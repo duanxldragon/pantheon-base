@@ -133,6 +133,8 @@ Pantheon Platform 将权限拆成四层：
 - `docs/FRONTEND.md`：前端架构与 UI 规范。
 - `docs/BACKEND.md`：后端模块化单体规范。
 - `docs/WORKFLOW.md`：开发流程与 AI 协作方式。
+- `CONTRIBUTING.md`：协作规范、提交格式与 PR checklist。
+- `SECURITY.md`：安全问题提交流程与披露边界。
 
 ## 提交规范
 
@@ -166,6 +168,7 @@ git config core.hooksPath .githooks
 - **Website**：如暂无线上环境，可暂留空。
 - **Topics**：`go`、`gin`、`gorm`、`react`、`typescript`、`vite`、`arco-design`、`casbin`、`iam`、`admin-dashboard`、`modular-monolith`、`enterprise-platform`
 - **Features**：启用 Issues、Pull Requests、Actions；如暂不开放协作，可关闭 Wiki。
+- **Community Files**：仓库已补齐 `README`、`CONTRIBUTING`、`SECURITY`、Issue Templates 和 PR Template。
 
 ## 安全提示
 
