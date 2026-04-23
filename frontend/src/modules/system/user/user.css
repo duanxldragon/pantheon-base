@@ -1,0 +1,45 @@
+.system-user-list__table-card .arco-card-body {
+  padding: 16px 20px 8px;
+}
+
+.system-user-list__table .arco-table-container {
+  border-radius: 0;
+  background: transparent;
+}
+
+.system-user-list__table .arco-table-pagination {
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+}
+
+.system-user-list__role-text {
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.system-user-list__actions {
+  row-gap: 2px;
+}
+
+.system-user-list__actions .arco-btn-text {
+  padding-inline: 6px;
+  color: var(--text-secondary);
+}
+
+.system-user-list__actions .arco-btn-text:not(.arco-btn-disabled):hover,
+.system-user-list__actions .arco-btn-text:not(.arco-btn-disabled):focus {
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+}
+
+.system-user-list__actions .arco-btn-status-danger.arco-btn-text {
+  color: #F53F3F;
+}
+
+.system-user-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):hover,
+.system-user-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):focus {
+  color: #F53F3F;
+  background: color-mix(in srgb, var(--danger-soft) 28%, #fff);
+}

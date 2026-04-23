@@ -1,0 +1,245 @@
+package system
+
+import (
+	"pantheon-platform/backend/internal/middleware"
+
+	audit "pantheon-platform/backend/modules/system/audit"
+	dept "pantheon-platform/backend/modules/system/dept"
+	dict "pantheon-platform/backend/modules/system/dict"
+	i18n "pantheon-platform/backend/modules/system/i18n"
+	menu "pantheon-platform/backend/modules/system/menu"
+	permission "pantheon-platform/backend/modules/system/permission"
+	post "pantheon-platform/backend/modules/system/post"
+	role "pantheon-platform/backend/modules/system/role"
+	setting "pantheon-platform/backend/modules/system/setting"
+	user "pantheon-platform/backend/modules/system/user"
+	"pantheon-platform/backend/pkg/contracts"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+// InitSystemModule 初始化系统模块
+func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
+	// 用户模块注入
+	userSvc := user.NewUserService(db)
+	userHandler := user.NewUserHandler(userSvc)
+
+	// 菜单模块注入
+	menuSvc := menu.NewMenuService(db)
+	menuHandler := menu.NewMenuHandler(menuSvc)
+
+	// 部门模块注入
+	deptSvc := dept.NewDeptService(db)
+	deptHandler := dept.NewDeptHandler(deptSvc)
+
+	// 字典模块注入
+	dictSvc := dict.NewDictService(db)
+	dictHandler := dict.NewDictHandler(dictSvc)
+
+	// 岗位模块注入
+	postSvc := post.NewPostService(db)
+	postHandler := post.NewPostHandler(postSvc)
+
+	// 权限模块注入
+	permissionSvc := permission.NewPermissionService(db)
+	permissionHandler := permission.NewPermissionHandler(permissionSvc)
+
+	// 角色模块注入
+	roleSvc := role.NewRoleService(db)
+	roleHandler := role.NewRoleHandler(roleSvc)
+
+	// 设置模块注入
+	settingSvc := setting.NewSettingService(db)
+	settingHandler := setting.NewSettingHandler(settingSvc)
+
+	// 多语言模块注入
+	i18nSvc := i18n.NewI18nService(db)
+	i18nHandler := i18n.NewI18nHandler(i18nSvc)
+
+	// 审计模块注入
+	auditSvc := audit.NewAuditService(db)
+	auditHandler := audit.NewAuditHandler(auditSvc)
+
+	modules := []contracts.BackendModule{
+		contracts.FuncModule{
+			ModuleName:  "user",
+			MigrateFunc: func(_ *gorm.DB) error { return userSvc.Migrate() },
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/profile", userHandler.GetProfile)
+					systemProtected.PUT("/profile", userHandler.UpdateProfile)
+					systemProtected.GET("/user/list", userHandler.GetUserList)
+					systemProtected.GET("/user/import-template", userHandler.DownloadImportTemplate)
+					systemProtected.GET("/user/:id", userHandler.GetUserDetail)
+					systemProtected.POST("/user", userHandler.CreateUser)
+					systemProtected.POST("/user/export", userHandler.ExportUsers)
+					systemProtected.POST("/user/import", userHandler.ImportUsers)
+					systemProtected.POST("/user/batch-status", userHandler.BatchUpdateUserStatus)
+					systemProtected.PUT("/user/:id", userHandler.UpdateUser)
+					systemProtected.PUT("/user/:id/reset-password", userHandler.ResetPassword)
+					systemProtected.DELETE("/user/:id", userHandler.DeleteUser)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "menu",
+			MigrateFunc:   func(_ *gorm.DB) error { return menuSvc.Migrate() },
+			SeedMenusFunc: seedMenuModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/menu/tree", menuHandler.GetMenuTree)
+					systemProtected.POST("/menu", menuHandler.CreateMenu)
+					systemProtected.PUT("/menu/:id", menuHandler.UpdateMenu)
+					systemProtected.DELETE("/menu/:id", menuHandler.DeleteMenu)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:  "role",
+			MigrateFunc: func(_ *gorm.DB) error { return roleSvc.Migrate() },
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/role/list", roleHandler.GetRoleList)
+					systemProtected.POST("/role", roleHandler.CreateRole)
+					systemProtected.POST("/role/export", roleHandler.ExportRoles)
+					systemProtected.POST("/role/batch-status", roleHandler.BatchUpdateRoleStatus)
+					systemProtected.PUT("/role/:id", roleHandler.UpdateRole)
+					systemProtected.DELETE("/role/:id", roleHandler.DeleteRole)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "dept",
+			MigrateFunc:   func(_ *gorm.DB) error { return deptSvc.Migrate() },
+			SeedMenusFunc: seedDeptModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/dept/tree", deptHandler.GetDeptTree)
+					systemProtected.GET("/dept/import-template", deptHandler.DownloadImportTemplate)
+					systemProtected.POST("/dept", deptHandler.CreateDept)
+					systemProtected.POST("/dept/export", deptHandler.ExportDepts)
+					systemProtected.POST("/dept/import", deptHandler.ImportDepts)
+					systemProtected.POST("/dept/batch-status", deptHandler.BatchUpdateDeptStatus)
+					systemProtected.PUT("/dept/:id", deptHandler.UpdateDept)
+					systemProtected.DELETE("/dept/:id", deptHandler.DeleteDept)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "post",
+			MigrateFunc:   func(_ *gorm.DB) error { return postSvc.Migrate() },
+			SeedMenusFunc: seedPostModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/post/list", postHandler.GetPostList)
+					systemProtected.GET("/post/import-template", postHandler.DownloadImportTemplate)
+					systemProtected.POST("/post", postHandler.CreatePost)
+					systemProtected.POST("/post/export", postHandler.ExportPosts)
+					systemProtected.POST("/post/import", postHandler.ImportPosts)
+					systemProtected.POST("/post/batch-status", postHandler.BatchUpdatePostStatus)
+					systemProtected.PUT("/post/:id", postHandler.UpdatePost)
+					systemProtected.DELETE("/post/:id", postHandler.DeletePost)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "permission",
+			MigrateFunc:   func(_ *gorm.DB) error { return permissionSvc.Migrate() },
+			SeedMenusFunc: seedPermissionModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/permission/workbench", permissionHandler.GetWorkbench)
+					systemProtected.GET("/permission/list", permissionHandler.GetPolicyList)
+					systemProtected.GET("/permission/import-template", permissionHandler.DownloadImportTemplate)
+					systemProtected.POST("/permission", permissionHandler.CreatePolicy)
+					systemProtected.POST("/permission/export", permissionHandler.ExportPolicies)
+					systemProtected.POST("/permission/import", permissionHandler.ImportPolicies)
+					systemProtected.PUT("/permission/:id", permissionHandler.UpdatePolicy)
+					systemProtected.DELETE("/permission/:id", permissionHandler.DeletePolicy)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "dict",
+			MigrateFunc:   func(_ *gorm.DB) error { return dictSvc.Migrate() },
+			SeedMenusFunc: seedDictModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemPublic := r.Group("/system")
+				{
+					systemPublic.GET("/dict/options", dictHandler.GetDictOptions)
+				}
+
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/dict/type/list", dictHandler.GetDictTypeList)
+					systemProtected.GET("/dict/type/import-template", dictHandler.DownloadDictTypeImportTemplate)
+					systemProtected.POST("/dict/type/export", dictHandler.ExportDictTypes)
+					systemProtected.POST("/dict/type/import", dictHandler.ImportDictTypes)
+					systemProtected.POST("/dict/cache/refresh", dictHandler.RefreshDictOptionsCache)
+					systemProtected.POST("/dict/type", dictHandler.CreateDictType)
+					systemProtected.PUT("/dict/type/:id", dictHandler.UpdateDictType)
+					systemProtected.DELETE("/dict/type/:id", dictHandler.DeleteDictType)
+					systemProtected.GET("/dict/item/list", dictHandler.GetDictItemList)
+					systemProtected.GET("/dict/item/import-template", dictHandler.DownloadDictItemImportTemplate)
+					systemProtected.POST("/dict/item/export", dictHandler.ExportDictItems)
+					systemProtected.POST("/dict/item/import", dictHandler.ImportDictItems)
+					systemProtected.POST("/dict/item", dictHandler.CreateDictItem)
+					systemProtected.PUT("/dict/item/:id", dictHandler.UpdateDictItem)
+					systemProtected.DELETE("/dict/item/:id", dictHandler.DeleteDictItem)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "setting",
+			MigrateFunc:   func(_ *gorm.DB) error { return settingSvc.Migrate() },
+			SeedMenusFunc: seedSettingModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemPublic := r.Group("/system")
+				{
+					systemPublic.GET("/setting/public", settingHandler.GetPublicSettings)
+				}
+
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/setting/list", settingHandler.GetSettingList)
+					systemProtected.GET("/setting/audit/list", settingHandler.GetSettingAuditList)
+					systemProtected.POST("/setting/cache/refresh", settingHandler.RefreshSettingCache)
+					systemProtected.GET("/setting/group/:groupKey", settingHandler.GetSettingGroup)
+					systemProtected.PUT("/setting/group/:groupKey", settingHandler.UpdateSettingGroup)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName: "i18n",
+			Register: func(r *gin.RouterGroup) {
+				sys := r.Group("/system")
+				{
+					sys.GET("/i18n/pack", i18nHandler.GetLangPack)
+				}
+			},
+		},
+		contracts.FuncModule{
+			ModuleName:    "audit",
+			MigrateFunc:   func(_ *gorm.DB) error { return auditSvc.Migrate() },
+			SeedMenusFunc: seedAuditModuleMenus,
+			Register: func(r *gin.RouterGroup) {
+				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				{
+					systemProtected.GET("/operation-log/list", auditHandler.GetOperationLogList)
+					systemProtected.POST("/operation-log/export", auditHandler.ExportOperationLogs)
+					systemProtected.DELETE("/operation-log/:id", auditHandler.DeleteOperationLog)
+					systemProtected.POST("/operation-log/clear", auditHandler.ClearOperationLogs)
+				}
+			},
+		},
+	}
+
+	contracts.RegisterBackendModules(r, db, modules...)
+}

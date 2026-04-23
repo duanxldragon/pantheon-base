@@ -1,0 +1,48 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+*.out.log
+*.err.log
+
+# Local caches and temp files
+.tmp/
+tmp/
+.gocache/
+.gstack/
+coverage/
+
+# Go
+bin/
+*.exe
+*.test
+*.prof
+vendor/
+
+# Local databases
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/coverage/
+frontend/.vite/
+
+# Test artifacts
+playwright-report/
+test-results/
