@@ -14,6 +14,7 @@ import { renderMenuIcon } from '../menu/icon';
 import ThemeSwitcher from '../theme/ThemeSwitcher';
 import { AppModal } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/dashboard/api';
+import { getBrandInitial, setExplicitLanguagePreference, usePublicSettings } from '../settings/publicSettings';
 import {
   OPENED_TABS_STORAGE_KEY,
   clearShellSessionState,
@@ -177,6 +178,7 @@ const BaseLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
+  const publicSettings = usePublicSettings();
   const { menuTree, fetchMenuTree, resetMenuTree, loading } = useMenuStore();
   const { userInfo, setUserInfo, clearAuth } = useAuthStore();
   const { isAdmin, hasPerm } = usePermission();
@@ -229,6 +231,8 @@ const BaseLayout: React.FC = () => {
   const isHorizontalLayout = layoutMode === 'horizontal';
   const layoutModeLabel = t(isHorizontalLayout ? 'app.layoutMode.horizontal' : 'app.layoutMode.vertical');
   const layoutModeActionLabel = t(isHorizontalLayout ? 'app.layoutMode.switchToVertical' : 'app.layoutMode.switchToHorizontal');
+  const appName = publicSettings.siteName || t('app.name');
+  const brandInitial = getBrandInitial(appName);
 
   useEffect(() => {
     void fetchMenuTree();
@@ -677,7 +681,7 @@ const BaseLayout: React.FC = () => {
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'zh-CN' ? 'en-US' : 'zh-CN';
-    localStorage.setItem('pantheon_lang', nextLang);
+    setExplicitLanguagePreference(nextLang);
     window.location.reload();
   };
 
@@ -737,10 +741,12 @@ const BaseLayout: React.FC = () => {
           onCollapse={setCollapsed}
         >
           <div className={collapsed ? 'app-shell__brand app-shell__brand--collapsed' : 'app-shell__brand'}>
-            <div className="app-shell__brand-mark">P</div>
+            <div className="app-shell__brand-mark">
+              {publicSettings.siteLogo ? <img src={publicSettings.siteLogo} alt={appName} /> : brandInitial}
+            </div>
             {!collapsed ? (
               <div className="app-shell__brand-text">
-                <span className="app-shell__brand-title">{t('app.name')}</span>
+                <span className="app-shell__brand-title">{appName}</span>
                 <span className="app-shell__brand-subtitle">{t('app.workspace')}</span>
               </div>
             ) : null}
@@ -770,9 +776,11 @@ const BaseLayout: React.FC = () => {
                 onClick={() => setCollapsed((value) => !value)}
               />
             ) : (
-              <div className="app-shell__header-brand" aria-label={t('app.name')}>
-                <span className="app-shell__header-brand-mark">P</span>
-                <span className="app-shell__header-brand-text">{t('app.name')}</span>
+              <div className="app-shell__header-brand" aria-label={appName}>
+                <span className="app-shell__header-brand-mark">
+                  {publicSettings.siteLogo ? <img src={publicSettings.siteLogo} alt={appName} /> : brandInitial}
+                </span>
+                <span className="app-shell__header-brand-text">{appName}</span>
               </div>
             )}
             <div className="app-shell__header-meta">
@@ -969,6 +977,7 @@ const BaseLayout: React.FC = () => {
             </Spin>
           </div>
         ) : null}
+        {publicSettings.enableTabBar ? (
         <div className="app-shell__tabs" role="tablist" aria-label={t('app.openedTabs')}>
           {openedTabs.map((item) => {
             const active = item.path === location.pathname;
@@ -1107,6 +1116,7 @@ const BaseLayout: React.FC = () => {
             );
           })}
         </div>
+        ) : null}
         <Content className="app-shell__content">
           <div className="app-shell__content-inner">
             <Outlet />

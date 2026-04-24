@@ -14,6 +14,8 @@
 - `system/setting` 已完成基础闭环：模型、迁移、默认配置、公开读取、管理端分组读取与保存、前端设置页、设置缓存刷新；
 - `system/dict` 已完成基础闭环：模型、迁移、默认种子、字典类型/字典项 CRUD、公共 options 接口、前端主从维护页、options 缓存刷新；
 - 上传配置分组、敏感配置加密存储、配置变更审计详情、设置缓存策略已完成基础实现。
+- 运行时接线状态已补第一批：`site.name/site.logo` 已接入登录页与应用壳层，`security.password_min_length` 已接入当前用户改密、用户创建与管理员重置密码，`login.max_failed_attempts/login.lock_minutes` 已接入登录失败锁定策略，`i18n.default_language` 已接入无显式语言偏好时的默认语言初始化，`ui.default_theme/ui.enable_tab_bar` 已接入平台壳层主题与标签栏显示策略。
+- 当前仍未完成运行时消费的重点项是上传配置组；原因不是“设置页保存失败”，而是平台尚未形成统一上传模块来消费 `upload.*` 配置。
 
 ## 1. 设计目标
 

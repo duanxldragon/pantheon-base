@@ -71,7 +71,7 @@ type UserListQuery struct {
 
 type UserCreateReq struct {
 	Username string   `json:"username" binding:"required"`
-	Password string   `json:"password" binding:"required,min=6"`
+	Password string   `json:"password" binding:"required"`
 	Nickname string   `json:"nickname"`
 	Avatar   string   `json:"avatar"`
 	Email    string   `json:"email"`
@@ -94,7 +94,7 @@ type UserUpdateReq struct {
 }
 
 type UserResetPasswordReq struct {
-	NewPassword string `json:"newPassword" binding:"required,min=6"`
+	NewPassword string `json:"newPassword" binding:"required"`
 }
 
 type UserBatchStatusReq struct {

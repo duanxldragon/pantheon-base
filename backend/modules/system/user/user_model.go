@@ -18,6 +18,8 @@ type SystemUser struct {
 	DeptID    uint64         `gorm:"default:0" json:"deptId"`
 	PostID    uint64         `gorm:"default:0" json:"postId"`
 	Status    int            `gorm:"default:1" json:"status"` // 1:正常, 2:禁用
+	FailedLoginAttempts int        `gorm:"default:0" json:"-"`
+	LoginLockedUntil    *time.Time `json:"-"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`

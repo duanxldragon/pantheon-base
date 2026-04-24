@@ -25,6 +25,7 @@ func setupUserTestDB() *gorm.DB {
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id TEXT, user_id INTEGER, revoked_at DATETIME)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id INTEGER PRIMARY KEY, parent_id INTEGER, dept_name TEXT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id INTEGER PRIMARY KEY, post_code TEXT, post_name TEXT, dept_id INTEGER)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
 
 	// 插入基础数据
 	_ = db.Exec("INSERT INTO system_role (id, role_key, status) VALUES (1, 'admin', 1)")
@@ -325,6 +326,36 @@ func TestUserService_ResetPassword(t *testing.T) {
 	}
 	if revokedRows != 2 {
 		t.Fatalf("expected 2 revoked session rows, got %d", revokedRows)
+	}
+}
+
+func TestUserService_CreateAndResetPasswordUseConfiguredMinLength(t *testing.T) {
+	db := setupUserTestDB()
+	s := NewUserService(db)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '8')")
+
+	_, err := s.CreateUser(&UserCreateReq{
+		Username: "short_policy_user",
+		Password: "1234567",
+		RoleIDs:  []uint64{2},
+		Status:   1,
+	})
+	if err == nil || err.Error() != "user.update.error.password_too_short" {
+		t.Fatalf("expected create user to respect configured min length, got %v", err)
+	}
+
+	userResp, err := s.CreateUser(&UserCreateReq{
+		Username: "long_policy_user",
+		Password: "12345678",
+		RoleIDs:  []uint64{2},
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("create long policy user: %v", err)
+	}
+
+	if _, err := s.ResetPassword(userResp.ID, "1234567"); err == nil || err.Error() != "user.update.error.password_too_short" {
+		t.Fatalf("expected reset password to respect configured min length, got %v", err)
 	}
 }
 

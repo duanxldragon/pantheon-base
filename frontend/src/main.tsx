@@ -6,12 +6,12 @@ import './index.css';
 import App from './App';
 import { initI18n } from './i18n';
 import { initializePantheonTheme } from './core/theme/theme';
+import { initializePublicSettings } from './core/settings/publicSettings';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
-void initializePantheonTheme();
-
-initI18n().finally(() => {
+Promise.allSettled([initializePublicSettings(), initializePantheonTheme()]).finally(() => {
+  initI18n().finally(() => {
   root.render(
     <React.StrictMode>
       <BrowserRouter>
@@ -19,4 +19,5 @@ initI18n().finally(() => {
       </BrowserRouter>
     </React.StrictMode>
   );
+  });
 });

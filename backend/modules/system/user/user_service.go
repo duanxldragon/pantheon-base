@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
@@ -62,6 +63,8 @@ func (s *UserService) Migrate() error {
 
 	return nil
 }
+
+const defaultConfiguredPasswordMinLength = 6
 
 // GetUserRoles 获取用户角色标识。
 func (s *UserService) GetUserRoles(userID uint64) ([]string, error) {
@@ -422,7 +425,7 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 	}
 
 	trimmedPassword := strings.TrimSpace(newPassword)
-	if len(trimmedPassword) < 6 {
+	if len(trimmedPassword) < s.getConfiguredPasswordMinLength() {
 		return 0, errors.New("user.update.error.password_too_short")
 	}
 
@@ -881,6 +884,9 @@ func normalizeUint64IDs(ids []uint64) []uint64 {
 }
 
 func (s *UserService) validateUserCreate(req *UserCreateReq) error {
+	if len(strings.TrimSpace(req.Password)) < s.getConfiguredPasswordMinLength() {
+		return errors.New("user.update.error.password_too_short")
+	}
 	if err := validateOptionalEmail(req.Email); err != nil {
 		return err
 	}
@@ -964,6 +970,32 @@ func (s *UserService) getAdminRoleID() (uint64, error) {
 		return 0, err
 	}
 	return roleID, nil
+}
+
+func (s *UserService) getConfiguredPasswordMinLength() int {
+	if s.db == nil {
+		return defaultConfiguredPasswordMinLength
+	}
+
+	var rawValue string
+	err := s.db.Table("system_setting").
+		Select("setting_value").
+		Where("setting_key = ?", "security.password_min_length").
+		Limit(1).
+		Pluck("setting_value", &rawValue).Error
+	if err != nil {
+		lowerError := strings.ToLower(err.Error())
+		if strings.Contains(lowerError, "no such table") || strings.Contains(lowerError, "doesn't exist") {
+			return defaultConfiguredPasswordMinLength
+		}
+		return defaultConfiguredPasswordMinLength
+	}
+
+	value, err := strconv.Atoi(strings.TrimSpace(rawValue))
+	if err != nil || value <= 0 {
+		return defaultConfiguredPasswordMinLength
+	}
+	return value
 }
 
 func (s *UserService) ensureDeptID(deptID uint64) error {

@@ -12,6 +12,10 @@ const systemPages = [
   { path: '/system/post', title: '岗位管理' },
   { path: '/system/permission', title: '权限管理' },
   { path: '/system/dict', title: '字典管理' },
+  { path: '/system/setting', title: '系统设置' },
+  { path: '/system/login-log', title: '登录日志' },
+  { path: '/system/session', title: '会话管理' },
+  { path: '/system/operation-log', title: '操作日志' },
 ] as const;
 
 async function signInAsAdmin(page: Page) {
@@ -36,6 +40,14 @@ async function signInAsAdmin(page: Page) {
       refreshToken: payload.data.refreshToken,
     },
   );
+
+  return payload.data.accessToken as string;
+}
+
+function authHeaders(accessToken: string) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+  };
 }
 
 async function expectNoPageError(page: Page) {
@@ -81,3 +93,106 @@ for (const pageMeta of systemPages) {
     expect(consoleErrors).toEqual([]);
   });
 }
+
+test('setting smoke: site name updates public brand display', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/basic`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(groupResponse.ok()).toBeTruthy();
+  const groupPayload = await groupResponse.json();
+  expect(groupPayload.code).toBe(200);
+  const originalItems = groupPayload.data.items as Array<{ settingKey: string; settingValue: string }>;
+  const nextSiteName = `Pantheon QA ${Date.now()}`;
+  const nextItems = originalItems.map((item) => ({
+    settingKey: item.settingKey,
+    settingValue: item.settingKey === 'site.name' ? nextSiteName : item.settingValue,
+  }));
+
+  try {
+    const updateResponse = await page.request.put(`${apiBaseUrl}/system/setting/group/basic`, {
+      headers: authHeaders(accessToken),
+      data: { items: nextItems },
+    });
+    expect(updateResponse.ok()).toBeTruthy();
+    const updatePayload = await updateResponse.json();
+    expect(updatePayload.code).toBe(200);
+
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    await expect(page.locator('.app-shell__brand-title')).toHaveText(nextSiteName);
+    await expect(page).toHaveTitle(nextSiteName);
+  } finally {
+    await page.request.put(`${apiBaseUrl}/system/setting/group/basic`, {
+      headers: authHeaders(accessToken),
+      data: { items: originalItems },
+    });
+  }
+});
+
+test('setting smoke: default language applies when there is no explicit choice', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(groupResponse.ok()).toBeTruthy();
+  const groupPayload = await groupResponse.json();
+  expect(groupPayload.code).toBe(200);
+  const originalItems = groupPayload.data.items as Array<{ settingKey: string; settingValue: string }>;
+  const nextItems = originalItems.map((item) => ({
+    settingKey: item.settingKey,
+    settingValue: item.settingKey === 'i18n.default_language' ? 'en-US' : item.settingValue,
+  }));
+
+  try {
+    const updateResponse = await page.request.put(`${apiBaseUrl}/system/setting/group/i18n`, {
+      headers: authHeaders(accessToken),
+      data: { items: nextItems },
+    });
+    expect(updateResponse.ok()).toBeTruthy();
+
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    await page.evaluate(() => {
+      localStorage.removeItem('pantheon_lang');
+      localStorage.removeItem('pantheon_lang_explicit');
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+
+    await expect(page.locator('.page-header').getByRole('heading', { name: 'Workbench' })).toBeVisible();
+  } finally {
+    await page.request.put(`${apiBaseUrl}/system/setting/group/i18n`, {
+      headers: authHeaders(accessToken),
+      data: { items: originalItems },
+    });
+  }
+});
+
+test('setting smoke: tab bar visibility follows ui preference', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(groupResponse.ok()).toBeTruthy();
+  const groupPayload = await groupResponse.json();
+  expect(groupPayload.code).toBe(200);
+  const originalItems = groupPayload.data.items as Array<{ settingKey: string; settingValue: string }>;
+  const nextItems = originalItems.map((item) => ({
+    settingKey: item.settingKey,
+    settingValue: item.settingKey === 'ui.enable_tab_bar' ? 'false' : item.settingValue,
+  }));
+
+  try {
+    const updateResponse = await page.request.put(`${apiBaseUrl}/system/setting/group/ui`, {
+      headers: authHeaders(accessToken),
+      data: { items: nextItems },
+    });
+    expect(updateResponse.ok()).toBeTruthy();
+
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    await expect(page.locator('.app-shell__tabs')).toHaveCount(0);
+  } finally {
+    await page.request.put(`${apiBaseUrl}/system/setting/group/ui`, {
+      headers: authHeaders(accessToken),
+      data: { items: originalItems },
+    });
+  }
+});

@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"sort"
 	"strings"
 	"time"
@@ -19,6 +20,18 @@ import (
 type AuthService struct {
 	db *gorm.DB
 }
+
+type authRuntimePolicy struct {
+	PasswordMinLength int
+	MaxFailedAttempts int
+	LockMinutes       int
+}
+
+const (
+	defaultPasswordMinLength = 6
+	defaultMaxFailedAttempts = 5
+	defaultLockMinutes       = 15
+)
 
 // NewAuthService 构造函数
 func NewAuthService(db *gorm.DB) *AuthService {
@@ -113,6 +126,7 @@ func (s *AuthService) Authenticate(req *LoginReq) (*user.SystemUser, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
+	policy := s.getAuthRuntimePolicy()
 
 	var currentUser user.SystemUser
 	result := s.db.Where("username = ?", req.Username).First(&currentUser)
@@ -126,9 +140,22 @@ func (s *AuthService) Authenticate(req *LoginReq) (*user.SystemUser, error) {
 	if currentUser.Status == 2 {
 		return nil, errors.New("user.login.error.disabled")
 	}
+	if currentUser.LoginLockedUntil != nil && currentUser.LoginLockedUntil.After(time.Now()) {
+		return nil, errors.New("user.login.error.locked")
+	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(req.Password)); err != nil {
+		locked, markErr := s.recordFailedLoginAttempt(&currentUser, policy)
+		if markErr != nil {
+			return nil, markErr
+		}
+		if locked {
+			return nil, errors.New("user.login.error.locked")
+		}
 		return nil, errors.New("user.login.error.password_wrong")
+	}
+	if err := s.clearFailedLoginState(currentUser.ID); err != nil {
+		return nil, err
 	}
 
 	return &currentUser, nil
@@ -210,7 +237,7 @@ func (s *AuthService) UpdatePassword(userID uint64, currentSessionID string, req
 
 	oldPassword := strings.TrimSpace(req.OldPassword)
 	newPassword := strings.TrimSpace(req.NewPassword)
-	if len(newPassword) < 6 {
+	if len(newPassword) < s.getAuthRuntimePolicy().PasswordMinLength {
 		return errors.New("user.update.error.password_too_short")
 	}
 
@@ -644,6 +671,92 @@ func (s *AuthService) RecordLoginLog(username, ip, browser, os string, status in
 		LoginLocation: "Local",
 	}
 	go s.db.Create(&loginLog)
+}
+
+func (s *AuthService) getAuthRuntimePolicy() authRuntimePolicy {
+	return authRuntimePolicy{
+		PasswordMinLength: s.getSettingInt("security.password_min_length", defaultPasswordMinLength),
+		MaxFailedAttempts: s.getSettingInt("login.max_failed_attempts", defaultMaxFailedAttempts),
+		LockMinutes:       s.getSettingInt("login.lock_minutes", defaultLockMinutes),
+	}
+}
+
+func (s *AuthService) getSettingInt(settingKey string, fallback int) int {
+	if s.db == nil {
+		return fallback
+	}
+
+	var rawValue string
+	err := s.db.Table("system_setting").
+		Select("setting_value").
+		Where("setting_key = ?", settingKey).
+		Limit(1).
+		Pluck("setting_value", &rawValue).Error
+	if err != nil {
+		lowerError := strings.ToLower(err.Error())
+		if strings.Contains(lowerError, "no such table") || strings.Contains(lowerError, "doesn't exist") {
+			return fallback
+		}
+		return fallback
+	}
+
+	value, err := strconv.Atoi(strings.TrimSpace(rawValue))
+	if err != nil || value <= 0 {
+		return fallback
+	}
+	return value
+}
+
+func (s *AuthService) recordFailedLoginAttempt(currentUser *user.SystemUser, policy authRuntimePolicy) (bool, error) {
+	if s.db == nil || currentUser == nil {
+		return false, errors.New("database.not_initialized")
+	}
+
+	nextAttempts := currentUser.FailedLoginAttempts + 1
+	updates := map[string]any{
+		"failed_login_attempts": nextAttempts,
+	}
+	if currentUser.LoginLockedUntil != nil && currentUser.LoginLockedUntil.Before(time.Now()) {
+		updates["login_locked_until"] = nil
+		currentUser.LoginLockedUntil = nil
+	}
+
+	if policy.MaxFailedAttempts > 0 && nextAttempts >= policy.MaxFailedAttempts {
+		lockUntil := time.Now().Add(time.Duration(maxInt(policy.LockMinutes, 1)) * time.Minute)
+		updates["failed_login_attempts"] = 0
+		updates["login_locked_until"] = &lockUntil
+		currentUser.FailedLoginAttempts = 0
+		currentUser.LoginLockedUntil = &lockUntil
+		if err := s.db.Model(currentUser).Updates(updates).Error; err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
+	currentUser.FailedLoginAttempts = nextAttempts
+	if err := s.db.Model(currentUser).Updates(updates).Error; err != nil {
+		return false, err
+	}
+	return false, nil
+}
+
+func (s *AuthService) clearFailedLoginState(userID uint64) error {
+	if s.db == nil {
+		return errors.New("database.not_initialized")
+	}
+	return s.db.Model(&user.SystemUser{}).
+		Where("id = ? AND (failed_login_attempts <> 0 OR login_locked_until IS NOT NULL)", userID).
+		Updates(map[string]any{
+			"failed_login_attempts": 0,
+			"login_locked_until":    nil,
+		}).Error
+}
+
+func maxInt(a int, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func (s *AuthService) issueTokenPair(currentUser *user.SystemUser, roles []string, session *SystemUserSession) (*common.TokenPair, error) {

@@ -95,6 +95,7 @@ export const OrderModule = {
 - **仪表盘真实数据化**: `src/modules/dashboard/` 已接入平台层汇总接口，不再使用硬编码统计数字。
 - **首页归属澄清**: dashboard 在模块 manifest 中按 `platform` scope 理解，语义上属于跨域聚合页；物理目录已从 `platform/dashboard` 扁平化到顶层 `dashboard`。
 - **系统设置页**: 已新增 `src/modules/system/setting/SettingPage.tsx`，按 `basic/security/login/upload/i18n/ui` 分组维护系统设置，并对敏感配置提供“已加密/留空不变”交互表达。
+- **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar` 已接入登录页与应用壳层；其中默认语言仅在“用户未显式切换语言”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐。
 - **设置审计详情**: 系统设置页底部已补最近配置变更审计表，支持查看操作人、操作 IP、变更字段、状态与操作时间，敏感字段只展示“已变更”而不回显明文。
 - **设置缓存刷新**: 系统设置页已补“刷新设置缓存”入口，允许管理员按当前分组手动预热缓存。
 - **字典管理页**: 已新增 `src/modules/system/dict/DictPage.tsx`，采用左侧字典类型 + 右侧字典项的主从布局，支持类型筛选、字典项排序、状态和颜色维护；类型与字典项都支持各自的 CSV 模板下载、导出与导入。

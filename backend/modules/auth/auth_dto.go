@@ -14,7 +14,7 @@ type RefreshTokenReq struct {
 // PasswordUpdateReq 当前登录用户修改密码请求 DTO
 type PasswordUpdateReq struct {
 	OldPassword string `json:"oldPassword" binding:"required"`
-	NewPassword string `json:"newPassword" binding:"required,min=6"`
+	NewPassword string `json:"newPassword" binding:"required"`
 }
 
 // UserInfoResp 当前登录主体信息 DTO

@@ -6,6 +6,7 @@ interface SubmitBarProps {
   onCancel?: () => void;
   onSubmit?: () => void;
   loading?: boolean;
+  submitDisabled?: boolean;
   submitText?: React.ReactNode;
   cancelText?: React.ReactNode;
 }
@@ -14,6 +15,7 @@ const SubmitBar: React.FC<SubmitBarProps> = ({
   onCancel,
   onSubmit,
   loading,
+  submitDisabled,
   submitText,
   cancelText,
 }) => {
@@ -25,7 +27,7 @@ const SubmitBar: React.FC<SubmitBarProps> = ({
         <Button onClick={onCancel}>
           {cancelText || t('common.cancel')}
         </Button>
-        <Button type="primary" loading={loading} onClick={onSubmit}>
+        <Button type="primary" loading={loading} disabled={submitDisabled} onClick={onSubmit}>
           {submitText || t('common.save')}
         </Button>
       </Space>

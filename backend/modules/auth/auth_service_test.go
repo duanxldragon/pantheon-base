@@ -22,6 +22,7 @@ func setupTestDB() *gorm.DB {
 
 	// 迁移模型
 	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{})
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
 	return db
 }
 
@@ -138,6 +139,59 @@ func TestAuthService_UpdatePassword(t *testing.T) {
 	})
 	if err == nil || err.Error() != "user.update.error.password_too_short" {
 		t.Errorf("expected password too short error, got %v", err)
+	}
+}
+
+func TestAuthService_AuthenticateLocksUserByConfiguredPolicy(t *testing.T) {
+	db := setupTestDB()
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "locked_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.max_failed_attempts', '2'), ('login.lock_minutes', '10')")
+
+	_, err := s.Authenticate(&LoginReq{Username: "locked_user", Password: "wrong"})
+	if err == nil || err.Error() != "user.login.error.password_wrong" {
+		t.Fatalf("expected password wrong on first failure, got %v", err)
+	}
+	_, err = s.Authenticate(&LoginReq{Username: "locked_user", Password: "wrong"})
+	if err == nil || err.Error() != "user.login.error.locked" {
+		t.Fatalf("expected locked error on second failure, got %v", err)
+	}
+
+	var updated user.SystemUser
+	if err := db.First(&updated, testUser.ID).Error; err != nil {
+		t.Fatalf("reload locked user: %v", err)
+	}
+	if updated.LoginLockedUntil == nil || !updated.LoginLockedUntil.After(time.Now()) {
+		t.Fatalf("expected login_locked_until to be set, got %+v", updated.LoginLockedUntil)
+	}
+}
+
+func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
+	db := setupTestDB()
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "policy_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '8')")
+
+	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
+		OldPassword: "oldpassword",
+		NewPassword: "1234567",
+	})
+	if err == nil || err.Error() != "user.update.error.password_too_short" {
+		t.Fatalf("expected configured min length error, got %v", err)
 	}
 }
 

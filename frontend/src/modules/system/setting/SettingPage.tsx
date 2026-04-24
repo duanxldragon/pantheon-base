@@ -4,10 +4,12 @@ import type { PaginationProps } from '@arco-design/web-react/es/Pagination/inter
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconRefresh } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
 import { FormSection, PageContainer, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { applyPantheonDefaultTheme, applyPantheonTheme, pantheonThemeOptions, type PantheonThemeKey } from '../../../core/theme/theme';
+import { hasExplicitLanguagePreference, refreshPublicSettings } from '../../../core/settings/publicSettings';
 import { usePermission } from '../../../hooks/usePermission';
 import {
   updateSettingGroup,
@@ -44,6 +46,7 @@ function buildFormValues(items: SettingItem[]) {
 const SettingPage: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
+  const canUpdateSetting = isAdmin || hasPerm('system:setting:update');
   const canRefreshCache = isAdmin || hasPerm('system:setting:refresh');
   const [loading, setLoading] = useState(false);
   const [submittingGroup, setSubmittingGroup] = useState<string | null>(null);
@@ -137,7 +140,7 @@ const SettingPage: React.FC = () => {
 
   const handleSubmit = async () => {
     const group = activeSettingGroup;
-    if (!group) {
+    if (!group || !canUpdateSetting) {
       return;
     }
     const values = await form.validate();
@@ -154,6 +157,12 @@ const SettingPage: React.FC = () => {
         if (typeof nextTheme === 'string') {
           applyPantheonDefaultTheme(nextTheme as PantheonThemeKey);
           applyPantheonTheme(nextTheme as PantheonThemeKey);
+        }
+      }
+      if (['basic', 'i18n', 'ui'].includes(group.groupKey)) {
+        const publicSettings = await refreshPublicSettings().catch(() => null);
+        if (group.groupKey === 'i18n' && publicSettings && !hasExplicitLanguagePreference()) {
+          await i18n.changeLanguage(publicSettings.defaultLanguage).catch(() => undefined);
         }
       }
       Message.success(t('common.updateSuccess'));
@@ -371,6 +380,7 @@ const SettingPage: React.FC = () => {
                   </Space>
                   <SubmitBar
                     loading={submittingGroup === activeSettingGroup.groupKey}
+                    submitDisabled={!canUpdateSetting}
                     onCancel={resetActiveGroupValues}
                     onSubmit={() => { void handleSubmit(); }}
                   />

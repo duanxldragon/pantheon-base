@@ -71,6 +71,14 @@
 - 登录日志
 - 安全策略（密码策略、登录失败限制、验证码、MFA 等）
 
+当前已接入的安全策略包括：
+
+- `security.password_min_length`：作用于当前用户修改密码
+- `login.max_failed_attempts`：作用于登录失败累计阈值
+- `login.lock_minutes`：作用于账号临时锁定时长
+
+同时，`system/iam` 中的用户创建与管理员重置密码也已消费 `security.password_min_length`，确保系统管理内部策略一致。
+
 ### 4.2 `auth` 不负责
 
 `auth` 不负责：

@@ -8,6 +8,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import ThemeSwitcher from '../../core/theme/ThemeSwitcher';
 import { clearShellSessionState } from '../../core/shellState';
+import { getBrandInitial, setExplicitLanguagePreference, usePublicSettings } from '../../core/settings/publicSettings';
 import './Login.css';
 
 const FormItem = Form.Item;
@@ -18,8 +19,11 @@ const LoginPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { setTokens, setUserInfo } = useAuthStore();
   const { resetMenuTree } = useMenuStore();
+  const publicSettings = usePublicSettings();
   const currentLang = i18n.language === 'en-US' ? 'en-US' : 'zh-CN';
   const nextLang = currentLang === 'zh-CN' ? 'en-US' : 'zh-CN';
+  const appName = publicSettings.siteName || t('app.name');
+  const brandInitial = getBrandInitial(appName);
   const featureItems = useMemo(() => [
     { icon: <IconCheckCircle />, label: t('auth.login.feature.modules') },
     { icon: <IconSafe />, label: t('auth.login.feature.security') },
@@ -49,7 +53,7 @@ const LoginPage: React.FC = () => {
   };
 
   const toggleLanguage = () => {
-    localStorage.setItem('pantheon_lang', nextLang);
+    setExplicitLanguagePreference(nextLang);
     void i18n.changeLanguage(nextLang);
   };
 
@@ -58,9 +62,11 @@ const LoginPage: React.FC = () => {
       <section className="auth-login-page__brand-pane">
         <div className="auth-login-page__brand-inner">
           <div className="auth-login-page__brand">
-            <div className="auth-login-page__brand-mark">P</div>
+            <div className="auth-login-page__brand-mark">
+              {publicSettings.siteLogo ? <img src={publicSettings.siteLogo} alt={appName} /> : brandInitial}
+            </div>
             <div className="auth-login-page__brand-copy">
-              <span className="auth-login-page__brand-title">{t('app.name')}</span>
+              <span className="auth-login-page__brand-title">{appName}</span>
               <span className="auth-login-page__brand-subtitle">{t('auth.login.consoleLabel')}</span>
             </div>
           </div>
