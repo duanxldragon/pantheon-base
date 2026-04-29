@@ -1,6 +1,6 @@
 # Auth 模块拆分设计
 
-更新时间：2026-04-17
+更新时间：2026-04-29
 
 本文用于把“认证与会话”从当前 `system/user` 混合实现中拆分为独立能力域，目标是在项目早期就锁定边界，避免后期继续把登录、用户管理、角色权限、安全策略揉成一个模块。
 
@@ -76,6 +76,13 @@
 - `security.password_min_length`：作用于当前用户修改密码
 - `login.max_failed_attempts`：作用于登录失败累计阈值
 - `login.lock_minutes`：作用于账号临时锁定时长
+- `login.source_max_failed_attempts`：作用于同一来源/IP 在窗口内的失败阈值
+- `login.source_window_minutes`：作用于来源/IP 失败次数的统计窗口
+- `login.source_lock_minutes`：作用于来源/IP 临时锁定时长
+- `login.session_idle_minutes`：作用于会话空闲超时判定，平台壳层会同步执行本地倒计时退出
+- `login.max_active_sessions_per_user`：作用于同账号最大活跃会话上限；新登录超过阈值时自动下线更早的活跃会话，后台账号建议默认为 `1`
+- `audit.session_retention_days`：作用于历史会话保留期；已下线或已过期会话超过天数后自动清理，避免 `system_user_session` 无界增长
+- `login.captcha_enabled` / `login.mfa_enabled` / `login.sso_enabled`：作为后续验证码、MFA、SSO 的配置开关预留；当前默认关闭，不展示伪能力
 
 同时，`system/iam` 中的用户创建与管理员重置密码也已消费 `security.password_min_length`，确保系统管理内部策略一致。
 
@@ -189,6 +196,196 @@ frontend/src/modules/
 - `system_auth_factor`
 - `system_user_device`
 - `system_login_risk_event`
+- `system_user_external_identity`
+- `system_auth_provider`
+
+### 7.3 SSO / 外部身份接入预留
+
+当前阶段只保留设计，不实现真实 SSO 登录流。
+
+原因不是“以后不会做”，而是：
+
+- 当前项目还是以内网本地账号密码登录为主
+- 未来身份源尚未确定，可能是 `OIDC`、`OAuth2`、企业微信、飞书、CAS、LDAP、ADFS 或其他企业身份系统
+- 如果在没有明确 IdP 的前提下提前把 SSO 流程硬塞进现有登录主链路，极易把本地登录、会话刷新、登出和审计语义一起搅乱
+
+因此当前设计原则是：
+
+- **只预留扩展点，不预实现协议分支**
+- **本地登录链路保持稳定，不因“预支持 SSO”而改成多分支脆弱实现**
+- **等未来确定身份源后，再按单协议一次做完整闭环**
+
+建议未来新增的模型边界如下：
+
+| 模型/表 | 归属 | 作用 |
+| :--- | :--- | :--- |
+| `system_auth_provider` | `auth/config` | 保存身份源配置，如协议类型、client 配置、回调地址、启用状态 |
+| `system_user_external_identity` | `auth/iam` 协同 | 保存“外部身份主体”与“本地用户”绑定关系 |
+
+`system_user_external_identity` 建议至少具备以下语义字段：
+
+- `provider_key`：身份源唯一标识
+- `provider_type`：如 `oidc` / `oauth2` / `wechat-work` / `cas` / `ldap`
+- `external_subject`：外部主体唯一值，如 `sub`、企业微信 `userid`
+- `external_username`：外部身份回传用户名或账号
+- `external_display_name`：外部身份展示名
+- `user_id`：绑定到本地 `system_user.id`
+- `tenant_code`：未来若支持多租户时可扩展
+- `last_login_at`：最近一次外部登录时间
+- `metadata_json`：保存协议差异字段，不把协议特例直接塞进主表
+
+`system_auth_provider` 建议至少具备以下语义字段：
+
+- `provider_key`
+- `provider_type`
+- `display_name`
+- `issuer_or_base_url`
+- `client_id`
+- `client_secret_ref`
+- `authorize_url`
+- `token_url`
+- `userinfo_url`
+- `jwks_url`
+- `scopes`
+- `callback_path`
+- `logout_url`
+- `status`
+- `sort`
+- `extra_json`
+
+注意：
+
+- `client_secret` 不建议明文入库，推荐保存到安全配置中心或环境变量，再用 `client_secret_ref` 引用
+- 不同协议的个性字段收敛到 `extra_json`，避免主表被某一种 IdP 污染
+
+### 7.4 当前代码现状与未来接入点
+
+当前 `system/auth` 已经具备“未来可接 SSO，但尚未开始接”的基础条件：
+
+- 登录入口已独立收口到 `backend/modules/auth/` 与 `frontend/src/modules/auth/`
+- `/api/v1/auth/login` 与 `/api/v1/auth/refresh` 已从 `system/user` 职责中抽离
+- 会话、刷新令牌、登录日志、来源/IP 节流、请求链路审计都已在 `auth` 域形成独立闭环
+- 安全策略中已预留 `login.sso_enabled` 配置开关，但当前只做状态展示，不驱动真实登录分支
+
+当前仍然明确属于“本地登录主链路”的部分：
+
+- 登录页只有账号/密码表单
+- 后端登录服务直接查询本地 `system_user`
+- 密码校验依赖本地密码哈希
+- 登录成功后由 Pantheon 自己签发 access token / refresh token
+- `system_user_session` 是本地会话事实来源
+
+这意味着未来接入 SSO 时，正确方式不是改坏现有 `Login()`，而是新增“并行登录入口”。
+
+建议未来按以下扩展点接入：
+
+| 扩展点 | 当前状态 | 未来做法 |
+| :--- | :--- | :--- |
+| 登录入口 | 本地用户名/密码 | 增加 `/auth/sso/start/:provider`、`/auth/sso/callback/:provider` |
+| 用户识别 | 本地 `system_user` | 新增外部主体绑定查询，先找绑定，再决定映射或拒绝 |
+| 会话签发 | 本地 JWT + `system_user_session` | 保持不变，外部认证成功后仍落到本地会话签发 |
+| 审计日志 | 已支持 requestId、登录日志 | 额外记录 provider、外部 subject、回调结果 |
+| 安全设置 | 已有开关预留 | 增加 provider 级配置，而不是只靠一个布尔开关 |
+
+核心原则：
+
+- **外部身份认证成功，不等于直接信任外部会话进入业务系统**
+- **Pantheon 仍然要把外部身份换成本地受控主体，并签发自己的会话**
+
+这样做的好处是：
+
+- 本地权限模型、菜单模型、Casbin、审计链路可以保持稳定
+- 不需要把整个前后端鉴权体系改成“完全依赖外部 token”
+- 本地登录和 SSO 登录可以长期并存
+
+### 7.5 未来 SSO 接入流程建议
+
+建议未来统一走以下抽象流程：
+
+1. 前端点击某个身份源入口，如“企业微信登录”或“统一身份认证登录”
+2. 前端跳转到 `/api/v1/auth/sso/start/:provider`
+3. 后端按 `provider_key` 读取身份源配置，构造跳转地址并写入 `state / nonce`
+4. 用户在外部 IdP 完成认证
+5. IdP 回调 `/api/v1/auth/sso/callback/:provider`
+6. 后端校验 `state / nonce / code / id_token / access_token`
+7. 后端解析外部主体标识，如 `sub` 或企业微信 `userid`
+8. 后端查询 `system_user_external_identity`
+9. 如果已绑定，则定位本地 `system_user`
+10. 如果未绑定，则按系统策略执行“拒绝 / 人工绑定 / 首次自动建号”
+11. 完成本地主体决策后，继续复用现有 `CreateSession()` 和 JWT 签发链路
+12. 返回前端，由前端进入正常业务壳层
+
+这里必须刻意避免两种错误：
+
+- 直接把 IdP 回传 token 当作平台业务 token 使用
+- 在没有本地绑定策略前就允许任意外部身份直接进入后台
+
+### 7.6 首次绑定与账号映射策略
+
+未来正式接入前，必须先明确账号映射策略，不能边做边猜。
+
+建议只允许以下三种显式模式之一：
+
+1. **严格绑定模式**
+   只有已建立 `external_identity -> local_user` 绑定关系的主体可以登录
+2. **管理员预绑定模式**
+   管理员先在后台把外部主体绑定到本地用户，再允许使用 SSO
+3. **受控自动绑定模式**
+   仅在明确可控的字段匹配规则下，允许首次登录自动绑定，如邮箱、工号、企业微信 `userid`
+
+不建议默认启用：
+
+- 任意首次登录自动建管理员账号
+- 仅凭昵称或展示名匹配本地账号
+- 没有审计记录的静默绑定
+
+### 7.7 前端设计约束
+
+在未来真正接入某种身份源之前，登录页应继续保持当前形态：
+
+- 不展示假按钮
+- 不展示“敬请期待”的 SSO 入口
+- 不因为 `login.sso_enabled` 为 `true` 就默认渲染某种固定协议文案
+
+未来真正接入后，前端建议只新增“身份源入口区”，不要把本地登录表单拆坏。
+
+推荐结构：
+
+```text
+LoginPage
+  ├── LocalLoginForm
+  ├── Divider（当至少启用一个 provider 时显示）
+  └── ExternalIdentityEntrances
+       ├── ProviderButton(oidc)
+       ├── ProviderButton(wechat-work)
+       └── ProviderButton(custom)
+```
+
+即：
+
+- 本地登录继续可用
+- 外部身份入口按启用的 provider 动态展示
+- provider 元数据来自后端，而不是写死在前端
+
+### 7.8 审计、注销与风控约束
+
+未来一旦接入 SSO，以下行为必须同步补齐：
+
+- 登录日志新增 `provider_key`、`provider_type`、`external_subject`
+- 失败日志需要区分“本地认证失败”和“外部身份认证失败”
+- 注销语义需区分“退出本地会话”与“同时发起上游单点退出”
+- 若身份源支持强制下线或 token introspection，必须明确是否接入，而不是默认假定可用
+- 来源/IP 节流是否作用于 SSO 回调链路，需要按协议单独定义，不能简单复用密码输错模型
+
+### 7.9 结论
+
+当前 `system/auth` 的正确状态是：
+
+- **架构已具备未来接 SSO 的边界基础**
+- **实现上故意不提前做协议流**
+- **短期继续以本地账号密码 + 本地会话为稳定主链路**
+
+后续只要先确定身份源类型，再补 provider 配置、主体绑定、回调接口和审计语义，就能在不破坏现有登录的前提下接入。
 
 ## 8. 前端页面规划
 
@@ -257,6 +454,8 @@ frontend/src/modules/
 - 当前用户会话管理、当前用户登录日志、管理员登录日志页、管理员全局会话页已落地
 
 当前下一批待推进：
+- `system/auth` 已补会话活动上报接口 `/api/v1/auth/activity`，并在 `system_user_session.last_activity_at` 基础上执行空闲超时判定；
+- `platform` 壳层已补锁屏按钮与解锁遮罩，锁屏不退出会话，但仍受空闲超时规则约束；
 
 - `GET /api/v1/auth/security` 安全概览独立接口
 - 管理员会话页的更完整筛选与设备信息解析
@@ -265,8 +464,10 @@ frontend/src/modules/
 其中第一项已完成当前阶段落地：
 
 - `/api/v1/auth/security` 已返回当前用户信息、当前会话、活跃会话数、最近成功登录时间
+- `/api/v1/auth/security` 已返回运行中安全策略快照，包括密码最小长度、账号失败锁定阈值、来源/IP 失败锁定阈值、锁定时长、空闲退出时长与安全特性开关状态
 - 当前会话与会话列表已补充 `browser / os / device / userAgent`
 - 登录日志写入时会基于 User-Agent 记录浏览器与操作系统基础识别结果
+- 登录接口已补来源/IP 维度的抗喷洒节流，失败状态会写入 `system_login_throttle`
 
 ## 10. 本次设计决策
 
