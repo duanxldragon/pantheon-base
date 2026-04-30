@@ -3,3 +3,36 @@
   font-size: 14px;
   line-height: 1.6;
 }
+
+.user-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.user-stats-bar__items {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.user-stats-bar__item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.user-stats-bar__value {
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.user-stats-bar__label {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
