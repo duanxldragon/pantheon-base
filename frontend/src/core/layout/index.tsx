@@ -1071,11 +1071,6 @@ const BaseLayout: React.FC = () => {
               </div>
             )}
             <div className="app-shell__header-meta">
-              <Breadcrumb className="app-shell__header-breadcrumb">
-                {breadcrumbItems.map((item) => (
-                  <Breadcrumb.Item key={`${item.path}-${item.label}`}>{item.label}</Breadcrumb.Item>
-                ))}
-              </Breadcrumb>
               <Typography.Title heading={6} className="app-shell__header-title">
                 {currentPageTitle}
               </Typography.Title>
@@ -1419,6 +1414,13 @@ const BaseLayout: React.FC = () => {
         </div>
         ) : null}
         <Content className="app-shell__content">
+          <div className="app-shell__content-breadcrumb">
+            <Breadcrumb>
+              {breadcrumbItems.map((item) => (
+                <Breadcrumb.Item key={`${item.path}-${item.label}`}>{item.label}</Breadcrumb.Item>
+              ))}
+            </Breadcrumb>
+          </div>
           <div className="app-shell__content-inner">
             <Outlet />
           </div>
