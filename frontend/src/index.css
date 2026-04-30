@@ -160,6 +160,7 @@ body,
 body {
   background: var(--app-bg);
   color: var(--text-primary);
+  font-family: 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * {
