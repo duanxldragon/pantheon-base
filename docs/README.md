@@ -18,126 +18,126 @@
 
 ### 2.1 新人或 AI 首次进入项目
 
-1. [总体架构与后端规范](./BACKEND.md)
-2. [前端架构与模块接入](./FRONTEND.md)
-3. [前端 UI 详细规范](./FRONTEND_UI_SPEC.md)
-4. [设计与实现验收清单](./ACCEPTANCE_CHECKLIST.md)
-5. [业务开发与 AI 协作](./WORKFLOW.md)
+1. [总体架构与后端规范](./designs/BACKEND.md)
+2. [前端架构与模块接入](./designs/FRONTEND.md)
+3. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
+4. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+5. [业务开发与 AI 协作](./designs/WORKFLOW.md)
 
 ### 2.2 做 `platform` 壳层、导航、工作台、浮层治理
 
-1. [平台仪表盘设计](./PLATFORM_DASHBOARD_DESIGN.md)
-2. [后台 UI 专项整改方案](./BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
-3. [前端 UI 详细规范](./FRONTEND_UI_SPEC.md)
-4. [前端页面模板规范](./FRONTEND_PAGE_TEMPLATES.md)
-5. [平台层 UI 迁移验收矩阵（2026-04-30）](./PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-6. [平台壳层双模式验收模板](./PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
+1. [平台仪表盘设计](./designs/PLATFORM_DASHBOARD_DESIGN.md)
+2. [后台 UI 专项整改方案](./remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
+3. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
+4. [前端页面模板规范](./designs/FRONTEND_PAGE_TEMPLATES.md)
+5. [平台层 UI 迁移验收矩阵（2026-04-30）](./acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+6. [平台壳层双模式验收模板](./acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
 
 ### 2.3 做系统域能力设计
 
 - `system/auth`
-  - [Auth 模块拆分设计](./AUTH_MODULE_DESIGN.md)
-  - [安全中心设计](./SECURITY_CENTER_DESIGN.md)
+  - [Auth 模块拆分设计](./designs/AUTH_MODULE_DESIGN.md)
+  - [安全中心设计](./designs/SECURITY_CENTER_DESIGN.md)
 - `system/iam`
-  - [权限模型设计](./PERMISSION_MODEL.md)
-  - [模块契约设计](./MODULE_CONTRACT.md)
+  - [权限模型设计](./designs/PERMISSION_MODEL.md)
+  - [模块契约设计](./designs/MODULE_CONTRACT.md)
 - `system/org`
-  - 当前主要依赖 [BACKEND.md](./BACKEND.md)、[FRONTEND_PAGE_TEMPLATES.md](./FRONTEND_PAGE_TEMPLATES.md)、[ACCEPTANCE_CHECKLIST.md](./ACCEPTANCE_CHECKLIST.md)
+  - 当前主要依赖 [BACKEND.md](./designs/BACKEND.md)、[FRONTEND_PAGE_TEMPLATES.md](./designs/FRONTEND_PAGE_TEMPLATES.md)、[ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
 - `system/config`
-  - [字典与系统设置设计](./DICT_AND_SETTING_DESIGN.md)
-  - [system/config 扩展设计](./SYSTEM_CONFIG_EXTENDED_DESIGN.md)
-  - [i18n 模块设计](./I18N_MODULE_DESIGN.md)
-  - [上传与存储设计](./UPLOAD_AND_STORAGE_DESIGN.md)
-  - [动态模块治理设计](./DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
-  - [模块生成器设计](./GENERATOR_MODULE_DESIGN.md)
+  - [字典与系统设置设计](./designs/DICT_AND_SETTING_DESIGN.md)
+  - [system/config 扩展设计](./designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
+  - [i18n 模块设计](./designs/I18N_MODULE_DESIGN.md)
+  - [上传与存储设计](./designs/UPLOAD_AND_STORAGE_DESIGN.md)
+  - [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
+  - [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
 
 ## 3. 核心设计文档
 
 ### 3.0 文档治理与合同主干
 
-- [文档合同化治理方案](./DOCUMENT_GOVERNANCE_CONTRACT.md)
-- [文档类型与状态说明](./DOCUMENT_METADATA_AND_STATUS.md)
-- [合同文档模板](./CONTRACT_TEMPLATE.md)
-- [平台层合同文档](./PLATFORM_CONTRACT.md)
-- [system/auth 合同文档](./SYSTEM_AUTH_CONTRACT.md)
-- [system/iam 合同文档](./SYSTEM_IAM_CONTRACT.md)
-- [system/org 合同文档](./SYSTEM_ORG_CONTRACT.md)
-- [system/config 合同文档](./SYSTEM_CONFIG_CONTRACT.md)
+- [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
+- [文档类型与状态说明](./contracts/DOCUMENT_METADATA_AND_STATUS.md)
+- [合同文档模板](./contracts/CONTRACT_TEMPLATE.md)
+- [平台层合同文档](./contracts/PLATFORM_CONTRACT.md)
+- [system/auth 合同文档](./contracts/SYSTEM_AUTH_CONTRACT.md)
+- [system/iam 合同文档](./contracts/SYSTEM_IAM_CONTRACT.md)
+- [system/org 合同文档](./contracts/SYSTEM_ORG_CONTRACT.md)
+- [system/config 合同文档](./contracts/SYSTEM_CONFIG_CONTRACT.md)
 
 ### 3.1 总体架构
 
-- [总体架构与后端规范](./BACKEND.md)
-- [前端架构与模块接入](./FRONTEND.md)
-- [数据库设计说明](./DATABASE.md)
-- [模块契约设计](./MODULE_CONTRACT.md)
-- [业务模块设计模板](./BUSINESS_MODULE_TEMPLATE.md)
-- [实施路线图](./IMPLEMENTATION_ROADMAP.md)
+- [总体架构与后端规范](./designs/BACKEND.md)
+- [前端架构与模块接入](./designs/FRONTEND.md)
+- [数据库设计说明](./designs/DATABASE.md)
+- [模块契约设计](./designs/MODULE_CONTRACT.md)
+- [业务模块设计模板](./designs/BUSINESS_MODULE_TEMPLATE.md)
+- [实施路线图](./archive/IMPLEMENTATION_ROADMAP.md)
 
 ### 3.2 平台与 UI 规范
 
-- [前端 UI 详细规范](./FRONTEND_UI_SPEC.md)
-- [前端页面模板规范](./FRONTEND_PAGE_TEMPLATES.md)
-- [前端组件规划](./FRONTEND_COMPONENT_PLAN.md)
-- [平台仪表盘设计](./PLATFORM_DASHBOARD_DESIGN.md)
-- [后台 UI 专项整改方案](./BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
+- [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
+- [前端页面模板规范](./designs/FRONTEND_PAGE_TEMPLATES.md)
+- [前端组件规划](./designs/FRONTEND_COMPONENT_PLAN.md)
+- [平台仪表盘设计](./designs/PLATFORM_DASHBOARD_DESIGN.md)
+- [后台 UI 专项整改方案](./remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
 
 ### 3.3 系统域设计
 
-- [Auth 模块拆分设计](./AUTH_MODULE_DESIGN.md)
-- [权限模型设计](./PERMISSION_MODEL.md)
-- [错误码与多语言设计](./ERROR_CODE_AND_I18N.md)
-- [安全中心设计](./SECURITY_CENTER_DESIGN.md)
-- [字典与系统设置设计](./DICT_AND_SETTING_DESIGN.md)
-- [system/config 扩展设计](./SYSTEM_CONFIG_EXTENDED_DESIGN.md)
-- [i18n 模块设计](./I18N_MODULE_DESIGN.md)
-- [上传与存储设计](./UPLOAD_AND_STORAGE_DESIGN.md)
-- [动态模块治理设计](./DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
-- [模块生成器设计](./GENERATOR_MODULE_DESIGN.md)
-- [数据权限 Hook 设计](./DATA_PERMISSION_HOOK.md)
+- [Auth 模块拆分设计](./designs/AUTH_MODULE_DESIGN.md)
+- [权限模型设计](./designs/PERMISSION_MODEL.md)
+- [错误码与多语言设计](./designs/ERROR_CODE_AND_I18N.md)
+- [安全中心设计](./designs/SECURITY_CENTER_DESIGN.md)
+- [字典与系统设置设计](./designs/DICT_AND_SETTING_DESIGN.md)
+- [system/config 扩展设计](./designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
+- [i18n 模块设计](./designs/I18N_MODULE_DESIGN.md)
+- [上传与存储设计](./designs/UPLOAD_AND_STORAGE_DESIGN.md)
+- [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
+- [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
+- [数据权限 Hook 设计](./designs/DATA_PERMISSION_HOOK.md)
 
 ### 3.4 低代码与辅助开发链路
 
-- [动态菜单能力成熟度评估与演进蓝图](./DYNAMIC_MENU_MATURITY_20260422.md)
-- [模块生成器设计](./GENERATOR_MODULE_DESIGN.md)
-- [低代码生成器使用指南](./LOWCODE_GENERATOR_GUIDE.md)
+- [动态菜单能力成熟度评估与演进蓝图](./assessments/DYNAMIC_MENU_MATURITY_20260422.md)
+- [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
+- [低代码生成器使用指南](./designs/LOWCODE_GENERATOR_GUIDE.md)
 
 ## 4. 交付、验收与运维
 
 ### 4.1 开发与验收
 
-- [设计与实现验收清单](./ACCEPTANCE_CHECKLIST.md)
-- [业务开发与 AI 协作](./WORKFLOW.md)
-- [系统模块审计](./SYSTEM_MODULE_AUDIT.md)
-- [平台缺口审计（2026-04-29）](./PLATFORM_GAP_AUDIT_20260429.md)
+- [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+- [业务开发与 AI 协作](./designs/WORKFLOW.md)
+- [系统模块审计](./assessments/SYSTEM_MODULE_AUDIT.md)
+- [平台缺口审计（2026-04-29）](./assessments/PLATFORM_GAP_AUDIT_20260429.md)
 
 ### 4.2 壳层治理模板
 
-- [平台层 UI 迁移验收矩阵（2026-04-30）](./PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [平台壳层双模式验收模板](./PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
-- [平台壳层双模式验收样例](./PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
-- [平台壳层 PR 描述模板](./PLATFORM_SHELL_PR_TEMPLATE.md)
-- [平台壳层 PR 描述样例](./PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md)
-- [平台壳层 PR Checklist 片段](./PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md)
+- [平台层 UI 迁移验收矩阵（2026-04-30）](./acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+- [平台壳层双模式验收模板](./acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
+- [平台壳层双模式验收样例](./archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
+- [平台壳层 PR 描述模板](./acceptances/PLATFORM_SHELL_PR_TEMPLATE.md)
+- [平台壳层 PR 描述样例](./archive/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md)
+- [平台壳层 PR Checklist 片段](./acceptances/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md)
 
 ### 4.3 升级与运行
 
-- [模块目录升级说明](./MODULE_LAYOUT_UPGRADE_20260421.md)
-- [老环境升级运维 SOP](./UPGRADE_RUNBOOK_20260421.md)
-- [老环境升级执行 Checklist](./UPGRADE_EXECUTION_CHECKLIST_20260421.md)
-- [系统导入导出 Smoke 指南](./SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
-- [gstack Windows 使用清单](./GSTACK_WINDOWS_GUIDE.md)
+- [模块目录升级说明](./archive/MODULE_LAYOUT_UPGRADE_20260421.md)
+- [老环境升级运维 SOP](./archive/UPGRADE_RUNBOOK_20260421.md)
+- [老环境升级执行 Checklist](./archive/UPGRADE_EXECUTION_CHECKLIST_20260421.md)
+- [系统导入导出 Smoke 指南](./acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
+- [gstack Windows 使用清单](./designs/GSTACK_WINDOWS_GUIDE.md)
 
 ## 5. 保留的历史基线与样例
 
 以下文档不是主设计入口，但仍有复用价值，因此保留：
 
-- [平台层冒烟归档报告（2026-04-20）](./QA_SMOKE_REPORT_20260420.md)
-  - 作为一次完整 `platform + system/*` 冒烟样例，被 [ACCEPTANCE_CHECKLIST.md](./ACCEPTANCE_CHECKLIST.md) 和 [WORKFLOW.md](./WORKFLOW.md) 引用。
-- [平台层验收矩阵（2026-04-27）](./PLATFORM_ACCEPTANCE_MATRIX_20260427.md)
+- [平台层冒烟归档报告（2026-04-20）](./archive/QA_SMOKE_REPORT_20260420.md)
+  - 作为一次完整 `platform + system/*` 冒烟样例，被 [ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md) 和 [WORKFLOW.md](./designs/WORKFLOW.md) 引用。
+- [平台层验收矩阵（2026-04-27）](./archive/PLATFORM_ACCEPTANCE_MATRIX_20260427.md)
   - 作为 2026-04-30 UI 迁移矩阵的上一阶段基线保留。
-- [Platform + Auth 整改结案清单（2026-04-29）](./PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
+- [Platform + Auth 整改结案清单（2026-04-29）](./archive/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
   - 作为一次整改结案样例保留，供后续阶段收口参考。
-- [菜单 Icon 审计与治理结果（2026-04-28）](./MENU_ICON_AUDIT_20260428.md)
+- [菜单 Icon 审计与治理结果（2026-04-28）](./archive/MENU_ICON_AUDIT_20260428.md)
   - 作为 `platform` 导航图标语义治理样例保留。
 
 ## 6. 本地启动
