@@ -1,10 +1,73 @@
 # 业务开发工作流与 AI 协作指南
 
+## 0. 文档合同化开发流
+
+从 2026-04-30 起，Pantheon 默认采用“合同先行”的文档治理方式。
+
+这不是额外的文书动作，而是为了避免以下问题继续反复出现：
+
+- 设计文档、评估稿、整改稿互相覆盖，却没有主依据；
+- 新需求直接进设计或代码，没有先确认归属层和完成定义；
+- 旧 dated 评估稿继续漂在主索引里，AI 和新人不知道该信哪份；
+- 代码已经改了，但验收和文档挂不到同一个锚点上。
+
+当前合同主干入口：
+
+- `docs/DOCUMENT_GOVERNANCE_CONTRACT.md`
+- `docs/DOCUMENT_METADATA_AND_STATUS.md`
+- `docs/CONTRACT_TEMPLATE.md`
+- `docs/PLATFORM_CONTRACT.md`
+- `docs/SYSTEM_AUTH_CONTRACT.md`
+- `docs/SYSTEM_IAM_CONTRACT.md`
+- `docs/SYSTEM_ORG_CONTRACT.md`
+- `docs/SYSTEM_CONFIG_CONTRACT.md`
+
+### 0.1 基本规则
+
+后续新需求或新专题默认按以下关系推进：
+
+```text
+Contract
+  -> Design
+  -> Assessment
+  -> Remediation
+  -> Acceptance
+```
+
+约束如下：
+
+1. 先判断需求属于 `platform`、`system/auth`、`system/iam`、`system/org`、`system/config` 还是 `business/*`
+2. 先确认是否已有对应 `Contract`
+3. 没有合同锚点时，先补合同或补合同骨架，再继续设计
+4. `Design / Assessment / Remediation / Acceptance` 文档都必须回指对应合同
+5. 新的阶段评估稿如果没有明确 `类型 / 状态 / 关联合同`，不应进入主索引
+
+### 0.2 文档类型规则
+
+后续文档统一使用以下类型：
+
+- `Contract`
+- `Design`
+- `Assessment`
+- `Remediation`
+- `Acceptance`
+- `Archive`
+
+后续新增或重写的主文档，至少补：
+
+- `类型`
+- `归属层`
+- `状态`
+
+规则以 `docs/DOCUMENT_METADATA_AND_STATUS.md` 为准。
+
 ## 1. 业务功能开发全生命周期 (SOP)
 
 ### 第一阶段：数据模型 (Design Phase)
-1.  编写 SQL DDL，以业务模块名作为表前缀（例如 `biz_order_`）。
-2.  在 `database/` 下记录 DDL 脚本。
+1.  先判断本次需求归属层，并确认是否已有对应 `Contract`。
+2.  若无合同锚点，先补合同或合同骨架；若已有合同，先核对当前设计是否越界。
+3.  编写 SQL DDL，以业务模块名作为表前缀（例如 `biz_order_`）。
+4.  在 `database/` 下记录 DDL 脚本。
 
 ### 第二阶段：后端逻辑 (Backend Phase)
 1.  在 `modules/business/` 下创建包（例如 `order`）。
@@ -43,6 +106,15 @@
 
 ## 2. AI 协作 Prompt 精准指南
 
+在让 AI 生成方案或代码前，默认先补充以下上下文：
+
+- 当前归属层：`platform / system/auth / system/iam / system/org / system/config / business/*`
+- 当前合同文档：`<doc path>`
+- 当前文档类型：`Design / Assessment / Remediation / Acceptance`
+- 当前状态：`Draft / Active / Superseded / Archived`
+
+如果以上 4 项说不清，默认先不要让 AI 直接生成实现。
+
 当你需要让 AI 生成代码时，请附带以下约束信息：
 
 ### 后端 Prompt 模板
@@ -65,6 +137,16 @@
 4.  启动后端服务：`go run ./backend/cmd/server`，监听 8080；若已执行初始化 SQL，`casbin_rule` 会已存在，服务启动时会继续做迁移校验与策略同步。
 5.  启动前端工程：`cd frontend && npm run dev`，访问登录界面。
 6.  提交前执行 `cd backend && go test ./...` 与 `cd frontend && npm run build`。
+
+### 3.1 文档同步门槛
+
+提交前至少检查：
+
+1. 当前改动是否仍符合对应 `Contract`
+2. 若改动触发边界变化，是否先更新了 `Contract`
+3. 若新增设计文档，是否已回链对应合同
+4. 若新增评估或整改文档，是否已标明 `类型 / 状态 / 关联合同`
+5. 若旧文档已被覆盖，是否已删除、降级或标记为 `Superseded / Archived`
 
 ## 4. 冒烟执行 SOP（gstack / Windows）
 

@@ -33,6 +33,15 @@
 
 当一个模块还处于设计阶段时，至少检查以下内容。
 
+### 2.0 合同前置条件
+
+- 是否已先判断本次需求归属 `platform`、`system/auth`、`system/iam`、`system/org`、`system/config` 或 `business/*`
+- 是否已有对应 `Contract`
+- 若没有对应 `Contract`，是否先补合同或合同骨架，而不是直接进入设计或代码
+- 当前设计文档是否已明确回链对应合同
+- 当前文档是否已标明 `类型 / 归属层 / 状态`
+- 若属于新的阶段评估稿或整改稿，是否已标明 `关联合同`
+
 ### 2.1 边界是否清晰
 
 - 是否已明确模块属于 `platform`、`system/*` 还是 `business/*`
@@ -57,10 +66,13 @@
 ### 2.3 是否满足文档前置条件
 
 - 是否与 `DESIGN.md` 保持一致
+- 是否符合 `docs/DOCUMENT_GOVERNANCE_CONTRACT.md`
+- 是否符合 `docs/DOCUMENT_METADATA_AND_STATUS.md`
 - 是否符合 `docs/MODULE_CONTRACT.md`
 - 是否符合 `docs/PERMISSION_MODEL.md`
 - 是否符合 `docs/ERROR_CODE_AND_I18N.md`
 - 是否符合 `docs/FRONTEND_PAGE_TEMPLATES.md`
+- 主设计文档若进入主索引，是否满足 `Contract + Active` 或 `Design + Active` 的展示规则
 
 ## 3. 数据与接口验收
 
@@ -126,6 +138,13 @@
 ## 5. 模块接入验收
 
 模块完成开发后，至少检查以下内容。
+
+### 5.0 合同回链检查
+
+- 本次开发是否仍在对应合同边界内
+- 若实现已经改变边界、完成定义或验收口径，是否先更新合同，再更新实现
+- 新增的 `Design / Assessment / Remediation / Acceptance` 文档是否都已回链对应合同
+- 若历史文档已被新文档覆盖，是否已删除、降级或标记为 `Superseded / Archived`
 
 ### 5.1 后端接入
 
@@ -334,9 +353,13 @@
 ### 9.1 文档同步
 
 - 文档是否已更新
+- 是否已同步更新对应 `Contract`
 - API 清单是否已同步
 - 菜单、权限、i18n、DDL 是否已同步
 - 是否补充了后续演进注意事项
+- 是否检查新增或重写文档已补 `类型 / 归属层 / 状态`
+- 是否检查新增的阶段评估稿、整改稿已补 `关联合同`
+- 若有旧文档被替代，是否明确删除、归档或标记为 `Superseded`
 
 ### 9.2 测试准备
 
@@ -387,6 +410,8 @@
 | 文档 | 负责什么 | 不负责什么 |
 | :--- | :--- | :--- |
 | `docs/IMPLEMENTATION_ROADMAP.md` | 规定阶段目标与顺序 | 不做逐项验收打勾 |
+| `docs/DOCUMENT_GOVERNANCE_CONTRACT.md` | 规定文档治理主干与合同模型 | 不替代具体模块设计 |
+| `docs/DOCUMENT_METADATA_AND_STATUS.md` | 规定文档类型、状态与主索引规则 | 不替代模块完成定义 |
 | `docs/MODULE_CONTRACT.md` | 规定模块接入方式 | 不做开发完成度验收 |
 | `docs/BUSINESS_MODULE_TEMPLATE.md` | 规定业务模块文档结构 | 不做阶段验收门槛 |
 | `docs/FRONTEND_UI_SPEC.md` | 规定 UI 设计细则 | 不做发布检查清单 |
