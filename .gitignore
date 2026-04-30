@@ -46,3 +46,15 @@ frontend/.vite/
 # Test artifacts
 playwright-report/
 test-results/
+
+# Local Pantheon artifacts
+.claude/
+.smoke.token
+.tmp-visual/
+.trace-debug/
+.codex_i18n_schema.go
+frontend/tmp-icon-audit.cjs
+frontend/tmp-icon-audit.js
+backend/cmd/server/uploads/
+backend/uploads/
+uploads/
