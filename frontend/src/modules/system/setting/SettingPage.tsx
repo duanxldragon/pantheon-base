@@ -647,8 +647,8 @@ const SettingPage: React.FC = () => {
       render: (value: string) => formatDateTime(value),
     },
     {
-      title: t('common.operations'),
-      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.single,
       render: (_, record) => (
         <Button
           type="text"

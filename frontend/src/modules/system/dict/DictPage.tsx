@@ -832,7 +832,7 @@ const DictPage: React.FC = () => {
                       onChange: (keys) => setSelectedTypeRowKeys(keys),
                     }}
                     emptyText={t('system.dict.typeEmpty')}
-                    scroll={{ x: 860 }}
+                    scroll={{ x: 980 }}
                   />
                 ) : null}
               </Space>
@@ -984,7 +984,7 @@ const DictPage: React.FC = () => {
                           pageSizeChangeResetCurrent: false,
                           onChange: (page, pageSize) => setItemQuery((prev) => ({ ...prev, page, pageSize })),
                         }}
-                        scroll={{ x: 980 }}
+                        scroll={{ x: 1160 }}
                       />
                     ) : null}
                   </>

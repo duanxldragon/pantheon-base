@@ -698,7 +698,7 @@ const PermissionList: React.FC = () => {
                       columns={columns}
                       rowKey="id"
                       loading={loading}
-                      scroll={{ x: 980 }}
+                      scroll={{ x: 1480 }}
                       onChange={handleTableChange}
                       emptyText={t('common.noData')}
                       pagination={{

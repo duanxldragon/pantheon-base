@@ -664,7 +664,7 @@ const UserList: React.FC = () => {
                   columns={columns}
                   rowKey="id"
                   loading={loading}
-                  scroll={{ x: 1560 }}
+                  scroll={{ x: 1600 }}
                   rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys,

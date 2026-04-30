@@ -582,7 +582,7 @@ const PostList: React.FC = () => {
                   columns={columns}
                   rowKey="id"
                   loading={loading}
-                  scroll={{ x: 1540 }}
+                  scroll={{ x: 2000 }}
                   rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys: visibleSelectedRowKeys,

@@ -783,7 +783,7 @@ const RoleList: React.FC = () => {
                   columns={columns}
                   rowKey="id"
                   loading={loading}
-                  scroll={{ x: 980 }}
+                  scroll={{ x: 1000 }}
                   rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys: visibleSelectedRowKeys,

@@ -597,7 +597,7 @@ const OperationLogList: React.FC = () => {
       render: (value: string) => formatDateTime(value),
     },
     {
-      title: t('common.operations'),
+      title: t('common.action'),
       fixed: 'right',
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
       render: (_, record) => (

@@ -1227,7 +1227,7 @@ const DeptList: React.FC = () => {
                     columns={governanceTaskColumns}
                     rowKey="taskKey"
                     loading={governanceLoading}
-                    scroll={{ x: 1200 }}
+                    scroll={{ x: 1440 }}
                     emptyText={t('common.noData')}
                     pagination={false}
                   />
@@ -1307,7 +1307,7 @@ const DeptList: React.FC = () => {
                       columns={columns}
                       rowKey="id"
                       loading={loading}
-                      scroll={{ x: 1100 }}
+                      scroll={{ x: 1480 }}
                       rowSelection={{
                         type: 'checkbox',
                         selectedRowKeys,
