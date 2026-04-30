@@ -121,3 +121,64 @@ browse chain "goto http://127.0.0.1:5173/login | wait --networkidle 15000 | stor
 - 本次真实样例可参考 `docs/QA_SMOKE_REPORT_20260420.md`
 - 平台层验收对照结论可参考 `docs/ACCEPTANCE_CHECKLIST.md`
 - Windows 使用细节可参考 `docs/GSTACK_WINDOWS_GUIDE.md`
+
+## 5. `platform` 壳层提交流程要求
+
+本节仅适用于 `platform` 壳层改动，尤其是以下对象：
+
+- `frontend/src/core/layout/index.tsx`
+- `frontend/src/core/layout/index.css`
+- 动态菜单渲染链路
+- 菜单图标映射
+- 顶部横版导航
+- 左侧竖版导航
+- 与导航直接相邻的品牌区、页签区、顶部栏布局
+
+### 5.1 提交门槛
+
+凡是触达上述对象的改动，无论是 PR、阶段记录、周报式交付说明还是 AI 生成的阶段结论，都必须附：
+
+1. 一份双模式验收记录文档链接
+2. 一份构建通过结论
+3. 一份固定扫描结果摘要
+
+不满足以上三项时：
+
+- 不应标记为 `Target`
+- 不应标记为“已收口”
+- 只能视为“代码已修改，待验收”
+
+### 5.2 验收文档要求
+
+双模式验收记录必须基于：
+
+- `docs/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
+
+首个基准样例为：
+
+- `docs/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- PR 描述模板：`docs/PLATFORM_SHELL_PR_TEMPLATE.md`
+- PR checklist 片段：`docs/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md`
+
+后续提交要求：
+
+- PR 描述中必须附验收文档链接
+- 阶段记录中必须附验收文档链接
+- 若本轮存在 `Pending` 例外，必须同时附矩阵文档链接并说明挂账位置
+- PR 描述与阶段记录正文建议直接复用 `docs/PLATFORM_SHELL_PR_TEMPLATE.md`
+
+### 5.3 固定摘要格式
+
+后续壳层提交说明至少包含以下四行：
+
+- `双模式验收文档：<doc link>`
+- `构建结果：npm run build Passed / Failed`
+- `扫描结果：旧右栏 / 原生浮层 / 静态 Modal API / 双模式链路`
+- `矩阵状态：Target / Pending`
+
+### 5.4 禁止事项
+
+- 不允许只附截图、不附验收文档链接
+- 不允许只写“已验证横竖版正常”而无记录文件
+- 不允许出现“横版后补”但仍标记完成
+- 不允许在壳层提交说明中省略 `Pending` 挂账

@@ -12,6 +12,7 @@ import {
   Space,
   Tabs,
   Tag,
+  Typography,
   TreeSelect,
 } from '@arco-design/web-react';
 import { IconDelete, IconDownload, IconEdit, IconEye, IconPlus, IconSearch } from '@arco-design/web-react/icon';
@@ -20,12 +21,15 @@ import type { TreeSelectDataType } from '@arco-design/web-react/es/TreeSelect/in
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
-import { batchUpdateDeptStatus, createDept, deleteDept, downloadDeptImportTemplate, exportDepts, getDeptTree, importDepts, updateDept, type DeptListQuery, type DeptNode, type DeptPayload } from './api';
+import { batchUpdateDeptLeader, batchUpdateDeptStatus, createDept, deleteDept, downloadDeptImportTemplate, exportDepts, exportDeptGovernanceTasks, getDeptGovernanceTasks, getDeptLeaderCandidates, getDeptOverview, getDeptTree, importDepts, updateDept, type DeptGovernanceTask, type DeptGovernanceTaskQuery, type DeptLeaderCandidate, type DeptListQuery, type DeptNode, type DeptOverviewResp, type DeptPayload } from './api';
 import { createPost, getPostList, type PostPayload, type PostRow } from '../post/api';
 import { getUserDetail, getUserList, type UserDetail as UserDetailData, type UserListRow } from '../user/api';
 import UserDetailContent from '../user/UserDetailContent';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -36,17 +40,29 @@ interface DeptFormValues {
   parentId: string;
   deptName: string;
   sort: number;
+  leaderUserId?: number;
   leader?: string;
   phone?: string;
   email?: string;
   status: number;
 }
 
+interface DeptLeaderFormValues {
+  [deptId: string]: number | undefined;
+}
+
 type OrgPostFormValues = PostPayload;
+
+interface BatchLeaderTask {
+  deptId: number;
+  deptName: string;
+  candidates: DeptLeaderCandidate[];
+}
 
 const emptyQuery: DeptListQuery = {
   deptName: '',
   status: undefined,
+  governance: undefined,
   sortField: 'sort',
   sortOrder: 'asc',
 };
@@ -55,6 +71,7 @@ const emptyForm: DeptFormValues = {
   parentId: '0',
   deptName: '',
   sort: 0,
+  leaderUserId: undefined,
   leader: '',
   phone: '',
   email: '',
@@ -62,6 +79,14 @@ const emptyForm: DeptFormValues = {
 };
 
 const orgChartPageSize = 1000;
+
+function isDefaultDeptListQuery(query: DeptListQuery) {
+  return !query.deptName
+    && query.status === undefined
+    && query.governance === undefined
+    && (query.sortField || 'sort') === 'sort'
+    && (query.sortOrder || 'asc') === 'asc';
+}
 
 function findRootDept(nodes: DeptNode[]): DeptNode | undefined {
   return nodes.find((node) => node.isRoot || node.parentId === 0);
@@ -107,6 +132,10 @@ function findDeptNode(nodes: DeptNode[], deptID: number): DeptNode | undefined {
     }
   }
   return undefined;
+}
+
+interface LoadDataOptions {
+  silent?: boolean;
 }
 
 interface OrgDeptNodeProps {
@@ -249,6 +278,7 @@ const DeptList: React.FC = () => {
   const [orgError, setOrgError] = useState<unknown>(null);
   const [selectedOrgDeptId, setSelectedOrgDeptId] = useState(0);
   const [postVisible, setPostVisible] = useState(false);
+  const [creatingPostDept, setCreatingPostDept] = useState<DeptNode | null>(null);
   const [postSubmitting, setPostSubmitting] = useState(false);
   const [userDetailVisible, setUserDetailVisible] = useState(false);
   const [userDetailLoading, setUserDetailLoading] = useState(false);
@@ -260,45 +290,85 @@ const DeptList: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState<DeptNode | null>(null);
+  const [leaderVisible, setLeaderVisible] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);
+  const [overview, setOverview] = useState<DeptOverviewResp | null>(null);
+  const [governanceTasks, setGovernanceTasks] = useState<DeptGovernanceTask[]>([]);
+  const [governanceLoading, setGovernanceLoading] = useState(false);
+  const [leaderCandidates, setLeaderCandidates] = useState<DeptLeaderCandidate[]>([]);
+  const [leaderCandidateLoading, setLeaderCandidateLoading] = useState(false);
+  const [batchLeaderTasks, setBatchLeaderTasks] = useState<BatchLeaderTask[]>([]);
   const [query, setQuery] = useState<DeptListQuery>(emptyQuery);
   const [form] = Form.useForm<DeptFormValues>();
+  const [leaderForm] = Form.useForm<DeptLeaderFormValues>();
   const [postForm] = Form.useForm<OrgPostFormValues>();
   const [queryForm] = Form.useForm<DeptListQuery>();
+  const invalidateDeptCaches = useCallback(() => {
+    invalidateRouteWarmDataMany([
+      { path: '/system/dept', resourceKeys: ['tree:default', 'overview', 'tree:sorted', 'posts:org-chart', 'users:org-chart'] },
+      { path: '/system/user', resourceKeys: ['depts:default'] },
+      { path: '/system/post', resourceKeys: ['depts:sorted'] },
+    ]);
+  }, []);
 
-  const loadData = useCallback(async (nextQuery: DeptListQuery = query) => {
-    setLoading(true);
-    setError(null);
+  const buildGovernanceTaskQuery = useCallback((nextQuery: DeptListQuery): DeptGovernanceTaskQuery => ({
+    keyword: nextQuery.deptName || undefined,
+    governance: nextQuery.governance as DeptGovernanceTaskQuery['governance'],
+    scope: 'all',
+  }), []);
+
+  const loadData = useCallback(async (nextQuery: DeptListQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+      setGovernanceLoading(true);
+    }
     try {
-      const rows = await getDeptTree(nextQuery);
+      const [rows, overviewResp, taskRows] = await Promise.all([
+        isDefaultDeptListQuery(nextQuery)
+          ? resolveRouteWarmData('/system/dept', 'tree:default', () => getDeptTree(nextQuery))
+          : getDeptTree(nextQuery),
+        resolveRouteWarmData('/system/dept', 'overview', () => getDeptOverview()),
+        getDeptGovernanceTasks(buildGovernanceTaskQuery(nextQuery)),
+      ]);
       setData(rows);
+      setOverview(overviewResp);
+      setGovernanceTasks(taskRows);
     } catch (requestError) {
       setError(requestError);
+      setGovernanceTasks([]);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+        setGovernanceLoading(false);
+      }
     }
-  }, [query]);
+  }, [buildGovernanceTaskQuery, query]);
 
   const loadAllDepts = useCallback(async () => {
     try {
-      const rows = await getDeptTree({ sortField: 'sort', sortOrder: 'asc' });
+      const rows = await resolveRouteWarmData('/system/dept', 'tree:sorted', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' }));
       setAllDeptTree(rows);
     } catch {
       Message.error(t('common.loadFailed'));
     }
   }, [t]);
 
-  const loadOrgData = useCallback(async () => {
-    setOrgLoading(true);
-    setOrgError(null);
+  const loadOrgData = useCallback(async (options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setOrgLoading(true);
+      setOrgError(null);
+    }
     try {
       const [deptRows, postRows, userRows] = await Promise.all([
-        getDeptTree({ sortField: 'sort', sortOrder: 'asc' }),
+        resolveRouteWarmData('/system/dept', 'tree:sorted', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' })),
         canViewPosts
-          ? getPostList({ page: 1, pageSize: orgChartPageSize, sortField: 'sort', sortOrder: 'asc' })
+          ? resolveRouteWarmData('/system/dept', 'posts:org-chart', () => getPostList({ page: 1, pageSize: orgChartPageSize, sortField: 'sort', sortOrder: 'asc' }))
           : Promise.resolve({ items: [], total: 0, page: 1, pageSize: orgChartPageSize }),
         canViewUsers
-          ? getUserList({ page: 1, pageSize: orgChartPageSize, sortField: 'username', sortOrder: 'asc' })
+          ? resolveRouteWarmData('/system/dept', 'users:org-chart', () => getUserList({ page: 1, pageSize: orgChartPageSize, sortField: 'username', sortOrder: 'asc' }))
           : Promise.resolve({ items: [], total: 0, page: 1, pageSize: orgChartPageSize }),
       ]);
       setOrgDepts(deptRows);
@@ -313,7 +383,9 @@ const DeptList: React.FC = () => {
     } catch (requestError) {
       setOrgError(requestError);
     } finally {
-      setOrgLoading(false);
+      if (!silent) {
+        setOrgLoading(false);
+      }
     }
   }, [canViewPosts, canViewUsers]);
 
@@ -335,6 +407,28 @@ const DeptList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [activeTab, loadOrgData]);
 
+  useRefreshSubscription(['system:dept:changed', 'system:post:changed', 'system:user:changed'], (payload) => {
+    if (payload.source === 'system/dept') {
+      return;
+    }
+    void loadData(query);
+    void loadAllDepts();
+    if (activeTab === 'org') {
+      void loadOrgData();
+    }
+  });
+
+  useEffect(() => {
+    const state = (window.history.state && typeof window.history.state === 'object'
+      ? (window.history.state.usr as { deptId?: number; taskKey?: string } | null)
+      : null);
+    if (!state?.deptId) {
+      return;
+    }
+    setSelectedOrgDeptId(state.deptId);
+    setActiveTab('org');
+  }, []);
+
   const deptOptions = useMemo<TreeSelectDataType[]>(() => {
     const build = (nodes: DeptNode[]): TreeSelectDataType[] => nodes.map((node) => ({
       title: node.deptName,
@@ -346,6 +440,7 @@ const DeptList: React.FC = () => {
   }, [allDeptTree]);
 
   const flatOrgDepts = useMemo(() => flattenDeptNodes(orgDepts), [orgDepts]);
+  const flatDeptRows = useMemo(() => flattenDeptNodes(data), [data]);
   const postsByDept = useMemo(() => groupByDept(orgPosts), [orgPosts]);
   const usersByDept = useMemo(() => groupByDept(orgUsers), [orgUsers]);
   const usersByPost = useMemo(() => groupUsersByPost(orgUsers), [orgUsers]);
@@ -364,10 +459,54 @@ const DeptList: React.FC = () => {
       userCount: orgUsers.filter((user) => deptIDs.has(user.deptId)).length,
     };
   }, [orgPosts, orgUsers, selectedOrgDept]);
+  const heroStats = useMemo(() => {
+    if (!overview) {
+      return [];
+    }
+    return [
+      {
+        key: 'totalDepts',
+        label: t('system.dept.overview.totalDepts'),
+        value: overview.totalDeptCount,
+        hint: t('system.dept.hero.totalDeptsHint'),
+      },
+      {
+        key: 'totalPosts',
+        label: t('system.dept.overview.totalPosts'),
+        value: overview.totalPostCount,
+        hint: t('system.dept.hero.totalPostsHint'),
+      },
+      {
+        key: 'leaderless',
+        label: t('system.dept.overview.leaderlessDepts'),
+        value: overview.leaderlessDeptCount,
+        hint: t('system.dept.hero.leaderlessHint'),
+      },
+      {
+        key: 'noPost',
+        label: t('system.dept.overview.noPostDepts'),
+        value: overview.noPostDeptCount,
+        hint: t('system.dept.hero.noPostHint'),
+      },
+      {
+        key: 'empty',
+        label: t('system.dept.overview.emptyDepts'),
+        value: overview.emptyDeptCount,
+        hint: t('system.dept.hero.emptyHint'),
+      },
+      {
+        key: 'issues',
+        label: t('system.dept.overview.healthIssues'),
+        value: overview.healthIssueCount,
+        hint: t('system.dept.hero.issuesHint'),
+      },
+    ];
+  }, [overview, t]);
 
   const openCreate = () => {
     const rootDept = findRootDept(allDeptTree);
     setEditing(null);
+    setLeaderCandidates([]);
     form.setFieldsValue({
       ...emptyForm,
       parentId: rootDept ? String(rootDept.id) : emptyForm.parentId,
@@ -375,12 +514,35 @@ const DeptList: React.FC = () => {
     setVisible(true);
   };
 
-  const openEdit = (row: DeptNode) => {
+  const loadLeaderCandidateOptions = useCallback(async (deptId: number) => {
+    setLeaderCandidateLoading(true);
+    try {
+      const items = await getDeptLeaderCandidates(deptId);
+      setLeaderCandidates(items);
+      return items;
+    } catch {
+      Message.error(t('system.dept.leaderCandidateLoadFailed'));
+      setLeaderCandidates([]);
+      return [];
+    } finally {
+      setLeaderCandidateLoading(false);
+    }
+  }, [t]);
+
+  const openEdit = async (row: DeptNode) => {
     setEditing(row);
+    setLeaderCandidates([]);
+    let matchedLeaderUserId: number | undefined = row.leaderUserId || undefined;
+    const items = row.isRoot ? [] : await loadLeaderCandidateOptions(row.id);
+    if (!matchedLeaderUserId && row.leader) {
+      const matched = items.find((item) => item.displayName === row.leader || item.nickname === row.leader || item.username === row.leader);
+      matchedLeaderUserId = matched?.userId;
+    }
     form.setFieldsValue({
       parentId: row.isRoot ? String(row.id) : String(row.parentId),
       deptName: row.deptName,
       sort: row.sort,
+      leaderUserId: matchedLeaderUserId,
       leader: row.leader,
       phone: row.phone,
       email: row.email,
@@ -390,10 +552,19 @@ const DeptList: React.FC = () => {
   };
 
   const submitForm = async () => {
-    const values = await form.validate();
+    let values;
+    try {
+      values = await form.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     const payload: DeptPayload = {
       ...values,
       parentId: editing?.isRoot ? 0 : Number(values.parentId || 0),
+      leaderUserId: values.leaderUserId ? Number(values.leaderUserId) : 0,
     };
     setSubmitting(true);
     try {
@@ -404,25 +575,40 @@ const DeptList: React.FC = () => {
         await createDept(payload);
         Message.success(t('common.createSuccess'));
       }
+      invalidateDeptCaches();
+      publishRefresh('system:dept:changed', 'system/dept');
       setVisible(false);
-      await loadData(query);
+      await loadData(query, { silent: true });
       await loadAllDepts();
       if (activeTab === 'org') {
-        await loadOrgData();
+        await loadOrgData({ silent: true });
       }
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleLeaderCandidateChange = (value: string | number | undefined) => {
+    const numericValue = Number(value || 0);
+    if (!numericValue) {
+      return;
+    }
+    const matched = leaderCandidates.find((item) => item.userId === numericValue);
+    if (matched) {
+      form.setFieldValue('leader', matched.displayName);
+    }
+  };
+
   const removeDept = async (id: number) => {
     await deleteDept(id);
     Message.success(t('common.deleteSuccess'));
+    invalidateDeptCaches();
+    publishRefresh('system:dept:changed', 'system/dept');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
-    await loadData(query);
+    await loadData(query, { silent: true });
     await loadAllDepts();
     if (activeTab === 'org') {
-      await loadOrgData();
+      await loadOrgData({ silent: true });
     }
   };
 
@@ -433,6 +619,19 @@ const DeptList: React.FC = () => {
       ...query,
       ...values,
     });
+  };
+
+  const applyGovernanceFilter = (governance?: 'leaderless' | 'no-post' | 'empty') => {
+    const nextQuery: DeptListQuery = {
+      ...query,
+      governance,
+    };
+    queryForm.setFieldsValue({
+      ...queryForm.getFieldsValue(),
+      governance,
+    });
+    setSelectedRowKeys([]);
+    setQuery(nextQuery);
   };
 
   const reset = () => {
@@ -484,6 +683,29 @@ const DeptList: React.FC = () => {
     { title: t('system.dept.email'), dataIndex: 'email', width: 180 },
     { title: t('system.dept.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
     {
+      title: t('system.dept.governance'),
+      width: 220,
+      render: (_: unknown, row: DeptNode) => {
+        if (row.isRoot) {
+          return <Tag>{t('system.dept.root')}</Tag>;
+        }
+        const tags = [];
+        if (row.isLeaderless) {
+          tags.push(<Tag key="leaderless" color="orange">{t('system.dept.governance.leaderless')}</Tag>);
+        }
+        if (row.isNoPost) {
+          tags.push(<Tag key="no-post" color="gold">{t('system.dept.governance.noPost')}</Tag>);
+        }
+        if (row.isEmpty) {
+          tags.push(<Tag key="empty" color="red">{t('system.dept.governance.empty')}</Tag>);
+        }
+        if (tags.length === 0) {
+          tags.push(<Tag key="clean" color="green">{t('system.dept.governance.clean')}</Tag>);
+        }
+        return <Space size={4} wrap>{tags}</Space>;
+      },
+    },
+    {
       title: t('system.dept.status'),
       dataIndex: 'status',
       width: 120,
@@ -496,17 +718,22 @@ const DeptList: React.FC = () => {
     },
     {
       title: t('common.action'),
-      width: 180,
+      width: TABLE_ACTION_COLUMN_WIDTH.medium,
       fixed: 'right',
       render: (_: unknown, row: DeptNode) => (
         <Space size={4} className="system-list__actions">
+          {canCreatePost && !row.isRoot && row.isNoPost ? (
+            <Button type="text" size="small" icon={<IconPlus />} onClick={() => openCreatePostForDept(row)}>
+              {t('system.dept.action.createPost')}
+            </Button>
+          ) : null}
           {canEdit ? (
-            <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
+            <Button type="text" size="small" icon={<IconEdit />} onClick={() => { void openEdit(row); }}>
               {t('common.edit')}
             </Button>
           ) : null}
           {canDelete ? (
-            <Popconfirm title={t('common.deleteConfirm')} onOk={() => removeDept(row.id)} disabled={row.isRoot}>
+            <Popconfirm title={t('system.dept.deleteConfirm')} onOk={() => removeDept(row.id)} disabled={row.isRoot}>
               <Button type="text" size="small" status="danger" icon={<IconDelete />} disabled={row.isRoot}>
                 {t('common.delete')}
               </Button>
@@ -531,6 +758,10 @@ const DeptList: React.FC = () => {
     await exportDepts(query);
   };
 
+  const handleExportGovernanceTasks = async () => {
+    await exportDeptGovernanceTasks(buildGovernanceTaskQuery(query));
+  };
+
   const handleDownloadTemplate = async () => {
     await downloadDeptImportTemplate();
   };
@@ -539,34 +770,157 @@ const DeptList: React.FC = () => {
     const result = await importDepts(file);
     showImportResult(result, t);
     if (result.applied) {
-      await loadData(query);
+      invalidateDeptCaches();
+      publishRefresh('system:dept:changed', 'system/dept');
+      await loadData(query, { silent: true });
       await loadAllDepts();
       if (activeTab === 'org') {
-        await loadOrgData();
+        await loadOrgData({ silent: true });
       }
     }
   };
 
   const handleBatchStatus = async (status: 1 | 2) => {
+    if (selectedRowKeys.length === 0) {
+      Message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
     const deptIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateDeptStatus({ deptIds, status });
     Message.success(t('system.dept.batchStatusSuccess', { count: result.updatedCount }));
+    invalidateDeptCaches();
+    publishRefresh('system:dept:changed', 'system/dept');
     setSelectedRowKeys([]);
-    await loadData(query);
+    await loadData(query, { silent: true });
     await loadAllDepts();
     if (activeTab === 'org') {
-      await loadOrgData();
+      await loadOrgData({ silent: true });
+    }
+  };
+
+  const locateGovernanceTask = async (task: DeptGovernanceTask) => {
+    const deptRow = flatDeptRows.find((item) => item.id === task.deptId);
+    if (task.governanceScope === 'dept' && deptRow) {
+      if (task.governanceAction === 'assign-leader' && canEdit) {
+        await openEdit(deptRow);
+        return;
+      }
+      if (task.governanceAction === 'create-post' && canCreatePost) {
+        openCreatePostForDept(deptRow);
+        return;
+      }
+      if (task.governanceTag === 'leaderless' || task.governanceTag === 'no-post' || task.governanceTag === 'empty') {
+        applyGovernanceFilter(task.governanceTag as 'leaderless' | 'no-post' | 'empty');
+        return;
+      }
+    }
+    setActiveTab('org');
+    setSelectedOrgDeptId(task.deptId);
+  };
+
+  const openBatchLeader = () => {
+    const selectedDeptIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const selectedDepts = flatDeptRows.filter((item) => selectedDeptIds.includes(item.id) && !item.isRoot);
+    if (selectedDepts.length === 0) {
+      Message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    setLeaderVisible(true);
+    setLeaderCandidateLoading(true);
+    void Promise.all(selectedDepts.map(async (dept) => ({
+      deptId: dept.id,
+      deptName: dept.deptName,
+      candidates: await getDeptLeaderCandidates(dept.id),
+    }))).then((tasks) => {
+      setBatchLeaderTasks(tasks);
+      const initialValues: DeptLeaderFormValues = {};
+      tasks.forEach((task) => {
+        if (task.candidates.length === 1) {
+          initialValues[String(task.deptId)] = task.candidates[0].userId;
+        }
+      });
+      leaderForm.setFieldsValue(initialValues);
+    }).catch(() => {
+      Message.error(t('system.dept.leaderCandidateLoadFailed'));
+      setLeaderVisible(false);
+      setBatchLeaderTasks([]);
+    }).finally(() => {
+      setLeaderCandidateLoading(false);
+    });
+  };
+
+  const submitBatchLeader = async () => {
+    let values;
+    try {
+      values = await leaderForm.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
+    const items = batchLeaderTasks.map((task) => ({
+      deptId: task.deptId,
+      leaderUserId: Number(values[String(task.deptId)] || 0),
+    }));
+    if (items.some((item) => item.leaderUserId <= 0)) {
+      Message.warning(t('system.dept.batchLeaderRequired'));
+      return;
+    }
+    const result = await batchUpdateDeptLeader({ items });
+    Message.success(t('system.dept.batchLeaderSuccess', { count: result.updatedCount }));
+    invalidateDeptCaches();
+    publishRefresh('system:dept:changed', 'system/dept');
+    setLeaderVisible(false);
+    setBatchLeaderTasks([]);
+    leaderForm.resetFields();
+    setSelectedRowKeys([]);
+    await loadData(query, { silent: true });
+    await loadAllDepts();
+    if (activeTab === 'org') {
+      await loadOrgData({ silent: true });
     }
   };
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const batchLeaderDisabled = !canEdit || selectedRowKeys.length === 0;
 
-  const openCreatePost = () => {
-    if (!selectedOrgDept || selectedOrgDept.isRoot) {
+  const governanceTaskColumns: ColumnProps<DeptGovernanceTask>[] = [
+    { title: t('system.dept.task.scope'), dataIndex: 'governanceScopeLabel', width: 110 },
+    { title: t('system.dept.task.tag'), dataIndex: 'governanceTagLabel', width: 180 },
+    {
+      title: t('system.dept.task.resource'),
+      width: 220,
+      render: (_: unknown, row: DeptGovernanceTask) => row.governanceScope === 'post'
+        ? `${row.postName || '-'} / ${row.deptName || '-'}`
+        : row.deptName,
+    },
+    { title: t('system.dept.task.blockedBy'), dataIndex: 'governanceBlockedByLabel', width: 170 },
+    { title: t('system.dept.task.action'), dataIndex: 'governanceActionLabel', width: 220 },
+    { title: t('system.dept.task.deptPath'), dataIndex: 'deptPath', width: 240 },
+    {
+      title: t('system.dept.task.relatedUserCount'),
+      dataIndex: 'relatedUserCount',
+      width: 110,
+    },
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      render: (_: unknown, row: DeptGovernanceTask) => (
+        <Button type="text" size="small" icon={<IconEye />} onClick={() => { void locateGovernanceTask(row); }}>
+          {t('system.dept.task.locate')}
+        </Button>
+      ),
+    },
+  ];
+
+  const openCreatePostForDept = (dept: DeptNode | null) => {
+    if (!dept || dept.isRoot) {
       return;
     }
+    setCreatingPostDept(dept);
     postForm.setFieldsValue({
-      deptId: selectedOrgDept.id,
+      deptId: dept.id,
       postCode: '',
       postName: '',
       sort: 0,
@@ -576,14 +930,35 @@ const DeptList: React.FC = () => {
     setPostVisible(true);
   };
 
+  const openCreatePost = () => {
+    openCreatePostForDept(selectedOrgDept || null);
+  };
+
   const submitPostForm = async () => {
-    const values = await postForm.validate();
+    let values;
+    try {
+      values = await postForm.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setPostSubmitting(true);
     try {
       await createPost(values);
       Message.success(t('common.createSuccess'));
+      invalidateDeptCaches();
+      invalidateRouteWarmDataMany([
+        { path: '/system/post', resourceKeys: ['list:default'] },
+        { path: '/system/user', resourceKeys: ['posts:active'] },
+      ]);
+      publishRefresh(['system:dept:changed', 'system:post:changed'], 'system/dept');
       setPostVisible(false);
-      await loadOrgData();
+      setCreatingPostDept(null);
+      await loadData(query, { silent: true });
+      await loadAllDepts();
+      await loadOrgData({ silent: true });
     } finally {
       setPostSubmitting(false);
     }
@@ -752,89 +1127,240 @@ const DeptList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
-        title={t('system.menu.dept')}
-        subtitle={t('system.dept.subtitle')}
         extra={activeTab === 'manage' ? (
-          <PageActions>
-            <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-            <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
-            <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
-              {t('common.import')}
-            </ImportCsvButton>
-            <Popconfirm title={t('system.dept.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-              <Button disabled={batchActionDisabled}>{t('system.dept.batchEnable')}</Button>
-            </Popconfirm>
-            <Popconfirm title={t('system.dept.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-              <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.dept.batchDisable')}</Button>
-            </Popconfirm>
-            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>
-          </PageActions>
+          <ListHeaderActions
+            utility={(
+              <>
+                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
+                <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
+                  {t('common.import')}
+                </ImportCsvButton>
+              </>
+            )}
+            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+          />
         ) : (
           <PageActions>
             <Button onClick={() => { void loadOrgData(); }} loading={orgLoading}>{t('common.refresh')}</Button>
           </PageActions>
         )}
       />
-      <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
-        <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
-            <FilterPanel>
-              <Form form={queryForm} layout="vertical">
-                <Row gutter={16}>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('system.dept.deptName')} field="deptName">
-                      <Input />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('system.dept.status')} field="status">
-                      <Select allowClear options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={24} lg={8}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
-            <Card className="page-panel system-list__table-card">
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {error && data.length === 0 ? renderErrorState() : null}
-              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 ? (
-                <AppTable<DeptNode>
-                  className="system-list__table"
-                  data={data}
-                  columns={columns}
-                  rowKey="id"
-                  loading={loading}
-                  scroll={{ x: 1100 }}
-                  rowSelection={{
-                    type: 'checkbox',
-                    selectedRowKeys,
-                    fixed: true,
-                    checkboxProps: (row) => ({ disabled: row.isRoot }),
-                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                  }}
-                  onChange={handleTableChange}
-                  emptyText={t('common.noData')}
-                />
-              ) : null}
-            </Card>
-          </Space>
-        </Tabs.TabPane>
-        <Tabs.TabPane key="org" title={t('system.dept.orgTab')}>
-          {renderOrgView()}
-        </Tabs.TabPane>
-      </Tabs>
+      <Space direction="vertical" size={16} className="system-page-template governance-workbench">
+        {overview ? (
+          <Card className="page-panel system-page-hero">
+            <div className="system-page-hero__top">
+              <div className="system-page-hero__copy">
+                <span className="system-page-hero__eyebrow">{t('system.dept.hero.eyebrow')}</span>
+                <Typography.Paragraph className="system-page-hero__desc">
+                  {t('system.dept.hero.desc')}
+                </Typography.Paragraph>
+              </div>
+            </div>
+            <div className="system-page-kpi-grid">
+              {heroStats.map((item) => (
+                <div
+                  key={item.key}
+                  className="system-page-kpi"
+                  role={item.key === 'leaderless' || item.key === 'noPost' || item.key === 'empty' || item.key === 'issues' ? 'button' : undefined}
+                  tabIndex={item.key === 'leaderless' || item.key === 'noPost' || item.key === 'empty' || item.key === 'issues' ? 0 : undefined}
+                  onClick={
+                    item.key === 'leaderless'
+                      ? () => applyGovernanceFilter('leaderless')
+                      : item.key === 'noPost'
+                        ? () => applyGovernanceFilter('no-post')
+                        : item.key === 'empty'
+                          ? () => applyGovernanceFilter('empty')
+                          : item.key === 'issues'
+                            ? () => applyGovernanceFilter(undefined)
+                            : undefined
+                  }
+                  onKeyDown={
+                    item.key === 'leaderless' || item.key === 'noPost' || item.key === 'empty' || item.key === 'issues'
+                      ? (event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            if (item.key === 'leaderless') {
+                              applyGovernanceFilter('leaderless');
+                            } else if (item.key === 'noPost') {
+                              applyGovernanceFilter('no-post');
+                            } else if (item.key === 'empty') {
+                              applyGovernanceFilter('empty');
+                            } else {
+                              applyGovernanceFilter(undefined);
+                            }
+                          }
+                        }
+                      : undefined
+                  }
+                >
+                  <span className="system-page-kpi__label">{item.label}</span>
+                  <span className="system-page-kpi__value">{item.value}</span>
+                  <span className="system-page-kpi__hint">{item.hint}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ) : null}
+        <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
+          <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>
+            <div className="page-split-layout">
+              <div className="page-main-column">
+                <Card
+                  className="page-panel system-list__table-card"
+                  title={t('system.dept.task.title')}
+                  extra={(
+                    <Space>
+                      <Button size="small" onClick={() => { void loadData(query); }} loading={governanceLoading}>{t('common.refresh')}</Button>
+                      <Button size="small" icon={<IconDownload />} onClick={() => { void handleExportGovernanceTasks(); }} disabled={!canExport}>
+                        {t('system.dept.task.export')}
+                      </Button>
+                    </Space>
+                  )}
+                >
+                  <Typography.Text className="governance-workbench__task-desc">
+                    {t('system.dept.task.hint')}
+                  </Typography.Text>
+                  <AppTable<DeptGovernanceTask>
+                    className="system-list__table"
+                    data={governanceTasks}
+                    columns={governanceTaskColumns}
+                    rowKey="taskKey"
+                    loading={governanceLoading}
+                    scroll={{ x: 1200 }}
+                    emptyText={t('common.noData')}
+                    pagination={false}
+                  />
+                </Card>
+                <FilterPanel>
+                  <Form form={queryForm} layout="vertical">
+                    <Row gutter={16}>
+                      <Col xs={24} md={12} lg={8}>
+                        <FormItem label={t('system.dept.deptName')} field="deptName">
+                          <Input />
+                        </FormItem>
+                      </Col>
+                      <Col xs={24} md={12} lg={8}>
+                        <FormItem label={t('system.dept.status')} field="status">
+                          <Select allowClear options={[
+                            { label: t('system.user.status.enabled'), value: 1 },
+                            { label: t('system.user.status.disabled'), value: 2 },
+                          ]} />
+                        </FormItem>
+                      </Col>
+                      <Col xs={24} md={12} lg={8}>
+                        <FormItem label={t('system.dept.governance')} field="governance">
+                          <Select
+                            allowClear
+                            options={[
+                              { label: t('system.dept.governance.leaderless'), value: 'leaderless' },
+                              { label: t('system.dept.governance.noPost'), value: 'no-post' },
+                              { label: t('system.dept.governance.empty'), value: 'empty' },
+                            ]}
+                          />
+                        </FormItem>
+                      </Col>
+                      <Col xs={24} md={24} lg={8}>
+                        <FormItem className="filter-panel__action-item">
+                          <Space>
+                            <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                            <Button onClick={reset}>{t('common.reset')}</Button>
+                          </Space>
+                        </FormItem>
+                      </Col>
+                    </Row>
+                  </Form>
+                </FilterPanel>
+                <Card className="page-panel system-list__table-card">
+                  <TableBatchActionBar
+                    selectedCount={selectedRowKeys.length}
+                    selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                    clearText={t('common.clearSelection')}
+                    clearSuccessText={t('common.clearSelectionSuccess')}
+                    onClear={() => setSelectedRowKeys([])}
+                    hint={!canBatchUpdate || !canEdit ? t('common.batchActionPermissionHint') : undefined}
+                    actions={(
+                      <>
+                        <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                          <Popconfirm title={t('system.dept.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                            <Button disabled={batchActionDisabled}>{t('system.dept.batchEnable')}</Button>
+                          </Popconfirm>
+                        </PermissionAction>
+                        <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                          <Popconfirm title={t('system.dept.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
+                            <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.dept.batchDisable')}</Button>
+                          </Popconfirm>
+                        </PermissionAction>
+                        <PermissionAction allowed={canEdit} tooltip={t('common.noPermissionAction')}>
+                          <Button onClick={openBatchLeader} disabled={batchLeaderDisabled}>{t('system.dept.batchLeader')}</Button>
+                        </PermissionAction>
+                      </>
+                    )}
+                  />
+                  {loading && data.length === 0 ? <PageLoading /> : null}
+                  {error && data.length === 0 ? renderErrorState() : null}
+                  {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+                  {!loading && !(error && data.length === 0) && data.length > 0 ? (
+                    <AppTable<DeptNode>
+                      className="system-list__table"
+                      data={data}
+                      columns={columns}
+                      rowKey="id"
+                      loading={loading}
+                      scroll={{ x: 1100 }}
+                      rowSelection={{
+                        type: 'checkbox',
+                        selectedRowKeys,
+                        fixed: true,
+                        checkboxProps: (row) => ({ disabled: row.isRoot }),
+                        onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                      }}
+                      onChange={handleTableChange}
+                      emptyText={t('common.noData')}
+                    />
+                  ) : null}
+                </Card>
+              </div>
+              <div className="page-side-column">
+                {overview ? (
+                  <Card className="page-panel side-rail-panel governance-workbench__summary">
+                    <span className="side-rail-panel__title">{t('system.dept.governance')}</span>
+                    <div className="side-rail-stack">
+                      <div className="side-rail-item">
+                        <span className="side-rail-item__label">{t('system.dept.overview.healthIssues')}</span>
+                        <span className="side-rail-item__value">{overview.healthIssueCount}</span>
+                        <span className="side-rail-item__desc">{t('system.dept.task.hint')}</span>
+                      </div>
+                      <div className="side-rail-item">
+                        <span className="side-rail-item__label">{t('system.dept.overview.leaderlessDepts')}</span>
+                        <span className="side-rail-item__value">{overview.leaderlessDeptCount}</span>
+                        <span className="side-rail-item__desc">{t('system.dept.leaderCandidateHint')}</span>
+                      </div>
+                      <div className="side-rail-item">
+                        <span className="side-rail-item__label">{t('system.dept.overview.noPostDepts')}</span>
+                        <span className="side-rail-item__value">{overview.noPostDeptCount}</span>
+                        <span className="side-rail-item__desc">{t('system.dept.governanceHint')}</span>
+                      </div>
+                    </div>
+                  </Card>
+                ) : null}
+                <Card className="page-panel side-rail-panel">
+                  <span className="side-rail-panel__title">{t('system.dept.task.title')}</span>
+                  <div className="side-rail-note">
+                    <span className="side-rail-note__title">{t('system.dept.governance')}</span>
+                    <span className="side-rail-note__desc">
+                      {t('system.dept.governanceHint')}
+                    </span>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane key="org" title={t('system.dept.orgTab')}>
+            {renderOrgView()}
+          </Tabs.TabPane>
+        </Tabs>
+      </Space>
 
       <AppModal
         title={editing ? t('system.dept.edit') : t('system.dept.create')}
@@ -866,8 +1392,30 @@ const DeptList: React.FC = () => {
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
+                  <FormItem
+                    label={t('system.dept.leaderCandidate')}
+                    field="leaderUserId"
+                    extra={editing
+                      ? (leaderCandidates.length > 0 ? t('system.dept.leaderCandidateHint') : t('system.dept.leaderCandidateEmpty'))
+                      : t('system.dept.leaderCandidateCreateHint')}
+                  >
+                    <Select
+                      allowClear
+                      showSearch
+                      loading={leaderCandidateLoading}
+                      disabled={!editing || editing.isRoot}
+                      placeholder={editing ? t('system.dept.leaderCandidatePlaceholder') : t('system.dept.leaderCandidateCreateHint')}
+                      options={leaderCandidates.map((item) => ({
+                        label: `${item.displayName} · ${item.postName || '-'}`,
+                        value: item.userId,
+                      }))}
+                      onChange={handleLeaderCandidateChange}
+                    />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12}>
                   <FormItem label={t('system.dept.leader')} field="leader">
-                    <Input />
+                    <Input placeholder={t('system.dept.leaderLegacyPlaceholder')} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
@@ -900,13 +1448,73 @@ const DeptList: React.FC = () => {
       </AppModal>
 
       <AppModal
+        title={t('system.dept.batchLeader')}
+        visible={leaderVisible}
+        size="lg"
+        onCancel={() => {
+          setLeaderVisible(false);
+          setBatchLeaderTasks([]);
+          leaderForm.resetFields();
+        }}
+        footer={(
+          <SubmitBar
+            onCancel={() => {
+              setLeaderVisible(false);
+              setBatchLeaderTasks([]);
+              leaderForm.resetFields();
+            }}
+            onSubmit={() => { void submitBatchLeader(); }}
+            submitText={t('common.save')}
+          />
+        )}
+        unmountOnExit
+      >
+        <Form form={leaderForm} layout="vertical">
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <div>{t('system.dept.batchLeaderTaskHint')}</div>
+            {batchLeaderTasks.map((task) => (
+              <Card key={task.deptId} size="small">
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <strong>{task.deptName}</strong>
+                  <FormItem
+                    label={t('system.dept.leaderCandidate')}
+                    field={String(task.deptId)}
+                    rules={[{ required: true, message: t('dept.leader.required') }]}
+                    extra={task.candidates.length > 0 ? t('system.dept.leaderCandidateHint') : t('system.dept.batchLeaderNoCandidate')}
+                  >
+                    <Select
+                      showSearch
+                      allowClear
+                      loading={leaderCandidateLoading}
+                      disabled={task.candidates.length === 0}
+                      placeholder={task.candidates.length > 0 ? t('system.dept.leaderCandidatePlaceholder') : t('system.dept.batchLeaderNoCandidate')}
+                      options={task.candidates.map((item) => ({
+                        label: `${item.displayName} · ${item.postName || '-'}`,
+                        value: item.userId,
+                      }))}
+                    />
+                  </FormItem>
+                </Space>
+              </Card>
+            ))}
+          </Space>
+        </Form>
+      </AppModal>
+
+      <AppModal
         title={t('system.dept.orgCreatePostTitle')}
         visible={postVisible}
         size="md"
-        onCancel={() => setPostVisible(false)}
+        onCancel={() => {
+          setPostVisible(false);
+          setCreatingPostDept(null);
+        }}
         footer={(
           <SubmitBar
-            onCancel={() => setPostVisible(false)}
+            onCancel={() => {
+              setPostVisible(false);
+              setCreatingPostDept(null);
+            }}
             onSubmit={() => { void submitPostForm(); }}
             loading={postSubmitting}
             submitText={t('common.add')}
@@ -920,7 +1528,7 @@ const DeptList: React.FC = () => {
               <Row gutter={16}>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.post.dept')} field="deptId" rules={[{ required: true, message: t('system.post.deptRequired') }]}>
-                    <Select disabled options={selectedOrgDept ? [{ label: selectedOrgDept.deptName, value: selectedOrgDept.id }] : []} />
+                    <Select disabled options={creatingPostDept ? [{ label: creatingPostDept.deptName, value: creatingPostDept.id }] : []} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>

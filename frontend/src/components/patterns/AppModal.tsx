@@ -8,6 +8,10 @@ interface AppModalProps extends ModalProps {
   size?: AppModalSize;
 }
 
+type AppModalStaticConfig = Parameters<typeof Modal.confirm>[0] & {
+  size?: AppModalSize;
+};
+
 const sizeWidthMap: Record<AppModalSize, number> = {
   sm: 560,
   md: 640,
@@ -15,6 +19,44 @@ const sizeWidthMap: Record<AppModalSize, number> = {
   xl: 920,
   detail: 880,
 };
+
+function mergeDialogClassName(base: string, className?: string | string[]) {
+  if (Array.isArray(className)) {
+    return [base, ...className];
+  }
+  return className ? `${base} ${className}` : base;
+}
+
+function resolveDialogStyle(config: AppModalStaticConfig) {
+  return {
+    ...config.style,
+    width: config.style?.width ?? sizeWidthMap[config.size ?? 'lg'],
+  };
+}
+
+export function showAppModalConfirm(config: AppModalStaticConfig) {
+  return Modal.confirm({
+    ...config,
+    className: mergeDialogClassName('app-dialog', config.className),
+    style: resolveDialogStyle(config),
+  });
+}
+
+export function showAppModalSuccess(config: AppModalStaticConfig) {
+  return Modal.success({
+    ...config,
+    className: mergeDialogClassName('app-dialog', config.className),
+    style: resolveDialogStyle(config),
+  });
+}
+
+export function showAppModalError(config: AppModalStaticConfig) {
+  return Modal.error({
+    ...config,
+    className: mergeDialogClassName('app-dialog', config.className),
+    style: resolveDialogStyle(config),
+  });
+}
 
 const AppModal: React.FC<AppModalProps> = ({
   className,
@@ -28,7 +70,7 @@ const AppModal: React.FC<AppModalProps> = ({
 
   return (
     <Modal
-      className={className ? `app-dialog ${className}` : 'app-dialog'}
+      className={mergeDialogClassName('app-dialog', className)}
       style={{ ...style, width }}
       maskClosable={maskClosable}
       unmountOnExit={unmountOnExit}

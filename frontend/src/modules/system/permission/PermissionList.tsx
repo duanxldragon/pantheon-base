@@ -20,16 +20,21 @@ import { IconDelete, IconDownload, IconEdit, IconPlus, IconRefresh, IconSearch }
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import { getRoleList } from '../role/api';
 import {
   createPermissionPolicy,
   deletePermissionPolicy,
   downloadPermissionImportTemplate,
+  exportPermissionWorkbench,
   exportPermissionPolicies,
   getPermissionPolicyList,
   getPermissionWorkbench,
   importPermissionPolicies,
+  remediatePermissionWorkbenchRole,
   updatePermissionPolicy,
   type PermissionPolicyPayload,
   type PermissionPolicyQuery,
@@ -38,7 +43,7 @@ import {
   type PermissionWorkbenchRole,
   type PermissionWorkbenchResp,
 } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -58,7 +63,25 @@ const emptyQuery: PermissionPolicyQuery = {
 const emptyWorkbenchQuery: PermissionWorkbenchQuery = {
   roleKey: '',
   status: undefined,
+  integrity: undefined,
+  coverage: undefined,
 };
+
+function isDefaultPermissionPolicyQuery(query: PermissionPolicyQuery) {
+  return !query.roleKey
+    && !query.path
+    && !query.method
+    && (query.page ?? 1) === 1
+    && (query.pageSize ?? 10) === 10;
+}
+
+function isDefaultPermissionWorkbenchQuery(query: PermissionWorkbenchQuery) {
+  return !query.roleKey && query.status === undefined && query.integrity === undefined && query.coverage === undefined;
+}
+
+interface LoadDataOptions {
+  silent?: boolean;
+}
 
 const emptyForm: PermissionPolicyPayload = {
   roleKey: '',
@@ -91,41 +114,61 @@ const PermissionList: React.FC = () => {
   const [workbench, setWorkbench] = useState<PermissionWorkbenchResp | null>(null);
   const [workbenchQuery, setWorkbenchQuery] = useState<PermissionWorkbenchQuery>(emptyWorkbenchQuery);
   const [detailRole, setDetailRole] = useState<PermissionWorkbenchRole | null>(null);
+  const [remediatingRoleKey, setRemediatingRoleKey] = useState<string>('');
   const [form] = Form.useForm<PermissionPolicyPayload>();
   const [queryForm] = Form.useForm<PermissionPolicyQuery>();
   const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
+  const invalidatePermissionCaches = useCallback(() => {
+    invalidateRouteWarmDataMany([
+      { path: '/system/permission', resourceKeys: ['list:default', 'workbench:default'] },
+    ]);
+  }, []);
 
-  const loadData = useCallback(async (nextQuery: PermissionPolicyQuery = query) => {
-    setLoading(true);
-    setPolicyError(null);
+  const loadData = useCallback(async (nextQuery: PermissionPolicyQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setPolicyError(null);
+    }
     try {
-      const result = await getPermissionPolicyList(nextQuery);
+      const result = isDefaultPermissionPolicyQuery(nextQuery)
+        ? await resolveRouteWarmData('/system/permission', 'list:default', () => getPermissionPolicyList(nextQuery))
+        : await getPermissionPolicyList(nextQuery);
       setData(result.items);
       setTotal(result.total);
     } catch (requestError) {
       setPolicyError(requestError);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [query]);
 
-  const loadWorkbench = useCallback(async (nextQuery: PermissionWorkbenchQuery = workbenchQuery) => {
-    setWorkbenchLoading(true);
-    setWorkbenchError(null);
+  const loadWorkbench = useCallback(async (nextQuery: PermissionWorkbenchQuery = workbenchQuery, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setWorkbenchLoading(true);
+      setWorkbenchError(null);
+    }
     try {
-      const result = await getPermissionWorkbench(nextQuery);
+      const result = isDefaultPermissionWorkbenchQuery(nextQuery)
+        ? await resolveRouteWarmData('/system/permission', 'workbench:default', () => getPermissionWorkbench(nextQuery))
+        : await getPermissionWorkbench(nextQuery);
       setWorkbench(result);
       setDetailRole((current) => current ? result.roles.find((item) => item.roleKey === current.roleKey) || null : current);
     } catch (requestError) {
       setWorkbenchError(requestError);
     } finally {
-      setWorkbenchLoading(false);
+      if (!silent) {
+        setWorkbenchLoading(false);
+      }
     }
   }, [workbenchQuery]);
 
   const loadRoles = useCallback(async () => {
     try {
-      const result = await getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc' });
+      const result = await resolveRouteWarmData('/system/permission', 'roles:default', () => getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc' }));
       setRoleOptions(result.items.map((item) => ({
         label: item.roleName,
         value: item.roleKey,
@@ -150,6 +193,19 @@ const PermissionList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadRoles]);
 
+  useRefreshSubscription(['system:permission:changed', 'system:role:changed', 'system:menu:changed'], (payload) => {
+    if (payload.source === 'system/permission') {
+      return;
+    }
+    void loadWorkbench(workbenchQuery);
+    if (payload.topic !== 'system:menu:changed') {
+      void loadData(query);
+    }
+    if (payload.topic === 'system:role:changed') {
+      void loadRoles();
+    }
+  });
+
   const handleExport = async () => {
     await exportPermissionPolicies(query);
   };
@@ -162,6 +218,8 @@ const PermissionList: React.FC = () => {
     const result = await importPermissionPolicies(file);
     showImportResult(result, t);
     if (result.applied) {
+      invalidatePermissionCaches();
+      publishRefresh('system:permission:changed', 'system/permission');
       await loadData(query);
       await loadWorkbench(workbenchQuery);
     }
@@ -184,7 +242,15 @@ const PermissionList: React.FC = () => {
   };
 
   const submitForm = async () => {
-    const values = await form.validate();
+    let values;
+    try {
+      values = await form.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setSubmitting(true);
     try {
       if (editing) {
@@ -194,8 +260,10 @@ const PermissionList: React.FC = () => {
         await createPermissionPolicy(values);
         Message.success(t('common.createSuccess'));
       }
+      invalidatePermissionCaches();
+      publishRefresh('system:permission:changed', 'system/permission');
       setVisible(false);
-      await Promise.all([loadData(query), loadWorkbench(workbenchQuery)]);
+      await Promise.all([loadData(query, { silent: true }), loadWorkbench(workbenchQuery, { silent: true })]);
     } finally {
       setSubmitting(false);
     }
@@ -204,6 +272,8 @@ const PermissionList: React.FC = () => {
   const removePolicy = async (row: PermissionPolicyRow) => {
     await deletePermissionPolicy(row.id);
     Message.success(t('common.deleteSuccess'));
+    invalidatePermissionCaches();
+    publishRefresh('system:permission:changed', 'system/permission');
     const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
     const nextQuery = { ...query, page: nextPage };
     setQuery(nextQuery);
@@ -245,6 +315,23 @@ const PermissionList: React.FC = () => {
     });
   };
 
+  const remediateRolePolicies = async (role: PermissionWorkbenchRole) => {
+    setRemediatingRoleKey(role.roleKey);
+    try {
+      const result = await remediatePermissionWorkbenchRole({ roleKey: role.roleKey });
+      if (result.createdCount > 0) {
+        Message.success(t('system.permission.workbench.remediateSuccess', { count: result.createdCount }));
+      } else {
+        Message.info(t('system.permission.workbench.remediateNoop'));
+      }
+      invalidatePermissionCaches();
+      publishRefresh('system:permission:changed', 'system/permission');
+      await Promise.all([loadWorkbench(workbenchQuery), loadData(query)]);
+    } finally {
+      setRemediatingRoleKey('');
+    }
+  };
+
   const translateTitleKey = (key?: string, fallback?: string) => {
     if (!key) {
       return fallback || '-';
@@ -271,8 +358,53 @@ const PermissionList: React.FC = () => {
         title: t('system.permission.workbench.apiAssignments'),
         value: overview?.apiActionCount ?? 0,
       },
+      {
+        title: t('system.permission.workbench.unknownAssignments'),
+        value: overview?.unknownPermissionAssignmentCount ?? 0,
+      },
+      {
+        title: t('system.permission.workbench.pageGapRoles'),
+        value: overview?.pageGapRoleCount ?? 0,
+      },
+      {
+        title: t('system.permission.workbench.apiGapRoles'),
+        value: overview?.apiGapRoleCount ?? 0,
+      },
     ];
   }, [t, workbench]);
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'roles',
+        label: t('system.permission.workbench.roleCount'),
+        value: workbench?.overview.roleCount ?? 0,
+        hint: t('system.permission.hero.rolesHint'),
+      },
+      {
+        key: 'assignments',
+        label: t('system.permission.workbench.permissionAssignments'),
+        value: workbench
+          ? (workbench.overview.pagePermissionAssignmentCount + workbench.overview.actionPermissionAssignmentCount)
+          : 0,
+        hint: t('system.permission.hero.assignmentsHint'),
+      },
+      {
+        key: 'api',
+        label: t('system.permission.workbench.apiAssignments'),
+        value: workbench?.overview.apiActionCount ?? total,
+        hint: t('system.permission.hero.apiHint'),
+      },
+      {
+        key: 'gaps',
+        label: t('system.permission.hero.gaps'),
+        value: workbench
+          ? workbench.overview.pageGapRoleCount + workbench.overview.apiGapRoleCount
+          : 0,
+        hint: t('system.permission.hero.gapsHint'),
+      },
+    ],
+    [t, total, workbench],
+  );
 
   const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
     if (isNetworkRequestError(requestError)) {
@@ -295,7 +427,7 @@ const PermissionList: React.FC = () => {
     { title: t('system.permission.path'), dataIndex: 'path' },
     {
       title: t('common.action'),
-      width: 180,
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
       fixed: 'right',
       render: (_: unknown, row: PermissionPolicyRow) => (
         <Space size={4} className="system-list__actions">
@@ -334,6 +466,18 @@ const PermissionList: React.FC = () => {
     { title: t('system.permission.workbench.actionCount'), dataIndex: 'actionPermissionCount', width: 120 },
     { title: t('system.permission.workbench.apiCount'), dataIndex: 'apiPolicyCount', width: 120 },
     {
+      title: t('system.permission.workbench.coverage'),
+      dataIndex: 'coverage',
+      width: 220,
+      render: (_: unknown, row: PermissionWorkbenchRole) => (
+        <Space size={4} wrap>
+          {row.hasPageGap ? <Tag color="orange">{t('system.permission.workbench.coverage.pageGap')}</Tag> : null}
+          {row.hasApiGap ? <Tag color="red">{t('system.permission.workbench.coverage.apiGap')}</Tag> : null}
+          {!row.hasPageGap && !row.hasApiGap ? <Tag color="green">{t('system.permission.workbench.coverage.complete')}</Tag> : null}
+        </Space>
+      ),
+    },
+    {
       title: t('system.permission.workbench.unknownCount'),
       dataIndex: 'unknownPermissionCount',
       width: 140,
@@ -341,7 +485,7 @@ const PermissionList: React.FC = () => {
     },
     {
       title: t('common.action'),
-      width: 120,
+      width: TABLE_ACTION_COLUMN_WIDTH.single,
       fixed: 'right',
       render: (_: unknown, row: PermissionWorkbenchRole) => (
         <Button type="text" size="small" onClick={() => setDetailRole(row)}>
@@ -354,166 +498,252 @@ const PermissionList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
-        title={t('system.menu.permission')}
-        subtitle={activeTab === 'workbench' ? t('system.permission.workbench.hint') : t('system.permission.hint')}
         extra={(
-          <PageActions>
-            <Button icon={<IconRefresh />} onClick={() => {
-              if (activeTab === 'workbench') {
-                void loadWorkbench(workbenchQuery);
-                return;
-              }
-              void loadData(query);
-            }}
-            >
-              {t('common.refresh')}
-            </Button>
-            {activeTab === 'api' ? (
+          <ListHeaderActions
+            utility={(
               <>
-                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
-                <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
-                  {t('common.import')}
-                </ImportCsvButton>
-                <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>
+                <Button icon={<IconRefresh />} onClick={() => {
+                  if (activeTab === 'workbench') {
+                    void loadWorkbench(workbenchQuery);
+                    return;
+                  }
+                  void loadData(query);
+                }}
+                >
+                  {t('common.refresh')}
+                </Button>
+                {activeTab === 'workbench' ? (
+                  <Button icon={<IconDownload />} onClick={() => { void exportPermissionWorkbench(workbenchQuery); }} disabled={!canExport}>
+                    {t('system.permission.workbench.export')}
+                  </Button>
+                ) : null}
+                {activeTab === 'api' ? (
+                  <>
+                    <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+                    <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
+                    <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
+                      {t('common.import')}
+                    </ImportCsvButton>
+                  </>
+                ) : null}
               </>
-            ) : null}
-          </PageActions>
+            )}
+            primary={activeTab === 'api' ? <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button> : null}
+          />
         )}
       />
 
-      <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as PermissionTabKey)}>
-        <Tabs.TabPane key="workbench" title={t('system.permission.workbench.tab')} />
-        <Tabs.TabPane key="api" title={t('system.permission.policy.tab')} />
-      </Tabs>
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('system.permission.hero.eyebrow')}</span>
+              <Typography.Paragraph className="system-page-hero__desc">
+                {t('system.permission.hero.desc')}
+              </Typography.Paragraph>
+            </div>
+          </div>
+          <div className="system-page-kpi-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="system-page-kpi">
+                <span className="system-page-kpi__label">{item.label}</span>
+                <span className="system-page-kpi__value">{item.value}</span>
+                <span className="system-page-kpi__hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <div className="page-split-layout">
+          <div className="page-main-column">
+            <Card className="page-panel">
+              <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as PermissionTabKey)}>
+                <Tabs.TabPane key="workbench" title={t('system.permission.workbench.tab')} />
+                <Tabs.TabPane key="api" title={t('system.permission.policy.tab')} />
+              </Tabs>
+            </Card>
 
-      {activeTab === 'workbench' ? (
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          {workbench ? (
-            <Row gutter={[16, 16]}>
-              {overviewCards.map((item) => (
-                <Col span={6} key={item.title}>
-                  <Card className="page-stat-panel">
-                    <Typography.Text type="secondary">{item.title}</Typography.Text>
-                    <Typography.Title heading={4} style={{ margin: '8px 0 0' }}>
-                      {item.value}
-                    </Typography.Title>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          ) : null}
+            {activeTab === 'workbench' ? (
+              <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                {workbench ? (
+                  <Row gutter={[16, 16]}>
+                    {overviewCards.map((item) => (
+                      <Col span={6} key={item.title}>
+                        <Card className="page-stat-panel">
+                          <Typography.Text type="secondary">{item.title}</Typography.Text>
+                          <Typography.Title heading={4} style={{ margin: '8px 0 0' }}>
+                            {item.value}
+                          </Typography.Title>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                ) : null}
 
-          <FilterPanel>
-            <Form form={workbenchForm} layout="vertical">
-              <Row gutter={16}>
-                <Col span={8}>
-                  <FormItem label={t('system.permission.roleKey')} field="roleKey">
-                    <Select allowClear options={roleOptions} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.role.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]}
+                <FilterPanel>
+                  <Form form={workbenchForm} layout="vertical">
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <FormItem label={t('system.permission.roleKey')} field="roleKey">
+                          <Select allowClear options={roleOptions} />
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem label={t('system.role.status')} field="status">
+                          <Select
+                            allowClear
+                            options={[
+                              { label: t('system.user.status.enabled'), value: 1 },
+                              { label: t('system.user.status.disabled'), value: 2 },
+                            ]}
+                          />
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem label={t('system.permission.workbench.integrity')} field="integrity">
+                          <Select
+                            allowClear
+                            options={[
+                              { label: t('system.permission.workbench.integrity.unknown'), value: 'unknown' },
+                              { label: t('system.permission.workbench.integrity.clean'), value: 'clean' },
+                            ]}
+                          />
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem label={t('system.permission.workbench.coverage')} field="coverage">
+                          <Select
+                            allowClear
+                            options={[
+                              { label: t('system.permission.workbench.coverage.pageGap'), value: 'page-gap' },
+                              { label: t('system.permission.workbench.coverage.apiGap'), value: 'api-gap' },
+                              { label: t('system.permission.workbench.coverage.complete'), value: 'complete' },
+                            ]}
+                          />
+                        </FormItem>
+                      </Col>
+                      <Col span={4}>
+                        <FormItem className="filter-panel__action-item">
+                          <Space>
+                            <Button type="primary" icon={<IconSearch />} onClick={searchWorkbench}>{t('common.search')}</Button>
+                            <Button onClick={resetWorkbench}>{t('common.reset')}</Button>
+                          </Space>
+                        </FormItem>
+                      </Col>
+                    </Row>
+                  </Form>
+                </FilterPanel>
+
+                <Card className="page-panel system-list__table-card">
+                  {workbenchLoading && !workbench ? <PageLoading /> : null}
+                  {workbenchError && !workbench ? renderRequestErrorState(workbenchError, () => { void loadWorkbench(workbenchQuery); }) : null}
+                  {!workbenchLoading && !workbenchError && (!workbench || workbench.roles.length === 0) ? <PageEmpty description={t('common.noData')} /> : null}
+                  {!workbenchLoading && !(workbenchError && !workbench) && workbench && workbench.roles.length > 0 ? (
+                    <AppTable<PermissionWorkbenchRole>
+                      className="system-list__table"
+                      rowKey="id"
+                      data={workbench.roles}
+                      columns={workbenchColumns}
+                      loading={workbenchLoading}
+                      scroll={{ x: 1100 }}
+                      pagination={false}
+                      emptyText={t('common.noData')}
                     />
-                  </FormItem>
-                </Col>
-                <Col span={10}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" icon={<IconSearch />} onClick={searchWorkbench}>{t('common.search')}</Button>
-                      <Button onClick={resetWorkbench}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
-
-          <Card className="page-panel system-list__table-card">
-            {workbenchLoading && !workbench ? <PageLoading /> : null}
-            {workbenchError && !workbench ? renderRequestErrorState(workbenchError, () => { void loadWorkbench(workbenchQuery); }) : null}
-            {!workbenchLoading && !workbenchError && (!workbench || workbench.roles.length === 0) ? <PageEmpty description={t('common.noData')} /> : null}
-            {!workbenchLoading && !(workbenchError && !workbench) && workbench && workbench.roles.length > 0 ? (
-              <AppTable<PermissionWorkbenchRole>
-                className="system-list__table"
-                rowKey="id"
-                data={workbench.roles}
-                columns={workbenchColumns}
-                loading={workbenchLoading}
-                scroll={{ x: 1100 }}
-                pagination={false}
-                emptyText={t('common.noData')}
-              />
-            ) : null}
-          </Card>
-        </Space>
-      ) : (
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical">
-              <Row gutter={16}>
-                <Col span={8}>
-                  <FormItem label={t('system.permission.roleKey')} field="roleKey">
-                    <Select allowClear options={roleOptions} />
-                  </FormItem>
-                </Col>
-                <Col span={8}>
-                  <FormItem label={t('system.permission.path')} field="path">
-                    <Input />
-                  </FormItem>
-                </Col>
-                <Col span={4}>
-                  <FormItem label={t('system.permission.method')} field="method">
-                    <Select allowClear options={methodOptions.map((item) => ({ label: item, value: item }))} />
-                  </FormItem>
-                </Col>
-                <Col span={4}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
-          <Card className="page-panel system-list__table-card">
-            {loading && data.length === 0 ? <PageLoading /> : null}
-            {policyError && data.length === 0 ? renderRequestErrorState(policyError, () => { void loadData(query); }) : null}
-            {!loading && !policyError && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-            {!loading && !(policyError && data.length === 0) && data.length > 0 ? (
-              <AppTable<PermissionPolicyRow>
-                className="system-list__table"
-                data={data}
-                columns={columns}
-                rowKey="id"
-                loading={loading}
-                scroll={{ x: 980 }}
-                onChange={handleTableChange}
-                emptyText={t('common.noData')}
-                pagination={{
-                  current: query.page || emptyQuery.page,
-                  pageSize: query.pageSize || emptyQuery.pageSize,
-                  total,
-                  showJumper: true,
-                  pageSizeChangeResetCurrent: false,
-                  sizeCanChange: true,
-                  sizeOptions: [10, 20, 50, 100],
-                  size: 'small',
-                  showTotal: (count: number) => t('common.total', { count }),
-                } as PaginationProps}
-              />
-            ) : null}
-          </Card>
-        </Space>
-      )}
+                  ) : null}
+                </Card>
+              </Space>
+            ) : (
+              <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <FilterPanel>
+                  <Form form={queryForm} layout="vertical">
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <FormItem label={t('system.permission.roleKey')} field="roleKey">
+                          <Select allowClear options={roleOptions} />
+                        </FormItem>
+                      </Col>
+                      <Col span={8}>
+                        <FormItem label={t('system.permission.path')} field="path">
+                          <Input />
+                        </FormItem>
+                      </Col>
+                      <Col span={4}>
+                        <FormItem label={t('system.permission.method')} field="method">
+                          <Select allowClear options={methodOptions.map((item) => ({ label: item, value: item }))} />
+                        </FormItem>
+                      </Col>
+                      <Col span={4}>
+                        <FormItem className="filter-panel__action-item">
+                          <Space>
+                            <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                            <Button onClick={reset}>{t('common.reset')}</Button>
+                          </Space>
+                        </FormItem>
+                      </Col>
+                    </Row>
+                  </Form>
+                </FilterPanel>
+                <Card className="page-panel system-list__table-card">
+                  {loading && data.length === 0 ? <PageLoading /> : null}
+                  {policyError && data.length === 0 ? renderRequestErrorState(policyError, () => { void loadData(query); }) : null}
+                  {!loading && !policyError && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+                  {!loading && !(policyError && data.length === 0) && data.length > 0 ? (
+                    <AppTable<PermissionPolicyRow>
+                      className="system-list__table"
+                      data={data}
+                      columns={columns}
+                      rowKey="id"
+                      loading={loading}
+                      scroll={{ x: 980 }}
+                      onChange={handleTableChange}
+                      emptyText={t('common.noData')}
+                      pagination={{
+                        current: query.page || emptyQuery.page,
+                        pageSize: query.pageSize || emptyQuery.pageSize,
+                        total,
+                        showJumper: true,
+                        pageSizeChangeResetCurrent: false,
+                        sizeCanChange: true,
+                        sizeOptions: [10, 20, 50, 100],
+                        size: 'small',
+                        showTotal: (count: number) => t('common.total', { count }),
+                      } as PaginationProps}
+                    />
+                  ) : null}
+                </Card>
+              </Space>
+            )}
+          </div>
+          <div className="page-side-column">
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.permission.hero.summaryTitle')}</span>
+              <div className="side-rail-stack">
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.permission.hero.currentMode')}</span>
+                  <span className="side-rail-item__value">{activeTab === 'workbench' ? t('system.permission.workbench.tab') : t('system.permission.policy.tab')}</span>
+                  <span className="side-rail-item__desc">{t('system.permission.hero.modeHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.permission.hero.unknownAssignments')}</span>
+                  <span className="side-rail-item__value">{workbench?.overview.unknownPermissionAssignmentCount ?? 0}</span>
+                  <span className="side-rail-item__desc">{t('system.permission.hero.unknownHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.permission.hero.exportReady')}</span>
+                  <span className="side-rail-item__value">{canExport ? t('common.yes') : t('common.no')}</span>
+                  <span className="side-rail-item__desc">{t('system.permission.hero.exportHint')}</span>
+                </div>
+              </div>
+            </Card>
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.permission.hero.sideTitle')}</span>
+              <div className="side-rail-note">
+                <span className="side-rail-note__title">{t('system.permission.hero.sideLead')}</span>
+                <span className="side-rail-note__desc">{t('system.permission.hero.sideDesc')}</span>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </Space>
 
       <AppModal
         title={detailRole ? `${detailRole.roleName} · ${detailRole.roleKey}` : t('system.permission.workbench.detailTitle')}
@@ -531,6 +761,15 @@ const PermissionList: React.FC = () => {
                 { label: t('system.permission.workbench.pageCount'), value: detailRole.pagePermissionCount },
                 { label: t('system.permission.workbench.actionCount'), value: detailRole.actionPermissionCount },
                 { label: t('system.permission.workbench.apiCount'), value: detailRole.apiPolicyCount },
+                { label: t('system.permission.workbench.apiRequiredCount'), value: detailRole.requiredApiPolicyCount },
+                { label: t('system.permission.workbench.apiMissingCount'), value: detailRole.missingApiPolicyCount },
+                {
+                  label: t('system.permission.workbench.coverage'),
+                  value: [
+                    detailRole.hasPageGap ? t('system.permission.workbench.coverage.pageGap') : '',
+                    detailRole.hasApiGap ? t('system.permission.workbench.coverage.apiGap') : '',
+                  ].filter(Boolean).join(' / ') || t('system.permission.workbench.coverage.complete'),
+                },
               ]}
             />
 
@@ -577,6 +816,41 @@ const PermissionList: React.FC = () => {
                 emptyText={t('common.noData')}
               />
             </Card>
+
+            {detailRole.missingApiPolicies.length > 0 ? (
+              <Card
+                className="detail-panel-card"
+                title={t('system.permission.workbench.missingApiSection')}
+                extra={canCreate ? (
+                  <Button
+                    type="primary"
+                    size="small"
+                    loading={remediatingRoleKey === detailRole.roleKey}
+                    onClick={() => { void remediateRolePolicies(detailRole); }}
+                  >
+                    {t('system.permission.workbench.remediateAction')}
+                  </Button>
+                ) : null}
+              >
+                <AppTable
+                  rowKey={(record) => `${record.method}-${record.path}`}
+                  data={detailRole.missingApiPolicies}
+                  columns={[
+                    {
+                      title: t('system.permission.method'),
+                      dataIndex: 'method',
+                      render: (value: string) => <Tag color="red">{value}</Tag>,
+                    },
+                    {
+                      title: t('system.permission.path'),
+                      dataIndex: 'path',
+                    },
+                  ]}
+                  pagination={false}
+                  emptyText={t('common.noData')}
+                />
+              </Card>
+            ) : null}
 
             {detailRole.unknownPermissions.length > 0 ? (
               <Card className="detail-panel-card" title={t('system.permission.workbench.unknownSection')}>

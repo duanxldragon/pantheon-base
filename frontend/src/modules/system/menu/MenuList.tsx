@@ -3,11 +3,14 @@ import { AutoComplete, Button, Card, Form, Grid, Input, InputNumber, Message, Po
 import { IconApps, IconDelete, IconEdit, IconList, IconPlus, IconSearch, IconUnorderedList } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmDataMany } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { createMenu, deleteMenu, getMenuTree, updateMenu, type MenuListQuery, type MenuNode, type MenuPayload } from './api';
 import { useMenuStore } from '../../../store/useMenuStore';
-import { AppModal, AppTable, FilterPanel, FormSection, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import { MENU_ICON_OPTIONS } from '../../../core/menu/icon';
 import { isRegisteredComponentKey, listRegisteredComponentKeys } from '../../../core/router/componentRegistry';
 import '../list-page.css';
@@ -50,6 +53,10 @@ const emptyQuery: MenuListQuery = {
   sortOrder: 'asc',
 };
 
+interface LoadDataOptions {
+  silent?: boolean;
+}
+
 const MenuList: React.FC = () => {
   const [data, setData] = useState<MenuNode[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +74,13 @@ const MenuList: React.FC = () => {
   const canCreate = isAdmin || hasPerm('system:menu:create');
   const canEdit = isAdmin || hasPerm('system:menu:update');
   const canDelete = isAdmin || hasPerm('system:menu:delete');
+  const invalidateMenuCaches = useCallback(() => {
+    invalidateRouteWarmDataMany([
+      { path: '/system/menu', resourceKeys: ['tree:manage'] },
+      { path: '/system/role', resourceKeys: ['menus:manage'] },
+      { path: '/system/permission', resourceKeys: ['workbench:default'] },
+    ]);
+  }, []);
 
   const flattenedMenus = useMemo<FlatMenuNode[]>(() => {
     const rows: FlatMenuNode[] = [];
@@ -82,16 +96,21 @@ const MenuList: React.FC = () => {
     return rows;
   }, [data]);
 
-  const loadData = useCallback(async (nextQuery: MenuListQuery = query) => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(async (nextQuery: MenuListQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const rows = await getMenuTree({ ...nextQuery, scope: 'manage' });
       setData(rows);
     } catch (requestError) {
       setError(requestError);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [query]);
 
@@ -101,6 +120,14 @@ const MenuList: React.FC = () => {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loadData, query]);
+
+  useRefreshSubscription('system:menu:changed', (payload) => {
+    if (payload.source === 'system/menu') {
+      return;
+    }
+    void loadData(query);
+    void fetchMenuTree({ force: true });
+  });
 
   const openCreate = () => {
     setEditing(null);
@@ -131,7 +158,15 @@ const MenuList: React.FC = () => {
   };
 
   const submitForm = async () => {
-    const values = await form.validate();
+    let values;
+    try {
+      values = await form.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setSubmitting(true);
     try {
       if (editing) {
@@ -141,9 +176,11 @@ const MenuList: React.FC = () => {
         await createMenu(values);
         Message.success(t('common.createSuccess'));
       }
+      invalidateMenuCaches();
+      publishRefresh('system:menu:changed', 'system/menu');
       setVisible(false);
-      await loadData(query);
-      await fetchMenuTree();
+      await loadData(query, { silent: true });
+      await fetchMenuTree({ force: true });
     } finally {
       setSubmitting(false);
     }
@@ -152,8 +189,10 @@ const MenuList: React.FC = () => {
   const removeMenu = async (id: number) => {
     await deleteMenu(id);
     Message.success(t('common.deleteSuccess'));
-    await loadData(query);
-    await fetchMenuTree();
+    invalidateMenuCaches();
+    publishRefresh('system:menu:changed', 'system/menu');
+    await loadData(query, { silent: true });
+    await fetchMenuTree({ force: true });
   };
 
   const search = () => {
@@ -398,7 +437,7 @@ const MenuList: React.FC = () => {
     },
     {
       title: t('common.action'),
-      width: 180,
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
       fixed: 'right',
       render: (_: unknown, row: MenuNode) => (
         renderMenuActions(row)
@@ -416,10 +455,48 @@ const MenuList: React.FC = () => {
     return <PageError onRetry={() => { void loadData(query); }} />;
   };
 
+  const totalMenus = flattenedMenus.length;
+  const visibleMenus = useMemo(
+    () => flattenedMenus.filter(({ node }) => node.isVisible === 1).length,
+    [flattenedMenus],
+  );
+  const actionMenus = useMemo(
+    () => flattenedMenus.filter(({ node }) => node.type === 'F').length,
+    [flattenedMenus],
+  );
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('common.total', { count: totalMenus }),
+        value: totalMenus,
+        hint: t('system.menu.hero.totalHint'),
+      },
+      {
+        key: 'visible',
+        label: t('system.menu.hero.visibleNodes'),
+        value: visibleMenus,
+        hint: t('system.menu.hero.visibleHint'),
+      },
+      {
+        key: 'actions',
+        label: t('system.menu.hero.actionNodes'),
+        value: actionMenus,
+        hint: t('system.menu.hero.actionHint'),
+      },
+      {
+        key: 'view',
+        label: t('system.menu.hero.currentView'),
+        value: t(`system.menu.view.${viewMode}`),
+        hint: t('system.menu.hero.viewHint'),
+      },
+    ],
+    [actionMenus, t, totalMenus, viewMode, visibleMenus],
+  );
+
   return (
     <PageContainer>
       <PageHeader
-        title={t('system.menu.menu')}
         extra={(
           <PageActions>
             <Space size={4} className="menu-view-switcher">
@@ -452,58 +529,110 @@ const MenuList: React.FC = () => {
           </PageActions>
         )}
       />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical">
-            <Row gutter={16}>
-              <Col span={8}>
-                <FormItem label={t('system.menu.titleKey')} field="titleKey">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col span={8}>
-                <FormItem label={t('system.menu.path')} field="path">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col span={4}>
-                <FormItem label={t('system.menu.visible')} field="isVisible">
-                  <Select allowClear options={[
-                    { label: t('common.yes'), value: 1 },
-                    { label: t('common.no'), value: 0 },
-                  ]} />
-                </FormItem>
-              </Col>
-              <Col span={4}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                    <Button onClick={reset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
-        <Card className="page-panel system-list__table-card">
-          {loading && data.length === 0 ? <PageLoading /> : null}
-          {error && data.length === 0 ? renderErrorState() : null}
-          {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-          {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'table' ? (
-            <AppTable<MenuNode>
-              className="system-list__table"
-              data={data}
-              columns={columns}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 1780 }}
-              onChange={handleTableChange}
-              emptyText={t('common.noData')}
-            />
-          ) : null}
-          {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'list' ? renderListView() : null}
-          {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'card' ? renderCardView() : null}
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('system.menu.hero.eyebrow')}</span>
+              <Typography.Paragraph className="system-page-hero__desc">
+                {t('system.menu.hero.desc')}
+              </Typography.Paragraph>
+            </div>
+          </div>
+          <div className="system-page-kpi-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="system-page-kpi">
+                <span className="system-page-kpi__label">{item.label}</span>
+                <span className="system-page-kpi__value">{item.value}</span>
+                <span className="system-page-kpi__hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
         </Card>
+        <div className="page-split-layout">
+          <div className="page-main-column">
+            <FilterPanel>
+              <Form form={queryForm} layout="vertical">
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <FormItem label={t('system.menu.titleKey')} field="titleKey">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col span={8}>
+                    <FormItem label={t('system.menu.path')} field="path">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col span={4}>
+                    <FormItem label={t('system.menu.visible')} field="isVisible">
+                      <Select allowClear options={[
+                        { label: t('common.yes'), value: 1 },
+                        { label: t('common.no'), value: 0 },
+                      ]} />
+                    </FormItem>
+                  </Col>
+                  <Col span={4}>
+                    <FormItem className="filter-panel__action-item">
+                      <Space>
+                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button onClick={reset}>{t('common.reset')}</Button>
+                      </Space>
+                    </FormItem>
+                  </Col>
+                </Row>
+              </Form>
+            </FilterPanel>
+            <Card className="page-panel system-list__table-card">
+              {loading && data.length === 0 ? <PageLoading /> : null}
+              {error && data.length === 0 ? renderErrorState() : null}
+              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+              {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'table' ? (
+                <AppTable<MenuNode>
+                  className="system-list__table"
+                  data={data}
+                  columns={columns}
+                  rowKey="id"
+                  loading={loading}
+                  scroll={{ x: 1780 }}
+                  onChange={handleTableChange}
+                  emptyText={t('common.noData')}
+                />
+              ) : null}
+              {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'list' ? renderListView() : null}
+              {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'card' ? renderCardView() : null}
+            </Card>
+          </div>
+          <div className="page-side-column">
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.menu.hero.summaryTitle')}</span>
+              <div className="side-rail-stack">
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.menu.hero.routeReady')}</span>
+                  <span className="side-rail-item__value">{flattenedMenus.filter(({ node }) => Boolean(node.routeName)).length}</span>
+                  <span className="side-rail-item__desc">{t('system.menu.hero.routeHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.menu.hero.cachedNodes')}</span>
+                  <span className="side-rail-item__value">{flattenedMenus.filter(({ node }) => node.isCache === 1).length}</span>
+                  <span className="side-rail-item__desc">{t('system.menu.hero.cacheHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.menu.hero.externalNodes')}</span>
+                  <span className="side-rail-item__value">{flattenedMenus.filter(({ node }) => node.isExternal === 1).length}</span>
+                  <span className="side-rail-item__desc">{t('system.menu.hero.externalHint')}</span>
+                </div>
+              </div>
+            </Card>
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.menu.hero.sideTitle')}</span>
+              <div className="side-rail-note">
+                <span className="side-rail-note__title">{t('system.menu.hero.sideLead')}</span>
+                <span className="side-rail-note__desc">{t('system.menu.hero.sideDesc')}</span>
+              </div>
+            </Card>
+          </div>
+        </div>
       </Space>
 
       <AppModal

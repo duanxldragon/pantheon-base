@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -11,6 +11,7 @@ import {
   Select,
   Space,
   Tag,
+  Typography,
 } from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
@@ -18,11 +19,44 @@ import { IconDelete, IconDownload, IconEdit, IconPlus, IconSearch } from '@arco-
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import { getDeptTree, type DeptNode } from '../dept/api';
-import { batchUpdatePostStatus, createPost, deletePost, downloadPostImportTemplate, exportPosts, getPostList, importPosts, updatePost, type PostListQuery, type PostPayload, type PostRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
+import {
+  batchUpdatePostStatus,
+  createPost,
+  deletePost,
+  downloadPostImportTemplate,
+  exportPosts,
+  getPostList,
+  importPosts,
+  updatePost,
+  type PostListQuery,
+  type PostPayload,
+  type PostRow,
+} from './api';
+import {
+  AppModal,
+  AppTable,
+  FilterPanel,
+  FormSection,
+  ImportCsvButton,
+  ListHeaderActions,
+  PageContainer,
+  PageEmpty,
+  PageError,
+  PageHeader,
+  PageLoading,
+  PageNetworkError,
+  PageServerError,
+  PermissionAction,
+  SubmitBar,
+  TABLE_ACTION_COLUMN_WIDTH,
+  TableBatchActionBar,
+} from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -47,6 +81,34 @@ const emptyForm: PostPayload = {
   remark: '',
 };
 
+function normalizePostRow(row: PostRow): PostRow {
+  return {
+    ...row,
+    assignedUserCount: typeof row.assignedUserCount === 'number' ? row.assignedUserCount : 0,
+    governanceTags: Array.isArray(row.governanceTags) ? row.governanceTags : [],
+    governanceTagLabels: Array.isArray(row.governanceTagLabels) ? row.governanceTagLabels : [],
+    governanceBlockedBy: Array.isArray(row.governanceBlockedBy) ? row.governanceBlockedBy : [],
+    governanceBlockedDesc: Array.isArray(row.governanceBlockedDesc) ? row.governanceBlockedDesc : [],
+    governanceActions: Array.isArray(row.governanceActions) ? row.governanceActions : [],
+    governanceActionLabel: Array.isArray(row.governanceActionLabel) ? row.governanceActionLabel : [],
+  };
+}
+
+function isDefaultPostListQuery(query: PostListQuery) {
+  return !query.postCode
+    && !query.postName
+    && query.deptId === undefined
+    && query.status === undefined
+    && (query.page ?? 1) === 1
+    && (query.pageSize ?? 10) === 10
+    && !query.sortField
+    && !query.sortOrder;
+}
+
+interface LoadDataOptions {
+  silent?: boolean;
+}
+
 const PostList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
@@ -68,24 +130,38 @@ const PostList: React.FC = () => {
   const [query, setQuery] = useState<PostListQuery>(emptyQuery);
   const [form] = Form.useForm<PostPayload>();
   const [queryForm] = Form.useForm<PostListQuery>();
+  const invalidatePostCaches = useCallback(() => {
+    invalidateRouteWarmDataMany([
+      { path: '/system/post', resourceKeys: ['list:default'] },
+      { path: '/system/user', resourceKeys: ['posts:active'] },
+      { path: '/system/dept', resourceKeys: ['posts:org-chart'] },
+    ]);
+  }, []);
 
-  const loadData = useCallback(async (nextQuery: PostListQuery = query) => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(async (nextQuery: PostListQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
-      const result = await getPostList(nextQuery);
-      setData(result.items);
+      const result = isDefaultPostListQuery(nextQuery)
+        ? await resolveRouteWarmData('/system/post', 'list:default', () => getPostList(nextQuery))
+        : await getPostList(nextQuery);
+      setData(result.items.map(normalizePostRow));
       setTotal(result.total);
     } catch (requestError) {
       setError(requestError);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [query]);
 
   const loadDeptOptions = useCallback(async () => {
     try {
-      const deptRows = await getDeptTree({ sortField: 'sort', sortOrder: 'asc' });
+      const deptRows = await resolveRouteWarmData('/system/post', 'depts:sorted', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' }));
       const flattenDept = (nodes: DeptNode[], depth = 0): Array<{ label: string; value: number }> =>
         nodes.flatMap((item) => [
           { label: `${'— '.repeat(depth)}${item.deptName}`, value: item.id },
@@ -108,6 +184,14 @@ const PostList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadDeptOptions]);
 
+  useRefreshSubscription(['system:dept:changed', 'system:post:changed', 'system:user:changed'], (payload) => {
+    if (payload.source === 'system/post') {
+      return;
+    }
+    void loadData(query);
+    void loadDeptOptions();
+  });
+
   const openCreate = () => {
     setEditing(null);
     form.setFieldsValue(emptyForm);
@@ -128,7 +212,15 @@ const PostList: React.FC = () => {
   };
 
   const submitForm = async () => {
-    const values = await form.validate();
+    let values;
+    try {
+      values = await form.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setSubmitting(true);
     try {
       if (editing) {
@@ -138,8 +230,10 @@ const PostList: React.FC = () => {
         await createPost(values);
         Message.success(t('common.createSuccess'));
       }
+      invalidatePostCaches();
+      publishRefresh('system:post:changed', 'system/post');
       setVisible(false);
-      await loadData(query);
+      await loadData(query, { silent: true });
     } finally {
       setSubmitting(false);
     }
@@ -148,6 +242,8 @@ const PostList: React.FC = () => {
   const removePost = async (id: number) => {
     await deletePost(id);
     Message.success(t('common.deleteSuccess'));
+    invalidatePostCaches();
+    publishRefresh('system:post:changed', 'system/post');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
     const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
     setQuery({ ...query, page: nextPage });
@@ -196,53 +292,6 @@ const PostList: React.FC = () => {
     });
   };
 
-  const columns: ColumnProps<PostRow>[] = [
-    { title: t('system.post.dept'), dataIndex: 'deptName', width: 160 },
-    { title: t('system.post.postCode'), dataIndex: 'postCode', width: 180, ...sortableColumn('postCode') },
-    { title: t('system.post.postName'), dataIndex: 'postName', width: 180, ...sortableColumn('postName') },
-    { title: t('system.post.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
-    {
-      title: t('system.post.status'),
-      dataIndex: 'status',
-      width: 120,
-      ...sortableColumn('status'),
-      render: (value: number) => (
-        <Tag color={value === 1 ? 'green' : 'red'}>
-          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
-        </Tag>
-      ),
-    },
-    { title: t('system.post.remark'), dataIndex: 'remark' },
-    {
-      title: t('system.post.createdAt'),
-      dataIndex: 'createdAt',
-      width: 180,
-      ...sortableColumn('createdAt'),
-      render: (value: string) => formatDateTime(value),
-    },
-    {
-      title: t('common.action'),
-      width: 180,
-      fixed: 'right',
-      render: (_: unknown, row: PostRow) => (
-        <Space size={4} className="system-list__actions">
-          {canEdit ? (
-            <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
-              {t('common.edit')}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm title={t('common.deleteConfirm')} onOk={() => removePost(row.id)}>
-              <Button type="text" size="small" status="danger" icon={<IconDelete />}>
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
-      ),
-    },
-  ];
-
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
       return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadData(query); }} />;
@@ -265,114 +314,328 @@ const PostList: React.FC = () => {
     const result = await importPosts(file);
     showImportResult(result, t);
     if (result.applied) {
-      await loadData(query);
+      invalidatePostCaches();
+      publishRefresh('system:post:changed', 'system/post');
+      await loadData(query, { silent: true });
     }
   };
 
   const handleBatchStatus = async (status: 1 | 2) => {
+    if (selectedRowKeys.length === 0) {
+      Message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
     const postIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdatePostStatus({ postIds, status });
     Message.success(t('system.post.batchStatusSuccess', { count: result.updatedCount }));
+    invalidatePostCaches();
+    publishRefresh('system:post:changed', 'system/post');
     setSelectedRowKeys([]);
-    await loadData(query);
+    await loadData(query, { silent: true });
   };
+
+  const visibleSelectedRowKeys = useMemo(() => {
+    const visibleKeys = new Set(data.map((item) => item.id));
+    return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
+  }, [data, selectedRowKeys]);
+
+  const heroStats = useMemo(() => {
+    const inUseCount = data.filter((item) => item.assignedUserCount > 0).length;
+    const disabledCount = data.filter((item) => item.status === 2).length;
+    const assignedUsers = data.reduce((sum, item) => sum + item.assignedUserCount, 0);
+    return [
+      {
+        key: 'total',
+        label: t('common.total', { count: total }),
+        value: total,
+        hint: t('system.post.hero.totalHint'),
+      },
+      {
+        key: 'inUse',
+        label: t('system.post.hero.inUse'),
+        value: inUseCount,
+        hint: t('system.post.hero.inUseHint'),
+      },
+      {
+        key: 'assignedUsers',
+        label: t('system.post.hero.assignedUsers'),
+        value: assignedUsers,
+        hint: t('system.post.hero.assignedUsersHint'),
+      },
+      {
+        key: 'disabled',
+        label: t('system.user.status.disabled'),
+        value: disabledCount,
+        hint: t('system.post.hero.disabledHint'),
+      },
+    ];
+  }, [data, t, total]);
+
+  const governanceSummary = useMemo(() => ({
+    inUse: data.filter((item) => item.assignedUserCount > 0).length,
+    disabled: data.filter((item) => item.status === 2).length,
+    clean: data.filter((item) => item.governanceTags.includes('clean')).length,
+  }), [data]);
+
+  const renderGovernanceTags = (labels: string[], tone: 'tag' | 'note' = 'tag') => {
+    if (labels.length === 0) {
+      return '-';
+    }
+    if (tone === 'note') {
+      return (
+        <Space size={[6, 6]} wrap>
+          {labels.map((label) => <Tag key={label} size="small">{label}</Tag>)}
+        </Space>
+      );
+    }
+    return (
+      <Space size={[6, 6]} wrap>
+        {labels.map((label) => <Tag key={label} size="small" color="arcoblue">{label}</Tag>)}
+      </Space>
+    );
+  };
+
+  const columns: ColumnProps<PostRow>[] = [
+    { title: t('system.post.dept'), dataIndex: 'deptName', width: 160 },
+    { title: t('system.post.postCode'), dataIndex: 'postCode', width: 170, ...sortableColumn('postCode') },
+    { title: t('system.post.postName'), dataIndex: 'postName', width: 180, ...sortableColumn('postName') },
+    {
+      title: t('system.post.hero.assignedUsers'),
+      dataIndex: 'assignedUserCount',
+      width: 120,
+      render: (value: number) => <span>{value}</span>,
+    },
+    {
+      title: t('system.dept.governance'),
+      dataIndex: 'governanceTagLabels',
+      width: 190,
+      render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTagLabels),
+    },
+    {
+      title: t('system.post.hero.blockedBy'),
+      dataIndex: 'governanceBlockedDesc',
+      width: 180,
+      render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceBlockedDesc, 'note'),
+    },
+    {
+      title: t('system.post.hero.nextAction'),
+      dataIndex: 'governanceActionLabel',
+      width: 220,
+      render: (_: unknown, row: PostRow) => (
+        <Typography.Text className="post-governance__action-text">
+          {row.governanceActionLabel.join(' / ') || '-'}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: t('system.post.status'),
+      dataIndex: 'status',
+      width: 110,
+      ...sortableColumn('status'),
+      render: (value: number) => (
+        <Tag color={value === 1 ? 'green' : 'red'}>
+          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
+        </Tag>
+      ),
+    },
+    { title: t('system.post.sort'), dataIndex: 'sort', width: 96, ...sortableColumn('sort') },
+    { title: t('system.post.remark'), dataIndex: 'remark', width: 180 },
+    {
+      title: t('system.post.createdAt'),
+      dataIndex: 'createdAt',
+      width: 180,
+      ...sortableColumn('createdAt'),
+      render: (value: string) => formatDateTime(value),
+    },
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      fixed: 'right',
+      render: (_: unknown, row: PostRow) => (
+        <Space size={4} className="system-list__actions">
+          {canEdit ? (
+            <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
+              {t('common.edit')}
+            </Button>
+          ) : null}
+          {canDelete ? (
+            <Popconfirm title={t('system.post.deleteConfirm')} onOk={() => removePost(row.id)}>
+              <Button type="text" size="small" status="danger" icon={<IconDelete />}>
+                {t('common.delete')}
+              </Button>
+            </Popconfirm>
+          ) : null}
+        </Space>
+      ),
+    },
+  ];
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
 
   return (
     <PageContainer>
       <PageHeader
-        title={t('system.menu.post')}
-        subtitle={t('system.post.subtitle')}
         extra={(
-          <PageActions>
-            <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-            <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
-            <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
-              {t('common.import')}
-            </ImportCsvButton>
-            <Popconfirm title={t('system.post.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-              <Button disabled={batchActionDisabled}>{t('system.post.batchEnable')}</Button>
-            </Popconfirm>
-            <Popconfirm title={t('system.post.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-              <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.post.batchDisable')}</Button>
-            </Popconfirm>
-            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>
-          </PageActions>
+          <ListHeaderActions
+            utility={(
+              <>
+                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
+                <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
+                  {t('common.import')}
+                </ImportCsvButton>
+              </>
+            )}
+            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+          />
         )}
       />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical">
-            <Row gutter={16}>
-              <Col xs={24} md={12} lg={6}>
-                <FormItem label={t('system.post.postCode')} field="postCode">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={6}>
-                <FormItem label={t('system.post.postName')} field="postName">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={6}>
-                <FormItem label={t('system.post.dept')} field="deptId">
-                  <Select allowClear options={deptOptions} />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={6}>
-                <FormItem label={t('system.post.status')} field="status">
-                  <Select allowClear options={[
-                    { label: t('system.user.status.enabled'), value: 1 },
-                    { label: t('system.user.status.disabled'), value: 2 },
-                  ]} />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={24} lg={6}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                    <Button onClick={reset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
-        <Card className="page-panel system-list__table-card">
-          {loading && data.length === 0 ? <PageLoading /> : null}
-          {error && data.length === 0 ? renderErrorState() : null}
-          {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-          {!loading && !(error && data.length === 0) && data.length > 0 ? (
-            <AppTable<PostRow>
-              className="system-list__table"
-              data={data}
-              columns={columns}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 1240 }}
-              rowSelection={{
-                type: 'checkbox',
-                selectedRowKeys,
-                fixed: true,
-                onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-              }}
-              onChange={handleTableChange}
-              emptyText={t('common.noData')}
-              pagination={{
-                current: query.page || emptyQuery.page,
-                pageSize: query.pageSize || emptyQuery.pageSize,
-                total,
-                showJumper: true,
-                pageSizeChangeResetCurrent: false,
-                sizeCanChange: true,
-                sizeOptions: [10, 20, 50, 100],
-                size: 'small',
-                showTotal: (count: number) => t('common.total', { count }),
-              } as PaginationProps}
-            />
-          ) : null}
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('system.post.hero.eyebrow')}</span>
+              <Typography.Paragraph className="system-page-hero__desc">
+                {t('system.post.hero.desc')}
+              </Typography.Paragraph>
+            </div>
+          </div>
+          <div className="system-page-kpi-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="system-page-kpi">
+                <span className="system-page-kpi__label">{item.label}</span>
+                <span className="system-page-kpi__value">{item.value}</span>
+                <span className="system-page-kpi__hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
         </Card>
+        <div className="page-split-layout">
+          <div className="page-main-column">
+            <FilterPanel>
+              <Form form={queryForm} layout="vertical">
+                <Row gutter={16}>
+                  <Col xs={24} md={12} lg={6}>
+                    <FormItem label={t('system.post.postCode')} field="postCode">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={6}>
+                    <FormItem label={t('system.post.postName')} field="postName">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={6}>
+                    <FormItem label={t('system.post.dept')} field="deptId">
+                      <Select allowClear options={deptOptions} />
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={6}>
+                    <FormItem label={t('system.post.status')} field="status">
+                      <Select allowClear options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]} />
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={24} lg={6}>
+                    <FormItem className="filter-panel__action-item">
+                      <Space>
+                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button onClick={reset}>{t('common.reset')}</Button>
+                      </Space>
+                    </FormItem>
+                  </Col>
+                </Row>
+              </Form>
+            </FilterPanel>
+            <Card className="page-panel system-list__table-card">
+              <TableBatchActionBar
+                selectedCount={selectedRowKeys.length}
+                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                clearText={t('common.clearSelection')}
+                clearSuccessText={t('common.clearSelectionSuccess')}
+                onClear={() => setSelectedRowKeys([])}
+                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+                actions={(
+                  <>
+                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm title={t('system.post.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                        <Button disabled={batchActionDisabled}>{t('system.post.batchEnable')}</Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm title={t('system.post.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
+                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.post.batchDisable')}</Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  </>
+                )}
+              />
+              {loading && data.length === 0 ? <PageLoading /> : null}
+              {error && data.length === 0 ? renderErrorState() : null}
+              {!loading && !error && data.length === 0 ? <PageEmpty description={t('system.post.empty')} /> : null}
+              {!loading && !(error && data.length === 0) && data.length > 0 ? (
+                <AppTable<PostRow>
+                  className="system-list__table"
+                  data={data}
+                  columns={columns}
+                  rowKey="id"
+                  loading={loading}
+                  scroll={{ x: 1540 }}
+                  rowSelection={{
+                    type: 'checkbox',
+                    selectedRowKeys: visibleSelectedRowKeys,
+                    fixed: true,
+                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                  }}
+                  onChange={handleTableChange}
+                  emptyText={t('system.post.empty')}
+                  pagination={{
+                    current: query.page || emptyQuery.page,
+                    pageSize: query.pageSize || emptyQuery.pageSize,
+                    total,
+                    showJumper: true,
+                    pageSizeChangeResetCurrent: false,
+                    sizeCanChange: true,
+                    sizeOptions: [10, 20, 50, 100],
+                    size: 'small',
+                    showTotal: (count: number) => t('common.total', { count }),
+                  } as PaginationProps}
+                />
+              ) : null}
+            </Card>
+          </div>
+          <div className="page-side-column">
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.post.hero.summaryTitle')}</span>
+              <div className="side-rail-stack">
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.post.hero.inUse')}</span>
+                  <span className="side-rail-item__value">{governanceSummary.inUse}</span>
+                  <span className="side-rail-item__desc">{t('system.post.hero.inUseHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.user.status.disabled')}</span>
+                  <span className="side-rail-item__value">{governanceSummary.disabled}</span>
+                  <span className="side-rail-item__desc">{t('system.post.hero.disabledHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.dept.governance.clean')}</span>
+                  <span className="side-rail-item__value">{governanceSummary.clean}</span>
+                  <span className="side-rail-item__desc">{t('system.post.hero.cleanHint')}</span>
+                </div>
+              </div>
+            </Card>
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.post.hero.sideTitle')}</span>
+              <div className="side-rail-note">
+                <span className="side-rail-note__title">{t('system.post.hero.sideLead')}</span>
+                <span className="side-rail-note__desc">{t('system.post.hero.sideDesc')}</span>
+              </div>
+            </Card>
+          </div>
+        </div>
       </Space>
 
       <AppModal

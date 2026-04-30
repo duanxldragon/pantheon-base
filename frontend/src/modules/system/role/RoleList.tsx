@@ -6,11 +6,14 @@ import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
 import { IconDelete, IconDownload, IconEdit, IconPlus, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import { getMenuTree, type MenuNode } from '../menu/api';
 import { batchUpdateRoleStatus, createRole, deleteRole, exportRoles, getRoleList, updateRole, type RoleListQuery, type RolePayload, type RoleRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -47,12 +50,26 @@ const emptyQuery: RoleListQuery = {
   pageSize: 10,
 };
 
+function isDefaultRoleListQuery(query: RoleListQuery) {
+  return !query.roleName
+    && !query.roleKey
+    && query.status === undefined
+    && (query.page ?? 1) === 1
+    && (query.pageSize ?? 10) === 10
+    && !query.sortField
+    && !query.sortOrder;
+}
+
 const emptyAuthorizationCounts = {
   navigation: 0,
   page: 0,
   action: 0,
   unknown: 0,
 };
+
+interface LoadDataOptions {
+  silent?: boolean;
+}
 
 const mergePermissionKeys = (...groups: string[][]) => Array.from(new Set(groups.flat().filter(Boolean)));
 
@@ -81,10 +98,6 @@ const PermissionTreeSelector: React.FC<PermissionTreeSelectorProps> = ({
 }) => {
   const [keyword, setKeyword] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<string[]>(defaultExpandedKeys);
-
-  useEffect(() => {
-    setExpandedKeys(defaultExpandedKeys);
-  }, [defaultExpandedKeys]);
 
   const collectExpandableKeys = useCallback((nodes: TreeDataType[]) => {
     const nextKeys: string[] = [];
@@ -193,24 +206,38 @@ const RoleList: React.FC = () => {
   const canDelete = isAdmin || hasPerm('system:role:delete');
   const canBatchUpdate = isAdmin || hasPerm('system:role:batch-update');
   const canExport = isAdmin || hasPerm('system:role:export');
+  const invalidateRoleCaches = useCallback(() => {
+    invalidateRouteWarmDataMany([
+      { path: '/system/role', resourceKeys: ['list:default'] },
+      { path: '/system/user', resourceKeys: ['roles:active'] },
+      { path: '/system/permission', resourceKeys: ['roles:default', 'workbench:default'] },
+    ]);
+  }, []);
 
-  const loadData = useCallback(async (nextQuery: RoleListQuery = query) => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(async (nextQuery: RoleListQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
-      const result = await getRoleList(nextQuery);
+      const result = isDefaultRoleListQuery(nextQuery)
+        ? await resolveRouteWarmData('/system/role', 'list:default', () => getRoleList(nextQuery))
+        : await getRoleList(nextQuery);
       setData(result.items);
       setTotal(result.total);
     } catch (requestError) {
       setError(requestError);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [query]);
 
   const loadMenus = useCallback(async () => {
     try {
-      const rows = await getMenuTree({ scope: 'manage' });
+      const rows = await resolveRouteWarmData('/system/role', 'menus:manage', () => getMenuTree({ scope: 'manage' }));
       setMenuTree(rows);
     } catch {
       Message.error(t('common.loadFailed'));
@@ -231,10 +258,20 @@ const RoleList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadMenus]);
 
-  useEffect(() => {
+  useRefreshSubscription(['system:menu:changed', 'system:permission:changed', 'system:role:changed'], (payload) => {
+    if (payload.source === 'system/role') {
+      return;
+    }
+    void loadData(query);
+    if (payload.topic === 'system:menu:changed') {
+      void loadMenus();
+    }
+  });
+
+  const visibleSelectedRowKeys = useMemo(() => {
     const visibleKeys = new Set(data.map((item) => item.id));
-    setSelectedRowKeys((current) => current.filter((key) => visibleKeys.has(Number(key))));
-  }, [data]);
+    return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
+  }, [data, selectedRowKeys]);
 
   const permissionCatalog = useMemo(() => {
     const navigationKeys = new Set<string>();
@@ -438,7 +475,15 @@ const RoleList: React.FC = () => {
   };
 
   const submitForm = async () => {
-    const values = await form.validate();
+    let values;
+    try {
+      values = await form.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     const payload: RolePayload = {
       roleName: values.roleName,
       roleKey: values.roleKey,
@@ -456,8 +501,10 @@ const RoleList: React.FC = () => {
         await createRole(payload);
         Message.success(t('common.createSuccess'));
       }
+      invalidateRoleCaches();
+      publishRefresh('system:role:changed', 'system/role');
       setVisible(false);
-      await loadData(query);
+      await loadData(query, { silent: true });
     } finally {
       setSubmitting(false);
     }
@@ -466,6 +513,8 @@ const RoleList: React.FC = () => {
   const removeRole = async (row: RoleRow) => {
     await deleteRole(row.id);
     Message.success(t('common.deleteSuccess'));
+    invalidateRoleCaches();
+    publishRefresh('system:role:changed', 'system/role');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== row.id));
     const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
     const nextQuery = { ...query, page: nextPage };
@@ -473,11 +522,17 @@ const RoleList: React.FC = () => {
   };
 
   const handleBatchStatus = async (status: 1 | 2) => {
+    if (selectedRowKeys.length === 0) {
+      Message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
     const roleIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateRoleStatus({ roleIds, status });
     Message.success(t('system.role.batchStatusSuccess', { count: result.updatedCount }));
+    invalidateRoleCaches();
+    publishRefresh('system:role:changed', 'system/role');
     setSelectedRowKeys([]);
-    await loadData(query);
+    await loadData(query, { silent: true });
   };
 
   const handleExport = async () => {
@@ -552,7 +607,7 @@ const RoleList: React.FC = () => {
     },
     {
       title: t('common.action'),
-      width: 180,
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
       fixed: 'right',
       render: (_: unknown, row: RoleRow) => (
         <Space size={4} className="system-list__actions">
@@ -593,98 +648,196 @@ const RoleList: React.FC = () => {
   };
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const enabledRoleCount = useMemo(
+    () => data.filter((item) => item.status === 1).length,
+    [data],
+  );
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('common.total', { count: total }),
+        value: total,
+        hint: t('system.role.hero.totalHint'),
+      },
+      {
+        key: 'enabled',
+        label: t('system.user.status.enabled'),
+        value: enabledRoleCount,
+        hint: t('system.role.hero.enabledHint'),
+      },
+      {
+        key: 'selected',
+        label: t('system.role.hero.selectedRows'),
+        value: selectedRowKeys.length,
+        hint: t('system.role.hero.selectedHint'),
+      },
+      {
+        key: 'menus',
+        label: t('system.role.hero.menuReady'),
+        value: permissionCatalog.navigationKeys.size,
+        hint: t('system.role.hero.menuHint'),
+      },
+    ],
+    [enabledRoleCount, permissionCatalog.navigationKeys.size, selectedRowKeys.length, t, total],
+  );
 
   return (
     <PageContainer>
       <PageHeader
-        title={t('system.menu.role')}
         extra={(
-          <PageActions>
-            <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>
-              {t('common.export')}
-            </Button>
-            <Popconfirm title={t('system.role.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-              <Button disabled={batchActionDisabled}>
-                {t('system.role.batchEnable')}
-              </Button>
-            </Popconfirm>
-            <Popconfirm title={t('system.role.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-              <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>
-                {t('system.role.batchDisable')}
-              </Button>
-            </Popconfirm>
-            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>
-          </PageActions>
+          <ListHeaderActions
+            utility={<Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>}
+            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+          />
         )}
       />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical">
-            <Row gutter={16}>
-              <Col span={6}>
-                <FormItem label={t('system.role.roleName')} field="roleName">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col span={6}>
-                <FormItem label={t('system.role.roleKey')} field="roleKey">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col span={6}>
-                <FormItem label={t('system.role.status')} field="status">
-                  <Select allowClear options={[
-                    { label: t('system.user.status.enabled'), value: 1 },
-                    { label: t('system.user.status.disabled'), value: 2 },
-                  ]} />
-                </FormItem>
-              </Col>
-              <Col span={6}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                    <Button onClick={reset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
-        <Card className="page-panel system-list__table-card">
-          {loading && data.length === 0 ? <PageLoading /> : null}
-          {error && data.length === 0 ? renderErrorState() : null}
-          {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-          {!loading && !(error && data.length === 0) && data.length > 0 ? (
-            <AppTable<RoleRow>
-              className="system-list__table"
-              data={data}
-              columns={columns}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 980 }}
-              rowSelection={{
-                type: 'checkbox',
-                selectedRowKeys,
-                fixed: true,
-                checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-              }}
-              onChange={handleTableChange}
-              emptyText={t('common.noData')}
-              pagination={{
-                current: query.page || emptyQuery.page,
-                pageSize: query.pageSize || emptyQuery.pageSize,
-                total,
-                showJumper: true,
-                pageSizeChangeResetCurrent: false,
-                sizeCanChange: true,
-                sizeOptions: [10, 20, 50, 100],
-                size: 'small',
-                showTotal: (count: number) => t('common.total', { count }),
-              } as PaginationProps}
-            />
-          ) : null}
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('system.role.hero.eyebrow')}</span>
+              <Typography.Paragraph className="system-page-hero__desc">
+                {t('system.role.hero.desc')}
+              </Typography.Paragraph>
+            </div>
+          </div>
+          <div className="system-page-kpi-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="system-page-kpi">
+                <span className="system-page-kpi__label">{item.label}</span>
+                <span className="system-page-kpi__value">{item.value}</span>
+                <span className="system-page-kpi__hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
         </Card>
+        <div className="page-split-layout">
+          <div className="page-main-column">
+            <FilterPanel>
+              <Form form={queryForm} layout="vertical">
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <FormItem label={t('system.role.roleName')} field="roleName">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col span={6}>
+                    <FormItem label={t('system.role.roleKey')} field="roleKey">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col span={6}>
+                    <FormItem label={t('system.role.status')} field="status">
+                      <Select allowClear options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]} />
+                    </FormItem>
+                  </Col>
+                  <Col span={6}>
+                    <FormItem className="filter-panel__action-item">
+                      <Space>
+                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button onClick={reset}>{t('common.reset')}</Button>
+                      </Space>
+                    </FormItem>
+                  </Col>
+                </Row>
+              </Form>
+            </FilterPanel>
+            <Card className="page-panel system-list__table-card">
+              <TableBatchActionBar
+                selectedCount={selectedRowKeys.length}
+                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                clearText={t('common.clearSelection')}
+                clearSuccessText={t('common.clearSelectionSuccess')}
+                onClear={() => setSelectedRowKeys([])}
+                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+                actions={(
+                  <>
+                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm title={t('system.role.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                        <Button disabled={batchActionDisabled}>
+                          {t('system.role.batchEnable')}
+                        </Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm title={t('system.role.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
+                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>
+                          {t('system.role.batchDisable')}
+                        </Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  </>
+                )}
+              />
+              {loading && data.length === 0 ? <PageLoading /> : null}
+              {error && data.length === 0 ? renderErrorState() : null}
+              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+              {!loading && !(error && data.length === 0) && data.length > 0 ? (
+                <AppTable<RoleRow>
+                  className="system-list__table"
+                  data={data}
+                  columns={columns}
+                  rowKey="id"
+                  loading={loading}
+                  scroll={{ x: 980 }}
+                  rowSelection={{
+                    type: 'checkbox',
+                    selectedRowKeys: visibleSelectedRowKeys,
+                    fixed: true,
+                    checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                  }}
+                  onChange={handleTableChange}
+                  emptyText={t('common.noData')}
+                  pagination={{
+                    current: query.page || emptyQuery.page,
+                    pageSize: query.pageSize || emptyQuery.pageSize,
+                    total,
+                    showJumper: true,
+                    pageSizeChangeResetCurrent: false,
+                    sizeCanChange: true,
+                    sizeOptions: [10, 20, 50, 100],
+                    size: 'small',
+                    showTotal: (count: number) => t('common.total', { count }),
+                  } as PaginationProps}
+                />
+              ) : null}
+            </Card>
+          </div>
+          <div className="page-side-column">
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.role.hero.summaryTitle')}</span>
+              <div className="side-rail-stack">
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.role.hero.pagePerms')}</span>
+                  <span className="side-rail-item__value">{permissionCatalog.pageKeys.size}</span>
+                  <span className="side-rail-item__desc">{t('system.role.hero.pagePermsHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.role.hero.actionPerms')}</span>
+                  <span className="side-rail-item__value">{permissionCatalog.actionKeys.size}</span>
+                  <span className="side-rail-item__desc">{t('system.role.hero.actionPermsHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.role.hero.batchActions')}</span>
+                  <span className="side-rail-item__value">{batchActionDisabled ? t('common.no') : t('common.yes')}</span>
+                  <span className="side-rail-item__desc">{t('system.role.hero.batchHint')}</span>
+                </div>
+              </div>
+            </Card>
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.role.hero.sideTitle')}</span>
+              <div className="side-rail-note">
+                <span className="side-rail-note__title">{t('system.role.hero.sideLead')}</span>
+                <span className="side-rail-note__desc">{t('system.role.hero.sideDesc')}</span>
+              </div>
+            </Card>
+          </div>
+        </div>
       </Space>
 
       <AppModal
@@ -744,6 +897,7 @@ const RoleList: React.FC = () => {
                       <Typography.Text type="secondary">{t('system.role.navigationAuthHint')}</Typography.Text>
                       <FormItem label={t('system.role.menuIds')} field="menuIds">
                         <PermissionTreeSelector
+                          key={`navigation-${navigationPermissionTree.expandedKeys.join('|')}`}
                           treeData={navigationPermissionTree.treeData}
                           defaultExpandedKeys={navigationPermissionTree.expandedKeys}
                           permissionKeys={permissionCatalog.navigationKeys}
@@ -766,6 +920,7 @@ const RoleList: React.FC = () => {
                       <Typography.Text type="secondary">{t('system.role.pageAuthHint')}</Typography.Text>
                       <FormItem label={t('system.role.pagePermissionKeys')} field="pagePermissionKeys">
                         <PermissionTreeSelector
+                          key={`page-${pagePermissionTree.expandedKeys.join('|')}`}
                           treeData={pagePermissionTree.treeData}
                           defaultExpandedKeys={pagePermissionTree.expandedKeys}
                           permissionKeys={permissionCatalog.pageKeys}
@@ -788,6 +943,7 @@ const RoleList: React.FC = () => {
                       <Typography.Text type="secondary">{t('system.role.actionAuthHint')}</Typography.Text>
                       <FormItem label={t('system.role.actionPermissionKeys')} field="actionPermissionKeys">
                         <PermissionTreeSelector
+                          key={`action-${actionPermissionTree.expandedKeys.join('|')}`}
                           treeData={actionPermissionTree.treeData}
                           defaultExpandedKeys={actionPermissionTree.expandedKeys}
                           permissionKeys={permissionCatalog.actionKeys}

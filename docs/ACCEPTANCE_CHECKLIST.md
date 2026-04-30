@@ -1,6 +1,6 @@
 # 设计与实现验收清单
 
-更新时间：2026-04-29
+更新时间：2026-04-30
 
 本文不是路线图，也不是模块契约。
 
@@ -239,6 +239,7 @@
 - 空状态、错误态、无权限态是否统一
 - 是否避免明显 AI 味设计堆砌
 - 是否符合 `docs/FRONTEND_UI_SPEC.md`
+- 是否存在“旧壳层样式 + 新公共骨架”双轨并存却未被标注的状态
 
 ### 7.1 后台 UI 专项验收
 
@@ -253,6 +254,61 @@
 - 系统列表页、树表页、配置页是否统一使用页面骨架和 Arco 组件
 - 是否符合 `docs/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 
+补充平台层混合态验收：
+
+- 右侧栏是否明确属于 `Context` 或 `Alert`，而不是“历史模板复制”；
+- 是否还在新增 `system-page-side / system-page-summary-card / system-page-note` 等旧右栏类名；
+- `rg "system-page-side|system-page-summary-card|system-page-note|system-page-main-grid|system-page-main" frontend/src` 是否为 `0` 命中；
+- `rg "<Modal|<Drawer" frontend/src/modules frontend/src/components` 是否只剩平台封装组件；
+- `rg "Modal\\.confirm|Modal\\.(success|error|info|warning)" frontend/src` 是否只剩平台封装内部命中，而不是业务层直接调用；
+- 是否仍有业务页面直接新增原生 `Modal` / `Drawer` 而绕过统一浮层模式；
+- 左侧导航是否只承担导航，不混入说明卡、统计卡、帮助卡；
+- 竖版侧栏和横版顶栏两种导航模式是否都完成验收，而不是只验证默认模式；
+- 对仍未迁移的历史页面，是否已明确标记为“遗留待收口”，而不是默认视为通过。
+
+### 7.2 `platform` 壳层双模式验收纪律
+
+凡是改动以下任一对象，必须同时触发竖版侧栏与横版顶栏双模式验收：
+
+- `frontend/src/core/layout/index.tsx`
+- `frontend/src/core/layout/index.css`
+- 动态菜单渲染、菜单图标映射、菜单选中态、菜单弹出层样式
+- 影响导航区域的品牌区、页签区、顶部栏、偏好切换入口
+
+固定验收输入：
+
+- 竖版侧栏展开态
+- 竖版侧栏折叠态
+- 横版顶栏主导航态
+- 横版顶栏弹出子菜单态
+
+固定验收项：
+
+- 当前菜单高亮是否一致
+- hover / selected / open 三态是否一致
+- icon badge 尺寸、间距、文字节奏是否一致
+- 外链菜单、分组菜单、普通叶子菜单是否一致
+- 面包屑、页签、头部品牌区是否未因布局切换而错位
+
+固定通过门槛：
+
+- 不允许只提交单一布局截图或单一布局结论
+- 不允许出现“竖版已修复、横版待后续处理”的半通过状态
+- 如有例外，必须在矩阵文档中显式记录为 `Pending`，不能口头保留
+
+固定模板：
+
+- 统一使用 `docs/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
+- 首个基准样例：`docs/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+
+提交流程要求：
+
+- 后续壳层 PR 或阶段记录必须附双模式验收文档链接；
+- 未附文档链接时，只能视为“待验收”，不能视为“已完成”；
+- 若存在 `Pending`，必须同时附矩阵文档链接与挂账位置。
+- PR 描述正文建议统一使用 `docs/PLATFORM_SHELL_PR_TEMPLATE.md`。
+- PR checklist 片段可直接复用 `docs/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md`。
+
 ## 8. 回归验收
 
 新增模块或重构后，至少做以下回归检查：
@@ -266,6 +322,8 @@
 - 前端 `prebuild` 是否通过 `check:i18n-hardcode`
 - locale 审计是否通过 `audit:i18n-locales`
 - 各 locale 是否与基准语言包保持 key 集合一致
+- 是否重新扫描旧右栏类名、原生 `Modal` / `Drawer` 的新增扩散
+- 若影响 `platform` 壳层导航，是否同步补齐竖版 / 横版双模式验收记录
 - 若影响 `system/config`，是否重新验证 `/system/i18n`、`/system/modules`、`/system/generator` 的页面、权限和危险动作链路
 - 若影响 `business/*`，是否重新验证业务入口页与其子模块页的菜单、页面权限、动作权限和审计链路
 
@@ -290,6 +348,7 @@
 - 是否保留 `check:i18n-hardcode`、`audit:i18n-locales`、`npm run build` 三条国际化固定门禁的执行记录
 - 是否验证 `GET /api/v1/health` 可被部署平台、探针或运维脚本直接调用
 - 浏览器页面链路、UI 冒烟、截图证据是否默认使用 gstack browse / gstack Browser；Playwright 仅作为 CI/API smoke 或明确要求时的补充
+- 是否保留一次前端全局扫描记录，至少包含旧右栏模式、原生浮层使用点和导航双模式验收结果
 
 ### 9.3 质量门槛
 

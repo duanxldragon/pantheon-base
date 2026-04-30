@@ -8,7 +8,8 @@
 }
 
 .app-shell__sider {
-  background: var(--panel-bg-solid);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 4%, #f8fbff) 0%, #f7fafc 100%);
   border-right: 1px solid var(--panel-border);
   box-shadow: none;
 }
@@ -20,9 +21,9 @@
   min-height: 72px;
   margin: 16px 16px 14px;
   padding: 14px 14px 14px 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
-  background: var(--panel-bg-solid);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.84);
 }
 
 .app-shell__brand--collapsed {
@@ -78,7 +79,7 @@
 }
 
 .app-shell__menu {
-  padding: 0 12px 16px;
+  padding: 0 10px 16px;
   background: transparent;
   border-inline-end: none !important;
 }
@@ -87,23 +88,109 @@
   padding: 0;
 }
 
+.app-shell__menu-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.app-shell__menu-entry-copy {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.app-shell__menu-entry-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__menu-entry-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-align: center;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.app-shell__menu-entry-icon .arco-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 0 !important;
+}
+
+.app-shell__menu-entry--level-0 {
+  gap: 10px;
+}
+
+.app-shell__menu-entry--level-1,
+.app-shell__menu-entry--level-2 {
+  gap: 10px;
+}
+
+.app-shell__menu-entry-icon--level-0 {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--brand-primary) 56%, var(--text-secondary));
+  box-shadow: none;
+}
+
+.app-shell__menu-entry-icon--level-1,
+.app-shell__menu-entry-icon--level-2 {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
+  box-shadow: none;
+}
+
+.app-shell__menu-entry-icon--level-0 .arco-icon {
+  font-size: 15px;
+}
+
+.app-shell__menu-entry-icon--level-1 .arco-icon,
+.app-shell__menu-entry-icon--level-2 .arco-icon {
+  font-size: 13px;
+}
+
 .app-shell__menu .arco-menu-inline-header,
 .app-shell__menu .arco-menu-item {
   position: relative;
-  min-height: 40px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 6px;
+  min-height: 42px;
+  border-radius: 10px;
+  margin-bottom: 2px;
   overflow: hidden;
   transition: background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.app-shell__menu > .arco-menu-inner > .arco-menu-item,
+.app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header {
+  padding: 0 12px 0 14px !important;
 }
 
 .app-shell__menu .arco-menu-inline-header::before,
 .app-shell__menu .arco-menu-item::before {
   content: '';
   position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 10px;
+  top: 7px;
+  bottom: 7px;
+  left: 6px;
   width: 3px;
   border-radius: var(--radius-pill);
   background: transparent;
@@ -135,25 +222,43 @@
 }
 
 .app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-content > .arco-menu-inner {
-  margin-left: 14px;
-  padding: 4px 0 2px 10px;
-  border-left: 1px solid var(--panel-border);
+  margin-left: 16px;
+  padding: 6px 0 6px 14px;
+  border-left: 1px solid color-mix(in srgb, var(--brand-primary) 12%, var(--panel-border));
   background: transparent;
 }
 
 .app-shell__menu .arco-menu-inline-content .arco-menu-item {
   min-height: 38px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  padding: 0 12px 0 14px !important;
   background: transparent;
 }
 
 .app-shell__menu .arco-menu-inline-content .arco-menu-item .arco-menu-item-inner {
   font-size: 13px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+}
+
+.app-shell__menu .arco-menu-inline-content .arco-menu-item::before {
+  left: 12px;
+  width: 2px;
+}
+
+.app-shell__menu .arco-menu-inline-content .app-shell__menu-entry {
+  align-items: center;
+}
+
+.app-shell__menu .arco-menu-inline-content .app-shell__menu-entry-copy {
+  min-height: 30px;
+  align-items: center;
 }
 
 .app-shell__menu .arco-menu-open > .arco-menu-inline-header {
-  background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff) !important;
+  background: color-mix(in srgb, var(--brand-primary) 5%, rgba(255,255,255,0.84)) !important;
   color: var(--text-primary);
 }
 
@@ -167,17 +272,36 @@
   color: var(--brand-primary) !important;
 }
 
+.app-shell__menu .arco-menu-open > .arco-menu-inline-header .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  color: var(--brand-primary);
+}
+
 .app-shell__menu .arco-menu-item:hover,
 .app-shell__menu .arco-menu-inline-header:hover {
-  background: color-mix(in srgb, var(--brand-primary) 5%, #ffffff) !important;
+  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255,255,255,0.84)) !important;
   color: var(--text-primary);
   box-shadow: none;
 }
 
+.app-shell__menu .arco-menu-item:hover .app-shell__menu-entry-icon--level-0,
+.app-shell__menu .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  color: var(--brand-primary);
+}
+
+.app-shell__menu .arco-menu-item:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__menu .arco-menu-item:hover .app-shell__menu-entry-icon--level-2,
+.app-shell__menu .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__menu .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-2 {
+  background: color-mix(in srgb, var(--brand-primary) 6%, #ffffff);
+  color: var(--brand-primary);
+}
+
 .app-shell__menu .arco-menu-selected,
 .app-shell__menu .arco-menu-inline-header.arco-menu-selected {
-  background: color-mix(in srgb, var(--brand-primary) 9%, #ffffff) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 9%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255,255,255,0.92)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 10%, transparent);
 }
 
 .app-shell__menu .arco-menu-selected,
@@ -197,6 +321,21 @@
   color: var(--brand-primary) !important;
 }
 
+.app-shell__menu .arco-menu-selected .app-shell__menu-entry-icon--level-0,
+.app-shell__menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
+  color: var(--brand-primary);
+  transform: none;
+}
+
+.app-shell__menu .arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__menu .arco-menu-selected .app-shell__menu-entry-icon--level-2,
+.app-shell__menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-2 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  color: var(--brand-primary);
+}
+
 .app-shell__menu .arco-menu-selected .arco-menu-item-inner,
 .app-shell__menu .arco-menu-inline-header.arco-menu-selected .arco-menu-item-inner,
 .app-shell__menu .arco-menu-inline-header.arco-menu-selected .arco-menu-inline-header-title {
@@ -208,6 +347,42 @@
 .app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header .arco-menu-item-inner,
 .app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header-title {
   font-size: 14px;
+}
+
+.app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header .app-shell__menu-entry-label,
+.app-shell__menu > .arco-menu-inner > .arco-menu-item > .arco-menu-item-inner .app-shell__menu-entry-label {
+  font-size: 14px;
+}
+
+.app-shell__menu .arco-menu-inline-content .app-shell__menu-entry-label {
+  font-size: 14px;
+}
+
+.app-shell__menu .arco-menu-icon {
+  margin-right: 0 !important;
+}
+
+.app-shell__menu .arco-menu-icon-suffix {
+  color: var(--text-tertiary);
+}
+
+.app-shell__sider.arco-layout-sider-collapsed .app-shell__menu {
+  padding-inline: 10px;
+}
+
+.app-shell__sider.arco-layout-sider-collapsed .app-shell__menu-entry {
+  justify-content: center;
+}
+
+.app-shell__sider.arco-layout-sider-collapsed .app-shell__menu-entry-copy {
+  display: none;
+}
+
+.app-shell__sider.arco-layout-sider-collapsed .app-shell__menu-entry-icon--level-0,
+.app-shell__sider.arco-layout-sider-collapsed .app-shell__menu-entry-icon--level-1,
+.app-shell__sider.arco-layout-sider-collapsed .app-shell__menu-entry-icon--level-2 {
+  width: 28px;
+  height: 28px;
 }
 
 .app-shell__main {
@@ -223,17 +398,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
-  padding: 16px 28px 12px;
-  background: var(--panel-bg-solid);
+  padding: 14px 28px 12px;
+  background: rgba(255, 255, 255, 0.9);
   border-bottom: 1px solid var(--panel-border);
-  box-shadow: none;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
 }
 
 .app-shell__header-left {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1 1 420px;
   min-width: 0;
 }
 
@@ -280,37 +457,53 @@
 }
 
 .app-shell__header-meta {
+  flex: 1 1 auto;
   min-width: 0;
+  overflow: hidden;
 }
 
 .app-shell__header-title {
-  margin: 0 0 4px !important;
+  margin: 2px 0 0 !important;
   color: var(--text-primary);
-  font-size: 18px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-shell__header-actions {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin-left: auto;
   flex-shrink: 0;
 }
 
 .app-shell__search-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-width: 320px;
-  height: 40px;
-  padding: 0 10px 0 12px;
+  gap: 8px;
+  flex: 0 1 280px;
+  min-width: 220px;
+  max-width: 320px;
+  height: 36px;
+  padding: 0 10px 0 10px;
   border: 1px solid rgba(229, 230, 235, 0.82);
   border-radius: var(--radius-sm);
-  background: var(--panel-bg-solid);
+  background: color-mix(in srgb, var(--brand-primary) 2%, #ffffff);
   color: var(--text-secondary);
   box-shadow: none;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.app-shell__search-trigger .arco-icon {
+  font-size: 14px;
 }
 
 .app-shell__search-trigger:hover {
@@ -345,13 +538,17 @@
 }
 
 .app-shell__icon-btn {
-  min-width: 40px;
-  height: 40px;
-  padding-inline: 10px !important;
+  min-width: 36px;
+  height: 36px;
+  padding-inline: 8px !important;
   border: 1px solid rgba(229, 230, 235, 0.82);
-  background: var(--panel-bg-solid);
+  background: color-mix(in srgb, var(--brand-primary) 2%, #ffffff);
   color: var(--text-secondary);
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.app-shell__icon-btn .arco-icon {
+  font-size: 14px;
 }
 
 .app-shell__icon-btn:hover {
@@ -361,10 +558,23 @@
   box-shadow: none;
 }
 
+.app-shell__icon-btn--attention {
+  border-color: color-mix(in srgb, var(--danger-color, #F53F3F) 18%, var(--panel-border));
+  background: color-mix(in srgb, var(--danger-color, #F53F3F) 5%, #ffffff);
+  color: var(--danger-color, #F53F3F);
+}
+
+.app-shell__icon-btn--attention:hover {
+  border-color: color-mix(in srgb, var(--danger-color, #F53F3F) 28%, var(--panel-border));
+  background: color-mix(in srgb, var(--danger-color, #F53F3F) 7%, #ffffff);
+  color: var(--danger-color, #F53F3F);
+}
+
 .app-shell__top-nav {
-  padding: 8px 28px 10px;
+  padding: 10px 28px 12px;
   border-bottom: 1px solid var(--panel-border);
-  background: var(--panel-bg-solid);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 3%, #fbfdff) 0%, var(--panel-bg-solid) 100%);
   overflow-x: auto;
 }
 
@@ -379,11 +589,11 @@
 }
 
 .app-shell__top-menu {
-  min-height: 48px;
-  padding: 4px 6px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
-  border-radius: 16px;
-  background: var(--panel-bg-solid) !important;
+  min-height: 52px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82) !important;
   border-bottom: none !important;
   box-shadow: none;
   white-space: nowrap;
@@ -391,7 +601,7 @@
 
 .app-shell__top-menu .arco-menu-inner {
   min-width: max-content;
-  gap: 4px;
+  gap: 6px;
   padding: 0;
 }
 
@@ -406,24 +616,90 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  height: 40px;
-  padding: 0 14px !important;
+  min-height: 42px;
+  height: 42px;
+  padding: 0 14px 0 16px !important;
   border: 1px solid transparent;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--brand-primary) 3%, #ffffff);
+  border-radius: 10px;
+  background: transparent;
   color: var(--text-secondary);
   font-weight: 500;
-  line-height: 40px;
+  line-height: 42px;
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.app-shell__top-menu .arco-menu-item::before,
+.app-shell__top-menu .arco-menu-pop-header::before,
+.app-shell__top-menu .arco-menu-inline-header::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 8px;
+  width: 3px;
+  border-radius: 999px;
+  background: transparent;
+  opacity: 0;
+  transform: scaleY(0.55);
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.app-shell__top-menu .app-shell__menu-entry {
+  gap: 10px;
+}
+
+.app-shell__top-menu .app-shell__menu-entry-copy {
+  min-width: 0;
+}
+
+.app-shell__top-menu .app-shell__menu-entry-icon--level-0 {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--brand-primary) 56%, var(--text-secondary));
+}
+
+.app-shell__top-menu .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .app-shell__menu-entry-icon--level-2 {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
 }
 
 .app-shell__top-menu .arco-menu-item:hover,
 .app-shell__top-menu .arco-menu-pop-header:hover,
 .app-shell__top-menu .arco-menu-inline-header:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255,255,255,0.84)) !important;
+}
+
+.app-shell__top-menu .arco-menu-item:hover::before,
+.app-shell__top-menu .arco-menu-pop-header:hover::before,
+.app-shell__top-menu .arco-menu-inline-header:hover::before {
+  opacity: 0.5;
+  transform: scaleY(0.78);
+  background: color-mix(in srgb, var(--brand-primary) 42%, transparent);
+}
+
+.app-shell__top-menu .arco-menu-item:hover .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu .arco-menu-pop-header:hover .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 7%, #ffffff) !important;
+}
+
+.app-shell__top-menu .arco-menu-item:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .arco-menu-item:hover .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu .arco-menu-pop-header:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .arco-menu-pop-header:hover .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-2 {
+  background: color-mix(in srgb, var(--brand-primary) 6%, #ffffff);
+  color: var(--brand-primary);
 }
 
 .app-shell__top-menu .arco-menu-selected,
@@ -432,19 +708,33 @@
   border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
   color: var(--brand-primary) !important;
   font-weight: 600;
-  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff) !important;
+  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255,255,255,0.92)) !important;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 6%, transparent);
 }
 
-.app-shell__top-menu .arco-menu-selected::after,
-.app-shell__top-menu .arco-menu-pop-header.arco-menu-selected::after,
-.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected::after {
-  left: 14px !important;
-  right: 14px !important;
-  bottom: 4px !important;
-  height: 3px !important;
-  border-radius: 999px;
-  background: var(--brand-primary) !important;
+.app-shell__top-menu .arco-menu-selected::before,
+.app-shell__top-menu .arco-menu-pop-header.arco-menu-selected::before,
+.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected::before {
+  opacity: 1;
+  transform: scaleY(1);
+  background: var(--brand-primary);
+}
+
+.app-shell__top-menu .arco-menu-selected .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
+  color: var(--brand-primary);
+}
+
+.app-shell__top-menu .arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .arco-menu-selected .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-2 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  color: var(--brand-primary);
 }
 
 .app-shell__top-menu .arco-menu-icon {
@@ -462,7 +752,7 @@
 .app-shell__top-menu-popup .arco-menu {
   min-width: 220px;
   padding: 8px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
   border-radius: 16px;
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);
@@ -472,13 +762,34 @@
 .app-shell__top-menu-popup .arco-menu-pop-header,
 .app-shell__top-menu-popup .arco-menu-inline-header {
   position: relative;
-  min-height: 40px;
-  margin-bottom: 4px;
+  min-height: 42px;
+  margin-bottom: 2px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   color: var(--text-secondary);
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.app-shell__top-menu-popup .app-shell__menu-entry {
+  gap: 10px;
+}
+
+.app-shell__top-menu-popup .app-shell__menu-entry-icon--level-0 {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--brand-primary) 56%, var(--text-secondary));
+}
+
+.app-shell__top-menu-popup .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .app-shell__menu-entry-icon--level-2 {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
 }
 
 .app-shell__top-menu-popup .arco-menu-item:last-child,
@@ -491,15 +802,32 @@
 .app-shell__top-menu-popup .arco-menu-pop-header:hover,
 .app-shell__top-menu-popup .arco-menu-inline-header:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 14%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 6%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255,255,255,0.84));
   color: var(--text-primary);
+}
+
+.app-shell__top-menu-popup .arco-menu-item:hover .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu-popup .arco-menu-pop-header:hover .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu-popup .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  color: var(--brand-primary);
+}
+
+.app-shell__top-menu-popup .arco-menu-item:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .arco-menu-item:hover .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu-popup .arco-menu-pop-header:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .arco-menu-pop-header:hover .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu-popup .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .arco-menu-inline-header:hover .app-shell__menu-entry-icon--level-2 {
+  background: color-mix(in srgb, var(--brand-primary) 6%, #ffffff);
+  color: var(--brand-primary);
 }
 
 .app-shell__top-menu-popup .arco-menu-selected,
 .app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected,
 .app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected {
   border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255,255,255,0.92));
   color: var(--brand-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 6%, transparent);
 }
@@ -534,6 +862,23 @@
   color: inherit;
 }
 
+.app-shell__top-menu-popup .arco-menu-selected .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-0 {
+  background: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
+  color: var(--brand-primary);
+}
+
+.app-shell__top-menu-popup .arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .arco-menu-selected .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-2 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  color: var(--brand-primary);
+}
+
 .app-shell__top-menu-popup .arco-menu-item-inner,
 .app-shell__top-menu-popup .arco-menu-pop-header .arco-menu-item-inner,
 .app-shell__top-menu-popup .arco-menu-inline-header .arco-menu-item-inner {
@@ -554,11 +899,11 @@
 .app-shell__user-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  height: 42px;
-  padding-inline: 10px !important;
+  gap: 8px;
+  height: 36px;
+  padding-inline: 8px !important;
   border: 1px solid rgba(229, 230, 235, 0.82);
-  background: var(--panel-bg-solid);
+  background: rgba(255, 255, 255, 0.94);
   box-shadow: none;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
@@ -567,6 +912,155 @@
   border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
   background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
   box-shadow: none;
+}
+
+.app-shell__preference-panel {
+  width: 340px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
+  border-radius: 14px;
+  background: var(--panel-bg-solid);
+  box-shadow: var(--panel-shadow-soft);
+}
+
+.app-shell__preference-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.app-shell__preference-title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.app-shell__preference-subtitle {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.app-shell__preference-section + .app-shell__preference-section {
+  margin-top: 14px;
+}
+
+.app-shell__preference-section-title {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.app-shell__preference-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.app-shell__preference-item:hover,
+.app-shell__preference-item--active {
+  border-color: color-mix(in srgb, var(--brand-primary) 14%, var(--panel-border));
+  background: color-mix(in srgb, var(--brand-primary) 5%, #ffffff);
+}
+
+.app-shell__preference-item + .app-shell__preference-item {
+  margin-top: 6px;
+}
+
+.app-shell__preference-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  color: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.app-shell__preference-theme-swatch {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.app-shell__preference-item-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-shell__preference-item-title {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.app-shell__preference-item-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.app-shell__preference-check {
+  color: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.app-shell__preference-pills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.app-shell__preference-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(229, 230, 235, 0.9);
+  border-radius: 10px;
+  background: var(--panel-bg-solid);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.app-shell__preference-pill span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__preference-pill:hover,
+.app-shell__preference-pill--active {
+  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
+  background: color-mix(in srgb, var(--brand-primary) 7%, #ffffff);
+  color: var(--brand-primary);
 }
 
 .app-shell__user-meta {
@@ -583,6 +1077,7 @@
   white-space: nowrap;
   font-weight: 600;
   color: var(--text-primary);
+  font-size: 13px;
 }
 
 .app-shell__user-subtitle {
@@ -591,17 +1086,27 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 11px;
 }
 
+.app-shell__header-breadcrumb,
 .app-shell__header .arco-breadcrumb {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .app-shell__header .arco-breadcrumb-item,
-.app-shell__header .arco-breadcrumb-item a {
+.app-shell__header .arco-breadcrumb-item a,
+.app-shell__header .arco-breadcrumb-item-link {
   color: var(--text-tertiary);
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .app-shell__header .arco-breadcrumb-item:last-child,
@@ -614,7 +1119,7 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  padding: 6px 28px;
+  padding: 6px 28px 8px;
   overflow-x: auto;
   border-bottom: 1px solid var(--panel-border);
   background: var(--panel-bg-solid);
@@ -714,7 +1219,7 @@
 .app-shell__content {
   padding: 24px 28px 0;
   overflow: auto;
-  background: transparent;
+  background: linear-gradient(180deg, #f7fbfb 0%, #f5faf8 100%);
 }
 
 .app-shell__content-inner {
@@ -737,10 +1242,10 @@
 }
 
 .app-shell__notice-panel {
-  width: 320px;
-  padding: 12px;
+  width: 300px;
+  padding: 10px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);
 }
@@ -781,15 +1286,15 @@
 .app-shell__notice-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .app-shell__notice-stat {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
@@ -808,7 +1313,7 @@
 
 .app-shell__notice-stat-value {
   color: var(--text-primary);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -817,8 +1322,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
   border-radius: 12px;
   background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
 }
@@ -841,7 +1346,7 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 10px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
@@ -904,7 +1409,7 @@
 }
 
 .app-shell__notice-list {
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .app-shell__notice-section {
@@ -921,7 +1426,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -931,7 +1436,7 @@
 }
 
 .app-shell__notice-item + .app-shell__notice-item {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .app-shell__notice-item:hover {
@@ -943,9 +1448,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
   flex-shrink: 0;
@@ -1027,14 +1532,14 @@
 
 .app-shell__notice-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 3px;
+  right: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding-inline: 5px;
+  min-width: 16px;
+  height: 16px;
+  padding-inline: 4px;
   border-radius: 999px;
   background: #F53F3F;
   color: #fff;
@@ -1044,16 +1549,16 @@
 }
 
 .app-command__input {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .app-command__results {
-  max-height: 420px;
+  max-height: 360px;
   overflow: auto;
 }
 
 .app-command__section {
-  margin: 16px 0 8px;
+  margin: 12px 0 6px;
   color: var(--text-tertiary);
   font-size: 12px;
   font-weight: 600;
@@ -1070,9 +1575,9 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   color: inherit;
   text-align: left;
@@ -1085,16 +1590,16 @@
 }
 
 .app-command__item + .app-command__item {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .app-command__item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
   flex-shrink: 0;
@@ -1109,7 +1614,7 @@
 
 .app-command__item-title {
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -1121,23 +1626,44 @@
 
 @media (max-width: 1200px) {
   .app-shell__header {
-    flex-direction: column;
+    padding-inline: 20px;
+  }
+
+  .app-shell__header-actions {
+    flex-basis: 360px;
+  }
+
+  .app-shell__search-trigger {
+    min-width: 220px;
+  }
+
+  .app-shell__top-nav {
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-shell__header {
     align-items: stretch;
+  }
+
+  .app-shell__header-left,
+  .app-shell__header-actions {
+    flex-basis: 100%;
   }
 
   .app-shell__header-actions {
     width: 100%;
     justify-content: space-between;
-    flex-wrap: wrap;
+    margin-left: 0;
   }
 
   .app-shell__search-trigger {
-    width: 100%;
-    min-width: 0;
+    max-width: none;
   }
 
-  .app-shell__top-nav {
-    padding-inline: 16px;
+  .app-shell__preference-panel {
+    width: min(340px, calc(100vw - 32px));
   }
 }
 
@@ -1157,6 +1683,14 @@
 
   .app-shell__top-menu {
     border-radius: 14px;
+  }
+
+  .app-shell__search-shortcut {
+    display: none;
+  }
+
+  .app-shell__preference-pills {
+    flex-direction: column;
   }
 
   .app-shell__tabs,

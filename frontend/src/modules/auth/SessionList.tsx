@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Card,
   Button,
@@ -7,17 +7,21 @@ import {
   Input,
   Message,
   Popconfirm,
+  Select,
   Space,
   Tag,
+  Typography,
 } from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
+import { getSettingGroup } from '../system/setting/api';
 import { formatDateTime } from '../../core/format/dateTime';
 import { useAuthStore } from '../../store/useAuthStore';
 import { usePermission } from '../../hooks/usePermission';
 import {
+  cleanupAdminSessions,
   getAdminSessionList,
   revokeAdminSession,
   type AdminSessionPageResp,
@@ -27,14 +31,16 @@ import {
 import {
   AppTable,
   FilterPanel,
+  GovernanceCleanupBar,
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
+  TABLE_ACTION_COLUMN_WIDTH,
 } from '../../components';
 import { formatClientSummary } from './clientInfo';
 import SessionDetailModal from './SessionDetailModal';
+import '../system/list-page.css';
 import './auth.css';
 
 const Row = Grid.Row;
@@ -43,35 +49,79 @@ const FormItem = Form.Item;
 
 const emptyQuery: AdminSessionQuery = {
   username: '',
+  lastIp: '',
+  browser: undefined,
+  os: undefined,
+  device: undefined,
+  status: undefined,
   page: 1,
   pageSize: 10,
 };
+const defaultRetentionOptions = [1, 7, 30];
+
+function normalizeRetentionOptions(rawValue: string | undefined) {
+  if (!rawValue) {
+    return defaultRetentionOptions;
+  }
+  try {
+    const parsed = JSON.parse(rawValue) as unknown;
+    if (!Array.isArray(parsed)) {
+      return defaultRetentionOptions;
+    }
+    const normalized = Array.from(
+      new Set(
+        parsed
+          .map((item) => Number(item))
+          .filter((item) => Number.isInteger(item) && item > 0),
+      ),
+    ).sort((left, right) => right - left);
+    return normalized.length > 0 ? normalized : defaultRetentionOptions;
+  } catch {
+    return defaultRetentionOptions;
+  }
+}
+
+interface LoadDataOptions {
+  silent?: boolean;
+}
 
 const SessionList: React.FC = () => {
   const { t } = useTranslation();
   const { userInfo } = useAuthStore();
   const { isAdmin, hasPerm } = usePermission();
   const canDelete = isAdmin || hasPerm('system:session:delete');
+  const canClear = isAdmin || hasPerm('system:session:clear');
   const [data, setData] = useState<AdminSessionRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [revokedCount, setRevokedCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [query, setQuery] = useState<AdminSessionQuery>(emptyQuery);
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
   const [queryForm] = Form.useForm<AdminSessionQuery>();
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [retentionOptions, setRetentionOptions] = useState<number[]>(() => [...defaultRetentionOptions].sort((left, right) => right - left));
 
-  const loadData = useCallback(async (nextQuery: AdminSessionQuery = query) => {
-    setLoading(true);
-    setLoadFailed(false);
+  const loadData = useCallback(async (nextQuery: AdminSessionQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setLoadFailed(false);
+    }
     try {
       const result: AdminSessionPageResp = await getAdminSessionList(nextQuery);
       setData(result.items);
       setTotal(result.total);
+      setActiveCount(result.activeCount);
+      setRevokedCount(result.revokedCount);
     } catch {
       setLoadFailed(true);
       Message.error(t('common.loadFailed'));
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [query, t]);
 
@@ -81,6 +131,20 @@ const SessionList: React.FC = () => {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loadData, query]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      getSettingGroup('audit')
+        .then((group) => {
+          const setting = group.items.find((item) => item.settingKey === 'audit.session_cleanup_retention_options');
+          const nextOptions = normalizeRetentionOptions(setting?.settingValue);
+          setRetentionOptions(nextOptions);
+          setRetentionDays((current) => (nextOptions.includes(current) ? current : nextOptions[0]));
+        })
+        .catch(() => undefined);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const search = () => {
     const values = queryForm.getFieldsValue();
@@ -107,29 +171,48 @@ const SessionList: React.FC = () => {
   const removeSession = async (row: AdminSessionRow) => {
     await revokeAdminSession(row.sessionId);
     Message.success(t('auth.session.revokeSuccess'));
-    await loadData(query);
+    await loadData(query, { silent: true });
+  };
+
+  const clearHistoricSessions = async () => {
+    const resp = await cleanupAdminSessions({ retentionDays });
+    Message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
+    await loadData(query, { silent: true });
   };
 
   const currentUsername = userInfo?.username;
-  const activeCount = data.filter((item) => !item.revokedAt).length;
-  const revokedCount = data.filter((item) => Boolean(item.revokedAt)).length;
-  const statItems = [
-    {
-      label: t('auth.security.sessions'),
-      value: String(total),
-      hint: t('auth.session.subtitle'),
-    },
-    {
-      label: t('auth.session.status.active'),
-      value: String(activeCount),
-      hint: t('auth.security.sessionHint'),
-    },
-    {
-      label: t('auth.session.status.revoked'),
-      value: String(revokedCount),
-      hint: t('auth.session.selfProtected'),
-    },
-  ];
+  const browserOptions = ['Chrome', 'Edge', 'Firefox', 'Safari', 'Opera', 'WeChat', 'Unknown'];
+  const osOptions = ['Windows', 'macOS', 'Linux', 'Android', 'iOS', 'Unknown'];
+  const deviceOptions = ['Desktop', 'iPhone', 'iPad', 'Android Phone', 'Android Tablet', 'Mobile', 'Unknown'];
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('auth.session.hero.totalLabel'),
+        value: total,
+        hint: t('auth.session.hero.totalHint'),
+      },
+      {
+        key: 'active',
+        label: t('auth.session.status.active'),
+        value: activeCount,
+        hint: t('auth.session.hero.activeHint'),
+      },
+      {
+        key: 'revoked',
+        label: t('auth.session.status.revoked'),
+        value: revokedCount,
+        hint: t('auth.session.hero.revokedHint'),
+      },
+      {
+        key: 'self',
+        label: t('auth.session.hero.currentUser'),
+        value: currentUsername || '-',
+        hint: t('auth.session.selfProtected'),
+      },
+    ],
+    [activeCount, currentUsername, revokedCount, t, total],
+  );
 
   const columns: ColumnProps<AdminSessionRow>[] = [
     {
@@ -168,7 +251,12 @@ const SessionList: React.FC = () => {
         </Space>
       ),
     },
-    { title: t('auth.session.lastActive'), dataIndex: 'lastRefreshAt', width: 150, render: (value?: string) => formatDateTime(value) },
+    {
+      title: t('auth.session.lastActive'),
+      dataIndex: 'lastActivityAt',
+      width: 150,
+      render: (_: unknown, row: AdminSessionRow) => formatDateTime(row.lastActivityAt || row.lastRefreshAt),
+    },
     { title: t('auth.session.refreshExpiresAt'), dataIndex: 'refreshExpiresAt', width: 160, render: (value: string) => formatDateTime(value) },
     {
       title: t('auth.session.status'),
@@ -179,11 +267,12 @@ const SessionList: React.FC = () => {
     {
       title: t('common.action'),
       dataIndex: 'action',
-      width: 168,
+      width: TABLE_ACTION_COLUMN_WIDTH.medium,
+      fixed: 'right',
       render: (_: unknown, row: AdminSessionRow) => {
         const isSelf = row.username === currentUsername;
         return (
-          <Space size={4}>
+          <Space size={4} className="system-list__actions">
             <Button size="small" onClick={() => setDetailSession(row)}>
               {t('common.detail')}
             </Button>
@@ -209,76 +298,162 @@ const SessionList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.session')}
-        subtitle={t('auth.session.subtitle')}
-      />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <div className="auth-page-stat-grid">
-          {statItems.map((item) => (
-            <Card key={item.label} className="page-stat-panel auth-page-stat-card">
-              <span className="auth-page-stat-card__label">{item.label}</span>
-              <span className="auth-page-stat-card__value">{item.value}</span>
-              <span className="auth-page-stat-card__hint">{item.hint}</span>
-            </Card>
-          ))}
-        </div>
-
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical">
-            <Row gutter={16} className="auth-filter-grid">
-              <Col xs={24} md={12} lg={8}>
-                <FormItem label={t('system.user.username')} field="username">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={16}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                    <Button onClick={reset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
-
-        <Card className="page-panel">
-          <div className="auth-inline-note" style={{ marginBottom: 16 }}>
-            <div className="auth-inline-note__copy">
-              <span className="auth-inline-note__title">{t('auth.session.selfProtected')}</span>
-              <span className="auth-inline-note__desc">{currentUsername ? `${t('auth.session.currentUser')}: ${currentUsername}` : t('auth.security.sessionHint')}</span>
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('auth.session.hero.eyebrow')}</span>
+              <Typography.Paragraph className="system-page-hero__desc">
+                {t('auth.session.hero.desc')}
+              </Typography.Paragraph>
             </div>
-            {currentUsername ? <Tag color="arcoblue">{currentUsername}</Tag> : null}
           </div>
-          {loading && data.length === 0 ? <PageLoading /> : null}
-          {loadFailed && !loading ? (
-            <PageError onRetry={() => { void loadData(query); }} />
-          ) : data.length === 0 && !loading ? (
-            <PageEmpty description={t('auth.session.empty')} />
-          ) : (
-            <AppTable<AdminSessionRow>
-              rowKey="sessionId"
-              data={data}
-              columns={columns}
-              loading={loading}
-              onChange={handleTableChange}
-              emptyText={t('auth.session.empty')}
-              pagination={{
-                current: query.page || emptyQuery.page,
-                pageSize: query.pageSize || emptyQuery.pageSize,
-                total,
-                showJumper: true,
-                pageSizeChangeResetCurrent: false,
-                sizeCanChange: true,
-                sizeOptions: [10, 20, 50, 100],
-                size: 'small',
-                showTotal: (count: number) => t('common.total', { count }),
-              } as PaginationProps}
-            />
-          )}
+          <div className="system-page-kpi-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="system-page-kpi">
+                <span className="system-page-kpi__label">{item.label}</span>
+                <span className="system-page-kpi__value">{item.value}</span>
+                <span className="system-page-kpi__hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
         </Card>
+        <div className="page-split-layout">
+          <div className="page-main-column">
+            <FilterPanel>
+              <Form form={queryForm} layout="vertical">
+                <Row gutter={16} className="auth-filter-grid">
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem label={t('system.user.username')} field="username">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem label={t('auth.session.ip')} field="lastIp">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem label={t('auth.session.filter.status')} field="status">
+                      <Select allowClear>
+                        <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
+                        <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
+                      </Select>
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem label={t('auth.session.browserName')} field="browser">
+                      <Select allowClear>
+                        {browserOptions.map((item) => (
+                          <Select.Option key={item} value={item}>{item}</Select.Option>
+                        ))}
+                      </Select>
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem label={t('auth.session.osName')} field="os">
+                      <Select allowClear>
+                        {osOptions.map((item) => (
+                          <Select.Option key={item} value={item}>{item}</Select.Option>
+                        ))}
+                      </Select>
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem label={t('auth.session.deviceName')} field="device">
+                      <Select allowClear>
+                        {deviceOptions.map((item) => (
+                          <Select.Option key={item} value={item}>{item}</Select.Option>
+                        ))}
+                      </Select>
+                    </FormItem>
+                  </Col>
+                  <Col xs={24} md={12} lg={8}>
+                    <FormItem className="filter-panel__action-item">
+                      <Space>
+                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button onClick={reset}>{t('common.reset')}</Button>
+                      </Space>
+                    </FormItem>
+                  </Col>
+                </Row>
+              </Form>
+            </FilterPanel>
+
+            <Card className="page-panel system-list__table-card">
+              {canClear ? (
+                <div>
+                  <GovernanceCleanupBar
+                    retentionDays={retentionDays}
+                    retentionOptions={retentionOptions}
+                    onRetentionChange={setRetentionDays}
+                    retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+                    confirmTitle={t('auth.session.cleanupConfirm', { count: retentionDays })}
+                    actionLabel={t('auth.session.cleanupAction')}
+                    onConfirm={() => { void clearHistoricSessions(); }}
+                    hint={t('auth.session.cleanupHint')}
+                  />
+                </div>
+              ) : null}
+              {loading && data.length === 0 ? <PageLoading /> : null}
+              {loadFailed && !loading ? (
+                <PageError onRetry={() => { void loadData(query); }} />
+              ) : data.length === 0 && !loading ? (
+                <PageEmpty description={t('auth.session.empty')} />
+              ) : (
+                <AppTable<AdminSessionRow>
+                  rowKey="sessionId"
+                  data={data}
+                  columns={columns}
+                  loading={loading}
+                  scroll={{ x: 1600 }}
+                  onChange={handleTableChange}
+                  emptyText={t('auth.session.empty')}
+                  pagination={{
+                    current: query.page || emptyQuery.page,
+                    pageSize: query.pageSize || emptyQuery.pageSize,
+                    total,
+                    showJumper: true,
+                    pageSizeChangeResetCurrent: false,
+                    sizeCanChange: true,
+                    sizeOptions: [10, 20, 50, 100],
+                    size: 'small',
+                    showTotal: (count: number) => t('common.total', { count }),
+                  } as PaginationProps}
+                />
+              )}
+            </Card>
+          </div>
+          <div className="page-side-column">
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('auth.session.hero.summaryTitle')}</span>
+              <div className="side-rail-stack">
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('auth.session.currentUser')}</span>
+                  <span className="side-rail-item__value">{currentUsername || '-'}</span>
+                  <span className="side-rail-item__desc">{t('auth.session.selfProtected')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('auth.session.status.active')}</span>
+                  <span className="side-rail-item__value">{activeCount}</span>
+                  <span className="side-rail-item__desc">{t('auth.session.hero.activeHint')}</span>
+                </div>
+                <div className="side-rail-item side-rail-item--warning">
+                  <span className="side-rail-item__label">{t('auth.session.status.revoked')}</span>
+                  <span className="side-rail-item__value">{revokedCount}</span>
+                  <span className="side-rail-item__desc">{t('auth.session.hero.revokedHint')}</span>
+                </div>
+              </div>
+            </Card>
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('auth.session.hero.sideTitle')}</span>
+              <div className="side-rail-note">
+                <span className="side-rail-note__title">{t('auth.security.sessionHint')}</span>
+                <span className="side-rail-note__desc">{t('auth.session.hero.sideDesc')}</span>
+              </div>
+            </Card>
+          </div>
+        </div>
       </Space>
       <SessionDetailModal
         visible={Boolean(detailSession)}

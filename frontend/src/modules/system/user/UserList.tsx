@@ -1,9 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Button, Card, Form, Grid, Input, Message, Popconfirm, Select, Space, Tag } from '@arco-design/web-react';
-import { IconDelete, IconDownload, IconEdit, IconEye, IconLock, IconPlus, IconSearch } from '@arco-design/web-react/icon';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Avatar, Button, Card, Form, Grid, Input, Message, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import { IconDelete, IconDownload, IconEdit, IconEye, IconLock, IconPlus, IconSearch, IconUpload } from '@arco-design/web-react/icon';
+import { uploadSystemFile } from '../../../api/upload';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { formatDateTime } from '../../../core/format/dateTime';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import { getDeptTree, type DeptNode } from '../dept/api';
 import { getPostList } from '../post/api';
@@ -11,9 +16,9 @@ import { getRoleList } from '../role/api';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { batchUpdateUserStatus, createUser, deleteUser, downloadUserImportTemplate, exportUsers, getUserDetail, getUserList, importUsers, resetUserPassword, updateUser, type UserCreatePayload, type UserDetail as UserDetailData, type UserListQuery, type UserListRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
-import { formatDateTime } from '../../../core/format/dateTime';
+import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import UserDetailContent from './UserDetailContent';
+import '../list-page.css';
 import './user.css';
 
 const Row = Grid.Row;
@@ -46,6 +51,22 @@ const emptyQuery: UserListQuery = {
   pageSize: 10,
 };
 
+function isDefaultUserListQuery(query: UserListQuery) {
+  return !query.username
+    && !query.nickname
+    && query.status === undefined
+    && query.deptId === undefined
+    && query.postId === undefined
+    && (query.page ?? 1) === 1
+    && (query.pageSize ?? 10) === 10
+    && !query.sortField
+    && !query.sortOrder;
+}
+
+interface LoadDataOptions {
+  silent?: boolean;
+}
+
 const UserList: React.FC = () => {
   const [data, setData] = useState<UserListRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -65,6 +86,8 @@ const UserList: React.FC = () => {
   const [deptOptions, setDeptOptions] = useState<Array<{ label: string; value: number }>>([]);
   const [postOptions, setPostOptions] = useState<Array<{ label: string; value: number; deptId: number }>>([]);
   const [formDeptId, setFormDeptId] = useState(0);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [form] = Form.useForm<UserCreatePayload>();
   const [resetPasswordForm] = Form.useForm<ResetPasswordFormValues>();
   const [queryForm] = Form.useForm<UserListQuery>();
@@ -78,24 +101,37 @@ const UserList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:user:export');
   const canImport = isAdmin || hasPerm('system:user:import');
   const canBatchUpdate = isAdmin || hasPerm('system:user:batch-update');
+  const invalidateUserCaches = useCallback(() => {
+    invalidateRouteWarmDataMany([
+      { path: '/system/user', resourceKeys: ['list:default'] },
+      { path: '/system/dept', resourceKeys: ['users:org-chart'] },
+    ]);
+  }, []);
 
-  const loadData = useCallback(async (nextQuery: UserListQuery = query) => {
-    setLoading(true);
-    setError(null);
+  const loadData = useCallback(async (nextQuery: UserListQuery = query, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
-      const result = await getUserList(nextQuery);
+      const result = isDefaultUserListQuery(nextQuery)
+        ? await resolveRouteWarmData('/system/user', 'list:default', () => getUserList(nextQuery))
+        : await getUserList(nextQuery);
       setData(result.items);
       setTotal(result.total);
     } catch (requestError) {
       setError(requestError);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [query]);
 
   const loadRoles = useCallback(async () => {
     try {
-      const result = await getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 });
+      const result = await resolveRouteWarmData('/system/user', 'roles:active', () => getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 }));
       setRoleOptions(result.items.map((item) => ({
         label: item.roleName,
         value: item.id,
@@ -108,8 +144,8 @@ const UserList: React.FC = () => {
   const loadDeptAndPostOptions = useCallback(async () => {
     try {
       const [deptRows, postRows] = await Promise.all([
-        getDeptTree({ sortField: 'sort', sortOrder: 'asc' }),
-        getPostList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 }),
+        resolveRouteWarmData('/system/user', 'depts:default', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' })),
+        resolveRouteWarmData('/system/user', 'posts:active', () => getPostList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 })),
       ]);
       const flattenDept = (nodes: DeptNode[], depth = 0): Array<{ label: string; value: number }> =>
         nodes.flatMap((item) => [
@@ -149,28 +185,44 @@ const UserList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadDeptAndPostOptions]);
 
+  useRefreshSubscription(['system:user:changed', 'system:role:changed', 'system:dept:changed', 'system:post:changed'], (payload) => {
+    if (payload.source === 'system/user') {
+      return;
+    }
+    void loadData(query);
+    void loadRoles();
+    void loadDeptAndPostOptions();
+  });
+
   const openCreate = () => {
     setEditing(null);
     setFormDeptId(emptyForm.deptId || 0);
+    setAvatarPreview('');
     form.setFieldsValue(emptyForm);
     setVisible(true);
   };
 
-  const openEdit = (row: UserListRow) => {
-    setEditing(row);
-    setFormDeptId(row.deptId || 0);
-    form.setFieldsValue({
-      username: row.username,
-      nickname: row.nickname,
-      email: row.email,
-      phone: row.phone,
-      avatar: '',
-      deptId: row.deptId,
-      postId: row.postId,
-      status: row.status,
-      roleIds: row.roleIds,
-    });
-    setVisible(true);
+  const openEdit = async (row: UserListRow) => {
+    try {
+      const detail = await getUserDetail(row.id);
+      setEditing(row);
+      setFormDeptId(detail.deptId || 0);
+      setAvatarPreview(detail.avatar || '');
+      form.setFieldsValue({
+        username: detail.username,
+        nickname: detail.nickname,
+        email: detail.email,
+        phone: detail.phone,
+        avatar: detail.avatar || '',
+        deptId: detail.deptId,
+        postId: detail.postId,
+        status: detail.status,
+        roleIds: detail.roleIds,
+      });
+      setVisible(true);
+    } catch {
+      Message.error(t('common.loadFailed'));
+    }
   };
 
   const loadDetail = useCallback(async (id: number) => {
@@ -202,7 +254,15 @@ const UserList: React.FC = () => {
   };
 
   const submitForm = async () => {
-    const values = await form.validate();
+    let values;
+    try {
+      values = await form.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setSubmitting(true);
     try {
       if (editing) {
@@ -221,10 +281,28 @@ const UserList: React.FC = () => {
         await createUser(values);
         Message.success(t('common.createSuccess'));
       }
+      invalidateUserCaches();
+      publishRefresh('system:user:changed', 'system/user');
       setVisible(false);
-      await loadData(query);
+      setAvatarPreview('');
+      await loadData(query, { silent: true });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUploadAvatar = async (file?: File | null) => {
+    if (!file) {
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const uploaded = await uploadSystemFile(file, 'user/avatar');
+      form.setFieldValue('avatar', uploaded.url);
+      setAvatarPreview(uploaded.url);
+      Message.success(t('system.profile.avatarUploadSuccess'));
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -237,7 +315,15 @@ const UserList: React.FC = () => {
     if (!resetTarget) {
       return;
     }
-    const values = await resetPasswordForm.validate();
+    let values;
+    try {
+      values = await resetPasswordForm.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setSubmitting(true);
     try {
       const result = await resetUserPassword(resetTarget.id, { newPassword: values.newPassword });
@@ -252,6 +338,8 @@ const UserList: React.FC = () => {
   const removeUser = async (id: number) => {
     await deleteUser(id);
     Message.success(t('common.deleteSuccess'));
+    invalidateUserCaches();
+    publishRefresh('system:user:changed', 'system/user');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
     const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
     const nextQuery = { ...query, page: nextPage };
@@ -339,17 +427,17 @@ const UserList: React.FC = () => {
     },
     {
       title: t('common.action'),
-      width: 320,
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
       fixed: 'right',
       render: (_: unknown, row: UserListRow) => (
-        <Space size={4} className="system-user-list__actions">
+        <Space size={4} className="system-list__actions">
           {canView ? (
             <Button type="text" size="small" icon={<IconEye />} onClick={() => openDetail(row)}>
               {t('common.detail')}
             </Button>
           ) : null}
           {canEdit ? (
-            <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
+            <Button type="text" size="small" icon={<IconEdit />} onClick={() => { void openEdit(row); }}>
               {t('common.edit')}
             </Button>
           ) : null}
@@ -392,18 +480,26 @@ const UserList: React.FC = () => {
     const result = await importUsers(file);
     showImportResult(result, t);
     if (result.applied) {
-      await loadData(query);
+      invalidateUserCaches();
+      publishRefresh('system:user:changed', 'system/user');
+      await loadData(query, { silent: true });
       await loadRoles();
       await loadDeptAndPostOptions();
     }
   };
 
   const handleBatchStatus = async (status: 1 | 2) => {
+    if (selectedRowKeys.length === 0) {
+      Message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
     const userIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateUserStatus({ userIds, status });
     Message.success(t('system.user.batchStatusSuccess', { count: result.updatedCount }));
+    invalidateUserCaches();
+    publishRefresh('system:user:changed', 'system/user');
     setSelectedRowKeys([]);
-    await loadData(query);
+    await loadData(query, { silent: true });
   };
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
@@ -425,105 +521,220 @@ const UserList: React.FC = () => {
     }
   };
 
+  const enabledUserCount = useMemo(
+    () => data.filter((item) => item.status === 1).length,
+    [data],
+  );
+  const disabledUserCount = useMemo(
+    () => data.filter((item) => item.status !== 1).length,
+    [data],
+  );
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('common.total', { count: total }),
+        value: total,
+        hint: t('system.user.hero.totalHint'),
+      },
+      {
+        key: 'enabled',
+        label: t('system.user.status.enabled'),
+        value: enabledUserCount,
+        hint: t('system.user.hero.enabledHint'),
+      },
+      {
+        key: 'selected',
+        label: t('system.user.hero.selectedRows'),
+        value: selectedRowKeys.length,
+        hint: t('system.user.hero.selectedHint'),
+      },
+      {
+        key: 'roles',
+        label: t('system.user.hero.rolesReady'),
+        value: roleOptions.length,
+        hint: t('system.user.hero.rolesHint'),
+      },
+    ],
+    [enabledUserCount, roleOptions.length, selectedRowKeys.length, t, total],
+  );
+
   return (
     <PageContainer>
       <PageHeader
-        title={t('system.menu.user')}
         extra={(
-          <PageActions>
-            <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-            <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
-            <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
-              {t('common.import')}
-            </ImportCsvButton>
-            <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-              <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
-            </Popconfirm>
-            <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-              <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
-            </Popconfirm>
-            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>
-          </PageActions>
+          <ListHeaderActions
+            utility={(
+              <>
+                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
+                <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
+                  {t('common.import')}
+                </ImportCsvButton>
+              </>
+            )}
+            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+          />
         )}
       />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical">
-            <Row gutter={16}>
-              <Col span={6}>
-                <FormItem label={t('system.user.username')} field="username">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col span={6}>
-                <FormItem label={t('system.user.nickname')} field="nickname">
-                  <Input />
-                </FormItem>
-              </Col>
-              <Col span={6}>
-                <FormItem label={t('system.user.status')} field="status">
-                  <Select allowClear options={[
-                    { label: t('system.user.status.enabled'), value: 1 },
-                    { label: t('system.user.status.disabled'), value: 2 },
-                  ]} />
-                </FormItem>
-              </Col>
-              <Col span={6}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                    <Button onClick={reset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
-        <Card className="page-panel system-user-list__table-card">
-          {loading && data.length === 0 ? <PageLoading /> : null}
-          {error && data.length === 0 ? renderErrorState() : null}
-          {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-          {!loading && !(error && data.length === 0) && data.length > 0 ? (
-            <AppTable<UserListRow>
-              className="system-user-list__table"
-              data={data}
-              columns={columns}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 1560 }}
-              rowSelection={{
-                type: 'checkbox',
-                selectedRowKeys,
-                fixed: true,
-                checkboxProps: (row) => ({ disabled: row.id === 1 }),
-                onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-              }}
-              onChange={handleTableChange}
-              emptyText={t('common.noData')}
-              pagination={{
-                current: query.page || emptyQuery.page,
-                pageSize: query.pageSize || emptyQuery.pageSize,
-                total,
-                showJumper: true,
-                pageSizeChangeResetCurrent: false,
-                sizeCanChange: true,
-                sizeOptions: [10, 20, 50, 100],
-                size: 'small',
-                showTotal: (count: number) => t('common.total', { count }),
-              } as PaginationProps}
-            />
-          ) : null}
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('system.user.hero.eyebrow')}</span>
+              <Typography.Paragraph className="system-page-hero__desc">
+                {t('system.user.hero.desc')}
+              </Typography.Paragraph>
+            </div>
+          </div>
+          <div className="system-page-kpi-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="system-page-kpi">
+                <span className="system-page-kpi__label">{item.label}</span>
+                <span className="system-page-kpi__value">{item.value}</span>
+                <span className="system-page-kpi__hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
         </Card>
+        <div className="page-split-layout">
+          <div className="page-main-column">
+            <FilterPanel>
+              <Form form={queryForm} layout="vertical">
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <FormItem label={t('system.user.username')} field="username">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col span={6}>
+                    <FormItem label={t('system.user.nickname')} field="nickname">
+                      <Input />
+                    </FormItem>
+                  </Col>
+                  <Col span={6}>
+                    <FormItem label={t('system.user.status')} field="status">
+                      <Select allowClear options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]} />
+                    </FormItem>
+                  </Col>
+                  <Col span={6}>
+                    <FormItem className="filter-panel__action-item">
+                      <Space>
+                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button onClick={reset}>{t('common.reset')}</Button>
+                      </Space>
+                    </FormItem>
+                  </Col>
+                </Row>
+              </Form>
+            </FilterPanel>
+            <Card className="page-panel system-user-list__table-card">
+              <TableBatchActionBar
+                selectedCount={selectedRowKeys.length}
+                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                clearText={t('common.clearSelection')}
+                clearSuccessText={t('common.clearSelectionSuccess')}
+                onClear={() => setSelectedRowKeys([])}
+                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+                actions={(
+                  <>
+                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                        <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
+                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  </>
+                )}
+              />
+              {loading && data.length === 0 ? <PageLoading /> : null}
+              {error && data.length === 0 ? renderErrorState() : null}
+              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+              {!loading && !(error && data.length === 0) && data.length > 0 ? (
+                <AppTable<UserListRow>
+                  className="system-user-list__table"
+                  data={data}
+                  columns={columns}
+                  rowKey="id"
+                  loading={loading}
+                  scroll={{ x: 1560 }}
+                  rowSelection={{
+                    type: 'checkbox',
+                    selectedRowKeys,
+                    fixed: true,
+                    checkboxProps: (row) => ({ disabled: row.id === 1 }),
+                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                  }}
+                  onChange={handleTableChange}
+                  emptyText={t('common.noData')}
+                  pagination={{
+                    current: query.page || emptyQuery.page,
+                    pageSize: query.pageSize || emptyQuery.pageSize,
+                    total,
+                    showJumper: true,
+                    pageSizeChangeResetCurrent: false,
+                    sizeCanChange: true,
+                    sizeOptions: [10, 20, 50, 100],
+                    size: 'small',
+                    showTotal: (count: number) => t('common.total', { count }),
+                  } as PaginationProps}
+                />
+              ) : null}
+            </Card>
+          </div>
+          <div className="page-side-column">
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.user.hero.summaryTitle')}</span>
+              <div className="side-rail-stack">
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.user.hero.orgReady')}</span>
+                  <span className="side-rail-item__value">{Math.max(deptOptions.length - 1, 0)} / {postOptions.length}</span>
+                  <span className="side-rail-item__desc">{t('system.user.hero.orgHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.user.hero.disabledRows')}</span>
+                  <span className="side-rail-item__value">{disabledUserCount}</span>
+                  <span className="side-rail-item__desc">{t('system.user.hero.disabledHint')}</span>
+                </div>
+                <div className="side-rail-item">
+                  <span className="side-rail-item__label">{t('system.user.hero.batchActions')}</span>
+                  <span className="side-rail-item__value">{batchActionDisabled ? t('common.no') : t('common.yes')}</span>
+                  <span className="side-rail-item__desc">{t('system.user.hero.batchHint')}</span>
+                </div>
+              </div>
+            </Card>
+            <Card className="page-panel side-rail-panel">
+              <span className="side-rail-panel__title">{t('system.user.hero.sideTitle')}</span>
+              <div className="side-rail-note">
+                <span className="side-rail-note__title">{t('system.user.hero.sideLead')}</span>
+                <span className="side-rail-note__desc">{t('system.user.hero.sideDesc')}</span>
+              </div>
+            </Card>
+          </div>
+        </div>
       </Space>
 
       <AppModal
         title={editing ? t('system.user.edit') : t('system.user.create')}
         visible={visible}
         size="lg"
-        onCancel={() => setVisible(false)}
+        onCancel={() => {
+          setVisible(false);
+          setAvatarPreview('');
+        }}
         footer={(
           <SubmitBar
-            onCancel={() => setVisible(false)}
+            onCancel={() => {
+              setVisible(false);
+              setAvatarPreview('');
+            }}
             onSubmit={() => { void submitForm(); }}
             loading={submitting}
             submitText={editing ? t('common.save') : t('common.add')}
@@ -541,7 +752,7 @@ const UserList: React.FC = () => {
                 <FormItem
                   label={t('system.user.password')}
                   field="password"
-                  rules={[{ required: true, message: t('auth.passwordRequired') }, { minLength: 6, message: t('system.user.password.rule') }]}
+                  rules={[{ required: true, message: t('auth.passwordRequired') }]}
                 >
                   <Input.Password />
                 </FormItem>
@@ -554,6 +765,37 @@ const UserList: React.FC = () => {
               </FormItem>
               <FormItem label={t('system.user.phone')} field="phone">
                 <Input />
+              </FormItem>
+              <FormItem label={t('system.user.avatar')} field="avatar">
+                <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                  <Input
+                    placeholder={t('system.profile.avatarPlaceholder')}
+                    onChange={(value) => setAvatarPreview(value)}
+                  />
+                  <Space align="center" wrap>
+                    <Avatar size={40}>
+                      {avatarPreview ? <img src={avatarPreview} alt={t('system.user.avatar')} /> : t('common.user').slice(0, 1)}
+                    </Avatar>
+                    <Button
+                      icon={<IconUpload />}
+                      loading={uploadingAvatar}
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
+                        input.onchange = () => {
+                          void handleUploadAvatar(input.files?.[0]);
+                        };
+                        input.click();
+                      }}
+                    >
+                      {t('system.profile.uploadAvatar')}
+                    </Button>
+                    <Typography.Text type="secondary">
+                      {t('system.profile.avatarUploadHint')}
+                    </Typography.Text>
+                  </Space>
+                </Space>
               </FormItem>
             </FormSection>
             <FormSection title={t('common.accessControl')}>
@@ -628,7 +870,7 @@ const UserList: React.FC = () => {
             <FormItem
               label={t('system.user.newPassword')}
               field="newPassword"
-              rules={[{ required: true, message: t('auth.passwordRequired') }, { minLength: 6, message: t('system.user.password.rule') }]}
+              rules={[{ required: true, message: t('auth.passwordRequired') }]}
             >
               <Input.Password />
             </FormItem>
