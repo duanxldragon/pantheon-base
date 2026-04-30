@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../api/request';
 import { AppTable, DateTimeMeta, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError } from '../../components';
 import { renderMenuIcon } from '../../core/menu/icon';
+import { resolveRouteWarmData } from '../../core/router/prefetch';
 import { usePermission } from '../../hooks/usePermission';
 import type { MenuNode } from '../system/menu/api';
 import { useMenuStore } from '../../store/useMenuStore';
@@ -43,7 +44,7 @@ const DashboardPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getDashboardSummary();
+      const data = await resolveRouteWarmData('/dashboard', 'summary', () => getDashboardSummary());
       setSummary(data);
     } catch (requestError) {
       setError(requestError);
@@ -307,6 +308,14 @@ const DashboardPage: React.FC = () => {
         desc: t('dashboard.metric.sessionsHint'),
       },
       {
+        key: 'org-tasks',
+        tone: summary.orgGovernanceTaskCount > 0 ? 'warning' : 'success',
+        icon: <IconExclamationCircle />,
+        label: t('dashboard.orgGovernanceTasks'),
+        value: summary.orgGovernanceTaskCount,
+        desc: t('dashboard.orgGovernanceTasksDesc'),
+      },
+      {
         key: 'operations',
         tone: 'neutral',
         icon: <IconClockCircle />,
@@ -316,6 +325,11 @@ const DashboardPage: React.FC = () => {
       },
     ];
   }, [successRate, summary, t]);
+
+  const primaryAttentionItems = useMemo(
+    () => attentionItems.slice(0, 4),
+    [attentionItems],
+  );
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
@@ -346,7 +360,28 @@ const DashboardPage: React.FC = () => {
       ) : null}
       {summary ? (
         <Space direction="vertical" size={20} className="dashboard-grid">
-          <Card className="page-panel dashboard-panel-card dashboard-status-strip" title={t('dashboard.statusStrip')}>
+          <Card className="page-panel dashboard-panel-card dashboard-hero-card">
+            <div className="dashboard-hero-card__top">
+              <div className="dashboard-hero-card__copy">
+                <span className="dashboard-hero-card__eyebrow">{t('dashboard.statusStrip')}</span>
+                <Typography.Title heading={4} className="dashboard-hero-card__title">
+                  {t('dashboard.attentionPanel')}
+                </Typography.Title>
+                <Typography.Paragraph className="dashboard-hero-card__desc">
+                  {t('dashboard.subtitle')}
+                </Typography.Paragraph>
+              </div>
+              <div className="dashboard-hero-card__summary">
+                <div className="dashboard-hero-card__summary-item">
+                  <span className="dashboard-hero-card__summary-label">{t('dashboard.enabledUserRate')}</span>
+                  <span className="dashboard-hero-card__summary-value">{enabledRate}%</span>
+                </div>
+                <div className="dashboard-hero-card__summary-item">
+                  <span className="dashboard-hero-card__summary-label">{t('dashboard.securitySuccessRate', { days: summary.periodDays })}</span>
+                  <span className="dashboard-hero-card__summary-value">{successRate}%</span>
+                </div>
+              </div>
+            </div>
             <Row gutter={[12, 12]}>
               {stats.map((item) => (
                 <Col xs={24} sm={12} xl={6} key={item.title}>
@@ -364,17 +399,17 @@ const DashboardPage: React.FC = () => {
           </Card>
 
           <Row gutter={[16, 16]}>
-            <Col xs={24} lg={14}>
+            <Col xs={24} lg={15}>
               <Card className="page-panel dashboard-panel-card dashboard-panel-card--attention" title={t('dashboard.attentionPanel')}>
-                <div className="dashboard-attention-grid">
-                  {attentionItems.map((item) => (
-                    <div key={item.key} className={`dashboard-attention-item dashboard-attention-item--${item.tone}`}>
-                      <span className="dashboard-attention-item__icon">{item.icon}</span>
-                      <span className="dashboard-attention-item__copy">
-                        <span className="dashboard-attention-item__label">{item.label}</span>
-                        <span className="dashboard-attention-item__value">{item.value}</span>
-                        <span className="dashboard-attention-item__desc">{item.desc}</span>
+                <div className="dashboard-focus-stack">
+                  {primaryAttentionItems.map((item) => (
+                    <div key={item.key} className={`dashboard-focus-item dashboard-focus-item--${item.tone}`}>
+                      <span className="dashboard-focus-item__icon">{item.icon}</span>
+                      <span className="dashboard-focus-item__copy">
+                        <span className="dashboard-focus-item__label">{item.label}</span>
+                        <span className="dashboard-focus-item__value">{item.value}</span>
                       </span>
+                      <span className="dashboard-focus-item__desc">{item.desc}</span>
                     </div>
                   ))}
                 </div>
@@ -385,7 +420,7 @@ const DashboardPage: React.FC = () => {
                 <Progress percent={successRate} showText={false} strokeWidth={6} />
               </Card>
             </Col>
-            <Col xs={24} lg={10}>
+            <Col xs={24} lg={9}>
               <Card className="page-panel dashboard-panel-card dashboard-panel-card--actions" title={t('dashboard.primaryActions')}>
                 {quickActions.length > 0 ? (
                   <div className="dashboard-quick-actions">
@@ -415,7 +450,7 @@ const DashboardPage: React.FC = () => {
           </Row>
 
           <Row gutter={[16, 16]}>
-            <Col xs={24} lg={8}>
+            <Col xs={24} lg={10}>
               <Card className="page-panel dashboard-panel-card dashboard-panel-card--overview" title={t('dashboard.platformOverview')}>
                 <Space direction="vertical" size={14} style={{ width: '100%' }}>
                   <div className="dashboard-panel-card__metric">
@@ -434,25 +469,58 @@ const DashboardPage: React.FC = () => {
                 </Space>
               </Card>
             </Col>
-            <Col xs={24} lg={16}>
-              <Card className="page-panel dashboard-panel-card" title={t('dashboard.domainOverview')}>
-                <div className="dashboard-domain-grid">
-                  {domainCards.map((item) => (
-                    <div key={item.key} className={`dashboard-domain-card dashboard-domain-card--${item.key}`}>
-                      <div className="dashboard-domain-card__head">
-                        <span className="dashboard-domain-card__title">{item.title}</span>
-                        <Button type="text" size="small" icon={<IconArrowRight />} onClick={() => navigate(item.path)}>
-                          {t('dashboard.openModule')}
+            <Col xs={24} lg={14}>
+              <Card className="page-panel dashboard-panel-card" title={t('dashboard.todoCenter')}>
+                {summary.orgGovernanceTasks?.length ? (
+                  <div className="dashboard-task-grid">
+                    {summary.orgGovernanceTasks.map((item) => (
+                      <div key={item.taskKey} className="dashboard-task-card">
+                        <span className="dashboard-task-card__icon"><IconExclamationCircle /></span>
+                        <div className="dashboard-task-card__body">
+                          <span className="dashboard-task-card__title">
+                            {item.issueLabel}
+                            <Tag size="small" style={{ marginLeft: 8 }}>{item.scopeLabel}</Tag>
+                          </span>
+                          <span className="dashboard-task-card__desc">{item.resourceLabel}</span>
+                          <span className="dashboard-task-card__desc">
+                            {item.actionLabel}
+                            {item.relatedUserCount > 0 ? ` · ${t('dashboard.relatedUsers', { count: item.relatedUserCount })}` : ''}
+                          </span>
+                        </div>
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<IconArrowRight />}
+                          onClick={() => navigate(item.routePath, { state: { deptId: item.routeStateDeptId, taskKey: item.taskKey } })}
+                        >
+                          {t('dashboard.openTask')}
                         </Button>
                       </div>
-                      <span className="dashboard-domain-card__summary">{item.summary}</span>
-                      <span className="dashboard-domain-card__desc">{item.description}</span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <PageEmpty description={t('dashboard.todoEmpty')} />
+                )}
               </Card>
             </Col>
           </Row>
+
+          <Card className="page-panel dashboard-panel-card" title={t('dashboard.domainOverview')}>
+            <div className="dashboard-domain-grid">
+              {domainCards.map((item) => (
+                <div key={item.key} className={`dashboard-domain-card dashboard-domain-card--${item.key}`}>
+                  <div className="dashboard-domain-card__head">
+                    <span className="dashboard-domain-card__title">{item.title}</span>
+                    <Button type="text" size="small" icon={<IconArrowRight />} onClick={() => navigate(item.path)}>
+                      {t('dashboard.openModule')}
+                    </Button>
+                  </div>
+                  <span className="dashboard-domain-card__summary">{item.summary}</span>
+                  <span className="dashboard-domain-card__desc">{item.description}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
 
           <Card
             className="page-panel dashboard-panel-card dashboard-login-table"

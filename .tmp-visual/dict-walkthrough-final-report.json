@@ -1,0 +1,50 @@
+{
+  "scope": "system/config -> dict",
+  "url": "http://127.0.0.1:5173/system/dict",
+  "generatedAt": "2026-04-26T23:01:40.949Z",
+  "checks": [
+    {
+      "name": "双标签可见",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "字典项表格已渲染真实数据",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "字典项上下文卡片已渲染",
+      "ok": true,
+      "detail": {
+        "summaryText": "字典项: 4"
+      }
+    },
+    {
+      "name": "勾选后批量按钮可用",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "使用分析弹窗可打开",
+      "ok": true,
+      "detail": {
+        "usageReferenceText": "引用数: 1"
+      }
+    },
+    {
+      "name": "刷新缓存成功提示可见",
+      "ok": true,
+      "detail": {}
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "screenshots": [
+    "dict-walkthrough-final-01-types.png",
+    "dict-walkthrough-final-02-items.png",
+    "dict-walkthrough-final-03-batch.png",
+    "dict-walkthrough-final-04-usage.png"
+  ]
+}

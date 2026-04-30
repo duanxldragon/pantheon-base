@@ -8,13 +8,13 @@ export const DeptModule = defineModule({
       path: 'system/dept',
       routeName: 'system-dept',
       titleKey: 'system.menu.dept',
-      icon: 'menu',
+      icon: 'branch',
       pagePermission: 'system:dept:list',
       componentKey: 'system/dept/DeptList',
     },
   ],
   menus: [
-    { path: '/system/dept', titleKey: 'system.menu.dept', icon: 'storage', routeName: 'system-dept', module: 'system.org' },
+    { path: '/system/dept', titleKey: 'system.menu.dept', icon: 'branch', routeName: 'system-dept', module: 'system.org' },
   ],
   permissions: [
     'system:dept:list',

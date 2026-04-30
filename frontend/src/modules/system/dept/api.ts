@@ -9,16 +9,23 @@ export interface DeptNode {
   isRoot: boolean;
   deptName: string;
   sort: number;
+  leaderUserId: number;
   leader: string;
   phone: string;
   email: string;
   status: number;
+  childDeptCount: number;
+  postCount: number;
+  isLeaderless: boolean;
+  isNoPost: boolean;
+  isEmpty: boolean;
   children?: DeptNode[];
 }
 
 export interface DeptListQuery {
   deptName?: string;
   status?: number;
+  governance?: 'leaderless' | 'no-post' | 'empty';
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -27,6 +34,7 @@ export interface DeptPayload {
   parentId: number;
   deptName: string;
   sort: number;
+  leaderUserId?: number;
   leader?: string;
   phone?: string;
   email?: string;
@@ -38,11 +46,94 @@ export interface DeptBatchStatusPayload {
   status: number;
 }
 
+export interface DeptBatchLeaderItemPayload {
+  deptId: number;
+  leaderUserId: number;
+}
+
+export interface DeptBatchLeaderPayload {
+  items: DeptBatchLeaderItemPayload[];
+}
+
+export interface DeptOverviewResp {
+  totalDeptCount: number;
+  enabledDeptCount: number;
+  disabledDeptCount: number;
+  rootDeptCount: number;
+  directChildDeptCount: number;
+  totalPostCount: number;
+  enabledPostCount: number;
+  leaderlessDeptCount: number;
+  noPostDeptCount: number;
+  emptyDeptCount: number;
+  healthIssueCount: number;
+}
+
+export interface DeptGovernanceTaskQuery {
+  keyword?: string;
+  scope?: 'all' | 'dept' | 'post';
+  governance?: 'leaderless' | 'no-post' | 'empty' | 'in-use' | 'disabled';
+  blockedBy?: 'children' | 'posts' | 'users' | 'none';
+  action?: string;
+}
+
+export interface DeptGovernanceTask {
+  taskKey: string;
+  governanceScope: 'dept' | 'post';
+  governanceScopeLabel: string;
+  governanceTag: string;
+  governanceTagLabel: string;
+  governanceBlockedBy: string;
+  governanceBlockedByLabel: string;
+  governanceAction: string;
+  governanceActionLabel: string;
+  deptId: number;
+  deptName: string;
+  deptPath: string;
+  postId: number;
+  postName: string;
+  relatedUserCount: number;
+  resourceStatus: number;
+}
+
+export interface DeptLeaderCandidate {
+  userId: number;
+  username: string;
+  nickname: string;
+  displayName: string;
+  deptId: number;
+  deptName: string;
+  postId: number;
+  postName: string;
+}
+
+export function getDeptOverview() {
+  return apiRequest<DeptOverviewResp>({
+    url: '/system/dept/overview',
+    method: 'get',
+  });
+}
+
+export function getDeptGovernanceTasks(params?: DeptGovernanceTaskQuery) {
+  return apiRequest<DeptGovernanceTask[]>({
+    url: '/system/dept/governance/tasks',
+    method: 'get',
+    params,
+  });
+}
+
 export function getDeptTree(params?: DeptListQuery) {
   return apiRequest<DeptNode[]>({
     url: '/system/dept/tree',
     method: 'get',
     params,
+  });
+}
+
+export function getDeptLeaderCandidates(id: number) {
+  return apiRequest<DeptLeaderCandidate[]>({
+    url: `/system/dept/${id}/leader-candidates`,
+    method: 'get',
   });
 }
 
@@ -77,12 +168,29 @@ export function batchUpdateDeptStatus(data: DeptBatchStatusPayload) {
   });
 }
 
+export function batchUpdateDeptLeader(data: DeptBatchLeaderPayload) {
+  return apiRequest<{ updatedCount: number }>({
+    url: '/system/dept/batch-leader',
+    method: 'post',
+    data,
+  });
+}
+
 export function exportDepts(data?: DeptListQuery) {
   return downloadFile({
     url: '/system/dept/export',
     method: 'post',
     data,
     filename: 'system-dept-export.csv',
+  });
+}
+
+export function exportDeptGovernanceTasks(data?: DeptGovernanceTaskQuery) {
+  return downloadFile({
+    url: '/system/dept/governance/export',
+    method: 'post',
+    data,
+    filename: 'system-org-governance-tasks.csv',
   });
 }
 

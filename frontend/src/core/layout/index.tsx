@@ -1,22 +1,32 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Avatar, Breadcrumb, Button, Dropdown, Empty, Input, Layout, Menu, Space, Spin, Tooltip, Typography } from '@arco-design/web-react';
-import { IconClose, IconLanguage, IconLayout, IconMenuFold, IconMenuUnfold, IconNotification, IconPoweroff, IconPushpin, IconSafe, IconSearch, IconUser } from '@arco-design/web-react/icon';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Avatar, Breadcrumb, Button, Dropdown, Empty, Input, Layout, Menu, Message, Space, Spin, Tooltip, Typography } from '@arco-design/web-react';
+import { IconCheck, IconClose, IconLanguage, IconLayout, IconLock, IconMenuFold, IconMenuUnfold, IconNotification, IconPoweroff, IconPushpin, IconSafe, IconSearch, IconSettings, IconUser } from '@arco-design/web-react/icon';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { beginLogoutTransition, endLogoutTransition } from '../../api/request';
 import type { MenuNode } from '../../modules/system/menu/api';
-import { getMe, logout as logoutApi } from '../../modules/auth/api';
+import { logout as logoutApi, reportActivity, verifyOperationPassword } from '../../modules/auth/api';
+import { ensureAuthUserInfo } from '../auth/bootstrap';
 import { useMenuStore } from '../../store/useMenuStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { usePermission } from '../../hooks/usePermission';
+import { useRefreshPolling, useRefreshSubscription } from '../refresh/refreshBus';
 import { findRouteByPath, systemRouteTitleMap } from '../router/modules';
 import { formatDateTime } from '../format/dateTime';
 import { renderMenuIcon } from '../menu/icon';
-import ThemeSwitcher from '../theme/ThemeSwitcher';
+import { clearPantheonThemePreference, usePantheonTheme } from '../theme/theme';
 import { AppModal } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/dashboard/api';
-import { getBrandInitial, setExplicitLanguagePreference, usePublicSettings } from '../settings/publicSettings';
+import { getBrandInitial, refreshPublicSettings, setExplicitLanguagePreference, usePublicSettings } from '../settings/publicSettings';
+import { clearExplicitLanguagePreference } from '../settings/languagePreference';
+import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
+import { preloadRouteComponent } from '../router/prefetch';
 import {
   OPENED_TABS_STORAGE_KEY,
+  persistShellLastActivityAt,
+  persistShellLockedState,
+  readShellLastActivityAt,
+  readShellLockedState,
   clearShellSessionState,
   persistShellLayoutMode,
   readShellLayoutMode,
@@ -36,6 +46,7 @@ interface OpenedPageTab {
 }
 
 type TabActionKey = 'close' | 'closeOthers' | 'closeRight' | 'closeAll' | 'togglePin';
+type UserMenuActionKey = 'profile' | 'security' | 'lock' | 'logout';
 
 interface CommandSearchItem {
   key: string;
@@ -166,6 +177,7 @@ function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefin
 }
 
 const BaseLayout: React.FC = () => {
+  const bootstrappedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
   const [layoutMode, setLayoutMode] = useState<ShellLayoutMode>(() => readShellLayoutMode());
   const [openedTabs, setOpenedTabs] = useState<OpenedPageTab[]>(() => readOpenedTabs());
@@ -175,13 +187,20 @@ const BaseLayout: React.FC = () => {
   const [commandQuery, setCommandQuery] = useState('');
   const [noticeSummary, setNoticeSummary] = useState<DashboardSummary | null>(null);
   const [noticeLoading, setNoticeLoading] = useState(false);
+  const [locked, setLocked] = useState(() => readShellLockedState());
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const [unlockLoading, setUnlockLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const publicSettings = usePublicSettings();
   const { menuTree, fetchMenuTree, resetMenuTree, loading } = useMenuStore();
-  const { userInfo, setUserInfo, clearAuth } = useAuthStore();
+  const { token, userInfo, clearAuth } = useAuthStore();
   const { isAdmin, hasPerm } = usePermission();
+  const lastActivityAtRef = useRef(readShellLastActivityAt() || 0);
+  const lastSyncedActivityAtRef = useRef(0);
+  const lastInteractionAtRef = useRef(0);
+  const idleLogoutInFlightRef = useRef(false);
   const matchedRoute = useMemo(() => findRouteByPath(location.pathname), [location.pathname]);
   const currentRouteTitleKey = matchedRoute?.titleKey || systemRouteTitleMap[location.pathname];
   const activeMenuPath = matchedRoute?.activeMenu || location.pathname;
@@ -233,17 +252,114 @@ const BaseLayout: React.FC = () => {
   const layoutModeActionLabel = t(isHorizontalLayout ? 'app.layoutMode.switchToVertical' : 'app.layoutMode.switchToHorizontal');
   const appName = publicSettings.siteName || t('app.name');
   const brandInitial = getBrandInitial(appName);
+  const { theme, setTheme, options: themeOptions } = usePantheonTheme();
+  const activeTheme = themeOptions.find((item) => item.key === theme) ?? themeOptions[0];
+  const sessionIdleMinutes = publicSettings.sessionIdleMinutes > 0 ? publicSettings.sessionIdleMinutes : 30;
+  const sessionIdleMs = sessionIdleMinutes * 60 * 1000;
+  const hasDashboardEntry = useMemo(() => Boolean(findMenuNodeByPath(menuTree, '/dashboard')), [menuTree]);
+  const canAccessDashboard = isAdmin || hasDashboardEntry || hasPerm('platform:dashboard:view');
+  const canViewNoticeSummary = isAdmin
+    || hasDashboardEntry
+    || hasPerm('platform:dashboard:view')
+    || hasPerm('system:login-log:list')
+    || hasPerm('system:session:list')
+    || hasPerm('system:operation-log:list');
+
+  const syncShellActivity = useCallback((value: number) => {
+    lastActivityAtRef.current = value;
+    persistShellLastActivityAt(value);
+  }, []);
+
+  const performLogout = useCallback(async (revokeSession: boolean) => {
+    if (idleLogoutInFlightRef.current) {
+      return;
+    }
+    idleLogoutInFlightRef.current = true;
+    beginLogoutTransition();
+    if (revokeSession) {
+      await logoutApi().catch(() => undefined);
+    }
+    await refreshPublicSettings().catch(() => undefined);
+    clearPantheonThemePreference();
+    const nextLanguage = clearExplicitLanguagePreference();
+    await switchI18nLanguage(nextLanguage).catch(() => undefined);
+    clearShellSessionState();
+    setOpenedTabs([]);
+    resetMenuTree();
+    clearAuth();
+    setLocked(false);
+    setUnlockPassword('');
+    navigate('/login', { replace: true });
+    window.setTimeout(() => {
+      endLogoutTransition();
+      idleLogoutInFlightRef.current = false;
+    }, 800);
+  }, [clearAuth, i18n, navigate, resetMenuTree]);
+
+  const recordActivity = useCallback((reason: 'interaction' | 'route' | 'unlock' | 'bootstrap', syncRemote = true) => {
+    if (!token || locked) {
+      return;
+    }
+    const now = Date.now();
+    if (reason === 'interaction' && now - lastInteractionAtRef.current < 3000) {
+      return;
+    }
+    if (reason === 'interaction') {
+      lastInteractionAtRef.current = now;
+    }
+    syncShellActivity(now);
+    if (!syncRemote || now - lastSyncedActivityAtRef.current < 60000) {
+      return;
+    }
+    lastSyncedActivityAtRef.current = now;
+    void reportActivity().catch(() => undefined);
+  }, [locked, syncShellActivity, token]);
 
   useEffect(() => {
-    void fetchMenuTree();
-    if (!userInfo) {
-      getMe().then(setUserInfo).catch(() => undefined);
+    if (bootstrappedRef.current) {
+      return;
     }
-  }, [fetchMenuTree, setUserInfo, userInfo]);
+    bootstrappedRef.current = true;
+
+    void fetchMenuTree();
+    if (!useAuthStore.getState().userInfo) {
+      void ensureAuthUserInfo().catch(() => undefined);
+    }
+    const initialActivityAt = readShellLastActivityAt();
+    syncShellActivity(initialActivityAt && initialActivityAt > 0 ? initialActivityAt : Date.now());
+  }, [fetchMenuTree, syncShellActivity]);
+
+  useRefreshSubscription(
+    ['system:menu:changed', 'system:role:changed', 'system:permission:changed', 'system:user:changed'],
+    () => {
+      if (!token) {
+        return;
+      }
+      void fetchMenuTree({ force: true });
+    },
+  );
+  useRefreshPolling(token, [
+    'system:user:changed',
+    'system:role:changed',
+    'system:menu:changed',
+    'system:dept:changed',
+    'system:post:changed',
+    'system:permission:changed',
+    'system:dict:changed',
+    'system:setting:changed',
+    'system:i18n:changed',
+  ]);
 
   useEffect(() => {
     let active = true;
     const loadNoticeSummary = async () => {
+      if (!token || !canViewNoticeSummary) {
+        if (active) {
+          setNoticeSummary(null);
+          setNoticeLoading(false);
+        }
+        return;
+      }
       setNoticeLoading(true);
       try {
         const data = await getDashboardSummary();
@@ -264,7 +380,7 @@ const BaseLayout: React.FC = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [canViewNoticeSummary, token]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -307,14 +423,76 @@ const BaseLayout: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [currentPageTitle, currentTabTitleKey, location.pathname, t]);
 
+  useEffect(() => {
+    if (!token || sessionIdleMs <= 0) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      if (Date.now() - lastActivityAtRef.current >= sessionIdleMs) {
+        void performLogout(true);
+      }
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, [locked, performLogout, sessionIdleMs, token]);
+
+  useEffect(() => {
+    if (!token || locked) {
+      return;
+    }
+
+    const handleActivity = () => {
+      recordActivity('interaction');
+    };
+    const handleVisible = () => {
+      if (document.visibilityState === 'visible') {
+        recordActivity('interaction');
+      }
+    };
+
+    window.addEventListener('pointerdown', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('scroll', handleActivity, true);
+    window.addEventListener('touchstart', handleActivity, true);
+    document.addEventListener('visibilitychange', handleVisible);
+    return () => {
+      window.removeEventListener('pointerdown', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('scroll', handleActivity, true);
+      window.removeEventListener('touchstart', handleActivity, true);
+      document.removeEventListener('visibilitychange', handleVisible);
+    };
+  }, [locked, recordActivity, token]);
+
+  useEffect(() => {
+    recordActivity('route');
+  }, [location.pathname, recordActivity]);
+
   const handleLogout = async () => {
-    await logoutApi().catch(() => undefined);
-    clearShellSessionState();
-    setOpenedTabs([]);
-    resetMenuTree();
-    clearAuth();
-    navigate('/login');
+    await performLogout(true);
   };
+
+  const handleLockScreen = useCallback(() => {
+    persistShellLockedState(true);
+    setLocked(true);
+    setUnlockPassword('');
+  }, []);
+
+  const handleUnlock = useCallback(async () => {
+    if (!unlockPassword.trim()) {
+      return;
+    }
+    setUnlockLoading(true);
+    try {
+      await verifyOperationPassword(unlockPassword);
+      persistShellLockedState(false);
+      setLocked(false);
+      setUnlockPassword('');
+      recordActivity('unlock');
+      Message.success(t('app.lock.unlockSuccess'));
+    } finally {
+      setUnlockLoading(false);
+    }
+  }, [recordActivity, t, unlockPassword]);
 
   const handleGoProfile = useCallback(() => {
     navigate('/system/profile');
@@ -325,6 +503,7 @@ const BaseLayout: React.FC = () => {
   }, [navigate]);
 
   const handleUserMenuClick = (key: string) => {
+    const actionKey = key as UserMenuActionKey;
     if (key === 'profile') {
       handleGoProfile();
       return;
@@ -333,14 +512,20 @@ const BaseLayout: React.FC = () => {
       handleGoSecurity();
       return;
     }
-    if (key === 'logout') {
+    if (actionKey === 'lock') {
+      handleLockScreen();
+      return;
+    }
+    if (actionKey === 'logout') {
       void handleLogout();
     }
   };
 
   const commandItems = useMemo<CommandSearchItem[]>(() => {
-    const items: CommandSearchItem[] = [
-      {
+    const items: CommandSearchItem[] = [];
+
+    if (canAccessDashboard) {
+      items.push({
         key: 'quick-dashboard',
         title: t('dashboard.title'),
         subtitle: t('app.command.section.quick'),
@@ -348,8 +533,10 @@ const BaseLayout: React.FC = () => {
         searchText: `${t('dashboard.title')} dashboard /dashboard`,
         icon: renderMenuIcon('dashboard'),
         run: () => navigate('/dashboard'),
-      },
-      {
+      });
+    }
+
+    items.push({
         key: 'quick-profile',
         title: t('system.profile.title'),
         subtitle: t('app.command.section.quick'),
@@ -357,8 +544,8 @@ const BaseLayout: React.FC = () => {
         searchText: `${t('system.profile.title')} profile /system/profile`,
         icon: <IconUser />,
         run: handleGoProfile,
-      },
-      {
+      });
+    items.push({
         key: 'quick-security',
         title: t('auth.security.title'),
         subtitle: t('app.command.section.quick'),
@@ -366,8 +553,7 @@ const BaseLayout: React.FC = () => {
         searchText: `${t('auth.security.title')} security /auth/security`,
         icon: <IconSafe />,
         run: handleGoSecurity,
-      },
-    ];
+      });
 
     openedTabs.forEach((item) => {
       const title = item.titleKey ? t(item.titleKey) : item.fallbackTitle;
@@ -420,7 +606,7 @@ const BaseLayout: React.FC = () => {
     };
     walk(menuTree);
     return items;
-  }, [handleGoProfile, handleGoSecurity, menuTree, navigate, openedTabs, t]);
+  }, [canAccessDashboard, handleGoProfile, handleGoSecurity, menuTree, navigate, openedTabs, t]);
 
   const filteredCommandItems = useMemo(() => {
     const queryText = commandQuery.trim().toLowerCase();
@@ -437,15 +623,17 @@ const BaseLayout: React.FC = () => {
   };
 
   const noticeEntries = useMemo<NoticeEntry[]>(() => {
-    const entries: NoticeEntry[] = [
-      {
+    const entries: NoticeEntry[] = [];
+
+    if (canViewNoticeSummary) {
+      entries.push({
         key: 'notice-security',
         title: t('auth.security.title'),
         description: t('app.notice.securityDesc'),
         icon: <IconSafe />,
         run: handleGoSecurity,
-      },
-    ];
+      });
+    }
 
     if (isAdmin || hasPerm('system:session:list')) {
       entries.push({
@@ -478,7 +666,7 @@ const BaseLayout: React.FC = () => {
     }
 
     return entries;
-  }, [handleGoSecurity, hasPerm, isAdmin, navigate, t]);
+  }, [canViewNoticeSummary, handleGoSecurity, hasPerm, isAdmin, navigate, t]);
 
   const noticeBadgeCount = useMemo(() => {
     if (!noticeSummary) {
@@ -567,6 +755,8 @@ const BaseLayout: React.FC = () => {
 
     return groups;
   }, [hasPerm, isAdmin, navigate, noticeSummary, t]);
+  const hasNoticeAttention = noticeBadgeCount > 0 || noticeRiskGroups.length > 0;
+  const showNoticeCenter = canViewNoticeSummary;
 
   const closeTab = (targetPath: string) => {
     const targetTab = openedTabs.find((item) => item.path === targetPath);
@@ -679,10 +869,14 @@ const BaseLayout: React.FC = () => {
     closeAllTabs();
   };
 
-  const toggleLanguage = () => {
-    const nextLang = i18n.language === 'zh-CN' ? 'en-US' : 'zh-CN';
-    setExplicitLanguagePreference(nextLang);
-    window.location.reload();
+  const currentLanguage = (SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN') as SupportedLocale;
+
+  const changeLanguage = (language: SupportedLocale) => {
+    if (language === i18n.language) {
+      return;
+    }
+    setExplicitLanguagePreference(language);
+    void switchI18nLanguage(language);
   };
 
   const toggleLayoutMode = () => {
@@ -693,6 +887,74 @@ const BaseLayout: React.FC = () => {
     });
   };
 
+  const preferencePanel = (
+    <div className="app-shell__preference-panel">
+      <div className="app-shell__preference-header">
+        <span className="app-shell__preference-title">{t('app.preference.title')}</span>
+        <span className="app-shell__preference-subtitle">{t('app.preference.subtitle')}</span>
+      </div>
+
+      <div className="app-shell__preference-section">
+        <span className="app-shell__preference-section-title">{t('app.preference.navigation')}</span>
+        <button type="button" className="app-shell__preference-item" onClick={toggleLayoutMode}>
+          <span className="app-shell__preference-item-icon">
+            <IconLayout />
+          </span>
+          <span className="app-shell__preference-item-copy">
+            <span className="app-shell__preference-item-title">{t('app.preference.navigationMode')}</span>
+            <span className="app-shell__preference-item-desc">{layoutModeActionLabel}</span>
+          </span>
+        </button>
+      </div>
+
+      <div className="app-shell__preference-section">
+        <span className="app-shell__preference-section-title">{t('app.preference.language')}</span>
+        <div className="app-shell__preference-pills">
+          {SUPPORTED_LOCALES.map((language) => (
+            <button
+              key={language}
+              type="button"
+              className={[
+                'app-shell__preference-pill',
+                currentLanguage === language ? 'app-shell__preference-pill--active' : '',
+              ].join(' ').trim()}
+              onClick={() => changeLanguage(language)}
+            >
+              <IconLanguage />
+              <span>{t(`app.language.${language}`)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="app-shell__preference-section">
+        <span className="app-shell__preference-section-title">{t('app.preference.theme')}</span>
+        <div className="app-shell__preference-theme-list">
+          {themeOptions.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={[
+                'app-shell__preference-item',
+                theme === item.key ? 'app-shell__preference-item--active' : '',
+              ].join(' ').trim()}
+              onClick={() => setTheme(item.key)}
+            >
+              <span className="app-shell__preference-item-icon">
+                <span className="app-shell__preference-theme-swatch" style={{ background: item.accent }} />
+              </span>
+              <span className="app-shell__preference-item-copy">
+                <span className="app-shell__preference-item-title">{t(item.labelKey)}</span>
+                <span className="app-shell__preference-item-desc">{t(item.descriptionKey)}</span>
+              </span>
+              {theme === item.key ? <IconCheck className="app-shell__preference-check" /> : null}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   const handleMenuNavigation = (key: string) => {
     const selected = findMenuNodeByPath(menuTree, key);
     if (selected?.isExternal === 1) {
@@ -702,26 +964,50 @@ const BaseLayout: React.FC = () => {
     navigate(key);
   };
 
-  const renderMenuItems = (nodes: MenuNode[]) => nodes.map((item) => {
+  const renderMenuItems = (nodes: MenuNode[], level = 0) => nodes.map((item) => {
+    const entryClassName = [
+      'app-shell__menu-entry',
+      `app-shell__menu-entry--level-${Math.min(level, 2)}`,
+      item.children && item.children.length > 0 ? 'app-shell__menu-entry--group' : 'app-shell__menu-entry--leaf',
+    ].join(' ');
+    const iconClassName = [
+      'app-shell__menu-entry-icon',
+      `app-shell__menu-entry-icon--level-${Math.min(level, 2)}`,
+    ].join(' ');
+
     if (item.children && item.children.length > 0) {
       return (
         <Menu.SubMenu
           key={item.id.toString()}
           title={(
-            <span>
-              {renderMenuIcon(item.icon)}
-              {t(item.titleKey)}
+            <span className={entryClassName}>
+              <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
+              <span className="app-shell__menu-entry-copy">
+                <span className="app-shell__menu-entry-label">{t(item.titleKey)}</span>
+              </span>
             </span>
           )}
         >
-          {renderMenuItems(item.children)}
+          {renderMenuItems(item.children, level + 1)}
         </Menu.SubMenu>
       );
     }
     return (
       <Menu.Item key={item.path}>
-        {renderMenuIcon(item.icon)}
-        {t(item.titleKey)}
+        <span
+          className={entryClassName}
+          onMouseEnter={() => {
+            void preloadRouteComponent(item.path);
+          }}
+          onFocus={() => {
+            void preloadRouteComponent(item.path);
+          }}
+        >
+          <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
+          <span className="app-shell__menu-entry-copy">
+            <span className="app-shell__menu-entry-label">{t(item.titleKey)}</span>
+          </span>
+        </span>
       </Menu.Item>
     );
   });
@@ -784,14 +1070,14 @@ const BaseLayout: React.FC = () => {
               </div>
             )}
             <div className="app-shell__header-meta">
-              <Typography.Title heading={6} className="app-shell__header-title">
-                {currentPageTitle}
-              </Typography.Title>
-              <Breadcrumb>
+              <Breadcrumb className="app-shell__header-breadcrumb">
                 {breadcrumbItems.map((item) => (
                   <Breadcrumb.Item key={`${item.path}-${item.label}`}>{item.label}</Breadcrumb.Item>
                 ))}
               </Breadcrumb>
+              <Typography.Title heading={6} className="app-shell__header-title">
+                {currentPageTitle}
+              </Typography.Title>
             </div>
           </div>
           <Space size={12} className="app-shell__header-actions">
@@ -805,132 +1091,134 @@ const BaseLayout: React.FC = () => {
               <span className="app-shell__search-placeholder">{t('app.command.placeholder')}</span>
               <kbd className="app-shell__search-shortcut">Ctrl K</kbd>
             </button>
-            <Dropdown
-              trigger="click"
-              position="br"
-              droplist={(
-                <div className="app-shell__notice-panel">
-                  <div className="app-shell__notice-header">
-                    <span className="app-shell__notice-title">{t('app.notice.title')}</span>
-                    <span className="app-shell__notice-subtitle">{t('app.notice.subtitle')}</span>
-                  </div>
-                  {noticeLoading ? (
-                    <div className="app-shell__notice-empty">{t('common.loading')}</div>
-                  ) : noticeSummary ? (
-                    <>
-                      <div className="app-shell__notice-stats">
-                        {noticeStatItems.map((item) => (
-                          <div
-                            key={item.key}
-                            className={[
-                              'app-shell__notice-stat',
-                              item.tone === 'danger' ? 'app-shell__notice-stat--danger' : '',
-                            ].filter(Boolean).join(' ')}
-                          >
-                            <span className="app-shell__notice-stat-label">{item.label}</span>
-                            <span className="app-shell__notice-stat-value">{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="app-shell__notice-summary">
-                        <span className="app-shell__notice-summary-label">{t('app.notice.lastSuccess')}</span>
-                        <span className="app-shell__notice-summary-value">
-                          {noticeSummary.lastSuccessfulLoginAt ? formatDateTime(noticeSummary.lastSuccessfulLoginAt) : t('dashboard.lastSuccessfulLoginEmpty')}
-                        </span>
-                      </div>
-                      {noticeRiskGroups.length > 0 ? (
-                        <div className="app-shell__notice-list">
-                          <div className="app-shell__notice-section">{t('app.notice.section.risk')}</div>
-                          {noticeRiskGroups.map((item) => (
-                            <button
+            {showNoticeCenter ? (
+              <Dropdown
+                trigger="click"
+                position="br"
+                droplist={(
+                  <div className="app-shell__notice-panel">
+                    <div className="app-shell__notice-header">
+                      <span className="app-shell__notice-title">{t('app.notice.title')}</span>
+                      <span className="app-shell__notice-subtitle">{t('app.notice.subtitle')}</span>
+                    </div>
+                    {noticeLoading ? (
+                      <div className="app-shell__notice-empty">{t('common.loading')}</div>
+                    ) : noticeSummary ? (
+                      <>
+                        <div className="app-shell__notice-stats">
+                          {noticeStatItems.map((item) => (
+                            <div
                               key={item.key}
-                              type="button"
                               className={[
-                                'app-shell__notice-risk',
-                                `app-shell__notice-risk--${item.tone}`,
-                              ].join(' ')}
-                              onClick={item.run}
+                                'app-shell__notice-stat',
+                                item.tone === 'danger' ? 'app-shell__notice-stat--danger' : '',
+                              ].filter(Boolean).join(' ')}
                             >
-                              <span className="app-shell__notice-risk-copy">
-                                <span className="app-shell__notice-risk-title">{item.title}</span>
-                                <span className="app-shell__notice-risk-desc">{item.description}</span>
-                              </span>
-                              <span className="app-shell__notice-risk-value">{item.value}</span>
-                            </button>
+                              <span className="app-shell__notice-stat-label">{item.label}</span>
+                              <span className="app-shell__notice-stat-value">{item.value}</span>
+                            </div>
                           ))}
                         </div>
-                      ) : null}
-                      <div className="app-shell__notice-list">
-                        <div className="app-shell__notice-section">{t('app.notice.section.recent')}</div>
-                        {noticeRecentItems.length > 0 ? noticeRecentItems.map((item) => (
-                          <div key={item.id} className="app-shell__notice-log">
-                            <span className={`app-shell__notice-log-dot ${item.status === 1 ? 'app-shell__notice-log-dot--success' : 'app-shell__notice-log-dot--danger'}`} />
-                            <span className="app-shell__notice-log-copy">
-                              <span className="app-shell__notice-log-title">{item.username}</span>
-                              <span className="app-shell__notice-log-desc">{item.message}</span>
-                            </span>
-                            <span className="app-shell__notice-log-time">{item.time}</span>
-                          </div>
-                        )) : (
-                          <div className="app-shell__notice-empty app-shell__notice-empty--compact">{t('dashboard.recentLoginsEmpty')}</div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="app-shell__notice-empty">{t('app.notice.empty')}</div>
-                  )}
-                  {noticeEntries.length > 0 ? (
-                    <div className="app-shell__notice-list">
-                      <div className="app-shell__notice-section">{t('app.notice.section.recommended')}</div>
-                      {noticeEntries.map((item) => (
-                        <button
-                          key={item.key}
-                          type="button"
-                          className="app-shell__notice-item"
-                          onClick={item.run}
-                        >
-                          <span className="app-shell__notice-item-icon">{item.icon}</span>
-                          <span className="app-shell__notice-item-copy">
-                            <span className="app-shell__notice-item-title">{item.title}</span>
-                            <span className="app-shell__notice-item-desc">{item.description}</span>
+                        <div className="app-shell__notice-summary">
+                          <span className="app-shell__notice-summary-label">{t('app.notice.lastSuccess')}</span>
+                          <span className="app-shell__notice-summary-value">
+                            {noticeSummary.lastSuccessfulLoginAt ? formatDateTime(noticeSummary.lastSuccessfulLoginAt) : t('dashboard.lastSuccessfulLoginEmpty')}
                           </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            >
-              <Button
-                type="text"
-                className="app-shell__icon-btn"
-                icon={<IconNotification />}
-                aria-label={t('app.notice.title')}
+                        </div>
+                        {noticeRiskGroups.length > 0 ? (
+                          <div className="app-shell__notice-list">
+                            <div className="app-shell__notice-section">{t('app.notice.section.risk')}</div>
+                            {noticeRiskGroups.map((item) => (
+                              <button
+                                key={item.key}
+                                type="button"
+                                className={[
+                                  'app-shell__notice-risk',
+                                  `app-shell__notice-risk--${item.tone}`,
+                                ].join(' ')}
+                                onClick={item.run}
+                              >
+                                <span className="app-shell__notice-risk-copy">
+                                  <span className="app-shell__notice-risk-title">{item.title}</span>
+                                  <span className="app-shell__notice-risk-desc">{item.description}</span>
+                                </span>
+                                <span className="app-shell__notice-risk-value">{item.value}</span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                        <div className="app-shell__notice-list">
+                          <div className="app-shell__notice-section">{t('app.notice.section.recent')}</div>
+                          {noticeRecentItems.length > 0 ? noticeRecentItems.map((item) => (
+                            <div key={item.id} className="app-shell__notice-log">
+                              <span className={`app-shell__notice-log-dot ${item.status === 1 ? 'app-shell__notice-log-dot--success' : 'app-shell__notice-log-dot--danger'}`} />
+                              <span className="app-shell__notice-log-copy">
+                                <span className="app-shell__notice-log-title">{item.username}</span>
+                                <span className="app-shell__notice-log-desc">{item.message}</span>
+                              </span>
+                              <span className="app-shell__notice-log-time">{item.time}</span>
+                            </div>
+                          )) : (
+                            <div className="app-shell__notice-empty app-shell__notice-empty--compact">{t('dashboard.recentLoginsEmpty')}</div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="app-shell__notice-empty">{t('app.notice.empty')}</div>
+                    )}
+                    {noticeEntries.length > 0 ? (
+                      <div className="app-shell__notice-list">
+                        <div className="app-shell__notice-section">{t('app.notice.section.recommended')}</div>
+                        {noticeEntries.map((item) => (
+                          <button
+                            key={item.key}
+                            type="button"
+                            className="app-shell__notice-item"
+                            onClick={item.run}
+                          >
+                            <span className="app-shell__notice-item-icon">{item.icon}</span>
+                            <span className="app-shell__notice-item-copy">
+                              <span className="app-shell__notice-item-title">{item.title}</span>
+                              <span className="app-shell__notice-item-desc">{item.description}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               >
-                {noticeBadgeCount > 0 ? <span className="app-shell__notice-badge">{noticeBadgeCount > 99 ? '99+' : noticeBadgeCount}</span> : null}
-              </Button>
+                <Tooltip content={hasNoticeAttention ? t('app.notice.attention') : t('app.notice.title')}>
+                  <Button
+                    type="text"
+                    className={[
+                      'app-shell__icon-btn',
+                      hasNoticeAttention ? 'app-shell__icon-btn--attention' : '',
+                    ].join(' ').trim()}
+                    icon={<IconNotification />}
+                    aria-label={t('app.notice.title')}
+                  >
+                    {noticeBadgeCount > 0 ? <span className="app-shell__notice-badge">{noticeBadgeCount > 99 ? '99+' : noticeBadgeCount}</span> : null}
+                  </Button>
+                </Tooltip>
+              </Dropdown>
+            ) : null}
+            <Dropdown trigger="click" position="br" droplist={preferencePanel}>
+              <Tooltip
+                content={t('app.preference.tooltip', {
+                  theme: t(activeTheme.labelKey),
+                  layout: layoutModeLabel,
+                  language: t(`app.language.${currentLanguage}`),
+                })}
+              >
+                <Button
+                  type="text"
+                  className="app-shell__icon-btn"
+                  icon={<IconSettings />}
+                  aria-label={t('app.preference.title')}
+                />
+              </Tooltip>
             </Dropdown>
-            <ThemeSwitcher className="app-shell__icon-btn" />
-            <Tooltip content={layoutModeActionLabel}>
-              <Button
-                type="text"
-                className="app-shell__icon-btn"
-                icon={<IconLayout />}
-                onClick={toggleLayoutMode}
-              >
-                {layoutModeLabel}
-              </Button>
-            </Tooltip>
-            <Tooltip content={t('app.toggleLanguage')}>
-              <Button
-                type="text"
-                className="app-shell__icon-btn"
-                icon={<IconLanguage />}
-                onClick={toggleLanguage}
-              >
-                {i18n.language === 'zh-CN' ? t('app.language.en-US') : t('app.language.zh-CN')}
-              </Button>
-            </Tooltip>
             <Dropdown
               position="br"
               droplist={(
@@ -943,6 +1231,10 @@ const BaseLayout: React.FC = () => {
                     <IconSafe />
                     {t('auth.security.title')}
                   </Menu.Item>
+                  <Menu.Item key="lock">
+                    <IconLock />
+                    {t('app.lock.action')}
+                  </Menu.Item>
                   <Menu.Item key="logout">
                     <IconPoweroff />
                     {t('common.logout')}
@@ -951,7 +1243,9 @@ const BaseLayout: React.FC = () => {
               )}
             >
               <Button type="text" className="app-shell__user-trigger">
-                <Avatar size={32}>{userDisplayName.slice(0, 1).toUpperCase()}</Avatar>
+                <Avatar size={28}>
+                  {userInfo?.avatar ? <img src={userInfo.avatar} alt={userDisplayName} /> : userDisplayName.slice(0, 1).toUpperCase()}
+                </Avatar>
                 <div className="app-shell__user-meta">
                   <span className="app-shell__user-name">{userDisplayName}</span>
                   <span className="app-shell__user-subtitle">
@@ -1027,6 +1321,12 @@ const BaseLayout: React.FC = () => {
                   ].filter(Boolean).join(' ')}
                   draggable={item.path !== '/dashboard'}
                   onClick={() => navigate(item.path)}
+                  onMouseEnter={() => {
+                    void preloadRouteComponent(item.path);
+                  }}
+                  onFocus={() => {
+                    void preloadRouteComponent(item.path);
+                  }}
                   onDoubleClick={() => closeTab(item.path)}
                   onMouseDown={(event) => {
                     if (event.button === 1) {
@@ -1126,6 +1426,36 @@ const BaseLayout: React.FC = () => {
           {t('app.footer')}
         </Footer>
       </Layout>
+      <AppModal
+        title={t('app.lock.title')}
+        visible={locked}
+        size="sm"
+        footer={null}
+        closable={false}
+        maskClosable={false}
+        className="app-shell__lock-modal"
+      >
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Typography.Text type="secondary">
+            {t('app.lock.description', { minutes: sessionIdleMinutes })}
+          </Typography.Text>
+          <Input.Password
+            autoFocus
+            value={unlockPassword}
+            placeholder={t('app.lock.passwordPlaceholder')}
+            onChange={setUnlockPassword}
+            onPressEnter={() => { void handleUnlock(); }}
+          />
+          <Space>
+            <Button type="primary" loading={unlockLoading} onClick={() => { void handleUnlock(); }}>
+              {t('app.lock.unlock')}
+            </Button>
+            <Button onClick={() => { void handleLogout(); }}>
+              {t('common.logout')}
+            </Button>
+          </Space>
+        </Space>
+      </AppModal>
       <AppModal
         title={t('app.command.title')}
         visible={commandVisible}

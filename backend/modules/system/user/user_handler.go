@@ -64,7 +64,8 @@ func (h *UserHandler) GetUserList(c *gin.Context) {
 		return
 	}
 
-	list, err := h.service.ListUsers(&query)
+	dataScope := common.GetDataScope(c)
+	list, err := h.service.ListUsers(&query, dataScope)
 	if err != nil {
 		common.Fail(c, common.CodeError, "user.list.error")
 		return

@@ -1,27 +1,44 @@
-import React, { useMemo, useState } from 'react';
-import { Alert, Button, Form, Input, Message, Space, Tag, Tooltip, Typography } from '@arco-design/web-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Button, Form, Input, Message, Select, Space, Tag, Tooltip, Typography } from '@arco-design/web-react';
 import { IconCheckCircle, IconLanguage, IconLock, IconSafe, IconStorage, IconUser } from '@arco-design/web-react/icon';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { endLogoutTransition, isRequestError, isServerRequestError, isTimeoutRequestError } from '../../api/request';
 import { login, type LoginPayload, type LoginResp } from './api';
+import { findFirstNavigableMenuPath } from '../system/menu/api';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import ThemeSwitcher from '../../core/theme/ThemeSwitcher';
 import { clearShellSessionState } from '../../core/shellState';
 import { getBrandInitial, setExplicitLanguagePreference, usePublicSettings } from '../../core/settings/publicSettings';
+import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
 import './Login.css';
 
 const FormItem = Form.Item;
+const LOGIN_NOTICE_STORAGE_KEY = 'pantheon_login_notice';
+const LOGIN_NOTICE_MESSAGE_KEY_MAP: Record<string, string> = {
+  'session.idle_timeout': 'auth.login.idleTimeoutNotice',
+};
+
+function resolvePostLoginPath(hasDashboardPermission: boolean, fallbackMenuPath: string | null) {
+  if (hasDashboardPermission) {
+    return '/dashboard';
+  }
+  if (fallbackMenuPath) {
+    return fallbackMenuPath;
+  }
+  return '/dashboard';
+}
 
 const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [loginNotice] = useState<string | null>(() => sessionStorage.getItem(LOGIN_NOTICE_STORAGE_KEY));
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { setTokens, setUserInfo } = useAuthStore();
-  const { resetMenuTree } = useMenuStore();
+  const { fetchMenuTree, resetMenuTree } = useMenuStore();
   const publicSettings = usePublicSettings();
-  const currentLang = i18n.language === 'en-US' ? 'en-US' : 'zh-CN';
-  const nextLang = currentLang === 'zh-CN' ? 'en-US' : 'zh-CN';
+  const currentLang = (SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN') as SupportedLocale;
   const appName = publicSettings.siteName || t('app.name');
   const brandInitial = getBrandInitial(appName);
   const featureItems = useMemo(() => [
@@ -35,27 +52,51 @@ const LoginPage: React.FC = () => {
     { key: 'audit', title: t('auth.login.assurance.audit'), desc: t('auth.login.assurance.auditDesc') },
   ], [t]);
 
+  useEffect(() => {
+    if (!loginNotice) {
+      return;
+    }
+    sessionStorage.removeItem(LOGIN_NOTICE_STORAGE_KEY);
+  }, [loginNotice]);
+
   const onSubmit = async (values: LoginPayload) => {
     setLoading(true);
     try {
+      endLogoutTransition();
       const res: LoginResp = await login(values);
       clearShellSessionState();
       resetMenuTree();
       setTokens(res.accessToken, res.refreshToken);
       setUserInfo(res.user);
+      const menuTree = await fetchMenuTree();
+      const fallbackMenuPath = findFirstNavigableMenuPath(menuTree);
+      const nextPath = resolvePostLoginPath(
+        Boolean(res.user.roles?.includes('admin') || res.user.perms?.includes('platform:dashboard:view')),
+        fallbackMenuPath,
+      );
       Message.success(t('auth.loginSuccess'));
-      navigate('/dashboard');
+      navigate(nextPath, { replace: true });
     } catch (error) {
-      console.error(error);
+      if (import.meta.env.DEV && (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))) {
+        console.error(error);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleLanguage = () => {
+  const changeLanguage = (language: string) => {
+    const nextLang = language as SupportedLocale;
+    if (!SUPPORTED_LOCALES.includes(nextLang) || nextLang === currentLang) {
+      return;
+    }
     setExplicitLanguagePreference(nextLang);
-    void i18n.changeLanguage(nextLang);
+    void switchI18nLanguage(nextLang);
   };
+
+  const loginNoticeText = loginNotice
+    ? t(LOGIN_NOTICE_MESSAGE_KEY_MAP[loginNotice] || loginNotice, { defaultValue: t('auth.login.idleTimeoutNotice') })
+    : null;
 
   return (
     <div className="auth-login-page">
@@ -117,9 +158,21 @@ const LoginPage: React.FC = () => {
         <div className="auth-login-page__tools">
           <ThemeSwitcher className="auth-login-page__tool-btn" />
           <Tooltip content={t('app.toggleLanguage')}>
-            <Button type="text" className="auth-login-page__tool-btn" icon={<IconLanguage />} onClick={toggleLanguage}>
-              {t(`app.language.${nextLang}`)}
-            </Button>
+            <Select
+              size="small"
+              className="auth-login-page__tool-btn"
+              value={currentLang}
+              prefix={<IconLanguage />}
+              bordered={false}
+              triggerProps={{ autoAlignPopupMinWidth: true }}
+              onChange={changeLanguage}
+            >
+              {SUPPORTED_LOCALES.map((language) => (
+                <Select.Option key={language} value={language}>
+                  {t(`app.language.${language}`)}
+                </Select.Option>
+              ))}
+            </Select>
           </Tooltip>
         </div>
 
@@ -136,6 +189,13 @@ const LoginPage: React.FC = () => {
             </Typography.Paragraph>
           </div>
 
+          {loginNoticeText ? (
+            <Alert
+              className="auth-login-card__notice"
+              type="warning"
+              content={loginNoticeText}
+            />
+          ) : null}
           <Alert className="auth-login-card__notice" type="info" content={t('auth.login.securityNotice')} />
 
           <Form layout="vertical" onSubmit={onSubmit}>

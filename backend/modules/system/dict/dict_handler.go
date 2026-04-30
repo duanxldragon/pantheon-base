@@ -81,6 +81,21 @@ func (h *DictHandler) DeleteDictType(c *gin.Context) {
 	common.Success(c, gin.H{"deleted": true})
 }
 
+func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量更新字典类型状态", common.BusinessUpdate)
+	var req DictTypeBatchStatusReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	updatedCount, err := h.service.BatchUpdateDictTypeStatus(req.TypeIDs, req.Status)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"updatedCount": updatedCount})
+}
+
 func (h *DictHandler) GetDictItemList(c *gin.Context) {
 	var query DictItemListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -93,6 +108,20 @@ func (h *DictHandler) GetDictItemList(c *gin.Context) {
 		return
 	}
 	common.Success(c, rows)
+}
+
+func (h *DictHandler) AnalyzeDictUsage(c *gin.Context) {
+	dictCode := strings.TrimSpace(c.Query("dictCode"))
+	if dictCode == "" {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp, err := h.service.AnalyzeDictUsage(dictCode)
+	if err != nil {
+		common.Fail(c, common.CodeError, "dict.usage.error")
+		return
+	}
+	common.Success(c, resp)
 }
 
 func (h *DictHandler) CreateDictItem(c *gin.Context) {
@@ -142,6 +171,41 @@ func (h *DictHandler) DeleteDictItem(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
+}
+
+func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量更新字典项状态", common.BusinessUpdate)
+	var req DictItemBatchStatusReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	updatedCount, err := h.service.BatchUpdateDictItemStatus(req.ItemIDs, req.Status)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"updatedCount": updatedCount})
+}
+
+func (h *DictHandler) ReorderDictItem(c *gin.Context) {
+	common.SetAuditMetadata(c, "调整字典项排序", common.BusinessUpdate)
+	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	var req DictItemReorderReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	row, err := h.service.ReorderDictItem(itemID, req.Direction)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, row)
 }
 
 func (h *DictHandler) GetDictOptions(c *gin.Context) {

@@ -12,9 +12,11 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import { IconLock, IconUser } from '@arco-design/web-react/icon';
+import { IconLock, IconUpload, IconUser } from '@arco-design/web-react/icon';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { uploadSystemFile } from '../../../api/upload';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { getProfile, updateProfile, type UserProfile, type UserProfileUpdatePayload } from '../user/api';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -30,7 +32,9 @@ const ProfileCenter: React.FC = () => {
   const { setUserInfo } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
   const [profileForm] = Form.useForm<UserProfileUpdatePayload>();
 
   const loadProfile = useCallback(async () => {
@@ -44,6 +48,7 @@ const ProfileCenter: React.FC = () => {
         email: result.email || '',
         phone: result.phone || '',
       });
+      setAvatarPreview(result.avatar || '');
       setUserInfo({
         id: result.id,
         username: result.username,
@@ -69,11 +74,20 @@ const ProfileCenter: React.FC = () => {
   }, [loadProfile]);
 
   const handleSaveProfile = async () => {
-    const values = await profileForm.validate();
+    let values;
+    try {
+      values = await profileForm.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
     setSavingProfile(true);
     try {
       const result = await updateProfile(values);
       setProfile(result);
+      setAvatarPreview(result.avatar || '');
       setUserInfo({
         id: result.id,
         username: result.username,
@@ -90,6 +104,21 @@ const ProfileCenter: React.FC = () => {
     }
   };
 
+  const handleUploadAvatar = async (file?: File | null) => {
+    if (!file) {
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const uploaded = await uploadSystemFile(file, 'profile/avatar');
+      profileForm.setFieldValue('avatar', uploaded.url);
+      setAvatarPreview(uploaded.url);
+      Message.success(t('system.profile.avatarUploadSuccess'));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   if (loading && !profile) {
     return <PageLoading />;
   }
@@ -103,7 +132,11 @@ const ProfileCenter: React.FC = () => {
             <Col span={16}>
               <Space align="start" size={16}>
                 <Avatar size={56}>
-                  {profile?.nickname?.[0] || profile?.username?.[0] || 'U'}
+                  {avatarPreview || profile?.avatar ? (
+                    <img src={avatarPreview || profile?.avatar} alt={profile?.nickname || profile?.username || 'U'} />
+                  ) : (
+                    profile?.nickname?.[0] || profile?.username?.[0] || 'U'
+                  )}
                 </Avatar>
                 <Space direction="vertical" size={4}>
                   <Typography.Title heading={5} style={{ margin: 0 }}>
@@ -158,7 +191,29 @@ const ProfileCenter: React.FC = () => {
                 </Col>
                 <Col span={24}>
                   <FormItem label={t('system.profile.avatar')} field="avatar">
-                    <Input placeholder={t('system.profile.avatarPlaceholder')} />
+                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <Input placeholder={t('system.profile.avatarPlaceholder')} onChange={(value) => setAvatarPreview(value)} />
+                      <Space wrap>
+                        <Button
+                          icon={<IconUpload />}
+                          loading={uploadingAvatar}
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
+                            input.onchange = () => {
+                              void handleUploadAvatar(input.files?.[0]);
+                            };
+                            input.click();
+                          }}
+                        >
+                          {t('system.profile.uploadAvatar')}
+                        </Button>
+                        <Typography.Text type="secondary">
+                          {t('system.profile.avatarUploadHint')}
+                        </Typography.Text>
+                      </Space>
+                    </Space>
                   </FormItem>
                 </Col>
               </Row>

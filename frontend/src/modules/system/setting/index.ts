@@ -20,6 +20,7 @@ export const SettingModule = defineModule({
     'system:setting:list',
     'system:setting:update',
     'system:setting:refresh',
+    'system:setting:export',
   ],
   i18nNamespaces: ['system.setting', 'system.menu'],
 });

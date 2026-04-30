@@ -14,6 +14,9 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 	authSvc := NewAuthService(db)
 	authHandler := NewAuthHandler(authSvc)
 
+	// 监听核心设置变更
+	authSvc.WatchSettings()
+
 	modules := []contracts.BackendModule{
 		contracts.FuncModule{
 			ModuleName:    "auth",
@@ -39,13 +42,18 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.PUT("/profile/password", authHandler.UpdatePassword)
 					systemProtected.GET("/login-log/list", authHandler.GetLoginLogList)
 					systemProtected.POST("/login-log/export", authHandler.ExportLoginLogs)
+					systemProtected.POST("/login-log/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupLoginLogs)
+					systemProtected.POST("/login-log/batch-delete", middleware.SecureActionMiddleware(), authHandler.BatchDeleteLoginLogs)
 					systemProtected.GET("/session/list", authHandler.GetSessionList)
+					systemProtected.POST("/session/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupHistoricSessions)
 					systemProtected.DELETE("/session/:id", authHandler.RevokeAnySession)
 				}
 
 				authV2 := r.Group("/auth").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
 				{
 					authV2.POST("/logout", authHandler.LogoutHandler)
+					authV2.POST("/activity", authHandler.TouchActivity)
+					authV2.POST("/operation-verify", authHandler.VerifyOperationPassword)
 					authV2.GET("/me", authHandler.GetCurrentUserInfo)
 					authV2.GET("/security", authHandler.GetSecurityOverview)
 					authV2.PUT("/password", authHandler.UpdatePassword)
@@ -92,7 +100,7 @@ func authMenuSeeds() []menuSeed {
 			Component: "auth/LoginLogList",
 			PagePerm:  "system:login-log:list",
 			Type:      "C",
-			Icon:      "safe",
+			Icon:      "clock",
 			RouteName: "system-login-log",
 			Module:    "system.auth",
 			Sort:      10,
@@ -105,13 +113,16 @@ func authMenuSeeds() []menuSeed {
 			Component: "auth/SessionList",
 			PagePerm:  "system:session:list",
 			Type:      "C",
-			Icon:      "safe",
+			Icon:      "desktop",
 			RouteName: "system-session",
 			Module:    "system.auth",
 			Sort:      20,
 		},
 		{Key: "login-log-export", ParentKey: "login-log", TitleKey: "system.permission.login_log.export", Perms: "system:login-log:export", Type: "F", Sort: 1},
+		{Key: "login-log-clear", ParentKey: "login-log", TitleKey: "system.permission.login_log.clear", Perms: "system:login-log:clear", Type: "F", Sort: 2},
+		{Key: "login-log-delete", ParentKey: "login-log", TitleKey: "system.permission.login_log.delete", Perms: "system:login-log:delete", Type: "F", Sort: 3},
 		{Key: "session-delete", ParentKey: "session", TitleKey: "system.permission.session.delete", Perms: "system:session:delete", Type: "F", Sort: 1},
+		{Key: "session-clear", ParentKey: "session", TitleKey: "system.permission.session.clear", Perms: "system:session:clear", Type: "F", Sort: 2},
 	}
 }
 

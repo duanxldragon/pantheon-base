@@ -6,6 +6,9 @@ export interface OperationLogQuery {
   operName?: string;
   status?: number;
   businessType?: number;
+  sourceDomain?: string;
+  sourcePage?: string;
+  failureCategory?: string;
   page: number;
   pageSize: number;
 }
@@ -18,9 +21,12 @@ export interface OperationLogRow {
   operName: string;
   operUrl: string;
   operIp: string;
+  sourceDomain: string;
+  sourcePage: string;
   operParam: string;
   jsonResult: string;
   status: number;
+  failureCategory: string;
   errorMsg: string;
   operTime: string;
   costTime: number;
@@ -33,11 +39,26 @@ export interface OperationLogPageResp {
   pageSize: number;
 }
 
+export interface OperationLogCleanupPayload {
+  retentionDays: number;
+}
+
+export interface OperationLogBatchDeletePayload {
+  ids: number[];
+}
+
 export function getOperationLogList(params: OperationLogQuery) {
   return apiRequest<OperationLogPageResp>({
     url: '/system/operation-log/list',
     method: 'get',
     params,
+  });
+}
+
+export function getOperationLog(id: number) {
+  return apiRequest<OperationLogRow>({
+    url: `/system/operation-log/${id}`,
+    method: 'get',
   });
 }
 
@@ -48,10 +69,19 @@ export function deleteOperationLog(id: number) {
   });
 }
 
-export function clearOperationLogs() {
-  return apiRequest<{ cleared: boolean }>({
-    url: '/system/operation-log/clear',
+export function cleanupOperationLogs(data: OperationLogCleanupPayload) {
+  return apiRequest<{ clearedCount: number }>({
+    url: '/system/operation-log/cleanup',
     method: 'post',
+    data,
+  });
+}
+
+export function batchDeleteOperationLogs(data: OperationLogBatchDeletePayload) {
+  return apiRequest<{ deletedCount: number }>({
+    url: '/system/operation-log/batch-delete',
+    method: 'post',
+    data,
   });
 }
 

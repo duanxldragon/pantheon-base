@@ -32,8 +32,23 @@ func (h *AuditHandler) GetOperationLogList(c *gin.Context) {
 	common.Success(c, page)
 }
 
+func (h *AuditHandler) GetOperationLog(c *gin.Context) {
+	logID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	resp, err := h.service.GetOperationLog(logID)
+	if err != nil {
+		common.Fail(c, common.CodeError, "audit.operation_log.detail.error")
+		return
+	}
+	common.Success(c, resp)
+}
+
 func (h *AuditHandler) DeleteOperationLog(c *gin.Context) {
-	common.SetAuditMetadata(c, "删除操作日志", common.BusinessDelete)
+	common.SetAuditMetadata(c, "audit.operation_log.delete.title", common.BusinessDelete)
 	logID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -47,17 +62,42 @@ func (h *AuditHandler) DeleteOperationLog(c *gin.Context) {
 	common.Success(c, gin.H{"deleted": true})
 }
 
-func (h *AuditHandler) ClearOperationLogs(c *gin.Context) {
-	common.SetAuditMetadata(c, "清空操作日志", common.BusinessClean)
-	if err := h.service.ClearOperationLogs(); err != nil {
+func (h *AuditHandler) CleanupOperationLogs(c *gin.Context) {
+	common.SetAuditMetadata(c, "audit.operation_log.cleanup.title", common.BusinessClean)
+
+	var req OperationLogCleanupReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	clearedCount, err := h.service.CleanupOperationLogs(req.RetentionDays)
+	if err != nil {
 		common.Fail(c, common.CodeError, err.Error())
 		return
 	}
-	common.Success(c, gin.H{"cleared": true})
+	common.Success(c, gin.H{"clearedCount": clearedCount})
+}
+
+func (h *AuditHandler) BatchDeleteOperationLogs(c *gin.Context) {
+	common.SetAuditMetadata(c, "audit.operation_log.batch_delete.title", common.BusinessDelete)
+
+	var req OperationLogBatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	deletedCount, err := h.service.BatchDeleteOperationLogs(req.IDs)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"deletedCount": deletedCount})
 }
 
 func (h *AuditHandler) ExportOperationLogs(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出操作日志", common.BusinessExport)
+	common.SetAuditMetadata(c, "audit.operation_log.export.title", common.BusinessExport)
 
 	var query OperationLogQuery
 	if err := c.ShouldBindJSON(&query); err != nil {

@@ -5,27 +5,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
-func setupUserTestDB() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
+func setupUserTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+	db := testmysql.Open(t)
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxOpenConns(1)
 
 	// 迁移模型
 	_ = db.AutoMigrate(&SystemUser{})
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY, role_key TEXT, status INTEGER, deleted_at DATETIME)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id TEXT, user_id INTEGER, revoked_at DATETIME)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id INTEGER PRIMARY KEY, parent_id INTEGER, dept_name TEXT)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id INTEGER PRIMARY KEY, post_code TEXT, post_name TEXT, dept_id INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT, deleted_at DATETIME NULL)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id VARCHAR(128), user_id BIGINT, revoked_at DATETIME NULL)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id BIGINT PRIMARY KEY, parent_id BIGINT, dept_name VARCHAR(128))")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id BIGINT PRIMARY KEY, post_code VARCHAR(64), post_name VARCHAR(128), dept_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(128) PRIMARY KEY, setting_value TEXT)")
 
 	// 插入基础数据
 	_ = db.Exec("INSERT INTO system_role (id, role_key, status) VALUES (1, 'admin', 1)")
@@ -35,7 +33,7 @@ func setupUserTestDB() *gorm.DB {
 }
 
 func TestUserService_CreateUser(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	req := &UserCreateReq{
@@ -71,7 +69,7 @@ func TestUserService_CreateUser(t *testing.T) {
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	// 创建初始用户
@@ -105,7 +103,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 }
 
 func TestUserService_BatchUpdateUserStatus(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	if err := db.Create(&SystemUser{ID: 1, Username: "admin", Status: 1}).Error; err != nil {
@@ -141,8 +139,34 @@ func TestUserService_BatchUpdateUserStatus(t *testing.T) {
 	}
 }
 
+func TestUserService_MigrateCreatesUserRoleTableAndAdminBinding(t *testing.T) {
+	db := testmysql.Open(t)
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT, deleted_at DATETIME NULL)").Error; err != nil {
+		t.Fatalf("create role table: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_role (id, role_key, status) VALUES (1, 'admin', 1)").Error; err != nil {
+		t.Fatalf("seed admin role: %v", err)
+	}
+
+	s := NewUserService(db)
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+	if !db.Migrator().HasTable("system_user_role") {
+		t.Fatal("expected system_user_role table to exist")
+	}
+
+	var bindingCount int64
+	if err := db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, 1).Count(&bindingCount).Error; err != nil {
+		t.Fatalf("count admin binding: %v", err)
+	}
+	if bindingCount != 1 {
+		t.Fatalf("expected admin user-role binding, got %d", bindingCount)
+	}
+}
+
 func TestUserService_ListUsersByDeptAndPost(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	_ = db.Exec("INSERT INTO system_dept (id, dept_name) VALUES (10, '研发部'), (20, '财务部')")
@@ -169,7 +193,7 @@ func TestUserService_ListUsersByDeptAndPost(t *testing.T) {
 		t.Fatalf("create finance user: %v", err)
 	}
 
-	deptList, err := s.ListUsers(&UserListQuery{DeptID: 10, Page: 1, PageSize: 20})
+	deptList, err := s.ListUsers(&UserListQuery{DeptID: 10, Page: 1, PageSize: 20}, nil)
 	if err != nil {
 		t.Fatalf("list by dept: %v", err)
 	}
@@ -177,7 +201,7 @@ func TestUserService_ListUsersByDeptAndPost(t *testing.T) {
 		t.Fatalf("expected only rd_user for dept 10, got %+v", deptList.Items)
 	}
 
-	postList, err := s.ListUsers(&UserListQuery{PostID: 200, Page: 1, PageSize: 20})
+	postList, err := s.ListUsers(&UserListQuery{PostID: 200, Page: 1, PageSize: 20}, nil)
 	if err != nil {
 		t.Fatalf("list by post: %v", err)
 	}
@@ -187,7 +211,7 @@ func TestUserService_ListUsersByDeptAndPost(t *testing.T) {
 }
 
 func TestUserService_DeleteUser(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	// 先创建一个占位用户，占用 ID 1
@@ -237,7 +261,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 }
 
 func TestUserService_MigrateReleasesLegacyDeletedUsername(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 
 	if err := db.Create(&SystemUser{
 		Username: "admin_seed",
@@ -287,7 +311,7 @@ func TestUserService_MigrateReleasesLegacyDeletedUsername(t *testing.T) {
 }
 
 func TestUserService_ResetPassword(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	createReq := &UserCreateReq{
@@ -330,7 +354,7 @@ func TestUserService_ResetPassword(t *testing.T) {
 }
 
 func TestUserService_CreateAndResetPasswordUseConfiguredMinLength(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '8')")
 
@@ -360,7 +384,7 @@ func TestUserService_CreateAndResetPasswordUseConfiguredMinLength(t *testing.T) 
 }
 
 func TestUserService_GetUserDetail(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	_ = db.Exec("INSERT INTO system_dept (id, dept_name) VALUES (10, '研发部')")
@@ -411,7 +435,7 @@ func TestUserService_GetUserDetail(t *testing.T) {
 }
 
 func TestUserService_ImportTemplateAndExport(t *testing.T) {
-	db := setupUserTestDB()
+	db := setupUserTestDB(t)
 	s := NewUserService(db)
 
 	template := s.BuildUserImportTemplate()

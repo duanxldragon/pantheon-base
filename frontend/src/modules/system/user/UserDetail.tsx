@@ -39,7 +39,10 @@ const UserDetail: React.FC = () => {
   }, [invalidUserId, userId]);
 
   useEffect(() => {
-    void loadDetail();
+    const timer = window.setTimeout(() => {
+      void loadDetail();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadDetail]);
 
   if (loading) {

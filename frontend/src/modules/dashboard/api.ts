@@ -11,6 +11,18 @@ export interface DashboardRecentLogin {
   loginTime: string;
 }
 
+export interface DashboardTodoItem {
+  taskKey: string;
+  domain: string;
+  scopeLabel: string;
+  issueLabel: string;
+  actionLabel: string;
+  resourceLabel: string;
+  relatedUserCount: number;
+  routePath: string;
+  routeStateDeptId: number;
+}
+
 export interface DashboardSummary {
   totalUsers: number;
   enabledUsers: number;
@@ -27,6 +39,8 @@ export interface DashboardSummary {
   lastSuccessfulLoginAt: string;
   periodDays: number;
   recentLogins: DashboardRecentLogin[];
+  orgGovernanceTaskCount: number;
+  orgGovernanceTasks: DashboardTodoItem[];
 }
 
 export function getDashboardSummary() {

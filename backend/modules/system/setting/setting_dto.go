@@ -4,6 +4,7 @@ type SettingResp struct {
 	ID           uint64 `json:"id"`
 	SettingKey   string `json:"settingKey"`
 	SettingValue string `json:"settingValue"`
+	DefaultValue string `json:"defaultValue"`
 	ValueType    string `json:"valueType"`
 	GroupKey     string `json:"groupKey"`
 	Module       string `json:"module"`
@@ -79,4 +80,23 @@ type SettingAuditPageResp struct {
 	Total    int64              `json:"total"`
 	Page     int                `json:"page"`
 	PageSize int                `json:"pageSize"`
+}
+
+type SettingOverviewIssueResp struct {
+	SettingKey string `json:"settingKey"`
+	GroupKey   string `json:"groupKey"`
+	Severity   string `json:"severity"`
+	ReasonKey  string `json:"reasonKey"`
+}
+
+type SettingOverviewResp struct {
+	TotalSettingCount     int                        `json:"totalSettingCount"`
+	PublicSettingCount    int                        `json:"publicSettingCount"`
+	EncryptedSettingCount int                        `json:"encryptedSettingCount"`
+	RequiredMissingCount  int                        `json:"requiredMissingCount"`
+	RiskCount             int                        `json:"riskCount"`
+	StorageDriver         string                     `json:"storageDriver"`
+	DefaultLanguage       string                     `json:"defaultLanguage"`
+	DefaultTheme          string                     `json:"defaultTheme"`
+	Issues                []SettingOverviewIssueResp `json:"issues"`
 }

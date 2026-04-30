@@ -59,6 +59,18 @@ type DictItem = {
   itemLabelKey: string;
 };
 
+type LoginLogItem = {
+  id: number;
+  username: string;
+  status: number;
+};
+
+type OperationLogItem = {
+  id: number;
+  title: string;
+  sourcePage: string;
+};
+
 type DeptNode = {
   deptName: string;
   isRoot: boolean;
@@ -290,8 +302,8 @@ test.describe.serial('system import/export api smoke', () => {
     const itemListResponse = await apiContext.get(`${apiBaseUrl}/system/dict/item/list`, {
       params: { dictCode: smokeDictCode },
     });
-    const itemList = await expectSuccess<DictItem[]>(itemListResponse);
-    expect(itemList.some((item) => item.dictCode === smokeDictCode && item.itemValue === smokeItemValue)).toBeTruthy();
+    const itemList = await expectSuccess<ListPage<DictItem>>(itemListResponse);
+    expect(itemList.items.some((item) => item.dictCode === smokeDictCode && item.itemValue === smokeItemValue)).toBeTruthy();
 
     const itemExportResponse = await apiContext.post(`${apiBaseUrl}/system/dict/item/export`, {
       data: { dictCode: smokeDictCode },
@@ -369,7 +381,74 @@ test.describe.serial('system import/export api smoke', () => {
       data: {},
     });
     const operationLogCsv = await expectCsv(operationLogResponse, 'system-operation-log-export.csv');
-    expect(parseCsvLines(operationLogCsv)[0]).toBe('title,businessType,method,operName,operUrl,operIp,status,errorMsg,operTime,costTime');
+    expect(parseCsvLines(operationLogCsv)[0]).toBe(
+      'title,businessType,sourceDomain,sourcePage,method,operName,operUrl,operIp,status,failureCategory,errorMsg,operTime,costTime',
+    );
+  });
+
+  test('login log and operation log cleanup / batch delete are usable', async () => {
+    const operationHeaders = await verifiedHeaders(apiContext);
+
+    const loginLogListResponse = await apiContext.get(`${apiBaseUrl}/system/login-log/list`, {
+      params: { username: adminUsername, page: '1', pageSize: '10' },
+    });
+    const loginLogList = await expectSuccess<ListPage<LoginLogItem>>(loginLogListResponse);
+    expect(loginLogList.items.length).toBeGreaterThan(0);
+
+    const loginCleanupResponse = await apiContext.post(`${apiBaseUrl}/system/login-log/cleanup`, {
+      headers: operationHeaders,
+      data: { retentionDays: 30 },
+    });
+    const loginCleanupResult = await expectSuccess<{ clearedCount: number }>(loginCleanupResponse);
+    expect(loginCleanupResult.clearedCount).toBeGreaterThanOrEqual(0);
+
+    const loginDeleteCandidate = loginLogList.items[0];
+    const loginBatchDeleteResponse = await apiContext.post(`${apiBaseUrl}/system/login-log/batch-delete`, {
+      headers: operationHeaders,
+      data: { ids: [loginDeleteCandidate.id] },
+    });
+    const loginBatchDeleteResult = await expectSuccess<{ deletedCount: number }>(loginBatchDeleteResponse);
+    expect(loginBatchDeleteResult.deletedCount).toBeGreaterThanOrEqual(1);
+
+    const loginVerifyResponse = await apiContext.get(`${apiBaseUrl}/system/login-log/list`, {
+      params: { username: adminUsername, page: '1', pageSize: '10' },
+    });
+    const loginVerifyList = await expectSuccess<ListPage<LoginLogItem>>(loginVerifyResponse);
+    expect(loginVerifyList.items.some((item) => item.id === loginDeleteCandidate.id)).toBeFalsy();
+
+    await expect.poll(async () => {
+      const operationListResponse = await apiContext.get(`${apiBaseUrl}/system/operation-log/list`, {
+        params: { page: '1', pageSize: '10' },
+      });
+      const payload = await expectSuccess<ListPage<OperationLogItem>>(operationListResponse);
+      return payload.items.length;
+    }).toBeGreaterThan(0);
+
+    const operationListResponse = await apiContext.get(`${apiBaseUrl}/system/operation-log/list`, {
+      params: { page: '1', pageSize: '10' },
+    });
+    const operationList = await expectSuccess<ListPage<OperationLogItem>>(operationListResponse);
+
+    const operationCleanupResponse = await apiContext.post(`${apiBaseUrl}/system/operation-log/cleanup`, {
+      headers: operationHeaders,
+      data: { retentionDays: 30 },
+    });
+    const operationCleanupResult = await expectSuccess<{ clearedCount: number }>(operationCleanupResponse);
+    expect(operationCleanupResult.clearedCount).toBeGreaterThanOrEqual(0);
+
+    const operationDeleteCandidate = operationList.items[0];
+    const operationBatchDeleteResponse = await apiContext.post(`${apiBaseUrl}/system/operation-log/batch-delete`, {
+      headers: operationHeaders,
+      data: { ids: [operationDeleteCandidate.id] },
+    });
+    const operationBatchDeleteResult = await expectSuccess<{ deletedCount: number }>(operationBatchDeleteResponse);
+    expect(operationBatchDeleteResult.deletedCount).toBeGreaterThanOrEqual(1);
+
+    const operationVerifyResponse = await apiContext.get(`${apiBaseUrl}/system/operation-log/list`, {
+      params: { page: '1', pageSize: '10' },
+    });
+    const operationVerifyList = await expectSuccess<ListPage<OperationLogItem>>(operationVerifyResponse);
+    expect(operationVerifyList.items.some((item) => item.id === operationDeleteCandidate.id)).toBeFalsy();
   });
 
   test('sample fixture files are present for manual smoke', async () => {
@@ -397,6 +476,16 @@ async function expectSuccess<T>(response: APIResponse): Promise<T> {
   const payload = (await response.json()) as ResponseEnvelope<T>;
   expect(payload.code).toBe(200);
   return payload.data;
+}
+
+async function verifiedHeaders(context: APIRequestContext) {
+  const verifyResponse = await context.post(`${apiBaseUrl}/auth/operation-verify`, {
+    data: { password: adminPassword },
+  });
+  const verifyPayload = await expectSuccess<{ operationToken: string }>(verifyResponse);
+  return {
+    'X-Operation-Token': verifyPayload.operationToken,
+  };
 }
 
 async function expectCsv(response: APIResponse, expectedFilename: string): Promise<string> {

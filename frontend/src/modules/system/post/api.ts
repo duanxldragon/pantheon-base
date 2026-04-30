@@ -11,6 +11,13 @@ export interface PostRow {
   sort: number;
   status: number;
   remark: string;
+  assignedUserCount: number;
+  governanceTags: string[];
+  governanceTagLabels: string[];
+  governanceBlockedBy: string[];
+  governanceBlockedDesc: string[];
+  governanceActions: string[];
+  governanceActionLabel: string[];
   createdAt: string;
 }
 

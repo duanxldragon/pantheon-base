@@ -9,16 +9,18 @@ import (
 )
 
 const (
-	TokenTypeAccess  = "access"
-	TokenTypeRefresh = "refresh"
+	TokenTypeAccess    = "access"
+	TokenTypeRefresh   = "refresh"
+	TokenTypeOperation = "operation"
 )
 
 var (
-	AccessTokenSecret  = []byte(getEnv("PANTHEON_ACCESS_TOKEN_SECRET", "pantheon-indigo-access-secret"))
-	RefreshTokenSecret = []byte(getEnv("PANTHEON_REFRESH_TOKEN_SECRET", "pantheon-indigo-refresh-secret"))
-	ErrTokenInvalid    = errors.New("token.invalid")
-	ErrTokenExpired    = errors.New("token.expired")
-	ErrTokenType       = errors.New("token.type.invalid")
+	AccessTokenSecret    = []byte(DefaultAccessTokenSecret)
+	RefreshTokenSecret   = []byte(DefaultRefreshTokenSecret)
+	OperationTokenSecret = []byte(DefaultOperationTokenSecret)
+	ErrTokenInvalid      = errors.New("token.invalid")
+	ErrTokenExpired      = errors.New("token.expired")
+	ErrTokenType         = errors.New("token.type.invalid")
 )
 
 type TokenPair struct {
@@ -39,14 +41,6 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func getEnv(key string, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-	return value
-}
-
 func accessTokenTTL() time.Duration {
 	return 15 * time.Minute
 }
@@ -56,7 +50,7 @@ func refreshTokenTTL() time.Duration {
 }
 
 func buildClaims(userID uint64, username string, roleKeys []string, tokenType string, sessionID string, tokenID string, expiresAt time.Time) CustomClaims {
-	claims := CustomClaims{
+	return CustomClaims{
 		UserID:    userID,
 		Username:  username,
 		RoleKeys:  roleKeys,
@@ -69,7 +63,6 @@ func buildClaims(userID uint64, username string, roleKeys []string, tokenType st
 			NotBefore: jwt.NewNumericDate(time.Now()),
 		},
 	}
-	return claims
 }
 
 func signToken(claims CustomClaims, secret []byte) (string, error) {
@@ -77,7 +70,6 @@ func signToken(claims CustomClaims, secret []byte) (string, error) {
 	return token.SignedString(secret)
 }
 
-// GenerateAccessToken 生成 access token。
 func GenerateAccessToken(userID uint64, username string, roleKeys []string, sessionID string, tokenID string) (string, time.Time, error) {
 	expiresAt := time.Now().Add(accessTokenTTL())
 	claims := buildClaims(userID, username, roleKeys, TokenTypeAccess, sessionID, tokenID, expiresAt)
@@ -85,7 +77,6 @@ func GenerateAccessToken(userID uint64, username string, roleKeys []string, sess
 	return token, expiresAt, err
 }
 
-// GenerateRefreshToken 生成 refresh token。
 func GenerateRefreshToken(userID uint64, username string, roleKeys []string, sessionID string, tokenID string) (string, time.Time, error) {
 	expiresAt := time.Now().Add(refreshTokenTTL())
 	claims := buildClaims(userID, username, roleKeys, TokenTypeRefresh, sessionID, tokenID, expiresAt)
@@ -93,18 +84,15 @@ func GenerateRefreshToken(userID uint64, username string, roleKeys []string, ses
 	return token, expiresAt, err
 }
 
-// GenerateTokenPair 生成 access + refresh token。
 func GenerateTokenPair(userID uint64, username string, roleKeys []string, sessionID string, accessTokenID string, refreshTokenID string) (*TokenPair, error) {
 	accessToken, accessExpiresAt, err := GenerateAccessToken(userID, username, roleKeys, sessionID, accessTokenID)
 	if err != nil {
 		return nil, err
 	}
-
 	refreshToken, refreshExpiresAt, err := GenerateRefreshToken(userID, username, roleKeys, sessionID, refreshTokenID)
 	if err != nil {
 		return nil, err
 	}
-
 	return &TokenPair{
 		AccessToken:      accessToken,
 		RefreshToken:     refreshToken,
@@ -115,30 +103,50 @@ func GenerateTokenPair(userID uint64, username string, roleKeys []string, sessio
 	}, nil
 }
 
-// ParseToken 解析并校验 JWT。
 func ParseToken(tokenString string, expectedType string) (*CustomClaims, error) {
 	secret := AccessTokenSecret
 	if expectedType == TokenTypeRefresh {
 		secret = RefreshTokenSecret
 	}
-
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
-
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrTokenExpired
 		}
 		return nil, err
 	}
-
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		if claims.TokenType != expectedType {
 			return nil, ErrTokenType
 		}
 		return claims, nil
 	}
+	return nil, ErrTokenInvalid
+}
 
+func GenerateOperationToken(userID uint64, ttl time.Duration) (string, error) {
+	expiresAt := time.Now().Add(ttl)
+	claims := buildClaims(userID, "op-verify", []string{}, TokenTypeOperation, "system", "op-"+os.Getenv("HOSTNAME"), expiresAt)
+	return signToken(claims, OperationTokenSecret)
+}
+
+func ParseOperationToken(tokenString string) (*CustomClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return OperationTokenSecret, nil
+	})
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, ErrTokenExpired
+		}
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
+		if claims.TokenType != TokenTypeOperation {
+			return nil, ErrTokenType
+		}
+		return claims, nil
+	}
 	return nil, ErrTokenInvalid
 }

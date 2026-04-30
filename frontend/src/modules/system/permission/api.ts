@@ -34,6 +34,8 @@ export interface PermissionPolicyPayload {
 export interface PermissionWorkbenchQuery {
   roleKey?: string;
   status?: number;
+  integrity?: string;
+  coverage?: string;
 }
 
 export interface PermissionWorkbenchOverview {
@@ -43,6 +45,9 @@ export interface PermissionWorkbenchOverview {
   pagePermissionAssignmentCount: number;
   actionPermissionAssignmentCount: number;
   apiActionCount: number;
+  unknownPermissionAssignmentCount: number;
+  pageGapRoleCount: number;
+  apiGapRoleCount: number;
 }
 
 export interface PermissionWorkbenchMenu {
@@ -75,17 +80,33 @@ export interface PermissionWorkbenchRole {
   pagePermissionCount: number;
   actionPermissionCount: number;
   apiPolicyCount: number;
+  requiredApiPolicyCount: number;
+  missingApiPolicyCount: number;
   unknownPermissionCount: number;
+  hasPageGap: boolean;
+  hasApiGap: boolean;
   menus: PermissionWorkbenchMenu[];
   pagePermissions: PermissionWorkbenchPermission[];
   actionPermissions: PermissionWorkbenchPermission[];
   unknownPermissions: PermissionWorkbenchPermission[];
   apiPolicies: PermissionWorkbenchApiPolicy[];
+  missingApiPolicies: PermissionWorkbenchApiPolicy[];
 }
 
 export interface PermissionWorkbenchResp {
   overview: PermissionWorkbenchOverview;
   roles: PermissionWorkbenchRole[];
+}
+
+export interface PermissionWorkbenchRemediatePayload {
+  roleKey: string;
+}
+
+export interface PermissionWorkbenchRemediateResp {
+  roleKey: string;
+  createdCount: number;
+  skippedCount: number;
+  createdPolicies: PermissionWorkbenchApiPolicy[];
 }
 
 export function getPermissionWorkbench(params?: PermissionWorkbenchQuery) {
@@ -101,6 +122,14 @@ export function getPermissionPolicyList(params?: PermissionPolicyQuery) {
     url: '/system/permission/list',
     method: 'get',
     params,
+  });
+}
+
+export function remediatePermissionWorkbenchRole(data: PermissionWorkbenchRemediatePayload) {
+  return apiRequest<PermissionWorkbenchRemediateResp>({
+    url: '/system/permission/workbench/remediate',
+    method: 'post',
+    data,
   });
 }
 
@@ -133,6 +162,15 @@ export function exportPermissionPolicies(data?: PermissionPolicyQuery) {
     method: 'post',
     data,
     filename: 'system-permission-export.csv',
+  });
+}
+
+export function exportPermissionWorkbench(params?: PermissionWorkbenchQuery) {
+  return downloadFile({
+    url: '/system/permission/workbench/export',
+    method: 'get',
+    params: params ? { ...params } : undefined,
+    filename: 'system-permission-workbench-export.csv',
   });
 }
 

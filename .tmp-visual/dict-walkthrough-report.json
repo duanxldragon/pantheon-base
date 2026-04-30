@@ -1,0 +1,75 @@
+{
+  "summary": {
+    "checks": [
+      {
+        "name": "双标签可见",
+        "ok": true,
+        "detail": {
+          "typeTabVisible": true,
+          "itemTabVisible": true
+        }
+      },
+      {
+        "name": "类型页首行跳转按钮可见",
+        "ok": true,
+        "detail": {}
+      },
+      {
+        "name": "字典项工具栏可见",
+        "ok": true,
+        "detail": {
+          "itemToolbarVisible": true,
+          "refreshVisible": true
+        }
+      },
+      {
+        "name": "字典项存在数据行",
+        "ok": false,
+        "detail": {
+          "rowCount": 0
+        }
+      },
+      {
+        "name": "字典项上下文卡片已渲染",
+        "ok": true,
+        "detail": {
+          "summaryText": "字典项: 4"
+        }
+      },
+      {
+        "name": "勾选后批量按钮可用",
+        "ok": false,
+        "detail": {
+          "checkboxVisible": false,
+          "batchEnableDisabled": true,
+          "batchDisableDisabled": true
+        }
+      },
+      {
+        "name": "使用分析弹窗可打开",
+        "ok": true,
+        "detail": {
+          "usageReferenceText": "引用数: 1",
+          "usageEmptyVisible": false
+        }
+      },
+      {
+        "name": "刷新缓存成功提示可见",
+        "ok": true,
+        "detail": {}
+      },
+      {
+        "name": "当前停留在字典项标签",
+        "ok": true,
+        "detail": {
+          "titleTabAria": "true"
+        }
+      }
+    ]
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "url": "http://127.0.0.1:5173/system/dict",
+  "generatedAt": "2026-04-26T22:58:37.612Z"
+}

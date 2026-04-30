@@ -9,17 +9,17 @@ import (
 
 	user "pantheon-platform/backend/modules/system/user"
 	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/testmysql"
 
 	"github.com/gin-gonic/gin"
-	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func setupSmokeTestRouter() (*gin.Engine, *gorm.DB) {
+func setupSmokeTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
+	t.Helper()
 	gin.SetMode(gin.TestMode)
-	// 使用文件数据库防止 Goroutine 找不到表
-	db, _ := gorm.Open(sqlite.Open("smoke_test.db"), &gorm.Config{})
+	db := testmysql.Open(t)
 
 	// 清理旧表
 	_ = db.Exec("DROP TABLE IF EXISTS system_user")
@@ -31,9 +31,9 @@ func setupSmokeTestRouter() (*gin.Engine, *gorm.DB) {
 
 	// 迁移所有核心表
 	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{})
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY, role_key TEXT, status INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id INTEGER, permission_key TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")
 
 	// 创建初始管理员
 	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
@@ -60,7 +60,7 @@ func setupSmokeTestRouter() (*gin.Engine, *gorm.DB) {
 }
 
 func TestSmoke_LoginFlow(t *testing.T) {
-	r, _ := setupSmokeTestRouter()
+	r, db := setupSmokeTestRouter(t)
 
 	tests := []struct {
 		name            string
@@ -113,5 +113,13 @@ func TestSmoke_LoginFlow(t *testing.T) {
 				t.Errorf("expected biz code %d, got %d. Msg: %s", tt.expectedBizCode, resp.Code, resp.Message)
 			}
 		})
+	}
+
+	var loginLogCount int64
+	if err := db.Model(&SystemLogLogin{}).Count(&loginLogCount).Error; err != nil {
+		t.Fatalf("count login logs: %v", err)
+	}
+	if loginLogCount != int64(len(tests)) {
+		t.Fatalf("expected %d login logs, got %d", len(tests), loginLogCount)
 	}
 }

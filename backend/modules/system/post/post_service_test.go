@@ -5,17 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
 func setupPostTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 	if err := db.AutoMigrate(&SystemPost{}); err != nil {
 		t.Fatalf("migrate post: %v", err)
 	}
@@ -159,6 +156,59 @@ func TestPostService_BatchUpdatePostStatus(t *testing.T) {
 	}
 }
 
+func TestPostService_UpdateRejectsDisableWhenUsersAssigned(t *testing.T) {
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
+
+	created, err := service.CreatePost(&PostCreateReq{
+		PostCode: "frontend",
+		PostName: "Frontend Engineer",
+		DeptID:   10,
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("create post: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_user (id, post_id, deleted_at) VALUES (1, ?, NULL)", created.ID).Error; err != nil {
+		t.Fatalf("seed active user: %v", err)
+	}
+
+	_, err = service.UpdatePost(created.ID, &PostUpdateReq{
+		DeptID:   10,
+		PostCode: created.PostCode,
+		PostName: created.PostName,
+		Sort:     created.Sort,
+		Status:   2,
+		Remark:   created.Remark,
+	})
+	if err == nil || err.Error() != "post.status.error.has_users" {
+		t.Fatalf("expected disable blocked by active users, got %v", err)
+	}
+}
+
+func TestPostService_BatchDisableRejectsPostsAssignedToUsers(t *testing.T) {
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
+
+	created, err := service.CreatePost(&PostCreateReq{
+		PostCode: "backend",
+		PostName: "Backend Engineer",
+		DeptID:   10,
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("create post: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_user (id, post_id, deleted_at) VALUES (1, ?, NULL)", created.ID).Error; err != nil {
+		t.Fatalf("seed active user: %v", err)
+	}
+
+	_, err = service.BatchUpdatePostStatus([]uint64{created.ID}, 2)
+	if err == nil || err.Error() != "post.status.error.has_users" {
+		t.Fatalf("expected batch disable blocked by active users, got %v", err)
+	}
+}
+
 func TestPostService_ImportTemplateAndExport(t *testing.T) {
 	db := setupPostTestDB(t)
 	service := NewPostService(db)
@@ -192,5 +242,129 @@ func TestPostService_ImportTemplateAndExport(t *testing.T) {
 	}
 	if len(exported.Rows) != 1 || exported.Rows[0][1] != "developer" || exported.Rows[0][2] != "研发工程师" {
 		t.Fatalf("unexpected export rows: %+v", exported.Rows)
+	}
+	if exported.Headers[len(exported.Headers)-1] != "governanceActionsLabel" {
+		t.Fatalf("expected governance export headers, got %+v", exported.Headers)
+	}
+}
+
+func TestPostService_ExportPostsIncludesGovernanceColumns(t *testing.T) {
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate post service: %v", err)
+	}
+
+	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		post_id INTEGER,
+		deleted_at DATETIME
+	)`).Error; err != nil {
+		t.Fatalf("create user table: %v", err)
+	}
+
+	activePost := SystemPost{
+		DeptID:   10,
+		PostCode: "developer",
+		PostName: "研发工程师",
+		Status:   1,
+	}
+	if err := db.Create(&activePost).Error; err != nil {
+		t.Fatalf("seed active post: %v", err)
+	}
+	disabledPost := SystemPost{
+		DeptID:   10,
+		PostCode: "assistant",
+		PostName: "助理",
+		Status:   2,
+	}
+	if err := db.Create(&disabledPost).Error; err != nil {
+		t.Fatalf("seed disabled post: %v", err)
+	}
+	if err := db.Exec(`INSERT INTO system_user (post_id, deleted_at) VALUES (?, NULL)`, activePost.ID).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+
+	exported, err := service.ExportPosts(&PostListQuery{})
+	if err != nil {
+		t.Fatalf("export posts: %v", err)
+	}
+	if len(exported.Rows) != 2 {
+		t.Fatalf("expected 2 exported rows, got %+v", exported.Rows)
+	}
+
+	var activeRow []string
+	var disabledRow []string
+	for _, row := range exported.Rows {
+		switch row[1] {
+		case "developer":
+			activeRow = row
+		case "assistant":
+			disabledRow = row
+		}
+	}
+	if len(activeRow) == 0 || len(disabledRow) == 0 {
+		t.Fatalf("expected active and disabled rows, got %+v", exported.Rows)
+	}
+	if activeRow[6] != "1" || activeRow[7] != "post" || activeRow[8] != "in-use" || activeRow[9] != "1" || activeRow[10] != "users" || activeRow[11] != "reassign-users" || activeRow[12] != "Post" || activeRow[13] != "Assigned Members" || activeRow[14] != "Users" || activeRow[15] != "Reassign Users" {
+		t.Fatalf("unexpected active governance export row: %+v", activeRow)
+	}
+	if disabledRow[6] != "0" || disabledRow[7] != "post" || disabledRow[8] != "disabled" || disabledRow[9] != "0" || disabledRow[10] != "none" || disabledRow[11] != "delete-or-keep-disabled" || disabledRow[12] != "Post" || disabledRow[13] != "Disabled" || disabledRow[14] != "No Blocker" || disabledRow[15] != "Delete or Keep Disabled" {
+		t.Fatalf("unexpected disabled governance export row: %+v", disabledRow)
+	}
+}
+
+func TestPostService_ListPostsIncludesGovernanceFields(t *testing.T) {
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
+
+	activePost, err := service.CreatePost(&PostCreateReq{
+		DeptID:   10,
+		PostCode: "developer",
+		PostName: "研发工程师",
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("create active post: %v", err)
+	}
+	if _, err := service.CreatePost(&PostCreateReq{
+		DeptID:   10,
+		PostCode: "assistant",
+		PostName: "助理",
+		Status:   2,
+	}); err != nil {
+		t.Fatalf("create disabled post: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_user (id, post_id, deleted_at) VALUES (1, ?, NULL)", activePost.ID).Error; err != nil {
+		t.Fatalf("seed active user: %v", err)
+	}
+
+	resp, err := service.ListPosts(&PostListQuery{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list posts: %v", err)
+	}
+	if len(resp.Items) != 2 {
+		t.Fatalf("expected 2 posts, got %+v", resp.Items)
+	}
+
+	var inUse *PostListResp
+	var disabled *PostListResp
+	for index := range resp.Items {
+		row := &resp.Items[index]
+		switch row.PostCode {
+		case "developer":
+			inUse = row
+		case "assistant":
+			disabled = row
+		}
+	}
+	if inUse == nil || disabled == nil {
+		t.Fatalf("expected developer and assistant rows, got %+v", resp.Items)
+	}
+	if inUse.AssignedUserCount != 1 || len(inUse.GovernanceTags) != 1 || inUse.GovernanceTags[0] != "in-use" {
+		t.Fatalf("unexpected in-use governance row: %+v", inUse)
+	}
+	if len(disabled.GovernanceTags) != 1 || disabled.GovernanceTags[0] != "disabled" {
+		t.Fatalf("unexpected disabled governance row: %+v", disabled)
 	}
 }

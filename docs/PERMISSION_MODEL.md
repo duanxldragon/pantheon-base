@@ -1,6 +1,6 @@
 # 权限模型设计
 
-更新时间：2026-04-17
+更新时间：2026-04-29
 
 本文定义 Pantheon Base 的权限模型，目标是把“菜单能不能看、页面能不能进、按钮能不能点、接口能不能调”拆清楚。
 
@@ -97,6 +97,26 @@ Pantheon Base 权限分四层：
 
 这比“只有 Casbin”更接近产品化权限，但还需要统一认知和命名。
 
+### 4.1 当前治理进展（2026-04-29）
+
+`system/iam` 的权限工作台已经从“纯展示页”演进为“治理视图”，当前已支持：
+
+- `integrity=unknown | clean`：识别角色上是否存在未知权限分配
+- `coverage=page-gap | api-gap | complete`：识别授权链路是否缺页面权限或 API 策略
+- 治理报表导出：支持把当前筛选结果导出为盘点文件，供线下整改与复核
+- 受控整改动作：支持在工作台内按推荐映射一键补齐单角色缺失的 Casbin 策略
+
+这三类问题分别代表：
+
+- 未知权限：权限键漂移，角色仍挂着系统已无法解释的授权标识
+- 页面缺口：角色已有导航，但缺少页面访问权限，形成“看得见进不去”的断链
+- API 缺口：角色已有页面/动作权限，但后端 Casbin 策略未补齐，形成“前端可点、后端被拒”的断链
+
+当前结论：
+
+- Pantheon 已具备 `system/iam` 授权治理第二层闭环：发现、解释、导出、受控整改
+- 当前整改仍限定为“推荐映射 + 单角色 + 后端重算”，不支持前端任意提交路径/方法写入 Casbin
+
 ## 5. 推荐目标模型
 
 ## 5.1 权限实体
@@ -176,6 +196,10 @@ resource 使用模块或资源名：
 - `session`
 - `dict`
 - `setting`
+- `i18n`
+- `upload`
+- `module`
+- `generator`
 
 ## 6.4 action 规范
 
@@ -195,6 +219,10 @@ resource 使用模块或资源名：
 | `disable` | 禁用 |
 | `assign` | 授权/分配 |
 | `manage` | 管理型兜底权限，谨慎使用 |
+| `refresh` | 刷新缓存或重载运行时资产 |
+| `register` | 注册模块、挂接模块接入状态 |
+| `unregister` | 卸载模块、解除模块接入状态 |
+| `generate` | 触发受控代码生成 |
 
 ### 6.4.1 `view` 与 `list` 的区别
 
@@ -202,6 +230,21 @@ resource 使用模块或资源名：
 - `list`：能不能调用列表查询接口
 
 简单模块可短期合并，但长期建议区分。
+
+### 6.4.2 高敏治理动作约束
+
+以下动作不应继续被宽泛权限兜底：
+
+- 模块注册
+- 模块卸载
+- 触发代码生成
+- 日志清理
+- 批量删除高敏记录
+
+原则：
+
+- 页面可见权限不等于动作执行权限
+- `use`、`manage` 这类宽泛动作只能作为短期兼容，不应长期替代高敏动作拆分
 
 ## 7. 导航权限设计
 
@@ -288,6 +331,37 @@ requiredPerm?: string
 
 所有写接口必须由后端权限模型兜底。
 
+### 9.4 `system/config` 高敏能力的权限拆分
+
+`system/config` 中必须特别区分两类能力：
+
+普通治理能力：
+
+- `system:i18n:update`
+- `system:i18n:import`
+- `system:i18n:export`
+- `system:i18n:refresh`
+
+高敏治理能力：
+
+- `system:module:register`
+- `system:module:unregister`
+- `system:module:generate`
+
+当前现状：
+
+- 动态模块页已拆出 `system:module:list / register / unregister`
+- 生成器页当前仍主要使用 `system:generator:use`
+
+推荐目标：
+
+- 页面进入权限：`system:generator:view` 或保留短期兼容的 `system:generator:use`
+- 真正触发生成：`system:module:generate`
+
+这样可以避免：
+
+- 任何能进入生成器页的人都能直接生成模块
+
 ## 10. 接口权限设计
 
 ## 10.1 当前实现
@@ -297,6 +371,25 @@ requiredPerm?: string
 ```text
 p, roleKey, path, method
 ```
+
+### 10.1.1 当前工作台治理视图
+
+当前 `GET /api/v1/system/permission/workbench` 会统一返回：
+
+- 角色导航授权计数
+- 页面权限计数
+- 动作权限计数
+- API 策略计数
+- 未知权限计数
+- 页面缺口标记 `hasPageGap`
+- API 缺口标记 `hasApiGap`
+
+同时支持：
+
+- `GET /api/v1/system/permission/workbench?integrity=unknown`
+- `GET /api/v1/system/permission/workbench?coverage=page-gap`
+- `GET /api/v1/system/permission/workbench?coverage=api-gap`
+- `GET /api/v1/system/permission/workbench/export`
 
 例如：
 
@@ -475,6 +568,29 @@ hasAnyPerm(['system:user:create', 'system:user:update'])
 - admin 是否自动拥有权限？
 - 菜单树是否只返回授权导航？
 - 无权限页面是否显示 403？
+
+### 18.2 `system/config -> dynamicmodule / generator` 额外验收项
+
+- `/system/modules` 的页面权限是否独立于注册/卸载动作权限
+- `/system/generator` 的页面权限是否独立于真正的生成动作权限
+- 是否已明确 `system:module:generate` 的接口策略归属
+- 若当前仍保留 `system:generator:use`，是否在文档中明确它只是短期兼容权限，而不是高敏动作的长期模型
+- 注册、卸载、生成动作是否同时受页面权限、动作权限、Casbin、二次验证和环境限制保护
+
+### 18.1 `system/config -> setting` 额外验收项
+
+系统设置页是当前权限模型里容易误配的典型页面，验收时必须额外确认：
+
+- `system:setting:list` 是否已授予对应角色；
+- `GET /api/v1/system/setting/list` 是否已授予对应 Casbin 策略；
+- `GET /api/v1/system/menu/tree` 是否已授予对应 Casbin 策略；
+- 若角色需要保存，是否同时具备：
+  - `system:setting:update`
+  - `PUT /api/v1/system/setting/group/:groupKey`
+- 若角色需要手动刷新缓存，是否同时具备：
+  - `system:setting:refresh`
+  - `POST /api/v1/system/setting/cache/refresh`
+- 若角色不具备统一审计查看能力，系统设置页是否仍能正常加载主体，而不是因为审计区块失败直接展示错误态。
 
 ## 19. 当前落地差距
 

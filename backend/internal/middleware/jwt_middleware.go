@@ -4,13 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
+)
+
+const defaultSessionIdleMinutes = 30
+
+var (
+	sessionIdleMinutesMu        sync.RWMutex
+	cachedSessionIdleMinutes    = defaultSessionIdleMinutes
+	cachedSessionIdleMinutesAt  time.Time
 )
 
 // JWTAuthMiddleware 权限校验中间件
@@ -55,14 +65,39 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		if database.DB != nil && claims.SessionID != "" {
-			var count int64
+			var session struct {
+				LastActivityAt   *time.Time `gorm:"column:last_activity_at"`
+				LastRefreshAt    *time.Time `gorm:"column:last_refresh_at"`
+				CreatedAt        time.Time  `gorm:"column:created_at"`
+				RefreshExpiresAt time.Time  `gorm:"column:refresh_expires_at"`
+			}
+			now := time.Now()
 			err := database.DB.Table("system_user_session").
-				Where("session_id = ? AND user_id = ? AND revoked_at IS NULL AND refresh_expires_at > ?", claims.SessionID, claims.UserID, time.Now()).
-				Count(&count).Error
-			if err != nil || count == 0 {
+				Select("last_activity_at, last_refresh_at, created_at, refresh_expires_at").
+				Where("session_id = ? AND user_id = ? AND revoked_at IS NULL AND refresh_expires_at > ?", claims.SessionID, claims.UserID, now).
+				Take(&session).Error
+			if err != nil {
 				common.Fail(c, common.CodeUnauthorized, "session.invalid")
 				c.Abort()
 				return
+			}
+			lastActivityAt := session.LastActivityAt
+			if lastActivityAt == nil {
+				lastActivityAt = session.LastRefreshAt
+			}
+			if lastActivityAt == nil {
+				lastActivityAt = &session.CreatedAt
+			}
+			if lastActivityAt != nil {
+				idleMinutes := loadSessionIdleMinutes()
+				if idleMinutes > 0 && lastActivityAt.Add(time.Duration(idleMinutes)*time.Minute).Before(now) {
+					_ = database.DB.Table("system_user_session").
+						Where("session_id = ? AND user_id = ? AND revoked_at IS NULL", claims.SessionID, claims.UserID).
+						Update("revoked_at", now).Error
+					common.Fail(c, common.CodeUnauthorized, "session.idle_timeout")
+					c.Abort()
+					return
+				}
 			}
 		}
 
@@ -76,4 +111,35 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func loadSessionIdleMinutes() int {
+	sessionIdleMinutesMu.RLock()
+	if !cachedSessionIdleMinutesAt.IsZero() && time.Since(cachedSessionIdleMinutesAt) < time.Minute {
+		value := cachedSessionIdleMinutes
+		sessionIdleMinutesMu.RUnlock()
+		return value
+	}
+	sessionIdleMinutesMu.RUnlock()
+
+	value := defaultSessionIdleMinutes
+	if database.DB != nil {
+		var raw string
+		err := database.DB.Table("system_setting").
+			Select("setting_value").
+			Where("setting_key = ?", "login.session_idle_minutes").
+			Limit(1).
+			Pluck("setting_value", &raw).Error
+		if err == nil {
+			if parsed, parseErr := strconv.Atoi(strings.TrimSpace(raw)); parseErr == nil && parsed > 0 {
+				value = parsed
+			}
+		}
+	}
+
+	sessionIdleMinutesMu.Lock()
+	cachedSessionIdleMinutes = value
+	cachedSessionIdleMinutesAt = time.Now()
+	sessionIdleMinutesMu.Unlock()
+	return value
 }

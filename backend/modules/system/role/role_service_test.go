@@ -6,16 +6,14 @@ import (
 	"time"
 
 	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/backend/pkg/testmysql"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
-func setupRoleTestDB() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
+func setupRoleTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+	db := testmysql.Open(t)
 
 	// 迁移模型
 	_ = db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &database.CasbinRule{})
@@ -31,7 +29,7 @@ func setupRoleTestDB() *gorm.DB {
 }
 
 func TestRoleService_CreateRole(t *testing.T) {
-	db := setupRoleTestDB()
+	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
 
 	req := &RoleCreateReq{
@@ -68,7 +66,7 @@ func TestRoleService_CreateRole(t *testing.T) {
 }
 
 func TestRoleService_ListRolesExcludesActionMenuBindings(t *testing.T) {
-	db := setupRoleTestDB()
+	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
 
 	role, err := s.CreateRole(&RoleCreateReq{
@@ -97,8 +95,39 @@ func TestRoleService_ListRolesExcludesActionMenuBindings(t *testing.T) {
 	}
 }
 
+func TestRoleService_MigrateSeedsAdminRoleAndBinding(t *testing.T) {
+	db := setupRoleTestDB(t)
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user (id INTEGER PRIMARY KEY, username TEXT)").Error; err != nil {
+		t.Fatalf("create user table: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_user (id, username) VALUES (1, 'admin')").Error; err != nil {
+		t.Fatalf("seed admin user: %v", err)
+	}
+
+	s := NewRoleService(db)
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	var adminRole SystemRole
+	if err := db.Where("role_key = ?", "admin").First(&adminRole).Error; err != nil {
+		t.Fatalf("load admin role: %v", err)
+	}
+	if adminRole.Status != 1 {
+		t.Fatalf("expected admin role status 1, got %d", adminRole.Status)
+	}
+
+	var bindingCount int64
+	if err := db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, adminRole.ID).Count(&bindingCount).Error; err != nil {
+		t.Fatalf("count admin binding: %v", err)
+	}
+	if bindingCount != 1 {
+		t.Fatalf("expected admin binding count 1, got %d", bindingCount)
+	}
+}
+
 func TestRoleService_DeleteRole(t *testing.T) {
-	db := setupRoleTestDB()
+	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
 
 	// 创建占位角色占用 ID 1
@@ -166,7 +195,7 @@ func TestRoleService_DeleteRole(t *testing.T) {
 }
 
 func TestRoleService_MigrateReleasesLegacyDeletedRoleKey(t *testing.T) {
-	db := setupRoleTestDB()
+	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
 
 	legacy := SystemRole{
@@ -198,7 +227,7 @@ func TestRoleService_MigrateReleasesLegacyDeletedRoleKey(t *testing.T) {
 }
 
 func TestRoleService_ExportAndBatchStatus(t *testing.T) {
-	db := setupRoleTestDB()
+	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
 
 	adminRole := SystemRole{ID: 1, RoleName: "Admin", RoleKey: "admin", Status: 1, Sort: 1}

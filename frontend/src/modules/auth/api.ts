@@ -50,6 +50,7 @@ export interface AuthSession {
   userAgent: string;
   refreshExpiresAt: string;
   lastRefreshAt?: string;
+  lastActivityAt?: string;
   revokedAt?: string;
   createdAt: string;
 }
@@ -59,6 +60,22 @@ export interface SecurityOverview {
   currentSession?: AuthSession;
   activeSessionCount: number;
   lastLoginAt?: string;
+  policy: SecurityPolicy;
+}
+
+export interface SecurityPolicy {
+  passwordMinLength: number;
+  maxFailedAttempts: number;
+  lockMinutes: number;
+  sourceMaxFailedAttempts: number;
+  sourceWindowMinutes: number;
+  sourceLockMinutes: number;
+  sessionIdleMinutes: number;
+  maxActiveSessions: number;
+  sessionRetentionDays: number;
+  captchaEnabled: boolean;
+  mfaEnabled: boolean;
+  ssoEnabled: boolean;
 }
 
 export interface LoginLogRow {
@@ -80,6 +97,18 @@ export interface LoginLogQuery {
   pageSize?: number;
 }
 
+export interface LoginLogCleanupPayload {
+  retentionDays: number;
+}
+
+export interface SessionCleanupPayload {
+  retentionDays: number;
+}
+
+export interface LoginLogBatchDeletePayload {
+  ids: number[];
+}
+
 export interface LoginLogPageResp {
   items: LoginLogRow[];
   total: number;
@@ -99,12 +128,18 @@ export interface AdminSessionRow {
   userAgent: string;
   refreshExpiresAt: string;
   lastRefreshAt?: string;
+  lastActivityAt?: string;
   revokedAt?: string;
   createdAt: string;
 }
 
 export interface AdminSessionQuery {
   username?: string;
+  lastIp?: string;
+  browser?: string;
+  os?: string;
+  device?: string;
+  status?: number;
   page?: number;
   pageSize?: number;
 }
@@ -112,6 +147,8 @@ export interface AdminSessionQuery {
 export interface AdminSessionPageResp {
   items: AdminSessionRow[];
   total: number;
+  activeCount: number;
+  revokedCount: number;
   page: number;
   pageSize: number;
 }
@@ -139,6 +176,14 @@ export function logout() {
     url: '/auth/logout',
     method: 'post',
     skipAuthRefresh: true,
+    skipErrorMessage: true,
+  });
+}
+
+export function reportActivity() {
+  return apiRequest<{ touched: boolean }>({
+    url: '/auth/activity',
+    method: 'post',
     skipErrorMessage: true,
   });
 }
@@ -210,11 +255,43 @@ export function revokeAdminSession(sessionId: string) {
   });
 }
 
+export function cleanupAdminSessions(data: SessionCleanupPayload) {
+  return apiRequest<{ clearedCount: number }>({
+    url: '/system/session/cleanup',
+    method: 'post',
+    data,
+  });
+}
+
 export function exportAdminLoginLogs(data?: LoginLogQuery) {
   return downloadFile({
     url: '/system/login-log/export',
     method: 'post',
     data,
     filename: 'system-login-log-export.csv',
+  });
+}
+
+export function cleanupAdminLoginLogs(data: LoginLogCleanupPayload) {
+  return apiRequest<{ clearedCount: number }>({
+    url: '/system/login-log/cleanup',
+    method: 'post',
+    data,
+  });
+}
+
+export function batchDeleteAdminLoginLogs(data: LoginLogBatchDeletePayload) {
+  return apiRequest<{ deletedCount: number }>({
+    url: '/system/login-log/batch-delete',
+    method: 'post',
+    data,
+  });
+}
+
+export function verifyOperationPassword(password: string) {
+  return apiRequest<{ operationToken: string }>({
+    url: '/auth/operation-verify',
+    method: 'post',
+    data: { password },
   });
 }

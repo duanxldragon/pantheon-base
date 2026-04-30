@@ -32,6 +32,45 @@ func (h *DeptHandler) GetDeptTree(c *gin.Context) {
 	common.Success(c, tree)
 }
 
+func (h *DeptHandler) GetDeptOverview(c *gin.Context) {
+	overview, err := h.service.GetOverview()
+	if err != nil {
+		common.Fail(c, common.CodeError, "dept.overview.error")
+		return
+	}
+	common.Success(c, overview)
+}
+
+func (h *DeptHandler) GetGovernanceTasks(c *gin.Context) {
+	var query DeptGovernanceTaskQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	items, err := h.service.ListGovernanceTasks(&query)
+	if err != nil {
+		common.Fail(c, common.CodeError, "dept.governance.task.error")
+		return
+	}
+	common.Success(c, items)
+}
+
+func (h *DeptHandler) GetDeptLeaderCandidates(c *gin.Context) {
+	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	items, err := h.service.ListLeaderCandidates(deptID)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, items)
+}
+
 func (h *DeptHandler) CreateDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "新增部门", common.BusinessInsert)
 	var req DeptCreateReq
@@ -87,6 +126,23 @@ func (h *DeptHandler) BatchUpdateDeptStatus(c *gin.Context) {
 	common.Success(c, gin.H{"updatedCount": updatedCount})
 }
 
+func (h *DeptHandler) BatchUpdateDeptLeader(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量补负责人", common.BusinessUpdate)
+
+	var req DeptBatchLeaderReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	updatedCount, err := h.service.BatchUpdateDeptLeader(req.Items)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, gin.H{"updatedCount": updatedCount})
+}
+
 func (h *DeptHandler) DeleteDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除部门", common.BusinessDelete)
 	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
@@ -117,6 +173,24 @@ func (h *DeptHandler) ExportDepts(c *gin.Context) {
 	}
 	if err := impexp.WriteCSV(c, *file); err != nil {
 		common.Fail(c, common.CodeError, "dept.export.error")
+	}
+}
+
+func (h *DeptHandler) ExportGovernanceTasks(c *gin.Context) {
+	common.SetAuditMetadata(c, "导出组织治理任务", common.BusinessExport)
+
+	var query DeptGovernanceTaskQuery
+	if err := c.ShouldBindJSON(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	file, err := h.service.ExportGovernanceTasks(&query)
+	if err != nil {
+		common.Fail(c, common.CodeError, "dept.governance.task.export.error")
+		return
+	}
+	if err := impexp.WriteCSV(c, *file); err != nil {
+		common.Fail(c, common.CodeError, "dept.governance.task.export.error")
 	}
 }
 

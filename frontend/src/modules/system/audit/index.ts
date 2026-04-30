@@ -8,13 +8,13 @@ export const AuditModule = defineModule({
       path: 'system/operation-log',
       routeName: 'system-operation-log',
       titleKey: 'system.menu.operationLog',
-      icon: 'safe',
+      icon: 'file',
       pagePermission: 'system:operation-log:list',
       componentKey: 'system/audit/OperationLogList',
     },
   ],
   menus: [
-    { path: '/system/operation-log', titleKey: 'system.menu.operationLog', icon: 'safe', routeName: 'system-operation-log', module: 'system.audit' },
+    { path: '/system/operation-log', titleKey: 'system.menu.operationLog', icon: 'file', routeName: 'system-operation-log', module: 'system.audit' },
   ],
   permissions: [
     'system:operation-log:list',

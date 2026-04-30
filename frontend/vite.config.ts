@@ -27,8 +27,32 @@ export default defineConfig({
               test: /node_modules[\\/]@arco-design[\\/]web-react[\\/]icon[\\/]/,
             },
             {
-              name: 'arco-heavy',
-              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Table|Pagination|Tree|TreeSelect|Select|Trigger|Checkbox)[\\/]/,
+              name: 'arco-table',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Table|Pagination)[\\/]/,
+            },
+            {
+              name: 'arco-tree',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Tree|TreeSelect)[\\/]/,
+            },
+            {
+              name: 'arco-shell',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Layout|Menu|Dropdown|Breadcrumb|Avatar|Tooltip)[\\/]/,
+            },
+            {
+              name: 'arco-feedback',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Alert|Empty|Message|Modal|Popconfirm|Progress|Result|Spin)[\\/]/,
+            },
+            {
+              name: 'arco-form-base',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](AutoComplete|Form|Input|InputNumber|Switch|Tabs)[\\/]/,
+            },
+            {
+              name: 'arco-content',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Button|Card|Space|Tag|Typography|Grid|Descriptions|Statistic)[\\/]/,
+            },
+            {
+              name: 'arco-form-heavy',
+              test: /node_modules[\\/]@arco-design[\\/]web-react[\\/](es|lib)[\\/](Select|Trigger|Checkbox)[\\/]/,
             },
             {
               name: 'arco-vendor',
@@ -37,6 +61,14 @@ export default defineConfig({
             {
               name: 'app-vendor',
               test: /node_modules[\\/](axios|zustand|i18next|react-i18next)[\\/]/,
+            },
+            {
+              name: 'platform-builder',
+              test: /frontend[\\/]src[\\/](modules[\\/](generator|system[\\/]dynamicmodule)|generator[\\/])|node_modules[\\/]jszip[\\/]/,
+            },
+            {
+              name: 'business-cmdb',
+              test: /frontend[\\/]src[\\/]modules[\\/]business[\\/]cmdb[\\/]/,
             },
           ],
         },

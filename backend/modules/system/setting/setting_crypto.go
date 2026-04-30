@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"os"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 )
 
@@ -76,10 +76,7 @@ func decryptSettingValue(value string) (string, error) {
 }
 
 func getSettingCipherKey() []byte {
-	value := os.Getenv("PANTHEON_SETTING_SECRET")
-	if strings.TrimSpace(value) == "" {
-		value = "pantheon-setting-dev-secret-key!"
-	}
+	value := common.ResolveSecret("PANTHEON_SETTING_SECRET", common.DefaultSettingSecret)
 
 	key := []byte(value)
 	switch {

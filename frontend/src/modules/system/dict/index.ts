@@ -8,13 +8,13 @@ export const DictModule = defineModule({
       path: 'system/dict',
       routeName: 'system-dict',
       titleKey: 'system.menu.dict',
-      icon: 'list',
+      icon: 'book',
       pagePermission: 'system:dict:list',
       componentKey: 'system/dict/DictPage',
     },
   ],
   menus: [
-    { path: '/system/dict', titleKey: 'system.menu.dict', icon: 'list', routeName: 'system-dict', module: 'system.config' },
+    { path: '/system/dict', titleKey: 'system.menu.dict', icon: 'book', routeName: 'system-dict', module: 'system.config' },
   ],
   permissions: [
     'system:dict:list',

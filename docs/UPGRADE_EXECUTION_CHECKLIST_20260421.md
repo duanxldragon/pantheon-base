@@ -102,7 +102,7 @@
 
 - [ ] `system_menu` 表存在 `page_perm` 字段
 - [ ] `system_role_permission` 表存在
-- [ ] 历史 SQLite 时间列修复逻辑继续生效
+- [ ] MySQL-only 运行时与测试夹具已完成切换
 
 ### 3.2 菜单目录自动补种
 

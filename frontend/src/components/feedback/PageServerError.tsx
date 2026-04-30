@@ -14,7 +14,7 @@ const PageServerError: React.FC<PageServerErrorProps> = ({ description, onRetry 
     <Result
       className="page-result"
       status="500"
-      title="500"
+      title={t('common.serverErrorTitle')}
       subTitle={description || t('common.serverError')}
       extra={onRetry ? <Button onClick={onRetry}>{t('common.retry')}</Button> : null}
     />

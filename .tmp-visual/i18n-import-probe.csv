@@ -1,0 +1,2 @@
+module,group,key,locale,value,remark
+system.config,messages,i18n.import.probe,zh-CN,probe,probe

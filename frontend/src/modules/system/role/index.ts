@@ -8,13 +8,13 @@ export const RoleModule = defineModule({
       path: 'system/role',
       routeName: 'system-role',
       titleKey: 'system.menu.role',
-      icon: 'safe',
+      icon: 'user-group',
       pagePermission: 'system:role:list',
       componentKey: 'system/role/RoleList',
     },
   ],
   menus: [
-    { path: '/system/role', titleKey: 'system.menu.role', icon: 'safe', routeName: 'system-role', module: 'system.iam' },
+    { path: '/system/role', titleKey: 'system.menu.role', icon: 'user-group', routeName: 'system-role', module: 'system.iam' },
   ],
   permissions: [
     'system:role:list',

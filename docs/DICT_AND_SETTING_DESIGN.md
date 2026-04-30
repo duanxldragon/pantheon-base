@@ -1,6 +1,6 @@
 # 字典与系统设置设计
 
-更新时间：2026-04-17
+更新时间：2026-04-28
 
 本文定义 Pantheon Base 的字典管理和系统设置设计。
 
@@ -12,10 +12,14 @@
 当前落地状态：
 
 - `system/setting` 已完成基础闭环：模型、迁移、默认配置、公开读取、管理端分组读取与保存、前端设置页、设置缓存刷新；
-- `system/dict` 已完成基础闭环：模型、迁移、默认种子、字典类型/字典项 CRUD、公共 options 接口、前端主从维护页、options 缓存刷新；
+- `system/dict` 已完成基础闭环：模型、迁移、默认种子、字典类型/字典项 CRUD、公共 options 接口、前端双标签工作台、字典项服务端分页筛选、类型项数统计、options 缓存刷新；
 - 上传配置分组、敏感配置加密存储、配置变更审计详情、设置缓存策略已完成基础实现。
-- 运行时接线状态已补第一批：`site.name/site.logo` 已接入登录页与应用壳层，`security.password_min_length` 已接入当前用户改密、用户创建与管理员重置密码，`login.max_failed_attempts/login.lock_minutes` 已接入登录失败锁定策略，`i18n.default_language` 已接入无显式语言偏好时的默认语言初始化，`ui.default_theme/ui.enable_tab_bar` 已接入平台壳层主题与标签栏显示策略。
-- 当前仍未完成运行时消费的重点项是上传配置组；原因不是“设置页保存失败”，而是平台尚未形成统一上传模块来消费 `upload.*` 配置。
+- `system/setting` 已补配置健康总览：可直接查看公开配置数量、敏感配置数量、缺失必填项、运行时风险与当前驱动/语言/主题摘要。
+- 运行时接线状态已补第一批：`site.name/site.logo` 已接入登录页与应用壳层，`security.password_min_length` 已接入当前用户改密、用户创建与管理员重置密码，`login.max_failed_attempts/login.lock_minutes` 已接入登录失败锁定策略，`login.session_idle_minutes` 已接入平台壳层空闲超时与 `system/auth` 会话失效判定，`login.max_active_sessions_per_user` 已接入同账号活跃会话上限治理，`audit.login_log_retention_days/audit.operation_log_retention_days/audit.session_retention_days` 已接入登录日志、操作日志与历史会话的自动保留治理，`i18n.default_language` 已接入无显式语言偏好时的默认语言初始化，`ui.default_theme/ui.enable_tab_bar` 已接入平台壳层主题与标签栏显示策略。
+- 上传配置也已形成基础运行时闭环：平台新增统一上传能力，`upload.max_file_size / upload.allowed_types / upload.local_path / upload.public_base_url` 已接入真实上传接口与文件访问地址生成；当前已支持 `local` 与 `s3-compatible` 两类驱动。
+- 国际化配置治理已补运行时收口：当前平台内置 fallback locale 为 `zh-CN / en-US / ja-JP / ko-KR / fr-FR`，默认语言设置只在用户没有显式语言偏好时生效；一旦用户已切换语言，平台应优先尊重用户显式选择，而不是反向被默认配置覆盖。
+- 当前语种策略为“按市场扩展，不做无依据预扩”：除非出现明确客户、区域交付或合规需求，否则不继续预置更多 locale；后续新增 locale 时，默认沿现有 i18n 导入导出、缺失检测和 fallback 校验链路扩展。
+- `system/config -> generator` 已补第一阶段“受管数据源”治理：代码生成器保留当前平台库为默认来源，同时允许管理员维护外部 MySQL 只读数据源，并按数据源选择表结构导入。当前只开放元数据读取，不支持任意 SQL 执行。
 
 ## 1. 设计目标
 
@@ -44,6 +48,13 @@
 - 登录策略
 - 国际化默认设置
 - UI 默认偏好
+- 当前允许的默认语言值：`zh-CN`、`en-US`、`ja-JP`、`ko-KR`、`fr-FR`
+- 后续如需新增默认语言值，必须先完成对应 locale 的 fallback 资源、运行时翻译资产、导入导出模板与回归验证，再进入设置可选项
+
+`generator` 同样归属 `system/config`，但职责与 `setting` 不同：
+
+- `setting` 管平台运行参数
+- `generator` 管研发接入治理元数据（如受管数据源、导入来源）
 
 ## 2.3 不负责
 
@@ -152,7 +163,34 @@ dict.system_user_status.disabled
 - 校验值是否合法
 - 不依赖自然语言文案
 
+## 4.6 字典管理台当前实现约束
+
+- 字典管理前端已调整为“字典类型 / 字典项”双标签工作台，不再强依赖左右主从布局。
+- 字典类型列表会返回聚合统计：`itemCount / activeItemCount / disabledItemCount / lastItemUpdatedAt`，用于工作台摘要与运维判断。
+- 字典项列表已升级为服务端分页查询，支持 `dictCode + status + keyword + page + pageSize`，避免字典项增多后一次性全量拉取。
+- 字典项导出会复用当前筛选条件，但不受分页限制。
+
 ## 5. 系统设置设计
+
+## 5.0 生成器受管数据源补充
+
+建议表：
+
+- `system_generator_datasource`
+
+字段职责：
+
+- `name / driver / host / port / database_name / username`
+- `password_encrypted`：只存加密后密码，不回传前端明文
+- `status`：启用 / 禁用
+- `readonly_scope`：当前固定为 `metadata_only`
+- `last_checked_at / last_check_status / last_check_error`：连接测试审计
+
+约束：
+
+- 第一阶段仅支持 `MySQL`
+- 仅允许读取 `information_schema`
+- 默认平台库作为虚拟内置数据源，不落 `system_generator_datasource`
 
 ## 5.1 设置模型
 
@@ -176,6 +214,8 @@ dict.system_user_status.disabled
 | `created_at` | 创建时间 |
 | `updated_at` | 更新时间 |
 
+当前管理接口返回的 `SettingResp` 除了当前值外，还会额外下发 `defaultValue` 元数据，供前端实现“恢复默认值”这类通用设置治理交互；前端不应再把默认值硬编码回页面。
+
 ## 5.2 value_type
 
 建议支持：
@@ -192,6 +232,7 @@ dict.system_user_status.disabled
 - `basic`
 - `security`
 - `login`
+- `audit`
 - `upload`
 - `i18n`
 - `ui`
@@ -205,10 +246,70 @@ security.password_min_length
 security.password_expire_days
 login.max_failed_attempts
 login.lock_minutes
+login.session_idle_minutes
+login.max_active_sessions_per_user
+audit.login_log_retention_options
+audit.operation_log_retention_options
+audit.session_cleanup_retention_options
+audit.login_log_retention_days
+audit.operation_log_retention_days
+audit.session_retention_days
 upload.max_file_size
 i18n.default_language
 ui.default_theme
 ```
+
+## 5.4.2 日志治理设置当前运行时语义
+
+- `audit.login_log_retention_options`
+  - 使用 JSON 数组维护登录日志清理允许的保留天数，例如 `[1,7,30]`
+  - 由 `system/auth` 在执行 `/system/login-log/cleanup` 时动态校验
+- `audit.login_log_retention_days`
+  - 使用 number 维护登录日志自动保留天数，例如 `90`
+  - 由 `system/auth` 在登录日志写入、列表和导出链路中按节流策略执行自动清理
+- `audit.operation_log_retention_days`
+  - 使用 number 维护操作日志自动保留天数，例如 `180`
+  - 由 `system/audit` 在操作日志列表、详情和导出链路中按节流策略执行自动清理
+- `audit.session_retention_days`
+  - 使用 number 维护历史会话保留天数，例如 `90`
+  - 由 `system/auth` 在登录建会话、当前用户会话查询、管理员会话查询前自动清理已下线或已过期的历史会话
+  - 目标是限制 `system_user_session` 数据规模，避免审计列表总量长期无界增长
+- `audit.session_cleanup_retention_options`
+  - 使用 JSON 数组维护管理员手动清理历史会话时可选的保留天数，例如 `[1,7,30]`
+  - 由 `system/auth` 在“会话管理 -> 清理历史会话”动作中动态校验
+  - 目标是让会话清理交互与登录日志/操作日志保持一致
+- `audit.operation_log_retention_options`
+  - 使用 JSON 数组维护操作日志清理允许的保留天数，例如 `[1,7,30]`
+  - 由 `system/audit` 在执行 `/system/operation-log/cleanup` 时动态校验
+- 前端登录日志页与操作日志页会读取 `audit` 分组设置来渲染清理下拉选项，避免再次把保留期硬编码回页面
+
+## 5.4.1 上传配置当前运行时语义
+
+- `upload.storage_driver`
+  - 当前支持值：`local`、`s3`
+  - `s3` 表示接入 S3 兼容对象存储（如 MinIO / AWS S3 / OSS 兼容网关）
+- `upload.max_file_size`
+  - 单文件最大体积，单位 MB
+  - 已接入 `/api/v1/system/upload`
+- `upload.allowed_types`
+  - JSON 数组，例如 `["jpg","jpeg","png"]`
+  - 已接入上传扩展名白名单校验
+- `upload.local_path`
+  - 本地存储根目录
+  - 已接入本地文件落盘与 `/api/v1/system/upload/files/*filepath` 文件读取
+- `upload.public_base_url`
+  - 用于生成上传后的公开访问 URL
+  - 为空时默认回退到平台内置文件访问路径
+- `upload.s3_endpoint`
+  - 对象存储 Endpoint
+  - 支持 `http(s)://host[:port]` 或裸 `host[:port]`
+- `upload.s3_bucket`
+  - 对象存储 Bucket 名称
+- `upload.s3_region`
+  - 对象存储 Region，默认 `us-east-1`
+- `upload.s3_access_key_id / upload.s3_secret_access_key`
+  - 对象存储访问凭据
+  - 按敏感配置加密保存，管理端不回显明文
 
 其中 `ui.default_theme` 当前建议枚举为：
 
@@ -343,8 +444,9 @@ system:dict:create
 system:dict:update
 system:dict:delete
 
-system:setting:view
+system:setting:list
 system:setting:update
+system:setting:refresh
 ```
 
 其中当前已落地的字典权限点为：
@@ -357,6 +459,45 @@ system:dict:delete
 ```
 
 `system:dict:refresh` 已落地，用于手动刷新字典 options 缓存。
+
+当前已落地的系统设置权限点为：
+
+```text
+system:setting:list
+system:setting:update
+system:setting:refresh
+```
+
+### 8.1 系统设置页面的双轨权限约束
+
+系统设置页当前不是“只有一个前端页面权限点”就足够。
+
+要让一个角色稳定进入并加载 `/system/setting`，至少要同时满足两类权限：
+
+1. 页面 / 操作权限
+   - `system:setting:list`：允许进入设置页
+   - `system:setting:update`：允许保存当前分组
+   - `system:setting:refresh`：允许点击“刷新设置缓存”
+2. Casbin 接口权限
+   - `GET /api/v1/system/setting/list`
+   - `GET /api/v1/system/menu/tree`
+   - 如果还要展示统一审计详情或跳转审计页，还需要相应的 `system/audit` 页面权限与接口策略
+
+这意味着：
+
+- 只授予 `system:setting:list`，但没有配套 Casbin `GET /system/setting/list` 时，用户可能“能进路由但页面数据加载失败”；
+- 只授予页面权限，不代表接口会自动放行；
+- 角色联调时必须同时检查“前端页面权限”与“后端接口策略”两层。
+
+### 8.2 低权限用户的审计区块降级规则
+
+系统设置页底部的“配置变更审计”属于 `system/audit` 能力，不应强绑到所有能查看设置页的角色。
+
+规则：
+
+- 仅当用户具备统一审计查看能力时，才展示并拉取设置审计区块；
+- 对只读设置角色，页面主体应可正常加载，但不默认请求审计数据；
+- 不能因为缺少 `system/audit` 能力，就让 `system/config` 主页面直接退化成失败态。
 
 ## 9. 菜单设计
 

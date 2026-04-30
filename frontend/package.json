@@ -5,15 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "npm run check:menu-contract",
+    "prebuild": "npm run check:menu-contract && npm run check:i18n-hardcode",
     "build": "tsc -b && vite build",
     "check:menu-contract": "node ./scripts/check-menu-contract.mjs",
+    "check:i18n-hardcode": "node ./scripts/check-i18n-hardcode.mjs",
+    "audit:i18n-locales": "node ./scripts/audit-i18n-locales.mjs",
+    "export:i18n-builtin-snapshot": "powershell -Command \"Set-Location ..; cmd /c node .\\frontend\\scripts\\export-i18n-builtin-snapshot.mjs --stdout > .\\frontend\\builtin_snapshot.tmp; $content = Get-Content .\\frontend\\builtin_snapshot.tmp -Raw; Set-Content -LiteralPath backend\\modules\\system\\i18n\\builtin_locale_resources.json -Value $content; Remove-Item .\\frontend\\builtin_snapshot.tmp -Force\"",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:smoke:role-auth": "playwright test tests/smoke/role-authorization.spec.ts --config=playwright.config.ts",
     "test:smoke:system": "playwright test tests/smoke/system-pages.spec.ts --config=playwright.config.ts",
     "test:smoke:backoffice-ui": "playwright test tests/smoke/backoffice-ui-visual.spec.ts --config=playwright.config.ts",
-    "test:smoke:impexp": "playwright test tests/smoke/system-import-export.spec.ts --config=playwright.api.config.ts"
+    "test:smoke:impexp": "playwright test tests/smoke/system-import-export.spec.ts --config=playwright.api.config.ts",
+    "test:smoke:module-governance-host": "playwright test tests/smoke/module-governance-host-real.spec.ts --config=playwright.config.ts"
   },
   "dependencies": {
     "@arco-design/web-react": "*",
@@ -27,15 +31,17 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.55.0",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^24.12.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@playwright/test": "^1.55.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jszip": "^3.10.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.4"

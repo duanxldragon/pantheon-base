@@ -1,21 +1,59 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const workspaceRoot = path.resolve(path.dirname(currentFilePath), '..', '..');
 const frontendModulesRoot = path.join(workspaceRoot, 'frontend', 'src', 'modules');
-const backendSeedFiles = [
-  path.join(workspaceRoot, 'backend', 'modules', 'system', 'seed.go'),
-  path.join(workspaceRoot, 'backend', 'modules', 'auth', 'module.go'),
-  path.join(workspaceRoot, 'backend', 'modules', 'business', 'cmdb', 'module.go'),
+const backendModulesRoot = path.join(workspaceRoot, 'backend', 'modules');
+const frontendRegistryFiles = [
+  path.join(workspaceRoot, 'frontend', 'src', 'core', 'router', 'componentRegistry.ts'),
+  path.join(workspaceRoot, 'frontend', 'src', 'core', 'router', 'generatedComponentRegistry.ts'),
 ];
-const componentRegistryPath = path.join(workspaceRoot, 'frontend', 'src', 'core', 'router', 'componentRegistry.ts');
-const backendComponentRegistryPath = path.join(workspaceRoot, 'backend', 'modules', 'system', 'menu', 'component_registry.go');
+const backendRegistryFiles = [
+  path.join(workspaceRoot, 'backend', 'modules', 'system', 'menu', 'component_registry.go'),
+  path.join(workspaceRoot, 'backend', 'modules', 'system', 'menu', 'generated_component_registry.go'),
+];
+const frontendI18nFiles = new Map([
+  ['zh-CN', path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'zh-CN.ts')],
+  ['en-US', path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'en-US.ts')],
+]);
+const frontendGeneratedI18nRoot = path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'generated');
 
 function readFile(filePath) {
   return fs.readFileSync(filePath, 'utf8');
+}
+
+function loadResourceModule(modulePath, cache = new Map()) {
+  const resolvedPath = path.resolve(modulePath);
+  if (cache.has(resolvedPath)) {
+    return cache.get(resolvedPath);
+  }
+
+  const source = readFile(resolvedPath);
+  const importMatches = [...source.matchAll(/import\s+([A-Za-z0-9_$]+)\s+from\s+['"](.+?)['"];?/g)];
+  const importedBindings = {};
+
+  for (const [, localName, specifier] of importMatches) {
+    const nextPath = path.resolve(path.dirname(resolvedPath), `${specifier}.ts`);
+    importedBindings[localName] = loadResourceModule(nextPath, cache);
+  }
+
+  const sanitized = source
+    .replace(/import\s+[A-Za-z0-9_$]+\s+from\s+['"].+?['"];?\s*/g, '')
+    .replace(/export default\s+([A-Za-z0-9_$]+);?\s*$/m, 'module.exports = $1;');
+
+  const context = {
+    module: { exports: {} },
+    exports: {},
+    ...importedBindings,
+  };
+
+  vm.runInNewContext(sanitized, context, { filename: resolvedPath });
+  cache.set(resolvedPath, context.module.exports);
+  return context.module.exports;
 }
 
 function walkFiles(dirPath, matcher, bucket = []) {
@@ -103,9 +141,9 @@ function extractObjectBlocks(arrayBody) {
 
 function extractField(block, fieldName) {
   const patterns = [
-    new RegExp(`${fieldName}\\s*:\\s*'([^']*)'`),
-    new RegExp(`${fieldName}\\s*:\\s*"([^"]*)"`),
-    new RegExp(`${fieldName}\\s*:\\s*([0-9]+)`),
+    new RegExp(`\\b${fieldName}\\b\\s*:\\s*'([^']*)'`),
+    new RegExp(`\\b${fieldName}\\b\\s*:\\s*"([^"]*)"`),
+    new RegExp(`\\b${fieldName}\\b\\s*:\\s*([0-9]+)`),
   ];
   for (const pattern of patterns) {
     const match = block.match(pattern);
@@ -173,9 +211,16 @@ function parseFrontendModules() {
 }
 
 function parseBackendSeeds() {
+  const backendSeedFiles = [
+    path.join(workspaceRoot, 'backend', 'modules', 'system', 'seed.go'),
+    ...walkFiles(backendModulesRoot, (filePath) => path.basename(filePath) === 'module.go'),
+  ];
   const seeds = [];
 
   for (const filePath of backendSeedFiles) {
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
     const source = readFile(filePath);
     const matches = source.matchAll(/\{([^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms);
     for (const match of matches) {
@@ -188,6 +233,7 @@ function parseBackendSeeds() {
         titleKey: extractField(block, 'TitleKey'),
         component: extractField(block, 'Component'),
         pagePerm: extractField(block, 'PagePerm'),
+        perms: extractField(block, 'Perms'),
         routeName: extractField(block, 'RouteName'),
         module: extractField(block, 'Module'),
         type,
@@ -202,17 +248,123 @@ function parseBackendSeeds() {
 }
 
 function parseRegistryKeys() {
-  const source = readFile(componentRegistryPath);
-  return new Set(
-    [...source.matchAll(/'([^']+)':\s*lazy/g)].map((match) => match[1]),
-  );
+  const keys = new Set();
+  for (const filePath of frontendRegistryFiles) {
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
+    const source = readFile(filePath);
+    for (const match of source.matchAll(/'([^']+)':\s*(?:lazy|defineRegistryEntry)/g)) {
+      keys.add(match[1]);
+    }
+  }
+  return keys;
 }
 
 function parseBackendRegistryKeys() {
-  const source = readFile(backendComponentRegistryPath);
-  return new Set(
-    [...source.matchAll(/"([^"]+)":\s*\{\}/g)].map((match) => match[1]),
-  );
+  const keys = new Set();
+  for (const filePath of backendRegistryFiles) {
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
+    const source = readFile(filePath);
+    for (const match of source.matchAll(/"([^"]+)":\s*\{\}/g)) {
+      keys.add(match[1]);
+    }
+  }
+  return keys;
+}
+
+function parseFallbackTranslations() {
+  const translations = new Map();
+
+  for (const locale of ['zh-CN', 'en-US']) {
+    const filePath = frontendI18nFiles.get(locale);
+    if (!filePath || !fs.existsSync(filePath)) {
+      translations.set(locale, new Set());
+      continue;
+    }
+    const base = loadResourceModule(filePath);
+    const generatedPath = path.join(frontendGeneratedI18nRoot, `${locale}.ts`);
+    const generated = fs.existsSync(generatedPath) ? loadResourceModule(generatedPath) : {};
+    const keys = new Set([...Object.keys(base), ...Object.keys(generated)]);
+    translations.set(locale, keys);
+  }
+
+  return translations;
+}
+
+function extractMapField(block, fieldName) {
+  const pattern = new RegExp(`"${fieldName}"\\s*:\\s*"([^"]*)"`);
+  const match = block.match(pattern);
+  return match ? match[1] : '';
+}
+
+function parseBackendMenuI18nSeeds() {
+  const files = walkFiles(backendModulesRoot, (filePath) => filePath.endsWith('.go'));
+  const translations = new Map([
+    ['zh-CN', new Set()],
+    ['en-US', new Set()],
+  ]);
+
+  for (const filePath of files) {
+    const source = readFile(filePath);
+
+    for (const match of source.matchAll(/\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"menu"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms)) {
+      const block = match[1];
+      const locale = extractField(block, 'Locale');
+      const key = extractField(block, 'Key');
+      if (translations.has(locale) && key) {
+        translations.get(locale).add(key);
+      }
+    }
+
+    for (const match of source.matchAll(/\{([^{}]*"locale"\s*:\s*"[^"]+"[^{}]*"group_name"\s*:\s*"menu"[^{}]*"key"\s*:\s*"[^"]+"[^{}]*)\}/gms)) {
+      const block = match[1];
+      const locale = extractMapField(block, 'locale');
+      const key = extractMapField(block, 'key');
+      if (translations.has(locale) && key) {
+        translations.get(locale).add(key);
+      }
+    }
+  }
+
+  return translations;
+}
+
+function parseBackendScopedI18nSeeds(groupNames) {
+  const files = walkFiles(backendModulesRoot, (filePath) => filePath.endsWith('.go'));
+  const translations = new Map([
+    ['zh-CN', new Set()],
+    ['en-US', new Set()],
+  ]);
+  const groups = new Set(groupNames);
+
+  for (const filePath of files) {
+    const source = readFile(filePath);
+
+    for (const match of source.matchAll(/\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"[^"]+"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms)) {
+      const block = match[1];
+      const locale = extractField(block, 'Locale');
+      const group = extractField(block, 'Group');
+      const key = extractField(block, 'Key');
+      if (translations.has(locale) && groups.has(group) && key) {
+        translations.get(locale).add(key);
+      }
+    }
+
+    for (const match of source.matchAll(/\{([^{}]*"locale"\s*:\s*"[^"]+"[^{}]*"group_name"\s*:\s*"[^"]+"[^{}]*"key"\s*:\s*"[^"]+"[^{}]*)\}/gms)) {
+      const block = match[1];
+      const locale = extractMapField(block, 'locale');
+      const group = extractMapField(block, 'group_name');
+      const key = extractMapField(block, 'key');
+      if (translations.has(locale) && groups.has(group) && key) {
+        translations.get(locale).add(key);
+      }
+    }
+  }
+
+  return translations;
 }
 
 function collectContracts() {
@@ -220,6 +372,10 @@ function collectContracts() {
   const backendSeeds = parseBackendSeeds();
   const registryKeys = parseRegistryKeys();
   const backendRegistryKeys = parseBackendRegistryKeys();
+  const fallbackTranslations = parseFallbackTranslations();
+  const backendMenuI18nSeeds = parseBackendMenuI18nSeeds();
+  const backendPageI18nSeeds = parseBackendScopedI18nSeeds(['page']);
+  const backendPermissionI18nSeeds = parseBackendScopedI18nSeeds(['permission']);
 
   const routeMap = new Map();
   const menuMap = new Map();
@@ -259,13 +415,14 @@ function collectContracts() {
     }
   }
 
-  return { frontendModules, backendSeeds, registryKeys, backendRegistryKeys, routes, menus, permissions, routeMap, menuMap };
+  return { frontendModules, backendSeeds, registryKeys, backendRegistryKeys, fallbackTranslations, backendMenuI18nSeeds, backendPageI18nSeeds, backendPermissionI18nSeeds, routes, menus, permissions, routeMap, menuMap };
 }
 
 function main() {
-  const { frontendModules, backendSeeds, registryKeys, backendRegistryKeys, routes, menus, permissions, routeMap, menuMap } = collectContracts();
+  const { frontendModules, backendSeeds, registryKeys, backendRegistryKeys, fallbackTranslations, backendMenuI18nSeeds, backendPageI18nSeeds, backendPermissionI18nSeeds, routes, menus, permissions, routeMap, menuMap } = collectContracts();
   const errors = [];
   const backendPageSeeds = backendSeeds.filter((item) => item.path && item.type === 'C');
+  const backendActionSeeds = backendSeeds.filter((item) => item.perms && item.type === 'F');
   const backendPermissionKeys = new Set(backendSeeds.flatMap((item) => [item.pagePerm, item.perms]).filter(Boolean));
   const frontendPermissionKeys = new Set(permissions.map((item) => item.key));
 
@@ -329,6 +486,16 @@ function main() {
     if (route.pagePermission && !frontendPermissionKeys.has(route.pagePermission)) {
       errors.push(`路由 pagePermission 未声明到 permissions: ${route.pagePermission} (${route.filePath} -> ${routePath})`);
     }
+    const isManagedMenuRoute = menuMap.has(routePath);
+    for (const locale of ['zh-CN', 'en-US']) {
+      if (!fallbackTranslations.get(locale)?.has(route.titleKey)) {
+        errors.push(`fallback 语言包缺少页面 key: ${route.titleKey} (${locale}, ${routePath})`);
+      }
+      const expectedBackendPageSet = isManagedMenuRoute ? backendMenuI18nSeeds : backendPageI18nSeeds;
+      if (!expectedBackendPageSet.get(locale)?.has(route.titleKey)) {
+        errors.push(`后端 i18n seed 缺少页面 key: ${route.titleKey} (${locale}, ${routePath})`);
+      }
+    }
   }
 
   for (const [menuPath, menu] of menuMap.entries()) {
@@ -377,6 +544,14 @@ function main() {
     if (route.componentKey !== backendSeed.component) {
       errors.push(`component key 不一致: ${menuPath} frontend=${route.componentKey || '<empty>'} backend=${backendSeed.component || '<empty>'}`);
     }
+    for (const locale of ['zh-CN', 'en-US']) {
+      if (!fallbackTranslations.get(locale)?.has(menu.titleKey)) {
+        errors.push(`fallback 语言包缺少菜单 key: ${menu.titleKey} (${locale}, ${menuPath})`);
+      }
+      if (!backendMenuI18nSeeds.get(locale)?.has(menu.titleKey)) {
+        errors.push(`后端 i18n seed 缺少菜单 key: ${menu.titleKey} (${locale}, ${menuPath})`);
+      }
+    }
   }
 
   for (const seed of backendPageSeeds) {
@@ -392,6 +567,21 @@ function main() {
   for (const permissionKey of backendPermissionKeys) {
     if (!frontendPermissionKeys.has(permissionKey)) {
       errors.push(`后端 seed 权限未声明到 frontend permissions: ${permissionKey}`);
+    }
+  }
+
+  for (const seed of backendActionSeeds) {
+    if (!seed.titleKey) {
+      errors.push(`后端权限 seed 缺少 titleKey: ${seed.perms} (${seed.filePath})`);
+      continue;
+    }
+    for (const locale of ['zh-CN', 'en-US']) {
+      if (!fallbackTranslations.get(locale)?.has(seed.titleKey)) {
+        errors.push(`fallback 语言包缺少权限 key: ${seed.titleKey} (${locale}, ${seed.perms})`);
+      }
+      if (!backendPermissionI18nSeeds.get(locale)?.has(seed.titleKey)) {
+        errors.push(`后端 i18n seed 缺少权限 key: ${seed.titleKey} (${locale}, ${seed.perms})`);
+      }
     }
   }
 

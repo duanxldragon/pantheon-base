@@ -9,6 +9,7 @@ type SystemUserSession struct {
 	RefreshJTI       string     `gorm:"size:64;not null" json:"refreshJti"`
 	RefreshExpiresAt time.Time  `json:"refreshExpiresAt"`
 	LastRefreshAt    *time.Time `json:"lastRefreshAt"`
+	LastActivityAt   *time.Time `json:"lastActivityAt"`
 	LastIP           string     `gorm:"size:128" json:"lastIp"`
 	UserAgent        string     `gorm:"size:255" json:"userAgent"`
 	RevokedAt        *time.Time `json:"revokedAt"`

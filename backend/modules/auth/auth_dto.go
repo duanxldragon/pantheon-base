@@ -59,15 +59,32 @@ type SessionResp struct {
 	UserAgent        string  `json:"userAgent"`
 	RefreshExpiresAt string  `json:"refreshExpiresAt"`
 	LastRefreshAt    *string `json:"lastRefreshAt"`
+	LastActivityAt   *string `json:"lastActivityAt"`
 	RevokedAt        *string `json:"revokedAt"`
 	CreatedAt        string  `json:"createdAt"`
 }
 
 type SecurityOverviewResp struct {
-	User               *UserInfoResp `json:"user"`
-	CurrentSession     *SessionResp  `json:"currentSession"`
-	ActiveSessionCount int64         `json:"activeSessionCount"`
-	LastLoginAt        *string       `json:"lastLoginAt"`
+	User               *UserInfoResp      `json:"user"`
+	CurrentSession     *SessionResp       `json:"currentSession"`
+	ActiveSessionCount int64              `json:"activeSessionCount"`
+	LastLoginAt        *string            `json:"lastLoginAt"`
+	Policy             SecurityPolicyResp `json:"policy"`
+}
+
+type SecurityPolicyResp struct {
+	PasswordMinLength       int  `json:"passwordMinLength"`
+	MaxFailedAttempts       int  `json:"maxFailedAttempts"`
+	LockMinutes             int  `json:"lockMinutes"`
+	SourceMaxFailedAttempts int  `json:"sourceMaxFailedAttempts"`
+	SourceWindowMinutes     int  `json:"sourceWindowMinutes"`
+	SourceLockMinutes       int  `json:"sourceLockMinutes"`
+	SessionIdleMinutes      int  `json:"sessionIdleMinutes"`
+	MaxActiveSessions       int  `json:"maxActiveSessions"`
+	SessionRetentionDays    int  `json:"sessionRetentionDays"`
+	CaptchaEnabled          bool `json:"captchaEnabled"`
+	MFAEnabled              bool `json:"mfaEnabled"`
+	SSOEnabled              bool `json:"ssoEnabled"`
 }
 
 // LoginLogQuery 登录日志查询
@@ -76,6 +93,14 @@ type LoginLogQuery struct {
 	Status   *int   `form:"status" json:"status"`
 	Page     int    `form:"page" json:"page"`
 	PageSize int    `form:"pageSize" json:"pageSize"`
+}
+
+type LoginLogCleanupReq struct {
+	RetentionDays int `json:"retentionDays"`
+}
+
+type LoginLogBatchDeleteReq struct {
+	IDs []uint64 `json:"ids"`
 }
 
 // LoginLogResp 登录日志 DTO
@@ -98,9 +123,26 @@ type LoginLogPageResp struct {
 	PageSize int            `json:"pageSize"`
 }
 
+type LoginLogCleanupResp struct {
+	ClearedCount int64 `json:"clearedCount"`
+}
+
+type SessionCleanupReq struct {
+	RetentionDays int `json:"retentionDays"`
+}
+
+type SessionCleanupResp struct {
+	ClearedCount int64 `json:"clearedCount"`
+}
+
 // AdminSessionQuery 管理员会话查询
 type AdminSessionQuery struct {
 	Username string `form:"username" json:"username"`
+	LastIP   string `form:"lastIp" json:"lastIp"`
+	Browser  string `form:"browser" json:"browser"`
+	OS       string `form:"os" json:"os"`
+	Device   string `form:"device" json:"device"`
+	Status   *int   `form:"status" json:"status"`
 	Page     int    `form:"page" json:"page"`
 	PageSize int    `form:"pageSize" json:"pageSize"`
 }
@@ -118,13 +160,16 @@ type AdminSessionResp struct {
 	UserAgent        string  `json:"userAgent"`
 	RefreshExpiresAt string  `json:"refreshExpiresAt"`
 	LastRefreshAt    *string `json:"lastRefreshAt"`
+	LastActivityAt   *string `json:"lastActivityAt"`
 	RevokedAt        *string `json:"revokedAt"`
 	CreatedAt        string  `json:"createdAt"`
 }
 
 type AdminSessionPageResp struct {
-	Items    []AdminSessionResp `json:"items"`
-	Total    int64              `json:"total"`
-	Page     int                `json:"page"`
-	PageSize int                `json:"pageSize"`
+	Items        []AdminSessionResp `json:"items"`
+	Total        int64              `json:"total"`
+	ActiveCount  int64              `json:"activeCount"`
+	RevokedCount int64              `json:"revokedCount"`
+	Page         int                `json:"page"`
+	PageSize     int                `json:"pageSize"`
 }

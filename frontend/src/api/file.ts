@@ -30,6 +30,8 @@ function parseFilename(contentDisposition?: string, fallbackName?: string) {
   return fallbackName || 'download.csv';
 }
 
+const I18N_KEY_PATTERN = /^[a-z0-9_]+(?:\.[a-z0-9_]+)+$/i;
+
 function saveBlob(blob: Blob, filename: string) {
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
@@ -63,7 +65,8 @@ export async function downloadFile(options: DownloadFileOptions) {
       const text = await response.data.text();
       const payload = JSON.parse(text);
       const messageKey = payload?.message || 'request.failed';
-      Message.error(i18n.t(messageKey, { defaultValue: messageKey }));
+      const resolvedKey = I18N_KEY_PATTERN.test(String(messageKey)) ? messageKey : 'request.failed';
+      Message.error(i18n.t(resolvedKey, { defaultValue: resolvedKey }));
       throw new Error(messageKey);
     } catch (error) {
       if (error instanceof Error) {

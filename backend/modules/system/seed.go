@@ -45,16 +45,23 @@ func seedPermissionModuleMenus(db *gorm.DB) error {
 }
 
 func seedSettingModuleMenus(db *gorm.DB) error {
-	return ensureMenuSeeds(db, append(baseMenuGroupSeeds(), settingMenuSeeds()...))
+	return ensureMenuSeeds(db, append(baseMenuGroupSeeds(), append(settingMenuSeeds(), platformToolMenuSeeds()...)...))
 }
 
 func seedDictModuleMenus(db *gorm.DB) error {
 	return ensureMenuSeeds(db, append(baseMenuGroupSeeds(), dictMenuSeeds()...))
 }
 
+func seedI18nModuleMenus(db *gorm.DB) error {
+	return ensureMenuSeeds(db, append(baseMenuGroupSeeds(), i18nMenuSeeds()...))
+}
+
 func ensureMenuSeeds(db *gorm.DB, seeds []menuSeed) error {
 	if db == nil {
 		return nil
+	}
+	if err := cleanupObsoleteMenus(db); err != nil {
+		return err
 	}
 	for _, seed := range seeds {
 		if err := ensureSingleMenuSeed(db, seed); err != nil {
@@ -64,6 +71,26 @@ func ensureMenuSeeds(db *gorm.DB, seeds []menuSeed) error {
 	return cleanupActionMenuRoleBindings(db)
 }
 
+type obsoleteMenuRule struct {
+	TitleKeys  []string
+	Paths      []string
+	RouteNames []string
+	Components []string
+	PagePerms  []string
+	Perms      []string
+}
+
+var obsoleteMenuRules = []obsoleteMenuRule{
+	{
+		TitleKeys:  []string{"system.menu-matrix", "system.menu.matrix"},
+		Paths:      []string{"/system/menu-matrix"},
+		RouteNames: []string{"system-menu-matrix"},
+		Components: []string{"system/menu/MenuMatrix"},
+		PagePerms:  []string{"system:menu:matrix"},
+		Perms:      []string{"system:menu:matrix"},
+	},
+}
+
 func baseMenuGroupSeeds() []menuSeed {
 	return []menuSeed{
 		{
@@ -71,7 +98,7 @@ func baseMenuGroupSeeds() []menuSeed {
 			TitleKey:  "system.menu.access",
 			Path:      "/system/access",
 			Type:      "M",
-			Icon:      "apps",
+			Icon:      "idcard",
 			Module:    "system.iam",
 			RouteName: "system-access",
 			Sort:      20,
@@ -91,7 +118,7 @@ func baseMenuGroupSeeds() []menuSeed {
 			TitleKey:  "system.menu.config",
 			Path:      "/system/config",
 			Type:      "M",
-			Icon:      "settings",
+			Icon:      "tool",
 			Module:    "system.config",
 			RouteName: "system-config",
 			Sort:      40,
@@ -146,7 +173,7 @@ func coreMenuSeeds() []menuSeed {
 			PagePerm:  "system:role:list",
 			Perms:     "",
 			Type:      "C",
-			Icon:      "safe",
+			Icon:      "user-group",
 			RouteName: "system-role",
 			Module:    "system.iam",
 			Sort:      20,
@@ -179,7 +206,7 @@ func deptMenuSeeds() []menuSeed {
 			PagePerm:  "system:dept:list",
 			Perms:     "",
 			Type:      "C",
-			Icon:      "storage",
+			Icon:      "branch",
 			RouteName: "system-dept",
 			Module:    "system.org",
 			Sort:      10,
@@ -204,7 +231,7 @@ func postMenuSeeds() []menuSeed {
 			PagePerm:  "system:post:list",
 			Perms:     "",
 			Type:      "C",
-			Icon:      "storage",
+			Icon:      "tags",
 			RouteName: "system-post",
 			Module:    "system.org",
 			Sort:      20,
@@ -229,7 +256,7 @@ func permissionMenuSeeds() []menuSeed {
 			PagePerm:  "system:permission:list",
 			Perms:     "",
 			Type:      "C",
-			Icon:      "safe",
+			Icon:      "lock",
 			RouteName: "system-permission",
 			Module:    "system.iam",
 			Sort:      30,
@@ -277,6 +304,45 @@ func settingMenuSeeds() []menuSeed {
 		},
 		{Key: "setting-update", ParentKey: "setting", TitleKey: "system.permission.setting.update", Perms: "system:setting:update", Type: "F", Sort: 1},
 		{Key: "setting-refresh", ParentKey: "setting", TitleKey: "system.permission.setting.refresh", Perms: "system:setting:refresh", Type: "F", Sort: 2},
+		{Key: "setting-export", ParentKey: "setting", TitleKey: "system.permission.setting.export", Perms: "system:setting:export", Type: "F", Sort: 3},
+	}
+}
+
+func platformToolMenuSeeds() []menuSeed {
+	return []menuSeed{
+		{
+			Key:       "modules",
+			ParentKey: "config",
+			TitleKey:  "system.menu.modules",
+			Path:      "/system/modules",
+			Component: "system/dynamicmodule/ModuleManager",
+			PagePerm:  "system:module:list",
+			Type:      "C",
+			Icon:      "apps",
+			RouteName: "system-modules",
+			Module:    "system.dynamic-module",
+			Sort:      35,
+		},
+		{Key: "module-register", ParentKey: "modules", TitleKey: "system.permission.module.register", Perms: "system:module:register", Type: "F", Sort: 1},
+		{Key: "module-unregister", ParentKey: "modules", TitleKey: "system.permission.module.unregister", Perms: "system:module:unregister", Type: "F", Sort: 2},
+		{Key: "module-delete-record", ParentKey: "modules", TitleKey: "system.permission.module.deleteRecord", Perms: "system:module:delete_record", Type: "F", Sort: 3},
+		{Key: "module-purge", ParentKey: "modules", TitleKey: "system.permission.module.purge", Perms: "system:module:purge", Type: "F", Sort: 4},
+		{Key: "module-repair", ParentKey: "modules", TitleKey: "system.permission.module.repair", Perms: "system:module:repair", Type: "F", Sort: 5},
+		{
+			Key:       "generator",
+			ParentKey: "config",
+			TitleKey:  "system.menu.generator",
+			Path:      "/system/generator",
+			Component: "system/generator/ModuleWizard",
+			PagePerm:  "system:generator:use",
+			Type:      "C",
+			Icon:      "code",
+			RouteName: "system-generator",
+			Module:    "system.config",
+			Sort:      40,
+		},
+		{Key: "module-generate", ParentKey: "generator", TitleKey: "system.permission.module.generate", Perms: "system:module:generate", Type: "F", Sort: 1},
+		{Key: "generator-datasource-manage", ParentKey: "generator", TitleKey: "system.permission.generator.datasourceManage", Perms: "system:generator:datasource:manage", Type: "F", Sort: 2},
 	}
 }
 
@@ -291,7 +357,7 @@ func dictMenuSeeds() []menuSeed {
 			PagePerm:  "system:dict:list",
 			Perms:     "",
 			Type:      "C",
-			Icon:      "list",
+			Icon:      "book",
 			RouteName: "system-dict",
 			Module:    "system.config",
 			IsCache:   1,
@@ -306,6 +372,33 @@ func dictMenuSeeds() []menuSeed {
 	}
 }
 
+func i18nMenuSeeds() []menuSeed {
+	return []menuSeed{
+		{
+			Key:       "i18n",
+			ParentKey: "config",
+			TitleKey:  "system.menu.i18n",
+			Path:      "/system/i18n",
+			Component: "system/i18n/I18nList",
+			PagePerm:  "system:i18n:list",
+			Perms:     "",
+			Type:      "C",
+			Icon:      "language",
+			RouteName: "system-i18n",
+			Module:    "system.config",
+			IsCache:   1,
+			Sort:      30,
+		},
+		{Key: "i18n-create", ParentKey: "i18n", TitleKey: "system.permission.i18n.create", Perms: "system:i18n:create", Type: "F", Sort: 1},
+		{Key: "i18n-update", ParentKey: "i18n", TitleKey: "system.permission.i18n.update", Perms: "system:i18n:update", Type: "F", Sort: 2},
+		{Key: "i18n-delete", ParentKey: "i18n", TitleKey: "system.permission.i18n.delete", Perms: "system:i18n:delete", Type: "F", Sort: 3},
+		{Key: "i18n-batch-delete", ParentKey: "i18n", TitleKey: "system.permission.i18n.batch_delete", Perms: "system:i18n:delete", Type: "F", Sort: 4},
+		{Key: "i18n-export", ParentKey: "i18n", TitleKey: "system.permission.i18n.export", Perms: "system:i18n:export", Type: "F", Sort: 5},
+		{Key: "i18n-import", ParentKey: "i18n", TitleKey: "system.permission.i18n.import", Perms: "system:i18n:import", Type: "F", Sort: 6},
+		{Key: "i18n-refresh", ParentKey: "i18n", TitleKey: "system.permission.i18n.refresh", Perms: "system:i18n:refresh", Type: "F", Sort: 7},
+	}
+}
+
 func auditMenuSeeds() []menuSeed {
 	return []menuSeed{
 		{
@@ -317,7 +410,7 @@ func auditMenuSeeds() []menuSeed {
 			PagePerm:  "system:operation-log:list",
 			Perms:     "",
 			Type:      "C",
-			Icon:      "safe",
+			Icon:      "file",
 			RouteName: "system-operation-log",
 			Module:    "system.audit",
 			Sort:      30,
@@ -454,6 +547,144 @@ WHERE menu_id IN (
 )`).Error
 }
 
+func cleanupObsoleteMenus(db *gorm.DB) error {
+	if db == nil || !db.Migrator().HasTable("system_menu") {
+		return nil
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		obsoleteIDs := make(map[uint64]struct{})
+		for _, rule := range obsoleteMenuRules {
+			ids, err := collectObsoleteMenuIDs(tx, rule)
+			if err != nil {
+				return err
+			}
+			for _, id := range ids {
+				obsoleteIDs[id] = struct{}{}
+			}
+		}
+
+		if len(obsoleteIDs) == 0 {
+			return nil
+		}
+
+		menuIDs := make([]uint64, 0, len(obsoleteIDs))
+		for id := range obsoleteIDs {
+			menuIDs = append(menuIDs, id)
+		}
+
+		if tx.Migrator().HasTable("system_role_menu") {
+			if err := tx.Table("system_role_menu").Where("menu_id IN ?", menuIDs).Delete(nil).Error; err != nil {
+				return err
+			}
+		}
+
+		if tx.Migrator().HasTable("system_role_permission") {
+			for _, rule := range obsoleteMenuRules {
+				if len(rule.PagePerms) > 0 {
+					if err := tx.Table("system_role_permission").Where("permission_key IN ?", rule.PagePerms).Delete(nil).Error; err != nil {
+						return err
+					}
+				}
+				if len(rule.Perms) > 0 {
+					if err := tx.Table("system_role_permission").Where("permission_key IN ?", rule.Perms).Delete(nil).Error; err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return tx.Table("system_menu").Where("id IN ?", menuIDs).Delete(nil).Error
+	})
+}
+
+func collectObsoleteMenuIDs(tx *gorm.DB, rule obsoleteMenuRule) ([]uint64, error) {
+	collected := make(map[uint64]struct{})
+
+	var collect func(ids []uint64) error
+	collect = func(ids []uint64) error {
+		for _, id := range ids {
+			if id == 0 {
+				continue
+			}
+			if _, ok := collected[id]; ok {
+				continue
+			}
+			collected[id] = struct{}{}
+
+			var children []uint64
+			if err := tx.Table("system_menu").Select("id").Where("parent_id = ?", id).Pluck("id", &children).Error; err != nil {
+				return err
+			}
+			if err := collect(children); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	var directIDs []uint64
+	if len(rule.TitleKeys) > 0 {
+		if err := tx.Table("system_menu").Select("id").Where("title_key IN ?", rule.TitleKeys).Pluck("id", &directIDs).Error; err != nil {
+			return nil, err
+		}
+		if err := collect(directIDs); err != nil {
+			return nil, err
+		}
+	}
+	if len(rule.Paths) > 0 {
+		directIDs = directIDs[:0]
+		if err := tx.Table("system_menu").Select("id").Where("path IN ?", rule.Paths).Pluck("id", &directIDs).Error; err != nil {
+			return nil, err
+		}
+		if err := collect(directIDs); err != nil {
+			return nil, err
+		}
+	}
+	if len(rule.RouteNames) > 0 {
+		directIDs = directIDs[:0]
+		if err := tx.Table("system_menu").Select("id").Where("route_name IN ?", rule.RouteNames).Pluck("id", &directIDs).Error; err != nil {
+			return nil, err
+		}
+		if err := collect(directIDs); err != nil {
+			return nil, err
+		}
+	}
+	if len(rule.Components) > 0 {
+		directIDs = directIDs[:0]
+		if err := tx.Table("system_menu").Select("id").Where("component IN ?", rule.Components).Pluck("id", &directIDs).Error; err != nil {
+			return nil, err
+		}
+		if err := collect(directIDs); err != nil {
+			return nil, err
+		}
+	}
+	if len(rule.PagePerms) > 0 {
+		directIDs = directIDs[:0]
+		if err := tx.Table("system_menu").Select("id").Where("page_perm IN ?", rule.PagePerms).Pluck("id", &directIDs).Error; err != nil {
+			return nil, err
+		}
+		if err := collect(directIDs); err != nil {
+			return nil, err
+		}
+	}
+	if len(rule.Perms) > 0 {
+		directIDs = directIDs[:0]
+		if err := tx.Table("system_menu").Select("id").Where("perms IN ?", rule.Perms).Pluck("id", &directIDs).Error; err != nil {
+			return nil, err
+		}
+		if err := collect(directIDs); err != nil {
+			return nil, err
+		}
+	}
+
+	result := make([]uint64, 0, len(collected))
+	for id := range collected {
+		result = append(result, id)
+	}
+	return result, nil
+}
+
 func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 	if parentKey == "" {
 		return 0, nil
@@ -472,7 +703,10 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 		"login-log":     "/system/login-log",
 		"session":       "/system/session",
 		"setting":       "/system/setting",
+		"modules":       "/system/modules",
+		"generator":     "/system/generator",
 		"dict":          "/system/dict",
+		"i18n":          "/system/i18n",
 		"operation-log": "/system/operation-log",
 	}
 	parentPath, ok := parentPaths[parentKey]

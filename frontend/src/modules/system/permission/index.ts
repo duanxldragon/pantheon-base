@@ -8,13 +8,13 @@ export const PermissionModule = defineModule({
       path: 'system/permission',
       routeName: 'system-permission',
       titleKey: 'system.menu.permission',
-      icon: 'safe',
+      icon: 'lock',
       pagePermission: 'system:permission:list',
       componentKey: 'system/permission/PermissionList',
     },
   ],
   menus: [
-    { path: '/system/permission', titleKey: 'system.menu.permission', icon: 'safe', routeName: 'system-permission', module: 'system.iam' },
+    { path: '/system/permission', titleKey: 'system.menu.permission', icon: 'lock', routeName: 'system-permission', module: 'system.iam' },
   ],
   permissions: [
     'system:permission:list',

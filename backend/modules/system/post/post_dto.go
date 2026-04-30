@@ -1,15 +1,22 @@
 package system
 
 type PostListResp struct {
-	ID        uint64 `json:"id"`
-	DeptID    uint64 `json:"deptId"`
-	DeptName  string `json:"deptName"`
-	PostCode  string `json:"postCode"`
-	PostName  string `json:"postName"`
-	Sort      int    `json:"sort"`
-	Status    int    `json:"status"`
-	Remark    string `json:"remark"`
-	CreatedAt string `json:"createdAt"`
+	ID                    uint64   `json:"id"`
+	DeptID                uint64   `json:"deptId"`
+	DeptName              string   `json:"deptName"`
+	PostCode              string   `json:"postCode"`
+	PostName              string   `json:"postName"`
+	Sort                  int      `json:"sort"`
+	Status                int      `json:"status"`
+	Remark                string   `json:"remark"`
+	AssignedUserCount     int      `json:"assignedUserCount"`
+	GovernanceTags        []string `json:"governanceTags"`
+	GovernanceTagLabels   []string `json:"governanceTagLabels"`
+	GovernanceBlockedBy   []string `json:"governanceBlockedBy"`
+	GovernanceBlockedDesc []string `json:"governanceBlockedDesc"`
+	GovernanceActions     []string `json:"governanceActions"`
+	GovernanceActionLabel []string `json:"governanceActionLabel"`
+	CreatedAt             string   `json:"createdAt"`
 }
 
 type PostListPageResp struct {

@@ -13,18 +13,15 @@ import (
 	role "pantheon-platform/backend/modules/system/role"
 	setting "pantheon-platform/backend/modules/system/setting"
 	user "pantheon-platform/backend/modules/system/user"
+	"pantheon-platform/backend/pkg/testmysql"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
 func setupDashboardTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 
 	if err := db.AutoMigrate(
 		&user.SystemUser{},
@@ -72,6 +69,9 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	if err := db.Create(&setting.SystemSetting{SettingKey: "site.name", SettingValue: "Pantheon", ValueType: "string", GroupKey: "basic", Module: "system"}).Error; err != nil {
 		t.Fatalf("seed setting: %v", err)
 	}
+	if err := db.Create(&setting.SystemSetting{SettingKey: "login.session_idle_minutes", SettingValue: "30", ValueType: "number", GroupKey: "login", Module: "system"}).Error; err != nil {
+		t.Fatalf("seed idle setting: %v", err)
+	}
 	if err := db.Create(&menu.SystemMenu{TitleKey: "system.menu.dashboard", Path: "/dashboard", Type: "C", Module: "platform", IsVisible: 1}).Error; err != nil {
 		t.Fatalf("seed menu: %v", err)
 	}
@@ -87,6 +87,34 @@ func TestDashboardService_GetSummary(t *testing.T) {
 		UpdatedAt:        now,
 	}).Error; err != nil {
 		t.Fatalf("seed session: %v", err)
+	}
+	if err := db.Create(&auth.SystemUserSession{
+		SessionID:        "session-expired",
+		UserID:           1,
+		RefreshJTI:       "jti-expired",
+		RefreshExpiresAt: now.Add(-5 * time.Minute),
+		LastRefreshAt:    timePtr(now.Add(-10 * time.Minute)),
+		LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
+		LastIP:           "127.0.0.2",
+		UserAgent:        "expired",
+		CreatedAt:        now.Add(-4 * time.Hour),
+		UpdatedAt:        now,
+	}).Error; err != nil {
+		t.Fatalf("seed expired session: %v", err)
+	}
+	if err := db.Create(&auth.SystemUserSession{
+		SessionID:        "session-idle",
+		UserID:           1,
+		RefreshJTI:       "jti-idle",
+		RefreshExpiresAt: now.Add(24 * time.Hour),
+		LastRefreshAt:    timePtr(now.Add(-90 * time.Minute)),
+		LastActivityAt:   timePtr(now.Add(-45 * time.Minute)),
+		LastIP:           "127.0.0.3",
+		UserAgent:        "idle",
+		CreatedAt:        now.Add(-5 * time.Hour),
+		UpdatedAt:        now,
+	}).Error; err != nil {
+		t.Fatalf("seed idle session: %v", err)
 	}
 	if err := db.Create(&auth.SystemLogLogin{
 		Username:  "admin",
@@ -155,4 +183,8 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	if len(summary.RecentLogins) != 2 {
 		t.Fatalf("expected 2 recent logins, got %d", len(summary.RecentLogins))
 	}
+}
+
+func timePtr(value time.Time) *time.Time {
+	return &value
 }

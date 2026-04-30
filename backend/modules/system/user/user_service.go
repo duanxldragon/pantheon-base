@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/impexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -32,39 +34,65 @@ func (s *UserService) Migrate() error {
 		return errors.New("database.not_initialized")
 	}
 
-	if err := s.db.AutoMigrate(&SystemUser{}); err != nil {
+	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}); err != nil {
 		return err
 	}
 	if err := s.releaseDeletedUsernames(); err != nil {
 		return err
 	}
+	if err := s.ensureAdminUserSeed(); err != nil {
+		return err
+	}
+	return s.ensureAdminRoleBinding()
+}
 
-	// 确保有初始管理员
+const defaultConfiguredPasswordMinLength = 6
+
+func (s *UserService) ensureAdminUserSeed() error {
 	var count int64
 	if err := s.db.Model(&SystemUser{}).Where("id = ?", 1).Count(&count).Error; err != nil {
 		return err
 	}
-	if count == 0 {
-		passwordHash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-		admin := SystemUser{
-			Username: "admin",
-			Password: string(passwordHash),
-			Nickname: "Administrator",
-			Status:   1,
-		}
-		admin.ID = 1
-		if err := s.db.Create(&admin).Error; err != nil {
-			return err
-		}
-
-		// 分配管理员角色 (ID 1)
-		_ = s.db.Exec("INSERT INTO system_user_role (user_id, role_id) VALUES (1, 1)")
+	if count > 0 {
+		return nil
 	}
 
-	return nil
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	admin := SystemUser{
+		Username: "admin",
+		Password: string(passwordHash),
+		Nickname: "Administrator",
+		Status:   1,
+	}
+	admin.ID = 1
+	return s.db.Create(&admin).Error
 }
 
-const defaultConfiguredPasswordMinLength = 6
+func (s *UserService) ensureAdminRoleBinding() error {
+	if !s.db.Migrator().HasTable("system_user_role") || !s.db.Migrator().HasTable("system_role") {
+		return nil
+	}
+
+	var adminRoleID uint64
+	if err := s.db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
+		return err
+	}
+	if adminRoleID == 0 {
+		return nil
+	}
+
+	var count int64
+	if err := s.db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, adminRoleID).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	return s.db.Exec("INSERT INTO system_user_role (user_id, role_id) VALUES (?, ?)", 1, adminRoleID).Error
+}
 
 // GetUserRoles 获取用户角色标识。
 func (s *UserService) GetUserRoles(userID uint64) ([]string, error) {
@@ -139,13 +167,13 @@ func (s *UserService) GetProfile(userID uint64) (*UserProfileResp, error) {
 }
 
 // ListUsers 获取用户列表。
-func (s *UserService) ListUsers(query *UserListQuery) (*UserListPageResp, error) {
+func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScopeReq) (*UserListPageResp, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
 
 	var users []SystemUser
-	db := s.db.Model(&SystemUser{})
+	db := s.db.Model(&SystemUser{}).Scopes(database.WithDataScope(dataScope))
 	page, pageSize := normalizeUserPageQuery(query)
 	if query != nil {
 		if strings.TrimSpace(query.Username) != "" {

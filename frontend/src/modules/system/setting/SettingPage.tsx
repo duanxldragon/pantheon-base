@@ -4,14 +4,20 @@ import type { PaginationProps } from '@arco-design/web-react/es/Pagination/inter
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconRefresh } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import i18n from 'i18next';
+import { useNavigate } from 'react-router-dom';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
-import { FormSection, PageContainer, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar } from '../../../components';
+import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { FormSection, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
-import { applyPantheonDefaultTheme, applyPantheonTheme, pantheonThemeOptions, type PantheonThemeKey } from '../../../core/theme/theme';
+import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
+import { invalidateRouteWarmData, resolveRouteWarmData } from '../../../core/router/prefetch';
+import { applyPantheonDefaultTheme, clearPantheonThemePreference, pantheonThemeOptions, type PantheonThemeKey } from '../../../core/theme/theme';
 import { hasExplicitLanguagePreference, refreshPublicSettings } from '../../../core/settings/publicSettings';
 import { usePermission } from '../../../hooks/usePermission';
+import { SUPPORTED_LOCALES, switchI18nLanguage } from '../../../i18n';
 import {
+  exportSettingAudit,
+  getSettingOverview,
   updateSettingGroup,
   getSettingAuditList,
   getSettingList,
@@ -19,21 +25,98 @@ import {
   type SettingAuditChange,
   type SettingAuditRow,
   type SettingItem,
+  type SettingOverviewResp,
 } from './api';
 
 const FormItem = Form.Item;
 
-const groupOrder = ['basic', 'security', 'login', 'upload', 'i18n', 'ui'];
+const groupOrder = ['basic', 'security', 'login', 'audit', 'upload', 'i18n', 'ui'];
 const defaultAuditPageSize = 5;
+const auditRetentionSettingKeys = new Set([
+  'audit.login_log_retention_options',
+  'audit.operation_log_retention_options',
+  'audit.session_cleanup_retention_options',
+]);
+const auditRetentionDaySettingKeys = new Set([
+  'audit.login_log_retention_days',
+  'audit.operation_log_retention_days',
+  'audit.session_retention_days',
+]);
+const integerSettingKeys = new Set([
+  'security.password_min_length',
+  'login.max_failed_attempts',
+  'login.lock_minutes',
+  'login.session_idle_minutes',
+  'upload.max_file_size',
+]);
+const recommendedAuditRetentionOptions = [1, 7, 30, 90, 180, 365];
+const recommendedAuditRetentionDayOptions = [30, 90, 180, 365];
+
+type SettingFormValue = string | number | boolean | string[] | undefined;
+
+function normalizeAuditRetentionTagValues(rawValues: Array<string | number>) {
+  const normalized = Array.from(
+    new Set(
+      rawValues
+        .map((item) => Number(String(item).trim()))
+        .filter((item) => Number.isInteger(item) && item > 0 && item <= 365),
+    ),
+  ).sort((left, right) => left - right);
+  return normalized.map((item) => String(item));
+}
+
+function parseAuditRetentionSettingValue(rawValue: string) {
+  try {
+    const parsed = JSON.parse(rawValue) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return normalizeAuditRetentionTagValues(parsed as Array<string | number>);
+  } catch {
+    return [];
+  }
+}
+
+function resolveAuditRetentionDefaultValues(item: SettingItem) {
+  const parsedDefaults = parseAuditRetentionSettingValue(item.defaultValue);
+  if (parsedDefaults.length > 0) {
+    return parsedDefaults;
+  }
+  return ['1', '7', '30'];
+}
+
+function parseDefaultFieldValue(item: SettingItem): SettingFormValue {
+  if (auditRetentionSettingKeys.has(item.settingKey)) {
+    return resolveAuditRetentionDefaultValues(item);
+  }
+  if (item.valueType === 'number') {
+    return item.defaultValue === '' ? undefined : Number(item.defaultValue);
+  }
+  if (item.valueType === 'boolean') {
+    return item.defaultValue === 'true';
+  }
+  return item.defaultValue;
+}
+
+function isSameStringArray(left: string[], right: string[]) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((value, index) => value === right[index]);
+}
 
 function buildFormValues(items: SettingItem[]) {
-  return items.reduce<Record<string, string | number | boolean>>((acc, item) => {
+  return items.reduce<Record<string, SettingFormValue>>((acc, item) => {
     if (item.isEncrypted === 1) {
       acc[item.settingKey] = '';
       return acc;
     }
+    if (auditRetentionSettingKeys.has(item.settingKey)) {
+      acc[item.settingKey] = parseAuditRetentionSettingValue(item.settingValue);
+      return acc;
+    }
     if (item.valueType === 'number') {
-      acc[item.settingKey] = item.settingValue === '' ? 0 : Number(item.settingValue);
+      acc[item.settingKey] = item.settingValue === '' ? undefined : Number(item.settingValue);
     } else if (item.valueType === 'boolean') {
       acc[item.settingKey] = item.settingValue === 'true';
     } else {
@@ -43,29 +126,91 @@ function buildFormValues(items: SettingItem[]) {
   }, {});
 }
 
+function serializeSettingValue(item: SettingItem, rawValue: SettingFormValue) {
+  if (auditRetentionSettingKeys.has(item.settingKey)) {
+    const normalized = normalizeAuditRetentionTagValues(Array.isArray(rawValue) ? rawValue : []);
+    if (normalized.length === 0) {
+      throw new Error('setting.value.invalid_audit_retention');
+    }
+    return JSON.stringify(normalized.map((option) => Number(option)));
+  }
+  if (item.valueType === 'boolean') {
+    return String(Boolean(rawValue));
+  }
+  if (item.valueType === 'number') {
+    if (typeof rawValue === 'number') {
+      if (!Number.isFinite(rawValue)) {
+        throw new Error('setting.value.invalid_number');
+      }
+      return String(rawValue);
+    }
+    if (typeof rawValue === 'string' && rawValue.trim() !== '' && Number.isFinite(Number(rawValue.trim()))) {
+      return rawValue.trim();
+    }
+    throw new Error('setting.value.invalid_number');
+  }
+  return String(rawValue ?? '');
+}
+
+function readFormFieldValue(
+  values: Record<string, unknown>,
+  fieldKey: string,
+  fallbackReader: (name: string) => unknown,
+) {
+  const directValue = fallbackReader(fieldKey);
+  if (directValue !== undefined) {
+    return directValue as SettingFormValue;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(values, fieldKey)) {
+    return values[fieldKey] as SettingFormValue;
+  }
+
+  return fieldKey.split('.').reduce<unknown>((current, segment) => {
+    if (current && typeof current === 'object' && segment in (current as Record<string, unknown>)) {
+      return (current as Record<string, unknown>)[segment];
+    }
+    return undefined;
+  }, values) as SettingFormValue;
+}
+
+function buildRequiredFieldMessage(t: ReturnType<typeof useTranslation>['t'], field: string) {
+  return t('common.requiredField', { field });
+}
+
 const SettingPage: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { isAdmin, hasPerm } = usePermission();
   const canUpdateSetting = isAdmin || hasPerm('system:setting:update');
   const canRefreshCache = isAdmin || hasPerm('system:setting:refresh');
+  const canExportAudit = isAdmin || hasPerm('system:setting:export');
+  const canViewOperationLog = isAdmin || hasPerm('system:operation-log:list');
   const [loading, setLoading] = useState(false);
   const [submittingGroup, setSubmittingGroup] = useState<string | null>(null);
   const [refreshingCache, setRefreshingCache] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [settings, setSettings] = useState<SettingItem[]>([]);
+  const [overview, setOverview] = useState<SettingOverviewResp | null>(null);
   const [activeGroup, setActiveGroup] = useState(groupOrder[0]);
   const [auditRows, setAuditRows] = useState<SettingAuditRow[]>([]);
   const [auditTotal, setAuditTotal] = useState(0);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditQuery, setAuditQuery] = useState({ page: 1, pageSize: defaultAuditPageSize });
-  const [form] = Form.useForm<Record<string, string | number | boolean>>();
+  const [form] = Form.useForm<Record<string, SettingFormValue>>();
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const rows = await getSettingList();
+      const rows = await resolveRouteWarmData('/system/setting', 'list:default', () => getSettingList());
       setSettings(rows);
+      try {
+        const overviewResp = await resolveRouteWarmData('/system/setting', 'overview', () => getSettingOverview());
+        setOverview(overviewResp);
+      } catch {
+        setOverview(null);
+      }
     } catch (requestError) {
       setError(requestError);
     } finally {
@@ -74,8 +219,19 @@ const SettingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void loadData();
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadData]);
+
+  useRefreshSubscription('system:setting:changed', () => {
+    invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
+    void loadData();
+    if (activeGroupKey && canViewOperationLog) {
+      void loadAudit(activeGroupKey, auditQuery.page, auditQuery.pageSize);
+    }
+  });
 
   const loadAudit = useCallback(async (groupKey: string, page = 1, pageSize = defaultAuditPageSize) => {
     setAuditLoading(true);
@@ -110,12 +266,6 @@ const SettingPage: React.FC = () => {
   const activeGroupKey = activeSettingGroup?.groupKey;
 
   useEffect(() => {
-    if (groupedSettings.length > 0 && !groupedSettings.some((item) => item.groupKey === activeGroup)) {
-      setActiveGroup(groupedSettings[0].groupKey);
-    }
-  }, [activeGroup, groupedSettings]);
-
-  useEffect(() => {
     if (!activeSettingGroup) {
       return;
     }
@@ -123,13 +273,14 @@ const SettingPage: React.FC = () => {
   }, [activeSettingGroup, form]);
 
   useEffect(() => {
-    if (!activeGroupKey) {
-      setAuditRows([]);
-      setAuditTotal(0);
+    if (!activeGroupKey || !canViewOperationLog) {
       return;
     }
-    void loadAudit(activeGroupKey, 1, defaultAuditPageSize);
-  }, [activeGroupKey, loadAudit]);
+    const timer = window.setTimeout(() => {
+      void loadAudit(activeGroupKey, 1, defaultAuditPageSize);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [activeGroupKey, canViewOperationLog, loadAudit]);
 
   const resetActiveGroupValues = () => {
     if (!activeSettingGroup) {
@@ -143,31 +294,52 @@ const SettingPage: React.FC = () => {
     if (!group || !canUpdateSetting) {
       return;
     }
-    const values = await form.validate();
-    setSubmittingGroup(group.groupKey);
+    const fieldNames = group.items.map((item) => item.settingKey);
+    let values;
     try {
+      values = await form.validate(fieldNames);
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
+    try {
+      const items = group.items.map((item) => ({
+        settingKey: item.settingKey,
+        settingValue: serializeSettingValue(
+          item,
+          readFormFieldValue(values as Record<string, unknown>, item.settingKey, (name) => form.getFieldValue(name)),
+        ),
+      }));
+      setSubmittingGroup(group.groupKey);
       await updateSettingGroup(group.groupKey, {
-        items: group.items.map((item) => ({
-          settingKey: item.settingKey,
-          settingValue: item.valueType === 'boolean' ? String(Boolean(values[item.settingKey])) : String(values[item.settingKey] ?? ''),
-        })),
+        items,
       });
       if (group.groupKey === 'ui') {
         const nextTheme = values['ui.default_theme'];
         if (typeof nextTheme === 'string') {
           applyPantheonDefaultTheme(nextTheme as PantheonThemeKey);
-          applyPantheonTheme(nextTheme as PantheonThemeKey);
+          clearPantheonThemePreference();
         }
       }
       if (['basic', 'i18n', 'ui'].includes(group.groupKey)) {
         const publicSettings = await refreshPublicSettings().catch(() => null);
         if (group.groupKey === 'i18n' && publicSettings && !hasExplicitLanguagePreference()) {
-          await i18n.changeLanguage(publicSettings.defaultLanguage).catch(() => undefined);
+          await switchI18nLanguage(publicSettings.defaultLanguage).catch(() => undefined);
         }
       }
       Message.success(t('common.updateSuccess'));
+      invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
+      publishRefresh('system:setting:changed', 'system/setting');
       await loadData();
       await loadAudit(group.groupKey, 1, auditQuery.pageSize);
+    } catch (submitError) {
+      if (submitError instanceof Error && submitError.message === 'setting.value.invalid_number') {
+        Message.error(t('setting.value.invalid_number'));
+      } else if (submitError instanceof Error && submitError.message === 'setting.value.invalid_audit_retention') {
+        Message.error(t('system.setting.audit.retentionRequired'));
+      }
     } finally {
       setSubmittingGroup(null);
     }
@@ -181,11 +353,37 @@ const SettingPage: React.FC = () => {
     try {
       await refreshSettingCache({ groupKeys: [activeGroupKey] });
       Message.success(t('system.setting.cache.refreshSuccess'));
+      invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
+      publishRefresh('system:setting:changed', 'system/setting');
       await loadData();
       await loadAudit(activeGroupKey, 1, auditQuery.pageSize);
     } finally {
       setRefreshingCache(false);
     }
+  };
+
+  const formatDefaultValueLabel = (item: SettingItem) => {
+    if (auditRetentionSettingKeys.has(item.settingKey)) {
+      const defaultValues = resolveAuditRetentionDefaultValues(item);
+      return defaultValues.map((option) => t('common.keepRecentDays', { count: Number(option) })).join(' / ');
+    }
+    if (item.settingKey === 'upload.storage_driver') {
+      return t(`system.setting.option.upload.storage_driver.${item.defaultValue}`, item.defaultValue);
+    }
+    if (item.settingKey === 'i18n.default_language') {
+      return t(`app.language.${item.defaultValue}`, item.defaultValue);
+    }
+    if (item.settingKey === 'ui.default_theme') {
+      const matchedTheme = pantheonThemeOptions.find((theme) => theme.key === item.defaultValue);
+      return matchedTheme ? t(matchedTheme.labelKey) : item.defaultValue;
+    }
+    if (item.valueType === 'boolean') {
+      return item.defaultValue === 'true' ? t('common.yes') : t('common.no');
+    }
+    if (item.defaultValue === '') {
+      return t('system.setting.defaultValueEmpty');
+    }
+    return item.defaultValue;
   };
 
   const renderField = (item: SettingItem) => {
@@ -201,7 +399,22 @@ const SettingPage: React.FC = () => {
               {item.hasValue === 1 ? t('system.setting.leaveEmptyToKeep') : t('system.setting.encryptedEmptyHint')}
             </Typography.Text>
           </Space>
-        ) : null}
+        ) : (
+          <Space size={12} wrap>
+            <Button
+              type="text"
+              size="small"
+              onClick={() => {
+                form.setFieldValue(item.settingKey, parseDefaultFieldValue(item));
+              }}
+            >
+              {t('system.setting.restoreDefault')}
+            </Button>
+            <Typography.Text type="secondary">
+              {t('system.setting.defaultValueHint', { value: formatDefaultValueLabel(item) })}
+            </Typography.Text>
+          </Space>
+        )}
       </Space>
     );
 
@@ -217,18 +430,126 @@ const SettingPage: React.FC = () => {
         </FormItem>
       );
     }
+    if (item.settingKey === 'upload.storage_driver') {
+      return (
+        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+          <Select
+            options={[
+              { label: t('system.setting.option.upload.storage_driver.local'), value: 'local' },
+              { label: t('system.setting.option.upload.storage_driver.s3'), value: 's3' },
+            ]}
+          />
+        </FormItem>
+      );
+    }
+    if (item.settingKey === 'i18n.default_language') {
+      return (
+        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+          <Select
+            options={SUPPORTED_LOCALES.map((locale) => ({
+              label: t(`app.language.${locale}`),
+              value: locale,
+            }))}
+          />
+        </FormItem>
+      );
+    }
+    if (auditRetentionSettingKeys.has(item.settingKey)) {
+      const savedValues = parseAuditRetentionSettingValue(item.settingValue);
+      return (
+        <FormItem
+          key={item.settingKey}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+          rules={[
+            { required: true, type: 'array', minLength: 1, message: t('system.setting.audit.retentionRequired') },
+            {
+              validator: (_value, callback) => {
+                const currentValue = form.getFieldValue(item.settingKey);
+                const normalized = normalizeAuditRetentionTagValues(Array.isArray(currentValue) ? currentValue : []);
+                if (normalized.length === 0) {
+                  callback(t('system.setting.audit.retentionRequired'));
+                  return;
+                }
+                if (normalized.length !== (Array.isArray(currentValue) ? currentValue.length : 0)) {
+                  callback(t('system.setting.audit.retentionInvalid'));
+                  return;
+                }
+                callback();
+              },
+            },
+          ]}
+        >
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Select
+              mode="multiple"
+              allowCreate
+              placeholder={t('system.setting.audit.retentionPlaceholder')}
+              options={recommendedAuditRetentionOptions.map((option) => ({
+                label: t('common.keepRecentDays', { count: option }),
+                value: String(option),
+              }))}
+              onChange={(value) => {
+                form.setFieldValue(item.settingKey, normalizeAuditRetentionTagValues(value as Array<string | number>));
+              }}
+            />
+            <FormItem noStyle shouldUpdate>
+              {() => {
+                const currentValue = normalizeAuditRetentionTagValues(
+                  Array.isArray(form.getFieldValue(item.settingKey)) ? form.getFieldValue(item.settingKey) as Array<string | number> : [],
+                );
+                const dirty = !isSameStringArray(currentValue, savedValues);
+                if (!dirty) {
+                  return null;
+                }
+                return <Tag color="orange">{t('system.setting.audit.unsavedChanges')}</Tag>;
+              }}
+            </FormItem>
+          </Space>
+        </FormItem>
+      );
+    }
 
     if (item.valueType === 'boolean') {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} triggerPropName="checked">
+        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help} triggerPropName="checked">
           <Switch checkedText={t('common.yes')} uncheckedText={t('common.no')} />
         </FormItem>
       );
     }
     if (item.valueType === 'number') {
+      if (auditRetentionDaySettingKeys.has(item.settingKey)) {
+        return (
+          <FormItem
+            key={item.settingKey}
+            field={item.settingKey}
+            label={label}
+            extra={help}
+            rules={[{ required: true, message: buildRequiredFieldMessage(t, label) }]}
+          >
+            <Select
+              options={recommendedAuditRetentionDayOptions.map((option) => ({
+                label: t('system.setting.audit.retentionDaysOption', { count: option }),
+                value: option,
+              }))}
+            />
+          </FormItem>
+        );
+      }
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
-          <InputNumber style={{ width: '100%' }} />
+        <FormItem
+          key={item.settingKey}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+          rules={[{ required: true, message: buildRequiredFieldMessage(t, label) }]}
+        >
+          <InputNumber
+            style={{ width: '100%' }}
+            precision={integerSettingKeys.has(item.settingKey) ? 0 : undefined}
+            min={integerSettingKeys.has(item.settingKey) ? 1 : undefined}
+          />
         </FormItem>
       );
     }
@@ -325,6 +646,20 @@ const SettingPage: React.FC = () => {
       dataIndex: 'operTime',
       render: (value: string) => formatDateTime(value),
     },
+    {
+      title: t('common.operations'),
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      render: (_, record) => (
+        <Button
+          type="text"
+          size="small"
+          disabled={!canViewOperationLog}
+          onClick={() => navigate(`/system/operation-log?detailId=${record.id}`)}
+        >
+          {t('system.setting.audit.viewOperationLog')}
+        </Button>
+      ),
+    },
   ];
 
   const handleAuditTableChange: TableProps<SettingAuditRow>['onChange'] = (pagination) => {
@@ -338,80 +673,194 @@ const SettingPage: React.FC = () => {
     );
   };
 
+  const handleExportAudit = async () => {
+    if (!activeGroupKey) {
+      return;
+    }
+    await exportSettingAudit({ groupKey: activeGroupKey });
+  };
+
+  const heroStats = overview ? [
+    {
+      key: 'total',
+      label: t('system.setting.overview.totalSettings'),
+      value: overview.totalSettingCount,
+      hint: t('system.setting.hero.totalHint'),
+    },
+    {
+      key: 'public',
+      label: t('system.setting.overview.publicSettings'),
+      value: overview.publicSettingCount,
+      hint: t('system.setting.hero.publicHint'),
+    },
+    {
+      key: 'encrypted',
+      label: t('system.setting.overview.encryptedSettings'),
+      value: overview.encryptedSettingCount,
+      hint: t('system.setting.hero.encryptedHint'),
+    },
+    {
+      key: 'risk',
+      label: t('system.setting.overview.risks'),
+      value: overview.riskCount,
+      hint: t('system.setting.hero.riskHint'),
+    },
+  ] : [];
+
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.setting')}
-        subtitle={t('system.setting.subtitle')}
-      />
-      {loading && settings.length === 0 ? <PageLoading /> : null}
-      {error && settings.length === 0 ? renderErrorState() : null}
-      {settings.length > 0 ? (
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          <Card className="page-panel">
-            <Tabs
-              type="rounded"
-              activeTab={activeSettingGroup?.groupKey}
-              onChange={setActiveGroup}
-            >
-              {groupedSettings.map((group) => (
-                <Tabs.TabPane key={group.groupKey} title={t(`system.setting.group.${group.groupKey}`)} />
+      <Space direction="vertical" size={16} className="system-page-template">
+        {overview ? (
+          <Card className="page-panel system-page-hero">
+            <div className="system-page-hero__top">
+              <div className="system-page-hero__copy">
+                <span className="system-page-hero__eyebrow">{t('system.setting.hero.eyebrow')}</span>
+                <Typography.Paragraph className="system-page-hero__desc">
+                  {t('system.setting.hero.desc')}
+                </Typography.Paragraph>
+              </div>
+            </div>
+            <div className="system-page-kpi-grid">
+              {heroStats.map((item) => (
+                <div key={item.key} className="system-page-kpi">
+                  <span className="system-page-kpi__label">{item.label}</span>
+                  <span className="system-page-kpi__value">{item.value}</span>
+                  <span className="system-page-kpi__hint">{item.hint}</span>
+                </div>
               ))}
-            </Tabs>
-            {activeSettingGroup ? (
-              <Form form={form} layout="vertical">
-                <Space direction="vertical" size={16} className="dialog-form-stack" style={{ marginTop: 16 }}>
-                  <FormSection
-                    title={t(`system.setting.group.${activeSettingGroup.groupKey}`)}
-                    description={t(`system.setting.groupHint.${activeSettingGroup.groupKey}`, '')}
-                  >
-                    {activeSettingGroup.items.map(renderField)}
-                  </FormSection>
-                  <Typography.Text type="secondary">{t('system.setting.saveHint')}</Typography.Text>
-                  <Space>
-                    <Button
-                      icon={<IconRefresh />}
-                      loading={refreshingCache}
-                      onClick={() => { void handleRefreshCache(); }}
-                      disabled={!canRefreshCache || !activeGroupKey}
-                    >
-                      {t('system.setting.cache.refresh')}
-                    </Button>
-                  </Space>
-                  <SubmitBar
-                    loading={submittingGroup === activeSettingGroup.groupKey}
-                    submitDisabled={!canUpdateSetting}
-                    onCancel={resetActiveGroupValues}
-                    onSubmit={() => { void handleSubmit(); }}
-                  />
-                </Space>
-              </Form>
-            ) : null}
+            </div>
           </Card>
-          {activeSettingGroup ? (
-            <Card className="page-panel" title={t('system.setting.audit.title')}>
-              <Table
-                rowKey="id"
-                data={auditRows}
-                columns={auditColumns}
-                loading={auditLoading}
-                onChange={handleAuditTableChange}
-                pagination={{
-                  current: auditQuery.page,
-                  pageSize: auditQuery.pageSize,
-                  total: auditTotal,
-                  showJumper: true,
-                  pageSizeChangeResetCurrent: false,
-                  sizeCanChange: true,
-                  sizeOptions: [5, 10, 20, 50],
-                  size: 'small',
-                  showTotal: (count: number) => t('common.total', { count }),
-                } as PaginationProps}
-              />
-            </Card>
-          ) : null}
-        </Space>
-      ) : null}
+        ) : null}
+        {loading && settings.length === 0 ? <PageLoading /> : null}
+        {error && settings.length === 0 ? renderErrorState() : null}
+        {!loading && !error && settings.length === 0 ? <PageEmpty description={t('system.setting.empty')} /> : null}
+        {settings.length > 0 ? (
+          <div className="page-split-layout">
+            <div className="page-main-column">
+              <Card className="page-panel">
+                <Tabs
+                  type="rounded"
+                  activeTab={activeSettingGroup?.groupKey}
+                  onChange={setActiveGroup}
+                >
+                  {groupedSettings.map((group) => (
+                    <Tabs.TabPane key={group.groupKey} title={t(`system.setting.group.${group.groupKey}`)} />
+                  ))}
+                </Tabs>
+                {activeSettingGroup ? (
+                  <Form form={form} layout="vertical">
+                    <Space direction="vertical" size={16} className="dialog-form-stack" style={{ marginTop: 16 }}>
+                      <FormSection
+                        title={t(`system.setting.group.${activeSettingGroup.groupKey}`)}
+                        description={t(`system.setting.groupHint.${activeSettingGroup.groupKey}`, '')}
+                      >
+                        {activeSettingGroup.items.map(renderField)}
+                      </FormSection>
+                      <Typography.Text type="secondary">{t('system.setting.saveHint')}</Typography.Text>
+                      <Space>
+                        <Button
+                          icon={<IconRefresh />}
+                          loading={refreshingCache}
+                          onClick={() => { void handleRefreshCache(); }}
+                          disabled={!canRefreshCache || !activeGroupKey}
+                        >
+                          {t('system.setting.cache.refresh')}
+                        </Button>
+                      </Space>
+                      <SubmitBar
+                        loading={submittingGroup === activeSettingGroup.groupKey}
+                        submitDisabled={!canUpdateSetting}
+                        onCancel={resetActiveGroupValues}
+                        onSubmit={() => { void handleSubmit(); }}
+                      />
+                    </Space>
+                  </Form>
+                ) : null}
+              </Card>
+              {activeSettingGroup && canViewOperationLog ? (
+                <Card className="page-panel">
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div>
+                      <Typography.Text style={{ fontWeight: 600 }}>{t('system.setting.audit.title')}</Typography.Text>
+                      <Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>
+                        {t('common.total', { count: auditTotal })}
+                      </Typography.Paragraph>
+                    </div>
+                    <Space>
+                      <Button onClick={() => { void handleExportAudit(); }} disabled={!canExportAudit}>
+                        {t('common.export')}
+                      </Button>
+                    </Space>
+                  </div>
+                  <Table
+                    rowKey="id"
+                    data={auditRows}
+                    columns={auditColumns}
+                    loading={auditLoading}
+                    onChange={handleAuditTableChange}
+                    pagination={{
+                      current: auditQuery.page,
+                      pageSize: auditQuery.pageSize,
+                      total: auditTotal,
+                      showJumper: true,
+                      pageSizeChangeResetCurrent: false,
+                      sizeCanChange: true,
+                      sizeOptions: [5, 10, 20, 50],
+                      size: 'small',
+                      showTotal: (count: number) => t('common.total', { count }),
+                    } as PaginationProps}
+                  />
+                </Card>
+              ) : null}
+            </div>
+            {overview ? (
+              <div className="page-side-column">
+                <Card className="page-panel side-rail-panel">
+                  <span className="side-rail-panel__title">{t('system.setting.overview.runtime')}</span>
+                  <div className="side-rail-stack">
+                    <div className="side-rail-item">
+                      <span className="side-rail-item__label">{t('system.setting.item.upload.storage_driver')}</span>
+                      <span className="side-rail-item__value">{t(`system.setting.option.upload.storage_driver.${overview.storageDriver}`, overview.storageDriver)}</span>
+                      <span className="side-rail-item__desc">{t('system.setting.hero.storageHint')}</span>
+                    </div>
+                    <div className="side-rail-item">
+                      <span className="side-rail-item__label">{t('system.setting.item.i18n.default_language')}</span>
+                      <span className="side-rail-item__value">{t(`app.language.${overview.defaultLanguage}`, overview.defaultLanguage)}</span>
+                      <span className="side-rail-item__desc">{t('system.setting.hero.languageHint')}</span>
+                    </div>
+                    <div className="side-rail-item">
+                      <span className="side-rail-item__label">{t('system.setting.item.ui.default_theme')}</span>
+                      <span className="side-rail-item__value">{overview.defaultTheme}</span>
+                      <span className="side-rail-item__desc">{t('system.setting.hero.themeHint')}</span>
+                    </div>
+                  </div>
+                </Card>
+                <Card className="page-panel side-rail-panel">
+                  <span className="side-rail-panel__title">{t('system.setting.hero.sideTitle')}</span>
+                  {overview.issues.length > 0 ? (
+                    <div className="side-rail-stack">
+                      {overview.issues.slice(0, 4).map((issue) => (
+                        <div key={`${issue.settingKey}-${issue.reasonKey}`} className={`side-rail-item side-rail-item--${issue.severity === 'critical' ? 'danger' : 'warning'}`}>
+                          <span className="side-rail-item__label">
+                            <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>{t(`system.setting.overview.severity.${issue.severity}`)}</Tag>
+                          </span>
+                          <span className="side-rail-item__value">{t(`system.setting.item.${issue.settingKey}`, issue.settingKey)}</span>
+                          <span className="side-rail-item__desc">{t(issue.reasonKey)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="side-rail-note">
+                      <span className="side-rail-note__title">{t('system.setting.overview.noRisks')}</span>
+                      <span className="side-rail-note__desc">{t('system.setting.hero.sideDesc')}</span>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </Space>
     </PageContainer>
   );
 };

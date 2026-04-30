@@ -220,8 +220,10 @@ const PermissionList: React.FC = () => {
     if (result.applied) {
       invalidatePermissionCaches();
       publishRefresh('system:permission:changed', 'system/permission');
-      await loadData(query);
-      await loadWorkbench(workbenchQuery);
+      await Promise.all([
+        loadData(query, { silent: true }),
+        loadWorkbench(workbenchQuery, { silent: true }),
+      ]);
     }
   };
 
@@ -277,7 +279,7 @@ const PermissionList: React.FC = () => {
     const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
     const nextQuery = { ...query, page: nextPage };
     setQuery(nextQuery);
-    await loadWorkbench(workbenchQuery);
+    await loadWorkbench(workbenchQuery, { silent: true });
   };
 
   const search = () => {
@@ -326,7 +328,10 @@ const PermissionList: React.FC = () => {
       }
       invalidatePermissionCaches();
       publishRefresh('system:permission:changed', 'system/permission');
-      await Promise.all([loadWorkbench(workbenchQuery), loadData(query)]);
+      await Promise.all([
+        loadWorkbench(workbenchQuery, { silent: true }),
+        loadData(query, { silent: true }),
+      ]);
     } finally {
       setRemediatingRoleKey('');
     }

@@ -66,6 +66,25 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 	return buildMenuTree(menus, 0), nil
 }
 
+func (s *MenuService) HasManageAccess(roleKeys []string) (bool, error) {
+	if hasRoleKey(roleKeys, "admin") {
+		return true, nil
+	}
+	if len(roleKeys) == 0 {
+		return false, nil
+	}
+
+	var count int64
+	err := s.db.Table("system_role_permission").
+		Joins("JOIN system_role ON system_role.id = system_role_permission.role_id").
+		Where("system_role.role_key IN ? AND system_role.status = ? AND system_role_permission.permission_key = ?", roleKeys, 1, "system:menu:list").
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTreeResp, error) {
 	allMenus, err := s.loadNavigationMenus()
 	if err != nil {

@@ -32,6 +32,42 @@ func (h *PermissionHandler) GetWorkbench(c *gin.Context) {
 	common.Success(c, workbench)
 }
 
+func (h *PermissionHandler) ExportWorkbench(c *gin.Context) {
+	common.SetAuditMetadata(c, "导出权限工作台", common.BusinessExport)
+
+	var query PermissionWorkbenchQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	file, err := h.service.ExportWorkbench(&query)
+	if err != nil {
+		common.Fail(c, common.CodeError, "permission.workbench.export.error")
+		return
+	}
+	if err := impexp.WriteCSV(c, *file); err != nil {
+		common.Fail(c, common.CodeError, "permission.workbench.export.error")
+	}
+}
+
+func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
+	common.SetAuditMetadata(c, "补齐推荐接口策略", common.BusinessInsert)
+
+	var req PermissionWorkbenchRemediateReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	resp, err := h.service.RemediateWorkbenchPolicies(&req)
+	if err != nil {
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.Success(c, resp)
+}
+
 func (h *PermissionHandler) GetPolicyList(c *gin.Context) {
 	var query PermissionPolicyQuery
 	if err := c.ShouldBindQuery(&query); err != nil {

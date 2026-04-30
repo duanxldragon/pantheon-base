@@ -2,26 +2,28 @@ package system
 
 import "strings"
 
-var registeredMenuComponentKeys = map[string]struct{}{
-	"dashboard":                        {},
-	"auth/SecurityCenter":              {},
-	"auth/LoginLogList":                {},
-	"auth/SessionList":                 {},
-	"system/profile/ProfileCenter":     {},
-	"system/dict/DictPage":             {},
-	"system/dept/DeptList":             {},
-	"system/menu/MenuList":             {},
-	"system/permission/PermissionList": {},
-	"system/post/PostList":             {},
-	"system/role/RoleList":             {},
-	"system/setting/SettingPage":       {},
-	"system/user/UserList":             {},
-	"system/user/UserDetail":           {},
-	"system/audit/OperationLogList":    {},
-	"business/cmdb/CMDBTypeList":       {},
-	"business/cmdb/CMDBItemList":       {},
-	"business/cmdb/CMDBItemDetail":     {},
+var staticRegisteredMenuComponentKeys = map[string]struct{}{
+	"dashboard":                          {},
+	"auth/SecurityCenter":                {},
+	"auth/LoginLogList":                  {},
+	"auth/SessionList":                   {},
+	"system/profile/ProfileCenter":       {},
+	"system/dict/DictPage":               {},
+	"system/i18n/I18nList":               {},
+	"system/dept/DeptList":               {},
+	"system/menu/MenuList":               {},
+	"system/permission/PermissionList":   {},
+	"system/post/PostList":               {},
+	"system/role/RoleList":               {},
+	"system/setting/SettingPage":         {},
+	"system/user/UserList":               {},
+	"system/user/UserDetail":             {},
+	"system/audit/OperationLogList":      {},
+	"system/dynamicmodule/ModuleManager": {},
+	"system/generator/ModuleWizard":      {},
 }
+
+var registeredMenuComponentKeys = mergeMenuComponentKeys(staticRegisteredMenuComponentKeys, generatedMenuComponentKeys)
 
 func isRegisteredMenuComponentKey(value string) bool {
 	_, ok := registeredMenuComponentKeys[strings.TrimSpace(value)]
@@ -33,4 +35,14 @@ func requiresRegisteredMenuComponent(module string) bool {
 	return normalized == "platform" ||
 		strings.HasPrefix(normalized, "system.") ||
 		strings.HasPrefix(normalized, "business.")
+}
+
+func mergeMenuComponentKeys(groups ...map[string]struct{}) map[string]struct{} {
+	merged := make(map[string]struct{})
+	for _, group := range groups {
+		for key := range group {
+			merged[key] = struct{}{}
+		}
+	}
+	return merged
 }

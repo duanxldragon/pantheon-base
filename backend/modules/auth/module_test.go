@@ -3,15 +3,12 @@ package auth
 import (
 	"testing"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
 func TestSeedAuthModuleMenusReparentsLegacyFlatMenus(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 	if err := createAuthSeedTestTables(db); err != nil {
 		t.Fatalf("create tables: %v", err)
 	}
@@ -42,37 +39,37 @@ VALUES
 func createAuthSeedTestTables(db *gorm.DB) error {
 	if err := db.Exec(`
 CREATE TABLE system_menu (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	parent_id INTEGER DEFAULT 0,
-	title_key TEXT NOT NULL,
-	path TEXT DEFAULT '',
-	component TEXT DEFAULT '',
-	page_perm TEXT DEFAULT '',
-	perms TEXT DEFAULT '',
-	type TEXT DEFAULT 'M',
-	icon TEXT DEFAULT '',
-	route_name TEXT DEFAULT '',
-	module TEXT DEFAULT 'system',
-	sort INTEGER DEFAULT 0,
-	is_visible INTEGER DEFAULT 1,
-	is_cache INTEGER DEFAULT 0,
-	is_external INTEGER DEFAULT 0,
-	active_menu TEXT DEFAULT ''
+	id BIGINT PRIMARY KEY AUTO_INCREMENT,
+	parent_id BIGINT DEFAULT 0,
+	title_key VARCHAR(128) NOT NULL,
+	path VARCHAR(255) DEFAULT '',
+	component VARCHAR(255) DEFAULT '',
+	page_perm VARCHAR(128) DEFAULT '',
+	perms VARCHAR(128) DEFAULT '',
+	type VARCHAR(8) DEFAULT 'M',
+	icon VARCHAR(64) DEFAULT '',
+	route_name VARCHAR(128) DEFAULT '',
+	module VARCHAR(64) DEFAULT 'system',
+	sort INT DEFAULT 0,
+	is_visible TINYINT DEFAULT 1,
+	is_cache TINYINT DEFAULT 0,
+	is_external TINYINT DEFAULT 0,
+	active_menu VARCHAR(255) DEFAULT ''
 )`).Error; err != nil {
 		return err
 	}
 	if err := db.Exec(`
 CREATE TABLE system_role (
-	id INTEGER PRIMARY KEY,
-	role_key TEXT,
-	status INTEGER
+	id BIGINT PRIMARY KEY,
+	role_key VARCHAR(64),
+	status INT
 )`).Error; err != nil {
 		return err
 	}
 	return db.Exec(`
 CREATE TABLE system_role_menu (
-	role_id INTEGER NOT NULL,
-	menu_id INTEGER NOT NULL,
+	role_id BIGINT NOT NULL,
+	menu_id BIGINT NOT NULL,
 	PRIMARY KEY (role_id, menu_id)
 )`).Error
 }

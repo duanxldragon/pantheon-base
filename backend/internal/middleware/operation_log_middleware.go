@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"pantheon-platform/backend/pkg/common"
+
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
@@ -34,19 +36,23 @@ func (w operationLogWriter) Write(data []byte) (int, error) {
 }
 
 type SystemLogOper struct {
-	ID           uint64 `gorm:"primaryKey;autoIncrement"`
-	Title        string `gorm:"size:64"`
-	BusinessType int    `gorm:"default:0"`
-	Method       string `gorm:"size:128"`
-	OperName     string `gorm:"size:64"`
-	OperURL      string `gorm:"size:255"`
-	OperIP       string `gorm:"size:128"`
-	OperParam    string `gorm:"type:text"`
-	JsonResult   string `gorm:"type:text"`
-	Status       int    `gorm:"default:1"`
-	ErrorMsg     string `gorm:"type:text"`
-	OperTime     time.Time
-	CostTime     int64
+	ID              uint64 `gorm:"primaryKey;autoIncrement"`
+	RequestID       string `gorm:"size:64;index:idx_system_log_oper_request_id"`
+	Title           string `gorm:"size:64"`
+	BusinessType    int    `gorm:"default:0"`
+	Method          string `gorm:"size:128"`
+	OperName        string `gorm:"size:64"`
+	OperURL         string `gorm:"size:255"`
+	OperIP          string `gorm:"size:128"`
+	SourceDomain    string `gorm:"size:32;index:idx_system_log_oper_source_domain_page,priority:1"`
+	SourcePage      string `gorm:"size:32;index:idx_system_log_oper_source_domain_page,priority:2;index:idx_system_log_oper_source_page"`
+	OperParam       string `gorm:"type:text"`
+	JsonResult      string `gorm:"type:text"`
+	Status          int    `gorm:"default:1"`
+	FailureCategory string `gorm:"size:32;index:idx_system_log_oper_failure_category"`
+	ErrorMsg        string `gorm:"type:text"`
+	OperTime        time.Time
+	CostTime        int64
 }
 
 func (SystemLogOper) TableName() string {
@@ -91,18 +97,22 @@ func OperationLogMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		log := SystemLogOper{
-			Title:        readOperationLogTitle(c),
-			BusinessType: readOperationLogBusinessType(c),
-			Method:       c.HandlerName(),
-			OperName:     username,
-			OperURL:      c.Request.URL.Path,
-			OperIP:       c.ClientIP(),
-			OperParam:    readOperationLogParam(c, requestBody),
-			JsonResult:   readOperationLogResult(c, responseBody.String()),
-			Status:       status,
-			ErrorMsg:     errorMessage,
-			OperTime:     start,
-			CostTime:     time.Since(start).Milliseconds(),
+			RequestID:       strings.TrimSpace(common.GetRequestID(c)),
+			Title:           readOperationLogTitle(c),
+			BusinessType:    readOperationLogBusinessType(c),
+			Method:          c.Request.Method,
+			OperName:        username,
+			OperURL:         c.Request.URL.Path,
+			OperIP:          c.ClientIP(),
+			SourceDomain:    DetectOperationLogSourceDomain(c.Request.URL.Path),
+			SourcePage:      DetectOperationLogSourcePage(c.Request.URL.Path),
+			OperParam:       readOperationLogParam(c, requestBody),
+			JsonResult:      readOperationLogResult(c, responseBody.String()),
+			Status:          status,
+			FailureCategory: DetectOperationLogFailureCategory(status, errorMessage, readOperationLogResult(c, responseBody.String())),
+			ErrorMsg:        errorMessage,
+			OperTime:        start,
+			CostTime:        time.Since(start).Milliseconds(),
 		}
 
 		go db.Create(&log)
@@ -148,10 +158,10 @@ func readOperationLogParam(c *gin.Context, fallback string) string {
 func readOperationLogResult(c *gin.Context, fallback string) string {
 	if value, ok := c.Get(operationLogResultKey); ok {
 		if text, ok := value.(string); ok {
-			return text
+			return sanitizeJSON(text)
 		}
 	}
-	return fallback
+	return sanitizeJSON(fallback)
 }
 
 func readOperationLogStatus(c *gin.Context) (int, bool) {
@@ -253,4 +263,89 @@ func parseBusinessResult(raw string) (int, string) {
 		return 0, ""
 	}
 	return payload.Code, payload.Message
+}
+
+func DetectOperationLogSourceDomain(operURL string) string {
+	path := strings.TrimSpace(operURL)
+	switch {
+	case strings.Contains(path, "/system/setting"), strings.Contains(path, "/system/upload"), strings.Contains(path, "/system/i18n"):
+		return "config"
+	case strings.Contains(path, "/system/operation-log"):
+		return "audit"
+	case strings.Contains(path, "/system/login-log"), strings.Contains(path, "/system/session"), strings.Contains(path, "/auth/"):
+		return "auth"
+	case strings.Contains(path, "/system/user"), strings.Contains(path, "/system/role"), strings.Contains(path, "/system/menu"), strings.Contains(path, "/system/permission"):
+		return "iam"
+	case strings.Contains(path, "/system/dept"), strings.Contains(path, "/system/post"):
+		return "org"
+	case strings.Contains(path, "/dashboard"):
+		return "platform"
+	default:
+		return "other"
+	}
+}
+
+func DetectOperationLogSourcePage(operURL string) string {
+	path := strings.TrimSpace(operURL)
+	switch {
+	case strings.Contains(path, "/system/setting"):
+		return "setting"
+	case strings.Contains(path, "/system/upload"):
+		return "upload"
+	case strings.Contains(path, "/system/i18n"):
+		return "i18n"
+	case strings.Contains(path, "/system/operation-log"):
+		return "operationLog"
+	case strings.Contains(path, "/system/login-log"):
+		return "loginLog"
+	case strings.Contains(path, "/system/session"), strings.Contains(path, "/auth/sessions"):
+		return "session"
+	case strings.Contains(path, "/system/user"):
+		return "user"
+	case strings.Contains(path, "/system/role"):
+		return "role"
+	case strings.Contains(path, "/system/menu"):
+		return "menu"
+	case strings.Contains(path, "/system/permission"):
+		return "permission"
+	case strings.Contains(path, "/system/dept"):
+		return "dept"
+	case strings.Contains(path, "/system/post"):
+		return "post"
+	case strings.Contains(path, "/dashboard"):
+		return "dashboard"
+	default:
+		return "other"
+	}
+}
+
+func DetectOperationLogFailureCategory(status int, errorMsg string, jsonResult string) string {
+	if status != 2 {
+		return ""
+	}
+	errorText := strings.ToLower(strings.TrimSpace(errorMsg) + " " + strings.TrimSpace(jsonResult))
+	switch {
+	case strings.Contains(errorText, "param.invalid"),
+		strings.Contains(errorText, "setting.value."),
+		strings.Contains(errorText, "upload.file."),
+		strings.Contains(errorText, "\"code\":400"),
+		strings.Contains(errorText, `"code": 400`):
+		return "validation"
+	case strings.Contains(errorText, "permission.denied"),
+		strings.Contains(errorText, "\"code\":403"),
+		strings.Contains(errorText, `"code": 403`):
+		return "permission"
+	case strings.Contains(errorText, "refresh_token"),
+		strings.Contains(errorText, "auth."),
+		strings.Contains(errorText, "login.error"),
+		strings.Contains(errorText, "\"code\":401"),
+		strings.Contains(errorText, `"code": 401`):
+		return "auth"
+	case strings.Contains(errorText, "database."),
+		strings.Contains(errorText, "\"code\":500"),
+		strings.Contains(errorText, `"code": 500`):
+		return "server"
+	default:
+		return "business"
+	}
 }

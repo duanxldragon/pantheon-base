@@ -1,0 +1,88 @@
+{
+  "scope": "system/config -> i18n",
+  "mode": "write regression walkthrough",
+  "generatedAt": "2026-04-26T23:27:01.464Z",
+  "tempModule": "system.qa.1777246002567",
+  "checks": [
+    {
+      "name": "新增翻译",
+      "ok": true,
+      "detail": {
+        "tempModule": "system.qa.1777246002567",
+        "tempKeyA": "qa.i18n.smoke.1777246002567"
+      }
+    },
+    {
+      "name": "按 key 筛选定位新记录",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "详情弹窗可打开",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "详情显示创建值",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "编辑翻译",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "导出翻译",
+      "ok": true,
+      "detail": {
+        "exportFile": "i18n-export-1777246002567.csv"
+      }
+    },
+    {
+      "name": "导入翻译",
+      "ok": true,
+      "detail": {
+        "importCsv": "i18n-import-1777246002567.csv"
+      }
+    },
+    {
+      "name": "缺失 locale 明细可打开",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "按模块补齐缺失 locale",
+      "ok": true,
+      "detail": {
+        "localesByKeyA": [
+          "en-US",
+          "zh-CN"
+        ],
+        "localesByKeyB": [
+          "en-US",
+          "zh-CN"
+        ]
+      }
+    },
+    {
+      "name": "批量删除按钮激活",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "批量删除临时翻译",
+      "ok": true,
+      "detail": {
+        "remaining": 0
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "artifact": {
+    "screenshot": "i18n-write-regression-1777246002567.png",
+    "importCsv": "i18n-import-1777246002567.csv"
+  }
+}

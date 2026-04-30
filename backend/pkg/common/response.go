@@ -2,26 +2,33 @@ package common
 
 import (
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
-// Response 统一响应结构
 type Response struct {
-	Code    int         `json:"code"`    // 业务错误码 (200: 成功, 其他: 失败)
-	Data    interface{} `json:"data"`    // 数据
-	Message string      `json:"message"` // 消息 (通常用于 i18n key)
+	Code    int         `json:"code"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
 }
 
-// Success 成功返回
+const (
+	CodeSuccess      = 200
+	CodeError        = 500
+	CodeParamInvalid = 400
+	CodeUnauthorized = 401
+	CodeForbidden    = 403
+	CodeNotFound     = 404
+)
+
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Response{
-		Code:    200,
+		Code:    CodeSuccess,
 		Data:    data,
 		Message: "success",
 	})
 }
 
-// Fail 失败返回
 func Fail(c *gin.Context, code int, message string) {
 	c.JSON(http.StatusOK, Response{
 		Code:    code,
@@ -30,10 +37,24 @@ func Fail(c *gin.Context, code int, message string) {
 	})
 }
 
-// 预定义一些底座错误码
-const (
-	CodeError        = 500
-	CodeUnauthorized = 401
-	CodeForbidden    = 403
-	CodeParamInvalid = 400
-)
+func FailWithCode(c *gin.Context, code int, message string) {
+	c.JSON(code, Response{
+		Code:    code,
+		Data:    nil,
+		Message: message,
+	})
+}
+
+func GetUserID(c *gin.Context) uint64 {
+	for _, key := range []string{"userID", "userId"} {
+		val, ok := c.Get(key)
+		if !ok {
+			continue
+		}
+		userID, ok := val.(uint64)
+		if ok {
+			return userID
+		}
+	}
+	return 0
+}

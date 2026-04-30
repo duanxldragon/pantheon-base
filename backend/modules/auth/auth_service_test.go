@@ -1,33 +1,33 @@
 package auth
 
 import (
-	"strings"
 	"testing"
 	"time"
 
 	"pantheon-platform/backend/internal/middleware"
 	auditmod "pantheon-platform/backend/modules/system/audit"
 	user "pantheon-platform/backend/modules/system/user"
+	"pantheon-platform/backend/pkg/testmysql"
 
-	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func setupTestDB() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
+func setupTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+	db := testmysql.Open(t)
 
 	// 迁移模型
-	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{})
+	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY AUTOINCREMENT, role_key TEXT, status INTEGER)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id INTEGER PRIMARY KEY AUTOINCREMENT, role_id INTEGER, permission_key TEXT)")
 	return db
 }
 
 func TestAuthService_Authenticate(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	s := NewAuthService(db)
 
 	password := "123456"
@@ -82,8 +82,32 @@ func TestAuthService_Authenticate(t *testing.T) {
 	}
 }
 
+func TestAuthService_AuthenticateTrimsUsername(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "trim_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+
+	u, err := s.Authenticate(&LoginReq{
+		Username: "  trim_user  ",
+		Password: "123456",
+	})
+	if err != nil {
+		t.Fatalf("expected trimmed username login to succeed, got %v", err)
+	}
+	if u.Username != "trim_user" {
+		t.Fatalf("expected trim_user, got %s", u.Username)
+	}
+}
+
 func TestAuthService_UpdatePassword(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	s := NewAuthService(db)
 
 	oldPassword := "oldpassword"
@@ -143,7 +167,7 @@ func TestAuthService_UpdatePassword(t *testing.T) {
 }
 
 func TestAuthService_AuthenticateLocksUserByConfiguredPolicy(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	s := NewAuthService(db)
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
@@ -154,6 +178,7 @@ func TestAuthService_AuthenticateLocksUserByConfiguredPolicy(t *testing.T) {
 	}
 	db.Create(&testUser)
 	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.max_failed_attempts', '2'), ('login.lock_minutes', '10')")
+	_ = s.ReloadSettings()
 
 	_, err := s.Authenticate(&LoginReq{Username: "locked_user", Password: "wrong"})
 	if err == nil || err.Error() != "user.login.error.password_wrong" {
@@ -173,8 +198,36 @@ func TestAuthService_AuthenticateLocksUserByConfiguredPolicy(t *testing.T) {
 	}
 }
 
+func TestAuthService_LoginWithSourceBlocksSourceAfterConfiguredFailures(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "source_locked_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.source_max_failed_attempts', '2'), ('login.source_window_minutes', '15'), ('login.source_lock_minutes', '10')")
+	_ = s.ReloadSettings()
+
+	_, err := s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
+	if err == nil || err.Error() != "user.login.error.password_wrong" {
+		t.Fatalf("expected password wrong on first failure, got %v", err)
+	}
+	_, err = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
+	if err == nil || err.Error() != "auth.login.error.source_blocked" {
+		t.Fatalf("expected source blocked error on second failure, got %v", err)
+	}
+	_, err = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "123456"}, "ip:10.0.0.1")
+	if err == nil || err.Error() != "auth.login.error.source_blocked" {
+		t.Fatalf("expected source to remain blocked, got %v", err)
+	}
+}
+
 func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	s := NewAuthService(db)
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
@@ -185,6 +238,7 @@ func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 	}
 	db.Create(&testUser)
 	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '8')")
+	_ = s.ReloadSettings()
 
 	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
 		OldPassword: "oldpassword",
@@ -195,8 +249,115 @@ func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 	}
 }
 
+func TestAuthService_CleanupLoginLogsUsesConfiguredRetentionOptions(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	now := time.Now().UTC()
+	if err := db.Create(&[]SystemLogLogin{
+		{Username: "u1", Status: 1, LoginTime: now.AddDate(0, 0, -12)},
+		{Username: "u2", Status: 1, LoginTime: now.AddDate(0, 0, -3)},
+	}).Error; err != nil {
+		t.Fatalf("seed login logs: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.login_log_retention_options', '[3,10]')").Error; err != nil {
+		t.Fatalf("seed audit retention setting: %v", err)
+	}
+
+	clearedCount, err := s.CleanupLoginLogs(10)
+	if err != nil {
+		t.Fatalf("cleanup login logs with configured option: %v", err)
+	}
+	if clearedCount != 1 {
+		t.Fatalf("expected to clean 1 login log, got %d", clearedCount)
+	}
+
+	_, err = s.CleanupLoginLogs(7)
+	if err == nil || err.Error() != "auth.login_log.cleanup.days_invalid" {
+		t.Fatalf("expected invalid retention days error, got %v", err)
+	}
+}
+
+func TestAuthService_ListLoginLogsAppliesAutomaticRetention(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(191) PRIMARY KEY, setting_value TEXT)").Error; err != nil {
+		t.Fatalf("create system_setting table: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.login_log_retention_days', '3')").Error; err != nil {
+		t.Fatalf("seed login log retention days: %v", err)
+	}
+	_ = s.ReloadSettings()
+
+	now := time.Now().UTC()
+	if err := db.Create(&[]SystemLogLogin{
+		{Username: "legacy-user", Status: 1, LoginTime: now.AddDate(0, 0, -10)},
+		{Username: "recent-user", Status: 1, LoginTime: now.AddDate(0, 0, -1)},
+	}).Error; err != nil {
+		t.Fatalf("seed login logs: %v", err)
+	}
+
+	resp, err := s.ListLoginLogs(&LoginLogQuery{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list login logs: %v", err)
+	}
+	if resp.Total != 1 || len(resp.Items) != 1 || resp.Items[0].Username != "recent-user" {
+		t.Fatalf("expected only retained login log, got %+v", resp)
+	}
+}
+
+func TestAuthService_CleanupHistoricSessionsUsesConfiguredRetentionOptions(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now().UTC()
+	oldRevokedAt := now.AddDate(0, 0, -12)
+	recentRevokedAt := now.AddDate(0, 0, -2)
+
+	testUser := user.SystemUser{Username: "cleanup-policy-user", Status: 1}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&[]SystemUserSession{
+		{
+			SessionID:        "old-revoked",
+			UserID:           testUser.ID,
+			RefreshJTI:       "old-jti",
+			RefreshExpiresAt: now.AddDate(0, 0, -20),
+			RevokedAt:        &oldRevokedAt,
+			CreatedAt:        now.AddDate(0, 0, -20),
+		},
+		{
+			SessionID:        "recent-revoked",
+			UserID:           testUser.ID,
+			RefreshJTI:       "recent-jti",
+			RefreshExpiresAt: now.AddDate(0, 0, -4),
+			RevokedAt:        &recentRevokedAt,
+			CreatedAt:        now.AddDate(0, 0, -4),
+		},
+	}).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.session_cleanup_retention_options', '[3,10]')").Error; err != nil {
+		t.Fatalf("seed session cleanup retention setting: %v", err)
+	}
+
+	clearedCount, err := s.CleanupHistoricSessions(10)
+	if err != nil {
+		t.Fatalf("cleanup historic sessions with configured option: %v", err)
+	}
+	if clearedCount != 1 {
+		t.Fatalf("expected to clean 1 historic session, got %d", clearedCount)
+	}
+
+	_, err = s.CleanupHistoricSessions(7)
+	if err == nil || err.Error() != "auth.session.cleanup.days_invalid" {
+		t.Fatalf("expected invalid historic-session retention days error, got %v", err)
+	}
+}
+
 func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	s := NewAuthService(db)
 	now := time.Now()
 	revokedAt := now.Add(-time.Hour)
@@ -252,83 +413,384 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 	}
 }
 
-func TestAuthService_MigrateRepairsSQLiteTemporalColumns(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+func TestAuthService_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "security_user",
+		Nickname: "Security User",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+
+	now := time.Now()
+	if err := db.Create(&SystemUserSession{
+		SessionID:        "current-session",
+		UserID:           testUser.ID,
+		RefreshJTI:       "refresh-jti",
+		RefreshExpiresAt: now.Add(24 * time.Hour),
+		LastRefreshAt:    timePtr(now.Add(-5 * time.Minute)),
+		LastActivityAt:   timePtr(now.Add(-2 * time.Minute)),
+		LastIP:           "127.0.0.1",
+		UserAgent:        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0 Safari/537.36",
+		CreatedAt:        now.Add(-time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("seed session: %v", err)
+	}
+	if err := db.Create(&SystemLogLogin{
+		Username:  testUser.Username,
+		Status:    1,
+		LoginTime: now.Add(-30 * time.Minute),
+	}).Error; err != nil {
+		t.Fatalf("seed login log: %v", err)
+	}
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '10'), ('login.max_failed_attempts', '3'), ('login.lock_minutes', '12'), ('login.source_max_failed_attempts', '9'), ('login.source_window_minutes', '20'), ('login.source_lock_minutes', '30'), ('login.captcha_enabled', 'true'), ('login.mfa_enabled', 'false'), ('login.sso_enabled', 'true'), ('login.session_idle_minutes', '45'), ('login.max_active_sessions_per_user', '1'), ('audit.session_retention_days', '90')")
+	_ = s.ReloadSettings()
+
+	resp, err := s.GetSecurityOverview(testUser.ID, testUser.Username, "current-session")
 	if err != nil {
-		t.Fatalf("failed to open sqlite database: %v", err)
+		t.Fatalf("get security overview: %v", err)
 	}
-
-	if err := db.Exec(`CREATE TABLE system_user_session (
-session_id TEXT PRIMARY KEY,
-user_id INTEGER NOT NULL,
-refresh_jti TEXT NOT NULL,
-refresh_expires_at TEXT NOT NULL,
-last_refresh_at TEXT NULL,
-last_ip TEXT NULL,
-user_agent TEXT NULL,
-revoked_at TEXT NULL,
-created_at TEXT NULL,
-updated_at TEXT NULL
-)`).Error; err != nil {
-		t.Fatalf("failed to create legacy session table: %v", err)
+	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 9 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
+		t.Fatalf("unexpected security policy: %+v", resp.Policy)
 	}
-	if err := db.Exec(`CREATE TABLE system_log_login (
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-username TEXT,
-ipaddr TEXT,
-login_location TEXT,
-browser TEXT,
-os TEXT,
-status INTEGER,
-msg TEXT,
-login_time TEXT
-)`).Error; err != nil {
-		t.Fatalf("failed to create legacy login log table: %v", err)
+	if resp.CurrentSession == nil || resp.CurrentSession.SessionID != "current-session" {
+		t.Fatalf("expected current session to be returned, got %+v", resp.CurrentSession)
 	}
-
-	svc := NewAuthService(db)
-	if err := svc.Migrate(); err != nil {
-		t.Fatalf("migrate failed: %v", err)
+	if resp.ActiveSessionCount != 1 {
+		t.Fatalf("expected one active session, got %d", resp.ActiveSessionCount)
 	}
-
-	assertSQLiteColumnType(t, db, "system_user_session", "refresh_expires_at", "DATETIME")
-	assertSQLiteColumnType(t, db, "system_user_session", "last_refresh_at", "DATETIME")
-	assertSQLiteColumnType(t, db, "system_log_login", "login_time", "DATETIME")
 }
 
-func TestAuditService_MigrateRepairsSQLiteTemporalColumns(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+func TestAuthService_ListAllSessionsSupportsAdminFilters(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now()
+	revokedAt := now.Add(-30 * time.Minute)
+
+	users := []user.SystemUser{
+		{Username: "alice", Nickname: "Alice", Status: 1},
+		{Username: "bob", Nickname: "Bob", Status: 1},
+	}
+	if err := db.Create(&users).Error; err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+
+	sessions := []SystemUserSession{
+		{
+			SessionID:        "alice-active",
+			UserID:           users[0].ID,
+			RefreshJTI:       "alice-active-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastRefreshAt:    timePtr(now.Add(-10 * time.Minute)),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
+			LastIP:           "10.0.0.1",
+			UserAgent:        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0 Safari/537.36",
+			CreatedAt:        now.Add(-2 * time.Hour),
+		},
+		{
+			SessionID:        "bob-revoked",
+			UserID:           users[1].ID,
+			RefreshJTI:       "bob-revoked-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastRefreshAt:    timePtr(now.Add(-40 * time.Minute)),
+			LastActivityAt:   timePtr(now.Add(-35 * time.Minute)),
+			LastIP:           "10.0.0.2",
+			UserAgent:        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1",
+			RevokedAt:        &revokedAt,
+			CreatedAt:        now.Add(-3 * time.Hour),
+		},
+	}
+	if err := db.Create(&sessions).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+
+	resp, err := s.ListAllSessions(&AdminSessionQuery{
+		Username: "alice",
+		LastIP:   "10.0.0",
+		Browser:  "Chrome",
+		OS:       "Windows",
+		Device:   "Desktop",
+		Status:   intPtr(1),
+		Page:     1,
+		PageSize: 20,
+	})
 	if err != nil {
-		t.Fatalf("failed to open sqlite database: %v", err)
+		t.Fatalf("list filtered sessions: %v", err)
+	}
+	if resp.Total != 1 || len(resp.Items) != 1 {
+		t.Fatalf("expected one filtered session, got total=%d len=%d", resp.Total, len(resp.Items))
+	}
+	if resp.Items[0].SessionID != "alice-active" {
+		t.Fatalf("expected alice-active, got %+v", resp.Items[0])
+	}
+	if resp.Items[0].LastActivityAt == nil {
+		t.Fatalf("expected last activity time to be populated")
 	}
 
-	if err := db.Exec(`CREATE TABLE system_log_oper (
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-title TEXT,
-business_type INTEGER,
-method TEXT,
-oper_name TEXT,
-oper_url TEXT,
-oper_ip TEXT,
-oper_param TEXT,
-json_result TEXT,
-status INTEGER,
-error_msg TEXT,
-oper_time TEXT,
-cost_time INTEGER
-)`).Error; err != nil {
-		t.Fatalf("failed to create legacy operation log table: %v", err)
+	revokedResp, err := s.ListAllSessions(&AdminSessionQuery{
+		Status:   intPtr(2),
+		Page:     1,
+		PageSize: 20,
+	})
+	if err != nil {
+		t.Fatalf("list revoked sessions: %v", err)
 	}
-	svc := auditmod.NewAuditService(db)
-	if err := svc.Migrate(); err != nil {
-		t.Fatalf("audit migrate failed: %v", err)
+	if revokedResp.Total != 1 || len(revokedResp.Items) != 1 || revokedResp.Items[0].SessionID != "bob-revoked" {
+		t.Fatalf("expected one revoked session, got %+v", revokedResp.Items)
+	}
+}
+
+func TestAuthService_ListAllSessionsCleansExpiredAndIdleSessions(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now()
+
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.session_idle_minutes', '30')").Error; err != nil {
+		t.Fatalf("seed session idle setting: %v", err)
+	}
+	if err := s.ReloadSettings(); err != nil {
+		t.Fatalf("reload settings: %v", err)
 	}
 
-	assertSQLiteColumnType(t, db, "system_log_oper", "oper_time", "DATETIME")
+	users := []user.SystemUser{
+		{Username: "active-user", Nickname: "Active", Status: 1},
+		{Username: "expired-user", Nickname: "Expired", Status: 1},
+		{Username: "idle-user", Nickname: "Idle", Status: 1},
+	}
+	if err := db.Create(&users).Error; err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+
+	sessions := []SystemUserSession{
+		{
+			SessionID:        "active-session",
+			UserID:           users[0].ID,
+			RefreshJTI:       "active-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastRefreshAt:    timePtr(now.Add(-15 * time.Minute)),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
+			CreatedAt:        now.Add(-2 * time.Hour),
+		},
+		{
+			SessionID:        "expired-session",
+			UserID:           users[1].ID,
+			RefreshJTI:       "expired-jti",
+			RefreshExpiresAt: now.Add(-5 * time.Minute),
+			LastRefreshAt:    timePtr(now.Add(-10 * time.Minute)),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
+			CreatedAt:        now.Add(-3 * time.Hour),
+		},
+		{
+			SessionID:        "idle-session",
+			UserID:           users[2].ID,
+			RefreshJTI:       "idle-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastRefreshAt:    timePtr(now.Add(-2 * time.Hour)),
+			LastActivityAt:   timePtr(now.Add(-40 * time.Minute)),
+			CreatedAt:        now.Add(-4 * time.Hour),
+		},
+	}
+	if err := db.Create(&sessions).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+
+	resp, err := s.ListAllSessions(&AdminSessionQuery{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatalf("list all sessions: %v", err)
+	}
+	if resp.ActiveCount != 1 || resp.RevokedCount != 2 {
+		t.Fatalf("expected active=1 revoked=2, got active=%d revoked=%d", resp.ActiveCount, resp.RevokedCount)
+	}
+
+	var revokedRows int64
+	if err := db.Model(&SystemUserSession{}).
+		Where("session_id IN ? AND revoked_at IS NOT NULL", []string{"expired-session", "idle-session"}).
+		Count(&revokedRows).Error; err != nil {
+		t.Fatalf("count cleaned sessions: %v", err)
+	}
+	if revokedRows != 2 {
+		t.Fatalf("expected cleaned sessions to be revoked, got %d", revokedRows)
+	}
+}
+
+func TestAuthService_CreateSessionRevokesOlderActiveSessionsByConfiguredLimit(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now()
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "single-session-user",
+		Password: string(hash),
+		Status:   1,
+	}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.max_active_sessions_per_user', '1'), ('audit.session_retention_days', '90')").Error; err != nil {
+		t.Fatalf("seed session settings: %v", err)
+	}
+	if err := s.ReloadSettings(); err != nil {
+		t.Fatalf("reload settings: %v", err)
+	}
+
+	sessions := []SystemUserSession{
+		{
+			SessionID:        "older-active",
+			UserID:           testUser.ID,
+			RefreshJTI:       "older-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-20 * time.Minute)),
+			CreatedAt:        now.Add(-2 * time.Hour),
+		},
+		{
+			SessionID:        "newer-active",
+			UserID:           testUser.ID,
+			RefreshJTI:       "newer-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
+			CreatedAt:        now.Add(-time.Hour),
+		},
+	}
+	if err := db.Create(&sessions).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+
+	pair, err := s.CreateSession(&testUser, nil, "127.0.0.1", "Mozilla/5.0")
+	if err != nil {
+		t.Fatalf("create session: %v", err)
+	}
+
+	var activeCount int64
+	if err := db.Model(&SystemUserSession{}).
+		Where("user_id = ? AND revoked_at IS NULL", testUser.ID).
+		Count(&activeCount).Error; err != nil {
+		t.Fatalf("count active sessions: %v", err)
+	}
+	if activeCount != 1 {
+		t.Fatalf("expected only one active session after login, got %d", activeCount)
+	}
+
+	var current SystemUserSession
+	if err := db.Where("session_id = ?", pair.SessionID).First(&current).Error; err != nil {
+		t.Fatalf("load current session: %v", err)
+	}
+	if current.RevokedAt != nil {
+		t.Fatalf("expected new session to stay active")
+	}
+}
+
+func TestAuthService_ListAllSessionsPurgesHistoricSessions(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now()
+	oldRevokedAt := now.AddDate(0, 0, -120)
+
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.session_retention_days', '90')").Error; err != nil {
+		t.Fatalf("seed retention setting: %v", err)
+	}
+	if err := s.ReloadSettings(); err != nil {
+		t.Fatalf("reload settings: %v", err)
+	}
+
+	testUser := user.SystemUser{Username: "cleanup-user", Status: 1}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&[]SystemUserSession{
+		{
+			SessionID:        "historic-revoked",
+			UserID:           testUser.ID,
+			RefreshJTI:       "historic-jti",
+			RefreshExpiresAt: now.AddDate(0, 0, -110),
+			RevokedAt:        &oldRevokedAt,
+			CreatedAt:        now.AddDate(0, 0, -150),
+		},
+		{
+			SessionID:        "current-active",
+			UserID:           testUser.ID,
+			RefreshJTI:       "current-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-2 * time.Minute)),
+			CreatedAt:        now.Add(-time.Hour),
+		},
+	}).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+
+	resp, err := s.ListAllSessions(&AdminSessionQuery{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatalf("list sessions: %v", err)
+	}
+	if resp.Total != 1 || resp.ActiveCount != 1 {
+		t.Fatalf("expected only current active session to remain, got total=%d active=%d", resp.Total, resp.ActiveCount)
+	}
+
+	var historicCount int64
+	if err := db.Model(&SystemUserSession{}).
+		Where("session_id = ?", "historic-revoked").
+		Count(&historicCount).Error; err != nil {
+		t.Fatalf("count historic session: %v", err)
+	}
+	if historicCount != 0 {
+		t.Fatalf("expected historic revoked session to be purged, got %d", historicCount)
+	}
+}
+
+func TestAuthService_CleanupHistoricSessionsDeletesRevokedHistoryOnly(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now()
+	revokedAt := now.Add(-time.Hour)
+
+	testUser := user.SystemUser{Username: "session-clean-user", Status: 1}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&[]SystemUserSession{
+		{
+			SessionID:        "revoked-history",
+			UserID:           testUser.ID,
+			RefreshJTI:       "revoked-jti",
+			RefreshExpiresAt: now.AddDate(0, 0, -1),
+			RevokedAt:        &revokedAt,
+			CreatedAt:        now.AddDate(0, 0, -10),
+		},
+		{
+			SessionID:        "active-session",
+			UserID:           testUser.ID,
+			RefreshJTI:       "active-jti",
+			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-2 * time.Minute)),
+			CreatedAt:        now.Add(-time.Hour),
+		},
+	}).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+
+	clearedCount, err := s.CleanupHistoricSessions(1)
+	if err != nil {
+		t.Fatalf("cleanup historic sessions: %v", err)
+	}
+	if clearedCount != 1 {
+		t.Fatalf("expected 1 cleared session, got %d", clearedCount)
+	}
+
+	var remaining []SystemUserSession
+	if err := db.Order("session_id asc").Find(&remaining).Error; err != nil {
+		t.Fatalf("load remaining sessions: %v", err)
+	}
+	if len(remaining) != 1 || remaining[0].SessionID != "active-session" {
+		t.Fatalf("expected only active-session to remain, got %+v", remaining)
+	}
 }
 
 func TestAuthService_ExportLoginLogs(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	s := NewAuthService(db)
 
 	if err := db.Create(&SystemLogLogin{
@@ -353,7 +815,7 @@ func TestAuthService_ExportLoginLogs(t *testing.T) {
 }
 
 func TestAuditService_ExportOperationLogs(t *testing.T) {
-	db := setupTestDB()
+	db := setupTestDB(t)
 	if err := db.AutoMigrate(&middleware.SystemLogOper{}); err != nil {
 		t.Fatalf("migrate operation log: %v", err)
 	}
@@ -382,32 +844,10 @@ func TestAuditService_ExportOperationLogs(t *testing.T) {
 	}
 }
 
-func assertSQLiteColumnType(t *testing.T, db *gorm.DB, tableName string, columnName string, expected string) {
-	t.Helper()
+func timePtr(value time.Time) *time.Time {
+	return &value
+}
 
-	rows, err := db.Raw("PRAGMA table_info(" + tableName + ")").Rows()
-	if err != nil {
-		t.Fatalf("failed to query table info: %v", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var cid int
-		var name string
-		var dataType string
-		var notNull int
-		var defaultValue interface{}
-		var pk int
-		if err := rows.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &pk); err != nil {
-			t.Fatalf("failed to scan pragma row: %v", err)
-		}
-		if name == columnName {
-			if !strings.EqualFold(dataType, expected) {
-				t.Fatalf("expected %s.%s to be %s, got %s", tableName, columnName, expected, dataType)
-			}
-			return
-		}
-	}
-
-	t.Fatalf("column %s not found in %s", columnName, tableName)
+func intPtr(value int) *int {
+	return &value
 }

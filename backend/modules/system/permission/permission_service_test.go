@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/backend/pkg/testmysql"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -61,10 +61,7 @@ func (permissionTestMenu) TableName() string {
 func setupPermissionTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 
 	if err := db.AutoMigrate(
 		&permissionTestRole{},
@@ -147,6 +144,285 @@ func TestPermissionService_GetWorkbench(t *testing.T) {
 	}
 	if role.UnknownPermissionCount != 0 {
 		t.Fatalf("expected 0 unknown permissions, got %d", role.UnknownPermissionCount)
+	}
+}
+
+func TestPermissionService_GetWorkbenchIntegrityFilter(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	roles := []permissionTestRole{
+		{ID: 1, RoleName: "Clean Role", RoleKey: "clean_role", Status: 1, Sort: 1},
+		{ID: 2, RoleName: "Dirty Role", RoleKey: "dirty_role", Status: 2, Sort: 2},
+	}
+	if err := db.Create(&roles).Error; err != nil {
+		t.Fatalf("seed roles: %v", err)
+	}
+
+	menus := []permissionTestMenu{
+		{ID: 10, TitleKey: "system.menu.user", Path: "/system/user", Module: "system", Type: "C", PagePerm: "system:user:list"},
+		{ID: 11, TitleKey: "system.permission.user.create", Path: "/system/user", Module: "system", Type: "F", Perms: "system:user:create"},
+	}
+	if err := db.Create(&menus).Error; err != nil {
+		t.Fatalf("seed menus: %v", err)
+	}
+
+	if err := db.Create(&[]permissionTestRolePermission{
+		{RoleID: 1, PermissionKey: "system:user:list"},
+		{RoleID: 2, PermissionKey: "system:user:create"},
+		{RoleID: 2, PermissionKey: "system:unknown:manage"},
+	}).Error; err != nil {
+		t.Fatalf("seed permissions: %v", err)
+	}
+
+	if err := db.Create(&[]database.CasbinRule{
+		{PType: "p", V0: "clean_role", V1: "/api/v1/system/user/list", V2: "GET"},
+		{PType: "p", V0: "dirty_role", V1: "/api/v1/system/user/create", V2: "POST"},
+	}).Error; err != nil {
+		t.Fatalf("seed policies: %v", err)
+	}
+
+	allWorkbench, err := service.GetWorkbench(nil)
+	if err != nil {
+		t.Fatalf("get workbench: %v", err)
+	}
+	if allWorkbench.Overview.RoleCount != 2 {
+		t.Fatalf("expected 2 roles, got %d", allWorkbench.Overview.RoleCount)
+	}
+	if allWorkbench.Overview.UnknownPermissionAssignmentCount != 1 {
+		t.Fatalf("expected 1 unknown assignment, got %d", allWorkbench.Overview.UnknownPermissionAssignmentCount)
+	}
+
+	unknownWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Integrity: "unknown"})
+	if err != nil {
+		t.Fatalf("get unknown workbench: %v", err)
+	}
+	if len(unknownWorkbench.Roles) != 1 || unknownWorkbench.Roles[0].RoleKey != "dirty_role" {
+		t.Fatalf("expected only dirty_role in unknown filter, got %+v", unknownWorkbench.Roles)
+	}
+	if unknownWorkbench.Overview.RoleCount != 1 || unknownWorkbench.Overview.UnknownPermissionAssignmentCount != 1 {
+		t.Fatalf("unexpected unknown overview: %+v", unknownWorkbench.Overview)
+	}
+
+	cleanWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Integrity: "clean"})
+	if err != nil {
+		t.Fatalf("get clean workbench: %v", err)
+	}
+	if len(cleanWorkbench.Roles) != 1 || cleanWorkbench.Roles[0].RoleKey != "clean_role" {
+		t.Fatalf("expected only clean_role in clean filter, got %+v", cleanWorkbench.Roles)
+	}
+	if cleanWorkbench.Overview.RoleCount != 1 || cleanWorkbench.Overview.UnknownPermissionAssignmentCount != 0 {
+		t.Fatalf("unexpected clean overview: %+v", cleanWorkbench.Overview)
+	}
+}
+
+func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	roles := []permissionTestRole{
+		{ID: 1, RoleName: "Page Gap", RoleKey: "page_gap", Status: 1, Sort: 1},
+		{ID: 2, RoleName: "API Gap", RoleKey: "api_gap", Status: 1, Sort: 2},
+		{ID: 3, RoleName: "Complete", RoleKey: "complete_role", Status: 1, Sort: 3},
+	}
+	if err := db.Create(&roles).Error; err != nil {
+		t.Fatalf("seed roles: %v", err)
+	}
+
+	menus := []permissionTestMenu{
+		{ID: 10, TitleKey: "system.menu.user", Path: "/system/user", Module: "system", Type: "C", PagePerm: "system:user:list"},
+		{ID: 11, TitleKey: "system.permission.user.create", Path: "/system/user", Module: "system", Type: "F", Perms: "system:user:create"},
+	}
+	if err := db.Create(&menus).Error; err != nil {
+		t.Fatalf("seed menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRoleMenu{
+		{RoleID: 1, MenuID: 10},
+		{RoleID: 2, MenuID: 10},
+		{RoleID: 3, MenuID: 10},
+	}).Error; err != nil {
+		t.Fatalf("seed role menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRolePermission{
+		{RoleID: 2, PermissionKey: "system:user:list"},
+		{RoleID: 2, PermissionKey: "system:user:create"},
+		{RoleID: 3, PermissionKey: "system:user:list"},
+		{RoleID: 3, PermissionKey: "system:user:create"},
+	}).Error; err != nil {
+		t.Fatalf("seed role permissions: %v", err)
+	}
+	if err := db.Create(&database.CasbinRule{
+		PType: "p",
+		V0:    "complete_role",
+		V1:    "/api/v1/system/user/list",
+		V2:    "GET",
+	}).Error; err != nil {
+		t.Fatalf("seed casbin rule: %v", err)
+	}
+
+	workbench, err := service.GetWorkbench(nil)
+	if err != nil {
+		t.Fatalf("get workbench: %v", err)
+	}
+	if workbench.Overview.PageGapRoleCount != 1 {
+		t.Fatalf("expected 1 page gap role, got %d", workbench.Overview.PageGapRoleCount)
+	}
+	if workbench.Overview.APIGapRoleCount != 1 {
+		t.Fatalf("expected 1 api gap role, got %d", workbench.Overview.APIGapRoleCount)
+	}
+
+	pageGapWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "page-gap"})
+	if err != nil {
+		t.Fatalf("get page-gap workbench: %v", err)
+	}
+	if len(pageGapWorkbench.Roles) != 1 || pageGapWorkbench.Roles[0].RoleKey != "page_gap" || !pageGapWorkbench.Roles[0].HasPageGap {
+		t.Fatalf("expected only page_gap role, got %+v", pageGapWorkbench.Roles)
+	}
+
+	apiGapWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "api-gap"})
+	if err != nil {
+		t.Fatalf("get api-gap workbench: %v", err)
+	}
+	if len(apiGapWorkbench.Roles) != 1 || apiGapWorkbench.Roles[0].RoleKey != "api_gap" || !apiGapWorkbench.Roles[0].HasAPIGap {
+		t.Fatalf("expected only api_gap role, got %+v", apiGapWorkbench.Roles)
+	}
+
+	completeWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "complete"})
+	if err != nil {
+		t.Fatalf("get complete workbench: %v", err)
+	}
+	if len(completeWorkbench.Roles) != 1 || completeWorkbench.Roles[0].RoleKey != "complete_role" {
+		t.Fatalf("expected only complete_role, got %+v", completeWorkbench.Roles)
+	}
+}
+
+func TestPermissionService_GetWorkbenchDetectsSpecificRequiredAPIPolicyGap(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	roles := []permissionTestRole{
+		{ID: 1, RoleName: "Generate Gap", RoleKey: "generate_gap", Status: 1, Sort: 1},
+		{ID: 2, RoleName: "Generate Ready", RoleKey: "generate_ready", Status: 1, Sort: 2},
+	}
+	if err := db.Create(&roles).Error; err != nil {
+		t.Fatalf("seed roles: %v", err)
+	}
+
+	menus := []permissionTestMenu{
+		{ID: 10, TitleKey: "system.menu.generator", Path: "/system/generator", Module: "system.config", Type: "C", PagePerm: "system:generator:use"},
+		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/system/generator", Module: "system.config", Type: "F", Perms: "system:module:generate"},
+	}
+	if err := db.Create(&menus).Error; err != nil {
+		t.Fatalf("seed menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRolePermission{
+		{RoleID: 1, PermissionKey: "system:generator:use"},
+		{RoleID: 1, PermissionKey: "system:module:generate"},
+		{RoleID: 2, PermissionKey: "system:generator:use"},
+		{RoleID: 2, PermissionKey: "system:module:generate"},
+	}).Error; err != nil {
+		t.Fatalf("seed role permissions: %v", err)
+	}
+	if err := db.Create(&[]database.CasbinRule{
+		{PType: "p", V0: "generate_gap", V1: "/api/v1/system/dynamic-modules", V2: "GET"},
+		{PType: "p", V0: "generate_ready", V1: "/api/v1/system/dynamic-modules/generate", V2: "POST"},
+	}).Error; err != nil {
+		t.Fatalf("seed casbin rules: %v", err)
+	}
+
+	workbench, err := service.GetWorkbench(nil)
+	if err != nil {
+		t.Fatalf("get workbench: %v", err)
+	}
+	if len(workbench.Roles) != 2 {
+		t.Fatalf("expected 2 roles, got %d", len(workbench.Roles))
+	}
+
+	var gapRole PermissionWorkbenchRoleResp
+	var readyRole PermissionWorkbenchRoleResp
+	for _, item := range workbench.Roles {
+		switch item.RoleKey {
+		case "generate_gap":
+			gapRole = item
+		case "generate_ready":
+			readyRole = item
+		}
+	}
+
+	if !gapRole.HasAPIGap {
+		t.Fatalf("expected generate_gap to have api gap, got %+v", gapRole)
+	}
+	if gapRole.MissingAPIPolicyCount != 1 {
+		t.Fatalf("expected 1 missing api policy, got %+v", gapRole.MissingAPIPolicies)
+	}
+	if len(gapRole.MissingAPIPolicies) != 1 || gapRole.MissingAPIPolicies[0].Path != "/api/v1/system/dynamic-modules/generate" || gapRole.MissingAPIPolicies[0].Method != "POST" {
+		t.Fatalf("unexpected missing policies: %+v", gapRole.MissingAPIPolicies)
+	}
+	if readyRole.HasAPIGap {
+		t.Fatalf("expected generate_ready to be api-complete, got %+v", readyRole)
+	}
+	if readyRole.MissingAPIPolicyCount != 0 {
+		t.Fatalf("expected 0 missing api policies, got %+v", readyRole.MissingAPIPolicies)
+	}
+}
+
+func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	if err := db.Create(&permissionTestRole{ID: 1, RoleName: "Generate Gap", RoleKey: "generate_gap", Status: 1, Sort: 1}).Error; err != nil {
+		t.Fatalf("seed role: %v", err)
+	}
+	menus := []permissionTestMenu{
+		{ID: 10, TitleKey: "system.menu.generator", Path: "/system/generator", Module: "system.config", Type: "C", PagePerm: "system:generator:use"},
+		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/system/generator", Module: "system.config", Type: "F", Perms: "system:module:generate"},
+	}
+	if err := db.Create(&menus).Error; err != nil {
+		t.Fatalf("seed menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRolePermission{
+		{RoleID: 1, PermissionKey: "system:generator:use"},
+		{RoleID: 1, PermissionKey: "system:module:generate"},
+	}).Error; err != nil {
+		t.Fatalf("seed role permissions: %v", err)
+	}
+
+	resp, err := service.RemediateWorkbenchPolicies(&PermissionWorkbenchRemediateReq{RoleKey: "generate_gap"})
+	if err != nil {
+		t.Fatalf("remediate workbench policies: %v", err)
+	}
+	if resp.RoleKey != "generate_gap" {
+		t.Fatalf("expected roleKey generate_gap, got %+v", resp)
+	}
+	if resp.CreatedCount != 1 || len(resp.CreatedPolicies) != 1 {
+		t.Fatalf("expected 1 created policy, got %+v", resp)
+	}
+	if resp.SkippedCount != 0 {
+		t.Fatalf("expected skipped count 0 before remediation, got %+v", resp)
+	}
+	if resp.CreatedPolicies[0].Path != "/api/v1/system/dynamic-modules/generate" || resp.CreatedPolicies[0].Method != "POST" {
+		t.Fatalf("unexpected created policy: %+v", resp.CreatedPolicies[0])
+	}
+
+	var count int64
+	if err := db.Model(&database.CasbinRule{}).
+		Where("ptype = ? AND v0 = ? AND v1 = ? AND v2 = ?", "p", "generate_gap", "/api/v1/system/dynamic-modules/generate", "POST").
+		Count(&count).Error; err != nil {
+		t.Fatalf("count created policy: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected 1 persisted policy, got %d", count)
+	}
+
+	secondResp, err := service.RemediateWorkbenchPolicies(&PermissionWorkbenchRemediateReq{RoleKey: "generate_gap"})
+	if err != nil {
+		t.Fatalf("second remediate workbench policies: %v", err)
+	}
+	if secondResp.CreatedCount != 0 || len(secondResp.CreatedPolicies) != 0 {
+		t.Fatalf("expected idempotent remediation, got %+v", secondResp)
+	}
+	if secondResp.SkippedCount != 1 {
+		t.Fatalf("expected skipped count 1 after remediation, got %+v", secondResp)
 	}
 }
 
@@ -243,5 +519,52 @@ func TestPermissionService_ImportTemplateAndExport(t *testing.T) {
 	}
 	if len(exported.Rows) != 1 || exported.Rows[0][0] != "admin" || exported.Rows[0][2] != "GET" {
 		t.Fatalf("unexpected export rows: %+v", exported.Rows)
+	}
+}
+
+func TestPermissionService_ExportWorkbench(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	if err := db.Create(&[]permissionTestRole{
+		{ID: 1, RoleName: "Page Gap", RoleKey: "page_gap", Status: 1, Sort: 1},
+		{ID: 2, RoleName: "API Gap", RoleKey: "api_gap", Status: 2, Sort: 2},
+	}).Error; err != nil {
+		t.Fatalf("seed roles: %v", err)
+	}
+	if err := db.Create(&[]permissionTestMenu{
+		{ID: 10, TitleKey: "system.menu.user", Path: "/system/user", Module: "system", Type: "C", PagePerm: "system:user:list"},
+		{ID: 11, TitleKey: "system.permission.user.create", Path: "/system/user", Module: "system", Type: "F", Perms: "system:user:create"},
+	}).Error; err != nil {
+		t.Fatalf("seed menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRoleMenu{
+		{RoleID: 1, MenuID: 10},
+		{RoleID: 2, MenuID: 10},
+	}).Error; err != nil {
+		t.Fatalf("seed role menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRolePermission{
+		{RoleID: 2, PermissionKey: "system:user:list"},
+		{RoleID: 2, PermissionKey: "system:unknown:manage"},
+	}).Error; err != nil {
+		t.Fatalf("seed role permissions: %v", err)
+	}
+
+	file, err := service.ExportWorkbench(&PermissionWorkbenchQuery{})
+	if err != nil {
+		t.Fatalf("export workbench: %v", err)
+	}
+	if file.Filename != "system-permission-workbench-export.csv" {
+		t.Fatalf("unexpected filename: %s", file.Filename)
+	}
+	if len(file.Rows) != 2 {
+		t.Fatalf("expected 2 rows, got %+v", file.Rows)
+	}
+	if file.Rows[0][1] != "page_gap" || file.Rows[0][8] != "true" || file.Rows[0][10] != "page-gap" {
+		t.Fatalf("unexpected page gap row: %+v", file.Rows[0])
+	}
+	if file.Rows[1][1] != "api_gap" || file.Rows[1][9] != "true" || file.Rows[1][10] != "api-gap" || file.Rows[1][11] != "system:unknown:manage" {
+		t.Fatalf("unexpected api gap row: %+v", file.Rows[1])
 	}
 }

@@ -33,10 +33,86 @@ func (s *RoleService) Migrate() error {
 	if err := s.releaseDeletedRoleKeys(); err != nil {
 		return err
 	}
+	if err := s.ensureAdminRoleSeed(); err != nil {
+		return err
+	}
+	if err := s.ensureAdminUserBinding(); err != nil {
+		return err
+	}
 	if !s.db.Migrator().HasTable("system_menu") {
 		return nil
 	}
 	return s.backfillRolePermissions()
+}
+
+func (s *RoleService) ensureAdminRoleSeed() error {
+	var adminRole SystemRole
+	err := s.db.Where("role_key = ?", "admin").First(&adminRole).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		adminRole = SystemRole{
+			RoleName: "超级管理员",
+			RoleKey:  "admin",
+			Sort:     1,
+			Status:   1,
+		}
+		var count int64
+		if err := s.db.Unscoped().Model(&SystemRole{}).Where("id = ?", 1).Count(&count).Error; err != nil {
+			return err
+		}
+		if count == 0 {
+			adminRole.ID = 1
+		}
+		return s.db.Create(&adminRole).Error
+	case err != nil:
+		return err
+	default:
+		updates := map[string]interface{}{}
+		if strings.TrimSpace(adminRole.RoleName) == "" {
+			updates["role_name"] = "超级管理员"
+		}
+		if adminRole.Sort == 0 {
+			updates["sort"] = 1
+		}
+		if adminRole.Status != 1 {
+			updates["status"] = 1
+		}
+		if len(updates) == 0 {
+			return nil
+		}
+		return s.db.Model(&adminRole).Updates(updates).Error
+	}
+}
+
+func (s *RoleService) ensureAdminUserBinding() error {
+	if !s.db.Migrator().HasTable("system_user_role") || !s.db.Migrator().HasTable("system_user") {
+		return nil
+	}
+
+	var adminRoleID uint64
+	if err := s.db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
+		return err
+	}
+	if adminRoleID == 0 {
+		return nil
+	}
+
+	var adminUserCount int64
+	if err := s.db.Table("system_user").Where("id = ?", 1).Count(&adminUserCount).Error; err != nil {
+		return err
+	}
+	if adminUserCount == 0 {
+		return nil
+	}
+
+	var bindingCount int64
+	if err := s.db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, adminRoleID).Count(&bindingCount).Error; err != nil {
+		return err
+	}
+	if bindingCount > 0 {
+		return nil
+	}
+	return s.db.Exec("INSERT INTO system_user_role (user_id, role_id) VALUES (?, ?)", 1, adminRoleID).Error
 }
 
 // ListRoles 获取角色分页列表。

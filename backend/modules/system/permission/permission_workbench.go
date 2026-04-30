@@ -41,6 +41,11 @@ type permissionRoleKeyPair struct {
 	PermissionKey string `gorm:"column:permission_key"`
 }
 
+type permissionRequiredAPIPolicy struct {
+	Path   string
+	Method string
+}
+
 func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*PermissionWorkbenchResp, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
@@ -92,6 +97,7 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 			ActionPermissions:  []PermissionWorkbenchPermissionResp{},
 			UnknownPermissions: []PermissionWorkbenchPermissionResp{},
 			APIPolicies:        []PermissionWorkbenchAPIPolicyResp{},
+			MissingAPIPolicies: []PermissionWorkbenchAPIPolicyResp{},
 		})
 	}
 	resp.Overview.RoleCount = len(resp.Roles)
@@ -138,6 +144,7 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 		resp.Roles[index].UnknownPermissionCount = len(resp.Roles[index].UnknownPermissions)
 		resp.Overview.PagePermissionAssignmentCount += resp.Roles[index].PagePermissionCount
 		resp.Overview.ActionPermissionAssignmentCount += resp.Roles[index].ActionPermissionCount
+		resp.Overview.UnknownPermissionAssignmentCount += resp.Roles[index].UnknownPermissionCount
 	}
 
 	rolePolicies, err := s.loadWorkbenchPolicies(roleKeys)
@@ -148,6 +155,12 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 		policies := rolePolicies[resp.Roles[index].RoleKey]
 		resp.Roles[index].APIPolicies = policies
 		resp.Roles[index].APIPolicyCount = len(policies)
+		resp.Roles[index].HasPageGap = resp.Roles[index].MenuCount > 0 && resp.Roles[index].PagePermissionCount == 0
+		requiredPolicies := collectRequiredAPIPolicies(resp.Roles[index].PagePermissions, resp.Roles[index].ActionPermissions)
+		resp.Roles[index].RequiredAPIPolicyCount = len(requiredPolicies)
+		resp.Roles[index].MissingAPIPolicies = diffMissingAPIPolicies(requiredPolicies, policies)
+		resp.Roles[index].MissingAPIPolicyCount = len(resp.Roles[index].MissingAPIPolicies)
+		resp.Roles[index].HasAPIGap = resp.Roles[index].MissingAPIPolicyCount > 0
 		resp.Overview.APIActionCount += len(policies)
 		sort.Slice(resp.Roles[index].Menus, func(i, j int) bool {
 			if resp.Roles[index].Menus[i].Module == resp.Roles[index].Menus[j].Module {
@@ -173,9 +186,86 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 			}
 			return resp.Roles[index].APIPolicies[i].Path < resp.Roles[index].APIPolicies[j].Path
 		})
+		sort.Slice(resp.Roles[index].MissingAPIPolicies, func(i, j int) bool {
+			if resp.Roles[index].MissingAPIPolicies[i].Path == resp.Roles[index].MissingAPIPolicies[j].Path {
+				return resp.Roles[index].MissingAPIPolicies[i].Method < resp.Roles[index].MissingAPIPolicies[j].Method
+			}
+			return resp.Roles[index].MissingAPIPolicies[i].Path < resp.Roles[index].MissingAPIPolicies[j].Path
+		})
 	}
 
+	if query != nil {
+		switch strings.TrimSpace(query.Integrity) {
+		case "unknown":
+			filtered := make([]PermissionWorkbenchRoleResp, 0, len(resp.Roles))
+			for _, role := range resp.Roles {
+				if role.UnknownPermissionCount > 0 {
+					filtered = append(filtered, role)
+				}
+			}
+			resp.Roles = filtered
+		case "clean":
+			filtered := make([]PermissionWorkbenchRoleResp, 0, len(resp.Roles))
+			for _, role := range resp.Roles {
+				if role.UnknownPermissionCount == 0 {
+					filtered = append(filtered, role)
+				}
+			}
+			resp.Roles = filtered
+		}
+		switch strings.TrimSpace(query.Coverage) {
+		case "page-gap":
+			filtered := make([]PermissionWorkbenchRoleResp, 0, len(resp.Roles))
+			for _, role := range resp.Roles {
+				if role.HasPageGap {
+					filtered = append(filtered, role)
+				}
+			}
+			resp.Roles = filtered
+		case "api-gap":
+			filtered := make([]PermissionWorkbenchRoleResp, 0, len(resp.Roles))
+			for _, role := range resp.Roles {
+				if role.HasAPIGap {
+					filtered = append(filtered, role)
+				}
+			}
+			resp.Roles = filtered
+		case "complete":
+			filtered := make([]PermissionWorkbenchRoleResp, 0, len(resp.Roles))
+			for _, role := range resp.Roles {
+				if !role.HasPageGap && !role.HasAPIGap {
+					filtered = append(filtered, role)
+				}
+			}
+			resp.Roles = filtered
+		}
+	}
+
+	resp.Overview = summarizeWorkbenchOverview(resp.Roles)
 	return resp, nil
+}
+
+func summarizeWorkbenchOverview(roles []PermissionWorkbenchRoleResp) PermissionWorkbenchOverviewResp {
+	overview := PermissionWorkbenchOverviewResp{
+		RoleCount: len(roles),
+	}
+	for _, role := range roles {
+		if role.Status == 1 {
+			overview.EnabledRoleCount++
+		}
+		overview.NavigationAssignmentCount += role.MenuCount
+		overview.PagePermissionAssignmentCount += role.PagePermissionCount
+		overview.ActionPermissionAssignmentCount += role.ActionPermissionCount
+		overview.APIActionCount += role.APIPolicyCount
+		overview.UnknownPermissionAssignmentCount += role.UnknownPermissionCount
+		if role.HasPageGap {
+			overview.PageGapRoleCount++
+		}
+		if role.HasAPIGap {
+			overview.APIGapRoleCount++
+		}
+	}
+	return overview
 }
 
 func (s *PermissionService) loadPermissionCatalog() (map[uint64]permissionMenuCatalogRow, map[string]PermissionWorkbenchPermissionResp, error) {
@@ -282,4 +372,96 @@ func (s *PermissionService) loadWorkbenchPolicies(roleKeys []string) (map[string
 		})
 	}
 	return result, nil
+}
+
+func collectRequiredAPIPolicies(pagePermissions []PermissionWorkbenchPermissionResp, actionPermissions []PermissionWorkbenchPermissionResp) []permissionRequiredAPIPolicy {
+	seen := make(map[string]struct{})
+	result := make([]permissionRequiredAPIPolicy, 0)
+	appendPolicy := func(path string, method string) {
+		path = strings.TrimSpace(path)
+		method = strings.ToUpper(strings.TrimSpace(method))
+		if path == "" || method == "" {
+			return
+		}
+		key := method + " " + path
+		if _, ok := seen[key]; ok {
+			return
+		}
+		seen[key] = struct{}{}
+		result = append(result, permissionRequiredAPIPolicy{Path: path, Method: method})
+	}
+
+	for _, item := range pagePermissions {
+		for _, policy := range requiredAPIPoliciesByPermissionKey(item.Key) {
+			appendPolicy(policy.Path, policy.Method)
+		}
+	}
+	for _, item := range actionPermissions {
+		for _, policy := range requiredAPIPoliciesByPermissionKey(item.Key) {
+			appendPolicy(policy.Path, policy.Method)
+		}
+	}
+	return result
+}
+
+func diffMissingAPIPolicies(required []permissionRequiredAPIPolicy, actual []PermissionWorkbenchAPIPolicyResp) []PermissionWorkbenchAPIPolicyResp {
+	if len(required) == 0 {
+		return []PermissionWorkbenchAPIPolicyResp{}
+	}
+	actualSet := make(map[string]struct{}, len(actual))
+	for _, item := range actual {
+		key := strings.ToUpper(strings.TrimSpace(item.Method)) + " " + strings.TrimSpace(item.Path)
+		actualSet[key] = struct{}{}
+	}
+
+	missing := make([]PermissionWorkbenchAPIPolicyResp, 0)
+	for _, item := range required {
+		key := item.Method + " " + item.Path
+		if _, ok := actualSet[key]; ok {
+			continue
+		}
+		missing = append(missing, PermissionWorkbenchAPIPolicyResp{
+			Path:   item.Path,
+			Method: item.Method,
+		})
+	}
+	return missing
+}
+
+func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequiredAPIPolicy {
+	switch strings.TrimSpace(permissionKey) {
+	case "system:module:list":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/dynamic-modules", Method: "GET"},
+		}
+	case "system:module:register":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/dynamic-modules", Method: "POST"},
+		}
+	case "system:module:unregister":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/dynamic-modules/:name", Method: "DELETE"},
+		}
+	case "system:module:delete_record":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/dynamic-modules/:name/record", Method: "DELETE"},
+		}
+	case "system:module:purge":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/dynamic-modules/:name/purge", Method: "DELETE"},
+		}
+	case "system:module:generate":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/dynamic-modules/generate", Method: "POST"},
+		}
+	case "system:generator:datasource:manage":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/generator/datasources", Method: "POST"},
+			{Path: "/api/v1/system/generator/datasources/:id", Method: "PUT"},
+			{Path: "/api/v1/system/generator/datasources/:id", Method: "DELETE"},
+			{Path: "/api/v1/system/generator/datasources/:id/test", Method: "POST"},
+		}
+	default:
+		return nil
+	}
 }

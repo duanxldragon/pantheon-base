@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
 type orderedModule struct {
@@ -35,10 +35,7 @@ func (m orderedModule) SeedI18n(_ *gorm.DB) error {
 }
 
 func TestRegisterBackendModules_PhasedExecution(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
+	db := testmysql.Open(t)
 
 	steps := make([]string, 0, 10)
 	r := gin.New()

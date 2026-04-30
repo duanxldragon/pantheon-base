@@ -25,6 +25,17 @@ func (h *MenuHandler) GetMenuTree(c *gin.Context) {
 	}
 
 	roleKeys := getRoleKeysFromContext(c)
+	if normalizeMenuScope(&query) == "manage" {
+		allowed, err := h.service.HasManageAccess(roleKeys)
+		if err != nil {
+			common.Fail(c, common.CodeError, "menu.fetch.error")
+			return
+		}
+		if !allowed {
+			common.Fail(c, common.CodeForbidden, "permission.denied")
+			return
+		}
+	}
 	tree, err := h.service.GetMenuTree(&query, roleKeys)
 	if err != nil {
 		common.Fail(c, common.CodeError, "menu.fetch.error")

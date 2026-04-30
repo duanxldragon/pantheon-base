@@ -8,13 +8,21 @@ import (
 	"pantheon-platform/backend/modules/auth"
 	"pantheon-platform/backend/modules/business"
 	"pantheon-platform/backend/modules/dashboard"
+	"pantheon-platform/backend/modules/platform"
 	"pantheon-platform/backend/modules/system"
+	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// 0. 初始化核心基础能力
+	common.InitLocationService()
+	if err := common.InitSecurityConfig(); err != nil {
+		log.Fatalf("security configuration invalid: %v", err)
+	}
+
 	// 1. 初始化数据库
 	dsn := os.Getenv("PANTHEON_DSN")
 	if dsn == "" {
@@ -31,10 +39,11 @@ func main() {
 
 	// 3. 初始化 Gin
 	r := gin.Default()
-	r.Use(middleware.OperationLogMiddleware(database.DB))
+	r.Use(middleware.RequestContextMiddleware(), middleware.OperationLogMiddleware(database.DB))
 
 	// 3. 注册底座模块
 	api := r.Group("/api/v1")
+	platform.RegisterHealthRoutes(api, database.DB)
 	dashboard.InitDashboardModule(api, database.DB)
 	system.InitSystemModule(api, database.DB)
 	auth.InitAuthModule(api, database.DB)

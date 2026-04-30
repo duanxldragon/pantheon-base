@@ -1,5 +1,16 @@
 import { useSyncExternalStore } from 'react';
 import { getPublicSettingList } from '../../modules/system/setting/api';
+import {
+  clearExplicitLanguagePreference as clearExplicitLanguagePreferenceBase,
+  hasExplicitLanguagePreference,
+  LANGUAGE_EXPLICIT_STORAGE_KEY,
+  LANGUAGE_STORAGE_KEY,
+  setExplicitLanguagePreference,
+  syncDefaultLanguagePreference as syncDefaultLanguagePreferenceBase,
+} from './languagePreference';
+import { applyPantheonDefaultTheme, type PantheonThemeKey } from '../theme/theme';
+
+export { LANGUAGE_STORAGE_KEY, LANGUAGE_EXPLICIT_STORAGE_KEY, hasExplicitLanguagePreference, setExplicitLanguagePreference };
 
 export interface PublicSettingsState {
   siteName: string;
@@ -7,12 +18,11 @@ export interface PublicSettingsState {
   defaultLanguage: string;
   defaultTheme: string;
   enableTabBar: boolean;
+  sessionIdleMinutes: number;
 }
 
 const PUBLIC_SETTINGS_STORAGE_KEY = 'pantheon_public_settings';
 const PUBLIC_SETTINGS_FALLBACK_SITE_NAME = 'Pantheon Base';
-export const LANGUAGE_STORAGE_KEY = 'pantheon_lang';
-export const LANGUAGE_EXPLICIT_STORAGE_KEY = 'pantheon_lang_explicit';
 
 let publicSettingsState: PublicSettingsState = readStoredPublicSettings();
 const listeners = new Set<() => void>();
@@ -40,6 +50,7 @@ function buildPublicSettingsState(settings: Record<string, string>): PublicSetti
     defaultLanguage: settings['i18n.default_language']?.trim() || 'zh-CN',
     defaultTheme: settings['ui.default_theme']?.trim() || 'indigo',
     enableTabBar: settings['ui.enable_tab_bar']?.trim() !== 'false',
+    sessionIdleMinutes: Number(settings['login.session_idle_minutes']?.trim() || '30') || 30,
   };
 }
 
@@ -52,6 +63,7 @@ function persistPublicSettings(settings: Record<string, string>) {
 
 function notifyPublicSettingsChanged() {
   syncDefaultLanguagePreference();
+  applyPantheonDefaultTheme(publicSettingsState.defaultTheme as PantheonThemeKey);
   if (typeof document !== 'undefined') {
     document.title = publicSettingsState.siteName;
   }
@@ -59,12 +71,7 @@ function notifyPublicSettingsChanged() {
 }
 
 function syncDefaultLanguagePreference() {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  if (!hasExplicitLanguagePreference()) {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, publicSettingsState.defaultLanguage);
-  }
+  syncDefaultLanguagePreferenceBase(publicSettingsState.defaultLanguage);
 }
 
 export function getPublicSettingsSnapshot() {
@@ -109,25 +116,6 @@ export function getBrandInitial(siteName: string) {
   return siteName.trim().charAt(0).toUpperCase() || 'P';
 }
 
-export function hasExplicitLanguagePreference() {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-  return window.localStorage.getItem(LANGUAGE_EXPLICIT_STORAGE_KEY) === '1';
-}
-
-export function setExplicitLanguagePreference(language: string) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  window.localStorage.setItem(LANGUAGE_EXPLICIT_STORAGE_KEY, '1');
-}
-
 export function clearExplicitLanguagePreference() {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  window.localStorage.removeItem(LANGUAGE_EXPLICIT_STORAGE_KEY);
-  syncDefaultLanguagePreference();
+  clearExplicitLanguagePreferenceBase(publicSettingsState.defaultLanguage);
 }

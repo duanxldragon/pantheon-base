@@ -1,8 +1,12 @@
 package system
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +15,12 @@ import (
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+)
+
+const (
+	defaultDictItemPage     = 1
+	defaultDictItemPageSize = 10
+	maxDictItemPageSize     = 100
 )
 
 type DictService struct {
@@ -40,6 +50,14 @@ type dictItemSeed struct {
 	Sort         int
 	Status       int
 	Remark       string
+}
+
+type dictTypeStatRow struct {
+	DictCode          string
+	ItemCount         int64
+	ActiveItemCount   int64
+	DisabledItemCount int64
+	LastItemUpdatedAt string
 }
 
 var defaultDictTypeSeeds = []dictTypeSeed{
@@ -143,9 +161,34 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 		return nil, err
 	}
 
+	statsByCode := make(map[string]dictTypeStatRow, len(rows))
+	if len(rows) > 0 {
+		dictCodes := make([]string, 0, len(rows))
+		for _, item := range rows {
+			dictCodes = append(dictCodes, item.DictCode)
+		}
+		var statRows []dictTypeStatRow
+		if err := s.db.Model(&SystemDictItem{}).
+			Select(`
+				dict_code,
+				COUNT(*) AS item_count,
+				SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS active_item_count,
+				SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS disabled_item_count,
+				MAX(updated_at) AS last_item_updated_at
+			`).
+			Where("dict_code IN ?", dictCodes).
+			Group("dict_code").
+			Scan(&statRows).Error; err != nil {
+			return nil, err
+		}
+		for _, item := range statRows {
+			statsByCode[item.DictCode] = item
+		}
+	}
+
 	result := make([]DictTypeResp, 0, len(rows))
 	for _, item := range rows {
-		result = append(result, toDictTypeResp(item))
+		result = append(result, toDictTypeResp(item, statsByCode[item.DictCode]))
 	}
 	return result, nil
 }
@@ -169,7 +212,7 @@ func (s *DictService) CreateDictType(req *DictTypeCreateReq) (*DictTypeResp, err
 		return nil, err
 	}
 	s.invalidateDictOptionCache(row.DictCode)
-	resp := toDictTypeResp(row)
+	resp := toDictTypeResp(row, dictTypeStatRow{})
 	return &resp, nil
 }
 
@@ -347,7 +390,7 @@ func (s *DictService) UpdateDictType(typeID uint64, req *DictTypeUpdateReq) (*Di
 	}
 	s.invalidateDictOptionCache(oldCode, row.DictCode)
 
-	resp := toDictTypeResp(row)
+	resp := toDictTypeResp(row, dictTypeStatRow{})
 	return &resp, nil
 }
 
@@ -384,31 +427,90 @@ func (s *DictService) DeleteDictType(typeID uint64) error {
 	return nil
 }
 
-func (s *DictService) ListDictItems(query *DictItemListQuery) ([]DictItemResp, error) {
+func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (int, error) {
+	if s.db == nil {
+		return 0, errors.New("database.not_initialized")
+	}
+	normalizedIDs := normalizeUint64IDs(typeIDs)
+	if len(normalizedIDs) == 0 {
+		return 0, errors.New("dict.type.batch.empty")
+	}
+	if status != 1 && status != 2 {
+		return 0, errors.New("param.invalid")
+	}
+
+	var rows []SystemDictType
+	if err := s.db.Where("id IN ?", normalizedIDs).Find(&rows).Error; err != nil {
+		return 0, err
+	}
+	if len(rows) != len(normalizedIDs) {
+		return 0, errors.New("dict.type.batch.not_found")
+	}
+
+	if err := s.db.Model(&SystemDictType{}).
+		Where("id IN ?", normalizedIDs).
+		Updates(map[string]any{
+			"status":     normalizeDictStatus(status),
+			"updated_at": time.Now(),
+		}).Error; err != nil {
+		return 0, err
+	}
+	return len(normalizedIDs), nil
+}
+
+func (s *DictService) ListDictItems(query *DictItemListQuery) (*DictItemPageResp, error) {
+	return s.listDictItems(query, true)
+}
+
+func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*DictItemPageResp, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
 	if query == nil || strings.TrimSpace(query.DictCode) == "" {
-		return []DictItemResp{}, nil
+		page, pageSize := normalizeDictItemPageQuery(query)
+		return &DictItemPageResp{
+			Items:    []DictItemResp{},
+			Total:    0,
+			Page:     page,
+			PageSize: pageSize,
+		}, nil
 	}
 
 	var rows []SystemDictItem
 	db := s.db.Model(&SystemDictItem{}).Where("dict_code = ?", strings.TrimSpace(query.DictCode))
+	if strings.TrimSpace(query.Keyword) != "" {
+		keyword := "%" + strings.TrimSpace(query.Keyword) + "%"
+		db = db.Where("item_label_key LIKE ? OR item_value LIKE ? OR remark LIKE ?", keyword, keyword, keyword)
+	}
 	if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 		db = db.Where("status = ?", *query.Status)
 	}
-	if err := db.
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "sort"}, Desc: false}).
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false}).
-		Find(&rows).Error; err != nil {
+	page, pageSize := normalizeDictItemPageQuery(query)
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
 
-	result := make([]DictItemResp, 0, len(rows))
-	for _, item := range rows {
-		result = append(result, toDictItemResp(item))
+	resultDB := db.
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "sort"}, Desc: false}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false})
+	if paginate {
+		resultDB = resultDB.Offset((page - 1) * pageSize).Limit(pageSize)
 	}
-	return result, nil
+	if err := resultDB.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	items := make([]DictItemResp, 0, len(rows))
+	for _, item := range rows {
+		items = append(items, toDictItemResp(item))
+	}
+	return &DictItemPageResp{
+		Items:    items,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}, nil
 }
 
 func (s *DictService) CreateDictItem(req *DictItemCreateReq) (*DictItemResp, error) {
@@ -437,12 +539,12 @@ func (s *DictService) CreateDictItem(req *DictItemCreateReq) (*DictItemResp, err
 }
 
 func (s *DictService) ExportDictItems(query *DictItemListQuery) (*impexp.CSVFile, error) {
-	rows, err := s.ListDictItems(query)
+	rows, err := s.listDictItems(query, false)
 	if err != nil {
 		return nil, err
 	}
-	result := make([][]string, 0, len(rows))
-	for _, row := range rows {
+	result := make([][]string, 0, len(rows.Items))
+	for _, row := range rows.Items {
 		result = append(result, []string{
 			row.DictCode,
 			row.ItemLabelKey,
@@ -660,6 +762,98 @@ func (s *DictService) DeleteDictItem(itemID uint64) error {
 	return nil
 }
 
+func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (int, error) {
+	if s.db == nil {
+		return 0, errors.New("database.not_initialized")
+	}
+	normalizedIDs := normalizeUint64IDs(itemIDs)
+	if len(normalizedIDs) == 0 {
+		return 0, errors.New("dict.item.batch.empty")
+	}
+	if status != 1 && status != 2 {
+		return 0, errors.New("param.invalid")
+	}
+
+	var rows []SystemDictItem
+	if err := s.db.Where("id IN ?", normalizedIDs).Find(&rows).Error; err != nil {
+		return 0, err
+	}
+	if len(rows) != len(normalizedIDs) {
+		return 0, errors.New("dict.item.batch.not_found")
+	}
+
+	dictCodes := make([]string, 0, len(rows))
+	for _, item := range rows {
+		dictCodes = append(dictCodes, item.DictCode)
+	}
+
+	if err := s.db.Model(&SystemDictItem{}).
+		Where("id IN ?", normalizedIDs).
+		Updates(map[string]any{
+			"status":     normalizeDictStatus(status),
+			"updated_at": time.Now(),
+		}).Error; err != nil {
+		return 0, err
+	}
+	s.invalidateDictOptionCache(dictCodes...)
+	return len(normalizedIDs), nil
+}
+
+func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictItemResp, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+	if direction != "up" && direction != "down" {
+		return nil, errors.New("param.invalid")
+	}
+
+	var current SystemDictItem
+	if err := s.db.First(&current, itemID).Error; err != nil {
+		return nil, err
+	}
+
+	var neighbor SystemDictItem
+	query := s.db.Model(&SystemDictItem{}).Where("dict_code = ? AND id <> ?", current.DictCode, current.ID)
+	if direction == "up" {
+		query = query.Where("(sort < ? OR (sort = ? AND id < ?))", current.Sort, current.Sort, current.ID).
+			Order("sort desc, id desc")
+	} else {
+		query = query.Where("(sort > ? OR (sort = ? AND id > ?))", current.Sort, current.Sort, current.ID).
+			Order("sort asc, id asc")
+	}
+	if err := query.First(&neighbor).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp := toDictItemResp(current)
+			return &resp, nil
+		}
+		return nil, err
+	}
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		currentSort := current.Sort
+		current.Sort = neighbor.Sort
+		neighbor.Sort = currentSort
+		if err := tx.Model(&SystemDictItem{}).Where("id = ?", current.ID).
+			Updates(map[string]any{"sort": current.Sort, "updated_at": time.Now()}).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&SystemDictItem{}).Where("id = ?", neighbor.ID).
+			Updates(map[string]any{"sort": neighbor.Sort, "updated_at": time.Now()}).Error; err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	if err := s.db.First(&current, current.ID).Error; err != nil {
+		return nil, err
+	}
+	s.invalidateDictOptionCache(current.DictCode)
+	resp := toDictItemResp(current)
+	return &resp, nil
+}
+
 func (s *DictService) GetDictOptions(codes []string) (DictOptionMapResp, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
@@ -735,6 +929,93 @@ func (s *DictService) RefreshDictOptionsCache(codes []string) (*DictCacheRefresh
 	return &DictCacheRefreshResp{
 		RefreshedCodes: normalizedCodes,
 		ClearedAll:     0,
+	}, nil
+}
+
+func (s *DictService) AnalyzeDictUsage(dictCode string) (*DictUsageAnalysisResp, error) {
+	trimmedCode := strings.TrimSpace(dictCode)
+	if trimmedCode == "" {
+		return nil, errors.New("param.invalid")
+	}
+	projectRoot, err := resolveProjectRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	allowedExt := map[string]struct{}{
+		".go":   {},
+		".ts":   {},
+		".tsx":  {},
+		".js":   {},
+		".jsx":  {},
+		".json": {},
+		".md":   {},
+		".yml":  {},
+		".yaml": {},
+	}
+	ignoredDir := map[string]struct{}{
+		".git":         {},
+		"node_modules": {},
+		"dist":         {},
+		"uploads":      {},
+		".tmp-visual":  {},
+	}
+
+	references := make([]DictUsageReferenceResp, 0)
+	walkErr := filepath.WalkDir(projectRoot, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if _, skip := ignoredDir[d.Name()]; skip {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if _, ok := allowedExt[strings.ToLower(filepath.Ext(path))]; !ok {
+			return nil
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return nil
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		lineNumber := 0
+		for scanner.Scan() {
+			lineNumber++
+			line := scanner.Text()
+			searchOffset := 0
+			for {
+				index := strings.Index(line[searchOffset:], trimmedCode)
+				if index < 0 {
+					break
+				}
+				column := searchOffset + index + 1
+				relPath, _ := filepath.Rel(projectRoot, path)
+				references = append(references, DictUsageReferenceResp{
+					FilePath:   filepath.ToSlash(relPath),
+					Line:       lineNumber,
+					Column:     column,
+					Snippet:    strings.TrimSpace(line),
+					Domain:     inferDictUsageDomain(relPath),
+					ModuleHint: inferDictUsageModuleHint(relPath),
+				})
+				searchOffset += index + len(trimmedCode)
+			}
+		}
+		return nil
+	})
+	if walkErr != nil {
+		return nil, walkErr
+	}
+
+	return &DictUsageAnalysisResp{
+		DictCode:           trimmedCode,
+		ReferenceCount:     len(references),
+		ScannedProjectRoot: filepath.ToSlash(projectRoot),
+		References:         references,
 	}, nil
 }
 
@@ -826,6 +1107,24 @@ func normalizeDictModule(module string) string {
 	return strings.TrimSpace(module)
 }
 
+func normalizeDictItemPageQuery(query *DictItemListQuery) (int, int) {
+	page := defaultDictItemPage
+	pageSize := defaultDictItemPageSize
+	if query == nil {
+		return page, pageSize
+	}
+	if query.Page > 0 {
+		page = query.Page
+	}
+	if query.PageSize > 0 {
+		pageSize = query.PageSize
+	}
+	if pageSize > maxDictItemPageSize {
+		pageSize = maxDictItemPageSize
+	}
+	return page, pageSize
+}
+
 func normalizeDictCodes(codes []string) []string {
 	result := make([]string, 0, len(codes))
 	seen := make(map[string]struct{}, len(codes))
@@ -841,6 +1140,81 @@ func normalizeDictCodes(codes []string) []string {
 		result = append(result, trimmed)
 	}
 	return result
+}
+
+func normalizeUint64IDs(ids []uint64) []uint64 {
+	result := make([]uint64, 0, len(ids))
+	seen := make(map[uint64]struct{}, len(ids))
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		result = append(result, id)
+	}
+	return result
+}
+
+func resolveProjectRoot() (string, error) {
+	current, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	for {
+		if fileExists(filepath.Join(current, "go.mod")) && dirExists(filepath.Join(current, "frontend")) {
+			return current, nil
+		}
+		parent := filepath.Dir(current)
+		if parent == current {
+			break
+		}
+		current = parent
+	}
+	return "", errors.New("dict.usage.project_root_not_found")
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
+}
+
+func inferDictUsageDomain(path string) string {
+	normalized := filepath.ToSlash(path)
+	switch {
+	case strings.Contains(normalized, "/frontend/src/modules/system/"):
+		return "system"
+	case strings.Contains(normalized, "/frontend/src/modules/business/"):
+		return "business"
+	case strings.Contains(normalized, "/backend/modules/system/"):
+		return "system"
+	case strings.Contains(normalized, "/backend/modules/business/"):
+		return "business"
+	case strings.Contains(normalized, "/docs/"):
+		return "docs"
+	default:
+		return "platform"
+	}
+}
+
+func inferDictUsageModuleHint(path string) string {
+	normalized := filepath.ToSlash(path)
+	segments := strings.Split(normalized, "/")
+	for index, part := range segments {
+		if part == "system" || part == "business" {
+			if index+1 < len(segments) {
+				return part + "/" + segments[index+1]
+			}
+		}
+	}
+	return ""
 }
 
 func cloneDictOptions(items []DictOptionResp) []DictOptionResp {
@@ -944,15 +1318,20 @@ func (s *DictService) allocateDeletedDictItemValue(tx *gorm.DB, itemID uint64, d
 	return "", errors.New("dict.item.delete.error.archive_value_conflict")
 }
 
-func toDictTypeResp(item SystemDictType) DictTypeResp {
+func toDictTypeResp(item SystemDictType, stat dictTypeStatRow) DictTypeResp {
 	return DictTypeResp{
-		ID:        item.ID,
-		DictCode:  item.DictCode,
-		DictName:  item.DictName,
-		Module:    item.Module,
-		Status:    item.Status,
-		Remark:    item.Remark,
-		CreatedAt: item.CreatedAt.Format(time.RFC3339),
+		ID:                item.ID,
+		DictCode:          item.DictCode,
+		DictName:          item.DictName,
+		Module:            item.Module,
+		Status:            item.Status,
+		Remark:            item.Remark,
+		ItemCount:         stat.ItemCount,
+		ActiveItemCount:   stat.ActiveItemCount,
+		DisabledItemCount: stat.DisabledItemCount,
+		LastItemUpdatedAt: stat.LastItemUpdatedAt,
+		CreatedAt:         item.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:         item.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
@@ -967,5 +1346,6 @@ func toDictItemResp(item SystemDictItem) DictItemResp {
 		Status:       item.Status,
 		Remark:       item.Remark,
 		CreatedAt:    item.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    item.UpdatedAt.Format(time.RFC3339),
 	}
 }

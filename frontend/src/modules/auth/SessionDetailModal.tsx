@@ -17,6 +17,7 @@ type SessionDetailRecord = {
   userAgent?: string;
   refreshExpiresAt?: string;
   lastRefreshAt?: string;
+  lastActivityAt?: string;
   revokedAt?: string;
   createdAt?: string;
 };
@@ -73,7 +74,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
               ...(session.username ? [{ label: t('system.user.username'), value: session.username }] : []),
               ...(session.nickname ? [{ label: t('system.profile.nickname'), value: session.nickname }] : []),
               { label: t('auth.session.ip'), value: session.lastIp || '-' },
-              { label: t('auth.session.lastActive'), value: formatDateTime(session.lastRefreshAt || session.createdAt) },
+              { label: t('auth.session.lastActive'), value: formatDateTime(session.lastActivityAt || session.lastRefreshAt || session.createdAt) },
               { label: t('auth.session.refreshExpiresAt'), value: formatDateTime(session.refreshExpiresAt) },
               { label: t('system.profile.createdAt'), value: formatDateTime(session.createdAt) },
               { label: t('auth.session.status'), value: session.revokedAt ? t('auth.session.status.revoked') : t('auth.session.status.active') },

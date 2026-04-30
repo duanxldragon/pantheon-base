@@ -15,7 +15,7 @@ const PageError: React.FC<PageErrorProps> = ({ description, onRetry }) => {
       className="page-result"
       status="error"
       title={t('common.loadFailed')}
-      subTitle={description}
+      subTitle={description || t('common.loadFailedDesc')}
       extra={onRetry ? <Button onClick={onRetry}>{t('common.retry')}</Button> : null}
     />
   );

@@ -1,8 +1,7 @@
-import { matchPath } from 'react-router-dom';
 import type { ModuleConfig } from './types';
-import { getRegisteredComponent } from './componentRegistry';
 import { AuthModule } from '../../modules/auth';
 import { DashboardModule } from '../../modules/dashboard';
+import { GeneratorModule } from '../../modules/generator';
 import { DictModule } from '../../modules/system/dict';
 import { DeptModule } from '../../modules/system/dept';
 import { MenuModule } from '../../modules/system/menu';
@@ -12,13 +11,15 @@ import { PostModule } from '../../modules/system/post';
 import { RoleModule } from '../../modules/system/role';
 import { SettingModule } from '../../modules/system/setting';
 import { AuditModule } from '../../modules/system/audit';
+import { DynamicModuleModule } from '../../modules/system/dynamicmodule';
+import { I18nModule } from '../../modules/system/i18n';
 import { UserModule } from '../../modules/system/user';
-import { CMDBModule } from '../../modules/business/cmdb';
+import { generatedSystemModules } from '../../modules/generated/system';
+import { generatedBusinessModules } from '../../modules/generated/business';
 
 export const systemModules: ModuleConfig[] = [
   DashboardModule,
   AuthModule,
-  ProfileModule,
   DictModule,
   DeptModule,
   PostModule,
@@ -27,40 +28,68 @@ export const systemModules: ModuleConfig[] = [
   RoleModule,
   MenuModule,
   SettingModule,
+  I18nModule,
+  DynamicModuleModule,
+  GeneratorModule,
   AuditModule,
+  ProfileModule,
+  ...generatedSystemModules,
 ];
 
-export const businessModules: ModuleConfig[] = [
-  CMDBModule,
-];
+export const businessModules: ModuleConfig[] = [...generatedBusinessModules];
 
 export const registeredModules: ModuleConfig[] = [
   ...systemModules,
   ...businessModules,
 ];
 
-export const systemRoutes = registeredModules.flatMap((module) => module.routes.map((route) => {
-  const component = route.component ?? getRegisteredComponent(route.componentKey);
-  if (!component) {
-    throw new Error(`Unresolved route component for path "${route.path}"`);
+// 构建路由路径到路由配置的映射
+const routePathMap = new Map<string, ModuleConfig['routes'][number]>();
+
+registeredModules.forEach((module) => {
+  module.routes.forEach((route) => {
+    const normalizedPath = route.path.startsWith('/') ? route.path : `/${route.path}`;
+    routePathMap.set(normalizedPath, route);
+  });
+});
+
+// 构建系统路由标题映射表（用于后备显示）
+export const systemRouteTitleMap: Record<string, string> = {};
+
+registeredModules.forEach((module) => {
+  if (module.scope === 'system' || module.scope === 'platform') {
+    module.routes.forEach((route) => {
+      const normalizedPath = route.path.startsWith('/') ? route.path : `/${route.path}`;
+      systemRouteTitleMap[normalizedPath] = route.titleKey;
+    });
   }
-  return {
-    ...route,
-    component,
-  };
-}));
+});
 
-export const systemModuleMenus = registeredModules.flatMap((module) => module.menus || []);
+/**
+ * 根据路径查找路由配置
+ * @param path - 路由路径
+ * @returns 路由配置对象，如果未找到则返回 undefined
+ */
+export function findRouteByPath(path: string) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
-export const systemModulePermissions = registeredModules.flatMap((module) => module.permissions || []);
+  // 直接匹配
+  const exactMatch = routePathMap.get(normalizedPath);
+  if (exactMatch) {
+    return exactMatch;
+  }
 
-export const systemModuleI18nNamespaces = registeredModules.flatMap((module) => module.i18nNamespaces || []);
+  // 处理动态路由（例如 /system/user/:id）
+  for (const [routePath, route] of routePathMap.entries()) {
+    if (routePath.includes(':')) {
+      // 将动态路由转换为正则表达式
+      const pattern = routePath.replace(/:(\w+)/g, '([^/]+)');
+      const regex = new RegExp(`^${pattern}$`);
+      if (regex.test(normalizedPath)) {
+        return route;
+      }
+    }
+  }
 
-export const systemRouteTitleMap = systemRoutes.reduce<Record<string, string>>((acc, route) => {
-  acc[`/${route.path}`] = route.titleKey;
-  return acc;
-}, {});
-
-export function findRouteByPath(pathname: string) {
-  return systemRoutes.find((route) => matchPath({ path: `/${route.path}`, end: true }, pathname));
+  return undefined;
 }

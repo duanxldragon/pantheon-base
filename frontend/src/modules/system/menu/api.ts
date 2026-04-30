@@ -55,6 +55,21 @@ export function getMenuTree(params?: MenuListQuery) {
   });
 }
 
+export function findFirstNavigableMenuPath(nodes: MenuNode[]): string | null {
+  for (const item of nodes) {
+    if (item.type === 'C' && item.path && item.isExternal !== 1) {
+      return item.path;
+    }
+    if (item.children?.length) {
+      const childPath = findFirstNavigableMenuPath(item.children);
+      if (childPath) {
+        return childPath;
+      }
+    }
+  }
+  return null;
+}
+
 export function createMenu(data: MenuPayload) {
   return apiRequest<MenuNode>({
     url: '/system/menu',

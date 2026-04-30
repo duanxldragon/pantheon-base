@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import "@arco-design/web-react/dist/css/arco.css";
+import './core/arco/style';
 import './index.css';
 import App from './App';
 import { initI18n } from './i18n';

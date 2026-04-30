@@ -1,0 +1,468 @@
+/**
+ * 动态模块管理 - 模块管理页面
+ * 
+ * 显示已注册模块列表,支持注册/卸载操作
+ */
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  Form,
+  Message,
+  Popconfirm,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from '@arco-design/web-react';
+import { IconDelete, IconPlus, IconRefresh } from '@arco-design/web-react/icon';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { ensureOperationVerified, isRequestError } from '../../../api/request';
+import PermissionAction from '../../../components/patterns/PermissionAction';
+import { usePermission } from '../../../hooks/usePermission';
+
+import {
+  getRegisteredModules,
+  deleteModuleRecord,
+  purgeModule,
+  repairRegistries,
+  registerModule,
+  unregisterModule,
+  type ModuleRegistration,
+} from './api';
+import { AppModal, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
+import '../list-page.css';
+
+const ModuleManager: React.FC = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { isAdmin, hasPerm } = usePermission();
+  const [purgeForm] = Form.useForm<{ dropTable: boolean; confirmed: boolean }>();
+  const canOpenGenerator = isAdmin || hasPerm('system:generator:use');
+  const canRegister = isAdmin || hasPerm('system:module:register');
+  const canUnregister = isAdmin || hasPerm('system:module:unregister');
+  const canDeleteRecord = isAdmin || hasPerm('system:module:delete_record');
+  const canPurge = isAdmin || hasPerm('system:module:purge');
+  const canRepair = isAdmin || hasPerm('system:module:repair');
+  const [modules, setModules] = useState<ModuleRegistration[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [featureDisabled, setFeatureDisabled] = useState(false);
+  const [purgeTarget, setPurgeTarget] = useState<ModuleRegistration | null>(null);
+  const [purging, setPurging] = useState(false);
+  const [purgeConfirmed, setPurgeConfirmed] = useState(false);
+  const [repairing, setRepairing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setFeatureDisabled(false);
+    try {
+      const result = await getRegisteredModules();
+      setModules(result);
+    } catch (requestError) {
+      if (isRequestError(requestError) && requestError.messageKey === 'module.dynamic.disabled') {
+        setFeatureDisabled(true);
+        setModules([]);
+        return;
+      }
+      setError(requestError);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
+
+  const handleUnregister = async (name: string) => {
+    try {
+      await ensureOperationVerified();
+      await unregisterModule(name, false);
+      Message.success(t('generator.moduleManager.unregisterSuccess'));
+      await loadData();
+    } catch (error) {
+      if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
+        return;
+      }
+      Message.error(t('generator.moduleManager.unregisterError'));
+    }
+  };
+
+  const handleRegister = async (name: string) => {
+    try {
+      await ensureOperationVerified();
+      await registerModule({ name });
+      Message.success(t('generator.moduleManager.registerSuccess'));
+      await loadData();
+    } catch (error) {
+      if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
+        return;
+      }
+      Message.error(t('generator.moduleManager.registerError'));
+    }
+  };
+
+  const handleDeleteRecord = async (name: string) => {
+    try {
+      await ensureOperationVerified();
+      await deleteModuleRecord(name);
+      Message.success(t('generator.moduleManager.deleteRecordSuccess'));
+      await loadData();
+    } catch (error) {
+      if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
+        return;
+      }
+      Message.error(t('generator.moduleManager.deleteRecordError'));
+    }
+  };
+
+  const openPurgeModal = (record: ModuleRegistration) => {
+    purgeForm.setFieldsValue({ dropTable: false, confirmed: false });
+    setPurgeConfirmed(false);
+    setPurgeTarget(record);
+  };
+
+  const closePurgeModal = () => {
+    if (purging) {
+      return;
+    }
+    setPurgeTarget(null);
+    setPurgeConfirmed(false);
+    purgeForm.resetFields();
+  };
+
+  const handlePurge = async () => {
+    if (!purgeTarget) {
+      return;
+    }
+    try {
+      const values = await purgeForm.validate();
+      await ensureOperationVerified();
+      setPurging(true);
+      await purgeModule(purgeTarget.name, { purgeSource: true, dropTable: Boolean(values.dropTable) });
+      Message.success(t('generator.moduleManager.purgeSuccess'));
+      closePurgeModal();
+      await loadData();
+    } catch (error) {
+      if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
+        return;
+      }
+      Message.error(t('generator.moduleManager.purgeError'));
+    } finally {
+      setPurging(false);
+    }
+  };
+
+  const handleRepair = async () => {
+    try {
+      await ensureOperationVerified();
+      setRepairing(true);
+      const result = await repairRegistries();
+      Message.success(
+        t('generator.moduleManager.repairSuccess', {
+          refs: result.summary.generatedRegistryRefs,
+          marked: result.summary.markedUninstalledModules,
+        }),
+      );
+      await loadData();
+    } catch (error) {
+      if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
+        return;
+      }
+      Message.error(t('generator.moduleManager.repairError'));
+    } finally {
+      setRepairing(false);
+    }
+  };
+
+  const stats = useMemo(() => ({
+    total: modules.length,
+    active: modules.filter((item) => item.status === 1).length,
+    pending: modules.filter((item) => item.status === 3).length,
+    uninstalled: modules.filter((item) => item.status === 2).length,
+  }), [modules]);
+
+  const columns = [
+    {
+      title: t('generator.moduleManager.name'),
+      dataIndex: 'name',
+      width: 150,
+      render: (name: string) => <code>{name}</code>,
+    },
+    {
+      title: t('generator.moduleManager.displayName'),
+      dataIndex: 'displayName',
+      width: 150,
+    },
+    {
+      title: t('generator.moduleManager.scope'),
+      dataIndex: 'scope',
+      width: 100,
+      render: (scope: string) => (
+        <Tag color={scope === 'system' ? 'blue' : scope === 'platform' ? 'purple' : 'green'}>
+          {scope}
+        </Tag>
+      ),
+    },
+    {
+      title: t('generator.moduleManager.source'),
+      dataIndex: 'source',
+      width: 120,
+      render: (source: string) => <Tag color={source === 'generated' || source === 'database' || source === 'manual' ? 'green' : 'arcoblue'}>{t(`generator.moduleManager.source.${source || 'core'}`)}</Tag>,
+    },
+    {
+      title: t('generator.moduleManager.owner'),
+      dataIndex: 'owner',
+      width: 120,
+      render: (value?: string) => value || '-',
+    },
+    {
+      title: t('generator.moduleManager.boundedContext'),
+      dataIndex: 'boundedContext',
+      width: 140,
+      render: (value?: string) => value || '-',
+    },
+    {
+      title: t('generator.moduleManager.tableName'),
+      dataIndex: 'tableName',
+      width: 180,
+      render: (tableName: string) => tableName ? <code>{tableName}</code> : <span>-</span>,
+    },
+    {
+      title: t('generator.moduleManager.status'),
+      dataIndex: 'status',
+      width: 100,
+      render: (status: number) => (
+        <Tag color={status === 1 ? 'green' : status === 3 ? 'orange' : 'gray'}>
+          {status === 1
+            ? t('generator.moduleManager.status.active')
+            : status === 3
+              ? t('generator.moduleManager.status.pending')
+              : t('generator.moduleManager.status.uninstalled')}
+        </Tag>
+      ),
+    },
+    {
+      title: t('generator.moduleManager.installedAt'),
+      dataIndex: 'installedAt',
+      width: 180,
+    },
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      render: (_value: unknown, record: ModuleRegistration) => (
+        <Space size={4} className="system-list__actions">
+          {record.builtIn ? (
+            <Tag color="arcoblue">{t('generator.moduleManager.builtIn')}</Tag>
+          ) : null}
+          {record.status === 2 && !record.builtIn ? (
+            <>
+              <PermissionAction allowed={canRegister} tooltip={t('common.noPermissionAction')}>
+                <Button
+                  type="text"
+                  disabled={featureDisabled}
+                  onClick={() => {
+                    void handleRegister(record.name);
+                  }}
+                >
+                  <IconPlus /> {t('generator.moduleManager.register')}
+                </Button>
+              </PermissionAction>
+              <PermissionAction allowed={canDeleteRecord} tooltip={t('common.noPermissionAction')}>
+                <Popconfirm
+                  title={t('generator.moduleManager.confirmDeleteRecord')}
+                  disabled={featureDisabled || !canDeleteRecord}
+                  onOk={() => handleDeleteRecord(record.name)}
+                >
+                  <Button type="text" status="danger" disabled={featureDisabled || !canDeleteRecord}>
+                    <IconDelete /> {t('generator.moduleManager.deleteRecord')}
+                  </Button>
+                </Popconfirm>
+              </PermissionAction>
+              <PermissionAction allowed={canPurge} tooltip={t('common.noPermissionAction')}>
+                <Button
+                  type="text"
+                  status="danger"
+                  disabled={featureDisabled || !canPurge}
+                  onClick={() => openPurgeModal(record)}
+                >
+                  <IconDelete /> {t('generator.moduleManager.purge')}
+                </Button>
+              </PermissionAction>
+            </>
+          ) : null}
+          {record.status !== 2 && !record.builtIn ? (
+            <PermissionAction allowed={canUnregister} tooltip={t('common.noPermissionAction')}>
+              <Popconfirm
+                title={t('generator.moduleManager.confirmUninstall')}
+                disabled={featureDisabled || !canUnregister}
+                onOk={() => handleUnregister(record.name)}
+              >
+                <Button type="text" status="danger" disabled={featureDisabled || !canUnregister}>
+                  <IconDelete /> {t('generator.moduleManager.unregister')}
+                </Button>
+              </Popconfirm>
+            </PermissionAction>
+          ) : null}
+        </Space>
+      ),
+    },
+  ];
+
+  if (loading && modules.length === 0) {
+    return <PageLoading />;
+  }
+
+  if (error) {
+    return <PageError onRetry={loadData} />;
+  }
+
+  return (
+    <PageContainer>
+      <PageHeader
+        title={t('generator.moduleManager.title')}
+        extra={
+          <Space>
+            <Button onClick={loadData}>
+              <IconRefresh /> {t('common.refresh')}
+            </Button>
+            <PermissionAction allowed={canRepair} tooltip={t('common.noPermissionAction')}>
+              <Button
+                disabled={featureDisabled || repairing}
+                loading={repairing}
+                onClick={() => void handleRepair()}
+              >
+                <IconRefresh /> {t('generator.moduleManager.repair')}
+              </Button>
+            </PermissionAction>
+            <PermissionAction allowed={canOpenGenerator} tooltip={t('common.noPermissionAction')}>
+              <Button
+                type="primary"
+                disabled={featureDisabled}
+                onClick={() => navigate('/system/generator')}
+              >
+                <IconPlus /> {t('generator.moduleManager.registerNew')}
+              </Button>
+            </PermissionAction>
+          </Space>
+        }
+      />
+
+      <Card>
+        {featureDisabled ? (
+          <Alert
+            type="warning"
+            style={{ marginBottom: 16 }}
+            content={t('generator.moduleManager.disabledHint')}
+          />
+        ) : null}
+        {modules.some((item) => item.status === 3) ? (
+          <Alert
+            type="warning"
+            style={{ marginBottom: 16 }}
+            content={t('generator.moduleManager.pendingHint')}
+          />
+        ) : null}
+        <Alert
+          type="info"
+          style={{ marginBottom: 16 }}
+          content={t('generator.moduleManager.positioning')}
+        />
+        <Alert
+          type="info"
+          style={{ marginBottom: 16 }}
+          content={t('generator.moduleManager.repairHint')}
+        />
+        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+          {t('generator.moduleManager.description')}
+        </Typography.Text>
+        <Space size={16} wrap style={{ marginBottom: 16 }}>
+          <Card size="small">
+            <Typography.Text type="secondary">{t('generator.moduleManager.stats.total')}</Typography.Text>
+            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.total}</Typography.Title>
+          </Card>
+          <Card size="small">
+            <Typography.Text type="secondary">{t('generator.moduleManager.stats.active')}</Typography.Text>
+            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.active}</Typography.Title>
+          </Card>
+          <Card size="small">
+            <Typography.Text type="secondary">{t('generator.moduleManager.stats.pending')}</Typography.Text>
+            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.pending}</Typography.Title>
+          </Card>
+          <Card size="small">
+            <Typography.Text type="secondary">{t('generator.moduleManager.stats.uninstalled')}</Typography.Text>
+            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.uninstalled}</Typography.Title>
+          </Card>
+        </Space>
+
+        <Table
+          columns={columns}
+          data={modules}
+          rowKey="name"
+          pagination={false}
+          noDataElement={featureDisabled ? t('generator.moduleManager.readOnlyEmpty') : t('generator.moduleManager.empty')}
+        />
+      </Card>
+      <AppModal
+        title={t('generator.moduleManager.purgeModal.title')}
+        visible={Boolean(purgeTarget)}
+        onCancel={closePurgeModal}
+        onOk={() => void handlePurge()}
+        okButtonProps={{ status: 'danger', disabled: !purgeConfirmed, loading: purging }}
+        okText={t('generator.moduleManager.purge')}
+        cancelText={t('common.cancel')}
+        size="md"
+      >
+        {purgeTarget ? (
+          <Form form={purgeForm} layout="vertical">
+            <Alert
+              type="error"
+              style={{ marginBottom: 16 }}
+              content={t('generator.moduleManager.purgeModal.warning')}
+            />
+            <Typography.Paragraph style={{ marginBottom: 12 }}>
+              {t('generator.moduleManager.purgeModal.summary', {
+                module: purgeTarget.displayName || purgeTarget.name,
+                name: purgeTarget.name,
+              })}
+            </Typography.Paragraph>
+            <Typography.Paragraph type="secondary" style={{ marginBottom: 12 }}>
+              {t('generator.moduleManager.purgeModal.impact')}
+            </Typography.Paragraph>
+            <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 16 }}>
+              <Typography.Text>{t('generator.moduleManager.purgeModal.removeRecord')}</Typography.Text>
+              <Typography.Text>{t('generator.moduleManager.purgeModal.removeSource')}</Typography.Text>
+              <Typography.Text type="secondary">
+                {purgeTarget.tableName
+                  ? t('generator.moduleManager.purgeModal.keepTable', { table: purgeTarget.tableName })
+                  : t('generator.moduleManager.purgeModal.noTable')}
+              </Typography.Text>
+            </Space>
+            {purgeTarget.tableName ? (
+              <Form.Item field="dropTable" triggerPropName="checked">
+                <Checkbox>{t('generator.moduleManager.purgeModal.dropTable', { table: purgeTarget.tableName })}</Checkbox>
+              </Form.Item>
+            ) : null}
+            <Form.Item field="confirmed" triggerPropName="checked">
+              <Checkbox onChange={(checked) => setPurgeConfirmed(Boolean(checked))}>
+                {t('generator.moduleManager.purgeModal.confirmLabel')}
+              </Checkbox>
+            </Form.Item>
+          </Form>
+        ) : null}
+      </AppModal>
+    </PageContainer>
+  );
+};
+
+export default ModuleManager;

@@ -36,17 +36,22 @@ type PermissionPolicyUpdateReq struct {
 }
 
 type PermissionWorkbenchQuery struct {
-	RoleKey string `form:"roleKey"`
-	Status  *int   `form:"status"`
+	RoleKey   string `form:"roleKey"`
+	Status    *int   `form:"status"`
+	Integrity string `form:"integrity"`
+	Coverage  string `form:"coverage"`
 }
 
 type PermissionWorkbenchOverviewResp struct {
-	RoleCount                       int `json:"roleCount"`
-	EnabledRoleCount                int `json:"enabledRoleCount"`
-	NavigationAssignmentCount       int `json:"navigationAssignmentCount"`
-	PagePermissionAssignmentCount   int `json:"pagePermissionAssignmentCount"`
-	ActionPermissionAssignmentCount int `json:"actionPermissionAssignmentCount"`
-	APIActionCount                  int `json:"apiActionCount"`
+	RoleCount                        int `json:"roleCount"`
+	EnabledRoleCount                 int `json:"enabledRoleCount"`
+	NavigationAssignmentCount        int `json:"navigationAssignmentCount"`
+	PagePermissionAssignmentCount    int `json:"pagePermissionAssignmentCount"`
+	ActionPermissionAssignmentCount  int `json:"actionPermissionAssignmentCount"`
+	APIActionCount                   int `json:"apiActionCount"`
+	UnknownPermissionAssignmentCount int `json:"unknownPermissionAssignmentCount"`
+	PageGapRoleCount                 int `json:"pageGapRoleCount"`
+	APIGapRoleCount                  int `json:"apiGapRoleCount"`
 }
 
 type PermissionWorkbenchMenuResp struct {
@@ -70,6 +75,17 @@ type PermissionWorkbenchAPIPolicyResp struct {
 	Method string `json:"method"`
 }
 
+type PermissionWorkbenchRemediateReq struct {
+	RoleKey string `json:"roleKey" binding:"required"`
+}
+
+type PermissionWorkbenchRemediateResp struct {
+	RoleKey         string                             `json:"roleKey"`
+	CreatedCount    int                                `json:"createdCount"`
+	SkippedCount    int                                `json:"skippedCount"`
+	CreatedPolicies []PermissionWorkbenchAPIPolicyResp `json:"createdPolicies"`
+}
+
 type PermissionWorkbenchRoleResp struct {
 	ID                     uint64                              `json:"id"`
 	RoleName               string                              `json:"roleName"`
@@ -79,12 +95,17 @@ type PermissionWorkbenchRoleResp struct {
 	PagePermissionCount    int                                 `json:"pagePermissionCount"`
 	ActionPermissionCount  int                                 `json:"actionPermissionCount"`
 	APIPolicyCount         int                                 `json:"apiPolicyCount"`
+	RequiredAPIPolicyCount int                                 `json:"requiredApiPolicyCount"`
+	MissingAPIPolicyCount  int                                 `json:"missingApiPolicyCount"`
 	UnknownPermissionCount int                                 `json:"unknownPermissionCount"`
+	HasPageGap             bool                                `json:"hasPageGap"`
+	HasAPIGap              bool                                `json:"hasApiGap"`
 	Menus                  []PermissionWorkbenchMenuResp       `json:"menus"`
 	PagePermissions        []PermissionWorkbenchPermissionResp `json:"pagePermissions"`
 	ActionPermissions      []PermissionWorkbenchPermissionResp `json:"actionPermissions"`
 	UnknownPermissions     []PermissionWorkbenchPermissionResp `json:"unknownPermissions"`
 	APIPolicies            []PermissionWorkbenchAPIPolicyResp  `json:"apiPolicies"`
+	MissingAPIPolicies     []PermissionWorkbenchAPIPolicyResp  `json:"missingApiPolicies"`
 }
 
 type PermissionWorkbenchResp struct {

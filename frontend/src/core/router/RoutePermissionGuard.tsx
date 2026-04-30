@@ -1,6 +1,6 @@
-import React from 'react';
-import { Spin } from '@arco-design/web-react';
-import { PageForbidden } from '../../components';
+import React, { useEffect } from 'react';
+import { PageForbidden, RouteContentFallback } from '../../components';
+import { ensureAuthUserInfo } from '../auth/bootstrap';
 import { useAuthStore } from '../../store/useAuthStore';
 
 interface RoutePermissionGuardProps {
@@ -9,14 +9,21 @@ interface RoutePermissionGuardProps {
 }
 
 const RoutePermissionGuard: React.FC<RoutePermissionGuardProps> = ({ permission, children }) => {
-  const { userInfo } = useAuthStore();
+  const { token, userInfo } = useAuthStore();
+
+  useEffect(() => {
+    if (!permission || !token || userInfo) {
+      return;
+    }
+    void ensureAuthUserInfo().catch(() => undefined);
+  }, [permission, token, userInfo]);
 
   if (!permission) {
     return children;
   }
 
   if (!userInfo) {
-    return <Spin loading style={{ width: '100%', minHeight: 240 }} />;
+    return <RouteContentFallback />;
   }
 
   const isAdmin = userInfo.roles?.includes('admin') || false;

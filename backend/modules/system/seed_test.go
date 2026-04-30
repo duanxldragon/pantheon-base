@@ -3,15 +3,12 @@ package system
 import (
 	"testing"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
 func TestEnsureMenuSeedsReparentsLegacyFlatMenus(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 	if err := createSeedTestTables(db); err != nil {
 		t.Fatalf("create tables: %v", err)
 	}
@@ -42,10 +39,7 @@ VALUES
 }
 
 func TestOrgAccessControlSeedContract(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 	if err := createSeedTestTables(db); err != nil {
 		t.Fatalf("create tables: %v", err)
 	}
@@ -73,48 +67,104 @@ func TestOrgAccessControlSeedContract(t *testing.T) {
 	assertActionPermissionContract(t, db, "system:user:view", "/system/user")
 }
 
+func TestEnsureMenuSeedsCleansObsoleteMenuMatrixEntries(t *testing.T) {
+	db := testmysql.Open(t)
+	if err := createSeedTestTables(db); err != nil {
+		t.Fatalf("create tables: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_role (id, role_key, status) VALUES (1, 'admin', 1)").Error; err != nil {
+		t.Fatalf("seed admin role: %v", err)
+	}
+	if err := db.Exec(`
+INSERT INTO system_menu (id, parent_id, title_key, path, component, page_perm, perms, type, icon, route_name, module, sort, is_visible, is_cache, is_external, active_menu)
+VALUES
+(200, 0, 'system.menu-matrix', '/system/menu-matrix', 'system/menu/MenuMatrix', 'system:menu:matrix', '', 'C', 'menu', 'system-menu-matrix', 'system.iam', 99, 1, 0, 0, ''),
+(201, 200, 'system.permission.menu.matrix.export', '', '', '', 'system:menu:matrix', 'F', '', '', 'system.iam', 1, 1, 0, 0, '')
+`).Error; err != nil {
+		t.Fatalf("seed obsolete menu matrix: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_role_menu (role_id, menu_id) VALUES (1, 200), (1, 201)").Error; err != nil {
+		t.Fatalf("seed obsolete role menu bindings: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_role_permission (role_id, permission_key) VALUES (1, 'system:menu:matrix')").Error; err != nil {
+		t.Fatalf("seed obsolete role permission binding: %v", err)
+	}
+
+	seeds := append([]menuSeed{}, baseMenuGroupSeeds()...)
+	seeds = append(seeds, coreMenuSeeds()...)
+	if err := ensureMenuSeeds(db, seeds); err != nil {
+		t.Fatalf("ensure seeds: %v", err)
+	}
+
+	var menuCount int64
+	if err := db.Table("system_menu").
+		Where("path = ? OR title_key = ? OR route_name = ?", "/system/menu-matrix", "system.menu-matrix", "system-menu-matrix").
+		Count(&menuCount).Error; err != nil {
+		t.Fatalf("count obsolete menu matrix records: %v", err)
+	}
+	if menuCount != 0 {
+		t.Fatalf("expected obsolete menu matrix records to be removed, got %d", menuCount)
+	}
+
+	var roleMenuCount int64
+	if err := db.Table("system_role_menu").Where("menu_id IN ?", []int{200, 201}).Count(&roleMenuCount).Error; err != nil {
+		t.Fatalf("count obsolete role menu bindings: %v", err)
+	}
+	if roleMenuCount != 0 {
+		t.Fatalf("expected obsolete role menu bindings to be removed, got %d", roleMenuCount)
+	}
+
+	var rolePermCount int64
+	if err := db.Table("system_role_permission").Where("permission_key = ?", "system:menu:matrix").Count(&rolePermCount).Error; err != nil {
+		t.Fatalf("count obsolete role permission binding: %v", err)
+	}
+	if rolePermCount != 0 {
+		t.Fatalf("expected obsolete role permission binding to be removed, got %d", rolePermCount)
+	}
+}
+
 func createSeedTestTables(db *gorm.DB) error {
 	if err := db.Exec(`
 CREATE TABLE system_menu (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	parent_id INTEGER DEFAULT 0,
-	title_key TEXT NOT NULL,
-	path TEXT DEFAULT '',
-	component TEXT DEFAULT '',
-	page_perm TEXT DEFAULT '',
-	perms TEXT DEFAULT '',
-	type TEXT DEFAULT 'M',
-	icon TEXT DEFAULT '',
-	route_name TEXT DEFAULT '',
-	module TEXT DEFAULT 'system',
-	sort INTEGER DEFAULT 0,
-	is_visible INTEGER DEFAULT 1,
-	is_cache INTEGER DEFAULT 0,
-	is_external INTEGER DEFAULT 0,
-	active_menu TEXT DEFAULT ''
+	id BIGINT PRIMARY KEY AUTO_INCREMENT,
+	parent_id BIGINT DEFAULT 0,
+	title_key VARCHAR(128) NOT NULL,
+	path VARCHAR(255) DEFAULT '',
+	component VARCHAR(255) DEFAULT '',
+	page_perm VARCHAR(128) DEFAULT '',
+	perms VARCHAR(128) DEFAULT '',
+	type VARCHAR(8) DEFAULT 'M',
+	icon VARCHAR(64) DEFAULT '',
+	route_name VARCHAR(128) DEFAULT '',
+	module VARCHAR(64) DEFAULT 'system',
+	sort INT DEFAULT 0,
+	is_visible TINYINT DEFAULT 1,
+	is_cache TINYINT DEFAULT 0,
+	is_external TINYINT DEFAULT 0,
+	active_menu VARCHAR(255) DEFAULT ''
 )`).Error; err != nil {
 		return err
 	}
 	if err := db.Exec(`
 CREATE TABLE system_role (
-	id INTEGER PRIMARY KEY,
-	role_key TEXT,
-	status INTEGER
+	id BIGINT PRIMARY KEY,
+	role_key VARCHAR(64),
+	status INT
 )`).Error; err != nil {
 		return err
 	}
 	if err := db.Exec(`
 CREATE TABLE system_role_menu (
-	role_id INTEGER NOT NULL,
-	menu_id INTEGER NOT NULL,
+	role_id BIGINT NOT NULL,
+	menu_id BIGINT NOT NULL,
 	PRIMARY KEY (role_id, menu_id)
 )`).Error; err != nil {
 		return err
 	}
 	return db.Exec(`
 CREATE TABLE system_role_permission (
-	role_id INTEGER NOT NULL,
-	permission_key TEXT NOT NULL,
+	role_id BIGINT NOT NULL,
+	permission_key VARCHAR(128) NOT NULL,
 	PRIMARY KEY (role_id, permission_key)
 )`).Error
 }

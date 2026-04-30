@@ -3,6 +3,7 @@ package middleware
 import (
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,12 +57,16 @@ func CasbinMiddleware() gin.HandlerFunc {
 }
 
 func isSelfServiceRoute(c *gin.Context) bool {
-	fullPath := c.FullPath()
-	method := c.Request.Method
+	return isSelfServiceRouteBySignature(c.FullPath(), c.Request.Method, c.Query("scope"))
+}
+
+func isSelfServiceRouteBySignature(fullPath string, method string, scope string) bool {
 	switch fullPath {
 	case "/api/v1/system/logout":
 		return method == "POST"
 	case "/api/v1/auth/logout":
+		return method == "POST"
+	case "/api/v1/auth/activity":
 		return method == "POST"
 	case "/api/v1/system/user/info":
 		return method == "GET"
@@ -73,6 +78,8 @@ func isSelfServiceRoute(c *gin.Context) bool {
 		return method == "GET" || method == "PUT"
 	case "/api/v1/system/profile/password":
 		return method == "PUT"
+	case "/api/v1/system/menu/tree":
+		return method == "GET" && strings.ToLower(strings.TrimSpace(scope)) != "manage"
 	case "/api/v1/auth/password":
 		return method == "PUT"
 	case "/api/v1/auth/sessions":

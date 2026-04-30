@@ -3,6 +3,7 @@ package system
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"pantheon-platform/backend/pkg/database"
@@ -205,6 +206,136 @@ func (s *PermissionService) BuildImportTemplate() *impexp.CSVFile {
 	}
 }
 
+func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*impexp.CSVFile, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+
+	workbench, err := s.GetWorkbench(query)
+	if err != nil {
+		return nil, err
+	}
+
+	rows := make([][]string, 0, len(workbench.Roles))
+	for _, role := range workbench.Roles {
+		coverage := "complete"
+		switch {
+		case role.HasPageGap && role.HasAPIGap:
+			coverage = "page-gap,api-gap"
+		case role.HasPageGap:
+			coverage = "page-gap"
+		case role.HasAPIGap:
+			coverage = "api-gap"
+		}
+		unknownKeys := make([]string, 0, len(role.UnknownPermissions))
+		for _, item := range role.UnknownPermissions {
+			if strings.TrimSpace(item.Key) != "" {
+				unknownKeys = append(unknownKeys, strings.TrimSpace(item.Key))
+			}
+		}
+
+		rows = append(rows, []string{
+			role.RoleName,
+			role.RoleKey,
+			strconv.Itoa(role.Status),
+			strconv.Itoa(role.MenuCount),
+			strconv.Itoa(role.PagePermissionCount),
+			strconv.Itoa(role.ActionPermissionCount),
+			strconv.Itoa(role.APIPolicyCount),
+			strconv.Itoa(role.UnknownPermissionCount),
+			boolToCSVValue(role.HasPageGap),
+			boolToCSVValue(role.HasAPIGap),
+			coverage,
+			strings.Join(unknownKeys, "|"),
+		})
+	}
+
+	return &impexp.CSVFile{
+		Filename: "system-permission-workbench-export.csv",
+		Headers: []string{
+			"roleName",
+			"roleKey",
+			"status",
+			"menuCount",
+			"pagePermissionCount",
+			"actionPermissionCount",
+			"apiPolicyCount",
+			"unknownPermissionCount",
+			"hasPageGap",
+			"hasApiGap",
+			"coverage",
+			"unknownPermissionKeys",
+		},
+		Rows: rows,
+	}, nil
+}
+
+func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchRemediateReq) (*PermissionWorkbenchRemediateResp, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+	roleKey := strings.TrimSpace(req.RoleKey)
+	if roleKey == "" {
+		return nil, errors.New("param.invalid")
+	}
+	if err := s.ensureRoleKeyExists(roleKey); err != nil {
+		return nil, err
+	}
+
+	workbench, err := s.GetWorkbench(&PermissionWorkbenchQuery{RoleKey: roleKey})
+	if err != nil {
+		return nil, err
+	}
+	var role *PermissionWorkbenchRoleResp
+	for index := range workbench.Roles {
+		if workbench.Roles[index].RoleKey == roleKey {
+			role = &workbench.Roles[index]
+			break
+		}
+	}
+	if role == nil {
+		return nil, errors.New("permission.role.invalid")
+	}
+	resp := &PermissionWorkbenchRemediateResp{
+		RoleKey:         roleKey,
+		SkippedCount:    role.RequiredAPIPolicyCount - role.MissingAPIPolicyCount,
+		CreatedPolicies: []PermissionWorkbenchAPIPolicyResp{},
+	}
+	if len(role.MissingAPIPolicies) == 0 {
+		return resp, nil
+	}
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range role.MissingAPIPolicies {
+			policy := database.CasbinRule{
+				PType: "p",
+				V0:    roleKey,
+				V1:    strings.TrimSpace(item.Path),
+				V2:    normalizePolicyMethod(item.Method),
+			}
+			if err := tx.Create(&policy).Error; err != nil {
+				return err
+			}
+			resp.CreatedPolicies = append(resp.CreatedPolicies, PermissionWorkbenchAPIPolicyResp{
+				ID:     policy.ID,
+				Path:   policy.V1,
+				Method: policy.V2,
+			})
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	resp.CreatedCount = len(resp.CreatedPolicies)
+	if resp.CreatedCount > 0 {
+		if err := reloadPermissionPolicies(); err != nil {
+			return nil, err
+		}
+	}
+	return resp, nil
+}
+
 func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{
 		Applied: false,
@@ -357,6 +488,13 @@ func (s *PermissionService) listPoliciesForExport(query *PermissionPolicyQuery) 
 		return nil, err
 	}
 	return policies, nil
+}
+
+func boolToCSVValue(value bool) string {
+	if value {
+		return "true"
+	}
+	return "false"
 }
 
 func (s *PermissionService) validatePolicyPayload(policyID uint64, roleKey string, path string, method string) (string, string, string, error) {

@@ -73,9 +73,13 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 	if err != nil {
 		return nil, err
 	}
+	userCountByPost, err := s.loadPostUserCounts()
+	if err != nil {
+		return nil, err
+	}
 	items := make([]PostListResp, 0, len(posts))
 	for _, post := range posts {
-		items = append(items, toPostListResp(post, deptNames[post.DeptID]))
+		items = append(items, toPostListResp(post, deptNames[post.DeptID], userCountByPost[post.ID]))
 	}
 
 	return &PostListPageResp{
@@ -110,7 +114,7 @@ func (s *PostService) CreatePost(req *PostCreateReq) (*PostListResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp := toPostListResp(post, deptNames[post.DeptID])
+	resp := toPostListResp(post, deptNames[post.DeptID], 0)
 	return &resp, nil
 }
 
@@ -125,6 +129,11 @@ func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListRe
 	}
 	if err := s.validatePostCreate(postID, req.PostCode, req.DeptID); err != nil {
 		return nil, err
+	}
+	if post.Status != 2 && normalizePostStatus(req.Status) == 2 {
+		if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
+			return nil, err
+		}
 	}
 
 	post.DeptID = req.DeptID
@@ -141,7 +150,7 @@ func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListRe
 	if err != nil {
 		return nil, err
 	}
-	resp := toPostListResp(post, deptNames[post.DeptID])
+	resp := toPostListResp(post, deptNames[post.DeptID], 0)
 	return &resp, nil
 }
 
@@ -150,12 +159,11 @@ func (s *PostService) DeletePost(postID uint64) error {
 		return errors.New("database.not_initialized")
 	}
 
-	var userCount int64
-	if err := s.db.Table("system_user").Where("post_id = ? AND deleted_at IS NULL", postID).Count(&userCount).Error; err != nil {
+	if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
+		if err.Error() == "post.status.error.has_users" {
+			return errors.New("post.delete.error.has_users")
+		}
 		return err
-	}
-	if userCount > 0 {
-		return errors.New("post.delete.error.has_users")
 	}
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var post SystemPost
@@ -192,6 +200,17 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 	if len(posts) != len(normalizedIDs) {
 		return 0, errors.New("post.batch.not_found")
 	}
+	if normalizePostStatus(status) == 2 {
+		activeIDs := make([]uint64, 0, len(posts))
+		for _, post := range posts {
+			if post.Status != 2 {
+				activeIDs = append(activeIDs, post.ID)
+			}
+		}
+		if err := s.ensurePostsNotAssignedToUsers(activeIDs); err != nil {
+			return 0, err
+		}
+	}
 
 	if err := s.db.Model(&SystemPost{}).
 		Where("id IN ?", normalizedIDs).
@@ -214,6 +233,10 @@ func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error)
 	if err != nil {
 		return nil, err
 	}
+	userCountByPost, err := s.loadPostUserCounts()
+	if err != nil {
+		return nil, err
+	}
 	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.db)
 	if err != nil {
 		return nil, err
@@ -221,6 +244,10 @@ func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error)
 
 	result := make([][]string, 0, len(rows))
 	for _, row := range rows {
+		assignedUserCount := userCountByPost[row.ID]
+		governanceTags := buildPostGovernanceTags(row.Status, assignedUserCount)
+		governanceBlockedBy := buildPostGovernanceBlockers(assignedUserCount)
+		governanceActions := buildPostGovernanceActions(row.Status, assignedUserCount)
 		result = append(result, []string{
 			deptPathByID[row.DeptID],
 			row.PostCode,
@@ -228,12 +255,22 @@ func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error)
 			fmt.Sprintf("%d", row.Sort),
 			fmt.Sprintf("%d", row.Status),
 			row.Remark,
+			fmt.Sprintf("%d", assignedUserCount),
+			"post",
+			strings.Join(governanceTags, "|"),
+			fmt.Sprintf("%d", impexp.CountGovernanceProblems(governanceTags, map[string]struct{}{"in-use": {}})),
+			strings.Join(governanceBlockedBy, "|"),
+			strings.Join(governanceActions, "|"),
+			impexp.GovernanceScopeLabel("post"),
+			impexp.GovernanceTagLabels(governanceTags),
+			impexp.GovernanceBlockedByLabels(governanceBlockedBy),
+			impexp.GovernanceActionLabels(governanceActions),
 		})
 	}
 
 	return &impexp.CSVFile{
 		Filename: "system-post-export.csv",
-		Headers:  []string{"deptPath", "postCode", "postName", "sort", "status", "remark"},
+		Headers:  append([]string{"deptPath", "postCode", "postName", "sort", "status", "remark", "assignedUserCount"}, impexp.GovernanceExportHeaders...),
 		Rows:     result,
 	}, nil
 }
@@ -498,18 +535,43 @@ func (s *PostService) loadPostDeptNames(posts []SystemPost) (map[uint64]string, 
 	return result, nil
 }
 
-func toPostListResp(post SystemPost, deptName string) PostListResp {
+func toPostListResp(post SystemPost, deptName string, assignedUserCount int) PostListResp {
+	governanceTags := buildPostGovernanceTags(post.Status, assignedUserCount)
+	governanceBlockedBy := buildPostGovernanceBlockers(assignedUserCount)
+	governanceActions := buildPostGovernanceActions(post.Status, assignedUserCount)
 	return PostListResp{
-		ID:        post.ID,
-		DeptID:    post.DeptID,
-		DeptName:  deptName,
-		PostCode:  post.PostCode,
-		PostName:  post.PostName,
-		Sort:      post.Sort,
-		Status:    post.Status,
-		Remark:    post.Remark,
-		CreatedAt: post.CreatedAt.Format(time.RFC3339),
+		ID:                    post.ID,
+		DeptID:                post.DeptID,
+		DeptName:              deptName,
+		PostCode:              post.PostCode,
+		PostName:              post.PostName,
+		Sort:                  post.Sort,
+		Status:                post.Status,
+		Remark:                post.Remark,
+		AssignedUserCount:     assignedUserCount,
+		GovernanceTags:        governanceTags,
+		GovernanceTagLabels:   splitGovernanceLabels(impexp.GovernanceTagLabels(governanceTags)),
+		GovernanceBlockedBy:   governanceBlockedBy,
+		GovernanceBlockedDesc: splitGovernanceLabels(impexp.GovernanceBlockedByLabels(governanceBlockedBy)),
+		GovernanceActions:     governanceActions,
+		GovernanceActionLabel: splitGovernanceLabels(impexp.GovernanceActionLabels(governanceActions)),
+		CreatedAt:             post.CreatedAt.Format(time.RFC3339),
 	}
+}
+
+func splitGovernanceLabels(value string) []string {
+	if strings.TrimSpace(value) == "" {
+		return []string{}
+	}
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }
 
 func normalizePostPageQuery(query *PostListQuery) (int, int) {
@@ -573,6 +635,83 @@ func normalizePostIDs(ids []uint64) []uint64 {
 		result = append(result, id)
 	}
 	return result
+}
+
+func (s *PostService) loadPostUserCounts() (map[uint64]int, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+	if !s.db.Migrator().HasTable("system_user") {
+		return map[uint64]int{}, nil
+	}
+
+	type postUserCountRow struct {
+		PostID uint64
+		Count  int
+	}
+
+	rows := make([]postUserCountRow, 0)
+	if err := s.db.Table("system_user").
+		Select("post_id, COUNT(1) AS count").
+		Where("deleted_at IS NULL AND post_id > 0").
+		Group("post_id").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	result := make(map[uint64]int, len(rows))
+	for _, row := range rows {
+		result[row.PostID] = row.Count
+	}
+	return result, nil
+}
+
+func buildPostGovernanceTags(status int, assignedUserCount int) []string {
+	tags := make([]string, 0, 2)
+	if assignedUserCount > 0 {
+		tags = append(tags, "in-use")
+	}
+	if normalizePostStatus(status) == 2 {
+		tags = append(tags, "disabled")
+	}
+	if len(tags) == 0 {
+		return []string{"clean"}
+	}
+	return tags
+}
+
+func buildPostGovernanceBlockers(assignedUserCount int) []string {
+	if assignedUserCount > 0 {
+		return []string{"users"}
+	}
+	return []string{"none"}
+}
+
+func buildPostGovernanceActions(status int, assignedUserCount int) []string {
+	if assignedUserCount > 0 {
+		if normalizePostStatus(status) == 2 {
+			return []string{"reassign-users", "review-status"}
+		}
+		return []string{"reassign-users"}
+	}
+	if normalizePostStatus(status) == 2 {
+		return []string{"delete-or-keep-disabled"}
+	}
+	return []string{"keep-observing"}
+}
+
+func (s *PostService) ensurePostsNotAssignedToUsers(postIDs []uint64) error {
+	if len(postIDs) == 0 {
+		return nil
+	}
+	var userCount int64
+	if err := s.db.Table("system_user").Where("post_id IN ? AND deleted_at IS NULL", postIDs).Count(&userCount).Error; err != nil {
+		return err
+	}
+	if userCount > 0 {
+		return errors.New("post.status.error.has_users")
+	}
+	return nil
 }
 
 func (s *PostService) releaseDeletedPostCodes() error {

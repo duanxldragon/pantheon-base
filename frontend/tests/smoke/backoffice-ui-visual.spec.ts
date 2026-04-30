@@ -5,7 +5,14 @@ import { join } from 'node:path';
 const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
-const pageErrorTexts = ['加载失败', '网络异常', '请求超时', '500'];
+const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out', '500'];
+
+async function installExplicitZhCNPreference(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('pantheon_lang', 'zh-CN');
+    localStorage.setItem('pantheon_lang_explicit', '1');
+  });
+}
 
 const authenticatedPages = [
   { path: '/dashboard', title: '工作台', screenshot: 'dashboard-desktop.png' },
@@ -36,6 +43,7 @@ async function signInAsAdmin(page: Page) {
       localStorage.setItem('pantheon_access_token', accessToken);
       localStorage.setItem('pantheon_refresh_token', refreshToken);
       localStorage.setItem('pantheon_lang', 'zh-CN');
+      localStorage.setItem('pantheon_lang_explicit', '1');
     },
     {
       accessToken: payload.data.accessToken,
@@ -60,6 +68,13 @@ function collectRuntimeErrors(page: Page) {
   return runtimeErrors;
 }
 
+function expectOnlyAllowedRuntimeErrors(runtimeErrors: string[], allowedPatterns: RegExp[] = []) {
+  const unexpectedErrors = runtimeErrors.filter(
+    (message) => !allowedPatterns.some((pattern) => pattern.test(message)),
+  );
+  expect(unexpectedErrors).toEqual([]);
+}
+
 async function expectNoPageError(page: Page) {
   for (const text of pageErrorTexts) {
     await expect(page.getByText(text, { exact: false })).toHaveCount(0);
@@ -82,6 +97,7 @@ test.describe('backoffice UI visual acceptance', () => {
   test('login page keeps a professional authentication console on desktop and mobile', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
 
+    await installExplicitZhCNPreference(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/login', { waitUntil: 'networkidle' });
 
@@ -101,7 +117,7 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(page.getByRole('button', { name: '登录' })).toBeVisible();
     await page.screenshot({ path: join(artifactDir, 'login-mobile.png'), fullPage: true });
 
-    expect(runtimeErrors).toEqual([]);
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
   for (const pageMeta of authenticatedPages) {
@@ -118,7 +134,7 @@ test.describe('backoffice UI visual acceptance', () => {
       await expectProfessionalBackofficeSurface(page);
       await page.screenshot({ path: join(artifactDir, pageMeta.screenshot), fullPage: true });
 
-      expect(runtimeErrors).toEqual([]);
+      expectOnlyAllowedRuntimeErrors(runtimeErrors);
     });
   }
 
@@ -131,5 +147,46 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(dashboardContent).toBeVisible();
     await expect(dashboardContent.getByText('业务资产', { exact: false })).toHaveCount(0);
     await expect(dashboardContent.getByText('CMDB', { exact: false })).toHaveCount(0);
+  });
+
+  test('secondary verify modal uses natural localized copy', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+    await signInAsAdmin(page);
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/system/setting', { waitUntil: 'networkidle' });
+    await page.locator('.submit-bar').getByRole('button', { name: '保存' }).click();
+
+    const verifyDialog = page.getByRole('dialog').filter({ has: page.getByText('敏感操作验证', { exact: true }) });
+    await expect(verifyDialog).toBeVisible();
+    await expect(verifyDialog.getByText('为了您的账号安全，请重新输入登录密码以继续操作。')).toBeVisible();
+
+    const passwordInput = verifyDialog.locator('input').first();
+    await expect(passwordInput).toHaveAttribute('placeholder', '请输入密码');
+    await verifyDialog.getByRole('button', { name: '确定' }).click();
+    await expect(verifyDialog.getByText('请输入密码')).toBeVisible();
+
+    await page.screenshot({ path: join(artifactDir, 'secondary-verify-dialog-validation.png'), fullPage: true });
+    expectOnlyAllowedRuntimeErrors(runtimeErrors, [/403 \(Forbidden\)/]);
+  });
+
+  test('system i18n create dialog shows localized required prompts', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+    await signInAsAdmin(page);
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/system/i18n', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: '新增' }).click();
+
+    const createDialog = page.getByRole('dialog').filter({ has: page.getByText('新增翻译', { exact: true }) });
+    await expect(createDialog).toBeVisible();
+    await createDialog.getByRole('button', { name: '确定' }).click();
+
+    await expect(createDialog.getByText('请输入所属模块')).toBeVisible();
+    await expect(createDialog.getByText('请输入翻译键')).toBeVisible();
+    await expect(createDialog.getByText('请输入内容')).toBeVisible();
+
+    await page.screenshot({ path: join(artifactDir, 'system-i18n-create-validation.png'), fullPage: true });
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 });

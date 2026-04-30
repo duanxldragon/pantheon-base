@@ -1,9 +1,11 @@
 import { apiRequest } from '../../../api/request';
+import { downloadFile } from '../../../api/file';
 
 export interface SettingItem {
   id: number;
   settingKey: string;
   settingValue: string;
+  defaultValue: string;
   valueType: 'string' | 'number' | 'boolean' | 'json';
   groupKey: string;
   module: string;
@@ -74,6 +76,32 @@ export interface SettingCacheRefreshResp {
   clearedAll: number;
 }
 
+export interface SettingOverviewIssue {
+  settingKey: string;
+  groupKey: string;
+  severity: 'warning' | 'critical';
+  reasonKey: string;
+}
+
+export interface SettingOverviewResp {
+  totalSettingCount: number;
+  publicSettingCount: number;
+  encryptedSettingCount: number;
+  requiredMissingCount: number;
+  riskCount: number;
+  storageDriver: string;
+  defaultLanguage: string;
+  defaultTheme: string;
+  issues: SettingOverviewIssue[];
+}
+
+export function getSettingOverview() {
+  return apiRequest<SettingOverviewResp>({
+    url: '/system/setting/overview',
+    method: 'get',
+  });
+}
+
 export function getSettingList(params?: { groupKey?: string; module?: string }) {
   return apiRequest<SettingItem[]>({
     url: '/system/setting/list',
@@ -111,6 +139,15 @@ export function getSettingAuditList(params?: SettingAuditQuery) {
     url: '/system/setting/audit/list',
     method: 'get',
     params,
+  });
+}
+
+export function exportSettingAudit(data?: SettingAuditQuery) {
+  return downloadFile({
+    url: '/system/setting/audit/export',
+    method: 'post',
+    data,
+    filename: 'system-setting-audit-export.csv',
   });
 }
 

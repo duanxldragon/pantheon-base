@@ -9,7 +9,12 @@ export interface DictTypeRow {
   module: string;
   status: number;
   remark: string;
+  itemCount: number;
+  activeItemCount: number;
+  disabledItemCount: number;
+  lastItemUpdatedAt: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface DictTypeQuery {
@@ -36,11 +41,22 @@ export interface DictItemRow {
   status: number;
   remark: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface DictItemPageResp {
+  items: DictItemRow[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface DictItemQuery {
   dictCode: string;
+  keyword?: string;
   status?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface DictItemPayload {
@@ -62,12 +78,75 @@ export interface DictCacheRefreshResp {
   clearedAll: number;
 }
 
-export function getDictTypeList(params?: DictTypeQuery) {
-  return apiRequest<DictTypeRow[]>({
+export interface DictTypeBatchStatusPayload {
+  typeIds: number[];
+  status: number;
+}
+
+export interface DictItemBatchStatusPayload {
+  itemIds: number[];
+  status: number;
+}
+
+export interface DictBatchStatusResp {
+  updatedCount: number;
+}
+
+export interface DictUsageReference {
+  filePath: string;
+  line: number;
+  column: number;
+  snippet: string;
+  domain: string;
+  moduleHint: string;
+}
+
+export interface DictUsageAnalysisResp {
+  dictCode: string;
+  referenceCount: number;
+  scannedProjectRoot: string;
+  references: DictUsageReference[];
+}
+
+function normalizeDictTypeRow(row: Partial<DictTypeRow>): DictTypeRow {
+  return {
+    id: Number(row.id || 0),
+    dictCode: row.dictCode || '',
+    dictName: row.dictName || '',
+    module: row.module || 'system',
+    status: Number(row.status || 1),
+    remark: row.remark || '',
+    itemCount: Number(row.itemCount || 0),
+    activeItemCount: Number(row.activeItemCount || 0),
+    disabledItemCount: Number(row.disabledItemCount || 0),
+    lastItemUpdatedAt: row.lastItemUpdatedAt || '',
+    createdAt: row.createdAt || '',
+    updatedAt: row.updatedAt || '',
+  };
+}
+
+function normalizeDictItemRow(row: Partial<DictItemRow>): DictItemRow {
+  return {
+    id: Number(row.id || 0),
+    dictCode: row.dictCode || '',
+    itemLabelKey: row.itemLabelKey || '',
+    itemValue: row.itemValue || '',
+    itemColor: row.itemColor || '',
+    sort: Number(row.sort || 0),
+    status: Number(row.status || 1),
+    remark: row.remark || '',
+    createdAt: row.createdAt || '',
+    updatedAt: row.updatedAt || '',
+  };
+}
+
+export async function getDictTypeList(params?: DictTypeQuery) {
+  const resp = await apiRequest<DictTypeRow[] | Partial<DictTypeRow>[]>({
     url: '/system/dict/type/list',
     method: 'get',
     params,
   });
+  return Array.isArray(resp) ? resp.map(normalizeDictTypeRow) : [];
 }
 
 export function createDictType(data: DictTypePayload) {
@@ -86,6 +165,14 @@ export function updateDictType(id: number, data: DictTypePayload) {
   });
 }
 
+export function batchUpdateDictTypeStatus(data: DictTypeBatchStatusPayload) {
+  return apiRequest<DictBatchStatusResp>({
+    url: '/system/dict/type/batch-status',
+    method: 'post',
+    data,
+  });
+}
+
 export function deleteDictType(id: number) {
   return apiRequest<{ deleted: boolean }>({
     url: `/system/dict/type/${id}`,
@@ -93,12 +180,27 @@ export function deleteDictType(id: number) {
   });
 }
 
-export function getDictItemList(params: DictItemQuery) {
-  return apiRequest<DictItemRow[]>({
+export async function getDictItemList(params: DictItemQuery) {
+  const resp = await apiRequest<DictItemPageResp | Partial<DictItemRow>[]>({
     url: '/system/dict/item/list',
     method: 'get',
     params,
   });
+  if (Array.isArray(resp)) {
+    const items = resp.map(normalizeDictItemRow);
+    return {
+      items,
+      total: items.length,
+      page: params.page || 1,
+      pageSize: params.pageSize || items.length || 10,
+    };
+  }
+  return {
+    items: Array.isArray(resp.items) ? resp.items.map(normalizeDictItemRow) : [],
+    total: Number(resp.total || 0),
+    page: Number(resp.page || params.page || 1),
+    pageSize: Number(resp.pageSize || params.pageSize || 10),
+  };
 }
 
 export function createDictItem(data: DictItemPayload) {
@@ -114,6 +216,30 @@ export function updateDictItem(id: number, data: DictItemPayload) {
     url: `/system/dict/item/${id}`,
     method: 'put',
     data,
+  });
+}
+
+export function batchUpdateDictItemStatus(data: DictItemBatchStatusPayload) {
+  return apiRequest<DictBatchStatusResp>({
+    url: '/system/dict/item/batch-status',
+    method: 'post',
+    data,
+  });
+}
+
+export function reorderDictItem(id: number, direction: 'up' | 'down') {
+  return apiRequest<DictItemRow>({
+    url: `/system/dict/item/${id}/reorder`,
+    method: 'put',
+    data: { direction },
+  });
+}
+
+export function analyzeDictUsage(dictCode: string) {
+  return apiRequest<DictUsageAnalysisResp>({
+    url: '/system/dict/usage',
+    method: 'get',
+    params: { dictCode },
   });
 }
 

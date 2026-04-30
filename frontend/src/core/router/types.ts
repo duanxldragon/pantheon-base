@@ -1,5 +1,6 @@
 import type { LazyExoticComponent, ComponentType } from 'react';
 import type { RegisteredComponentKey } from './componentRegistry';
+import type { MenuIconKey } from '../menu/icon';
 
 export type ModuleScope = 'platform' | 'system' | 'business';
 
@@ -7,7 +8,7 @@ interface ModuleRouteConfigBase {
   path: string;
   routeName?: string;
   titleKey: string;
-  icon?: string;
+  icon?: MenuIconKey;
   isCache?: boolean;
   activeMenu?: string;
   pagePermission?: string;
@@ -27,7 +28,7 @@ export type ModuleRouteConfig = ModuleRouteConfigBase & (
 export interface ModuleMenuMeta {
   titleKey: string;
   path: string;
-  icon?: string;
+  icon?: MenuIconKey;
   routeName?: string;
   module?: string;
   isCache?: boolean;

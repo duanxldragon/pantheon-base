@@ -1,22 +1,18 @@
 package system
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
 func setupDictTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 	if err := db.AutoMigrate(&SystemDictType{}, &SystemDictItem{}); err != nil {
 		t.Fatalf("migrate dict: %v", err)
 	}
@@ -217,5 +213,126 @@ func TestDictService_ImportTemplateAndExport(t *testing.T) {
 	}
 	if len(exportedItems.Rows) != 1 || exportedItems.Rows[0][0] != "biz_status" || exportedItems.Rows[0][2] != "enabled" {
 		t.Fatalf("unexpected item export rows: %+v", exportedItems.Rows)
+	}
+}
+
+func TestDictService_ListDictItemsSupportsPagingAndKeyword(t *testing.T) {
+	db := setupDictTestDB(t)
+	service := NewDictService(db)
+
+	if _, err := service.CreateDictType(&DictTypeCreateReq{
+		DictCode: "service_status",
+		DictName: "Service Status",
+		Module:   "business.cmdb",
+		Status:   1,
+	}); err != nil {
+		t.Fatalf("create dict type: %v", err)
+	}
+
+	seeds := []DictItemCreateReq{
+		{DictCode: "service_status", ItemLabelKey: "dict.service_status.pending", ItemValue: "pending", Sort: 10, Status: 1, Remark: "pending item"},
+		{DictCode: "service_status", ItemLabelKey: "dict.service_status.running", ItemValue: "running", Sort: 20, Status: 1, Remark: "running item"},
+		{DictCode: "service_status", ItemLabelKey: "dict.service_status.stopped", ItemValue: "stopped", Sort: 30, Status: 2, Remark: "stopped item"},
+	}
+	for _, item := range seeds {
+		if _, err := service.CreateDictItem(&item); err != nil {
+			t.Fatalf("create dict item %s: %v", item.ItemValue, err)
+		}
+	}
+
+	pageResp, err := service.ListDictItems(&DictItemListQuery{
+		DictCode: "service_status",
+		Page:     1,
+		PageSize: 2,
+	})
+	if err != nil {
+		t.Fatalf("list dict items: %v", err)
+	}
+	if pageResp.Total != 3 || len(pageResp.Items) != 2 || pageResp.PageSize != 2 {
+		t.Fatalf("unexpected page resp: %+v", pageResp)
+	}
+
+	filteredResp, err := service.ListDictItems(&DictItemListQuery{
+		DictCode: "service_status",
+		Keyword:  "run",
+		Status:   func() *int { value := 1; return &value }(),
+		Page:     1,
+		PageSize: 10,
+	})
+	if err != nil {
+		t.Fatalf("filter dict items: %v", err)
+	}
+	if filteredResp.Total != 1 || len(filteredResp.Items) != 1 || filteredResp.Items[0].ItemValue != "running" {
+		t.Fatalf("unexpected filtered resp: %+v", filteredResp)
+	}
+
+	typeRows, err := service.ListDictTypes(&DictTypeListQuery{DictCode: "service_status"})
+	if err != nil {
+		t.Fatalf("list dict types: %v", err)
+	}
+	if len(typeRows) != 1 {
+		t.Fatalf("expected one dict type, got %d", len(typeRows))
+	}
+	if typeRows[0].ItemCount != 3 || typeRows[0].ActiveItemCount != 2 || typeRows[0].DisabledItemCount != 1 {
+		t.Fatalf("unexpected dict type stats: %+v", typeRows[0])
+	}
+}
+
+func TestDictService_BatchUpdateAndReorderDictItems(t *testing.T) {
+	db := setupDictTestDB(t)
+	service := NewDictService(db)
+
+	typeResp, err := service.CreateDictType(&DictTypeCreateReq{
+		DictCode: "deploy_status",
+		DictName: "Deploy Status",
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("create dict type: %v", err)
+	}
+	first, err := service.CreateDictItem(&DictItemCreateReq{
+		DictCode:     typeResp.DictCode,
+		ItemLabelKey: "dict.deploy_status.pending",
+		ItemValue:    "pending",
+		Sort:         10,
+		Status:       1,
+	})
+	if err != nil {
+		t.Fatalf("create first item: %v", err)
+	}
+	second, err := service.CreateDictItem(&DictItemCreateReq{
+		DictCode:     typeResp.DictCode,
+		ItemLabelKey: "dict.deploy_status.running",
+		ItemValue:    "running",
+		Sort:         20,
+		Status:       1,
+	})
+	if err != nil {
+		t.Fatalf("create second item: %v", err)
+	}
+
+	updatedCount, err := service.BatchUpdateDictTypeStatus([]uint64{typeResp.ID, typeResp.ID}, 2)
+	if err != nil || updatedCount != 1 {
+		t.Fatalf("batch update dict type status failed: count=%d err=%v", updatedCount, err)
+	}
+	updatedCount, err = service.BatchUpdateDictItemStatus([]uint64{first.ID, second.ID, second.ID}, 2)
+	if err != nil || updatedCount != 2 {
+		t.Fatalf("batch update dict item status failed: count=%d err=%v", updatedCount, err)
+	}
+
+	moved, err := service.ReorderDictItem(second.ID, "up")
+	if err != nil {
+		t.Fatalf("reorder dict item: %v", err)
+	}
+	if moved.Sort != 10 {
+		t.Fatalf("expected moved item sort=10, got %+v", moved)
+	}
+
+	pageResp, err := service.ListDictItems(&DictItemListQuery{DictCode: typeResp.DictCode, Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list dict items: %v", err)
+	}
+	if len(pageResp.Items) != 2 || pageResp.Items[0].ID != second.ID {
+		t.Fatalf("unexpected reorder result: %+v", pageResp.Items)
 	}
 }

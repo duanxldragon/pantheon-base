@@ -198,8 +198,17 @@ SecurityCenter
 | 方法 | 路径 | 说明 |
 | :--- | :--- | :--- |
 | `GET` | `/api/v1/system/login-log/list` | 登录日志列表 |
+| `POST` | `/api/v1/system/login-log/export` | 登录日志导出 |
+| `POST` | `/api/v1/system/login-log/cleanup` | 按保留期清理登录日志，当前只允许保留最近 `1 / 7 / 30` 天，并要求二次验证 |
+| `POST` | `/api/v1/system/login-log/batch-delete` | 按选择集批量删除登录日志，并要求二次验证 |
 | `GET` | `/api/v1/system/session/list` | 全局会话列表 |
 | `DELETE` | `/api/v1/system/session/:id` | 管理员下线会话 |
+
+补充约束：
+
+- 登录日志不再默认开放“清空全部”。
+- 管理员侧危险动作统一收敛为“保留最近 `1 / 7 / 30` 天清理”或“按选择集删除”。
+- 选择集删除与保留期清理都必须复用敏感操作二次验证链路。
 
 ## 7. 数据模型
 

@@ -4,6 +4,9 @@ import (
 	"errors"
 	"time"
 
+	dept "pantheon-platform/backend/modules/system/dept"
+	"pantheon-platform/backend/pkg/authsession"
+
 	"gorm.io/gorm"
 )
 
@@ -25,6 +28,10 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 	now := time.Now()
 	since := now.AddDate(0, 0, -summaryPeriodDays)
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	idleMinutes := authsession.LoadSessionIdleMinutes(s.db, authsession.DefaultSessionIdleMinutes)
+	if err := authsession.CleanupInactiveSessions(s.db, now, idleMinutes); err != nil {
+		return nil, err
+	}
 	resp := &SummaryResp{
 		PeriodDays: summaryPeriodDays,
 	}
@@ -53,8 +60,7 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 	if err := s.db.Table("system_menu").Where("is_visible = ? AND type <> ?", 1, "F").Count(&resp.VisibleMenuCount).Error; err != nil {
 		return nil, err
 	}
-	if err := s.db.Table("system_user_session").
-		Where("revoked_at IS NULL AND refresh_expires_at > ?", now).
+	if err := authsession.ApplyActiveScope(s.db.Table("system_user_session"), "", now, idleMinutes).
 		Count(&resp.ActiveSessionCount).Error; err != nil {
 		return nil, err
 	}
@@ -121,5 +127,40 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 		})
 	}
 
+	orgSvc := dept.NewDeptService(s.db)
+	orgTasks, err := orgSvc.ListGovernanceTasks(&dept.DeptGovernanceTaskQuery{})
+	if err != nil {
+		return nil, err
+	}
+	resp.OrgGovernanceTaskCount = len(orgTasks)
+	resp.OrgGovernanceTasks = make([]DashboardTodoResp, 0, minInt(len(orgTasks), 6))
+	for _, task := range orgTasks {
+		if len(resp.OrgGovernanceTasks) >= 6 {
+			break
+		}
+		resourceLabel := task.DeptName
+		if task.GovernanceScope == "post" && task.PostName != "" {
+			resourceLabel = task.PostName + " / " + task.DeptName
+		}
+		resp.OrgGovernanceTasks = append(resp.OrgGovernanceTasks, DashboardTodoResp{
+			TaskKey:          task.TaskKey,
+			Domain:           "system.org",
+			ScopeLabel:       task.GovernanceScopeLabel,
+			IssueLabel:       task.GovernanceTagLabel,
+			ActionLabel:      task.GovernanceActionLabel,
+			ResourceLabel:    resourceLabel,
+			RelatedUserCount: task.RelatedUserCount,
+			RoutePath:        "/system/dept",
+			RouteStateDeptID: task.DeptID,
+		})
+	}
+
 	return resp, nil
+}
+
+func minInt(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

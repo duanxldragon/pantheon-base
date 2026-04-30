@@ -1,23 +1,21 @@
 package system
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"pantheon-platform/backend/pkg/testmysql"
 )
 
 func setupMenuTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := testmysql.Open(t)
 	if err := db.AutoMigrate(&SystemMenu{}); err != nil {
 		t.Fatalf("migrate menu: %v", err)
 	}
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_key VARCHAR(64), status INT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")
 	return db
 }
 
@@ -54,5 +52,33 @@ func TestMenuServiceValidateMenuMetaAcceptsRegisteredComponent(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("expected registered component to pass, got %v", err)
+	}
+}
+
+func TestMenuServiceHasManageAccess(t *testing.T) {
+	db := setupMenuTestDB(t)
+	service := NewMenuService(db)
+
+	if err := db.Exec("INSERT INTO system_role (id, role_key, status) VALUES (1, 'menu_manager', 1)").Error; err != nil {
+		t.Fatalf("seed role: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_role_permission (role_id, permission_key) VALUES (1, 'system:menu:list')").Error; err != nil {
+		t.Fatalf("seed role permission: %v", err)
+	}
+
+	allowed, err := service.HasManageAccess([]string{"menu_manager"})
+	if err != nil {
+		t.Fatalf("has manage access: %v", err)
+	}
+	if !allowed {
+		t.Fatalf("expected menu_manager to have manage access")
+	}
+
+	allowed, err = service.HasManageAccess([]string{"guest"})
+	if err != nil {
+		t.Fatalf("has manage access for guest: %v", err)
+	}
+	if allowed {
+		t.Fatalf("expected guest to have no manage access")
 	}
 }
