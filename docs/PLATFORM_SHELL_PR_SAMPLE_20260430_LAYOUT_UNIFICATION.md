@@ -1,5 +1,11 @@
 # Platform 壳层 PR 描述样例
 
+更新时间：2026-04-30
+
+类型：Acceptance
+归属层：platform
+状态：Archived
+
 适用批次：`platform-shell-2026-04-30-layout-unification`
 
 基于：

@@ -2,6 +2,10 @@
 
 更新时间：2026-04-29
 
+类型：Design
+归属层：system/config
+状态：Active
+
 本文定义 `system/config -> dynamicmodule` 的正式治理边界。
 
 它重点回答：

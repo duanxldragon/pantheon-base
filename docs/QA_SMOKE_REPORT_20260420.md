@@ -1,6 +1,11 @@
 # Pantheon 平台层冒烟归档报告（2026-04-20）
 
 更新时间：2026-04-20
+
+类型：Acceptance
+归属层：platform
+状态：Archived
+
 执行者：Pantheon 专家
 层级归属：`platform` + `system/auth` + `system/iam` + `system/org` + `system/config`
 

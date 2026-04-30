@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(go test *)",
-      "Bash(xargs wc *)"
+      "Bash(xargs wc *)",
+      "Bash(git push *)",
+      "Bash(grep -v \":0$\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

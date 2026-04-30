@@ -2,6 +2,10 @@
 
 更新时间：2026-04-21
 
+类型：Acceptance
+归属层：system/config
+状态：Active
+
 本文用于验证 `system/iam`、`system/org`、`system/config`、`system/auth`、`system/audit` 已开放的导入导出能力是否真实可用。
 
 除本文的手工联调步骤外，仓库也已提供一套可复用的 API 自动 smoke：

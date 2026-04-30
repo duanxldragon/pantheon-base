@@ -2,6 +2,10 @@
 
 更新时间：2026-04-30
 
+类型：Acceptance
+归属层：platform
+状态：Active
+
 本文用于 `platform` 壳层相关改动的 PR 描述、阶段记录说明或阶段收口说明。
 
 快速 checklist 片段：

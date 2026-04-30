@@ -2,6 +2,10 @@
 
 更新时间：2026-04-17
 
+类型：Design
+归属层：platform
+状态：Active
+
 ## 1. 归属边界
 
 平台仪表盘属于 `platform` 层，不属于单一 `system/auth`、`system/iam`、`system/org` 或 `system/config` 子域。

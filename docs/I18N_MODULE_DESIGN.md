@@ -2,6 +2,10 @@
 
 更新时间：2026-04-29
 
+类型：Design
+归属层：system/config
+状态：Active
+
 本文定义 `system/config -> i18n` 子域的独立边界。
 
 它重点解决四个问题：

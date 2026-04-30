@@ -2,6 +2,12 @@
 
 验收批次：`platform-shell-2026-04-30-layout-unification`
 
+更新时间：2026-04-30
+
+类型：Acceptance
+归属层：platform
+状态：Archived
+
 基于模板：`docs/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
 
 ---

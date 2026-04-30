@@ -2,6 +2,10 @@
 
 更新时间：2026-04-30
 
+类型：Acceptance
+归属层：platform
+状态：Active
+
 本文是 `platform` 壳层改动的固定验收模板。
 
 提交要求：

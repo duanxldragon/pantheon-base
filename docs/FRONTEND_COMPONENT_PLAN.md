@@ -2,6 +2,10 @@
 
 更新时间：2026-04-17
 
+类型：Design
+归属层：platform
+状态：Active
+
 本文用于承接：
 
 - `docs/FRONTEND_UI_SPEC.md` 的视觉与交互规范

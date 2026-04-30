@@ -2,6 +2,10 @@
 
 更新时间：2026-04-30
 
+类型：Acceptance
+归属层：platform
+状态：Active
+
 以下内容可直接复制到后续 `platform` 壳层 PR 描述中。
 
 适用范围：

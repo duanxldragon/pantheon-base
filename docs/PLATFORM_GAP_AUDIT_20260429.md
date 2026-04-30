@@ -1,5 +1,11 @@
 # 平台功能与设计缺口审计（2026-04-29）
 
+更新时间：2026-04-29
+
+类型：Assessment
+归属层：platform
+状态：Active
+
 本次审计遵循 Pantheon 分层边界，按 **platform / system/auth / system/iam / system/org / system/config / business/\*** 做只读评估。
 
 本报告不评估单个页面视觉细节，也不进入“发现即修复”的代码变更流程，重点回答两个问题：

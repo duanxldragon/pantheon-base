@@ -2,6 +2,10 @@
 
 更新时间：2026-04-28
 
+类型：Design
+归属层：system/config
+状态：Active
+
 本文定义 Pantheon Base 的字典管理和系统设置设计。
 
 这两个能力属于 `system/config` 能力域，是企业后台“通用底座”的关键组成：
