@@ -461,17 +461,6 @@
   overflow: hidden;
 }
 
-.app-shell__header-title {
-  margin: 0 !important;
-  color: var(--text-primary);
-  font-size: var(--text-lg) !important;
-  font-weight: 600 !important;
-  letter-spacing: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .app-shell__header-actions {
   display: inline-flex;
   align-items: center;
@@ -1088,24 +1077,32 @@
   font-size: 11px;
 }
 
-.app-shell__content-breadcrumb {
-  padding: 0 0 12px;
-  color: var(--text-tertiary);
-  font-size: var(--text-sm);
-  line-height: 1.5;
+.app-shell__header-breadcrumb {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-base);
+  line-height: 1.4;
 }
 
-.app-shell__content-breadcrumb .arco-breadcrumb-item,
-.app-shell__content-breadcrumb .arco-breadcrumb-item a,
-.app-shell__content-breadcrumb .arco-breadcrumb-item-link {
+.app-shell__header-breadcrumb .arco-breadcrumb-item,
+.app-shell__header-breadcrumb .arco-breadcrumb-item a,
+.app-shell__header-breadcrumb .arco-breadcrumb-item-link {
   color: var(--text-tertiary);
   white-space: nowrap;
   word-break: keep-all;
+  font-size: var(--text-sm);
 }
 
-.app-shell__content-breadcrumb .arco-breadcrumb-item:last-child,
-.app-shell__content-breadcrumb .arco-breadcrumb-item:last-child a {
-  color: var(--text-secondary);
+.app-shell__header-breadcrumb .arco-breadcrumb-item:last-child,
+.app-shell__header-breadcrumb .arco-breadcrumb-item:last-child a {
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  pointer-events: none;
 }}
 
 .app-shell__tabs {
