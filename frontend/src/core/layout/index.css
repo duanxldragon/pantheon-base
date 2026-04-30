@@ -8,8 +8,7 @@
 }
 
 .app-shell__sider {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 4%, #f8fbff) 0%, #f7fafc 100%);
+  background: #f7f8fa;
   border-right: 1px solid var(--panel-border);
   box-shadow: none;
 }
@@ -1219,7 +1218,7 @@
 .app-shell__content {
   padding: 24px 28px 0;
   overflow: auto;
-  background: linear-gradient(180deg, #f7fbfb 0%, #f5faf8 100%);
+  background: var(--app-bg);
 }
 
 .app-shell__content-inner {

@@ -23,3 +23,15 @@ Key routing rules:
 - Architecture review → invoke plan-eng-review
 - Save progress, checkpoint, resume → invoke checkpoint
 - Code quality, health check → invoke health
+
+## Design System
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.
+
+Key constraints:
+- Font: Source Sans 3 (body/UI), JetBrains Mono (code)
+- No Inter, no radial-gradient, no large button shadows, no non-standard font-weights
+- Radius: 4/6/8/12px (no pill-radius cards)
+- All colors via Pantheon CSS tokens, never raw Arco variables

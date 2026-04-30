@@ -5,7 +5,6 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Select,
   Space,
   Switch,
@@ -13,6 +12,7 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { AppModal, showAppModalConfirm } from '../../../components';
@@ -120,7 +120,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
       content: t('generator.fieldEditor.confirmDelete.content'),
       onOk: () => {
         onChange(fields.filter((item) => item.name !== name));
-        Message.success(t('common.deleteSuccess'));
+        message.success(t('common.deleteSuccess'));
       },
     });
   };
@@ -178,7 +178,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
 
       const duplicated = fields.some((field) => field.name === nextField.name && field.name !== editingFieldName);
       if (duplicated) {
-        Message.error(t('generator.fieldEditor.duplicateName'));
+        message.error(t('generator.fieldEditor.duplicateName'));
         return;
       }
 
@@ -187,7 +187,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
         : [...fields, nextField];
       onChange(nextFields);
       setVisible(false);
-      Message.success(editingFieldName ? t('common.updateSuccess') : t('common.createSuccess'));
+      message.success(editingFieldName ? t('common.updateSuccess') : t('common.createSuccess'));
     } catch {
       // form validate handled by Arco
     }
@@ -265,7 +265,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
               onClick={() => {
                 const preset = applyFieldTemplate(template.key, resolveTemplateText);
                 if (!preset || fields.some((field) => field.name === preset.name)) {
-                  Message.warning(t('generator.fieldEditor.templateExists'));
+                  message.warning(t('generator.fieldEditor.templateExists'));
                   return;
                 }
                 onChange([...fields, normalizeField(preset)]);

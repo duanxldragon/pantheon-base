@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Form, Grid, Input, InputNumber, Message, Popconfirm, Select, Space, Tag, Tree, Typography } from '@arco-design/web-react';
+import { Alert, Button, Card, Form, Grid, Input, InputNumber, Popconfirm, Select, Space, Tag, Tree, Typography } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
@@ -240,7 +241,7 @@ const RoleList: React.FC = () => {
       const rows = await resolveRouteWarmData('/system/role', 'menus:manage', () => getMenuTree({ scope: 'manage' }));
       setMenuTree(rows);
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   }, [t]);
 
@@ -336,7 +337,7 @@ const RoleList: React.FC = () => {
 
   const authorizationTitle = (label: string, count: number, color: string) => (
     <Space size={8}>
-      <Typography.Text style={{ fontWeight: 600 }}>{label}</Typography.Text>
+      <Typography.Text className="font-semibold">{label}</Typography.Text>
       <Tag color={color}>{t('system.role.selectedCount', { count })}</Tag>
     </Space>
   );
@@ -496,10 +497,10 @@ const RoleList: React.FC = () => {
     try {
       if (editing) {
         await updateRole(editing.id, payload);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createRole(payload);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidateRoleCaches();
       publishRefresh('system:role:changed', 'system/role');
@@ -512,7 +513,7 @@ const RoleList: React.FC = () => {
 
   const removeRole = async (row: RoleRow) => {
     await deleteRole(row.id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidateRoleCaches();
     publishRefresh('system:role:changed', 'system/role');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== row.id));
@@ -523,12 +524,12 @@ const RoleList: React.FC = () => {
 
   const handleBatchStatus = async (status: 1 | 2) => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const roleIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateRoleStatus({ roleIds, status });
-    Message.success(t('system.role.batchStatusSuccess', { count: result.updatedCount }));
+    message.success(t('system.role.batchStatusSuccess', { count: result.updatedCount }));
     invalidateRoleCaches();
     publishRefresh('system:role:changed', 'system/role');
     setSelectedRowKeys([]);

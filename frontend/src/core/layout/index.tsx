@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Avatar, Breadcrumb, Button, Dropdown, Empty, Input, Layout, Menu, Message, Space, Spin, Tooltip, Typography } from '@arco-design/web-react';
+import { Avatar, Breadcrumb, Button, Dropdown, Empty, Input, Layout, Menu, Space, Spin, Tooltip, Typography } from '@arco-design/web-react';
+import { message } from '../../components/feedback/message';
 import { IconCheck, IconClose, IconLanguage, IconLayout, IconLock, IconMenuFold, IconMenuUnfold, IconNotification, IconPoweroff, IconPushpin, IconSafe, IconSearch, IconSettings, IconUser } from '@arco-design/web-react/icon';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -488,7 +489,7 @@ const BaseLayout: React.FC = () => {
       setLocked(false);
       setUnlockPassword('');
       recordActivity('unlock');
-      Message.success(t('app.lock.unlockSuccess'));
+      message.success(t('app.lock.unlockSuccess'));
     } finally {
       setUnlockLoading(false);
     }

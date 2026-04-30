@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Table, Typography } from '@arco-design/web-react';
+import { Card, Typography } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import {
   getCmdbHostList,
   type CmdbHostListQuery,
   type CmdbHostListRow,
 } from './api';
+import AppTable from '../../../../components/data-display/AppTable';
 import { PageContainer, PageError, PageLoading } from '../../../../components';
 
 const emptyQuery: CmdbHostListQuery = {
@@ -61,7 +62,7 @@ const CmdbHostList: React.FC = () => {
     <PageContainer>
       <Card bordered={false}>
         <Typography.Title heading={5}>{t('business.cmdb.host.title')}</Typography.Title>
-        <Table
+        <AppTable
           data={data}
           rowKey="id"
           pagination={{

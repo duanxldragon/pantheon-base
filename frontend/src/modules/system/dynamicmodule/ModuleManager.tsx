@@ -14,11 +14,11 @@ import {
   Message,
   Popconfirm,
   Space,
-  Table,
   Tag,
   Typography,
 } from '@arco-design/web-react';
 import { IconDelete, IconPlus, IconRefresh } from '@arco-design/web-react/icon';
+import AppTable from '../../../components/data-display/AppTable';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ensureOperationVerified, isRequestError } from '../../../api/request';
@@ -88,13 +88,13 @@ const ModuleManager: React.FC = () => {
     try {
       await ensureOperationVerified();
       await unregisterModule(name, false);
-      Message.success(t('generator.moduleManager.unregisterSuccess'));
+      message.success(t('generator.moduleManager.unregisterSuccess'));
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.moduleManager.unregisterError'));
+      message.error(t('generator.moduleManager.unregisterError'));
     }
   };
 
@@ -102,13 +102,13 @@ const ModuleManager: React.FC = () => {
     try {
       await ensureOperationVerified();
       await registerModule({ name });
-      Message.success(t('generator.moduleManager.registerSuccess'));
+      message.success(t('generator.moduleManager.registerSuccess'));
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.moduleManager.registerError'));
+      message.error(t('generator.moduleManager.registerError'));
     }
   };
 
@@ -116,13 +116,13 @@ const ModuleManager: React.FC = () => {
     try {
       await ensureOperationVerified();
       await deleteModuleRecord(name);
-      Message.success(t('generator.moduleManager.deleteRecordSuccess'));
+      message.success(t('generator.moduleManager.deleteRecordSuccess'));
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.moduleManager.deleteRecordError'));
+      message.error(t('generator.moduleManager.deleteRecordError'));
     }
   };
 
@@ -150,14 +150,14 @@ const ModuleManager: React.FC = () => {
       await ensureOperationVerified();
       setPurging(true);
       await purgeModule(purgeTarget.name, { purgeSource: true, dropTable: Boolean(values.dropTable) });
-      Message.success(t('generator.moduleManager.purgeSuccess'));
+      message.success(t('generator.moduleManager.purgeSuccess'));
       closePurgeModal();
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.moduleManager.purgeError'));
+      message.error(t('generator.moduleManager.purgeError'));
     } finally {
       setPurging(false);
     }
@@ -168,7 +168,7 @@ const ModuleManager: React.FC = () => {
       await ensureOperationVerified();
       setRepairing(true);
       const result = await repairRegistries();
-      Message.success(
+      message.success(
         t('generator.moduleManager.repairSuccess', {
           refs: result.summary.generatedRegistryRefs,
           marked: result.summary.markedUninstalledModules,
@@ -179,7 +179,7 @@ const ModuleManager: React.FC = () => {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.moduleManager.repairError'));
+      message.error(t('generator.moduleManager.repairError'));
     } finally {
       setRepairing(false);
     }
@@ -405,12 +405,12 @@ const ModuleManager: React.FC = () => {
           </Card>
         </Space>
 
-        <Table
+        <AppTable
           columns={columns}
           data={modules}
           rowKey="name"
           pagination={false}
-          noDataElement={featureDisabled ? t('generator.moduleManager.readOnlyEmpty') : t('generator.moduleManager.empty')}
+          emptyText={featureDisabled ? t('generator.moduleManager.readOnlyEmpty') : t('generator.moduleManager.empty')}
         />
       </Card>
       <AppModal

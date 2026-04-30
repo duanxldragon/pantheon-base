@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Card, Form, Grid, Input, Message, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import { Avatar, Button, Card, Form, Grid, Input, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconDelete, IconDownload, IconEdit, IconEye, IconLock, IconPlus, IconSearch, IconUpload } from '@arco-design/web-react/icon';
 import { uploadSystemFile } from '../../../api/upload';
 import { useTranslation } from 'react-i18next';
@@ -137,7 +138,7 @@ const UserList: React.FC = () => {
         value: item.id,
       })));
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   }, [t]);
 
@@ -160,7 +161,7 @@ const UserList: React.FC = () => {
         deptId: item.deptId,
       })));
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   }, [t]);
 
@@ -221,7 +222,7 @@ const UserList: React.FC = () => {
       });
       setVisible(true);
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   };
 
@@ -276,10 +277,10 @@ const UserList: React.FC = () => {
           status: values.status,
           roleIds: values.roleIds,
         });
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createUser(values);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidateUserCaches();
       publishRefresh('system:user:changed', 'system/user');
@@ -300,7 +301,7 @@ const UserList: React.FC = () => {
       const uploaded = await uploadSystemFile(file, 'user/avatar');
       form.setFieldValue('avatar', uploaded.url);
       setAvatarPreview(uploaded.url);
-      Message.success(t('system.profile.avatarUploadSuccess'));
+      message.success(t('system.profile.avatarUploadSuccess'));
     } finally {
       setUploadingAvatar(false);
     }
@@ -327,7 +328,7 @@ const UserList: React.FC = () => {
     setSubmitting(true);
     try {
       const result = await resetUserPassword(resetTarget.id, { newPassword: values.newPassword });
-      Message.success(t('system.user.resetPasswordSuccess', { count: result.revokedSessionCount }));
+      message.success(t('system.user.resetPasswordSuccess', { count: result.revokedSessionCount }));
       setResetTarget(null);
       resetPasswordForm.resetFields();
     } finally {
@@ -337,7 +338,7 @@ const UserList: React.FC = () => {
 
   const removeUser = async (id: number) => {
     await deleteUser(id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidateUserCaches();
     publishRefresh('system:user:changed', 'system/user');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
@@ -490,12 +491,12 @@ const UserList: React.FC = () => {
 
   const handleBatchStatus = async (status: 1 | 2) => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const userIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateUserStatus({ userIds, status });
-    Message.success(t('system.user.batchStatusSuccess', { count: result.updatedCount }));
+    message.success(t('system.user.batchStatusSuccess', { count: result.updatedCount }));
     invalidateUserCaches();
     publishRefresh('system:user:changed', 'system/user');
     setSelectedRowKeys([]);

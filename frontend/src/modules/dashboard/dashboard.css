@@ -13,9 +13,7 @@
 .dashboard-hero-card {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--brand-primary) 10%, transparent) 0, transparent 32%),
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 3%, #ffffff) 0%, #ffffff 100%);
+  background: var(--panel-bg-solid);
 }
 
 .dashboard-hero-card__top {
@@ -38,20 +36,20 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .dashboard-hero-card__title {
   margin: 12px 0 8px !important;
-  font-size: 28px !important;
+  font-size: var(--text-3xl) !important;
   line-height: 1.1 !important;
 }
 
 .dashboard-hero-card__desc {
   margin: 0 !important;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.7;
 }
 
@@ -72,14 +70,14 @@
 .dashboard-hero-card__summary-label {
   display: block;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   margin-bottom: 8px;
 }
 
 .dashboard-hero-card__summary-value {
   color: var(--text-primary);
-  font-size: 24px;
-  font-weight: 650;
+  font-size: var(--text-2xl);
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -116,8 +114,8 @@
 
 .dashboard-stat-card__value .arco-statistic-content {
   color: var(--text-primary);
-  font-size: 28px;
-  font-weight: 650;
+  font-size: var(--text-3xl);
+  font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
@@ -126,7 +124,7 @@
   display: block;
   margin-top: 10px;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.6;
 }
 
@@ -144,12 +142,12 @@
 
 .dashboard-panel-card__meta {
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .dashboard-panel-card__value {
-  font-size: 24px;
-  font-weight: 650;
+  font-size: var(--text-2xl);
+  font-weight: 600;
   line-height: 1.2;
   color: var(--text-primary);
 }
@@ -207,19 +205,19 @@
 
 .dashboard-focus-item__label {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .dashboard-focus-item__value {
   color: var(--text-primary);
-  font-size: 24px;
-  font-weight: 650;
+  font-size: var(--text-2xl);
+  font-weight: 600;
   line-height: 1.2;
 }
 
 .dashboard-focus-item__desc {
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 
@@ -287,7 +285,7 @@
 .dashboard-quick-action__desc {
   display: block;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.6;
 }
 
@@ -328,7 +326,7 @@
 
 .dashboard-domain-card__summary {
   font-size: 22px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -382,7 +380,7 @@
 
 .dashboard-task-card__desc {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.6;
 }
 
@@ -428,7 +426,7 @@
   }
 
   .dashboard-hero-card__title {
-    font-size: 24px !important;
+    font-size: var(--text-2xl) !important;
   }
 
   .dashboard-task-card {

@@ -7,7 +7,6 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Popconfirm,
   Select,
   Space,
@@ -15,6 +14,7 @@ import {
   Typography,
   List,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconDelete, IconEdit, IconEye, IconRefresh, IconSearch } from '@arco-design/web-react/icon';
 import { IconDownload } from '@arco-design/web-react/icon';
 import type { TFunction } from 'i18next';
@@ -255,7 +255,7 @@ const I18nList: React.FC = () => {
       setAudit(resp);
     } catch {
       setAudit(null);
-      Message.error(t('i18n.audit.error'));
+      message.error(t('i18n.audit.error'));
     } finally {
       setAuditLoading(false);
     }
@@ -397,7 +397,7 @@ const I18nList: React.FC = () => {
         setEditVisible(true);
       }
     } catch {
-      Message.error(t('i18n.detail.error'));
+      message.error(t('i18n.detail.error'));
     } finally {
       setDetailLoading(false);
     }
@@ -407,7 +407,7 @@ const I18nList: React.FC = () => {
     try {
       await deleteI18n(String(row.id));
       await reloadI18nResources();
-      Message.success(t('common.deleteSuccess'));
+      message.success(t('common.deleteSuccess'));
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
       await loadOverview();
@@ -416,20 +416,20 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('i18n.delete.error'));
+      message.error(t('i18n.delete.error'));
     }
   };
 
   const handleBatchDelete = async () => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     try {
       const deletedCount = selectedRowKeys.length;
       await batchDeleteI18n(selectedRowKeys.map(String));
       await reloadI18nResources();
-      Message.success(t('i18n.batchDeleteSuccess', { count: deletedCount }));
+      message.success(t('i18n.batchDeleteSuccess', { count: deletedCount }));
       setSelectedRowKeys([]);
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
@@ -439,7 +439,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('i18n.delete.error'));
+      message.error(t('i18n.delete.error'));
     }
   };
 
@@ -447,7 +447,7 @@ const I18nList: React.FC = () => {
     try {
       await refreshI18nCache();
       await reloadI18nResources();
-      Message.success(t('i18n.refreshSuccess'));
+      message.success(t('i18n.refreshSuccess'));
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
       await loadOverview();
@@ -456,23 +456,23 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('common.actionFailed'));
+      message.error(t('common.actionFailed'));
     }
   };
 
   const handleRefreshSelected = async () => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const locales = Array.from(new Set(rows.filter((row) => selectedRowKeys.includes(row.id)).map((row) => row.locale)));
     try {
       await refreshI18nLocales(locales);
       await reloadI18nResources();
-      Message.success(t('i18n.refreshSuccess'));
+      message.success(t('i18n.refreshSuccess'));
       publishRefresh('system:i18n:changed', 'system/i18n');
     } catch {
-      Message.error(t('i18n.refresh.error'));
+      message.error(t('i18n.refresh.error'));
     }
   };
 
@@ -488,7 +488,7 @@ const I18nList: React.FC = () => {
     try {
       await downloadI18nImportTemplate();
     } catch {
-      Message.error(t('i18n.import.template.error'));
+      message.error(t('i18n.import.template.error'));
     }
   };
 
@@ -510,14 +510,14 @@ const I18nList: React.FC = () => {
         }
       }
     } catch {
-      Message.error(t('i18n.import.error'));
+      message.error(t('i18n.import.error'));
     }
   };
 
   const handleSyncKeys = async () => {
     try {
       const resp = await syncI18nKeys();
-      Message.success(t('i18n.syncSuccess', { count: resp.count }));
+      message.success(t('i18n.syncSuccess', { count: resp.count }));
       setSyncedKeys(resp.keys || []);
       setSyncVisible(true);
       publishRefresh('system:i18n:changed', 'system/i18n');
@@ -528,7 +528,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('i18n.syncFailed'));
+      message.error(t('i18n.syncFailed'));
     }
   };
 
@@ -549,7 +549,7 @@ const I18nList: React.FC = () => {
     try {
       await updateI18n(String(currentRow.id), values);
       await reloadI18nResources();
-      Message.success(t('common.updateSuccess'));
+      message.success(t('common.updateSuccess'));
       setEditVisible(false);
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
@@ -567,7 +567,7 @@ const I18nList: React.FC = () => {
     setFillingMissingLocales(true);
     try {
       const resp = await fillI18nMissingLocales(missingLocaleModuleFilter || undefined);
-      Message.success(t('i18n.fillMissingLocales.success', { count: resp.created }));
+      message.success(t('i18n.fillMissingLocales.success', { count: resp.created }));
       await reloadI18nResources();
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
@@ -577,7 +577,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('i18n.fill_missing_locales.error'));
+      message.error(t('i18n.fill_missing_locales.error'));
     } finally {
       setFillingMissingLocales(false);
     }
@@ -587,7 +587,7 @@ const I18nList: React.FC = () => {
     setHydratingBuiltinLocales(true);
     try {
       const resp = await hydrateBuiltinI18nLocales(moduleName);
-      Message.success(t('i18n.hydrateBuiltin.success', { created: resp.created, updated: resp.updated }));
+      message.success(t('i18n.hydrateBuiltin.success', { created: resp.created, updated: resp.updated }));
       await reloadI18nResources();
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
@@ -597,7 +597,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('i18n.hydrate_builtin.error'));
+      message.error(t('i18n.hydrate_builtin.error'));
     } finally {
       setHydratingBuiltinLocales(false);
     }
@@ -661,7 +661,7 @@ const I18nList: React.FC = () => {
     try {
       await createI18n(values);
       await reloadI18nResources();
-      Message.success(t('common.createSuccess'));
+      message.success(t('common.createSuccess'));
       setCreateVisible(false);
       createForm.resetFields();
       publishRefresh('system:i18n:changed', 'system/i18n');
@@ -676,7 +676,7 @@ const I18nList: React.FC = () => {
         await resolveCreateDuplicateConflict(values.key, values.locale);
         return;
       }
-      Message.error(t('i18n.create.error'));
+      message.error(t('i18n.create.error'));
     } finally {
       setSubmitting(false);
     }
@@ -699,10 +699,10 @@ const I18nList: React.FC = () => {
     setUnusedLifecycleLoading(true);
     try {
       const resp = await startUnusedObservation(moduleName);
-      Message.success(t('i18n.lifecycle.observe.success', { count: resp.affectedKeys.length }));
+      message.success(t('i18n.lifecycle.observe.success', { count: resp.affectedKeys.length }));
       await refreshAfterLifecycleChange();
     } catch {
-      Message.error(t('i18n.lifecycle.observe.error'));
+      message.error(t('i18n.lifecycle.observe.error'));
     } finally {
       setUnusedLifecycleLoading(false);
     }
@@ -712,10 +712,10 @@ const I18nList: React.FC = () => {
     setUnusedLifecycleLoading(true);
     try {
       const resp = await archiveObservedUnusedKeys(moduleName);
-      Message.success(t('i18n.lifecycle.archive.success', { count: resp.affectedKeys.length }));
+      message.success(t('i18n.lifecycle.archive.success', { count: resp.affectedKeys.length }));
       await refreshAfterLifecycleChange();
     } catch {
-      Message.error(t('i18n.lifecycle.archive.error'));
+      message.error(t('i18n.lifecycle.archive.error'));
     } finally {
       setUnusedLifecycleLoading(false);
     }
@@ -725,10 +725,10 @@ const I18nList: React.FC = () => {
     setUnusedLifecycleLoading(true);
     try {
       const resp = await deleteArchivedUnusedKeys(moduleName, true);
-      Message.success(t('i18n.lifecycle.delete.success', { count: resp.affectedKeys.length }));
+      message.success(t('i18n.lifecycle.delete.success', { count: resp.affectedKeys.length }));
       await refreshAfterLifecycleChange();
     } catch {
-      Message.error(t('i18n.lifecycle.delete.error'));
+      message.error(t('i18n.lifecycle.delete.error'));
     } finally {
       setUnusedLifecycleLoading(false);
     }
@@ -757,7 +757,7 @@ const I18nList: React.FC = () => {
       setRenamePreview(resp);
     } catch {
       setRenamePreview(null);
-      Message.error(t('i18n.rename.preview.error'));
+      message.error(t('i18n.rename.preview.error'));
     } finally {
       setRenamePreviewLoading(false);
     }
@@ -809,7 +809,7 @@ const I18nList: React.FC = () => {
       throw error;
     }
     if (renamePreview?.requiresCodeMigration && !values.confirmSourceUpdated) {
-      Message.warning(t('i18n.rename.confirmSourceRequired'));
+      message.warning(t('i18n.rename.confirmSourceRequired'));
       return;
     }
     setRenameSubmitting(true);
@@ -820,7 +820,7 @@ const I18nList: React.FC = () => {
         newKey: values.newKey,
         confirmSourceUpdated: Boolean(values.confirmSourceUpdated),
       });
-      Message.success(t('i18n.rename.execute.success', { count: resp.renamedRows }));
+      message.success(t('i18n.rename.execute.success', { count: resp.renamedRows }));
       setRenameVisible(false);
       setRenamePreview(null);
       await reloadI18nResources();
@@ -832,7 +832,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch {
-      Message.error(t('i18n.rename.execute.error'));
+      message.error(t('i18n.rename.execute.error'));
     } finally {
       setRenameSubmitting(false);
     }
@@ -852,7 +852,7 @@ const I18nList: React.FC = () => {
     anchor.click();
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(url);
-    Message.success(t('i18n.rename.report.downloadSuccess'));
+    message.success(t('i18n.rename.report.downloadSuccess'));
   };
 
   const columns: ColumnProps<SystemI18n>[] = [
@@ -1251,7 +1251,7 @@ const I18nList: React.FC = () => {
                     <List.Item key={item.module}>
                       <Space direction="vertical" size={4} style={{ width: '100%' }}>
                         <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
-                          <Text style={{ fontWeight: 600 }}>{item.module}</Text>
+                          <Text className="font-semibold">{item.module}</Text>
                           <Space>
                             <Button size="mini" onClick={() => void handleExportModule(item.module)}>
                               {t('i18n.audit.exportModule')}

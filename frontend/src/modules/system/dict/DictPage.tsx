@@ -6,7 +6,7 @@ import {
   Grid,
   Input,
   InputNumber,
-  Message,
+import { message } from '../../../components/feedback/message';
   Popconfirm,
   Select,
   Space,
@@ -348,10 +348,10 @@ const DictPage: React.FC = () => {
     try {
       if (editingType) {
         await updateDictType(editingType.id, values);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createDictType(values);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidateDictCaches();
       publishRefresh('system:dict:changed', 'system/dict');
@@ -376,10 +376,10 @@ const DictPage: React.FC = () => {
     try {
       if (editingItem) {
         await updateDictItem(editingItem.id, values);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createDictItem(values);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidateDictCaches(values.dictCode);
       publishRefresh('system:dict:changed', 'system/dict');
@@ -393,7 +393,7 @@ const DictPage: React.FC = () => {
 
   const removeType = async (row: DictTypeRow) => {
     await deleteDictType(row.id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidateDictCaches(row.dictCode);
     publishRefresh('system:dict:changed', 'system/dict');
     await loadTypes(typeQuery);
@@ -401,7 +401,7 @@ const DictPage: React.FC = () => {
 
   const removeItem = async (row: DictItemRow) => {
     await deleteDictItem(row.id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidateDictCaches(row.dictCode);
     publishRefresh('system:dict:changed', 'system/dict');
     await loadItems(itemQuery, row.dictCode);
@@ -411,7 +411,7 @@ const DictPage: React.FC = () => {
   const handleRefreshCache = async () => {
     const codes = selectedType ? [selectedType.dictCode] : [];
     await refreshDictCache({ codes });
-    Message.success(t('system.dict.refreshSuccess'));
+    message.success(t('system.dict.refreshSuccess'));
     invalidateDictCaches(selectedType?.dictCode);
     publishRefresh('system:dict:changed', 'system/dict');
     await loadItems(itemQuery, selectedType?.dictCode);
@@ -463,12 +463,12 @@ const DictPage: React.FC = () => {
 
   const handleBatchTypeStatus = async (status: 1 | 2) => {
     if (selectedTypeRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const typeIds = selectedTypeRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateDictTypeStatus({ typeIds, status });
-    Message.success(t('system.dict.type.batchStatusSuccess', { count: result.updatedCount }));
+    message.success(t('system.dict.type.batchStatusSuccess', { count: result.updatedCount }));
     invalidateDictCaches();
     publishRefresh('system:dict:changed', 'system/dict');
     setSelectedTypeRowKeys([]);
@@ -477,12 +477,12 @@ const DictPage: React.FC = () => {
 
   const handleBatchItemStatus = async (status: 1 | 2) => {
     if (selectedItemRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const itemIds = selectedItemRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateDictItemStatus({ itemIds, status });
-    Message.success(t('system.dict.item.batchStatusSuccess', { count: result.updatedCount }));
+    message.success(t('system.dict.item.batchStatusSuccess', { count: result.updatedCount }));
     invalidateDictCaches(selectedType?.dictCode);
     publishRefresh('system:dict:changed', 'system/dict');
     setSelectedItemRowKeys([]);
@@ -509,7 +509,7 @@ const DictPage: React.FC = () => {
       setUsageAnalysis(result);
     } catch {
       setUsageAnalysis(null);
-      Message.error(t('system.dict.usage.error'));
+      message.error(t('system.dict.usage.error'));
     } finally {
       setUsageLoading(false);
     }
@@ -589,7 +589,7 @@ const DictPage: React.FC = () => {
       render: (value: string) => (
         <Space direction="vertical" size={2}>
           <Text ellipsis={{ showTooltip: true }}>{t(value, value)}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }} ellipsis={{ showTooltip: true }}>{value}</Text>
+          <Text type="secondary" className="text-sm" ellipsis={{ showTooltip: true }}>{value}</Text>
         </Space>
       ),
     },

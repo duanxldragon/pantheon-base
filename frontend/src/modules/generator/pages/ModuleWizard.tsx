@@ -9,7 +9,6 @@ import {
   Grid,
   Input,
   InputNumber,
-  Message,
   Popconfirm,
   Select,
   Space,
@@ -18,6 +17,7 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconCode, IconDelete, IconDownload, IconEdit, IconPlus, IconRefresh } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -340,7 +340,7 @@ const ModuleWizard: React.FC = () => {
       let metadata = readMetadataValues();
       const sourceMode = metadata.sourceMode;
       if (sourceMode === 'database' && !metadata.sourceTable) {
-        Message.error(t('generator.wizard.sourceTable.required'));
+        message.error(t('generator.wizard.sourceTable.required'));
         return;
       }
       let tablePreview: Awaited<ReturnType<typeof previewGeneratorTable>> | null = null;
@@ -387,7 +387,7 @@ const ModuleWizard: React.FC = () => {
       setRegisterResult(null);
       setCurrentStep(1);
     } catch {
-      Message.error(t('generator.wizard.fillRequired'));
+      message.error(t('generator.wizard.fillRequired'));
     }
   };
 
@@ -436,10 +436,10 @@ const ModuleWizard: React.FC = () => {
       setDatasourceSaving(true);
       if (editingDatasourceId) {
         await updateGeneratorDatasource(editingDatasourceId, values);
-        Message.success(t('generator.datasource.saveSuccess'));
+        message.success(t('generator.datasource.saveSuccess'));
       } else {
         await createGeneratorDatasource(values);
-        Message.success(t('generator.datasource.createSuccess'));
+        message.success(t('generator.datasource.createSuccess'));
       }
       const items = await loadDatasources();
       if (!editingDatasourceId) {
@@ -456,7 +456,7 @@ const ModuleWizard: React.FC = () => {
       if (!isRequestError(error)) {
         return;
       }
-      Message.error(t('generator.datasource.saveError'));
+      message.error(t('generator.datasource.saveError'));
     } finally {
       setDatasourceSaving(false);
     }
@@ -466,13 +466,13 @@ const ModuleWizard: React.FC = () => {
     try {
       await ensureOperationVerified();
       await testGeneratorDatasource(id);
-      Message.success(t('generator.datasource.testSuccess'));
+      message.success(t('generator.datasource.testSuccess'));
       await loadDatasources();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.datasource.testError'));
+      message.error(t('generator.datasource.testError'));
     }
   };
 
@@ -480,7 +480,7 @@ const ModuleWizard: React.FC = () => {
     try {
       await ensureOperationVerified();
       await deleteGeneratorDatasource(id);
-      Message.success(t('generator.datasource.deleteSuccess'));
+      message.success(t('generator.datasource.deleteSuccess'));
       const items = await loadDatasources();
       if (selectedDatasourceId === id) {
         setSelectedDatasourceId(items[0]?.id || 'current');
@@ -490,7 +490,7 @@ const ModuleWizard: React.FC = () => {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      Message.error(t('generator.datasource.deleteError'));
+      message.error(t('generator.datasource.deleteError'));
     }
   };
 
@@ -507,9 +507,9 @@ const ModuleWizard: React.FC = () => {
       link.download = `${buildSchema().name}-module.zip`;
       link.click();
       URL.revokeObjectURL(url);
-      Message.success(t('generator.wizard.downloadSuccess'));
+      message.success(t('generator.wizard.downloadSuccess'));
     } catch {
-      Message.error(t('generator.wizard.downloadError'));
+      message.error(t('generator.wizard.downloadError'));
     }
   };
 
@@ -530,7 +530,7 @@ const ModuleWizard: React.FC = () => {
       return;
     }
     if (previewSchema.scope !== 'business') {
-      Message.warning(t('generator.wizard.register.businessOnly'));
+      message.warning(t('generator.wizard.register.businessOnly'));
       return;
     }
     if (!isValidScopedModulePath(previewSchema.scope, previewSchema.name)) {
@@ -547,7 +547,7 @@ const ModuleWizard: React.FC = () => {
       });
       setDynamicModuleDisabled(false);
       setRegisterResult(result);
-      Message.success(t('generator.wizard.register.success'));
+      message.success(t('generator.wizard.register.success'));
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
@@ -567,10 +567,10 @@ const ModuleWizard: React.FC = () => {
         return;
       }
       if (isRequestError(error)) {
-        Message.error(t(error.messageKey || 'request.failed'));
+        message.error(t(error.messageKey || 'request.failed'));
         return;
       }
-      Message.error(t('request.failed'));
+      message.error(t('request.failed'));
     } finally {
       setRegistering(false);
     }

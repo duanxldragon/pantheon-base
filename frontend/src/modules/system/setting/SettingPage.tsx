@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Form, Input, InputNumber, Message, Select, Space, Switch, Table, Tabs, Tag, Typography } from '@arco-design/web-react';
+import { Button, Card, Form, Input, InputNumber, Select, Space, Switch, Tabs, Tag, Typography } from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconRefresh } from '@arco-design/web-react/icon';
@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import AppTable from '../../../components/data-display/AppTable';
+import { message } from '../../../components/feedback/message';
 import { FormSection, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
@@ -244,7 +246,7 @@ const SettingPage: React.FC = () => {
         pageSize: result.pageSize || pageSize,
       });
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     } finally {
       setAuditLoading(false);
     }
@@ -329,16 +331,16 @@ const SettingPage: React.FC = () => {
           await switchI18nLanguage(publicSettings.defaultLanguage).catch(() => undefined);
         }
       }
-      Message.success(t('common.updateSuccess'));
+      message.success(t('common.updateSuccess'));
       invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
       publishRefresh('system:setting:changed', 'system/setting');
       await loadData();
       await loadAudit(group.groupKey, 1, auditQuery.pageSize);
     } catch (submitError) {
       if (submitError instanceof Error && submitError.message === 'setting.value.invalid_number') {
-        Message.error(t('setting.value.invalid_number'));
+        message.error(t('setting.value.invalid_number'));
       } else if (submitError instanceof Error && submitError.message === 'setting.value.invalid_audit_retention') {
-        Message.error(t('system.setting.audit.retentionRequired'));
+        message.error(t('system.setting.audit.retentionRequired'));
       }
     } finally {
       setSubmittingGroup(null);
@@ -352,7 +354,7 @@ const SettingPage: React.FC = () => {
     setRefreshingCache(true);
     try {
       await refreshSettingCache({ groupKeys: [activeGroupKey] });
-      Message.success(t('system.setting.cache.refreshSuccess'));
+      message.success(t('system.setting.cache.refreshSuccess'));
       invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
       publishRefresh('system:setting:changed', 'system/setting');
       await loadData();
@@ -781,7 +783,7 @@ const SettingPage: React.FC = () => {
                 <Card className="page-panel">
                   <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                     <div>
-                      <Typography.Text style={{ fontWeight: 600 }}>{t('system.setting.audit.title')}</Typography.Text>
+                      <Typography.Text className="font-semibold">{t('system.setting.audit.title')}</Typography.Text>
                       <Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>
                         {t('common.total', { count: auditTotal })}
                       </Typography.Paragraph>
@@ -792,7 +794,7 @@ const SettingPage: React.FC = () => {
                       </Button>
                     </Space>
                   </div>
-                  <Table
+                  <AppTable
                     rowKey="id"
                     data={auditRows}
                     columns={auditColumns}

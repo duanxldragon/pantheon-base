@@ -6,7 +6,6 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Popconfirm,
   Select,
   Space,
@@ -14,6 +13,7 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconEdit, IconPlus, IconRefresh, IconSearch } from '@arco-design/web-react/icon';
@@ -174,7 +174,7 @@ const PermissionList: React.FC = () => {
         value: item.roleKey,
       })));
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   }, [t]);
 
@@ -257,10 +257,10 @@ const PermissionList: React.FC = () => {
     try {
       if (editing) {
         await updatePermissionPolicy(editing.id, values);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createPermissionPolicy(values);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidatePermissionCaches();
       publishRefresh('system:permission:changed', 'system/permission');
@@ -273,7 +273,7 @@ const PermissionList: React.FC = () => {
 
   const removePolicy = async (row: PermissionPolicyRow) => {
     await deletePermissionPolicy(row.id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidatePermissionCaches();
     publishRefresh('system:permission:changed', 'system/permission');
     const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
@@ -322,9 +322,9 @@ const PermissionList: React.FC = () => {
     try {
       const result = await remediatePermissionWorkbenchRole({ roleKey: role.roleKey });
       if (result.createdCount > 0) {
-        Message.success(t('system.permission.workbench.remediateSuccess', { count: result.createdCount }));
+        message.success(t('system.permission.workbench.remediateSuccess', { count: result.createdCount }));
       } else {
-        Message.info(t('system.permission.workbench.remediateNoop'));
+        message.info(t('system.permission.workbench.remediateNoop'));
       }
       invalidatePermissionCaches();
       publishRefresh('system:permission:changed', 'system/permission');

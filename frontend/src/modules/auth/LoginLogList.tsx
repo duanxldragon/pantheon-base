@@ -5,13 +5,13 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Popconfirm,
   Select,
   Space,
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
@@ -104,7 +104,7 @@ const LoginLogList: React.FC = () => {
       setSelectedRowKeys([]);
     } catch {
       setLoadFailed(true);
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -155,17 +155,17 @@ const LoginLogList: React.FC = () => {
 
   const handleCleanup = async () => {
     const resp = await cleanupAdminLoginLogs({ retentionDays });
-    Message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
+    message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
     void loadData();
   };
 
   const handleBatchDelete = async () => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const resp = await batchDeleteAdminLoginLogs({ ids: selectedRowKeys });
-    Message.success(t('auth.loginLog.batchDeleteSuccess', { count: resp.deletedCount }));
+    message.success(t('auth.loginLog.batchDeleteSuccess', { count: resp.deletedCount }));
     setSelectedRowKeys([]);
     void loadData();
   };
@@ -336,7 +336,7 @@ const LoginLogList: React.FC = () => {
                               return;
                             }
                             setSelectedRowKeys([]);
-                            Message.success(t('common.clearSelectionSuccess'));
+                            message.success(t('common.clearSelectionSuccess'));
                           }}
                         >
                           {t('common.clearSelection')}

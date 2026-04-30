@@ -5,13 +5,13 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Popconfirm,
   Select,
   Space,
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconSearch } from '@arco-design/web-react/icon';
@@ -117,7 +117,7 @@ const SessionList: React.FC = () => {
       setRevokedCount(result.revokedCount);
     } catch {
       setLoadFailed(true);
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     } finally {
       if (!silent) {
         setLoading(false);
@@ -170,13 +170,13 @@ const SessionList: React.FC = () => {
 
   const removeSession = async (row: AdminSessionRow) => {
     await revokeAdminSession(row.sessionId);
-    Message.success(t('auth.session.revokeSuccess'));
+    message.success(t('auth.session.revokeSuccess'));
     await loadData(query, { silent: true });
   };
 
   const clearHistoricSessions = async () => {
     const resp = await cleanupAdminSessions({ retentionDays });
-    Message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
+    message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
     await loadData(query, { silent: true });
   };
 

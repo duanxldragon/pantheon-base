@@ -6,13 +6,13 @@ import {
   Grid,
   Input,
   InputNumber,
-  Message,
   Popconfirm,
   Select,
   Space,
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconEdit, IconPlus, IconSearch } from '@arco-design/web-react/icon';
@@ -170,7 +170,7 @@ const PostList: React.FC = () => {
       const selectableDeptRows = deptRows.flatMap((item) => (item.isRoot ? (item.children || []) : [item]));
       setDeptOptions(flattenDept(selectableDeptRows));
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   }, [t]);
 
@@ -225,10 +225,10 @@ const PostList: React.FC = () => {
     try {
       if (editing) {
         await updatePost(editing.id, values);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createPost(values);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidatePostCaches();
       publishRefresh('system:post:changed', 'system/post');
@@ -241,7 +241,7 @@ const PostList: React.FC = () => {
 
   const removePost = async (id: number) => {
     await deletePost(id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidatePostCaches();
     publishRefresh('system:post:changed', 'system/post');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
@@ -322,12 +322,12 @@ const PostList: React.FC = () => {
 
   const handleBatchStatus = async (status: 1 | 2) => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const postIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdatePostStatus({ postIds, status });
-    Message.success(t('system.post.batchStatusSuccess', { count: result.updatedCount }));
+    message.success(t('system.post.batchStatusSuccess', { count: result.updatedCount }));
     invalidatePostCaches();
     publishRefresh('system:post:changed', 'system/post');
     setSelectedRowKeys([]);

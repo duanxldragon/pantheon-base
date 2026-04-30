@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Form, Input, Message } from '@arco-design/web-react';
+import { Form, Input } from '@arco-design/web-react';
+import { message } from './message';
 import { useTranslation } from 'react-i18next';
 import { verifyOperationPassword } from '../../modules/auth/api';
 import AppModal from '../patterns/AppModal';
@@ -24,7 +25,7 @@ export const SecondaryVerifyModal: React.FC<SecondaryVerifyModalProps> = ({
       const values = await form.validate();
       setLoading(true);
       const resp = await verifyOperationPassword(values.password);
-      Message.success(t('auth.operation.verify_success'));
+      message.success(t('auth.operation.verify_success'));
       onSuccess(resp.operationToken);
       form.resetFields();
     } catch {

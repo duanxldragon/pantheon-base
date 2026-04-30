@@ -6,7 +6,6 @@ import {
   Grid,
   Input,
   InputNumber,
-  Message,
   Popconfirm,
   Select,
   Space,
@@ -15,6 +14,7 @@ import {
   Typography,
   TreeSelect,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconDelete, IconDownload, IconEdit, IconEye, IconPlus, IconSearch } from '@arco-design/web-react/icon';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import type { TreeSelectDataType } from '@arco-design/web-react/es/TreeSelect/interface';
@@ -351,7 +351,7 @@ const DeptList: React.FC = () => {
       const rows = await resolveRouteWarmData('/system/dept', 'tree:sorted', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' }));
       setAllDeptTree(rows);
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     }
   }, [t]);
 
@@ -521,7 +521,7 @@ const DeptList: React.FC = () => {
       setLeaderCandidates(items);
       return items;
     } catch {
-      Message.error(t('system.dept.leaderCandidateLoadFailed'));
+      message.error(t('system.dept.leaderCandidateLoadFailed'));
       setLeaderCandidates([]);
       return [];
     } finally {
@@ -570,10 +570,10 @@ const DeptList: React.FC = () => {
     try {
       if (editing) {
         await updateDept(editing.id, payload);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createDept(payload);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidateDeptCaches();
       publishRefresh('system:dept:changed', 'system/dept');
@@ -601,7 +601,7 @@ const DeptList: React.FC = () => {
 
   const removeDept = async (id: number) => {
     await deleteDept(id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidateDeptCaches();
     publishRefresh('system:dept:changed', 'system/dept');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
@@ -782,12 +782,12 @@ const DeptList: React.FC = () => {
 
   const handleBatchStatus = async (status: 1 | 2) => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const deptIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateDeptStatus({ deptIds, status });
-    Message.success(t('system.dept.batchStatusSuccess', { count: result.updatedCount }));
+    message.success(t('system.dept.batchStatusSuccess', { count: result.updatedCount }));
     invalidateDeptCaches();
     publishRefresh('system:dept:changed', 'system/dept');
     setSelectedRowKeys([]);
@@ -822,7 +822,7 @@ const DeptList: React.FC = () => {
     const selectedDeptIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const selectedDepts = flatDeptRows.filter((item) => selectedDeptIds.includes(item.id) && !item.isRoot);
     if (selectedDepts.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     setLeaderVisible(true);
@@ -841,7 +841,7 @@ const DeptList: React.FC = () => {
       });
       leaderForm.setFieldsValue(initialValues);
     }).catch(() => {
-      Message.error(t('system.dept.leaderCandidateLoadFailed'));
+      message.error(t('system.dept.leaderCandidateLoadFailed'));
       setLeaderVisible(false);
       setBatchLeaderTasks([]);
     }).finally(() => {
@@ -864,11 +864,11 @@ const DeptList: React.FC = () => {
       leaderUserId: Number(values[String(task.deptId)] || 0),
     }));
     if (items.some((item) => item.leaderUserId <= 0)) {
-      Message.warning(t('system.dept.batchLeaderRequired'));
+      message.warning(t('system.dept.batchLeaderRequired'));
       return;
     }
     const result = await batchUpdateDeptLeader({ items });
-    Message.success(t('system.dept.batchLeaderSuccess', { count: result.updatedCount }));
+    message.success(t('system.dept.batchLeaderSuccess', { count: result.updatedCount }));
     invalidateDeptCaches();
     publishRefresh('system:dept:changed', 'system/dept');
     setLeaderVisible(false);
@@ -947,7 +947,7 @@ const DeptList: React.FC = () => {
     setPostSubmitting(true);
     try {
       await createPost(values);
-      Message.success(t('common.createSuccess'));
+      message.success(t('common.createSuccess'));
       invalidateDeptCaches();
       invalidateRouteWarmDataMany([
         { path: '/system/post', resourceKeys: ['list:default'] },

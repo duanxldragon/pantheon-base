@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Form, Input, Message, Select, Space, Tag, Tooltip, Typography } from '@arco-design/web-react';
+import { Alert, Button, Form, Input, Select, Space, Tag, Tooltip, Typography } from '@arco-design/web-react';
+import { message } from '../../components/feedback/message';
 import { IconCheckCircle, IconLanguage, IconLock, IconSafe, IconStorage, IconUser } from '@arco-design/web-react/icon';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -74,7 +75,7 @@ const LoginPage: React.FC = () => {
         Boolean(res.user.roles?.includes('admin') || res.user.perms?.includes('platform:dashboard:view')),
         fallbackMenuPath,
       );
-      Message.success(t('auth.loginSuccess'));
+      message.success(t('auth.loginSuccess'));
       navigate(nextPath, { replace: true });
     } catch (error) {
       if (import.meta.env.DEV && (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))) {

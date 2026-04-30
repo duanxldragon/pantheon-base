@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AutoComplete, Button, Card, Form, Grid, Input, InputNumber, Message, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import { AutoComplete, Button, Card, Form, Grid, Input, InputNumber, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconApps, IconDelete, IconEdit, IconList, IconPlus, IconSearch, IconUnorderedList } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
@@ -171,10 +172,10 @@ const MenuList: React.FC = () => {
     try {
       if (editing) {
         await updateMenu(editing.id, values);
-        Message.success(t('common.updateSuccess'));
+        message.success(t('common.updateSuccess'));
       } else {
         await createMenu(values);
-        Message.success(t('common.createSuccess'));
+        message.success(t('common.createSuccess'));
       }
       invalidateMenuCaches();
       publishRefresh('system:menu:changed', 'system/menu');
@@ -188,7 +189,7 @@ const MenuList: React.FC = () => {
 
   const removeMenu = async (id: number) => {
     await deleteMenu(id);
-    Message.success(t('common.deleteSuccess'));
+    message.success(t('common.deleteSuccess'));
     invalidateMenuCaches();
     publishRefresh('system:menu:changed', 'system/menu');
     await loadData(query, { silent: true });
@@ -385,7 +386,7 @@ const MenuList: React.FC = () => {
       render: (value: string, row: MenuNode) => (
         <Space direction="vertical" size={2}>
           <Typography.Text>{value || '-'}</Typography.Text>
-          {row.component ? <Typography.Text type="secondary" style={{ fontSize: 12 }}>{row.component}</Typography.Text> : null}
+          {row.component ? <Typography.Text type="secondary" className="text-sm">{row.component}</Typography.Text> : null}
         </Space>
       ),
     },

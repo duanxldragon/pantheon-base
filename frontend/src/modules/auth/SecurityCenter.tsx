@@ -5,12 +5,12 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Popconfirm,
   Space,
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../components/feedback/message';
 import { IconEye, IconLock } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '../../core/format/dateTime';
@@ -76,7 +76,7 @@ const SecurityCenter: React.FC = () => {
       setLoginLogs(loginLogsResp.items);
     } catch {
       setLoadFailed(true);
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +120,7 @@ const SecurityCenter: React.FC = () => {
         newPassword: values.newPassword,
       });
       passwordForm.resetFields();
-      Message.success(t('system.profile.passwordSuccess'));
+      message.success(t('system.profile.passwordSuccess'));
       await loadSecurityContext();
     } finally {
       setSavingPassword(false);
@@ -131,7 +131,7 @@ const SecurityCenter: React.FC = () => {
     setRevokingSessionId(sessionId);
     try {
       await revokeSession(sessionId);
-      Message.success(t('auth.session.revokeSuccess'));
+      message.success(t('auth.session.revokeSuccess'));
       await loadSecurityContext();
     } finally {
       setRevokingSessionId(null);

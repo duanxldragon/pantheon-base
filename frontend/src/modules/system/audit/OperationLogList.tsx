@@ -7,13 +7,13 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Popconfirm,
   Select,
   Space,
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconSearch, IconEye } from '@arco-design/web-react/icon';
@@ -425,7 +425,7 @@ const OperationLogList: React.FC = () => {
       setSelectedRowKeys([]);
     } catch {
       setLoadFailed(true);
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -476,7 +476,7 @@ const OperationLogList: React.FC = () => {
           setDetailVisible(true);
         })
         .catch(() => {
-          Message.error(t('common.loadFailed'));
+          message.error(t('common.loadFailed'));
         })
         .finally(() => {
           setDetailLoading(false);
@@ -502,26 +502,26 @@ const OperationLogList: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await deleteOperationLog(id);
-      Message.success(t('system.audit.deleteSuccess'));
+      message.success(t('system.audit.deleteSuccess'));
       void loadData();
     } catch {
-      // Message.error already handled by request interceptor
+      // message.error already handled by request interceptor
     }
   };
 
   const handleCleanup = async () => {
     const resp = await cleanupOperationLogs({ retentionDays });
-    Message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
+    message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
     void loadData();
   };
 
   const handleBatchDelete = async () => {
     if (selectedRowKeys.length === 0) {
-      Message.warning(t('common.batchSelectionRequired'));
+      message.warning(t('common.batchSelectionRequired'));
       return;
     }
     const resp = await batchDeleteOperationLogs({ ids: selectedRowKeys });
-    Message.success(t('system.audit.batchDeleteSuccess', { count: resp.deletedCount }));
+    message.success(t('system.audit.batchDeleteSuccess', { count: resp.deletedCount }));
     setSelectedRowKeys([]);
     void loadData();
   };
@@ -824,7 +824,7 @@ const OperationLogList: React.FC = () => {
                               return;
                             }
                             setSelectedRowKeys([]);
-                            Message.success(t('common.clearSelectionSuccess'));
+                            message.success(t('common.clearSelectionSuccess'));
                           }}
                         >
                           {t('common.clearSelection')}

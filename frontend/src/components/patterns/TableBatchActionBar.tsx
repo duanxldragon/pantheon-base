@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button, Message, Typography } from '@arco-design/web-react';
+import { Button, Typography } from '@arco-design/web-react';
+import { message } from '../feedback/message';
 
 interface TableBatchActionBarProps {
   selectedCount: number;
@@ -28,7 +29,7 @@ const TableBatchActionBar: React.FC<TableBatchActionBarProps> = ({
     }
     onClear();
     if (clearSuccessText) {
-      Message.success(clearSuccessText);
+      message.success(clearSuccessText);
     }
   };
 

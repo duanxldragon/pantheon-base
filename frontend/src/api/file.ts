@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Message } from '@arco-design/web-react';
+import { message } from '../components/feedback/message';
 import i18n from 'i18next';
 import { ACCESS_TOKEN_KEY } from '../store/useAuthStore';
 
@@ -66,7 +66,7 @@ export async function downloadFile(options: DownloadFileOptions) {
       const payload = JSON.parse(text);
       const messageKey = payload?.message || 'request.failed';
       const resolvedKey = I18N_KEY_PATTERN.test(String(messageKey)) ? messageKey : 'request.failed';
-      Message.error(i18n.t(resolvedKey, { defaultValue: resolvedKey }));
+      message.error(i18n.t(resolvedKey, { defaultValue: resolvedKey }));
       throw new Error(messageKey);
     } catch (error) {
       if (error instanceof Error) {

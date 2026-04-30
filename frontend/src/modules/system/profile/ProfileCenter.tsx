@@ -7,11 +7,11 @@ import {
   Form,
   Grid,
   Input,
-  Message,
   Space,
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import { message } from '../../../components/feedback/message';
 import { IconLock, IconUpload, IconUser } from '@arco-design/web-react/icon';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -60,7 +60,7 @@ const ProfileCenter: React.FC = () => {
         perms: result.perms,
       });
     } catch {
-      Message.error(t('common.loadFailed'));
+      message.error(t('common.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const ProfileCenter: React.FC = () => {
         roles: result.roles,
         perms: result.perms,
       });
-      Message.success(t('common.updateSuccess'));
+      message.success(t('common.updateSuccess'));
     } finally {
       setSavingProfile(false);
     }
@@ -113,7 +113,7 @@ const ProfileCenter: React.FC = () => {
       const uploaded = await uploadSystemFile(file, 'profile/avatar');
       profileForm.setFieldValue('avatar', uploaded.url);
       setAvatarPreview(uploaded.url);
-      Message.success(t('system.profile.avatarUploadSuccess'));
+      message.success(t('system.profile.avatarUploadSuccess'));
     } finally {
       setUploadingAvatar(false);
     }
