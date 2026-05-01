@@ -46,7 +46,6 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--brand-primary) 7%, transparent) 0, transparent 28%),
     linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 3%, #ffffff) 0%, #ffffff 100%);
 }
 
