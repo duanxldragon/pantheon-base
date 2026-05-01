@@ -32,14 +32,16 @@ import {
   AppTable,
   FilterPanel,
   GovernanceCleanupBar,
+  GovernanceRailPanel,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
   PageContainer,
   PageEmpty,
   PageError,
   PageLoading,
   PageSplitLayout,
-  StandardRailNotePanel,
-  StandardRailSummary,
   TABLE_ACTION_COLUMN_WIDTH,
+  useGovernanceRail,
 } from '../../components';
 import { formatClientSummary } from './clientInfo';
 import SessionDetailModal from './SessionDetailModal';
@@ -94,6 +96,7 @@ const SessionList: React.FC = () => {
   const { isAdmin, hasPerm } = usePermission();
   const canDelete = isAdmin || hasPerm('system:session:delete');
   const canClear = isAdmin || hasPerm('system:session:clear');
+  const governanceRail = useGovernanceRail();
   const [data, setData] = useState<AdminSessionRow[]>([]);
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
@@ -310,6 +313,9 @@ const SessionList: React.FC = () => {
                 {t('auth.session.hero.title')}
               </Typography.Title>
             </div>
+            <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+              {t('auth.session.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
           </div>
           <div className="system-page-kpi-grid">
             {heroStats.map((item) => (
@@ -322,22 +328,24 @@ const SessionList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={(
-            <>
-              <StandardRailSummary
-                title={t('auth.session.hero.summaryTitle')}
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('auth.session.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('auth.security.sessionHint')}
+              noteDescription={t('auth.session.hero.sideDesc')}
+              noteTone="warning"
+            >
+              <GovernanceRailSummary
                 items={[
                   { label: t('auth.session.currentUser'), value: currentUsername || '-', description: t('auth.session.selfProtected') },
                   { label: t('auth.session.status.active'), value: activeCount, description: t('auth.session.hero.activeHint') },
                   { tone: 'warning', label: t('auth.session.status.revoked'), value: revokedCount, description: t('auth.session.hero.revokedHint') },
                 ]}
               />
-              <StandardRailNotePanel
-                title={t('auth.session.hero.sideTitle')}
-                noteTitle={t('auth.security.sessionHint')}
-                noteDescription={t('auth.session.hero.sideDesc')}
-              />
-            </>
+            </GovernanceRailPanel>
+          ) : null}
           )}
         >
             <FilterPanel>

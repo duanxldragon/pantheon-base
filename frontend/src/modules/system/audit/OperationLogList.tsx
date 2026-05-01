@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { getSettingGroup } from '../setting/api';
 import { batchDeleteOperationLogs, cleanupOperationLogs, deleteOperationLog, exportOperationLogs, getOperationLog, getOperationLogList, type OperationLogRow, type OperationLogQuery } from './api';
-import { AppModal, AppTable, FilterPanel, GovernanceCleanupBar, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageSplitLayout, PermissionAction, StandardRailNotePanel, StandardRailSummary, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, GovernanceCleanupBar, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageSplitLayout, PermissionAction, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import '../list-page.css';
@@ -390,6 +390,7 @@ const OperationLogList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:operation-log:export');
   const canClear = isAdmin || hasPerm('system:operation-log:clear');
   const canDelete = isAdmin || hasPerm('system:operation-log:delete');
+  const governanceRail = useGovernanceRail();
   const [data, setData] = useState<OperationLogRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -683,7 +684,16 @@ const OperationLogList: React.FC = () => {
     <PageContainer>
       <PageHeader
         extra={(
-          <ListHeaderActions utility={<Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>} />
+          <ListHeaderActions
+            utility={(
+              <>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('system.audit.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
+                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+              </>
+            )}
+          />
         )}
       />
       <Space direction="vertical" size={16} className="system-page-template">
@@ -707,10 +717,16 @@ const OperationLogList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={(
-            <>
-              <StandardRailSummary
-                title={t('system.audit.hero.summaryTitle')}
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('system.audit.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('system.audit.failureSummary')}
+              noteDescription={t('system.audit.hero.sideDesc')}
+              noteTone="warning"
+            >
+              <GovernanceRailSummary
                 items={[
                   { label: t('common.success'), value: successCount, description: t('system.audit.hero.successHint') },
                   { tone: 'warning', label: t('common.failed'), value: failedCount, description: t('system.audit.hero.failedHint') },
@@ -718,14 +734,8 @@ const OperationLogList: React.FC = () => {
                   { label: t('common.selected'), value: selectedRowKeys.length, description: t('system.audit.hero.selectedHint') },
                 ]}
               />
-              <StandardRailNotePanel
-                title={t('system.audit.hero.sideTitle')}
-                noteTone="warning"
-                noteTitle={t('system.audit.failureSummary')}
-                noteDescription={t('system.audit.hero.sideDesc')}
-              />
-            </>
-          )}
+            </GovernanceRailPanel>
+          ) : null}
         >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">

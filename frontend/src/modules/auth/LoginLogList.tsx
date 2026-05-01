@@ -32,6 +32,9 @@ import {
   AppTable,
   FilterPanel,
   GovernanceCleanupBar,
+  GovernanceRailPanel,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
   ListHeaderActions,
   PageContainer,
   PageEmpty,
@@ -40,8 +43,7 @@ import {
   PageLoading,
   PageSplitLayout,
   PermissionAction,
-  StandardRailNotePanel,
-  StandardRailSummary,
+  useGovernanceRail,
 } from '../../components';
 import { usePermission } from '../../hooks/usePermission';
 import './auth.css';
@@ -87,6 +89,7 @@ const LoginLogList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:login-log:export');
   const canClear = isAdmin || hasPerm('system:login-log:clear');
   const canDelete = isAdmin || hasPerm('system:login-log:delete');
+  const governanceRail = useGovernanceRail();
   const [data, setData] = useState<LoginLogRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -256,7 +259,16 @@ const LoginLogList: React.FC = () => {
     <PageContainer>
       <PageHeader
         extra={(
-          <ListHeaderActions utility={<Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>} />
+          <ListHeaderActions
+            utility={(
+              <>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('auth.loginLog.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
+                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+              </>
+            )}
+          />
         )}
       />
       <Space direction="vertical" size={16} className="system-page-template">
@@ -280,10 +292,16 @@ const LoginLogList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={(
-            <>
-              <StandardRailSummary
-                title={t('auth.loginLog.hero.summaryTitle')}
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('auth.loginLog.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('auth.security.loginLogHint')}
+              noteDescription={t('auth.loginLog.hero.sideDesc')}
+              noteTone="warning"
+            >
+              <GovernanceRailSummary
                 items={[
                   { label: t('auth.loginLog.status.success'), value: successCount, description: t('auth.loginLog.hero.successHint') },
                   { tone: 'warning', label: t('auth.loginLog.status.failed'), value: failedCount, description: t('auth.loginLog.hero.failedHint') },
@@ -291,14 +309,8 @@ const LoginLogList: React.FC = () => {
                   { label: t('common.selected'), value: selectedRowKeys.length, description: t('auth.loginLog.hero.selectedHint') },
                 ]}
               />
-              <StandardRailNotePanel
-                title={t('auth.loginLog.hero.sideTitle')}
-                noteTone="warning"
-                noteTitle={t('auth.security.loginLogHint')}
-                noteDescription={t('auth.loginLog.hero.sideDesc')}
-              />
-            </>
-          )}
+            </GovernanceRailPanel>
+          ) : null}
         >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
