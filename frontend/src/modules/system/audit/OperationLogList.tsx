@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { getSettingGroup } from '../setting/api';
 import { batchDeleteOperationLogs, cleanupOperationLogs, deleteOperationLog, exportOperationLogs, getOperationLog, getOperationLogList, type OperationLogRow, type OperationLogQuery } from './api';
-import { AppModal, AppTable, FilterPanel, GovernanceCleanupBar, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, GovernanceCleanupBar, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageSplitLayout, PermissionAction, StandardRailNotePanel, StandardRailSummary, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import '../list-page.css';
@@ -691,9 +691,9 @@ const OperationLogList: React.FC = () => {
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.audit.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.audit.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.audit.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -706,8 +706,27 @@ const OperationLogList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={(
+            <>
+              <StandardRailSummary
+                title={t('system.audit.hero.summaryTitle')}
+                items={[
+                  { label: t('common.success'), value: successCount, description: t('system.audit.hero.successHint') },
+                  { tone: 'warning', label: t('common.failed'), value: failedCount, description: t('system.audit.hero.failedHint') },
+                  { label: t('system.audit.hero.clearReady'), value: canClear ? t('common.yes') : t('common.no'), description: t('system.audit.hero.clearHint') },
+                  { label: t('common.selected'), value: selectedRowKeys.length, description: t('system.audit.hero.selectedHint') },
+                ]}
+              />
+              <StandardRailNotePanel
+                title={t('system.audit.hero.sideTitle')}
+                noteTone="warning"
+                noteTitle={t('system.audit.failureSummary')}
+                noteDescription={t('system.audit.hero.sideDesc')}
+              />
+            </>
+          )}
+        >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
                 <Row gutter={16}>
@@ -884,42 +903,7 @@ const OperationLogList: React.FC = () => {
                 />
               )}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.audit.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('common.success')}</span>
-                  <span className="side-rail-item__value">{successCount}</span>
-                  <span className="side-rail-item__desc">{t('system.audit.hero.successHint')}</span>
-                </div>
-                <div className="side-rail-item side-rail-item--warning">
-                  <span className="side-rail-item__label">{t('common.failed')}</span>
-                  <span className="side-rail-item__value">{failedCount}</span>
-                  <span className="side-rail-item__desc">{t('system.audit.hero.failedHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.audit.hero.clearReady')}</span>
-                  <span className="side-rail-item__value">{canClear ? t('common.yes') : t('common.no')}</span>
-                  <span className="side-rail-item__desc">{t('system.audit.hero.clearHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('common.selected')}</span>
-                  <span className="side-rail-item__value">{selectedRowKeys.length}</span>
-                  <span className="side-rail-item__desc">{t('system.audit.hero.selectedHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.audit.hero.sideTitle')}</span>
-              <div className="side-rail-note side-rail-note--warning">
-                <span className="side-rail-note__title">{t('system.audit.failureSummary')}</span>
-                <span className="side-rail-note__desc">{t('system.audit.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

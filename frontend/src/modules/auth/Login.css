@@ -73,6 +73,10 @@
   gap: 4px;
 }
 
+.auth-login-page__mobile-brand {
+  display: none;
+}
+
 .auth-login-page__brand-title {
   color: var(--text-primary);
   font-size: 18px;
@@ -290,14 +294,7 @@
   }
 
   .auth-login-page__brand-pane {
-    order: 2;
-    padding: 18px;
-    border-top: 1px solid var(--panel-border);
-    border-bottom: none;
-  }
-
-  .auth-login-page__brand {
-    margin-bottom: 20px;
+    display: none;
   }
 
   .auth-login-page__headline {
@@ -323,12 +320,24 @@
     padding: 24px 16px 18px;
   }
 
+  .auth-login-page__mobile-brand {
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .auth-login-page__mobile-brand .auth-login-page__brand {
+    margin-bottom: 0;
+    gap: 12px;
+  }
+
   .auth-login-card {
     width: 100%;
     padding: 28px 22px;
   }
 
-  .auth-login-assurance {
-    margin-top: 24px;
+  .auth-login-page__features,
+  .auth-login-assurance,
+  .auth-login-page__footer {
+    display: none;
   }
 }

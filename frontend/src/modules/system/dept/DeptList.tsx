@@ -29,7 +29,7 @@ import { batchUpdateDeptLeader, batchUpdateDeptStatus, createDept, deleteDept, d
 import { createPost, getPostList, type PostPayload, type PostRow } from '../post/api';
 import { getUserDetail, getUserList, type UserDetail as UserDetailData, type UserListRow } from '../user/api';
 import UserDetailContent from '../user/UserDetailContent';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ImportCsvButton, ListHeaderActions, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -303,6 +303,7 @@ const DeptList: React.FC = () => {
   const [leaderForm] = Form.useForm<DeptLeaderFormValues>();
   const [postForm] = Form.useForm<OrgPostFormValues>();
   const [queryForm] = Form.useForm<DeptListQuery>();
+  const governanceRail = useGovernanceRail({ enabled: activeTab === 'manage' });
   const invalidateDeptCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/dept', resourceKeys: ['tree:default', 'overview', 'tree:sorted', 'posts:org-chart', 'users:org-chart'] },
@@ -471,28 +472,10 @@ const DeptList: React.FC = () => {
         hint: t('system.dept.hero.totalDeptsHint'),
       },
       {
-        key: 'totalPosts',
-        label: t('system.dept.overview.totalPosts'),
-        value: overview.totalPostCount,
-        hint: t('system.dept.hero.totalPostsHint'),
-      },
-      {
         key: 'leaderless',
         label: t('system.dept.overview.leaderlessDepts'),
         value: overview.leaderlessDeptCount,
         hint: t('system.dept.hero.leaderlessHint'),
-      },
-      {
-        key: 'noPost',
-        label: t('system.dept.overview.noPostDepts'),
-        value: overview.noPostDeptCount,
-        hint: t('system.dept.hero.noPostHint'),
-      },
-      {
-        key: 'empty',
-        label: t('system.dept.overview.emptyDepts'),
-        value: overview.emptyDeptCount,
-        hint: t('system.dept.hero.emptyHint'),
       },
       {
         key: 'issues',
@@ -502,6 +485,26 @@ const DeptList: React.FC = () => {
       },
     ];
   }, [overview, t]);
+  const governanceSummaryItems = useMemo(
+    () => overview ? [
+      {
+        label: t('system.dept.overview.healthIssues'),
+        value: overview.healthIssueCount,
+        description: t('system.dept.task.hint'),
+      },
+      {
+        label: t('system.dept.overview.leaderlessDepts'),
+        value: overview.leaderlessDeptCount,
+        description: t('system.dept.leaderCandidateHint'),
+      },
+      {
+        label: t('system.dept.overview.noPostDepts'),
+        value: overview.noPostDeptCount,
+        description: t('system.dept.governanceHint'),
+      },
+    ] : [],
+    [overview, t],
+  );
 
   const openCreate = () => {
     const rootDept = findRootDept(allDeptTree);
@@ -679,9 +682,9 @@ const DeptList: React.FC = () => {
       ),
     },
     { title: t('system.dept.leader'), dataIndex: 'leader', width: 140, ...sortableColumn('leader') },
-    { title: t('system.dept.phone'), dataIndex: 'phone', width: 140 },
-    { title: t('system.dept.email'), dataIndex: 'email', width: 180 },
-    { title: t('system.dept.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
+    withTableColumnPriority({ title: t('system.dept.phone'), dataIndex: 'phone', width: 140 }, 'low'),
+    withTableColumnPriority({ title: t('system.dept.email'), dataIndex: 'email', width: 180 }, 'low'),
+    withTableColumnPriority({ title: t('system.dept.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') }, 'medium'),
     {
       title: t('system.dept.governance'),
       width: 220,
@@ -895,14 +898,14 @@ const DeptList: React.FC = () => {
         ? `${row.postName || '-'} / ${row.deptName || '-'}`
         : row.deptName,
     },
-    { title: t('system.dept.task.blockedBy'), dataIndex: 'governanceBlockedByLabel', width: 170 },
-    { title: t('system.dept.task.action'), dataIndex: 'governanceActionLabel', width: 220 },
-    { title: t('system.dept.task.deptPath'), dataIndex: 'deptPath', width: 240 },
-    {
+    withTableColumnPriority({ title: t('system.dept.task.blockedBy'), dataIndex: 'governanceBlockedByLabel', width: 170 }, 'medium'),
+    withTableColumnPriority({ title: t('system.dept.task.action'), dataIndex: 'governanceActionLabel', width: 220 }, 'low'),
+    withTableColumnPriority({ title: t('system.dept.task.deptPath'), dataIndex: 'deptPath', width: 240 }, 'low'),
+    withTableColumnPriority({
       title: t('system.dept.task.relatedUserCount'),
       dataIndex: 'relatedUserCount',
       width: 110,
-    },
+    }, 'medium'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
@@ -1129,32 +1132,36 @@ const DeptList: React.FC = () => {
       <PageHeader
         extra={activeTab === 'manage' ? (
           <ListHeaderActions
+            className="dept-list-page__header-actions"
             utility={(
               <>
-                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('system.dept.governance')}
+                </GovernanceRailToggleButton>
+                <Button size="small" icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+                <Button size="small" onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
                 <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
                   {t('common.import')}
                 </ImportCsvButton>
               </>
             )}
-            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+            primary={<Button size="small" type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
           />
         ) : (
           <PageActions>
-            <Button onClick={() => { void loadOrgData(); }} loading={orgLoading}>{t('common.refresh')}</Button>
+            <Button size="small" onClick={() => { void loadOrgData(); }} loading={orgLoading}>{t('common.refresh')}</Button>
           </PageActions>
         )}
       />
-      <Space direction="vertical" size={16} className="system-page-template governance-workbench">
+      <Space direction="vertical" size={12} className="system-page-template governance-workbench dept-list-page">
         {overview ? (
-          <Card className="page-panel system-page-hero">
+          <Card className="page-panel system-page-hero system-list__hero">
             <div className="system-page-hero__top">
               <div className="system-page-hero__copy">
                 <span className="system-page-hero__eyebrow">{t('system.dept.hero.eyebrow')}</span>
-                <Typography.Paragraph className="system-page-hero__desc">
-                  {t('system.dept.hero.desc')}
-                </Typography.Paragraph>
+                <Typography.Title heading={5} className="system-page-hero__title">
+                  {t('system.dept.hero.title')}
+                </Typography.Title>
               </div>
             </div>
             <div className="system-page-kpi-grid">
@@ -1200,14 +1207,27 @@ const DeptList: React.FC = () => {
                 </div>
               ))}
             </div>
-          </Card>
+        </Card>
         ) : null}
         <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
           <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>
-            <div className="page-split-layout">
-              <div className="page-main-column">
+            <PageSplitLayout
+              className="dept-list-page__layout"
+              railClassName="dept-list-page__side-column"
+              rail={governanceRail.expanded && overview ? (
+                <GovernanceRailPanel
+                  title={t('system.dept.governance')}
+                  onClose={governanceRail.close}
+                  closeText={t('common.close')}
+                  noteTitle={t('system.dept.governance')}
+                  noteDescription={t('system.dept.governanceHint')}
+                >
+                  <GovernanceRailSummary items={governanceSummaryItems} />
+                </GovernanceRailPanel>
+              ) : null}
+            >
                 <Card
-                  className="page-panel system-list__table-card"
+                  className="page-panel system-list__table-card dept-governance-task-card dept-list-page__task-card"
                   title={t('system.dept.task.title')}
                   extra={(
                     <Space>
@@ -1218,16 +1238,18 @@ const DeptList: React.FC = () => {
                     </Space>
                   )}
                 >
-                  <Typography.Text className="governance-workbench__task-desc">
-                    {t('system.dept.task.hint')}
-                  </Typography.Text>
+                  <div className="dept-governance-task-card__intro">
+                    <Typography.Text className="governance-workbench__task-desc">
+                      {t('system.dept.task.hint')}
+                    </Typography.Text>
+                  </div>
                   <AppTable<DeptGovernanceTask>
                     className="system-list__table"
                     data={governanceTasks}
                     columns={governanceTaskColumns}
                     rowKey="taskKey"
                     loading={governanceLoading}
-                    scroll={{ x: 1440 }}
+                    scroll={{ x: 'max-content' }}
                     emptyText={t('common.noData')}
                     pagination={false}
                   />
@@ -1262,16 +1284,16 @@ const DeptList: React.FC = () => {
                       </Col>
                       <Col xs={24} md={24} lg={8}>
                         <FormItem className="filter-panel__action-item">
-                          <Space>
-                            <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                            <Button onClick={reset}>{t('common.reset')}</Button>
+                          <Space size={6}>
+                            <Button size="small" type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                            <Button size="small" onClick={reset}>{t('common.reset')}</Button>
                           </Space>
                         </FormItem>
                       </Col>
                     </Row>
                   </Form>
                 </FilterPanel>
-                <Card className="page-panel system-list__table-card">
+                <Card className="page-panel system-list__table-card dept-list-page__table-card">
                   <TableBatchActionBar
                     selectedCount={selectedRowKeys.length}
                     selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
@@ -1283,16 +1305,16 @@ const DeptList: React.FC = () => {
                       <>
                         <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
                           <Popconfirm title={t('system.dept.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-                            <Button disabled={batchActionDisabled}>{t('system.dept.batchEnable')}</Button>
+                            <Button size="small" disabled={batchActionDisabled}>{t('system.dept.batchEnable')}</Button>
                           </Popconfirm>
                         </PermissionAction>
                         <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
                           <Popconfirm title={t('system.dept.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-                            <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.dept.batchDisable')}</Button>
+                            <Button size="small" status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.dept.batchDisable')}</Button>
                           </Popconfirm>
                         </PermissionAction>
                         <PermissionAction allowed={canEdit} tooltip={t('common.noPermissionAction')}>
-                          <Button onClick={openBatchLeader} disabled={batchLeaderDisabled}>{t('system.dept.batchLeader')}</Button>
+                          <Button size="small" onClick={openBatchLeader} disabled={batchLeaderDisabled}>{t('system.dept.batchLeader')}</Button>
                         </PermissionAction>
                       </>
                     )}
@@ -1307,7 +1329,7 @@ const DeptList: React.FC = () => {
                       columns={columns}
                       rowKey="id"
                       loading={loading}
-                      scroll={{ x: 1480 }}
+                      scroll={{ x: 'max-content' }}
                       rowSelection={{
                         type: 'checkbox',
                         selectedRowKeys,
@@ -1320,41 +1342,7 @@ const DeptList: React.FC = () => {
                     />
                   ) : null}
                 </Card>
-              </div>
-              <div className="page-side-column">
-                {overview ? (
-                  <Card className="page-panel side-rail-panel governance-workbench__summary">
-                    <span className="side-rail-panel__title">{t('system.dept.governance')}</span>
-                    <div className="side-rail-stack">
-                      <div className="side-rail-item">
-                        <span className="side-rail-item__label">{t('system.dept.overview.healthIssues')}</span>
-                        <span className="side-rail-item__value">{overview.healthIssueCount}</span>
-                        <span className="side-rail-item__desc">{t('system.dept.task.hint')}</span>
-                      </div>
-                      <div className="side-rail-item">
-                        <span className="side-rail-item__label">{t('system.dept.overview.leaderlessDepts')}</span>
-                        <span className="side-rail-item__value">{overview.leaderlessDeptCount}</span>
-                        <span className="side-rail-item__desc">{t('system.dept.leaderCandidateHint')}</span>
-                      </div>
-                      <div className="side-rail-item">
-                        <span className="side-rail-item__label">{t('system.dept.overview.noPostDepts')}</span>
-                        <span className="side-rail-item__value">{overview.noPostDeptCount}</span>
-                        <span className="side-rail-item__desc">{t('system.dept.governanceHint')}</span>
-                      </div>
-                    </div>
-                  </Card>
-                ) : null}
-                <Card className="page-panel side-rail-panel">
-                  <span className="side-rail-panel__title">{t('system.dept.task.title')}</span>
-                  <div className="side-rail-note">
-                    <span className="side-rail-note__title">{t('system.dept.governance')}</span>
-                    <span className="side-rail-note__desc">
-                      {t('system.dept.governanceHint')}
-                    </span>
-                  </div>
-                </Card>
-              </div>
-            </div>
+            </PageSplitLayout>
           </Tabs.TabPane>
           <Tabs.TabPane key="org" title={t('system.dept.orgTab')}>
             {renderOrgView()}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Grid, Progress, Space, Statistic, Tag, Typography } from '@arco-design/web-react';
+import { Button, Card, Grid, Space, Statistic, Tag, Typography } from '@arco-design/web-react';
 import { IconArrowRight, IconClockCircle, IconExclamationCircle, IconSafe } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -8,28 +8,13 @@ import { AppTable, DateTimeMeta, PageContainer, PageEmpty, PageError, PageHeader
 import { renderMenuIcon } from '../../core/menu/icon';
 import { resolveRouteWarmData } from '../../core/router/prefetch';
 import { usePermission } from '../../hooks/usePermission';
-import type { MenuNode } from '../system/menu/api';
 import { useMenuStore } from '../../store/useMenuStore';
 import { getDashboardSummary, type DashboardRecentLogin, type DashboardSummary } from './api';
+import { dashboardDomainOverviewWidgets, dashboardQuickActionWidgets, isDashboardWidgetVisible } from './widgets';
 import './dashboard.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;
-
-function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefined {
-  for (const item of nodes) {
-    if (item.path === path || item.activeMenu === path) {
-      return item;
-    }
-    if (item.children?.length) {
-      const child = findMenuNodeByPath(item.children, path);
-      if (child) {
-        return child;
-      }
-    }
-  }
-  return undefined;
-}
 
 const DashboardPage: React.FC = () => {
   const { t } = useTranslation();
@@ -81,13 +66,6 @@ const DashboardPage: React.FC = () => {
     return Math.round((summary.loginSuccessCount / total) * 100);
   }, [summary]);
 
-  const enabledRate = useMemo(() => {
-    if (!summary || summary.totalUsers === 0) {
-      return 0;
-    }
-    return Math.round((summary.enabledUsers / summary.totalUsers) * 100);
-  }, [summary]);
-
   const stats = useMemo(
     () => ([
       {
@@ -123,110 +101,27 @@ const DashboardPage: React.FC = () => {
   );
 
   const quickActions = useMemo(() => {
-    const items = [
-      {
-        key: 'user',
-        path: '/system/user',
-        title: t('system.menu.user'),
-        description: t('dashboard.quickAction.user'),
-        icon: 'user',
-        permission: 'system:user:list',
-      },
-      {
-        key: 'role',
-        path: '/system/role',
-        title: t('system.menu.role'),
-        description: t('dashboard.quickAction.role'),
-        icon: 'safe',
-        permission: 'system:role:list',
-      },
-      {
-        key: 'menu',
-        path: '/system/menu',
-        title: t('system.menu.menu'),
-        description: t('dashboard.quickAction.menu'),
-        icon: 'menu',
-        permission: 'system:menu:list',
-      },
-      {
-        key: 'dict',
-        path: '/system/dict',
-        title: t('system.menu.dict'),
-        description: t('dashboard.quickAction.dict'),
-        icon: 'storage',
-        permission: 'system:dict:list',
-      },
-      {
-        key: 'setting',
-        path: '/system/setting',
-        title: t('system.menu.setting'),
-        description: t('dashboard.quickAction.setting'),
-        icon: 'settings',
-        permission: 'system:setting:list',
-      },
-      {
-        key: 'security',
-        path: '/auth/security',
-        title: t('auth.security.title'),
-        description: t('dashboard.quickAction.security'),
-        icon: 'safe',
-      },
-    ];
-
-    return items.filter((item) => {
-      const hasAccess = !item.permission || isAdmin || hasPerm(item.permission);
-      if (!hasAccess) {
-        return false;
-      }
-      if (item.path === '/auth/security') {
-        return true;
-      }
-      return Boolean(findMenuNodeByPath(menuTree, item.path));
-    });
+    return dashboardQuickActionWidgets
+      .filter((widget) => isDashboardWidgetVisible(widget, { menuTree, hasPerm, isAdmin }))
+      .map((widget) => ({
+        key: widget.key,
+        path: widget.path,
+        title: t(widget.titleKey),
+        description: t(widget.descriptionKey),
+        icon: widget.icon,
+      }));
   }, [hasPerm, isAdmin, menuTree, t]);
 
   const domainCards = useMemo(
-    () => ([
-      {
-        key: 'access',
-        title: t('dashboard.domain.access'),
-        description: t('dashboard.domain.accessDesc'),
-        summary: t('dashboard.usersAndRoles', {
-          users: summary?.totalUsers ?? 0,
-          roles: summary?.totalRoles ?? 0,
-        }),
-        path: '/system/user',
-        permission: 'system:user:list',
-      },
-      {
-        key: 'org',
-        title: t('dashboard.domain.org'),
-        description: t('dashboard.domain.orgDesc'),
-        summary: t('dashboard.deptsAndPosts', {
-          depts: summary?.totalDepts ?? 0,
-          posts: summary?.totalPosts ?? 0,
-        }),
-        path: '/system/dept',
-        permission: 'system:dept:list',
-      },
-      {
-        key: 'config',
-        title: t('dashboard.domain.config'),
-        description: t('dashboard.domain.configDesc'),
-        summary: t('dashboard.dictAndSettings', {
-          dicts: summary?.totalDictTypes ?? 0,
-          settings: summary?.totalSettings ?? 0,
-        }),
-        path: '/system/setting',
-        permission: 'system:setting:list',
-      },
-    ].filter((item) => {
-      const hasAccess = !item.permission || isAdmin || hasPerm(item.permission);
-      if (!hasAccess) {
-        return false;
-      }
-      return Boolean(findMenuNodeByPath(menuTree, item.path));
-    })),
+    () => dashboardDomainOverviewWidgets
+      .filter((widget) => isDashboardWidgetVisible(widget, { menuTree, hasPerm, isAdmin }))
+      .map((widget) => ({
+        key: widget.key,
+        title: t(widget.titleKey),
+        description: t(widget.descriptionKey),
+        summary: widget.summary(summary, t),
+        path: widget.path,
+      })),
     [hasPerm, isAdmin, menuTree, summary, t],
   );
 
@@ -284,14 +179,6 @@ const DashboardPage: React.FC = () => {
     }
     return [
       {
-        key: 'success',
-        tone: successRate >= 90 ? 'success' : 'warning',
-        icon: <IconSafe />,
-        label: t('dashboard.securitySuccessRate', { days: summary.periodDays }),
-        value: `${successRate}%`,
-        desc: t('dashboard.attention.successRateDesc'),
-      },
-      {
         key: 'failed',
         tone: summary.loginFailureCount > 0 ? 'danger' : 'neutral',
         icon: <IconExclamationCircle />,
@@ -300,12 +187,12 @@ const DashboardPage: React.FC = () => {
         desc: t('dashboard.attention.failedLoginDesc'),
       },
       {
-        key: 'sessions',
-        tone: 'neutral',
-        icon: <IconClockCircle />,
-        label: t('dashboard.sessions'),
-        value: summary.activeSessionCount,
-        desc: t('dashboard.metric.sessionsHint'),
+        key: 'success',
+        tone: successRate >= 90 ? 'success' : 'warning',
+        icon: <IconSafe />,
+        label: t('dashboard.securitySuccessRate', { days: summary.periodDays }),
+        value: `${successRate}%`,
+        desc: t('dashboard.attention.successRateDesc'),
       },
       {
         key: 'org-tasks',
@@ -316,12 +203,12 @@ const DashboardPage: React.FC = () => {
         desc: t('dashboard.orgGovernanceTasksDesc'),
       },
       {
-        key: 'operations',
+        key: 'last-login',
         tone: 'neutral',
         icon: <IconClockCircle />,
-        label: t('dashboard.todayOperations'),
-        value: summary.todayOperationCount,
-        desc: t('dashboard.metric.todayOpsHint'),
+        label: t('dashboard.lastSuccessfulLogin'),
+        value: summary.lastSuccessfulLoginAt ? renderActivityTime(summary.lastSuccessfulLoginAt) : t('dashboard.lastSuccessfulLoginEmpty'),
+        desc: t('dashboard.subtitle'),
       },
     ];
   }, [successRate, summary, t]);
@@ -365,21 +252,11 @@ const DashboardPage: React.FC = () => {
               <div className="dashboard-hero-card__copy">
                 <span className="dashboard-hero-card__eyebrow">{t('dashboard.statusStrip')}</span>
                 <Typography.Title heading={4} className="dashboard-hero-card__title">
-                  {t('dashboard.attentionPanel')}
+                  {t('dashboard.title')}
                 </Typography.Title>
                 <Typography.Paragraph className="dashboard-hero-card__desc">
                   {t('dashboard.subtitle')}
                 </Typography.Paragraph>
-              </div>
-              <div className="dashboard-hero-card__summary">
-                <div className="dashboard-hero-card__summary-item">
-                  <span className="dashboard-hero-card__summary-label">{t('dashboard.enabledUserRate')}</span>
-                  <span className="dashboard-hero-card__summary-value">{enabledRate}%</span>
-                </div>
-                <div className="dashboard-hero-card__summary-item">
-                  <span className="dashboard-hero-card__summary-label">{t('dashboard.securitySuccessRate', { days: summary.periodDays })}</span>
-                  <span className="dashboard-hero-card__summary-value">{successRate}%</span>
-                </div>
               </div>
             </div>
             <Row gutter={[12, 12]}>
@@ -407,17 +284,12 @@ const DashboardPage: React.FC = () => {
                       <span className="dashboard-focus-item__icon">{item.icon}</span>
                       <span className="dashboard-focus-item__copy">
                         <span className="dashboard-focus-item__label">{item.label}</span>
-                        <span className="dashboard-focus-item__value">{item.value}</span>
+                        <span className={`dashboard-focus-item__value${item.key === 'last-login' ? ' dashboard-focus-item__value--meta' : ''}`}>{item.value}</span>
                       </span>
                       <span className="dashboard-focus-item__desc">{item.desc}</span>
                     </div>
                   ))}
                 </div>
-                <div className="dashboard-panel-card__metric dashboard-panel-card__metric--footer">
-                  <span className="dashboard-panel-card__meta">{t('dashboard.lastSuccessfulLogin')}</span>
-                  <div>{summary.lastSuccessfulLoginAt ? renderActivityTime(summary.lastSuccessfulLoginAt) : t('dashboard.lastSuccessfulLoginEmpty')}</div>
-                </div>
-                <Progress percent={successRate} showText={false} strokeWidth={6} />
               </Card>
             </Col>
             <Col xs={24} lg={9}>
@@ -450,26 +322,7 @@ const DashboardPage: React.FC = () => {
           </Row>
 
           <Row gutter={[16, 16]}>
-            <Col xs={24} lg={10}>
-              <Card className="page-panel dashboard-panel-card dashboard-panel-card--overview" title={t('dashboard.platformOverview')}>
-                <Space direction="vertical" size={14} style={{ width: '100%' }}>
-                  <div className="dashboard-panel-card__metric">
-                    <span className="dashboard-panel-card__meta">{t('dashboard.enabledUserRate')}</span>
-                    <span className="dashboard-panel-card__value">{enabledRate}%</span>
-                    <Progress percent={enabledRate} showText={false} strokeWidth={6} />
-                  </div>
-                  <div className="dashboard-panel-card__metric">
-                    <span className="dashboard-panel-card__meta">{t('dashboard.visibleMenuHint')}</span>
-                    <span>{t('dashboard.visibleMenuValue', { count: summary.visibleMenuCount })}</span>
-                  </div>
-                  <div className="dashboard-panel-card__metric">
-                    <span className="dashboard-panel-card__meta">{t('dashboard.platformActivity')}</span>
-                    <span>{t('dashboard.platformActivityDesc', { count: summary.todayOperationCount })}</span>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
-            <Col xs={24} lg={14}>
+            <Col xs={24}>
               <Card className="page-panel dashboard-panel-card" title={t('dashboard.todoCenter')}>
                 {summary.orgGovernanceTasks?.length ? (
                   <div className="dashboard-task-grid">

@@ -43,7 +43,7 @@ import {
   type PermissionWorkbenchRole,
   type PermissionWorkbenchResp,
 } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -118,6 +118,7 @@ const PermissionList: React.FC = () => {
   const [form] = Form.useForm<PermissionPolicyPayload>();
   const [queryForm] = Form.useForm<PermissionPolicyQuery>();
   const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
+  const governanceRail = useGovernanceRail();
   const invalidatePermissionCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/permission', resourceKeys: ['list:default', 'workbench:default'] },
@@ -410,6 +411,26 @@ const PermissionList: React.FC = () => {
     ],
     [t, total, workbench],
   );
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.permission.hero.currentMode'),
+        value: activeTab === 'workbench' ? t('system.permission.workbench.tab') : t('system.permission.policy.tab'),
+        description: t('system.permission.hero.modeHint'),
+      },
+      {
+        label: t('system.permission.hero.unknownAssignments'),
+        value: workbench?.overview.unknownPermissionAssignmentCount ?? 0,
+        description: t('system.permission.hero.unknownHint'),
+      },
+      {
+        label: t('system.permission.hero.exportReady'),
+        value: canExport ? t('common.yes') : t('common.no'),
+        description: t('system.permission.hero.exportHint'),
+      },
+    ],
+    [activeTab, canExport, t, workbench?.overview.unknownPermissionAssignmentCount],
+  );
 
   const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
     if (isNetworkRequestError(requestError)) {
@@ -455,8 +476,8 @@ const PermissionList: React.FC = () => {
 
   const workbenchColumns: ColumnProps<PermissionWorkbenchRole>[] = [
     { title: t('system.role.roleName'), dataIndex: 'roleName', width: 180 },
-    { title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180 },
-    {
+    withTableColumnPriority({ title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180 }, 'medium'),
+    withTableColumnPriority({
       title: t('system.role.status'),
       dataIndex: 'status',
       width: 120,
@@ -465,11 +486,11 @@ const PermissionList: React.FC = () => {
           {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
         </Tag>
       ),
-    },
-    { title: t('system.permission.workbench.navCount'), dataIndex: 'menuCount', width: 120 },
-    { title: t('system.permission.workbench.pageCount'), dataIndex: 'pagePermissionCount', width: 120 },
-    { title: t('system.permission.workbench.actionCount'), dataIndex: 'actionPermissionCount', width: 120 },
-    { title: t('system.permission.workbench.apiCount'), dataIndex: 'apiPolicyCount', width: 120 },
+    }, 'medium'),
+    withTableColumnPriority({ title: t('system.permission.workbench.navCount'), dataIndex: 'menuCount', width: 120 }, 'low'),
+    withTableColumnPriority({ title: t('system.permission.workbench.pageCount'), dataIndex: 'pagePermissionCount', width: 120 }, 'low'),
+    withTableColumnPriority({ title: t('system.permission.workbench.actionCount'), dataIndex: 'actionPermissionCount', width: 120 }, 'low'),
+    withTableColumnPriority({ title: t('system.permission.workbench.apiCount'), dataIndex: 'apiPolicyCount', width: 120 }, 'low'),
     {
       title: t('system.permission.workbench.coverage'),
       dataIndex: 'coverage',
@@ -482,12 +503,12 @@ const PermissionList: React.FC = () => {
         </Space>
       ),
     },
-    {
+    withTableColumnPriority({
       title: t('system.permission.workbench.unknownCount'),
       dataIndex: 'unknownPermissionCount',
       width: 140,
       render: (value: number) => value > 0 ? <Tag color="orange">{value}</Tag> : <Tag color="green">0</Tag>,
-    },
+    }, 'medium'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.single,
@@ -507,6 +528,9 @@ const PermissionList: React.FC = () => {
           <ListHeaderActions
             utility={(
               <>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('system.permission.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
                 <Button icon={<IconRefresh />} onClick={() => {
                   if (activeTab === 'workbench') {
                     void loadWorkbench(workbenchQuery);
@@ -539,13 +563,13 @@ const PermissionList: React.FC = () => {
       />
 
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.permission.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.permission.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.permission.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -558,9 +582,20 @@ const PermissionList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
-            <Card className="page-panel">
+        <PageSplitLayout
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('system.permission.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('system.permission.hero.summaryTitle')}
+              noteDescription={t('system.permission.hero.sideDesc')}
+            >
+              <GovernanceRailSummary items={governanceSummaryItems} />
+            </GovernanceRailPanel>
+          ) : null}
+        >
+            <Card className="page-panel permission-workbench__tabs">
               <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as PermissionTabKey)}>
                 <Tabs.TabPane key="workbench" title={t('system.permission.workbench.tab')} />
                 <Tabs.TabPane key="api" title={t('system.permission.policy.tab')} />
@@ -568,12 +603,12 @@ const PermissionList: React.FC = () => {
             </Card>
 
             {activeTab === 'workbench' ? (
-              <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              <Space direction="vertical" size={14} className="permission-workbench">
                 {workbench ? (
-                  <Row gutter={[16, 16]}>
+                  <Row gutter={[12, 12]} className="permission-workbench__overview">
                     {overviewCards.map((item) => (
-                      <Col span={6} key={item.title}>
-                        <Card className="page-stat-panel">
+                      <Col xs={24} sm={12} lg={6} key={item.title}>
+                        <Card className="page-stat-panel permission-workbench__overview-card">
                           <Typography.Text type="secondary">{item.title}</Typography.Text>
                           <Typography.Title heading={4} style={{ margin: '8px 0 0' }}>
                             {item.value}
@@ -649,7 +684,7 @@ const PermissionList: React.FC = () => {
                       data={workbench.roles}
                       columns={workbenchColumns}
                       loading={workbenchLoading}
-                      scroll={{ x: 1100 }}
+                      scroll={{ x: 'max-content' }}
                       pagination={false}
                       emptyText={t('common.noData')}
                     />
@@ -698,7 +733,7 @@ const PermissionList: React.FC = () => {
                       columns={columns}
                       rowKey="id"
                       loading={loading}
-                      scroll={{ x: 1480 }}
+                      scroll={{ x: 'max-content' }}
                       onChange={handleTableChange}
                       emptyText={t('common.noData')}
                       pagination={{
@@ -717,37 +752,7 @@ const PermissionList: React.FC = () => {
                 </Card>
               </Space>
             )}
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.permission.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.permission.hero.currentMode')}</span>
-                  <span className="side-rail-item__value">{activeTab === 'workbench' ? t('system.permission.workbench.tab') : t('system.permission.policy.tab')}</span>
-                  <span className="side-rail-item__desc">{t('system.permission.hero.modeHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.permission.hero.unknownAssignments')}</span>
-                  <span className="side-rail-item__value">{workbench?.overview.unknownPermissionAssignmentCount ?? 0}</span>
-                  <span className="side-rail-item__desc">{t('system.permission.hero.unknownHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.permission.hero.exportReady')}</span>
-                  <span className="side-rail-item__value">{canExport ? t('common.yes') : t('common.no')}</span>
-                  <span className="side-rail-item__desc">{t('system.permission.hero.exportHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.permission.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('system.permission.hero.sideLead')}</span>
-                <span className="side-rail-note__desc">{t('system.permission.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

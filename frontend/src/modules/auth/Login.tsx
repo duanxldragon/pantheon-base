@@ -156,6 +156,18 @@ const LoginPage: React.FC = () => {
       </section>
 
       <section className="auth-login-page__form-pane" aria-label={t('auth.login.visualAria')}>
+        <div className="auth-login-page__mobile-brand">
+          <div className="auth-login-page__brand">
+            <div className="auth-login-page__brand-mark">
+              {publicSettings.siteLogo ? <img src={publicSettings.siteLogo} alt={appName} /> : brandInitial}
+            </div>
+            <div className="auth-login-page__brand-copy">
+              <span className="auth-login-page__brand-title">{appName}</span>
+              <span className="auth-login-page__brand-subtitle">{t('auth.login.consoleLabel')}</span>
+            </div>
+          </div>
+        </div>
+
         <div className="auth-login-page__tools">
           <ThemeSwitcher className="auth-login-page__tool-btn" />
           <Tooltip content={t('app.toggleLanguage')}>

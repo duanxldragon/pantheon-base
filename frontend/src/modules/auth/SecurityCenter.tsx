@@ -37,6 +37,9 @@ import {
   PageEmpty,
   PageError,
   PageLoading,
+  PageSplitLayout,
+  StandardRailNotePanel,
+  StandardRailSummary,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
 } from '../../components';
@@ -339,9 +342,9 @@ const SecurityCenter: React.FC = () => {
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('auth.security.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('auth.security.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('auth.security.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -355,8 +358,34 @@ const SecurityCenter: React.FC = () => {
           </div>
         </Card>
 
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={(
+            <>
+              {loading && !overview ? <PageLoading /> : (
+                <StandardRailSummary
+                  title={t('auth.security.overview')}
+                  items={[
+                    { label: t('system.profile.username'), value: overview?.user?.username || userInfo?.username || '-', description: overview?.user?.nickname || userInfo?.nickname || '-' },
+                    { label: t('auth.security.currentDevice'), value: formatClientSummary(currentSession), description: currentSession?.lastIp || '-' },
+                    { label: t('auth.session.lastActive'), value: currentSession ? renderActivityTime(currentSession.lastRefreshAt || currentSession.createdAt) : '-' },
+                  ]}
+                />
+              )}
+              {policyItems.length === 0 && loading ? <PageLoading /> : null}
+              {policyItems.length > 0 ? (
+                <StandardRailSummary
+                  title={t('auth.security.policy')}
+                  items={policyItems.map((item) => ({ label: item.label, value: item.value, description: item.hint }))}
+                />
+              ) : null}
+              <StandardRailNotePanel
+                title={t('auth.security.hero.sideTitle')}
+                noteTitle={t('auth.security.currentSessionSummary')}
+                noteDescription={t('auth.security.hero.sideDesc')}
+              />
+            </>
+          )}
+        >
             <Card className="page-panel" title={t('auth.security.password')} extra={<Tag>{t('auth.security.passwordTip')}</Tag>}>
               <Form form={passwordForm} layout="vertical">
                 <Space direction="vertical" size={20} className="auth-section-stack">
@@ -455,56 +484,7 @@ const SecurityCenter: React.FC = () => {
                 )}
               </Space>
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              {loading && !overview ? (
-                <PageLoading />
-              ) : (
-                <>
-                  <span className="side-rail-panel__title">{t('auth.security.overview')}</span>
-                  <div className="side-rail-stack">
-                    <div className="side-rail-item">
-                      <span className="side-rail-item__label">{t('system.profile.username')}</span>
-                      <span className="side-rail-item__value">{overview?.user?.username || userInfo?.username || '-'}</span>
-                      <span className="side-rail-item__desc">{overview?.user?.nickname || userInfo?.nickname || '-'}</span>
-                    </div>
-                    <div className="side-rail-item">
-                      <span className="side-rail-item__label">{t('auth.security.currentDevice')}</span>
-                      <span className="side-rail-item__value">{formatClientSummary(currentSession)}</span>
-                      <span className="side-rail-item__desc">{currentSession?.lastIp || '-'}</span>
-                    </div>
-                    <div className="side-rail-item">
-                      <span className="side-rail-item__label">{t('auth.session.lastActive')}</span>
-                      <span className="side-rail-item__value">{currentSession ? renderActivityTime(currentSession.lastRefreshAt || currentSession.createdAt) : '-'}</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </Card>
-            <Card className="page-panel side-rail-panel" title={t('auth.security.policy')}>
-              {policyItems.length === 0 && loading ? <PageLoading /> : null}
-              {policyItems.length > 0 ? (
-                <div className="side-rail-stack">
-                  {policyItems.map((item) => (
-                    <div key={item.label} className="side-rail-item">
-                      <span className="side-rail-item__label">{item.label}</span>
-                      <span className="side-rail-item__value">{item.value}</span>
-                      <span className="side-rail-item__desc">{item.hint}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('auth.security.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('auth.security.currentSessionSummary')}</span>
-                <span className="side-rail-note__desc">{t('auth.security.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
       <SessionDetailModal
         visible={Boolean(detailSession)}

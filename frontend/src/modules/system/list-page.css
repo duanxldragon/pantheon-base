@@ -1,7 +1,7 @@
 .system-list__table-card .arco-card-body {
   display: grid;
-  gap: 16px;
-  padding: 16px 20px 8px;
+  gap: 12px;
+  padding: 12px 14px 6px;
 }
 
 .system-list__table .arco-table-container {
@@ -15,13 +15,23 @@
   padding-bottom: 0;
 }
 
+.system-list__table .arco-table-th,
+.system-list__table .arco-table-td {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
 .system-list__actions {
   row-gap: 2px;
+  column-gap: 2px !important;
 }
 
 .system-list__actions .arco-btn-text {
-  padding-inline: 6px;
+  min-height: 28px;
+  padding-inline: 4px;
   color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .system-list__actions .arco-btn-text:not(.arco-btn-disabled):hover,
@@ -40,16 +50,61 @@
   background: color-mix(in srgb, var(--danger-soft) 28%, #fff);
 }
 
+.post-list-page .system-page-hero .arco-card-body {
+  padding: 14px 16px;
+}
+
+.post-list-page .system-page-kpi-grid {
+  gap: 8px;
+}
+
+.post-list-page .system-page-kpi {
+  padding: 10px 12px;
+}
+
+.post-list-page .system-page-kpi__value {
+  font-size: 20px;
+}
+
+.post-list-page .filter-panel .arco-card-body {
+  padding: 12px 14px 2px;
+}
+
+.post-list-page .table-batch-action-bar {
+  gap: 4px;
+}
+
+.post-list-page__row-actions {
+  column-gap: 4px !important;
+}
+
+.post-list-page__row-actions .arco-btn-text {
+  padding-inline: 6px;
+}
+
+.dict-page__row-actions {
+  column-gap: 4px !important;
+}
+
+.dict-page__row-actions .arco-btn-text {
+  padding-inline: 6px;
+}
+
+.dict-page__row-actions--items .arco-btn-text {
+  min-width: 28px;
+  padding-inline: 4px;
+}
+
 .table-batch-action-bar {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .system-list__table-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
   flex-wrap: wrap;
 }
 
@@ -59,17 +114,21 @@
 
 .system-list__table-head-title {
   font-weight: 600;
+  line-height: 1.35;
+  font-size: 14px;
 }
 
 .system-list__table-head-desc {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .table-batch-action-bar__main {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px 16px;
+  gap: 8px 12px;
   flex-wrap: wrap;
 }
 
@@ -77,7 +136,7 @@
 .table-batch-action-bar__actions {
   display: flex;
   align-items: center;
-  gap: 8px 10px;
+  gap: 6px 8px;
   flex-wrap: wrap;
 }
 
@@ -91,15 +150,16 @@
 
 .table-batch-action-bar__summary {
   font-size: 13px;
+  line-height: 1.4;
 }
 
 .table-batch-action-bar__hint {
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .table-batch-action-bar__select {
-  width: 220px;
+  width: 200px;
 }
 
 .table-batch-action-bar--governance .table-batch-action-bar__actions {
@@ -114,7 +174,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px 16px;
+  gap: 8px 12px;
   flex-wrap: wrap;
   width: 100%;
 }
@@ -131,6 +191,432 @@
 .list-header-actions__primary {
   justify-content: flex-end;
   margin-left: auto;
+}
+
+.list-header-actions .arco-btn,
+.table-batch-action-bar .arco-btn {
+  min-height: 32px;
+}
+
+:root[data-pantheon-density='compact'] .system-list__table-card .arco-card-body {
+  gap: 8px;
+  padding: 10px 12px 2px;
+}
+
+:root[data-pantheon-density='compact'] .system-list__hero .arco-card-body {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+:root[data-pantheon-density='compact'] .system-list__hero .system-page-kpi {
+  padding: 10px 12px;
+}
+
+:root[data-pantheon-density='compact'] .filter-panel .arco-card-body {
+  padding: 12px 14px 0;
+}
+
+:root[data-pantheon-density='compact'] .list-header-actions,
+:root[data-pantheon-density='compact'] .table-batch-action-bar,
+:root[data-pantheon-density='compact'] .system-list__table-head,
+:root[data-pantheon-density='compact'] .table-batch-action-bar__main {
+  gap: 6px 10px;
+}
+
+:root[data-pantheon-density='compact'] .list-header-actions .arco-btn,
+:root[data-pantheon-density='compact'] .table-batch-action-bar .arco-btn {
+  min-height: 28px;
+}
+
+.system-list__table .arco-table-th .arco-table-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.system-list__hero .arco-card-body {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.system-list__hero .system-page-kpi-grid {
+  gap: 10px;
+}
+
+.system-list__hero .system-page-kpi {
+  padding: 12px 14px;
+}
+
+.system-list__hero .system-page-kpi__value {
+  font-size: 22px;
+}
+
+.i18n-list-page .system-page-hero .arco-card-body,
+.dept-list-page .system-page-hero .arco-card-body,
+.setting-page .system-page-hero .arco-card-body {
+  padding: 12px 14px;
+}
+
+.i18n-list-page .system-page-kpi-grid,
+.dept-list-page .system-page-kpi-grid,
+.setting-page .system-page-kpi-grid {
+  gap: 6px;
+}
+
+.i18n-list-page .system-page-kpi,
+.dept-list-page .system-page-kpi,
+.setting-page .system-page-kpi {
+  padding: 8px 10px;
+}
+
+.i18n-list-page .system-page-kpi__value,
+.dept-list-page .system-page-kpi__value,
+.setting-page .system-page-kpi__value {
+  font-size: 19px;
+}
+
+.i18n-list-page .page-split-layout,
+.dept-list-page .page-split-layout,
+.setting-page .page-split-layout {
+  gap: 10px;
+}
+
+.i18n-list-page .filter-panel .arco-card-body,
+.dept-list-page .filter-panel .arco-card-body {
+  padding: 10px 12px 0;
+}
+
+.i18n-list-page .system-list__table-card .arco-card-body,
+.dept-list-page .system-list__table-card .arco-card-body {
+  gap: 8px;
+  padding: 8px 10px 2px;
+}
+
+.i18n-list-page .table-batch-action-bar,
+.dept-list-page .table-batch-action-bar {
+  gap: 4px;
+}
+
+.i18n-list-page .system-page-hero__top,
+.dept-list-page .system-page-hero__top,
+.setting-page .system-page-hero__top {
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.i18n-list-page .system-page-hero__eyebrow,
+.dept-list-page .system-page-hero__eyebrow,
+.setting-page .system-page-hero__eyebrow {
+  min-height: 20px;
+}
+
+.i18n-list-page .system-page-hero__desc,
+.dept-list-page .system-page-hero__desc,
+.setting-page .system-page-hero__desc {
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 58ch;
+}
+
+.i18n-list-page .system-page-kpi__label,
+.dept-list-page .system-page-kpi__label,
+.setting-page .system-page-kpi__label {
+  margin-bottom: 4px;
+}
+
+.i18n-list-page .system-page-kpi__hint,
+.dept-list-page .system-page-kpi__hint,
+.setting-page .system-page-kpi__hint {
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.i18n-list-page .filter-panel .arco-form-item,
+.dept-list-page .filter-panel .arco-form-item {
+  margin-bottom: 10px;
+}
+
+.i18n-list-page .filter-panel .arco-form-item-label-col,
+.dept-list-page .filter-panel .arco-form-item-label-col {
+  padding-bottom: 2px;
+}
+
+.i18n-list-page .filter-panel .arco-input-inner-wrapper,
+.i18n-list-page .filter-panel .arco-input-password,
+.i18n-list-page .filter-panel .arco-input,
+.i18n-list-page .filter-panel .arco-input-number,
+.i18n-list-page .filter-panel .arco-select-view,
+.i18n-list-page .filter-panel .arco-tree-select-view,
+.i18n-list-page .filter-panel .arco-picker,
+.dept-list-page .filter-panel .arco-input-inner-wrapper,
+.dept-list-page .filter-panel .arco-input-password,
+.dept-list-page .filter-panel .arco-input,
+.dept-list-page .filter-panel .arco-input-number,
+.dept-list-page .filter-panel .arco-select-view,
+.dept-list-page .filter-panel .arco-tree-select-view,
+.dept-list-page .filter-panel .arco-picker {
+  min-height: 32px;
+}
+
+.i18n-list-page .system-list__table-head,
+.dept-list-page .system-list__table-head {
+  gap: 6px 10px;
+}
+
+.i18n-list-page .system-list__table-head-title,
+.dept-list-page .system-list__table-head-title {
+  line-height: 1.25;
+}
+
+.setting-page .page-panel .arco-card-body {
+  padding: 12px 14px;
+}
+
+.setting-page__layout .page-main-column {
+  gap: 10px;
+}
+
+.setting-page .arco-tabs-header {
+  margin-bottom: 8px;
+}
+
+.setting-page__form-stack {
+  gap: 8px !important;
+}
+
+.setting-page__field-grid {
+  gap: 8px 12px;
+}
+
+.setting-page__save-hint {
+  line-height: 1.4;
+}
+
+.setting-page__audit-header {
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.module-manager-page__header-actions .list-header-actions__utility {
+  gap: 4px !important;
+}
+
+.module-manager-page__header-actions .arco-btn {
+  min-height: 28px;
+}
+
+.module-manager-page__card .arco-card-body {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.module-manager-page__intro {
+  display: grid;
+  gap: 8px;
+}
+
+.module-manager-page__copy {
+  display: grid;
+  gap: 4px;
+}
+
+.module-manager-page__desc {
+  margin: 0 !important;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.module-manager-page__notice-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.module-manager-page__notice-stack .arco-alert {
+  box-shadow: none;
+}
+
+.module-manager-page__notice-stack .arco-alert-content {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.module-manager-page__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.module-manager-page__stat-card .arco-card-body {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+.module-manager-page__stat-card .arco-typography-secondary {
+  font-size: 12px;
+}
+
+.i18n-list-page .list-header-actions__utility,
+.dept-list-page .list-header-actions__utility {
+  gap: 4px !important;
+}
+
+.i18n-list-page .list-header-actions__utility .arco-btn,
+.dept-list-page .list-header-actions__utility .arco-btn {
+  min-height: 28px;
+}
+
+.i18n-list-page .system-list__table-head-desc {
+  margin-top: 0;
+}
+
+.permission-workbench,
+.permission-workbench__tabs {
+  width: 100%;
+}
+
+.permission-workbench__tabs .arco-card-body {
+  padding-top: 10px;
+  padding-bottom: 6px;
+}
+
+.permission-workbench__overview-card {
+  border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.permission-workbench__overview-card .arco-card-body {
+  padding: 14px 16px;
+}
+
+.permission-workbench__overview-card .arco-typography {
+  display: block;
+}
+
+.permission-workbench__overview-card .arco-typography-secondary {
+  font-size: 12px;
+}
+
+.permission-workbench__overview-card .arco-typography-h4 {
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.dept-governance-task-card .arco-card-head {
+  min-height: 56px;
+}
+
+.dept-governance-task-card__intro {
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-primary) 2%, #ffffff);
+}
+
+.dept-list-page .system-dept-tabs .arco-tabs-header {
+  margin-bottom: 8px;
+}
+
+.dept-list-page .dept-governance-task-card .arco-card-head {
+  min-height: 46px;
+}
+
+.dept-list-page .dept-governance-task-card__intro {
+  padding: 6px 8px;
+}
+
+.dept-list-page .dept-governance-task-card .governance-workbench__task-desc {
+  margin-bottom: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .i18n-list-page__header-actions .list-header-actions__utility,
+  .dept-list-page__header-actions .list-header-actions__utility,
+  .module-manager-page__header-actions .list-header-actions__utility {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+
+  .i18n-list-page__header-actions .list-header-actions__utility::-webkit-scrollbar,
+  .dept-list-page__header-actions .list-header-actions__utility::-webkit-scrollbar,
+  .module-manager-page__header-actions .list-header-actions__utility::-webkit-scrollbar {
+    display: none;
+  }
+
+  .i18n-list-page__header-actions .list-header-actions__utility .arco-btn,
+  .dept-list-page__header-actions .list-header-actions__utility .arco-btn,
+  .module-manager-page__header-actions .list-header-actions__utility .arco-btn {
+    white-space: nowrap;
+  }
+
+  .i18n-list-page__side-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .dept-list-page .system-page-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .i18n-list-page .system-page-hero__desc,
+  .dept-list-page .system-page-hero__desc,
+  .setting-page .system-page-hero__desc,
+  .i18n-list-page .system-page-kpi__hint,
+  .dept-list-page .system-page-kpi__hint,
+  .setting-page .system-page-kpi__hint {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .dept-list-page .system-dept-tabs .arco-tabs-header {
+    margin-bottom: 6px;
+  }
+
+  .dept-list-page .dept-governance-task-card .arco-card-head {
+    min-height: 42px;
+  }
+
+  .dept-list-page .dept-governance-task-card .governance-workbench__task-desc {
+    -webkit-line-clamp: 1;
+  }
+
+  .i18n-list-page__side-column {
+    grid-template-columns: 1fr;
+  }
+
+  .setting-page__side-column {
+    grid-template-columns: 1fr;
+  }
+
+  .module-manager-page__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dept-list-page .system-page-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .module-manager-page__stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .audit-detail-summary {
@@ -216,8 +702,8 @@
 
 .dict-workbench__summary-card,
 .dict-workbench__context-card {
-  border: 1px solid var(--color-border-2);
-  border-radius: 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
 }
 
 .dict-workbench__summary-card .arco-card-body {
@@ -241,7 +727,7 @@
 }
 
 .dict-workbench__summary-card--active {
-  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--color-border-2));
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
   background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 8%, #fff) 0%, #fff 100%);
 }
 
@@ -284,8 +770,8 @@
   display: grid;
   gap: 8px;
   padding: 12px 14px;
-  border: 1px solid var(--color-border-2);
-  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
   background: linear-gradient(180deg, #fff 0%, var(--color-fill-1) 100%);
 }
 
@@ -307,8 +793,8 @@
 }
 
 .org-structure__summary-card {
-  border: 1px solid var(--color-border-2);
-  border-radius: 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
 }
 
 .org-structure__summary-card .arco-card-body {
@@ -330,7 +816,7 @@
 }
 
 .org-structure__summary-card--active {
-  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--color-border-2));
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
   background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 8%, #fff) 0%, #fff 100%);
 }
 
@@ -390,8 +876,8 @@
 .org-chart__dept-card {
   width: 320px;
   cursor: pointer;
-  border: 1px solid var(--color-border-2);
-  border-radius: 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, #fff 0%, var(--color-fill-1) 100%);
   padding: 14px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
@@ -399,7 +885,7 @@
 
 .org-chart__dept-card:hover,
 .org-chart__dept-card:focus {
-  border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--color-border-2));
+  border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border));
   box-shadow: 0 10px 28px rgba(22, 93, 255, 0.08);
   outline: none;
   transform: translateY(-1px);
@@ -636,8 +1122,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
-  border: 1px solid var(--color-border-2);
-  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, #fff 0%, var(--color-fill-1) 100%);
 }
 
@@ -829,5 +1315,15 @@
 
   .menu-list-view__item {
     margin-left: 0 !important;
+  }
+
+  .post-list-page .list-header-actions__utility {
+    gap: 6px !important;
+  }
+
+  .post-list-page .list-header-actions__utility .arco-btn,
+  .post-list-page .list-header-actions__utility .arco-space-item,
+  .post-list-page .list-header-actions__primary .arco-btn {
+    min-height: 30px;
   }
 }

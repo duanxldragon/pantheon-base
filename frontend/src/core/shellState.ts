@@ -1,9 +1,11 @@
 export const OPENED_TABS_STORAGE_KEY = 'pantheon_opened_tabs';
 export const SHELL_LAYOUT_MODE_STORAGE_KEY = 'pantheon_shell_layout_mode';
+export const SHELL_DENSITY_MODE_STORAGE_KEY = 'pantheon_shell_density_mode';
 export const SHELL_LOCKED_STORAGE_KEY = 'pantheon_shell_locked';
 export const SHELL_LAST_ACTIVITY_AT_STORAGE_KEY = 'pantheon_shell_last_activity_at';
 
 export type ShellLayoutMode = 'vertical' | 'horizontal';
+export type ShellDensityMode = 'comfortable' | 'compact';
 
 export function readShellLayoutMode(): ShellLayoutMode {
   const rawValue = localStorage.getItem(SHELL_LAYOUT_MODE_STORAGE_KEY);
@@ -12,6 +14,15 @@ export function readShellLayoutMode(): ShellLayoutMode {
 
 export function persistShellLayoutMode(mode: ShellLayoutMode) {
   localStorage.setItem(SHELL_LAYOUT_MODE_STORAGE_KEY, mode);
+}
+
+export function readShellDensityMode(): ShellDensityMode {
+  const rawValue = localStorage.getItem(SHELL_DENSITY_MODE_STORAGE_KEY);
+  return rawValue === 'compact' ? 'compact' : 'comfortable';
+}
+
+export function persistShellDensityMode(mode: ShellDensityMode) {
+  localStorage.setItem(SHELL_DENSITY_MODE_STORAGE_KEY, mode);
 }
 
 export function readShellLockedState() {

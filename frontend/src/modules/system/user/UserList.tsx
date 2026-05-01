@@ -17,7 +17,7 @@ import { getRoleList } from '../role/api';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { batchUpdateUserStatus, createUser, deleteUser, downloadUserImportTemplate, exportUsers, getUserDetail, getUserList, importUsers, resetUserPassword, updateUser, type UserCreatePayload, type UserDetail as UserDetailData, type UserListQuery, type UserListRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
 import UserDetailContent from './UserDetailContent';
 import '../list-page.css';
 import './user.css';
@@ -102,6 +102,7 @@ const UserList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:user:export');
   const canImport = isAdmin || hasPerm('system:user:import');
   const canBatchUpdate = isAdmin || hasPerm('system:user:batch-update');
+  const governanceRail = useGovernanceRail();
   const invalidateUserCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/user', resourceKeys: ['list:default'] },
@@ -395,8 +396,12 @@ const UserList: React.FC = () => {
     { title: t('system.user.username'), dataIndex: 'username', width: 120, ...sortableColumn('username') },
     { title: t('system.user.nickname'), dataIndex: 'nickname', width: 140, ...sortableColumn('nickname') },
     { title: t('system.user.dept'), dataIndex: 'deptName', width: 120 },
-    { title: t('system.user.post'), dataIndex: 'postName', width: 120 },
-    {
+    withTableColumnPriority({
+      title: t('system.user.post'),
+      dataIndex: 'postName',
+      width: 120,
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('system.user.roles'),
       dataIndex: 'roleKeys',
       width: 140,
@@ -405,9 +410,9 @@ const UserList: React.FC = () => {
           {value?.length ? value.join(' / ') : '-'}
         </span>
       ),
-    },
-    { title: t('system.user.email'), dataIndex: 'email', width: 180, ...sortableColumn('email') },
-    { title: t('system.user.phone'), dataIndex: 'phone', width: 140, ...sortableColumn('phone') },
+    }, 'medium'),
+    withTableColumnPriority({ title: t('system.user.email'), dataIndex: 'email', width: 180, ...sortableColumn('email') }, 'low'),
+    withTableColumnPriority({ title: t('system.user.phone'), dataIndex: 'phone', width: 140, ...sortableColumn('phone') }, 'low'),
     {
       title: t('system.user.status'),
       dataIndex: 'status',
@@ -419,13 +424,13 @@ const UserList: React.FC = () => {
         </Tag>
       ),
     },
-    {
+    withTableColumnPriority({
       title: t('system.user.createdAt'),
       dataIndex: 'createdAt',
       width: 180,
       ...sortableColumn('createdAt'),
       render: (value: string) => formatDateTime(value),
-    },
+    }, 'low'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
@@ -559,6 +564,26 @@ const UserList: React.FC = () => {
     ],
     [enabledUserCount, roleOptions.length, selectedRowKeys.length, t, total],
   );
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.user.hero.orgReady'),
+        value: `${Math.max(deptOptions.length - 1, 0)} / ${postOptions.length}`,
+        description: t('system.user.hero.orgHint'),
+      },
+      {
+        label: t('system.user.hero.disabledRows'),
+        value: disabledUserCount,
+        description: t('system.user.hero.disabledHint'),
+      },
+      {
+        label: t('system.user.hero.batchActions'),
+        value: batchActionDisabled ? t('common.no') : t('common.yes'),
+        description: t('system.user.hero.batchHint'),
+      },
+    ],
+    [batchActionDisabled, deptOptions.length, disabledUserCount, postOptions.length, t],
+  );
 
   return (
     <PageContainer>
@@ -567,6 +592,9 @@ const UserList: React.FC = () => {
           <ListHeaderActions
             utility={(
               <>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('system.user.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
                 <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
                 <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
                 <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
@@ -579,13 +607,13 @@ const UserList: React.FC = () => {
         )}
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-user-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.user.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.user.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.user.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -598,128 +626,109 @@ const UserList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
-            <FilterPanel>
-              <Form form={queryForm} layout="vertical">
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <FormItem label={t('system.user.username')} field="username">
-                      <Input />
-                    </FormItem>
-                  </Col>
-                  <Col span={6}>
-                    <FormItem label={t('system.user.nickname')} field="nickname">
-                      <Input />
-                    </FormItem>
-                  </Col>
-                  <Col span={6}>
-                    <FormItem label={t('system.user.status')} field="status">
-                      <Select allowClear options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]} />
-                    </FormItem>
-                  </Col>
-                  <Col span={6}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
-            <Card className="page-panel system-user-list__table-card">
-              <TableBatchActionBar
-                selectedCount={selectedRowKeys.length}
-                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-                clearText={t('common.clearSelection')}
-                clearSuccessText={t('common.clearSelectionSuccess')}
-                onClear={() => setSelectedRowKeys([])}
-                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
-                actions={(
-                  <>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-                        <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </>
-                )}
+        <PageSplitLayout
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('system.user.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('system.user.hero.summaryTitle')}
+              noteDescription={t('system.user.hero.sideDesc')}
+            >
+              <GovernanceRailSummary items={governanceSummaryItems} />
+            </GovernanceRailPanel>
+          ) : null}
+        >
+          <FilterPanel>
+            <Form form={queryForm} layout="vertical">
+              <Row gutter={16}>
+                <Col span={6}>
+                  <FormItem label={t('system.user.username')} field="username">
+                    <Input />
+                  </FormItem>
+                </Col>
+                <Col span={6}>
+                  <FormItem label={t('system.user.nickname')} field="nickname">
+                    <Input />
+                  </FormItem>
+                </Col>
+                <Col span={6}>
+                  <FormItem label={t('system.user.status')} field="status">
+                    <Select allowClear options={[
+                      { label: t('system.user.status.enabled'), value: 1 },
+                      { label: t('system.user.status.disabled'), value: 2 },
+                    ]} />
+                  </FormItem>
+                </Col>
+                <Col span={6}>
+                  <FormItem className="filter-panel__action-item">
+                    <Space>
+                      <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                      <Button onClick={reset}>{t('common.reset')}</Button>
+                    </Space>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </FilterPanel>
+          <Card className="page-panel system-user-list__table-card">
+            <TableBatchActionBar
+              selectedCount={selectedRowKeys.length}
+              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+              clearText={t('common.clearSelection')}
+              clearSuccessText={t('common.clearSelectionSuccess')}
+              onClear={() => setSelectedRowKeys([])}
+              hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+              actions={(
+                <>
+                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                      <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
+                      <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                </>
+              )}
+            />
+            {loading && data.length === 0 ? <PageLoading /> : null}
+            {error && data.length === 0 ? renderErrorState() : null}
+            {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+            {!loading && !(error && data.length === 0) && data.length > 0 ? (
+              <AppTable<UserListRow>
+                className="system-user-list__table"
+                data={data}
+                columns={columns}
+                rowKey="id"
+                loading={loading}
+                scroll={{ x: 'max-content' }}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys,
+                  fixed: true,
+                  checkboxProps: (row) => ({ disabled: row.id === 1 }),
+                  onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                }}
+                onChange={handleTableChange}
+                emptyText={t('common.noData')}
+                pagination={{
+                  current: query.page || emptyQuery.page,
+                  pageSize: query.pageSize || emptyQuery.pageSize,
+                  total,
+                  showJumper: true,
+                  pageSizeChangeResetCurrent: false,
+                  sizeCanChange: true,
+                  sizeOptions: [10, 20, 50, 100],
+                  size: 'small',
+                  showTotal: (count: number) => t('common.total', { count }),
+                } as PaginationProps}
               />
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {error && data.length === 0 ? renderErrorState() : null}
-              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 ? (
-                <AppTable<UserListRow>
-                  className="system-user-list__table"
-                  data={data}
-                  columns={columns}
-                  rowKey="id"
-                  loading={loading}
-                  scroll={{ x: 1600 }}
-                  rowSelection={{
-                    type: 'checkbox',
-                    selectedRowKeys,
-                    fixed: true,
-                    checkboxProps: (row) => ({ disabled: row.id === 1 }),
-                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                  }}
-                  onChange={handleTableChange}
-                  emptyText={t('common.noData')}
-                  pagination={{
-                    current: query.page || emptyQuery.page,
-                    pageSize: query.pageSize || emptyQuery.pageSize,
-                    total,
-                    showJumper: true,
-                    pageSizeChangeResetCurrent: false,
-                    sizeCanChange: true,
-                    sizeOptions: [10, 20, 50, 100],
-                    size: 'small',
-                    showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps}
-                />
-              ) : null}
-            </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.user.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.hero.orgReady')}</span>
-                  <span className="side-rail-item__value">{Math.max(deptOptions.length - 1, 0)} / {postOptions.length}</span>
-                  <span className="side-rail-item__desc">{t('system.user.hero.orgHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.hero.disabledRows')}</span>
-                  <span className="side-rail-item__value">{disabledUserCount}</span>
-                  <span className="side-rail-item__desc">{t('system.user.hero.disabledHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.hero.batchActions')}</span>
-                  <span className="side-rail-item__value">{batchActionDisabled ? t('common.no') : t('common.yes')}</span>
-                  <span className="side-rail-item__desc">{t('system.user.hero.batchHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.user.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('system.user.hero.sideLead')}</span>
-                <span className="side-rail-note__desc">{t('system.user.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+            ) : null}
+          </Card>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

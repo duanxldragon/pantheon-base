@@ -38,9 +38,13 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
+  PageSplitLayout,
   PermissionAction,
+  StandardRailNotePanel,
+  StandardRailSummary,
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
+  withTableColumnPriority,
 } from '../../../components';
 import { usePermission } from '../../../hooks/usePermission';
 import { SUPPORTED_LOCALES, reloadI18nResources } from '../../../i18n';
@@ -856,38 +860,38 @@ const I18nList: React.FC = () => {
   };
 
   const columns: ColumnProps<SystemI18n>[] = [
-    {
+    withTableColumnPriority({
       title: t('i18n.module'),
       dataIndex: 'module',
       width: 140,
       render: (value: string) => <Tag color="arcoblue">{value}</Tag>,
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('i18n.group'),
       dataIndex: 'group',
       width: 120,
       render: (value: string) => <Tag>{value}</Tag>,
-    },
+    }, 'medium'),
     {
       title: t('i18n.key'),
       dataIndex: 'key',
-      width: 320,
+      width: 280,
       render: (value: string) => (
         <Text copyable style={{ display: 'block' }} ellipsis={{ showTooltip: true }}>
           {value}
         </Text>
       ),
     },
-    {
+    withTableColumnPriority({
       title: t('i18n.locale'),
       dataIndex: 'locale',
       width: 110,
       render: (value: string) => <Tag>{value}</Tag>,
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('i18n.value'),
       dataIndex: 'value',
-      width: 360,
+      width: 280,
       render: (value: string) => {
         const isMissing = !value || value.startsWith('[');
         return (
@@ -903,19 +907,19 @@ const I18nList: React.FC = () => {
           </Text>
         );
       },
-    },
-    {
+    }, 'low'),
+    withTableColumnPriority({
       title: t('i18n.createdAt'),
       dataIndex: 'createdAt',
       width: 168,
       sorter: true,
-    },
-    {
+    }, 'low'),
+    withTableColumnPriority({
       title: t('i18n.updatedAt'),
       dataIndex: 'updatedAt',
       width: 168,
       sorter: true,
-    },
+    }, 'low'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.medium,
@@ -969,16 +973,18 @@ const I18nList: React.FC = () => {
       <PageHeader
         extra={(
           <ListHeaderActions
+            className="i18n-list-page__header-actions"
             utility={(
               <>
-                <Button icon={<IconRefresh />} onClick={() => void handleSyncKeys()} disabled={!canRefresh}>
+                <Button size="small" icon={<IconRefresh />} onClick={() => void handleSyncKeys()} disabled={!canRefresh}>
                   {t('common.refresh')}
                 </Button>
-                <Button icon={<IconEye />} onClick={() => void handleOpenAudit()}>
+                <Button size="small" icon={<IconEye />} onClick={() => void handleOpenAudit()}>
                   {t('i18n.audit.action')}
                 </Button>
                 {canHydrateBuiltin ? (
                   <Button
+                    size="small"
                     status="warning"
                     loading={hydratingBuiltinLocales}
                     onClick={() => void handleHydrateBuiltinLocales(query.module || undefined)}
@@ -987,13 +993,13 @@ const I18nList: React.FC = () => {
                   </Button>
                 ) : null}
                 {canExport ? (
-                  <Button icon={<IconDownload />} onClick={() => void handleExport()}>
+                  <Button size="small" icon={<IconDownload />} onClick={() => void handleExport()}>
                     {t('i18n.export')}
                   </Button>
                 ) : null}
                 {canImport ? (
                   <>
-                    <Button onClick={() => void handleDownloadTemplate()}>
+                    <Button size="small" onClick={() => void handleDownloadTemplate()}>
                       {t('common.downloadTemplate')}
                     </Button>
                     <ImportCsvButton onSelect={(file) => { void handleImport(file); }}>
@@ -1002,6 +1008,7 @@ const I18nList: React.FC = () => {
                   </>
                 ) : null}
                 <Button
+                  size="small"
                   status="warning"
                   icon={<IconRefresh />}
                   onClick={() => void handleRefreshCache()}
@@ -1011,19 +1018,19 @@ const I18nList: React.FC = () => {
                 </Button>
               </>
             )}
-            primary={canCreate ? <Button type="primary" onClick={() => openCreateModal()}>{t('common.create')}</Button> : null}
+            primary={canCreate ? <Button size="small" type="primary" onClick={() => openCreateModal()}>{t('common.create')}</Button> : null}
           />
         )}
       />
 
-      <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+      <Space direction="vertical" size={12} className="system-page-template i18n-list-page">
+        <Card className="page-panel system-page-hero system-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('i18n.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('i18n.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('i18n.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -1036,8 +1043,37 @@ const I18nList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          className="i18n-list-page__layout"
+          railClassName="i18n-list-page__side-column"
+          rail={(
+            <>
+              <StandardRailSummary
+                title={t('i18n.hero.summaryTitle')}
+                items={[
+                  { label: t('i18n.hero.groups'), value: overview?.groupCount || groupOptions.length, description: t('i18n.hero.groupsHint') },
+                  { tone: 'warning', label: t('i18n.hero.missingValues'), value: overview?.missingValueCount || 0, description: t('i18n.hero.missingValuesHint') },
+                  { label: t('i18n.hero.refreshReady'), value: canRefresh ? t('common.yes') : t('common.no'), description: t('i18n.hero.refreshHint') },
+                ]}
+              />
+              {overview ? (
+                <StandardRailSummary
+                  title={t('i18n.hero.coverageTitle')}
+                  items={overview.coverage.map((item) => ({
+                    label: item.locale,
+                    value: item.entryCount,
+                    description: t('i18n.stats.localeCoverage', { locale: item.locale, entries: item.entryCount, missing: item.missingCount }),
+                  }))}
+                />
+              ) : null}
+              <StandardRailNotePanel
+                title={t('i18n.hero.sideTitle')}
+                noteTitle={t('i18n.audit.action')}
+                noteDescription={t('i18n.hero.sideDesc')}
+              />
+            </>
+          )}
+        >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
                 <Row gutter={16}>
@@ -1075,9 +1111,9 @@ const I18nList: React.FC = () => {
                   </Col>
                   <Col span={3}>
                     <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>{t('common.search')}</Button>
-                        <Button onClick={handleReset}>{t('common.reset')}</Button>
+                      <Space size={6}>
+                        <Button size="small" type="primary" icon={<IconSearch />} onClick={handleSearch}>{t('common.search')}</Button>
+                        <Button size="small" onClick={handleReset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>
                   </Col>
@@ -1085,7 +1121,7 @@ const I18nList: React.FC = () => {
               </Form>
             </FilterPanel>
 
-            <Card className="page-panel system-list__table-card">
+            <Card className="page-panel system-list__table-card i18n-list-page__table-card">
               <div className="system-list__table-head">
                 <div className="system-list__table-head-copy">
                   <Typography.Text className="system-list__table-head-title">{t('i18n.viewTitle')}</Typography.Text>
@@ -1096,13 +1132,14 @@ const I18nList: React.FC = () => {
                 {canDelete || canRefresh ? (
                   <PageActions>
                     <PermissionAction allowed={canRefresh} tooltip={t('common.noPermissionAction')}>
-                      <Button onClick={() => void handleRefreshSelected()} disabled={selectedRowKeys.length === 0 || !canRefresh}>
+                      <Button size="small" onClick={() => void handleRefreshSelected()} disabled={selectedRowKeys.length === 0 || !canRefresh}>
                         {t('i18n.refreshSelected')}
                       </Button>
                     </PermissionAction>
                     <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
                       <Popconfirm title={t('i18n.batchDeleteConfirm')} onOk={() => void handleBatchDelete()} disabled={selectedRowKeys.length === 0 || !canDelete}>
                         <Button
+                          size="small"
                           status="danger"
                           icon={<IconDelete />}
                           disabled={selectedRowKeys.length === 0 || !canDelete}
@@ -1139,7 +1176,7 @@ const I18nList: React.FC = () => {
                     selectedRowKeys,
                     onChange: (keys) => setSelectedRowKeys(keys),
                   } : undefined}
-                  scroll={{ x: 1480 }}
+                  scroll={{ x: 'max-content' }}
                   pagination={{
                     total,
                     current: query.page,
@@ -1150,53 +1187,7 @@ const I18nList: React.FC = () => {
                 />
               )}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('i18n.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('i18n.hero.groups')}</span>
-                  <span className="side-rail-item__value">{overview?.groupCount || groupOptions.length}</span>
-                  <span className="side-rail-item__desc">{t('i18n.hero.groupsHint')}</span>
-                </div>
-                <div className="side-rail-item side-rail-item--warning">
-                  <span className="side-rail-item__label">{t('i18n.hero.missingValues')}</span>
-                  <span className="side-rail-item__value">{overview?.missingValueCount || 0}</span>
-                  <span className="side-rail-item__desc">{t('i18n.hero.missingValuesHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('i18n.hero.refreshReady')}</span>
-                  <span className="side-rail-item__value">{canRefresh ? t('common.yes') : t('common.no')}</span>
-                  <span className="side-rail-item__desc">{t('i18n.hero.refreshHint')}</span>
-                </div>
-              </div>
-            </Card>
-            {overview ? (
-              <Card className="page-panel side-rail-panel">
-                <span className="side-rail-panel__title">{t('i18n.hero.coverageTitle')}</span>
-                <div className="side-rail-stack">
-                  {overview.coverage.map((item) => (
-                    <div key={item.locale} className="side-rail-item">
-                      <span className="side-rail-item__label">{item.locale}</span>
-                      <span className="side-rail-item__value">{item.entryCount}</span>
-                      <span className="side-rail-item__desc">
-                        {t('i18n.stats.localeCoverage', { locale: item.locale, entries: item.entryCount, missing: item.missingCount })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ) : null}
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('i18n.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('i18n.audit.action')}</span>
-                <span className="side-rail-note__desc">{t('i18n.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

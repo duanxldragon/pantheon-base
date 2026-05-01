@@ -43,6 +43,9 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
+  GovernanceRailPanel,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
   ImportCsvButton,
   ListHeaderActions,
   PageContainer,
@@ -52,10 +55,13 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
+  PageSplitLayout,
   PermissionAction,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
+  useGovernanceRail,
+  withTableColumnPriority,
 } from '../../../components';
 import '../list-page.css';
 
@@ -118,6 +124,7 @@ const PostList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:post:export');
   const canImport = isAdmin || hasPerm('system:post:import');
   const canBatchUpdate = isAdmin || hasPerm('system:post:batch-update');
+  const governanceRail = useGovernanceRail();
   const [data, setData] = useState<PostRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -396,28 +403,28 @@ const PostList: React.FC = () => {
   };
 
   const columns: ColumnProps<PostRow>[] = [
-    { title: t('system.post.dept'), dataIndex: 'deptName', width: 160 },
+    withTableColumnPriority({ title: t('system.post.dept'), dataIndex: 'deptName', width: 160 }, 'medium'),
     { title: t('system.post.postCode'), dataIndex: 'postCode', width: 170, ...sortableColumn('postCode') },
     { title: t('system.post.postName'), dataIndex: 'postName', width: 180, ...sortableColumn('postName') },
-    {
+    withTableColumnPriority({
       title: t('system.post.hero.assignedUsers'),
       dataIndex: 'assignedUserCount',
       width: 120,
       render: (value: number) => <span>{value}</span>,
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('system.dept.governance'),
       dataIndex: 'governanceTagLabels',
       width: 190,
       render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTagLabels),
-    },
-    {
+    }, 'low'),
+    withTableColumnPriority({
       title: t('system.post.hero.blockedBy'),
       dataIndex: 'governanceBlockedDesc',
       width: 180,
       render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceBlockedDesc, 'note'),
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('system.post.hero.nextAction'),
       dataIndex: 'governanceActionLabel',
       width: 220,
@@ -426,7 +433,7 @@ const PostList: React.FC = () => {
           {row.governanceActionLabel.join(' / ') || '-'}
         </Typography.Text>
       ),
-    },
+    }, 'low'),
     {
       title: t('system.post.status'),
       dataIndex: 'status',
@@ -438,21 +445,21 @@ const PostList: React.FC = () => {
         </Tag>
       ),
     },
-    { title: t('system.post.sort'), dataIndex: 'sort', width: 96, ...sortableColumn('sort') },
-    { title: t('system.post.remark'), dataIndex: 'remark', width: 180 },
-    {
+    withTableColumnPriority({ title: t('system.post.sort'), dataIndex: 'sort', width: 96, ...sortableColumn('sort') }, 'medium'),
+    withTableColumnPriority({ title: t('system.post.remark'), dataIndex: 'remark', width: 180 }, 'low'),
+    withTableColumnPriority({
       title: t('system.post.createdAt'),
       dataIndex: 'createdAt',
       width: 180,
       ...sortableColumn('createdAt'),
       render: (value: string) => formatDateTime(value),
-    },
+    }, 'low'),
     {
       title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
       fixed: 'right',
       render: (_: unknown, row: PostRow) => (
-        <Space size={4} className="system-list__actions">
+        <Space size={4} className="system-list__actions post-list-page__row-actions">
           {canEdit ? (
             <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
               {t('common.edit')}
@@ -471,6 +478,26 @@ const PostList: React.FC = () => {
   ];
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.post.hero.inUse'),
+        value: governanceSummary.inUse,
+        description: t('system.post.hero.inUseHint'),
+      },
+      {
+        label: t('system.user.status.disabled'),
+        value: governanceSummary.disabled,
+        description: t('system.post.hero.disabledHint'),
+      },
+      {
+        label: t('system.dept.governance.clean'),
+        value: governanceSummary.clean,
+        description: t('system.post.hero.cleanHint'),
+      },
+    ],
+    [governanceSummary.clean, governanceSummary.disabled, governanceSummary.inUse, t],
+  );
 
   return (
     <PageContainer>
@@ -479,6 +506,9 @@ const PostList: React.FC = () => {
           <ListHeaderActions
             utility={(
               <>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('system.post.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
                 <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
                 <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
                 <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
@@ -490,14 +520,14 @@ const PostList: React.FC = () => {
           />
         )}
       />
-      <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+      <Space direction="vertical" size={16} className="system-page-template post-list-page">
+        <Card className="page-panel system-page-hero system-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.post.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.post.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.post.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -510,8 +540,19 @@ const PostList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('system.post.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('system.post.hero.summaryTitle')}
+              noteDescription={t('system.post.hero.sideDesc')}
+            >
+              <GovernanceRailSummary items={governanceSummaryItems} />
+            </GovernanceRailPanel>
+          ) : null}
+        >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
                 <Row gutter={16}>
@@ -582,7 +623,7 @@ const PostList: React.FC = () => {
                   columns={columns}
                   rowKey="id"
                   loading={loading}
-                  scroll={{ x: 2000 }}
+                  scroll={{ x: 'max-content' }}
                   rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys: visibleSelectedRowKeys,
@@ -605,37 +646,7 @@ const PostList: React.FC = () => {
                 />
               ) : null}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.post.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.post.hero.inUse')}</span>
-                  <span className="side-rail-item__value">{governanceSummary.inUse}</span>
-                  <span className="side-rail-item__desc">{t('system.post.hero.inUseHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.status.disabled')}</span>
-                  <span className="side-rail-item__value">{governanceSummary.disabled}</span>
-                  <span className="side-rail-item__desc">{t('system.post.hero.disabledHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.dept.governance.clean')}</span>
-                  <span className="side-rail-item__value">{governanceSummary.clean}</span>
-                  <span className="side-rail-item__desc">{t('system.post.hero.cleanHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.post.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('system.post.hero.sideLead')}</span>
-                <span className="side-rail-note__desc">{t('system.post.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

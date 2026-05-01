@@ -7,7 +7,7 @@ interface PageActionsProps {
 }
 
 const PageActions: React.FC<PageActionsProps> = ({ children, className }) => (
-  <Space size={10} className={className ? `page-actions ${className}` : 'page-actions'}>
+  <Space size={8} className={className ? `page-actions ${className}` : 'page-actions'}>
     {children}
   </Space>
 );

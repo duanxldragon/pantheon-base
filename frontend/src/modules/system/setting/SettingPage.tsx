@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Form, Input, InputNumber, Message, Select, Space, Switch, Table, Tabs, Tag, Typography } from '@arco-design/web-react';
+import { Button, Card, Form, Input, InputNumber, Message, Select, Space, Switch, Tabs, Tag, Typography } from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconRefresh } from '@arco-design/web-react/icon';
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
-import { FormSection, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppTable, FormSection, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmData, resolveRouteWarmData } from '../../../core/router/prefetch';
@@ -27,6 +27,7 @@ import {
   type SettingItem,
   type SettingOverviewResp,
 } from './api';
+import '../list-page.css';
 
 const FormItem = Form.Item;
 
@@ -388,6 +389,10 @@ const SettingPage: React.FC = () => {
 
   const renderField = (item: SettingItem) => {
     const label = t(`system.setting.item.${item.settingKey}`, item.settingKey);
+    const isWideField = auditRetentionSettingKeys.has(item.settingKey)
+      || item.valueType === 'json'
+      || item.isEncrypted === 1;
+    const fieldClassName = isWideField ? 'setting-page__field setting-page__field--full' : 'setting-page__field';
     const remark = t(item.remark, '');
     const help = (
       <Space direction="vertical" size={4}>
@@ -420,7 +425,7 @@ const SettingPage: React.FC = () => {
 
     if (item.settingKey === 'ui.default_theme') {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
           <Select
             options={pantheonThemeOptions.map((theme) => ({
               label: `${t(theme.labelKey)} · ${t(theme.descriptionKey)}`,
@@ -432,7 +437,7 @@ const SettingPage: React.FC = () => {
     }
     if (item.settingKey === 'upload.storage_driver') {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
           <Select
             options={[
               { label: t('system.setting.option.upload.storage_driver.local'), value: 'local' },
@@ -444,7 +449,7 @@ const SettingPage: React.FC = () => {
     }
     if (item.settingKey === 'i18n.default_language') {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
           <Select
             options={SUPPORTED_LOCALES.map((locale) => ({
               label: t(`app.language.${locale}`),
@@ -459,6 +464,7 @@ const SettingPage: React.FC = () => {
       return (
         <FormItem
           key={item.settingKey}
+          className={fieldClassName}
           field={item.settingKey}
           label={label}
           extra={help}
@@ -513,7 +519,7 @@ const SettingPage: React.FC = () => {
 
     if (item.valueType === 'boolean') {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help} triggerPropName="checked">
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help} triggerPropName="checked">
           <Switch checkedText={t('common.yes')} uncheckedText={t('common.no')} />
         </FormItem>
       );
@@ -523,6 +529,7 @@ const SettingPage: React.FC = () => {
         return (
           <FormItem
             key={item.settingKey}
+            className={fieldClassName}
             field={item.settingKey}
             label={label}
             extra={help}
@@ -540,6 +547,7 @@ const SettingPage: React.FC = () => {
       return (
         <FormItem
           key={item.settingKey}
+          className={fieldClassName}
           field={item.settingKey}
           label={label}
           extra={help}
@@ -555,7 +563,7 @@ const SettingPage: React.FC = () => {
     }
     if (item.isEncrypted === 1) {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
           <Input.Password
             placeholder={item.hasValue === 1 ? t('system.setting.leaveEmptyToKeep') : t('system.setting.encryptedPlaceholder')}
           />
@@ -564,13 +572,13 @@ const SettingPage: React.FC = () => {
     }
     if (item.valueType === 'json') {
       return (
-        <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
           <Input.TextArea autoSize={{ minRows: 4, maxRows: 10 }} />
         </FormItem>
       );
     }
     return (
-      <FormItem key={item.settingKey} field={item.settingKey} label={label} extra={help}>
+      <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
         <Input />
       </FormItem>
     );
@@ -614,12 +622,12 @@ const SettingPage: React.FC = () => {
       dataIndex: 'operName',
       render: (value: string) => value || '-',
     },
-    {
+    withTableColumnPriority({
       title: t('system.setting.audit.ip'),
       dataIndex: 'operIp',
       render: (value: string) => value || '-',
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('system.setting.audit.changes'),
       dataIndex: 'changes',
       render: (changes: SettingAuditChange[]) => (
@@ -631,7 +639,7 @@ const SettingPage: React.FC = () => {
           )}
         </Space>
       ),
-    },
+    }, 'low'),
     {
       title: t('system.setting.audit.status'),
       dataIndex: 'status',
@@ -694,12 +702,6 @@ const SettingPage: React.FC = () => {
       hint: t('system.setting.hero.publicHint'),
     },
     {
-      key: 'encrypted',
-      label: t('system.setting.overview.encryptedSettings'),
-      value: overview.encryptedSettingCount,
-      hint: t('system.setting.hero.encryptedHint'),
-    },
-    {
       key: 'risk',
       label: t('system.setting.overview.risks'),
       value: overview.riskCount,
@@ -709,15 +711,15 @@ const SettingPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Space direction="vertical" size={16} className="system-page-template">
+      <Space direction="vertical" size={12} className="system-page-template setting-page">
         {overview ? (
-          <Card className="page-panel system-page-hero">
+          <Card className="page-panel system-page-hero system-list__hero setting-page__hero">
             <div className="system-page-hero__top">
               <div className="system-page-hero__copy">
                 <span className="system-page-hero__eyebrow">{t('system.setting.hero.eyebrow')}</span>
-                <Typography.Paragraph className="system-page-hero__desc">
-                  {t('system.setting.hero.desc')}
-                </Typography.Paragraph>
+                <Typography.Title heading={5} className="system-page-hero__title">
+                  {t('system.setting.hero.title')}
+                </Typography.Title>
               </div>
             </div>
             <div className="system-page-kpi-grid">
@@ -735,9 +737,40 @@ const SettingPage: React.FC = () => {
         {error && settings.length === 0 ? renderErrorState() : null}
         {!loading && !error && settings.length === 0 ? <PageEmpty description={t('system.setting.empty')} /> : null}
         {settings.length > 0 ? (
-          <div className="page-split-layout">
-            <div className="page-main-column">
-              <Card className="page-panel">
+          <PageSplitLayout
+            className="setting-page__layout"
+            railClassName="setting-page__side-column"
+            rail={overview ? (
+              <div>
+                <StandardRailSummary
+                  title={t('system.setting.overview.runtime')}
+                  items={[
+                    { label: t('system.setting.item.upload.storage_driver'), value: t(`system.setting.option.upload.storage_driver.${overview.storageDriver}`, overview.storageDriver), description: t('system.setting.hero.storageHint') },
+                    { label: t('system.setting.item.i18n.default_language'), value: t(`app.language.${overview.defaultLanguage}`, overview.defaultLanguage), description: t('system.setting.hero.languageHint') },
+                    { label: t('system.setting.item.ui.default_theme'), value: overview.defaultTheme, description: t('system.setting.hero.themeHint') },
+                  ]}
+                />
+                {overview.issues.length > 0 ? (
+                  <StandardRailSummary
+                    title={t('system.setting.hero.sideTitle')}
+                    items={overview.issues.slice(0, 4).map((issue) => ({
+                      tone: issue.severity === 'critical' ? 'danger' : 'warning',
+                      label: <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>{t(`system.setting.overview.severity.${issue.severity}`)}</Tag>,
+                      value: t(`system.setting.item.${issue.settingKey}`, issue.settingKey),
+                      description: t(issue.reasonKey),
+                    }))}
+                  />
+                ) : (
+                  <StandardRailNotePanel
+                    title={t('system.setting.hero.sideTitle')}
+                    noteTitle={t('system.setting.overview.noRisks')}
+                    noteDescription={t('system.setting.hero.sideDesc')}
+                  />
+                )}
+              </div>
+            ) : null}
+          >
+              <Card className="page-panel setting-page__config-card">
                 <Tabs
                   type="rounded"
                   activeTab={activeSettingGroup?.groupKey}
@@ -749,37 +782,42 @@ const SettingPage: React.FC = () => {
                 </Tabs>
                 {activeSettingGroup ? (
                   <Form form={form} layout="vertical">
-                    <Space direction="vertical" size={16} className="dialog-form-stack" style={{ marginTop: 16 }}>
+                    <Space direction="vertical" size={10} className="dialog-form-stack setting-page__form-stack" style={{ marginTop: 10 }}>
                       <FormSection
                         title={t(`system.setting.group.${activeSettingGroup.groupKey}`)}
                         description={t(`system.setting.groupHint.${activeSettingGroup.groupKey}`, '')}
                       >
-                        {activeSettingGroup.items.map(renderField)}
+                        <div className="setting-page__field-grid">
+                          {activeSettingGroup.items.map(renderField)}
+                        </div>
                       </FormSection>
-                      <Typography.Text type="secondary">{t('system.setting.saveHint')}</Typography.Text>
-                      <Space>
-                        <Button
-                          icon={<IconRefresh />}
-                          loading={refreshingCache}
-                          onClick={() => { void handleRefreshCache(); }}
-                          disabled={!canRefreshCache || !activeGroupKey}
-                        >
-                          {t('system.setting.cache.refresh')}
-                        </Button>
-                      </Space>
-                      <SubmitBar
-                        loading={submittingGroup === activeSettingGroup.groupKey}
-                        submitDisabled={!canUpdateSetting}
-                        onCancel={resetActiveGroupValues}
-                        onSubmit={() => { void handleSubmit(); }}
-                      />
+                      <Typography.Text type="secondary" className="setting-page__save-hint">{t('system.setting.saveHint')}</Typography.Text>
+                      <div className="setting-page__actions">
+                        <Space className="setting-page__meta-actions">
+                          <Button
+                            size="small"
+                            icon={<IconRefresh />}
+                            loading={refreshingCache}
+                            onClick={() => { void handleRefreshCache(); }}
+                            disabled={!canRefreshCache || !activeGroupKey}
+                          >
+                            {t('system.setting.cache.refresh')}
+                          </Button>
+                        </Space>
+                        <SubmitBar
+                          loading={submittingGroup === activeSettingGroup.groupKey}
+                          submitDisabled={!canUpdateSetting}
+                          onCancel={resetActiveGroupValues}
+                          onSubmit={() => { void handleSubmit(); }}
+                        />
+                      </div>
                     </Space>
                   </Form>
                 ) : null}
               </Card>
               {activeSettingGroup && canViewOperationLog ? (
-                <Card className="page-panel">
-                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <Card className="page-panel setting-page__audit-card">
+                  <div className="setting-page__audit-header">
                     <div>
                       <Typography.Text style={{ fontWeight: 600 }}>{t('system.setting.audit.title')}</Typography.Text>
                       <Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>
@@ -787,16 +825,18 @@ const SettingPage: React.FC = () => {
                       </Typography.Paragraph>
                     </div>
                     <Space>
-                      <Button onClick={() => { void handleExportAudit(); }} disabled={!canExportAudit}>
+                      <Button size="small" onClick={() => { void handleExportAudit(); }} disabled={!canExportAudit}>
                         {t('common.export')}
                       </Button>
                     </Space>
                   </div>
-                  <Table
+                  <AppTable<SettingAuditRow>
+                    className="system-list__table"
                     rowKey="id"
                     data={auditRows}
                     columns={auditColumns}
                     loading={auditLoading}
+                    scroll={{ x: 'max-content' }}
                     onChange={handleAuditTableChange}
                     pagination={{
                       current: auditQuery.page,
@@ -812,53 +852,7 @@ const SettingPage: React.FC = () => {
                   />
                 </Card>
               ) : null}
-            </div>
-            {overview ? (
-              <div className="page-side-column">
-                <Card className="page-panel side-rail-panel">
-                  <span className="side-rail-panel__title">{t('system.setting.overview.runtime')}</span>
-                  <div className="side-rail-stack">
-                    <div className="side-rail-item">
-                      <span className="side-rail-item__label">{t('system.setting.item.upload.storage_driver')}</span>
-                      <span className="side-rail-item__value">{t(`system.setting.option.upload.storage_driver.${overview.storageDriver}`, overview.storageDriver)}</span>
-                      <span className="side-rail-item__desc">{t('system.setting.hero.storageHint')}</span>
-                    </div>
-                    <div className="side-rail-item">
-                      <span className="side-rail-item__label">{t('system.setting.item.i18n.default_language')}</span>
-                      <span className="side-rail-item__value">{t(`app.language.${overview.defaultLanguage}`, overview.defaultLanguage)}</span>
-                      <span className="side-rail-item__desc">{t('system.setting.hero.languageHint')}</span>
-                    </div>
-                    <div className="side-rail-item">
-                      <span className="side-rail-item__label">{t('system.setting.item.ui.default_theme')}</span>
-                      <span className="side-rail-item__value">{overview.defaultTheme}</span>
-                      <span className="side-rail-item__desc">{t('system.setting.hero.themeHint')}</span>
-                    </div>
-                  </div>
-                </Card>
-                <Card className="page-panel side-rail-panel">
-                  <span className="side-rail-panel__title">{t('system.setting.hero.sideTitle')}</span>
-                  {overview.issues.length > 0 ? (
-                    <div className="side-rail-stack">
-                      {overview.issues.slice(0, 4).map((issue) => (
-                        <div key={`${issue.settingKey}-${issue.reasonKey}`} className={`side-rail-item side-rail-item--${issue.severity === 'critical' ? 'danger' : 'warning'}`}>
-                          <span className="side-rail-item__label">
-                            <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>{t(`system.setting.overview.severity.${issue.severity}`)}</Tag>
-                          </span>
-                          <span className="side-rail-item__value">{t(`system.setting.item.${issue.settingKey}`, issue.settingKey)}</span>
-                          <span className="side-rail-item__desc">{t(issue.reasonKey)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="side-rail-note">
-                      <span className="side-rail-note__title">{t('system.setting.overview.noRisks')}</span>
-                      <span className="side-rail-note__desc">{t('system.setting.hero.sideDesc')}</span>
-                    </div>
-                  )}
-                </Card>
-              </div>
-            ) : null}
-          </div>
+          </PageSplitLayout>
         ) : null}
       </Space>
     </PageContainer>

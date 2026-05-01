@@ -36,6 +36,9 @@ import {
   PageEmpty,
   PageError,
   PageLoading,
+  PageSplitLayout,
+  StandardRailNotePanel,
+  StandardRailSummary,
   TABLE_ACTION_COLUMN_WIDTH,
 } from '../../components';
 import { formatClientSummary } from './clientInfo';
@@ -303,9 +306,9 @@ const SessionList: React.FC = () => {
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('auth.session.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('auth.session.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('auth.session.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -318,8 +321,25 @@ const SessionList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={(
+            <>
+              <StandardRailSummary
+                title={t('auth.session.hero.summaryTitle')}
+                items={[
+                  { label: t('auth.session.currentUser'), value: currentUsername || '-', description: t('auth.session.selfProtected') },
+                  { label: t('auth.session.status.active'), value: activeCount, description: t('auth.session.hero.activeHint') },
+                  { tone: 'warning', label: t('auth.session.status.revoked'), value: revokedCount, description: t('auth.session.hero.revokedHint') },
+                ]}
+              />
+              <StandardRailNotePanel
+                title={t('auth.session.hero.sideTitle')}
+                noteTitle={t('auth.security.sessionHint')}
+                noteDescription={t('auth.session.hero.sideDesc')}
+              />
+            </>
+          )}
+        >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
                 <Row gutter={16} className="auth-filter-grid">
@@ -423,37 +443,7 @@ const SessionList: React.FC = () => {
                 />
               )}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('auth.session.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('auth.session.currentUser')}</span>
-                  <span className="side-rail-item__value">{currentUsername || '-'}</span>
-                  <span className="side-rail-item__desc">{t('auth.session.selfProtected')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('auth.session.status.active')}</span>
-                  <span className="side-rail-item__value">{activeCount}</span>
-                  <span className="side-rail-item__desc">{t('auth.session.hero.activeHint')}</span>
-                </div>
-                <div className="side-rail-item side-rail-item--warning">
-                  <span className="side-rail-item__label">{t('auth.session.status.revoked')}</span>
-                  <span className="side-rail-item__value">{revokedCount}</span>
-                  <span className="side-rail-item__desc">{t('auth.session.hero.revokedHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('auth.session.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('auth.security.sessionHint')}</span>
-                <span className="side-rail-note__desc">{t('auth.session.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
       <SessionDetailModal
         visible={Boolean(detailSession)}

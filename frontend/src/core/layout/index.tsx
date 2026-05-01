@@ -23,13 +23,16 @@ import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../
 import { preloadRouteComponent } from '../router/prefetch';
 import {
   OPENED_TABS_STORAGE_KEY,
+  persistShellDensityMode,
   persistShellLastActivityAt,
   persistShellLockedState,
+  readShellDensityMode,
   readShellLastActivityAt,
   readShellLockedState,
   clearShellSessionState,
   persistShellLayoutMode,
   readShellLayoutMode,
+  type ShellDensityMode,
   type ShellLayoutMode,
 } from '../shellState';
 import './index.css';
@@ -180,6 +183,7 @@ const BaseLayout: React.FC = () => {
   const bootstrappedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
   const [layoutMode, setLayoutMode] = useState<ShellLayoutMode>(() => readShellLayoutMode());
+  const [densityMode, setDensityMode] = useState<ShellDensityMode>(() => readShellDensityMode());
   const [openedTabs, setOpenedTabs] = useState<OpenedPageTab[]>(() => readOpenedTabs());
   const [draggingTabPath, setDraggingTabPath] = useState<string | null>(null);
   const [dragOverTabPath, setDragOverTabPath] = useState<string | null>(null);
@@ -250,6 +254,7 @@ const BaseLayout: React.FC = () => {
   const isHorizontalLayout = layoutMode === 'horizontal';
   const layoutModeLabel = t(isHorizontalLayout ? 'app.layoutMode.horizontal' : 'app.layoutMode.vertical');
   const layoutModeActionLabel = t(isHorizontalLayout ? 'app.layoutMode.switchToVertical' : 'app.layoutMode.switchToHorizontal');
+  const densityModeLabel = t(densityMode === 'compact' ? 'app.density.compact' : 'app.density.comfortable');
   const appName = publicSettings.siteName || t('app.name');
   const brandInitial = getBrandInitial(appName);
   const { theme, setTheme, options: themeOptions } = usePantheonTheme();
@@ -462,6 +467,11 @@ const BaseLayout: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisible);
     };
   }, [locked, recordActivity, token]);
+
+  useEffect(() => {
+    document.documentElement.dataset.pantheonDensity = densityMode;
+    persistShellDensityMode(densityMode);
+  }, [densityMode]);
 
   useEffect(() => {
     recordActivity('route');
@@ -887,6 +897,10 @@ const BaseLayout: React.FC = () => {
     });
   };
 
+  const changeDensityMode = (mode: ShellDensityMode) => {
+    setDensityMode(mode);
+  };
+
   const preferencePanel = (
     <div className="app-shell__preference-panel">
       <div className="app-shell__preference-header">
@@ -905,6 +919,26 @@ const BaseLayout: React.FC = () => {
             <span className="app-shell__preference-item-desc">{layoutModeActionLabel}</span>
           </span>
         </button>
+      </div>
+
+      <div className="app-shell__preference-section">
+        <span className="app-shell__preference-section-title">{t('app.preference.density')}</span>
+        <div className="app-shell__preference-pills">
+          {(['comfortable', 'compact'] as ShellDensityMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              className={[
+                'app-shell__preference-pill',
+                densityMode === mode ? 'app-shell__preference-pill--active' : '',
+              ].join(' ').trim()}
+              onClick={() => changeDensityMode(mode)}
+            >
+              <span>{t(`app.density.${mode}`)}</span>
+              <span>{t(`app.density.${mode}.description`)}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="app-shell__preference-section">
@@ -1075,9 +1109,6 @@ const BaseLayout: React.FC = () => {
                   <Breadcrumb.Item key={`${item.path}-${item.label}`}>{item.label}</Breadcrumb.Item>
                 ))}
               </Breadcrumb>
-              <Typography.Title heading={6} className="app-shell__header-title">
-                {currentPageTitle}
-              </Typography.Title>
             </div>
           </div>
           <Space size={12} className="app-shell__header-actions">
@@ -1208,6 +1239,7 @@ const BaseLayout: React.FC = () => {
                 content={t('app.preference.tooltip', {
                   theme: t(activeTheme.labelKey),
                   layout: layoutModeLabel,
+                  density: densityModeLabel,
                   language: t(`app.language.${currentLanguage}`),
                 })}
               >

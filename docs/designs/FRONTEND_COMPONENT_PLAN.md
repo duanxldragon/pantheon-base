@@ -355,6 +355,60 @@ frontend/src/modules/{system|business}/{module}/components/
 - 面包屑展示
 - 长路径截断策略
 
+## 4.8 Rail 模式类
+
+### `PageSplitLayout`
+
+负责：
+
+- 双列后台页面骨架
+- 主内容区与右侧辅助栏的共享布局节奏
+- 在无辅助信息时平滑回退为单列
+
+### `GovernanceRailPanel`
+
+负责：
+
+- 治理摘要 rail 的标题区
+- 关闭按钮承接
+- 摘要内容与说明 note 的组合承接
+
+要求：
+
+- 仅承接治理语义较强的右栏场景
+- 与 `useGovernanceRail`、`GovernanceRailSummary` 配套使用
+
+### `GovernanceRailSummary`
+
+负责：
+
+- 治理摘要条目列表渲染
+- `warning / danger / neutral` tone 透传
+
+要求：
+
+- 条目结构统一使用 `RailSummaryItem`
+- 不允许在系统页内重复声明 `label/value/description/tone` 的局部 item 类型
+
+### `StandardRailSummary`
+
+负责：
+
+- 非治理类右栏摘要信息渲染
+- 普通系统页上下文摘要复用
+
+要求：
+
+- 与 `GovernanceRailSummary` 共用 `RailSummaryItem`
+- 仅允许在面板标题、面板包裹方式上与治理 rail 区分
+
+### `StandardRailNotePanel`
+
+负责：
+
+- 非治理类右栏说明 note
+- 统一承接普通提示、背景说明、只读辅助信息
+
 ## 5. 不建议过早抽象的组件
 
 在项目早期，不要一上来就抽这些高度不稳定组件：

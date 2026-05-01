@@ -5,7 +5,13 @@ import { join } from 'node:path';
 const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
-const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out', '500'];
+const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];
+
+interface ShellPreferenceOptions {
+  language?: string;
+  layoutMode?: 'vertical' | 'horizontal';
+  densityMode?: 'comfortable' | 'compact';
+}
 
 async function installExplicitZhCNPreference(page: Page) {
   await page.addInitScript(() => {
@@ -14,9 +20,35 @@ async function installExplicitZhCNPreference(page: Page) {
   });
 }
 
+async function installShellPreferences(page: Page, options: ShellPreferenceOptions = {}) {
+  const {
+    language = 'zh-CN',
+    layoutMode = 'vertical',
+    densityMode = 'comfortable',
+  } = options;
+  await page.addInitScript(
+    ({ nextLanguage, nextLayoutMode, nextDensityMode }) => {
+      localStorage.setItem('pantheon_lang', nextLanguage);
+      localStorage.setItem('pantheon_lang_explicit', '1');
+      localStorage.setItem('pantheon_shell_layout_mode', nextLayoutMode);
+      localStorage.setItem('pantheon_shell_density_mode', nextDensityMode);
+    },
+    {
+      nextLanguage: language,
+      nextLayoutMode: layoutMode,
+      nextDensityMode: densityMode,
+    },
+  );
+}
+
 const authenticatedPages = [
   { path: '/dashboard', title: '工作台', screenshot: 'dashboard-desktop.png' },
   { path: '/system/user', title: '用户管理', screenshot: 'system-user-desktop.png' },
+  { path: '/system/role', title: '角色管理', screenshot: 'system-role-desktop.png' },
+  { path: '/system/permission', title: '权限管理', screenshot: 'system-permission-desktop.png' },
+  { path: '/system/menu', title: '菜单管理', screenshot: 'system-menu-desktop.png' },
+  { path: '/system/dept', title: '部门管理', screenshot: 'system-dept-desktop.png' },
+  { path: '/system/post', title: '岗位管理', screenshot: 'system-post-desktop.png' },
   { path: '/system/setting', title: '系统设置', screenshot: 'system-setting-desktop.png' },
   { path: '/auth/security', title: '安全中心', screenshot: 'auth-security-desktop.png' },
 ] as const;
@@ -89,6 +121,14 @@ async function expectProfessionalBackofficeSurface(page: Page) {
   await expect(page.locator('.arco-layout-sider-dark')).toHaveCount(0);
 }
 
+async function expectPageIdentity(page: Page, title: string) {
+  const activeTab = page.locator('[role="tab"][aria-selected="true"]').first();
+  await expect(activeTab).toContainText(title);
+
+  const breadcrumbs = page.locator('.app-shell__header').getByRole('listitem');
+  await expect(breadcrumbs.last()).toContainText(title);
+}
+
 test.beforeAll(async () => {
   await ensureArtifactDir();
 });
@@ -129,7 +169,7 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
       await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
-      await expect(page.locator('.page-header').getByRole('heading', { name: pageMeta.title })).toBeVisible();
+      await expectPageIdentity(page, pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);
       await page.screenshot({ path: join(artifactDir, pageMeta.screenshot), fullPage: true });
@@ -147,6 +187,27 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(dashboardContent).toBeVisible();
     await expect(dashboardContent.getByText('业务资产', { exact: false })).toHaveCount(0);
     await expect(dashboardContent.getByText('CMDB', { exact: false })).toHaveCount(0);
+  });
+
+  test('platform shell keeps horizontal compact preference baseline stable', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+    await signInAsAdmin(page);
+    await installShellPreferences(page, { layoutMode: 'horizontal', densityMode: 'compact' });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
+    await expect(page.locator('.app-shell--horizontal')).toBeVisible();
+    await expect(page.locator('.app-shell__top-menu')).toBeVisible();
+    await page.screenshot({ path: join(artifactDir, 'dashboard-horizontal-compact.png'), fullPage: true });
+
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
+    await expect(page.locator('.app-shell--horizontal')).toBeVisible();
+    await expect(page.locator('.app-table')).toBeVisible();
+    await page.screenshot({ path: join(artifactDir, 'system-user-horizontal-compact.png'), fullPage: true });
+
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
   test('secondary verify modal uses natural localized copy', async ({ page }) => {

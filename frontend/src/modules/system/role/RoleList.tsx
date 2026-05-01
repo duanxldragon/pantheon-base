@@ -14,7 +14,7 @@ import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core
 import { usePermission } from '../../../hooks/usePermission';
 import { getMenuTree, type MenuNode } from '../menu/api';
 import { batchUpdateRoleStatus, createRole, deleteRole, exportRoles, getRoleList, updateRole, type RoleListQuery, type RolePayload, type RoleRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -207,6 +207,7 @@ const RoleList: React.FC = () => {
   const canDelete = isAdmin || hasPerm('system:role:delete');
   const canBatchUpdate = isAdmin || hasPerm('system:role:batch-update');
   const canExport = isAdmin || hasPerm('system:role:export');
+  const governanceRail = useGovernanceRail();
   const invalidateRoleCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/role', resourceKeys: ['list:default'] },
@@ -586,8 +587,8 @@ const RoleList: React.FC = () => {
 
   const columns: ColumnProps<RoleRow>[] = [
     { title: t('system.role.roleName'), dataIndex: 'roleName', width: 180, ...sortableColumn('roleName') },
-    { title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180, ...sortableColumn('roleKey') },
-    { title: t('system.role.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
+    withTableColumnPriority({ title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180, ...sortableColumn('roleKey') }, 'medium'),
+    withTableColumnPriority({ title: t('system.role.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') }, 'low'),
     {
       title: t('system.role.status'),
       dataIndex: 'status',
@@ -599,13 +600,13 @@ const RoleList: React.FC = () => {
         </Tag>
       ),
     },
-    {
+    withTableColumnPriority({
       title: t('system.role.createdAt'),
       dataIndex: 'createdAt',
       width: 180,
       ...sortableColumn('createdAt'),
       render: (value: string) => formatDateTime(value),
-    },
+    }, 'low'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
@@ -682,25 +683,52 @@ const RoleList: React.FC = () => {
     ],
     [enabledRoleCount, permissionCatalog.navigationKeys.size, selectedRowKeys.length, t, total],
   );
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.role.hero.pagePerms'),
+        value: permissionCatalog.pageKeys.size,
+        description: t('system.role.hero.pagePermsHint'),
+      },
+      {
+        label: t('system.role.hero.actionPerms'),
+        value: permissionCatalog.actionKeys.size,
+        description: t('system.role.hero.actionPermsHint'),
+      },
+      {
+        label: t('system.role.hero.batchActions'),
+        value: batchActionDisabled ? t('common.no') : t('common.yes'),
+        description: t('system.role.hero.batchHint'),
+      },
+    ],
+    [batchActionDisabled, permissionCatalog.actionKeys.size, permissionCatalog.pageKeys.size, t],
+  );
 
   return (
     <PageContainer>
       <PageHeader
         extra={(
           <ListHeaderActions
-            utility={<Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>}
+            utility={(
+              <>
+                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                  {t('system.role.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
+                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+              </>
+            )}
             primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
           />
         )}
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.role.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.role.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.role.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -713,8 +741,19 @@ const RoleList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('system.role.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('system.role.hero.summaryTitle')}
+              noteDescription={t('system.role.hero.sideDesc')}
+            >
+              <GovernanceRailSummary items={governanceSummaryItems} />
+            </GovernanceRailPanel>
+          ) : null}
+        >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
                 <Row gutter={16}>
@@ -784,7 +823,7 @@ const RoleList: React.FC = () => {
                   columns={columns}
                   rowKey="id"
                   loading={loading}
-                  scroll={{ x: 1000 }}
+                  scroll={{ x: 'max-content' }}
                   rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys: visibleSelectedRowKeys,
@@ -808,37 +847,7 @@ const RoleList: React.FC = () => {
                 />
               ) : null}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.role.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.role.hero.pagePerms')}</span>
-                  <span className="side-rail-item__value">{permissionCatalog.pageKeys.size}</span>
-                  <span className="side-rail-item__desc">{t('system.role.hero.pagePermsHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.role.hero.actionPerms')}</span>
-                  <span className="side-rail-item__value">{permissionCatalog.actionKeys.size}</span>
-                  <span className="side-rail-item__desc">{t('system.role.hero.actionPermsHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.role.hero.batchActions')}</span>
-                  <span className="side-rail-item__value">{batchActionDisabled ? t('common.no') : t('common.yes')}</span>
-                  <span className="side-rail-item__desc">{t('system.role.hero.batchHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.role.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('system.role.hero.sideLead')}</span>
-                <span className="side-rail-note__desc">{t('system.role.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

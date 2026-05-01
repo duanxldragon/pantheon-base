@@ -11,7 +11,7 @@ import { usePermission } from '../../../hooks/usePermission';
 import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { createMenu, deleteMenu, getMenuTree, updateMenu, type MenuListQuery, type MenuNode, type MenuPayload } from './api';
 import { useMenuStore } from '../../../store/useMenuStore';
-import { AppModal, AppTable, FilterPanel, FormSection, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
 import { MENU_ICON_OPTIONS } from '../../../core/menu/icon';
 import { isRegisteredComponentKey, listRegisteredComponentKeys } from '../../../core/router/componentRegistry';
 import '../list-page.css';
@@ -75,6 +75,7 @@ const MenuList: React.FC = () => {
   const canCreate = isAdmin || hasPerm('system:menu:create');
   const canEdit = isAdmin || hasPerm('system:menu:update');
   const canDelete = isAdmin || hasPerm('system:menu:delete');
+  const governanceRail = useGovernanceRail();
   const invalidateMenuCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/menu', resourceKeys: ['tree:manage'] },
@@ -378,7 +379,7 @@ const MenuList: React.FC = () => {
   const columns: ColumnProps<MenuNode>[] = [
     { title: t('system.menu.title'), dataIndex: 'titleKey', width: 180, render: (value: string) => t(value), ...sortableColumn('titleKey') },
     { title: t('system.menu.path'), dataIndex: 'path', width: 180, ...sortableColumn('path') },
-    {
+    withTableColumnPriority({
       title: t('system.menu.routeName'),
       dataIndex: 'routeName',
       width: 220,
@@ -389,15 +390,15 @@ const MenuList: React.FC = () => {
           {row.component ? <Typography.Text type="secondary" className="text-sm">{row.component}</Typography.Text> : null}
         </Space>
       ),
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('system.menu.pagePerm'),
       dataIndex: 'pagePerm',
       width: 220,
       ...sortableColumn('pagePerm'),
       render: (value: string) => <Typography.Text ellipsis={{ showTooltip: true }}>{value || '-'}</Typography.Text>,
-    },
-    {
+    }, 'low'),
+    withTableColumnPriority({
       title: t('system.menu.perms'),
       dataIndex: 'perms',
       width: 220,
@@ -411,7 +412,7 @@ const MenuList: React.FC = () => {
         }
         return <Typography.Text type="secondary">-</Typography.Text>;
       },
-    },
+    }, 'low'),
     {
       title: t('system.menu.type'),
       dataIndex: 'type',
@@ -421,7 +422,7 @@ const MenuList: React.FC = () => {
         return getMenuTypeLabel(value);
       },
     },
-    { title: t('system.menu.sort'), dataIndex: 'sort', width: 100, ...sortableColumn('sort') },
+    withTableColumnPriority({ title: t('system.menu.sort'), dataIndex: 'sort', width: 100, ...sortableColumn('sort') }, 'medium'),
     {
       title: t('system.menu.visible'),
       dataIndex: 'isVisible',
@@ -429,13 +430,13 @@ const MenuList: React.FC = () => {
       ...sortableColumn('isVisible'),
       render: renderVisibleTag,
     },
-    {
+    withTableColumnPriority({
       title: t('system.menu.metadata'),
       width: 260,
       render: (_: unknown, row: MenuNode) => (
         renderMetadataTags(row)
       ),
-    },
+    }, 'low'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
@@ -494,12 +495,35 @@ const MenuList: React.FC = () => {
     ],
     [actionMenus, t, totalMenus, viewMode, visibleMenus],
   );
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.menu.hero.routeReady'),
+        value: flattenedMenus.filter(({ node }) => Boolean(node.routeName)).length,
+        description: t('system.menu.hero.routeHint'),
+      },
+      {
+        label: t('system.menu.hero.cachedNodes'),
+        value: flattenedMenus.filter(({ node }) => node.isCache === 1).length,
+        description: t('system.menu.hero.cacheHint'),
+      },
+      {
+        label: t('system.menu.hero.externalNodes'),
+        value: flattenedMenus.filter(({ node }) => node.isExternal === 1).length,
+        description: t('system.menu.hero.externalHint'),
+      },
+    ],
+    [flattenedMenus, t],
+  );
 
   return (
     <PageContainer>
       <PageHeader
         extra={(
           <PageActions>
+            <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+              {t('system.menu.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
             <Space size={4} className="menu-view-switcher">
               <Button
                 size="small"
@@ -531,13 +555,13 @@ const MenuList: React.FC = () => {
         )}
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.menu.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.menu.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.menu.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -550,22 +574,33 @@ const MenuList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={governanceRail.expanded ? (
+            <GovernanceRailPanel
+              title={t('system.menu.hero.summaryTitle')}
+              onClose={governanceRail.close}
+              closeText={t('common.close')}
+              noteTitle={t('system.menu.hero.summaryTitle')}
+              noteDescription={t('system.menu.hero.sideDesc')}
+            >
+              <GovernanceRailSummary items={governanceSummaryItems} />
+            </GovernanceRailPanel>
+          ) : null}
+        >
             <FilterPanel>
-              <Form form={queryForm} layout="vertical">
+                <Form form={queryForm} layout="vertical">
                 <Row gutter={16}>
-                  <Col span={8}>
+                  <Col xs={24} md={12} lg={8}>
                     <FormItem label={t('system.menu.titleKey')} field="titleKey">
                       <Input />
                     </FormItem>
                   </Col>
-                  <Col span={8}>
+                  <Col xs={24} md={12} lg={8}>
                     <FormItem label={t('system.menu.path')} field="path">
                       <Input />
                     </FormItem>
                   </Col>
-                  <Col span={4}>
+                  <Col xs={24} md={12} lg={4}>
                     <FormItem label={t('system.menu.visible')} field="isVisible">
                       <Select allowClear options={[
                         { label: t('common.yes'), value: 1 },
@@ -573,7 +608,7 @@ const MenuList: React.FC = () => {
                       ]} />
                     </FormItem>
                   </Col>
-                  <Col span={4}>
+                  <Col xs={24} md={12} lg={4}>
                     <FormItem className="filter-panel__action-item">
                       <Space>
                         <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
@@ -595,7 +630,7 @@ const MenuList: React.FC = () => {
                   columns={columns}
                   rowKey="id"
                   loading={loading}
-                  scroll={{ x: 1780 }}
+                  scroll={{ x: 'max-content' }}
                   onChange={handleTableChange}
                   emptyText={t('common.noData')}
                 />
@@ -603,37 +638,7 @@ const MenuList: React.FC = () => {
               {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'list' ? renderListView() : null}
               {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'card' ? renderCardView() : null}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.menu.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.menu.hero.routeReady')}</span>
-                  <span className="side-rail-item__value">{flattenedMenus.filter(({ node }) => Boolean(node.routeName)).length}</span>
-                  <span className="side-rail-item__desc">{t('system.menu.hero.routeHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.menu.hero.cachedNodes')}</span>
-                  <span className="side-rail-item__value">{flattenedMenus.filter(({ node }) => node.isCache === 1).length}</span>
-                  <span className="side-rail-item__desc">{t('system.menu.hero.cacheHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.menu.hero.externalNodes')}</span>
-                  <span className="side-rail-item__value">{flattenedMenus.filter(({ node }) => node.isExternal === 1).length}</span>
-                  <span className="side-rail-item__desc">{t('system.menu.hero.externalHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.menu.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('system.menu.hero.sideLead')}</span>
-                <span className="side-rail-note__desc">{t('system.menu.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
 
       <AppModal

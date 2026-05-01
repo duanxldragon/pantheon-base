@@ -38,7 +38,10 @@ import {
   PageError,
   PageHeader,
   PageLoading,
+  PageSplitLayout,
   PermissionAction,
+  StandardRailNotePanel,
+  StandardRailSummary,
 } from '../../components';
 import { usePermission } from '../../hooks/usePermission';
 import './auth.css';
@@ -261,9 +264,9 @@ const LoginLogList: React.FC = () => {
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('auth.loginLog.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('auth.loginLog.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('auth.loginLog.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -276,8 +279,27 @@ const LoginLogList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
+        <PageSplitLayout
+          rail={(
+            <>
+              <StandardRailSummary
+                title={t('auth.loginLog.hero.summaryTitle')}
+                items={[
+                  { label: t('auth.loginLog.status.success'), value: successCount, description: t('auth.loginLog.hero.successHint') },
+                  { tone: 'warning', label: t('auth.loginLog.status.failed'), value: failedCount, description: t('auth.loginLog.hero.failedHint') },
+                  { label: t('auth.loginLog.hero.window'), value: t('auth.loginLog.hero.windowValue'), description: t('auth.security.recentWindow') },
+                  { label: t('common.selected'), value: selectedRowKeys.length, description: t('auth.loginLog.hero.selectedHint') },
+                ]}
+              />
+              <StandardRailNotePanel
+                title={t('auth.loginLog.hero.sideTitle')}
+                noteTone="warning"
+                noteTitle={t('auth.security.loginLogHint')}
+                noteDescription={t('auth.loginLog.hero.sideDesc')}
+              />
+            </>
+          )}
+        >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
                 <Row gutter={16} className="auth-filter-grid">
@@ -400,42 +422,7 @@ const LoginLogList: React.FC = () => {
                 />
               )}
             </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('auth.loginLog.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('auth.loginLog.status.success')}</span>
-                  <span className="side-rail-item__value">{successCount}</span>
-                  <span className="side-rail-item__desc">{t('auth.loginLog.hero.successHint')}</span>
-                </div>
-                <div className="side-rail-item side-rail-item--warning">
-                  <span className="side-rail-item__label">{t('auth.loginLog.status.failed')}</span>
-                  <span className="side-rail-item__value">{failedCount}</span>
-                  <span className="side-rail-item__desc">{t('auth.loginLog.hero.failedHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('auth.loginLog.hero.window')}</span>
-                  <span className="side-rail-item__value">{t('auth.loginLog.hero.windowValue')}</span>
-                  <span className="side-rail-item__desc">{t('auth.security.recentWindow')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('common.selected')}</span>
-                  <span className="side-rail-item__value">{selectedRowKeys.length}</span>
-                  <span className="side-rail-item__desc">{t('auth.loginLog.hero.selectedHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('auth.loginLog.hero.sideTitle')}</span>
-              <div className="side-rail-note side-rail-note--warning">
-                <span className="side-rail-note__title">{t('auth.security.loginLogHint')}</span>
-                <span className="side-rail-note__desc">{t('auth.loginLog.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </PageSplitLayout>
       </Space>
     </PageContainer>
   );

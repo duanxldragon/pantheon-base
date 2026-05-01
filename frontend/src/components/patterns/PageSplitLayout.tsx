@@ -15,7 +15,13 @@ const PageSplitLayout: React.FC<PageSplitLayoutProps> = ({
   mainClassName,
   railClassName,
 }) => (
-  <div className={className ? `page-split-layout ${className}` : 'page-split-layout'}>
+  <div
+    className={[
+      'page-split-layout',
+      rail ? 'page-split-layout--with-rail' : 'page-split-layout--single',
+      className,
+    ].filter(Boolean).join(' ')}
+  >
     <div className={mainClassName ? `page-main-column ${mainClassName}` : 'page-main-column'}>
       {children}
     </div>

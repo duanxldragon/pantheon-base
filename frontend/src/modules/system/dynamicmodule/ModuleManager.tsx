@@ -11,7 +11,6 @@ import {
   Card,
   Checkbox,
   Form,
-  Message,
   Popconfirm,
   Space,
   Tag,
@@ -22,6 +21,7 @@ import AppTable from '../../../components/data-display/AppTable';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ensureOperationVerified, isRequestError } from '../../../api/request';
+import { message } from '../../../components/feedback/message';
 import PermissionAction from '../../../components/patterns/PermissionAction';
 import { usePermission } from '../../../hooks/usePermission';
 
@@ -34,7 +34,7 @@ import {
   unregisterModule,
   type ModuleRegistration,
 } from './api';
-import { AppModal, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH } from '../../../components';
+import { AppModal, ListHeaderActions, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
 import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
 import '../list-page.css';
 
@@ -220,24 +220,24 @@ const ModuleManager: React.FC = () => {
       width: 120,
       render: (source: string) => <Tag color={source === 'generated' || source === 'database' || source === 'manual' ? 'green' : 'arcoblue'}>{t(`generator.moduleManager.source.${source || 'core'}`)}</Tag>,
     },
-    {
+    withTableColumnPriority({
       title: t('generator.moduleManager.owner'),
       dataIndex: 'owner',
       width: 120,
       render: (value?: string) => value || '-',
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('generator.moduleManager.boundedContext'),
       dataIndex: 'boundedContext',
       width: 140,
       render: (value?: string) => value || '-',
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('generator.moduleManager.tableName'),
       dataIndex: 'tableName',
       width: 180,
       render: (tableName: string) => tableName ? <code>{tableName}</code> : <span>-</span>,
-    },
+    }, 'low'),
     {
       title: t('generator.moduleManager.status'),
       dataIndex: 'status',
@@ -252,11 +252,11 @@ const ModuleManager: React.FC = () => {
         </Tag>
       ),
     },
-    {
+    withTableColumnPriority({
       title: t('generator.moduleManager.installedAt'),
       dataIndex: 'installedAt',
       width: 180,
-    },
+    }, 'low'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
@@ -332,87 +332,88 @@ const ModuleManager: React.FC = () => {
       <PageHeader
         title={t('generator.moduleManager.title')}
         extra={
-          <Space>
-            <Button onClick={loadData}>
-              <IconRefresh /> {t('common.refresh')}
-            </Button>
-            <PermissionAction allowed={canRepair} tooltip={t('common.noPermissionAction')}>
-              <Button
-                disabled={featureDisabled || repairing}
-                loading={repairing}
-                onClick={() => void handleRepair()}
-              >
-                <IconRefresh /> {t('generator.moduleManager.repair')}
-              </Button>
-            </PermissionAction>
-            <PermissionAction allowed={canOpenGenerator} tooltip={t('common.noPermissionAction')}>
-              <Button
-                type="primary"
-                disabled={featureDisabled}
-                onClick={() => navigate('/system/generator')}
-              >
-                <IconPlus /> {t('generator.moduleManager.registerNew')}
-              </Button>
-            </PermissionAction>
-          </Space>
+          <ListHeaderActions
+            className="module-manager-page__header-actions"
+            utility={(
+              <>
+                <Button size="small" onClick={loadData}>
+                  <IconRefresh /> {t('common.refresh')}
+                </Button>
+                <PermissionAction allowed={canRepair} tooltip={t('common.noPermissionAction')}>
+                  <Button
+                    size="small"
+                    disabled={featureDisabled || repairing}
+                    loading={repairing}
+                    onClick={() => void handleRepair()}
+                  >
+                    <IconRefresh /> {t('generator.moduleManager.repair')}
+                  </Button>
+                </PermissionAction>
+              </>
+            )}
+            primary={(
+              <PermissionAction allowed={canOpenGenerator} tooltip={t('common.noPermissionAction')}>
+                <Button
+                  size="small"
+                  type="primary"
+                  disabled={featureDisabled}
+                  onClick={() => navigate('/system/generator')}
+                >
+                  <IconPlus /> {t('generator.moduleManager.registerNew')}
+                </Button>
+              </PermissionAction>
+            )}
+          />
         }
       />
 
-      <Card>
-        {featureDisabled ? (
-          <Alert
-            type="warning"
-            style={{ marginBottom: 16 }}
-            content={t('generator.moduleManager.disabledHint')}
+      <Space direction="vertical" size={12} className="system-page-template module-manager-page">
+        <Card className="page-panel module-manager-page__card">
+          <div className="module-manager-page__intro">
+            <div className="module-manager-page__copy">
+              <span className="system-page-hero__eyebrow">{t('generator.moduleManager.title')}</span>
+              <Typography.Paragraph className="module-manager-page__desc">
+                {t('generator.moduleManager.description')}
+              </Typography.Paragraph>
+            </div>
+            <div className="module-manager-page__notice-stack">
+              {featureDisabled ? (
+                <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
+              ) : null}
+              {modules.some((item) => item.status === 3) ? (
+                <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
+              ) : null}
+              <Alert type="info" content={t('generator.moduleManager.positioning')} />
+              <Alert type="info" content={t('generator.moduleManager.repairHint')} />
+            </div>
+          </div>
+          <div className="module-manager-page__stats">
+            <Card size="small" className="module-manager-page__stat-card">
+              <Typography.Text type="secondary">{t('generator.moduleManager.stats.total')}</Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.total}</Typography.Title>
+            </Card>
+            <Card size="small" className="module-manager-page__stat-card">
+              <Typography.Text type="secondary">{t('generator.moduleManager.stats.active')}</Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.active}</Typography.Title>
+            </Card>
+            <Card size="small" className="module-manager-page__stat-card">
+              <Typography.Text type="secondary">{t('generator.moduleManager.stats.pending')}</Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.pending}</Typography.Title>
+            </Card>
+            <Card size="small" className="module-manager-page__stat-card">
+              <Typography.Text type="secondary">{t('generator.moduleManager.stats.uninstalled')}</Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.uninstalled}</Typography.Title>
+            </Card>
+          </div>
+          <AppTable
+            columns={columns}
+            data={modules}
+            rowKey="name"
+            pagination={false}
+            emptyText={featureDisabled ? t('generator.moduleManager.readOnlyEmpty') : t('generator.moduleManager.empty')}
           />
-        ) : null}
-        {modules.some((item) => item.status === 3) ? (
-          <Alert
-            type="warning"
-            style={{ marginBottom: 16 }}
-            content={t('generator.moduleManager.pendingHint')}
-          />
-        ) : null}
-        <Alert
-          type="info"
-          style={{ marginBottom: 16 }}
-          content={t('generator.moduleManager.positioning')}
-        />
-        <Alert
-          type="info"
-          style={{ marginBottom: 16 }}
-          content={t('generator.moduleManager.repairHint')}
-        />
-        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-          {t('generator.moduleManager.description')}
-        </Typography.Text>
-        <Space size={16} wrap style={{ marginBottom: 16 }}>
-          <Card size="small">
-            <Typography.Text type="secondary">{t('generator.moduleManager.stats.total')}</Typography.Text>
-            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.total}</Typography.Title>
-          </Card>
-          <Card size="small">
-            <Typography.Text type="secondary">{t('generator.moduleManager.stats.active')}</Typography.Text>
-            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.active}</Typography.Title>
-          </Card>
-          <Card size="small">
-            <Typography.Text type="secondary">{t('generator.moduleManager.stats.pending')}</Typography.Text>
-            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.pending}</Typography.Title>
-          </Card>
-          <Card size="small">
-            <Typography.Text type="secondary">{t('generator.moduleManager.stats.uninstalled')}</Typography.Text>
-            <Typography.Title heading={6} style={{ margin: 0 }}>{stats.uninstalled}</Typography.Title>
-          </Card>
-        </Space>
-
-        <AppTable
-          columns={columns}
-          data={modules}
-          rowKey="name"
-          pagination={false}
-          emptyText={featureDisabled ? t('generator.moduleManager.readOnlyEmpty') : t('generator.moduleManager.empty')}
-        />
-      </Card>
+        </Card>
+      </Space>
       <AppModal
         title={t('generator.moduleManager.purgeModal.title')}
         visible={Boolean(purgeTarget)}

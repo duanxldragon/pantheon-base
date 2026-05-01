@@ -6,7 +6,7 @@ interface FilterPanelProps {
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ children }) => (
-  <Card className="filter-panel" bodyStyle={{ paddingBottom: 8 }}>
+  <Card className="filter-panel" bodyStyle={{ paddingBottom: 4 }}>
     {children}
   </Card>
 );

@@ -6,7 +6,6 @@ import {
   Grid,
   Input,
   InputNumber,
-import { message } from '../../../components/feedback/message';
   Popconfirm,
   Select,
   Space,
@@ -14,16 +13,17 @@ import { message } from '../../../components/feedback/message';
   Tabs,
   Typography,
 } from '@arco-design/web-react';
-import { IconDelete, IconDownload, IconEdit, IconPlus, IconRefresh, IconSearch } from '@arco-design/web-react/icon';
+import { IconCaretDown, IconCaretUp, IconDelete, IconDownload, IconEdit, IconPlus, IconRefresh, IconSearch } from '@arco-design/web-react/icon';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
+import { message } from '../../../components/feedback/message';
 import { showImportResult } from '../../../api/importExport';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, TableBatchActionBar, PermissionAction } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, TableBatchActionBar, PermissionAction, withTableColumnPriority } from '../../../components';
 import {
   analyzeDictUsage,
   createDictItem,
@@ -536,20 +536,20 @@ const DictPage: React.FC = () => {
         </Text>
       ),
     },
-    {
+    withTableColumnPriority({
       title: t('system.dict.module'),
       dataIndex: 'module',
       width: 120,
       ellipsis: true,
-    },
-    {
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('system.dict.item'),
       dataIndex: 'itemCount',
       width: 108,
       render: (_: unknown, row: DictTypeRow) => (
         <Text>{`${row.activeItemCount}/${row.itemCount}`}</Text>
       ),
-    },
+    }, 'low'),
     {
       title: t('system.dict.status'),
       dataIndex: 'status',
@@ -562,9 +562,10 @@ const DictPage: React.FC = () => {
     },
     {
       title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.medium,
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      fixed: 'right',
       render: (_: unknown, row: DictTypeRow) => (
-        <Space size={4} className="system-list__actions">
+        <Space size={4} className="system-list__actions dict-page__row-actions">
           <Button size="small" type="text" onClick={() => switchToItemsTab(row)}>
             {t('system.dict.item')}
           </Button>
@@ -599,13 +600,13 @@ const DictPage: React.FC = () => {
       width: 180,
       ellipsis: true,
     },
-    {
+    withTableColumnPriority({
       title: t('system.dict.itemColor'),
       dataIndex: 'itemColor',
       width: 120,
       render: (value: string) => value ? <Tag color={value}>{value}</Tag> : '-',
-    },
-    { title: t('system.dict.sort'), dataIndex: 'sort', width: 90 },
+    }, 'medium'),
+    withTableColumnPriority({ title: t('system.dict.sort'), dataIndex: 'sort', width: 90 }, 'low'),
     {
       title: t('system.dict.status'),
       dataIndex: 'status',
@@ -619,14 +620,23 @@ const DictPage: React.FC = () => {
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      fixed: 'right',
       render: (_: unknown, row: DictItemRow) => (
-        <Space size={4} className="system-list__actions">
-          <Button size="small" type="text" onClick={() => { void handleReorderItem(row, 'up'); }} disabled={!canEdit}>
-            {t('system.dict.moveUp')}
-          </Button>
-          <Button size="small" type="text" onClick={() => { void handleReorderItem(row, 'down'); }} disabled={!canEdit}>
-            {t('system.dict.moveDown')}
-          </Button>
+        <Space size={4} className="system-list__actions dict-page__row-actions dict-page__row-actions--items">
+          <Button
+            size="small"
+            type="text"
+            icon={<IconCaretUp />}
+            onClick={() => { void handleReorderItem(row, 'up'); }}
+            disabled={!canEdit}
+          />
+          <Button
+            size="small"
+            type="text"
+            icon={<IconCaretDown />}
+            onClick={() => { void handleReorderItem(row, 'down'); }}
+            disabled={!canEdit}
+          />
           <Button size="small" icon={<IconEdit />} onClick={() => openEditItem(row)} disabled={!canEdit}>
             {t('common.edit')}
           </Button>
@@ -705,9 +715,9 @@ const DictPage: React.FC = () => {
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.dict.hero.eyebrow')}</span>
-              <Typography.Paragraph className="system-page-hero__desc">
-                {t('system.dict.hero.desc')}
-              </Typography.Paragraph>
+              <Typography.Title heading={5} className="system-page-hero__title">
+                {t('system.dict.hero.title')}
+              </Typography.Title>
             </div>
           </div>
           <div className="system-page-kpi-grid">
@@ -720,9 +730,26 @@ const DictPage: React.FC = () => {
             ))}
           </div>
         </Card>
-        <div className="page-split-layout">
-          <div className="page-main-column">
-            <Card className="page-panel">
+        <PageSplitLayout
+          rail={(
+            <>
+              <StandardRailSummary
+                title={t('system.dict.hero.summaryTitle')}
+                items={[
+                  { label: t('system.dict.hero.disabledTypes'), value: typeSummary.disabled, description: t('system.dict.hero.disabledHint') },
+                  { label: t('system.dict.hero.refreshReady'), value: canRefresh ? t('common.yes') : t('common.no'), description: t('system.dict.hero.refreshHint') },
+                  { label: t('system.dict.hero.importReady'), value: canImport ? t('common.yes') : t('common.no'), description: t('system.dict.hero.importHint') },
+                ]}
+              />
+              <StandardRailNotePanel
+                title={t('system.dict.hero.sideTitle')}
+                noteTitle={t('system.dict.hero.sideLead')}
+                noteDescription={t('system.dict.hero.sideDesc')}
+              />
+            </>
+          )}
+        >
+          <Card className="page-panel">
           <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
             <Tabs.TabPane key="types" title={t('system.dict.type')}>
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -748,17 +775,17 @@ const DictPage: React.FC = () => {
                 <FilterPanel>
                   <Form form={queryForm} layout="vertical">
                     <Row gutter={16}>
-                      <Col span={8}>
+                      <Col xs={24} md={12} lg={8}>
                         <FormItem label={t('system.dict.dictCode')} field="dictCode">
                           <Input />
                         </FormItem>
                       </Col>
-                      <Col span={8}>
+                      <Col xs={24} md={12} lg={8}>
                         <FormItem label={t('system.dict.dictName')} field="dictName">
                           <Input />
                         </FormItem>
                       </Col>
-                      <Col span={4}>
+                      <Col xs={24} md={12} lg={4}>
                         <FormItem label={t('system.dict.status')} field="status">
                           <Select allowClear options={[
                             { label: t('system.user.status.enabled'), value: 1 },
@@ -766,7 +793,7 @@ const DictPage: React.FC = () => {
                           ]} />
                         </FormItem>
                       </Col>
-                      <Col span={4}>
+                      <Col xs={24} md={12} lg={4}>
                         <FormItem className="filter-panel__action-item">
                           <Space>
                             <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>{t('common.search')}</Button>
@@ -832,7 +859,7 @@ const DictPage: React.FC = () => {
                       onChange: (keys) => setSelectedTypeRowKeys(keys),
                     }}
                     emptyText={t('system.dict.typeEmpty')}
-                    scroll={{ x: 980 }}
+                    scroll={{ x: 'max-content' }}
                   />
                 ) : null}
               </Space>
@@ -984,7 +1011,7 @@ const DictPage: React.FC = () => {
                           pageSizeChangeResetCurrent: false,
                           onChange: (page, pageSize) => setItemQuery((prev) => ({ ...prev, page, pageSize })),
                         }}
-                        scroll={{ x: 1160 }}
+                        scroll={{ x: 'max-content' }}
                       />
                     ) : null}
                   </>
@@ -992,38 +1019,8 @@ const DictPage: React.FC = () => {
               </Space>
             </Tabs.TabPane>
           </Tabs>
-            </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.dict.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.dict.hero.disabledTypes')}</span>
-                  <span className="side-rail-item__value">{typeSummary.disabled}</span>
-                  <span className="side-rail-item__desc">{t('system.dict.hero.disabledHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.dict.hero.refreshReady')}</span>
-                  <span className="side-rail-item__value">{canRefresh ? t('common.yes') : t('common.no')}</span>
-                  <span className="side-rail-item__desc">{t('system.dict.hero.refreshHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.dict.hero.importReady')}</span>
-                  <span className="side-rail-item__value">{canImport ? t('common.yes') : t('common.no')}</span>
-                  <span className="side-rail-item__desc">{t('system.dict.hero.importHint')}</span>
-                </div>
-              </div>
-            </Card>
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.dict.hero.sideTitle')}</span>
-              <div className="side-rail-note">
-                <span className="side-rail-note__title">{t('system.dict.hero.sideLead')}</span>
-                <span className="side-rail-note__desc">{t('system.dict.hero.sideDesc')}</span>
-              </div>
-            </Card>
-          </div>
-        </div>
+          </Card>
+        </PageSplitLayout>
       </Space>
 
       <AppModal
