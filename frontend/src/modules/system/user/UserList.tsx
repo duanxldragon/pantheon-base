@@ -639,89 +639,63 @@ const UserList: React.FC = () => {
             </Form>
           </FilterPanel>
         ) : null}
-        <div className="page-split-layout" style={{ gridTemplateColumns: 'minmax(0, 1fr) 200px' }}>
-          <div className="page-main-column">
-            <Card className="page-panel system-user-list__table-card">
-              <TableBatchActionBar
-                selectedCount={selectedRowKeys.length}
-                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-                clearText={t('common.clearSelection')}
-                clearSuccessText={t('common.clearSelectionSuccess')}
-                onClear={() => setSelectedRowKeys([])}
-                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
-                actions={(
-                  <>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-                        <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </>
-                )}
-              />
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {error && data.length === 0 ? renderErrorState() : null}
-              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 ? (
-                <AppTable<UserListRow>
-                  className="system-user-list__table"
-                  data={data}
-                  columns={columns}
-                  rowKey="id"
-                  loading={loading}
-                  scroll={{ x: 1600 }}
-                  rowSelection={{
-                    type: 'checkbox',
-                    selectedRowKeys,
-                    fixed: true,
-                    checkboxProps: (row) => ({ disabled: row.id === 1 }),
-                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                  }}
-                  onChange={handleTableChange}
-                  emptyText={t('common.noData')}
-                  pagination={{
-                    current: query.page || emptyQuery.page,
-                    pageSize: query.pageSize || emptyQuery.pageSize,
-                    total,
-                    showJumper: true,
-                    pageSizeChangeResetCurrent: false,
-                    sizeCanChange: true,
-                    sizeOptions: [10, 20, 50, 100],
-                    size: 'small',
-                    showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps}
-                />
-              ) : null}
-            </Card>
-          </div>
-          <div className="page-side-column">
-            <Card className="page-panel side-rail-panel">
-              <span className="side-rail-panel__title">{t('system.user.hero.summaryTitle')}</span>
-              <div className="side-rail-stack">
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.hero.orgReady')}</span>
-                  <span className="side-rail-item__value">{Math.max(deptOptions.length - 1, 0)} / {postOptions.length}</span>
-                  <span className="side-rail-item__desc">{t('system.user.hero.orgHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.hero.disabledRows')}</span>
-                  <span className="side-rail-item__value">{disabledUserCount}</span>
-                  <span className="side-rail-item__desc">{t('system.user.hero.disabledHint')}</span>
-                </div>
-                <div className="side-rail-item">
-                  <span className="side-rail-item__label">{t('system.user.hero.batchActions')}</span>
-                  <span className="side-rail-item__value">{batchActionDisabled ? t('common.no') : t('common.yes')}</span>
-                  <span className="side-rail-item__desc">{t('system.user.hero.batchHint')}</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
+        <Card className="page-panel system-user-list__table-card">
+          <TableBatchActionBar
+            selectedCount={selectedRowKeys.length}
+            selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+            clearText={t('common.clearSelection')}
+            clearSuccessText={t('common.clearSelectionSuccess')}
+            onClear={() => setSelectedRowKeys([])}
+            hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+            actions={(
+              <>
+                <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                  <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                    <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
+                  </Popconfirm>
+                </PermissionAction>
+                <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                  <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
+                    <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
+                  </Popconfirm>
+                </PermissionAction>
+              </>
+            )}
+          />
+          {loading && data.length === 0 ? <PageLoading /> : null}
+          {error && data.length === 0 ? renderErrorState() : null}
+          {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+          {!loading && !(error && data.length === 0) && data.length > 0 ? (
+            <AppTable<UserListRow>
+              className="system-user-list__table"
+              data={data}
+              columns={columns}
+              rowKey="id"
+              loading={loading}
+              scroll={{ x: 1600 }}
+              rowSelection={{
+                type: 'checkbox',
+                selectedRowKeys,
+                fixed: true,
+                checkboxProps: (row) => ({ disabled: row.id === 1 }),
+                onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+              }}
+              onChange={handleTableChange}
+              emptyText={t('common.noData')}
+              pagination={{
+                current: query.page || emptyQuery.page,
+                pageSize: query.pageSize || emptyQuery.pageSize,
+                total,
+                showJumper: true,
+                pageSizeChangeResetCurrent: false,
+                sizeCanChange: true,
+                sizeOptions: [10, 20, 50, 100],
+                size: 'small',
+                showTotal: (count: number) => t('common.total', { count }),
+              } as PaginationProps}
+            />
+          ) : null}
+        </Card>
       </Space>
 
       <AppModal
