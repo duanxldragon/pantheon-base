@@ -1,6 +1,7 @@
 import { apiRequest } from '../../../api/request';
 import { downloadFile } from '../../../api/file';
 import { uploadImportFile } from '../../../api/importExport';
+import type { UserPlatformPreferences } from '../../auth/api';
 
 export interface UserProfile {
   id: number;
@@ -11,6 +12,7 @@ export interface UserProfile {
   phone?: string;
   roles?: string[];
   perms?: string[];
+  preferences?: UserPlatformPreferences;
   deptId: number;
   postId: number;
   status: number;

@@ -55,6 +55,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					authV2.POST("/activity", authHandler.TouchActivity)
 					authV2.POST("/operation-verify", authHandler.VerifyOperationPassword)
 					authV2.GET("/me", authHandler.GetCurrentUserInfo)
+					authV2.PUT("/me/preferences", authHandler.UpdateCurrentUserPreferences)
 					authV2.GET("/security", authHandler.GetSecurityOverview)
 					authV2.PUT("/password", authHandler.UpdatePassword)
 					authV2.GET("/sessions", authHandler.GetSessions)

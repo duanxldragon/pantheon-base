@@ -5,7 +5,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { beginLogoutTransition, endLogoutTransition } from '../../api/request';
 import type { MenuNode } from '../../modules/system/menu/api';
-import { logout as logoutApi, reportActivity, verifyOperationPassword } from '../../modules/auth/api';
+import { logout as logoutApi, reportActivity, updateCurrentUserPreferences, verifyOperationPassword, type UserPlatformPreferences } from '../../modules/auth/api';
 import { ensureAuthUserInfo } from '../auth/bootstrap';
 import { useMenuStore } from '../../store/useMenuStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -199,7 +199,7 @@ const BaseLayout: React.FC = () => {
   const { t, i18n } = useTranslation();
   const publicSettings = usePublicSettings();
   const { menuTree, fetchMenuTree, resetMenuTree, loading } = useMenuStore();
-  const { token, userInfo, clearAuth } = useAuthStore();
+  const { token, userInfo, clearAuth, setUserInfo } = useAuthStore();
   const { isAdmin, hasPerm } = usePermission();
   const lastActivityAtRef = useRef(readShellLastActivityAt() || 0);
   const lastSyncedActivityAtRef = useRef(0);
@@ -881,24 +881,89 @@ const BaseLayout: React.FC = () => {
 
   const currentLanguage = (SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN') as SupportedLocale;
 
+  const persistPlatformPreferences = useCallback((nextPreferences: UserPlatformPreferences) => {
+    const currentUserInfo = useAuthStore.getState().userInfo;
+    if (!currentUserInfo) {
+      return;
+    }
+
+    setUserInfo({
+      ...currentUserInfo,
+      preferences: nextPreferences,
+    });
+
+    void updateCurrentUserPreferences(nextPreferences)
+      .then((nextUserInfo) => {
+        if (useAuthStore.getState().token === token) {
+          setUserInfo(nextUserInfo);
+        }
+      })
+      .catch(() => {
+        if (useAuthStore.getState().token === token) {
+          setUserInfo(currentUserInfo);
+        }
+        Message.error(t('app.preference.saveFailed'));
+      });
+  }, [setUserInfo, t, token]);
+
+  useEffect(() => {
+    const preferences = userInfo?.preferences;
+    if (!preferences) {
+      return;
+    }
+
+    if (preferences.layoutMode && preferences.layoutMode !== layoutMode) {
+      setLayoutMode(preferences.layoutMode);
+      persistShellLayoutMode(preferences.layoutMode);
+    }
+    if (preferences.densityMode && preferences.densityMode !== densityMode) {
+      setDensityMode(preferences.densityMode);
+    }
+    if (preferences.theme && preferences.theme !== theme) {
+      setTheme(preferences.theme);
+    }
+    if (preferences.language && preferences.language !== currentLanguage) {
+      setExplicitLanguagePreference(preferences.language);
+      void switchI18nLanguage(preferences.language);
+    }
+  }, [currentLanguage, densityMode, layoutMode, setTheme, theme, userInfo?.preferences]);
+
   const changeLanguage = (language: SupportedLocale) => {
     if (language === i18n.language) {
       return;
     }
     setExplicitLanguagePreference(language);
     void switchI18nLanguage(language);
+    persistPlatformPreferences({
+      theme,
+      language,
+      layoutMode,
+      densityMode,
+    });
   };
 
   const toggleLayoutMode = () => {
     setLayoutMode((currentMode) => {
       const nextMode: ShellLayoutMode = currentMode === 'vertical' ? 'horizontal' : 'vertical';
       persistShellLayoutMode(nextMode);
+      persistPlatformPreferences({
+        theme,
+        language: currentLanguage,
+        layoutMode: nextMode,
+        densityMode,
+      });
       return nextMode;
     });
   };
 
   const changeDensityMode = (mode: ShellDensityMode) => {
     setDensityMode(mode);
+    persistPlatformPreferences({
+      theme,
+      language: currentLanguage,
+      layoutMode,
+      densityMode: mode,
+    });
   };
 
   const preferencePanel = (
@@ -972,7 +1037,15 @@ const BaseLayout: React.FC = () => {
                 'app-shell__preference-item',
                 theme === item.key ? 'app-shell__preference-item--active' : '',
               ].join(' ').trim()}
-              onClick={() => setTheme(item.key)}
+              onClick={() => {
+                setTheme(item.key);
+                persistPlatformPreferences({
+                  theme: item.key,
+                  language: currentLanguage,
+                  layoutMode,
+                  densityMode,
+                });
+              }}
             >
               <span className="app-shell__preference-item-icon">
                 <span className="app-shell__preference-theme-swatch" style={{ background: item.accent }} />

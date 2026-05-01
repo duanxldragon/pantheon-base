@@ -34,6 +34,7 @@ const zhCNFallback = {
       'app.toggleTheme': '切换主题风格',
       'app.preference.title': '平台偏好',
       'app.preference.subtitle': '主题、语言与导航模式属于平台层壳能力，不并入个人资料。',
+      'app.preference.saveFailed': '平台偏好保存失败，已恢复到上一次有效配置。',
       'app.preference.tooltip': '平台偏好：{{theme}} · {{layout}} · {{density}} · {{language}}',
       'app.preference.navigation': '导航模式',
       'app.preference.navigationMode': '当前导航布局',

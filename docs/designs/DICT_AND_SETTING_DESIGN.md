@@ -20,6 +20,7 @@
 - 上传配置分组、敏感配置加密存储、配置变更审计详情、设置缓存策略已完成基础实现。
 - `system/setting` 已补配置健康总览：可直接查看公开配置数量、敏感配置数量、缺失必填项、运行时风险与当前驱动/语言/主题摘要。
 - 运行时接线状态已补第一批：`site.name/site.logo` 已接入登录页与应用壳层，`security.password_min_length` 已接入当前用户改密、用户创建与管理员重置密码，`login.max_failed_attempts/login.lock_minutes` 已接入登录失败锁定策略，`login.session_idle_minutes` 已接入平台壳层空闲超时与 `system/auth` 会话失效判定，`login.max_active_sessions_per_user` 已接入同账号活跃会话上限治理，`audit.login_log_retention_days/audit.operation_log_retention_days/audit.session_retention_days` 已接入登录日志、操作日志与历史会话的自动保留治理，`i18n.default_language` 已接入无显式语言偏好时的默认语言初始化，`ui.default_theme/ui.enable_tab_bar` 已接入平台壳层主题与标签栏显示策略。
+- 平台壳层显式偏好已完成与默认值解耦：`i18n.default_language`、`ui.default_theme` 仍只负责公开默认值；用户一旦在登录后显式切换 `theme / language / layoutMode / densityMode`，该选择由 `auth/me/preferences` 持久化并优先于默认值生效。
 - 上传配置也已形成基础运行时闭环：平台新增统一上传能力，`upload.max_file_size / upload.allowed_types / upload.local_path / upload.public_base_url` 已接入真实上传接口与文件访问地址生成；当前已支持 `local` 与 `s3-compatible` 两类驱动。
 - 国际化配置治理已补运行时收口：当前平台内置 fallback locale 为 `zh-CN / en-US / ja-JP / ko-KR / fr-FR`，默认语言设置只在用户没有显式语言偏好时生效；一旦用户已切换语言，平台应优先尊重用户显式选择，而不是反向被默认配置覆盖。
 - 当前语种策略为“按市场扩展，不做无依据预扩”：除非出现明确客户、区域交付或合规需求，否则不继续预置更多 locale；后续新增 locale 时，默认沿现有 i18n 导入导出、缺失检测和 fallback 校验链路扩展。

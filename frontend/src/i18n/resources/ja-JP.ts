@@ -27,6 +27,7 @@ const jaJPFallback = {
   'app.toggleTheme': 'テーマを切り替え',
   'app.preference.title': 'プラットフォーム設定',
   'app.preference.subtitle': 'テーマ、言語、ナビゲーションモードは個人プロフィールではなくプラットフォームシェルで管理されます。',
+  'app.preference.saveFailed': 'プラットフォーム設定の保存に失敗したため、直前の有効な設定に戻しました。',
   'app.preference.density': '表示密度',
   'app.preference.navigation': 'ナビゲーション',
   'app.preference.navigationMode': '現在のナビゲーションレイアウト',

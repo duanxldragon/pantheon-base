@@ -32,6 +32,13 @@ type AuthService struct {
 	lastCleanupAt map[string]time.Time
 }
 
+type UserPreferenceUpdateResult struct {
+	User      *UserInfoResp
+	Previous  *user.UserPlatformPreferenceResp
+	Current   *user.UserPlatformPreferenceResp
+	Persisted string
+}
+
 type authRuntimePolicy struct {
 	PasswordMinLength       int
 	MaxFailedAttempts       int
@@ -298,14 +305,58 @@ func (s *AuthService) GetCurrentUserInfo(userID uint64) (*UserInfoResp, error) {
 	}
 
 	return &UserInfoResp{
-		ID:       currentUser.ID,
-		Username: currentUser.Username,
-		Nickname: currentUser.Nickname,
-		Avatar:   currentUser.Avatar,
-		Email:    currentUser.Email,
-		Phone:    currentUser.Phone,
-		Roles:    roles,
-		Perms:    perms,
+		ID:          currentUser.ID,
+		Username:    currentUser.Username,
+		Nickname:    currentUser.Nickname,
+		Avatar:      currentUser.Avatar,
+		Email:       currentUser.Email,
+		Phone:       currentUser.Phone,
+		Roles:       roles,
+		Perms:       perms,
+		Preferences: user.ParseUserPlatformPreferences(currentUser.PreferenceJSON),
+	}, nil
+}
+
+func (s *AuthService) UpdateCurrentUserPreferences(userID uint64, req *UserPlatformPreferenceUpdateReq) (*UserPreferenceUpdateResult, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+
+	var currentUser user.SystemUser
+	if err := s.db.First(&currentUser, userID).Error; err != nil {
+		return nil, err
+	}
+
+	previousPreferences := user.ParseUserPlatformPreferences(currentUser.PreferenceJSON)
+	nextPreferences := user.NormalizeUserPlatformPreferences(&user.UserPlatformPreferenceResp{
+		Theme:       req.Theme,
+		Language:    req.Language,
+		LayoutMode:  req.LayoutMode,
+		DensityMode: req.DensityMode,
+	})
+	preferenceJSON, err := user.MarshalUserPlatformPreferences(nextPreferences)
+	if err != nil {
+		return nil, err
+	}
+
+	if preferenceJSON != currentUser.PreferenceJSON {
+		if err := s.db.Model(&user.SystemUser{}).
+			Where("id = ?", userID).
+			Update("preference_json", preferenceJSON).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	userInfo, err := s.GetCurrentUserInfo(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserPreferenceUpdateResult{
+		User:      userInfo,
+		Previous:  previousPreferences,
+		Current:   nextPreferences,
+		Persisted: preferenceJSON,
 	}, nil
 }
 

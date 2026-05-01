@@ -1,18 +1,19 @@
 package system
 
 type UserProfileResp struct {
-	ID        uint64   `json:"id"`
-	Username  string   `json:"username"`
-	Nickname  string   `json:"nickname"`
-	Avatar    string   `json:"avatar"`
-	Email     string   `json:"email"`
-	Phone     string   `json:"phone"`
-	DeptID    uint64   `json:"deptId"`
-	PostID    uint64   `json:"postId"`
-	Status    int      `json:"status"`
-	Roles     []string `json:"roles"`
-	Perms     []string `json:"perms"`
-	CreatedAt string   `json:"createdAt"`
+	ID          uint64                      `json:"id"`
+	Username    string                      `json:"username"`
+	Nickname    string                      `json:"nickname"`
+	Avatar      string                      `json:"avatar"`
+	Email       string                      `json:"email"`
+	Phone       string                      `json:"phone"`
+	Preferences *UserPlatformPreferenceResp `json:"preferences,omitempty"`
+	DeptID      uint64                      `json:"deptId"`
+	PostID      uint64                      `json:"postId"`
+	Status      int                         `json:"status"`
+	Roles       []string                    `json:"roles"`
+	Perms       []string                    `json:"perms"`
+	CreatedAt   string                      `json:"createdAt"`
 }
 
 // UserListResp 列表页返回 DTO

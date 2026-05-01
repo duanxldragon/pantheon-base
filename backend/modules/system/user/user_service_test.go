@@ -310,6 +310,32 @@ func TestUserService_MigrateReleasesLegacyDeletedUsername(t *testing.T) {
 	}
 }
 
+func TestUserService_MigrateNormalizesLegacyPreferenceJSON(t *testing.T) {
+	db := setupUserTestDB(t)
+
+	if err := db.Create(&SystemUser{
+		Username:       "legacy_preference_user",
+		Password:       "hashed",
+		Status:         1,
+		PreferenceJSON: `{"theme":"emerald","layout":"horizontal","density":"compact","lang":"en-US","extra":"ignored"}`,
+	}).Error; err != nil {
+		t.Fatalf("seed legacy preference user: %v", err)
+	}
+
+	s := NewUserService(db)
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	var repaired SystemUser
+	if err := db.Where("username = ?", "legacy_preference_user").First(&repaired).Error; err != nil {
+		t.Fatalf("reload repaired user: %v", err)
+	}
+	if repaired.PreferenceJSON != `{"theme":"emerald","language":"en-US","layoutMode":"horizontal","densityMode":"compact"}` {
+		t.Fatalf("unexpected normalized preference json: %s", repaired.PreferenceJSON)
+	}
+}
+
 func TestUserService_ResetPassword(t *testing.T) {
 	db := setupUserTestDB(t)
 	s := NewUserService(db)

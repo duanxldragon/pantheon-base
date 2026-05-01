@@ -15,6 +15,14 @@ export interface UserInfo {
   phone?: string;
   roles?: string[];
   perms?: string[];
+  preferences?: UserPlatformPreferences;
+}
+
+export interface UserPlatformPreferences {
+  theme?: 'indigo' | 'emerald' | 'violet' | 'slate';
+  language?: 'zh-CN' | 'en-US' | 'ja-JP' | 'ko-KR' | 'fr-FR';
+  layoutMode?: 'vertical' | 'horizontal';
+  densityMode?: 'comfortable' | 'compact';
 }
 
 export interface AuthTokens {
@@ -192,6 +200,15 @@ export function getMe() {
   return apiRequest<UserInfo>({
     url: '/auth/me',
     method: 'get',
+  });
+}
+
+export function updateCurrentUserPreferences(data: UserPlatformPreferences) {
+  return apiRequest<UserInfo>({
+    url: '/auth/me/preferences',
+    method: 'put',
+    data,
+    skipErrorMessage: true,
   });
 }
 

@@ -130,6 +130,7 @@ export const OrderModule = {
 - **系统设置页**: 已新增 `src/modules/system/setting/SettingPage.tsx`，按 `basic/security/login/audit/upload/i18n/ui` 分组维护系统设置，并对敏感配置提供“已加密/留空不变”交互表达。
 - **配置健康总览**: `src/modules/system/setting/SettingPage.tsx` 顶部已补配置治理摘要，展示公开/敏感配置数量、缺失必填项、运行时风险以及当前语言、主题、上传驱动状态。
 - **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar / login.session_idle_minutes` 已接入登录页与应用壳层；其中默认语言仅在“用户未显式切换语言”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐，空闲时长由 `login.session_idle_minutes` 控制自动退出。
+- **平台壳层偏好持久化**: 当前登录用户的 `theme / language / layoutMode / densityMode` 已通过 `GET/PUT /api/v1/auth/me/preferences` 收口到 `platform` 壳层偏好链路；`system/config` 的公开设置继续只负责默认值，不再覆盖用户已经显式保存的壳层选择。
 - **上传配置消费**: 个人中心与用户管理头像上传都已接入 `/system/upload`，会实时遵守 `upload.max_file_size / upload.allowed_types / upload.public_base_url / upload.s3_*`；本地驱动下返回平台文件 URL，S3 驱动下返回对象访问 URL。
 - **设置审计详情**: 系统设置页底部已补最近配置变更审计表，支持查看操作人、操作 IP、变更字段、状态与操作时间，敏感字段只展示“已变更”而不回显明文。
 - **设置缓存刷新**: 系统设置页已补“刷新设置缓存”入口，允许管理员按当前分组手动预热缓存。

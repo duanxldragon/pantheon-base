@@ -26,6 +26,7 @@ const frFRFallback = {
   'app.toggleTheme': 'Changer le thème',
   'app.preference.title': 'Préférences de la plateforme',
   'app.preference.subtitle': 'Le thème, la langue et le mode de navigation restent dans le shell de la plateforme, pas dans le profil personnel.',
+  'app.preference.saveFailed': 'L’enregistrement des préférences de plateforme a échoué. La dernière configuration valide a été restaurée.',
   'app.preference.density': 'Densité',
   'app.preference.navigation': 'Navigation',
   'app.preference.navigationMode': 'Disposition actuelle de navigation',

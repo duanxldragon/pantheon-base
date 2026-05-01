@@ -14,6 +14,7 @@ CREATE TABLE `system_user` (
     `avatar` varchar(255) DEFAULT NULL COMMENT '头像',
     `email` varchar(128) DEFAULT NULL COMMENT '邮箱',
     `phone` varchar(20) DEFAULT NULL COMMENT '手机号',
+    `preference_json` text COMMENT '平台壳层偏好 JSON',
     `dept_id` bigint DEFAULT '0' COMMENT '部门ID',
     `post_id` bigint DEFAULT '0' COMMENT '岗位ID',
     `status` tinyint DEFAULT '1' COMMENT '状态 (1:正常, 2:禁用)',

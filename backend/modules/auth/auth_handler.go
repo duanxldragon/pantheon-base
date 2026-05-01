@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"encoding/json"
 	"strings"
 
+	user "pantheon-platform/backend/modules/system/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/impexp"
 
@@ -107,6 +109,28 @@ func (h *AuthHandler) GetCurrentUserInfo(c *gin.Context) {
 	}
 	common.Success(c, resp)
 }
+
+func (h *AuthHandler) UpdateCurrentUserPreferences(c *gin.Context) {
+	common.SetAuditMetadata(c, "更新平台偏好", common.BusinessUpdate)
+
+	var req UserPlatformPreferenceUpdateReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, err.Error())
+		return
+	}
+
+	result, err := h.service.UpdateCurrentUserPreferences(common.GetUserID(c), &req)
+	if err != nil {
+		common.SetAuditStatus(c, 2)
+		common.SetAuditErrorMsg(c, err.Error())
+		common.Fail(c, common.CodeError, err.Error())
+		return
+	}
+	common.SetAuditParam(c, buildPreferenceAuditPayload(result.Previous, result.Current))
+	common.SetAuditResult(c, buildPreferenceAuditResult(result.User, result.Previous, result.Current))
+	common.Success(c, result.User)
+}
+
 func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 	var req PasswordUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -148,6 +172,44 @@ func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 	if err := impexp.WriteCSV(c, *file); err != nil {
 		common.Fail(c, common.CodeError, err.Error())
 	}
+}
+
+func buildPreferenceAuditPayload(previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) string {
+	return marshalAuthAuditPayload(gin.H{
+		"scope":  "platform.shell.preferences",
+		"before": previous,
+		"after":  current,
+	})
+}
+
+func buildPreferenceAuditResult(resp *UserInfoResp, previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) string {
+	return marshalAuthAuditPayload(gin.H{
+		"userId":      resp.ID,
+		"username":    resp.Username,
+		"preferences": current,
+		"changed":     !preferencesEqual(previous, current),
+	})
+}
+
+func preferencesEqual(previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) bool {
+	if previous == nil && current == nil {
+		return true
+	}
+	if previous == nil || current == nil {
+		return false
+	}
+	return previous.Theme == current.Theme &&
+		previous.Language == current.Language &&
+		previous.LayoutMode == current.LayoutMode &&
+		previous.DensityMode == current.DensityMode
+}
+
+func marshalAuthAuditPayload(payload any) string {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return "{}"
+	}
+	return string(data)
 }
 
 func (h *AuthHandler) CleanupLoginLogs(c *gin.Context) {

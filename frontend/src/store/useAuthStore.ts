@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { UserPlatformPreferences } from '../modules/auth/api';
 
 export const ACCESS_TOKEN_KEY = 'pantheon_access_token';
 export const REFRESH_TOKEN_KEY = 'pantheon_refresh_token';
@@ -13,6 +14,7 @@ export interface UserInfo {
   phone?: string;
   roles?: string[];
   perms?: string[];
+  preferences?: UserPlatformPreferences;
 }
 
 interface AuthState {

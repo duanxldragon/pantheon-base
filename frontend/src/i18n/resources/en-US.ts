@@ -34,6 +34,7 @@ const enUSFallback = {
       'app.toggleTheme': 'Switch theme style',
       'app.preference.title': 'Platform Preferences',
       'app.preference.subtitle': 'Theme, language, and navigation mode stay in the platform shell instead of personal profile.',
+      'app.preference.saveFailed': 'Saving platform preferences failed. The previous valid configuration has been restored.',
       'app.preference.tooltip': 'Preferences: {{theme}} · {{layout}} · {{density}} · {{language}}',
       'app.preference.navigation': 'Navigation',
       'app.preference.navigationMode': 'Current navigation layout',

@@ -31,6 +31,7 @@
 - **权限**: Access Token 携带 `userId`、`username`、`roleKeys`、`sessionId`；Casbin 按 RESTful 路由匹配，`admin` 角色默认拥有 `/api/v1/*` 权限。
 - **Casbin 持久化**: `database/system_init.sql` 会预建 `casbin_rule`，启动时再通过本地 GORM Adapter 自动迁移并同步策略，避免“只初始化 SQL 但没启动服务时表不存在”的落差。
 - **审计**: `OperationLogMiddleware` 异步写入 `system_log_oper`，对 `password`、`token` 等敏感键递归脱敏，并持久化 `source_domain / source_page / failure_category` 三个派生字段；派生字段补偿仅发生在迁移/启动阶段，查询热路径直接按落库字段下推 SQL 过滤，配合组合/单列索引避免统一审计页退化为全表扫描；业务模块仍可通过上下文覆盖 `title / businessType / param / result`，让配置审计等场景复用统一操作日志底座。
+- **平台偏好审计**: `PUT /api/v1/auth/me/preferences` 会把当前登录主体的平台壳层偏好变更写入统一审计，记录变更前/变更后快照，但不混入密码、token 等敏感值。
 - **请求链路标识**: 平台壳层会为每个请求生成或透传 `X-Request-ID`，并同步回写 `X-Trace-ID` 响应头；统一审计会把 `request_id` 一并落库，用于串联前端报错、接口响应与操作日志。
 - **多语言**: `/api/v1/system/i18n/pack` 返回语言包，优先查询 Redis，缓存失效后读取 `system_i18n`。
 - **健康检查**: 平台层提供 `GET /api/v1/health`，默认返回进程状态、数据库连通性与 Redis 状态（未启用时标记为 `disabled`）。
@@ -51,6 +52,7 @@
 | `POST` | `/api/v1/auth/logout` | 是 | 注销当前用户会话，新 auth 域主入口。 |
 | `POST` | `/api/v1/auth/activity` | 是 | 更新当前会话最近活动时间，供空闲超时与锁屏场景复用。 |
 | `GET` | `/api/v1/auth/me` | 是 | 获取当前登录主体信息。 |
+| `PUT` | `/api/v1/auth/me/preferences` | 是 | 更新当前登录主体的平台壳层偏好，仅承载 `theme / language / layoutMode / densityMode`，不混入 `system/iam` 个人资料字段。 |
 | `GET` | `/api/v1/auth/security` | 是 | 获取当前登录账号安全概览，包含当前设备、活跃会话数、最近成功登录时间，以及运行时认证策略快照（密码长度、账号失败阈值、来源失败阈值、锁定时长、空闲超时、可配置安全特性开关）。 |
 | `PUT` | `/api/v1/auth/password` | 是 | 校验旧密码后修改当前登录用户密码，并吊销其他设备会话。 |
 | `GET` | `/api/v1/auth/sessions` | 是 | 获取当前登录账号会话列表，并标识当前会话。 |

@@ -160,6 +160,7 @@ frontend/src/modules/
 | `POST` | `/api/v1/auth/refresh` | 刷新 token |
 | `POST` | `/api/v1/auth/logout` | 注销当前会话 |
 | `GET` | `/api/v1/auth/me` | 获取当前登录主体信息 |
+| `PUT` | `/api/v1/auth/me/preferences` | 更新当前登录主体的平台壳层偏好，归属 `platform` 壳层协同能力 |
 | `GET` | `/api/v1/auth/sessions` | 获取当前账号在线会话，仅返回未吊销且 refresh token 未过期的活跃会话，当前会话优先展示 |
 | `DELETE` | `/api/v1/auth/sessions/:id` | 下线某个会话 |
 | `PUT` | `/api/v1/auth/password` | 修改当前账号密码 |

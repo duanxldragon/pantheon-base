@@ -45,6 +45,12 @@
 - **revoked_at**: 注销或强退时写入，受保护接口会检查会话是否仍有效。
 - **refresh_expires_at**: 会话最长有效期，超过后必须重新登录。
 
+### 3.3.5 用户平台壳层偏好 (`system_user.preference_json`)
+- **领域归属**: 存储载体仍挂在 `system_user`，但语义归属 `platform` 壳层偏好，不属于 `system/iam` 个人资料字段。
+- **承载内容**: 当前只允许 `theme / language / layoutMode / densityMode` 四项。
+- **迁移约束**: 启动迁移会自动把历史 JSON 中的兼容别名（如 `layout / density / lang`）重写为当前规范字段，并清理非法值。
+- **默认值关系**: `system/config` 的公开设置继续提供默认主题和默认语言；一旦当前用户保存了显式偏好，运行时优先使用 `preference_json`。
+
 ### 3.3.4 生成器受管数据源 (`system_generator_datasource`)
 - **领域归属**: `system/config -> generator`。
 - **用途**: 为低代码生成器维护外部数据库的只读连接元数据，支持“按数据源选择表并导入字段”。

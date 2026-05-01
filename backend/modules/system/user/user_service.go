@@ -37,6 +37,9 @@ func (s *UserService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}); err != nil {
 		return err
 	}
+	if err := s.normalizeUserPreferenceJSON(); err != nil {
+		return err
+	}
 	if err := s.releaseDeletedUsernames(); err != nil {
 		return err
 	}
@@ -44,6 +47,44 @@ func (s *UserService) Migrate() error {
 		return err
 	}
 	return s.ensureAdminRoleBinding()
+}
+
+func (s *UserService) normalizeUserPreferenceJSON() error {
+	if s.db == nil {
+		return errors.New("database.not_initialized")
+	}
+
+	type userPreferenceRow struct {
+		ID             uint64 `gorm:"column:id"`
+		PreferenceJSON string `gorm:"column:preference_json"`
+	}
+
+	var rows []userPreferenceRow
+	if err := s.db.Unscoped().
+		Model(&SystemUser{}).
+		Select("id", "preference_json").
+		Where("preference_json <> ''").
+		Find(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		normalized, err := MarshalUserPlatformPreferences(ParseUserPlatformPreferences(row.PreferenceJSON))
+		if err != nil {
+			return err
+		}
+		if normalized == row.PreferenceJSON {
+			continue
+		}
+		if err := s.db.Unscoped().
+			Model(&SystemUser{}).
+			Where("id = ?", row.ID).
+			Update("preference_json", normalized).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 const defaultConfiguredPasswordMinLength = 6
@@ -151,18 +192,19 @@ func (s *UserService) GetProfile(userID uint64) (*UserProfileResp, error) {
 	}
 
 	return &UserProfileResp{
-		ID:        user.ID,
-		Username:  user.Username,
-		Nickname:  user.Nickname,
-		Avatar:    user.Avatar,
-		Email:     user.Email,
-		Phone:     user.Phone,
-		DeptID:    user.DeptID,
-		PostID:    user.PostID,
-		Status:    user.Status,
-		Roles:     roles,
-		Perms:     perms,
-		CreatedAt: formatUserTime(user.CreatedAt),
+		ID:          user.ID,
+		Username:    user.Username,
+		Nickname:    user.Nickname,
+		Avatar:      user.Avatar,
+		Email:       user.Email,
+		Phone:       user.Phone,
+		Preferences: ParseUserPlatformPreferences(user.PreferenceJSON),
+		DeptID:      user.DeptID,
+		PostID:      user.PostID,
+		Status:      user.Status,
+		Roles:       roles,
+		Perms:       perms,
+		CreatedAt:   formatUserTime(user.CreatedAt),
 	}, nil
 }
 

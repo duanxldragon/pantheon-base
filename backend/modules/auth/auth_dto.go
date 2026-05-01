@@ -1,5 +1,7 @@
 package auth
 
+import user "pantheon-platform/backend/modules/system/user"
+
 // LoginReq 登录请求 DTO
 type LoginReq struct {
 	Username string `json:"username" binding:"required"`
@@ -19,14 +21,22 @@ type PasswordUpdateReq struct {
 
 // UserInfoResp 当前登录主体信息 DTO
 type UserInfoResp struct {
-	ID       uint64   `json:"id"`
-	Username string   `json:"username"`
-	Nickname string   `json:"nickname"`
-	Avatar   string   `json:"avatar"`
-	Email    string   `json:"email"`
-	Phone    string   `json:"phone"`
-	Roles    []string `json:"roles"`
-	Perms    []string `json:"perms"`
+	ID          uint64                           `json:"id"`
+	Username    string                           `json:"username"`
+	Nickname    string                           `json:"nickname"`
+	Avatar      string                           `json:"avatar"`
+	Email       string                           `json:"email"`
+	Phone       string                           `json:"phone"`
+	Roles       []string                         `json:"roles"`
+	Perms       []string                         `json:"perms"`
+	Preferences *user.UserPlatformPreferenceResp `json:"preferences,omitempty"`
+}
+
+type UserPlatformPreferenceUpdateReq struct {
+	Theme       string `json:"theme"`
+	Language    string `json:"language"`
+	LayoutMode  string `json:"layoutMode"`
+	DensityMode string `json:"densityMode"`
 }
 
 type ClientInfoResp struct {

@@ -249,6 +249,49 @@ func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 	}
 }
 
+func TestAuthService_UpdateCurrentUserPreferencesReturnsNormalizedPayload(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username:       "preference_user",
+		Password:       string(hash),
+		Status:         1,
+		PreferenceJSON: `{"theme":"emerald","layout":"vertical","lang":"zh-CN"}`,
+	}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+
+	result, err := s.UpdateCurrentUserPreferences(testUser.ID, &UserPlatformPreferenceUpdateReq{
+		Theme:       "slate",
+		Language:    "en-US",
+		LayoutMode:  "horizontal",
+		DensityMode: "compact",
+	})
+	if err != nil {
+		t.Fatalf("update preferences: %v", err)
+	}
+	if result.User == nil || result.User.Preferences == nil {
+		t.Fatalf("expected returned user preferences")
+	}
+	if result.Previous == nil || result.Previous.Theme != "emerald" || result.Previous.LayoutMode != "vertical" || result.Previous.Language != "zh-CN" {
+		t.Fatalf("unexpected previous preferences: %+v", result.Previous)
+	}
+	if result.Current == nil || result.Current.Theme != "slate" || result.Current.Language != "en-US" || result.Current.LayoutMode != "horizontal" || result.Current.DensityMode != "compact" {
+		t.Fatalf("unexpected current preferences: %+v", result.Current)
+	}
+
+	var updated user.SystemUser
+	if err := db.First(&updated, testUser.ID).Error; err != nil {
+		t.Fatalf("reload user: %v", err)
+	}
+	if updated.PreferenceJSON != `{"theme":"slate","language":"en-US","layoutMode":"horizontal","densityMode":"compact"}` {
+		t.Fatalf("unexpected persisted preference json: %s", updated.PreferenceJSON)
+	}
+}
+
 func TestAuthService_CleanupLoginLogsUsesConfiguredRetentionOptions(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)

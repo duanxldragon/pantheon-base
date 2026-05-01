@@ -26,6 +26,7 @@ const koKRFallback = {
   'app.toggleTheme': '테마 전환',
   'app.preference.title': '플랫폼 설정',
   'app.preference.subtitle': '테마, 언어, 내비게이션 모드는 개인 프로필이 아니라 플랫폼 셸에서 유지됩니다.',
+  'app.preference.saveFailed': '플랫폼 설정 저장에 실패하여 직전의 유효한 설정으로 복원했습니다.',
   'app.preference.density': '밀도',
   'app.preference.navigation': '내비게이션',
   'app.preference.navigationMode': '현재 내비게이션 레이아웃',

@@ -58,6 +58,7 @@ const ProfileCenter: React.FC = () => {
         phone: result.phone,
         roles: result.roles,
         perms: result.perms,
+        preferences: result.preferences,
       });
     } catch {
       message.error(t('common.loadFailed'));
@@ -97,6 +98,7 @@ const ProfileCenter: React.FC = () => {
         phone: result.phone,
         roles: result.roles,
         perms: result.perms,
+        preferences: result.preferences,
       });
       message.success(t('common.updateSuccess'));
     } finally {
