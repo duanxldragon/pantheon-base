@@ -8,7 +8,8 @@
 }
 
 .app-shell__sider {
-  background: #f7f8fa;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 4%, #f8fbff) 0%, #f7fafc 100%);
   border-right: 1px solid var(--panel-border);
   box-shadow: none;
 }
@@ -399,7 +400,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 8px 24px;
+  padding: 14px 28px 12px;
   background: rgba(255, 255, 255, 0.9);
   border-bottom: 1px solid var(--panel-border);
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
@@ -459,6 +460,17 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+}
+
+.app-shell__header-title {
+  margin: 2px 0 0 !important;
+  color: var(--text-primary);
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-shell__header-actions {
@@ -1077,33 +1089,30 @@
   font-size: 11px;
 }
 
-.app-shell__header-breadcrumb {
-  display: flex;
-  align-items: center;
+.app-shell__header-breadcrumb,
+.app-shell__header .arco-breadcrumb {
+  display: block;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: var(--text-base);
+  color: var(--text-tertiary);
+  font-size: 11px;
   line-height: 1.4;
 }
 
-.app-shell__header-breadcrumb .arco-breadcrumb-item,
-.app-shell__header-breadcrumb .arco-breadcrumb-item a,
-.app-shell__header-breadcrumb .arco-breadcrumb-item-link {
+.app-shell__header .arco-breadcrumb-item,
+.app-shell__header .arco-breadcrumb-item a,
+.app-shell__header .arco-breadcrumb-item-link {
   color: var(--text-tertiary);
   white-space: nowrap;
   word-break: keep-all;
-  font-size: var(--text-sm);
 }
 
-.app-shell__header-breadcrumb .arco-breadcrumb-item:last-child,
-.app-shell__header-breadcrumb .arco-breadcrumb-item:last-child a {
-  color: var(--text-primary);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  pointer-events: none;
-}}
+.app-shell__header .arco-breadcrumb-item:last-child,
+.app-shell__header .arco-breadcrumb-item:last-child a {
+  color: var(--text-secondary);
+}
 
 .app-shell__tabs {
   display: flex;
@@ -1210,7 +1219,7 @@
 .app-shell__content {
   padding: 24px 28px 0;
   overflow: auto;
-  background: var(--app-bg);
+  background: linear-gradient(180deg, #f7fbfb 0%, #f5faf8 100%);
 }
 
 .app-shell__content-inner {

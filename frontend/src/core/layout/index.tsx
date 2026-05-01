@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Avatar, Breadcrumb, Button, Dropdown, Empty, Input, Layout, Menu, Space, Spin, Tooltip, Typography } from '@arco-design/web-react';
-import { message } from '../../components/feedback/message';
+import { Avatar, Breadcrumb, Button, Dropdown, Empty, Input, Layout, Menu, Message, Space, Spin, Tooltip, Typography } from '@arco-design/web-react';
 import { IconCheck, IconClose, IconLanguage, IconLayout, IconLock, IconMenuFold, IconMenuUnfold, IconNotification, IconPoweroff, IconPushpin, IconSafe, IconSearch, IconSettings, IconUser } from '@arco-design/web-react/icon';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -489,7 +488,7 @@ const BaseLayout: React.FC = () => {
       setLocked(false);
       setUnlockPassword('');
       recordActivity('unlock');
-      message.success(t('app.lock.unlockSuccess'));
+      Message.success(t('app.lock.unlockSuccess'));
     } finally {
       setUnlockLoading(false);
     }
@@ -1076,6 +1075,9 @@ const BaseLayout: React.FC = () => {
                   <Breadcrumb.Item key={`${item.path}-${item.label}`}>{item.label}</Breadcrumb.Item>
                 ))}
               </Breadcrumb>
+              <Typography.Title heading={6} className="app-shell__header-title">
+                {currentPageTitle}
+              </Typography.Title>
             </div>
           </div>
           <Space size={12} className="app-shell__header-actions">

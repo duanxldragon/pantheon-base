@@ -6,7 +6,20 @@
       "Bash(git push *)",
       "Bash(grep -v \":0$\")",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(grep -cP '`[^`]+\\\\.md`' docs/PLATFORM_CONTRACT.md docs/README.md docs/DOCUMENT_GOVERNANCE_CONTRACT.md)",
+      "Bash(git mv *)",
+      "Bash(cat)",
+      "Bash(bash /tmp/fix_links.sh)",
+      "Bash(bash /tmp/fix_readme.sh)",
+      "Skill(design-consultation)",
+      "Skill(design-review)",
+      "Bash(npx playwright *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)",
+      "Bash(git revert *)",
+      "Bash(git checkout *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
