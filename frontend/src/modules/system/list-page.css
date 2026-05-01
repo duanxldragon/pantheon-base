@@ -483,7 +483,7 @@
 
 .permission-workbench__overview-card {
   border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: none;
 }
 
@@ -645,7 +645,7 @@
 
 .role-permission-tree-panel {
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
   padding: 10px 12px;
 }
@@ -1171,7 +1171,7 @@
 
 .menu-card-view__card {
   border: 1px solid var(--panel-border);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
 }
 
