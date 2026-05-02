@@ -6,7 +6,7 @@ import (
 
 	"pantheon-platform/backend/internal/middleware"
 	auditmod "pantheon-platform/backend/modules/system/audit"
-	user "pantheon-platform/backend/modules/system/user"
+	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/testmysql"
 
 	"golang.org/x/crypto/bcrypt"

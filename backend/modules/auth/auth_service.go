@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	user "pantheon-platform/backend/modules/system/user"
+	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/authsession"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	dept "pantheon-platform/backend/modules/system/dept"
+	dept "pantheon-platform/backend/modules/system/org/dept"
 	"pantheon-platform/backend/pkg/authsession"
 
 	"gorm.io/gorm"

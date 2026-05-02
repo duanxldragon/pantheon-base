@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	user "pantheon-platform/backend/modules/system/user"
+	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/impexp"
 
