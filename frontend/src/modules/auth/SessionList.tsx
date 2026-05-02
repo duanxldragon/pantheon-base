@@ -42,6 +42,7 @@ import {
   PageSplitLayout,
   TABLE_ACTION_COLUMN_WIDTH,
   useGovernanceRail,
+  withTableColumnPriority,
 } from '../../components';
 import { formatClientSummary } from './clientInfo';
 import SessionDetailModal from './SessionDetailModal';
@@ -248,22 +249,33 @@ const SessionList: React.FC = () => {
       title: t('auth.session.userAgent'),
       dataIndex: 'device',
       width: 260,
-      render: (_: unknown, row: AdminSessionRow) => (
-        <Space direction="vertical" size={2}>
-          <span className="auth-device-summary">{formatClientSummary(row)}</span>
-          {row.userAgent ? (
-            <span className="auth-device-summary__meta">{row.userAgent}</span>
-          ) : null}
-        </Space>
-      ),
+      ...withTableColumnPriority({
+        render: (_: unknown, row: AdminSessionRow) => (
+          <Space direction="vertical" size={2}>
+            <span className="auth-device-summary">{formatClientSummary(row)}</span>
+            {row.userAgent ? (
+              <span className="auth-device-summary__meta">{row.userAgent}</span>
+            ) : null}
+          </Space>
+        ),
+      }, 'low'),
     },
     {
       title: t('auth.session.lastActive'),
       dataIndex: 'lastActivityAt',
       width: 150,
-      render: (_: unknown, row: AdminSessionRow) => formatDateTime(row.lastActivityAt || row.lastRefreshAt),
+      ...withTableColumnPriority({
+        render: (_: unknown, row: AdminSessionRow) => formatDateTime(row.lastActivityAt || row.lastRefreshAt),
+      }, 'medium'),
     },
-    { title: t('auth.session.refreshExpiresAt'), dataIndex: 'refreshExpiresAt', width: 160, render: (value: string) => formatDateTime(value) },
+    { 
+      title: t('auth.session.refreshExpiresAt'), 
+      dataIndex: 'refreshExpiresAt', 
+      width: 160, 
+      ...withTableColumnPriority({
+        render: (value: string) => formatDateTime(value),
+      }, 'low'),
+    },
     {
       title: t('auth.session.status'),
       dataIndex: 'revokedAt',

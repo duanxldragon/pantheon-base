@@ -7,11 +7,11 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
-  --radius-overlay: var(--radius-md);
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-overlay: 4px;
   --radius-control: var(--radius-xs);
   --radius-action: var(--radius-sm);
   --radius-pill: 999px;
@@ -334,7 +334,7 @@ a {
 }
 
 .page-panel {
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);
@@ -383,6 +383,13 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--shell-page-main-gap);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.page-split-layout {
+  min-width: 0;
+  width: 100%;
 }
 
 .page-side-column {
@@ -519,7 +526,7 @@ a {
 
 .system-page-hero {
   overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 3%, #ffffff) 0%, #ffffff 100%);
+  background: var(--panel-bg-solid);
 }
 
 .system-page-hero .arco-card-body {
@@ -576,9 +583,9 @@ a {
 
 .system-page-kpi {
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
+  border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 100%);
+  background: var(--panel-bg-solid);
 }
 
 .system-page-kpi__label {
@@ -660,6 +667,11 @@ a {
   background: transparent;
   border: none;
   box-shadow: none;
+  z-index: 2500 !important;
+}
+
+.app-drawer {
+  z-index: 2500 !important;
 }
 
 .app-dialog .arco-modal-header {
@@ -667,16 +679,18 @@ a {
   padding-left: 24px;
   padding-right: 24px;
   background: var(--panel-bg-solid);
+  border-bottom: 1px solid var(--panel-border-strong);
 }
 
 .app-dialog .arco-modal-body {
   padding: 20px 24px 24px;
-  background: var(--panel-bg-solid);
+  background: var(--panel-muted);
 }
 
 .app-dialog .arco-modal-footer {
   padding: 16px 24px 20px;
   background: var(--panel-bg-solid);
+  border-top: 1px solid var(--panel-border-strong);
 }
 
 .app-dialog .arco-modal-title {
@@ -695,7 +709,7 @@ a {
 
 .app-dialog .arco-modal-content {
   overflow: hidden;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-overlay);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-strong);
@@ -709,7 +723,7 @@ a {
   min-height: 64px;
   padding-left: 24px;
   padding-right: 24px;
-  border-bottom: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border-strong);
   background: var(--panel-bg-solid);
 }
 
@@ -726,7 +740,7 @@ a {
 
 .app-drawer .arco-drawer-footer {
   padding: 16px 24px 20px;
-  border-top: 1px solid var(--panel-border);
+  border-top: 1px solid var(--panel-border-strong);
   background: var(--panel-bg-solid);
 }
 
@@ -740,7 +754,7 @@ a {
 
 .app-drawer .arco-drawer-content {
   overflow: hidden;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-overlay);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-strong);
@@ -1080,8 +1094,8 @@ a {
 
 .arco-modal-content,
 .arco-drawer-content {
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--panel-shadow);
+  border: none;
+  box-shadow: none;
 }
 
 .arco-message {
@@ -1199,7 +1213,7 @@ a {
 .arco-table-border .arco-table-container,
 .arco-table-th,
 .arco-table-td {
-  border-color: var(--panel-border) !important;
+  border-color: var(--panel-border-strong) !important;
 }
 
 .arco-table-th {
@@ -1215,7 +1229,7 @@ a {
 
 .arco-tabs-header-nav::before,
 .arco-tabs-header-nav::after {
-  border-bottom-color: var(--panel-border) !important;
+  border-bottom-color: var(--panel-border-strong) !important;
 }
 
 .arco-tabs-tab {
@@ -1284,7 +1298,7 @@ a {
   padding: 30px 22px;
   border: 1px dashed color-mix(in srgb, var(--brand-primary) 14%, var(--panel-border));
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 2%, #ffffff) 0%, #ffffff 100%);
+  background: var(--panel-muted);
 }
 
 .page-empty .arco-empty-image {
@@ -1301,7 +1315,7 @@ a {
   margin: 0 auto;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 2%, #ffffff) 0%, #ffffff 100%);
+  background: var(--panel-muted);
   box-shadow: var(--panel-shadow-soft);
 }
 

@@ -81,6 +81,7 @@ const LoginPage: React.FC = () => {
       if (import.meta.env.DEV && (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))) {
         console.error(error);
       }
+      message.error(t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }

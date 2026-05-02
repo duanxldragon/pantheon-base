@@ -19,7 +19,11 @@
       "Bash(npx tsx *)",
       "Bash(git revert *)",
       "Bash(git checkout *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:5173/src/modules/auth/SessionList.tsx)",
+      "Bash(npx vite *)"
     ]
   }
 }

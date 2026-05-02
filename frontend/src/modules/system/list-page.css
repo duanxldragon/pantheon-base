@@ -5,7 +5,6 @@
 }
 
 .system-list__table .arco-table-container {
-  border-radius: 0;
   background: transparent;
 }
 
@@ -511,7 +510,7 @@
 .dept-governance-task-card__intro {
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-primary) 2%, #ffffff);
 }
 
@@ -646,7 +645,7 @@
 .role-permission-tree-panel {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
+  background: var(--panel-bg-solid);
   padding: 10px 12px;
 }
 
@@ -728,7 +727,7 @@
 
 .dict-workbench__summary-card--active {
   border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 8%, #fff) 0%, #fff 100%);
+  background: color-mix(in srgb, var(--brand-primary) 4%, #fff);
 }
 
 .dict-workbench__context-card .arco-card-body {
@@ -772,7 +771,7 @@
   padding: 12px 14px;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
+  background: var(--panel-bg-solid);
 }
 
 .dict-usage__head {
@@ -817,7 +816,7 @@
 
 .org-structure__summary-card--active {
   border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 8%, #fff) 0%, #fff 100%);
+  background: color-mix(in srgb, var(--brand-primary) 4%, #fff);
 }
 
 .org-structure__notice .arco-card-body {
@@ -878,7 +877,7 @@
   cursor: pointer;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
+  background: var(--panel-bg-solid);
   padding: 14px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
@@ -944,7 +943,7 @@
 
 .org-chart__post {
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: #fff;
   padding: 10px;
 }
@@ -970,7 +969,7 @@
 
 .org-chart__empty-line {
   border: 1px dashed var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   font-size: 12px;
   padding: 10px;
@@ -1000,7 +999,7 @@
   display: grid;
   gap: 4px;
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--panel-muted);
   padding: 10px;
 }
@@ -1066,7 +1065,7 @@
   justify-content: space-between;
   gap: 10px;
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--panel-muted);
   padding: 9px 10px;
 }
@@ -1094,7 +1093,7 @@
 }
 
 .org-structure__rule {
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-primary) 7%, #fff);
   padding: 10px 12px;
 }
@@ -1124,7 +1123,7 @@
   padding: 14px 16px;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
+  background: var(--panel-bg-solid);
 }
 
 .menu-list-view__content {
@@ -1172,7 +1171,7 @@
 .menu-card-view__card {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, #fff 0%, var(--panel-muted) 100%);
+  background: var(--panel-bg-solid);
 }
 
 .menu-card-view__card .arco-card-body {

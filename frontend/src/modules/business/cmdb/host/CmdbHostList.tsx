@@ -1,13 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Typography } from '@arco-design/web-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Card, Form, Grid, Input, Space, Typography } from '@arco-design/web-react';
+import { IconPlus, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import {
   getCmdbHostList,
   type CmdbHostListQuery,
   type CmdbHostListRow,
 } from './api';
-import AppTable from '../../../../components/data-display/AppTable';
-import { PageContainer, PageError, PageLoading } from '../../../../components';
+import { AppTable, FilterPanel, ListHeaderActions, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../../components';
+
+const Row = Grid.Row;
+const Col = Grid.Col;
+const FormItem = Form.Item;
 
 const emptyQuery: CmdbHostListQuery = {
   hostCode: '',
@@ -30,6 +34,7 @@ const CmdbHostList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [query, setQuery] = useState<CmdbHostListQuery>(emptyQuery);
+  const [queryForm] = Form.useForm<CmdbHostListQuery>();
   const { t } = useTranslation();
 
   const loadData = useCallback(async (nextQuery: CmdbHostListQuery = query) => {
@@ -50,6 +55,19 @@ const CmdbHostList: React.FC = () => {
     void loadData();
   }, [loadData]);
 
+  const handleSearch = () => {
+    const values = queryForm.getFieldsValue();
+    const nextQuery = { ...query, ...values, page: 1 };
+    setQuery(nextQuery);
+    void loadData(nextQuery);
+  };
+
+  const handleReset = () => {
+    queryForm.resetFields();
+    setQuery(emptyQuery);
+    void loadData(emptyQuery);
+  };
+
   if (loading && data.length === 0) {
     return <PageLoading />;
   }
@@ -60,16 +78,61 @@ const CmdbHostList: React.FC = () => {
 
   return (
     <PageContainer>
-      <Card bordered={false}>
-        <Typography.Title heading={5}>{t('business.cmdb.host.title')}</Typography.Title>
+      <PageHeader
+        title={t('business.cmdb.host.title')}
+        breadcrumb={{
+          items: [
+            { title: t('app.home'), path: '/' },
+            { title: t('business.cmdb.host.title') },
+          ],
+        }}
+      />
+      <FilterPanel>
+        <Form form={queryForm} layout="vertical">
+          <Row gutter={16}>
+            <Col span={6}>
+              <FormItem label={t('business.cmdb.host.field.hostCode.label')} field="hostCode">
+                <Input placeholder={t('business.cmdb.host.field.hostCode.label')} />
+              </FormItem>
+            </Col>
+            <Col span={6}>
+              <FormItem label={t('business.cmdb.host.field.hostname.label')} field="hostname">
+                <Input placeholder={t('business.cmdb.host.field.hostname.label')} />
+              </FormItem>
+            </Col>
+            <Col span={12} style={{ textAlign: 'right', marginTop: 24 }}>
+              <Space>
+                <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
+                  {t('common.search')}
+                </Button>
+                <Button onClick={handleReset}>
+                  {t('common.reset')}
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Form>
+      </FilterPanel>
+
+      <Card className="page-panel">
+        <ListHeaderActions
+          primary={
+            <Button type="primary" icon={<IconPlus />}>
+              {t('common.add')}
+            </Button>
+          }
+        />
         <AppTable
+          className="system-list__table"
           data={data}
           rowKey="id"
+          loading={loading}
           pagination={{
             current: query.page,
             pageSize: query.pageSize,
             total,
             showTotal: true,
+            sizeCanChange: true,
             onChange: (page, pageSize) => {
               const nextQuery = { ...query, page, pageSize };
               setQuery(nextQuery);
@@ -78,101 +141,42 @@ const CmdbHostList: React.FC = () => {
           }}
           columns={[
             {
-      title: t('business.cmdb.host.field.hostCode.label'),
-      dataIndex: 'hostCode',
-    },
+              title: t('business.cmdb.host.field.hostCode.label'),
+              dataIndex: 'hostCode',
+              fixed: 'left',
+              width: 140,
+            },
             {
-      title: t('business.cmdb.host.field.hostname.label'),
-      dataIndex: 'hostname',
-    },
+              title: t('business.cmdb.host.field.hostname.label'),
+              dataIndex: 'hostname',
+              width: 180,
+            },
             {
-      title: t('business.cmdb.host.field.displayName.label'),
-      dataIndex: 'displayName',
-    },
+              title: t('business.cmdb.host.field.ipAddress.label'),
+              dataIndex: 'ipAddress',
+              width: 140,
+            },
             {
-      title: t('business.cmdb.host.field.ipAddress.label'),
-      dataIndex: 'ipAddress',
-    },
+              title: t('business.cmdb.host.field.osName.label'),
+              dataIndex: 'osName',
+              width: 160,
+            },
             {
-      title: t('business.cmdb.host.field.sshPort.label'),
-      dataIndex: 'sshPort',
-    },
+              title: t('business.cmdb.host.field.status.label'),
+              dataIndex: 'status',
+              width: 100,
+            },
             {
-      title: t('business.cmdb.host.field.osFamily.label'),
-      dataIndex: 'osFamily',
-    },
-            {
-      title: t('business.cmdb.host.field.osName.label'),
-      dataIndex: 'osName',
-    },
-            {
-      title: t('business.cmdb.host.field.kernelVersion.label'),
-      dataIndex: 'kernelVersion',
-    },
-            {
-      title: t('business.cmdb.host.field.arch.label'),
-      dataIndex: 'arch',
-    },
-            {
-      title: t('business.cmdb.host.field.environment.label'),
-      dataIndex: 'environment',
-    },
-            {
-      title: t('business.cmdb.host.field.status.label'),
-      dataIndex: 'status',
-    },
-            {
-      title: t('business.cmdb.host.field.lifecycleStatus.label'),
-      dataIndex: 'lifecycleStatus',
-    },
-            {
-      title: t('business.cmdb.host.field.provider.label'),
-      dataIndex: 'provider',
-    },
-            {
-      title: t('business.cmdb.host.field.regionCode.label'),
-      dataIndex: 'regionCode',
-    },
-            {
-      title: t('business.cmdb.host.field.idcCode.label'),
-      dataIndex: 'idcCode',
-    },
-            {
-      title: t('business.cmdb.host.field.clusterName.label'),
-      dataIndex: 'clusterName',
-    },
-            {
-      title: t('business.cmdb.host.field.ownerUserId.label'),
-      dataIndex: 'ownerUserId',
-    },
-            {
-      title: t('business.cmdb.host.field.ownerName.label'),
-      dataIndex: 'ownerName',
-    },
-            {
-      title: t('business.cmdb.host.field.maintainerTeam.label'),
-      dataIndex: 'maintainerTeam',
-    },
-            {
-      title: t('business.cmdb.host.field.purpose.label'),
-      dataIndex: 'purpose',
-    },
-            {
-      title: t('business.cmdb.host.field.lastCheckInAt.label'),
-      dataIndex: 'lastCheckInAt',
-    },
-            {
-      title: t('business.cmdb.host.field.lastInventoryAt.label'),
-      dataIndex: 'lastInventoryAt',
-    },
-            {
-      title: t('business.cmdb.host.field.lastOperatedAt.label'),
-      dataIndex: 'lastOperatedAt',
-    },
-            {
-      title: t('business.cmdb.host.field.remark.label'),
-      dataIndex: 'remark',
-    },
+              title: t('common.operations'),
+              fixed: 'right',
+              width: TABLE_ACTION_COLUMN_WIDTH.NORMAL,
+              render: () => (
+                <Space>
+                  <Button type="text" size="small">{t('common.edit')}</Button>
+                  <Button type="text" size="small" status="danger">{t('common.delete')}</Button>
+                </Space>
+              ),
+            },
           ]}
         />
       </Card>
@@ -180,5 +184,4 @@ const CmdbHostList: React.FC = () => {
   );
 };
 
-export default CmdbHostList;
-      
+export default withTableColumnPriority(CmdbHostList);

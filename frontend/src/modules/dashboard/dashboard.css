@@ -45,8 +45,7 @@
 .dashboard-hero-card {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 3%, #ffffff) 0%, #ffffff 100%);
+  background: var(--panel-bg-solid);
 }
 
 .dashboard-hero-card__top {
