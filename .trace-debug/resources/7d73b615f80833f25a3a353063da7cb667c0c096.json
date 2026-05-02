@@ -1,1 +1,0 @@
-{"code":200,"data":[{"id":"current","name":"当前平台库","driver":"mysql","databaseName":"pantheon","status":1,"readonlyScope":"metadata_only","isCurrent":true}],"message":"success"}
