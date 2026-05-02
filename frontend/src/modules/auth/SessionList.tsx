@@ -346,7 +346,6 @@ const SessionList: React.FC = () => {
               />
             </GovernanceRailPanel>
           ) : null}
-          )}
         >
             <FilterPanel>
               <Form form={queryForm} layout="vertical">
