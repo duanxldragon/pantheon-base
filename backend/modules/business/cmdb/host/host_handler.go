@@ -1,9 +1,9 @@
 package host
 
 import (
+	"github.com/gin-gonic/gin"
 	"pantheon-platform/backend/pkg/common"
 	"strconv"
-	"github.com/gin-gonic/gin"
 )
 
 type CmdbHostHandler struct {

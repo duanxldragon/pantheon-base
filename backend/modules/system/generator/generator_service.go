@@ -482,12 +482,16 @@ func mapColumnToField(column columnRow) ModuleFieldResp {
 	required := strings.EqualFold(column.IsNullable, "NO") && !strings.Contains(strings.ToLower(column.Extra), "auto_increment")
 	unique := column.ColumnKey == "UNI"
 	label := humanizeLabel(column.ColumnName, column.ColumnComment)
+	labelEn := humanizeEnglishLabel(column.ColumnName)
 	placeholder := ""
+	placeholderEn := ""
 	if fieldType == "string" || fieldType == "text" {
 		placeholder = fmt.Sprintf("请输入%s", label)
+		placeholderEn = fmt.Sprintf("Enter %s", strings.ToLower(labelEn))
 	}
 	if fieldType == "enum" {
 		placeholder = fmt.Sprintf("请选择%s", label)
+		placeholderEn = fmt.Sprintf("Select %s", strings.ToLower(labelEn))
 	}
 
 	validation := &FieldValidationResp{
@@ -508,16 +512,16 @@ func mapColumnToField(column columnRow) ModuleFieldResp {
 		Name:          toCamel(column.ColumnName),
 		Type:          fieldType,
 		Label:         label,
-		LabelEn:       label,
+		LabelEn:       labelEn,
 		Required:      required,
 		Searchable:    shouldFieldBeSearchable(column.ColumnName, fieldType),
 		Sortable:      fieldType != "text" && fieldType != "relation",
 		VisibleInList: fieldType != "text",
 		VisibleInForm: true,
 		Placeholder:   placeholder,
-		PlaceholderEn: placeholder,
+		PlaceholderEn: placeholderEn,
 		HelpText:      strings.TrimSpace(column.ColumnComment),
-		HelpTextEn:    strings.TrimSpace(column.ColumnComment),
+		HelpTextEn:    "",
 		DictCode:      dictCode,
 		EnumOptions:   enumOptions,
 		Validation:    validation,
@@ -560,15 +564,15 @@ func inferConventionalEnumField(columnName string) (string, []EnumOptionResp, bo
 	switch columnName {
 	case "environment":
 		return "environment", []EnumOptionResp{
-			{Value: "dev", Label: "dev"},
-			{Value: "test", Label: "test"},
-			{Value: "staging", Label: "staging"},
-			{Value: "prod", Label: "prod"},
+			{Value: "dev", Label: "开发", LabelEn: "Development"},
+			{Value: "test", Label: "测试", LabelEn: "Test"},
+			{Value: "staging", Label: "预发", LabelEn: "Staging"},
+			{Value: "prod", Label: "生产", LabelEn: "Production"},
 		}, true
 	case "status":
 		return "status", []EnumOptionResp{
-			{Value: "active", Label: "active"},
-			{Value: "inactive", Label: "inactive"},
+			{Value: "active", Label: "启用", LabelEn: "Active"},
+			{Value: "inactive", Label: "停用", LabelEn: "Inactive"},
 		}, true
 	default:
 		return "", nil, false
@@ -590,8 +594,9 @@ func parseEnumOptions(columnType string) []EnumOptionResp {
 			continue
 		}
 		items = append(items, EnumOptionResp{
-			Value: value,
-			Label: strings.ReplaceAll(value, "_", " "),
+			Value:   value,
+			Label:   strings.ReplaceAll(value, "_", " "),
+			LabelEn: humanizeEnglishLabel(value),
 		})
 	}
 	return items
@@ -635,11 +640,38 @@ func humanizeLabel(name string, comment string) string {
 	if trimmed := strings.TrimSpace(comment); trimmed != "" {
 		return trimmed
 	}
+	if label, ok := conventionalChineseFieldLabels[strings.ToLower(strings.TrimSpace(name))]; ok {
+		return label
+	}
 	normalized := strings.ReplaceAll(strings.TrimSpace(name), "_", " ")
 	if normalized == "" {
 		return name
 	}
 	runes := []rune(normalized)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
+}
+
+func humanizeEnglishLabel(name string) string {
+	if label, ok := conventionalEnglishFieldLabels[strings.ToLower(strings.TrimSpace(name))]; ok {
+		return label
+	}
+	normalized := strings.NewReplacer("_", " ", "-", " ").Replace(strings.TrimSpace(name))
+	if normalized == "" {
+		return name
+	}
+	words := strings.Fields(normalized)
+	for index, word := range words {
+		if strings.ToUpper(word) == word && len(word) <= 4 {
+			continue
+		}
+		words[index] = strings.ToLower(word)
+	}
+	result := strings.Join(words, " ")
+	runes := []rune(result)
+	if len(runes) == 0 {
+		return result
+	}
 	runes[0] = unicode.ToUpper(runes[0])
 	return string(runes)
 }
@@ -663,6 +695,44 @@ func toCamel(value string) string {
 		builder.WriteString(string(runes))
 	}
 	return builder.String()
+}
+
+var conventionalChineseFieldLabels = map[string]string{
+	"arch":             "架构",
+	"cluster_name":     "集群名称",
+	"code":             "编码",
+	"display_name":     "显示名称",
+	"email":            "邮箱",
+	"environment":      "环境",
+	"host_code":        "主机编码",
+	"hostname":         "主机名",
+	"idc_code":         "机房编码",
+	"ip_address":       "IP 地址",
+	"kernel_version":   "内核版本",
+	"lifecycle_status": "生命周期状态",
+	"maintainer_team":  "维护团队",
+	"name":             "名称",
+	"os_family":        "系统家族",
+	"os_name":          "操作系统",
+	"owner_name":       "负责人",
+	"owner_user_id":    "负责人用户 ID",
+	"phone":            "手机号",
+	"provider":         "云厂商",
+	"purpose":          "用途",
+	"region_code":      "区域编码",
+	"remark":           "备注",
+	"sort":             "排序",
+	"ssh_port":         "SSH 端口",
+	"status":           "状态",
+}
+
+var conventionalEnglishFieldLabels = map[string]string{
+	"idc_code":      "IDC code",
+	"ip_address":    "IP address",
+	"os_family":     "OS family",
+	"os_name":       "OS name",
+	"owner_user_id": "Owner user ID",
+	"ssh_port":      "SSH port",
 }
 
 func shouldFieldBeSearchable(name string, fieldType string) bool {

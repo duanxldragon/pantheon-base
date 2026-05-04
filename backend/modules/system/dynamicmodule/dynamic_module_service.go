@@ -713,6 +713,9 @@ func (s *DynamicModuleService) RebuildGeneratedRegistries() error {
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return errors.New("workspace.not_found")
 	}
+	if _, err := s.syncGeneratedModuleRegistrations(); err != nil {
+		return err
+	}
 	refs, err := s.listGeneratedModuleRefs()
 	if err != nil {
 		return err
@@ -854,7 +857,7 @@ func (s *DynamicModuleService) buildGeneratedModuleSummary(req *scaffold.Registe
 			"backend_component_registry",
 			"pass",
 			"module.generate.verify.backend_component_registry_updated",
-			filepath.Join("backend", "modules", "system", "menu", "generated_component_registry.go"),
+			filepath.Join("backend", "modules", "system", "iam", "menu", "generated_component_registry.go"),
 			componentKey,
 		),
 		s.verifyParentMenu(parentMenuPath, parentMenuSource, parentMenuExists),

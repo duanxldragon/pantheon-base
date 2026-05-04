@@ -32,6 +32,14 @@ export type PageActionKey =
 
 export type PageActionTemplate = 'standard' | 'masterData' | 'lookup';
 
+export type BusinessTableRole = 'main' | 'detail' | 'relation' | 'dictionary';
+
+export type GeneratorTemplateVersion = 'v1';
+
+export type DataScopeMode = 'none' | 'owner' | 'dept' | 'tenant' | 'custom';
+
+export type ModuleRelationType = 'oneToMany' | 'manyToMany' | 'lookup';
+
 export type FieldTemplateKey =
   | 'none'
   | 'code'
@@ -121,6 +129,13 @@ export interface I18nConfig {
 }
 
 export interface ModuleMetadata {
+  businessContext?: string;
+  businessContextTitle?: string;
+  businessContextTitleEn?: string;
+  tableRole?: BusinessTableRole;
+  primaryTable?: string;
+  relationFromField?: string;
+  relationToField?: string;
   boundedContext?: string;
   owner?: string;
   summary?: string;
@@ -130,8 +145,24 @@ export interface ModuleMetadata {
   sourceTable?: string;
 }
 
+export interface ModuleDependency {
+  module: string;
+  required?: boolean;
+  reason?: string;
+}
+
+export interface ModuleRelation {
+  name: string;
+  type: ModuleRelationType;
+  targetModule: string;
+  localField: string;
+  targetField: string;
+  junctionTable?: string;
+}
+
 export interface ModuleSchema {
   name: string;
+  templateVersion?: GeneratorTemplateVersion;
   displayName: string;
   displayNameEn?: string;
   description?: string;
@@ -140,6 +171,9 @@ export interface ModuleSchema {
   templateLevel?: TemplateLevel;
   pageActionTemplate?: PageActionTemplate;
   pageActions?: PageActionKey[];
+  dependencies?: ModuleDependency[];
+  relations?: ModuleRelation[];
+  dataScopeMode?: DataScopeMode;
   metadata?: ModuleMetadata;
   model: {
     tableName: string;
@@ -167,6 +201,22 @@ export interface PageActionTemplateDefinition {
   labelKey: string;
   descriptionKey: string;
   actions: PageActionKey[];
+}
+
+export interface GeneratorCompletenessIssue {
+  code: string;
+  level: 'error' | 'warn';
+  messageKey: string;
+  detail?: string;
+}
+
+export interface GeneratorMenuPreviewNode {
+  key: string;
+  titleKey: string;
+  path?: string;
+  type: MenuType;
+  module?: string;
+  children: GeneratorMenuPreviewNode[];
 }
 
 type TemplateLocale = 'zh-CN' | 'en-US';
@@ -464,6 +514,11 @@ export function normalizeModulePath(value?: string): string {
   return splitModuleSegments(String(value || '')).join('/');
 }
 
+export function normalizeBusinessContext(value?: string): string {
+  const segments = splitModuleSegments(String(value || ''));
+  return segments[0] || '';
+}
+
 export function isValidModulePath(value?: string, allowNested = true): boolean {
   const segments = splitModuleSegments(String(value || ''));
   if (segments.length === 0) {
@@ -519,6 +574,29 @@ export function buildRouteName(scope: ModuleScope, name: string): string {
 
 export function buildTitleKey(scope: ModuleScope, name: string): string {
   return `${buildModuleNamespace(scope, name)}.title`;
+}
+
+export function buildMenuGroupTitleKey(scope: ModuleScope, segments: string[]): string {
+  return `${scope}.${segments.join('.')}.title`;
+}
+
+export function inferMenuGroupDisplayName(segment: string): string {
+  const normalized = segment.trim();
+  if (!normalized) {
+    return '';
+  }
+  if (normalized.length <= 4) {
+    return normalized.toUpperCase();
+  }
+  return normalized
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((item) => item.charAt(0).toUpperCase() + item.slice(1))
+    .join(' ');
+}
+
+export function inferBusinessContextFromName(name: string): string {
+  return splitModuleSegments(name)[0] || '';
 }
 
 export function buildFieldLabelKey(scope: ModuleScope, name: string, fieldName: string): string {
@@ -609,21 +687,50 @@ export function normalizeFields(fields: ModuleField[]): ModuleField[] {
   return fields.map(normalizeField);
 }
 
+export function getTableRole(schema: Pick<ModuleSchema, 'metadata'>): BusinessTableRole {
+  return schema.metadata?.tableRole ?? 'main';
+}
+
+export function shouldGenerateNavigation(schema: Pick<ModuleSchema, 'metadata'>): boolean {
+  return getTableRole(schema) !== 'relation';
+}
+
 export function generateDefaultMenus(schema: ModuleSchema): MenuSeedConfig[] {
+  if (!shouldGenerateNavigation(schema)) {
+    return [];
+  }
   const { scope, name } = schema;
+  const segments = splitModuleSegments(name);
   const modelName = inferModelName(schema);
   const titleKey = buildTitleKey(scope, name);
   const routePath = buildRoutePath(scope, name);
   const routeName = buildRouteName(scope, name);
   const moduleNamespace = buildModuleNamespace(scope, name);
   const permissionPrefix = buildPermissionPrefix(scope, name);
-  const menuKey = splitModuleSegments(name).join('-');
+  const menuKey = segments.join('-');
   const actions = getPageActions(schema).filter((action) => action !== 'detail');
+  const groupMenus: MenuSeedConfig[] = segments.slice(0, -1).map((_, index) => {
+    const groupSegments = segments.slice(0, index + 1);
+    const groupKey = groupSegments.join('-');
+    const parentSegments = groupSegments.slice(0, -1);
+    return {
+      key: groupKey,
+      parentKey: parentSegments.length > 0 ? parentSegments.join('-') : scope,
+      titleKey: buildMenuGroupTitleKey(scope, groupSegments),
+      path: `/${scope}/${groupSegments.join('/')}`,
+      type: 'M',
+      icon: 'apps',
+      routeName: `${scope}-${groupSegments.join('-')}`,
+      module: `${scope}.${groupSegments.join('.')}`,
+      sort: 10,
+    };
+  });
 
   return [
+    ...groupMenus,
     {
       key: menuKey,
-      parentKey: scope,
+      parentKey: segments.length > 1 ? segments.slice(0, -1).join('-') : scope,
       titleKey,
       path: routePath,
       component: buildComponentKey(scope, name, modelName),
@@ -646,6 +753,9 @@ export function generateDefaultMenus(schema: ModuleSchema): MenuSeedConfig[] {
 }
 
 export function generateDefaultPermissions(schema: ModuleSchema): PermissionConfig[] {
+  if (!shouldGenerateNavigation(schema)) {
+    return [];
+  }
   const { scope, name } = schema;
   const permissionPrefix = buildPermissionPrefix(scope, name);
   const moduleNamespace = buildModuleNamespace(scope, name);
@@ -662,4 +772,125 @@ export function generateDefaultPermissions(schema: ModuleSchema): PermissionConf
         module: moduleNamespace,
       })),
   ];
+}
+
+export function buildMenuPreview(schema: Pick<ModuleSchema, 'menus'>): GeneratorMenuPreviewNode[] {
+  const nodes = new Map<string, GeneratorMenuPreviewNode>();
+  const roots: GeneratorMenuPreviewNode[] = [];
+
+  for (const menu of schema.menus) {
+    nodes.set(menu.key, {
+      key: menu.key,
+      titleKey: menu.titleKey,
+      path: menu.path,
+      type: menu.type,
+      module: menu.module,
+      children: [],
+    });
+  }
+
+  for (const menu of schema.menus) {
+    const node = nodes.get(menu.key);
+    if (!node) {
+      continue;
+    }
+    const parent = menu.parentKey ? nodes.get(menu.parentKey) : undefined;
+    if (parent) {
+      parent.children.push(node);
+      continue;
+    }
+    roots.push(node);
+  }
+
+  return roots;
+}
+
+export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCompletenessIssue[] {
+  const issues: GeneratorCompletenessIssue[] = [];
+  const segments = splitModuleSegments(schema.name);
+  const zh = schema.i18n.translations.zh;
+  const en = schema.i18n.translations.en;
+  const requiredKeys = new Set<string>();
+
+  if (schema.scope === 'business' && segments.length > 0) {
+    const expectedContext = segments[0];
+    if (!schema.metadata?.businessContext) {
+      issues.push({
+        code: 'business_context_missing',
+        level: 'warn',
+        messageKey: 'generator.validation.businessContextMissing',
+        detail: expectedContext,
+      });
+    }
+  }
+
+  if (getTableRole(schema) === 'relation' && schema.menus.length > 0) {
+    issues.push({
+      code: 'relation_table_has_menu',
+      level: 'error',
+      messageKey: 'generator.validation.relationTableHasMenu',
+      detail: schema.name,
+    });
+  }
+
+  for (const dependency of schema.dependencies ?? []) {
+    if (!isValidScopedModulePath('business', dependency.module) && !isValidScopedModulePath('system', dependency.module)) {
+      issues.push({
+        code: 'dependency_invalid',
+        level: 'error',
+        messageKey: 'generator.validation.dependencyInvalid',
+        detail: dependency.module,
+      });
+    }
+  }
+
+  for (const relation of schema.relations ?? []) {
+    if (!['oneToMany', 'manyToMany', 'lookup'].includes(relation.type)) {
+      issues.push({
+        code: 'relation_type_invalid',
+        level: 'error',
+        messageKey: 'generator.validation.relationTypeInvalid',
+        detail: relation.type,
+      });
+    }
+    if (!relation.name || !relation.targetModule || !relation.localField || !relation.targetField) {
+      issues.push({
+        code: 'relation_incomplete',
+        level: 'error',
+        messageKey: 'generator.validation.relationIncomplete',
+        detail: relation.name || schema.name,
+      });
+    }
+  }
+
+  for (const menu of schema.menus) {
+    requiredKeys.add(menu.titleKey);
+  }
+  requiredKeys.add(buildTitleKey(schema.scope, schema.name));
+  for (const field of schema.model.fields) {
+    requiredKeys.add(buildFieldLabelKey(schema.scope, schema.name, field.name));
+    if (field.placeholder || field.placeholderEn) {
+      requiredKeys.add(buildFieldPlaceholderKey(schema.scope, schema.name, field.name));
+    }
+    for (const option of field.enumOptions ?? []) {
+      requiredKeys.add(buildEnumOptionKey(schema.scope, schema.name, field.name, option.value));
+    }
+  }
+  for (const permission of schema.permissions) {
+    requiredKeys.add(permission.name);
+  }
+  for (const auditAction of ['create', 'update', 'delete'] as const) {
+    requiredKeys.add(buildAuditActionKey(schema.scope, schema.name, auditAction));
+  }
+
+  for (const key of requiredKeys) {
+    if (!zh[key]) {
+      issues.push({ code: 'i18n_zh_missing', level: 'error', messageKey: 'generator.validation.i18nZhMissing', detail: key });
+    }
+    if (!en[key]) {
+      issues.push({ code: 'i18n_en_missing', level: 'error', messageKey: 'generator.validation.i18nEnMissing', detail: key });
+    }
+  }
+
+  return issues;
 }

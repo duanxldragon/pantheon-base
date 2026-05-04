@@ -1,13 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from '@arco-design/web-react';
 import { IconStorage } from '@arco-design/web-react/icon';
 import { SideRailItem, SideRailNote, SideRailPanel, SideRailStack } from './SideRail';
 import type { RailSummaryItem, RailSummaryTone } from './RailSummary';
-
-interface UseGovernanceRailOptions {
-  defaultExpanded?: boolean;
-  enabled?: boolean;
-}
 
 interface GovernanceRailToggleButtonProps {
   expanded: boolean;
@@ -34,33 +29,6 @@ interface GovernanceRailPanelProps {
 interface GovernanceRailSummaryProps {
   items: RailSummaryItem[];
   className?: string;
-}
-
-export function useGovernanceRail(options?: UseGovernanceRailOptions) {
-  const enabled = options?.enabled ?? true;
-  const [expanded, setExpanded] = useState(options?.defaultExpanded ?? false);
-
-  useEffect(() => {
-    if (!enabled) {
-      setExpanded(false);
-    }
-  }, [enabled]);
-
-  const open = useCallback(() => setExpanded(true), []);
-  const close = useCallback(() => setExpanded(false), []);
-  const toggle = useCallback(() => {
-    if (!enabled) {
-      return;
-    }
-    setExpanded((current) => !current);
-  }, [enabled]);
-
-  return {
-    expanded: enabled ? expanded : false,
-    open,
-    close,
-    toggle,
-  };
 }
 
 export const GovernanceRailToggleButton: React.FC<GovernanceRailToggleButtonProps> = ({

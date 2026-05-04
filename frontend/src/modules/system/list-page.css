@@ -97,6 +97,13 @@
 .table-batch-action-bar {
   display: grid;
   gap: 6px;
+  width: auto;
+  justify-self: stretch;
+  align-self: stretch;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .system-list__table-head {
@@ -129,6 +136,9 @@
   justify-content: space-between;
   gap: 8px 12px;
   flex-wrap: wrap;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .table-batch-action-bar__meta,
@@ -137,24 +147,30 @@
   align-items: center;
   gap: 6px 8px;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .table-batch-action-bar__meta {
-  min-width: 0;
+  flex: 1 1 260px;
 }
 
 .table-batch-action-bar__actions {
+  flex: 0 1 auto;
   justify-content: flex-end;
 }
 
 .table-batch-action-bar__summary {
+  min-width: 0;
   font-size: 13px;
   line-height: 1.4;
 }
 
 .table-batch-action-bar__hint {
+  min-width: 0;
   font-size: 12px;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .table-batch-action-bar__select {
@@ -181,6 +197,8 @@
 .list-header-actions__utility,
 .list-header-actions__primary {
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .list-header-actions__utility {
@@ -190,6 +208,15 @@
 .list-header-actions__primary {
   justify-content: flex-end;
   margin-left: auto;
+}
+
+.table-batch-action-bar .arco-space,
+.table-batch-action-bar .arco-space-horizontal,
+.list-header-actions .arco-space,
+.list-header-actions .arco-space-horizontal {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
 }
 
 .list-header-actions .arco-btn,
@@ -407,16 +434,26 @@
   display: grid;
   gap: 10px;
   padding: 12px 14px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .module-manager-page__intro {
   display: grid;
   gap: 8px;
+  justify-self: stretch;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .module-manager-page__copy {
   display: grid;
   gap: 4px;
+  justify-self: stretch;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .module-manager-page__desc {
@@ -429,6 +466,10 @@
 .module-manager-page__notice-stack {
   display: grid;
   gap: 8px;
+  justify-self: stretch;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .module-manager-page__notice-stack .arco-alert {
@@ -1219,6 +1260,11 @@
 }
 
 @media (max-width: 768px) {
+  .system-list__table-card .arco-card-body {
+    min-width: 0;
+    overflow: hidden;
+  }
+
   .system-list__table-head {
     flex-direction: column;
     align-items: stretch;
@@ -1237,6 +1283,7 @@
   .table-batch-action-bar__meta,
   .table-batch-action-bar__actions {
     width: 100%;
+    flex-basis: auto;
   }
 
   .table-batch-action-bar__actions .arco-btn,

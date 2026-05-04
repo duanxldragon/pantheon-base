@@ -226,14 +226,6 @@ const SettingPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadData]);
 
-  useRefreshSubscription('system:setting:changed', () => {
-    invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
-    void loadData();
-    if (activeGroupKey && canViewOperationLog) {
-      void loadAudit(activeGroupKey, auditQuery.page, auditQuery.pageSize);
-    }
-  });
-
   const loadAudit = useCallback(async (groupKey: string, page = 1, pageSize = defaultAuditPageSize) => {
     setAuditLoading(true);
     try {
@@ -265,6 +257,14 @@ const SettingPage: React.FC = () => {
 
   const activeSettingGroup = groupedSettings.find((item) => item.groupKey === activeGroup) || groupedSettings[0];
   const activeGroupKey = activeSettingGroup?.groupKey;
+
+  useRefreshSubscription('system:setting:changed', () => {
+    invalidateRouteWarmData('/system/setting', ['list:default', 'overview']);
+    void loadData();
+    if (activeGroupKey && canViewOperationLog) {
+      void loadAudit(activeGroupKey, auditQuery.page, auditQuery.pageSize);
+    }
+  });
 
   useEffect(() => {
     if (!activeSettingGroup) {

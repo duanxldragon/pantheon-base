@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Form, Grid, Input, Space, Typography } from '@arco-design/web-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Button, Card, Form, Grid, Input, Space } from '@arco-design/web-react';
 import { IconPlus, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,7 +7,7 @@ import {
   type CmdbHostListQuery,
   type CmdbHostListRow,
 } from './api';
-import { AppTable, FilterPanel, ListHeaderActions, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../../components';
+import { AppTable, FilterPanel, ListHeaderActions, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH } from '../../../../components';
 
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -52,7 +52,8 @@ const CmdbHostList: React.FC = () => {
   }, [query]);
 
   useEffect(() => {
-    void loadData();
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadData]);
 
   const handleSearch = () => {
@@ -80,12 +81,6 @@ const CmdbHostList: React.FC = () => {
     <PageContainer>
       <PageHeader
         title={t('business.cmdb.host.title')}
-        breadcrumb={{
-          items: [
-            { title: t('app.home'), path: '/' },
-            { title: t('business.cmdb.host.title') },
-          ],
-        }}
       />
       <FilterPanel>
         <Form form={queryForm} layout="vertical">
@@ -169,7 +164,7 @@ const CmdbHostList: React.FC = () => {
             {
               title: t('common.operations'),
               fixed: 'right',
-              width: TABLE_ACTION_COLUMN_WIDTH.NORMAL,
+              width: TABLE_ACTION_COLUMN_WIDTH.compact,
               render: () => (
                 <Space>
                   <Button type="text" size="small">{t('common.edit')}</Button>
@@ -184,4 +179,4 @@ const CmdbHostList: React.FC = () => {
   );
 };
 
-export default withTableColumnPriority(CmdbHostList);
+export default CmdbHostList;

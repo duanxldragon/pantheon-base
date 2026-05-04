@@ -1,5 +1,5 @@
 .app-shell {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: transparent;
 }
 
@@ -1223,11 +1223,11 @@
 }
 
 .app-shell__content-inner {
-  min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - 160px);
 }
 
 .app-shell--horizontal .app-shell__content-inner {
-  min-height: calc(100vh - 220px);
+  min-height: calc(100dvh - 220px);
 }
 
 .app-shell__footer {

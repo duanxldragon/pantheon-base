@@ -89,32 +89,12 @@ async function waitForDialog(page: Page, title: string) {
   return dialog;
 }
 
-function escapeRegex(source: string) {
-  return source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function formField(dialog: Locator, label: string) {
-  return dialog.locator('.arco-form-item').filter({ has: dialog.getByText(label, { exact: true }) }).first();
-}
-
-function inputByLabel(dialog: Locator, label: string) {
-  return dialog
-    .getByRole('textbox', { name: new RegExp(`^${escapeRegex(label)}$`) })
-    .or(formField(dialog, label).locator('input, textarea').first())
-    .first();
-}
-
 function enabledInputs(dialog: Locator) {
   return dialog.locator('input:not([type="hidden"]):not([disabled]), textarea:not([disabled])');
 }
 
 function passwordInput(dialog: Locator, index: number) {
   return dialog.locator('input[type="password"]').nth(index);
-}
-
-async function selectFirstOption(page: Page, trigger: Locator) {
-  await trigger.click();
-  await page.locator('[role="option"]:visible, .arco-select-option:visible').first().click();
 }
 
 function resolveSubmitButton(matrixCase: FormMatrixCase, form: Locator, page: Page) {

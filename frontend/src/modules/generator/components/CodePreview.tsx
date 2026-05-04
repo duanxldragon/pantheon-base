@@ -16,6 +16,7 @@ import { IconCode, IconDownload } from '@arco-design/web-react/icon';
 import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
 import { useTranslation } from 'react-i18next';
 import { AppDrawer } from '../../../components';
+import './CodePreview.css';
 
 import type { GeneratedFile } from '../exporter';
 
@@ -119,10 +120,10 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
         )
       }
     >
-      <div style={{ display: 'flex', gap: 16, height: '100%' }}>
+      <div className="generator-code-preview">
         {/* 左侧: 文件树 */}
-        <div style={{ width: 280, borderRight: '1px solid var(--color-border)', paddingRight: 16 }}>
-          <Typography.Title heading={6} style={{ marginTop: 0 }}>
+        <div className="generator-code-preview__tree">
+          <Typography.Title heading={6} className="generator-code-preview__section-title">
             {t('generator.codePreview.files')}
           </Typography.Title>
           <Tree
@@ -133,11 +134,11 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
         </div>
 
         {/* 右侧: 代码显示 */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div className="generator-code-preview__content">
           {selectedFile ? (
             <div>
-              <Space style={{ marginBottom: 16 }}>
-                <Typography.Title heading={6} style={{ margin: 0 }}>
+              <Space className="generator-code-preview__file-header">
+                <Typography.Title heading={6} className="generator-code-preview__file-title">
                   {selectedFile.path.split('/').pop()}
                 </Typography.Title>
                 <Tag color={getLanguageTag(selectedFile.language)}>
@@ -145,27 +146,17 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
                 </Tag>
               </Space>
               
-              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+              <Typography.Text type="secondary" className="generator-code-preview__path">
                 {selectedFile.path}
               </Typography.Text>
 
-              <pre
-                style={{
-                  background: 'var(--color-fill-1)',
-                  padding: 16,
-                  borderRadius: 4,
-                  overflow: 'auto',
-                  maxHeight: 'calc(100vh - 250px)',
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                }}
-              >
+              <pre className="generator-code-preview__pre">
                 <code>{selectedFile.content}</code>
               </pre>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--color-text-3)' }}>
-              <IconCode style={{ fontSize: 48, marginBottom: 16 }} />
+            <div className="generator-code-preview__empty">
+              <IconCode className="generator-code-preview__empty-icon" />
               <Typography.Text>{t('generator.codePreview.selectFile')}</Typography.Text>
             </div>
           )}

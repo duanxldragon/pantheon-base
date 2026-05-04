@@ -41,6 +41,15 @@ func TestMapColumnToFieldInfersEnvironmentEnumFromVarchar(t *testing.T) {
 	if field.Validation == nil || len(field.Validation.Enum) != 4 {
 		t.Fatalf("expected validation enum to be populated")
 	}
+	if field.Label != "环境" || field.LabelEn != "Environment" {
+		t.Fatalf("unexpected environment labels: %q / %q", field.Label, field.LabelEn)
+	}
+	if field.Placeholder != "请选择环境" || field.PlaceholderEn != "Select environment" {
+		t.Fatalf("unexpected environment placeholders: %q / %q", field.Placeholder, field.PlaceholderEn)
+	}
+	if field.EnumOptions[0].Label != "开发" || field.EnumOptions[0].LabelEn != "Development" {
+		t.Fatalf("unexpected environment option labels: %#v", field.EnumOptions[0])
+	}
 }
 
 func TestMapColumnToFieldInfersStatusEnumFromVarchar(t *testing.T) {
@@ -59,5 +68,27 @@ func TestMapColumnToFieldInfersStatusEnumFromVarchar(t *testing.T) {
 	}
 	if len(field.EnumOptions) != 2 {
 		t.Fatalf("expected 2 enum options, got %d", len(field.EnumOptions))
+	}
+	if field.EnumOptions[0].Label != "启用" || field.EnumOptions[0].LabelEn != "Active" {
+		t.Fatalf("unexpected status option labels: %#v", field.EnumOptions[0])
+	}
+}
+
+func TestMapColumnToFieldSplitsChineseAndEnglishFallbacks(t *testing.T) {
+	field := mapColumnToField(columnRow{
+		ColumnName: "ip_address",
+		DataType:   "varchar",
+		ColumnType: "varchar(64)",
+		IsNullable: "NO",
+	})
+
+	if field.Name != "ipAddress" {
+		t.Fatalf("unexpected field name: %s", field.Name)
+	}
+	if field.Label != "IP 地址" || field.LabelEn != "IP address" {
+		t.Fatalf("unexpected labels: %q / %q", field.Label, field.LabelEn)
+	}
+	if field.Placeholder != "请输入IP 地址" || field.PlaceholderEn != "Enter ip address" {
+		t.Fatalf("unexpected placeholders: %q / %q", field.Placeholder, field.PlaceholderEn)
 	}
 }

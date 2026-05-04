@@ -85,8 +85,11 @@ export function subscribeRefresh(topics: PantheonRefreshTopic | PantheonRefreshT
 
 export function useRefreshSubscription(topics: PantheonRefreshTopic | PantheonRefreshTopic[], handler: RefreshHandler) {
   const handlerRef = useRef(handler);
-  handlerRef.current = handler;
   const topicKey = useMemo(() => normalizeTopics(topics).join(','), [topics]);
+
+  useEffect(() => {
+    handlerRef.current = handler;
+  }, [handler]);
 
   useEffect(() => subscribeRefresh(topics, (payload) => {
     handlerRef.current(payload);

@@ -966,7 +966,7 @@ const OperationLogList: React.FC = () => {
             />
 
             {currentLog.status === 2 && (
-              <Card className="detail-panel-card" title={t('system.audit.failureReason')} size="small" style={{ borderColor: 'var(--danger-border)' }}>
+              <Card className="detail-panel-card detail-panel-card--danger" title={t('system.audit.failureReason')} size="small">
                 <Space direction="vertical" size={12} style={{ width: '100%' }}>
                   <Space wrap>
                     {failureMeta ? <Tag color={failureMeta.color}>{t(failureMeta.typeKey)}</Tag> : null}

@@ -10,6 +10,7 @@
     "check:menu-contract": "node ./scripts/check-menu-contract.mjs",
     "check:i18n-hardcode": "node ./scripts/check-i18n-hardcode.mjs",
     "audit:i18n-locales": "node ./scripts/audit-i18n-locales.mjs",
+    "type-check": "tsc -b",
     "export:i18n-builtin-snapshot": "powershell -Command \"Set-Location ..; cmd /c node .\\frontend\\scripts\\export-i18n-builtin-snapshot.mjs --stdout > .\\frontend\\builtin_snapshot.tmp; $content = Get-Content .\\frontend\\builtin_snapshot.tmp -Raw; Set-Content -LiteralPath backend\\modules\\system\\i18n\\builtin_locale_resources.json -Value $content; Remove-Item .\\frontend\\builtin_snapshot.tmp -Force\"",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -17,7 +18,8 @@
     "test:smoke:system": "playwright test tests/smoke/system-pages.spec.ts --config=playwright.config.ts",
     "test:smoke:backoffice-ui": "playwright test tests/smoke/backoffice-ui-visual.spec.ts --config=playwright.config.ts",
     "test:smoke:impexp": "playwright test tests/smoke/system-import-export.spec.ts --config=playwright.api.config.ts",
-    "test:smoke:module-governance-host": "playwright test tests/smoke/module-governance-host-real.spec.ts --config=playwright.config.ts"
+    "test:smoke:module-governance-host": "playwright test tests/smoke/module-governance-host-real.spec.ts --config=playwright.config.ts",
+    "test:smoke:full-system": "playwright test tests/smoke/full-system-pages.spec.ts --config=playwright.full-system.config.ts"
   },
   "dependencies": {
     "@arco-design/web-react": "*",

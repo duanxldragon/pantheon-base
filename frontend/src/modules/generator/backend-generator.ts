@@ -23,6 +23,7 @@ import {
   buildFieldHelpTextKey,
   buildFieldLabelKey,
   buildFieldPlaceholderKey,
+  buildMenuGroupTitleKey,
   buildModuleNamespace,
   buildPermissionTitleKey,
   buildPermissionPrefix,
@@ -31,6 +32,7 @@ import {
   buildTitleKey,
   normalizeMenuPath,
   getPageActions,
+  inferMenuGroupDisplayName,
   inferPackageName,
   inferModelName,
   splitModuleSegments,
@@ -240,13 +242,13 @@ ${this.generateDTOFields('update')}
     const structName = scope === 'system' ? `System${this.modelName}` : this.modelName;
     const modelName = this.modelName;
     
-    const hasAudit = templateLevel === 'enterprise';
+    const hasDataScope = this.schema.enableDataScope ?? (templateLevel === 'enterprise');
     return `package ${this.packageName}
 
 import (
 \t"errors"
-\t${hasAudit ? `"pantheon-platform/backend/pkg/common"` : ``}
-\t${hasAudit ? `"pantheon-platform/backend/pkg/database"` : ``}
+\t${hasDataScope ? `"pantheon-platform/backend/pkg/common"` : ``}
+\t${hasDataScope ? `"pantheon-platform/backend/pkg/database"` : ``}
 \t"strings"
 \t"time"
 \t"gorm.io/gorm"
@@ -270,7 +272,7 @@ func (s *${modelName}Service) Migrate() error {
 }
 
 // List${modelName}s 分页列表查询
-func (s *${modelName}Service) List${modelName}s(query *${modelName}ListQuery${hasAudit ? ', dataScope *common.DataScopeReq' : ''}) (*${modelName}ListPageResp, error) {
+func (s *${modelName}Service) List${modelName}s(query *${modelName}ListQuery${hasDataScope ? ', dataScope *common.DataScopeReq' : ''}) (*${modelName}ListPageResp, error) {
 \tif query == nil {
 \t\tquery = &${modelName}ListQuery{}
 \t}
@@ -283,7 +285,7 @@ func (s *${modelName}Service) List${modelName}s(query *${modelName}ListQuery${ha
 \tvar items []${structName}
 \tvar total int64
 
-\tdb := s.db.Model(&${structName}{})${hasAudit ? `.Scopes(database.WithDataScope(dataScope))` : ``}
+\tdb := s.db.Model(&${structName}{})${hasDataScope ? `.Scopes(database.WithDataScope(dataScope))` : ``}
 \t${this.generateQueryFilters()}
 
 \tif err := db.Count(&total).Error; err != nil {
@@ -499,6 +501,7 @@ ${this.fromCreateReqFields()}
     const { templateLevel = 'enterprise' } = this.schema;
     const modelName = this.modelName;
     const hasAudit = templateLevel === 'enterprise';
+    const hasDataScope = this.schema.enableDataScope ?? (templateLevel === 'enterprise');
 
     return `package ${this.packageName}
 
@@ -524,8 +527,8 @@ func (h *${modelName}Handler) Get${modelName}List(c *gin.Context) {
 \t\treturn
 \t}
 
-${hasAudit ? '\tdataScope := common.GetDataScope(c)' : ''}
-\tlist, err := h.service.List${modelName}s(&query${hasAudit ? ', dataScope' : ''})
+${hasDataScope ? '\tdataScope := common.GetDataScope(c)' : ''}
+\tlist, err := h.service.List${modelName}s(&query${hasDataScope ? ', dataScope' : ''})
 \tif err != nil {
 \t\tcommon.Fail(c, common.CodeError, "${modelName.toLowerCase()}.list.error")
 \t\treturn
@@ -853,8 +856,11 @@ func seed${modelName}I18n(db *gorm.DB) error {
     const routeName = buildRouteName(this.schema.scope, this.schema.name);
     const segments = splitModuleSegments(this.schema.name);
     const menuKey = segments.join('-');
-    const inferredParentPath = segments.length > 1 ? `/${this.schema.scope}/${segments.slice(0, -1).join('/')}` : '';
-    const parentPath = normalizeMenuPath(this.schema.parentMenu || inferredParentPath || '');
+    const explicitParentPath = normalizeMenuPath(this.schema.parentMenu || '');
+    const shouldGenerateAncestorMenus = !explicitParentPath && segments.length > 1;
+    const inferredParentPath = shouldGenerateAncestorMenus ? '' : segments.length > 1 ? `/${this.schema.scope}/${segments.slice(0, -1).join('/')}` : '';
+    const parentPath = normalizeMenuPath(explicitParentPath || inferredParentPath || '');
+    const parentKey = shouldGenerateAncestorMenus ? segments.slice(0, -1).join('-') : '';
     const actionSeeds = getPageActions(this.schema)
       .filter((action) => action !== 'detail')
       .map((action) => ({
@@ -863,8 +869,30 @@ func seed${modelName}I18n(db *gorm.DB) error {
         titleEn: this.renderActionTitle(action, 'en'),
       }));
 
+    const ancestorEntries = shouldGenerateAncestorMenus
+      ? segments.slice(0, -1).map((_, index) => {
+        const groupSegments = segments.slice(0, index + 1);
+        const groupKey = groupSegments.join('-');
+        const parentSegments = groupSegments.slice(0, -1);
+        const groupModuleKey = `${this.schema.scope}.${groupSegments.join('.')}`;
+        const groupTitleKey = buildMenuGroupTitleKey(this.schema.scope, groupSegments);
+        return `\t{
+\t\tKey:       "${groupKey}",
+\t\tParentKey: "${parentSegments.join('-')}",
+\t\tTitleKey:  "${groupTitleKey}",
+\t\tPath:      "/${this.schema.scope}/${groupSegments.join('/')}",
+\t\tType:      "M",
+\t\tIcon:      "apps",
+\t\tRouteName: "${this.schema.scope}-${groupSegments.join('-')}",
+\t\tModule:    "${groupModuleKey}",
+\t\tSort:      10,
+\t},`;
+      })
+      : [];
+
     const mainSeed = `\t{
 \t\tKey:       "${menuKey}",
+\t\tParentKey: "${parentKey}",
 \t\tParentPath: "${parentPath}",
 \t\tTitleKey:  "${pageTitleKey}",
 \t\tPath:      "${routePath}",
@@ -887,31 +915,46 @@ func seed${modelName}I18n(db *gorm.DB) error {
 \t\tSort:      ${index + 1},
 \t},`);
 
-    return [mainSeed, ...actionEntries].join('\n');
+    return [...ancestorEntries, mainSeed, ...actionEntries].join('\n');
   }
 
   private generateI18nSeedEntries(pageTitleKey: string): string {
     const moduleKey = buildModuleNamespace(this.schema.scope, this.schema.name);
+    const seenZh = new Set<string>();
+    const seenEn = new Set<string>();
+    const pushEntry = (entries: Array<{ group: string; key: string; value: string }>, seen: Set<string>, item: { group: string; key: string; value: string }) => {
+      if (seen.has(item.key)) {
+        return;
+      }
+      seen.add(item.key);
+      entries.push(item);
+    };
     const getTranslation = (locale: 'zh' | 'en', key: string, fallback: string) => {
       return this.schema.i18n.translations[locale][key] || fallback;
     };
-    const zhEntries: Array<{ group: string; key: string; value: string }> = [
-      { group: 'menu', key: pageTitleKey, value: getTranslation('zh', pageTitleKey, this.schema.displayName) },
-      { group: 'page', key: `${moduleKey}.title`, value: getTranslation('zh', `${moduleKey}.title`, this.schema.displayName) },
-    ];
-    const enEntries: Array<{ group: string; key: string; value: string }> = [
-      { group: 'menu', key: pageTitleKey, value: getTranslation('en', pageTitleKey, this.schema.displayNameEn || this.schema.displayName) },
-      { group: 'page', key: `${moduleKey}.title`, value: getTranslation('en', `${moduleKey}.title`, this.schema.displayNameEn || this.schema.displayName) },
-    ];
+    const zhEntries: Array<{ group: string; key: string; value: string }> = [];
+    const enEntries: Array<{ group: string; key: string; value: string }> = [];
+    const segments = splitModuleSegments(this.schema.name);
+    for (let index = 0; index < segments.length - 1; index += 1) {
+      const groupSegments = segments.slice(0, index + 1);
+      const groupTitleKey = buildMenuGroupTitleKey(this.schema.scope, groupSegments);
+      const fallback = inferMenuGroupDisplayName(groupSegments[groupSegments.length - 1]);
+      pushEntry(zhEntries, seenZh, { group: 'menu', key: groupTitleKey, value: getTranslation('zh', groupTitleKey, fallback) });
+      pushEntry(enEntries, seenEn, { group: 'menu', key: groupTitleKey, value: getTranslation('en', groupTitleKey, fallback) });
+    }
+    pushEntry(zhEntries, seenZh, { group: 'menu', key: pageTitleKey, value: getTranslation('zh', pageTitleKey, this.schema.displayName) });
+    pushEntry(zhEntries, seenZh, { group: 'page', key: `${moduleKey}.title`, value: getTranslation('zh', `${moduleKey}.title`, this.schema.displayName) });
+    pushEntry(enEntries, seenEn, { group: 'menu', key: pageTitleKey, value: getTranslation('en', pageTitleKey, this.schema.displayNameEn || this.schema.displayName) });
+    pushEntry(enEntries, seenEn, { group: 'page', key: `${moduleKey}.title`, value: getTranslation('en', `${moduleKey}.title`, this.schema.displayNameEn || this.schema.displayName) });
 
     for (const field of this.schema.model.fields) {
       const fieldLabelKey = buildFieldLabelKey(this.schema.scope, this.schema.name, field.name);
-      zhEntries.push({
+      pushEntry(zhEntries, seenZh, {
         group: 'field',
         key: fieldLabelKey,
         value: getTranslation('zh', fieldLabelKey, field.label),
       });
-      enEntries.push({
+      pushEntry(enEntries, seenEn, {
         group: 'field',
         key: fieldLabelKey,
         value: getTranslation('en', fieldLabelKey, field.labelEn || field.label),
@@ -919,12 +962,12 @@ func seed${modelName}I18n(db *gorm.DB) error {
 
       if (field.placeholder) {
         const placeholderKey = buildFieldPlaceholderKey(this.schema.scope, this.schema.name, field.name);
-        zhEntries.push({
+        pushEntry(zhEntries, seenZh, {
           group: 'placeholder',
           key: placeholderKey,
           value: getTranslation('zh', placeholderKey, field.placeholder),
         });
-        enEntries.push({
+        pushEntry(enEntries, seenEn, {
           group: 'placeholder',
           key: placeholderKey,
           value: getTranslation('en', placeholderKey, field.placeholderEn || field.placeholder),
@@ -933,12 +976,12 @@ func seed${modelName}I18n(db *gorm.DB) error {
 
       if (field.helpText) {
         const helpTextKey = buildFieldHelpTextKey(this.schema.scope, this.schema.name, field.name);
-        zhEntries.push({
+        pushEntry(zhEntries, seenZh, {
           group: 'help',
           key: helpTextKey,
           value: getTranslation('zh', helpTextKey, field.helpText),
         });
-        enEntries.push({
+        pushEntry(enEntries, seenEn, {
           group: 'help',
           key: helpTextKey,
           value: getTranslation('en', helpTextKey, field.helpTextEn || field.helpText),
@@ -947,12 +990,12 @@ func seed${modelName}I18n(db *gorm.DB) error {
 
       for (const option of field.enumOptions ?? []) {
         const optionKey = buildEnumOptionKey(this.schema.scope, this.schema.name, field.name, option.value);
-        zhEntries.push({
+        pushEntry(zhEntries, seenZh, {
           group: 'option',
           key: optionKey,
           value: getTranslation('zh', optionKey, option.label),
         });
-        enEntries.push({
+        pushEntry(enEntries, seenEn, {
           group: 'option',
           key: optionKey,
           value: getTranslation('en', optionKey, option.labelEn || option.label),
@@ -969,12 +1012,12 @@ func seed${modelName}I18n(db *gorm.DB) error {
       }));
 
     for (const permission of permissionActions) {
-      zhEntries.push({
+      pushEntry(zhEntries, seenZh, {
         group: 'permission',
         key: buildPermissionTitleKey(this.schema.scope, this.schema.name, permission.action),
         value: getTranslation('zh', buildPermissionTitleKey(this.schema.scope, this.schema.name, permission.action), permission.zh),
       });
-      enEntries.push({
+      pushEntry(enEntries, seenEn, {
         group: 'permission',
         key: buildPermissionTitleKey(this.schema.scope, this.schema.name, permission.action),
         value: getTranslation('en', buildPermissionTitleKey(this.schema.scope, this.schema.name, permission.action), permission.en),
@@ -982,16 +1025,23 @@ func seed${modelName}I18n(db *gorm.DB) error {
     }
 
     for (const auditAction of ['create', 'update', 'delete'] as const) {
-      zhEntries.push({
+      pushEntry(zhEntries, seenZh, {
         group: 'audit',
         key: buildAuditActionKey(this.schema.scope, this.schema.name, auditAction),
         value: getTranslation('zh', buildAuditActionKey(this.schema.scope, this.schema.name, auditAction), this.renderActionTitle(auditAction, 'zh')),
       });
-      enEntries.push({
+      pushEntry(enEntries, seenEn, {
         group: 'audit',
         key: buildAuditActionKey(this.schema.scope, this.schema.name, auditAction),
         value: getTranslation('en', buildAuditActionKey(this.schema.scope, this.schema.name, auditAction), this.renderActionTitle(auditAction, 'en')),
       });
+    }
+
+    for (const [key, value] of Object.entries(this.schema.i18n.translations.zh)) {
+      pushEntry(zhEntries, seenZh, { group: this.inferI18nGroup(key), key, value });
+    }
+    for (const [key, value] of Object.entries(this.schema.i18n.translations.en)) {
+      pushEntry(enEntries, seenEn, { group: this.inferI18nGroup(key), key, value });
     }
 
     return [...zhEntries.map((item) => this.formatI18nSeed('zh-CN', item.group, item.key, item.value)), ...enEntries.map((item) => this.formatI18nSeed('en-US', item.group, item.key, item.value))].join('\n');
@@ -1006,6 +1056,14 @@ func seed${modelName}I18n(db *gorm.DB) error {
 
   private formatI18nSeed(locale: string, group: string, key: string, value: string): string {
     return `\t{Module: "${buildModuleNamespace(this.schema.scope, this.schema.name)}", Locale: "${locale}", Group: "${group}", Key: "${this.escapeGoString(key)}", Value: "${this.escapeGoString(value)}"},`;
+  }
+
+  private inferI18nGroup(key: string): string {
+    if (key.includes('.field.')) return 'field';
+    if (key.includes('.permission.')) return 'permission';
+    if (key.includes('.audit.')) return 'audit';
+    if (key.endsWith('.title')) return 'menu';
+    return 'page';
   }
 
   /**

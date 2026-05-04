@@ -13,8 +13,8 @@ const frontendRegistryFiles = [
   path.join(workspaceRoot, 'frontend', 'src', 'core', 'router', 'generatedComponentRegistry.ts'),
 ];
 const backendRegistryFiles = [
-  path.join(workspaceRoot, 'backend', 'modules', 'system', 'menu', 'component_registry.go'),
-  path.join(workspaceRoot, 'backend', 'modules', 'system', 'menu', 'generated_component_registry.go'),
+  path.join(workspaceRoot, 'backend', 'modules', 'system', 'iam', 'menu', 'component_registry.go'),
+  path.join(workspaceRoot, 'backend', 'modules', 'system', 'iam', 'menu', 'generated_component_registry.go'),
 ];
 const frontendI18nFiles = new Map([
   ['zh-CN', path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'zh-CN.ts')],

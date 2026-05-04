@@ -37,8 +37,9 @@ type TableOptionResp struct {
 }
 
 type EnumOptionResp struct {
-	Value string `json:"value"`
-	Label string `json:"label"`
+	Value   string `json:"value"`
+	Label   string `json:"label"`
+	LabelEn string `json:"labelEn,omitempty"`
 }
 
 type FieldValidationResp struct {

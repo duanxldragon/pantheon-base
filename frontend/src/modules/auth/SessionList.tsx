@@ -245,37 +245,31 @@ const SessionList: React.FC = () => {
       width: 128,
       render: (value: string) => <span style={{ whiteSpace: 'nowrap' }}>{value || '-'}</span>,
     },
-    {
+    withTableColumnPriority({
       title: t('auth.session.userAgent'),
       dataIndex: 'device',
       width: 260,
-      ...withTableColumnPriority({
-        render: (_: unknown, row: AdminSessionRow) => (
-          <Space direction="vertical" size={2}>
-            <span className="auth-device-summary">{formatClientSummary(row)}</span>
-            {row.userAgent ? (
-              <span className="auth-device-summary__meta">{row.userAgent}</span>
-            ) : null}
-          </Space>
-        ),
-      }, 'low'),
-    },
-    {
+      render: (_: unknown, row: AdminSessionRow) => (
+        <Space direction="vertical" size={2}>
+          <span className="auth-device-summary">{formatClientSummary(row)}</span>
+          {row.userAgent ? (
+            <span className="auth-device-summary__meta">{row.userAgent}</span>
+          ) : null}
+        </Space>
+      ),
+    }, 'low'),
+    withTableColumnPriority({
       title: t('auth.session.lastActive'),
       dataIndex: 'lastActivityAt',
       width: 150,
-      ...withTableColumnPriority({
-        render: (_: unknown, row: AdminSessionRow) => formatDateTime(row.lastActivityAt || row.lastRefreshAt),
-      }, 'medium'),
-    },
-    { 
+      render: (_: unknown, row: AdminSessionRow) => formatDateTime(row.lastActivityAt || row.lastRefreshAt),
+    }, 'medium'),
+    withTableColumnPriority({
       title: t('auth.session.refreshExpiresAt'), 
       dataIndex: 'refreshExpiresAt', 
       width: 160, 
-      ...withTableColumnPriority({
-        render: (value: string) => formatDateTime(value),
-      }, 'low'),
-    },
+      render: (value: string) => formatDateTime(value),
+    }, 'low'),
     {
       title: t('auth.session.status'),
       dataIndex: 'revokedAt',

@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];

@@ -210,6 +210,33 @@ test.describe('backoffice UI visual acceptance', () => {
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
+  test('system user page keeps filter and table patterns readable on phone and tablet', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+    await signInAsAdmin(page);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await expect(page.locator('.filter-panel')).toBeVisible();
+    await expect(page.locator('.app-table')).toBeVisible();
+    await expect(page.locator('.app-table__mobile-hint')).toBeVisible();
+    await expectNoPageError(page);
+    await page.screenshot({ path: join(artifactDir, 'system-user-phone.png'), fullPage: true });
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await expect(page.locator('.filter-panel')).toBeVisible();
+    await expect(page.locator('.app-table')).toBeVisible();
+    await page.screenshot({ path: join(artifactDir, 'system-user-tablet-portrait.png'), fullPage: true });
+
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await expect(page.locator('.filter-panel')).toBeVisible();
+    await expect(page.locator('.app-table')).toBeVisible();
+    await page.screenshot({ path: join(artifactDir, 'system-user-tablet-landscape.png'), fullPage: true });
+
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+  });
+
   test('secondary verify modal uses natural localized copy', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     await signInAsAdmin(page);

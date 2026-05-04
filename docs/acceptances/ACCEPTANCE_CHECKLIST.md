@@ -25,6 +25,8 @@
 
 验收必须按阶段进行，不能只看“功能能不能跑”。
 
+代码评审固定执行 `docs/acceptances/CODE_REVIEW_STANDARD.md`。该文档是提交前、阶段评审和 AI 自动评审的标准入口；本清单负责定义验收维度，代码评审标准负责定义执行顺序、发现项格式和固定验证命令。
+
 建议分为五层：
 
 1. 设计验收
@@ -503,11 +505,11 @@
 
 当业务域已经出现子模块切片时，不能只验父入口页。
 
-以当前 `CMDB` 为例，后续至少覆盖：
+以当前 `CMDB` 为例，自动化烟测至少覆盖已实现子模块：
 
-- `/business/cmdb/list`
 - `/business/cmdb/host`
-- `/business/cmdb/vendor`
+
+若后续新增供应商、资源类型、资源实例等子模块，必须同步扩展 `test:smoke:full-system`，不能只保留主机管理页。
 
 至少检查：
 
@@ -517,7 +519,28 @@
 - i18n namespace 是否已补齐
 - 审计点是否覆盖新增、编辑、删除、导入导出等关键动作
 
-### 14.4 业务模块专项文档要求
+### 14.4 全系统页面烟测脚本
+
+固定命令：
+
+- `cd frontend; npm run test:smoke:full-system`
+
+固定覆盖：
+
+- `platform`：`/dashboard`
+- `system/auth`：`/login`、`/auth/security`、`/system/login-log`、`/system/session`
+- `system/iam`：`/system/profile`、`/system/user`、`/system/user/1`、`/system/role`、`/system/menu`、`/system/permission`、`/system/operation-log`
+- `system/org`：`/system/dept`、`/system/post`
+- `system/config`：`/system/dict`、`/system/setting`、`/system/i18n`、`/system/modules`、`/system/generator`
+- `business/cmdb`：`/business/cmdb/host`
+
+固定视口：
+
+- PC：`1440x900`
+- Pad：`1024x768`
+- Phone：`390x844`
+
+### 14.5 业务模块专项文档要求
 
 如果业务域从单入口演进为多子模块切片，至少满足以下之一：
 

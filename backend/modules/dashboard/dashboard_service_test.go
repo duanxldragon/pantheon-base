@@ -6,13 +6,13 @@ import (
 
 	"pantheon-platform/backend/internal/middleware"
 	auth "pantheon-platform/backend/modules/auth"
-	dept "pantheon-platform/backend/modules/system/org/dept"
 	dict "pantheon-platform/backend/modules/system/config/dict"
-	menu "pantheon-platform/backend/modules/system/iam/menu"
-	post "pantheon-platform/backend/modules/system/org/post"
-	role "pantheon-platform/backend/modules/system/iam/role"
 	setting "pantheon-platform/backend/modules/system/config/setting"
+	menu "pantheon-platform/backend/modules/system/iam/menu"
+	role "pantheon-platform/backend/modules/system/iam/role"
 	user "pantheon-platform/backend/modules/system/iam/user"
+	dept "pantheon-platform/backend/modules/system/org/dept"
+	post "pantheon-platform/backend/modules/system/org/post"
 	"pantheon-platform/backend/pkg/testmysql"
 
 	"gorm.io/gorm"

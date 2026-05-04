@@ -103,7 +103,7 @@ function App() {
     return () => {
       active = false;
     };
-  }, [fetchMenuTree, menuTree.length, token]);
+  }, [fetchMenuTree, menuTree, menuTree.length, token]);
 
   const handleSuccess = (token: string) => {
     setVerifyVisible(false);

@@ -2,22 +2,9 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(360px, 44%) minmax(420px, 56%);
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
-  background: var(--app-bg);
-}
-
-.auth-login-page::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: '';
-  background-image:
-    linear-gradient(var(--app-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--app-grid-line) 1px, transparent 1px);
-  background-size: 48px 48px;
-  opacity: 0.55;
-  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.42), transparent 78%);
+  background: color-mix(in srgb, var(--app-bg) 92%, var(--panel-bg-solid) 8%);
 }
 
 .auth-login-page__brand-pane,
@@ -265,10 +252,6 @@
 @media (max-width: 1100px) {
   .auth-login-page {
     grid-template-columns: 1fr;
-  }
-
-  .auth-login-page::before {
-    mask-image: none;
   }
 
   .auth-login-page__brand-pane {

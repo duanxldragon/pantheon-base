@@ -10,8 +10,8 @@ export {
   GovernanceRailSummary,
   GovernanceRailCloseButton,
   GovernanceRailToggleButton,
-  useGovernanceRail,
 } from './patterns/GovernanceRail';
+export { useGovernanceRail } from './patterns/useGovernanceRail';
 export { default as GovernanceCleanupBar } from './patterns/GovernanceCleanupBar';
 export { default as PermissionAction } from './patterns/PermissionAction';
 export { default as TableBatchActionBar } from './patterns/TableBatchActionBar';
@@ -21,10 +21,12 @@ export { default as FormSection } from './patterns/FormSection';
 export { default as SubmitBar } from './patterns/SubmitBar';
 export {
   default as AppModal,
+} from './patterns/AppModal';
+export {
   showAppModalConfirm,
   showAppModalSuccess,
   showAppModalError,
-} from './patterns/AppModal';
+} from './patterns/AppModalActions';
 export { default as AppDrawer } from './patterns/AppDrawer';
 export { default as PageSplitLayout } from './patterns/PageSplitLayout';
 export { SideRailPanel, SideRailStack, SideRailItem, SideRailNote } from './patterns/SideRail';

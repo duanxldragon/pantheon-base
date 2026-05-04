@@ -16,6 +16,7 @@ import { message } from '../../../components/feedback/message';
 import { IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { AppModal, showAppModalConfirm } from '../../../components';
+import './FieldEditor.css';
 
 import {
   applyFieldTemplate,
@@ -255,7 +256,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
 
   return (
     <div>
-      <Card size="small" style={{ marginBottom: 16 }}>
+      <Card size="small" className="generator-field-editor__section">
         <Space wrap>
           <Typography.Text type="secondary">{t('generator.fieldEditor.templates')}</Typography.Text>
           {FIELD_TEMPLATE_DEFINITIONS.map((template) => (
@@ -277,7 +278,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
         </Space>
       </Card>
 
-      <Button type="primary" onClick={openCreateModal} style={{ marginBottom: 16 }}>
+      <Button type="primary" onClick={openCreateModal} className="generator-field-editor__add-button">
         <IconPlus /> {t('generator.fieldEditor.addField')}
       </Button>
 

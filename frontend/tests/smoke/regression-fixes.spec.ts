@@ -1,7 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
-import { join } from 'node:path';
-
-const artifactDir = join(process.cwd(), 'test-results', 'regression-fixes');
+import { expect, test } from '@playwright/test';
 
 test.describe('UI Structural Audit (Direct CSS/DOM Verification)', () => {
   test('verify global radii and gradient removal', async ({ page }) => {

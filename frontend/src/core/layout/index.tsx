@@ -299,7 +299,7 @@ const BaseLayout: React.FC = () => {
       endLogoutTransition();
       idleLogoutInFlightRef.current = false;
     }, 800);
-  }, [clearAuth, i18n, navigate, resetMenuTree]);
+  }, [clearAuth, navigate, resetMenuTree]);
 
   const recordActivity = useCallback((reason: 'interaction' | 'route' | 'unlock' | 'bootstrap', syncRemote = true) => {
     if (!token || locked) {
@@ -912,20 +912,23 @@ const BaseLayout: React.FC = () => {
       return;
     }
 
-    if (preferences.layoutMode && preferences.layoutMode !== layoutMode) {
-      setLayoutMode(preferences.layoutMode);
-      persistShellLayoutMode(preferences.layoutMode);
-    }
-    if (preferences.densityMode && preferences.densityMode !== densityMode) {
-      setDensityMode(preferences.densityMode);
-    }
-    if (preferences.theme && preferences.theme !== theme) {
-      setTheme(preferences.theme);
-    }
-    if (preferences.language && preferences.language !== currentLanguage) {
-      setExplicitLanguagePreference(preferences.language);
-      void switchI18nLanguage(preferences.language);
-    }
+    const timer = window.setTimeout(() => {
+      if (preferences.layoutMode && preferences.layoutMode !== layoutMode) {
+        setLayoutMode(preferences.layoutMode);
+        persistShellLayoutMode(preferences.layoutMode);
+      }
+      if (preferences.densityMode && preferences.densityMode !== densityMode) {
+        setDensityMode(preferences.densityMode);
+      }
+      if (preferences.theme && preferences.theme !== theme) {
+        setTheme(preferences.theme);
+      }
+      if (preferences.language && preferences.language !== currentLanguage) {
+        setExplicitLanguagePreference(preferences.language);
+        void switchI18nLanguage(preferences.language);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [currentLanguage, densityMode, layoutMode, setTheme, theme, userInfo?.preferences]);
 
   const changeLanguage = (language: SupportedLocale) => {

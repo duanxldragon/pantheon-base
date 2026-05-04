@@ -124,7 +124,7 @@ func TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles(t *testing.T)
 	if err != nil {
 		t.Fatalf("read ja generated file: %v", err)
 	}
-	if !strings.Contains(string(jaContent), "{}") {
-		t.Fatalf("expected unsupported locale generated fallback to stay empty, got %s", string(jaContent))
+	if !strings.Contains(string(jaContent), `"business.cmdb.host.title": "Host Management"`) {
+		t.Fatalf("expected ja generated fallback to include English host title, got %s", string(jaContent))
 	}
 }

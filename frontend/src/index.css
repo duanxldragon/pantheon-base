@@ -171,7 +171,7 @@ html,
 body,
 #root {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
 }
 
@@ -340,6 +340,22 @@ a {
   box-shadow: var(--panel-shadow-soft);
 }
 
+.side-rail-panel {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--panel-border-strong) !important;
+  background: var(--panel-bg-solid);
+}
+
+.side-rail-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--brand-primary);
+  opacity: 0.72;
+}
+
 .page-panel .arco-card-head {
   min-height: var(--shell-panel-head-min-height);
   padding-top: 6px;
@@ -355,7 +371,8 @@ a {
 }
 
 .page-panel--soft {
-  background: color-mix(in srgb, var(--brand-primary) 4%, #fff);
+  border-color: var(--panel-border-strong);
+  background: var(--panel-bg-solid);
 }
 
 .page-split-layout {
@@ -404,7 +421,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
+  padding: 18px 16px 16px;
 }
 
 .side-rail-panel .arco-card-head {
@@ -449,9 +466,9 @@ a {
 
 .side-rail-item {
   padding: 11px 12px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--brand-primary) 2%, #ffffff);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-xs);
+  background: var(--panel-bg-solid);
 }
 
 .side-rail-item--warning {
@@ -490,9 +507,9 @@ a {
 
 .side-rail-note {
   padding: 13px 14px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--brand-primary) 3%, #ffffff);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-xs);
+  background: var(--panel-bg-solid);
 }
 
 .side-rail-note--warning {
@@ -668,6 +685,8 @@ a {
   border: none;
   box-shadow: none;
   z-index: 2500 !important;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
 }
 
 .app-drawer {
@@ -685,6 +704,7 @@ a {
 .app-dialog .arco-modal-body {
   padding: 20px 24px 24px;
   background: var(--panel-muted);
+  overflow: auto;
 }
 
 .app-dialog .arco-modal-footer {
@@ -708,11 +728,24 @@ a {
 }
 
 .app-dialog .arco-modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 32px);
   overflow: hidden;
   border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-overlay);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-strong);
+}
+
+.app-dialog .arco-modal-header,
+.app-dialog .arco-modal-footer {
+  flex: 0 0 auto;
+}
+
+.app-dialog .arco-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .app-dialog .arco-form-item:last-child {
@@ -786,6 +819,45 @@ a {
   background: var(--panel-bg-solid);
 }
 
+.app-dialog .dialog-grid-card,
+.app-dialog .detail-panel-card {
+  overflow: hidden;
+  border-color: var(--panel-border-strong) !important;
+  border-radius: var(--radius-xs);
+  background: var(--panel-bg-solid) !important;
+  box-shadow: none;
+}
+
+.app-dialog .dialog-grid-card--danger,
+.app-dialog .detail-panel-card--danger {
+  border-color: var(--danger-border) !important;
+  background: color-mix(in srgb, var(--danger-soft) 24%, #fff) !important;
+}
+
+.app-dialog .dialog-grid-card .arco-card-head,
+.app-dialog .detail-panel-card .arco-card-head {
+  min-height: 44px;
+  border-bottom-color: var(--panel-border);
+  background: color-mix(in srgb, var(--brand-primary) 2%, #fff);
+}
+
+.app-dialog .dialog-grid-card .arco-card-body,
+.app-dialog .detail-panel-card .arco-card-body {
+  padding: 14px 16px;
+}
+
+.app-dialog .detail-stack,
+.app-dialog .dialog-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app-dialog .detail-stack .arco-space-item,
+.app-dialog .dialog-form-stack .arco-space-item {
+  width: 100%;
+}
+
 .page-stat-panel .arco-card-body {
   padding: 18px 20px;
 }
@@ -795,6 +867,31 @@ a {
 }
 
 .filter-panel .arco-card-body {
+  padding: 0;
+}
+
+.filter-panel__header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.filter-panel__title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filter-panel__toggle {
+  min-height: 32px;
+  color: var(--text-secondary);
+}
+
+.filter-panel__body {
   padding: 16px 16px 4px;
 }
 
@@ -1067,13 +1164,14 @@ a {
 
 .arco-btn-primary {
   background: var(--brand-primary);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  box-shadow: none;
 }
 
 .arco-btn-primary:not(.arco-btn-disabled):hover,
 .arco-btn-primary:not(.arco-btn-disabled):focus {
   background: color-mix(in srgb, var(--brand-primary) 88%, #000);
   filter: none;
+  box-shadow: none;
 }
 
 .arco-btn-primary:not(.arco-btn-disabled):active {
@@ -1349,6 +1447,27 @@ a {
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);
+  min-width: 0;
+}
+
+.app-table-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.app-table__mobile-hint {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--brand-primary) 4%, #fff);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .app-table .arco-table-td,
@@ -1380,7 +1499,7 @@ a {
 }
 
 .app-table .arco-table-container {
-  overflow: hidden;
+  overflow: auto hidden;
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
 }
@@ -1563,6 +1682,78 @@ a {
 }
 
 @media (max-width: 768px) {
+  .app-dialog {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    margin: 12px auto;
+  }
+
+  .app-dialog .arco-modal-content {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .app-dialog .arco-modal-header,
+  .app-dialog .arco-modal-body,
+  .app-dialog .arco-modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .filter-panel__header {
+    display: flex;
+  }
+
+  .filter-panel__body {
+    padding: 12px 12px 2px;
+  }
+
+  .filter-panel--collapsed .arco-card-body {
+    padding-bottom: 0;
+  }
+
+  .filter-panel .arco-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .filter-panel .arco-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .filter-panel__action-item .arco-form-item-control,
+  .filter-panel__action-item .arco-form-item-control-children,
+  .filter-panel__action-item .arco-space,
+  .filter-panel__action-item .arco-space-item,
+  .filter-panel__action-item .arco-btn {
+    width: 100%;
+  }
+
+  .filter-panel__action-item .arco-space {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .app-table .arco-table-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-table__mobile-hint {
+    display: flex;
+  }
+
+  .app-table .arco-table-pagination {
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
   .system-page-hero .arco-card-body {
     padding: 14px;
   }

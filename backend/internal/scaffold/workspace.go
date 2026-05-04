@@ -68,6 +68,24 @@ func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 	if len(req.Files) == 0 {
 		return errors.New("module.generate.empty_files")
 	}
+	for _, dependency := range req.Schema.Dependencies {
+		if !isValidModulePath(strings.TrimSpace(dependency.Module), true) {
+			return errors.New("module.generate.invalid_dependency")
+		}
+	}
+	for _, relation := range req.Schema.Relations {
+		if strings.TrimSpace(relation.Name) == "" ||
+			strings.TrimSpace(relation.TargetModule) == "" ||
+			strings.TrimSpace(relation.LocalField) == "" ||
+			strings.TrimSpace(relation.TargetField) == "" {
+			return errors.New("module.generate.invalid_relation")
+		}
+		switch strings.TrimSpace(relation.Type) {
+		case "oneToMany", "manyToMany", "lookup":
+		default:
+			return errors.New("module.generate.invalid_relation")
+		}
+	}
 	return nil
 }
 
@@ -213,9 +231,9 @@ func writeGeneratedBackendRegistry(workspaceRoot string, scope string, refs []Ge
 	target := filepath.Join(workspaceRoot, "backend", "modules", scope, "generated_registry.go")
 
 	type entry struct {
-		Alias       string
-		ImportPath  string
-		InitFunc    string
+		Alias      string
+		ImportPath string
+		InitFunc   string
 	}
 	entries := make([]entry, 0, len(refs))
 	for _, ref := range refs {
@@ -292,7 +310,7 @@ func writeGeneratedFrontendComponentRegistry(workspaceRoot string, refs []Genera
 }
 
 func writeGeneratedBackendComponentRegistry(workspaceRoot string, refs []GeneratedModuleRef) error {
-	target := filepath.Join(workspaceRoot, "backend", "modules", "system", "menu", "generated_component_registry.go")
+	target := filepath.Join(workspaceRoot, "backend", "modules", "system", "iam", "menu", "generated_component_registry.go")
 
 	type entry struct {
 		Key string
@@ -443,6 +461,13 @@ func WriteGeneratedFallbackResources(workspaceRoot string) error {
 			return walkErr
 		}
 	}
+	for _, locale := range []string{"ja-JP", "ko-KR", "fr-FR"} {
+		for key, value := range localePayload["en-US"] {
+			if strings.TrimSpace(localePayload[locale][key]) == "" {
+				localePayload[locale][key] = value
+			}
+		}
+	}
 
 	resourceDir := filepath.Join(workspaceRoot, "frontend", "src", "i18n", "resources", "generated")
 	if err := os.MkdirAll(resourceDir, 0o755); err != nil {
@@ -537,7 +562,7 @@ export const generatedComponentRegistry = {
 } satisfies Record<string, RegistryEntry>;
 `
 
-const generatedBackendComponentRegistryTemplate = `package system
+const generatedBackendComponentRegistryTemplate = `package iam
 
 var generatedMenuComponentKeys = map[string]struct{}{
 {{- range .Entries }}

@@ -426,8 +426,12 @@ const DeptList: React.FC = () => {
     if (!state?.deptId) {
       return;
     }
-    setSelectedOrgDeptId(state.deptId);
-    setActiveTab('org');
+    const deptId = state.deptId;
+    const timer = window.setTimeout(() => {
+      setSelectedOrgDeptId(deptId);
+      setActiveTab('org');
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const deptOptions = useMemo<TreeSelectDataType[]>(() => {

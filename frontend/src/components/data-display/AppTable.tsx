@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from '@arco-design/web-react';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
+import { useTranslation } from 'react-i18next';
 import PageEmpty from '../feedback/PageEmpty';
 
 interface AppTableProps<T> extends TableProps<T> {
@@ -57,6 +58,7 @@ function filterResponsiveColumns<T>(columns: ColumnProps<T>[] | undefined, viewp
 
 function AppTable<T>(props: AppTableProps<T>) {
   const { data, loading, emptyText, columns, scroll, ...rest } = props;
+  const { t } = useTranslation();
   const rows = Array.isArray(data) ? data : [];
   const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 1920 : window.innerWidth));
 
@@ -84,15 +86,23 @@ function AppTable<T>(props: AppTableProps<T>) {
   }
 
   return (
-    <Table
-      {...rest}
-      className={rest.className ? `app-table ${rest.className}` : 'app-table'}
-      columns={responsiveColumns}
-      scroll={effectiveScroll}
-      size={rest.size || 'small'}
-      data={rows}
-      loading={loading}
-    />
+    <div className="app-table-shell">
+      {viewportWidth <= 768 ? (
+        <div className="app-table__mobile-hint">
+          <span>{t('common.tableRecordSummary', { count: rows.length })}</span>
+          {needsHorizontalScroll(responsiveColumns) ? <span>{t('common.tableSwipeHint')}</span> : null}
+        </div>
+      ) : null}
+      <Table
+        {...rest}
+        className={rest.className ? `app-table ${rest.className}` : 'app-table'}
+        columns={responsiveColumns}
+        scroll={effectiveScroll}
+        size={rest.size || 'small'}
+        data={rows}
+        loading={loading}
+      />
+    </div>
   );
 }
 
