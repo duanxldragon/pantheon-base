@@ -188,6 +188,16 @@ const SecurityCenter: React.FC = () => {
         hint: t('system.setting.remark.security.password_require_uppercase'),
       },
       {
+        label: t('system.setting.item.security.password_history_limit'),
+        value: String(policy.passwordHistoryLimit ?? 0),
+        hint: t('system.setting.remark.security.password_history_limit'),
+      },
+      {
+        label: t('system.setting.item.security.password_expire_days'),
+        value: String(policy.passwordExpireDays ?? 0),
+        hint: t('system.setting.remark.security.password_expire_days'),
+      },
+      {
         label: t('system.setting.item.login.max_failed_attempts'),
         value: t('auth.security.policy.maxFailedAttempts', { count: policy.maxFailedAttempts }),
         hint: t('system.setting.remark.login.max_failed_attempts'),
@@ -388,6 +398,16 @@ const SecurityCenter: React.FC = () => {
                   items={policyItems.map((item) => ({ label: item.label, value: item.value, description: item.hint }))}
                 />
               ) : null}
+              {overview?.recentSecurityEvents?.length ? (
+                <StandardRailSummary
+                  title={t('system.menu.securityEvent')}
+                  items={overview.recentSecurityEvents.map((item) => ({
+                    label: t(`auth.securityEvent.type.${item.eventType}`, { defaultValue: item.eventType }),
+                    value: t(`auth.securityEvent.severity.${item.severity}`, { defaultValue: item.severity }),
+                    description: formatDateTime(item.createdAt),
+                  }))}
+                />
+              ) : null}
               <StandardRailNotePanel
                 title={t('auth.security.hero.sideTitle')}
                 noteTitle={t('auth.security.currentSessionSummary')}
@@ -396,7 +416,7 @@ const SecurityCenter: React.FC = () => {
             </>
           )}
         >
-            <Card className="page-panel" title={t('auth.security.password')} extra={<Tag>{t('auth.security.passwordTip')}</Tag>}>
+            <Card className="page-panel" title={t('auth.security.password')} extra={<Tag color={overview?.passwordExpired ? 'red' : undefined}>{overview?.passwordExpired ? t('auth.security.passwordExpired') : t('auth.security.passwordTip')}</Tag>}>
               <Form form={passwordForm} layout="vertical" onSubmit={() => { void handleChangePassword(); }}>
                 <Space direction="vertical" size={20} className="auth-section-stack">
                   <FormSection title={t('system.profile.passwordTitle')} description={t('system.profile.passwordHint')}>

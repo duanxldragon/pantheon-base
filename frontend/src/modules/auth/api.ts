@@ -79,6 +79,9 @@ export interface SecurityOverview {
   currentSession?: AuthSession;
   activeSessionCount: number;
   lastLoginAt?: string;
+  passwordExpired?: boolean;
+  passwordExpiresAt?: string;
+  recentSecurityEvents?: SecurityEventRow[];
   policy: SecurityPolicy;
 }
 
@@ -86,6 +89,8 @@ export interface SecurityPolicy {
   passwordMinLength: number;
   passwordRequireDigit: boolean;
   passwordRequireUpper: boolean;
+  passwordHistoryLimit?: number;
+  passwordExpireDays?: number;
   maxFailedAttempts: number;
   lockMinutes: number;
   sourceMaxFailedAttempts: number;
@@ -97,6 +102,35 @@ export interface SecurityPolicy {
   captchaEnabled: boolean;
   mfaEnabled: boolean;
   ssoEnabled: boolean;
+}
+
+export interface SecurityEventRow {
+  id: number;
+  userId: number;
+  username: string;
+  eventType: string;
+  severity: string;
+  sourceKey: string;
+  ip: string;
+  userAgent: string;
+  messageKey: string;
+  metadata: string;
+  createdAt: string;
+}
+
+export interface SecurityEventQuery {
+  username?: string;
+  eventType?: string;
+  severity?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SecurityEventPageResp {
+  items: SecurityEventRow[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface LoginLogRow {
@@ -283,6 +317,14 @@ export function getAdminLoginLogList(params?: LoginLogQuery) {
 export function getAdminSessionList(params?: AdminSessionQuery) {
   return apiRequest<AdminSessionPageResp>({
     url: '/system/session/list',
+    method: 'get',
+    params,
+  });
+}
+
+export function getAdminSecurityEventList(params?: SecurityEventQuery) {
+  return apiRequest<SecurityEventPageResp>({
+    url: '/system/security-event/list',
     method: 'get',
     params,
   });

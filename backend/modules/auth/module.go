@@ -47,6 +47,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/login-log/export", authHandler.ExportLoginLogs)
 					systemProtected.POST("/login-log/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupLoginLogs)
 					systemProtected.POST("/login-log/batch-delete", middleware.SecureActionMiddleware(), authHandler.BatchDeleteLoginLogs)
+					systemProtected.GET("/security-event/list", authHandler.GetSecurityEventList)
 					systemProtected.GET("/session/list", authHandler.GetSessionList)
 					systemProtected.POST("/session/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupHistoricSessions)
 					systemProtected.DELETE("/session/:id", authHandler.RevokeAnySession)
@@ -121,6 +122,19 @@ func authMenuSeeds() []menuSeed {
 			RouteName: "system-session",
 			Module:    "system.auth",
 			Sort:      20,
+		},
+		{
+			Key:       "security-event",
+			ParentKey: "security",
+			TitleKey:  "system.menu.securityEvent",
+			Path:      "/system/security-event",
+			Component: "auth/SecurityEventList",
+			PagePerm:  "system:security-event:list",
+			Type:      "C",
+			Icon:      "safe",
+			RouteName: "system-security-event",
+			Module:    "system.auth",
+			Sort:      30,
 		},
 		{Key: "login-log-export", ParentKey: "login-log", TitleKey: "system.permission.login_log.export", Perms: "system:login-log:export", Type: "F", Sort: 1},
 		{Key: "login-log-clear", ParentKey: "login-log", TitleKey: "system.permission.login_log.clear", Perms: "system:login-log:clear", Type: "F", Sort: 2},
@@ -240,9 +254,10 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 		return 0, nil
 	}
 	parentPaths := map[string]string{
-		"security":  "/system/security",
-		"login-log": "/system/login-log",
-		"session":   "/system/session",
+		"security":       "/system/security",
+		"login-log":      "/system/login-log",
+		"session":        "/system/session",
+		"security-event": "/system/security-event",
 	}
 	parentPath, ok := parentPaths[parentKey]
 	if !ok {

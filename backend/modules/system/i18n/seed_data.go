@@ -44,6 +44,8 @@ func (s *I18nService) SeedI18nModuleI18n(db *gorm.DB) error {
 		{Module: "system.auth", Locale: "en-US", Group: "menu", Key: "system.menu.loginLog", Value: "Login Logs"},
 		{Module: "system.auth", Locale: "zh-CN", Group: "menu", Key: "system.menu.session", Value: "会话管理"},
 		{Module: "system.auth", Locale: "en-US", Group: "menu", Key: "system.menu.session", Value: "Session Management"},
+		{Module: "system.auth", Locale: "zh-CN", Group: "menu", Key: "system.menu.securityEvent", Value: "安全事件"},
+		{Module: "system.auth", Locale: "en-US", Group: "menu", Key: "system.menu.securityEvent", Value: "Security Events"},
 		{Module: "system.audit", Locale: "zh-CN", Group: "menu", Key: "system.menu.operationLog", Value: "操作日志"},
 		{Module: "system.audit", Locale: "en-US", Group: "menu", Key: "system.menu.operationLog", Value: "Operation Logs"},
 

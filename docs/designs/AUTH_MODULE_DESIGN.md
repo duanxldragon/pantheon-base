@@ -79,18 +79,21 @@
 
 - `security.password_min_length`：作用于当前用户修改密码
 - `security.password_require_digit` / `security.password_require_uppercase`：作用于当前用户修改密码复杂度校验
+- `security.password_history_limit`：限制最近 N 次历史密码不可复用；`0` 表示关闭
+- `security.password_expire_days`：控制安全中心密码过期提醒；`0` 表示关闭
 - `login.max_failed_attempts`：作用于登录失败累计阈值
 - `login.lock_minutes`：作用于账号临时锁定时长
 - `login.source_max_failed_attempts`：作用于同一来源/IP 在窗口内的失败阈值
 - `login.source_window_minutes`：作用于来源/IP 失败次数的统计窗口
 - `login.source_lock_minutes`：作用于来源/IP 临时锁定时长
+- `login.security_event_enabled`：控制是否记录来源锁定、账号锁定等真实安全事件
 - `login.session_idle_minutes`：作用于会话空闲超时判定，平台壳层会同步执行本地倒计时退出
 - `login.max_active_sessions_per_user`：作用于同账号最大活跃会话上限；新登录超过阈值时自动下线更早的活跃会话，后台账号建议默认为 `1`
 - `audit.session_retention_days`：作用于历史会话保留期；已下线或已过期会话超过天数后自动清理，避免 `system_user_session` 无界增长
 - `login.mfa_enabled`：控制真实 TOTP 二次验证登录链路；默认关闭，关闭时保持原账号密码登录链路
 - `login.captcha_enabled` / `login.sso_enabled`：作为后续验证码、SSO 的配置开关预留；当前默认关闭，不展示伪能力
 
-同时，`system/iam` 中的用户创建与管理员重置密码也已消费 `security.password_min_length`，确保系统管理内部策略一致。
+同时，`system/iam` 中的用户创建与管理员重置密码也已消费 `security.password_min_length`，确保系统管理内部策略一致。`system_auth_security_event` 和 `system_user_password_history` 属于 `system/auth`，不应下沉到 `iam/user`。
 
 ### 4.2 `auth` 不负责
 

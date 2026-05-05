@@ -198,6 +198,21 @@ func (h *AuthHandler) GetLoginLogList(c *gin.Context) {
 	}
 	common.Success(c, resp)
 }
+
+func (h *AuthHandler) GetSecurityEventList(c *gin.Context) {
+	var query SecurityEventQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp, err := h.service.ListSecurityEvents(&query)
+	if err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.security_event.list.error")
+		return
+	}
+	common.Success(c, resp)
+}
+
 func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 	common.SetAuditMetadata(c, "audit.login_log.export.title", common.BusinessExport)
 

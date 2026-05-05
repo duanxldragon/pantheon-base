@@ -423,6 +423,16 @@ func TestPermissionService_GetWorkbenchDetectsSpecificRequiredAPIPolicyGap(t *te
 	}
 }
 
+func TestPermissionWorkbenchRequiresSecurityEventListPolicy(t *testing.T) {
+	policies := requiredAPIPoliciesByPermissionKey("system:security-event:list")
+	if len(policies) != 1 {
+		t.Fatalf("expected one required policy, got %+v", policies)
+	}
+	if policies[0].Path != "/api/v1/system/security-event/list" || policies[0].Method != "GET" {
+		t.Fatalf("unexpected required policy: %+v", policies[0])
+	}
+}
+
 func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 	db := setupPermissionTestDB(t)
 	service := NewPermissionService(db)

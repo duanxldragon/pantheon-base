@@ -44,6 +44,8 @@ type authRuntimePolicy struct {
 	PasswordMinLength       int
 	PasswordRequireDigit    bool
 	PasswordRequireUpper    bool
+	PasswordHistoryLimit    int
+	PasswordExpireDays      int
 	MaxFailedAttempts       int
 	LockMinutes             int
 	SourceMaxFailedAttempts int
@@ -53,6 +55,7 @@ type authRuntimePolicy struct {
 	MaxActiveSessions       int
 	LoginLogRetentionDays   int
 	SessionRetentionDays    int
+	SecurityEventEnabled    bool
 	CaptchaEnabled          bool
 	MFAEnabled              bool
 	SSOEnabled              bool
@@ -90,6 +93,8 @@ func (s *AuthService) ReloadSettings() error {
 		PasswordMinLength:       s.fetchSettingIntFromDB("security.password_min_length", defaultPasswordMinLength),
 		PasswordRequireDigit:    s.fetchSettingBoolFromDB("security.password_require_digit", false),
 		PasswordRequireUpper:    s.fetchSettingBoolFromDB("security.password_require_uppercase", false),
+		PasswordHistoryLimit:    s.fetchSettingIntFromDB("security.password_history_limit", 0),
+		PasswordExpireDays:      s.fetchSettingIntFromDB("security.password_expire_days", 0),
 		MaxFailedAttempts:       s.fetchSettingIntFromDB("login.max_failed_attempts", defaultMaxFailedAttempts),
 		LockMinutes:             s.fetchSettingIntFromDB("login.lock_minutes", defaultLockMinutes),
 		SourceMaxFailedAttempts: s.fetchSettingIntFromDB("login.source_max_failed_attempts", defaultSourceMaxFailedAttempts),
@@ -99,6 +104,7 @@ func (s *AuthService) ReloadSettings() error {
 		MaxActiveSessions:       s.fetchSettingIntFromDB("login.max_active_sessions_per_user", defaultMaxActiveSessions),
 		LoginLogRetentionDays:   s.fetchSettingIntFromDB("audit.login_log_retention_days", defaultLoginLogRetentionDays),
 		SessionRetentionDays:    s.fetchSettingIntFromDB("audit.session_retention_days", defaultSessionRetentionDays),
+		SecurityEventEnabled:    s.fetchSettingBoolFromDB("login.security_event_enabled", true),
 		CaptchaEnabled:          s.fetchSettingBoolFromDB("login.captcha_enabled", false),
 		MFAEnabled:              s.fetchSettingBoolFromDB("login.mfa_enabled", false),
 		SSOEnabled:              s.fetchSettingBoolFromDB("login.sso_enabled", false),
@@ -108,6 +114,8 @@ func (s *AuthService) ReloadSettings() error {
 	s.settingsCache["security.password_min_length"] = policy.PasswordMinLength
 	s.settingsCache["security.password_require_digit"] = boolToInt(policy.PasswordRequireDigit)
 	s.settingsCache["security.password_require_uppercase"] = boolToInt(policy.PasswordRequireUpper)
+	s.settingsCache["security.password_history_limit"] = policy.PasswordHistoryLimit
+	s.settingsCache["security.password_expire_days"] = policy.PasswordExpireDays
 	s.settingsCache["login.max_failed_attempts"] = policy.MaxFailedAttempts
 	s.settingsCache["login.lock_minutes"] = policy.LockMinutes
 	s.settingsCache["login.source_max_failed_attempts"] = policy.SourceMaxFailedAttempts
@@ -117,6 +125,7 @@ func (s *AuthService) ReloadSettings() error {
 	s.settingsCache["login.max_active_sessions_per_user"] = policy.MaxActiveSessions
 	s.settingsCache["audit.login_log_retention_days"] = policy.LoginLogRetentionDays
 	s.settingsCache["audit.session_retention_days"] = policy.SessionRetentionDays
+	s.settingsCache["login.security_event_enabled"] = boolToInt(policy.SecurityEventEnabled)
 	s.settingsCache["login.captcha_enabled"] = boolToInt(policy.CaptchaEnabled)
 	s.settingsCache["login.mfa_enabled"] = boolToInt(policy.MFAEnabled)
 	s.settingsCache["login.sso_enabled"] = boolToInt(policy.SSOEnabled)
@@ -145,7 +154,7 @@ func (s *AuthService) Migrate() error {
 	if s.db == nil {
 		return errors.New("database.not_initialized")
 	}
-	if err := s.db.AutoMigrate(&SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}); err != nil {
+	if err := s.db.AutoMigrate(&SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &SystemAuthSecurityEvent{}, &SystemUserPasswordHistory{}); err != nil {
 		return err
 	}
 	return nil
@@ -240,9 +249,25 @@ func (s *AuthService) LoginWithSource(req *LoginReq, sourceKey string) (*user.Sy
 		if blocked, sourceErr := s.recordSourceFailure(sourceKey, policy, time.Now()); sourceErr != nil {
 			return nil, sourceErr
 		} else if blocked {
+			s.recordSecurityEvent(SystemAuthSecurityEvent{
+				UserID:     currentUser.ID,
+				Username:   currentUser.Username,
+				EventType:  "source_blocked",
+				Severity:   "high",
+				SourceKey:  sourceKey,
+				MessageKey: "auth.security.event.source_blocked",
+			})
 			return nil, errors.New("auth.login.error.source_blocked")
 		}
 		if locked {
+			s.recordSecurityEvent(SystemAuthSecurityEvent{
+				UserID:     currentUser.ID,
+				Username:   currentUser.Username,
+				EventType:  "account_locked",
+				Severity:   "high",
+				SourceKey:  sourceKey,
+				MessageKey: "auth.security.event.account_locked",
+			})
 			return nil, errors.New("user.login.error.locked")
 		}
 		return nil, errors.New("user.login.error.password_wrong")
@@ -571,6 +596,9 @@ func (s *AuthService) UpdatePassword(userID uint64, currentSessionID string, req
 	if oldPassword == newPassword {
 		return errors.New("user.password.error.same_as_old")
 	}
+	if err := s.ensurePasswordNotRecentlyUsed(currentUser.ID, newPassword, currentUser.Password, policy); err != nil {
+		return err
+	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
@@ -578,6 +606,15 @@ func (s *AuthService) UpdatePassword(userID uint64, currentSessionID string, req
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
+		if policy.PasswordHistoryLimit > 0 {
+			if err := tx.Create(&SystemUserPasswordHistory{
+				UserID:       currentUser.ID,
+				PasswordHash: currentUser.Password,
+				ChangedAt:    time.Now(),
+			}).Error; err != nil {
+				return err
+			}
+		}
 		if err := tx.Model(&currentUser).Update("password", string(passwordHash)).Error; err != nil {
 			return err
 		}
@@ -781,14 +818,19 @@ func (s *AuthService) GetSecurityOverview(userID uint64, username string, curren
 	}
 
 	return &SecurityOverviewResp{
-		User:               info,
-		CurrentSession:     currentSession,
-		ActiveSessionCount: activeSessionCount,
-		LastLoginAt:        lastLoginAt,
+		User:                 info,
+		CurrentSession:       currentSession,
+		ActiveSessionCount:   activeSessionCount,
+		LastLoginAt:          lastLoginAt,
+		PasswordExpired:      s.isPasswordExpired(userID, policy, now),
+		PasswordExpiresAt:    s.passwordExpiresAt(userID, policy),
+		RecentSecurityEvents: s.listRecentSecurityEvents(userID, 5),
 		Policy: SecurityPolicyResp{
 			PasswordMinLength:       policy.PasswordMinLength,
 			PasswordRequireDigit:    policy.PasswordRequireDigit,
 			PasswordRequireUpper:    policy.PasswordRequireUpper,
+			PasswordHistoryLimit:    policy.PasswordHistoryLimit,
+			PasswordExpireDays:      policy.PasswordExpireDays,
 			MaxFailedAttempts:       policy.MaxFailedAttempts,
 			LockMinutes:             policy.LockMinutes,
 			SourceMaxFailedAttempts: policy.SourceMaxFailedAttempts,
@@ -850,6 +892,41 @@ func (s *AuthService) ListOwnLoginLogs(username string, query *LoginLogQuery) (*
 func (s *AuthService) ListLoginLogs(query *LoginLogQuery) (*LoginLogPageResp, error) {
 	s.ensureAutomaticLoginLogRetention()
 	return s.listLoginLogs(query)
+}
+
+func (s *AuthService) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventPageResp, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+
+	page, pageSize := normalizeSecurityEventPageQuery(query)
+	db := s.db.Model(&SystemAuthSecurityEvent{})
+	if query != nil {
+		if strings.TrimSpace(query.Username) != "" {
+			db = db.Where("username LIKE ?", "%"+strings.TrimSpace(query.Username)+"%")
+		}
+		if strings.TrimSpace(query.EventType) != "" {
+			db = db.Where("event_type = ?", strings.TrimSpace(query.EventType))
+		}
+		if strings.TrimSpace(query.Severity) != "" {
+			db = db.Where("severity = ?", strings.TrimSpace(query.Severity))
+		}
+	}
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	var events []SystemAuthSecurityEvent
+	if err := db.Order("created_at desc, id desc").Offset((page - 1) * pageSize).Limit(pageSize).Find(&events).Error; err != nil {
+		return nil, err
+	}
+	return &SecurityEventPageResp{
+		Items:    toSecurityEventRespList(events),
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}, nil
 }
 
 func (s *AuthService) ExportLoginLogs(query *LoginLogQuery) (*impexp.CSVFile, error) {
@@ -1231,6 +1308,8 @@ func (s *AuthService) getAuthRuntimePolicy() authRuntimePolicy {
 		PasswordMinLength:       s.settingsCache["security.password_min_length"],
 		PasswordRequireDigit:    s.settingsCache["security.password_require_digit"] == 1,
 		PasswordRequireUpper:    s.settingsCache["security.password_require_uppercase"] == 1,
+		PasswordHistoryLimit:    s.settingsCache["security.password_history_limit"],
+		PasswordExpireDays:      s.settingsCache["security.password_expire_days"],
 		MaxFailedAttempts:       s.settingsCache["login.max_failed_attempts"],
 		LockMinutes:             s.settingsCache["login.lock_minutes"],
 		SourceMaxFailedAttempts: maxInt(s.settingsCache["login.source_max_failed_attempts"], defaultSourceMaxFailedAttempts),
@@ -1240,6 +1319,7 @@ func (s *AuthService) getAuthRuntimePolicy() authRuntimePolicy {
 		MaxActiveSessions:       maxInt(s.settingsCache["login.max_active_sessions_per_user"], defaultMaxActiveSessions),
 		LoginLogRetentionDays:   maxInt(s.settingsCache["audit.login_log_retention_days"], defaultLoginLogRetentionDays),
 		SessionRetentionDays:    maxInt(s.settingsCache["audit.session_retention_days"], defaultSessionRetentionDays),
+		SecurityEventEnabled:    s.settingsCache["login.security_event_enabled"] == 1,
 		CaptchaEnabled:          s.settingsCache["login.captcha_enabled"] == 1,
 		MFAEnabled:              s.settingsCache["login.mfa_enabled"] == 1,
 		SSOEnabled:              s.settingsCache["login.sso_enabled"] == 1,
@@ -1352,6 +1432,114 @@ func (s *AuthService) fetchSettingBoolFromDB(settingKey string, fallback bool) b
 		return fallback
 	}
 	return parsed
+}
+
+func (s *AuthService) ensurePasswordNotRecentlyUsed(userID uint64, newPassword string, currentPasswordHash string, policy authRuntimePolicy) error {
+	if policy.PasswordHistoryLimit <= 0 {
+		return nil
+	}
+	if bcrypt.CompareHashAndPassword([]byte(currentPasswordHash), []byte(newPassword)) == nil {
+		return errors.New("user.password.error.reused")
+	}
+
+	var rows []SystemUserPasswordHistory
+	if err := s.db.Where("user_id = ?", userID).
+		Order("changed_at desc, id desc").
+		Limit(policy.PasswordHistoryLimit).
+		Find(&rows).Error; err != nil {
+		return err
+	}
+	for _, row := range rows {
+		if bcrypt.CompareHashAndPassword([]byte(row.PasswordHash), []byte(newPassword)) == nil {
+			return errors.New("user.password.error.reused")
+		}
+	}
+	return nil
+}
+
+func (s *AuthService) recordSecurityEvent(event SystemAuthSecurityEvent) {
+	if s.db == nil || !s.getAuthRuntimePolicy().SecurityEventEnabled {
+		return
+	}
+	if strings.TrimSpace(event.EventType) == "" || strings.TrimSpace(event.MessageKey) == "" {
+		return
+	}
+	if strings.TrimSpace(event.Severity) == "" {
+		event.Severity = "medium"
+	}
+	event.SourceKey = strings.TrimSpace(event.SourceKey)
+	event.Username = strings.TrimSpace(event.Username)
+	_ = s.db.Create(&event).Error
+}
+
+func (s *AuthService) listRecentSecurityEvents(userID uint64, limit int) []SecurityEventResp {
+	if s.db == nil || userID == 0 || limit <= 0 {
+		return []SecurityEventResp{}
+	}
+	var events []SystemAuthSecurityEvent
+	if err := s.db.Where("user_id = ?", userID).Order("created_at desc, id desc").Limit(limit).Find(&events).Error; err != nil {
+		return []SecurityEventResp{}
+	}
+	return toSecurityEventRespList(events)
+}
+
+func toSecurityEventRespList(events []SystemAuthSecurityEvent) []SecurityEventResp {
+	result := make([]SecurityEventResp, 0, len(events))
+	for _, item := range events {
+		result = append(result, SecurityEventResp{
+			ID:         item.ID,
+			UserID:     item.UserID,
+			Username:   item.Username,
+			EventType:  item.EventType,
+			Severity:   item.Severity,
+			SourceKey:  item.SourceKey,
+			IP:         item.IP,
+			UserAgent:  item.UserAgent,
+			MessageKey: item.MessageKey,
+			Metadata:   item.Metadata,
+			CreatedAt:  item.CreatedAt.Format(time.RFC3339),
+		})
+	}
+	return result
+}
+
+func (s *AuthService) passwordExpiresAt(userID uint64, policy authRuntimePolicy) *string {
+	if policy.PasswordExpireDays <= 0 {
+		return nil
+	}
+	changedAt := s.passwordLastChangedAt(userID)
+	if changedAt.IsZero() {
+		return nil
+	}
+	expiresAt := changedAt.AddDate(0, 0, policy.PasswordExpireDays).Format(time.RFC3339)
+	return &expiresAt
+}
+
+func (s *AuthService) isPasswordExpired(userID uint64, policy authRuntimePolicy, now time.Time) bool {
+	expiresAt := s.passwordExpiresAt(userID, policy)
+	if expiresAt == nil {
+		return false
+	}
+	parsed, err := time.Parse(time.RFC3339, *expiresAt)
+	if err != nil {
+		return false
+	}
+	return !parsed.After(now)
+}
+
+func (s *AuthService) passwordLastChangedAt(userID uint64) time.Time {
+	var row SystemUserPasswordHistory
+	if err := s.db.Where("user_id = ?", userID).Order("changed_at desc, id desc").First(&row).Error; err == nil {
+		return row.ChangedAt
+	}
+	var currentUser user.SystemUser
+	if err := s.db.First(&currentUser, userID).Error; err == nil {
+		if !currentUser.UpdatedAt.IsZero() {
+			return currentUser.UpdatedAt
+		}
+		return currentUser.CreatedAt
+	}
+	return time.Time{}
 }
 
 func (s *AuthService) recordFailedLoginAttempt(currentUser *user.SystemUser, policy authRuntimePolicy) (bool, error) {
@@ -1584,6 +1772,13 @@ func normalizePageQuery(page int, pageSize int) (int, int) {
 		pageSize = 100
 	}
 	return page, pageSize
+}
+
+func normalizeSecurityEventPageQuery(query *SecurityEventQuery) (int, int) {
+	if query == nil {
+		return 1, 10
+	}
+	return normalizePageQuery(query.Page, query.PageSize)
 }
 
 func normalizeUint64IDs(ids []uint64) []uint64 {

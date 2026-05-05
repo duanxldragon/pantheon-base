@@ -6,6 +6,7 @@ var staticRegisteredMenuComponentKeys = map[string]struct{}{
 	"dashboard":                          {},
 	"auth/SecurityCenter":                {},
 	"auth/LoginLogList":                  {},
+	"auth/SecurityEventList":             {},
 	"auth/SessionList":                   {},
 	"system/profile/ProfileCenter":       {},
 	"system/dict/DictPage":               {},

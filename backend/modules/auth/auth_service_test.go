@@ -21,7 +21,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	db := testmysql.Open(t)
 
 	// 迁移模型
-	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{})
+	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &SystemAuthSecurityEvent{}, &SystemUserPasswordHistory{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY AUTOINCREMENT, role_key TEXT, status INTEGER)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
@@ -357,6 +357,37 @@ func TestAuthService_LoginWithSourceBlocksSourceAfterConfiguredFailures(t *testi
 	}
 }
 
+func TestAuthService_LoginWithSourceRecordsSecurityEventWhenSourceBlocked(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "risk_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.source_max_failed_attempts', '1'), ('login.source_window_minutes', '15'), ('login.source_lock_minutes', '10')")
+	_ = s.ReloadSettings()
+
+	_, err := s.LoginWithSource(&LoginReq{Username: "risk_user", Password: "wrong"}, "ip:10.0.0.9")
+	if err == nil || err.Error() != "auth.login.error.source_blocked" {
+		t.Fatalf("expected source blocked error, got %v", err)
+	}
+
+	events, err := s.ListSecurityEvents(&SecurityEventQuery{Username: "risk_user", EventType: "source_blocked", Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list security events: %v", err)
+	}
+	if events.Total != 1 || len(events.Items) != 1 {
+		t.Fatalf("expected one security event, got %+v", events)
+	}
+	if events.Items[0].Severity != "high" || events.Items[0].SourceKey != "ip:10.0.0.9" || events.Items[0].MessageKey != "auth.security.event.source_blocked" {
+		t.Fatalf("unexpected security event: %+v", events.Items[0])
+	}
+}
+
 func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)
@@ -408,6 +439,33 @@ func TestAuthService_UpdatePasswordUsesConfiguredComplexity(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("expected complex password to pass, got %v", err)
+	}
+}
+
+func TestAuthService_UpdatePasswordRejectsRecentPasswordReuse(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "history_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_history_limit', '2')")
+	_ = s.ReloadSettings()
+
+	if err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{OldPassword: "oldpassword", NewPassword: "newpassword1"}); err != nil {
+		t.Fatalf("first password update: %v", err)
+	}
+	if err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{OldPassword: "newpassword1", NewPassword: "newpassword2"}); err != nil {
+		t.Fatalf("second password update: %v", err)
+	}
+
+	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{OldPassword: "newpassword2", NewPassword: "oldpassword"})
+	if err == nil || err.Error() != "user.password.error.reused" {
+		t.Fatalf("expected reused password error, got %v", err)
 	}
 }
 
@@ -667,6 +725,40 @@ func TestAuthService_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
 	}
 	if resp.ActiveSessionCount != 1 {
 		t.Fatalf("expected one active session, got %d", resp.ActiveSessionCount)
+	}
+}
+
+func TestAuthService_GetSecurityOverviewReportsPasswordExpiration(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "expired_password_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	changedAt := time.Now().AddDate(0, 0, -40)
+	if err := db.Create(&SystemUserPasswordHistory{
+		UserID:       testUser.ID,
+		PasswordHash: "previous-hash",
+		ChangedAt:    changedAt,
+	}).Error; err != nil {
+		t.Fatalf("seed password history: %v", err)
+	}
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_expire_days', '30')")
+	_ = s.ReloadSettings()
+
+	resp, err := s.GetSecurityOverview(testUser.ID, testUser.Username, "")
+	if err != nil {
+		t.Fatalf("get security overview: %v", err)
+	}
+	if !resp.PasswordExpired || resp.PasswordExpiresAt == nil {
+		t.Fatalf("expected expired password details, got %+v", resp)
+	}
+	if resp.Policy.PasswordExpireDays != 30 {
+		t.Fatalf("expected policy to expose password expire days, got %+v", resp.Policy)
 	}
 }
 

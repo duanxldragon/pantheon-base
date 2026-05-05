@@ -294,6 +294,41 @@ func TestSettingService_ListIncludesDefaultValueMetadata(t *testing.T) {
 	}
 }
 
+func TestSettingService_MigrateSeedsAuthSecurityPolicySettings(t *testing.T) {
+	db := setupSettingTestDB(t)
+	service := NewSettingService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate setting: %v", err)
+	}
+
+	items, err := service.List(&SettingListQuery{GroupKey: "security", Module: "system.auth"})
+	if err != nil {
+		t.Fatalf("list auth security settings: %v", err)
+	}
+	defaults := map[string]string{}
+	for _, item := range items {
+		defaults[item.SettingKey] = item.DefaultValue
+	}
+	if defaults["security.password_history_limit"] != "0" {
+		t.Fatalf("expected password history limit default metadata, got %s", defaults["security.password_history_limit"])
+	}
+	if defaults["security.password_expire_days"] != "0" {
+		t.Fatalf("expected password expire days default metadata, got %s", defaults["security.password_expire_days"])
+	}
+
+	loginItems, err := service.List(&SettingListQuery{GroupKey: "login", Module: "system.auth"})
+	if err != nil {
+		t.Fatalf("list auth login settings: %v", err)
+	}
+	loginDefaults := map[string]string{}
+	for _, item := range loginItems {
+		loginDefaults[item.SettingKey] = item.DefaultValue
+	}
+	if loginDefaults["login.security_event_enabled"] != "true" {
+		t.Fatalf("expected security event enabled default metadata, got %s", loginDefaults["login.security_event_enabled"])
+	}
+}
+
 func TestSettingService_MigrateUpgradesLegacySessionCleanupRetentionDefault(t *testing.T) {
 	db := setupSettingTestDB(t)
 	if err := db.Create(&SystemSetting{

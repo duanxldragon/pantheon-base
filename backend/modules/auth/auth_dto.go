@@ -94,17 +94,22 @@ type SessionResp struct {
 }
 
 type SecurityOverviewResp struct {
-	User               *UserInfoResp      `json:"user"`
-	CurrentSession     *SessionResp       `json:"currentSession"`
-	ActiveSessionCount int64              `json:"activeSessionCount"`
-	LastLoginAt        *string            `json:"lastLoginAt"`
-	Policy             SecurityPolicyResp `json:"policy"`
+	User                 *UserInfoResp       `json:"user"`
+	CurrentSession       *SessionResp        `json:"currentSession"`
+	ActiveSessionCount   int64               `json:"activeSessionCount"`
+	LastLoginAt          *string             `json:"lastLoginAt"`
+	PasswordExpired      bool                `json:"passwordExpired"`
+	PasswordExpiresAt    *string             `json:"passwordExpiresAt"`
+	RecentSecurityEvents []SecurityEventResp `json:"recentSecurityEvents"`
+	Policy               SecurityPolicyResp  `json:"policy"`
 }
 
 type SecurityPolicyResp struct {
 	PasswordMinLength       int  `json:"passwordMinLength"`
 	PasswordRequireDigit    bool `json:"passwordRequireDigit"`
 	PasswordRequireUpper    bool `json:"passwordRequireUpper"`
+	PasswordHistoryLimit    int  `json:"passwordHistoryLimit"`
+	PasswordExpireDays      int  `json:"passwordExpireDays"`
 	MaxFailedAttempts       int  `json:"maxFailedAttempts"`
 	LockMinutes             int  `json:"lockMinutes"`
 	SourceMaxFailedAttempts int  `json:"sourceMaxFailedAttempts"`
@@ -116,6 +121,35 @@ type SecurityPolicyResp struct {
 	CaptchaEnabled          bool `json:"captchaEnabled"`
 	MFAEnabled              bool `json:"mfaEnabled"`
 	SSOEnabled              bool `json:"ssoEnabled"`
+}
+
+type SecurityEventQuery struct {
+	Username  string `form:"username" json:"username"`
+	EventType string `form:"eventType" json:"eventType"`
+	Severity  string `form:"severity" json:"severity"`
+	Page      int    `form:"page" json:"page"`
+	PageSize  int    `form:"pageSize" json:"pageSize"`
+}
+
+type SecurityEventResp struct {
+	ID         uint64 `json:"id"`
+	UserID     uint64 `json:"userId"`
+	Username   string `json:"username"`
+	EventType  string `json:"eventType"`
+	Severity   string `json:"severity"`
+	SourceKey  string `json:"sourceKey"`
+	IP         string `json:"ip"`
+	UserAgent  string `json:"userAgent"`
+	MessageKey string `json:"messageKey"`
+	Metadata   string `json:"metadata"`
+	CreatedAt  string `json:"createdAt"`
+}
+
+type SecurityEventPageResp struct {
+	Items    []SecurityEventResp `json:"items"`
+	Total    int64               `json:"total"`
+	Page     int                 `json:"page"`
+	PageSize int                 `json:"pageSize"`
 }
 
 // LoginLogQuery 登录日志查询

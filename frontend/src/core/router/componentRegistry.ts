@@ -19,6 +19,7 @@ const staticComponentRegistry = {
   'dashboard': defineRegistryEntry(() => import('../../modules/dashboard/Dashboard')),
   'auth/SecurityCenter': defineRegistryEntry(() => import('../../modules/auth/SecurityCenter')),
   'auth/LoginLogList': defineRegistryEntry(() => import('../../modules/auth/LoginLogList')),
+  'auth/SecurityEventList': defineRegistryEntry(() => import('../../modules/auth/SecurityEventList')),
   'auth/SessionList': defineRegistryEntry(() => import('../../modules/auth/SessionList')),
   'system/profile/ProfileCenter': defineRegistryEntry(() => import('../../modules/system/profile/ProfileCenter')),
   'system/dict/DictPage': defineRegistryEntry(() => import('../../modules/system/dict/DictPage')),

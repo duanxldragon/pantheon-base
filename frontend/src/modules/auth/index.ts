@@ -27,10 +27,19 @@ export const AuthModule = defineModule({
       pagePermission: 'system:session:list',
       componentKey: 'auth/SessionList',
     },
+    {
+      path: 'system/security-event',
+      routeName: 'system-security-event',
+      titleKey: 'system.menu.securityEvent',
+      icon: 'safe',
+      pagePermission: 'system:security-event:list',
+      componentKey: 'auth/SecurityEventList',
+    },
   ],
   menus: [
     { path: '/system/login-log', titleKey: 'system.menu.loginLog', icon: 'clock', routeName: 'system-login-log', module: 'system.auth' },
     { path: '/system/session', titleKey: 'system.menu.session', icon: 'desktop', routeName: 'system-session', module: 'system.auth' },
+    { path: '/system/security-event', titleKey: 'system.menu.securityEvent', icon: 'safe', routeName: 'system-security-event', module: 'system.auth' },
   ],
   permissions: [
     'system:login-log:list',
@@ -40,6 +49,7 @@ export const AuthModule = defineModule({
     'system:session:list',
     'system:session:delete',
     'system:session:clear',
+    'system:security-event:list',
   ],
   i18nNamespaces: ['auth', 'system.menu'],
 });
