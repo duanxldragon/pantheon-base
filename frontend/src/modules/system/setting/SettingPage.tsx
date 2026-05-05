@@ -31,7 +31,7 @@ import '../list-page.css';
 
 const FormItem = Form.Item;
 
-const groupOrder = ['basic', 'security', 'login', 'audit', 'upload', 'i18n', 'ui'];
+const groupOrder = ['basic', 'platform', 'security', 'login', 'audit', 'upload', 'i18n', 'ui'];
 const defaultAuditPageSize = 5;
 const auditRetentionSettingKeys = new Set([
   'audit.login_log_retention_options',
@@ -324,7 +324,7 @@ const SettingPage: React.FC = () => {
           clearPantheonThemePreference();
         }
       }
-      if (['basic', 'i18n', 'ui'].includes(group.groupKey)) {
+      if (['basic', 'platform', 'i18n', 'ui'].includes(group.groupKey)) {
         const publicSettings = await refreshPublicSettings().catch(() => null);
         if (group.groupKey === 'i18n' && publicSettings && !hasExplicitLanguagePreference()) {
           await switchI18nLanguage(publicSettings.defaultLanguage).catch(() => undefined);
@@ -377,6 +377,9 @@ const SettingPage: React.FC = () => {
     if (item.settingKey === 'ui.default_theme') {
       const matchedTheme = pantheonThemeOptions.find((theme) => theme.key === item.defaultValue);
       return matchedTheme ? t(matchedTheme.labelKey) : item.defaultValue;
+    }
+    if (item.settingKey === 'platform.app_mode') {
+      return t(`system.setting.option.platform.app_mode.${item.defaultValue}`, item.defaultValue);
     }
     if (item.valueType === 'boolean') {
       return item.defaultValue === 'true' ? t('common.yes') : t('common.no');
@@ -431,6 +434,19 @@ const SettingPage: React.FC = () => {
               label: `${t(theme.labelKey)} · ${t(theme.descriptionKey)}`,
               value: theme.key,
             }))}
+          />
+        </FormItem>
+      );
+    }
+    if (item.settingKey === 'platform.app_mode') {
+      return (
+        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+          <Select
+            options={[
+              { label: t('system.setting.option.platform.app_mode.enterprise'), value: 'enterprise' },
+              { label: t('system.setting.option.platform.app_mode.consumer'), value: 'consumer' },
+              { label: t('system.setting.option.platform.app_mode.hybrid'), value: 'hybrid' },
+            ]}
           />
         </FormItem>
       );
@@ -566,6 +582,7 @@ const SettingPage: React.FC = () => {
         <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
           <Input.Password
             placeholder={item.hasValue === 1 ? t('system.setting.leaveEmptyToKeep') : t('system.setting.encryptedPlaceholder')}
+            onPressEnter={() => form.submit()}
           />
         </FormItem>
       );
@@ -579,7 +596,7 @@ const SettingPage: React.FC = () => {
     }
     return (
       <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
-        <Input />
+        <Input onPressEnter={() => form.submit()} />
       </FormItem>
     );
   };
@@ -781,7 +798,7 @@ const SettingPage: React.FC = () => {
                   ))}
                 </Tabs>
                 {activeSettingGroup ? (
-                  <Form form={form} layout="vertical">
+                  <Form form={form} layout="vertical" onSubmit={() => { void handleSubmit(); }}>
                     <Space direction="vertical" size={10} className="dialog-form-stack setting-page__form-stack" style={{ marginTop: 10 }}>
                       <FormSection
                         title={t(`system.setting.group.${activeSettingGroup.groupKey}`)}

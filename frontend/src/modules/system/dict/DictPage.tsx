@@ -773,16 +773,16 @@ const DictPage: React.FC = () => {
                 </div>
 
                 <FilterPanel>
-                  <Form form={queryForm} layout="vertical">
+                  <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
                     <Row gutter={16}>
                       <Col xs={24} md={12} lg={8}>
                         <FormItem label={t('system.dict.dictCode')} field="dictCode">
-                          <Input />
+                          <Input onPressEnter={() => queryForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col xs={24} md={12} lg={8}>
                         <FormItem label={t('system.dict.dictName')} field="dictName">
-                          <Input />
+                          <Input onPressEnter={() => queryForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col xs={24} md={12} lg={4}>
@@ -796,7 +796,7 @@ const DictPage: React.FC = () => {
                       <Col xs={24} md={12} lg={4}>
                         <FormItem className="filter-panel__action-item">
                           <Space>
-                            <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>{t('common.search')}</Button>
+                            <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                             <Button onClick={handleReset}>{t('common.reset')}</Button>
                           </Space>
                         </FormItem>
@@ -892,7 +892,7 @@ const DictPage: React.FC = () => {
                 ) : null}
 
                 <FilterPanel>
-                  <Form form={itemQueryForm} layout="vertical">
+                  <Form form={itemQueryForm} layout="vertical" onSubmit={() => handleItemSearch()}>
                     <Row gutter={16}>
                       <Col xs={24} lg={8}>
                         <FormItem label={t('system.dict.type')}>
@@ -923,13 +923,13 @@ const DictPage: React.FC = () => {
                       </Col>
                       <Col xs={24} lg={4}>
                         <FormItem label={t('common.search')} field="keyword">
-                          <Input placeholder={t('system.dict.itemLabelKey')} />
+                          <Input placeholder={t('system.dict.itemLabelKey')} onPressEnter={() => itemQueryForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col xs={24} lg={6}>
                         <FormItem className="filter-panel__action-item">
                           <Space>
-                            <Button type="primary" icon={<IconSearch />} onClick={handleItemSearch}>{t('common.search')}</Button>
+                            <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                             <Button onClick={handleItemReset}>{t('common.reset')}</Button>
                           </Space>
                         </FormItem>
@@ -1079,17 +1079,17 @@ const DictPage: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={typeForm} layout="vertical">
+        <Form form={typeForm} layout="vertical" onSubmit={() => { void submitTypeForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.dict.dictCode')} field="dictCode" rules={[{ required: true, message: t('system.dict.dictCodeRequired') }]}>
-                <Input />
+                <Input onPressEnter={() => typeForm.submit()} />
               </FormItem>
               <FormItem label={t('system.dict.dictName')} field="dictName" rules={[{ required: true, message: t('system.dict.dictNameRequired') }]}>
-                <Input />
+                <Input onPressEnter={() => typeForm.submit()} />
               </FormItem>
               <FormItem label={t('system.dict.module')} field="module">
-                <Input />
+                <Input onPressEnter={() => typeForm.submit()} />
               </FormItem>
               <FormItem label={t('system.dict.status')} field="status">
                 <Select options={[
@@ -1120,20 +1120,20 @@ const DictPage: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={itemForm} layout="vertical">
+        <Form form={itemForm} layout="vertical" onSubmit={() => { void submitItemForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('system.dict.item')}>
               <FormItem label={t('system.dict.dictCode')} field="dictCode" rules={[{ required: true, message: t('system.dict.dictCodeRequired') }]}>
                 <Input disabled />
               </FormItem>
               <FormItem label={t('system.dict.itemLabelKey')} field="itemLabelKey" rules={[{ required: true, message: t('system.dict.itemLabelKeyRequired') }]}>
-                <Input />
+                <Input onPressEnter={() => itemForm.submit()} />
               </FormItem>
               <FormItem label={t('system.dict.itemValue')} field="itemValue" rules={[{ required: true, message: t('system.dict.itemValueRequired') }]}>
-                <Input />
+                <Input onPressEnter={() => itemForm.submit()} />
               </FormItem>
               <FormItem label={t('system.dict.itemColor')} field="itemColor">
-                <Input placeholder={t('system.dict.itemColorPlaceholder')} />
+                <Input placeholder={t('system.dict.itemColorPlaceholder')} onPressEnter={() => itemForm.submit()} />
               </FormItem>
               <FormItem label={t('system.dict.sort')} field="sort">
                 <InputNumber min={0} />

@@ -3,6 +3,8 @@ import { downloadFile } from '../../../api/file';
 import { uploadImportFile } from '../../../api/importExport';
 import type { UserPlatformPreferences } from '../../auth/api';
 
+export type UserProfileExt = Record<string, unknown>;
+
 export interface UserProfile {
   id: number;
   username: string;
@@ -13,6 +15,7 @@ export interface UserProfile {
   roles?: string[];
   perms?: string[];
   preferences?: UserPlatformPreferences;
+  profileExt?: UserProfileExt;
   deptId: number;
   postId: number;
   status: number;
@@ -33,6 +36,7 @@ export interface UserListRow {
   createdAt: string;
   roleIds: number[];
   roleKeys: string[];
+  profileExt?: UserProfileExt;
 }
 
 export interface UserDetail {
@@ -83,6 +87,7 @@ export interface UserCreatePayload {
   postId?: number;
   status: number;
   roleIds: number[];
+  profileExt?: UserProfileExt;
 }
 
 export interface UserUpdatePayload {
@@ -94,6 +99,7 @@ export interface UserUpdatePayload {
   postId?: number;
   status: number;
   roleIds: number[];
+  profileExt?: UserProfileExt;
 }
 
 export interface UserResetPasswordPayload {
@@ -110,6 +116,7 @@ export interface UserProfileUpdatePayload {
   avatar?: string;
   email?: string;
   phone?: string;
+  profileExt?: UserProfileExt;
 }
 
 export function getUserList(params?: UserListQuery) {

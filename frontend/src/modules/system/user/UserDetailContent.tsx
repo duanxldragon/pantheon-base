@@ -9,10 +9,29 @@ const Col = Grid.Col;
 
 interface UserDetailContentProps {
   detail: UserDetailData;
+  orgEnabled?: boolean;
 }
 
-const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail }) => {
+const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail, orgEnabled = true }) => {
   const { t } = useTranslation();
+  const summaryItems = [
+    ...(orgEnabled ? [
+      { label: t('system.user.dept'), value: detail.deptName || '-' },
+      { label: t('system.user.post'), value: detail.postName || '-' },
+    ] : []),
+    {
+      label: t('system.user.roles'),
+      value: detail.roleKeys.length ? (
+        <Space wrap>
+          {detail.roleKeys.map((item) => (
+            <Tag key={item}>{item}</Tag>
+          ))}
+        </Space>
+      ) : '-',
+    },
+    { label: t('system.user.createdAt'), value: formatDateTime(detail.createdAt) },
+    { label: t('system.user.updatedAt'), value: formatDateTime(detail.updatedAt) },
+  ];
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -54,22 +73,7 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail }) => {
           <Card title={t('system.user.summary')}>
             <Descriptions
               column={1}
-              data={[
-                { label: t('system.user.dept'), value: detail.deptName || '-' },
-                { label: t('system.user.post'), value: detail.postName || '-' },
-                {
-                  label: t('system.user.roles'),
-                  value: detail.roleKeys.length ? (
-                    <Space wrap>
-                      {detail.roleKeys.map((item) => (
-                        <Tag key={item}>{item}</Tag>
-                      ))}
-                    </Space>
-                  ) : '-',
-                },
-                { label: t('system.user.createdAt'), value: formatDateTime(detail.createdAt) },
-                { label: t('system.user.updatedAt'), value: formatDateTime(detail.updatedAt) },
-              ]}
+              data={summaryItems}
             />
           </Card>
         </Col>

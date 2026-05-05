@@ -83,21 +83,21 @@ const CmdbHostList: React.FC = () => {
         title={t('business.cmdb.host.title')}
       />
       <FilterPanel>
-        <Form form={queryForm} layout="vertical">
+        <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
           <Row gutter={16}>
             <Col span={6}>
               <FormItem label={t('business.cmdb.host.field.hostCode.label')} field="hostCode">
-                <Input placeholder={t('business.cmdb.host.field.hostCode.label')} />
+                <Input placeholder={t('business.cmdb.host.field.hostCode.label')} onPressEnter={() => queryForm.submit()} />
               </FormItem>
             </Col>
             <Col span={6}>
               <FormItem label={t('business.cmdb.host.field.hostname.label')} field="hostname">
-                <Input placeholder={t('business.cmdb.host.field.hostname.label')} />
+                <Input placeholder={t('business.cmdb.host.field.hostname.label')} onPressEnter={() => queryForm.submit()} />
               </FormItem>
             </Col>
             <Col span={12} style={{ textAlign: 'right', marginTop: 24 }}>
               <Space>
-                <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
+                <Button type="primary" htmlType="submit" icon={<IconSearch />}>
                   {t('common.search')}
                 </Button>
                 <Button onClick={handleReset}>

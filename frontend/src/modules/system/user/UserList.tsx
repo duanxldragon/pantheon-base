@@ -10,6 +10,7 @@ import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
+import { usePublicSettings } from '../../../core/settings/publicSettings';
 import { usePermission } from '../../../hooks/usePermission';
 import { getDeptTree, type DeptNode } from '../dept/api';
 import { getPostList } from '../post/api';
@@ -93,6 +94,9 @@ const UserList: React.FC = () => {
   const [resetPasswordForm] = Form.useForm<ResetPasswordFormValues>();
   const [queryForm] = Form.useForm<UserListQuery>();
   const { t } = useTranslation();
+  const publicSettings = usePublicSettings();
+  const orgEnabled = publicSettings.orgEnabled;
+  const orgRequiredForUser = orgEnabled && publicSettings.orgRequiredForUser;
   const { isAdmin, hasPerm } = usePermission();
   const canView = isAdmin || hasPerm('system:user:view');
   const canCreate = isAdmin || hasPerm('system:user:create');
@@ -144,6 +148,11 @@ const UserList: React.FC = () => {
   }, [t]);
 
   const loadDeptAndPostOptions = useCallback(async () => {
+    if (!orgEnabled) {
+      setDeptOptions([]);
+      setPostOptions([]);
+      return;
+    }
     try {
       const [deptRows, postRows] = await Promise.all([
         resolveRouteWarmData('/system/user', 'depts:default', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' })),
@@ -164,7 +173,7 @@ const UserList: React.FC = () => {
     } catch {
       message.error(t('common.loadFailed'));
     }
-  }, [t]);
+  }, [orgEnabled, t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -193,7 +202,9 @@ const UserList: React.FC = () => {
     }
     void loadData(query);
     void loadRoles();
-    void loadDeptAndPostOptions();
+    if (orgEnabled) {
+      void loadDeptAndPostOptions();
+    }
   });
 
   const openCreate = () => {
@@ -208,7 +219,7 @@ const UserList: React.FC = () => {
     try {
       const detail = await getUserDetail(row.id);
       setEditing(row);
-      setFormDeptId(detail.deptId || 0);
+      setFormDeptId(orgEnabled ? detail.deptId || 0 : 0);
       setAvatarPreview(detail.avatar || '');
       form.setFieldsValue({
         username: detail.username,
@@ -216,8 +227,8 @@ const UserList: React.FC = () => {
         email: detail.email,
         phone: detail.phone,
         avatar: detail.avatar || '',
-        deptId: detail.deptId,
-        postId: detail.postId,
+        deptId: orgEnabled ? detail.deptId : 0,
+        postId: orgEnabled ? detail.postId : 0,
         status: detail.status,
         roleIds: detail.roleIds,
       });
@@ -273,14 +284,18 @@ const UserList: React.FC = () => {
           email: values.email,
           phone: values.phone,
           avatar: values.avatar,
-          deptId: values.deptId,
-          postId: values.postId,
+          deptId: orgEnabled ? values.deptId : 0,
+          postId: orgEnabled ? values.postId : 0,
           status: values.status,
           roleIds: values.roleIds,
         });
         message.success(t('common.updateSuccess'));
       } else {
-        await createUser(values);
+        await createUser({
+          ...values,
+          deptId: orgEnabled ? values.deptId : 0,
+          postId: orgEnabled ? values.postId : 0,
+        });
         message.success(t('common.createSuccess'));
       }
       invalidateUserCaches();
@@ -395,12 +410,14 @@ const UserList: React.FC = () => {
   const columns: ColumnProps<UserListRow>[] = [
     { title: t('system.user.username'), dataIndex: 'username', width: 120, ...sortableColumn('username') },
     { title: t('system.user.nickname'), dataIndex: 'nickname', width: 140, ...sortableColumn('nickname') },
-    { title: t('system.user.dept'), dataIndex: 'deptName', width: 120 },
-    withTableColumnPriority({
-      title: t('system.user.post'),
-      dataIndex: 'postName',
-      width: 120,
-    }, 'medium'),
+    ...(orgEnabled ? [
+      { title: t('system.user.dept'), dataIndex: 'deptName', width: 120 },
+      withTableColumnPriority({
+        title: t('system.user.post'),
+        dataIndex: 'postName',
+        width: 120,
+      }, 'medium'),
+    ] : []),
     withTableColumnPriority({
       title: t('system.user.roles'),
       dataIndex: 'roleKeys',
@@ -490,7 +507,9 @@ const UserList: React.FC = () => {
       publishRefresh('system:user:changed', 'system/user');
       await loadData(query, { silent: true });
       await loadRoles();
-      await loadDeptAndPostOptions();
+      if (orgEnabled) {
+        await loadDeptAndPostOptions();
+      }
     }
   };
 
@@ -566,11 +585,11 @@ const UserList: React.FC = () => {
   );
   const governanceSummaryItems = useMemo(
     () => [
-      {
+      ...(orgEnabled ? [{
         label: t('system.user.hero.orgReady'),
         value: `${Math.max(deptOptions.length - 1, 0)} / ${postOptions.length}`,
         description: t('system.user.hero.orgHint'),
-      },
+      }] : []),
       {
         label: t('system.user.hero.disabledRows'),
         value: disabledUserCount,
@@ -582,7 +601,7 @@ const UserList: React.FC = () => {
         description: t('system.user.hero.batchHint'),
       },
     ],
-    [batchActionDisabled, deptOptions.length, disabledUserCount, postOptions.length, t],
+    [batchActionDisabled, deptOptions.length, disabledUserCount, orgEnabled, postOptions.length, t],
   );
 
   return (
@@ -640,16 +659,16 @@ const UserList: React.FC = () => {
           ) : null}
         >
           <FilterPanel>
-            <Form form={queryForm} layout="vertical">
+            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
                 <Col span={6}>
                   <FormItem label={t('system.user.username')} field="username">
-                    <Input />
+                    <Input onPressEnter={() => queryForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col span={6}>
                   <FormItem label={t('system.user.nickname')} field="nickname">
-                    <Input />
+                    <Input onPressEnter={() => queryForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col span={6}>
@@ -663,7 +682,7 @@ const UserList: React.FC = () => {
                 <Col span={6}>
                   <FormItem className="filter-panel__action-item">
                     <Space>
-                      <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                      <Button type="primary" htmlType="submit" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
                       <Button onClick={reset}>{t('common.reset')}</Button>
                     </Space>
                   </FormItem>
@@ -752,11 +771,11 @@ const UserList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.user.username')} field="username" rules={[{ required: true, message: t('auth.usernameRequired') }]}>
-                <Input disabled={Boolean(editing)} />
+                <Input disabled={Boolean(editing)} onPressEnter={() => form.submit()} />
               </FormItem>
               {!editing ? (
                 <FormItem
@@ -764,17 +783,17 @@ const UserList: React.FC = () => {
                   field="password"
                   rules={[{ required: true, message: t('auth.passwordRequired') }]}
                 >
-                  <Input.Password />
+                  <Input.Password onPressEnter={() => form.submit()} />
                 </FormItem>
               ) : null}
               <FormItem label={t('system.user.nickname')} field="nickname">
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.user.email')} field="email" rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}>
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.user.phone')} field="phone">
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.user.avatar')} field="avatar">
                 <Space direction="vertical" size={8} style={{ width: '100%' }}>
@@ -809,12 +828,28 @@ const UserList: React.FC = () => {
               </FormItem>
             </FormSection>
             <FormSection title={t('common.accessControl')}>
-              <FormItem label={t('system.user.dept')} field="deptId">
-                <Select options={deptOptions} onChange={handleDeptChange} />
-              </FormItem>
-              <FormItem label={t('system.user.post')} field="postId">
-                <Select options={filteredPostOptions} disabled={formDeptId === 0} />
-              </FormItem>
+              {orgEnabled ? (
+                <>
+                  <FormItem
+                    label={t('system.user.dept')}
+                    field="deptId"
+                    rules={orgRequiredForUser ? [{
+                      validator: (value, callback) => {
+                        if (Number(value || 0) > 0) {
+                          callback();
+                          return;
+                        }
+                        callback(t('system.user.dept.required'));
+                      },
+                    }] : undefined}
+                  >
+                    <Select options={deptOptions} onChange={handleDeptChange} />
+                  </FormItem>
+                  <FormItem label={t('system.user.post')} field="postId">
+                    <Select options={filteredPostOptions} disabled={formDeptId === 0} />
+                  </FormItem>
+                </>
+              ) : null}
               <FormItem label={t('system.user.status')} field="status">
                 <Select
                   options={[
@@ -848,7 +883,7 @@ const UserList: React.FC = () => {
           />
         ) : null}
         {!detailLoading && !detailError && !detailData ? <PageEmpty description={t('common.noData')} /> : null}
-        {!detailLoading && !detailError && detailData ? <UserDetailContent detail={detailData} /> : null}
+        {!detailLoading && !detailError && detailData ? <UserDetailContent detail={detailData} orgEnabled={orgEnabled} /> : null}
       </AppModal>
 
       <AppModal
@@ -872,7 +907,7 @@ const UserList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={resetPasswordForm} layout="vertical">
+        <Form form={resetPasswordForm} layout="vertical" onSubmit={() => { void submitResetPassword(); }}>
           <Space direction="vertical" size={16} className="dialog-form-stack">
             <FormItem label={t('system.user.resetPasswordTarget')}>
               <Input value={resetTarget ? `${resetTarget.username} / ${resetTarget.nickname || '-'}` : ''} disabled />
@@ -882,7 +917,7 @@ const UserList: React.FC = () => {
               field="newPassword"
               rules={[{ required: true, message: t('auth.passwordRequired') }]}
             >
-              <Input.Password />
+              <Input.Password onPressEnter={() => resetPasswordForm.submit()} />
             </FormItem>
             <FormItem
               label={t('system.user.confirmPassword')}
@@ -901,7 +936,7 @@ const UserList: React.FC = () => {
                 },
               ]}
             >
-              <Input.Password />
+              <Input.Password onPressEnter={() => resetPasswordForm.submit()} />
             </FormItem>
             <Tag color="orange">{t('system.user.resetPasswordHint')}</Tag>
           </Space>

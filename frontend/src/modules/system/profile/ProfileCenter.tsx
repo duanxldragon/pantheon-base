@@ -168,7 +168,7 @@ const ProfileCenter: React.FC = () => {
         </Card>
 
         <Card className="page-panel" title={t('system.profile.basicTitle')}>
-          <Form form={profileForm} layout="vertical">
+          <Form form={profileForm} layout="vertical" onSubmit={() => { void handleSaveProfile(); }}>
             <FormSection title={t('common.basicInfo')}>
               <Row gutter={16}>
                 <Col span={12}>
@@ -178,23 +178,23 @@ const ProfileCenter: React.FC = () => {
                 </Col>
                 <Col span={12}>
                   <FormItem label={t('system.profile.nickname')} field="nickname" rules={[{ required: true, message: t('system.profile.nicknameRequired') }]}>
-                    <Input />
+                    <Input onPressEnter={() => profileForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col span={12}>
                   <FormItem label={t('system.profile.email')} field="email" rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}>
-                    <Input />
+                    <Input onPressEnter={() => profileForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col span={12}>
                   <FormItem label={t('system.profile.phone')} field="phone">
-                    <Input />
+                    <Input onPressEnter={() => profileForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col span={24}>
                   <FormItem label={t('system.profile.avatar')} field="avatar">
                     <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                      <Input placeholder={t('system.profile.avatarPlaceholder')} onChange={(value) => setAvatarPreview(value)} />
+                      <Input placeholder={t('system.profile.avatarPlaceholder')} onChange={(value) => setAvatarPreview(value)} onPressEnter={() => profileForm.submit()} />
                       <Space wrap>
                         <Button
                           icon={<IconUpload />}

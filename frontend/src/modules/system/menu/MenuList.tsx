@@ -588,16 +588,16 @@ const MenuList: React.FC = () => {
           ) : null}
         >
             <FilterPanel>
-                <Form form={queryForm} layout="vertical">
+                <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                 <Row gutter={16}>
                   <Col xs={24} md={12} lg={8}>
                     <FormItem label={t('system.menu.titleKey')} field="titleKey">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col xs={24} md={12} lg={8}>
                     <FormItem label={t('system.menu.path')} field="path">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col xs={24} md={12} lg={4}>
@@ -611,7 +611,7 @@ const MenuList: React.FC = () => {
                   <Col xs={24} md={12} lg={4}>
                     <FormItem className="filter-panel__action-item">
                       <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                         <Button onClick={reset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>
@@ -656,17 +656,17 @@ const MenuList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.menu.parentId')} field="parentId">
                 <InputNumber min={0} />
               </FormItem>
               <FormItem label={t('system.menu.titleKey')} field="titleKey" rules={[{ required: true, message: t('system.menu.titleRequired') }]}>
-                <Input placeholder={t('system.menu.titleKey.placeholder')} />
+                <Input placeholder={t('system.menu.titleKey.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.menu.path')} field="path">
-                <Input placeholder={t('system.menu.path.placeholder')} />
+                <Input placeholder={t('system.menu.path.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem
                 label={t('system.menu.component')}
@@ -699,6 +699,7 @@ const MenuList: React.FC = () => {
                   data={registeredComponentKeys}
                   placeholder={t('system.menu.component.placeholder')}
                   filterOption
+                  onPressEnter={() => form.submit()}
                 />
               </FormItem>
               <FormItem
@@ -717,10 +718,10 @@ const MenuList: React.FC = () => {
                   },
                 ]}
               >
-                <Input placeholder={t('system.menu.routeName.placeholder')} />
+                <Input placeholder={t('system.menu.routeName.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.menu.module')} field="module">
-                <Input placeholder={t('system.menu.module.placeholder')} />
+                <Input placeholder={t('system.menu.module.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem
                 label={t('system.menu.pagePerm')}
@@ -739,7 +740,7 @@ const MenuList: React.FC = () => {
                   },
                 ]}
               >
-                <Input placeholder={t('system.menu.pagePerm.placeholder')} />
+                <Input placeholder={t('system.menu.pagePerm.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem
                 label={t('system.menu.perms')}
@@ -757,7 +758,7 @@ const MenuList: React.FC = () => {
                   },
                 ]}
               >
-                <Input placeholder={t('system.menu.perms.placeholder')} />
+                <Input placeholder={t('system.menu.perms.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.menu.type')} field="type">
                 <Select
@@ -803,7 +804,7 @@ const MenuList: React.FC = () => {
                 />
               </FormItem>
               <FormItem label={t('system.menu.activeMenu')} field="activeMenu">
-                <Input placeholder={t('system.menu.activeMenu.placeholder')} />
+                <Input placeholder={t('system.menu.activeMenu.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
             </FormSection>
           </Space>

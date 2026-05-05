@@ -179,6 +179,15 @@ function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefin
   return undefined;
 }
 
+function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): MenuNode[] {
+  return nodes
+    .filter((item) => orgEnabled || item.module !== 'system.org')
+    .map((item) => ({
+      ...item,
+      children: item.children?.length ? filterMenuTreeByCapabilities(item.children, orgEnabled) : [],
+    }));
+}
+
 const BaseLayout: React.FC = () => {
   const bootstrappedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -208,17 +217,21 @@ const BaseLayout: React.FC = () => {
   const matchedRoute = useMemo(() => findRouteByPath(location.pathname), [location.pathname]);
   const currentRouteTitleKey = matchedRoute?.titleKey || systemRouteTitleMap[location.pathname];
   const activeMenuPath = matchedRoute?.activeMenu || location.pathname;
+  const visibleMenuTree = useMemo(
+    () => filterMenuTreeByCapabilities(menuTree, publicSettings.orgEnabled),
+    [menuTree, publicSettings.orgEnabled],
+  );
   const currentMenuTitleKey = useMemo(
-    () => findMenuTitleKey(menuTree, activeMenuPath),
-    [activeMenuPath, menuTree],
+    () => findMenuTitleKey(visibleMenuTree, activeMenuPath),
+    [activeMenuPath, visibleMenuTree],
   );
   const menuTrail = useMemo(
-    () => findMenuTrail(menuTree, activeMenuPath),
-    [activeMenuPath, menuTree],
+    () => findMenuTrail(visibleMenuTree, activeMenuPath),
+    [activeMenuPath, visibleMenuTree],
   );
   const selectedMenuPath = useMemo(
-    () => findSelectedMenuPath(menuTree, activeMenuPath),
-    [activeMenuPath, menuTree],
+    () => findSelectedMenuPath(visibleMenuTree, activeMenuPath),
+    [activeMenuPath, visibleMenuTree],
   );
   const breadcrumbItems = useMemo(() => {
     const root = [{ path: '/', label: t('common.home') }];
@@ -261,7 +274,7 @@ const BaseLayout: React.FC = () => {
   const activeTheme = themeOptions.find((item) => item.key === theme) ?? themeOptions[0];
   const sessionIdleMinutes = publicSettings.sessionIdleMinutes > 0 ? publicSettings.sessionIdleMinutes : 30;
   const sessionIdleMs = sessionIdleMinutes * 60 * 1000;
-  const hasDashboardEntry = useMemo(() => Boolean(findMenuNodeByPath(menuTree, '/dashboard')), [menuTree]);
+  const hasDashboardEntry = useMemo(() => Boolean(findMenuNodeByPath(visibleMenuTree, '/dashboard')), [visibleMenuTree]);
   const canAccessDashboard = isAdmin || hasDashboardEntry || hasPerm('platform:dashboard:view');
   const canViewNoticeSummary = isAdmin
     || hasDashboardEntry
@@ -335,7 +348,7 @@ const BaseLayout: React.FC = () => {
   }, [fetchMenuTree, syncShellActivity]);
 
   useRefreshSubscription(
-    ['system:menu:changed', 'system:role:changed', 'system:permission:changed', 'system:user:changed'],
+    ['system:menu:changed', 'system:role:changed', 'system:permission:changed', 'system:user:changed', 'system:setting:changed'],
     () => {
       if (!token) {
         return;
@@ -614,9 +627,9 @@ const BaseLayout: React.FC = () => {
         }
       });
     };
-    walk(menuTree);
+    walk(visibleMenuTree);
     return items;
-  }, [canAccessDashboard, handleGoProfile, handleGoSecurity, menuTree, navigate, openedTabs, t]);
+  }, [canAccessDashboard, handleGoProfile, handleGoSecurity, navigate, openedTabs, t, visibleMenuTree]);
 
   const filteredCommandItems = useMemo(() => {
     const queryText = commandQuery.trim().toLowerCase();
@@ -1066,7 +1079,7 @@ const BaseLayout: React.FC = () => {
   );
 
   const handleMenuNavigation = (key: string) => {
-    const selected = findMenuNodeByPath(menuTree, key);
+    const selected = findMenuNodeByPath(visibleMenuTree, key);
     if (selected?.isExternal === 1) {
       window.open(selected.path, '_blank', 'noopener,noreferrer');
       return;
@@ -1156,7 +1169,7 @@ const BaseLayout: React.FC = () => {
               defaultOpenKeys={menuOpenKeys}
               onClickMenuItem={handleMenuNavigation}
             >
-              {renderMenuItems(menuTree)}
+              {renderMenuItems(visibleMenuTree)}
             </Menu>
           </Spin>
         </Sider>
@@ -1374,7 +1387,7 @@ const BaseLayout: React.FC = () => {
                 triggerProps={{ className: 'app-shell__top-menu-popup' }}
                 onClickMenuItem={handleMenuNavigation}
               >
-                {renderMenuItems(menuTree)}
+                {renderMenuItems(visibleMenuTree)}
               </Menu>
             </Spin>
           </div>

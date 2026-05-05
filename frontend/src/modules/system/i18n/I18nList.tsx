@@ -1075,11 +1075,11 @@ const I18nList: React.FC = () => {
           )}
         >
             <FilterPanel>
-              <Form form={queryForm} layout="vertical">
+              <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
                 <Row gutter={16}>
                   <Col span={8}>
                     <FormItem label={t('i18n.key')} field="key">
-                      <Input allowClear prefix={<IconSearch />} />
+                      <Input allowClear prefix={<IconSearch />} onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col span={5}>
@@ -1112,7 +1112,7 @@ const I18nList: React.FC = () => {
                   <Col span={3}>
                     <FormItem className="filter-panel__action-item">
                       <Space size={6}>
-                        <Button size="small" type="primary" icon={<IconSearch />} onClick={handleSearch}>{t('common.search')}</Button>
+                        <Button size="small" type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                         <Button size="small" onClick={handleReset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>
@@ -1464,21 +1464,21 @@ const I18nList: React.FC = () => {
           </Space>
         )}
       >
-        <Form form={renameForm} layout="vertical">
+        <Form form={renameForm} layout="vertical" onSubmit={() => { void handlePreviewRename(); }}>
           <Row gutter={16}>
             <Col span={8}>
               <FormItem label={t('i18n.module')} field="module" rules={[requiredRule(t, 'i18n.module')]}>
-                <Input />
+                <Input onPressEnter={() => renameForm.submit()} />
               </FormItem>
             </Col>
             <Col span={8}>
               <FormItem label={t('i18n.rename.oldKey')} field="oldKey" rules={[requiredRule(t, 'i18n.rename.oldKey')]}>
-                <Input />
+                <Input onPressEnter={() => renameForm.submit()} />
               </FormItem>
             </Col>
             <Col span={8}>
               <FormItem label={t('i18n.rename.newKey')} field="newKey" rules={[requiredRule(t, 'i18n.rename.newKey')]}>
-                <Input />
+                <Input onPressEnter={() => renameForm.submit()} />
               </FormItem>
             </Col>
           </Row>
@@ -1632,6 +1632,7 @@ const I18nList: React.FC = () => {
         <Form
           form={createForm}
           layout="vertical"
+          onSubmit={() => { void handleCreate(); }}
           onValuesChange={(changedValues) => {
             if (createDuplicateConflict && ('key' in changedValues || 'locale' in changedValues || 'module' in changedValues)) {
               setCreateDuplicateConflict(null);
@@ -1658,19 +1659,19 @@ const I18nList: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <FormItem label={t('i18n.module')} field="module" rules={[requiredRule(t, 'i18n.module')]}>
-                <Input />
+                <Input onPressEnter={() => createForm.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>
               <FormItem label={t('i18n.group')} field="group" initialValue="messages">
-                <Input />
+                <Input onPressEnter={() => createForm.submit()} />
               </FormItem>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
               <FormItem label={t('i18n.key')} field="key" rules={[requiredRule(t, 'i18n.key')]}>
-                <Input />
+                <Input onPressEnter={() => createForm.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>

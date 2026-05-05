@@ -90,12 +90,13 @@ export const OrderModule = {
 - **语种扩展验收**: 新增 fallback locale 时，不要求预先支持所有语言，但一旦新增，就必须同步补齐本地资源、通过 `check:i18n-hardcode`、通过 `audit:i18n-locales`，并完成一次 `npm run build` 验证，确保语言切换、动态菜单、导入导出结果与错误反馈都不回退到硬编码。
 
 ## 7. 当前页面闭环
-- **登录页**: `src/modules/auth/Login.tsx`，已从 `system/user` 迁出，完成 access/refresh token 持久化与用户信息写入；后续按专项整改方案收敛为专业认证控制台，避免轮播、虚假指标和营销 hero，并保留语言/主题入口。
+- **登录页**: `src/modules/auth/Login.tsx`，已从 `system/user` 迁出，完成 access/refresh token 持久化、用户信息写入与真实 TOTP MFA 登录链路；当 `login.mfa_enabled=true` 且用户未绑定因子时，页面进入现场绑定态，优先展示二维码，并保留手动密钥与 `otpauth://` URI 复制兜底。
 - **认证 API**: `src/modules/auth/api.ts`，统一承接 login / refresh / logout / getMe / updatePassword。
 - **会话活动与锁屏**: `src/core/layout/index.tsx` 已接入空闲计时、活动上报、锁屏按钮与解锁遮罩；锁屏属于 `platform` 壳层能力，不退出会话、不清空已打开标签，但仍受 `login.session_idle_minutes` 控制。
 - **安全中心**: `src/modules/auth/SecurityCenter.tsx`，通过 `/api/v1/auth/security` 承接安全概览，并组合当前用户在线会话管理、登录日志与密码修改。
 - **安全审计页**: `src/modules/auth/LoginLogList.tsx`、`src/modules/auth/SessionList.tsx`，已承接管理员登录日志与全局会话管理；登录日志页现已支持按筛选条件导出、按 `system/config -> audit` 设置动态下发的保留期清理，以及按选择集批量删除。
 - **请求封装**: `src/api/request.ts` 自动注入 access token；业务码 `401` 时使用 `auth/refresh` 轮换并重放原请求。
+- **登录错误反馈**: 登录页和 MFA 验证页对 `/auth/login`、`/auth/mfa/verify` 采用页面级错误处理，优先展示后端返回的认证错误 key 翻译，例如用户名/密码错误、动态码错误、challenge 过期，而不是统一模糊提示。
 - **模块 Manifest**: `src/core/router/types.ts` 已将 `ModuleConfig` 升级为包含 `scope / menus / permissions / i18nNamespaces / pagePermission` 的模块契约。
 - **权限钩子**: `src/hooks/usePermission.ts` 统一处理 `admin` 角色和权限标识判断。
 - **页面权限**: `src/core/router/RoutePermissionGuard.tsx` 根据路由 `pagePermission` 做页面级拦截，并统一展示 403。
@@ -130,6 +131,8 @@ export const OrderModule = {
 - **系统设置页**: 已新增 `src/modules/system/setting/SettingPage.tsx`，按 `basic/security/login/audit/upload/i18n/ui` 分组维护系统设置，并对敏感配置提供“已加密/留空不变”交互表达。
 - **配置健康总览**: `src/modules/system/setting/SettingPage.tsx` 顶部已补配置治理摘要，展示公开/敏感配置数量、缺失必填项、运行时风险以及当前语言、主题、上传驱动状态。
 - **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar / login.session_idle_minutes` 已接入登录页与应用壳层；其中默认语言仅在“用户未显式切换语言”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐，空闲时长由 `login.session_idle_minutes` 控制自动退出。
+- **平台能力开关消费**: `platform.app_mode / org.enabled / org.required_for_user` 已进入公开设置链路。`org.enabled=false` 时，壳层会隐藏 `system.org` 导航，用户页隐藏部门/岗位列和表单字段；`org.required_for_user=true` 且组织启用时，用户表单要求选择部门。
+- **用户扩展档案契约**: 用户相关 API 类型已预留 `profileExt`，用于 C 端或混合模式下的扩展档案展示与编辑。后台管理页默认不渲染任意 JSON 字段，后续应由具体业务页面或受控表单定义字段语义，避免把未知 PII 直接散落到通用用户列表。
 - **平台壳层偏好持久化**: 当前登录用户的 `theme / language / layoutMode / densityMode` 已通过 `GET/PUT /api/v1/auth/me/preferences` 收口到 `platform` 壳层偏好链路；`system/config` 的公开设置继续只负责默认值，不再覆盖用户已经显式保存的壳层选择。
 - **上传配置消费**: 个人中心与用户管理头像上传都已接入 `/system/upload`，会实时遵守 `upload.max_file_size / upload.allowed_types / upload.public_base_url / upload.s3_*`；本地驱动下返回平台文件 URL，S3 驱动下返回对象访问 URL。
 - **设置审计详情**: 系统设置页底部已补最近配置变更审计表，支持查看操作人、操作 IP、变更字段、状态与操作时间，敏感字段只展示“已变更”而不回显明文。

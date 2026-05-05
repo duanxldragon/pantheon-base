@@ -15,6 +15,9 @@ export { LANGUAGE_STORAGE_KEY, LANGUAGE_EXPLICIT_STORAGE_KEY, hasExplicitLanguag
 export interface PublicSettingsState {
   siteName: string;
   siteLogo: string;
+  appMode: 'enterprise' | 'consumer' | 'hybrid';
+  orgEnabled: boolean;
+  orgRequiredForUser: boolean;
   defaultLanguage: string;
   defaultTheme: string;
   enableTabBar: boolean;
@@ -44,14 +47,26 @@ function readStoredPublicSettings(): PublicSettingsState {
 }
 
 function buildPublicSettingsState(settings: Record<string, string>): PublicSettingsState {
+  const appMode = normalizeAppMode(settings['platform.app_mode']);
   return {
     siteName: settings['site.name']?.trim() || PUBLIC_SETTINGS_FALLBACK_SITE_NAME,
     siteLogo: settings['site.logo']?.trim() || '',
+    appMode,
+    orgEnabled: settings['org.enabled']?.trim() !== 'false',
+    orgRequiredForUser: settings['org.required_for_user']?.trim() === 'true',
     defaultLanguage: settings['i18n.default_language']?.trim() || 'zh-CN',
     defaultTheme: settings['ui.default_theme']?.trim() || 'indigo',
     enableTabBar: settings['ui.enable_tab_bar']?.trim() !== 'false',
     sessionIdleMinutes: Number(settings['login.session_idle_minutes']?.trim() || '30') || 30,
   };
+}
+
+function normalizeAppMode(value?: string): PublicSettingsState['appMode'] {
+  const normalized = value?.trim();
+  if (normalized === 'consumer' || normalized === 'hybrid') {
+    return normalized;
+  }
+  return 'enterprise';
 }
 
 function persistPublicSettings(settings: Record<string, string>) {

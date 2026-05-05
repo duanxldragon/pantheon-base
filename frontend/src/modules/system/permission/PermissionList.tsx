@@ -620,7 +620,7 @@ const PermissionList: React.FC = () => {
                 ) : null}
 
                 <FilterPanel>
-                  <Form form={workbenchForm} layout="vertical">
+                  <Form form={workbenchForm} layout="vertical" onSubmit={() => searchWorkbench()}>
                     <Row gutter={16}>
                       <Col span={8}>
                         <FormItem label={t('system.permission.roleKey')} field="roleKey">
@@ -664,7 +664,7 @@ const PermissionList: React.FC = () => {
                       <Col span={4}>
                         <FormItem className="filter-panel__action-item">
                           <Space>
-                            <Button type="primary" icon={<IconSearch />} onClick={searchWorkbench}>{t('common.search')}</Button>
+                            <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                             <Button onClick={resetWorkbench}>{t('common.reset')}</Button>
                           </Space>
                         </FormItem>
@@ -694,7 +694,7 @@ const PermissionList: React.FC = () => {
             ) : (
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
                 <FilterPanel>
-                  <Form form={queryForm} layout="vertical">
+                  <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                     <Row gutter={16}>
                       <Col span={8}>
                         <FormItem label={t('system.permission.roleKey')} field="roleKey">
@@ -703,7 +703,7 @@ const PermissionList: React.FC = () => {
                       </Col>
                       <Col span={8}>
                         <FormItem label={t('system.permission.path')} field="path">
-                          <Input />
+                          <Input onPressEnter={() => queryForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col span={4}>
@@ -714,7 +714,7 @@ const PermissionList: React.FC = () => {
                       <Col span={4}>
                         <FormItem className="filter-panel__action-item">
                           <Space>
-                            <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                            <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                             <Button onClick={reset}>{t('common.reset')}</Button>
                           </Space>
                         </FormItem>
@@ -890,14 +890,14 @@ const PermissionList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.permission.roleKey')} field="roleKey" rules={[{ required: true, message: t('system.permission.roleRequired') }]}>
                 <Select options={roleOptions} />
               </FormItem>
               <FormItem label={t('system.permission.path')} field="path" rules={[{ required: true, message: t('system.permission.pathRequired') }]}>
-                <Input placeholder="/api/v1/system/user/list" />
+                <Input placeholder="/api/v1/system/user/list" onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.permission.method')} field="method" rules={[{ required: true, message: t('system.permission.methodRequired') }]}>
                 <Select options={methodOptions.map((item) => ({ label: item, value: item }))} />

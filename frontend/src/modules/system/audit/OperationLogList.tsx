@@ -738,16 +738,16 @@ const OperationLogList: React.FC = () => {
           ) : null}
         >
             <FilterPanel>
-              <Form form={queryForm} layout="vertical">
+              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                 <Row gutter={16}>
                   <Col span={6}>
                     <FormItem label={t('system.audit.title')} field="title">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col span={6}>
                     <FormItem label={t('system.audit.operName')} field="operName">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col span={6}>
@@ -817,7 +817,7 @@ const OperationLogList: React.FC = () => {
                   <Col span={6}>
                     <FormItem className="filter-panel__action-item">
                       <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                         <Button onClick={reset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>

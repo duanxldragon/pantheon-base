@@ -554,16 +554,16 @@ const PostList: React.FC = () => {
           ) : null}
         >
             <FilterPanel>
-              <Form form={queryForm} layout="vertical">
+              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                 <Row gutter={16}>
                   <Col xs={24} md={12} lg={6}>
                     <FormItem label={t('system.post.postCode')} field="postCode">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col xs={24} md={12} lg={6}>
                     <FormItem label={t('system.post.postName')} field="postName">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col xs={24} md={12} lg={6}>
@@ -582,7 +582,7 @@ const PostList: React.FC = () => {
                   <Col xs={24} md={24} lg={6}>
                     <FormItem className="filter-panel__action-item">
                       <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                         <Button onClick={reset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>
@@ -664,7 +664,7 @@ const PostList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <Row gutter={16}>
@@ -675,12 +675,12 @@ const PostList: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.post.postCode')} field="postCode" rules={[{ required: true, message: t('system.post.postCodeRequired') }]}>
-                    <Input disabled={Boolean(editing)} />
+                    <Input disabled={Boolean(editing)} onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.post.postName')} field="postName" rules={[{ required: true, message: t('system.post.postNameRequired') }]}>
-                    <Input />
+                    <Input onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>

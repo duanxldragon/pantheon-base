@@ -755,16 +755,16 @@ const RoleList: React.FC = () => {
           ) : null}
         >
             <FilterPanel>
-              <Form form={queryForm} layout="vertical">
+              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                 <Row gutter={16}>
                   <Col span={6}>
                     <FormItem label={t('system.role.roleName')} field="roleName">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col span={6}>
                     <FormItem label={t('system.role.roleKey')} field="roleKey">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col span={6}>
@@ -778,7 +778,7 @@ const RoleList: React.FC = () => {
                   <Col span={6}>
                     <FormItem className="filter-panel__action-item">
                       <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                         <Button onClick={reset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>
@@ -868,15 +868,16 @@ const RoleList: React.FC = () => {
         <Form
           form={form}
           layout="vertical"
+          onSubmit={() => { void submitForm(); }}
           onValuesChange={(_, values) => updateAuthorizationCounts(values)}
         >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.role.roleName')} field="roleName" rules={[{ required: true, message: t('system.role.roleName.required') }]}>
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.role.roleKey')} field="roleKey" rules={[{ required: true, message: t('system.role.roleKey.required') }]}>
-                <Input disabled={protectedRole} />
+                <Input disabled={protectedRole} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.role.sort')} field="sort">
                 <InputNumber min={0} />

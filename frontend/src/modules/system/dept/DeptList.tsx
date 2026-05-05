@@ -1259,11 +1259,11 @@ const DeptList: React.FC = () => {
                   />
                 </Card>
                 <FilterPanel>
-                  <Form form={queryForm} layout="vertical">
+                  <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                     <Row gutter={16}>
                       <Col xs={24} md={12} lg={8}>
                         <FormItem label={t('system.dept.deptName')} field="deptName">
-                          <Input />
+                          <Input onPressEnter={() => queryForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col xs={24} md={12} lg={8}>
@@ -1289,7 +1289,7 @@ const DeptList: React.FC = () => {
                       <Col xs={24} md={24} lg={8}>
                         <FormItem className="filter-panel__action-item">
                           <Space size={6}>
-                            <Button size="small" type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                            <Button size="small" type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                             <Button size="small" onClick={reset}>{t('common.reset')}</Button>
                           </Space>
                         </FormItem>
@@ -1369,7 +1369,7 @@ const DeptList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <Row gutter={16}>
@@ -1380,7 +1380,7 @@ const DeptList: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.dept.deptName')} field="deptName" rules={[{ required: true, message: t('system.dept.deptNameRequired') }]}>
-                    <Input />
+                    <Input onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
@@ -1407,17 +1407,17 @@ const DeptList: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.dept.leader')} field="leader">
-                    <Input placeholder={t('system.dept.leaderLegacyPlaceholder')} />
+                    <Input placeholder={t('system.dept.leaderLegacyPlaceholder')} onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.dept.phone')} field="phone">
-                    <Input />
+                    <Input onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.dept.email')} field="email" rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}>
-                    <Input />
+                    <Input onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={6}>
@@ -1461,7 +1461,7 @@ const DeptList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={leaderForm} layout="vertical">
+        <Form form={leaderForm} layout="vertical" onSubmit={() => { void submitBatchLeader(); }}>
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <div>{t('system.dept.batchLeaderTaskHint')}</div>
             {batchLeaderTasks.map((task) => (
@@ -1514,7 +1514,7 @@ const DeptList: React.FC = () => {
         )}
         unmountOnExit
       >
-        <Form form={postForm} layout="vertical">
+        <Form form={postForm} layout="vertical" onSubmit={() => { void submitPostForm(); }}>
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <Row gutter={16}>
@@ -1525,12 +1525,12 @@ const DeptList: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.post.postCode')} field="postCode" rules={[{ required: true, message: t('system.post.postCodeRequired') }]}>
-                    <Input />
+                    <Input onPressEnter={() => postForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.post.postName')} field="postName" rules={[{ required: true, message: t('system.post.postNameRequired') }]}>
-                    <Input />
+                    <Input onPressEnter={() => postForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
