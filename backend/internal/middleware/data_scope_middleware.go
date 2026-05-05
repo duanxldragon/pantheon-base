@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -65,16 +66,18 @@ func applyRoleDataScopePolicy(db *gorm.DB, scope *common.DataScopeReq) {
 	if err := db.Where("role_key IN ?", scope.RoleKeys).Find(&policies).Error; err != nil {
 		return
 	}
-	for _, policy := range policies {
-		mode := strings.TrimSpace(policy.Mode)
-		if mode == "" || mode == common.DataScopeModeAll {
-			continue
-		}
-		scope.Mode = mode
-		if mode == common.DataScopeModeCustom {
-			scope.DeptIDs = parseDataScopeDeptIDs(policy.DeptIDs)
-		}
+	if len(policies) == 0 {
 		return
+	}
+
+	scope.Mode = resolveDataScopeMode(policies)
+	switch scope.Mode {
+	case common.DataScopeModeCustom:
+		scope.DeptIDs = resolveCustomDataScopeDeptIDs(policies)
+	case common.DataScopeModeDept, common.DataScopeModeDeptAndChildren, common.DataScopeModeSelf:
+		scope.DeptIDs = nil
+	case common.DataScopeModeAll:
+		scope.DeptIDs = nil
 	}
 }
 
@@ -88,6 +91,60 @@ func parseDataScopeDeptIDs(raw string) []uint64 {
 		}
 		result = append(result, value)
 	}
+	return result
+}
+
+func resolveDataScopeMode(policies []SystemRoleDataScope) string {
+	hasSelf := false
+	hasDept := false
+	hasDeptAndChildren := false
+	customDeptIDs := 0
+
+	for _, policy := range policies {
+		switch strings.TrimSpace(policy.Mode) {
+		case "", common.DataScopeModeAll:
+			return common.DataScopeModeAll
+		case common.DataScopeModeCustom:
+			customDeptIDs += len(parseDataScopeDeptIDs(policy.DeptIDs))
+		case common.DataScopeModeDeptAndChildren:
+			hasDeptAndChildren = true
+		case common.DataScopeModeDept:
+			hasDept = true
+		case common.DataScopeModeSelf:
+			hasSelf = true
+		}
+	}
+
+	switch {
+	case customDeptIDs > 0:
+		return common.DataScopeModeCustom
+	case hasDeptAndChildren:
+		return common.DataScopeModeDeptAndChildren
+	case hasDept:
+		return common.DataScopeModeDept
+	case hasSelf:
+		return common.DataScopeModeSelf
+	default:
+		return common.DataScopeModeAll
+	}
+}
+
+func resolveCustomDataScopeDeptIDs(policies []SystemRoleDataScope) []uint64 {
+	seen := make(map[uint64]struct{})
+	result := make([]uint64, 0)
+	for _, policy := range policies {
+		if strings.TrimSpace(policy.Mode) != common.DataScopeModeCustom {
+			continue
+		}
+		for _, deptID := range parseDataScopeDeptIDs(policy.DeptIDs) {
+			if _, ok := seen[deptID]; ok {
+				continue
+			}
+			seen[deptID] = struct{}{}
+			result = append(result, deptID)
+		}
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i] < result[j] })
 	return result
 }
 

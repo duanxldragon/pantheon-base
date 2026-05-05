@@ -90,6 +90,11 @@ interface LoadDataOptions {
   silent?: boolean;
 }
 
+interface DataScopeEditorFormValues {
+  mode: PermissionDataScopeMode;
+  deptIdsText?: string;
+}
+
 const emptyForm: PermissionPolicyPayload = {
   roleKey: '',
   path: '',
@@ -125,6 +130,8 @@ const PermissionList: React.FC = () => {
   const [dataScopeError, setDataScopeError] = useState<unknown>(null);
   const [dataScopeQuery, setDataScopeQuery] = useState<PermissionDataScopeQuery>({});
   const [dataScopeSubmittingRoleKey, setDataScopeSubmittingRoleKey] = useState('');
+  const [dataScopeEditingRow, setDataScopeEditingRow] = useState<PermissionDataScopePolicy | null>(null);
+  const [dataScopeModeDraft, setDataScopeModeDraft] = useState<PermissionDataScopeMode>('all');
   const [detailRole, setDetailRole] = useState<PermissionWorkbenchRole | null>(null);
   const [remediationEvents, setRemediationEvents] = useState<PermissionWorkbenchRemediationEvent[]>([]);
   const [remediatingRoleKey, setRemediatingRoleKey] = useState<string>('');
@@ -132,6 +139,7 @@ const PermissionList: React.FC = () => {
   const [queryForm] = Form.useForm<PermissionPolicyQuery>();
   const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
   const [dataScopeForm] = Form.useForm<PermissionDataScopeQuery>();
+  const [dataScopeEditorForm] = Form.useForm<DataScopeEditorFormValues>();
   const governanceRail = useGovernanceRail();
   const invalidatePermissionCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
@@ -385,37 +393,56 @@ const PermissionList: React.FC = () => {
     setDataScopeQuery({});
   };
 
-  const updateDataScopeMode = async (row: PermissionDataScopePolicy, mode: PermissionDataScopeMode) => {
-    setDataScopeSubmittingRoleKey(row.roleKey);
-    try {
-      await updatePermissionDataScopePolicy(row.roleKey, {
-        mode,
-        deptIds: mode === 'custom' ? row.deptIds : [],
-      });
-      message.success(t('common.updateSuccess'));
-      publishRefresh('system:permission:changed', 'system/permission');
-      await loadDataScopePolicies(dataScopeQuery, { silent: true });
-    } finally {
-      setDataScopeSubmittingRoleKey('');
-    }
+  const openDataScopeEditor = (row: PermissionDataScopePolicy) => {
+    setDataScopeEditingRow(row);
+    setDataScopeModeDraft(row.mode);
+    dataScopeEditorForm.setFieldsValue({
+      mode: row.mode,
+      deptIdsText: row.deptIds.join(','),
+    });
   };
 
-  const updateCustomDataScope = async (row: PermissionDataScopePolicy, rawDeptIds: string) => {
-    const deptIds = rawDeptIds
+  const closeDataScopeEditor = () => {
+    setDataScopeEditingRow(null);
+    setDataScopeModeDraft('all');
+    dataScopeEditorForm.resetFields();
+  };
+
+  const saveDataScopePolicy = async () => {
+    if (!dataScopeEditingRow) {
+      return;
+    }
+    let values;
+    try {
+      values = await dataScopeEditorForm.validate();
+    } catch (error) {
+      if (isArcoFormValidationError(error)) {
+        return;
+      }
+      throw error;
+    }
+    const mode = values.mode || 'all';
+    const deptIds = (values.deptIdsText || '')
       .split(',')
       .map((item) => Number(item.trim()))
       .filter((item) => Number.isInteger(item) && item > 0);
-    setDataScopeSubmittingRoleKey(row.roleKey);
+    if (mode === 'custom' && deptIds.length === 0) {
+      message.error(t('permission.data_scope.dept_required'));
+      return;
+    }
+
+    setDataScopeSubmittingRoleKey(dataScopeEditingRow.roleKey);
     try {
-      await updatePermissionDataScopePolicy(row.roleKey, {
-        mode: 'custom',
-        deptIds,
+      await updatePermissionDataScopePolicy(dataScopeEditingRow.roleKey, {
+        mode,
+        deptIds: mode === 'custom' ? deptIds : [],
       });
       message.success(t('common.updateSuccess'));
       publishRefresh('system:permission:changed', 'system/permission');
       await loadDataScopePolicies(dataScopeQuery, { silent: true });
     } finally {
       setDataScopeSubmittingRoleKey('');
+      closeDataScopeEditor();
     }
   };
 
@@ -655,20 +682,8 @@ const PermissionList: React.FC = () => {
       title: t('system.permission.dataScope.mode'),
       dataIndex: 'mode',
       width: 220,
-      render: (value: PermissionDataScopeMode, row: PermissionDataScopePolicy) => (
-        <Select
-          value={value}
-          size="small"
-          disabled={!canEdit}
-          loading={dataScopeSubmittingRoleKey === row.roleKey}
-          onChange={(nextMode) => { void updateDataScopeMode(row, nextMode as PermissionDataScopeMode); }}
-        >
-          <Select.Option value="all">{t('system.permission.dataScope.mode.all')}</Select.Option>
-          <Select.Option value="self">{t('system.permission.dataScope.mode.self')}</Select.Option>
-          <Select.Option value="dept">{t('system.permission.dataScope.mode.dept')}</Select.Option>
-          <Select.Option value="dept_and_children">{t('system.permission.dataScope.mode.deptAndChildren')}</Select.Option>
-          <Select.Option value="custom">{t('system.permission.dataScope.mode.custom')}</Select.Option>
-        </Select>
+      render: (value: PermissionDataScopeMode) => (
+        <Tag color="arcoblue">{t(`system.permission.dataScope.mode.${value === 'dept_and_children' ? 'deptAndChildren' : value}`)}</Tag>
       ),
     },
     {
@@ -676,15 +691,11 @@ const PermissionList: React.FC = () => {
       dataIndex: 'deptIds',
       width: 280,
       render: (_: unknown, row: PermissionDataScopePolicy) => (
-        <Input.Search
-          key={`${row.roleKey}-${row.deptIds.join(',')}`}
-          defaultValue={row.deptIds.join(',')}
-          placeholder={t('system.permission.dataScope.customDeptIds.placeholder')}
-          disabled={!canEdit || row.mode !== 'custom'}
-          loading={dataScopeSubmittingRoleKey === row.roleKey}
-          searchButton={t('common.save')}
-          onSearch={(value) => { void updateCustomDataScope(row, value); }}
-        />
+        <Space wrap>
+          {row.deptIds.length > 0 ? row.deptIds.map((deptId) => (
+            <Tag key={`${row.roleKey}-${deptId}`}>{deptId}</Tag>
+          )) : <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>}
+        </Space>
       ),
     },
     withTableColumnPriority({
@@ -697,6 +708,16 @@ const PermissionList: React.FC = () => {
         </Tag>
       ),
     }, 'low'),
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.single,
+      fixed: 'right',
+      render: (_: unknown, row: PermissionDataScopePolicy) => (
+        <Button type="text" size="small" icon={<IconEdit />} disabled={!canEdit} onClick={() => openDataScopeEditor(row)}>
+          {t('common.edit')}
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -987,6 +1008,46 @@ const PermissionList: React.FC = () => {
             )}
         </PageSplitLayout>
       </Space>
+
+      <AppModal
+        title={dataScopeEditingRow ? `${dataScopeEditingRow.roleName} · ${dataScopeEditingRow.roleKey}` : t('system.permission.dataScope.tab')}
+        visible={Boolean(dataScopeEditingRow)}
+        size="md"
+        confirmLoading={dataScopeSubmittingRoleKey === dataScopeEditingRow?.roleKey}
+        onOk={() => { void saveDataScopePolicy(); }}
+        onCancel={closeDataScopeEditor}
+      >
+        <Form form={dataScopeEditorForm} layout="vertical">
+          <FormItem label={t('system.permission.dataScope.mode')} field="mode">
+            <Select
+              value={dataScopeModeDraft}
+              options={[
+                { label: t('system.permission.dataScope.mode.all'), value: 'all' },
+                { label: t('system.permission.dataScope.mode.self'), value: 'self' },
+                { label: t('system.permission.dataScope.mode.dept'), value: 'dept' },
+                { label: t('system.permission.dataScope.mode.deptAndChildren'), value: 'dept_and_children' },
+                { label: t('system.permission.dataScope.mode.custom'), value: 'custom' },
+              ]}
+              onChange={(value) => {
+                const nextMode = (value as PermissionDataScopeMode) || 'all';
+                setDataScopeModeDraft(nextMode);
+                dataScopeEditorForm.setFieldValue('mode', nextMode);
+              }}
+            />
+          </FormItem>
+          <FormItem
+            label={t('system.permission.dataScope.customDeptIds')}
+            field="deptIdsText"
+            extra={t('system.permission.dataScope.customDeptIds.placeholder')}
+          >
+            <Input.TextArea
+              autoSize={{ minRows: 2, maxRows: 4 }}
+              disabled={dataScopeModeDraft !== 'custom'}
+              placeholder={t('system.permission.dataScope.customDeptIds.placeholder')}
+            />
+          </FormItem>
+        </Form>
+      </AppModal>
 
       <AppModal
         title={detailRole ? `${detailRole.roleName} · ${detailRole.roleKey}` : t('system.permission.workbench.detailTitle')}

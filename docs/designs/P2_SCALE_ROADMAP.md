@@ -36,6 +36,7 @@ P2 不应做成一轮“大爆炸重构”。
 - `system_role_data_scope` 角色数据范围策略表。
 - CMDB Host 路由接入数据权限中间件。
 - `/system/permission` 数据权限管理页，可按角色配置 `all / self / dept / dept_and_children / custom`。
+- 多角色数据范围已按“授权叠加”合并：`all` 优先，多个 `custom` 合并部门集合，其他模式按固定优先级选择，避免依赖数据库返回顺序。
 
 后续要补：
 

@@ -47,6 +47,18 @@ func (h *OrderHandler) List(c *gin.Context) {
 3. **业务接入样板**：`business/cmdb/host` 列表已接入 `common.GetDataScope(c)` 与 `database.WithDataScope(dataScope)`。
 4. **脚手架集成**：业务模块生成器已提供 `enableDataScope` / `dataScopeMode` 契约，新生成模块可默认包含数据权限注入点。
 
+### 3.1 多角色合并规则
+
+当前数据权限按“角色授权叠加”处理，不引入 deny 语义：
+
+- `admin` 角色绕过数据权限过滤。
+- 任一角色为 `all` 时，最终范围为 `all`。
+- 多个 `custom` 角色合并部门 ID 集合。
+- 无 `all/custom` 时，按 `dept_and_children -> dept -> self` 选择最宽可见范围。
+- 数据库返回顺序不得影响最终结果，后端必须用测试固定该行为。
+
+如果未来需要“拒绝优先”或“最小权限交集”模型，应新增独立策略类型，而不是复用当前角色范围字段隐式表达。
+
 后续扩展仍按以下顺序推进：
 
 1. **部门树展开**：补齐 `dept_and_children` 的真实下级部门展开，而不是只按当前部门兜底。
