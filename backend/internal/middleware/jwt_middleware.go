@@ -18,9 +18,9 @@ import (
 const defaultSessionIdleMinutes = 30
 
 var (
-	sessionIdleMinutesMu        sync.RWMutex
-	cachedSessionIdleMinutes    = defaultSessionIdleMinutes
-	cachedSessionIdleMinutesAt  time.Time
+	sessionIdleMinutesMu       sync.RWMutex
+	cachedSessionIdleMinutes   = defaultSessionIdleMinutes
+	cachedSessionIdleMinutesAt time.Time
 )
 
 // JWTAuthMiddleware 权限校验中间件

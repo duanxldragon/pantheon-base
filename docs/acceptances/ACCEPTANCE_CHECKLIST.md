@@ -231,6 +231,7 @@
 - `/system/i18n` 是否已纳入固定验收范围
 - `/system/modules` 是否已纳入固定验收范围
 - `/system/generator` 是否已纳入固定验收范围
+- 以上三类高敏治理页是否按 `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md` 留存权限、二次验证、审计和失败态证据
 - `system/config` 是否已明确区分普通配置能力与高敏治理能力
 - `i18n` 的新增、编辑、导入、导出、缓存刷新与生命周期治理链路是否可解释
 - 上传配置是否已验证大小、类型、路径和访问地址约束
@@ -351,6 +352,7 @@
 - 若影响 `platform` 壳层导航，是否同步补齐竖版 / 横版双模式验收记录
 - 若影响 `system/config`，是否重新验证 `/system/i18n`、`/system/modules`、`/system/generator` 的页面、权限和危险动作链路
 - 若影响 `business/*`，是否重新验证业务入口页与其子模块页的菜单、页面权限、动作权限和审计链路
+- 若影响 `business/*`，是否按 `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md` 补齐九维验收证据
 
 ## 9. 发布前验收
 
@@ -546,5 +548,6 @@
 
 - 在主业务域设计文档中明确纳入子模块边界、路由、权限和验收
 - 或者单独补对应子模块设计文档
+- CMDB 业务域和 `business/cmdb/vendor` 归属以 `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md` 为准
 
 不能再接受“代码里已有模块，文档里没有定义”的状态。

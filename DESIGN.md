@@ -308,37 +308,39 @@ Source Sans 3 通过 Google Fonts 加载，`index.html` 中引入。
 - 多语言语言包拉取
 - 个人中心资料维护
 - 安全中心 / 当前用户会话管理 / 最近登录日志
+- MFA / TOTP 与高敏操作二次验证
 - 平台首页真实统计卡与最近登录活动概览
 - Casbin 鉴权
 
 但距离“标准企业级后台”仍有明显缺口：
 
-- 后台 UI 的主要短板不是功能缺失，而是登录页、应用壳层、工作台和系统页视觉语言还需要统一，避免 AI 模板感；
-- 字典管理已完成基础闭环与缓存刷新，但业务字典接入样例与更严格引用保护仍需增强
-- 系统设置已完成上传配置分组、敏感配置加密与配置变更审计基础能力，但更完整的安全策略与缓存策略仍需增强
-- 菜单元数据基础能力已补齐，但 IA 与菜单/权限进一步解耦仍需增强
-- 更细的安全策略能力未补齐（如 MFA / 登录告警 / 密码策略）
+- 后台 UI 的主要短板已经从“风格不统一”收敛到“持续验收和基线防回归”；
+- 字典管理已完成基础闭环与缓存刷新，业务字典接入样例与引用保护已有指南，后续重点是按业务模块逐步落地；
+- 系统设置已完成上传配置分组、敏感配置加密与配置变更审计基础能力，后续重点是安全策略消费和缓存策略制度化；
+- 菜单元数据基础能力已补齐，IA、外链、iframe、页签缓存和导航高亮已有深化设计；
+- MFA 已实现，后续安全策略缺口集中在登录告警、密码策略、SSO/OIDC 和风控；
 - UI 状态规范虽已起步，但还未全站制度化
 
 ## 9. 近期建议路线图
 
 ### P0
 
-1. 把 `auth` 从 `user` 中逻辑拆分
-2. 完成后台 UI 专项整改：登录页、应用壳层、工作台和系统页统一视觉语言
-3. 补业务字典接入样例与引用保护
-4. 菜单与权限模型进一步解耦并补 IA 深化
+1. 已完成：`auth` 从 `user` 中逻辑拆分，并落地 MFA / TOTP。
+2. 已完成：后台 UI 专项整改进入基线防回归阶段。
+3. 已完成：补齐 `system/config` 高敏页面验收基线。
+4. 已完成：补齐 `business/cmdb` 设计锚点和 `business/*` 业务模块验收矩阵。
 
 ### P1
 
-5. 补更细的安全策略能力（MFA / 登录告警 / 密码策略）
-6. 补 dashboard 快捷入口 / 告警摘要 / 工作台卡片注册机制
-7. 补更完整的菜单 IA 与导航策略
+5. 已完成设计锚点：`system/org` 独立组织域设计。
+6. 已完成设计锚点：权限工作台治理深化，从“发现 + 导出 + 受控补齐”推进到“整改追踪”。
+7. 已完成设计锚点：业务字典接入、菜单 IA 深化、安全策略路线图。
 
 ### P2
 
-8. 补数据权限 / 租户能力
-9. 补 SSO / MFA / 风控
+8. 已完成设计锚点：数据权限、租户就绪与 P2 规模化路线图。
+9. 已完成设计锚点：SSO / OAuth2 / OIDC 与登录风控后续边界。
+10. 待进入下一轮实现：数据权限中间件、真实多租户、SSO provider、登录风控自动化。
 
 ## 10. 文档使用顺序
 
@@ -346,22 +348,46 @@ Source Sans 3 通过 Google Fonts 加载，`index.html` 中引入。
 
 1. `DESIGN.md`
 2. `AGENTS.md` / `agent.md`
-3. `docs/BACKEND.md`
-4. `docs/FRONTEND.md`
-5. `docs/FRONTEND_UI_SPEC.md`
-6. `docs/AUTH_MODULE_DESIGN.md`
-7. `docs/MODULE_CONTRACT.md`
-8. `docs/BUSINESS_MODULE_TEMPLATE.md`
-9. `docs/PERMISSION_MODEL.md`
-10. `docs/ERROR_CODE_AND_I18N.md`
-11. `docs/FRONTEND_PAGE_TEMPLATES.md`
-12. `docs/FRONTEND_COMPONENT_PLAN.md`
-13. `docs/SECURITY_CENTER_DESIGN.md`
-14. `docs/DICT_AND_SETTING_DESIGN.md`
-15. `docs/ACCEPTANCE_CHECKLIST.md`
-16. `docs/IMPLEMENTATION_ROADMAP.md`
-17. `docs/DATABASE.md`
-18. `docs/WORKFLOW.md`
-19. `docs/SYSTEM_MODULE_AUDIT.md`
-20. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
-21. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`
+3. `docs/README.md`
+4. `docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md`
+5. `docs/contracts/DOCUMENT_METADATA_AND_STATUS.md`
+6. `docs/contracts/PLATFORM_CONTRACT.md`
+7. `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+8. `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+9. `docs/contracts/SYSTEM_ORG_CONTRACT.md`
+10. `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
+11. `docs/designs/BACKEND.md`
+12. `docs/designs/FRONTEND.md`
+13. `docs/designs/FRONTEND_UI_SPEC.md`
+14. `docs/designs/PLATFORM_DASHBOARD_DESIGN.md`
+15. `docs/designs/AUTH_MODULE_DESIGN.md`
+16. `docs/designs/MODULE_CONTRACT.md`
+17. `docs/designs/BUSINESS_MODULE_TEMPLATE.md`
+18. `docs/designs/PERMISSION_MODEL.md`
+19. `docs/designs/ERROR_CODE_AND_I18N.md`
+20. `docs/designs/FRONTEND_PAGE_TEMPLATES.md`
+21. `docs/designs/FRONTEND_COMPONENT_PLAN.md`
+22. `docs/designs/SECURITY_CENTER_DESIGN.md`
+23. `docs/designs/DICT_AND_SETTING_DESIGN.md`
+24. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
+25. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`
+26. `docs/designs/LOWCODE_GENERATOR_GUIDE.md`
+27. `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
+28. `docs/designs/GENERATOR_MODULE_DESIGN.md`
+29. `docs/designs/I18N_MODULE_DESIGN.md`
+30. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
+31. `docs/designs/SYSTEM_ORG_DESIGN.md`
+32. `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md`
+33. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
+34. `docs/designs/NAVIGATION_IA_STRATEGY.md`
+35. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
+36. `docs/designs/SECURITY_POLICY_ROADMAP.md`
+37. `docs/designs/SSO_OIDC_DESIGN.md`
+38. `docs/designs/P2_SCALE_ROADMAP.md`
+39. `docs/designs/DATABASE.md`
+40. `docs/designs/WORKFLOW.md`
+41. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
+42. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
+43. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+44. `docs/archive/IMPLEMENTATION_ROADMAP.md`
+45. `docs/assessments/SYSTEM_MODULE_AUDIT.md`

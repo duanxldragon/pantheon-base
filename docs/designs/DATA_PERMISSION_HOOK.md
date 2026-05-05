@@ -1,6 +1,6 @@
 # 数据权限架构钩子 (Data Permission Hook)
 
-更新时间：2026-04-17
+更新时间：2026-05-05
 
 类型：Design
 归属层：system/iam
@@ -40,12 +40,19 @@ func (h *OrderHandler) List(c *gin.Context) {
 
 `WithDataScope` 已具备最小安全语义：未设置 `Mode` 或 `Mode=all` 时保持历史行为；`dept / dept_and_children / custom` 模式如果缺少部门上下文，会返回空结果，避免 `dept_id=0` 用户在组织可选场景下被误解释为“拥有全部部门数据”。
 
-未来我们将按以下步骤补全逻辑：
+当前已补齐的 P2 基线：
 
-1. **中间件注入**：在 `JWTAuthMiddleware` 之后增加 `DataScopeMiddleware`，根据用户角色配置（如：角色 A 拥有“本部门数据权限”），构造好 `DataScopeReq` 并存入 Context。
-2. **多租户支持**：在 `WithDataScope` 中自动注入 `tenant_id = ?` 条件。
-3. **Casbin 集成**：利用 Casbin 的逻辑表达式（如 `r.obj.owner == r.sub.id`）动态生成 SQL 过滤片段。
-4. **脚手架集成**：已同步更新业务模块脚手架，新生成的模块将默认包含数据权限注入点。
+1. **中间件注入**：`DataScopeMiddleware` 已在 `JWTAuthMiddleware` 之后构造 `DataScopeReq`，并从 `system_role_data_scope` 读取角色数据范围策略。
+2. **策略管理页**：`/system/permission` 的“数据权限”页已支持按角色配置 `all / self / dept / dept_and_children / custom`。
+3. **业务接入样板**：`business/cmdb/host` 列表已接入 `common.GetDataScope(c)` 与 `database.WithDataScope(dataScope)`。
+4. **脚手架集成**：业务模块生成器已提供 `enableDataScope` / `dataScopeMode` 契约，新生成模块可默认包含数据权限注入点。
+
+后续扩展仍按以下顺序推进：
+
+1. **部门树展开**：补齐 `dept_and_children` 的真实下级部门展开，而不是只按当前部门兜底。
+2. **租户支持**：未来进入真实多租户后，在统一 scope 中注入 `tenant_id = ?` 条件。
+3. **高级策略表达式**：如确有需要，再评估 Casbin 条件表达式到 SQL 过滤片段的映射。
+4. **业务 smoke**：为 CMDB 等业务域补有权限/无权限的数据集验证。
 
 ## 4. 为什么现在做占位？
 

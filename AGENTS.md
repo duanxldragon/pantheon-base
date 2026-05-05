@@ -8,24 +8,49 @@
 
 1. `DESIGN.md`
 2. `AGENTS.md` / `agent.md`
-3. `docs/BACKEND.md`
-4. `docs/FRONTEND.md`
-5. `docs/FRONTEND_UI_SPEC.md`
-6. `docs/PLATFORM_DASHBOARD_DESIGN.md`
-7. `docs/AUTH_MODULE_DESIGN.md`
-8. `docs/MODULE_CONTRACT.md`
-9. `docs/BUSINESS_MODULE_TEMPLATE.md`
-10. `docs/PERMISSION_MODEL.md`
-11. `docs/ERROR_CODE_AND_I18N.md`
-12. `docs/FRONTEND_PAGE_TEMPLATES.md`
-13. `docs/FRONTEND_COMPONENT_PLAN.md`
-14. `docs/SECURITY_CENTER_DESIGN.md`
-15. `docs/DICT_AND_SETTING_DESIGN.md`
-16. `docs/ACCEPTANCE_CHECKLIST.md`
-17. `docs/IMPLEMENTATION_ROADMAP.md`
-18. `docs/DATABASE.md`
-19. `docs/WORKFLOW.md`
-20. `docs/SYSTEM_MODULE_AUDIT.md`
+3. `docs/README.md`
+4. `docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md`
+5. `docs/contracts/DOCUMENT_METADATA_AND_STATUS.md`
+6. `docs/contracts/PLATFORM_CONTRACT.md`
+7. `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+8. `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+9. `docs/contracts/SYSTEM_ORG_CONTRACT.md`
+10. `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
+11. `docs/designs/BACKEND.md`
+12. `docs/designs/FRONTEND.md`
+13. `docs/designs/FRONTEND_UI_SPEC.md`
+14. `docs/designs/PLATFORM_DASHBOARD_DESIGN.md`
+15. `docs/designs/AUTH_MODULE_DESIGN.md`
+16. `docs/designs/MODULE_CONTRACT.md`
+17. `docs/designs/BUSINESS_MODULE_TEMPLATE.md`
+18. `docs/designs/PERMISSION_MODEL.md`
+19. `docs/designs/ERROR_CODE_AND_I18N.md`
+20. `docs/designs/FRONTEND_PAGE_TEMPLATES.md`
+21. `docs/designs/FRONTEND_COMPONENT_PLAN.md`
+22. `docs/designs/SECURITY_CENTER_DESIGN.md`
+23. `docs/designs/DICT_AND_SETTING_DESIGN.md`
+24. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
+25. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`
+26. `docs/designs/LOWCODE_GENERATOR_GUIDE.md`
+27. `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
+28. `docs/designs/GENERATOR_MODULE_DESIGN.md`
+29. `docs/designs/I18N_MODULE_DESIGN.md`
+30. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
+31. `docs/designs/SYSTEM_ORG_DESIGN.md`
+32. `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md`
+33. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
+34. `docs/designs/NAVIGATION_IA_STRATEGY.md`
+35. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
+36. `docs/designs/SECURITY_POLICY_ROADMAP.md`
+37. `docs/designs/SSO_OIDC_DESIGN.md`
+38. `docs/designs/P2_SCALE_ROADMAP.md`
+39. `docs/designs/DATABASE.md`
+40. `docs/designs/WORKFLOW.md`
+41. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
+42. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
+43. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+44. `docs/archive/IMPLEMENTATION_ROADMAP.md`
+45. `docs/assessments/SYSTEM_MODULE_AUDIT.md`
 
 ## 1. 任务分类先行（新增约束）
 

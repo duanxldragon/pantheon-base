@@ -31,15 +31,22 @@ import {
   downloadPermissionImportTemplate,
   exportPermissionWorkbench,
   exportPermissionPolicies,
+  getPermissionWorkbenchRemediationEvents,
+  getPermissionDataScopePolicies,
   getPermissionPolicyList,
   getPermissionWorkbench,
   importPermissionPolicies,
   remediatePermissionWorkbenchRole,
+  updatePermissionDataScopePolicy,
+  type PermissionDataScopeMode,
+  type PermissionDataScopePolicy,
+  type PermissionDataScopeQuery,
   updatePermissionPolicy,
   type PermissionPolicyPayload,
   type PermissionPolicyQuery,
   type PermissionPolicyRow,
   type PermissionWorkbenchQuery,
+  type PermissionWorkbenchRemediationEvent,
   type PermissionWorkbenchRole,
   type PermissionWorkbenchResp,
 } from './api';
@@ -89,7 +96,7 @@ const emptyForm: PermissionPolicyPayload = {
   method: 'GET',
 };
 
-type PermissionTabKey = 'workbench' | 'api';
+type PermissionTabKey = 'workbench' | 'data-scope' | 'api';
 
 const PermissionList: React.FC = () => {
   const { t } = useTranslation();
@@ -113,11 +120,18 @@ const PermissionList: React.FC = () => {
   const [workbenchError, setWorkbenchError] = useState<unknown>(null);
   const [workbench, setWorkbench] = useState<PermissionWorkbenchResp | null>(null);
   const [workbenchQuery, setWorkbenchQuery] = useState<PermissionWorkbenchQuery>(emptyWorkbenchQuery);
+  const [dataScopeRows, setDataScopeRows] = useState<PermissionDataScopePolicy[]>([]);
+  const [dataScopeLoading, setDataScopeLoading] = useState(false);
+  const [dataScopeError, setDataScopeError] = useState<unknown>(null);
+  const [dataScopeQuery, setDataScopeQuery] = useState<PermissionDataScopeQuery>({});
+  const [dataScopeSubmittingRoleKey, setDataScopeSubmittingRoleKey] = useState('');
   const [detailRole, setDetailRole] = useState<PermissionWorkbenchRole | null>(null);
+  const [remediationEvents, setRemediationEvents] = useState<PermissionWorkbenchRemediationEvent[]>([]);
   const [remediatingRoleKey, setRemediatingRoleKey] = useState<string>('');
   const [form] = Form.useForm<PermissionPolicyPayload>();
   const [queryForm] = Form.useForm<PermissionPolicyQuery>();
   const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
+  const [dataScopeForm] = Form.useForm<PermissionDataScopeQuery>();
   const governanceRail = useGovernanceRail();
   const invalidatePermissionCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
@@ -167,6 +181,24 @@ const PermissionList: React.FC = () => {
     }
   }, [workbenchQuery]);
 
+  const loadDataScopePolicies = useCallback(async (nextQuery: PermissionDataScopeQuery = dataScopeQuery, options?: LoadDataOptions) => {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setDataScopeLoading(true);
+      setDataScopeError(null);
+    }
+    try {
+      const result = await getPermissionDataScopePolicies(nextQuery);
+      setDataScopeRows(result.items);
+    } catch (requestError) {
+      setDataScopeError(requestError);
+    } finally {
+      if (!silent) {
+        setDataScopeLoading(false);
+      }
+    }
+  }, [dataScopeQuery]);
+
   const loadRoles = useCallback(async () => {
     try {
       const result = await resolveRouteWarmData('/system/permission', 'roles:default', () => getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc' }));
@@ -190,15 +222,45 @@ const PermissionList: React.FC = () => {
   }, [loadWorkbench, workbenchQuery]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => void loadDataScopePolicies(dataScopeQuery), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadDataScopePolicies, dataScopeQuery]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => void loadRoles(), 0);
     return () => window.clearTimeout(timer);
   }, [loadRoles]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!detailRole) {
+      setRemediationEvents([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+    void getPermissionWorkbenchRemediationEvents({ roleKey: detailRole.roleKey, limit: 5 })
+      .then((events) => {
+        if (!cancelled) {
+          setRemediationEvents(events);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRemediationEvents([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [detailRole]);
 
   useRefreshSubscription(['system:permission:changed', 'system:role:changed', 'system:menu:changed'], (payload) => {
     if (payload.source === 'system/permission') {
       return;
     }
     void loadWorkbench(workbenchQuery);
+    void loadDataScopePolicies(dataScopeQuery);
     if (payload.topic !== 'system:menu:changed') {
       void loadData(query);
     }
@@ -310,6 +372,53 @@ const PermissionList: React.FC = () => {
     setWorkbenchQuery(emptyWorkbenchQuery);
   };
 
+  const searchDataScope = () => {
+    const values = dataScopeForm.getFieldsValue();
+    setDataScopeQuery({
+      ...dataScopeQuery,
+      ...values,
+    });
+  };
+
+  const resetDataScope = () => {
+    dataScopeForm.setFieldsValue({});
+    setDataScopeQuery({});
+  };
+
+  const updateDataScopeMode = async (row: PermissionDataScopePolicy, mode: PermissionDataScopeMode) => {
+    setDataScopeSubmittingRoleKey(row.roleKey);
+    try {
+      await updatePermissionDataScopePolicy(row.roleKey, {
+        mode,
+        deptIds: mode === 'custom' ? row.deptIds : [],
+      });
+      message.success(t('common.updateSuccess'));
+      publishRefresh('system:permission:changed', 'system/permission');
+      await loadDataScopePolicies(dataScopeQuery, { silent: true });
+    } finally {
+      setDataScopeSubmittingRoleKey('');
+    }
+  };
+
+  const updateCustomDataScope = async (row: PermissionDataScopePolicy, rawDeptIds: string) => {
+    const deptIds = rawDeptIds
+      .split(',')
+      .map((item) => Number(item.trim()))
+      .filter((item) => Number.isInteger(item) && item > 0);
+    setDataScopeSubmittingRoleKey(row.roleKey);
+    try {
+      await updatePermissionDataScopePolicy(row.roleKey, {
+        mode: 'custom',
+        deptIds,
+      });
+      message.success(t('common.updateSuccess'));
+      publishRefresh('system:permission:changed', 'system/permission');
+      await loadDataScopePolicies(dataScopeQuery, { silent: true });
+    } finally {
+      setDataScopeSubmittingRoleKey('');
+    }
+  };
+
   const handleTableChange: TableProps<PermissionPolicyRow>['onChange'] = (pagination) => {
     setQuery({
       ...query,
@@ -333,6 +442,10 @@ const PermissionList: React.FC = () => {
         loadWorkbench(workbenchQuery, { silent: true }),
         loadData(query, { silent: true }),
       ]);
+      if (detailRole?.roleKey === role.roleKey) {
+        const events = await getPermissionWorkbenchRemediationEvents({ roleKey: role.roleKey, limit: 5 });
+        setRemediationEvents(events);
+      }
     } finally {
       setRemediatingRoleKey('');
     }
@@ -415,7 +528,11 @@ const PermissionList: React.FC = () => {
     () => [
       {
         label: t('system.permission.hero.currentMode'),
-        value: activeTab === 'workbench' ? t('system.permission.workbench.tab') : t('system.permission.policy.tab'),
+        value: activeTab === 'workbench'
+          ? t('system.permission.workbench.tab')
+          : activeTab === 'data-scope'
+            ? t('system.permission.dataScope.tab')
+            : t('system.permission.policy.tab'),
         description: t('system.permission.hero.modeHint'),
       },
       {
@@ -521,6 +638,67 @@ const PermissionList: React.FC = () => {
     },
   ];
 
+  const dataScopeColumns: ColumnProps<PermissionDataScopePolicy>[] = [
+    { title: t('system.role.roleName'), dataIndex: 'roleName', width: 180 },
+    withTableColumnPriority({ title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180 }, 'medium'),
+    withTableColumnPriority({
+      title: t('system.role.status'),
+      dataIndex: 'status',
+      width: 120,
+      render: (value: number) => (
+        <Tag color={value === 1 ? 'green' : 'red'}>
+          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
+        </Tag>
+      ),
+    }, 'medium'),
+    {
+      title: t('system.permission.dataScope.mode'),
+      dataIndex: 'mode',
+      width: 220,
+      render: (value: PermissionDataScopeMode, row: PermissionDataScopePolicy) => (
+        <Select
+          value={value}
+          size="small"
+          disabled={!canEdit}
+          loading={dataScopeSubmittingRoleKey === row.roleKey}
+          onChange={(nextMode) => { void updateDataScopeMode(row, nextMode as PermissionDataScopeMode); }}
+        >
+          <Select.Option value="all">{t('system.permission.dataScope.mode.all')}</Select.Option>
+          <Select.Option value="self">{t('system.permission.dataScope.mode.self')}</Select.Option>
+          <Select.Option value="dept">{t('system.permission.dataScope.mode.dept')}</Select.Option>
+          <Select.Option value="dept_and_children">{t('system.permission.dataScope.mode.deptAndChildren')}</Select.Option>
+          <Select.Option value="custom">{t('system.permission.dataScope.mode.custom')}</Select.Option>
+        </Select>
+      ),
+    },
+    {
+      title: t('system.permission.dataScope.customDeptIds'),
+      dataIndex: 'deptIds',
+      width: 280,
+      render: (_: unknown, row: PermissionDataScopePolicy) => (
+        <Input.Search
+          key={`${row.roleKey}-${row.deptIds.join(',')}`}
+          defaultValue={row.deptIds.join(',')}
+          placeholder={t('system.permission.dataScope.customDeptIds.placeholder')}
+          disabled={!canEdit || row.mode !== 'custom'}
+          loading={dataScopeSubmittingRoleKey === row.roleKey}
+          searchButton={t('common.save')}
+          onSearch={(value) => { void updateCustomDataScope(row, value); }}
+        />
+      ),
+    },
+    withTableColumnPriority({
+      title: t('system.permission.dataScope.policyState'),
+      dataIndex: 'policyExists',
+      width: 140,
+      render: (value: boolean) => (
+        <Tag color={value ? 'green' : 'gray'}>
+          {t(value ? 'system.permission.dataScope.explicit' : 'system.permission.dataScope.default')}
+        </Tag>
+      ),
+    }, 'low'),
+  ];
+
   return (
     <PageContainer>
       <PageHeader
@@ -534,6 +712,10 @@ const PermissionList: React.FC = () => {
                 <Button icon={<IconRefresh />} onClick={() => {
                   if (activeTab === 'workbench') {
                     void loadWorkbench(workbenchQuery);
+                    return;
+                  }
+                  if (activeTab === 'data-scope') {
+                    void loadDataScopePolicies(dataScopeQuery);
                     return;
                   }
                   void loadData(query);
@@ -598,6 +780,7 @@ const PermissionList: React.FC = () => {
             <Card className="page-panel permission-workbench__tabs">
               <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as PermissionTabKey)}>
                 <Tabs.TabPane key="workbench" title={t('system.permission.workbench.tab')} />
+                <Tabs.TabPane key="data-scope" title={t('system.permission.dataScope.tab')} />
                 <Tabs.TabPane key="api" title={t('system.permission.policy.tab')} />
               </Tabs>
             </Card>
@@ -684,6 +867,56 @@ const PermissionList: React.FC = () => {
                       data={workbench.roles}
                       columns={workbenchColumns}
                       loading={workbenchLoading}
+                      scroll={{ x: 'max-content' }}
+                      pagination={false}
+                      emptyText={t('common.noData')}
+                    />
+                  ) : null}
+                </Card>
+              </Space>
+            ) : activeTab === 'data-scope' ? (
+              <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <FilterPanel>
+                  <Form form={dataScopeForm} layout="vertical" onSubmit={() => searchDataScope()}>
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <FormItem label={t('system.permission.roleKey')} field="roleKey">
+                          <Select allowClear options={roleOptions} />
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem label={t('system.role.status')} field="status">
+                          <Select
+                            allowClear
+                            options={[
+                              { label: t('system.user.status.enabled'), value: 1 },
+                              { label: t('system.user.status.disabled'), value: 2 },
+                            ]}
+                          />
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem className="filter-panel__action-item">
+                          <Space>
+                            <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
+                            <Button onClick={resetDataScope}>{t('common.reset')}</Button>
+                          </Space>
+                        </FormItem>
+                      </Col>
+                    </Row>
+                  </Form>
+                </FilterPanel>
+                <Card className="page-panel system-list__table-card">
+                  {dataScopeLoading && dataScopeRows.length === 0 ? <PageLoading /> : null}
+                  {dataScopeError && dataScopeRows.length === 0 ? renderRequestErrorState(dataScopeError, () => { void loadDataScopePolicies(dataScopeQuery); }) : null}
+                  {!dataScopeLoading && !dataScopeError && dataScopeRows.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+                  {!(dataScopeError && dataScopeRows.length === 0) && dataScopeRows.length > 0 ? (
+                    <AppTable<PermissionDataScopePolicy>
+                      className="system-list__table"
+                      rowKey="roleKey"
+                      data={dataScopeRows}
+                      columns={dataScopeColumns}
+                      loading={dataScopeLoading}
                       scroll={{ x: 'max-content' }}
                       pagination={false}
                       emptyText={t('common.noData')}
@@ -861,6 +1094,40 @@ const PermissionList: React.FC = () => {
                 />
               </Card>
             ) : null}
+
+            <Card className="detail-panel-card" title={t('system.permission.workbench.remediationSection')}>
+              <AppTable<PermissionWorkbenchRemediationEvent>
+                rowKey="id"
+                data={remediationEvents}
+                columns={[
+                  {
+                    title: t('system.permission.workbench.remediationAction'),
+                    dataIndex: 'action',
+                    render: (value: string) => (
+                      <Tag color={value === 'remediated' ? 'green' : 'arcoblue'}>{value}</Tag>
+                    ),
+                  },
+                  {
+                    title: t('system.permission.workbench.remediationState'),
+                    render: (_: unknown, row: PermissionWorkbenchRemediationEvent) => `${row.beforeState} -> ${row.afterState}`,
+                  },
+                  {
+                    title: t('system.permission.workbench.remediationCreated'),
+                    dataIndex: 'createdCount',
+                  },
+                  {
+                    title: t('system.permission.workbench.remediationSkipped'),
+                    dataIndex: 'skippedCount',
+                  },
+                  {
+                    title: t('system.permission.workbench.remediationTime'),
+                    dataIndex: 'createdAt',
+                  },
+                ]}
+                pagination={false}
+                emptyText={t('common.noData')}
+              />
+            </Card>
 
             {detailRole.unknownPermissions.length > 0 ? (
               <Card className="detail-panel-card" title={t('system.permission.workbench.unknownSection')}>

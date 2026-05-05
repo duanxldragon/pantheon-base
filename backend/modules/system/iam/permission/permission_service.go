@@ -3,8 +3,10 @@ package iam
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/impexp"
@@ -24,6 +26,12 @@ func NewPermissionService(db *gorm.DB) *PermissionService {
 func (s *PermissionService) Migrate() error {
 	if s.db == nil {
 		return errors.New("database.not_initialized")
+	}
+	if err := s.db.AutoMigrate(&PermissionWorkbenchRemediationEvent{}); err != nil {
+		return err
+	}
+	if err := s.db.AutoMigrate(&PermissionRoleDataScopePolicy{}); err != nil {
+		return err
 	}
 	if !s.db.Migrator().HasTable("system_role") || !s.db.Migrator().HasTable("casbin_rule") {
 		return nil
@@ -302,6 +310,7 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 		CreatedPolicies: []PermissionWorkbenchAPIPolicyResp{},
 	}
 	if len(role.MissingAPIPolicies) == 0 {
+		_ = s.recordWorkbenchRemediation(roleKey, "api-gap", "", "complete", "complete", "noop", 0, resp.SkippedCount)
 		return resp, nil
 	}
 
@@ -333,7 +342,89 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 			return nil, err
 		}
 	}
+	if err := s.recordWorkbenchRemediation(
+		roleKey,
+		"api-gap",
+		joinWorkbenchPolicyKeys(role.MissingAPIPolicies),
+		"api-gap",
+		"complete",
+		"remediated",
+		resp.CreatedCount,
+		resp.SkippedCount,
+	); err != nil {
+		return nil, err
+	}
 	return resp, nil
+}
+
+func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWorkbenchRemediationQuery) ([]PermissionWorkbenchRemediationResp, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+
+	limit := 20
+	if query != nil && query.Limit > 0 {
+		limit = query.Limit
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	var events []PermissionWorkbenchRemediationEvent
+	db := s.db.Model(&PermissionWorkbenchRemediationEvent{})
+	if query != nil && strings.TrimSpace(query.RoleKey) != "" {
+		db = db.Where("role_key = ?", strings.TrimSpace(query.RoleKey))
+	}
+	if err := db.Order("id asc").Limit(limit).Find(&events).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]PermissionWorkbenchRemediationResp, 0, len(events))
+	for _, item := range events {
+		result = append(result, PermissionWorkbenchRemediationResp{
+			ID:           item.ID,
+			RoleKey:      item.RoleKey,
+			IssueType:    item.IssueType,
+			IssueKey:     item.IssueKey,
+			BeforeState:  item.BeforeState,
+			AfterState:   item.AfterState,
+			Action:       item.Action,
+			CreatedCount: item.CreatedCount,
+			SkippedCount: item.SkippedCount,
+			CreatedAt:    item.CreatedAt.Format(time.RFC3339),
+		})
+	}
+	return result, nil
+}
+
+func (s *PermissionService) recordWorkbenchRemediation(roleKey string, issueType string, issueKey string, beforeState string, afterState string, action string, createdCount int, skippedCount int) error {
+	if s.db == nil || !s.db.Migrator().HasTable(&PermissionWorkbenchRemediationEvent{}) {
+		return nil
+	}
+	return s.db.Create(&PermissionWorkbenchRemediationEvent{
+		RoleKey:      strings.TrimSpace(roleKey),
+		IssueType:    strings.TrimSpace(issueType),
+		IssueKey:     strings.TrimSpace(issueKey),
+		BeforeState:  strings.TrimSpace(beforeState),
+		AfterState:   strings.TrimSpace(afterState),
+		Action:       strings.TrimSpace(action),
+		CreatedCount: createdCount,
+		SkippedCount: skippedCount,
+	}).Error
+}
+
+func joinWorkbenchPolicyKeys(policies []PermissionWorkbenchAPIPolicyResp) string {
+	keys := make([]string, 0, len(policies))
+	for _, item := range policies {
+		method := normalizePolicyMethod(item.Method)
+		path := strings.TrimSpace(item.Path)
+		if method == "" || path == "" {
+			continue
+		}
+		keys = append(keys, method+" "+path)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, "|")
 }
 
 func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportResult, error) {

@@ -109,6 +109,46 @@ export interface PermissionWorkbenchRemediateResp {
   createdPolicies: PermissionWorkbenchApiPolicy[];
 }
 
+export interface PermissionWorkbenchRemediationEvent {
+  id: number;
+  roleKey: string;
+  issueType: string;
+  issueKey: string;
+  beforeState: string;
+  afterState: string;
+  action: string;
+  createdCount: number;
+  skippedCount: number;
+  createdAt: string;
+}
+
+export type PermissionDataScopeMode = 'all' | 'self' | 'dept' | 'dept_and_children' | 'custom';
+
+export interface PermissionDataScopeQuery {
+  roleKey?: string;
+  status?: number;
+}
+
+export interface PermissionDataScopePolicy {
+  id: number;
+  roleName: string;
+  roleKey: string;
+  status: number;
+  mode: PermissionDataScopeMode;
+  deptIds: number[];
+  policyExists: boolean;
+}
+
+export interface PermissionDataScopePolicyListResp {
+  items: PermissionDataScopePolicy[];
+  total: number;
+}
+
+export interface PermissionDataScopePolicyPayload {
+  mode: PermissionDataScopeMode;
+  deptIds?: number[];
+}
+
 export function getPermissionWorkbench(params?: PermissionWorkbenchQuery) {
   return apiRequest<PermissionWorkbenchResp>({
     url: '/system/permission/workbench',
@@ -129,6 +169,30 @@ export function remediatePermissionWorkbenchRole(data: PermissionWorkbenchRemedi
   return apiRequest<PermissionWorkbenchRemediateResp>({
     url: '/system/permission/workbench/remediate',
     method: 'post',
+    data,
+  });
+}
+
+export function getPermissionWorkbenchRemediationEvents(params?: { roleKey?: string; limit?: number }) {
+  return apiRequest<PermissionWorkbenchRemediationEvent[]>({
+    url: '/system/permission/workbench/remediation',
+    method: 'get',
+    params,
+  });
+}
+
+export function getPermissionDataScopePolicies(params?: PermissionDataScopeQuery) {
+  return apiRequest<PermissionDataScopePolicyListResp>({
+    url: '/system/permission/data-scope',
+    method: 'get',
+    params,
+  });
+}
+
+export function updatePermissionDataScopePolicy(roleKey: string, data: PermissionDataScopePolicyPayload) {
+  return apiRequest<PermissionDataScopePolicy>({
+    url: `/system/permission/data-scope/${roleKey}`,
+    method: 'put',
     data,
   });
 }

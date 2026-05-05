@@ -153,7 +153,7 @@
 
 主要缺口：
 
-- [ACCEPTANCE_CHECKLIST.md](./ACCEPTANCE_CHECKLIST.md) 的固定页面覆盖仍停留在 `/system/dict`、`/system/setting`
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md) 的固定页面覆盖曾停留在 `/system/dict`、`/system/setting`
 - 未把 `/system/i18n`、`/system/modules`、`/system/generator` 纳入固定验收矩阵
 - 缺少独立的 `i18n` 设计文档
 - 缺少独立的动态模块/生成器治理设计文档
@@ -169,7 +169,7 @@
 结论：
 
 - `business/cmdb` 已不再只是单一入口样板，而是开始出现子模块分化
-- 设计文档与业务验收基线还没跟上这个变化
+- 设计文档与业务验收基线此前没有跟上这个变化，本轮已补齐 CMDB 总设计和业务验收矩阵
 
 当前已发现的真实模块：
 
@@ -179,9 +179,9 @@
 
 关键问题：
 
-- 文档 [docs/business/CMDB_MODULE_DESIGN.md](./business/CMDB_MODULE_DESIGN.md) 目前主要围绕 `cmdb` 与 `cmdb/host`
-- 代码里已经存在 `vendor` 后后端模块、前端页面与 generated registry 装配
-- 但文档目录没有单独的 `vendor` 设计，也没有在现有 CMDB 文档中完整声明其边界、菜单、权限、i18n 与验收要求
+- 文档已迁移为 [BUSINESS_CMDB_MODULE_DESIGN.md](../designs/BUSINESS_CMDB_MODULE_DESIGN.md)，并明确纳入 `cmdb/host` 与后续 `cmdb/vendor`
+- `vendor` 当前不再按“已实现”统计，而是按“设计归属已明确，待实现”管理
+- 后续实现 `vendor` 前必须补 DDL、菜单、权限、i18n、审计与 smoke 验收证据
 
 判断：
 
@@ -193,41 +193,39 @@
 
 | 类别 | 层级 | 当前状态 | 缺口性质 | 优先级 |
 | :--- | :--- | :--- | :--- | :--- |
-| 权限工作台第二层治理 | `system/iam` | 已有发现与导出 | 功能缺失 | P1 |
-| 组织治理域文档 | `system/org` | 有实现，无独立域设计 | 文档缺失 | P1 |
-| i18n 独立域设计 | `system/config` | 有实现，无独立域设计 | 文档缺失 | P0 |
-| 动态模块治理设计 | `system/config` | 有实现，无正式治理设计 | 文档缺失 | P0 |
-| 上传与存储边界设计 | `system/config` | 有实现，文档分散 | 文档缺失 | P1 |
-| `/system/i18n` 固定验收基线 | `system/config` | 有页面，有接口 | 验收缺失 | P0 |
-| `/system/modules` 固定验收基线 | `system/config` | 有页面，有接口 | 验收缺失 | P0 |
-| `/system/generator` 固定验收基线 | `system/config` | 有页面，有功能 | 验收缺失 | P0 |
-| `business/cmdb/vendor` 设计定义 | `business/cmdb` | 有实现，无完整设计 | 文档缺失 | P0 |
-| `business/*` 业务域专项验收矩阵 | `business/*` | 仅有样板文档 | 验收缺失 | P0 |
+| 权限工作台第二层治理 | `system/iam` | 已有发现、导出、受控补齐与深化设计 | 进入整改追踪实现阶段 | P1 |
+| 组织治理域文档 | `system/org` | 已补 `docs/designs/SYSTEM_ORG_DESIGN.md` | 已收口 | P1 |
+| i18n 独立域设计 | `system/config` | 已补 `docs/designs/I18N_MODULE_DESIGN.md` | 已收口 | P0 |
+| 动态模块治理设计 | `system/config` | 已补 `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md` | 已收口 | P0 |
+| 上传与存储边界设计 | `system/config` | 已补 `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md` | 已收口 | P1 |
+| `/system/i18n` 固定验收基线 | `system/config` | 已纳入 `SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md` | 已收口 | P0 |
+| `/system/modules` 固定验收基线 | `system/config` | 已纳入 `SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md` | 已收口 | P0 |
+| `/system/generator` 固定验收基线 | `system/config` | 已纳入 `SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md` | 已收口 | P0 |
+| `business/cmdb/vendor` 设计定义 | `business/cmdb` | 已纳入 `BUSINESS_CMDB_MODULE_DESIGN.md` | 待实现 | P0 |
+| `business/*` 业务域专项验收矩阵 | `business/*` | 已补 `BUSINESS_MODULE_ACCEPTANCE_MATRIX.md` | 已收口 | P0 |
 
 ---
 
 ## 五、最需要先补的文档
 
-建议按下面顺序补齐：
+本轮已按 typed docs 结构补齐：
 
 1. `docs/designs/I18N_MODULE_DESIGN.md`
 2. `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
 3. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
-4. `docs/ORG_MODULE_DESIGN.md`
-5. 更新 [docs/business/CMDB_MODULE_DESIGN.md](./business/CMDB_MODULE_DESIGN.md)，明确纳入 `vendor`，或拆出 `docs/business/CMDB_VENDOR_MODULE_DESIGN.md`
-6. 新增一份业务域验收矩阵，例如 `docs/BUSINESS_ACCEPTANCE_MATRIX.md`
-
-如果不想拆太细，至少应先新增一份总文档：
-
-- `docs/designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md`
-
-用于把 `dict / setting / i18n / upload / dynamicmodule / generator` 六块能力先收口在一个设计锚点中。
+4. `docs/designs/SYSTEM_ORG_DESIGN.md`
+5. `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md`
+6. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+7. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
 
 ---
 
 ## 六、最需要先补的验收项
 
-建议优先修改 [ACCEPTANCE_CHECKLIST.md](./ACCEPTANCE_CHECKLIST.md)：
+固定验收入口已拆出到：
+
+- `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
+- `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
 
 ### 6.1 system/config 固定页面覆盖补齐
 
@@ -280,20 +278,21 @@
 
 ### P0，本周应完成
 
-- 补 `system/config` 扩展设计文档
-- 把 `/system/i18n`、`/system/modules`、`/system/generator` 纳入固定验收清单
-- 明确 `business/cmdb/vendor` 的设计归属与验收要求
+- 已完成：补 `system/config` 扩展设计文档与高敏验收基线
+- 已完成：把 `/system/i18n`、`/system/modules`、`/system/generator` 纳入固定验收入口
+- 已完成：明确 `business/cmdb/vendor` 的设计归属与验收要求
 
 ### P1，下一阶段完成
 
-- 为 `system/org` 补独立设计文档
-- 为 `system/auth` 与 `system/audit` 的交界治理补统一说明
-- 为 `business/*` 建立统一验收矩阵模板
+- 已完成：为 `system/org` 补独立设计文档
+- 已完成：为 `system/auth` 安全策略深化补统一说明
+- 已完成：为 `business/*` 建立统一验收矩阵模板
 
 ### P2，后续增强
 
-- 把 `system/iam` 权限工作台从“发现 + 导出”推进到“发现 + 整改 + 追踪”
-- 把业务模块验收从手工文档升级到固定 smoke 套件与报告归档
+- 已完成设计锚点：把 `system/iam` 权限工作台从“发现 + 导出”推进到“发现 + 整改 + 追踪”
+- 已完成设计锚点：把业务模块验收从手工文档升级到固定 smoke 套件与报告归档
+- 待实现：权限整改追踪落表、业务 smoke 常态化报告归档
 
 ---
 

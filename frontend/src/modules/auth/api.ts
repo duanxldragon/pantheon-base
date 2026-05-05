@@ -84,6 +84,8 @@ export interface SecurityOverview {
 
 export interface SecurityPolicy {
   passwordMinLength: number;
+  passwordRequireDigit: boolean;
+  passwordRequireUpper: boolean;
   maxFailedAttempts: number;
   lockMinutes: number;
   sourceMaxFailedAttempts: number;

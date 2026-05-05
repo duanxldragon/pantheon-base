@@ -172,15 +172,23 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			},
 		},
 		contracts.FuncModule{
-			ModuleName:    "permission",
-			MigrateFunc:   func(_ *gorm.DB) error { return permissionSvc.Migrate() },
+			ModuleName: "permission",
+			MigrateFunc: func(_ *gorm.DB) error {
+				if err := middleware.MigrateDataScopePolicy(db); err != nil {
+					return err
+				}
+				return permissionSvc.Migrate()
+			},
 			SeedMenusFunc: seedPermissionModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/permission/workbench", permissionHandler.GetWorkbench)
+					systemProtected.GET("/permission/workbench/remediation", permissionHandler.ListWorkbenchRemediationEvents)
 					systemProtected.GET("/permission/workbench/export", permissionHandler.ExportWorkbench)
 					systemProtected.POST("/permission/workbench/remediate", middleware.SecureActionMiddleware(), permissionHandler.RemediateWorkbenchPolicies)
+					systemProtected.GET("/permission/data-scope", permissionHandler.ListDataScopePolicies)
+					systemProtected.PUT("/permission/data-scope/:roleKey", middleware.SecureActionMiddleware(), permissionHandler.UpdateDataScopePolicy)
 					systemProtected.GET("/permission/list", permissionHandler.GetPolicyList)
 					systemProtected.GET("/permission/import-template", permissionHandler.DownloadImportTemplate)
 					systemProtected.POST("/permission", permissionHandler.CreatePolicy)

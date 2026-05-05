@@ -44,7 +44,7 @@ Pantheon Base 目前处于：
 | `P0-System` | 完成企业后台底座闭环 | 安全中心、会话管理、权限工作台、403/500/空态体系 | 进行中 |
 | `P1-Config` | 完成平台配置层 | 字典管理、系统设置、菜单元数据增强 | 进行中 |
 | `P1-BusinessReady` | 让业务模块可落地 | 业务模块样例、模块脚手架、注册约定、文档模板 | 进行中 |
-| `P2-Scale` | 面向中长期演进 | 数据权限、租户、SSO、MFA、风控 | 待开始 |
+| `P2-Scale` | 面向中长期演进 | 数据权限、租户、SSO/OIDC、登录风控；MFA 已实现 | 设计锚点已补，待分项实现 |
 
 ## 3. 实施原则
 
@@ -372,7 +372,7 @@ P0 必须完成：
 
 ### 8.3 当前产出
 
-- `docs/business/CMDB_MODULE_DESIGN.md` 已形成轻量 CMDB 设计基线；
+- `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md` 已形成 CMDB 业务域设计基线；
 - `backend/modules/business/cmdb/` 已完成模块装配、菜单/权限 seed、导入导出、详情关系能力；
 - `frontend/src/modules/business/cmdb/` 已完成类型页、实例页、详情页接入；
 - `docs/assessments/DYNAMIC_MENU_MATURITY_20260422.md` 已明确动态菜单成熟度结论与下一阶段蓝图。
@@ -392,7 +392,7 @@ P0 必须完成：
 - CSV 导入导出与模板下载能力
 - 资源详情页与轻量关系视图
 
-设计文档见 `docs/business/CMDB_MODULE_DESIGN.md`。
+设计文档见 `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md`。
 
 #### B. 模块脚手架
 
@@ -451,7 +451,7 @@ P0 必须完成：
 - 数据权限
 - 多租户
 - SSO / OAuth2 / OIDC
-- MFA
+- MFA（已实现，后续只保留回归与风控联动）
 - 登录风控
 - 安全事件中心
 

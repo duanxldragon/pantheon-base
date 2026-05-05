@@ -42,6 +42,31 @@ type PermissionWorkbenchQuery struct {
 	Coverage  string `form:"coverage"`
 }
 
+type PermissionDataScopeQuery struct {
+	RoleKey string `form:"roleKey" json:"roleKey"`
+	Status  *int   `form:"status" json:"status"`
+}
+
+type PermissionDataScopePolicyResp struct {
+	ID           uint64   `json:"id"`
+	RoleName     string   `json:"roleName"`
+	RoleKey      string   `json:"roleKey"`
+	Status       int      `json:"status"`
+	Mode         string   `json:"mode"`
+	DeptIDs      []uint64 `json:"deptIds"`
+	PolicyExists bool     `json:"policyExists"`
+}
+
+type PermissionDataScopePolicyListResp struct {
+	Items []PermissionDataScopePolicyResp `json:"items"`
+	Total int                             `json:"total"`
+}
+
+type PermissionDataScopePolicyUpdateReq struct {
+	Mode    string   `json:"mode" binding:"required"`
+	DeptIDs []uint64 `json:"deptIds"`
+}
+
 type PermissionWorkbenchOverviewResp struct {
 	RoleCount                        int `json:"roleCount"`
 	EnabledRoleCount                 int `json:"enabledRoleCount"`
@@ -84,6 +109,24 @@ type PermissionWorkbenchRemediateResp struct {
 	CreatedCount    int                                `json:"createdCount"`
 	SkippedCount    int                                `json:"skippedCount"`
 	CreatedPolicies []PermissionWorkbenchAPIPolicyResp `json:"createdPolicies"`
+}
+
+type PermissionWorkbenchRemediationQuery struct {
+	RoleKey string `form:"roleKey" json:"roleKey"`
+	Limit   int    `form:"limit" json:"limit"`
+}
+
+type PermissionWorkbenchRemediationResp struct {
+	ID           uint64 `json:"id"`
+	RoleKey      string `json:"roleKey"`
+	IssueType    string `json:"issueType"`
+	IssueKey     string `json:"issueKey"`
+	BeforeState  string `json:"beforeState"`
+	AfterState   string `json:"afterState"`
+	Action       string `json:"action"`
+	CreatedCount int    `json:"createdCount"`
+	SkippedCount int    `json:"skippedCount"`
+	CreatedAt    string `json:"createdAt"`
 }
 
 type PermissionWorkbenchRoleResp struct {

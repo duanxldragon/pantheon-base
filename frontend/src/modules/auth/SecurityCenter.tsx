@@ -178,6 +178,16 @@ const SecurityCenter: React.FC = () => {
         hint: t('system.setting.remark.security.password_min_length'),
       },
       {
+        label: t('system.setting.item.security.password_require_digit'),
+        value: policy.passwordRequireDigit ? t('common.yes') : t('common.no'),
+        hint: t('system.setting.remark.security.password_require_digit'),
+      },
+      {
+        label: t('system.setting.item.security.password_require_uppercase'),
+        value: policy.passwordRequireUpper ? t('common.yes') : t('common.no'),
+        hint: t('system.setting.remark.security.password_require_uppercase'),
+      },
+      {
         label: t('system.setting.item.login.max_failed_attempts'),
         value: t('auth.security.policy.maxFailedAttempts', { count: policy.maxFailedAttempts }),
         hint: t('system.setting.remark.login.max_failed_attempts'),

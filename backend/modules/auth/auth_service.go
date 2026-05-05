@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/authsession"
@@ -41,6 +42,8 @@ type UserPreferenceUpdateResult struct {
 
 type authRuntimePolicy struct {
 	PasswordMinLength       int
+	PasswordRequireDigit    bool
+	PasswordRequireUpper    bool
 	MaxFailedAttempts       int
 	LockMinutes             int
 	SourceMaxFailedAttempts int
@@ -85,6 +88,8 @@ func NewAuthService(db *gorm.DB) *AuthService {
 func (s *AuthService) ReloadSettings() error {
 	policy := authRuntimePolicy{
 		PasswordMinLength:       s.fetchSettingIntFromDB("security.password_min_length", defaultPasswordMinLength),
+		PasswordRequireDigit:    s.fetchSettingBoolFromDB("security.password_require_digit", false),
+		PasswordRequireUpper:    s.fetchSettingBoolFromDB("security.password_require_uppercase", false),
 		MaxFailedAttempts:       s.fetchSettingIntFromDB("login.max_failed_attempts", defaultMaxFailedAttempts),
 		LockMinutes:             s.fetchSettingIntFromDB("login.lock_minutes", defaultLockMinutes),
 		SourceMaxFailedAttempts: s.fetchSettingIntFromDB("login.source_max_failed_attempts", defaultSourceMaxFailedAttempts),
@@ -101,6 +106,8 @@ func (s *AuthService) ReloadSettings() error {
 
 	s.settingsMu.Lock()
 	s.settingsCache["security.password_min_length"] = policy.PasswordMinLength
+	s.settingsCache["security.password_require_digit"] = boolToInt(policy.PasswordRequireDigit)
+	s.settingsCache["security.password_require_uppercase"] = boolToInt(policy.PasswordRequireUpper)
 	s.settingsCache["login.max_failed_attempts"] = policy.MaxFailedAttempts
 	s.settingsCache["login.lock_minutes"] = policy.LockMinutes
 	s.settingsCache["login.source_max_failed_attempts"] = policy.SourceMaxFailedAttempts
@@ -546,8 +553,12 @@ func (s *AuthService) UpdatePassword(userID uint64, currentSessionID string, req
 
 	oldPassword := strings.TrimSpace(req.OldPassword)
 	newPassword := strings.TrimSpace(req.NewPassword)
-	if len(newPassword) < s.getAuthRuntimePolicy().PasswordMinLength {
+	policy := s.getAuthRuntimePolicy()
+	if len(newPassword) < policy.PasswordMinLength {
 		return errors.New("user.update.error.password_too_short")
+	}
+	if !passwordMatchesComplexity(newPassword, policy) {
+		return errors.New("user.update.error.password_weak")
 	}
 
 	var currentUser user.SystemUser
@@ -776,6 +787,8 @@ func (s *AuthService) GetSecurityOverview(userID uint64, username string, curren
 		LastLoginAt:        lastLoginAt,
 		Policy: SecurityPolicyResp{
 			PasswordMinLength:       policy.PasswordMinLength,
+			PasswordRequireDigit:    policy.PasswordRequireDigit,
+			PasswordRequireUpper:    policy.PasswordRequireUpper,
 			MaxFailedAttempts:       policy.MaxFailedAttempts,
 			LockMinutes:             policy.LockMinutes,
 			SourceMaxFailedAttempts: policy.SourceMaxFailedAttempts,
@@ -1216,6 +1229,8 @@ func (s *AuthService) getAuthRuntimePolicy() authRuntimePolicy {
 
 	return authRuntimePolicy{
 		PasswordMinLength:       s.settingsCache["security.password_min_length"],
+		PasswordRequireDigit:    s.settingsCache["security.password_require_digit"] == 1,
+		PasswordRequireUpper:    s.settingsCache["security.password_require_uppercase"] == 1,
 		MaxFailedAttempts:       s.settingsCache["login.max_failed_attempts"],
 		LockMinutes:             s.settingsCache["login.lock_minutes"],
 		SourceMaxFailedAttempts: maxInt(s.settingsCache["login.source_max_failed_attempts"], defaultSourceMaxFailedAttempts),
@@ -1229,6 +1244,29 @@ func (s *AuthService) getAuthRuntimePolicy() authRuntimePolicy {
 		MFAEnabled:              s.settingsCache["login.mfa_enabled"] == 1,
 		SSOEnabled:              s.settingsCache["login.sso_enabled"] == 1,
 	}
+}
+
+func passwordMatchesComplexity(password string, policy authRuntimePolicy) bool {
+	if !policy.PasswordRequireDigit && !policy.PasswordRequireUpper {
+		return true
+	}
+	hasDigit := false
+	hasUpper := false
+	for _, r := range password {
+		if unicode.IsDigit(r) {
+			hasDigit = true
+		}
+		if unicode.IsUpper(r) {
+			hasUpper = true
+		}
+	}
+	if policy.PasswordRequireDigit && !hasDigit {
+		return false
+	}
+	if policy.PasswordRequireUpper && !hasUpper {
+		return false
+	}
+	return true
 }
 
 func (s *AuthService) governSessionInventory(now time.Time, policy authRuntimePolicy) error {

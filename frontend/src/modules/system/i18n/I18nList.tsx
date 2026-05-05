@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   Button,
@@ -180,6 +180,7 @@ const I18nList: React.FC = () => {
   const [error, setError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailLoadingKey, setDetailLoadingKey] = useState('');
   const [detailVisible, setDetailVisible] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
@@ -207,6 +208,7 @@ const I18nList: React.FC = () => {
   const [renameForm] = Form.useForm<I18nRenameFormValues>();
   const [registeredModuleOptions, setRegisteredModuleOptions] = useState<string[]>([]);
   const [createDuplicateConflict, setCreateDuplicateConflict] = useState<I18nDuplicateConflictState | null>(null);
+  const detailRequestKeyRef = useRef('');
 
   const loadData = useCallback(async (nextQuery: I18nQuery = query, options?: LoadDataOptions) => {
     const silent = options?.silent === true;
@@ -387,6 +389,12 @@ const I18nList: React.FC = () => {
   };
 
   const loadDetail = async (row: SystemI18n, mode: 'view' | 'edit') => {
+    const requestKey = `${row.id}:${mode}`;
+    if (detailRequestKeyRef.current === requestKey) {
+      return;
+    }
+    detailRequestKeyRef.current = requestKey;
+    setDetailLoadingKey(requestKey);
     setDetailLoading(true);
     try {
       const detail = await getI18nDetail(String(row.id));
@@ -403,6 +411,8 @@ const I18nList: React.FC = () => {
     } catch {
       message.error(t('i18n.detail.error'));
     } finally {
+      detailRequestKeyRef.current = '';
+      setDetailLoadingKey('');
       setDetailLoading(false);
     }
   };
@@ -926,11 +936,23 @@ const I18nList: React.FC = () => {
       fixed: 'right',
       render: (_: unknown, row: SystemI18n) => (
         <Space className="system-list__actions">
-          <Button type="text" icon={<IconEye />} onClick={() => void loadDetail(row, 'view')}>
+          <Button
+            type="text"
+            icon={<IconEye />}
+            loading={detailLoadingKey === `${row.id}:view`}
+            disabled={detailLoading && detailLoadingKey !== `${row.id}:view`}
+            onClick={() => void loadDetail(row, 'view')}
+          >
             {t('common.detail')}
           </Button>
           {canEdit ? (
-            <Button type="text" icon={<IconEdit />} onClick={() => void loadDetail(row, 'edit')}>
+            <Button
+              type="text"
+              icon={<IconEdit />}
+              loading={detailLoadingKey === `${row.id}:edit`}
+              disabled={detailLoading && detailLoadingKey !== `${row.id}:edit`}
+              onClick={() => void loadDetail(row, 'edit')}
+            >
               {t('common.edit')}
             </Button>
           ) : null}

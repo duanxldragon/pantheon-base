@@ -245,7 +245,7 @@ func InitCmdbHostModule(r *gin.RouterGroup, db *gorm.DB) {
 		SeedMenusFunc: seedCmdbHostMenus,
 		SeedI18nFunc:  seedCmdbHostI18n,
 		Register: func(r *gin.RouterGroup) {
-			protected := r.Group("/business/cmdb/host").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+			protected := r.Group("/business/cmdb/host").Use(middleware.JWTAuthMiddleware()).Use(middleware.DataScopeMiddleware(db)).Use(middleware.CasbinMiddleware())
 			{
 				protected.GET("/list", handler.GetCmdbHostList)
 				protected.GET("/:id", handler.GetCmdbHostDetail)

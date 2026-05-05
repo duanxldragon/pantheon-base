@@ -16,4 +16,5 @@ function defineRegistryEntry(loader: ComponentLoader): RegistryEntry {
 
 export const generatedComponentRegistry = {
   'business/cmdb/host/CmdbHostList': defineRegistryEntry(() => import('../../modules/business/cmdb/host/CmdbHostList')),
+  'business/cmdb/vendor/CmdbVendorList': defineRegistryEntry(() => import('../../modules/business/cmdb/vendor/CmdbVendorList')),
 } satisfies Record<string, RegistryEntry>;

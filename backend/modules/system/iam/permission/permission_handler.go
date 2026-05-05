@@ -51,6 +51,21 @@ func (h *PermissionHandler) ExportWorkbench(c *gin.Context) {
 	}
 }
 
+func (h *PermissionHandler) ListWorkbenchRemediationEvents(c *gin.Context) {
+	var query PermissionWorkbenchRemediationQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	events, err := h.service.ListWorkbenchRemediationEvents(&query)
+	if err != nil {
+		common.Fail(c, common.CodeError, "permission.workbench.remediation.error")
+		return
+	}
+	common.Success(c, events)
+}
+
 func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
 	common.SetAuditMetadata(c, "补齐推荐接口策略", common.BusinessInsert)
 
@@ -61,6 +76,38 @@ func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
 	}
 
 	resp, err := h.service.RemediateWorkbenchPolicies(&req)
+	if err != nil {
+		common.FailWithError(c, common.CodeError, err, "request.failed")
+		return
+	}
+	common.Success(c, resp)
+}
+
+func (h *PermissionHandler) ListDataScopePolicies(c *gin.Context) {
+	var query PermissionDataScopeQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	resp, err := h.service.ListDataScopePolicies(&query)
+	if err != nil {
+		common.Fail(c, common.CodeError, "permission.data_scope.list.error")
+		return
+	}
+	common.Success(c, resp)
+}
+
+func (h *PermissionHandler) UpdateDataScopePolicy(c *gin.Context) {
+	common.SetAuditMetadata(c, "更新数据权限策略", common.BusinessUpdate)
+
+	var req PermissionDataScopePolicyUpdateReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	resp, err := h.service.UpdateDataScopePolicy(c.Param("roleKey"), &req)
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return

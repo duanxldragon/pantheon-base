@@ -13,6 +13,7 @@
 - `UPLOAD_AND_STORAGE_DESIGN.md`
 - `DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
 - `GENERATOR_MODULE_DESIGN.md`
+- `BUSINESS_DICT_INTEGRATION_GUIDE.md`
 
 关联评估：
 - `SYSTEM_MODULE_AUDIT.md`
@@ -23,6 +24,7 @@
 
 关联验收：
 - `ACCEPTANCE_CHECKLIST.md`
+- `SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
 - `PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md`
 - `QA_SMOKE_REPORT_20260420.md`
 
@@ -300,4 +302,3 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - 子合同不能改写本总合同边界
 - 子合同只做更细的完成定义与验收补充
 - 在没有专题子合同前，仍以本总合同为主依据
-

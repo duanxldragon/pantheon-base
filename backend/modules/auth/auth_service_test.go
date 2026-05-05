@@ -380,6 +380,37 @@ func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 	}
 }
 
+func TestAuthService_UpdatePasswordUsesConfiguredComplexity(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "complexity_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_require_digit', 'true'), ('security.password_require_uppercase', 'true')")
+	_ = s.ReloadSettings()
+
+	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
+		OldPassword: "oldpassword",
+		NewPassword: "longenough",
+	})
+	if err == nil || err.Error() != "user.update.error.password_weak" {
+		t.Fatalf("expected weak password error without digit and uppercase, got %v", err)
+	}
+
+	err = s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
+		OldPassword: "oldpassword",
+		NewPassword: "Longenough1",
+	})
+	if err != nil {
+		t.Fatalf("expected complex password to pass, got %v", err)
+	}
+}
+
 func TestAuthService_UpdateCurrentUserPreferencesReturnsNormalizedPayload(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)

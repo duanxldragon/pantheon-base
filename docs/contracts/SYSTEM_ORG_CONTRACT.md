@@ -7,6 +7,7 @@
 状态：Active
 
 关联设计：
+- `SYSTEM_ORG_DESIGN.md`
 - `FRONTEND_PAGE_TEMPLATES.md`
 - `BACKEND.md`
 
@@ -212,4 +213,3 @@
 - [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
 - [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/QA_SMOKE_REPORT_20260420.md)
-

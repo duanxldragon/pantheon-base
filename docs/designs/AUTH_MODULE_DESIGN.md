@@ -78,6 +78,7 @@
 当前已接入的安全策略包括：
 
 - `security.password_min_length`：作用于当前用户修改密码
+- `security.password_require_digit` / `security.password_require_uppercase`：作用于当前用户修改密码复杂度校验
 - `login.max_failed_attempts`：作用于登录失败累计阈值
 - `login.lock_minutes`：作用于账号临时锁定时长
 - `login.source_max_failed_attempts`：作用于同一来源/IP 在窗口内的失败阈值

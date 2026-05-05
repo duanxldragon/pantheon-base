@@ -103,6 +103,8 @@ type SecurityOverviewResp struct {
 
 type SecurityPolicyResp struct {
 	PasswordMinLength       int  `json:"passwordMinLength"`
+	PasswordRequireDigit    bool `json:"passwordRequireDigit"`
+	PasswordRequireUpper    bool `json:"passwordRequireUpper"`
 	MaxFailedAttempts       int  `json:"maxFailedAttempts"`
 	LockMinutes             int  `json:"lockMinutes"`
 	SourceMaxFailedAttempts int  `json:"sourceMaxFailedAttempts"`

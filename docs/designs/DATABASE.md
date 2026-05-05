@@ -100,6 +100,6 @@
 - **外键约束**: 为了支持后续的模块化拆分，**严禁使用数据库物理外键**。通过程序逻辑（Service 层）确保数据完整性。
 
 ## 5. 初始初始化路径
-- [DDL 脚本见这里](../database/system_init.sql)
+- [DDL 脚本见这里](../../database/system_init.sql)
 - `database/system_init.sql` 中默认管理员账号为 `admin / 123456`，密码已使用 bcrypt 哈希。
 - 运行时 `PANTHEON_DSN` 必须是 MySQL DSN；后端测试也统一通过 MySQL 夹具执行。

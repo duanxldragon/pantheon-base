@@ -16,33 +16,51 @@
 
 ## 2. 推荐阅读路径
 
+### 2.0 项目入口与文档治理
+
+1. [项目总体设计](../DESIGN.md)
+2. [AI Agent 行为准则](../AGENTS.md)
+3. [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
+4. [文档类型与状态说明](./contracts/DOCUMENT_METADATA_AND_STATUS.md)
+
 ### 2.1 新人或 AI 首次进入项目
 
-1. [总体架构与后端规范](./designs/BACKEND.md)
-2. [前端架构与模块接入](./designs/FRONTEND.md)
-3. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
-4. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
-5. [业务开发与 AI 协作](./designs/WORKFLOW.md)
+1. [平台层合同文档](./contracts/PLATFORM_CONTRACT.md)
+2. [system/auth 合同文档](./contracts/SYSTEM_AUTH_CONTRACT.md)
+3. [system/iam 合同文档](./contracts/SYSTEM_IAM_CONTRACT.md)
+4. [system/org 合同文档](./contracts/SYSTEM_ORG_CONTRACT.md)
+5. [system/config 合同文档](./contracts/SYSTEM_CONFIG_CONTRACT.md)
+6. [总体架构与后端规范](./designs/BACKEND.md)
+7. [前端架构与模块接入](./designs/FRONTEND.md)
+8. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
+9. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+10. [业务开发与 AI 协作](./designs/WORKFLOW.md)
 
 ### 2.2 做 `platform` 壳层、导航、工作台、浮层治理
 
 1. [平台仪表盘设计](./designs/PLATFORM_DASHBOARD_DESIGN.md)
-2. [后台 UI 专项整改方案](./remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
-3. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
-4. [前端页面模板规范](./designs/FRONTEND_PAGE_TEMPLATES.md)
-5. [平台层 UI 迁移验收矩阵（2026-04-30）](./acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-6. [平台壳层双模式验收模板](./acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
+2. [后台风格硬约束](./designs/BACKOFFICE_STYLE_CONSTRAINTS.md)
+3. [后台 UI 专项整改方案](./remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
+4. [后台 UI 视觉基线（2026-05-01）](./remediations/BACKOFFICE_UI_VISUAL_BASELINE_20260501.md)
+5. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
+6. [前端页面模板规范](./designs/FRONTEND_PAGE_TEMPLATES.md)
+7. [平台层 UI 迁移验收矩阵（2026-04-30）](./acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+8. [平台壳层双模式验收模板](./acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
 
 ### 2.3 做系统域能力设计
 
 - `system/auth`
   - [Auth 模块拆分设计](./designs/AUTH_MODULE_DESIGN.md)
   - [安全中心设计](./designs/SECURITY_CENTER_DESIGN.md)
+  - [安全策略深化路线图](./designs/SECURITY_POLICY_ROADMAP.md)
+  - [SSO / OAuth2 / OIDC 设计](./designs/SSO_OIDC_DESIGN.md)
 - `system/iam`
   - [权限模型设计](./designs/PERMISSION_MODEL.md)
   - [模块契约设计](./designs/MODULE_CONTRACT.md)
+  - [权限工作台治理深化设计](./designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md)
+  - [导航信息架构深化设计](./designs/NAVIGATION_IA_STRATEGY.md)
 - `system/org`
-  - 当前主要依赖 [BACKEND.md](./designs/BACKEND.md)、[FRONTEND_PAGE_TEMPLATES.md](./designs/FRONTEND_PAGE_TEMPLATES.md)、[ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
+  - [system/org 组织域设计](./designs/SYSTEM_ORG_DESIGN.md)
 - `system/config`
   - [字典与系统设置设计](./designs/DICT_AND_SETTING_DESIGN.md)
   - [system/config 扩展设计](./designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
@@ -50,6 +68,27 @@
   - [上传与存储设计](./designs/UPLOAD_AND_STORAGE_DESIGN.md)
   - [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
   - [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
+  - [业务字典接入指南](./designs/BUSINESS_DICT_INTEGRATION_GUIDE.md)
+  - [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
+
+### 2.4 做低代码生成器或业务模块接入
+
+1. [模块契约设计](./designs/MODULE_CONTRACT.md)
+2. [业务模块设计模板](./designs/BUSINESS_MODULE_TEMPLATE.md)
+3. [低代码生成器使用指南](./designs/LOWCODE_GENERATOR_GUIDE.md)
+4. [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
+5. [业务建模评审清单](./designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md)
+6. [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
+7. [CMDB 业务模块设计](./designs/BUSINESS_CMDB_MODULE_DESIGN.md)
+8. [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
+
+### 2.5 做 P2 规模化能力
+
+1. [P2 规模化能力路线图](./designs/P2_SCALE_ROADMAP.md)
+2. [数据权限 Hook 设计](./designs/DATA_PERMISSION_HOOK.md)
+3. [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
+4. [SSO / OAuth2 / OIDC 设计](./designs/SSO_OIDC_DESIGN.md)
+5. [安全策略深化路线图](./designs/SECURITY_POLICY_ROADMAP.md)
 
 ## 3. 核心设计文档
 
@@ -71,6 +110,10 @@
 - [数据库设计说明](./designs/DATABASE.md)
 - [模块契约设计](./designs/MODULE_CONTRACT.md)
 - [业务模块设计模板](./designs/BUSINESS_MODULE_TEMPLATE.md)
+- [CMDB 业务模块设计](./designs/BUSINESS_CMDB_MODULE_DESIGN.md)
+- [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
+- [业务建模评审清单](./designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md)
+- [P2 规模化能力路线图](./designs/P2_SCALE_ROADMAP.md)
 - [实施路线图](./archive/IMPLEMENTATION_ROADMAP.md)
 
 ### 3.2 平台与 UI 规范
@@ -79,7 +122,10 @@
 - [前端页面模板规范](./designs/FRONTEND_PAGE_TEMPLATES.md)
 - [前端组件规划](./designs/FRONTEND_COMPONENT_PLAN.md)
 - [平台仪表盘设计](./designs/PLATFORM_DASHBOARD_DESIGN.md)
+- [导航信息架构深化设计](./designs/NAVIGATION_IA_STRATEGY.md)
+- [后台风格硬约束](./designs/BACKOFFICE_STYLE_CONSTRAINTS.md)
 - [后台 UI 专项整改方案](./remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
+- [后台 UI 视觉基线（2026-05-01）](./remediations/BACKOFFICE_UI_VISUAL_BASELINE_20260501.md)
 
 ### 3.3 系统域设计
 
@@ -87,7 +133,12 @@
 - [权限模型设计](./designs/PERMISSION_MODEL.md)
 - [错误码与多语言设计](./designs/ERROR_CODE_AND_I18N.md)
 - [安全中心设计](./designs/SECURITY_CENTER_DESIGN.md)
+- [安全策略深化路线图](./designs/SECURITY_POLICY_ROADMAP.md)
+- [SSO / OAuth2 / OIDC 设计](./designs/SSO_OIDC_DESIGN.md)
+- [system/org 组织域设计](./designs/SYSTEM_ORG_DESIGN.md)
+- [权限工作台治理深化设计](./designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md)
 - [字典与系统设置设计](./designs/DICT_AND_SETTING_DESIGN.md)
+- [业务字典接入指南](./designs/BUSINESS_DICT_INTEGRATION_GUIDE.md)
 - [system/config 扩展设计](./designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
 - [i18n 模块设计](./designs/I18N_MODULE_DESIGN.md)
 - [上传与存储设计](./designs/UPLOAD_AND_STORAGE_DESIGN.md)
@@ -100,12 +151,16 @@
 - [动态菜单能力成熟度评估与演进蓝图](./assessments/DYNAMIC_MENU_MATURITY_20260422.md)
 - [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
 - [低代码生成器使用指南](./designs/LOWCODE_GENERATOR_GUIDE.md)
+- [CMDB 业务模块设计](./designs/BUSINESS_CMDB_MODULE_DESIGN.md)
 
 ## 4. 交付、验收与运维
 
 ### 4.1 开发与验收
 
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+- [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
+- [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
+- [代码评审标准](./acceptances/CODE_REVIEW_STANDARD.md)
 - [业务开发与 AI 协作](./designs/WORKFLOW.md)
 - [系统模块审计](./assessments/SYSTEM_MODULE_AUDIT.md)
 - [平台缺口审计（2026-04-29）](./assessments/PLATFORM_GAP_AUDIT_20260429.md)

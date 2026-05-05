@@ -69,6 +69,7 @@ func setupPermissionTestDB(t *testing.T) *gorm.DB {
 		&permissionTestRolePermission{},
 		&permissionTestMenu{},
 		&database.CasbinRule{},
+		&PermissionRoleDataScopePolicy{},
 	); err != nil {
 		t.Fatalf("migrate permission fixtures: %v", err)
 	}
@@ -144,6 +145,62 @@ func TestPermissionService_GetWorkbench(t *testing.T) {
 	}
 	if role.UnknownPermissionCount != 0 {
 		t.Fatalf("expected 0 unknown permissions, got %d", role.UnknownPermissionCount)
+	}
+}
+
+func TestPermissionService_DataScopePolicies(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	if err := db.Create(&permissionTestRole{ID: 1, RoleName: "编辑", RoleKey: "editor", Status: 1, Sort: 1}).Error; err != nil {
+		t.Fatalf("seed role: %v", err)
+	}
+
+	initial, err := service.ListDataScopePolicies(nil)
+	if err != nil {
+		t.Fatalf("list initial data scope policies: %v", err)
+	}
+	if initial.Total != 1 || len(initial.Items) != 1 {
+		t.Fatalf("expected one role data scope row, got %+v", initial)
+	}
+	if initial.Items[0].Mode != "all" || initial.Items[0].PolicyExists {
+		t.Fatalf("expected default all mode without explicit policy, got %+v", initial.Items[0])
+	}
+
+	updated, err := service.UpdateDataScopePolicy("editor", &PermissionDataScopePolicyUpdateReq{
+		Mode:    "custom",
+		DeptIDs: []uint64{20, 10, 20, 0},
+	})
+	if err != nil {
+		t.Fatalf("update data scope policy: %v", err)
+	}
+	if updated.Mode != "custom" || !updated.PolicyExists {
+		t.Fatalf("expected custom explicit policy, got %+v", updated)
+	}
+	if len(updated.DeptIDs) != 2 || updated.DeptIDs[0] != 10 || updated.DeptIDs[1] != 20 {
+		t.Fatalf("expected normalized dept ids [10 20], got %+v", updated.DeptIDs)
+	}
+
+	updated, err = service.UpdateDataScopePolicy("editor", &PermissionDataScopePolicyUpdateReq{Mode: "dept"})
+	if err != nil {
+		t.Fatalf("update data scope policy to dept: %v", err)
+	}
+	if updated.Mode != "dept" || len(updated.DeptIDs) != 0 {
+		t.Fatalf("expected dept mode without custom dept ids, got %+v", updated)
+	}
+}
+
+func TestPermissionService_DataScopePolicyRequiresCustomDeptIDs(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	if err := db.Create(&permissionTestRole{ID: 1, RoleName: "编辑", RoleKey: "editor", Status: 1, Sort: 1}).Error; err != nil {
+		t.Fatalf("seed role: %v", err)
+	}
+
+	_, err := service.UpdateDataScopePolicy("editor", &PermissionDataScopePolicyUpdateReq{Mode: "custom"})
+	if err == nil || !strings.Contains(err.Error(), "permission.data_scope.dept_required") {
+		t.Fatalf("expected custom dept required error, got %v", err)
 	}
 }
 
@@ -369,6 +426,9 @@ func TestPermissionService_GetWorkbenchDetectsSpecificRequiredAPIPolicyGap(t *te
 func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 	db := setupPermissionTestDB(t)
 	service := NewPermissionService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate permission service: %v", err)
+	}
 
 	if err := db.Create(&permissionTestRole{ID: 1, RoleName: "Generate Gap", RoleKey: "generate_gap", Status: 1, Sort: 1}).Error; err != nil {
 		t.Fatalf("seed role: %v", err)
@@ -423,6 +483,20 @@ func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 	}
 	if secondResp.SkippedCount != 1 {
 		t.Fatalf("expected skipped count 1 after remediation, got %+v", secondResp)
+	}
+
+	events, err := service.ListWorkbenchRemediationEvents(&PermissionWorkbenchRemediationQuery{RoleKey: "generate_gap"})
+	if err != nil {
+		t.Fatalf("list remediation events: %v", err)
+	}
+	if len(events) != 2 {
+		t.Fatalf("expected 2 remediation events, got %+v", events)
+	}
+	if events[0].RoleKey != "generate_gap" || events[0].IssueType != "api-gap" || events[0].Action != "remediated" || events[0].CreatedCount != 1 || events[0].AfterState != "complete" {
+		t.Fatalf("unexpected first remediation event: %+v", events[0])
+	}
+	if events[1].Action != "noop" || events[1].CreatedCount != 0 || events[1].SkippedCount != 1 {
+		t.Fatalf("unexpected second remediation event: %+v", events[1])
 	}
 }
 
