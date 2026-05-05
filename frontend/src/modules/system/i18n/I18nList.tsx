@@ -993,6 +993,7 @@ const I18nList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.i18n')}
         extra={(
           <ListHeaderActions
             className="i18n-list-page__header-actions"

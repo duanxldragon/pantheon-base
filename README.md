@@ -86,10 +86,14 @@ npm run dev
 
 ### 4. 默认登录
 
+非生产环境未设置 `PANTHEON_INITIAL_ADMIN_PASSWORD` 时，后端迁移会创建开发默认账号：
+
 ```text
 用户名：admin
 密码：123456
 ```
+
+生产环境必须在启动前设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位。
 
 ## 常用命令
 

@@ -1134,6 +1134,7 @@ const DeptList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.dept')}
         extra={activeTab === 'manage' ? (
           <ListHeaderActions
             className="dept-list-page__header-actions"

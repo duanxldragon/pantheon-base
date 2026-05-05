@@ -200,9 +200,10 @@
 1. 执行 `docker compose up -d`，或手动执行 `database/system_init.sql` 初始化 MySQL。
 2. 设置 `PANTHEON_DSN`，例如 `user:pass@tcp(127.0.0.1:3306)/pantheon?charset=utf8mb4&parseTime=True&loc=Local`。
 3. 可选设置 `PANTHEON_REDIS_ADDR=127.0.0.1:6379` 与 `PANTHEON_REDIS_PASSWORD=DHCCdhcc2025`。
-4. 后端执行 `go run ./backend/cmd/server`。
-5. 前端进入 `frontend/` 执行 `npm install` 和 `npm run dev`。
-6. 启动后可访问 `GET /api/v1/health` 验证进程、数据库与 Redis 状态。
+4. 生产环境设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位；开发环境未设置时会创建 `admin / 123456`。
+5. 后端执行 `go run ./backend/cmd/server`。
+6. 前端进入 `frontend/` 执行 `npm install` 和 `npm run dev`。
+7. 启动后可访问 `GET /api/v1/health` 验证进程、数据库与 Redis 状态。
 
 ## 7. 当前系统能力概览
 

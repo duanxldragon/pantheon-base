@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -88,7 +89,11 @@ func (s *UserService) normalizeUserPreferenceJSON() error {
 	return nil
 }
 
-const defaultConfiguredPasswordMinLength = 6
+const (
+	defaultConfiguredPasswordMinLength = 6
+	defaultDevInitialAdminPassword     = "123456"
+	productionInitialAdminMinLength    = 12
+)
 
 func (s *UserService) ensureAdminUserSeed() error {
 	var count int64
@@ -99,7 +104,11 @@ func (s *UserService) ensureAdminUserSeed() error {
 		return nil
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	initialPassword, err := resolveInitialAdminPassword()
+	if err != nil {
+		return err
+	}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(initialPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
@@ -111,6 +120,23 @@ func (s *UserService) ensureAdminUserSeed() error {
 	}
 	admin.ID = 1
 	return s.db.Create(&admin).Error
+}
+
+func resolveInitialAdminPassword() (string, error) {
+	password := strings.TrimSpace(os.Getenv("PANTHEON_INITIAL_ADMIN_PASSWORD"))
+	if !common.IsProductionEnv() {
+		if password != "" {
+			return password, nil
+		}
+		return defaultDevInitialAdminPassword, nil
+	}
+	if password == "" {
+		return "", errors.New("admin.initial_password_required")
+	}
+	if len(password) < productionInitialAdminMinLength {
+		return "", errors.New("admin.initial_password_too_short")
+	}
+	return password, nil
 }
 
 func (s *UserService) ensureAdminRoleBinding() error {

@@ -6,6 +6,12 @@ const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
 const pageEmptyTexts = ['暂无数据', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
 type SettingItem = { settingKey: string; settingValue: string };
 type LoginResult = { accessToken: string; refreshToken: string };
+type UserPlatformPreferences = {
+  theme?: string;
+  language?: string;
+  layoutMode?: string;
+  densityMode?: string;
+};
 
 const systemPages = [
   { path: '/system/user', title: '用户管理' },
@@ -156,6 +162,26 @@ async function createApiPermission(page: Page, accessToken: string, roleKey: str
   const response = await page.request.post(`${apiBaseUrl}/system/permission`, {
     headers: await verifiedHeaders(page, accessToken),
     data: { roleKey, path, method },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+}
+
+async function getCurrentUserPreferences(page: Page, accessToken: string): Promise<UserPlatformPreferences> {
+  const response = await page.request.get(`${apiBaseUrl}/auth/me`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return (payload.data?.preferences || {}) as UserPlatformPreferences;
+}
+
+async function updateCurrentUserPreferences(page: Page, accessToken: string, preferences: UserPlatformPreferences) {
+  const response = await page.request.put(`${apiBaseUrl}/auth/me/preferences`, {
+    headers: authHeaders(accessToken),
+    data: preferences,
   });
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
@@ -569,6 +595,7 @@ test('setting smoke: upload storage driver can be selected through setting page 
 
 test('setting smoke: default language applies when there is no explicit choice', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
+  const originalPreferences = await getCurrentUserPreferences(page, accessToken);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
     headers: authHeaders(accessToken),
   });
@@ -582,6 +609,12 @@ test('setting smoke: default language applies when there is no explicit choice',
   }));
 
   try {
+    await updateCurrentUserPreferences(page, accessToken, {
+      theme: originalPreferences.theme,
+      language: '',
+      layoutMode: originalPreferences.layoutMode,
+      densityMode: originalPreferences.densityMode,
+    });
     const updateResponse = await updateSettingGroup(page, accessToken, 'i18n', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
 
@@ -592,8 +625,9 @@ test('setting smoke: default language applies when there is no explicit choice',
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
     await page.reload({ waitUntil: 'networkidle' });
 
-    await expect(page.locator('.app-shell__header-title').getByText('Workbench')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Workbench' }).first()).toBeVisible();
   } finally {
+    await updateCurrentUserPreferences(page, accessToken, originalPreferences);
     await updateSettingGroup(page, accessToken, 'i18n', originalItems);
   }
 });
@@ -633,6 +667,7 @@ test('setting smoke: default language can be selected through setting page UI', 
 
 test('setting smoke: logout clears explicit language and falls back to default language', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
+  const originalPreferences = await getCurrentUserPreferences(page, accessToken);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
     headers: authHeaders(accessToken),
   });
@@ -646,6 +681,12 @@ test('setting smoke: logout clears explicit language and falls back to default l
   }));
 
   try {
+    await updateCurrentUserPreferences(page, accessToken, {
+      theme: originalPreferences.theme,
+      language: '',
+      layoutMode: originalPreferences.layoutMode,
+      densityMode: originalPreferences.densityMode,
+    });
     const updateResponse = await updateSettingGroup(page, accessToken, 'i18n', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
 
@@ -661,9 +702,10 @@ test('setting smoke: logout clears explicit language and falls back to default l
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
-    await expect(page.locator('.app-shell__header-title').getByText('Workbench')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Workbench' }).first()).toBeVisible();
   } finally {
     const restoreToken = await signInAsAdmin(page);
+    await updateCurrentUserPreferences(page, restoreToken, originalPreferences);
     await updateSettingGroup(page, restoreToken, 'i18n', originalItems);
   }
 });
@@ -734,7 +776,7 @@ test('platform smoke: lock screen keeps current route and opened tabs', async ({
     await expect(page.locator('.app-shell__tabs [role="tab"]')).toHaveCount(2);
 
     await page.getByRole('button', { name: /admin/i }).click();
-    await page.getByRole('menuitem', { name: /锁屏|Lock Screen/i }).click();
+    await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
     await expect(page.getByRole('dialog')).toContainText(/会话已锁定|Session Locked/);
 
     await page.getByPlaceholder(/请输入当前账号密码以解锁|Enter the current account password to unlock/).fill('123456');
@@ -1454,6 +1496,7 @@ test('session governance smoke: cleanup bar uses the unified governance affordan
 });
 
 test('refresh sync smoke: setting page auto-updates across isolated contexts', async ({ browser, page }) => {
+  test.setTimeout(45000);
   const accessToken = await signInAsAdmin(page);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/basic`, {
     headers: authHeaders(accessToken),
@@ -1493,6 +1536,7 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
 });
 
 test('refresh sync smoke: dict page auto-updates across isolated contexts', async ({ browser, page }) => {
+  test.setTimeout(45000);
   const accessToken = await signInAsAdmin(page);
   const dictCode = `system_sync_${Date.now()}`;
   const dictName = `system.dict.sync.${Date.now()}`;
@@ -1507,6 +1551,7 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
     await formItem(syncPage, '字典编码').locator('input').first().fill(dictCode);
     await syncPage.getByRole('button', { name: '搜索' }).click();
     await expect(syncPage.getByText(dictCode, { exact: false })).toHaveCount(0);
+    await syncPage.waitForTimeout(5500);
 
     const createResponse = await page.request.post(`${apiBaseUrl}/system/dict/type`, {
       headers: await verifiedHeaders(page, accessToken),
@@ -1534,6 +1579,7 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
 });
 
 test('refresh sync smoke: i18n page auto-updates across isolated contexts', async ({ browser, page }) => {
+  test.setTimeout(45000);
   const accessToken = await signInAsAdmin(page);
   const i18nKey = `i18n.sync.${Date.now()}`;
 

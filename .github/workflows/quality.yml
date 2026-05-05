@@ -29,6 +29,18 @@ jobs:
         working-directory: frontend
         run: npm run check:menu-contract
 
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Audit i18n locales
+        working-directory: frontend
+        run: npm run audit:i18n-locales
+
+      - name: Audit production dependencies
+        working-directory: frontend
+        run: npm audit --registry=https://registry.npmjs.org --audit-level=high --omit=dev
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
@@ -48,3 +60,6 @@ jobs:
 
       - name: Test backend
         run: go test ./...
+
+      - name: Scan backend vulnerabilities
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...

@@ -101,5 +101,7 @@
 
 ## 5. 初始初始化路径
 - [DDL 脚本见这里](../../database/system_init.sql)
-- `database/system_init.sql` 中默认管理员账号为 `admin / 123456`，密码已使用 bcrypt 哈希。
+- `database/system_init.sql` 不再直接写入默认管理员密码账号；首个 `admin` 用户由后端迁移创建。
+- 非生产环境如果未设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，运行时会创建 `admin / 123456` 作为本地开发默认账号。
+- 生产环境必须显式设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，且长度不少于 12 位；不得依赖开发默认密码。
 - 运行时 `PANTHEON_DSN` 必须是 MySQL DSN；后端测试也统一通过 MySQL 夹具执行。

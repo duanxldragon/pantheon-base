@@ -386,7 +386,7 @@ func seedCmdbHostI18n(db *gorm.DB) error {
 	}
 	for _, seed := range generatedI18nSeeds {
 		var count int64
-		if err := db.Table("system_i18n").Where("module = ? AND locale = ? AND `key` = ?", seed.Module, seed.Locale, seed.Key).Count(&count).Error; err != nil {
+		if err := db.Table("system_i18n").Where("locale = ? AND `key` = ?", seed.Locale, seed.Key).Count(&count).Error; err != nil {
 			return err
 		}
 		payload := map[string]interface{}{
@@ -402,7 +402,7 @@ func seedCmdbHostI18n(db *gorm.DB) error {
 			}
 			continue
 		}
-		if err := db.Table("system_i18n").Where("module = ? AND locale = ? AND `key` = ?", seed.Module, seed.Locale, seed.Key).Updates(map[string]interface{}{
+		if err := db.Table("system_i18n").Where("locale = ? AND `key` = ?", seed.Locale, seed.Key).Updates(map[string]interface{}{
 			"group_name": seed.Group,
 			"value":      seed.Value,
 		}).Error; err != nil {

@@ -683,6 +683,7 @@ const OperationLogList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.operationLog')}
         extra={(
           <ListHeaderActions
             utility={(

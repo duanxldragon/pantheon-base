@@ -188,6 +188,7 @@ func TestUserService_BatchUpdateUserStatus(t *testing.T) {
 }
 
 func TestUserService_MigrateCreatesUserRoleTableAndAdminBinding(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "development")
 	db := testmysql.Open(t)
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT, deleted_at DATETIME NULL)").Error; err != nil {
 		t.Fatalf("create role table: %v", err)
@@ -210,6 +211,82 @@ func TestUserService_MigrateCreatesUserRoleTableAndAdminBinding(t *testing.T) {
 	}
 	if bindingCount != 1 {
 		t.Fatalf("expected admin user-role binding, got %d", bindingCount)
+	}
+}
+
+func TestUserService_MigrateRejectsMissingInitialAdminPasswordInProduction(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "production")
+	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "")
+	db := testmysql.Open(t)
+
+	s := NewUserService(db)
+	if err := s.Migrate(); err == nil || err.Error() != "admin.initial_password_required" {
+		t.Fatalf("expected production initial admin password guard, got %v", err)
+	}
+}
+
+func TestUserService_MigrateUsesConfiguredInitialAdminPasswordInProduction(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "production")
+	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "initial-admin-password-2026")
+	db := testmysql.Open(t)
+
+	s := NewUserService(db)
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate with configured admin password: %v", err)
+	}
+
+	var admin SystemUser
+	if err := db.First(&admin, 1).Error; err != nil {
+		t.Fatalf("load admin user: %v", err)
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte("initial-admin-password-2026")); err != nil {
+		t.Fatalf("expected configured initial admin password hash to match: %v", err)
+	}
+}
+
+func TestResolveInitialAdminPasswordRequiresProductionOverride(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "production")
+	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "")
+
+	_, err := resolveInitialAdminPassword()
+	if err == nil || err.Error() != "admin.initial_password_required" {
+		t.Fatalf("expected production guard error, got %v", err)
+	}
+}
+
+func TestResolveInitialAdminPasswordUsesProductionOverride(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "production")
+	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "initial-admin-password-2026")
+
+	password, err := resolveInitialAdminPassword()
+	if err != nil {
+		t.Fatalf("resolve production password: %v", err)
+	}
+	if password != "initial-admin-password-2026" {
+		t.Fatalf("expected configured password, got %q", password)
+	}
+}
+
+func TestResolveInitialAdminPasswordRejectsWeakProductionOverride(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "production")
+	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "123456")
+
+	_, err := resolveInitialAdminPassword()
+	if err == nil || err.Error() != "admin.initial_password_too_short" {
+		t.Fatalf("expected weak production password error, got %v", err)
+	}
+}
+
+func TestResolveInitialAdminPasswordKeepsDevFallback(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "development")
+	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "")
+
+	password, err := resolveInitialAdminPassword()
+	if err != nil {
+		t.Fatalf("resolve development password: %v", err)
+	}
+	if password != "123456" {
+		t.Fatalf("expected development fallback password, got %q", password)
 	}
 }
 

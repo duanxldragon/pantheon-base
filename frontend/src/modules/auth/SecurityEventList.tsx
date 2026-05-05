@@ -58,7 +58,8 @@ const SecurityEventList: React.FC = () => {
   };
 
   useEffect(() => {
-    void fetchData(emptyQuery);
+    const timer = window.setTimeout(() => void fetchData(emptyQuery), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const columns: ColumnProps<SecurityEventRow>[] = [

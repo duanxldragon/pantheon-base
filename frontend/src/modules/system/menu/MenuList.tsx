@@ -519,6 +519,7 @@ const MenuList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.menu')}
         extra={(
           <PageActions>
             <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>

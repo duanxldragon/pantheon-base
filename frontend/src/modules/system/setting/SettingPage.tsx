@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
-import { AppTable, FormSection, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
+import { AppTable, FormSection, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmData, resolveRouteWarmData } from '../../../core/router/prefetch';
@@ -644,7 +644,7 @@ const SettingPage: React.FC = () => {
       dataIndex: 'operIp',
       render: (value: string) => value || '-',
     }, 'medium'),
-    withTableColumnPriority({
+    {
       title: t('system.setting.audit.changes'),
       dataIndex: 'changes',
       render: (changes: SettingAuditChange[]) => (
@@ -656,7 +656,7 @@ const SettingPage: React.FC = () => {
           )}
         </Space>
       ),
-    }, 'low'),
+    },
     {
       title: t('system.setting.audit.status'),
       dataIndex: 'status',
@@ -734,9 +734,11 @@ const SettingPage: React.FC = () => {
             <div className="system-page-hero__top">
               <div className="system-page-hero__copy">
                 <span className="system-page-hero__eyebrow">{t('system.setting.hero.eyebrow')}</span>
-                <Typography.Title heading={5} className="system-page-hero__title">
-                  {t('system.setting.hero.title')}
-                </Typography.Title>
+                <PageHeader
+                  title={t('system.menu.setting')}
+                  subtitle={t('system.setting.hero.title')}
+                  className="system-page-hero__header"
+                />
               </div>
             </div>
             <div className="system-page-kpi-grid">
@@ -749,7 +751,13 @@ const SettingPage: React.FC = () => {
               ))}
             </div>
           </Card>
-        ) : null}
+        ) : (
+          <PageHeader
+            title={t('system.menu.setting')}
+            subtitle={t('system.setting.hero.title')}
+            className="setting-page__fallback-header"
+          />
+        )}
         {loading && settings.length === 0 ? <PageLoading /> : null}
         {error && settings.length === 0 ? renderErrorState() : null}
         {!loading && !error && settings.length === 0 ? <PageEmpty description={t('system.setting.empty')} /> : null}

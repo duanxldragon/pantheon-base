@@ -242,9 +242,14 @@ const PermissionList: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     if (!detailRole) {
-      setRemediationEvents([]);
+      const timer = window.setTimeout(() => {
+        if (!cancelled) {
+          setRemediationEvents([]);
+        }
+      }, 0);
       return () => {
         cancelled = true;
+        window.clearTimeout(timer);
       };
     }
     void getPermissionWorkbenchRemediationEvents({ roleKey: detailRole.roleKey, limit: 5 })
@@ -723,6 +728,7 @@ const PermissionList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.permission')}
         extra={(
           <ListHeaderActions
             utility={(

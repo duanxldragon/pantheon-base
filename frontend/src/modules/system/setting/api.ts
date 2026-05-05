@@ -99,6 +99,7 @@ export function getSettingOverview() {
   return apiRequest<SettingOverviewResp>({
     url: '/system/setting/overview',
     method: 'get',
+    skipErrorMessage: true,
   });
 }
 

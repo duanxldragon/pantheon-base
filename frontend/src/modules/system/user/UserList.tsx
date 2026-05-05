@@ -607,6 +607,7 @@ const UserList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.user')}
         extra={(
           <ListHeaderActions
             utility={(

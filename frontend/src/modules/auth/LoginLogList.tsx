@@ -258,6 +258,7 @@ const LoginLogList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.loginLog')}
         extra={(
           <ListHeaderActions
             utility={(

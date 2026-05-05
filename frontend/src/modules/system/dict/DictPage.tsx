@@ -23,7 +23,7 @@ import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
-import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, TableBatchActionBar, PermissionAction, withTableColumnPriority } from '../../../components';
+import { AppModal, AppTable, FilterPanel, FormSection, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, TableBatchActionBar, PermissionAction, withTableColumnPriority } from '../../../components';
 import {
   analyzeDictUsage,
   createDictItem,
@@ -710,6 +710,7 @@ const DictPage: React.FC = () => {
 
   return (
     <PageContainer>
+      <PageHeader title={t('system.menu.dict')} />
       <Space direction="vertical" size={16} className="system-page-template">
         <Card className="page-panel system-page-hero">
           <div className="system-page-hero__top">

@@ -249,8 +249,7 @@ CREATE TABLE `casbin_rule` (
     UNIQUE KEY `idx_casbin_rule` (`ptype`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Casbin 策略表';
 
--- 初始数据：admin 账号 (密码：123456)
-INSERT INTO `system_user` (username, password, nickname, created_at) VALUES ('admin', '$2a$10$R1/OWRp9MQvVH2CXODoBEO0flMy2WWyqp1BvImlz0ty2Vgbvva3T2', '超级管理员', NOW());
+-- 初始数据：admin 账号由后端迁移创建。开发环境默认密码为 123456；生产环境必须设置 PANTHEON_INITIAL_ADMIN_PASSWORD。
 INSERT INTO `system_role` (role_name, role_key, sort, status, created_at) VALUES ('超级管理员', 'admin', 1, 1, NOW());
 INSERT INTO `system_user_role` (user_id, role_id) VALUES (1, 1);
 

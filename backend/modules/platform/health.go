@@ -64,6 +64,6 @@ func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 		if resp.Status != "ok" {
 			statusCode = http.StatusServiceUnavailable
 		}
-		c.JSON(statusCode, resp)
+		common.SuccessWithStatus(c, statusCode, resp)
 	})
 }

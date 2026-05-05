@@ -56,11 +56,6 @@ export { FrontendGenerator } from './frontend-generator';
 // 导出器
 export { ModuleExporter, type GeneratedFile } from './exporter';
 
-// UI 组件
-export { default as ModuleWizard } from './pages/ModuleWizard';
-export { FieldEditor } from './components/FieldEditor';
-export { CodePreview } from './components/CodePreview';
-
 export const GeneratorModule = defineModule({
   name: 'generator',
   scope: 'system',

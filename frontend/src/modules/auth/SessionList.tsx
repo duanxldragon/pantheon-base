@@ -38,6 +38,7 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
+  PageHeader,
   PageLoading,
   PageSplitLayout,
   TABLE_ACTION_COLUMN_WIDTH,
@@ -310,6 +311,7 @@ const SessionList: React.FC = () => {
 
   return (
     <PageContainer>
+      <PageHeader title={t('system.menu.session')} />
       <Space direction="vertical" size={16} className="system-page-template">
         <Card className="page-panel system-page-hero">
           <div className="system-page-hero__top">

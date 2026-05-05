@@ -502,6 +502,7 @@ const PostList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.post')}
         extra={(
           <ListHeaderActions
             utility={(

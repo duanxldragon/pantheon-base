@@ -17,7 +17,7 @@ import { renderMenuIcon } from '../menu/icon';
 import { clearPantheonThemePreference, usePantheonTheme } from '../theme/theme';
 import { AppModal } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/dashboard/api';
-import { getBrandInitial, refreshPublicSettings, setExplicitLanguagePreference, usePublicSettings } from '../settings/publicSettings';
+import { getBrandInitial, hasExplicitLanguagePreference, refreshPublicSettings, setExplicitLanguagePreference, usePublicSettings } from '../settings/publicSettings';
 import { clearExplicitLanguagePreference } from '../settings/languagePreference';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
 import { preloadRouteComponent } from '../router/prefetch';
@@ -352,6 +352,13 @@ const BaseLayout: React.FC = () => {
     () => {
       if (!token) {
         return;
+      }
+      if (!hasExplicitLanguagePreference()) {
+        void refreshPublicSettings()
+          .then((settings) => switchI18nLanguage(settings.defaultLanguage))
+          .catch(() => undefined);
+      } else {
+        void refreshPublicSettings().catch(() => undefined);
       }
       void fetchMenuTree({ force: true });
     },

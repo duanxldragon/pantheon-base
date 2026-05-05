@@ -707,6 +707,7 @@ const RoleList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
+        title={t('system.menu.role')}
         extra={(
           <ListHeaderActions
             utility={(

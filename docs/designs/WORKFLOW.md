@@ -138,11 +138,12 @@ Contract
 
 ## 3. 测试与部署流程
 1.  运行 `docker compose up -d` 启动 MySQL/Redis 环境。
-2.  初始化 `database/system_init.sql`，默认管理员账号为 `admin / 123456`。
+2.  初始化 `database/system_init.sql`；脚本只写入角色、菜单、权限等底座数据，首个 `admin` 用户由后端迁移创建。
 3.  设置 `PANTHEON_DSN`，可选设置 `PANTHEON_REDIS_ADDR` 与 `PANTHEON_REDIS_PASSWORD`。
-4.  启动后端服务：`go run ./backend/cmd/server`，监听 8080；若已执行初始化 SQL，`casbin_rule` 会已存在，服务启动时会继续做迁移校验与策略同步。
-5.  启动前端工程：`cd frontend && npm run dev`，访问登录界面。
-6.  提交前执行 `cd backend && go test ./...` 与 `cd frontend && npm run build`。
+4.  生产环境额外设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位；开发环境未设置时默认创建 `admin / 123456`。
+5.  启动后端服务：`go run ./backend/cmd/server`，监听 8080；若已执行初始化 SQL，`casbin_rule` 会已存在，服务启动时会继续做迁移校验与策略同步。
+6.  启动前端工程：`cd frontend && npm run dev`，访问登录界面。
+7.  提交前执行 `go test ./...`、`cd frontend && npm run lint`、`cd frontend && npm run build`、`cd frontend && npm audit --registry=https://registry.npmjs.org --audit-level=high --omit=dev`。
 
 ### 3.1 文档同步门槛
 
