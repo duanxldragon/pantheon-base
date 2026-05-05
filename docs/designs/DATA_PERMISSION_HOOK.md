@@ -46,6 +46,9 @@ func (h *OrderHandler) List(c *gin.Context) {
 2. **策略管理页**：`/system/permission` 的“数据权限”页已支持按角色配置 `all / self / dept / dept_and_children / custom`。
 3. **业务接入样板**：`business/cmdb/host` 列表已接入 `common.GetDataScope(c)` 与 `database.WithDataScope(dataScope)`。
 4. **脚手架集成**：业务模块生成器已提供 `enableDataScope` / `dataScopeMode` 契约，新生成模块可默认包含数据权限注入点。
+5. **部门树展开**：`dept_and_children` 已基于 `system_dept.ancestors` 展开当前部门及下级部门，并写入 `DataScopeReq.DeptIDs`。
+6. **失败兜底**：用户部门、角色策略或部门树加载失败时会记录日志；部门树不可用时回退为当前部门，避免误放大数据范围。
+7. **业务回归样板**：`business/cmdb/host` 已新增 `dept_id` 数据范围字段，并用后端测试固定有权限/无权限数据集过滤行为。
 
 ### 3.1 多角色合并规则
 
@@ -61,10 +64,9 @@ func (h *OrderHandler) List(c *gin.Context) {
 
 后续扩展仍按以下顺序推进：
 
-1. **部门树展开**：补齐 `dept_and_children` 的真实下级部门展开，而不是只按当前部门兜底。
-2. **租户支持**：未来进入真实多租户后，在统一 scope 中注入 `tenant_id = ?` 条件。
-3. **高级策略表达式**：如确有需要，再评估 Casbin 条件表达式到 SQL 过滤片段的映射。
-4. **业务 smoke**：为 CMDB 等业务域补有权限/无权限的数据集验证。
+1. **租户支持**：未来进入真实多租户后，在统一 scope 中注入 `tenant_id = ?` 条件。
+2. **高级策略表达式**：如确有需要，再评估 Casbin 条件表达式到 SQL 过滤片段的映射。
+3. **业务 smoke**：继续为更多业务域补有权限/无权限的数据集验证。
 
 ## 4. 为什么现在做占位？
 

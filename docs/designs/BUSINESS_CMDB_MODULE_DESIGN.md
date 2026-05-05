@@ -64,6 +64,8 @@ CMDB 不负责：
 
 - 表名前缀符合 `biz_` 要求。
 - 列表接口已接入 `DataScopeReq + WithDataScope`，具备未来数据权限和租户过滤扩展位。
+- `dept_id` 是 Host 当前的数据范围归属字段，`dept_and_children` 会基于系统域部门树展开后的 `DeptIDs` 过滤主机列表。
+- 后端回归 `go test ./backend/modules/business/cmdb/host` 已固定：当前部门及下级部门主机可见，其他部门主机不可见。
 - 当前属于单租户运行，后续若进入真实多租户，应优先审查主机编码唯一键是否从平台全局唯一调整为租户内唯一。
 
 ### 4.3 API 与权限

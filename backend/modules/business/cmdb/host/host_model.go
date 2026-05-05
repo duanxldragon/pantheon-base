@@ -24,6 +24,7 @@ type CmdbHost struct {
 	RegionCode      string         `gorm:"not null;size:255" json:"regionCode"`
 	IdcCode         string         `gorm:"not null;size:255" json:"idcCode"`
 	ClusterName     string         `gorm:"not null;size:255" json:"clusterName"`
+	DeptID          uint64         `gorm:"index;default:0" json:"deptId"`
 	OwnerUserId     int64          `gorm:"not null" json:"ownerUserId"`
 	OwnerName       string         `gorm:"not null;size:255" json:"ownerName"`
 	MaintainerTeam  string         `gorm:"not null;size:255" json:"maintainerTeam"`

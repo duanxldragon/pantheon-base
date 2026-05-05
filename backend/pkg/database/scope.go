@@ -18,7 +18,15 @@ func WithDataScope(req *common.DataScopeReq) func(db *gorm.DB) *gorm.DB {
 		switch strings.TrimSpace(req.Mode) {
 		case "", common.DataScopeModeAll:
 			return db
-		case common.DataScopeModeDept, common.DataScopeModeDeptAndChildren:
+		case common.DataScopeModeDept:
+			if req.DeptID == 0 {
+				return db.Where("1 = 0")
+			}
+			return db.Where("dept_id = ?", req.DeptID)
+		case common.DataScopeModeDeptAndChildren:
+			if len(req.DeptIDs) > 0 {
+				return db.Where("dept_id IN ?", req.DeptIDs)
+			}
 			if req.DeptID == 0 {
 				return db.Where("1 = 0")
 			}

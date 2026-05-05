@@ -37,11 +37,12 @@ P2 不应做成一轮“大爆炸重构”。
 - CMDB Host 路由接入数据权限中间件。
 - `/system/permission` 数据权限管理页，可按角色配置 `all / self / dept / dept_and_children / custom`。
 - 多角色数据范围已按“授权叠加”合并：`all` 优先，多个 `custom` 合并部门集合，其他模式按固定优先级选择，避免依赖数据库返回顺序。
+- `dept_and_children` 已通过 `system_dept.ancestors` 展开当前部门及下级部门，失败时记录日志并回退为当前部门。
+- CMDB Host 已补 `dept_id` 数据范围字段，并用后端回归固定 `dept_and_children` 过滤行为。
 
 后续要补：
 
-- `dept_and_children` 的部门树展开。
-- 业务模块 smoke 覆盖有权限/无权限数据集。
+- 更多业务模块 smoke 覆盖有权限/无权限数据集。
 
 ## 3. 多租户
 
@@ -90,6 +91,12 @@ SSO 必须在身份源明确后实现。
 - 覆盖菜单、权限、i18n、审计和数据范围。
 
 CMDB 应作为第一批样板。
+
+当前 CMDB Host 已具备后端自动化样板：
+
+- `go test ./backend/modules/business/cmdb/host` 覆盖 `dept_and_children` 只返回当前部门及下级部门数据。
+- `go test ./backend/internal/middleware` 覆盖中间件从角色策略扩展部门树。
+- `go test ./backend/pkg/database` 覆盖 `WithDataScope` 对展开后的 `DeptIDs` 生成过滤条件。
 
 ## 7. P2 完成定义
 

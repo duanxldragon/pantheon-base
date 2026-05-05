@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,7 +55,9 @@ func DataScopeMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 func loadCurrentUserDeptID(db *gorm.DB, userID uint64) uint64 {
 	var deptID uint64
-	_ = db.Table("system_user").Select("dept_id").Where("id = ?", userID).Limit(1).Pluck("dept_id", &deptID).Error
+	if err := db.Table("system_user").Select("dept_id").Where("id = ?", userID).Limit(1).Pluck("dept_id", &deptID).Error; err != nil {
+		log.Printf("data scope: failed to load user dept id userID=%d: %v", userID, err)
+	}
 	return deptID
 }
 
@@ -64,6 +67,7 @@ func applyRoleDataScopePolicy(db *gorm.DB, scope *common.DataScopeReq) {
 	}
 	var policies []SystemRoleDataScope
 	if err := db.Where("role_key IN ?", scope.RoleKeys).Find(&policies).Error; err != nil {
+		log.Printf("data scope: failed to load role policies roles=%s: %v", strings.Join(scope.RoleKeys, ","), err)
 		return
 	}
 	if len(policies) == 0 {
@@ -74,11 +78,44 @@ func applyRoleDataScopePolicy(db *gorm.DB, scope *common.DataScopeReq) {
 	switch scope.Mode {
 	case common.DataScopeModeCustom:
 		scope.DeptIDs = resolveCustomDataScopeDeptIDs(policies)
-	case common.DataScopeModeDept, common.DataScopeModeDeptAndChildren, common.DataScopeModeSelf:
+	case common.DataScopeModeDeptAndChildren:
+		scope.DeptIDs = loadDeptAndChildrenIDs(db, scope.DeptID)
+	case common.DataScopeModeDept, common.DataScopeModeSelf:
 		scope.DeptIDs = nil
 	case common.DataScopeModeAll:
 		scope.DeptIDs = nil
 	}
+}
+
+func loadDeptAndChildrenIDs(db *gorm.DB, deptID uint64) []uint64 {
+	if db == nil || deptID == 0 {
+		return nil
+	}
+	if !db.Migrator().HasTable("system_dept") {
+		return []uint64{deptID}
+	}
+
+	var ids []uint64
+	deptIDText := strconv.FormatUint(deptID, 10)
+	if err := db.Table("system_dept").
+		Select("id").
+		Where(
+			"id = ? OR ancestors = ? OR ancestors LIKE ? OR ancestors LIKE ? OR ancestors LIKE ?",
+			deptID,
+			deptIDText,
+			deptIDText+",%",
+			"%,"+deptIDText+",%",
+			"%,"+deptIDText,
+		).
+		Order("id asc").
+		Pluck("id", &ids).Error; err != nil {
+		log.Printf("data scope: failed to expand dept children deptID=%d: %v", deptID, err)
+		return []uint64{deptID}
+	}
+	if len(ids) == 0 {
+		return []uint64{deptID}
+	}
+	return ids
 }
 
 func parseDataScopeDeptIDs(raw string) []uint64 {

@@ -59,3 +59,33 @@ func TestWithDataScopeDefaultModeKeepsExistingBehavior(t *testing.T) {
 		t.Fatalf("expected default scope to keep current behavior, got %+v", rows)
 	}
 }
+
+func TestWithDataScopeDeptAndChildrenUsesExpandedDeptIDs(t *testing.T) {
+	db := testmysql.Open(t)
+	if err := db.AutoMigrate(&dataScopeTestRow{}); err != nil {
+		t.Fatalf("migrate data scope rows: %v", err)
+	}
+	if err := db.Create(&[]dataScopeTestRow{
+		{ID: 1, DeptID: 10},
+		{ID: 2, DeptID: 11},
+		{ID: 3, DeptID: 20},
+	}).Error; err != nil {
+		t.Fatalf("seed rows: %v", err)
+	}
+
+	var rows []dataScopeTestRow
+	err := db.Model(&dataScopeTestRow{}).
+		Scopes(WithDataScope(&common.DataScopeReq{
+			Mode:    common.DataScopeModeDeptAndChildren,
+			DeptID:  10,
+			DeptIDs: []uint64{10, 11},
+		})).
+		Order("id asc").
+		Find(&rows).Error
+	if err != nil {
+		t.Fatalf("query scoped rows: %v", err)
+	}
+	if len(rows) != 2 || rows[0].ID != 1 || rows[1].ID != 2 {
+		t.Fatalf("expected dept and child rows, got %+v", rows)
+	}
+}

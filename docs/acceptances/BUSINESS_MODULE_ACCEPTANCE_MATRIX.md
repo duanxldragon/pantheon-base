@@ -54,6 +54,8 @@
 - 确认 `business/cmdb/host` 的菜单挂接在业务域入口下。
 - 确认列表接口接入 `DataScopeReq + WithDataScope`。
 - 确认业务路由接入 `DataScopeMiddleware`，角色数据范围策略由 `/system/permission` 的“数据权限”页统一配置。
+- 确认 `biz_cmdb_host.dept_id` 作为数据范围字段参与 `dept / dept_and_children / custom` 过滤。
+- 自动化证据：`go test ./backend/modules/business/cmdb/host` 覆盖 `dept_and_children` 有权限/无权限数据集过滤。
 - 确认创建、编辑、删除有审计 action。
 - 确认按钮权限不复用列表权限。
 - 确认错误 key 使用 `cmdbhost.*`。
