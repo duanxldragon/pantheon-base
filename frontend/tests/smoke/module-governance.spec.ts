@@ -363,4 +363,55 @@ test.describe('module governance smoke', () => {
     await expect(formItem(page, '模块名').getByText('模块名格式不正确', { exact: true })).toBeVisible();
     await expect(page.locator('.arco-message').getByText('模块名格式不正确', { exact: true })).toHaveCount(0);
   });
+
+  test('generator workbench entry follows business toggle and relation table role', async ({ page }) => {
+    await signInAsAdmin(page);
+
+    await page.route(/\/api\/v1\/system\/generator\/datasources$/, async (route) => {
+      await fulfillJson(route, {
+        code: 200,
+        data: [
+          {
+            id: 'current',
+            name: '当前平台库',
+            driver: 'mysql',
+            databaseName: 'pantheon',
+            status: 1,
+            isCurrent: true,
+          },
+        ],
+      });
+    });
+
+    await page.goto('/system/generator', { waitUntil: 'networkidle' });
+    await expect(page.getByRole('heading', { name: '模块生成向导' })).toBeVisible();
+
+    await formItem(page, '模块名').locator('input').first().fill('cmdb/workbench_probe');
+    await formItem(page, '显示名').locator('input').first().fill('工作台探针');
+    await page.getByRole('button', { name: '下一步', exact: true }).click();
+    await page.getByRole('button', { name: '名称', exact: true }).click();
+    await page.getByRole('button', { name: '状态', exact: true }).click();
+    await page.getByRole('button', { name: '下一步', exact: true }).click();
+    await expect(page.getByText('工作台入口已接入', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: '上一步', exact: true }).click();
+    await page.getByRole('button', { name: '上一步', exact: true }).click();
+    await openFormSelect(page, '平台工作台入口');
+    await chooseOption(page, '禁用');
+    await page.getByRole('button', { name: '下一步', exact: true }).click();
+    await page.getByRole('button', { name: '下一步', exact: true }).click();
+    await expect(page.getByText('工作台入口未接入', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: '上一步', exact: true }).click();
+    await page.getByRole('button', { name: '上一步', exact: true }).click();
+    await openFormSelect(page, '平台工作台入口');
+    await chooseOption(page, '启用');
+    await openFormSelect(page, '表角色');
+    await chooseOption(page, '关系表');
+    await expect(formItem(page, '平台工作台入口').locator('.arco-select').first()).toHaveClass(/arco-select-disabled/);
+    await page.getByRole('button', { name: '下一步', exact: true }).click();
+    await page.getByRole('button', { name: '下一步', exact: true }).click();
+    await expect(page.getByText('关系表', { exact: true })).toBeVisible();
+    await expect(page.getByText('工作台入口未接入', { exact: true })).toBeVisible();
+  });
 });

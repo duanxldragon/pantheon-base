@@ -46,6 +46,7 @@ import { CodePreview } from '../components/CodePreview';
 import './ModuleWizard.css';
 import { ModuleExporter } from '../exporter';
 import {
+  buildDashboardQuickActionDescriptionKey,
   buildEnumOptionKey,
   buildFieldHelpTextKey,
   buildFieldLabelKey,
@@ -174,6 +175,7 @@ const ModuleWizard: React.FC = () => {
   const [dependencyModulesText, setDependencyModulesText] = useState('');
   const [relationContractsText, setRelationContractsText] = useState('');
   const [enableDataScope, setEnableDataScope] = useState(true);
+  const [includeDashboardWidget, setIncludeDashboardWidget] = useState(true);
   const [dataScopeMode, setDataScopeMode] = useState<DataScopeMode>('dept');
   const [translationOverrides, setTranslationOverrides] = useState<Record<string, TranslationOverride>>({});
   const [datasourceForm] = Form.useForm<UpsertGeneratorDatasourcePayload>();
@@ -316,6 +318,7 @@ const ModuleWizard: React.FC = () => {
     const parentMenu = normalizeMenuPath(values.parentMenu);
     const templateLevel = (values.templateLevel as TemplateLevel | undefined) || 'enterprise';
     const tableRole = (metadata.tableRole as BusinessTableRole | undefined) || 'main';
+    const canAttachDashboardWidget = scope === 'business' && tableRole !== 'relation';
     const pageActionTemplate = (values.pageActionTemplate as PageActionTemplate | undefined) || 'standard';
     const pageActions = tableRole === 'relation' ? [] : (values.pageActions as PageActionKey[] | undefined) ?? getPageActions({
       pageActionTemplate,
@@ -330,6 +333,7 @@ const ModuleWizard: React.FC = () => {
     };
     const normalizedFields = normalizeFields(fields);
     const titleKey = buildTitleKey(scope, name);
+    const dashboardQuickActionDescriptionKey = buildDashboardQuickActionDescriptionKey(scope, name);
     const moduleSegments = name.split('/').filter(Boolean);
     const businessContext = normalizeBusinessContext(metadata.businessContext || inferBusinessContextFromName(name));
     const businessContextTitle = metadata.businessContextTitle || inferMenuGroupDisplayName(businessContext);
@@ -364,6 +368,10 @@ const ModuleWizard: React.FC = () => {
     }, {
       [titleKey]: displayNameEn,
     });
+    if (canAttachDashboardWidget && includeDashboardWidget) {
+      zhTranslations[dashboardQuickActionDescriptionKey] = `进入${displayName}`;
+      enTranslations[dashboardQuickActionDescriptionKey] = `Open ${displayNameEn}`;
+    }
 
     moduleSegments.slice(0, -1).forEach((_, index) => {
       const groupSegments = moduleSegments.slice(0, index + 1);
@@ -457,6 +465,7 @@ const ModuleWizard: React.FC = () => {
       enableImport,
       enableAudit: templateLevel === 'enterprise',
       enableDataScope,
+      includeDashboardWidget: canAttachDashboardWidget ? includeDashboardWidget : false,
     };
 
     schema.menus = generateDefaultMenus(schema);
@@ -1054,6 +1063,22 @@ const ModuleWizard: React.FC = () => {
                 </FormItem>
               </Col>
               <Col xs={24} md={8}>
+                <FormItem label={t('generator.wizard.includeDashboardWidget')} extra={t('generator.wizard.includeDashboardWidget.help')}>
+                  <Select
+                    value={
+                      (((form.getFieldValue('scope') as ModuleScope | undefined) || 'business') === 'business' && selectedTableRole !== 'relation')
+                        ? (includeDashboardWidget ? 'enabled' : 'disabled')
+                        : 'disabled'
+                    }
+                    disabled={(((form.getFieldValue('scope') as ModuleScope | undefined) || 'business') !== 'business') || selectedTableRole === 'relation'}
+                    onChange={(value) => setIncludeDashboardWidget(value === 'enabled')}
+                  >
+                    <Select.Option value="enabled">{t('common.enabled')}</Select.Option>
+                    <Select.Option value="disabled">{t('common.disabled')}</Select.Option>
+                  </Select>
+                </FormItem>
+              </Col>
+              <Col xs={24} md={8}>
                 <FormItem label={t('generator.wizard.dataScopeMode')}>
                   <Select value={dataScopeMode} disabled={!enableDataScope} onChange={(value) => setDataScopeMode((value as DataScopeMode) || 'dept')}>
                     <Select.Option value="dept">{t('generator.wizard.dataScopeMode.dept')}</Select.Option>
@@ -1271,6 +1296,9 @@ const ModuleWizard: React.FC = () => {
               <Tag color={previewSchema.enableDataScope ? 'green' : 'gray'}>
                 {t(previewSchema.enableDataScope ? 'generator.wizard.dataScope.enabledTag' : 'generator.wizard.dataScope.disabledTag')}
               </Tag>
+              <Tag color={previewSchema.includeDashboardWidget ? 'arcoblue' : 'gray'}>
+                {t(previewSchema.includeDashboardWidget ? 'generator.wizard.dashboardWidget.enabledTag' : 'generator.wizard.dashboardWidget.disabledTag')}
+              </Tag>
               <Tag color="blue">{t('generator.wizard.step3.impact.dependencies', { count: previewSchema.dependencies?.length || 0 })}</Tag>
               <Tag color="orange">{t('generator.wizard.step3.impact.relations', { count: previewSchema.relations?.length || 0 })}</Tag>
             </Space>
@@ -1442,11 +1470,11 @@ const ModuleWizard: React.FC = () => {
             noDataElement={t('generator.datasource.empty')}
           />
           <Card size="small" title={editingDatasourceId ? t('generator.datasource.editTitle') : t('generator.datasource.createTitle')}>
-            <Form form={datasourceForm} layout="vertical">
+            <Form form={datasourceForm} layout="vertical" onSubmit={() => { void handleSaveDatasource(); }}>
               <Row gutter={16}>
                 <Col xs={24} md={12}>
                   <FormItem field="name" label={t('generator.datasource.name')} rules={[{ required: true, message: t('common.required') }]}>
-                    <Input placeholder={t('generator.datasource.namePlaceholder')} />
+                    <Input placeholder={t('generator.datasource.namePlaceholder')} onPressEnter={() => datasourceForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
@@ -1458,7 +1486,7 @@ const ModuleWizard: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem field="host" label={t('generator.datasource.host')} rules={[{ required: true, message: t('common.required') }]}>
-                    <Input placeholder={t('generator.datasource.hostPlaceholder')} />
+                    <Input placeholder={t('generator.datasource.hostPlaceholder')} onPressEnter={() => datasourceForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
@@ -1468,17 +1496,17 @@ const ModuleWizard: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem field="databaseName" label={t('generator.datasource.databaseName')} rules={[{ required: true, message: t('common.required') }]}>
-                    <Input placeholder={t('generator.datasource.databasePlaceholder')} />
+                    <Input placeholder={t('generator.datasource.databasePlaceholder')} onPressEnter={() => datasourceForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem field="username" label={t('generator.datasource.username')} rules={[{ required: true, message: t('common.required') }]}>
-                    <Input placeholder={t('generator.datasource.usernamePlaceholder')} />
+                    <Input placeholder={t('generator.datasource.usernamePlaceholder')} onPressEnter={() => datasourceForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem field="password" label={t('generator.datasource.password')} extra={editingDatasourceId ? t('generator.datasource.passwordOptional') : undefined}>
-                    <Input.Password placeholder={t('generator.datasource.passwordPlaceholder')} />
+                    <Input.Password placeholder={t('generator.datasource.passwordPlaceholder')} onPressEnter={() => datasourceForm.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>

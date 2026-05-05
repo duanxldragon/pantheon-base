@@ -291,7 +291,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
         onCancel={() => setVisible(false)}
         size="detail"
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onSubmit={handleSubmit}>
           <Row gutter={16}>
             <Col span={12}>
               <FormItem label={t('generator.fieldEditor.template')} field="templateKey">
@@ -315,7 +315,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                 ]}
                 disabled={!!editingFieldName}
               >
-                <Input placeholder="orderNo" />
+                <Input placeholder="orderNo" onPressEnter={() => form.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>
@@ -324,7 +324,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                 field="label"
                 rules={[{ required: true, message: t('common.required') }]}
               >
-                <Input placeholder={t('generator.fieldEditor.label.placeholder')} />
+                <Input placeholder={t('generator.fieldEditor.label.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>
@@ -332,7 +332,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                 label={t('generator.fieldEditor.labelEn')}
                 field="labelEn"
               >
-                <Input placeholder={t('generator.fieldEditor.labelEn.placeholder')} />
+                <Input placeholder={t('generator.fieldEditor.labelEn.placeholder')} onPressEnter={() => form.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>
@@ -355,17 +355,17 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
             </Col>
             <Col span={12}>
               <FormItem label={t('generator.fieldEditor.placeholder')} field="placeholder">
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>
               <FormItem label={t('generator.fieldEditor.placeholderEn')} field="placeholderEn">
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
             </Col>
             <Col span={12}>
               <FormItem label={t('generator.fieldEditor.defaultValue')} field="defaultValue">
-                <Input />
+                <Input onPressEnter={() => form.submit()} />
               </FormItem>
             </Col>
             <Col span={24}>
@@ -382,7 +382,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
               <>
                 <Col span={12}>
                   <FormItem label={t('generator.fieldEditor.dictCode')} field="dictCode">
-                    <Input placeholder={t('generator.fieldEditor.dictCode.placeholder')} />
+                    <Input placeholder={t('generator.fieldEditor.dictCode.placeholder')} onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col span={24}>

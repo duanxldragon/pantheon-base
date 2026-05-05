@@ -129,10 +129,11 @@ type ModuleSchema struct {
 			En map[string]string `json:"en"`
 		} `json:"translations"`
 	} `json:"i18n"`
-	EnableExport    bool `json:"enableExport,omitempty"`
-	EnableImport    bool `json:"enableImport,omitempty"`
-	EnableAudit     bool `json:"enableAudit,omitempty"`
-	EnableDataScope bool `json:"enableDataScope,omitempty"`
+	EnableExport           bool `json:"enableExport,omitempty"`
+	EnableImport           bool `json:"enableImport,omitempty"`
+	EnableAudit            bool `json:"enableAudit,omitempty"`
+	EnableDataScope        bool `json:"enableDataScope,omitempty"`
+	IncludeDashboardWidget bool `json:"includeDashboardWidget,omitempty"`
 }
 
 type RegisterGeneratedModuleRequest struct {

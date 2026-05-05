@@ -92,3 +92,43 @@ func TestMapColumnToFieldSplitsChineseAndEnglishFallbacks(t *testing.T) {
 		t.Fatalf("unexpected placeholders: %q / %q", field.Placeholder, field.PlaceholderEn)
 	}
 }
+
+func TestNormalizeDatasourceReqRejectsUnsafeHosts(t *testing.T) {
+	tests := []struct {
+		name      string
+		host      string
+		envValue  string
+		wantError string
+	}{
+		{name: "reject localhost", host: "localhost", wantError: "generator.datasource.host_invalid"},
+		{name: "reject loopback ip", host: "127.0.0.1", wantError: "generator.datasource.host_invalid"},
+		{name: "reject private ip by default", host: "10.10.10.10", wantError: "generator.datasource.host_private_disabled"},
+		{name: "reject invalid host chars", host: "db/internal", wantError: "generator.datasource.host_invalid"},
+		{name: "allow private ip with env", host: "10.10.10.10", envValue: "true"},
+		{name: "allow public hostname", host: "db.example.com"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("PANTHEON_ALLOW_PRIVATE_GENERATOR_DATASOURCE", tt.envValue)
+			_, err := normalizeDatasourceReq(&UpsertGeneratorDatasourceReq{
+				Name:         "demo",
+				Driver:       "mysql",
+				Host:         tt.host,
+				Port:         3306,
+				DatabaseName: "demo",
+				Username:     "root",
+				Password:     "secret",
+				Status:       generatorDatasourceEnabled,
+			}, true)
+			if tt.wantError == "" && err != nil {
+				t.Fatalf("expected success, got %v", err)
+			}
+			if tt.wantError != "" {
+				if err == nil || err.Error() != tt.wantError {
+					t.Fatalf("expected %s, got %v", tt.wantError, err)
+				}
+			}
+		})
+	}
+}

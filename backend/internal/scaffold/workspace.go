@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"text/template"
 	"unicode"
 )
+
+var managedTableNamePattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 func ResolveWorkspaceRoot(start string) (string, error) {
 	current := strings.TrimSpace(start)
@@ -59,10 +62,7 @@ func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 	if tableName == "" {
 		return errors.New("module.generate.table_name_required")
 	}
-	if scope == "system" && !strings.HasPrefix(tableName, "system_") {
-		return errors.New("module.generate.invalid_table_name")
-	}
-	if scope == "business" && !strings.HasPrefix(tableName, "biz_") {
+	if err := ValidateManagedTableName(scope, tableName); err != nil {
 		return errors.New("module.generate.invalid_table_name")
 	}
 	if len(req.Files) == 0 {
@@ -85,6 +85,33 @@ func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 		default:
 			return errors.New("module.generate.invalid_relation")
 		}
+	}
+	return nil
+}
+
+func ValidateManagedTableName(scope string, tableName string) error {
+	normalizedScope := strings.TrimSpace(scope)
+	normalizedTableName := strings.TrimSpace(tableName)
+	if normalizedTableName == "" {
+		return errors.New("module.generate.invalid_table_name")
+	}
+	if !managedTableNamePattern.MatchString(normalizedTableName) {
+		return errors.New("module.generate.invalid_table_name")
+	}
+	if strings.Contains(normalizedTableName, "__") {
+		return errors.New("module.generate.invalid_table_name")
+	}
+	switch normalizedScope {
+	case "system":
+		if !strings.HasPrefix(normalizedTableName, "system_") {
+			return errors.New("module.generate.invalid_table_name")
+		}
+	case "business":
+		if !strings.HasPrefix(normalizedTableName, "biz_") {
+			return errors.New("module.generate.invalid_table_name")
+		}
+	default:
+		return errors.New("module.generate.invalid_table_name")
 	}
 	return nil
 }

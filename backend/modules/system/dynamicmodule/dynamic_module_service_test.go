@@ -403,6 +403,36 @@ func TestAuditAndRepairGeneratedRegistries_MarksMissingSourceAndRewritesSummary(
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/ticket/TicketList")
 }
 
+func TestUnregisterModuleRejectsUnsafeManagedTableName(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+
+	registration := ModuleRegistration{
+		Name:           "business.asset",
+		DisplayName:    "资产管理",
+		Scope:          "business",
+		Source:         "generated",
+		ModelTableName: "biz_asset;drop table system_user",
+		Status:         ModuleStatusActive,
+		InstalledAt:    "2026-04-01T00:00:00Z",
+	}
+	if err := db.Create(&registration).Error; err != nil {
+		t.Fatalf("seed registration: %v", err)
+	}
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	err := service.UnregisterModule("business.asset", true, false)
+	if err == nil || err.Error() != "module.generate.invalid_table_name" {
+		t.Fatalf("expected invalid table name error, got %v", err)
+	}
+}
+
 func openDynamicModuleTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 

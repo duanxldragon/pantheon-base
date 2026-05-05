@@ -188,6 +188,7 @@ export interface ModuleSchema {
   enableImport?: boolean;
   enableAudit?: boolean;
   enableDataScope?: boolean;
+  includeDashboardWidget?: boolean;
 }
 
 export interface FieldTemplateDefinition {
@@ -576,6 +577,10 @@ export function buildTitleKey(scope: ModuleScope, name: string): string {
   return `${buildModuleNamespace(scope, name)}.title`;
 }
 
+export function buildDashboardQuickActionDescriptionKey(scope: ModuleScope, name: string): string {
+  return `${buildModuleNamespace(scope, name)}.dashboard.quickAction`;
+}
+
 export function buildMenuGroupTitleKey(scope: ModuleScope, segments: string[]): string {
   return `${scope}.${segments.join('.')}.title`;
 }
@@ -867,6 +872,9 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
     requiredKeys.add(menu.titleKey);
   }
   requiredKeys.add(buildTitleKey(schema.scope, schema.name));
+  if (schema.scope === 'business' && shouldGenerateNavigation(schema) && schema.includeDashboardWidget !== false) {
+    requiredKeys.add(buildDashboardQuickActionDescriptionKey(schema.scope, schema.name));
+  }
   for (const field of schema.model.fields) {
     requiredKeys.add(buildFieldLabelKey(schema.scope, schema.name, field.name));
     if (field.placeholder || field.placeholderEn) {

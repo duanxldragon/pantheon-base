@@ -16,6 +16,7 @@
 import type { ModuleSchema } from './schema';
 import {
   buildComponentKey,
+  buildDashboardQuickActionDescriptionKey,
   buildFieldLabelKey,
   buildModuleNamespace,
   buildPermissionPrefix,
@@ -24,6 +25,7 @@ import {
   buildTitleKey,
   getPageActions,
   inferModelName,
+  shouldGenerateNavigation,
   splitModuleSegments,
 } from './schema';
 import { TYPE_MAPPING } from './type-mapping';
@@ -53,6 +55,8 @@ export class FrontendGenerator {
     const componentKey = buildComponentKey(scope, name, modelName);
     const toSrcRoot = this.relativeToSrcRoot();
     const pageActions = getPageActions(this.schema);
+    const businessContext = splitModuleSegments(name)[0] || 'default';
+    const quickActionDescriptionKey = buildDashboardQuickActionDescriptionKey(scope, name);
     
     const permissionItems = [
       `'${permissionPrefix}:list'`,
@@ -60,6 +64,25 @@ export class FrontendGenerator {
         .filter((action) => action !== 'detail')
         .map((action) => `'${permissionPrefix}:${action}'`),
     ];
+    const dashboardWidgets = scope === 'business'
+      && shouldGenerateNavigation(this.schema)
+      && this.schema.includeDashboardWidget !== false
+      ? `
+  dashboardWidgets: [
+    {
+      key: '${permissionPrefix}',
+      slot: 'quick-action',
+      sourceDomain: 'business/${businessContext}',
+      titleKey: '${titleKey}',
+      descriptionKey: '${quickActionDescriptionKey}',
+      path: '${buildRoutePath(scope, name)}',
+      permission: '${permissionPrefix}:list',
+      icon: 'apps',
+      cleanupPolicy: 'remove_with_source_module',
+      registrationOwner: '${moduleNamespace}',
+    },
+  ],`
+      : '';
 
     return `import { defineModule } from '${toSrcRoot}/core/router/types';
 
@@ -78,7 +101,7 @@ export const ${modelName}Module = defineModule({
   ],
   menus: [
     { path: '${buildRoutePath(scope, name)}', titleKey: '${titleKey}', icon: 'apps', routeName: '${routeName}', module: '${moduleNamespace}' },
-  ],
+  ],${dashboardWidgets}
   permissions: [
     ${permissionItems.join(',\n    ')}
   ],

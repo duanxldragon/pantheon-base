@@ -35,7 +35,7 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 		case "module.invalid_name", "module.register.source_missing", "module.register.schema_invalid":
 			code = common.CodeParamInvalid
 		}
-		common.Fail(c, code, err.Error())
+		common.FailWithError(c, code, err, "module.register.error")
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 		if isGenerateValidationError(err) {
 			code = common.CodeParamInvalid
 		}
-		common.Fail(c, code, err.Error())
+		common.FailWithError(c, code, err, "module.generate.error")
 		return
 	}
 
@@ -84,7 +84,7 @@ func (h *DynamicModuleHandler) UnregisterModule(c *gin.Context) {
 	purgeSource := c.Query("purgeSource") == "true"
 
 	if err := h.service.UnregisterModule(moduleName, dropTable, purgeSource); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "module.unregister.error")
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *DynamicModuleHandler) DeleteModuleRecord(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除动态模块记录", common.BusinessDelete)
 
 	if err := h.service.DeleteModuleRecord(c.Param("name")); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "module.delete_record.error")
 		return
 	}
 	common.Success(c, gin.H{
@@ -115,7 +115,7 @@ func (h *DynamicModuleHandler) PurgeModule(c *gin.Context) {
 	purgeSource := c.Query("purgeSource") != "false"
 
 	if err := h.service.PurgeModule(moduleName, dropTable, purgeSource); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "module.purge.error")
 		return
 	}
 	common.Success(c, gin.H{
@@ -129,7 +129,7 @@ func (h *DynamicModuleHandler) RepairRegistries(c *gin.Context) {
 
 	summary, err := h.service.AuditAndRepairGeneratedRegistries()
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "module.registry.repair.error")
 		return
 	}
 	common.Success(c, gin.H{

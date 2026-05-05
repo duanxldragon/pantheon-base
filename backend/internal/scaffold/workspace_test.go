@@ -67,6 +67,29 @@ func TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules(t *testing.T)
 	}
 }
 
+func TestValidateRegisterRequestRejectsUnsafeManagedTableName(t *testing.T) {
+	req := &RegisterGeneratedModuleRequest{
+		Schema: ModuleSchema{
+			Name:        "asset",
+			Scope:       "business",
+			DisplayName: "资产管理",
+			Model: struct {
+				TableName string        `json:"tableName"`
+				ModelName string        `json:"modelName"`
+				Fields    []ModuleField `json:"fields"`
+			}{
+				TableName: "biz_asset;drop_table",
+			},
+		},
+		Files: []GeneratedFile{{Path: "backend/modules/business/asset/module.go", Content: "package asset"}},
+	}
+
+	err := ValidateRegisterRequest(req)
+	if err == nil || err.Error() != "module.generate.invalid_table_name" {
+		t.Fatalf("expected invalid table name error, got %v", err)
+	}
+}
+
 func TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles(t *testing.T) {
 	root := t.TempDir()
 	schemaDir := filepath.Join(root, "schema", "generated", "business", "cmdb")

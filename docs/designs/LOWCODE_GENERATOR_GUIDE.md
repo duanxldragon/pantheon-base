@@ -18,6 +18,7 @@
 4. ✅ 可视化配置界面
 5. ✅ 待激活注册态与系统烟测
 6. ✅ `i18n-first` 结构化 key 生成
+7. ✅ `platform` 工作台快捷入口 widget 自动生成
 
 ## 🎯 定位边界
 
@@ -115,6 +116,28 @@ business.cmdb.host.field.hostname.label,主机名,Hostname
 - 页面菜单：`/business/cmdb/host`，`titleKey = business.cmdb.host.title`
 - 权限前缀：`business:cmdb:host`
 - 模块命名空间：`business.cmdb.host`
+- 平台工作台快捷入口：`dashboardWidgets[0]`
+  - `sourceDomain = business/cmdb`
+  - `permission = business:cmdb:host:list`
+  - `cleanupPolicy = remove_with_source_module`
+  - `registrationOwner = business.cmdb.host`
+
+### 平台工作台注册
+
+当前生成器会为可导航的 `business/*` 模块默认补一条 `platform` 工作台快捷入口 widget，并允许在向导中显式关闭。
+
+约束：
+
+- 仅生成 `quick-action`，不自动生成业务域概览卡片；
+- `relation` 表角色不生成 widget；
+- `system/*` 不生成 widget；
+- widget 描述文案会写入模块 i18n，例如：
+
+```text
+business.cmdb.host.dashboard.quickAction
+```
+
+这样生成出的业务模块可以在不修改 `platform/dashboard` 源码的前提下，通过 `ModuleConfig.dashboardWidgets` 自动接入平台工作台。
 
 ## 🧩 多表业务建模建议
 

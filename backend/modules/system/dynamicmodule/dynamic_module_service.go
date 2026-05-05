@@ -576,8 +576,10 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 			return err
 		}
 
-		if tableName != "" {
-			s.db.Exec("DROP TABLE IF EXISTS " + tableName)
+		if strings.TrimSpace(tableName) != "" {
+			if err := s.dropManagedModuleTable(scope, tableName); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -647,7 +649,9 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 			return err
 		}
 	} else if dropTable && strings.TrimSpace(registration.ModelTableName) != "" {
-		s.db.Exec("DROP TABLE IF EXISTS " + registration.ModelTableName)
+		if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
+			return err
+		}
 	}
 
 	if err := s.db.Delete(&registration).Error; err != nil {
@@ -672,6 +676,13 @@ func (s *DynamicModuleService) ListRegisteredModules() ([]ModuleRegistration, er
 		modules[index].BuiltIn = strings.TrimSpace(modules[index].ModelTableName) == ""
 	}
 	return modules, nil
+}
+
+func (s *DynamicModuleService) dropManagedModuleTable(scope string, tableName string) error {
+	if err := scaffold.ValidateManagedTableName(scope, tableName); err != nil {
+		return err
+	}
+	return s.db.Migrator().DropTable(strings.TrimSpace(tableName))
 }
 
 // GetModuleStatus 获取模块状态

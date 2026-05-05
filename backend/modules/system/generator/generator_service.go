@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"fmt"
+	"net/netip"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -398,6 +400,9 @@ func normalizeDatasourceReq(req *UpsertGeneratorDatasourceReq, requirePassword b
 	if driver != "mysql" {
 		return nil, errors.New("generator.datasource.driver_unsupported")
 	}
+	if err := validateDatasourceHost(host); err != nil {
+		return nil, err
+	}
 	port := req.Port
 	if port <= 0 {
 		port = 3306
@@ -433,6 +438,52 @@ func normalizeDatasourceReq(req *UpsertGeneratorDatasourceReq, requirePassword b
 		ReadonlyScope:     "metadata_only",
 		Remark:            strings.TrimSpace(req.Remark),
 	}, nil
+}
+
+func validateDatasourceHost(host string) error {
+	normalizedHost := strings.ToLower(strings.TrimSpace(host))
+	if normalizedHost == "" {
+		return errors.New("generator.datasource.required")
+	}
+	if strings.ContainsAny(normalizedHost, `/\:@`) {
+		return errors.New("generator.datasource.host_invalid")
+	}
+
+	if addr, err := netip.ParseAddr(normalizedHost); err == nil {
+		if addr.IsLoopback() || addr.IsMulticast() || addr.IsLinkLocalMulticast() || addr.IsLinkLocalUnicast() || addr.IsUnspecified() {
+			return errors.New("generator.datasource.host_invalid")
+		}
+		if addr.IsPrivate() && !allowPrivateGeneratorDatasourceHosts() {
+			return errors.New("generator.datasource.host_private_disabled")
+		}
+		return nil
+	}
+
+	if normalizedHost == "localhost" || strings.HasSuffix(normalizedHost, ".localhost") {
+		return errors.New("generator.datasource.host_invalid")
+	}
+	if strings.HasSuffix(normalizedHost, ".local") || strings.HasSuffix(normalizedHost, ".internal") {
+		if !allowPrivateGeneratorDatasourceHosts() {
+			return errors.New("generator.datasource.host_private_disabled")
+		}
+	}
+	if !regexp.MustCompile(`^[a-z0-9.-]+$`).MatchString(normalizedHost) {
+		return errors.New("generator.datasource.host_invalid")
+	}
+	if strings.HasPrefix(normalizedHost, ".") || strings.HasSuffix(normalizedHost, ".") || strings.Contains(normalizedHost, "..") {
+		return errors.New("generator.datasource.host_invalid")
+	}
+	for _, label := range strings.Split(normalizedHost, ".") {
+		if label == "" || strings.HasPrefix(label, "-") || strings.HasSuffix(label, "-") {
+			return errors.New("generator.datasource.host_invalid")
+		}
+	}
+	return nil
+}
+
+func allowPrivateGeneratorDatasourceHosts() bool {
+	value := strings.TrimSpace(strings.ToLower(os.Getenv("PANTHEON_ALLOW_PRIVATE_GENERATOR_DATASOURCE")))
+	return value == "1" || value == "true" || value == "yes" || value == "on"
 }
 
 func parseDatasourceNumericID(id string) (uint64, error) {

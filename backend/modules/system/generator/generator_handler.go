@@ -18,7 +18,7 @@ func NewGeneratorHandler(service *GeneratorService) *GeneratorHandler {
 func (h *GeneratorHandler) ListDatasources(c *gin.Context) {
 	items, err := h.service.ListDatasources()
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "generator.datasource.list.error")
 		return
 	}
 	common.Success(c, items)
@@ -34,7 +34,7 @@ func (h *GeneratorHandler) CreateDatasource(c *gin.Context) {
 	}
 	item, err := h.service.CreateDatasource(&req)
 	if err != nil {
-		common.Fail(c, mapGeneratorErrorCode(err), err.Error())
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.save.error")
 		return
 	}
 	common.Success(c, item)
@@ -50,7 +50,7 @@ func (h *GeneratorHandler) UpdateDatasource(c *gin.Context) {
 	}
 	item, err := h.service.UpdateDatasource(c.Param("id"), &req)
 	if err != nil {
-		common.Fail(c, mapGeneratorErrorCode(err), err.Error())
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.save.error")
 		return
 	}
 	common.Success(c, item)
@@ -60,7 +60,7 @@ func (h *GeneratorHandler) DeleteDatasource(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除生成器数据源", common.BusinessDelete)
 
 	if err := h.service.DeleteDatasource(c.Param("id")); err != nil {
-		common.Fail(c, mapGeneratorErrorCode(err), err.Error())
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.delete.error")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -71,7 +71,7 @@ func (h *GeneratorHandler) TestDatasource(c *gin.Context) {
 
 	item, err := h.service.TestDatasource(c.Param("id"))
 	if err != nil {
-		common.Fail(c, mapGeneratorErrorCode(err), err.Error())
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.test.error")
 		return
 	}
 	common.Success(c, item)
@@ -80,7 +80,7 @@ func (h *GeneratorHandler) TestDatasource(c *gin.Context) {
 func (h *GeneratorHandler) ListTables(c *gin.Context) {
 	items, err := h.service.ListTables(c.Query("datasourceId"), c.Query("keyword"))
 	if err != nil {
-		common.Fail(c, mapGeneratorErrorCode(err), err.Error())
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.table.list.error")
 		return
 	}
 	common.Success(c, items)
@@ -94,7 +94,7 @@ func (h *GeneratorHandler) PreviewTable(c *gin.Context) {
 	}
 	preview, err := h.service.PreviewTable(c.Query("datasourceId"), tableName)
 	if err != nil {
-		common.Fail(c, mapGeneratorErrorCode(err), err.Error())
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.table.preview.error")
 		return
 	}
 	common.Success(c, preview)
@@ -106,6 +106,8 @@ func mapGeneratorErrorCode(err error) int {
 		"generator.table.invalid",
 		"generator.table.not_found",
 		"generator.datasource.required",
+		"generator.datasource.host_invalid",
+		"generator.datasource.host_private_disabled",
 		"generator.datasource.password_required",
 		"generator.datasource.port_invalid",
 		"generator.datasource.not_found",
