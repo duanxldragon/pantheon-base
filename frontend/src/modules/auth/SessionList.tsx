@@ -354,16 +354,16 @@ const SessionList: React.FC = () => {
           ) : null}
         >
             <FilterPanel>
-              <Form form={queryForm} layout="vertical">
+              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                 <Row gutter={16} className="auth-filter-grid">
                   <Col xs={24} md={12} lg={8}>
                     <FormItem label={t('system.user.username')} field="username">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col xs={24} md={12} lg={8}>
                     <FormItem label={t('auth.session.ip')} field="lastIp">
-                      <Input />
+                      <Input onPressEnter={() => queryForm.submit()} />
                     </FormItem>
                   </Col>
                   <Col xs={24} md={12} lg={8}>
@@ -404,7 +404,7 @@ const SessionList: React.FC = () => {
                   <Col xs={24} md={12} lg={8}>
                     <FormItem className="filter-panel__action-item">
                       <Space>
-                        <Button type="primary" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
                         <Button onClick={reset}>{t('common.reset')}</Button>
                       </Space>
                     </FormItem>

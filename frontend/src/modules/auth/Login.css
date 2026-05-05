@@ -237,6 +237,71 @@
   border-radius: var(--radius-control);
 }
 
+.auth-login-mfa-setup {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-control);
+  background: var(--panel-muted);
+}
+
+.auth-login-mfa-qr {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 12px 10px 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-control);
+  background: var(--panel-bg-solid);
+}
+
+.auth-login-mfa-qr__image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 188px;
+  height: 188px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 8%, var(--panel-border));
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+}
+
+.auth-login-mfa-qr__image svg {
+  display: block;
+}
+
+.auth-login-mfa-qr__hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.auth-login-mfa-setup__label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.auth-login-mfa-setup__secret,
+.auth-login-mfa-setup__uri {
+  max-width: 100%;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.auth-login-mfa-setup__uri {
+  color: var(--text-tertiary);
+}
+
 .auth-login-card .arco-input-inner-wrapper,
 .auth-login-card .arco-input-password {
   border-radius: var(--radius-control);

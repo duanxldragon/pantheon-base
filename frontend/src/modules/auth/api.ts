@@ -6,6 +6,11 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface MFAVerifyPayload {
+  challengeId: string;
+  code: string;
+}
+
 export interface UserInfo {
   id: number;
   username: string;
@@ -26,17 +31,23 @@ export interface UserPlatformPreferences {
 }
 
 export interface AuthTokens {
-  token: string;
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  accessExpiresAt: string;
-  refreshExpiresAt: string;
-  sessionId: string;
+  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenType?: string;
+  accessExpiresAt?: string;
+  refreshExpiresAt?: string;
+  sessionId?: string;
 }
 
 export interface LoginResp extends AuthTokens {
-  user: UserInfo;
+  mfaRequired?: boolean;
+  challengeId?: string;
+  setupRequired?: boolean;
+  totpSecret?: string;
+  totpProvisionUri?: string;
+  expiresAt?: string;
+  user?: UserInfo;
 }
 
 export interface RefreshTokenPayload {
@@ -166,6 +177,16 @@ export function login(data: LoginPayload) {
     url: '/auth/login',
     method: 'post',
     data,
+    skipErrorMessage: true,
+  });
+}
+
+export function verifyMFA(data: MFAVerifyPayload) {
+  return apiRequest<LoginResp>({
+    url: '/auth/mfa/verify',
+    method: 'post',
+    data,
+    skipErrorMessage: true,
   });
 }
 

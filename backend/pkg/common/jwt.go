@@ -33,11 +33,12 @@ type TokenPair struct {
 }
 
 type CustomClaims struct {
-	UserID    uint64   `json:"userId"`
-	Username  string   `json:"username"`
-	RoleKeys  []string `json:"roleKeys"`
-	TokenType string   `json:"tokenType"`
-	SessionID string   `json:"sessionId"`
+	UserID         uint64   `json:"userId"`
+	Username       string   `json:"username"`
+	RoleKeys       []string `json:"roleKeys"`
+	TokenType      string   `json:"tokenType"`
+	SessionID      string   `json:"sessionId"`
+	OperationScope string   `json:"operationScope,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -126,9 +127,10 @@ func ParseToken(tokenString string, expectedType string) (*CustomClaims, error) 
 	return nil, ErrTokenInvalid
 }
 
-func GenerateOperationToken(userID uint64, ttl time.Duration) (string, error) {
+func GenerateOperationToken(userID uint64, sessionID string, operationScope string, ttl time.Duration) (string, error) {
 	expiresAt := time.Now().Add(ttl)
-	claims := buildClaims(userID, "op-verify", []string{}, TokenTypeOperation, "system", "op-"+os.Getenv("HOSTNAME"), expiresAt)
+	claims := buildClaims(userID, "op-verify", []string{}, TokenTypeOperation, sessionID, "op-"+os.Getenv("HOSTNAME"), expiresAt)
+	claims.OperationScope = operationScope
 	return signToken(claims, OperationTokenSecret)
 }
 

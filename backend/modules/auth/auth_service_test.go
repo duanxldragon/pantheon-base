@@ -6,7 +6,10 @@ import (
 
 	"pantheon-platform/backend/internal/middleware"
 	auditmod "pantheon-platform/backend/modules/system/audit"
+	settingmod "pantheon-platform/backend/modules/system/config/setting"
 	user "pantheon-platform/backend/modules/system/iam/user"
+	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/contracts"
 	"pantheon-platform/backend/pkg/testmysql"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,12 +21,112 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	db := testmysql.Open(t)
 
 	// 迁移模型
-	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{})
+	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY AUTOINCREMENT, role_key TEXT, status INTEGER)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id INTEGER PRIMARY KEY AUTOINCREMENT, role_id INTEGER, permission_key TEXT)")
 	return db
+}
+
+func TestAuthService_MFAChallengeSetupAndVerify(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "mfa_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.mfa_enabled', 'true')")
+	_ = s.ReloadSettings()
+
+	authenticated, err := s.Authenticate(&LoginReq{Username: "mfa_user", Password: "123456"})
+	if err != nil {
+		t.Fatalf("authenticate before mfa: %v", err)
+	}
+
+	challenge, err := s.CreateMFAChallenge(authenticated)
+	if err != nil {
+		t.Fatalf("create mfa challenge: %v", err)
+	}
+	if !challenge.MFARequired || !challenge.SetupRequired || challenge.TOTPSecret == "" || challenge.TOTPProvisionURI == "" {
+		t.Fatalf("expected setup challenge with provisioning data, got %+v", challenge)
+	}
+
+	code := generateTOTPCode(challenge.TOTPSecret, time.Now().Unix()/totpPeriod)
+	resp, err := s.VerifyMFAChallenge(&MFAVerifyReq{ChallengeID: challenge.ChallengeID, Code: code}, "127.0.0.1", "test-agent")
+	if err != nil {
+		t.Fatalf("verify mfa challenge: %v", err)
+	}
+	if resp.AccessToken == "" || resp.RefreshToken == "" || resp.User == nil || resp.User.Username != "mfa_user" {
+		t.Fatalf("expected token response after mfa, got %+v", resp)
+	}
+
+	var factorCount int64
+	if err := db.Model(&SystemAuthFactor{}).Where("user_id = ? AND enabled = ?", testUser.ID, 1).Count(&factorCount).Error; err != nil {
+		t.Fatalf("count factor: %v", err)
+	}
+	if factorCount != 1 {
+		t.Fatalf("expected one enabled factor, got %d", factorCount)
+	}
+
+	_, err = s.VerifyMFAChallenge(&MFAVerifyReq{ChallengeID: challenge.ChallengeID, Code: code}, "127.0.0.1", "test-agent")
+	if err == nil || err.Error() != "auth.mfa.challenge_expired" {
+		t.Fatalf("expected consumed challenge to fail, got %v", err)
+	}
+}
+
+func TestAuthService_MFARejectsInvalidCode(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "mfa_invalid_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.mfa_enabled', 'true')")
+	_ = s.ReloadSettings()
+
+	challenge, err := s.CreateMFAChallenge(&testUser)
+	if err != nil {
+		t.Fatalf("create mfa challenge: %v", err)
+	}
+	_, err = s.VerifyMFAChallenge(&MFAVerifyReq{ChallengeID: challenge.ChallengeID, Code: "000000"}, "127.0.0.1", "test-agent")
+	if err == nil || err.Error() != "auth.mfa.code_invalid" {
+		t.Fatalf("expected invalid code error, got %v", err)
+	}
+}
+
+func TestAuthService_ReloadsMFASettingAfterSettingUpdate(t *testing.T) {
+	db := testmysql.Open(t)
+	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{})
+	settingSvc := settingmod.NewSettingService(db)
+	if err := settingSvc.Migrate(); err != nil {
+		t.Fatalf("migrate setting: %v", err)
+	}
+
+	authSvc := NewAuthService(db)
+	if authSvc.getAuthRuntimePolicy().MFAEnabled {
+		t.Fatalf("expected MFA to start disabled")
+	}
+	unregister := contracts.RegisterRuntimeSettingReloader("test/system-auth-mfa", authSvc.ReloadSettings)
+	defer unregister()
+
+	if _, err := settingSvc.UpdateGroup("login", &settingmod.SettingGroupUpdateReq{Items: []settingmod.SettingUpdateItemReq{
+		{SettingKey: "login.mfa_enabled", SettingValue: "true"},
+	}}); err != nil {
+		t.Fatalf("update MFA setting: %v", err)
+	}
+
+	if !authSvc.getAuthRuntimePolicy().MFAEnabled {
+		t.Fatalf("expected MFA cache to reload after setting update")
+	}
 }
 
 func TestAuthService_Authenticate(t *testing.T) {
@@ -103,6 +206,34 @@ func TestAuthService_AuthenticateTrimsUsername(t *testing.T) {
 	}
 	if u.Username != "trim_user" {
 		t.Fatalf("expected trim_user, got %s", u.Username)
+	}
+}
+
+func TestAuthService_VerifyPasswordForOperationBindsSession(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "verify_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+
+	token, err := s.VerifyPasswordForOperation(testUser.ID, "session-verify-1", "123456")
+	if err != nil {
+		t.Fatalf("verify password for operation: %v", err)
+	}
+	claims, err := common.ParseOperationToken(token)
+	if err != nil {
+		t.Fatalf("parse operation token: %v", err)
+	}
+	if claims.SessionID != "session-verify-1" {
+		t.Fatalf("expected bound session id, got %s", claims.SessionID)
+	}
+	if claims.OperationScope != "secure_action" {
+		t.Fatalf("expected secure_action scope, got %s", claims.OperationScope)
 	}
 }
 

@@ -12,8 +12,8 @@
 
 - **职责清晰**：`auth` 只负责“你是谁、是否可登录、会话是否有效”。
 - **边界稳定**：`iam` 负责用户、角色、菜单、权限；`auth` 不承担后台管理 CRUD。
-- **易于扩展**：为后续验证码、MFA、SSO、登录设备、安全策略、租户登录做好演进空间。
-- **先逻辑拆分，后代码实现**：当前优先完成文档和边界设计，后续按计划分阶段重构。
+- **易于扩展**：当前已接入 TOTP MFA，并为后续验证码、SSO、登录设备、安全策略、租户登录做好演进空间。
+- **先逻辑拆分，后代码实现**：当前已完成 `auth` 物理模块与 TOTP MFA 主链路，后续按边界继续演进 SSO、风控和租户登录。
 
 ## 2. 拆分结论
 
@@ -46,7 +46,7 @@
 
 1. **安全能力和后台管理耦合**
 2. **文件职责持续膨胀**
-3. **后续引入 MFA / SSO / 设备管理时无处安放**
+3. **后续引入 SSO / 设备管理 / 风控时无处安放**
 4. **AI 容易继续把 auth 逻辑写进 user 模块**
 
 ## 4. 目标模块边界
@@ -86,7 +86,8 @@
 - `login.session_idle_minutes`：作用于会话空闲超时判定，平台壳层会同步执行本地倒计时退出
 - `login.max_active_sessions_per_user`：作用于同账号最大活跃会话上限；新登录超过阈值时自动下线更早的活跃会话，后台账号建议默认为 `1`
 - `audit.session_retention_days`：作用于历史会话保留期；已下线或已过期会话超过天数后自动清理，避免 `system_user_session` 无界增长
-- `login.captcha_enabled` / `login.mfa_enabled` / `login.sso_enabled`：作为后续验证码、MFA、SSO 的配置开关预留；当前默认关闭，不展示伪能力
+- `login.mfa_enabled`：控制真实 TOTP 二次验证登录链路；默认关闭，关闭时保持原账号密码登录链路
+- `login.captcha_enabled` / `login.sso_enabled`：作为后续验证码、SSO 的配置开关预留；当前默认关闭，不展示伪能力
 
 同时，`system/iam` 中的用户创建与管理员重置密码也已消费 `security.password_min_length`，确保系统管理内部策略一致。
 
@@ -198,11 +199,91 @@ frontend/src/modules/
 后续建议预留：
 
 - `system_auth_policy`
-- `system_auth_factor`
+- `system_auth_factor`（已用于 TOTP 二次验证因子）
+- `system_auth_mfa_challenge`（已用于登录 MFA 短期挑战）
 - `system_user_device`
 - `system_login_risk_event`
 - `system_user_external_identity`
 - `system_auth_provider`
+
+### 7.2.1 TOTP 二次验证当前实现
+
+`login.mfa_enabled` 已进入真实实现，不再只是预留开关。
+
+当前实现策略：
+
+- 开关关闭：`POST /api/v1/auth/login` 按原账号密码链路直接签发 Access / Refresh Token。
+- 开关开启：密码校验成功后不立即签发会话，而是创建 `system_auth_mfa_challenge` 并返回 `mfaRequired=true`。
+- 已绑定 TOTP 因子的用户：前端调用 `POST /api/v1/auth/mfa/verify` 提交 challenge 与 6 位动态码，通过后签发会话。
+- 未绑定 TOTP 因子的用户：首次登录时返回 TOTP 手动密钥与 `otpauth://` URI，用户用认证器应用绑定后提交 6 位动态码，验证通过后写入 `system_auth_factor` 并签发会话。
+- MFA 密钥按 `PANTHEON_MFA_SECRET` 派生的 AES-GCM 加密保存；生产环境必须显式配置该 secret。
+
+这个方案避免管理员在开启开关后因“未预先绑定因子”被锁死，同时保证验证码不是由后端直接回显的伪二次验证。
+
+#### 7.2.1.1 登录主链路时序
+
+当前 TOTP 二次验证的真实链路如下：
+
+1. 用户访问 `/login`，输入用户名和密码。
+2. 前端调用 `POST /api/v1/auth/login`。
+3. 后端先完成账号存在性、状态、密码、失败锁定、来源/IP 节流等一次认证检查。
+4. 若 `login.mfa_enabled=false`，则按原链路直接签发 Access / Refresh Token。
+5. 若 `login.mfa_enabled=true`，则后端不立即签发会话，而是创建一条短期 `system_auth_mfa_challenge`，有效期当前为 5 分钟。
+6. 若用户已绑定 TOTP 因子：
+   用户看到二次验证码输入框，输入认证器应用中的 6 位动态码，前端调用 `POST /api/v1/auth/mfa/verify`。
+7. 若用户尚未绑定 TOTP 因子：
+   后端返回 `totpSecret` 与 `totpProvisionUri`，前端优先把 `otpauth://` URI 渲染成二维码，同时保留手动密钥与 URI 文本复制作为兜底。
+8. 用户用支持 TOTP 的认证器应用扫码或手动录入密钥，获得 6 位动态码后提交 `POST /api/v1/auth/mfa/verify`。
+9. 后端校验 challenge 是否存在、未消费、未过期，再用绑定中的 secret 验证 6 位动态码。
+10. 首次绑定成功时，后端把加密后的 TOTP secret 落到 `system_auth_factor`，然后消费当前 challenge 并签发登录会话。
+
+#### 7.2.1.2 TOTP 参数与实现约束
+
+当前实现采用标准 TOTP 方案，参数固定为：
+
+- 算法：`HMAC-SHA1`
+- 动态码位数：`6`
+- 时间步长：`30` 秒
+- 时间偏移容忍：前后各 `1` 个步长
+- 密钥编码：Base32
+- 发行方（issuer）：`Pantheon Base`
+
+这意味着动态码由“本地密钥 + 当前时间”推导得到，不依赖短信网关，也不依赖外部身份服务。
+
+#### 7.2.1.3 最终用户如何使用
+
+当前推荐使用方式：
+
+1. 管理员在 `system/config -> login` 中开启 `login.mfa_enabled`。
+2. 用户首次登录时，页面会进入二次验证设置态。
+3. 用户使用支持 TOTP 的认证器应用扫码页面二维码。
+4. 如果设备无法扫码，则手动录入页面展示的密钥，或复制 `otpauth://` URI 到支持导入的认证器。
+5. 认证器应用会每 30 秒离线生成一个 6 位动态码。
+6. 用户把当前 6 位动态码填回登录页，完成绑定并登录。
+7. 后续再次登录时，只需在密码验证通过后输入认证器中的 6 位动态码。
+
+适配说明：
+
+- MFA 本身不要求连外网，认证器应用离线即可生成动态码。
+- 真正需要准确的是客户端时间。如果手机或电脑时间偏差过大，动态码会校验失败。
+- 普通扫码工具只能读出二维码文本，不能替代 TOTP 认证器。必须使用支持 `otpauth://totp/...` 或 TOTP 手动密钥导入的认证器应用。
+
+#### 7.2.1.4 前端交互约束
+
+登录页在 MFA 设置态必须满足：
+
+- 二维码优先展示，降低手动录入错误率。
+- 保留手动密钥展示与复制。
+- 保留 `otpauth://` URI 文本复制，兼容支持 URI 导入的认证器。
+- 在 challenge 过期、动态码错误、未绑定因子、来源受限等失败场景下，优先展示后端返回的错误 key 对应翻译，而不是统一模糊提示。
+
+#### 7.2.1.5 运维与安全注意事项
+
+- 生产环境必须显式配置 `PANTHEON_MFA_SECRET`，不得依赖开发默认值。
+- `PANTHEON_MFA_SECRET` 变更后，历史已加密 TOTP secret 将无法解密，属于破坏性操作，必须按迁移方案执行。
+- `system_auth_mfa_challenge` 只承担短期挑战，不可长期保存为用户永久因子。
+- `system_auth_factor` 保存的是加密后的因子密钥，不允许通过接口回显真实 secret。
+- MFA 是 `system/auth` 登录主链路的一部分，不应被塞回 `system/iam` 用户管理页承担长期职责。
 
 ### 7.3 SSO / 外部身份接入预留
 
@@ -400,7 +481,7 @@ LoginPage
 
 - 登录页
 - 忘记密码页（后续）
-- 二次验证页（后续）
+- TOTP MFA 二次验证流程（已集成在登录页）
 
 ### 8.2 安全中心页
 

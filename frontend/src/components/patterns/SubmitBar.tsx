@@ -27,7 +27,7 @@ const SubmitBar: React.FC<SubmitBarProps> = ({
         <Button onClick={onCancel}>
           {cancelText || t('common.cancel')}
         </Button>
-        <Button type="primary" loading={loading} disabled={submitDisabled} onClick={onSubmit}>
+        <Button type="primary" htmlType="submit" loading={loading} disabled={submitDisabled} onClick={onSubmit}>
           {submitText || t('common.save')}
         </Button>
       </Space>

@@ -14,6 +14,8 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 	authSvc := NewAuthService(db)
 	authHandler := NewAuthHandler(authSvc)
 
+	contracts.RegisterRuntimeSettingReloader("system/auth", authSvc.ReloadSettings)
+
 	// 监听核心设置变更
 	authSvc.WatchSettings()
 
@@ -32,6 +34,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 				apiAuth := r.Group("/auth")
 				{
 					apiAuth.POST("/login", authHandler.LoginHandler)
+					apiAuth.POST("/mfa/verify", authHandler.VerifyMFAHandler)
 					apiAuth.POST("/refresh", authHandler.RefreshTokenHandler)
 				}
 

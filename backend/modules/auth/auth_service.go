@@ -138,16 +138,19 @@ func (s *AuthService) Migrate() error {
 	if s.db == nil {
 		return errors.New("database.not_initialized")
 	}
-	if err := s.db.AutoMigrate(&SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}); err != nil {
+	if err := s.db.AutoMigrate(&SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}); err != nil {
 		return err
 	}
 	return nil
 }
 
 // VerifyPasswordForOperation 敏感操作前的密码二次验证
-func (s *AuthService) VerifyPasswordForOperation(userID uint64, password string) (string, error) {
+func (s *AuthService) VerifyPasswordForOperation(userID uint64, sessionID string, password string) (string, error) {
 	if s.db == nil {
 		return "", errors.New("database.not_initialized")
+	}
+	if strings.TrimSpace(sessionID) == "" {
+		return "", errors.New("auth.operation.verification_mismatch")
 	}
 
 	var currentUser user.SystemUser
@@ -162,7 +165,7 @@ func (s *AuthService) VerifyPasswordForOperation(userID uint64, password string)
 
 	// 生成操作令牌 (Operation Token)，有效期 5 分钟
 	// 这里复用 JWT 逻辑，但添加一个特定的 Claim
-	token, err := common.GenerateOperationToken(userID, 5*time.Minute)
+	token, err := common.GenerateOperationToken(userID, sessionID, "secure_action", 5*time.Minute)
 	if err != nil {
 		return "", err
 	}
@@ -246,6 +249,181 @@ func (s *AuthService) LoginWithSource(req *LoginReq, sourceKey string) (*user.Sy
 
 func (s *AuthService) Authenticate(req *LoginReq) (*user.SystemUser, error) {
 	return s.Login(req)
+}
+
+func (s *AuthService) CreateMFAChallenge(currentUser *user.SystemUser) (*MFAChallengeResp, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+	if currentUser == nil || currentUser.ID == 0 {
+		return nil, errors.New("auth.mfa.user_invalid")
+	}
+	if !s.getAuthRuntimePolicy().MFAEnabled {
+		return nil, errors.New("auth.mfa.disabled")
+	}
+
+	var factor SystemAuthFactor
+	err := s.db.Where("user_id = ? AND factor_type = ? AND enabled = ?", currentUser.ID, "totp", 1).First(&factor).Error
+	setupRequired := errors.Is(err, gorm.ErrRecordNotFound)
+	if err != nil && !setupRequired {
+		return nil, err
+	}
+
+	secret := ""
+	if setupRequired {
+		var secretErr error
+		secret, secretErr = generateTOTPSecret()
+		if secretErr != nil {
+			return nil, secretErr
+		}
+	}
+	encryptedSecret, err := encryptMFASecret(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	expiresAt := time.Now().Add(5 * time.Minute)
+	challenge := SystemAuthMFAChallenge{
+		ChallengeID:     uuid.NewString(),
+		UserID:          currentUser.ID,
+		Purpose:         "login",
+		SecretEncrypted: encryptedSecret,
+		SetupRequired:   boolToInt(setupRequired),
+		ExpiresAt:       expiresAt,
+	}
+	if err := s.db.Create(&challenge).Error; err != nil {
+		return nil, err
+	}
+
+	resp := &MFAChallengeResp{
+		MFARequired:   true,
+		ChallengeID:   challenge.ChallengeID,
+		SetupRequired: setupRequired,
+		ExpiresAt:     expiresAt.Format(time.RFC3339),
+	}
+	if setupRequired {
+		resp.TOTPSecret = secret
+		resp.TOTPProvisionURI = buildTOTPURL(currentUser.Username, secret)
+	}
+	return resp, nil
+}
+
+func (s *AuthService) VerifyMFAChallenge(req *MFAVerifyReq, ip string, userAgent string) (*AuthTokenResp, error) {
+	if s.db == nil {
+		return nil, errors.New("database.not_initialized")
+	}
+	if req == nil || strings.TrimSpace(req.ChallengeID) == "" {
+		return nil, errors.New("auth.mfa.challenge_required")
+	}
+
+	var challenge SystemAuthMFAChallenge
+	if err := s.db.Where("challenge_id = ?", strings.TrimSpace(req.ChallengeID)).First(&challenge).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("auth.mfa.challenge_invalid")
+		}
+		return nil, err
+	}
+	if challenge.ConsumedAt != nil || !challenge.ExpiresAt.After(time.Now()) {
+		return nil, errors.New("auth.mfa.challenge_expired")
+	}
+
+	secret := ""
+	if challenge.SetupRequired == 1 {
+		decrypted, err := decryptMFASecret(challenge.SecretEncrypted)
+		if err != nil {
+			return nil, err
+		}
+		secret = decrypted
+	} else {
+		var factor SystemAuthFactor
+		if err := s.db.Where("user_id = ? AND factor_type = ? AND enabled = ?", challenge.UserID, "totp", 1).First(&factor).Error; err != nil {
+			return nil, errors.New("auth.mfa.factor_missing")
+		}
+		decrypted, err := decryptMFASecret(factor.SecretEncrypted)
+		if err != nil {
+			return nil, err
+		}
+		secret = decrypted
+	}
+	if !validateTOTPCode(secret, req.Code, time.Now()) {
+		return nil, errors.New("auth.mfa.code_invalid")
+	}
+
+	var currentUser user.SystemUser
+	if err := s.db.First(&currentUser, challenge.UserID).Error; err != nil {
+		return nil, err
+	}
+	if currentUser.Status == 2 {
+		return nil, errors.New("user.login.error.disabled")
+	}
+
+	now := time.Now()
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if challenge.SetupRequired == 1 {
+			encryptedSecret, err := encryptMFASecret(secret)
+			if err != nil {
+				return err
+			}
+			var factor SystemAuthFactor
+			err = tx.Where("user_id = ? AND factor_type = ?", challenge.UserID, "totp").First(&factor).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				factor = SystemAuthFactor{
+					UserID:          challenge.UserID,
+					FactorType:      "totp",
+					SecretEncrypted: encryptedSecret,
+					Enabled:         1,
+					ConfirmedAt:     &now,
+				}
+				if err := tx.Create(&factor).Error; err != nil {
+					return err
+				}
+			} else if err != nil {
+				return err
+			} else if err := tx.Model(&factor).Updates(map[string]any{
+				"secret_encrypted": encryptedSecret,
+				"enabled":          1,
+				"confirmed_at":     &now,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		result := tx.Model(&SystemAuthMFAChallenge{}).
+			Where("id = ? AND consumed_at IS NULL", challenge.ID).
+			Update("consumed_at", &now)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("auth.mfa.challenge_expired")
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	roles, err := s.GetUserRoles(currentUser.ID)
+	if err != nil {
+		return nil, err
+	}
+	tokenPair, err := s.CreateSession(&currentUser, roles, ip, userAgent)
+	if err != nil {
+		return nil, err
+	}
+	userInfo, err := s.GetCurrentUserInfo(currentUser.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthTokenResp{
+		Token:            tokenPair.AccessToken,
+		AccessToken:      tokenPair.AccessToken,
+		RefreshToken:     tokenPair.RefreshToken,
+		TokenType:        tokenPair.TokenType,
+		AccessExpiresAt:  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
+		RefreshExpiresAt: tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
+		SessionID:        tokenPair.SessionID,
+		User:             userInfo,
+	}, nil
 }
 
 // GetUserRoles 获取用户角色标识

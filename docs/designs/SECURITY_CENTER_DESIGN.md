@@ -15,7 +15,7 @@
 - 把认证与安全能力从 `user/profile` 中独立出来
 - 支持当前用户管理自己的会话和密码
 - 支持管理员查看安全事件和登录日志
-- 为后续 MFA、SSO、风控预留空间
+- 当前已接入 TOTP MFA 登录主链路，并为后续 SSO、风控预留空间
 - 保持企业级后台的克制、清晰、可信
 
 ## 2. 能力边界
@@ -149,7 +149,7 @@ SecurityCenter
 - 最近登录时间
 - 当前会话状态
 - 密码最近更新时间（后续）
-- MFA 状态（后续）
+- MFA 策略状态
 
 ## 5.3 SessionsPanel
 
@@ -194,6 +194,7 @@ SecurityCenter
 | `DELETE` | `/api/v1/auth/sessions/:id` | 下线指定会话 |
 | `PUT` | `/api/v1/auth/password` | 修改当前账号密码 |
 | `GET` | `/api/v1/auth/login-logs` | 获取当前账号登录日志 |
+| `POST` | `/api/v1/auth/mfa/verify` | 校验 TOTP 二次验证 challenge，成功后签发登录会话 |
 
 ## 6.2 管理员安全审计接口
 
@@ -222,6 +223,8 @@ SecurityCenter
 
 - `system_user_session`
 - `system_log_login`
+- `system_auth_factor`
+- `system_auth_mfa_challenge`
 
 ## 7.2 `system_user_session`
 
@@ -380,7 +383,7 @@ auth.loginLog.status.failed
 
 - 密码策略
 - 登录失败限制
-- MFA 预留
+- MFA（当前已进入真实 TOTP 登录链路）
 - 风险事件
 
 ## 15. 与个人中心的关系

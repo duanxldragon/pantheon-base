@@ -31,6 +31,12 @@ func SecureActionMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		currentSessionID := c.GetString("sessionId")
+		if claims.SessionID == "" || currentSessionID == "" || claims.SessionID != currentSessionID {
+			common.FailWithCode(c, 403, "auth.operation.verification_mismatch")
+			c.Abort()
+			return
+		}
 
 		c.Next()
 	}

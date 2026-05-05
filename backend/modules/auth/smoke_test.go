@@ -25,12 +25,15 @@ func setupSmokeTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	_ = db.Exec("DROP TABLE IF EXISTS system_user")
 	_ = db.Exec("DROP TABLE IF EXISTS system_user_session")
 	_ = db.Exec("DROP TABLE IF EXISTS system_log_login")
+	_ = db.Exec("DROP TABLE IF EXISTS system_login_throttle")
+	_ = db.Exec("DROP TABLE IF EXISTS system_auth_factor")
+	_ = db.Exec("DROP TABLE IF EXISTS system_auth_mfa_challenge")
 	_ = db.Exec("DROP TABLE IF EXISTS system_role")
 	_ = db.Exec("DROP TABLE IF EXISTS system_user_role")
 	_ = db.Exec("DROP TABLE IF EXISTS system_role_permission")
 
 	// 迁移所有核心表
-	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{})
+	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")

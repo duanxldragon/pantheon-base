@@ -8,6 +8,11 @@ type LoginReq struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type MFAVerifyReq struct {
+	ChallengeID string `json:"challengeId" binding:"required"`
+	Code        string `json:"code" binding:"required"`
+}
+
 // RefreshTokenReq 刷新令牌请求 DTO
 type RefreshTokenReq struct {
 	RefreshToken string `json:"refreshToken" binding:"required"`
@@ -48,6 +53,11 @@ type ClientInfoResp struct {
 
 // AuthTokenResp 认证返回 DTO
 type AuthTokenResp struct {
+	MFARequired      bool          `json:"mfaRequired,omitempty"`
+	ChallengeID      string        `json:"challengeId,omitempty"`
+	SetupRequired    bool          `json:"setupRequired,omitempty"`
+	TOTPSecret       string        `json:"totpSecret,omitempty"`
+	TOTPProvisionURI string        `json:"totpProvisionUri,omitempty"`
 	Token            string        `json:"token"`
 	AccessToken      string        `json:"accessToken"`
 	RefreshToken     string        `json:"refreshToken"`
@@ -56,6 +66,15 @@ type AuthTokenResp struct {
 	RefreshExpiresAt string        `json:"refreshExpiresAt"`
 	SessionID        string        `json:"sessionId"`
 	User             *UserInfoResp `json:"user"`
+}
+
+type MFAChallengeResp struct {
+	MFARequired      bool   `json:"mfaRequired"`
+	ChallengeID      string `json:"challengeId"`
+	SetupRequired    bool   `json:"setupRequired"`
+	TOTPSecret       string `json:"totpSecret,omitempty"`
+	TOTPProvisionURI string `json:"totpProvisionUri,omitempty"`
+	ExpiresAt        string `json:"expiresAt"`
 }
 
 // SessionResp 当前用户会话信息 DTO

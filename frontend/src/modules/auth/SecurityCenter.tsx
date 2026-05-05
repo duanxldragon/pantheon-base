@@ -387,18 +387,18 @@ const SecurityCenter: React.FC = () => {
           )}
         >
             <Card className="page-panel" title={t('auth.security.password')} extra={<Tag>{t('auth.security.passwordTip')}</Tag>}>
-              <Form form={passwordForm} layout="vertical">
+              <Form form={passwordForm} layout="vertical" onSubmit={() => { void handleChangePassword(); }}>
                 <Space direction="vertical" size={20} className="auth-section-stack">
                   <FormSection title={t('system.profile.passwordTitle')} description={t('system.profile.passwordHint')}>
                     <Row gutter={16} className="auth-form-grid">
                       <Col xs={24} md={12}>
                         <FormItem label={t('system.profile.oldPassword')} field="oldPassword" rules={[{ required: true, message: t('system.profile.oldPasswordRequired') }]}>
-                          <Input.Password prefix={<IconLock />} />
+                          <Input.Password prefix={<IconLock />} onPressEnter={() => passwordForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col xs={24} md={12}>
                         <FormItem label={t('system.profile.newPassword')} field="newPassword" rules={[{ required: true, message: t('auth.passwordRequired') }]}>
-                          <Input.Password prefix={<IconLock />} />
+                          <Input.Password prefix={<IconLock />} onPressEnter={() => passwordForm.submit()} />
                         </FormItem>
                       </Col>
                       <Col xs={24} md={12}>
@@ -419,7 +419,7 @@ const SecurityCenter: React.FC = () => {
                             },
                           ]}
                         >
-                          <Input.Password prefix={<IconLock />} />
+                          <Input.Password prefix={<IconLock />} onPressEnter={() => passwordForm.submit()} />
                         </FormItem>
                       </Col>
                     </Row>
