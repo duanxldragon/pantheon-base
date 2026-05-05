@@ -107,3 +107,12 @@ DashboardPage
   - `cleanupPolicy`
   - 若属于 `business/*`，还必须声明 `registrationOwner`
 - `business/*` widget 的清理策略必须为“模块退出时移除”，不能把失效卡片长期留在平台首页。
+
+## 6. 当前注册契约
+
+当前前端工作台已收口到 `ModuleConfig.dashboardWidgets`：
+
+- 每个模块在自己的 `index.ts` 中声明可挂入工作台的 widget；
+- `platform` 层只负责从已注册模块聚合 widget，不再在 `dashboard/widgets.tsx` 中维护静态大列表；
+- `system/*` 与 `business/*` 通过同一注册面接入，但 `business/*` 必须额外声明 `registrationOwner` 与 `remove_with_source_module` 清理策略；
+- widget 可见性仍由导航可达性与权限共同决定，`platform` 不绕过 `system/*` 的权限边界。

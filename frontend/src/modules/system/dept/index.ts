@@ -16,6 +16,22 @@ export const DeptModule = defineModule({
   menus: [
     { path: '/system/dept', titleKey: 'system.menu.dept', icon: 'branch', routeName: 'system-dept', module: 'system.org' },
   ],
+  dashboardWidgets: [
+    {
+      key: 'platform.domain.org',
+      slot: 'domain-overview',
+      sourceDomain: 'system/org',
+      titleKey: 'dashboard.domain.org',
+      descriptionKey: 'dashboard.domain.orgDesc',
+      path: '/system/dept',
+      permission: 'system:dept:list',
+      cleanupPolicy: 'hide_when_forbidden',
+      summary: (summary, t) => t('dashboard.deptsAndPosts', {
+        depts: summary?.totalDepts ?? 0,
+        posts: summary?.totalPosts ?? 0,
+      }),
+    },
+  ],
   permissions: [
     'system:dept:list',
     'system:dept:create',

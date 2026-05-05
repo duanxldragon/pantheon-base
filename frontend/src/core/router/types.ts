@@ -1,6 +1,7 @@
 import type { LazyExoticComponent, ComponentType } from 'react';
 import type { RegisteredComponentKey } from './componentRegistry';
 import type { MenuIconKey } from '../menu/icon';
+import type { DashboardWidgetDefinition } from '../workbench/dashboard';
 
 export type ModuleScope = 'platform' | 'system' | 'business';
 
@@ -41,6 +42,7 @@ export interface ModuleConfig {
   scope: ModuleScope;
   routes: ModuleRouteConfig[];
   menus?: ModuleMenuMeta[];
+  dashboardWidgets?: DashboardWidgetDefinition[];
   permissions?: string[];
   i18nNamespaces?: string[];
   featureFlags?: string[];

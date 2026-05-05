@@ -16,6 +16,19 @@ export const DictModule = defineModule({
   menus: [
     { path: '/system/dict', titleKey: 'system.menu.dict', icon: 'book', routeName: 'system-dict', module: 'system.config' },
   ],
+  dashboardWidgets: [
+    {
+      key: 'platform.dict',
+      slot: 'quick-action',
+      sourceDomain: 'system/config',
+      titleKey: 'system.menu.dict',
+      descriptionKey: 'dashboard.quickAction.dict',
+      path: '/system/dict',
+      permission: 'system:dict:list',
+      icon: 'storage',
+      cleanupPolicy: 'hide_when_forbidden',
+    },
+  ],
   permissions: [
     'system:dict:list',
     'system:dict:create',

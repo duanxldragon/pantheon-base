@@ -16,6 +16,19 @@ export const RoleModule = defineModule({
   menus: [
     { path: '/system/role', titleKey: 'system.menu.role', icon: 'user-group', routeName: 'system-role', module: 'system.iam' },
   ],
+  dashboardWidgets: [
+    {
+      key: 'platform.roles',
+      slot: 'quick-action',
+      sourceDomain: 'system/iam',
+      titleKey: 'system.menu.role',
+      descriptionKey: 'dashboard.quickAction.role',
+      path: '/system/role',
+      permission: 'system:role:list',
+      icon: 'safe',
+      cleanupPolicy: 'hide_when_forbidden',
+    },
+  ],
   permissions: [
     'system:role:list',
     'system:role:create',

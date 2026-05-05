@@ -24,6 +24,33 @@ export const UserModule = defineModule({
   menus: [
     { path: '/system/user', titleKey: 'system.menu.user', icon: 'user', routeName: 'system-user', module: 'system.iam' },
   ],
+  dashboardWidgets: [
+    {
+      key: 'platform.users',
+      slot: 'quick-action',
+      sourceDomain: 'system/iam',
+      titleKey: 'system.menu.user',
+      descriptionKey: 'dashboard.quickAction.user',
+      path: '/system/user',
+      permission: 'system:user:list',
+      icon: 'user',
+      cleanupPolicy: 'hide_when_forbidden',
+    },
+    {
+      key: 'platform.domain.access',
+      slot: 'domain-overview',
+      sourceDomain: 'system/iam',
+      titleKey: 'dashboard.domain.access',
+      descriptionKey: 'dashboard.domain.accessDesc',
+      path: '/system/user',
+      permission: 'system:user:list',
+      cleanupPolicy: 'hide_when_forbidden',
+      summary: (summary, t) => t('dashboard.usersAndRoles', {
+        users: summary?.totalUsers ?? 0,
+        roles: summary?.totalRoles ?? 0,
+      }),
+    },
+  ],
   permissions: [
     'system:user:list',
     'system:user:view',
