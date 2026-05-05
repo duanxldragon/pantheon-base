@@ -41,7 +41,7 @@ func (h *DictHandler) CreateDictType(c *gin.Context) {
 	}
 	row, err := h.service.CreateDictType(&req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, row)
@@ -61,7 +61,7 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 	}
 	row, err := h.service.UpdateDictType(typeID, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, row)
@@ -75,7 +75,7 @@ func (h *DictHandler) DeleteDictType(c *gin.Context) {
 		return
 	}
 	if err := h.service.DeleteDictType(typeID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -90,7 +90,7 @@ func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
 	}
 	updatedCount, err := h.service.BatchUpdateDictTypeStatus(req.TypeIDs, req.Status)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -133,7 +133,7 @@ func (h *DictHandler) CreateDictItem(c *gin.Context) {
 	}
 	row, err := h.service.CreateDictItem(&req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, row)
@@ -153,7 +153,7 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 	}
 	row, err := h.service.UpdateDictItem(itemID, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, row)
@@ -167,7 +167,7 @@ func (h *DictHandler) DeleteDictItem(c *gin.Context) {
 		return
 	}
 	if err := h.service.DeleteDictItem(itemID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -182,7 +182,7 @@ func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
 	}
 	updatedCount, err := h.service.BatchUpdateDictItemStatus(req.ItemIDs, req.Status)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -202,7 +202,7 @@ func (h *DictHandler) ReorderDictItem(c *gin.Context) {
 	}
 	row, err := h.service.ReorderDictItem(itemID, req.Direction)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, row)

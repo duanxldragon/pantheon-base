@@ -143,6 +143,12 @@ t('permission.denied')
 2. 如果 key 缺失，则走 fallback
 3. 如果是网络异常或非标准错误，再走默认前端 key
 
+后端 handler 层应配套使用统一错误出口：
+
+- 如果 Service 返回的是稳定 key，则原样返回；
+- 如果拿到的是框架错误、数据库错误或其他非 key 文本，则不能直接透传给前端；
+- 建议统一通过类似 `common.FailWithError(...)` 的出口，把非 key 错误收敛到稳定 fallback key。
+
 ## 5. 成功提示规则
 
 ## 5.1 成功提示优先由前端控制

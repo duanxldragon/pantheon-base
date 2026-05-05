@@ -62,7 +62,7 @@ func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
 
 	resp, err := h.service.RemediateWorkbenchPolicies(&req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, resp)
@@ -93,7 +93,7 @@ func (h *PermissionHandler) CreatePolicy(c *gin.Context) {
 
 	policy, err := h.service.CreatePolicy(&req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, policy)
@@ -115,7 +115,7 @@ func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
 
 	policy, err := h.service.UpdatePolicy(policyID, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, policy)
@@ -130,7 +130,7 @@ func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
 	}
 
 	if err := h.service.DeletePolicy(policyID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
-import { message } from '../components/feedback/message';
+import { message as feedbackMessage } from '../components/feedback/message';
 import i18n from 'i18next';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, useAuthStore } from '../store/useAuthStore';
 import { clearShellSessionState } from '../core/shellState';
@@ -362,7 +362,7 @@ request.interceptors.response.use(
 
     const requestError = createBusinessError(code, message || 'request.failed');
     if (!config.skipErrorMessage && !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)) {
-      message.error(translateMessage(
+      feedbackMessage.error(translateMessage(
         requestError.messageKey || requestError.message,
         resolveFallbackMessageKey(requestError),
       ));
@@ -392,7 +392,7 @@ request.interceptors.response.use(
 
     const requestError = createTransportError(error);
     if (!config?.skipErrorMessage && !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)) {
-      message.error(translateMessage(
+      feedbackMessage.error(translateMessage(
         requestError.messageKey || requestError.message,
         resolveFallbackMessageKey(requestError),
       ));

@@ -50,7 +50,7 @@ func (h *SettingHandler) GetSettingOverview(c *gin.Context) {
 func (h *SettingHandler) GetSettingGroup(c *gin.Context) {
 	group, err := h.service.GetGroup(c.Param("groupKey"))
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, group)
@@ -75,7 +75,7 @@ func (h *SettingHandler) UpdateSettingGroup(c *gin.Context) {
 
 	group, err := h.service.UpdateGroup(groupKey, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	if successPayload != "" {
@@ -170,7 +170,7 @@ func (h *SettingHandler) UploadFile(c *gin.Context) {
 
 	stored, err := h.uploadService.Store(fileHeader, c.DefaultQuery("scope", "general"), requestBaseURL(c))
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, stored)
@@ -190,7 +190,7 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 
 	filePath, err := h.uploadService.ResolveLocalPath(objectKey)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "upload.file.not_found")
 		return
 	}
 	if _, statErr := os.Stat(filePath); statErr != nil {

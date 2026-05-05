@@ -100,7 +100,7 @@ func (h *I18nHandler) DeleteArchivedUnusedKeys(c *gin.Context) {
 	resp, err := h.service.DeleteArchivedUnusedKeys(req.Module, req.ConfirmArchived)
 	if err != nil {
 		if err.Error() == "i18n.lifecycle.delete.confirm_required" {
-			common.Fail(c, common.CodeParamInvalid, err.Error())
+			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
 			return
 		}
 		common.Fail(c, common.CodeError, "i18n.lifecycle.delete.error")
@@ -161,9 +161,9 @@ func (h *I18nHandler) PreviewRenameKey(c *gin.Context) {
 	if err != nil {
 		switch err.Error() {
 		case "i18n.rename.invalid":
-			common.Fail(c, common.CodeParamInvalid, err.Error())
+			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
 		case "i18n.rename.source_not_found":
-			common.Fail(c, common.CodeError, err.Error())
+			common.FailWithError(c, common.CodeError, err, "i18n.rename.preview.error")
 		default:
 			common.Fail(c, common.CodeError, "i18n.rename.preview.error")
 		}
@@ -183,9 +183,9 @@ func (h *I18nHandler) RenameKey(c *gin.Context) {
 	if err != nil {
 		switch err.Error() {
 		case "i18n.rename.invalid", "i18n.rename.source_not_found":
-			common.Fail(c, common.CodeParamInvalid, err.Error())
+			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
 		case "i18n.rename.target_exists", "i18n.rename.source_not_confirmed":
-			common.Fail(c, common.CodeError, err.Error())
+			common.FailWithError(c, common.CodeError, err, "i18n.rename.execute.error")
 		default:
 			common.Fail(c, common.CodeError, "i18n.rename.execute.error")
 		}
@@ -267,9 +267,9 @@ func (h *I18nHandler) Create(c *gin.Context) {
 	if err != nil {
 		switch err.Error() {
 		case "i18n.create.invalid":
-			common.Fail(c, common.CodeParamInvalid, err.Error())
+			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
 		case "i18n.key.duplicate":
-			common.Fail(c, common.CodeError, err.Error())
+			common.FailWithError(c, common.CodeError, err, "i18n.create.error")
 		default:
 			common.Fail(c, common.CodeError, "i18n.create.error")
 		}
@@ -300,7 +300,7 @@ func (h *I18nHandler) Update(c *gin.Context) {
 			return
 		}
 		if err.Error() == "i18n.value.required" {
-			common.Fail(c, common.CodeParamInvalid, err.Error())
+			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
 			return
 		}
 		common.Fail(c, common.CodeError, "i18n.update.error")

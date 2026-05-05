@@ -60,6 +60,8 @@ const serialized = `${JSON.stringify(snapshot, null, 2)}\n`;
 if (process.argv.includes('--stdout')) {
   process.stdout.write(serialized);
 } else {
-  fs.writeFileSync(outputPath, serialized, 'utf8');
+  const tempOutputPath = `${outputPath}.tmp`;
+  fs.writeFileSync(tempOutputPath, serialized, 'utf8');
+  fs.renameSync(tempOutputPath, outputPath);
   console.log(`Exported built-in i18n snapshot to ${outputPath}`);
 }

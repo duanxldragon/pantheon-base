@@ -43,7 +43,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 
 	role, err := h.service.CreateRole(&req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, role)
@@ -84,7 +84,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	role, err := h.service.UpdateRole(roleID, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, role)
@@ -101,7 +101,7 @@ func (h *RoleHandler) BatchUpdateRoleStatus(c *gin.Context) {
 
 	updatedCount, err := h.service.BatchUpdateRoleStatus(req.RoleIDs, req.Status)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -116,7 +116,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteRole(roleID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})

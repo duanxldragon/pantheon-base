@@ -56,7 +56,7 @@ func (h *AuditHandler) DeleteOperationLog(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteOperationLog(logID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -73,7 +73,7 @@ func (h *AuditHandler) CleanupOperationLogs(c *gin.Context) {
 
 	clearedCount, err := h.service.CleanupOperationLogs(req.RetentionDays)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"clearedCount": clearedCount})
@@ -90,7 +90,7 @@ func (h *AuditHandler) BatchDeleteOperationLogs(c *gin.Context) {
 
 	deletedCount, err := h.service.BatchDeleteOperationLogs(req.IDs)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deletedCount": deletedCount})

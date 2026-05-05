@@ -2,6 +2,8 @@ package common
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +23,8 @@ const (
 	CodeNotFound     = 404
 )
 
+var i18nKeyPattern = regexp.MustCompile(`^[a-z0-9_]+(?:\.[a-z0-9_]+)+$`)
+
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Response{
 		Code:    CodeSuccess,
@@ -35,6 +39,31 @@ func Fail(c *gin.Context, code int, message string) {
 		Data:    nil,
 		Message: message,
 	})
+}
+
+func IsI18nMessageKey(message string) bool {
+	return i18nKeyPattern.MatchString(strings.TrimSpace(message))
+}
+
+func ResolveErrorMessageKey(err error, fallback string) string {
+	if err == nil {
+		if strings.TrimSpace(fallback) != "" {
+			return fallback
+		}
+		return "request.failed"
+	}
+	message := strings.TrimSpace(err.Error())
+	if IsI18nMessageKey(message) {
+		return message
+	}
+	if strings.TrimSpace(fallback) != "" {
+		return fallback
+	}
+	return "request.failed"
+}
+
+func FailWithError(c *gin.Context, code int, err error, fallback string) {
+	Fail(c, code, ResolveErrorMessageKey(err, fallback))
 }
 
 func FailWithCode(c *gin.Context, code int, message string) {

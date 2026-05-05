@@ -91,7 +91,7 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteMenu(menuID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "request.failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
