@@ -17,7 +17,7 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 	sqlDB.SetMaxOpenConns(1)
 
 	// 迁移模型
-	_ = db.AutoMigrate(&SystemUser{})
+	_ = db.AutoMigrate(&SystemUser{}, &SystemUserProfileExt{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT, deleted_at DATETIME NULL)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id VARCHAR(128), user_id BIGINT, revoked_at DATETIME NULL)")
@@ -51,6 +51,9 @@ func TestUserService_CreateUser(t *testing.T) {
 	}
 	if resp.Username != "admin_test" {
 		t.Errorf("expected username admin_test, got %s", resp.Username)
+	}
+	if resp.DeptID != 0 || resp.PostID != 0 {
+		t.Fatalf("expected user without organization binding, got dept=%d post=%d", resp.DeptID, resp.PostID)
 	}
 
 	// 2. 用户名重复
@@ -99,6 +102,51 @@ func TestUserService_UpdateUser(t *testing.T) {
 	_, err = s.UpdateUser(999, updateReq)
 	if err == nil {
 		t.Error("expected error for non-existent user, got nil")
+	}
+}
+
+func TestUserService_UserProfileExtLifecycle(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := NewUserService(db)
+
+	userResp, err := s.CreateUser(&UserCreateReq{
+		Username: "consumer_user",
+		Password: "password123",
+		Nickname: "Consumer",
+		RoleIDs:  []uint64{2},
+		Status:   1,
+		ProfileExt: map[string]interface{}{
+			"gender": "unknown",
+			"vip":    true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("create consumer user: %v", err)
+	}
+
+	detail, err := s.GetUserDetail(userResp.ID)
+	if err != nil {
+		t.Fatalf("get user detail: %v", err)
+	}
+	if detail.ProfileExt["gender"] != "unknown" || detail.ProfileExt["vip"] != true {
+		t.Fatalf("unexpected created profile ext: %+v", detail.ProfileExt)
+	}
+
+	updated, err := s.UpdateProfile(userResp.ID, &UserProfileUpdateReq{
+		Nickname: "Consumer Updated",
+		ProfileExt: map[string]interface{}{
+			"gender": "female",
+			"source": "app",
+		},
+	})
+	if err != nil {
+		t.Fatalf("update profile ext: %v", err)
+	}
+	if updated.ProfileExt["gender"] != "female" || updated.ProfileExt["source"] != "app" {
+		t.Fatalf("unexpected updated profile ext: %+v", updated.ProfileExt)
+	}
+	if updated.DeptID != 0 || updated.PostID != 0 {
+		t.Fatalf("expected consumer profile without org binding, got dept=%d post=%d", updated.DeptID, updated.PostID)
 	}
 }
 

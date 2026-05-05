@@ -208,6 +208,35 @@ func TestSettingService_UpdateGroupValidatesValueType(t *testing.T) {
 	if err == nil || err.Error() != "setting.value.invalid_option" {
 		t.Fatalf("expected invalid non-positive audit retention option error, got %v", err)
 	}
+
+	_, err = service.UpdateGroup("platform", &SettingGroupUpdateReq{Items: []SettingUpdateItemReq{
+		{SettingKey: "platform.app_mode", SettingValue: "invalid"},
+	}})
+	if err == nil || err.Error() != "setting.value.invalid_option" {
+		t.Fatalf("expected invalid app mode option error, got %v", err)
+	}
+}
+
+func TestSettingService_MigrateSeedsPlatformCapabilities(t *testing.T) {
+	db := setupSettingTestDB(t)
+	service := NewSettingService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate setting: %v", err)
+	}
+
+	publicSettings, err := service.GetPublicSettings()
+	if err != nil {
+		t.Fatalf("load public settings: %v", err)
+	}
+	if publicSettings.Settings["platform.app_mode"] != "enterprise" {
+		t.Fatalf("expected enterprise app mode, got %s", publicSettings.Settings["platform.app_mode"])
+	}
+	if publicSettings.Settings["org.enabled"] != "true" {
+		t.Fatalf("expected org enabled, got %s", publicSettings.Settings["org.enabled"])
+	}
+	if publicSettings.Settings["org.required_for_user"] != "false" {
+		t.Fatalf("expected org not required for users, got %s", publicSettings.Settings["org.required_for_user"])
+	}
 }
 
 func TestSettingService_MigrateSeedsS3Region(t *testing.T) {

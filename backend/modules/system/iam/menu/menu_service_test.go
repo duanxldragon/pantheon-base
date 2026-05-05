@@ -16,6 +16,7 @@ func setupMenuTestDB(t *testing.T) *gorm.DB {
 	}
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_key VARCHAR(64), status INT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(128) PRIMARY KEY, setting_value TEXT)")
 	return db
 }
 
@@ -80,5 +81,28 @@ func TestMenuServiceHasManageAccess(t *testing.T) {
 	}
 	if allowed {
 		t.Fatalf("expected guest to have no manage access")
+	}
+}
+
+func TestMenuServiceNavigationHidesOrgWhenCapabilityDisabled(t *testing.T) {
+	db := setupMenuTestDB(t)
+	service := NewMenuService(db)
+
+	if err := db.Create(&SystemMenu{ID: 1, TitleKey: "system.menu.user", Path: "/system/user", Type: "C", Module: "system.iam", IsVisible: 1}).Error; err != nil {
+		t.Fatalf("seed iam menu: %v", err)
+	}
+	if err := db.Create(&SystemMenu{ID: 2, TitleKey: "system.menu.org", Path: "/system/org", Type: "M", Module: "system.org", IsVisible: 1}).Error; err != nil {
+		t.Fatalf("seed org menu: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('org.enabled', 'false')").Error; err != nil {
+		t.Fatalf("seed org capability: %v", err)
+	}
+
+	tree, err := service.GetMenuTree(&MenuListQuery{Scope: "nav"}, []string{"admin"})
+	if err != nil {
+		t.Fatalf("get nav tree: %v", err)
+	}
+	if len(tree) != 1 || tree[0].Path != "/system/user" {
+		t.Fatalf("expected only iam menu when org disabled, got %+v", tree)
 	}
 }

@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	DefaultAccessTokenSecret  = "pantheon-indigo-access-secret"
-	DefaultRefreshTokenSecret = "pantheon-indigo-refresh-secret"
+	DefaultAccessTokenSecret    = "pantheon-indigo-access-secret"
+	DefaultRefreshTokenSecret   = "pantheon-indigo-refresh-secret"
 	DefaultOperationTokenSecret = "pantheon-indigo-op-secret"
-	DefaultSettingSecret      = "pantheon-setting-dev-secret-key!"
+	DefaultSettingSecret        = "pantheon-setting-dev-secret-key!"
+	DefaultMFASecret            = "pantheon-mfa-dev-secret-key!"
 )
 
 func IsProductionEnv() bool {
@@ -51,6 +52,7 @@ func InitSecurityConfig() error {
 		{name: "PANTHEON_REFRESH_TOKEN_SECRET", fallback: DefaultRefreshTokenSecret},
 		{name: "PANTHEON_OP_TOKEN_SECRET", fallback: DefaultOperationTokenSecret},
 		{name: "PANTHEON_SETTING_SECRET", fallback: DefaultSettingSecret},
+		{name: "PANTHEON_MFA_SECRET", fallback: DefaultMFASecret},
 	} {
 		if err := ValidateRequiredProductionSecret(item.name, item.fallback); err != nil {
 			return err

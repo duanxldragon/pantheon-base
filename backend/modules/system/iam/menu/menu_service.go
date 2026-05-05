@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"pantheon-platform/backend/pkg/capability"
 	"strings"
 
 	"gorm.io/gorm"
@@ -137,10 +138,13 @@ func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTre
 
 func (s *MenuService) loadNavigationMenus() ([]SystemMenu, error) {
 	var menus []SystemMenu
-	err := s.db.Model(&SystemMenu{}).
+	db := s.db.Model(&SystemMenu{}).
 		Where("is_visible = ? AND type <> ?", 1, "F").
-		Order("sort asc, id asc").
-		Find(&menus).Error
+		Order("sort asc, id asc")
+	if !capability.Load(s.db).OrgEnabled {
+		db = db.Where("module <> ?", "system.org")
+	}
+	err := db.Find(&menus).Error
 	return menus, err
 }
 
@@ -149,11 +153,15 @@ func (s *MenuService) loadAllowedNavigationMenuIDs(roleKeys []string) ([]uint64,
 		return []uint64{}, nil
 	}
 	var menuIDs []uint64
-	err := s.db.Table("system_menu").
+	db := s.db.Table("system_menu").
 		Distinct("system_menu.id").
 		Joins("JOIN system_role_menu ON system_role_menu.menu_id = system_menu.id").
 		Joins("JOIN system_role ON system_role.id = system_role_menu.role_id").
-		Where("system_role.role_key IN ? AND system_role.status = ? AND system_menu.is_visible = ? AND system_menu.type <> ?", roleKeys, 1, 1, "F").
+		Where("system_role.role_key IN ? AND system_role.status = ? AND system_menu.is_visible = ? AND system_menu.type <> ?", roleKeys, 1, 1, "F")
+	if !capability.Load(s.db).OrgEnabled {
+		db = db.Where("system_menu.module <> ?", "system.org")
+	}
+	err := db.
 		Order("system_menu.sort asc, system_menu.id asc").
 		Pluck("system_menu.id", &menuIDs).Error
 	return menuIDs, err

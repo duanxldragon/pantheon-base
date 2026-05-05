@@ -38,7 +38,9 @@ func (h *OrderHandler) List(c *gin.Context) {
 
 ## 3. 未来扩展路径 (Roadmap)
 
-目前 `WithDataScope` 仅作为占位符。未来我们将按以下步骤补全逻辑：
+`WithDataScope` 已具备最小安全语义：未设置 `Mode` 或 `Mode=all` 时保持历史行为；`dept / dept_and_children / custom` 模式如果缺少部门上下文，会返回空结果，避免 `dept_id=0` 用户在组织可选场景下被误解释为“拥有全部部门数据”。
+
+未来我们将按以下步骤补全逻辑：
 
 1. **中间件注入**：在 `JWTAuthMiddleware` 之后增加 `DataScopeMiddleware`，根据用户角色配置（如：角色 A 拥有“本部门数据权限”），构造好 `DataScopeReq` 并存入 Context。
 2. **多租户支持**：在 `WithDataScope` 中自动注入 `tenant_id = ?` 条件。

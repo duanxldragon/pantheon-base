@@ -363,3 +363,5 @@ Source Sans 3 通过 Google Fonts 加载，`index.html` 中引入。
 17. `docs/DATABASE.md`
 18. `docs/WORKFLOW.md`
 19. `docs/SYSTEM_MODULE_AUDIT.md`
+20. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
+21. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`

@@ -26,6 +26,17 @@ type SystemUser struct {
 	DeletedAt           gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+type SystemUserProfileExt struct {
+	UserID      uint64 `gorm:"primaryKey" json:"userId"`
+	ProfileJSON string `gorm:"type:text" json:"-"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+func (SystemUserProfileExt) TableName() string {
+	return "system_user_profile_ext"
+}
+
 // TableName 指定表名
 func (SystemUser) TableName() string {
 	return "system_user"

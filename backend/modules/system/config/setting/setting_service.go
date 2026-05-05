@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"sort"
@@ -9,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/impexp"
 
 	"gorm.io/gorm"
@@ -36,6 +39,9 @@ type defaultSettingSeed struct {
 var defaultSettingSeeds = []defaultSettingSeed{
 	{SettingKey: "site.name", SettingValue: "Pantheon Base", ValueType: "string", GroupKey: "basic", Module: "system", IsPublic: 1, Remark: "system.setting.remark.site.name"},
 	{SettingKey: "site.logo", SettingValue: "", ValueType: "string", GroupKey: "basic", Module: "system", IsPublic: 1, Remark: "system.setting.remark.site.logo"},
+	{SettingKey: "platform.app_mode", SettingValue: "enterprise", ValueType: "string", GroupKey: "platform", Module: "platform", IsPublic: 1, Remark: "system.setting.remark.platform.app_mode"},
+	{SettingKey: "org.enabled", SettingValue: "true", ValueType: "boolean", GroupKey: "platform", Module: "system.org", IsPublic: 1, Remark: "system.setting.remark.org.enabled"},
+	{SettingKey: "org.required_for_user", SettingValue: "false", ValueType: "boolean", GroupKey: "platform", Module: "system.org", IsPublic: 1, Remark: "system.setting.remark.org.required_for_user"},
 	{SettingKey: "security.password_min_length", SettingValue: "6", ValueType: "number", GroupKey: "security", Module: "system", IsPublic: 0, Remark: "system.setting.remark.security.password_min_length"},
 	{SettingKey: "login.max_failed_attempts", SettingValue: "5", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.max_failed_attempts"},
 	{SettingKey: "login.lock_minutes", SettingValue: "15", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.lock_minutes"},
@@ -87,6 +93,11 @@ var (
 	allowedStorageDriverValues = map[string]struct{}{
 		"local": {},
 		"s3":    {},
+	}
+	allowedAppModeValues = map[string]struct{}{
+		"enterprise": {},
+		"consumer":   {},
+		"hybrid":     {},
 	}
 )
 
@@ -285,6 +296,9 @@ func (s *SettingService) UpdateGroup(groupKey string, req *SettingGroupUpdateReq
 	}
 
 	s.invalidateSettingCache()
+	if err := s.notifyRuntimeSettingsChanged(); err != nil {
+		return nil, err
+	}
 	return s.GetGroup(groupKey)
 }
 
@@ -428,6 +442,9 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 
 	requiredKeys := []string{
 		"site.name",
+		"platform.app_mode",
+		"org.enabled",
+		"org.required_for_user",
 		"security.password_min_length",
 		"login.max_failed_attempts",
 		"login.lock_minutes",
@@ -507,6 +524,15 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 			ReasonKey:  "setting.overview.issue.invalid_default_theme",
 		})
 	}
+	appMode := safeSettingOverviewValue(byKey["platform.app_mode"], "enterprise")
+	if _, ok := allowedAppModeValues[appMode]; !ok {
+		resp.Issues = appendSettingOverviewIssue(resp.Issues, seenIssues, SettingOverviewIssueResp{
+			SettingKey: "platform.app_mode",
+			GroupKey:   "platform",
+			Severity:   "warning",
+			ReasonKey:  "setting.overview.issue.invalid_app_mode",
+		})
+	}
 
 	resp.RiskCount = len(resp.Issues)
 	return resp, nil
@@ -520,6 +546,9 @@ func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheR
 	normalizedGroups := normalizeSettingGroups(groupKeys)
 	if len(normalizedGroups) == 0 {
 		s.invalidateSettingCache()
+		if err := s.notifyRuntimeSettingsChanged(); err != nil {
+			return nil, err
+		}
 		return &SettingCacheRefreshResp{
 			RefreshedGroups: []string{},
 			ClearedAll:      1,
@@ -527,6 +556,9 @@ func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheR
 	}
 
 	s.invalidateSettingCache()
+	if err := s.notifyRuntimeSettingsChanged(); err != nil {
+		return nil, err
+	}
 	for _, groupKey := range normalizedGroups {
 		if _, err := s.GetGroup(groupKey); err != nil {
 			return nil, err
@@ -751,6 +783,16 @@ func (s *SettingService) invalidateSettingCache() {
 	s.publicCache = nil
 }
 
+func (s *SettingService) notifyRuntimeSettingsChanged() error {
+	if err := contracts.NotifyRuntimeSettingsChanged(); err != nil {
+		return err
+	}
+	if database.RDB != nil {
+		_ = database.RDB.Publish(context.Background(), "settings:refresh", "updated").Err()
+	}
+	return nil
+}
+
 func appendSettingOverviewIssue(issues []SettingOverviewIssueResp, seen map[string]struct{}, issue SettingOverviewIssueResp) []SettingOverviewIssueResp {
 	key := issue.SettingKey + "|" + issue.ReasonKey
 	if _, ok := seen[key]; ok {
@@ -764,6 +806,8 @@ func inferSettingGroupKey(settingKey string) string {
 	switch {
 	case strings.HasPrefix(settingKey, "site."):
 		return "basic"
+	case strings.HasPrefix(settingKey, "platform."), strings.HasPrefix(settingKey, "org."):
+		return "platform"
 	case strings.HasPrefix(settingKey, "security."):
 		return "security"
 	case strings.HasPrefix(settingKey, "login."):
@@ -844,6 +888,13 @@ func validateAndNormalizeSettingValue(settingKey string, valueType string, value
 func normalizeSettingValue(settingKey string, value string) (string, error) {
 	trimmed := strings.TrimSpace(value)
 	switch settingKey {
+	case "platform.app_mode":
+		if trimmed == "" {
+			trimmed = "enterprise"
+		}
+		if _, ok := allowedAppModeValues[trimmed]; !ok {
+			return "", errors.New("setting.value.invalid_option")
+		}
 	case "upload.storage_driver":
 		switch trimmed {
 		case "s3-compatible":

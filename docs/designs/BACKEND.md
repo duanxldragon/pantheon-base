@@ -47,7 +47,8 @@
 | 方法 | 路径 | 鉴权 | 说明 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/health` | 否 | 平台层健康检查接口，返回进程、数据库与 Redis 依赖状态。 |
-| `POST` | `/api/v1/auth/login` | 否 | 登录，新 auth 域主入口。 |
+| `POST` | `/api/v1/auth/login` | 否 | 登录，新 auth 域主入口；在 `login.mfa_enabled=true` 时，密码校验成功后可能先返回 `mfaRequired=true` 与 challenge，而不是直接签发会话。 |
+| `POST` | `/api/v1/auth/mfa/verify` | 否 | 校验登录阶段的 TOTP 二次验证 challenge；成功后签发登录会话。 |
 | `POST` | `/api/v1/auth/refresh` | 否 | 刷新 token，新 auth 域主入口。 |
 | `POST` | `/api/v1/auth/logout` | 是 | 注销当前用户会话，新 auth 域主入口。 |
 | `POST` | `/api/v1/auth/activity` | 是 | 更新当前会话最近活动时间，供空闲超时与锁屏场景复用。 |
@@ -167,6 +168,8 @@
 - **用户删除与复用**: `system_user` 采用软删除，但删除时会先把用户名归档为内部保留值，再写入 `deleted_at`；这样既保留审计痕迹，也允许后续重新创建同名用户。
 - **软删唯一键复用**: 对 `system_user.username`、`system_role.role_key`、`system_post.post_code`、`system_dict_type.dict_code`、`system_dict_item(dict_code,item_value)` 这类“软删除 + 唯一键”实体，删除时统一先归档唯一标识，再执行软删除；启动迁移也会自动修复历史遗留数据。
 - **用户组织字段**: `dept_id`、`post_id` 允许为空；若选择岗位，则必须先选择部门，且岗位必须属于该部门。
+- **平台能力开关**: `system/config` 公开下发 `platform.app_mode`、`org.enabled`、`org.required_for_user`。`platform.app_mode` 支持 `enterprise / consumer / hybrid`；关闭 `org.enabled` 只隐藏组织导航和用户组织字段，不删除 `system/org` 数据，也不改变已有用户记录。
+- **用户扩展档案**: `system_user` 保持瘦核心表；C 端或混合模式下的非稳定档案字段统一进入 `system_user_profile_ext.profile_json`，通过 `profileExt` DTO 受控暴露。`preference_json` 仅用于平台壳层偏好，不承载业务档案。
 - **角色**: 创建/更新时校验 `role_key` 唯一、导航菜单 ID 只能引用 `M/C` 菜单节点、权限 key 必须来自菜单元数据中的 `page_perm/perms`；删除时若仍绑定用户则拒绝。
 - **菜单**: 创建/更新时校验路径唯一、父节点存在，且父节点不能指向自己；菜单类型为 `C` 时要求 `route_name` 非空且唯一；非外链菜单要求 `component` 非空；外链菜单要求 `path` 为合法 `http(s)` 地址。
 - **部门**: 创建/更新时校验上级部门存在、不能把自己挂到自己或子孙节点下；删除时若存在子部门或被用户引用则拒绝。
@@ -180,6 +183,9 @@
 - **字典缓存**: `GET /system/dict/options` 已接入进程内 options 缓存；字典类型/字典项变更后自动失效对应 `dict_code`，后台也支持手动刷新缓存。
 - **菜单与权限解耦**: `system_role_menu` 只承载导航授权；页面/按钮权限改由 `system_role_permission` 保存，菜单元数据新增 `page_perm` 与原有 `perms` 分别承载页面权限和动作权限。
 - **系统设置**: 更新时按 `value_type` 校验值类型；`is_encrypted=1` 的敏感配置会以应用主密钥加密后入库，管理接口不回显明文，公开接口强制忽略敏感配置。
+- **组织可选化**: 企业后台默认启用组织能力；面向 C 端应用时可切到 `consumer` 并关闭 `org.enabled`。`system/iam` 用户 CRUD 不强制依赖 `system/org`，未来业务域只能通过 `pkg/capability` 或上下文能力判断消费开关，不允许直接依赖组织 Service。
+- **C 端用户兼容**: 不把性别、生日、会员等级、营销来源、实名认证状态等 C 端字段直接铺到 `system_user`；先使用 `system_user_profile_ext` 承载，只有成为高频筛选/排序字段后才评估提取为独立列或业务域档案表。
+- **单租户先行、租户就绪**: 当前平台继续按单租户运行，不引入真实租户模型；但新增 `biz_*` 表、唯一键、列表查询、导出和统计接口时，必须先判断未来是否需要 `tenant_id`、是否应采用“租户内唯一”，以及是否需要统一 tenant 过滤注入点。详见 `TENANT_READY_SINGLE_TENANT_DESIGN.md`。
 - **上传能力**: 当前统一上传能力物理归于平台公共包、配置源归于 `system/config`；运行时已消费 `upload.max_file_size / upload.allowed_types / upload.local_path / upload.public_base_url / upload.s3_*`。当前支持 `local` 与 `s3-compatible` 驱动；本地驱动走平台文件访问路由，S3 驱动直接返回对象访问 URL。
 - **系统设置缓存**: `GET /system/setting/list`、`GET /system/setting/group/:groupKey`、`GET /system/setting/public` 已接入进程内缓存；配置更新后自动失效，后台支持手动刷新与预热。
 - **系统设置审计**: 配置变更不单独新建审计表，而是复用 `system_log_oper`；更新分组时会写入结构化变更 payload，并对敏感配置只记录“已变更”状态，不记录明文前后值。
@@ -209,6 +215,15 @@
 - **多角色判定**: Casbin 中间件会遍历 `roleKeys` 集合，只要任一角色命中策略即放行。
 - **自助接口白名单**: `/system/logout`、`/system/user/info`、`/system/profile*` 以及 `/auth/logout`、`/auth/me`、`/auth/security`、`/auth/password`、`/auth/sessions*`、`/auth/login-logs` 允许所有已登录用户访问，不依赖角色菜单授权，避免普通用户无法维护自己的账号资料。
 - **导航菜单**: `scope=nav` 只返回当前用户已授权、`is_visible=1`、且 `type <> 'F'` 的菜单；为保证树结构完整，会自动补齐其祖先节点。该接口归入平台壳层自助能力，避免普通登录用户在壳层初始化阶段被 `permission.denied` 阻断。
+
+### 5.1 登录阶段 MFA 约束
+
+- `POST /api/v1/auth/login` 在 `login.mfa_enabled=false` 时保持原账号密码登录链路。
+- `POST /api/v1/auth/login` 在 `login.mfa_enabled=true` 时，密码验证成功后返回 MFA challenge，当前不直接签发 Access / Refresh Token。
+- 已绑定因子的用户，前端应继续调用 `POST /api/v1/auth/mfa/verify` 提交 `challengeId + 6 位动态码`。
+- 未绑定因子的用户，后端返回 `totpSecret` 与 `totpProvisionUri`，供前端渲染二维码和手动密钥。
+- challenge 当前有效期为 5 分钟，只允许消费一次。
+- 动态码由认证器本地根据 TOTP secret 和当前时间生成，后端不直接生成或回显当前验证码。
 - **管理菜单**: `scope=manage` 返回完整菜单树，供菜单管理页与角色授权页使用；该接口继续保留在 `system/iam` 管理边界内，要求 `system:menu:list`。
 - **管理员兜底**: 新增菜单后自动绑定 `admin` 角色，避免系统管理入口丢失。
 - **系统菜单补种**: 服务启动时会自动补齐 `dashboard / access / org / config / security` 目录菜单，以及 `user / role / permission / menu / dept / post / dict / setting / login-log / session / operation-log` 等基础系统菜单，并回填菜单元数据，同时绑定到 `admin` 角色，避免老库升级后没有导航入口。

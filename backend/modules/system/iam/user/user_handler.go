@@ -50,7 +50,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	profile, err := h.service.UpdateProfile(userID, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "user.profile.update.error")
 		return
 	}
 	common.Success(c, profile)
@@ -152,7 +152,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	user, err := h.service.CreateUser(&req)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "user.create.error")
 		return
 	}
 	common.Success(c, user)
@@ -199,7 +199,7 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 
 	revokedSessionCount, err := h.service.ResetPassword(userID, req.NewPassword)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "user.password.reset.error")
 		return
 	}
 	common.Success(c, gin.H{
@@ -219,7 +219,7 @@ func (h *UserHandler) BatchUpdateUserStatus(c *gin.Context) {
 
 	updatedCount, err := h.service.BatchUpdateUserStatus(req.UserIDs, req.Status)
 	if err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "user.status.batch_update.error")
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -235,7 +235,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteUser(userID); err != nil {
-		common.Fail(c, common.CodeError, err.Error())
+		common.FailWithError(c, common.CodeError, err, "user.delete.error")
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})

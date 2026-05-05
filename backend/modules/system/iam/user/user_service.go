@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/mail"
@@ -34,7 +35,7 @@ func (s *UserService) Migrate() error {
 		return errors.New("database.not_initialized")
 	}
 
-	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}); err != nil {
+	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}, &SystemUserProfileExt{}); err != nil {
 		return err
 	}
 	if err := s.normalizeUserPreferenceJSON(); err != nil {
@@ -190,6 +191,10 @@ func (s *UserService) GetProfile(userID uint64) (*UserProfileResp, error) {
 	if err != nil {
 		return nil, err
 	}
+	profileExt, err := s.loadUserProfileExt(user.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	return &UserProfileResp{
 		ID:          user.ID,
@@ -204,6 +209,7 @@ func (s *UserService) GetProfile(userID uint64) (*UserProfileResp, error) {
 		Status:      user.Status,
 		Roles:       roles,
 		Perms:       perms,
+		ProfileExt:  profileExt,
 		CreatedAt:   formatUserTime(user.CreatedAt),
 	}, nil
 }
@@ -319,23 +325,28 @@ func (s *UserService) GetUserDetail(userID uint64) (*UserDetailResp, error) {
 	if err != nil {
 		return nil, err
 	}
+	profileExt, err := s.loadUserProfileExt(user.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	return &UserDetailResp{
-		ID:        user.ID,
-		Username:  user.Username,
-		Nickname:  user.Nickname,
-		Avatar:    user.Avatar,
-		Email:     user.Email,
-		Phone:     user.Phone,
-		DeptID:    user.DeptID,
-		DeptName:  deptNames[user.DeptID],
-		PostID:    user.PostID,
-		PostName:  postNames[user.PostID],
-		Status:    user.Status,
-		CreatedAt: formatUserTime(user.CreatedAt),
-		UpdatedAt: formatUserTime(user.UpdatedAt),
-		RoleIDs:   roleIDsMap[user.ID],
-		RoleKeys:  roleKeysMap[user.ID],
+		ID:         user.ID,
+		Username:   user.Username,
+		Nickname:   user.Nickname,
+		Avatar:     user.Avatar,
+		Email:      user.Email,
+		Phone:      user.Phone,
+		DeptID:     user.DeptID,
+		DeptName:   deptNames[user.DeptID],
+		PostID:     user.PostID,
+		PostName:   postNames[user.PostID],
+		Status:     user.Status,
+		CreatedAt:  formatUserTime(user.CreatedAt),
+		UpdatedAt:  formatUserTime(user.UpdatedAt),
+		RoleIDs:    roleIDsMap[user.ID],
+		RoleKeys:   roleKeysMap[user.ID],
+		ProfileExt: profileExt,
 	}, nil
 }
 
@@ -345,6 +356,10 @@ func (s *UserService) CreateUser(req *UserCreateReq) (*UserListResp, error) {
 		return nil, errors.New("database.not_initialized")
 	}
 	if err := s.validateUserCreate(req); err != nil {
+		return nil, err
+	}
+	profileExtJSON, err := marshalUserProfileExt(req.ProfileExt)
+	if err != nil {
 		return nil, err
 	}
 
@@ -369,6 +384,11 @@ func (s *UserService) CreateUser(req *UserCreateReq) (*UserListResp, error) {
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&user).Error; err != nil {
 			return err
+		}
+		if profileExtJSON != "" {
+			if err := upsertUserProfileExt(tx, user.ID, profileExtJSON); err != nil {
+				return err
+			}
 		}
 		return replaceUserRoles(tx, user.ID, roleIDs)
 	})
@@ -406,6 +426,10 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 	if err := s.validateUserUpdate(&user, req); err != nil {
 		return nil, err
 	}
+	profileExtJSON, err := marshalUserProfileExt(req.ProfileExt)
+	if err != nil {
+		return nil, err
+	}
 	roleIDs := normalizeUint64IDs(req.RoleIDs)
 
 	updates := map[string]interface{}{
@@ -423,6 +447,11 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&user).Updates(updates).Error; err != nil {
 			return err
+		}
+		if req.ProfileExt != nil {
+			if err := upsertUserProfileExt(tx, userID, profileExtJSON); err != nil {
+				return err
+			}
 		}
 		return replaceUserRoles(tx, userID, roleIDs)
 	}); err != nil {
@@ -469,6 +498,10 @@ func (s *UserService) UpdateProfile(userID uint64, req *UserProfileUpdateReq) (*
 	if err := validateOptionalEmail(req.Email); err != nil {
 		return nil, err
 	}
+	profileExtJSON, err := marshalUserProfileExt(req.ProfileExt)
+	if err != nil {
+		return nil, err
+	}
 
 	var user SystemUser
 	if err := s.db.First(&user, userID).Error; err != nil {
@@ -481,7 +514,15 @@ func (s *UserService) UpdateProfile(userID uint64, req *UserProfileUpdateReq) (*
 		"email":    strings.TrimSpace(req.Email),
 		"phone":    strings.TrimSpace(req.Phone),
 	}
-	if err := s.db.Model(&user).Updates(updates).Error; err != nil {
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&user).Updates(updates).Error; err != nil {
+			return err
+		}
+		if req.ProfileExt != nil {
+			return upsertUserProfileExt(tx, userID, profileExtJSON)
+		}
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
@@ -1396,6 +1437,61 @@ func mergeUserPermissionKeys(groups ...[]string) []string {
 		}
 	}
 	return result
+}
+
+const maxUserProfileExtBytes = 16 * 1024
+
+func marshalUserProfileExt(profileExt map[string]interface{}) (string, error) {
+	if profileExt == nil {
+		return "", nil
+	}
+	data, err := json.Marshal(profileExt)
+	if err != nil {
+		return "", errors.New("user.profile_ext.invalid")
+	}
+	if len(data) > maxUserProfileExtBytes {
+		return "", errors.New("user.profile_ext.too_large")
+	}
+	return string(data), nil
+}
+
+func unmarshalUserProfileExt(raw string) (map[string]interface{}, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return nil, nil
+	}
+	var profileExt map[string]interface{}
+	if err := json.Unmarshal([]byte(trimmed), &profileExt); err != nil {
+		return nil, errors.New("user.profile_ext.invalid")
+	}
+	if profileExt == nil {
+		return map[string]interface{}{}, nil
+	}
+	return profileExt, nil
+}
+
+func (s *UserService) loadUserProfileExt(userID uint64) (map[string]interface{}, error) {
+	if userID == 0 || !s.db.Migrator().HasTable(&SystemUserProfileExt{}) {
+		return nil, nil
+	}
+	var ext SystemUserProfileExt
+	if err := s.db.First(&ext, "user_id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return unmarshalUserProfileExt(ext.ProfileJSON)
+}
+
+func upsertUserProfileExt(tx *gorm.DB, userID uint64, profileExtJSON string) error {
+	return tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"profile_json", "updated_at"}),
+	}).Create(&SystemUserProfileExt{
+		UserID:      userID,
+		ProfileJSON: profileExtJSON,
+	}).Error
 }
 
 func formatUserTime(value time.Time) string {
