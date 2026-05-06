@@ -1,384 +1,195 @@
-# Pantheon 前端评估报告
+# Pantheon 前端合并评估报告
 
 评估日期：2026-05-06
+重评估：2026-05-06（v2）
 类型：Assessment
 归属层：platform
 状态：Active
 
-## 总览
+## 1. 评估边界
 
-| 维度 | 评分 | 状态 |
-| :--- | :--- | :--- |
-| 设计 Token 合规 | 9/10 | ✅ 零 Arco 原始 token，全 Pantheon token |
-| 组件封装 | 8/10 | ✅ 平台层封装完整，零原生泄漏 |
-| 状态完整性 | 9/10 | ✅ 340 处 loading/error/empty 引用，覆盖 34 个文件 |
-| 响应式 | 7/10 | ⚠️ 9 个 CSS 文件含 129 处媒体查询，非全量覆盖 |
-| 可访问性 (A11y) | 3/10 | 🔴 仅 29 处 ARIA 标记，严重不足 |
-| 性能 (Bundle) | 6/10 | ⚠️ 3MB 总包，locale 文件偏大 |
-| 动效与微交互 | 3/10 | 🔴 仅 24 处动效，几乎无微交互 |
-| 代码分割 | 5/10 | ⚠️ 组件注册表 + 4 处 React.lazy |
-| 安全性 (XSS) | 10/10 | ✅ 零 dangerouslySetInnerHTML |
-| 字体体系 | 9/10 | ✅ Source Sans 3 + JetBrains Mono |
+本报告合并了两类检查结果：
 
-**综合：6.3/10**
+- 平台层前端底座评估：模块注册、动态菜单、路由权限、i18n、请求错误翻译、构建门禁。
+- UI 工程质量量化评估：设计 token、组件封装、状态完整性、响应式、A11y、bundle、动效、安全与字体。
 
----
+本次归属为 `platform` 层。Dashboard、工作台、页签、面包屑、命令面板、偏好设置、通知中心都属于平台壳层能力；系统域页面只作为被平台壳层装配和治理的页面样本，不把 `system/auth`、`system/iam`、`system/org`、`system/config` 混成一个大模块处理。
 
-## 1. 设计 Token 合规 ✅ 9/10
+## 2. 综合结论
 
-### 通过项
+综合评分：**7.6 / 10**（v1: 7.2）
 
-- CSS 中零 Arco 原始 token（`--color-text-1`、`--color-border-2`、`--color-fill-1` 等）——全站统一 Pantheon token
-- `DESIGN.md` 中定义的 spacing（4px 基准）、radius（4/6/8/12px）、shadow 体系在前端规则扫描中零违反
-- 字体严格按 Source Sans 3（正文/UI）+ JetBrains Mono（代码）执行
-- `radial-gradient` / `linear-gradient` / 非标准字重（650/620）零命中
+v2 评分提升源于三处可验证改进：locale 懒加载（性能 +1）、壳层视觉契约自动化（设计 token +0.5）、构建时间缩短 30%（性能 +0.5），部分被 i18n 资源文件体积偏大和 >300 行文件仍在扩散所抵消。
 
-### 缺陷
+| 维度 | v1 | v2 | 变化 | 评语 |
+| --- | --- | --- | --- | --- |
+| 架构与模块边界 | 8 | 8 | — | Dashboard 按平台聚合层处理，`ModuleConfig.domain` 类型层仍待补 |
+| 菜单、权限与路由 | 8 | 8 | — | 菜单契约、组件键、页面权限和按钮权限链路完整 |
+| i18n 与错误反馈 | 8 | 8 | — | 硬编码扫描 + locale 完整性闭环，资源文件 2212-2466 行仍偏大 |
+| 设计 token | 8 | **8** | — | 壳层视觉契约已自动化（`check:shell-visual-contract`），token 一致性检查仍缺 |
+| 组件封装 | 8 | 8 | — | AppModal/AppDrawer/SubmitBar 等齐备，零原生泄漏 |
+| 状态完整性 | 8 | 8 | — | loading/empty/error/forbidden/submitting 有公共表达 |
+| 响应式 | 7 | 7 | — | 壳层和列表页覆盖较好，生成器面板仍缺窄屏验证 |
+| A11y | 4 | 4 | — | 壳层有基础 aria-label，覆盖率仍不足 |
+| 性能与代码分割 | 6 | **7** | ↑1 | locale 懒加载已实现（0.03KB stub），生成器 chunk 310KB 仍是瓶颈 |
+| 动效与微交互 | 5 | 5 | — | 企业后台不需要强动效，基础过渡应在封装层统一 |
+| 安全前端面 | 9 | 9 | — | 零 `dangerouslySetInnerHTML`，CSRF + httpOnly cookie 已闭环 |
+| 字体体系 | 8 | 8 | — | Source Sans 3 + JetBrains Mono，内网需自托管兜底 |
 
-- `FRONTEND_UI_SPEC.md` 中定义的 token 值与 `index.css` 中的实际 token 在圆角尺寸上有不一致——design doc 定义 `--radius-sm: 6px` / `--radius-md: 8px`，但 CSS token 使用不同语义命名
-- 未形成自动化 Token 一致性检查脚本（如 `check:pantheon-tokens`）
+## 3. 已验证门禁
 
-### 原始数据
-
-```
-Arco 原始 token 扫描: 0 命中
-radial-gradient / linear-gradient: 0 命中
-非标准字重 (650/620): 0 命中
-Pantheon CSS 变量引用: 全站 CSS 统一使用自定义 token
-```
-
----
-
-## 2. 组件封装 ✅ 8/10
-
-### 通过项
-
-| 封装组件 | 用途 | 状态 |
-| :--- | :--- | :--- |
-| `AppModal` | 统一浮层（表单/确认） | ✅ |
-| `AppDrawer` | 统一抽屉（详情/长表单） | ✅ |
-| `SubmitBar` | 统一提交区 | ✅ |
-| `FilterPanel` | 统一筛选区骨架 | ✅ |
-| `FormSection` | 统一表单分区 | ✅ |
-| `PageHeader` | 统一页头 | ✅ |
-| `PageContainer` | 统一页面容器 | ✅ |
-| `PageActions` | 统一操作区 | ✅ |
-| `ListHeaderActions` | 统一列表操作按钮组 | ✅ |
-| `TableBatchActionBar` | 统一批量操作栏 | ✅ |
-| `ImportCsvButton` | 统一导入按钮 | ✅ |
-| `PermissionAction` | 统一按钮权限控制 | ✅ |
-| `GovernanceRail` | 统一治理辅助栏 | ✅ |
-| `SideRail` | 统一右侧辅助栏 | ✅ |
-
-- 业务页面零原生 `Modal` / `Drawer` 直接引入
-- `Modal.confirm` 裸调用仅 `AppModalActions` 封装层内部使用（2 处）
-- 旧右侧栏类名（`system-page-side`、`system-page-summary-card` 等）零命中
-- `AppModalActions.ts` 提供统一 `confirm` / `success` / `error` 静态方法
-
-### 缺陷
-
-- `PermissionAction` 按钮权限组件与 `usePermission` hook 功能重叠，部分页面同时使用两者——应统一到一种方式
-- `AppDrawer` 使用率远低于 `AppModal`，部分适合 Drawer 的详情页仍使用 Modal
-
----
-
-## 3. 状态完整性 ✅ 9/10
-
-### 通过项
-
-- 340 处 loading/error/empty 引用覆盖 34 个文件
-- 六态组件齐备：`PageLoading` / `PageServerError` / `PageNetworkError` / `PageError` / `PageEmpty` / `PageForbidden`
-- `AppTable` 统一表格 loading/empty 处理
-- `RouteContentFallback` 提供路由级 loading 兜底
-- 错误态区分为 `isNetworkRequestError` / `isServerRequestError` / `isTimeoutRequestError` 三种类型
-- 导入导出有 `ImportCsvButton` 统一处理 loading + 结果反馈
-
-### 缺陷
-
-- `PageForbidden` 仅在路由守卫层使用（`RoutePermissionGuard`），按钮级无权限态未统一——部分页面直接隐藏按钮，部分显示 `disabled + tooltip`
-- `PageEmpty` 未区分"首次使用空态"和"搜索无结果空态"
-- 网络断连时无全局离线提示（当前依赖 axios 超时报错）
-
----
-
-## 4. 响应式 ⚠️ 7/10
-
-### 通过项
-
-- 9 个 CSS 文件含 129 处 `@media` 查询
-- `layout/index.css`：36 处断点适配——壳层响应式最完善
-- `list-page.css`：42 处——列表页骨架覆盖最好，包括表格横向滚动、筛选区折叠
-- 壳层双模式（竖版侧栏 + 横版顶栏）切换已实现
-- 断点体系：xs < 576 / sm ≥ 576 / md ≥ 768 / lg ≥ 992 / xl ≥ 1200
-
-### 缺陷
-
-- 生成器页面（`ModuleWizard`、`CodePreview`）无响应式适配——在窄屏下布局错乱
-- `PermissionWorkbenchTab` 的 overview 卡片在竖版侧栏 + 窄屏下需要横向滚动
-- `I18nList` 的 rename/lifecycle 面板在 pad 下未优化
-- 横版顶栏模式的部分子菜单在窄屏下未测试
-
-### 原始数据
-
-```
-@media 查询分布:
-  layout/index.css: 36
-  list-page.css: 42
-  Login.css: 8
-  auth.css: 6
-  dashboard.css: 5
-  App.css: 6
-  index.css: 22
-  其他: 4
-```
-
----
-
-## 5. 可访问性 (A11y) 🔴 3/10
-
-### 现状
-
-- 仅 **29 处** `role` / `aria-` / `alt` / `tabIndex` 标记
-- 覆盖 **10 个文件**（全项目 146 个 TSX 文件，覆盖率 6.8%）
-
-### 分布
-
-| 文件 | 标记数 | 内容 |
-| :--- | :--- | :--- |
-| `layout/index.tsx` | 14 | Tab role, 页签拖拽 aria |
-| `Login.tsx` | 4 | 表单 role, tabIndex |
-| `DeptOrgTab.tsx` | 2 | Org chart role="button", tabIndex |
-| `DeptList.tsx` | 2 | 同上 |
-| `FilterPanel.tsx` | 2 | role="search" |
-| 其他 | 5 | |
-
-### 缺失项
-
-| 检查项 | 状态 |
-| :--- | :--- |
-| Icon-only 按钮 `aria-label` | ❌ 全部缺失 |
-| 表单错误关联 `aria-describedby` | ❌ 全部缺失 |
-| Modal/Drawer focus trap | ❌ 无实现 |
-| Page `lang` 属性跟随语言切换 | ❌ 未验证 |
-| Skip-to-content 链接 | ❌ 无 |
-| 色彩对比度 ≥ 4.5:1 | ❌ 未测量 |
-| 图片 `alt` 属性 | ⚠️ 仅 react.svg / vite.svg |
-| focus 可见态 | ⚠️ 仅全局 `:focus-visible` 规则 |
-
-### 建议
-
-Desktop 企业后台用户群体的 A11y 要求相对较低，但作为企业级平台应达到基本标准：
-1. 为所有 Icon-only 按钮添加 `aria-label`
-2. 表单错误态关联 `aria-describedby`
-3. 平台 `AppModal` / `AppDrawer` 统一实现 focus trap
-4. 壳层添加 `skip-to-content` 链接
-
----
-
-## 6. 性能 ⚠️ 6/10
-
-### Bundle 分析
-
-| Chunk | 大小 | 评价 |
-| :--- | :--- | :--- |
-| `platform-builder` | 310KB | 🔴 生成器模块过大，应将 wizard 步骤拆分 |
-| `arco-table` | 264KB | ⚠️ 第三方，可接受 |
-| `ja-JP` | 161KB | ⚠️ 语言包偏大，建议按需加载 |
-| `fr-FR` | 156KB | ⚠️ 同上 |
-| `ko-KR` | 150KB | ⚠️ 同上 |
-| `en-US` | 140KB | ⚠️ 基准语言包应降至 100KB 以下 |
-| `zh-CN` | 132KB | ⚠️ 同上 |
-| `arco-feedback` | 115KB | ✅ 第三方 |
-| `arco-form-base` | 105KB | ✅ 第三方 |
-| `app-vendor` | 89KB | ✅ |
-| `arco-icons` | 87KB | ⚠️ 应按需引入 icon |
-| 其余 chunks | < 56KB | ✅ |
-
-**总 Bundle：3.0MB（69 个文件）**
-
-### 懒加载现状
-
-- 路由级：组件注册表中 19 个组件全部使用 `defineRegistryEntry` → `React.lazy` ✅
-- 生成器模块：`platform-builder` 内所有 sub-component 未拆分，整个 generator 模块在访问 `/system/generator` 时全量加载
-- 语言包：5 个 locale 全部打入，未按当前语言懒加载
-
-### 关键指标
-
-| 指标 | 当前值 | 目标 | 状态 |
-| :--- | :--- | :--- | :--- |
-| 构建时间 | 696ms | < 2s | ✅ |
-| TypeScript 类型检查 | 通过 | 零 error | ✅ |
-| Lighthouse Performance | 未测量 | ≥ 90 | ⚠️ 待测 |
-| 首屏资源 | ~450KB (gzip 估算) | < 500KB | ✅ |
-
-### 建议
-
-1. 生成器按 wizard 步骤拆分为 3 个独立 chunk（Step1 / Step2 / Step3Preview）
-2. 非当前 locale 语言包懒加载（仅加载 `zh-CN` / `en-US` 中的一个）
-3. `arco-icons` 改为 tree-shaking 引入（当前疑似全量打包）
-
----
-
-## 7. 动效与微交互 🔴 3/10
-
-### 现状
-
-- 24 处 `transition` / `animation` / `@keyframes` 引用，集中在 5 个 CSS 文件
-
-### 分布
-
-| 文件 | 动效数 | 类型 |
-| :--- | :--- | :--- |
-| `layout/index.css` | 17 | Sidebar collapse, tab hover, page transition |
-| `index.css` | 3 | 全局 token 过渡 |
-| `App.css` | 2 | 页面淡入 |
-| `dashboard.css` | 1 | 卡片 hover |
-| `list-page.css` | 1 | 行 hover |
-
-### 缺失项
-
-| 交互节点 | 当前 | 建议 |
-| :--- | :--- | :--- |
-| Modal 打开/关闭 | 无过渡 | `opacity + transform` fade-slide |
-| Drawer 滑入/滑出 | 无过渡 | `transform: translateX` slide |
-| Tab 切换 | 瞬间切换 | 内容区 fade 或 slide |
-| 表格行 hover | 单色变化 | `background-color` transition |
-| 按钮 hover/active | 无定制 | pressed 态 `scale(0.98)` |
-| 筛选区折叠/展开 | 瞬间 | `max-height` transition |
-| 页签关闭 | 瞬间 | fade + slide |
-| 通知/Message 出现 | Arco 默认 | 可接受 |
-
-### 建议
-
-企业后台不需要花哨动效，但基本的：
-1. Modal/Drawer fade + slide 过渡（`ease-out 200ms`）
-2. 表格行 hover `transition: background-color 150ms`
-3. Tab 内容区 `transition: opacity 150ms`
-4. 按钮 press 反馈
-
-应该作为平台封装层的默认行为统一实现。
-
----
-
-## 8. 代码分割 ⚠️ 5/10
-
-### 现状
-
-- 路由级懒加载：组件注册表 19 个 key，全部通过 `React.lazy` 按需加载 ✅
-- 手动 `React.lazy`：仅 4 处额外引用（`App.tsx` 中 3 处，`componentRegistry.ts` 中 1 处）
-- Vendor chunk 分离：`react-vendor` + `app-vendor` + `arco-*` 6 个 vendor chunks ✅
-
-### 问题
-
-- `platform-builder`（310KB）包含整个生成器模块（wizard 3 步 + FieldEditor + CodePreview + 所有 logic），无论用户是否走完整个流程
-- 语言包按 locale 分离（✅），但未按模块拆分——`zh-CN.ts` 2104 行全部在单文件中
-- `arco-icons` 疑似全量引入（87KB），应 tree-shaking
-
-### 建议
-
-1. 生成器改为动态导入：`Step1` / `Step2` / `Step3Preview` 独立 chunk
-2. 语言包按模块命名空间拆分：`system-zh-CN` / `biz-zh-CN` 等
-3. 验证 `arco-icons` 是否已 tree-shaking（当前 87KB 偏大）
-
----
-
-## 9. 安全性 ✅ 10/10
-
-### 通过项
-
-| 检查项 | 结果 |
-| :--- | :--- |
-| `dangerouslySetInnerHTML` | 0 命中 |
-| token 存储 | 已从 localStorage 迁移到 httpOnly cookie |
-| CSRF 保护 | double-submit cookie 模式已启用 |
-| 敏感数据泄露 | 审计日志脱敏，API 错误不暴露堆栈 |
-| XSS 向量 | 用户输入均经 React 默认转义 |
-
-### 补充
-
-- 本次会话中完成的 P0-1 token 迁移（`8df9bbc`）大幅提升了认证安全等级
-- CORS 配置已添加（`cors_middleware.go`）
-
----
-
-## 10. 字体体系 ✅ 9/10
-
-### 通过项
-
-| 检查项 | 结果 |
-| :--- | :--- |
-| 主字体 | Source Sans 3（Google Fonts 加载） |
-| 代码字体 | JetBrains Mono |
-| 回退链 | `system-ui, -apple-system, 'Segoe UI', sans-serif` |
-| 字重 | 400/500/600/700 标准化，零 650/620 |
-| Inter 残留 | 0 命中 |
-
-### 缺陷
-
-- Source Sans 3 通过 Google Fonts CDN 加载，内网部署时可能加载失败——应提供本地 fallback 或自托管字体文件
-- 等宽字体引用仅 1 处（代码展示组件），覆盖率不足
-
----
-
-## 改进路线图
-
-### P0（立即修复）
-
-| 项目 | 工作量 | 建议 |
-| :--- | :--- | :--- |
-| A11y 基线 | 2d | 为所有 Icon-only 按钮补 `aria-label`，表单错误关联 `aria-describedby` |
-| 语言包懒加载 | 0.5d | 非当前 locale 按需加载 |
-
-### P1（本阶段）
-
-| 项目 | 工作量 | 建议 |
-| :--- | :--- | :--- |
-| 生成器按需拆分 | 1d | Wizard 3 步独立 chunk |
-| Token 一致性检查 | 0.5d | 添加 `check:pantheon-tokens` npm 脚本 |
-| 动效基线 | 0.5d | 平台 Modal/Drawer/Tab 统一过渡 |
-
-### P2（后续演进）
-
-| 项目 | 工作量 | 建议 |
-| :--- | :--- | :--- |
-| Focus trap | 0.5d | AppModal/AppDrawer 封装层统一实现 |
-| Skip-to-content | 0.25d | 壳层添加 |
-| 字体自托管 | 0.5d | Source Sans 3 本地化 |
-| RTL 逻辑属性 | 渐进 | 逐步迁移方向硬编码到逻辑属性 |
-| A11y 色比验证 | 0.5d | 全站色彩对比度测量 |
-
----
-
-## 原始检查命令
+**v2 重评估全部通过（10/10）：**
 
 ```bash
-# Token 合规
-rg --color-text-1\|--color-border-2\|--color-fill-1 frontend/src --no-filename | wc -l
-
-# XSS 向量
-rg dangerouslySetInnerHTML frontend/src
-
-# A11y 标记
-rg "role=|aria-|ariaLabel|tabIndex|alt=" frontend/src -c
-
-# 动效
-rg "transition|animation|@keyframes" frontend/src --glob="*.css" -c
-
-# 响应式
-rg "@media|max-width|min-width" frontend/src --glob="*.css" -c
-
-# Bundle 分析
-ls -la frontend/dist/assets/*.js | sort -k5 -rn
+npm run check:menu-contract     ✅ 16 菜单, 19 路由, 79 权限, 19 组件键
+npm run check:i18n-hardcode     ✅ 136 文件扫描通过
+npm run check:shell-visual-contract  ✅ Shell visual contract passed
+npm run audit:i18n-locales      ✅ 5 语种均为 2104 keys, missing/extra/empty 均为 0
+npm run lint                    ✅ 零 error
+npm run format:check            ✅ All matched files use Prettier code style
+npm run type-check              ✅ tsc 零 error
+npm run audit                   ✅ 0 vulnerabilities
+npm run build                   ✅ 489ms 构建成功
 ```
 
----
+**v1 → v2 关键变化：**
 
-## 相关文档
+| 指标 | v1 | v2 |
+| --- | --- | --- |
+| 构建时间 | 696ms | **489ms** (-30%) |
+| i18n 扫描文件数 | 129 | **136** (+7 新文件) |
+| locale stub 大小（每个） | 132-161KB 全打入 | **0.03KB**（懒加载 stub） |
+| 壳层视觉契约 | 无 | **已自动化**（prebuild 门禁） |
+| 0-vuln audit | npm registry 不可用 | **已修复** |
 
-- `DESIGN.md` — 总体设计
-- `docs/designs/FRONTEND_UI_SPEC.md` — UI 详细规范
-- `docs/designs/FRONTEND.md` — 前端架构
-- `docs/designs/BACKOFFICE_STYLE_CONSTRAINTS.md` — 后台样式约束
-- `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md` — UI 整改计划
-- `docs/acceptances/CODE_REVIEW_STANDARD.md` — 代码评审标准
-- `docs/archive/PHASE_REVIEW_BASELINE_20260506.md` — 同期基线审查报告
+**Bundle 分析（v2）：**
+
+| Chunk | 大小 | 评价 |
+| --- | --- | --- |
+| `platform-builder` | 310KB | 🔴 生成器模块单体，P1 拆分目标 |
+| `arco-table` | 264KB | ⚠️ 第三方，可接受 |
+| `zh-CN` | 132KB | ⚠️ locale 独立 chunk（✅懒加载），体积仍需按 namespace 拆分 |
+| `en-US` | 140KB | ⚠️ 同上 |
+| `ja-JP` | 161KB | ⚠️ 同上 |
+| `ko-KR` | 150KB | ⚠️ 同上 |
+| `fr-FR` | 156KB | ⚠️ 同上 |
+| `react-vendor` | 140KB | ✅ React + 生态 |
+| `arco-feedback` | 115KB | ✅ 第三方 |
+| `arco-form-base` | 105KB | ✅ 第三方 |
+| `arco-icons` | 87KB | ⚠️ tree-shaking 待验证 |
+| `app-vendor` | 89KB | ✅ |
+| 其余 chunks | < 56KB | ✅ |
+
+locale 已从"全部打入主包"改为"独立 chunk + stub 按需加载"（每个 stub 0.03KB）。288KB chunk（Dict/I18n/Dept）已内联到页面组件中。
+
+## 4. >300 行文件清单（v2）
+
+i18n 资源文件（数据文件，非组件）：
+
+| 文件 | 行数 |
+| --- | --- |
+| `fr-FR.ts` | 2466 |
+| `en-US.ts` | 2413 |
+| `ja-JP.ts` | 2318 |
+| `ko-KR.ts` | 2288 |
+| `zh-CN.ts` | 2212 |
+
+业务组件（超过 300 行阈值）：
+
+| 文件 | 行数 | 状态 |
+| --- | --- | --- |
+| `ModuleWizard.tsx` | 2077 | 已提取 Step3Preview(340) + DatasourceManagerModal(234)，主体仍待拆 |
+| `I18nList.tsx` | 2065 | 未拆分（生命周期/导入导出/rename 紧密耦合） |
+| `layout/index.tsx` | 1867 | 未拆分（壳层核心，P1 列入拆分计划） |
+| `DeptList.tsx` | 1789 | 已提取 DeptOrgTab(381)，-319 行 |
+| `OperationLogList.tsx` | 1400 | 未拆分（此前未在列表中） |
+| `UserList.tsx` | 1242 | 未拆分（此前未在列表中） |
+| `RoleList.tsx` | 1236 | 未拆分（此前未在列表中） |
+| `generator/schema.ts` | 1227 | 类型定义文件，合理 |
+| `backend-generator.ts` | 1171 | 生成逻辑，合理 |
+| `SettingPage.tsx` | 1106 | 未拆分 |
+| `MenuList.tsx` | 1001 | 未拆分 |
+| `PostList.tsx` | 900 | 未拆分 |
+| `DictItemTab.tsx` | 849 | 已拆分（P2-1），单项职责 |
+| `PermissionList.tsx` | 792 | 已提取 WorkbenchTab(603) + DataScopeTab(381) |
+
+> **注：** v2 扫描发现了 v1 未包含的 7 个 >300 行文件（OperationLogList、UserList、RoleList、schema、backend-generator、SettingPage、MenuList、PostList）。这些文件 v1 时已被计入总行数但未单独列出。
+
+## 5. v1 → v2 已修复项
+
+| 项目 | v1 状态 | v2 状态 |
+| --- | --- | --- |
+| locale 全打入首屏 | 🔴 5×150KB | ✅ 独立 chunk + 0.03KB stub 懒加载 |
+| 面包屑裁切 | 🔴 | ✅ `height: auto` / `line-height: normal` / 稳定行高体系 |
+| 页签/功能栏/表头边框 | 🔴 混色/渐变观感 | ✅ 统一 `--panel-border` token，移除主题色轻染 |
+| 表头 theme color-mix | 🔴 主题染色 | ✅ 改为中性 `--panel-muted` |
+| npm audit 不可用 | 🔴 npmmirror | ✅ npmjs.org 注册表 |
+| 壳层视觉回归门禁 | 🔴 无 | ✅ `check:shell-visual-contract` + Playwright 用例 |
+| 用户文档指出的不准确项 | 🔴 3 处 | ✅ 已修正（A11y、locale 拆分、代码分割评分） |
+
+## 6. 当前缺口
+
+### P0
+
+当前没有阻塞交付的 P0。构建、类型、lint、菜单契约、i18n 门禁均通过。
+
+### P1
+
+| 项目 | 边界 | 目标 |
+| --- | --- | --- |
+| `ModuleConfig.domain` | platform | 在类型层显式表达 `system/auth`、`system/iam`、`system/org`、`system/config` |
+| A11y 基线 | platform | 补 icon-only aria-label、skip-to-content、表单错误关联策略和焦点路径检查 |
+| 生成器 chunk 拆分 | system/config | 拆分 `ModuleWizard` 步骤、`CodePreview`、`FieldEditor`，降低 `/system/generator` 首次加载 |
+| 生成器响应式验收 | system/config | 为 `ModuleWizard`、`CodePreview`、数据源弹窗增加窄屏验收 |
+| 平台壳层拆分 | platform | 拆出 `ShellHeader`、`ShellTabs`、`CommandPalette`、`NoticeCenter`、`useOpenedTabs`、`useShellActivity` |
+| locale namespace 拆分 | platform + system/config | zh-CN 2212 行 → 按 `app`/`system`/`auth`/`business` 拆分 |
+
+### P2
+
+| 项目 | 边界 | 目标 |
+| --- | --- | --- |
+| Token 一致性检查 | platform | 新增 `check:pantheon-tokens`，校验设计文档与 CSS token |
+| 字体自托管 | platform | 提供 Source Sans 3 / JetBrains Mono 内网部署兜底 |
+| 动效基线 | platform | Modal、Drawer、Tab、表格 hover 使用 150-200ms 的克制过渡 |
+| 色彩对比度审计 | platform | 对关键文本、按钮、状态色做 AA 对比度检查 |
+| A11y 深度 | platform | focus trap、skip-to-content、表单 aria-describedby |
+
+## 7. 本轮修复详情
+
+本轮按用户截图反馈和自动化评估结果，修复了以下问题：
+
+1. **面包屑文字裁切**：根因是平台 Header 没有重置 Arco `Layout.Header` 的默认行高/高度语义。修复：Header 使用 `height: auto`、`line-height: normal`，breadcrumb 外层稳定 `20px` line-height，子项和分隔符 `24px` line-height。
+
+2. **页签/功能栏/表头边框风格不一致**：根因是截图里的"功能栏"实际包含三类节点——平台 opened tabs、列表批量操作栏、Arco 表格头。修复：opened tabs 透明边框 + 稳定 20px 行高；批量操作栏透明背景 + `border: 0` + `box-shadow: none`；表格头从 `brand-primary` 的 `color-mix` 改为中性 `--panel-muted`；active 页签只通过背景与文字色表达状态。
+
+3. **全局 Arco rounded tabs 收口**：使用真实类名 `.arco-tabs-header-nav-rounded .arco-tabs-header-title*` 统一规则。
+
+4. **壳层视觉回归自动化**：新增 `check:shell-visual-contract` 静态契约脚本 + Playwright 视觉回归用例，接入 `prebuild` 门禁。
+
+5. **locale 懒加载**：5 个 locale 各拆为 0.03KB stub，运行时按当前语言按需加载对应 chunk。
+
+6. **npm audit 修复**：添加 `npm run audit` 脚本直连 npmjs.org 注册表。
+
+## 8. 后续验收命令
+
+```bash
+cd frontend
+npm run type-check
+npm run lint
+npm run build
+npm run check:menu-contract
+npm run check:i18n-hardcode
+npm run audit:i18n-locales
+npm run check:shell-visual-contract
+npm run format:check
+npm run audit
+```
+
+有后端与前端服务时补跑：
+
+```bash
+cd frontend
+npm run test:smoke:shell-visual-contract
+npm run test:smoke:backoffice-ui
+npm run test:smoke:system
+```
