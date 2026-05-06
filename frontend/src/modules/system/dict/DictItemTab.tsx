@@ -701,6 +701,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
             ) : null}
             {!itemLoading && !(itemError && itemRows.length === 0) && itemTotal > 0 ? (
               <AppTable<DictItemRow>
+                className="system-list__table"
                 rowKey="id"
                 columns={itemColumns}
                 data={itemRows}

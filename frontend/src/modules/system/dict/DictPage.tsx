@@ -207,7 +207,7 @@ const DictPage: React.FC = () => {
             </>
           }
         >
-          <Card className="page-panel">
+          <Card className="page-panel system-list__table-card dict-page__table-card">
             <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
               <Tabs.TabPane key="types" title={t('system.dict.type')}>
                 <DictTypeTab

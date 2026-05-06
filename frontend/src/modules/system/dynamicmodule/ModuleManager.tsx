@@ -488,7 +488,7 @@ const ModuleManager: React.FC = () => {
       />
 
       <Space direction="vertical" size={12} className="system-page-template module-manager-page">
-        <Card className="page-panel module-manager-page__card">
+        <Card className="page-panel system-list__table-card module-manager-page__card">
           <div className="module-manager-page__intro">
             <div className="module-manager-page__copy">
               <span className="system-page-hero__eyebrow">

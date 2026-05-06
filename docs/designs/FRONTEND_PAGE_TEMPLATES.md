@@ -117,6 +117,12 @@ ListPage
 - 超过 4 个筛选项时支持折叠
 - 查询按钮在右侧，顺序为：重置、查询
 - 筛选项必须能随分页、排序联动
+- 筛选区必须使用共享 `FilterPanel`，不得在页面内直接手写 `Card + Form` 复制筛选样式
+- 筛选区 body padding 必须使用平台变量 `--shell-filter-body-padding`
+- 筛选控件高度必须使用 `--shell-filter-control-min-height`，Input / Select / TreeSelect / Picker 不得单页私自压缩
+- 筛选项底部间距必须使用 `--shell-filter-form-item-margin-bottom`，label 底部间距必须使用 `--shell-filter-label-padding-bottom`
+- 查询/重置按钮必须放在 `filter-panel__action-item` 内，按钮高度与筛选控件一致，桌面端右对齐，移动端纵向撑满
+- 禁止通过 `.xxx-page .filter-panel ...` 覆盖 padding、控件高度、label 间距；视觉密度只能通过 `data-pantheon-density` 的平台 token 调整
 
 ## 3.3 TableCard
 
@@ -127,6 +133,26 @@ ListPage
 - 初始无数据要显示“暂无数据”空态
 - 操作列固定右侧
 - 操作列顺序：查看、编辑、删除、更多
+- 表格必须放入统一 `TableCard` 语义容器，系统页默认使用 `page-panel system-list__table-card`
+- `TableCard` 左右留白必须统一使用平台变量 `--shell-table-card-padding`，页面不得为某个列表页单独压缩左右 padding
+- `AppTable` 的 `.arco-table-container` 必须使用 `--radius-md` 圆角，并由容器裁切表头背景，避免同一批系统页出现圆角和方角混用
+- 表头背景必须是中性 `--panel-muted`，不得用品牌色 `color-mix`、渐变或主题色轻染
+- 固定列产生的 Arco 阴影伪元素不得显示为表头左上角或右侧的“渐变边框”，平台层应统一关闭或替换为中性边界
+- 分页区左右 padding 与表格内容区对齐，不得在单页内单独偏移
+
+## 3.3.1 列表操作条
+
+列表页头部操作和表格批量/治理操作必须统一使用共享组件：
+
+- 页头导入、导出、刷新等次级操作使用 `ListHeaderActions.utility`
+- 页头新增、生成、注册等主操作使用 `ListHeaderActions.primary`
+- 批量选择后的启用、禁用、清空选择等使用 `TableBatchActionBar`
+- 登录日志、会话管理、操作日志等保留期清理使用 `GovernanceCleanupBar`
+- `ListHeaderActions` 间距必须使用 `--shell-list-actions-gap`
+- `TableBatchActionBar` 主行间距和高度必须使用 `--shell-action-bar-gap`、`--shell-action-bar-min-height`
+- `GovernanceCleanupBar` 的保留期 Select 宽度必须使用 `--shell-governance-select-width`
+- 治理条的清理动作与保留期选择在左侧元信息区，额外动作在右侧对齐；不得出现有的页面左对齐、有的页面右对齐
+- 禁止页面通过 `.xxx-page .list-header-actions...` 或 `.xxx-page .table-batch-action-bar...` 私自改 gap、按钮高度和主轴对齐
 
 ## 3.4 Modal 与 Drawer
 

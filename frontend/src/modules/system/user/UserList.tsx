@@ -897,7 +897,7 @@ const UserList: React.FC = () => {
               </Row>
             </Form>
           </FilterPanel>
-          <Card className="page-panel system-user-list__table-card">
+          <Card className="page-panel system-list__table-card system-user-list__table-card">
             <TableBatchActionBar
               selectedCount={selectedRowKeys.length}
               selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}

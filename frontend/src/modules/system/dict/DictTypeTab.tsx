@@ -491,6 +491,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
         ) : null}
         {!typeLoading && !(typeError && typeRows.length === 0) && typeRows.length > 0 ? (
           <AppTable<DictTypeRow>
+            className="system-list__table"
             rowKey="id"
             columns={typeColumns}
             data={typeRows}

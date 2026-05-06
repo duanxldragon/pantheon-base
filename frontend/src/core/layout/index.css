@@ -425,10 +425,13 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
+  height: auto;
+  min-height: 64px;
   padding: 12px 24px 10px;
   background: rgba(255, 255, 255, 0.9);
   border-bottom: 1px solid var(--panel-border);
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+  line-height: normal;
 }
 
 .app-shell__header-left {
@@ -483,12 +486,12 @@
 
 .app-shell__header-meta {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   flex: 1 1 auto;
   min-height: 36px;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .app-shell__header-actions {
@@ -1168,20 +1171,29 @@
   width: 100%;
   min-width: 0;
   min-height: 36px;
-  overflow: hidden;
+  overflow: visible;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--text-tertiary);
   font-size: 13px;
-  line-height: 1;
+  line-height: 20px;
 }
 
 .app-shell__header .arco-breadcrumb-item,
 .app-shell__header .arco-breadcrumb-item a,
 .app-shell__header .arco-breadcrumb-item-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  overflow: visible;
   color: var(--text-tertiary);
+  line-height: 24px;
   white-space: nowrap;
   word-break: keep-all;
+}
+
+.app-shell__header .arco-breadcrumb-item-separator {
+  line-height: 24px;
 }
 
 .app-shell__header .arco-breadcrumb-item:last-child,
@@ -1206,16 +1218,17 @@
   gap: 8px;
   flex: 0 0 auto;
   max-width: 176px;
-  height: 28px;
+  height: 30px;
+  min-height: 30px;
   padding: 0 8px 0 10px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
+  border: 1px solid transparent;
   border-radius: 9px;
   background: var(--panel-bg-solid);
   color: var(--text-secondary);
   font: inherit;
   font-size: 12px;
   font-weight: 500;
-  line-height: 1;
+  line-height: 20px;
   cursor: pointer;
   transition:
     background 0.18s ease,
@@ -1225,16 +1238,16 @@
 }
 
 .app-shell__tab:hover {
-  border-color: color-mix(in srgb, var(--brand-primary) 12%, var(--panel-border));
+  border-color: transparent;
   background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
   color: var(--text-primary);
 }
 
 .app-shell__tab--active {
-  border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
+  border-color: transparent;
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 6%, transparent);
+  box-shadow: none;
 }
 
 .app-shell__tab--pinned {
@@ -1247,7 +1260,7 @@
 }
 
 .app-shell__tab--drag-over {
-  border-color: color-mix(in srgb, var(--brand-primary) 24%, var(--panel-border));
+  border-color: transparent;
   background: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
 }
 
@@ -1259,6 +1272,10 @@
 }
 
 .app-shell__tab-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  line-height: 20px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1286,7 +1303,7 @@
 .app-shell__tab-menu {
   min-width: 144px;
   padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);

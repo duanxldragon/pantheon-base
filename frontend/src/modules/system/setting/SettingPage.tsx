@@ -1050,7 +1050,7 @@ const SettingPage: React.FC = () => {
               ) : null}
             </Card>
             {activeSettingGroup && canViewOperationLog ? (
-              <Card className="page-panel setting-page__audit-card">
+              <Card className="page-panel system-list__table-card setting-page__audit-card">
                 <div className="setting-page__audit-header">
                   <div>
                     <Typography.Text style={{ fontWeight: 600 }}>

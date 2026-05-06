@@ -926,7 +926,7 @@ const ModuleWizard: React.FC = () => {
   return (
     <PageContainer className="generator-wizard-page">
       <PageHeader title={t('generator.wizard.title')} />
-      <Card className="generator-wizard-card">
+      <Card className="page-panel generator-wizard-card">
         <Alert
           type="info"
           className="generator-wizard__section"

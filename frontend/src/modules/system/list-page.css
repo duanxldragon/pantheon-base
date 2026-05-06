@@ -1,7 +1,7 @@
 .system-list__table-card .arco-card-body {
   display: grid;
   gap: 12px;
-  padding: 12px 14px 6px;
+  padding: var(--shell-table-card-padding);
 }
 
 .system-list__table .arco-table-container {
@@ -65,14 +65,6 @@
   font-size: 20px;
 }
 
-.post-list-page .filter-panel .arco-card-body {
-  padding: 12px 14px 2px;
-}
-
-.post-list-page .table-batch-action-bar {
-  gap: 4px;
-}
-
 .post-list-page__row-actions {
   column-gap: 4px !important;
 }
@@ -103,14 +95,18 @@
   min-width: 0;
   min-inline-size: 0;
   max-width: 100%;
-  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .system-list__table-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px 12px;
+  gap: var(--shell-table-head-gap);
   flex-wrap: wrap;
 }
 
@@ -132,11 +128,12 @@
 
 .table-batch-action-bar__main {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
+  gap: var(--shell-action-bar-gap);
   flex-wrap: wrap;
   width: 100%;
+  min-height: var(--shell-action-bar-min-height);
   min-width: 0;
   max-width: 100%;
 }
@@ -163,7 +160,7 @@
 .table-batch-action-bar__summary {
   min-width: 0;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 20px;
 }
 
 .table-batch-action-bar__hint {
@@ -174,11 +171,15 @@
 }
 
 .table-batch-action-bar__select {
-  width: 200px;
+  width: var(--shell-governance-select-width);
+}
+
+.table-batch-action-bar--governance .table-batch-action-bar__meta {
+  flex: 1 1 420px;
 }
 
 .table-batch-action-bar--governance .table-batch-action-bar__actions {
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 .permission-action {
@@ -189,7 +190,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px 12px;
+  gap: var(--shell-list-actions-gap);
   flex-wrap: wrap;
   width: 100%;
 }
@@ -221,12 +222,19 @@
 
 .list-header-actions .arco-btn,
 .table-batch-action-bar .arco-btn {
-  min-height: 32px;
+  min-height: var(--shell-action-bar-min-height);
+  box-shadow: none;
+}
+
+.table-batch-action-bar .arco-btn-text {
+  border: 0;
+  background: transparent;
+  line-height: 20px;
 }
 
 :root[data-pantheon-density='compact'] .system-list__table-card .arco-card-body {
   gap: 8px;
-  padding: 10px 12px 2px;
+  padding: var(--shell-table-card-padding);
 }
 
 :root[data-pantheon-density='compact'] .system-list__hero .arco-card-body {
@@ -238,20 +246,11 @@
   padding: 10px 12px;
 }
 
-:root[data-pantheon-density='compact'] .filter-panel .arco-card-body {
-  padding: 12px 14px 0;
-}
-
 :root[data-pantheon-density='compact'] .list-header-actions,
 :root[data-pantheon-density='compact'] .table-batch-action-bar,
 :root[data-pantheon-density='compact'] .system-list__table-head,
 :root[data-pantheon-density='compact'] .table-batch-action-bar__main {
-  gap: 6px 10px;
-}
-
-:root[data-pantheon-density='compact'] .list-header-actions .arco-btn,
-:root[data-pantheon-density='compact'] .table-batch-action-bar .arco-btn {
-  min-height: 28px;
+  gap: var(--shell-action-bar-gap);
 }
 
 .system-list__table .arco-table-th .arco-table-cell {
@@ -306,22 +305,6 @@
   gap: 10px;
 }
 
-.i18n-list-page .filter-panel .arco-card-body,
-.dept-list-page .filter-panel .arco-card-body {
-  padding: 10px 12px 0;
-}
-
-.i18n-list-page .system-list__table-card .arco-card-body,
-.dept-list-page .system-list__table-card .arco-card-body {
-  gap: 8px;
-  padding: 8px 10px 2px;
-}
-
-.i18n-list-page .table-batch-action-bar,
-.dept-list-page .table-batch-action-bar {
-  gap: 4px;
-}
-
 .i18n-list-page .system-page-hero__top,
 .dept-list-page .system-page-hero__top,
 .setting-page .system-page-hero__top {
@@ -356,36 +339,9 @@
   line-height: 1.35;
 }
 
-.i18n-list-page .filter-panel .arco-form-item,
-.dept-list-page .filter-panel .arco-form-item {
-  margin-bottom: 10px;
-}
-
-.i18n-list-page .filter-panel .arco-form-item-label-col,
-.dept-list-page .filter-panel .arco-form-item-label-col {
-  padding-bottom: 2px;
-}
-
-.i18n-list-page .filter-panel .arco-input-inner-wrapper,
-.i18n-list-page .filter-panel .arco-input-password,
-.i18n-list-page .filter-panel .arco-input,
-.i18n-list-page .filter-panel .arco-input-number,
-.i18n-list-page .filter-panel .arco-select-view,
-.i18n-list-page .filter-panel .arco-tree-select-view,
-.i18n-list-page .filter-panel .arco-picker,
-.dept-list-page .filter-panel .arco-input-inner-wrapper,
-.dept-list-page .filter-panel .arco-input-password,
-.dept-list-page .filter-panel .arco-input,
-.dept-list-page .filter-panel .arco-input-number,
-.dept-list-page .filter-panel .arco-select-view,
-.dept-list-page .filter-panel .arco-tree-select-view,
-.dept-list-page .filter-panel .arco-picker {
-  min-height: 32px;
-}
-
 .i18n-list-page .system-list__table-head,
 .dept-list-page .system-list__table-head {
-  gap: 6px 10px;
+  gap: var(--shell-table-head-gap);
 }
 
 .i18n-list-page .system-list__table-head-title,
@@ -393,7 +349,7 @@
   line-height: 1.25;
 }
 
-.setting-page .page-panel .arco-card-body {
+.setting-page .page-panel:not(.system-list__table-card) .arco-card-body {
   padding: 12px 14px;
 }
 
@@ -422,18 +378,10 @@
   margin-bottom: 8px;
 }
 
-.module-manager-page__header-actions .list-header-actions__utility {
-  gap: 4px !important;
-}
-
-.module-manager-page__header-actions .arco-btn {
-  min-height: 28px;
-}
-
 .module-manager-page__card .arco-card-body {
   display: grid;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 12px;
+  padding: var(--shell-table-card-padding);
   min-width: 0;
   overflow: hidden;
 }
@@ -495,16 +443,6 @@
 
 .module-manager-page__stat-card .arco-typography-secondary {
   font-size: 12px;
-}
-
-.i18n-list-page .list-header-actions__utility,
-.dept-list-page .list-header-actions__utility {
-  gap: 4px !important;
-}
-
-.i18n-list-page .list-header-actions__utility .arco-btn,
-.dept-list-page .list-header-actions__utility .arco-btn {
-  min-height: 28px;
 }
 
 .i18n-list-page .system-list__table-head-desc {
@@ -1364,15 +1302,5 @@
 
   .menu-list-view__item {
     margin-left: 0 !important;
-  }
-
-  .post-list-page .list-header-actions__utility {
-    gap: 6px !important;
-  }
-
-  .post-list-page .list-header-actions__utility .arco-btn,
-  .post-list-page .list-header-actions__utility .arco-space-item,
-  .post-list-page .list-header-actions__primary .arco-btn {
-    min-height: 30px;
   }
 }

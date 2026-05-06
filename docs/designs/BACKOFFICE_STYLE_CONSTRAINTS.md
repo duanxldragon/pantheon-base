@@ -102,12 +102,46 @@
 - 浮层面板：`radius-overlay`
 - 输入类控件：`radius-control`
 - 操作按钮：`radius-action`
+- 系统列表表格面板：`page-panel system-list__table-card`
+- 系统列表表格容器：`.app-table .arco-table-container` 使用 `radius-md`
+- 系统列表表格面板留白：统一使用 `--shell-table-card-padding`
+- 系统列表筛选面板：统一使用 `FilterPanel` 与 `--shell-filter-*` token
+- 系统列表页头动作：统一使用 `ListHeaderActions` 与 `--shell-list-actions-gap`
+- 系统列表批量/治理动作：统一使用 `TableBatchActionBar` / `GovernanceCleanupBar` 与 `--shell-action-bar-*` token
 
 禁止：
 
 - 禁止在系统页摘要卡中随意使用 `14px / 18px / 22px` 等自由圆角
 - 禁止同屏卡片混用 `var(--panel-border)` 与 `var(--color-border-2)` 作为主边框语言
 - 禁止为“看起来更高级”额外叠加局部高阴影
+- 禁止单个系统页通过 `.xxx-page .system-list__table-card .arco-card-body` 私自改表格面板左右 padding
+- 禁止单个系统页通过 `.xxx-page .filter-panel ...` 私自改筛选区 padding、控件高度、label 间距或查询按钮对齐
+- 禁止单个系统页通过 `.xxx-page .list-header-actions...` / `.xxx-page .table-batch-action-bar...` 私自改按钮间距、高度和主轴对齐
+- 禁止保留 Arco fixed column 默认阴影，让表头左上角、固定列边缘呈现渐变边框观感
+
+### 3.4 系统表格视觉契约
+
+用户、角色、部门、岗位、字典、国际化、登录日志、操作日志等系统域列表页必须共享同一套表格视觉契约：
+
+- 表格外层面板统一走 `page-panel system-list__table-card`
+- 表格面板左右留白、顶部批量操作栏间距、表格主体起点必须一致
+- 表头左上角不得出现渐变、阴影或主题色边缘
+- 表头背景使用中性 surface，不随主题色变成绿色、紫色或蓝色染色
+- 表格容器圆角统一由 `--radius-md` 控制，不允许同屏出现圆角表格和方角表格
+- 如果页面有 Tabs 或主从布局，Tabs/主从容器可以包住表格，但不能改变表格自身的 TableCard 契约
+
+### 3.5 系统筛选与操作视觉契约
+
+用户、角色、权限、菜单、部门、岗位、字典、国际化、会话管理、登录日志、操作日志等系统域页面必须共享同一套筛选与操作契约：
+
+- 筛选区一律由 `FilterPanel` 渲染，body 留白来自 `--shell-filter-body-padding`
+- 筛选控件高度来自 `--shell-filter-control-min-height`，不得出现 32px、34px、自由高度混用
+- 筛选项底部节奏来自 `--shell-filter-form-item-margin-bottom` 和 `--shell-filter-label-padding-bottom`
+- 查询/重置按钮通过 `filter-panel__action-item` 与输入控件底线对齐
+- 页头操作条通过 `ListHeaderActions` 分离次级动作和主动作，gap 来自 `--shell-list-actions-gap`
+- 批量操作条通过 `TableBatchActionBar`，治理清理条通过 `GovernanceCleanupBar`
+- 治理清理条的保留期选择宽度来自 `--shell-governance-select-width`，额外动作统一靠右
+- 视觉密度只能通过平台层 `data-pantheon-density` token 生效，不得在页面局部重新声明压缩值
 
 ## 4. 共享 Token 约束
 
