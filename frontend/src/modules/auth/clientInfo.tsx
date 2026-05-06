@@ -12,7 +12,9 @@ export function formatClientSummary(info?: ClientInfoLike | null) {
     return '-';
   }
 
-  const segments = [info.device, info.browser, info.os].filter((item) => item && item !== 'Unknown');
+  const segments = [info.device, info.browser, info.os].filter(
+    (item) => item && item !== 'Unknown',
+  );
   if (segments.length > 0) {
     return segments.join(' · ');
   }
@@ -29,7 +31,11 @@ export function renderClientInfo(info?: ClientInfoLike | null) {
     <Space direction="vertical" size={2}>
       <span>{formatClientSummary(info)}</span>
       {info.userAgent ? (
-        <Typography.Text type="secondary" ellipsis={{ showTooltip: true }} style={{ maxWidth: 360 }}>
+        <Typography.Text
+          type="secondary"
+          ellipsis={{ showTooltip: true }}
+          style={{ maxWidth: 360 }}
+        >
           {info.userAgent}
         </Typography.Text>
       ) : null}

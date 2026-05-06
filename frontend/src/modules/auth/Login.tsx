@@ -1,18 +1,45 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Form, Input, Select, Space, Tag, Tooltip, Typography } from '@arco-design/web-react';
+import {
+  Alert,
+  Button,
+  Form,
+  Input,
+  Select,
+  Space,
+  Tag,
+  Tooltip,
+  Typography,
+} from '@arco-design/web-react';
 import { message } from '../../components/feedback/message';
-import { IconCheckCircle, IconLanguage, IconLock, IconQrcode, IconSafe, IconStorage, IconUser } from '@arco-design/web-react/icon';
+import {
+  IconCheckCircle,
+  IconLanguage,
+  IconLock,
+  IconQrcode,
+  IconSafe,
+  IconStorage,
+  IconUser,
+} from '@arco-design/web-react/icon';
 import { QRCodeSVG } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { endLogoutTransition, isRequestError, isServerRequestError, isTimeoutRequestError } from '../../api/request';
+import {
+  endLogoutTransition,
+  isRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../api/request';
 import { login, verifyMFA, type LoginPayload, type LoginResp } from './api';
 import { findFirstNavigableMenuPath } from '../system/menu/api';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import ThemeSwitcher from '../../core/theme/ThemeSwitcher';
 import { clearShellSessionState } from '../../core/shellState';
-import { getBrandInitial, setExplicitLanguagePreference, usePublicSettings } from '../../core/settings/publicSettings';
+import {
+  getBrandInitial,
+  setExplicitLanguagePreference,
+  usePublicSettings,
+} from '../../core/settings/publicSettings';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
 import './Login.css';
 
@@ -41,9 +68,9 @@ function resolveLoginErrorKey(error: unknown, fallbackKey: string) {
     return fallbackKey;
   }
   if (
-    messageKey.startsWith('user.login.error.')
-    || messageKey.startsWith('auth.login.error.')
-    || messageKey.startsWith('auth.mfa.')
+    messageKey.startsWith('user.login.error.') ||
+    messageKey.startsWith('auth.login.error.') ||
+    messageKey.startsWith('auth.mfa.')
   ) {
     return messageKey;
   }
@@ -54,25 +81,47 @@ const LoginPage: React.FC = () => {
   const [form] = Form.useForm<LoginPayload & { mfaCode?: string }>();
   const [loading, setLoading] = useState(false);
   const [mfaChallenge, setMFAChallenge] = useState<LoginResp | null>(null);
-  const [loginNotice] = useState<string | null>(() => sessionStorage.getItem(LOGIN_NOTICE_STORAGE_KEY));
+  const [loginNotice] = useState<string | null>(() =>
+    sessionStorage.getItem(LOGIN_NOTICE_STORAGE_KEY),
+  );
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { setTokens, setUserInfo } = useAuthStore();
   const { fetchMenuTree, resetMenuTree } = useMenuStore();
   const publicSettings = usePublicSettings();
-  const currentLang = (SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN') as SupportedLocale;
+  const currentLang = (
+    SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN'
+  ) as SupportedLocale;
   const appName = publicSettings.siteName || t('app.name');
   const brandInitial = getBrandInitial(appName);
-  const featureItems = useMemo(() => [
-    { icon: <IconCheckCircle />, label: t('auth.login.feature.modules') },
-    { icon: <IconSafe />, label: t('auth.login.feature.security') },
-    { icon: <IconStorage />, label: t('auth.login.feature.i18n') },
-  ], [t]);
-  const assuranceItems = useMemo(() => [
-    { key: 'boundary', title: t('auth.login.assurance.boundary'), desc: t('auth.login.assurance.boundaryDesc') },
-    { key: 'session', title: t('auth.login.assurance.session'), desc: t('auth.login.assurance.sessionDesc') },
-    { key: 'audit', title: t('auth.login.assurance.audit'), desc: t('auth.login.assurance.auditDesc') },
-  ], [t]);
+  const featureItems = useMemo(
+    () => [
+      { icon: <IconCheckCircle />, label: t('auth.login.feature.modules') },
+      { icon: <IconSafe />, label: t('auth.login.feature.security') },
+      { icon: <IconStorage />, label: t('auth.login.feature.i18n') },
+    ],
+    [t],
+  );
+  const assuranceItems = useMemo(
+    () => [
+      {
+        key: 'boundary',
+        title: t('auth.login.assurance.boundary'),
+        desc: t('auth.login.assurance.boundaryDesc'),
+      },
+      {
+        key: 'session',
+        title: t('auth.login.assurance.session'),
+        desc: t('auth.login.assurance.sessionDesc'),
+      },
+      {
+        key: 'audit',
+        title: t('auth.login.assurance.audit'),
+        desc: t('auth.login.assurance.auditDesc'),
+      },
+    ],
+    [t],
+  );
 
   useEffect(() => {
     if (!loginNotice) {
@@ -92,7 +141,9 @@ const LoginPage: React.FC = () => {
     const menuTree = await fetchMenuTree();
     const fallbackMenuPath = findFirstNavigableMenuPath(menuTree);
     const nextPath = resolvePostLoginPath(
-      Boolean(res.user.roles?.includes('admin') || res.user.perms?.includes('platform:dashboard:view')),
+      Boolean(
+        res.user.roles?.includes('admin') || res.user.perms?.includes('platform:dashboard:view'),
+      ),
       fallbackMenuPath,
     );
     message.success(t('auth.loginSuccess'));
@@ -120,7 +171,10 @@ const LoginPage: React.FC = () => {
       }
       await completeLogin(res);
     } catch (error) {
-      if (import.meta.env.DEV && (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))) {
+      if (
+        import.meta.env.DEV &&
+        (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))
+      ) {
         console.error(error);
       }
       const fallbackKey = mfaChallenge ? 'auth.mfa.verifyFailed' : 'auth.loginFailed';
@@ -140,7 +194,9 @@ const LoginPage: React.FC = () => {
   };
 
   const loginNoticeText = loginNotice
-    ? t(LOGIN_NOTICE_MESSAGE_KEY_MAP[loginNotice] || loginNotice, { defaultValue: t('auth.login.idleTimeoutNotice') })
+    ? t(LOGIN_NOTICE_MESSAGE_KEY_MAP[loginNotice] || loginNotice, {
+        defaultValue: t('auth.login.idleTimeoutNotice'),
+      })
     : null;
 
   return (
@@ -149,11 +205,17 @@ const LoginPage: React.FC = () => {
         <div className="auth-login-page__brand-inner">
           <div className="auth-login-page__brand">
             <div className="auth-login-page__brand-mark">
-              {publicSettings.siteLogo ? <img src={publicSettings.siteLogo} alt={appName} /> : brandInitial}
+              {publicSettings.siteLogo ? (
+                <img src={publicSettings.siteLogo} alt={appName} />
+              ) : (
+                brandInitial
+              )}
             </div>
             <div className="auth-login-page__brand-copy">
               <span className="auth-login-page__brand-title">{appName}</span>
-              <span className="auth-login-page__brand-subtitle">{t('auth.login.consoleLabel')}</span>
+              <span className="auth-login-page__brand-subtitle">
+                {t('auth.login.consoleLabel')}
+              </span>
             </div>
           </div>
 
@@ -180,7 +242,9 @@ const LoginPage: React.FC = () => {
           <div className="auth-login-assurance">
             <div className="auth-login-assurance__header">
               <span>{t('auth.login.assurance.title')}</span>
-              <Tag bordered={false} color="green">{t('auth.login.visualBadge')}</Tag>
+              <Tag bordered={false} color="green">
+                {t('auth.login.visualBadge')}
+              </Tag>
             </div>
             <div className="auth-login-assurance__list">
               {assuranceItems.map((item) => (
@@ -203,11 +267,17 @@ const LoginPage: React.FC = () => {
         <div className="auth-login-page__mobile-brand">
           <div className="auth-login-page__brand">
             <div className="auth-login-page__brand-mark">
-              {publicSettings.siteLogo ? <img src={publicSettings.siteLogo} alt={appName} /> : brandInitial}
+              {publicSettings.siteLogo ? (
+                <img src={publicSettings.siteLogo} alt={appName} />
+              ) : (
+                brandInitial
+              )}
             </div>
             <div className="auth-login-page__brand-copy">
               <span className="auth-login-page__brand-title">{appName}</span>
-              <span className="auth-login-page__brand-subtitle">{t('auth.login.consoleLabel')}</span>
+              <span className="auth-login-page__brand-subtitle">
+                {t('auth.login.consoleLabel')}
+              </span>
             </div>
           </div>
         </div>
@@ -247,27 +317,49 @@ const LoginPage: React.FC = () => {
           </div>
 
           {loginNoticeText ? (
-            <Alert
-              className="auth-login-card__notice"
-              type="warning"
-              content={loginNoticeText}
-            />
+            <Alert className="auth-login-card__notice" type="warning" content={loginNoticeText} />
           ) : null}
-          <Alert className="auth-login-card__notice" type="info" content={t('auth.login.securityNotice')} />
+          <Alert
+            className="auth-login-card__notice"
+            type="info"
+            content={t('auth.login.securityNotice')}
+          />
 
           <Form form={form} layout="vertical" onSubmit={onSubmit}>
-            <FormItem label={t('auth.username')} field="username" rules={[{ required: true, message: t('auth.usernameRequired') }]}>
-              <Input disabled={Boolean(mfaChallenge)} prefix={<IconUser />} placeholder={t('auth.usernamePlaceholder')} size="large" onPressEnter={() => form.submit()} />
+            <FormItem
+              label={t('auth.username')}
+              field="username"
+              rules={[{ required: true, message: t('auth.usernameRequired') }]}
+            >
+              <Input
+                disabled={Boolean(mfaChallenge)}
+                prefix={<IconUser />}
+                placeholder={t('auth.usernamePlaceholder')}
+                size="large"
+                onPressEnter={() => form.submit()}
+              />
             </FormItem>
-            <FormItem label={t('auth.password')} field="password" rules={[{ required: true, message: t('auth.passwordRequired') }]}>
-              <Input.Password disabled={Boolean(mfaChallenge)} prefix={<IconLock />} placeholder={t('auth.passwordPlaceholder')} size="large" onPressEnter={() => form.submit()} />
+            <FormItem
+              label={t('auth.password')}
+              field="password"
+              rules={[{ required: true, message: t('auth.passwordRequired') }]}
+            >
+              <Input.Password
+                disabled={Boolean(mfaChallenge)}
+                prefix={<IconLock />}
+                placeholder={t('auth.passwordPlaceholder')}
+                size="large"
+                onPressEnter={() => form.submit()}
+              />
             </FormItem>
             {mfaChallenge ? (
               <>
                 <Alert
                   className="auth-login-card__notice"
                   type={mfaChallenge.setupRequired ? 'warning' : 'info'}
-                  content={mfaChallenge.setupRequired ? t('auth.mfa.setupHint') : t('auth.mfa.verifyHint')}
+                  content={
+                    mfaChallenge.setupRequired ? t('auth.mfa.setupHint') : t('auth.mfa.verifyHint')
+                  }
                 />
                 {mfaChallenge.setupRequired && mfaChallenge.totpSecret ? (
                   <div className="auth-login-mfa-setup">
@@ -287,31 +379,49 @@ const LoginPage: React.FC = () => {
                         </Typography.Text>
                       </div>
                     ) : null}
-                    <Typography.Text className="auth-login-mfa-setup__label">{t('auth.mfa.manualSecret')}</Typography.Text>
-                    <Typography.Text copyable className="auth-login-mfa-setup__secret">{mfaChallenge.totpSecret}</Typography.Text>
+                    <Typography.Text className="auth-login-mfa-setup__label">
+                      {t('auth.mfa.manualSecret')}
+                    </Typography.Text>
+                    <Typography.Text copyable className="auth-login-mfa-setup__secret">
+                      {mfaChallenge.totpSecret}
+                    </Typography.Text>
                     {mfaChallenge.totpProvisionUri ? (
                       <>
-                        <Typography.Text className="auth-login-mfa-setup__label">{t('auth.mfa.provisionUri')}</Typography.Text>
-                        <Typography.Text copyable className="auth-login-mfa-setup__uri">{mfaChallenge.totpProvisionUri}</Typography.Text>
+                        <Typography.Text className="auth-login-mfa-setup__label">
+                          {t('auth.mfa.provisionUri')}
+                        </Typography.Text>
+                        <Typography.Text copyable className="auth-login-mfa-setup__uri">
+                          {mfaChallenge.totpProvisionUri}
+                        </Typography.Text>
                       </>
                     ) : null}
                   </div>
                 ) : null}
-                <FormItem label={t('auth.mfa.code')} field="mfaCode" rules={[{ required: true, message: t('auth.mfa.codeRequired') }]}>
-                  <Input placeholder={t('auth.mfa.codePlaceholder')} size="large" maxLength={6} onPressEnter={() => form.submit()} />
+                <FormItem
+                  label={t('auth.mfa.code')}
+                  field="mfaCode"
+                  rules={[{ required: true, message: t('auth.mfa.codeRequired') }]}
+                >
+                  <Input
+                    placeholder={t('auth.mfa.codePlaceholder')}
+                    size="large"
+                    maxLength={6}
+                    onPressEnter={() => form.submit()}
+                  />
                 </FormItem>
               </>
             ) : null}
-            <Button type="primary" htmlType="submit" long loading={loading} className="auth-login-card__submit">
+            <Button
+              type="primary"
+              htmlType="submit"
+              long
+              loading={loading}
+              className="auth-login-card__submit"
+            >
               {mfaChallenge ? t('auth.mfa.verifyAndSignIn') : t('auth.signIn')}
             </Button>
             {mfaChallenge ? (
-              <Button
-                long
-                type="text"
-                disabled={loading}
-                onClick={() => setMFAChallenge(null)}
-              >
+              <Button long type="text" disabled={loading} onClick={() => setMFAChallenge(null)}>
                 {t('auth.mfa.backToPassword')}
               </Button>
             ) : null}

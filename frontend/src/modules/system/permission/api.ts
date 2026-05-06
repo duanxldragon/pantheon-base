@@ -173,7 +173,10 @@ export function remediatePermissionWorkbenchRole(data: PermissionWorkbenchRemedi
   });
 }
 
-export function getPermissionWorkbenchRemediationEvents(params?: { roleKey?: string; limit?: number }) {
+export function getPermissionWorkbenchRemediationEvents(params?: {
+  roleKey?: string;
+  limit?: number;
+}) {
   return apiRequest<PermissionWorkbenchRemediationEvent[]>({
     url: '/system/permission/workbench/remediation',
     method: 'get',
@@ -189,7 +192,10 @@ export function getPermissionDataScopePolicies(params?: PermissionDataScopeQuery
   });
 }
 
-export function updatePermissionDataScopePolicy(roleKey: string, data: PermissionDataScopePolicyPayload) {
+export function updatePermissionDataScopePolicy(
+  roleKey: string,
+  data: PermissionDataScopePolicyPayload,
+) {
   return apiRequest<PermissionDataScopePolicy>({
     url: `/system/permission/data-scope/${roleKey}`,
     method: 'put',

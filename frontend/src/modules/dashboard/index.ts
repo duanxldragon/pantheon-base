@@ -14,7 +14,13 @@ export const DashboardModule = defineModule({
     },
   ],
   menus: [
-    { path: '/dashboard', titleKey: 'system.menu.dashboard', icon: 'dashboard', routeName: 'dashboard', module: 'platform' },
+    {
+      path: '/dashboard',
+      titleKey: 'system.menu.dashboard',
+      icon: 'dashboard',
+      routeName: 'dashboard',
+      module: 'platform',
+    },
   ],
   dashboardWidgets: [
     {

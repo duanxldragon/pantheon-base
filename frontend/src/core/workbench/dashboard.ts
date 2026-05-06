@@ -68,15 +68,21 @@ function assertDashboardWidgetDefinition(widget: DashboardWidgetDefinition) {
       throw new Error(`Business dashboard widget "${widget.key}" must declare a permission.`);
     }
     if (!widget.registrationOwner?.trim()) {
-      throw new Error(`Business dashboard widget "${widget.key}" must declare a registration owner.`);
+      throw new Error(
+        `Business dashboard widget "${widget.key}" must declare a registration owner.`,
+      );
     }
     if (widget.cleanupPolicy !== 'remove_with_source_module') {
-      throw new Error(`Business dashboard widget "${widget.key}" must declare remove_with_source_module cleanup.`);
+      throw new Error(
+        `Business dashboard widget "${widget.key}" must declare remove_with_source_module cleanup.`,
+      );
     }
   }
 }
 
-export function buildDashboardWidgetRegistry(modules: DashboardWidgetModuleLike[]): DashboardWidgetDefinition[] {
+export function buildDashboardWidgetRegistry(
+  modules: DashboardWidgetModuleLike[],
+): DashboardWidgetDefinition[] {
   const widgets: DashboardWidgetDefinition[] = [];
   const keys = new Set<string>();
 
@@ -84,7 +90,9 @@ export function buildDashboardWidgetRegistry(modules: DashboardWidgetModuleLike[
     module.dashboardWidgets?.forEach((widget) => {
       assertDashboardWidgetDefinition(widget);
       if (keys.has(widget.key)) {
-        throw new Error(`Duplicate dashboard widget key "${widget.key}" declared by module "${module.name}".`);
+        throw new Error(
+          `Duplicate dashboard widget key "${widget.key}" declared by module "${module.name}".`,
+        );
       }
       keys.add(widget.key);
       widgets.push(widget);

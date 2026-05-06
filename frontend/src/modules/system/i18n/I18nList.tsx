@@ -15,13 +15,23 @@ import {
   List,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import { IconDelete, IconEdit, IconEye, IconRefresh, IconSearch } from '@arco-design/web-react/icon';
+import {
+  IconDelete,
+  IconEdit,
+  IconEye,
+  IconRefresh,
+  IconSearch,
+} from '@arco-design/web-react/icon';
 import { IconDownload } from '@arco-design/web-react/icon';
 import type { TFunction } from 'i18next';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import {
@@ -126,9 +136,13 @@ function buildRenameMigrationReport(preview: I18nRenamePreviewResp, t: TFunction
       lines.push('');
       lines.push(`- ${t('i18n.rename.report.referenceFile')}: ${file.path}`);
       lines.push(`  ${t('i18n.rename.report.referenceMatches')}: ${file.matchCount}`);
-      lines.push(`  ${t('i18n.rename.report.referenceSuggestedReplacement')}: ${file.suggestedReplacement || preview.newKey}`);
+      lines.push(
+        `  ${t('i18n.rename.report.referenceSuggestedReplacement')}: ${file.suggestedReplacement || preview.newKey}`,
+      );
       file.matches.forEach((match) => {
-        lines.push(`  - ${t('i18n.rename.report.referenceLocation', { line: match.line, column: match.column })}`);
+        lines.push(
+          `  - ${t('i18n.rename.report.referenceLocation', { line: match.line, column: match.column })}`,
+        );
         lines.push(`    ${t('i18n.rename.report.referenceBefore')}: ${match.snippet}`);
         lines.push(`    ${t('i18n.rename.report.referenceAfter')}: ${match.replacementHint}`);
       });
@@ -207,28 +221,32 @@ const I18nList: React.FC = () => {
   const [renamePreview, setRenamePreview] = useState<I18nRenamePreviewResp | null>(null);
   const [renameForm] = Form.useForm<I18nRenameFormValues>();
   const [registeredModuleOptions, setRegisteredModuleOptions] = useState<string[]>([]);
-  const [createDuplicateConflict, setCreateDuplicateConflict] = useState<I18nDuplicateConflictState | null>(null);
+  const [createDuplicateConflict, setCreateDuplicateConflict] =
+    useState<I18nDuplicateConflictState | null>(null);
   const detailRequestKeyRef = useRef('');
 
-  const loadData = useCallback(async (nextQuery: I18nQuery = query, options?: LoadDataOptions) => {
-    const silent = options?.silent === true;
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const resp = await getI18nList(nextQuery);
-      setRows(resp.items);
-      setTotal(resp.total);
-      setSelectedRowKeys([]);
-    } catch (requestError) {
-      setError(requestError);
-    } finally {
+  const loadData = useCallback(
+    async (nextQuery: I18nQuery = query, options?: LoadDataOptions) => {
+      const silent = options?.silent === true;
       if (!silent) {
-        setLoading(false);
+        setLoading(true);
+        setError(null);
       }
-    }
-  }, [query]);
+      try {
+        const resp = await getI18nList(nextQuery);
+        setRows(resp.items);
+        setTotal(resp.total);
+        setSelectedRowKeys([]);
+      } catch (requestError) {
+        setError(requestError);
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [query],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -240,7 +258,12 @@ const I18nList: React.FC = () => {
   useEffect(() => {
     getRegisteredModules()
       .then((modules) => {
-        setRegisteredModuleOptions(modules.map((item) => item.name).filter(Boolean).sort());
+        setRegisteredModuleOptions(
+          modules
+            .map((item) => item.name)
+            .filter(Boolean)
+            .sort(),
+        );
       })
       .catch(() => setRegisteredModuleOptions([]));
   }, []);
@@ -277,7 +300,9 @@ const I18nList: React.FC = () => {
   }, []);
 
   const reloadMissingLocaleRows = useCallback(async () => {
-    await loadMissingLocales(missingLocaleVisible ? missingLocaleModuleFilter || undefined : undefined);
+    await loadMissingLocales(
+      missingLocaleVisible ? missingLocaleModuleFilter || undefined : undefined,
+    );
   }, [loadMissingLocales, missingLocaleModuleFilter, missingLocaleVisible]);
 
   useEffect(() => {
@@ -310,7 +335,10 @@ const I18nList: React.FC = () => {
   }, [loadMissingLocales, missingLocaleModuleFilter, missingLocaleVisible]);
 
   const moduleOptions = useMemo(
-    () => Array.from(new Set([...registeredModuleOptions, ...rows.map((item) => item.module).filter(Boolean)])).sort(),
+    () =>
+      Array.from(
+        new Set([...registeredModuleOptions, ...rows.map((item) => item.module).filter(Boolean)]),
+      ).sort(),
     [registeredModuleOptions, rows],
   );
   const groupOptions = useMemo(
@@ -318,10 +346,13 @@ const I18nList: React.FC = () => {
     [rows],
   );
 
-  const summary = useMemo(() => ({
-    total,
-    selected: selectedRowKeys.length,
-  }), [selectedRowKeys.length, total]);
+  const summary = useMemo(
+    () => ({
+      total,
+      selected: selectedRowKeys.length,
+    }),
+    [selectedRowKeys.length, total],
+  );
   const heroStats = useMemo(
     () => [
       {
@@ -349,7 +380,15 @@ const I18nList: React.FC = () => {
         hint: t('i18n.hero.selectedHint'),
       },
     ],
-    [moduleOptions.length, overview?.missingLocaleCount, overview?.moduleCount, overview?.totalEntries, summary.selected, t, total],
+    [
+      moduleOptions.length,
+      overview?.missingLocaleCount,
+      overview?.moduleCount,
+      overview?.totalEntries,
+      summary.selected,
+      t,
+      total,
+    ],
   );
 
   const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
@@ -479,7 +518,9 @@ const I18nList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const locales = Array.from(new Set(rows.filter((row) => selectedRowKeys.includes(row.id)).map((row) => row.locale)));
+    const locales = Array.from(
+      new Set(rows.filter((row) => selectedRowKeys.includes(row.id)).map((row) => row.locale)),
+    );
     try {
       await refreshI18nLocales(locales);
       await reloadI18nResources();
@@ -601,7 +642,9 @@ const I18nList: React.FC = () => {
     setHydratingBuiltinLocales(true);
     try {
       const resp = await hydrateBuiltinI18nLocales(moduleName);
-      message.success(t('i18n.hydrateBuiltin.success', { created: resp.created, updated: resp.updated }));
+      message.success(
+        t('i18n.hydrateBuiltin.success', { created: resp.created, updated: resp.updated }),
+      );
       await reloadI18nResources();
       publishRefresh('system:i18n:changed', 'system/i18n');
       await loadData(query, { silent: true });
@@ -647,7 +690,9 @@ const I18nList: React.FC = () => {
         page: 1,
         pageSize: 20,
       });
-      const exactMatch = (resp.items || []).find((item) => item.key === key && item.locale === locale);
+      const exactMatch = (resp.items || []).find(
+        (item) => item.key === key && item.locale === locale,
+      );
       setCreateDuplicateConflict({
         key,
         locale,
@@ -861,7 +906,11 @@ const I18nList: React.FC = () => {
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${renamePreview.module}-${renamePreview.oldKey}-migration-report.txt`.replace(/[\\/:\s]+/g, '-');
+    anchor.download =
+      `${renamePreview.module}-${renamePreview.oldKey}-migration-report.txt`.replace(
+        /[\\/:\s]+/g,
+        '-',
+      );
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -870,18 +919,24 @@ const I18nList: React.FC = () => {
   };
 
   const columns: ColumnProps<SystemI18n>[] = [
-    withTableColumnPriority({
-      title: t('i18n.module'),
-      dataIndex: 'module',
-      width: 140,
-      render: (value: string) => <Tag color="arcoblue">{value}</Tag>,
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('i18n.group'),
-      dataIndex: 'group',
-      width: 120,
-      render: (value: string) => <Tag>{value}</Tag>,
-    }, 'medium'),
+    withTableColumnPriority(
+      {
+        title: t('i18n.module'),
+        dataIndex: 'module',
+        width: 140,
+        render: (value: string) => <Tag color="arcoblue">{value}</Tag>,
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('i18n.group'),
+        dataIndex: 'group',
+        width: 120,
+        render: (value: string) => <Tag>{value}</Tag>,
+      },
+      'medium',
+    ),
     {
       title: t('i18n.key'),
       dataIndex: 'key',
@@ -892,44 +947,56 @@ const I18nList: React.FC = () => {
         </Text>
       ),
     },
-    withTableColumnPriority({
-      title: t('i18n.locale'),
-      dataIndex: 'locale',
-      width: 110,
-      render: (value: string) => <Tag>{value}</Tag>,
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('i18n.value'),
-      dataIndex: 'value',
-      width: 280,
-      render: (value: string) => {
-        const isMissing = !value || value.startsWith('[');
-        return (
-          <Text
-            style={{
-              display: 'block',
-              color: isMissing ? '#F53F3F' : undefined,
-              wordBreak: 'break-word',
-            }}
-            ellipsis={{ rows: 2, showTooltip: true }}
-          >
-            {value || '-'}
-          </Text>
-        );
+    withTableColumnPriority(
+      {
+        title: t('i18n.locale'),
+        dataIndex: 'locale',
+        width: 110,
+        render: (value: string) => <Tag>{value}</Tag>,
       },
-    }, 'low'),
-    withTableColumnPriority({
-      title: t('i18n.createdAt'),
-      dataIndex: 'createdAt',
-      width: 168,
-      sorter: true,
-    }, 'low'),
-    withTableColumnPriority({
-      title: t('i18n.updatedAt'),
-      dataIndex: 'updatedAt',
-      width: 168,
-      sorter: true,
-    }, 'low'),
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('i18n.value'),
+        dataIndex: 'value',
+        width: 280,
+        render: (value: string) => {
+          const isMissing = !value || value.startsWith('[');
+          return (
+            <Text
+              style={{
+                display: 'block',
+                color: isMissing ? '#F53F3F' : undefined,
+                wordBreak: 'break-word',
+              }}
+              ellipsis={{ rows: 2, showTooltip: true }}
+            >
+              {value || '-'}
+            </Text>
+          );
+        },
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('i18n.createdAt'),
+        dataIndex: 'createdAt',
+        width: 168,
+        sorter: true,
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('i18n.updatedAt'),
+        dataIndex: 'updatedAt',
+        width: 168,
+        sorter: true,
+      },
+      'low',
+    ),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.medium,
@@ -994,12 +1061,17 @@ const I18nList: React.FC = () => {
     <PageContainer>
       <PageHeader
         title={t('system.menu.i18n')}
-        extra={(
+        extra={
           <ListHeaderActions
             className="i18n-list-page__header-actions"
-            utility={(
+            utility={
               <>
-                <Button size="small" icon={<IconRefresh />} onClick={() => void handleSyncKeys()} disabled={!canRefresh}>
+                <Button
+                  size="small"
+                  icon={<IconRefresh />}
+                  onClick={() => void handleSyncKeys()}
+                  disabled={!canRefresh}
+                >
                   {t('common.refresh')}
                 </Button>
                 <Button size="small" icon={<IconEye />} onClick={() => void handleOpenAudit()}>
@@ -1025,7 +1097,11 @@ const I18nList: React.FC = () => {
                     <Button size="small" onClick={() => void handleDownloadTemplate()}>
                       {t('common.downloadTemplate')}
                     </Button>
-                    <ImportCsvButton onSelect={(file) => { void handleImport(file); }}>
+                    <ImportCsvButton
+                      onSelect={(file) => {
+                        void handleImport(file);
+                      }}
+                    >
                       {t('i18n.import')}
                     </ImportCsvButton>
                   </>
@@ -1040,10 +1116,16 @@ const I18nList: React.FC = () => {
                   {t('i18n.refreshCache')}
                 </Button>
               </>
-            )}
-            primary={canCreate ? <Button size="small" type="primary" onClick={() => openCreateModal()}>{t('common.create')}</Button> : null}
+            }
+            primary={
+              canCreate ? (
+                <Button size="small" type="primary" onClick={() => openCreateModal()}>
+                  {t('common.create')}
+                </Button>
+              ) : null
+            }
           />
-        )}
+        }
       />
 
       <Space direction="vertical" size={12} className="system-page-template i18n-list-page">
@@ -1069,14 +1151,27 @@ const I18nList: React.FC = () => {
         <PageSplitLayout
           className="i18n-list-page__layout"
           railClassName="i18n-list-page__side-column"
-          rail={(
+          rail={
             <>
               <StandardRailSummary
                 title={t('i18n.hero.summaryTitle')}
                 items={[
-                  { label: t('i18n.hero.groups'), value: overview?.groupCount || groupOptions.length, description: t('i18n.hero.groupsHint') },
-                  { tone: 'warning', label: t('i18n.hero.missingValues'), value: overview?.missingValueCount || 0, description: t('i18n.hero.missingValuesHint') },
-                  { label: t('i18n.hero.refreshReady'), value: canRefresh ? t('common.yes') : t('common.no'), description: t('i18n.hero.refreshHint') },
+                  {
+                    label: t('i18n.hero.groups'),
+                    value: overview?.groupCount || groupOptions.length,
+                    description: t('i18n.hero.groupsHint'),
+                  },
+                  {
+                    tone: 'warning',
+                    label: t('i18n.hero.missingValues'),
+                    value: overview?.missingValueCount || 0,
+                    description: t('i18n.hero.missingValuesHint'),
+                  },
+                  {
+                    label: t('i18n.hero.refreshReady'),
+                    value: canRefresh ? t('common.yes') : t('common.no'),
+                    description: t('i18n.hero.refreshHint'),
+                  },
                 ]}
               />
               {overview ? (
@@ -1085,7 +1180,11 @@ const I18nList: React.FC = () => {
                   items={overview.coverage.map((item) => ({
                     label: item.locale,
                     value: item.entryCount,
-                    description: t('i18n.stats.localeCoverage', { locale: item.locale, entries: item.entryCount, missing: item.missingCount }),
+                    description: t('i18n.stats.localeCoverage', {
+                      locale: item.locale,
+                      entries: item.entryCount,
+                      missing: item.missingCount,
+                    }),
                   }))}
                 />
               ) : null}
@@ -1095,121 +1194,149 @@ const I18nList: React.FC = () => {
                 noteDescription={t('i18n.hero.sideDesc')}
               />
             </>
-          )}
+          }
         >
-            <FilterPanel>
-              <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
-                <Row gutter={16}>
-                  <Col span={8}>
-                    <FormItem label={t('i18n.key')} field="key">
-                      <Input allowClear prefix={<IconSearch />} onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col span={5}>
-                    <FormItem label={t('i18n.module')} field="module">
-                      <Select allowClear placeholder={t('i18n.module')}>
-                        {moduleOptions.map((moduleName) => (
-                          <Select.Option key={moduleName} value={moduleName}>{moduleName}</Select.Option>
-                        ))}
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col span={5}>
-                    <FormItem label={t('i18n.group')} field="group">
-                      <Select allowClear placeholder={t('i18n.group.placeholder')}>
-                        {groupOptions.map((groupName) => (
-                          <Select.Option key={groupName} value={groupName}>{groupName}</Select.Option>
-                        ))}
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col span={3}>
-                    <FormItem label={t('i18n.locale')} field="locale">
-                      <Select allowClear placeholder={t('i18n.locale')}>
-                        {(overview?.locales || [...SUPPORTED_LOCALES]).map((locale) => (
-                          <Select.Option key={locale} value={locale}>{locale}</Select.Option>
-                        ))}
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col span={3}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space size={6}>
-                        <Button size="small" type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
-                        <Button size="small" onClick={handleReset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
-
-            <Card className="page-panel system-list__table-card i18n-list-page__table-card">
-              <div className="system-list__table-head">
-                <div className="system-list__table-head-copy">
-                  <Typography.Text className="system-list__table-head-title">{t('i18n.viewTitle')}</Typography.Text>
-                  <Typography.Paragraph type="secondary" className="system-list__table-head-desc">
-                    {t('common.total', { count: summary.total })}
-                  </Typography.Paragraph>
-                </div>
-                {canDelete || canRefresh ? (
-                  <PageActions>
-                    <PermissionAction allowed={canRefresh} tooltip={t('common.noPermissionAction')}>
-                      <Button size="small" onClick={() => void handleRefreshSelected()} disabled={selectedRowKeys.length === 0 || !canRefresh}>
-                        {t('i18n.refreshSelected')}
+          <FilterPanel>
+            <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <FormItem label={t('i18n.key')} field="key">
+                    <Input
+                      allowClear
+                      prefix={<IconSearch />}
+                      onPressEnter={() => queryForm.submit()}
+                    />
+                  </FormItem>
+                </Col>
+                <Col span={5}>
+                  <FormItem label={t('i18n.module')} field="module">
+                    <Select allowClear placeholder={t('i18n.module')}>
+                      {moduleOptions.map((moduleName) => (
+                        <Select.Option key={moduleName} value={moduleName}>
+                          {moduleName}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col span={5}>
+                  <FormItem label={t('i18n.group')} field="group">
+                    <Select allowClear placeholder={t('i18n.group.placeholder')}>
+                      {groupOptions.map((groupName) => (
+                        <Select.Option key={groupName} value={groupName}>
+                          {groupName}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col span={3}>
+                  <FormItem label={t('i18n.locale')} field="locale">
+                    <Select allowClear placeholder={t('i18n.locale')}>
+                      {(overview?.locales || [...SUPPORTED_LOCALES]).map((locale) => (
+                        <Select.Option key={locale} value={locale}>
+                          {locale}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col span={3}>
+                  <FormItem className="filter-panel__action-item">
+                    <Space size={6}>
+                      <Button size="small" type="primary" htmlType="submit" icon={<IconSearch />}>
+                        {t('common.search')}
                       </Button>
-                    </PermissionAction>
-                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('i18n.batchDeleteConfirm')} onOk={() => void handleBatchDelete()} disabled={selectedRowKeys.length === 0 || !canDelete}>
-                        <Button
-                          size="small"
-                          status="danger"
-                          icon={<IconDelete />}
-                          disabled={selectedRowKeys.length === 0 || !canDelete}
-                        >
-                          {t('i18n.batchDelete')}
-                        </Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </PageActions>
-                ) : null}
+                      <Button size="small" onClick={handleReset}>
+                        {t('common.reset')}
+                      </Button>
+                    </Space>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </FilterPanel>
+
+          <Card className="page-panel system-list__table-card i18n-list-page__table-card">
+            <div className="system-list__table-head">
+              <div className="system-list__table-head-copy">
+                <Typography.Text className="system-list__table-head-title">
+                  {t('i18n.viewTitle')}
+                </Typography.Text>
+                <Typography.Paragraph type="secondary" className="system-list__table-head-desc">
+                  {t('common.total', { count: summary.total })}
+                </Typography.Paragraph>
               </div>
               {canDelete || canRefresh ? (
-                <TableBatchActionBar
-                  selectedCount={selectedRowKeys.length}
-                  selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-                  clearText={t('common.clearSelection')}
-                  clearSuccessText={t('common.clearSelectionSuccess')}
-                  onClear={() => setSelectedRowKeys([])}
-                  hint={!canDelete || !canRefresh ? t('common.batchActionPermissionHint') : undefined}
-                />
+                <PageActions>
+                  <PermissionAction allowed={canRefresh} tooltip={t('common.noPermissionAction')}>
+                    <Button
+                      size="small"
+                      onClick={() => void handleRefreshSelected()}
+                      disabled={selectedRowKeys.length === 0 || !canRefresh}
+                    >
+                      {t('i18n.refreshSelected')}
+                    </Button>
+                  </PermissionAction>
+                  <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm
+                      title={t('i18n.batchDeleteConfirm')}
+                      onOk={() => void handleBatchDelete()}
+                      disabled={selectedRowKeys.length === 0 || !canDelete}
+                    >
+                      <Button
+                        size="small"
+                        status="danger"
+                        icon={<IconDelete />}
+                        disabled={selectedRowKeys.length === 0 || !canDelete}
+                      >
+                        {t('i18n.batchDelete')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                </PageActions>
               ) : null}
+            </div>
+            {canDelete || canRefresh ? (
+              <TableBatchActionBar
+                selectedCount={selectedRowKeys.length}
+                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                clearText={t('common.clearSelection')}
+                clearSuccessText={t('common.clearSelectionSuccess')}
+                onClear={() => setSelectedRowKeys([])}
+                hint={!canDelete || !canRefresh ? t('common.batchActionPermissionHint') : undefined}
+              />
+            ) : null}
 
-              {rows.length === 0 ? (
-                <PageEmpty description={t('common.noData')} />
-              ) : (
-                <AppTable<SystemI18n>
-                  className="system-list__table"
-                  rowKey="id"
-                  loading={loading}
-                  columns={columns}
-                  data={rows}
-                  onChange={handleTableChange}
-                  rowSelection={canDelete || canRefresh ? {
-                    selectedRowKeys,
-                    onChange: (keys) => setSelectedRowKeys(keys),
-                  } : undefined}
-                  scroll={{ x: 'max-content' }}
-                  pagination={{
-                    total,
-                    current: query.page,
-                    pageSize: query.pageSize,
-                    showTotal: (count: number) => t('common.total', { count }),
-                    onChange: (page, pageSize) => setQuery({ ...query, page, pageSize }),
-                  }}
-                />
-              )}
-            </Card>
+            {rows.length === 0 ? (
+              <PageEmpty description={t('common.noData')} />
+            ) : (
+              <AppTable<SystemI18n>
+                className="system-list__table"
+                rowKey="id"
+                loading={loading}
+                columns={columns}
+                data={rows}
+                onChange={handleTableChange}
+                rowSelection={
+                  canDelete || canRefresh
+                    ? {
+                        selectedRowKeys,
+                        onChange: (keys) => setSelectedRowKeys(keys),
+                      }
+                    : undefined
+                }
+                scroll={{ x: 'max-content' }}
+                pagination={{
+                  total,
+                  current: query.page,
+                  pageSize: query.pageSize,
+                  showTotal: (count: number) => t('common.total', { count }),
+                  onChange: (page, pageSize) => setQuery({ ...query, page, pageSize }),
+                }}
+              />
+            )}
+          </Card>
         </PageSplitLayout>
       </Space>
 
@@ -1217,10 +1344,12 @@ const I18nList: React.FC = () => {
         title={t('i18n.audit.title')}
         visible={auditVisible}
         size="detail"
-        footer={(
+        footer={
           <Space>
             <Button onClick={() => setAuditVisible(false)}>{t('common.close')}</Button>
-            <Button loading={auditLoading} onClick={() => void loadAudit()}>{t('common.refresh')}</Button>
+            <Button loading={auditLoading} onClick={() => void loadAudit()}>
+              {t('common.refresh')}
+            </Button>
             <Button
               type="outline"
               loading={unusedLifecycleLoading}
@@ -1233,23 +1362,30 @@ const I18nList: React.FC = () => {
               type="outline"
               status="warning"
               loading={unusedLifecycleLoading}
-              disabled={!audit || audit.unusedKeys.every((item) => !item.eligibleForArchive) || !canEdit}
+              disabled={
+                !audit || audit.unusedKeys.every((item) => !item.eligibleForArchive) || !canEdit
+              }
               onClick={() => void handleArchiveObservedUnusedKeys()}
             >
               {t('i18n.lifecycle.archive.all')}
             </Button>
-            <Popconfirm title={t('i18n.lifecycle.delete.confirm')} onOk={() => void handleDeleteArchivedUnusedKeys()}>
+            <Popconfirm
+              title={t('i18n.lifecycle.delete.confirm')}
+              onOk={() => void handleDeleteArchivedUnusedKeys()}
+            >
               <Button
                 type="primary"
                 status="danger"
                 loading={unusedLifecycleLoading}
-                disabled={!audit || audit.unusedKeys.every((item) => !item.eligibleForDelete) || !canDelete}
+                disabled={
+                  !audit || audit.unusedKeys.every((item) => !item.eligibleForDelete) || !canDelete
+                }
               >
                 {t('i18n.lifecycle.delete.all')}
               </Button>
             </Popconfirm>
           </Space>
-        )}
+        }
         onCancel={() => setAuditVisible(false)}
       >
         {auditLoading && !audit ? (
@@ -1267,7 +1403,10 @@ const I18nList: React.FC = () => {
                         <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
                           <Text className="font-semibold">{item.module}</Text>
                           <Space>
-                            <Button size="mini" onClick={() => void handleExportModule(item.module)}>
+                            <Button
+                              size="mini"
+                              onClick={() => void handleExportModule(item.module)}
+                            >
                               {t('i18n.audit.exportModule')}
                             </Button>
                             <Button
@@ -1289,7 +1428,10 @@ const I18nList: React.FC = () => {
                             >
                               {t('i18n.lifecycle.archive.module')}
                             </Button>
-                            <Popconfirm title={t('i18n.lifecycle.delete.confirmModule')} onOk={() => void handleDeleteArchivedUnusedKeys(item.module)}>
+                            <Popconfirm
+                              title={t('i18n.lifecycle.delete.confirmModule')}
+                              onOk={() => void handleDeleteArchivedUnusedKeys(item.module)}
+                            >
                               <Button
                                 size="mini"
                                 status="danger"
@@ -1304,13 +1446,29 @@ const I18nList: React.FC = () => {
                         <Space wrap>
                           <Tag>{t('i18n.audit.entryCount', { count: item.entryCount })}</Tag>
                           <Tag>{t('i18n.audit.keyCount', { count: item.keyCount })}</Tag>
-                          <Tag color={item.unusedKeyCount > 0 ? 'orange' : 'green'}>{t('i18n.audit.unusedCount', { count: item.unusedKeyCount })}</Tag>
-                          <Tag color={item.duplicateKeyCount > 0 ? 'red' : 'green'}>{t('i18n.audit.duplicateCount', { count: item.duplicateKeyCount })}</Tag>
-                          <Tag color={item.missingLocaleCount > 0 ? 'orange' : 'green'}>{t('i18n.audit.missingLocaleCount', { count: item.missingLocaleCount })}</Tag>
-                          <Tag color={item.placeholderCount > 0 ? 'orange' : 'green'}>{t('i18n.audit.placeholderCount', { count: item.placeholderCount })}</Tag>
-                          <Tag color={item.stalePlaceholderCount > 0 ? 'red' : 'green'}>{t('i18n.audit.stalePlaceholderCount', { count: item.stalePlaceholderCount })}</Tag>
-                          <Tag color={item.observingKeyCount > 0 ? 'gold' : 'green'}>{t('i18n.lifecycle.observingCount', { count: item.observingKeyCount })}</Tag>
-                          <Tag color={item.archivedKeyCount > 0 ? 'red' : 'green'}>{t('i18n.lifecycle.archivedCount', { count: item.archivedKeyCount })}</Tag>
+                          <Tag color={item.unusedKeyCount > 0 ? 'orange' : 'green'}>
+                            {t('i18n.audit.unusedCount', { count: item.unusedKeyCount })}
+                          </Tag>
+                          <Tag color={item.duplicateKeyCount > 0 ? 'red' : 'green'}>
+                            {t('i18n.audit.duplicateCount', { count: item.duplicateKeyCount })}
+                          </Tag>
+                          <Tag color={item.missingLocaleCount > 0 ? 'orange' : 'green'}>
+                            {t('i18n.audit.missingLocaleCount', { count: item.missingLocaleCount })}
+                          </Tag>
+                          <Tag color={item.placeholderCount > 0 ? 'orange' : 'green'}>
+                            {t('i18n.audit.placeholderCount', { count: item.placeholderCount })}
+                          </Tag>
+                          <Tag color={item.stalePlaceholderCount > 0 ? 'red' : 'green'}>
+                            {t('i18n.audit.stalePlaceholderCount', {
+                              count: item.stalePlaceholderCount,
+                            })}
+                          </Tag>
+                          <Tag color={item.observingKeyCount > 0 ? 'gold' : 'green'}>
+                            {t('i18n.lifecycle.observingCount', { count: item.observingKeyCount })}
+                          </Tag>
+                          <Tag color={item.archivedKeyCount > 0 ? 'red' : 'green'}>
+                            {t('i18n.lifecycle.archivedCount', { count: item.archivedKeyCount })}
+                          </Tag>
                         </Space>
                       </Space>
                     </List.Item>
@@ -1344,20 +1502,29 @@ const I18nList: React.FC = () => {
                           ))}
                         </Space>
                         <Text type="secondary">
-                          {t('i18n.audit.groupsLabel')}: {item.groups.join(', ') || '-'} · {t('i18n.audit.localesLabel')}: {item.locales.join(', ') || '-'}
+                          {t('i18n.audit.groupsLabel')}: {item.groups.join(', ') || '-'} ·{' '}
+                          {t('i18n.audit.localesLabel')}: {item.locales.join(', ') || '-'}
                         </Text>
                         {item.suggestions.length > 0 ? (
                           <Space direction="vertical" size={4}>
                             <Text type="secondary">{t('i18n.audit.renameSuggestions')}</Text>
                             {item.suggestions.map((suggestion: I18nRenameSuggestion) => (
                               <Space key={`${item.key}-${suggestion.module}`} wrap>
-                                <Text copyable>{`${suggestion.module} -> ${suggestion.suggestedKey}`}</Text>
+                                <Text
+                                  copyable
+                                >{`${suggestion.module} -> ${suggestion.suggestedKey}`}</Text>
                                 <Button
                                   size="mini"
                                   type="outline"
                                   status="danger"
                                   disabled={!canEdit}
-                                  onClick={() => void handleOpenRenameRepair(suggestion.module, item.key, suggestion.suggestedKey)}
+                                  onClick={() =>
+                                    void handleOpenRenameRepair(
+                                      suggestion.module,
+                                      item.key,
+                                      suggestion.suggestedKey,
+                                    )
+                                  }
                                 >
                                   {t('i18n.rename.action')}
                                 </Button>
@@ -1395,19 +1562,34 @@ const I18nList: React.FC = () => {
                               {moduleName}
                             </Button>
                           ))}
-                          {item.placeholder ? <Tag color="gold">{t('i18n.audit.placeholderTag')}</Tag> : null}
-                          <Tag color={item.lifecycleStatus === 'archived' ? 'red' : item.lifecycleStatus === 'observing' ? 'gold' : 'green'}>
+                          {item.placeholder ? (
+                            <Tag color="gold">{t('i18n.audit.placeholderTag')}</Tag>
+                          ) : null}
+                          <Tag
+                            color={
+                              item.lifecycleStatus === 'archived'
+                                ? 'red'
+                                : item.lifecycleStatus === 'observing'
+                                  ? 'gold'
+                                  : 'green'
+                            }
+                          >
                             {t(`i18n.lifecycle.status.${item.lifecycleStatus}`)}
                           </Tag>
-                          {item.eligibleForArchive ? <Tag color="orange">{t('i18n.lifecycle.readyToArchive')}</Tag> : null}
-                          {item.eligibleForDelete ? <Tag color="red">{t('i18n.lifecycle.readyToDelete')}</Tag> : null}
+                          {item.eligibleForArchive ? (
+                            <Tag color="orange">{t('i18n.lifecycle.readyToArchive')}</Tag>
+                          ) : null}
+                          {item.eligibleForDelete ? (
+                            <Tag color="red">{t('i18n.lifecycle.readyToDelete')}</Tag>
+                          ) : null}
                         </Space>
                         <Text type="secondary">
                           {t('i18n.audit.localesLabel')}: {item.locales.join(', ') || '-'}
                         </Text>
                         {item.lifecycleMarkedAt ? (
                           <Text type="secondary">
-                            {t('i18n.lifecycle.markedAt')}: {item.lifecycleMarkedAt} · {t('i18n.lifecycle.observingDays', { count: item.observingDays })}
+                            {t('i18n.lifecycle.markedAt')}: {item.lifecycleMarkedAt} ·{' '}
+                            {t('i18n.lifecycle.observingDays', { count: item.observingDays })}
                           </Text>
                         ) : null}
                       </Space>
@@ -1429,13 +1611,21 @@ const I18nList: React.FC = () => {
                       <Space direction="vertical" size={4} style={{ width: '100%' }}>
                         <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
                           <Text copyable>{item.key}</Text>
-                          <Button size="mini" status="warning" onClick={() => handleLocateStalePlaceholder(item)}>
+                          <Button
+                            size="mini"
+                            status="warning"
+                            onClick={() => handleLocateStalePlaceholder(item)}
+                          >
                             {t('i18n.audit.locateAction')}
                           </Button>
                         </Space>
-                        <Text type="secondary">{item.module || '-'} / {item.group || 'messages'} / {item.locale}</Text>
+                        <Text type="secondary">
+                          {item.module || '-'} / {item.group || 'messages'} / {item.locale}
+                        </Text>
                         <Space wrap>
-                          <Tag color="red">{t('i18n.audit.staleDays', { count: item.staleDays })}</Tag>
+                          <Tag color="red">
+                            {t('i18n.audit.staleDays', { count: item.staleDays })}
+                          </Tag>
                           <Tag color="gold">{t('i18n.audit.placeholderTag')}</Tag>
                         </Space>
                       </Space>
@@ -1443,7 +1633,11 @@ const I18nList: React.FC = () => {
                   )}
                 />
               ) : (
-                <Text type="secondary">{t('i18n.audit.stalePlaceholdersEmpty', { days: audit?.stalePlaceholderThresholdDays || 30 })}</Text>
+                <Text type="secondary">
+                  {t('i18n.audit.stalePlaceholdersEmpty', {
+                    days: audit?.stalePlaceholderThresholdDays || 30,
+                  })}
+                </Text>
               )}
             </Card>
           </Space>
@@ -1460,19 +1654,24 @@ const I18nList: React.FC = () => {
           setRenameVisible(false);
           setRenamePreview(null);
         }}
-        footer={(
+        footer={
           <Space>
-            <Button onClick={() => {
-              setRenameVisible(false);
-              setRenamePreview(null);
-            }}
+            <Button
+              onClick={() => {
+                setRenameVisible(false);
+                setRenamePreview(null);
+              }}
             >
               {t('common.close')}
             </Button>
             <Button loading={renamePreviewLoading} onClick={() => void handlePreviewRename()}>
               {t('i18n.rename.preview.action')}
             </Button>
-            <Button icon={<IconDownload />} disabled={!renamePreview} onClick={() => handleDownloadRenameReport()}>
+            <Button
+              icon={<IconDownload />}
+              disabled={!renamePreview}
+              onClick={() => handleDownloadRenameReport()}
+            >
               {t('i18n.rename.report.download')}
             </Button>
             <Button
@@ -1485,22 +1684,40 @@ const I18nList: React.FC = () => {
               {t('i18n.rename.execute.action')}
             </Button>
           </Space>
-        )}
+        }
       >
-        <Form form={renameForm} layout="vertical" onSubmit={() => { void handlePreviewRename(); }}>
+        <Form
+          form={renameForm}
+          layout="vertical"
+          onSubmit={() => {
+            void handlePreviewRename();
+          }}
+        >
           <Row gutter={16}>
             <Col span={8}>
-              <FormItem label={t('i18n.module')} field="module" rules={[requiredRule(t, 'i18n.module')]}>
+              <FormItem
+                label={t('i18n.module')}
+                field="module"
+                rules={[requiredRule(t, 'i18n.module')]}
+              >
                 <Input onPressEnter={() => renameForm.submit()} />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('i18n.rename.oldKey')} field="oldKey" rules={[requiredRule(t, 'i18n.rename.oldKey')]}>
+              <FormItem
+                label={t('i18n.rename.oldKey')}
+                field="oldKey"
+                rules={[requiredRule(t, 'i18n.rename.oldKey')]}
+              >
                 <Input onPressEnter={() => renameForm.submit()} />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('i18n.rename.newKey')} field="newKey" rules={[requiredRule(t, 'i18n.rename.newKey')]}>
+              <FormItem
+                label={t('i18n.rename.newKey')}
+                field="newKey"
+                rules={[requiredRule(t, 'i18n.rename.newKey')]}
+              >
                 <Input onPressEnter={() => renameForm.submit()} />
               </FormItem>
             </Col>
@@ -1513,20 +1730,26 @@ const I18nList: React.FC = () => {
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <Card className="page-panel" title={t('i18n.rename.preview.title')}>
               <Space wrap>
-                <Tag color="arcoblue">{t('i18n.rename.preview.affectedRows', { count: renamePreview.affectedRows })}</Tag>
+                <Tag color="arcoblue">
+                  {t('i18n.rename.preview.affectedRows', { count: renamePreview.affectedRows })}
+                </Tag>
                 <Tag color={renamePreview.existingTargetRows > 0 ? 'red' : 'green'}>
                   {t('i18n.rename.preview.targetRows', { count: renamePreview.existingTargetRows })}
                 </Tag>
                 <Tag color={renamePreview.requiresCodeMigration ? 'orange' : 'green'}>
-                  {t('i18n.rename.preview.referenceFiles', { count: renamePreview.referenceFiles.length })}
+                  {t('i18n.rename.preview.referenceFiles', {
+                    count: renamePreview.referenceFiles.length,
+                  })}
                 </Tag>
               </Space>
               <Text type="secondary" style={{ display: 'block', marginTop: 12 }}>
-                {t('i18n.rename.preview.localeSummary')}: {renamePreview.affectedLocales.join(', ') || '-'}
+                {t('i18n.rename.preview.localeSummary')}:{' '}
+                {renamePreview.affectedLocales.join(', ') || '-'}
               </Text>
               {renamePreview.existingTargetLocales.length > 0 ? (
                 <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-                  {t('i18n.rename.preview.targetLocaleSummary')}: {renamePreview.existingTargetLocales.join(', ')}
+                  {t('i18n.rename.preview.targetLocaleSummary')}:{' '}
+                  {renamePreview.existingTargetLocales.join(', ')}
                 </Text>
               ) : null}
             </Card>
@@ -1544,8 +1767,18 @@ const I18nList: React.FC = () => {
                           {t('i18n.rename.preview.matchCount', { count: item.matchCount })}
                         </Text>
                         {item.matches.map((match) => (
-                          <Space key={`${item.path}-${match.line}-${match.column}`} direction="vertical" size={2} style={{ width: '100%' }}>
-                            <Text type="secondary">{t('i18n.rename.preview.matchLocation', { line: match.line, column: match.column })}</Text>
+                          <Space
+                            key={`${item.path}-${match.line}-${match.column}`}
+                            direction="vertical"
+                            size={2}
+                            style={{ width: '100%' }}
+                          >
+                            <Text type="secondary">
+                              {t('i18n.rename.preview.matchLocation', {
+                                line: match.line,
+                                column: match.column,
+                              })}
+                            </Text>
                             <Text code>{match.snippet || '-'}</Text>
                             <Text code>{match.replacementHint || '-'}</Text>
                           </Space>
@@ -1574,7 +1807,7 @@ const I18nList: React.FC = () => {
         title={t('i18n.missingLocales.title')}
         visible={missingLocaleVisible}
         size="detail"
-        footer={(
+        footer={
           <Space>
             <Button onClick={() => setMissingLocaleVisible(false)}>{t('common.close')}</Button>
             <Button
@@ -1589,12 +1822,14 @@ const I18nList: React.FC = () => {
               status="warning"
               loading={hydratingBuiltinLocales}
               disabled={!canHydrateBuiltin}
-              onClick={() => void handleHydrateBuiltinLocales(missingLocaleModuleFilter || undefined)}
+              onClick={() =>
+                void handleHydrateBuiltinLocales(missingLocaleModuleFilter || undefined)
+              }
             >
               {t('i18n.hydrateBuiltin.action')}
             </Button>
           </Space>
-        )}
+        }
         onCancel={() => setMissingLocaleVisible(false)}
       >
         <>
@@ -1607,7 +1842,9 @@ const I18nList: React.FC = () => {
                 onChange={(value) => setMissingLocaleModuleFilter(value || '')}
               >
                 {moduleOptions.map((moduleName) => (
-                  <Select.Option key={moduleName} value={moduleName}>{moduleName}</Select.Option>
+                  <Select.Option key={moduleName} value={moduleName}>
+                    {moduleName}
+                  </Select.Option>
                 ))}
               </Select>
             </FormItem>
@@ -1622,7 +1859,9 @@ const I18nList: React.FC = () => {
                 <List.Item key={`${item.key}-${index}`}>
                   <Space direction="vertical" size={4} style={{ width: '100%' }}>
                     <Text copyable>{item.key}</Text>
-                    <Text type="secondary">{item.module || '-'} / {item.group || 'messages'}</Text>
+                    <Text type="secondary">
+                      {item.module || '-'} / {item.group || 'messages'}
+                    </Text>
                     <Space wrap>
                       {item.missingLocales.map((locale) => (
                         <Button
@@ -1638,8 +1877,8 @@ const I18nList: React.FC = () => {
                     </Space>
                   </Space>
                 </List.Item>
-                )}
-              />
+              )}
+            />
           )}
         </>
       </AppModal>
@@ -1655,9 +1894,14 @@ const I18nList: React.FC = () => {
         <Form
           form={createForm}
           layout="vertical"
-          onSubmit={() => { void handleCreate(); }}
+          onSubmit={() => {
+            void handleCreate();
+          }}
           onValuesChange={(changedValues) => {
-            if (createDuplicateConflict && ('key' in changedValues || 'locale' in changedValues || 'module' in changedValues)) {
+            if (
+              createDuplicateConflict &&
+              ('key' in changedValues || 'locale' in changedValues || 'module' in changedValues)
+            ) {
               setCreateDuplicateConflict(null);
             }
           }}
@@ -1681,7 +1925,11 @@ const I18nList: React.FC = () => {
           ) : null}
           <Row gutter={16}>
             <Col span={12}>
-              <FormItem label={t('i18n.module')} field="module" rules={[requiredRule(t, 'i18n.module')]}>
+              <FormItem
+                label={t('i18n.module')}
+                field="module"
+                rules={[requiredRule(t, 'i18n.module')]}
+              >
                 <Input onPressEnter={() => createForm.submit()} />
               </FormItem>
             </Col>
@@ -1698,10 +1946,17 @@ const I18nList: React.FC = () => {
               </FormItem>
             </Col>
             <Col span={12}>
-              <FormItem label={t('i18n.locale')} field="locale" rules={[requiredRule(t, 'i18n.locale')]} initialValue="zh-CN">
+              <FormItem
+                label={t('i18n.locale')}
+                field="locale"
+                rules={[requiredRule(t, 'i18n.locale')]}
+                initialValue="zh-CN"
+              >
                 <Select>
                   {SUPPORTED_LOCALES.map((locale) => (
-                    <Select.Option key={locale} value={locale}>{locale}</Select.Option>
+                    <Select.Option key={locale} value={locale}>
+                      {locale}
+                    </Select.Option>
                   ))}
                 </Select>
               </FormItem>
@@ -1772,11 +2027,7 @@ const I18nList: React.FC = () => {
               </FormItem>
             </Col>
           </Row>
-          <FormItem
-            label={t('i18n.value')}
-            field="value"
-            rules={[requiredRule(t, 'i18n.value')]}
-          >
+          <FormItem label={t('i18n.value')} field="value" rules={[requiredRule(t, 'i18n.value')]}>
             <Input.TextArea autoSize={{ minRows: 4, maxRows: 8 }} />
           </FormItem>
           <FormItem label={t('i18n.remark')} field="remark">

@@ -1,11 +1,36 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Card, Form, Grid, Input, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import {
+  Avatar,
+  Button,
+  Card,
+  Form,
+  Grid,
+  Input,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+  Typography,
+} from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import { IconDelete, IconDownload, IconEdit, IconEye, IconLock, IconPlus, IconSearch, IconUpload } from '@arco-design/web-react/icon';
+import {
+  IconDelete,
+  IconDownload,
+  IconEdit,
+  IconEye,
+  IconLock,
+  IconPlus,
+  IconSearch,
+  IconUpload,
+} from '@arco-design/web-react/icon';
 import { uploadSystemFile } from '../../../api/upload';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
@@ -16,9 +41,52 @@ import { getDeptTree, type DeptNode } from '../dept/api';
 import { getPostList } from '../post/api';
 import { getRoleList } from '../role/api';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
-import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
-import { batchUpdateUserStatus, createUser, deleteUser, downloadUserImportTemplate, exportUsers, getUserDetail, getUserList, importUsers, resetUserPassword, updateUser, type UserCreatePayload, type UserDetail as UserDetailData, type UserListQuery, type UserListRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ImportCsvButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
+import {
+  batchUpdateUserStatus,
+  createUser,
+  deleteUser,
+  downloadUserImportTemplate,
+  exportUsers,
+  getUserDetail,
+  getUserList,
+  importUsers,
+  resetUserPassword,
+  updateUser,
+  type UserCreatePayload,
+  type UserDetail as UserDetailData,
+  type UserListQuery,
+  type UserListRow,
+} from './api';
+import {
+  AppModal,
+  AppTable,
+  FilterPanel,
+  FormSection,
+  GovernanceRailPanel,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
+  ImportCsvButton,
+  ListHeaderActions,
+  PageContainer,
+  PageEmpty,
+  PageError,
+  PageHeader,
+  PageLoading,
+  PageNetworkError,
+  PageServerError,
+  PageSplitLayout,
+  SubmitBar,
+  TableBatchActionBar,
+  PermissionAction,
+  TABLE_ACTION_COLUMN_WIDTH,
+  useGovernanceRail,
+  withTableColumnPriority,
+} from '../../../components';
 import UserDetailContent from './UserDetailContent';
 import '../list-page.css';
 import './user.css';
@@ -54,15 +122,17 @@ const emptyQuery: UserListQuery = {
 };
 
 function isDefaultUserListQuery(query: UserListQuery) {
-  return !query.username
-    && !query.nickname
-    && query.status === undefined
-    && query.deptId === undefined
-    && query.postId === undefined
-    && (query.page ?? 1) === 1
-    && (query.pageSize ?? 10) === 10
-    && !query.sortField
-    && !query.sortOrder;
+  return (
+    !query.username &&
+    !query.nickname &&
+    query.status === undefined &&
+    query.deptId === undefined &&
+    query.postId === undefined &&
+    (query.page ?? 1) === 1 &&
+    (query.pageSize ?? 10) === 10 &&
+    !query.sortField &&
+    !query.sortOrder
+  );
 }
 
 interface LoadDataOptions {
@@ -86,7 +156,9 @@ const UserList: React.FC = () => {
   const [query, setQuery] = useState<UserListQuery>(emptyQuery);
   const [roleOptions, setRoleOptions] = useState<Array<{ label: string; value: number }>>([]);
   const [deptOptions, setDeptOptions] = useState<Array<{ label: string; value: number }>>([]);
-  const [postOptions, setPostOptions] = useState<Array<{ label: string; value: number; deptId: number }>>([]);
+  const [postOptions, setPostOptions] = useState<
+    Array<{ label: string; value: number; deptId: number }>
+  >([]);
   const [formDeptId, setFormDeptId] = useState(0);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -114,34 +186,41 @@ const UserList: React.FC = () => {
     ]);
   }, []);
 
-  const loadData = useCallback(async (nextQuery: UserListQuery = query, options?: LoadDataOptions) => {
-    const silent = options?.silent === true;
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const result = isDefaultUserListQuery(nextQuery)
-        ? await resolveRouteWarmData('/system/user', 'list:default', () => getUserList(nextQuery))
-        : await getUserList(nextQuery);
-      setData(result.items);
-      setTotal(result.total);
-    } catch (requestError) {
-      setError(requestError);
-    } finally {
+  const loadData = useCallback(
+    async (nextQuery: UserListQuery = query, options?: LoadDataOptions) => {
+      const silent = options?.silent === true;
       if (!silent) {
-        setLoading(false);
+        setLoading(true);
+        setError(null);
       }
-    }
-  }, [query]);
+      try {
+        const result = isDefaultUserListQuery(nextQuery)
+          ? await resolveRouteWarmData('/system/user', 'list:default', () => getUserList(nextQuery))
+          : await getUserList(nextQuery);
+        setData(result.items);
+        setTotal(result.total);
+      } catch (requestError) {
+        setError(requestError);
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [query],
+  );
 
   const loadRoles = useCallback(async () => {
     try {
-      const result = await resolveRouteWarmData('/system/user', 'roles:active', () => getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 }));
-      setRoleOptions(result.items.map((item) => ({
-        label: item.roleName,
-        value: item.id,
-      })));
+      const result = await resolveRouteWarmData('/system/user', 'roles:active', () =>
+        getRoleList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 }),
+      );
+      setRoleOptions(
+        result.items.map((item) => ({
+          label: item.roleName,
+          value: item.id,
+        })),
+      );
     } catch {
       message.error(t('common.loadFailed'));
     }
@@ -155,21 +234,32 @@ const UserList: React.FC = () => {
     }
     try {
       const [deptRows, postRows] = await Promise.all([
-        resolveRouteWarmData('/system/user', 'depts:default', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' })),
-        resolveRouteWarmData('/system/user', 'posts:active', () => getPostList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 })),
+        resolveRouteWarmData('/system/user', 'depts:default', () =>
+          getDeptTree({ sortField: 'sort', sortOrder: 'asc' }),
+        ),
+        resolveRouteWarmData('/system/user', 'posts:active', () =>
+          getPostList({ page: 1, pageSize: 100, sortField: 'sort', sortOrder: 'asc', status: 1 }),
+        ),
       ]);
       const flattenDept = (nodes: DeptNode[], depth = 0): Array<{ label: string; value: number }> =>
         nodes.flatMap((item) => [
           { label: `${'— '.repeat(depth)}${item.deptName}`, value: item.id },
           ...(item.children?.length ? flattenDept(item.children, depth + 1) : []),
         ]);
-      const selectableDeptRows = deptRows.flatMap((item) => (item.isRoot ? (item.children || []) : [item]));
-      setDeptOptions([{ label: t('system.dept.none'), value: 0 }, ...flattenDept(selectableDeptRows)]);
-      setPostOptions(postRows.items.map((item) => ({
-        label: item.postName,
-        value: item.id,
-        deptId: item.deptId,
-      })));
+      const selectableDeptRows = deptRows.flatMap((item) =>
+        item.isRoot ? item.children || [] : [item],
+      );
+      setDeptOptions([
+        { label: t('system.dept.none'), value: 0 },
+        ...flattenDept(selectableDeptRows),
+      ]);
+      setPostOptions(
+        postRows.items.map((item) => ({
+          label: item.postName,
+          value: item.id,
+          deptId: item.deptId,
+        })),
+      );
     } catch {
       message.error(t('common.loadFailed'));
     }
@@ -196,16 +286,19 @@ const UserList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadDeptAndPostOptions]);
 
-  useRefreshSubscription(['system:user:changed', 'system:role:changed', 'system:dept:changed', 'system:post:changed'], (payload) => {
-    if (payload.source === 'system/user') {
-      return;
-    }
-    void loadData(query);
-    void loadRoles();
-    if (orgEnabled) {
-      void loadDeptAndPostOptions();
-    }
-  });
+  useRefreshSubscription(
+    ['system:user:changed', 'system:role:changed', 'system:dept:changed', 'system:post:changed'],
+    (payload) => {
+      if (payload.source === 'system/user') {
+        return;
+      }
+      void loadData(query);
+      void loadRoles();
+      if (orgEnabled) {
+        void loadDeptAndPostOptions();
+      }
+    },
+  );
 
   const openCreate = () => {
     setEditing(null);
@@ -358,7 +451,8 @@ const UserList: React.FC = () => {
     invalidateUserCaches();
     publishRefresh('system:user:changed', 'system/user');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
-    const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
+    const nextPage =
+      data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : query.page || 1;
     const nextQuery = { ...query, page: nextPage };
     setQuery(nextQuery);
   };
@@ -389,47 +483,78 @@ const UserList: React.FC = () => {
     return undefined;
   };
 
-  const sortableColumn = (field: NonNullable<UserListQuery['sortField']>): Partial<ColumnProps<UserListRow>> => ({
+  const sortableColumn = (
+    field: NonNullable<UserListQuery['sortField']>,
+  ): Partial<ColumnProps<UserListRow>> => ({
     sorter: true,
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
   const handleTableChange: TableProps<UserListRow>['onChange'] = (pagination, sorter) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter as SorterInfo | undefined;
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     const nextQuery: UserListQuery = {
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder: currentSorter?.direction === 'ascend' ? 'asc' : currentSorter?.direction === 'descend' ? 'desc' : undefined,
+      sortOrder:
+        currentSorter?.direction === 'ascend'
+          ? 'asc'
+          : currentSorter?.direction === 'descend'
+            ? 'desc'
+            : undefined,
     };
     setSelectedRowKeys([]);
     setQuery(nextQuery);
   };
 
   const columns: ColumnProps<UserListRow>[] = [
-    { title: t('system.user.username'), dataIndex: 'username', width: 120, ...sortableColumn('username') },
-    { title: t('system.user.nickname'), dataIndex: 'nickname', width: 140, ...sortableColumn('nickname') },
-    ...(orgEnabled ? [
-      { title: t('system.user.dept'), dataIndex: 'deptName', width: 120 },
-      withTableColumnPriority({
-        title: t('system.user.post'),
-        dataIndex: 'postName',
-        width: 120,
-      }, 'medium'),
-    ] : []),
-    withTableColumnPriority({
-      title: t('system.user.roles'),
-      dataIndex: 'roleKeys',
+    {
+      title: t('system.user.username'),
+      dataIndex: 'username',
+      width: 120,
+      ...sortableColumn('username'),
+    },
+    {
+      title: t('system.user.nickname'),
+      dataIndex: 'nickname',
       width: 140,
-      render: (value: string[]) => (
-        <span className="system-user-list__role-text">
-          {value?.length ? value.join(' / ') : '-'}
-        </span>
-      ),
-    }, 'medium'),
-    withTableColumnPriority({ title: t('system.user.email'), dataIndex: 'email', width: 180, ...sortableColumn('email') }, 'low'),
-    withTableColumnPriority({ title: t('system.user.phone'), dataIndex: 'phone', width: 140, ...sortableColumn('phone') }, 'low'),
+      ...sortableColumn('nickname'),
+    },
+    ...(orgEnabled
+      ? [
+          { title: t('system.user.dept'), dataIndex: 'deptName', width: 120 },
+          withTableColumnPriority(
+            {
+              title: t('system.user.post'),
+              dataIndex: 'postName',
+              width: 120,
+            },
+            'medium',
+          ),
+        ]
+      : []),
+    withTableColumnPriority(
+      {
+        title: t('system.user.roles'),
+        dataIndex: 'roleKeys',
+        width: 140,
+        render: (value: string[]) => (
+          <span className="system-user-list__role-text">
+            {value?.length ? value.join(' / ') : '-'}
+          </span>
+        ),
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      { title: t('system.user.email'), dataIndex: 'email', width: 180, ...sortableColumn('email') },
+      'low',
+    ),
+    withTableColumnPriority(
+      { title: t('system.user.phone'), dataIndex: 'phone', width: 140, ...sortableColumn('phone') },
+      'low',
+    ),
     {
       title: t('system.user.status'),
       dataIndex: 'status',
@@ -441,13 +566,16 @@ const UserList: React.FC = () => {
         </Tag>
       ),
     },
-    withTableColumnPriority({
-      title: t('system.user.createdAt'),
-      dataIndex: 'createdAt',
-      width: 180,
-      ...sortableColumn('createdAt'),
-      render: (value: string) => formatDateTime(value),
-    }, 'low'),
+    withTableColumnPriority(
+      {
+        title: t('system.user.createdAt'),
+        dataIndex: 'createdAt',
+        width: 180,
+        ...sortableColumn('createdAt'),
+        render: (value: string) => formatDateTime(value),
+      },
+      'low',
+    ),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
@@ -460,18 +588,40 @@ const UserList: React.FC = () => {
             </Button>
           ) : null}
           {canEdit ? (
-            <Button type="text" size="small" icon={<IconEdit />} onClick={() => { void openEdit(row); }}>
+            <Button
+              type="text"
+              size="small"
+              icon={<IconEdit />}
+              onClick={() => {
+                void openEdit(row);
+              }}
+            >
               {t('common.edit')}
             </Button>
           ) : null}
           {canResetPassword ? (
-            <Button type="text" size="small" icon={<IconLock />} onClick={() => openResetPassword(row)}>
+            <Button
+              type="text"
+              size="small"
+              icon={<IconLock />}
+              onClick={() => openResetPassword(row)}
+            >
               {t('system.user.resetPassword')}
             </Button>
           ) : null}
           {canDelete ? (
-            <Popconfirm title={t('common.deleteConfirm')} onOk={() => removeUser(row.id)} disabled={row.id === 1}>
-              <Button type="text" size="small" status="danger" icon={<IconDelete />} disabled={row.id === 1}>
+            <Popconfirm
+              title={t('common.deleteConfirm')}
+              onOk={() => removeUser(row.id)}
+              disabled={row.id === 1}
+            >
+              <Button
+                type="text"
+                size="small"
+                status="danger"
+                icon={<IconDelete />}
+                disabled={row.id === 1}
+              >
                 {t('common.delete')}
               </Button>
             </Popconfirm>
@@ -483,12 +633,31 @@ const UserList: React.FC = () => {
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageNetworkError
+          timeout={isTimeoutRequestError(error)}
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
     if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageServerError
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
-    return <PageError onRetry={() => { void loadData(query); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadData(query);
+        }}
+      />
+    );
   };
 
   const handleExport = async () => {
@@ -546,14 +715,8 @@ const UserList: React.FC = () => {
     }
   };
 
-  const enabledUserCount = useMemo(
-    () => data.filter((item) => item.status === 1).length,
-    [data],
-  );
-  const disabledUserCount = useMemo(
-    () => data.filter((item) => item.status !== 1).length,
-    [data],
-  );
+  const enabledUserCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
+  const disabledUserCount = useMemo(() => data.filter((item) => item.status !== 1).length, [data]);
   const heroStats = useMemo(
     () => [
       {
@@ -585,11 +748,15 @@ const UserList: React.FC = () => {
   );
   const governanceSummaryItems = useMemo(
     () => [
-      ...(orgEnabled ? [{
-        label: t('system.user.hero.orgReady'),
-        value: `${Math.max(deptOptions.length - 1, 0)} / ${postOptions.length}`,
-        description: t('system.user.hero.orgHint'),
-      }] : []),
+      ...(orgEnabled
+        ? [
+            {
+              label: t('system.user.hero.orgReady'),
+              value: `${Math.max(deptOptions.length - 1, 0)} / ${postOptions.length}`,
+              description: t('system.user.hero.orgHint'),
+            },
+          ]
+        : []),
       {
         label: t('system.user.hero.disabledRows'),
         value: disabledUserCount,
@@ -608,23 +775,50 @@ const UserList: React.FC = () => {
     <PageContainer>
       <PageHeader
         title={t('system.menu.user')}
-        extra={(
+        extra={
           <ListHeaderActions
-            utility={(
+            utility={
               <>
-                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                <GovernanceRailToggleButton
+                  expanded={governanceRail.expanded}
+                  onToggle={governanceRail.toggle}
+                >
                   {t('system.user.hero.summaryTitle')}
                 </GovernanceRailToggleButton>
-                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
-                <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
+                <Button
+                  icon={<IconDownload />}
+                  onClick={() => {
+                    void handleExport();
+                  }}
+                  disabled={!canExport}
+                >
+                  {t('common.export')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    void handleDownloadTemplate();
+                  }}
+                  disabled={!canImport}
+                >
+                  {t('common.downloadTemplate')}
+                </Button>
+                <ImportCsvButton
+                  disabled={!canImport}
+                  onSelect={(file) => {
+                    void handleImport(file);
+                  }}
+                >
                   {t('common.import')}
                 </ImportCsvButton>
               </>
-            )}
-            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+            }
+            primary={
+              <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
+                {t('common.add')}
+              </Button>
+            }
           />
-        )}
+        }
       />
       <Space direction="vertical" size={16} className="system-page-template">
         <Card className="page-panel system-page-hero system-user-list__hero">
@@ -647,17 +841,19 @@ const UserList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={governanceRail.expanded ? (
-            <GovernanceRailPanel
-              title={t('system.user.hero.summaryTitle')}
-              onClose={governanceRail.close}
-              closeText={t('common.close')}
-              noteTitle={t('system.user.hero.summaryTitle')}
-              noteDescription={t('system.user.hero.sideDesc')}
-            >
-              <GovernanceRailSummary items={governanceSummaryItems} />
-            </GovernanceRailPanel>
-          ) : null}
+          rail={
+            governanceRail.expanded ? (
+              <GovernanceRailPanel
+                title={t('system.user.hero.summaryTitle')}
+                onClose={governanceRail.close}
+                closeText={t('common.close')}
+                noteTitle={t('system.user.hero.summaryTitle')}
+                noteDescription={t('system.user.hero.sideDesc')}
+              >
+                <GovernanceRailSummary items={governanceSummaryItems} />
+              </GovernanceRailPanel>
+            ) : null
+          }
         >
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
@@ -674,16 +870,26 @@ const UserList: React.FC = () => {
                 </Col>
                 <Col span={6}>
                   <FormItem label={t('system.user.status')} field="status">
-                    <Select allowClear options={[
-                      { label: t('system.user.status.enabled'), value: 1 },
-                      { label: t('system.user.status.disabled'), value: 2 },
-                    ]} />
+                    <Select
+                      allowClear
+                      options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]}
+                    />
                   </FormItem>
                 </Col>
                 <Col span={6}>
                   <FormItem className="filter-panel__action-item">
                     <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />} onClick={search}>{t('common.search')}</Button>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        icon={<IconSearch />}
+                        onClick={search}
+                      >
+                        {t('common.search')}
+                      </Button>
                       <Button onClick={reset}>{t('common.reset')}</Button>
                     </Space>
                   </FormItem>
@@ -699,24 +905,49 @@ const UserList: React.FC = () => {
               clearSuccessText={t('common.clearSelectionSuccess')}
               onClear={() => setSelectedRowKeys([])}
               hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
-              actions={(
+              actions={
                 <>
-                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                    <Popconfirm title={t('system.user.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.user.batchEnableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(1);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
                       <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
                     </Popconfirm>
                   </PermissionAction>
-                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                    <Popconfirm title={t('system.user.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-                      <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.user.batchDisable')}</Button>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.user.batchDisableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(2);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button
+                        status={batchActionDisabled ? undefined : 'warning'}
+                        disabled={batchActionDisabled}
+                      >
+                        {t('system.user.batchDisable')}
+                      </Button>
                     </Popconfirm>
                   </PermissionAction>
                 </>
-              )}
+              }
             />
             {loading && data.length === 0 ? <PageLoading /> : null}
             {error && data.length === 0 ? renderErrorState() : null}
-            {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
+            {!loading && !error && data.length === 0 ? (
+              <PageEmpty description={t('common.noData')} />
+            ) : null}
             {!loading && !(error && data.length === 0) && data.length > 0 ? (
               <AppTable<UserListRow>
                 className="system-user-list__table"
@@ -734,17 +965,19 @@ const UserList: React.FC = () => {
                 }}
                 onChange={handleTableChange}
                 emptyText={t('common.noData')}
-                pagination={{
-                  current: query.page || emptyQuery.page,
-                  pageSize: query.pageSize || emptyQuery.pageSize,
-                  total,
-                  showJumper: true,
-                  pageSizeChangeResetCurrent: false,
-                  sizeCanChange: true,
-                  sizeOptions: [10, 20, 50, 100],
-                  size: 'small',
-                  showTotal: (count: number) => t('common.total', { count }),
-                } as PaginationProps}
+                pagination={
+                  {
+                    current: query.page || emptyQuery.page,
+                    pageSize: query.pageSize || emptyQuery.pageSize,
+                    total,
+                    showJumper: true,
+                    pageSizeChangeResetCurrent: false,
+                    sizeCanChange: true,
+                    sizeOptions: [10, 20, 50, 100],
+                    size: 'small',
+                    showTotal: (count: number) => t('common.total', { count }),
+                  } as PaginationProps
+                }
               />
             ) : null}
           </Card>
@@ -759,23 +992,35 @@ const UserList: React.FC = () => {
           setVisible(false);
           setAvatarPreview('');
         }}
-        footer={(
+        footer={
           <SubmitBar
             onCancel={() => {
               setVisible(false);
               setAvatarPreview('');
             }}
-            onSubmit={() => { void submitForm(); }}
+            onSubmit={() => {
+              void submitForm();
+            }}
             loading={submitting}
             submitText={editing ? t('common.save') : t('common.add')}
           />
-        )}
+        }
         unmountOnExit
       >
-        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
+        <Form
+          form={form}
+          layout="vertical"
+          onSubmit={() => {
+            void submitForm();
+          }}
+        >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
-              <FormItem label={t('system.user.username')} field="username" rules={[{ required: true, message: t('auth.usernameRequired') }]}>
+              <FormItem
+                label={t('system.user.username')}
+                field="username"
+                rules={[{ required: true, message: t('auth.usernameRequired') }]}
+              >
                 <Input disabled={Boolean(editing)} onPressEnter={() => form.submit()} />
               </FormItem>
               {!editing ? (
@@ -790,7 +1035,11 @@ const UserList: React.FC = () => {
               <FormItem label={t('system.user.nickname')} field="nickname">
                 <Input onPressEnter={() => form.submit()} />
               </FormItem>
-              <FormItem label={t('system.user.email')} field="email" rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}>
+              <FormItem
+                label={t('system.user.email')}
+                field="email"
+                rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}
+              >
                 <Input onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.user.phone')} field="phone">
@@ -804,7 +1053,11 @@ const UserList: React.FC = () => {
                   />
                   <Space align="center" wrap>
                     <Avatar size={40}>
-                      {avatarPreview ? <img src={avatarPreview} alt={t('system.user.avatar')} /> : t('common.user').slice(0, 1)}
+                      {avatarPreview ? (
+                        <img src={avatarPreview} alt={t('system.user.avatar')} />
+                      ) : (
+                        t('common.user').slice(0, 1)
+                      )}
                     </Avatar>
                     <Button
                       icon={<IconUpload />}
@@ -834,15 +1087,21 @@ const UserList: React.FC = () => {
                   <FormItem
                     label={t('system.user.dept')}
                     field="deptId"
-                    rules={orgRequiredForUser ? [{
-                      validator: (value, callback) => {
-                        if (Number(value || 0) > 0) {
-                          callback();
-                          return;
-                        }
-                        callback(t('system.user.dept.required'));
-                      },
-                    }] : undefined}
+                    rules={
+                      orgRequiredForUser
+                        ? [
+                            {
+                              validator: (value, callback) => {
+                                if (Number(value || 0) > 0) {
+                                  callback();
+                                  return;
+                                }
+                                callback(t('system.user.dept.required'));
+                              },
+                            },
+                          ]
+                        : undefined
+                    }
                   >
                     <Select options={deptOptions} onChange={handleDeptChange} />
                   </FormItem>
@@ -859,7 +1118,18 @@ const UserList: React.FC = () => {
                   ]}
                 />
               </FormItem>
-              <FormItem label={t('system.user.roles')} field="roleIds" rules={[{ required: true, type: 'array', minLength: 1, message: t('system.user.role.required') }]}>
+              <FormItem
+                label={t('system.user.roles')}
+                field="roleIds"
+                rules={[
+                  {
+                    required: true,
+                    type: 'array',
+                    minLength: 1,
+                    message: t('system.user.role.required'),
+                  },
+                ]}
+              >
                 <Select mode="multiple" options={roleOptions} />
               </FormItem>
             </FormSection>
@@ -868,7 +1138,11 @@ const UserList: React.FC = () => {
       </AppModal>
 
       <AppModal
-        title={detailTarget ? `${detailTarget.username} / ${detailTarget.nickname || '-'}` : t('system.user.detail')}
+        title={
+          detailTarget
+            ? `${detailTarget.username} / ${detailTarget.nickname || '-'}`
+            : t('system.user.detail')
+        }
         visible={Boolean(detailTarget)}
         size="xl"
         onCancel={closeDetail}
@@ -876,15 +1150,20 @@ const UserList: React.FC = () => {
       >
         {detailLoading ? <PageLoading /> : null}
         {!detailLoading && detailError ? (
-          <PageError onRetry={() => {
-            if (detailTarget) {
-              void loadDetail(detailTarget.id);
-            }
-          }}
+          <PageError
+            onRetry={() => {
+              if (detailTarget) {
+                void loadDetail(detailTarget.id);
+              }
+            }}
           />
         ) : null}
-        {!detailLoading && !detailError && !detailData ? <PageEmpty description={t('common.noData')} /> : null}
-        {!detailLoading && !detailError && detailData ? <UserDetailContent detail={detailData} orgEnabled={orgEnabled} /> : null}
+        {!detailLoading && !detailError && !detailData ? (
+          <PageEmpty description={t('common.noData')} />
+        ) : null}
+        {!detailLoading && !detailError && detailData ? (
+          <UserDetailContent detail={detailData} orgEnabled={orgEnabled} />
+        ) : null}
       </AppModal>
 
       <AppModal
@@ -895,23 +1174,36 @@ const UserList: React.FC = () => {
           setResetTarget(null);
           resetPasswordForm.resetFields();
         }}
-        footer={(
+        footer={
           <SubmitBar
             onCancel={() => {
               setResetTarget(null);
               resetPasswordForm.resetFields();
             }}
-            onSubmit={() => { void submitResetPassword(); }}
+            onSubmit={() => {
+              void submitResetPassword();
+            }}
             loading={submitting}
             submitText={t('system.user.resetPassword')}
           />
-        )}
+        }
         unmountOnExit
       >
-        <Form form={resetPasswordForm} layout="vertical" onSubmit={() => { void submitResetPassword(); }}>
+        <Form
+          form={resetPasswordForm}
+          layout="vertical"
+          onSubmit={() => {
+            void submitResetPassword();
+          }}
+        >
           <Space direction="vertical" size={16} className="dialog-form-stack">
             <FormItem label={t('system.user.resetPasswordTarget')}>
-              <Input value={resetTarget ? `${resetTarget.username} / ${resetTarget.nickname || '-'}` : ''} disabled />
+              <Input
+                value={
+                  resetTarget ? `${resetTarget.username} / ${resetTarget.nickname || '-'}` : ''
+                }
+                disabled
+              />
             </FormItem>
             <FormItem
               label={t('system.user.newPassword')}

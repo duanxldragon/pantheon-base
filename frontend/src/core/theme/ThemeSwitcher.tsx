@@ -17,7 +17,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className, showLabel = tr
   return (
     <Dropdown
       position="br"
-      droplist={(
+      droplist={
         <Menu
           selectedKeys={[theme]}
           onClickMenuItem={(key) => setTheme(key as PantheonThemeKey)}
@@ -35,7 +35,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className, showLabel = tr
             </Menu.Item>
           ))}
         </Menu>
-      )}
+      }
     >
       <Button type="text" className={className} icon={<IconPalette />}>
         {showLabel ? t(activeTheme.labelKey) : null}

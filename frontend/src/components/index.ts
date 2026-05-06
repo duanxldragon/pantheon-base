@@ -15,13 +15,14 @@ export { useGovernanceRail } from './patterns/useGovernanceRail';
 export { default as GovernanceCleanupBar } from './patterns/GovernanceCleanupBar';
 export { default as PermissionAction } from './patterns/PermissionAction';
 export { default as TableBatchActionBar } from './patterns/TableBatchActionBar';
-export { TABLE_ACTION_COLUMN_WIDTH, type TableActionColumnWidthPreset } from './patterns/TableAction';
+export {
+  TABLE_ACTION_COLUMN_WIDTH,
+  type TableActionColumnWidthPreset,
+} from './patterns/TableAction';
 export { withTableColumnPriority, type TableColumnPriority } from './patterns/TableColumnPriority';
 export { default as FormSection } from './patterns/FormSection';
 export { default as SubmitBar } from './patterns/SubmitBar';
-export {
-  default as AppModal,
-} from './patterns/AppModal';
+export { default as AppModal } from './patterns/AppModal';
 export {
   showAppModalConfirm,
   showAppModalSuccess,

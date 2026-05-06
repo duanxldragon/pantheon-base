@@ -8,15 +8,20 @@ import RoutePermissionGuard from './core/router/RoutePermissionGuard';
 import { ensureAuthUserInfo } from './core/auth/bootstrap';
 import { scheduleHighFrequencyRouteWarmup } from './core/router/prefetch';
 import { PageNotFound, RouteContentFallback } from './components';
-import { handleVerifySuccess, handleVerifyCancel } from './components/feedback/secondaryVerifyController';
+import {
+  handleVerifySuccess,
+  handleVerifyCancel,
+} from './components/feedback/secondaryVerifyController';
 import { findFirstNavigableMenuPath } from './modules/system/menu/api';
 import { useMenuStore } from './store/useMenuStore';
 
 const BaseLayout = lazy(() => import('./core/layout'));
 const LoginPage = lazy(() => import('./modules/auth/Login'));
-const SecondaryVerifyModal = lazy(() => import('./components/feedback/SecondaryVerifyModal').then((module) => ({
-  default: module.SecondaryVerifyModal,
-})));
+const SecondaryVerifyModal = lazy(() =>
+  import('./components/feedback/SecondaryVerifyModal').then((module) => ({
+    default: module.SecondaryVerifyModal,
+  })),
+);
 
 const AuthGuard = ({ children }: { children: ReactElement }) => {
   const { token } = useAuthStore();
@@ -26,7 +31,10 @@ const AuthGuard = ({ children }: { children: ReactElement }) => {
   return children;
 };
 
-function resolveDefaultAuthedPath(hasDashboardPermission: boolean, fallbackMenuPath: string | null) {
+function resolveDefaultAuthedPath(
+  hasDashboardPermission: boolean,
+  fallbackMenuPath: string | null,
+) {
   if (hasDashboardPermission) {
     return '/dashboard';
   }
@@ -52,11 +60,19 @@ const DefaultHomeRedirect = () => {
   }
 
   const targetPath = resolveDefaultAuthedPath(
-    Boolean(userInfo.roles?.includes('admin') || userInfo.perms?.includes('platform:dashboard:view')),
+    Boolean(
+      userInfo.roles?.includes('admin') || userInfo.perms?.includes('platform:dashboard:view'),
+    ),
     findFirstNavigableMenuPath(menuTree),
   );
 
-  if (loading && menuTree.length === 0 && targetPath === '/dashboard' && !userInfo.perms?.includes('platform:dashboard:view') && !userInfo.roles?.includes('admin')) {
+  if (
+    loading &&
+    menuTree.length === 0 &&
+    targetPath === '/dashboard' &&
+    !userInfo.perms?.includes('platform:dashboard:view') &&
+    !userInfo.roles?.includes('admin')
+  ) {
     return <RouteContentFallback />;
   }
 
@@ -93,12 +109,15 @@ function App() {
       if (!active) {
         return;
       }
-      scheduleHighFrequencyRouteWarmup({
-        userInfo,
-        menuTree: resolvedMenuTree,
-      }, {
-        excludePaths: [window.location.pathname],
-      });
+      scheduleHighFrequencyRouteWarmup(
+        {
+          userInfo,
+          menuTree: resolvedMenuTree,
+        },
+        {
+          excludePaths: [window.location.pathname],
+        },
+      );
     });
     return () => {
       active = false;
@@ -137,13 +156,13 @@ function App() {
               <Route
                 key={route.path}
                 path={route.path}
-                element={(
+                element={
                   <Suspense fallback={<RouteContentFallback />}>
                     <RoutePermissionGuard permission={route.pagePermission}>
                       <Component />
                     </RoutePermissionGuard>
                   </Suspense>
-                )}
+                }
               />
             );
           })}

@@ -17,7 +17,9 @@ function needsHorizontalScroll<T>(columns?: ColumnProps<T>[]): boolean {
     if (Array.isArray(column.children) && column.children.length > 0) {
       return needsHorizontalScroll(column.children);
     }
-    return Boolean(column.fixed) || typeof column.width === 'number' || typeof column.width === 'string';
+    return (
+      Boolean(column.fixed) || typeof column.width === 'number' || typeof column.width === 'string'
+    );
   });
 }
 
@@ -28,7 +30,10 @@ function getColumnClassName<T>(column: ColumnProps<T>) {
   return column.className || '';
 }
 
-function filterResponsiveColumns<T>(columns: ColumnProps<T>[] | undefined, viewportWidth: number): ColumnProps<T>[] | undefined {
+function filterResponsiveColumns<T>(
+  columns: ColumnProps<T>[] | undefined,
+  viewportWidth: number,
+): ColumnProps<T>[] | undefined {
   if (!Array.isArray(columns) || columns.length === 0) {
     return columns;
   }
@@ -60,7 +65,9 @@ function AppTable<T>(props: AppTableProps<T>) {
   const { data, loading, emptyText, columns, scroll, ...rest } = props;
   const { t } = useTranslation();
   const rows = Array.isArray(data) ? data : [];
-  const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 1920 : window.innerWidth));
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === 'undefined' ? 1920 : window.innerWidth,
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -77,9 +84,10 @@ function AppTable<T>(props: AppTableProps<T>) {
   }, []);
 
   const responsiveColumns = filterResponsiveColumns(columns, viewportWidth);
-  const effectiveScroll = scroll?.x !== undefined || !needsHorizontalScroll(responsiveColumns)
-    ? scroll
-    : { ...scroll, x: 'max-content' as const };
+  const effectiveScroll =
+    scroll?.x !== undefined || !needsHorizontalScroll(responsiveColumns)
+      ? scroll
+      : { ...scroll, x: 'max-content' as const };
 
   if (!loading && rows.length === 0) {
     return <PageEmpty description={emptyText} />;
@@ -90,7 +98,9 @@ function AppTable<T>(props: AppTableProps<T>) {
       {viewportWidth <= 768 ? (
         <div className="app-table__mobile-hint">
           <span>{t('common.tableRecordSummary', { count: rows.length })}</span>
-          {needsHorizontalScroll(responsiveColumns) ? <span>{t('common.tableSwipeHint')}</span> : null}
+          {needsHorizontalScroll(responsiveColumns) ? (
+            <span>{t('common.tableSwipeHint')}</span>
+          ) : null}
         </div>
       ) : null}
       <Table

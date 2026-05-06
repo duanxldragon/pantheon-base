@@ -6,12 +6,7 @@ const PageNotFound: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <Result
-      className="page-result"
-      status="404"
-      title="404"
-      subTitle={t('common.notFound')}
-    />
+    <Result className="page-result" status="404" title="404" subTitle={t('common.notFound')} />
   );
 };
 

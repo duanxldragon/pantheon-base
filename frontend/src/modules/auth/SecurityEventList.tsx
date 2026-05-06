@@ -39,7 +39,12 @@ const SecurityEventList: React.FC = () => {
   const { t } = useTranslation();
   const [form] = Form.useForm<SecurityEventQuery>();
   const [query, setQuery] = useState<SecurityEventQuery>(emptyQuery);
-  const [data, setData] = useState<SecurityEventPageResp>({ items: [], total: 0, page: 1, pageSize: 10 });
+  const [data, setData] = useState<SecurityEventPageResp>({
+    items: [],
+    total: 0,
+    page: 1,
+    pageSize: 10,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,7 +84,8 @@ const SecurityEventList: React.FC = () => {
       title: t('auth.securityEvent.eventType'),
       dataIndex: 'eventType',
       width: 180,
-      render: (value) => t(`auth.securityEvent.type.${value}`, { defaultValue: String(value || '-') }),
+      render: (value) =>
+        t(`auth.securityEvent.type.${value}`, { defaultValue: String(value || '-') }),
     },
     {
       title: t('auth.securityEvent.severity'),
@@ -88,7 +94,11 @@ const SecurityEventList: React.FC = () => {
       render: (value) => {
         const severity = String(value || 'medium');
         const color = severity === 'high' ? 'red' : severity === 'low' ? 'green' : 'orange';
-        return <Tag color={color}>{t(`auth.securityEvent.severity.${severity}`, { defaultValue: severity })}</Tag>;
+        return (
+          <Tag color={color}>
+            {t(`auth.securityEvent.severity.${severity}`, { defaultValue: severity })}
+          </Tag>
+        );
       },
     },
     {
@@ -129,29 +139,41 @@ const SecurityEventList: React.FC = () => {
         extra={<Tag color="arcoblue">{t('auth.securityEvent.hero.eyebrow')}</Tag>}
       />
 
-      <FilterPanel
-        title={t('common.filters')}
-      >
+      <FilterPanel title={t('common.filters')}>
         <Form form={form} layout="vertical" initialValues={emptyQuery}>
           <Row gutter={16}>
             <Col span={8}>
               <FormItem field="username" label={t('common.user')}>
-                <Input allowClear placeholder={t('auth.securityEvent.filter.usernamePlaceholder')} />
+                <Input
+                  allowClear
+                  placeholder={t('auth.securityEvent.filter.usernamePlaceholder')}
+                />
               </FormItem>
             </Col>
             <Col span={8}>
               <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
-                <Select allowClear placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}>
-                  <Select.Option value="source_blocked">{t('auth.securityEvent.type.source_blocked')}</Select.Option>
-                  <Select.Option value="account_locked">{t('auth.securityEvent.type.account_locked')}</Select.Option>
+                <Select
+                  allowClear
+                  placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
+                >
+                  <Select.Option value="source_blocked">
+                    {t('auth.securityEvent.type.source_blocked')}
+                  </Select.Option>
+                  <Select.Option value="account_locked">
+                    {t('auth.securityEvent.type.account_locked')}
+                  </Select.Option>
                 </Select>
               </FormItem>
             </Col>
             <Col span={8}>
               <FormItem field="severity" label={t('auth.securityEvent.severity')}>
                 <Select allowClear placeholder={t('auth.securityEvent.filter.severityPlaceholder')}>
-                  <Select.Option value="high">{t('auth.securityEvent.severity.high')}</Select.Option>
-                  <Select.Option value="medium">{t('auth.securityEvent.severity.medium')}</Select.Option>
+                  <Select.Option value="high">
+                    {t('auth.securityEvent.severity.high')}
+                  </Select.Option>
+                  <Select.Option value="medium">
+                    {t('auth.securityEvent.severity.medium')}
+                  </Select.Option>
                   <Select.Option value="low">{t('auth.securityEvent.severity.low')}</Select.Option>
                 </Select>
               </FormItem>
@@ -174,7 +196,13 @@ const SecurityEventList: React.FC = () => {
       ) : (
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Typography.Text type="secondary">{t('auth.securityEvent.hint')}</Typography.Text>
-          <AppTable rowKey="id" columns={columns} data={data.items} loading={loading} pagination={pagination} />
+          <AppTable
+            rowKey="id"
+            columns={columns}
+            data={data.items}
+            loading={loading}
+            pagination={pagination}
+          />
         </Space>
       )}
     </PageContainer>

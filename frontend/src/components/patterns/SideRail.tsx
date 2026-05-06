@@ -36,7 +36,9 @@ export const SideRailPanel: React.FC<SideRailPanelProps> = ({
   className,
   children,
 }) => (
-  <Card className={className ? `page-panel side-rail-panel ${className}` : 'page-panel side-rail-panel'}>
+  <Card
+    className={className ? `page-panel side-rail-panel ${className}` : 'page-panel side-rail-panel'}
+  >
     {title || extra ? (
       <div className="side-rail-panel__header">
         {title ? <span className="side-rail-panel__title">{title}</span> : <span />}
@@ -48,9 +50,7 @@ export const SideRailPanel: React.FC<SideRailPanelProps> = ({
 );
 
 export const SideRailStack: React.FC<SideRailStackProps> = ({ className, children }) => (
-  <div className={className ? `side-rail-stack ${className}` : 'side-rail-stack'}>
-    {children}
-  </div>
+  <div className={className ? `side-rail-stack ${className}` : 'side-rail-stack'}>{children}</div>
 );
 
 export const SideRailItem: React.FC<SideRailItemProps> = ({
@@ -60,7 +60,13 @@ export const SideRailItem: React.FC<SideRailItemProps> = ({
   tone = 'neutral',
   className,
 }) => (
-  <div className={className ? `side-rail-item side-rail-item--${tone} ${className}` : `side-rail-item side-rail-item--${tone}`}>
+  <div
+    className={
+      className
+        ? `side-rail-item side-rail-item--${tone} ${className}`
+        : `side-rail-item side-rail-item--${tone}`
+    }
+  >
     {label ? <span className="side-rail-item__label">{label}</span> : null}
     {value ? <span className="side-rail-item__value">{value}</span> : null}
     {description ? <span className="side-rail-item__desc">{description}</span> : null}
@@ -73,7 +79,13 @@ export const SideRailNote: React.FC<SideRailNoteProps> = ({
   tone = 'neutral',
   className,
 }) => (
-  <div className={className ? `side-rail-note side-rail-note--${tone} ${className}` : `side-rail-note side-rail-note--${tone}`}>
+  <div
+    className={
+      className
+        ? `side-rail-note side-rail-note--${tone} ${className}`
+        : `side-rail-note side-rail-note--${tone}`
+    }
+  >
     {title ? <span className="side-rail-note__title">{title}</span> : null}
     {description ? <span className="side-rail-note__desc">{description}</span> : null}
   </div>

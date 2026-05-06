@@ -74,7 +74,10 @@ export function deleteModuleRecord(name: string) {
   });
 }
 
-export function purgeModule(name: string, options?: { dropTable?: boolean; purgeSource?: boolean }) {
+export function purgeModule(
+  name: string,
+  options?: { dropTable?: boolean; purgeSource?: boolean },
+) {
   const dropTable = options?.dropTable ? 'true' : 'false';
   const purgeSource = options?.purgeSource === false ? 'false' : 'true';
   return apiRequest<{ deleted: boolean; message: string }>({

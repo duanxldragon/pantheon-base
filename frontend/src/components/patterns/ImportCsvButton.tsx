@@ -9,12 +9,22 @@ interface ImportCsvButtonProps {
   onSelect: (file: File) => void;
 }
 
-const ImportCsvButton: React.FC<ImportCsvButtonProps> = ({ disabled, loading, children, onSelect }) => {
+const ImportCsvButton: React.FC<ImportCsvButtonProps> = ({
+  disabled,
+  loading,
+  children,
+  onSelect,
+}) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <>
-      <Button icon={<IconUpload />} disabled={disabled} loading={loading} onClick={() => inputRef.current?.click()}>
+      <Button
+        icon={<IconUpload />}
+        disabled={disabled}
+        loading={loading}
+        onClick={() => inputRef.current?.click()}
+      >
         {children}
       </Button>
       <input

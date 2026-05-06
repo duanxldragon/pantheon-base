@@ -28,7 +28,10 @@ function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefin
   return undefined;
 }
 
-export function isDashboardWidgetVisible(widget: DashboardWidgetDefinition, context: DashboardWidgetVisibilityContext) {
+export function isDashboardWidgetVisible(
+  widget: DashboardWidgetDefinition,
+  context: DashboardWidgetVisibilityContext,
+) {
   const hasAccess = !widget.permission || context.isAdmin || context.hasPerm(widget.permission);
   if (!hasAccess) {
     return false;

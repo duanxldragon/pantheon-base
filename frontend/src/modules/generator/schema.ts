@@ -11,15 +11,7 @@ export type ModuleScope = 'system' | 'business';
 
 export type TemplateLevel = 'basic' | 'enterprise';
 
-export type FieldType =
-  | 'string'
-  | 'text'
-  | 'int'
-  | 'float'
-  | 'bool'
-  | 'date'
-  | 'enum'
-  | 'relation';
+export type FieldType = 'string' | 'text' | 'int' | 'float' | 'bool' | 'date' | 'enum' | 'relation';
 
 export type PageActionKey =
   | 'view'
@@ -239,15 +231,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'code',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.code', 'generator.fieldTemplates.code'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.code', 'generator.fieldTemplates.code'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.code',
+        'generator.fieldTemplates.code',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.code',
+        'generator.fieldTemplates.code',
+      ),
       required: true,
       searchable: true,
       sortable: true,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.code.placeholder', 'generator.fieldTemplates.code.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.code.placeholder', 'generator.fieldTemplates.code.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.code.placeholder',
+        'generator.fieldTemplates.code.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.code.placeholder',
+        'generator.fieldTemplates.code.placeholder',
+      ),
       validation: { unique: true, maxLength: 64 },
       templateKey: 'code',
     }),
@@ -258,15 +270,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'name',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.name', 'generator.fieldTemplates.name'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.name', 'generator.fieldTemplates.name'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.name',
+        'generator.fieldTemplates.name',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.name',
+        'generator.fieldTemplates.name',
+      ),
       required: true,
       searchable: true,
       sortable: true,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.name.placeholder', 'generator.fieldTemplates.name.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.name.placeholder', 'generator.fieldTemplates.name.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.name.placeholder',
+        'generator.fieldTemplates.name.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.name.placeholder',
+        'generator.fieldTemplates.name.placeholder',
+      ),
       validation: { maxLength: 128 },
       templateKey: 'name',
     }),
@@ -277,27 +309,67 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'status',
       type: 'enum',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.status', 'generator.fieldTemplates.status'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.status', 'generator.fieldTemplates.status'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.status',
+        'generator.fieldTemplates.status',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.status',
+        'generator.fieldTemplates.status',
+      ),
       required: true,
       searchable: true,
       sortable: true,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.status.placeholder', 'generator.fieldTemplates.status.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.status.placeholder', 'generator.fieldTemplates.status.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.status.placeholder',
+        'generator.fieldTemplates.status.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.status.placeholder',
+        'generator.fieldTemplates.status.placeholder',
+      ),
       dictCode: 'status',
       enumOptions: [
         {
           value: 'active',
-          label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.status.active', 'generator.fieldTemplates.status.active'),
-          labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.status.active', 'generator.fieldTemplates.status.active'),
+          label: resolveTemplateText(
+            resolveText,
+            'zh-CN',
+            'generator.fieldTemplates.status.active',
+            'generator.fieldTemplates.status.active',
+          ),
+          labelEn: resolveTemplateText(
+            resolveText,
+            'en-US',
+            'generator.fieldTemplates.status.active',
+            'generator.fieldTemplates.status.active',
+          ),
           color: 'green',
         },
         {
           value: 'inactive',
-          label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.status.inactive', 'generator.fieldTemplates.status.inactive'),
-          labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.status.inactive', 'generator.fieldTemplates.status.inactive'),
+          label: resolveTemplateText(
+            resolveText,
+            'zh-CN',
+            'generator.fieldTemplates.status.inactive',
+            'generator.fieldTemplates.status.inactive',
+          ),
+          labelEn: resolveTemplateText(
+            resolveText,
+            'en-US',
+            'generator.fieldTemplates.status.inactive',
+            'generator.fieldTemplates.status.inactive',
+          ),
           color: 'gray',
         },
       ],
@@ -311,15 +383,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'sort',
       type: 'int',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.sort', 'generator.fieldTemplates.sort'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.sort', 'generator.fieldTemplates.sort'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.sort',
+        'generator.fieldTemplates.sort',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.sort',
+        'generator.fieldTemplates.sort',
+      ),
       required: false,
       searchable: false,
       sortable: true,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.sort.placeholder', 'generator.fieldTemplates.sort.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.sort.placeholder', 'generator.fieldTemplates.sort.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.sort.placeholder',
+        'generator.fieldTemplates.sort.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.sort.placeholder',
+        'generator.fieldTemplates.sort.placeholder',
+      ),
       templateKey: 'sort',
     }),
   },
@@ -329,15 +421,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'remark',
       type: 'text',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.remark', 'generator.fieldTemplates.remark'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.remark', 'generator.fieldTemplates.remark'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.remark',
+        'generator.fieldTemplates.remark',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.remark',
+        'generator.fieldTemplates.remark',
+      ),
       required: false,
       searchable: false,
       sortable: false,
       visibleInList: false,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.remark.placeholder', 'generator.fieldTemplates.remark.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.remark.placeholder', 'generator.fieldTemplates.remark.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.remark.placeholder',
+        'generator.fieldTemplates.remark.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.remark.placeholder',
+        'generator.fieldTemplates.remark.placeholder',
+      ),
       templateKey: 'remark',
     }),
   },
@@ -347,15 +459,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'owner',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.owner', 'generator.fieldTemplates.owner'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.owner', 'generator.fieldTemplates.owner'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.owner',
+        'generator.fieldTemplates.owner',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.owner',
+        'generator.fieldTemplates.owner',
+      ),
       required: false,
       searchable: true,
       sortable: false,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.owner.placeholder', 'generator.fieldTemplates.owner.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.owner.placeholder', 'generator.fieldTemplates.owner.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.owner.placeholder',
+        'generator.fieldTemplates.owner.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.owner.placeholder',
+        'generator.fieldTemplates.owner.placeholder',
+      ),
       templateKey: 'owner',
     }),
   },
@@ -365,15 +497,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'phone',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.phone', 'generator.fieldTemplates.phone'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.phone', 'generator.fieldTemplates.phone'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.phone',
+        'generator.fieldTemplates.phone',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.phone',
+        'generator.fieldTemplates.phone',
+      ),
       required: false,
       searchable: true,
       sortable: false,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.phone.placeholder', 'generator.fieldTemplates.phone.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.phone.placeholder', 'generator.fieldTemplates.phone.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.phone.placeholder',
+        'generator.fieldTemplates.phone.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.phone.placeholder',
+        'generator.fieldTemplates.phone.placeholder',
+      ),
       validation: { pattern: '^1[3-9]\\d{9}$' },
       templateKey: 'phone',
     }),
@@ -384,15 +536,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'email',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.email', 'generator.fieldTemplates.email'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.email', 'generator.fieldTemplates.email'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.email',
+        'generator.fieldTemplates.email',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.email',
+        'generator.fieldTemplates.email',
+      ),
       required: false,
       searchable: true,
       sortable: false,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.email.placeholder', 'generator.fieldTemplates.email.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.email.placeholder', 'generator.fieldTemplates.email.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.email.placeholder',
+        'generator.fieldTemplates.email.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.email.placeholder',
+        'generator.fieldTemplates.email.placeholder',
+      ),
       validation: { pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
       templateKey: 'email',
     }),
@@ -403,15 +575,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'ipAddress',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.ipAddress', 'generator.fieldTemplates.ipAddress'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.ipAddress', 'generator.fieldTemplates.ipAddress'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.ipAddress',
+        'generator.fieldTemplates.ipAddress',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.ipAddress',
+        'generator.fieldTemplates.ipAddress',
+      ),
       required: true,
       searchable: true,
       sortable: true,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.ipAddress.placeholder', 'generator.fieldTemplates.ipAddress.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.ipAddress.placeholder', 'generator.fieldTemplates.ipAddress.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.ipAddress.placeholder',
+        'generator.fieldTemplates.ipAddress.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.ipAddress.placeholder',
+        'generator.fieldTemplates.ipAddress.placeholder',
+      ),
       validation: { unique: true },
       templateKey: 'ipAddress',
     }),
@@ -422,15 +614,35 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'hostname',
       type: 'string',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.hostname', 'generator.fieldTemplates.hostname'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.hostname', 'generator.fieldTemplates.hostname'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.hostname',
+        'generator.fieldTemplates.hostname',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.hostname',
+        'generator.fieldTemplates.hostname',
+      ),
       required: true,
       searchable: true,
       sortable: true,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.hostname.placeholder', 'generator.fieldTemplates.hostname.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.hostname.placeholder', 'generator.fieldTemplates.hostname.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.hostname.placeholder',
+        'generator.fieldTemplates.hostname.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.hostname.placeholder',
+        'generator.fieldTemplates.hostname.placeholder',
+      ),
       templateKey: 'hostname',
     }),
   },
@@ -440,39 +652,99 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
     createField: (resolveText) => ({
       name: 'environment',
       type: 'enum',
-      label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.environment', 'generator.fieldTemplates.environment'),
-      labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.environment', 'generator.fieldTemplates.environment'),
+      label: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.environment',
+        'generator.fieldTemplates.environment',
+      ),
+      labelEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.environment',
+        'generator.fieldTemplates.environment',
+      ),
       required: true,
       searchable: true,
       sortable: false,
       visibleInList: true,
       visibleInForm: true,
-      placeholder: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.environment.placeholder', 'generator.fieldTemplates.environment.placeholder'),
-      placeholderEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.environment.placeholder', 'generator.fieldTemplates.environment.placeholder'),
+      placeholder: resolveTemplateText(
+        resolveText,
+        'zh-CN',
+        'generator.fieldTemplates.environment.placeholder',
+        'generator.fieldTemplates.environment.placeholder',
+      ),
+      placeholderEn: resolveTemplateText(
+        resolveText,
+        'en-US',
+        'generator.fieldTemplates.environment.placeholder',
+        'generator.fieldTemplates.environment.placeholder',
+      ),
       dictCode: 'environment',
       enumOptions: [
         {
           value: 'dev',
-          label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.environment.dev', 'generator.fieldTemplates.environment.dev'),
-          labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.environment.dev', 'generator.fieldTemplates.environment.dev'),
+          label: resolveTemplateText(
+            resolveText,
+            'zh-CN',
+            'generator.fieldTemplates.environment.dev',
+            'generator.fieldTemplates.environment.dev',
+          ),
+          labelEn: resolveTemplateText(
+            resolveText,
+            'en-US',
+            'generator.fieldTemplates.environment.dev',
+            'generator.fieldTemplates.environment.dev',
+          ),
           color: 'arcoblue',
         },
         {
           value: 'test',
-          label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.environment.test', 'generator.fieldTemplates.environment.test'),
-          labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.environment.test', 'generator.fieldTemplates.environment.test'),
+          label: resolveTemplateText(
+            resolveText,
+            'zh-CN',
+            'generator.fieldTemplates.environment.test',
+            'generator.fieldTemplates.environment.test',
+          ),
+          labelEn: resolveTemplateText(
+            resolveText,
+            'en-US',
+            'generator.fieldTemplates.environment.test',
+            'generator.fieldTemplates.environment.test',
+          ),
           color: 'purple',
         },
         {
           value: 'staging',
-          label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.environment.staging', 'generator.fieldTemplates.environment.staging'),
-          labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.environment.staging', 'generator.fieldTemplates.environment.staging'),
+          label: resolveTemplateText(
+            resolveText,
+            'zh-CN',
+            'generator.fieldTemplates.environment.staging',
+            'generator.fieldTemplates.environment.staging',
+          ),
+          labelEn: resolveTemplateText(
+            resolveText,
+            'en-US',
+            'generator.fieldTemplates.environment.staging',
+            'generator.fieldTemplates.environment.staging',
+          ),
           color: 'orange',
         },
         {
           value: 'prod',
-          label: resolveTemplateText(resolveText, 'zh-CN', 'generator.fieldTemplates.environment.prod', 'generator.fieldTemplates.environment.prod'),
-          labelEn: resolveTemplateText(resolveText, 'en-US', 'generator.fieldTemplates.environment.prod', 'generator.fieldTemplates.environment.prod'),
+          label: resolveTemplateText(
+            resolveText,
+            'zh-CN',
+            'generator.fieldTemplates.environment.prod',
+            'generator.fieldTemplates.environment.prod',
+          ),
+          labelEn: resolveTemplateText(
+            resolveText,
+            'en-US',
+            'generator.fieldTemplates.environment.prod',
+            'generator.fieldTemplates.environment.prod',
+          ),
           color: 'red',
         },
       ],
@@ -561,7 +833,9 @@ export function buildRoutePath(scope: ModuleScope, name: string): string {
 }
 
 export function normalizeMenuPath(value?: string): string {
-  const normalized = String(value || '').trim().replace(/\\/g, '/');
+  const normalized = String(value || '')
+    .trim()
+    .replace(/\\/g, '/');
   if (!normalized) {
     return '';
   }
@@ -608,7 +882,11 @@ export function buildFieldLabelKey(scope: ModuleScope, name: string, fieldName: 
   return `${buildModuleNamespace(scope, name)}.field.${fieldName}.label`;
 }
 
-export function buildFieldPlaceholderKey(scope: ModuleScope, name: string, fieldName: string): string {
+export function buildFieldPlaceholderKey(
+  scope: ModuleScope,
+  name: string,
+  fieldName: string,
+): string {
   return `${buildModuleNamespace(scope, name)}.field.${fieldName}.placeholder`;
 }
 
@@ -616,15 +894,28 @@ export function buildFieldHelpTextKey(scope: ModuleScope, name: string, fieldNam
   return `${buildModuleNamespace(scope, name)}.field.${fieldName}.helpText`;
 }
 
-export function buildEnumOptionKey(scope: ModuleScope, name: string, fieldName: string, optionValue: string): string {
+export function buildEnumOptionKey(
+  scope: ModuleScope,
+  name: string,
+  fieldName: string,
+  optionValue: string,
+): string {
   return `${buildModuleNamespace(scope, name)}.field.${fieldName}.option.${optionValue}`;
 }
 
-export function buildPermissionTitleKey(scope: ModuleScope, name: string, action: PageActionKey): string {
+export function buildPermissionTitleKey(
+  scope: ModuleScope,
+  name: string,
+  action: PageActionKey,
+): string {
   return `${buildModuleNamespace(scope, name)}.permission.${action}`;
 }
 
-export function buildAuditActionKey(scope: ModuleScope, name: string, action: 'create' | 'update' | 'delete'): string {
+export function buildAuditActionKey(
+  scope: ModuleScope,
+  name: string,
+  action: 'create' | 'update' | 'delete',
+): string {
   return `${buildModuleNamespace(scope, name)}.audit.${action}`;
 }
 
@@ -649,11 +940,18 @@ export function inferModelName(schema: ModuleSchema): string {
   return toPascalCase(schema.name);
 }
 
-export function getPageActions(schema: Pick<ModuleSchema, 'pageActions' | 'pageActionTemplate' | 'enableExport' | 'enableImport'>): PageActionKey[] {
+export function getPageActions(
+  schema: Pick<
+    ModuleSchema,
+    'pageActions' | 'pageActionTemplate' | 'enableExport' | 'enableImport'
+  >,
+): PageActionKey[] {
   if (schema.pageActions && schema.pageActions.length > 0) {
     return Array.from(new Set(schema.pageActions));
   }
-  const template = PAGE_ACTION_TEMPLATE_DEFINITIONS.find((item) => item.key === schema.pageActionTemplate) ?? PAGE_ACTION_TEMPLATE_DEFINITIONS[0];
+  const template =
+    PAGE_ACTION_TEMPLATE_DEFINITIONS.find((item) => item.key === schema.pageActionTemplate) ??
+    PAGE_ACTION_TEMPLATE_DEFINITIONS[0];
   const actions = [...template.actions];
   if (schema.enableExport && !actions.includes('export')) {
     actions.push('export');
@@ -664,7 +962,10 @@ export function getPageActions(schema: Pick<ModuleSchema, 'pageActions' | 'pageA
   return actions;
 }
 
-export function applyFieldTemplate(templateKey: FieldTemplateKey, resolveText?: TemplateTextResolver): ModuleField | null {
+export function applyFieldTemplate(
+  templateKey: FieldTemplateKey,
+  resolveText?: TemplateTextResolver,
+): ModuleField | null {
   const template = FIELD_TEMPLATE_DEFINITIONS.find((item) => item.key === templateKey);
   return template ? template.createField(resolveText) : null;
 }
@@ -767,7 +1068,12 @@ export function generateDefaultPermissions(schema: ModuleSchema): PermissionConf
   const actions = getPageActions(schema);
 
   return [
-    { key: `${permissionPrefix}:list`, name: buildPermissionTitleKey(scope, name, 'view'), type: 'menu', module: moduleNamespace },
+    {
+      key: `${permissionPrefix}:list`,
+      name: buildPermissionTitleKey(scope, name, 'view'),
+      type: 'menu',
+      module: moduleNamespace,
+    },
     ...actions
       .filter((action) => action !== 'detail')
       .map((action) => ({
@@ -839,7 +1145,10 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
   }
 
   for (const dependency of schema.dependencies ?? []) {
-    if (!isValidScopedModulePath('business', dependency.module) && !isValidScopedModulePath('system', dependency.module)) {
+    if (
+      !isValidScopedModulePath('business', dependency.module) &&
+      !isValidScopedModulePath('system', dependency.module)
+    ) {
       issues.push({
         code: 'dependency_invalid',
         level: 'error',
@@ -872,7 +1181,11 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
     requiredKeys.add(menu.titleKey);
   }
   requiredKeys.add(buildTitleKey(schema.scope, schema.name));
-  if (schema.scope === 'business' && shouldGenerateNavigation(schema) && schema.includeDashboardWidget !== false) {
+  if (
+    schema.scope === 'business' &&
+    shouldGenerateNavigation(schema) &&
+    schema.includeDashboardWidget !== false
+  ) {
     requiredKeys.add(buildDashboardQuickActionDescriptionKey(schema.scope, schema.name));
   }
   for (const field of schema.model.fields) {
@@ -893,10 +1206,20 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
 
   for (const key of requiredKeys) {
     if (!zh[key]) {
-      issues.push({ code: 'i18n_zh_missing', level: 'error', messageKey: 'generator.validation.i18nZhMissing', detail: key });
+      issues.push({
+        code: 'i18n_zh_missing',
+        level: 'error',
+        messageKey: 'generator.validation.i18nZhMissing',
+        detail: key,
+      });
     }
     if (!en[key]) {
-      issues.push({ code: 'i18n_en_missing', level: 'error', messageKey: 'generator.validation.i18nEnMissing', detail: key });
+      issues.push({
+        code: 'i18n_en_missing',
+        level: 'error',
+        messageKey: 'generator.validation.i18nEnMissing',
+        detail: key,
+      });
     }
   }
 

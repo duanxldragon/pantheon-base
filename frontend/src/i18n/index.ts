@@ -4,7 +4,7 @@ import { getLangPack } from '../modules/system/i18n/api';
 
 export const SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR'] as const;
 
-export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 type FallbackResourceMap = Record<string, string>;
 
@@ -69,10 +69,12 @@ async function ensureLocaleResources(locale: SupportedLocale) {
   const fallbackLocale: SupportedLocale = 'zh-CN';
   const localesToLoad = locale === fallbackLocale ? [fallbackLocale] : [fallbackLocale, locale];
 
-  await Promise.all(localesToLoad.map(async (item) => {
-    const resources = await buildLocaleResources(item);
-    i18n.addResourceBundle(item, 'translation', resources.translation, true, true);
-  }));
+  await Promise.all(
+    localesToLoad.map(async (item) => {
+      const resources = await buildLocaleResources(item);
+      i18n.addResourceBundle(item, 'translation', resources.translation, true, true);
+    }),
+  );
 }
 
 // 初始化 i18n
@@ -86,16 +88,14 @@ export async function initI18n() {
     resources[currentLang] = await buildLocaleResources(currentLang);
   }
 
-  await i18n
-    .use(initReactI18next)
-    .init({
-      resources,
-      lng: currentLang,
-      fallbackLng: 'zh-CN',
-      interpolation: {
-        escapeValue: false,
-      },
-    });
+  await i18n.use(initReactI18next).init({
+    resources,
+    lng: currentLang,
+    fallbackLng: 'zh-CN',
+    interpolation: {
+      escapeValue: false,
+    },
+  });
 }
 
 export async function switchI18nLanguage(locale: string) {

@@ -19,22 +19,38 @@ const staticComponentRegistry = {
   'dashboard': defineRegistryEntry(() => import('../../modules/dashboard/Dashboard')),
   'auth/SecurityCenter': defineRegistryEntry(() => import('../../modules/auth/SecurityCenter')),
   'auth/LoginLogList': defineRegistryEntry(() => import('../../modules/auth/LoginLogList')),
-  'auth/SecurityEventList': defineRegistryEntry(() => import('../../modules/auth/SecurityEventList')),
+  'auth/SecurityEventList': defineRegistryEntry(
+    () => import('../../modules/auth/SecurityEventList'),
+  ),
   'auth/SessionList': defineRegistryEntry(() => import('../../modules/auth/SessionList')),
-  'system/profile/ProfileCenter': defineRegistryEntry(() => import('../../modules/system/profile/ProfileCenter')),
+  'system/profile/ProfileCenter': defineRegistryEntry(
+    () => import('../../modules/system/profile/ProfileCenter'),
+  ),
   'system/dict/DictPage': defineRegistryEntry(() => import('../../modules/system/dict/DictPage')),
   'system/i18n/I18nList': defineRegistryEntry(() => import('../../modules/system/i18n/I18nList')),
   'system/dept/DeptList': defineRegistryEntry(() => import('../../modules/system/dept/DeptList')),
   'system/menu/MenuList': defineRegistryEntry(() => import('../../modules/system/menu/MenuList')),
-  'system/permission/PermissionList': defineRegistryEntry(() => import('../../modules/system/permission/PermissionList')),
+  'system/permission/PermissionList': defineRegistryEntry(
+    () => import('../../modules/system/permission/PermissionList'),
+  ),
   'system/post/PostList': defineRegistryEntry(() => import('../../modules/system/post/PostList')),
   'system/role/RoleList': defineRegistryEntry(() => import('../../modules/system/role/RoleList')),
-  'system/setting/SettingPage': defineRegistryEntry(() => import('../../modules/system/setting/SettingPage')),
+  'system/setting/SettingPage': defineRegistryEntry(
+    () => import('../../modules/system/setting/SettingPage'),
+  ),
   'system/user/UserList': defineRegistryEntry(() => import('../../modules/system/user/UserList')),
-  'system/user/UserDetail': defineRegistryEntry(() => import('../../modules/system/user/UserDetail')),
-  'system/audit/OperationLogList': defineRegistryEntry(() => import('../../modules/system/audit/OperationLogList')),
-  'system/dynamicmodule/ModuleManager': defineRegistryEntry(() => import('../../modules/system/dynamicmodule/ModuleManager')),
-  'system/generator/ModuleWizard': defineRegistryEntry(() => import('../../modules/generator/pages/ModuleWizard')),
+  'system/user/UserDetail': defineRegistryEntry(
+    () => import('../../modules/system/user/UserDetail'),
+  ),
+  'system/audit/OperationLogList': defineRegistryEntry(
+    () => import('../../modules/system/audit/OperationLogList'),
+  ),
+  'system/dynamicmodule/ModuleManager': defineRegistryEntry(
+    () => import('../../modules/system/dynamicmodule/ModuleManager'),
+  ),
+  'system/generator/ModuleWizard': defineRegistryEntry(
+    () => import('../../modules/generator/pages/ModuleWizard'),
+  ),
 } satisfies Record<string, RegistryEntry>;
 
 const componentRegistry = {

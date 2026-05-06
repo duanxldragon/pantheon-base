@@ -1,6 +1,11 @@
 import React from 'react';
 import { Space, Typography } from '@arco-design/web-react';
-import { formatDateTime, formatRelativeTime, isValidDateValue, type DateValue } from '../../core/format/dateTime';
+import {
+  formatDateTime,
+  formatRelativeTime,
+  isValidDateValue,
+  type DateValue,
+} from '../../core/format/dateTime';
 
 interface DateTimeMetaProps {
   value?: DateValue;
@@ -18,7 +23,8 @@ const DateTimeMeta: React.FC<DateTimeMetaProps> = ({
   className,
 }) => {
   if (!isValidDateValue(value)) {
-    const text = value === null || value === undefined || value === '' ? fallback : formatDateTime(value);
+    const text =
+      value === null || value === undefined || value === '' ? fallback : formatDateTime(value);
     return <>{text}</>;
   }
 

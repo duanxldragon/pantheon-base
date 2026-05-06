@@ -46,7 +46,11 @@ const TableBatchActionBar: React.FC<TableBatchActionBarProps> = ({
         </div>
         {actions ? <div className="table-batch-action-bar__actions">{actions}</div> : null}
       </div>
-      {hint ? <Typography.Text type="secondary" className="table-batch-action-bar__hint">{hint}</Typography.Text> : null}
+      {hint ? (
+        <Typography.Text type="secondary" className="table-batch-action-bar__hint">
+          {hint}
+        </Typography.Text>
+      ) : null}
     </div>
   );
 };

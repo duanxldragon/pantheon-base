@@ -395,7 +395,7 @@ npm run audit:i18n-locales
 npm run type-check
 npm run lint
 npm run format:check
-npm audit --audit-level=high
+npm run audit
 npm run build
 ```
 

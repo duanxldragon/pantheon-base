@@ -16,6 +16,9 @@
     "type-check": "tsc -b",
     "export:i18n-builtin-snapshot": "cd .. && node frontend/scripts/export-i18n-builtin-snapshot.mjs",
     "lint": "eslint .",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "audit": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
     "preview": "vite preview",
     "test:smoke:role-auth": "playwright test tests/smoke/role-authorization.spec.ts --config=playwright.config.ts",
     "test:smoke:system": "playwright test tests/smoke/system-pages.spec.ts --config=playwright.config.ts",
@@ -49,6 +52,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "jszip": "^3.10.1",
+    "prettier": "^3.8.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.4"

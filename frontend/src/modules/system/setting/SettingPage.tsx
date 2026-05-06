@@ -1,18 +1,59 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Form, Input, InputNumber, Message, Select, Space, Switch, Tabs, Tag, Typography } from '@arco-design/web-react';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  InputNumber,
+  Message,
+  Select,
+  Space,
+  Switch,
+  Tabs,
+  Tag,
+  Typography,
+} from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconRefresh } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
-import { AppTable, FormSection, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, StandardRailNotePanel, StandardRailSummary, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
+import {
+  AppTable,
+  FormSection,
+  PageContainer,
+  PageEmpty,
+  PageError,
+  PageHeader,
+  PageLoading,
+  PageNetworkError,
+  PageServerError,
+  PageSplitLayout,
+  StandardRailNotePanel,
+  StandardRailSummary,
+  SubmitBar,
+  TABLE_ACTION_COLUMN_WIDTH,
+  withTableColumnPriority,
+} from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmData, resolveRouteWarmData } from '../../../core/router/prefetch';
-import { applyPantheonDefaultTheme, clearPantheonThemePreference, pantheonThemeOptions, type PantheonThemeKey } from '../../../core/theme/theme';
-import { hasExplicitLanguagePreference, refreshPublicSettings } from '../../../core/settings/publicSettings';
+import {
+  applyPantheonDefaultTheme,
+  clearPantheonThemePreference,
+  pantheonThemeOptions,
+  type PantheonThemeKey,
+} from '../../../core/theme/theme';
+import {
+  hasExplicitLanguagePreference,
+  refreshPublicSettings,
+} from '../../../core/settings/publicSettings';
 import { usePermission } from '../../../hooks/usePermission';
 import { SUPPORTED_LOCALES, switchI18nLanguage } from '../../../i18n';
 import {
@@ -145,7 +186,11 @@ function serializeSettingValue(item: SettingItem, rawValue: SettingFormValue) {
       }
       return String(rawValue);
     }
-    if (typeof rawValue === 'string' && rawValue.trim() !== '' && Number.isFinite(Number(rawValue.trim()))) {
+    if (
+      typeof rawValue === 'string' &&
+      rawValue.trim() !== '' &&
+      Number.isFinite(Number(rawValue.trim()))
+    ) {
       return rawValue.trim();
     }
     throw new Error('setting.value.invalid_number');
@@ -204,10 +249,14 @@ const SettingPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const rows = await resolveRouteWarmData('/system/setting', 'list:default', () => getSettingList());
+      const rows = await resolveRouteWarmData('/system/setting', 'list:default', () =>
+        getSettingList(),
+      );
       setSettings(rows);
       try {
-        const overviewResp = await resolveRouteWarmData('/system/setting', 'overview', () => getSettingOverview());
+        const overviewResp = await resolveRouteWarmData('/system/setting', 'overview', () =>
+          getSettingOverview(),
+        );
         setOverview(overviewResp);
       } catch {
         setOverview(null);
@@ -226,22 +275,25 @@ const SettingPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadData]);
 
-  const loadAudit = useCallback(async (groupKey: string, page = 1, pageSize = defaultAuditPageSize) => {
-    setAuditLoading(true);
-    try {
-      const result = await getSettingAuditList({ groupKey, page, pageSize });
-      setAuditRows(result.items);
-      setAuditTotal(result.total);
-      setAuditQuery({
-        page: result.page || page,
-        pageSize: result.pageSize || pageSize,
-      });
-    } catch {
-      Message.error(t('common.loadFailed'));
-    } finally {
-      setAuditLoading(false);
-    }
-  }, [t]);
+  const loadAudit = useCallback(
+    async (groupKey: string, page = 1, pageSize = defaultAuditPageSize) => {
+      setAuditLoading(true);
+      try {
+        const result = await getSettingAuditList({ groupKey, page, pageSize });
+        setAuditRows(result.items);
+        setAuditTotal(result.total);
+        setAuditQuery({
+          page: result.page || page,
+          pageSize: result.pageSize || pageSize,
+        });
+      } catch {
+        Message.error(t('common.loadFailed'));
+      } finally {
+        setAuditLoading(false);
+      }
+    },
+    [t],
+  );
 
   const groupedSettings = useMemo(() => {
     const buckets = new Map<string, SettingItem[]>();
@@ -255,7 +307,8 @@ const SettingPage: React.FC = () => {
       .map((groupKey) => ({ groupKey, items: buckets.get(groupKey) || [] }));
   }, [settings]);
 
-  const activeSettingGroup = groupedSettings.find((item) => item.groupKey === activeGroup) || groupedSettings[0];
+  const activeSettingGroup =
+    groupedSettings.find((item) => item.groupKey === activeGroup) || groupedSettings[0];
   const activeGroupKey = activeSettingGroup?.groupKey;
 
   useRefreshSubscription('system:setting:changed', () => {
@@ -310,7 +363,9 @@ const SettingPage: React.FC = () => {
         settingKey: item.settingKey,
         settingValue: serializeSettingValue(
           item,
-          readFormFieldValue(values as Record<string, unknown>, item.settingKey, (name) => form.getFieldValue(name)),
+          readFormFieldValue(values as Record<string, unknown>, item.settingKey, (name) =>
+            form.getFieldValue(name),
+          ),
         ),
       }));
       setSubmittingGroup(group.groupKey);
@@ -338,7 +393,10 @@ const SettingPage: React.FC = () => {
     } catch (submitError) {
       if (submitError instanceof Error && submitError.message === 'setting.value.invalid_number') {
         Message.error(t('setting.value.invalid_number'));
-      } else if (submitError instanceof Error && submitError.message === 'setting.value.invalid_audit_retention') {
+      } else if (
+        submitError instanceof Error &&
+        submitError.message === 'setting.value.invalid_audit_retention'
+      ) {
         Message.error(t('system.setting.audit.retentionRequired'));
       }
     } finally {
@@ -366,10 +424,15 @@ const SettingPage: React.FC = () => {
   const formatDefaultValueLabel = (item: SettingItem) => {
     if (auditRetentionSettingKeys.has(item.settingKey)) {
       const defaultValues = resolveAuditRetentionDefaultValues(item);
-      return defaultValues.map((option) => t('common.keepRecentDays', { count: Number(option) })).join(' / ');
+      return defaultValues
+        .map((option) => t('common.keepRecentDays', { count: Number(option) }))
+        .join(' / ');
     }
     if (item.settingKey === 'upload.storage_driver') {
-      return t(`system.setting.option.upload.storage_driver.${item.defaultValue}`, item.defaultValue);
+      return t(
+        `system.setting.option.upload.storage_driver.${item.defaultValue}`,
+        item.defaultValue,
+      );
     }
     if (item.settingKey === 'i18n.default_language') {
       return t(`app.language.${item.defaultValue}`, item.defaultValue);
@@ -392,10 +455,13 @@ const SettingPage: React.FC = () => {
 
   const renderField = (item: SettingItem) => {
     const label = t(`system.setting.item.${item.settingKey}`, item.settingKey);
-    const isWideField = auditRetentionSettingKeys.has(item.settingKey)
-      || item.valueType === 'json'
-      || item.isEncrypted === 1;
-    const fieldClassName = isWideField ? 'setting-page__field setting-page__field--full' : 'setting-page__field';
+    const isWideField =
+      auditRetentionSettingKeys.has(item.settingKey) ||
+      item.valueType === 'json' ||
+      item.isEncrypted === 1;
+    const fieldClassName = isWideField
+      ? 'setting-page__field setting-page__field--full'
+      : 'setting-page__field';
     const remark = t(item.remark, '');
     const help = (
       <Space direction="vertical" size={4}>
@@ -404,7 +470,9 @@ const SettingPage: React.FC = () => {
           <Space size={8} wrap>
             <Tag color="red">{t('system.setting.encrypted')}</Tag>
             <Typography.Text type="secondary">
-              {item.hasValue === 1 ? t('system.setting.leaveEmptyToKeep') : t('system.setting.encryptedEmptyHint')}
+              {item.hasValue === 1
+                ? t('system.setting.leaveEmptyToKeep')
+                : t('system.setting.encryptedEmptyHint')}
             </Typography.Text>
           </Space>
         ) : (
@@ -428,7 +496,13 @@ const SettingPage: React.FC = () => {
 
     if (item.settingKey === 'ui.default_theme') {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+        >
           <Select
             options={pantheonThemeOptions.map((theme) => ({
               label: `${t(theme.labelKey)} · ${t(theme.descriptionKey)}`,
@@ -440,10 +514,19 @@ const SettingPage: React.FC = () => {
     }
     if (item.settingKey === 'platform.app_mode') {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+        >
           <Select
             options={[
-              { label: t('system.setting.option.platform.app_mode.enterprise'), value: 'enterprise' },
+              {
+                label: t('system.setting.option.platform.app_mode.enterprise'),
+                value: 'enterprise',
+              },
               { label: t('system.setting.option.platform.app_mode.consumer'), value: 'consumer' },
               { label: t('system.setting.option.platform.app_mode.hybrid'), value: 'hybrid' },
             ]}
@@ -453,7 +536,13 @@ const SettingPage: React.FC = () => {
     }
     if (item.settingKey === 'upload.storage_driver') {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+        >
           <Select
             options={[
               { label: t('system.setting.option.upload.storage_driver.local'), value: 'local' },
@@ -465,7 +554,13 @@ const SettingPage: React.FC = () => {
     }
     if (item.settingKey === 'i18n.default_language') {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+        >
           <Select
             options={SUPPORTED_LOCALES.map((locale) => ({
               label: t(`app.language.${locale}`),
@@ -485,11 +580,18 @@ const SettingPage: React.FC = () => {
           label={label}
           extra={help}
           rules={[
-            { required: true, type: 'array', minLength: 1, message: t('system.setting.audit.retentionRequired') },
+            {
+              required: true,
+              type: 'array',
+              minLength: 1,
+              message: t('system.setting.audit.retentionRequired'),
+            },
             {
               validator: (_value, callback) => {
                 const currentValue = form.getFieldValue(item.settingKey);
-                const normalized = normalizeAuditRetentionTagValues(Array.isArray(currentValue) ? currentValue : []);
+                const normalized = normalizeAuditRetentionTagValues(
+                  Array.isArray(currentValue) ? currentValue : [],
+                );
                 if (normalized.length === 0) {
                   callback(t('system.setting.audit.retentionRequired'));
                   return;
@@ -513,13 +615,18 @@ const SettingPage: React.FC = () => {
                 value: String(option),
               }))}
               onChange={(value) => {
-                form.setFieldValue(item.settingKey, normalizeAuditRetentionTagValues(value as Array<string | number>));
+                form.setFieldValue(
+                  item.settingKey,
+                  normalizeAuditRetentionTagValues(value as Array<string | number>),
+                );
               }}
             />
             <FormItem noStyle shouldUpdate>
               {() => {
                 const currentValue = normalizeAuditRetentionTagValues(
-                  Array.isArray(form.getFieldValue(item.settingKey)) ? form.getFieldValue(item.settingKey) as Array<string | number> : [],
+                  Array.isArray(form.getFieldValue(item.settingKey))
+                    ? (form.getFieldValue(item.settingKey) as Array<string | number>)
+                    : [],
                 );
                 const dirty = !isSameStringArray(currentValue, savedValues);
                 if (!dirty) {
@@ -535,7 +642,14 @@ const SettingPage: React.FC = () => {
 
     if (item.valueType === 'boolean') {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help} triggerPropName="checked">
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+          triggerPropName="checked"
+        >
           <Switch checkedText={t('common.yes')} uncheckedText={t('common.no')} />
         </FormItem>
       );
@@ -579,9 +693,19 @@ const SettingPage: React.FC = () => {
     }
     if (item.isEncrypted === 1) {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+        >
           <Input.Password
-            placeholder={item.hasValue === 1 ? t('system.setting.leaveEmptyToKeep') : t('system.setting.encryptedPlaceholder')}
+            placeholder={
+              item.hasValue === 1
+                ? t('system.setting.leaveEmptyToKeep')
+                : t('system.setting.encryptedPlaceholder')
+            }
             onPressEnter={() => form.submit()}
           />
         </FormItem>
@@ -589,13 +713,25 @@ const SettingPage: React.FC = () => {
     }
     if (item.valueType === 'json') {
       return (
-        <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+        >
           <Input.TextArea autoSize={{ minRows: 4, maxRows: 10 }} />
         </FormItem>
       );
     }
     return (
-      <FormItem key={item.settingKey} className={fieldClassName} field={item.settingKey} label={label} extra={help}>
+      <FormItem
+        key={item.settingKey}
+        className={fieldClassName}
+        field={item.settingKey}
+        label={label}
+        extra={help}
+      >
         <Input onPressEnter={() => form.submit()} />
       </FormItem>
     );
@@ -603,12 +739,31 @@ const SettingPage: React.FC = () => {
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadData(); }} />;
+      return (
+        <PageNetworkError
+          timeout={isTimeoutRequestError(error)}
+          onRetry={() => {
+            void loadData();
+          }}
+        />
+      );
     }
     if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => { void loadData(); }} />;
+      return (
+        <PageServerError
+          onRetry={() => {
+            void loadData();
+          }}
+        />
+      );
     }
-    return <PageError onRetry={() => { void loadData(); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadData();
+        }}
+      />
+    );
   };
 
   const renderAuditChange = (change: SettingAuditChange) => {
@@ -639,19 +794,22 @@ const SettingPage: React.FC = () => {
       dataIndex: 'operName',
       render: (value: string) => value || '-',
     },
-    withTableColumnPriority({
-      title: t('system.setting.audit.ip'),
-      dataIndex: 'operIp',
-      render: (value: string) => value || '-',
-    }, 'medium'),
+    withTableColumnPriority(
+      {
+        title: t('system.setting.audit.ip'),
+        dataIndex: 'operIp',
+        render: (value: string) => value || '-',
+      },
+      'medium',
+    ),
     {
       title: t('system.setting.audit.changes'),
       dataIndex: 'changes',
       render: (changes: SettingAuditChange[]) => (
         <Space direction="vertical" size={4}>
-          {changes.length > 0 ? changes.map((change) => (
-            <div key={change.settingKey}>{renderAuditChange(change)}</div>
-          )) : (
+          {changes.length > 0 ? (
+            changes.map((change) => <div key={change.settingKey}>{renderAuditChange(change)}</div>)
+          ) : (
             <Typography.Text type="secondary">{t('system.setting.audit.noChange')}</Typography.Text>
           )}
         </Space>
@@ -660,11 +818,12 @@ const SettingPage: React.FC = () => {
     {
       title: t('system.setting.audit.status'),
       dataIndex: 'status',
-      render: (value: number) => value === 1 ? (
-        <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
-      ) : (
-        <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>
-      ),
+      render: (value: number) =>
+        value === 1 ? (
+          <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
+        ) : (
+          <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>
+        ),
     },
     {
       title: t('system.setting.audit.operTime'),
@@ -705,26 +864,28 @@ const SettingPage: React.FC = () => {
     await exportSettingAudit({ groupKey: activeGroupKey });
   };
 
-  const heroStats = overview ? [
-    {
-      key: 'total',
-      label: t('system.setting.overview.totalSettings'),
-      value: overview.totalSettingCount,
-      hint: t('system.setting.hero.totalHint'),
-    },
-    {
-      key: 'public',
-      label: t('system.setting.overview.publicSettings'),
-      value: overview.publicSettingCount,
-      hint: t('system.setting.hero.publicHint'),
-    },
-    {
-      key: 'risk',
-      label: t('system.setting.overview.risks'),
-      value: overview.riskCount,
-      hint: t('system.setting.hero.riskHint'),
-    },
-  ] : [];
+  const heroStats = overview
+    ? [
+        {
+          key: 'total',
+          label: t('system.setting.overview.totalSettings'),
+          value: overview.totalSettingCount,
+          hint: t('system.setting.hero.totalHint'),
+        },
+        {
+          key: 'public',
+          label: t('system.setting.overview.publicSettings'),
+          value: overview.publicSettingCount,
+          hint: t('system.setting.hero.publicHint'),
+        },
+        {
+          key: 'risk',
+          label: t('system.setting.overview.risks'),
+          value: overview.riskCount,
+          hint: t('system.setting.hero.riskHint'),
+        },
+      ]
+    : [];
 
   return (
     <PageContainer>
@@ -733,7 +894,9 @@ const SettingPage: React.FC = () => {
           <Card className="page-panel system-page-hero system-list__hero setting-page__hero">
             <div className="system-page-hero__top">
               <div className="system-page-hero__copy">
-                <span className="system-page-hero__eyebrow">{t('system.setting.hero.eyebrow')}</span>
+                <span className="system-page-hero__eyebrow">
+                  {t('system.setting.hero.eyebrow')}
+                </span>
                 <PageHeader
                   title={t('system.menu.setting')}
                   subtitle={t('system.setting.hero.title')}
@@ -760,110 +923,165 @@ const SettingPage: React.FC = () => {
         )}
         {loading && settings.length === 0 ? <PageLoading /> : null}
         {error && settings.length === 0 ? renderErrorState() : null}
-        {!loading && !error && settings.length === 0 ? <PageEmpty description={t('system.setting.empty')} /> : null}
+        {!loading && !error && settings.length === 0 ? (
+          <PageEmpty description={t('system.setting.empty')} />
+        ) : null}
         {settings.length > 0 ? (
           <PageSplitLayout
             className="setting-page__layout"
             railClassName="setting-page__side-column"
-            rail={overview ? (
-              <div>
-                <StandardRailSummary
-                  title={t('system.setting.overview.runtime')}
-                  items={[
-                    { label: t('system.setting.item.upload.storage_driver'), value: t(`system.setting.option.upload.storage_driver.${overview.storageDriver}`, overview.storageDriver), description: t('system.setting.hero.storageHint') },
-                    { label: t('system.setting.item.i18n.default_language'), value: t(`app.language.${overview.defaultLanguage}`, overview.defaultLanguage), description: t('system.setting.hero.languageHint') },
-                    { label: t('system.setting.item.ui.default_theme'), value: overview.defaultTheme, description: t('system.setting.hero.themeHint') },
-                  ]}
-                />
-                {overview.issues.length > 0 ? (
+            rail={
+              overview ? (
+                <div>
                   <StandardRailSummary
-                    title={t('system.setting.hero.sideTitle')}
-                    items={overview.issues.slice(0, 4).map((issue) => ({
-                      tone: issue.severity === 'critical' ? 'danger' : 'warning',
-                      label: <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>{t(`system.setting.overview.severity.${issue.severity}`)}</Tag>,
-                      value: t(`system.setting.item.${issue.settingKey}`, issue.settingKey),
-                      description: t(issue.reasonKey),
-                    }))}
+                    title={t('system.setting.overview.runtime')}
+                    items={[
+                      {
+                        label: t('system.setting.item.upload.storage_driver'),
+                        value: t(
+                          `system.setting.option.upload.storage_driver.${overview.storageDriver}`,
+                          overview.storageDriver,
+                        ),
+                        description: t('system.setting.hero.storageHint'),
+                      },
+                      {
+                        label: t('system.setting.item.i18n.default_language'),
+                        value: t(
+                          `app.language.${overview.defaultLanguage}`,
+                          overview.defaultLanguage,
+                        ),
+                        description: t('system.setting.hero.languageHint'),
+                      },
+                      {
+                        label: t('system.setting.item.ui.default_theme'),
+                        value: overview.defaultTheme,
+                        description: t('system.setting.hero.themeHint'),
+                      },
+                    ]}
                   />
-                ) : (
-                  <StandardRailNotePanel
-                    title={t('system.setting.hero.sideTitle')}
-                    noteTitle={t('system.setting.overview.noRisks')}
-                    noteDescription={t('system.setting.hero.sideDesc')}
-                  />
-                )}
-              </div>
-            ) : null}
+                  {overview.issues.length > 0 ? (
+                    <StandardRailSummary
+                      title={t('system.setting.hero.sideTitle')}
+                      items={overview.issues.slice(0, 4).map((issue) => ({
+                        tone: issue.severity === 'critical' ? 'danger' : 'warning',
+                        label: (
+                          <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>
+                            {t(`system.setting.overview.severity.${issue.severity}`)}
+                          </Tag>
+                        ),
+                        value: t(`system.setting.item.${issue.settingKey}`, issue.settingKey),
+                        description: t(issue.reasonKey),
+                      }))}
+                    />
+                  ) : (
+                    <StandardRailNotePanel
+                      title={t('system.setting.hero.sideTitle')}
+                      noteTitle={t('system.setting.overview.noRisks')}
+                      noteDescription={t('system.setting.hero.sideDesc')}
+                    />
+                  )}
+                </div>
+              ) : null
+            }
           >
-              <Card className="page-panel setting-page__config-card">
-                <Tabs
-                  type="rounded"
-                  activeTab={activeSettingGroup?.groupKey}
-                  onChange={setActiveGroup}
+            <Card className="page-panel setting-page__config-card">
+              <Tabs
+                type="rounded"
+                activeTab={activeSettingGroup?.groupKey}
+                onChange={setActiveGroup}
+              >
+                {groupedSettings.map((group) => (
+                  <Tabs.TabPane
+                    key={group.groupKey}
+                    title={t(`system.setting.group.${group.groupKey}`)}
+                  />
+                ))}
+              </Tabs>
+              {activeSettingGroup ? (
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onSubmit={() => {
+                    void handleSubmit();
+                  }}
                 >
-                  {groupedSettings.map((group) => (
-                    <Tabs.TabPane key={group.groupKey} title={t(`system.setting.group.${group.groupKey}`)} />
-                  ))}
-                </Tabs>
-                {activeSettingGroup ? (
-                  <Form form={form} layout="vertical" onSubmit={() => { void handleSubmit(); }}>
-                    <Space direction="vertical" size={10} className="dialog-form-stack setting-page__form-stack" style={{ marginTop: 10 }}>
-                      <FormSection
-                        title={t(`system.setting.group.${activeSettingGroup.groupKey}`)}
-                        description={t(`system.setting.groupHint.${activeSettingGroup.groupKey}`, '')}
-                      >
-                        <div className="setting-page__field-grid">
-                          {activeSettingGroup.items.map(renderField)}
-                        </div>
-                      </FormSection>
-                      <Typography.Text type="secondary" className="setting-page__save-hint">{t('system.setting.saveHint')}</Typography.Text>
-                      <div className="setting-page__actions">
-                        <Space className="setting-page__meta-actions">
-                          <Button
-                            size="small"
-                            icon={<IconRefresh />}
-                            loading={refreshingCache}
-                            onClick={() => { void handleRefreshCache(); }}
-                            disabled={!canRefreshCache || !activeGroupKey}
-                          >
-                            {t('system.setting.cache.refresh')}
-                          </Button>
-                        </Space>
-                        <SubmitBar
-                          loading={submittingGroup === activeSettingGroup.groupKey}
-                          submitDisabled={!canUpdateSetting}
-                          onCancel={resetActiveGroupValues}
-                          onSubmit={() => { void handleSubmit(); }}
-                        />
+                  <Space
+                    direction="vertical"
+                    size={10}
+                    className="dialog-form-stack setting-page__form-stack"
+                    style={{ marginTop: 10 }}
+                  >
+                    <FormSection
+                      title={t(`system.setting.group.${activeSettingGroup.groupKey}`)}
+                      description={t(`system.setting.groupHint.${activeSettingGroup.groupKey}`, '')}
+                    >
+                      <div className="setting-page__field-grid">
+                        {activeSettingGroup.items.map(renderField)}
                       </div>
-                    </Space>
-                  </Form>
-                ) : null}
-              </Card>
-              {activeSettingGroup && canViewOperationLog ? (
-                <Card className="page-panel setting-page__audit-card">
-                  <div className="setting-page__audit-header">
-                    <div>
-                      <Typography.Text style={{ fontWeight: 600 }}>{t('system.setting.audit.title')}</Typography.Text>
-                      <Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>
-                        {t('common.total', { count: auditTotal })}
-                      </Typography.Paragraph>
+                    </FormSection>
+                    <Typography.Text type="secondary" className="setting-page__save-hint">
+                      {t('system.setting.saveHint')}
+                    </Typography.Text>
+                    <div className="setting-page__actions">
+                      <Space className="setting-page__meta-actions">
+                        <Button
+                          size="small"
+                          icon={<IconRefresh />}
+                          loading={refreshingCache}
+                          onClick={() => {
+                            void handleRefreshCache();
+                          }}
+                          disabled={!canRefreshCache || !activeGroupKey}
+                        >
+                          {t('system.setting.cache.refresh')}
+                        </Button>
+                      </Space>
+                      <SubmitBar
+                        loading={submittingGroup === activeSettingGroup.groupKey}
+                        submitDisabled={!canUpdateSetting}
+                        onCancel={resetActiveGroupValues}
+                        onSubmit={() => {
+                          void handleSubmit();
+                        }}
+                      />
                     </div>
-                    <Space>
-                      <Button size="small" onClick={() => { void handleExportAudit(); }} disabled={!canExportAudit}>
-                        {t('common.export')}
-                      </Button>
-                    </Space>
+                  </Space>
+                </Form>
+              ) : null}
+            </Card>
+            {activeSettingGroup && canViewOperationLog ? (
+              <Card className="page-panel setting-page__audit-card">
+                <div className="setting-page__audit-header">
+                  <div>
+                    <Typography.Text style={{ fontWeight: 600 }}>
+                      {t('system.setting.audit.title')}
+                    </Typography.Text>
+                    <Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>
+                      {t('common.total', { count: auditTotal })}
+                    </Typography.Paragraph>
                   </div>
-                  <AppTable<SettingAuditRow>
-                    className="system-list__table"
-                    rowKey="id"
-                    data={auditRows}
-                    columns={auditColumns}
-                    loading={auditLoading}
-                    scroll={{ x: 'max-content' }}
-                    onChange={handleAuditTableChange}
-                    pagination={{
+                  <Space>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        void handleExportAudit();
+                      }}
+                      disabled={!canExportAudit}
+                    >
+                      {t('common.export')}
+                    </Button>
+                  </Space>
+                </div>
+                <AppTable<SettingAuditRow>
+                  className="system-list__table"
+                  rowKey="id"
+                  data={auditRows}
+                  columns={auditColumns}
+                  loading={auditLoading}
+                  scroll={{ x: 'max-content' }}
+                  onChange={handleAuditTableChange}
+                  pagination={
+                    {
                       current: auditQuery.page,
                       pageSize: auditQuery.pageSize,
                       total: auditTotal,
@@ -873,10 +1091,11 @@ const SettingPage: React.FC = () => {
                       sizeOptions: [5, 10, 20, 50],
                       size: 'small',
                       showTotal: (count: number) => t('common.total', { count }),
-                    } as PaginationProps}
-                  />
-                </Card>
-              ) : null}
+                    } as PaginationProps
+                  }
+                />
+              </Card>
+            ) : null}
           </PageSplitLayout>
         ) : null}
       </Space>

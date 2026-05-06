@@ -71,7 +71,9 @@ const SecurityCenter: React.FC = () => {
       const [overviewResp, sessionsResp, loginLogsResp] = await Promise.all([
         resolveRouteWarmData('/auth/security', 'overview', () => getSecurityOverview()),
         resolveRouteWarmData('/auth/security', 'sessions', () => getSessions()),
-        resolveRouteWarmData('/auth/security', 'login-logs', () => getOwnLoginLogs({ page: 1, pageSize: 10 })),
+        resolveRouteWarmData('/auth/security', 'login-logs', () =>
+          getOwnLoginLogs({ page: 1, pageSize: 10 }),
+        ),
       ]);
       setOverview(overviewResp);
       setUserInfo(overviewResp.user);
@@ -209,7 +211,9 @@ const SecurityCenter: React.FC = () => {
       },
       {
         label: t('system.setting.item.login.source_max_failed_attempts'),
-        value: t('auth.security.policy.sourceMaxFailedAttempts', { count: policy.sourceMaxFailedAttempts }),
+        value: t('auth.security.policy.sourceMaxFailedAttempts', {
+          count: policy.sourceMaxFailedAttempts,
+        }),
         hint: t('system.setting.remark.login.source_max_failed_attempts'),
       },
       {
@@ -234,7 +238,9 @@ const SecurityCenter: React.FC = () => {
       },
       {
         label: t('system.setting.item.audit.session_retention_days'),
-        value: t('auth.security.policy.sessionRetentionDays', { count: policy.sessionRetentionDays }),
+        value: t('auth.security.policy.sessionRetentionDays', {
+          count: policy.sessionRetentionDays,
+        }),
         hint: t('system.setting.remark.audit.session_retention_days'),
       },
       {
@@ -259,9 +265,12 @@ const SecurityCenter: React.FC = () => {
     {
       title: t('auth.session.current'),
       dataIndex: 'isCurrent',
-      render: (_: unknown, record: AuthSession) => (
-        record.isCurrent ? <Tag color="arcoblue">{t('auth.session.currentDevice')}</Tag> : <Tag>{t('auth.session.otherDevice')}</Tag>
-      ),
+      render: (_: unknown, record: AuthSession) =>
+        record.isCurrent ? (
+          <Tag color="arcoblue">{t('auth.session.currentDevice')}</Tag>
+        ) : (
+          <Tag>{t('auth.session.otherDevice')}</Tag>
+        ),
     },
     {
       title: t('auth.session.ip'),
@@ -280,7 +289,8 @@ const SecurityCenter: React.FC = () => {
     {
       title: t('auth.session.lastActive'),
       dataIndex: 'lastRefreshAt',
-      render: (value: string | undefined, record: AuthSession) => renderActivityTime(value || record.createdAt),
+      render: (value: string | undefined, record: AuthSession) =>
+        renderActivityTime(value || record.createdAt),
     },
     {
       title: t('auth.session.refreshExpiresAt'),
@@ -339,7 +349,12 @@ const SecurityCenter: React.FC = () => {
     {
       title: t('auth.loginLog.status'),
       dataIndex: 'status',
-      render: (value: number) => value === 1 ? <Tag color="green">{t('auth.loginLog.status.success')}</Tag> : <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>,
+      render: (value: number) =>
+        value === 1 ? (
+          <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
+        ) : (
+          <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>
+        ),
     },
     {
       title: t('auth.loginLog.failureReason'),
@@ -354,7 +369,11 @@ const SecurityCenter: React.FC = () => {
       <Space direction="vertical" size={16} className="system-page-template">
         {loadFailed && !loading && !overview ? (
           <Card className="page-panel">
-            <PageError onRetry={() => { void loadSecurityContext(); }} />
+            <PageError
+              onRetry={() => {
+                void loadSecurityContext();
+              }}
+            />
           </Card>
         ) : null}
 
@@ -379,15 +398,32 @@ const SecurityCenter: React.FC = () => {
         </Card>
 
         <PageSplitLayout
-          rail={(
+          rail={
             <>
-              {loading && !overview ? <PageLoading /> : (
+              {loading && !overview ? (
+                <PageLoading />
+              ) : (
                 <StandardRailSummary
                   title={t('auth.security.overview')}
                   items={[
-                    { label: t('system.profile.username'), value: overview?.user?.username || userInfo?.username || '-', description: overview?.user?.nickname || userInfo?.nickname || '-' },
-                    { label: t('auth.security.currentDevice'), value: formatClientSummary(currentSession), description: currentSession?.lastIp || '-' },
-                    { label: t('auth.session.lastActive'), value: currentSession ? renderActivityTime(currentSession.lastRefreshAt || currentSession.createdAt) : '-' },
+                    {
+                      label: t('system.profile.username'),
+                      value: overview?.user?.username || userInfo?.username || '-',
+                      description: overview?.user?.nickname || userInfo?.nickname || '-',
+                    },
+                    {
+                      label: t('auth.security.currentDevice'),
+                      value: formatClientSummary(currentSession),
+                      description: currentSession?.lastIp || '-',
+                    },
+                    {
+                      label: t('auth.session.lastActive'),
+                      value: currentSession
+                        ? renderActivityTime(
+                            currentSession.lastRefreshAt || currentSession.createdAt,
+                          )
+                        : '-',
+                    },
                   ]}
                 />
               )}
@@ -395,15 +431,23 @@ const SecurityCenter: React.FC = () => {
               {policyItems.length > 0 ? (
                 <StandardRailSummary
                   title={t('auth.security.policy')}
-                  items={policyItems.map((item) => ({ label: item.label, value: item.value, description: item.hint }))}
+                  items={policyItems.map((item) => ({
+                    label: item.label,
+                    value: item.value,
+                    description: item.hint,
+                  }))}
                 />
               ) : null}
               {overview?.recentSecurityEvents?.length ? (
                 <StandardRailSummary
                   title={t('system.menu.securityEvent')}
                   items={overview.recentSecurityEvents.map((item) => ({
-                    label: t(`auth.securityEvent.type.${item.eventType}`, { defaultValue: item.eventType }),
-                    value: t(`auth.securityEvent.severity.${item.severity}`, { defaultValue: item.severity }),
+                    label: t(`auth.securityEvent.type.${item.eventType}`, {
+                      defaultValue: item.eventType,
+                    }),
+                    value: t(`auth.securityEvent.severity.${item.severity}`, {
+                      defaultValue: item.severity,
+                    }),
                     description: formatDateTime(item.createdAt),
                   }))}
                 />
@@ -414,106 +458,164 @@ const SecurityCenter: React.FC = () => {
                 noteDescription={t('auth.security.hero.sideDesc')}
               />
             </>
-          )}
+          }
         >
-            <Card className="page-panel" title={t('auth.security.password')} extra={<Tag color={overview?.passwordExpired ? 'red' : undefined}>{overview?.passwordExpired ? t('auth.security.passwordExpired') : t('auth.security.passwordTip')}</Tag>}>
-              <Form form={passwordForm} layout="vertical" onSubmit={() => { void handleChangePassword(); }}>
-                <Space direction="vertical" size={20} className="auth-section-stack">
-                  <FormSection title={t('system.profile.passwordTitle')} description={t('system.profile.passwordHint')}>
-                    <Row gutter={16} className="auth-form-grid">
-                      <Col xs={24} md={12}>
-                        <FormItem label={t('system.profile.oldPassword')} field="oldPassword" rules={[{ required: true, message: t('system.profile.oldPasswordRequired') }]}>
-                          <Input.Password prefix={<IconLock />} onPressEnter={() => passwordForm.submit()} />
-                        </FormItem>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <FormItem label={t('system.profile.newPassword')} field="newPassword" rules={[{ required: true, message: t('auth.passwordRequired') }]}>
-                          <Input.Password prefix={<IconLock />} onPressEnter={() => passwordForm.submit()} />
-                        </FormItem>
-                      </Col>
-                      <Col xs={24} md={12}>
-                        <FormItem
-                          label={t('system.profile.confirmPassword')}
-                          field="confirmPassword"
-                          rules={[
-                            { required: true, message: t('system.profile.confirmPasswordRequired') },
-                            {
-                              validator: (value, callback) => {
-                                const nextPassword = passwordForm.getFieldValue('newPassword');
-                                if (value && nextPassword && value !== nextPassword) {
-                                  callback(t('system.profile.confirmPasswordMismatch'));
-                                  return;
-                                }
-                                callback();
-                              },
+          <Card
+            className="page-panel"
+            title={t('auth.security.password')}
+            extra={
+              <Tag color={overview?.passwordExpired ? 'red' : undefined}>
+                {overview?.passwordExpired
+                  ? t('auth.security.passwordExpired')
+                  : t('auth.security.passwordTip')}
+              </Tag>
+            }
+          >
+            <Form
+              form={passwordForm}
+              layout="vertical"
+              onSubmit={() => {
+                void handleChangePassword();
+              }}
+            >
+              <Space direction="vertical" size={20} className="auth-section-stack">
+                <FormSection
+                  title={t('system.profile.passwordTitle')}
+                  description={t('system.profile.passwordHint')}
+                >
+                  <Row gutter={16} className="auth-form-grid">
+                    <Col xs={24} md={12}>
+                      <FormItem
+                        label={t('system.profile.oldPassword')}
+                        field="oldPassword"
+                        rules={[
+                          { required: true, message: t('system.profile.oldPasswordRequired') },
+                        ]}
+                      >
+                        <Input.Password
+                          prefix={<IconLock />}
+                          onPressEnter={() => passwordForm.submit()}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <FormItem
+                        label={t('system.profile.newPassword')}
+                        field="newPassword"
+                        rules={[{ required: true, message: t('auth.passwordRequired') }]}
+                      >
+                        <Input.Password
+                          prefix={<IconLock />}
+                          onPressEnter={() => passwordForm.submit()}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <FormItem
+                        label={t('system.profile.confirmPassword')}
+                        field="confirmPassword"
+                        rules={[
+                          { required: true, message: t('system.profile.confirmPasswordRequired') },
+                          {
+                            validator: (value, callback) => {
+                              const nextPassword = passwordForm.getFieldValue('newPassword');
+                              if (value && nextPassword && value !== nextPassword) {
+                                callback(t('system.profile.confirmPasswordMismatch'));
+                                return;
+                              }
+                              callback();
                             },
-                          ]}
-                        >
-                          <Input.Password prefix={<IconLock />} onPressEnter={() => passwordForm.submit()} />
-                        </FormItem>
-                      </Col>
-                    </Row>
-                  </FormSection>
-                </Space>
-                <SubmitBar
-                  loading={savingPassword}
-                  onSubmit={() => { void handleChangePassword(); }}
-                  submitText={t('system.profile.savePassword')}
+                          },
+                        ]}
+                      >
+                        <Input.Password
+                          prefix={<IconLock />}
+                          onPressEnter={() => passwordForm.submit()}
+                        />
+                      </FormItem>
+                    </Col>
+                  </Row>
+                </FormSection>
+              </Space>
+              <SubmitBar
+                loading={savingPassword}
+                onSubmit={() => {
+                  void handleChangePassword();
+                }}
+                submitText={t('system.profile.savePassword')}
+              />
+            </Form>
+          </Card>
+
+          <Card
+            className="page-panel"
+            title={t('auth.security.sessions')}
+            extra={<Tag color="arcoblue">{t('common.total', { count: sessions.length })}</Tag>}
+          >
+            <Space direction="vertical" size={16} className="auth-table-stack">
+              <div className="auth-inline-note">
+                <div className="auth-inline-note__copy">
+                  <span className="auth-inline-note__title">{t('auth.session.currentDevice')}</span>
+                  <span className="auth-inline-note__desc">
+                    {formatClientSummary(currentSession)}
+                  </span>
+                </div>
+                <Tag>{t('auth.security.sessionHint')}</Tag>
+              </div>
+              {sessions.length === 0 && !loadFailed ? (
+                <PageEmpty description={t('auth.session.empty')} />
+              ) : (
+                <AppTable<AuthSession>
+                  rowKey="sessionId"
+                  columns={sessionColumns}
+                  data={sessions}
+                  loading={loading && Boolean(overview)}
+                  pagination={{ pageSize: 5, sizeCanChange: false }}
+                  scroll={{ x: 1100 }}
+                  emptyText={t('auth.session.empty')}
                 />
-              </Form>
-            </Card>
+              )}
+            </Space>
+          </Card>
 
-            <Card className="page-panel" title={t('auth.security.sessions')} extra={<Tag color="arcoblue">{t('common.total', { count: sessions.length })}</Tag>}>
-              <Space direction="vertical" size={16} className="auth-table-stack">
-                <div className="auth-inline-note">
-                  <div className="auth-inline-note__copy">
-                    <span className="auth-inline-note__title">{t('auth.session.currentDevice')}</span>
-                    <span className="auth-inline-note__desc">{formatClientSummary(currentSession)}</span>
-                  </div>
-                  <Tag>{t('auth.security.sessionHint')}</Tag>
+          <Card
+            className="page-panel"
+            title={t('auth.security.loginLogs')}
+            extra={
+              <Tag color={failedCount > 0 ? 'orange' : 'green'}>
+                {t('common.total', { count: loginLogs.length })}
+              </Tag>
+            }
+          >
+            <Space direction="vertical" size={16} className="auth-table-stack">
+              <div className="auth-inline-note">
+                <div className="auth-inline-note__copy">
+                  <span className="auth-inline-note__title">{t('auth.security.loginLogHint')}</span>
+                  <span className="auth-inline-note__desc">{t('auth.security.recentWindow')}</span>
                 </div>
-                {sessions.length === 0 && !loadFailed ? (
-                  <PageEmpty description={t('auth.session.empty')} />
-                ) : (
-                  <AppTable<AuthSession>
-                    rowKey="sessionId"
-                    columns={sessionColumns}
-                    data={sessions}
-                    loading={loading && Boolean(overview)}
-                    pagination={{ pageSize: 5, sizeCanChange: false }}
-                    scroll={{ x: 1100 }}
-                    emptyText={t('auth.session.empty')}
-                  />
-                )}
-              </Space>
-            </Card>
-
-            <Card className="page-panel" title={t('auth.security.loginLogs')} extra={<Tag color={failedCount > 0 ? 'orange' : 'green'}>{t('common.total', { count: loginLogs.length })}</Tag>}>
-              <Space direction="vertical" size={16} className="auth-table-stack">
-                <div className="auth-inline-note">
-                  <div className="auth-inline-note__copy">
-                    <span className="auth-inline-note__title">{t('auth.security.loginLogHint')}</span>
-                    <span className="auth-inline-note__desc">{t('auth.security.recentWindow')}</span>
-                  </div>
-                  <Space wrap>
-                    <Tag color="green">{t('auth.loginLog.status.success')}: {successCount}</Tag>
-                    <Tag color="red">{t('auth.loginLog.status.failed')}: {failedCount}</Tag>
-                  </Space>
-                </div>
-                {loginLogs.length === 0 && !loadFailed ? (
-                  <PageEmpty description={t('auth.loginLog.empty')} />
-                ) : (
-                  <AppTable<LoginLogRow>
-                    rowKey="id"
-                    columns={loginLogColumns}
-                    data={loginLogs}
-                    loading={loading && Boolean(overview)}
-                    pagination={false}
-                    emptyText={t('auth.loginLog.empty')}
-                  />
-                )}
-              </Space>
-            </Card>
+                <Space wrap>
+                  <Tag color="green">
+                    {t('auth.loginLog.status.success')}: {successCount}
+                  </Tag>
+                  <Tag color="red">
+                    {t('auth.loginLog.status.failed')}: {failedCount}
+                  </Tag>
+                </Space>
+              </div>
+              {loginLogs.length === 0 && !loadFailed ? (
+                <PageEmpty description={t('auth.loginLog.empty')} />
+              ) : (
+                <AppTable<LoginLogRow>
+                  rowKey="id"
+                  columns={loginLogColumns}
+                  data={loginLogs}
+                  loading={loading && Boolean(overview)}
+                  pagination={false}
+                  emptyText={t('auth.loginLog.empty')}
+                />
+              )}
+            </Space>
+          </Card>
         </PageSplitLayout>
       </Space>
       <SessionDetailModal

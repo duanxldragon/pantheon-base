@@ -22,7 +22,13 @@ export const UserModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/user', titleKey: 'system.menu.user', icon: 'user', routeName: 'system-user', module: 'system.iam' },
+    {
+      path: '/system/user',
+      titleKey: 'system.menu.user',
+      icon: 'user',
+      routeName: 'system-user',
+      module: 'system.iam',
+    },
   ],
   dashboardWidgets: [
     {
@@ -45,10 +51,11 @@ export const UserModule = defineModule({
       path: '/system/user',
       permission: 'system:user:list',
       cleanupPolicy: 'hide_when_forbidden',
-      summary: (summary, t) => t('dashboard.usersAndRoles', {
-        users: summary?.totalUsers ?? 0,
-        roles: summary?.totalRoles ?? 0,
-      }),
+      summary: (summary, t) =>
+        t('dashboard.usersAndRoles', {
+          users: summary?.totalUsers ?? 0,
+          roles: summary?.totalRoles ?? 0,
+        }),
     },
   ],
   permissions: [

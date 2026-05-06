@@ -15,7 +15,8 @@ const jaJPFallback = {
   'app.notice.title': '通知センター',
   'app.notice.attention': '対応が必要な通知があります',
   'app.notice.subtitle': 'システムメッセージとガバナンス通知の共通受信箱',
-  'app.notice.empty': 'リアルタイム通知はまだ接続されていません。今後はシステム通知、承認、セキュリティ警告がここに集約されます。',
+  'app.notice.empty':
+    'リアルタイム通知はまだ接続されていません。今後はシステム通知、承認、セキュリティ警告がここに集約されます。',
   'app.notice.section.recommended': 'おすすめエントリ',
   'app.notice.section.recent': '最近のセキュリティ活動',
   'app.notice.section.risk': 'リスクグループ',
@@ -26,8 +27,10 @@ const jaJPFallback = {
   'app.toggleLanguage': '表示言語を切り替え',
   'app.toggleTheme': 'テーマを切り替え',
   'app.preference.title': 'プラットフォーム設定',
-  'app.preference.subtitle': 'テーマ、言語、ナビゲーションモードは個人プロフィールではなくプラットフォームシェルで管理されます。',
-  'app.preference.saveFailed': 'プラットフォーム設定の保存に失敗したため、直前の有効な設定に戻しました。',
+  'app.preference.subtitle':
+    'テーマ、言語、ナビゲーションモードは個人プロフィールではなくプラットフォームシェルで管理されます。',
+  'app.preference.saveFailed':
+    'プラットフォーム設定の保存に失敗したため、直前の有効な設定に戻しました。',
   'app.preference.density': '表示密度',
   'app.preference.navigation': 'ナビゲーション',
   'app.preference.navigationMode': '現在のナビゲーションレイアウト',
@@ -39,7 +42,8 @@ const jaJPFallback = {
   'app.density.compact.description': '表、カード、操作の間隔を詰めて高頻度の管理作業に合わせます。',
   'app.lock.action': '画面をロック',
   'app.lock.title': 'セッションはロックされています',
-  'app.lock.description': 'ロックしても現在のセッションと開いているタブは保持されます。{{minutes}} 分間操作がない場合、システムは自動的にサインアウトします。',
+  'app.lock.description':
+    'ロックしても現在のセッションと開いているタブは保持されます。{{minutes}} 分間操作がない場合、システムは自動的にサインアウトします。',
   'app.lock.passwordPlaceholder': '解除するには現在のアカウントのパスワードを入力してください',
   'app.lock.unlock': 'ロック解除',
   'app.lock.unlockSuccess': 'セッションのロックを解除しました',
@@ -67,29 +71,37 @@ const jaJPFallback = {
   'auth.loginSuccess': 'ログインしました',
   'auth.login.entryTag': '統一認証入口',
   'auth.login.title': 'お帰りなさい',
-  'auth.login.subtitle': 'サインインしてプラットフォームワークスペースに入り、ID、権限、メニュー、セキュリティを管理します。',
+  'auth.login.subtitle':
+    'サインインしてプラットフォームワークスペースに入り、ID、権限、メニュー、セキュリティを管理します。',
   'auth.login.consoleLabel': '管理認証コンソール',
   'auth.login.consoleTitle': '本人確認',
-  'auth.login.securityNotice': '管理者が割り当てたアカウントでサインインしてください。ログイン時刻、端末、送信元 IP はセキュリティ監査のため記録されます。',
-  'auth.login.idleTimeoutNotice': '長時間操作がなかったため自動的にサインアウトされました。続行するには再度サインインしてください。',
+  'auth.login.securityNotice':
+    '管理者が割り当てたアカウントでサインインしてください。ログイン時刻、端末、送信元 IP はセキュリティ監査のため記録されます。',
+  'auth.login.idleTimeoutNotice':
+    '長時間操作がなかったため自動的にサインアウトされました。続行するには再度サインインしてください。',
   'auth.login.feature.modules': 'モジュラーモノリス',
   'auth.login.feature.security': '安全なセッション',
   'auth.login.feature.i18n': '多言語基盤',
   'auth.login.visualAria': 'プラットフォーム認証コンソール',
   'auth.login.visualTitle': 'エンタープライズ管理基盤',
-  'auth.login.visualDesc': '統一された認証入口、動的メニュー、権限モデル、監査トレイルにより、安定した信頼性の高い管理ワークスペースを提供します。',
+  'auth.login.visualDesc':
+    '統一された認証入口、動的メニュー、権限モデル、監査トレイルにより、安定した信頼性の高い管理ワークスペースを提供します。',
   'auth.login.visualBadge': 'Platform Ready',
   'auth.login.assurance.title': 'サインイン後に利用可能',
   'auth.login.assurance.boundary': '明確な能力境界',
-  'auth.login.assurance.boundaryDesc': '認証、IAM、組織、設定、監査は分離され、プラットフォームシェルが統合します。',
+  'auth.login.assurance.boundaryDesc':
+    '認証、IAM、組織、設定、監査は分離され、プラットフォームシェルが統合します。',
   'auth.login.assurance.session': '追跡可能なセッションセキュリティ',
-  'auth.login.assurance.sessionDesc': 'Access / Refresh Token を分離し、ログアウト無効化とアクティブセッション管理を提供します。',
+  'auth.login.assurance.sessionDesc':
+    'Access / Refresh Token を分離し、ログアウト無効化とアクティブセッション管理を提供します。',
   'auth.login.assurance.audit': '重要な操作は監査へ記録',
-  'auth.login.assurance.auditDesc': 'ログイン、セッション、設定変更、システム書き込み操作は追跡可能な記録を保持します。',
+  'auth.login.assurance.auditDesc':
+    'ログイン、セッション、設定変更、システム書き込み操作は追跡可能な記録を保持します。',
   'auth.mfa.required': '二要素コードを入力してサインインを完了してください',
   'auth.mfa.verifyFailed': '二要素認証に失敗しました',
   'auth.mfa.verifyHint': '認証アプリの 6 桁コードを入力してください。',
-  'auth.mfa.setupHint': '初回設定です。下の秘密鍵を認証アプリに追加し、6 桁コードを入力してバインドを完了してください。',
+  'auth.mfa.setupHint':
+    '初回設定です。下の秘密鍵を認証アプリに追加し、6 桁コードを入力してバインドを完了してください。',
   'auth.mfa.scanQr': '認証アプリで QR コードをスキャンしてください',
   'auth.mfa.manualSecret': '手動秘密鍵',
   'auth.mfa.provisionUri': '設定 URI',
@@ -115,7 +127,8 @@ const jaJPFallback = {
   'common.downloadTemplate': 'テンプレートをダウンロード',
   'common.updatedAt': '更新日時',
   'common.loadFailed': '読み込みに失敗しました',
-  'common.loadFailedDesc': '現在このセクションのデータを取得できません。再試行するか後で確認してください。',
+  'common.loadFailedDesc':
+    '現在このセクションのデータを取得できません。再試行するか後で確認してください。',
   'common.loading': '読み込み中…',
   'common.notFound': '404 見つかりません',
   'common.logout': 'ログアウト',
@@ -189,7 +202,8 @@ const jaJPFallback = {
   'common.networkError': 'ネットワーク接続を利用できません。接続を確認して再試行してください。',
   'common.networkTimeoutTitle': 'リクエストがタイムアウトしました',
   'common.networkTimeout': 'リクエストがタイムアウトしました。後でもう一度お試しください。',
-  'system.setting.subtitle': '公開プラットフォーム設定、セキュリティポリシー、ログインポリシー、既定の設定を管理します。',
+  'system.setting.subtitle':
+    '公開プラットフォーム設定、セキュリティポリシー、ログインポリシー、既定の設定を管理します。',
   'system.setting.group.basic': '基本情報',
   'system.setting.group.platform': 'プラットフォーム機能',
   'system.setting.group.security': 'セキュリティポリシー',
@@ -198,7 +212,8 @@ const jaJPFallback = {
   'system.setting.group.upload': 'アップロード',
   'system.setting.group.i18n': '国際化',
   'system.setting.group.ui': 'UI 設定',
-  'system.setting.groupHint.platform': 'アプリ形態、組織機能、ユーザーの組織紐付け必須条件を制御します。',
+  'system.setting.groupHint.platform':
+    'アプリ形態、組織機能、ユーザーの組織紐付け必須条件を制御します。',
   'system.setting.item.site.name': 'サイト名',
   'system.setting.item.platform.app_mode': 'アプリモード',
   'system.setting.item.org.enabled': '組織機能を有効化',
@@ -236,7 +251,8 @@ const jaJPFallback = {
   'system.setting.encrypted': '機密',
   'system.setting.encryptedPlaceholder': '機密値を入力',
   'system.setting.leaveEmptyToKeep': '空欄のままにすると現在の暗号化済み値を保持します',
-  'system.setting.encryptedEmptyHint': 'まだ機密値は設定されていません。保存後は暗号化して保存されます。',
+  'system.setting.encryptedEmptyHint':
+    'まだ機密値は設定されていません。保存後は暗号化して保存されます。',
   'system.setting.restoreDefault': 'デフォルトに戻す',
   'system.setting.defaultValueHint': 'デフォルト値: {{value}}',
   'system.setting.defaultValueEmpty': '空',
@@ -252,9 +268,11 @@ const jaJPFallback = {
   'system.setting.overview.severity.warning': '警告',
   'system.setting.overview.severity.critical': '重大',
   'system.setting.audit.title': '設定変更監査',
-  'system.setting.audit.retentionPlaceholder': '保持日数を選択または入力し、Enter で確定してください',
+  'system.setting.audit.retentionPlaceholder':
+    '保持日数を選択または入力し、Enter で確定してください',
   'system.setting.audit.retentionRequired': '有効な保持日数を少なくとも 1 つ設定してください',
-  'system.setting.audit.retentionInvalid': '1 から 365 までの正の整数日数のみ対応し、重複は自動で除去されます',
+  'system.setting.audit.retentionInvalid':
+    '1 から 365 までの正の整数日数のみ対応し、重複は自動で除去されます',
   'system.setting.audit.restoreDefault': 'デフォルトに戻す',
   'system.setting.audit.defaultValueHint': '推奨デフォルト: {{value}}',
   'system.setting.audit.unsavedChanges': '未保存の変更があります',
@@ -304,7 +322,8 @@ const jaJPFallback = {
   'i18n.fillMissingLocales.action': '不足言語を補完',
   'i18n.fillMissingLocales.success': '{{count}} 件の不足言語プレースホルダー翻訳を補完しました。',
   'i18n.hydrateBuiltin.action': '内蔵翻訳を補完',
-  'i18n.hydrateBuiltin.success': '{{updated}} 件のプレースホルダー値を補完し、{{created}} 件の内蔵翻訳を追加しました。',
+  'i18n.hydrateBuiltin.success':
+    '{{updated}} 件のプレースホルダー値を補完し、{{created}} 件の内蔵翻訳を追加しました。',
   'i18n.hydrate_builtin.error': '内蔵翻訳の補完に失敗しました',
   'auth.security.title': 'セキュリティセンター',
   'auth.security.password': 'パスワードセキュリティ',
@@ -314,7 +333,8 @@ const jaJPFallback = {
   'auth.security.lastLoginAt': '直近の成功ログイン',
   'auth.security.currentDevice': '現在の端末',
   'auth.security.currentIp': '現在の IP',
-  'auth.security.subtitle': '現在のアカウントの端末、ログイン活動、パスワードセキュリティを確認します。',
+  'auth.security.subtitle':
+    '現在のアカウントの端末、ログイン活動、パスワードセキュリティを確認します。',
   'auth.security.overview': 'アカウントセキュリティ概要',
   'auth.security.currentSessionSummary': '現在のセッション概要',
   'auth.security.passwordTip': 'パスワードを変更すると他のセッションはサインアウトされます',
@@ -325,16 +345,21 @@ const jaJPFallback = {
   'auth.security.policy.maxFailedAttempts': '{{count}} 回失敗でロック',
   'auth.security.policy.lockMinutes': '{{count}} 分間ロック',
   'auth.security.policy.sessionIdleMinutes': '{{count}} 分間無操作でサインアウト',
-  'auth.security.policy.maxActiveSessions': '同一アカウントで最大 {{count}} 件の有効セッションを保持',
+  'auth.security.policy.maxActiveSessions':
+    '同一アカウントで最大 {{count}} 件の有効セッションを保持',
   'auth.security.policy.sessionRetentionDays': '履歴セッションを {{count}} 日保持',
   'auth.security.sessionHint': 'この一覧で端末活動を確認し、安全にセッションを無効化できます。',
-  'auth.security.loginLogHint': '最近のログイン活動は異常なサインインリスクを素早く検知するのに役立ちます。',
+  'auth.security.loginLogHint':
+    '最近のログイン活動は異常なサインインリスクを素早く検知するのに役立ちます。',
   'auth.security.recentWindow': '以下の概要は最近のセキュリティ活動ウィンドウを反映しています。',
   'auth.security.hero.eyebrow': 'システムドメイン / 認証セキュリティ',
-  'auth.security.hero.title': 'パスワード、端末、ログインリスクを 1 つのセキュリティワークフローで管理',
-  'auth.security.hero.desc': 'セキュリティセンターは `system/auth` の境界を厳格に維持します。メイン領域はパスワード更新、アクティブセッション、最近のログインを担当し、サイド領域は現在アカウントと有効ポリシーの要約のみを表示します。',
+  'auth.security.hero.title':
+    'パスワード、端末、ログインリスクを 1 つのセキュリティワークフローで管理',
+  'auth.security.hero.desc':
+    'セキュリティセンターは `system/auth` の境界を厳格に維持します。メイン領域はパスワード更新、アクティブセッション、最近のログインを担当し、サイド領域は現在アカウントと有効ポリシーの要約のみを表示します。',
   'auth.security.hero.sideTitle': 'ガバナンスメモ',
-  'auth.security.hero.sideDesc': 'パスワード変更は他のセッションを無効化します。見覚えのない端末や IP を見つけたら、先にそのセッションを無効化し、その後ログインログと統一監査で追跡してください。',
+  'auth.security.hero.sideDesc':
+    'パスワード変更は他のセッションを無効化します。見覚えのない端末や IP を見つけたら、先にそのセッションを無効化し、その後ログインログと統一監査で追跡してください。',
   'auth.session.current': '現在のセッション',
   'auth.session.currentDevice': '現在の端末',
   'auth.session.otherDevice': 'その他の端末',
@@ -346,9 +371,11 @@ const jaJPFallback = {
   'auth.session.revokeConfirm': 'このセッションを無効化してよろしいですか？',
   'auth.session.revokeSuccess': 'セッションを無効化しました',
   'auth.session.cleanupAction': '履歴セッションを整理',
-  'auth.session.cleanupConfirm': '無効化済みの履歴セッションをすべて整理しますか？現在の有効セッションは保持されます。',
+  'auth.session.cleanupConfirm':
+    '無効化済みの履歴セッションをすべて整理しますか？現在の有効セッションは保持されます。',
   'auth.session.cleanupSuccess': '{{count}} 件の履歴セッションを整理しました',
-  'auth.session.cleanupHint': '無効化済みの履歴セッションを即時削除し、セッションテーブルの肥大化を防ぎます。有効セッションは保持されます。',
+  'auth.session.cleanupHint':
+    '無効化済みの履歴セッションを即時削除し、セッションテーブルの肥大化を防ぎます。有効セッションは保持されます。',
   'auth.session.empty': 'セッションデータがありません',
   'auth.session.status': '状態',
   'auth.session.status.active': '有効',
@@ -360,19 +387,24 @@ const jaJPFallback = {
   'auth.session.osName': 'OS',
   'auth.session.userAgentRaw': '生の User-Agent',
   'auth.session.subtitle': '全体のオンラインセッション、端末詳細、無効化操作を確認します。',
-  'auth.session.selfProtected': '現在サインイン中のアカウントはこのページから自分自身を無効化できません。',
+  'auth.session.selfProtected':
+    '現在サインイン中のアカウントはこのページから自分自身を無効化できません。',
   'auth.session.currentUser': '現在のアカウント',
   'auth.session.hero.eyebrow': 'システムドメイン / セッション監査',
-  'auth.session.hero.title': 'オンラインセッション、端末指紋、無効化境界を 1 つのガバナンス画面で確認',
-  'auth.session.hero.desc': 'セッションページは `system/auth` の境界を維持します。メイン領域はフィルタと無効化操作を担当し、サイド領域は現在アカウントとセッション状態の要約のみを表示します。',
+  'auth.session.hero.title':
+    'オンラインセッション、端末指紋、無効化境界を 1 つのガバナンス画面で確認',
+  'auth.session.hero.desc':
+    'セッションページは `system/auth` の境界を維持します。メイン領域はフィルタと無効化操作を担当し、サイド領域は現在アカウントとセッション状態の要約のみを表示します。',
   'auth.session.hero.totalLabel': '総セッション数',
-  'auth.session.hero.totalHint': '現在の監査範囲で保持されている全セッション数です。アクティブと無効化済みを含みます。',
+  'auth.session.hero.totalHint':
+    '現在の監査範囲で保持されている全セッション数です。アクティブと無効化済みを含みます。',
   'auth.session.hero.activeHint': '現在も有効でオンライン画面に含まれるセッション。',
   'auth.session.hero.revokedHint': 'ガバナンス確認と追跡用にすでに無効化されたセッション。',
   'auth.session.hero.currentUser': '現在のアカウント',
   'auth.session.hero.summaryTitle': 'セッション概要',
   'auth.session.hero.sideTitle': 'ガバナンスメモ',
-  'auth.session.hero.sideDesc': '無効化する前に異常な IP、ブラウザ、端末で絞り込んでください。現在サインイン中のアカウントは自己保護されており、この一覧から自分自身を無効化できません。',
+  'auth.session.hero.sideDesc':
+    '無効化する前に異常な IP、ブラウザ、端末で絞り込んでください。現在サインイン中のアカウントは自己保護されており、この一覧から自分自身を無効化できません。',
   'auth.loginLog.loginTime': 'ログイン時刻',
   'auth.loginLog.ip': 'IP アドレス',
   'auth.loginLog.location': '位置情報',
@@ -386,25 +418,31 @@ const jaJPFallback = {
   'auth.loginLog.subtitle': '管理者ログイン記録、状態内訳、エクスポート結果を確認します。',
   'auth.loginLog.hero.eyebrow': 'システムドメイン / ログイン監査',
   'auth.loginLog.hero.title': '管理者ログイン結果、送信元、異常シグナルを 1 か所で追跡',
-  'auth.loginLog.hero.desc': 'ログインログページは共有システムテンプレートに従います。メイン領域はフィルタと詳細テーブルを担当し、サイド領域は成功/失敗サマリーとリスクメモのみを表示します。',
+  'auth.loginLog.hero.desc':
+    'ログインログページは共有システムテンプレートに従います。メイン領域はフィルタと詳細テーブルを担当し、サイド領域は成功/失敗サマリーとリスクメモのみを表示します。',
   'auth.loginLog.hero.totalHint': '現在の監査結果セット内のログイン記録総数。',
   'auth.loginLog.hero.successHint': '現在の結果セット内の成功サインイン。',
-  'auth.loginLog.hero.failedHint': '現在の結果セット内の失敗サインイン。異常送信元の確認入口として有用です。',
+  'auth.loginLog.hero.failedHint':
+    '現在の結果セット内の失敗サインイン。異常送信元の確認入口として有用です。',
   'auth.loginLog.hero.exportReady': 'エクスポート準備完了',
   'auth.loginLog.hero.exportHint': 'ログイン監査のエクスポートは引き続き細粒度権限で制御されます。',
   'auth.loginLog.hero.cleanupReady': '整理準備完了',
-  'auth.loginLog.hero.cleanupHint': '保持期間による整理と選択行削除は、どちらも専用権限と二次確認が必要です。',
+  'auth.loginLog.hero.cleanupHint':
+    '保持期間による整理と選択行削除は、どちらも専用権限と二次確認が必要です。',
   'auth.loginLog.hero.summaryTitle': '監査概要',
   'auth.loginLog.hero.window': '観測ウィンドウ',
   'auth.loginLog.hero.windowValue': '現在の結果セット',
   'auth.loginLog.hero.selectedHint': '選択された行は二次確認後に対象削除されます。',
   'auth.loginLog.hero.sideTitle': 'ガバナンスメモ',
-  'auth.loginLog.hero.sideDesc': '失敗が増えた場合は、まずアカウントと IP で絞り込み、その後セッション管理とセキュリティセンターで端末情報を照合してください。',
-  'auth.loginLog.cleanupConfirm': '直近 {{count}} 日の保持ウィンドウを超えるログインログを整理しますか？',
+  'auth.loginLog.hero.sideDesc':
+    '失敗が増えた場合は、まずアカウントと IP で絞り込み、その後セッション管理とセキュリティセンターで端末情報を照合してください。',
+  'auth.loginLog.cleanupConfirm':
+    '直近 {{count}} 日の保持ウィンドウを超えるログインログを整理しますか？',
   'auth.loginLog.cleanupSuccess': '{{count}} 件のログインログを整理しました',
   'auth.loginLog.batchDeleteConfirm': '選択した {{count}} 件のログインログを削除しますか？',
   'auth.loginLog.batchDeleteSuccess': '{{count}} 件の選択済みログインログを削除しました',
-  'auth.securityEvent.subtitle': '送信元ロックやアカウントロックなどの認証リスクイベントを確認します。',
+  'auth.securityEvent.subtitle':
+    '送信元ロックやアカウントロックなどの認証リスクイベントを確認します。',
   'auth.securityEvent.hero.eyebrow': 'システム領域 / 認証リスクイベント',
   'auth.securityEvent.createdAt': '発生日時',
   'auth.securityEvent.eventType': 'イベント種別',
@@ -422,8 +460,10 @@ const jaJPFallback = {
   'auth.securityEvent.severity.medium': '中',
   'auth.securityEvent.severity.low': '低',
   'auth.security.event.source_blocked': '失敗回数が多すぎるため送信元を一時的にロックしました。',
-  'auth.security.event.account_locked': '失敗回数が多すぎるためアカウントを一時的にロックしました。',
-  'auth.login_log.cleanup.days_invalid': '選択した保持期間は現在のシステム設定では許可されていません',
+  'auth.security.event.account_locked':
+    '失敗回数が多すぎるためアカウントを一時的にロックしました。',
+  'auth.login_log.cleanup.days_invalid':
+    '選択した保持期間は現在のシステム設定では許可されていません',
   'auth.login_log.delete.ids_required': '少なくとも1件のログインログを選択してください',
   'dashboard.title': 'ワークベンチ',
   'dashboard.subtitle': 'プラットフォームの状態と最近のセキュリティ活動を確認',
@@ -443,19 +483,22 @@ const jaJPFallback = {
   'dashboard.securityScore': 'セキュリティスナップショット',
   'dashboard.platformOverview': 'プラットフォーム概要',
   'dashboard.platformActivity': 'プラットフォーム活動',
-  'dashboard.platformActivityDesc': '本日 {{count}} 件の重要な書き込み操作が統一監査に記録されました',
+  'dashboard.platformActivityDesc':
+    '本日 {{count}} 件の重要な書き込み操作が統一監査に記録されました',
   'dashboard.orgGovernanceTasks': '組織ガバナンスタスク',
   'dashboard.orgGovernanceTasksDesc': 'system/org から集約された実行可能なガバナンスタスク',
   'dashboard.loginSuccessTrend': '直近 {{days}} 日の成功ログイン',
   'dashboard.loginFailureTrend': '直近 {{days}} 日の失敗ログイン',
   'dashboard.attention.successRateDesc': '認証成功率はログインリスク傾向の把握に役立ちます',
-  'dashboard.attention.failedLoginDesc': '失敗がある場合はログインログで送信元と理由を確認してください',
+  'dashboard.attention.failedLoginDesc':
+    '失敗がある場合はログインログで送信元と理由を確認してください',
   'dashboard.securitySuccessRate': '直近 {{days}} 日の成功率',
   'dashboard.lastSuccessfulLogin': '直近の成功ログイン',
   'dashboard.lastSuccessfulLoginEmpty': 'まだ成功ログインはありません',
   'dashboard.enabledUserRate': '有効ユーザー比率',
   'dashboard.visibleMenuHint': '現在の表示ナビゲーション規模',
-  'dashboard.visibleMenuValue': '現在システムは {{count}} 個の表示ナビゲーションノードを公開しています',
+  'dashboard.visibleMenuValue':
+    '現在システムは {{count}} 個の表示ナビゲーションノードを公開しています',
   'dashboard.quickActions': 'クイック操作',
   'dashboard.quickAction.user': 'アカウント、プロフィール、ロール紐付けを管理',
   'dashboard.quickAction.role': 'ナビゲーション、ボタン、認可境界を制御',
@@ -507,7 +550,8 @@ const jaJPFallback = {
   'system.user.batchDisable': '一括無効化',
   'system.user.hero.eyebrow': 'システムドメイン / IAM ユーザーガバナンス',
   'system.user.hero.title': 'アカウント、ロール、組織紐付けを中心にユーザーガバナンスを実行',
-  'system.user.hero.desc': 'ユーザーページは標準管理テンプレートに従います。フィルタ、テーブル、一括操作はメイン領域に集約し、サイド領域は組織準備状況とガバナンス案内のみを担います。',
+  'system.user.hero.desc':
+    'ユーザーページは標準管理テンプレートに従います。フィルタ、テーブル、一括操作はメイン領域に集約し、サイド領域は組織準備状況とガバナンス案内のみを担います。',
   'system.user.hero.selectedRows': '選択ユーザー',
   'system.user.hero.rolesReady': '割当可能ロール',
   'system.user.hero.summaryTitle': 'ガバナンス概要',
@@ -529,18 +573,25 @@ const jaJPFallback = {
   'system.role.pagePermissionKeys': 'ページ権限',
   'system.role.pagePermissionKeys.placeholder': 'このロールが入れるページを選択してください',
   'system.role.actionPermissionKeys': '操作権限',
-  'system.role.actionPermissionKeys.placeholder': 'このロールが利用できるボタンまたは操作を選択してください',
+  'system.role.actionPermissionKeys.placeholder':
+    'このロールが利用できるボタンまたは操作を選択してください',
   'system.role.unknownPermissionKeys': '不明な権限キー',
-  'system.role.accessControlDesc': 'ロールアクセスはナビゲーション、ページ、操作の 3 層で構成します。API ポリシーは引き続き権限ページで管理します。',
-  'system.role.apiPolicyHint': 'このフォームは Casbin の API ポリシーを変更しません。ロール保存後に権限ページで API アクセス境界を確認してください。',
+  'system.role.accessControlDesc':
+    'ロールアクセスはナビゲーション、ページ、操作の 3 層で構成します。API ポリシーは引き続き権限ページで管理します。',
+  'system.role.apiPolicyHint':
+    'このフォームは Casbin の API ポリシーを変更しません。ロール保存後に権限ページで API アクセス境界を確認してください。',
   'system.role.navigationAuth': 'ナビゲーション認可',
-  'system.role.navigationAuthHint': 'サイドバーにどのグループとメニューを表示するかを制御します。これだけでページや API へのアクセスを保証するものではありません。',
+  'system.role.navigationAuthHint':
+    'サイドバーにどのグループとメニューを表示するかを制御します。これだけでページや API へのアクセスを保証するものではありません。',
   'system.role.pageAuth': 'ページ認可',
-  'system.role.pageAuthHint': 'ロールがページルートへ入れるかを制御します。表示は左ナビゲーション階層に従い、メニューのページ権限メタデータを使用します。',
+  'system.role.pageAuthHint':
+    'ロールがページルートへ入れるかを制御します。表示は左ナビゲーション階層に従い、メニューのページ権限メタデータを使用します。',
   'system.role.actionAuth': '操作認可',
-  'system.role.actionAuthHint': '作成、更新、削除などのページ内操作を表示するかを制御します。操作は所属ページの下にグループ化されます。',
+  'system.role.actionAuthHint':
+    '作成、更新、削除などのページ内操作を表示するかを制御します。操作は所属ページの下にグループ化されます。',
   'system.role.unknownAuth': '確認が必要な権限',
-  'system.role.unknownAuthHint': 'これらのキーは現在のメニューメタデータに存在しません。過去の付与を誤って削除しないよう保持されます。',
+  'system.role.unknownAuthHint':
+    'これらのキーは現在のメニューメタデータに存在しません。過去の付与を誤って削除しないよう保持されます。',
   'system.role.module.unknown': '未分類',
   'system.role.module.platform': 'プラットフォーム',
   'system.role.module.system_auth': '認証セキュリティ',
@@ -553,11 +604,13 @@ const jaJPFallback = {
   'system.role.permissionGroup.selectAll': 'すべて選択',
   'system.role.permissionGroup.clear': 'クリア',
   'system.role.permissionGroup.selectedOfTotal': '{{selected}} / {{total}} 件選択済み',
-  'system.role.permissionGroup.empty': '設定可能な権限がありません。先にメニューメタデータを確認してください。',
+  'system.role.permissionGroup.empty':
+    '設定可能な権限がありません。先にメニューメタデータを確認してください。',
   'system.role.permissionTree.searchPlaceholder': '名称または権限キーで検索',
   'system.role.permissionTree.expandAll': 'すべて展開',
   'system.role.permissionTree.collapseAll': 'すべて折りたたむ',
-  'system.role.permissionTree.empty': '設定可能な項目がありません。先にメニューメタデータを確認してください。',
+  'system.role.permissionTree.empty':
+    '設定可能な項目がありません。先にメニューメタデータを確認してください。',
   'system.role.batchEnable': '一括有効化',
   'system.role.batchDisable': '一括無効化',
   'system.role.batchEnableConfirm': '選択したロールをすべて有効化しますか？',
@@ -567,27 +620,34 @@ const jaJPFallback = {
   'system.role.edit': 'ロールを編集',
   'system.role.hero.eyebrow': 'システムドメイン / IAM ロールガバナンス',
   'system.role.hero.title': 'ナビゲーション、ページ、操作の各レイヤーでロール認可を管理',
-  'system.role.hero.desc': 'ロールページは共有システムテンプレートに合わせており、メイン領域がフィルタ、一覧、ロール保守を担当し、サイド領域は認可準備状況とガバナンスノートのみを表示します。',
+  'system.role.hero.desc':
+    'ロールページは共有システムテンプレートに合わせており、メイン領域がフィルタ、一覧、ロール保守を担当し、サイド領域は認可準備状況とガバナンスノートのみを表示します。',
   'system.role.hero.totalHint': '現在アクセス制御ドメインで管理されているロール総数です。',
-  'system.role.hero.enabledHint': '現在の結果セットにあり、なおユーザーへ割り当て可能なロール数です。',
+  'system.role.hero.enabledHint':
+    '現在の結果セットにあり、なおユーザーへ割り当て可能なロール数です。',
   'system.role.hero.selectedRows': '選択したロール',
   'system.role.hero.selectedHint': '一括有効化と一括無効化は現在の選択に対して実行されます。',
   'system.role.hero.menuReady': '管理可能なナビゲーション',
   'system.role.hero.menuHint': '現在ロール単位メニュー認可に利用できるナビゲーションノードです。',
   'system.role.hero.summaryTitle': '認可概要',
   'system.role.hero.pagePerms': 'ページ権限プール',
-  'system.role.hero.pagePermsHint': 'メニューの `pagePerm` メタデータから導出され、ページ入場制御に使われます。',
+  'system.role.hero.pagePermsHint':
+    'メニューの `pagePerm` メタデータから導出され、ページ入場制御に使われます。',
   'system.role.hero.actionPerms': '操作権限プール',
-  'system.role.hero.actionPermsHint': 'ボタンや操作キーから導出され、ページ内操作の制御に使われます。',
+  'system.role.hero.actionPermsHint':
+    'ボタンや操作キーから導出され、ページ内操作の制御に使われます。',
   'system.role.hero.batchActions': '一括操作準備完了',
-  'system.role.hero.batchHint': '一括状態操作は、組み込みでないロールを 1 件以上選択した後にのみ有効になります。',
+  'system.role.hero.batchHint':
+    '一括状態操作は、組み込みでないロールを 1 件以上選択した後にのみ有効になります。',
   'system.role.hero.sideTitle': 'ガバナンスメモ',
   'system.role.hero.sideLead': '先にページ境界、次に API 境界を設定',
-  'system.role.hero.sideDesc': 'ロールページはナビゲーション、ページ、操作認可を担当します。Casbin の API ポリシーは権限ページ側に残し、ページ表示とバックエンドアクセスが再び混在しないようにします。',
+  'system.role.hero.sideDesc':
+    'ロールページはナビゲーション、ページ、操作認可を担当します。Casbin の API ポリシーは権限ページ側に残し、ページ表示とバックエンドアクセスが再び混在しないようにします。',
   'system.permission.roleKey': 'ロールキー',
   'system.permission.path': 'API パス',
   'system.permission.method': 'メソッド',
-  'system.permission.hint': 'このページではロールごとのバックエンド API アクセス用 Casbin ルートポリシーを管理します。',
+  'system.permission.hint':
+    'このページではロールごとのバックエンド API アクセス用 Casbin ルートポリシーを管理します。',
   'system.permission.policy.tab': 'API ポリシー',
   'system.permission.workbench.tab': '権限ワークベンチ',
   'system.permission.workbench.export': 'ガバナンスレポートをエクスポート',
@@ -613,7 +673,8 @@ const jaJPFallback = {
   'system.permission.create': 'ポリシーを作成',
   'system.permission.edit': 'ポリシーを編集',
   'system.permission.hero.eyebrow': 'システムドメイン / IAM 権限ワークベンチ',
-  'system.permission.hero.title': 'ロール認可と Casbin API ポリシーを 1 つの権限ガバナンスチェーンに統合',
+  'system.permission.hero.title':
+    'ロール認可と Casbin API ポリシーを 1 つの権限ガバナンスチェーンに統合',
   'system.permission.hero.gaps': 'カバレッジギャップ',
   'system.permission.hero.summaryTitle': 'ガバナンス概要',
   'system.permission.hero.currentMode': '現在のモード',
@@ -662,9 +723,12 @@ const jaJPFallback = {
   'system.dept.parentId': '親部門',
   'system.dept.leader': '責任者',
   'system.dept.leaderCandidate': '責任者候補',
-  'system.dept.leaderCandidateHint': '現在の部門に所属し、有効な役職を持つ有効メンバーを優先して選択してください。',
-  'system.dept.leaderCandidateEmpty': 'この部門ではまだ条件を満たす責任者候補がいません。先にメンバーと役職を作成してください。',
-  'system.dept.leaderCandidateCreateHint': '先に部門を作成し、その後編集モードで実際の責任者を紐付けてください。',
+  'system.dept.leaderCandidateHint':
+    '現在の部門に所属し、有効な役職を持つ有効メンバーを優先して選択してください。',
+  'system.dept.leaderCandidateEmpty':
+    'この部門ではまだ条件を満たす責任者候補がいません。先にメンバーと役職を作成してください。',
+  'system.dept.leaderCandidateCreateHint':
+    '先に部門を作成し、その後編集モードで実際の責任者を紐付けてください。',
   'system.dept.leaderCandidatePlaceholder': '責任者候補を選択',
   'system.dept.leaderCandidateLoadFailed': '責任者候補の読み込みに失敗しました',
   'system.dept.leaderLegacyPlaceholder': '後方互換のための旧フリーテキスト責任者',
@@ -677,11 +741,13 @@ const jaJPFallback = {
   'system.dept.governance.noPost': '役職のない部門',
   'system.dept.governance.empty': '空部門',
   'system.dept.governance.clean': '健全',
-  'system.dept.governanceHint': '組織ガバナンスのルール: 部門を削除する前に、子部門、役職、メンバーを先に整理してください。責任者不在、役職なし、空部門はガバナンスフィルタで抽出し、順に改善します。',
+  'system.dept.governanceHint':
+    '組織ガバナンスのルール: 部門を削除する前に、子部門、役職、メンバーを先に整理してください。責任者不在、役職なし、空部門はガバナンスフィルタで抽出し、順に改善します。',
   'system.dept.subtitle': '組織ツリー、報告ライン、部門責任者を保守します。',
   'system.dept.hero.eyebrow': 'システムドメイン / 組織ガバナンス',
   'system.dept.hero.title': '責任者補完と組織課題の是正を軸に部門ガバナンスを進める',
-  'system.dept.hero.desc': '部門ページはシステムページテンプレートに揃えました。上部サマリーは組織健全性とガバナンス入口を示し、主タスク領域はガバナンスタスク、絞り込み、部門保守を担当し、組織図ビューはツリー閲覧と是正対象の特定を担います。',
+  'system.dept.hero.desc':
+    '部門ページはシステムページテンプレートに揃えました。上部サマリーは組織健全性とガバナンス入口を示し、主タスク領域はガバナンスタスク、絞り込み、部門保守を担当し、組織図ビューはツリー閲覧と是正対象の特定を担います。',
   'system.dept.hero.totalDeptsHint': '現在、組織ガバナンスの対象となっている部門総数です。',
   'system.dept.hero.totalPostsHint': '現在の組織ツリー配下に紐づく役職総数です。',
   'system.dept.hero.leaderlessHint': 'クリックすると責任者未設定の部門を直接絞り込めます。',
@@ -691,7 +757,8 @@ const jaJPFallback = {
   'system.dept.manageTab': '部門管理',
   'system.dept.orgTab': '組織図',
   'system.dept.orgChartTitle': '組織図',
-  'system.dept.orgChartHint': '部門が骨格を形成し、役職は部門に属し、メンバーは部門と役職で整理されます。',
+  'system.dept.orgChartHint':
+    '部門が骨格を形成し、役職は部門に属し、メンバーは部門と役職で整理されます。',
   'system.dept.orgDeptTotal': '部門',
   'system.dept.orgPostTotal': '役職',
   'system.dept.orgMemberTotal': 'メンバー',
@@ -711,21 +778,27 @@ const jaJPFallback = {
   'system.dept.orgAddPost': '役職を作成',
   'system.dept.orgCreatePostTitle': '現在の部門に役職を作成',
   'system.dept.orgRootPostHint': '役職をルート直下へ紐付けることはできません',
-  'system.dept.orgRelationRule': 'ルール: 部門が組織ツリーを形成し、役職は必ず具体的な非ルート部門に属し、ユーザーの役職はユーザー部門と一致している必要があります。',
-  'system.dept.orgPostPermissionHint': '役職一覧権限がありません。組織図には部門と表示可能メンバーのみ表示されます。',
-  'system.dept.orgUserPermissionHint': 'ユーザー一覧権限がありません。組織図には部門と役職のみ表示されます。',
+  'system.dept.orgRelationRule':
+    'ルール: 部門が組織ツリーを形成し、役職は必ず具体的な非ルート部門に属し、ユーザーの役職はユーザー部門と一致している必要があります。',
+  'system.dept.orgPostPermissionHint':
+    '役職一覧権限がありません。組織図には部門と表示可能メンバーのみ表示されます。',
+  'system.dept.orgUserPermissionHint':
+    'ユーザー一覧権限がありません。組織図には部門と役職のみ表示されます。',
   'system.dept.create': '部門を作成',
   'system.dept.edit': '部門を編集',
   'system.dept.batchEnable': '一括有効化',
   'system.dept.batchDisable': '一括無効化',
   'system.dept.batchLeader': '責任者を一括割当',
-  'system.dept.batchLeaderTaskHint': '一括ガバナンス入口は維持されますが、各部門は必ず自部門メンバーから実在する責任者候補を紐付ける必要があります。',
+  'system.dept.batchLeaderTaskHint':
+    '一括ガバナンス入口は維持されますが、各部門は必ず自部門メンバーから実在する責任者候補を紐付ける必要があります。',
   'system.dept.batchLeaderSelectionEmpty': '先に改善対象の部門を選択してください',
   'system.dept.batchLeaderRequired': '各部門に責任者候補を選択してください',
-  'system.dept.batchLeaderNoCandidate': 'この部門にはまだ条件を満たす候補がいません。先に役職とメンバーを作成してください。',
+  'system.dept.batchLeaderNoCandidate':
+    'この部門にはまだ条件を満たす候補がいません。先に役職とメンバーを作成してください。',
   'system.dept.batchEnableConfirm': '選択した部門をすべて有効化しますか？',
   'system.dept.batchDisableConfirm': '選択した部門をすべて無効化しますか？',
-  'system.dept.deleteConfirm': 'この部門を削除しますか？先に子部門、役職、メンバーを整理する必要があります。',
+  'system.dept.deleteConfirm':
+    'この部門を削除しますか？先に子部門、役職、メンバーを整理する必要があります。',
   'system.dept.batchStatusSuccess': '{{count}} 件の部門状態を更新しました',
   'system.dept.batchLeaderSuccess': '{{count}} 部門の責任者を割り当てました',
   'system.dept.action.createPost': '役職を作成',
@@ -736,7 +809,8 @@ const jaJPFallback = {
   'system.dept.overview.emptyDepts': '空部門',
   'system.dept.overview.healthIssues': '組織課題',
   'system.dept.task.title': 'ガバナンスタスク',
-  'system.dept.task.hint': '現在の組織ガバナンス結果を実行可能なタスクへ変換し、責任者割当、役職作成、メンバー再配置の入口へ直接移動します。',
+  'system.dept.task.hint':
+    '現在の組織ガバナンス結果を実行可能なタスクへ変換し、責任者割当、役職作成、メンバー再配置の入口へ直接移動します。',
   'system.dept.task.export': 'タスクをエクスポート',
   'system.dept.task.scope': '範囲',
   'system.dept.task.tag': 'ガバナンス課題',
@@ -764,16 +838,21 @@ const jaJPFallback = {
   'system.post.batchDisable': '一括無効化',
   'system.post.batchEnableConfirm': '選択した役職をすべて有効化しますか？',
   'system.post.batchDisableConfirm': '選択した役職をすべて無効化しますか？',
-  'system.post.deleteConfirm': 'この役職を削除しますか？メンバーがまだ割り当てられている場合、この操作はブロックされます。',
-  'system.post.governanceHint': '役職ガバナンスのルール: メンバーがまだ割り当てられている役職は無効化または削除できません。先にメンバーを再配置してください。',
+  'system.post.deleteConfirm':
+    'この役職を削除しますか？メンバーがまだ割り当てられている場合、この操作はブロックされます。',
+  'system.post.governanceHint':
+    '役職ガバナンスのルール: メンバーがまだ割り当てられている役職は無効化または削除できません。先にメンバーを再配置してください。',
   'system.post.batchStatusSuccess': '{{count}} 件の役職状態を更新しました',
-  'system.post.empty': '現在の範囲に一致する役職はありません。フィルタを調整するか先に役職を作成してください。',
+  'system.post.empty':
+    '現在の範囲に一致する役職はありません。フィルタを調整するか先に役職を作成してください。',
   'system.post.hero.eyebrow': '役職ガバナンス',
   'system.post.hero.title': '役職状態、使用中ブロッカー、改善アクションを 1 つのワークベンチで解決',
-  'system.post.hero.desc': '役職ページは `system/org` の境界を維持しています。メイン作業レーンがフィルタ、保守、一括ガバナンスを担当し、サイドレールは使用中リスク、無効在庫、改善ガイダンスのみを要約します。',
+  'system.post.hero.desc':
+    '役職ページは `system/org` の境界を維持しています。メイン作業レーンがフィルタ、保守、一括ガバナンスを担当し、サイドレールは使用中リスク、無効在庫、改善ガイダンスのみを要約します。',
   'system.post.hero.totalHint': '現在のガバナンス範囲内にある役職総数です。',
   'system.post.hero.inUse': '使用中の役職',
-  'system.post.hero.inUseHint': 'まだメンバーが占有しているため、無効化や削除がブロックされている役職です。',
+  'system.post.hero.inUseHint':
+    'まだメンバーが占有しているため、無効化や削除がブロックされている役職です。',
   'system.post.hero.assignedUsers': '割当メンバー',
   'system.post.hero.assignedUsersHint': '現在ページに表示されている役職が抱えるメンバー総数です。',
   'system.post.hero.disabledHint': '保持または整理の判断がまだ必要な無効役職です。',
@@ -782,8 +861,10 @@ const jaJPFallback = {
   'system.post.hero.summaryTitle': 'ガバナンス概要',
   'system.post.hero.cleanHint': 'すでに持続可能で、阻害要因のない状態にある役職です。',
   'system.post.hero.sideTitle': 'ガバナンスノート',
-  'system.post.hero.sideLead': 'ガバナンスタスクの目的は問題を見せることだけでなく、運用順序を明示することにあります。',
-  'system.post.hero.sideDesc': '部門ガバナンスは構造準備を閉じ、役職ガバナンスはメンバーを抱える制約を閉じます。専用の役職ガバナンスレイヤーがなければ、削除ブロッカーや改善アクションはダイアログやエラーメッセージの中に埋もれたままになります。このページでは、割当メンバー数、阻害要因、次のアクションを通じてそれらを直接可視化します。',
+  'system.post.hero.sideLead':
+    'ガバナンスタスクの目的は問題を見せることだけでなく、運用順序を明示することにあります。',
+  'system.post.hero.sideDesc':
+    '部門ガバナンスは構造準備を閉じ、役職ガバナンスはメンバーを抱える制約を閉じます。専用の役職ガバナンスレイヤーがなければ、削除ブロッカーや改善アクションはダイアログやエラーメッセージの中に埋もれたままになります。このページでは、割当メンバー数、阻害要因、次のアクションを通じてそれらを直接可視化します。',
   'system.audit.subtitle': 'プラットフォームの重要操作記録と変更監査を全体で確認します。',
   'system.audit.title': '操作タイトル',
   'system.audit.operName': '操作者',
@@ -842,11 +923,16 @@ const jaJPFallback = {
   'system.audit.failureType.permission': '権限拒否',
   'system.audit.failureType.server': 'サーバー例外',
   'system.audit.failureType.business': '業務失敗',
-  'system.audit.failureSummary.validation': 'リクエストは業務処理まで到達しましたが、パラメータ、設定、または入力検証ルールによってブロックされました。',
-  'system.audit.failureSummary.auth': 'リクエストは認証チェーン内で失敗しました。ログイン状態、トークン、または認証ポリシーを確認してください。',
-  'system.audit.failureSummary.permission': 'ユーザー識別は成功しましたが、操作は権限モデルによって拒否されました。',
-  'system.audit.failureSummary.server': 'リクエストはサーバー側実行中に失敗しました。バックエンドログまたは依存先の状態を確認してください。',
-  'system.audit.failureSummary.business': 'リクエストは業務フローに入り、その後失敗しました。通常は業務ルールまたは実行時制約が原因です。',
+  'system.audit.failureSummary.validation':
+    'リクエストは業務処理まで到達しましたが、パラメータ、設定、または入力検証ルールによってブロックされました。',
+  'system.audit.failureSummary.auth':
+    'リクエストは認証チェーン内で失敗しました。ログイン状態、トークン、または認証ポリシーを確認してください。',
+  'system.audit.failureSummary.permission':
+    'ユーザー識別は成功しましたが、操作は権限モデルによって拒否されました。',
+  'system.audit.failureSummary.server':
+    'リクエストはサーバー側実行中に失敗しました。バックエンドログまたは依存先の状態を確認してください。',
+  'system.audit.failureSummary.business':
+    'リクエストは業務フローに入り、その後失敗しました。通常は業務ルールまたは実行時制約が原因です。',
   'system.audit.businessType.other': 'その他',
   'system.audit.businessType.insert': '作成',
   'system.audit.businessType.update': '更新',
@@ -859,18 +945,22 @@ const jaJPFallback = {
   'system.audit.businessType.settingUpdate': '設定更新',
   'system.audit.hero.eyebrow': 'システムドメイン / 統一監査',
   'system.audit.hero.title': '重要操作、失敗分類、ソースドメインを統一監査で管理',
-  'system.audit.hero.desc': '操作ログページは `system/audit` の境界を維持しています。メイン領域がフィルタ、クリア、詳細テーブルを担当し、サイド領域は成功/失敗の概要とガバナンス案内のみを扱います。',
+  'system.audit.hero.desc':
+    '操作ログページは `system/audit` の境界を維持しています。メイン領域がフィルタ、クリア、詳細テーブルを担当し、サイド領域は成功/失敗の概要とガバナンス案内のみを扱います。',
   'system.audit.hero.totalHint': '現在の統一監査結果セットに含まれる重要操作の総数です。',
   'system.audit.hero.successHint': '現在の結果セットにおける成功操作数です。',
-  'system.audit.hero.failedHint': '現在の結果セットにおける失敗操作数です。失敗カテゴリやソースページのドリルダウンに使えます。',
+  'system.audit.hero.failedHint':
+    '現在の結果セットにおける失敗操作数です。失敗カテゴリやソースページのドリルダウンに使えます。',
   'system.audit.hero.summaryTitle': '監査概要',
   'system.audit.hero.exportReady': 'エクスポート準備完了',
   'system.audit.hero.exportHint': '統一監査のエクスポートは専用の権限境界で保護されています。',
   'system.audit.hero.clearReady': 'クリア準備完了',
-  'system.audit.hero.clearHint': '危険なクリア操作は、専用のクリア権限がある場合にのみ表示されます。',
+  'system.audit.hero.clearHint':
+    '危険なクリア操作は、専用のクリア権限がある場合にのみ表示されます。',
   'system.audit.hero.selectedHint': '選択された行は二次確認後に対象削除されます。',
   'system.audit.hero.sideTitle': 'ガバナンスメモ',
-  'system.audit.hero.sideDesc': 'まずソースドメイン、ソースページ、失敗カテゴリで絞り込み、その後に詳細画面でリクエスト概要と結果概要を確認してください。全ログを 1 行ずつ追うより効率的です。',
+  'system.audit.hero.sideDesc':
+    'まずソースドメイン、ソースページ、失敗カテゴリで絞り込み、その後に詳細画面でリクエスト概要と結果概要を確認してください。全ログを 1 行ずつ追うより効率的です。',
   'audit.login_log.export.title': 'ログインログをエクスポート',
   'audit.login_log.cleanup.title': 'ログインログを整理',
   'audit.login_log.batch_delete.title': 'ログインログを一括削除',
@@ -880,13 +970,17 @@ const jaJPFallback = {
   'audit.operation_log.export.title': '操作ログをエクスポート',
   'auth.session.cleanup.title': '履歴セッション整理',
   'auth.session.revoke.title': 'セッションを強制失効',
-  'system.audit.cleanupConfirm': '直近 {{count}} 日の保持ウィンドウを超える操作ログを整理しますか？',
+  'system.audit.cleanupConfirm':
+    '直近 {{count}} 日の保持ウィンドウを超える操作ログを整理しますか？',
   'system.audit.cleanupSuccess': '履歴操作ログを {{count}} 件整理し、整理監査を 1 件記録しました',
-  'system.audit.cleanupHint': '保持ウィンドウを超える履歴操作ログを整理します。選択行削除は個別レコードの対象削除です。どちらも専用権限と二次確認が必要です。',
+  'system.audit.cleanupHint':
+    '保持ウィンドウを超える履歴操作ログを整理します。選択行削除は個別レコードの対象削除です。どちらも専用権限と二次確認が必要です。',
   'system.audit.batchDeleteConfirm': '選択した {{count}} 件の操作ログを削除しますか？',
   'system.audit.deleteSuccess': '履歴操作ログを 1 件削除し、削除監査を 1 件記録しました',
-  'system.audit.batchDeleteSuccess': '履歴操作ログを {{count}} 件削除し、削除監査を 1 件記録しました',
-  'audit.operation_log.cleanup.days_invalid': '選択した保持期間は現在のシステム設定では許可されていません',
+  'system.audit.batchDeleteSuccess':
+    '履歴操作ログを {{count}} 件削除し、削除監査を 1 件記録しました',
+  'audit.operation_log.cleanup.days_invalid':
+    '選択した保持期間は現在のシステム設定では許可されていません',
   'audit.operation_log.delete.ids_required': '少なくとも1件の操作ログを選択してください',
   'system.profile.title': 'プロフィールセンター',
   'system.profile.basicTab': '基本プロフィール',
@@ -911,15 +1005,18 @@ const jaJPFallback = {
   'system.profile.confirmPassword': 'パスワード確認',
   'system.profile.confirmPasswordRequired': '新しいパスワードを確認してください',
   'system.profile.confirmPasswordMismatch': 'パスワードが一致しません',
-  'system.profile.passwordHint': 'パスワードを変更すると、他の有効なセッションは自動的にサインアウトされます。',
+  'system.profile.passwordHint':
+    'パスワードを変更すると、他の有効なセッションは自動的にサインアウトされます。',
   'system.profile.savePassword': 'パスワードを更新',
   'system.profile.passwordSuccess': 'パスワードを更新しました',
   'system.user.password.rule': 'パスワード長は現在のセキュリティポリシーに従う必要があります',
   'system.user.password.keep': '空欄のままにすると現在のパスワードを維持します',
   'system.user.resetPasswordTitle': 'ユーザーパスワードをリセット',
   'system.user.resetPasswordTarget': '対象ユーザー',
-  'system.user.resetPasswordHint': 'パスワードをリセットすると、このユーザーの有効なセッションはすべて取り消されます。',
-  'system.user.resetPasswordSuccess': 'パスワードのリセットが完了し、{{count}} 件のセッションを取り消しました',
+  'system.user.resetPasswordHint':
+    'パスワードをリセットすると、このユーザーの有効なセッションはすべて取り消されます。',
+  'system.user.resetPasswordSuccess':
+    'パスワードのリセットが完了し、{{count}} 件のセッションを取り消しました',
   'system.user.summary': 'アカウント概要',
   'system.user.detailSubtitle': 'ユーザープロフィール、組織割当、ロール認可を確認します。',
   'system.user.detailInvalid': '無効なユーザー識別子です',
@@ -935,14 +1032,17 @@ const jaJPFallback = {
   'user.update.error.protected': '組み込み管理者はこの方法では変更できません',
   'user.update.error.password_too_short': 'パスワードが最小長ポリシーを満たしていません',
   'user.update.error.password_weak': 'パスワードが現在の複雑度ポリシーを満たしていません',
-  'user.login.error.locked': 'このアカウントは一時的にロックされています。しばらくしてから再試行してください。',
+  'user.login.error.locked':
+    'このアカウントは一時的にロックされています。しばらくしてから再試行してください。',
   'user.login.error.not_found': 'ユーザー名またはパスワードが正しくありません。',
   'user.login.error.password_wrong': 'ユーザー名またはパスワードが正しくありません。',
   'user.login.error.disabled': 'このアカウントは無効です。管理者に連絡してください。',
-  'auth.login.error.source_blocked': 'この送信元からのログイン失敗が多すぎます。しばらくしてから再試行してください。',
+  'auth.login.error.source_blocked':
+    'この送信元からのログイン失敗が多すぎます。しばらくしてから再試行してください。',
   'user.batch.empty': '先にユーザーを選択してください',
   'user.batch.not_found': '一部のユーザーは存在しなくなりました。更新して再試行してください',
-  'system.dict.subtitle': 'プラットフォームと業務モジュールの共通オプション、状態列挙、ラベル色を管理します。',
+  'system.dict.subtitle':
+    'プラットフォームと業務モジュールの共通オプション、状態列挙、ラベル色を管理します。',
   'system.dict.type': '辞書タイプ',
   'system.dict.item': '辞書項目',
   'system.dict.dictCode': '辞書コード',
@@ -986,21 +1086,33 @@ const jaJPFallback = {
   'upload.file.read.error': 'アップロードファイルの読み取りに失敗しました',
   'upload.file.not_found': 'アップロードファイルが存在しないか、すでに利用できません',
   'module.generate.success': 'モジュールファイルを書き込み、アクティベーション待ちになりました',
-  'module.generate.verify.source_written': '生成されたソースファイルはワークスペースに書き込まれました',
-  'module.generate.verify.source_write_incomplete': '一部の生成ファイルがワークスペースに見つかりません',
+  'module.generate.verify.source_written':
+    '生成されたソースファイルはワークスペースに書き込まれました',
+  'module.generate.verify.source_write_incomplete':
+    '一部の生成ファイルがワークスペースに見つかりません',
   'module.generate.verify.backend_registry_updated': 'バックエンド生成レジストリを更新しました',
   'module.generate.verify.frontend_registry_updated': 'フロントエンド生成レジストリを更新しました',
-  'module.generate.verify.component_registry_updated': 'フロントエンドコンポーネントレジストリを更新しました',
-  'module.generate.verify.backend_component_registry_updated': 'バックエンドのメニューコンポーネントレジストリを更新しました',
+  'module.generate.verify.component_registry_updated':
+    'フロントエンドコンポーネントレジストリを更新しました',
+  'module.generate.verify.backend_component_registry_updated':
+    'バックエンドのメニューコンポーネントレジストリを更新しました',
   'module.generate.verify.parent_menu_found': '親メニューパスはメニューテーブル内に存在します',
-  'module.generate.verify.parent_menu_missing': '親メニューパスがメニューテーブルに見つかりません。メニュー割当を確認してください',
-  'module.generate.verify.parent_menu_top_level': 'このモジュールは業務トップレベルメニューとして扱われ、親メニューは不要です',
-  'module.generate.verify.pending_activation': 'このモジュールはアクティベーション待ちとして登録されています',
-  'module.generate.verify.contract_governance': '生成前ガバナンス契約を検証し、サマリーへ書き込みました',
-  'module.generate.verify.restart_required': '新しい Go モジュールと生成レジストリを読み込むにはバックエンドを再起動してください',
-  'module.generate.verify.frontend_build_required': '新しいページコンポーネントをルートツリーへ反映するにはフロントエンドを再ビルドしてください',
-  'module.generate.verify.registry_check_failed': 'レジストリ検証が不完全です。生成ファイルを確認してください',
-  'module.generate.verify.artifacts_missing': 'モジュールソースまたは schema が欠落しているため、実行時レジストリから除外しました',
+  'module.generate.verify.parent_menu_missing':
+    '親メニューパスがメニューテーブルに見つかりません。メニュー割当を確認してください',
+  'module.generate.verify.parent_menu_top_level':
+    'このモジュールは業務トップレベルメニューとして扱われ、親メニューは不要です',
+  'module.generate.verify.pending_activation':
+    'このモジュールはアクティベーション待ちとして登録されています',
+  'module.generate.verify.contract_governance':
+    '生成前ガバナンス契約を検証し、サマリーへ書き込みました',
+  'module.generate.verify.restart_required':
+    '新しい Go モジュールと生成レジストリを読み込むにはバックエンドを再起動してください',
+  'module.generate.verify.frontend_build_required':
+    '新しいページコンポーネントをルートツリーへ反映するにはフロントエンドを再ビルドしてください',
+  'module.generate.verify.registry_check_failed':
+    'レジストリ検証が不完全です。生成ファイルを確認してください',
+  'module.generate.verify.artifacts_missing':
+    'モジュールソースまたは schema が欠落しているため、実行時レジストリから除外しました',
   'module.artifacts_missing': 'モジュールソースまたは schema が欠落しています',
   'module.generate.invalid_payload': 'モジュール生成リクエストが不正です',
   'module.generate.invalid_name': 'モジュール名の形式が不正です',
@@ -1011,23 +1123,28 @@ const jaJPFallback = {
   'module.generate.invalid_scope': 'モジュールスコープが不正です',
   'module.generate.display_name_required': '表示名は必須です',
   'module.generate.table_name_required': 'テーブル名は必須です',
-  'module.generate.invalid_table_name': 'テーブル名プレフィックスがモジュールスコープと一致しません',
+  'module.generate.invalid_table_name':
+    'テーブル名プレフィックスがモジュールスコープと一致しません',
   'module.generate.empty_files': '生成ファイルが送信されていません',
   'module.generate.invalid_path': '1 つ以上の生成ファイルパスが不正です',
   'module.generate.duplicate_file': '生成ファイル一覧に重複パスがあります',
   'module.generate.file_exists': '対象ファイルはすでに存在します。上書きするか確認してください',
   'module.generate.reserved': 'このモジュールキーは組み込みモジュールで予約されています',
   'module.generate.already_exists': 'このモジュールはすでに存在します',
-  'module.generate.business_only': 'ワンクリック登録は現在 business/* モジュールのみをサポートしています',
+  'module.generate.business_only':
+    'ワンクリック登録は現在 business/* モジュールのみをサポートしています',
   'module.register.success': 'モジュールを再登録し、アクティベーション待ちにしました',
-  'module.register.source_missing': '生成済みソースまたは schema ファイルが見つからないため、再登録できません',
+  'module.register.source_missing':
+    '生成済みソースまたは schema ファイルが見つからないため、再登録できません',
   'module.register.schema_invalid': 'モジュール schema が無効なため、再登録できません',
   'module.register.builtin_forbidden': '組み込みモジュールはこのページから再登録できません',
-  'module.register.unsupported': '旧来の手動登録エンドポイントは無効です。代わりにジェネレーターを使用してください',
+  'module.register.unsupported':
+    '旧来の手動登録エンドポイントは無効です。代わりにジェネレーターを使用してください',
   'module.list.error': 'モジュールレジストリの読み込みに失敗しました',
   'module.status.error': 'モジュール状態の取得に失敗しました',
   'module.unregistered': 'モジュールをアンインストールしました',
-  'module.unregister.builtin_forbidden': '組み込みモジュールはこのページからアンインストールできません',
+  'module.unregister.builtin_forbidden':
+    '組み込みモジュールはこのページからアンインストールできません',
   'module.invalid_name': 'モジュールキーの形式が不正です',
   'workspace.not_found': 'ワークスペースのルートが見つからず、生成ファイルを書き込めません',
   'business.cmdb.title': 'CMDB',
@@ -1176,7 +1293,8 @@ const jaJPFallback = {
   'post.dept.invalid': '選択した部門は存在しません',
   'post.dept.root_forbidden': '役職を組織ルート直下に所属させることはできません',
   'post.delete.error.has_users': 'この役職にはまだユーザーが割り当てられているため削除できません',
-  'post.status.error.has_users': 'この役職にはまだユーザーが割り当てられているため無効化できません。先にメンバーを再配置してください',
+  'post.status.error.has_users':
+    'この役職にはまだユーザーが割り当てられているため無効化できません。先にメンバーを再配置してください',
   'post.batch.empty': 'まず役職を選択してください',
   'post.batch.not_found': '一部の役職は存在しなくなりました。更新して再試行してください',
   'user.post.dept_required': '役職を選ぶ前に部門を選択してください',
@@ -1190,7 +1308,8 @@ const jaJPFallback = {
   'role.delete.error.has_users': 'このロールはまだユーザーに割り当てられているため削除できません',
   'upload.config.unavailable': 'アップロード設定を利用できません',
   'upload.config.invalid_max_file_size': '設定された最大アップロードサイズが不正です',
-  'upload.config.invalid_allowed_types': '許可するアップロード形式は有効な JSON 配列である必要があります',
+  'upload.config.invalid_allowed_types':
+    '許可するアップロード形式は有効な JSON 配列である必要があります',
   'upload.s3.endpoint.required': '先にオブジェクトストレージのエンドポイントを設定してください',
   'upload.s3.bucket.required': '先にオブジェクトストレージのバケットを設定してください',
   'upload.s3.credentials.required': '先にオブジェクトストレージ認証情報を設定してください',
@@ -1198,9 +1317,12 @@ const jaJPFallback = {
   'upload.s3.bucket.ensure.error': 'オブジェクトストレージバケットの初期化に失敗しました',
   'upload.s3.upload.error': 'ファイルをオブジェクトストレージへアップロードできませんでした',
   'setting.overview.error': '設定ヘルス概要の読み込みに失敗しました',
-  'setting.overview.issue.required_missing': 'この実行時設定は必須ですが、まだ値が設定されていません',
-  'setting.overview.issue.public_encrypted_conflict': 'この設定は公開かつ機密として同時にマークされており、リリースリスクです',
-  'setting.overview.issue.invalid_storage_driver': '設定されたアップロードドライバーはサポートされていません',
+  'setting.overview.issue.required_missing':
+    'この実行時設定は必須ですが、まだ値が設定されていません',
+  'setting.overview.issue.public_encrypted_conflict':
+    'この設定は公開かつ機密として同時にマークされており、リリースリスクです',
+  'setting.overview.issue.invalid_storage_driver':
+    '設定されたアップロードドライバーはサポートされていません',
   'setting.overview.issue.invalid_default_language': '既定言語が許可された範囲外です',
   'setting.overview.issue.invalid_default_theme': '既定テーマが許可された範囲外です',
   'setting.overview.issue.invalid_app_mode': 'アプリモードが許可された範囲外です',
@@ -1219,8 +1341,10 @@ const jaJPFallback = {
   'system.permission.dict.update': '辞書更新',
   'system.permission.dict.delete': '辞書削除',
   'system.permission.dict.refresh': '辞書キャッシュ更新',
-  'system.setting.item.audit.session_cleanup_retention_options': '履歴セッションクリーンアップ保持期間オプション',
-  'system.setting.remark.audit.session_cleanup_retention_options': '履歴セッションのクリーンアップで選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
+  'system.setting.item.audit.session_cleanup_retention_options':
+    '履歴セッションクリーンアップ保持期間オプション',
+  'system.setting.remark.audit.session_cleanup_retention_options':
+    '履歴セッションのクリーンアップで選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
   'business.cmdb.host.permission.view': 'ホスト閲覧',
   'business.cmdb.host.permission.create': 'ホスト作成',
   'business.cmdb.host.permission.update': 'ホスト編集',
@@ -1257,7 +1381,8 @@ const jaJPFallback = {
   'app.notice.risk.failedLogin': '高リスクサインイン',
   'app.notice.risk.failedLoginDesc': 'ログイン失敗記録があります。発生元と理由を確認してください',
   'app.notice.risk.activeSession': 'セッション注意',
-  'app.notice.risk.activeSessionDesc': '有効なセッションがあります。異常な端末がないか確認してください',
+  'app.notice.risk.activeSessionDesc':
+    '有効なセッションがあります。異常な端末がないか確認してください',
   'app.notice.risk.operation': 'ガバナンス活動',
   'app.notice.risk.operationDesc': '本日の重要操作が統合監査に記録されています',
   'app.notice.securityDesc': '現在のアカウントの端末、ログイン、パスワードセキュリティを確認します',
@@ -1270,7 +1395,8 @@ const jaJPFallback = {
   'theme.emerald': 'エメラルド Flow',
   'theme.emerald.description': '運用と設定作業に向いた、より穏やかなグリーン系ワークスペースです。',
   'theme.violet': 'バイオレット Pulse',
-  'theme.violet.description': 'より高いプロダクト感とプラットフォームの活力を持つシャープなテーマです。',
+  'theme.violet.description':
+    'より高いプロダクト感とプラットフォームの活力を持つシャープなテーマです。',
   'theme.slate': 'スレート Core',
   'theme.slate.description': '長時間の管理作業向けの低彩度グラファイトテーマです。',
   'auth.operation.verify_title': '重要操作の再確認',
@@ -1279,7 +1405,8 @@ const jaJPFallback = {
   'request.failed': 'リクエストに失敗しました。しばらくしてから再試行してください。',
   'network.error': 'ネットワークエラーです。接続を確認して再試行してください。',
   'network.timeout': 'リクエストがタイムアウトしました。しばらくしてから再試行してください。',
-  'session.idle_timeout': '操作がないためセッションが期限切れになりました。再度ログインしてください。',
+  'session.idle_timeout':
+    '操作がないためセッションが期限切れになりました。再度ログインしてください。',
   'system.menu.dashboard': 'ワークベンチ',
   'system.menu.access': 'アクセス制御',
   'system.menu.org': '組織構造',
@@ -1303,7 +1430,8 @@ const jaJPFallback = {
   'i18n.group.placeholder': 'グループを選択',
   'i18n.hero.eyebrow': 'システムドメイン / 設定ガバナンス国際化',
   'i18n.hero.title': '翻訳エントリ、不足ロケール枠、i18n 監査を 1 つのワークフローで管理',
-  'i18n.hero.desc': 'i18n ページは厳格な `system/config` 境界を維持します。メイン領域がエントリ検索とガバナンス操作を担い、サイド領域はカバレッジ概要と修復ガイダンスのみを表示します。',
+  'i18n.hero.desc':
+    'i18n ページは厳格な `system/config` 境界を維持します。メイン領域がエントリ検索とガバナンス操作を担い、サイド領域はカバレッジ概要と修復ガイダンスのみを表示します。',
   'i18n.hero.entriesHint': '現在のガバナンス範囲にある翻訳エントリ総数です。',
   'i18n.hero.modules': 'モジュール',
   'i18n.hero.modulesHint': 'すでに i18n ガバナンスへ登録済みのモジュールです。',
@@ -1319,7 +1447,8 @@ const jaJPFallback = {
   'i18n.hero.refreshHint': 'i18n 全量更新とロケール単位更新はどちらも権限制御下にあります。',
   'i18n.hero.coverageTitle': 'ロケールカバレッジ',
   'i18n.hero.sideTitle': 'ガバナンスメモ',
-  'i18n.hero.sideDesc': 'まず不足ロケールとプレースホルダー値を処理し、その後に重複キー、未使用キー、キー改名修復ワークフローのため i18n 監査へ進んでください。',
+  'i18n.hero.sideDesc':
+    'まず不足ロケールとプレースホルダー値を処理し、その後に重複キー、未使用キー、キー改名修復ワークフローのため i18n 監査へ進んでください。',
   'i18n.detail.error': '翻訳詳細の読み込みに失敗しました',
   'i18n.delete.error': '翻訳の削除に失敗しました',
   'i18n.import.error': '翻訳のインポートに失敗しました',
@@ -1333,8 +1462,10 @@ const jaJPFallback = {
   'i18n.cleanup_unused.error': '未使用 i18n キーのクリーンアップに失敗しました',
   'i18n.refresh.error': 'i18n キャッシュの更新に失敗しました',
   'i18n.key.duplicate': '翻訳キーはすでに存在します',
-  'i18n.create.duplicateBlocked': '翻訳キー {{key}} はロケール {{locale}} ですでに使用されているため再作成できません。',
-  'i18n.create.duplicateOwner': '所有モジュール: {{module}}。既存レコードを編集するか、新しい翻訳キーを選択してください。',
+  'i18n.create.duplicateBlocked':
+    '翻訳キー {{key}} はロケール {{locale}} ですでに使用されているため再作成できません。',
+  'i18n.create.duplicateOwner':
+    '所有モジュール: {{module}}。既存レコードを編集するか、新しい翻訳キーを選択してください。',
   'i18n.create.invalid': '翻訳作成パラメータが不完全です',
   'i18n.stats.modules': '{{count}} モジュール',
   'i18n.stats.groups': '{{count}} グループ',
@@ -1366,8 +1497,10 @@ const jaJPFallback = {
   'i18n.audit.staleDays': '{{count}} 日未解消',
   'i18n.audit.stalePlaceholdersEmpty': '{{days}} 日以上未解消のプレースホルダーはありません。',
   'generator.moduleManager.title': 'モジュールレジストリ',
-  'generator.moduleManager.description': '導入済みの platform、system、business モジュールを確認します。組み込みモジュールはここでは読み取り専用で、このページからアンインストールできません。',
-  'generator.moduleManager.positioning': 'この機能はエンジニア支援によるモジュール登録とガバナンス向けの補助的なプラットフォームツールです。標準管理システムのアーキテクチャを再定義するものではありません。',
+  'generator.moduleManager.description':
+    '導入済みの platform、system、business モジュールを確認します。組み込みモジュールはここでは読み取り専用で、このページからアンインストールできません。',
+  'generator.moduleManager.positioning':
+    'この機能はエンジニア支援によるモジュール登録とガバナンス向けの補助的なプラットフォームツールです。標準管理システムのアーキテクチャを再定義するものではありません。',
   'generator.moduleManager.name': 'モジュールキー',
   'generator.moduleManager.displayName': '表示名',
   'generator.moduleManager.scope': 'スコープ',
@@ -1388,18 +1521,23 @@ const jaJPFallback = {
   'generator.moduleManager.registerNew': 'ジェネレーターを開く',
   'generator.moduleManager.confirmUninstall': 'このモジュールをアンインストールしますか？',
   'generator.moduleManager.register': '再登録',
-  'generator.moduleManager.registerSuccess': 'モジュールを再登録し、アクティベーション待ちにしました',
+  'generator.moduleManager.registerSuccess':
+    'モジュールを再登録し、アクティベーション待ちにしました',
   'generator.moduleManager.registerError': 'モジュールの再登録に失敗しました',
   'generator.moduleManager.unregister': 'アンインストール',
   'generator.moduleManager.unregisterSuccess': 'モジュールをアンインストールしました',
   'generator.moduleManager.unregisterError': 'モジュールのアンインストールに失敗しました',
   'generator.moduleManager.repair': 'レジストリ自検・修復',
-  'generator.moduleManager.repairHint': '履歴上の汚れたデータや手動削除によって生成レジストリと実ソース状態がずれた場合に実行します。プラットフォームは有効モジュールから generated registries を再生成し、ソース欠落レコードをアンインストール済みに補正します。',
-  'generator.moduleManager.repairSuccess': 'レジストリ修復が完了しました。有効登録 {{refs}} 件を保持し、ソース欠落 {{marked}} 件をアンインストール済みに補正しました',
+  'generator.moduleManager.repairHint':
+    '履歴上の汚れたデータや手動削除によって生成レジストリと実ソース状態がずれた場合に実行します。プラットフォームは有効モジュールから generated registries を再生成し、ソース欠落レコードをアンインストール済みに補正します。',
+  'generator.moduleManager.repairSuccess':
+    'レジストリ修復が完了しました。有効登録 {{refs}} 件を保持し、ソース欠落 {{marked}} 件をアンインストール済みに補正しました',
   'generator.moduleManager.repairError': 'レジストリの自検・修復に失敗しました',
   'generator.moduleManager.builtIn': '組み込み',
-  'generator.moduleManager.pendingHint': '保留中モジュールは有効化前にバックエンド再起動とフロントエンド再ビルドが必要です。',
-  'generator.moduleManager.disabledHint': '現在の環境では動的モジュール機能が無効です。レジストリは読み取り専用で、生成/登録/アンインストール操作は利用できません。',
+  'generator.moduleManager.pendingHint':
+    '保留中モジュールは有効化前にバックエンド再起動とフロントエンド再ビルドが必要です。',
+  'generator.moduleManager.disabledHint':
+    '現在の環境では動的モジュール機能が無効です。レジストリは読み取り専用で、生成/登録/アンインストール操作は利用できません。',
   'generator.moduleManager.empty': '管理対象のモジュールはありません。',
   'generator.moduleManager.readOnlyEmpty': 'この環境では動的モジュールガバナンスが無効です。',
   'generator.moduleManager.stats.total': '総モジュール数',
@@ -1412,7 +1550,8 @@ const jaJPFallback = {
   'generator.moduleManager.status.uninstalled': 'アンインストール済み',
   'generator.moduleManager.status.failed': '失敗',
   'generator.wizard.title': 'モジュール生成ウィザード',
-  'generator.wizard.positioning': 'この機能は標準管理プラットフォーム上の軽量なエンジニア支援ツールです。プラットフォーム契約に準拠した業務モジュール雛形を生成し、コア管理システムの代替ではありません。',
+  'generator.wizard.positioning':
+    'この機能は標準管理プラットフォーム上の軽量なエンジニア支援ツールです。プラットフォーム契約に準拠した業務モジュール雛形を生成し、コア管理システムの代替ではありません。',
   'generator.wizard.step1.title': '基本情報',
   'generator.wizard.step1.desc': 'モジュールキー、表示名、スコープを定義します。',
   'generator.wizard.step2.title': 'データモデル',
@@ -1427,17 +1566,24 @@ const jaJPFallback = {
   'generator.wizard.step3.enumCount': '{{count}} 件の列挙型項目',
   'generator.wizard.step3.actionCount': '{{count}} 件のページ操作',
   'generator.wizard.step3.menus': '既定メニュー',
-  'generator.wizard.step3.menus.auto': 'ジェネレーターはメニューパス、コンポーネントキー、タイトルキーを自動作成します。',
+  'generator.wizard.step3.menus.auto':
+    'ジェネレーターはメニューパス、コンポーネントキー、タイトルキーを自動作成します。',
   'generator.wizard.step3.permissions': '既定権限',
-  'generator.wizard.step3.permissions.auto': 'ジェネレーターは契約から list/create/update/delete 権限ポイントを自動生成します。',
-  'generator.wizard.step3.permissions.empty': 'このテーブルロールでは独立した権限ポイントを生成しません。',
+  'generator.wizard.step3.permissions.auto':
+    'ジェネレーターは契約から list/create/update/delete 権限ポイントを自動生成します。',
+  'generator.wizard.step3.permissions.empty':
+    'このテーブルロールでは独立した権限ポイントを生成しません。',
   'generator.wizard.step3.menuPreview': 'メニューツリープレビュー',
-  'generator.wizard.step3.menuPreview.desc': '生成前に親業務モジュール、ページメニュー、操作権限の階層を確認します。',
-  'generator.wizard.step3.menuPreview.empty': 'このテーブルロールではナビゲーションを生成しません。',
+  'generator.wizard.step3.menuPreview.desc':
+    '生成前に親業務モジュール、ページメニュー、操作権限の階層を確認します。',
+  'generator.wizard.step3.menuPreview.empty':
+    'このテーブルロールではナビゲーションを生成しません。',
   'generator.wizard.step3.i18nCompleteness': 'i18n 完整性',
-  'generator.wizard.step3.i18nCompleteness.desc': '生成前にメニュー、項目、権限、監査タイトルの中国語/英語キーを確認します。',
+  'generator.wizard.step3.i18nCompleteness.desc':
+    '生成前にメニュー、項目、権限、監査タイトルの中国語/英語キーを確認します。',
   'generator.wizard.step3.translationPreview': '翻訳リソースプレビュー',
-  'generator.wizard.step3.translationPreview.desc': '生成前に中国語と英語の初期翻訳を編集できます。値は schema、backend i18n seed、frontend fallback に書き込まれます。',
+  'generator.wizard.step3.translationPreview.desc':
+    '生成前に中国語と英語の初期翻訳を編集できます。値は schema、backend i18n seed、frontend fallback に書き込まれます。',
   'generator.wizard.step3.translationPreview.key': 'i18n Key',
   'generator.wizard.step3.translationPreview.zh': '中国語',
   'generator.wizard.step3.translationPreview.en': '英語',
@@ -1447,20 +1593,24 @@ const jaJPFallback = {
   'generator.wizard.step3.translationPreview.importError': '翻訳リソースのインポートに失敗しました',
   'generator.wizard.step3.generationImpact': '生成影響プレビュー',
   'generator.wizard.step3.impact.files': '{{count}} 個の候補ファイル',
-  'generator.wizard.step3.impact.more': 'さらに {{count}} 個のファイルをコードプレビューで表示します',
+  'generator.wizard.step3.impact.more':
+    'さらに {{count}} 個のファイルをコードプレビューで表示します',
   'generator.wizard.step3.impact.dependencies': '{{count}} 件のモジュール依存',
   'generator.wizard.step3.impact.relations': '{{count}} 件の関連契約',
   'generator.wizard.step4.title': 'プレビューと登録',
-  'generator.wizard.step4.desc': '書き込まれるファイルを確認し、その後モジュールをダウンロードまたは登録します。',
+  'generator.wizard.step4.desc':
+    '書き込まれるファイルを確認し、その後モジュールをダウンロードまたは登録します。',
   'generator.wizard.moduleName': 'モジュール名',
-  'generator.wizard.moduleName.help': 'cmdb/host のような階層パスに対応します。各セグメントでは小文字、数字、アンダースコアのみ使用できます。',
+  'generator.wizard.moduleName.help':
+    'cmdb/host のような階層パスに対応します。各セグメントでは小文字、数字、アンダースコアのみ使用できます。',
   'generator.wizard.sourceMode': 'モデリング元',
   'generator.wizard.sourceMode.manual': '手動モデリング',
   'generator.wizard.sourceMode.database': 'DB テーブルから取り込み',
   'generator.wizard.sourceTable': '元テーブル',
   'generator.wizard.sourceTable.required': '取り込むテーブルを選択してください',
   'generator.wizard.sourceTable.placeholder': 'データベーステーブルを選択',
-  'generator.wizard.sourceTable.help': '構造のみを取り込みます。フィールド、型、制約候補を読み込んだ後でも生成前に手動調整できます。',
+  'generator.wizard.sourceTable.help':
+    '構造のみを取り込みます。フィールド、型、制約候補を読み込んだ後でも生成前に手動調整できます。',
   'generator.wizard.displayName': '表示名',
   'generator.wizard.displayName.placeholder': '例: チケット管理',
   'generator.wizard.displayNameEn': '英語表示名',
@@ -1470,9 +1620,11 @@ const jaJPFallback = {
   'generator.wizard.templateVersion': 'テンプレートバージョン',
   'generator.wizard.templateVersion.v1': 'v1 安定スキャフォールド',
   'generator.wizard.enableDataScope': 'データ権限フック',
-  'generator.wizard.enableDataScope.help': '有効にすると生成された一覧クエリに common.GetDataScope と database.WithDataScope を注入します。',
+  'generator.wizard.enableDataScope.help':
+    '有効にすると生成された一覧クエリに common.GetDataScope と database.WithDataScope を注入します。',
   'generator.wizard.includeDashboardWidget': 'プラットフォーム作業台入口',
-  'generator.wizard.includeDashboardWidget.help': 'platform 作業台へ接続できるのはナビゲーション可能な business/* モジュールのみです。relation テーブルでは常に無効になります。',
+  'generator.wizard.includeDashboardWidget.help':
+    'platform 作業台へ接続できるのはナビゲーション可能な business/* モジュールのみです。relation テーブルでは常に無効になります。',
   'generator.wizard.dataScopeMode': 'データ権限モード',
   'generator.wizard.dataScopeMode.dept': '部門',
   'generator.wizard.dataScopeMode.owner': '本人',
@@ -1484,19 +1636,24 @@ const jaJPFallback = {
   'generator.wizard.dashboardWidget.disabledTag': '作業台入口無効',
   'generator.wizard.dependencies': 'モジュール依存',
   'generator.wizard.dependencies.placeholder': '1 行に 1 モジュール、例: cmdb/vendor',
-  'generator.wizard.dependencies.help': '依存契約のみを記録し、他モジュールの Service を直接呼びません。',
+  'generator.wizard.dependencies.help':
+    '依存契約のみを記録し、他モジュールの Service を直接呼びません。',
   'generator.wizard.relations': '関連契約',
-  'generator.wizard.relations.placeholder': '形式: name|type|targetModule|localField|targetField|junctionTable',
-  'generator.wizard.relations.help': '主従/関連ガバナンスのプレビュー用です。複数テーブルのトランザクションは生成しません。',
+  'generator.wizard.relations.placeholder':
+    '形式: name|type|targetModule|localField|targetField|junctionTable',
+  'generator.wizard.relations.help':
+    '主従/関連ガバナンスのプレビュー用です。複数テーブルのトランザクションは生成しません。',
   'generator.wizard.businessContext': '業務コンテキスト',
   'generator.wizard.businessContext.placeholder': '例: cmdb',
-  'generator.wizard.businessContext.help': '複数テーブルの業務モジュールをグループ化します。既定ではモジュールパスの先頭セグメントを使用します。',
+  'generator.wizard.businessContext.help':
+    '複数テーブルの業務モジュールをグループ化します。既定ではモジュールパスの先頭セグメントを使用します。',
   'generator.wizard.businessContextTitle': 'コンテキスト中国語タイトル',
   'generator.wizard.businessContextTitle.placeholder': '例: CMDB',
   'generator.wizard.businessContextTitleEn': 'コンテキスト英語タイトル',
   'generator.wizard.businessContextTitleEn.placeholder': '例: CMDB',
   'generator.wizard.tableRole': 'テーブルロール',
-  'generator.wizard.tableRole.help': 'メニュー、権限、独立ページを生成するかを制御します。関連テーブルは既定でナビゲーションを生成しません。',
+  'generator.wizard.tableRole.help':
+    'メニュー、権限、独立ページを生成するかを制御します。関連テーブルは既定でナビゲーションを生成しません。',
   'generator.wizard.tableRole.main': '主テーブル',
   'generator.wizard.tableRole.detail': '明細テーブル',
   'generator.wizard.tableRole.relation': '関連テーブル',
@@ -1505,7 +1662,8 @@ const jaJPFallback = {
   'generator.wizard.primaryTable.placeholder': '例: biz_cmdb_host',
   'generator.wizard.primaryTable.help': '複数テーブル業務で所属する主エンティティを示します。',
   'generator.wizard.relationFields': '関連フィールド',
-  'generator.wizard.relationFields.help': '関連テーブルの場合のみ両端の関連フィールドを入力します。',
+  'generator.wizard.relationFields.help':
+    '関連テーブルの場合のみ両端の関連フィールドを入力します。',
   'generator.wizard.relationFromField.placeholder': 'From フィールド、例: host_id',
   'generator.wizard.relationToField.placeholder': 'To フィールド、例: group_id',
   'generator.wizard.scope': 'スコープ',
@@ -1518,13 +1676,15 @@ const jaJPFallback = {
   'generator.wizard.templateLevel.basic.tag': '軽量',
   'generator.wizard.parentMenu': '親メニューパス',
   'generator.wizard.parentMenu.placeholder': '任意。例: /business/cmdb',
-  'generator.wizard.parentMenu.help': '任意です。ネストした業務モジュールはモジュールパスから親メニューを自動推定します。既存メニューパスで上書きすることもできます。',
+  'generator.wizard.parentMenu.help':
+    '任意です。ネストした業務モジュールはモジュールパスから親メニューを自動推定します。既存メニューパスで上書きすることもできます。',
   'generator.wizard.owner': '責任者',
   'generator.wizard.owner.placeholder': '例: Platform Engineering',
   'generator.wizard.boundedContext': '境界づけられたコンテキスト',
   'generator.wizard.boundedContext.placeholder': '例: CMDB / 資産管理',
   'generator.wizard.summary': 'モジュール概要',
-  'generator.wizard.summary.placeholder': 'モジュールの境界、主要エンティティ、取り込み元を説明してください。',
+  'generator.wizard.summary.placeholder':
+    'モジュールの境界、主要エンティティ、取り込み元を説明してください。',
   'generator.wizard.fillRequired': '先に必須項目を入力してください',
   'generator.wizard.generate': 'コードを生成',
   'generator.wizard.generatedFiles': '{{count}} 個のファイルを生成',
@@ -1534,14 +1694,20 @@ const jaJPFallback = {
   'generator.wizard.downloadError': 'ソースパッケージの生成に失敗しました',
   'generator.wizard.preview': 'コードをプレビュー',
   'generator.wizard.register.submit': '生成して登録',
-  'generator.wizard.register.success': 'モジュールファイルを書き込み、アクティベーション待ちになりました',
+  'generator.wizard.register.success':
+    'モジュールファイルを書き込み、アクティベーション待ちになりました',
   'generator.wizard.register.error': 'モジュールの生成または登録に失敗しました',
   'generator.wizard.register.overwriteTitle': '既存モジュールを検出しました',
-  'generator.wizard.register.overwriteContent': '対象モジュールまたはファイルは既に存在します。上書きして再度アクティベーション待ちに戻しますか？',
-  'generator.validation.blocked': '生成契約にブロッキング問題があります。先に完整性チェックを修正してください。',
-  'generator.validation.passed': 'メニュー、権限、監査、中国語/英語翻訳キーの基本チェックに合格しました。',
-  'generator.validation.businessContextMissing': '業務コンテキストがありません。トップレベルモジュールのコンテキストを追加してください。',
-  'generator.validation.relationTableHasMenu': '関連テーブルはメニューや権限を生成すべきではありません。',
+  'generator.wizard.register.overwriteContent':
+    '対象モジュールまたはファイルは既に存在します。上書きして再度アクティベーション待ちに戻しますか？',
+  'generator.validation.blocked':
+    '生成契約にブロッキング問題があります。先に完整性チェックを修正してください。',
+  'generator.validation.passed':
+    'メニュー、権限、監査、中国語/英語翻訳キーの基本チェックに合格しました。',
+  'generator.validation.businessContextMissing':
+    '業務コンテキストがありません。トップレベルモジュールのコンテキストを追加してください。',
+  'generator.validation.relationTableHasMenu':
+    '関連テーブルはメニューや権限を生成すべきではありません。',
   'generator.validation.dependencyInvalid': 'モジュール依存の形式が不正です。',
   'generator.validation.relationTypeInvalid': '関連タイプが不正です。',
   'generator.validation.relationIncomplete': '関連契約が不完全です。',
@@ -1552,15 +1718,22 @@ const jaJPFallback = {
   'generator.table.not_found': '選択したテーブルが見つかりません',
   'database.schema_unknown': '現在のデータベース schema を判定できませんでした',
   'generator.wizard.register.nextSteps': '次の手順',
-  'generator.wizard.register.restartBackend': '1. 生成された Go モジュールをコンパイルしてマウントするため、バックエンドを再起動してください。',
-  'generator.wizard.register.rebuildFrontend': '2. 生成されたページコンポーネントをルーターレジストリへ反映するため、フロントエンドを再ビルドしてください。',
-  'generator.wizard.register.openModuleManager': '3. その後、モジュール管理を開いて {{module}} の有効化状態を確認してください。',
-  'generator.wizard.register.businessOnly': 'ワンクリック登録は現在 business/* モジュールのみ対応しています。system/* モジュールは引き続き手動でサブドメイン統合が必要です。',
+  'generator.wizard.register.restartBackend':
+    '1. 生成された Go モジュールをコンパイルしてマウントするため、バックエンドを再起動してください。',
+  'generator.wizard.register.rebuildFrontend':
+    '2. 生成されたページコンポーネントをルーターレジストリへ反映するため、フロントエンドを再ビルドしてください。',
+  'generator.wizard.register.openModuleManager':
+    '3. その後、モジュール管理を開いて {{module}} の有効化状態を確認してください。',
+  'generator.wizard.register.businessOnly':
+    'ワンクリック登録は現在 business/* モジュールのみ対応しています。system/* モジュールは引き続き手動でサブドメイン統合が必要です。',
   'generator.wizard.register.disabledTitle': '動的モジュールは無効です',
-  'generator.wizard.register.disabledHint': '現在の環境ではフロントエンドからのモジュール生成または登録は許可されていません。開発環境で機能を有効にするか、制御されたエンジニアリング手順で対応してください。',
+  'generator.wizard.register.disabledHint':
+    '現在の環境ではフロントエンドからのモジュール生成または登録は許可されていません。開発環境で機能を有効にするか、制御されたエンジニアリング手順で対応してください。',
   'generator.wizard.result.title': '生成結果',
-  'generator.wizard.result.pendingActivation': 'ソースファイル、レジストリ、雛形概要の書き込みが完了しました',
-  'generator.wizard.result.pendingActivationDesc': 'このモジュールはまだ有効化待ちです。業務モジュールを公開する前にバックエンドを再起動し、フロントエンドを再ビルドしてください。',
+  'generator.wizard.result.pendingActivation':
+    'ソースファイル、レジストリ、雛形概要の書き込みが完了しました',
+  'generator.wizard.result.pendingActivationDesc':
+    'このモジュールはまだ有効化待ちです。業務モジュールを公開する前にバックエンドを再起動し、フロントエンドを再ビルドしてください。',
   'generator.wizard.result.moduleKey': 'モジュールキー',
   'generator.wizard.result.activationStatus': '有効化状態',
   'generator.wizard.result.parentMenu': '親メニュー',
@@ -1610,8 +1783,10 @@ const jaJPFallback = {
   'i18n.rename.title': '競合キー修復',
   'i18n.rename.oldKey': '旧キー',
   'i18n.rename.newKey': '新キー',
-  'i18n.rename.confirmSourceUpdated': 'コード参照の移行を完了し、データベース翻訳キーの更新を許可します',
-  'i18n.rename.confirmSourceRequired': 'コード参照がまだ残っています。実行前にソース移行を確認してください',
+  'i18n.rename.confirmSourceUpdated':
+    'コード参照の移行を完了し、データベース翻訳キーの更新を許可します',
+  'i18n.rename.confirmSourceRequired':
+    'コード参照がまだ残っています。実行前にソース移行を確認してください',
   'i18n.rename.preview.action': 'プレビュー実行',
   'i18n.rename.execute.action': '改名を実行',
   'i18n.rename.preview.title': '改名プレビュー',
@@ -1623,11 +1798,15 @@ const jaJPFallback = {
   'i18n.rename.preview.referenceTitle': 'コード参照ファイル',
   'i18n.rename.preview.matchCount': '{{count}} 件一致',
   'i18n.rename.preview.matchLocation': '{{line}} 行 {{column}} 列',
-  'i18n.rename.preview.referenceEmpty': 'ソース参照ファイルは見つかりませんでした。データベース改名を直接実行できます。',
+  'i18n.rename.preview.referenceEmpty':
+    'ソース参照ファイルは見つかりませんでした。データベース改名を直接実行できます。',
   'i18n.rename.preview.warningTitle': '実行前チェック',
-  'i18n.rename.preview.warning1': '管理バックエンドはソースファイルを自動変更しません。更新するのはデータベース内の i18n キーのみです。',
-  'i18n.rename.preview.warning2': 'ソースコードがまだ旧キーを参照している場合、実行後にページへ欠損翻訳またはプレースホルダーが表示されます。',
-  'i18n.rename.preview.warning3': '既存の翻訳資産を上書きしないため、対象キーがすでに存在する場合は実行がブロックされます。',
+  'i18n.rename.preview.warning1':
+    '管理バックエンドはソースファイルを自動変更しません。更新するのはデータベース内の i18n キーのみです。',
+  'i18n.rename.preview.warning2':
+    'ソースコードがまだ旧キーを参照している場合、実行後にページへ欠損翻訳またはプレースホルダーが表示されます。',
+  'i18n.rename.preview.warning3':
+    '既存の翻訳資産を上書きしないため、対象キーがすでに存在する場合は実行がブロックされます。',
   'i18n.rename.preview.error': 'i18n キー改名プレビューに失敗しました',
   'i18n.rename.execute.error': 'i18n キーの改名に失敗しました',
   'i18n.rename.execute.success': '{{count}} 件の i18n レコードを改名しました。',
@@ -1647,14 +1826,17 @@ const jaJPFallback = {
   'i18n.rename.report.referenceBefore': '変更前',
   'i18n.rename.report.referenceAfter': '変更後',
   'i18n.rename.report.checklistTitle': '実行チェックリスト',
-  'i18n.rename.report.checklist1': 'まずソースコード内の oldKey をすべて newKey へ更新してください。',
-  'i18n.rename.report.checklist2': 'ローカルのテストまたはビルドを再実行し、oldKey が残っていないことを確認してください。',
+  'i18n.rename.report.checklist1':
+    'まずソースコード内の oldKey をすべて newKey へ更新してください。',
+  'i18n.rename.report.checklist2':
+    'ローカルのテストまたはビルドを再実行し、oldKey が残っていないことを確認してください。',
   'i18n.rename.report.checklist3': 'i18n 管理ページへ戻り、ソース移行完了を確認してください。',
   'i18n.rename.report.checklist4': 'コード移行完了後にのみデータベース改名を実行してください。',
   'i18n.rename.invalid': 'i18n キー改名パラメータが不正です',
   'i18n.rename.source_not_found': '改名元の i18n キーが見つかりませんでした',
   'i18n.rename.target_exists': '対象 i18n キーはすでに存在しており、上書きできません',
-  'i18n.rename.source_not_confirmed': 'ソースコード参照がまだ残っています。実行前にコード移行を完了してください',
+  'i18n.rename.source_not_confirmed':
+    'ソースコード参照がまだ残っています。実行前にコード移行を完了してください',
   'i18n.lifecycle.observe.all': 'すべてを観測対象にする',
   'i18n.lifecycle.observe.module': '観測を開始',
   'i18n.lifecycle.observe.success': '{{count}} 件の未使用キーを観測対象にしました。',
@@ -1665,8 +1847,10 @@ const jaJPFallback = {
   'i18n.lifecycle.archive.error': '観測中の未使用キーをアーカイブできませんでした',
   'i18n.lifecycle.delete.all': 'アーカイブ済みキーを削除',
   'i18n.lifecycle.delete.module': 'アーカイブ済みを削除',
-  'i18n.lifecycle.delete.confirm': 'アーカイブ済みの未使用 i18n キーを今すぐ削除しますか？この操作は元に戻せません。',
-  'i18n.lifecycle.delete.confirmModule': 'このモジュール内のアーカイブ済み未使用 i18n キーを削除しますか？この操作は元に戻せません。',
+  'i18n.lifecycle.delete.confirm':
+    'アーカイブ済みの未使用 i18n キーを今すぐ削除しますか？この操作は元に戻せません。',
+  'i18n.lifecycle.delete.confirmModule':
+    'このモジュール内のアーカイブ済み未使用 i18n キーを削除しますか？この操作は元に戻せません。',
   'i18n.lifecycle.delete.success': '{{count}} 件のアーカイブ済み未使用キーを削除しました。',
   'i18n.lifecycle.delete.error': 'アーカイブ済み未使用キーの削除に失敗しました',
   'i18n.lifecycle.status.active': '有効',
@@ -1694,9 +1878,11 @@ const jaJPFallback = {
   'generator.pageActions.export': 'エクスポート',
   'generator.pageActions.import': 'インポート',
   'generator.actionTemplates.standard': '標準 CRUD',
-  'generator.actionTemplates.standard.desc': '表示、作成、更新、削除、詳細を持つ一般的な業務ページ向けです。',
+  'generator.actionTemplates.standard.desc':
+    '表示、作成、更新、削除、詳細を持つ一般的な業務ページ向けです。',
   'generator.actionTemplates.masterData': 'マスターデータ',
-  'generator.actionTemplates.masterData.desc': 'インポートとエクスポートを持つカタログおよび参照データ向けです。',
+  'generator.actionTemplates.masterData.desc':
+    'インポートとエクスポートを持つカタログおよび参照データ向けです。',
   'generator.actionTemplates.lookup': '参照専用',
   'generator.actionTemplates.lookup.desc': '一覧と詳細のみを持つ検索可能な参照専用ページ向けです。',
   'generator.fieldTemplates.code': 'コード',
@@ -1758,7 +1944,8 @@ const jaJPFallback = {
   'generator.fieldEditor.duplicateName': 'フィールド名はすでに存在します',
   'generator.fieldEditor.template': 'フィールドテンプレート',
   'generator.fieldEditor.template.none': 'テンプレートなし',
-  'generator.fieldEditor.templateExists': 'このテンプレートフィールドはすでに存在します。既存フィールドを編集してください。',
+  'generator.fieldEditor.templateExists':
+    'このテンプレートフィールドはすでに存在します。既存フィールドを編集してください。',
   'generator.fieldEditor.unique': '一意',
   'generator.fieldEditor.enumDict': '列挙辞書',
   'generator.fieldEditor.enumInline': 'インライン列挙',
@@ -1779,12 +1966,14 @@ const jaJPFallback = {
   'dept.parent.not_found': '親部門が存在しません',
   'dept.leader.required': '責任者を入力してください',
   'dept.leader.bind_after_create': '先に部門を作成してから実際の責任者を紐付けてください',
-  'dept.leader.user_invalid': '責任者は現在の部門に所属し、有効な役職を持つ有効メンバーである必要があります',
+  'dept.leader.user_invalid':
+    '責任者は現在の部門に所属し、有効な役職を持つ有効メンバーである必要があります',
   'dept.parent.required': '部門は組織ルートまたは既存部門の配下に配置する必要があります',
   'dept.update.error.parent_self': '親部門を自分自身にすることはできません',
   'dept.update.error.parent_descendant': '親部門を現在部門の子孫にすることはできません',
   'dept.delete.error.has_children': '現在の部門を削除する前に子部門を削除してください',
-  'dept.delete.error.has_posts': '現在の部門にはまだ役職が存在するため削除できません。先に役職を再配置または削除してください',
+  'dept.delete.error.has_posts':
+    '現在の部門にはまだ役職が存在するため削除できません。先に役職を再配置または削除してください',
   'dept.delete.error.has_users': '現在の部門にはまだユーザーが割り当てられているため削除できません',
   'dept.overview.error': '組織健全性概要の読み込みに失敗しました',
   'dept.governance.task.error': '組織ガバナンスタスクの読み込みに失敗しました',
@@ -1795,7 +1984,8 @@ const jaJPFallback = {
   'dept.root.status_fixed': '組織ルートは常に有効状態でなければなりません',
   'dept.batch.empty': '先に部門を選択してください',
   'dept.batch.not_found': '一部の部門は存在しなくなりました。更新して再試行してください',
-  'system.permission.workbench.hint': 'ナビゲーション、ページ/操作権限、Casbin API ポリシーをロール視点で 1 か所から確認します。',
+  'system.permission.workbench.hint':
+    'ナビゲーション、ページ/操作権限、Casbin API ポリシーをロール視点で 1 か所から確認します。',
   'system.permission.workbench.pageGapRoles': 'ページ権限不足ロール',
   'system.permission.workbench.apiGapRoles': 'API ポリシー不足ロール',
   'system.permission.workbench.navCount': 'ナビゲーション',
@@ -1832,16 +2022,23 @@ const jaJPFallback = {
   'system.permission.roleRequired': 'ロールを選択してください',
   'system.permission.pathRequired': 'API パスを入力してください',
   'system.permission.methodRequired': 'リクエストメソッドを選択してください',
-  'system.permission.hero.desc': '権限ページは `system/iam` のガバナンスループを維持します。ワークベンチがエンドツーエンドの認可カバレッジを確認し、API ポリシータブがバックエンドルート境界を閉じます。どちらも同じ共有ページテンプレート内で扱います。',
+  'system.permission.hero.desc':
+    '権限ページは `system/iam` のガバナンスループを維持します。ワークベンチがエンドツーエンドの認可カバレッジを確認し、API ポリシータブがバックエンドルート境界を閉じます。どちらも同じ共有ページテンプレート内で扱います。',
   'system.permission.hero.rolesHint': '権限ワークベンチが現在分析しているロール数です。',
   'system.permission.hero.assignmentsHint': 'ロール層にあるページ権限と操作権限の割当総数です。',
-  'system.permission.hero.apiHint': 'バックエンド API 到達範囲を定義している現在の Casbin ルートポリシー数です。',
-  'system.permission.hero.gapsHint': 'ページ権限不足または API ポリシー不足を持つロール数の合計です。',
-  'system.permission.hero.modeHint': '同じガバナンス文脈のまま、ワークベンチモードと API ポリシーモードを切り替えます。',
-  'system.permission.hero.unknownHint': '不明な権限キーがある場合は、先にメニューメタデータと過去の付与を確認してください。',
-  'system.permission.hero.exportHint': 'ガバナンスレポートと API ポリシーエクスポートはいずれも統一された権限制御に従います。',
+  'system.permission.hero.apiHint':
+    'バックエンド API 到達範囲を定義している現在の Casbin ルートポリシー数です。',
+  'system.permission.hero.gapsHint':
+    'ページ権限不足または API ポリシー不足を持つロール数の合計です。',
+  'system.permission.hero.modeHint':
+    '同じガバナンス文脈のまま、ワークベンチモードと API ポリシーモードを切り替えます。',
+  'system.permission.hero.unknownHint':
+    '不明な権限キーがある場合は、先にメニューメタデータと過去の付与を確認してください。',
+  'system.permission.hero.exportHint':
+    'ガバナンスレポートと API ポリシーエクスポートはいずれも統一された権限制御に従います。',
   'system.permission.hero.sideLead': '先にカバレッジ不足を見つけ、次に API 境界を補完',
-  'system.permission.hero.sideDesc': 'まずワークベンチで不足ページ権限、不足 API ポリシー、不明キーを見つけ、その後 API ポリシーへ移って Casbin 境界を閉じてください。孤立したルールを盲目的に修正しないようにします。',
+  'system.permission.hero.sideDesc':
+    'まずワークベンチで不足ページ権限、不足 API ポリシー、不明キーを見つけ、その後 API ポリシーへ移って Casbin 境界を閉じてください。孤立したルールを盲目的に修正しないようにします。',
   'system.permission.user.create': 'ユーザー作成',
   'system.permission.user.view': 'ユーザー詳細閲覧',
   'system.permission.user.update': 'ユーザー更新',
@@ -1927,78 +2124,125 @@ const jaJPFallback = {
   'system.menu.icon.tags': 'タグ',
   'system.menu.activeMenu.placeholder': '例: system-user',
   'system.menu.level': '階層レベル',
-  'system.menu.hero.desc': 'メニューページはシステムページ共通テンプレートを継承します。主作業領域がフィルター、ツリーテーブル、多視点閲覧を担い、右側にはメタデータの準備状況とガバナンスのヒントだけを表示し、メニュー情報を散在した概要に分解しません。',
+  'system.menu.hero.desc':
+    'メニューページはシステムページ共通テンプレートを継承します。主作業領域がフィルター、ツリーテーブル、多視点閲覧を担い、右側にはメタデータの準備状況とガバナンスのヒントだけを表示し、メニュー情報を散在した概要に分解しません。',
   'system.menu.hero.totalHint': '現在のメニューガバナンス範囲にある全ナビゲーションノード数です。',
-  'system.menu.hero.visibleHint': '現在の結果セットでサイドバーに表示できるナビゲーションノード数です。',
+  'system.menu.hero.visibleHint':
+    '現在の結果セットでサイドバーに表示できるナビゲーションノード数です。',
   'system.menu.hero.actionHint': '現在メタデータにバインドされている操作権限ノード数です。',
   'system.menu.hero.viewHint': '現在のワークベンチがツリー表示か一覧表示かを示します。',
-  'system.menu.hero.routeHint': 'ルーティング可能なページノード数で、ルート登録の整合性確認に使います。',
-  'system.menu.hero.cacheHint': 'キャッシュ有効のページノード数で、ルートキャッシュ戦略の確認に使います。',
-  'system.menu.hero.externalHint': '外部リンクとしてマークされたナビゲーションノード数で、遷移境界の確認に使います。',
+  'system.menu.hero.routeHint':
+    'ルーティング可能なページノード数で、ルート登録の整合性確認に使います。',
+  'system.menu.hero.cacheHint':
+    'キャッシュ有効のページノード数で、ルートキャッシュ戦略の確認に使います。',
+  'system.menu.hero.externalHint':
+    '外部リンクとしてマークされたナビゲーションノード数で、遷移境界の確認に使います。',
   'system.menu.hero.sideLead': 'メニューはナビゲーションのみ、権限は別でモデリング',
-  'system.menu.hero.sideDesc': 'メニューツリーはナビゲーションメタデータとページ入口のみを管理し、ボタン権限や API 権限を直接表しません。メニュー更新時は `pagePerm`、操作 `perms`、コンポーネント登録が完全かも併せて確認してください。',
+  'system.menu.hero.sideDesc':
+    'メニューツリーはナビゲーションメタデータとページ入口のみを管理し、ボタン権限や API 権限を直接表しません。メニュー更新時は `pagePerm`、操作 `perms`、コンポーネント登録が完全かも併せて確認してください。',
   'system.user.hero.totalHint': 'プラットフォーム内で ID ガバナンスに含まれるアカウント総数です。',
-  'system.user.hero.enabledHint': '現在の結果セットで、まだログイン可能かつ権限を割り当てられるアカウント数です。',
-  'system.user.hero.selectedHint': '一括有効化、無効化、インポート、エクスポートは現在の選択セットを基準にします。',
-  'system.user.hero.rolesHint': 'ロールプールの準備が整うことで、ユーザー権限付与は `system/iam` の権限境界を越えません。',
-  'system.user.hero.orgHint': '紐付け可能な部門数と役職数を表示し、組織所属チェーンの準備状況を判断します。',
-  'system.user.hero.disabledHint': '現在の結果セット内の無効アカウント数で、整理と再確認の入口になります。',
-  'system.user.hero.batchHint': '少なくとも 1 件の組み込み以外のアカウントを選択すると、一括状態操作が有効になります。',
-  'system.user.hero.sideDesc': 'まず部門と役職を整備し、その後でロール割当と一括有効化/無効化を行うことを推奨します。実際の組織コンテキストから切り離されたユーザーガバナンスを避けるためです。',
+  'system.user.hero.enabledHint':
+    '現在の結果セットで、まだログイン可能かつ権限を割り当てられるアカウント数です。',
+  'system.user.hero.selectedHint':
+    '一括有効化、無効化、インポート、エクスポートは現在の選択セットを基準にします。',
+  'system.user.hero.rolesHint':
+    'ロールプールの準備が整うことで、ユーザー権限付与は `system/iam` の権限境界を越えません。',
+  'system.user.hero.orgHint':
+    '紐付け可能な部門数と役職数を表示し、組織所属チェーンの準備状況を判断します。',
+  'system.user.hero.disabledHint':
+    '現在の結果セット内の無効アカウント数で、整理と再確認の入口になります。',
+  'system.user.hero.batchHint':
+    '少なくとも 1 件の組み込み以外のアカウントを選択すると、一括状態操作が有効になります。',
+  'system.user.hero.sideDesc':
+    'まず部門と役職を整備し、その後でロール割当と一括有効化/無効化を行うことを推奨します。実際の組織コンテキストから切り離されたユーザーガバナンスを避けるためです。',
   'system.setting.hero.eyebrow': 'システムドメイン / 設定ガバナンス',
   'system.setting.hero.title': '統一テンプレートでプラットフォーム設定、既定値、運用リスクを管理',
-  'system.setting.hero.desc': '設定ページは `system/config` の意味論を維持します。主作業領域がグループ設定と変更監査を担当し、副次サマリー領域は現行ランタイム要約とガバナンスリスクのみを表示して、設定ページを再び独立カードの壁にしません。',
+  'system.setting.hero.desc':
+    '設定ページは `system/config` の意味論を維持します。主作業領域がグループ設定と変更監査を担当し、副次サマリー領域は現行ランタイム要約とガバナンスリスクのみを表示して、設定ページを再び独立カードの壁にしません。',
   'system.setting.hero.totalHint': '現在のシステム設定センターで管理されている全設定項目数です。',
-  'system.setting.hero.publicHint': 'プラットフォームシェルやログインページが公開利用できる設定数です。',
+  'system.setting.hero.publicHint':
+    'プラットフォームシェルやログインページが公開利用できる設定数です。',
   'system.setting.hero.encryptedHint': '機密設定として扱われ、暗号化保存される設定数です。',
   'system.setting.hero.riskHint': '必須値の欠落や不正値に基づいて識別された現在の運用リスクです。',
-  'system.setting.hero.storageHint': '現在アップロード経路で実際に使用中のストレージドライバーです。',
-  'system.setting.hero.languageHint': '明示的に切り替えていない場合のプラットフォーム既定表示言語です。',
-  'system.setting.hero.themeHint': 'プラットフォームシェルとシステムページで共用する既定テーマ識別子です。',
+  'system.setting.hero.storageHint':
+    '現在アップロード経路で実際に使用中のストレージドライバーです。',
+  'system.setting.hero.languageHint':
+    '明示的に切り替えていない場合のプラットフォーム既定表示言語です。',
+  'system.setting.hero.themeHint':
+    'プラットフォームシェルとシステムページで共用する既定テーマ識別子です。',
   'system.setting.hero.sideTitle': 'リスク要約',
-  'system.setting.hero.sideDesc': '現時点で直ちに是正が必要な設定リスクはありません。今後新しいリスクが出ても、この統一サマリーカードで継続的に受け止め、別のトップ概要は作りません。',
-  'system.setting.saveHint': '保存後、設定は直ちにシステム設定テーブルへ書き込まれ、機密設定は公開 API から配信されません。',
+  'system.setting.hero.sideDesc':
+    '現時点で直ちに是正が必要な設定リスクはありません。今後新しいリスクが出ても、この統一サマリーカードで継続的に受け止め、別のトップ概要は作りません。',
+  'system.setting.saveHint':
+    '保存後、設定は直ちにシステム設定テーブルへ書き込まれ、機密設定は公開 API から配信されません。',
   'system.setting.groupHint.basic': 'サイト名や Logo など公開参照可能な基本情報です。',
-  'system.setting.groupHint.security': 'アカウントとパスワードの安全性に影響するバックエンドポリシーです。',
+  'system.setting.groupHint.security':
+    'アカウントとパスワードの安全性に影響するバックエンドポリシーです。',
   'system.setting.groupHint.login': 'ログイン失敗、ロックなど認証動作に影響するポリシーです。',
-  'system.setting.groupHint.upload': 'ファイルアップロード、ストレージドライバー、公開 URL、クラウド保存資格情報などの設定です。',
+  'system.setting.groupHint.upload':
+    'ファイルアップロード、ストレージドライバー、公開 URL、クラウド保存資格情報などの設定です。',
   'system.setting.groupHint.i18n': '既定言語などの国際化設定です。',
   'system.setting.groupHint.ui': 'プラットフォーム既定テーマと操作設定です。',
   'system.setting.remark.site.name': 'ログインページ、ブラウザータイトル、公開設定で使用します。',
-  'system.setting.remark.platform.app_mode': 'enterprise は管理画面向け、consumer は C 向けアカウント、hybrid は両方をサポートします。',
-  'system.setting.remark.org.enabled': '無効にすると部門と役職をナビゲーションとユーザーフォームから隠しますが、組織データは削除しません。',
-  'system.setting.remark.org.required_for_user': '組織機能が有効な場合のみ適用され、ユーザー作成・編集時に部門選択を必須にします。',
+  'system.setting.remark.platform.app_mode':
+    'enterprise は管理画面向け、consumer は C 向けアカウント、hybrid は両方をサポートします。',
+  'system.setting.remark.org.enabled':
+    '無効にすると部門と役職をナビゲーションとユーザーフォームから隠しますが、組織データは削除しません。',
+  'system.setting.remark.org.required_for_user':
+    '組織機能が有効な場合のみ適用され、ユーザー作成・編集時に部門選択を必須にします。',
   'system.setting.option.platform.app_mode.enterprise': 'エンタープライズ管理',
   'system.setting.option.platform.app_mode.consumer': 'コンシューマーアプリ',
   'system.setting.option.platform.app_mode.hybrid': 'ハイブリッド',
   'system.setting.remark.site.logo': 'サイト Logo の URL です。空欄可。',
-  'system.setting.remark.security.password_min_length': 'ユーザーのパスワード変更、新規作成、管理者リセットなどの長さ検証に適用されます。',
-  'system.setting.remark.security.password_require_digit': '有効にすると、パスワード変更時に少なくとも 1 つの数字が必要です。',
-  'system.setting.remark.security.password_require_uppercase': '有効にすると、パスワード変更時に少なくとも 1 つの大文字が必要です。',
-  'system.setting.remark.security.password_history_limit': '直近 N 件の履歴パスワードの再利用を禁止します。0 は無効です。',
-  'system.setting.remark.security.password_expire_days': 'この日数を超えるとセキュリティセンターで期限切れとして表示します。0 は無効です。',
-  'system.setting.remark.login.max_failed_attempts': '同一アカウントの連続ログイン失敗回数がこの値に達すると、ロック戦略を発動できます。',
+  'system.setting.remark.security.password_min_length':
+    'ユーザーのパスワード変更、新規作成、管理者リセットなどの長さ検証に適用されます。',
+  'system.setting.remark.security.password_require_digit':
+    '有効にすると、パスワード変更時に少なくとも 1 つの数字が必要です。',
+  'system.setting.remark.security.password_require_uppercase':
+    '有効にすると、パスワード変更時に少なくとも 1 つの大文字が必要です。',
+  'system.setting.remark.security.password_history_limit':
+    '直近 N 件の履歴パスワードの再利用を禁止します。0 は無効です。',
+  'system.setting.remark.security.password_expire_days':
+    'この日数を超えるとセキュリティセンターで期限切れとして表示します。0 は無効です。',
+  'system.setting.remark.login.max_failed_attempts':
+    '同一アカウントの連続ログイン失敗回数がこの値に達すると、ロック戦略を発動できます。',
   'system.setting.remark.login.lock_minutes': 'ログインロックの継続時間（分）です。',
-  'system.setting.remark.login.session_idle_minutes': 'ユーザーが連続して無操作のままこの分数に達すると、現在のセッションを自動退出します。既定は 30 分です。',
-  'system.setting.remark.login.max_active_sessions_per_user': '同一アカウントで保持できる有効セッション数の上限です。新しいログインで上限を超えると、古い有効セッションを自動で無効化します。管理画面アカウントでは 1 を推奨します。',
-  'system.setting.remark.audit.session_retention_days': '無効化済みまたは期限切れの履歴セッションを保持する日数です。超過後は自動削除され、監査テーブルの肥大化を防ぎます。既定値は 90 日です。',
-  'system.setting.remark.audit.login_log_retention_days': 'ログインログを自動保持する日数です。超過後は節流付き自動クリーンアップが実行されます。既定値は 90 日です。',
-  'system.setting.remark.audit.operation_log_retention_days': '操作ログを自動保持する日数です。超過後は節流付き自動クリーンアップが実行されます。既定値は 180 日です。',
+  'system.setting.remark.login.session_idle_minutes':
+    'ユーザーが連続して無操作のままこの分数に達すると、現在のセッションを自動退出します。既定は 30 分です。',
+  'system.setting.remark.login.max_active_sessions_per_user':
+    '同一アカウントで保持できる有効セッション数の上限です。新しいログインで上限を超えると、古い有効セッションを自動で無効化します。管理画面アカウントでは 1 を推奨します。',
+  'system.setting.remark.audit.session_retention_days':
+    '無効化済みまたは期限切れの履歴セッションを保持する日数です。超過後は自動削除され、監査テーブルの肥大化を防ぎます。既定値は 90 日です。',
+  'system.setting.remark.audit.login_log_retention_days':
+    'ログインログを自動保持する日数です。超過後は節流付き自動クリーンアップが実行されます。既定値は 90 日です。',
+  'system.setting.remark.audit.operation_log_retention_days':
+    '操作ログを自動保持する日数です。超過後は節流付き自動クリーンアップが実行されます。既定値は 180 日です。',
   'system.setting.audit.retentionDaysOption': '{{count}} 日を自動保持',
-  'system.setting.remark.upload.storage_driver': '現在は local / s3-compatible をサポートし、MinIO、AWS S3、OSS 互換ゲートウェイに接続できます。',
+  'system.setting.remark.upload.storage_driver':
+    '現在は local / s3-compatible をサポートし、MinIO、AWS S3、OSS 互換ゲートウェイに接続できます。',
   'system.setting.remark.upload.max_file_size': '単一ファイルの最大アップロードサイズ（MB）です。',
-  'system.setting.remark.upload.allowed_types': '許可する拡張子ホワイトリストを JSON 配列で管理します。',
-  'system.setting.remark.upload.local_path': 'ローカル保存モード時のアップロードルートディレクトリです。',
-  'system.setting.remark.upload.public_base_url': 'ファイル公開アクセス用ドメインまたはベースパスです。空欄可。',
-  'system.setting.remark.upload.s3_endpoint': 'AWS S3 / MinIO / OSS 互換ゲートウェイなどのオブジェクトストレージエンドポイントです。',
+  'system.setting.remark.upload.allowed_types':
+    '許可する拡張子ホワイトリストを JSON 配列で管理します。',
+  'system.setting.remark.upload.local_path':
+    'ローカル保存モード時のアップロードルートディレクトリです。',
+  'system.setting.remark.upload.public_base_url':
+    'ファイル公開アクセス用ドメインまたはベースパスです。空欄可。',
+  'system.setting.remark.upload.s3_endpoint':
+    'AWS S3 / MinIO / OSS 互換ゲートウェイなどのオブジェクトストレージエンドポイントです。',
   'system.setting.remark.upload.s3_bucket': 'オブジェクトストレージの Bucket 名です。',
-  'system.setting.remark.upload.s3_region': 'オブジェクトストレージの Region です。既定は us-east-1 です。',
-  'system.setting.remark.upload.s3_access_key_id': 'オブジェクトストレージの Access Key ID で、機密設定として暗号化保存されます。',
-  'system.setting.remark.upload.s3_secret_access_key': 'オブジェクトストレージの Secret Access Key で、機密設定として暗号化保存されます。',
-  'system.setting.remark.i18n.default_language': '明示的に言語選択していない場合に使用する既定言語です。',
-  'system.setting.remark.ui.default_theme': 'プラットフォーム既定テーマです。現在は indigo / emerald / violet / slate をサポートします。',
+  'system.setting.remark.upload.s3_region':
+    'オブジェクトストレージの Region です。既定は us-east-1 です。',
+  'system.setting.remark.upload.s3_access_key_id':
+    'オブジェクトストレージの Access Key ID で、機密設定として暗号化保存されます。',
+  'system.setting.remark.upload.s3_secret_access_key':
+    'オブジェクトストレージの Secret Access Key で、機密設定として暗号化保存されます。',
+  'system.setting.remark.i18n.default_language':
+    '明示的に言語選択していない場合に使用する既定言語です。',
+  'system.setting.remark.ui.default_theme':
+    'プラットフォーム既定テーマです。現在は indigo / emerald / violet / slate をサポートします。',
   'system.setting.remark.ui.enable_tab_bar': '上部タブ式ルーティング体験を有効にするかどうかです。',
-  'upload.storage_driver.unsupported': '現在のアップロードドライバーは未対応です。ローカル保存へ切り替えてください',
+  'upload.storage_driver.unsupported':
+    '現在のアップロードドライバーは未対応です。ローカル保存へ切り替えてください',
   'upload.path.invalid': 'アップロード保存パスが不正です',
   'upload.file.open.error': 'アップロードファイルの読み込みに失敗しました',
   'upload.file.save.error': 'アップロードファイルの保存に失敗しました',
@@ -2018,26 +2262,35 @@ const jaJPFallback = {
   'system.dict.item.batchStatusSuccess': '{{count}} 件の辞書項目状態を更新しました',
   'system.dict.usage.empty': '現在のコードベースでこの辞書コードの参照は見つかりませんでした',
   'system.dict.usage.error': '辞書利用分析の読み込みに失敗しました',
-  'system.dict.hero.desc': '辞書ページはシステムページ共通テンプレートを継承します。主作業領域はタイプ/項目の二重ワークベンチを維持し、右側だけが現在のガバナンス要約と操作ヒントを引き受け、追加のトップ概要は広げません。',
-  'system.dict.hero.typeHint': '現在プラットフォームと業務ガバナンスに取り込まれている辞書タイプ数です。',
+  'system.dict.hero.desc':
+    '辞書ページはシステムページ共通テンプレートを継承します。主作業領域はタイプ/項目の二重ワークベンチを維持し、右側だけが現在のガバナンス要約と操作ヒントを引き受け、追加のトップ概要は広げません。',
+  'system.dict.hero.typeHint':
+    '現在プラットフォームと業務ガバナンスに取り込まれている辞書タイプ数です。',
   'system.dict.hero.activeHint': 'まだ有効で業務に利用可能な辞書タイプ数です。',
   'system.dict.hero.itemHint': 'すべての辞書タイプ配下の辞書項目総数で、列挙規模の評価に使います。',
   'system.dict.hero.currentHint': '現在主従ワークベンチが注目している辞書コードです。',
   'system.dict.hero.disabledHint': '無効化済み辞書タイプ数で、整理と再確認の入口になります。',
-  'system.dict.hero.refreshHint': '辞書キャッシュ更新は、バックオフィスのガバナンス結果をランタイムの選択肢へ同期するために使います。',
-  'system.dict.hero.importHint': 'タイプと辞書項目のインポートはどちらも統一されたインポート要約フィードバック経路を通ります。',
+  'system.dict.hero.refreshHint':
+    '辞書キャッシュ更新は、バックオフィスのガバナンス結果をランタイムの選択肢へ同期するために使います。',
+  'system.dict.hero.importHint':
+    'タイプと辞書項目のインポートはどちらも統一されたインポート要約フィードバック経路を通ります。',
   'system.dict.hero.sideLead': '先にタイプ境界、その後で辞書項目内容',
-  'system.dict.hero.sideDesc': 'まず辞書コード、モジュール帰属、状態を確定し、その後で辞書項目保守に進むことを推奨します。業務側の選択値と設定意味論のずれを防ぐためです。',
+  'system.dict.hero.sideDesc':
+    'まず辞書コード、モジュール帰属、状態を確定し、その後で辞書項目保守に進むことを推奨します。業務側の選択値と設定意味論のずれを防ぐためです。',
   'system.dict.seed.system_yes_no': 'はい / いいえ',
   'system.dict.seed.system_user_status': 'ユーザーステータス',
   'system.dict.remark.system_yes_no': 'システム共通の Yes/No 辞書です。',
   'system.dict.remark.system_user_status': 'システムユーザーステータス辞書です。',
-  'system.setting.groupHint.audit': 'ログインログと操作ログの整理保持日数オプション。監査ページが実行時に動的参照します。',
-  'system.setting.remark.audit.login_log_retention_options': 'ログインログ整理で選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
-  'system.setting.remark.audit.operation_log_retention_options': '操作ログ整理で選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
+  'system.setting.groupHint.audit':
+    'ログインログと操作ログの整理保持日数オプション。監査ページが実行時に動的参照します。',
+  'system.setting.remark.audit.login_log_retention_options':
+    'ログインログ整理で選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
+  'system.setting.remark.audit.operation_log_retention_options':
+    '操作ログ整理で選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
   'user.username.required': 'ユーザー名は必須です',
   'user.password.required': 'パスワードは必須です',
-  'auth.security.policy.sourceMaxFailedAttempts': '同一ソースはウィンドウ内で最大 {{count}} 回失敗可能',
+  'auth.security.policy.sourceMaxFailedAttempts':
+    '同一ソースはウィンドウ内で最大 {{count}} 回失敗可能',
   'auth.security.policy.sourceWindowMinutes': 'ソース失敗の集計ウィンドウは {{count}} 分',
   'auth.security.policy.sourceLockMinutes': 'ソースを {{count}} 分ロック',
   'system.setting.item.login.source_max_failed_attempts': 'ソース最大失敗回数',
@@ -2047,13 +2300,19 @@ const jaJPFallback = {
   'system.setting.item.login.captcha_enabled': 'ログイン CAPTCHA を有効化',
   'system.setting.item.login.mfa_enabled': 'MFA を有効化',
   'system.setting.item.login.sso_enabled': 'SSO を有効化',
-  'system.setting.remark.login.source_max_failed_attempts': '同一ソースが集計ウィンドウ内でこの回数に達すると、一時的にソース単位でロックします。',
-  'system.setting.remark.login.source_window_minutes': '同一ソースの失敗回数を集計する時間ウィンドウです。',
+  'system.setting.remark.login.source_max_failed_attempts':
+    '同一ソースが集計ウィンドウ内でこの回数に達すると、一時的にソース単位でロックします。',
+  'system.setting.remark.login.source_window_minutes':
+    '同一ソースの失敗回数を集計する時間ウィンドウです。',
   'system.setting.remark.login.source_lock_minutes': 'ソース単位ロックの継続時間（分）。',
-  'system.setting.remark.login.security_event_enabled': '有効にすると、送信元ロックやアカウントロックなどの実リスクイベントを記録します。',
-  'system.setting.remark.login.captcha_enabled': '将来の CAPTCHA フロー向けの機能フラグです。オフ時は疑似機能を表示しません。',
-  'system.setting.remark.login.mfa_enabled': 'ログイン時に TOTP 二要素認証を要求するかを制御します。オフ時は従来のパスワードログインのままです。',
-  'system.setting.remark.login.sso_enabled': '将来の SSO / OIDC 連携向けの機能フラグです。オフ時はローカルアカウントのみを使用します。',
+  'system.setting.remark.login.security_event_enabled':
+    '有効にすると、送信元ロックやアカウントロックなどの実リスクイベントを記録します。',
+  'system.setting.remark.login.captcha_enabled':
+    '将来の CAPTCHA フロー向けの機能フラグです。オフ時は疑似機能を表示しません。',
+  'system.setting.remark.login.mfa_enabled':
+    'ログイン時に TOTP 二要素認証を要求するかを制御します。オフ時は従来のパスワードログインのままです。',
+  'system.setting.remark.login.sso_enabled':
+    '将来の SSO / OIDC 連携向けの機能フラグです。オフ時はローカルアカウントのみを使用します。',
 };
 
 export default jaJPFallback;

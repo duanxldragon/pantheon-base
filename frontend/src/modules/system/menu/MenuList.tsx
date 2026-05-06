@@ -1,19 +1,80 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AutoComplete, Button, Card, Form, Grid, Input, InputNumber, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import {
+  AutoComplete,
+  Button,
+  Card,
+  Form,
+  Grid,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+  Typography,
+} from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import { IconApps, IconDelete, IconEdit, IconList, IconPlus, IconSearch, IconUnorderedList } from '@arco-design/web-react/icon';
+import {
+  IconApps,
+  IconDelete,
+  IconEdit,
+  IconList,
+  IconPlus,
+  IconSearch,
+  IconUnorderedList,
+} from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
-import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
-import { createMenu, deleteMenu, getMenuTree, updateMenu, type MenuListQuery, type MenuNode, type MenuPayload } from './api';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
+import {
+  createMenu,
+  deleteMenu,
+  getMenuTree,
+  updateMenu,
+  type MenuListQuery,
+  type MenuNode,
+  type MenuPayload,
+} from './api';
 import { useMenuStore } from '../../../store/useMenuStore';
-import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, PageActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
+import {
+  AppModal,
+  AppTable,
+  FilterPanel,
+  FormSection,
+  GovernanceRailPanel,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
+  PageActions,
+  PageContainer,
+  PageEmpty,
+  PageError,
+  PageHeader,
+  PageLoading,
+  PageNetworkError,
+  PageServerError,
+  PageSplitLayout,
+  SubmitBar,
+  TABLE_ACTION_COLUMN_WIDTH,
+  useGovernanceRail,
+  withTableColumnPriority,
+} from '../../../components';
 import { MENU_ICON_OPTIONS } from '../../../core/menu/icon';
-import { isRegisteredComponentKey, listRegisteredComponentKeys } from '../../../core/router/componentRegistry';
+import {
+  isRegisteredComponentKey,
+  listRegisteredComponentKeys,
+} from '../../../core/router/componentRegistry';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -98,23 +159,26 @@ const MenuList: React.FC = () => {
     return rows;
   }, [data]);
 
-  const loadData = useCallback(async (nextQuery: MenuListQuery = query, options?: LoadDataOptions) => {
-    const silent = options?.silent === true;
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const rows = await getMenuTree({ ...nextQuery, scope: 'manage' });
-      setData(rows);
-    } catch (requestError) {
-      setError(requestError);
-    } finally {
+  const loadData = useCallback(
+    async (nextQuery: MenuListQuery = query, options?: LoadDataOptions) => {
+      const silent = options?.silent === true;
       if (!silent) {
-        setLoading(false);
+        setLoading(true);
+        setError(null);
       }
-    }
-  }, [query]);
+      try {
+        const rows = await getMenuTree({ ...nextQuery, scope: 'manage' });
+        setData(rows);
+      } catch (requestError) {
+        setError(requestError);
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [query],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -220,13 +284,15 @@ const MenuList: React.FC = () => {
     return undefined;
   };
 
-  const sortableColumn = (field: NonNullable<MenuListQuery['sortField']>): Partial<ColumnProps<MenuNode>> => ({
+  const sortableColumn = (
+    field: NonNullable<MenuListQuery['sortField']>,
+  ): Partial<ColumnProps<MenuNode>> => ({
     sorter: true,
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
   const handleTableChange: TableProps<MenuNode>['onChange'] = (_pagination, sorter) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter as SorterInfo | undefined;
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     const nextQuery: MenuListQuery = {
       ...query,
       sortField: currentSorter?.direction ? String(currentSorter.field) : emptyQuery.sortField,
@@ -310,14 +376,18 @@ const MenuList: React.FC = () => {
         >
           <div className="menu-list-view__content">
             <div className="menu-list-view__title-row">
-              <Typography.Text className="menu-list-view__title">{t(node.titleKey)}</Typography.Text>
+              <Typography.Text className="menu-list-view__title">
+                {t(node.titleKey)}
+              </Typography.Text>
               {renderTypeTag(node)}
               {renderVisibleTag(node.isVisible)}
             </div>
             <div className="menu-list-view__meta">
               <Typography.Text type="secondary">{node.path || '-'}</Typography.Text>
               <Typography.Text type="secondary">{node.routeName || '-'}</Typography.Text>
-              {node.component ? <Typography.Text type="secondary">{node.component}</Typography.Text> : null}
+              {node.component ? (
+                <Typography.Text type="secondary">{node.component}</Typography.Text>
+              ) : null}
             </div>
             <div className="menu-list-view__meta">
               <Typography.Text type="secondary">{renderPermissionText(node)}</Typography.Text>
@@ -333,17 +403,17 @@ const MenuList: React.FC = () => {
   const renderCardView = () => (
     <div className="menu-card-view">
       {flattenedMenus.map(({ node, depth }) => (
-        <Card
-          key={node.id}
-          className="menu-card-view__card"
-          bordered={false}
-        >
+        <Card key={node.id} className="menu-card-view__card" bordered={false}>
           <div className="menu-card-view__header">
             <div>
-              <Typography.Text className="menu-card-view__title">{t(node.titleKey)}</Typography.Text>
+              <Typography.Text className="menu-card-view__title">
+                {t(node.titleKey)}
+              </Typography.Text>
               <div className="menu-card-view__subtitle">{node.titleKey}</div>
             </div>
-            <Tag color={depth === 0 ? 'arcoblue' : 'gray'}>{t('system.menu.level', { level: depth + 1 })}</Tag>
+            <Tag color={depth === 0 ? 'arcoblue' : 'gray'}>
+              {t('system.menu.level', { level: depth + 1 })}
+            </Tag>
           </div>
           <Space wrap size={4}>
             {renderTypeTag(node)}
@@ -356,15 +426,21 @@ const MenuList: React.FC = () => {
             </div>
             <div>
               <span>{t('system.menu.routeName')}</span>
-              <Typography.Text ellipsis={{ showTooltip: true }}>{node.routeName || '-'}</Typography.Text>
+              <Typography.Text ellipsis={{ showTooltip: true }}>
+                {node.routeName || '-'}
+              </Typography.Text>
             </div>
             <div>
               <span>{t('system.menu.component')}</span>
-              <Typography.Text ellipsis={{ showTooltip: true }}>{node.component || '-'}</Typography.Text>
+              <Typography.Text ellipsis={{ showTooltip: true }}>
+                {node.component || '-'}
+              </Typography.Text>
             </div>
             <div>
               <span>{t('system.menu.pagePerm')}</span>
-              <Typography.Text ellipsis={{ showTooltip: true }}>{renderPermissionText(node)}</Typography.Text>
+              <Typography.Text ellipsis={{ showTooltip: true }}>
+                {renderPermissionText(node)}
+              </Typography.Text>
             </div>
           </div>
           <div className="menu-card-view__footer">
@@ -377,42 +453,65 @@ const MenuList: React.FC = () => {
   );
 
   const columns: ColumnProps<MenuNode>[] = [
-    { title: t('system.menu.title'), dataIndex: 'titleKey', width: 180, render: (value: string) => t(value), ...sortableColumn('titleKey') },
+    {
+      title: t('system.menu.title'),
+      dataIndex: 'titleKey',
+      width: 180,
+      render: (value: string) => t(value),
+      ...sortableColumn('titleKey'),
+    },
     { title: t('system.menu.path'), dataIndex: 'path', width: 180, ...sortableColumn('path') },
-    withTableColumnPriority({
-      title: t('system.menu.routeName'),
-      dataIndex: 'routeName',
-      width: 220,
-      ...sortableColumn('routeName'),
-      render: (value: string, row: MenuNode) => (
-        <Space direction="vertical" size={2}>
-          <Typography.Text>{value || '-'}</Typography.Text>
-          {row.component ? <Typography.Text type="secondary" className="text-sm">{row.component}</Typography.Text> : null}
-        </Space>
-      ),
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('system.menu.pagePerm'),
-      dataIndex: 'pagePerm',
-      width: 220,
-      ...sortableColumn('pagePerm'),
-      render: (value: string) => <Typography.Text ellipsis={{ showTooltip: true }}>{value || '-'}</Typography.Text>,
-    }, 'low'),
-    withTableColumnPriority({
-      title: t('system.menu.perms'),
-      dataIndex: 'perms',
-      width: 220,
-      ...sortableColumn('perms'),
-      render: (value: string, row: MenuNode) => {
-        if (value) {
-          return <Typography.Text ellipsis={{ showTooltip: true }}>{value}</Typography.Text>;
-        }
-        if (row.type === 'C') {
-          return <Typography.Text type="secondary">{t('system.menu.perms.fromPage')}</Typography.Text>;
-        }
-        return <Typography.Text type="secondary">-</Typography.Text>;
+    withTableColumnPriority(
+      {
+        title: t('system.menu.routeName'),
+        dataIndex: 'routeName',
+        width: 220,
+        ...sortableColumn('routeName'),
+        render: (value: string, row: MenuNode) => (
+          <Space direction="vertical" size={2}>
+            <Typography.Text>{value || '-'}</Typography.Text>
+            {row.component ? (
+              <Typography.Text type="secondary" className="text-sm">
+                {row.component}
+              </Typography.Text>
+            ) : null}
+          </Space>
+        ),
       },
-    }, 'low'),
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.menu.pagePerm'),
+        dataIndex: 'pagePerm',
+        width: 220,
+        ...sortableColumn('pagePerm'),
+        render: (value: string) => (
+          <Typography.Text ellipsis={{ showTooltip: true }}>{value || '-'}</Typography.Text>
+        ),
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.menu.perms'),
+        dataIndex: 'perms',
+        width: 220,
+        ...sortableColumn('perms'),
+        render: (value: string, row: MenuNode) => {
+          if (value) {
+            return <Typography.Text ellipsis={{ showTooltip: true }}>{value}</Typography.Text>;
+          }
+          if (row.type === 'C') {
+            return (
+              <Typography.Text type="secondary">{t('system.menu.perms.fromPage')}</Typography.Text>
+            );
+          }
+          return <Typography.Text type="secondary">-</Typography.Text>;
+        },
+      },
+      'low',
+    ),
     {
       title: t('system.menu.type'),
       dataIndex: 'type',
@@ -422,7 +521,10 @@ const MenuList: React.FC = () => {
         return getMenuTypeLabel(value);
       },
     },
-    withTableColumnPriority({ title: t('system.menu.sort'), dataIndex: 'sort', width: 100, ...sortableColumn('sort') }, 'medium'),
+    withTableColumnPriority(
+      { title: t('system.menu.sort'), dataIndex: 'sort', width: 100, ...sortableColumn('sort') },
+      'medium',
+    ),
     {
       title: t('system.menu.visible'),
       dataIndex: 'isVisible',
@@ -430,31 +532,49 @@ const MenuList: React.FC = () => {
       ...sortableColumn('isVisible'),
       render: renderVisibleTag,
     },
-    withTableColumnPriority({
-      title: t('system.menu.metadata'),
-      width: 260,
-      render: (_: unknown, row: MenuNode) => (
-        renderMetadataTags(row)
-      ),
-    }, 'low'),
+    withTableColumnPriority(
+      {
+        title: t('system.menu.metadata'),
+        width: 260,
+        render: (_: unknown, row: MenuNode) => renderMetadataTags(row),
+      },
+      'low',
+    ),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
       fixed: 'right',
-      render: (_: unknown, row: MenuNode) => (
-        renderMenuActions(row)
-      ),
+      render: (_: unknown, row: MenuNode) => renderMenuActions(row),
     },
   ];
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageNetworkError
+          timeout={isTimeoutRequestError(error)}
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
     if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageServerError
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
-    return <PageError onRetry={() => { void loadData(query); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadData(query);
+        }}
+      />
+    );
   };
 
   const totalMenus = flattenedMenus.length;
@@ -520,9 +640,12 @@ const MenuList: React.FC = () => {
     <PageContainer>
       <PageHeader
         title={t('system.menu.menu')}
-        extra={(
+        extra={
           <PageActions>
-            <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
               {t('system.menu.hero.summaryTitle')}
             </GovernanceRailToggleButton>
             <Space size={4} className="menu-view-switcher">
@@ -551,9 +674,11 @@ const MenuList: React.FC = () => {
                 {t('system.menu.view.card')}
               </Button>
             </Space>
-            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>
+            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
+              {t('common.add')}
+            </Button>
           </PageActions>
-        )}
+        }
       />
       <Space direction="vertical" size={16} className="system-page-template">
         <Card className="page-panel system-page-hero system-list__hero">
@@ -576,69 +701,85 @@ const MenuList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={governanceRail.expanded ? (
-            <GovernanceRailPanel
-              title={t('system.menu.hero.summaryTitle')}
-              onClose={governanceRail.close}
-              closeText={t('common.close')}
-              noteTitle={t('system.menu.hero.summaryTitle')}
-              noteDescription={t('system.menu.hero.sideDesc')}
-            >
-              <GovernanceRailSummary items={governanceSummaryItems} />
-            </GovernanceRailPanel>
-          ) : null}
+          rail={
+            governanceRail.expanded ? (
+              <GovernanceRailPanel
+                title={t('system.menu.hero.summaryTitle')}
+                onClose={governanceRail.close}
+                closeText={t('common.close')}
+                noteTitle={t('system.menu.hero.summaryTitle')}
+                noteDescription={t('system.menu.hero.sideDesc')}
+              >
+                <GovernanceRailSummary items={governanceSummaryItems} />
+              </GovernanceRailPanel>
+            ) : null
+          }
         >
-            <FilterPanel>
-                <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-                <Row gutter={16}>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('system.menu.titleKey')} field="titleKey">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('system.menu.path')} field="path">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={4}>
-                    <FormItem label={t('system.menu.visible')} field="isVisible">
-                      <Select allowClear options={[
+          <FilterPanel>
+            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
+              <Row gutter={16}>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('system.menu.titleKey')} field="titleKey">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('system.menu.path')} field="path">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={4}>
+                  <FormItem label={t('system.menu.visible')} field="isVisible">
+                    <Select
+                      allowClear
+                      options={[
                         { label: t('common.yes'), value: 1 },
                         { label: t('common.no'), value: 0 },
-                      ]} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={4}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
-            <Card className="page-panel system-list__table-card">
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {error && data.length === 0 ? renderErrorState() : null}
-              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'table' ? (
-                <AppTable<MenuNode>
-                  className="system-list__table"
-                  data={data}
-                  columns={columns}
-                  rowKey="id"
-                  loading={loading}
-                  scroll={{ x: 'max-content' }}
-                  onChange={handleTableChange}
-                  emptyText={t('common.noData')}
-                />
-              ) : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'list' ? renderListView() : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'card' ? renderCardView() : null}
-            </Card>
+                      ]}
+                    />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={4}>
+                  <FormItem className="filter-panel__action-item">
+                    <Space>
+                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
+                        {t('common.search')}
+                      </Button>
+                      <Button onClick={reset}>{t('common.reset')}</Button>
+                    </Space>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </FilterPanel>
+          <Card className="page-panel system-list__table-card">
+            {loading && data.length === 0 ? <PageLoading /> : null}
+            {error && data.length === 0 ? renderErrorState() : null}
+            {!loading && !error && data.length === 0 ? (
+              <PageEmpty description={t('common.noData')} />
+            ) : null}
+            {!loading &&
+            !(error && data.length === 0) &&
+            data.length > 0 &&
+            viewMode === 'table' ? (
+              <AppTable<MenuNode>
+                className="system-list__table"
+                data={data}
+                columns={columns}
+                rowKey="id"
+                loading={loading}
+                scroll={{ x: 'max-content' }}
+                onChange={handleTableChange}
+                emptyText={t('common.noData')}
+              />
+            ) : null}
+            {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'list'
+              ? renderListView()
+              : null}
+            {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'card'
+              ? renderCardView()
+              : null}
+          </Card>
         </PageSplitLayout>
       </Space>
 
@@ -647,27 +788,45 @@ const MenuList: React.FC = () => {
         visible={visible}
         size="lg"
         onCancel={() => setVisible(false)}
-        footer={(
+        footer={
           <SubmitBar
             onCancel={() => setVisible(false)}
-            onSubmit={() => { void submitForm(); }}
+            onSubmit={() => {
+              void submitForm();
+            }}
             loading={submitting}
             submitText={editing ? t('common.save') : t('common.add')}
           />
-        )}
+        }
         unmountOnExit
       >
-        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
+        <Form
+          form={form}
+          layout="vertical"
+          onSubmit={() => {
+            void submitForm();
+          }}
+        >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.menu.parentId')} field="parentId">
                 <InputNumber min={0} />
               </FormItem>
-              <FormItem label={t('system.menu.titleKey')} field="titleKey" rules={[{ required: true, message: t('system.menu.titleRequired') }]}>
-                <Input placeholder={t('system.menu.titleKey.placeholder')} onPressEnter={() => form.submit()} />
+              <FormItem
+                label={t('system.menu.titleKey')}
+                field="titleKey"
+                rules={[{ required: true, message: t('system.menu.titleRequired') }]}
+              >
+                <Input
+                  placeholder={t('system.menu.titleKey.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
               <FormItem label={t('system.menu.path')} field="path">
-                <Input placeholder={t('system.menu.path.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('system.menu.path.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
               <FormItem
                 label={t('system.menu.component')}
@@ -683,10 +842,16 @@ const MenuList: React.FC = () => {
                         callback(t('system.menu.componentRequired'));
                         return;
                       }
-                      const requiresRegisteredComponent = moduleName === 'platform'
-                        || moduleName.startsWith('system.')
-                        || moduleName.startsWith('business.');
-                      if (type === 'C' && isExternal !== 1 && requiresRegisteredComponent && !isRegisteredComponentKey(componentKey)) {
+                      const requiresRegisteredComponent =
+                        moduleName === 'platform' ||
+                        moduleName.startsWith('system.') ||
+                        moduleName.startsWith('business.');
+                      if (
+                        type === 'C' &&
+                        isExternal !== 1 &&
+                        requiresRegisteredComponent &&
+                        !isRegisteredComponentKey(componentKey)
+                      ) {
                         callback(t('system.menu.componentInvalid'));
                         return;
                       }
@@ -719,10 +884,16 @@ const MenuList: React.FC = () => {
                   },
                 ]}
               >
-                <Input placeholder={t('system.menu.routeName.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('system.menu.routeName.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
               <FormItem label={t('system.menu.module')} field="module">
-                <Input placeholder={t('system.menu.module.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('system.menu.module.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
               <FormItem
                 label={t('system.menu.pagePerm')}
@@ -741,7 +912,10 @@ const MenuList: React.FC = () => {
                   },
                 ]}
               >
-                <Input placeholder={t('system.menu.pagePerm.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('system.menu.pagePerm.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
               <FormItem
                 label={t('system.menu.perms')}
@@ -759,7 +933,10 @@ const MenuList: React.FC = () => {
                   },
                 ]}
               >
-                <Input placeholder={t('system.menu.perms.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('system.menu.perms.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
               <FormItem label={t('system.menu.type')} field="type">
                 <Select
@@ -774,7 +951,10 @@ const MenuList: React.FC = () => {
                 <Select
                   allowClear
                   placeholder={t('system.menu.icon.placeholder')}
-                  options={MENU_ICON_OPTIONS.map((item) => ({ label: t(item.labelKey), value: item.value }))}
+                  options={MENU_ICON_OPTIONS.map((item) => ({
+                    label: t(item.labelKey),
+                    value: item.value,
+                  }))}
                 />
               </FormItem>
               <FormItem label={t('system.menu.sort')} field="sort">
@@ -805,7 +985,10 @@ const MenuList: React.FC = () => {
                 />
               </FormItem>
               <FormItem label={t('system.menu.activeMenu')} field="activeMenu">
-                <Input placeholder={t('system.menu.activeMenu.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('system.menu.activeMenu.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
             </FormSection>
           </Space>

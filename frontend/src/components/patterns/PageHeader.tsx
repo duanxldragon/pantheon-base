@@ -17,13 +17,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, extra, classNa
             {title}
           </Typography.Title>
         ) : null}
-        {subtitle ? (
-          <Typography.Text type="secondary">
-            {subtitle}
-          </Typography.Text>
-        ) : null}
+        {subtitle ? <Typography.Text type="secondary">{subtitle}</Typography.Text> : null}
       </Space>
-    ) : <div />}
+    ) : (
+      <div />
+    )}
     {extra ? <div className="page-header__extra">{extra}</div> : null}
   </div>
 );

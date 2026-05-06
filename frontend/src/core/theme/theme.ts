@@ -52,13 +52,17 @@ function readStoredTheme(storageKey: string): PantheonThemeKey | null {
     return null;
   }
   const storedValue = window.localStorage.getItem(storageKey);
-  return storedValue && themeKeys.has(storedValue as PantheonThemeKey) ? (storedValue as PantheonThemeKey) : null;
+  return storedValue && themeKeys.has(storedValue as PantheonThemeKey)
+    ? (storedValue as PantheonThemeKey)
+    : null;
 }
 
 export function getStoredPantheonTheme(): PantheonThemeKey {
-  return readStoredTheme(PANTHEON_THEME_STORAGE_KEY)
-    || readStoredTheme(PANTHEON_DEFAULT_THEME_KEY)
-    || 'indigo';
+  return (
+    readStoredTheme(PANTHEON_THEME_STORAGE_KEY) ||
+    readStoredTheme(PANTHEON_DEFAULT_THEME_KEY) ||
+    'indigo'
+  );
 }
 
 export function applyPantheonTheme(theme: PantheonThemeKey) {
@@ -81,7 +85,9 @@ export function applyPantheonDefaultTheme(theme: PantheonThemeKey) {
 
   if (!window.localStorage.getItem(PANTHEON_THEME_STORAGE_KEY)) {
     document.documentElement.dataset.pantheonTheme = normalizedTheme;
-    window.dispatchEvent(new CustomEvent<PantheonThemeKey>(PANTHEON_THEME_EVENT, { detail: normalizedTheme }));
+    window.dispatchEvent(
+      new CustomEvent<PantheonThemeKey>(PANTHEON_THEME_EVENT, { detail: normalizedTheme }),
+    );
   }
 }
 
@@ -115,7 +121,9 @@ export function clearPantheonThemePreference() {
   window.localStorage.removeItem(PANTHEON_THEME_STORAGE_KEY);
   const defaultTheme = readStoredTheme(PANTHEON_DEFAULT_THEME_KEY) || 'indigo';
   document.documentElement.dataset.pantheonTheme = defaultTheme;
-  window.dispatchEvent(new CustomEvent<PantheonThemeKey>(PANTHEON_THEME_EVENT, { detail: defaultTheme }));
+  window.dispatchEvent(
+    new CustomEvent<PantheonThemeKey>(PANTHEON_THEME_EVENT, { detail: defaultTheme }),
+  );
 }
 
 export function usePantheonTheme() {

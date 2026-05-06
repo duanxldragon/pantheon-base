@@ -38,10 +38,7 @@ export const systemModules: ModuleConfig[] = [
 
 export const businessModules: ModuleConfig[] = [...generatedBusinessModules];
 
-export const registeredModules: ModuleConfig[] = [
-  ...systemModules,
-  ...businessModules,
-];
+export const registeredModules: ModuleConfig[] = [...systemModules, ...businessModules];
 
 // 构建路由路径到路由配置的映射
 const routePathMap = new Map<string, ModuleConfig['routes'][number]>();

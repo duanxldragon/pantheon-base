@@ -15,10 +15,12 @@ interface UserDetailContentProps {
 const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail, orgEnabled = true }) => {
   const { t } = useTranslation();
   const summaryItems = [
-    ...(orgEnabled ? [
-      { label: t('system.user.dept'), value: detail.deptName || '-' },
-      { label: t('system.user.post'), value: detail.postName || '-' },
-    ] : []),
+    ...(orgEnabled
+      ? [
+          { label: t('system.user.dept'), value: detail.deptName || '-' },
+          { label: t('system.user.post'), value: detail.postName || '-' },
+        ]
+      : []),
     {
       label: t('system.user.roles'),
       value: detail.roleKeys.length ? (
@@ -27,7 +29,9 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail, orgEnable
             <Tag key={item}>{item}</Tag>
           ))}
         </Space>
-      ) : '-',
+      ) : (
+        '-'
+      ),
     },
     { label: t('system.user.createdAt'), value: formatDateTime(detail.createdAt) },
     { label: t('system.user.updatedAt'), value: formatDateTime(detail.updatedAt) },
@@ -39,7 +43,11 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail, orgEnable
         <Space size={16} align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space size={16} align="center">
             <Avatar size={56}>
-              {detail.avatar ? <img src={detail.avatar} alt={detail.nickname || detail.username} /> : detail.nickname?.charAt(0) || detail.username.charAt(0)}
+              {detail.avatar ? (
+                <img src={detail.avatar} alt={detail.nickname || detail.username} />
+              ) : (
+                detail.nickname?.charAt(0) || detail.username.charAt(0)
+              )}
             </Avatar>
             <Space direction="vertical" size={4}>
               <Typography.Title heading={5} style={{ margin: 0 }}>
@@ -49,7 +57,9 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail, orgEnable
             </Space>
           </Space>
           <Tag color={detail.status === 1 ? 'green' : 'red'}>
-            {detail.status === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
+            {detail.status === 1
+              ? t('system.user.status.enabled')
+              : t('system.user.status.disabled')}
           </Tag>
         </Space>
       </Card>
@@ -71,10 +81,7 @@ const UserDetailContent: React.FC<UserDetailContentProps> = ({ detail, orgEnable
         </Col>
         <Col span={12}>
           <Card title={t('system.user.summary')}>
-            <Descriptions
-              column={1}
-              data={summaryItems}
-            />
+            <Descriptions column={1} data={summaryItems} />
           </Card>
         </Col>
       </Row>

@@ -7,6 +7,7 @@ export const usePermission = () => {
   return {
     isAdmin,
     hasPerm: (perm: string) => isAdmin || userInfo?.perms?.includes(perm) || false,
-    hasAnyPerm: (perms: string[]) => isAdmin || perms.some((perm) => userInfo?.perms?.includes(perm)),
+    hasAnyPerm: (perms: string[]) =>
+      isAdmin || perms.some((perm) => userInfo?.perms?.includes(perm)),
   };
 };

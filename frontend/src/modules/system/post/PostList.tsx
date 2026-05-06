@@ -14,11 +14,25 @@ import {
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
-import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
-import { IconDelete, IconDownload, IconEdit, IconPlus, IconSearch } from '@arco-design/web-react/icon';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
+import {
+  IconDelete,
+  IconDownload,
+  IconEdit,
+  IconPlus,
+  IconSearch,
+} from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
@@ -94,21 +108,27 @@ function normalizePostRow(row: PostRow): PostRow {
     governanceTags: Array.isArray(row.governanceTags) ? row.governanceTags : [],
     governanceTagLabels: Array.isArray(row.governanceTagLabels) ? row.governanceTagLabels : [],
     governanceBlockedBy: Array.isArray(row.governanceBlockedBy) ? row.governanceBlockedBy : [],
-    governanceBlockedDesc: Array.isArray(row.governanceBlockedDesc) ? row.governanceBlockedDesc : [],
+    governanceBlockedDesc: Array.isArray(row.governanceBlockedDesc)
+      ? row.governanceBlockedDesc
+      : [],
     governanceActions: Array.isArray(row.governanceActions) ? row.governanceActions : [],
-    governanceActionLabel: Array.isArray(row.governanceActionLabel) ? row.governanceActionLabel : [],
+    governanceActionLabel: Array.isArray(row.governanceActionLabel)
+      ? row.governanceActionLabel
+      : [],
   };
 }
 
 function isDefaultPostListQuery(query: PostListQuery) {
-  return !query.postCode
-    && !query.postName
-    && query.deptId === undefined
-    && query.status === undefined
-    && (query.page ?? 1) === 1
-    && (query.pageSize ?? 10) === 10
-    && !query.sortField
-    && !query.sortOrder;
+  return (
+    !query.postCode &&
+    !query.postName &&
+    query.deptId === undefined &&
+    query.status === undefined &&
+    (query.page ?? 1) === 1 &&
+    (query.pageSize ?? 10) === 10 &&
+    !query.sortField &&
+    !query.sortOrder
+  );
 }
 
 interface LoadDataOptions {
@@ -145,36 +165,43 @@ const PostList: React.FC = () => {
     ]);
   }, []);
 
-  const loadData = useCallback(async (nextQuery: PostListQuery = query, options?: LoadDataOptions) => {
-    const silent = options?.silent === true;
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const result = isDefaultPostListQuery(nextQuery)
-        ? await resolveRouteWarmData('/system/post', 'list:default', () => getPostList(nextQuery))
-        : await getPostList(nextQuery);
-      setData(result.items.map(normalizePostRow));
-      setTotal(result.total);
-    } catch (requestError) {
-      setError(requestError);
-    } finally {
+  const loadData = useCallback(
+    async (nextQuery: PostListQuery = query, options?: LoadDataOptions) => {
+      const silent = options?.silent === true;
       if (!silent) {
-        setLoading(false);
+        setLoading(true);
+        setError(null);
       }
-    }
-  }, [query]);
+      try {
+        const result = isDefaultPostListQuery(nextQuery)
+          ? await resolveRouteWarmData('/system/post', 'list:default', () => getPostList(nextQuery))
+          : await getPostList(nextQuery);
+        setData(result.items.map(normalizePostRow));
+        setTotal(result.total);
+      } catch (requestError) {
+        setError(requestError);
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [query],
+  );
 
   const loadDeptOptions = useCallback(async () => {
     try {
-      const deptRows = await resolveRouteWarmData('/system/post', 'depts:sorted', () => getDeptTree({ sortField: 'sort', sortOrder: 'asc' }));
+      const deptRows = await resolveRouteWarmData('/system/post', 'depts:sorted', () =>
+        getDeptTree({ sortField: 'sort', sortOrder: 'asc' }),
+      );
       const flattenDept = (nodes: DeptNode[], depth = 0): Array<{ label: string; value: number }> =>
         nodes.flatMap((item) => [
           { label: `${'— '.repeat(depth)}${item.deptName}`, value: item.id },
           ...(item.children?.length ? flattenDept(item.children, depth + 1) : []),
         ]);
-      const selectableDeptRows = deptRows.flatMap((item) => (item.isRoot ? (item.children || []) : [item]));
+      const selectableDeptRows = deptRows.flatMap((item) =>
+        item.isRoot ? item.children || [] : [item],
+      );
       setDeptOptions(flattenDept(selectableDeptRows));
     } catch {
       message.error(t('common.loadFailed'));
@@ -191,13 +218,16 @@ const PostList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadDeptOptions]);
 
-  useRefreshSubscription(['system:dept:changed', 'system:post:changed', 'system:user:changed'], (payload) => {
-    if (payload.source === 'system/post') {
-      return;
-    }
-    void loadData(query);
-    void loadDeptOptions();
-  });
+  useRefreshSubscription(
+    ['system:dept:changed', 'system:post:changed', 'system:user:changed'],
+    (payload) => {
+      if (payload.source === 'system/post') {
+        return;
+      }
+      void loadData(query);
+      void loadDeptOptions();
+    },
+  );
 
   const openCreate = () => {
     setEditing(null);
@@ -252,7 +282,8 @@ const PostList: React.FC = () => {
     invalidatePostCaches();
     publishRefresh('system:post:changed', 'system/post');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== id));
-    const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
+    const nextPage =
+      data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : query.page || 1;
     setQuery({ ...query, page: nextPage });
   };
 
@@ -282,31 +313,57 @@ const PostList: React.FC = () => {
     return undefined;
   };
 
-  const sortableColumn = (field: NonNullable<PostListQuery['sortField']>): Partial<ColumnProps<PostRow>> => ({
+  const sortableColumn = (
+    field: NonNullable<PostListQuery['sortField']>,
+  ): Partial<ColumnProps<PostRow>> => ({
     sorter: true,
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
   const handleTableChange: TableProps<PostRow>['onChange'] = (pagination, sorter) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter as SorterInfo | undefined;
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     setSelectedRowKeys([]);
     setQuery({
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder: currentSorter?.direction === 'ascend' ? 'asc' : currentSorter?.direction === 'descend' ? 'desc' : undefined,
+      sortOrder:
+        currentSorter?.direction === 'ascend'
+          ? 'asc'
+          : currentSorter?.direction === 'descend'
+            ? 'desc'
+            : undefined,
     });
   };
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageNetworkError
+          timeout={isTimeoutRequestError(error)}
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
     if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageServerError
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
-    return <PageError onRetry={() => { void loadData(query); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadData(query);
+        }}
+      />
+    );
   };
 
   const handleExport = async () => {
@@ -378,11 +435,14 @@ const PostList: React.FC = () => {
     ];
   }, [data, t, total]);
 
-  const governanceSummary = useMemo(() => ({
-    inUse: data.filter((item) => item.assignedUserCount > 0).length,
-    disabled: data.filter((item) => item.status === 2).length,
-    clean: data.filter((item) => item.governanceTags.includes('clean')).length,
-  }), [data]);
+  const governanceSummary = useMemo(
+    () => ({
+      inUse: data.filter((item) => item.assignedUserCount > 0).length,
+      disabled: data.filter((item) => item.status === 2).length,
+      clean: data.filter((item) => item.governanceTags.includes('clean')).length,
+    }),
+    [data],
+  );
 
   const renderGovernanceTags = (labels: string[], tone: 'tag' | 'note' = 'tag') => {
     if (labels.length === 0) {
@@ -391,49 +451,83 @@ const PostList: React.FC = () => {
     if (tone === 'note') {
       return (
         <Space size={[6, 6]} wrap>
-          {labels.map((label) => <Tag key={label} size="small">{label}</Tag>)}
+          {labels.map((label) => (
+            <Tag key={label} size="small">
+              {label}
+            </Tag>
+          ))}
         </Space>
       );
     }
     return (
       <Space size={[6, 6]} wrap>
-        {labels.map((label) => <Tag key={label} size="small" color="arcoblue">{label}</Tag>)}
+        {labels.map((label) => (
+          <Tag key={label} size="small" color="arcoblue">
+            {label}
+          </Tag>
+        ))}
       </Space>
     );
   };
 
   const columns: ColumnProps<PostRow>[] = [
-    withTableColumnPriority({ title: t('system.post.dept'), dataIndex: 'deptName', width: 160 }, 'medium'),
-    { title: t('system.post.postCode'), dataIndex: 'postCode', width: 170, ...sortableColumn('postCode') },
-    { title: t('system.post.postName'), dataIndex: 'postName', width: 180, ...sortableColumn('postName') },
-    withTableColumnPriority({
-      title: t('system.post.hero.assignedUsers'),
-      dataIndex: 'assignedUserCount',
-      width: 120,
-      render: (value: number) => <span>{value}</span>,
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('system.dept.governance'),
-      dataIndex: 'governanceTagLabels',
-      width: 190,
-      render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTagLabels),
-    }, 'low'),
-    withTableColumnPriority({
-      title: t('system.post.hero.blockedBy'),
-      dataIndex: 'governanceBlockedDesc',
+    withTableColumnPriority(
+      { title: t('system.post.dept'), dataIndex: 'deptName', width: 160 },
+      'medium',
+    ),
+    {
+      title: t('system.post.postCode'),
+      dataIndex: 'postCode',
+      width: 170,
+      ...sortableColumn('postCode'),
+    },
+    {
+      title: t('system.post.postName'),
+      dataIndex: 'postName',
       width: 180,
-      render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceBlockedDesc, 'note'),
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('system.post.hero.nextAction'),
-      dataIndex: 'governanceActionLabel',
-      width: 220,
-      render: (_: unknown, row: PostRow) => (
-        <Typography.Text className="post-governance__action-text">
-          {row.governanceActionLabel.join(' / ') || '-'}
-        </Typography.Text>
-      ),
-    }, 'low'),
+      ...sortableColumn('postName'),
+    },
+    withTableColumnPriority(
+      {
+        title: t('system.post.hero.assignedUsers'),
+        dataIndex: 'assignedUserCount',
+        width: 120,
+        render: (value: number) => <span>{value}</span>,
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.dept.governance'),
+        dataIndex: 'governanceTagLabels',
+        width: 190,
+        render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTagLabels),
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.post.hero.blockedBy'),
+        dataIndex: 'governanceBlockedDesc',
+        width: 180,
+        render: (_: unknown, row: PostRow) =>
+          renderGovernanceTags(row.governanceBlockedDesc, 'note'),
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.post.hero.nextAction'),
+        dataIndex: 'governanceActionLabel',
+        width: 220,
+        render: (_: unknown, row: PostRow) => (
+          <Typography.Text className="post-governance__action-text">
+            {row.governanceActionLabel.join(' / ') || '-'}
+          </Typography.Text>
+        ),
+      },
+      'low',
+    ),
     {
       title: t('system.post.status'),
       dataIndex: 'status',
@@ -445,15 +539,24 @@ const PostList: React.FC = () => {
         </Tag>
       ),
     },
-    withTableColumnPriority({ title: t('system.post.sort'), dataIndex: 'sort', width: 96, ...sortableColumn('sort') }, 'medium'),
-    withTableColumnPriority({ title: t('system.post.remark'), dataIndex: 'remark', width: 180 }, 'low'),
-    withTableColumnPriority({
-      title: t('system.post.createdAt'),
-      dataIndex: 'createdAt',
-      width: 180,
-      ...sortableColumn('createdAt'),
-      render: (value: string) => formatDateTime(value),
-    }, 'low'),
+    withTableColumnPriority(
+      { title: t('system.post.sort'), dataIndex: 'sort', width: 96, ...sortableColumn('sort') },
+      'medium',
+    ),
+    withTableColumnPriority(
+      { title: t('system.post.remark'), dataIndex: 'remark', width: 180 },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.post.createdAt'),
+        dataIndex: 'createdAt',
+        width: 180,
+        ...sortableColumn('createdAt'),
+        render: (value: string) => formatDateTime(value),
+      },
+      'low',
+    ),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
@@ -503,23 +606,50 @@ const PostList: React.FC = () => {
     <PageContainer>
       <PageHeader
         title={t('system.menu.post')}
-        extra={(
+        extra={
           <ListHeaderActions
-            utility={(
+            utility={
               <>
-                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                <GovernanceRailToggleButton
+                  expanded={governanceRail.expanded}
+                  onToggle={governanceRail.toggle}
+                >
                   {t('system.post.hero.summaryTitle')}
                 </GovernanceRailToggleButton>
-                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
-                <Button onClick={() => { void handleDownloadTemplate(); }} disabled={!canImport}>{t('common.downloadTemplate')}</Button>
-                <ImportCsvButton disabled={!canImport} onSelect={(file) => { void handleImport(file); }}>
+                <Button
+                  icon={<IconDownload />}
+                  onClick={() => {
+                    void handleExport();
+                  }}
+                  disabled={!canExport}
+                >
+                  {t('common.export')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    void handleDownloadTemplate();
+                  }}
+                  disabled={!canImport}
+                >
+                  {t('common.downloadTemplate')}
+                </Button>
+                <ImportCsvButton
+                  disabled={!canImport}
+                  onSelect={(file) => {
+                    void handleImport(file);
+                  }}
+                >
                   {t('common.import')}
                 </ImportCsvButton>
               </>
-            )}
-            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+            }
+            primary={
+              <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
+                {t('common.add')}
+              </Button>
+            }
           />
-        )}
+        }
       />
       <Space direction="vertical" size={16} className="system-page-template post-list-page">
         <Card className="page-panel system-page-hero system-list__hero">
@@ -542,98 +672,131 @@ const PostList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={governanceRail.expanded ? (
-            <GovernanceRailPanel
-              title={t('system.post.hero.summaryTitle')}
-              onClose={governanceRail.close}
-              closeText={t('common.close')}
-              noteTitle={t('system.post.hero.summaryTitle')}
-              noteDescription={t('system.post.hero.sideDesc')}
-            >
-              <GovernanceRailSummary items={governanceSummaryItems} />
-            </GovernanceRailPanel>
-          ) : null}
+          rail={
+            governanceRail.expanded ? (
+              <GovernanceRailPanel
+                title={t('system.post.hero.summaryTitle')}
+                onClose={governanceRail.close}
+                closeText={t('common.close')}
+                noteTitle={t('system.post.hero.summaryTitle')}
+                noteDescription={t('system.post.hero.sideDesc')}
+              >
+                <GovernanceRailSummary items={governanceSummaryItems} />
+              </GovernanceRailPanel>
+            ) : null
+          }
         >
-            <FilterPanel>
-              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-                <Row gutter={16}>
-                  <Col xs={24} md={12} lg={6}>
-                    <FormItem label={t('system.post.postCode')} field="postCode">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={6}>
-                    <FormItem label={t('system.post.postName')} field="postName">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={6}>
-                    <FormItem label={t('system.post.dept')} field="deptId">
-                      <Select allowClear options={deptOptions} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={6}>
-                    <FormItem label={t('system.post.status')} field="status">
-                      <Select allowClear options={[
+          <FilterPanel>
+            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
+              <Row gutter={16}>
+                <Col xs={24} md={12} lg={6}>
+                  <FormItem label={t('system.post.postCode')} field="postCode">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={6}>
+                  <FormItem label={t('system.post.postName')} field="postName">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={6}>
+                  <FormItem label={t('system.post.dept')} field="deptId">
+                    <Select allowClear options={deptOptions} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={6}>
+                  <FormItem label={t('system.post.status')} field="status">
+                    <Select
+                      allowClear
+                      options={[
                         { label: t('system.user.status.enabled'), value: 1 },
                         { label: t('system.user.status.disabled'), value: 2 },
-                      ]} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={24} lg={6}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
-            <Card className="page-panel system-list__table-card">
-              <TableBatchActionBar
-                selectedCount={selectedRowKeys.length}
-                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-                clearText={t('common.clearSelection')}
-                clearSuccessText={t('common.clearSelectionSuccess')}
-                onClear={() => setSelectedRowKeys([])}
-                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
-                actions={(
-                  <>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.post.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-                        <Button disabled={batchActionDisabled}>{t('system.post.batchEnable')}</Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.post.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>{t('system.post.batchDisable')}</Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </>
-                )}
-              />
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {error && data.length === 0 ? renderErrorState() : null}
-              {!loading && !error && data.length === 0 ? <PageEmpty description={t('system.post.empty')} /> : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 ? (
-                <AppTable<PostRow>
-                  className="system-list__table"
-                  data={data}
-                  columns={columns}
-                  rowKey="id"
-                  loading={loading}
-                  scroll={{ x: 'max-content' }}
-                  rowSelection={{
-                    type: 'checkbox',
-                    selectedRowKeys: visibleSelectedRowKeys,
-                    fixed: true,
-                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                  }}
-                  onChange={handleTableChange}
-                  emptyText={t('system.post.empty')}
-                  pagination={{
+                      ]}
+                    />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={24} lg={6}>
+                  <FormItem className="filter-panel__action-item">
+                    <Space>
+                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
+                        {t('common.search')}
+                      </Button>
+                      <Button onClick={reset}>{t('common.reset')}</Button>
+                    </Space>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </FilterPanel>
+          <Card className="page-panel system-list__table-card">
+            <TableBatchActionBar
+              selectedCount={selectedRowKeys.length}
+              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+              clearText={t('common.clearSelection')}
+              clearSuccessText={t('common.clearSelectionSuccess')}
+              onClear={() => setSelectedRowKeys([])}
+              hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+              actions={
+                <>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.post.batchEnableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(1);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button disabled={batchActionDisabled}>{t('system.post.batchEnable')}</Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.post.batchDisableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(2);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button
+                        status={batchActionDisabled ? undefined : 'warning'}
+                        disabled={batchActionDisabled}
+                      >
+                        {t('system.post.batchDisable')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                </>
+              }
+            />
+            {loading && data.length === 0 ? <PageLoading /> : null}
+            {error && data.length === 0 ? renderErrorState() : null}
+            {!loading && !error && data.length === 0 ? (
+              <PageEmpty description={t('system.post.empty')} />
+            ) : null}
+            {!loading && !(error && data.length === 0) && data.length > 0 ? (
+              <AppTable<PostRow>
+                className="system-list__table"
+                data={data}
+                columns={columns}
+                rowKey="id"
+                loading={loading}
+                scroll={{ x: 'max-content' }}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: visibleSelectedRowKeys,
+                  fixed: true,
+                  onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                }}
+                onChange={handleTableChange}
+                emptyText={t('system.post.empty')}
+                pagination={
+                  {
                     current: query.page || emptyQuery.page,
                     pageSize: query.pageSize || emptyQuery.pageSize,
                     total,
@@ -643,10 +806,11 @@ const PostList: React.FC = () => {
                     sizeOptions: [10, 20, 50, 100],
                     size: 'small',
                     showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps}
-                />
-              ) : null}
-            </Card>
+                  } as PaginationProps
+                }
+              />
+            ) : null}
+          </Card>
         </PageSplitLayout>
       </Space>
 
@@ -655,32 +819,52 @@ const PostList: React.FC = () => {
         visible={visible}
         size="md"
         onCancel={() => setVisible(false)}
-        footer={(
+        footer={
           <SubmitBar
             onCancel={() => setVisible(false)}
-            onSubmit={() => { void submitForm(); }}
+            onSubmit={() => {
+              void submitForm();
+            }}
             loading={submitting}
             submitText={editing ? t('common.save') : t('common.add')}
           />
-        )}
+        }
         unmountOnExit
       >
-        <Form form={form} layout="vertical" onSubmit={() => { void submitForm(); }}>
+        <Form
+          form={form}
+          layout="vertical"
+          onSubmit={() => {
+            void submitForm();
+          }}
+        >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <Row gutter={16}>
                 <Col xs={24} md={12}>
-                  <FormItem label={t('system.post.dept')} field="deptId" rules={[{ required: true, message: t('system.post.deptRequired') }]}>
+                  <FormItem
+                    label={t('system.post.dept')}
+                    field="deptId"
+                    rules={[{ required: true, message: t('system.post.deptRequired') }]}
+                  >
                     <Select options={deptOptions} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
-                  <FormItem label={t('system.post.postCode')} field="postCode" rules={[{ required: true, message: t('system.post.postCodeRequired') }]}>
+                  <FormItem
+                    label={t('system.post.postCode')}
+                    field="postCode"
+                    rules={[{ required: true, message: t('system.post.postCodeRequired') }]}
+                  >
                     <Input disabled={Boolean(editing)} onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
                 <Col xs={24} md={12}>
-                  <FormItem label={t('system.post.postName')} field="postName" rules={[{ required: true, message: t('system.post.postNameRequired') }]}>
+                  <FormItem
+                    label={t('system.post.postName')}
+                    field="postName"
+                    rules={[{ required: true, message: t('system.post.postNameRequired') }]}
+                  >
                     <Input onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
@@ -691,10 +875,12 @@ const PostList: React.FC = () => {
                 </Col>
                 <Col xs={24} md={12}>
                   <FormItem label={t('system.post.status')} field="status">
-                    <Select options={[
-                      { label: t('system.user.status.enabled'), value: 1 },
-                      { label: t('system.user.status.disabled'), value: 2 },
-                    ]} />
+                    <Select
+                      options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]}
+                    />
                   </FormItem>
                 </Col>
                 <Col span={24}>

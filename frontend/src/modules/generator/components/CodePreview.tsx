@@ -1,17 +1,11 @@
 /**
  * 模块生成器 - 代码预览组件
- * 
+ *
  * 显示生成的代码文件列表,支持文件切换和代码高亮
  */
 
 import React, { useState } from 'react';
-import {
-  Tree,
-  Typography,
-  Space,
-  Button,
-  Tag,
-} from '@arco-design/web-react';
+import { Tree, Typography, Space, Button, Tag } from '@arco-design/web-react';
 import { IconCode, IconDownload } from '@arco-design/web-react/icon';
 import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
 import { useTranslation } from 'react-i18next';
@@ -49,14 +43,14 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
     const tree: CodeTreeNode[] = [];
     const pathMap = new Map<string, CodeTreeNode>();
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const parts = file.path.split('/');
       let currentPath = '';
       let parentNode: CodeTreeNode[] = tree;
 
       parts.forEach((part, index) => {
         currentPath = currentPath ? `${currentPath}/${part}` : part;
-        
+
         if (index === parts.length - 1) {
           // 文件节点
           parentNode.push({
@@ -88,7 +82,7 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
   // 选择文件
   const handleSelect = (selectedKeys: React.Key[]) => {
     const key = selectedKeys[0] as string;
-    const file = files.find(f => f.path === key);
+    const file = files.find((f) => f.path === key);
     if (file) {
       setSelectedFile(file);
     }
@@ -111,7 +105,8 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
       onCancel={onClose}
       size="xl"
       footer={
-        selectedFile && onDownload && (
+        selectedFile &&
+        onDownload && (
           <Space>
             <Button type="primary" onClick={onDownload}>
               <IconDownload /> {t('generator.codePreview.download')}
@@ -126,11 +121,7 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
           <Typography.Title heading={6} className="generator-code-preview__section-title">
             {t('generator.codePreview.files')}
           </Typography.Title>
-          <Tree
-            treeData={buildFileTree()}
-            onSelect={handleSelect}
-            showLine
-          />
+          <Tree treeData={buildFileTree()} onSelect={handleSelect} showLine />
         </div>
 
         {/* 右侧: 代码显示 */}
@@ -145,7 +136,7 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
                   {selectedFile.language.toUpperCase()}
                 </Tag>
               </Space>
-              
+
               <Typography.Text type="secondary" className="generator-code-preview__path">
                 {selectedFile.path}
               </Typography.Text>

@@ -40,12 +40,12 @@
 }
 
 .system-list__actions .arco-btn-status-danger.arco-btn-text {
-  color: #F53F3F;
+  color: #f53f3f;
 }
 
 .system-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):hover,
 .system-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):focus {
-  color: #F53F3F;
+  color: #f53f3f;
   background: color-mix(in srgb, var(--danger-soft) 28%, #fff);
 }
 
@@ -920,7 +920,10 @@
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
   padding: 14px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .org-chart__dept-card:hover,

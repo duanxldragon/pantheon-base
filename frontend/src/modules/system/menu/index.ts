@@ -14,7 +14,13 @@ export const MenuModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/menu', titleKey: 'system.menu.menu', icon: 'menu', routeName: 'system-menu', module: 'system.iam' },
+    {
+      path: '/system/menu',
+      titleKey: 'system.menu.menu',
+      icon: 'menu',
+      routeName: 'system-menu',
+      module: 'system.iam',
+    },
   ],
   dashboardWidgets: [
     {

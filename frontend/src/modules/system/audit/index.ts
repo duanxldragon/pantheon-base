@@ -14,7 +14,13 @@ export const AuditModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/operation-log', titleKey: 'system.menu.operationLog', icon: 'file', routeName: 'system-operation-log', module: 'system.audit' },
+    {
+      path: '/system/operation-log',
+      titleKey: 'system.menu.operationLog',
+      icon: 'file',
+      routeName: 'system-operation-log',
+      module: 'system.audit',
+    },
   ],
   permissions: [
     'system:operation-log:list',

@@ -77,9 +77,7 @@ function normalizeRetentionOptions(rawValue: string | undefined) {
     }
     const normalized = Array.from(
       new Set(
-        parsed
-          .map((item) => Number(item))
-          .filter((item) => Number.isInteger(item) && item > 0),
+        parsed.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0),
       ),
     ).sort((left, right) => right - left);
     return normalized.length > 0 ? normalized : defaultRetentionOptions;
@@ -109,29 +107,34 @@ const SessionList: React.FC = () => {
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
   const [queryForm] = Form.useForm<AdminSessionQuery>();
   const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [retentionOptions, setRetentionOptions] = useState<number[]>(() => [...defaultRetentionOptions].sort((left, right) => right - left));
+  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
+    [...defaultRetentionOptions].sort((left, right) => right - left),
+  );
 
-  const loadData = useCallback(async (nextQuery: AdminSessionQuery = query, options?: LoadDataOptions) => {
-    const silent = options?.silent === true;
-    if (!silent) {
-      setLoading(true);
-      setLoadFailed(false);
-    }
-    try {
-      const result: AdminSessionPageResp = await getAdminSessionList(nextQuery);
-      setData(result.items);
-      setTotal(result.total);
-      setActiveCount(result.activeCount);
-      setRevokedCount(result.revokedCount);
-    } catch {
-      setLoadFailed(true);
-      message.error(t('common.loadFailed'));
-    } finally {
+  const loadData = useCallback(
+    async (nextQuery: AdminSessionQuery = query, options?: LoadDataOptions) => {
+      const silent = options?.silent === true;
       if (!silent) {
-        setLoading(false);
+        setLoading(true);
+        setLoadFailed(false);
       }
-    }
-  }, [query, t]);
+      try {
+        const result: AdminSessionPageResp = await getAdminSessionList(nextQuery);
+        setData(result.items);
+        setTotal(result.total);
+        setActiveCount(result.activeCount);
+        setRevokedCount(result.revokedCount);
+      } catch {
+        setLoadFailed(true);
+        message.error(t('common.loadFailed'));
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [query, t],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -144,7 +147,9 @@ const SessionList: React.FC = () => {
     const timer = window.setTimeout(() => {
       getSettingGroup('audit')
         .then((group) => {
-          const setting = group.items.find((item) => item.settingKey === 'audit.session_cleanup_retention_options');
+          const setting = group.items.find(
+            (item) => item.settingKey === 'audit.session_cleanup_retention_options',
+          );
           const nextOptions = normalizeRetentionOptions(setting?.settingValue);
           setRetentionOptions(nextOptions);
           setRetentionDays((current) => (nextOptions.includes(current) ? current : nextOptions[0]));
@@ -191,7 +196,15 @@ const SessionList: React.FC = () => {
   const currentUsername = userInfo?.username;
   const browserOptions = ['Chrome', 'Edge', 'Firefox', 'Safari', 'Opera', 'WeChat', 'Unknown'];
   const osOptions = ['Windows', 'macOS', 'Linux', 'Android', 'iOS', 'Unknown'];
-  const deviceOptions = ['Desktop', 'iPhone', 'iPad', 'Android Phone', 'Android Tablet', 'Mobile', 'Unknown'];
+  const deviceOptions = [
+    'Desktop',
+    'iPhone',
+    'iPad',
+    'Android Phone',
+    'Android Tablet',
+    'Mobile',
+    'Unknown',
+  ];
   const heroStats = useMemo(
     () => [
       {
@@ -230,7 +243,9 @@ const SessionList: React.FC = () => {
       render: (value: string) => (
         <Space direction="vertical" size={4}>
           <span style={{ whiteSpace: 'nowrap' }}>{value}</span>
-          {value === currentUsername ? <Tag color="arcoblue">{t('auth.session.currentUser')}</Tag> : null}
+          {value === currentUsername ? (
+            <Tag color="arcoblue">{t('auth.session.currentUser')}</Tag>
+          ) : null}
         </Space>
       ),
     },
@@ -246,36 +261,51 @@ const SessionList: React.FC = () => {
       width: 128,
       render: (value: string) => <span style={{ whiteSpace: 'nowrap' }}>{value || '-'}</span>,
     },
-    withTableColumnPriority({
-      title: t('auth.session.userAgent'),
-      dataIndex: 'device',
-      width: 260,
-      render: (_: unknown, row: AdminSessionRow) => (
-        <Space direction="vertical" size={2}>
-          <span className="auth-device-summary">{formatClientSummary(row)}</span>
-          {row.userAgent ? (
-            <span className="auth-device-summary__meta">{row.userAgent}</span>
-          ) : null}
-        </Space>
-      ),
-    }, 'low'),
-    withTableColumnPriority({
-      title: t('auth.session.lastActive'),
-      dataIndex: 'lastActivityAt',
-      width: 150,
-      render: (_: unknown, row: AdminSessionRow) => formatDateTime(row.lastActivityAt || row.lastRefreshAt),
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('auth.session.refreshExpiresAt'), 
-      dataIndex: 'refreshExpiresAt', 
-      width: 160, 
-      render: (value: string) => formatDateTime(value),
-    }, 'low'),
+    withTableColumnPriority(
+      {
+        title: t('auth.session.userAgent'),
+        dataIndex: 'device',
+        width: 260,
+        render: (_: unknown, row: AdminSessionRow) => (
+          <Space direction="vertical" size={2}>
+            <span className="auth-device-summary">{formatClientSummary(row)}</span>
+            {row.userAgent ? (
+              <span className="auth-device-summary__meta">{row.userAgent}</span>
+            ) : null}
+          </Space>
+        ),
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('auth.session.lastActive'),
+        dataIndex: 'lastActivityAt',
+        width: 150,
+        render: (_: unknown, row: AdminSessionRow) =>
+          formatDateTime(row.lastActivityAt || row.lastRefreshAt),
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('auth.session.refreshExpiresAt'),
+        dataIndex: 'refreshExpiresAt',
+        width: 160,
+        render: (value: string) => formatDateTime(value),
+      },
+      'low',
+    ),
     {
       title: t('auth.session.status'),
       dataIndex: 'revokedAt',
       width: 110,
-      render: (value?: string) => value ? <Tag color="red">{t('auth.session.status.revoked')}</Tag> : <Tag color="green">{t('auth.session.status.active')}</Tag>,
+      render: (value?: string) =>
+        value ? (
+          <Tag color="red">{t('auth.session.status.revoked')}</Tag>
+        ) : (
+          <Tag color="green">{t('auth.session.status.active')}</Tag>
+        ),
     },
     {
       title: t('common.action'),
@@ -321,7 +351,10 @@ const SessionList: React.FC = () => {
                 {t('auth.session.hero.title')}
               </Typography.Title>
             </div>
-            <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
               {t('auth.session.hero.summaryTitle')}
             </GovernanceRailToggleButton>
           </div>
@@ -336,115 +369,145 @@ const SessionList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={governanceRail.expanded ? (
-            <GovernanceRailPanel
-              title={t('auth.session.hero.summaryTitle')}
-              onClose={governanceRail.close}
-              closeText={t('common.close')}
-              noteTitle={t('auth.security.sessionHint')}
-              noteDescription={t('auth.session.hero.sideDesc')}
-              noteTone="warning"
-            >
-              <GovernanceRailSummary
-                items={[
-                  { label: t('auth.session.currentUser'), value: currentUsername || '-', description: t('auth.session.selfProtected') },
-                  { label: t('auth.session.status.active'), value: activeCount, description: t('auth.session.hero.activeHint') },
-                  { tone: 'warning', label: t('auth.session.status.revoked'), value: revokedCount, description: t('auth.session.hero.revokedHint') },
-                ]}
-              />
-            </GovernanceRailPanel>
-          ) : null}
+          rail={
+            governanceRail.expanded ? (
+              <GovernanceRailPanel
+                title={t('auth.session.hero.summaryTitle')}
+                onClose={governanceRail.close}
+                closeText={t('common.close')}
+                noteTitle={t('auth.security.sessionHint')}
+                noteDescription={t('auth.session.hero.sideDesc')}
+                noteTone="warning"
+              >
+                <GovernanceRailSummary
+                  items={[
+                    {
+                      label: t('auth.session.currentUser'),
+                      value: currentUsername || '-',
+                      description: t('auth.session.selfProtected'),
+                    },
+                    {
+                      label: t('auth.session.status.active'),
+                      value: activeCount,
+                      description: t('auth.session.hero.activeHint'),
+                    },
+                    {
+                      tone: 'warning',
+                      label: t('auth.session.status.revoked'),
+                      value: revokedCount,
+                      description: t('auth.session.hero.revokedHint'),
+                    },
+                  ]}
+                />
+              </GovernanceRailPanel>
+            ) : null
+          }
         >
-            <FilterPanel>
-              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-                <Row gutter={16} className="auth-filter-grid">
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('system.user.username')} field="username">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('auth.session.ip')} field="lastIp">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('auth.session.filter.status')} field="status">
-                      <Select allowClear>
-                        <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
-                        <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('auth.session.browserName')} field="browser">
-                      <Select allowClear>
-                        {browserOptions.map((item) => (
-                          <Select.Option key={item} value={item}>{item}</Select.Option>
-                        ))}
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('auth.session.osName')} field="os">
-                      <Select allowClear>
-                        {osOptions.map((item) => (
-                          <Select.Option key={item} value={item}>{item}</Select.Option>
-                        ))}
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem label={t('auth.session.deviceName')} field="device">
-                      <Select allowClear>
-                        {deviceOptions.map((item) => (
-                          <Select.Option key={item} value={item}>{item}</Select.Option>
-                        ))}
-                      </Select>
-                    </FormItem>
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
+          <FilterPanel>
+            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
+              <Row gutter={16} className="auth-filter-grid">
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('system.user.username')} field="username">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('auth.session.ip')} field="lastIp">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('auth.session.filter.status')} field="status">
+                    <Select allowClear>
+                      <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
+                      <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('auth.session.browserName')} field="browser">
+                    <Select allowClear>
+                      {browserOptions.map((item) => (
+                        <Select.Option key={item} value={item}>
+                          {item}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('auth.session.osName')} field="os">
+                    <Select allowClear>
+                      {osOptions.map((item) => (
+                        <Select.Option key={item} value={item}>
+                          {item}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem label={t('auth.session.deviceName')} field="device">
+                    <Select allowClear>
+                      {deviceOptions.map((item) => (
+                        <Select.Option key={item} value={item}>
+                          {item}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12} lg={8}>
+                  <FormItem className="filter-panel__action-item">
+                    <Space>
+                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
+                        {t('common.search')}
+                      </Button>
+                      <Button onClick={reset}>{t('common.reset')}</Button>
+                    </Space>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </FilterPanel>
 
-            <Card className="page-panel system-list__table-card">
-              {canClear ? (
-                <div>
-                  <GovernanceCleanupBar
-                    retentionDays={retentionDays}
-                    retentionOptions={retentionOptions}
-                    onRetentionChange={setRetentionDays}
-                    retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                    confirmTitle={t('auth.session.cleanupConfirm', { count: retentionDays })}
-                    actionLabel={t('auth.session.cleanupAction')}
-                    onConfirm={() => { void clearHistoricSessions(); }}
-                    hint={t('auth.session.cleanupHint')}
-                  />
-                </div>
-              ) : null}
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {loadFailed && !loading ? (
-                <PageError onRetry={() => { void loadData(query); }} />
-              ) : data.length === 0 && !loading ? (
-                <PageEmpty description={t('auth.session.empty')} />
-              ) : (
-                <AppTable<AdminSessionRow>
-                  rowKey="sessionId"
-                  data={data}
-                  columns={columns}
-                  loading={loading}
-                  scroll={{ x: 1600 }}
-                  onChange={handleTableChange}
-                  emptyText={t('auth.session.empty')}
-                  pagination={{
+          <Card className="page-panel system-list__table-card">
+            {canClear ? (
+              <div>
+                <GovernanceCleanupBar
+                  retentionDays={retentionDays}
+                  retentionOptions={retentionOptions}
+                  onRetentionChange={setRetentionDays}
+                  retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+                  confirmTitle={t('auth.session.cleanupConfirm', { count: retentionDays })}
+                  actionLabel={t('auth.session.cleanupAction')}
+                  onConfirm={() => {
+                    void clearHistoricSessions();
+                  }}
+                  hint={t('auth.session.cleanupHint')}
+                />
+              </div>
+            ) : null}
+            {loading && data.length === 0 ? <PageLoading /> : null}
+            {loadFailed && !loading ? (
+              <PageError
+                onRetry={() => {
+                  void loadData(query);
+                }}
+              />
+            ) : data.length === 0 && !loading ? (
+              <PageEmpty description={t('auth.session.empty')} />
+            ) : (
+              <AppTable<AdminSessionRow>
+                rowKey="sessionId"
+                data={data}
+                columns={columns}
+                loading={loading}
+                scroll={{ x: 1600 }}
+                onChange={handleTableChange}
+                emptyText={t('auth.session.empty')}
+                pagination={
+                  {
                     current: query.page || emptyQuery.page,
                     pageSize: query.pageSize || emptyQuery.pageSize,
                     total,
@@ -454,10 +517,11 @@ const SessionList: React.FC = () => {
                     sizeOptions: [10, 20, 50, 100],
                     size: 'small',
                     showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps}
-                />
-              )}
-            </Card>
+                  } as PaginationProps
+                }
+              />
+            )}
+          </Card>
         </PageSplitLayout>
       </Space>
       <SessionDetailModal

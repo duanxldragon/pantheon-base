@@ -1,6 +1,6 @@
 /**
  * 模块生成器 - 类型映射表
- * 
+ *
  * 定义 Go / TypeScript / SQL 三端类型对应关系
  * 基于项目真实使用的类型约定
  */
@@ -11,15 +11,15 @@ import type { FieldType } from './schema';
  * 类型映射定义
  */
 export interface TypeMapping {
-  go: string;        // Go 类型
-  ts: string;        // TypeScript 类型
-  sql: string;       // SQL 数据类型
-  gorm?: string;     // GORM 标签(可选)
+  go: string; // Go 类型
+  ts: string; // TypeScript 类型
+  sql: string; // SQL 数据类型
+  gorm?: string; // GORM 标签(可选)
 }
 
 /**
  * 字段类型映射表
- * 
+ *
  * 基于项目实际使用的类型:
  * - system/user: string, int64, time.Time, bool
  * - business/cmdb: string, int
@@ -109,7 +109,7 @@ export function getGORMTag(fieldType: FieldType, extra?: string): string {
 
 /**
  * 生成完整的 GORM 标签字符串
- * 
+ *
  * 示例: `gorm:"primaryKey;autoIncrement" json:"id"`
  */
 export function generateStructTags(
@@ -122,9 +122,9 @@ export function generateStructTags(
     index?: boolean;
     notNull?: boolean;
     defaultValue?: string;
-    jsonOmit?: boolean;  // json:"-"
-    jsonName?: string;   // 自定义JSON字段名
-  }
+    jsonOmit?: boolean; // json:"-"
+    jsonName?: string; // 自定义JSON字段名
+  },
 ): string {
   const gormTags: string[] = [];
   const jsonTags: string[] = [];
@@ -136,7 +136,7 @@ export function generateStructTags(
   if (options?.index) gormTags.push('index');
   if (options?.notNull) gormTags.push('not null');
   if (options?.defaultValue) gormTags.push(`default:${options.defaultValue}`);
-  
+
   const typeMapping = TYPE_MAPPING[fieldType];
   if (typeMapping.gorm) {
     gormTags.push(typeMapping.gorm);
@@ -163,7 +163,7 @@ export function generateStructTags(
 
 /**
  * Go 类型导入包映射
- * 
+ *
  * 某些类型需要额外的 import
  */
 export const GO_TYPE_IMPORTS: Record<string, string> = {
@@ -176,19 +176,19 @@ export const GO_TYPE_IMPORTS: Record<string, string> = {
  */
 export function getRequiredImports(fields: Array<{ type: FieldType }>): Set<string> {
   const imports = new Set<string>();
-  
+
   // 默认导入
   imports.add('"time"');
   imports.add('"gorm.io/gorm"');
-  
+
   // 根据字段类型添加
-  fields.forEach(field => {
+  fields.forEach((field) => {
     const goType = TYPE_MAPPING[field.type].go;
     if (GO_TYPE_IMPORTS[goType]) {
       imports.add(GO_TYPE_IMPORTS[goType]);
     }
   });
-  
+
   return imports;
 }
 

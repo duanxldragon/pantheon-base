@@ -54,7 +54,11 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
       )}
       {extraActions ? <div className="table-batch-action-bar__actions">{extraActions}</div> : null}
     </div>
-    {hint ? <Typography.Text type="secondary" className="table-batch-action-bar__hint">{hint}</Typography.Text> : null}
+    {hint ? (
+      <Typography.Text type="secondary" className="table-batch-action-bar__hint">
+        {hint}
+      </Typography.Text>
+    ) : null}
   </div>
 );
 

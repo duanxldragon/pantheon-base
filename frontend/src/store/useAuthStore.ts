@@ -46,6 +46,6 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'pantheon-auth-storage',
-    }
-  )
+    },
+  ),
 );

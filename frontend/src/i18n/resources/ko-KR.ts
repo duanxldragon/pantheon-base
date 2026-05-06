@@ -14,7 +14,8 @@ const koKRFallback = {
   'app.notice.title': '알림 센터',
   'app.notice.attention': '확인이 필요한 알림이 있습니다',
   'app.notice.subtitle': '시스템 메시지와 거버넌스 알림을 위한 플랫폼 공용 수신함',
-  'app.notice.empty': '실시간 알림이 아직 연결되지 않았습니다. 앞으로 시스템 메시지, 승인, 보안 경고가 이곳에 집계됩니다.',
+  'app.notice.empty':
+    '실시간 알림이 아직 연결되지 않았습니다. 앞으로 시스템 메시지, 승인, 보안 경고가 이곳에 집계됩니다.',
   'app.notice.section.recommended': '추천 항목',
   'app.notice.section.recent': '최근 보안 활동',
   'app.notice.section.risk': '위험 그룹',
@@ -25,7 +26,8 @@ const koKRFallback = {
   'app.toggleLanguage': '표시 언어 전환',
   'app.toggleTheme': '테마 전환',
   'app.preference.title': '플랫폼 설정',
-  'app.preference.subtitle': '테마, 언어, 내비게이션 모드는 개인 프로필이 아니라 플랫폼 셸에서 유지됩니다.',
+  'app.preference.subtitle':
+    '테마, 언어, 내비게이션 모드는 개인 프로필이 아니라 플랫폼 셸에서 유지됩니다.',
   'app.preference.saveFailed': '플랫폼 설정 저장에 실패하여 직전의 유효한 설정으로 복원했습니다.',
   'app.preference.density': '밀도',
   'app.preference.navigation': '내비게이션',
@@ -33,12 +35,14 @@ const koKRFallback = {
   'app.preference.language': '언어',
   'app.preference.theme': '테마',
   'app.density.comfortable': '여유',
-  'app.density.comfortable.description': '카드와 표에 조금 더 여백을 두어 개요와 검토에 적합합니다.',
+  'app.density.comfortable.description':
+    '카드와 표에 조금 더 여백을 두어 개요와 검토에 적합합니다.',
   'app.density.compact': '집중',
   'app.density.compact.description': '표, 카드, 작업 간격을 줄여 고빈도 거버넌스 작업에 맞춥니다.',
   'app.lock.action': '화면 잠금',
   'app.lock.title': '세션이 잠겼습니다',
-  'app.lock.description': '잠금 상태에서도 현재 세션과 열린 탭은 유지됩니다. {{minutes}}분 동안 활동이 없으면 시스템이 자동으로 로그아웃합니다.',
+  'app.lock.description':
+    '잠금 상태에서도 현재 세션과 열린 탭은 유지됩니다. {{minutes}}분 동안 활동이 없으면 시스템이 자동으로 로그아웃합니다.',
   'app.lock.passwordPlaceholder': '잠금을 해제하려면 현재 계정 비밀번호를 입력하세요',
   'app.lock.unlock': '잠금 해제',
   'app.lock.unlockSuccess': '세션 잠금이 해제되었습니다',
@@ -66,28 +70,36 @@ const koKRFallback = {
   'auth.loginSuccess': '로그인 성공',
   'auth.login.entryTag': '통합 인증 진입점',
   'auth.login.title': '다시 오신 것을 환영합니다',
-  'auth.login.subtitle': '로그인하여 플랫폼 워크스페이스로 진입하고 계정, 권한, 메뉴, 보안을 관리하세요.',
+  'auth.login.subtitle':
+    '로그인하여 플랫폼 워크스페이스로 진입하고 계정, 권한, 메뉴, 보안을 관리하세요.',
   'auth.login.consoleLabel': '관리 인증 콘솔',
   'auth.login.consoleTitle': '신원 확인',
-  'auth.login.securityNotice': '관리자가 할당한 계정으로 로그인하세요. 로그인 시간, 장치, 출처 IP 는 보안 감사를 위해 기록됩니다.',
-  'auth.login.idleTimeoutNotice': '오랫동안 활동이 없어 자동 로그아웃되었습니다. 계속하려면 다시 로그인하세요.',
+  'auth.login.securityNotice':
+    '관리자가 할당한 계정으로 로그인하세요. 로그인 시간, 장치, 출처 IP 는 보안 감사를 위해 기록됩니다.',
+  'auth.login.idleTimeoutNotice':
+    '오랫동안 활동이 없어 자동 로그아웃되었습니다. 계속하려면 다시 로그인하세요.',
   'auth.login.feature.modules': '모듈형 모놀리스',
   'auth.login.feature.security': '안전한 세션',
   'auth.login.feature.i18n': '다국어 기반',
   'auth.login.visualAria': '플랫폼 인증 콘솔',
   'auth.login.visualTitle': '엔터프라이즈 관리 기반',
-  'auth.login.visualDesc': '통합 인증 진입점, 동적 메뉴, 권한 모델, 감사 추적을 통해 안정적이고 신뢰할 수 있는 관리 워크스페이스를 제공합니다.',
+  'auth.login.visualDesc':
+    '통합 인증 진입점, 동적 메뉴, 권한 모델, 감사 추적을 통해 안정적이고 신뢰할 수 있는 관리 워크스페이스를 제공합니다.',
   'auth.login.assurance.title': '로그인 후 사용 가능',
   'auth.login.assurance.boundary': '명확한 능력 경계',
-  'auth.login.assurance.boundaryDesc': '인증, IAM, 조직, 설정, 감사는 분리되며 플랫폼 셸이 이를 조합합니다.',
+  'auth.login.assurance.boundaryDesc':
+    '인증, IAM, 조직, 설정, 감사는 분리되며 플랫폼 셸이 이를 조합합니다.',
   'auth.login.assurance.session': '추적 가능한 세션 보안',
-  'auth.login.assurance.sessionDesc': 'Access / Refresh Token 을 분리하고 로그아웃 무효화 및 활성 세션 관리를 제공합니다.',
+  'auth.login.assurance.sessionDesc':
+    'Access / Refresh Token 을 분리하고 로그아웃 무효화 및 활성 세션 관리를 제공합니다.',
   'auth.login.assurance.audit': '핵심 작업은 감사에 기록',
-  'auth.login.assurance.auditDesc': '로그인, 세션, 설정 변경, 시스템 쓰기 작업은 추적 가능한 기록을 유지합니다.',
+  'auth.login.assurance.auditDesc':
+    '로그인, 세션, 설정 변경, 시스템 쓰기 작업은 추적 가능한 기록을 유지합니다.',
   'auth.mfa.required': '로그인을 완료하려면 2차 인증 코드를 입력하세요',
   'auth.mfa.verifyFailed': '2차 인증에 실패했습니다',
   'auth.mfa.verifyHint': '인증 앱의 6자리 코드를 입력하세요.',
-  'auth.mfa.setupHint': '최초 2차 인증 설정입니다. 아래 비밀키를 인증 앱에 추가한 뒤 6자리 코드를 입력해 바인딩하세요.',
+  'auth.mfa.setupHint':
+    '최초 2차 인증 설정입니다. 아래 비밀키를 인증 앱에 추가한 뒤 6자리 코드를 입력해 바인딩하세요.',
   'auth.mfa.scanQr': '인증 앱으로 QR 코드를 스캔하세요',
   'auth.mfa.manualSecret': '수동 비밀키',
   'auth.mfa.provisionUri': '설정 URI',
@@ -113,7 +125,8 @@ const koKRFallback = {
   'common.downloadTemplate': '템플릿 다운로드',
   'common.updatedAt': '업데이트 시간',
   'common.loadFailed': '불러오기에 실패했습니다',
-  'common.loadFailedDesc': '현재 이 영역의 데이터를 반환할 수 없습니다. 다시 시도하거나 나중에 확인하세요.',
+  'common.loadFailedDesc':
+    '현재 이 영역의 데이터를 반환할 수 없습니다. 다시 시도하거나 나중에 확인하세요.',
   'common.loading': '불러오는 중…',
   'common.notFound': '404 찾을 수 없음',
   'common.logout': '로그아웃',
@@ -196,7 +209,8 @@ const koKRFallback = {
   'system.setting.group.upload': '업로드',
   'system.setting.group.i18n': '국제화',
   'system.setting.group.ui': 'UI 설정',
-  'system.setting.groupHint.platform': '앱 형태, 조직 기능, 사용자 조직 연결 필수 여부를 제어합니다.',
+  'system.setting.groupHint.platform':
+    '앱 형태, 조직 기능, 사용자 조직 연결 필수 여부를 제어합니다.',
   'system.setting.item.site.name': '사이트 이름',
   'system.setting.item.platform.app_mode': '앱 모드',
   'system.setting.item.org.enabled': '조직 기능 사용',
@@ -234,7 +248,8 @@ const koKRFallback = {
   'system.setting.encrypted': '민감',
   'system.setting.encryptedPlaceholder': '민감 값을 입력하세요',
   'system.setting.leaveEmptyToKeep': '비워두면 현재 암호화된 값을 유지합니다',
-  'system.setting.encryptedEmptyHint': '아직 민감 값이 설정되지 않았습니다. 저장 후 암호화되어 보관됩니다.',
+  'system.setting.encryptedEmptyHint':
+    '아직 민감 값이 설정되지 않았습니다. 저장 후 암호화되어 보관됩니다.',
   'system.setting.restoreDefault': '기본값으로 복원',
   'system.setting.defaultValueHint': '기본값: {{value}}',
   'system.setting.defaultValueEmpty': '비어 있음',
@@ -250,9 +265,11 @@ const koKRFallback = {
   'system.setting.overview.severity.warning': '경고',
   'system.setting.overview.severity.critical': '치명적',
   'system.setting.audit.title': '설정 변경 감사',
-  'system.setting.audit.retentionPlaceholder': '보관 일수를 선택하거나 입력한 뒤 Enter로 확정하세요',
+  'system.setting.audit.retentionPlaceholder':
+    '보관 일수를 선택하거나 입력한 뒤 Enter로 확정하세요',
   'system.setting.audit.retentionRequired': '유효한 보관 일수를 최소 1개 이상 설정하세요',
-  'system.setting.audit.retentionInvalid': '1~365 범위의 양의 정수 일수만 허용되며, 중복 값은 자동 제거됩니다',
+  'system.setting.audit.retentionInvalid':
+    '1~365 범위의 양의 정수 일수만 허용되며, 중복 값은 자동 제거됩니다',
   'system.setting.audit.restoreDefault': '기본값으로 복원',
   'system.setting.audit.defaultValueHint': '권장 기본값: {{value}}',
   'system.setting.audit.unsavedChanges': '저장되지 않은 변경이 있습니다',
@@ -302,7 +319,8 @@ const koKRFallback = {
   'i18n.fillMissingLocales.action': '누락 언어 채우기',
   'i18n.fillMissingLocales.success': '누락 언어 플레이스홀더 번역 {{count}}개를 채웠습니다.',
   'i18n.hydrateBuiltin.action': '내장 번역 채우기',
-  'i18n.hydrateBuiltin.success': '플레이스홀더 값 {{updated}}개를 채우고 내장 번역 {{created}}개를 추가했습니다.',
+  'i18n.hydrateBuiltin.success':
+    '플레이스홀더 값 {{updated}}개를 채우고 내장 번역 {{created}}개를 추가했습니다.',
   'i18n.hydrate_builtin.error': '내장 번역 채우기에 실패했습니다',
   'auth.security.title': '보안 센터',
   'auth.security.password': '비밀번호 보안',
@@ -325,14 +343,18 @@ const koKRFallback = {
   'auth.security.policy.sessionIdleMinutes': '{{count}}분 유휴 시 로그아웃',
   'auth.security.policy.maxActiveSessions': '동일 계정당 최대 {{count}}개의 활성 세션 유지',
   'auth.security.policy.sessionRetentionDays': '세션 이력 {{count}}일 보관',
-  'auth.security.sessionHint': '이 목록을 사용해 장치 활동을 검토하고 세션을 안전하게 종료할 수 있습니다.',
-  'auth.security.loginLogHint': '최근 로그인 활동은 비정상 로그인 위험을 빠르게 감지하는 데 도움이 됩니다.',
+  'auth.security.sessionHint':
+    '이 목록을 사용해 장치 활동을 검토하고 세션을 안전하게 종료할 수 있습니다.',
+  'auth.security.loginLogHint':
+    '최근 로그인 활동은 비정상 로그인 위험을 빠르게 감지하는 데 도움이 됩니다.',
   'auth.security.recentWindow': '아래 요약은 최근 보안 활동 구간을 반영합니다.',
   'auth.security.hero.eyebrow': '시스템 도메인 / 인증 보안',
   'auth.security.hero.title': '비밀번호, 장치, 로그인 위험을 하나의 보안 워크플로로 처리',
-  'auth.security.hero.desc': '보안 센터는 `system/auth` 경계를 엄격히 유지합니다. 메인 영역은 비밀번호 변경, 활성 세션, 최근 로그인을 담당하고, 사이드 영역은 현재 계정과 적용 중인 정책만 요약합니다.',
+  'auth.security.hero.desc':
+    '보안 센터는 `system/auth` 경계를 엄격히 유지합니다. 메인 영역은 비밀번호 변경, 활성 세션, 최근 로그인을 담당하고, 사이드 영역은 현재 계정과 적용 중인 정책만 요약합니다.',
   'auth.security.hero.sideTitle': '거버넌스 메모',
-  'auth.security.hero.sideDesc': '비밀번호를 변경하면 다른 세션이 해제됩니다. 낯선 장치나 IP 를 발견하면 먼저 해당 세션을 해제한 뒤 로그인 로그와 통합 감사에서 추적하세요.',
+  'auth.security.hero.sideDesc':
+    '비밀번호를 변경하면 다른 세션이 해제됩니다. 낯선 장치나 IP 를 발견하면 먼저 해당 세션을 해제한 뒤 로그인 로그와 통합 감사에서 추적하세요.',
   'auth.session.current': '현재 세션',
   'auth.session.currentDevice': '현재 장치',
   'auth.session.otherDevice': '다른 장치',
@@ -344,9 +366,11 @@ const koKRFallback = {
   'auth.session.revokeConfirm': '이 세션을 해제하시겠습니까?',
   'auth.session.revokeSuccess': '세션이 해제되었습니다',
   'auth.session.cleanupAction': '이력 세션 정리',
-  'auth.session.cleanupConfirm': '해제된 이력 세션을 모두 정리하시겠습니까? 현재 활성 세션은 유지됩니다.',
+  'auth.session.cleanupConfirm':
+    '해제된 이력 세션을 모두 정리하시겠습니까? 현재 활성 세션은 유지됩니다.',
   'auth.session.cleanupSuccess': '{{count}}개의 이력 세션을 정리했습니다',
-  'auth.session.cleanupHint': '해제된 이력 세션을 즉시 삭제해 세션 테이블 규모를 제어합니다. 활성 세션은 유지됩니다.',
+  'auth.session.cleanupHint':
+    '해제된 이력 세션을 즉시 삭제해 세션 테이블 규모를 제어합니다. 활성 세션은 유지됩니다.',
   'auth.session.empty': '세션 데이터가 없습니다',
   'auth.session.status': '상태',
   'auth.session.status.active': '활성',
@@ -358,19 +382,23 @@ const koKRFallback = {
   'auth.session.osName': '운영체제',
   'auth.session.userAgentRaw': '원본 User-Agent',
   'auth.session.subtitle': '전역 온라인 세션, 장치 상세, 해제 작업을 검토합니다.',
-  'auth.session.selfProtected': '현재 로그인한 계정은 이 페이지에서 자기 자신을 해제할 수 없습니다.',
+  'auth.session.selfProtected':
+    '현재 로그인한 계정은 이 페이지에서 자기 자신을 해제할 수 없습니다.',
   'auth.session.currentUser': '현재 계정',
   'auth.session.hero.eyebrow': '시스템 도메인 / 세션 감사',
   'auth.session.hero.title': '온라인 세션, 장치 지문, 해제 경계를 하나의 거버넌스 화면에서 검토',
-  'auth.session.hero.desc': '세션 페이지는 `system/auth` 경계를 유지합니다. 메인 영역은 필터와 해제 작업을 담당하고, 사이드 영역은 현재 계정과 세션 상태만 요약합니다.',
+  'auth.session.hero.desc':
+    '세션 페이지는 `system/auth` 경계를 유지합니다. 메인 영역은 필터와 해제 작업을 담당하고, 사이드 영역은 현재 계정과 세션 상태만 요약합니다.',
   'auth.session.hero.totalLabel': '총 세션',
-  'auth.session.hero.totalHint': '현재 감사 범위에 유지되는 전체 세션 수로, 활성과 해제된 세션을 모두 포함합니다.',
+  'auth.session.hero.totalHint':
+    '현재 감사 범위에 유지되는 전체 세션 수로, 활성과 해제된 세션을 모두 포함합니다.',
   'auth.session.hero.activeHint': '여전히 활성 상태이며 현재 온라인 화면에 포함된 세션입니다.',
   'auth.session.hero.revokedHint': '거버넌스 검토와 추적을 위해 이미 해제된 세션입니다.',
   'auth.session.hero.currentUser': '현재 계정',
   'auth.session.hero.summaryTitle': '세션 요약',
   'auth.session.hero.sideTitle': '거버넌스 메모',
-  'auth.session.hero.sideDesc': '해제 전에 비정상 IP, 브라우저, 장치로 먼저 필터링하세요. 현재 로그인 계정은 자기 보호되어 목록에서 스스로를 해제할 수 없습니다.',
+  'auth.session.hero.sideDesc':
+    '해제 전에 비정상 IP, 브라우저, 장치로 먼저 필터링하세요. 현재 로그인 계정은 자기 보호되어 목록에서 스스로를 해제할 수 없습니다.',
   'auth.loginLog.loginTime': '로그인 시간',
   'auth.loginLog.ip': 'IP 주소',
   'auth.loginLog.location': '위치',
@@ -384,21 +412,26 @@ const koKRFallback = {
   'auth.loginLog.subtitle': '관리자 로그인 기록, 상태 분포, 내보내기 결과를 검토합니다.',
   'auth.loginLog.hero.eyebrow': '시스템 도메인 / 로그인 감사',
   'auth.loginLog.hero.title': '관리자 로그인 결과, 출처, 이상 신호를 한 곳에서 추적',
-  'auth.loginLog.hero.desc': '로그인 로그 페이지는 공유 시스템 템플릿을 따릅니다. 메인 영역은 필터와 상세 테이블을 담당하고, 사이드 영역은 성공/실패 요약과 위험 메모만 제공합니다.',
+  'auth.loginLog.hero.desc':
+    '로그인 로그 페이지는 공유 시스템 템플릿을 따릅니다. 메인 영역은 필터와 상세 테이블을 담당하고, 사이드 영역은 성공/실패 요약과 위험 메모만 제공합니다.',
   'auth.loginLog.hero.totalHint': '현재 감사 결과 집합의 로그인 기록 총수입니다.',
   'auth.loginLog.hero.successHint': '현재 결과 집합의 성공 로그인입니다.',
-  'auth.loginLog.hero.failedHint': '현재 결과 집합의 실패 로그인으로, 비정상 출처 확인의 시작점으로 유용합니다.',
+  'auth.loginLog.hero.failedHint':
+    '현재 결과 집합의 실패 로그인으로, 비정상 출처 확인의 시작점으로 유용합니다.',
   'auth.loginLog.hero.exportReady': '내보내기 준비 완료',
   'auth.loginLog.hero.exportHint': '로그인 감사 내보내기는 여전히 세분화된 권한 제어를 따릅니다.',
   'auth.loginLog.hero.cleanupReady': '정리 준비 완료',
-  'auth.loginLog.hero.cleanupHint': '보관 기간 정리와 선택 행 삭제는 모두 전용 권한과 2차 검증이 필요합니다.',
+  'auth.loginLog.hero.cleanupHint':
+    '보관 기간 정리와 선택 행 삭제는 모두 전용 권한과 2차 검증이 필요합니다.',
   'auth.loginLog.hero.summaryTitle': '감사 요약',
   'auth.loginLog.hero.window': '관측 구간',
   'auth.loginLog.hero.windowValue': '현재 결과 집합',
   'auth.loginLog.hero.selectedHint': '선택된 행은 2차 검증 후 대상 삭제됩니다.',
   'auth.loginLog.hero.sideTitle': '거버넌스 메모',
-  'auth.loginLog.hero.sideDesc': '실패가 증가하면 먼저 계정과 IP 로 필터링한 뒤 세션 관리와 보안 센터에서 장치 출처를 교차 확인하세요.',
-  'auth.loginLog.cleanupConfirm': '최근 {{count}}일 보관 창을 초과한 로그인 로그를 정리하시겠습니까?',
+  'auth.loginLog.hero.sideDesc':
+    '실패가 증가하면 먼저 계정과 IP 로 필터링한 뒤 세션 관리와 보안 센터에서 장치 출처를 교차 확인하세요.',
+  'auth.loginLog.cleanupConfirm':
+    '최근 {{count}}일 보관 창을 초과한 로그인 로그를 정리하시겠습니까?',
   'auth.loginLog.cleanupSuccess': '로그인 로그 {{count}}건을 정리했습니다',
   'auth.loginLog.batchDeleteConfirm': '선택한 로그인 로그 {{count}}건을 삭제하시겠습니까?',
   'auth.loginLog.batchDeleteSuccess': '선택한 로그인 로그 {{count}}건을 삭제했습니다',
@@ -421,7 +454,8 @@ const koKRFallback = {
   'auth.securityEvent.severity.low': '낮음',
   'auth.security.event.source_blocked': '실패 횟수가 너무 많아 소스가 일시적으로 잠겼습니다.',
   'auth.security.event.account_locked': '실패 횟수가 너무 많아 계정이 일시적으로 잠겼습니다.',
-  'auth.login_log.cleanup.days_invalid': '선택한 보관 기간은 현재 시스템 설정에서 허용되지 않습니다',
+  'auth.login_log.cleanup.days_invalid':
+    '선택한 보관 기간은 현재 시스템 설정에서 허용되지 않습니다',
   'auth.login_log.delete.ids_required': '최소 한 건의 로그인 로그를 먼저 선택하세요',
   'dashboard.title': '워크벤치',
   'dashboard.subtitle': '플랫폼 상태와 최근 보안 활동을 확인합니다',
@@ -446,14 +480,16 @@ const koKRFallback = {
   'dashboard.orgGovernanceTasksDesc': 'system/org 에서 집계된 실행 가능한 거버넌스 작업',
   'dashboard.loginSuccessTrend': '최근 {{days}}일 성공 로그인',
   'dashboard.loginFailureTrend': '최근 {{days}}일 실패 로그인',
-  'dashboard.attention.successRateDesc': '인증 성공률은 로그인 위험 추세를 파악하는 데 도움이 됩니다',
+  'dashboard.attention.successRateDesc':
+    '인증 성공률은 로그인 위험 추세를 파악하는 데 도움이 됩니다',
   'dashboard.attention.failedLoginDesc': '실패가 있다면 로그인 로그에서 출처와 사유를 확인하세요',
   'dashboard.securitySuccessRate': '최근 {{days}}일 성공률',
   'dashboard.lastSuccessfulLogin': '최근 성공 로그인',
   'dashboard.lastSuccessfulLoginEmpty': '아직 성공 로그인 기록이 없습니다',
   'dashboard.enabledUserRate': '활성 사용자 비율',
   'dashboard.visibleMenuHint': '현재 표시 가능한 내비게이션 규모',
-  'dashboard.visibleMenuValue': '현재 시스템은 {{count}}개의 표시 가능한 내비게이션 노드를 제공합니다',
+  'dashboard.visibleMenuValue':
+    '현재 시스템은 {{count}}개의 표시 가능한 내비게이션 노드를 제공합니다',
   'dashboard.quickActions': '빠른 작업',
   'dashboard.quickAction.user': '계정, 프로필, 역할 바인딩 관리',
   'dashboard.quickAction.role': '내비게이션, 버튼, 권한 경계 제어',
@@ -518,18 +554,25 @@ const koKRFallback = {
   'system.role.pagePermissionKeys': '페이지 권한',
   'system.role.pagePermissionKeys.placeholder': '이 역할이 접근할 수 있는 페이지를 선택하세요',
   'system.role.actionPermissionKeys': '작업 권한',
-  'system.role.actionPermissionKeys.placeholder': '이 역할이 사용할 수 있는 버튼 또는 작업을 선택하세요',
+  'system.role.actionPermissionKeys.placeholder':
+    '이 역할이 사용할 수 있는 버튼 또는 작업을 선택하세요',
   'system.role.unknownPermissionKeys': '알 수 없는 권한 키',
-  'system.role.accessControlDesc': '역할 접근은 내비게이션, 페이지, 작업의 3개 레이어로 구성합니다. API 정책은 계속 권한 페이지에서 관리합니다.',
-  'system.role.apiPolicyHint': '이 폼은 Casbin API 정책을 변경하지 않습니다. 역할 저장 후 권한 페이지에서 API 접근 경계를 검토하세요.',
+  'system.role.accessControlDesc':
+    '역할 접근은 내비게이션, 페이지, 작업의 3개 레이어로 구성합니다. API 정책은 계속 권한 페이지에서 관리합니다.',
+  'system.role.apiPolicyHint':
+    '이 폼은 Casbin API 정책을 변경하지 않습니다. 역할 저장 후 권한 페이지에서 API 접근 경계를 검토하세요.',
   'system.role.navigationAuth': '내비게이션 권한',
-  'system.role.navigationAuthHint': '사이드바에 어떤 그룹과 메뉴가 보일지 제어합니다. 이것만으로 페이지나 API 접근을 보장하지는 않습니다.',
+  'system.role.navigationAuthHint':
+    '사이드바에 어떤 그룹과 메뉴가 보일지 제어합니다. 이것만으로 페이지나 API 접근을 보장하지는 않습니다.',
   'system.role.pageAuth': '페이지 권한',
-  'system.role.pageAuthHint': '역할이 페이지 라우트에 진입할 수 있는지 제어합니다. 표시 구조는 좌측 내비게이션 계층을 따르며 메뉴의 페이지 권한 메타데이터를 사용합니다.',
+  'system.role.pageAuthHint':
+    '역할이 페이지 라우트에 진입할 수 있는지 제어합니다. 표시 구조는 좌측 내비게이션 계층을 따르며 메뉴의 페이지 권한 메타데이터를 사용합니다.',
   'system.role.actionAuth': '작업 권한',
-  'system.role.actionAuthHint': '생성, 수정, 삭제 등 페이지 내 작업의 노출 여부를 제어합니다. 작업은 소속 페이지 아래로 그룹화됩니다.',
+  'system.role.actionAuthHint':
+    '생성, 수정, 삭제 등 페이지 내 작업의 노출 여부를 제어합니다. 작업은 소속 페이지 아래로 그룹화됩니다.',
   'system.role.unknownAuth': '검토가 필요한 권한',
-  'system.role.unknownAuthHint': '이 키들은 현재 메뉴 메타데이터에 존재하지 않습니다. 과거 부여 이력을 실수로 삭제하지 않도록 유지됩니다.',
+  'system.role.unknownAuthHint':
+    '이 키들은 현재 메뉴 메타데이터에 존재하지 않습니다. 과거 부여 이력을 실수로 삭제하지 않도록 유지됩니다.',
   'system.role.module.unknown': '미분류',
   'system.role.module.platform': '플랫폼',
   'system.role.module.system_auth': '인증 보안',
@@ -542,11 +585,13 @@ const koKRFallback = {
   'system.role.permissionGroup.selectAll': '전체 선택',
   'system.role.permissionGroup.clear': '지우기',
   'system.role.permissionGroup.selectedOfTotal': '{{selected}} / {{total}}개 선택됨',
-  'system.role.permissionGroup.empty': '설정 가능한 권한이 없습니다. 먼저 메뉴 메타데이터를 확인하세요.',
+  'system.role.permissionGroup.empty':
+    '설정 가능한 권한이 없습니다. 먼저 메뉴 메타데이터를 확인하세요.',
   'system.role.permissionTree.searchPlaceholder': '이름 또는 권한 키 검색',
   'system.role.permissionTree.expandAll': '전체 펼치기',
   'system.role.permissionTree.collapseAll': '전체 접기',
-  'system.role.permissionTree.empty': '설정 가능한 항목이 없습니다. 먼저 메뉴 메타데이터를 확인하세요.',
+  'system.role.permissionTree.empty':
+    '설정 가능한 항목이 없습니다. 먼저 메뉴 메타데이터를 확인하세요.',
   'system.role.batchEnable': '일괄 활성화',
   'system.role.batchDisable': '일괄 비활성화',
   'system.role.batchEnableConfirm': '선택한 역할을 모두 활성화하시겠습니까?',
@@ -556,23 +601,29 @@ const koKRFallback = {
   'system.role.edit': '역할 수정',
   'system.role.hero.eyebrow': '시스템 도메인 / IAM 역할 거버넌스',
   'system.role.hero.title': '내비게이션, 페이지, 작업 레이어 전반의 역할 권한 관리',
-  'system.role.hero.desc': '역할 페이지는 공유 시스템 템플릿을 따릅니다. 메인 작업 영역은 필터, 목록, 역할 관리를 담당하고, 사이드 영역은 권한 준비도와 거버넌스 메모만 표시합니다.',
+  'system.role.hero.desc':
+    '역할 페이지는 공유 시스템 템플릿을 따릅니다. 메인 작업 영역은 필터, 목록, 역할 관리를 담당하고, 사이드 영역은 권한 준비도와 거버넌스 메모만 표시합니다.',
   'system.role.hero.totalHint': '현재 접근 제어 도메인에서 관리 중인 전체 역할 수입니다.',
-  'system.role.hero.enabledHint': '현재 결과 집합에서 아직 사용자에게 할당할 수 있는 역할 수입니다.',
+  'system.role.hero.enabledHint':
+    '현재 결과 집합에서 아직 사용자에게 할당할 수 있는 역할 수입니다.',
   'system.role.hero.selectedRows': '선택된 역할',
   'system.role.hero.selectedHint': '일괄 활성화와 비활성화는 현재 선택 항목에 대해 실행됩니다.',
   'system.role.hero.menuReady': '관리 가능한 내비게이션',
   'system.role.hero.menuHint': '현재 역할 단위 메뉴 권한에 사용할 수 있는 내비게이션 노드입니다.',
   'system.role.hero.summaryTitle': '권한 요약',
   'system.role.hero.pagePerms': '페이지 권한 풀',
-  'system.role.hero.pagePermsHint': '메뉴의 `pagePerm` 메타데이터에서 파생되며 페이지 진입 제어에 사용됩니다.',
+  'system.role.hero.pagePermsHint':
+    '메뉴의 `pagePerm` 메타데이터에서 파생되며 페이지 진입 제어에 사용됩니다.',
   'system.role.hero.actionPerms': '작업 권한 풀',
-  'system.role.hero.actionPermsHint': '버튼 및 작업 키에서 파생되며 페이지 내 작업 제어에 사용됩니다.',
+  'system.role.hero.actionPermsHint':
+    '버튼 및 작업 키에서 파생되며 페이지 내 작업 제어에 사용됩니다.',
   'system.role.hero.batchActions': '일괄 작업 준비 완료',
-  'system.role.hero.batchHint': '일괄 상태 작업은 내장 역할이 아닌 항목을 하나 이상 선택했을 때만 열립니다.',
+  'system.role.hero.batchHint':
+    '일괄 상태 작업은 내장 역할이 아닌 항목을 하나 이상 선택했을 때만 열립니다.',
   'system.role.hero.sideTitle': '거버넌스 메모',
   'system.role.hero.sideLead': '먼저 페이지 경계, 다음으로 API 경계 설정',
-  'system.role.hero.sideDesc': '역할 페이지는 내비게이션, 페이지, 작업 권한을 담당합니다. Casbin API 정책은 권한 페이지에 남겨 두어 페이지 가시성과 백엔드 접근이 다시 섞이지 않도록 합니다.',
+  'system.role.hero.sideDesc':
+    '역할 페이지는 내비게이션, 페이지, 작업 권한을 담당합니다. Casbin API 정책은 권한 페이지에 남겨 두어 페이지 가시성과 백엔드 접근이 다시 섞이지 않도록 합니다.',
   'system.permission.roleKey': '역할 키',
   'system.permission.path': 'API 경로',
   'system.permission.method': '메서드',
@@ -586,7 +637,8 @@ const koKRFallback = {
   'system.permission.create': '정책 생성',
   'system.permission.edit': '정책 수정',
   'system.permission.hero.eyebrow': '시스템 도메인 / IAM 권한 워크벤치',
-  'system.permission.hero.title': '역할 권한과 Casbin API 정책을 하나의 권한 거버넌스 체인으로 통합',
+  'system.permission.hero.title':
+    '역할 권한과 Casbin API 정책을 하나의 권한 거버넌스 체인으로 통합',
   'system.menu.title': '제목',
   'system.menu.titleKey': '제목 키',
   'system.menu.path': '경로',
@@ -621,9 +673,12 @@ const koKRFallback = {
   'system.dept.parentId': '상위 부서',
   'system.dept.leader': '책임자',
   'system.dept.leaderCandidate': '책임자 후보',
-  'system.dept.leaderCandidateHint': '현재 부서에 속하고 유효한 직책을 가진 활성 멤버를 우선 선택하세요.',
-  'system.dept.leaderCandidateEmpty': '이 부서에는 아직 조건을 만족하는 책임자 후보가 없습니다. 먼저 멤버와 직책을 생성하세요.',
-  'system.dept.leaderCandidateCreateHint': '먼저 부서를 생성한 뒤 수정 모드에서 실제 책임자를 바인딩하세요.',
+  'system.dept.leaderCandidateHint':
+    '현재 부서에 속하고 유효한 직책을 가진 활성 멤버를 우선 선택하세요.',
+  'system.dept.leaderCandidateEmpty':
+    '이 부서에는 아직 조건을 만족하는 책임자 후보가 없습니다. 먼저 멤버와 직책을 생성하세요.',
+  'system.dept.leaderCandidateCreateHint':
+    '먼저 부서를 생성한 뒤 수정 모드에서 실제 책임자를 바인딩하세요.',
   'system.dept.leaderCandidatePlaceholder': '책임자 후보 선택',
   'system.dept.leaderCandidateLoadFailed': '책임자 후보를 불러오지 못했습니다',
   'system.dept.leaderLegacyPlaceholder': '하위 호환을 위한 기존 자유 입력 책임자',
@@ -636,11 +691,13 @@ const koKRFallback = {
   'system.dept.governance.noPost': '직책 없는 부서',
   'system.dept.governance.empty': '빈 부서',
   'system.dept.governance.clean': '정상',
-  'system.dept.governanceHint': '조직 거버넌스 규칙: 부서를 삭제하기 전에 하위 부서, 직책, 멤버를 먼저 정리하세요. 책임자 없음, 직책 없음, 빈 부서는 거버넌스 필터로 찾아 순차적으로 개선합니다.',
+  'system.dept.governanceHint':
+    '조직 거버넌스 규칙: 부서를 삭제하기 전에 하위 부서, 직책, 멤버를 먼저 정리하세요. 책임자 없음, 직책 없음, 빈 부서는 거버넌스 필터로 찾아 순차적으로 개선합니다.',
   'system.dept.subtitle': '조직 트리, 보고 라인, 부서 책임자를 유지합니다.',
   'system.dept.hero.eyebrow': '시스템 도메인 / 조직 거버넌스',
   'system.dept.hero.title': '책임자 보강과 조직 이슈 정비를 중심으로 부서 거버넌스를 추진합니다',
-  'system.dept.hero.desc': '부서 페이지는 이제 시스템 페이지 템플릿과 맞춰졌습니다. 상단 요약 영역은 조직 상태와 거버넌스 진입점을 보여 주고, 주 작업 영역은 거버넌스 작업, 필터, 부서 관리를 맡으며, 조직도 보기에서는 트리 탐색과 정비 대상 위치 확인을 담당합니다.',
+  'system.dept.hero.desc':
+    '부서 페이지는 이제 시스템 페이지 템플릿과 맞춰졌습니다. 상단 요약 영역은 조직 상태와 거버넌스 진입점을 보여 주고, 주 작업 영역은 거버넌스 작업, 필터, 부서 관리를 맡으며, 조직도 보기에서는 트리 탐색과 정비 대상 위치 확인을 담당합니다.',
   'system.dept.hero.totalDeptsHint': '현재 조직 거버넌스 범위에 포함된 전체 부서 수입니다.',
   'system.dept.hero.totalPostsHint': '현재 조직 트리 아래에 연결된 전체 직책 수입니다.',
   'system.dept.hero.leaderlessHint': '클릭하면 책임자 미지정 부서를 바로 필터링합니다.',
@@ -650,7 +707,8 @@ const koKRFallback = {
   'system.dept.manageTab': '부서 관리',
   'system.dept.orgTab': '조직도',
   'system.dept.orgChartTitle': '조직도',
-  'system.dept.orgChartHint': '부서가 뼈대를 이루고, 직책은 부서에 속하며, 멤버는 부서와 직책 기준으로 묶입니다.',
+  'system.dept.orgChartHint':
+    '부서가 뼈대를 이루고, 직책은 부서에 속하며, 멤버는 부서와 직책 기준으로 묶입니다.',
   'system.dept.orgDeptTotal': '부서',
   'system.dept.orgPostTotal': '직책',
   'system.dept.orgMemberTotal': '구성원',
@@ -670,21 +728,27 @@ const koKRFallback = {
   'system.dept.orgAddPost': '직책 생성',
   'system.dept.orgCreatePostTitle': '현재 부서에 직책 생성',
   'system.dept.orgRootPostHint': '직책은 루트에 직접 연결할 수 없습니다',
-  'system.dept.orgRelationRule': '규칙: 부서는 조직 트리를 이루고, 직책은 반드시 구체적인 비루트 부서에 속해야 하며, 사용자 직책은 사용자 부서와 일치해야 합니다.',
-  'system.dept.orgPostPermissionHint': '직책 목록 권한이 없습니다. 조직도에는 부서와 보이는 구성원만 표시됩니다.',
-  'system.dept.orgUserPermissionHint': '사용자 목록 권한이 없습니다. 조직도에는 부서와 직책만 표시됩니다.',
+  'system.dept.orgRelationRule':
+    '규칙: 부서는 조직 트리를 이루고, 직책은 반드시 구체적인 비루트 부서에 속해야 하며, 사용자 직책은 사용자 부서와 일치해야 합니다.',
+  'system.dept.orgPostPermissionHint':
+    '직책 목록 권한이 없습니다. 조직도에는 부서와 보이는 구성원만 표시됩니다.',
+  'system.dept.orgUserPermissionHint':
+    '사용자 목록 권한이 없습니다. 조직도에는 부서와 직책만 표시됩니다.',
   'system.dept.create': '부서 생성',
   'system.dept.edit': '부서 수정',
   'system.dept.batchEnable': '일괄 활성화',
   'system.dept.batchDisable': '일괄 비활성화',
   'system.dept.batchLeader': '책임자 일괄 지정',
-  'system.dept.batchLeaderTaskHint': '일괄 거버넌스 진입점은 유지되지만, 각 부서는 반드시 자체 멤버 중 실제 책임자 후보를 바인딩해야 합니다.',
+  'system.dept.batchLeaderTaskHint':
+    '일괄 거버넌스 진입점은 유지되지만, 각 부서는 반드시 자체 멤버 중 실제 책임자 후보를 바인딩해야 합니다.',
   'system.dept.batchLeaderSelectionEmpty': '먼저 관리할 부서를 선택하세요',
   'system.dept.batchLeaderRequired': '각 부서마다 책임자 후보를 선택하세요',
-  'system.dept.batchLeaderNoCandidate': '이 부서에는 아직 적격 후보가 없습니다. 먼저 직책과 멤버를 생성하세요.',
+  'system.dept.batchLeaderNoCandidate':
+    '이 부서에는 아직 적격 후보가 없습니다. 먼저 직책과 멤버를 생성하세요.',
   'system.dept.batchEnableConfirm': '선택한 부서를 모두 활성화하시겠습니까?',
   'system.dept.batchDisableConfirm': '선택한 부서를 모두 비활성화하시겠습니까?',
-  'system.dept.deleteConfirm': '이 부서를 삭제하시겠습니까? 먼저 하위 부서, 직책, 멤버를 정리해야 합니다.',
+  'system.dept.deleteConfirm':
+    '이 부서를 삭제하시겠습니까? 먼저 하위 부서, 직책, 멤버를 정리해야 합니다.',
   'system.dept.batchStatusSuccess': '{{count}}개 부서 상태를 업데이트했습니다',
   'system.dept.batchLeaderSuccess': '{{count}}개 부서에 책임자를 지정했습니다',
   'system.dept.action.createPost': '직책 생성',
@@ -695,7 +759,8 @@ const koKRFallback = {
   'system.dept.overview.emptyDepts': '빈 부서',
   'system.dept.overview.healthIssues': '조직 이슈',
   'system.dept.task.title': '거버넌스 작업',
-  'system.dept.task.hint': '현재 조직 거버넌스 결과를 실행 가능한 작업으로 전환하고 책임자 지정, 직책 생성, 멤버 재배치 진입점으로 바로 이동합니다.',
+  'system.dept.task.hint':
+    '현재 조직 거버넌스 결과를 실행 가능한 작업으로 전환하고 책임자 지정, 직책 생성, 멤버 재배치 진입점으로 바로 이동합니다.',
   'system.dept.task.export': '작업 내보내기',
   'system.dept.task.scope': '범위',
   'system.dept.task.tag': '거버넌스 이슈',
@@ -722,16 +787,21 @@ const koKRFallback = {
   'system.post.batchDisable': '일괄 비활성화',
   'system.post.batchEnableConfirm': '선택한 직책을 모두 활성화하시겠습니까?',
   'system.post.batchDisableConfirm': '선택한 직책을 모두 비활성화하시겠습니까?',
-  'system.post.deleteConfirm': '이 직책을 삭제하시겠습니까? 아직 구성원이 배정되어 있으면 이 작업은 차단됩니다.',
-  'system.post.governanceHint': '직책 거버넌스 규칙: 아직 구성원이 배정된 직책은 비활성화하거나 삭제할 수 없습니다. 계속하기 전에 먼저 구성원을 재배치하세요.',
+  'system.post.deleteConfirm':
+    '이 직책을 삭제하시겠습니까? 아직 구성원이 배정되어 있으면 이 작업은 차단됩니다.',
+  'system.post.governanceHint':
+    '직책 거버넌스 규칙: 아직 구성원이 배정된 직책은 비활성화하거나 삭제할 수 없습니다. 계속하기 전에 먼저 구성원을 재배치하세요.',
   'system.post.batchStatusSuccess': '{{count}}개 직책 상태를 업데이트했습니다',
-  'system.post.empty': '현재 범위에 일치하는 직책이 없습니다. 필터를 조정하거나 먼저 직책을 생성하세요.',
+  'system.post.empty':
+    '현재 범위에 일치하는 직책이 없습니다. 필터를 조정하거나 먼저 직책을 생성하세요.',
   'system.post.hero.eyebrow': '직책 거버넌스',
   'system.post.hero.title': '직책 상태, 사용 중 차단 요인, 개선 작업을 하나의 워크벤치에서 처리',
-  'system.post.hero.desc': '직책 페이지는 `system/org` 경계를 유지합니다. 메인 작업 레인은 필터링, 유지보수, 일괄 거버넌스를 담당하고, 사이드 영역은 사용 중 리스크, 비활성 재고, 개선 가이드만 요약합니다.',
+  'system.post.hero.desc':
+    '직책 페이지는 `system/org` 경계를 유지합니다. 메인 작업 레인은 필터링, 유지보수, 일괄 거버넌스를 담당하고, 사이드 영역은 사용 중 리스크, 비활성 재고, 개선 가이드만 요약합니다.',
   'system.post.hero.totalHint': '현재 거버넌스 범위 안에 있는 전체 직책 수입니다.',
   'system.post.hero.inUse': '사용 중인 직책',
-  'system.post.hero.inUseHint': '아직 구성원이 점유하고 있어 비활성화 또는 삭제 작업이 차단된 직책입니다.',
+  'system.post.hero.inUseHint':
+    '아직 구성원이 점유하고 있어 비활성화 또는 삭제 작업이 차단된 직책입니다.',
   'system.post.hero.assignedUsers': '배정된 구성원',
   'system.post.hero.assignedUsersHint': '현재 페이지의 직책들이 부담하는 전체 구성원 수입니다.',
   'system.post.hero.disabledHint': '유지할지 정리할지 판단이 아직 필요한 비활성 직책입니다.',
@@ -740,8 +810,10 @@ const koKRFallback = {
   'system.post.hero.summaryTitle': '거버넌스 요약',
   'system.post.hero.cleanHint': '이미 지속 가능하고 차단 요인이 없는 상태의 직책입니다.',
   'system.post.hero.sideTitle': '거버넌스 메모',
-  'system.post.hero.sideLead': '거버넌스 작업의 목적은 문제를 보여주는 데서 그치지 않고, 운영 순서를 명확히 하는 데 있습니다.',
-  'system.post.hero.sideDesc': '부서 거버넌스가 구조 준비를 닫는다면, 직책 거버넌스는 구성원 보유 제약을 닫습니다. 전용 직책 거버넌스 레이어가 없으면 삭제 차단 요인과 개선 조치가 대화상자와 오류 메시지 안에 숨어 있게 됩니다. 이 페이지는 배정 구성원 수, 차단 요인, 다음 작업을 통해 그것들을 직접 드러냅니다.',
+  'system.post.hero.sideLead':
+    '거버넌스 작업의 목적은 문제를 보여주는 데서 그치지 않고, 운영 순서를 명확히 하는 데 있습니다.',
+  'system.post.hero.sideDesc':
+    '부서 거버넌스가 구조 준비를 닫는다면, 직책 거버넌스는 구성원 보유 제약을 닫습니다. 전용 직책 거버넌스 레이어가 없으면 삭제 차단 요인과 개선 조치가 대화상자와 오류 메시지 안에 숨어 있게 됩니다. 이 페이지는 배정 구성원 수, 차단 요인, 다음 작업을 통해 그것들을 직접 드러냅니다.',
   'system.audit.subtitle': '플랫폼의 전체 핵심 작업 기록과 변경 감사를 확인합니다.',
   'system.audit.title': '작업 제목',
   'system.audit.operName': '작업자',
@@ -800,11 +872,16 @@ const koKRFallback = {
   'system.audit.failureType.permission': '권한 실패',
   'system.audit.failureType.server': '서버 예외',
   'system.audit.failureType.business': '비즈니스 실패',
-  'system.audit.failureSummary.validation': '요청은 비즈니스 처리까지 도달했지만, 파라미터, 설정 또는 입력 검증 규칙에 의해 차단되었습니다.',
-  'system.audit.failureSummary.auth': '요청이 인증 체인에서 실패했습니다. 로그인 상태, 토큰 또는 인증 정책을 확인하세요.',
-  'system.audit.failureSummary.permission': '사용자 신원은 확인되었지만 작업이 권한 모델에 의해 거부되었습니다.',
-  'system.audit.failureSummary.server': '요청이 서버 측 실행 중 실패했습니다. 백엔드 로그 또는 의존성 상태를 확인하세요.',
-  'system.audit.failureSummary.business': '요청이 비즈니스 흐름에 들어간 뒤 실패했습니다. 일반적으로 비즈니스 규칙 또는 런타임 제약이 원인입니다.',
+  'system.audit.failureSummary.validation':
+    '요청은 비즈니스 처리까지 도달했지만, 파라미터, 설정 또는 입력 검증 규칙에 의해 차단되었습니다.',
+  'system.audit.failureSummary.auth':
+    '요청이 인증 체인에서 실패했습니다. 로그인 상태, 토큰 또는 인증 정책을 확인하세요.',
+  'system.audit.failureSummary.permission':
+    '사용자 신원은 확인되었지만 작업이 권한 모델에 의해 거부되었습니다.',
+  'system.audit.failureSummary.server':
+    '요청이 서버 측 실행 중 실패했습니다. 백엔드 로그 또는 의존성 상태를 확인하세요.',
+  'system.audit.failureSummary.business':
+    '요청이 비즈니스 흐름에 들어간 뒤 실패했습니다. 일반적으로 비즈니스 규칙 또는 런타임 제약이 원인입니다.',
   'system.audit.businessType.other': '기타',
   'system.audit.businessType.insert': '생성',
   'system.audit.businessType.update': '수정',
@@ -817,10 +894,12 @@ const koKRFallback = {
   'system.audit.businessType.settingUpdate': '설정 수정',
   'system.audit.hero.eyebrow': '시스템 도메인 / 통합 감사',
   'system.audit.hero.title': '핵심 작업, 실패 분류, 소스 도메인을 통합 감사로 관리',
-  'system.audit.hero.desc': '작업 로그 페이지는 `system/audit` 경계를 유지합니다. 메인 작업 영역은 필터링, 비우기, 상세 테이블을 담당하고, 사이드 영역은 성공/실패 요약과 거버넌스 안내만 제공합니다.',
+  'system.audit.hero.desc':
+    '작업 로그 페이지는 `system/audit` 경계를 유지합니다. 메인 작업 영역은 필터링, 비우기, 상세 테이블을 담당하고, 사이드 영역은 성공/실패 요약과 거버넌스 안내만 제공합니다.',
   'system.audit.hero.totalHint': '현재 통합 감사 결과 집합에 포함된 전체 핵심 작업 수입니다.',
   'system.audit.hero.successHint': '현재 결과 집합의 성공 작업 수입니다.',
-  'system.audit.hero.failedHint': '현재 결과 집합의 실패 작업 수이며, 실패 분류와 소스 페이지 드릴다운에 사용할 수 있습니다.',
+  'system.audit.hero.failedHint':
+    '현재 결과 집합의 실패 작업 수이며, 실패 분류와 소스 페이지 드릴다운에 사용할 수 있습니다.',
   'system.audit.hero.summaryTitle': '감사 요약',
   'system.audit.hero.exportReady': '내보내기 준비 완료',
   'system.audit.hero.exportHint': '통합 감사 내보내기는 자체 권한 경계로 보호됩니다.',
@@ -828,7 +907,8 @@ const koKRFallback = {
   'system.audit.hero.clearHint': '위험한 비우기 작업은 전용 비우기 권한이 있을 때만 노출됩니다.',
   'system.audit.hero.selectedHint': '선택된 행은 2차 검증 후 대상 삭제됩니다.',
   'system.audit.hero.sideTitle': '거버넌스 메모',
-  'system.audit.hero.sideDesc': '먼저 소스 도메인, 소스 페이지, 실패 분류로 필터링한 뒤, 상세 보기에서 요청 요약과 결과 요약을 확인하세요. 전체 로그를 한 줄씩 훑는 것보다 효율적입니다.',
+  'system.audit.hero.sideDesc':
+    '먼저 소스 도메인, 소스 페이지, 실패 분류로 필터링한 뒤, 상세 보기에서 요청 요약과 결과 요약을 확인하세요. 전체 로그를 한 줄씩 훑는 것보다 효율적입니다.',
   'audit.login_log.export.title': '로그인 로그 내보내기',
   'audit.login_log.cleanup.title': '로그인 로그 정리',
   'audit.login_log.batch_delete.title': '로그인 로그 일괄 삭제',
@@ -839,12 +919,16 @@ const koKRFallback = {
   'auth.session.cleanup.title': '이력 세션 정리',
   'auth.session.revoke.title': '세션 강제 종료',
   'system.audit.cleanupConfirm': '최근 {{count}}일 보관 창을 초과한 작업 로그를 정리하시겠습니까?',
-  'system.audit.cleanupSuccess': '이력 작업 로그 {{count}}건을 정리하고 정리 감사 1건을 기록했습니다',
-  'system.audit.cleanupHint': '정리는 보관 창을 초과한 이력 작업 로그를 제거하고, 선택 삭제는 특정 레코드를 대상으로 합니다. 두 작업 모두 전용 권한과 2차 검증이 필요합니다.',
+  'system.audit.cleanupSuccess':
+    '이력 작업 로그 {{count}}건을 정리하고 정리 감사 1건을 기록했습니다',
+  'system.audit.cleanupHint':
+    '정리는 보관 창을 초과한 이력 작업 로그를 제거하고, 선택 삭제는 특정 레코드를 대상으로 합니다. 두 작업 모두 전용 권한과 2차 검증이 필요합니다.',
   'system.audit.batchDeleteConfirm': '선택한 작업 로그 {{count}}건을 삭제하시겠습니까?',
   'system.audit.deleteSuccess': '이력 작업 로그 1건을 삭제하고 삭제 감사 1건을 기록했습니다',
-  'system.audit.batchDeleteSuccess': '이력 작업 로그 {{count}}건을 삭제하고 삭제 감사 1건을 기록했습니다',
-  'audit.operation_log.cleanup.days_invalid': '선택한 보관 기간은 현재 시스템 설정에서 허용되지 않습니다',
+  'system.audit.batchDeleteSuccess':
+    '이력 작업 로그 {{count}}건을 삭제하고 삭제 감사 1건을 기록했습니다',
+  'audit.operation_log.cleanup.days_invalid':
+    '선택한 보관 기간은 현재 시스템 설정에서 허용되지 않습니다',
   'audit.operation_log.delete.ids_required': '최소 한 건의 작업 로그를 먼저 선택하세요',
   'system.profile.title': '프로필 센터',
   'system.profile.basicTab': '기본 프로필',
@@ -877,7 +961,8 @@ const koKRFallback = {
   'system.user.resetPasswordTitle': '사용자 비밀번호 재설정',
   'system.user.resetPasswordTarget': '대상 사용자',
   'system.user.resetPasswordHint': '비밀번호를 재설정하면 이 사용자의 활성 세션이 모두 회수됩니다.',
-  'system.user.resetPasswordSuccess': '비밀번호 재설정이 완료되었고 {{count}}개의 세션이 회수되었습니다',
+  'system.user.resetPasswordSuccess':
+    '비밀번호 재설정이 완료되었고 {{count}}개의 세션이 회수되었습니다',
   'system.user.summary': '계정 요약',
   'system.user.detailSubtitle': '사용자 프로필, 조직 배정, 역할 권한을 확인합니다.',
   'system.user.detailInvalid': '유효하지 않은 사용자 식별자입니다',
@@ -897,10 +982,12 @@ const koKRFallback = {
   'user.login.error.not_found': '사용자명 또는 비밀번호가 올바르지 않습니다.',
   'user.login.error.password_wrong': '사용자명 또는 비밀번호가 올바르지 않습니다.',
   'user.login.error.disabled': '이 계정은 비활성화되었습니다. 관리자에게 문의하세요.',
-  'auth.login.error.source_blocked': '이 출처에서 로그인 실패가 너무 많습니다. 잠시 후 다시 시도하세요.',
+  'auth.login.error.source_blocked':
+    '이 출처에서 로그인 실패가 너무 많습니다. 잠시 후 다시 시도하세요.',
   'user.batch.empty': '먼저 사용자를 선택하세요',
   'user.batch.not_found': '일부 사용자가 더 이상 존재하지 않습니다. 새로고침 후 다시 시도하세요',
-  'system.dict.subtitle': '플랫폼과 비즈니스 모듈의 공용 옵션, 상태 열거값, 라벨 색상을 관리합니다.',
+  'system.dict.subtitle':
+    '플랫폼과 비즈니스 모듈의 공용 옵션, 상태 열거값, 라벨 색상을 관리합니다.',
   'system.dict.type': '사전 유형',
   'system.dict.item': '사전 항목',
   'system.dict.dictCode': '사전 코드',
@@ -945,20 +1032,31 @@ const koKRFallback = {
   'upload.file.not_found': '업로드한 파일이 존재하지 않거나 더 이상 사용할 수 없습니다',
   'module.generate.success': '모듈 파일이 기록되었으며 활성화 대기 중입니다',
   'module.generate.verify.source_written': '생성된 소스 파일이 워크스페이스에 기록되었습니다',
-  'module.generate.verify.source_write_incomplete': '일부 생성 파일이 워크스페이스에서 누락되었습니다',
+  'module.generate.verify.source_write_incomplete':
+    '일부 생성 파일이 워크스페이스에서 누락되었습니다',
   'module.generate.verify.backend_registry_updated': '백엔드 생성 레지스트리가 업데이트되었습니다',
-  'module.generate.verify.frontend_registry_updated': '프론트엔드 생성 레지스트리가 업데이트되었습니다',
-  'module.generate.verify.component_registry_updated': '프론트엔드 컴포넌트 레지스트리가 업데이트되었습니다',
-  'module.generate.verify.backend_component_registry_updated': '백엔드 메뉴 컴포넌트 레지스트리가 업데이트되었습니다',
+  'module.generate.verify.frontend_registry_updated':
+    '프론트엔드 생성 레지스트리가 업데이트되었습니다',
+  'module.generate.verify.component_registry_updated':
+    '프론트엔드 컴포넌트 레지스트리가 업데이트되었습니다',
+  'module.generate.verify.backend_component_registry_updated':
+    '백엔드 메뉴 컴포넌트 레지스트리가 업데이트되었습니다',
   'module.generate.verify.parent_menu_found': '상위 메뉴 경로가 메뉴 테이블에 존재합니다',
-  'module.generate.verify.parent_menu_missing': '상위 메뉴 경로를 메뉴 테이블에서 찾지 못했습니다. 메뉴 할당을 확인하세요',
-  'module.generate.verify.parent_menu_top_level': '이 모듈은 비즈니스 최상위 메뉴로 처리되므로 상위 메뉴가 필요하지 않습니다',
+  'module.generate.verify.parent_menu_missing':
+    '상위 메뉴 경로를 메뉴 테이블에서 찾지 못했습니다. 메뉴 할당을 확인하세요',
+  'module.generate.verify.parent_menu_top_level':
+    '이 모듈은 비즈니스 최상위 메뉴로 처리되므로 상위 메뉴가 필요하지 않습니다',
   'module.generate.verify.pending_activation': '이 모듈은 활성화 대기 상태로 등록되었습니다',
-  'module.generate.verify.contract_governance': '생성 전 거버넌스 계약을 검증하고 요약에 기록했습니다',
-  'module.generate.verify.restart_required': '새 Go 모듈과 생성 레지스트리를 로드하려면 백엔드를 재시작하세요',
-  'module.generate.verify.frontend_build_required': '새 페이지 컴포넌트를 라우트 트리에 반영하려면 프론트엔드를 다시 빌드하세요',
-  'module.generate.verify.registry_check_failed': '레지스트리 검증이 완료되지 않았습니다. 생성된 파일을 확인하세요',
-  'module.generate.verify.artifacts_missing': '모듈 소스 또는 schema 가 누락되어 런타임 레지스트리에서 제외했습니다',
+  'module.generate.verify.contract_governance':
+    '생성 전 거버넌스 계약을 검증하고 요약에 기록했습니다',
+  'module.generate.verify.restart_required':
+    '새 Go 모듈과 생성 레지스트리를 로드하려면 백엔드를 재시작하세요',
+  'module.generate.verify.frontend_build_required':
+    '새 페이지 컴포넌트를 라우트 트리에 반영하려면 프론트엔드를 다시 빌드하세요',
+  'module.generate.verify.registry_check_failed':
+    '레지스트리 검증이 완료되지 않았습니다. 생성된 파일을 확인하세요',
+  'module.generate.verify.artifacts_missing':
+    '모듈 소스 또는 schema 가 누락되어 런타임 레지스트리에서 제외했습니다',
   'module.artifacts_missing': '모듈 소스 또는 schema 가 누락되었습니다',
   'module.generate.invalid_payload': '모듈 생성 요청이 올바르지 않습니다',
   'module.generate.invalid_name': '모듈 이름 형식이 올바르지 않습니다',
@@ -978,10 +1076,12 @@ const koKRFallback = {
   'module.generate.already_exists': '이 모듈은 이미 존재합니다',
   'module.generate.business_only': '원클릭 등록은 현재 business/* 모듈만 지원합니다',
   'module.register.success': '모듈을 다시 등록했으며 활성화 대기 상태입니다',
-  'module.register.source_missing': '생성된 소스 또는 schema 파일을 찾을 수 없어 모듈을 재등록할 수 없습니다',
+  'module.register.source_missing':
+    '생성된 소스 또는 schema 파일을 찾을 수 없어 모듈을 재등록할 수 없습니다',
   'module.register.schema_invalid': '모듈 schema 가 올바르지 않아 재등록할 수 없습니다',
   'module.register.builtin_forbidden': '내장 모듈은 이 페이지에서 재등록할 수 없습니다',
-  'module.register.unsupported': '기존 수동 등록 엔드포인트는 비활성화되었습니다. 대신 생성기 흐름을 사용하세요',
+  'module.register.unsupported':
+    '기존 수동 등록 엔드포인트는 비활성화되었습니다. 대신 생성기 흐름을 사용하세요',
   'module.list.error': '모듈 레지스트리를 불러오지 못했습니다',
   'module.status.error': '모듈 상태를 조회하지 못했습니다',
   'module.unregistered': '모듈이 제거되었습니다',
@@ -990,21 +1090,21 @@ const koKRFallback = {
   'workspace.not_found': '워크스페이스 루트를 찾지 못해 생성 파일을 쓸 수 없습니다',
   'business.cmdb.title': 'CMDB',
   'business.cmdb.overview': '개요',
-      'business.cmdb.host.title': '호스트 관리',
-      'business.cmdb.host.dashboard.quickAction': '호스트 관리 열기',
-      'business.cmdb.vendor.title': '벤더 관리',
-      'business.cmdb.vendor.field.vendorCode.label': '벤더 코드',
-      'business.cmdb.vendor.field.vendorName.label': '벤더 이름',
-      'business.cmdb.vendor.field.vendorType.label': '벤더 유형',
-      'business.cmdb.vendor.field.status.label': '상태',
-      'business.cmdb.vendor.field.contactName.label': '담당자',
-      'business.cmdb.vendor.field.contactEmail.label': '담당자 이메일',
-      'business.cmdb.vendor.field.remark.label': '비고',
-      'business.cmdb.vendor.type.cloud': '클라우드',
-      'business.cmdb.vendor.type.idc': 'IDC',
-      'business.cmdb.vendor.type.hardware': '하드웨어',
-      'business.cmdb.vendor.type.service': '서비스',
-      'business.cmdb.vendor.vendorCode': '벤더 코드',
+  'business.cmdb.host.title': '호스트 관리',
+  'business.cmdb.host.dashboard.quickAction': '호스트 관리 열기',
+  'business.cmdb.vendor.title': '벤더 관리',
+  'business.cmdb.vendor.field.vendorCode.label': '벤더 코드',
+  'business.cmdb.vendor.field.vendorName.label': '벤더 이름',
+  'business.cmdb.vendor.field.vendorType.label': '벤더 유형',
+  'business.cmdb.vendor.field.status.label': '상태',
+  'business.cmdb.vendor.field.contactName.label': '담당자',
+  'business.cmdb.vendor.field.contactEmail.label': '담당자 이메일',
+  'business.cmdb.vendor.field.remark.label': '비고',
+  'business.cmdb.vendor.type.cloud': '클라우드',
+  'business.cmdb.vendor.type.idc': 'IDC',
+  'business.cmdb.vendor.type.hardware': '하드웨어',
+  'business.cmdb.vendor.type.service': '서비스',
+  'business.cmdb.vendor.vendorCode': '벤더 코드',
   'business.cmdb.vendor.vendorName': '벤더명',
   'business.cmdb.vendor.contactEmail': '연락처 이메일',
   'business.cmdb.vendor.status': '상태',
@@ -1134,7 +1234,8 @@ const koKRFallback = {
   'post.dept.invalid': '선택한 부서는 존재하지 않습니다',
   'post.dept.root_forbidden': '직책은 조직 루트에 직접 속할 수 없습니다',
   'post.delete.error.has_users': '이 직책은 아직 사용자에게 할당되어 있어 삭제할 수 없습니다',
-  'post.status.error.has_users': '이 직책은 아직 사용자에게 할당되어 있어 비활성화할 수 없습니다. 먼저 구성원을 재배치하세요',
+  'post.status.error.has_users':
+    '이 직책은 아직 사용자에게 할당되어 있어 비활성화할 수 없습니다. 먼저 구성원을 재배치하세요',
   'post.batch.empty': '먼저 직책을 선택하세요',
   'post.batch.not_found': '일부 직책이 더 이상 존재하지 않습니다. 새로고침 후 다시 시도하세요',
   'user.post.dept_required': '직책을 선택하기 전에 부서를 먼저 선택하세요',
@@ -1157,7 +1258,8 @@ const koKRFallback = {
   'upload.s3.upload.error': '파일을 객체 스토리지에 업로드하지 못했습니다',
   'setting.overview.error': '설정 상태 개요를 불러오지 못했습니다',
   'setting.overview.issue.required_missing': '이 런타임 설정은 필수이지만 아직 값이 없습니다',
-  'setting.overview.issue.public_encrypted_conflict': '이 설정은 공개와 민감으로 동시에 표시되어 있어 릴리스 위험입니다',
+  'setting.overview.issue.public_encrypted_conflict':
+    '이 설정은 공개와 민감으로 동시에 표시되어 있어 릴리스 위험입니다',
   'setting.overview.issue.invalid_storage_driver': '구성된 업로드 드라이버가 지원되지 않습니다',
   'setting.overview.issue.invalid_default_language': '기본 언어가 허용 목록에 없습니다',
   'setting.overview.issue.invalid_default_theme': '기본 테마가 허용 목록에 없습니다',
@@ -1178,7 +1280,8 @@ const koKRFallback = {
   'system.permission.dict.delete': '사전 삭제',
   'system.permission.dict.refresh': '사전 캐시 새로고침',
   'system.setting.item.audit.session_cleanup_retention_options': '이력 세션 정리 보관 기간 옵션',
-  'system.setting.remark.audit.session_cleanup_retention_options': '이력 세션 정리에서 선택 가능한 보관 일수를 JSON 배열로 관리합니다. 예: [1,7,30].',
+  'system.setting.remark.audit.session_cleanup_retention_options':
+    '이력 세션 정리에서 선택 가능한 보관 일수를 JSON 배열로 관리합니다. 예: [1,7,30].',
   'business.cmdb.host.permission.view': '호스트 조회',
   'business.cmdb.host.permission.create': '호스트 생성',
   'business.cmdb.host.permission.update': '호스트 수정',
@@ -1226,7 +1329,8 @@ const koKRFallback = {
   'theme.indigo': '인디고 Pro',
   'theme.indigo.description': '구조와 신뢰에 집중한 기본 엔터프라이즈 스타일입니다.',
   'theme.emerald': '에메랄드 Flow',
-  'theme.emerald.description': '운영과 설정 작업에 어울리는 더 부드러운 녹색 계열 워크스페이스입니다.',
+  'theme.emerald.description':
+    '운영과 설정 작업에 어울리는 더 부드러운 녹색 계열 워크스페이스입니다.',
   'theme.violet': '바이올렛 Pulse',
   'theme.violet.description': '플랫폼 에너지가 더 강한 날카로운 제품 지향 테마입니다.',
   'theme.slate': '슬레이트 Core',
@@ -1261,12 +1365,14 @@ const koKRFallback = {
   'i18n.group.placeholder': '그룹 선택',
   'i18n.hero.eyebrow': '시스템 도메인 / 설정 거버넌스 국제화',
   'i18n.hero.title': '번역 항목, 누락된 로케일 슬롯, i18n 감사를 하나의 워크플로에서 관리',
-  'i18n.hero.desc': 'i18n 페이지는 엄격한 `system/config` 경계를 유지합니다. 메인 작업 영역은 항목 조회와 거버넌스 작업을 담당하고, 사이드 영역은 커버리지와 복구 가이드만 요약합니다.',
+  'i18n.hero.desc':
+    'i18n 페이지는 엄격한 `system/config` 경계를 유지합니다. 메인 작업 영역은 항목 조회와 거버넌스 작업을 담당하고, 사이드 영역은 커버리지와 복구 가이드만 요약합니다.',
   'i18n.hero.entriesHint': '현재 거버넌스 범위에 있는 전체 번역 항목 수입니다.',
   'i18n.hero.modules': '모듈',
   'i18n.hero.modulesHint': '이미 i18n 거버넌스에 편입된 모듈입니다.',
   'i18n.hero.missingLocales': '누락 로케일 슬롯',
-  'i18n.hero.missingHint': '아직 보완이 필요하며 누락 로케일 거버넌스로 복구할 수 있는 로케일 슬롯입니다.',
+  'i18n.hero.missingHint':
+    '아직 보완이 필요하며 누락 로케일 거버넌스로 복구할 수 있는 로케일 슬롯입니다.',
   'i18n.hero.selectedHint': '일괄 새로고침과 일괄 삭제는 모두 현재 선택 항목에 대해 실행됩니다.',
   'i18n.hero.summaryTitle': '거버넌스 요약',
   'i18n.hero.groups': '그룹',
@@ -1274,10 +1380,12 @@ const koKRFallback = {
   'i18n.hero.missingValues': '플레이스홀더 / 누락 값',
   'i18n.hero.missingValuesHint': '아직 플레이스홀더이거나 값이 비어 있는 항목입니다.',
   'i18n.hero.refreshReady': '캐시 새로고침 준비 완료',
-  'i18n.hero.refreshHint': '전체 i18n 캐시 새로고침과 로케일 단위 새로고침 모두 권한 제어를 따릅니다.',
+  'i18n.hero.refreshHint':
+    '전체 i18n 캐시 새로고침과 로케일 단위 새로고침 모두 권한 제어를 따릅니다.',
   'i18n.hero.coverageTitle': '로케일 커버리지',
   'i18n.hero.sideTitle': '거버넌스 메모',
-  'i18n.hero.sideDesc': '먼저 누락 로케일과 플레이스홀더 값을 처리한 뒤, 중복 키, 미사용 키, 키 이름 변경 복구 워크플로를 위해 i18n 감사로 이동하세요.',
+  'i18n.hero.sideDesc':
+    '먼저 누락 로케일과 플레이스홀더 값을 처리한 뒤, 중복 키, 미사용 키, 키 이름 변경 복구 워크플로를 위해 i18n 감사로 이동하세요.',
   'i18n.detail.error': '번역 상세를 불러오지 못했습니다',
   'i18n.delete.error': '번역을 삭제하지 못했습니다',
   'i18n.import.error': '번역을 가져오지 못했습니다',
@@ -1291,8 +1399,10 @@ const koKRFallback = {
   'i18n.cleanup_unused.error': '미사용 i18n 키 정리에 실패했습니다',
   'i18n.refresh.error': 'i18n 캐시 새로고침에 실패했습니다',
   'i18n.key.duplicate': '번역 키가 이미 존재합니다',
-  'i18n.create.duplicateBlocked': '번역 키 {{key}} 는 로케일 {{locale}} 에 이미 존재하므로 다시 생성할 수 없습니다.',
-  'i18n.create.duplicateOwner': '소유 모듈: {{module}}. 기존 레코드를 수정하거나 새 번역 키를 선택하세요.',
+  'i18n.create.duplicateBlocked':
+    '번역 키 {{key}} 는 로케일 {{locale}} 에 이미 존재하므로 다시 생성할 수 없습니다.',
+  'i18n.create.duplicateOwner':
+    '소유 모듈: {{module}}. 기존 레코드를 수정하거나 새 번역 키를 선택하세요.',
   'i18n.create.invalid': '번역 생성 매개변수가 완전하지 않습니다',
   'i18n.stats.modules': '{{count}}개 모듈',
   'i18n.stats.groups': '{{count}}개 그룹',
@@ -1324,8 +1434,10 @@ const koKRFallback = {
   'i18n.audit.staleDays': '{{count}}일 미해결',
   'i18n.audit.stalePlaceholdersEmpty': '{{days}}일 이상 미해결된 플레이스홀더가 없습니다.',
   'generator.moduleManager.title': '모듈 레지스트리',
-  'generator.moduleManager.description': '설치된 platform, system, business 모듈을 검토합니다. 내장 모듈은 여기서 읽기 전용이며 이 페이지에서 제거할 수 없습니다.',
-  'generator.moduleManager.positioning': '이 기능은 엔지니어링 지원 모듈 등록과 거버넌스를 위한 보조 플랫폼 도구입니다. 표준 관리자 시스템 아키텍처를 다시 정의하지 않습니다.',
+  'generator.moduleManager.description':
+    '설치된 platform, system, business 모듈을 검토합니다. 내장 모듈은 여기서 읽기 전용이며 이 페이지에서 제거할 수 없습니다.',
+  'generator.moduleManager.positioning':
+    '이 기능은 엔지니어링 지원 모듈 등록과 거버넌스를 위한 보조 플랫폼 도구입니다. 표준 관리자 시스템 아키텍처를 다시 정의하지 않습니다.',
   'generator.moduleManager.name': '모듈 키',
   'generator.moduleManager.displayName': '표시 이름',
   'generator.moduleManager.scope': '범위',
@@ -1352,14 +1464,19 @@ const koKRFallback = {
   'generator.moduleManager.unregisterSuccess': '모듈이 제거되었습니다',
   'generator.moduleManager.unregisterError': '모듈 제거에 실패했습니다',
   'generator.moduleManager.repair': '레지스트리 점검/복구',
-  'generator.moduleManager.repairHint': '이력상 오염 데이터나 수동 삭제 때문에 생성 레지스트리와 실제 소스 상태가 어긋난 경우 실행합니다. 플랫폼이 유효한 모듈 기준으로 generated registries 를 다시 쓰고, 소스가 없는 기록은 제거됨 상태로 보정합니다.',
-  'generator.moduleManager.repairSuccess': '레지스트리 복구 완료: 유효 등록 {{refs}}건 유지, 소스 누락 {{marked}}건을 제거됨으로 보정',
+  'generator.moduleManager.repairHint':
+    '이력상 오염 데이터나 수동 삭제 때문에 생성 레지스트리와 실제 소스 상태가 어긋난 경우 실행합니다. 플랫폼이 유효한 모듈 기준으로 generated registries 를 다시 쓰고, 소스가 없는 기록은 제거됨 상태로 보정합니다.',
+  'generator.moduleManager.repairSuccess':
+    '레지스트리 복구 완료: 유효 등록 {{refs}}건 유지, 소스 누락 {{marked}}건을 제거됨으로 보정',
   'generator.moduleManager.repairError': '레지스트리 점검/복구에 실패했습니다',
   'generator.moduleManager.builtIn': '내장',
-  'generator.moduleManager.pendingHint': '대기 중인 모듈은 활성화되기 전에 백엔드 재시작과 프론트엔드 재빌드가 필요합니다.',
-  'generator.moduleManager.disabledHint': '현재 환경에서는 동적 모듈 기능이 비활성화되어 있습니다. 레지스트리는 읽기 전용이며 생성/등록/제거 작업을 사용할 수 없습니다.',
+  'generator.moduleManager.pendingHint':
+    '대기 중인 모듈은 활성화되기 전에 백엔드 재시작과 프론트엔드 재빌드가 필요합니다.',
+  'generator.moduleManager.disabledHint':
+    '현재 환경에서는 동적 모듈 기능이 비활성화되어 있습니다. 레지스트리는 읽기 전용이며 생성/등록/제거 작업을 사용할 수 없습니다.',
   'generator.moduleManager.empty': '관리 대상 모듈이 없습니다.',
-  'generator.moduleManager.readOnlyEmpty': '이 환경에서는 동적 모듈 거버넌스가 비활성화되어 있습니다.',
+  'generator.moduleManager.readOnlyEmpty':
+    '이 환경에서는 동적 모듈 거버넌스가 비활성화되어 있습니다.',
   'generator.moduleManager.stats.total': '전체 모듈',
   'generator.moduleManager.stats.active': '활성',
   'generator.moduleManager.stats.pending': '대기',
@@ -1370,7 +1487,8 @@ const koKRFallback = {
   'generator.moduleManager.status.uninstalled': '제거됨',
   'generator.moduleManager.status.failed': '실패',
   'generator.wizard.title': '모듈 생성 마법사',
-  'generator.wizard.positioning': '이 기능은 표준 관리자 플랫폼 위에 있는 경량 엔지니어링 지원 도구입니다. 플랫폼 계약을 준수하는 비즈니스 모듈 골격을 생성하며, 핵심 관리자 시스템을 대체하지 않습니다.',
+  'generator.wizard.positioning':
+    '이 기능은 표준 관리자 플랫폼 위에 있는 경량 엔지니어링 지원 도구입니다. 플랫폼 계약을 준수하는 비즈니스 모듈 골격을 생성하며, 핵심 관리자 시스템을 대체하지 않습니다.',
   'generator.wizard.step1.title': '기본 정보',
   'generator.wizard.step1.desc': '모듈 키, 표시 이름, 범위를 정의합니다.',
   'generator.wizard.step2.title': '데이터 모델',
@@ -1385,17 +1503,24 @@ const koKRFallback = {
   'generator.wizard.step3.enumCount': '{{count}}개 열거형 필드',
   'generator.wizard.step3.actionCount': '{{count}}개 페이지 작업',
   'generator.wizard.step3.menus': '기본 메뉴',
-  'generator.wizard.step3.menus.auto': '생성기가 메뉴 경로, 컴포넌트 키, 제목 키를 자동으로 생성합니다.',
+  'generator.wizard.step3.menus.auto':
+    '생성기가 메뉴 경로, 컴포넌트 키, 제목 키를 자동으로 생성합니다.',
   'generator.wizard.step3.permissions': '기본 권한',
-  'generator.wizard.step3.permissions.auto': '생성기가 계약에서 list/create/update/delete 권한 포인트를 자동 생성합니다.',
-  'generator.wizard.step3.permissions.empty': '이 테이블 역할은 독립 권한 포인트를 생성하지 않습니다.',
+  'generator.wizard.step3.permissions.auto':
+    '생성기가 계약에서 list/create/update/delete 권한 포인트를 자동 생성합니다.',
+  'generator.wizard.step3.permissions.empty':
+    '이 테이블 역할은 독립 권한 포인트를 생성하지 않습니다.',
   'generator.wizard.step3.menuPreview': '메뉴 트리 미리보기',
-  'generator.wizard.step3.menuPreview.desc': '생성 전에 상위 비즈니스 모듈, 페이지 메뉴, 작업 권한 계층을 확인합니다.',
-  'generator.wizard.step3.menuPreview.empty': '이 테이블 역할은 내비게이션 메뉴를 생성하지 않습니다.',
+  'generator.wizard.step3.menuPreview.desc':
+    '생성 전에 상위 비즈니스 모듈, 페이지 메뉴, 작업 권한 계층을 확인합니다.',
+  'generator.wizard.step3.menuPreview.empty':
+    '이 테이블 역할은 내비게이션 메뉴를 생성하지 않습니다.',
   'generator.wizard.step3.i18nCompleteness': 'i18n 완성도',
-  'generator.wizard.step3.i18nCompleteness.desc': '생성 전에 메뉴, 필드, 권한, 감사 제목의 중국어/영어 키를 검사합니다.',
+  'generator.wizard.step3.i18nCompleteness.desc':
+    '생성 전에 메뉴, 필드, 권한, 감사 제목의 중국어/영어 키를 검사합니다.',
   'generator.wizard.step3.translationPreview': '번역 리소스 미리보기',
-  'generator.wizard.step3.translationPreview.desc': '생성 전에 중국어와 영어 초기 번역을 수정할 수 있습니다. 이 값은 schema, backend i18n seed, frontend fallback 에 기록됩니다.',
+  'generator.wizard.step3.translationPreview.desc':
+    '생성 전에 중국어와 영어 초기 번역을 수정할 수 있습니다. 이 값은 schema, backend i18n seed, frontend fallback 에 기록됩니다.',
   'generator.wizard.step3.translationPreview.key': 'i18n Key',
   'generator.wizard.step3.translationPreview.zh': '중국어',
   'generator.wizard.step3.translationPreview.en': '영어',
@@ -1411,14 +1536,16 @@ const koKRFallback = {
   'generator.wizard.step4.title': '미리보기 및 등록',
   'generator.wizard.step4.desc': '기록될 파일을 검토한 뒤 모듈을 다운로드하거나 등록합니다.',
   'generator.wizard.moduleName': '모듈 이름',
-  'generator.wizard.moduleName.help': 'cmdb/host 같은 중첩 경로를 지원합니다. 각 세그먼트에는 소문자, 숫자, 밑줄만 사용할 수 있습니다.',
+  'generator.wizard.moduleName.help':
+    'cmdb/host 같은 중첩 경로를 지원합니다. 각 세그먼트에는 소문자, 숫자, 밑줄만 사용할 수 있습니다.',
   'generator.wizard.sourceMode': '모델링 소스',
   'generator.wizard.sourceMode.manual': '수동 모델링',
   'generator.wizard.sourceMode.database': 'DB 테이블에서 가져오기',
   'generator.wizard.sourceTable': '원본 테이블',
   'generator.wizard.sourceTable.required': '가져올 테이블을 먼저 선택하세요',
   'generator.wizard.sourceTable.placeholder': '데이터베이스 테이블 선택',
-  'generator.wizard.sourceTable.help': '구조만 읽어옵니다. 필드, 타입, 제약 제안값을 가져온 뒤 생성 전에 계속 수동 조정할 수 있습니다.',
+  'generator.wizard.sourceTable.help':
+    '구조만 읽어옵니다. 필드, 타입, 제약 제안값을 가져온 뒤 생성 전에 계속 수동 조정할 수 있습니다.',
   'generator.wizard.displayName': '표시 이름',
   'generator.wizard.displayName.placeholder': '예: 티켓 관리',
   'generator.wizard.displayNameEn': '영문 표시 이름',
@@ -1427,41 +1554,49 @@ const koKRFallback = {
   'generator.wizard.p2plus.title': 'P2+ 거버넌스 계약',
   'generator.wizard.templateVersion': '템플릿 버전',
   'generator.wizard.templateVersion.v1': 'v1 안정 스캐폴드',
-      'generator.wizard.enableDataScope': '데이터 권한 훅',
-      'generator.wizard.enableDataScope.help': '활성화하면 생성된 목록 조회에 common.GetDataScope 및 database.WithDataScope 를 주입합니다.',
-      'generator.wizard.includeDashboardWidget': '플랫폼 워크벤치 진입점',
-      'generator.wizard.includeDashboardWidget.help': '탐색 가능한 business/* 모듈만 platform 워크벤치에 연결할 수 있습니다. relation 테이블은 항상 비활성화됩니다.',
-      'generator.wizard.dataScopeMode': '데이터 권한 모드',
+  'generator.wizard.enableDataScope': '데이터 권한 훅',
+  'generator.wizard.enableDataScope.help':
+    '활성화하면 생성된 목록 조회에 common.GetDataScope 및 database.WithDataScope 를 주입합니다.',
+  'generator.wizard.includeDashboardWidget': '플랫폼 워크벤치 진입점',
+  'generator.wizard.includeDashboardWidget.help':
+    '탐색 가능한 business/* 모듈만 platform 워크벤치에 연결할 수 있습니다. relation 테이블은 항상 비활성화됩니다.',
+  'generator.wizard.dataScopeMode': '데이터 권한 모드',
   'generator.wizard.dataScopeMode.dept': '부서',
   'generator.wizard.dataScopeMode.owner': '본인',
   'generator.wizard.dataScopeMode.tenant': '테넌트',
   'generator.wizard.dataScopeMode.custom': '사용자 지정',
-      'generator.wizard.dataScope.enabledTag': '데이터 권한 활성화',
-      'generator.wizard.dataScope.disabledTag': '데이터 권한 비활성화',
-      'generator.wizard.dashboardWidget.enabledTag': '워크벤치 진입점 활성화',
-      'generator.wizard.dashboardWidget.disabledTag': '워크벤치 진입점 비활성화',
+  'generator.wizard.dataScope.enabledTag': '데이터 권한 활성화',
+  'generator.wizard.dataScope.disabledTag': '데이터 권한 비활성화',
+  'generator.wizard.dashboardWidget.enabledTag': '워크벤치 진입점 활성화',
+  'generator.wizard.dashboardWidget.disabledTag': '워크벤치 진입점 비활성화',
   'generator.wizard.dependencies': '모듈 의존성',
   'generator.wizard.dependencies.placeholder': '한 줄에 하나의 모듈, 예: cmdb/vendor',
-  'generator.wizard.dependencies.help': '의존성 계약만 기록하며 다른 모듈 Service 를 직접 호출하지 않습니다.',
+  'generator.wizard.dependencies.help':
+    '의존성 계약만 기록하며 다른 모듈 Service 를 직접 호출하지 않습니다.',
   'generator.wizard.relations': '관계 계약',
-  'generator.wizard.relations.placeholder': '형식: name|type|targetModule|localField|targetField|junctionTable',
-  'generator.wizard.relations.help': '마스터-디테일/관계 거버넌스 미리보기에 사용합니다. 다중 테이블 트랜잭션은 생성하지 않습니다.',
+  'generator.wizard.relations.placeholder':
+    '형식: name|type|targetModule|localField|targetField|junctionTable',
+  'generator.wizard.relations.help':
+    '마스터-디테일/관계 거버넌스 미리보기에 사용합니다. 다중 테이블 트랜잭션은 생성하지 않습니다.',
   'generator.wizard.businessContext': '비즈니스 컨텍스트',
   'generator.wizard.businessContext.placeholder': '예: cmdb',
-  'generator.wizard.businessContext.help': '다중 테이블 비즈니스 모듈을 그룹화합니다. 기본값은 모듈 경로의 첫 세그먼트입니다.',
+  'generator.wizard.businessContext.help':
+    '다중 테이블 비즈니스 모듈을 그룹화합니다. 기본값은 모듈 경로의 첫 세그먼트입니다.',
   'generator.wizard.businessContextTitle': '컨텍스트 중국어 제목',
   'generator.wizard.businessContextTitle.placeholder': '예: CMDB',
   'generator.wizard.businessContextTitleEn': '컨텍스트 영어 제목',
   'generator.wizard.businessContextTitleEn.placeholder': '예: CMDB',
   'generator.wizard.tableRole': '테이블 역할',
-  'generator.wizard.tableRole.help': '메뉴, 권한, 독립 페이지 생성 여부를 제어합니다. 관계 테이블은 기본적으로 내비게이션을 생성하지 않습니다.',
+  'generator.wizard.tableRole.help':
+    '메뉴, 권한, 독립 페이지 생성 여부를 제어합니다. 관계 테이블은 기본적으로 내비게이션을 생성하지 않습니다.',
   'generator.wizard.tableRole.main': '메인 테이블',
   'generator.wizard.tableRole.detail': '상세 테이블',
   'generator.wizard.tableRole.relation': '관계 테이블',
   'generator.wizard.tableRole.dictionary': '비즈니스 사전 테이블',
   'generator.wizard.primaryTable': '소속 메인 테이블',
   'generator.wizard.primaryTable.placeholder': '예: biz_cmdb_host',
-  'generator.wizard.primaryTable.help': '다중 테이블 비즈니스 모듈에서 소속 주 엔터티를 표시합니다.',
+  'generator.wizard.primaryTable.help':
+    '다중 테이블 비즈니스 모듈에서 소속 주 엔터티를 표시합니다.',
   'generator.wizard.relationFields': '관계 필드',
   'generator.wizard.relationFields.help': '관계 테이블에서만 양쪽 연결 필드를 입력합니다.',
   'generator.wizard.relationFromField.placeholder': 'From 필드, 예: host_id',
@@ -1476,7 +1611,8 @@ const koKRFallback = {
   'generator.wizard.templateLevel.basic.tag': '경량',
   'generator.wizard.parentMenu': '상위 메뉴 경로',
   'generator.wizard.parentMenu.placeholder': '선택 사항, 예: /business/cmdb',
-  'generator.wizard.parentMenu.help': '선택 사항입니다. 중첩된 비즈니스 모듈은 모듈 경로에서 상위 메뉴를 자동 추론하며, 기존 메뉴 경로로 직접 지정할 수도 있습니다.',
+  'generator.wizard.parentMenu.help':
+    '선택 사항입니다. 중첩된 비즈니스 모듈은 모듈 경로에서 상위 메뉴를 자동 추론하며, 기존 메뉴 경로로 직접 지정할 수도 있습니다.',
   'generator.wizard.owner': '담당 조직',
   'generator.wizard.owner.placeholder': '예: Platform Engineering',
   'generator.wizard.boundedContext': '경계 컨텍스트',
@@ -1495,10 +1631,14 @@ const koKRFallback = {
   'generator.wizard.register.success': '모듈 파일이 기록되었으며 활성화 대기 중입니다',
   'generator.wizard.register.error': '모듈 생성 또는 등록에 실패했습니다',
   'generator.wizard.register.overwriteTitle': '기존 모듈이 감지되었습니다',
-  'generator.wizard.register.overwriteContent': '대상 모듈 또는 파일이 이미 존재합니다. 덮어쓰고 다시 활성화 대기 상태로 전환하시겠습니까?',
-  'generator.validation.blocked': '생성 계약에 차단 문제가 있습니다. 먼저 완성도 검사를 수정하세요.',
-  'generator.validation.passed': '메뉴, 권한, 감사, 중국어/영어 번역 키가 기본 검사를 통과했습니다.',
-  'generator.validation.businessContextMissing': '비즈니스 컨텍스트가 없습니다. 최상위 모듈 컨텍스트를 추가하세요.',
+  'generator.wizard.register.overwriteContent':
+    '대상 모듈 또는 파일이 이미 존재합니다. 덮어쓰고 다시 활성화 대기 상태로 전환하시겠습니까?',
+  'generator.validation.blocked':
+    '생성 계약에 차단 문제가 있습니다. 먼저 완성도 검사를 수정하세요.',
+  'generator.validation.passed':
+    '메뉴, 권한, 감사, 중국어/영어 번역 키가 기본 검사를 통과했습니다.',
+  'generator.validation.businessContextMissing':
+    '비즈니스 컨텍스트가 없습니다. 최상위 모듈 컨텍스트를 추가하세요.',
   'generator.validation.relationTableHasMenu': '관계 테이블은 메뉴나 권한을 생성하면 안 됩니다.',
   'generator.validation.dependencyInvalid': '모듈 의존성 형식이 올바르지 않습니다.',
   'generator.validation.relationTypeInvalid': '관계 유형이 올바르지 않습니다.',
@@ -1510,15 +1650,22 @@ const koKRFallback = {
   'generator.table.not_found': '선택한 테이블을 찾을 수 없습니다',
   'database.schema_unknown': '현재 데이터베이스 schema 를 확인할 수 없습니다',
   'generator.wizard.register.nextSteps': '다음 단계',
-  'generator.wizard.register.restartBackend': '1. 생성된 Go 모듈이 컴파일되고 마운트되도록 백엔드를 재시작하세요.',
-  'generator.wizard.register.rebuildFrontend': '2. 생성된 페이지 컴포넌트가 라우터 레지스트리에 들어가도록 프론트엔드를 다시 빌드하세요.',
-  'generator.wizard.register.openModuleManager': '3. 그런 다음 모듈 관리를 열어 {{module}} 의 활성화 상태를 확인하세요.',
-  'generator.wizard.register.businessOnly': '원클릭 등록은 현재 business/* 모듈만 지원합니다. system/* 모듈은 여전히 수동 서브도메인 통합이 필요합니다.',
+  'generator.wizard.register.restartBackend':
+    '1. 생성된 Go 모듈이 컴파일되고 마운트되도록 백엔드를 재시작하세요.',
+  'generator.wizard.register.rebuildFrontend':
+    '2. 생성된 페이지 컴포넌트가 라우터 레지스트리에 들어가도록 프론트엔드를 다시 빌드하세요.',
+  'generator.wizard.register.openModuleManager':
+    '3. 그런 다음 모듈 관리를 열어 {{module}} 의 활성화 상태를 확인하세요.',
+  'generator.wizard.register.businessOnly':
+    '원클릭 등록은 현재 business/* 모듈만 지원합니다. system/* 모듈은 여전히 수동 서브도메인 통합이 필요합니다.',
   'generator.wizard.register.disabledTitle': '동적 모듈이 비활성화됨',
-  'generator.wizard.register.disabledHint': '현재 환경에서는 프론트엔드에서 모듈 생성 또는 등록을 허용하지 않습니다. 개발 환경에서 기능을 활성화하거나 통제된 엔지니어링 절차로 처리하세요.',
+  'generator.wizard.register.disabledHint':
+    '현재 환경에서는 프론트엔드에서 모듈 생성 또는 등록을 허용하지 않습니다. 개발 환경에서 기능을 활성화하거나 통제된 엔지니어링 절차로 처리하세요.',
   'generator.wizard.result.title': '생성 결과',
-  'generator.wizard.result.pendingActivation': '소스 파일, 레지스트리, 골격 요약이 성공적으로 기록되었습니다',
-  'generator.wizard.result.pendingActivationDesc': '이 모듈은 아직 활성화 대기 상태입니다. 비즈니스 모듈이 라이브되기 전에 백엔드를 재시작하고 프론트엔드를 다시 빌드하세요.',
+  'generator.wizard.result.pendingActivation':
+    '소스 파일, 레지스트리, 골격 요약이 성공적으로 기록되었습니다',
+  'generator.wizard.result.pendingActivationDesc':
+    '이 모듈은 아직 활성화 대기 상태입니다. 비즈니스 모듈이 라이브되기 전에 백엔드를 재시작하고 프론트엔드를 다시 빌드하세요.',
   'generator.wizard.result.moduleKey': '모듈 키',
   'generator.wizard.result.activationStatus': '활성화 상태',
   'generator.wizard.result.parentMenu': '상위 메뉴',
@@ -1570,8 +1717,10 @@ const koKRFallback = {
   'i18n.rename.title': '충돌 키 복구',
   'i18n.rename.oldKey': '기존 키',
   'i18n.rename.newKey': '새 키',
-  'i18n.rename.confirmSourceUpdated': '코드 참조 이전을 완료했으며 데이터베이스 번역 키 업데이트를 허용합니다',
-  'i18n.rename.confirmSourceRequired': '코드 참조가 아직 존재합니다. 실행 전에 소스 이전을 확인하세요',
+  'i18n.rename.confirmSourceUpdated':
+    '코드 참조 이전을 완료했으며 데이터베이스 번역 키 업데이트를 허용합니다',
+  'i18n.rename.confirmSourceRequired':
+    '코드 참조가 아직 존재합니다. 실행 전에 소스 이전을 확인하세요',
   'i18n.rename.preview.action': '미리보기 실행',
   'i18n.rename.execute.action': '이름 변경 실행',
   'i18n.rename.preview.title': '이름 변경 미리보기',
@@ -1583,11 +1732,15 @@ const koKRFallback = {
   'i18n.rename.preview.referenceTitle': '코드 참조 파일',
   'i18n.rename.preview.matchCount': '{{count}}개 일치',
   'i18n.rename.preview.matchLocation': '{{line}}행 {{column}}열',
-  'i18n.rename.preview.referenceEmpty': '소스 참조 파일을 찾지 못했습니다. 데이터베이스 이름 변경을 바로 실행할 수 있습니다.',
+  'i18n.rename.preview.referenceEmpty':
+    '소스 참조 파일을 찾지 못했습니다. 데이터베이스 이름 변경을 바로 실행할 수 있습니다.',
   'i18n.rename.preview.warningTitle': '실행 전 점검',
-  'i18n.rename.preview.warning1': '관리 백엔드는 소스 파일을 자동 수정하지 않습니다. 데이터베이스의 i18n 키만 업데이트합니다.',
-  'i18n.rename.preview.warning2': '소스 코드가 여전히 기존 키를 참조하면 실행 후 페이지에 누락 번역이나 플레이스홀더가 표시됩니다.',
-  'i18n.rename.preview.warning3': '기존 번역 자산 덮어쓰기를 막기 위해 대상 키가 이미 존재하면 실행이 차단됩니다.',
+  'i18n.rename.preview.warning1':
+    '관리 백엔드는 소스 파일을 자동 수정하지 않습니다. 데이터베이스의 i18n 키만 업데이트합니다.',
+  'i18n.rename.preview.warning2':
+    '소스 코드가 여전히 기존 키를 참조하면 실행 후 페이지에 누락 번역이나 플레이스홀더가 표시됩니다.',
+  'i18n.rename.preview.warning3':
+    '기존 번역 자산 덮어쓰기를 막기 위해 대상 키가 이미 존재하면 실행이 차단됩니다.',
   'i18n.rename.preview.error': 'i18n 키 이름 변경 미리보기에 실패했습니다',
   'i18n.rename.execute.error': 'i18n 키 이름 변경에 실패했습니다',
   'i18n.rename.execute.success': '{{count}}개의 i18n 레코드 이름을 변경했습니다.',
@@ -1608,13 +1761,17 @@ const koKRFallback = {
   'i18n.rename.report.referenceAfter': '변경 후',
   'i18n.rename.report.checklistTitle': '실행 체크리스트',
   'i18n.rename.report.checklist1': '먼저 소스 코드의 oldKey 참조를 모두 newKey로 바꾸세요.',
-  'i18n.rename.report.checklist2': '로컬 테스트 또는 빌드를 다시 실행해 oldKey가 남아 있지 않은지 확인하세요.',
-  'i18n.rename.report.checklist3': '국제화 관리 페이지로 돌아가 소스 마이그레이션 완료를 확인하세요.',
-  'i18n.rename.report.checklist4': '코드 마이그레이션이 완료된 뒤에만 데이터베이스 이름 변경을 실행하세요.',
+  'i18n.rename.report.checklist2':
+    '로컬 테스트 또는 빌드를 다시 실행해 oldKey가 남아 있지 않은지 확인하세요.',
+  'i18n.rename.report.checklist3':
+    '국제화 관리 페이지로 돌아가 소스 마이그레이션 완료를 확인하세요.',
+  'i18n.rename.report.checklist4':
+    '코드 마이그레이션이 완료된 뒤에만 데이터베이스 이름 변경을 실행하세요.',
   'i18n.rename.invalid': 'i18n 키 이름 변경 매개변수가 올바르지 않습니다',
   'i18n.rename.source_not_found': '이름을 변경할 원본 i18n 키를 찾지 못했습니다',
   'i18n.rename.target_exists': '대상 i18n 키가 이미 존재하여 덮어쓸 수 없습니다',
-  'i18n.rename.source_not_confirmed': '소스 코드 참조가 아직 존재합니다. 실행 전에 코드 이전을 완료하세요',
+  'i18n.rename.source_not_confirmed':
+    '소스 코드 참조가 아직 존재합니다. 실행 전에 코드 이전을 완료하세요',
   'i18n.lifecycle.observe.all': '전체 관찰 시작',
   'i18n.lifecycle.observe.module': '관찰 시작',
   'i18n.lifecycle.observe.success': '{{count}}개의 미사용 키를 관찰 대상으로 표시했습니다.',
@@ -1625,8 +1782,10 @@ const koKRFallback = {
   'i18n.lifecycle.archive.error': '관찰 중인 미사용 키를 보관하지 못했습니다',
   'i18n.lifecycle.delete.all': '보관된 키 삭제',
   'i18n.lifecycle.delete.module': '보관 항목 삭제',
-  'i18n.lifecycle.delete.confirm': '보관된 미사용 i18n 키를 지금 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
-  'i18n.lifecycle.delete.confirmModule': '이 모듈의 보관된 미사용 i18n 키를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+  'i18n.lifecycle.delete.confirm':
+    '보관된 미사용 i18n 키를 지금 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+  'i18n.lifecycle.delete.confirmModule':
+    '이 모듈의 보관된 미사용 i18n 키를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
   'i18n.lifecycle.delete.success': '{{count}}개의 보관된 미사용 키를 삭제했습니다.',
   'i18n.lifecycle.delete.error': '보관된 미사용 키 삭제에 실패했습니다',
   'i18n.lifecycle.status.active': '활성',
@@ -1654,11 +1813,14 @@ const koKRFallback = {
   'generator.pageActions.export': '내보내기',
   'generator.pageActions.import': '가져오기',
   'generator.actionTemplates.standard': '표준 CRUD',
-  'generator.actionTemplates.standard.desc': '조회, 생성, 수정, 삭제, 상세 작업이 있는 일반 비즈니스 페이지용입니다.',
+  'generator.actionTemplates.standard.desc':
+    '조회, 생성, 수정, 삭제, 상세 작업이 있는 일반 비즈니스 페이지용입니다.',
   'generator.actionTemplates.masterData': '마스터 데이터',
-  'generator.actionTemplates.masterData.desc': '가져오기와 내보내기가 필요한 카탈로그 및 기준 데이터용입니다.',
+  'generator.actionTemplates.masterData.desc':
+    '가져오기와 내보내기가 필요한 카탈로그 및 기준 데이터용입니다.',
   'generator.actionTemplates.lookup': '읽기 전용 조회',
-  'generator.actionTemplates.lookup.desc': '목록과 상세 조회만 필요한 검색형 읽기 전용 페이지용입니다.',
+  'generator.actionTemplates.lookup.desc':
+    '목록과 상세 조회만 필요한 검색형 읽기 전용 페이지용입니다.',
   'generator.fieldTemplates.code': '코드',
   'generator.fieldTemplates.name': '이름',
   'generator.fieldTemplates.status': '상태',
@@ -1718,7 +1880,8 @@ const koKRFallback = {
   'generator.fieldEditor.duplicateName': '필드명이 이미 존재합니다',
   'generator.fieldEditor.template': '필드 템플릿',
   'generator.fieldEditor.template.none': '템플릿 없음',
-  'generator.fieldEditor.templateExists': '이 템플릿 필드는 이미 존재합니다. 기존 필드를 수정하세요.',
+  'generator.fieldEditor.templateExists':
+    '이 템플릿 필드는 이미 존재합니다. 기존 필드를 수정하세요.',
   'generator.fieldEditor.unique': '고유값',
   'generator.fieldEditor.enumDict': '열거 사전',
   'generator.fieldEditor.enumInline': '인라인 열거',
@@ -1744,7 +1907,8 @@ const koKRFallback = {
   'dept.update.error.parent_self': '상위 부서는 자기 자신일 수 없습니다',
   'dept.update.error.parent_descendant': '상위 부서는 현재 부서의 하위 부서일 수 없습니다',
   'dept.delete.error.has_children': '현재 부서를 삭제하기 전에 하위 부서를 먼저 삭제하세요',
-  'dept.delete.error.has_posts': '현재 부서에는 아직 직책이 있어 삭제할 수 없습니다. 먼저 직책을 재배치하거나 제거하세요',
+  'dept.delete.error.has_posts':
+    '현재 부서에는 아직 직책이 있어 삭제할 수 없습니다. 먼저 직책을 재배치하거나 제거하세요',
   'dept.delete.error.has_users': '현재 부서에는 아직 사용자가 배정되어 있어 삭제할 수 없습니다',
   'dept.overview.error': '조직 상태 개요를 불러오지 못했습니다',
   'dept.governance.task.error': '조직 거버넌스 작업을 불러오지 못했습니다',
@@ -1755,8 +1919,10 @@ const koKRFallback = {
   'dept.root.status_fixed': '조직 루트는 항상 활성 상태여야 합니다',
   'dept.batch.empty': '먼저 부서를 선택하세요',
   'dept.batch.not_found': '일부 부서가 더 이상 존재하지 않습니다. 새로고침 후 다시 시도하세요',
-  'system.permission.hint': '이 페이지는 역할별 백엔드 API 접근을 위한 Casbin 라우트 정책을 관리합니다.',
-  'system.permission.workbench.hint': '내비게이션, 페이지/작업 권한, Casbin API 정책을 역할 관점에서 한 곳에서 검토합니다.',
+  'system.permission.hint':
+    '이 페이지는 역할별 백엔드 API 접근을 위한 Casbin 라우트 정책을 관리합니다.',
+  'system.permission.workbench.hint':
+    '내비게이션, 페이지/작업 권한, Casbin API 정책을 역할 관점에서 한 곳에서 검토합니다.',
   'system.permission.workbench.unknownAssignments': '알 수 없는 할당',
   'system.permission.workbench.pageGapRoles': '페이지 권한 누락 역할',
   'system.permission.workbench.apiGapRoles': 'API 정책 누락 역할',
@@ -1808,22 +1974,29 @@ const koKRFallback = {
   'system.permission.roleRequired': '역할을 선택하세요',
   'system.permission.pathRequired': 'API 경로를 입력하세요',
   'system.permission.methodRequired': '요청 메서드를 선택하세요',
-  'system.permission.hero.desc': '권한 페이지는 `system/iam` 거버넌스 루프를 유지합니다. 워크벤치는 엔드투엔드 권한 커버리지를 검토하고, API 정책 탭은 백엔드 라우트 경계를 닫습니다. 모두 같은 공유 페이지 템플릿 안에서 처리됩니다.',
+  'system.permission.hero.desc':
+    '권한 페이지는 `system/iam` 거버넌스 루프를 유지합니다. 워크벤치는 엔드투엔드 권한 커버리지를 검토하고, API 정책 탭은 백엔드 라우트 경계를 닫습니다. 모두 같은 공유 페이지 템플릿 안에서 처리됩니다.',
   'system.permission.hero.rolesHint': '권한 워크벤치가 현재 분석 중인 역할 수입니다.',
   'system.permission.hero.assignmentsHint': '역할 레이어의 전체 페이지 및 작업 권한 할당 수입니다.',
-  'system.permission.hero.apiHint': '백엔드 API 도달 범위를 정의하는 현재 Casbin 라우트 정책 수입니다.',
+  'system.permission.hero.apiHint':
+    '백엔드 API 도달 범위를 정의하는 현재 Casbin 라우트 정책 수입니다.',
   'system.permission.hero.gaps': '커버리지 공백',
-  'system.permission.hero.gapsHint': '페이지 권한 누락 또는 API 정책 누락이 있는 역할 수의 합계입니다.',
+  'system.permission.hero.gapsHint':
+    '페이지 권한 누락 또는 API 정책 누락이 있는 역할 수의 합계입니다.',
   'system.permission.hero.summaryTitle': '거버넌스 요약',
   'system.permission.hero.currentMode': '현재 모드',
-  'system.permission.hero.modeHint': '같은 거버넌스 맥락을 유지한 채 워크벤치와 API 정책 모드를 전환합니다.',
+  'system.permission.hero.modeHint':
+    '같은 거버넌스 맥락을 유지한 채 워크벤치와 API 정책 모드를 전환합니다.',
   'system.permission.hero.unknownAssignments': '알 수 없는 할당',
-  'system.permission.hero.unknownHint': '알 수 없는 권한 키가 존재하면 먼저 메뉴 메타데이터와 과거 부여 이력을 검토하세요.',
+  'system.permission.hero.unknownHint':
+    '알 수 없는 권한 키가 존재하면 먼저 메뉴 메타데이터와 과거 부여 이력을 검토하세요.',
   'system.permission.hero.exportReady': '내보내기 준비 완료',
-  'system.permission.hero.exportHint': '거버넌스 보고서와 API 정책 내보내기는 모두 통합 권한 제어를 따릅니다.',
+  'system.permission.hero.exportHint':
+    '거버넌스 보고서와 API 정책 내보내기는 모두 통합 권한 제어를 따릅니다.',
   'system.permission.hero.sideTitle': '거버넌스 메모',
   'system.permission.hero.sideLead': '먼저 커버리지 공백을 찾고, 다음으로 API 경계를 보강',
-  'system.permission.hero.sideDesc': '먼저 워크벤치에서 누락된 페이지 권한, 누락된 API 정책, 알 수 없는 키를 찾고, 그 다음 API 정책으로 이동해 Casbin 경계를 닫으세요. 고립된 규칙만 무작정 수정하지 않도록 합니다.',
+  'system.permission.hero.sideDesc':
+    '먼저 워크벤치에서 누락된 페이지 권한, 누락된 API 정책, 알 수 없는 키를 찾고, 그 다음 API 정책으로 이동해 Casbin 경계를 닫으세요. 고립된 규칙만 무작정 수정하지 않도록 합니다.',
   'system.permission.user.create': '사용자 생성',
   'system.permission.user.view': '사용자 상세 조회',
   'system.permission.user.update': '사용자 수정',
@@ -1910,95 +2083,138 @@ const koKRFallback = {
   'system.menu.icon.tags': '태그',
   'system.menu.activeMenu.placeholder': '예: system-user',
   'system.menu.level': '계층 레벨',
-  'system.menu.hero.desc': '메뉴 페이지는 시스템 페이지 공통 템플릿을 이어갑니다. 주 작업 영역이 필터, 트리 테이블, 다중 뷰 탐색을 담당하고 우측은 메타데이터 준비도와 거버넌스 힌트만 표시하여 메뉴 정보를 흩어진 개요로 다시 분해하지 않습니다.',
+  'system.menu.hero.desc':
+    '메뉴 페이지는 시스템 페이지 공통 템플릿을 이어갑니다. 주 작업 영역이 필터, 트리 테이블, 다중 뷰 탐색을 담당하고 우측은 메타데이터 준비도와 거버넌스 힌트만 표시하여 메뉴 정보를 흩어진 개요로 다시 분해하지 않습니다.',
   'system.menu.hero.totalHint': '현재 메뉴 거버넌스 범위에 포함된 전체 내비게이션 노드 수입니다.',
   'system.menu.hero.visibleNodes': '표시 가능 노드',
-  'system.menu.hero.visibleHint': '현재 결과 집합에서 사이드바에 노출 가능한 내비게이션 노드 수입니다.',
+  'system.menu.hero.visibleHint':
+    '현재 결과 집합에서 사이드바에 노출 가능한 내비게이션 노드 수입니다.',
   'system.menu.hero.actionNodes': '작업 노드',
   'system.menu.hero.actionHint': '현재 메타데이터에 바인딩된 작업 권한 노드 수입니다.',
   'system.menu.hero.currentView': '현재 보기',
   'system.menu.hero.viewHint': '현재 워크벤치가 트리 보기인지 목록 보기인지 나타냅니다.',
   'system.menu.hero.summaryTitle': '거버넌스 요약',
   'system.menu.hero.routeReady': '라우트 준비도',
-  'system.menu.hero.routeHint': '라우팅 가능한 페이지 노드 수로, 라우트 등록 정합성 검토에 사용합니다.',
+  'system.menu.hero.routeHint':
+    '라우팅 가능한 페이지 노드 수로, 라우트 등록 정합성 검토에 사용합니다.',
   'system.menu.hero.cachedNodes': '캐시 노드',
-  'system.menu.hero.cacheHint': '캐시가 활성화된 페이지 노드 수로, 라우트 캐시 전략을 확인하는 데 사용합니다.',
+  'system.menu.hero.cacheHint':
+    '캐시가 활성화된 페이지 노드 수로, 라우트 캐시 전략을 확인하는 데 사용합니다.',
   'system.menu.hero.externalNodes': '외부 링크 노드',
-  'system.menu.hero.externalHint': '외부 링크로 표시된 내비게이션 노드 수로, 이동 경계 확인에 사용합니다.',
+  'system.menu.hero.externalHint':
+    '외부 링크로 표시된 내비게이션 노드 수로, 이동 경계 확인에 사용합니다.',
   'system.menu.hero.sideTitle': '거버넌스 힌트',
   'system.menu.hero.sideLead': '메뉴는 내비게이션만, 권한은 별도 모델링',
-  'system.menu.hero.sideDesc': '메뉴 트리는 내비게이션 메타데이터와 페이지 진입점만 담당하며 버튼이나 API 권한을 직접 의미하지 않습니다. 메뉴를 유지보수할 때는 `pagePerm`, 작업 `perms`, 컴포넌트 등록도 함께 완전한지 확인해야 합니다.',
-  'system.user.hero.desc': '사용자 페이지는 표준 백오피스의 “타이틀 영역 / 주 작업 영역 / 보조 요약 영역” 구조를 유지합니다. 필터, 테이블, 일괄 작업은 주 작업 영역에 고정하고, 우측은 조직 준비도와 거버넌스 알림만 담당합니다.',
+  'system.menu.hero.sideDesc':
+    '메뉴 트리는 내비게이션 메타데이터와 페이지 진입점만 담당하며 버튼이나 API 권한을 직접 의미하지 않습니다. 메뉴를 유지보수할 때는 `pagePerm`, 작업 `perms`, 컴포넌트 등록도 함께 완전한지 확인해야 합니다.',
+  'system.user.hero.desc':
+    '사용자 페이지는 표준 백오피스의 “타이틀 영역 / 주 작업 영역 / 보조 요약 영역” 구조를 유지합니다. 필터, 테이블, 일괄 작업은 주 작업 영역에 고정하고, 우측은 조직 준비도와 거버넌스 알림만 담당합니다.',
   'system.user.hero.totalHint': '플랫폼에서 신원 거버넌스에 포함되는 전체 계정 수입니다.',
-  'system.user.hero.enabledHint': '현재 결과 집합에서 로그인 가능하고 권한을 부여할 수 있는 계정 수입니다.',
+  'system.user.hero.enabledHint':
+    '현재 결과 집합에서 로그인 가능하고 권한을 부여할 수 있는 계정 수입니다.',
   'system.user.hero.selectedRows': '선택된 계정',
-  'system.user.hero.selectedHint': '일괄 활성화, 비활성화, 가져오기, 내보내기는 현재 선택 집합을 기준으로 합니다.',
+  'system.user.hero.selectedHint':
+    '일괄 활성화, 비활성화, 가져오기, 내보내기는 현재 선택 집합을 기준으로 합니다.',
   'system.user.hero.rolesReady': '할당 가능 역할',
-  'system.user.hero.rolesHint': '역할 풀이 준비되면 사용자 권한 부여는 `system/iam` 권한 경계를 우회하지 않습니다.',
+  'system.user.hero.rolesHint':
+    '역할 풀이 준비되면 사용자 권한 부여는 `system/iam` 권한 경계를 우회하지 않습니다.',
   'system.user.hero.summaryTitle': '거버넌스 요약',
   'system.user.hero.orgReady': '조직 준비도',
-  'system.user.hero.orgHint': '연결 가능한 부서와 직책 수를 표시해 조직 소속 체인이 준비되었는지 판단합니다.',
+  'system.user.hero.orgHint':
+    '연결 가능한 부서와 직책 수를 표시해 조직 소속 체인이 준비되었는지 판단합니다.',
   'system.user.hero.disabledRows': '비활성 계정',
-  'system.user.hero.disabledHint': '현재 결과 집합 내 비활성 계정 수로, 정리와 재검토의 진입점이 됩니다.',
+  'system.user.hero.disabledHint':
+    '현재 결과 집합 내 비활성 계정 수로, 정리와 재검토의 진입점이 됩니다.',
   'system.user.hero.batchActions': '일괄 작업 가능',
-  'system.user.hero.batchHint': '내장 계정이 아닌 항목을 하나 이상 선택해야 일괄 상태 작업이 열립니다.',
+  'system.user.hero.batchHint':
+    '내장 계정이 아닌 항목을 하나 이상 선택해야 일괄 상태 작업이 열립니다.',
   'system.user.hero.sideTitle': '사용 팁',
   'system.user.hero.sideLead': '먼저 조직 소속, 그다음 역할 부여',
-  'system.user.hero.sideDesc': '먼저 부서와 직책을 정비한 뒤 역할 할당과 일괄 활성/비활성을 수행하는 것을 권장합니다. 실제 조직 문맥과 분리된 사용자 거버넌스를 피하기 위함입니다.',
+  'system.user.hero.sideDesc':
+    '먼저 부서와 직책을 정비한 뒤 역할 할당과 일괄 활성/비활성을 수행하는 것을 권장합니다. 실제 조직 문맥과 분리된 사용자 거버넌스를 피하기 위함입니다.',
   'system.setting.hero.eyebrow': '시스템 도메인 / 설정 거버넌스',
   'system.setting.hero.title': '통합 템플릿에서 플랫폼 파라미터, 기본 설정, 운영 위험을 관리',
-  'system.setting.hero.desc': '설정 페이지는 `system/config` 의미를 유지합니다. 주 작업 영역이 그룹 설정과 변경 감사를 담당하고, 보조 요약 영역은 현재 런타임 요약과 거버넌스 위험만 표시하여 설정 페이지가 다시 카드 벽으로 흩어지지 않게 합니다.',
+  'system.setting.hero.desc':
+    '설정 페이지는 `system/config` 의미를 유지합니다. 주 작업 영역이 그룹 설정과 변경 감사를 담당하고, 보조 요약 영역은 현재 런타임 요약과 거버넌스 위험만 표시하여 설정 페이지가 다시 카드 벽으로 흩어지지 않게 합니다.',
   'system.setting.hero.totalHint': '현재 시스템 설정 센터에서 관리 중인 전체 설정 항목 수입니다.',
-  'system.setting.hero.publicHint': '플랫폼 셸이나 로그인 페이지가 공개 소비할 수 있는 설정 수입니다.',
+  'system.setting.hero.publicHint':
+    '플랫폼 셸이나 로그인 페이지가 공개 소비할 수 있는 설정 수입니다.',
   'system.setting.hero.encryptedHint': '민감 설정으로 처리되어 암호화 저장되는 설정 수입니다.',
   'system.setting.hero.riskHint': '필수값 누락과 잘못된 값에 기반해 식별된 현재 운영 위험입니다.',
   'system.setting.hero.storageHint': '현재 업로드 경로에서 실제 사용하는 저장소 드라이버입니다.',
   'system.setting.hero.languageHint': '명시적으로 전환하지 않았을 때 플랫폼 기본 표시 언어입니다.',
-  'system.setting.hero.themeHint': '플랫폼 셸과 시스템 페이지가 공용으로 사용하는 기본 테마 식별자입니다.',
+  'system.setting.hero.themeHint':
+    '플랫폼 셸과 시스템 페이지가 공용으로 사용하는 기본 테마 식별자입니다.',
   'system.setting.hero.sideTitle': '위험 요약',
-  'system.setting.hero.sideDesc': '현재 즉시 시정이 필요한 설정 위험은 없습니다. 이후 새 위험이 생겨도 이 통합 요약 카드에서 계속 수용하며 별도의 상단 개요를 만들지 않습니다.',
-  'system.setting.saveHint': '저장 후 설정은 즉시 시스템 설정 테이블에 기록되며, 민감 설정은 공개 API로 배포되지 않습니다.',
+  'system.setting.hero.sideDesc':
+    '현재 즉시 시정이 필요한 설정 위험은 없습니다. 이후 새 위험이 생겨도 이 통합 요약 카드에서 계속 수용하며 별도의 상단 개요를 만들지 않습니다.',
+  'system.setting.saveHint':
+    '저장 후 설정은 즉시 시스템 설정 테이블에 기록되며, 민감 설정은 공개 API로 배포되지 않습니다.',
   'system.setting.groupHint.basic': '사이트 이름, Logo 등 공개 조회 가능한 기본 정보입니다.',
   'system.setting.groupHint.security': '계정과 비밀번호 보안에 영향을 주는 백엔드 정책입니다.',
   'system.setting.groupHint.login': '로그인 실패, 잠금 등 인증 동작에 영향을 주는 정책입니다.',
-  'system.setting.groupHint.upload': '파일 업로드, 저장소 드라이버, 공개 주소, 클라우드 저장소 자격 증명 등의 설정입니다.',
+  'system.setting.groupHint.upload':
+    '파일 업로드, 저장소 드라이버, 공개 주소, 클라우드 저장소 자격 증명 등의 설정입니다.',
   'system.setting.groupHint.i18n': '기본 언어 등 국제화 설정입니다.',
   'system.setting.groupHint.ui': '플랫폼 기본 테마와 상호작용 선호 설정입니다.',
   'system.setting.remark.site.name': '로그인 페이지, 브라우저 제목, 공개 설정에 사용됩니다.',
-  'system.setting.remark.platform.app_mode': 'enterprise는 기업 관리자용, consumer는 C엔드 계정용, hybrid는 두 유형을 함께 지원합니다.',
-  'system.setting.remark.org.enabled': '끄면 부서와 직책을 내비게이션 및 사용자 폼에서 숨기지만 기존 조직 데이터는 삭제하지 않습니다.',
-  'system.setting.remark.org.required_for_user': '조직 기능이 켜져 있을 때만 적용되며 사용자 생성/수정 시 부서 선택을 필수로 합니다.',
+  'system.setting.remark.platform.app_mode':
+    'enterprise는 기업 관리자용, consumer는 C엔드 계정용, hybrid는 두 유형을 함께 지원합니다.',
+  'system.setting.remark.org.enabled':
+    '끄면 부서와 직책을 내비게이션 및 사용자 폼에서 숨기지만 기존 조직 데이터는 삭제하지 않습니다.',
+  'system.setting.remark.org.required_for_user':
+    '조직 기능이 켜져 있을 때만 적용되며 사용자 생성/수정 시 부서 선택을 필수로 합니다.',
   'system.setting.option.platform.app_mode.enterprise': '엔터프라이즈 백오피스',
   'system.setting.option.platform.app_mode.consumer': '소비자 앱',
   'system.setting.option.platform.app_mode.hybrid': '하이브리드 모드',
   'system.setting.remark.site.logo': '사이트 Logo 주소이며 비워둘 수 있습니다.',
-  'system.setting.remark.security.password_min_length': '현재 사용자 비밀번호 변경, 사용자 생성, 관리자 비밀번호 재설정 등 길이 검증에 적용됩니다.',
-  'system.setting.remark.security.password_require_digit': '켜면 비밀번호 변경 시 숫자 1개 이상이 필요합니다.',
-  'system.setting.remark.security.password_require_uppercase': '켜면 비밀번호 변경 시 대문자 1개 이상이 필요합니다.',
-  'system.setting.remark.security.password_history_limit': '최근 N개의 이전 비밀번호 재사용을 금지합니다. 0은 비활성화입니다.',
-  'system.setting.remark.security.password_expire_days': '이 일수를 넘으면 보안 센터에서 만료로 표시합니다. 0은 비활성화입니다.',
-  'system.setting.remark.login.max_failed_attempts': '동일 계정의 연속 로그인 실패 횟수가 이 값에 도달하면 잠금 정책을 발동할 수 있습니다.',
+  'system.setting.remark.security.password_min_length':
+    '현재 사용자 비밀번호 변경, 사용자 생성, 관리자 비밀번호 재설정 등 길이 검증에 적용됩니다.',
+  'system.setting.remark.security.password_require_digit':
+    '켜면 비밀번호 변경 시 숫자 1개 이상이 필요합니다.',
+  'system.setting.remark.security.password_require_uppercase':
+    '켜면 비밀번호 변경 시 대문자 1개 이상이 필요합니다.',
+  'system.setting.remark.security.password_history_limit':
+    '최근 N개의 이전 비밀번호 재사용을 금지합니다. 0은 비활성화입니다.',
+  'system.setting.remark.security.password_expire_days':
+    '이 일수를 넘으면 보안 센터에서 만료로 표시합니다. 0은 비활성화입니다.',
+  'system.setting.remark.login.max_failed_attempts':
+    '동일 계정의 연속 로그인 실패 횟수가 이 값에 도달하면 잠금 정책을 발동할 수 있습니다.',
   'system.setting.remark.login.lock_minutes': '로그인 잠금 유지 시간(분)입니다.',
-  'system.setting.remark.login.session_idle_minutes': '사용자가 연속 무작동 상태로 이 분 수에 도달하면 현재 세션이 자동 종료됩니다. 기본값은 30분입니다.',
-  'system.setting.remark.login.max_active_sessions_per_user': '동일 계정에 허용되는 활성 세션 최대 수입니다. 새 로그인으로 상한을 넘기면 더 오래된 활성 세션이 자동 종료됩니다. 백오피스 관리자 계정은 1을 권장합니다.',
-  'system.setting.remark.audit.session_retention_days': '종료되었거나 만료된 세션 이력을 보관하는 일수입니다. 기간이 지나면 자동 정리되어 감사 테이블이 무한히 커지는 것을 막습니다. 기본값은 90일입니다.',
-  'system.setting.remark.audit.login_log_retention_days': '로그인 로그를 자동 보관하는 일수입니다. 기간이 지나면 시스템이 스로틀링된 자동 정리를 수행합니다. 기본값은 90일입니다.',
-  'system.setting.remark.audit.operation_log_retention_days': '작업 로그를 자동 보관하는 일수입니다. 기간이 지나면 시스템이 스로틀링된 자동 정리를 수행합니다. 기본값은 180일입니다.',
+  'system.setting.remark.login.session_idle_minutes':
+    '사용자가 연속 무작동 상태로 이 분 수에 도달하면 현재 세션이 자동 종료됩니다. 기본값은 30분입니다.',
+  'system.setting.remark.login.max_active_sessions_per_user':
+    '동일 계정에 허용되는 활성 세션 최대 수입니다. 새 로그인으로 상한을 넘기면 더 오래된 활성 세션이 자동 종료됩니다. 백오피스 관리자 계정은 1을 권장합니다.',
+  'system.setting.remark.audit.session_retention_days':
+    '종료되었거나 만료된 세션 이력을 보관하는 일수입니다. 기간이 지나면 자동 정리되어 감사 테이블이 무한히 커지는 것을 막습니다. 기본값은 90일입니다.',
+  'system.setting.remark.audit.login_log_retention_days':
+    '로그인 로그를 자동 보관하는 일수입니다. 기간이 지나면 시스템이 스로틀링된 자동 정리를 수행합니다. 기본값은 90일입니다.',
+  'system.setting.remark.audit.operation_log_retention_days':
+    '작업 로그를 자동 보관하는 일수입니다. 기간이 지나면 시스템이 스로틀링된 자동 정리를 수행합니다. 기본값은 180일입니다.',
   'system.setting.audit.retentionDaysOption': '{{count}}일 자동 보관',
-  'system.setting.remark.upload.storage_driver': '현재 local / s3-compatible 을 지원하며 MinIO, AWS S3, OSS 호환 게이트웨이에 연결할 수 있습니다.',
+  'system.setting.remark.upload.storage_driver':
+    '현재 local / s3-compatible 을 지원하며 MinIO, AWS S3, OSS 호환 게이트웨이에 연결할 수 있습니다.',
   'system.setting.remark.upload.max_file_size': '단일 파일 최대 업로드 크기(MB)입니다.',
-  'system.setting.remark.upload.allowed_types': '허용 확장자 화이트리스트를 JSON 배열로 관리합니다.',
+  'system.setting.remark.upload.allowed_types':
+    '허용 확장자 화이트리스트를 JSON 배열로 관리합니다.',
   'system.setting.remark.upload.local_path': '로컬 저장 모드에서의 업로드 루트 디렉터리입니다.',
-  'system.setting.remark.upload.public_base_url': '파일 공개 접근 도메인 또는 기본 경로이며 비워둘 수 있습니다.',
-  'system.setting.remark.upload.s3_endpoint': 'AWS S3 / MinIO / OSS 호환 게이트웨이 등의 객체 저장소 엔드포인트입니다.',
+  'system.setting.remark.upload.public_base_url':
+    '파일 공개 접근 도메인 또는 기본 경로이며 비워둘 수 있습니다.',
+  'system.setting.remark.upload.s3_endpoint':
+    'AWS S3 / MinIO / OSS 호환 게이트웨이 등의 객체 저장소 엔드포인트입니다.',
   'system.setting.remark.upload.s3_bucket': '객체 저장소 Bucket 이름입니다.',
   'system.setting.remark.upload.s3_region': '객체 저장소 Region 이며 기본값은 us-east-1 입니다.',
-  'system.setting.remark.upload.s3_access_key_id': '객체 저장소 Access Key ID 이며 민감 설정으로 암호화 저장됩니다.',
-  'system.setting.remark.upload.s3_secret_access_key': '객체 저장소 Secret Access Key 이며 민감 설정으로 암호화 저장됩니다.',
-  'system.setting.remark.i18n.default_language': '명시적으로 언어를 선택하지 않았을 때 사용하는 기본 언어입니다.',
-  'system.setting.remark.ui.default_theme': '플랫폼 기본 테마이며 현재 indigo / emerald / violet / slate 를 지원합니다.',
+  'system.setting.remark.upload.s3_access_key_id':
+    '객체 저장소 Access Key ID 이며 민감 설정으로 암호화 저장됩니다.',
+  'system.setting.remark.upload.s3_secret_access_key':
+    '객체 저장소 Secret Access Key 이며 민감 설정으로 암호화 저장됩니다.',
+  'system.setting.remark.i18n.default_language':
+    '명시적으로 언어를 선택하지 않았을 때 사용하는 기본 언어입니다.',
+  'system.setting.remark.ui.default_theme':
+    '플랫폼 기본 테마이며 현재 indigo / emerald / violet / slate 를 지원합니다.',
   'system.setting.remark.ui.enable_tab_bar': '상단 탭형 라우팅 경험을 활성화할지 여부입니다.',
-  'upload.storage_driver.unsupported': '현재 업로드 드라이버는 지원되지 않습니다. 로컬 저장소로 전환하세요',
+  'upload.storage_driver.unsupported':
+    '현재 업로드 드라이버는 지원되지 않습니다. 로컬 저장소로 전환하세요',
   'upload.path.invalid': '업로드 저장 경로가 올바르지 않습니다',
   'upload.file.open.error': '업로드 파일을 읽지 못했습니다',
   'upload.file.save.error': '업로드 파일 저장에 실패했습니다',
@@ -2018,23 +2234,30 @@ const koKRFallback = {
   'system.dict.item.batchStatusSuccess': '{{count}}개의 사전 항목 상태를 업데이트했습니다',
   'system.dict.usage.empty': '현재 코드베이스에서 이 사전 코드 참조를 찾지 못했습니다',
   'system.dict.usage.error': '사전 사용 분석을 불러오지 못했습니다',
-  'system.dict.hero.desc': '사전 페이지는 시스템 페이지 공통 템플릿을 이어갑니다. 주 작업 영역은 유형/항목 이중 워크벤치를 유지하고, 우측만 현재 거버넌스 요약과 작업 힌트를 담당하여 추가 상단 개요를 확장하지 않습니다.',
+  'system.dict.hero.desc':
+    '사전 페이지는 시스템 페이지 공통 템플릿을 이어갑니다. 주 작업 영역은 유형/항목 이중 워크벤치를 유지하고, 우측만 현재 거버넌스 요약과 작업 힌트를 담당하여 추가 상단 개요를 확장하지 않습니다.',
   'system.dict.hero.typeHint': '현재 플랫폼과 비즈니스 거버넌스에 포함된 사전 유형 수입니다.',
   'system.dict.hero.activeHint': '아직 활성 상태로 비즈니스에서 사용할 수 있는 사전 유형 수입니다.',
   'system.dict.hero.itemHint': '모든 사전 유형 아래 사전 항목 총수로, 열거 규모 평가에 사용합니다.',
   'system.dict.hero.currentHint': '현재 마스터-디테일 워크벤치가 집중하는 사전 코드입니다.',
   'system.dict.hero.disabledHint': '비활성화된 사전 유형 수로, 정리와 재검토의 진입점이 됩니다.',
-  'system.dict.hero.refreshHint': '사전 캐시 새로고침은 백오피스 거버넌스 결과를 런타임 드롭다운 옵션으로 동기화하는 데 사용합니다.',
-  'system.dict.hero.importHint': '유형과 사전 항목 가져오기는 모두 통합된 가져오기 요약 피드백 체인을 따릅니다.',
+  'system.dict.hero.refreshHint':
+    '사전 캐시 새로고침은 백오피스 거버넌스 결과를 런타임 드롭다운 옵션으로 동기화하는 데 사용합니다.',
+  'system.dict.hero.importHint':
+    '유형과 사전 항목 가져오기는 모두 통합된 가져오기 요약 피드백 체인을 따릅니다.',
   'system.dict.hero.sideLead': '먼저 유형 경계, 그다음 사전 항목 내용',
-  'system.dict.hero.sideDesc': '먼저 사전 코드, 모듈 귀속, 활성 상태를 확정한 뒤 사전 항목 유지보수로 들어가는 것을 권장합니다. 비즈니스 측 드롭다운 값과 설정 의미가 어긋나는 것을 막기 위함입니다.',
+  'system.dict.hero.sideDesc':
+    '먼저 사전 코드, 모듈 귀속, 활성 상태를 확정한 뒤 사전 항목 유지보수로 들어가는 것을 권장합니다. 비즈니스 측 드롭다운 값과 설정 의미가 어긋나는 것을 막기 위함입니다.',
   'system.dict.seed.system_yes_no': '예 / 아니오',
   'system.dict.seed.system_user_status': '사용자 상태',
   'system.dict.remark.system_yes_no': '시스템 공용 예/아니오 사전입니다.',
   'system.dict.remark.system_user_status': '시스템 사용자 상태 사전입니다.',
-  'system.setting.groupHint.audit': '로그인 로그와 작업 로그 정리에 사용할 보관 기간 옵션입니다. 감사 페이지가 런타임에 동적으로 읽습니다.',
-  'system.setting.remark.audit.login_log_retention_options': '로그인 로그 정리에서 선택 가능한 보관 일수를 JSON 배열로 관리합니다. 예: [1,7,30].',
-  'system.setting.remark.audit.operation_log_retention_options': '작업 로그 정리에서 선택 가능한 보관 일수를 JSON 배열로 관리합니다. 예: [1,7,30].',
+  'system.setting.groupHint.audit':
+    '로그인 로그와 작업 로그 정리에 사용할 보관 기간 옵션입니다. 감사 페이지가 런타임에 동적으로 읽습니다.',
+  'system.setting.remark.audit.login_log_retention_options':
+    '로그인 로그 정리에서 선택 가능한 보관 일수를 JSON 배열로 관리합니다. 예: [1,7,30].',
+  'system.setting.remark.audit.operation_log_retention_options':
+    '작업 로그 정리에서 선택 가능한 보관 일수를 JSON 배열로 관리합니다. 예: [1,7,30].',
   'user.username.required': '사용자명은 비워둘 수 없습니다',
   'user.password.required': '비밀번호는 비워둘 수 없습니다',
   'auth.security.policy.sourceMaxFailedAttempts': '동일 출처는 창 내 최대 {{count}}회 실패 가능',
@@ -2047,13 +2270,19 @@ const koKRFallback = {
   'system.setting.item.login.captcha_enabled': '로그인 CAPTCHA 사용',
   'system.setting.item.login.mfa_enabled': 'MFA 사용',
   'system.setting.item.login.sso_enabled': 'SSO 사용',
-  'system.setting.remark.login.source_max_failed_attempts': '동일 출처가 집계 창 내에서 이 횟수에 도달하면 출처 단위 임시 잠금을 수행합니다.',
-  'system.setting.remark.login.source_window_minutes': '동일 출처의 실패 횟수를 집계하는 시간 창입니다.',
+  'system.setting.remark.login.source_max_failed_attempts':
+    '동일 출처가 집계 창 내에서 이 횟수에 도달하면 출처 단위 임시 잠금을 수행합니다.',
+  'system.setting.remark.login.source_window_minutes':
+    '동일 출처의 실패 횟수를 집계하는 시간 창입니다.',
   'system.setting.remark.login.source_lock_minutes': '출처 단위 잠금이 유지되는 시간(분)입니다.',
-  'system.setting.remark.login.security_event_enabled': '켜면 소스 잠금, 계정 잠금 등 실제 위험 이벤트를 기록합니다.',
-  'system.setting.remark.login.captcha_enabled': '향후 CAPTCHA 흐름을 위한 기능 플래그입니다. 기본적으로 꺼 두어 가짜 제어를 노출하지 않습니다.',
-  'system.setting.remark.login.mfa_enabled': '로그인 시 TOTP 2차 인증을 요구할지 제어합니다. 꺼져 있으면 기존 비밀번호 로그인 흐름을 유지합니다.',
-  'system.setting.remark.login.sso_enabled': '향후 SSO / OIDC 연동을 위한 기능 플래그입니다. 꺼져 있으면 로컬 계정 로그인만 허용합니다.',
+  'system.setting.remark.login.security_event_enabled':
+    '켜면 소스 잠금, 계정 잠금 등 실제 위험 이벤트를 기록합니다.',
+  'system.setting.remark.login.captcha_enabled':
+    '향후 CAPTCHA 흐름을 위한 기능 플래그입니다. 기본적으로 꺼 두어 가짜 제어를 노출하지 않습니다.',
+  'system.setting.remark.login.mfa_enabled':
+    '로그인 시 TOTP 2차 인증을 요구할지 제어합니다. 꺼져 있으면 기존 비밀번호 로그인 흐름을 유지합니다.',
+  'system.setting.remark.login.sso_enabled':
+    '향후 SSO / OIDC 연동을 위한 기능 플래그입니다. 꺼져 있으면 로컬 계정 로그인만 허용합니다.',
 };
 
 export default koKRFallback;

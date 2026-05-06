@@ -55,8 +55,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             aria-label={collapsed ? t('common.expandFilters') : t('common.collapseFilters')}
             onClick={() => setCollapsed((value) => !value)}
           >
-          {collapsed ? <IconDown /> : <IconUp />}
-          {collapsed ? t('common.expand') : t('common.collapse')}
+            {collapsed ? <IconDown /> : <IconUp />}
+            {collapsed ? t('common.expand') : t('common.collapse')}
           </Button>
         </div>
       ) : null}

@@ -28,11 +28,7 @@ interface SessionDetailModalProps {
   onCancel: () => void;
 }
 
-const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
-  visible,
-  session,
-  onCancel,
-}) => {
+const SessionDetailModal: React.FC<SessionDetailModalProps> = ({ visible, session, onCancel }) => {
   const { t } = useTranslation();
 
   return (
@@ -63,7 +59,9 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                 <Tag color="arcoblue">{t('auth.session.currentDevice')}</Tag>
               ) : null}
               <Tag color={session.revokedAt ? 'red' : 'green'}>
-                {session.revokedAt ? t('auth.session.status.revoked') : t('auth.session.status.active')}
+                {session.revokedAt
+                  ? t('auth.session.status.revoked')
+                  : t('auth.session.status.active')}
               </Tag>
             </Space>
           </div>
@@ -71,13 +69,30 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
           <Descriptions
             column={2}
             data={[
-              ...(session.username ? [{ label: t('system.user.username'), value: session.username }] : []),
-              ...(session.nickname ? [{ label: t('system.profile.nickname'), value: session.nickname }] : []),
+              ...(session.username
+                ? [{ label: t('system.user.username'), value: session.username }]
+                : []),
+              ...(session.nickname
+                ? [{ label: t('system.profile.nickname'), value: session.nickname }]
+                : []),
               { label: t('auth.session.ip'), value: session.lastIp || '-' },
-              { label: t('auth.session.lastActive'), value: formatDateTime(session.lastActivityAt || session.lastRefreshAt || session.createdAt) },
-              { label: t('auth.session.refreshExpiresAt'), value: formatDateTime(session.refreshExpiresAt) },
+              {
+                label: t('auth.session.lastActive'),
+                value: formatDateTime(
+                  session.lastActivityAt || session.lastRefreshAt || session.createdAt,
+                ),
+              },
+              {
+                label: t('auth.session.refreshExpiresAt'),
+                value: formatDateTime(session.refreshExpiresAt),
+              },
               { label: t('system.profile.createdAt'), value: formatDateTime(session.createdAt) },
-              { label: t('auth.session.status'), value: session.revokedAt ? t('auth.session.status.revoked') : t('auth.session.status.active') },
+              {
+                label: t('auth.session.status'),
+                value: session.revokedAt
+                  ? t('auth.session.status.revoked')
+                  : t('auth.session.status.active'),
+              },
               { label: t('auth.session.sessionId'), value: session.sessionId || '-' },
             ]}
           />

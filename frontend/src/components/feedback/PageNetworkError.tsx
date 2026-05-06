@@ -8,7 +8,11 @@ interface PageNetworkErrorProps {
   timeout?: boolean;
 }
 
-const PageNetworkError: React.FC<PageNetworkErrorProps> = ({ description, onRetry, timeout = false }) => {
+const PageNetworkError: React.FC<PageNetworkErrorProps> = ({
+  description,
+  onRetry,
+  timeout = false,
+}) => {
   const { t } = useTranslation();
 
   return (

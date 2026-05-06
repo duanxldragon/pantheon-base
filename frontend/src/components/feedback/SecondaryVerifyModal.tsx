@@ -48,16 +48,23 @@ export const SecondaryVerifyModal: React.FC<SecondaryVerifyModalProps> = ({
       unmountOnExit
       size="sm"
     >
-      <div style={{ marginBottom: 16 }}>
-        {t('auth.operation.verify_hint')}
-      </div>
-      <Form form={form} layout="vertical" onSubmit={() => { void handleOk(); }}>
+      <div style={{ marginBottom: 16 }}>{t('auth.operation.verify_hint')}</div>
+      <Form
+        form={form}
+        layout="vertical"
+        onSubmit={() => {
+          void handleOk();
+        }}
+      >
         <Form.Item
           label={t('system.user.password')}
           field="password"
           rules={[{ required: true, message: t('auth.passwordRequired') }]}
         >
-          <Input.Password placeholder={t('auth.passwordPlaceholder')} onPressEnter={() => form.submit()} />
+          <Input.Password
+            placeholder={t('auth.passwordPlaceholder')}
+            onPressEnter={() => form.submit()}
+          />
         </Form.Item>
       </Form>
     </AppModal>

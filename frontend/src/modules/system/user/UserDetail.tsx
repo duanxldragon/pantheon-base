@@ -54,7 +54,13 @@ const UserDetail: React.FC = () => {
   }
 
   if (error) {
-    return <PageError onRetry={() => { void loadDetail(); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadDetail();
+        }}
+      />
+    );
   }
 
   if (!detail) {

@@ -10,7 +10,12 @@ import {
 } from './languagePreference';
 import { applyPantheonDefaultTheme, type PantheonThemeKey } from '../theme/theme';
 
-export { LANGUAGE_STORAGE_KEY, LANGUAGE_EXPLICIT_STORAGE_KEY, hasExplicitLanguagePreference, setExplicitLanguagePreference };
+export {
+  LANGUAGE_STORAGE_KEY,
+  LANGUAGE_EXPLICIT_STORAGE_KEY,
+  hasExplicitLanguagePreference,
+  setExplicitLanguagePreference,
+};
 
 export interface PublicSettingsState {
   siteName: string;

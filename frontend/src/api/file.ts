@@ -53,7 +53,7 @@ export async function downloadFile(options: DownloadFileOptions) {
     responseType: 'blob',
     timeout: 30000,
     headers: {
-      Authorization: readAccessToken() ? `Bearer ${readAccessToken()}` : '',
+      'Authorization': readAccessToken() ? `Bearer ${readAccessToken()}` : '',
       'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
     },
     validateStatus: () => true,
@@ -76,6 +76,9 @@ export async function downloadFile(options: DownloadFileOptions) {
     }
   }
 
-  const filename = parseFilename(String(response.headers['content-disposition'] || ''), options.filename);
+  const filename = parseFilename(
+    String(response.headers['content-disposition'] || ''),
+    options.filename,
+  );
   saveBlob(response.data, filename);
 }

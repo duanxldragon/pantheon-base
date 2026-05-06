@@ -1,16 +1,39 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Card, Grid, Space, Statistic, Tag, Typography } from '@arco-design/web-react';
-import { IconArrowRight, IconClockCircle, IconExclamationCircle, IconSafe } from '@arco-design/web-react/icon';
+import {
+  IconArrowRight,
+  IconClockCircle,
+  IconExclamationCircle,
+  IconSafe,
+} from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../api/request';
-import { AppTable, DateTimeMeta, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError } from '../../components';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../api/request';
+import {
+  AppTable,
+  DateTimeMeta,
+  PageContainer,
+  PageEmpty,
+  PageError,
+  PageHeader,
+  PageLoading,
+  PageNetworkError,
+  PageServerError,
+} from '../../components';
 import { renderMenuIcon } from '../../core/menu/icon';
 import { resolveRouteWarmData } from '../../core/router/prefetch';
 import { usePermission } from '../../hooks/usePermission';
 import { useMenuStore } from '../../store/useMenuStore';
 import { getDashboardSummary, type DashboardRecentLogin, type DashboardSummary } from './api';
-import { dashboardDomainOverviewWidgets, dashboardQuickActionWidgets, isDashboardWidgetVisible } from './widgets';
+import {
+  dashboardDomainOverviewWidgets,
+  dashboardQuickActionWidgets,
+  isDashboardWidgetVisible,
+} from './widgets';
 import './dashboard.css';
 
 const Row = Grid.Row;
@@ -67,12 +90,16 @@ const DashboardPage: React.FC = () => {
   }, [summary]);
 
   const stats = useMemo(
-    () => ([
+    () => [
       {
         key: 'users',
         title: t('dashboard.users'),
         value: summary?.totalUsers ?? 0,
-        extra: <Tag color="green">{t('dashboard.enabledUsers')}: {summary?.enabledUsers ?? 0}</Tag>,
+        extra: (
+          <Tag color="green">
+            {t('dashboard.enabledUsers')}: {summary?.enabledUsers ?? 0}
+          </Tag>
+        ),
         hint: t('dashboard.metric.usersHint'),
       },
       {
@@ -93,10 +120,15 @@ const DashboardPage: React.FC = () => {
         key: 'operations',
         title: t('dashboard.todayOperations'),
         value: summary?.todayOperationCount ?? 0,
-        extra: <Tag color="purple"><IconClockCircle />{t('dashboard.platformActivity')}</Tag>,
+        extra: (
+          <Tag color="purple">
+            <IconClockCircle />
+            {t('dashboard.platformActivity')}
+          </Tag>
+        ),
         hint: t('dashboard.metric.todayOpsHint'),
       },
-    ]),
+    ],
     [summary, t],
   );
 
@@ -113,15 +145,16 @@ const DashboardPage: React.FC = () => {
   }, [hasPerm, isAdmin, menuTree, t]);
 
   const domainCards = useMemo(
-    () => dashboardDomainOverviewWidgets
-      .filter((widget) => isDashboardWidgetVisible(widget, { menuTree, hasPerm, isAdmin }))
-      .map((widget) => ({
-        key: widget.key,
-        title: t(widget.titleKey),
-        description: t(widget.descriptionKey),
-        summary: widget.summary(summary, t),
-        path: widget.path,
-      })),
+    () =>
+      dashboardDomainOverviewWidgets
+        .filter((widget) => isDashboardWidgetVisible(widget, { menuTree, hasPerm, isAdmin }))
+        .map((widget) => ({
+          key: widget.key,
+          title: t(widget.titleKey),
+          description: t(widget.descriptionKey),
+          summary: widget.summary(summary, t),
+          path: widget.path,
+        })),
     [hasPerm, isAdmin, menuTree, summary, t],
   );
 
@@ -156,13 +189,19 @@ const DashboardPage: React.FC = () => {
       dataIndex: 'browser',
       width: 220,
       ellipsis: true,
-      render: (value: string, record: DashboardRecentLogin) => `${value || '-'} / ${record.os || '-'}`,
+      render: (value: string, record: DashboardRecentLogin) =>
+        `${value || '-'} / ${record.os || '-'}`,
     },
     {
       title: t('auth.loginLog.status'),
       dataIndex: 'status',
       width: 96,
-      render: (value: number) => value === 1 ? <Tag color="green">{t('auth.loginLog.status.success')}</Tag> : <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>,
+      render: (value: number) =>
+        value === 1 ? (
+          <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
+        ) : (
+          <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>
+        ),
     },
     {
       title: t('auth.loginLog.failureReason'),
@@ -207,25 +246,43 @@ const DashboardPage: React.FC = () => {
         tone: 'neutral',
         icon: <IconClockCircle />,
         label: t('dashboard.lastSuccessfulLogin'),
-        value: summary.lastSuccessfulLoginAt ? renderActivityTime(summary.lastSuccessfulLoginAt) : t('dashboard.lastSuccessfulLoginEmpty'),
+        value: summary.lastSuccessfulLoginAt
+          ? renderActivityTime(summary.lastSuccessfulLoginAt)
+          : t('dashboard.lastSuccessfulLoginEmpty'),
         desc: t('dashboard.subtitle'),
       },
     ];
   }, [successRate, summary, t]);
 
-  const primaryAttentionItems = useMemo(
-    () => attentionItems.slice(0, 4),
-    [attentionItems],
-  );
+  const primaryAttentionItems = useMemo(() => attentionItems.slice(0, 4), [attentionItems]);
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadSummary(); }} />;
+      return (
+        <PageNetworkError
+          timeout={isTimeoutRequestError(error)}
+          onRetry={() => {
+            void loadSummary();
+          }}
+        />
+      );
     }
     if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => { void loadSummary(); }} />;
+      return (
+        <PageServerError
+          onRetry={() => {
+            void loadSummary();
+          }}
+        />
+      );
     }
-    return <PageError onRetry={() => { void loadSummary(); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadSummary();
+        }}
+      />
+    );
   };
 
   return (
@@ -241,9 +298,7 @@ const DashboardPage: React.FC = () => {
         </Card>
       ) : null}
       {error && !summary ? (
-        <Card className="page-panel dashboard-panel-card">
-          {renderErrorState()}
-        </Card>
+        <Card className="page-panel dashboard-panel-card">{renderErrorState()}</Card>
       ) : null}
       {summary ? (
         <Space direction="vertical" size={20} className="dashboard-grid">
@@ -277,14 +332,24 @@ const DashboardPage: React.FC = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={15}>
-              <Card className="page-panel dashboard-panel-card dashboard-panel-card--attention" title={t('dashboard.attentionPanel')}>
+              <Card
+                className="page-panel dashboard-panel-card dashboard-panel-card--attention"
+                title={t('dashboard.attentionPanel')}
+              >
                 <div className="dashboard-focus-stack">
                   {primaryAttentionItems.map((item) => (
-                    <div key={item.key} className={`dashboard-focus-item dashboard-focus-item--${item.tone}`}>
+                    <div
+                      key={item.key}
+                      className={`dashboard-focus-item dashboard-focus-item--${item.tone}`}
+                    >
                       <span className="dashboard-focus-item__icon">{item.icon}</span>
                       <span className="dashboard-focus-item__copy">
                         <span className="dashboard-focus-item__label">{item.label}</span>
-                        <span className={`dashboard-focus-item__value${item.key === 'last-login' ? ' dashboard-focus-item__value--meta' : ''}`}>{item.value}</span>
+                        <span
+                          className={`dashboard-focus-item__value${item.key === 'last-login' ? ' dashboard-focus-item__value--meta' : ''}`}
+                        >
+                          {item.value}
+                        </span>
                       </span>
                       <span className="dashboard-focus-item__desc">{item.desc}</span>
                     </div>
@@ -293,7 +358,10 @@ const DashboardPage: React.FC = () => {
               </Card>
             </Col>
             <Col xs={24} lg={9}>
-              <Card className="page-panel dashboard-panel-card dashboard-panel-card--actions" title={t('dashboard.primaryActions')}>
+              <Card
+                className="page-panel dashboard-panel-card dashboard-panel-card--actions"
+                title={t('dashboard.primaryActions')}
+              >
                 {quickActions.length > 0 ? (
                   <div className="dashboard-quick-actions">
                     {quickActions.map((item) => (
@@ -303,7 +371,9 @@ const DashboardPage: React.FC = () => {
                         className="dashboard-quick-action"
                         onClick={() => navigate(item.path)}
                       >
-                        <span className="dashboard-quick-action__icon">{renderMenuIcon(item.icon)}</span>
+                        <span className="dashboard-quick-action__icon">
+                          {renderMenuIcon(item.icon)}
+                        </span>
                         <span className="dashboard-quick-action__main">
                           <span>
                             <span className="dashboard-quick-action__title">{item.title}</span>
@@ -328,23 +398,33 @@ const DashboardPage: React.FC = () => {
                   <div className="dashboard-task-grid">
                     {summary.orgGovernanceTasks.map((item) => (
                       <div key={item.taskKey} className="dashboard-task-card">
-                        <span className="dashboard-task-card__icon"><IconExclamationCircle /></span>
+                        <span className="dashboard-task-card__icon">
+                          <IconExclamationCircle />
+                        </span>
                         <div className="dashboard-task-card__body">
                           <span className="dashboard-task-card__title">
                             {item.issueLabel}
-                            <Tag size="small" style={{ marginLeft: 8 }}>{item.scopeLabel}</Tag>
+                            <Tag size="small" style={{ marginLeft: 8 }}>
+                              {item.scopeLabel}
+                            </Tag>
                           </span>
                           <span className="dashboard-task-card__desc">{item.resourceLabel}</span>
                           <span className="dashboard-task-card__desc">
                             {item.actionLabel}
-                            {item.relatedUserCount > 0 ? ` · ${t('dashboard.relatedUsers', { count: item.relatedUserCount })}` : ''}
+                            {item.relatedUserCount > 0
+                              ? ` · ${t('dashboard.relatedUsers', { count: item.relatedUserCount })}`
+                              : ''}
                           </span>
                         </div>
                         <Button
                           type="text"
                           size="small"
                           icon={<IconArrowRight />}
-                          onClick={() => navigate(item.routePath, { state: { deptId: item.routeStateDeptId, taskKey: item.taskKey } })}
+                          onClick={() =>
+                            navigate(item.routePath, {
+                              state: { deptId: item.routeStateDeptId, taskKey: item.taskKey },
+                            })
+                          }
                         >
                           {t('dashboard.openTask')}
                         </Button>
@@ -361,10 +441,18 @@ const DashboardPage: React.FC = () => {
           <Card className="page-panel dashboard-panel-card" title={t('dashboard.domainOverview')}>
             <div className="dashboard-domain-grid">
               {domainCards.map((item) => (
-                <div key={item.key} className={`dashboard-domain-card dashboard-domain-card--${item.key}`}>
+                <div
+                  key={item.key}
+                  className={`dashboard-domain-card dashboard-domain-card--${item.key}`}
+                >
                   <div className="dashboard-domain-card__head">
                     <span className="dashboard-domain-card__title">{item.title}</span>
-                    <Button type="text" size="small" icon={<IconArrowRight />} onClick={() => navigate(item.path)}>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<IconArrowRight />}
+                      onClick={() => navigate(item.path)}
+                    >
                       {t('dashboard.openModule')}
                     </Button>
                   </div>
@@ -378,11 +466,16 @@ const DashboardPage: React.FC = () => {
           <Card
             className="page-panel dashboard-panel-card dashboard-login-table"
             title={t('dashboard.recentLogins')}
-            extra={(
-              <Button type="text" size="small" icon={<IconArrowRight />} onClick={() => navigate('/system/login-log')}>
+            extra={
+              <Button
+                type="text"
+                size="small"
+                icon={<IconArrowRight />}
+                onClick={() => navigate('/system/login-log')}
+              >
                 {t('dashboard.viewAllActivity')}
               </Button>
-            )}
+            }
           >
             <AppTable<DashboardRecentLogin>
               rowKey="id"

@@ -1,20 +1,81 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Form, Grid, Input, InputNumber, Popconfirm, Select, Space, Tag, Tree, Typography } from '@arco-design/web-react';
+import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  Grid,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+  Tree,
+  Typography,
+} from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
-import type { ColumnProps, SorterInfo, TableProps } from '@arco-design/web-react/es/Table/interface';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
 import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
-import { IconDelete, IconDownload, IconEdit, IconPlus, IconSearch } from '@arco-design/web-react/icon';
+import {
+  IconDelete,
+  IconDownload,
+  IconEdit,
+  IconPlus,
+  IconSearch,
+} from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { isNetworkRequestError, isServerRequestError, isTimeoutRequestError } from '../../../api/request';
+import {
+  isNetworkRequestError,
+  isServerRequestError,
+  isTimeoutRequestError,
+} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import { getMenuTree, type MenuNode } from '../menu/api';
-import { batchUpdateRoleStatus, createRole, deleteRole, exportRoles, getRoleList, updateRole, type RoleListQuery, type RolePayload, type RoleRow } from './api';
-import { AppModal, AppTable, FilterPanel, FormSection, GovernanceRailPanel, GovernanceRailSummary, GovernanceRailToggleButton, ListHeaderActions, PageContainer, PageEmpty, PageError, PageHeader, PageLoading, PageNetworkError, PageServerError, PageSplitLayout, SubmitBar, TableBatchActionBar, PermissionAction, TABLE_ACTION_COLUMN_WIDTH, useGovernanceRail, withTableColumnPriority } from '../../../components';
+import {
+  batchUpdateRoleStatus,
+  createRole,
+  deleteRole,
+  exportRoles,
+  getRoleList,
+  updateRole,
+  type RoleListQuery,
+  type RolePayload,
+  type RoleRow,
+} from './api';
+import {
+  AppModal,
+  AppTable,
+  FilterPanel,
+  FormSection,
+  GovernanceRailPanel,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
+  ListHeaderActions,
+  PageContainer,
+  PageEmpty,
+  PageError,
+  PageHeader,
+  PageLoading,
+  PageNetworkError,
+  PageServerError,
+  PageSplitLayout,
+  SubmitBar,
+  TableBatchActionBar,
+  PermissionAction,
+  TABLE_ACTION_COLUMN_WIDTH,
+  useGovernanceRail,
+  withTableColumnPriority,
+} from '../../../components';
 import '../list-page.css';
 
 const Row = Grid.Row;
@@ -52,13 +113,15 @@ const emptyQuery: RoleListQuery = {
 };
 
 function isDefaultRoleListQuery(query: RoleListQuery) {
-  return !query.roleName
-    && !query.roleKey
-    && query.status === undefined
-    && (query.page ?? 1) === 1
-    && (query.pageSize ?? 10) === 10
-    && !query.sortField
-    && !query.sortOrder;
+  return (
+    !query.roleName &&
+    !query.roleKey &&
+    query.status === undefined &&
+    (query.page ?? 1) === 1 &&
+    (query.pageSize ?? 10) === 10 &&
+    !query.sortField &&
+    !query.sortOrder
+  );
 }
 
 const emptyAuthorizationCounts = {
@@ -72,7 +135,8 @@ interface LoadDataOptions {
   silent?: boolean;
 }
 
-const mergePermissionKeys = (...groups: string[][]) => Array.from(new Set(groups.flat().filter(Boolean)));
+const mergePermissionKeys = (...groups: string[][]) =>
+  Array.from(new Set(groups.flat().filter(Boolean)));
 
 interface PermissionTreeSelectorProps {
   treeData: TreeDataType[];
@@ -159,7 +223,11 @@ const PermissionTreeSelector: React.FC<PermissionTreeSelectorProps> = ({
           onChange={setKeyword}
         />
         <Space size={4}>
-          <Button type="text" size="mini" onClick={() => setExpandedKeys(collectExpandableKeys(treeData))}>
+          <Button
+            type="text"
+            size="mini"
+            onClick={() => setExpandedKeys(collectExpandableKeys(treeData))}
+          >
             {expandAllText}
           </Button>
           <Button type="text" size="mini" onClick={() => setExpandedKeys([])}>
@@ -216,30 +284,35 @@ const RoleList: React.FC = () => {
     ]);
   }, []);
 
-  const loadData = useCallback(async (nextQuery: RoleListQuery = query, options?: LoadDataOptions) => {
-    const silent = options?.silent === true;
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const result = isDefaultRoleListQuery(nextQuery)
-        ? await resolveRouteWarmData('/system/role', 'list:default', () => getRoleList(nextQuery))
-        : await getRoleList(nextQuery);
-      setData(result.items);
-      setTotal(result.total);
-    } catch (requestError) {
-      setError(requestError);
-    } finally {
+  const loadData = useCallback(
+    async (nextQuery: RoleListQuery = query, options?: LoadDataOptions) => {
+      const silent = options?.silent === true;
       if (!silent) {
-        setLoading(false);
+        setLoading(true);
+        setError(null);
       }
-    }
-  }, [query]);
+      try {
+        const result = isDefaultRoleListQuery(nextQuery)
+          ? await resolveRouteWarmData('/system/role', 'list:default', () => getRoleList(nextQuery))
+          : await getRoleList(nextQuery);
+        setData(result.items);
+        setTotal(result.total);
+      } catch (requestError) {
+        setError(requestError);
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [query],
+  );
 
   const loadMenus = useCallback(async () => {
     try {
-      const rows = await resolveRouteWarmData('/system/role', 'menus:manage', () => getMenuTree({ scope: 'manage' }));
+      const rows = await resolveRouteWarmData('/system/role', 'menus:manage', () =>
+        getMenuTree({ scope: 'manage' }),
+      );
       setMenuTree(rows);
     } catch {
       message.error(t('common.loadFailed'));
@@ -260,15 +333,18 @@ const RoleList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadMenus]);
 
-  useRefreshSubscription(['system:menu:changed', 'system:permission:changed', 'system:role:changed'], (payload) => {
-    if (payload.source === 'system/role') {
-      return;
-    }
-    void loadData(query);
-    if (payload.topic === 'system:menu:changed') {
-      void loadMenus();
-    }
-  });
+  useRefreshSubscription(
+    ['system:menu:changed', 'system:permission:changed', 'system:role:changed'],
+    (payload) => {
+      if (payload.source === 'system/role') {
+        return;
+      }
+      void loadData(query);
+      if (payload.topic === 'system:menu:changed') {
+        void loadMenus();
+      }
+    },
+  );
 
   const visibleSelectedRowKeys = useMemo(() => {
     const visibleKeys = new Set(data.map((item) => item.id));
@@ -303,29 +379,32 @@ const RoleList: React.FC = () => {
     };
   }, [menuTree]);
 
-  const splitPermissionKeys = useCallback((permissionKeys: string[] = []) => {
-    const pagePermissionKeys: string[] = [];
-    const actionPermissionKeys: string[] = [];
-    const unknownPermissionKeys: string[] = [];
+  const splitPermissionKeys = useCallback(
+    (permissionKeys: string[] = []) => {
+      const pagePermissionKeys: string[] = [];
+      const actionPermissionKeys: string[] = [];
+      const unknownPermissionKeys: string[] = [];
 
-    permissionKeys.forEach((permissionKey) => {
-      if (permissionCatalog.pageKeys.has(permissionKey)) {
-        pagePermissionKeys.push(permissionKey);
-        return;
-      }
-      if (permissionCatalog.actionKeys.has(permissionKey)) {
-        actionPermissionKeys.push(permissionKey);
-        return;
-      }
-      unknownPermissionKeys.push(permissionKey);
-    });
+      permissionKeys.forEach((permissionKey) => {
+        if (permissionCatalog.pageKeys.has(permissionKey)) {
+          pagePermissionKeys.push(permissionKey);
+          return;
+        }
+        if (permissionCatalog.actionKeys.has(permissionKey)) {
+          actionPermissionKeys.push(permissionKey);
+          return;
+        }
+        unknownPermissionKeys.push(permissionKey);
+      });
 
-    return {
-      pagePermissionKeys,
-      actionPermissionKeys,
-      unknownPermissionKeys,
-    };
-  }, [permissionCatalog]);
+      return {
+        pagePermissionKeys,
+        actionPermissionKeys,
+        unknownPermissionKeys,
+      };
+    },
+    [permissionCatalog],
+  );
 
   const updateAuthorizationCounts = (values: Partial<RoleFormValues>) => {
     setAuthorizationCounts({
@@ -354,7 +433,11 @@ const RoleList: React.FC = () => {
           title: (
             <span className="role-permission-tree__node">
               <span className="role-permission-tree__title">{t(item.titleKey)}</span>
-              {item.path ? <Tag size="small" color="arcoblue">{item.path}</Tag> : null}
+              {item.path ? (
+                <Tag size="small" color="arcoblue">
+                  {item.path}
+                </Tag>
+              ) : null}
             </span>
           ),
           children: item.children?.length ? buildTree(item.children) : undefined,
@@ -392,7 +475,11 @@ const RoleList: React.FC = () => {
             title: (
               <span className="role-permission-tree__node">
                 <span className="role-permission-tree__title">{t(item.titleKey)}</span>
-                {item.pagePerm ? <Tag size="small" color="green">{item.pagePerm}</Tag> : null}
+                {item.pagePerm ? (
+                  <Tag size="small" color="green">
+                    {item.pagePerm}
+                  </Tag>
+                ) : null}
               </span>
             ),
             children: children.length > 0 ? children : undefined,
@@ -420,7 +507,9 @@ const RoleList: React.FC = () => {
               title: (
                 <span className="role-permission-tree__node">
                   <span className="role-permission-tree__title">{t(item.titleKey)}</span>
-                  <Tag size="small" color="orange">{item.perms}</Tag>
+                  <Tag size="small" color="orange">
+                    {item.perms}
+                  </Tag>
                 </span>
               ),
             } as TreeDataType;
@@ -440,7 +529,11 @@ const RoleList: React.FC = () => {
             title: (
               <span className="role-permission-tree__node">
                 <span className="role-permission-tree__title">{t(item.titleKey)}</span>
-                {item.pagePerm ? <Tag size="small" color="arcoblue">{item.pagePerm}</Tag> : null}
+                {item.pagePerm ? (
+                  <Tag size="small" color="arcoblue">
+                    {item.pagePerm}
+                  </Tag>
+                ) : null}
               </span>
             ),
             children,
@@ -492,7 +585,11 @@ const RoleList: React.FC = () => {
       sort: values.sort,
       status: values.status,
       menuIds: values.menuIds.map((item) => Number(item)),
-      permissionKeys: mergePermissionKeys(values.pagePermissionKeys, values.actionPermissionKeys, values.unknownPermissionKeys),
+      permissionKeys: mergePermissionKeys(
+        values.pagePermissionKeys,
+        values.actionPermissionKeys,
+        values.unknownPermissionKeys,
+      ),
     };
     setSubmitting(true);
     try {
@@ -518,7 +615,8 @@ const RoleList: React.FC = () => {
     invalidateRoleCaches();
     publishRefresh('system:role:changed', 'system/role');
     setSelectedRowKeys((keys) => keys.filter((key) => Number(key) !== row.id));
-    const nextPage = data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : (query.page || 1);
+    const nextPage =
+      data.length === 1 && (query.page || 1) > 1 ? (query.page || 1) - 1 : query.page || 1;
     const nextQuery = { ...query, page: nextPage };
     setQuery(nextQuery);
   };
@@ -567,28 +665,51 @@ const RoleList: React.FC = () => {
     return undefined;
   };
 
-  const sortableColumn = (field: NonNullable<RoleListQuery['sortField']>): Partial<ColumnProps<RoleRow>> => ({
+  const sortableColumn = (
+    field: NonNullable<RoleListQuery['sortField']>,
+  ): Partial<ColumnProps<RoleRow>> => ({
     sorter: true,
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
   const handleTableChange: TableProps<RoleRow>['onChange'] = (pagination, sorter) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter as SorterInfo | undefined;
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     const nextQuery: RoleListQuery = {
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder: currentSorter?.direction === 'ascend' ? 'asc' : currentSorter?.direction === 'descend' ? 'desc' : undefined,
+      sortOrder:
+        currentSorter?.direction === 'ascend'
+          ? 'asc'
+          : currentSorter?.direction === 'descend'
+            ? 'desc'
+            : undefined,
     };
     setSelectedRowKeys([]);
     setQuery(nextQuery);
   };
 
   const columns: ColumnProps<RoleRow>[] = [
-    { title: t('system.role.roleName'), dataIndex: 'roleName', width: 180, ...sortableColumn('roleName') },
-    withTableColumnPriority({ title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180, ...sortableColumn('roleKey') }, 'medium'),
-    withTableColumnPriority({ title: t('system.role.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') }, 'low'),
+    {
+      title: t('system.role.roleName'),
+      dataIndex: 'roleName',
+      width: 180,
+      ...sortableColumn('roleName'),
+    },
+    withTableColumnPriority(
+      {
+        title: t('system.role.roleKey'),
+        dataIndex: 'roleKey',
+        width: 180,
+        ...sortableColumn('roleKey'),
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      { title: t('system.role.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
+      'low',
+    ),
     {
       title: t('system.role.status'),
       dataIndex: 'status',
@@ -600,13 +721,16 @@ const RoleList: React.FC = () => {
         </Tag>
       ),
     },
-    withTableColumnPriority({
-      title: t('system.role.createdAt'),
-      dataIndex: 'createdAt',
-      width: 180,
-      ...sortableColumn('createdAt'),
-      render: (value: string) => formatDateTime(value),
-    }, 'low'),
+    withTableColumnPriority(
+      {
+        title: t('system.role.createdAt'),
+        dataIndex: 'createdAt',
+        width: 180,
+        ...sortableColumn('createdAt'),
+        render: (value: string) => formatDateTime(value),
+      },
+      'low',
+    ),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
@@ -619,8 +743,18 @@ const RoleList: React.FC = () => {
             </Button>
           ) : null}
           {canDelete ? (
-            <Popconfirm title={t('common.deleteConfirm')} onOk={() => removeRole(row)} disabled={row.roleKey === 'admin'}>
-              <Button type="text" size="small" status="danger" icon={<IconDelete />} disabled={row.roleKey === 'admin'}>
+            <Popconfirm
+              title={t('common.deleteConfirm')}
+              onOk={() => removeRole(row)}
+              disabled={row.roleKey === 'admin'}
+            >
+              <Button
+                type="text"
+                size="small"
+                status="danger"
+                icon={<IconDelete />}
+                disabled={row.roleKey === 'admin'}
+              >
                 {t('common.delete')}
               </Button>
             </Popconfirm>
@@ -634,26 +768,42 @@ const RoleList: React.FC = () => {
   const unknownPermissionKeys = form.getFieldValue('unknownPermissionKeys');
   const unknownPermissionOptions = Array.isArray(unknownPermissionKeys)
     ? unknownPermissionKeys.map((permissionKey) => ({
-      label: String(permissionKey),
-      value: String(permissionKey),
-    }))
+        label: String(permissionKey),
+        value: String(permissionKey),
+      }))
     : [];
 
   const renderErrorState = () => {
     if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageNetworkError
+          timeout={isTimeoutRequestError(error)}
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
     if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => { void loadData(query); }} />;
+      return (
+        <PageServerError
+          onRetry={() => {
+            void loadData(query);
+          }}
+        />
+      );
     }
-    return <PageError onRetry={() => { void loadData(query); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadData(query);
+        }}
+      />
+    );
   };
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
-  const enabledRoleCount = useMemo(
-    () => data.filter((item) => item.status === 1).length,
-    [data],
-  );
+  const enabledRoleCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
   const heroStats = useMemo(
     () => [
       {
@@ -708,19 +858,34 @@ const RoleList: React.FC = () => {
     <PageContainer>
       <PageHeader
         title={t('system.menu.role')}
-        extra={(
+        extra={
           <ListHeaderActions
-            utility={(
+            utility={
               <>
-                <GovernanceRailToggleButton expanded={governanceRail.expanded} onToggle={governanceRail.toggle}>
+                <GovernanceRailToggleButton
+                  expanded={governanceRail.expanded}
+                  onToggle={governanceRail.toggle}
+                >
                   {t('system.role.hero.summaryTitle')}
                 </GovernanceRailToggleButton>
-                <Button icon={<IconDownload />} onClick={() => { void handleExport(); }} disabled={!canExport}>{t('common.export')}</Button>
+                <Button
+                  icon={<IconDownload />}
+                  onClick={() => {
+                    void handleExport();
+                  }}
+                  disabled={!canExport}
+                >
+                  {t('common.export')}
+                </Button>
               </>
-            )}
-            primary={<Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>{t('common.add')}</Button>}
+            }
+            primary={
+              <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
+                {t('common.add')}
+              </Button>
+            }
           />
-        )}
+        }
       />
       <Space direction="vertical" size={16} className="system-page-template">
         <Card className="page-panel system-page-hero system-list__hero">
@@ -743,98 +908,127 @@ const RoleList: React.FC = () => {
           </div>
         </Card>
         <PageSplitLayout
-          rail={governanceRail.expanded ? (
-            <GovernanceRailPanel
-              title={t('system.role.hero.summaryTitle')}
-              onClose={governanceRail.close}
-              closeText={t('common.close')}
-              noteTitle={t('system.role.hero.summaryTitle')}
-              noteDescription={t('system.role.hero.sideDesc')}
-            >
-              <GovernanceRailSummary items={governanceSummaryItems} />
-            </GovernanceRailPanel>
-          ) : null}
+          rail={
+            governanceRail.expanded ? (
+              <GovernanceRailPanel
+                title={t('system.role.hero.summaryTitle')}
+                onClose={governanceRail.close}
+                closeText={t('common.close')}
+                noteTitle={t('system.role.hero.summaryTitle')}
+                noteDescription={t('system.role.hero.sideDesc')}
+              >
+                <GovernanceRailSummary items={governanceSummaryItems} />
+              </GovernanceRailPanel>
+            ) : null
+          }
         >
-            <FilterPanel>
-              <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <FormItem label={t('system.role.roleName')} field="roleName">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col span={6}>
-                    <FormItem label={t('system.role.roleKey')} field="roleKey">
-                      <Input onPressEnter={() => queryForm.submit()} />
-                    </FormItem>
-                  </Col>
-                  <Col span={6}>
-                    <FormItem label={t('system.role.status')} field="status">
-                      <Select allowClear options={[
+          <FilterPanel>
+            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <FormItem label={t('system.role.roleName')} field="roleName">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col span={6}>
+                  <FormItem label={t('system.role.roleKey')} field="roleKey">
+                    <Input onPressEnter={() => queryForm.submit()} />
+                  </FormItem>
+                </Col>
+                <Col span={6}>
+                  <FormItem label={t('system.role.status')} field="status">
+                    <Select
+                      allowClear
+                      options={[
                         { label: t('system.user.status.enabled'), value: 1 },
                         { label: t('system.user.status.disabled'), value: 2 },
-                      ]} />
-                    </FormItem>
-                  </Col>
-                  <Col span={6}>
-                    <FormItem className="filter-panel__action-item">
-                      <Space>
-                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>{t('common.search')}</Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </FormItem>
-                  </Col>
-                </Row>
-              </Form>
-            </FilterPanel>
-            <Card className="page-panel system-list__table-card">
-              <TableBatchActionBar
-                selectedCount={selectedRowKeys.length}
-                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-                clearText={t('common.clearSelection')}
-                clearSuccessText={t('common.clearSelectionSuccess')}
-                onClear={() => setSelectedRowKeys([])}
-                hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
-                actions={(
-                  <>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.role.batchEnableConfirm')} onOk={() => { void handleBatchStatus(1); }} disabled={batchActionDisabled}>
-                        <Button disabled={batchActionDisabled}>
-                          {t('system.role.batchEnable')}
-                        </Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                    <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm title={t('system.role.batchDisableConfirm')} onOk={() => { void handleBatchStatus(2); }} disabled={batchActionDisabled}>
-                        <Button status={batchActionDisabled ? undefined : 'warning'} disabled={batchActionDisabled}>
-                          {t('system.role.batchDisable')}
-                        </Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </>
-                )}
-              />
-              {loading && data.length === 0 ? <PageLoading /> : null}
-              {error && data.length === 0 ? renderErrorState() : null}
-              {!loading && !error && data.length === 0 ? <PageEmpty description={t('common.noData')} /> : null}
-              {!loading && !(error && data.length === 0) && data.length > 0 ? (
-                <AppTable<RoleRow>
-                  className="system-list__table"
-                  data={data}
-                  columns={columns}
-                  rowKey="id"
-                  loading={loading}
-                  scroll={{ x: 'max-content' }}
-                  rowSelection={{
-                    type: 'checkbox',
-                    selectedRowKeys: visibleSelectedRowKeys,
-                    fixed: true,
-                    checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                    onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                  }}
-                  onChange={handleTableChange}
-                  emptyText={t('common.noData')}
-                  pagination={{
+                      ]}
+                    />
+                  </FormItem>
+                </Col>
+                <Col span={6}>
+                  <FormItem className="filter-panel__action-item">
+                    <Space>
+                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
+                        {t('common.search')}
+                      </Button>
+                      <Button onClick={reset}>{t('common.reset')}</Button>
+                    </Space>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </FilterPanel>
+          <Card className="page-panel system-list__table-card">
+            <TableBatchActionBar
+              selectedCount={selectedRowKeys.length}
+              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+              clearText={t('common.clearSelection')}
+              clearSuccessText={t('common.clearSelectionSuccess')}
+              onClear={() => setSelectedRowKeys([])}
+              hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+              actions={
+                <>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.role.batchEnableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(1);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button disabled={batchActionDisabled}>{t('system.role.batchEnable')}</Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.role.batchDisableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(2);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button
+                        status={batchActionDisabled ? undefined : 'warning'}
+                        disabled={batchActionDisabled}
+                      >
+                        {t('system.role.batchDisable')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                </>
+              }
+            />
+            {loading && data.length === 0 ? <PageLoading /> : null}
+            {error && data.length === 0 ? renderErrorState() : null}
+            {!loading && !error && data.length === 0 ? (
+              <PageEmpty description={t('common.noData')} />
+            ) : null}
+            {!loading && !(error && data.length === 0) && data.length > 0 ? (
+              <AppTable<RoleRow>
+                className="system-list__table"
+                data={data}
+                columns={columns}
+                rowKey="id"
+                loading={loading}
+                scroll={{ x: 'max-content' }}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: visibleSelectedRowKeys,
+                  fixed: true,
+                  checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+                  onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                }}
+                onChange={handleTableChange}
+                emptyText={t('common.noData')}
+                pagination={
+                  {
                     current: query.page || emptyQuery.page,
                     pageSize: query.pageSize || emptyQuery.pageSize,
                     total,
@@ -844,10 +1038,11 @@ const RoleList: React.FC = () => {
                     sizeOptions: [10, 20, 50, 100],
                     size: 'small',
                     showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps}
-                />
-              ) : null}
-            </Card>
+                  } as PaginationProps
+                }
+              />
+            ) : null}
+          </Card>
         </PageSplitLayout>
       </Space>
 
@@ -856,28 +1051,40 @@ const RoleList: React.FC = () => {
         visible={visible}
         size="xl"
         onCancel={() => setVisible(false)}
-        footer={(
+        footer={
           <SubmitBar
             onCancel={() => setVisible(false)}
-            onSubmit={() => { void submitForm(); }}
+            onSubmit={() => {
+              void submitForm();
+            }}
             loading={submitting}
             submitText={editing ? t('common.save') : t('common.add')}
           />
-        )}
+        }
         unmountOnExit
       >
         <Form
           form={form}
           layout="vertical"
-          onSubmit={() => { void submitForm(); }}
+          onSubmit={() => {
+            void submitForm();
+          }}
           onValuesChange={(_, values) => updateAuthorizationCounts(values)}
         >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
-              <FormItem label={t('system.role.roleName')} field="roleName" rules={[{ required: true, message: t('system.role.roleName.required') }]}>
+              <FormItem
+                label={t('system.role.roleName')}
+                field="roleName"
+                rules={[{ required: true, message: t('system.role.roleName.required') }]}
+              >
                 <Input onPressEnter={() => form.submit()} />
               </FormItem>
-              <FormItem label={t('system.role.roleKey')} field="roleKey" rules={[{ required: true, message: t('system.role.roleKey.required') }]}>
+              <FormItem
+                label={t('system.role.roleKey')}
+                field="roleKey"
+                rules={[{ required: true, message: t('system.role.roleKey.required') }]}
+              >
                 <Input disabled={protectedRole} onPressEnter={() => form.submit()} />
               </FormItem>
               <FormItem label={t('system.role.sort')} field="sort">
@@ -903,10 +1110,16 @@ const RoleList: React.FC = () => {
                   <Card
                     className="dialog-grid-card"
                     size="small"
-                    title={authorizationTitle(t('system.role.navigationAuth'), authorizationCounts.navigation, 'arcoblue')}
+                    title={authorizationTitle(
+                      t('system.role.navigationAuth'),
+                      authorizationCounts.navigation,
+                      'arcoblue',
+                    )}
                   >
                     <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                      <Typography.Text type="secondary">{t('system.role.navigationAuthHint')}</Typography.Text>
+                      <Typography.Text type="secondary">
+                        {t('system.role.navigationAuthHint')}
+                      </Typography.Text>
                       <FormItem label={t('system.role.menuIds')} field="menuIds">
                         <PermissionTreeSelector
                           key={`navigation-${navigationPermissionTree.expandedKeys.join('|')}`}
@@ -926,11 +1139,20 @@ const RoleList: React.FC = () => {
                   <Card
                     className="dialog-grid-card"
                     size="small"
-                    title={authorizationTitle(t('system.role.pageAuth'), authorizationCounts.page, 'green')}
+                    title={authorizationTitle(
+                      t('system.role.pageAuth'),
+                      authorizationCounts.page,
+                      'green',
+                    )}
                   >
                     <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                      <Typography.Text type="secondary">{t('system.role.pageAuthHint')}</Typography.Text>
-                      <FormItem label={t('system.role.pagePermissionKeys')} field="pagePermissionKeys">
+                      <Typography.Text type="secondary">
+                        {t('system.role.pageAuthHint')}
+                      </Typography.Text>
+                      <FormItem
+                        label={t('system.role.pagePermissionKeys')}
+                        field="pagePermissionKeys"
+                      >
                         <PermissionTreeSelector
                           key={`page-${pagePermissionTree.expandedKeys.join('|')}`}
                           treeData={pagePermissionTree.treeData}
@@ -949,11 +1171,20 @@ const RoleList: React.FC = () => {
                   <Card
                     className="dialog-grid-card"
                     size="small"
-                    title={authorizationTitle(t('system.role.actionAuth'), authorizationCounts.action, 'orange')}
+                    title={authorizationTitle(
+                      t('system.role.actionAuth'),
+                      authorizationCounts.action,
+                      'orange',
+                    )}
                   >
                     <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                      <Typography.Text type="secondary">{t('system.role.actionAuthHint')}</Typography.Text>
-                      <FormItem label={t('system.role.actionPermissionKeys')} field="actionPermissionKeys">
+                      <Typography.Text type="secondary">
+                        {t('system.role.actionAuthHint')}
+                      </Typography.Text>
+                      <FormItem
+                        label={t('system.role.actionPermissionKeys')}
+                        field="actionPermissionKeys"
+                      >
                         <PermissionTreeSelector
                           key={`action-${actionPermissionTree.expandedKeys.join('|')}`}
                           treeData={actionPermissionTree.treeData}
@@ -973,16 +1204,21 @@ const RoleList: React.FC = () => {
                     <Card
                       className="dialog-grid-card dialog-grid-card--danger"
                       size="small"
-                      title={authorizationTitle(t('system.role.unknownAuth'), authorizationCounts.unknown, 'red')}
+                      title={authorizationTitle(
+                        t('system.role.unknownAuth'),
+                        authorizationCounts.unknown,
+                        'red',
+                      )}
                     >
                       <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                        <Typography.Text type="secondary">{t('system.role.unknownAuthHint')}</Typography.Text>
-                        <FormItem label={t('system.role.unknownPermissionKeys')} field="unknownPermissionKeys">
-                          <Select
-                            mode="multiple"
-                            disabled
-                            options={unknownPermissionOptions}
-                          />
+                        <Typography.Text type="secondary">
+                          {t('system.role.unknownAuthHint')}
+                        </Typography.Text>
+                        <FormItem
+                          label={t('system.role.unknownPermissionKeys')}
+                          field="unknownPermissionKeys"
+                        >
+                          <Select mode="multiple" disabled options={unknownPermissionOptions} />
                         </FormItem>
                       </Space>
                     </Card>

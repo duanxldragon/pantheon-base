@@ -12,12 +12,12 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 Promise.allSettled([initializePublicSettings(), initializePantheonTheme()]).finally(() => {
   initI18n().finally(() => {
-  root.render(
-    <React.StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </React.StrictMode>
-  );
+    root.render(
+      <React.StrictMode>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </React.StrictMode>,
+    );
   });
 });

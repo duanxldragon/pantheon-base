@@ -14,7 +14,13 @@ export const DictModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/dict', titleKey: 'system.menu.dict', icon: 'book', routeName: 'system-dict', module: 'system.config' },
+    {
+      path: '/system/dict',
+      titleKey: 'system.menu.dict',
+      icon: 'book',
+      routeName: 'system-dict',
+      module: 'system.config',
+    },
   ],
   dashboardWidgets: [
     {

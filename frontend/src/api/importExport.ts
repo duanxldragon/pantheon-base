@@ -59,7 +59,11 @@ function downloadTextFile(filename: string, content: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export function downloadImportErrors(result: ImportResult, t: TFunction, filename = t('common.importErrorFileName')) {
+export function downloadImportErrors(
+  result: ImportResult,
+  t: TFunction,
+  filename = t('common.importErrorFileName'),
+) {
   if (!result.errors.length) {
     return;
   }
@@ -82,7 +86,11 @@ export function downloadImportErrors(result: ImportResult, t: TFunction, filenam
   downloadTextFile(filename, content);
 }
 
-export function showImportResult(result: ImportResult, t: TFunction, options?: ImportResultOptions) {
+export function showImportResult(
+  result: ImportResult,
+  t: TFunction,
+  options?: ImportResultOptions,
+) {
   if (result.applied && result.failed === 0) {
     showAppModalSuccess({
       title: t('common.import'),
@@ -100,14 +108,29 @@ export function showImportResult(result: ImportResult, t: TFunction, options?: I
     downloadImportErrors(result, t, options?.errorFileName || t('common.importErrorFileName'));
   }
 
-  const lines = result.errors.slice(0, 8).map((item) => `${t('common.row', { count: item.row })} · ${item.field} · ${translateImportMessage(item.message, t)}`);
-  const tailLine = shouldDownloadErrors ? [t('common.importErrorFileDownloaded', { filename: options?.errorFileName || t('common.importErrorFileName') })] : [];
+  const lines = result.errors
+    .slice(0, 8)
+    .map(
+      (item) =>
+        `${t('common.row', { count: item.row })} · ${item.field} · ${translateImportMessage(item.message, t)}`,
+    );
+  const tailLine = shouldDownloadErrors
+    ? [
+        t('common.importErrorFileDownloaded', {
+          filename: options?.errorFileName || t('common.importErrorFileName'),
+        }),
+      ]
+    : [];
   showAppModalError({
     title: t('common.importFailed'),
-    content: [t('common.importSummary', {
-      created: result.created,
-      updated: result.updated,
-      failed: result.failed,
-    }), ...lines, ...tailLine].join('\n'),
+    content: [
+      t('common.importSummary', {
+        created: result.created,
+        updated: result.updated,
+        failed: result.failed,
+      }),
+      ...lines,
+      ...tailLine,
+    ].join('\n'),
   });
 }

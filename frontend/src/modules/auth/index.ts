@@ -37,9 +37,27 @@ export const AuthModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/login-log', titleKey: 'system.menu.loginLog', icon: 'clock', routeName: 'system-login-log', module: 'system.auth' },
-    { path: '/system/session', titleKey: 'system.menu.session', icon: 'desktop', routeName: 'system-session', module: 'system.auth' },
-    { path: '/system/security-event', titleKey: 'system.menu.securityEvent', icon: 'safe', routeName: 'system-security-event', module: 'system.auth' },
+    {
+      path: '/system/login-log',
+      titleKey: 'system.menu.loginLog',
+      icon: 'clock',
+      routeName: 'system-login-log',
+      module: 'system.auth',
+    },
+    {
+      path: '/system/session',
+      titleKey: 'system.menu.session',
+      icon: 'desktop',
+      routeName: 'system-session',
+      module: 'system.auth',
+    },
+    {
+      path: '/system/security-event',
+      titleKey: 'system.menu.securityEvent',
+      icon: 'safe',
+      routeName: 'system-security-event',
+      module: 'system.auth',
+    },
   ],
   permissions: [
     'system:login-log:list',

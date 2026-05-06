@@ -1,6 +1,6 @@
 /**
  * 动态模块管理 - 模块管理页面
- * 
+ *
  * 显示已注册模块列表,支持注册/卸载操作
  */
 
@@ -35,7 +35,16 @@ import {
   unregisterModule,
   type ModuleRegistration,
 } from './api';
-import { AppModal, ListHeaderActions, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
+import {
+  AppModal,
+  ListHeaderActions,
+  PageContainer,
+  PageError,
+  PageHeader,
+  PageLoading,
+  TABLE_ACTION_COLUMN_WIDTH,
+  withTableColumnPriority,
+} from '../../../components';
 import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
 import '../list-page.css';
 
@@ -90,7 +99,9 @@ const ModuleManager: React.FC = () => {
     try {
       const result = options?.force
         ? await getRegisteredModules()
-        : await resolveRouteWarmData('/system/modules', 'modules:registered', () => getRegisteredModules());
+        : await resolveRouteWarmData('/system/modules', 'modules:registered', () =>
+            getRegisteredModules(),
+          );
       setModules(result);
     } catch (requestError) {
       if (isRequestError(requestError) && requestError.messageKey === 'module.dynamic.disabled') {
@@ -179,7 +190,10 @@ const ModuleManager: React.FC = () => {
       const values = await purgeForm.validate();
       await ensureOperationVerified();
       setPurging(true);
-      await purgeModule(purgeTarget.name, { purgeSource: true, dropTable: Boolean(values.dropTable) });
+      await purgeModule(purgeTarget.name, {
+        purgeSource: true,
+        dropTable: Boolean(values.dropTable),
+      });
       message.success(t('generator.moduleManager.purgeSuccess'));
       closePurgeModal();
       invalidateModuleManagerWarmData();
@@ -217,13 +231,16 @@ const ModuleManager: React.FC = () => {
     }
   };
 
-  const stats = useMemo(() => ({
-    total: modules.length,
-    active: modules.filter((item) => item.status === 1).length,
-    pending: modules.filter((item) => item.status === 3).length,
-    uninstalled: modules.filter((item) => item.status === 2).length,
-    failed: modules.filter((item) => item.status === 4).length,
-  }), [modules]);
+  const stats = useMemo(
+    () => ({
+      total: modules.length,
+      active: modules.filter((item) => item.status === 1).length,
+      pending: modules.filter((item) => item.status === 3).length,
+      uninstalled: modules.filter((item) => item.status === 2).length,
+      failed: modules.filter((item) => item.status === 4).length,
+    }),
+    [modules],
+  );
 
   const columns = [
     {
@@ -251,26 +268,45 @@ const ModuleManager: React.FC = () => {
       title: t('generator.moduleManager.source'),
       dataIndex: 'source',
       width: 120,
-      render: (source: string) => <Tag color={source === 'generated' || source === 'database' || source === 'manual' ? 'green' : 'arcoblue'}>{t(`generator.moduleManager.source.${source || 'core'}`)}</Tag>,
+      render: (source: string) => (
+        <Tag
+          color={
+            source === 'generated' || source === 'database' || source === 'manual'
+              ? 'green'
+              : 'arcoblue'
+          }
+        >
+          {t(`generator.moduleManager.source.${source || 'core'}`)}
+        </Tag>
+      ),
     },
-    withTableColumnPriority({
-      title: t('generator.moduleManager.owner'),
-      dataIndex: 'owner',
-      width: 120,
-      render: (value?: string) => value || '-',
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('generator.moduleManager.boundedContext'),
-      dataIndex: 'boundedContext',
-      width: 140,
-      render: (value?: string) => value || '-',
-    }, 'medium'),
-    withTableColumnPriority({
-      title: t('generator.moduleManager.tableName'),
-      dataIndex: 'tableName',
-      width: 180,
-      render: (tableName: string) => tableName ? <span>{tableName}</span> : <span>-</span>,
-    }, 'low'),
+    withTableColumnPriority(
+      {
+        title: t('generator.moduleManager.owner'),
+        dataIndex: 'owner',
+        width: 120,
+        render: (value?: string) => value || '-',
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('generator.moduleManager.boundedContext'),
+        dataIndex: 'boundedContext',
+        width: 140,
+        render: (value?: string) => value || '-',
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('generator.moduleManager.tableName'),
+        dataIndex: 'tableName',
+        width: 180,
+        render: (tableName: string) => (tableName ? <span>{tableName}</span> : <span>-</span>),
+      },
+      'low',
+    ),
     {
       title: t('generator.moduleManager.status'),
       dataIndex: 'status',
@@ -287,34 +323,40 @@ const ModuleManager: React.FC = () => {
         </Tag>
       ),
     },
-    withTableColumnPriority({
-      title: t('generator.moduleManager.installedAt'),
-      dataIndex: 'installedAt',
-      width: 180,
-    }, 'low'),
-    withTableColumnPriority({
-      title: t('generator.moduleManager.diagnostics'),
-      width: 220,
-      render: (_value: unknown, record: ModuleRegistration) => {
-        if (record.lastError) {
-          return (
-            <Space direction="vertical" size={2}>
-              <Tag color="red">{t('generator.moduleManager.diagnostics.failed')}</Tag>
-              <Typography.Text type="secondary">{t(record.lastError)}</Typography.Text>
-            </Space>
-          );
-        }
-        if (record.lastVerifiedAt) {
-          return (
-            <Space direction="vertical" size={2}>
-              <Tag color="green">{t('generator.moduleManager.diagnostics.verified')}</Tag>
-              <Typography.Text type="secondary">{record.lastVerifiedAt}</Typography.Text>
-            </Space>
-          );
-        }
-        return <span>-</span>;
+    withTableColumnPriority(
+      {
+        title: t('generator.moduleManager.installedAt'),
+        dataIndex: 'installedAt',
+        width: 180,
       },
-    }, 'low'),
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('generator.moduleManager.diagnostics'),
+        width: 220,
+        render: (_value: unknown, record: ModuleRegistration) => {
+          if (record.lastError) {
+            return (
+              <Space direction="vertical" size={2}>
+                <Tag color="red">{t('generator.moduleManager.diagnostics.failed')}</Tag>
+                <Typography.Text type="secondary">{t(record.lastError)}</Typography.Text>
+              </Space>
+            );
+          }
+          if (record.lastVerifiedAt) {
+            return (
+              <Space direction="vertical" size={2}>
+                <Tag color="green">{t('generator.moduleManager.diagnostics.verified')}</Tag>
+                <Typography.Text type="secondary">{record.lastVerifiedAt}</Typography.Text>
+              </Space>
+            );
+          }
+          return <span>-</span>;
+        },
+      },
+      'low',
+    ),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
@@ -340,13 +382,20 @@ const ModuleManager: React.FC = () => {
                     <IconPlus /> {t('generator.moduleManager.register')}
                   </Button>
                 </PermissionAction>
-                <PermissionAction allowed={canDeleteRecord} tooltip={t('common.noPermissionAction')}>
+                <PermissionAction
+                  allowed={canDeleteRecord}
+                  tooltip={t('common.noPermissionAction')}
+                >
                   <Popconfirm
                     title={t('generator.moduleManager.confirmDeleteRecord')}
                     disabled={featureDisabled || !canDeleteRecord}
                     onOk={() => handleDeleteRecord(record.name)}
                   >
-                    <Button type="text" status="danger" disabled={featureDisabled || !canDeleteRecord}>
+                    <Button
+                      type="text"
+                      status="danger"
+                      disabled={featureDisabled || !canDeleteRecord}
+                    >
                       <IconDelete /> {t('generator.moduleManager.deleteRecord')}
                     </Button>
                   </Popconfirm>
@@ -389,7 +438,13 @@ const ModuleManager: React.FC = () => {
   }
 
   if (error) {
-    return <PageError onRetry={() => { void loadData({ force: true }); }} />;
+    return (
+      <PageError
+        onRetry={() => {
+          void loadData({ force: true });
+        }}
+      />
+    );
   }
 
   return (
@@ -399,7 +454,7 @@ const ModuleManager: React.FC = () => {
         extra={
           <ListHeaderActions
             className="module-manager-page__header-actions"
-            utility={(
+            utility={
               <>
                 <Button size="small" onClick={() => void loadData({ force: true })}>
                   <IconRefresh /> {t('common.refresh')}
@@ -415,8 +470,8 @@ const ModuleManager: React.FC = () => {
                   </Button>
                 </PermissionAction>
               </>
-            )}
-            primary={(
+            }
+            primary={
               <PermissionAction allowed={canOpenGenerator} tooltip={t('common.noPermissionAction')}>
                 <Button
                   size="small"
@@ -427,7 +482,7 @@ const ModuleManager: React.FC = () => {
                   <IconPlus /> {t('generator.moduleManager.registerNew')}
                 </Button>
               </PermissionAction>
-            )}
+            }
           />
         }
       />
@@ -436,7 +491,9 @@ const ModuleManager: React.FC = () => {
         <Card className="page-panel module-manager-page__card">
           <div className="module-manager-page__intro">
             <div className="module-manager-page__copy">
-              <span className="system-page-hero__eyebrow">{t('generator.moduleManager.title')}</span>
+              <span className="system-page-hero__eyebrow">
+                {t('generator.moduleManager.title')}
+              </span>
               <Typography.Paragraph className="module-manager-page__desc">
                 {t('generator.moduleManager.description')}
               </Typography.Paragraph>
@@ -453,24 +510,44 @@ const ModuleManager: React.FC = () => {
           </div>
           <div className="module-manager-page__stats">
             <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">{t('generator.moduleManager.stats.total')}</Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.total}</Typography.Title>
+              <Typography.Text type="secondary">
+                {t('generator.moduleManager.stats.total')}
+              </Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>
+                {stats.total}
+              </Typography.Title>
             </Card>
             <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">{t('generator.moduleManager.stats.active')}</Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.active}</Typography.Title>
+              <Typography.Text type="secondary">
+                {t('generator.moduleManager.stats.active')}
+              </Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>
+                {stats.active}
+              </Typography.Title>
             </Card>
             <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">{t('generator.moduleManager.stats.pending')}</Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.pending}</Typography.Title>
+              <Typography.Text type="secondary">
+                {t('generator.moduleManager.stats.pending')}
+              </Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>
+                {stats.pending}
+              </Typography.Title>
             </Card>
             <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">{t('generator.moduleManager.stats.uninstalled')}</Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.uninstalled}</Typography.Title>
+              <Typography.Text type="secondary">
+                {t('generator.moduleManager.stats.uninstalled')}
+              </Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>
+                {stats.uninstalled}
+              </Typography.Title>
             </Card>
             <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">{t('generator.moduleManager.stats.failed')}</Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.failed}</Typography.Title>
+              <Typography.Text type="secondary">
+                {t('generator.moduleManager.stats.failed')}
+              </Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>
+                {stats.failed}
+              </Typography.Title>
             </Card>
           </div>
           <AppTable
@@ -478,7 +555,11 @@ const ModuleManager: React.FC = () => {
             data={modules}
             rowKey="name"
             pagination={false}
-            emptyText={featureDisabled ? t('generator.moduleManager.readOnlyEmpty') : t('generator.moduleManager.empty')}
+            emptyText={
+              featureDisabled
+                ? t('generator.moduleManager.readOnlyEmpty')
+                : t('generator.moduleManager.empty')
+            }
           />
         </Card>
       </Space>
@@ -509,19 +590,29 @@ const ModuleManager: React.FC = () => {
               {t('generator.moduleManager.purgeModal.impact')}
             </Typography.Paragraph>
             <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 16 }}>
-              <Typography.Text>{t('generator.moduleManager.purgeModal.removeRecord')}</Typography.Text>
+              <Typography.Text>
+                {t('generator.moduleManager.purgeModal.removeRecord')}
+              </Typography.Text>
               {purgeTarget.tableName ? (
-                <Typography.Text>{t('generator.moduleManager.purgeModal.removeSource')}</Typography.Text>
+                <Typography.Text>
+                  {t('generator.moduleManager.purgeModal.removeSource')}
+                </Typography.Text>
               ) : null}
               <Typography.Text type="secondary">
                 {purgeTarget.tableName
-                  ? t('generator.moduleManager.purgeModal.keepTable', { table: purgeTarget.tableName })
+                  ? t('generator.moduleManager.purgeModal.keepTable', {
+                      table: purgeTarget.tableName,
+                    })
                   : t('generator.moduleManager.purgeModal.noTable')}
               </Typography.Text>
             </Space>
             {purgeTarget.tableName ? (
               <Form.Item field="dropTable" triggerPropName="checked">
-                <Checkbox>{t('generator.moduleManager.purgeModal.dropTable', { table: purgeTarget.tableName })}</Checkbox>
+                <Checkbox>
+                  {t('generator.moduleManager.purgeModal.dropTable', {
+                    table: purgeTarget.tableName,
+                  })}
+                </Checkbox>
               </Form.Item>
             ) : null}
             <Form.Item field="confirmed" triggerPropName="checked">

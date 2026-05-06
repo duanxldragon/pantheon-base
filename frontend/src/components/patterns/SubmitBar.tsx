@@ -24,10 +24,14 @@ const SubmitBar: React.FC<SubmitBarProps> = ({
   return (
     <div className="submit-bar">
       <Space size={10}>
-        <Button onClick={onCancel}>
-          {cancelText || t('common.cancel')}
-        </Button>
-        <Button type="primary" htmlType="submit" loading={loading} disabled={submitDisabled} onClick={onSubmit}>
+        <Button onClick={onCancel}>{cancelText || t('common.cancel')}</Button>
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loading}
+          disabled={submitDisabled}
+          onClick={onSubmit}
+        >
           {submitText || t('common.save')}
         </Button>
       </Space>

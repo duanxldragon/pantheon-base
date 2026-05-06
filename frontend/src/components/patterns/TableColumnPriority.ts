@@ -17,7 +17,7 @@ export function withTableColumnPriority<T>(
 
   const currentClassName = Array.isArray(column.className)
     ? column.className.join(' ')
-    : (column.className || '');
+    : column.className || '';
   const nextClassName = [currentClassName, TABLE_COLUMN_PRIORITY_CLASS[priority]]
     .filter(Boolean)
     .join(' ');

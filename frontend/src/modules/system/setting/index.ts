@@ -14,7 +14,13 @@ export const SettingModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/setting', titleKey: 'system.menu.setting', icon: 'settings', routeName: 'system-setting', module: 'system.config' },
+    {
+      path: '/system/setting',
+      titleKey: 'system.menu.setting',
+      icon: 'settings',
+      routeName: 'system-setting',
+      module: 'system.config',
+    },
   ],
   dashboardWidgets: [
     {
@@ -37,10 +43,11 @@ export const SettingModule = defineModule({
       path: '/system/setting',
       permission: 'system:setting:list',
       cleanupPolicy: 'hide_when_forbidden',
-      summary: (summary, t) => t('dashboard.dictAndSettings', {
-        dicts: summary?.totalDictTypes ?? 0,
-        settings: summary?.totalSettings ?? 0,
-      }),
+      summary: (summary, t) =>
+        t('dashboard.dictAndSettings', {
+          dicts: summary?.totalDictTypes ?? 0,
+          settings: summary?.totalSettings ?? 0,
+        }),
     },
   ],
   permissions: [

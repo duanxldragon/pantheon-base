@@ -38,7 +38,9 @@ const FormItem = Form.Item;
 const { Row, Col } = Grid;
 
 function enumOptionsToText(options?: EnumOption[]) {
-  return (options ?? []).map((item) => `${item.value}|${item.label}${item.color ? `|${item.color}` : ''}`).join('\n');
+  return (options ?? [])
+    .map((item) => `${item.value}|${item.label}${item.color ? `|${item.color}` : ''}`)
+    .join('\n');
 }
 
 function enumOptionsToEnglishText(options?: EnumOption[]) {
@@ -77,11 +79,14 @@ function parseEnumOptionTranslations(text?: string): Record<string, string> {
 
 export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) => {
   const { t } = useTranslation();
-  const resolveTemplateText = (locale: 'zh-CN' | 'en-US', key: string, fallback: string) => t(key, { lng: locale, defaultValue: fallback });
+  const resolveTemplateText = (locale: 'zh-CN' | 'en-US', key: string, fallback: string) =>
+    t(key, { lng: locale, defaultValue: fallback });
   const [visible, setVisible] = useState(false);
   const [editingFieldName, setEditingFieldName] = useState<string | null>(null);
   const [templateToApply, setTemplateToApply] = useState<FieldTemplateKey>('none');
-  const [form] = Form.useForm<ModuleField & { enumOptionsText?: string; enumOptionsEnText?: string; unique?: boolean }>();
+  const [form] = Form.useForm<
+    ModuleField & { enumOptionsText?: string; enumOptionsEnText?: string; unique?: boolean }
+  >();
 
   const openCreateModal = () => {
     setEditingFieldName(null);
@@ -147,8 +152,10 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
   const handleSubmit = async () => {
     try {
       const values = await form.validate();
-      const enumOptions = values.type === 'enum' ? parseEnumOptions(values.enumOptionsText) : undefined;
-      const enumOptionTranslations = values.type === 'enum' ? parseEnumOptionTranslations(values.enumOptionsEnText) : {};
+      const enumOptions =
+        values.type === 'enum' ? parseEnumOptions(values.enumOptionsText) : undefined;
+      const enumOptionTranslations =
+        values.type === 'enum' ? parseEnumOptionTranslations(values.enumOptionsEnText) : {};
       const nextField = normalizeField({
         name: values.name,
         type: values.type,
@@ -177,7 +184,9 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
         },
       });
 
-      const duplicated = fields.some((field) => field.name === nextField.name && field.name !== editingFieldName);
+      const duplicated = fields.some(
+        (field) => field.name === nextField.name && field.name !== editingFieldName,
+      );
       if (duplicated) {
         message.error(t('generator.fieldEditor.duplicateName'));
         return;
@@ -221,11 +230,12 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
       title: t('generator.fieldEditor.enumDict'),
       dataIndex: 'dictCode',
       width: 140,
-      render: (dictCode: string, record: ModuleField) => (
-        record.type === 'enum'
-          ? <Tag color="arcoblue">{dictCode || t('generator.fieldEditor.enumInline')}</Tag>
-          : '-'
-      ),
+      render: (dictCode: string, record: ModuleField) =>
+        record.type === 'enum' ? (
+          <Tag color="arcoblue">{dictCode || t('generator.fieldEditor.enumInline')}</Tag>
+        ) : (
+          '-'
+        ),
     },
     {
       title: t('generator.fieldEditor.template'),
@@ -278,7 +288,11 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
         </Space>
       </Card>
 
-      <Button type="primary" onClick={openCreateModal} className="generator-field-editor__add-button">
+      <Button
+        type="primary"
+        onClick={openCreateModal}
+        className="generator-field-editor__add-button"
+      >
         <IconPlus /> {t('generator.fieldEditor.addField')}
       </Button>
 
@@ -296,7 +310,9 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
             <Col span={12}>
               <FormItem label={t('generator.fieldEditor.template')} field="templateKey">
                 <Select value={templateToApply} onChange={handleTemplateApply}>
-                  <Select.Option value="none">{t('generator.fieldEditor.template.none')}</Select.Option>
+                  <Select.Option value="none">
+                    {t('generator.fieldEditor.template.none')}
+                  </Select.Option>
                   {FIELD_TEMPLATE_DEFINITIONS.map((template) => (
                     <Select.Option key={template.key} value={template.key}>
                       {t(template.labelKey)}
@@ -311,7 +327,10 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                 field="name"
                 rules={[
                   { required: true, message: t('common.required') },
-                  { match: /^[a-z][a-zA-Z0-9]*$/, message: t('generator.fieldEditor.name.pattern') },
+                  {
+                    match: /^[a-z][a-zA-Z0-9]*$/,
+                    message: t('generator.fieldEditor.name.pattern'),
+                  },
                 ]}
                 disabled={!!editingFieldName}
               >
@@ -324,15 +343,18 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                 field="label"
                 rules={[{ required: true, message: t('common.required') }]}
               >
-                <Input placeholder={t('generator.fieldEditor.label.placeholder')} onPressEnter={() => form.submit()} />
+                <Input
+                  placeholder={t('generator.fieldEditor.label.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
             </Col>
             <Col span={12}>
-              <FormItem
-                label={t('generator.fieldEditor.labelEn')}
-                field="labelEn"
-              >
-                <Input placeholder={t('generator.fieldEditor.labelEn.placeholder')} onPressEnter={() => form.submit()} />
+              <FormItem label={t('generator.fieldEditor.labelEn')} field="labelEn">
+                <Input
+                  placeholder={t('generator.fieldEditor.labelEn.placeholder')}
+                  onPressEnter={() => form.submit()}
+                />
               </FormItem>
             </Col>
             <Col span={12}>
@@ -342,14 +364,20 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                 rules={[{ required: true, message: t('common.required') }]}
               >
                 <Select>
-                  <Select.Option value="string">{t('generator.fieldEditor.type.string')}</Select.Option>
+                  <Select.Option value="string">
+                    {t('generator.fieldEditor.type.string')}
+                  </Select.Option>
                   <Select.Option value="text">{t('generator.fieldEditor.type.text')}</Select.Option>
                   <Select.Option value="int">{t('generator.fieldEditor.type.int')}</Select.Option>
-                  <Select.Option value="float">{t('generator.fieldEditor.type.float')}</Select.Option>
+                  <Select.Option value="float">
+                    {t('generator.fieldEditor.type.float')}
+                  </Select.Option>
                   <Select.Option value="bool">{t('generator.fieldEditor.type.bool')}</Select.Option>
                   <Select.Option value="date">{t('generator.fieldEditor.type.date')}</Select.Option>
                   <Select.Option value="enum">{t('generator.fieldEditor.type.enum')}</Select.Option>
-                  <Select.Option value="relation">{t('generator.fieldEditor.type.relation')}</Select.Option>
+                  <Select.Option value="relation">
+                    {t('generator.fieldEditor.type.relation')}
+                  </Select.Option>
                 </Select>
               </FormItem>
             </Col>
@@ -382,7 +410,10 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
               <>
                 <Col span={12}>
                   <FormItem label={t('generator.fieldEditor.dictCode')} field="dictCode">
-                    <Input placeholder={t('generator.fieldEditor.dictCode.placeholder')} onPressEnter={() => form.submit()} />
+                    <Input
+                      placeholder={t('generator.fieldEditor.dictCode.placeholder')}
+                      onPressEnter={() => form.submit()}
+                    />
                   </FormItem>
                 </Col>
                 <Col span={24}>
@@ -394,7 +425,10 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
                   </FormItem>
                 </Col>
                 <Col span={24}>
-                  <FormItem label={t('generator.fieldEditor.enumOptionsEn')} field="enumOptionsEnText">
+                  <FormItem
+                    label={t('generator.fieldEditor.enumOptionsEn')}
+                    field="enumOptionsEnText"
+                  >
                     <Input.TextArea
                       autoSize={{ minRows: 4, maxRows: 8 }}
                       placeholder={t('generator.fieldEditor.enumOptionsEn.placeholder')}
@@ -407,32 +441,58 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ fields, onChange }) =>
 
           <Row gutter={16}>
             <Col span={8}>
-              <FormItem label={t('generator.fieldEditor.required')} field="required" triggerPropName="checked">
+              <FormItem
+                label={t('generator.fieldEditor.required')}
+                field="required"
+                triggerPropName="checked"
+              >
                 <Switch />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('generator.fieldEditor.unique')} field="unique" triggerPropName="checked">
+              <FormItem
+                label={t('generator.fieldEditor.unique')}
+                field="unique"
+                triggerPropName="checked"
+              >
                 <Switch />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('generator.fieldEditor.searchable')} field="searchable" triggerPropName="checked">
+              <FormItem
+                label={t('generator.fieldEditor.searchable')}
+                field="searchable"
+                triggerPropName="checked"
+              >
                 <Switch />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('generator.fieldEditor.sortable')} field="sortable" triggerPropName="checked">
+              <FormItem
+                label={t('generator.fieldEditor.sortable')}
+                field="sortable"
+                triggerPropName="checked"
+              >
                 <Switch />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('generator.fieldEditor.visibleInList')} field="visibleInList" triggerPropName="checked" initialValue>
+              <FormItem
+                label={t('generator.fieldEditor.visibleInList')}
+                field="visibleInList"
+                triggerPropName="checked"
+                initialValue
+              >
                 <Switch />
               </FormItem>
             </Col>
             <Col span={8}>
-              <FormItem label={t('generator.fieldEditor.visibleInForm')} field="visibleInForm" triggerPropName="checked" initialValue>
+              <FormItem
+                label={t('generator.fieldEditor.visibleInForm')}
+                field="visibleInForm"
+                triggerPropName="checked"
+                initialValue
+              >
                 <Switch />
               </FormItem>
             </Col>

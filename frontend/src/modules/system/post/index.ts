@@ -14,7 +14,13 @@ export const PostModule = defineModule({
     },
   ],
   menus: [
-    { path: '/system/post', titleKey: 'system.menu.post', icon: 'tags', routeName: 'system-post', module: 'system.org' },
+    {
+      path: '/system/post',
+      titleKey: 'system.menu.post',
+      icon: 'tags',
+      routeName: 'system-post',
+      module: 'system.org',
+    },
   ],
   permissions: [
     'system:post:list',

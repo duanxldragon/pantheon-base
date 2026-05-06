@@ -115,7 +115,11 @@
   justify-content: center;
   flex-shrink: 0;
   text-align: center;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .app-shell__menu-entry-icon .arco-icon {
@@ -175,7 +179,10 @@
   border-radius: 10px;
   margin-bottom: 2px;
   overflow: hidden;
-  transition: background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease;
 }
 
 .app-shell__menu > .arco-menu-inner > .arco-menu-item,
@@ -195,7 +202,10 @@
   background: transparent;
   opacity: 0;
   transform: scaleY(0.55);
-  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
 .app-shell__menu .arco-menu-item,
@@ -220,7 +230,11 @@
   margin: 0 0 8px;
 }
 
-.app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-content > .arco-menu-inner {
+.app-shell__menu
+  > .arco-menu-inner
+  > .arco-menu-sub
+  > .arco-menu-inline-content
+  > .arco-menu-inner {
   margin-left: 16px;
   padding: 6px 0 6px 14px;
   border-left: 1px solid color-mix(in srgb, var(--brand-primary) 12%, var(--panel-border));
@@ -257,7 +271,7 @@
 }
 
 .app-shell__menu .arco-menu-open > .arco-menu-inline-header {
-  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255,255,255,0.92)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255, 255, 255, 0.92)) !important;
   color: var(--text-primary);
 }
 
@@ -278,7 +292,7 @@
 
 .app-shell__menu .arco-menu-item:hover,
 .app-shell__menu .arco-menu-inline-header:hover {
-  background: color-mix(in srgb, var(--brand-primary) 3%, rgba(255,255,255,0.92)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 3%, rgba(255, 255, 255, 0.92)) !important;
   color: var(--text-primary);
   box-shadow: none;
 }
@@ -299,7 +313,7 @@
 
 .app-shell__menu .arco-menu-selected,
 .app-shell__menu .arco-menu-inline-header.arco-menu-selected {
-  background: color-mix(in srgb, var(--brand-primary) 8%, rgba(255,255,255,0.96)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 8%, rgba(255, 255, 255, 0.96)) !important;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 8%, transparent);
 }
 
@@ -343,13 +357,25 @@
 }
 
 .app-shell__menu > .arco-menu-inner > .arco-menu-item > .arco-menu-item-inner,
-.app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header .arco-menu-item-inner,
+.app-shell__menu
+  > .arco-menu-inner
+  > .arco-menu-sub
+  > .arco-menu-inline-header
+  .arco-menu-item-inner,
 .app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header-title {
   font-size: 14px;
 }
 
-.app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header .app-shell__menu-entry-label,
-.app-shell__menu > .arco-menu-inner > .arco-menu-item > .arco-menu-item-inner .app-shell__menu-entry-label {
+.app-shell__menu
+  > .arco-menu-inner
+  > .arco-menu-sub
+  > .arco-menu-inline-header
+  .app-shell__menu-entry-label,
+.app-shell__menu
+  > .arco-menu-inner
+  > .arco-menu-item
+  > .arco-menu-item-inner
+  .app-shell__menu-entry-label {
   font-size: 14px;
 }
 
@@ -496,7 +522,11 @@
   background: var(--panel-bg-solid);
   color: var(--text-secondary);
   box-shadow: none;
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease;
 }
 
 .app-shell__search-trigger .arco-icon {
@@ -541,7 +571,11 @@
   border: 1px solid rgba(229, 230, 235, 0.82);
   background: var(--panel-bg-solid);
   color: var(--text-secondary);
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .app-shell__icon-btn .arco-icon {
@@ -556,15 +590,15 @@
 }
 
 .app-shell__icon-btn--attention {
-  border-color: color-mix(in srgb, var(--danger-color, #F53F3F) 18%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-color, #F53F3F) 5%, #ffffff);
-  color: var(--danger-color, #F53F3F);
+  border-color: color-mix(in srgb, var(--danger-color, #f53f3f) 18%, var(--panel-border));
+  background: color-mix(in srgb, var(--danger-color, #f53f3f) 5%, #ffffff);
+  color: var(--danger-color, #f53f3f);
 }
 
 .app-shell__icon-btn--attention:hover {
-  border-color: color-mix(in srgb, var(--danger-color, #F53F3F) 28%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-color, #F53F3F) 7%, #ffffff);
-  color: var(--danger-color, #F53F3F);
+  border-color: color-mix(in srgb, var(--danger-color, #f53f3f) 28%, var(--panel-border));
+  background: color-mix(in srgb, var(--danger-color, #f53f3f) 7%, #ffffff);
+  color: var(--danger-color, #f53f3f);
 }
 
 .app-shell__top-nav {
@@ -621,7 +655,11 @@
   color: var(--text-secondary);
   font-weight: 500;
   line-height: 42px;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .app-shell__top-menu .arco-menu-item::before,
@@ -637,7 +675,10 @@
   background: transparent;
   opacity: 0;
   transform: scaleY(0.55);
-  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
 .app-shell__top-menu .app-shell__menu-entry {
@@ -670,7 +711,7 @@
 .app-shell__top-menu .arco-menu-inline-header:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--brand-primary) 3%, rgba(255,255,255,0.94)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 3%, rgba(255, 255, 255, 0.94)) !important;
 }
 
 .app-shell__top-menu .arco-menu-item:hover::before,
@@ -704,7 +745,7 @@
   border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
   color: var(--brand-primary) !important;
   font-weight: 600;
-  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255,255,255,0.92)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255, 255, 255, 0.92)) !important;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 6%, transparent);
 }
 
@@ -718,7 +759,9 @@
 
 .app-shell__top-menu .arco-menu-selected .app-shell__menu-entry-icon--level-0,
 .app-shell__top-menu .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-0,
-.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-0 {
+.app-shell__top-menu
+  .arco-menu-inline-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-0 {
   background: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
   color: var(--brand-primary);
 }
@@ -727,8 +770,12 @@
 .app-shell__top-menu .arco-menu-selected .app-shell__menu-entry-icon--level-2,
 .app-shell__top-menu .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
 .app-shell__top-menu .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-2,
-.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
-.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-2 {
+.app-shell__top-menu
+  .arco-menu-inline-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu
+  .arco-menu-inline-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-2 {
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
 }
@@ -764,7 +811,11 @@
   border-radius: 10px;
   background: transparent;
   color: var(--text-secondary);
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .app-shell__top-menu-popup .app-shell__menu-entry {
@@ -798,7 +849,7 @@
 .app-shell__top-menu-popup .arco-menu-pop-header:hover,
 .app-shell__top-menu-popup .arco-menu-inline-header:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 14%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255,255,255,0.84));
+  background: color-mix(in srgb, var(--brand-primary) 4%, rgba(255, 255, 255, 0.84));
   color: var(--text-primary);
 }
 
@@ -823,7 +874,7 @@
 .app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected,
 .app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected {
   border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255,255,255,0.92));
+  background: color-mix(in srgb, var(--brand-primary) 10%, rgba(255, 255, 255, 0.92));
   color: var(--brand-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 6%, transparent);
 }
@@ -841,7 +892,10 @@
   background: transparent;
   opacity: 0;
   transform: scaleY(0.55);
-  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
 .app-shell__top-menu-popup .arco-menu-selected::before,
@@ -859,18 +913,30 @@
 }
 
 .app-shell__top-menu-popup .arco-menu-selected .app-shell__menu-entry-icon--level-0,
-.app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-0,
-.app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-0 {
+.app-shell__top-menu-popup
+  .arco-menu-pop-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-0,
+.app-shell__top-menu-popup
+  .arco-menu-inline-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-0 {
   background: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
   color: var(--brand-primary);
 }
 
 .app-shell__top-menu-popup .arco-menu-selected .app-shell__menu-entry-icon--level-1,
 .app-shell__top-menu-popup .arco-menu-selected .app-shell__menu-entry-icon--level-2,
-.app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
-.app-shell__top-menu-popup .arco-menu-pop-header.arco-menu-selected .app-shell__menu-entry-icon--level-2,
-.app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-1,
-.app-shell__top-menu-popup .arco-menu-inline-header.arco-menu-selected .app-shell__menu-entry-icon--level-2 {
+.app-shell__top-menu-popup
+  .arco-menu-pop-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup
+  .arco-menu-pop-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-2,
+.app-shell__top-menu-popup
+  .arco-menu-inline-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-1,
+.app-shell__top-menu-popup
+  .arco-menu-inline-header.arco-menu-selected
+  .app-shell__menu-entry-icon--level-2 {
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
 }
@@ -901,7 +967,10 @@
   border: 1px solid rgba(229, 230, 235, 0.82);
   background: rgba(255, 255, 255, 0.94);
   box-shadow: none;
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .app-shell__user-trigger:hover {
@@ -963,7 +1032,10 @@
   background: transparent;
   color: inherit;
   text-align: left;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .app-shell__preference-item:hover,
@@ -1042,7 +1114,10 @@
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .app-shell__preference-pill span:last-child {
@@ -1142,7 +1217,11 @@
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .app-shell__tab:hover {
@@ -1194,7 +1273,9 @@
   margin-right: -4px;
   border-radius: 8px;
   color: var(--text-tertiary);
-  transition: background 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .app-shell__tab-close:hover {
@@ -1352,7 +1433,9 @@
   background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
   color: inherit;
   text-align: left;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .app-shell__notice-risk + .app-shell__notice-risk {
@@ -1432,7 +1515,9 @@
   background: transparent;
   color: inherit;
   text-align: left;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .app-shell__notice-item + .app-shell__notice-item {
@@ -1496,11 +1581,11 @@
 }
 
 .app-shell__notice-log-dot--success {
-  background: #00B42A;
+  background: #00b42a;
 }
 
 .app-shell__notice-log-dot--danger {
-  background: #F53F3F;
+  background: #f53f3f;
 }
 
 .app-shell__notice-log-copy {
@@ -1541,7 +1626,7 @@
   height: 16px;
   padding-inline: 4px;
   border-radius: 999px;
-  background: #F53F3F;
+  background: #f53f3f;
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -1581,7 +1666,10 @@
   background: transparent;
   color: inherit;
   text-align: left;
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .app-command__item:hover {

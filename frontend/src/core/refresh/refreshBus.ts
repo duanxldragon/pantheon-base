@@ -39,7 +39,9 @@ function getRefreshChannel() {
     refreshChannel.onmessage = (event: MessageEvent<RefreshPayload | RefreshPayload[]>) => {
       const payloads = Array.isArray(event.data) ? event.data : [event.data];
       payloads.forEach((payload) => {
-        refreshEventTarget.dispatchEvent(new CustomEvent<RefreshPayload>(REFRESH_EVENT_NAME, { detail: payload }));
+        refreshEventTarget.dispatchEvent(
+          new CustomEvent<RefreshPayload>(REFRESH_EVENT_NAME, { detail: payload }),
+        );
       });
     };
   }
@@ -50,7 +52,10 @@ function normalizeTopics(topics: PantheonRefreshTopic | PantheonRefreshTopic[]) 
   return Array.isArray(topics) ? topics : [topics];
 }
 
-export function publishRefresh(topics: PantheonRefreshTopic | PantheonRefreshTopic[], source?: string) {
+export function publishRefresh(
+  topics: PantheonRefreshTopic | PantheonRefreshTopic[],
+  source?: string,
+) {
   const payloads = normalizeTopics(topics).map<RefreshPayload>((topic) => ({
     topic,
     source,
@@ -58,7 +63,9 @@ export function publishRefresh(topics: PantheonRefreshTopic | PantheonRefreshTop
   }));
 
   payloads.forEach((payload) => {
-    refreshEventTarget.dispatchEvent(new CustomEvent<RefreshPayload>(REFRESH_EVENT_NAME, { detail: payload }));
+    refreshEventTarget.dispatchEvent(
+      new CustomEvent<RefreshPayload>(REFRESH_EVENT_NAME, { detail: payload }),
+    );
   });
 
   const channel = getRefreshChannel();
@@ -67,7 +74,10 @@ export function publishRefresh(topics: PantheonRefreshTopic | PantheonRefreshTop
   }
 }
 
-export function subscribeRefresh(topics: PantheonRefreshTopic | PantheonRefreshTopic[], handler: RefreshHandler) {
+export function subscribeRefresh(
+  topics: PantheonRefreshTopic | PantheonRefreshTopic[],
+  handler: RefreshHandler,
+) {
   const topicSet = new Set(normalizeTopics(topics));
   const listener = (event: Event) => {
     const payload = (event as CustomEvent<RefreshPayload>).detail;
@@ -83,7 +93,10 @@ export function subscribeRefresh(topics: PantheonRefreshTopic | PantheonRefreshT
   };
 }
 
-export function useRefreshSubscription(topics: PantheonRefreshTopic | PantheonRefreshTopic[], handler: RefreshHandler) {
+export function useRefreshSubscription(
+  topics: PantheonRefreshTopic | PantheonRefreshTopic[],
+  handler: RefreshHandler,
+) {
   const handlerRef = useRef(handler);
   const topicKey = useMemo(() => normalizeTopics(topics).join(','), [topics]);
 
@@ -91,15 +104,24 @@ export function useRefreshSubscription(topics: PantheonRefreshTopic | PantheonRe
     handlerRef.current = handler;
   }, [handler]);
 
-  useEffect(() => subscribeRefresh(topics, (payload) => {
-    handlerRef.current(payload);
-  }), [topicKey, topics]);
+  useEffect(
+    () =>
+      subscribeRefresh(topics, (payload) => {
+        handlerRef.current(payload);
+      }),
+    [topicKey, topics],
+  );
 }
 
-export function useRefreshPolling(token: string | null, topics: PantheonRefreshTopic[], intervalMs = DEFAULT_REFRESH_POLL_INTERVAL_MS) {
+export function useRefreshPolling(
+  token: string | null,
+  topics: PantheonRefreshTopic[],
+  intervalMs = DEFAULT_REFRESH_POLL_INTERVAL_MS,
+) {
   const versionsRef = useRef<Record<string, number>>({});
   const topicKey = useMemo(() => normalizeTopics(topics).sort().join(','), [topics]);
-  const authToken = token || (typeof window !== 'undefined' ? window.localStorage.getItem(ACCESS_TOKEN_KEY) : null);
+  const authToken =
+    token || (typeof window !== 'undefined' ? window.localStorage.getItem(ACCESS_TOKEN_KEY) : null);
 
   useEffect(() => {
     versionsRef.current = {};

@@ -6,12 +6,7 @@ const PageForbidden: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <Result
-      className="page-result"
-      status="403"
-      title="403"
-      subTitle={t('common.forbidden')}
-    />
+    <Result className="page-result" status="403" title="403" subTitle={t('common.forbidden')} />
   );
 };
 

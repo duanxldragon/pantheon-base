@@ -1,9 +1,5 @@
 import { Modal } from '@arco-design/web-react';
-import {
-  appModalSizeWidthMap,
-  mergeDialogClassName,
-  type AppModalSize,
-} from './AppModal.shared';
+import { appModalSizeWidthMap, mergeDialogClassName, type AppModalSize } from './AppModal.shared';
 
 type AppModalStaticConfig = Parameters<typeof Modal.confirm>[0] & {
   size?: AppModalSize;

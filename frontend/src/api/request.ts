@@ -16,7 +16,14 @@ export interface RequestConfig extends AxiosRequestConfig {
   skipErrorMessage?: boolean;
 }
 
-export type RequestErrorKind = 'business' | 'unauthorized' | 'forbidden' | 'server' | 'network' | 'timeout' | 'unknown';
+export type RequestErrorKind =
+  | 'business'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'server'
+  | 'network'
+  | 'timeout'
+  | 'unknown';
 
 export class RequestError extends Error {
   kind: RequestErrorKind;
@@ -24,7 +31,13 @@ export class RequestError extends Error {
   status?: number;
   messageKey?: string;
 
-  constructor(options: { kind: RequestErrorKind; message?: string; code?: number; status?: number; messageKey?: string }) {
+  constructor(options: {
+    kind: RequestErrorKind;
+    message?: string;
+    code?: number;
+    status?: number;
+    messageKey?: string;
+  }) {
     super(options.messageKey || options.message || 'request.failed');
     this.name = 'RequestError';
     this.kind = options.kind;
@@ -92,7 +105,12 @@ const shouldRefresh = (config?: RequestConfig, code?: number) => {
   if (!config || config.skipAuthRefresh || config._retry || logoutTransition) {
     return false;
   }
-  if (config.url?.includes('/system/login') || config.url?.includes('/system/refresh') || config.url?.includes('/auth/login') || config.url?.includes('/auth/refresh')) {
+  if (
+    config.url?.includes('/system/login') ||
+    config.url?.includes('/system/refresh') ||
+    config.url?.includes('/auth/login') ||
+    config.url?.includes('/auth/refresh')
+  ) {
     return false;
   }
   return code === 401;
@@ -106,11 +124,15 @@ const doRefreshToken = async (): Promise<string | null> => {
 
   if (!refreshPromise) {
     refreshPromise = axios
-      .post('/api/v1/auth/refresh', { refreshToken: currentRefreshToken }, {
-        headers: {
-          'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
+      .post(
+        '/api/v1/auth/refresh',
+        { refreshToken: currentRefreshToken },
+        {
+          headers: {
+            'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
+          },
         },
-      })
+      )
       .then((response) => {
         const { code, data } = response.data;
         if (code !== 200) {
@@ -192,7 +214,10 @@ const createTransportError = (error: unknown) => {
 
 const isLikelyI18nKey = (message?: string) => Boolean(message && I18N_KEY_PATTERN.test(message));
 
-const resolveFallbackMessageKey = (error: Pick<RequestError, 'kind'>, explicitFallbackKey?: string) => {
+const resolveFallbackMessageKey = (
+  error: Pick<RequestError, 'kind'>,
+  explicitFallbackKey?: string,
+) => {
   if (explicitFallbackKey) {
     return explicitFallbackKey;
   }
@@ -232,20 +257,25 @@ const translateMessage = (message: string | undefined, fallbackKey = 'request.fa
 };
 
 const shouldSuppressAuthMessage = (messageKey: string | undefined, kind: RequestErrorKind) => {
-  const isAuthError = kind === 'unauthorized'
-    || messageKey === 'session.invalid'
-    || messageKey === 'session.idle_timeout'
-    || Boolean(messageKey && messageKey.startsWith('token.'));
+  const isAuthError =
+    kind === 'unauthorized' ||
+    messageKey === 'session.invalid' ||
+    messageKey === 'session.idle_timeout' ||
+    Boolean(messageKey && messageKey.startsWith('token.'));
   if (!isAuthError) {
     return false;
   }
   return logoutTransition || window.location.pathname === '/login';
 };
 
-export const isRequestError = (error: unknown): error is RequestError => error instanceof RequestError;
-export const isTimeoutRequestError = (error: unknown) => isRequestError(error) && error.kind === 'timeout';
-export const isNetworkRequestError = (error: unknown) => isRequestError(error) && (error.kind === 'network' || error.kind === 'timeout');
-export const isServerRequestError = (error: unknown) => isRequestError(error) && error.kind === 'server';
+export const isRequestError = (error: unknown): error is RequestError =>
+  error instanceof RequestError;
+export const isTimeoutRequestError = (error: unknown) =>
+  isRequestError(error) && error.kind === 'timeout';
+export const isNetworkRequestError = (error: unknown) =>
+  isRequestError(error) && (error.kind === 'network' || error.kind === 'timeout');
+export const isServerRequestError = (error: unknown) =>
+  isRequestError(error) && error.kind === 'server';
 
 const OPERATION_TOKEN_KEY = 'pantheon_op_token';
 const OPERATION_TOKEN_REFRESH_BUFFER_MS = 30 * 1000;
@@ -296,9 +326,11 @@ const shouldRetryOperationVerify = (config?: RequestConfig, message?: string) =>
   if (!config || config._opRetry) {
     return false;
   }
-  return message === 'auth.operation.verification_required'
-    || message === 'auth.operation.verification_expired'
-    || message === 'auth.operation.verification_mismatch';
+  return (
+    message === 'auth.operation.verification_required' ||
+    message === 'auth.operation.verification_expired' ||
+    message === 'auth.operation.verification_mismatch'
+  );
 };
 
 const retryWithOperationVerify = async (config: RequestConfig) => {
@@ -324,7 +356,7 @@ request.interceptors.request.use(
     config.headers['Accept-Language'] = localStorage.getItem('pantheon_lang') || 'zh-CN';
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 request.interceptors.response.use(
@@ -361,17 +393,26 @@ request.interceptors.response.use(
     }
 
     const requestError = createBusinessError(code, message || 'request.failed');
-    if (!config.skipErrorMessage && !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)) {
-      feedbackMessage.error(translateMessage(
-        requestError.messageKey || requestError.message,
-        resolveFallbackMessageKey(requestError),
-      ));
+    if (
+      !config.skipErrorMessage &&
+      !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)
+    ) {
+      feedbackMessage.error(
+        translateMessage(
+          requestError.messageKey || requestError.message,
+          resolveFallbackMessageKey(requestError),
+        ),
+      );
     }
     return Promise.reject(requestError);
   },
   async (error) => {
     const config = error.config as RequestConfig | undefined;
-    if (error.response?.status === 403 && config && shouldRetryOperationVerify(config, error.response?.data?.message)) {
+    if (
+      error.response?.status === 403 &&
+      config &&
+      shouldRetryOperationVerify(config, error.response?.data?.message)
+    ) {
       try {
         return retryWithOperationVerify(config);
       } catch (verifyError) {
@@ -391,14 +432,19 @@ request.interceptors.response.use(
     }
 
     const requestError = createTransportError(error);
-    if (!config?.skipErrorMessage && !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)) {
-      feedbackMessage.error(translateMessage(
-        requestError.messageKey || requestError.message,
-        resolveFallbackMessageKey(requestError),
-      ));
+    if (
+      !config?.skipErrorMessage &&
+      !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)
+    ) {
+      feedbackMessage.error(
+        translateMessage(
+          requestError.messageKey || requestError.message,
+          resolveFallbackMessageKey(requestError),
+        ),
+      );
     }
     return Promise.reject(requestError);
-  }
+  },
 );
 
 export default request;

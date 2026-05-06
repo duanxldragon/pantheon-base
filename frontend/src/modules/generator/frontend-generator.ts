@@ -1,12 +1,12 @@
 /**
  * 模块生成器 - 前端代码生成器
- * 
+ *
  * 基于项目真实代码结构生成前端 TypeScript/React 代码:
  * - 完整的5类状态处理(loading/empty/error/forbidden/submitting)
  * - 权限检查集成
  * - 100% 国际化支持
  * - 强类型API接口
- * 
+ *
  * 参考:
  * - system/user/index.ts
  * - system/user/api.ts
@@ -41,7 +41,7 @@ export class FrontendGenerator {
 
   /**
    * 生成 index.ts (模块注册)
-   * 
+   *
    * 参考: system/user/index.ts
    */
   generateModuleIndex(): string {
@@ -58,17 +58,18 @@ export class FrontendGenerator {
     const generateNavigation = shouldGenerateNavigation(this.schema);
     const businessContext = splitModuleSegments(name)[0] || 'default';
     const quickActionDescriptionKey = buildDashboardQuickActionDescriptionKey(scope, name);
-    
-    const permissionItems = generateNavigation ? [
-      `'${permissionPrefix}:list'`,
-      ...pageActions
-        .filter((action) => action !== 'detail')
-        .map((action) => `'${permissionPrefix}:${action}'`),
-    ] : [];
-    const dashboardWidgets = scope === 'business'
-      && generateNavigation
-      && this.schema.includeDashboardWidget !== false
-      ? `
+
+    const permissionItems = generateNavigation
+      ? [
+          `'${permissionPrefix}:list'`,
+          ...pageActions
+            .filter((action) => action !== 'detail')
+            .map((action) => `'${permissionPrefix}:${action}'`),
+        ]
+      : [];
+    const dashboardWidgets =
+      scope === 'business' && generateNavigation && this.schema.includeDashboardWidget !== false
+        ? `
   dashboardWidgets: [
     {
       key: '${permissionPrefix}',
@@ -83,14 +84,16 @@ export class FrontendGenerator {
       registrationOwner: '${moduleNamespace}',
     },
   ],`
-      : '';
+        : '';
 
     return `import { defineModule } from '${toSrcRoot}/core/router/types';
 
 export const ${modelName}Module = defineModule({
   name: '${name}',
   scope: '${scope}',
-  routes: ${generateNavigation ? `[
+  routes: ${
+    generateNavigation
+      ? `[
     {
       path: '${routePath}',
       routeName: '${routeName}',
@@ -99,13 +102,23 @@ export const ${modelName}Module = defineModule({
       pagePermission: '${permissionPrefix}:list',
       componentKey: '${componentKey}',
     },
-  ]` : '[]'},
-  menus: ${generateNavigation ? `[
+  ]`
+      : '[]'
+  },
+  menus: ${
+    generateNavigation
+      ? `[
     { path: '${buildRoutePath(scope, name)}', titleKey: '${titleKey}', icon: 'apps', routeName: '${routeName}', module: '${moduleNamespace}' },
-  ]` : '[]'},${dashboardWidgets}
-  permissions: ${permissionItems.length > 0 ? `[
+  ]`
+      : '[]'
+  },${dashboardWidgets}
+  permissions: ${
+    permissionItems.length > 0
+      ? `[
     ${permissionItems.join(',\n    ')}
-  ]` : '[]'},
+  ]`
+      : '[]'
+  },
   i18nNamespaces: ['${moduleNamespace}'],
 });
 `;
@@ -113,7 +126,7 @@ export const ${modelName}Module = defineModule({
 
   /**
    * 生成 api.ts
-   * 
+   *
    * 参考: system/user/api.ts
    */
   generateAPI(): string {
@@ -122,14 +135,19 @@ export const ${modelName}Module = defineModule({
     const routePath = buildRoutePath(scope, name);
     const toSrcRoot = this.relativeToSrcRoot();
     const pageActions = getPageActions(this.schema);
-    
+
     const extraImports = [
       pageActions.includes('export') ? `import { downloadFile } from '${toSrcRoot}/api/file';` : '',
-      pageActions.includes('import') ? `import { uploadImportFile } from '${toSrcRoot}/api/importExport';` : '',
-    ].filter(Boolean).join('\n');
+      pageActions.includes('import')
+        ? `import { uploadImportFile } from '${toSrcRoot}/api/importExport';`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     const extraApi = [
-      pageActions.includes('export') ? `
+      pageActions.includes('export')
+        ? `
 export function export${modelName}s(data?: ${modelName}ListQuery) {
   return downloadFile({
     url: '${routePath}/export',
@@ -137,38 +155,51 @@ export function export${modelName}s(data?: ${modelName}ListQuery) {
     data,
     filename: '${buildRouteName(scope, name)}-export.csv',
   });
-}` : '',
-      pageActions.includes('import') ? `
+}`
+        : '',
+      pageActions.includes('import')
+        ? `
 export function import${modelName}s(file: File) {
   return uploadImportFile('${routePath}/import', file);
-}` : '',
-    ].filter(Boolean).join('\n\n');
+}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
 
     const mutatingApi = [
-      pageActions.includes('create') ? `
+      pageActions.includes('create')
+        ? `
 export function create${modelName}(data: ${modelName}CreatePayload) {
   return apiRequest<${modelName}ListRow>({
     url: '${routePath}',
     method: 'post',
     data,
   });
-}` : '',
-      pageActions.includes('update') ? `
+}`
+        : '',
+      pageActions.includes('update')
+        ? `
 export function update${modelName}(id: number, data: ${modelName}UpdatePayload) {
   return apiRequest<${modelName}ListRow>({
     url: \`${routePath}/\${id}\`,
     method: 'put',
     data,
   });
-}` : '',
-      pageActions.includes('delete') ? `
+}`
+        : '',
+      pageActions.includes('delete')
+        ? `
 export function delete${modelName}(id: number) {
   return apiRequest<{ deleted: boolean }>({
     url: \`${routePath}/\${id}\`,
     method: 'delete',
   });
-}` : '',
-    ].filter(Boolean).join('\n\n');
+}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
 
     return `import { apiRequest } from '${toSrcRoot}/api/request';
 ${extraImports ? `${extraImports}\n` : ''}
@@ -220,12 +251,12 @@ ${extraApi ? `\n${extraApi}\n` : ''}
    */
   private generateTSFields(mode: 'list' | 'detail' | 'create' | 'update'): string {
     return this.schema.model.fields
-      .filter(f => {
+      .filter((f) => {
         if (mode === 'list') return f.visibleInList !== false;
         if (mode === 'create' || mode === 'update') return f.visibleInForm !== false;
         return true;
       })
-      .map(field => {
+      .map((field) => {
         const tsType = TYPE_MAPPING[field.type].ts;
         const isOptional = mode === 'update' || !field.required;
         return `  ${field.name}${isOptional ? '?' : ''}: ${tsType};`;
@@ -237,14 +268,14 @@ ${extraApi ? `\n${extraApi}\n` : ''}
    * 生成 TypeScript 查询字段
    */
   private generateTSQueryFields(): string {
-    const searchableFields = this.schema.model.fields.filter(f => f.searchable);
-    
+    const searchableFields = this.schema.model.fields.filter((f) => f.searchable);
+
     if (searchableFields.length === 0) {
       return '  // 无搜索字段';
     }
-    
+
     return searchableFields
-      .map(field => {
+      .map((field) => {
         const tsType = TYPE_MAPPING[field.type].ts;
         return `  ${field.name}?: ${tsType};`;
       })
@@ -253,7 +284,7 @@ ${extraApi ? `\n${extraApi}\n` : ''}
 
   /**
    * 生成 List.tsx (列表页)
-   * 
+   *
    * 参考: system/user/UserList.tsx (726行完整实现)
    */
   generateListPage(): string {
@@ -347,10 +378,10 @@ export default ${modelName}List;
    * 生成空查询字段
    */
   private generateEmptyQueryFields(): string {
-    const searchableFields = this.schema.model.fields.filter(f => f.searchable);
-    
+    const searchableFields = this.schema.model.fields.filter((f) => f.searchable);
+
     return searchableFields
-      .map(field => {
+      .map((field) => {
         const defaultValue = this.getDefaultValue(field.type);
         return `  ${field.name}: ${defaultValue},`;
       })
@@ -361,13 +392,15 @@ export default ${modelName}List;
    * 生成表格列
    */
   private generateSimpleTableColumns(): string {
-    const listFields = this.schema.model.fields.filter(f => f.visibleInList !== false);
-    
+    const listFields = this.schema.model.fields.filter((f) => f.visibleInList !== false);
+
     return listFields
-      .map(field => `            {
+      .map(
+        (field) => `            {
       title: t('${buildFieldLabelKey(this.schema.scope, this.schema.name, field.name)}'),
       dataIndex: '${field.name}',
-    },`)
+    },`,
+      )
       .join('\n');
   }
 

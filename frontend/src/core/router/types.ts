@@ -15,16 +15,17 @@ interface ModuleRouteConfigBase {
   pagePermission?: string;
 }
 
-export type ModuleRouteConfig = ModuleRouteConfigBase & (
-  | {
-    component: LazyExoticComponent<ComponentType>;
-    componentKey?: RegisteredComponentKey;
-  }
-  | {
-    component?: undefined;
-    componentKey: RegisteredComponentKey;
-  }
-);
+export type ModuleRouteConfig = ModuleRouteConfigBase &
+  (
+    | {
+        component: LazyExoticComponent<ComponentType>;
+        componentKey?: RegisteredComponentKey;
+      }
+    | {
+        component?: undefined;
+        componentKey: RegisteredComponentKey;
+      }
+  );
 
 export interface ModuleMenuMeta {
   titleKey: string;

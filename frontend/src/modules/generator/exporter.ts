@@ -1,6 +1,6 @@
 /**
  * 模块生成器 - 代码导出器
- * 
+ *
  * 整合后端和前端生成器,提供完整的代码预览和下载功能
  */
 
@@ -13,9 +13,9 @@ import { FrontendGenerator } from './frontend-generator';
  * 生成的文件
  */
 export interface GeneratedFile {
-  path: string;      // 文件路径 (如: backend/modules/business/order/order_model.go)
-  content: string;   // 文件内容
-  language: string;  // 语言 (go, typescript, tsx)
+  path: string; // 文件路径 (如: backend/modules/business/order/order_model.go)
+  content: string; // 文件内容
+  language: string; // 语言 (go, typescript, tsx)
 }
 
 /**
@@ -102,8 +102,8 @@ export class ModuleExporter {
     totalLines: number;
   } {
     const files = this.generateAll();
-    const backendFiles = files.filter(f => f.language === 'go').map(f => f.path);
-    const frontendFiles = files.filter(f => f.language !== 'go').map(f => f.path);
+    const backendFiles = files.filter((f) => f.language === 'go').map((f) => f.path);
+    const frontendFiles = files.filter((f) => f.language !== 'go').map((f) => f.path);
     const totalLines = files.reduce((sum, f) => sum + f.content.split('\n').length, 0);
 
     return {
@@ -115,7 +115,7 @@ export class ModuleExporter {
 
   /**
    * 导出为 ZIP (需要引入 JSZip 库)
-   * 
+   *
    * 注意: 需要先安装 jszip: npm install jszip
    */
   async exportAsZip(): Promise<Blob> {
@@ -126,7 +126,7 @@ export class ModuleExporter {
     const zip = new JSZip();
 
     const files = this.generateAll();
-    files.forEach(file => {
+    files.forEach((file) => {
       zip.file(file.path, file.content);
     });
 

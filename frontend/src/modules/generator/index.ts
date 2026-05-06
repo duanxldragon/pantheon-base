@@ -1,6 +1,6 @@
 /**
  * 模块生成器 - 入口文件
- * 
+ *
  * 导出所有生成器类和工具函数
  */
 
@@ -78,6 +78,10 @@ export const GeneratorModule = defineModule({
       module: 'system.config',
     },
   ],
-  permissions: ['system:generator:use', 'system:module:generate', 'system:generator:datasource:manage'],
+  permissions: [
+    'system:generator:use',
+    'system:module:generate',
+    'system:generator:datasource:manage',
+  ],
   i18nNamespaces: ['generator', 'system.menu'],
 });

@@ -1,10 +1,6 @@
 import React from 'react';
 import { Modal } from '@arco-design/web-react';
-import {
-  appModalSizeWidthMap,
-  mergeDialogClassName,
-  type AppModalProps,
-} from './AppModal.shared';
+import { appModalSizeWidthMap, mergeDialogClassName, type AppModalProps } from './AppModal.shared';
 
 const AppModal: React.FC<AppModalProps> = ({
   className,
