@@ -23,24 +23,32 @@ var (
 	cachedSessionIdleMinutesAt time.Time
 )
 
+func extractToken(c *gin.Context) string {
+	if token, err := c.Cookie(common.CookieAccessToken); err == nil && token != "" {
+		return token
+	}
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return ""
+	}
+	parts := strings.SplitN(authHeader, " ", 2)
+	if !(len(parts) == 2 && parts[0] == "Bearer") {
+		return ""
+	}
+	return parts[1]
+}
+
 // JWTAuthMiddleware 权限校验中间件
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		token := extractToken(c)
+		if token == "" {
 			common.Fail(c, common.CodeUnauthorized, "token.missing")
 			c.Abort()
 			return
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			common.Fail(c, common.CodeUnauthorized, "token.format.error")
-			c.Abort()
-			return
-		}
-
-		claims, err := common.ParseToken(parts[1], common.TokenTypeAccess)
+		claims, err := common.ParseToken(token, common.TokenTypeAccess)
 		if err != nil {
 			switch {
 			case errors.Is(err, common.ErrTokenExpired):

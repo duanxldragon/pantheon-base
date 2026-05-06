@@ -75,6 +75,13 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	h.service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
 
+	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
+	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
+	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
+		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+		return
+	}
+
 	common.Success(c, AuthTokenResp{
 		Token:            tokenPair.AccessToken,
 		AccessToken:      tokenPair.AccessToken,
@@ -110,17 +117,40 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 		username = resp.User.Username
 	}
 	h.service.RecordLoginLog(common.GetRequestID(c), username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
+
+	if resp.Token != "" {
+		common.SetAccessTokenCookie(c.Writer, resp.Token)
+	}
+	if resp.RefreshToken != "" {
+		common.SetRefreshTokenCookie(c.Writer, resp.RefreshToken)
+	}
+	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
+		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+		return
+	}
+
 	common.Success(c, resp)
 }
 
 func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
-	var req RefreshTokenReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+	refreshToken := ""
+	if cookie, err := c.Cookie(common.CookieRefreshToken); err == nil && cookie != "" {
+		refreshToken = cookie
+	}
+	if refreshToken == "" {
+		var req RefreshTokenReq
+		if err := c.ShouldBindJSON(&req); err != nil {
+			common.Fail(c, common.CodeParamInvalid, "param.invalid")
+			return
+		}
+		refreshToken = req.RefreshToken
+	}
+	if refreshToken == "" {
+		common.Fail(c, common.CodeUnauthorized, "token.invalid")
 		return
 	}
 
-	claims, err := common.ParseToken(req.RefreshToken, common.TokenTypeRefresh)
+	claims, err := common.ParseToken(refreshToken, common.TokenTypeRefresh)
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "token.invalid")
 		return
@@ -131,6 +161,9 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.session.refresh.error")
 		return
 	}
+
+	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
+	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
 
 	common.Success(c, gin.H{
 		"token":            tokenPair.AccessToken,
@@ -379,6 +412,7 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 		common.FailWithError(c, common.CodeError, err, "auth.logout.error")
 		return
 	}
+	common.ClearTokenCookies(c.Writer)
 	common.Success(c, gin.H{"loggedOut": true})
 }
 func (h *AuthHandler) GetSessions(c *gin.Context) {

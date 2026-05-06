@@ -39,7 +39,9 @@ func main() {
 
 	// 3. 初始化 Gin
 	r := gin.Default()
+	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.RequestContextMiddleware(), middleware.OperationLogMiddleware(database.DB))
+	r.Use(middleware.CSRFMiddleware())
 
 	// 3. 注册底座模块
 	api := r.Group("/api/v1")

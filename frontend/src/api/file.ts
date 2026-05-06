@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { message } from '../components/feedback/message';
 import i18n from 'i18next';
-import { ACCESS_TOKEN_KEY } from '../store/useAuthStore';
 
 interface DownloadFileOptions {
   url: string;
@@ -9,10 +8,6 @@ interface DownloadFileOptions {
   data?: unknown;
   params?: Record<string, unknown>;
   filename?: string;
-}
-
-function readAccessToken() {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 function parseFilename(contentDisposition?: string, fallbackName?: string) {
@@ -52,8 +47,8 @@ export async function downloadFile(options: DownloadFileOptions) {
     params: options.params,
     responseType: 'blob',
     timeout: 30000,
+    withCredentials: true,
     headers: {
-      'Authorization': readAccessToken() ? `Bearer ${readAccessToken()}` : '',
       'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
     },
     validateStatus: () => true,

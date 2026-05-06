@@ -1,34 +1,36 @@
 import { getMe, type UserInfo } from '../../modules/auth/api';
-import { useAuthStore } from '../../store/useAuthStore';
+import { hasAuthCookie, useAuthStore } from '../../store/useAuthStore';
 
-let pendingToken: string | null = null;
+const COOKIE_TOKEN_PLACEHOLDER = '_cookie';
+
 let pendingProfilePromise: Promise<UserInfo | null> | null = null;
 
 export function ensureAuthUserInfo() {
-  const { token, userInfo, setUserInfo } = useAuthStore.getState();
-  if (!token) {
+  const { userInfo, setTokens, setUserInfo } = useAuthStore.getState();
+
+  if (!hasAuthCookie()) {
     return Promise.resolve(null);
   }
+
   if (userInfo) {
     return Promise.resolve(userInfo);
   }
-  if (pendingProfilePromise && pendingToken === token) {
+
+  if (pendingProfilePromise) {
     return pendingProfilePromise;
   }
 
-  pendingToken = token;
   pendingProfilePromise = getMe()
     .then((profile) => {
-      if (useAuthStore.getState().token === token) {
-        setUserInfo(profile);
-      }
+      setTokens(COOKIE_TOKEN_PLACEHOLDER, COOKIE_TOKEN_PLACEHOLDER);
+      setUserInfo(profile);
       return profile;
     })
+    .catch(() => {
+      return null;
+    })
     .finally(() => {
-      if (pendingToken === token) {
-        pendingToken = null;
-        pendingProfilePromise = null;
-      }
+      pendingProfilePromise = null;
     });
 
   return pendingProfilePromise;

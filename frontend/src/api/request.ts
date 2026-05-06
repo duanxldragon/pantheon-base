@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { message as feedbackMessage } from '../components/feedback/message';
 import i18n from 'i18next';
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, useAuthStore } from '../store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { clearShellSessionState } from '../core/shellState';
 import { clearExplicitLanguagePreference } from '../core/settings/languagePreference';
 import { clearPantheonThemePreference } from '../core/theme/theme';
@@ -52,31 +52,24 @@ const I18N_KEY_PATTERN = /^[a-z0-9_]+(?:\.[a-z0-9_]+)+$/i;
 const request = axios.create({
   baseURL: '/api/v1',
   timeout: 10000,
+  withCredentials: true,
 });
+
+function readCsrfToken(): string {
+  const match = document.cookie.match(/(?:^|;\s*)pantheon_csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
 
 let refreshPromise: Promise<string | null> | null = null;
 let logoutTransition = false;
 const LOGIN_NOTICE_STORAGE_KEY = 'pantheon_login_notice';
-
-const readAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
-const readRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
-
-const saveTokens = (accessToken: string, refreshTokenValue: string) => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshTokenValue);
-};
-
-const clearTokens = () => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-};
 
 const saveLoginNotice = (messageKey: string) => {
   sessionStorage.setItem(LOGIN_NOTICE_STORAGE_KEY, messageKey);
 };
 
 const clearClientSession = () => {
-  clearTokens();
+  axios.post('/api/v1/auth/logout', {}, { withCredentials: true }).catch(() => undefined);
   clearShellSessionState();
   clearPantheonThemePreference();
   const nextLanguage = clearExplicitLanguagePreference();
@@ -117,17 +110,13 @@ const shouldRefresh = (config?: RequestConfig, code?: number) => {
 };
 
 const doRefreshToken = async (): Promise<string | null> => {
-  const currentRefreshToken = readRefreshToken();
-  if (!currentRefreshToken) {
-    return null;
-  }
-
   if (!refreshPromise) {
     refreshPromise = axios
       .post(
         '/api/v1/auth/refresh',
-        { refreshToken: currentRefreshToken },
+        {},
         {
+          withCredentials: true,
           headers: {
             'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
           },
@@ -141,7 +130,6 @@ const doRefreshToken = async (): Promise<string | null> => {
         return data;
       })
       .then((data) => {
-        saveTokens(data.accessToken, data.refreshToken);
         return data.accessToken;
       })
       .catch(() => {
@@ -345,9 +333,15 @@ const retryWithOperationVerify = async (config: RequestConfig) => {
 
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = readAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const csrfToken = readCsrfToken();
+    if (
+      csrfToken &&
+      config.method &&
+      config.method !== 'get' &&
+      config.method !== 'head' &&
+      config.method !== 'options'
+    ) {
+      config.headers['X-CSRF-Token'] = csrfToken;
     }
     const opToken = readOperationToken();
     if (opToken) {
