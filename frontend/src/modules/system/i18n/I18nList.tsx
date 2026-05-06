@@ -95,17 +95,18 @@ import {
 } from './api';
 import '../list-page.css';
 
+interface I18nRenameFormValues {
+  module: string;
+  sourceKey?: string;
+  oldKey: string;
+  newKey: string;
+  confirmSourceUpdated: boolean;
+}
+
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
 const { Text } = Typography;
-
-interface I18nRenameFormValues {
-  module: string;
-  oldKey: string;
-  newKey: string;
-  confirmSourceUpdated?: boolean;
-}
 
 interface I18nDuplicateConflictState {
   key: string;
