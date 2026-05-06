@@ -35,6 +35,7 @@ import {
   inferMenuGroupDisplayName,
   inferPackageName,
   inferModelName,
+  shouldGenerateNavigation,
   splitModuleSegments,
 } from './schema';
 import { TYPE_MAPPING, generateStructTags, getRequiredImports } from './type-mapping';
@@ -850,6 +851,9 @@ func seed${modelName}I18n(db *gorm.DB) error {
   }
 
   private generateMenuSeedEntries(componentKey: string, pageTitleKey: string): string {
+    if (!shouldGenerateNavigation(this.schema)) {
+      return '';
+    }
     const moduleKey = buildModuleNamespace(this.schema.scope, this.schema.name);
     const permissionPrefix = buildPermissionPrefix(this.schema.scope, this.schema.name);
     const routePath = buildRoutePath(this.schema.scope, this.schema.name);

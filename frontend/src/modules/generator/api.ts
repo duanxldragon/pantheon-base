@@ -19,6 +19,15 @@ export interface GenerateAndRegisterResp {
     routeName: string;
     componentKey: string;
     permissionPrefix: string;
+    contract: {
+      templateVersion: string;
+      dataScopeEnabled: boolean;
+      dataScopeMode: string;
+      dependencyCount: number;
+      relationCount: number;
+      dependencies?: ModuleSchema['dependencies'];
+      relations?: ModuleSchema['relations'];
+    };
     parentMenuPath: string;
     parentMenuSource: 'explicit' | 'inferred' | 'top_level';
     parentMenuExists: boolean;

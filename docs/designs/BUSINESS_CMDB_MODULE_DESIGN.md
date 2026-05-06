@@ -6,7 +6,13 @@
 归属层：business/cmdb
 状态：Active
 
-本文用于补齐 `business/cmdb` 的业务域设计锚点。当前代码已经存在 `business/cmdb/host` 切片，历史缺口在于没有把 CMDB 业务域、Host 子模块以及后续 Vendor 子模块的边界、菜单、权限、i18n、审计和验收要求集中声明。
+本文用于补齐 `business/cmdb` 的业务域设计锚点。当前仓库已将 `business/cmdb` 作为内置业务模块退役，不再随平台默认装配；`biz_cmdb_host`、`biz_cmdb_vendor` 等业务表保留，用作低代码平台与动态模块治理能力的验证样本。历史缺口在于没有把 CMDB 业务域、Host 子模块以及后续 Vendor 子模块的边界、菜单、权限、i18n、审计和验收要求集中声明。
+
+当前治理结论：
+
+- `business/cmdb` 不再作为平台默认内置业务模块交付。
+- 与 `business.cmdb*` 对应的菜单、权限、i18n、模块注册元数据应在退役时清理。
+- `biz_cmdb_*` 业务表保留，不作为退役清理目标，用于后续低代码平台验证。
 
 ---
 

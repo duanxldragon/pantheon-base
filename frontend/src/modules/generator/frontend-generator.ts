@@ -55,17 +55,18 @@ export class FrontendGenerator {
     const componentKey = buildComponentKey(scope, name, modelName);
     const toSrcRoot = this.relativeToSrcRoot();
     const pageActions = getPageActions(this.schema);
+    const generateNavigation = shouldGenerateNavigation(this.schema);
     const businessContext = splitModuleSegments(name)[0] || 'default';
     const quickActionDescriptionKey = buildDashboardQuickActionDescriptionKey(scope, name);
     
-    const permissionItems = [
+    const permissionItems = generateNavigation ? [
       `'${permissionPrefix}:list'`,
       ...pageActions
         .filter((action) => action !== 'detail')
         .map((action) => `'${permissionPrefix}:${action}'`),
-    ];
+    ] : [];
     const dashboardWidgets = scope === 'business'
-      && shouldGenerateNavigation(this.schema)
+      && generateNavigation
       && this.schema.includeDashboardWidget !== false
       ? `
   dashboardWidgets: [
@@ -89,7 +90,7 @@ export class FrontendGenerator {
 export const ${modelName}Module = defineModule({
   name: '${name}',
   scope: '${scope}',
-  routes: [
+  routes: ${generateNavigation ? `[
     {
       path: '${routePath}',
       routeName: '${routeName}',
@@ -98,13 +99,13 @@ export const ${modelName}Module = defineModule({
       pagePermission: '${permissionPrefix}:list',
       componentKey: '${componentKey}',
     },
-  ],
-  menus: [
+  ]` : '[]'},
+  menus: ${generateNavigation ? `[
     { path: '${buildRoutePath(scope, name)}', titleKey: '${titleKey}', icon: 'apps', routeName: '${routeName}', module: '${moduleNamespace}' },
-  ],${dashboardWidgets}
-  permissions: [
+  ]` : '[]'},${dashboardWidgets}
+  permissions: ${permissionItems.length > 0 ? `[
     ${permissionItems.join(',\n    ')}
-  ],
+  ]` : '[]'},
   i18nNamespaces: ['${moduleNamespace}'],
 });
 `;

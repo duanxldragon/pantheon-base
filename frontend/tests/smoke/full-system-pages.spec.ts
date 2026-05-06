@@ -11,7 +11,7 @@ type ViewportCase = {
 type SmokePage = {
   path: string;
   title: string;
-  layer: 'platform' | 'system/auth' | 'system/iam' | 'system/org' | 'system/config' | 'business/cmdb';
+  layer: 'platform' | 'system/auth' | 'system/iam' | 'system/org' | 'system/config';
 };
 
 type LoginResult = {
@@ -44,7 +44,6 @@ const smokePages: SmokePage[] = [
   { layer: 'system/config', path: '/system/i18n', title: '国际化管理' },
   { layer: 'system/config', path: '/system/modules', title: '模块注册表' },
   { layer: 'system/config', path: '/system/generator', title: '模块生成器' },
-  { layer: 'business/cmdb', path: '/business/cmdb/host', title: '主机管理' },
 ];
 
 async function loginByApi(page: Page): Promise<LoginResult> {

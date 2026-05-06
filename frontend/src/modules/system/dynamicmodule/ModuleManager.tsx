@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { ensureOperationVerified, isRequestError } from '../../../api/request';
 import { message } from '../../../components/feedback/message';
 import PermissionAction from '../../../components/patterns/PermissionAction';
+import { invalidateRouteWarmData, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 
 import {
@@ -37,6 +38,27 @@ import {
 import { AppModal, ListHeaderActions, PageContainer, PageError, PageHeader, PageLoading, TABLE_ACTION_COLUMN_WIDTH, withTableColumnPriority } from '../../../components';
 import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
 import '../list-page.css';
+
+const moduleManagerWarmDataKeys = ['modules:registered'];
+
+function invalidateModuleManagerWarmData() {
+  invalidateRouteWarmData('/system/modules', moduleManagerWarmDataKeys);
+}
+
+function isManagedRegistration(record: ModuleRegistration) {
+  return !record.builtIn && Boolean(record.tableName);
+}
+
+function isBusinessStaticRegistration(record: ModuleRegistration) {
+  return !record.builtIn && record.scope === 'business' && !record.tableName;
+}
+
+function statusColor(status: number) {
+  if (status === 1) return 'green';
+  if (status === 3) return 'orange';
+  if (status === 4) return 'red';
+  return 'gray';
+}
 
 const ModuleManager: React.FC = () => {
   const { t } = useTranslation();
@@ -58,12 +80,17 @@ const ModuleManager: React.FC = () => {
   const [purgeConfirmed, setPurgeConfirmed] = useState(false);
   const [repairing, setRepairing] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (options?: { force?: boolean }) => {
+    if (options?.force) {
+      invalidateModuleManagerWarmData();
+    }
     setLoading(true);
     setError(null);
     setFeatureDisabled(false);
     try {
-      const result = await getRegisteredModules();
+      const result = options?.force
+        ? await getRegisteredModules()
+        : await resolveRouteWarmData('/system/modules', 'modules:registered', () => getRegisteredModules());
       setModules(result);
     } catch (requestError) {
       if (isRequestError(requestError) && requestError.messageKey === 'module.dynamic.disabled') {
@@ -89,6 +116,7 @@ const ModuleManager: React.FC = () => {
       await ensureOperationVerified();
       await unregisterModule(name, false);
       message.success(t('generator.moduleManager.unregisterSuccess'));
+      invalidateModuleManagerWarmData();
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
@@ -103,6 +131,7 @@ const ModuleManager: React.FC = () => {
       await ensureOperationVerified();
       await registerModule({ name });
       message.success(t('generator.moduleManager.registerSuccess'));
+      invalidateModuleManagerWarmData();
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
@@ -117,6 +146,7 @@ const ModuleManager: React.FC = () => {
       await ensureOperationVerified();
       await deleteModuleRecord(name);
       message.success(t('generator.moduleManager.deleteRecordSuccess'));
+      invalidateModuleManagerWarmData();
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
@@ -152,6 +182,7 @@ const ModuleManager: React.FC = () => {
       await purgeModule(purgeTarget.name, { purgeSource: true, dropTable: Boolean(values.dropTable) });
       message.success(t('generator.moduleManager.purgeSuccess'));
       closePurgeModal();
+      invalidateModuleManagerWarmData();
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
@@ -174,6 +205,7 @@ const ModuleManager: React.FC = () => {
           marked: result.summary.markedUninstalledModules,
         }),
       );
+      invalidateModuleManagerWarmData();
       await loadData();
     } catch (error) {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
@@ -190,6 +222,7 @@ const ModuleManager: React.FC = () => {
     active: modules.filter((item) => item.status === 1).length,
     pending: modules.filter((item) => item.status === 3).length,
     uninstalled: modules.filter((item) => item.status === 2).length,
+    failed: modules.filter((item) => item.status === 4).length,
   }), [modules]);
 
   const columns = [
@@ -197,7 +230,7 @@ const ModuleManager: React.FC = () => {
       title: t('generator.moduleManager.name'),
       dataIndex: 'name',
       width: 150,
-      render: (name: string) => <code>{name}</code>,
+      render: (name: string) => <span>{name}</span>,
     },
     {
       title: t('generator.moduleManager.displayName'),
@@ -236,19 +269,21 @@ const ModuleManager: React.FC = () => {
       title: t('generator.moduleManager.tableName'),
       dataIndex: 'tableName',
       width: 180,
-      render: (tableName: string) => tableName ? <code>{tableName}</code> : <span>-</span>,
+      render: (tableName: string) => tableName ? <span>{tableName}</span> : <span>-</span>,
     }, 'low'),
     {
       title: t('generator.moduleManager.status'),
       dataIndex: 'status',
       width: 100,
       render: (status: number) => (
-        <Tag color={status === 1 ? 'green' : status === 3 ? 'orange' : 'gray'}>
+        <Tag color={statusColor(status)}>
           {status === 1
             ? t('generator.moduleManager.status.active')
             : status === 3
               ? t('generator.moduleManager.status.pending')
-              : t('generator.moduleManager.status.uninstalled')}
+              : status === 4
+                ? t('generator.moduleManager.status.failed')
+                : t('generator.moduleManager.status.uninstalled')}
         </Tag>
       ),
     },
@@ -257,38 +292,81 @@ const ModuleManager: React.FC = () => {
       dataIndex: 'installedAt',
       width: 180,
     }, 'low'),
+    withTableColumnPriority({
+      title: t('generator.moduleManager.diagnostics'),
+      width: 220,
+      render: (_value: unknown, record: ModuleRegistration) => {
+        if (record.lastError) {
+          return (
+            <Space direction="vertical" size={2}>
+              <Tag color="red">{t('generator.moduleManager.diagnostics.failed')}</Tag>
+              <Typography.Text type="secondary">{t(record.lastError)}</Typography.Text>
+            </Space>
+          );
+        }
+        if (record.lastVerifiedAt) {
+          return (
+            <Space direction="vertical" size={2}>
+              <Tag color="green">{t('generator.moduleManager.diagnostics.verified')}</Tag>
+              <Typography.Text type="secondary">{record.lastVerifiedAt}</Typography.Text>
+            </Space>
+          );
+        }
+        return <span>-</span>;
+      },
+    }, 'low'),
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
-      render: (_value: unknown, record: ModuleRegistration) => (
-        <Space size={4} className="system-list__actions">
-          {record.builtIn ? (
-            <Tag color="arcoblue">{t('generator.moduleManager.builtIn')}</Tag>
-          ) : null}
-          {record.status === 2 && !record.builtIn ? (
-            <>
-              <PermissionAction allowed={canRegister} tooltip={t('common.noPermissionAction')}>
-                <Button
-                  type="text"
-                  disabled={featureDisabled}
-                  onClick={() => {
-                    void handleRegister(record.name);
-                  }}
-                >
-                  <IconPlus /> {t('generator.moduleManager.register')}
-                </Button>
-              </PermissionAction>
-              <PermissionAction allowed={canDeleteRecord} tooltip={t('common.noPermissionAction')}>
+      render: (_value: unknown, record: ModuleRegistration) => {
+        const managedRegistration = isManagedRegistration(record);
+        const businessStaticRegistration = isBusinessStaticRegistration(record);
+        const canPurgeRecord = managedRegistration || businessStaticRegistration;
+        return (
+          <Space size={4} className="system-list__actions">
+            {record.builtIn ? (
+              <Tag color="arcoblue">{t('generator.moduleManager.builtIn')}</Tag>
+            ) : null}
+            {record.status === 2 && managedRegistration ? (
+              <>
+                <PermissionAction allowed={canRegister} tooltip={t('common.noPermissionAction')}>
+                  <Button
+                    type="text"
+                    disabled={featureDisabled}
+                    onClick={() => {
+                      void handleRegister(record.name);
+                    }}
+                  >
+                    <IconPlus /> {t('generator.moduleManager.register')}
+                  </Button>
+                </PermissionAction>
+                <PermissionAction allowed={canDeleteRecord} tooltip={t('common.noPermissionAction')}>
+                  <Popconfirm
+                    title={t('generator.moduleManager.confirmDeleteRecord')}
+                    disabled={featureDisabled || !canDeleteRecord}
+                    onOk={() => handleDeleteRecord(record.name)}
+                  >
+                    <Button type="text" status="danger" disabled={featureDisabled || !canDeleteRecord}>
+                      <IconDelete /> {t('generator.moduleManager.deleteRecord')}
+                    </Button>
+                  </Popconfirm>
+                </PermissionAction>
+              </>
+            ) : null}
+            {record.status !== 2 && managedRegistration && canUnregister ? (
+              <PermissionAction allowed={canUnregister} tooltip={t('common.noPermissionAction')}>
                 <Popconfirm
-                  title={t('generator.moduleManager.confirmDeleteRecord')}
-                  disabled={featureDisabled || !canDeleteRecord}
-                  onOk={() => handleDeleteRecord(record.name)}
+                  title={t('generator.moduleManager.confirmUninstall')}
+                  disabled={featureDisabled || !canUnregister}
+                  onOk={() => handleUnregister(record.name)}
                 >
-                  <Button type="text" status="danger" disabled={featureDisabled || !canDeleteRecord}>
-                    <IconDelete /> {t('generator.moduleManager.deleteRecord')}
+                  <Button type="text" status="danger" disabled={featureDisabled || !canUnregister}>
+                    <IconDelete /> {t('generator.moduleManager.unregister')}
                   </Button>
                 </Popconfirm>
               </PermissionAction>
+            ) : null}
+            {canPurgeRecord ? (
               <PermissionAction allowed={canPurge} tooltip={t('common.noPermissionAction')}>
                 <Button
                   type="text"
@@ -299,23 +377,10 @@ const ModuleManager: React.FC = () => {
                   <IconDelete /> {t('generator.moduleManager.purge')}
                 </Button>
               </PermissionAction>
-            </>
-          ) : null}
-          {record.status !== 2 && !record.builtIn ? (
-            <PermissionAction allowed={canUnregister} tooltip={t('common.noPermissionAction')}>
-              <Popconfirm
-                title={t('generator.moduleManager.confirmUninstall')}
-                disabled={featureDisabled || !canUnregister}
-                onOk={() => handleUnregister(record.name)}
-              >
-                <Button type="text" status="danger" disabled={featureDisabled || !canUnregister}>
-                  <IconDelete /> {t('generator.moduleManager.unregister')}
-                </Button>
-              </Popconfirm>
-            </PermissionAction>
-          ) : null}
-        </Space>
-      ),
+            ) : null}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -324,7 +389,7 @@ const ModuleManager: React.FC = () => {
   }
 
   if (error) {
-    return <PageError onRetry={loadData} />;
+    return <PageError onRetry={() => { void loadData({ force: true }); }} />;
   }
 
   return (
@@ -336,7 +401,7 @@ const ModuleManager: React.FC = () => {
             className="module-manager-page__header-actions"
             utility={(
               <>
-                <Button size="small" onClick={loadData}>
+                <Button size="small" onClick={() => void loadData({ force: true })}>
                   <IconRefresh /> {t('common.refresh')}
                 </Button>
                 <PermissionAction allowed={canRepair} tooltip={t('common.noPermissionAction')}>
@@ -383,7 +448,6 @@ const ModuleManager: React.FC = () => {
               {modules.some((item) => item.status === 3) ? (
                 <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
               ) : null}
-              <Alert type="info" content={t('generator.moduleManager.positioning')} />
               <Alert type="info" content={t('generator.moduleManager.repairHint')} />
             </div>
           </div>
@@ -403,6 +467,10 @@ const ModuleManager: React.FC = () => {
             <Card size="small" className="module-manager-page__stat-card">
               <Typography.Text type="secondary">{t('generator.moduleManager.stats.uninstalled')}</Typography.Text>
               <Typography.Title heading={6} style={{ margin: 0 }}>{stats.uninstalled}</Typography.Title>
+            </Card>
+            <Card size="small" className="module-manager-page__stat-card">
+              <Typography.Text type="secondary">{t('generator.moduleManager.stats.failed')}</Typography.Text>
+              <Typography.Title heading={6} style={{ margin: 0 }}>{stats.failed}</Typography.Title>
             </Card>
           </div>
           <AppTable
@@ -442,7 +510,9 @@ const ModuleManager: React.FC = () => {
             </Typography.Paragraph>
             <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 16 }}>
               <Typography.Text>{t('generator.moduleManager.purgeModal.removeRecord')}</Typography.Text>
-              <Typography.Text>{t('generator.moduleManager.purgeModal.removeSource')}</Typography.Text>
+              {purgeTarget.tableName ? (
+                <Typography.Text>{t('generator.moduleManager.purgeModal.removeSource')}</Typography.Text>
+              ) : null}
               <Typography.Text type="secondary">
                 {purgeTarget.tableName
                   ? t('generator.moduleManager.purgeModal.keepTable', { table: purgeTarget.tableName })

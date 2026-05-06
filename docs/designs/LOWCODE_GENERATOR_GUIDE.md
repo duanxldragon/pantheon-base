@@ -479,6 +479,9 @@ go test ./modules/system/dynamicmodule/...
 cd frontend
 npm run type-check
 
+# 生成器契约 smoke
+npm run test:generator:smoke
+
 # 菜单契约检查
 npm run check:menu-contract
 

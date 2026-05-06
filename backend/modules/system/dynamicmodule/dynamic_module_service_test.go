@@ -78,6 +78,42 @@ func TestRegisterGeneratedModuleWritesRegistries(t *testing.T) {
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "'business/ticket/TicketList'")
 }
 
+func TestRegisterGeneratedModulePersistsActivationDiagnostics(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	req := newGeneratedModuleRequest("business", "ticket", "工单管理", "biz_ticket")
+
+	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
+		t.Fatalf("register generated module: %v", err)
+	}
+
+	var registration ModuleRegistration
+	if err := db.Where("name = ?", "business.ticket").First(&registration).Error; err != nil {
+		t.Fatalf("load registration: %v", err)
+	}
+	if registration.Status != ModuleStatusPendingActivation {
+		t.Fatalf("expected pending activation, got %d", registration.Status)
+	}
+	if registration.LastError != "" {
+		t.Fatalf("expected empty last error, got %q", registration.LastError)
+	}
+	if strings.TrimSpace(registration.LastVerifiedAt) == "" {
+		t.Fatal("expected last verified time to be persisted")
+	}
+	if !strings.Contains(registration.LastVerificationResult, `"code":"pending_activation"`) {
+		t.Fatalf("expected pending activation verification result, got %s", registration.LastVerificationResult)
+	}
+	if !strings.Contains(registration.LastVerificationResult, `"code":"backend_registry"`) {
+		t.Fatalf("expected backend registry verification result, got %s", registration.LastVerificationResult)
+	}
+}
+
 func TestRegisterGeneratedModuleBuildsInferredParentSummary(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
@@ -121,6 +157,50 @@ func TestRegisterGeneratedModuleBuildsInferredParentSummary(t *testing.T) {
 		t.Fatal("expected inferred parent menu to exist")
 	}
 	assertHasVerification(t, summary.Verifications, "parent_menu", "pass")
+}
+
+func TestRegisterGeneratedModuleBuildsGovernanceContractSummary(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	req := newGeneratedModuleRequest("business", "cmdb/host", "主机管理", "biz_cmdb_host")
+	req.Schema.TemplateVersion = "v1"
+	req.Schema.EnableDataScope = true
+	req.Schema.DataScopeMode = "dept"
+	req.Schema.Dependencies = []scaffold.ModuleDependency{{Module: "cmdb/vendor", Required: true, Reason: "host needs vendor"}}
+	req.Schema.Relations = []scaffold.ModuleRelation{{
+		Name:         "hostVendor",
+		Type:         "lookup",
+		TargetModule: "cmdb/vendor",
+		LocalField:   "vendorId",
+		TargetField:  "id",
+	}}
+
+	_, _, summary, err := service.RegisterGeneratedModule(req)
+	if err != nil {
+		t.Fatalf("register generated module: %v", err)
+	}
+	if summary.Contract.TemplateVersion != "v1" {
+		t.Fatalf("unexpected template version: %s", summary.Contract.TemplateVersion)
+	}
+	if !summary.Contract.DataScopeEnabled || summary.Contract.DataScopeMode != "dept" {
+		t.Fatalf("unexpected data scope contract: %+v", summary.Contract)
+	}
+	if summary.Contract.DependencyCount != 1 || summary.Contract.RelationCount != 1 {
+		t.Fatalf("unexpected contract counts: %+v", summary.Contract)
+	}
+	if len(summary.Contract.Dependencies) != 1 || summary.Contract.Dependencies[0].Module != "cmdb/vendor" {
+		t.Fatalf("unexpected contract dependencies: %+v", summary.Contract.Dependencies)
+	}
+	if len(summary.Contract.Relations) != 1 || summary.Contract.Relations[0].Name != "hostVendor" {
+		t.Fatalf("unexpected contract relations: %+v", summary.Contract.Relations)
+	}
+	assertHasVerification(t, summary.Verifications, "contract_governance", "pass")
 }
 
 func TestRegisterGeneratedModuleNormalizesExplicitParentMenu(t *testing.T) {
@@ -396,11 +476,159 @@ func TestAuditAndRepairGeneratedRegistries_MarksMissingSourceAndRewritesSummary(
 	if refreshed.Status != ModuleStatusUninstalled {
 		t.Fatalf("expected asset to be marked uninstalled, got %d", refreshed.Status)
 	}
+	if refreshed.LastError != "module.artifacts_missing" {
+		t.Fatalf("expected artifact missing diagnostic, got %q", refreshed.LastError)
+	}
+	if strings.TrimSpace(refreshed.LastVerifiedAt) == "" {
+		t.Fatal("expected repair verification time to be persisted")
+	}
+	if !strings.Contains(refreshed.LastVerificationResult, `"code":"artifact_check"`) {
+		t.Fatalf("expected artifact check verification result, got %s", refreshed.LastVerificationResult)
+	}
 
 	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "business/ticket")
 	assertFileNotContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "business/asset")
 	assertFileNotContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "business/vendor")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/ticket/TicketList")
+}
+
+func TestListRegisteredModulesDoesNotRewriteGeneratedRegistries(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
+	if err := scaffold.WriteGeneratedRegistries(workspaceRoot, []scaffold.GeneratedModuleRef{{Scope: "business", Name: "asset"}}); err != nil {
+		t.Fatalf("seed generated registries: %v", err)
+	}
+
+	registration := ModuleRegistration{
+		Name:           "business.asset",
+		DisplayName:    "资产管理",
+		Scope:          "business",
+		Source:         "generated",
+		ModelTableName: "biz_asset",
+		Status:         ModuleStatusUninstalled,
+		InstalledAt:    "2026-04-01T00:00:00Z",
+		UninstalledAt:  "2026-04-02T00:00:00Z",
+	}
+	if err := db.Create(&registration).Error; err != nil {
+		t.Fatalf("seed registration: %v", err)
+	}
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	if _, err := service.ListRegisteredModules(); err != nil {
+		t.Fatalf("list registered modules: %v", err)
+	}
+
+	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "business/asset")
+	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/asset/AssetList")
+}
+
+func TestListRegisteredModulesDoesNotMarkBusinessStaticModuleAsBuiltIn(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	mustCreateSystemMenuTable(t, db)
+
+	records := []ModuleRegistration{
+		{
+			Name:        "business.cmdb",
+			DisplayName: "CMDB",
+			Scope:       "business",
+			Source:      "static",
+			Status:      ModuleStatusActive,
+			InstalledAt: "2026-05-04T12:29:36+08:00",
+		},
+		{
+			Name:        "system",
+			DisplayName: "system",
+			Scope:       "system",
+			Source:      "core",
+			Status:      ModuleStatusActive,
+			InstalledAt: "2026-04-25T16:31:20+08:00",
+		},
+	}
+	if err := db.Create(&records).Error; err != nil {
+		t.Fatalf("seed registrations: %v", err)
+	}
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	modules, err := service.ListRegisteredModules()
+	if err != nil {
+		t.Fatalf("list registered modules: %v", err)
+	}
+
+	byName := make(map[string]ModuleRegistration, len(modules))
+	for _, module := range modules {
+		byName[module.Name] = module
+	}
+	if byName["business.cmdb"].BuiltIn {
+		t.Fatal("expected business static module to not be marked built-in")
+	}
+	if !byName["system"].BuiltIn {
+		t.Fatal("expected system shell module to be marked built-in")
+	}
+}
+
+func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemI18nTable(t, db)
+
+	registration := ModuleRegistration{
+		Name:        "business.cmdb",
+		DisplayName: "CMDB",
+		Scope:       "business",
+		Source:      "static",
+		Status:      ModuleStatusActive,
+		InstalledAt: "2026-05-04T12:29:36+08:00",
+	}
+	if err := db.Create(&registration).Error; err != nil {
+		t.Fatalf("seed registration: %v", err)
+	}
+	if err := db.Exec(`INSERT INTO system_menu (path, type, module) VALUES ('/business/cmdb', 'M', 'business.cmdb')`).Error; err != nil {
+		t.Fatalf("seed menu: %v", err)
+	}
+	if err := db.Exec(`INSERT INTO system_i18n (module) VALUES ('business.cmdb')`).Error; err != nil {
+		t.Fatalf("seed i18n: %v", err)
+	}
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	if err := service.PurgeModule("business.cmdb", false, true); err != nil {
+		t.Fatalf("purge business static module: %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&ModuleRegistration{}).Where("name = ?", "business.cmdb").Count(&count).Error; err != nil {
+		t.Fatalf("count registration: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected registration to be deleted, got %d", count)
+	}
+	if err := db.Table("system_menu").Where("module = ?", "business.cmdb").Count(&count).Error; err != nil {
+		t.Fatalf("count menu: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected menu rows to be deleted, got %d", count)
+	}
+	if err := db.Table("system_i18n").Where("module = ?", "business.cmdb").Count(&count).Error; err != nil {
+		t.Fatalf("count i18n: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected i18n rows to be deleted, got %d", count)
+	}
 }
 
 func TestUnregisterModuleRejectsUnsafeManagedTableName(t *testing.T) {
@@ -470,6 +698,16 @@ func mustCreateSystemRolePermissionTable(t *testing.T, db *gorm.DB) {
 		permission_key VARCHAR(255)
 	)`).Error; err != nil {
 		t.Fatalf("create system_role_permission table: %v", err)
+	}
+}
+
+func mustCreateSystemI18nTable(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	if err := db.Exec(`CREATE TABLE system_i18n (
+		id BIGINT PRIMARY KEY AUTO_INCREMENT,
+		module VARCHAR(64)
+	)`).Error; err != nil {
+		t.Fatalf("create system_i18n table: %v", err)
 	}
 }
 

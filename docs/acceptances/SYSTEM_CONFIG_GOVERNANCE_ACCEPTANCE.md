@@ -93,11 +93,20 @@
 推荐固定执行：
 
 - `cd frontend && npm run test:generator:dashboard-widget`
+- `cd frontend && npm run test:generator:quality`
+- `cd frontend && npm run test:generator:smoke`
 - `go test ./backend/modules/system/i18n`
 - `go test ./backend/modules/system/dynamicmodule`
 - `go test ./backend/modules/system/generator`
 - `cd frontend && npm run check:menu-contract`
 - `cd frontend && npm run check:i18n-hardcode`
+
+`test:generator:smoke` 固化低代码生成链路的非浏览器验收，当前聚合：
+
+- 工作台快捷入口生成契约；
+- 生成物质量契约快照，包括后端 module seed、前端 manifest、数据权限钩子、i18n key 和关系表不导航规则；
+- 菜单 / 权限 / 组件注册表一致性；
+- 前端展示型硬编码文案扫描。
 
 涉及真实浏览器主链路时补充：
 

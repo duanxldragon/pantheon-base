@@ -68,23 +68,8 @@ func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 	if len(req.Files) == 0 {
 		return errors.New("module.generate.empty_files")
 	}
-	for _, dependency := range req.Schema.Dependencies {
-		if !isValidModulePath(strings.TrimSpace(dependency.Module), true) {
-			return errors.New("module.generate.invalid_dependency")
-		}
-	}
-	for _, relation := range req.Schema.Relations {
-		if strings.TrimSpace(relation.Name) == "" ||
-			strings.TrimSpace(relation.TargetModule) == "" ||
-			strings.TrimSpace(relation.LocalField) == "" ||
-			strings.TrimSpace(relation.TargetField) == "" {
-			return errors.New("module.generate.invalid_relation")
-		}
-		switch strings.TrimSpace(relation.Type) {
-		case "oneToMany", "manyToMany", "lookup":
-		default:
-			return errors.New("module.generate.invalid_relation")
-		}
+	if err := validateGovernanceContract(req); err != nil {
+		return err
 	}
 	return nil
 }

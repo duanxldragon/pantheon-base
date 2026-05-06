@@ -90,6 +90,114 @@ func TestValidateRegisterRequestRejectsUnsafeManagedTableName(t *testing.T) {
 	}
 }
 
+func TestValidateRegisterRequestRejectsInvalidGovernanceContract(t *testing.T) {
+	tests := []struct {
+		name      string
+		mutate    func(*RegisterGeneratedModuleRequest)
+		wantError string
+	}{
+		{
+			name: "unsupported template version",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.TemplateVersion = "v2"
+			},
+			wantError: "module.generate.invalid_template_version",
+		},
+		{
+			name: "invalid data scope mode",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.EnableDataScope = true
+				req.Schema.DataScopeMode = "project"
+			},
+			wantError: "module.generate.invalid_data_scope",
+		},
+		{
+			name: "module cannot depend on itself",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Dependencies = []ModuleDependency{{Module: "asset", Required: true}}
+			},
+			wantError: "module.generate.invalid_dependency",
+		},
+		{
+			name: "duplicate dependency",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Dependencies = []ModuleDependency{
+					{Module: "cmdb/vendor", Required: true},
+					{Module: "cmdb/vendor", Required: true},
+				}
+			},
+			wantError: "module.generate.invalid_dependency",
+		},
+		{
+			name: "relation target module must be valid",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Relations = []ModuleRelation{{
+					Name:         "assetOwner",
+					Type:         "lookup",
+					TargetModule: "CMDB/vendor",
+					LocalField:   "vendorId",
+					TargetField:  "id",
+				}}
+			},
+			wantError: "module.generate.invalid_relation",
+		},
+		{
+			name: "many to many relation requires junction table",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Relations = []ModuleRelation{{
+					Name:         "assetGroups",
+					Type:         "manyToMany",
+					TargetModule: "cmdb/group",
+					LocalField:   "id",
+					TargetField:  "id",
+				}}
+			},
+			wantError: "module.generate.invalid_relation",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := newScaffoldTestRequest()
+			tt.mutate(req)
+
+			err := ValidateRegisterRequest(req)
+			if err == nil || err.Error() != tt.wantError {
+				t.Fatalf("expected %s, got %v", tt.wantError, err)
+			}
+		})
+	}
+}
+
+func TestValidateRegisterRequestAcceptsP2GovernanceContract(t *testing.T) {
+	req := newScaffoldTestRequest()
+	req.Schema.TemplateVersion = "v1"
+	req.Schema.EnableDataScope = true
+	req.Schema.DataScopeMode = "dept"
+	req.Schema.Dependencies = []ModuleDependency{{Module: "cmdb/vendor", Required: true, Reason: "asset needs vendor"}}
+	req.Schema.Relations = []ModuleRelation{
+		{
+			Name:         "assetVendor",
+			Type:         "lookup",
+			TargetModule: "cmdb/vendor",
+			LocalField:   "vendorId",
+			TargetField:  "id",
+		},
+		{
+			Name:          "assetGroups",
+			Type:          "manyToMany",
+			TargetModule:  "cmdb/group",
+			LocalField:    "id",
+			TargetField:   "id",
+			JunctionTable: "biz_cmdb_asset_group",
+		},
+	}
+
+	if err := ValidateRegisterRequest(req); err != nil {
+		t.Fatalf("expected valid P2 governance contract, got %v", err)
+	}
+}
+
 func TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles(t *testing.T) {
 	root := t.TempDir()
 	schemaDir := filepath.Join(root, "schema", "generated", "business", "cmdb")
@@ -150,4 +258,23 @@ func TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles(t *testing.T)
 	if !strings.Contains(string(jaContent), `"business.cmdb.host.title": "Host Management"`) {
 		t.Fatalf("expected ja generated fallback to include English host title, got %s", string(jaContent))
 	}
+}
+
+func newScaffoldTestRequest() *RegisterGeneratedModuleRequest {
+	req := &RegisterGeneratedModuleRequest{
+		Schema: ModuleSchema{
+			Name:        "asset",
+			Scope:       "business",
+			DisplayName: "资产管理",
+			Model: struct {
+				TableName string        `json:"tableName"`
+				ModelName string        `json:"modelName"`
+				Fields    []ModuleField `json:"fields"`
+			}{
+				TableName: "biz_asset",
+			},
+		},
+		Files: []GeneratedFile{{Path: "backend/modules/business/asset/module.go", Content: "package asset"}},
+	}
+	return req
 }

@@ -1389,6 +1389,38 @@ const ModuleWizard: React.FC = () => {
                   <Tag color={registerResult.module.status === 3 ? 'orange' : 'green'}>{t(activationStatusKey)}</Tag>
                 </Space>
               </Card>
+              <Card title={t('generator.wizard.result.contractTitle')} className="generator-wizard__section">
+                <Space direction="vertical" className="generator-wizard__full">
+                  <Space wrap>
+                    <Tag color="arcoblue">{t('generator.wizard.result.templateVersion')}: {summary.contract.templateVersion}</Tag>
+                    <Tag color={summary.contract.dataScopeEnabled ? 'green' : 'gray'}>
+                      {t('generator.wizard.result.dataScope')}: {summary.contract.dataScopeMode}
+                    </Tag>
+                    <Tag color="blue">{t('generator.wizard.result.dependencyCount', { count: summary.contract.dependencyCount })}</Tag>
+                    <Tag color="orange">{t('generator.wizard.result.relationCount', { count: summary.contract.relationCount })}</Tag>
+                  </Space>
+                  {(summary.contract.dependencies?.length || 0) > 0 ? (
+                    <Space direction="vertical" className="generator-wizard__full">
+                      <Typography.Text type="secondary">{t('generator.wizard.result.dependencies')}</Typography.Text>
+                      {summary.contract.dependencies?.map((dependency) => (
+                        <Typography.Text key={dependency.module} code>
+                          {dependency.module}{dependency.reason ? ` · ${dependency.reason}` : ''}
+                        </Typography.Text>
+                      ))}
+                    </Space>
+                  ) : null}
+                  {(summary.contract.relations?.length || 0) > 0 ? (
+                    <Space direction="vertical" className="generator-wizard__full">
+                      <Typography.Text type="secondary">{t('generator.wizard.result.relations')}</Typography.Text>
+                      {summary.contract.relations?.map((relation) => (
+                        <Typography.Text key={`${relation.name}-${relation.targetModule}`} code>
+                          {relation.name} · {relation.type} · {relation.targetModule}
+                        </Typography.Text>
+                      ))}
+                    </Space>
+                  ) : null}
+                </Space>
+              </Card>
               <Card title={t('generator.wizard.result.verifications')} className="generator-wizard__section">
                 <Space direction="vertical" className="generator-wizard__full">
                   {summary.verifications.map((item) => (

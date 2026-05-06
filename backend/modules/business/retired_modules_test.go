@@ -8,25 +8,42 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestCleanupRetiredBusinessModules_PreservesManagedGeneratedModules(t *testing.T) {
+func TestCleanupRetiredBusinessModules_RemovesManagedRetiredModuleMetadataWithoutDroppingBusinessTables(t *testing.T) {
 	db := openRetiredModuleTestDB(t)
 	mustCreateRetiredModuleGovernanceTables(t, db)
 	mustCreateRetiredModuleBusinessTable(t, db, "biz_cmdb_host")
+	mustCreateRetiredModuleBusinessTable(t, db, "biz_cmdb_vendor")
 
-	mustInsertRetiredMenu(t, db, "/business/cmdb/host", "business.cmdb.host")
+	rootMenuID := mustInsertRetiredMenuRow(t, db, "/business/cmdb", "business.cmdb", "", "", "")
+	vendorMenuID := mustInsertRetiredMenuRow(
+		t,
+		db,
+		"/business/cmdb/vendor",
+		"business.cmdb.vendor",
+		"business/cmdb/vendor/CmdbVendorList",
+		"business:cmdb:vendor:list",
+		"business:cmdb:vendor:view",
+	)
+	mustInsertRetiredRoleMenu(t, db, rootMenuID)
+	mustInsertRetiredRoleMenu(t, db, vendorMenuID)
 	mustInsertRetiredPermission(t, db, "business:cmdb:host:view")
-	mustInsertRetiredI18n(t, db, "business.cmdb.host")
-	mustInsertManagedRegistration(t, db, "business.cmdb.host", "biz_cmdb_host", 1)
+	mustInsertRetiredPermission(t, db, "business:cmdb:vendor:view")
+	mustInsertRetiredI18n(t, db, "business.cmdb")
+	mustInsertRetiredI18n(t, db, "business.cmdb.vendor")
+	mustInsertManagedRegistration(t, db, "business.cmdb", "", 1)
+	mustInsertManagedRegistration(t, db, "business.cmdb.vendor", "biz_cmdb_vendor", 1)
 
 	if err := cleanupRetiredBusinessModules(db); err != nil {
 		t.Fatalf("cleanup retired modules: %v", err)
 	}
 
 	assertTableExists(t, db, "biz_cmdb_host")
-	assertRecordCount(t, db, "system_menu", "module = 'business.cmdb.host'", 1)
-	assertRecordCount(t, db, "system_role_permission", "permission_key = 'business:cmdb:host:view'", 1)
-	assertRecordCount(t, db, "system_i18n", "module = 'business.cmdb.host'", 1)
-	assertRecordCount(t, db, "system_module_registration", "name = 'business.cmdb.host'", 1)
+	assertTableExists(t, db, "biz_cmdb_vendor")
+	assertRecordCount(t, db, "system_menu", "1 = 1", 0)
+	assertRecordCount(t, db, "system_role_menu", "1 = 1", 0)
+	assertRecordCount(t, db, "system_role_permission", "permission_key LIKE 'business:cmdb:%'", 0)
+	assertRecordCount(t, db, "system_i18n", "module IN ('business.cmdb', 'business.cmdb.vendor')", 0)
+	assertRecordCount(t, db, "system_module_registration", "name IN ('business.cmdb', 'business.cmdb.vendor')", 0)
 }
 
 func TestCleanupRetiredBusinessModules_RemovesLegacyMetadataWithoutDroppingBusinessTables(t *testing.T) {
@@ -34,7 +51,7 @@ func TestCleanupRetiredBusinessModules_RemovesLegacyMetadataWithoutDroppingBusin
 	mustCreateRetiredModuleGovernanceTables(t, db)
 	mustCreateRetiredModuleBusinessTable(t, db, "biz_cmdb_host")
 
-	mustInsertRetiredMenu(t, db, "/business/cmdb/host", "business.cmdb")
+	mustInsertRetiredMenuRow(t, db, "/business/cmdb/host", "business.cmdb", "business/cmdb/host/CmdbHostList", "business:cmdb:host:list", "business:cmdb:host:view")
 	mustInsertRetiredPermission(t, db, "business:cmdb:host:view")
 	mustInsertRetiredI18n(t, db, "business.cmdb.host")
 
@@ -100,14 +117,29 @@ func mustCreateRetiredModuleBusinessTable(t *testing.T, db *gorm.DB, tableName s
 	}
 }
 
-func mustInsertRetiredMenu(t *testing.T, db *gorm.DB, path string, module string) {
+func mustInsertRetiredMenuRow(t *testing.T, db *gorm.DB, path string, module string, component string, pagePerm string, perms string) uint64 {
 	t.Helper()
 	if err := db.Exec(
-		`INSERT INTO system_menu (path, type, module, component, page_perm, perms) VALUES (?, 'C', ?, 'business/cmdb/host/CmdbHostList', 'business:cmdb:host:view', 'business:cmdb:host:view')`,
+		`INSERT INTO system_menu (path, type, module, component, page_perm, perms) VALUES (?, 'C', ?, ?, ?, ?)`,
 		path,
 		module,
+		component,
+		pagePerm,
+		perms,
 	).Error; err != nil {
 		t.Fatalf("insert retired menu: %v", err)
+	}
+	var menuID uint64
+	if err := db.Table("system_menu").Select("id").Where("path = ?", path).Limit(1).Pluck("id", &menuID).Error; err != nil {
+		t.Fatalf("lookup retired menu id: %v", err)
+	}
+	return menuID
+}
+
+func mustInsertRetiredRoleMenu(t *testing.T, db *gorm.DB, menuID uint64) {
+	t.Helper()
+	if err := db.Exec(`INSERT INTO system_role_menu (role_id, menu_id) VALUES (1, ?)`, menuID).Error; err != nil {
+		t.Fatalf("insert retired role menu: %v", err)
 	}
 }
 

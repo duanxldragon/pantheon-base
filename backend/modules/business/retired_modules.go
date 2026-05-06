@@ -7,7 +7,6 @@ type retiredModuleSpec struct {
 	PermissionPrefixes []string
 	MenuPaths          []string
 	ComponentKeys      []string
-	TableNames         []string
 }
 
 var retiredBusinessModules = []retiredModuleSpec{
@@ -36,12 +35,11 @@ var retiredBusinessModules = []retiredModuleSpec{
 			"business/cmdb/host/CmdbHostList",
 			"business/cmdb/vendor/CmdbVendorList",
 		},
-		TableNames: []string{
-			"biz_cmdb",
-			"biz_cmdb_host",
-			"biz_cmdb_vendor",
-		},
 	},
+}
+
+func CleanupRetiredBusinessModules(db *gorm.DB) error {
+	return cleanupRetiredBusinessModules(db)
 }
 
 func cleanupRetiredBusinessModules(db *gorm.DB) error {
@@ -59,14 +57,6 @@ func cleanupRetiredBusinessModules(db *gorm.DB) error {
 }
 
 func cleanupRetiredModule(tx *gorm.DB, spec retiredModuleSpec) error {
-	protected, err := hasManagedRetiredOverlap(tx, spec)
-	if err != nil {
-		return err
-	}
-	if protected {
-		return nil
-	}
-
 	menuIDs, err := collectRetiredMenuIDs(tx, spec)
 	if err != nil {
 		return err
@@ -105,38 +95,6 @@ func cleanupRetiredModule(tx *gorm.DB, spec retiredModuleSpec) error {
 	}
 
 	return nil
-}
-
-func hasManagedRetiredOverlap(tx *gorm.DB, spec retiredModuleSpec) (bool, error) {
-	if tx == nil || !tx.Migrator().HasTable("system_module_registration") {
-		return false, nil
-	}
-
-	query := tx.Table("system_module_registration").
-		Where("COALESCE(table_name, '') <> ''")
-
-	applied := false
-	if len(spec.ModuleNames) > 0 {
-		query = query.Where("name IN ?", spec.ModuleNames)
-		applied = true
-	}
-	if len(spec.TableNames) > 0 {
-		if applied {
-			query = query.Or("table_name IN ?", spec.TableNames)
-		} else {
-			query = query.Where("table_name IN ?", spec.TableNames)
-			applied = true
-		}
-	}
-	if !applied {
-		return false, nil
-	}
-
-	var count int64
-	if err := query.Count(&count).Error; err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }
 
 func collectRetiredMenuIDs(tx *gorm.DB, spec retiredModuleSpec) ([]uint64, error) {

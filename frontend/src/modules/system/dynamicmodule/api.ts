@@ -15,9 +15,12 @@ export interface ModuleRegistration {
   summary?: string;
   sourceTable?: string;
   tableName: string;
-  status: number; // 1:已注册, 2:已卸载
+  status: number; // 1:已接入, 2:已卸载, 3:待激活, 4:失败
   installedAt: string;
   uninstalledAt?: string;
+  lastVerifiedAt?: string;
+  lastError?: string;
+  lastVerificationResult?: string;
   builtIn?: boolean;
 }
 
