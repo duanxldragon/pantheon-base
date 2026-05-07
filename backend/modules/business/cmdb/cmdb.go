@@ -22,7 +22,6 @@ func InitCmdbModule(r *gin.RouterGroup, db *gorm.DB) {
 			ModuleName:    "business.cmdb.host",
 			MigrateFunc:   func(db *gorm.DB) error { return hostSvc.Migrate() },
 			SeedMenusFunc: seedHostMenus,
-			SeedPermsFunc: seedHostPermissions,
 			SeedI18nFunc:  seedHostI18n,
 			Register: func(r *gin.RouterGroup) {
 				cmdb := r.Group("/business/cmdb").
@@ -35,7 +34,6 @@ func InitCmdbModule(r *gin.RouterGroup, db *gorm.DB) {
 			ModuleName:    "business.cmdb.group",
 			MigrateFunc:   func(db *gorm.DB) error { return groupSvc.Migrate() },
 			SeedMenusFunc: seedGroupMenus,
-			SeedPermsFunc: seedGroupPermissions,
 			SeedI18nFunc:  seedGroupI18n,
 			Register: func(r *gin.RouterGroup) {
 				cmdb := r.Group("/business/cmdb").

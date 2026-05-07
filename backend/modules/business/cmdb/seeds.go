@@ -75,32 +75,9 @@ func seedHostMenus(db *gorm.DB) error {
 	return seedRecords(db, "system_menu", menus)
 }
 
-func seedHostPermissions(db *gorm.DB) error {
-	if db == nil {
-		return nil
-	}
-	perms := []map[string]interface{}{
-		{"permission_key": "business:cmdb:host:list", "module": "business.cmdb", "description": "主机列表"},
-		{"permission_key": "business:cmdb:host:detail", "module": "business.cmdb", "description": "主机详情"},
-		{"permission_key": "business:cmdb:host:create", "module": "business.cmdb", "description": "新增主机"},
-		{"permission_key": "business:cmdb:host:update", "module": "business.cmdb", "description": "编辑主机"},
-		{"permission_key": "business:cmdb:host:delete", "module": "business.cmdb", "description": "删除主机"},
-		{"permission_key": "business:cmdb:host:collect", "module": "business.cmdb", "description": "SSH采集"},
-		{"permission_key": "business:cmdb:host:status", "module": "business.cmdb", "description": "更新状态"},
-		{"permission_key": "business:cmdb:group:list", "module": "business.cmdb", "description": "分组列表"},
-		{"permission_key": "business:cmdb:group:detail", "module": "business.cmdb", "description": "分组详情"},
-		{"permission_key": "business:cmdb:group:create", "module": "business.cmdb", "description": "新增分组"},
-		{"permission_key": "business:cmdb:group:update", "module": "business.cmdb", "description": "编辑分组"},
-		{"permission_key": "business:cmdb:group:delete", "module": "business.cmdb", "description": "删除分组"},
-	}
-	for _, p := range perms {
-		p["created_at"] = time.Now()
-		p["updated_at"] = time.Now()
-	}
-	return seedRecords(db, "system_permission", perms)
-}
+func seedHostPermissions(db *gorm.DB) error { return nil }
 
-func seedGroupMenus(db *gorm.DB) error   { return nil }
+func seedGroupMenus(db *gorm.DB) error     { return nil }
 func seedGroupPermissions(db *gorm.DB) error { return nil }
 
 func seedHostI18n(db *gorm.DB) error {
@@ -108,14 +85,14 @@ func seedHostI18n(db *gorm.DB) error {
 		return nil
 	}
 	i18nEntries := []map[string]interface{}{
-		{"module": "operations", "locale": "zh-CN", "i18n_key": "operations.menu", "i18n_value": "运维平台", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations", "locale": "en-US", "i18n_key": "operations.menu", "i18n_value": "Operations", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations.cmdb", "locale": "zh-CN", "i18n_key": "operations.cmdb.menu", "i18n_value": "CMDB", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations.cmdb", "locale": "en-US", "i18n_key": "operations.cmdb.menu", "i18n_value": "CMDB", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations.cmdb", "locale": "zh-CN", "i18n_key": "operations.cmdb.host.menu", "i18n_value": "主机管理", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations.cmdb", "locale": "en-US", "i18n_key": "operations.cmdb.host.menu", "i18n_value": "Host Management", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations.cmdb", "locale": "zh-CN", "i18n_key": "operations.cmdb.group.menu", "i18n_value": "主机分组", "created_at": time.Now(), "updated_at": time.Now()},
-		{"module": "operations.cmdb", "locale": "en-US", "i18n_key": "operations.cmdb.group.menu", "i18n_value": "Host Groups", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations", "group_name": "messages", "key": "operations.menu", "locale": "zh-CN", "value": "运维平台", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations", "group_name": "messages", "key": "operations.menu", "locale": "en-US", "value": "Operations", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations.cmdb", "group_name": "messages", "key": "operations.cmdb.menu", "locale": "zh-CN", "value": "CMDB", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations.cmdb", "group_name": "messages", "key": "operations.cmdb.menu", "locale": "en-US", "value": "CMDB", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations.cmdb", "group_name": "messages", "key": "operations.cmdb.host.menu", "locale": "zh-CN", "value": "主机管理", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations.cmdb", "group_name": "messages", "key": "operations.cmdb.host.menu", "locale": "en-US", "value": "Host Management", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations.cmdb", "group_name": "messages", "key": "operations.cmdb.group.menu", "locale": "zh-CN", "value": "主机分组", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
+		{"module": "operations.cmdb", "group_name": "messages", "key": "operations.cmdb.group.menu", "locale": "en-US", "value": "Host Groups", "lifecycle_status": "active", "created_at": time.Now(), "updated_at": time.Now()},
 	}
 	return seedRecords(db, "system_i18n", i18nEntries)
 }
@@ -127,13 +104,13 @@ func seedCmdbDicts(db *gorm.DB) error {
 		return nil
 	}
 	dictTypes := []map[string]interface{}{
-		{"dict_type": "cmdb_host_status", "dict_name": "主机状态", "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_os_type", "dict_name": "操作系统类型", "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_label_key", "dict_name": "预置标签键", "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_host_status", "dict_name": "主机状态", "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_os_type", "dict_name": "操作系统类型", "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_label_key", "dict_name": "预置标签键", "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
 	}
 	for _, dt := range dictTypes {
 		var count int64
-		db.Table("system_dict_type").Where("dict_type = ?", dt["dict_type"]).Count(&count)
+		db.Table("system_dict_type").Where("dict_code = ?", dt["dict_code"]).Count(&count)
 		if count == 0 {
 			if err := db.Table("system_dict_type").Create(dt).Error; err != nil {
 				return err
@@ -141,23 +118,23 @@ func seedCmdbDicts(db *gorm.DB) error {
 		}
 	}
 	dictItems := []map[string]interface{}{
-		{"dict_type": "cmdb_host_status", "dict_label": "待上线", "dict_value": "pending", "sort": 1, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_host_status", "dict_label": "在线", "dict_value": "online", "sort": 2, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_host_status", "dict_label": "离线", "dict_value": "offline", "sort": 3, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_host_status", "dict_label": "维护中", "dict_value": "maintenance", "sort": 4, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_os_type", "dict_label": "Linux", "dict_value": "linux", "sort": 1, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_os_type", "dict_label": "Windows", "dict_value": "windows", "sort": 2, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_label_key", "dict_label": "环境", "dict_value": "env", "sort": 1, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_label_key", "dict_label": "业务系统", "dict_value": "biz", "sort": 2, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_label_key", "dict_label": "集群", "dict_value": "cluster", "sort": 3, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_label_key", "dict_label": "区域", "dict_value": "region", "sort": 4, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
-		{"dict_type": "cmdb_label_key", "dict_label": "数据库类型", "dict_value": "db_type", "sort": 5, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_host_status", "item_label_key": "待上线", "item_value": "pending", "sort": 1, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_host_status", "item_label_key": "在线", "item_value": "online", "sort": 2, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_host_status", "item_label_key": "离线", "item_value": "offline", "sort": 3, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_host_status", "item_label_key": "维护中", "item_value": "maintenance", "sort": 4, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_os_type", "item_label_key": "Linux", "item_value": "linux", "sort": 1, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_os_type", "item_label_key": "Windows", "item_value": "windows", "sort": 2, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_label_key", "item_label_key": "环境", "item_value": "env", "sort": 1, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_label_key", "item_label_key": "业务系统", "item_value": "biz", "sort": 2, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_label_key", "item_label_key": "集群", "item_value": "cluster", "sort": 3, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_label_key", "item_label_key": "区域", "item_value": "region", "sort": 4, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
+		{"dict_code": "cmdb_label_key", "item_label_key": "数据库类型", "item_value": "db_type", "sort": 5, "status": 1, "created_at": time.Now(), "updated_at": time.Now()},
 	}
 	for _, di := range dictItems {
 		var count int64
-		db.Table("system_dict_data").Where("dict_type = ? AND dict_value = ?", di["dict_type"], di["dict_value"]).Count(&count)
+		db.Table("system_dict_item").Where("dict_code = ? AND item_value = ?", di["dict_code"], di["item_value"]).Count(&count)
 		if count == 0 {
-			if err := db.Table("system_dict_data").Create(di).Error; err != nil {
+			if err := db.Table("system_dict_item").Create(di).Error; err != nil {
 				return err
 			}
 		}
@@ -171,11 +148,9 @@ func seedRecords(db *gorm.DB, table string, records []map[string]interface{}) er
 		switch table {
 		case "system_menu":
 			db.Table(table).Where("name = ?", record["name"]).Count(&count)
-		case "system_permission":
-			db.Table(table).Where("permission_key = ?", record["permission_key"]).Count(&count)
 		case "system_i18n":
-			db.Table(table).Where("module = ? AND i18n_key = ? AND locale = ?",
-				record["module"], record["i18n_key"], record["locale"]).Count(&count)
+			db.Table(table).Where("module = ? AND `key` = ? AND locale = ?",
+				record["module"], record["key"], record["locale"]).Count(&count)
 		}
 		if count == 0 {
 			if err := db.Table(table).Create(record).Error; err != nil {
