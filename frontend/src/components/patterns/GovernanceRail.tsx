@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@arco-design/web-react';
 import { IconStorage } from '@arco-design/web-react/icon';
+import AppDrawer from './AppDrawer';
 import { SideRailItem, SideRailNote, SideRailPanel, SideRailStack } from './SideRail';
 import type { RailSummaryItem, RailSummaryTone } from './RailSummary';
 
@@ -29,6 +30,17 @@ interface GovernanceRailPanelProps {
 interface GovernanceRailSummaryProps {
   items: RailSummaryItem[];
   className?: string;
+}
+
+interface GovernanceInsightDrawerProps {
+  visible: boolean;
+  title: React.ReactNode;
+  onClose: () => void;
+  children: React.ReactNode;
+  noteTitle?: React.ReactNode;
+  noteDescription?: React.ReactNode;
+  noteTone?: RailSummaryTone;
+  footer?: React.ReactNode;
 }
 
 export const GovernanceRailToggleButton: React.FC<GovernanceRailToggleButtonProps> = ({
@@ -96,4 +108,33 @@ export const GovernanceRailSummary: React.FC<GovernanceRailSummaryProps> = ({
       />
     ))}
   </SideRailStack>
+);
+
+export const GovernanceInsightDrawer: React.FC<GovernanceInsightDrawerProps> = ({
+  visible,
+  title,
+  onClose,
+  children,
+  noteTitle,
+  noteDescription,
+  noteTone = 'neutral',
+  footer,
+}) => (
+  <AppDrawer
+    title={title}
+    visible={visible}
+    onCancel={onClose}
+    size="sm"
+    className="governance-insight-drawer"
+    footer={footer ?? null}
+  >
+    <div className="governance-insight-drawer__body">
+      <SideRailPanel className="governance-insight-drawer__summary">{children}</SideRailPanel>
+      {noteTitle || noteDescription ? (
+        <SideRailPanel className="governance-insight-drawer__note-panel">
+          <SideRailNote title={noteTitle} description={noteDescription} tone={noteTone} />
+        </SideRailPanel>
+      ) : null}
+    </div>
+  </AppDrawer>
 );

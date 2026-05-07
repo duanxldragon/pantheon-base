@@ -35,7 +35,7 @@ import {
   AppTable,
   FilterPanel,
   GovernanceCleanupBar,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ListHeaderActions,
@@ -44,10 +44,11 @@ import {
   PageError,
   PageHeader,
   PageLoading,
-  PageSplitLayout,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
+  withTableColumnPriority,
 } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
@@ -640,31 +641,54 @@ const OperationLogList: React.FC = () => {
     {
       title: t('system.audit.title'),
       dataIndex: 'title',
-      width: 180,
+      width: TABLE_COLUMN_WIDTH.tagGroup,
       ellipsis: true,
       render: (value: string) => t(value, { defaultValue: value || '-' }),
     },
     {
       title: t('system.audit.sourceDomain'),
-      width: 140,
+      width: TABLE_COLUMN_WIDTH.identity,
       render: (_, record) => {
         const recordSourceMeta = getAuditSourceMeta(record);
         return <Tag color="purple">{t(recordSourceMeta.domainKey)}</Tag>;
       },
     },
+    withTableColumnPriority(
+      {
+        title: t('system.audit.operName'),
+        dataIndex: 'operName',
+        width: TABLE_COLUMN_WIDTH.identity,
+        render: (value: string) => value || '-',
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.audit.operIp'),
+        dataIndex: 'operIp',
+        width: TABLE_COLUMN_WIDTH.identity,
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('auth.loginLog.location'),
+        dataIndex: 'operLocation',
+        width: TABLE_COLUMN_WIDTH.location,
+        ellipsis: true,
+      },
+      'low',
+    ),
     {
-      title: t('system.audit.operName'),
-      dataIndex: 'operName',
-      width: 140,
-      render: (value: string) => value || '-',
+      title: t('system.audit.operUrl'),
+      dataIndex: 'operUrl',
+      width: TABLE_COLUMN_WIDTH.routePath,
+      ellipsis: true,
     },
-    { title: t('system.audit.operIp'), dataIndex: 'operIp', width: 140 },
-    { title: t('auth.loginLog.location'), dataIndex: 'operLocation', width: 180, ellipsis: true },
-    { title: t('system.audit.operUrl'), dataIndex: 'operUrl', ellipsis: true },
     {
       title: t('system.audit.status'),
       dataIndex: 'status',
-      width: 220,
+      width: TABLE_COLUMN_WIDTH.diagnostics,
       render: (value: number, record) => (
         <Space direction="vertical" size={4}>
           <Tag color={value === 1 ? 'green' : 'red'}>
@@ -689,12 +713,15 @@ const OperationLogList: React.FC = () => {
         </Space>
       ),
     },
-    {
-      title: t('system.audit.operTime'),
-      dataIndex: 'operTime',
-      width: 180,
-      render: (value: string) => formatDateTime(value),
-    },
+    withTableColumnPriority(
+      {
+        title: t('system.audit.operTime'),
+        dataIndex: 'operTime',
+        width: TABLE_COLUMN_WIDTH.datetime,
+        render: (value: string) => formatDateTime(value),
+      },
+      'medium',
+    ),
     {
       title: t('common.action'),
       fixed: 'right',
@@ -749,9 +776,9 @@ const OperationLogList: React.FC = () => {
       },
       {
         key: 'cleanup',
-        label: t('system.audit.hero.clearReady'),
+        label: t('system.audit.hero.cleanupReady'),
         value: canClear ? t('common.yes') : t('common.no'),
-        hint: t('system.audit.hero.clearHint'),
+        hint: t('system.audit.hero.cleanupHint'),
       },
     ],
     [canClear, canExport, failedCount, successCount, t, total],
@@ -802,7 +829,7 @@ const OperationLogList: React.FC = () => {
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-list__hero audit-log-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('system.audit.hero.eyebrow')}</span>
@@ -821,46 +848,7 @@ const OperationLogList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('system.audit.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('system.audit.failureSummary')}
-                noteDescription={t('system.audit.hero.sideDesc')}
-                noteTone="warning"
-              >
-                <GovernanceRailSummary
-                  items={[
-                    {
-                      label: t('common.success'),
-                      value: successCount,
-                      description: t('system.audit.hero.successHint'),
-                    },
-                    {
-                      tone: 'warning',
-                      label: t('common.failed'),
-                      value: failedCount,
-                      description: t('system.audit.hero.failedHint'),
-                    },
-                    {
-                      label: t('system.audit.hero.clearReady'),
-                      value: canClear ? t('common.yes') : t('common.no'),
-                      description: t('system.audit.hero.clearHint'),
-                    },
-                    {
-                      label: t('common.selected'),
-                      value: selectedRowKeys.length,
-                      description: t('system.audit.hero.selectedHint'),
-                    },
-                  ]}
-                />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
@@ -1062,8 +1050,43 @@ const OperationLogList: React.FC = () => {
               />
             )}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.audit.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.audit.failureSummary')}
+        noteDescription={t('system.audit.hero.sideDesc')}
+        noteTone="warning"
+      >
+        <GovernanceRailSummary
+          items={[
+            {
+              label: t('common.success'),
+              value: successCount,
+              description: t('system.audit.hero.successHint'),
+            },
+            {
+              tone: 'warning',
+              label: t('common.failed'),
+              value: failedCount,
+              description: t('system.audit.hero.failedHint'),
+            },
+            {
+              label: t('system.audit.hero.cleanupReady'),
+              value: canClear ? t('common.yes') : t('common.no'),
+              description: t('system.audit.hero.cleanupHint'),
+            },
+            {
+              label: t('common.selected'),
+              value: selectedRowKeys.length,
+              description: t('system.audit.hero.selectedHint'),
+            },
+          ]}
+        />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={t('common.detail')}

@@ -46,6 +46,7 @@ import {
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
   PermissionAction,
+  TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
 import {
@@ -250,7 +251,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
       {
         title: t('system.dict.dictCode'),
         dataIndex: 'dictCode',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.code,
         render: (value: string, row: DictTypeRow) => (
           <Button type="text" style={{ padding: 0 }} onClick={() => onSelectType(row)}>
             {value}
@@ -260,33 +261,33 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
       {
         title: t('system.dict.dictName'),
         dataIndex: 'dictName',
-        width: 160,
+        width: TABLE_COLUMN_WIDTH.name,
         render: (value: string) => <Text ellipsis={{ showTooltip: true }}>{t(value, value)}</Text>,
       },
       withTableColumnPriority(
         {
           title: t('system.dict.module'),
           dataIndex: 'module',
-          width: 120,
+          width: TABLE_COLUMN_WIDTH.code,
           ellipsis: true,
         },
         'medium',
       ),
       withTableColumnPriority(
-        {
-          title: t('system.dict.item'),
-          dataIndex: 'itemCount',
-          width: 108,
-          render: (_: unknown, row: DictTypeRow) => (
-            <Text>{`${row.activeItemCount}/${row.itemCount}`}</Text>
-          ),
+      {
+        title: t('system.dict.item'),
+        dataIndex: 'itemCount',
+        width: TABLE_COLUMN_WIDTH.count,
+        render: (_: unknown, row: DictTypeRow) => (
+          <Text>{`${row.activeItemCount}/${row.itemCount}`}</Text>
+        ),
         },
         'low',
       ),
       {
         title: t('system.dict.status'),
         dataIndex: 'status',
-        width: 96,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: number) => (
           <Tag color={value === 1 ? 'green' : 'red'}>
             {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}

@@ -5,6 +5,7 @@ import '@arco-design/web-react/es/Breadcrumb/style/css.js';
 import '@arco-design/web-react/es/Button/style/css.js';
 import '@arco-design/web-react/es/Card/style/css.js';
 import '@arco-design/web-react/es/Descriptions/style/css.js';
+import '@arco-design/web-react/es/Drawer/style/css.js';
 import '@arco-design/web-react/es/Dropdown/style/css.js';
 import '@arco-design/web-react/es/Empty/style/css.js';
 import '@arco-design/web-react/es/Form/style/css.js';

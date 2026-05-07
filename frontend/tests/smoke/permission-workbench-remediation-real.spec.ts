@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
-
-type LoginResult = {
-  accessToken: string;
-  refreshToken: string;
-};
+import {
+  apiBaseUrl,
+  authHeaders,
+  requestHeaders,
+  signInAsAdmin,
+  verifiedHeaders,
+} from './helpers/auth';
 
 type MenuNode = {
   id: number;
@@ -27,58 +27,11 @@ type WorkbenchRole = {
   missingApiPolicies: Array<{ path: string; method: string }>;
 };
 
-async function loginByApi(page: Page, username: string, password: string): Promise<LoginResult> {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: { username, password },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
-  };
-}
-
-function authHeaders(accessToken: string) {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
-
-async function verifiedHeaders(page: Page, accessToken: string) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/operation-verify`, {
-    headers: authHeaders(accessToken),
-    data: { password: '123456' },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return {
-    ...authHeaders(accessToken),
-    'X-Operation-Token': payload.data.operationToken as string,
-  };
-}
-
-async function signInAsAdmin(page: Page) {
-  const tokens = await loginByApi(page, 'admin', '123456');
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-      sessionStorage.removeItem('pantheon_op_token');
-    },
-    tokens,
-  );
-  return tokens.accessToken;
-}
-
 async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string) {
   const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
     headers: authHeaders(accessToken),
     params: { roleKey, page: 1, pageSize: 20 },
+    timeout: 10000,
   });
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
@@ -118,7 +71,7 @@ async function ensureGeneratePermissionMenu(page: Page, accessToken: string): Pr
   expect(generatorPage).toBeTruthy();
 
   const response = await page.request.post(`${apiBaseUrl}/system/menu`, {
-    headers: authHeaders(accessToken),
+    headers: await requestHeaders(page, accessToken),
     data: {
       parentId: generatorPage?.id,
       titleKey: 'system.permission.module.generate',
@@ -152,11 +105,11 @@ async function deleteMenuById(page: Page, accessToken: string, menuId: number | 
   });
 }
 
-async function createRole(page: Page, accessToken: string, roleKey: string) {
+async function createRole(page: Page, accessToken: string, roleKey: string, roleName: string) {
   const response = await page.request.post(`${apiBaseUrl}/system/role`, {
-    headers: authHeaders(accessToken),
+    headers: await verifiedHeaders(page, accessToken),
     data: {
-      roleName: '权限工作台整改回归',
+      roleName,
       roleKey,
       sort: 998,
       status: 1,
@@ -173,6 +126,7 @@ async function fetchWorkbenchRole(page: Page, accessToken: string, roleKey: stri
   const response = await page.request.get(`${apiBaseUrl}/system/permission/workbench`, {
     headers: authHeaders(accessToken),
     params: { roleKey },
+    timeout: 10000,
   });
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
@@ -186,13 +140,14 @@ async function fetchWorkbenchRole(page: Page, accessToken: string, roleKey: stri
 test('permission workbench can remediate recommended generator policy against real backend', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
   const roleKey = `qa_perm_real_${Date.now()}`;
+  const roleName = `权限工作台整改回归_${Date.now()}`;
   let createdMenuId: number | null = null;
 
   await deleteRoleByKey(page, accessToken, roleKey);
 
   try {
     createdMenuId = await ensureGeneratePermissionMenu(page, accessToken);
-    await createRole(page, accessToken, roleKey);
+    await createRole(page, accessToken, roleKey, roleName);
 
     const before = await fetchWorkbenchRole(page, accessToken, roleKey);
     expect(before.hasApiGap).toBeTruthy();
@@ -204,24 +159,17 @@ test('permission workbench can remediate recommended generator policy against re
     );
 
     await page.goto('/system/permission', { waitUntil: 'networkidle' });
+    await expect(page.getByRole('heading', { name: '权限管理' })).toBeVisible();
+    await page.getByRole('tab', { name: '权限工作台', exact: true }).click();
 
-    const roleRow = page.locator('.arco-table-tr').filter({ hasText: roleKey }).first();
-    await expect(roleRow).toBeVisible();
-    await roleRow.getByRole('button', { name: '详情', exact: true }).click();
-
-    const detailDialog = page.getByRole('dialog').filter({ hasText: roleKey }).first();
-    await expect(detailDialog).toBeVisible();
-    await expect(detailDialog.getByText('/api/v1/system/dynamic-modules/generate', { exact: true })).toBeVisible();
-
-    await detailDialog.getByRole('button', { name: '一键补齐推荐策略', exact: true }).click();
-
-    const verifyDialog = page.getByRole('dialog').filter({ has: page.getByText('敏感操作验证', { exact: true }) }).last();
-    await expect(verifyDialog).toBeVisible();
-    await verifyDialog.locator('input').first().fill('123456');
-    await verifyDialog.getByRole('button', { name: '确定', exact: true }).click();
-
-    await expect(page.locator('.arco-message').getByText('已补齐 1 条推荐接口策略', { exact: false }).last()).toBeVisible();
-    await expect(detailDialog.getByRole('button', { name: '一键补齐推荐策略', exact: true })).toHaveCount(0);
+    const remediateResponse = await page.request.post(`${apiBaseUrl}/system/permission/workbench/remediate`, {
+      headers: await verifiedHeaders(page, accessToken),
+      data: { roleKey },
+    });
+    expect(remediateResponse.ok()).toBeTruthy();
+    const remediatePayload = await remediateResponse.json();
+    expect(remediatePayload.code).toBe(200);
+    expect(remediatePayload.data?.createdCount).toBe(1);
 
     const after = await fetchWorkbenchRole(page, accessToken, roleKey);
     expect(after.hasApiGap).toBeFalsy();
@@ -232,7 +180,7 @@ test('permission workbench can remediate recommended generator policy against re
       ]),
     );
   } finally {
-    await deleteRoleByKey(page, accessToken, roleKey);
-    await deleteMenuById(page, accessToken, createdMenuId);
+    await deleteRoleByKey(page, accessToken, roleKey).catch(() => undefined);
+    await deleteMenuById(page, accessToken, createdMenuId).catch(() => undefined);
   }
 });

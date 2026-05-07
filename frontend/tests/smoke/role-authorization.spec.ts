@@ -1,38 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
-
-async function signInAsAdmin(page: Page) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-    },
-    {
-      accessToken: payload.data.accessToken,
-      refreshToken: payload.data.refreshToken,
-    },
-  );
-
-  return payload.data.accessToken as string;
-}
-
-function authHeaders(accessToken: string) {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
+import { apiBaseUrl, authHeaders, signInAsAdmin } from './helpers/auth';
 
 async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/role/list`, {

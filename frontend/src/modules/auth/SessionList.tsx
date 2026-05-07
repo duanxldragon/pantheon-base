@@ -32,15 +32,15 @@ import {
   AppTable,
   FilterPanel,
   GovernanceCleanupBar,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  ListHeaderActions,
   PageContainer,
   PageEmpty,
   PageError,
   PageHeader,
   PageLoading,
-  PageSplitLayout,
   TABLE_ACTION_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
@@ -341,9 +341,23 @@ const SessionList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader title={t('system.menu.session')} />
+      <PageHeader
+        title={t('system.menu.session')}
+        extra={
+          <ListHeaderActions
+            utility={
+              <GovernanceRailToggleButton
+                expanded={governanceRail.expanded}
+                onToggle={governanceRail.toggle}
+              >
+                {t('auth.session.hero.summaryTitle')}
+              </GovernanceRailToggleButton>
+            }
+          />
+        }
+      />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-list__hero auth-log-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('auth.session.hero.eyebrow')}</span>
@@ -351,12 +365,6 @@ const SessionList: React.FC = () => {
                 {t('auth.session.hero.title')}
               </Typography.Title>
             </div>
-            <GovernanceRailToggleButton
-              expanded={governanceRail.expanded}
-              onToggle={governanceRail.toggle}
-            >
-              {t('auth.session.hero.summaryTitle')}
-            </GovernanceRailToggleButton>
           </div>
           <div className="system-page-kpi-grid">
             {heroStats.map((item) => (
@@ -368,41 +376,7 @@ const SessionList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('auth.session.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('auth.security.sessionHint')}
-                noteDescription={t('auth.session.hero.sideDesc')}
-                noteTone="warning"
-              >
-                <GovernanceRailSummary
-                  items={[
-                    {
-                      label: t('auth.session.currentUser'),
-                      value: currentUsername || '-',
-                      description: t('auth.session.selfProtected'),
-                    },
-                    {
-                      label: t('auth.session.status.active'),
-                      value: activeCount,
-                      description: t('auth.session.hero.activeHint'),
-                    },
-                    {
-                      tone: 'warning',
-                      label: t('auth.session.status.revoked'),
-                      value: revokedCount,
-                      description: t('auth.session.hero.revokedHint'),
-                    },
-                  ]}
-                />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16} className="auth-filter-grid">
@@ -522,8 +496,37 @@ const SessionList: React.FC = () => {
               />
             )}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+      <GovernanceInsightDrawer
+        title={t('auth.session.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('auth.security.sessionHint')}
+        noteDescription={t('auth.session.hero.sideDesc')}
+        noteTone="warning"
+      >
+        <GovernanceRailSummary
+          items={[
+            {
+              label: t('auth.session.currentUser'),
+              value: currentUsername || '-',
+              description: t('auth.session.selfProtected'),
+            },
+            {
+              label: t('auth.session.status.active'),
+              value: activeCount,
+              description: t('auth.session.hero.activeHint'),
+            },
+            {
+              tone: 'warning',
+              label: t('auth.session.status.revoked'),
+              value: revokedCount,
+              description: t('auth.session.hero.revokedHint'),
+            },
+          ]}
+        />
+      </GovernanceInsightDrawer>
       <SessionDetailModal
         visible={Boolean(detailSession)}
         session={detailSession}

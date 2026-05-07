@@ -67,6 +67,7 @@ import {
   persistShellDensityMode,
   persistShellLastActivityAt,
   persistShellLockedState,
+  persistLoginNotice,
   readShellDensityMode,
   readShellLastActivityAt,
   readShellLockedState,
@@ -345,12 +346,15 @@ const BaseLayout: React.FC = () => {
   }, []);
 
   const performLogout = useCallback(
-    async (revokeSession: boolean) => {
+    async (revokeSession: boolean, noticeKey?: string) => {
       if (idleLogoutInFlightRef.current) {
         return;
       }
       idleLogoutInFlightRef.current = true;
       beginLogoutTransition();
+      if (noticeKey) {
+        persistLoginNotice(noticeKey);
+      }
       if (revokeSession) {
         await logoutApi().catch(() => undefined);
       }
@@ -375,7 +379,7 @@ const BaseLayout: React.FC = () => {
 
   const recordActivity = useCallback(
     (reason: 'interaction' | 'route' | 'unlock' | 'bootstrap', syncRemote = true) => {
-      if (!token || locked) {
+      if (!token || (locked && reason !== 'unlock')) {
         return;
       }
       const now = Date.now();
@@ -477,6 +481,9 @@ const BaseLayout: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (locked) {
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         setCommandVisible(true);
@@ -484,7 +491,7 @@ const BaseLayout: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [locked]);
 
   useEffect(() => {
     const nextTab: OpenedPageTab = {
@@ -538,7 +545,7 @@ const BaseLayout: React.FC = () => {
     }
     const timer = window.setInterval(() => {
       if (Date.now() - lastActivityAtRef.current >= sessionIdleMs) {
-        void performLogout(true);
+        void performLogout(true, 'session.idle_timeout');
       }
     }, 15000);
     return () => window.clearInterval(timer);
@@ -586,6 +593,8 @@ const BaseLayout: React.FC = () => {
   };
 
   const handleLockScreen = useCallback(() => {
+    setCommandVisible(false);
+    setCommandQuery('');
     persistShellLockedState(true);
     setLocked(true);
     setUnlockPassword('');

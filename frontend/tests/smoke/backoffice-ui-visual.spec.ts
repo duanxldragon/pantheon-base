@@ -1,8 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
+import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from './helpers/auth';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
 const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];
@@ -41,6 +40,30 @@ async function installShellPreferences(page: Page, options: ShellPreferenceOptio
   );
 }
 
+async function getCurrentUserPreferences(page: Page, accessToken: string) {
+  const response = await page.request.get(`${apiBaseUrl}/auth/me`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return (payload.data?.preferences || {}) as ShellPreferenceOptions;
+}
+
+async function updateCurrentUserPreferences(
+  page: Page,
+  accessToken: string,
+  preferences: ShellPreferenceOptions,
+) {
+  const response = await page.request.put(`${apiBaseUrl}/auth/me/preferences`, {
+    headers: await requestHeaders(page, accessToken),
+    data: preferences,
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+}
+
 const authenticatedPages = [
   { path: '/dashboard', title: '工作台', screenshot: 'dashboard-desktop.png' },
   { path: '/system/user', title: '用户管理', screenshot: 'system-user-desktop.png' },
@@ -57,31 +80,6 @@ async function ensureArtifactDir() {
   if (!existsSync(artifactDir)) {
     mkdirSync(artifactDir, { recursive: true });
   }
-}
-
-async function signInAsAdmin(page: Page) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-    },
-    {
-      accessToken: payload.data.accessToken,
-      refreshToken: payload.data.refreshToken,
-    },
-  );
 }
 
 function collectRuntimeErrors(page: Page) {
@@ -191,21 +189,33 @@ test.describe('backoffice UI visual acceptance', () => {
 
   test('platform shell keeps horizontal compact preference baseline stable', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
-    await signInAsAdmin(page);
-    await installShellPreferences(page, { layoutMode: 'horizontal', densityMode: 'compact' });
+    const accessToken = await signInAsAdmin(page);
+    const originalPreferences = await getCurrentUserPreferences(page, accessToken);
 
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/dashboard', { waitUntil: 'networkidle' });
-    await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
-    await expect(page.locator('.app-shell--horizontal')).toBeVisible();
-    await expect(page.locator('.app-shell__top-menu')).toBeVisible();
-    await page.screenshot({ path: join(artifactDir, 'dashboard-horizontal-compact.png'), fullPage: true });
+    try {
+      await updateCurrentUserPreferences(page, accessToken, {
+        ...originalPreferences,
+        language: 'zh-CN',
+        layoutMode: 'horizontal',
+        densityMode: 'compact',
+      });
+      await installShellPreferences(page, { layoutMode: 'horizontal', densityMode: 'compact' });
 
-    await page.goto('/system/user', { waitUntil: 'networkidle' });
-    await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
-    await expect(page.locator('.app-shell--horizontal')).toBeVisible();
-    await expect(page.locator('.app-table')).toBeVisible();
-    await page.screenshot({ path: join(artifactDir, 'system-user-horizontal-compact.png'), fullPage: true });
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto('/dashboard', { waitUntil: 'networkidle' });
+      await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
+      await expect(page.locator('.app-shell--horizontal')).toBeVisible();
+      await expect(page.locator('.app-shell__top-menu')).toBeVisible();
+      await page.screenshot({ path: join(artifactDir, 'dashboard-horizontal-compact.png'), fullPage: true });
+
+      await page.goto('/system/user', { waitUntil: 'networkidle' });
+      await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
+      await expect(page.locator('.app-shell--horizontal')).toBeVisible();
+      await expect(page.locator('.app-table')).toBeVisible();
+      await page.screenshot({ path: join(artifactDir, 'system-user-horizontal-compact.png'), fullPage: true });
+    } finally {
+      await updateCurrentUserPreferences(page, accessToken, originalPreferences);
+    }
 
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });

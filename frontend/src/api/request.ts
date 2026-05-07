@@ -3,7 +3,7 @@ import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { message as feedbackMessage } from '../components/feedback/message';
 import i18n from 'i18next';
 import { useAuthStore } from '../store/useAuthStore';
-import { clearShellSessionState } from '../core/shellState';
+import { clearShellSessionState, persistLoginNotice } from '../core/shellState';
 import { clearExplicitLanguagePreference } from '../core/settings/languagePreference';
 import { clearPantheonThemePreference } from '../core/theme/theme';
 import { showSecondaryVerify } from '../components/feedback/secondaryVerifyController';
@@ -62,11 +62,6 @@ function readCsrfToken(): string {
 
 let refreshPromise: Promise<string | null> | null = null;
 let logoutTransition = false;
-const LOGIN_NOTICE_STORAGE_KEY = 'pantheon_login_notice';
-
-const saveLoginNotice = (messageKey: string) => {
-  sessionStorage.setItem(LOGIN_NOTICE_STORAGE_KEY, messageKey);
-};
 
 const clearClientSession = () => {
   axios.post('/api/v1/auth/logout', {}, { withCredentials: true }).catch(() => undefined);
@@ -362,7 +357,7 @@ request.interceptors.response.use(
     }
 
     if (code === 401 && message === 'session.idle_timeout') {
-      saveLoginNotice(message);
+      persistLoginNotice(message);
       redirectToLogin();
     }
 

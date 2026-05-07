@@ -551,7 +551,7 @@ export const generated{{ .ScopeTitle }}Modules: ModuleConfig[] = [
 ];
 `
 
-const generatedFrontendComponentRegistryTemplate = `import { lazy, type LazyExoticComponent, type ComponentType } from 'react';
+const generatedFrontendComponentRegistryTemplate = `{{- if .Entries }}import { lazy, type LazyExoticComponent, type ComponentType } from 'react';
 
 type ComponentLoader = () => Promise<{ default: ComponentType }>;
 
@@ -572,6 +572,8 @@ export const generatedComponentRegistry = {
   '{{ .Key }}': defineRegistryEntry(() => import('{{ .ImportPath }}')),
 {{- end }}
 } satisfies Record<string, RegistryEntry>;
+{{- else }}export const generatedComponentRegistry = {};
+{{- end }}
 `
 
 const generatedBackendComponentRegistryTemplate = `package iam

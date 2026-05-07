@@ -10,6 +10,7 @@ export {
   GovernanceRailSummary,
   GovernanceRailCloseButton,
   GovernanceRailToggleButton,
+  GovernanceInsightDrawer,
 } from './patterns/GovernanceRail';
 export { useGovernanceRail } from './patterns/useGovernanceRail';
 export { default as GovernanceCleanupBar } from './patterns/GovernanceCleanupBar';
@@ -19,6 +20,10 @@ export {
   TABLE_ACTION_COLUMN_WIDTH,
   type TableActionColumnWidthPreset,
 } from './patterns/TableAction';
+export {
+  TABLE_COLUMN_WIDTH,
+  type TableColumnWidthPreset,
+} from './patterns/TableColumnWidth';
 export { withTableColumnPriority, type TableColumnPriority } from './patterns/TableColumnPriority';
 export { default as FormSection } from './patterns/FormSection';
 export { default as SubmitBar } from './patterns/SubmitBar';

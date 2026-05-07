@@ -38,6 +38,9 @@ import {
   AppModal,
   AppTable,
   FilterPanel,
+  GovernanceInsightDrawer,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
   ImportCsvButton,
   ListHeaderActions,
   PageActions,
@@ -48,12 +51,11 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   PermissionAction,
-  StandardRailNotePanel,
-  StandardRailSummary,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   TableBatchActionBar,
+  useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
 import { usePermission } from '../../../hooks/usePermission';
@@ -225,6 +227,7 @@ const I18nList: React.FC = () => {
   const [createDuplicateConflict, setCreateDuplicateConflict] =
     useState<I18nDuplicateConflictState | null>(null);
   const detailRequestKeyRef = useRef('');
+  const governanceRail = useGovernanceRail();
 
   const loadData = useCallback(
     async (nextQuery: I18nQuery = query, options?: LoadDataOptions) => {
@@ -390,6 +393,37 @@ const I18nList: React.FC = () => {
       t,
       total,
     ],
+  );
+
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('i18n.hero.groups'),
+        value: overview?.groupCount || groupOptions.length,
+        description: t('i18n.hero.groupsHint'),
+      },
+      {
+        tone: 'warning' as const,
+        label: t('i18n.hero.missingValues'),
+        value: overview?.missingValueCount || 0,
+        description: t('i18n.hero.missingValuesHint'),
+      },
+      {
+        label: t('i18n.hero.refreshReady'),
+        value: canRefresh ? t('common.yes') : t('common.no'),
+        description: t('i18n.hero.refreshHint'),
+      },
+      ...(overview?.coverage.map((item) => ({
+        label: item.locale,
+        value: item.entryCount,
+        description: t('i18n.stats.localeCoverage', {
+          locale: item.locale,
+          entries: item.entryCount,
+          missing: item.missingCount,
+        }),
+      })) || []),
+    ],
+    [canRefresh, groupOptions.length, overview, t],
   );
 
   const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
@@ -924,24 +958,24 @@ const I18nList: React.FC = () => {
       {
         title: t('i18n.module'),
         dataIndex: 'module',
-        width: 140,
+        width: TABLE_COLUMN_WIDTH.code,
         render: (value: string) => <Tag color="arcoblue">{value}</Tag>,
       },
-      'medium',
+      'low',
     ),
     withTableColumnPriority(
       {
         title: t('i18n.group'),
         dataIndex: 'group',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: string) => <Tag>{value}</Tag>,
       },
-      'medium',
+      'low',
     ),
     {
       title: t('i18n.key'),
       dataIndex: 'key',
-      width: 280,
+      width: TABLE_COLUMN_WIDTH.treeLabel,
       render: (value: string) => (
         <Text copyable style={{ display: 'block' }} ellipsis={{ showTooltip: true }}>
           {value}
@@ -952,39 +986,36 @@ const I18nList: React.FC = () => {
       {
         title: t('i18n.locale'),
         dataIndex: 'locale',
-        width: 110,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: string) => <Tag>{value}</Tag>,
       },
       'medium',
     ),
-    withTableColumnPriority(
-      {
-        title: t('i18n.value'),
-        dataIndex: 'value',
-        width: 280,
-        render: (value: string) => {
-          const isMissing = !value || value.startsWith('[');
-          return (
-            <Text
-              style={{
-                display: 'block',
-                color: isMissing ? '#F53F3F' : undefined,
-                wordBreak: 'break-word',
-              }}
-              ellipsis={{ rows: 2, showTooltip: true }}
-            >
-              {value || '-'}
-            </Text>
-          );
-        },
+    {
+      title: t('i18n.value'),
+      dataIndex: 'value',
+      width: TABLE_COLUMN_WIDTH.body,
+      render: (value: string) => {
+        const isMissing = !value || value.startsWith('[');
+        return (
+          <Text
+            style={{
+              display: 'block',
+              color: isMissing ? '#F53F3F' : undefined,
+              wordBreak: 'break-word',
+            }}
+            ellipsis={{ rows: 2, showTooltip: true }}
+          >
+            {value || '-'}
+          </Text>
+        );
       },
-      'low',
-    ),
+    },
     withTableColumnPriority(
       {
         title: t('i18n.createdAt'),
         dataIndex: 'createdAt',
-        width: 168,
+        width: TABLE_COLUMN_WIDTH.datetime,
         sorter: true,
       },
       'low',
@@ -993,7 +1024,7 @@ const I18nList: React.FC = () => {
       {
         title: t('i18n.updatedAt'),
         dataIndex: 'updatedAt',
-        width: 168,
+        width: TABLE_COLUMN_WIDTH.datetime,
         sorter: true,
       },
       'low',
@@ -1067,6 +1098,12 @@ const I18nList: React.FC = () => {
             className="i18n-list-page__header-actions"
             utility={
               <>
+                <GovernanceRailToggleButton
+                  expanded={governanceRail.expanded}
+                  onToggle={governanceRail.toggle}
+                >
+                  {t('i18n.hero.summaryTitle')}
+                </GovernanceRailToggleButton>
                 <Button
                   size="small"
                   icon={<IconRefresh />}
@@ -1149,54 +1186,7 @@ const I18nList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          className="i18n-list-page__layout"
-          railClassName="i18n-list-page__side-column"
-          rail={
-            <>
-              <StandardRailSummary
-                title={t('i18n.hero.summaryTitle')}
-                items={[
-                  {
-                    label: t('i18n.hero.groups'),
-                    value: overview?.groupCount || groupOptions.length,
-                    description: t('i18n.hero.groupsHint'),
-                  },
-                  {
-                    tone: 'warning',
-                    label: t('i18n.hero.missingValues'),
-                    value: overview?.missingValueCount || 0,
-                    description: t('i18n.hero.missingValuesHint'),
-                  },
-                  {
-                    label: t('i18n.hero.refreshReady'),
-                    value: canRefresh ? t('common.yes') : t('common.no'),
-                    description: t('i18n.hero.refreshHint'),
-                  },
-                ]}
-              />
-              {overview ? (
-                <StandardRailSummary
-                  title={t('i18n.hero.coverageTitle')}
-                  items={overview.coverage.map((item) => ({
-                    label: item.locale,
-                    value: item.entryCount,
-                    description: t('i18n.stats.localeCoverage', {
-                      locale: item.locale,
-                      entries: item.entryCount,
-                      missing: item.missingCount,
-                    }),
-                  }))}
-                />
-              ) : null}
-              <StandardRailNotePanel
-                title={t('i18n.hero.sideTitle')}
-                noteTitle={t('i18n.audit.action')}
-                noteDescription={t('i18n.hero.sideDesc')}
-              />
-            </>
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
               <Row gutter={16}>
@@ -1338,8 +1328,18 @@ const I18nList: React.FC = () => {
               />
             )}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('i18n.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('i18n.audit.action')}
+        noteDescription={t('i18n.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={t('i18n.audit.title')}

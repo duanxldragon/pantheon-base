@@ -1394,9 +1394,9 @@ const enUSFallback = {
   'system.audit.hero.exportHint':
     'Unified audit export remains protected by its own permission boundary.',
   'system.audit.hero.summaryTitle': 'Audit Summary',
-  'system.audit.hero.clearReady': 'Clear Ready',
-  'system.audit.hero.clearHint':
-    'Dangerous clear actions are only exposed when the dedicated clear permission is present.',
+  'system.audit.hero.cleanupReady': 'Cleanup Ready',
+  'system.audit.hero.cleanupHint':
+    'Retention cleanup and selected-row deletion both require dedicated permissions and secondary verification; full-table clear is not provided.',
   'system.audit.hero.selectedHint':
     'Selected rows are staged for targeted deletion after secondary verification.',
   'system.audit.hero.sideTitle': 'Governance Note',
@@ -1427,14 +1427,14 @@ const enUSFallback = {
   'audit.operation_log.delete.ids_required': 'Select at least one operation log record first',
   'setting.group.update': 'Setting Group Update',
   '删除操作日志': 'Delete Operation Log',
-  '清空操作日志': 'Clear Operation Logs',
+  '清空操作日志': 'Clean Operation Logs',
   '导出操作日志': 'Export Operation Logs',
   '上传文件': 'Upload File',
   'system.permission.login_log.clear': 'Login Log Cleanup',
   'system.permission.login_log.delete': 'Login Log Delete',
   'system.permission.operation_log.list': 'Operation Log Query',
   'system.permission.operation_log.delete': 'Operation Log Delete',
-  'system.permission.operation_log.clear': 'Operation Log Clear',
+  'system.permission.operation_log.clear': 'Operation Log Cleanup',
   'system.profile.title': 'Profile Center',
   'system.profile.basicTab': 'Basic Profile',
   'system.profile.securityTab': 'Security',

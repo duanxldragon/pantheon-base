@@ -3,6 +3,7 @@ export const SHELL_LAYOUT_MODE_STORAGE_KEY = 'pantheon_shell_layout_mode';
 export const SHELL_DENSITY_MODE_STORAGE_KEY = 'pantheon_shell_density_mode';
 export const SHELL_LOCKED_STORAGE_KEY = 'pantheon_shell_locked';
 export const SHELL_LAST_ACTIVITY_AT_STORAGE_KEY = 'pantheon_shell_last_activity_at';
+export const LOGIN_NOTICE_STORAGE_KEY = 'pantheon_login_notice';
 
 export type ShellLayoutMode = 'vertical' | 'horizontal';
 export type ShellDensityMode = 'comfortable' | 'compact';
@@ -58,4 +59,11 @@ export function clearShellSessionState() {
   localStorage.removeItem(OPENED_TABS_STORAGE_KEY);
   clearShellLockState();
   sessionStorage.removeItem(SHELL_LAST_ACTIVITY_AT_STORAGE_KEY);
+}
+
+export function persistLoginNotice(messageKey: string) {
+  if (!messageKey) {
+    return;
+  }
+  sessionStorage.setItem(LOGIN_NOTICE_STORAGE_KEY, messageKey);
 }

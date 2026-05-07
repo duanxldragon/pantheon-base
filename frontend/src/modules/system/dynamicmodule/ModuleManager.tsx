@@ -43,6 +43,7 @@ import {
   PageHeader,
   PageLoading,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
 import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
@@ -246,18 +247,18 @@ const ModuleManager: React.FC = () => {
     {
       title: t('generator.moduleManager.name'),
       dataIndex: 'name',
-      width: 150,
+      width: TABLE_COLUMN_WIDTH.identity,
       render: (name: string) => <span>{name}</span>,
     },
     {
       title: t('generator.moduleManager.displayName'),
       dataIndex: 'displayName',
-      width: 150,
+      width: TABLE_COLUMN_WIDTH.name,
     },
     {
       title: t('generator.moduleManager.scope'),
       dataIndex: 'scope',
-      width: 100,
+      width: TABLE_COLUMN_WIDTH.scope,
       render: (scope: string) => (
         <Tag color={scope === 'system' ? 'blue' : scope === 'platform' ? 'purple' : 'green'}>
           {scope}
@@ -267,7 +268,7 @@ const ModuleManager: React.FC = () => {
     {
       title: t('generator.moduleManager.source'),
       dataIndex: 'source',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.code,
       render: (source: string) => (
         <Tag
           color={
@@ -284,7 +285,7 @@ const ModuleManager: React.FC = () => {
       {
         title: t('generator.moduleManager.owner'),
         dataIndex: 'owner',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.owner,
         render: (value?: string) => value || '-',
       },
       'medium',
@@ -293,7 +294,7 @@ const ModuleManager: React.FC = () => {
       {
         title: t('generator.moduleManager.boundedContext'),
         dataIndex: 'boundedContext',
-        width: 140,
+        width: TABLE_COLUMN_WIDTH.owner,
         render: (value?: string) => value || '-',
       },
       'medium',
@@ -302,7 +303,7 @@ const ModuleManager: React.FC = () => {
       {
         title: t('generator.moduleManager.tableName'),
         dataIndex: 'tableName',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.name,
         render: (tableName: string) => (tableName ? <span>{tableName}</span> : <span>-</span>),
       },
       'low',
@@ -310,7 +311,7 @@ const ModuleManager: React.FC = () => {
     {
       title: t('generator.moduleManager.status'),
       dataIndex: 'status',
-      width: 100,
+      width: TABLE_COLUMN_WIDTH.status,
       render: (status: number) => (
         <Tag color={statusColor(status)}>
           {status === 1
@@ -327,14 +328,14 @@ const ModuleManager: React.FC = () => {
       {
         title: t('generator.moduleManager.installedAt'),
         dataIndex: 'installedAt',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.datetime,
       },
       'low',
     ),
     withTableColumnPriority(
       {
         title: t('generator.moduleManager.diagnostics'),
-        width: 220,
+        width: TABLE_COLUMN_WIDTH.diagnostics,
         render: (_value: unknown, record: ModuleRegistration) => {
           if (record.lastError) {
             return (

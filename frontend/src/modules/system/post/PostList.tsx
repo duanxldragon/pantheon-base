@@ -57,7 +57,7 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ImportCsvButton,
@@ -69,10 +69,10 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   PermissionAction,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   TableBatchActionBar,
   useGovernanceRail,
   withTableColumnPriority,
@@ -472,26 +472,26 @@ const PostList: React.FC = () => {
 
   const columns: ColumnProps<PostRow>[] = [
     withTableColumnPriority(
-      { title: t('system.post.dept'), dataIndex: 'deptName', width: 160 },
+      { title: t('system.post.dept'), dataIndex: 'deptName', width: TABLE_COLUMN_WIDTH.name },
       'medium',
     ),
     {
       title: t('system.post.postCode'),
       dataIndex: 'postCode',
-      width: 170,
+      width: TABLE_COLUMN_WIDTH.code,
       ...sortableColumn('postCode'),
     },
     {
       title: t('system.post.postName'),
       dataIndex: 'postName',
-      width: 180,
+      width: TABLE_COLUMN_WIDTH.name,
       ...sortableColumn('postName'),
     },
     withTableColumnPriority(
       {
         title: t('system.post.hero.assignedUsers'),
         dataIndex: 'assignedUserCount',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.count,
         render: (value: number) => <span>{value}</span>,
       },
       'medium',
@@ -500,7 +500,7 @@ const PostList: React.FC = () => {
       {
         title: t('system.dept.governance'),
         dataIndex: 'governanceTagLabels',
-        width: 190,
+        width: TABLE_COLUMN_WIDTH.tagGroup,
         render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTagLabels),
       },
       'low',
@@ -509,7 +509,7 @@ const PostList: React.FC = () => {
       {
         title: t('system.post.hero.blockedBy'),
         dataIndex: 'governanceBlockedDesc',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.diagnostics,
         render: (_: unknown, row: PostRow) =>
           renderGovernanceTags(row.governanceBlockedDesc, 'note'),
       },
@@ -519,7 +519,7 @@ const PostList: React.FC = () => {
       {
         title: t('system.post.hero.nextAction'),
         dataIndex: 'governanceActionLabel',
-        width: 220,
+        width: TABLE_COLUMN_WIDTH.tagGroup,
         render: (_: unknown, row: PostRow) => (
           <Typography.Text className="post-governance__action-text">
             {row.governanceActionLabel.join(' / ') || '-'}
@@ -531,7 +531,7 @@ const PostList: React.FC = () => {
     {
       title: t('system.post.status'),
       dataIndex: 'status',
-      width: 110,
+      width: TABLE_COLUMN_WIDTH.status,
       ...sortableColumn('status'),
       render: (value: number) => (
         <Tag color={value === 1 ? 'green' : 'red'}>
@@ -540,18 +540,23 @@ const PostList: React.FC = () => {
       ),
     },
     withTableColumnPriority(
-      { title: t('system.post.sort'), dataIndex: 'sort', width: 96, ...sortableColumn('sort') },
+      {
+        title: t('system.post.sort'),
+        dataIndex: 'sort',
+        width: TABLE_COLUMN_WIDTH.count,
+        ...sortableColumn('sort'),
+      },
       'medium',
     ),
     withTableColumnPriority(
-      { title: t('system.post.remark'), dataIndex: 'remark', width: 180 },
+      { title: t('system.post.remark'), dataIndex: 'remark', width: TABLE_COLUMN_WIDTH.name },
       'low',
     ),
     withTableColumnPriority(
       {
         title: t('system.post.createdAt'),
         dataIndex: 'createdAt',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.datetime,
         ...sortableColumn('createdAt'),
         render: (value: string) => formatDateTime(value),
       },
@@ -671,21 +676,7 @@ const PostList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('system.post.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('system.post.hero.summaryTitle')}
-                noteDescription={t('system.post.hero.sideDesc')}
-              >
-                <GovernanceRailSummary items={governanceSummaryItems} />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
@@ -811,8 +802,18 @@ const PostList: React.FC = () => {
               />
             ) : null}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.post.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.post.hero.summaryTitle')}
+        noteDescription={t('system.post.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.post.edit') : t('system.post.create')}

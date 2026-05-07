@@ -1,6 +1,13 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {
+  adminCredentials,
+  apiBaseUrl,
+  loginByApi,
+  verifiedApiHeaders,
+  type BrowserLoginResult,
+} from './helpers/auth';
 
 type ResponseEnvelope<T> = {
   code: number;
@@ -77,10 +84,6 @@ type DeptNode = {
   children?: DeptNode[];
 };
 
-const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
-const adminUsername = process.env.PANTHEON_SMOKE_ADMIN_USERNAME ?? 'admin';
-const adminPassword = process.env.PANTHEON_SMOKE_ADMIN_PASSWORD ?? '123456';
-
 const smokeRoleKey = 'smoke_impexp_role';
 const smokeRoleName = '导入导出烟测角色';
 const smokeUserName = 'smoke_impexp_user';
@@ -98,20 +101,17 @@ const fixtureDir = path.resolve(__dirname, '../../../tests/fixtures/system-impor
 
 test.describe.serial('system import/export api smoke', () => {
   let apiContext: APIRequestContext;
+  let login: BrowserLoginResult;
 
   test.beforeAll(async () => {
     const loginContext = await playwrightRequest.newContext();
-    const loginResponse = await loginContext.post(`${apiBaseUrl}/auth/login`, {
-      data: {
-        username: adminUsername,
-        password: adminPassword,
-      },
-    });
-    const loginPayload = await expectSuccess<{ accessToken: string }>(loginResponse);
+    login = await loginByApi(loginContext, adminCredentials);
 
     apiContext = await playwrightRequest.newContext({
       extraHTTPHeaders: {
-        Authorization: `Bearer ${loginPayload.accessToken}`,
+        Authorization: `Bearer ${login.accessToken}`,
+        'X-CSRF-Token': login.csrfToken,
+        Cookie: `pantheon_csrf_token=${login.csrfToken}`,
       },
     });
 
@@ -372,7 +372,7 @@ test.describe.serial('system import/export api smoke', () => {
 
   test('login log and operation log export are usable', async () => {
     const loginLogResponse = await apiContext.post(`${apiBaseUrl}/system/login-log/export`, {
-      data: { username: adminUsername },
+      data: { username: adminCredentials.username },
     });
     const loginLogCsv = await expectCsv(loginLogResponse, 'system-login-log-export.csv');
     expect(parseCsvLines(loginLogCsv)[0]).toBe('username,ipaddr,loginLocation,browser,os,status,msg,loginTime');
@@ -382,15 +382,15 @@ test.describe.serial('system import/export api smoke', () => {
     });
     const operationLogCsv = await expectCsv(operationLogResponse, 'system-operation-log-export.csv');
     expect(parseCsvLines(operationLogCsv)[0]).toBe(
-      'title,businessType,sourceDomain,sourcePage,method,operName,operUrl,operIp,status,failureCategory,errorMsg,operTime,costTime',
+      'requestId,title,businessType,sourceDomain,sourcePage,method,operName,operUrl,operIp,status,failureCategory,errorMsg,operTime,costTime',
     );
   });
 
   test('login log and operation log cleanup / batch delete are usable', async () => {
-    const operationHeaders = await verifiedHeaders(apiContext);
+    const operationHeaders = await verifiedApiHeaders(apiContext, login);
 
     const loginLogListResponse = await apiContext.get(`${apiBaseUrl}/system/login-log/list`, {
-      params: { username: adminUsername, page: '1', pageSize: '10' },
+      params: { username: adminCredentials.username, page: '1', pageSize: '10' },
     });
     const loginLogList = await expectSuccess<ListPage<LoginLogItem>>(loginLogListResponse);
     expect(loginLogList.items.length).toBeGreaterThan(0);
@@ -411,7 +411,7 @@ test.describe.serial('system import/export api smoke', () => {
     expect(loginBatchDeleteResult.deletedCount).toBeGreaterThanOrEqual(1);
 
     const loginVerifyResponse = await apiContext.get(`${apiBaseUrl}/system/login-log/list`, {
-      params: { username: adminUsername, page: '1', pageSize: '10' },
+      params: { username: adminCredentials.username, page: '1', pageSize: '10' },
     });
     const loginVerifyList = await expectSuccess<ListPage<LoginLogItem>>(loginVerifyResponse);
     expect(loginVerifyList.items.some((item) => item.id === loginDeleteCandidate.id)).toBeFalsy();
@@ -476,16 +476,6 @@ async function expectSuccess<T>(response: APIResponse): Promise<T> {
   const payload = (await response.json()) as ResponseEnvelope<T>;
   expect(payload.code).toBe(200);
   return payload.data;
-}
-
-async function verifiedHeaders(context: APIRequestContext) {
-  const verifyResponse = await context.post(`${apiBaseUrl}/auth/operation-verify`, {
-    data: { password: adminPassword },
-  });
-  const verifyPayload = await expectSuccess<{ operationToken: string }>(verifyResponse);
-  return {
-    'X-Operation-Token': verifyPayload.operationToken,
-  };
 }
 
 async function expectCsv(response: APIResponse, expectedFilename: string): Promise<string> {

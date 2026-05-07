@@ -1,6 +1,5 @@
 import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
+import { installOperationToken, signInAsAdmin } from './helpers/auth';
 
 type Deferred<T = void> = {
   promise: Promise<T>;
@@ -31,31 +30,6 @@ function createDeferred<T = void>(): Deferred<T> {
     resolve = nextResolve;
   });
   return { promise, resolve };
-}
-
-async function signInAsAdmin(page: Page) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-    },
-    {
-      accessToken: payload.data.accessToken,
-      refreshToken: payload.data.refreshToken,
-    },
-  );
 }
 
 function collectRuntimeErrors(page: Page) {
@@ -316,8 +290,8 @@ const matrixCases: FormMatrixCase[] = [
     openForm: async (page) => {
       await page.goto('/system/setting', { waitUntil: 'networkidle' });
       await page.getByRole('tab', { name: '安全策略', exact: true }).click();
-      const form = page.locator('.system-page-main .page-panel').first();
-      await expect(form.locator('.form-section__title').filter({ hasText: '安全策略' })).toBeVisible();
+      const form = page.locator('.setting-page__config-card').first();
+      await expect(form.getByText('安全策略', { exact: true }).first()).toBeVisible();
       return form;
     },
     fillValid: async (form) => {
@@ -368,7 +342,7 @@ test.describe('system form state matrix', () => {
 
   test('required state matrix uses natural prompts', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
-    await signInAsAdmin(page);
+    const accessToken = await signInAsAdmin(page);
 
     for (const matrixCase of matrixCases) {
       if (!matrixCase.requiredMessages?.length) {
@@ -376,6 +350,9 @@ test.describe('system form state matrix', () => {
       }
 
       const form = await matrixCase.openForm(page);
+      if (matrixCase.key === 'setting-security-update') {
+        await installOperationToken(page, accessToken);
+      }
       if (matrixCase.prepareRequired) {
         await matrixCase.prepareRequired(form, page);
       }
@@ -399,7 +376,7 @@ test.describe('system form state matrix', () => {
 
   test('format state matrix keeps validation copy natural', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
-    await signInAsAdmin(page);
+    const accessToken = await signInAsAdmin(page);
 
     const formatCases = matrixCases.filter((matrixCase) => matrixCase.formatScenario);
     expect(formatCases.length).toBeGreaterThan(0);
@@ -407,6 +384,9 @@ test.describe('system form state matrix', () => {
     for (const matrixCase of formatCases) {
       const form = await matrixCase.openForm(page);
       await matrixCase.formatScenario?.prepare(form, page);
+      if (matrixCase.key === 'setting-security-update') {
+        await installOperationToken(page, accessToken);
+      }
       await resolveSubmitButton(matrixCase, form, page).click({ noWaitAfter: true });
 
       for (const message of matrixCase.formatScenario?.messages || []) {
@@ -422,7 +402,7 @@ test.describe('system form state matrix', () => {
 
   test('submitting state matrix shows deterministic loading feedback', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
-    await signInAsAdmin(page);
+    const accessToken = await signInAsAdmin(page);
 
     for (const matrixCase of matrixCases) {
       const gate = createDeferred<void>();
@@ -439,6 +419,9 @@ test.describe('system form state matrix', () => {
       });
 
       const form = await matrixCase.openForm(page);
+      if (matrixCase.key === 'setting-security-update') {
+        await installOperationToken(page, accessToken);
+      }
       await matrixCase.fillValid(form, page);
 
       const submit = resolveSubmitButton(matrixCase, form, page);
@@ -461,7 +444,7 @@ test.describe('system form state matrix', () => {
 
   test('server error matrix keeps modal state and shows friendly copy', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
-    await signInAsAdmin(page);
+    const accessToken = await signInAsAdmin(page);
 
     for (const matrixCase of matrixCases) {
       await page.route(matrixCase.submitRoutePattern, async (route) => {
@@ -476,6 +459,9 @@ test.describe('system form state matrix', () => {
       });
 
       const form = await matrixCase.openForm(page);
+      if (matrixCase.key === 'setting-security-update') {
+        await installOperationToken(page, accessToken);
+      }
       await matrixCase.fillValid(form, page);
       await resolveSubmitButton(matrixCase, form, page).click({ noWaitAfter: true });
 

@@ -558,6 +558,21 @@ a {
   line-height: 1.7;
 }
 
+.governance-insight-drawer .arco-drawer-body {
+  background: var(--app-bg);
+}
+
+.governance-insight-drawer__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.governance-insight-drawer__summary,
+.governance-insight-drawer__note-panel {
+  box-shadow: none;
+}
+
 .system-page-template {
   width: 100%;
 }
@@ -1572,6 +1587,21 @@ a {
 .app-table .arco-table-td.arco-table-col-fixed-left,
 .app-table .arco-table-td.arco-table-col-fixed-right {
   background: var(--panel-bg-solid);
+}
+
+.app-table .arco-table-th.arco-table-checkbox,
+.app-table .arco-table-td.arco-table-checkbox {
+  border-inline-start: 1px solid var(--panel-border-strong);
+}
+
+.app-table .arco-table-th.arco-table-checkbox.arco-table-col-fixed-left,
+.app-table .arco-table-td.arco-table-checkbox.arco-table-col-fixed-left {
+  border-inline-start: 1px solid var(--panel-border-strong);
+}
+
+.app-table .arco-table-col-fixed-left-last,
+.app-table .arco-table-col-fixed-right-first {
+  border-inline-end: 1px solid var(--panel-border);
 }
 
 .app-table .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-left,

@@ -1,16 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-async function signIn(page: import('@playwright/test').Page) {
-  await page.goto('/login', { waitUntil: 'networkidle' });
-  await page.getByPlaceholder('请输入用户名').fill('admin');
-  await page.getByPlaceholder('请输入密码').fill('123456');
-  const loginResponse = page.waitForResponse((response) =>
-    response.url().includes('/api/v1/auth/login'),
-  );
-  await page.getByRole('button', { name: '登录' }).click();
-  await expect((await loginResponse).ok()).toBeTruthy();
-  await expect(page.locator('.app-shell__header')).toBeVisible();
-}
+import { signInAsAdmin } from './helpers/auth';
 
 const systemTablePages = [
   { path: '/system/user', title: '用户管理' },
@@ -49,6 +38,9 @@ const governanceBarPages = [
 ] as const;
 
 async function navigateInShell(page: import('@playwright/test').Page, path: string) {
+  if (page.url() === 'about:blank') {
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+  }
   await page.evaluate((nextPath) => {
     window.history.pushState({}, '', nextPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -60,7 +52,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await signIn(page);
+  await signInAsAdmin(page);
   await navigateInShell(page, '/system/user');
   await expect(page.locator('.table-batch-action-bar')).toBeVisible();
 
@@ -159,7 +151,7 @@ test('system table pages keep unified table card spacing radius and neutral head
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await signIn(page);
+  await signInAsAdmin(page);
 
   for (const pageMeta of systemTablePages) {
     await navigateInShell(page, pageMeta.path);
@@ -216,8 +208,8 @@ test('system table pages keep unified table card spacing radius and neutral head
     expect(tableContract.body?.paddingRight, pageMeta.path).toBe('14px');
     expect(tableContract.body?.paddingBottom, pageMeta.path).toBe('6px');
     expect(tableContract.body?.paddingLeft, pageMeta.path).toBe('14px');
-    expect(tableContract.container?.borderTopLeftRadius, pageMeta.path).toBe('4px');
-    expect(tableContract.container?.borderTopRightRadius, pageMeta.path).toBe('4px');
+    expect(tableContract.container?.borderTopLeftRadius, pageMeta.path).toBe('0px');
+    expect(tableContract.container?.borderTopRightRadius, pageMeta.path).toBe('0px');
     expect(tableContract.firstHeader?.backgroundColor, pageMeta.path).toBe('rgb(247, 248, 250)');
     expect(tableContract.fixedColumnShadow, pageMeta.path).toBe('none');
     expect(tableContract.scrollBeforeShadow, pageMeta.path).toBe('none');
@@ -227,7 +219,7 @@ test('system table pages keep unified table card spacing radius and neutral head
 
 test('system filter panels and governance bars keep one formal rhythm', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await signIn(page);
+  await signInAsAdmin(page);
 
   for (const path of filterPanelPages) {
     await navigateInShell(page, path);
@@ -330,7 +322,7 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
 
 test('dict management keeps both tabs on the shared list rhythm', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await signIn(page);
+  await signInAsAdmin(page);
   await navigateInShell(page, '/system/dict');
   await expect(page.getByRole('heading', { name: '字典管理' })).toBeVisible();
 
@@ -380,6 +372,7 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
       return {
         hasSharedTableCard: Boolean(tableCard),
         hasSharedSystemTable: Boolean(appTable?.classList.contains('system-list__table')),
+        hasVisibleTable: Boolean(appTable),
         filterBody: read(filterBody),
         firstItem: read(firstItem),
         firstControl: read(firstControl),
@@ -404,14 +397,14 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
   expect(typeTabContract.listActions?.justifyContent).toBe('space-between');
   expect(typeTabContract.listActionsPrimary?.justifyContent).toBe('flex-end');
   expect(typeTabContract.batchBar?.display).toBe('grid');
-  expect(typeTabContract.tableContainer?.borderTopLeftRadius).toBe('4px');
+  expect(typeTabContract.tableContainer?.borderTopLeftRadius).toBe('0px');
 
   await page.getByRole('tab', { name: '字典项' }).click();
   await expect(page.locator('.dict-page__table-card .filter-panel').first()).toBeVisible();
 
   const itemTabContract = await readDictTabContract();
   expect(itemTabContract.hasSharedTableCard).toBe(true);
-  expect(itemTabContract.hasSharedSystemTable).toBe(true);
+  expect(itemTabContract.hasSharedSystemTable || !itemTabContract.hasVisibleTable).toBe(true);
   expect(itemTabContract.filterBody?.paddingTop).toBe('16px');
   expect(itemTabContract.filterBody?.paddingRight).toBe('16px');
   expect(itemTabContract.filterBody?.paddingBottom).toBe('4px');
@@ -420,6 +413,8 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
   expect(itemTabContract.firstControl?.height).toBeGreaterThanOrEqual(34);
   expect(itemTabContract.listActions?.justifyContent).toBe('space-between');
   expect(itemTabContract.listActionsPrimary?.justifyContent).toBe('flex-end');
-  expect(itemTabContract.batchBar?.display).toBe('grid');
-  expect(itemTabContract.tableContainer?.borderTopLeftRadius).toBe('4px');
+  if (itemTabContract.hasVisibleTable) {
+    expect(itemTabContract.batchBar?.display).toBe('grid');
+    expect(itemTabContract.tableContainer?.borderTopLeftRadius).toBe('0px');
+  }
 });

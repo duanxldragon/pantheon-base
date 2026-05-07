@@ -57,7 +57,7 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ListHeaderActions,
@@ -68,11 +68,11 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   SubmitBar,
   TableBatchActionBar,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
@@ -694,26 +694,31 @@ const RoleList: React.FC = () => {
     {
       title: t('system.role.roleName'),
       dataIndex: 'roleName',
-      width: 180,
+      width: TABLE_COLUMN_WIDTH.name,
       ...sortableColumn('roleName'),
     },
     withTableColumnPriority(
       {
         title: t('system.role.roleKey'),
         dataIndex: 'roleKey',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.code,
         ...sortableColumn('roleKey'),
       },
       'medium',
     ),
     withTableColumnPriority(
-      { title: t('system.role.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
+      {
+        title: t('system.role.sort'),
+        dataIndex: 'sort',
+        width: TABLE_COLUMN_WIDTH.count,
+        ...sortableColumn('sort'),
+      },
       'low',
     ),
     {
       title: t('system.role.status'),
       dataIndex: 'status',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.status,
       ...sortableColumn('status'),
       render: (value: number) => (
         <Tag color={value === 1 ? 'green' : 'red'}>
@@ -725,7 +730,7 @@ const RoleList: React.FC = () => {
       {
         title: t('system.role.createdAt'),
         dataIndex: 'createdAt',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.datetime,
         ...sortableColumn('createdAt'),
         render: (value: string) => formatDateTime(value),
       },
@@ -907,21 +912,7 @@ const RoleList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('system.role.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('system.role.hero.summaryTitle')}
-                noteDescription={t('system.role.hero.sideDesc')}
-              >
-                <GovernanceRailSummary items={governanceSummaryItems} />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
@@ -1043,8 +1034,18 @@ const RoleList: React.FC = () => {
               />
             ) : null}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.role.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.role.hero.summaryTitle')}
+        noteDescription={t('system.role.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.role.edit') : t('system.role.create')}

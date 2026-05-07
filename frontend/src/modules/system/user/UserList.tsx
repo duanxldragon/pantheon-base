@@ -67,7 +67,7 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ImportCsvButton,
@@ -79,11 +79,11 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   SubmitBar,
   TableBatchActionBar,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
@@ -512,23 +512,27 @@ const UserList: React.FC = () => {
     {
       title: t('system.user.username'),
       dataIndex: 'username',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.identity,
       ...sortableColumn('username'),
     },
     {
       title: t('system.user.nickname'),
       dataIndex: 'nickname',
-      width: 140,
+      width: TABLE_COLUMN_WIDTH.identity,
       ...sortableColumn('nickname'),
     },
     ...(orgEnabled
       ? [
-          { title: t('system.user.dept'), dataIndex: 'deptName', width: 120 },
+          {
+            title: t('system.user.dept'),
+            dataIndex: 'deptName',
+            width: TABLE_COLUMN_WIDTH.identity,
+          },
           withTableColumnPriority(
             {
               title: t('system.user.post'),
               dataIndex: 'postName',
-              width: 120,
+              width: TABLE_COLUMN_WIDTH.identity,
             },
             'medium',
           ),
@@ -538,7 +542,7 @@ const UserList: React.FC = () => {
       {
         title: t('system.user.roles'),
         dataIndex: 'roleKeys',
-        width: 140,
+        width: TABLE_COLUMN_WIDTH.name,
         render: (value: string[]) => (
           <span className="system-user-list__role-text">
             {value?.length ? value.join(' / ') : '-'}
@@ -548,17 +552,27 @@ const UserList: React.FC = () => {
       'medium',
     ),
     withTableColumnPriority(
-      { title: t('system.user.email'), dataIndex: 'email', width: 180, ...sortableColumn('email') },
+      {
+        title: t('system.user.email'),
+        dataIndex: 'email',
+        width: TABLE_COLUMN_WIDTH.name,
+        ...sortableColumn('email'),
+      },
       'low',
     ),
     withTableColumnPriority(
-      { title: t('system.user.phone'), dataIndex: 'phone', width: 140, ...sortableColumn('phone') },
+      {
+        title: t('system.user.phone'),
+        dataIndex: 'phone',
+        width: TABLE_COLUMN_WIDTH.identity,
+        ...sortableColumn('phone'),
+      },
       'low',
     ),
     {
       title: t('system.user.status'),
       dataIndex: 'status',
-      width: 100,
+      width: TABLE_COLUMN_WIDTH.status,
       ...sortableColumn('status'),
       render: (value: number) => (
         <Tag color={value === 1 ? 'green' : 'red'}>
@@ -570,7 +584,7 @@ const UserList: React.FC = () => {
       {
         title: t('system.user.createdAt'),
         dataIndex: 'createdAt',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.datetime,
         ...sortableColumn('createdAt'),
         render: (value: string) => formatDateTime(value),
       },
@@ -840,21 +854,7 @@ const UserList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('system.user.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('system.user.hero.summaryTitle')}
-                noteDescription={t('system.user.hero.sideDesc')}
-              >
-                <GovernanceRailSummary items={governanceSummaryItems} />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
@@ -981,8 +981,18 @@ const UserList: React.FC = () => {
               />
             ) : null}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.user.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.user.hero.summaryTitle')}
+        noteDescription={t('system.user.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.user.edit') : t('system.user.create')}

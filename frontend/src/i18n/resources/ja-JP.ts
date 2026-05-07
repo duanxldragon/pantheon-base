@@ -954,9 +954,9 @@ const jaJPFallback = {
   'system.audit.hero.summaryTitle': '監査概要',
   'system.audit.hero.exportReady': 'エクスポート準備完了',
   'system.audit.hero.exportHint': '統一監査のエクスポートは専用の権限境界で保護されています。',
-  'system.audit.hero.clearReady': 'クリア準備完了',
-  'system.audit.hero.clearHint':
-    '危険なクリア操作は、専用のクリア権限がある場合にのみ表示されます。',
+  'system.audit.hero.cleanupReady': '整理準備完了',
+  'system.audit.hero.cleanupHint':
+    '保持期間による整理と選択行削除は、どちらも専用権限と二次確認が必要で、全件クリアは提供しません。',
   'system.audit.hero.selectedHint': '選択された行は二次確認後に対象削除されます。',
   'system.audit.hero.sideTitle': 'ガバナンスメモ',
   'system.audit.hero.sideDesc':
@@ -1962,7 +1962,7 @@ const jaJPFallback = {
   'system.permission.login_log.delete': 'ログインログ削除',
   'system.permission.operation_log.list': '操作ログ照会',
   'system.permission.operation_log.delete': '操作ログ削除',
-  'system.permission.operation_log.clear': '操作ログクリア',
+  'system.permission.operation_log.clear': '操作ログ整理',
   'dept.parent.not_found': '親部門が存在しません',
   'dept.leader.required': '責任者を入力してください',
   'dept.leader.bind_after_create': '先に部門を作成してから実際の責任者を紐付けてください',
@@ -2083,7 +2083,7 @@ const jaJPFallback = {
   'permission.method.invalid': 'リクエストメソッドが不正です',
   'setting.group.update': '設定グループ更新',
   '删除操作日志': '操作ログを削除',
-  '清空操作日志': '操作ログをクリア',
+  '清空操作日志': '操作ログを整理',
   '导出操作日志': '操作ログをエクスポート',
   '上传文件': 'ファイルをアップロード',
   'system.menu.titleRequired': 'タイトルキーを入力してください',

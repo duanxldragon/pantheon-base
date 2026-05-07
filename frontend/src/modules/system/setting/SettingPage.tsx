@@ -27,6 +27,10 @@ import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import {
   AppTable,
   FormSection,
+  GovernanceInsightDrawer,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
+  PageActions,
   PageContainer,
   PageEmpty,
   PageError,
@@ -34,11 +38,9 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
-  StandardRailNotePanel,
-  StandardRailSummary,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
+  useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
@@ -244,6 +246,7 @@ const SettingPage: React.FC = () => {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditQuery, setAuditQuery] = useState({ page: 1, pageSize: defaultAuditPageSize });
   const [form] = Form.useForm<Record<string, SettingFormValue>>();
+  const governanceRail = useGovernanceRail();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -887,8 +890,56 @@ const SettingPage: React.FC = () => {
       ]
     : [];
 
+  const governanceSummaryItems = overview
+    ? [
+        {
+          label: t('system.setting.overview.runtime'),
+          value: t(
+            `system.setting.option.upload.storage_driver.${overview.storageDriver}`,
+            overview.storageDriver,
+          ),
+          description: t('system.setting.hero.storageHint'),
+        },
+        {
+          label: t('system.setting.item.i18n.default_language'),
+          value: t(`app.language.${overview.defaultLanguage}`, overview.defaultLanguage),
+          description: t('system.setting.hero.languageHint'),
+        },
+        {
+          label: t('system.setting.item.ui.default_theme'),
+          value: overview.defaultTheme,
+          description: t('system.setting.hero.themeHint'),
+        },
+        ...overview.issues.slice(0, 4).map((issue) => ({
+          tone: issue.severity === 'critical' ? ('danger' as const) : ('warning' as const),
+          label: (
+            <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>
+              {t(`system.setting.overview.severity.${issue.severity}`)}
+            </Tag>
+          ),
+          value: t(`system.setting.item.${issue.settingKey}`, issue.settingKey),
+          description: t(issue.reasonKey),
+        })),
+      ]
+    : [];
+
   return (
     <PageContainer>
+      <PageHeader
+        title={t('system.menu.setting')}
+        extra={
+          overview ? (
+            <PageActions>
+              <GovernanceRailToggleButton
+                expanded={governanceRail.expanded}
+                onToggle={governanceRail.toggle}
+              >
+                {t('system.setting.hero.summaryTitle')}
+              </GovernanceRailToggleButton>
+            </PageActions>
+          ) : undefined
+        }
+      />
       <Space direction="vertical" size={12} className="system-page-template setting-page">
         {overview ? (
           <Card className="page-panel system-page-hero system-list__hero setting-page__hero">
@@ -897,11 +948,12 @@ const SettingPage: React.FC = () => {
                 <span className="system-page-hero__eyebrow">
                   {t('system.setting.hero.eyebrow')}
                 </span>
-                <PageHeader
-                  title={t('system.menu.setting')}
-                  subtitle={t('system.setting.hero.title')}
-                  className="system-page-hero__header"
-                />
+                <Typography.Title heading={5} className="system-page-hero__title">
+                  {t('system.setting.hero.title')}
+                </Typography.Title>
+                <Typography.Paragraph type="secondary" className="system-page-hero__desc">
+                  {t('system.setting.hero.desc')}
+                </Typography.Paragraph>
               </div>
             </div>
             <div className="system-page-kpi-grid">
@@ -916,7 +968,6 @@ const SettingPage: React.FC = () => {
           </Card>
         ) : (
           <PageHeader
-            title={t('system.menu.setting')}
             subtitle={t('system.setting.hero.title')}
             className="setting-page__fallback-header"
           />
@@ -927,63 +978,7 @@ const SettingPage: React.FC = () => {
           <PageEmpty description={t('system.setting.empty')} />
         ) : null}
         {settings.length > 0 ? (
-          <PageSplitLayout
-            className="setting-page__layout"
-            railClassName="setting-page__side-column"
-            rail={
-              overview ? (
-                <div>
-                  <StandardRailSummary
-                    title={t('system.setting.overview.runtime')}
-                    items={[
-                      {
-                        label: t('system.setting.item.upload.storage_driver'),
-                        value: t(
-                          `system.setting.option.upload.storage_driver.${overview.storageDriver}`,
-                          overview.storageDriver,
-                        ),
-                        description: t('system.setting.hero.storageHint'),
-                      },
-                      {
-                        label: t('system.setting.item.i18n.default_language'),
-                        value: t(
-                          `app.language.${overview.defaultLanguage}`,
-                          overview.defaultLanguage,
-                        ),
-                        description: t('system.setting.hero.languageHint'),
-                      },
-                      {
-                        label: t('system.setting.item.ui.default_theme'),
-                        value: overview.defaultTheme,
-                        description: t('system.setting.hero.themeHint'),
-                      },
-                    ]}
-                  />
-                  {overview.issues.length > 0 ? (
-                    <StandardRailSummary
-                      title={t('system.setting.hero.sideTitle')}
-                      items={overview.issues.slice(0, 4).map((issue) => ({
-                        tone: issue.severity === 'critical' ? 'danger' : 'warning',
-                        label: (
-                          <Tag color={issue.severity === 'critical' ? 'red' : 'orange'}>
-                            {t(`system.setting.overview.severity.${issue.severity}`)}
-                          </Tag>
-                        ),
-                        value: t(`system.setting.item.${issue.settingKey}`, issue.settingKey),
-                        description: t(issue.reasonKey),
-                      }))}
-                    />
-                  ) : (
-                    <StandardRailNotePanel
-                      title={t('system.setting.hero.sideTitle')}
-                      noteTitle={t('system.setting.overview.noRisks')}
-                      noteDescription={t('system.setting.hero.sideDesc')}
-                    />
-                  )}
-                </div>
-              ) : null
-            }
-          >
+          <>
             <Card className="page-panel setting-page__config-card">
               <Tabs
                 type="rounded"
@@ -1096,9 +1091,24 @@ const SettingPage: React.FC = () => {
                 />
               </Card>
             ) : null}
-          </PageSplitLayout>
+          </>
         ) : null}
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.setting.hero.summaryTitle')}
+        visible={governanceRail.expanded && Boolean(overview)}
+        onClose={governanceRail.close}
+        noteTitle={
+          overview?.issues.length
+            ? t('system.setting.hero.sideTitle')
+            : t('system.setting.overview.noRisks')
+        }
+        noteDescription={t('system.setting.hero.sideDesc')}
+        noteTone={overview?.issues.length ? 'warning' : 'neutral'}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
     </PageContainer>
   );
 };

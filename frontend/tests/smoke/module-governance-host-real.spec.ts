@@ -17,8 +17,15 @@ import {
   generateDefaultPermissions,
   inferModelName,
 } from '../../src/modules/generator/schema';
+import {
+  adminCredentials,
+  apiBaseUrl,
+  apiRequestHeaders,
+  getApiOperationToken,
+  loginByApi,
+  type BrowserLoginResult,
+} from './helpers/auth';
 
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(currentDir, '../../..');
 const moduleName = 'cmdb/host';
@@ -32,47 +39,9 @@ const frontendRegistry = path.join(workspaceRoot, 'frontend', 'src', 'modules', 
 const componentRegistry = path.join(workspaceRoot, 'frontend', 'src', 'core', 'router', 'generatedComponentRegistry.ts');
 const tableName = 'biz_cmdb_host';
 
-type LoginPayload = {
-  accessToken: string;
-  refreshToken: string;
-};
-
-async function loginByApi(request: APIRequestContext): Promise<LoginPayload> {
-  const response = await request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
-  };
-}
-
-async function getOperationToken(request: APIRequestContext, accessToken: string) {
-  const response = await request.post(`${apiBaseUrl}/auth/operation-verify`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    data: {
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return payload.data.operationToken as string;
-}
-
-async function fetchTablePreview(request: APIRequestContext, accessToken: string) {
+async function fetchTablePreview(request: APIRequestContext, login: BrowserLoginResult) {
   const response = await request.get(`${apiBaseUrl}/system/generator/table-schema`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: apiRequestHeaders(login),
     params: {
       datasourceId: 'current',
       tableName,
@@ -195,10 +164,10 @@ function buildSchema(preview: GeneratorTablePreview): ModuleSchema {
   return schema;
 }
 
-async function purgeModuleIfExists(request: APIRequestContext, accessToken: string, operationToken: string) {
+async function purgeModuleIfExists(request: APIRequestContext, login: BrowserLoginResult, operationToken: string) {
   const response = await request.delete(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}/purge?dropTable=false&purgeSource=true`, {
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
     },
     failOnStatusCode: false,
@@ -209,11 +178,9 @@ async function purgeModuleIfExists(request: APIRequestContext, accessToken: stri
   expect(response.ok()).toBeTruthy();
 }
 
-async function getModuleStatus(request: APIRequestContext, accessToken: string) {
+async function getModuleStatus(request: APIRequestContext, login: BrowserLoginResult) {
   const response = await request.get(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers: apiRequestHeaders(login),
     failOnStatusCode: false,
   });
   return {
@@ -228,12 +195,12 @@ async function readFileContains(target: string, fragment: string) {
 }
 
 test('cmdb host database-import flow can generate register verify and purge without dropping source table', async ({ page }) => {
-  const login = await loginByApi(page.request);
-  const operationToken = await getOperationToken(page.request, login.accessToken);
+  const login = await loginByApi(page.request, adminCredentials);
+  const operationToken = await getApiOperationToken(page.request, login);
 
-  await purgeModuleIfExists(page.request, login.accessToken, operationToken);
+  await purgeModuleIfExists(page.request, login, operationToken);
 
-  const preview = await fetchTablePreview(page.request, login.accessToken);
+  const preview = await fetchTablePreview(page.request, login);
   expect(preview.tableName).toBe(tableName);
   expect(preview.suggestedName).toBe(moduleName);
   expect(preview.suggestedScope).toBe('business');
@@ -250,7 +217,7 @@ test('cmdb host database-import flow can generate register verify and purge with
 
   const generateResponse = await page.request.post(`${apiBaseUrl}/system/dynamic-modules/generate`, {
     headers: {
-      Authorization: `Bearer ${login.accessToken}`,
+      ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
     },
     data: {
@@ -275,7 +242,7 @@ test('cmdb host database-import flow can generate register verify and purge with
   expect(result.summary.schemaPath).toBe('schema/generated/business/cmdb/host.json');
 
   await expect.poll(async () => {
-    const status = (await getModuleStatus(page.request, login.accessToken)).payload.data?.status;
+    const status = (await getModuleStatus(page.request, login)).payload.data?.status;
     return status === 1 || status === 3;
   }).toBe(true);
 
@@ -298,7 +265,7 @@ test('cmdb host database-import flow can generate register verify and purge with
 
   const purgeResponse = await page.request.delete(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}/purge?dropTable=false&purgeSource=true`, {
     headers: {
-      Authorization: `Bearer ${login.accessToken}`,
+      ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
     },
   });
@@ -307,14 +274,12 @@ test('cmdb host database-import flow can generate register verify and purge with
   expect(purgePayload.code).toBe(200);
 
   await expect.poll(async () => {
-    const response = await getModuleStatus(page.request, login.accessToken);
+    const response = await getModuleStatus(page.request, login);
     return response.payload.code;
   }).not.toBe(200);
   await expect.poll(async () => {
     const response = await page.request.get(`${apiBaseUrl}/system/dynamic-modules`, {
-      headers: {
-        Authorization: `Bearer ${login.accessToken}`,
-      },
+      headers: apiRequestHeaders(login),
     });
     const payload = await response.json();
     return Array.isArray(payload.data) && payload.data.some((item: { name: string }) => item.name === moduleKey);
@@ -350,9 +315,7 @@ test('cmdb host database-import flow can generate register verify and purge with
   await expect.poll(async () => readFileContains(componentRegistry, 'business/cmdb/host/CmdbHostList')).toBe(false);
 
   const tableCheck = await page.request.get(`${apiBaseUrl}/system/generator/table-schema`, {
-    headers: {
-      Authorization: `Bearer ${login.accessToken}`,
-    },
+    headers: apiRequestHeaders(login),
     params: {
       datasourceId: 'current',
       tableName,

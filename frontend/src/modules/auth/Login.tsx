@@ -34,7 +34,7 @@ import { findFirstNavigableMenuPath } from '../system/menu/api';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import ThemeSwitcher from '../../core/theme/ThemeSwitcher';
-import { clearShellSessionState } from '../../core/shellState';
+import { clearShellSessionState, LOGIN_NOTICE_STORAGE_KEY } from '../../core/shellState';
 import {
   getBrandInitial,
   setExplicitLanguagePreference,
@@ -44,7 +44,6 @@ import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../
 import './Login.css';
 
 const FormItem = Form.Item;
-const LOGIN_NOTICE_STORAGE_KEY = 'pantheon_login_notice';
 const LOGIN_NOTICE_MESSAGE_KEY_MAP: Record<string, string> = {
   'session.idle_timeout': 'auth.login.idleTimeoutNotice',
 };

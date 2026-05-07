@@ -36,6 +36,7 @@ import {
   PageNetworkError,
   PageServerError,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
 
@@ -183,16 +184,16 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
   };
 
   const workbenchColumns: ColumnProps<PermissionWorkbenchRole>[] = [
-    { title: t('system.role.roleName'), dataIndex: 'roleName', width: 180 },
+    { title: t('system.role.roleName'), dataIndex: 'roleName', width: TABLE_COLUMN_WIDTH.name },
     withTableColumnPriority(
-      { title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180 },
+      { title: t('system.role.roleKey'), dataIndex: 'roleKey', width: TABLE_COLUMN_WIDTH.code },
       'medium',
     ),
     withTableColumnPriority(
       {
         title: t('system.role.status'),
         dataIndex: 'status',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: number) => (
           <Tag color={value === 1 ? 'green' : 'red'}>
             {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
@@ -202,14 +203,18 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
       'medium',
     ),
     withTableColumnPriority(
-      { title: t('system.permission.workbench.navCount'), dataIndex: 'menuCount', width: 120 },
+      {
+        title: t('system.permission.workbench.navCount'),
+        dataIndex: 'menuCount',
+        width: TABLE_COLUMN_WIDTH.count,
+      },
       'low',
     ),
     withTableColumnPriority(
       {
         title: t('system.permission.workbench.pageCount'),
         dataIndex: 'pagePermissionCount',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.count,
       },
       'low',
     ),
@@ -217,7 +222,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
       {
         title: t('system.permission.workbench.actionCount'),
         dataIndex: 'actionPermissionCount',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.count,
       },
       'low',
     ),
@@ -225,14 +230,14 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
       {
         title: t('system.permission.workbench.apiCount'),
         dataIndex: 'apiPolicyCount',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.count,
       },
       'low',
     ),
     {
       title: t('system.permission.workbench.coverage'),
       dataIndex: 'coverage',
-      width: 220,
+      width: TABLE_COLUMN_WIDTH.tagGroup,
       render: (_: unknown, row: PermissionWorkbenchRole) => (
         <Space size={4} wrap>
           {row.hasPageGap ? (
@@ -251,7 +256,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
       {
         title: t('system.permission.workbench.unknownCount'),
         dataIndex: 'unknownPermissionCount',
-        width: 140,
+        width: TABLE_COLUMN_WIDTH.count,
         render: (value: number) =>
           value > 0 ? <Tag color="orange">{value}</Tag> : <Tag color="green">0</Tag>,
       },

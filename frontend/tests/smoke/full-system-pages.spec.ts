@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
+import {
+  adminCredentials,
+  installClientSession,
+  loginByApi,
+} from './helpers/auth';
 
 type ViewportCase = {
   key: string;
@@ -12,11 +15,6 @@ type SmokePage = {
   path: string;
   title: string;
   layer: 'platform' | 'system/auth' | 'system/iam' | 'system/org' | 'system/config';
-};
-
-type LoginResult = {
-  accessToken: string;
-  refreshToken: string;
 };
 
 const viewportCases: ViewportCase[] = [
@@ -45,32 +43,6 @@ const smokePages: SmokePage[] = [
   { layer: 'system/config', path: '/system/modules', title: '模块注册表' },
   { layer: 'system/config', path: '/system/generator', title: '模块生成器' },
 ];
-
-async function loginByApi(page: Page): Promise<LoginResult> {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: { username: 'admin', password: '123456' },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
-  };
-}
-
-async function installClientSession(page: Page, tokens: LoginResult) {
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-      sessionStorage.removeItem('pantheon_op_token');
-    },
-    tokens,
-  );
-}
 
 function collectRuntimeErrors(page: Page) {
   const errors: string[] = [];
@@ -136,7 +108,7 @@ test.describe('full system page smoke', () => {
 
       for (const smokePage of smokePages) {
         test(`${smokePage.layer}: ${smokePage.path}`, async ({ page }) => {
-          const tokens = await loginByApi(page);
+          const tokens = await loginByApi(page.request, adminCredentials);
           await installClientSession(page, tokens);
           const errors = collectRuntimeErrors(page);
 

@@ -53,7 +53,7 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   PageActions,
@@ -64,9 +64,9 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
@@ -456,22 +456,36 @@ const MenuList: React.FC = () => {
     {
       title: t('system.menu.title'),
       dataIndex: 'titleKey',
-      width: 180,
-      render: (value: string) => t(value),
+      width: TABLE_COLUMN_WIDTH.tagGroup,
+      render: (value: string) => (
+        <Typography.Text ellipsis={{ showTooltip: true }}>{t(value)}</Typography.Text>
+      ),
       ...sortableColumn('titleKey'),
     },
-    { title: t('system.menu.path'), dataIndex: 'path', width: 180, ...sortableColumn('path') },
+    {
+      title: t('system.menu.path'),
+      dataIndex: 'path',
+      width: TABLE_COLUMN_WIDTH.routePath,
+      ...sortableColumn('path'),
+      render: (value: string) => (
+        <Typography.Text ellipsis={{ showTooltip: true }}>{value || '-'}</Typography.Text>
+      ),
+    },
     withTableColumnPriority(
       {
         title: t('system.menu.routeName'),
         dataIndex: 'routeName',
-        width: 220,
+        width: TABLE_COLUMN_WIDTH.routePath,
         ...sortableColumn('routeName'),
         render: (value: string, row: MenuNode) => (
           <Space direction="vertical" size={2}>
-            <Typography.Text>{value || '-'}</Typography.Text>
+            <Typography.Text ellipsis={{ showTooltip: true }}>{value || '-'}</Typography.Text>
             {row.component ? (
-              <Typography.Text type="secondary" className="text-sm">
+              <Typography.Text
+                type="secondary"
+                className="text-sm"
+                ellipsis={{ showTooltip: true }}
+              >
                 {row.component}
               </Typography.Text>
             ) : null}
@@ -484,7 +498,7 @@ const MenuList: React.FC = () => {
       {
         title: t('system.menu.pagePerm'),
         dataIndex: 'pagePerm',
-        width: 220,
+        width: TABLE_COLUMN_WIDTH.tagGroup,
         ...sortableColumn('pagePerm'),
         render: (value: string) => (
           <Typography.Text ellipsis={{ showTooltip: true }}>{value || '-'}</Typography.Text>
@@ -496,7 +510,7 @@ const MenuList: React.FC = () => {
       {
         title: t('system.menu.perms'),
         dataIndex: 'perms',
-        width: 220,
+        width: TABLE_COLUMN_WIDTH.tagGroup,
         ...sortableColumn('perms'),
         render: (value: string, row: MenuNode) => {
           if (value) {
@@ -515,27 +529,32 @@ const MenuList: React.FC = () => {
     {
       title: t('system.menu.type'),
       dataIndex: 'type',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.status,
       ...sortableColumn('type'),
       render: (value: string) => {
         return getMenuTypeLabel(value);
       },
     },
     withTableColumnPriority(
-      { title: t('system.menu.sort'), dataIndex: 'sort', width: 100, ...sortableColumn('sort') },
+      {
+        title: t('system.menu.sort'),
+        dataIndex: 'sort',
+        width: TABLE_COLUMN_WIDTH.count,
+        ...sortableColumn('sort'),
+      },
       'medium',
     ),
     {
       title: t('system.menu.visible'),
       dataIndex: 'isVisible',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.status,
       ...sortableColumn('isVisible'),
       render: renderVisibleTag,
     },
     withTableColumnPriority(
       {
         title: t('system.menu.metadata'),
-        width: 260,
+        width: TABLE_COLUMN_WIDTH.diagnostics,
         render: (_: unknown, row: MenuNode) => renderMetadataTags(row),
       },
       'low',
@@ -700,21 +719,7 @@ const MenuList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('system.menu.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('system.menu.hero.summaryTitle')}
-                noteDescription={t('system.menu.hero.sideDesc')}
-              >
-                <GovernanceRailSummary items={governanceSummaryItems} />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
@@ -780,8 +785,18 @@ const MenuList: React.FC = () => {
               ? renderCardView()
               : null}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.menu.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.menu.hero.summaryTitle')}
+        noteDescription={t('system.menu.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.menu.edit') : t('system.menu.create')}

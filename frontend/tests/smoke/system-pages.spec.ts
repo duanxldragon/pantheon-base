@@ -1,11 +1,20 @@
 import fs from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
+import {
+  adminCredentials,
+  apiBaseUrl,
+  authHeaders,
+  installClientSession,
+  installOperationToken,
+  loginByApi,
+  requestHeaders,
+  signInAsAdmin,
+  signInWithUi,
+  verifiedHeaders,
+} from './helpers/auth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
 const pageEmptyTexts = ['暂无数据', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
 type SettingItem = { settingKey: string; settingValue: string };
-type LoginResult = { accessToken: string; refreshToken: string };
 type UserPlatformPreferences = {
   theme?: string;
   language?: string;
@@ -29,84 +38,11 @@ const systemPages = [
   { path: '/system/modules', title: '模块注册表' },
 ] as const;
 
-async function signInAsAdmin(page: Page) {
-  const tokens = await loginByApi(page, 'admin', '123456');
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-    },
-    tokens,
-  );
-
-  return tokens.accessToken;
-}
-
-async function loginByApi(page: Page, username: string, password: string): Promise<LoginResult> {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: { username, password },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
-  };
-}
-
-async function installClientSession(page: Page, tokens: LoginResult) {
-  await page.goto('/login', { waitUntil: 'domcontentloaded' });
-  await page.evaluate(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-      sessionStorage.removeItem('pantheon_op_token');
-    },
-    tokens,
-  );
-}
-
-function authHeaders(accessToken: string) {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
-
-async function getOperationToken(page: Page, accessToken: string) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/operation-verify`, {
-    headers: authHeaders(accessToken),
-    data: { password: '123456' },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return payload.data.operationToken as string;
-}
-
-async function verifiedHeaders(page: Page, accessToken: string) {
-  return {
-    ...authHeaders(accessToken),
-    'X-Operation-Token': await getOperationToken(page, accessToken),
-  };
-}
-
 async function updateSettingGroup(page: Page, accessToken: string, groupKey: string, items: SettingItem[]) {
   return page.request.put(`${apiBaseUrl}/system/setting/group/${groupKey}`, {
     headers: await verifiedHeaders(page, accessToken),
     data: { items },
   });
-}
-
-async function installOperationToken(page: Page, accessToken: string) {
-  const token = await getOperationToken(page, accessToken);
-  await page.evaluate((value) => {
-    sessionStorage.setItem('pantheon_op_token', value);
-  }, token);
 }
 
 async function deleteUserByUsername(page: Page, accessToken: string, username: string) {
@@ -180,7 +116,7 @@ async function getCurrentUserPreferences(page: Page, accessToken: string): Promi
 
 async function updateCurrentUserPreferences(page: Page, accessToken: string, preferences: UserPlatformPreferences) {
   const response = await page.request.put(`${apiBaseUrl}/auth/me/preferences`, {
-    headers: authHeaders(accessToken),
+    headers: await requestHeaders(page, accessToken),
     data: preferences,
   });
   expect(response.ok()).toBeTruthy();
@@ -213,6 +149,11 @@ async function expectPageBodyReady(page: Page) {
   }
 }
 
+async function expectVisiblePageTitle(page: Page, title: string) {
+  const visibleMatches = page.getByText(title, { exact: false }).filter({ visible: true });
+  await expect(visibleMatches.first()).toBeVisible();
+}
+
 function formItem(page: Page, label: string) {
   return page.locator('.arco-form-item').filter({ has: page.getByText(label, { exact: true }) }).first();
 }
@@ -233,7 +174,7 @@ for (const pageMeta of systemPages) {
     await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
     await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
-    await expect(page.getByRole('heading', { name: pageMeta.title })).toBeVisible();
+    await expectVisiblePageTitle(page, pageMeta.title);
     await expectNoPageError(page);
     await expectPageBodyReady(page);
     expect(consoleErrors).toEqual([]);
@@ -711,7 +652,7 @@ test('setting smoke: logout clears explicit language and falls back to default l
 });
 
 test('auth smoke: logout sends revoke request without stale invalid-session prompt', async ({ page }) => {
-  const tokens = await loginByApi(page, 'admin', '123456');
+  const tokens = await loginByApi(page.request, adminCredentials);
   await installClientSession(page, tokens);
 
   let captureAuthFailures = false;
@@ -791,6 +732,38 @@ test('platform smoke: lock screen keeps current route and opened tabs', async ({
   }
 });
 
+test('platform smoke: lock screen refreshes activity timestamp and blocks command palette while locked', async ({
+  page,
+}) => {
+  await signInAsAdmin(page);
+
+  await page.goto('/auth/security', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '安全中心');
+
+  await page.goto('/system/profile', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '个人中心');
+
+  const beforeLockActivity = await page.evaluate(() => sessionStorage.getItem('pantheon_shell_last_activity_at'));
+  expect(beforeLockActivity).toBeTruthy();
+
+  await page.getByRole('button', { name: /admin/i }).click();
+  await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
+  const lockDialog = page.getByRole('dialog');
+  await expect(lockDialog).toContainText(/会话已锁定|Session Locked/);
+
+  await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+K`);
+  await expect(page.locator('.app-command')).toHaveCount(0);
+
+  await page.getByPlaceholder(/请输入当前账号密码以解锁|Enter the current account password to unlock/).fill('123456');
+  await page.getByRole('button', { name: /解锁|Unlock/ }).click();
+  await expect(lockDialog).toHaveCount(0);
+  await expect(page).toHaveURL(/\/system\/profile$/);
+
+  const afterUnlockActivity = await page.evaluate(() => sessionStorage.getItem('pantheon_shell_last_activity_at'));
+  expect(afterUnlockActivity).toBeTruthy();
+  expect(Number(afterUnlockActivity)).toBeGreaterThan(Number(beforeLockActivity));
+});
+
 test('auth smoke: login page shows idle-timeout notice once', async ({ page }) => {
   await page.goto('/login', { waitUntil: 'networkidle' });
   await page.evaluate(() => {
@@ -802,6 +775,47 @@ test('auth smoke: login page shows idle-timeout notice once', async ({ page }) =
 
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true })).toHaveCount(0);
+});
+
+test('platform + system/auth smoke: locked session times out, relogin notice appears, and security center shows session context', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+
+  await page.goto('/system/profile', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '个人中心');
+
+  await page.getByRole('button', { name: /admin/i }).click();
+  await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
+  const lockDialog = page.getByRole('dialog');
+  await expect(lockDialog).toContainText(/会话已锁定|Session Locked/);
+
+  await page.evaluate(() => {
+    sessionStorage.setItem(
+      'pantheon_shell_last_activity_at',
+      String(Date.now() - 31 * 60 * 1000),
+    );
+  });
+
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(page.getByRole('dialog')).toContainText(/会话已锁定|Session Locked/);
+  await expect(page).toHaveURL(/\/login$/, { timeout: 25_000 });
+  await expect(
+    page.getByText(
+      /当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。|This account was signed out automatically after being idle for too long\. Sign in again to continue\./,
+    ),
+  ).toBeVisible();
+
+  await signInWithUi(page, adminCredentials);
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  await page.goto('/auth/security', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '安全中心');
+  await expect(page.getByText('在线会话', { exact: true })).toBeVisible();
+  await expect(page.getByText('最近登录', { exact: true })).toBeVisible();
+  await expect(page.getByText('当前设备', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.arco-table')).toHaveCount(2);
+  await expect(page.getByText('成功', { exact: true }).first()).toBeVisible();
 });
 
 test('setting smoke: logout clears explicit theme and falls back to default theme', async ({ page }) => {
@@ -846,7 +860,7 @@ test('setting smoke: logout clears explicit theme and falls back to default them
     await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme)).toBe(nextTheme);
   } finally {
     const restoreToken = await page.evaluate(() => localStorage.getItem('pantheon_access_token'));
-    const effectiveToken = restoreToken || await signInAsAdmin(page);
+    const effectiveToken = restoreToken || (await signInAsAdmin(page));
     await updateSettingGroup(page, effectiveToken, 'ui', originalItems);
   }
 });
@@ -935,7 +949,7 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
     const updateResponse = await updateSettingGroup(page, accessToken, 'upload', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
     const uploadPayload = await page.request.post(`${apiBaseUrl}/system/upload?scope=profile/avatar`, {
-      headers: authHeaders(accessToken),
+      headers: await requestHeaders(page, accessToken),
       multipart: {
         file: {
           name: 'avatar.png',
@@ -954,7 +968,7 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
     expect((await fileResponse.body()).toString('utf8')).toBe('pantheon-upload-smoke');
 
     const blockedPayload = await page.request.post(`${apiBaseUrl}/system/upload?scope=profile/avatar`, {
-      headers: authHeaders(accessToken),
+      headers: await requestHeaders(page, accessToken),
       multipart: {
         file: {
           name: 'avatar.txt',
@@ -975,7 +989,7 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
 test('operation log smoke: failed reason and detail summary are visible', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
   const failedUploadResponse = await page.request.post(`${apiBaseUrl}/system/upload?scope=profile/avatar`, {
-    headers: authHeaders(accessToken),
+    headers: await requestHeaders(page, accessToken),
     multipart: {
       file: {
         name: 'audit-failure.txt',
@@ -1058,7 +1072,7 @@ test('setting permission smoke: list-only role can view page but cannot save or 
     const createUserPayload = await createUserResponse.json();
     expect(createUserPayload.code).toBe(200);
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1120,7 +1134,7 @@ test('dict permission smoke: list-only role can view page but cannot mutate conf
     });
     expect(createUserResponse.ok()).toBeTruthy();
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1191,7 +1205,7 @@ test('i18n permission smoke: list-only role can view page but cannot mutate tran
     });
     expect(createUserResponse.ok()).toBeTruthy();
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1256,7 +1270,7 @@ test('login-log permission smoke: list-only role can view page but cannot clear,
     });
     expect(createUserResponse.ok()).toBeTruthy();
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1317,7 +1331,7 @@ test('session permission smoke: list-only role can view page but cannot revoke o
     });
     expect(createUserResponse.ok()).toBeTruthy();
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1379,7 +1393,7 @@ test('operation-log permission smoke: list-only role can view page but cannot cl
     });
     expect(createUserResponse.ok()).toBeTruthy();
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1440,7 +1454,7 @@ test('module permission smoke: list-only role can view registry but cannot regis
     });
     expect(createUserResponse.ok()).toBeTruthy();
 
-    const viewerTokens = await loginByApi(page, username, password);
+    const viewerTokens = await loginByApi(page.request, { username, password });
     const viewerPage = await page.context().newPage();
 
     try {
@@ -1516,7 +1530,7 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
   const syncPage = await syncContext.newPage();
 
   try {
-    const adminTokens = await loginByApi(page, 'admin', '123456');
+    const adminTokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(syncPage, adminTokens);
     await syncPage.goto('/system/setting', { waitUntil: 'networkidle' });
     const siteNameInput = formItem(syncPage, '站点名称').locator('input').first();
@@ -1545,7 +1559,7 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
   const syncPage = await syncContext.newPage();
 
   try {
-    const adminTokens = await loginByApi(page, 'admin', '123456');
+    const adminTokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(syncPage, adminTokens);
     await syncPage.goto('/system/dict', { waitUntil: 'networkidle' });
     await formItem(syncPage, '字典编码').locator('input').first().fill(dictCode);
@@ -1587,7 +1601,7 @@ test('refresh sync smoke: i18n page auto-updates across isolated contexts', asyn
   const syncPage = await syncContext.newPage();
 
   try {
-    const adminTokens = await loginByApi(page, 'admin', '123456');
+    const adminTokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(syncPage, adminTokens);
     await syncPage.goto('/system/i18n', { waitUntil: 'networkidle' });
     await formItem(syncPage, '翻译键').locator('input').first().fill(i18nKey);

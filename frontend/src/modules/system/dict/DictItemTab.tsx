@@ -50,6 +50,7 @@ import {
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
   PermissionAction,
+  TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
 import {
@@ -404,7 +405,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
       {
         title: t('system.dict.itemLabelKey'),
         dataIndex: 'itemLabelKey',
-        width: 300,
+        width: TABLE_COLUMN_WIDTH.treeLabel,
         render: (value: string) => (
           <Space direction="vertical" size={2}>
             <Text ellipsis={{ showTooltip: true }}>{t(value, value)}</Text>
@@ -417,26 +418,26 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
       {
         title: t('system.dict.itemValue'),
         dataIndex: 'itemValue',
-        width: 180,
+        width: TABLE_COLUMN_WIDTH.name,
         ellipsis: true,
       },
       withTableColumnPriority(
         {
           title: t('system.dict.itemColor'),
           dataIndex: 'itemColor',
-          width: 120,
+          width: TABLE_COLUMN_WIDTH.status,
           render: (value: string) => (value ? <Tag color={value}>{value}</Tag> : '-'),
         },
         'medium',
       ),
       withTableColumnPriority(
-        { title: t('system.dict.sort'), dataIndex: 'sort', width: 90 },
+        { title: t('system.dict.sort'), dataIndex: 'sort', width: TABLE_COLUMN_WIDTH.count },
         'low',
       ),
       {
         title: t('system.dict.status'),
         dataIndex: 'status',
-        width: 96,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: number) => (
           <Tag color={value === 1 ? 'green' : 'red'}>
             {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}

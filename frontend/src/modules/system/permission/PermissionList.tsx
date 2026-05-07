@@ -60,7 +60,7 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ImportCsvButton,
@@ -72,9 +72,9 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
 } from '../../../components';
 import '../list-page.css';
@@ -461,14 +461,22 @@ const PermissionList: React.FC = () => {
   };
 
   const columns: ColumnProps<PermissionPolicyRow>[] = [
-    { title: t('system.permission.roleKey'), dataIndex: 'roleKey', width: 180 },
+    {
+      title: t('system.permission.roleKey'),
+      dataIndex: 'roleKey',
+      width: TABLE_COLUMN_WIDTH.code,
+    },
     {
       title: t('system.permission.method'),
       dataIndex: 'method',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.method,
       render: (value: string) => <Tag color="arcoblue">{value}</Tag>,
     },
-    { title: t('system.permission.path'), dataIndex: 'path' },
+    {
+      title: t('system.permission.path'),
+      dataIndex: 'path',
+      width: TABLE_COLUMN_WIDTH.routePath,
+    },
     {
       title: t('common.action'),
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
@@ -613,21 +621,7 @@ const PermissionList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('system.permission.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('system.permission.hero.summaryTitle')}
-                noteDescription={t('system.permission.hero.sideDesc')}
-              >
-                <GovernanceRailSummary items={governanceSummaryItems} />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <Card className="page-panel permission-workbench__tabs">
             <Tabs
               activeTab={activeTab}
@@ -731,8 +725,18 @@ const PermissionList: React.FC = () => {
               </Card>
             </Space>
           )}
-        </PageSplitLayout>
+        </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.permission.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.permission.hero.summaryTitle')}
+        noteDescription={t('system.permission.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.permission.edit') : t('system.permission.create')}

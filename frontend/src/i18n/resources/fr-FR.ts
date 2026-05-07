@@ -972,9 +972,9 @@ const frFRFallback = {
   'system.audit.hero.exportReady': 'Export prêt',
   'system.audit.hero.exportHint':
     'L’export de l’audit unifié reste protégé par sa propre frontière de permission.',
-  'system.audit.hero.clearReady': 'Purge prête',
-  'system.audit.hero.clearHint':
-    'Les actions de purge dangereuses ne sont exposées que lorsque la permission dédiée de purge est présente.',
+  'system.audit.hero.cleanupReady': 'Nettoyage prêt',
+  'system.audit.hero.cleanupHint':
+    'Le nettoyage par rétention et la suppression ciblée exigent tous deux des autorisations dédiées et une vérification secondaire ; l’effacement complet n’est pas proposé.',
   'system.audit.hero.selectedHint':
     'Les lignes sélectionnées seront supprimées de manière ciblée après vérification secondaire.',
   'system.audit.hero.sideTitle': 'Note de gouvernance',
@@ -2034,7 +2034,7 @@ const frFRFallback = {
   'system.permission.login_log.delete': 'Suppression journal de connexion',
   'system.permission.operation_log.list': 'Consultation journal des opérations',
   'system.permission.operation_log.delete': 'Suppression journal des opérations',
-  'system.permission.operation_log.clear': 'Purge journal des opérations',
+  'system.permission.operation_log.clear': 'Nettoyage journal des opérations',
   'dept.parent.not_found': 'Le département parent n’existe pas',
   'dept.leader.required': 'Veuillez saisir un responsable',
   'dept.leader.bind_after_create':
@@ -2189,7 +2189,7 @@ const frFRFallback = {
   'permission.method.invalid': 'Méthode de requête invalide',
   'setting.group.update': 'Mise à jour du groupe de configuration',
   '删除操作日志': 'Supprimer le journal des opérations',
-  '清空操作日志': 'Vider le journal des opérations',
+  '清空操作日志': 'Nettoyer les journaux des opérations',
   '导出操作日志': 'Exporter le journal des opérations',
   '上传文件': 'Téléverser un fichier',
   'system.dept.task.locate': 'Localiser la correction',

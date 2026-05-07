@@ -2,8 +2,17 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import {
+  adminCredentials,
+  apiBaseUrl,
+  apiRequestHeaders,
+  getApiOperationToken,
+  installClientSession,
+  installOperationToken,
+  loginByApi,
+  type BrowserLoginResult,
+} from './helpers/auth';
 
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(currentDir, '../../..');
 const moduleName = 'orderqa';
@@ -15,11 +24,6 @@ const schemaFile = path.join(workspaceRoot, 'schema', 'generated', 'business', `
 const backendRegistry = path.join(workspaceRoot, 'backend', 'modules', 'business', 'generated_registry.go');
 const frontendRegistry = path.join(workspaceRoot, 'frontend', 'src', 'modules', 'generated', 'business.ts');
 const componentRegistry = path.join(workspaceRoot, 'frontend', 'src', 'core', 'router', 'generatedComponentRegistry.ts');
-
-type LoginPayload = {
-  accessToken: string;
-  refreshToken: string;
-};
 
 function buildGenerateRequest() {
   return {
@@ -158,62 +162,14 @@ export default OrderqaModule;
   };
 }
 
-async function loginByApi(request: APIRequestContext): Promise<LoginPayload> {
-  const response = await request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
-  };
-}
-
-async function getOperationToken(request: APIRequestContext, accessToken: string) {
-  const response = await request.post(`${apiBaseUrl}/auth/operation-verify`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    data: {
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  return payload.data.operationToken as string;
-}
-
-async function installSession(page: Page, login: LoginPayload, operationToken: string) {
-  await page.addInitScript(
-    ({ accessToken, refreshToken, opToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-      sessionStorage.setItem('pantheon_op_token', opToken);
-    },
-    {
-      accessToken: login.accessToken,
-      refreshToken: login.refreshToken,
-      opToken: operationToken,
-    },
-  );
-}
-
 async function formItem(page: Page, label: string) {
   return page.locator('.arco-form-item').filter({ has: page.getByText(label, { exact: true }) }).first();
 }
 
-async function cleanupModule(request: APIRequestContext, accessToken: string, operationToken: string) {
+async function cleanupModule(request: APIRequestContext, login: BrowserLoginResult, operationToken: string) {
   const response = await request.delete(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}?dropTable=false&purgeSource=true`, {
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
     },
     failOnStatusCode: false,
@@ -235,10 +191,11 @@ async function expectPathMissing(target: string) {
 }
 
 test('real module governance flow can generate register and purge a temporary business module', async ({ page }) => {
-  const login = await loginByApi(page.request);
-  const operationToken = await getOperationToken(page.request, login.accessToken);
-  await cleanupModule(page.request, login.accessToken, operationToken);
-  await installSession(page, login, operationToken);
+  const login = await loginByApi(page.request, adminCredentials);
+  const operationToken = await getApiOperationToken(page.request, login);
+  await cleanupModule(page.request, login, operationToken);
+  await installClientSession(page, login);
+  await installOperationToken(page, login.accessToken);
 
   await page.goto('/system/generator', { waitUntil: 'networkidle' });
   await expect(page.getByRole('heading', { name: '模块生成向导' })).toBeVisible();
@@ -262,7 +219,7 @@ test('real module governance flow can generate register and purge a temporary bu
 
   const generateResponse = await page.request.post(`${apiBaseUrl}/system/dynamic-modules/generate`, {
     headers: {
-      Authorization: `Bearer ${login.accessToken}`,
+      ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
     },
     data: buildGenerateRequest(),
@@ -276,9 +233,7 @@ test('real module governance flow can generate register and purge a temporary bu
 
   await expect.poll(async () => {
     const response = await page.request.get(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}`, {
-      headers: {
-        Authorization: `Bearer ${login.accessToken}`,
-      },
+      headers: apiRequestHeaders(login),
     });
     const payload = await response.json();
     return payload.data?.status === 1 || payload.data?.status === 3;
@@ -304,7 +259,7 @@ test('real module governance flow can generate register and purge a temporary bu
 
   const cleanupResponse = await page.request.delete(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}?dropTable=false&purgeSource=true`, {
     headers: {
-      Authorization: `Bearer ${login.accessToken}`,
+      ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
     },
   });
@@ -314,9 +269,7 @@ test('real module governance flow can generate register and purge a temporary bu
 
   await expect.poll(async () => {
     const response = await page.request.get(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}`, {
-      headers: {
-        Authorization: `Bearer ${login.accessToken}`,
-      },
+      headers: apiRequestHeaders(login),
     });
     const payload = await response.json();
     return payload.data?.status;

@@ -14,7 +14,7 @@ export interface UserInfo {
 }
 
 export function hasAuthCookie(): boolean {
-  return document.cookie.indexOf('pantheon_access_token=') >= 0;
+  return document.cookie.indexOf('pantheon_csrf_token=') >= 0;
 }
 
 interface AuthState {

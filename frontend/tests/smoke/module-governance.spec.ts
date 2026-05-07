@@ -1,40 +1,10 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
-
-async function signInAsAdmin(page: Page) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-
-  await page.addInitScript(
-    ({ accessToken, refreshToken, user }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-      localStorage.setItem('pantheon-auth-storage', JSON.stringify({
-        state: {
-          token: accessToken,
-          refreshToken,
-          userInfo: user,
-        },
-        version: 0,
-      }));
-    },
-    {
-      accessToken: payload.data.accessToken,
-      refreshToken: payload.data.refreshToken,
-      user: payload.data.user,
-    },
-  );
-}
+import {
+  installClientSession,
+  installOperationToken,
+  loginByApi,
+  signInAsAdmin,
+} from './helpers/auth';
 
 async function fulfillJson(route: Route, body: Record<string, unknown>) {
   await route.fulfill({
@@ -42,25 +12,6 @@ async function fulfillJson(route: Route, body: Record<string, unknown>) {
     contentType: 'application/json',
     body: JSON.stringify(body),
   });
-}
-
-function authHeaders(accessToken: string) {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
-
-async function installOperationToken(page: Page, accessToken: string) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/operation-verify`, {
-    headers: authHeaders(accessToken),
-    data: { password: '123456' },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-  await page.evaluate((value) => {
-    sessionStorage.setItem('pantheon_op_token', value);
-  }, payload.data.operationToken as string);
 }
 
 function formItem(page: Page, label: string) {
@@ -165,38 +116,9 @@ test.describe('module governance smoke', () => {
   });
 
   test('generator requires overwrite confirmation before replacing an existing module', async ({ page }) => {
-    const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-      data: {
-        username: 'admin',
-        password: '123456',
-      },
-    });
-    expect(response.ok()).toBeTruthy();
-    const payload = await response.json();
-    expect(payload.code).toBe(200);
-    const accessToken = payload.data.accessToken as string;
-
-    await page.addInitScript(
-      ({ token, refreshToken, user }) => {
-        localStorage.setItem('pantheon_access_token', token);
-        localStorage.setItem('pantheon_refresh_token', refreshToken);
-        localStorage.setItem('pantheon_lang', 'zh-CN');
-        localStorage.setItem('pantheon_lang_explicit', '1');
-        localStorage.setItem('pantheon-auth-storage', JSON.stringify({
-          state: {
-            token,
-            refreshToken,
-            userInfo: user,
-          },
-          version: 0,
-        }));
-      },
-      {
-        token: accessToken,
-        refreshToken: payload.data.refreshToken,
-        user: payload.data.user,
-      },
-    );
+    const tokens = await loginByApi(page.request, { username: 'admin', password: '123456' });
+    const accessToken = tokens.accessToken;
+    await installClientSession(page, tokens);
 
     let submitCount = 0;
     await page.route(/\/api\/v1\/system\/generator\/tables(?:\?.*)?$/, async (route) => {
@@ -273,6 +195,15 @@ test.describe('module governance smoke', () => {
             routeName: 'business-cmdb-vendor',
             componentKey: 'business/cmdb/vendor/CmdbVendorList',
             permissionPrefix: 'business:cmdb:vendor',
+            contract: {
+              templateVersion: 'enterprise',
+              dataScopeEnabled: false,
+              dataScopeMode: 'none',
+              dependencyCount: 0,
+              relationCount: 0,
+              dependencies: [],
+              relations: [],
+            },
             parentMenuPath: '/business/cmdb',
             parentMenuSource: 'inferred',
             parentMenuExists: true,
@@ -318,7 +249,8 @@ test.describe('module governance smoke', () => {
 
     await expect.poll(() => submitCount).toBe(2);
     await expect(page.locator('.arco-message').getByText('模块源码已写入，等待激活', { exact: true }).last()).toBeVisible();
-    await expect(page.getByText('生成结果', { exact: true })).toBeVisible();
+    await expect(page.getByText(/模块标识:\s*business\.cmdb\.vendor/)).toBeVisible();
+    await expect(page.getByText(/路由路径:\s*\/business\/cmdb\/vendor/)).toBeVisible();
   });
 
   test('generator validates system scope module name before submit and shows a single error hint', async ({ page }) => {

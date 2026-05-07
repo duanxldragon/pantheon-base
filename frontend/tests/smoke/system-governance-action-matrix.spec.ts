@@ -1,6 +1,5 @@
 import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
-
-const apiBaseUrl = 'http://127.0.0.1:8080/api/v1';
+import { installOperationToken, signInAsAdmin } from './helpers/auth';
 
 type Deferred<T = void> = {
   promise: Promise<T>;
@@ -24,31 +23,6 @@ function createDeferred<T = void>(): Deferred<T> {
     resolve = nextResolve;
   });
   return { promise, resolve };
-}
-
-async function signInAsAdmin(page: Page) {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: {
-      username: 'admin',
-      password: '123456',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.code).toBe(200);
-
-  await page.addInitScript(
-    ({ accessToken, refreshToken }) => {
-      localStorage.setItem('pantheon_access_token', accessToken);
-      localStorage.setItem('pantheon_refresh_token', refreshToken);
-      localStorage.setItem('pantheon_lang', 'zh-CN');
-      localStorage.setItem('pantheon_lang_explicit', '1');
-    },
-    {
-      accessToken: payload.data.accessToken,
-      refreshToken: payload.data.refreshToken,
-    },
-  );
 }
 
 function collectRuntimeErrors(page: Page) {
@@ -279,7 +253,7 @@ const actionCases: GovernanceActionCase[] = [
     domain: 'system/iam',
     path: '/system/operation-log',
     confirmText: '确认清理超出最近 30 天保留窗口的操作日志？',
-    successToast: '已清理 1 条操作日志',
+    successToast: '已清理 1 条历史操作日志，并记录 1 条清理审计',
     errorToast: '请求失败，请稍后重试',
     actionRoutePattern: /\/api\/v1\/system\/operation-log\/cleanup$/,
     prepare: prepareOperationCleanup,
@@ -305,7 +279,9 @@ test.describe('system governance action matrix', () => {
       const runtimeErrors = collectRuntimeErrors(casePage);
 
       try {
-        await signInAsAdmin(casePage);
+        const accessToken = await signInAsAdmin(casePage);
+        await casePage.goto('/dashboard', { waitUntil: 'networkidle' });
+        await installOperationToken(casePage, accessToken);
         const popup = await actionCase.prepare(casePage);
         await expect(popup.getByText(actionCase.confirmText, { exact: true })).toBeVisible();
         await expect(casePage).toHaveURL(new RegExp(`${actionCase.path.replace(/\//g, '\\/')}$`));
@@ -324,7 +300,9 @@ test.describe('system governance action matrix', () => {
       let intercepted = false;
 
       try {
-        await signInAsAdmin(casePage);
+        const accessToken = await signInAsAdmin(casePage);
+        await casePage.goto('/dashboard', { waitUntil: 'networkidle' });
+        await installOperationToken(casePage, accessToken);
         await casePage.route(actionCase.actionRoutePattern, async (route) => {
           intercepted = true;
           await gate.promise;
@@ -360,7 +338,9 @@ test.describe('system governance action matrix', () => {
       const runtimeErrors = collectRuntimeErrors(casePage);
 
       try {
-        await signInAsAdmin(casePage);
+        const accessToken = await signInAsAdmin(casePage);
+        await casePage.goto('/dashboard', { waitUntil: 'networkidle' });
+        await installOperationToken(casePage, accessToken);
         await casePage.route(actionCase.actionRoutePattern, async (route) => {
           await fulfillJson(route, 500, {
             code: 500,

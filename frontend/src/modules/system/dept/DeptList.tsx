@@ -76,7 +76,7 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ImportCsvButton,
@@ -89,11 +89,11 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
-  PageSplitLayout,
   SubmitBar,
   TableBatchActionBar,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
@@ -682,7 +682,7 @@ const DeptList: React.FC = () => {
     {
       title: t('system.dept.deptName'),
       dataIndex: 'deptName',
-      width: 220,
+      width: TABLE_COLUMN_WIDTH.treeLabel,
       ...sortableColumn('deptName'),
       render: (_: unknown, row: DeptNode) => (
         <Space size={8}>
@@ -691,27 +691,35 @@ const DeptList: React.FC = () => {
         </Space>
       ),
     },
-    {
-      title: t('system.dept.leader'),
-      dataIndex: 'leader',
-      width: 140,
-      ...sortableColumn('leader'),
-    },
     withTableColumnPriority(
-      { title: t('system.dept.phone'), dataIndex: 'phone', width: 140 },
+      {
+        title: t('system.dept.leader'),
+        dataIndex: 'leader',
+        width: TABLE_COLUMN_WIDTH.identity,
+        ...sortableColumn('leader'),
+      },
+      'medium',
+    ),
+    withTableColumnPriority(
+      { title: t('system.dept.phone'), dataIndex: 'phone', width: TABLE_COLUMN_WIDTH.identity },
       'low',
     ),
     withTableColumnPriority(
-      { title: t('system.dept.email'), dataIndex: 'email', width: 180 },
+      { title: t('system.dept.email'), dataIndex: 'email', width: TABLE_COLUMN_WIDTH.name },
       'low',
     ),
     withTableColumnPriority(
-      { title: t('system.dept.sort'), dataIndex: 'sort', width: 120, ...sortableColumn('sort') },
+      {
+        title: t('system.dept.sort'),
+        dataIndex: 'sort',
+        width: TABLE_COLUMN_WIDTH.count,
+        ...sortableColumn('sort'),
+      },
       'medium',
     ),
     {
       title: t('system.dept.governance'),
-      width: 220,
+      width: TABLE_COLUMN_WIDTH.tagGroup,
       render: (_: unknown, row: DeptNode) => {
         if (row.isRoot) {
           return <Tag>{t('system.dept.root')}</Tag>;
@@ -755,7 +763,7 @@ const DeptList: React.FC = () => {
     {
       title: t('system.dept.status'),
       dataIndex: 'status',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.status,
       ...sortableColumn('status'),
       render: (value: number) => (
         <Tag color={value === 1 ? 'green' : 'red'}>
@@ -1253,23 +1261,7 @@ const DeptList: React.FC = () => {
         ) : null}
         <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
           <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>
-            <PageSplitLayout
-              className="dept-list-page__layout"
-              railClassName="dept-list-page__side-column"
-              rail={
-                governanceRail.expanded && overview ? (
-                  <GovernanceRailPanel
-                    title={t('system.dept.governance')}
-                    onClose={governanceRail.close}
-                    closeText={t('common.close')}
-                    noteTitle={t('system.dept.governance')}
-                    noteDescription={t('system.dept.governanceHint')}
-                  >
-                    <GovernanceRailSummary items={governanceSummaryItems} />
-                  </GovernanceRailPanel>
-                ) : null
-              }
-            >
+            <div className="page-main-column dept-list-page__layout">
               <Card
                 className="page-panel system-list__table-card dept-governance-task-card dept-list-page__task-card"
                 title={t('system.dept.task.title')}
@@ -1449,7 +1441,7 @@ const DeptList: React.FC = () => {
                   />
                 ) : null}
               </Card>
-            </PageSplitLayout>
+            </div>
           </Tabs.TabPane>
           <Tabs.TabPane key="org" title={t('system.dept.orgTab')}>
             <DeptOrgTab
@@ -1481,6 +1473,16 @@ const DeptList: React.FC = () => {
           </Tabs.TabPane>
         </Tabs>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.dept.governance')}
+        visible={governanceRail.expanded && Boolean(overview)}
+        onClose={governanceRail.close}
+        noteTitle={t('system.dept.governance')}
+        noteDescription={t('system.dept.governanceHint')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.dept.edit') : t('system.dept.create')}

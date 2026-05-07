@@ -5,11 +5,13 @@ import { usePermission } from '../../../hooks/usePermission';
 import { useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { resolveRouteWarmData } from '../../../core/router/prefetch';
 import {
+  GovernanceInsightDrawer,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
   PageContainer,
   PageHeader,
-  PageSplitLayout,
-  StandardRailNotePanel,
-  StandardRailSummary,
+  PageActions,
+  useGovernanceRail,
 } from '../../../components';
 import { getDictTypeList, type DictTypeQuery, type DictTypeRow } from './api';
 import DictTypeTab from './DictTypeTab';
@@ -46,6 +48,7 @@ const DictPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DictTabKey>('types');
   const [selectedType, setSelectedType] = useState<DictTypeRow | null>(null);
   const selectedTypeId = selectedType?.id;
+  const governanceRail = useGovernanceRail();
 
   const selectType = useCallback((nextType: DictTypeRow | null) => {
     setSelectedType(nextType);
@@ -145,6 +148,27 @@ const DictPage: React.FC = () => {
     [selectedType?.dictCode, t, typeSummary.active, typeSummary.items, typeSummary.total],
   );
 
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.dict.hero.disabledTypes'),
+        value: typeSummary.disabled,
+        description: t('system.dict.hero.disabledHint'),
+      },
+      {
+        label: t('system.dict.hero.refreshReady'),
+        value: canRefresh ? t('common.yes') : t('common.no'),
+        description: t('system.dict.hero.refreshHint'),
+      },
+      {
+        label: t('system.dict.hero.importReady'),
+        value: canImport ? t('common.yes') : t('common.no'),
+        description: t('system.dict.hero.importHint'),
+      },
+    ],
+    [canImport, canRefresh, t, typeSummary.disabled],
+  );
+
   useEffect(() => {
     if (selectedType?.id) {
       localStorage.setItem(DICT_SELECTED_TYPE_STORAGE_KEY, String(selectedType.id));
@@ -155,7 +179,19 @@ const DictPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader title={t('system.menu.dict')} />
+      <PageHeader
+        title={t('system.menu.dict')}
+        extra={
+          <PageActions>
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('system.dict.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
+          </PageActions>
+        }
+      />
       <Space direction="vertical" size={16} className="system-page-template">
         <Card className="page-panel system-page-hero">
           <div className="system-page-hero__top">
@@ -176,80 +212,58 @@ const DictPage: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            <>
-              <StandardRailSummary
-                title={t('system.dict.hero.summaryTitle')}
-                items={[
-                  {
-                    label: t('system.dict.hero.disabledTypes'),
-                    value: typeSummary.disabled,
-                    description: t('system.dict.hero.disabledHint'),
-                  },
-                  {
-                    label: t('system.dict.hero.refreshReady'),
-                    value: canRefresh ? t('common.yes') : t('common.no'),
-                    description: t('system.dict.hero.refreshHint'),
-                  },
-                  {
-                    label: t('system.dict.hero.importReady'),
-                    value: canImport ? t('common.yes') : t('common.no'),
-                    description: t('system.dict.hero.importHint'),
-                  },
-                ]}
+        <Card className="page-panel system-list__table-card dict-page__table-card">
+          <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
+            <Tabs.TabPane key="types" title={t('system.dict.type')}>
+              <DictTypeTab
+                typeRows={typeRows}
+                typeLoading={typeLoading}
+                typeError={typeError}
+                typeQuery={typeQuery}
+                typeSummary={typeSummary}
+                canCreate={canCreate}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canExport={canExport}
+                canImport={canImport}
+                onQueryChange={setTypeQuery}
+                onReload={() => {
+                  void loadTypes();
+                }}
+                onSelectType={selectType}
+                onSwitchToItemsTab={switchToItemsTab}
               />
-              <StandardRailNotePanel
-                title={t('system.dict.hero.sideTitle')}
-                noteTitle={t('system.dict.hero.sideLead')}
-                noteDescription={t('system.dict.hero.sideDesc')}
+            </Tabs.TabPane>
+            <Tabs.TabPane key="items" title={t('system.dict.item')}>
+              <DictItemTab
+                key={selectedType?.id ?? '__empty__'}
+                selectedType={selectedType}
+                typeRows={typeRows}
+                canCreate={canCreate}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canRefresh={canRefresh}
+                canExport={canExport}
+                canImport={canImport}
+                onSelectType={selectType}
+                onReloadTypes={() => {
+                  void loadTypes(typeQuery);
+                }}
               />
-            </>
-          }
-        >
-          <Card className="page-panel system-list__table-card dict-page__table-card">
-            <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
-              <Tabs.TabPane key="types" title={t('system.dict.type')}>
-                <DictTypeTab
-                  typeRows={typeRows}
-                  typeLoading={typeLoading}
-                  typeError={typeError}
-                  typeQuery={typeQuery}
-                  typeSummary={typeSummary}
-                  canCreate={canCreate}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  canExport={canExport}
-                  canImport={canImport}
-                  onQueryChange={setTypeQuery}
-                  onReload={() => {
-                    void loadTypes();
-                  }}
-                  onSelectType={selectType}
-                  onSwitchToItemsTab={switchToItemsTab}
-                />
-              </Tabs.TabPane>
-              <Tabs.TabPane key="items" title={t('system.dict.item')}>
-                <DictItemTab
-                  key={selectedType?.id ?? '__empty__'}
-                  selectedType={selectedType}
-                  typeRows={typeRows}
-                  canCreate={canCreate}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  canRefresh={canRefresh}
-                  canExport={canExport}
-                  canImport={canImport}
-                  onSelectType={selectType}
-                  onReloadTypes={() => {
-                    void loadTypes(typeQuery);
-                  }}
-                />
-              </Tabs.TabPane>
-            </Tabs>
-          </Card>
-        </PageSplitLayout>
+            </Tabs.TabPane>
+          </Tabs>
+        </Card>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.dict.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.dict.hero.sideLead')}
+        noteDescription={t('system.dict.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
     </PageContainer>
   );
 };

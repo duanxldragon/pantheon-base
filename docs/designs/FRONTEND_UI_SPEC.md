@@ -514,6 +514,30 @@ MainGrid
 
 ## 8. 表格规范
 
+### 8.0 列宽语义约束
+
+列表页列宽默认归属 **platform 共享表格契约**，不再由单页自由写一组新的裸数字宽度。
+
+当前统一规则：
+
+- 列宽优先使用 `frontend/src/components/patterns/TableColumnWidth.ts` 中的 **语义别名**，例如：
+  - `status / count / method / scope`
+  - `code / identity / owner / name / location`
+  - `datetime / routePath / keyPath`
+  - `tagGroup / diagnostics / treeLabel / body`
+- 只有在当前字段确实找不到合适语义映射时，才允许回退到基础尺寸档位：
+  - `xs / sm / md / lg / xl / tree / time / path / content`
+- 新页面和重构页禁止直接在列定义里手写裸数字宽度，例如 `width: 180`、`width: 220`；如确有特殊场景，必须先补共享语义，再消费该语义。
+
+落地顺序要求：
+
+1. 先判断该列是“状态 / 数量 / 编码 / 标识 / 时间 / 路径 / 诊断摘要 / 树主列 / 正文列”中的哪一种。
+2. 若能归入上述语义，直接使用对应 `TABLE_COLUMN_WIDTH.<semantic>`.
+3. 若暂时无法归类，才退回基础尺寸档位。
+4. 若同一类字段在多个系统页重复出现，应优先新增共享语义别名，而不是在多个页面分别挑 `sm/md/lg`。
+
+这样做的目的不是增加抽象层，而是保证 `system/iam`、`system/org`、`system/config`、`system/auth` 的列表页在信息密度、横向滚动和视觉节奏上保持同一套基线。
+
 ### 8.1 列类型
 
 常见列：

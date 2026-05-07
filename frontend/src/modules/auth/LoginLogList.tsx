@@ -32,7 +32,7 @@ import {
   AppTable,
   FilterPanel,
   GovernanceCleanupBar,
-  GovernanceRailPanel,
+  GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   ListHeaderActions,
@@ -41,8 +41,8 @@ import {
   PageError,
   PageHeader,
   PageLoading,
-  PageSplitLayout,
   PermissionAction,
+  TABLE_COLUMN_WIDTH,
   useGovernanceRail,
 } from '../../components';
 import { usePermission } from '../../hooks/usePermission';
@@ -227,19 +227,28 @@ const LoginLogList: React.FC = () => {
   );
 
   const columns: ColumnProps<LoginLogRow>[] = [
-    { title: t('system.user.username'), dataIndex: 'username', width: 140 },
-    { title: t('auth.loginLog.ip'), dataIndex: 'ipaddr', width: 140 },
-    { title: t('auth.loginLog.location'), dataIndex: 'loginLocation', width: 180, ellipsis: true },
+    {
+      title: t('system.user.username'),
+      dataIndex: 'username',
+      width: TABLE_COLUMN_WIDTH.identity,
+    },
+    { title: t('auth.loginLog.ip'), dataIndex: 'ipaddr', width: TABLE_COLUMN_WIDTH.identity },
+    {
+      title: t('auth.loginLog.location'),
+      dataIndex: 'loginLocation',
+      width: TABLE_COLUMN_WIDTH.location,
+      ellipsis: true,
+    },
     {
       title: t('auth.loginLog.browser'),
       dataIndex: 'browser',
-      width: 220,
+      width: TABLE_COLUMN_WIDTH.diagnostics,
       render: (_: unknown, record: LoginLogRow) => renderClientInfo(record),
     },
     {
       title: t('auth.loginLog.status'),
       dataIndex: 'status',
-      width: 120,
+      width: TABLE_COLUMN_WIDTH.status,
       render: (value: number) =>
         value === 1 ? (
           <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
@@ -256,7 +265,7 @@ const LoginLogList: React.FC = () => {
     {
       title: t('auth.loginLog.loginTime'),
       dataIndex: 'loginTime',
-      width: 180,
+      width: TABLE_COLUMN_WIDTH.datetime,
       render: (value: string) => formatDateTime(value),
     },
   ];
@@ -294,7 +303,7 @@ const LoginLogList: React.FC = () => {
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
+        <Card className="page-panel system-page-hero system-list__hero auth-log-list__hero">
           <div className="system-page-hero__top">
             <div className="system-page-hero__copy">
               <span className="system-page-hero__eyebrow">{t('auth.loginLog.hero.eyebrow')}</span>
@@ -313,46 +322,7 @@ const LoginLogList: React.FC = () => {
             ))}
           </div>
         </Card>
-        <PageSplitLayout
-          rail={
-            governanceRail.expanded ? (
-              <GovernanceRailPanel
-                title={t('auth.loginLog.hero.summaryTitle')}
-                onClose={governanceRail.close}
-                closeText={t('common.close')}
-                noteTitle={t('auth.security.loginLogHint')}
-                noteDescription={t('auth.loginLog.hero.sideDesc')}
-                noteTone="warning"
-              >
-                <GovernanceRailSummary
-                  items={[
-                    {
-                      label: t('auth.loginLog.status.success'),
-                      value: successCount,
-                      description: t('auth.loginLog.hero.successHint'),
-                    },
-                    {
-                      tone: 'warning',
-                      label: t('auth.loginLog.status.failed'),
-                      value: failedCount,
-                      description: t('auth.loginLog.hero.failedHint'),
-                    },
-                    {
-                      label: t('auth.loginLog.hero.window'),
-                      value: t('auth.loginLog.hero.windowValue'),
-                      description: t('auth.security.recentWindow'),
-                    },
-                    {
-                      label: t('common.selected'),
-                      value: selectedRowKeys.length,
-                      description: t('auth.loginLog.hero.selectedHint'),
-                    },
-                  ]}
-                />
-              </GovernanceRailPanel>
-            ) : null
-          }
-        >
+        <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16} className="auth-filter-grid">
@@ -496,8 +466,42 @@ const LoginLogList: React.FC = () => {
               />
             )}
           </Card>
-        </PageSplitLayout>
+        </>
       </Space>
+      <GovernanceInsightDrawer
+        title={t('auth.loginLog.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('auth.security.loginLogHint')}
+        noteDescription={t('auth.loginLog.hero.sideDesc')}
+        noteTone="warning"
+      >
+        <GovernanceRailSummary
+          items={[
+            {
+              label: t('auth.loginLog.status.success'),
+              value: successCount,
+              description: t('auth.loginLog.hero.successHint'),
+            },
+            {
+              tone: 'warning',
+              label: t('auth.loginLog.status.failed'),
+              value: failedCount,
+              description: t('auth.loginLog.hero.failedHint'),
+            },
+            {
+              label: t('auth.loginLog.hero.window'),
+              value: t('auth.loginLog.hero.windowValue'),
+              description: t('auth.security.recentWindow'),
+            },
+            {
+              label: t('common.selected'),
+              value: selectedRowKeys.length,
+              description: t('auth.loginLog.hero.selectedHint'),
+            },
+          ]}
+        />
+      </GovernanceInsightDrawer>
     </PageContainer>
   );
 };

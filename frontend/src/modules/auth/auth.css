@@ -184,6 +184,11 @@
   gap: 16px;
 }
 
+.auth-log-list__hero .system-page-kpi__value,
+.audit-log-list__hero .system-page-kpi__value {
+  font-size: 22px;
+}
+
 .auth-detail-user-agent {
   margin-bottom: 0;
   word-break: break-all;

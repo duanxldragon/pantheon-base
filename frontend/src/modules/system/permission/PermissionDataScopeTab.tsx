@@ -39,6 +39,7 @@ import {
   PageNetworkError,
   PageServerError,
   TABLE_ACTION_COLUMN_WIDTH,
+  TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
 
@@ -189,16 +190,16 @@ export const PermissionDataScopeTab: React.FC<PermissionDataScopeTabProps> = ({ 
   };
 
   const dataScopeColumns: ColumnProps<PermissionDataScopePolicy>[] = [
-    { title: t('system.role.roleName'), dataIndex: 'roleName', width: 180 },
+    { title: t('system.role.roleName'), dataIndex: 'roleName', width: TABLE_COLUMN_WIDTH.name },
     withTableColumnPriority(
-      { title: t('system.role.roleKey'), dataIndex: 'roleKey', width: 180 },
+      { title: t('system.role.roleKey'), dataIndex: 'roleKey', width: TABLE_COLUMN_WIDTH.code },
       'medium',
     ),
     withTableColumnPriority(
       {
         title: t('system.role.status'),
         dataIndex: 'status',
-        width: 120,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: number) => (
           <Tag color={value === 1 ? 'green' : 'red'}>
             {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
@@ -210,7 +211,7 @@ export const PermissionDataScopeTab: React.FC<PermissionDataScopeTabProps> = ({ 
     {
       title: t('system.permission.dataScope.mode'),
       dataIndex: 'mode',
-      width: 220,
+      width: TABLE_COLUMN_WIDTH.tagGroup,
       render: (value: PermissionDataScopeMode) => (
         <Tag color="arcoblue">
           {t(
@@ -222,7 +223,7 @@ export const PermissionDataScopeTab: React.FC<PermissionDataScopeTabProps> = ({ 
     {
       title: t('system.permission.dataScope.customDeptIds'),
       dataIndex: 'deptIds',
-      width: 280,
+      width: TABLE_COLUMN_WIDTH.keyPath,
       render: (_: unknown, row: PermissionDataScopePolicy) => (
         <Space wrap>
           {row.deptIds.length > 0 ? (
@@ -237,7 +238,7 @@ export const PermissionDataScopeTab: React.FC<PermissionDataScopeTabProps> = ({ 
       {
         title: t('system.permission.dataScope.policyState'),
         dataIndex: 'policyExists',
-        width: 140,
+        width: TABLE_COLUMN_WIDTH.status,
         render: (value: boolean) => (
           <Tag color={value ? 'green' : 'gray'}>
             {t(
