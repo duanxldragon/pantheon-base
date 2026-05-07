@@ -108,10 +108,10 @@
 
 | 发现项 | 状态 | 修复内容 |
 | :--- | :--- | :--- |
-| P0-1 | 待讨论 | localStorage → httpOnly cookie 需评估影响面 |
-| P1-1 | 待修复 | 添加 format:check 脚本 + prettier |
-| P1-2 | 待修复 | 清理 extra key |
-| P1-3 | 待修复 | 补充翻译或标记 |
-| P1-4 | 待修复 | 配置 audit registry |
-| P2-1 | 记录 | 技术债清单 |
+| P0-1 | 技术债 | localStorage → httpOnly cookie 排期到独立分支 `feat(auth): migrate token to httpOnly cookie` |
+| P1-1 | ✅ 已修复 | 安装 prettier + 添加 `format:check` / `format` 脚本 + `.prettierrc` + `.prettierignore` |
+| P1-2 | ✅ 已修复 | 补全 zh-CN/en-US 中缺失的 `business.cmdb.host.permission.*` 四个 key |
+| P1-3 | ✅ 已修复 | fr-FR `remediationAction` 改为 `Action corrective`；其余 5 条为法语同源词，无需修改 |
+| P1-4 | ✅ 已修复 | 添加 `npm run audit` 脚本使用 npmjs.org registry `.npmrc` |
+| P2-1 | 技术债 | 记录到技术债清单，后续逐步拆分 |
 | P2-2 | 不阻塞 | Phase 级别，渐进推进 |
