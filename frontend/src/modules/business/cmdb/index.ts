@@ -5,6 +5,20 @@ export const CmdbModule = defineModule({
   scope: 'business',
   routes: [
     {
+      path: '/operations',
+      routeName: 'operations',
+      titleKey: 'operations.menu',
+      componentKey: 'business/cmdb/host/CmdbHostList',
+      pagePermission: 'business:cmdb:host:list',
+    },
+    {
+      path: '/operations/cmdb',
+      routeName: 'cmdb',
+      titleKey: 'operations.cmdb.menu',
+      componentKey: 'business/cmdb/host/CmdbHostList',
+      pagePermission: 'business:cmdb:host:list',
+    },
+    {
       path: '/operations/cmdb/host',
       routeName: 'cmdb-host-list',
       titleKey: 'operations.cmdb.host.menu',
@@ -32,28 +46,28 @@ export const CmdbModule = defineModule({
       titleKey: 'operations.menu',
       icon: 'IconDesktop',
       routeName: 'operations',
-      module: 'operations',
+      module: 'business.cmdb',
     },
     {
       path: '/operations/cmdb',
       titleKey: 'operations.cmdb.menu',
       icon: 'IconStorage',
       routeName: 'cmdb',
-      module: 'operations.cmdb',
+      module: 'business.cmdb',
     },
     {
       path: '/operations/cmdb/host',
       titleKey: 'operations.cmdb.host.menu',
       icon: 'IconApps',
       routeName: 'cmdb-host-list',
-      module: 'operations.cmdb',
+      module: 'business.cmdb',
     },
     {
       path: '/operations/cmdb/group',
       titleKey: 'operations.cmdb.group.menu',
       icon: 'IconBranch',
       routeName: 'cmdb-group-list',
-      module: 'operations.cmdb',
+      module: 'business.cmdb',
     },
   ],
   permissions: [

@@ -29,7 +29,7 @@ func seedHostMenus(db *gorm.DB) error {
 		},
 		{
 			"path":        "/operations/cmdb",
-			"name":        "operations.cmdb",
+			"name":        "cmdb",
 			"title_key":   "operations.cmdb.menu",
 			"component":   "",
 			"type":        "M",
@@ -43,7 +43,7 @@ func seedHostMenus(db *gorm.DB) error {
 		},
 		{
 			"path":        "/operations/cmdb/host",
-			"name":        "operations.cmdb.host",
+			"name":        "cmdb-host-list",
 			"title_key":   "operations.cmdb.host.menu",
 			"component":   "business/cmdb/host/CmdbHostList",
 			"type":        "C",
@@ -58,7 +58,7 @@ func seedHostMenus(db *gorm.DB) error {
 		},
 		{
 			"path":        "/operations/cmdb/group",
-			"name":        "operations.cmdb.group",
+			"name":        "cmdb-group-list",
 			"title_key":   "operations.cmdb.group.menu",
 			"component":   "business/cmdb/group/CmdbGroupList",
 			"type":        "C",
