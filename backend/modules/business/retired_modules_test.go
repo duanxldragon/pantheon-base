@@ -11,55 +11,74 @@ import (
 func TestCleanupRetiredBusinessModules_RemovesManagedRetiredModuleMetadataWithoutDroppingBusinessTables(t *testing.T) {
 	db := openRetiredModuleTestDB(t)
 	mustCreateRetiredModuleGovernanceTables(t, db)
-	mustCreateRetiredModuleBusinessTable(t, db, "biz_cmdb_host")
-	mustCreateRetiredModuleBusinessTable(t, db, "biz_cmdb_vendor")
+	mustCreateRetiredModuleBusinessTable(t, db, "biz_test_retired")
+	mustCreateRetiredModuleBusinessTable(t, db, "biz_test_retired_sub")
 
-	rootMenuID := mustInsertRetiredMenuRow(t, db, "/business/cmdb", "business.cmdb", "", "", "")
-	vendorMenuID := mustInsertRetiredMenuRow(
+	rootMenuID := mustInsertRetiredMenuRow(t, db, "/test/retired", "test.retired", "", "", "")
+	subMenuID := mustInsertRetiredMenuRow(
 		t,
 		db,
-		"/business/cmdb/vendor",
-		"business.cmdb.vendor",
-		"business/cmdb/vendor/CmdbVendorList",
-		"business:cmdb:vendor:list",
-		"business:cmdb:vendor:view",
+		"/test/retired/sub",
+		"test.retired.sub",
+		"test/retired/sub/TestRetiredList",
+		"test:retired:sub:list",
+		"test:retired:sub:view",
 	)
 	mustInsertRetiredRoleMenu(t, db, rootMenuID)
-	mustInsertRetiredRoleMenu(t, db, vendorMenuID)
-	mustInsertRetiredPermission(t, db, "business:cmdb:host:view")
-	mustInsertRetiredPermission(t, db, "business:cmdb:vendor:view")
-	mustInsertRetiredI18n(t, db, "business.cmdb")
-	mustInsertRetiredI18n(t, db, "business.cmdb.vendor")
-	mustInsertManagedRegistration(t, db, "business.cmdb", "", 1)
-	mustInsertManagedRegistration(t, db, "business.cmdb.vendor", "biz_cmdb_vendor", 1)
+	mustInsertRetiredRoleMenu(t, db, subMenuID)
+	mustInsertRetiredPermission(t, db, "test:retired:sub:view")
+	mustInsertRetiredPermission(t, db, "test:retired:other:view")
+	mustInsertRetiredI18n(t, db, "test.retired")
+	mustInsertRetiredI18n(t, db, "test.retired.sub")
+	mustInsertManagedRegistration(t, db, "test.retired", "", 1)
+	mustInsertManagedRegistration(t, db, "test.retired.sub", "biz_test_retired_sub", 1)
+
+	// Temporarily set retired modules for this test
+	original := retiredBusinessModules
+	retiredBusinessModules = []retiredModuleSpec{{
+		ModuleNames:        []string{"test.retired", "test.retired.sub"},
+		PermissionPrefixes: []string{"test:retired:"},
+		MenuPaths:          []string{"/test/retired", "/test/retired/sub"},
+		ComponentKeys:      []string{"test/retired/sub/TestRetiredList"},
+	}}
+	defer func() { retiredBusinessModules = original }()
 
 	if err := cleanupRetiredBusinessModules(db); err != nil {
 		t.Fatalf("cleanup retired modules: %v", err)
 	}
 
-	assertTableExists(t, db, "biz_cmdb_host")
-	assertTableExists(t, db, "biz_cmdb_vendor")
+	assertTableExists(t, db, "biz_test_retired")
+	assertTableExists(t, db, "biz_test_retired_sub")
 	assertRecordCount(t, db, "system_menu", "1 = 1", 0)
 	assertRecordCount(t, db, "system_role_menu", "1 = 1", 0)
-	assertRecordCount(t, db, "system_role_permission", "permission_key LIKE 'business:cmdb:%'", 0)
-	assertRecordCount(t, db, "system_i18n", "module IN ('business.cmdb', 'business.cmdb.vendor')", 0)
-	assertRecordCount(t, db, "system_module_registration", "name IN ('business.cmdb', 'business.cmdb.vendor')", 0)
+	assertRecordCount(t, db, "system_role_permission", "permission_key LIKE 'test:retired:%'", 0)
+	assertRecordCount(t, db, "system_i18n", "module IN ('test.retired', 'test.retired.sub')", 0)
+	assertRecordCount(t, db, "system_module_registration", "name IN ('test.retired', 'test.retired.sub')", 0)
 }
 
 func TestCleanupRetiredBusinessModules_RemovesLegacyMetadataWithoutDroppingBusinessTables(t *testing.T) {
 	db := openRetiredModuleTestDB(t)
 	mustCreateRetiredModuleGovernanceTables(t, db)
-	mustCreateRetiredModuleBusinessTable(t, db, "biz_cmdb_host")
+	mustCreateRetiredModuleBusinessTable(t, db, "biz_test_retired_legacy")
 
-	mustInsertRetiredMenuRow(t, db, "/business/cmdb/host", "business.cmdb", "business/cmdb/host/CmdbHostList", "business:cmdb:host:list", "business:cmdb:host:view")
-	mustInsertRetiredPermission(t, db, "business:cmdb:host:view")
-	mustInsertRetiredI18n(t, db, "business.cmdb.host")
+	mustInsertRetiredMenuRow(t, db, "/test/retired/legacy", "test.retired.legacy", "test/retired/legacy/TestLegacyList", "test:retired:legacy:list", "test:retired:legacy:view")
+	mustInsertRetiredPermission(t, db, "test:retired:legacy:view")
+	mustInsertRetiredI18n(t, db, "test.retired.legacy")
+
+	original := retiredBusinessModules
+	retiredBusinessModules = []retiredModuleSpec{{
+		ModuleNames:        []string{"test.retired.legacy"},
+		PermissionPrefixes: []string{"test:retired:legacy:"},
+		MenuPaths:          []string{"/test/retired/legacy"},
+		ComponentKeys:      []string{"test/retired/legacy/TestLegacyList"},
+	}}
+	defer func() { retiredBusinessModules = original }()
 
 	if err := cleanupRetiredBusinessModules(db); err != nil {
 		t.Fatalf("cleanup retired modules: %v", err)
 	}
 
-	assertTableExists(t, db, "biz_cmdb_host")
+	assertTableExists(t, db, "biz_test_retired_legacy")
 	assertRecordCount(t, db, "system_menu", "1 = 1", 0)
 	assertRecordCount(t, db, "system_role_permission", "1 = 1", 0)
 	assertRecordCount(t, db, "system_i18n", "1 = 1", 0)
