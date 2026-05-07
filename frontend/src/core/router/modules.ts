@@ -15,6 +15,7 @@ import { DynamicModuleModule } from '../../modules/system/dynamicmodule';
 import { I18nModule } from '../../modules/system/i18n';
 import { UserModule } from '../../modules/system/user';
 import { generatedSystemModules } from '../../modules/generated/system';
+import { CmdbModule } from '../../modules/business/cmdb';
 import { generatedBusinessModules } from '../../modules/generated/business';
 
 export const systemModules: ModuleConfig[] = [
@@ -36,7 +37,7 @@ export const systemModules: ModuleConfig[] = [
   ...generatedSystemModules,
 ];
 
-export const businessModules: ModuleConfig[] = [...generatedBusinessModules];
+export const businessModules: ModuleConfig[] = [CmdbModule, ...generatedBusinessModules];
 
 export const registeredModules: ModuleConfig[] = [...systemModules, ...businessModules];
 

@@ -51,6 +51,15 @@ const staticComponentRegistry = {
   'system/generator/ModuleWizard': defineRegistryEntry(
     () => import('../../modules/generator/pages/ModuleWizard'),
   ),
+  'business/cmdb/host/CmdbHostList': defineRegistryEntry(
+    () => import('../../modules/business/cmdb/host/CmdbHostList'),
+  ),
+  'business/cmdb/host/CmdbHostDetail': defineRegistryEntry(
+    () => import('../../modules/business/cmdb/host/CmdbHostDetail'),
+  ),
+  'business/cmdb/group/CmdbGroupList': defineRegistryEntry(
+    () => import('../../modules/business/cmdb/group/CmdbGroupList'),
+  ),
 } satisfies Record<string, RegistryEntry>;
 
 const componentRegistry = {
