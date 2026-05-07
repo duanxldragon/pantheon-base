@@ -203,10 +203,19 @@ func seedCmdbDicts(db *gorm.DB) error {
 
 func seedCmdbRecords(db *gorm.DB, table string, records []map[string]interface{}) error {
 	for _, record := range records {
-		var count int64
-		db.Table(table).Where("module = ? AND `key` = ? AND locale = ?",
-			record["module"], record["key"], record["locale"]).Count(&count)
-		if count == 0 {
+		var existingID uint64
+		db.Table(table).Select("id").Where("`key` = ? AND locale = ?",
+			record["key"], record["locale"]).Limit(1).Pluck("id", &existingID)
+		if existingID > 0 {
+			update := map[string]interface{}{
+				"value":      record["value"],
+				"module":     record["module"],
+				"updated_at": record["updated_at"],
+			}
+			if err := db.Table(table).Where("id = ?", existingID).Updates(update).Error; err != nil {
+				return err
+			}
+		} else {
 			if err := db.Table(table).Create(record).Error; err != nil {
 				return err
 			}
