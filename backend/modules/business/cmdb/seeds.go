@@ -25,7 +25,7 @@ func hostMenuSeeds() []cmdbMenuSeed {
 	return []cmdbMenuSeed{
 		{
 			Key:       "operations-cmdb-host",
-			ParentKey: "operations-cmdb",
+			ParentKey: "cmdb",
 			TitleKey:  "operations.cmdb.host.menu",
 			Path:      "/operations/cmdb/host",
 			Component:  "business/cmdb/host/CmdbHostList",
@@ -37,7 +37,7 @@ func hostMenuSeeds() []cmdbMenuSeed {
 		},
 		{
 			Key:       "operations-cmdb-group",
-			ParentKey: "operations-cmdb",
+			ParentKey: "cmdb",
 			TitleKey:  "operations.cmdb.group.menu",
 			Path:      "/operations/cmdb/group",
 			Component:  "business/cmdb/group/CmdbGroupList",
