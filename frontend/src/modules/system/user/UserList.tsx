@@ -47,6 +47,7 @@ import type {
   TableProps,
 } from '@arco-design/web-react/es/Table/interface';
 import {
+  batchDeleteUsers,
   batchUpdateUserStatus,
   createUser,
   deleteUser,
@@ -178,6 +179,7 @@ const UserList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:user:export');
   const canImport = isAdmin || hasPerm('system:user:import');
   const canBatchUpdate = isAdmin || hasPerm('system:user:batch-update');
+  const canBatchDelete = isAdmin || hasPerm('system:user:batch-delete');
   const governanceRail = useGovernanceRail();
   const invalidateUserCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
@@ -710,7 +712,26 @@ const UserList: React.FC = () => {
     await loadData(query, { silent: true });
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const result = await batchDeleteUsers({ ids });
+    const messageKey =
+      result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
+    message[result.failedCount > 0 ? 'warning' : 'success'](
+      t(messageKey, { deleted: result.deletedCount, failed: result.failedCount }),
+    );
+    invalidateUserCaches();
+    publishRefresh('system:user:changed', 'system/user');
+    setSelectedRowKeys([]);
+    await loadData(query, { silent: true });
+  };
+
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
   const filteredPostOptions = [
     { label: t('system.post.none'), value: 0 },
     ...postOptions
@@ -904,7 +925,11 @@ const UserList: React.FC = () => {
               clearText={t('common.clearSelection')}
               clearSuccessText={t('common.clearSelectionSuccess')}
               onClear={() => setSelectedRowKeys([])}
-              hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+              hint={
+                !canBatchUpdate || !canBatchDelete
+                  ? t('common.batchActionPermissionHint')
+                  : undefined
+              }
               actions={
                 <>
                   <PermissionAction
@@ -937,6 +962,26 @@ const UserList: React.FC = () => {
                         disabled={batchActionDisabled}
                       >
                         {t('system.user.batchDisable')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction
+                    allowed={canBatchDelete}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.user.batchDeleteConfirm')}
+                      onOk={() => {
+                        void handleBatchDelete();
+                      }}
+                      disabled={batchDeleteDisabled}
+                    >
+                      <Button
+                        status={batchDeleteDisabled ? undefined : 'danger'}
+                        icon={<IconDelete />}
+                        disabled={batchDeleteDisabled}
+                      >
+                        {t('common.deleteSelected')}
                       </Button>
                     </Popconfirm>
                   </PermissionAction>

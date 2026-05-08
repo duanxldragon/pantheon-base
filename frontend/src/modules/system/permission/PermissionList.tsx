@@ -36,6 +36,7 @@ import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core
 import { usePermission } from '../../../hooks/usePermission';
 import { getRoleList } from '../role/api';
 import {
+  batchDeletePermissionPolicies,
   createPermissionPolicy,
   deletePermissionPolicy,
   downloadPermissionImportTemplate,
@@ -72,9 +73,11 @@ import {
   PageLoading,
   PageNetworkError,
   PageServerError,
+  PermissionAction,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
+  TableBatchActionBar,
   useGovernanceRail,
 } from '../../../components';
 import '../list-page.css';
@@ -137,11 +140,13 @@ const PermissionList: React.FC = () => {
   const canCreate = isAdmin || hasPerm('system:permission:create');
   const canEdit = isAdmin || hasPerm('system:permission:update');
   const canDelete = isAdmin || hasPerm('system:permission:delete');
+  const canBatchDelete = isAdmin || hasPerm('system:permission:batch-delete');
   const canExport = isAdmin || hasPerm('system:permission:export');
   const canImport = isAdmin || hasPerm('system:permission:import');
   const [activeTab, setActiveTab] = useState<PermissionTabKey>('workbench');
   const [data, setData] = useState<PermissionPolicyRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);
   const [loading, setLoading] = useState(false);
   const [policyError, setPolicyError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -346,6 +351,27 @@ const PermissionList: React.FC = () => {
     await loadWorkbench(workbenchQuery, { silent: true });
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const result = await batchDeletePermissionPolicies({ ids });
+    const messageKey =
+      result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
+    message[result.failedCount > 0 ? 'warning' : 'success'](
+      t(messageKey, { deleted: result.deletedCount, failed: result.failedCount }),
+    );
+    invalidatePermissionCaches();
+    publishRefresh('system:permission:changed', 'system/permission');
+    setSelectedRowKeys([]);
+    await Promise.all([
+      loadData(query, { silent: true }),
+      loadWorkbench(workbenchQuery, { silent: true }),
+    ]);
+  };
+
   const search = () => {
     const values = queryForm.getFieldsValue();
     setQuery({
@@ -361,12 +387,20 @@ const PermissionList: React.FC = () => {
   };
 
   const handleTableChange: TableProps<PermissionPolicyRow>['onChange'] = (pagination) => {
+    setSelectedRowKeys([]);
     setQuery({
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
     });
   };
+
+  const visibleSelectedRowKeys = useMemo(() => {
+    const visibleKeys = new Set(data.map((item) => item.id));
+    return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
+  }, [data, selectedRowKeys]);
+
+  const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
 
   const remediateRolePolicies = async (role: PermissionWorkbenchRole) => {
     setRemediatingRoleKey(role.roleKey);
@@ -688,6 +722,36 @@ const PermissionList: React.FC = () => {
                 </Form>
               </FilterPanel>
               <Card className="page-panel system-list__table-card">
+                <TableBatchActionBar
+                  selectedCount={selectedRowKeys.length}
+                  selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                  clearText={t('common.clearSelection')}
+                  clearSuccessText={t('common.clearSelectionSuccess')}
+                  onClear={() => setSelectedRowKeys([])}
+                  hint={!canBatchDelete ? t('common.batchActionPermissionHint') : undefined}
+                  actions={
+                    <PermissionAction
+                      allowed={canBatchDelete}
+                      tooltip={t('common.noPermissionAction')}
+                    >
+                      <Popconfirm
+                        title={t('system.permission.policy.batchDeleteConfirm')}
+                        onOk={() => {
+                          void handleBatchDelete();
+                        }}
+                        disabled={batchDeleteDisabled}
+                      >
+                        <Button
+                          status={batchDeleteDisabled ? undefined : 'danger'}
+                          icon={<IconDelete />}
+                          disabled={batchDeleteDisabled}
+                        >
+                          {t('common.deleteSelected')}
+                        </Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  }
+                />
                 {loading && data.length === 0 ? <PageLoading /> : null}
                 {policyError && data.length === 0
                   ? renderRequestErrorState(policyError, () => {
@@ -705,6 +769,13 @@ const PermissionList: React.FC = () => {
                     rowKey="id"
                     loading={loading}
                     scroll={{ x: 'max-content' }}
+                    rowSelection={{
+                      type: 'checkbox',
+                      selectedRowKeys: visibleSelectedRowKeys,
+                      fixed: true,
+                      checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+                      onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                    }}
                     onChange={handleTableChange}
                     emptyText={t('common.noData')}
                     pagination={

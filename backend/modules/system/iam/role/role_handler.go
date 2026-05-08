@@ -107,6 +107,18 @@ func (h *RoleHandler) BatchUpdateRoleStatus(c *gin.Context) {
 	common.Success(c, gin.H{"updatedCount": updatedCount})
 }
 
+func (h *RoleHandler) BatchDeleteRoles(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除角色", common.BusinessDelete)
+
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeleteRole)
+	common.Success(c, resp)
+}
+
 // DeleteRole 删除角色。
 func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)

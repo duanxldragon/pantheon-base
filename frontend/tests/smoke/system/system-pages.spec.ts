@@ -11,7 +11,7 @@ import {
   signInAsAdmin,
   signInWithUi,
   verifiedHeaders,
-} from './helpers/auth';
+} from '../helpers/auth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
 const pageEmptyTexts = ['暂无数据', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
 type SettingItem = { settingKey: string; settingValue: string };

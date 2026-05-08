@@ -4,7 +4,7 @@ import {
   installOperationToken,
   loginByApi,
   signInAsAdmin,
-} from './helpers/auth';
+} from '../../helpers/auth';
 
 async function fulfillJson(route: Route, body: Record<string, unknown>) {
   await route.fulfill({

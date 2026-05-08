@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
-import { installOperationToken, signInAsAdmin } from './helpers/auth';
+import { installOperationToken, signInAsAdmin } from '../helpers/auth';
 
 type Deferred<T = void> = {
   promise: Promise<T>;

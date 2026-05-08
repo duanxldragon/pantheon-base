@@ -217,6 +217,7 @@ func deptMenuSeeds() []menuSeed {
 		{Key: "dept-export", ParentKey: "dept", TitleKey: "system.permission.dept.export", Perms: "system:dept:export", Type: "F", Sort: 4},
 		{Key: "dept-import", ParentKey: "dept", TitleKey: "system.permission.dept.import", Perms: "system:dept:import", Type: "F", Sort: 5},
 		{Key: "dept-batch-update", ParentKey: "dept", TitleKey: "system.permission.dept.batch_update", Perms: "system:dept:batch-update", Type: "F", Sort: 6},
+		{Key: "dept-batch-delete", ParentKey: "dept", TitleKey: "system.permission.dept.batch_delete", Perms: "system:dept:batch-delete", Type: "F", Sort: 7},
 	}
 }
 
@@ -242,6 +243,7 @@ func postMenuSeeds() []menuSeed {
 		{Key: "post-export", ParentKey: "post", TitleKey: "system.permission.post.export", Perms: "system:post:export", Type: "F", Sort: 4},
 		{Key: "post-import", ParentKey: "post", TitleKey: "system.permission.post.import", Perms: "system:post:import", Type: "F", Sort: 5},
 		{Key: "post-batch-update", ParentKey: "post", TitleKey: "system.permission.post.batch_update", Perms: "system:post:batch-update", Type: "F", Sort: 6},
+		{Key: "post-batch-delete", ParentKey: "post", TitleKey: "system.permission.post.batch_delete", Perms: "system:post:batch-delete", Type: "F", Sort: 7},
 	}
 }
 
@@ -269,19 +271,22 @@ func permissionMenuSeeds() []menuSeed {
 		{Key: "user-export", ParentKey: "user", TitleKey: "system.permission.user.export", Perms: "system:user:export", Type: "F", Sort: 6},
 		{Key: "user-import", ParentKey: "user", TitleKey: "system.permission.user.import", Perms: "system:user:import", Type: "F", Sort: 7},
 		{Key: "user-batch-update", ParentKey: "user", TitleKey: "system.permission.user.batch_update", Perms: "system:user:batch-update", Type: "F", Sort: 8},
+		{Key: "user-batch-delete", ParentKey: "user", TitleKey: "system.permission.user.batch_delete", Perms: "system:user:batch-delete", Type: "F", Sort: 9},
 		{Key: "role-create", ParentKey: "role", TitleKey: "system.permission.role.create", Perms: "system:role:create", Type: "F", Sort: 1},
 		{Key: "role-update", ParentKey: "role", TitleKey: "system.permission.role.update", Perms: "system:role:update", Type: "F", Sort: 2},
 		{Key: "role-delete", ParentKey: "role", TitleKey: "system.permission.role.delete", Perms: "system:role:delete", Type: "F", Sort: 3},
 		{Key: "role-batch-update", ParentKey: "role", TitleKey: "system.permission.role.batch_update", Perms: "system:role:batch-update", Type: "F", Sort: 4},
-		{Key: "role-export", ParentKey: "role", TitleKey: "system.permission.role.export", Perms: "system:role:export", Type: "F", Sort: 5},
+		{Key: "role-batch-delete", ParentKey: "role", TitleKey: "system.permission.role.batch_delete", Perms: "system:role:batch-delete", Type: "F", Sort: 5},
+		{Key: "role-export", ParentKey: "role", TitleKey: "system.permission.role.export", Perms: "system:role:export", Type: "F", Sort: 6},
 		{Key: "menu-create", ParentKey: "menu", TitleKey: "system.permission.menu.create", Perms: "system:menu:create", Type: "F", Sort: 1},
 		{Key: "menu-update", ParentKey: "menu", TitleKey: "system.permission.menu.update", Perms: "system:menu:update", Type: "F", Sort: 2},
 		{Key: "menu-delete", ParentKey: "menu", TitleKey: "system.permission.menu.delete", Perms: "system:menu:delete", Type: "F", Sort: 3},
 		{Key: "permission-create", ParentKey: "permission", TitleKey: "system.permission.policy.create", Perms: "system:permission:create", Type: "F", Sort: 1},
 		{Key: "permission-update", ParentKey: "permission", TitleKey: "system.permission.policy.update", Perms: "system:permission:update", Type: "F", Sort: 2},
 		{Key: "permission-delete", ParentKey: "permission", TitleKey: "system.permission.policy.delete", Perms: "system:permission:delete", Type: "F", Sort: 3},
-		{Key: "permission-export", ParentKey: "permission", TitleKey: "system.permission.policy.export", Perms: "system:permission:export", Type: "F", Sort: 4},
-		{Key: "permission-import", ParentKey: "permission", TitleKey: "system.permission.policy.import", Perms: "system:permission:import", Type: "F", Sort: 5},
+		{Key: "permission-batch-delete", ParentKey: "permission", TitleKey: "system.permission.policy.batch_delete", Perms: "system:permission:batch-delete", Type: "F", Sort: 4},
+		{Key: "permission-export", ParentKey: "permission", TitleKey: "system.permission.policy.export", Perms: "system:permission:export", Type: "F", Sort: 5},
+		{Key: "permission-import", ParentKey: "permission", TitleKey: "system.permission.policy.import", Perms: "system:permission:import", Type: "F", Sort: 6},
 	}
 }
 
@@ -369,6 +374,8 @@ func dictMenuSeeds() []menuSeed {
 		{Key: "dict-refresh", ParentKey: "dict", TitleKey: "system.permission.dict.refresh", Perms: "system:dict:refresh", Type: "F", Sort: 4},
 		{Key: "dict-export", ParentKey: "dict", TitleKey: "system.permission.dict.export", Perms: "system:dict:export", Type: "F", Sort: 5},
 		{Key: "dict-import", ParentKey: "dict", TitleKey: "system.permission.dict.import", Perms: "system:dict:import", Type: "F", Sort: 6},
+		{Key: "dict-batch-update", ParentKey: "dict", TitleKey: "system.permission.dict.batch_update", Perms: "system:dict:batch-update", Type: "F", Sort: 7},
+		{Key: "dict-batch-delete", ParentKey: "dict", TitleKey: "system.permission.dict.batch_delete", Perms: "system:dict:batch-delete", Type: "F", Sort: 8},
 	}
 }
 

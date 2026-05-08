@@ -53,6 +53,16 @@ export interface PostBatchStatusPayload {
   status: number;
 }
 
+export interface BatchDeletePayload {
+  ids: number[];
+}
+
+export interface BatchDeleteResp {
+  deletedCount: number;
+  failedCount: number;
+  failures: Array<{ id: number; reason: string }>;
+}
+
 export function getPostList(params?: PostListQuery) {
   return apiRequest<PostListPageResp>({
     url: '/system/post/list',
@@ -87,6 +97,14 @@ export function deletePost(id: number) {
 export function batchUpdatePostStatus(data: PostBatchStatusPayload) {
   return apiRequest<{ updatedCount: number }>({
     url: '/system/post/batch-status',
+    method: 'post',
+    data,
+  });
+}
+
+export function batchDeletePosts(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/post/batch-delete',
     method: 'post',
     data,
   });

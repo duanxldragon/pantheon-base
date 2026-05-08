@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { signInAsAdmin } from './helpers/auth';
+import { signInAsAdmin } from '../helpers/auth';
 
 const systemTablePages = [
   { path: '/system/user', title: '用户管理' },

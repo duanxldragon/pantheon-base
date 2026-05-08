@@ -50,6 +50,7 @@ import {
   withTableColumnPriority,
 } from '../../../components';
 import {
+  batchDeleteDictTypes,
   batchUpdateDictTypeStatus,
   createDictType,
   deleteDictType,
@@ -98,6 +99,8 @@ export interface DictTypeTabProps {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  canBatchUpdate: boolean;
+  canBatchDelete: boolean;
   canExport: boolean;
   canImport: boolean;
   onQueryChange: (query: DictTypeQuery) => void;
@@ -115,6 +118,8 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   canCreate,
   canEdit,
   canDelete,
+  canBatchUpdate,
+  canBatchDelete,
   canExport,
   canImport,
   onQueryChange,
@@ -222,6 +227,24 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
     const typeIds = selectedTypeRowKeys.map((item) => Number(item)).filter((item) => item > 0);
     const result = await batchUpdateDictTypeStatus({ typeIds, status });
     message.success(t('system.dict.type.batchStatusSuccess', { count: result.updatedCount }));
+    invalidateCaches();
+    publishRefresh('system:dict:changed', 'system/dict');
+    setSelectedTypeRowKeys([]);
+    onReload();
+  };
+
+  const handleBatchTypeDelete = async () => {
+    if (selectedTypeRowKeys.length === 0) {
+      message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    const ids = selectedTypeRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const result = await batchDeleteDictTypes({ ids });
+    const messageKey =
+      result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
+    message[result.failedCount > 0 ? 'warning' : 'success'](
+      t(messageKey, { deleted: result.deletedCount, failed: result.failedCount }),
+    );
     invalidateCaches();
     publishRefresh('system:dict:changed', 'system/dict');
     setSelectedTypeRowKeys([]);
@@ -337,7 +360,8 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
     return <PageError onRetry={onRetry} />;
   }, []);
 
-  const typeBatchActionDisabled = !canEdit || selectedTypeRowKeys.length === 0;
+  const typeBatchActionDisabled = !canBatchUpdate || selectedTypeRowKeys.length === 0;
+  const typeBatchDeleteDisabled = !canBatchDelete || selectedTypeRowKeys.length === 0;
 
   return (
     <>
@@ -447,10 +471,12 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
           clearText={t('common.clearSelection')}
           clearSuccessText={t('common.clearSelectionSuccess')}
           onClear={() => setSelectedTypeRowKeys([])}
-          hint={!canEdit ? t('common.batchActionPermissionHint') : undefined}
+          hint={
+            !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
+          }
           actions={
             <>
-              <PermissionAction allowed={canEdit} tooltip={t('common.noPermissionAction')}>
+              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
                 <Popconfirm
                   title={t('system.dict.type.batchEnableConfirm')}
                   onOk={() => {
@@ -461,7 +487,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
                   <Button disabled={typeBatchActionDisabled}>{t('system.dict.batchEnable')}</Button>
                 </Popconfirm>
               </PermissionAction>
-              <PermissionAction allowed={canEdit} tooltip={t('common.noPermissionAction')}>
+              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
                 <Popconfirm
                   title={t('system.dict.type.batchDisableConfirm')}
                   onOk={() => {
@@ -474,6 +500,23 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
                     disabled={typeBatchActionDisabled}
                   >
                     {t('system.dict.batchDisable')}
+                  </Button>
+                </Popconfirm>
+              </PermissionAction>
+              <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
+                <Popconfirm
+                  title={t('system.dict.type.batchDeleteConfirm')}
+                  onOk={() => {
+                    void handleBatchTypeDelete();
+                  }}
+                  disabled={typeBatchDeleteDisabled}
+                >
+                  <Button
+                    status={typeBatchDeleteDisabled ? undefined : 'danger'}
+                    icon={<IconDelete />}
+                    disabled={typeBatchDeleteDisabled}
+                  >
+                    {t('common.deleteSelected')}
                   </Button>
                 </Popconfirm>
               </PermissionAction>

@@ -3,6 +3,7 @@ package host
 import (
 	"testing"
 
+	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/testmysql"
 
 	"gorm.io/gorm"
@@ -54,12 +55,47 @@ func TestListHosts(t *testing.T) {
 	svc.Create(CreateHostRequest{Hostname: "h1", IP: "10.0.0.10", OS: "linux"}, "1")
 	svc.Create(CreateHostRequest{Hostname: "h2", IP: "10.0.0.20", OS: "windows"}, "1")
 
-	resp, err := svc.List(HostListQuery{Page: 1, PageSize: 10})
+	resp, err := svc.List(HostListQuery{Page: 1, PageSize: 10}, nil)
 	if err != nil {
 		t.Fatalf("list hosts: %v", err)
 	}
 	if resp.Total < 2 {
 		t.Errorf("expected at least 2 hosts, got %d", resp.Total)
+	}
+}
+
+func TestListHostsAppliesDeptAndChildrenDataScope(t *testing.T) {
+	db := setupTestDB(t)
+	svc := NewHostService(db)
+
+	dept10 := uint64(10)
+	dept11 := uint64(11)
+	dept20 := uint64(20)
+	if _, err := svc.Create(CreateHostRequest{Hostname: "dept-10", IP: "10.10.0.10", OS: "linux", DeptID: dept10}, "1"); err != nil {
+		t.Fatalf("seed dept 10 host: %v", err)
+	}
+	if _, err := svc.Create(CreateHostRequest{Hostname: "dept-11", IP: "10.10.0.11", OS: "linux", DeptID: dept11}, "1"); err != nil {
+		t.Fatalf("seed dept 11 host: %v", err)
+	}
+	if _, err := svc.Create(CreateHostRequest{Hostname: "dept-20", IP: "10.10.0.20", OS: "linux", DeptID: dept20}, "1"); err != nil {
+		t.Fatalf("seed dept 20 host: %v", err)
+	}
+
+	resp, err := svc.List(HostListQuery{Page: 1, PageSize: 10}, &common.DataScopeReq{
+		Mode:    common.DataScopeModeDeptAndChildren,
+		DeptID:  dept10,
+		DeptIDs: []uint64{dept10, dept11},
+	})
+	if err != nil {
+		t.Fatalf("list scoped hosts: %v", err)
+	}
+	if resp.Total != 2 {
+		t.Fatalf("expected 2 scoped hosts, got %d", resp.Total)
+	}
+	for _, item := range resp.Items {
+		if item.DeptID != dept10 && item.DeptID != dept11 {
+			t.Fatalf("unexpected host outside scope: %+v", item)
+		}
 	}
 }
 
@@ -69,11 +105,11 @@ func TestUpdateHost(t *testing.T) {
 	created, _ := svc.Create(CreateHostRequest{Hostname: "h1", IP: "10.0.0.30", OS: "linux"}, "1")
 
 	newHostname := "h1-updated"
-	_, err := svc.Update(created.ID, UpdateHostRequest{Hostname: &newHostname}, "1")
+	_, err := svc.Update(created.ID, UpdateHostRequest{Hostname: &newHostname}, "1", nil)
 	if err != nil {
 		t.Fatalf("update host: %v", err)
 	}
-	resp, _ := svc.GetByID(created.ID)
+	resp, _ := svc.GetByID(created.ID, nil)
 	if resp.Hostname != "h1-updated" {
 		t.Errorf("expected h1-updated, got %s", resp.Hostname)
 	}
@@ -84,10 +120,10 @@ func TestDeleteHost(t *testing.T) {
 	svc := NewHostService(db)
 	created, _ := svc.Create(CreateHostRequest{Hostname: "h1-del", IP: "10.0.0.40", OS: "linux"}, "1")
 
-	if err := svc.Delete(created.ID); err != nil {
+	if err := svc.Delete(created.ID, nil); err != nil {
 		t.Fatalf("delete host: %v", err)
 	}
-	_, err := svc.GetByID(created.ID)
+	_, err := svc.GetByID(created.ID, nil)
 	if err == nil {
 		t.Error("expected not_found error after delete")
 	}
@@ -98,10 +134,10 @@ func TestUpdateStatus(t *testing.T) {
 	svc := NewHostService(db)
 	created, _ := svc.Create(CreateHostRequest{Hostname: "h1-status", IP: "10.0.0.50", OS: "linux"}, "1")
 
-	if err := svc.UpdateStatus(created.ID, "online"); err != nil {
+	if err := svc.UpdateStatus(created.ID, "online", nil); err != nil {
 		t.Fatalf("update status: %v", err)
 	}
-	resp, _ := svc.GetByID(created.ID)
+	resp, _ := svc.GetByID(created.ID, nil)
 	if resp.Status != "online" {
 		t.Errorf("expected online, got %s", resp.Status)
 	}

@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/database"
+
 	"golang.org/x/crypto/ssh"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -28,7 +31,11 @@ func (s *HostService) Migrate() error {
 	return s.db.AutoMigrate(&Host{})
 }
 
-func (s *HostService) List(query HostListQuery) (*HostListResponse, error) {
+func (s *HostService) hostQuery(dataScope *common.DataScopeReq) *gorm.DB {
+	return s.db.Model(&Host{}).Scopes(database.WithDataScope(dataScope))
+}
+
+func (s *HostService) List(query HostListQuery, dataScope *common.DataScopeReq) (*HostListResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
@@ -39,7 +46,7 @@ func (s *HostService) List(query HostListQuery) (*HostListResponse, error) {
 		query.PageSize = 10
 	}
 
-	db := s.db.Model(&Host{})
+	db := s.hostQuery(dataScope)
 	if query.Keyword != "" {
 		like := "%" + query.Keyword + "%"
 		db = db.Where("hostname LIKE ? OR ip LIKE ?", like, like)
@@ -49,6 +56,9 @@ func (s *HostService) List(query HostListQuery) (*HostListResponse, error) {
 	}
 	if query.OS != "" {
 		db = db.Where("os = ?", query.OS)
+	}
+	if query.DeptID > 0 {
+		db = db.Where("dept_id = ?", query.DeptID)
 	}
 
 	var total int64
@@ -70,12 +80,12 @@ func (s *HostService) List(query HostListQuery) (*HostListResponse, error) {
 	return &HostListResponse{Items: items, Total: total, Page: query.Page, PageSize: query.PageSize}, nil
 }
 
-func (s *HostService) GetByID(id uint64) (*HostResponse, error) {
+func (s *HostService) GetByID(id uint64, dataScope *common.DataScopeReq) (*HostResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
 	var host Host
-	if err := s.db.First(&host, id).Error; err != nil {
+	if err := s.hostQuery(dataScope).First(&host, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("cmdbhost.not_found")
 		}
@@ -104,6 +114,7 @@ func (s *HostService) Create(req CreateHostRequest, createdBy string) (*HostResp
 		MemoryGB:    req.MemoryGB,
 		DiskGB:      req.DiskGB,
 		LabelValues: datatypes.JSON(labelsJSON),
+		DeptID:      req.DeptID,
 		Owner:       req.Owner,
 		Remark:      req.Remark,
 		Status:      "pending",
@@ -121,12 +132,12 @@ func (s *HostService) Create(req CreateHostRequest, createdBy string) (*HostResp
 	return &resp, nil
 }
 
-func (s *HostService) Update(id uint64, req UpdateHostRequest, updatedBy string) (*HostResponse, error) {
+func (s *HostService) Update(id uint64, req UpdateHostRequest, updatedBy string, dataScope *common.DataScopeReq) (*HostResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
 	var host Host
-	if err := s.db.First(&host, id).Error; err != nil {
+	if err := s.hostQuery(dataScope).First(&host, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("cmdbhost.not_found")
 		}
@@ -165,6 +176,9 @@ func (s *HostService) Update(id uint64, req UpdateHostRequest, updatedBy string)
 		labelsJSON, _ := json.Marshal(*req.Labels)
 		updates["label_values"] = datatypes.JSON(labelsJSON)
 	}
+	if req.DeptID != nil {
+		updates["dept_id"] = *req.DeptID
+	}
 	if req.Owner != nil {
 		updates["owner"] = *req.Owner
 	}
@@ -177,18 +191,18 @@ func (s *HostService) Update(id uint64, req UpdateHostRequest, updatedBy string)
 	if err := s.db.Model(&host).Updates(updates).Error; err != nil {
 		return nil, err
 	}
-	if err := s.db.First(&host, id).Error; err != nil {
+	if err := s.hostQuery(dataScope).First(&host, id).Error; err != nil {
 		return nil, err
 	}
 	resp := hostToResponse(&host)
 	return &resp, nil
 }
 
-func (s *HostService) Delete(id uint64) error {
+func (s *HostService) Delete(id uint64, dataScope *common.DataScopeReq) error {
 	if s.db == nil {
 		return errors.New("database.not_initialized")
 	}
-	result := s.db.Delete(&Host{}, id)
+	result := s.hostQuery(dataScope).Where("id = ?", id).Delete(&Host{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -198,12 +212,12 @@ func (s *HostService) Delete(id uint64) error {
 	return nil
 }
 
-func (s *HostService) Collect(id uint64, req CollectRequest) (*HostResponse, error) {
+func (s *HostService) Collect(id uint64, req CollectRequest, dataScope *common.DataScopeReq) (*HostResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
 	var host Host
-	if err := s.db.First(&host, id).Error; err != nil {
+	if err := s.hostQuery(dataScope).First(&host, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("cmdbhost.not_found")
 		}
@@ -248,18 +262,18 @@ func (s *HostService) Collect(id uint64, req CollectRequest) (*HostResponse, err
 	if err := s.db.Model(&host).Updates(updates).Error; err != nil {
 		return nil, err
 	}
-	if err := s.db.First(&host, id).Error; err != nil {
+	if err := s.hostQuery(dataScope).First(&host, id).Error; err != nil {
 		return nil, err
 	}
 	resp := hostToResponse(&host)
 	return &resp, nil
 }
 
-func (s *HostService) UpdateStatus(id uint64, status string) error {
+func (s *HostService) UpdateStatus(id uint64, status string, dataScope *common.DataScopeReq) error {
 	if s.db == nil {
 		return errors.New("database.not_initialized")
 	}
-	result := s.db.Model(&Host{}).Where("id = ?", id).Update("status", status)
+	result := s.hostQuery(dataScope).Where("id = ?", id).Update("status", status)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -346,6 +360,7 @@ func hostToResponse(h *Host) HostResponse {
 		LabelValues:         labels,
 		InstalledComponents: components,
 		Status:              h.Status,
+		DeptID:              h.DeptID,
 		Owner:               h.Owner,
 		Remark:              h.Remark,
 		CreatedAt:           h.CreatedAt.Format(time.RFC3339),

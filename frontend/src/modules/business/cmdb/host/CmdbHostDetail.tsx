@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,27 +7,23 @@ import {
   Tag,
   Space,
   Button,
-  Modal,
   Form,
   Input,
   Select,
   Message,
-  Spin,
+  Typography,
 } from '@arco-design/web-react';
-import { IconLeft, IconCode, IconEdit } from '@arco-design/web-react/icon';
-import { PageContainer } from '../../../../components/patterns/PageContainer';
-import { PageHeader } from '../../../../components/patterns/PageHeader';
-import { FormSection } from '../../../../components/patterns/FormSection';
-import { SubmitBar } from '../../../../components/patterns/SubmitBar';
-import { getHostDetail, collectHostConfig, HostRow } from './api';
+import { IconLeft, IconCode } from '@arco-design/web-react/icon';
+import { AppModal, PageEmpty, PageError, PageLoading } from '../../../../components';
+import PageContainer from '../../../../components/patterns/PageContainer';
+import PageHeader from '../../../../components/patterns/PageHeader';
+import FormSection from '../../../../components/patterns/FormSection';
+import SubmitBar from '../../../../components/patterns/SubmitBar';
+import { getHostDetail, collectHostConfig } from './api';
+import type { HostRow } from './api';
 import { usePermission } from '../../../../hooks/usePermission';
-
-const statusColorMap: Record<string, string> = {
-  pending: 'gray',
-  online: 'green',
-  offline: 'red',
-  maintenance: 'orange',
-};
+import '../../../system/list-page.css';
+import '../cmdb.css';
 
 export default function CmdbHostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -38,18 +34,63 @@ export default function CmdbHostDetail() {
 
   const [host, setHost] = useState<HostRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   const [collectVisible, setCollectVisible] = useState(searchParams.get('collect') === '1');
   const [collecting, setCollecting] = useState(false);
   const [collectForm] = Form.useForm();
 
   const canCollect = hasPerm('business:cmdb:host:collect');
 
-  useEffect(() => {
+  const hostStats = useMemo(
+    () =>
+      host
+        ? [
+            {
+              key: 'status',
+              label: t('business.cmdb.host.status'),
+              value: t(`business.cmdb.host.status.${host.status}`),
+              hint: t('business.cmdb.host.hero.statusHint'),
+            },
+            {
+              key: 'os',
+              label: t('business.cmdb.host.os'),
+              value: t(`business.cmdb.host.os.${host.os}`),
+              hint: t('business.cmdb.host.hero.osHint'),
+            },
+            {
+              key: 'labels',
+              label: t('business.cmdb.host.labels'),
+              value: host.labelValues?.length || 0,
+              hint: t('business.cmdb.host.hero.labelsHint'),
+            },
+            {
+              key: 'components',
+              label: t('business.cmdb.host.installedComponents'),
+              value: host.installedComponents?.length || 0,
+              hint: t('business.cmdb.host.hero.componentsHint'),
+            },
+          ]
+        : [],
+    [host, t],
+  );
+
+  const loadDetail = async () => {
     if (!id) return;
     setLoading(true);
-    getHostDetail(Number(id))
-      .then(setHost)
-      .finally(() => setLoading(false));
+    setError(null);
+    try {
+      const result = await getHostDetail(Number(id));
+      setHost(result);
+    } catch (err) {
+      setError(err);
+      setHost(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadDetail();
   }, [id]);
 
   const handleCollect = async () => {
@@ -62,7 +103,7 @@ export default function CmdbHostDetail() {
       setCollectVisible(false);
       Message.success(t('business.cmdb.host.collectSuccess'));
     } catch {
-      // error handled by interceptor
+      // handled by request interceptor
     } finally {
       setCollecting(false);
     }
@@ -71,16 +112,16 @@ export default function CmdbHostDetail() {
   if (loading) {
     return (
       <PageContainer>
-        <Spin loading style={{ display: 'block', padding: 100 }} />
+        <PageLoading />
       </PageContainer>
     );
   }
 
-  if (!host) {
+  if (error || !host) {
     return (
       <PageContainer>
-        <PageHeader title={t('business.cmdb.host.detail')} />
-        <Card>{t('common.empty')}</Card>
+        <PageHeader title={t('operations.cmdb.host.detail')} />
+        <PageError description={t('common.loadFailedDesc')} onRetry={loadDetail} />
       </PageContainer>
     );
   }
@@ -102,8 +143,29 @@ export default function CmdbHostDetail() {
           </Space>
         }
       />
-      <Space direction="vertical" size={16}>
-        <Card>
+      <Space direction="vertical" size={16} className="system-page-template">
+        <Card className="page-panel system-page-hero cmdb-page__hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">
+                {t('business.cmdb.host.hero.eyebrow')}
+              </span>
+              <Typography.Title heading={5} className="system-page-hero__title cmdb-page__hero-title">
+                {host.hostname}
+              </Typography.Title>
+            </div>
+          </div>
+          <div className="cmdb-page__hero-grid">
+            {hostStats.map((item) => (
+              <div key={item.key} className="cmdb-page__hero-metric">
+                <span className="cmdb-page__hero-label">{item.label}</span>
+                <span className="cmdb-page__hero-value">{item.value}</span>
+                <span className="cmdb-page__hero-hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card className="page-panel">
           <FormSection title={t('common.baseInfo')}>
             <Descriptions
               column={2}
@@ -111,21 +173,16 @@ export default function CmdbHostDetail() {
                 { label: t('business.cmdb.host.hostname'), value: host.hostname },
                 { label: t('business.cmdb.host.ip'), value: host.ip },
                 { label: t('business.cmdb.host.sshPort'), value: host.sshPort || 22 },
-                { label: t('business.cmdb.host.os'), value: host.os },
-                { label: t('business.cmdb.host.osVersion'), value: host.osVersion || '-' },
+                { label: t('business.cmdb.host.os'), value: t(`business.cmdb.host.os.${host.os}`) },
+                { label: t('business.cmdb.host.status'), value: t(`business.cmdb.host.status.${host.status}`) },
                 { label: t('business.cmdb.host.owner'), value: host.owner || '-' },
-              ]}
-            />
-            <Descriptions
-              column={1}
-              style={{ marginTop: 16 }}
-              data={[
+                { label: t('business.cmdb.host.osVersion'), value: host.osVersion || '-' },
                 { label: t('business.cmdb.host.remark'), value: host.remark || '-' },
               ]}
             />
           </FormSection>
         </Card>
-        <Card>
+        <Card className="page-panel">
           <FormSection title={t('business.cmdb.host.labels')}>
             {host.labelValues?.length ? (
               <Space wrap>
@@ -136,11 +193,11 @@ export default function CmdbHostDetail() {
                 ))}
               </Space>
             ) : (
-              <span style={{ color: 'var(--text-tertiary)' }}>{t('common.empty')}</span>
+              <PageEmpty description={t('common.empty')} />
             )}
           </FormSection>
         </Card>
-        <Card>
+        <Card className="page-panel">
           <FormSection title={t('business.cmdb.host.installedComponents')}>
             {host.installedComponents?.length ? (
               <Space wrap>
@@ -151,12 +208,12 @@ export default function CmdbHostDetail() {
                 ))}
               </Space>
             ) : (
-              <span style={{ color: 'var(--text-tertiary)' }}>{t('common.empty')}</span>
+              <PageEmpty description={t('common.empty')} />
             )}
           </FormSection>
         </Card>
       </Space>
-      <Modal
+      <AppModal
         visible={collectVisible}
         onCancel={() => setCollectVisible(false)}
         title={t('business.cmdb.collect.modalTitle')}
@@ -168,7 +225,7 @@ export default function CmdbHostDetail() {
             field="sshUser"
             rules={[{ required: true }]}
           >
-            <Input placeholder="root" />
+            <Input placeholder={t('business.cmdb.host.collectSshUserPlaceholder')} />
           </Form.Item>
           <Form.Item
             label={t('business.cmdb.host.collectAuthMode')}
@@ -193,7 +250,10 @@ export default function CmdbHostDetail() {
                   field="sshPrivateKey"
                   rules={[{ required: true }]}
                 >
-                  <Input.TextArea rows={4} placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" />
+                  <Input.TextArea
+                    rows={4}
+                    placeholder={t('business.cmdb.host.collectPrivateKeyPlaceholder')}
+                  />
                 </Form.Item>
               ) : (
                 <Form.Item
@@ -215,7 +275,7 @@ export default function CmdbHostDetail() {
             submitText={t('business.cmdb.collect.start')}
           />
         </Form>
-      </Modal>
+      </AppModal>
     </PageContainer>
   );
 }

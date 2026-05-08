@@ -1,30 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
+  Grid,
   Card,
-  Table,
   Button,
   Tag,
   Space,
   Popconfirm,
-  Message,
   Form,
   Input,
   Select,
-  Modal,
+  Message,
+  Typography,
 } from '@arco-design/web-react';
+import type { PaginationProps } from '@arco-design/web-react';
+import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconPlus, IconEdit, IconDelete, IconCode, IconEye } from '@arco-design/web-react/icon';
-import type { ColumnProps, PaginationProps } from '@arco-design/web-react';
-import { PageContainer } from '../../../../components/patterns/PageContainer';
-import { PageHeader } from '../../../../components/patterns/PageHeader';
-import { FilterPanel } from '../../../../components/patterns/FilterPanel';
-import { AppTable } from '../../../../components/data-display/AppTable';
-import { ListHeaderActions } from '../../../../components/patterns/ListHeaderActions';
-import { getHostList, deleteHost, HostRow, HostListQuery } from './api';
+import { AppModal, PageEmpty, PageError, PageLoading } from '../../../../components';
+import PageContainer from '../../../../components/patterns/PageContainer';
+import PageHeader from '../../../../components/patterns/PageHeader';
+import FilterPanel from '../../../../components/patterns/FilterPanel';
+import AppTable from '../../../../components/data-display/AppTable';
+import ListHeaderActions from '../../../../components/patterns/ListHeaderActions';
+import { getHostList, deleteHost } from './api';
+import type { HostRow, HostListQuery } from './api';
 import { usePermission } from '../../../../hooks/usePermission';
 import CmdbHostForm from './CmdbHostForm';
 import '../../../system/list-page.css';
+import '../cmdb.css';
+
+const Row = Grid.Row;
+const Col = Grid.Col;
 
 const statusColorMap: Record<string, string> = {
   pending: 'gray',
@@ -46,7 +53,6 @@ export default function CmdbHostList() {
   const [data, setData] = useState<HostRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<unknown>(null);
   const [query, setQuery] = useState<HostListQuery>({ page: 1, pageSize: 10 });
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState<HostRow | null>(null);
@@ -54,6 +60,7 @@ export default function CmdbHostList() {
   const [keyword, setKeyword] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [filterOS, setFilterOS] = useState<string>('');
+  const [error, setError] = useState<unknown>(null);
 
   const canCreate = hasPerm('business:cmdb:host:create');
   const canUpdate = hasPerm('business:cmdb:host:update');
@@ -70,11 +77,12 @@ export default function CmdbHostList() {
         setTotal(result.total);
       } catch (err) {
         setError(err);
+        Message.error(t('common.loadFailed'));
       } finally {
         setLoading(false);
       }
     },
-    [query],
+    [query, t],
   );
 
   useEffect(() => {
@@ -91,6 +99,36 @@ export default function CmdbHostList() {
     setFilterOS('');
     setQuery({ page: 1, pageSize: 10 });
   };
+
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('business.cmdb.host.hero.total'),
+        value: total,
+        hint: t('business.cmdb.host.hero.totalHint'),
+      },
+      {
+        key: 'online',
+        label: t('business.cmdb.host.hero.online'),
+        value: data.filter((item) => item.status === 'online').length,
+        hint: t('business.cmdb.host.hero.onlineHint'),
+      },
+      {
+        key: 'maintenance',
+        label: t('business.cmdb.host.hero.maintenance'),
+        value: data.filter((item) => item.status === 'maintenance').length,
+        hint: t('business.cmdb.host.hero.maintenanceHint'),
+      },
+      {
+        key: 'scoped',
+        label: t('business.cmdb.host.hero.scope'),
+        value: t('business.cmdb.host.hero.scopeValue'),
+        hint: t('business.cmdb.host.hero.scopeHint'),
+      },
+    ],
+    [data, t, total],
+  );
 
   const handleDelete = async (id: number) => {
     await deleteHost(id);
@@ -151,31 +189,33 @@ export default function CmdbHostList() {
       title: t('business.cmdb.host.os'),
       dataIndex: 'os',
       width: 100,
-      render: (_, row) => <Tag color={osColorMap[row.os] || 'gray'}>{row.os}</Tag>,
+      render: (_: unknown, row: HostRow) => (
+        <Tag color={osColorMap[row.os] || 'gray'}>{row.os}</Tag>
+      ),
     },
     {
-      title: 'CPU',
+      title: t('business.cmdb.host.cpuCores'),
       dataIndex: 'cpuCores',
       width: 80,
-      render: (_, row) => (row.cpuCores ? `${row.cpuCores} Cores` : '-'),
+      render: (_: unknown, row: HostRow) => (row.cpuCores ? row.cpuCores : '-'),
     },
     {
       title: t('business.cmdb.host.memoryGb'),
       dataIndex: 'memoryGb',
       width: 100,
-      render: (_, row) => (row.memoryGb ? `${row.memoryGb} GB` : '-'),
+      render: (_: unknown, row: HostRow) => (row.memoryGb ? row.memoryGb : '-'),
     },
     {
       title: t('business.cmdb.host.diskGb'),
       dataIndex: 'diskGb',
       width: 100,
-      render: (_, row) => (row.diskGb ? `${row.diskGb} GB` : '-'),
+      render: (_: unknown, row: HostRow) => (row.diskGb ? row.diskGb : '-'),
     },
     {
       title: t('business.cmdb.host.status'),
       dataIndex: 'status',
       width: 100,
-      render: (_, row) => (
+      render: (_: unknown, row: HostRow) => (
         <Tag color={statusColorMap[row.status] || 'gray'}>
           {t(`business.cmdb.host.status.${row.status}`)}
         </Tag>
@@ -185,7 +225,7 @@ export default function CmdbHostList() {
       title: t('business.cmdb.host.labels'),
       dataIndex: 'labelValues',
       width: 200,
-      render: (_, row) =>
+      render: (_: unknown, row: HostRow) =>
         row.labelValues?.length ? (
           <Space wrap size={4}>
             {row.labelValues.map((l, i) => (
@@ -203,7 +243,7 @@ export default function CmdbHostList() {
       key: 'action',
       fixed: 'right',
       width: 220,
-      render: (_, row) => (
+      render: (_: unknown, row: HostRow) => (
         <Space>
           <Button
             type="text"
@@ -275,59 +315,107 @@ export default function CmdbHostList() {
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <FilterPanel onSearch={handleSearch} onReset={handleReset}>
-          <Form.Item label={t('common.keyword')}>
-            <Input
-              value={keyword}
-              onChange={setKeyword}
-              placeholder={t('common.keyword')}
-              allowClear
-              style={{ width: 200 }}
-            />
-          </Form.Item>
-          <Form.Item label={t('business.cmdb.host.status')}>
-            <Select
-              value={filterStatus}
-              onChange={setFilterStatus}
-              placeholder={t('common.all')}
-              allowClear
-              style={{ width: 140 }}
-            >
-              {['pending', 'online', 'offline', 'maintenance'].map((s) => (
-                <Select.Option key={s} value={s}>
-                  {t(`business.cmdb.host.status.${s}`)}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label={t('business.cmdb.host.os')}>
-            <Select
-              value={filterOS}
-              onChange={setFilterOS}
-              placeholder={t('common.all')}
-              allowClear
-              style={{ width: 140 }}
-            >
-              {['linux', 'windows'].map((o) => (
-                <Select.Option key={o} value={o}>
-                  {o}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+        <Card className="page-panel system-page-hero cmdb-page__hero">
+          <div className="system-page-hero__top">
+            <div className="system-page-hero__copy">
+              <span className="system-page-hero__eyebrow">{t('business.cmdb.host.hero.eyebrow')}</span>
+              <Typography.Title heading={5} className="system-page-hero__title cmdb-page__hero-title">
+                {t('business.cmdb.host.hero.title')}
+              </Typography.Title>
+            </div>
+          </div>
+          <div className="cmdb-page__hero-grid">
+            {heroStats.map((item) => (
+              <div key={item.key} className="cmdb-page__hero-metric">
+                <span className="cmdb-page__hero-label">{item.label}</span>
+                <span className="cmdb-page__hero-value">{item.value}</span>
+                <span className="cmdb-page__hero-hint">{item.hint}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <FilterPanel>
+          <Form layout="vertical" onSubmit={handleSearch}>
+            <Row gutter={16}>
+              <Col xs={24} md={12} lg={8}>
+                <Form.Item label={t('common.keyword')}>
+                  <Input
+                    value={keyword}
+                    onChange={setKeyword}
+                    placeholder={t('common.keyword')}
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12} lg={4}>
+                <Form.Item label={t('business.cmdb.host.status')}>
+                  <Select
+                    value={filterStatus}
+                    onChange={setFilterStatus}
+                    placeholder={t('common.all')}
+                    allowClear
+                  >
+                    {['pending', 'online', 'offline', 'maintenance'].map((s) => (
+                      <Select.Option key={s} value={s}>
+                        {t(`business.cmdb.host.status.${s}`)}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12} lg={4}>
+                <Form.Item label={t('business.cmdb.host.os')}>
+                  <Select
+                    value={filterOS}
+                    onChange={setFilterOS}
+                    placeholder={t('common.all')}
+                    allowClear
+                  >
+                    {['linux', 'windows'].map((o) => (
+                      <Select.Option key={o} value={o}>
+                        {t(`business.cmdb.host.os.${o}`)}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12} lg={8}>
+                <Form.Item className="filter-panel__action-item">
+                  <Space>
+                    <Button type="primary" onClick={handleSearch}>
+                      {t('common.search')}
+                    </Button>
+                    <Button onClick={handleReset}>{t('common.reset')}</Button>
+                  </Space>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
         </FilterPanel>
         <Card className="page-panel system-list__table-card">
-          <AppTable
-            columns={columns}
-            data={data}
-            loading={loading}
-            pagination={pagination}
-            rowKey="id"
-            scroll={{ x: 1200 }}
-          />
+          {loading && data.length === 0 ? <PageLoading /> : null}
+          {!loading && error && data.length === 0 ? (
+            <PageError
+              description={t('common.loadFailedDesc')}
+              onRetry={() => loadData(query)}
+            />
+          ) : null}
+          {!loading && !error && data.length === 0 ? (
+            <PageEmpty description={t('business.cmdb.host.empty')} />
+          ) : null}
+          {!loading && !(error && data.length === 0) && data.length > 0 ? (
+            <AppTable
+              columns={columns}
+              data={data}
+              loading={loading}
+              pagination={pagination}
+              rowKey="id"
+              scroll={{ x: 'max-content' }}
+            />
+          ) : null}
         </Card>
       </Space>
-      <Modal
+      <AppModal
         visible={visible}
         onCancel={() => {
           setVisible(false);
@@ -339,7 +427,7 @@ export default function CmdbHostList() {
             : t('business.cmdb.host.createTitle')
         }
         footer={null}
-        style={{ width: 640 }}
+        size="lg"
       >
         <CmdbHostForm
           editing={editing}
@@ -350,7 +438,7 @@ export default function CmdbHostList() {
           }}
           submitting={submitting}
         />
-      </Modal>
+      </AppModal>
     </PageContainer>
   );
 }

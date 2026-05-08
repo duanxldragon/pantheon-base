@@ -16,6 +16,7 @@ type HostListQuery struct {
 	Keyword  string `form:"keyword" json:"keyword"`
 	Status   string `form:"status" json:"status"`
 	OS       string `form:"os" json:"os"`
+	DeptID   uint64 `form:"deptId" json:"deptId"`
 }
 
 type CreateHostRequest struct {
@@ -28,6 +29,7 @@ type CreateHostRequest struct {
 	MemoryGB  float64      `json:"memoryGb"`
 	DiskGB    float64      `json:"diskGb"`
 	Labels    []LabelEntry `json:"labels"`
+	DeptID    uint64       `json:"deptId"`
 	Owner     string       `json:"owner"`
 	Remark    string       `json:"remark"`
 }
@@ -42,6 +44,7 @@ type UpdateHostRequest struct {
 	MemoryGB  *float64      `json:"memoryGb"`
 	DiskGB    *float64      `json:"diskGb"`
 	Labels    *[]LabelEntry `json:"labels"`
+	DeptID    *uint64       `json:"deptId"`
 	Owner     *string       `json:"owner"`
 	Remark    *string       `json:"remark"`
 }
@@ -70,6 +73,7 @@ type HostResponse struct {
 	LabelValues         []LabelEntry     `json:"labelValues"`
 	InstalledComponents []ComponentEntry `json:"installedComponents"`
 	Status              string           `json:"status"`
+	DeptID              uint64           `json:"deptId"`
 	Owner               string           `json:"owner"`
 	Remark              string           `json:"remark"`
 	CreatedAt           string           `json:"createdAt"`

@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/database"
+
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -25,7 +28,7 @@ func (s *GroupService) Migrate() error {
 	return s.db.AutoMigrate(&Group{})
 }
 
-func (s *GroupService) List() ([]GroupResponse, error) {
+func (s *GroupService) List(dataScope *common.DataScopeReq) ([]GroupResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
@@ -33,14 +36,18 @@ func (s *GroupService) List() ([]GroupResponse, error) {
 	if err := s.db.Order("id DESC").Find(&groups).Error; err != nil {
 		return nil, err
 	}
+	hosts, err := s.scopedHosts(dataScope)
+	if err != nil {
+		return nil, err
+	}
 	items := make([]GroupResponse, len(groups))
 	for i, g := range groups {
-		items[i] = s.toResponse(&g)
+		items[i] = s.toResponse(&g, hosts)
 	}
 	return items, nil
 }
 
-func (s *GroupService) GetByID(id uint64) (*GroupResponse, error) {
+func (s *GroupService) GetByID(id uint64, dataScope *common.DataScopeReq) (*GroupResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
@@ -51,13 +58,20 @@ func (s *GroupService) GetByID(id uint64) (*GroupResponse, error) {
 		}
 		return nil, err
 	}
-	resp := s.toResponse(&group)
+	hosts, err := s.scopedHosts(dataScope)
+	if err != nil {
+		return nil, err
+	}
+	resp := s.toResponse(&group, hosts)
 	return &resp, nil
 }
 
-func (s *GroupService) Create(req CreateGroupRequest) (*GroupResponse, error) {
+func (s *GroupService) Create(req CreateGroupRequest, dataScope *common.DataScopeReq) (*GroupResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
+	}
+	if err := validateConditions(req.Conditions); err != nil {
+		return nil, err
 	}
 	condJSON, _ := json.Marshal(req.Conditions)
 	group := Group{
@@ -68,11 +82,15 @@ func (s *GroupService) Create(req CreateGroupRequest) (*GroupResponse, error) {
 	if err := s.db.Create(&group).Error; err != nil {
 		return nil, err
 	}
-	resp := s.toResponse(&group)
+	hosts, err := s.scopedHosts(dataScope)
+	if err != nil {
+		return nil, err
+	}
+	resp := s.toResponse(&group, hosts)
 	return &resp, nil
 }
 
-func (s *GroupService) Update(id uint64, req UpdateGroupRequest) (*GroupResponse, error) {
+func (s *GroupService) Update(id uint64, req UpdateGroupRequest, dataScope *common.DataScopeReq) (*GroupResponse, error) {
 	if s.db == nil {
 		return nil, errors.New("database.not_initialized")
 	}
@@ -91,6 +109,9 @@ func (s *GroupService) Update(id uint64, req UpdateGroupRequest) (*GroupResponse
 		updates["description"] = *req.Description
 	}
 	if req.Conditions != nil {
+		if err := validateConditions(*req.Conditions); err != nil {
+			return nil, err
+		}
 		condJSON, _ := json.Marshal(*req.Conditions)
 		updates["conditions"] = datatypes.JSON(condJSON)
 	}
@@ -101,7 +122,11 @@ func (s *GroupService) Update(id uint64, req UpdateGroupRequest) (*GroupResponse
 	if err := s.db.First(&group, id).Error; err != nil {
 		return nil, err
 	}
-	resp := s.toResponse(&group)
+	hosts, err := s.scopedHosts(dataScope)
+	if err != nil {
+		return nil, err
+	}
+	resp := s.toResponse(&group, hosts)
 	return &resp, nil
 }
 
@@ -119,7 +144,7 @@ func (s *GroupService) Delete(id uint64) error {
 	return nil
 }
 
-func (s *GroupService) GetMembers(id uint64) ([]Host, *Group, error) {
+func (s *GroupService) GetMembers(id uint64, dataScope *common.DataScopeReq) ([]Host, *Group, error) {
 	if s.db == nil {
 		return nil, nil, errors.New("database.not_initialized")
 	}
@@ -130,21 +155,19 @@ func (s *GroupService) GetMembers(id uint64) ([]Host, *Group, error) {
 		}
 		return nil, nil, err
 	}
-	var hosts []Host
-	if err := s.db.Find(&hosts).Error; err != nil {
+	hosts, err := s.scopedHosts(dataScope)
+	if err != nil {
 		return nil, nil, err
 	}
 	members := filterHostsByConditions(hosts, group.Conditions)
 	return members, &group, nil
 }
 
-func (s *GroupService) toResponse(g *Group) GroupResponse {
+func (s *GroupService) toResponse(g *Group, hosts []Host) GroupResponse {
 	var conds ConditionExpression
 	if len(g.Conditions) > 0 {
 		json.Unmarshal(g.Conditions, &conds)
 	}
-	var hosts []Host
-	s.db.Find(&hosts)
 	members := filterHostsByConditions(hosts, g.Conditions)
 
 	return GroupResponse{
@@ -156,6 +179,14 @@ func (s *GroupService) toResponse(g *Group) GroupResponse {
 		CreatedAt:   g.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:   g.UpdatedAt.Format(time.RFC3339),
 	}
+}
+
+func (s *GroupService) scopedHosts(dataScope *common.DataScopeReq) ([]Host, error) {
+	var hosts []Host
+	if err := s.db.Model(&Host{}).Scopes(database.WithDataScope(dataScope)).Find(&hosts).Error; err != nil {
+		return nil, err
+	}
+	return hosts, nil
 }
 
 func filterHostsByConditions(hosts []Host, conditions datatypes.JSON) []Host {
@@ -173,6 +204,30 @@ func filterHostsByConditions(hosts []Host, conditions datatypes.JSON) []Host {
 		}
 	}
 	return result
+}
+
+func validateConditions(expr ConditionExpression) error {
+	operator := strings.TrimSpace(expr.Operator)
+	if operator == "" {
+		operator = "AND"
+	}
+	if operator != "AND" && operator != "OR" {
+		return errors.New("cmdbgroup.invalid_conditions")
+	}
+	if len(expr.Rules) == 0 {
+		return errors.New("cmdbgroup.invalid_conditions")
+	}
+	for _, rule := range expr.Rules {
+		if strings.TrimSpace(rule.Key) == "" || strings.TrimSpace(rule.Val) == "" {
+			return errors.New("cmdbgroup.invalid_conditions")
+		}
+		switch strings.TrimSpace(rule.Op) {
+		case "eq", "neq", "in", "notIn":
+		default:
+			return errors.New("cmdbgroup.invalid_conditions")
+		}
+	}
+	return nil
 }
 
 func matchHost(h Host, expr ConditionExpression) bool {

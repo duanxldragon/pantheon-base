@@ -52,6 +52,7 @@
 ### 4.1 Host
 
 - 确认 `business/cmdb/host` 的菜单挂接在业务域入口下。
+- 确认主机列表、详情、表单都沿用系统页模板的 hero / card / modal 视觉节奏，而不是平台页的旧式散装样式。
 - 确认列表接口接入 `DataScopeReq + WithDataScope`。
 - 确认业务路由接入 `DataScopeMiddleware`，角色数据范围策略由 `/system/permission` 的“数据权限”页统一配置。
 - 确认 `biz_cmdb_host.dept_id` 作为数据范围字段参与 `dept / dept_and_children / custom` 过滤。
@@ -60,25 +61,15 @@
 - 确认按钮权限不复用列表权限。
 - 确认错误 key 使用 `cmdbhost.*`。
 
-### 4.2 Vendor
+### 4.2 Group
 
-Vendor 当前基础模块已实现，仍处于“导入导出与字典联动待补”状态。
-
-已完成：
-
-- `biz_cmdb_vendor` DDL / AutoMigrate。
-- `business:cmdb:vendor:*` 权限点 seed。
-- `business.cmdb.vendor.*` i18n key。
-- 菜单 seed 和组件键 `business/cmdb/vendor/CmdbVendorList` 注册。
-- 后端 `go test ./backend/modules/business/cmdb/vendor`。
-- 列表接入数据权限扩展位。
-- 新增、编辑、删除审计 metadata。
-
-仍待补：
-
-- 导入导出与审计点。
-- 真实字典项联动。
-- 有权限/无权限的浏览器 smoke 证据。
+- 确认 `business/cmdb/group` 的成员列表和成员数量都基于当前请求的数据范围计算。
+- 确认分组详情与分组成员接口不会越权读取不可见主机。
+- 确认分组条件在创建/更新时做基础合法性校验，避免空规则和非法操作符。
+- 确认分组页左侧采用树形结构，右侧承载当前选中分组的表格视图或成员抽屉，不再只用单表平铺。
+- 自动化证据：`go test ./backend/modules/business/cmdb/group` 覆盖成员过滤和条件校验。
+- 确认创建、编辑、删除有审计 action。
+- 确认错误 key 使用 `cmdbgroup.*`。
 
 ## 5. 固定命令
 

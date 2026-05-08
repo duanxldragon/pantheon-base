@@ -30,6 +30,7 @@ export const PostModule = defineModule({
     'system:post:export',
     'system:post:import',
     'system:post:batch-update',
+    'system:post:batch-delete',
   ],
   i18nNamespaces: ['system.post', 'system.menu', 'system.permission'],
 });

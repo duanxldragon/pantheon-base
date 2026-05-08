@@ -27,7 +27,7 @@ func (h *GroupHandler) RegisterRoutes(r gin.IRoutes) {
 }
 
 func (h *GroupHandler) List(c *gin.Context) {
-	items, err := h.svc.List()
+	items, err := h.svc.List(common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbgroup.list_failed")
 		return
@@ -41,7 +41,7 @@ func (h *GroupHandler) GetByID(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	resp, err := h.svc.GetByID(id)
+	resp, err := h.svc.GetByID(id, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbgroup.not_found")
 		return
@@ -55,20 +55,16 @@ func (h *GroupHandler) GetMembers(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	members, group, err := h.svc.GetMembers(id)
+	members, group, err := h.svc.GetMembers(id, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbgroup.not_found")
 		return
 	}
-	memberMaps := make([]map[string]interface{}, len(members))
+	memberMaps := make([]HostResponse, len(members))
 	for i, m := range members {
-		memberMaps[i] = hostToMap(&m)
+		memberMaps[i] = hostToResponse(&m)
 	}
-	common.Success(c, map[string]interface{}{
-		"groupId":   group.ID,
-		"groupName": group.Name,
-		"members":   memberMaps,
-	})
+	common.Success(c, GroupMemberListResponse{GroupID: group.ID, GroupName: group.Name, Members: memberMaps})
 }
 
 func (h *GroupHandler) Create(c *gin.Context) {
@@ -77,7 +73,7 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	resp, err := h.svc.Create(req)
+	resp, err := h.svc.Create(req, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbgroup.create_failed")
 		return
@@ -96,7 +92,7 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	resp, err := h.svc.Update(id, req)
+	resp, err := h.svc.Update(id, req, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbgroup.update_failed")
 		return
@@ -117,21 +113,25 @@ func (h *GroupHandler) Delete(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func hostToMap(h *Host) map[string]interface{} {
+func hostToResponse(h *Host) HostResponse {
 	var labels []LabelEntry
 	if len(h.LabelValues) > 0 {
-		json.Unmarshal(h.LabelValues, &labels)
+		_ = json.Unmarshal(h.LabelValues, &labels)
 	}
-	return map[string]interface{}{
-		"id":           h.ID,
-		"hostname":     h.Hostname,
-		"ip":           h.IP,
-		"status":       h.Status,
-		"os":           h.OS,
-		"osVersion":    h.OSVersion,
-		"cpuCores":     h.CPUCores,
-		"memoryGb":     h.MemoryGB,
-		"diskGb":       h.DiskGB,
-		"labelValues":  labels,
+	if labels == nil {
+		labels = []LabelEntry{}
+	}
+	return HostResponse{
+		ID:          h.ID,
+		Hostname:    h.Hostname,
+		IP:          h.IP,
+		Status:      h.Status,
+		OS:          h.OS,
+		OSVersion:   h.OSVersion,
+		CPUCores:    h.CPUCores,
+		MemoryGB:    h.MemoryGB,
+		DiskGB:      h.DiskGB,
+		DeptID:      h.DeptID,
+		LabelValues: labels,
 	}
 }

@@ -23,6 +23,7 @@ export interface HostRow {
   labelValues: LabelEntry[];
   installedComponents: ComponentEntry[];
   status: string;
+  deptId: number;
   owner: string;
   remark: string;
   createdAt: string;
@@ -56,6 +57,7 @@ export interface CreateHostPayload {
   memoryGb?: number;
   diskGb?: number;
   labels?: LabelEntry[];
+  deptId?: number;
   owner?: string;
   remark?: string;
 }
@@ -70,6 +72,7 @@ export interface UpdateHostPayload {
   memoryGb?: number;
   diskGb?: number;
   labels?: LabelEntry[];
+  deptId?: number;
   owner?: string;
   remark?: string;
 }

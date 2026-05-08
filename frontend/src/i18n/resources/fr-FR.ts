@@ -149,6 +149,8 @@ const frFRFallback = {
   'common.disabled': 'Désactivé',
   'common.search': 'Rechercher',
   'common.reset': 'Réinitialiser',
+  'common.keyword': 'Mot-clé',
+  'common.all': 'Tous',
   'common.filters': 'Filtres',
   'common.expand': 'Déployer',
   'common.collapse': 'Réduire',
@@ -165,6 +167,9 @@ const frFRFallback = {
   'common.clearSuccess': 'Effacement réussi',
   'common.cleanupLogs': 'Nettoyer les journaux',
   'common.deleteSelected': 'Supprimer la sélection',
+  'common.batchDeleteSuccess': '{{deleted}} enregistrement(s) supprimé(s)',
+  'common.batchDeletePartialSuccess':
+    '{{deleted}} enregistrement(s) supprimé(s), {{failed}} échec(s)',
   'common.keepRecentDays': 'Conserver les {{count}} derniers jours',
   'common.errorMsg': "Message d'erreur",
   'common.failed': 'Échoué',
@@ -643,6 +648,7 @@ const frFRFallback = {
   'system.role.batchDisable': 'Désactiver en lot',
   'system.role.batchEnableConfirm': 'Activer tous les rôles sélectionnés ?',
   'system.role.batchDisableConfirm': 'Désactiver tous les rôles sélectionnés ?',
+  'system.role.batchDeleteConfirm': 'Supprimer tous les rôles sélectionnés ?',
   'system.role.batchStatusSuccess': '{{count}} statuts de rôle mis à jour',
   'system.role.create': 'Créer un rôle',
   'system.role.edit': 'Modifier un rôle',
@@ -809,6 +815,7 @@ const frFRFallback = {
     'Aucun candidat éligible n’existe encore pour ce département. Créez d’abord des postes et des membres.',
   'system.dept.batchEnableConfirm': 'Activer tous les départements sélectionnés ?',
   'system.dept.batchDisableConfirm': 'Désactiver tous les départements sélectionnés ?',
+  'system.dept.batchDeleteConfirm': 'Supprimer tous les départements sélectionnés ?',
   'system.dept.deleteConfirm':
     'Supprimer ce département ? Les sous-départements, postes et membres doivent d’abord être vidés.',
   'system.dept.batchStatusSuccess': '{{count}} statuts de département mis à jour',
@@ -849,6 +856,7 @@ const frFRFallback = {
   'system.post.batchDisable': 'Désactiver en lot',
   'system.post.batchEnableConfirm': 'Activer tous les postes sélectionnés ?',
   'system.post.batchDisableConfirm': 'Désactiver tous les postes sélectionnés ?',
+  'system.post.batchDeleteConfirm': 'Supprimer tous les postes sélectionnés ?',
   'system.post.deleteConfirm':
     'Supprimer ce poste ? L’action sera bloquée si des membres y sont encore affectés.',
   'system.post.governanceHint':
@@ -1051,6 +1059,7 @@ const frFRFallback = {
   'system.user.email.invalid': 'Adresse email invalide',
   'system.user.batchEnableConfirm': 'Activer tous les utilisateurs sélectionnés ?',
   'system.user.batchDisableConfirm': 'Désactiver tous les utilisateurs sélectionnés ?',
+  'system.user.batchDeleteConfirm': 'Supprimer tous les utilisateurs sélectionnés ?',
   'system.user.batchStatusSuccess': '{{count}} statuts utilisateur mis à jour',
   'user.create.error.username_exists': "Le nom d'utilisateur existe déjà",
   'user.role.invalid': 'Le rôle sélectionné est invalide ou désactivé',
@@ -1389,6 +1398,8 @@ const frFRFallback = {
   'system.permission.dict.update': 'Modifier un dictionnaire',
   'system.permission.dict.delete': 'Supprimer un dictionnaire',
   'system.permission.dict.refresh': 'Rafraîchir le cache du dictionnaire',
+  'system.permission.dict.batch_update': 'Mise à jour en lot du statut dictionnaire',
+  'system.permission.dict.batch_delete': 'Suppression en lot du dictionnaire',
   'system.setting.item.audit.session_cleanup_retention_options':
     'Options de rétention du nettoyage des sessions historiques',
   'system.setting.remark.audit.session_cleanup_retention_options':
@@ -2153,10 +2164,12 @@ const frFRFallback = {
   'system.permission.user.export': 'Export utilisateur',
   'system.permission.user.import': 'Import utilisateur',
   'system.permission.user.batch_update': 'Mise à jour en lot du statut utilisateur',
+  'system.permission.user.batch_delete': 'Suppression en lot des utilisateurs',
   'system.permission.role.create': 'Création rôle',
   'system.permission.role.update': 'Modification rôle',
   'system.permission.role.delete': 'Suppression rôle',
   'system.permission.role.batch_update': 'Mise à jour en lot du statut rôle',
+  'system.permission.role.batch_delete': 'Suppression en lot des rôles',
   'system.permission.role.export': 'Export rôle',
   'system.permission.menu.create': 'Création menu',
   'system.permission.menu.update': 'Modification menu',
@@ -2167,15 +2180,18 @@ const frFRFallback = {
   'system.permission.dept.export': 'Export département',
   'system.permission.dept.import': 'Import département',
   'system.permission.dept.batch_update': 'Mise à jour en lot du statut département',
+  'system.permission.dept.batch_delete': 'Suppression en lot des départements',
   'system.permission.post.create': 'Création poste',
   'system.permission.post.update': 'Modification poste',
   'system.permission.post.delete': 'Suppression poste',
   'system.permission.post.export': 'Export poste',
   'system.permission.post.import': 'Import poste',
   'system.permission.post.batch_update': 'Mise à jour en lot du statut poste',
+  'system.permission.post.batch_delete': 'Suppression en lot des postes',
   'system.permission.policy.create': 'Création politique',
   'system.permission.policy.update': 'Modification politique',
   'system.permission.policy.delete': 'Suppression politique',
+  'system.permission.policy.batch_delete': 'Suppression en lot des politiques',
   'system.permission.policy.export': 'Export politique',
   'system.permission.policy.import': 'Import politique',
   'system.permission.dict.export': 'Export dictionnaire',
@@ -2395,10 +2411,14 @@ const frFRFallback = {
     'Confirmer l’activation en lot des types de dictionnaire sélectionnés ?',
   'system.dict.type.batchDisableConfirm':
     'Confirmer la désactivation en lot des types de dictionnaire sélectionnés ?',
+  'system.dict.type.batchDeleteConfirm':
+    'Supprimer tous les types de dictionnaire sélectionnés ?',
   'system.dict.item.batchEnableConfirm':
     'Confirmer l’activation en lot des éléments de dictionnaire sélectionnés ?',
   'system.dict.item.batchDisableConfirm':
     'Confirmer la désactivation en lot des éléments de dictionnaire sélectionnés ?',
+  'system.dict.item.batchDeleteConfirm':
+    'Supprimer tous les éléments de dictionnaire sélectionnés ?',
   'system.dict.type.batchStatusSuccess': 'Statut de {{count}} types de dictionnaire mis à jour',
   'system.dict.item.batchStatusSuccess': 'Statut de {{count}} éléments de dictionnaire mis à jour',
   'system.dict.usage.empty':

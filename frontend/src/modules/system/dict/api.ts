@@ -92,6 +92,16 @@ export interface DictBatchStatusResp {
   updatedCount: number;
 }
 
+export interface BatchDeletePayload {
+  ids: number[];
+}
+
+export interface BatchDeleteResp {
+  deletedCount: number;
+  failedCount: number;
+  failures: Array<{ id: number; reason: string }>;
+}
+
 export interface DictUsageReference {
   filePath: string;
   line: number;
@@ -180,6 +190,14 @@ export function deleteDictType(id: number) {
   });
 }
 
+export function batchDeleteDictTypes(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/dict/type/batch-delete',
+    method: 'post',
+    data,
+  });
+}
+
 export async function getDictItemList(params: DictItemQuery) {
   const resp = await apiRequest<DictItemPageResp | Partial<DictItemRow>[]>({
     url: '/system/dict/item/list',
@@ -247,6 +265,14 @@ export function deleteDictItem(id: number) {
   return apiRequest<{ deleted: boolean }>({
     url: `/system/dict/item/${id}`,
     method: 'delete',
+  });
+}
+
+export function batchDeleteDictItems(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/dict/item/batch-delete',
+    method: 'post',
+    data,
   });
 }
 

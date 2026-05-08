@@ -43,6 +43,16 @@ export interface RoleBatchStatusPayload {
   status: number;
 }
 
+export interface BatchDeletePayload {
+  ids: number[];
+}
+
+export interface BatchDeleteResp {
+  deletedCount: number;
+  failedCount: number;
+  failures: Array<{ id: number; reason: string }>;
+}
+
 export function getRoleList(params?: RoleListQuery) {
   return apiRequest<RoleListPageResp>({
     url: '/system/role/list',
@@ -86,6 +96,14 @@ export function exportRoles(data?: RoleListQuery) {
 export function batchUpdateRoleStatus(data: RoleBatchStatusPayload) {
   return apiRequest<{ updatedCount: number }>({
     url: '/system/role/batch-status',
+    method: 'post',
+    data,
+  });
+}
+
+export function batchDeleteRoles(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/role/batch-delete',
     method: 'post',
     data,
   });

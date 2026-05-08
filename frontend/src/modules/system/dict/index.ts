@@ -43,6 +43,8 @@ export const DictModule = defineModule({
     'system:dict:refresh',
     'system:dict:export',
     'system:dict:import',
+    'system:dict:batch-update',
+    'system:dict:batch-delete',
   ],
   i18nNamespaces: ['system.dict', 'system.menu'],
 });

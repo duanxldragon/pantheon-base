@@ -225,6 +225,18 @@ func (h *UserHandler) BatchUpdateUserStatus(c *gin.Context) {
 	common.Success(c, gin.H{"updatedCount": updatedCount})
 }
 
+func (h *UserHandler) BatchDeleteUsers(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除用户", common.BusinessDelete)
+
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeleteUser)
+	common.Success(c, resp)
+}
+
 // DeleteUser 删除用户。
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除用户", common.BusinessDelete)

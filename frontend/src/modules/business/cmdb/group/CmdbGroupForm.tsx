@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Form, Input, Select, Button, Space, Radio } from '@arco-design/web-react';
 import { IconPlus, IconDelete } from '@arco-design/web-react/icon';
 import type { GroupRow, ConditionRule } from './api';
-import { SubmitBar } from '../../../../components/patterns/SubmitBar';
+import SubmitBar from '../../../../components/patterns/SubmitBar';
 
 interface Props {
   editing: GroupRow | null;
@@ -12,16 +12,15 @@ interface Props {
   submitting: boolean;
 }
 
-const OP_OPTIONS = [
-  { value: 'eq', label: '= (eq)' },
-  { value: 'neq', label: '!= (neq)' },
-  { value: 'in', label: 'in' },
-  { value: 'notIn', label: 'not in' },
-];
-
 export default function CmdbGroupForm({ editing, onSubmit, onCancel, submitting }: Props) {
   const { t } = useTranslation();
   const [form] = Form.useForm();
+  const opOptions = [
+    { value: 'eq', label: t('business.cmdb.group.condition.op.eq') },
+    { value: 'neq', label: t('business.cmdb.group.condition.op.neq') },
+    { value: 'in', label: t('business.cmdb.group.condition.op.in') },
+    { value: 'notIn', label: t('business.cmdb.group.condition.op.notIn') },
+  ];
 
   useEffect(() => {
     if (editing) {
@@ -71,8 +70,8 @@ export default function CmdbGroupForm({ editing, onSubmit, onCancel, submitting 
         field="operator"
       >
         <Radio.Group>
-          <Radio value="AND">AND</Radio>
-          <Radio value="OR">OR</Radio>
+          <Radio value="AND">{t('business.cmdb.group.condition.operator.and')}</Radio>
+          <Radio value="OR">{t('business.cmdb.group.condition.operator.or')}</Radio>
         </Radio.Group>
       </Form.Item>
       <Form.Item label={t('business.cmdb.group.conditions')}>
@@ -90,7 +89,7 @@ export default function CmdbGroupForm({ editing, onSubmit, onCancel, submitting 
                   </Form.Item>
                   <Form.Item field={`rules[${index}].op`} noStyle>
                     <Select style={{ width: 110 }}>
-                      {OP_OPTIONS.map((o) => (
+                      {opOptions.map((o) => (
                         <Select.Option key={o.value} value={o.value}>
                           {o.label}
                         </Select.Option>

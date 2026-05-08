@@ -3,7 +3,7 @@ import {
   adminCredentials,
   installClientSession,
   loginByApi,
-} from './helpers/auth';
+} from '../helpers/auth';
 
 type ViewportCase = {
   key: string;

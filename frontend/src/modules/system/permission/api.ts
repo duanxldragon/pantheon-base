@@ -31,6 +31,16 @@ export interface PermissionPolicyPayload {
   method: string;
 }
 
+export interface BatchDeletePayload {
+  ids: number[];
+}
+
+export interface BatchDeleteResp {
+  deletedCount: number;
+  failedCount: number;
+  failures: Array<{ id: number; reason: string }>;
+}
+
 export interface PermissionWorkbenchQuery {
   roleKey?: string;
   status?: number;
@@ -223,6 +233,14 @@ export function deletePermissionPolicy(id: number) {
   return apiRequest<{ deleted: boolean }>({
     url: `/system/permission/${id}`,
     method: 'delete',
+  });
+}
+
+export function batchDeletePermissionPolicies(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/permission/batch-delete',
+    method: 'post',
+    data,
   });
 }
 

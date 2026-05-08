@@ -7,7 +7,7 @@ import {
   loginByApi,
   verifiedApiHeaders,
   type BrowserLoginResult,
-} from './helpers/auth';
+} from '../../helpers/auth';
 
 type ResponseEnvelope<T> = {
   code: number;
@@ -44,23 +44,27 @@ type RoleItem = {
 };
 
 type UserItem = {
+  id: number;
   username: string;
   nickname: string;
   roleKeys: string[];
 };
 
 type PostItem = {
+  id: number;
   deptName: string;
   postCode: string;
   postName: string;
 };
 
 type DictTypeItem = {
+  id: number;
   dictCode: string;
   dictName: string;
 };
 
 type DictItem = {
+  id: number;
   dictCode: string;
   itemValue: string;
   itemLabelKey: string;
@@ -79,6 +83,7 @@ type OperationLogItem = {
 };
 
 type DeptNode = {
+  id: number;
   deptName: string;
   isRoot: boolean;
   children?: DeptNode[];
@@ -97,7 +102,7 @@ const smokePermissionPath = '/api/v1/system/user/list';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const fixtureDir = path.resolve(__dirname, '../../../tests/fixtures/system-import-export');
+const fixtureDir = path.resolve(__dirname, '../../../../../tests/fixtures/system-import-export');
 
 test.describe.serial('system import/export api smoke', () => {
   let apiContext: APIRequestContext;
@@ -115,11 +120,13 @@ test.describe.serial('system import/export api smoke', () => {
       },
     });
 
+    await cleanupSmokeFixtures(apiContext, login);
     await ensureSmokeRole(apiContext);
     await loginContext.dispose();
   });
 
   test.afterAll(async () => {
+    await cleanupSmokeFixtures(apiContext, login);
     await apiContext.dispose();
   });
 
@@ -535,6 +542,125 @@ async function ensureSmokeRole(context: APIRequestContext) {
     },
   });
   return expectSuccess<RoleItem>(createResponse);
+}
+
+async function cleanupSmokeFixtures(context: APIRequestContext, login: BrowserLoginResult) {
+  const operationHeaders = await verifiedApiHeaders(context, login);
+
+  await deleteUsersByUsername(context, operationHeaders, smokeUserName);
+  await deletePostsByCode(context, operationHeaders, smokePostCode);
+  await deleteDeptByName(context, operationHeaders, smokeDeptName);
+  await deleteDictItems(context, operationHeaders, smokeDictCode, smokeItemValue);
+  await deleteDictTypes(context, operationHeaders, smokeDictCode);
+  await deletePolicies(context, operationHeaders, smokeRoleKey, smokePermissionPath, 'GET');
+  await deleteRolesByKey(context, operationHeaders, smokeRoleKey);
+}
+
+async function deleteUsersByUsername(context: APIRequestContext, headers: Record<string, string>, username: string) {
+  const listResponse = await context.get(`${apiBaseUrl}/system/user/list`, {
+    params: { username, page: '1', pageSize: '20' },
+  });
+  if (!listResponse.ok()) {
+    return;
+  }
+  const list = await expectSuccess<ListPage<UserItem>>(listResponse);
+  for (const item of list.items) {
+    if (item.username === username) {
+      await context.delete(`${apiBaseUrl}/system/user/${item.id}`, { headers }).catch(() => undefined);
+    }
+  }
+}
+
+async function deletePostsByCode(context: APIRequestContext, headers: Record<string, string>, postCode: string) {
+  const listResponse = await context.get(`${apiBaseUrl}/system/post/list`, {
+    params: { postCode, page: '1', pageSize: '20' },
+  });
+  if (!listResponse.ok()) {
+    return;
+  }
+  const list = await expectSuccess<ListPage<PostItem>>(listResponse);
+  for (const item of list.items) {
+    if (item.postCode === postCode) {
+      await context.delete(`${apiBaseUrl}/system/post/${item.id}`, { headers }).catch(() => undefined);
+    }
+  }
+}
+
+async function deleteDeptByName(context: APIRequestContext, headers: Record<string, string>, deptName: string) {
+  const treeResponse = await context.get(`${apiBaseUrl}/system/dept/tree`, {
+    params: { deptName },
+  });
+  if (!treeResponse.ok()) {
+    return;
+  }
+  const tree = await expectSuccess<DeptNode[]>(treeResponse);
+  const dept = findDeptByName(tree, deptName);
+  if (dept?.id) {
+    await context.delete(`${apiBaseUrl}/system/dept/${dept.id}`, { headers }).catch(() => undefined);
+  }
+}
+
+async function deleteDictItems(
+  context: APIRequestContext,
+  headers: Record<string, string>,
+  dictCode: string,
+  itemValue: string,
+) {
+  const listResponse = await context.get(`${apiBaseUrl}/system/dict/item/list`, {
+    params: { dictCode, page: '1', pageSize: '50' },
+  });
+  if (!listResponse.ok()) {
+    return;
+  }
+  const list = await expectSuccess<ListPage<DictItem>>(listResponse);
+  for (const item of list.items) {
+    if (item.dictCode === dictCode && item.itemValue === itemValue) {
+      await context.delete(`${apiBaseUrl}/system/dict/item/${item.id}`, { headers }).catch(() => undefined);
+    }
+  }
+}
+
+async function deleteDictTypes(context: APIRequestContext, headers: Record<string, string>, dictCode: string) {
+  const listResponse = await context.get(`${apiBaseUrl}/system/dict/type/list`, {
+    params: { dictCode },
+  });
+  if (!listResponse.ok()) {
+    return;
+  }
+  const items = await expectSuccess<DictTypeItem[]>(listResponse);
+  for (const item of items) {
+    if (item.dictCode === dictCode) {
+      await context.delete(`${apiBaseUrl}/system/dict/type/${item.id}`, { headers }).catch(() => undefined);
+    }
+  }
+}
+
+async function deletePolicies(
+  context: APIRequestContext,
+  headers: Record<string, string>,
+  roleKey: string,
+  path: string,
+  method: string,
+) {
+  const listResponse = await context.get(`${apiBaseUrl}/system/permission/list`, {
+    params: { roleKey, path, method, page: '1', pageSize: '50' },
+  });
+  if (!listResponse.ok()) {
+    return;
+  }
+  const list = await expectSuccess<ListPage<{ id: number; roleKey: string; path: string; method: string }>>(listResponse);
+  for (const item of list.items) {
+    if (item.roleKey === roleKey && item.path === path && item.method === method) {
+      await context.delete(`${apiBaseUrl}/system/permission/${item.id}`, { headers }).catch(() => undefined);
+    }
+  }
+}
+
+async function deleteRolesByKey(context: APIRequestContext, headers: Record<string, string>, roleKey: string) {
+  const role = await getRoleByKey(context, roleKey);
+  if (role?.id && role.roleKey !== 'admin') {
+    await context.delete(`${apiBaseUrl}/system/role/${role.id}`, { headers }).catch(() => undefined);
+  }
 }
 
 async function getRoleByKey(context: APIRequestContext, roleKey: string) {

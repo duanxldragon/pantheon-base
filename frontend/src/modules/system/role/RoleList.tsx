@@ -42,6 +42,7 @@ import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core
 import { usePermission } from '../../../hooks/usePermission';
 import { getMenuTree, type MenuNode } from '../menu/api';
 import {
+  batchDeleteRoles,
   batchUpdateRoleStatus,
   createRole,
   deleteRole,
@@ -274,6 +275,7 @@ const RoleList: React.FC = () => {
   const canEdit = isAdmin || hasPerm('system:role:update');
   const canDelete = isAdmin || hasPerm('system:role:delete');
   const canBatchUpdate = isAdmin || hasPerm('system:role:batch-update');
+  const canBatchDelete = isAdmin || hasPerm('system:role:batch-delete');
   const canExport = isAdmin || hasPerm('system:role:export');
   const governanceRail = useGovernanceRail();
   const invalidateRoleCaches = useCallback(() => {
@@ -635,6 +637,24 @@ const RoleList: React.FC = () => {
     await loadData(query, { silent: true });
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const result = await batchDeleteRoles({ ids });
+    const messageKey =
+      result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
+    message[result.failedCount > 0 ? 'warning' : 'success'](
+      t(messageKey, { deleted: result.deletedCount, failed: result.failedCount }),
+    );
+    invalidateRoleCaches();
+    publishRefresh('system:role:changed', 'system/role');
+    setSelectedRowKeys([]);
+    await loadData(query, { silent: true });
+  };
+
   const handleExport = async () => {
     await exportRoles(query);
   };
@@ -808,6 +828,7 @@ const RoleList: React.FC = () => {
   };
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
   const enabledRoleCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
   const heroStats = useMemo(
     () => [
@@ -957,7 +978,11 @@ const RoleList: React.FC = () => {
               clearText={t('common.clearSelection')}
               clearSuccessText={t('common.clearSelectionSuccess')}
               onClear={() => setSelectedRowKeys([])}
-              hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+              hint={
+                !canBatchUpdate || !canBatchDelete
+                  ? t('common.batchActionPermissionHint')
+                  : undefined
+              }
               actions={
                 <>
                   <PermissionAction
@@ -990,6 +1015,26 @@ const RoleList: React.FC = () => {
                         disabled={batchActionDisabled}
                       >
                         {t('system.role.batchDisable')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction
+                    allowed={canBatchDelete}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.role.batchDeleteConfirm')}
+                      onOk={() => {
+                        void handleBatchDelete();
+                      }}
+                      disabled={batchDeleteDisabled}
+                    >
+                      <Button
+                        status={batchDeleteDisabled ? undefined : 'danger'}
+                        icon={<IconDelete />}
+                        disabled={batchDeleteDisabled}
+                      >
+                        {t('common.deleteSelected')}
                       </Button>
                     </Popconfirm>
                   </PermissionAction>

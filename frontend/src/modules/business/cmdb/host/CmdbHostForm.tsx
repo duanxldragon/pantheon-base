@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Form, Input, InputNumber, Select, Button, Space } from '@arco-design/web-react';
 import { IconPlus, IconDelete } from '@arco-design/web-react/icon';
 import type { HostRow } from './api';
-import { SubmitBar } from '../../../../components/patterns/SubmitBar';
+import SubmitBar from '../../../../components/patterns/SubmitBar';
 
 interface Props {
   editing: HostRow | null;
@@ -70,8 +70,8 @@ export default function CmdbHostForm({ editing, onSubmit, onCancel, submitting }
         rules={[{ required: true }]}
       >
         <Select>
-          <Select.Option value="linux">Linux</Select.Option>
-          <Select.Option value="windows">Windows</Select.Option>
+          <Select.Option value="linux">{t('business.cmdb.host.os.linux')}</Select.Option>
+          <Select.Option value="windows">{t('business.cmdb.host.os.windows')}</Select.Option>
         </Select>
       </Form.Item>
       <Form.Item label={t('business.cmdb.host.osVersion')} field="osVersion">

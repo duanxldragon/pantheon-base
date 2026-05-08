@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from './helpers/auth';
+import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from '../helpers/auth';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
 const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];

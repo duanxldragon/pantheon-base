@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { signInAsAdmin } from './helpers/auth';
+import { signInAsAdmin } from '../../helpers/auth';
 
 async function navigateInShell(page: Page, path: string) {
   if (page.url() === 'about:blank') {

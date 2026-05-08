@@ -41,6 +41,7 @@ export const RoleModule = defineModule({
     'system:role:update',
     'system:role:delete',
     'system:role:batch-update',
+    'system:role:batch-delete',
     'system:role:export',
   ],
   i18nNamespaces: ['system.role', 'system.menu'],

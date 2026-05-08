@@ -102,6 +102,18 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 	common.Success(c, gin.H{"deleted": true})
 }
 
+func (h *PostHandler) BatchDeletePosts(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除岗位", common.BusinessDelete)
+
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeletePost)
+	common.Success(c, resp)
+}
+
 func (h *PostHandler) ExportPosts(c *gin.Context) {
 	common.SetAuditMetadata(c, "导出岗位", common.BusinessExport)
 

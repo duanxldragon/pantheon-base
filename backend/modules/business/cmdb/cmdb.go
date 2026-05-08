@@ -26,7 +26,8 @@ func InitCmdbModule(r *gin.RouterGroup, db *gorm.DB) {
 			Register: func(r *gin.RouterGroup) {
 				cmdb := r.Group("/business/cmdb").
 					Use(middleware.JWTAuthMiddleware()).
-					Use(middleware.CasbinMiddleware())
+					Use(middleware.CasbinMiddleware()).
+					Use(middleware.DataScopeMiddleware(db))
 				hostHandler.RegisterRoutes(cmdb)
 			},
 		},
@@ -38,7 +39,8 @@ func InitCmdbModule(r *gin.RouterGroup, db *gorm.DB) {
 			Register: func(r *gin.RouterGroup) {
 				cmdb := r.Group("/business/cmdb").
 					Use(middleware.JWTAuthMiddleware()).
-					Use(middleware.CasbinMiddleware())
+					Use(middleware.CasbinMiddleware()).
+					Use(middleware.DataScopeMiddleware(db))
 				groupHandler.RegisterRoutes(cmdb)
 			},
 		},

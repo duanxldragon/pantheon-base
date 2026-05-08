@@ -27,6 +27,7 @@ export const PermissionModule = defineModule({
     'system:permission:create',
     'system:permission:update',
     'system:permission:delete',
+    'system:permission:batch-delete',
     'system:permission:export',
     'system:permission:import',
   ],

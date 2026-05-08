@@ -40,6 +40,7 @@ import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core
 import { usePermission } from '../../../hooks/usePermission';
 import { getDeptTree, type DeptNode } from '../dept/api';
 import {
+  batchDeletePosts,
   batchUpdatePostStatus,
   createPost,
   deletePost,
@@ -144,6 +145,7 @@ const PostList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:post:export');
   const canImport = isAdmin || hasPerm('system:post:import');
   const canBatchUpdate = isAdmin || hasPerm('system:post:batch-update');
+  const canBatchDelete = isAdmin || hasPerm('system:post:batch-delete');
   const governanceRail = useGovernanceRail();
   const [data, setData] = useState<PostRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -398,6 +400,24 @@ const PostList: React.FC = () => {
     await loadData(query, { silent: true });
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const result = await batchDeletePosts({ ids });
+    const messageKey =
+      result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
+    message[result.failedCount > 0 ? 'warning' : 'success'](
+      t(messageKey, { deleted: result.deletedCount, failed: result.failedCount }),
+    );
+    invalidatePostCaches();
+    publishRefresh('system:post:changed', 'system/post');
+    setSelectedRowKeys([]);
+    await loadData(query, { silent: true });
+  };
+
   const visibleSelectedRowKeys = useMemo(() => {
     const visibleKeys = new Set(data.map((item) => item.id));
     return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
@@ -586,6 +606,7 @@ const PostList: React.FC = () => {
   ];
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
   const governanceSummaryItems = useMemo(
     () => [
       {
@@ -726,7 +747,11 @@ const PostList: React.FC = () => {
               clearText={t('common.clearSelection')}
               clearSuccessText={t('common.clearSelectionSuccess')}
               onClear={() => setSelectedRowKeys([])}
-              hint={!canBatchUpdate ? t('common.batchActionPermissionHint') : undefined}
+              hint={
+                !canBatchUpdate || !canBatchDelete
+                  ? t('common.batchActionPermissionHint')
+                  : undefined
+              }
               actions={
                 <>
                   <PermissionAction
@@ -759,6 +784,26 @@ const PostList: React.FC = () => {
                         disabled={batchActionDisabled}
                       >
                         {t('system.post.batchDisable')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction
+                    allowed={canBatchDelete}
+                    tooltip={t('common.noPermissionAction')}
+                  >
+                    <Popconfirm
+                      title={t('system.post.batchDeleteConfirm')}
+                      onOk={() => {
+                        void handleBatchDelete();
+                      }}
+                      disabled={batchDeleteDisabled}
+                    >
+                      <Button
+                        status={batchDeleteDisabled ? undefined : 'danger'}
+                        icon={<IconDelete />}
+                        disabled={batchDeleteDisabled}
+                      >
+                        {t('common.deleteSelected')}
                       </Button>
                     </Popconfirm>
                   </PermissionAction>

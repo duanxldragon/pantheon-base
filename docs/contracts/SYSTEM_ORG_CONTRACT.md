@@ -171,6 +171,13 @@
 
 `system/org` 相关改动至少应通过以下验收：
 
+### 9.0 批量删除能力约束
+
+- 部门、岗位支持受控批量删除，归属 `system/org`，不得回塞到 `iam` 或 `config`。
+- 批量删除必须使用独立权限点：`system:dept:batch-delete`、`system:post:batch-delete`。
+- 批量删除接口必须复用单条删除服务校验，保留根部门、子部门、岗位占用、用户占用等组织治理保护逻辑。
+- 批量删除属于高风险写操作，必须经过二次验证，并返回部分成功结果：`deletedCount`、`failedCount`、`failures[]`。
+
 ### 9.1 文档验收
 
 - 符合 [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)

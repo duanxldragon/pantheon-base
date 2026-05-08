@@ -111,6 +111,16 @@ export interface UserBatchStatusPayload {
   status: number;
 }
 
+export interface BatchDeletePayload {
+  ids: number[];
+}
+
+export interface BatchDeleteResp {
+  deletedCount: number;
+  failedCount: number;
+  failures: Array<{ id: number; reason: string }>;
+}
+
 export interface UserProfileUpdatePayload {
   nickname: string;
   avatar?: string;
@@ -176,6 +186,14 @@ export function resetUserPassword(id: number, data: UserResetPasswordPayload) {
 export function batchUpdateUserStatus(data: UserBatchStatusPayload) {
   return apiRequest<{ updatedCount: number }>({
     url: '/system/user/batch-status',
+    method: 'post',
+    data,
+  });
+}
+
+export function batchDeleteUsers(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/user/batch-delete',
     method: 'post',
     data,
   });

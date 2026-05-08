@@ -32,7 +32,7 @@ func (h *HostHandler) List(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	resp, err := h.svc.List(query)
+	resp, err := h.svc.List(query, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbhost.list_failed")
 		return
@@ -46,7 +46,7 @@ func (h *HostHandler) GetByID(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	resp, err := h.svc.GetByID(id)
+	resp, err := h.svc.GetByID(id, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbhost.not_found")
 		return
@@ -59,6 +59,11 @@ func (h *HostHandler) Create(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
+	}
+	if req.DeptID == 0 {
+		if scope := common.GetDataScope(c); scope != nil && scope.DeptID > 0 {
+			req.DeptID = scope.DeptID
+		}
 	}
 	createdBy := strconv.FormatUint(common.GetUserID(c), 10)
 	resp, err := h.svc.Create(req, createdBy)
@@ -81,7 +86,7 @@ func (h *HostHandler) Update(c *gin.Context) {
 		return
 	}
 	updatedBy := strconv.FormatUint(common.GetUserID(c), 10)
-	resp, err := h.svc.Update(id, req, updatedBy)
+	resp, err := h.svc.Update(id, req, updatedBy, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbhost.update_failed")
 		return
@@ -95,7 +100,7 @@ func (h *HostHandler) Delete(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	if err := h.svc.Delete(id); err != nil {
+	if err := h.svc.Delete(id, common.GetDataScope(c)); err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbhost.delete_failed")
 		return
 	}
@@ -113,7 +118,7 @@ func (h *HostHandler) Collect(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	resp, err := h.svc.Collect(id, req)
+	resp, err := h.svc.Collect(id, req, common.GetDataScope(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbhost.collect_failed")
 		return
@@ -132,7 +137,7 @@ func (h *HostHandler) UpdateStatus(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "common.param_invalid")
 		return
 	}
-	if err := h.svc.UpdateStatus(id, req.Status); err != nil {
+	if err := h.svc.UpdateStatus(id, req.Status, common.GetDataScope(c)); err != nil {
 		common.FailWithError(c, common.CodeError, err, "cmdbhost.status_failed")
 		return
 	}

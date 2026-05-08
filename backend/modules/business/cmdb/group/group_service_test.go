@@ -29,7 +29,7 @@ func TestCreateGroup(t *testing.T) {
 		Operator: "AND",
 		Rules:    []ConditionRule{{Key: "env", Op: "eq", Val: "production"}},
 	}
-	resp, err := svc.Create(CreateGroupRequest{Name: "production", Conditions: cond})
+	resp, err := svc.Create(CreateGroupRequest{Name: "production", Conditions: cond}, nil)
 	if err != nil {
 		t.Fatalf("create group: %v", err)
 	}
@@ -50,9 +50,9 @@ func TestGroupMembersFiltering(t *testing.T) {
 		Operator: "AND",
 		Rules:    []ConditionRule{{Key: "env", Op: "eq", Val: "production"}},
 	}
-	created, _ := svc.Create(CreateGroupRequest{Name: "prod", Conditions: cond})
+	created, _ := svc.Create(CreateGroupRequest{Name: "prod", Conditions: cond}, nil)
 
-	members, group, err := svc.GetMembers(created.ID)
+	members, group, err := svc.GetMembers(created.ID, nil)
 	if err != nil {
 		t.Fatalf("get members: %v", err)
 	}
@@ -67,15 +67,15 @@ func TestGroupMembersFiltering(t *testing.T) {
 func TestUpdateGroup(t *testing.T) {
 	db := setupTestDB(t)
 	svc := NewGroupService(db)
-	cond := ConditionExpression{Operator: "AND", Rules: []ConditionRule{}}
-	created, _ := svc.Create(CreateGroupRequest{Name: "old", Conditions: cond})
+	cond := ConditionExpression{Operator: "AND", Rules: []ConditionRule{{Key: "env", Op: "eq", Val: "production"}}}
+	created, _ := svc.Create(CreateGroupRequest{Name: "old", Conditions: cond}, nil)
 
 	newName := "new-name"
-	_, err := svc.Update(created.ID, UpdateGroupRequest{Name: &newName})
+	_, err := svc.Update(created.ID, UpdateGroupRequest{Name: &newName}, nil)
 	if err != nil {
 		t.Fatalf("update group: %v", err)
 	}
-	resp, _ := svc.GetByID(created.ID)
+	resp, _ := svc.GetByID(created.ID, nil)
 	if resp.Name != "new-name" {
 		t.Errorf("expected new-name, got %s", resp.Name)
 	}
@@ -84,13 +84,13 @@ func TestUpdateGroup(t *testing.T) {
 func TestDeleteGroup(t *testing.T) {
 	db := setupTestDB(t)
 	svc := NewGroupService(db)
-	cond := ConditionExpression{Operator: "AND", Rules: []ConditionRule{}}
-	created, _ := svc.Create(CreateGroupRequest{Name: "tmp", Conditions: cond})
+	cond := ConditionExpression{Operator: "AND", Rules: []ConditionRule{{Key: "env", Op: "eq", Val: "production"}}}
+	created, _ := svc.Create(CreateGroupRequest{Name: "tmp", Conditions: cond}, nil)
 
 	if err := svc.Delete(created.ID); err != nil {
 		t.Fatalf("delete group: %v", err)
 	}
-	_, err := svc.GetByID(created.ID)
+	_, err := svc.GetByID(created.ID, nil)
 	if err == nil {
 		t.Error("expected not_found error after delete")
 	}

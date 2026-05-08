@@ -29,6 +29,7 @@ type Host struct {
 	IP          string         `gorm:"column:ip"`
 	LabelValues datatypes.JSON `gorm:"column:label_values"`
 	Status      string         `gorm:"column:status"`
+	DeptID      uint64         `gorm:"column:dept_id"`
 	OS          string         `gorm:"column:os"`
 	OSVersion   string         `gorm:"column:os_version"`
 	CPUCores    int            `gorm:"column:cpu_cores"`

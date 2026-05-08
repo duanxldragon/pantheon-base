@@ -95,6 +95,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/user/export", userHandler.ExportUsers)
 					systemProtected.POST("/user/import", userHandler.ImportUsers)
 					systemProtected.POST("/user/batch-status", userHandler.BatchUpdateUserStatus)
+					systemProtected.POST("/user/batch-delete", middleware.SecureActionMiddleware(), userHandler.BatchDeleteUsers)
 					systemProtected.PUT("/user/:id", userHandler.UpdateUser)
 					systemProtected.PUT("/user/:id/reset-password", userHandler.ResetPassword)
 					systemProtected.DELETE("/user/:id", userHandler.DeleteUser)
@@ -125,6 +126,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/role", roleHandler.CreateRole)
 					systemProtected.POST("/role/export", roleHandler.ExportRoles)
 					systemProtected.POST("/role/batch-status", roleHandler.BatchUpdateRoleStatus)
+					systemProtected.POST("/role/batch-delete", middleware.SecureActionMiddleware(), roleHandler.BatchDeleteRoles)
 					systemProtected.PUT("/role/:id", roleHandler.UpdateRole)
 					systemProtected.DELETE("/role/:id", roleHandler.DeleteRole)
 				}
@@ -148,6 +150,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/dept/import", deptHandler.ImportDepts)
 					systemProtected.POST("/dept/batch-status", deptHandler.BatchUpdateDeptStatus)
 					systemProtected.POST("/dept/batch-leader", deptHandler.BatchUpdateDeptLeader)
+					systemProtected.POST("/dept/batch-delete", middleware.SecureActionMiddleware(), deptHandler.BatchDeleteDepts)
 					systemProtected.PUT("/dept/:id", deptHandler.UpdateDept)
 					systemProtected.DELETE("/dept/:id", deptHandler.DeleteDept)
 				}
@@ -166,6 +169,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/post/export", postHandler.ExportPosts)
 					systemProtected.POST("/post/import", postHandler.ImportPosts)
 					systemProtected.POST("/post/batch-status", postHandler.BatchUpdatePostStatus)
+					systemProtected.POST("/post/batch-delete", middleware.SecureActionMiddleware(), postHandler.BatchDeletePosts)
 					systemProtected.PUT("/post/:id", postHandler.UpdatePost)
 					systemProtected.DELETE("/post/:id", postHandler.DeletePost)
 				}
@@ -194,6 +198,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/permission", permissionHandler.CreatePolicy)
 					systemProtected.POST("/permission/export", permissionHandler.ExportPolicies)
 					systemProtected.POST("/permission/import", permissionHandler.ImportPolicies)
+					systemProtected.POST("/permission/batch-delete", middleware.SecureActionMiddleware(), permissionHandler.BatchDeletePolicies)
 					systemProtected.PUT("/permission/:id", permissionHandler.UpdatePolicy)
 					systemProtected.DELETE("/permission/:id", permissionHandler.DeletePolicy)
 				}
@@ -218,6 +223,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/dict/cache/refresh", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.RefreshDictOptionsCache)
 					systemProtected.POST("/dict/type", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.CreateDictType)
 					systemProtected.POST("/dict/type/batch-status", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.BatchUpdateDictTypeStatus)
+					systemProtected.POST("/dict/type/batch-delete", RefreshSyncMiddleware(refreshSyncSvc), middleware.SecureActionMiddleware(), dictHandler.BatchDeleteDictTypes)
 					systemProtected.PUT("/dict/type/:id", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.UpdateDictType)
 					systemProtected.DELETE("/dict/type/:id", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.DeleteDictType)
 					systemProtected.GET("/dict/item/list", dictHandler.GetDictItemList)
@@ -227,6 +233,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/dict/item/import", dictHandler.ImportDictItems)
 					systemProtected.POST("/dict/item", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.CreateDictItem)
 					systemProtected.POST("/dict/item/batch-status", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.BatchUpdateDictItemStatus)
+					systemProtected.POST("/dict/item/batch-delete", RefreshSyncMiddleware(refreshSyncSvc), middleware.SecureActionMiddleware(), dictHandler.BatchDeleteDictItems)
 					systemProtected.PUT("/dict/item/:id", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.UpdateDictItem)
 					systemProtected.PUT("/dict/item/:id/reorder", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.ReorderDictItem)
 					systemProtected.DELETE("/dict/item/:id", RefreshSyncMiddleware(refreshSyncSvc), dictHandler.DeleteDictItem)

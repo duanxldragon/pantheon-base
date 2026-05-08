@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { apiBaseUrl, authHeaders, signInAsAdmin } from './helpers/auth';
+import { apiBaseUrl, authHeaders, signInAsAdmin } from '../helpers/auth';
 
 async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/role/list`, {

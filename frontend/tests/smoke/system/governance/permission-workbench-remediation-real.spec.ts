@@ -5,7 +5,7 @@ import {
   requestHeaders,
   signInAsAdmin,
   verifiedHeaders,
-} from './helpers/auth';
+} from '../../helpers/auth';
 
 type MenuNode = {
   id: number;

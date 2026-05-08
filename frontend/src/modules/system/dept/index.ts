@@ -47,6 +47,7 @@ export const DeptModule = defineModule({
     'system:dept:export',
     'system:dept:import',
     'system:dept:batch-update',
+    'system:dept:batch-delete',
   ],
   i18nNamespaces: ['system.dept', 'system.menu', 'system.permission'],
 });

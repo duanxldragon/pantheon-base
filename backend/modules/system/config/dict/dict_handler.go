@@ -96,6 +96,17 @@ func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
 	common.Success(c, gin.H{"updatedCount": updatedCount})
 }
 
+func (h *DictHandler) BatchDeleteDictTypes(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除字典类型", common.BusinessDelete)
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeleteDictType)
+	common.Success(c, resp)
+}
+
 func (h *DictHandler) GetDictItemList(c *gin.Context) {
 	var query DictItemListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -186,6 +197,17 @@ func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
+}
+
+func (h *DictHandler) BatchDeleteDictItems(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除字典项", common.BusinessDelete)
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeleteDictItem)
+	common.Success(c, resp)
 }
 
 func (h *DictHandler) ReorderDictItem(c *gin.Context) {

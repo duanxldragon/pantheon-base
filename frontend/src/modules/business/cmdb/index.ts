@@ -30,14 +30,14 @@ export const CmdbModule = defineModule({
     {
       path: '/operations/cmdb/host',
       titleKey: 'operations.cmdb.host.menu',
-      icon: 'IconApps',
+      icon: 'apps',
       routeName: 'cmdb-host-list',
       module: 'business.cmdb',
     },
     {
       path: '/operations/cmdb/group',
       titleKey: 'operations.cmdb.group.menu',
-      icon: 'IconBranch',
+      icon: 'branch',
       routeName: 'cmdb-group-list',
       module: 'business.cmdb',
     },

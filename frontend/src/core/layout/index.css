@@ -185,6 +185,20 @@
     color 0.18s ease;
 }
 
+.app-shell__menu .arco-menu-inline-header {
+  display: flex;
+  align-items: center;
+}
+
+.app-shell__menu .arco-menu-inline-header > span:not(.arco-menu-icon-suffix) {
+  flex: 0 0 auto;
+}
+
+.app-shell__menu .arco-menu-inline-header > span:nth-last-child(2) {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .app-shell__menu > .arco-menu-inner > .arco-menu-item,
 .app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header {
   padding: 0 12px 0 14px !important;
@@ -219,6 +233,13 @@
 .app-shell__menu .arco-menu-inline-header-title {
   letter-spacing: 0.01em;
   font-weight: 500;
+}
+
+.app-shell__menu .arco-menu-inline-header-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .app-shell__menu .arco-menu-item,

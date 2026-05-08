@@ -158,6 +158,18 @@ func (h *DeptHandler) DeleteDept(c *gin.Context) {
 	common.Success(c, gin.H{"deleted": true})
 }
 
+func (h *DeptHandler) BatchDeleteDepts(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除部门", common.BusinessDelete)
+
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeleteDept)
+	common.Success(c, resp)
+}
+
 func (h *DeptHandler) ExportDepts(c *gin.Context) {
 	common.SetAuditMetadata(c, "导出部门", common.BusinessExport)
 

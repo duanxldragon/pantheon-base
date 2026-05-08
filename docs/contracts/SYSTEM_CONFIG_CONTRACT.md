@@ -205,6 +205,13 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 `system/config` 达到“当前已完成”至少应满足：
 
+### 8.0 批量删除能力约束
+
+- 字典类型、字典项支持受控批量删除，归属 `system/config/dict`，不得扩散成跨系统域通用删除器。
+- 批量删除必须使用独立权限点 `system:dict:batch-delete`；批量启停使用 `system:dict:batch-update`，二者不得混用。
+- 批量删除接口必须复用单条删除服务校验，保留字典类型被字典项占用、唯一键软删释放、字典缓存失效等保护逻辑。
+- 批量删除属于高风险写操作，必须经过二次验证，并返回部分成功结果：`deletedCount`、`failedCount`、`failures[]`。
+
 ### 8.1 职责完成
 
 - 六类子域边界清晰

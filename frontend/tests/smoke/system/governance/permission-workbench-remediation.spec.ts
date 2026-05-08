@@ -1,4 +1,5 @@
 import { expect, test, type Route } from '@playwright/test';
+import { signInAsAdmin } from '../../helpers/auth';
 
 function initialWorkbench(roleKey: string) {
   return {
@@ -131,13 +132,14 @@ async function fulfillJson(route: Route, status: number, body: Record<string, un
 
 test('permission workbench remediation retries through secondary verify and closes api gap', async ({ page }) => {
   const roleKey = 'qa_perm_remediate_mock';
+  const roleName = '权限工作台整改回归';
   let remediated = false;
   let firstAttemptCount = 0;
   let retriedWithToken = false;
 
+  await signInAsAdmin(page);
+
   await page.addInitScript(() => {
-    localStorage.setItem('pantheon_access_token', 'mock-access-token');
-    localStorage.setItem('pantheon_refresh_token', 'mock-refresh-token');
     localStorage.setItem('pantheon_lang', 'zh-CN');
     localStorage.setItem('pantheon_lang_explicit', '1');
     sessionStorage.removeItem('pantheon_op_token');
@@ -227,7 +229,7 @@ test('permission workbench remediation retries through secondary verify and clos
         items: [
           {
             id: 501,
-            roleName: '权限工作台整改回归',
+            roleName,
             roleKey,
           },
         ],
@@ -288,7 +290,7 @@ test('permission workbench remediation retries through secondary verify and clos
 
   await page.goto('/system/permission', { waitUntil: 'networkidle' });
 
-  const roleRow = page.locator('.arco-table-tr').filter({ hasText: roleKey }).first();
+  const roleRow = page.locator('.arco-table-tr').filter({ hasText: roleName }).first();
   await expect(roleRow).toBeVisible();
   await expect(roleRow.getByText('缺接口策略', { exact: true })).toBeVisible();
   await roleRow.getByRole('button', { name: '详情', exact: true }).click();

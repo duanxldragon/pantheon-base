@@ -11,10 +11,10 @@ import {
   installOperationToken,
   loginByApi,
   type BrowserLoginResult,
-} from './helpers/auth';
+} from '../../helpers/auth';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const workspaceRoot = path.resolve(currentDir, '../../..');
+const workspaceRoot = path.resolve(currentDir, '../../../../..');
 const moduleName = 'orderqa';
 const moduleKey = `business.${moduleName}`;
 const moduleRoute = `/business/${moduleName}`;

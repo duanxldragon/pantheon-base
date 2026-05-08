@@ -41,6 +41,7 @@ import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/re
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
 import {
+  batchDeleteDepts,
   batchUpdateDeptLeader,
   batchUpdateDeptStatus,
   createDept,
@@ -216,6 +217,7 @@ const DeptList: React.FC = () => {
   const canExport = isAdmin || hasPerm('system:dept:export');
   const canImport = isAdmin || hasPerm('system:dept:import');
   const canBatchUpdate = isAdmin || hasPerm('system:dept:batch-update');
+  const canBatchDelete = isAdmin || hasPerm('system:dept:batch-delete');
   const canViewPosts = isAdmin || hasPerm('system:post:list');
   const canViewUsers = isAdmin || hasPerm('system:user:list');
   const canCreatePost = isAdmin || hasPerm('system:post:create');
@@ -894,6 +896,28 @@ const DeptList: React.FC = () => {
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning(t('common.batchSelectionRequired'));
+      return;
+    }
+    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const result = await batchDeleteDepts({ ids });
+    const messageKey =
+      result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
+    message[result.failedCount > 0 ? 'warning' : 'success'](
+      t(messageKey, { deleted: result.deletedCount, failed: result.failedCount }),
+    );
+    invalidateDeptCaches();
+    publishRefresh('system:dept:changed', 'system/dept');
+    setSelectedRowKeys([]);
+    await loadData(query, { silent: true });
+    await loadAllDepts();
+    if (activeTab === 'org') {
+      await loadOrgData({ silent: true });
+    }
+  };
+
   const locateGovernanceTask = async (task: DeptGovernanceTask) => {
     const deptRow = flatDeptRows.find((item) => item.id === task.deptId);
     if (task.governanceScope === 'dept' && deptRow) {
@@ -990,6 +1014,7 @@ const DeptList: React.FC = () => {
   };
 
   const batchActionDisabled = !canBatchUpdate || selectedRowKeys.length === 0;
+  const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
   const batchLeaderDisabled = !canEdit || selectedRowKeys.length === 0;
 
   const governanceTaskColumns: ColumnProps<DeptGovernanceTask>[] = [
@@ -1364,7 +1389,9 @@ const DeptList: React.FC = () => {
                   clearSuccessText={t('common.clearSelectionSuccess')}
                   onClear={() => setSelectedRowKeys([])}
                   hint={
-                    !canBatchUpdate || !canEdit ? t('common.batchActionPermissionHint') : undefined
+                    !canBatchUpdate || !canBatchDelete || !canEdit
+                      ? t('common.batchActionPermissionHint')
+                      : undefined
                   }
                   actions={
                     <>
@@ -1401,6 +1428,27 @@ const DeptList: React.FC = () => {
                             disabled={batchActionDisabled}
                           >
                             {t('system.dept.batchDisable')}
+                          </Button>
+                        </Popconfirm>
+                      </PermissionAction>
+                      <PermissionAction
+                        allowed={canBatchDelete}
+                        tooltip={t('common.noPermissionAction')}
+                      >
+                        <Popconfirm
+                          title={t('system.dept.batchDeleteConfirm')}
+                          onOk={() => {
+                            void handleBatchDelete();
+                          }}
+                          disabled={batchDeleteDisabled}
+                        >
+                          <Button
+                            size="small"
+                            status={batchDeleteDisabled ? undefined : 'danger'}
+                            icon={<IconDelete />}
+                            disabled={batchDeleteDisabled}
+                          >
+                            {t('common.deleteSelected')}
                           </Button>
                         </Popconfirm>
                       </PermissionAction>

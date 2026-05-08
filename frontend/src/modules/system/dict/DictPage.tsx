@@ -37,6 +37,8 @@ const DictPage: React.FC = () => {
   const canCreate = isAdmin || hasPerm('system:dict:create');
   const canEdit = isAdmin || hasPerm('system:dict:update');
   const canDelete = isAdmin || hasPerm('system:dict:delete');
+  const canBatchUpdate = isAdmin || hasPerm('system:dict:batch-update');
+  const canBatchDelete = isAdmin || hasPerm('system:dict:batch-delete');
   const canRefresh = isAdmin || hasPerm('system:dict:refresh');
   const canExport = isAdmin || hasPerm('system:dict:export');
   const canImport = isAdmin || hasPerm('system:dict:import');
@@ -221,10 +223,12 @@ const DictPage: React.FC = () => {
                 typeError={typeError}
                 typeQuery={typeQuery}
                 typeSummary={typeSummary}
-                canCreate={canCreate}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                canExport={canExport}
+            canCreate={canCreate}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            canBatchUpdate={canBatchUpdate}
+            canBatchDelete={canBatchDelete}
+            canExport={canExport}
                 canImport={canImport}
                 onQueryChange={setTypeQuery}
                 onReload={() => {
@@ -239,10 +243,12 @@ const DictPage: React.FC = () => {
                 key={selectedType?.id ?? '__empty__'}
                 selectedType={selectedType}
                 typeRows={typeRows}
-                canCreate={canCreate}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                canRefresh={canRefresh}
+            canCreate={canCreate}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            canBatchUpdate={canBatchUpdate}
+            canBatchDelete={canBatchDelete}
+            canRefresh={canRefresh}
                 canExport={canExport}
                 canImport={canImport}
                 onSelectType={selectType}

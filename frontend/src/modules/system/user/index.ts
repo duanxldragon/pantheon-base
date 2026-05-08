@@ -68,6 +68,7 @@ export const UserModule = defineModule({
     'system:user:export',
     'system:user:import',
     'system:user:batch-update',
+    'system:user:batch-delete',
   ],
   i18nNamespaces: ['system.user', 'system.menu', 'auth'],
 });

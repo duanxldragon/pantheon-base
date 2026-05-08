@@ -46,6 +46,16 @@ export interface DeptBatchStatusPayload {
   status: number;
 }
 
+export interface BatchDeletePayload {
+  ids: number[];
+}
+
+export interface BatchDeleteResp {
+  deletedCount: number;
+  failedCount: number;
+  failures: Array<{ id: number; reason: string }>;
+}
+
 export interface DeptBatchLeaderItemPayload {
   deptId: number;
   leaderUserId: number;
@@ -163,6 +173,14 @@ export function deleteDept(id: number) {
 export function batchUpdateDeptStatus(data: DeptBatchStatusPayload) {
   return apiRequest<{ updatedCount: number }>({
     url: '/system/dept/batch-status',
+    method: 'post',
+    data,
+  });
+}
+
+export function batchDeleteDepts(data: BatchDeletePayload) {
+  return apiRequest<BatchDeleteResp>({
+    url: '/system/dept/batch-delete',
     method: 'post',
     data,
   });

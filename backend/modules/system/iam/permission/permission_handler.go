@@ -183,6 +183,18 @@ func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
 	common.Success(c, gin.H{"deleted": true})
 }
 
+func (h *PermissionHandler) BatchDeletePolicies(c *gin.Context) {
+	common.SetAuditMetadata(c, "批量删除权限策略", common.BusinessDelete)
+
+	var req common.BatchDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+	resp := common.BatchDelete(req.IDs, h.service.DeletePolicy)
+	common.Success(c, resp)
+}
+
 func (h *PermissionHandler) ExportPolicies(c *gin.Context) {
 	common.SetAuditMetadata(c, "导出权限策略", common.BusinessExport)
 
