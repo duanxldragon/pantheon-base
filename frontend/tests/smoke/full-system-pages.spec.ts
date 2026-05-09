@@ -143,7 +143,9 @@ test.describe('full system page smoke', () => {
 
           await page.goto(smokePage.path, { waitUntil: 'domcontentloaded' });
 
-          await expect(page).toHaveURL(new RegExp(`${smokePage.path.replace(/\//g, '\\/')}$`));
+          await expect(page).toHaveURL(
+            new RegExp(`${smokePage.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+          );
           await expectVisiblePageTitle(page, smokePage.title);
           await expect(page.locator('#root')).not.toBeEmpty();
           await expectNoBrokenState(page);
