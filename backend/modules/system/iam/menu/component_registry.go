@@ -21,10 +21,7 @@ var staticRegisteredMenuComponentKeys = map[string]struct{}{
 	"system/user/UserDetail":             {},
 	"system/audit/OperationLogList":      {},
 	"system/dynamicmodule/ModuleManager": {},
-	"system/generator/ModuleWizard":       {},
-	"business/cmdb/host/CmdbHostList":    {},
-	"business/cmdb/host/CmdbHostDetail":  {},
-	"business/cmdb/group/CmdbGroupList":  {},
+	"system/generator/ModuleWizard":      {},
 }
 
 var registeredMenuComponentKeys = mergeMenuComponentKeys(staticRegisteredMenuComponentKeys, generatedMenuComponentKeys)

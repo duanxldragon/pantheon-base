@@ -6,7 +6,7 @@
 归属层：business/*
 状态：Active
 
-本文把业务模块验收从“参考模板”升级为固定矩阵，适用于 `business/cmdb` 以及后续所有 `business/*` 模块。
+本文把业务模块验收从“参考模板”升级为固定矩阵，适用于独立业务仓库中的所有 `business/*` 模块。
 
 ---
 
@@ -47,35 +47,17 @@
 - 至少一条主链路 smoke。
 - 权限账号验证，覆盖有权限和无权限两类场景。
 
-## 4. CMDB 当前验收重点
+## 4. 独立业务仓库验收重点
 
-### 4.1 Host
-
-- 确认 `business/cmdb/host` 的菜单挂接在业务域入口下。
-- 确认主机列表、详情、表单都沿用系统页模板的 hero / card / modal 视觉节奏，而不是平台页的旧式散装样式。
-- 确认列表接口接入 `DataScopeReq + WithDataScope`。
-- 确认业务路由接入 `DataScopeMiddleware`，角色数据范围策略由 `/system/permission` 的“数据权限”页统一配置。
-- 确认 `biz_cmdb_host.dept_id` 作为数据范围字段参与 `dept / dept_and_children / custom` 过滤。
-- 自动化证据：`go test ./backend/modules/business/cmdb/host` 覆盖 `dept_and_children` 有权限/无权限数据集过滤。
-- 确认创建、编辑、删除有审计 action。
-- 确认按钮权限不复用列表权限。
-- 确认错误 key 使用 `cmdbhost.*`。
-
-### 4.2 Group
-
-- 确认 `business/cmdb/group` 的成员列表和成员数量都基于当前请求的数据范围计算。
-- 确认分组详情与分组成员接口不会越权读取不可见主机。
-- 确认分组条件在创建/更新时做基础合法性校验，避免空规则和非法操作符。
-- 确认分组页左侧采用树形结构，右侧承载当前选中分组的表格视图或成员抽屉，不再只用单表平铺。
-- 自动化证据：`go test ./backend/modules/business/cmdb/group` 覆盖成员过滤和条件校验。
-- 确认创建、编辑、删除有审计 action。
-- 确认错误 key 使用 `cmdbgroup.*`。
+- 业务仓库必须声明业务域设计文档、模块清单和 smoke 命令。
+- 平台仓库只固定通用验收矩阵，不内置具体业务模块验收项。
+- 业务仓库从平台底座升级时，必须重新执行菜单契约、权限、i18n、构建和主链路 smoke。
 
 ## 5. 固定命令
 
 推荐固定执行：
 
-- `go test ./backend/modules/business/cmdb/...`
+- `go test ./backend/modules/business/...`
 - `go test ./backend/modules/system/iam/permission`
 - `cd frontend && npm run check:menu-contract`
 - `cd frontend && npm run check:i18n-hardcode`

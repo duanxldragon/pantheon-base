@@ -9,7 +9,41 @@ type retiredModuleSpec struct {
 	ComponentKeys      []string
 }
 
-var retiredBusinessModules = []retiredModuleSpec{}
+var retiredBusinessModules = []retiredModuleSpec{
+	{
+		ModuleNames: []string{
+			"business.cmdb",
+			"business.cmdb.host",
+			"business.cmdb.group",
+			"business.cmdb.label",
+			"cmdb",
+			"cmdb.host",
+			"cmdb.group",
+		},
+		PermissionPrefixes: []string{
+			"business:cmdb:",
+			"cmdb:",
+		},
+		MenuPaths: []string{
+			"/business/cmdb",
+			"/business/cmdb/host",
+			"/business/cmdb/host/:id",
+			"/business/cmdb/group",
+			"/business/cmdb/label",
+			"/operations/cmdb",
+			"/operations/cmdb/host",
+			"/operations/cmdb/host/:id",
+			"/operations/cmdb/group",
+			"/operations/cmdb/label",
+		},
+		ComponentKeys: []string{
+			"business/cmdb/host/CmdbHostList",
+			"business/cmdb/host/CmdbHostDetail",
+			"business/cmdb/group/CmdbGroupList",
+			"business/cmdb/label/CmdbLabelSchemaList",
+		},
+	},
+}
 
 func CleanupRetiredBusinessModules(db *gorm.DB) error {
 	return cleanupRetiredBusinessModules(db)

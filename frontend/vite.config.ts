@@ -66,10 +66,6 @@ export default defineConfig({
               name: 'platform-builder',
               test: /frontend[\\/]src[\\/](modules[\\/](generator|system[\\/]dynamicmodule)|generator[\\/])|node_modules[\\/]jszip[\\/]/,
             },
-            {
-              name: 'business-cmdb',
-              test: /frontend[\\/]src[\\/]modules[\\/]business[\\/]cmdb[\\/]/,
-            },
           ],
         },
       },

@@ -18,6 +18,7 @@ Thumbs.db
 
 # Local caches and temp files
 .tmp/
+.tmp-trace-user/
 tmp/
 .gocache/
 .gstack/

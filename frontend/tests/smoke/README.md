@@ -8,7 +8,7 @@ Pantheon smoke tests are grouped by ownership boundary.
 - `system/`: backend management platform domains such as auth, IAM, org, config, permissions, and governance.
 - `system/api/`: system-domain API smoke tests that do not need a browser page.
 - `system/governance/`: module governance, generator workbench, permission remediation, and policy workbench flows.
-- `business/<module>/`: business-domain smoke tests. CMDB lives in `business/cmdb/`.
+- `business/<module>/`: business-domain smoke tests. Platform main does not include built-in business smoke tests.
 - `helpers/`: shared test helpers only. Do not put test cases here.
 
 ## Script Rules
@@ -35,13 +35,10 @@ Pantheon smoke tests are grouped by ownership boundary.
 | permission governance | Workbench drawer, recommended API remediation, secondary verify retry | `system/governance/governance-insight-drawer.spec.ts`, `system/governance/permission-workbench-remediation*.spec.ts` |
 | module governance | Module registry, generator validation, generated module register/purge, DB-import generation | `system/governance/module-governance*.spec.ts` |
 | system import/export | Templates, user, dept, post, permission, dict, role, login log, operation log | `system/api/system-import-export.spec.ts` |
-| business/cmdb | Operations menu, host list/detail, group tree/empty state, host create/detail/filter/status/delete, group create/update/member calculation/delete, invalid condition rejection | `business/cmdb/cmdb-pages.spec.ts` |
 
 ## Current Gaps
 
-- CMDB SSH collect is not yet covered by browser smoke because it requires a reachable SSH target and disposable credentials. Backend/service tests should cover parser and error handling; add an environment-gated smoke when a stable test host exists.
-- Business-module permission negative cases are not yet covered in browser smoke: hidden menu, list-only buttons, and 403 API behavior for CMDB.
-- Audit assertions for CMDB create/update/delete/collect are not yet automated in smoke.
+- Business-module smoke coverage lives in each independent business repository.
 
 ## Cleanup Rules
 

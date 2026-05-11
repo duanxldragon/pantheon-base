@@ -328,7 +328,7 @@ Source Sans 3 通过 Google Fonts 加载，`index.html` 中引入。
 1. 已完成：`auth` 从 `user` 中逻辑拆分，并落地 MFA / TOTP。
 2. 已完成：后台 UI 专项整改进入基线防回归阶段。
 3. 已完成：补齐 `system/config` 高敏页面验收基线。
-4. 已完成：补齐 `business/cmdb` 设计锚点和 `business/*` 业务模块验收矩阵。
+4. 已完成：补齐 `business/*` 业务模块验收矩阵；具体业务设计迁移到独立业务仓库维护。
 
 ### P1
 
@@ -338,7 +338,7 @@ Source Sans 3 通过 Google Fonts 加载，`index.html` 中引入。
 
 ### P2
 
-8. 已完成：数据权限中间件、角色数据范围策略、`dept_and_children` 部门树展开和 CMDB Host 数据范围回归样板。
+8. 已完成：数据权限中间件、角色数据范围策略、`dept_and_children` 部门树展开和业务模块数据范围接入样板。
 9. 已完成设计锚点：SSO / OAuth2 / OIDC 与登录风控后续边界。
 10. 后续演进：更多业务模块 smoke 覆盖有权限/无权限数据集；真实多租户、SSO provider 和登录风控自动化继续按边界预留，不在身份源或租户模型未明确前提前实现。
 
@@ -377,17 +377,16 @@ Source Sans 3 通过 Google Fonts 加载，`index.html` 中引入。
 29. `docs/designs/I18N_MODULE_DESIGN.md`
 30. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
 31. `docs/designs/SYSTEM_ORG_DESIGN.md`
-32. `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md`
-33. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
-34. `docs/designs/NAVIGATION_IA_STRATEGY.md`
-35. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
-36. `docs/designs/SECURITY_POLICY_ROADMAP.md`
-37. `docs/designs/SSO_OIDC_DESIGN.md`
-38. `docs/designs/P2_SCALE_ROADMAP.md`
-39. `docs/designs/DATABASE.md`
-40. `docs/designs/WORKFLOW.md`
-41. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
-42. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
-43. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
-44. `docs/archive/IMPLEMENTATION_ROADMAP.md`
-45. `docs/assessments/SYSTEM_MODULE_AUDIT.md`
+32. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
+33. `docs/designs/NAVIGATION_IA_STRATEGY.md`
+34. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
+35. `docs/designs/SECURITY_POLICY_ROADMAP.md`
+36. `docs/designs/SSO_OIDC_DESIGN.md`
+37. `docs/designs/P2_SCALE_ROADMAP.md`
+38. `docs/designs/DATABASE.md`
+39. `docs/designs/WORKFLOW.md`
+40. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
+41. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
+42. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+43. `docs/archive/IMPLEMENTATION_ROADMAP.md`
+44. `docs/assessments/SYSTEM_MODULE_AUDIT.md`

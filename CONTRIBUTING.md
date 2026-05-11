@@ -45,7 +45,7 @@ type(scope): subject
 - `system-org`
 - `system-config`
 - `system-audit`
-- `business-cmdb`
+- `business`
 - `frontend`
 - `backend`
 - `docs`

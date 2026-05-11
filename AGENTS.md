@@ -37,20 +37,19 @@
 29. `docs/designs/I18N_MODULE_DESIGN.md`
 30. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
 31. `docs/designs/SYSTEM_ORG_DESIGN.md`
-32. `docs/designs/BUSINESS_CMDB_MODULE_DESIGN.md`
-33. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
-34. `docs/designs/NAVIGATION_IA_STRATEGY.md`
-35. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
-36. `docs/designs/SECURITY_POLICY_ROADMAP.md`
-37. `docs/designs/SSO_OIDC_DESIGN.md`
-38. `docs/designs/P2_SCALE_ROADMAP.md`
-39. `docs/designs/DATABASE.md`
-40. `docs/designs/WORKFLOW.md`
-41. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
-42. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
-43. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
-44. `docs/archive/IMPLEMENTATION_ROADMAP.md`
-45. `docs/assessments/SYSTEM_MODULE_AUDIT.md`
+32. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
+33. `docs/designs/NAVIGATION_IA_STRATEGY.md`
+34. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
+35. `docs/designs/SECURITY_POLICY_ROADMAP.md`
+36. `docs/designs/SSO_OIDC_DESIGN.md`
+37. `docs/designs/P2_SCALE_ROADMAP.md`
+38. `docs/designs/DATABASE.md`
+39. `docs/designs/WORKFLOW.md`
+40. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
+41. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
+42. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+43. `docs/archive/IMPLEMENTATION_ROADMAP.md`
+44. `docs/assessments/SYSTEM_MODULE_AUDIT.md`
 
 ## 1. 任务分类先行（新增约束）
 

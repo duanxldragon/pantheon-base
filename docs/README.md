@@ -79,8 +79,7 @@
 4. [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
 5. [业务建模评审清单](./designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md)
 6. [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
-7. [CMDB 业务模块设计](./designs/BUSINESS_CMDB_MODULE_DESIGN.md)
-8. [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
+7. [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
 
 ### 2.5 做 P2 规模化能力
 
@@ -110,7 +109,6 @@
 - [数据库设计说明](./designs/DATABASE.md)
 - [模块契约设计](./designs/MODULE_CONTRACT.md)
 - [业务模块设计模板](./designs/BUSINESS_MODULE_TEMPLATE.md)
-- [CMDB 业务模块设计](./designs/BUSINESS_CMDB_MODULE_DESIGN.md)
 - [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
 - [业务建模评审清单](./designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md)
 - [P2 规模化能力路线图](./designs/P2_SCALE_ROADMAP.md)
@@ -151,7 +149,6 @@
 - [动态菜单能力成熟度评估与演进蓝图](./assessments/DYNAMIC_MENU_MATURITY_20260422.md)
 - [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
 - [低代码生成器使用指南](./designs/LOWCODE_GENERATOR_GUIDE.md)
-- [CMDB 业务模块设计](./designs/BUSINESS_CMDB_MODULE_DESIGN.md)
 
 ## 4. 交付、验收与运维
 
