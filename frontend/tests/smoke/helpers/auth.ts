@@ -99,11 +99,13 @@ export async function signInAsAdmin(page: Page) {
 
 export async function installClientSession(page: Page, login: BrowserLoginResult) {
   await primeChineseLocale(page);
+  const appBaseUrl = new URL(page.url() === 'about:blank' ? '/' : page.url(), page.url() === 'about:blank' ? 'http://127.0.0.1:5173' : undefined);
+  const cookieUrl = appBaseUrl.origin;
   await page.context().addCookies([
     {
       name: 'pantheon_access_token',
       value: login.accessToken,
-      url: 'http://127.0.0.1:5173',
+      url: cookieUrl,
       httpOnly: true,
       secure: false,
       sameSite: 'Strict',
@@ -111,7 +113,7 @@ export async function installClientSession(page: Page, login: BrowserLoginResult
     {
       name: 'pantheon_refresh_token',
       value: login.refreshToken,
-      url: 'http://127.0.0.1:5173',
+      url: cookieUrl,
       httpOnly: true,
       secure: false,
       sameSite: 'Strict',
@@ -119,7 +121,7 @@ export async function installClientSession(page: Page, login: BrowserLoginResult
     {
       name: 'pantheon_csrf_token',
       value: login.csrfToken,
-      url: 'http://127.0.0.1:5173',
+      url: cookieUrl,
       httpOnly: false,
       secure: false,
       sameSite: 'Strict',

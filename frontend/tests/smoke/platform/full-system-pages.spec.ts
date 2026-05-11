@@ -3,6 +3,7 @@ import {
   adminCredentials,
   installClientSession,
   loginByApi,
+  primeChineseLocale,
 } from '../helpers/auth';
 
 type ViewportCase = {
@@ -100,6 +101,7 @@ test.describe('full system page smoke', () => {
 
       test(`login page renders on ${viewport.key}`, async ({ page }) => {
         const errors = collectRuntimeErrors(page);
+        await primeChineseLocale(page);
         await page.goto('/login', { waitUntil: 'domcontentloaded' });
         await expect(page.getByRole('button', { name: '登录' })).toBeVisible();
         await expect(page.locator('input[type="password"]')).toBeVisible();
