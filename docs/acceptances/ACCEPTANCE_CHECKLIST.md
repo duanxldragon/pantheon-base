@@ -512,7 +512,9 @@
 
 当业务域已经出现子模块切片时，不能只验父入口页。
 
-具体业务模块在独立业务仓库维护时，自动化烟测至少覆盖已实现子模块，并在业务仓库的 smoke README 中记录命令。
+具体业务模块在独立业务仓库维护时，自动化烟测至少覆盖已实现子模块，并在业务仓库的 smoke README、业务验收文档或等价入口中记录命令与覆盖页面。
+
+如果后续新增供应商、资源类型、资源实例等子模块，必须同步扩展 `test:smoke:full-system` 或业务仓库内等价的全链路烟测脚本，不能只保留父入口页。
 
 至少检查：
 
@@ -535,7 +537,7 @@
 - `system/iam`：`/system/profile`、`/system/user`、`/system/user/1`、`/system/role`、`/system/menu`、`/system/permission`、`/system/operation-log`
 - `system/org`：`/system/dept`、`/system/post`
 - `system/config`：`/system/dict`、`/system/setting`、`/system/i18n`、`/system/modules`、`/system/generator`
-- `business/*`：由独立业务仓库声明并覆盖
+- `business/*`：由独立业务仓库声明具体覆盖页面，并至少覆盖每个已实现子模块的一个主页面
 
 固定视口：
 
@@ -549,6 +551,6 @@
 
 - 在主业务域设计文档中明确纳入子模块边界、路由、权限和验收
 - 或者单独补对应子模块设计文档
-- 业务域归属以业务仓库内的业务设计文档为准
+- 业务域归属与子模块边界以业务仓库内的业务设计文档为准
 
 不能再接受“代码里已有模块，文档里没有定义”的状态。

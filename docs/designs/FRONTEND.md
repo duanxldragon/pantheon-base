@@ -73,6 +73,8 @@ export const OrderModule = {
 - **i18next**: 核心引擎。
 - **Backend Sync**: 应用启动时调用 `/api/v1/system/i18n/pack` 接口，拉取数据库中的全量翻译并注入资源池。
 - **Fallback Resources**: 前端内置 `zh-CN`、`en-US`、`ja-JP`、`ko-KR`、`fr-FR` 最小语言包；其中新增语言可先回退到英文骨架，再由 `system/config -> i18n` 运行时资产覆盖。
+- **模块语言包聚合**: 业务模块和系统模块可以在自身目录维护 `locales/{locale}.json`。平台层通过 `npm run i18n:generate-module` 扫描 `src/modules/**/locales/*.json`，生成 `src/i18n/resources/generated/{locale}.ts`，再由 `src/i18n/index.ts` 与基础 fallback、远端语言包合并。模块开发时只维护本模块 json，禁止再手工双写到全局 fallback。
+- **模块语言包聚合**: 业务模块和系统模块可以在自身目录维护 `locales/{locale}.json`。平台层通过 `npm run i18n:generate-module` 扫描 `src/modules/**/locales/*.json`，生成 `src/i18n/resources/generated/{locale}.ts`，再由 `src/i18n/index.ts` 与基础 fallback、远端语言包合并。模块开发时只维护本模块 json，禁止再手工双写到全局 fallback。
 - **UI 绑定**: 使用 `t('key')` 或 `<Trans />` 组件进行文本翻译。
 - **运行时刷新**: `system/config -> i18n` 管理端修改翻译后，前端应支持重新拉取并刷新资源池，不要求用户手工刷新整个页面。
 - **请求层兜底**: 请求失败、网络异常、超时等默认提示统一回退到 i18n key，如 `request.failed / network.error / network.timeout`，不再直接暴露硬编码英文 fallback。
@@ -85,7 +87,7 @@ export const OrderModule = {
 - **严禁大量手写 CSS**: 优先使用 Arco Design 的属性（如 `Grid`, `Space`）进行布局。
 - **Form 封装**: 统一使用表单校验，并配合后端返回的业务错误码显示 Tip。
 - **Fetch 封装**: 统一处理 Token 注入、401/403 异常拦截及 RequestID 日志跟踪。
-- **国际化防回归**: 前端构建前必须执行 `npm run check:i18n-hardcode`，扫描 `title / label / placeholder / content / defaultValue / Message / Notification` 等展示位，阻断新的用户可见硬编码文案进入仓库。
+- **国际化防回归**: 前端构建前必须执行 `npm run i18n:generate-module`、`npm run check:i18n-missing-keys`、`npm run check:i18n-hardcode`。其中生成脚本保证模块语言包进入运行时 fallback，缺失 key 检查扫描静态 `t('...')` 调用，硬编码扫描阻断 `title / label / placeholder / content / defaultValue / Message / Notification` 等展示位写死自然语言。
 - **Locale 完整性门禁**: 扩语种、补翻译、导入翻译资产或批量改 key 后，必须执行 `npm run audit:i18n-locales`。该脚本以 `zh-CN` 为基准、`en-US` 为参考，检查各 locale 的 `missing / extra / empty / sameAsEn`，用于阻断缺 key、空值和可疑未翻译值进入仓库。
 - **语种扩展验收**: 新增 fallback locale 时，不要求预先支持所有语言，但一旦新增，就必须同步补齐本地资源、通过 `check:i18n-hardcode`、通过 `audit:i18n-locales`，并完成一次 `npm run build` 验证，确保语言切换、动态菜单、导入导出结果与错误反馈都不回退到硬编码。
 
@@ -133,7 +135,7 @@ export const OrderModule = {
 - **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar / login.session_idle_minutes` 已接入登录页与应用壳层；其中默认语言仅在“用户未显式切换语言”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐，空闲时长由 `login.session_idle_minutes` 控制自动退出。
 - **平台能力开关消费**: `platform.app_mode / org.enabled / org.required_for_user` 已进入公开设置链路。`org.enabled=false` 时，壳层会隐藏 `system.org` 导航，用户页隐藏部门/岗位列和表单字段；`org.required_for_user=true` 且组织启用时，用户表单要求选择部门。
 - **用户扩展档案契约**: 用户相关 API 类型已预留 `profileExt`，用于 C 端或混合模式下的扩展档案展示与编辑。后台管理页默认不渲染任意 JSON 字段，后续应由具体业务页面或受控表单定义字段语义，避免把未知 PII 直接散落到通用用户列表。
-- **平台壳层偏好持久化**: 当前登录用户的 `theme / language / layoutMode / densityMode` 已通过 `GET/PUT /api/v1/auth/me/preferences` 收口到 `platform` 壳层偏好链路；`system/config` 的公开设置继续只负责默认值，不再覆盖用户已经显式保存的壳层选择。
+- **平台壳层偏好持久化**: 当前登录用户的 `theme / language / layoutMode / densityMode` 已通过 `GET/PUT /api/v1/auth/me/preferences` 收口到 `platform` 壳层偏好链路；`system/config` 的公开设置继续只负责默认值，不再覆盖用户已经显式保存的壳层选择。登录页语言下拉也视为显式壳层选择，进入系统后不得再被账号历史偏好或默认语言反向覆盖。
 - **上传配置消费**: 个人中心与用户管理头像上传都已接入 `/system/upload`，会实时遵守 `upload.max_file_size / upload.allowed_types / upload.public_base_url / upload.s3_*`；本地驱动下返回平台文件 URL，S3 驱动下返回对象访问 URL。
 - **设置审计详情**: 系统设置页底部已补最近配置变更审计表，支持查看操作人、操作 IP、变更字段、状态与操作时间，敏感字段只展示“已变更”而不回显明文。
 - **设置缓存刷新**: 系统设置页已补“刷新设置缓存”入口，允许管理员按当前分组手动预热缓存。
@@ -158,7 +160,7 @@ export const OrderModule = {
 - **国际化导入导出交互**: i18n 资源导入时，如果出现重复 key 冲突、目标 key 已存在或与 canonical 记录冲突，前端应以阻断式提示和本地化错误清单反馈，不允许继续“部分成功 + 英文提示兜底”。
 - **组织字段接入**: 用户页已支持选择部门和岗位，并在列表中直接展示 `deptName/postName`；用户表单中的部门选项会排除组织根节点，岗位下拉按所选部门过滤，避免用户岗位与部门不一致。
 - **组织架构视图**: 部门页中的“组织架构”页签采用 `system/org` 语义，部门节点下直接展示岗位卡片与成员摘要，选中节点后右侧展示直属岗位、直属成员和当前组织规则说明；管理员可在选中部门下直接新增岗位，并从直属成员列表查看用户详情。
-- **权限三轨**: 导航授权通过 `system_role_menu`，页面/按钮权限通过 `system_role_permission`，接口访问权限通过 `casbin_rule` 在权限页单独维护。
+- **权限三轨**: 导航授权通过 `system_role_menu`，页面/按钮权限通过 `system_role_permission`，接口访问权限通过 `casbin_rule`；角色保存会同步系统已知权限点对应的 API 策略，权限页仍保留独立治理入口。
 - **菜单作用域**: 侧边栏通过 `getMenuTree({ scope: 'nav' })` 只拉取当前用户可见导航；菜单页与角色页通过 `scope: 'manage'` 拉取完整授权树。
 - **菜单权限边界**: 菜单元数据中的 `pagePerm` 用于页面进入权限，`perms` 用于按钮/动作权限，前端路由守卫与按钮显隐共享统一权限源但不再复用导航关系。
 - **国际化约束**: 布局、按钮、页签等展示文本统一通过 `t()` 输出，避免系统页出现硬编码文案。
