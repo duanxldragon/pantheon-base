@@ -9,6 +9,15 @@ const admissionPath = path.resolve(frontendRoot, 'config/system-page-admission.j
 
 const governancePatterns = ['GovernanceInsightDrawer', 'GovernanceRailToggleButton'];
 const heroPatterns = ['system-list__hero', 'system-page-hero'];
+const validNarratives = [
+  'task-first-list',
+  'config-overview',
+  'config-group',
+  'governance-workbench',
+  'audit-console',
+  'module-governance',
+  'module-onboarding',
+];
 
 function fail(message) {
   throw new Error(message);
@@ -65,6 +74,20 @@ function assertAllowedPatterns(entry, source) {
   }
 }
 
+function assertNarrativeContract(entry) {
+  if (!validNarratives.includes(entry.narrative)) {
+    fail(`${entry.path} has unsupported narrative: ${entry.narrative}`);
+  }
+  if (entry.narrative === 'module-governance' || entry.narrative === 'module-onboarding') {
+    if (entry.governanceDrawer !== 'forbidden') {
+      fail(`${entry.path} is a high-sensitivity module page and must keep governanceDrawer forbidden`);
+    }
+    if (entry.hero !== 'forbidden') {
+      fail(`${entry.path} is a high-sensitivity module page and must keep hero forbidden`);
+    }
+  }
+}
+
 function main() {
   const entries = readAdmissionConfig();
   assertUniquePaths(entries);
@@ -80,6 +103,7 @@ function main() {
       fail(`${entry.path} has invalid hero value: ${entry.hero}`);
     }
 
+    assertNarrativeContract(entry);
     const source = readSourceFile(entry.sourceFile);
     assertForbiddenPatterns(entry, source);
     assertAllowedPatterns(entry, source);

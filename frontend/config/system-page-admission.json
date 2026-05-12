@@ -125,10 +125,18 @@
   },
   {
     "path": "/system/modules",
-    "title": "模块管理",
+    "title": "模块注册表",
     "sourceFile": "src/modules/system/dynamicmodule/ModuleManager.tsx",
     "narrative": "module-governance",
     "governanceDrawer": "forbidden",
-    "hero": "allowed"
+    "hero": "forbidden"
+  },
+  {
+    "path": "/system/generator",
+    "title": "模块生成器",
+    "sourceFile": "src/modules/generator/pages/ModuleWizard.tsx",
+    "narrative": "module-onboarding",
+    "governanceDrawer": "forbidden",
+    "hero": "forbidden"
   }
 ]
