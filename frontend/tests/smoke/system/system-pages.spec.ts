@@ -50,6 +50,7 @@ const systemPages = [
   { path: '/system/dict', title: '字典管理' },
   { path: '/system/setting', title: '系统设置' },
   { path: '/system/i18n', title: '国际化管理' },
+  { path: '/system/generator', title: /模块生成(?:器|向导)/ },
   { path: '/system/login-log', title: '登录日志' },
   { path: '/system/session', title: '会话管理' },
   { path: '/system/operation-log', title: '操作日志' },
@@ -165,11 +166,15 @@ async function expectNoPageError(page: Page) {
 async function expectPageBodyReady(page: Page) {
   const table = page.locator('.arco-table');
   const empty = page.locator('.arco-empty');
+  const settingOverviewCards = page.locator('.setting-overview-page__group-card');
+  const generatorSteps = page.locator('.generator-wizard__steps');
 
   const hasTable = (await table.count()) > 0;
   const hasEmpty = (await empty.count()) > 0;
+  const hasSettingOverviewCards = (await settingOverviewCards.count()) > 0;
+  const hasGeneratorSteps = (await generatorSteps.count()) > 0;
 
-  expect(hasTable || hasEmpty).toBeTruthy();
+  expect(hasTable || hasEmpty || hasSettingOverviewCards || hasGeneratorSteps).toBeTruthy();
 
   if (hasEmpty) {
     const emptyText = await empty.first().innerText();
@@ -177,7 +182,7 @@ async function expectPageBodyReady(page: Page) {
   }
 }
 
-async function expectVisiblePageTitle(page: Page, title: string) {
+async function expectVisiblePageTitle(page: Page, title: string | RegExp) {
   const visibleMatches = page.getByText(title, { exact: false }).filter({ visible: true });
   await expect(visibleMatches.first()).toBeVisible();
 }
@@ -268,7 +273,7 @@ test('setting group route isolates one group context per route', async ({ page }
 
 test('governance and audit pages remove hero-heavy main-area blocks', async ({ page }) => {
   for (const path of compactMainAreaPages) {
-    await page.goto(path, { waitUntil: 'networkidle' });
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.system-page-hero')).toHaveCount(0);
     await expect(page.locator('.system-list__hero')).toHaveCount(0);
     await expect(page.locator('.governance-summary-bar')).toBeVisible();
@@ -278,6 +283,30 @@ test('governance and audit pages remove hero-heavy main-area blocks', async ({ p
         .first(),
     ).toBeVisible();
   }
+});
+
+test('config high-sensitivity pages keep one summary container and no hero wall', async ({ page }) => {
+  await page.goto('/system/modules', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '模块注册表');
+  await expect(page.locator('.system-page-hero')).toHaveCount(0);
+  await expect(page.locator('.system-list__hero')).toHaveCount(0);
+  await expect(page.locator('.module-manager-page__intro')).toHaveCount(0);
+  await expect(page.locator('.module-manager-page__stats')).toHaveCount(0);
+  await expect(page.locator('.module-manager-page__header-actions .arco-btn-primary')).toBeVisible();
+
+  await page.goto('/system/generator', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, /模块生成(?:器|向导)/);
+  await expect(page.locator('.system-page-hero')).toHaveCount(0);
+  await expect(page.locator('.system-list__hero')).toHaveCount(0);
+  await expect(page.locator('.page-header__extra .arco-btn')).toBeVisible();
+  await expect(page.locator('.generator-wizard__steps')).toBeVisible();
+
+  await page.goto('/system/i18n', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '国际化管理');
+  await expect(page.locator('.governance-summary-bar')).toBeVisible();
+  await expect(page.locator('.system-page-hero')).toHaveCount(0);
+  await expect(page.locator('.system-list__hero')).toHaveCount(0);
+  await expect(page.locator('.system-list__table-card')).toBeVisible();
 });
 
 test('setting smoke: site name updates public brand display', async ({ page }) => {
@@ -515,8 +544,7 @@ test('setting smoke: security policy saves through setting page UI', async ({ pa
   const nextValue = originalValue === '6' ? '7' : '6';
 
   try {
-    await page.goto('/system/setting', { waitUntil: 'networkidle' });
-    await page.getByRole('tab', { name: '安全策略' }).click();
+    await page.goto('/system/setting/security', { waitUntil: 'networkidle' });
     await installOperationToken(page, accessToken);
     await page.locator('input[role="spinbutton"]').first().fill(nextValue);
     await page.locator('.submit-bar button').last().click();
@@ -535,37 +563,41 @@ test('setting smoke: security policy saves through setting page UI', async ({ pa
 
 test('setting smoke: setting audit row opens unified operation log detail', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/security`, {
+  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/audit`, {
     headers: authHeaders(accessToken),
   });
   expect(groupResponse.ok()).toBeTruthy();
   const groupPayload = await groupResponse.json();
   expect(groupPayload.code).toBe(200);
   const originalItems = groupPayload.data.items as SettingItem[];
-  const originalValue = originalItems.find((item) => item.settingKey === 'security.password_min_length')?.settingValue ?? '6';
-  const nextValue = originalValue === '6' ? '7' : '6';
+  const originalValue =
+    originalItems.find((item) => item.settingKey === 'audit.login_log_retention_days')
+      ?.settingValue ?? '90';
+  const nextValue = originalValue === '90' ? '91' : '90';
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
-    settingValue: item.settingKey === 'security.password_min_length' ? nextValue : item.settingValue,
+    settingValue:
+      item.settingKey === 'audit.login_log_retention_days' ? nextValue : item.settingValue,
   }));
 
   try {
-    const updateResponse = await updateSettingGroup(page, accessToken, 'security', nextItems);
+    const updateResponse = await updateSettingGroup(page, accessToken, 'audit', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
 
-    await page.goto('/system/setting', { waitUntil: 'networkidle' });
-    await page.getByRole('tab', { name: '安全策略' }).click();
-    const firstAuditRow = page.getByRole('row', { name: /最小密码长度/ }).first();
-    await expect(firstAuditRow).toBeVisible();
-    await firstAuditRow.getByRole('button', { name: '查看统一审计' }).click();
+    await page.goto('/system/setting/audit', { waitUntil: 'networkidle' });
+    const auditCard = page.locator('.setting-page__audit-card');
+    await expect(auditCard).toBeVisible();
+    const viewAuditButton = auditCard.getByRole('button', { name: '查看统一审计' }).first();
+    await expect(viewAuditButton).toBeVisible();
+    await viewAuditButton.click();
 
     await expect(page).toHaveURL(/\/system\/operation-log\?detailId=\d+/);
     const detailDialog = page.getByRole('dialog');
     await expect(detailDialog).toBeVisible();
     await expect(detailDialog.getByText('请求摘要')).toBeVisible();
-    await expect(detailDialog.getByText('安全策略')).toBeVisible();
+    await expect(detailDialog.getByText('日志治理')).toBeVisible();
   } finally {
-    await updateSettingGroup(page, accessToken, 'security', originalItems);
+    await updateSettingGroup(page, accessToken, 'audit', originalItems);
   }
 });
 
@@ -582,8 +614,7 @@ test('setting smoke: login policy saves through setting page UI', async ({ page 
   const nextValue = originalValue === '5' ? '6' : '5';
 
   try {
-    await page.goto('/system/setting', { waitUntil: 'networkidle' });
-    await page.getByRole('tab', { name: '登录策略' }).click();
+    await page.goto('/system/setting/login', { waitUntil: 'networkidle' });
     await installOperationToken(page, accessToken);
     await page.locator('input[role="spinbutton"]').first().fill(nextValue);
     await page.locator('.submit-bar button').last().click();
@@ -614,8 +645,7 @@ test('setting smoke: upload storage driver can be selected through setting page 
   const nextLabel = nextValue === 's3' ? 'S3 兼容对象存储' : '本地存储';
 
   try {
-    await page.goto('/system/setting', { waitUntil: 'networkidle' });
-    await page.getByRole('tab', { name: '上传配置' }).click();
+    await page.goto('/system/setting/upload', { waitUntil: 'networkidle' });
     await installOperationToken(page, accessToken);
     await page.locator('.arco-select-view').first().click();
     await page.locator('.arco-select-option').filter({ hasText: nextLabel }).first().click();
@@ -686,8 +716,7 @@ test('setting smoke: default language can be selected through setting page UI', 
   const nextLabel = nextValue === 'en-US' ? 'English' : '中文';
 
   try {
-    await page.goto('/system/setting', { waitUntil: 'networkidle' });
-    await page.getByRole('tab', { name: '国际化' }).click();
+    await page.goto('/system/setting/i18n', { waitUntil: 'networkidle' });
     await installOperationToken(page, accessToken);
     await page.locator('.arco-select-view').first().click();
     await page.locator('.arco-select-option').filter({ hasText: nextLabel }).first().click();
@@ -1176,7 +1205,7 @@ test('setting permission smoke: list-only role can view page but cannot save or 
 
     try {
       await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/setting', { waitUntil: 'networkidle' });
+      await viewerPage.goto('/system/setting/basic', { waitUntil: 'networkidle' });
       await expect(viewerPage.getByRole('heading', { name: '系统设置' })).toBeVisible();
       await expectNoPageError(viewerPage);
 
@@ -1632,7 +1661,7 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
     const adminTokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(syncPage, adminTokens);
     const refreshBootstrap = waitForRefreshBootstrap(syncPage);
-    await syncPage.goto('/system/setting', { waitUntil: 'networkidle' });
+    await syncPage.goto('/system/setting/basic', { waitUntil: 'networkidle' });
     const siteNameInput = formItem(syncPage, '站点名称').locator('input').first();
     await expect(siteNameInput).toHaveValue(originalSiteName);
     await refreshBootstrap;

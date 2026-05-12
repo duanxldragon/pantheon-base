@@ -925,13 +925,17 @@ const ModuleWizard: React.FC = () => {
 
   return (
     <PageContainer className="generator-wizard-page">
-      <PageHeader title={t('generator.wizard.title')} />
+      <PageHeader
+        title={t('generator.wizard.title')}
+        extra={
+          canOpenModuleManager ? (
+            <Button size="small" onClick={() => navigate('/system/modules')}>
+              {t('generator.wizard.openRegistry')}
+            </Button>
+          ) : null
+        }
+      />
       <Card className="page-panel generator-wizard-card">
-        <Alert
-          type="info"
-          className="generator-wizard__section"
-          content={t('generator.wizard.positioning')}
-        />
         <Steps current={currentStep} className="generator-wizard__steps">
           <Steps.Step
             title={t('generator.wizard.step1.title')}

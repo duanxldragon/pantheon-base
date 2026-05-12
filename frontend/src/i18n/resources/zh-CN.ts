@@ -632,7 +632,7 @@ const zhCNFallback = {
   'generator.moduleManager.diagnostics': '激活诊断',
   'generator.moduleManager.diagnostics.verified': '已验证',
   'generator.moduleManager.diagnostics.failed': '异常',
-  'generator.moduleManager.registerNew': '前往生成器',
+  'generator.moduleManager.registerNew': '新模块接入',
   'generator.moduleManager.confirmUninstall': '确认卸载该模块吗？',
   'generator.moduleManager.register': '重新接入',
   'generator.moduleManager.registerSuccess': '模块已重新接入，等待激活',
@@ -687,7 +687,8 @@ const zhCNFallback = {
   'generator.moduleManager.status.pending': '待激活',
   'generator.moduleManager.status.uninstalled': '已卸载',
   'generator.moduleManager.status.failed': '失败',
-  'generator.wizard.title': '模块生成向导',
+  'generator.wizard.title': '模块生成器',
+  'generator.wizard.openRegistry': '查看模块注册表',
   'generator.wizard.positioning':
     '该能力是标准后台底座上的轻量级研发辅助工具，用于生成符合平台约束的业务模块脚手架，不作为核心后台能力替代物。',
   'generator.wizard.step1.title': '基础信息',

@@ -51,6 +51,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   await signInAsAdmin(page);
   await navigateInShell(page, '/system/user');
   await expect(page.locator('.table-batch-action-bar')).toBeVisible();
+  await expect(page.locator('.app-table .arco-table-th').first()).toBeVisible();
 
   const userShellStyles = await page.evaluate(() => {
     const read = (selector: string) => {
@@ -191,6 +192,63 @@ test('setting overview keeps summary hero and group cards on the shared page rhy
   expect(overviewContract.groupCardBody?.paddingRight).toBe('14px');
   expect(overviewContract.groupCardBody?.paddingBottom).toBe('12px');
   expect(overviewContract.groupCardBody?.paddingLeft).toBe('14px');
+});
+
+test('high-sensitivity config pages keep a single summary shell without hero walls', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signInAsAdmin(page);
+
+  await navigateInShell(page, '/system/modules');
+  await expect(page.getByRole('heading', { name: '模块注册表' })).toBeVisible();
+  await expect(page.locator('.module-manager-page__header-actions .arco-btn-primary')).toBeVisible();
+  await expect(page.locator('.system-page-hero')).toHaveCount(0);
+  await expect(page.locator('.system-list__hero')).toHaveCount(0);
+  await expect(page.locator('.module-manager-page__intro')).toHaveCount(0);
+  await expect(page.locator('.module-manager-page__stats')).toHaveCount(0);
+
+  const moduleShellContract = await page.evaluate(() => {
+    const alert = document.querySelector<HTMLElement>('.module-manager-page__card .arco-alert');
+    const descriptions = document.querySelector<HTMLElement>(
+      '.module-manager-page__card .arco-descriptions',
+    );
+    const note = document.querySelector<HTMLElement>('.module-manager-page__summary-note');
+    return {
+      alertCount: document.querySelectorAll('.module-manager-page__card .arco-alert').length,
+      descriptionsCount: document.querySelectorAll('.module-manager-page__card .arco-descriptions')
+        .length,
+      noteCount: document.querySelectorAll('.module-manager-page__summary-note').length,
+      alertDisplay: alert ? window.getComputedStyle(alert).display : null,
+      descriptionsDisplay: descriptions ? window.getComputedStyle(descriptions).display : null,
+      noteDisplay: note ? window.getComputedStyle(note).display : null,
+    };
+  });
+
+  expect(moduleShellContract.alertCount).toBe(1);
+  expect(moduleShellContract.descriptionsCount).toBe(1);
+  expect(moduleShellContract.noteCount).toBe(1);
+
+  await navigateInShell(page, '/system/generator');
+  await expect(page.getByRole('heading', { name: /模块生成(?:器|向导)/ })).toBeVisible();
+  await expect(page.locator('.page-header__extra .arco-btn')).toBeVisible();
+  await expect(page.locator('.system-page-hero')).toHaveCount(0);
+  await expect(page.locator('.system-list__hero')).toHaveCount(0);
+
+  const generatorShellContract = await page.evaluate(() => {
+    const topAlert = document.querySelector<HTMLElement>(
+      '.generator-wizard-card > .arco-card-body > .arco-alert',
+    );
+    const steps = document.querySelector<HTMLElement>('.generator-wizard__steps');
+    return {
+      topAlertCount: document.querySelectorAll('.generator-wizard-card > .arco-card-body > .arco-alert')
+        .length,
+      stepsDisplay: steps ? window.getComputedStyle(steps).display : null,
+    };
+  });
+
+  expect(generatorShellContract.topAlertCount).toBe(0);
+  expect(generatorShellContract.stepsDisplay).toBeTruthy();
 });
 
 test('system table pages keep unified table card spacing radius and neutral headers', async ({

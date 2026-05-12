@@ -684,7 +684,7 @@ const enUSFallback = {
   'generator.moduleManager.diagnostics': 'Activation Diagnostics',
   'generator.moduleManager.diagnostics.verified': 'Verified',
   'generator.moduleManager.diagnostics.failed': 'Issue',
-  'generator.moduleManager.registerNew': 'Open Generator',
+  'generator.moduleManager.registerNew': 'New Module Onboarding',
   'generator.moduleManager.confirmUninstall': 'Uninstall this module?',
   'generator.moduleManager.register': 'Re-register',
   'generator.moduleManager.registerSuccess': 'Module re-registered and pending activation',
@@ -746,7 +746,8 @@ const enUSFallback = {
   'generator.moduleManager.status.pending': 'Pending Activation',
   'generator.moduleManager.status.uninstalled': 'Uninstalled',
   'generator.moduleManager.status.failed': 'Failed',
-  'generator.wizard.title': 'Module Generator Wizard',
+  'generator.wizard.title': 'Module Generator',
+  'generator.wizard.openRegistry': 'Open Module Registry',
   'generator.wizard.positioning':
     'This capability is a lightweight engineering-assist tool on top of the standard admin platform. It generates business module scaffolds that comply with platform contracts and is not a replacement for the core admin system.',
   'generator.wizard.step1.title': 'Basics',

@@ -459,6 +459,11 @@
   overflow: hidden;
 }
 
+.module-manager-page__summary-note {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .module-manager-page__intro {
   display: grid;
   gap: 8px;

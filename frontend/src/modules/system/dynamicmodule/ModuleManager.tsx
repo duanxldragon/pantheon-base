@@ -10,6 +10,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Descriptions,
   Form,
   Popconfirm,
   Space,
@@ -490,67 +491,41 @@ const ModuleManager: React.FC = () => {
 
       <Space direction="vertical" size={12} className="system-page-template module-manager-page">
         <Card className="page-panel system-list__table-card module-manager-page__card">
-          <div className="module-manager-page__intro">
-            <div className="module-manager-page__copy">
-              <span className="system-page-hero__eyebrow">
-                {t('generator.moduleManager.title')}
-              </span>
-              <Typography.Paragraph className="module-manager-page__desc">
-                {t('generator.moduleManager.description')}
-              </Typography.Paragraph>
-            </div>
-            <div className="module-manager-page__notice-stack">
-              {featureDisabled ? (
-                <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
-              ) : null}
-              {modules.some((item) => item.status === 3) ? (
-                <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
-              ) : null}
-              <Alert type="info" content={t('generator.moduleManager.repairHint')} />
-            </div>
-          </div>
-          <div className="module-manager-page__stats">
-            <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">
-                {t('generator.moduleManager.stats.total')}
-              </Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>
-                {stats.total}
-              </Typography.Title>
-            </Card>
-            <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">
-                {t('generator.moduleManager.stats.active')}
-              </Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>
-                {stats.active}
-              </Typography.Title>
-            </Card>
-            <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">
-                {t('generator.moduleManager.stats.pending')}
-              </Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>
-                {stats.pending}
-              </Typography.Title>
-            </Card>
-            <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">
-                {t('generator.moduleManager.stats.uninstalled')}
-              </Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>
-                {stats.uninstalled}
-              </Typography.Title>
-            </Card>
-            <Card size="small" className="module-manager-page__stat-card">
-              <Typography.Text type="secondary">
-                {t('generator.moduleManager.stats.failed')}
-              </Typography.Text>
-              <Typography.Title heading={6} style={{ margin: 0 }}>
-                {stats.failed}
-              </Typography.Title>
-            </Card>
-          </div>
+          {featureDisabled ? (
+            <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
+          ) : modules.some((item) => item.status === 3) ? (
+            <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
+          ) : (
+            <Alert type="info" content={t('generator.moduleManager.repairHint')} />
+          )}
+          <Descriptions
+            column={5}
+            data={[
+              {
+                label: t('generator.moduleManager.stats.total'),
+                value: stats.total,
+              },
+              {
+                label: t('generator.moduleManager.stats.active'),
+                value: stats.active,
+              },
+              {
+                label: t('generator.moduleManager.stats.pending'),
+                value: stats.pending,
+              },
+              {
+                label: t('generator.moduleManager.stats.uninstalled'),
+                value: stats.uninstalled,
+              },
+              {
+                label: t('generator.moduleManager.stats.failed'),
+                value: stats.failed,
+              },
+            ]}
+          />
+          <Typography.Text type="secondary" className="module-manager-page__summary-note">
+            {t('generator.moduleManager.positioning')}
+          </Typography.Text>
           <AppTable
             columns={columns}
             data={modules}

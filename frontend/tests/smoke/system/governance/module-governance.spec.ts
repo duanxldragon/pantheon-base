@@ -102,6 +102,11 @@ test.describe('module governance smoke', () => {
 
     await page.goto('/system/modules', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { name: '模块注册表' })).toBeVisible();
+    await expect(page.locator('.system-page-hero')).toHaveCount(0);
+    await expect(page.locator('.system-list__hero')).toHaveCount(0);
+    await expect(page.locator('.module-manager-page__intro')).toHaveCount(0);
+    await expect(page.locator('.module-manager-page__stats')).toHaveCount(0);
+    await expect(page.locator('.module-manager-page__header-actions .arco-btn-primary')).toBeVisible();
 
     const targetRow = page.getByRole('row', { name: /business\.asset/ }).first();
     await expect(targetRow).toBeVisible();
@@ -223,7 +228,10 @@ test.describe('module governance smoke', () => {
     });
 
     await page.goto('/system/generator', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: '模块生成向导' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /模块生成(?:器|向导)/ })).toBeVisible();
+    await expect(page.locator('.system-page-hero')).toHaveCount(0);
+    await expect(page.locator('.system-list__hero')).toHaveCount(0);
+    await expect(page.locator('.page-header__extra .arco-btn')).toBeVisible();
     await installOperationToken(page, accessToken);
 
     await openFormSelect(page, '建模来源');
@@ -283,7 +291,8 @@ test.describe('module governance smoke', () => {
     });
 
     await page.goto('/system/generator', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: '模块生成向导' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /模块生成(?:器|向导)/ })).toBeVisible();
+    await expect(page.locator('.page-header__extra .arco-btn')).toBeVisible();
 
     await formItem(page, '模块名').locator('input').first().fill('config/audit');
     await formItem(page, '显示名').locator('input').first().fill('审计配置');
@@ -316,7 +325,8 @@ test.describe('module governance smoke', () => {
     });
 
     await page.goto('/system/generator', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: '模块生成向导' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /模块生成(?:器|向导)/ })).toBeVisible();
+    await expect(page.locator('.page-header__extra .arco-btn')).toBeVisible();
 
     await formItem(page, '模块名').locator('input').first().fill('cmdb/workbench_probe');
     await formItem(page, '显示名').locator('input').first().fill('工作台探针');
