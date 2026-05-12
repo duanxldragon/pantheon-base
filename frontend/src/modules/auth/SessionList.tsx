@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Card,
-  Button,
-  Form,
-  Grid,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Tag,
-  Typography,
-} from '@arco-design/web-react';
+import { Card, Button, Form, Grid, Input, Popconfirm, Select, Space, Tag } from '@arco-design/web-react';
 import { message } from '../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
@@ -35,6 +24,7 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   ListHeaderActions,
   PageContainer,
   PageEmpty,
@@ -345,37 +335,29 @@ const SessionList: React.FC = () => {
         title={t('system.menu.session')}
         extra={
           <ListHeaderActions
-            utility={
-              <GovernanceRailToggleButton
-                expanded={governanceRail.expanded}
-                onToggle={governanceRail.toggle}
-              >
-                {t('auth.session.hero.summaryTitle')}
-              </GovernanceRailToggleButton>
-            }
+            utility={null}
           />
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero system-list__hero auth-log-list__hero">
-          <div className="system-page-hero__top">
-            <div className="system-page-hero__copy">
-              <span className="system-page-hero__eyebrow">{t('auth.session.hero.eyebrow')}</span>
-              <Typography.Title heading={5} className="system-page-hero__title">
-                {t('auth.session.hero.title')}
-              </Typography.Title>
-            </div>
-          </div>
-          <div className="system-page-kpi-grid">
-            {heroStats.map((item) => (
-              <div key={item.key} className="system-page-kpi">
-                <span className="system-page-kpi__label">{item.label}</span>
-                <span className="system-page-kpi__value">{item.value}</span>
-                <span className="system-page-kpi__hint">{item.hint}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <GovernanceSummaryBar
+          eyebrow={t('auth.session.hero.eyebrow')}
+          title={t('auth.session.hero.title')}
+          description={t('auth.session.hero.sideDesc')}
+          metrics={heroStats.slice(0, 3).map((item) => ({
+            key: item.key,
+            label: item.label,
+            value: item.value,
+          }))}
+          action={
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('auth.session.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
+          }
+        />
         <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>

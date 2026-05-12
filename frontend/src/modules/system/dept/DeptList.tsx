@@ -80,6 +80,7 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   ImportCsvButton,
   ListHeaderActions,
   PageActions,
@@ -1145,12 +1146,6 @@ const DeptList: React.FC = () => {
               className="dept-list-page__header-actions"
               utility={
                 <>
-                  <GovernanceRailToggleButton
-                    expanded={governanceRail.expanded}
-                    onToggle={governanceRail.toggle}
-                  >
-                    {t('system.dept.governance')}
-                  </GovernanceRailToggleButton>
                   <Button
                     size="small"
                     icon={<IconDownload />}
@@ -1213,76 +1208,69 @@ const DeptList: React.FC = () => {
         className="system-page-template governance-workbench dept-list-page"
       >
         {overview ? (
-          <Card className="page-panel system-page-hero system-list__hero">
-            <div className="system-page-hero__top">
-              <div className="system-page-hero__copy">
-                <span className="system-page-hero__eyebrow">{t('system.dept.hero.eyebrow')}</span>
-                <Typography.Title heading={5} className="system-page-hero__title">
-                  {t('system.dept.hero.title')}
-                </Typography.Title>
-              </div>
-            </div>
-            <div className="system-page-kpi-grid">
-              {heroStats.map((item) => (
-                <div
-                  key={item.key}
-                  className="system-page-kpi"
-                  role={
-                    item.key === 'leaderless' ||
-                    item.key === 'noPost' ||
-                    item.key === 'empty' ||
-                    item.key === 'issues'
-                      ? 'button'
-                      : undefined
-                  }
-                  tabIndex={
-                    item.key === 'leaderless' ||
-                    item.key === 'noPost' ||
-                    item.key === 'empty' ||
-                    item.key === 'issues'
-                      ? 0
-                      : undefined
-                  }
-                  onClick={
-                    item.key === 'leaderless'
-                      ? () => applyGovernanceFilter('leaderless')
-                      : item.key === 'noPost'
-                        ? () => applyGovernanceFilter('no-post')
-                        : item.key === 'empty'
-                          ? () => applyGovernanceFilter('empty')
-                          : item.key === 'issues'
-                            ? () => applyGovernanceFilter(undefined)
-                            : undefined
-                  }
-                  onKeyDown={
-                    item.key === 'leaderless' ||
-                    item.key === 'noPost' ||
-                    item.key === 'empty' ||
-                    item.key === 'issues'
-                      ? (event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            if (item.key === 'leaderless') {
-                              applyGovernanceFilter('leaderless');
-                            } else if (item.key === 'noPost') {
-                              applyGovernanceFilter('no-post');
-                            } else if (item.key === 'empty') {
-                              applyGovernanceFilter('empty');
-                            } else {
-                              applyGovernanceFilter(undefined);
-                            }
-                          }
+          <GovernanceSummaryBar
+            eyebrow={t('system.dept.hero.eyebrow')}
+            title={t('system.dept.hero.title')}
+            description={t('system.dept.hero.issuesHint')}
+            metrics={heroStats.slice(0, 4).map((item) => ({
+              key: item.key,
+              label: item.label,
+              value: item.value,
+              description: item.hint,
+              role:
+                item.key === 'leaderless' ||
+                item.key === 'noPost' ||
+                item.key === 'empty' ||
+                item.key === 'issues'
+                  ? 'button'
+                  : undefined,
+              tabIndex:
+                item.key === 'leaderless' ||
+                item.key === 'noPost' ||
+                item.key === 'empty' ||
+                item.key === 'issues'
+                  ? 0
+                  : undefined,
+              onClick:
+                item.key === 'leaderless'
+                  ? () => applyGovernanceFilter('leaderless')
+                  : item.key === 'noPost'
+                    ? () => applyGovernanceFilter('no-post')
+                    : item.key === 'empty'
+                      ? () => applyGovernanceFilter('empty')
+                      : item.key === 'issues'
+                        ? () => applyGovernanceFilter(undefined)
+                        : undefined,
+              onKeyDown:
+                item.key === 'leaderless' ||
+                item.key === 'noPost' ||
+                item.key === 'empty' ||
+                item.key === 'issues'
+                  ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        if (item.key === 'leaderless') {
+                          applyGovernanceFilter('leaderless');
+                        } else if (item.key === 'noPost') {
+                          applyGovernanceFilter('no-post');
+                        } else if (item.key === 'empty') {
+                          applyGovernanceFilter('empty');
+                        } else {
+                          applyGovernanceFilter(undefined);
                         }
-                      : undefined
-                  }
-                >
-                  <span className="system-page-kpi__label">{item.label}</span>
-                  <span className="system-page-kpi__value">{item.value}</span>
-                  <span className="system-page-kpi__hint">{item.hint}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+                      }
+                    }
+                  : undefined,
+            }))}
+            action={
+              <GovernanceRailToggleButton
+                expanded={governanceRail.expanded}
+                onToggle={governanceRail.toggle}
+              >
+                {t('system.dept.governance')}
+              </GovernanceRailToggleButton>
+            }
+          />
         ) : null}
         <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
           <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>

@@ -1,4 +1,7 @@
 import fs from 'node:fs/promises';
+import syncFs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 import {
   adminCredentials,
@@ -13,7 +16,7 @@ import {
   verifiedHeaders,
 } from '../helpers/auth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
-const pageEmptyTexts = ['暂无数据', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
+const pageEmptyTexts = ['暂无数据', '当前筛选范围内没有可展示的数据', '当前筛选下暂无岗位', '暂无系统设置', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
 type SettingItem = { settingKey: string; settingValue: string };
 type UserPlatformPreferences = {
   theme?: string;
@@ -21,6 +24,21 @@ type UserPlatformPreferences = {
   layoutMode?: string;
   densityMode?: string;
 };
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const admissionConfig = JSON.parse(
+  syncFs.readFileSync(path.resolve(__dirname, '../../../config/system-page-admission.json'), 'utf8'),
+) as Array<{
+  path: string;
+  hero: 'allowed' | 'forbidden';
+  governanceDrawer: 'allowed' | 'forbidden';
+}>;
+
+const compactMainAreaPages = admissionConfig
+  .filter((item) => item.hero === 'forbidden' && item.governanceDrawer === 'allowed')
+  .map((item) => item.path)
+  .filter((item) => !item.includes(':'));
 
 const systemPages = [
   { path: '/system/user', title: '用户管理' },
@@ -43,6 +61,16 @@ async function updateSettingGroup(page: Page, accessToken: string, groupKey: str
     headers: await verifiedHeaders(page, accessToken),
     data: { items },
   });
+}
+
+async function waitForRefreshBootstrap(page: Page) {
+  await page.waitForResponse(
+    (response) =>
+      response.url().includes('/system/refresh/state') &&
+      response.request().method() === 'GET' &&
+      response.ok(),
+    { timeout: 15000 },
+  );
 }
 
 async function deleteUserByUsername(page: Page, accessToken: string, username: string) {
@@ -180,6 +208,77 @@ for (const pageMeta of systemPages) {
     expect(consoleErrors).toEqual([]);
   });
 }
+
+test('user page keeps list workflow primary without governance drawer entry', async ({ page }) => {
+  await page.goto('/system/user', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '用户管理');
+  await expect(page.locator('.system-user-list__hero')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(0);
+  await expect(page.locator('.governance-insight-drawer')).toHaveCount(0);
+  await expect(page.locator('.system-list__table-card')).toBeVisible();
+});
+
+test('setting page shows audit table only in audit group and removes governance drawer entry', async ({
+  page,
+}) => {
+  await page.goto('/system/setting', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '系统设置');
+  await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(0);
+  await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
+  await expect(page.locator('.setting-overview-page')).toBeVisible();
+
+  await page.getByRole('link', { name: '日志治理' }).click();
+  await expect(page).toHaveURL(/\/system\/setting\/audit$/);
+  await expect(page.locator('.setting-page__audit-card')).toBeVisible();
+
+  await page.getByRole('tab', { name: '基础信息' }).click();
+  await expect(page).toHaveURL(/\/system\/setting\/basic$/);
+  await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
+});
+
+test('setting overview route shows group navigation instead of the giant tabbed form', async ({
+  page,
+}) => {
+  await page.goto('/system/setting', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '系统设置');
+  await expect(page.locator('.setting-overview-page')).toBeVisible();
+  await expect(page.locator('.setting-group-page')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: '基础信息' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: '基础信息' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '日志治理' })).toBeVisible();
+});
+
+test('setting group route isolates one group context per route', async ({ page }) => {
+  await page.goto('/system/setting/security', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '系统设置');
+  await expect(page.locator('.setting-group-page')).toBeVisible();
+  await expect(page.locator('.setting-overview-page')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: '安全策略' })).toBeVisible();
+  await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
+  await expect(page.locator('.form-section__title').getByText('安全策略', { exact: true })).toBeVisible();
+
+  await page.getByRole('tab', { name: '日志治理' }).click();
+  await expect(page).toHaveURL(/\/system\/setting\/audit$/);
+  await expect(page.locator('.setting-page__audit-card')).toBeVisible();
+});
+
+test('governance and audit pages remove hero-heavy main-area blocks', async ({ page }) => {
+  for (const path of compactMainAreaPages) {
+    await page.goto(path, { waitUntil: 'networkidle' });
+    await expect(page.locator('.system-page-hero')).toHaveCount(0);
+    await expect(page.locator('.system-list__hero')).toHaveCount(0);
+    await expect(page.locator('.governance-summary-bar')).toBeVisible();
+    await expect(
+      page
+        .locator('.system-list__table-card, .permission-workbench__tabs, .org-structure, .dict-workbench')
+        .first(),
+    ).toBeVisible();
+  }
+});
 
 test('setting smoke: site name updates public brand display', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
@@ -1532,10 +1631,11 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
   try {
     const adminTokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(syncPage, adminTokens);
+    const refreshBootstrap = waitForRefreshBootstrap(syncPage);
     await syncPage.goto('/system/setting', { waitUntil: 'networkidle' });
     const siteNameInput = formItem(syncPage, '站点名称').locator('input').first();
     await expect(siteNameInput).toHaveValue(originalSiteName);
-    await syncPage.waitForTimeout(5500);
+    await refreshBootstrap;
 
     const updateResponse = await updateSettingGroup(page, accessToken, 'basic', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
@@ -1561,11 +1661,12 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
   try {
     const adminTokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(syncPage, adminTokens);
+    const refreshBootstrap = waitForRefreshBootstrap(syncPage);
     await syncPage.goto('/system/dict', { waitUntil: 'networkidle' });
     await formItem(syncPage, '字典编码').locator('input').first().fill(dictCode);
     await syncPage.getByRole('button', { name: '搜索' }).click();
     await expect(syncPage.getByText(dictCode, { exact: false })).toHaveCount(0);
-    await syncPage.waitForTimeout(5500);
+    await refreshBootstrap;
 
     const createResponse = await page.request.post(`${apiBaseUrl}/system/dict/type`, {
       headers: await verifiedHeaders(page, accessToken),

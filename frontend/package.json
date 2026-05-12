@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "npm run check:menu-contract && npm run check:i18n-hardcode && npm run check:shell-visual-contract",
+    "prebuild": "npm run check:menu-contract && npm run check:i18n-hardcode && npm run check:shell-visual-contract && npm run check:system-page-admission",
     "build": "tsc -b && vite build",
     "check:menu-contract": "node ./scripts/check-menu-contract.mjs",
     "check:i18n-hardcode": "node ./scripts/check-i18n-hardcode.mjs",
     "check:shell-visual-contract": "node ./scripts/check-shell-visual-contract.mjs",
+    "check:system-page-admission": "node ./scripts/check-system-page-admission.mjs",
     "test:generator:dashboard-widget": "node ./scripts/run-generator-dashboard-widget-test.mjs",
     "test:generator:quality": "node ./scripts/run-generator-quality-contract-test.mjs",
     "test:generator:smoke": "npm run test:generator:dashboard-widget && npm run test:generator:quality && npm run check:menu-contract && npm run check:i18n-hardcode",

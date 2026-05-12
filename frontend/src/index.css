@@ -330,6 +330,16 @@ a {
   margin-bottom: 10px;
 }
 
+.setting-overview-page__group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.setting-overview-page__group-card .arco-card-body {
+  height: 100%;
+}
+
 .submit-bar {
   display: flex;
   justify-content: flex-end;

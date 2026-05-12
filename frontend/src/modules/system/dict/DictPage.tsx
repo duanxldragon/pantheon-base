@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, Space, Tabs, Typography } from '@arco-design/web-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Card, Space, Tabs } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { usePermission } from '../../../hooks/usePermission';
 import { useRefreshSubscription } from '../../../core/refresh/refreshBus';
@@ -8,9 +8,9 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   PageContainer,
   PageHeader,
-  PageActions,
   useGovernanceRail,
 } from '../../../components';
 import { getDictTypeList, type DictTypeQuery, type DictTypeRow } from './api';
@@ -51,6 +51,7 @@ const DictPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<DictTypeRow | null>(null);
   const selectedTypeId = selectedType?.id;
   const governanceRail = useGovernanceRail();
+  const typeLoadRequestSeqRef = useRef(0);
 
   const selectType = useCallback((nextType: DictTypeRow | null) => {
     setSelectedType(nextType);
@@ -66,6 +67,8 @@ const DictPage: React.FC = () => {
 
   const loadTypes = useCallback(
     async (nextQuery: DictTypeQuery = typeQuery) => {
+      const requestSeq = typeLoadRequestSeqRef.current + 1;
+      typeLoadRequestSeqRef.current = requestSeq;
       setTypeLoading(true);
       setTypeError(null);
       try {
@@ -74,6 +77,9 @@ const DictPage: React.FC = () => {
               getDictTypeList(nextQuery),
             )
           : await getDictTypeList(nextQuery);
+        if (typeLoadRequestSeqRef.current !== requestSeq) {
+          return;
+        }
         setTypeRows(rows);
         if (rows.length === 0) {
           selectType(null);
@@ -87,9 +93,14 @@ const DictPage: React.FC = () => {
           rows[0];
         selectType(nextSelectedType);
       } catch (requestError) {
+        if (typeLoadRequestSeqRef.current !== requestSeq) {
+          return;
+        }
         setTypeError(requestError);
       } finally {
-        setTypeLoading(false);
+        if (typeLoadRequestSeqRef.current === requestSeq) {
+          setTypeLoading(false);
+        }
       }
     },
     [selectType, selectedTypeId, typeQuery],
@@ -181,39 +192,26 @@ const DictPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.dict')}
-        extra={
-          <PageActions>
+      <PageHeader title={t('system.menu.dict')} />
+      <Space direction="vertical" size={16} className="system-page-template">
+        <GovernanceSummaryBar
+          eyebrow={t('system.dict.hero.eyebrow')}
+          title={t('system.dict.hero.title')}
+          description={t('system.dict.hero.sideDesc')}
+          metrics={heroStats.slice(0, 3).map((item) => ({
+            key: item.key,
+            label: item.label,
+            value: item.value,
+          }))}
+          action={
             <GovernanceRailToggleButton
               expanded={governanceRail.expanded}
               onToggle={governanceRail.toggle}
             >
               {t('system.dict.hero.summaryTitle')}
             </GovernanceRailToggleButton>
-          </PageActions>
-        }
-      />
-      <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero">
-          <div className="system-page-hero__top">
-            <div className="system-page-hero__copy">
-              <span className="system-page-hero__eyebrow">{t('system.dict.hero.eyebrow')}</span>
-              <Typography.Title heading={5} className="system-page-hero__title">
-                {t('system.dict.hero.title')}
-              </Typography.Title>
-            </div>
-          </div>
-          <div className="system-page-kpi-grid">
-            {heroStats.map((item) => (
-              <div key={item.key} className="system-page-kpi">
-                <span className="system-page-kpi__label">{item.label}</span>
-                <span className="system-page-kpi__value">{item.value}</span>
-                <span className="system-page-kpi__hint">{item.hint}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+          }
+        />
         <Card className="page-panel system-list__table-card dict-page__table-card">
           <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
             <Tabs.TabPane key="types" title={t('system.dict.type')}>

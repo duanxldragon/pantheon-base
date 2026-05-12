@@ -10,7 +10,15 @@ export const SettingModule = defineModule({
       titleKey: 'system.menu.setting',
       icon: 'settings',
       pagePermission: 'system:setting:list',
-      componentKey: 'system/setting/SettingPage',
+      componentKey: 'system/setting/SettingOverviewPage',
+    },
+    {
+      path: 'system/setting/:groupKey',
+      routeName: 'system-setting-group',
+      titleKey: 'system.menu.setting',
+      pagePermission: 'system:setting:list',
+      activeMenu: '/system/setting',
+      componentKey: 'system/setting/SettingGroupPage',
     },
   ],
   menus: [

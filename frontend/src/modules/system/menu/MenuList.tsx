@@ -56,6 +56,7 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   PageActions,
   PageContainer,
   PageEmpty,
@@ -661,12 +662,6 @@ const MenuList: React.FC = () => {
         title={t('system.menu.menu')}
         extra={
           <PageActions>
-            <GovernanceRailToggleButton
-              expanded={governanceRail.expanded}
-              onToggle={governanceRail.toggle}
-            >
-              {t('system.menu.hero.summaryTitle')}
-            </GovernanceRailToggleButton>
             <Space size={4} className="menu-view-switcher">
               <Button
                 size="small"
@@ -700,25 +695,24 @@ const MenuList: React.FC = () => {
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero system-list__hero">
-          <div className="system-page-hero__top">
-            <div className="system-page-hero__copy">
-              <span className="system-page-hero__eyebrow">{t('system.menu.hero.eyebrow')}</span>
-              <Typography.Title heading={5} className="system-page-hero__title">
-                {t('system.menu.hero.title')}
-              </Typography.Title>
-            </div>
-          </div>
-          <div className="system-page-kpi-grid">
-            {heroStats.map((item) => (
-              <div key={item.key} className="system-page-kpi">
-                <span className="system-page-kpi__label">{item.label}</span>
-                <span className="system-page-kpi__value">{item.value}</span>
-                <span className="system-page-kpi__hint">{item.hint}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <GovernanceSummaryBar
+          eyebrow={t('system.menu.hero.eyebrow')}
+          title={t('system.menu.hero.title')}
+          description={t('system.menu.hero.sideDesc')}
+          metrics={heroStats.slice(0, 3).map((item) => ({
+            key: item.key,
+            label: item.label,
+            value: item.value,
+          }))}
+          action={
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('system.menu.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
+          }
+        />
         <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>

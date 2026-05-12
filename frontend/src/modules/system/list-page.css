@@ -49,6 +49,79 @@
   background: color-mix(in srgb, var(--danger-soft) 28%, #fff);
 }
 
+.governance-summary-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 12px 16px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  background: var(--panel-bg-solid);
+}
+
+.governance-summary-bar__copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.governance-summary-bar__eyebrow {
+  color: var(--brand-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.governance-summary-bar__title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.governance-summary-bar__desc {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.governance-summary-bar__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.governance-summary-bar__metric {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--panel-muted);
+}
+
+.governance-summary-bar__metric-label {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.governance-summary-bar__metric-value {
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.governance-summary-bar__metric-desc {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.governance-summary-bar__action {
+  justify-self: end;
+}
+
 .post-list-page .system-page-hero .arco-card-body {
   padding: 14px 16px;
 }
@@ -550,6 +623,22 @@
 }
 
 @media (max-width: 920px) {
+  .governance-summary-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .governance-summary-bar__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .governance-summary-bar__action {
+    justify-self: stretch;
+  }
+
+  .governance-summary-bar__action .arco-btn {
+    width: 100%;
+  }
+
   .i18n-list-page .system-page-hero__desc,
   .dept-list-page .system-page-hero__desc,
   .setting-page .system-page-hero__desc,

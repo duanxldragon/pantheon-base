@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Avatar,
   Button,
@@ -68,9 +68,6 @@ import {
   AppTable,
   FilterPanel,
   FormSection,
-  GovernanceInsightDrawer,
-  GovernanceRailSummary,
-  GovernanceRailToggleButton,
   ImportCsvButton,
   ListHeaderActions,
   PageContainer,
@@ -85,7 +82,6 @@ import {
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
-  useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
 import UserDetailContent from './UserDetailContent';
@@ -180,7 +176,6 @@ const UserList: React.FC = () => {
   const canImport = isAdmin || hasPerm('system:user:import');
   const canBatchUpdate = isAdmin || hasPerm('system:user:batch-update');
   const canBatchDelete = isAdmin || hasPerm('system:user:batch-delete');
-  const governanceRail = useGovernanceRail();
   const invalidateUserCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/user', resourceKeys: ['list:default'] },
@@ -750,62 +745,6 @@ const UserList: React.FC = () => {
     }
   };
 
-  const enabledUserCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
-  const disabledUserCount = useMemo(() => data.filter((item) => item.status !== 1).length, [data]);
-  const heroStats = useMemo(
-    () => [
-      {
-        key: 'total',
-        label: t('common.total', { count: total }),
-        value: total,
-        hint: t('system.user.hero.totalHint'),
-      },
-      {
-        key: 'enabled',
-        label: t('system.user.status.enabled'),
-        value: enabledUserCount,
-        hint: t('system.user.hero.enabledHint'),
-      },
-      {
-        key: 'selected',
-        label: t('system.user.hero.selectedRows'),
-        value: selectedRowKeys.length,
-        hint: t('system.user.hero.selectedHint'),
-      },
-      {
-        key: 'roles',
-        label: t('system.user.hero.rolesReady'),
-        value: roleOptions.length,
-        hint: t('system.user.hero.rolesHint'),
-      },
-    ],
-    [enabledUserCount, roleOptions.length, selectedRowKeys.length, t, total],
-  );
-  const governanceSummaryItems = useMemo(
-    () => [
-      ...(orgEnabled
-        ? [
-            {
-              label: t('system.user.hero.orgReady'),
-              value: `${Math.max(deptOptions.length - 1, 0)} / ${postOptions.length}`,
-              description: t('system.user.hero.orgHint'),
-            },
-          ]
-        : []),
-      {
-        label: t('system.user.hero.disabledRows'),
-        value: disabledUserCount,
-        description: t('system.user.hero.disabledHint'),
-      },
-      {
-        label: t('system.user.hero.batchActions'),
-        value: batchActionDisabled ? t('common.no') : t('common.yes'),
-        description: t('system.user.hero.batchHint'),
-      },
-    ],
-    [batchActionDisabled, deptOptions.length, disabledUserCount, orgEnabled, postOptions.length, t],
-  );
-
   return (
     <PageContainer>
       <PageHeader
@@ -814,12 +753,6 @@ const UserList: React.FC = () => {
           <ListHeaderActions
             utility={
               <>
-                <GovernanceRailToggleButton
-                  expanded={governanceRail.expanded}
-                  onToggle={governanceRail.toggle}
-                >
-                  {t('system.user.hero.summaryTitle')}
-                </GovernanceRailToggleButton>
                 <Button
                   icon={<IconDownload />}
                   onClick={() => {
@@ -856,25 +789,6 @@ const UserList: React.FC = () => {
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero system-user-list__hero">
-          <div className="system-page-hero__top">
-            <div className="system-page-hero__copy">
-              <span className="system-page-hero__eyebrow">{t('system.user.hero.eyebrow')}</span>
-              <Typography.Title heading={5} className="system-page-hero__title">
-                {t('system.user.hero.title')}
-              </Typography.Title>
-            </div>
-          </div>
-          <div className="system-page-kpi-grid">
-            {heroStats.map((item) => (
-              <div key={item.key} className="system-page-kpi">
-                <span className="system-page-kpi__label">{item.label}</span>
-                <span className="system-page-kpi__value">{item.value}</span>
-                <span className="system-page-kpi__hint">{item.hint}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
         <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
@@ -1028,16 +942,6 @@ const UserList: React.FC = () => {
           </Card>
         </>
       </Space>
-
-      <GovernanceInsightDrawer
-        title={t('system.user.hero.summaryTitle')}
-        visible={governanceRail.expanded}
-        onClose={governanceRail.close}
-        noteTitle={t('system.user.hero.summaryTitle')}
-        noteDescription={t('system.user.hero.sideDesc')}
-      >
-        <GovernanceRailSummary items={governanceSummaryItems} />
-      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.user.edit') : t('system.user.create')}

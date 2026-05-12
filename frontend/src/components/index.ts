@@ -14,6 +14,11 @@ export {
 } from './patterns/GovernanceRail';
 export { useGovernanceRail } from './patterns/useGovernanceRail';
 export { default as GovernanceCleanupBar } from './patterns/GovernanceCleanupBar';
+export {
+  default as GovernanceSummaryBar,
+  type GovernanceSummaryBarProps,
+  type GovernanceSummaryMetric,
+} from './patterns/GovernanceSummaryBar';
 export { default as PermissionAction } from './patterns/PermissionAction';
 export { default as TableBatchActionBar } from './patterns/TableBatchActionBar';
 export {

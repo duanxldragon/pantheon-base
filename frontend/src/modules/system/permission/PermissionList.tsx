@@ -10,7 +10,6 @@ import {
   Space,
   Tabs,
   Tag,
-  Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
@@ -64,6 +63,7 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   ImportCsvButton,
   ListHeaderActions,
   PageContainer,
@@ -552,12 +552,6 @@ const PermissionList: React.FC = () => {
           <ListHeaderActions
             utility={
               <>
-                <GovernanceRailToggleButton
-                  expanded={governanceRail.expanded}
-                  onToggle={governanceRail.toggle}
-                >
-                  {t('system.permission.hero.summaryTitle')}
-                </GovernanceRailToggleButton>
                 <Button
                   icon={<IconRefresh />}
                   onClick={() => {
@@ -634,27 +628,24 @@ const PermissionList: React.FC = () => {
       />
 
       <Space direction="vertical" size={16} className="system-page-template">
-        <Card className="page-panel system-page-hero system-list__hero">
-          <div className="system-page-hero__top">
-            <div className="system-page-hero__copy">
-              <span className="system-page-hero__eyebrow">
-                {t('system.permission.hero.eyebrow')}
-              </span>
-              <Typography.Title heading={5} className="system-page-hero__title">
-                {t('system.permission.hero.title')}
-              </Typography.Title>
-            </div>
-          </div>
-          <div className="system-page-kpi-grid">
-            {heroStats.map((item) => (
-              <div key={item.key} className="system-page-kpi">
-                <span className="system-page-kpi__label">{item.label}</span>
-                <span className="system-page-kpi__value">{item.value}</span>
-                <span className="system-page-kpi__hint">{item.hint}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <GovernanceSummaryBar
+          eyebrow={t('system.permission.hero.eyebrow')}
+          title={t('system.permission.hero.title')}
+          description={t('system.permission.hero.sideDesc')}
+          metrics={heroStats.slice(0, 3).map((item) => ({
+            key: item.key,
+            label: item.label,
+            value: item.value,
+          }))}
+          action={
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('system.permission.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
+          }
+        />
         <>
           <Card className="page-panel permission-workbench__tabs">
             <Tabs
