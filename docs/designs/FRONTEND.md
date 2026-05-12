@@ -8,6 +8,12 @@
 
 > 本文偏”架构总览”。更细的页面骨架、导航、状态、表单、表格、响应式和权限态规范，见 `docs/designs/FRONTEND_UI_SPEC.md`；后台 UI 专项整改见 `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`。
 
+数值性真相源约束：
+
+- 视觉 token 最终数值以 `docs/designs/THEME_TOKENS_REFERENCE.md` 为准
+- 响应式断点与降级行为以 `docs/designs/MOBILE_RESPONSIVE_BREAKPOINTS.md` 为准
+- 本文与 `FRONTEND_UI_SPEC.md` 负责架构、语义和原则，不再承担最终数值事实表职责
+
 ## 1. 架构目标：模块化、声明式、解耦
 前端底座是一个“壳”，业务模块通过配置化的形式向壳注册自己。
 

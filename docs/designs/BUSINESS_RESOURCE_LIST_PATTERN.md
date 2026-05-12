@@ -113,7 +113,7 @@ const canDelete = hasPerm('business:<module>:<resource>:delete');
 const canCollect = hasPerm('business:cmdb:host:collect'); // 示例
 ```
 
-**约束**：权限点命名必须遵循 `business:<module>:<resource>:<action>` 三段式（详见 `PERMISSION_MODEL.md`）。
+**约束**：权限点命名必须遵循 `business:<module>:<resource>:<action>` 四段式（详见 `PERMISSION_MODEL.md`），禁止新增 `biz:*`。
 
 ---
 
@@ -349,7 +349,7 @@ const handleDelete = async (id: number) => {
 新业务资源列表页合入前，验证：
 
 - [ ] 6 个核心 import 全部存在（`PageContainer`、`PageHeader`、`FilterPanel`、`AppTable`、`ListHeaderActions`、`AppModal`）
-- [ ] 权限 hook `usePermission` 正确调用，权限点命名三段式
+- [ ] 权限 hook `usePermission` 正确调用，权限点命名符合 canonical 四段式
 - [ ] `statusColorMap` 与平台主题 token 对齐
 - [ ] `loadData` 用 useCallback + 标准 try/catch/finally 三段式
 - [ ] 5 种状态变体（loading/empty-initial/empty-filtered/error/正常）全部覆盖

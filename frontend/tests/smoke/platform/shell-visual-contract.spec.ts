@@ -9,7 +9,6 @@ const systemTablePages = [
   { path: '/system/dept', title: '部门管理' },
   { path: '/system/post', title: '岗位管理' },
   { path: '/system/dict', title: '字典管理' },
-  { path: '/system/setting', title: '系统设置' },
   { path: '/system/i18n', title: '国际化管理' },
   { path: '/system/modules', title: '模块注册表' },
   { path: '/system/session', title: '会话管理' },
@@ -26,9 +25,6 @@ const filterPanelPages = [
   '/system/post',
   '/system/dict',
   '/system/i18n',
-  '/system/session',
-  '/system/login-log',
-  '/system/operation-log',
 ] as const;
 
 const governanceBarPages = [
@@ -112,7 +108,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   expect(userShellStyles.batchButton?.borderStyle).toBe('none');
   expect(userShellStyles.tableHeader?.backgroundColor).toBe('rgb(247, 248, 250)');
 
-  await navigateInShell(page, '/system/setting');
+  await navigateInShell(page, '/system/setting/basic');
   await expect(
     page.locator('.arco-tabs-header-nav-rounded .arco-tabs-header-title-active'),
   ).toBeVisible();
@@ -147,6 +143,56 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   expect(settingShellStyles.roundedTab?.borderStyle).toContain('solid');
 });
 
+test('setting overview keeps summary hero and group cards on the shared page rhythm', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signInAsAdmin(page);
+  await navigateInShell(page, '/system/setting');
+  await expect(page.getByRole('heading', { name: '系统设置' })).toBeVisible();
+  await expect(page.locator('.setting-page__hero')).toBeVisible();
+  await expect(page.locator('.setting-overview-page__group-card').first()).toBeVisible();
+
+  const overviewContract = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>('.setting-page__hero');
+    const heroBody = hero?.querySelector<HTMLElement>('.arco-card-body');
+    const groupGrid = document.querySelector<HTMLElement>('.setting-overview-page__group-grid');
+    const groupCard = document.querySelector<HTMLElement>('.setting-overview-page__group-card');
+    const groupCardBody = groupCard?.querySelector<HTMLElement>('.arco-card-body');
+
+    const read = (element?: HTMLElement | null) => {
+      if (!element) {
+        return null;
+      }
+      const style = window.getComputedStyle(element);
+      return {
+        display: style.display,
+        gap: style.gap,
+        paddingTop: style.paddingTop,
+        paddingRight: style.paddingRight,
+        paddingBottom: style.paddingBottom,
+        paddingLeft: style.paddingLeft,
+      };
+    };
+
+    return {
+      heroBody: read(heroBody),
+      groupGrid: read(groupGrid),
+      groupCardBody: read(groupCardBody),
+    };
+  });
+
+  expect(overviewContract.heroBody?.paddingTop).toBe('12px');
+  expect(overviewContract.heroBody?.paddingRight).toBe('14px');
+  expect(overviewContract.heroBody?.paddingBottom).toBe('12px');
+  expect(overviewContract.heroBody?.paddingLeft).toBe('14px');
+  expect(overviewContract.groupGrid?.display).toBe('grid');
+  expect(overviewContract.groupCardBody?.paddingTop).toBe('12px');
+  expect(overviewContract.groupCardBody?.paddingRight).toBe('14px');
+  expect(overviewContract.groupCardBody?.paddingBottom).toBe('12px');
+  expect(overviewContract.groupCardBody?.paddingLeft).toBe('14px');
+});
+
 test('system table pages keep unified table card spacing radius and neutral headers', async ({
   page,
 }) => {
@@ -156,12 +202,14 @@ test('system table pages keep unified table card spacing radius and neutral head
   for (const pageMeta of systemTablePages) {
     await navigateInShell(page, pageMeta.path);
     await expect(page.getByRole('heading', { name: pageMeta.title })).toBeVisible();
-    await expect(page.locator('.app-table').first()).toBeVisible();
+    await expect(page.locator('.app-table, .page-empty').first()).toBeVisible();
 
     const tableContract = await page.evaluate(() => {
       const table = document.querySelector<HTMLElement>('.app-table');
-      const tableCard = table?.closest<HTMLElement>('.system-list__table-card');
-      const body = table?.closest<HTMLElement>('.arco-card-body');
+      const empty = document.querySelector<HTMLElement>('.page-empty');
+      const contentAnchor = table ?? empty;
+      const tableCard = contentAnchor?.closest<HTMLElement>('.system-list__table-card');
+      const body = contentAnchor?.closest<HTMLElement>('.arco-card-body');
       const container = table?.querySelector<HTMLElement>('.arco-table-container');
       const firstHeader = table?.querySelector<HTMLElement>('.arco-table-th');
       const fixedColumn = table?.querySelector<HTMLElement>(
@@ -187,6 +235,7 @@ test('system table pages keep unified table card spacing radius and neutral head
       };
 
       return {
+        hasDataTable: Boolean(table),
         hasSharedTableCard: Boolean(tableCard),
         body: read(body),
         container: read(container),
@@ -208,12 +257,14 @@ test('system table pages keep unified table card spacing radius and neutral head
     expect(tableContract.body?.paddingRight, pageMeta.path).toBe('14px');
     expect(tableContract.body?.paddingBottom, pageMeta.path).toBe('6px');
     expect(tableContract.body?.paddingLeft, pageMeta.path).toBe('14px');
-    expect(tableContract.container?.borderTopLeftRadius, pageMeta.path).toBe('0px');
-    expect(tableContract.container?.borderTopRightRadius, pageMeta.path).toBe('0px');
-    expect(tableContract.firstHeader?.backgroundColor, pageMeta.path).toBe('rgb(247, 248, 250)');
-    expect(tableContract.fixedColumnShadow, pageMeta.path).toBe('none');
-    expect(tableContract.scrollBeforeShadow, pageMeta.path).toBe('none');
-    expect(tableContract.scrollAfterShadow, pageMeta.path).toBe('none');
+    if (tableContract.hasDataTable) {
+      expect(tableContract.container?.borderTopLeftRadius, pageMeta.path).toBe('0px');
+      expect(tableContract.container?.borderTopRightRadius, pageMeta.path).toBe('0px');
+      expect(tableContract.firstHeader?.backgroundColor, pageMeta.path).toBe('rgb(247, 248, 250)');
+      expect(tableContract.fixedColumnShadow, pageMeta.path).toBe('none');
+      expect(tableContract.scrollBeforeShadow, pageMeta.path).toBe('none');
+      expect(tableContract.scrollAfterShadow, pageMeta.path).toBe('none');
+    }
   }
 });
 

@@ -153,10 +153,14 @@ Role
 
 ## 6.1 命名格式
 
-统一格式：
+Pantheon 当前把权限命名分成两类 canonical：
 
 ```text
-{scope}:{resource}:{action}
+system / auth:
+  {scope}:{resource}:{action}
+
+business:
+  business:{module}:{resource}:{action}
 ```
 
 示例：
@@ -171,8 +175,17 @@ system:user:batch-update
 system:dept:batch-update
 system:post:batch-update
 system:permission:manage
-biz:order:approve
+auth:session:revoke
+business:order:order:create
+business:cmdb:host:collect
+business:deploy:task:start
 ```
+
+补充约束：
+
+- `business:*` 是业务域唯一合法前缀；**禁止新增** `biz:*`
+- 文档、seed、前端 `pagePermission`、按钮权限、Casbin 策略映射都必须使用同一套 canonical 名称
+- 历史文档中的 `biz:*` 只视为过渡示例，后续统一迁移到 `business:*`
 
 ## 6.2 scope 规范
 
@@ -180,16 +193,17 @@ biz:order:approve
 | :--- | :--- |
 | `system` | 系统底座 |
 | `auth` | 认证与安全中心 |
-| `biz` | 业务模块 |
+| `business` | 业务模块 |
 
 说明：
 
 - `auth` 可以作为独立 scope，也可以短期归入 `system`，但文档和代码必须明确。
-- 业务模块统一使用 `biz` 前缀，避免和底座冲突。
+- 业务模块统一使用 `business` 前缀，避免和底座冲突。
+- `business` 后必须继续细分出 `{module}:{resource}` 两层，不能把所有业务资源直接堆到 `business:<resource>:<action>`。
 
 ## 6.3 resource 规范
 
-resource 使用模块或资源名：
+`system / auth` 的 resource 使用模块或资源名：
 
 - `user`
 - `role`
@@ -204,6 +218,18 @@ resource 使用模块或资源名：
 - `upload`
 - `module`
 - `generator`
+
+`business` 的命名拆分为：
+
+- `module`：业务模块名，如 `cmdb`、`deploy`、`crm`
+- `resource`：模块内资源名，如 `host`、`group`、`task`、`package`
+
+例如：
+
+- `business:cmdb:host:list`
+- `business:cmdb:group:update`
+- `business:deploy:task:start`
+- `business:deploy:package:create`
 
 ## 6.4 action 规范
 
@@ -423,7 +449,7 @@ p, admin, /api/v1/system/user, POST
 
 ## 11.1 当前问题
 
-当前角色页已从单一菜单授权升级为三段式授权表单：
+当前角色页已从单一菜单授权升级为三轨授权表单：
 
 - 导航授权：维护 `system_role_menu`，决定侧边栏可见菜单；
 - 页面授权：维护 `system_role_permission` 中来自菜单 `pagePerm` 的页面权限；

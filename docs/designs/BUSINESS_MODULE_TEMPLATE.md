@@ -77,7 +77,7 @@
 | :--- | :--- | :--- |
 | 平台层 | `pkg/common`、`pkg/contracts`、`gin.Context` | 直接耦合启动装配逻辑 |
 | 系统域 | `auth` 上下文、`iam` 权限校验结果、`dict` 枚举能力 | 直接 import `system/*` 内部 service |
-| 业务域 | 本模块内部能力、显式声明的跨模块接口 | 跨业务模块直接深度耦合 |
+| 业务域 | 本模块内部能力、显式声明的跨模块接口 / query capability | 跨业务模块直接深度耦合、直读对方表/Repo/Service |
 
 ### 2.3 业务对象与术语
 
@@ -157,9 +157,9 @@
 
 | 接口 | 方法 | 说明 | 权限点 |
 | :--- | :--- | :--- | :--- |
-| `/api/orders` | `GET` | 订单列表 | `biz:order:query` |
-| `/api/orders` | `POST` | 创建订单 | `biz:order:create` |
-| `/api/orders/:id/approve` | `POST` | 审批订单 | `biz:order:approve` |
+| `/api/orders` | `GET` | 订单列表 | `business:order:order:list` |
+| `/api/orders` | `POST` | 创建订单 | `business:order:order:create` |
+| `/api/orders/:id/approve` | `POST` | 审批订单 | `business:order:order:approve` |
 
 必须额外说明：
 
@@ -167,6 +167,7 @@
 - 哪些接口是状态动作类
 - 哪些接口要记审计日志
 - 哪些接口必须做幂等控制
+- 若接口消费其他业务模块数据，必须写清消费的是哪一个 capability / facade，而不是“内部直接查表”
 
 ### 2.7 权限模型
 
@@ -194,6 +195,7 @@
 - 哪些权限决定菜单可见
 - 哪些权限决定页面按钮显示
 - 哪些权限决定后端接口可访问
+- canonical 命名必须使用 `business:{module}:{resource}:{action}`，禁止新增 `biz:*`
 
 ### 2.8 菜单与导航设计
 

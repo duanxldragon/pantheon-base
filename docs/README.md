@@ -104,6 +104,7 @@
 
 ### 3.1 总体架构
 
+- [Pantheon Base 架构总览](./designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md)
 - [总体架构与后端规范](./designs/BACKEND.md)
 - [前端架构与模块接入](./designs/FRONTEND.md)
 - [数据库设计说明](./designs/DATABASE.md)
@@ -194,8 +195,8 @@
 
 ## 6. 本地启动
 
-1. 执行 `docker compose up -d`，或手动执行 `database/system_init.sql` 初始化 MySQL。
-2. 设置 `PANTHEON_DSN`，例如 `user:pass@tcp(127.0.0.1:3306)/pantheon?charset=utf8mb4&parseTime=True&loc=Local`。
+1. 执行 `docker compose up -d`，或手动执行 `database/system_init.sql` 初始化 MySQL；底座默认库名为 `pantheon_base`。
+2. 设置 `PANTHEON_DSN`，例如 `user:pass@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local`。
 3. 可选设置 `PANTHEON_REDIS_ADDR=127.0.0.1:6379` 与 `PANTHEON_REDIS_PASSWORD=DHCCdhcc2025`。
 4. 生产环境设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位；开发环境未设置时会创建 `admin / 123456`。
 5. 后端执行 `go run ./backend/cmd/server`。

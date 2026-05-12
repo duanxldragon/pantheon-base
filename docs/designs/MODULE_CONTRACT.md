@@ -178,6 +178,12 @@ Migrate(db *gorm.DB) error
 - 通过 `pkg/common`、`pkg/contracts` 获取稳定能力
 - 通过显式定义的接口调用跨模块能力
 
+补充边界：
+
+- `business/*` 不允许直接读取另一个 `business/*` 的数据库表、repository、service
+- 若模块 A 需要消费模块 B 的数据，模块 B 必须作为拥有方暴露只读 capability / facade / query contract
+- 该 capability 的输入、输出、权限与数据范围语义必须进入设计文档或 `pkg/contracts`，不能只靠实现层默契
+
 ## 4.5 后端 seed 契约
 
 每个模块如果拥有平台元数据，必须同步提供 seed：
@@ -364,7 +370,7 @@ export interface ModuleManifest {
 
 - `system:user:create`
 - `system:role:update`
-- `biz:order:approve`
+- `business:order:order:approve`
 
 ## 7.2 权限注册要求
 
@@ -385,7 +391,7 @@ export interface ModuleManifest {
 - `auth.*`
 - `system.user.*`
 - `system.role.*`
-- `biz.order.*`
+- `business.order.*`
 
 ## 8.2 i18n 责任分工
 
