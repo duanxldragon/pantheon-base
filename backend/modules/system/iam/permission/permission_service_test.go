@@ -353,6 +353,137 @@ func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
 	}
 }
 
+func TestPermissionService_GetWorkbenchIncludesRemediationGovernanceSummary(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate permission service: %v", err)
+	}
+
+	roles := []permissionTestRole{
+		{ID: 1, RoleName: "Pending Role", RoleKey: "pending_role", Status: 1, Sort: 1},
+		{ID: 2, RoleName: "Remediated Role", RoleKey: "remediated_role", Status: 1, Sort: 2},
+		{ID: 3, RoleName: "Clean Role", RoleKey: "clean_role", Status: 1, Sort: 3},
+	}
+	if err := db.Create(&roles).Error; err != nil {
+		t.Fatalf("seed roles: %v", err)
+	}
+
+	menus := []permissionTestMenu{
+		{ID: 10, TitleKey: "system.menu.generator", Path: "/system/generator", Module: "system.config", Type: "C", PagePerm: "system:generator:use"},
+		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/system/generator", Module: "system.config", Type: "F", Perms: "system:module:generate"},
+	}
+	if err := db.Create(&menus).Error; err != nil {
+		t.Fatalf("seed menus: %v", err)
+	}
+	if err := db.Create(&[]permissionTestRolePermission{
+		{RoleID: 1, PermissionKey: "system:generator:use"},
+		{RoleID: 1, PermissionKey: "system:module:generate"},
+		{RoleID: 2, PermissionKey: "system:generator:use"},
+		{RoleID: 2, PermissionKey: "system:module:generate"},
+	}).Error; err != nil {
+		t.Fatalf("seed role permissions: %v", err)
+	}
+	if err := db.Create(&database.CasbinRule{
+		PType: "p",
+		V0:    "remediated_role",
+		V1:    "/api/v1/system/dynamic-modules/generate",
+		V2:    "POST",
+	}).Error; err != nil {
+		t.Fatalf("seed casbin rule: %v", err)
+	}
+
+	now := time.Now()
+	if err := db.Create(&[]PermissionWorkbenchRemediationEvent{
+		{
+			RoleKey:      "pending_role",
+			IssueType:    "api-gap",
+			IssueKey:     "POST /api/v1/system/dynamic-modules/generate",
+			BeforeState:  "api-gap",
+			AfterState:   "complete",
+			Action:       "remediated",
+			CreatedCount: 1,
+			SkippedCount: 0,
+			CreatedAt:    now.Add(-time.Hour),
+		},
+		{
+			RoleKey:      "remediated_role",
+			IssueType:    "api-gap",
+			IssueKey:     "POST /api/v1/system/dynamic-modules/generate",
+			BeforeState:  "api-gap",
+			AfterState:   "complete",
+			Action:       "remediated",
+			CreatedCount: 1,
+			SkippedCount: 0,
+			CreatedAt:    now,
+		},
+	}).Error; err != nil {
+		t.Fatalf("seed remediation events: %v", err)
+	}
+
+	workbench, err := service.GetWorkbench(nil)
+	if err != nil {
+		t.Fatalf("get workbench: %v", err)
+	}
+
+	if workbench.Overview.PendingRemediationRoleCount != 1 {
+		t.Fatalf("expected 1 pending remediation role, got %d", workbench.Overview.PendingRemediationRoleCount)
+	}
+	if workbench.Overview.RemediatedRoleCount != 1 {
+		t.Fatalf("expected 1 remediated role, got %d", workbench.Overview.RemediatedRoleCount)
+	}
+	if workbench.Overview.RecentRemediationCount != 2 {
+		t.Fatalf("expected 2 recent remediation events, got %d", workbench.Overview.RecentRemediationCount)
+	}
+
+	roleByKey := make(map[string]PermissionWorkbenchRoleResp, len(workbench.Roles))
+	for _, item := range workbench.Roles {
+		roleByKey[item.RoleKey] = item
+	}
+
+	pendingRole, ok := roleByKey["pending_role"]
+	if !ok {
+		t.Fatalf("missing pending_role in workbench: %+v", workbench.Roles)
+	}
+	if pendingRole.GovernanceStatus != "pending" {
+		t.Fatalf("expected pending governance status, got %s", pendingRole.GovernanceStatus)
+	}
+	if pendingRole.LastRemediationAction != "remediated" {
+		t.Fatalf("expected pending role last remediation action remediated, got %s", pendingRole.LastRemediationAction)
+	}
+	if pendingRole.LastRemediationAt == "" {
+		t.Fatalf("expected pending role last remediation timestamp")
+	}
+
+	remediatedRole, ok := roleByKey["remediated_role"]
+	if !ok {
+		t.Fatalf("missing remediated_role in workbench: %+v", workbench.Roles)
+	}
+	if remediatedRole.GovernanceStatus != "remediated" {
+		t.Fatalf("expected remediated governance status, got %s", remediatedRole.GovernanceStatus)
+	}
+	if remediatedRole.LastRemediationAction != "remediated" {
+		t.Fatalf("expected remediated role last remediation action remediated, got %s", remediatedRole.LastRemediationAction)
+	}
+	if remediatedRole.LastRemediationAt == "" {
+		t.Fatalf("expected remediated role last remediation timestamp")
+	}
+
+	cleanRole, ok := roleByKey["clean_role"]
+	if !ok {
+		t.Fatalf("missing clean_role in workbench: %+v", workbench.Roles)
+	}
+	if cleanRole.GovernanceStatus != "clean" {
+		t.Fatalf("expected clean governance status, got %s", cleanRole.GovernanceStatus)
+	}
+	if cleanRole.LastRemediationAction != "" {
+		t.Fatalf("expected clean role to have no last remediation action, got %s", cleanRole.LastRemediationAction)
+	}
+	if cleanRole.LastRemediationAt != "" {
+		t.Fatalf("expected clean role to have no last remediation timestamp, got %s", cleanRole.LastRemediationAt)
+	}
+}
+
 func TestPermissionService_GetWorkbenchDetectsSpecificRequiredAPIPolicyGap(t *testing.T) {
 	db := setupPermissionTestDB(t)
 	service := NewPermissionService(db)
