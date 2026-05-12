@@ -21,6 +21,7 @@ type MenuNode = {
 
 type WorkbenchRole = {
   roleKey: string;
+  governanceStatus: 'pending' | 'remediated' | 'clean';
   hasApiGap: boolean;
   missingApiPolicyCount: number;
   apiPolicies: Array<{ path: string; method: string }>;
@@ -150,6 +151,7 @@ test('permission workbench can remediate recommended generator policy against re
     await createRole(page, accessToken, roleKey, roleName);
 
     const before = await fetchWorkbenchRole(page, accessToken, roleKey);
+    expect(before.governanceStatus).toBe('pending');
     expect(before.hasApiGap).toBeTruthy();
     expect(before.missingApiPolicyCount).toBe(1);
     expect(before.missingApiPolicies).toEqual(
@@ -161,6 +163,8 @@ test('permission workbench can remediate recommended generator policy against re
     await page.goto('/system/permission', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { name: '权限管理' })).toBeVisible();
     await page.getByRole('tab', { name: '权限工作台', exact: true }).click();
+    await expect(page.getByText('整改任务台', { exact: false })).toBeVisible();
+    await expect(page.getByText('待整改', { exact: true }).first()).toBeVisible();
 
     const remediateResponse = await page.request.post(`${apiBaseUrl}/system/permission/workbench/remediate`, {
       headers: await verifiedHeaders(page, accessToken),
@@ -172,6 +176,7 @@ test('permission workbench can remediate recommended generator policy against re
     expect(remediatePayload.data?.createdCount).toBe(1);
 
     const after = await fetchWorkbenchRole(page, accessToken, roleKey);
+    expect(after.governanceStatus).toBe('remediated');
     expect(after.hasApiGap).toBeFalsy();
     expect(after.missingApiPolicyCount).toBe(0);
     expect(after.apiPolicies).toEqual(

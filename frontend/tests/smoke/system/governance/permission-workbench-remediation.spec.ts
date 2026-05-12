@@ -13,6 +13,9 @@ function initialWorkbench(roleKey: string) {
       unknownPermissionAssignmentCount: 0,
       pageGapRoleCount: 0,
       apiGapRoleCount: 1,
+      pendingRemediationRoleCount: 1,
+      remediatedRoleCount: 0,
+      recentRemediationCount: 1,
     },
     roles: [
       {
@@ -29,6 +32,9 @@ function initialWorkbench(roleKey: string) {
         unknownPermissionCount: 0,
         hasPageGap: false,
         hasApiGap: true,
+        governanceStatus: 'pending',
+        lastRemediationAt: '2026-05-12T10:00:00Z',
+        lastRemediationAction: 'noop',
         menus: [],
         pagePermissions: [
           {
@@ -73,6 +79,9 @@ function remediatedWorkbench(roleKey: string) {
       unknownPermissionAssignmentCount: 0,
       pageGapRoleCount: 0,
       apiGapRoleCount: 0,
+      pendingRemediationRoleCount: 0,
+      remediatedRoleCount: 1,
+      recentRemediationCount: 2,
     },
     roles: [
       {
@@ -89,6 +98,9 @@ function remediatedWorkbench(roleKey: string) {
         unknownPermissionCount: 0,
         hasPageGap: false,
         hasApiGap: false,
+        governanceStatus: 'remediated',
+        lastRemediationAt: '2026-05-12T11:00:00Z',
+        lastRemediationAction: 'remediated',
         menus: [],
         pagePermissions: [
           {
@@ -259,6 +271,53 @@ test('permission workbench remediation retries through secondary verify and clos
     });
   });
 
+  await page.route(/\/api\/v1\/system\/permission\/workbench\/remediation(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: remediated
+        ? [
+            {
+              id: 2,
+              roleKey,
+              issueType: 'api-gap',
+              issueKey: 'POST /api/v1/system/dynamic-modules/generate',
+              beforeState: 'api-gap',
+              afterState: 'complete',
+              action: 'remediated',
+              createdCount: 1,
+              skippedCount: 0,
+              createdAt: '2026-05-12T11:00:00Z',
+            },
+            {
+              id: 1,
+              roleKey,
+              issueType: 'api-gap',
+              issueKey: 'POST /api/v1/system/dynamic-modules/generate',
+              beforeState: 'complete',
+              afterState: 'complete',
+              action: 'noop',
+              createdCount: 0,
+              skippedCount: 1,
+              createdAt: '2026-05-12T10:00:00Z',
+            },
+          ]
+        : [
+            {
+              id: 1,
+              roleKey,
+              issueType: 'api-gap',
+              issueKey: 'POST /api/v1/system/dynamic-modules/generate',
+              beforeState: 'complete',
+              afterState: 'complete',
+              action: 'noop',
+              createdCount: 0,
+              skippedCount: 1,
+              createdAt: '2026-05-12T10:00:00Z',
+            },
+          ],
+    });
+  });
+
   await page.route(/\/api\/v1\/system\/permission\/workbench\/remediate$/, async (route) => {
     const token = route.request().headers()['x-operation-token'];
     if (!token) {
@@ -290,13 +349,17 @@ test('permission workbench remediation retries through secondary verify and clos
 
   await page.goto('/system/permission', { waitUntil: 'networkidle' });
 
+  await expect(page.getByText('待整改角色', { exact: true })).toBeVisible();
+  await expect(page.getByText('整改任务台', { exact: false })).toBeVisible();
   const roleRow = page.locator('.arco-table-tr').filter({ hasText: roleName }).first();
   await expect(roleRow).toBeVisible();
+  await expect(roleRow.getByText('待整改', { exact: true })).toBeVisible();
   await expect(roleRow.getByText('缺接口策略', { exact: true })).toBeVisible();
   await roleRow.getByRole('button', { name: '详情', exact: true }).click();
 
   const detailDialog = page.getByRole('dialog').filter({ hasText: roleKey }).first();
   await expect(detailDialog).toBeVisible();
+  await expect(detailDialog.getByText('最近整改时间线', { exact: true })).toBeVisible();
   await expect(detailDialog.getByText('/api/v1/system/dynamic-modules/generate', { exact: true })).toBeVisible();
 
   await detailDialog.getByRole('button', { name: '一键补齐推荐策略', exact: true }).click();
@@ -312,4 +375,5 @@ test('permission workbench remediation retries through secondary verify and clos
   await expect(detailDialog.getByRole('button', { name: '一键补齐推荐策略', exact: true })).toHaveCount(0);
   await expect(detailDialog.getByText('缺接口策略', { exact: true })).toHaveCount(0);
   await expect(detailDialog.getByText('/api/v1/system/dynamic-modules/generate', { exact: true })).toHaveCount(1);
+  await expect(detailDialog.getByText('已整改', { exact: true })).toBeVisible();
 });
