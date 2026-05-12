@@ -278,3 +278,49 @@ func newScaffoldTestRequest() *RegisterGeneratedModuleRequest {
 	}
 	return req
 }
+
+func TestResolveWorkspaceRootHonorsConfiguredEnvWhenStartIsEmpty(t *testing.T) {
+	root := prepareScaffoldWorkspaceRoot(t)
+	t.Setenv(workspaceRootEnvKey, root)
+
+	resolved, err := ResolveWorkspaceRoot("")
+	if err != nil {
+		t.Fatalf("resolve workspace root from env: %v", err)
+	}
+	if resolved != root {
+		t.Fatalf("expected workspace root %s, got %s", root, resolved)
+	}
+}
+
+func TestResolveWorkspaceRootIgnoresEnvWhenExplicitStartProvided(t *testing.T) {
+	envRoot := prepareScaffoldWorkspaceRoot(t)
+	startRoot := prepareScaffoldWorkspaceRoot(t)
+	nestedStart := filepath.Join(startRoot, "backend", "modules")
+	if err := os.MkdirAll(nestedStart, 0o755); err != nil {
+		t.Fatalf("mkdir nested start: %v", err)
+	}
+	t.Setenv(workspaceRootEnvKey, envRoot)
+
+	resolved, err := ResolveWorkspaceRoot(nestedStart)
+	if err != nil {
+		t.Fatalf("resolve workspace root from explicit start: %v", err)
+	}
+	if resolved != startRoot {
+		t.Fatalf("expected explicit start root %s, got %s", startRoot, resolved)
+	}
+}
+
+func prepareScaffoldWorkspaceRoot(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module pantheon-platform\n\ngo 1.25.4\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "backend"), 0o755); err != nil {
+		t.Fatalf("mkdir backend: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "frontend"), 0o755); err != nil {
+		t.Fatalf("mkdir frontend: %v", err)
+	}
+	return root
+}

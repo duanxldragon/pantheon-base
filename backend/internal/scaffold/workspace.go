@@ -14,10 +14,28 @@ import (
 )
 
 var managedTableNamePattern = regexp.MustCompile(`^[a-z0-9_]+$`)
+const workspaceRootEnvKey = "PANTHEON_WORKSPACE_ROOT"
+
+func isWorkspaceRoot(candidate string) bool {
+	return fileExists(filepath.Join(candidate, "go.mod")) &&
+		dirExists(filepath.Join(candidate, "backend")) &&
+		dirExists(filepath.Join(candidate, "frontend"))
+}
 
 func ResolveWorkspaceRoot(start string) (string, error) {
 	current := strings.TrimSpace(start)
 	if current == "" {
+		if configuredRoot := strings.TrimSpace(os.Getenv(workspaceRootEnvKey)); configuredRoot != "" {
+			resolved, err := filepath.Abs(configuredRoot)
+			if err != nil {
+				return "", err
+			}
+			if !isWorkspaceRoot(resolved) {
+				return "", errors.New("workspace.not_found")
+			}
+			return resolved, nil
+		}
+
 		var err error
 		current, err = os.Getwd()
 		if err != nil {
@@ -27,9 +45,7 @@ func ResolveWorkspaceRoot(start string) (string, error) {
 	current, _ = filepath.Abs(current)
 
 	for {
-		if fileExists(filepath.Join(current, "go.mod")) &&
-			dirExists(filepath.Join(current, "backend")) &&
-			dirExists(filepath.Join(current, "frontend")) {
+		if isWorkspaceRoot(current) {
 			return current, nil
 		}
 		parent := filepath.Dir(current)

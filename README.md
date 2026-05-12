@@ -70,11 +70,13 @@ PowerShell 示例：
 $env:PANTHEON_DSN='root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
 $env:PANTHEON_REDIS_ADDR='127.0.0.1:6379'
 $env:PANTHEON_REDIS_PASSWORD='DHCCdhcc2025'
+$env:PANTHEON_WORKSPACE_ROOT=(Get-Location).Path
 go run ./backend/cmd/server
 ```
 
 后端默认监听 `http://127.0.0.1:8080`。
 `pantheon-base` 作为底座仓库，应独占 `pantheon_base` 数据库，不与业务仓库混用。
+如果你在 `git worktree` 中运行动态模块生成、卸载或彻底删除，务必显式设置 `PANTHEON_WORKSPACE_ROOT` 指向当前 worktree 根目录，避免 generated 源码和注册表被写入另一套仓目录。
 
 ### 3. 启动前端
 

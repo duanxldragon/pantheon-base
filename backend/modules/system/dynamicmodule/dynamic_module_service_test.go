@@ -28,6 +28,16 @@ func TestRegisterGeneratedModuleBusinessOnly(t *testing.T) {
 	}
 }
 
+func TestNewDynamicModuleServiceHonorsConfiguredWorkspaceRoot(t *testing.T) {
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
+
+	service := NewDynamicModuleService(nil)
+	if service.workspaceRoot != workspaceRoot {
+		t.Fatalf("expected workspace root %s, got %s", workspaceRoot, service.workspaceRoot)
+	}
+}
+
 func TestRegisterGeneratedModuleWritesRegistries(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
