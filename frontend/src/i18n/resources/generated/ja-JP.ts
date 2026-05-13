@@ -1,5 +1,3 @@
-const generatedjaJPFallback = {
-  "business.orderqa.title": "Order QA"
-};
+const generatedjaJPFallback = {};
 
 export default generatedjaJPFallback;

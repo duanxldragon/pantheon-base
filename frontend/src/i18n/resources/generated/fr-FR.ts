@@ -1,5 +1,3 @@
-const generatedfrFRFallback = {
-  "business.orderqa.title": "Order QA"
-};
+const generatedfrFRFallback = {};
 
 export default generatedfrFRFallback;

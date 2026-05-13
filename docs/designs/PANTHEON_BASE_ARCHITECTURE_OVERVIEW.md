@@ -176,7 +176,6 @@ Pantheon 明确把系统域拆成四块，而不是继续维护一个“大 syst
 当前样板包括：
 
 - `backend/modules/business/cmdb`
-- `backend/modules/business/orderqa`
 - 前端 generated business modules
 
 它们应该通过统一契约接入：
@@ -310,7 +309,7 @@ Pantheon 明确把系统域拆成四块，而不是继续维护一个“大 syst
 
 ### 6.3 `business/*` 还需要更多真实样板
 
-现在有 `cmdb` 和 `orderqa`，但这还不足以证明：
+现在底座已经有 `cmdb` 这类真实业务样板，也验证过临时模块生成与清理闭环，但这还不足以证明：
 
 - 所有业务模块都能稳定接入
 - 所有业务模块都能稳定通过权限 / i18n / 审计 / 数据范围治理

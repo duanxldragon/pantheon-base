@@ -1,5 +1,3 @@
-const generatedkoKRFallback = {
-  "business.orderqa.title": "Order QA"
-};
+const generatedkoKRFallback = {};
 
 export default generatedkoKRFallback;

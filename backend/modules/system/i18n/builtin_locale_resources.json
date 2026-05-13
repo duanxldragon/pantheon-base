@@ -2240,8 +2240,7 @@
     "business.cmdb.collect.hint": "凭据仅用于本次采集，不会保存到服务器",
     "business.cmdb.collect.start": "开始采集",
     "business.cmdb.component.name": "组件名称",
-    "business.cmdb.component.version": "版本",
-    "business.orderqa.title": "订单测试"
+    "business.cmdb.component.version": "版本"
   },
   "en-US": {
     "app.name": "Pantheon Base",
@@ -4484,8 +4483,7 @@
     "business.cmdb.collect.hint": "Credentials are used only for this collection and will not be stored on the server.",
     "business.cmdb.collect.start": "Start Collection",
     "business.cmdb.component.name": "Component Name",
-    "business.cmdb.component.version": "Version",
-    "business.orderqa.title": "Order QA"
+    "business.cmdb.component.version": "Version"
   },
   "ja-JP": {
     "app.name": "Pantheon Base",
@@ -6728,8 +6726,7 @@
     "business.cmdb.collect.hint": "Credentials are used only for this collection and will not be stored on the server.",
     "business.cmdb.collect.start": "Start Collection",
     "business.cmdb.component.name": "Component Name",
-    "business.cmdb.component.version": "Version",
-    "business.orderqa.title": "Order QA"
+    "business.cmdb.component.version": "Version"
   },
   "ko-KR": {
     "app.name": "Pantheon Base",
@@ -8972,8 +8969,7 @@
     "business.cmdb.collect.hint": "Credentials are used only for this collection and will not be stored on the server.",
     "business.cmdb.collect.start": "Start Collection",
     "business.cmdb.component.name": "Component Name",
-    "business.cmdb.component.version": "Version",
-    "business.orderqa.title": "Order QA"
+    "business.cmdb.component.version": "Version"
   },
   "fr-FR": {
     "app.name": "Pantheon Base",
@@ -11216,7 +11212,6 @@
     "business.cmdb.collect.hint": "Credentials are used only for this collection and will not be stored on the server.",
     "business.cmdb.collect.start": "Start Collection",
     "business.cmdb.component.name": "Component Name",
-    "business.cmdb.component.version": "Version",
-    "business.orderqa.title": "Order QA"
+    "business.cmdb.component.version": "Version"
   }
 }

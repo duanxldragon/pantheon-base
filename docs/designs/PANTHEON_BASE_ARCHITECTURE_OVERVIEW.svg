@@ -87,7 +87,7 @@
 
   <rect x="1284" y="690" width="232" height="118" rx="14" fill="#e8f8ff" stroke="#b5d8ea"/>
   <text x="1304" y="718" class="box-title">business/*</text>
-  <text x="1304" y="740" class="box-text">cmdb, orderqa, future</text>
+  <text x="1304" y="740" class="box-text">cmdb, more samples, future</text>
   <text x="1304" y="758" class="box-text">derived repo modules</text>
 
   <rect x="64" y="856" width="1472" height="76" rx="16" fill="#f7f9fc" stroke="#d5dee8"/>

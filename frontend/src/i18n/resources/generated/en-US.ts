@@ -1,5 +1,3 @@
-const generatedenUSFallback = {
-  "business.orderqa.title": "Order QA"
-};
+const generatedenUSFallback = {};
 
 export default generatedenUSFallback;
