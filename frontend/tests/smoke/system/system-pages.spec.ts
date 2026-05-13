@@ -191,6 +191,10 @@ function formItem(page: Page, label: string) {
   return page.locator('.arco-form-item').filter({ has: page.getByText(label, { exact: true }) }).first();
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 test.beforeEach(async ({ page }) => {
   await signInAsAdmin(page);
 });
@@ -208,7 +212,7 @@ for (const pageMeta of systemPages) {
     const expectedUrlPattern =
       pageMeta.path === '/system/setting'
         ? /\/system\/setting(?:\/[a-z-]+)?$/
-        : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
+        : new RegExp(`${escapeRegExp(pageMeta.path)}$`);
     await expect(page).toHaveURL(expectedUrlPattern);
     await expectVisiblePageTitle(page, pageMeta.title);
     await expectNoPageError(page);
