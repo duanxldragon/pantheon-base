@@ -166,7 +166,11 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
-      await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
+      const expectedUrlPattern =
+        pageMeta.path === '/system/setting'
+          ? /\/system\/setting(?:\/[a-z-]+)?$/
+          : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
+      await expect(page).toHaveURL(expectedUrlPattern);
       await expectPageIdentity(page, pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);

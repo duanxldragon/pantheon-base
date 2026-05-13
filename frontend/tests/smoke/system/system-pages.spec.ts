@@ -961,6 +961,7 @@ test('platform + system/auth smoke: locked session times out, relogin notice app
 test('setting smoke: logout clears explicit theme and falls back to default theme', async ({ page }) => {
   test.setTimeout(45000);
   const accessToken = await signInAsAdmin(page);
+  const originalPreferences = await getCurrentUserPreferences(page, accessToken);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
     headers: authHeaders(accessToken),
   });
@@ -975,6 +976,12 @@ test('setting smoke: logout clears explicit theme and falls back to default them
   }));
 
   try {
+    await updateCurrentUserPreferences(page, accessToken, {
+      theme: '',
+      language: originalPreferences.language,
+      layoutMode: originalPreferences.layoutMode,
+      densityMode: originalPreferences.densityMode,
+    });
     const updateResponse = await updateSettingGroup(page, accessToken, 'ui', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
 
@@ -1001,6 +1008,7 @@ test('setting smoke: logout clears explicit theme and falls back to default them
   } finally {
     const restoreToken = await page.evaluate(() => localStorage.getItem('pantheon_access_token'));
     const effectiveToken = restoreToken || (await signInAsAdmin(page));
+    await updateCurrentUserPreferences(page, effectiveToken, originalPreferences);
     await updateSettingGroup(page, effectiveToken, 'ui', originalItems);
   }
 });
@@ -1032,6 +1040,7 @@ test('setting smoke: tab bar visibility follows ui preference', async ({ page })
 
 test('setting smoke: default theme applies when explicit theme preference is cleared', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
+  const originalPreferences = await getCurrentUserPreferences(page, accessToken);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
     headers: authHeaders(accessToken),
   });
@@ -1046,6 +1055,12 @@ test('setting smoke: default theme applies when explicit theme preference is cle
   }));
 
   try {
+    await updateCurrentUserPreferences(page, accessToken, {
+      theme: '',
+      language: originalPreferences.language,
+      layoutMode: originalPreferences.layoutMode,
+      densityMode: originalPreferences.densityMode,
+    });
     const updateResponse = await updateSettingGroup(page, accessToken, 'ui', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
 
@@ -1057,6 +1072,7 @@ test('setting smoke: default theme applies when explicit theme preference is cle
 
     await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme)).toBe(nextTheme);
   } finally {
+    await updateCurrentUserPreferences(page, accessToken, originalPreferences);
     await updateSettingGroup(page, accessToken, 'ui', originalItems);
   }
 });

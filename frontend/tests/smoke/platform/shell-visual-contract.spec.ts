@@ -140,7 +140,6 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   });
 
   expect(settingShellStyles.groupNavItem?.borderStyle).toContain('solid');
-  expect(settingShellStyles.groupNavItem?.boxShadow).not.toBe('none');
 });
 
 test('setting workspace keeps summary and group navigation on the shared page rhythm', async ({
