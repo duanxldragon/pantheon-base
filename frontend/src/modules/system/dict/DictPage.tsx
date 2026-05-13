@@ -8,7 +8,6 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
-  GovernanceSummaryBar,
   PageContainer,
   PageHeader,
   useGovernanceRail,
@@ -131,36 +130,6 @@ const DictPage: React.FC = () => {
     };
   }, [typeRows]);
 
-  const heroStats = useMemo(
-    () => [
-      {
-        key: 'types',
-        label: t('system.dict.type'),
-        value: typeSummary.total,
-        hint: t('system.dict.hero.typeHint'),
-      },
-      {
-        key: 'active',
-        label: t('system.user.status.enabled'),
-        value: typeSummary.active,
-        hint: t('system.dict.hero.activeHint'),
-      },
-      {
-        key: 'items',
-        label: t('system.dict.item'),
-        value: typeSummary.items,
-        hint: t('system.dict.hero.itemHint'),
-      },
-      {
-        key: 'selected',
-        label: t('system.dict.hero.currentType'),
-        value: selectedType?.dictCode || '-',
-        hint: t('system.dict.hero.currentHint'),
-      },
-    ],
-    [selectedType?.dictCode, t, typeSummary.active, typeSummary.items, typeSummary.total],
-  );
-
   const governanceSummaryItems = useMemo(
     () => [
       {
@@ -192,26 +161,18 @@ const DictPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader title={t('system.menu.dict')} />
+      <PageHeader
+        title={t('system.menu.dict')}
+        extra={
+          <GovernanceRailToggleButton
+            expanded={governanceRail.expanded}
+            onToggle={governanceRail.toggle}
+          >
+            {t('system.dict.hero.summaryTitle')}
+          </GovernanceRailToggleButton>
+        }
+      />
       <Space direction="vertical" size={16} className="system-page-template">
-        <GovernanceSummaryBar
-          eyebrow={t('system.dict.hero.eyebrow')}
-          title={t('system.dict.hero.title')}
-          description={t('system.dict.hero.sideDesc')}
-          metrics={heroStats.slice(0, 3).map((item) => ({
-            key: item.key,
-            label: item.label,
-            value: item.value,
-          }))}
-          action={
-            <GovernanceRailToggleButton
-              expanded={governanceRail.expanded}
-              onToggle={governanceRail.toggle}
-            >
-              {t('system.dict.hero.summaryTitle')}
-            </GovernanceRailToggleButton>
-          }
-        />
         <Card className="page-panel system-list__table-card dict-page__table-card">
           <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
             <Tabs.TabPane key="types" title={t('system.dict.type')}>

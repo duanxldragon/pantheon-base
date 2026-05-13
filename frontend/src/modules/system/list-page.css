@@ -593,6 +593,62 @@
   overflow: hidden;
 }
 
+.dept-governance-rail {
+  display: grid;
+  gap: 12px;
+}
+
+.dept-governance-rail__tasks {
+  display: grid;
+  gap: 10px;
+}
+
+.dept-governance-rail__tasks-head {
+  display: grid;
+  gap: 8px;
+}
+
+.dept-governance-rail__tasks-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.dept-governance-rail__tasks-title {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.dept-governance-rail__tasks-hint {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dept-governance-rail__task {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--brand-primary) 2%, #fff);
+}
+
+.dept-governance-rail__task-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dept-governance-rail__task-resource {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.dept-governance-rail__task-meta {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 @media (max-width: 1200px) {
   .i18n-list-page__header-actions .list-header-actions__utility,
   .dept-list-page__header-actions .list-header-actions__utility,

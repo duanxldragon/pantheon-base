@@ -110,9 +110,8 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   expect(userShellStyles.tableHeader?.backgroundColor).toBe('rgb(247, 248, 250)');
 
   await navigateInShell(page, '/system/setting/basic');
-  await expect(
-    page.locator('.arco-tabs-header-nav-rounded .arco-tabs-header-title-active'),
-  ).toBeVisible();
+  await expect(page.locator('.setting-page__group-nav-item--active')).toBeVisible();
+  await expect(page.locator('.arco-tabs-header-nav-rounded')).toHaveCount(0);
 
   const settingShellStyles = await page.evaluate(() => {
     const read = (selector: string) => {
@@ -136,30 +135,28 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
     };
 
     return {
-      roundedTab: read('.arco-tabs-header-nav-rounded .arco-tabs-header-title-active'),
+      groupNavItem: read('.setting-page__group-nav-item--active'),
     };
   });
 
-  expect(settingShellStyles.roundedTab?.boxShadow).toBe('none');
-  expect(settingShellStyles.roundedTab?.borderStyle).toContain('solid');
+  expect(settingShellStyles.groupNavItem?.borderStyle).toContain('solid');
+  expect(settingShellStyles.groupNavItem?.boxShadow).not.toBe('none');
 });
 
-test('setting overview keeps summary hero and group cards on the shared page rhythm', async ({
+test('setting workspace keeps summary and group navigation on the shared page rhythm', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
   await navigateInShell(page, '/system/setting');
   await expect(page.getByRole('heading', { name: '系统设置' })).toBeVisible();
-  await expect(page.locator('.setting-page__hero')).toBeVisible();
-  await expect(page.locator('.setting-overview-page__group-card').first()).toBeVisible();
+  await expect(page.locator('.governance-summary-bar')).toBeVisible();
+  await expect(page.locator('.setting-page__group-nav-item').first()).toBeVisible();
 
   const overviewContract = await page.evaluate(() => {
-    const hero = document.querySelector<HTMLElement>('.setting-page__hero');
-    const heroBody = hero?.querySelector<HTMLElement>('.arco-card-body');
-    const groupGrid = document.querySelector<HTMLElement>('.setting-overview-page__group-grid');
-    const groupCard = document.querySelector<HTMLElement>('.setting-overview-page__group-card');
-    const groupCardBody = groupCard?.querySelector<HTMLElement>('.arco-card-body');
+    const summary = document.querySelector<HTMLElement>('.governance-summary-bar');
+    const groupGrid = document.querySelector<HTMLElement>('.setting-page__group-nav-grid');
+    const runtimeStrip = document.querySelector<HTMLElement>('.setting-page__runtime-strip');
 
     const read = (element?: HTMLElement | null) => {
       if (!element) {
@@ -176,22 +173,16 @@ test('setting overview keeps summary hero and group cards on the shared page rhy
       };
     };
 
-    return {
-      heroBody: read(heroBody),
-      groupGrid: read(groupGrid),
-      groupCardBody: read(groupCardBody),
-    };
-  });
+      return {
+        summary: read(summary),
+        groupGrid: read(groupGrid),
+        runtimeStrip: read(runtimeStrip),
+      };
+    });
 
-  expect(overviewContract.heroBody?.paddingTop).toBe('12px');
-  expect(overviewContract.heroBody?.paddingRight).toBe('14px');
-  expect(overviewContract.heroBody?.paddingBottom).toBe('12px');
-  expect(overviewContract.heroBody?.paddingLeft).toBe('14px');
+  expect(overviewContract.summary?.display).toBe('grid');
   expect(overviewContract.groupGrid?.display).toBe('grid');
-  expect(overviewContract.groupCardBody?.paddingTop).toBe('12px');
-  expect(overviewContract.groupCardBody?.paddingRight).toBe('14px');
-  expect(overviewContract.groupCardBody?.paddingBottom).toBe('12px');
-  expect(overviewContract.groupCardBody?.paddingLeft).toBe('14px');
+  expect(overviewContract.runtimeStrip?.display).toBe('flex');
 });
 
 test('high-sensitivity config pages keep a single summary shell without hero walls', async ({

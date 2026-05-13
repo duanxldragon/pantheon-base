@@ -4,7 +4,9 @@
     "title": "用户管理",
     "sourceFile": "src/modules/system/user/UserList.tsx",
     "narrative": "task-first-list",
-    "governanceDrawer": "forbidden",
+    "governanceDrawer": "allowed",
+    "governanceButtonText": "治理摘要",
+    "governanceDrawerTitle": "治理摘要",
     "hero": "forbidden"
   },
   {

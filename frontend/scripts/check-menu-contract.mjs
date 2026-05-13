@@ -486,13 +486,14 @@ function main() {
     if (route.pagePermission && !frontendPermissionKeys.has(route.pagePermission)) {
       errors.push(`路由 pagePermission 未声明到 permissions: ${route.pagePermission} (${route.filePath} -> ${routePath})`);
     }
-    const isManagedMenuRoute = menuMap.has(routePath);
     for (const locale of ['zh-CN', 'en-US']) {
       if (!fallbackTranslations.get(locale)?.has(route.titleKey)) {
         errors.push(`fallback 语言包缺少页面 key: ${route.titleKey} (${locale}, ${routePath})`);
       }
-      const expectedBackendPageSet = isManagedMenuRoute ? backendMenuI18nSeeds : backendPageI18nSeeds;
-      if (!expectedBackendPageSet.get(locale)?.has(route.titleKey)) {
+      const backendRouteKeyExists =
+        backendMenuI18nSeeds.get(locale)?.has(route.titleKey)
+        || backendPageI18nSeeds.get(locale)?.has(route.titleKey);
+      if (!backendRouteKeyExists) {
         errors.push(`后端 i18n seed 缺少页面 key: ${route.titleKey} (${locale}, ${routePath})`);
       }
     }
@@ -508,11 +509,14 @@ function main() {
     if (!menu.module) {
       errors.push(`菜单缺少 module: ${menuPath} (${menu.filePath})`);
     }
-    if (menu.scope === 'platform' && menu.module !== 'platform') {
-      errors.push(`platform 菜单 module 必须为 platform: ${menuPath} (${menu.filePath})`);
+    if (menu.scope === 'platform' && !(menu.module === 'platform' || menu.module.startsWith('platform.'))) {
+      errors.push(`platform 菜单 module 必须为 platform 或 platform.*: ${menuPath} (${menu.filePath})`);
     }
-    if (menu.scope === 'system' && !menu.module.startsWith('system.')) {
-      errors.push(`system 菜单 module 必须以 system. 开头: ${menuPath} (${menu.filePath})`);
+    if (
+      menu.scope === 'system'
+      && !(menu.module.startsWith('system.') || menu.module.startsWith('platform.'))
+    ) {
+      errors.push(`system 菜单 module 必须以 system. 或 platform. 开头: ${menuPath} (${menu.filePath})`);
     }
     if (menu.scope === 'business' && !menu.module.startsWith('business.')) {
       errors.push(`business 菜单 module 必须以 business. 开头: ${menuPath} (${menu.filePath})`);

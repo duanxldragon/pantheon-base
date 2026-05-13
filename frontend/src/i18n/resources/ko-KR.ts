@@ -1357,6 +1357,7 @@ const koKRFallback = {
   'system.menu.access': '접근 제어',
   'system.menu.org': '조직 구조',
   'system.menu.config': '플랫폼 설정',
+  'system.menu.lowcode': '로우코드 플랫폼',
   'system.menu.modules': '모듈 관리',
   'system.menu.generator': '모듈 생성기',
   'system.menu.security': '보안 감사',

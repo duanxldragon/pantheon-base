@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Button,
@@ -74,6 +74,10 @@ import {
   PageEmpty,
   PageError,
   PageHeader,
+  GovernanceInsightDrawer,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -82,6 +86,7 @@ import {
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
+  useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
 import UserDetailContent from './UserDetailContent';
@@ -167,6 +172,7 @@ const UserList: React.FC = () => {
   const orgEnabled = publicSettings.orgEnabled;
   const orgRequiredForUser = orgEnabled && publicSettings.orgRequiredForUser;
   const { isAdmin, hasPerm } = usePermission();
+  const governanceRail = useGovernanceRail();
   const canView = isAdmin || hasPerm('system:user:view');
   const canCreate = isAdmin || hasPerm('system:user:create');
   const canEdit = isAdmin || hasPerm('system:user:update');
@@ -733,6 +739,72 @@ const UserList: React.FC = () => {
       .filter((item) => formDeptId > 0 && item.deptId === formDeptId)
       .map(({ label, value }) => ({ label, value })),
   ];
+  const enabledUserCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
+  const disabledUserCount = useMemo(() => data.filter((item) => item.status !== 1).length, [data]);
+  const assignableRoleCount = useMemo(() => roleOptions.length, [roleOptions]);
+  const availableDeptCount = useMemo(
+    () => deptOptions.filter((item) => item.value > 0).length,
+    [deptOptions],
+  );
+  const availablePostCount = useMemo(
+    () => postOptions.filter((item) => item.value > 0).length,
+    [postOptions],
+  );
+  const batchActionReady = !batchActionDisabled || !batchDeleteDisabled;
+  const governanceStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('system.menu.user'),
+        value: total,
+      },
+      {
+        key: 'enabled',
+        label: t('system.user.status.enabled'),
+        value: enabledUserCount,
+      },
+      {
+        key: 'disabled',
+        label: t('system.user.hero.disabledRows'),
+        value: disabledUserCount,
+      },
+      {
+        key: 'roles',
+        label: t('system.user.hero.rolesReady'),
+        value: assignableRoleCount,
+      },
+    ],
+    [assignableRoleCount, disabledUserCount, enabledUserCount, t, total],
+  );
+  const governanceSummaryItems = useMemo(
+    () => [
+      {
+        label: t('system.user.hero.orgReady'),
+        value: orgEnabled
+          ? `${availableDeptCount} / ${availablePostCount}`
+          : t('common.disabled'),
+        description: t('system.user.hero.orgHint'),
+      },
+      {
+        label: t('system.user.hero.rolesReady'),
+        value: assignableRoleCount,
+        description: t('system.user.hero.rolesHint'),
+      },
+      {
+        label: t('system.user.hero.batchActions'),
+        value: batchActionReady ? t('common.yes') : t('common.no'),
+        description: t('system.user.hero.batchHint'),
+      },
+    ],
+    [
+      availableDeptCount,
+      availablePostCount,
+      assignableRoleCount,
+      batchActionReady,
+      orgEnabled,
+      t,
+    ],
+  );
   const handleDeptChange = (value: unknown) => {
     const nextDeptId = Number(value || 0);
     setFormDeptId(nextDeptId);
@@ -789,6 +861,20 @@ const UserList: React.FC = () => {
         }
       />
       <Space direction="vertical" size={16} className="system-page-template">
+        <GovernanceSummaryBar
+          eyebrow={t('system.user.hero.eyebrow')}
+          title={t('system.user.hero.title')}
+          description={t('system.user.hero.sideDesc')}
+          metrics={governanceStats}
+          action={
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('system.user.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
+          }
+        />
         <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
@@ -942,6 +1028,16 @@ const UserList: React.FC = () => {
           </Card>
         </>
       </Space>
+
+      <GovernanceInsightDrawer
+        title={t('system.user.hero.summaryTitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.user.hero.sideLead')}
+        noteDescription={t('system.user.hero.sideDesc')}
+      >
+        <GovernanceRailSummary items={governanceSummaryItems} />
+      </GovernanceInsightDrawer>
 
       <AppModal
         title={editing ? t('system.user.edit') : t('system.user.create')}

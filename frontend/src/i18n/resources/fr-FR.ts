@@ -1478,6 +1478,7 @@ const frFRFallback = {
   'system.menu.access': 'Contrôle d’accès',
   'system.menu.org': 'Structure organisationnelle',
   'system.menu.config': 'Configuration plateforme',
+  'system.menu.lowcode': 'Plateforme low-code',
   'system.menu.modules': 'Gestion des modules',
   'system.menu.generator': 'Générateur de modules',
   'system.menu.security': 'Audit de sécurité',

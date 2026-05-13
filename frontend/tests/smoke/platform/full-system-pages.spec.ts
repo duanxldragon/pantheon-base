@@ -15,7 +15,13 @@ type ViewportCase = {
 type SmokePage = {
   path: string;
   title: string;
-  layer: 'platform' | 'system/auth' | 'system/iam' | 'system/org' | 'system/config';
+  layer:
+    | 'platform'
+    | 'platform/lowcode'
+    | 'system/auth'
+    | 'system/iam'
+    | 'system/org'
+    | 'system/config';
 };
 
 const viewportCases: ViewportCase[] = [
@@ -41,8 +47,8 @@ const smokePages: SmokePage[] = [
   { layer: 'system/config', path: '/system/dict', title: '字典管理' },
   { layer: 'system/config', path: '/system/setting', title: '系统设置' },
   { layer: 'system/config', path: '/system/i18n', title: '国际化管理' },
-  { layer: 'system/config', path: '/system/modules', title: '模块注册表' },
-  { layer: 'system/config', path: '/system/generator', title: '模块生成器' },
+  { layer: 'platform/lowcode', path: '/system/modules', title: '模块注册表' },
+  { layer: 'platform/lowcode', path: '/system/generator', title: '模块生成器' },
 ];
 
 function collectRuntimeErrors(page: Page) {

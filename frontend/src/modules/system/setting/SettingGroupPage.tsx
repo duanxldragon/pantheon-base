@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Form, Message, Space } from '@arco-design/web-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Card, Form, Message, Space, Tag, Typography } from '@arco-design/web-react';
 import type { TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,6 +10,7 @@ import {
 } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import {
+  GovernanceSummaryBar,
   PageContainer,
   PageEmpty,
   PageError,
@@ -62,6 +63,7 @@ const SettingGroupPage: React.FC = () => {
     loading,
     error,
     settings,
+    overview,
     groupedSettings,
     auditRows,
     auditTotal,
@@ -76,6 +78,43 @@ const SettingGroupPage: React.FC = () => {
   const activeSettingGroup =
     groupedSettings.find((item) => item.groupKey === activeGroupMeta.key) || groupedSettings[0];
   const shouldShowAuditCard = activeSettingGroup?.groupKey === 'audit' && canViewOperationLog;
+  const groupIssueCounts = useMemo(() => {
+    return (overview?.issues || []).reduce<Record<string, number>>((acc, issue) => {
+      acc[issue.groupKey] = (acc[issue.groupKey] || 0) + 1;
+      return acc;
+    }, {});
+  }, [overview]);
+  const heroStats = useMemo(() => {
+    if (!overview) {
+      return [];
+    }
+    return [
+      {
+        key: 'total',
+        label: t('system.setting.overview.totalSettings'),
+        value: overview.totalSettingCount,
+        description: t('system.setting.hero.totalHint'),
+      },
+      {
+        key: 'public',
+        label: t('system.setting.overview.publicSettings'),
+        value: overview.publicSettingCount,
+        description: t('system.setting.hero.publicHint'),
+      },
+      {
+        key: 'encrypted',
+        label: t('system.setting.overview.encryptedSettings'),
+        value: overview.encryptedSettingCount,
+        description: t('system.setting.hero.encryptedHint'),
+      },
+      {
+        key: 'risk',
+        label: t('system.setting.overview.risks'),
+        value: overview.riskCount,
+        description: t('system.setting.hero.riskHint'),
+      },
+    ];
+  }, [overview, t]);
 
   useEffect(() => {
     if (groupKey && isSettingGroupKey(groupKey)) {
@@ -227,21 +266,16 @@ const SettingGroupPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.setting')}
-        subtitle={t(activeGroupMeta.descriptionKey, '')}
-        extra={
-          <Button
-            size="small"
-            onClick={() => {
-              navigate('/system/setting');
-            }}
-          >
-            {t('common.back')}
-          </Button>
-        }
-      />
+      <PageHeader title={t('system.menu.setting')} subtitle={t('system.setting.subtitle')} />
       <Space direction="vertical" size={12} className="system-page-template setting-page setting-group-page">
+        {overview ? (
+          <GovernanceSummaryBar
+            eyebrow={t('system.setting.hero.eyebrow')}
+            title={t('system.setting.hero.title')}
+            description={t('system.setting.hero.desc')}
+            metrics={heroStats}
+          />
+        ) : null}
         {loading && settings.length === 0 ? <PageLoading /> : null}
         {error && settings.length === 0 ? renderErrorState() : null}
         {!loading && !error && settings.length === 0 ? (
@@ -249,19 +283,62 @@ const SettingGroupPage: React.FC = () => {
         ) : null}
         {settings.length > 0 ? (
           <>
+            <Card className="page-panel setting-page__group-nav-card">
+              <div className="setting-page__group-nav-grid">
+                {groupedSettings.map((group) => {
+                  const meta = resolveSettingGroupMeta(group.groupKey);
+                  const issueCount = groupIssueCounts[group.groupKey] || 0;
+                  const active = activeSettingGroup?.groupKey === group.groupKey;
+                  return (
+                    <button
+                      key={group.groupKey}
+                      type="button"
+                      className={`setting-page__group-nav-item${active ? ' setting-page__group-nav-item--active' : ''}`}
+                      onClick={() => {
+                        navigate(getSettingGroupPath(group.groupKey as SettingGroupKey));
+                      }}
+                    >
+                      <span className="setting-page__group-nav-title-row">
+                        <span className="setting-page__group-nav-title">{t(meta.titleKey)}</span>
+                        {issueCount > 0 ? (
+                          <Tag color={meta.tone === 'danger' ? 'red' : 'orange'}>
+                            {t('common.total', { count: issueCount })}
+                          </Tag>
+                        ) : null}
+                      </span>
+                      <span className="setting-page__group-nav-desc">
+                        {t(meta.descriptionKey, '')}
+                      </span>
+                      <span className="setting-page__group-nav-meta">
+                        {t('common.total', { count: group.items.length })}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {overview ? (
+                <div className="setting-page__runtime-strip">
+                  <Typography.Text type="secondary">
+                    {t('system.setting.hero.storageHint')} {overview.storageDriver || '-'}
+                  </Typography.Text>
+                  <Typography.Text type="secondary">
+                    {t('system.setting.hero.languageHint')} {overview.defaultLanguage || '-'}
+                  </Typography.Text>
+                  <Typography.Text type="secondary">
+                    {t('system.setting.hero.themeHint')} {overview.defaultTheme || '-'}
+                  </Typography.Text>
+                </div>
+              ) : null}
+            </Card>
             {activeSettingGroup ? (
               <SettingGroupForm
                 form={form}
                 activeGroupKey={activeSettingGroup.groupKey}
                 activeGroupItems={activeSettingGroup.items}
-                groupedSettings={groupedSettings}
                 canUpdateSetting={canUpdateSetting}
                 canRefreshCache={canRefreshCache}
                 refreshingCache={refreshingCache}
                 submittingGroup={submittingGroup}
-                onNavigateGroup={(nextGroupKey) => {
-                  navigate(getSettingGroupPath(nextGroupKey as SettingGroupKey));
-                }}
                 onRefreshCache={() => {
                   void handleRefreshCache();
                 }}

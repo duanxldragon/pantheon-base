@@ -366,63 +366,6 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   return (
     <>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <div className="dict-workbench__summary">
-          <Card className="dict-workbench__summary-card dict-workbench__summary-card--active">
-            <span>{t('system.dict.type')}</span>
-            <strong>{typeSummary.total}</strong>
-          </Card>
-          <Card className="dict-workbench__summary-card">
-            <span>{t('system.user.status.enabled')}</span>
-            <strong>{typeSummary.active}</strong>
-          </Card>
-          <Card className="dict-workbench__summary-card">
-            <span>{t('system.user.status.disabled')}</span>
-            <strong>{typeSummary.disabled}</strong>
-          </Card>
-          <Card className="dict-workbench__summary-card">
-            <span>{t('system.dict.item')}</span>
-            <strong>{typeSummary.items}</strong>
-          </Card>
-        </div>
-
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
-            <Row gutter={16}>
-              <Col xs={24} md={12} lg={8}>
-                <FormItem label={t('system.dict.dictCode')} field="dictCode">
-                  <Input onPressEnter={() => queryForm.submit()} />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={8}>
-                <FormItem label={t('system.dict.dictName')} field="dictName">
-                  <Input onPressEnter={() => queryForm.submit()} />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={4}>
-                <FormItem label={t('system.dict.status')} field="status">
-                  <Select
-                    allowClear
-                    options={[
-                      { label: t('system.user.status.enabled'), value: 1 },
-                      { label: t('system.user.status.disabled'), value: 2 },
-                    ]}
-                  />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={4}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                      {t('common.search')}
-                    </Button>
-                    <Button onClick={handleReset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
-
         <ListHeaderActions
           className="dict-page__actions"
           utility={
@@ -465,6 +408,43 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
             </Button>
           }
         />
+        <FilterPanel>
+          <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
+            <Row gutter={16}>
+              <Col xs={24} md={12} lg={8}>
+                <FormItem label={t('system.dict.dictCode')} field="dictCode">
+                  <Input onPressEnter={() => queryForm.submit()} />
+                </FormItem>
+              </Col>
+              <Col xs={24} md={12} lg={8}>
+                <FormItem label={t('system.dict.dictName')} field="dictName">
+                  <Input onPressEnter={() => queryForm.submit()} />
+                </FormItem>
+              </Col>
+              <Col xs={24} md={12} lg={4}>
+                <FormItem label={t('system.dict.status')} field="status">
+                  <Select
+                    allowClear
+                    options={[
+                      { label: t('system.user.status.enabled'), value: 1 },
+                      { label: t('system.user.status.disabled'), value: 2 },
+                    ]}
+                  />
+                </FormItem>
+              </Col>
+              <Col xs={24} md={12} lg={4}>
+                <FormItem className="filter-panel__action-item">
+                  <Space>
+                    <Button type="primary" htmlType="submit" icon={<IconSearch />}>
+                      {t('common.search')}
+                    </Button>
+                    <Button onClick={handleReset}>{t('common.reset')}</Button>
+                  </Space>
+                </FormItem>
+              </Col>
+            </Row>
+          </Form>
+        </FilterPanel>
         <TableBatchActionBar
           selectedCount={selectedTypeRowKeys.length}
           selectedText={t('common.selectedCount', { count: selectedTypeRowKeys.length })}
@@ -547,6 +527,34 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
             emptyText={t('system.dict.typeEmpty')}
             scroll={{ x: 'max-content' }}
           />
+        ) : null}
+        {!typeLoading && !(typeError && typeRows.length === 0) ? (
+          <Card className="dict-workbench__context-card">
+            <div className="dict-workbench__context-head">
+              <div className="dict-workbench__context-copy">
+                <div className="dict-workbench__context-title">
+                  {t('system.dict.hero.summaryTitle')}
+                </div>
+                <div className="dict-workbench__context-subtitle">
+                  {t('system.dict.hero.sideLead')}
+                </div>
+              </div>
+            </div>
+            <div className="dict-workbench__context-metrics">
+              <span>
+                {t('system.dict.type')}: {typeSummary.total}
+              </span>
+              <span>
+                {t('system.user.status.enabled')}: {typeSummary.active}
+              </span>
+              <span>
+                {t('system.user.status.disabled')}: {typeSummary.disabled}
+              </span>
+              <span>
+                {t('system.dict.item')}: {typeSummary.items}
+              </span>
+            </div>
+          </Card>
         ) : null}
       </Space>
 

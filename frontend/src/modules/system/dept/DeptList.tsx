@@ -508,6 +508,7 @@ const DeptList: React.FC = () => {
         : [],
     [overview, t],
   );
+  const governanceTaskPreview = useMemo(() => governanceTasks.slice(0, 5), [governanceTasks]);
 
   const openCreate = () => {
     const rootDept = findRootDept(allDeptTree);
@@ -1018,55 +1019,6 @@ const DeptList: React.FC = () => {
   const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
   const batchLeaderDisabled = !canEdit || selectedRowKeys.length === 0;
 
-  const governanceTaskColumns: ColumnProps<DeptGovernanceTask>[] = [
-    { title: t('system.dept.task.scope'), dataIndex: 'governanceScopeLabel', width: 110 },
-    { title: t('system.dept.task.tag'), dataIndex: 'governanceTagLabel', width: 180 },
-    {
-      title: t('system.dept.task.resource'),
-      width: 220,
-      render: (_: unknown, row: DeptGovernanceTask) =>
-        row.governanceScope === 'post'
-          ? `${row.postName || '-'} / ${row.deptName || '-'}`
-          : row.deptName,
-    },
-    withTableColumnPriority(
-      { title: t('system.dept.task.blockedBy'), dataIndex: 'governanceBlockedByLabel', width: 170 },
-      'medium',
-    ),
-    withTableColumnPriority(
-      { title: t('system.dept.task.action'), dataIndex: 'governanceActionLabel', width: 220 },
-      'low',
-    ),
-    withTableColumnPriority(
-      { title: t('system.dept.task.deptPath'), dataIndex: 'deptPath', width: 240 },
-      'low',
-    ),
-    withTableColumnPriority(
-      {
-        title: t('system.dept.task.relatedUserCount'),
-        dataIndex: 'relatedUserCount',
-        width: 110,
-      },
-      'medium',
-    ),
-    {
-      title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.compact,
-      render: (_: unknown, row: DeptGovernanceTask) => (
-        <Button
-          type="text"
-          size="small"
-          icon={<IconEye />}
-          onClick={() => {
-            void locateGovernanceTask(row);
-          }}
-        >
-          {t('system.dept.task.locate')}
-        </Button>
-      ),
-    },
-  ];
-
   const openCreatePostForDept = (dept: DeptNode | null) => {
     if (!dept || dept.isRoot) {
       return;
@@ -1275,49 +1227,6 @@ const DeptList: React.FC = () => {
         <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
           <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>
             <div className="page-main-column dept-list-page__layout">
-              <Card
-                className="page-panel system-list__table-card dept-governance-task-card dept-list-page__task-card"
-                title={t('system.dept.task.title')}
-                extra={
-                  <Space>
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        void loadData(query);
-                      }}
-                      loading={governanceLoading}
-                    >
-                      {t('common.refresh')}
-                    </Button>
-                    <Button
-                      size="small"
-                      icon={<IconDownload />}
-                      onClick={() => {
-                        void handleExportGovernanceTasks();
-                      }}
-                      disabled={!canExport}
-                    >
-                      {t('system.dept.task.export')}
-                    </Button>
-                  </Space>
-                }
-              >
-                <div className="dept-governance-task-card__intro">
-                  <Typography.Text className="governance-workbench__task-desc">
-                    {t('system.dept.task.hint')}
-                  </Typography.Text>
-                </div>
-                <AppTable<DeptGovernanceTask>
-                  className="system-list__table"
-                  data={governanceTasks}
-                  columns={governanceTaskColumns}
-                  rowKey="taskKey"
-                  loading={governanceLoading}
-                  scroll={{ x: 'max-content' }}
-                  emptyText={t('common.noData')}
-                  pagination={false}
-                />
-              </Card>
               <FilterPanel>
                 <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                   <Row gutter={16}>
@@ -1517,7 +1426,94 @@ const DeptList: React.FC = () => {
         noteTitle={t('system.dept.governance')}
         noteDescription={t('system.dept.governanceHint')}
       >
-        <GovernanceRailSummary items={governanceSummaryItems} />
+        <div className="dept-governance-rail">
+          <GovernanceRailSummary
+            items={[
+              ...governanceSummaryItems,
+              {
+                label: t('system.dept.task.title'),
+                value: governanceTasks.length,
+                description: t('system.dept.task.hint'),
+              },
+            ]}
+          />
+          <div className="dept-governance-rail__tasks">
+            <div className="dept-governance-rail__tasks-head">
+              <div className="dept-governance-rail__tasks-copy">
+                <Typography.Text className="dept-governance-rail__tasks-title">
+                  {t('system.dept.task.title')}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="dept-governance-rail__tasks-hint">
+                  {t('system.dept.task.hint')}
+                </Typography.Text>
+              </div>
+              <Space wrap>
+                <Typography.Text type="secondary">
+                  {t('common.total', { count: governanceTasks.length })}
+                </Typography.Text>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    void loadData(query);
+                  }}
+                  loading={governanceLoading}
+                >
+                  {t('common.refresh')}
+                </Button>
+                <Button
+                  size="small"
+                  icon={<IconDownload />}
+                  onClick={() => {
+                    void handleExportGovernanceTasks();
+                  }}
+                  disabled={!canExport}
+                >
+                  {t('system.dept.task.export')}
+                </Button>
+              </Space>
+            </div>
+            {governanceTaskPreview.length > 0 ? (
+              <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                {governanceTaskPreview.map((task) => (
+                  <div key={task.taskKey} className="dept-governance-rail__task">
+                    <div className="dept-governance-rail__task-head">
+                      <Space wrap size={6}>
+                        <Tag color="arcoblue">{task.governanceScopeLabel}</Tag>
+                        <Tag color="orange">{task.governanceTagLabel}</Tag>
+                        {task.relatedUserCount > 0 ? (
+                          <Tag color="gold">
+                            {t('system.dept.task.relatedUserCount')}: {task.relatedUserCount}
+                          </Tag>
+                        ) : null}
+                      </Space>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<IconEye />}
+                        onClick={() => {
+                          void locateGovernanceTask(task);
+                        }}
+                      >
+                        {t('system.dept.task.locate')}
+                      </Button>
+                    </div>
+                    <Typography.Text className="dept-governance-rail__task-resource">
+                      {task.governanceScope === 'post'
+                        ? `${task.postName || '-'} / ${task.deptName || '-'}`
+                        : task.deptName}
+                    </Typography.Text>
+                    <Typography.Text type="secondary" className="dept-governance-rail__task-meta">
+                      {task.governanceActionLabel}
+                      {task.governanceBlockedByLabel ? ` · ${task.governanceBlockedByLabel}` : ''}
+                    </Typography.Text>
+                  </div>
+                ))}
+              </Space>
+            ) : (
+              <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>
+            )}
+          </div>
+        </div>
       </GovernanceInsightDrawer>
 
       <AppModal

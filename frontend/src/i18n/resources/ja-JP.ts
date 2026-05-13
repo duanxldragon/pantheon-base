@@ -1421,6 +1421,7 @@ const jaJPFallback = {
   'system.menu.access': 'アクセス制御',
   'system.menu.org': '組織構造',
   'system.menu.config': 'プラットフォーム設定',
+  'system.menu.lowcode': 'ローコードプラットフォーム',
   'system.menu.modules': 'モジュール管理',
   'system.menu.generator': 'モジュール生成',
   'system.menu.security': 'セキュリティ監査',

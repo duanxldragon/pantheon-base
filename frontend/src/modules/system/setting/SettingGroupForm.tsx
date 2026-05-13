@@ -8,7 +8,6 @@ import {
   Select,
   Space,
   Switch,
-  Tabs,
   Tag,
   Typography,
   type FormInstance,
@@ -19,7 +18,6 @@ import { FormSection, SubmitBar } from '../../../components';
 import { pantheonThemeOptions } from '../../../core/theme/theme';
 import { SUPPORTED_LOCALES } from '../../../i18n';
 import type { SettingItem } from './api';
-import type { SettingGroupKey } from './settingGroups';
 import {
   auditRetentionDaySettingKeys,
   auditRetentionSettingKeys,
@@ -31,7 +29,6 @@ import {
   recommendedAuditRetentionDayOptions,
   recommendedAuditRetentionOptions,
   resolveAuditRetentionDefaultValues,
-  type GroupedSettingItems,
   type SettingFormValue,
 } from './useSettingCatalog';
 
@@ -41,12 +38,10 @@ interface SettingGroupFormProps {
   form: FormInstance<Record<string, SettingFormValue>>;
   activeGroupKey: string;
   activeGroupItems: SettingItem[];
-  groupedSettings: GroupedSettingItems[];
   canUpdateSetting: boolean;
   canRefreshCache: boolean;
   refreshingCache: boolean;
   submittingGroup: string | null;
-  onNavigateGroup: (groupKey: SettingGroupKey) => void;
   onRefreshCache: () => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -56,12 +51,10 @@ const SettingGroupForm: React.FC<SettingGroupFormProps> = ({
   form,
   activeGroupKey,
   activeGroupItems,
-  groupedSettings,
   canUpdateSetting,
   canRefreshCache,
   refreshingCache,
   submittingGroup,
-  onNavigateGroup,
   onRefreshCache,
   onSubmit,
   onCancel,
@@ -386,17 +379,6 @@ const SettingGroupForm: React.FC<SettingGroupFormProps> = ({
 
   return (
     <Card className="page-panel setting-page__config-card">
-      <Tabs
-        type="rounded"
-        activeTab={activeGroupKey}
-        onChange={(nextGroupKey) => {
-          onNavigateGroup(nextGroupKey as SettingGroupKey);
-        }}
-      >
-        {groupedSettings.map((group) => (
-          <Tabs.TabPane key={group.groupKey} title={t(`system.setting.group.${group.groupKey}`)} />
-        ))}
-      </Tabs>
       <Form
         form={form}
         layout="vertical"

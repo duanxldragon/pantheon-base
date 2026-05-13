@@ -75,7 +75,7 @@ export const GeneratorModule = defineModule({
       titleKey: 'system.menu.generator',
       icon: 'code',
       routeName: 'system-generator',
-      module: 'system.config',
+      module: 'platform.lowcode',
     },
   ],
   permissions: [
