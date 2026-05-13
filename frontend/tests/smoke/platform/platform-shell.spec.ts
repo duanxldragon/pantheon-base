@@ -20,6 +20,29 @@ async function waitForDialog(page: Page, title: string) {
   return dialog;
 }
 
+async function selectAdminRoleInVirtualizedList(page: Page, accessToken: string) {
+  const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
+    headers: authHeaders(accessToken),
+    params: {
+      page: '1',
+      pageSize: '100',
+      sortField: 'sort',
+      sortOrder: 'asc',
+      status: '1',
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+  const adminIndex = items.findIndex((item: { roleKey?: string }) => item.roleKey === 'admin');
+  expect(adminIndex).toBeGreaterThanOrEqual(0);
+
+  for (let index = 0; index < adminIndex; index += 1) {
+    await page.keyboard.press('ArrowDown');
+  }
+  await page.keyboard.press('Enter');
+}
+
 test.describe('enter submit smoke', () => {
   test('login page submits with Enter key', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'networkidle' });
@@ -119,7 +142,7 @@ test.describe('enter submit smoke', () => {
       await page.getByRole('button', { name: '新增', exact: true }).click();
       const permissionDialog = await waitForDialog(page, '新增策略');
       await permissionDialog.locator('.arco-select-view').first().click();
-      await page.getByRole('option', { name: /超级管理员|superadmin/i }).first().click();
+      await selectAdminRoleInVirtualizedList(page, accessToken);
       const pathInput = permissionDialog.getByPlaceholder('/api/v1/system/user/list');
       await pathInput.fill(permissionPath);
       await pathInput.press('Enter');
