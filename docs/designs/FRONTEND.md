@@ -138,10 +138,11 @@ export const OrderModule = {
 - **首页归属澄清**: dashboard 在模块 manifest 中按 `platform` scope 理解，语义上属于跨域聚合页；物理目录已从 `platform/dashboard` 扁平化到顶层 `dashboard`。
 - **系统设置页**: 已新增 `src/modules/system/setting/SettingPage.tsx`，按 `basic/security/login/audit/upload/i18n/ui` 分组维护系统设置，并对敏感配置提供“已加密/留空不变”交互表达。
 - **配置健康总览**: `src/modules/system/setting/SettingPage.tsx` 顶部已补配置治理摘要，展示公开/敏感配置数量、缺失必填项、运行时风险以及当前语言、主题、上传驱动状态。
-- **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar / login.session_idle_minutes` 已接入登录页与应用壳层；其中默认语言仅在“用户未显式切换语言”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐，空闲时长由 `login.session_idle_minutes` 控制自动退出。
+- **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar / login.session_idle_minutes` 已接入登录页与应用壳层；其中默认语言仅在“当前会话无显式语言覆盖且当前用户无语言偏好”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐，空闲时长由 `login.session_idle_minutes` 控制自动退出。
 - **平台能力开关消费**: `platform.app_mode / org.enabled / org.required_for_user` 已进入公开设置链路。`org.enabled=false` 时，壳层会隐藏 `system.org` 导航，用户页隐藏部门/岗位列和表单字段；`org.required_for_user=true` 且组织启用时，用户表单要求选择部门。
 - **用户扩展档案契约**: 用户相关 API 类型已预留 `profileExt`，用于 C 端或混合模式下的扩展档案展示与编辑。后台管理页默认不渲染任意 JSON 字段，后续应由具体业务页面或受控表单定义字段语义，避免把未知 PII 直接散落到通用用户列表。
-- **平台壳层偏好持久化**: 当前登录用户的 `theme / language / layoutMode / densityMode` 已通过 `GET/PUT /api/v1/auth/me/preferences` 收口到 `platform` 壳层偏好链路；`system/config` 的公开设置继续只负责默认值，不再覆盖用户已经显式保存的壳层选择。登录页语言下拉也视为显式壳层选择，进入系统后不得再被账号历史偏好或默认语言反向覆盖。
+- **平台壳层语言解析**: 当前运行时语言优先级固定为 `本次登录选择 > 用户偏好 > 系统默认`。登录页语言下拉属于当前登录会话的显式壳层选择，进入系统后不得再被账号历史偏好或默认语言反向覆盖；登出时必须清理该会话级语言覆盖，避免污染下一位登录主体。
+- **平台壳层偏好持久化**: 当前登录用户的 `theme / language / layoutMode / densityMode` 已通过 `GET/PUT /api/v1/auth/me/preferences` 收口到 `platform` 壳层偏好链路；`system/config` 的公开设置继续只负责默认值。系统内语言切换当前默认只作用于本次会话，不自动写入 `preference_json.language`；用户偏好仅在“当前会话没有显式语言覆盖”时参与解析。
 - **上传配置消费**: 个人中心与用户管理头像上传都已接入 `/system/upload`，会实时遵守 `upload.max_file_size / upload.allowed_types / upload.public_base_url / upload.s3_*`；本地驱动下返回平台文件 URL，S3 驱动下返回对象访问 URL。
 - **设置审计详情**: 系统设置页底部已补最近配置变更审计表，支持查看操作人、操作 IP、变更字段、状态与操作时间，敏感字段只展示“已变更”而不回显明文。
 - **设置缓存刷新**: 系统设置页已补“刷新设置缓存”入口，允许管理员按当前分组手动预热缓存。
@@ -155,6 +156,7 @@ export const OrderModule = {
 - **按钮权限**: 增删改、批量状态更新与敏感动作按钮通过 `usePermission` 按细粒度权限点控制，例如 `system:user:create`、`system:user:reset`、`system:user:batch-update`、`system:dept:batch-update`、`system:role:update`、`system:permission:delete`、`system:dict:update`；`admin` 角色默认拥有全部操作能力。
 - **表单校验**: 用户页对密码长度、邮箱格式、角色必选以及部门/岗位选择做前端约束；角色页对角色名称、角色标识必填做前端校验；菜单页对标题键必填做前端校验；部门/岗位页分别对名称、编码等关键字段做必填校验。
 - **表格交互**: 用户、角色、部门、岗位在存在批量状态操作时均在表格最左侧展示选择框；用户、角色、岗位表格使用服务端分页与排序，切换页码、每页条数、列排序时统一回写 query 状态。
+- **跨页选择集约束**: 存在批量启停、批量删除等治理动作的列表页，选择集按“查询上下文”维护，不按“当前页”维护。翻页或修改每页条数时保留已选项；搜索、筛选、排序和重置时清空已选项；批量动作始终基于完整选择集执行。
 - **角色授权**: 角色页通过统一树形面板维护 `menuIds` 导航授权、`pagePerm` 页面权限和 `perms` 操作权限，三类授权均支持搜索、全展开/全收起和父级批量勾选，并保留未知历史权限键避免误删授权。
 - **树表交互**: 菜单页树表使用服务端排序，列头排序会回写 `sortField/sortOrder` 并保留当前筛选条件。
 - **菜单元数据行为**: 菜单导航已支持外链菜单新窗口打开，并支持基于 `activeMenu` 的菜单高亮兜底；图标渲染已统一收口到共享 icon 映射。

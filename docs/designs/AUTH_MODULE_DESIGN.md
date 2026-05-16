@@ -171,6 +171,11 @@ frontend/src/modules/
 | `PUT` | `/api/v1/auth/password` | 修改当前账号密码 |
 | `GET` | `/api/v1/auth/security` | 获取安全配置/状态 |
 
+补充边界约束：
+
+- `/login` 可以暴露语言切换，但登录页语言选择属于 `platform` 会话语义，而不是 `system/auth` 的长期偏好写入动作。
+- `PUT /api/v1/auth/me/preferences` 继续承载长期平台壳层偏好；运行时是否采用该偏好，仍由 `platform` 按 `本次登录选择 > 用户偏好 > 系统默认` 解释。
+
 ### 6.2 `system/iam` 域接口
 
 建议保留：
