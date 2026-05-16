@@ -90,6 +90,7 @@ import {
   PageNetworkError,
   PageServerError,
   SubmitBar,
+  SystemRowActions,
   TableBatchActionBar,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
@@ -778,47 +779,38 @@ const DeptList: React.FC = () => {
       width: TABLE_ACTION_COLUMN_WIDTH.medium,
       fixed: 'right',
       render: (_: unknown, row: DeptNode) => (
-        <Space size={4} className="system-list__actions">
-          {canCreatePost && !row.isRoot && row.isNoPost ? (
-            <Button
-              type="text"
-              size="small"
-              icon={<IconPlus />}
-              onClick={() => openCreatePostForDept(row)}
-            >
-              {t('system.dept.action.createPost')}
-            </Button>
-          ) : null}
-          {canEdit ? (
-            <Button
-              type="text"
-              size="small"
-              icon={<IconEdit />}
-              onClick={() => {
+        <SystemRowActions
+          actions={[
+            {
+              key: 'create-post',
+              text: t('system.dept.action.createPost'),
+              icon: <IconPlus />,
+              onClick: () => openCreatePostForDept(row),
+              hidden: !canCreatePost || row.isRoot || !row.isNoPost,
+            },
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              onClick: () => {
                 void openEdit(row);
-              }}
-            >
-              {t('common.edit')}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              title={t('system.dept.deleteConfirm')}
-              onOk={() => removeDept(row.id)}
-              disabled={row.isRoot}
-            >
-              <Button
-                type="text"
-                size="small"
-                status="danger"
-                icon={<IconDelete />}
-                disabled={row.isRoot}
-              >
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+              },
+              hidden: !canEdit,
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              disabled: row.isRoot,
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('system.dept.deleteConfirm'),
+                onOk: () => removeDept(row.id),
+              },
+            },
+          ]}
+        />
       ),
     },
   ];

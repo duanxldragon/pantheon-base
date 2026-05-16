@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import syncFs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import {
   adminCredentials,
   apiBaseUrl,
@@ -15,6 +15,7 @@ import {
   signInWithUi,
   verifiedHeaders,
 } from '../helpers/auth';
+import { registerSystemWorkspaceTaskDepthSmokeTests } from './system-workspace-task-depth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
 const pageEmptyTexts = ['暂无数据', '当前筛选范围内没有可展示的数据', '当前筛选下暂无岗位', '暂无系统设置', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
 type SettingItem = { settingKey: string; settingValue: string };
@@ -69,6 +70,42 @@ const systemPages = [
   { path: '/system/modules', title: '模块注册表' },
 ] as const;
 
+const workspacePages = [
+  {
+    path: '/dashboard',
+    title: '工作台',
+    assertReady: async (page: Page) => {
+      await expect(page.locator('.dashboard-hero-card')).toBeVisible();
+      await expect(page.locator('.dashboard-stat-card').first()).toBeVisible();
+    },
+  },
+  {
+    path: '/auth/security',
+    title: '安全中心',
+    assertReady: async (page: Page) => {
+      await expect(page.locator('.page-split-layout--with-rail')).toBeVisible();
+      await expect(page.locator('.page-main-column .arco-card').filter({ hasText: /在线会话|Active Sessions/ }).first()).toBeVisible();
+      await expect(page.locator('.page-main-column .arco-card').filter({ hasText: /最近登录|Recent Logins/ }).first()).toBeVisible();
+    },
+  },
+  {
+    path: '/system/profile',
+    title: '个人中心',
+    assertReady: async (page: Page) => {
+      await expect(page.locator('.arco-form')).toBeVisible();
+      await expect(page.locator('.submit-bar')).toBeVisible();
+    },
+  },
+  {
+    path: '/system/user/1',
+    assertReady: async (page: Page) => {
+      await expect(page.getByRole('button', { name: /返回|Back/ })).toBeVisible();
+      await expect(page.getByText('基础信息', { exact: true })).toBeVisible();
+      await expect(page.getByText('账号摘要', { exact: true })).toBeVisible();
+    },
+  },
+] as const;
+
 async function updateSettingGroup(page: Page, accessToken: string, groupKey: string, items: SettingItem[]) {
   return page.request.put(`${apiBaseUrl}/system/setting/group/${groupKey}`, {
     headers: await verifiedHeaders(page, accessToken),
@@ -84,6 +121,21 @@ async function waitForRefreshBootstrap(page: Page) {
       response.ok(),
     { timeout: 15000 },
   );
+}
+
+async function closeExtraBrowserContext(context: BrowserContext) {
+  try {
+    await context.close();
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes('apiRequestContext._wrapApiCall: ENOENT') &&
+      error.message.includes('.playwright-artifacts-0')
+    ) {
+      return;
+    }
+    throw error;
+  }
 }
 
 async function deleteUserByUsername(page: Page, accessToken: string, username: string) {
@@ -220,6 +272,12 @@ test.beforeEach(async ({ page }) => {
   await signInAsAdmin(page);
 });
 
+registerSystemWorkspaceTaskDepthSmokeTests({
+  expectVisiblePageTitle,
+  expectPageIdentityReady,
+  formItem,
+});
+
 for (const pageMeta of systemPages) {
   test(`system smoke: ${pageMeta.path}`, async ({ page }) => {
     const consoleErrors: string[] = [];
@@ -242,6 +300,18 @@ for (const pageMeta of systemPages) {
   });
 }
 
+for (const pageMeta of workspacePages) {
+  test(`workspace smoke: ${pageMeta.path} is reachable`, async ({ page }) => {
+    await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
+    await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
+    if ('title' in pageMeta && pageMeta.title) {
+      await expectVisiblePageTitle(page, pageMeta.title);
+    }
+    await expectNoPageError(page);
+    await pageMeta.assertReady(page);
+  });
+}
+
 test('user page keeps list workflow primary without governance drawer entry', async ({ page }) => {
   await page.goto('/system/user', { waitUntil: 'networkidle' });
 
@@ -254,6 +324,18 @@ test('user page keeps list workflow primary without governance drawer entry', as
   await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(1);
   await expect(page.locator('.governance-insight-drawer')).toHaveCount(0);
   await expect(page.locator('.system-list__table-card')).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: '部门' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: '岗位' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: '角色' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: '邮箱' })).toBeVisible();
+
+  const firstRowActions = page.locator('.system-user-list__row-actions').first();
+  await expect(firstRowActions.getByRole('button', { name: '详情' })).toBeVisible();
+  await expect(firstRowActions.getByRole('button', { name: '编辑' })).toBeVisible();
+  await expect(firstRowActions.getByRole('button', { name: '重置密码' })).toBeVisible();
+  await expect(firstRowActions.getByRole('button', { name: /启用|禁用/ })).toBeVisible();
+  await expect(firstRowActions.getByRole('button', { name: '删除' })).toHaveCount(0);
+  await expect(firstRowActions.getByLabel('操作')).toHaveCount(0);
 });
 
 test('setting page shows audit table only in audit group and removes governance drawer entry', async ({
@@ -342,6 +424,128 @@ test('config high-sensitivity pages keep one summary container and no hero wall'
   await expect(page.locator('.system-page-hero')).toHaveCount(0);
   await expect(page.locator('.system-list__hero')).toHaveCount(0);
   await expect(page.locator('.system-list__table-card')).toBeVisible();
+});
+
+test('dict workspace keeps the governance summary outside one tabbed task surface', async ({
+  page,
+}) => {
+  await page.goto('/system/dict', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '字典管理');
+  const governanceBar = page.locator('.dict-page__governance-bar');
+  const workbench = page.locator('.dict-page__table-card');
+
+  await expect(governanceBar).toHaveCount(1);
+  await expect(governanceBar).toBeVisible();
+  await expect(workbench).toBeVisible();
+  await expect(workbench.locator('.governance-summary-bar, .dict-page__governance-bar')).toHaveCount(0);
+  await expect(workbench.getByRole('tab')).toHaveCount(2);
+  await expect(workbench.locator('[role="tab"][aria-selected="true"]')).toHaveCount(1);
+  await expect(workbench.locator('.dict-page__actions').first()).toBeVisible();
+
+  const initialHierarchy = await page.evaluate(() => {
+    const summary = document.querySelector<HTMLElement>('.dict-page__governance-bar');
+    const taskSurface = document.querySelector<HTMLElement>('.dict-page__table-card');
+    return summary && taskSurface
+      ? {
+          summaryHeight: summary.getBoundingClientRect().height,
+          summaryTop: summary.getBoundingClientRect().top,
+          surfaceHeight: taskSurface.getBoundingClientRect().height,
+          surfaceTop: taskSurface.getBoundingClientRect().top,
+        }
+      : null;
+  });
+  expect(initialHierarchy).not.toBeNull();
+  expect(initialHierarchy!.summaryTop).toBeLessThan(initialHierarchy!.surfaceTop);
+  expect(initialHierarchy!.surfaceHeight).toBeGreaterThan(initialHierarchy!.summaryHeight);
+
+  const itemTab = workbench.getByRole('tab').nth(1);
+  await itemTab.click();
+  await expect(itemTab).toHaveAttribute('aria-selected', 'true');
+  await expect(workbench.locator('.governance-summary-bar, .dict-page__governance-bar')).toHaveCount(0);
+  await expect(workbench.locator('.dict-page__actions').first()).toBeVisible();
+});
+
+test('i18n workspace keeps translation work primary and utility actions subordinate', async ({
+  page,
+}) => {
+  await page.goto('/system/i18n', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '国际化管理');
+  const summaryBar = page.locator('.governance-summary-bar');
+  const tableCard = page.locator('.i18n-list-page__table-card');
+  const batchBar = tableCard.locator('.table-batch-action-bar');
+  const tableBody = tableCard.locator('.system-list__table, .arco-empty').first();
+
+  await expect(summaryBar).toBeVisible();
+  await expect(tableCard).toBeVisible();
+  await expect(batchBar).toBeVisible();
+  await expect(tableBody).toBeVisible();
+  await expect(tableCard.getByRole('button', { name: '导出' })).toBeVisible();
+  await expect(tableCard.getByRole('button', { name: '导入' })).toBeVisible();
+
+  const tableHierarchy = await page.evaluate(() => {
+    const card = document.querySelector<HTMLElement>('.i18n-list-page__table-card');
+    const actionBar = document.querySelector<HTMLElement>(
+      '.i18n-list-page__table-card .table-batch-action-bar',
+    );
+    const table = document.querySelector<HTMLElement>(
+      '.i18n-list-page__table-card .system-list__table, .i18n-list-page__table-card .arco-empty',
+    );
+    return card && actionBar && table
+      ? {
+          actionBottom: actionBar.getBoundingClientRect().bottom,
+          actionHeight: actionBar.getBoundingClientRect().height,
+          cardTop: card.getBoundingClientRect().top,
+          cardHeight: card.getBoundingClientRect().height,
+          controlRegionHeight: table.getBoundingClientRect().top - card.getBoundingClientRect().top,
+          tableHeight: table.getBoundingClientRect().height,
+          tableTop: table.getBoundingClientRect().top,
+        }
+      : null;
+  });
+  expect(tableHierarchy).not.toBeNull();
+  expect(tableHierarchy!.actionHeight).toBeGreaterThan(0);
+  expect(tableHierarchy!.cardTop).toBeLessThan(tableHierarchy!.tableTop);
+  expect(tableHierarchy!.cardHeight).toBeGreaterThan(tableHierarchy!.actionHeight);
+  expect(tableHierarchy!.tableHeight).toBeGreaterThan(tableHierarchy!.controlRegionHeight);
+  expect(tableHierarchy!.tableTop).toBeGreaterThanOrEqual(tableHierarchy!.actionBottom - 1);
+});
+
+test('setting workspace keeps group navigation and config primary while audit stays secondary', async ({
+  page,
+}) => {
+  await page.goto('/system/setting/audit', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, '系统设置');
+  const groupNav = page.locator('.setting-page__group-nav-grid');
+  const configCard = page.locator('.setting-page__config-card');
+  const auditCard = page.locator('.setting-page__audit-card');
+
+  await expect(groupNav).toBeVisible();
+  await expect(configCard).toBeVisible();
+  await expect(auditCard).toBeVisible();
+  await expect(configCard.locator('.submit-bar')).toBeVisible();
+
+  const panelHierarchy = await page.evaluate(() => {
+    const nav = document.querySelector<HTMLElement>('.setting-page__group-nav-grid');
+    const config = document.querySelector<HTMLElement>('.setting-page__config-card');
+    const audit = document.querySelector<HTMLElement>('.setting-page__audit-card');
+    return nav && config && audit
+      ? {
+          navBottom: nav.getBoundingClientRect().bottom,
+          navTop: nav.getBoundingClientRect().top,
+          configTop: config.getBoundingClientRect().top,
+          configBottom: config.getBoundingClientRect().bottom,
+          auditTop: audit.getBoundingClientRect().top,
+        }
+      : null;
+  });
+  expect(panelHierarchy).not.toBeNull();
+  expect(panelHierarchy!.navTop).toBeLessThan(panelHierarchy!.configTop);
+  expect(panelHierarchy!.navBottom).toBeLessThanOrEqual(panelHierarchy!.configTop + 1);
+  expect(panelHierarchy!.configTop).toBeLessThan(panelHierarchy!.auditTop);
+  expect(panelHierarchy!.configBottom).toBeLessThanOrEqual(panelHierarchy!.auditTop + 1);
 });
 
 test('setting smoke: site name updates public brand display', async ({ page }) => {
@@ -1827,7 +2031,7 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
     await expect(siteNameInput).toHaveValue(nextSiteName, { timeout: 15000 });
   } finally {
     await updateSettingGroup(page, accessToken, 'basic', originalItems);
-    await syncContext.close();
+    await closeExtraBrowserContext(syncContext);
   }
 });
 
@@ -1871,7 +2075,7 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
       headers: await verifiedHeaders(page, accessToken),
     }).catch(() => undefined);
   } finally {
-    await syncContext.close();
+    await closeExtraBrowserContext(syncContext);
   }
 });
 
@@ -1913,6 +2117,6 @@ test('refresh sync smoke: i18n page auto-updates across isolated contexts', asyn
       headers: await verifiedHeaders(page, accessToken),
     }).catch(() => undefined);
   } finally {
-    await syncContext.close();
+    await closeExtraBrowserContext(syncContext);
   }
 });

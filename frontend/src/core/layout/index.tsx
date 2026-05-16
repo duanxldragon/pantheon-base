@@ -1325,6 +1325,170 @@ const BaseLayout: React.FC = () => {
       );
     });
 
+  const openedTabsContent = publicSettings.enableTabBar ? (
+    <div
+      className={[
+        'app-shell__tabs',
+        isHorizontalLayout ? 'app-shell__tabs--horizontal' : 'app-shell__tabs--vertical',
+      ].join(' ')}
+      role="tablist"
+      aria-label={t('app.openedTabs')}
+    >
+      {openedTabs.map((item) => {
+        const active = item.path === location.pathname;
+        const itemIndex = openedTabs.findIndex((tab) => tab.path === item.path);
+        const canCloseCurrent = item.closable && !item.pinned;
+        const canCloseOthers = openedTabs.some(
+          (tab) => tab.path !== item.path && tab.closable && !tab.pinned,
+        );
+        const canCloseRight = openedTabs
+          .slice(itemIndex + 1)
+          .some((tab) => tab.closable && !tab.pinned);
+        const canCloseAll = openedTabs.some((tab) => tab.closable && !tab.pinned);
+        return (
+          <Dropdown
+            key={item.path}
+            trigger="contextMenu"
+            position="bl"
+            droplist={
+              <Menu
+                onClickMenuItem={(key) => handleTabAction(item.path, key as TabActionKey)}
+                className="app-shell__tab-menu"
+              >
+                <Menu.Item key="togglePin" disabled={item.path === '/dashboard'}>
+                  {item.pinned ? t('app.tab.unpin') : t('app.tab.pin')}
+                </Menu.Item>
+                <Menu.Item key="close" disabled={!canCloseCurrent}>
+                  {t('common.close')}
+                </Menu.Item>
+                <Menu.Item key="closeOthers" disabled={!canCloseOthers}>
+                  {t('app.tab.closeOthers')}
+                </Menu.Item>
+                <Menu.Item key="closeRight" disabled={!canCloseRight}>
+                  {t('app.tab.closeRight')}
+                </Menu.Item>
+                <Menu.Item key="closeAll" disabled={!canCloseAll}>
+                  {t('app.tab.closeAll')}
+                </Menu.Item>
+              </Menu>
+            }
+          >
+            <div
+              role="tab"
+              tabIndex={0}
+              aria-selected={active}
+              className={[
+                'app-shell__tab',
+                active ? 'app-shell__tab--active' : '',
+                item.pinned ? 'app-shell__tab--pinned' : '',
+                draggingTabPath === item.path ? 'app-shell__tab--dragging' : '',
+                dragOverTabPath === item.path ? 'app-shell__tab--drag-over' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              draggable={item.path !== '/dashboard'}
+              onClick={() => navigate(item.path)}
+              onMouseEnter={() => {
+                void preloadRouteComponent(item.path);
+              }}
+              onFocus={() => {
+                void preloadRouteComponent(item.path);
+              }}
+              onDoubleClick={() => closeTab(item.path)}
+              onMouseDown={(event) => {
+                if (event.button === 1) {
+                  event.preventDefault();
+                }
+              }}
+              onAuxClick={(event) => {
+                if (event.button === 1) {
+                  event.preventDefault();
+                  closeTab(item.path);
+                }
+              }}
+              onDragStart={(event) => {
+                if (item.path === '/dashboard') {
+                  event.preventDefault();
+                  return;
+                }
+                setDraggingTabPath(item.path);
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', item.path);
+              }}
+              onDragOver={(event) => {
+                if (!draggingTabPath || draggingTabPath === item.path) {
+                  return;
+                }
+                const dragTab = openedTabs.find((tab) => tab.path === draggingTabPath);
+                if (
+                  !dragTab ||
+                  dragTab.path === '/dashboard' ||
+                  Boolean(dragTab.pinned) !== Boolean(item.pinned)
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                if (dragOverTabPath !== item.path) {
+                  setDragOverTabPath(item.path);
+                }
+              }}
+              onDragLeave={() => {
+                if (dragOverTabPath === item.path) {
+                  setDragOverTabPath(null);
+                }
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (draggingTabPath) {
+                  moveTab(draggingTabPath, item.path);
+                }
+                setDraggingTabPath(null);
+                setDragOverTabPath(null);
+              }}
+              onDragEnd={() => {
+                setDraggingTabPath(null);
+                setDragOverTabPath(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigate(item.path);
+                }
+              }}
+            >
+              {item.pinned ? <IconPushpin className="app-shell__tab-pin" /> : null}
+              <span className="app-shell__tab-label">
+                {item.titleKey ? t(item.titleKey) : item.fallbackTitle}
+              </span>
+              {canCloseCurrent ? (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('common.close')}
+                  className="app-shell__tab-close"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    closeTab(item.path);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      closeTab(item.path);
+                    }
+                  }}
+                >
+                  <IconClose />
+                </span>
+              ) : null}
+            </div>
+          </Dropdown>
+        );
+      })}
+    </div>
+  ) : null;
+
   return (
     <Layout
       className={[
@@ -1620,6 +1784,7 @@ const BaseLayout: React.FC = () => {
             </Dropdown>
           </Space>
         </Header>
+        {isHorizontalLayout ? openedTabsContent : null}
         {isHorizontalLayout ? (
           <div className="app-shell__top-nav">
             <Spin loading={loading} className="app-shell__menu-loading">
@@ -1635,162 +1800,7 @@ const BaseLayout: React.FC = () => {
             </Spin>
           </div>
         ) : null}
-        {publicSettings.enableTabBar ? (
-          <div className="app-shell__tabs" role="tablist" aria-label={t('app.openedTabs')}>
-            {openedTabs.map((item) => {
-              const active = item.path === location.pathname;
-              const itemIndex = openedTabs.findIndex((tab) => tab.path === item.path);
-              const canCloseCurrent = item.closable && !item.pinned;
-              const canCloseOthers = openedTabs.some(
-                (tab) => tab.path !== item.path && tab.closable && !tab.pinned,
-              );
-              const canCloseRight = openedTabs
-                .slice(itemIndex + 1)
-                .some((tab) => tab.closable && !tab.pinned);
-              const canCloseAll = openedTabs.some((tab) => tab.closable && !tab.pinned);
-              return (
-                <Dropdown
-                  key={item.path}
-                  trigger="contextMenu"
-                  position="bl"
-                  droplist={
-                    <Menu
-                      onClickMenuItem={(key) => handleTabAction(item.path, key as TabActionKey)}
-                      className="app-shell__tab-menu"
-                    >
-                      <Menu.Item key="togglePin" disabled={item.path === '/dashboard'}>
-                        {item.pinned ? t('app.tab.unpin') : t('app.tab.pin')}
-                      </Menu.Item>
-                      <Menu.Item key="close" disabled={!canCloseCurrent}>
-                        {t('common.close')}
-                      </Menu.Item>
-                      <Menu.Item key="closeOthers" disabled={!canCloseOthers}>
-                        {t('app.tab.closeOthers')}
-                      </Menu.Item>
-                      <Menu.Item key="closeRight" disabled={!canCloseRight}>
-                        {t('app.tab.closeRight')}
-                      </Menu.Item>
-                      <Menu.Item key="closeAll" disabled={!canCloseAll}>
-                        {t('app.tab.closeAll')}
-                      </Menu.Item>
-                    </Menu>
-                  }
-                >
-                  <div
-                    role="tab"
-                    tabIndex={0}
-                    aria-selected={active}
-                    className={[
-                      'app-shell__tab',
-                      active ? 'app-shell__tab--active' : '',
-                      item.pinned ? 'app-shell__tab--pinned' : '',
-                      draggingTabPath === item.path ? 'app-shell__tab--dragging' : '',
-                      dragOverTabPath === item.path ? 'app-shell__tab--drag-over' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    draggable={item.path !== '/dashboard'}
-                    onClick={() => navigate(item.path)}
-                    onMouseEnter={() => {
-                      void preloadRouteComponent(item.path);
-                    }}
-                    onFocus={() => {
-                      void preloadRouteComponent(item.path);
-                    }}
-                    onDoubleClick={() => closeTab(item.path)}
-                    onMouseDown={(event) => {
-                      if (event.button === 1) {
-                        event.preventDefault();
-                      }
-                    }}
-                    onAuxClick={(event) => {
-                      if (event.button === 1) {
-                        event.preventDefault();
-                        closeTab(item.path);
-                      }
-                    }}
-                    onDragStart={(event) => {
-                      if (item.path === '/dashboard') {
-                        event.preventDefault();
-                        return;
-                      }
-                      setDraggingTabPath(item.path);
-                      event.dataTransfer.effectAllowed = 'move';
-                      event.dataTransfer.setData('text/plain', item.path);
-                    }}
-                    onDragOver={(event) => {
-                      if (!draggingTabPath || draggingTabPath === item.path) {
-                        return;
-                      }
-                      const dragTab = openedTabs.find((tab) => tab.path === draggingTabPath);
-                      if (
-                        !dragTab ||
-                        dragTab.path === '/dashboard' ||
-                        Boolean(dragTab.pinned) !== Boolean(item.pinned)
-                      ) {
-                        return;
-                      }
-                      event.preventDefault();
-                      event.dataTransfer.dropEffect = 'move';
-                      if (dragOverTabPath !== item.path) {
-                        setDragOverTabPath(item.path);
-                      }
-                    }}
-                    onDragLeave={() => {
-                      if (dragOverTabPath === item.path) {
-                        setDragOverTabPath(null);
-                      }
-                    }}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      if (draggingTabPath) {
-                        moveTab(draggingTabPath, item.path);
-                      }
-                      setDraggingTabPath(null);
-                      setDragOverTabPath(null);
-                    }}
-                    onDragEnd={() => {
-                      setDraggingTabPath(null);
-                      setDragOverTabPath(null);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        navigate(item.path);
-                      }
-                    }}
-                  >
-                    {item.pinned ? <IconPushpin className="app-shell__tab-pin" /> : null}
-                    <span className="app-shell__tab-label">
-                      {item.titleKey ? t(item.titleKey) : item.fallbackTitle}
-                    </span>
-                    {canCloseCurrent ? (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label={t('common.close')}
-                        className="app-shell__tab-close"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          closeTab(item.path);
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            closeTab(item.path);
-                          }
-                        }}
-                      >
-                        <IconClose />
-                      </span>
-                    ) : null}
-                  </div>
-                </Dropdown>
-              );
-            })}
-          </div>
-        ) : null}
+        {!isHorizontalLayout ? openedTabsContent : null}
         <Content className="app-shell__content">
           <div className="app-shell__content-inner">
             <Outlet />

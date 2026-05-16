@@ -76,6 +76,7 @@ import {
   PageServerError,
   PermissionAction,
   SubmitBar,
+  SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   TableBatchActionBar,
@@ -595,20 +596,29 @@ const PostList: React.FC = () => {
       width: TABLE_ACTION_COLUMN_WIDTH.wide,
       fixed: 'right',
       render: (_: unknown, row: PostRow) => (
-        <Space size={4} className="system-list__actions post-list-page__row-actions">
-          {canEdit ? (
-            <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
-              {t('common.edit')}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm title={t('system.post.deleteConfirm')} onOk={() => removePost(row.id)}>
-              <Button type="text" size="small" status="danger" icon={<IconDelete />}>
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+        <SystemRowActions
+          className="post-list-page__row-actions"
+          actions={[
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              onClick: () => openEdit(row),
+              hidden: !canEdit,
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('system.post.deleteConfirm'),
+                onOk: () => removePost(row.id),
+              },
+            },
+          ]}
+        />
       ),
     },
   ];

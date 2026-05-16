@@ -20,15 +20,13 @@ export {
   type GovernanceSummaryMetric,
 } from './patterns/GovernanceSummaryBar';
 export { default as PermissionAction } from './patterns/PermissionAction';
+export { default as SystemRowActions, type SystemRowAction } from './patterns/SystemRowActions';
 export { default as TableBatchActionBar } from './patterns/TableBatchActionBar';
 export {
   TABLE_ACTION_COLUMN_WIDTH,
   type TableActionColumnWidthPreset,
 } from './patterns/TableAction';
-export {
-  TABLE_COLUMN_WIDTH,
-  type TableColumnWidthPreset,
-} from './patterns/TableColumnWidth';
+export { TABLE_COLUMN_WIDTH, type TableColumnWidthPreset } from './patterns/TableColumnWidth';
 export { withTableColumnPriority, type TableColumnPriority } from './patterns/TableColumnPriority';
 export { default as FormSection } from './patterns/FormSection';
 export { default as SubmitBar } from './patterns/SubmitBar';

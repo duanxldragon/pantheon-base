@@ -74,6 +74,7 @@ import {
   PageNetworkError,
   PageServerError,
   SubmitBar,
+  SystemRowActions,
   TableBatchActionBar,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
@@ -768,30 +769,29 @@ const RoleList: React.FC = () => {
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
       fixed: 'right',
       render: (_: unknown, row: RoleRow) => (
-        <Space size={4} className="system-list__actions">
-          {canEdit ? (
-            <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
-              {t('common.edit')}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              title={t('common.deleteConfirm')}
-              onOk={() => removeRole(row)}
-              disabled={row.roleKey === 'admin'}
-            >
-              <Button
-                type="text"
-                size="small"
-                status="danger"
-                icon={<IconDelete />}
-                disabled={row.roleKey === 'admin'}
-              >
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+        <SystemRowActions
+          actions={[
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              onClick: () => openEdit(row),
+              hidden: !canEdit,
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              disabled: row.roleKey === 'admin',
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('common.deleteConfirm'),
+                onOk: () => removeRole(row),
+              },
+            },
+          ]}
+        />
       ),
     },
   ];

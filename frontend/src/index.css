@@ -1210,6 +1210,7 @@ a {
 }
 
 .filter-panel .arco-input-inner-wrapper,
+.filter-panel input.arco-input,
 .filter-panel .arco-input-password,
 .filter-panel .arco-input-number,
 .filter-panel .arco-select-view,

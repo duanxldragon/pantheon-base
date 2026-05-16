@@ -255,7 +255,19 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.goto('/dashboard', { waitUntil: 'networkidle' });
       await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
       await expect(page.locator('.app-shell--horizontal')).toBeVisible();
+      await expect(page.locator('.app-shell__tabs--horizontal')).toBeVisible();
       await expect(page.locator('.app-shell__top-menu')).toBeVisible();
+      const horizontalShellOrder = await page.evaluate(() => {
+        const tabs = document.querySelector<HTMLElement>('.app-shell__tabs--horizontal');
+        const menu = document.querySelector<HTMLElement>('.app-shell__top-nav');
+        return {
+          tabsTop: tabs?.getBoundingClientRect().top ?? null,
+          menuTop: menu?.getBoundingClientRect().top ?? null,
+        };
+      });
+      expect(horizontalShellOrder.tabsTop).not.toBeNull();
+      expect(horizontalShellOrder.menuTop).not.toBeNull();
+      expect(horizontalShellOrder.tabsTop!).toBeLessThan(horizontalShellOrder.menuTop!);
       await page.screenshot({ path: join(artifactDir, 'dashboard-horizontal-compact.png'), fullPage: true });
 
       await page.goto('/system/user', { waitUntil: 'networkidle' });
@@ -294,6 +306,45 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(page.locator('.app-table')).toBeVisible();
     await page.screenshot({ path: join(artifactDir, 'system-user-tablet-landscape.png'), fullPage: true });
 
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+  });
+
+  test('module generator keeps step density readable on narrow screens', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+    await signInAsAdmin(page);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/system/generator', { waitUntil: 'networkidle' });
+
+    await expect(page.locator('.generator-wizard-card')).toBeVisible();
+    await expect(page.locator('.generator-wizard__steps')).toBeVisible();
+    await expect(page.locator('.generator-wizard__step-card')).toHaveCount(4);
+    await expect(page.locator('.generator-wizard-card .arco-form')).toBeVisible();
+    await expectNoPageError(page);
+
+    const mobileStepLayout = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll<HTMLElement>('.generator-wizard__step-card')).map(
+        (card) => {
+          const rect = card.getBoundingClientRect();
+          return {
+            top: rect.top,
+            left: rect.left,
+          };
+        },
+      );
+    });
+    expect(mobileStepLayout).toHaveLength(4);
+    for (let index = 1; index < mobileStepLayout.length; index += 1) {
+      expect(mobileStepLayout[index].top).toBeGreaterThan(mobileStepLayout[index - 1].top);
+      expect(Math.abs(mobileStepLayout[index].left - mobileStepLayout[0].left)).toBeLessThanOrEqual(1);
+    }
+    await expect
+      .poll(async () =>
+        page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      )
+      .toBeLessThanOrEqual(1);
+
+    await page.screenshot({ path: join(artifactDir, 'system-generator-phone.png'), fullPage: true });
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
