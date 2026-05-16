@@ -161,7 +161,8 @@ test('permission workbench can remediate recommended generator policy against re
     );
 
     await page.goto('/system/permission', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: '权限管理' })).toBeVisible();
+    await expect(page.getByText('权限管理', { exact: false }).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.locator('.governance-summary-bar, .permission-workbench__tabs').first()).toBeVisible();
     await page.getByRole('tab', { name: '权限工作台', exact: true }).click();
     await expect(page.getByText('整改任务台', { exact: false })).toBeVisible();
     await expect(page.getByText('待整改', { exact: true }).first()).toBeVisible();

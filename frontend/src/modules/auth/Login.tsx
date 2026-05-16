@@ -101,26 +101,6 @@ const LoginPage: React.FC = () => {
     ],
     [t],
   );
-  const assuranceItems = useMemo(
-    () => [
-      {
-        key: 'boundary',
-        title: t('auth.login.assurance.boundary'),
-        desc: t('auth.login.assurance.boundaryDesc'),
-      },
-      {
-        key: 'session',
-        title: t('auth.login.assurance.session'),
-        desc: t('auth.login.assurance.sessionDesc'),
-      },
-      {
-        key: 'audit',
-        title: t('auth.login.assurance.audit'),
-        desc: t('auth.login.assurance.auditDesc'),
-      },
-    ],
-    [t],
-  );
 
   useEffect(() => {
     if (!loginNotice) {
@@ -237,26 +217,6 @@ const LoginPage: React.FC = () => {
               </Tag>
             ))}
           </Space>
-
-          <div className="auth-login-assurance">
-            <div className="auth-login-assurance__header">
-              <span>{t('auth.login.assurance.title')}</span>
-              <Tag bordered={false} color="green">
-                {t('auth.login.visualBadge')}
-              </Tag>
-            </div>
-            <div className="auth-login-assurance__list">
-              {assuranceItems.map((item) => (
-                <div className="auth-login-assurance__item" key={item.key}>
-                  <span className="auth-login-assurance__dot" />
-                  <span className="auth-login-assurance__copy">
-                    <span className="auth-login-assurance__title">{item.title}</span>
-                    <span className="auth-login-assurance__desc">{item.desc}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           <div className="auth-login-page__footer">{t('app.footer')}</div>
         </div>

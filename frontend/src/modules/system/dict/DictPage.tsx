@@ -8,8 +8,8 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   PageContainer,
-  PageHeader,
   useGovernanceRail,
 } from '../../../components';
 import { getDictTypeList, type DictTypeQuery, type DictTypeRow } from './api';
@@ -161,18 +161,41 @@ const DictPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.dict')}
-        extra={
+      <Space direction="vertical" size={12} className="system-page-template">
+        <GovernanceSummaryBar
+          className="dict-page__governance-bar"
+          eyebrow={t('system.dict.hero.summaryTitle')}
+          title={t('system.dict.hero.sideLead')}
+          description={t('system.dict.hero.sideDesc')}
+          metrics={[
+            {
+              key: 'types',
+              label: t('system.dict.type'),
+              value: typeSummary.total,
+              description: t('system.dict.hero.disabledHint'),
+            },
+            {
+              key: 'active',
+              label: t('system.user.status.enabled'),
+              value: typeSummary.active,
+              description: t('system.dict.hero.refreshHint'),
+            },
+            {
+              key: 'items',
+              label: t('system.dict.item'),
+              value: typeSummary.items,
+              description: t('system.dict.hero.importHint'),
+            },
+          ]}
+          action={
           <GovernanceRailToggleButton
             expanded={governanceRail.expanded}
             onToggle={governanceRail.toggle}
           >
             {t('system.dict.hero.summaryTitle')}
           </GovernanceRailToggleButton>
-        }
-      />
-      <Space direction="vertical" size={16} className="system-page-template">
+          }
+        />
         <Card className="page-panel system-list__table-card dict-page__table-card">
           <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
             <Tabs.TabPane key="types" title={t('system.dict.type')}>
@@ -181,13 +204,12 @@ const DictPage: React.FC = () => {
                 typeLoading={typeLoading}
                 typeError={typeError}
                 typeQuery={typeQuery}
-                typeSummary={typeSummary}
-            canCreate={canCreate}
-            canEdit={canEdit}
-            canDelete={canDelete}
-            canBatchUpdate={canBatchUpdate}
-            canBatchDelete={canBatchDelete}
-            canExport={canExport}
+                canCreate={canCreate}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canBatchUpdate={canBatchUpdate}
+                canBatchDelete={canBatchDelete}
+                canExport={canExport}
                 canImport={canImport}
                 onQueryChange={setTypeQuery}
                 onReload={() => {
@@ -202,12 +224,12 @@ const DictPage: React.FC = () => {
                 key={selectedType?.id ?? '__empty__'}
                 selectedType={selectedType}
                 typeRows={typeRows}
-            canCreate={canCreate}
-            canEdit={canEdit}
-            canDelete={canDelete}
-            canBatchUpdate={canBatchUpdate}
-            canBatchDelete={canBatchDelete}
-            canRefresh={canRefresh}
+                canCreate={canCreate}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canBatchUpdate={canBatchUpdate}
+                canBatchDelete={canBatchDelete}
+                canRefresh={canRefresh}
                 canExport={canExport}
                 canImport={canImport}
                 onSelectType={selectType}

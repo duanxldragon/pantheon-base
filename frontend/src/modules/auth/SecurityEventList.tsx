@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Grid, Input, Select, Space, Tag, Typography } from '@arco-design/web-react';
+import {
+  Button,
+  Card,
+  Form,
+  Grid,
+  Input,
+  Select,
+  Space,
+  Tag,
+  Typography,
+} from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconSearch } from '@arco-design/web-react/icon';
@@ -8,10 +18,10 @@ import { formatDateTime } from '../../core/format/dateTime';
 import {
   AppTable,
   FilterPanel,
+  GovernanceSummaryBar,
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
 } from '../../components';
 import {
@@ -131,80 +141,117 @@ const SecurityEventList: React.FC = () => {
     void fetchData({ ...emptyQuery, ...values, page: 1 });
   };
 
+  const handleReset = () => {
+    form.resetFields();
+    void fetchData(emptyQuery);
+  };
+
+  const heroStats = [
+    {
+      key: 'total',
+      label: t('common.total'),
+      value: data.total,
+    },
+    {
+      key: 'high',
+      label: t('auth.securityEvent.severity.high'),
+      value: data.items.filter((item) => item.severity === 'high').length,
+    },
+    {
+      key: 'sourceBlocked',
+      label: t('auth.securityEvent.type.source_blocked'),
+      value: data.items.filter((item) => item.eventType === 'source_blocked').length,
+    },
+    {
+      key: 'accountLocked',
+      label: t('auth.securityEvent.type.account_locked'),
+      value: data.items.filter((item) => item.eventType === 'account_locked').length,
+    },
+  ];
+
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.securityEvent')}
-        subtitle={t('auth.securityEvent.subtitle')}
-        extra={<Tag color="arcoblue">{t('auth.securityEvent.hero.eyebrow')}</Tag>}
-      />
-
-      <FilterPanel title={t('common.filters')}>
-        <Form form={form} layout="vertical" initialValues={emptyQuery}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <FormItem field="username" label={t('common.user')}>
-                <Input
-                  allowClear
-                  placeholder={t('auth.securityEvent.filter.usernamePlaceholder')}
-                />
-              </FormItem>
-            </Col>
-            <Col span={8}>
-              <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
-                <Select
-                  allowClear
-                  placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
-                >
-                  <Select.Option value="source_blocked">
-                    {t('auth.securityEvent.type.source_blocked')}
-                  </Select.Option>
-                  <Select.Option value="account_locked">
-                    {t('auth.securityEvent.type.account_locked')}
-                  </Select.Option>
-                </Select>
-              </FormItem>
-            </Col>
-            <Col span={8}>
-              <FormItem field="severity" label={t('auth.securityEvent.severity')}>
-                <Select allowClear placeholder={t('auth.securityEvent.filter.severityPlaceholder')}>
-                  <Select.Option value="high">
-                    {t('auth.securityEvent.severity.high')}
-                  </Select.Option>
-                  <Select.Option value="medium">
-                    {t('auth.securityEvent.severity.medium')}
-                  </Select.Option>
-                  <Select.Option value="low">{t('auth.securityEvent.severity.low')}</Select.Option>
-                </Select>
-              </FormItem>
-            </Col>
-          </Row>
-          <Space>
-            <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
-              {t('common.search')}
-            </Button>
-          </Space>
-        </Form>
-      </FilterPanel>
-
-      {loading && data.items.length === 0 ? (
-        <PageLoading />
-      ) : error ? (
-        <PageError description={error} onRetry={() => void fetchData(query)} />
-      ) : data.items.length === 0 ? (
-        <PageEmpty description={t('auth.securityEvent.empty')} />
-      ) : (
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space direction="vertical" size={16} className="system-page-template auth-security-event-page">
+        <GovernanceSummaryBar
+          eyebrow={t('auth.securityEvent.hero.eyebrow')}
+          title={t('system.menu.securityEvent')}
+          description={t('auth.securityEvent.hint')}
+          metrics={heroStats}
+        />
+        <FilterPanel>
+          <Form form={form} layout="vertical" initialValues={emptyQuery}>
+            <Row gutter={16} className="auth-filter-grid">
+              <Col xs={24} md={12} lg={8}>
+                <FormItem field="username" label={t('common.user')}>
+                  <Input
+                    allowClear
+                    placeholder={t('auth.securityEvent.filter.usernamePlaceholder')}
+                  />
+                </FormItem>
+              </Col>
+              <Col xs={24} md={12} lg={8}>
+                <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
+                  >
+                    <Select.Option value="source_blocked">
+                      {t('auth.securityEvent.type.source_blocked')}
+                    </Select.Option>
+                    <Select.Option value="account_locked">
+                      {t('auth.securityEvent.type.account_locked')}
+                    </Select.Option>
+                  </Select>
+                </FormItem>
+              </Col>
+              <Col xs={24} md={12} lg={8}>
+                <FormItem field="severity" label={t('auth.securityEvent.severity')}>
+                  <Select allowClear placeholder={t('auth.securityEvent.filter.severityPlaceholder')}>
+                    <Select.Option value="high">
+                      {t('auth.securityEvent.severity.high')}
+                    </Select.Option>
+                    <Select.Option value="medium">
+                      {t('auth.securityEvent.severity.medium')}
+                    </Select.Option>
+                    <Select.Option value="low">
+                      {t('auth.securityEvent.severity.low')}
+                    </Select.Option>
+                  </Select>
+                </FormItem>
+              </Col>
+              <Col xs={24}>
+                <FormItem className="filter-panel__action-item">
+                  <Space>
+                    <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
+                      {t('common.search')}
+                    </Button>
+                    <Button onClick={handleReset}>{t('common.reset')}</Button>
+                  </Space>
+                </FormItem>
+              </Col>
+            </Row>
+          </Form>
+        </FilterPanel>
+        <Card className="page-panel system-list__table-card auth-security-event-page__table-card">
           <Typography.Text type="secondary">{t('auth.securityEvent.hint')}</Typography.Text>
-          <AppTable
-            rowKey="id"
-            columns={columns}
-            data={data.items}
-            loading={loading}
-            pagination={pagination}
-          />
+          {loading && data.items.length === 0 ? <PageLoading /> : null}
+          {error ? <PageError description={error} onRetry={() => void fetchData(query)} /> : null}
+          {!error && data.items.length === 0 && !loading ? (
+            <PageEmpty description={t('auth.securityEvent.empty')} />
+          ) : null}
+          {!error && data.items.length > 0 ? (
+            <AppTable
+              className="system-list__table"
+              rowKey="id"
+              columns={columns}
+              data={data.items}
+              loading={loading}
+              pagination={pagination}
+              scroll={{ x: 980 }}
+            />
+          ) : null}
+        </Card>
         </Space>
-      )}
     </PageContainer>
   );
 };

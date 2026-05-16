@@ -61,7 +61,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -658,42 +657,6 @@ const MenuList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.menu')}
-        extra={
-          <PageActions>
-            <Space size={4} className="menu-view-switcher">
-              <Button
-                size="small"
-                type={viewMode === 'table' ? 'primary' : 'secondary'}
-                icon={<IconList />}
-                onClick={() => setViewMode('table')}
-              >
-                {t('system.menu.view.table')}
-              </Button>
-              <Button
-                size="small"
-                type={viewMode === 'list' ? 'primary' : 'secondary'}
-                icon={<IconUnorderedList />}
-                onClick={() => setViewMode('list')}
-              >
-                {t('system.menu.view.list')}
-              </Button>
-              <Button
-                size="small"
-                type={viewMode === 'card' ? 'primary' : 'secondary'}
-                icon={<IconApps />}
-                onClick={() => setViewMode('card')}
-              >
-                {t('system.menu.view.card')}
-              </Button>
-            </Space>
-            <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
-              {t('common.add')}
-            </Button>
-          </PageActions>
-        }
-      />
       <Space direction="vertical" size={16} className="system-page-template">
         <GovernanceSummaryBar
           eyebrow={t('system.menu.hero.eyebrow')}
@@ -752,6 +715,39 @@ const MenuList: React.FC = () => {
             </Form>
           </FilterPanel>
           <Card className="page-panel system-list__table-card">
+            <div className="system-list__work-actions">
+              <PageActions>
+                <Space size={4} className="menu-view-switcher">
+                  <Button
+                    size="small"
+                    type={viewMode === 'table' ? 'primary' : 'secondary'}
+                    icon={<IconList />}
+                    onClick={() => setViewMode('table')}
+                  >
+                    {t('system.menu.view.table')}
+                  </Button>
+                  <Button
+                    size="small"
+                    type={viewMode === 'list' ? 'primary' : 'secondary'}
+                    icon={<IconUnorderedList />}
+                    onClick={() => setViewMode('list')}
+                  >
+                    {t('system.menu.view.list')}
+                  </Button>
+                  <Button
+                    size="small"
+                    type={viewMode === 'card' ? 'primary' : 'secondary'}
+                    icon={<IconApps />}
+                    onClick={() => setViewMode('card')}
+                  >
+                    {t('system.menu.view.card')}
+                  </Button>
+                </Space>
+                <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
+                  {t('common.add')}
+                </Button>
+              </PageActions>
+            </div>
             {loading && data.length === 0 ? <PageLoading /> : null}
             {error && data.length === 0 ? renderErrorState() : null}
             {!loading && !error && data.length === 0 ? (

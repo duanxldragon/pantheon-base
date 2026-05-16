@@ -38,10 +38,10 @@ import {
 } from './api';
 import {
   AppModal,
+  GovernanceSummaryBar,
   ListHeaderActions,
   PageContainer,
   PageError,
-  PageHeader,
   PageLoading,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
@@ -451,53 +451,77 @@ const ModuleManager: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('generator.moduleManager.title')}
-        extra={
-          <ListHeaderActions
-            className="module-manager-page__header-actions"
-            utility={
-              <>
-                <Button size="small" onClick={() => void loadData({ force: true })}>
-                  <IconRefresh /> {t('common.refresh')}
-                </Button>
-                <PermissionAction allowed={canRepair} tooltip={t('common.noPermissionAction')}>
+      <Space direction="vertical" size={12} className="system-page-template module-manager-page">
+        <GovernanceSummaryBar
+          title={t('generator.moduleManager.title')}
+          description={t('generator.moduleManager.positioning')}
+          metrics={[
+            {
+              key: 'total',
+              label: t('generator.moduleManager.stats.total'),
+              value: stats.total,
+            },
+            {
+              key: 'active',
+              label: t('generator.moduleManager.stats.active'),
+              value: stats.active,
+            },
+            {
+              key: 'pending',
+              label: t('generator.moduleManager.stats.pending'),
+              value: stats.pending,
+            },
+            {
+              key: 'failed',
+              label: t('generator.moduleManager.stats.failed'),
+              value: stats.failed,
+            },
+          ]}
+        />
+        <Card className="page-panel system-list__table-card module-manager-page__card">
+          <div className="system-list__work-actions">
+            <ListHeaderActions
+              className="module-manager-page__header-actions"
+              utility={
+                <>
+                  <Button size="small" onClick={() => void loadData({ force: true })}>
+                    <IconRefresh /> {t('common.refresh')}
+                  </Button>
+                  <PermissionAction allowed={canRepair} tooltip={t('common.noPermissionAction')}>
+                    <Button
+                      size="small"
+                      disabled={featureDisabled || repairing}
+                      loading={repairing}
+                      onClick={() => void handleRepair()}
+                    >
+                      <IconRefresh /> {t('generator.moduleManager.repair')}
+                    </Button>
+                  </PermissionAction>
+                </>
+              }
+              primary={
+                <PermissionAction allowed={canOpenGenerator} tooltip={t('common.noPermissionAction')}>
                   <Button
                     size="small"
-                    disabled={featureDisabled || repairing}
-                    loading={repairing}
-                    onClick={() => void handleRepair()}
+                    type="primary"
+                    disabled={featureDisabled}
+                    onClick={() => navigate('/system/generator')}
                   >
-                    <IconRefresh /> {t('generator.moduleManager.repair')}
+                    <IconPlus /> {t('generator.moduleManager.registerNew')}
                   </Button>
                 </PermissionAction>
-              </>
-            }
-            primary={
-              <PermissionAction allowed={canOpenGenerator} tooltip={t('common.noPermissionAction')}>
-                <Button
-                  size="small"
-                  type="primary"
-                  disabled={featureDisabled}
-                  onClick={() => navigate('/system/generator')}
-                >
-                  <IconPlus /> {t('generator.moduleManager.registerNew')}
-                </Button>
-              </PermissionAction>
-            }
-          />
-        }
-      />
-
-      <Space direction="vertical" size={12} className="system-page-template module-manager-page">
-        <Card className="page-panel system-list__table-card module-manager-page__card">
-          {featureDisabled ? (
-            <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
-          ) : modules.some((item) => item.status === 3) ? (
-            <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
-          ) : (
-            <Alert type="info" content={t('generator.moduleManager.repairHint')} />
-          )}
+              }
+            />
+          </div>
+          <div className="module-manager-page__notice-stack">
+            {featureDisabled ? (
+              <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
+            ) : modules.some((item) => item.status === 3) ? (
+              <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
+            ) : (
+              <Alert type="info" content={t('generator.moduleManager.repairHint')} />
+            )}
+          </div>
           <Descriptions
             column={5}
             data={[
@@ -527,6 +551,7 @@ const ModuleManager: React.FC = () => {
             {t('generator.moduleManager.positioning')}
           </Typography.Text>
           <AppTable
+            className="system-list__table"
             columns={columns}
             data={modules}
             rowKey="name"

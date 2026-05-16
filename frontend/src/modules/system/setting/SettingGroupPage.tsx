@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Form, Message, Space, Tag, Typography } from '@arco-design/web-react';
+import { Form, Message, Space, Tag, Typography } from '@arco-design/web-react';
 import type { TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,14 +10,13 @@ import {
 } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import {
-  GovernanceSummaryBar,
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
+  GovernanceSummaryBar,
 } from '../../../components';
 import { usePermission } from '../../../hooks/usePermission';
 import {
@@ -266,16 +265,7 @@ const SettingGroupPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader title={t('system.menu.setting')} subtitle={t('system.setting.subtitle')} />
       <Space direction="vertical" size={12} className="system-page-template setting-page setting-group-page">
-        {overview ? (
-          <GovernanceSummaryBar
-            eyebrow={t('system.setting.hero.eyebrow')}
-            title={t('system.setting.hero.title')}
-            description={t('system.setting.hero.desc')}
-            metrics={heroStats}
-          />
-        ) : null}
         {loading && settings.length === 0 ? <PageLoading /> : null}
         {error && settings.length === 0 ? renderErrorState() : null}
         {!loading && !error && settings.length === 0 ? (
@@ -283,7 +273,19 @@ const SettingGroupPage: React.FC = () => {
         ) : null}
         {settings.length > 0 ? (
           <>
-            <Card className="page-panel setting-page__group-nav-card">
+            <div className="setting-page__governance-stack">
+              <GovernanceSummaryBar
+                className="setting-page__governance-bar"
+                eyebrow={t('system.setting.hero.eyebrow')}
+                title={t('system.setting.hero.title')}
+                description={t('system.setting.hero.desc')}
+                metrics={heroStats.map((item) => ({
+                  key: item.key,
+                  label: item.label,
+                  value: item.value,
+                  description: item.description,
+                }))}
+              />
               <div className="setting-page__group-nav-grid">
                 {groupedSettings.map((group) => {
                   const meta = resolveSettingGroupMeta(group.groupKey);
@@ -329,7 +331,7 @@ const SettingGroupPage: React.FC = () => {
                   </Typography.Text>
                 </div>
               ) : null}
-            </Card>
+            </div>
             {activeSettingGroup ? (
               <SettingGroupForm
                 form={form}

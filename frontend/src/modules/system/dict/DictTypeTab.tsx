@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Button,
-  Card,
   Form,
   Grid,
   Input,
@@ -95,7 +94,6 @@ export interface DictTypeTabProps {
   typeLoading: boolean;
   typeError: unknown;
   typeQuery: DictTypeQuery;
-  typeSummary: TypeSummary;
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -114,7 +112,6 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   typeLoading,
   typeError,
   typeQuery,
-  typeSummary,
   canCreate,
   canEdit,
   canDelete,
@@ -492,7 +489,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
                   disabled={typeBatchDeleteDisabled}
                 >
                   <Button
-                    status={typeBatchDeleteDisabled ? undefined : 'danger'}
+                    status="danger"
                     icon={<IconDelete />}
                     disabled={typeBatchDeleteDisabled}
                   >
@@ -527,34 +524,6 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
             emptyText={t('system.dict.typeEmpty')}
             scroll={{ x: 'max-content' }}
           />
-        ) : null}
-        {!typeLoading && !(typeError && typeRows.length === 0) ? (
-          <Card className="dict-workbench__context-card">
-            <div className="dict-workbench__context-head">
-              <div className="dict-workbench__context-copy">
-                <div className="dict-workbench__context-title">
-                  {t('system.dict.hero.summaryTitle')}
-                </div>
-                <div className="dict-workbench__context-subtitle">
-                  {t('system.dict.hero.sideLead')}
-                </div>
-              </div>
-            </div>
-            <div className="dict-workbench__context-metrics">
-              <span>
-                {t('system.dict.type')}: {typeSummary.total}
-              </span>
-              <span>
-                {t('system.user.status.enabled')}: {typeSummary.active}
-              </span>
-              <span>
-                {t('system.user.status.disabled')}: {typeSummary.disabled}
-              </span>
-              <span>
-                {t('system.dict.item')}: {typeSummary.items}
-              </span>
-            </div>
-          </Card>
         ) : null}
       </Space>
 

@@ -83,11 +83,9 @@ import {
   GovernanceSummaryBar,
   ImportCsvButton,
   ListHeaderActions,
-  PageActions,
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -1090,70 +1088,6 @@ const DeptList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.dept')}
-        extra={
-          activeTab === 'manage' ? (
-            <ListHeaderActions
-              className="dept-list-page__header-actions"
-              utility={
-                <>
-                  <Button
-                    size="small"
-                    icon={<IconDownload />}
-                    onClick={() => {
-                      void handleExport();
-                    }}
-                    disabled={!canExport}
-                  >
-                    {t('common.export')}
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() => {
-                      void handleDownloadTemplate();
-                    }}
-                    disabled={!canImport}
-                  >
-                    {t('common.downloadTemplate')}
-                  </Button>
-                  <ImportCsvButton
-                    disabled={!canImport}
-                    onSelect={(file) => {
-                      void handleImport(file);
-                    }}
-                  >
-                    {t('common.import')}
-                  </ImportCsvButton>
-                </>
-              }
-              primary={
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<IconPlus />}
-                  onClick={openCreate}
-                  disabled={!canCreate}
-                >
-                  {t('common.add')}
-                </Button>
-              }
-            />
-          ) : (
-            <PageActions>
-              <Button
-                size="small"
-                onClick={() => {
-                  void loadOrgData();
-                }}
-                loading={orgLoading}
-              >
-                {t('common.refresh')}
-              </Button>
-            </PageActions>
-          )
-        }
-      />
       <Space
         direction="vertical"
         size={12}
@@ -1285,6 +1219,53 @@ const DeptList: React.FC = () => {
                   clearText={t('common.clearSelection')}
                   clearSuccessText={t('common.clearSelectionSuccess')}
                   onClear={() => setSelectedRowKeys([])}
+                  prefixActions={
+                    <ListHeaderActions
+                      className="dept-list-page__header-actions"
+                      utility={
+                        <>
+                          <Button
+                            size="small"
+                            icon={<IconDownload />}
+                            onClick={() => {
+                              void handleExport();
+                            }}
+                            disabled={!canExport}
+                          >
+                            {t('common.export')}
+                          </Button>
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              void handleDownloadTemplate();
+                            }}
+                            disabled={!canImport}
+                          >
+                            {t('common.downloadTemplate')}
+                          </Button>
+                          <ImportCsvButton
+                            disabled={!canImport}
+                            onSelect={(file) => {
+                              void handleImport(file);
+                            }}
+                          >
+                            {t('common.import')}
+                          </ImportCsvButton>
+                        </>
+                      }
+                      primary={
+                        <Button
+                          size="small"
+                          type="primary"
+                          icon={<IconPlus />}
+                          onClick={openCreate}
+                          disabled={!canCreate}
+                        >
+                          {t('common.add')}
+                        </Button>
+                      }
+                    />
+                  }
                   hint={
                     !canBatchUpdate || !canBatchDelete || !canEdit
                       ? t('common.batchActionPermissionHint')
@@ -1341,7 +1322,7 @@ const DeptList: React.FC = () => {
                         >
                           <Button
                             size="small"
-                            status={batchDeleteDisabled ? undefined : 'danger'}
+                            status="danger"
                             icon={<IconDelete />}
                             disabled={batchDeleteDisabled}
                           >

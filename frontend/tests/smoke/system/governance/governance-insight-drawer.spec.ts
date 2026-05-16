@@ -12,6 +12,18 @@ const mainContentSelectors = [
   '.page-panel',
 ].map((selector) => `main ${selector}`);
 
+const pageIdentitySelectors = [
+  '.governance-summary-bar',
+  '.system-list__table-card',
+  '.permission-workbench__tabs',
+  '.dict-workbench',
+  '.setting-group-page',
+  '.module-manager-page',
+  '.generator-wizard-card',
+  '.dashboard-hero-card',
+  '.auth-security-page',
+];
+
 async function navigateInShell(page: Page, path: string) {
   if (page.url() === 'about:blank') {
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
@@ -21,6 +33,11 @@ async function navigateInShell(page: Page, path: string) {
     window.dispatchEvent(new PopStateEvent('popstate'));
   }, path);
   await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, '\\/')}$`));
+}
+
+async function expectPageIdentityReady(page: Page, title: string | RegExp) {
+  await expect(page.getByText(title, { exact: false }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.locator(pageIdentitySelectors.join(', ')).first()).toBeVisible();
 }
 
 async function measureMainContentWidth(page: Page) {
@@ -66,7 +83,7 @@ test('governance insight opens as drawer without compressing main pages', async 
 
   for (const item of governancePages) {
     await navigateInShell(page, item.path);
-    await expect(page.getByRole('heading', { name: item.title })).toBeVisible();
+    await expectPageIdentityReady(page, item.title);
     await expect(page.locator('.page-split-layout')).toHaveCount(0);
     const mainWidthBefore = await measureMainContentWidth(page);
     expect(mainWidthBefore, item.path).toBeGreaterThan(700);

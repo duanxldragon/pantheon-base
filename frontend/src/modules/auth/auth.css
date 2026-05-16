@@ -123,6 +123,11 @@
   min-height: 180px;
 }
 
+.auth-security-event-page__table-card .page-empty,
+.auth-security-event-page__table-card .page-error {
+  min-height: 220px;
+}
+
 .auth-device-summary {
   display: block;
   max-width: 240px;

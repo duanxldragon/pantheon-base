@@ -19,7 +19,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -287,11 +286,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <PageContainer className="dashboard-page">
-      <PageHeader
-        title={t('dashboard.title')}
-        subtitle={t('dashboard.subtitle')}
-        extra={<Tag color="arcoblue">{t('app.workspace')}</Tag>}
-      />
       {loading && !summary ? (
         <Card className="page-panel dashboard-panel-card">
           <PageLoading />

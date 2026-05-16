@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Checkbox,
-  Divider,
   Form,
   Grid,
   Input,
@@ -12,7 +11,6 @@ import {
   Popconfirm,
   Select,
   Space,
-  Steps,
   Table,
   Tag,
   Typography,
@@ -31,7 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import { isRequestError } from '../../../api/request';
 import { ensureOperationVerified } from '../../../api/request';
 import PermissionAction from '../../../components/patterns/PermissionAction';
-import { AppModal, PageContainer, PageHeader, showAppModalConfirm } from '../../../components';
+import { AppModal, PageContainer, showAppModalConfirm } from '../../../components';
 import { usePermission } from '../../../hooks/usePermission';
 
 import type { GenerateAndRegisterResp } from '../api';
@@ -923,39 +921,55 @@ const ModuleWizard: React.FC = () => {
     }
   };
 
+  const wizardSteps = [
+    {
+      title: t('generator.wizard.step1.title'),
+      description: t('generator.wizard.step1.desc'),
+    },
+    {
+      title: t('generator.wizard.step2.title'),
+      description: t('generator.wizard.step2.desc'),
+    },
+    {
+      title: t('generator.wizard.step3.title'),
+      description: t('generator.wizard.step3.desc'),
+    },
+    {
+      title: t('generator.wizard.step4.title'),
+      description: t('generator.wizard.step4.desc'),
+    },
+  ];
   return (
     <PageContainer className="generator-wizard-page">
-      <PageHeader
-        title={t('generator.wizard.title')}
-        extra={
-          canOpenModuleManager ? (
+      <Space
+        direction="vertical"
+        size={12}
+        className="system-page-template generator-wizard-page__content"
+      >
+        {canOpenModuleManager ? (
+          <div className="system-list__work-actions">
             <Button size="small" onClick={() => navigate('/system/modules')}>
               {t('generator.wizard.openRegistry')}
             </Button>
-          ) : null
-        }
-      />
-      <Card className="page-panel generator-wizard-card">
-        <Steps current={currentStep} className="generator-wizard__steps">
-          <Steps.Step
-            title={t('generator.wizard.step1.title')}
-            description={t('generator.wizard.step1.desc')}
-          />
-          <Steps.Step
-            title={t('generator.wizard.step2.title')}
-            description={t('generator.wizard.step2.desc')}
-          />
-          <Steps.Step
-            title={t('generator.wizard.step3.title')}
-            description={t('generator.wizard.step3.desc')}
-          />
-          <Steps.Step
-            title={t('generator.wizard.step4.title')}
-            description={t('generator.wizard.step4.desc')}
-          />
-        </Steps>
+          </div>
+        ) : null}
+        <Card className="page-panel generator-wizard-card">
+          <div className="generator-wizard__steps generator-wizard__step-grid">
+            {wizardSteps.map((step, index) => (
+              <div
+                key={step.title}
+                className={`generator-wizard__step-card${
+                  index === currentStep ? ' generator-wizard__step-card--active' : ''
+                }${index < currentStep ? ' generator-wizard__step-card--done' : ''}`}
+              >
+                <span className="generator-wizard__step-index">{index + 1}</span>
+                <span className="generator-wizard__step-title">{step.title}</span>
+                <span className="generator-wizard__step-desc">{step.description}</span>
+              </div>
+            ))}
+          </div>
 
-        <Divider />
+          <div className="generator-wizard__content-divider" />
 
         {currentStep === 0 ? (
           <Form form={form} layout="vertical">
@@ -1884,7 +1898,8 @@ const ModuleWizard: React.FC = () => {
             ) : null}
           </div>
         ) : null}
-      </Card>
+        </Card>
+      </Space>
       <AppModal
         title={t('generator.datasource.manageTitle')}
         visible={datasourceModalVisible}

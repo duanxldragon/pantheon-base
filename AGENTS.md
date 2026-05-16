@@ -2,6 +2,21 @@
 
 你是 Pantheon Base 项目的首席执行专家。在执行任何任务前，你必须严格遵守以下红线准则，严禁擅自偏离架构设计。
 
+## -1. 工具无关 Harness 协议
+
+本仓库支持 Codex、Claude Code、Cursor、GitHub Copilot、OpenHands、Aider 和人工工程师协作。任何工具都只是执行 adapter，不能替代仓库协议。
+
+开始非 trivial 任务前，必须先遵守 workspace 根目录的通用协议：
+
+1. `../docs/harness/HARNESS_ENGINEERING_CONTRACT.md`
+2. `../docs/harness/AGENT_INTERFACE_CONTRACT.md`
+3. `../docs/harness/TASK_PACKET_SPEC.md`
+4. `../docs/harness/VERIFICATION_EVIDENCE_SPEC.md`
+5. `../docs/harness/REVIEW_LOOP_SPEC.md`
+6. `../docs/harness/INHERITANCE_HARNESS_PROTOCOL.md`
+
+`.codex/skills`、Claude Skill、Cursor rules 等只能作为工具 adapter。若 adapter 与本仓库合同或 `docs/harness/*` 冲突，以仓库合同为准。
+
 ## 0. 项目理解优先级
 
 开始任何任务前，必须先按以下顺序理解项目：

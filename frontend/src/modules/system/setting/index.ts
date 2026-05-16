@@ -1,4 +1,10 @@
 import { defineModule } from '../../../core/router/types';
+import { isSettingGroupKey } from './settingGroups';
+
+function resolveSettingRouteTitleKey(path: string) {
+  const groupKey = path.split('/').filter(Boolean)[2];
+  return isSettingGroupKey(groupKey) ? `system.setting.group.${groupKey}` : undefined;
+}
 
 export const SettingModule = defineModule({
   name: 'setting',
@@ -16,6 +22,7 @@ export const SettingModule = defineModule({
       path: 'system/setting/:groupKey',
       routeName: 'system-setting-group',
       titleKey: 'system.menu.setting',
+      resolveTitleKey: resolveSettingRouteTitleKey,
       pagePermission: 'system:setting:list',
       activeMenu: '/system/setting',
       componentKey: 'system/setting/SettingGroupPage',

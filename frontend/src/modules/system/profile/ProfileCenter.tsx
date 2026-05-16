@@ -28,7 +28,6 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import {
   FormSection,
   PageContainer,
-  PageHeader,
   PageLoading,
   SubmitBar,
 } from '../../../components';
@@ -138,7 +137,6 @@ const ProfileCenter: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader title={t('system.profile.title')} />
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         <Card className="page-panel page-panel--soft">
           <Row gutter={24} align="center">

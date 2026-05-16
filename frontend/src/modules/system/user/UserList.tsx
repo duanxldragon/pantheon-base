@@ -685,7 +685,7 @@ const UserList: React.FC = () => {
                   size="small"
                   icon={<IconMore />}
                   aria-label={t('common.action')}
-                />
+                ></Button>
               </Tooltip>
             </Dropdown>
           ) : null}

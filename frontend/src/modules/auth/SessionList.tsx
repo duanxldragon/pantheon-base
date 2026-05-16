@@ -25,11 +25,9 @@ import {
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
-  ListHeaderActions,
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   TABLE_ACTION_COLUMN_WIDTH,
   useGovernanceRail,
@@ -331,14 +329,6 @@ const SessionList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.session')}
-        extra={
-          <ListHeaderActions
-            utility={null}
-          />
-        }
-      />
       <Space direction="vertical" size={16} className="system-page-template">
         <GovernanceSummaryBar
           eyebrow={t('auth.session.hero.eyebrow')}
