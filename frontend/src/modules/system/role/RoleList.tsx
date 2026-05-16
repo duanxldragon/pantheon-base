@@ -40,6 +40,10 @@ import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
+import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../../components/table/crossPageSelection';
 import { getMenuTree, type MenuNode } from '../menu/api';
 import {
   batchDeleteRoles,
@@ -66,7 +70,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -350,8 +353,7 @@ const RoleList: React.FC = () => {
   );
 
   const visibleSelectedRowKeys = useMemo(() => {
-    const visibleKeys = new Set(data.map((item) => item.id));
-    return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
+    return getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id));
   }, [data, selectedRowKeys]);
 
   const permissionCatalog = useMemo(() => {
@@ -707,7 +709,11 @@ const RoleList: React.FC = () => {
             ? 'desc'
             : undefined,
     };
-    setSelectedRowKeys([]);
+    const sortChanged =
+      nextQuery.sortField !== query.sortField || nextQuery.sortOrder !== query.sortOrder;
+    if (sortChanged) {
+      setSelectedRowKeys([]);
+    }
     setQuery(nextQuery);
   };
 
@@ -883,31 +889,6 @@ const RoleList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.role')}
-        extra={
-          <ListHeaderActions
-            utility={
-              <>
-                <Button
-                  icon={<IconDownload />}
-                  onClick={() => {
-                    void handleExport();
-                  }}
-                  disabled={!canExport}
-                >
-                  {t('common.export')}
-                </Button>
-              </>
-            }
-            primary={
-              <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
-                {t('common.add')}
-              </Button>
-            }
-          />
-        }
-      />
       <Space direction="vertical" size={16} className="system-page-template">
         <GovernanceSummaryBar
           eyebrow={t('system.role.hero.eyebrow')}
@@ -972,6 +953,31 @@ const RoleList: React.FC = () => {
               clearText={t('common.clearSelection')}
               clearSuccessText={t('common.clearSelectionSuccess')}
               onClear={() => setSelectedRowKeys([])}
+              prefixActions={
+                <ListHeaderActions
+                  utility={
+                    <Button
+                      icon={<IconDownload />}
+                      onClick={() => {
+                        void handleExport();
+                      }}
+                      disabled={!canExport}
+                    >
+                      {t('common.export')}
+                    </Button>
+                  }
+                  primary={
+                    <Button
+                      type="primary"
+                      icon={<IconPlus />}
+                      onClick={openCreate}
+                      disabled={!canCreate}
+                    >
+                      {t('common.add')}
+                    </Button>
+                  }
+                />
+              }
               hint={
                 !canBatchUpdate || !canBatchDelete
                   ? t('common.batchActionPermissionHint')
@@ -1024,7 +1030,7 @@ const RoleList: React.FC = () => {
                       disabled={batchDeleteDisabled}
                     >
                       <Button
-                        status={batchDeleteDisabled ? undefined : 'danger'}
+                        status="danger"
                         icon={<IconDelete />}
                         disabled={batchDeleteDisabled}
                       >
@@ -1048,13 +1054,18 @@ const RoleList: React.FC = () => {
                 rowKey="id"
                 loading={loading}
                 scroll={{ x: 'max-content' }}
-                rowSelection={{
-                  type: 'checkbox',
-                  selectedRowKeys: visibleSelectedRowKeys,
-                  fixed: true,
-                  checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                  onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                }}
+                    rowSelection={{
+                      type: 'checkbox',
+                      selectedRowKeys: visibleSelectedRowKeys,
+                      checkCrossPage: true,
+                      preserveSelectedRowKeys: true,
+                      fixed: true,
+                      checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+                      onChange: (rowKeys) =>
+                        setSelectedRowKeys((keys) =>
+                          mergeCrossPageSelection(keys, rowKeys, data.map((item) => item.id)),
+                        ),
+                    }}
                 onChange={handleTableChange}
                 emptyText={t('common.noData')}
                 pagination={

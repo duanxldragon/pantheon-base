@@ -33,6 +33,10 @@ import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
+import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../../components/table/crossPageSelection';
 import { getRoleList } from '../role/api';
 import {
   batchDeletePermissionPolicies,
@@ -69,7 +73,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -374,6 +377,7 @@ const PermissionList: React.FC = () => {
 
   const search = () => {
     const values = queryForm.getFieldsValue();
+    setSelectedRowKeys([]);
     setQuery({
       ...query,
       ...values,
@@ -383,11 +387,11 @@ const PermissionList: React.FC = () => {
 
   const reset = () => {
     queryForm.setFieldsValue(emptyQuery);
+    setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
 
   const handleTableChange: TableProps<PermissionPolicyRow>['onChange'] = (pagination) => {
-    setSelectedRowKeys([]);
     setQuery({
       ...query,
       page: pagination.current || 1,
@@ -396,8 +400,7 @@ const PermissionList: React.FC = () => {
   };
 
   const visibleSelectedRowKeys = useMemo(() => {
-    const visibleKeys = new Set(data.map((item) => item.id));
-    return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
+    return getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id));
   }, [data, selectedRowKeys]);
 
   const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
@@ -546,87 +549,6 @@ const PermissionList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.permission')}
-        extra={
-          <ListHeaderActions
-            utility={
-              <>
-                <Button
-                  icon={<IconRefresh />}
-                  onClick={() => {
-                    if (activeTab === 'workbench') {
-                      void loadWorkbench(workbenchQuery);
-                      return;
-                    }
-                    if (activeTab === 'data-scope') {
-                      // Data-scope child manages its own refresh via subscription
-                      publishRefresh('system:permission:changed', 'system/permission');
-                      return;
-                    }
-                    void loadData(query);
-                  }}
-                >
-                  {t('common.refresh')}
-                </Button>
-                {activeTab === 'workbench' ? (
-                  <Button
-                    icon={<IconDownload />}
-                    onClick={() => {
-                      void exportPermissionWorkbench(workbenchQuery);
-                    }}
-                    disabled={!canExport}
-                  >
-                    {t('system.permission.workbench.export')}
-                  </Button>
-                ) : null}
-                {activeTab === 'api' ? (
-                  <>
-                    <Button
-                      icon={<IconDownload />}
-                      onClick={() => {
-                        void handleExport();
-                      }}
-                      disabled={!canExport}
-                    >
-                      {t('common.export')}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        void handleDownloadTemplate();
-                      }}
-                      disabled={!canImport}
-                    >
-                      {t('common.downloadTemplate')}
-                    </Button>
-                    <ImportCsvButton
-                      disabled={!canImport}
-                      onSelect={(file) => {
-                        void handleImport(file);
-                      }}
-                    >
-                      {t('common.import')}
-                    </ImportCsvButton>
-                  </>
-                ) : null}
-              </>
-            }
-            primary={
-              activeTab === 'api' ? (
-                <Button
-                  type="primary"
-                  icon={<IconPlus />}
-                  onClick={openCreate}
-                  disabled={!canCreate}
-                >
-                  {t('common.add')}
-                </Button>
-              ) : null
-            }
-          />
-        }
-      />
-
       <Space direction="vertical" size={16} className="system-page-template">
         <GovernanceSummaryBar
           eyebrow={t('system.permission.hero.eyebrow')}
@@ -659,23 +581,66 @@ const PermissionList: React.FC = () => {
           </Card>
 
           {activeTab === 'workbench' ? (
-            <PermissionWorkbenchTab
-              roleOptions={roleOptions}
-              workbench={workbench}
-              workbenchLoading={workbenchLoading}
-              workbenchError={workbenchError}
-              workbenchQuery={workbenchQuery}
-              onWorkbenchQueryChange={setWorkbenchQuery}
-              onRetryLoadWorkbench={() => {
-                void loadWorkbench(workbenchQuery);
-              }}
-              detailRole={detailRole}
-              onDetailRoleChange={setDetailRole}
-              remediateRolePolicies={remediateRolePolicies}
-              remediatingRoleKey={remediatingRoleKey}
-            />
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              <div className="system-list__work-actions">
+                <ListHeaderActions
+                  utility={
+                    <>
+                      <Button
+                        icon={<IconRefresh />}
+                        onClick={() => {
+                          void loadWorkbench(workbenchQuery);
+                        }}
+                      >
+                        {t('common.refresh')}
+                      </Button>
+                      <Button
+                        icon={<IconDownload />}
+                        onClick={() => {
+                          void exportPermissionWorkbench(workbenchQuery);
+                        }}
+                        disabled={!canExport}
+                      >
+                        {t('system.permission.workbench.export')}
+                      </Button>
+                    </>
+                  }
+                />
+              </div>
+              <PermissionWorkbenchTab
+                roleOptions={roleOptions}
+                workbench={workbench}
+                workbenchLoading={workbenchLoading}
+                workbenchError={workbenchError}
+                workbenchQuery={workbenchQuery}
+                onWorkbenchQueryChange={setWorkbenchQuery}
+                onRetryLoadWorkbench={() => {
+                  void loadWorkbench(workbenchQuery);
+                }}
+                detailRole={detailRole}
+                onDetailRoleChange={setDetailRole}
+                remediateRolePolicies={remediateRolePolicies}
+                remediatingRoleKey={remediatingRoleKey}
+              />
+            </Space>
           ) : activeTab === 'data-scope' ? (
-            <PermissionDataScopeTab roleOptions={roleOptions} />
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              <div className="system-list__work-actions">
+                <ListHeaderActions
+                  utility={
+                    <Button
+                      icon={<IconRefresh />}
+                      onClick={() => {
+                        publishRefresh('system:permission:changed', 'system/permission');
+                      }}
+                    >
+                      {t('common.refresh')}
+                    </Button>
+                  }
+                />
+              </div>
+              <PermissionDataScopeTab roleOptions={roleOptions} />
+            </Space>
           ) : (
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               <FilterPanel>
@@ -719,6 +684,57 @@ const PermissionList: React.FC = () => {
                   clearText={t('common.clearSelection')}
                   clearSuccessText={t('common.clearSelectionSuccess')}
                   onClear={() => setSelectedRowKeys([])}
+                  prefixActions={
+                    <ListHeaderActions
+                      utility={
+                        <>
+                          <Button
+                            icon={<IconRefresh />}
+                            onClick={() => {
+                              void loadData(query);
+                            }}
+                          >
+                            {t('common.refresh')}
+                          </Button>
+                          <Button
+                            icon={<IconDownload />}
+                            onClick={() => {
+                              void handleExport();
+                            }}
+                            disabled={!canExport}
+                          >
+                            {t('common.export')}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              void handleDownloadTemplate();
+                            }}
+                            disabled={!canImport}
+                          >
+                            {t('common.downloadTemplate')}
+                          </Button>
+                          <ImportCsvButton
+                            disabled={!canImport}
+                            onSelect={(file) => {
+                              void handleImport(file);
+                            }}
+                          >
+                            {t('common.import')}
+                          </ImportCsvButton>
+                        </>
+                      }
+                      primary={
+                        <Button
+                          type="primary"
+                          icon={<IconPlus />}
+                          onClick={openCreate}
+                          disabled={!canCreate}
+                        >
+                          {t('common.add')}
+                        </Button>
+                      }
+                    />
+                  }
                   hint={!canBatchDelete ? t('common.batchActionPermissionHint') : undefined}
                   actions={
                     <PermissionAction
@@ -733,7 +749,7 @@ const PermissionList: React.FC = () => {
                         disabled={batchDeleteDisabled}
                       >
                         <Button
-                          status={batchDeleteDisabled ? undefined : 'danger'}
+                          status="danger"
                           icon={<IconDelete />}
                           disabled={batchDeleteDisabled}
                         >
@@ -763,9 +779,14 @@ const PermissionList: React.FC = () => {
                     rowSelection={{
                       type: 'checkbox',
                       selectedRowKeys: visibleSelectedRowKeys,
+                      checkCrossPage: true,
+                      preserveSelectedRowKeys: true,
                       fixed: true,
                       checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                      onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                      onChange: (rowKeys) =>
+                        setSelectedRowKeys((keys) =>
+                          mergeCrossPageSelection(keys, rowKeys, data.map((item) => item.id)),
+                        ),
                     }}
                     onChange={handleTableChange}
                     emptyText={t('common.noData')}

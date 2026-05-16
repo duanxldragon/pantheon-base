@@ -17,6 +17,10 @@ import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/in
 import { IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { getSettingGroup } from '../system/setting/api';
+import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../components/table/crossPageSelection';
 import { formatDateTime } from '../../core/format/dateTime';
 import {
   batchDeleteAdminLoginLogs,
@@ -40,7 +44,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PermissionAction,
   TABLE_COLUMN_WIDTH,
@@ -109,7 +112,6 @@ const LoginLogList: React.FC = () => {
         const result: LoginLogPageResp = await getAdminLoginLogList(nextQuery);
         setData(result.items);
         setTotal(result.total);
-        setSelectedRowKeys([]);
       } catch {
         setLoadFailed(true);
         message.error(t('common.loadFailed'));
@@ -145,6 +147,7 @@ const LoginLogList: React.FC = () => {
 
   const search = () => {
     const values = queryForm.getFieldsValue();
+    setSelectedRowKeys([]);
     setQuery({
       ...query,
       ...values,
@@ -154,6 +157,7 @@ const LoginLogList: React.FC = () => {
 
   const reset = () => {
     queryForm.setFieldsValue(emptyQuery);
+    setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
 
@@ -191,6 +195,10 @@ const LoginLogList: React.FC = () => {
 
   const successCount = data.filter((item) => item.status === 1).length;
   const failedCount = data.filter((item) => item.status !== 1).length;
+  const visibleSelectedRowKeys = useMemo(
+    () => getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id)),
+    [data, selectedRowKeys],
+  );
   const heroStats = useMemo(
     () => [
       {
@@ -277,26 +285,6 @@ const LoginLogList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.loginLog')}
-        extra={
-          <ListHeaderActions
-            utility={
-              <>
-                <Button
-                  icon={<IconDownload />}
-                  onClick={() => {
-                    void handleExport();
-                  }}
-                  disabled={!canExport}
-                >
-                  {t('common.export')}
-                </Button>
-              </>
-            }
-          />
-        }
-      />
       <Space direction="vertical" size={16} className="system-page-template">
         <GovernanceSummaryBar
           eyebrow={t('auth.loginLog.hero.eyebrow')}
@@ -351,6 +339,21 @@ const LoginLogList: React.FC = () => {
           </FilterPanel>
 
           <Card className="page-panel system-list__table-card">
+            <div className="system-list__work-actions">
+              <ListHeaderActions
+                utility={
+                  <Button
+                    icon={<IconDownload />}
+                    onClick={() => {
+                      void handleExport();
+                    }}
+                    disabled={!canExport}
+                  >
+                    {t('common.export')}
+                  </Button>
+                }
+              />
+            </div>
             {(canClear || canDelete) && (
               <div>
                 <GovernanceCleanupBar
@@ -439,8 +442,17 @@ const LoginLogList: React.FC = () => {
                   canDelete
                     ? {
                         type: 'checkbox',
-                        selectedRowKeys,
-                        onChange: (keys) => setSelectedRowKeys(keys as number[]),
+                        selectedRowKeys: visibleSelectedRowKeys,
+                        checkCrossPage: true,
+                        preserveSelectedRowKeys: true,
+                        onChange: (keys) =>
+                          setSelectedRowKeys((currentKeys) =>
+                            mergeCrossPageSelection(
+                              currentKeys,
+                              keys as number[],
+                              data.map((item) => item.id),
+                            ) as number[],
+                          ),
                       }
                     : undefined
                 }

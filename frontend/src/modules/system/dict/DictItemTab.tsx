@@ -35,6 +35,10 @@ import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../../components/table/crossPageSelection';
+import {
   AppModal,
   AppTable,
   FilterPanel,
@@ -180,7 +184,6 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
           : await getDictItemList({ dictCode: currentCode, ...nextQuery });
         setItemRows(resp.items);
         setItemTotal(resp.total);
-        setSelectedItemRowKeys([]);
       } catch (requestError) {
         setItemError(requestError);
       } finally {
@@ -222,6 +225,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
 
   const handleItemSearch = () => {
     const values = itemQueryForm.getFieldsValue();
+    setSelectedItemRowKeys([]);
     setItemQuery({
       ...emptyItemQuery,
       ...values,
@@ -231,11 +235,13 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
 
   const handleItemReset = () => {
     itemQueryForm.setFieldsValue(emptyItemQuery);
+    setSelectedItemRowKeys([]);
     setItemQuery(emptyItemQuery);
   };
 
   const handleSelectedTypeChange = (value?: string | number) => {
     const nextType = typeRows.find((item) => item.id === Number(value)) || null;
+    setSelectedItemRowKeys([]);
     onSelectType(nextType);
   };
 
@@ -521,6 +527,10 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
 
   const itemBatchActionDisabled = !canBatchUpdate || selectedItemRowKeys.length === 0;
   const itemBatchDeleteDisabled = !canBatchDelete || selectedItemRowKeys.length === 0;
+  const visibleSelectedItemRowKeys = useMemo(
+    () => getVisibleSelectedRowKeys(selectedItemRowKeys, itemRows.map((item) => item.id)),
+    [itemRows, selectedItemRowKeys],
+  );
 
   return (
     <>
@@ -719,7 +729,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
                   disabled={itemBatchDeleteDisabled}
                 >
                   <Button
-                    status={itemBatchDeleteDisabled ? undefined : 'danger'}
+                    status="danger"
                     icon={<IconDelete />}
                     disabled={itemBatchDeleteDisabled}
                   >
@@ -752,8 +762,13 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
                 data={itemRows}
                 loading={itemLoading}
                 rowSelection={{
-                  selectedRowKeys: selectedItemRowKeys,
-                  onChange: (keys) => setSelectedItemRowKeys(keys),
+                  selectedRowKeys: visibleSelectedItemRowKeys,
+                  checkCrossPage: true,
+                  preserveSelectedRowKeys: true,
+                  onChange: (keys) =>
+                    setSelectedItemRowKeys((currentKeys) =>
+                      mergeCrossPageSelection(currentKeys, keys, itemRows.map((item) => item.id)),
+                    ),
                 }}
                 emptyText={t('system.dict.itemEmpty')}
                 onChange={handleItemTableChange}

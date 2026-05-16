@@ -3,6 +3,7 @@ import {
   Avatar,
   Button,
   Card,
+  Dropdown,
   Form,
   Grid,
   Input,
@@ -10,6 +11,7 @@ import {
   Select,
   Space,
   Tag,
+  Tooltip,
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
@@ -19,6 +21,7 @@ import {
   IconEdit,
   IconEye,
   IconLock,
+  IconMore,
   IconPlus,
   IconSearch,
   IconUpload,
@@ -73,11 +76,9 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
-  GovernanceSummaryBar,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -139,6 +140,11 @@ function isDefaultUserListQuery(query: UserListQuery) {
 
 interface LoadDataOptions {
   silent?: boolean;
+}
+
+function getTableText(value: string | number | null | undefined) {
+  const text = typeof value === 'number' ? String(value) : value?.trim();
+  return text || '-';
 }
 
 const UserList: React.FC = () => {
@@ -493,6 +499,17 @@ const UserList: React.FC = () => {
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
+  const renderCellText = (value: string | number | null | undefined, className?: string) => {
+    const text = getTableText(value);
+    const cell = (
+      <span className={['system-user-list__cell-text', className].filter(Boolean).join(' ')}>
+        {text}
+      </span>
+    );
+
+    return text === '-' ? cell : <Tooltip content={text}>{cell}</Tooltip>;
+  };
+
   const handleTableChange: TableProps<UserListRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     const nextQuery: UserListQuery = {
@@ -504,10 +521,14 @@ const UserList: React.FC = () => {
         currentSorter?.direction === 'ascend'
           ? 'asc'
           : currentSorter?.direction === 'descend'
-            ? 'desc'
+          ? 'desc'
             : undefined,
     };
-    setSelectedRowKeys([]);
+    const sortChanged =
+      nextQuery.sortField !== query.sortField || nextQuery.sortOrder !== query.sortOrder;
+    if (sortChanged) {
+      setSelectedRowKeys([]);
+    }
     setQuery(nextQuery);
   };
 
@@ -515,27 +536,31 @@ const UserList: React.FC = () => {
     {
       title: t('system.user.username'),
       dataIndex: 'username',
-      width: TABLE_COLUMN_WIDTH.identity,
+      width: TABLE_COLUMN_WIDTH.name,
       ...sortableColumn('username'),
+      render: (value: string) => renderCellText(value, 'system-user-list__cell-text--strong'),
     },
     {
       title: t('system.user.nickname'),
       dataIndex: 'nickname',
       width: TABLE_COLUMN_WIDTH.identity,
       ...sortableColumn('nickname'),
+      render: (value: string) => renderCellText(value),
     },
     ...(orgEnabled
       ? [
           {
             title: t('system.user.dept'),
             dataIndex: 'deptName',
-            width: TABLE_COLUMN_WIDTH.identity,
+            width: TABLE_COLUMN_WIDTH.sm,
+            render: (value: string) => renderCellText(value),
           },
           withTableColumnPriority(
             {
               title: t('system.user.post'),
               dataIndex: 'postName',
-              width: TABLE_COLUMN_WIDTH.identity,
+              width: TABLE_COLUMN_WIDTH.sm,
+              render: (value: string) => renderCellText(value),
             },
             'medium',
           ),
@@ -545,12 +570,12 @@ const UserList: React.FC = () => {
       {
         title: t('system.user.roles'),
         dataIndex: 'roleKeys',
-        width: TABLE_COLUMN_WIDTH.name,
-        render: (value: string[]) => (
-          <span className="system-user-list__role-text">
-            {value?.length ? value.join(' / ') : '-'}
-          </span>
-        ),
+        width: TABLE_COLUMN_WIDTH.tagGroup,
+        render: (value: string[]) =>
+          renderCellText(
+            value?.length ? value.join(' / ') : undefined,
+            'system-user-list__role-text',
+          ),
       },
       'medium',
     ),
@@ -560,6 +585,7 @@ const UserList: React.FC = () => {
         dataIndex: 'email',
         width: TABLE_COLUMN_WIDTH.name,
         ...sortableColumn('email'),
+        render: (value: string) => renderCellText(value),
       },
       'low',
     ),
@@ -569,6 +595,7 @@ const UserList: React.FC = () => {
         dataIndex: 'phone',
         width: TABLE_COLUMN_WIDTH.identity,
         ...sortableColumn('phone'),
+        render: (value: string) => renderCellText(value),
       },
       'low',
     ),
@@ -595,10 +622,10 @@ const UserList: React.FC = () => {
     ),
     {
       title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      width: TABLE_ACTION_COLUMN_WIDTH.medium,
       fixed: 'right',
       render: (_: unknown, row: UserListRow) => (
-        <Space size={4} className="system-list__actions">
+        <Space size={4} className="system-list__actions system-user-list__row-actions">
           {canView ? (
             <Button type="text" size="small" icon={<IconEye />} onClick={() => openDetail(row)}>
               {t('common.detail')}
@@ -616,32 +643,51 @@ const UserList: React.FC = () => {
               {t('common.edit')}
             </Button>
           ) : null}
-          {canResetPassword ? (
-            <Button
-              type="text"
-              size="small"
-              icon={<IconLock />}
-              onClick={() => openResetPassword(row)}
+          {canResetPassword || canDelete ? (
+            <Dropdown
+              trigger="click"
+              position="br"
+              droplist={
+                <div className="system-user-list__row-menu" role="menu">
+                  {canResetPassword ? (
+                    <Button
+                      type="text"
+                      icon={<IconLock />}
+                      onClick={() => openResetPassword(row)}
+                      role="menuitem"
+                    >
+                      {t('system.user.resetPassword')}
+                    </Button>
+                  ) : null}
+                  {canDelete ? (
+                    <Popconfirm
+                      title={t('common.deleteConfirm')}
+                      onOk={() => removeUser(row.id)}
+                      disabled={row.id === 1}
+                    >
+                      <Button
+                        type="text"
+                        status="danger"
+                        icon={<IconDelete />}
+                        disabled={row.id === 1}
+                        role="menuitem"
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    </Popconfirm>
+                  ) : null}
+                </div>
+              }
             >
-              {t('system.user.resetPassword')}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              title={t('common.deleteConfirm')}
-              onOk={() => removeUser(row.id)}
-              disabled={row.id === 1}
-            >
-              <Button
-                type="text"
-                size="small"
-                status="danger"
-                icon={<IconDelete />}
-                disabled={row.id === 1}
-              >
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
+              <Tooltip content={t('common.action')}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<IconMore />}
+                  aria-label={t('common.action')}
+                />
+              </Tooltip>
+            </Dropdown>
           ) : null}
         </Space>
       ),
@@ -741,6 +787,10 @@ const UserList: React.FC = () => {
   ];
   const enabledUserCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
   const disabledUserCount = useMemo(() => data.filter((item) => item.status !== 1).length, [data]);
+  const unassignedRoleUserCount = useMemo(
+    () => data.filter((item) => !item.roleKeys?.length).length,
+    [data],
+  );
   const assignableRoleCount = useMemo(() => roleOptions.length, [roleOptions]);
   const availableDeptCount = useMemo(
     () => deptOptions.filter((item) => item.value > 0).length,
@@ -751,7 +801,7 @@ const UserList: React.FC = () => {
     [postOptions],
   );
   const batchActionReady = !batchActionDisabled || !batchDeleteDisabled;
-  const governanceStats = useMemo(
+  const statusMetrics = useMemo(
     () => [
       {
         key: 'total',
@@ -769,12 +819,17 @@ const UserList: React.FC = () => {
         value: disabledUserCount,
       },
       {
+        key: 'unassigned',
+        label: t('system.user.hero.unassignedRoles'),
+        value: unassignedRoleUserCount,
+      },
+      {
         key: 'roles',
         label: t('system.user.hero.rolesReady'),
         value: assignableRoleCount,
       },
     ],
-    [assignableRoleCount, disabledUserCount, enabledUserCount, t, total],
+    [assignableRoleCount, disabledUserCount, enabledUserCount, t, total, unassignedRoleUserCount],
   );
   const governanceSummaryItems = useMemo(
     () => [
@@ -819,9 +874,14 @@ const UserList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.user')}
-        extra={
+      <Space direction="vertical" size={16} className="system-page-template">
+        <div className="system-user-list__function-bar">
+          <div className="system-user-list__function-copy">
+            <span className="system-user-list__eyebrow">{t('system.user.hero.eyebrow')}</span>
+            <Typography.Title heading={5} className="system-user-list__title">
+              {t('system.menu.user')}
+            </Typography.Title>
+          </div>
           <ListHeaderActions
             utility={
               <>
@@ -858,21 +918,85 @@ const UserList: React.FC = () => {
               </Button>
             }
           />
-        }
-      />
-      <Space direction="vertical" size={16} className="system-page-template">
-        <GovernanceSummaryBar
-          eyebrow={t('system.user.hero.eyebrow')}
-          title={t('system.user.hero.title')}
-          description={t('system.user.hero.sideDesc')}
-          metrics={governanceStats}
-          action={
-            <GovernanceRailToggleButton
-              expanded={governanceRail.expanded}
-              onToggle={governanceRail.toggle}
-            >
-              {t('system.user.hero.summaryTitle')}
-            </GovernanceRailToggleButton>
+        </div>
+        <TableBatchActionBar
+          className="system-user-list__ops-strip"
+          selectedCount={selectedRowKeys.length}
+          selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+          clearText={t('common.clearSelection')}
+          clearSuccessText={t('common.clearSelectionSuccess')}
+          onClear={() => setSelectedRowKeys([])}
+          prefixActions={
+            <>
+              <div
+                className="system-user-list__status-strip"
+                aria-label={t('system.user.hero.summaryTitle')}
+              >
+                {statusMetrics.map((item) => (
+                  <span key={item.key} className="system-user-list__status-item">
+                    <span className="system-user-list__status-label">{item.label}</span>
+                    <strong className="system-user-list__status-value">{item.value}</strong>
+                  </span>
+                ))}
+              </div>
+              <GovernanceRailToggleButton
+                expanded={governanceRail.expanded}
+                onToggle={governanceRail.toggle}
+              >
+                {t('system.user.hero.summaryTitle')}
+              </GovernanceRailToggleButton>
+            </>
+          }
+          hint={
+            !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
+          }
+          actions={
+            <>
+              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                <Popconfirm
+                  title={t('system.user.batchEnableConfirm')}
+                  onOk={() => {
+                    void handleBatchStatus(1);
+                  }}
+                  disabled={batchActionDisabled}
+                >
+                  <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
+                </Popconfirm>
+              </PermissionAction>
+              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                <Popconfirm
+                  title={t('system.user.batchDisableConfirm')}
+                  onOk={() => {
+                    void handleBatchStatus(2);
+                  }}
+                  disabled={batchActionDisabled}
+                >
+                  <Button
+                    status={batchActionDisabled ? undefined : 'warning'}
+                    disabled={batchActionDisabled}
+                  >
+                    {t('system.user.batchDisable')}
+                  </Button>
+                </Popconfirm>
+              </PermissionAction>
+              <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
+                <Popconfirm
+                  title={t('system.user.batchDeleteConfirm')}
+                  onOk={() => {
+                    void handleBatchDelete();
+                  }}
+                  disabled={batchDeleteDisabled}
+                >
+                  <Button
+                    status={batchDeleteDisabled ? undefined : 'danger'}
+                    icon={<IconDelete />}
+                    disabled={batchDeleteDisabled}
+                  >
+                    {t('common.deleteSelected')}
+                  </Button>
+                </Popconfirm>
+              </PermissionAction>
+            </>
           }
         />
         <>
@@ -919,75 +1043,6 @@ const UserList: React.FC = () => {
             </Form>
           </FilterPanel>
           <Card className="page-panel system-list__table-card system-user-list__table-card">
-            <TableBatchActionBar
-              selectedCount={selectedRowKeys.length}
-              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-              clearText={t('common.clearSelection')}
-              clearSuccessText={t('common.clearSelectionSuccess')}
-              onClear={() => setSelectedRowKeys([])}
-              hint={
-                !canBatchUpdate || !canBatchDelete
-                  ? t('common.batchActionPermissionHint')
-                  : undefined
-              }
-              actions={
-                <>
-                  <PermissionAction
-                    allowed={canBatchUpdate}
-                    tooltip={t('common.noPermissionAction')}
-                  >
-                    <Popconfirm
-                      title={t('system.user.batchEnableConfirm')}
-                      onOk={() => {
-                        void handleBatchStatus(1);
-                      }}
-                      disabled={batchActionDisabled}
-                    >
-                      <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
-                    </Popconfirm>
-                  </PermissionAction>
-                  <PermissionAction
-                    allowed={canBatchUpdate}
-                    tooltip={t('common.noPermissionAction')}
-                  >
-                    <Popconfirm
-                      title={t('system.user.batchDisableConfirm')}
-                      onOk={() => {
-                        void handleBatchStatus(2);
-                      }}
-                      disabled={batchActionDisabled}
-                    >
-                      <Button
-                        status={batchActionDisabled ? undefined : 'warning'}
-                        disabled={batchActionDisabled}
-                      >
-                        {t('system.user.batchDisable')}
-                      </Button>
-                    </Popconfirm>
-                  </PermissionAction>
-                  <PermissionAction
-                    allowed={canBatchDelete}
-                    tooltip={t('common.noPermissionAction')}
-                  >
-                    <Popconfirm
-                      title={t('system.user.batchDeleteConfirm')}
-                      onOk={() => {
-                        void handleBatchDelete();
-                      }}
-                      disabled={batchDeleteDisabled}
-                    >
-                      <Button
-                        status={batchDeleteDisabled ? undefined : 'danger'}
-                        icon={<IconDelete />}
-                        disabled={batchDeleteDisabled}
-                      >
-                        {t('common.deleteSelected')}
-                      </Button>
-                    </Popconfirm>
-                  </PermissionAction>
-                </>
-              }
-            />
             {loading && data.length === 0 ? <PageLoading /> : null}
             {error && data.length === 0 ? renderErrorState() : null}
             {!loading && !error && data.length === 0 ? (
@@ -1004,6 +1059,8 @@ const UserList: React.FC = () => {
                 rowSelection={{
                   type: 'checkbox',
                   selectedRowKeys,
+                  checkCrossPage: true,
+                  preserveSelectedRowKeys: true,
                   fixed: true,
                   checkboxProps: (row) => ({ disabled: row.id === 1 }),
                   onChange: (rowKeys) => setSelectedRowKeys(rowKeys),

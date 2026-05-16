@@ -35,6 +35,10 @@ import {
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../../components/table/crossPageSelection';
+import {
   AppModal,
   AppTable,
   FilterPanel,
@@ -44,11 +48,9 @@ import {
   GovernanceSummaryBar,
   ImportCsvButton,
   ListHeaderActions,
-  PageActions,
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -241,7 +243,6 @@ const I18nList: React.FC = () => {
         const resp = await getI18nList(nextQuery);
         setRows(resp.items);
         setTotal(resp.total);
-        setSelectedRowKeys([]);
       } catch (requestError) {
         setError(requestError);
       } finally {
@@ -439,6 +440,7 @@ const I18nList: React.FC = () => {
 
   const handleSearch = () => {
     const values = queryForm.getFieldsValue();
+    setSelectedRowKeys([]);
     setQuery({
       ...query,
       ...values,
@@ -448,6 +450,7 @@ const I18nList: React.FC = () => {
 
   const handleReset = () => {
     queryForm.setFieldsValue(emptyQuery);
+    setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
 
@@ -1072,6 +1075,7 @@ const I18nList: React.FC = () => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
     const direction = currentSorter?.direction;
     const field = typeof currentSorter?.field === 'string' ? currentSorter.field : '';
+    setSelectedRowKeys([]);
     setQuery((prev) => ({
       ...prev,
       sortBy: direction ? field : '',
@@ -1079,6 +1083,11 @@ const I18nList: React.FC = () => {
       page: 1,
     }));
   };
+
+  const visibleSelectedRowKeys = useMemo(
+    () => getVisibleSelectedRowKeys(selectedRowKeys, rows.map((row) => row.id)),
+    [rows, selectedRowKeys],
+  );
 
   if (loading && rows.length === 0) {
     return <PageLoading />;
@@ -1092,75 +1101,6 @@ const I18nList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.i18n')}
-        extra={
-          <ListHeaderActions
-            className="i18n-list-page__header-actions"
-            utility={
-              <>
-                <Button
-                  size="small"
-                  icon={<IconRefresh />}
-                  onClick={() => void handleSyncKeys()}
-                  disabled={!canRefresh}
-                >
-                  {t('common.refresh')}
-                </Button>
-                <Button size="small" icon={<IconEye />} onClick={() => void handleOpenAudit()}>
-                  {t('i18n.audit.action')}
-                </Button>
-                {canHydrateBuiltin ? (
-                  <Button
-                    size="small"
-                    status="warning"
-                    loading={hydratingBuiltinLocales}
-                    onClick={() => void handleHydrateBuiltinLocales(query.module || undefined)}
-                  >
-                    {t('i18n.hydrateBuiltin.action')}
-                  </Button>
-                ) : null}
-                {canExport ? (
-                  <Button size="small" icon={<IconDownload />} onClick={() => void handleExport()}>
-                    {t('i18n.export')}
-                  </Button>
-                ) : null}
-                {canImport ? (
-                  <>
-                    <Button size="small" onClick={() => void handleDownloadTemplate()}>
-                      {t('common.downloadTemplate')}
-                    </Button>
-                    <ImportCsvButton
-                      onSelect={(file) => {
-                        void handleImport(file);
-                      }}
-                    >
-                      {t('i18n.import')}
-                    </ImportCsvButton>
-                  </>
-                ) : null}
-                <Button
-                  size="small"
-                  status="warning"
-                  icon={<IconRefresh />}
-                  onClick={() => void handleRefreshCache()}
-                  disabled={!canRefresh}
-                >
-                  {t('i18n.refreshCache')}
-                </Button>
-              </>
-            }
-            primary={
-              canCreate ? (
-                <Button size="small" type="primary" onClick={() => openCreateModal()}>
-                  {t('common.create')}
-                </Button>
-              ) : null
-            }
-          />
-        }
-      />
-
       <Space direction="vertical" size={12} className="system-page-template i18n-list-page">
         <GovernanceSummaryBar
           eyebrow={t('i18n.hero.eyebrow')}
@@ -1252,35 +1192,6 @@ const I18nList: React.FC = () => {
                   {t('common.total', { count: summary.total })}
                 </Typography.Paragraph>
               </div>
-              {canDelete || canRefresh ? (
-                <PageActions>
-                  <PermissionAction allowed={canRefresh} tooltip={t('common.noPermissionAction')}>
-                    <Button
-                      size="small"
-                      onClick={() => void handleRefreshSelected()}
-                      disabled={selectedRowKeys.length === 0 || !canRefresh}
-                    >
-                      {t('i18n.refreshSelected')}
-                    </Button>
-                  </PermissionAction>
-                  <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
-                    <Popconfirm
-                      title={t('i18n.batchDeleteConfirm')}
-                      onOk={() => void handleBatchDelete()}
-                      disabled={selectedRowKeys.length === 0 || !canDelete}
-                    >
-                      <Button
-                        size="small"
-                        status="danger"
-                        icon={<IconDelete />}
-                        disabled={selectedRowKeys.length === 0 || !canDelete}
-                      >
-                        {t('i18n.batchDelete')}
-                      </Button>
-                    </Popconfirm>
-                  </PermissionAction>
-                </PageActions>
-              ) : null}
             </div>
             {canDelete || canRefresh ? (
               <TableBatchActionBar
@@ -1289,7 +1200,105 @@ const I18nList: React.FC = () => {
                 clearText={t('common.clearSelection')}
                 clearSuccessText={t('common.clearSelectionSuccess')}
                 onClear={() => setSelectedRowKeys([])}
+                prefixActions={
+                  <ListHeaderActions
+                    className="i18n-list-page__header-actions"
+                    utility={
+                      <>
+                        <Button
+                          size="small"
+                          icon={<IconRefresh />}
+                          onClick={() => void handleSyncKeys()}
+                          disabled={!canRefresh}
+                        >
+                          {t('common.refresh')}
+                        </Button>
+                        <Button size="small" icon={<IconEye />} onClick={() => void handleOpenAudit()}>
+                          {t('i18n.audit.action')}
+                        </Button>
+                        {canHydrateBuiltin ? (
+                          <Button
+                            size="small"
+                            status="warning"
+                            loading={hydratingBuiltinLocales}
+                            onClick={() => void handleHydrateBuiltinLocales(query.module || undefined)}
+                          >
+                            {t('i18n.hydrateBuiltin.action')}
+                          </Button>
+                        ) : null}
+                        {canExport ? (
+                          <Button
+                            size="small"
+                            icon={<IconDownload />}
+                            onClick={() => void handleExport()}
+                          >
+                            {t('i18n.export')}
+                          </Button>
+                        ) : null}
+                        {canImport ? (
+                          <>
+                            <Button size="small" onClick={() => void handleDownloadTemplate()}>
+                              {t('common.downloadTemplate')}
+                            </Button>
+                            <ImportCsvButton
+                              onSelect={(file) => {
+                                void handleImport(file);
+                              }}
+                            >
+                              {t('i18n.import')}
+                            </ImportCsvButton>
+                          </>
+                        ) : null}
+                        <Button
+                          size="small"
+                          status="warning"
+                          icon={<IconRefresh />}
+                          onClick={() => void handleRefreshCache()}
+                          disabled={!canRefresh}
+                        >
+                          {t('i18n.refreshCache')}
+                        </Button>
+                      </>
+                    }
+                    primary={
+                      canCreate ? (
+                        <Button size="small" type="primary" onClick={() => openCreateModal()}>
+                          {t('common.create')}
+                        </Button>
+                      ) : null
+                    }
+                  />
+                }
                 hint={!canDelete || !canRefresh ? t('common.batchActionPermissionHint') : undefined}
+                actions={
+                  <>
+                    <PermissionAction allowed={canRefresh} tooltip={t('common.noPermissionAction')}>
+                      <Button
+                        size="small"
+                        onClick={() => void handleRefreshSelected()}
+                        disabled={selectedRowKeys.length === 0 || !canRefresh}
+                      >
+                        {t('i18n.refreshSelected')}
+                      </Button>
+                    </PermissionAction>
+                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm
+                        title={t('i18n.batchDeleteConfirm')}
+                        onOk={() => void handleBatchDelete()}
+                        disabled={selectedRowKeys.length === 0 || !canDelete}
+                      >
+                        <Button
+                          size="small"
+                          status="danger"
+                          icon={<IconDelete />}
+                          disabled={selectedRowKeys.length === 0 || !canDelete}
+                        >
+                          {t('i18n.batchDelete')}
+                        </Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  </>
+                }
               />
             ) : null}
 
@@ -1306,8 +1315,17 @@ const I18nList: React.FC = () => {
                 rowSelection={
                   canDelete || canRefresh
                     ? {
-                        selectedRowKeys,
-                        onChange: (keys) => setSelectedRowKeys(keys),
+                        selectedRowKeys: visibleSelectedRowKeys,
+                        checkCrossPage: true,
+                        preserveSelectedRowKeys: true,
+                        onChange: (keys) =>
+                          setSelectedRowKeys((currentKeys) =>
+                            mergeCrossPageSelection(
+                              currentKeys,
+                              keys,
+                              rows.map((row) => row.id),
+                            ),
+                          ),
                       }
                     : undefined
                 }

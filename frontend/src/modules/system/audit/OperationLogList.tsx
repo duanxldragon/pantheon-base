@@ -21,6 +21,10 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { getSettingGroup } from '../setting/api';
 import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../../components/table/crossPageSelection';
+import {
   batchDeleteOperationLogs,
   cleanupOperationLogs,
   deleteOperationLog,
@@ -43,7 +47,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PermissionAction,
   TABLE_ACTION_COLUMN_WIDTH,
@@ -507,7 +510,6 @@ const OperationLogList: React.FC = () => {
         const result = await getOperationLogList(nextQuery);
         setData(result.items);
         setTotal(result.total);
-        setSelectedRowKeys([]);
       } catch {
         setLoadFailed(true);
         message.error(t('common.loadFailed'));
@@ -576,6 +578,7 @@ const OperationLogList: React.FC = () => {
 
   const search = () => {
     const values = queryForm.getFieldsValue();
+    setSelectedRowKeys([]);
     setQuery({
       ...query,
       ...values,
@@ -585,6 +588,7 @@ const OperationLogList: React.FC = () => {
 
   const reset = () => {
     queryForm.setFieldsValue(emptyQuery);
+    setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
 
@@ -637,6 +641,11 @@ const OperationLogList: React.FC = () => {
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
     });
   };
+
+  const visibleSelectedRowKeys = useMemo(
+    () => getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id)),
+    [data, selectedRowKeys],
+  );
 
   const columns: ColumnProps<OperationLogRow>[] = [
     {
@@ -803,26 +812,6 @@ const OperationLogList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.operationLog')}
-        extra={
-          <ListHeaderActions
-            utility={
-              <>
-                <Button
-                  icon={<IconDownload />}
-                  onClick={() => {
-                    void handleExport();
-                  }}
-                  disabled={!canExport}
-                >
-                  {t('common.export')}
-                </Button>
-              </>
-            }
-          />
-        }
-      />
       <Space direction="vertical" size={16} className="system-page-template">
         <GovernanceSummaryBar
           eyebrow={t('system.audit.hero.eyebrow')}
@@ -935,6 +924,21 @@ const OperationLogList: React.FC = () => {
           </FilterPanel>
 
           <Card className="page-panel system-list__table-card">
+            <div className="system-list__work-actions">
+              <ListHeaderActions
+                utility={
+                  <Button
+                    icon={<IconDownload />}
+                    onClick={() => {
+                      void handleExport();
+                    }}
+                    disabled={!canExport}
+                  >
+                    {t('common.export')}
+                  </Button>
+                }
+              />
+            </div>
             {(canClear || canDelete) && (
               <div>
                 <GovernanceCleanupBar
@@ -1023,8 +1027,17 @@ const OperationLogList: React.FC = () => {
                   canDelete
                     ? {
                         type: 'checkbox',
-                        selectedRowKeys,
-                        onChange: (keys) => setSelectedRowKeys(keys as number[]),
+                        selectedRowKeys: visibleSelectedRowKeys,
+                        checkCrossPage: true,
+                        preserveSelectedRowKeys: true,
+                        onChange: (keys) =>
+                          setSelectedRowKeys((currentKeys) =>
+                            mergeCrossPageSelection(
+                              currentKeys,
+                              keys as number[],
+                              data.map((item) => item.id),
+                            ) as number[],
+                          ),
                       }
                     : undefined
                 }

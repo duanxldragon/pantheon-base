@@ -40,6 +40,18 @@ const compactMainAreaPages = admissionConfig
   .map((item) => item.path)
   .filter((item) => !item.includes(':'));
 
+const pageIdentitySelectors = [
+  '.governance-summary-bar',
+  '.system-list__table-card',
+  '.permission-workbench__tabs',
+  '.dict-workbench',
+  '.setting-group-page',
+  '.module-manager-page',
+  '.generator-wizard-card',
+  '.dashboard-hero-card',
+  '.auth-security-page',
+];
+
 const systemPages = [
   { path: '/system/user', title: '用户管理' },
   { path: '/system/role', title: '角色管理' },
@@ -166,15 +178,19 @@ async function expectNoPageError(page: Page) {
 async function expectPageBodyReady(page: Page) {
   const table = page.locator('.arco-table');
   const empty = page.locator('.arco-empty');
-  const settingGroupNav = page.locator('.setting-page__group-nav-card');
+  const settingGroupNav = page.locator('.setting-page__group-nav-grid');
+  const settingConfigCard = page.locator('.setting-page__config-card');
   const generatorSteps = page.locator('.generator-wizard__steps');
 
   const hasTable = (await table.count()) > 0;
   const hasEmpty = (await empty.count()) > 0;
   const hasSettingGroupNav = (await settingGroupNav.count()) > 0;
+  const hasSettingConfigCard = (await settingConfigCard.count()) > 0;
   const hasGeneratorSteps = (await generatorSteps.count()) > 0;
 
-  expect(hasTable || hasEmpty || hasSettingGroupNav || hasGeneratorSteps).toBeTruthy();
+  expect(
+    hasTable || hasEmpty || hasSettingGroupNav || hasSettingConfigCard || hasGeneratorSteps,
+  ).toBeTruthy();
 
   if (hasEmpty) {
     const emptyText = await empty.first().innerText();
@@ -185,6 +201,11 @@ async function expectPageBodyReady(page: Page) {
 async function expectVisiblePageTitle(page: Page, title: string | RegExp) {
   const visibleMatches = page.getByText(title, { exact: false }).filter({ visible: true });
   await expect(visibleMatches.first()).toBeVisible();
+}
+
+async function expectPageIdentityReady(page: Page, title: string | RegExp) {
+  await expectVisiblePageTitle(page, title);
+  await expect(page.locator(pageIdentitySelectors.join(', ')).first()).toBeVisible();
 }
 
 function formItem(page: Page, label: string) {
@@ -222,7 +243,10 @@ test('user page keeps list workflow primary without governance drawer entry', as
 
   await expectVisiblePageTitle(page, '用户管理');
   await expect(page.locator('.system-user-list__hero')).toHaveCount(0);
-  await expect(page.locator('.governance-summary-bar')).toBeVisible();
+  await expect(page.locator('.governance-summary-bar')).toHaveCount(0);
+  await expect(page.locator('.system-user-list__function-bar')).toBeVisible();
+  await expect(page.locator('.system-user-list__status-strip')).toBeVisible();
+  await expect(page.locator('.system-user-list__status-item')).toHaveCount(5);
   await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(1);
   await expect(page.locator('.governance-insight-drawer')).toHaveCount(0);
   await expect(page.locator('.system-list__table-card')).toBeVisible();
@@ -237,7 +261,7 @@ test('setting page shows audit table only in audit group and removes governance 
   await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(0);
   await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
   await expect(page.locator('.setting-group-page')).toBeVisible();
-  await expect(page.locator('.setting-page__group-nav-card')).toBeVisible();
+  await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
 
   await page.getByRole('button', { name: /日志治理/ }).click();
   await expect(page).toHaveURL(/\/system\/setting\/audit$/);
@@ -255,9 +279,9 @@ test('setting route lands in the single workspace with group navigation', async 
 
   await expectVisiblePageTitle(page, '系统设置');
   await expect(page.locator('.setting-group-page')).toBeVisible();
-  await expect(page.locator('.setting-page__group-nav-card')).toBeVisible();
+  await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
   await expect(page).toHaveURL(/\/system\/setting\/basic$/);
-  await expect(page.getByRole('tab', { name: '基础信息' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: '基础信息' })).toBeVisible();
   await expect(page.getByRole('button', { name: /基础信息/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /日志治理/ })).toBeVisible();
 });
@@ -267,8 +291,8 @@ test('setting group route isolates one group context per route', async ({ page }
 
   await expectVisiblePageTitle(page, '系统设置');
   await expect(page.locator('.setting-group-page')).toBeVisible();
-  await expect(page.locator('.setting-page__group-nav-card')).toBeVisible();
-  await expect(page.getByRole('tab', { name: '安全策略' })).toHaveCount(0);
+  await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
+  await expect(page.getByRole('tab', { name: '安全策略' })).toBeVisible();
   await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
   await expect(page.locator('.form-section__title').getByText('安全策略', { exact: true })).toBeVisible();
 
@@ -305,7 +329,7 @@ test('config high-sensitivity pages keep one summary container and no hero wall'
   await expectVisiblePageTitle(page, /模块生成(?:器|向导)/);
   await expect(page.locator('.system-page-hero')).toHaveCount(0);
   await expect(page.locator('.system-list__hero')).toHaveCount(0);
-  await expect(page.locator('.page-header__extra .arco-btn')).toBeVisible();
+  await expect(page.locator('.system-list__work-actions .arco-btn')).toBeVisible();
   await expect(page.locator('.generator-wizard__steps')).toBeVisible();
 
   await page.goto('/system/i18n', { waitUntil: 'networkidle' });
@@ -746,6 +770,67 @@ test('setting smoke: default language can be selected through setting page UI', 
   }
 });
 
+test('setting smoke: login page language choice overrides saved preference and system default for the session', async ({
+  page,
+}) => {
+  const accessToken = await signInAsAdmin(page);
+  const originalPreferences = await getCurrentUserPreferences(page, accessToken);
+  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(groupResponse.ok()).toBeTruthy();
+  const groupPayload = await groupResponse.json();
+  expect(groupPayload.code).toBe(200);
+  const originalItems = groupPayload.data.items as SettingItem[];
+  const nextItems = originalItems.map((item) => ({
+    settingKey: item.settingKey,
+    settingValue: item.settingKey === 'i18n.default_language' ? 'ja-JP' : item.settingValue,
+  }));
+
+  try {
+    await updateCurrentUserPreferences(page, accessToken, {
+      theme: originalPreferences.theme,
+      language: 'zh-CN',
+      layoutMode: originalPreferences.layoutMode,
+      densityMode: originalPreferences.densityMode,
+    });
+    const updateResponse = await updateSettingGroup(page, accessToken, 'i18n', nextItems);
+    expect(updateResponse.ok()).toBeTruthy();
+
+    await page.context().clearCookies();
+    await page.goto('/login', { waitUntil: 'networkidle' });
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+
+    await page.locator('.auth-login-page__tools .arco-select-view').click();
+    await page.locator('.arco-select-option').filter({ hasText: 'English' }).first().click();
+    await page.getByPlaceholder(/username/i).fill(adminCredentials.username);
+    await page.getByPlaceholder(/password/i).fill(adminCredentials.password);
+    await page.getByRole('button', { name: /sign in/i }).click();
+
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByRole('heading', { name: 'Workbench' }).first()).toBeVisible();
+    await expect
+      .poll(async () => {
+        return page.evaluate(() => ({
+          language: localStorage.getItem('pantheon_lang'),
+          explicit: localStorage.getItem('pantheon_lang_explicit'),
+        }));
+      })
+      .toEqual({
+        language: 'en-US',
+        explicit: '1',
+      });
+  } finally {
+    const restoreToken = await signInAsAdmin(page);
+    await updateCurrentUserPreferences(page, restoreToken, originalPreferences);
+    await updateSettingGroup(page, restoreToken, 'i18n', originalItems);
+  }
+});
+
 test('setting smoke: logout clears explicit language and falls back to default language', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
@@ -853,7 +938,7 @@ test('platform smoke: lock screen keeps current route and opened tabs', async ({
     expect(updateResponse.ok()).toBeTruthy();
 
     await page.goto('/system/user', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: '用户管理' })).toBeVisible();
+    await expectPageIdentityReady(page, '用户管理');
     await expect(page.locator('.app-shell__tabs [role="tab"]')).toHaveCount(2);
 
     await page.getByRole('button', { name: /admin/i }).click();
@@ -865,7 +950,7 @@ test('platform smoke: lock screen keeps current route and opened tabs', async ({
 
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page).toHaveURL(/\/system\/user$/);
-    await expect(page.getByRole('heading', { name: '用户管理' })).toBeVisible();
+    await expectPageIdentityReady(page, '用户管理');
     await expect(page.locator('.app-shell__tabs [role="tab"]')).toHaveCount(2);
   } finally {
     await updateSettingGroup(page, accessToken, 'ui', originalItems);
@@ -1234,7 +1319,7 @@ test('setting permission smoke: list-only role can view page but cannot save or 
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/setting/basic', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '系统设置' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '系统设置');
       await expectNoPageError(viewerPage);
 
       const settingPanel = viewerPage.locator('.setting-page__config-card');
@@ -1296,7 +1381,7 @@ test('dict permission smoke: list-only role can view page but cannot mutate conf
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/dict', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '字典管理' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '字典管理');
       await expectNoPageError(viewerPage);
 
       const typePanel = viewerPage.locator('.dict-page__actions').first();
@@ -1367,13 +1452,13 @@ test('i18n permission smoke: list-only role can view page but cannot mutate tran
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/i18n', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '国际化管理' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '国际化管理');
       await expectNoPageError(viewerPage);
 
-      const headerActions = viewerPage.locator('.page-header').first();
+      const headerActions = viewerPage.locator('.system-list__work-actions').first();
       await expect(headerActions.getByRole('button', { name: '新增' })).toHaveCount(0);
-      await expect(headerActions.getByRole('button', { name: '刷新缓存' })).toBeDisabled();
-      await expect(headerActions.getByRole('button', { name: '刷新', exact: true })).toBeDisabled();
+      await expect(headerActions.getByRole('button', { name: '刷新缓存' })).toHaveCount(0);
+      await expect(headerActions.getByRole('button', { name: '刷新', exact: true })).toHaveCount(0);
       await expect(headerActions.getByRole('button', { name: '导出' })).toHaveCount(0);
       await expect(headerActions.getByRole('button', { name: '导入' })).toHaveCount(0);
     } finally {
@@ -1432,7 +1517,7 @@ test('login-log permission smoke: list-only role can view page but cannot clear,
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/login-log', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '登录日志' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '登录日志');
       await expectNoPageError(viewerPage);
 
       await expect(viewerPage.getByRole('button', { name: '导出' })).toBeDisabled();
@@ -1493,7 +1578,7 @@ test('session permission smoke: list-only role can view page but cannot revoke o
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/session', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '会话管理' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '会话管理');
       await expectNoPageError(viewerPage);
 
       await expect(viewerPage.getByRole('button', { name: '清理历史会话' })).toHaveCount(0);
@@ -1555,7 +1640,7 @@ test('operation-log permission smoke: list-only role can view page but cannot cl
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/operation-log', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '操作日志' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '操作日志');
       await expectNoPageError(viewerPage);
 
       await expect(viewerPage.getByRole('button', { name: '导出' })).toBeDisabled();
@@ -1616,7 +1701,7 @@ test('module permission smoke: list-only role can view registry but cannot regis
     try {
       await installClientSession(viewerPage, viewerTokens);
       await viewerPage.goto('/system/modules', { waitUntil: 'networkidle' });
-      await expect(viewerPage.getByRole('heading', { name: '模块注册表' })).toBeVisible();
+      await expectPageIdentityReady(viewerPage, '模块注册表');
       await expectNoPageError(viewerPage);
 
       await expect(viewerPage.getByRole('button', { name: '前往生成器' })).toHaveCount(0);
@@ -1633,7 +1718,7 @@ test('module permission smoke: list-only role can view registry but cannot regis
 test('login-log governance smoke: selecting rows enables batch delete affordance', async ({ page }) => {
   await signInAsAdmin(page);
   await page.goto('/system/login-log', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('heading', { name: '登录日志' })).toBeVisible();
+  await expectPageIdentityReady(page, '登录日志');
   await expectNoPageError(page);
 
   const batchDeleteButton = page.getByRole('button', { name: '删除所选' });
@@ -1645,7 +1730,7 @@ test('login-log governance smoke: selecting rows enables batch delete affordance
 test('operation-log governance smoke: selecting rows enables batch delete affordance', async ({ page }) => {
   await signInAsAdmin(page);
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('heading', { name: '操作日志' })).toBeVisible();
+  await expectPageIdentityReady(page, '操作日志');
   await expectNoPageError(page);
 
   const batchDeleteButton = page.getByRole('button', { name: '删除所选' });
@@ -1654,10 +1739,46 @@ test('operation-log governance smoke: selecting rows enables batch delete afford
   await expect(batchDeleteButton).toBeEnabled();
 });
 
+test('user governance smoke: cross-page selection keeps the full selected set', async ({ page }) => {
+  await page.goto('/system/user', { waitUntil: 'networkidle' });
+  await expectPageIdentityReady(page, '用户管理');
+  await expectNoPageError(page);
+  await expect(page.locator('.arco-checkbox').nth(1)).toBeVisible();
+
+  const selectedText = page.locator('.table-batch-action-bar__meta');
+  const firstPageCheckbox = page.locator('.arco-checkbox').nth(1);
+  await firstPageCheckbox.click({ force: true });
+  await expect(selectedText).toContainText('已选 1 条');
+
+  await page.locator('.system-user-list__table .arco-pagination-item-next').click();
+  await expect
+    .poll(async () => {
+      return page.locator('.system-user-list__table .arco-pagination-item-active').innerText();
+    })
+    .toBe('2');
+  await expect(selectedText).toContainText('已选 1 条');
+
+  const secondPageCheckbox = page.locator('.arco-checkbox').nth(1);
+  await secondPageCheckbox.click({ force: true });
+  await expect(selectedText).toContainText('已选 2 条');
+
+  await page
+    .locator('.system-user-list__table .arco-pagination-item')
+    .filter({ hasText: '1' })
+    .first()
+    .click();
+  await expect
+    .poll(async () => {
+      return page.locator('.system-user-list__table .arco-pagination-item-active').innerText();
+    })
+    .toBe('1');
+  await expect(selectedText).toContainText('已选 2 条');
+});
+
 test('session governance smoke: cleanup bar uses the unified governance affordance', async ({ page }) => {
   await signInAsAdmin(page);
   await page.goto('/system/session', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('heading', { name: '会话管理' })).toBeVisible();
+  await expectPageIdentityReady(page, '会话管理');
   await expectNoPageError(page);
 
   const cleanupBar = page.locator('.page-panel').filter({ has: page.getByRole('button', { name: '清理历史会话' }) }).first();

@@ -38,6 +38,10 @@ import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
+import {
+  getVisibleSelectedRowKeys,
+  mergeCrossPageSelection,
+} from '../../../components/table/crossPageSelection';
 import { getDeptTree, type DeptNode } from '../dept/api';
 import {
   batchDeletePosts,
@@ -67,7 +71,6 @@ import {
   PageContainer,
   PageEmpty,
   PageError,
-  PageHeader,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -325,8 +328,7 @@ const PostList: React.FC = () => {
 
   const handleTableChange: TableProps<PostRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
-    setSelectedRowKeys([]);
-    setQuery({
+    const nextQuery: PostListQuery = {
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
@@ -335,9 +337,15 @@ const PostList: React.FC = () => {
         currentSorter?.direction === 'ascend'
           ? 'asc'
           : currentSorter?.direction === 'descend'
-            ? 'desc'
+          ? 'desc'
             : undefined,
-    });
+    };
+    const sortChanged =
+      nextQuery.sortField !== query.sortField || nextQuery.sortOrder !== query.sortOrder;
+    if (sortChanged) {
+      setSelectedRowKeys([]);
+    }
+    setQuery(nextQuery);
   };
 
   const renderErrorState = () => {
@@ -420,8 +428,7 @@ const PostList: React.FC = () => {
   };
 
   const visibleSelectedRowKeys = useMemo(() => {
-    const visibleKeys = new Set(data.map((item) => item.id));
-    return selectedRowKeys.filter((key) => visibleKeys.has(Number(key)));
+    return getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id));
   }, [data, selectedRowKeys]);
 
   const heroStats = useMemo(() => {
@@ -631,47 +638,6 @@ const PostList: React.FC = () => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('system.menu.post')}
-        extra={
-          <ListHeaderActions
-            utility={
-              <>
-                <Button
-                  icon={<IconDownload />}
-                  onClick={() => {
-                    void handleExport();
-                  }}
-                  disabled={!canExport}
-                >
-                  {t('common.export')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    void handleDownloadTemplate();
-                  }}
-                  disabled={!canImport}
-                >
-                  {t('common.downloadTemplate')}
-                </Button>
-                <ImportCsvButton
-                  disabled={!canImport}
-                  onSelect={(file) => {
-                    void handleImport(file);
-                  }}
-                >
-                  {t('common.import')}
-                </ImportCsvButton>
-              </>
-            }
-            primary={
-              <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
-                {t('common.add')}
-              </Button>
-            }
-          />
-        }
-      />
       <Space direction="vertical" size={16} className="system-page-template post-list-page">
         <GovernanceSummaryBar
           eyebrow={t('system.post.hero.eyebrow')}
@@ -741,6 +707,49 @@ const PostList: React.FC = () => {
               clearText={t('common.clearSelection')}
               clearSuccessText={t('common.clearSelectionSuccess')}
               onClear={() => setSelectedRowKeys([])}
+              prefixActions={
+                <ListHeaderActions
+                  utility={
+                    <>
+                      <Button
+                        icon={<IconDownload />}
+                        onClick={() => {
+                          void handleExport();
+                        }}
+                        disabled={!canExport}
+                      >
+                        {t('common.export')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          void handleDownloadTemplate();
+                        }}
+                        disabled={!canImport}
+                      >
+                        {t('common.downloadTemplate')}
+                      </Button>
+                      <ImportCsvButton
+                        disabled={!canImport}
+                        onSelect={(file) => {
+                          void handleImport(file);
+                        }}
+                      >
+                        {t('common.import')}
+                      </ImportCsvButton>
+                    </>
+                  }
+                  primary={
+                    <Button
+                      type="primary"
+                      icon={<IconPlus />}
+                      onClick={openCreate}
+                      disabled={!canCreate}
+                    >
+                      {t('common.add')}
+                    </Button>
+                  }
+                />
+              }
               hint={
                 !canBatchUpdate || !canBatchDelete
                   ? t('common.batchActionPermissionHint')
@@ -793,7 +802,7 @@ const PostList: React.FC = () => {
                       disabled={batchDeleteDisabled}
                     >
                       <Button
-                        status={batchDeleteDisabled ? undefined : 'danger'}
+                        status="danger"
                         icon={<IconDelete />}
                         disabled={batchDeleteDisabled}
                       >
@@ -820,8 +829,13 @@ const PostList: React.FC = () => {
                 rowSelection={{
                   type: 'checkbox',
                   selectedRowKeys: visibleSelectedRowKeys,
+                  checkCrossPage: true,
+                  preserveSelectedRowKeys: true,
                   fixed: true,
-                  onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+                  onChange: (rowKeys) =>
+                    setSelectedRowKeys((keys) =>
+                      mergeCrossPageSelection(keys, rowKeys, data.map((item) => item.id)),
+                    ),
                 }}
                 onChange={handleTableChange}
                 emptyText={t('system.post.empty')}

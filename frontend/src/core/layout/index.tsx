@@ -261,7 +261,10 @@ const BaseLayout: React.FC = () => {
   const lastInteractionAtRef = useRef(0);
   const idleLogoutInFlightRef = useRef(false);
   const matchedRoute = useMemo(() => findRouteByPath(location.pathname), [location.pathname]);
-  const currentRouteTitleKey = matchedRoute?.titleKey || systemRouteTitleMap[location.pathname];
+  const currentRouteTitleKey =
+    matchedRoute?.resolveTitleKey?.(location.pathname) ||
+    matchedRoute?.titleKey ||
+    systemRouteTitleMap[location.pathname];
   const activeMenuPath = matchedRoute?.activeMenu || location.pathname;
   const visibleMenuTree = useMemo(
     () => filterMenuTreeByCapabilities(menuTree, publicSettings.orgEnabled),
@@ -282,13 +285,27 @@ const BaseLayout: React.FC = () => {
   const breadcrumbItems = useMemo(() => {
     const root = [{ path: '/', label: t('common.home') }];
     if (menuTrail.length > 0) {
-      return [
+      const trailItems = [
         ...root,
         ...menuTrail.map((item) => ({
           path: item.path,
           label: t(item.titleKey),
         })),
       ];
+      if (
+        matchedRoute?.activeMenu &&
+        currentRouteTitleKey &&
+        currentRouteTitleKey !== currentMenuTitleKey
+      ) {
+        return [
+          ...trailItems,
+          {
+            path: location.pathname,
+            label: t(currentRouteTitleKey),
+          },
+        ];
+      }
+      return trailItems;
     }
     return [
       ...root,
@@ -301,7 +318,15 @@ const BaseLayout: React.FC = () => {
             : location.pathname,
       },
     ];
-  }, [activeMenuPath, currentMenuTitleKey, currentRouteTitleKey, location.pathname, menuTrail, t]);
+  }, [
+    activeMenuPath,
+    currentMenuTitleKey,
+    currentRouteTitleKey,
+    location.pathname,
+    matchedRoute?.activeMenu,
+    menuTrail,
+    t,
+  ]);
   const menuOpenKeys = useMemo(
     () => menuTrail.slice(0, -1).map((item) => item.id.toString()),
     [menuTrail],
@@ -1042,18 +1067,22 @@ const BaseLayout: React.FC = () => {
   ) as SupportedLocale;
 
   const persistPlatformPreferences = useCallback(
-    (nextPreferences: UserPlatformPreferences) => {
+    (nextPreferences: Partial<UserPlatformPreferences>) => {
       const currentUserInfo = useAuthStore.getState().userInfo;
       if (!currentUserInfo) {
         return;
       }
+      const mergedPreferences: UserPlatformPreferences = {
+        ...currentUserInfo.preferences,
+        ...nextPreferences,
+      };
 
       setUserInfo({
         ...currentUserInfo,
-        preferences: nextPreferences,
+        preferences: mergedPreferences,
       });
 
-      void updateCurrentUserPreferences(nextPreferences)
+      void updateCurrentUserPreferences(mergedPreferences)
         .then((nextUserInfo) => {
           if (useAuthStore.getState().token === token) {
             setUserInfo(nextUserInfo);
@@ -1086,7 +1115,11 @@ const BaseLayout: React.FC = () => {
       if (preferences.theme && preferences.theme !== theme) {
         setTheme(preferences.theme);
       }
-      if (preferences.language && preferences.language !== currentLanguage) {
+      if (
+        !hasExplicitLanguagePreference() &&
+        preferences.language &&
+        preferences.language !== currentLanguage
+      ) {
         setExplicitLanguagePreference(preferences.language);
         void switchI18nLanguage(preferences.language);
       }
@@ -1100,12 +1133,6 @@ const BaseLayout: React.FC = () => {
     }
     setExplicitLanguagePreference(language);
     void switchI18nLanguage(language);
-    persistPlatformPreferences({
-      theme,
-      language,
-      layoutMode,
-      densityMode,
-    });
   };
 
   const toggleLayoutMode = () => {
@@ -1114,7 +1141,6 @@ const BaseLayout: React.FC = () => {
       persistShellLayoutMode(nextMode);
       persistPlatformPreferences({
         theme,
-        language: currentLanguage,
         layoutMode: nextMode,
         densityMode,
       });
@@ -1126,7 +1152,6 @@ const BaseLayout: React.FC = () => {
     setDensityMode(mode);
     persistPlatformPreferences({
       theme,
-      language: currentLanguage,
       layoutMode,
       densityMode: mode,
     });
@@ -1217,7 +1242,6 @@ const BaseLayout: React.FC = () => {
                 setTheme(item.key);
                 persistPlatformPreferences({
                   theme: item.key,
-                  language: currentLanguage,
                   layoutMode,
                   densityMode,
                 });
