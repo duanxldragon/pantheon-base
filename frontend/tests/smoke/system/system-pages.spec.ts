@@ -203,6 +203,10 @@ async function expectVisiblePageTitle(page: Page, title: string | RegExp) {
   await expect(visibleMatches.first()).toBeVisible();
 }
 
+function shellBrandTextLocator(page: Page) {
+  return page.locator('.app-shell__brand-title, .app-shell__header-brand-text').first();
+}
+
 async function expectPageIdentityReady(page: Page, title: string | RegExp) {
   await expectVisiblePageTitle(page, title);
   await expect(page.locator(pageIdentitySelectors.join(', ')).first()).toBeVisible();
@@ -362,7 +366,7 @@ test('setting smoke: site name updates public brand display', async ({ page }) =
     expect(updatePayload.code).toBe(200);
 
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
-    await expect(page.locator('.app-shell__brand-title')).toHaveText(nextSiteName);
+    await expect(shellBrandTextLocator(page)).toHaveText(nextSiteName);
     await expect(page).toHaveTitle(nextSiteName);
   } finally {
     await updateSettingGroup(page, accessToken, 'basic', originalItems);

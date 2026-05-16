@@ -1237,9 +1237,11 @@ test('empty loading error and destructive controls keep shared visual semantics'
   });
   await navigateInShell(page, '/system/user');
   await expect(page.locator('.system-list__table-card .app-table')).toBeVisible();
+  await page.locator('.system-user-list__table .arco-checkbox').nth(1).click({ force: true });
+  await expect(page.getByRole('button', { name: '删除所选' })).toBeEnabled();
 
   const destructiveContract = await page.evaluate(() => {
-    const listRoot = document.querySelector<HTMLElement>('.system-list__table-card') || document;
+    const listRoot = document.querySelector<HTMLElement>('.page-container') || document;
     const buttons = Array.from(listRoot.querySelectorAll<HTMLElement>('.arco-btn')).filter(
       (button) => /删除|delete/i.test(button.textContent || ''),
     );

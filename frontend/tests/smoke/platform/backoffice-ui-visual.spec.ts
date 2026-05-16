@@ -112,11 +112,18 @@ async function expectNoPageError(page: Page) {
 }
 
 async function expectProfessionalBackofficeSurface(page: Page) {
-  await expect(page.locator('.app-shell__sider')).toBeVisible();
   await expect(page.locator('.app-shell__header')).toBeVisible();
   await expect(page.locator('.app-shell__content')).toBeVisible();
   await expect(page.locator('.page-panel').first()).toBeVisible();
   await expect(page.locator('.arco-layout-sider-dark')).toHaveCount(0);
+  const usesHorizontalShell = (await page.locator('.app-shell--horizontal').count()) > 0;
+  if (usesHorizontalShell) {
+    await expect(page.locator('.app-shell__header-brand')).toBeVisible();
+    await expect(page.locator('.app-shell__top-menu')).toBeVisible();
+    await expect(page.locator('.app-shell__sider')).toHaveCount(0);
+    return;
+  }
+  await expect(page.locator('.app-shell__sider')).toBeVisible();
 }
 
 async function expectPageIdentity(page: Page, title: string) {
