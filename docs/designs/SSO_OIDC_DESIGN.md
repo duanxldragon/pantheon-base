@@ -1,11 +1,14 @@
+---
+title: SSO / OAuth2 / OIDC 设计
+doc_type: Design
+layer: system/auth
+status: Draft
+linked_contracts:
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # SSO / OAuth2 / OIDC 设计
-
-更新时间：2026-05-05
-
-类型：Design
-归属层：system/auth
-状态：Draft
-
 本文定义 Pantheon 后续接入 SSO / OAuth2 / OIDC 的边界。当前不实现真实 SSO，本文件用于避免未来临时拼接身份源导致认证域混乱。
 
 ---

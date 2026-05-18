@@ -1,11 +1,14 @@
+---
+title: 业务生命周期详情页模板 (Business Lifecycle Detail Pattern)
+doc_type: Design / Pattern
+layer: business/* (从 pantheon-ops 的 CMDB + Deploy 抽象)
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-11
+---
+
 # 业务生命周期详情页模板 (Business Lifecycle Detail Pattern)
-
-更新时间：2026-05-11
-
-类型：Design / Pattern
-归属层：business/* (从 pantheon-ops 的 CMDB + Deploy 抽象)
-状态：Active
-
 本文沉淀**业务资源详情页**的标准实现模板，特别针对**有状态生命周期**的资源（如 Deploy 任务的 pending→running→success/failed，CMDB 主机的 pending→online→offline）。
 
 配合 `BUSINESS_RESOURCE_LIST_PATTERN.md` 使用——前者管列表，本文管详情。

@@ -1,11 +1,14 @@
+---
+title: 动态菜单能力成熟度评估与演进蓝图（2026-04-22）
+doc_type: Assessment
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-22
+---
+
 # 动态菜单能力成熟度评估与演进蓝图（2026-04-22）
-
-更新时间：2026-04-22
-
-类型：Assessment
-归属层：platform
-状态：Active
-
 ## 1. 评估范围
 
 本次评估聚焦三个层面：

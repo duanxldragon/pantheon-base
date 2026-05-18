@@ -1,11 +1,14 @@
+---
+title: 动态模块治理设计
+doc_type: Design
+layer: system/config
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-29
+---
+
 # 动态模块治理设计
-
-更新时间：2026-04-29
-
-类型：Design
-归属层：system/config
-状态：Active
-
 本文定义 `system/config -> dynamicmodule` 的正式治理边界。
 
 它重点回答：

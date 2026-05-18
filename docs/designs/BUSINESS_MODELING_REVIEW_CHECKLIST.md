@@ -1,11 +1,14 @@
+---
+title: 业务模块建模评审清单
+doc_type: Design
+layer: business/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-04
+---
+
 # 业务模块建模评审清单
-
-更新时间：2026-05-04
-
-类型：Design
-归属层：business/*
-状态：Active
-
 本文用于业务模块进入设计、DDL、接口和页面实现前的统一评审。
 
 目标只有一个：

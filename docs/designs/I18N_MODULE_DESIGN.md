@@ -1,11 +1,14 @@
+---
+title: i18n 模块设计
+doc_type: Design
+layer: system/config
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-29
+---
+
 # i18n 模块设计
-
-更新时间：2026-04-29
-
-类型：Design
-归属层：system/config
-状态：Active
-
 本文定义 `system/config -> i18n` 子域的独立边界。
 
 它重点解决四个问题：

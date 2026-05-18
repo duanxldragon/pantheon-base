@@ -1,11 +1,14 @@
+---
+title: 平台仪表盘设计
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-01
+---
+
 # 平台仪表盘设计
-
-更新时间：2026-05-01
-
-类型：Design
-归属层：platform
-状态：Active
-
 ## 1. 归属边界
 
 平台仪表盘属于 `platform` 层，不属于单一 `system/auth`、`system/iam`、`system/org` 或 `system/config` 子域。

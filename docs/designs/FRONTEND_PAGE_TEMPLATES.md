@@ -1,6 +1,15 @@
-# 前端页面模板规范
+---
+title: 前端页面模板规范
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+updated_at: 2026-04-17
+---
 
-更新时间：2026-04-17
+# 前端页面模板规范
 
 本文定义 Pantheon Base 的标准页面模板，用于指导后续所有前端页面实现。
 

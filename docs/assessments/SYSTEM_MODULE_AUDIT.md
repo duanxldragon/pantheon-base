@@ -1,11 +1,14 @@
+---
+title: 系统管理功能审计报告
+doc_type: Assessment
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-17
+---
+
 # 系统管理功能审计报告
-
-更新时间：2026-04-17
-
-类型：Assessment
-归属层：platform
-状态：Active
-
 本文用于对齐”设计文档 / 数据库 / 后端 / 前端”四层现实状态，重点检查以下系统管理功能点是否真正闭环：
 
 - 用户管理

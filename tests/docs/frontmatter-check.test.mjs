@@ -95,6 +95,26 @@ test('validateDoc reports missing linked contract files', () => {
   assert.match(result.errors.join('\n'), /does not exist/);
 });
 
+test('validateDoc requires superseded_by when status is Superseded', () => {
+  const result = validateDoc({
+    filePath: 'docs/archive/baselines/example.md',
+    data: {
+      title: 'Old Baseline',
+      doc_type: 'Acceptance',
+      layer: 'platform',
+      status: 'Superseded',
+      index_group: 'archive/baselines',
+      retention_reason: 'kept as baseline',
+      linked_contracts: ['docs/contracts/PLATFORM_CONTRACT.md'],
+      updated_at: '2026-05-18',
+    },
+    repoRoot: process.cwd(),
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /superseded_by/);
+});
+
 test('validateDoc also validates non-retained frontmatter docs', () => {
   const result = validateDoc({
     filePath: 'docs/designs/example.md',

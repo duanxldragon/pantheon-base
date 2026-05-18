@@ -1,11 +1,14 @@
+---
+title: gstack Windows 使用清单
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-20
+---
+
 # gstack Windows 使用清单
-
-更新时间：2026-04-20
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文只描述 Pantheon 本地开发场景下，如何在 Windows 上稳定使用 gstack 内置浏览器完成冒烟或页面巡检。
 
 ## 1. 适用范围

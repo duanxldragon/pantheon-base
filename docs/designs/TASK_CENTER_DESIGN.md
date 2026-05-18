@@ -1,11 +1,15 @@
+---
+title: 任务中心设计
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+updated_at: 2026-05-18
+---
+
 # 任务中心设计
-
-更新时间：2026-05-18
-
-类型：Design
-归属层：platform
-状态：Active
-
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_IAM_CONTRACT.md`

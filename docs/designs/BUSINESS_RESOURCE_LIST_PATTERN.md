@@ -1,11 +1,14 @@
+---
+title: 业务资源列表页模板 (Business Resource List Pattern)
+doc_type: Design / Pattern
+layer: business/* (从 pantheon-ops 的 CMDB + Deploy 抽象)
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-11
+---
+
 # 业务资源列表页模板 (Business Resource List Pattern)
-
-更新时间：2026-05-11
-
-类型：Design / Pattern
-归属层：business/* (从 pantheon-ops 的 CMDB + Deploy 抽象)
-状态：Active
-
 本文沉淀**业务资源列表页**的标准实现模板。所有 `business/<module>/<resource>` 类资源列表（CMDB 主机、Deploy 任务、Deploy 软件包、CMDB 分组、CMDB 标签规范、未来 CRM 客户、WMS 物料等）都应遵循此模板。
 
 不替代 `FRONTEND_PAGE_TEMPLATES.md §3 ListPage`——后者定义骨架；本文定义业务领域特化。

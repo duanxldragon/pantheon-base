@@ -1,11 +1,16 @@
+---
+title: 单租户先行、租户就绪设计
+doc_type: Design
+layer: platform / system/auth / system/config / business/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-04
+---
+
 # 单租户先行、租户就绪设计
-
-更新时间：2026-05-04
-
-类型：Design
-归属层：platform / system/auth / system/config / business/*
-状态：Active
-
 本文用于回答一个现实问题：
 
 当前 Pantheon 先服务内网和后台场景，不立即实现多租户；但为了后续集中精力做业务、尽量少改底座，现在必须把“未来不能堵死的地方”先约束好。

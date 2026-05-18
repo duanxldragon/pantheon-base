@@ -1,11 +1,14 @@
+---
+title: 错误码与多语言设计
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-28
+---
+
 # 错误码与多语言设计
-
-更新时间：2026-04-28
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文定义 Pantheon Base 的错误码与 i18n 责任边界。
 
 目标是把下面这些问题一次讲清：

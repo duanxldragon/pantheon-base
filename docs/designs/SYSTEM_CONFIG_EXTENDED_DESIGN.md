@@ -1,11 +1,14 @@
+---
+title: system/config 扩展设计
+doc_type: Design
+layer: system/config
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-29
+---
+
 # system/config 扩展设计
-
-更新时间：2026-04-29
-
-类型：Design
-归属层：system/config
-状态：Active
-
 本文用于把 `system/config` 已经真实存在的扩展能力重新收口成一个统一设计锚点。
 
 它不是为了替代：

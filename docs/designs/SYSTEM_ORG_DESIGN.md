@@ -1,11 +1,14 @@
+---
+title: system/org 组织域设计
+doc_type: Design
+layer: system/org
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # system/org 组织域设计
-
-更新时间：2026-05-05
-
-类型：Design
-归属层：system/org
-状态：Active
-
 本文补齐 `system/org` 的独立设计锚点。组织域当前已有部门、岗位、组织治理页面和后端能力，但历史上主要散落在总体设计、系统审计和页面实现中，缺少单域设计文档。
 
 ---

@@ -1,11 +1,14 @@
+---
+title: 权限工作台治理深化设计
+doc_type: Design
+layer: system/iam
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # 权限工作台治理深化设计
-
-更新时间：2026-05-05
-
-类型：Design
-归属层：system/iam
-状态：Active
-
 本文定义 `system/iam` 权限工作台从“发现 + 导出 + 受控补齐”继续演进到“发现 + 整改 + 追踪”的下一阶段边界。
 
 ---

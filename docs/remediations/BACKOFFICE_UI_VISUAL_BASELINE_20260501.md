@@ -1,11 +1,14 @@
+---
+title: 后台 UI 截图基线与视觉回归清单
+doc_type: Baseline
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-01
+---
+
 # 后台 UI 截图基线与视觉回归清单
-
-更新时间：2026-05-01
-
-类型：Baseline
-归属层：platform
-状态：Active
-
 ## 1. 目标
 
 本清单用于固定 Pantheon Base 后台 UI 的平台层视觉基线，防止以下回归：

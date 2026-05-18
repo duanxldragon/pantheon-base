@@ -1,11 +1,14 @@
+---
+title: 安全策略深化路线图
+doc_type: Design
+layer: system/auth
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # 安全策略深化路线图
-
-更新时间：2026-05-05
-
-类型：Design
-归属层：system/auth
-状态：Active
-
 本文用于更新安全策略后续任务。MFA/TOTP 已进入已实现能力，不再作为“待补功能缺口”统计；后续重点转向登录告警、密码策略和风控。
 
 ---

@@ -1,11 +1,14 @@
+---
+title: 前端架构设计与 UI 规范
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-17
+---
+
 # 前端架构设计与 UI 规范
-
-更新时间：2026-04-17
-
-类型：Design
-归属层：platform
-状态：Active
-
 > 本文偏”架构总览”。更细的页面骨架、导航、状态、表单、表格、响应式和权限态规范，见 `docs/designs/FRONTEND_UI_SPEC.md`；后台 UI 专项整改见 `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`。
 
 数值性真相源约束：

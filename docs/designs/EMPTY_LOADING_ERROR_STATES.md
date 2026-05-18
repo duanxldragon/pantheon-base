@@ -1,11 +1,14 @@
+---
+title: 空 / 加载 / 错误状态规范 (Empty / Loading / Error States)
+doc_type: Design
+layer: platform / system/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-11
+---
+
 # 空 / 加载 / 错误状态规范 (Empty / Loading / Error States)
-
-更新时间：2026-05-11
-
-类型：Design
-归属层：platform / system/*
-状态：Active
-
 本文规定每类页面在「**非正常路径**」下的视觉、文案、交互、ARIA 标识。配合 `FRONTEND_UI_SPEC.md` §9 状态设计、`FRONTEND_PAGE_TEMPLATES.md`、`ACCESSIBILITY.md` §5 使用。
 
 UI Spec §9 给视觉原则；本文给**具体每页**的状态变体规格。

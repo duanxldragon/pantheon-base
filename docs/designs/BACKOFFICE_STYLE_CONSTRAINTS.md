@@ -1,11 +1,14 @@
+---
+title: 后台 UI 风格约束
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-01
+---
+
 # 后台 UI 风格约束
-
-更新时间：2026-05-01
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文用于约束 Pantheon Base 后台的**共享风格实现**，重点解决以下回归模式：
 
 - 右侧辅助栏存在多种 `Card`/标题/边框写法；

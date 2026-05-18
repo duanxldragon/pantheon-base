@@ -1,11 +1,15 @@
+---
+title: 用户偏好设计
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-05-18
+---
+
 # 用户偏好设计
-
-更新时间：2026-05-18
-
-类型：Design
-归属层：platform
-状态：Active
-
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_AUTH_CONTRACT.md`

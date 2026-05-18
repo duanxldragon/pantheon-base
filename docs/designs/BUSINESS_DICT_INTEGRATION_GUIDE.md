@@ -1,10 +1,14 @@
+---
+title: 业务字典接入指南
+doc_type: Design
+layer: system/config / business/*
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # 业务字典接入指南
-
-更新时间：2026-05-05
-
-类型：Design
-归属层：system/config / business/*
-状态：Active
 
 本文定义业务模块如何使用 `system/config/dict`，避免业务模块各自硬编码枚举或把业务字典混进 system 底座语义。
 

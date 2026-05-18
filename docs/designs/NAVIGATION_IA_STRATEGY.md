@@ -1,11 +1,15 @@
+---
+title: 导航信息架构深化设计
+doc_type: Design
+layer: platform / system/iam
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+updated_at: 2026-05-11
+---
+
 # 导航信息架构深化设计
-
-更新时间：2026-05-11
-
-类型：Design
-归属层：platform / system/iam
-状态：Active
-
 本文定义菜单 IA、外链、iframe、页签缓存、面包屑和高亮策略的深化规范。配合 `FRONTEND_UI_SPEC.md` §5、`PERMISSION_MODEL.md`、`MOBILE_RESPONSIVE_BREAKPOINTS.md` 使用。
 
 ---

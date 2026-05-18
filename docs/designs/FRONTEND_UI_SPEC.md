@@ -1,6 +1,14 @@
-# 前端 UI 详细设计规范
+---
+title: 前端 UI 详细设计规范
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-12
+---
 
-更新时间：2026-05-12
+# 前端 UI 详细设计规范
 
 本文是 Pantheon Base 的前端 UI 细则文档，用来补足 `docs/designs/FRONTEND.md` 中尚未展开的视觉、交互、响应式、状态、导航和页面模板规范。
 

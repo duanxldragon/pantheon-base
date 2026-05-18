@@ -1,11 +1,14 @@
+---
+title: 数据库设计规范与详细说明
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-17
+---
+
 # 数据库设计规范与详细说明
-
-更新时间：2026-04-17
-
-类型：Design
-归属层：platform
-状态：Active
-
 ## 1. 基础规范
 - **引擎**: 统一使用 InnoDB。
 - **编码**: `utf8mb4_general_ci`。

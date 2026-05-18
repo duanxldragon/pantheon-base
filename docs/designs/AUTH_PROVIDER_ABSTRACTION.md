@@ -1,11 +1,15 @@
+---
+title: 认证 Provider 抽象设计
+doc_type: Design
+layer: system/auth
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+updated_at: 2026-05-18
+---
+
 # 认证 Provider 抽象设计
-
-更新时间：2026-05-18
-
-类型：Design
-归属层：system/auth
-状态：Active
-
 关联合同：
 - `SYSTEM_AUTH_CONTRACT.md`
 - `SYSTEM_IAM_CONTRACT.md`

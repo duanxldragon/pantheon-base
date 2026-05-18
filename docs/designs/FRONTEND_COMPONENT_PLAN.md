@@ -1,11 +1,14 @@
+---
+title: 前端组件规划
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-17
+---
+
 # 前端组件规划
-
-更新时间：2026-04-17
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文用于承接：
 
 - `docs/designs/FRONTEND_UI_SPEC.md` 的视觉与交互规范

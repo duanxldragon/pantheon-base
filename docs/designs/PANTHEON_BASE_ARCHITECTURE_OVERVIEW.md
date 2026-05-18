@@ -1,17 +1,18 @@
-﻿# Pantheon Base 架构总览
+---
+title: Pantheon Base 架构总览
+doc_type: Design
+layer: platform / system/auth / system/iam / system/org / system/config / business/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-12
+---
 
-更新时间：2026-05-12
-
-类型：Design
-归属层：platform / system/auth / system/iam / system/org / system/config / business/*
-状态：Active
-
-关联合同：
-- `PLATFORM_CONTRACT.md`
-- `SYSTEM_AUTH_CONTRACT.md`
-- `SYSTEM_IAM_CONTRACT.md`
-- `SYSTEM_ORG_CONTRACT.md`
-- `SYSTEM_CONFIG_CONTRACT.md`
+# Pantheon Base 架构总览
 
 ---
 

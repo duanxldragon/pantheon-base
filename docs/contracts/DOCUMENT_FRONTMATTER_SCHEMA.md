@@ -308,6 +308,8 @@ npm run check:docs-frontmatter:legacy
 - `index_group` 是否与目录语义匹配
 - `status` 是否符合该目录允许值
 - `linked_contracts` 是否为数组且目标文件存在
+- 非 `Contract` 主文档是否携带 `linked_contracts`
+- `Superseded` 文档是否声明 `superseded_by`
 - 输出尚未迁移、仍使用旧元信息头部的 legacy 文档清单
 
 对应测试命令：

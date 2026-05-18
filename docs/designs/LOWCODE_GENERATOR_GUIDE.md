@@ -1,11 +1,14 @@
+---
+title: 轻量级低代码辅助生成器 - 集成与使用指南
+doc_type: Design
+layer: system/config
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-04
+---
+
 # 轻量级低代码辅助生成器 - 集成与使用指南
-
-更新时间：2026-05-04
-
-类型：Design
-归属层：system/config
-状态：Active
-
 ## 📋 概述
 
 该生成器是 Pantheon 标准后台底座上的**补充功能**，目标是辅助研发快速接入业务模块，而不是反向定义平台核心架构。

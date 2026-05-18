@@ -1,10 +1,17 @@
+---
+title: Pantheon 前端合并评估报告
+doc_type: Assessment
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-06
+last_reviewed_at: 2026-05-06（v2）
+---
+
 # Pantheon 前端合并评估报告
 
-评估日期：2026-05-06
 重评估：2026-05-06（v2）
-类型：Assessment
-归属层：platform
-状态：Active
 
 ## 1. 评估边界
 

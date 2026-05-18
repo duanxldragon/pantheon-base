@@ -1,11 +1,15 @@
+---
+title: 调度中心设计
+doc_type: Design
+layer: platform / system/config / business/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-18
+---
+
 # 调度中心设计
-
-更新时间：2026-05-18
-
-类型：Design
-归属层：platform / system/config / business/*
-状态：Active
-
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_CONFIG_CONTRACT.md`

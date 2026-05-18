@@ -1,11 +1,14 @@
+---
+title: 安全中心设计
+doc_type: Design
+layer: system/auth
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-04-17
+---
+
 # 安全中心设计
-
-更新时间：2026-04-17
-
-类型：Design
-归属层：system/auth
-状态：Active
-
 本文定义 Pantheon Base 的安全中心设计，用于承接 `auth` 模块拆分后的安全能力。
 
 安全中心不是“个人中心里放一个改密码表单”，而是用户和管理员理解账号安全、会话状态、登录风险的入口。

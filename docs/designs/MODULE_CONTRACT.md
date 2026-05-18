@@ -1,11 +1,14 @@
+---
+title: 模块契约设计
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-17
+---
+
 # 模块契约设计
-
-更新时间：2026-04-17
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文定义 Pantheon Base 的”模块契约”，目标是让后续所有模块都按统一方式接入，而不是各写各的。
 
 它解决的问题是：

@@ -1,11 +1,14 @@
+---
+title: 响应式断点与移动端适配 (Mobile Responsive Breakpoints)
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-11
+---
+
 # 响应式断点与移动端适配 (Mobile Responsive Breakpoints)
-
-更新时间：2026-05-11
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文定义 Pantheon Base 的断点、容器宽度策略、组件在各断点的退化规则。配合 `FRONTEND_UI_SPEC.md` §12 响应式规范使用。
 
 UI Spec §12 给响应式**原则**；本文给具体**断点数值 + 每类组件的行为表**。

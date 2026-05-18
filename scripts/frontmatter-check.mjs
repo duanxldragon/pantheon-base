@@ -6,6 +6,33 @@ const DOC_ROOT = 'docs';
 
 const REQUIRED_BASE_FIELDS = ['title', 'doc_type', 'layer', 'status', 'updated_at'];
 const REQUIRED_RETAINED_FIELDS = ['index_group', 'retention_reason', 'linked_contracts'];
+const DOC_TYPES_REQUIRING_CONTRACTS = new Set([
+  'Design',
+  'Design / Pattern',
+  'Assessment',
+  'Remediation',
+  'Acceptance',
+  'Audit',
+  'Baseline',
+]);
+const ALLOWED_DOC_TYPES = new Set([
+  'Contract',
+  'Design',
+  'Design / Pattern',
+  'Assessment',
+  'Remediation',
+  'Acceptance',
+  'Audit',
+  'Baseline',
+]);
+const ALLOWED_STATUSES = new Set([
+  'Draft',
+  'Active',
+  'Approved',
+  'Superseded',
+  'Archived',
+  'Completed (Execution Synced)',
+]);
 
 function walkMarkdownFiles(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
@@ -114,6 +141,14 @@ export function validateDoc({ filePath, data, repoRoot }) {
     }
   }
 
+  if (data.doc_type && !ALLOWED_DOC_TYPES.has(data.doc_type)) {
+    errors.push(`${filePath}: doc_type "${data.doc_type}" is not in the allowed set`);
+  }
+
+  if (data.status && !ALLOWED_STATUSES.has(data.status)) {
+    errors.push(`${filePath}: status "${data.status}" is not in the allowed set`);
+  }
+
   const expectedGroup = expectedIndexGroup(filePath);
   if (expectedGroup) {
     for (const field of REQUIRED_RETAINED_FIELDS) {
@@ -147,6 +182,14 @@ export function validateDoc({ filePath, data, repoRoot }) {
         }
       }
     }
+  }
+
+  if (DOC_TYPES_REQUIRING_CONTRACTS.has(data.doc_type) && !isNonEmptyArray(data.linked_contracts)) {
+    errors.push(`${filePath}: doc_type "${data.doc_type}" requires non-empty linked_contracts`);
+  }
+
+  if (data.status === 'Superseded' && !isNonEmptyString(data.superseded_by)) {
+    errors.push(`${filePath}: status "Superseded" requires non-empty superseded_by`);
   }
 
   return {

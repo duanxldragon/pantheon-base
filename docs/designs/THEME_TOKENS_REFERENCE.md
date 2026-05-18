@@ -1,11 +1,14 @@
+---
+title: 主题 Token 参考表 (Theme Tokens Reference)
+doc_type: Design
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-11
+---
+
 # 主题 Token 参考表 (Theme Tokens Reference)
-
-更新时间：2026-05-11
-
-类型：Design
-归属层：platform
-状态：Active
-
 本文是 Pantheon Base 4 个内置主题（`indigo / emerald / violet / slate`）的**具体 token 值参考表**，配合 `FRONTEND_UI_SPEC.md` §3 (Design Token) 使用。
 
 UI Spec §3 定义了 token 命名结构和语义；本文给出每个 token 在每个主题下的**具体值**，作为前端实现和 AI 代码生成的事实表。

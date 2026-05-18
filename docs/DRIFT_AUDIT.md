@@ -1,11 +1,16 @@
+---
+title: Pantheon Base Drift Audit
+doc_type: Audit
+layer: platform / system/auth / system/iam / system/config / business/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-18
+---
+
 # Pantheon Base Drift Audit
-
-更新时间：2026-05-18
-
-类型：Audit
-归属层：platform / system/auth / system/iam / system/config / business/*
-状态：Active
-
 关联设计：
 - `designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md`
 - `designs/P2_SCALE_ROADMAP.md`

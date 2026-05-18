@@ -1,10 +1,14 @@
+---
+title: 右侧功能页面布局与功能性系统评估报告
+doc_type: Assessment
+layer: platform
+status: Completed (Execution Synced)
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-16
+---
+
 # 右侧功能页面布局与功能性系统评估报告
-
-评估日期：2026-05-16
-类型：Assessment
-归属层：platform
-状态：Completed (Execution Synced)
-
 ## 1. 评估目标
 
 本报告面向登录后的右侧功能页面体系，评估两个维度：

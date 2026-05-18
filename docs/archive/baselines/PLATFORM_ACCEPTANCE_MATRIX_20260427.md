@@ -3,6 +3,7 @@ title: 平台层验收矩阵（2026-04-27）
 doc_type: Acceptance
 layer: platform
 status: Superseded
+superseded_by: docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
 index_group: archive/baselines
 retention_reason: 作为 2026-04-30 平台 UI 迁移矩阵之前一阶段的历史验收基线保留
 linked_contracts:

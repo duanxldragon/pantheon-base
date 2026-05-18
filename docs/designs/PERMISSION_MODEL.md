@@ -1,11 +1,14 @@
+---
+title: 权限模型设计
+doc_type: Design
+layer: system/iam
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+updated_at: 2026-04-29
+---
+
 # 权限模型设计
-
-更新时间：2026-04-29
-
-类型：Design
-归属层：system/iam
-状态：Active
-
 本文定义 Pantheon Base 的权限模型，目标是把”菜单能不能看、页面能不能进、按钮能不能点、接口能不能调”拆清楚。
 
 如果这份模型不先定好，后续最容易变成：
