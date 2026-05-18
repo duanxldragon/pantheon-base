@@ -7,7 +7,13 @@ const moduleUrl = pathToFileURL(
   path.resolve('scripts/frontmatter-check.mjs'),
 ).href;
 
-const { parseFrontmatter, validateDoc, hasLegacyMetadata } = await import(moduleUrl);
+const {
+  parseFrontmatter,
+  validateDoc,
+  hasLegacyMetadata,
+  parseContractBodyReferences,
+  extractReadmeDocLinks,
+} = await import(moduleUrl);
 
 test('parseFrontmatter reads yaml-like scalar and array fields', () => {
   const source = `---
@@ -135,4 +141,14 @@ test('hasLegacyMetadata detects old header style docs', () => {
   const source = `# Example\n\n更新时间：2026-05-18\n\n类型：Design\n归属层：platform\n状态：Active\n`;
   assert.equal(hasLegacyMetadata(source), true);
   assert.equal(hasLegacyMetadata('# Example\n\nNo metadata here'), false);
+});
+
+test('parseContractBodyReferences reads contract sections', () => {
+  const source = `# Contract\n\n关联设计：\n- \`FOO.md\`\n- \`BAR.md\`\n\n关联验收：\n- \`BAZ.md\`\n`;
+  assert.deepEqual(parseContractBodyReferences(source), ['FOO.md', 'BAR.md', 'BAZ.md']);
+});
+
+test('extractReadmeDocLinks ignores external and anchor links', () => {
+  const source = `[Local](./designs/FOO.md)\n[Web](https://example.com)\n[Anchor](#section)\n[Parent](../DESIGN.md)`;
+  assert.deepEqual(extractReadmeDocLinks(source), ['./designs/FOO.md', '../DESIGN.md']);
 });

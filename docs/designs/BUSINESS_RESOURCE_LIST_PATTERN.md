@@ -1,6 +1,6 @@
 ---
 title: 业务资源列表页模板 (Business Resource List Pattern)
-doc_type: Design / Pattern
+doc_type: Design
 layer: business/* (从 pantheon-ops 的 CMDB + Deploy 抽象)
 status: Active
 linked_contracts:

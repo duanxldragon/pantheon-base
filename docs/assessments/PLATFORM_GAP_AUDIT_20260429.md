@@ -5,6 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
 updated_at: 2026-04-29
 ---
 

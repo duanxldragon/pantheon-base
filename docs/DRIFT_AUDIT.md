@@ -1,6 +1,6 @@
 ---
 title: Pantheon Base Drift Audit
-doc_type: Audit
+doc_type: Assessment
 layer: platform / system/auth / system/iam / system/config / business/*
 status: Active
 linked_contracts:

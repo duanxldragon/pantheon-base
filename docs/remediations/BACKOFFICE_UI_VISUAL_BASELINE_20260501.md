@@ -1,6 +1,6 @@
 ---
 title: 后台 UI 截图基线与视觉回归清单
-doc_type: Baseline
+doc_type: Acceptance
 layer: platform
 status: Active
 linked_contracts:

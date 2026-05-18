@@ -2,7 +2,7 @@
 title: 右侧功能页面布局与功能性系统评估报告
 doc_type: Assessment
 layer: platform
-status: Completed (Execution Synced)
+status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-05-16

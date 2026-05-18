@@ -8,22 +8,16 @@ const REQUIRED_BASE_FIELDS = ['title', 'doc_type', 'layer', 'status', 'updated_a
 const REQUIRED_RETAINED_FIELDS = ['index_group', 'retention_reason', 'linked_contracts'];
 const DOC_TYPES_REQUIRING_CONTRACTS = new Set([
   'Design',
-  'Design / Pattern',
   'Assessment',
   'Remediation',
   'Acceptance',
-  'Audit',
-  'Baseline',
 ]);
 const ALLOWED_DOC_TYPES = new Set([
   'Contract',
   'Design',
-  'Design / Pattern',
   'Assessment',
   'Remediation',
   'Acceptance',
-  'Audit',
-  'Baseline',
 ]);
 const ALLOWED_STATUSES = new Set([
   'Draft',
@@ -31,7 +25,6 @@ const ALLOWED_STATUSES = new Set([
   'Approved',
   'Superseded',
   'Archived',
-  'Completed (Execution Synced)',
 ]);
 
 function walkMarkdownFiles(dirPath) {
@@ -130,6 +123,78 @@ function isNonEmptyString(value) {
 
 function isNonEmptyArray(value) {
   return Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
+}
+
+function normalizeSlash(p) {
+  return p.replace(/\\/g, '/');
+}
+
+function buildDocsIndex(repoRoot) {
+  const files = walkMarkdownFiles(path.resolve(repoRoot, DOC_ROOT));
+  const byPath = new Map();
+  const byBasename = new Map();
+
+  for (const filePath of files) {
+    const relativePath = normalizeSlash(path.relative(repoRoot, filePath));
+    const source = fs.readFileSync(filePath, 'utf8');
+    let parsed;
+    try {
+      parsed = parseFrontmatter(source);
+    } catch {
+      parsed = { hasFrontmatter: false, data: null, body: source };
+    }
+
+    const entry = {
+      path: relativePath,
+      basename: path.basename(relativePath),
+      source,
+      parsed,
+    };
+    byPath.set(relativePath, entry);
+    const existing = byBasename.get(entry.basename) ?? [];
+    existing.push(entry);
+    byBasename.set(entry.basename, existing);
+  }
+
+  return { files, byPath, byBasename };
+}
+
+function resolveContractBodyReference(ref, docsIndex) {
+  if (ref.startsWith('docs/')) return docsIndex.byPath.get(ref) ?? null;
+  const basenameMatches = docsIndex.byBasename.get(ref) ?? [];
+  if (basenameMatches.length === 1) return basenameMatches[0];
+  return null;
+}
+
+export function parseContractBodyReferences(source) {
+  const refs = [];
+  const lines = source.split(/\r?\n/);
+  const headers = new Set(['关联设计：', '关联评估：', '关联整改：', '关联验收：']);
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!headers.has(lines[i].trim())) continue;
+    for (let j = i + 1; j < lines.length; j += 1) {
+      const line = lines[j].trim();
+      if (!line) break;
+      const match = line.match(/^-\s+`([^`]+)`$/);
+      if (!match) break;
+      refs.push(match[1]);
+    }
+  }
+
+  return refs;
+}
+
+export function extractReadmeDocLinks(source) {
+  const links = [];
+  const regex = /\[[^\]]+\]\(([^)]+)\)/g;
+  let match;
+  while ((match = regex.exec(source)) !== null) {
+    const href = match[1].trim();
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('#')) continue;
+    links.push(href);
+  }
+  return links;
 }
 
 export function validateDoc({ filePath, data, repoRoot }) {
@@ -242,15 +307,18 @@ function checkFile(filePath, repoRoot) {
 }
 
 export function runCheck(repoRoot = process.cwd(), options = {}) {
-  const files = walkMarkdownFiles(path.resolve(repoRoot, DOC_ROOT));
+  const docsIndex = buildDocsIndex(repoRoot);
+  const files = docsIndex.files;
   const errors = [];
   const legacyFiles = [];
   let frontmatterFiles = 0;
 
   for (const filePath of files) {
     const result = checkFile(filePath, repoRoot);
-    const source = fs.readFileSync(filePath, 'utf8');
-    if (parseFrontmatter(source).hasFrontmatter) {
+    const relativePath = normalizeSlash(path.relative(repoRoot, filePath));
+    const source = docsIndex.byPath.get(relativePath)?.source ?? fs.readFileSync(filePath, 'utf8');
+    const parsed = docsIndex.byPath.get(relativePath)?.parsed ?? parseFrontmatter(source);
+    if (parsed.hasFrontmatter) {
       frontmatterFiles += 1;
     }
     if (!result.ok) {
@@ -258,6 +326,39 @@ export function runCheck(repoRoot = process.cwd(), options = {}) {
     }
     if (result.legacy) {
       legacyFiles.push(path.relative(repoRoot, filePath).replace(/\\/g, '/'));
+    }
+  }
+
+  for (const [relativePath, entry] of docsIndex.byPath.entries()) {
+    if (!entry.parsed.hasFrontmatter) continue;
+    if (entry.parsed.data?.doc_type !== 'Contract') continue;
+
+    for (const ref of parseContractBodyReferences(entry.source)) {
+      if (ref === 'TBD') continue;
+      const target = resolveContractBodyReference(ref, docsIndex);
+      if (!target) {
+        errors.push(`${relativePath}: contract reference cannot be resolved: ${ref}`);
+        continue;
+      }
+      if (!target.parsed.hasFrontmatter) {
+        errors.push(`${relativePath}: referenced doc has no frontmatter: ${target.path}`);
+        continue;
+      }
+      const linked = target.parsed.data?.linked_contracts;
+      if (!Array.isArray(linked) || !linked.includes(relativePath)) {
+        errors.push(`${relativePath}: referenced doc does not link back via linked_contracts: ${target.path}`);
+      }
+    }
+  }
+
+  const readmeEntry = docsIndex.byPath.get('docs/README.md');
+  if (readmeEntry) {
+    for (const href of extractReadmeDocLinks(readmeEntry.source)) {
+      const baseDir = path.resolve(repoRoot, 'docs');
+      const resolved = normalizeSlash(path.relative(repoRoot, path.resolve(baseDir, href)));
+      if (!docsIndex.byPath.has(resolved) && !fs.existsSync(path.resolve(repoRoot, resolved))) {
+        errors.push(`docs/README.md: link target does not exist: ${href}`);
+      }
     }
   }
 

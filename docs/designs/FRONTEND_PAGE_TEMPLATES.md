@@ -6,6 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
 updated_at: 2026-04-17
 ---
 
