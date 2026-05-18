@@ -8,7 +8,7 @@
 
 本文是给运维/发布执行人的顺序版 SOP，用于将已有 Pantheon 环境升级到 2026-04-21 这轮模块目录与菜单信息架构版本。
 
-详细解释、完整 SQL 和回归项见 `docs/archive/UPGRADE_EXECUTION_CHECKLIST_20260421.md`；本文只保留执行顺序和放行/回滚判断。
+详细解释、完整 SQL 和回归项见 `docs/archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md`；本文只保留执行顺序和放行/回滚判断。
 
 ---
 
@@ -259,3 +259,4 @@ ORDER BY path;
 - [ ] 记录失败日志、数据库核查结果和回滚时间。
 
 回滚后不要直接再次执行升级；先根据失败点回到代码或数据层定位根因。
+

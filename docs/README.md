@@ -166,30 +166,38 @@
 
 - [平台层 UI 迁移验收矩阵（2026-04-30）](./acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
 - [平台壳层双模式验收模板](./acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
-- [平台壳层双模式验收样例](./archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
+- [平台壳层双模式验收样例](./archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
 - [平台壳层 PR 描述模板](./acceptances/PLATFORM_SHELL_PR_TEMPLATE.md)
-- [平台壳层 PR 描述样例](./archive/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md)
+- [平台壳层 PR 描述样例](./archive/examples/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md)
 - [平台壳层 PR Checklist 片段](./acceptances/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md)
 
 ### 4.3 升级与运行
 
-- [模块目录升级说明](./archive/MODULE_LAYOUT_UPGRADE_20260421.md)
-- [老环境升级运维 SOP](./archive/UPGRADE_RUNBOOK_20260421.md)
-- [老环境升级执行 Checklist](./archive/UPGRADE_EXECUTION_CHECKLIST_20260421.md)
+- [模块目录升级说明](./archive/upgrade/MODULE_LAYOUT_UPGRADE_20260421.md)
+- [老环境升级运维 SOP](./archive/upgrade/UPGRADE_RUNBOOK_20260421.md)
+- [老环境升级执行 Checklist](./archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md)
 - [系统导入导出 Smoke 指南](./acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
 - [gstack Windows 使用清单](./designs/GSTACK_WINDOWS_GUIDE.md)
 
 ## 5. 保留的历史基线与样例
 
+`docs/archive/` 现按用途拆分为：
+
+- `archive/examples/`：真实交付样例、验收样例、整改结案样例
+- `archive/baselines/`：旧矩阵、旧审计等仍需保留的历史基线
+- `archive/upgrade/`：老环境升级说明、runbook 与执行 checklist
+
+这样做的目标不是删除历史，而是让历史材料的用途一眼可分。
+
 以下文档不是主设计入口，但仍有复用价值，因此保留：
 
-- [平台层冒烟归档报告（2026-04-20）](./archive/QA_SMOKE_REPORT_20260420.md)
+- [平台层冒烟归档报告（2026-04-20）](./archive/examples/QA_SMOKE_REPORT_20260420.md)
   - 作为一次完整 `platform + system/*` 冒烟样例，被 [ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md) 和 [WORKFLOW.md](./designs/WORKFLOW.md) 引用。
-- [平台层验收矩阵（2026-04-27）](./archive/PLATFORM_ACCEPTANCE_MATRIX_20260427.md)
+- [平台层验收矩阵（2026-04-27）](./archive/baselines/PLATFORM_ACCEPTANCE_MATRIX_20260427.md)
   - 作为 2026-04-30 UI 迁移矩阵的上一阶段基线保留。
-- [Platform + Auth 整改结案清单（2026-04-29）](./archive/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
+- [Platform + Auth 整改结案清单（2026-04-29）](./archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
   - 作为一次整改结案样例保留，供后续阶段收口参考。
-- [菜单 Icon 审计与治理结果（2026-04-28）](./archive/MENU_ICON_AUDIT_20260428.md)
+- [菜单 Icon 审计与治理结果（2026-04-28）](./archive/baselines/MENU_ICON_AUDIT_20260428.md)
   - 作为 `platform` 导航图标语义治理样例保留。
 
 以下文档保留为阶段性评估归档，但不再作为主入口推荐阅读：
@@ -230,3 +238,4 @@
 - 设计规范类进入主索引；
 - 模板、样例、基线进入“历史基线与样例”；
 - 一次性评估稿如果被后续文档完全覆盖，应在下一轮文档治理中删除。
+

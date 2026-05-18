@@ -8,7 +8,7 @@
 
 本文用于说明 2026-04-21 这一轮”逻辑层不变、物理目录优化”的升级。
 
-如需在老环境执行实际升级，请配合 `docs/archive/UPGRADE_RUNBOOK_20260421.md` 与 `docs/archive/UPGRADE_EXECUTION_CHECKLIST_20260421.md` 一起使用；本文只负责解释边界与目录变化，不替代执行清单。
+如需在老环境执行实际升级，请配合 `docs/archive/upgrade/UPGRADE_RUNBOOK_20260421.md` 与 `docs/archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md` 一起使用；本文只负责解释边界与目录变化，不替代执行清单。
 
 ## 1. 目标
 
@@ -119,5 +119,6 @@ cd frontend && npm run build
 
 若是数据库已在线运行的老环境，执行顺序、菜单重挂核查、页面/API 回归项请直接使用：
 
-- `docs/archive/UPGRADE_RUNBOOK_20260421.md`
-- `docs/archive/UPGRADE_EXECUTION_CHECKLIST_20260421.md`
+- `docs/archive/upgrade/UPGRADE_RUNBOOK_20260421.md`
+- `docs/archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md`
+

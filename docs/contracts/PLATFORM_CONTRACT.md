@@ -246,5 +246,6 @@ Pantheon 当前已经不再是“只有登录 + 菜单 + CRUD”的后台壳。
 - [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
 - [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
-- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md](D:/workspace/go/pantheon-platform/docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
-- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/QA_SMOKE_REPORT_20260420.md)
+- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md](D:/workspace/go/pantheon-platform/docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
+- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/examples/QA_SMOKE_REPORT_20260420.md)
+

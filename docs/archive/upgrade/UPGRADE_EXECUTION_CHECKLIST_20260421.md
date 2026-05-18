@@ -8,7 +8,7 @@
 
 本文用于指导已经运行中的 Pantheon 环境完成 2026-04-21 这一轮升级。
 
-如果你需要发布窗口内“按顺序直接执行”的版本，请先看 `docs/archive/UPGRADE_RUNBOOK_20260421.md`；本文更偏完整核查与验收清单。
+如果你需要发布窗口内“按顺序直接执行”的版本，请先看 `docs/archive/upgrade/UPGRADE_RUNBOOK_20260421.md`；本文更偏完整核查与验收清单。
 
 适用范围：
 
@@ -392,3 +392,4 @@ cd frontend && npm run build
 - [ ] 恢复后重新验证 `/login`、`/dashboard`、`/system/user`
 
 不建议在未确认问题根因前反复重跑初始化 SQL。
+

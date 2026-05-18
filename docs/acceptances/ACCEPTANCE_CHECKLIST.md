@@ -336,7 +336,7 @@
 固定模板：
 
 - 统一使用 `docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
-- 首个基准样例：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 首个基准样例：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 
 提交流程要求：
 
@@ -464,7 +464,7 @@
 
 ### 13.3 验收证据
 
-- 最终汇总：`docs/archive/QA_SMOKE_REPORT_20260420.md`
+- 最终汇总：`docs/archive/examples/QA_SMOKE_REPORT_20260420.md`
 - 机器可读结果：`.gstack/qa-reports/summary-20260420-final.json`
 - 原始输出：`.gstack/qa-reports/raw/20260420-final`
 - 页面截图：`.gstack/qa-reports/screenshots/20260420-final`
@@ -559,3 +559,4 @@
 - 业务域归属与子模块边界以业务仓库内的业务设计文档为准
 
 不能再接受“代码里已有模块，文档里没有定义”的状态。
+

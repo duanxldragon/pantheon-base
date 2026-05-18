@@ -197,14 +197,14 @@
 3. `rg "<Modal|<Drawer" frontend/src/modules frontend/src/components` 仅命中 `AppModal.tsx` 与 `AppDrawer.tsx` 两个平台封装
 4. `rg "Modal\\.confirm|Modal\\.(success|error|info|warning)" frontend/src` 仅命中 `AppModal.tsx` 平台封装内部与 i18n 文案 key
 5. `frontend/src/core/layout/index.css` 中横版导航已切换为与竖版共享的 icon badge、左侧激活导轨和轻强调选中规则
-6. 首个真实双模式验收样例已落档：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+6. 首个真实双模式验收样例已落档：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 
 纪律补充：
 
 - 以后凡是触达 `frontend/src/core/layout/index.tsx`、`frontend/src/core/layout/index.css` 或菜单渲染链路的改动，都默认触发双模式验收；
 - 未附双模式验收记录的壳层改动，不应判定为 `Target`。
 - 后续壳层 PR 或阶段记录，必须显式附 `docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md` 产出的验收文档链接；
-- 首个可复用基准样例为 `docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`。
+- 首个可复用基准样例为 `docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`。
 
 ---
 
@@ -215,7 +215,7 @@
 - `docs/designs/FRONTEND_UI_SPEC.md`
 - `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 - `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
-- `docs/archive/PLATFORM_ACCEPTANCE_MATRIX_20260427.md`
+- `docs/archive/baselines/PLATFORM_ACCEPTANCE_MATRIX_20260427.md`
 
 边界说明：
 
@@ -223,3 +223,4 @@
 - `BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md` 负责定义整改方向与优先级
 - `ACCEPTANCE_CHECKLIST.md` 负责定义验收门槛
 - **本文负责定义 2026-04-30 这轮混合态盘点结果与页面级迁移归属**
+

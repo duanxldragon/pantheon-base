@@ -302,7 +302,7 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 - [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/QA_SMOKE_REPORT_20260420.md)
+- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/examples/QA_SMOKE_REPORT_20260420.md)
 
 ## 11. 后续专题子合同预留
 
@@ -320,3 +320,4 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - 子合同不能改写本总合同边界
 - 子合同只做更细的完成定义与验收补充
 - 在没有专题子合同前，仍以本总合同为主依据
+

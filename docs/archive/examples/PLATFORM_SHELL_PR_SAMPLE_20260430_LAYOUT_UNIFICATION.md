@@ -11,7 +11,7 @@
 基于：
 
 - PR 模板：`docs/acceptances/PLATFORM_SHELL_PR_TEMPLATE.md`
-- 双模式验收记录：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 双模式验收记录：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 
 以下正文可直接复制到后续 PR、阶段记录或阶段收口说明中。
 
@@ -27,14 +27,14 @@
 
 ## 结果摘要
 
-- 双模式验收文档：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 双模式验收文档：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 - 构建结果：`npm run build Passed`
 - 扫描结果：`旧右栏 0 命中 / 原生浮层仅平台封装 / 静态 Modal API 仅平台封装内部 / 双模式链路已验证`
 - 矩阵状态：`Target`
 
 ## 文档链接
 
-- 双模式验收记录：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 双模式验收记录：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 - 验收矩阵：`docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md`
 - 验收清单：`docs/acceptances/ACCEPTANCE_CHECKLIST.md`
 - 工作流要求：`docs/designs/WORKFLOW.md`
@@ -63,7 +63,7 @@
 
 ## 结果摘要
 
-- 双模式验收文档：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 双模式验收文档：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 - 构建结果：`npm run build Passed`
 - 扫描结果：`旧右栏 0 命中 / 原生浮层仅平台封装 / 静态 Modal API 仅平台封装内部 / 双模式链路已验证`
 - 矩阵状态：`Target`
@@ -76,4 +76,5 @@
 - 若后续批次不是 `layout-unification`，只替换批次名、文档链接、影响文件和摘要结论，不改整体结构。
 - 若存在 `Pending`，必须删除 `None` 并填写真实挂账项，不能沿用本样例。
 - 若构建或扫描未通过，必须把 `Passed / Target` 改成真实结果，不能直接复制本样例结论。
+
 

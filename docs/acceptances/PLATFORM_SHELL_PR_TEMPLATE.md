@@ -94,8 +94,8 @@
 
 当前首个真实验收样例：
 
-- `docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
-- 对应 PR 正文样例：`docs/archive/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md`
+- `docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 对应 PR 正文样例：`docs/archive/examples/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md`
 - 可直接粘贴的 checklist 片段：`docs/acceptances/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md`
 
 基于该样例的摘要写法示例：
@@ -110,14 +110,14 @@
 
 ## 结果摘要
 
-- 双模式验收文档：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 双模式验收文档：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 - 构建结果：`npm run build Passed`
 - 扫描结果：`旧右栏 0 命中 / 原生浮层仅平台封装 / 静态 Modal API 仅平台封装内部 / 双模式链路已验证`
 - 矩阵状态：`Target`
 
 ## 文档链接
 
-- 双模式验收记录：`docs/archive/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
+- 双模式验收记录：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 - 验收矩阵：`docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md`
 - 验收清单：`docs/acceptances/ACCEPTANCE_CHECKLIST.md`
 - 工作流要求：`docs/designs/WORKFLOW.md`
@@ -139,3 +139,4 @@
 - 不允许把 `Pending` 写成“后续再看”而不给文件位置
 - 不允许把扫描结果写成“已检查”而不给结论摘要
 - 不允许用单页视觉截图替代壳层双模式验收记录
+
