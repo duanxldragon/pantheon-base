@@ -428,7 +428,6 @@
 
 | 文档 | 负责什么 | 不负责什么 |
 | :--- | :--- | :--- |
-| `docs/archive/IMPLEMENTATION_ROADMAP.md` | 规定阶段目标与顺序 | 不做逐项验收打勾 |
 | `docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md` | 规定文档治理主干与合同模型 | 不替代具体模块设计 |
 | `docs/contracts/DOCUMENT_METADATA_AND_STATUS.md` | 规定文档类型、状态与主索引规则 | 不替代模块完成定义 |
 | `docs/designs/MODULE_CONTRACT.md` | 规定模块接入方式 | 不做开发完成度验收 |

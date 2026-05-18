@@ -141,8 +141,6 @@ Pantheon Platform 将权限拆成四层：
 - `docs/FRONTEND.md`：前端架构与 UI 规范。
 - `docs/BACKEND.md`：后端模块化单体规范。
 - `docs/WORKFLOW.md`：开发流程与 AI 协作方式。
-- `CONTRIBUTING.md`：协作规范、提交格式与 PR checklist。
-- `SECURITY.md`：安全问题提交流程与披露边界。
 
 ## 提交规范
 
@@ -161,7 +159,7 @@ docs(platform): improve repository README
 test(system-iam): add role authorization smoke coverage
 ```
 
-允许的 `type` 见 `CONTRIBUTING.md`。仓库提供 `.gitmessage` 和 `.githooks/commit-msg`，本地可通过以下命令启用：
+常用 `type` 包括 `feat`、`fix`、`docs`、`refactor`、`test`、`chore`。仓库提供 `.gitmessage` 和 `.githooks/commit-msg`，本地可通过以下命令启用：
 
 ```bash
 git config commit.template .gitmessage

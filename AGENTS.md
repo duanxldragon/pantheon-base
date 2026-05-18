@@ -22,7 +22,7 @@
 开始任何任务前，必须先按以下顺序理解项目：
 
 1. `DESIGN.md`
-2. `AGENTS.md` / `agent.md`
+2. `AGENTS.md`
 3. `docs/README.md`
 4. `docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md`
 5. `docs/contracts/DOCUMENT_METADATA_AND_STATUS.md`
@@ -63,7 +63,6 @@
 40. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
 41. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
 42. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
-43. `docs/archive/IMPLEMENTATION_ROADMAP.md`
 44. `docs/assessments/SYSTEM_MODULE_AUDIT.md`
 
 ## 1. 任务分类先行（新增约束）

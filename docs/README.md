@@ -113,7 +113,6 @@
 - [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
 - [业务建模评审清单](./designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md)
 - [P2 规模化能力路线图](./designs/P2_SCALE_ROADMAP.md)
-- [实施路线图](./archive/IMPLEMENTATION_ROADMAP.md)
 
 ### 3.2 平台与 UI 规范
 
