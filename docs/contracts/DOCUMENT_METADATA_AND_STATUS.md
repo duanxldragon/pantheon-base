@@ -39,6 +39,8 @@
 - `Owner`
 - `Last Reviewed`
 - `关联合同`
+- `索引分组`
+- `保留原因`
 
 推荐格式：
 
@@ -49,12 +51,20 @@
 归属层：system/config
 状态：Active
 关联合同：SYSTEM_CONFIG_CONTRACT.md
+索引分组：designs
 ```
 
 说明：
 
 - 不要求第一轮为所有历史文档一次性补齐全部扩展字段；
 - 但从现在开始新增或重写的主文档，应至少补 `类型 / 归属层 / 状态`。
+
+如果文档位于 `docs/superpowers/specs/` 或 `docs/archive/*`，建议进一步补充：
+
+- `索引分组`
+  - 可选值：`superpowers-specs`、`archive/examples`、`archive/baselines`、`archive/upgrade`
+- `保留原因`
+  - 简要说明为什么这份文档不删除，而要继续被保留
 
 ---
 
@@ -238,6 +248,26 @@
 - 某份 `Assessment` 如果仍被流程强依赖，可以进入二级入口；
 - 某份 `Acceptance` 模板或长期矩阵可以进入一线或二级入口。
 
+### 6.4 目录与索引分组映射
+
+为避免后续再次堆回 `docs/archive/` 或 `docs/superpowers/specs/`，建议固定使用以下映射：
+
+- `docs/superpowers/specs/`
+  - `类型` 通常为 `Design`
+  - `状态` 通常为 `Active` 或 `Superseded`
+  - `索引分组` 固定写 `superpowers-specs`
+- `docs/archive/examples/`
+  - `状态` 固定写 `Archived`
+  - `索引分组` 固定写 `archive/examples`
+- `docs/archive/baselines/`
+  - `状态` 固定写 `Archived` 或 `Superseded`
+  - `索引分组` 固定写 `archive/baselines`
+- `docs/archive/upgrade/`
+  - `状态` 固定写 `Archived`
+  - `索引分组` 固定写 `archive/upgrade`
+
+如果一份文档无法给出合理的 `索引分组` 和 `保留原因`，默认说明它不该被保留。
+
 ---
 
 ## 7. 第一轮落地要求
@@ -258,3 +288,4 @@
 1. 为首批平台级合同建立统一模板
 2. 为 `README` 中的一线主文档逐步补齐元信息
 3. 对仍保留的历史样例文档补 `状态：Archived`
+4. 为 `docs/superpowers/specs/` 与 `docs/archive/*` 文档逐步补 `索引分组 / 保留原因`
