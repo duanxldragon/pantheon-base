@@ -5,6 +5,15 @@
 类型：Acceptance
 归属层：platform
 状态：Superseded
+索引分组：archive/baselines
+保留原因：作为 2026-04-30 平台 UI 迁移矩阵之前一阶段的历史验收基线保留
+
+关联合同：
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+- `docs/contracts/SYSTEM_ORG_CONTRACT.md`
+- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
 
 本文用于沉淀 Pantheon `platform` 层与各系统域的统一验收基线，避免后续只记住“测过”，却没有一份可持续维护的标准矩阵。
 

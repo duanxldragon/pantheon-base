@@ -5,6 +5,15 @@
 类型：Acceptance
 归属层：platform
 状态：Archived
+索引分组：archive/examples
+保留原因：作为覆盖 `platform + system/*` 主链路的完整冒烟验收样例保留
+
+关联合同：
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+- `docs/contracts/SYSTEM_ORG_CONTRACT.md`
+- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
 
 执行者：Pantheon 专家
 层级归属：`platform` + `system/auth` + `system/iam` + `system/org` + `system/config`

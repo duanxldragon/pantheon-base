@@ -6,6 +6,8 @@
 主层：system/iam
 依赖层：system/config
 状态：Approved
+索引分组：superpowers-specs
+保留原因：作为 `system/iam` 整改治理与 `system/config` 高敏页面收口的跨模块设计锚点保留
 
 关联合同：
 - `docs/contracts/SYSTEM_IAM_CONTRACT.md`

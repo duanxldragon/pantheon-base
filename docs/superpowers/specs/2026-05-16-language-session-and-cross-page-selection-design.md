@@ -6,6 +6,8 @@
 主层：platform
 依赖层：system/auth、system/config、system/iam
 状态：Approved
+索引分组：superpowers-specs
+保留原因：作为语言运行时优先级和跨页批量选择规则的跨模块设计锚点保留
 
 关联合同：
 - `docs/contracts/PLATFORM_CONTRACT.md`

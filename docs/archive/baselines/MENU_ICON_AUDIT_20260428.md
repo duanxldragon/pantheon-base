@@ -5,6 +5,11 @@
 类型：Assessment
 归属层：platform
 状态：Archived
+索引分组：archive/baselines
+保留原因：作为平台导航图标语义治理的历史审计基线保留
+
+关联合同：
+- `docs/contracts/PLATFORM_CONTRACT.md`
 
 ## 1. 归属判断
 
