@@ -58,6 +58,7 @@
 3. [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
 4. [文档类型与状态说明](./contracts/DOCUMENT_METADATA_AND_STATUS.md)
 5. [文档 Frontmatter Schema 约定](./contracts/DOCUMENT_FRONTMATTER_SCHEMA.md)
+6. 文档 frontmatter 校验命令：`npm run check:docs-frontmatter`
 
 ### 2.1 新人或 AI 首次进入项目
 

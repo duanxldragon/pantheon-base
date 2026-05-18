@@ -281,3 +281,27 @@ updated_at: 2026-04-30
 - `change / task packet / evidence / review` 的跨文件自动校验
 
 这些能力应在 frontmatter 稳定后，再逐步推进。
+
+---
+
+## 10. 当前校验命令
+
+当前仓库已提供轻量 frontmatter 校验脚本：
+
+```bash
+npm run check:docs-frontmatter
+```
+
+当前会检查：
+
+- `docs/superpowers/specs/` 与 `docs/archive/*` 是否存在 YAML frontmatter
+- 必填字段是否缺失
+- `index_group` 是否与目录语义匹配
+- `status` 是否符合该目录允许值
+- `linked_contracts` 是否为数组且目标文件存在
+
+对应测试命令：
+
+```bash
+npm run test:docs-frontmatter
+```
