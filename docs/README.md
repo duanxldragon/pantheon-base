@@ -196,7 +196,6 @@
 
 - `docs/assessments/FRONTEND_EVALUATION_20260506.md`
 - `docs/assessments/RIGHT_SIDE_FUNCTIONAL_PAGES_EVALUATION_20260516.md`
-- `docs/archive/PHASE_REVIEW_BASELINE_20260506.md`
 
 ## 6. 本地启动
 
