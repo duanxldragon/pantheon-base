@@ -192,6 +192,12 @@
 - [菜单 Icon 审计与治理结果（2026-04-28）](./archive/MENU_ICON_AUDIT_20260428.md)
   - 作为 `platform` 导航图标语义治理样例保留。
 
+以下文档保留为阶段性评估归档，但不再作为主入口推荐阅读：
+
+- `docs/assessments/FRONTEND_EVALUATION_20260506.md`
+- `docs/assessments/RIGHT_SIDE_FUNCTIONAL_PAGES_EVALUATION_20260516.md`
+- `docs/archive/PHASE_REVIEW_BASELINE_20260506.md`
+
 ## 6. 本地启动
 
 1. 执行 `docker compose up -d`，或手动执行 `database/system_init.sql` 初始化 MySQL；底座默认库名为 `pantheon_base`。

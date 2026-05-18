@@ -8,7 +8,6 @@ export { default as ListHeaderActions } from './patterns/ListHeaderActions';
 export {
   GovernanceRailPanel,
   GovernanceRailSummary,
-  GovernanceRailCloseButton,
   GovernanceRailToggleButton,
   GovernanceInsightDrawer,
 } from './patterns/GovernanceRail';
