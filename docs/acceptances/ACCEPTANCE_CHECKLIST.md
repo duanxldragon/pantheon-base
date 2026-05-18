@@ -1,10 +1,14 @@
+---
+title: 设计与实现验收清单
+doc_type: Acceptance
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # 设计与实现验收清单
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Active
 
 本文不是路线图，也不是模块契约。
 

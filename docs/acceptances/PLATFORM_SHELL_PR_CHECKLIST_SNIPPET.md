@@ -1,10 +1,14 @@
+---
+title: Platform 壳层 PR Checklist 片段
+doc_type: Acceptance
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # Platform 壳层 PR Checklist 片段
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Active
 
 以下内容可直接复制到后续 `platform` 壳层 PR 描述中。
 

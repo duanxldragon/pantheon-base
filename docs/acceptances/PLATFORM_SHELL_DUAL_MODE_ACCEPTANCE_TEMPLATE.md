@@ -1,10 +1,14 @@
+---
+title: Platform 壳层双模式验收模板
+doc_type: Acceptance
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # Platform 壳层双模式验收模板
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Active
 
 本文是 `platform` 壳层改动的固定验收模板。
 

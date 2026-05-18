@@ -1,6 +1,12 @@
-# 文档合同化治理方案
+---
+title: 文档合同化治理方案
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-04-30
+---
 
-更新时间：2026-04-30
+# 文档合同化治理方案
 
 本文用于定义 Pantheon Base 的文档治理模型。
 

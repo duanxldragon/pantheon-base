@@ -1,14 +1,17 @@
+---
+title: 文档类型与状态说明
+doc_type: Contract
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
+  - docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md
+updated_at: 2026-04-30
+---
+
 # 文档类型与状态说明
 
-更新时间：2026-04-30
-
-类型：Contract
-归属层：platform
-状态：Active
-
 本文用于定义 Pantheon Base 文档系统的统一元信息字段、文档类型枚举和生命周期状态枚举。
-
-它是 [DOCUMENT_GOVERNANCE_CONTRACT.md](./DOCUMENT_GOVERNANCE_CONTRACT.md) 与 [DOCUMENT_FRONTMATTER_SCHEMA.md](./DOCUMENT_FRONTMATTER_SCHEMA.md) 的配套规则文档。
 
 ---
 

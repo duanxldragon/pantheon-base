@@ -1,10 +1,14 @@
+---
+title: system/config 高敏治理验收基线
+doc_type: Acceptance
+layer: system/config
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # system/config 高敏治理验收基线
-
-更新时间：2026-05-05
-
-类型：Acceptance
-归属层：system/config
-状态：Active
 
 本文把 `/system/i18n`、`/system/modules`、`/system/generator` 纳入固定验收范围，解决此前只有设计和实现、缺少稳定验收基线的问题。
 

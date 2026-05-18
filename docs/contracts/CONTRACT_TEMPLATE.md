@@ -1,10 +1,12 @@
+---
+title: 合同文档模板
+doc_type: Contract
+layer: platform / system/auth / system/iam / system/org / system/config / business/*
+status: Draft
+updated_at: YYYY-MM-DD
+---
+
 # 合同文档模板
-
-更新时间：YYYY-MM-DD
-
-类型：Contract
-归属层：platform / system/auth / system/iam / system/org / system/config / business/*
-状态：Draft
 
 关联设计：
 - `TBD`

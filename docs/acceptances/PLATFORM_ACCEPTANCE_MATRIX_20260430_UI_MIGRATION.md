@@ -1,10 +1,18 @@
+---
+title: 平台层 UI 迁移验收矩阵（2026-04-30）
+doc_type: Acceptance
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # 平台层 UI 迁移验收矩阵（2026-04-30）
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Active
 
 本文用于承接 2026-04-30 的第二阶段文档驱动盘点，重点回答一个平台层问题：
 

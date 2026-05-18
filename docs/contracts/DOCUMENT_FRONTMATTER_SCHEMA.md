@@ -1,10 +1,12 @@
+---
+title: 文档 Frontmatter Schema 约定
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-05-18
+---
+
 # 文档 Frontmatter Schema 约定
-
-更新时间：2026-05-18
-
-类型：Contract
-归属层：platform
-状态：Active
 
 本文用于定义 Pantheon Base 文档系统的统一 YAML frontmatter 约定。
 

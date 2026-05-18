@@ -1,10 +1,17 @@
+---
+title: 系统域导入导出 Smoke 指南
+doc_type: Acceptance
+layer: system/config
+status: Active
+linked_contracts:
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-21
+---
+
 # 系统域导入导出 Smoke 指南
-
-更新时间：2026-04-21
-
-类型：Acceptance
-归属层：system/config
-状态：Active
 
 本文用于验证 `system/iam`、`system/org`、`system/config`、`system/auth`、`system/audit` 已开放的导入导出能力是否真实可用。
 

@@ -1,10 +1,14 @@
+---
+title: Platform 壳层 PR 描述模板
+doc_type: Acceptance
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # Platform 壳层 PR 描述模板
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Active
 
 本文用于 `platform` 壳层相关改动的 PR 描述、阶段记录说明或阶段收口说明。
 

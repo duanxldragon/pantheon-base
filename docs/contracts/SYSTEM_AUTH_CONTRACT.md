@@ -1,10 +1,12 @@
+---
+title: system/auth 合同文档
+doc_type: Contract
+layer: system/auth
+status: Active
+updated_at: 2026-04-30
+---
+
 # system/auth 合同文档
-
-更新时间：2026-04-30
-
-类型：Contract
-归属层：system/auth
-状态：Active
 
 关联设计：
 - `AUTH_MODULE_DESIGN.md`

@@ -1,10 +1,14 @@
+---
+title: business/* 业务模块验收矩阵
+doc_type: Acceptance
+layer: business/*
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-05
+---
+
 # business/* 业务模块验收矩阵
-
-更新时间：2026-05-05
-
-类型：Acceptance
-归属层：business/*
-状态：Active
 
 本文把业务模块验收从“参考模板”升级为固定矩阵，适用于独立业务仓库中的所有 `business/*` 模块。
 

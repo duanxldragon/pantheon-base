@@ -1,10 +1,14 @@
+---
+title: Pantheon 代码评审标准流程
+doc_type: Acceptance
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-05-06
+---
+
 # Pantheon 代码评审标准流程
-
-更新时间：2026-05-06
-
-类型：Acceptance
-归属层：platform
-状态：Active
 
 本文定义 Pantheon Base 的固定代码评审流程。它适用于人工评审、AI 评审和阶段性交付前自检。
 

@@ -1,10 +1,12 @@
+---
+title: 平台层合同文档
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-04-30
+---
+
 # 平台层合同文档
-
-更新时间：2026-04-30
-
-类型：Contract
-归属层：platform
-状态：Active
 
 关联设计：
 - `PLATFORM_DASHBOARD_DESIGN.md`

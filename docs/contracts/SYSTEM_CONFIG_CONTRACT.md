@@ -1,10 +1,12 @@
+---
+title: system/config 合同文档
+doc_type: Contract
+layer: system/config
+status: Active
+updated_at: 2026-05-12
+---
+
 # system/config 合同文档
-
-更新时间：2026-05-12
-
-类型：Contract
-归属层：system/config
-状态：Active
 
 关联设计：
 - `DICT_AND_SETTING_DESIGN.md`
