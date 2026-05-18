@@ -109,7 +109,7 @@ function isDefaultDictItemQuery(query: Omit<DictItemQuery, 'dictCode'>) {
   );
 }
 
-export interface DictItemTabProps {
+interface DictItemTabProps {
   selectedType: DictTypeRow | null;
   typeRows: DictTypeRow[];
   canCreate: boolean;

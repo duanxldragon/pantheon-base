@@ -89,7 +89,7 @@ export interface TypeSummary {
   items: number;
 }
 
-export interface DictTypeTabProps {
+interface DictTypeTabProps {
   typeRows: DictTypeRow[];
   typeLoading: boolean;
   typeError: unknown;
