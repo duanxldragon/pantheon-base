@@ -1,23 +1,27 @@
+---
+title: Language Session And Cross-Page Selection Design
+doc_type: Design
+layer: platform
+depends_on_layers:
+  - system/auth
+  - system/config
+  - system/iam
+status: Approved
+index_group: superpowers-specs
+retention_reason: 作为语言运行时优先级和跨页批量选择规则的跨模块设计锚点保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/designs/FRONTEND.md
+  - docs/designs/FRONTEND_UI_SPEC.md
+  - docs/designs/AUTH_MODULE_DESIGN.md
+  - docs/designs/DATABASE.md
+updated_at: 2026-05-16
+---
+
 # Language Session And Cross-Page Selection Design
-
-更新时间：2026-05-16
-
-类型：Design
-主层：platform
-依赖层：system/auth、system/config、system/iam
-状态：Approved
-索引分组：superpowers-specs
-保留原因：作为语言运行时优先级和跨页批量选择规则的跨模块设计锚点保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
-- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
-- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `docs/designs/FRONTEND.md`
-- `docs/designs/FRONTEND_UI_SPEC.md`
-- `docs/designs/AUTH_MODULE_DESIGN.md`
-- `docs/designs/DATABASE.md`
 
 ---
 

@@ -236,6 +236,8 @@ Pantheon 当前最合理的合同粒度是两层。
 - `类型：Remediation`
 - `类型：Acceptance`
 
+如果是新增或重写文档，优先使用统一 YAML frontmatter，而不是继续扩散自由格式头部。具体字段约定见 [DOCUMENT_FRONTMATTER_SCHEMA.md](./DOCUMENT_FRONTMATTER_SCHEMA.md)。
+
 ### 6.2 `docs/superpowers/specs/` 准入规则
 
 该目录不是“所有 AI 过程文档”的收纳区，而是 AI 设计锚点区。

@@ -1,15 +1,16 @@
+---
+title: Platform 壳层 PR 描述样例
+doc_type: Acceptance
+layer: platform
+status: Archived
+index_group: archive/examples
+retention_reason: 作为平台壳层改动的 PR 描述样例保留，供后续批次复用
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # Platform 壳层 PR 描述样例
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Archived
-索引分组：archive/examples
-保留原因：作为平台壳层改动的 PR 描述样例保留，供后续批次复用
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
 
 适用批次：`platform-shell-2026-04-30-layout-unification`
 

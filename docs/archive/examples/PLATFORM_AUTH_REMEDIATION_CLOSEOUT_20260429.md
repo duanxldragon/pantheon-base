@@ -1,16 +1,17 @@
+---
+title: Platform + Auth 整改结案清单
+doc_type: Acceptance
+layer: platform
+status: Archived
+index_group: archive/examples
+retention_reason: 作为 `platform + system/auth` 整改收口的结案样例保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-04-29
+---
+
 # Platform + Auth 整改结案清单
-
-更新时间：2026-04-29
-
-类型：Acceptance
-归属层：platform
-状态：Archived
-索引分组：archive/examples
-保留原因：作为 `platform + system/auth` 整改收口的结案样例保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
-- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
 
 本文用于对本轮 `platform` 与 `system/auth` 整改做结案确认，避免把“已经完成的闭环”“明确延期的演进项”“本轮不做的能力”混在一起。
 

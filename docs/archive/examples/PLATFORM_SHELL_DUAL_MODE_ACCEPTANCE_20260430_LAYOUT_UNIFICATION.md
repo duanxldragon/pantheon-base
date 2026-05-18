@@ -1,17 +1,18 @@
+---
+title: Platform 壳层双模式验收记录
+doc_type: Acceptance
+layer: platform
+status: Archived
+index_group: archive/examples
+retention_reason: 作为平台壳层双模式验收的完整记录样例保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-30
+---
+
 # Platform 壳层双模式验收记录
 
 验收批次：`platform-shell-2026-04-30-layout-unification`
-
-更新时间：2026-04-30
-
-类型：Acceptance
-归属层：platform
-状态：Archived
-索引分组：archive/examples
-保留原因：作为平台壳层双模式验收的完整记录样例保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
 
 基于模板：`docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
 

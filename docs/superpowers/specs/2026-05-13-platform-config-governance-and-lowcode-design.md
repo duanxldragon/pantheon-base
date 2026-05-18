@@ -1,19 +1,21 @@
+---
+title: 平台配置治理与低代码菜单重构设计
+doc_type: Design
+layer: platform
+depends_on_layers:
+  - system/config
+status: Approved
+index_group: superpowers-specs
+retention_reason: 作为平台导航信息架构调整与低代码工作域上提的设计锚点保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+  - docs/designs/FRONTEND_UI_SPEC.md
+  - docs/designs/NAVIGATION_IA_STRATEGY.md
+updated_at: 2026-05-13
+---
+
 # 平台配置治理与低代码菜单重构设计
-
-更新时间：2026-05-13
-
-类型：Design
-主层：platform
-依赖层：system/config
-状态：Approved
-索引分组：superpowers-specs
-保留原因：作为平台导航信息架构调整与低代码工作域上提的设计锚点保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
-- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
-- `docs/designs/FRONTEND_UI_SPEC.md`
-- `docs/designs/NAVIGATION_IA_STRATEGY.md`
 
 ---
 

@@ -1,15 +1,16 @@
+---
+title: 菜单 Icon 审计与治理结果
+doc_type: Assessment
+layer: platform
+status: Archived
+index_group: archive/baselines
+retention_reason: 作为平台导航图标语义治理的历史审计基线保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-04-28
+---
+
 # 菜单 Icon 审计与治理结果
-
-更新时间：2026-04-28
-
-类型：Assessment
-归属层：platform
-状态：Archived
-索引分组：archive/baselines
-保留原因：作为平台导航图标语义治理的历史审计基线保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
 
 ## 1. 归属判断
 

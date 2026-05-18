@@ -1,19 +1,20 @@
+---
+title: 模块物理目录升级说明（2026-04-21）
+doc_type: Design
+layer: platform
+status: Archived
+index_group: archive/upgrade
+retention_reason: 作为 2026-04-21 模块物理目录调整的升级说明保留，供老环境迁移对照
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-21
+---
+
 # 模块物理目录升级说明（2026-04-21）
-
-更新时间：2026-04-21
-
-类型：Design
-归属层：platform
-状态：Archived
-索引分组：archive/upgrade
-保留原因：作为 2026-04-21 模块物理目录调整的升级说明保留，供老环境迁移对照
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
-- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `docs/contracts/SYSTEM_ORG_CONTRACT.md`
-- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
 
 本文用于说明 2026-04-21 这一轮”逻辑层不变、物理目录优化”的升级。
 

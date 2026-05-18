@@ -1,19 +1,20 @@
+---
+title: 数据库 / 老环境升级执行 Checklist（2026-04-21）
+doc_type: Design
+layer: platform
+status: Archived
+index_group: archive/upgrade
+retention_reason: 作为老环境执行 2026-04-21 升级时的核查与验收 checklist 保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-21
+---
+
 # 数据库 / 老环境升级执行 Checklist（2026-04-21）
-
-更新时间：2026-04-21
-
-类型：Design
-归属层：platform
-状态：Archived
-索引分组：archive/upgrade
-保留原因：作为老环境执行 2026-04-21 升级时的核查与验收 checklist 保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
-- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `docs/contracts/SYSTEM_ORG_CONTRACT.md`
-- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
 
 本文用于指导已经运行中的 Pantheon 环境完成 2026-04-21 这一轮升级。
 

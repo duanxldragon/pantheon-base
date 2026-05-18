@@ -1,19 +1,20 @@
+---
+title: 老环境升级运维 SOP（2026-04-21）
+doc_type: Design
+layer: platform
+status: Archived
+index_group: archive/upgrade
+retention_reason: 作为老环境执行 2026-04-21 升级时的顺序化 runbook 保留
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_ORG_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+updated_at: 2026-04-21
+---
+
 # 老环境升级运维 SOP（2026-04-21）
-
-更新时间：2026-04-21
-
-类型：Design
-归属层：platform
-状态：Archived
-索引分组：archive/upgrade
-保留原因：作为老环境执行 2026-04-21 升级时的顺序化 runbook 保留
-
-关联合同：
-- `docs/contracts/PLATFORM_CONTRACT.md`
-- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `docs/contracts/SYSTEM_ORG_CONTRACT.md`
-- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
 
 本文是给运维/发布执行人的顺序版 SOP，用于将已有 Pantheon 环境升级到 2026-04-21 这轮模块目录与菜单信息架构版本。
 

@@ -8,7 +8,7 @@
 
 本文用于定义 Pantheon Base 文档系统的统一元信息字段、文档类型枚举和生命周期状态枚举。
 
-它是 [DOCUMENT_GOVERNANCE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md) 的配套规则文档。
+它是 [DOCUMENT_GOVERNANCE_CONTRACT.md](./DOCUMENT_GOVERNANCE_CONTRACT.md) 与 [DOCUMENT_FRONTMATTER_SCHEMA.md](./DOCUMENT_FRONTMATTER_SCHEMA.md) 的配套规则文档。
 
 ---
 
@@ -27,7 +27,13 @@
 
 ## 2. 统一元信息字段
 
-建议每份主文档头部至少包含以下字段：
+建议每份主文档头部至少包含以下字段。
+
+新增或重写文档时，优先使用 YAML frontmatter 承载这些字段；正文行写法仅作为过渡兼容。
+
+建议 frontmatter 入口文档见：[DOCUMENT_FRONTMATTER_SCHEMA.md](./DOCUMENT_FRONTMATTER_SCHEMA.md)
+
+至少包含以下字段：
 
 - `更新时间`
 - `类型`

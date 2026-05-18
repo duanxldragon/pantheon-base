@@ -1,19 +1,21 @@
+---
+title: IAM Remediation And Config Governance Design
+doc_type: Design
+layer: system/iam
+depends_on_layers:
+  - system/config
+status: Approved
+index_group: superpowers-specs
+retention_reason: 作为 `system/iam` 整改治理与 `system/config` 高敏页面收口的跨模块设计锚点保留
+linked_contracts:
+  - docs/contracts/SYSTEM_IAM_CONTRACT.md
+  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+  - docs/designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md
+  - docs/designs/FRONTEND_UI_SPEC.md
+updated_at: 2026-05-12
+---
+
 # IAM Remediation And Config Governance Design
-
-更新时间：2026-05-12
-
-类型：Design
-主层：system/iam
-依赖层：system/config
-状态：Approved
-索引分组：superpowers-specs
-保留原因：作为 `system/iam` 整改治理与 `system/config` 高敏页面收口的跨模块设计锚点保留
-
-关联合同：
-- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
-- `docs/designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md`
-- `docs/designs/FRONTEND_UI_SPEC.md`
 
 ---
 
