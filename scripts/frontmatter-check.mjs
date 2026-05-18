@@ -2,12 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DOC_GLOBS = [
-  'docs/superpowers/specs',
-  'docs/archive/examples',
-  'docs/archive/baselines',
-  'docs/archive/upgrade',
-];
+const DOC_ROOT = 'docs';
 
 const REQUIRED_BASE_FIELDS = ['title', 'doc_type', 'layer', 'status', 'updated_at'];
 const REQUIRED_RETAINED_FIELDS = ['index_group', 'retention_reason', 'linked_contracts'];
@@ -28,6 +23,10 @@ function walkMarkdownFiles(dirPath) {
     }
   }
   return files;
+}
+
+export function hasLegacyMetadata(source) {
+  return /^(更新时间：|类型：|归属层：|主层：|状态：)/m.test(source);
 }
 
 export function parseFrontmatter(source) {
@@ -171,33 +170,59 @@ function checkFile(filePath, repoRoot) {
   }
 
   if (!parsed.hasFrontmatter) {
+    const expectedGroup = expectedIndexGroup(relativePath);
+    if (expectedGroup) {
+      return {
+        ok: false,
+        errors: [`${relativePath}: missing YAML frontmatter block`],
+        legacy: hasLegacyMetadata(source),
+      };
+    }
+
     return {
-      ok: false,
-      errors: [`${relativePath}: missing YAML frontmatter block`],
+      ok: true,
+      errors: [],
+      legacy: hasLegacyMetadata(source),
     };
   }
 
-  return validateDoc({
+  const validation = validateDoc({
     filePath: relativePath,
     data: parsed.data ?? {},
     repoRoot,
   });
+
+  return {
+    ...validation,
+    legacy: false,
+  };
 }
 
-export function runCheck(repoRoot = process.cwd()) {
-  const files = DOC_GLOBS.flatMap((dir) => walkMarkdownFiles(path.resolve(repoRoot, dir)));
+export function runCheck(repoRoot = process.cwd(), options = {}) {
+  const files = walkMarkdownFiles(path.resolve(repoRoot, DOC_ROOT));
   const errors = [];
+  const legacyFiles = [];
+  let frontmatterFiles = 0;
 
   for (const filePath of files) {
     const result = checkFile(filePath, repoRoot);
+    const source = fs.readFileSync(filePath, 'utf8');
+    if (parseFrontmatter(source).hasFrontmatter) {
+      frontmatterFiles += 1;
+    }
     if (!result.ok) {
       errors.push(...result.errors);
+    }
+    if (result.legacy) {
+      legacyFiles.push(path.relative(repoRoot, filePath).replace(/\\/g, '/'));
     }
   }
 
   return {
     ok: errors.length === 0,
     checkedFiles: files.length,
+    frontmatterFiles,
+    legacyFiles,
     errors,
   };
 }
@@ -207,14 +232,27 @@ const isDirectRun =
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isDirectRun) {
+  const showLegacy = process.argv.includes('--report-legacy');
   const result = runCheck();
   if (!result.ok) {
-    console.error(`Frontmatter check failed. Checked ${result.checkedFiles} files.`);
+    console.error(`Frontmatter check failed. Checked ${result.checkedFiles} docs, ${result.frontmatterFiles} with frontmatter.`);
     for (const error of result.errors) {
       console.error(`- ${error}`);
+    }
+    if (showLegacy && result.legacyFiles.length > 0) {
+      console.error('Legacy metadata docs not yet migrated:');
+      for (const file of result.legacyFiles) {
+        console.error(`- ${file}`);
+      }
     }
     process.exit(1);
   }
 
-  console.log(`Frontmatter check passed. Checked ${result.checkedFiles} files.`);
+  console.log(`Frontmatter check passed. Checked ${result.checkedFiles} docs, ${result.frontmatterFiles} with frontmatter.`);
+  if (showLegacy) {
+    console.log(`Legacy metadata docs not yet migrated: ${result.legacyFiles.length}`);
+    for (const file of result.legacyFiles) {
+      console.log(`- ${file}`);
+    }
+  }
 }

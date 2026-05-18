@@ -7,7 +7,7 @@ const moduleUrl = pathToFileURL(
   path.resolve('scripts/frontmatter-check.mjs'),
 ).href;
 
-const { parseFrontmatter, validateDoc } = await import(moduleUrl);
+const { parseFrontmatter, validateDoc, hasLegacyMetadata } = await import(moduleUrl);
 
 test('parseFrontmatter reads yaml-like scalar and array fields', () => {
   const source = `---
@@ -93,4 +93,26 @@ test('validateDoc reports missing linked contract files', () => {
 
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /does not exist/);
+});
+
+test('validateDoc also validates non-retained frontmatter docs', () => {
+  const result = validateDoc({
+    filePath: 'docs/designs/example.md',
+    data: {
+      title: 'Design Example',
+      doc_type: 'Design',
+      layer: 'platform',
+      status: 'Active',
+    },
+    repoRoot: process.cwd(),
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /updated_at/);
+});
+
+test('hasLegacyMetadata detects old header style docs', () => {
+  const source = `# Example\n\n更新时间：2026-05-18\n\n类型：Design\n归属层：platform\n状态：Active\n`;
+  assert.equal(hasLegacyMetadata(source), true);
+  assert.equal(hasLegacyMetadata('# Example\n\nNo metadata here'), false);
 });

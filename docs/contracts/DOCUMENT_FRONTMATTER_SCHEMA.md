@@ -292,13 +292,21 @@ updated_at: 2026-04-30
 npm run check:docs-frontmatter
 ```
 
+如果需要同时查看“哪些文档还没有迁移到 frontmatter”，执行：
+
+```bash
+npm run check:docs-frontmatter:legacy
+```
+
 当前会检查：
 
-- `docs/superpowers/specs/` 与 `docs/archive/*` 是否存在 YAML frontmatter
-- 必填字段是否缺失
+- 全仓 `docs/*.md` 扫描
+- 已采用 frontmatter 的文档是否满足基础字段约束
+- `docs/superpowers/specs/` 与 `docs/archive/*` 是否满足目录专属约束
 - `index_group` 是否与目录语义匹配
 - `status` 是否符合该目录允许值
 - `linked_contracts` 是否为数组且目标文件存在
+- 输出尚未迁移、仍使用旧元信息头部的 legacy 文档清单
 
 对应测试命令：
 
