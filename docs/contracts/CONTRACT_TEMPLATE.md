@@ -3,6 +3,14 @@ title: 合同文档模板
 doc_type: Contract
 layer: platform / system/auth / system/iam / system/org / system/config / business/*
 status: Draft
+related_designs:
+  - docs/designs/TBD.md
+related_assessments:
+  - docs/assessments/TBD.md
+related_remediations:
+  - docs/remediations/TBD.md
+related_acceptances:
+  - docs/acceptances/TBD.md
 updated_at: YYYY-MM-DD
 ---
 

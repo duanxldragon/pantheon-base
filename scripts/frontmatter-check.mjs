@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DOC_ROOT = 'docs';
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const DEFAULT_REPO_ROOT = path.resolve(SCRIPT_DIR, '..');
 
 const REQUIRED_BASE_FIELDS = ['title', 'doc_type', 'layer', 'status', 'updated_at'];
 const REQUIRED_RETAINED_FIELDS = ['index_group', 'retention_reason', 'linked_contracts'];
@@ -26,6 +28,12 @@ const ALLOWED_STATUSES = new Set([
   'Superseded',
   'Archived',
 ]);
+const CONTRACT_RELATION_FIELDS = [
+  { heading: '关联设计：', field: 'related_designs' },
+  { heading: '关联评估：', field: 'related_assessments' },
+  { heading: '关联整改：', field: 'related_remediations' },
+  { heading: '关联验收：', field: 'related_acceptances' },
+];
 
 function walkMarkdownFiles(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
@@ -168,21 +176,28 @@ function resolveContractBodyReference(ref, docsIndex) {
 
 export function parseContractBodyReferences(source) {
   const refs = [];
+  const byField = {
+    related_designs: [],
+    related_assessments: [],
+    related_remediations: [],
+    related_acceptances: [],
+  };
   const lines = source.split(/\r?\n/);
-  const headers = new Set(['关联设计：', '关联评估：', '关联整改：', '关联验收：']);
 
   for (let i = 0; i < lines.length; i += 1) {
-    if (!headers.has(lines[i].trim())) continue;
+    const relation = CONTRACT_RELATION_FIELDS.find(({ heading }) => heading === lines[i].trim());
+    if (!relation) continue;
     for (let j = i + 1; j < lines.length; j += 1) {
       const line = lines[j].trim();
       if (!line) break;
       const match = line.match(/^-\s+`([^`]+)`$/);
       if (!match) break;
       refs.push(match[1]);
+      byField[relation.field].push(match[1]);
     }
   }
 
-  return refs;
+  return { all: refs, byField };
 }
 
 export function extractReadmeDocLinks(source) {
@@ -195,6 +210,26 @@ export function extractReadmeDocLinks(source) {
     links.push(href);
   }
   return links;
+}
+
+export function extractReadmeMainEntryLinks(source) {
+  const lines = source.split(/\r?\n/);
+  const captured = [];
+  let inMainEntry = false;
+
+  for (const line of lines) {
+    if (/^## 2\./.test(line) || /^## 3\./.test(line) || /^## 4\./.test(line)) {
+      inMainEntry = true;
+    } else if (/^## 5\./.test(line) || /^## 6\./.test(line)) {
+      inMainEntry = false;
+    }
+    if (!inMainEntry) continue;
+    for (const href of extractReadmeDocLinks(line)) {
+      captured.push(href);
+    }
+  }
+
+  return captured;
 }
 
 export function validateDoc({ filePath, data, repoRoot }) {
@@ -306,7 +341,7 @@ function checkFile(filePath, repoRoot) {
   };
 }
 
-export function runCheck(repoRoot = process.cwd(), options = {}) {
+export function runCheck(repoRoot = DEFAULT_REPO_ROOT, options = {}) {
   const docsIndex = buildDocsIndex(repoRoot);
   const files = docsIndex.files;
   const errors = [];
@@ -332,8 +367,26 @@ export function runCheck(repoRoot = process.cwd(), options = {}) {
   for (const [relativePath, entry] of docsIndex.byPath.entries()) {
     if (!entry.parsed.hasFrontmatter) continue;
     if (entry.parsed.data?.doc_type !== 'Contract') continue;
+    if (entry.parsed.data?.status === 'Draft') continue;
 
-    for (const ref of parseContractBodyReferences(entry.source)) {
+    const relationRefs = parseContractBodyReferences(entry.source);
+    for (const { field } of CONTRACT_RELATION_FIELDS) {
+      const bodyRefs = relationRefs.byField[field].filter((ref) => ref !== 'TBD');
+      const fmRefs = Array.isArray(entry.parsed.data?.[field]) ? entry.parsed.data[field] : [];
+      const resolvedBody = bodyRefs
+        .map((ref) => resolveContractBodyReference(ref, docsIndex)?.path ?? null)
+        .filter(Boolean)
+        .sort();
+      const resolvedFm = fmRefs
+        .map((ref) => resolveContractBodyReference(ref, docsIndex)?.path ?? ref)
+        .filter(Boolean)
+        .sort();
+      if (resolvedBody.join('|') !== resolvedFm.join('|')) {
+        errors.push(`${relativePath}: frontmatter field "${field}" does not match contract body references`);
+      }
+    }
+
+    for (const ref of relationRefs.all) {
       if (ref === 'TBD') continue;
       const target = resolveContractBodyReference(ref, docsIndex);
       if (!target) {
@@ -358,6 +411,17 @@ export function runCheck(repoRoot = process.cwd(), options = {}) {
       const resolved = normalizeSlash(path.relative(repoRoot, path.resolve(baseDir, href)));
       if (!docsIndex.byPath.has(resolved) && !fs.existsSync(path.resolve(repoRoot, resolved))) {
         errors.push(`docs/README.md: link target does not exist: ${href}`);
+      }
+    }
+
+    for (const href of extractReadmeMainEntryLinks(readmeEntry.source)) {
+      const baseDir = path.resolve(repoRoot, 'docs');
+      const resolved = normalizeSlash(path.relative(repoRoot, path.resolve(baseDir, href)));
+      const target = docsIndex.byPath.get(resolved);
+      if (!target?.parsed?.hasFrontmatter) continue;
+      const status = target.parsed.data?.status;
+      if (status && status !== 'Active') {
+        errors.push(`docs/README.md: main entry link must target Active docs only: ${href} (${status})`);
       }
     }
   }

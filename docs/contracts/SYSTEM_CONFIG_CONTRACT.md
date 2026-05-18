@@ -3,6 +3,24 @@ title: system/config 合同文档
 doc_type: Contract
 layer: system/config
 status: Active
+related_designs:
+  - docs/designs/DICT_AND_SETTING_DESIGN.md
+  - docs/designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md
+  - docs/designs/I18N_MODULE_DESIGN.md
+  - docs/designs/UPLOAD_AND_STORAGE_DESIGN.md
+  - docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md
+  - docs/designs/GENERATOR_MODULE_DESIGN.md
+  - docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md
+related_assessments:
+  - docs/assessments/SYSTEM_MODULE_AUDIT.md
+  - docs/assessments/PLATFORM_GAP_AUDIT_20260429.md
+related_remediations:
+  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
+related_acceptances:
+  - docs/acceptances/ACCEPTANCE_CHECKLIST.md
+  - docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md
+  - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
+  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-05-12
 ---
 

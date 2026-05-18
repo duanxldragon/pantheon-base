@@ -3,6 +3,20 @@ title: 平台层合同文档
 doc_type: Contract
 layer: platform
 status: Active
+related_designs:
+  - docs/designs/PLATFORM_DASHBOARD_DESIGN.md
+  - docs/designs/FRONTEND_UI_SPEC.md
+  - docs/designs/FRONTEND_PAGE_TEMPLATES.md
+  - docs/designs/NAVIGATION_IA_STRATEGY.md
+  - docs/designs/P2_SCALE_ROADMAP.md
+related_assessments:
+  - docs/assessments/PLATFORM_GAP_AUDIT_20260429.md
+related_remediations:
+  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
+related_acceptances:
+  - docs/acceptances/ACCEPTANCE_CHECKLIST.md
+  - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
+  - docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md
 updated_at: 2026-04-30
 ---
 

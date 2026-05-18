@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
+const testDir = path.dirname(fileURLToPath(import.meta.url));
 const moduleUrl = pathToFileURL(
-  path.resolve('scripts/frontmatter-check.mjs'),
+  path.resolve(testDir, '../../scripts/frontmatter-check.mjs'),
 ).href;
 
 const {
@@ -13,6 +14,7 @@ const {
   hasLegacyMetadata,
   parseContractBodyReferences,
   extractReadmeDocLinks,
+  extractReadmeMainEntryLinks,
 } = await import(moduleUrl);
 
 test('parseFrontmatter reads yaml-like scalar and array fields', () => {
@@ -145,10 +147,18 @@ test('hasLegacyMetadata detects old header style docs', () => {
 
 test('parseContractBodyReferences reads contract sections', () => {
   const source = `# Contract\n\n关联设计：\n- \`FOO.md\`\n- \`BAR.md\`\n\n关联验收：\n- \`BAZ.md\`\n`;
-  assert.deepEqual(parseContractBodyReferences(source), ['FOO.md', 'BAR.md', 'BAZ.md']);
+  const parsed = parseContractBodyReferences(source);
+  assert.deepEqual(parsed.all, ['FOO.md', 'BAR.md', 'BAZ.md']);
+  assert.deepEqual(parsed.byField.related_designs, ['FOO.md', 'BAR.md']);
+  assert.deepEqual(parsed.byField.related_acceptances, ['BAZ.md']);
 });
 
 test('extractReadmeDocLinks ignores external and anchor links', () => {
   const source = `[Local](./designs/FOO.md)\n[Web](https://example.com)\n[Anchor](#section)\n[Parent](../DESIGN.md)`;
   assert.deepEqual(extractReadmeDocLinks(source), ['./designs/FOO.md', '../DESIGN.md']);
+});
+
+test('extractReadmeMainEntryLinks limits checks to main entry sections', () => {
+  const source = `## 2. Main\n[Active](./designs/FOO.md)\n## 5. Archive\n[Archived](./archive/examples/BAR.md)`;
+  assert.deepEqual(extractReadmeMainEntryLinks(source), ['./designs/FOO.md']);
 });

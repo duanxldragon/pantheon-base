@@ -3,6 +3,19 @@ title: system/auth 合同文档
 doc_type: Contract
 layer: system/auth
 status: Active
+related_designs:
+  - docs/designs/AUTH_MODULE_DESIGN.md
+  - docs/designs/SECURITY_CENTER_DESIGN.md
+  - docs/designs/ERROR_CODE_AND_I18N.md
+  - docs/designs/SECURITY_POLICY_ROADMAP.md
+  - docs/designs/SSO_OIDC_DESIGN.md
+related_assessments:
+  - docs/assessments/SYSTEM_MODULE_AUDIT.md
+related_remediations:
+  - docs/archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md
+related_acceptances:
+  - docs/acceptances/ACCEPTANCE_CHECKLIST.md
+  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-04-30
 ---
 

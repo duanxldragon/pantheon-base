@@ -91,7 +91,7 @@
   - [Auth 模块拆分设计](./designs/AUTH_MODULE_DESIGN.md)
   - [安全中心设计](./designs/SECURITY_CENTER_DESIGN.md)
   - [安全策略深化路线图](./designs/SECURITY_POLICY_ROADMAP.md)
-  - [SSO / OAuth2 / OIDC 设计](./designs/SSO_OIDC_DESIGN.md)
+  - `SSO / OAuth2 / OIDC 设计` 当前仍为 `Draft`，暂不作为主入口直接链接
 - `system/iam`
   - [权限模型设计](./designs/PERMISSION_MODEL.md)
   - [模块契约设计](./designs/MODULE_CONTRACT.md)
@@ -124,7 +124,7 @@
 1. [P2 规模化能力路线图](./designs/P2_SCALE_ROADMAP.md)
 2. [数据权限 Hook 设计](./designs/DATA_PERMISSION_HOOK.md)
 3. [租户就绪单租户设计](./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md)
-4. [SSO / OAuth2 / OIDC 设计](./designs/SSO_OIDC_DESIGN.md)
+4. `SSO / OAuth2 / OIDC 设计` 当前仍为 `Draft`，暂不作为主入口直接链接
 5. [安全策略深化路线图](./designs/SECURITY_POLICY_ROADMAP.md)
 
 ## 3. 核心设计文档
@@ -133,7 +133,7 @@
 
 - [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
 - [文档类型与状态说明](./contracts/DOCUMENT_METADATA_AND_STATUS.md)
-- [合同文档模板](./contracts/CONTRACT_TEMPLATE.md)
+- `合同文档模板` 当前仍为 `Draft`，用于新合同起草，不作为主入口直接链接
 - [平台层合同文档](./contracts/PLATFORM_CONTRACT.md)
 - [system/auth 合同文档](./contracts/SYSTEM_AUTH_CONTRACT.md)
 - [system/iam 合同文档](./contracts/SYSTEM_IAM_CONTRACT.md)
@@ -170,7 +170,7 @@
 - [错误码与多语言设计](./designs/ERROR_CODE_AND_I18N.md)
 - [安全中心设计](./designs/SECURITY_CENTER_DESIGN.md)
 - [安全策略深化路线图](./designs/SECURITY_POLICY_ROADMAP.md)
-- [SSO / OAuth2 / OIDC 设计](./designs/SSO_OIDC_DESIGN.md)
+- `SSO / OAuth2 / OIDC 设计` 当前仍为 `Draft`，暂不作为主入口直接链接
 - [system/org 组织域设计](./designs/SYSTEM_ORG_DESIGN.md)
 - [权限工作台治理深化设计](./designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md)
 - [字典与系统设置设计](./designs/DICT_AND_SETTING_DESIGN.md)
@@ -204,16 +204,13 @@
 
 - [平台层 UI 迁移验收矩阵（2026-04-30）](./acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
 - [平台壳层双模式验收模板](./acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
-- [平台壳层双模式验收样例](./archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
 - [平台壳层 PR 描述模板](./acceptances/PLATFORM_SHELL_PR_TEMPLATE.md)
-- [平台壳层 PR 描述样例](./archive/examples/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md)
 - [平台壳层 PR Checklist 片段](./acceptances/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md)
+- 壳层样例与 PR 样例统一放在第 5 节 archive examples，不再作为主入口直接链接
 
 ### 4.3 升级与运行
 
-- [模块目录升级说明](./archive/upgrade/MODULE_LAYOUT_UPGRADE_20260421.md)
-- [老环境升级运维 SOP](./archive/upgrade/UPGRADE_RUNBOOK_20260421.md)
-- [老环境升级执行 Checklist](./archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md)
+- 升级迁移材料统一放在第 5 节 `archive/upgrade/`，不作为主入口直接链接
 - [系统导入导出 Smoke 指南](./acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
 - [gstack Windows 使用清单](./designs/GSTACK_WINDOWS_GUIDE.md)
 

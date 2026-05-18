@@ -3,6 +3,18 @@ title: system/org 合同文档
 doc_type: Contract
 layer: system/org
 status: Active
+related_designs:
+  - docs/designs/SYSTEM_ORG_DESIGN.md
+  - docs/designs/FRONTEND_PAGE_TEMPLATES.md
+  - docs/designs/BACKEND.md
+related_assessments:
+  - docs/assessments/SYSTEM_MODULE_AUDIT.md
+related_remediations:
+  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
+related_acceptances:
+  - docs/acceptances/ACCEPTANCE_CHECKLIST.md
+  - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
+  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-04-30
 ---
 

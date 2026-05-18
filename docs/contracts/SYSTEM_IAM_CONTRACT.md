@@ -3,6 +3,21 @@ title: system/iam 合同文档
 doc_type: Contract
 layer: system/iam
 status: Active
+related_designs:
+  - docs/designs/PERMISSION_MODEL.md
+  - docs/designs/MODULE_CONTRACT.md
+  - docs/designs/FRONTEND_PAGE_TEMPLATES.md
+  - docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md
+  - docs/designs/NAVIGATION_IA_STRATEGY.md
+related_assessments:
+  - docs/assessments/SYSTEM_MODULE_AUDIT.md
+  - docs/assessments/DYNAMIC_MENU_MATURITY_20260422.md
+related_remediations:
+  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
+related_acceptances:
+  - docs/acceptances/ACCEPTANCE_CHECKLIST.md
+  - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
+  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-05-12
 ---
 
