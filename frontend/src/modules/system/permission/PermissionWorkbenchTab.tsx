@@ -83,7 +83,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
   const canCreate = isAdmin;
 
   const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
-  const [viewMode, setViewMode] = useState<'pending' | 'all'>('pending');
+  const [viewMode, setViewMode] = useState<'pending' | 'all'>('all');
   const [remediationEvents, setRemediationEvents] = useState<PermissionWorkbenchRemediationEvent[]>(
     [],
   );

@@ -873,43 +873,38 @@ test('business actions stay in the work area and dialogs use single-layer inputs
   await navigateInShell(page, '/system/user');
 
   await expect(page.locator('.page-container > .page-header')).toHaveCount(0);
-  await expect(page.locator('.governance-summary-bar')).toHaveCount(0);
+  await expect(page.locator('.governance-summary-bar')).toBeVisible();
   await expect(page.locator('.system-user-list__hero')).toHaveCount(0);
-  await expect(page.locator('.system-user-list__function-bar')).toBeVisible();
-  await expect(page.locator('.system-user-list__function-bar').getByText('新增')).toBeVisible();
-  await expect(page.locator('.system-user-list__function-bar').getByText('导入')).toBeVisible();
-  await expect(page.locator('.system-user-list__function-bar').getByText('导出')).toBeVisible();
-  await expect(page.locator('.system-user-list__status-strip')).toBeVisible();
-  await expect(page.locator('.system-user-list__status-item')).toHaveCount(5);
   await expect(page.locator('.table-batch-action-bar__prefix-actions')).toBeVisible();
-  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('新增')).toHaveCount(0);
+  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('新增')).toBeVisible();
+  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('导入')).toBeVisible();
+  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('导出')).toBeVisible();
 
   const actionContract = await page.evaluate(() => {
-    const functionBar = document.querySelector<HTMLElement>('.system-user-list__function-bar');
-    const statusStrip = document.querySelector<HTMLElement>('.system-user-list__status-strip');
+    const summaryBar = document.querySelector<HTMLElement>('.governance-summary-bar');
     const prefixActions = document.querySelector<HTMLElement>(
       '.table-batch-action-bar__prefix-actions',
     );
     const batchBar = document.querySelector<HTMLElement>('.table-batch-action-bar');
     return {
-      functionBarHasCreate: Boolean(
-        functionBar &&
-          Array.from(functionBar.querySelectorAll('button')).some((button) =>
+      summaryOutsideBatch: Boolean(summaryBar && !batchBar?.contains(summaryBar)),
+      prefixInsideBatch: Boolean(prefixActions && batchBar?.contains(prefixActions)),
+      prefixHasCreate: Boolean(
+        prefixActions &&
+          Array.from(prefixActions.querySelectorAll('button')).some((button) =>
             /新增/.test(button.textContent || ''),
           ),
       ),
-      statusInsideBatch: Boolean(statusStrip && batchBar?.contains(statusStrip)),
-      prefixInsideBatch: Boolean(prefixActions && batchBar?.contains(prefixActions)),
       prefixGap: prefixActions ? window.getComputedStyle(prefixActions).gap : null,
     };
   });
 
-  expect(actionContract.functionBarHasCreate).toBe(true);
-  expect(actionContract.statusInsideBatch).toBe(true);
+  expect(actionContract.summaryOutsideBatch).toBe(true);
   expect(actionContract.prefixInsideBatch).toBe(true);
+  expect(actionContract.prefixHasCreate).toBe(true);
   expect(actionContract.prefixGap).toBe('6px 8px');
 
-  await page.locator('.system-user-list__function-bar').getByText('新增').click();
+  await page.locator('.table-batch-action-bar__prefix-actions').getByText('新增').click();
   await expect(page.locator('.app-dialog')).toBeVisible();
 
   const controlContracts = await readVisibleControlContracts(page, '.app-dialog');
@@ -939,17 +934,14 @@ test('narrow mobile layout keeps actions dialogs and states inside the viewport'
   await navigateInShell(page, '/system/user');
 
   await expect(page.locator('.page-container > .page-header')).toHaveCount(0);
-  await expect(page.locator('.governance-summary-bar')).toHaveCount(0);
-  await expect(page.locator('.system-user-list__function-bar')).toBeVisible();
-  await expect(page.locator('.system-user-list__status-strip')).toBeVisible();
+  await expect(page.locator('.governance-summary-bar')).toBeVisible();
   await expect(page.locator('.table-batch-action-bar__prefix-actions')).toBeVisible();
 
   const mobileContract = await page.evaluate(() => {
     const viewportWidth = window.innerWidth;
     const selectors = [
       '.page-container',
-      '.system-user-list__function-bar',
-      '.system-user-list__status-strip',
+      '.governance-summary-bar',
       '.filter-panel',
       '.system-list__table-card',
       '.table-batch-action-bar',
@@ -985,7 +977,7 @@ test('narrow mobile layout keeps actions dialogs and states inside the viewport'
     expect(box.right, box.selector).toBeLessThanOrEqual(mobileContract.viewportWidth + 1);
   }
 
-  await page.locator('.system-user-list__function-bar').getByText('新增').click();
+  await page.locator('.table-batch-action-bar__prefix-actions').getByText('新增').click();
   await expect(page.locator('.app-dialog')).toBeVisible();
   const dialogContract = await readDialogContract(page);
   expect(dialogContract.dialog?.left).toBeGreaterThanOrEqual(0);

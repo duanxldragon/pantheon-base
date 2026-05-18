@@ -76,6 +76,7 @@ import {
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
+  GovernanceSummaryBar,
   PageLoading,
   PageNetworkError,
   PageServerError,
@@ -547,6 +548,17 @@ const UserList: React.FC = () => {
       ...sortableColumn('nickname'),
       render: (value: string) => renderCellText(value),
     },
+    {
+      title: t('system.user.status'),
+      dataIndex: 'status',
+      width: TABLE_COLUMN_WIDTH.status,
+      ...sortableColumn('status'),
+      render: (value: number) => (
+        <Tag color={value === 1 ? 'green' : 'red'}>
+          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
+        </Tag>
+      ),
+    },
     ...(orgEnabled
       ? [
           {
@@ -565,13 +577,16 @@ const UserList: React.FC = () => {
       : []),
     {
       title: t('system.user.roles'),
-      dataIndex: 'roleKeys',
+      dataIndex: 'roleNames',
       width: TABLE_COLUMN_WIDTH.tagGroup,
       render: (_: string[], row: UserListRow) => {
+        const roleNames = row.roleNames?.filter(Boolean);
         const roleLabels = row.roleIds
           ?.map((roleId) => roleLabelById.get(roleId))
           .filter((value): value is string => Boolean(value));
-        const roleText = roleLabels?.length
+        const roleText = roleNames?.length
+          ? roleNames.join(' / ')
+          : roleLabels?.length
           ? roleLabels.join(' / ')
           : row.roleKeys?.length
             ? row.roleKeys.join(' / ')
@@ -596,17 +611,6 @@ const UserList: React.FC = () => {
       },
       'low',
     ),
-    {
-      title: t('system.user.status'),
-      dataIndex: 'status',
-      width: TABLE_COLUMN_WIDTH.status,
-      ...sortableColumn('status'),
-      render: (value: number) => (
-        <Tag color={value === 1 ? 'green' : 'red'}>
-          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
-        </Tag>
-      ),
-    },
     withTableColumnPriority(
       {
         title: t('system.user.createdAt'),
@@ -840,128 +844,22 @@ const UserList: React.FC = () => {
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template">
-        <div className="system-user-list__function-bar">
-          <div className="system-user-list__function-copy">
-            <span className="system-user-list__eyebrow">{t('system.user.hero.eyebrow')}</span>
-            <Typography.Title heading={5} className="system-user-list__title">
-              {t('system.menu.user')}
-            </Typography.Title>
-          </div>
-          <ListHeaderActions
-            utility={
-              <>
-                <Button
-                  icon={<IconDownload />}
-                  onClick={() => {
-                    void handleExport();
-                  }}
-                  disabled={!canExport}
-                >
-                  {t('common.export')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    void handleDownloadTemplate();
-                  }}
-                  disabled={!canImport}
-                >
-                  {t('common.downloadTemplate')}
-                </Button>
-                <ImportCsvButton
-                  disabled={!canImport}
-                  onSelect={(file) => {
-                    void handleImport(file);
-                  }}
-                >
-                  {t('common.import')}
-                </ImportCsvButton>
-              </>
-            }
-            primary={
-              <Button type="primary" icon={<IconPlus />} onClick={openCreate} disabled={!canCreate}>
-                {t('common.add')}
-              </Button>
-            }
-          />
-        </div>
-        <TableBatchActionBar
-          className="system-user-list__ops-strip"
-          selectedCount={selectedRowKeys.length}
-          selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-          clearText={t('common.clearSelection')}
-          clearSuccessText={t('common.clearSelectionSuccess')}
-          onClear={() => setSelectedRowKeys([])}
-          prefixActions={
-            <>
-              <div
-                className="system-user-list__status-strip"
-                aria-label={t('system.user.hero.summaryTitle')}
-              >
-                {statusMetrics.map((item) => (
-                  <span key={item.key} className="system-user-list__status-item">
-                    <span className="system-user-list__status-label">{item.label}</span>
-                    <strong className="system-user-list__status-value">{item.value}</strong>
-                  </span>
-                ))}
-              </div>
-              <GovernanceRailToggleButton
-                expanded={governanceRail.expanded}
-                onToggle={governanceRail.toggle}
-              >
-                {t('system.user.hero.summaryTitle')}
-              </GovernanceRailToggleButton>
-            </>
-          }
-          hint={
-            !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
-          }
-          actions={
-            <>
-              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                <Popconfirm
-                  title={t('system.user.batchEnableConfirm')}
-                  onOk={() => {
-                    void handleBatchStatus(1);
-                  }}
-                  disabled={batchActionDisabled}
-                >
-                  <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
-                </Popconfirm>
-              </PermissionAction>
-              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                <Popconfirm
-                  title={t('system.user.batchDisableConfirm')}
-                  onOk={() => {
-                    void handleBatchStatus(2);
-                  }}
-                  disabled={batchActionDisabled}
-                >
-                  <Button
-                    status={batchActionDisabled ? undefined : 'warning'}
-                    disabled={batchActionDisabled}
-                  >
-                    {t('system.user.batchDisable')}
-                  </Button>
-                </Popconfirm>
-              </PermissionAction>
-              <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
-                <Popconfirm
-                  title={t('system.user.batchDeleteConfirm')}
-                  onOk={() => {
-                    void handleBatchDelete();
-                  }}
-                  disabled={batchDeleteDisabled}
-                >
-                  <Button
-                    status={batchDeleteDisabled ? undefined : 'danger'}
-                    icon={<IconDelete />}
-                    disabled={batchDeleteDisabled}
-                  >
-                    {t('common.deleteSelected')}
-                  </Button>
-                </Popconfirm>
-              </PermissionAction>
-            </>
+        <GovernanceSummaryBar
+          eyebrow={t('system.user.hero.eyebrow')}
+          title={t('system.user.hero.title')}
+          description={t('system.user.hero.desc')}
+          metrics={statusMetrics.slice(0, 3).map((item) => ({
+            key: item.key,
+            label: item.label,
+            value: item.value,
+          }))}
+          action={
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('system.user.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
           }
         />
         <>
@@ -1008,6 +906,109 @@ const UserList: React.FC = () => {
             </Form>
           </FilterPanel>
           <Card className="page-panel system-list__table-card system-user-list__table-card">
+            <TableBatchActionBar
+              selectedCount={selectedRowKeys.length}
+              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+              clearText={t('common.clearSelection')}
+              clearSuccessText={t('common.clearSelectionSuccess')}
+              onClear={() => setSelectedRowKeys([])}
+              prefixActions={
+                <ListHeaderActions
+                  utility={
+                    <>
+                      <Button
+                        icon={<IconDownload />}
+                        onClick={() => {
+                          void handleExport();
+                        }}
+                        disabled={!canExport}
+                      >
+                        {t('common.export')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          void handleDownloadTemplate();
+                        }}
+                        disabled={!canImport}
+                      >
+                        {t('common.downloadTemplate')}
+                      </Button>
+                      <ImportCsvButton
+                        disabled={!canImport}
+                        onSelect={(file) => {
+                          void handleImport(file);
+                        }}
+                      >
+                        {t('common.import')}
+                      </ImportCsvButton>
+                    </>
+                  }
+                  primary={
+                    <Button
+                      type="primary"
+                      icon={<IconPlus />}
+                      onClick={openCreate}
+                      disabled={!canCreate}
+                    >
+                      {t('common.add')}
+                    </Button>
+                  }
+                />
+              }
+              hint={
+                !canBatchUpdate || !canBatchDelete
+                  ? t('common.batchActionPermissionHint')
+                  : undefined
+              }
+              actions={
+                <>
+                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm
+                      title={t('system.user.batchEnableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(1);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm
+                      title={t('system.user.batchDisableConfirm')}
+                      onOk={() => {
+                        void handleBatchStatus(2);
+                      }}
+                      disabled={batchActionDisabled}
+                    >
+                      <Button
+                        status={batchActionDisabled ? undefined : 'warning'}
+                        disabled={batchActionDisabled}
+                      >
+                        {t('system.user.batchDisable')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                  <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm
+                      title={t('system.user.batchDeleteConfirm')}
+                      onOk={() => {
+                        void handleBatchDelete();
+                      }}
+                      disabled={batchDeleteDisabled}
+                    >
+                      <Button
+                        status={batchDeleteDisabled ? undefined : 'danger'}
+                        icon={<IconDelete />}
+                        disabled={batchDeleteDisabled}
+                      >
+                        {t('common.deleteSelected')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
+                </>
+              }
+            />
             {loading && data.length === 0 ? <PageLoading /> : null}
             {error && data.length === 0 ? renderErrorState() : null}
             {!loading && !error && data.length === 0 ? (

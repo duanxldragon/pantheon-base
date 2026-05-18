@@ -142,6 +142,208 @@ async function fulfillJson(route: Route, status: number, body: Record<string, un
   });
 }
 
+test('permission workbench shows clean roles on first load for role-based browsing', async ({
+  page,
+}) => {
+  const roleKey = 'qa_perm_clean_visible';
+  const roleName = '权限工作台清洁角色';
+
+  await signInAsAdmin(page);
+
+  await page.addInitScript(() => {
+    localStorage.setItem('pantheon_lang', 'zh-CN');
+    localStorage.setItem('pantheon_lang_explicit', '1');
+  });
+
+  await page.route(/\/api\/v1\/auth\/me$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: {
+        id: 1,
+        username: 'admin',
+        nickname: '管理员',
+        roles: ['admin'],
+        perms: ['system:permission:list'],
+      },
+    });
+  });
+
+  await page.route(/\/api\/v1\/system\/refresh\/state(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: {
+        topics: {},
+      },
+    });
+  });
+
+  await page.route(/\/api\/v1\/system\/menu\/tree(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: [
+        {
+          id: 50,
+          parentId: 0,
+          titleKey: 'system.menu.access',
+          path: '/system/access',
+          component: '',
+          pagePerm: '',
+          perms: '',
+          type: 'M',
+          icon: 'idcard',
+          routeName: 'system-access',
+          module: 'system.iam',
+          sort: 20,
+          isVisible: 1,
+          isCache: 0,
+          isExternal: 0,
+          activeMenu: '',
+          children: [
+            {
+              id: 7,
+              parentId: 50,
+              titleKey: 'system.menu.permission',
+              path: '/system/permission',
+              component: 'system/permission/PermissionList',
+              pagePerm: 'system:permission:list',
+              perms: '',
+              type: 'C',
+              icon: 'lock',
+              routeName: 'system-permission',
+              module: 'system.iam',
+              sort: 30,
+              isVisible: 1,
+              isCache: 0,
+              isExternal: 0,
+              activeMenu: '',
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  await page.route(/\/api\/v1\/system\/role\/list(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: {
+        items: [
+          {
+            id: 502,
+            roleName,
+            roleKey,
+          },
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 100,
+      },
+    });
+  });
+
+  await page.route(/\/api\/v1\/system\/permission\/list(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: {
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 10,
+      },
+    });
+  });
+
+  await page.route(/\/api\/v1\/system\/permission\/workbench(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: {
+        overview: {
+          roleCount: 1,
+          enabledRoleCount: 1,
+          navigationAssignmentCount: 1,
+          pagePermissionAssignmentCount: 1,
+          actionPermissionAssignmentCount: 1,
+          apiActionCount: 1,
+          unknownPermissionAssignmentCount: 0,
+          pageGapRoleCount: 0,
+          apiGapRoleCount: 0,
+          pendingRemediationRoleCount: 0,
+          remediatedRoleCount: 0,
+          recentRemediationCount: 0,
+        },
+        roles: [
+          {
+            id: 502,
+            roleName,
+            roleKey,
+            status: 1,
+            menuCount: 1,
+            pagePermissionCount: 1,
+            actionPermissionCount: 1,
+            apiPolicyCount: 1,
+            requiredApiPolicyCount: 1,
+            missingApiPolicyCount: 0,
+            unknownPermissionCount: 0,
+            hasPageGap: false,
+            hasApiGap: false,
+            governanceStatus: 'clean',
+            lastRemediationAt: '',
+            lastRemediationAction: '',
+            menus: [
+              {
+                id: 101,
+                titleKey: 'system.menu.permission',
+                path: '/system/permission',
+                module: 'system.iam',
+              },
+            ],
+            pagePermissions: [
+              {
+                key: 'system:permission:list',
+                titleKey: 'system.menu.permission',
+                path: '/system/permission',
+                module: 'system.iam',
+                kind: 'page',
+              },
+            ],
+            actionPermissions: [
+              {
+                key: 'system:permission:update',
+                titleKey: 'system.permission.policy.edit',
+                path: '/system/permission',
+                module: 'system.iam',
+                kind: 'action',
+              },
+            ],
+            unknownPermissions: [],
+            apiPolicies: [
+              {
+                id: 9100,
+                path: '/api/v1/system/permission/list',
+                method: 'GET',
+              },
+            ],
+            missingApiPolicies: [],
+          },
+        ],
+      },
+    });
+  });
+
+  await page.route(/\/api\/v1\/system\/permission\/workbench\/remediation(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, 200, {
+      code: 200,
+      data: [],
+    });
+  });
+
+  await page.goto('/system/permission', { waitUntil: 'networkidle' });
+
+  const roleRow = page.locator('.arco-table-tr').filter({ hasText: roleName }).first();
+  await expect(roleRow).toBeVisible();
+  await expect(roleRow.getByRole('button', { name: '详情', exact: true })).toBeVisible();
+});
+
 test('permission workbench remediation retries through secondary verify and closes api gap', async ({ page }) => {
   const roleKey = 'qa_perm_remediate_mock';
   const roleName = '权限工作台整改回归';

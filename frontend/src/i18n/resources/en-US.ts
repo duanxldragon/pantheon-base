@@ -1987,7 +1987,8 @@ const enUSFallback = {
   'system.menu.titleKey.placeholder': 'Example: system.menu.example',
   'system.menu.path': 'Path',
   'system.menu.path.placeholder': 'Example: /system/example',
-  'system.menu.parentId': 'Parent ID',
+  'system.menu.parentId': 'Parent Menu',
+  'system.menu.root': 'Root Menu',
   'system.menu.component': 'Component Key',
   'system.menu.componentRequired': 'Please input component key',
   'system.menu.componentInvalid':
@@ -2040,6 +2041,7 @@ const enUSFallback = {
   'system.menu.activeMenu.placeholder': 'Example: /system/user',
   'system.menu.metadata': 'Metadata',
   'system.menu.create': 'Create Menu',
+  'system.menu.createChild': 'Create Child Menu',
   'system.menu.edit': 'Edit Menu',
   'system.menu.view.table': 'Table',
   'system.menu.view.list': 'List',

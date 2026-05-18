@@ -11,6 +11,7 @@ import {
   Select,
   Space,
   Tag,
+  TreeSelect,
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
@@ -38,6 +39,7 @@ import type {
   SorterInfo,
   TableProps,
 } from '@arco-design/web-react/es/Table/interface';
+import type { TreeSelectDataType } from '@arco-design/web-react/es/TreeSelect/interface';
 import {
   createMenu,
   deleteMenu,
@@ -89,8 +91,12 @@ interface FlatMenuNode {
   depth: number;
 }
 
-const emptyForm: MenuPayload = {
-  parentId: 0,
+type MenuFormValues = Omit<MenuPayload, 'parentId'> & {
+  parentId: string;
+};
+
+const emptyForm: MenuFormValues = {
+  parentId: '0',
   titleKey: '',
   path: '',
   component: '',
@@ -121,6 +127,7 @@ interface LoadDataOptions {
 
 const MenuList: React.FC = () => {
   const [data, setData] = useState<MenuNode[]>([]);
+  const [parentTree, setParentTree] = useState<MenuNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -128,7 +135,7 @@ const MenuList: React.FC = () => {
   const [editing, setEditing] = useState<MenuNode | null>(null);
   const [viewMode, setViewMode] = useState<MenuViewMode>('table');
   const [query, setQuery] = useState<MenuListQuery>(emptyQuery);
-  const [form] = Form.useForm<MenuPayload>();
+  const [form] = Form.useForm<MenuFormValues>();
   const [queryForm] = Form.useForm<MenuListQuery>();
   const { fetchMenuTree } = useMenuStore();
   const { t } = useTranslation();
@@ -180,6 +187,15 @@ const MenuList: React.FC = () => {
     [query],
   );
 
+  const loadParentTree = useCallback(async () => {
+    const rows = await getMenuTree({
+      scope: 'manage',
+      sortField: emptyQuery.sortField,
+      sortOrder: emptyQuery.sortOrder,
+    });
+    setParentTree(rows);
+  }, []);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadData(query);
@@ -187,11 +203,19 @@ const MenuList: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [loadData, query]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadParentTree().catch(() => undefined);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadParentTree]);
+
   useRefreshSubscription('system:menu:changed', (payload) => {
     if (payload.source === 'system/menu') {
       return;
     }
     void loadData(query);
+    void loadParentTree().catch(() => undefined);
     void fetchMenuTree({ force: true });
   });
 
@@ -201,10 +225,21 @@ const MenuList: React.FC = () => {
     setVisible(true);
   };
 
+  const openCreateChild = (row: MenuNode) => {
+    setEditing(null);
+    form.setFieldsValue({
+      ...emptyForm,
+      parentId: String(row.id),
+      module: row.module || emptyForm.module,
+      isVisible: row.isVisible,
+    });
+    setVisible(true);
+  };
+
   const openEdit = (row: MenuNode) => {
     setEditing(row);
     form.setFieldsValue({
-      parentId: row.parentId,
+      parentId: String(row.parentId),
       titleKey: row.titleKey,
       path: row.path,
       component: row.component,
@@ -235,18 +270,25 @@ const MenuList: React.FC = () => {
     }
     setSubmitting(true);
     try {
+      const normalizedValues: MenuPayload = {
+        ...values,
+        parentId: Number(values.parentId || 0),
+      };
       if (editing) {
-        await updateMenu(editing.id, values);
+        await updateMenu(editing.id, normalizedValues);
         message.success(t('common.updateSuccess'));
       } else {
-        await createMenu(values);
+        await createMenu(normalizedValues);
         message.success(t('common.createSuccess'));
       }
       invalidateMenuCaches();
       publishRefresh('system:menu:changed', 'system/menu');
       setVisible(false);
-      await loadData(query, { silent: true });
-      await fetchMenuTree({ force: true });
+      await Promise.all([
+        loadData(query, { silent: true }),
+        loadParentTree().catch(() => undefined),
+        fetchMenuTree({ force: true }),
+      ]);
     } finally {
       setSubmitting(false);
     }
@@ -257,8 +299,11 @@ const MenuList: React.FC = () => {
     message.success(t('common.deleteSuccess'));
     invalidateMenuCaches();
     publishRefresh('system:menu:changed', 'system/menu');
-    await loadData(query, { silent: true });
-    await fetchMenuTree({ force: true });
+    await Promise.all([
+      loadData(query, { silent: true }),
+      loadParentTree().catch(() => undefined),
+      fetchMenuTree({ force: true }),
+    ]);
   };
 
   const search = () => {
@@ -349,8 +394,58 @@ const MenuList: React.FC = () => {
     return '-';
   };
 
+  const excludedParentIDs = useMemo(() => {
+    if (!editing) {
+      return new Set<number>();
+    }
+    const blocked = new Set<number>([editing.id]);
+    const collect = (nodes: MenuNode[]) => {
+      nodes.forEach((node) => {
+        blocked.add(node.id);
+        if (node.children?.length) {
+          collect(node.children);
+        }
+      });
+    };
+    collect(editing.children || []);
+    return blocked;
+  }, [editing]);
+
+  const parentOptions = useMemo<TreeSelectDataType[]>(() => {
+    const build = (nodes: MenuNode[]): TreeSelectDataType[] =>
+      nodes
+        .filter((node) => !excludedParentIDs.has(node.id))
+        .map((node) => {
+          const translatedTitle = t(node.titleKey, { defaultValue: node.titleKey });
+          return {
+            title: node.path ? `${translatedTitle} · ${node.path}` : translatedTitle,
+            key: String(node.id),
+            value: String(node.id),
+            children: node.children?.length ? build(node.children) : undefined,
+          };
+        });
+    return [
+      {
+        title: t('system.menu.root'),
+        key: '0',
+        value: '0',
+      },
+      ...build(parentTree),
+    ];
+  }, [excludedParentIDs, parentTree, t]);
+
   const renderMenuActions = (row: MenuNode) => (
     <Space size={4} className="system-list__actions">
+      {canCreate && row.type !== 'F' ? (
+        <Button
+          type="text"
+          size="small"
+          icon={<IconPlus />}
+          onClick={() => openCreateChild(row)}
+        >
+          {t('system.menu.createChild')}
+        </Button>
+      ) : null}
       {canEdit ? (
         <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
           {t('common.edit')}
@@ -561,7 +656,7 @@ const MenuList: React.FC = () => {
     ),
     {
       title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      width: TABLE_ACTION_COLUMN_WIDTH.medium,
       fixed: 'right',
       render: (_: unknown, row: MenuNode) => renderMenuActions(row),
     },
@@ -815,7 +910,12 @@ const MenuList: React.FC = () => {
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
               <FormItem label={t('system.menu.parentId')} field="parentId">
-                <InputNumber min={0} />
+                <TreeSelect
+                  allowClear
+                  showSearch
+                  treeData={parentOptions}
+                  placeholder={t('system.menu.parentId')}
+                />
               </FormItem>
               <FormItem
                 label={t('system.menu.titleKey')}

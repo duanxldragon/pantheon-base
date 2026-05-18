@@ -25,6 +25,14 @@ type UserPlatformPreferences = {
   layoutMode?: string;
   densityMode?: string;
 };
+type ManageMenuNode = {
+  id: number;
+  parentId: number;
+  titleKey: string;
+  path: string;
+  type: string;
+  children?: ManageMenuNode[];
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -176,6 +184,30 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
   }
 }
 
+async function fetchManageMenuTree(page: Page, accessToken: string): Promise<ManageMenuNode[]> {
+  const response = await page.request.get(`${apiBaseUrl}/system/menu/tree`, {
+    headers: authHeaders(accessToken),
+    params: { scope: 'manage' },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return Array.isArray(payload.data) ? (payload.data as ManageMenuNode[]) : [];
+}
+
+function flattenManageMenus(nodes: ManageMenuNode[]): ManageMenuNode[] {
+  return nodes.flatMap((node) => [node, ...flattenManageMenus(node.children || [])]);
+}
+
+async function deleteMenuById(page: Page, accessToken: string, menuId: number | null) {
+  if (!menuId) {
+    return;
+  }
+  await page.request.delete(`${apiBaseUrl}/system/menu/${menuId}`, {
+    headers: await verifiedHeaders(page, accessToken),
+  });
+}
+
 async function getRoleByKey(page: Page, accessToken: string, roleKey: string) {
   const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
     headers: authHeaders(accessToken),
@@ -317,13 +349,15 @@ test('user page keeps list workflow primary without governance drawer entry', as
 
   await expectVisiblePageTitle(page, '用户管理');
   await expect(page.locator('.system-user-list__hero')).toHaveCount(0);
-  await expect(page.locator('.governance-summary-bar')).toHaveCount(0);
-  await expect(page.locator('.system-user-list__function-bar')).toBeVisible();
-  await expect(page.locator('.system-user-list__status-strip')).toBeVisible();
-  await expect(page.locator('.system-user-list__status-item')).toHaveCount(5);
+  await expect(page.locator('.governance-summary-bar')).toBeVisible();
   await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(1);
   await expect(page.locator('.governance-insight-drawer')).toHaveCount(0);
   await expect(page.locator('.system-list__table-card')).toBeVisible();
+  await expect(page.locator('.table-batch-action-bar__prefix-actions')).toBeVisible();
+  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('新增')).toBeVisible();
+  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('导入')).toBeVisible();
+  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('导出')).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: '状态' })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '部门' })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '岗位' })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '角色' })).toBeVisible();
@@ -398,6 +432,69 @@ test('governance and audit pages remove hero-heavy main-area blocks', async ({ p
         .locator('.system-list__table-card, .permission-workbench__tabs, .org-structure, .dict-workbench')
         .first(),
     ).toBeVisible();
+  }
+});
+
+test('menu smoke: create dialog uses tree parent selector', async ({ page }) => {
+  await signInAsAdmin(page);
+  await page.goto('/system/menu', { waitUntil: 'networkidle' });
+
+  await page.getByRole('button', { name: '新增', exact: true }).click();
+  const dialog = page.getByRole('dialog').filter({ has: page.getByText('新增菜单', { exact: true }) });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('.arco-tree-select').first()).toBeVisible();
+});
+
+test('menu smoke: create child action preselects clicked parent', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const menus = flattenManageMenus(await fetchManageMenuTree(page, accessToken));
+  const parentMenu =
+    menus.find((item) => item.path === '/system/access') ??
+    menus.find((item) => item.path && item.type !== 'F');
+  expect(parentMenu).toBeTruthy();
+
+  let createdMenuId: number | null = null;
+  try {
+    await page.goto('/system/menu', { waitUntil: 'networkidle' });
+
+    const parentRow = page.locator('.arco-table-tr').filter({ hasText: parentMenu?.path || '' }).first();
+    await expect(parentRow).toBeVisible();
+    await parentRow.getByRole('button', { name: '新增子菜单', exact: true }).click();
+
+    const dialog = page.getByRole('dialog').filter({ has: page.getByText('新增菜单', { exact: true }) });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('.arco-tree-select').first()).toContainText('/system/access');
+
+    const uniqueSuffix = Date.now();
+    await dialog.getByPlaceholder('例如：system.menu.example').fill(`system.menu.child.${uniqueSuffix}`);
+    await dialog.getByPlaceholder('例如：/system/example').fill(`/system/menu-child-${uniqueSuffix}`);
+    await dialog
+      .getByPlaceholder('例如：business/cmdb/CMDBTypeList')
+      .fill('system/menu/MenuList');
+    await dialog.getByPlaceholder('例如：system-example').fill(`system-menu-child-${uniqueSuffix}`);
+    await dialog
+      .getByPlaceholder('例如：system.iam / system.auth / platform / business.order')
+      .fill('system.iam');
+    await dialog
+      .getByPlaceholder('例如：system:example:list')
+      .nth(0)
+      .fill(`system:menu:child:${uniqueSuffix}`);
+
+    const createResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/v1/system/menu') &&
+        response.request().method() === 'POST',
+    );
+    await dialog.locator('.submit-bar').getByRole('button', { name: '新增', exact: true }).click();
+    const createResponse = await createResponsePromise;
+    expect(createResponse.ok()).toBeTruthy();
+    const requestBody = createResponse.request().postDataJSON() as { parentId: number };
+    expect(requestBody.parentId).toBe(parentMenu?.id);
+    const payload = await createResponse.json();
+    expect(payload.code).toBe(200);
+    createdMenuId = Number(payload.data?.id || 0) || null;
+  } finally {
+    await deleteMenuById(page, accessToken, createdMenuId);
   }
 });
 
