@@ -170,9 +170,13 @@ const LoginLogList: React.FC = () => {
   };
 
   const handleCleanup = async () => {
-    const resp = await cleanupAdminLoginLogs({ retentionDays });
-    message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
-    void loadData();
+    try {
+      const resp = await cleanupAdminLoginLogs({ retentionDays });
+      message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const handleBatchDelete = async () => {
@@ -180,10 +184,14 @@ const LoginLogList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const resp = await batchDeleteAdminLoginLogs({ ids: selectedRowKeys });
-    message.success(t('auth.loginLog.batchDeleteSuccess', { count: resp.deletedCount }));
-    setSelectedRowKeys([]);
-    void loadData();
+    try {
+      const resp = await batchDeleteAdminLoginLogs({ ids: selectedRowKeys });
+      message.success(t('auth.loginLog.batchDeleteSuccess', { count: resp.deletedCount }));
+      setSelectedRowKeys([]);
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const translateLogMessage = (value?: string | null) => {

@@ -603,9 +603,13 @@ const OperationLogList: React.FC = () => {
   };
 
   const handleCleanup = async () => {
-    const resp = await cleanupOperationLogs({ retentionDays });
-    message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
-    void loadData();
+    try {
+      const resp = await cleanupOperationLogs({ retentionDays });
+      message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const handleBatchDelete = async () => {
@@ -613,10 +617,14 @@ const OperationLogList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const resp = await batchDeleteOperationLogs({ ids: selectedRowKeys });
-    message.success(t('system.audit.batchDeleteSuccess', { count: resp.deletedCount }));
-    setSelectedRowKeys([]);
-    void loadData();
+    try {
+      const resp = await batchDeleteOperationLogs({ ids: selectedRowKeys });
+      message.success(t('system.audit.batchDeleteSuccess', { count: resp.deletedCount }));
+      setSelectedRowKeys([]);
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const showDetail = (log: OperationLogRow) => {

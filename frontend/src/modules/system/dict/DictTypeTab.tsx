@@ -185,7 +185,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
       if (isArcoFormValidationError(error)) {
         return;
       }
-      throw error;
+      return;
     }
     setTypeSubmitting(true);
     try {

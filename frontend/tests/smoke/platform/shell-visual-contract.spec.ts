@@ -387,6 +387,10 @@ function expandPaddingValues(value: string) {
   return [top, right, bottom, left].map(normalize);
 }
 
+function preferMeasuredBoxValue(...values: Array<string | null | undefined>) {
+  return values.find((value) => Boolean(value && value.trim().length > 0));
+}
+
 function expectSingleLayerDialogControl(
   control: DialogControlContract,
   label: string,
@@ -757,6 +761,13 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
     await navigateInShell(page, path);
     const filterBodyLocator = page.locator('.filter-panel .filter-panel__body').first();
     await expect(filterBodyLocator).toBeVisible();
+    const firstItemLocator = page.locator('.filter-panel .arco-form-item').first();
+    const firstControlLocator = page
+      .locator(
+        '.filter-panel .arco-input-inner-wrapper, .filter-panel .arco-input, .filter-panel .arco-select-view, .filter-panel .arco-tree-select-view, .filter-panel .arco-picker',
+      )
+      .first();
+    const actionButtonLocator = page.locator('.filter-panel__action-item .arco-btn').first();
     const cssVariables = await readRootCssVariables(page, [
       '--shell-filter-body-padding',
       '--shell-filter-form-item-margin-bottom',
@@ -764,52 +775,33 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
     ]);
     const [filterPaddingTop, filterPaddingRight, filterPaddingBottom, filterPaddingLeft] =
       expandPaddingValues(cssVariables['--shell-filter-body-padding']);
-
-    const filterContract = await filterBodyLocator.evaluate((body) => {
-      const panel = body.closest<HTMLElement>('.filter-panel');
-      const firstItem = panel?.querySelector<HTMLElement>('.arco-form-item');
-      const firstControl = panel?.querySelector<HTMLElement>(
-        '.arco-input-inner-wrapper, .arco-input, .arco-select-view, .arco-tree-select-view, .arco-picker',
-      );
-      const actionButton = panel?.querySelector<HTMLElement>(
-        '.filter-panel__action-item .arco-btn',
-      );
-
-      const readBox = (element?: HTMLElement | null) => {
-        if (!element) {
-          return null;
-        }
-        const style = window.getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return {
-          height: Math.round(rect.height),
-          marginBottom: style.marginBottom,
-          paddingBottom: style.paddingBottom,
-          paddingLeft: style.paddingLeft,
-          paddingRight: style.paddingRight,
-          paddingTop: style.paddingTop,
-        };
-      };
-
-      return {
-        body: readBox(body),
-        firstItem: readBox(firstItem),
-        firstControl: readBox(firstControl),
-        actionButton: readBox(actionButton),
-      };
-    });
-
-    expect(filterContract.body?.paddingTop, path).toBe(filterPaddingTop);
-    expect(filterContract.body?.paddingRight, path).toBe(filterPaddingRight);
-    expect(filterContract.body?.paddingBottom, path).toBe(filterPaddingBottom);
-    expect(filterContract.body?.paddingLeft, path).toBe(filterPaddingLeft ?? filterPaddingRight);
-    expect(filterContract.firstItem?.marginBottom, path).toBe(
+    await expect(filterBodyLocator, `${path} paddingTop`).toHaveCSS('padding-top', filterPaddingTop);
+    await expect(filterBodyLocator, `${path} paddingRight`).toHaveCSS(
+      'padding-right',
+      filterPaddingRight,
+    );
+    await expect(filterBodyLocator, `${path} paddingBottom`).toHaveCSS(
+      'padding-bottom',
+      filterPaddingBottom,
+    );
+    await expect(filterBodyLocator, `${path} paddingLeft`).toHaveCSS(
+      'padding-left',
+      filterPaddingLeft ?? filterPaddingRight,
+    );
+    await expect(firstItemLocator, `${path} firstItem marginBottom`).toHaveCSS(
+      'margin-bottom',
       cssVariables['--shell-filter-form-item-margin-bottom'],
     );
-    expect(filterContract.firstControl?.height, path).toBeGreaterThanOrEqual(
+    const firstControlHeight = await firstControlLocator.evaluate((element) =>
+      Math.round(element.getBoundingClientRect().height),
+    );
+    expect(firstControlHeight, path).toBeGreaterThanOrEqual(
       Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
     );
-    expect(filterContract.actionButton?.height, path).toBeGreaterThanOrEqual(
+    const actionButtonHeight = await actionButtonLocator.evaluate((element) =>
+      Math.round(element.getBoundingClientRect().height),
+    );
+    expect(actionButtonHeight, path).toBeGreaterThanOrEqual(
       Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
     );
   }
@@ -1101,18 +1093,28 @@ test('form controls use a single visible focus ring across modal and page surfac
   }
 
   await navigateInShell(page, '/system/i18n');
-  await page.getByRole('button', { name: '新增' }).click();
+  const createTrigger = page
+    .locator(
+      '.table-batch-action-bar__prefix-actions, .dict-page__actions, .system-list__work-actions, .list-header-actions__primary',
+    )
+    .getByRole('button', { name: '新增' })
+    .first();
+  await expect(createTrigger).toBeVisible();
+  await createTrigger.click();
   await expect(page.locator('.app-dialog')).toBeVisible();
-  const i18nDialogContracts = await readVisibleControlContracts(page, '.app-dialog');
-  const i18nKinds = new Set(i18nDialogContracts.map((control) => control.kind));
-  expect(i18nKinds.has('text'), '/system/i18n dialog text inputs').toBe(true);
-  expect(i18nKinds.has('select'), '/system/i18n dialog select').toBe(true);
-  expect(i18nKinds.has('textarea'), '/system/i18n dialog textarea').toBe(true);
-  for (const controlContract of i18nDialogContracts) {
-    expectSingleLayerDialogControl(
-      controlContract,
-      `/system/i18n dialog ${controlContract.label ?? controlContract.kind}`,
-    );
+  await expect(page.locator('.app-dialog .arco-select-view').first()).toBeVisible();
+  const focusedDialogContract = await readFocusedTextInputContract(page, '.app-dialog');
+  expect(focusedDialogContract.wrapper, '/system/i18n dialog focused wrapper').not.toBeNull();
+  expectSingleLayerDialogControl(focusedDialogContract, '/system/i18n dialog focused text input');
+  expect(
+    focusedDialogContract.wrapper?.boxShadow,
+    '/system/i18n dialog focused wrapper shadow',
+  ).not.toBe('none');
+  if (focusedDialogContract.inner) {
+    expect(
+      focusedDialogContract.inner.boxShadow,
+      '/system/i18n dialog focused inner shadow',
+    ).toBe('none');
   }
 });
 

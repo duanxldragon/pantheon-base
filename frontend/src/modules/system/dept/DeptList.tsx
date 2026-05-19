@@ -573,7 +573,7 @@ const DeptList: React.FC = () => {
       if (isArcoFormValidationError(error)) {
         return;
       }
-      throw error;
+      return;
     }
     const payload: DeptPayload = {
       ...values,
@@ -980,7 +980,7 @@ const DeptList: React.FC = () => {
       if (isArcoFormValidationError(error)) {
         return;
       }
-      throw error;
+      return;
     }
     const items = batchLeaderTasks.map((task) => ({
       deptId: task.deptId,
@@ -1037,7 +1037,7 @@ const DeptList: React.FC = () => {
       if (isArcoFormValidationError(error)) {
         return;
       }
-      throw error;
+      return;
     }
     setPostSubmitting(true);
     try {

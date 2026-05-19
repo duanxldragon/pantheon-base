@@ -170,15 +170,23 @@ const SessionList: React.FC = () => {
   };
 
   const removeSession = async (row: AdminSessionRow) => {
-    await revokeAdminSession(row.sessionId);
-    message.success(t('auth.session.revokeSuccess'));
-    await loadData(query, { silent: true });
+    try {
+      await revokeAdminSession(row.sessionId);
+      message.success(t('auth.session.revokeSuccess'));
+      await loadData(query, { silent: true });
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const clearHistoricSessions = async () => {
-    const resp = await cleanupAdminSessions({ retentionDays });
-    message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
-    await loadData(query, { silent: true });
+    try {
+      const resp = await cleanupAdminSessions({ retentionDays });
+      message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
+      await loadData(query, { silent: true });
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const currentUsername = userInfo?.username;

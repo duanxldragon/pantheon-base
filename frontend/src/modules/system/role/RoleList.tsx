@@ -583,7 +583,7 @@ const RoleList: React.FC = () => {
       if (isArcoFormValidationError(error)) {
         return;
       }
-      throw error;
+      return;
     }
     const payload: RolePayload = {
       roleName: values.roleName,

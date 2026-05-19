@@ -40,6 +40,7 @@ type UserDetail = {
   username: string;
   nickname: string;
   roleKeys: string[];
+  roleNames?: string[];
 };
 
 type WorkspaceTaskDepthDeps = {
@@ -253,6 +254,8 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
       expect(detailPayload.code).toBe(200);
       expect(detailPayload.data.username).toBeTruthy();
       expect(detailPayload.data.roleKeys.length).toBeGreaterThan(0);
+      const expectedRoleLabel =
+        detailPayload.data.roleNames?.find(Boolean) || detailPayload.data.roleKeys[0];
 
       const detailLoadPayloadPromise = expectOkJson<UserDetail>(
         page.waitForResponse(
@@ -278,7 +281,7 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
           name: new RegExp(`用户名\\s+${detailPayload.data.username}`),
         }).first(),
       ).toBeVisible();
-      await expect(page.getByRole('row', { name: new RegExp(`角色\\s+${detailPayload.data.roleKeys[0]}`) }).first()).toBeVisible();
+      await expect(page.getByRole('row', { name: new RegExp(`角色\\s+${expectedRoleLabel}`) }).first()).toBeVisible();
       await expect(page.getByText('基础信息', { exact: true })).toBeVisible();
       await expect(page.getByText('账号摘要', { exact: true })).toBeVisible();
       await expect(page.locator('.arco-card').first()).toContainText(

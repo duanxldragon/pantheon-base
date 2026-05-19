@@ -319,7 +319,7 @@ const PermissionList: React.FC = () => {
       if (isArcoFormValidationError(error)) {
         return;
       }
-      throw error;
+      return;
     }
     setSubmitting(true);
     try {

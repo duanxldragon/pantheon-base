@@ -967,6 +967,12 @@ a {
   box-shadow: none;
 }
 
+.app-dialog .arco-select-view,
+.app-dialog .arco-tree-select-view,
+.app-dialog .arco-picker {
+  background: #fff !important;
+}
+
 .app-dialog .arco-input-inner-wrapper .arco-input,
 .app-dialog .arco-input-password .arco-input,
 .app-dialog .arco-input-password .arco-input-inner-wrapper,
@@ -1184,6 +1190,7 @@ a {
 
 .filter-panel__body {
   padding: var(--shell-filter-body-padding);
+  box-sizing: border-box;
 }
 
 .filter-panel .arco-row {
@@ -1198,6 +1205,10 @@ a {
 
 .filter-panel .arco-form-item {
   margin-bottom: var(--shell-filter-form-item-margin-bottom);
+}
+
+.filter-panel__action-item {
+  margin-bottom: var(--shell-filter-form-item-margin-bottom) !important;
 }
 
 .filter-panel .arco-form-item-label-col {
