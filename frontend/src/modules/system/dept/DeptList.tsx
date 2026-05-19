@@ -597,6 +597,8 @@ const DeptList: React.FC = () => {
       if (activeTab === 'org') {
         await loadOrgData({ silent: true });
       }
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }

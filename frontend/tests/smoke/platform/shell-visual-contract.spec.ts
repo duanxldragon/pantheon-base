@@ -1094,12 +1094,11 @@ test('form controls use a single visible focus ring across modal and page surfac
 
   await navigateInShell(page, '/system/i18n');
   const createTrigger = page
-    .locator(
-      '.table-batch-action-bar__prefix-actions, .dict-page__actions, .system-list__work-actions, .list-header-actions__primary',
-    )
+    .locator('.table-batch-action-bar__prefix-actions')
     .getByRole('button', { name: '新增' })
     .first();
   await expect(createTrigger).toBeVisible();
+  await expect(createTrigger).toBeEnabled();
   await createTrigger.click();
   await expect(page.locator('.app-dialog')).toBeVisible();
   await expect(page.locator('.app-dialog .arco-select-view').first()).toBeVisible();

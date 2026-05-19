@@ -610,6 +610,8 @@ const RoleList: React.FC = () => {
       publishRefresh('system:role:changed', 'system/role');
       setVisible(false);
       await loadData(query, { silent: true });
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }

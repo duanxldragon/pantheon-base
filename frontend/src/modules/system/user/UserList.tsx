@@ -403,6 +403,8 @@ const UserList: React.FC = () => {
       setVisible(false);
       setAvatarPreview('');
       await loadData(query, { silent: true });
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -447,6 +449,8 @@ const UserList: React.FC = () => {
       message.success(t('system.user.resetPasswordSuccess', { count: result.revokedSessionCount }));
       setResetTarget(null);
       resetPasswordForm.resetFields();
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }

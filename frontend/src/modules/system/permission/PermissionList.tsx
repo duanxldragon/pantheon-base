@@ -337,6 +337,8 @@ const PermissionList: React.FC = () => {
         loadData(query, { silent: true }),
         loadWorkbench(workbenchQuery, { silent: true }),
       ]);
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }

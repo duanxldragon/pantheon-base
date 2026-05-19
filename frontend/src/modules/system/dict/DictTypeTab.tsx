@@ -200,6 +200,8 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
       publishRefresh('system:dict:changed', 'system/dict');
       setTypeVisible(false);
       onReload();
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setTypeSubmitting(false);
     }

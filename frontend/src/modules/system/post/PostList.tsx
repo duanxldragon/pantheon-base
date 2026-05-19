@@ -278,6 +278,8 @@ const PostList: React.FC = () => {
       publishRefresh('system:post:changed', 'system/post');
       setVisible(false);
       await loadData(query, { silent: true });
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }

@@ -289,6 +289,8 @@ const MenuList: React.FC = () => {
         loadParentTree().catch(() => undefined),
         fetchMenuTree({ force: true }),
       ]);
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSubmitting(false);
     }
