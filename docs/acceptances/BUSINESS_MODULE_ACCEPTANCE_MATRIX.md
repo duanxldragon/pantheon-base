@@ -10,6 +10,8 @@ updated_at: 2026-05-05
 
 # business/* 业务模块验收矩阵
 
+English version: [BUSINESS_MODULE_ACCEPTANCE_MATRIX.en.md](./BUSINESS_MODULE_ACCEPTANCE_MATRIX.en.md)
+
 本文把业务模块验收从“参考模板”升级为固定矩阵，适用于独立业务仓库中的所有 `business/*` 模块。
 
 ---

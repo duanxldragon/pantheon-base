@@ -9,6 +9,9 @@ updated_at: 2026-04-29
 ---
 
 # 动态模块治理设计
+
+English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md)
+
 本文定义 `system/config -> dynamicmodule` 的正式治理边界。
 
 它重点回答：

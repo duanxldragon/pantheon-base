@@ -10,6 +10,9 @@ updated_at: 2026-05-18
 ---
 
 # 用户偏好设计
+
+English version: [USER_PREFERENCE_DESIGN.en.md](./USER_PREFERENCE_DESIGN.en.md)
+
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_AUTH_CONTRACT.md`

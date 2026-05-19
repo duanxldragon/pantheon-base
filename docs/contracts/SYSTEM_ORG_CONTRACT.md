@@ -20,6 +20,8 @@ updated_at: 2026-04-30
 
 # system/org 合同文档
 
+English version: [SYSTEM_ORG_CONTRACT.en.md](./SYSTEM_ORG_CONTRACT.en.md)
+
 关联设计：
 - `SYSTEM_ORG_DESIGN.md`
 - `FRONTEND_PAGE_TEMPLATES.md`

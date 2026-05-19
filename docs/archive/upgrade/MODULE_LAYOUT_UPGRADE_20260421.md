@@ -16,6 +16,8 @@ updated_at: 2026-04-21
 
 # 模块物理目录升级说明（2026-04-21）
 
+English version: [MODULE_LAYOUT_UPGRADE_20260421.en.md](./MODULE_LAYOUT_UPGRADE_20260421.en.md)
+
 本文用于说明 2026-04-21 这一轮”逻辑层不变、物理目录优化”的升级。
 
 如需在老环境执行实际升级，请配合 `docs/archive/upgrade/UPGRADE_RUNBOOK_20260421.md` 与 `docs/archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md` 一起使用；本文只负责解释边界与目录变化，不替代执行清单。

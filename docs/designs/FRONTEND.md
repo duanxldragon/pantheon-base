@@ -9,6 +9,9 @@ updated_at: 2026-04-17
 ---
 
 # 前端架构设计与 UI 规范
+
+English version: [FRONTEND.en.md](./FRONTEND.en.md)
+
 > 本文偏”架构总览”。更细的页面骨架、导航、状态、表单、表格、响应式和权限态规范，见 `docs/designs/FRONTEND_UI_SPEC.md`；后台 UI 专项整改见 `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`。
 
 数值性真相源约束：

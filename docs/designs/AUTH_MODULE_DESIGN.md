@@ -9,6 +9,9 @@ updated_at: 2026-04-29
 ---
 
 # Auth 模块拆分设计
+
+English version: [AUTH_MODULE_DESIGN.en.md](./AUTH_MODULE_DESIGN.en.md)
+
 本文用于把”认证与会话”从当前 `system/user` 混合实现中拆分为独立能力域，目标是在项目早期就锁定边界，避免后期继续把登录、用户管理、角色权限、安全策略揉成一个模块。
 
 ## 1. 设计目标

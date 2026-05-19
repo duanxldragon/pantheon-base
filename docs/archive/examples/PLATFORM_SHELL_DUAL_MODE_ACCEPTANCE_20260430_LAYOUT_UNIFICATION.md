@@ -12,6 +12,8 @@ updated_at: 2026-04-30
 
 # Platform 壳层双模式验收记录
 
+English version: [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.en.md](./PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.en.md)
+
 验收批次：`platform-shell-2026-04-30-layout-unification`
 
 基于模板：`docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`

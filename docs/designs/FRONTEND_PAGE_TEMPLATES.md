@@ -12,6 +12,8 @@ updated_at: 2026-04-17
 
 # 前端页面模板规范
 
+English version: [FRONTEND_PAGE_TEMPLATES.en.md](./FRONTEND_PAGE_TEMPLATES.en.md)
+
 本文定义 Pantheon Base 的标准页面模板，用于指导后续所有前端页面实现。
 
 目标是：

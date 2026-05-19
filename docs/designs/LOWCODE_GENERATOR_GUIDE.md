@@ -9,6 +9,9 @@ updated_at: 2026-05-04
 ---
 
 # 轻量级低代码辅助生成器 - 集成与使用指南
+
+English version: [LOWCODE_GENERATOR_GUIDE.en.md](./LOWCODE_GENERATOR_GUIDE.en.md)
+
 ## 📋 概述
 
 该生成器是 Pantheon 标准后台底座上的**补充功能**，目标是辅助研发快速接入业务模块，而不是反向定义平台核心架构。

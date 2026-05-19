@@ -9,6 +9,9 @@ updated_at: 2026-05-05
 ---
 
 # system/org 组织域设计
+
+English version: [SYSTEM_ORG_DESIGN.en.md](./SYSTEM_ORG_DESIGN.en.md)
+
 本文补齐 `system/org` 的独立设计锚点。组织域当前已有部门、岗位、组织治理页面和后端能力，但历史上主要散落在总体设计、系统审计和页面实现中，缺少单域设计文档。
 
 ---

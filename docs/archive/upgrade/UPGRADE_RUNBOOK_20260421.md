@@ -16,6 +16,8 @@ updated_at: 2026-04-21
 
 # 老环境升级运维 SOP（2026-04-21）
 
+English version: [UPGRADE_RUNBOOK_20260421.en.md](./UPGRADE_RUNBOOK_20260421.en.md)
+
 本文是给运维/发布执行人的顺序版 SOP，用于将已有 Pantheon 环境升级到 2026-04-21 这轮模块目录与菜单信息架构版本。
 
 详细解释、完整 SQL 和回归项见 `docs/archive/upgrade/UPGRADE_EXECUTION_CHECKLIST_20260421.md`；本文只保留执行顺序和放行/回滚判断。

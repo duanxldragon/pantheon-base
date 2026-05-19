@@ -26,6 +26,8 @@ updated_at: 2026-05-12
 
 # system/config 合同文档
 
+English version: [SYSTEM_CONFIG_CONTRACT.en.md](./SYSTEM_CONFIG_CONTRACT.en.md)
+
 关联设计：
 - `DICT_AND_SETTING_DESIGN.md`
 - `SYSTEM_CONFIG_EXTENDED_DESIGN.md`

@@ -9,6 +9,9 @@ updated_at: 2026-04-29
 ---
 
 # 权限模型设计
+
+English version: [PERMISSION_MODEL.en.md](./PERMISSION_MODEL.en.md)
+
 本文定义 Pantheon Base 的权限模型，目标是把”菜单能不能看、页面能不能进、按钮能不能点、接口能不能调”拆清楚。
 
 如果这份模型不先定好，后续最容易变成：

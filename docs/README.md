@@ -1,5 +1,7 @@
 # Pantheon Base 文档索引
 
+English version: [README.en.md](./README.en.md)
+
 本文是 `docs/` 的统一入口。
 
 目标不是把所有历史记录都堆在首页，而是先帮人快速判断：
@@ -73,6 +75,7 @@
 8. [前端 UI 详细规范](./designs/FRONTEND_UI_SPEC.md)
 9. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
 10. [业务开发与 AI 协作](./designs/WORKFLOW.md)
+11. [designs/ 设计目录入口（中文优先）](./designs/README.md)
 
 ### 2.2 做 `platform` 壳层、导航、工作台、浮层治理
 
@@ -142,6 +145,7 @@
 
 ### 3.1 总体架构
 
+- [designs/ 设计目录入口（中文优先）](./designs/README.md)
 - [Pantheon Base 架构总览](./designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md)
 - [总体架构与后端规范](./designs/BACKEND.md)
 - [前端架构与模块接入](./designs/FRONTEND.md)

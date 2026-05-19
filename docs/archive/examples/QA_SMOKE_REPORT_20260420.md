@@ -16,6 +16,8 @@ updated_at: 2026-04-20
 
 # Pantheon 平台层冒烟归档报告（2026-04-20）
 
+English version: [QA_SMOKE_REPORT_20260420.en.md](./QA_SMOKE_REPORT_20260420.en.md)
+
 执行者：Pantheon 专家
 层级归属：`platform` + `system/auth` + `system/iam` + `system/org` + `system/config`
 

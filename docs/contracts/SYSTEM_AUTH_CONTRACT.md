@@ -21,6 +21,8 @@ updated_at: 2026-04-30
 
 # system/auth 合同文档
 
+English version: [SYSTEM_AUTH_CONTRACT.en.md](./SYSTEM_AUTH_CONTRACT.en.md)
+
 关联设计：
 - `AUTH_MODULE_DESIGN.md`
 - `SECURITY_CENTER_DESIGN.md`

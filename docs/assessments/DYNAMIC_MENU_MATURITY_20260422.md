@@ -10,6 +10,9 @@ updated_at: 2026-04-22
 ---
 
 # 动态菜单能力成熟度评估与演进蓝图（2026-04-22）
+
+English version: [DYNAMIC_MENU_MATURITY_20260422.en.md](./DYNAMIC_MENU_MATURITY_20260422.en.md)
+
 ## 1. 评估范围
 
 本次评估聚焦三个层面：

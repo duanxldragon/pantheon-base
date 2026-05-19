@@ -9,6 +9,9 @@ updated_at: 2026-04-20
 ---
 
 # gstack Windows 使用清单
+
+English version: [GSTACK_WINDOWS_GUIDE.en.md](./GSTACK_WINDOWS_GUIDE.en.md)
+
 本文只描述 Pantheon 本地开发场景下，如何在 Windows 上稳定使用 gstack 内置浏览器完成冒烟或页面巡检。
 
 ## 1. 适用范围

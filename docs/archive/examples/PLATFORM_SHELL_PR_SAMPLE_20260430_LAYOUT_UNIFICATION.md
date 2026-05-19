@@ -12,6 +12,8 @@ updated_at: 2026-04-30
 
 # Platform 壳层 PR 描述样例
 
+English version: [PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.en.md](./PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.en.md)
+
 适用批次：`platform-shell-2026-04-30-layout-unification`
 
 基于：

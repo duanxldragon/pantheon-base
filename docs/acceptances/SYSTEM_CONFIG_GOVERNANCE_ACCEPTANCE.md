@@ -10,6 +10,8 @@ updated_at: 2026-05-05
 
 # system/config 高敏治理验收基线
 
+English version: [SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md](./SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md)
+
 本文把 `/system/i18n`、`/system/modules`、`/system/generator` 纳入固定验收范围，解决此前只有设计和实现、缺少稳定验收基线的问题。
 
 ---

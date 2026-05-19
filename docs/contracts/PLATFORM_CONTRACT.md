@@ -22,6 +22,8 @@ updated_at: 2026-04-30
 
 # 平台层合同文档
 
+English version: [PLATFORM_CONTRACT.en.md](./PLATFORM_CONTRACT.en.md)
+
 关联设计：
 - `PLATFORM_DASHBOARD_DESIGN.md`
 - `FRONTEND_UI_SPEC.md`

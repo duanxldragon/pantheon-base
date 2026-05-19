@@ -9,6 +9,9 @@ updated_at: 2026-04-17
 ---
 
 # 前端组件规划
+
+English version: [FRONTEND_COMPONENT_PLAN.en.md](./FRONTEND_COMPONENT_PLAN.en.md)
+
 本文用于承接：
 
 - `docs/designs/FRONTEND_UI_SPEC.md` 的视觉与交互规范

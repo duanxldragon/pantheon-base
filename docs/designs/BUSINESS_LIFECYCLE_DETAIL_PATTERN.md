@@ -9,6 +9,9 @@ updated_at: 2026-05-11
 ---
 
 # 业务生命周期详情页模板 (Business Lifecycle Detail Pattern)
+
+English version: [BUSINESS_LIFECYCLE_DETAIL_PATTERN.en.md](./BUSINESS_LIFECYCLE_DETAIL_PATTERN.en.md)
+
 本文沉淀**业务资源详情页**的标准实现模板，特别针对**有状态生命周期**的资源（如 Deploy 任务的 pending→running→success/failed，CMDB 主机的 pending→online→offline）。
 
 配合 `BUSINESS_RESOURCE_LIST_PATTERN.md` 使用——前者管列表，本文管详情。

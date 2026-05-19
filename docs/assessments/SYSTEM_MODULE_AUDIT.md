@@ -13,6 +13,9 @@ updated_at: 2026-04-17
 ---
 
 # 系统管理功能审计报告
+
+English version: [SYSTEM_MODULE_AUDIT.en.md](./SYSTEM_MODULE_AUDIT.en.md)
+
 本文用于对齐”设计文档 / 数据库 / 后端 / 前端”四层现实状态，重点检查以下系统管理功能点是否真正闭环：
 
 - 用户管理

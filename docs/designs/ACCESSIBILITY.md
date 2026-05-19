@@ -9,6 +9,9 @@ updated_at: 2026-05-11
 ---
 
 # 无障碍设计规范 (Accessibility)
+
+English version: [ACCESSIBILITY.en.md](./ACCESSIBILITY.en.md)
+
 本文是 Pantheon Base 的 a11y 设计与验收规范，作为 `FRONTEND_UI_SPEC.md` 的补充。目标是让所有键盘、屏幕阅读器、低视力用户都能完成核心管理任务。
 
 不重复 `FRONTEND_UI_SPEC.md` 中已有的「视觉对比」「字号尺度」「色彩 token」规则，本文聚焦交互可达性。

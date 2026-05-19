@@ -10,6 +10,8 @@ updated_at: 2026-05-06
 
 # Pantheon 代码评审标准流程
 
+English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
+
 本文定义 Pantheon Base 的固定代码评审流程。它适用于人工评审、AI 评审和阶段性交付前自检。
 
 目标不是做格式化意见，而是防止设计边界、权限、多语言、审计、动态菜单和生成器契约在迭代中漂移。

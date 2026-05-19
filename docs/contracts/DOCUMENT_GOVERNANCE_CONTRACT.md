@@ -8,6 +8,8 @@ updated_at: 2026-04-30
 
 # 文档合同化治理方案
 
+English version: [DOCUMENT_GOVERNANCE_CONTRACT.en.md](./DOCUMENT_GOVERNANCE_CONTRACT.en.md)
+
 本文用于定义 Pantheon Base 的文档治理模型。
 
 目标不是再新增一类“好看的文档名称”，而是把项目文档从“资料堆”收敛为一套可执行的治理系统，让设计、实现、评估、整改、验收都围绕同一份契约推进。

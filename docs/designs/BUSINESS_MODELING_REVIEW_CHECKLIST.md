@@ -9,6 +9,9 @@ updated_at: 2026-05-04
 ---
 
 # 业务模块建模评审清单
+
+English version: [BUSINESS_MODELING_REVIEW_CHECKLIST.en.md](./BUSINESS_MODELING_REVIEW_CHECKLIST.en.md)
+
 本文用于业务模块进入设计、DDL、接口和页面实现前的统一评审。
 
 目标只有一个：

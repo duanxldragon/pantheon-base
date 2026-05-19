@@ -11,6 +11,8 @@ updated_at: 2026-04-30
 
 # 文档类型与状态说明
 
+English version: [DOCUMENT_METADATA_AND_STATUS.en.md](./DOCUMENT_METADATA_AND_STATUS.en.md)
+
 本文用于定义 Pantheon Base 文档系统的统一元信息字段、文档类型枚举和生命周期状态枚举。
 
 ---

@@ -9,6 +9,9 @@ updated_at: 2026-05-01
 ---
 
 # 后台 UI 风格约束
+
+English version: [BACKOFFICE_STYLE_CONSTRAINTS.en.md](./BACKOFFICE_STYLE_CONSTRAINTS.en.md)
+
 本文用于约束 Pantheon Base 后台的**共享风格实现**，重点解决以下回归模式：
 
 - 右侧辅助栏存在多种 `Card`/标题/边框写法；

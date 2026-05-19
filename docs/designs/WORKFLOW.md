@@ -9,6 +9,9 @@ updated_at: 2026-04-30
 ---
 
 # 业务开发工作流与 AI 协作指南
+
+English version: [WORKFLOW.en.md](./WORKFLOW.en.md)
+
 ## 0. 文档合同化开发流
 
 从 2026-04-30 起，Pantheon 默认采用“合同先行”的文档治理方式。
@@ -274,4 +277,3 @@ browse chain "goto http://127.0.0.1:5173/login | wait --networkidle 15000 | stor
 - 不允许只写“已验证横竖版正常”而无记录文件
 - 不允许出现“横版后补”但仍标记完成
 - 不允许在壳层提交说明中省略 `Pending` 挂账
-

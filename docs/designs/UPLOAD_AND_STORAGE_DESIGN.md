@@ -9,6 +9,9 @@ updated_at: 2026-04-29
 ---
 
 # 上传与存储设计
+
+English version: [UPLOAD_AND_STORAGE_DESIGN.en.md](./UPLOAD_AND_STORAGE_DESIGN.en.md)
+
 本文定义 `system/config -> upload` 子域与平台统一上传能力的边界。
 
 它重点回答：

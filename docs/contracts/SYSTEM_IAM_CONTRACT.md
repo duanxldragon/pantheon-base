@@ -23,6 +23,8 @@ updated_at: 2026-05-12
 
 # system/iam 合同文档
 
+English version: [SYSTEM_IAM_CONTRACT.en.md](./SYSTEM_IAM_CONTRACT.en.md)
+
 关联设计：
 - `PERMISSION_MODEL.md`
 - `MODULE_CONTRACT.md`

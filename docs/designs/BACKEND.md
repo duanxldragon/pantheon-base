@@ -10,6 +10,9 @@ updated_at: 2026-04-17
 ---
 
 # 后端架构设计与开发规范
+
+English version: [BACKEND.en.md](./BACKEND.en.md)
+
 ## 1. 架构核心：模块化单体 (Modular Monolith)
 底座将系统拆分为物理隔离的模块，业务模块与底座通过 `pkg/common` 定义的接口契约进行“逻辑通信”。
 

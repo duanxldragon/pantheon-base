@@ -9,6 +9,9 @@ updated_at: 2026-04-17
 ---
 
 # 数据库设计规范与详细说明
+
+English version: [DATABASE.en.md](./DATABASE.en.md)
+
 ## 1. 基础规范
 - **引擎**: 统一使用 InnoDB。
 - **编码**: `utf8mb4_general_ci`。

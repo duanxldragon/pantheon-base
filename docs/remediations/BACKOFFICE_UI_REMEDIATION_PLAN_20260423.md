@@ -13,6 +13,9 @@ updated_at: 2026-05-01
 ---
 
 # 后台 UI 专项整改方案
+
+English version: [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.en.md](./BACKOFFICE_UI_REMEDIATION_PLAN_20260423.en.md)
+
 本文用于指导 Pantheon Base 后台管理界面的专项整改。整改重点是**后台管理本身**，覆盖登录页、平台壳层、工作台、系统域管理页、全局状态与反馈，不设计 `business/*` 的业务页面。
 
 实现层风格收口与回归阻断规则，见 `docs/designs/BACKOFFICE_STYLE_CONSTRAINTS.md`。

@@ -10,6 +10,8 @@ updated_at: 2026-05-05
 
 # 业务字典接入指南
 
+English version: [BUSINESS_DICT_INTEGRATION_GUIDE.en.md](./BUSINESS_DICT_INTEGRATION_GUIDE.en.md)
+
 本文定义业务模块如何使用 `system/config/dict`，避免业务模块各自硬编码枚举或把业务字典混进 system 底座语义。
 
 ---

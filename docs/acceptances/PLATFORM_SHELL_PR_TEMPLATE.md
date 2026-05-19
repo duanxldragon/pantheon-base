@@ -10,6 +10,8 @@ updated_at: 2026-04-30
 
 # Platform 壳层 PR 描述模板
 
+English version: [PLATFORM_SHELL_PR_TEMPLATE.en.md](./PLATFORM_SHELL_PR_TEMPLATE.en.md)
+
 本文用于 `platform` 壳层相关改动的 PR 描述、阶段记录说明或阶段收口说明。
 
 快速 checklist 片段：

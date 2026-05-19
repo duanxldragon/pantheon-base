@@ -13,6 +13,8 @@ updated_at: 2026-04-29
 
 # Platform + Auth 整改结案清单
 
+English version: [PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.en.md](./PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.en.md)
+
 本文用于对本轮 `platform` 与 `system/auth` 整改做结案确认，避免把“已经完成的闭环”“明确延期的演进项”“本轮不做的能力”混在一起。
 
 ## 1. 本轮范围

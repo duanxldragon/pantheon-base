@@ -9,6 +9,9 @@ updated_at: 2026-05-05
 ---
 
 # 权限工作台治理深化设计
+
+English version: [PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.en.md](./PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.en.md)
+
 本文定义 `system/iam` 权限工作台从“发现 + 导出 + 受控补齐”继续演进到“发现 + 整改 + 追踪”的下一阶段边界。
 
 ---

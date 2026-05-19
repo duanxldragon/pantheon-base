@@ -17,6 +17,8 @@ updated_at: 2026-04-27
 
 # 平台层验收矩阵（2026-04-27）
 
+English version: [PLATFORM_ACCEPTANCE_MATRIX_20260427.en.md](./PLATFORM_ACCEPTANCE_MATRIX_20260427.en.md)
+
 本文用于沉淀 Pantheon `platform` 层与各系统域的统一验收基线，避免后续只记住“测过”，却没有一份可持续维护的标准矩阵。
 
 适用范围：

@@ -10,6 +10,9 @@ updated_at: 2026-04-28
 ---
 
 # 错误码与多语言设计
+
+English version: [ERROR_CODE_AND_I18N.en.md](./ERROR_CODE_AND_I18N.en.md)
+
 本文定义 Pantheon Base 的错误码与 i18n 责任边界。
 
 目标是把下面这些问题一次讲清：

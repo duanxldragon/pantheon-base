@@ -9,6 +9,9 @@ updated_at: 2026-05-05
 ---
 
 # SSO / OAuth2 / OIDC 设计
+
+English version: [SSO_OIDC_DESIGN.en.md](./SSO_OIDC_DESIGN.en.md)
+
 本文定义 Pantheon 后续接入 SSO / OAuth2 / OIDC 的边界。当前不实现真实 SSO，本文件用于避免未来临时拼接身份源导致认证域混乱。
 
 ---

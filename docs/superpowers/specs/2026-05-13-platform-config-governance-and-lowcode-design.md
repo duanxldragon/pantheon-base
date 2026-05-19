@@ -17,6 +17,8 @@ updated_at: 2026-05-13
 
 # 平台配置治理与低代码菜单重构设计
 
+English version: [2026-05-13-platform-config-governance-and-lowcode-design.en.md](./2026-05-13-platform-config-governance-and-lowcode-design.en.md)
+
 ---
 
 ## 背景

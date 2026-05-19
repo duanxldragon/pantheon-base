@@ -9,6 +9,9 @@ updated_at: 2026-05-16
 ---
 
 # 右侧功能页面布局与功能性系统评估报告
+
+English version: [RIGHT_SIDE_FUNCTIONAL_PAGES_EVALUATION_20260516.en.md](./RIGHT_SIDE_FUNCTIONAL_PAGES_EVALUATION_20260516.en.md)
+
 ## 1. 评估目标
 
 本报告面向登录后的右侧功能页面体系，评估两个维度：

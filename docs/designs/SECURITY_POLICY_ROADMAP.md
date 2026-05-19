@@ -9,6 +9,9 @@ updated_at: 2026-05-05
 ---
 
 # 安全策略深化路线图
+
+English version: [SECURITY_POLICY_ROADMAP.en.md](./SECURITY_POLICY_ROADMAP.en.md)
+
 本文用于更新安全策略后续任务。MFA/TOTP 已进入已实现能力，不再作为“待补功能缺口”统计；后续重点转向登录告警、密码策略和风控。
 
 ---

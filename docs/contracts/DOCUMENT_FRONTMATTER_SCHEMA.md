@@ -8,6 +8,8 @@ updated_at: 2026-05-18
 
 # 文档 Frontmatter Schema 约定
 
+English version: [DOCUMENT_FRONTMATTER_SCHEMA.en.md](./DOCUMENT_FRONTMATTER_SCHEMA.en.md)
+
 本文用于定义 Pantheon Base 文档系统的统一 YAML frontmatter 约定。
 
 它补充 [DOCUMENT_GOVERNANCE_CONTRACT.md](./DOCUMENT_GOVERNANCE_CONTRACT.md) 与 [DOCUMENT_METADATA_AND_STATUS.md](./DOCUMENT_METADATA_AND_STATUS.md)，把原本主要依赖正文行文本的元信息，收敛成可被脚本直接解析的固定头部。

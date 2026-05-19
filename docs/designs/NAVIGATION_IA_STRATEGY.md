@@ -10,6 +10,9 @@ updated_at: 2026-05-11
 ---
 
 # 导航信息架构深化设计
+
+English version: [NAVIGATION_IA_STRATEGY.en.md](./NAVIGATION_IA_STRATEGY.en.md)
+
 本文定义菜单 IA、外链、iframe、页签缓存、面包屑和高亮策略的深化规范。配合 `FRONTEND_UI_SPEC.md` §5、`PERMISSION_MODEL.md`、`MOBILE_RESPONSIVE_BREAKPOINTS.md` 使用。
 
 ---

@@ -10,6 +10,9 @@ updated_at: 2026-04-17
 ---
 
 # 模块契约设计
+
+English version: [MODULE_CONTRACT.en.md](./MODULE_CONTRACT.en.md)
+
 本文定义 Pantheon Base 的”模块契约”，目标是让后续所有模块都按统一方式接入，而不是各写各的。
 
 它解决的问题是：

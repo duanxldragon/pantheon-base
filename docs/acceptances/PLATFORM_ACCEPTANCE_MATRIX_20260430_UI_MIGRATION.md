@@ -14,6 +14,8 @@ updated_at: 2026-04-30
 
 # 平台层 UI 迁移验收矩阵（2026-04-30）
 
+English version: [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.en.md](./PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.en.md)
+
 本文用于承接 2026-04-30 的第二阶段文档驱动盘点，重点回答一个平台层问题：
 
 > 当前前端哪些页面和壳层能力已经进入“新骨架”，哪些仍停留在“旧样式遗留”，哪些属于平台策略尚未最终定稿的灰区。

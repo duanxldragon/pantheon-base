@@ -9,6 +9,9 @@ updated_at: 2026-05-18
 ---
 
 # 通知中心设计
+
+English version: [NOTICE_CENTER_DESIGN.en.md](./NOTICE_CENTER_DESIGN.en.md)
+
 关联合同：
 - `PLATFORM_CONTRACT.md`
 

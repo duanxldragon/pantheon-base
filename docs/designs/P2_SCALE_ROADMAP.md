@@ -12,6 +12,9 @@ updated_at: 2026-05-05
 ---
 
 # P2 规模化能力路线图
+
+English version: [P2_SCALE_ROADMAP.en.md](./P2_SCALE_ROADMAP.en.md)
+
 本文用于收口 `pantheon-base` 迈向“标准企业后台产品底座”的第二阶段专题线。它不替代全局架构文档，而是承接第二阶段中真正进入 P2/规模化与产品化深化的方向：数据权限、真实多租户、SSO/OIDC、登录风控、业务模块自动化验收，以及平台级产品化控制台骨架。
 
 ---

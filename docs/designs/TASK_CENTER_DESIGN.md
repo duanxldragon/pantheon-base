@@ -10,6 +10,9 @@ updated_at: 2026-05-18
 ---
 
 # 任务中心设计
+
+English version: [TASK_CENTER_DESIGN.en.md](./TASK_CENTER_DESIGN.en.md)
+
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_IAM_CONTRACT.md`

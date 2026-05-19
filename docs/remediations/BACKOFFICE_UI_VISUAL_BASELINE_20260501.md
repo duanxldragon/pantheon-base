@@ -9,6 +9,9 @@ updated_at: 2026-05-01
 ---
 
 # 后台 UI 截图基线与视觉回归清单
+
+English version: [BACKOFFICE_UI_VISUAL_BASELINE_20260501.en.md](./BACKOFFICE_UI_VISUAL_BASELINE_20260501.en.md)
+
 ## 1. 目标
 
 本清单用于固定 Pantheon Base 后台 UI 的平台层视觉基线，防止以下回归：

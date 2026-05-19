@@ -13,6 +13,8 @@ updated_at: 2026-04-21
 
 # 系统域导入导出 Smoke 指南
 
+English version: [SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.en.md](./SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.en.md)
+
 本文用于验证 `system/iam`、`system/org`、`system/config`、`system/auth`、`system/audit` 已开放的导入导出能力是否真实可用。
 
 除本文的手工联调步骤外，仓库也已提供一套可复用的 API 自动 smoke：

@@ -9,6 +9,9 @@ updated_at: 2026-04-28
 ---
 
 # 字典与系统设置设计
+
+English version: [DICT_AND_SETTING_DESIGN.en.md](./DICT_AND_SETTING_DESIGN.en.md)
+
 本文定义 Pantheon Base 的字典管理和系统设置设计。
 
 这两个能力属于 `system/config` 能力域，是企业后台“通用底座”的关键组成：

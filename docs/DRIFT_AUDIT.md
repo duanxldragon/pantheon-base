@@ -11,6 +11,9 @@ updated_at: 2026-05-18
 ---
 
 # Pantheon Base Drift Audit
+
+English version: [DRIFT_AUDIT.en.md](./DRIFT_AUDIT.en.md)
+
 关联设计：
 - `designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md`
 - `designs/P2_SCALE_ROADMAP.md`

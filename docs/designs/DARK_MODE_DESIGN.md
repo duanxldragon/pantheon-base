@@ -9,6 +9,9 @@ updated_at: 2026-05-11
 ---
 
 # 暗色模式设计 (Dark Mode Design)
+
+English version: [DARK_MODE_DESIGN.en.md](./DARK_MODE_DESIGN.en.md)
+
 本文定义 Pantheon Base 的暗色模式（color mode = dark）实现规范、Token 反转策略、组件适配清单和切换行为。
 
 具体 token 数值见 `THEME_TOKENS_REFERENCE.md`，本文聚焦**模式行为**而非数值。

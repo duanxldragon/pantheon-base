@@ -9,6 +9,9 @@ updated_at: 2026-04-29
 ---
 
 # i18n 模块设计
+
+English version: [I18N_MODULE_DESIGN.en.md](./I18N_MODULE_DESIGN.en.md)
+
 本文定义 `system/config -> i18n` 子域的独立边界。
 
 它重点解决四个问题：

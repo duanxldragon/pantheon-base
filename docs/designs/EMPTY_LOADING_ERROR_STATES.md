@@ -9,6 +9,9 @@ updated_at: 2026-05-11
 ---
 
 # 空 / 加载 / 错误状态规范 (Empty / Loading / Error States)
+
+English version: [EMPTY_LOADING_ERROR_STATES.en.md](./EMPTY_LOADING_ERROR_STATES.en.md)
+
 本文规定每类页面在「**非正常路径**」下的视觉、文案、交互、ARIA 标识。配合 `FRONTEND_UI_SPEC.md` §9 状态设计、`FRONTEND_PAGE_TEMPLATES.md`、`ACCESSIBILITY.md` §5 使用。
 
 UI Spec §9 给视觉原则；本文给**具体每页**的状态变体规格。

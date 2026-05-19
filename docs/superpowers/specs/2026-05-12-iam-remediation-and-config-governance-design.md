@@ -17,6 +17,8 @@ updated_at: 2026-05-12
 
 # IAM Remediation And Config Governance Design
 
+English version: [2026-05-12-iam-remediation-and-config-governance-design.en.md](./2026-05-12-iam-remediation-and-config-governance-design.en.md)
+
 ---
 
 ## 1. 目标

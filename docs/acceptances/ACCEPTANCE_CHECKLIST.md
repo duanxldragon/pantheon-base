@@ -14,6 +14,8 @@ updated_at: 2026-04-30
 
 # 设计与实现验收清单
 
+English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
+
 本文不是路线图，也不是模块契约。
 
 它解决的问题是：

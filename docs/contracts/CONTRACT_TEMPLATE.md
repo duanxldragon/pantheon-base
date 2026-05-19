@@ -16,6 +16,8 @@ updated_at: YYYY-MM-DD
 
 # 合同文档模板
 
+English version: [CONTRACT_TEMPLATE.en.md](./CONTRACT_TEMPLATE.en.md)
+
 关联设计：
 - `TBD`
 

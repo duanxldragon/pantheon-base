@@ -12,6 +12,8 @@ updated_at: 2026-04-28
 
 # 菜单 Icon 审计与治理结果
 
+English version: [MENU_ICON_AUDIT_20260428.en.md](./MENU_ICON_AUDIT_20260428.en.md)
+
 ## 1. 归属判断
 
 本次治理属于 `platform` 层导航规范整改，目标是统一菜单图标语义、消除重复感，并收口前后端菜单 icon key。

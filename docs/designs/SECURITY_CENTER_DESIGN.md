@@ -9,6 +9,9 @@ updated_at: 2026-04-17
 ---
 
 # 安全中心设计
+
+English version: [SECURITY_CENTER_DESIGN.en.md](./SECURITY_CENTER_DESIGN.en.md)
+
 本文定义 Pantheon Base 的安全中心设计，用于承接 `auth` 模块拆分后的安全能力。
 
 安全中心不是“个人中心里放一个改密码表单”，而是用户和管理员理解账号安全、会话状态、登录风险的入口。

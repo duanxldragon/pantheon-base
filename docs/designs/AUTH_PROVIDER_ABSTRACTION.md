@@ -10,6 +10,9 @@ updated_at: 2026-05-18
 ---
 
 # 认证 Provider 抽象设计
+
+English version: [AUTH_PROVIDER_ABSTRACTION.en.md](./AUTH_PROVIDER_ABSTRACTION.en.md)
+
 关联合同：
 - `SYSTEM_AUTH_CONTRACT.md`
 - `SYSTEM_IAM_CONTRACT.md`

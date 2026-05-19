@@ -11,6 +11,8 @@ last_reviewed_at: 2026-05-06（v2）
 
 # Pantheon 前端合并评估报告
 
+English version: [FRONTEND_EVALUATION_20260506.en.md](./FRONTEND_EVALUATION_20260506.en.md)
+
 重评估：2026-05-06（v2）
 
 ## 1. 评估边界

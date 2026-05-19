@@ -10,6 +10,9 @@ updated_at: 2026-05-18
 ---
 
 # 调度中心设计
+
+English version: [SCHEDULER_CENTER_DESIGN.en.md](./SCHEDULER_CENTER_DESIGN.en.md)
+
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_CONFIG_CONTRACT.md`

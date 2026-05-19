@@ -10,6 +10,9 @@ updated_at: 2026-05-18
 ---
 
 # 监控告警中心设计
+
+English version: [ALERT_MONITORING_CENTER_DESIGN.en.md](./ALERT_MONITORING_CENTER_DESIGN.en.md)
+
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_CONFIG_CONTRACT.md`

@@ -10,6 +10,8 @@ updated_at: 2026-05-12
 
 # 前端 UI 详细设计规范
 
+English version: [FRONTEND_UI_SPEC.en.md](./FRONTEND_UI_SPEC.en.md)
+
 本文是 Pantheon Base 的前端 UI 细则文档，用来补足 `docs/designs/FRONTEND.md` 中尚未展开的视觉、交互、响应式、状态、导航和页面模板规范。
 
 涉及后台共享边框、圆角、辅助栏、浮层风格收口时，还必须同时参考 `docs/designs/BACKOFFICE_STYLE_CONSTRAINTS.md`。

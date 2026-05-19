@@ -10,6 +10,8 @@ updated_at: 2026-04-30
 
 # Platform 壳层 PR Checklist 片段
 
+English version: [PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.en.md](./PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.en.md)
+
 以下内容可直接复制到后续 `platform` 壳层 PR 描述中。
 
 适用范围：

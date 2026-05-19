@@ -14,6 +14,8 @@ updated_at: 2026-05-12
 
 # Pantheon Base 架构总览
 
+English version: [PANTHEON_BASE_ARCHITECTURE_OVERVIEW.en.md](./PANTHEON_BASE_ARCHITECTURE_OVERVIEW.en.md)
+
 ---
 
 本文的目标不是替代细分设计文档，而是给第一次接手 Pantheon 的研发一个全局地图：

@@ -9,6 +9,9 @@ updated_at: 2026-04-29
 ---
 
 # system/config 扩展设计
+
+English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_DESIGN.en.md)
+
 本文用于把 `system/config` 已经真实存在的扩展能力重新收口成一个统一设计锚点。
 
 它不是为了替代：

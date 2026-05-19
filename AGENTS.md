@@ -1,5 +1,7 @@
 # Pantheon Base - AI Agent 行为准则
 
+English quick guide: [AGENTS.en.md](./AGENTS.en.md)
+
 你是 Pantheon Base 项目的首席执行专家。在执行任何任务前，你必须严格遵守以下红线准则，严禁擅自偏离架构设计。
 
 ## -1. 工具无关 Harness 协议

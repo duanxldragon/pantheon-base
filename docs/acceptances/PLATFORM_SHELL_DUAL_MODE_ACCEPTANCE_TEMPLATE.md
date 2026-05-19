@@ -10,6 +10,8 @@ updated_at: 2026-04-30
 
 # Platform 壳层双模式验收模板
 
+English version: [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.en.md](./PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.en.md)
+
 本文是 `platform` 壳层改动的固定验收模板。
 
 提交要求：

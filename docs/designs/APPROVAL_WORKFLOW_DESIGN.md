@@ -10,6 +10,9 @@ updated_at: 2026-05-18
 ---
 
 # 审批流骨架设计
+
+English version: [APPROVAL_WORKFLOW_DESIGN.en.md](./APPROVAL_WORKFLOW_DESIGN.en.md)
+
 关联合同：
 - `PLATFORM_CONTRACT.md`
 - `SYSTEM_IAM_CONTRACT.md`

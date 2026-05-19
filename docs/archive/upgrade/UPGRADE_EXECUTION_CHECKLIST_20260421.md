@@ -16,6 +16,8 @@ updated_at: 2026-04-21
 
 # 数据库 / 老环境升级执行 Checklist（2026-04-21）
 
+English version: [UPGRADE_EXECUTION_CHECKLIST_20260421.en.md](./UPGRADE_EXECUTION_CHECKLIST_20260421.en.md)
+
 本文用于指导已经运行中的 Pantheon 环境完成 2026-04-21 这一轮升级。
 
 如果你需要发布窗口内“按顺序直接执行”的版本，请先看 `docs/archive/upgrade/UPGRADE_RUNBOOK_20260421.md`；本文更偏完整核查与验收清单。

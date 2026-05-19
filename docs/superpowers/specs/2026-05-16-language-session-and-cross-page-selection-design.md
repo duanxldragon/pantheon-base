@@ -23,6 +23,8 @@ updated_at: 2026-05-16
 
 # Language Session And Cross-Page Selection Design
 
+English version: [2026-05-16-language-session-and-cross-page-selection-design.en.md](./2026-05-16-language-session-and-cross-page-selection-design.en.md)
+
 ---
 
 ## 1. 目标

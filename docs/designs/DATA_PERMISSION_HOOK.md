@@ -9,6 +9,9 @@ updated_at: 2026-05-05
 ---
 
 # 数据权限架构钩子 (Data Permission Hook)
+
+English version: [DATA_PERMISSION_HOOK.en.md](./DATA_PERMISSION_HOOK.en.md)
+
 本文定义 Pantheon 平台的数据权限（行级过滤）架构占位规范，用于支持未来“部门级”、“本人级”或“自定义维度”的数据隔离需求。
 
 ## 1. 核心契约

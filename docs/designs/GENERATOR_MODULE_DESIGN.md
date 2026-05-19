@@ -9,6 +9,9 @@ updated_at: 2026-05-04
 ---
 
 # 模块生成器设计
+
+English version: [GENERATOR_MODULE_DESIGN.en.md](./GENERATOR_MODULE_DESIGN.en.md)
+
 本文定义 `system/config -> generator` 的正式边界。
 
 它重点回答：

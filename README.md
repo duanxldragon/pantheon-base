@@ -1,5 +1,7 @@
 # Pantheon Platform
 
+English version: [README.en.md](./README.en.md)
+
 [![Quality Gates](https://github.com/duanxldragon/pantheon-platform/actions/workflows/quality.yml/badge.svg)](https://github.com/duanxldragon/pantheon-platform/actions/workflows/quality.yml)
 
 Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀认证、IAM、组织、配置、审计、多语言、动态菜单和业务模块注册能力。项目目标不是只提供登录和 CRUD 壳，而是提供一套可持续演进、系统域与业务域解耦、AI 友好的后台平台基础设施。
@@ -137,10 +139,21 @@ Pantheon Platform 将权限拆成四层：
 
 - `DESIGN.md`：顶层架构与领域边界。
 - `docs/README.md`：完整文档索引。
+- `docs/README.en.md`：英文索引入口。
 - `docs/PERMISSION_MODEL.md`：权限模型设计。
 - `docs/FRONTEND.md`：前端架构与 UI 规范。
 - `docs/BACKEND.md`：后端模块化单体规范。
 - `docs/WORKFLOW.md`：开发流程与 AI 协作方式。
+
+## 推荐阅读顺序
+
+建议按这个顺序进入：
+
+1. [README.md](./README.md)
+2. [DESIGN.md](./DESIGN.md)
+3. [docs/README.md](./docs/README.md)
+4. [AGENTS.md](./AGENTS.md)
+5. 如需英文入口，再看 [README.en.md](./README.en.md) 和 [docs/README.en.md](./docs/README.en.md)
 
 ## 提交规范
 

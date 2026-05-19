@@ -9,6 +9,9 @@ updated_at: 2026-04-17
 ---
 
 # 业务模块设计模板
+
+English version: [BUSINESS_MODULE_TEMPLATE.en.md](./BUSINESS_MODULE_TEMPLATE.en.md)
+
 本文不是某个具体业务模块的实现说明，而是一份**标准模板**。
 
 它解决的问题是：
