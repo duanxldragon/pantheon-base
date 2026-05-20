@@ -1,12 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from '@arco-design/web-react';
+import { IconDoubleLeft, IconDoubleRight } from '@arco-design/web-react/icon';
+import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import PageEmpty from '../feedback/PageEmpty';
+import {
+  getPaginationCurrentPage,
+  getPaginationPageSize,
+  getPaginationTotalPages,
+  isPaginationConfig,
+} from '../table/crossPageSelection';
 
 interface AppTableProps<T> extends TableProps<T> {
   emptyText?: React.ReactNode;
 }
+
+type PaginationNodeProps = PaginationProps & {
+  children?: React.ReactNode;
+};
+
+type TablePagePosition =
+  | 'tl'
+  | 'tr'
+  | 'bl'
+  | 'br'
+  | 'topCenter'
+  | 'bottomCenter'
+  | undefined;
 
 function needsHorizontalScroll<T>(columns?: ColumnProps<T>[]): boolean {
   if (!Array.isArray(columns) || columns.length === 0) {
@@ -61,8 +82,71 @@ function filterResponsiveColumns<T>(
   }, []);
 }
 
+function createBoundaryPaginationItem(
+  type: 'first' | 'last',
+  paginationProps: PaginationNodeProps,
+  ariaLabel: string,
+) {
+  const currentPage = getPaginationCurrentPage(paginationProps);
+  const totalPages = getPaginationTotalPages(paginationProps);
+  const pageSize = getPaginationPageSize(paginationProps);
+  const isFirst = type === 'first';
+  const targetPage = isFirst ? 1 : totalPages;
+  const disabled =
+    Boolean(paginationProps.disabled) ||
+    totalPages <= 1 ||
+    (isFirst ? currentPage <= 1 : currentPage >= totalPages);
+  const classNames = ['arco-pagination-item', 'arco-pagination-item-step'];
+  if (disabled) {
+    classNames.push('arco-pagination-item-disabled');
+  }
+
+  return (
+    <ul className="arco-pagination-list app-table__pagination-boundary-list">
+      <li role="none">
+        <button
+          type="button"
+          className={[...classNames, `app-table__pagination-item-${type}`].join(' ')}
+          aria-label={ariaLabel}
+          disabled={disabled}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!disabled) {
+              paginationProps.onChange?.(targetPage, pageSize);
+            }
+          }}
+        >
+          {isFirst ? <IconDoubleLeft /> : <IconDoubleRight />}
+        </button>
+      </li>
+    </ul>
+  );
+}
+
+function renderNativePagination(
+  paginationNode: React.ReactNode,
+  pagePosition: TablePagePosition,
+) {
+  return (
+    <div className={getPaginationWrapperClassName(pagePosition)}>
+      {paginationNode}
+    </div>
+  );
+}
+
 function AppTable<T>(props: AppTableProps<T>) {
-  const { data, loading, emptyText, columns, scroll, ...rest } = props;
+  const {
+    data,
+    loading,
+    emptyText,
+    columns,
+    scroll,
+    pagination,
+    renderPagination,
+    pagePosition,
+    ...rest
+  } = props;
   const { t } = useTranslation();
   const rows = Array.isArray(data) ? data : [];
   const [viewportWidth, setViewportWidth] = useState(() =>
@@ -93,6 +177,40 @@ function AppTable<T>(props: AppTableProps<T>) {
     return <PageEmpty description={emptyText} />;
   }
 
+  const firstPageAriaLabel = t('common.pagination.firstPage', { defaultValue: 'First page' });
+  const lastPageAriaLabel = t('common.pagination.lastPage', { defaultValue: 'Last page' });
+
+  const enhancedRenderPagination =
+    isPaginationConfig(pagination)
+      ? (paginationNode?: React.ReactNode) => {
+          if (!React.isValidElement<PaginationNodeProps>(paginationNode)) {
+            return renderPagination
+              ? renderPagination(paginationNode)
+              : renderNativePagination(paginationNode, pagePosition);
+          }
+
+          const callerNode = renderPagination ? renderPagination(paginationNode) : paginationNode;
+          const shouldDecorate =
+            !paginationNode.props.simple &&
+            getPaginationTotalPages(paginationNode.props) > 1 &&
+            callerNode != null;
+
+          if (!shouldDecorate) {
+            return renderPagination
+              ? callerNode
+              : renderNativePagination(paginationNode, pagePosition);
+          }
+
+          return (
+            <div className={getPaginationWrapperClassName(pagePosition)}>
+              {createBoundaryPaginationItem('first', paginationNode.props, firstPageAriaLabel)}
+              <div className="app-table__pagination-shell">{callerNode}</div>
+              {createBoundaryPaginationItem('last', paginationNode.props, lastPageAriaLabel)}
+            </div>
+          );
+        }
+      : renderPagination;
+
   return (
     <div className="app-table-shell">
       {viewportWidth <= 768 ? (
@@ -111,9 +229,25 @@ function AppTable<T>(props: AppTableProps<T>) {
         size={rest.size || 'small'}
         data={rows}
         loading={loading}
+        pagePosition={pagePosition}
+        pagination={pagination}
+        renderPagination={enhancedRenderPagination}
       />
     </div>
   );
+}
+function getPaginationWrapperClassName(pagePosition: TablePagePosition) {
+  const classNames = ['arco-table-pagination'];
+  if (pagePosition === 'tl' || pagePosition === 'bl') {
+    classNames.push('arco-table-pagination-left');
+  }
+  if (pagePosition === 'topCenter' || pagePosition === 'bottomCenter') {
+    classNames.push('arco-table-pagination-center');
+  }
+  if (pagePosition === 'tl' || pagePosition === 'tr' || pagePosition === 'topCenter') {
+    classNames.push('arco-table-pagination-top');
+  }
+  return classNames.join(' ');
 }
 
 export default AppTable;

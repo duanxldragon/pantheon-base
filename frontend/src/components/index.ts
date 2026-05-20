@@ -27,6 +27,16 @@ export {
 } from './patterns/TableAction';
 export { TABLE_COLUMN_WIDTH, type TableColumnWidthPreset } from './patterns/TableColumnWidth';
 export { withTableColumnPriority, type TableColumnPriority } from './patterns/TableColumnPriority';
+export {
+  getPaginationCurrentPage,
+  getPaginationPageSize,
+  getPaginationTotalPages,
+  getVisibleSelectedRowKeys,
+  isPaginationConfig,
+  mergeCrossPageSelection,
+  type CrossPageRowKey,
+  type SharedPaginationConfig,
+} from './table/crossPageSelection';
 export { default as FormSection } from './patterns/FormSection';
 export { default as SubmitBar } from './patterns/SubmitBar';
 export { default as AppModal } from './patterns/AppModal';

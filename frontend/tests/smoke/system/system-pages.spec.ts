@@ -2032,6 +2032,236 @@ test('login-log governance smoke: selecting rows enables batch delete affordance
   await expect(batchDeleteButton).toBeEnabled();
 });
 
+test('login-log governance smoke: pager exposes first and last page controls', async ({ page }) => {
+  const pageSize = 10;
+  const total = pageSize + 1;
+  const totalPages = Math.ceil(total / pageSize);
+  const loginLogItems = Array.from({ length: total }, (_, index) => ({
+    id: 910000 + index,
+    username: `${adminCredentials.username}-${index + 1}`,
+    ipaddr: '127.0.0.1',
+    loginLocation: '本地',
+    browser: 'Chrome',
+    os: 'Windows',
+    status: 1,
+    msg: '',
+    loginTime: `2026-05-${String((index % 28) + 1).padStart(2, '0')} 09:00:00`,
+  }));
+
+  await signInAsAdmin(page);
+  await page.route(/\/api\/v1\/system\/login-log\/list(?:\?.*)?$/, async (route) => {
+    const requestUrl = new URL(route.request().url());
+    const currentPage = Number(requestUrl.searchParams.get('page') || '1');
+    const currentPageSize = Number(requestUrl.searchParams.get('pageSize') || String(pageSize));
+    const startIndex = (currentPage - 1) * currentPageSize;
+    const items = loginLogItems.slice(startIndex, startIndex + currentPageSize);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          items,
+          total,
+          page: currentPage,
+          pageSize: currentPageSize,
+        },
+      }),
+    });
+  });
+
+  await page.goto('/system/login-log', { waitUntil: 'networkidle' });
+  await expectPageIdentityReady(page, '登录日志');
+  await expectNoPageError(page);
+
+  const pager = page.locator('.system-list__table').first();
+  const firstPageButton = pager.getByRole('button', { name: /^(首页|First page)$/ });
+  const lastPageButton = pager.getByRole('button', { name: /^(末页|Last page)$/ });
+  const prevPageButton = pager.locator('.arco-pagination-item-prev');
+  const nextPageButton = pager.locator('.arco-pagination-item-next');
+  await expect(firstPageButton).toBeVisible();
+  await expect(lastPageButton).toBeVisible();
+  await expect(firstPageButton).toBeDisabled();
+  await expect(prevPageButton).toHaveClass(/arco-pagination-item-disabled/);
+  await expect(nextPageButton).not.toHaveClass(/arco-pagination-item-disabled/);
+  await expect(lastPageButton).toBeEnabled();
+
+  await lastPageButton.focus();
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(async () => pager.locator('.arco-pagination-item-active').innerText())
+    .toBe(String(totalPages));
+  await expect(firstPageButton).toBeEnabled();
+  await expect(prevPageButton).not.toHaveClass(/arco-pagination-item-disabled/);
+  await expect(nextPageButton).toHaveClass(/arco-pagination-item-disabled/);
+  await expect(lastPageButton).toBeDisabled();
+
+  await firstPageButton.focus();
+  await page.keyboard.press(' ');
+  await expect
+    .poll(async () => pager.locator('.arco-pagination-item-active').innerText())
+    .toBe('1');
+  await expect(firstPageButton).toBeDisabled();
+  await expect(prevPageButton).toHaveClass(/arco-pagination-item-disabled/);
+  await expect(nextPageButton).not.toHaveClass(/arco-pagination-item-disabled/);
+  await expect(lastPageButton).toBeEnabled();
+});
+
+test('login-log governance smoke: single-page data does not show boundary pager controls', async ({ page }) => {
+  const pageSize = 10;
+  await signInAsAdmin(page);
+  await page.route(/\/api\/v1\/system\/login-log\/list(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          items: [
+            {
+              id: 920001,
+              username: adminCredentials.username,
+              ipaddr: '127.0.0.1',
+              loginLocation: '本地',
+              browser: 'Chrome',
+              os: 'Windows',
+              status: 1,
+              msg: '',
+              loginTime: '2026-05-20 09:00:00',
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize,
+        },
+      }),
+    });
+  });
+
+  await page.goto('/system/login-log', { waitUntil: 'networkidle' });
+  await expectPageIdentityReady(page, '登录日志');
+  await expectNoPageError(page);
+
+  const pager = page.locator('.system-list__table').first();
+  await expect(pager.locator('.arco-pagination')).toBeVisible();
+  await expect(pager.getByRole('button', { name: /^(首页|First page)$/ })).toHaveCount(0);
+  await expect(pager.getByRole('button', { name: /^(末页|Last page)$/ })).toHaveCount(0);
+});
+
+test('security-center smoke: client-side AppTable pagination exposes shared boundary controls', async ({
+  page,
+}) => {
+  const sessions = Array.from({ length: 6 }, (_, index) => ({
+    sessionId: `client-session-${index + 1}`,
+    isCurrent: index === 0,
+    lastIp: `127.0.0.${index + 1}`,
+    browser: 'Chrome',
+    os: 'Windows',
+    device: `Device ${index + 1}`,
+    userAgent: 'Mozilla/5.0',
+    refreshExpiresAt: '2026-05-21 09:00:00',
+    lastRefreshAt: '2026-05-20 09:00:00',
+    lastActivityAt: '2026-05-20 09:00:00',
+    createdAt: `2026-05-${String(index + 1).padStart(2, '0')} 08:00:00`,
+  }));
+
+  await signInAsAdmin(page);
+  await page.route(/\/api\/v1\/auth\/security$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          user: {
+            id: 1,
+            username: adminCredentials.username,
+            nickname: '管理员',
+          },
+          currentSession: sessions[0],
+          activeSessionCount: sessions.length,
+          lastLoginAt: '2026-05-20 09:00:00',
+          passwordExpired: false,
+          recentSecurityEvents: [],
+          policy: {
+            passwordMinLength: 8,
+            passwordRequireDigit: true,
+            passwordRequireUpper: false,
+            passwordHistoryLimit: 3,
+            passwordExpireDays: 90,
+            maxFailedAttempts: 5,
+            lockMinutes: 30,
+            sourceMaxFailedAttempts: 5,
+            sourceWindowMinutes: 15,
+            sourceLockMinutes: 30,
+            sessionIdleMinutes: 30,
+            maxActiveSessions: 10,
+            sessionRetentionDays: 30,
+            captchaEnabled: true,
+            mfaEnabled: false,
+            ssoEnabled: false,
+          },
+        },
+      }),
+    });
+  });
+  await page.route(/\/api\/v1\/auth\/sessions$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: sessions,
+      }),
+    });
+  });
+  await page.route(/\/api\/v1\/auth\/login-logs(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 10,
+        },
+      }),
+    });
+  });
+
+  await page.goto('/auth/security', { waitUntil: 'networkidle' });
+  await expectVisiblePageTitle(page, '安全中心');
+  await expectNoPageError(page);
+  await expect(page.locator('.page-split-layout--with-rail')).toBeVisible();
+  await expect(
+    page.locator('.page-main-column .arco-card').filter({ hasText: /在线会话|Active Sessions/ }).first(),
+  ).toBeVisible();
+
+  const sessionCard = page.locator('.page-panel').filter({ hasText: /在线会话|Active Sessions/ }).first();
+  const firstPageButton = sessionCard.getByRole('button', { name: /^(首页|First page)$/ });
+  const lastPageButton = sessionCard.getByRole('button', { name: /^(末页|Last page)$/ });
+  const prevPageButton = sessionCard.locator('.arco-pagination-item-prev');
+  const nextPageButton = sessionCard.locator('.arco-pagination-item-next');
+  await expect(firstPageButton).toBeVisible();
+  await expect(lastPageButton).toBeVisible();
+  await expect(firstPageButton).toBeDisabled();
+  await expect(prevPageButton).toHaveClass(/arco-pagination-item-disabled/);
+  await expect(nextPageButton).not.toHaveClass(/arco-pagination-item-disabled/);
+  await expect(lastPageButton).toBeEnabled();
+
+  await lastPageButton.focus();
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(async () => sessionCard.locator('.arco-pagination-item-active').innerText())
+    .toBe('2');
+  await expect(nextPageButton).toHaveClass(/arco-pagination-item-disabled/);
+  await expect(lastPageButton).toBeDisabled();
+  await expect(firstPageButton).toBeEnabled();
+});
+
 test('operation-log governance smoke: selecting rows enables batch delete affordance', async ({ page }) => {
   await signInAsAdmin(page);
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
