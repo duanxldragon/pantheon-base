@@ -2,7 +2,7 @@
 
 Chinese version: [README.md](./README.md)
 
-Pantheon Platform is an enterprise backoffice foundation built as a modular monolith. It consolidates authentication, IAM, organization, configuration, audit, i18n, dynamic menus, and business-module registration into a reusable admin platform baseline.
+Pantheon Platform is an enterprise backoffice foundation built as a modular monolith. It consolidates authentication, IAM, organization, configuration, audit, i18n, dynamic menus, and a controlled low-code generation and module-governance workflow into a reusable admin platform baseline.
 
 The project is not intended to be just a login shell plus CRUD scaffolding. Its goal is to provide AI-friendly, sustainably evolving platform infrastructure with clear separation between system domains and business domains.
 
@@ -20,6 +20,7 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 - **Configuration governance**: system settings, dictionary management, cache refresh, sensitive-config protection
 - **Audit**: login logs, operation logs, key write-operation audit
 - **Dynamic menus**: menu seeds, frontend manifests, component registry, build-time contract checks
+- **Low-code work domain**: `system/generator` handles controlled module generation and `system/dynamicmodule` handles module onboarding governance under `platform.lowcode`
 - **Business integration**: platform-owned `business/*` extension seams, generator support, governance contracts; concrete business repositories evolve separately
 
 ## Tech Stack
@@ -99,3 +100,30 @@ npm run test:smoke:backoffice-ui
 - [docs/README.md](./docs/README.md): Chinese-first full documentation index
 - [docs/README.en.md](./docs/README.en.md): English companion index
 
+## GitHub Presentation
+
+Recommended repository description:
+
+```text
+Enterprise admin foundation with modular monolith, IAM, audit, i18n, dynamic menus, and controlled low-code module generation.
+```
+
+Recommended topics:
+
+```text
+go, gin, gorm, react, typescript, vite, arco-design, casbin, iam, audit, i18n, admin-dashboard, modular-monolith, low-code, enterprise-platform
+```
+
+Preferred external positioning:
+
+- `Enterprise admin foundation`
+- `Modular monolith backoffice platform`
+- `Controlled low-code generation workflow`
+
+Avoid claiming, for now:
+
+- `runtime low-code platform`
+- `hot-pluggable low-code PaaS`
+- `visual builder for non-engineers`
+
+The reason is straightforward: the current version already delivers a controlled generation and governance workflow, but generated modules still require backend restart and frontend rebuild before activation.
