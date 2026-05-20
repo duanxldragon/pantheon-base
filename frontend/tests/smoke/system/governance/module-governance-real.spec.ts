@@ -82,82 +82,6 @@ function buildGenerateRequest() {
         },
       },
     },
-    files: [
-      {
-        path: `backend/modules/business/${moduleName}/${moduleName}_model.go`,
-        language: 'go',
-        content: `package ${moduleName}
-
-type Orderqa struct{}
-`,
-      },
-      {
-        path: `backend/modules/business/${moduleName}/${moduleName}_dto.go`,
-        language: 'go',
-        content: `package ${moduleName}
-
-type OrderqaListItem struct{}
-`,
-      },
-      {
-        path: `backend/modules/business/${moduleName}/${moduleName}_service.go`,
-        language: 'go',
-        content: `package ${moduleName}
-
-type Service struct{}
-`,
-      },
-      {
-        path: `backend/modules/business/${moduleName}/${moduleName}_handler.go`,
-        language: 'go',
-        content: `package ${moduleName}
-
-type Handler struct{}
-`,
-      },
-      {
-        path: `backend/modules/business/${moduleName}/module.go`,
-        language: 'go',
-        content: `package ${moduleName}
-
-import (
-  "github.com/gin-gonic/gin"
-  "gorm.io/gorm"
-)
-
-func InitOrderqaModule(r *gin.RouterGroup, db *gorm.DB) {}
-`,
-      },
-      {
-        path: `frontend/src/modules/business/${moduleName}/index.ts`,
-        language: 'typescript',
-        content: `export const OrderqaModule = {
-  name: '${moduleName}',
-  routes: [],
-};
-
-export default OrderqaModule;
-`,
-      },
-      {
-        path: `frontend/src/modules/business/${moduleName}/api.ts`,
-        language: 'typescript',
-        content: `export interface OrderqaItem {
-  id: number;
-  name: string;
-  status: string;
-}
-`,
-      },
-      {
-        path: `frontend/src/modules/business/${moduleName}/OrderqaList.tsx`,
-        language: 'tsx',
-        content: `export default function OrderqaList() {
-  return null;
-}
-`,
-      },
-    ],
     overwrite: false,
   };
 }
@@ -217,7 +141,7 @@ test('real module governance flow can generate register and purge a temporary bu
   await page.getByRole('button', { name: '生成代码', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: '预览与接入' })).toBeVisible();
-  await expect(page.getByText('共生成 8 个文件', { exact: true })).toBeVisible();
+  await expect(page.getByText('共生成 10 个文件', { exact: true })).toBeVisible();
 
   const generateResponse = await page.request.post(`${apiBaseUrl}/system/dynamic-modules/generate`, {
     headers: {
@@ -238,8 +162,8 @@ test('real module governance flow can generate register and purge a temporary bu
       headers: apiRequestHeaders(login),
     });
     const payload = await response.json();
-    return payload.data?.status === 1 || payload.data?.status === 3;
-  }).toBe(true);
+    return payload.data?.status;
+  }).toBe(3);
 
   await expect.poll(async () => {
     const content = await fs.readFile(backendRegistry, 'utf8');
@@ -257,7 +181,7 @@ test('real module governance flow can generate register and purge a temporary bu
   await page.goto('/system/modules', { waitUntil: 'networkidle' });
   const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
   await expect(row).toBeVisible();
-  await expect(row.getByText(/已接入|待激活/).first()).toBeVisible();
+  await expect(row.getByText(/待激活/).first()).toBeVisible();
 
   const cleanupResponse = await page.request.delete(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}?dropTable=false&purgeSource=true`, {
     headers: {

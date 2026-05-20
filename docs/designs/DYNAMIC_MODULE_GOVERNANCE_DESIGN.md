@@ -1,18 +1,18 @@
 ---
 title: 动态模块治理设计
 doc_type: Design
-layer: system/config
+layer: system/dynamicmodule
 status: Active
 linked_contracts:
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-04-29
+updated_at: 2026-05-20
 ---
 
 # 动态模块治理设计
 
 English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md)
 
-本文定义 `system/config -> dynamicmodule` 的正式治理边界。
+本文定义 `system/dynamicmodule` 的正式治理边界，并说明它如何挂接到 `platform.lowcode` 工作域。
 
 它重点回答：
 
@@ -27,7 +27,11 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 
 动态模块能力归属：
 
-- `system/config`
+- `system/dynamicmodule`
+
+工作域与导航归属：
+
+- `platform.lowcode`
 
 但它不是普通配置页能力。
 
@@ -83,6 +87,10 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 - 查询单模块状态
 - 重新接入已卸载模块
 - 卸载模块
+- 删除卸载记录
+- 彻底删除模块并清理生成源码
+- 注册表自检修复
+- 待激活模块激活审计
 - 生成并注册模块
 
 前端页面：
@@ -125,6 +133,7 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 | 查询模块状态 | 低 | 只读治理视图 |
 | 重新接入模块 | 高 | 重写 generated registry，并让模块重新进入待激活状态 |
 | 卸载模块 | 高 | 影响模块可用性 |
+| 删除记录 / 彻底删除 | 高 | 影响治理追踪、生成源码与托管数据表 |
 | 生成并注册模块 | 高 | 同时影响源码、注册表和装配状态 |
 
 ---
@@ -139,18 +148,15 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 
 - `system:module:register`
 - `system:module:unregister`
+- `system:module:delete_record`
+- `system:module:purge`
+- `system:module:generate`
 
 要求：
 
 - 页面权限只解决“能否进入模块管理页”
 - 注册、卸载、生成必须单独受动作权限控制
 - 接口仍需 Casbin 校验
-
-如果后续新增：
-
-- `system:module:generate`
-
-也应与 `register` 分开，不建议长期混用
 
 ---
 
@@ -200,6 +206,7 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 
 - 生成成功后先进入 `待激活`
 - 完成后端重启与前端重建后才进入 `已接入`
+- `metadata.autoRecycle = true` 的临时模块在彻底删除时自动回收托管业务表
 
 这样做的价值：
 
@@ -249,6 +256,7 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 
 - 不应出现前后端注册表部分脱钩
 - 默认卸载只解除接入，不直接删除工作区源码，避免把“停用模块”误做成“不可恢复删除”
+- 已标记 `autoRecycle` 的模块在“彻底删除”阶段默认自动回收业务表，不再要求额外勾选 `dropTable`
 
 ### 10.3 生成并注册失败
 
@@ -272,6 +280,12 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 3. 调用动态模块治理链路进入“待激活”
 4. 重启后端、重建前端
 5. 在 `/system/modules` 检查状态是否变成“已接入”
+
+临时 QA / smoke 模块建议：
+
+- 生成阶段显式写入 `metadata.autoRecycle = true`
+- 治理页展示“临时模块”统计与生命周期标签
+- 彻底删除时自动删除托管业务表与生成源码，避免残留脏表
 
 约束：
 
@@ -314,7 +328,7 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 
 ## 13. 当前结论
 
-动态模块能力必须继续留在 `system/config`，但必须被明确标注为：
+动态模块能力不应再留在 `system/config`，但必须被明确标注为：
 
 - 高敏治理能力
 - 默认开发环境导向能力

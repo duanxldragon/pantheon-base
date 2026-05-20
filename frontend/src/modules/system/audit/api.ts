@@ -40,7 +40,9 @@ export interface OperationLogPageResp {
 }
 
 export interface OperationLogCleanupPayload {
-  retentionDays: number;
+  retentionDays?: number;
+  startedAt?: string;
+  endedAt?: string;
 }
 
 export interface OperationLogBatchDeletePayload {

@@ -59,7 +59,7 @@ English version: [DATABASE.en.md](./DATABASE.en.md)
 - **语言语义约束**: `preference_json.language` 表示长期用户偏好，不等于每次登录都必须强制覆盖当前会话语言。
 
 ### 3.3.4 生成器受管数据源 (`system_generator_datasource`)
-- **领域归属**: `system/config -> generator`。
+- **领域归属**: `system/generator`。
 - **用途**: 为低代码生成器维护外部数据库的只读连接元数据，支持“按数据源选择表并导入字段”。
 - **核心字段**:
   - `driver`: 当前第一阶段固定为 `mysql`。

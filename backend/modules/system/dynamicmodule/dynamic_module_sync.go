@@ -186,6 +186,7 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 			Summary        string `json:"summary"`
 			SourceMode     string `json:"sourceMode"`
 			SourceTable    string `json:"sourceTable"`
+			AutoRecycle    bool   `json:"autoRecycle"`
 		} `json:"metadata"`
 		Model struct {
 			TableName string `json:"tableName"`
@@ -239,6 +240,7 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 			BoundedContext: strings.TrimSpace(schema.Metadata.BoundedContext),
 			Summary:        strings.TrimSpace(schema.Metadata.Summary),
 			SourceTable:    strings.TrimSpace(schema.Metadata.SourceTable),
+			AutoRecycle:    schema.Metadata.AutoRecycle,
 			ModelTableName: tableName,
 			Status:         ModuleStatusActive,
 			InstalledAt:    now,
@@ -260,6 +262,7 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 				"bounded_context": registration.BoundedContext,
 				"summary":         registration.Summary,
 				"source_table":    registration.SourceTable,
+				"auto_recycle":    registration.AutoRecycle,
 				"table_name":      tableName,
 			}
 			if existing.Status != ModuleStatusUninstalled {

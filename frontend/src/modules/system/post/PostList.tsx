@@ -652,9 +652,9 @@ const PostList: React.FC = () => {
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template post-list-page">
         <GovernanceSummaryBar
-          eyebrow={t('system.post.hero.eyebrow')}
-          title={t('system.post.hero.title')}
-          description={t('system.post.hero.sideDesc')}
+          eyebrow={t('system.post.header.eyebrow')}
+          title={t('system.post.header.title')}
+          description={t('system.post.header.description')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

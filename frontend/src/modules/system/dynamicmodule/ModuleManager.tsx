@@ -64,6 +64,10 @@ function isBusinessStaticRegistration(record: ModuleRegistration) {
   return !record.builtIn && record.scope === 'business' && !record.tableName;
 }
 
+function hasAutoRecycle(record: ModuleRegistration) {
+  return Boolean(record.autoRecycle && record.tableName);
+}
+
 function statusColor(status: number) {
   if (status === 1) return 'green';
   if (status === 3) return 'orange';
@@ -240,6 +244,7 @@ const ModuleManager: React.FC = () => {
       pending: modules.filter((item) => item.status === 3).length,
       uninstalled: modules.filter((item) => item.status === 2).length,
       failed: modules.filter((item) => item.status === 4).length,
+      autoRecycle: modules.filter((item) => hasAutoRecycle(item)).length,
     }),
     [modules],
   );
@@ -308,6 +313,26 @@ const ModuleManager: React.FC = () => {
         render: (tableName: string) => (tableName ? <span>{tableName}</span> : <span>-</span>),
       },
       'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('generator.moduleManager.lifecycle'),
+        dataIndex: 'autoRecycle',
+        width: TABLE_COLUMN_WIDTH.status,
+        render: (_value: boolean | undefined, record: ModuleRegistration) => {
+          if (!record.tableName) {
+            return <Tag color="gray">{t('generator.moduleManager.lifecycle.noTable')}</Tag>;
+          }
+          return hasAutoRecycle(record) ? (
+            <Space size={6}>
+              <Tag color="orange">{t('generator.moduleManager.lifecycle.autoRecycle')}</Tag>
+            </Space>
+          ) : (
+            <Tag color="arcoblue">{t('generator.moduleManager.lifecycle.standard')}</Tag>
+          );
+        },
+      },
+      'medium',
     ),
     {
       title: t('generator.moduleManager.status'),
@@ -407,7 +432,13 @@ const ModuleManager: React.FC = () => {
             {record.status !== 2 && managedRegistration && canUnregister ? (
               <PermissionAction allowed={canUnregister} tooltip={t('common.noPermissionAction')}>
                 <Popconfirm
-                  title={t('generator.moduleManager.confirmUninstall')}
+                  title={
+                    hasAutoRecycle(record)
+                      ? t('generator.moduleManager.confirmUninstallAutoRecycle', {
+                          table: record.tableName,
+                        })
+                      : t('generator.moduleManager.confirmUninstall')
+                  }
                   disabled={featureDisabled || !canUnregister}
                   onOk={() => handleUnregister(record.name)}
                 >
@@ -453,8 +484,9 @@ const ModuleManager: React.FC = () => {
     <PageContainer>
       <Space direction="vertical" size={12} className="system-page-template module-manager-page">
         <GovernanceSummaryBar
-          title={t('generator.moduleManager.title')}
-          description={t('generator.moduleManager.positioning')}
+          eyebrow={t('generator.moduleManager.header.eyebrow')}
+          title={t('generator.moduleManager.header.title')}
+          description={t('generator.moduleManager.header.description')}
           metrics={[
             {
               key: 'total',
@@ -475,6 +507,11 @@ const ModuleManager: React.FC = () => {
               key: 'failed',
               label: t('generator.moduleManager.stats.failed'),
               value: stats.failed,
+            },
+            {
+              key: 'autoRecycle',
+              label: t('generator.moduleManager.stats.autoRecycle'),
+              value: stats.autoRecycle,
             },
           ]}
         />
@@ -545,6 +582,10 @@ const ModuleManager: React.FC = () => {
                 label: t('generator.moduleManager.stats.failed'),
                 value: stats.failed,
               },
+              {
+                label: t('generator.moduleManager.stats.autoRecycle'),
+                value: stats.autoRecycle,
+              },
             ]}
           />
           <Typography.Text type="secondary" className="module-manager-page__summary-note">
@@ -600,14 +641,18 @@ const ModuleManager: React.FC = () => {
                 </Typography.Text>
               ) : null}
               <Typography.Text type="secondary">
-                {purgeTarget.tableName
+                {hasAutoRecycle(purgeTarget)
+                  ? t('generator.moduleManager.purgeModal.autoRecycleTable', {
+                      table: purgeTarget.tableName,
+                    })
+                  : purgeTarget.tableName
                   ? t('generator.moduleManager.purgeModal.keepTable', {
                       table: purgeTarget.tableName,
                     })
                   : t('generator.moduleManager.purgeModal.noTable')}
               </Typography.Text>
             </Space>
-            {purgeTarget.tableName ? (
+            {purgeTarget.tableName && !hasAutoRecycle(purgeTarget) ? (
               <Form.Item field="dropTable" triggerPropName="checked">
                 <Checkbox>
                   {t('generator.moduleManager.purgeModal.dropTable', {
@@ -615,6 +660,13 @@ const ModuleManager: React.FC = () => {
                   })}
                 </Checkbox>
               </Form.Item>
+            ) : null}
+            {hasAutoRecycle(purgeTarget) ? (
+              <Alert
+                type="warning"
+                style={{ marginBottom: 16 }}
+                content={t('generator.moduleManager.purgeModal.autoRecycleNotice')}
+              />
             ) : null}
             <Form.Item field="confirmed" triggerPropName="checked">
               <Checkbox onChange={(checked) => setPurgeConfirmed(Boolean(checked))}>

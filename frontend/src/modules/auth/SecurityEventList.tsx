@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -12,19 +12,27 @@ import {
 } from '@arco-design/web-react';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
-import { IconSearch } from '@arco-design/web-react/icon';
+import { IconCheck, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
+import { message } from '../../components/feedback/message';
 import { formatDateTime } from '../../core/format/dateTime';
 import {
+  AppModal,
   AppTable,
   FilterPanel,
+  GovernanceInsightDrawer,
+  GovernanceRailSummary,
+  GovernanceRailToggleButton,
   GovernanceSummaryBar,
   PageContainer,
   PageEmpty,
   PageError,
   PageLoading,
+  useGovernanceRail,
 } from '../../components';
+import { usePermission } from '../../hooks/usePermission';
 import {
+  acknowledgeSecurityEvent,
   getAdminSecurityEventList,
   type SecurityEventPageResp,
   type SecurityEventQuery,
@@ -36,18 +44,36 @@ import '../system/list-page.css';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
+const TextArea = Input.TextArea;
 
 const emptyQuery: SecurityEventQuery = {
   username: '',
   eventType: '',
   severity: '',
+  acknowledged: undefined,
+  page: 1,
+  pageSize: 10,
+};
+
+type SecurityEventFilterForm = Omit<SecurityEventQuery, 'acknowledged'> & {
+  acknowledged?: 'acknowledged' | 'pending';
+};
+
+const emptyFilterForm: SecurityEventFilterForm = {
+  username: '',
+  eventType: '',
+  severity: '',
+  acknowledged: undefined,
   page: 1,
   pageSize: 10,
 };
 
 const SecurityEventList: React.FC = () => {
   const { t } = useTranslation();
-  const [form] = Form.useForm<SecurityEventQuery>();
+  const { isAdmin, hasPerm } = usePermission();
+  const canAcknowledge = isAdmin || hasPerm('system:security-event:acknowledge');
+  const governanceRail = useGovernanceRail();
+  const [form] = Form.useForm<SecurityEventFilterForm>();
   const [query, setQuery] = useState<SecurityEventQuery>(emptyQuery);
   const [data, setData] = useState<SecurityEventPageResp>({
     items: [],
@@ -57,6 +83,9 @@ const SecurityEventList: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ackTarget, setAckTarget] = useState<SecurityEventRow | null>(null);
+  const [ackNote, setAckNote] = useState('');
+  const [ackSubmitting, setAckSubmitting] = useState(false);
 
   const fetchData = async (nextQuery: SecurityEventQuery) => {
     setLoading(true);
@@ -122,6 +151,46 @@ const SecurityEventList: React.FC = () => {
       dataIndex: 'messageKey',
       render: (value) => t(String(value || ''), { defaultValue: String(value || '-') }),
     },
+    {
+      title: t('auth.securityEvent.acknowledgement'),
+      dataIndex: 'acknowledgedAt',
+      width: 220,
+      render: (_value, record) =>
+        record.acknowledgedAt ? (
+          <Space direction="vertical" size={2}>
+            <Tag color="green">{t('auth.securityEvent.status.acknowledged')}</Tag>
+            <Typography.Text type="secondary">
+              {record.acknowledgedByUser || '-'} · {formatDateTime(record.acknowledgedAt)}
+            </Typography.Text>
+          </Space>
+        ) : (
+          <Tag color="orange">{t('auth.securityEvent.status.pending')}</Tag>
+        ),
+    },
+    {
+      title: t('common.action'),
+      dataIndex: 'action',
+      width: 120,
+      render: (_value, record) =>
+        record.acknowledgedAt ? (
+          <Typography.Text type="secondary">
+            {t('auth.securityEvent.status.acknowledged')}
+          </Typography.Text>
+        ) : (
+          <Button
+            size="small"
+            type="text"
+            icon={<IconCheck />}
+            disabled={!canAcknowledge}
+            onClick={() => {
+              setAckTarget(record);
+              setAckNote('');
+            }}
+          >
+            {t('auth.securityEvent.acknowledge')}
+          </Button>
+        ),
+    },
   ];
 
   const pagination: PaginationProps = {
@@ -138,7 +207,17 @@ const SecurityEventList: React.FC = () => {
 
   const handleSearch = () => {
     const values = form.getFieldsValue();
-    void fetchData({ ...emptyQuery, ...values, page: 1 });
+    void fetchData({
+      ...emptyQuery,
+      ...values,
+      acknowledged:
+        values.acknowledged === 'acknowledged'
+          ? true
+          : values.acknowledged === 'pending'
+            ? false
+            : undefined,
+      page: 1,
+    });
   };
 
   const handleReset = () => {
@@ -146,28 +225,31 @@ const SecurityEventList: React.FC = () => {
     void fetchData(emptyQuery);
   };
 
-  const heroStats = [
-    {
-      key: 'total',
-      label: t('common.total'),
-      value: data.total,
-    },
-    {
-      key: 'high',
-      label: t('auth.securityEvent.severity.high'),
-      value: data.items.filter((item) => item.severity === 'high').length,
-    },
-    {
-      key: 'sourceBlocked',
-      label: t('auth.securityEvent.type.source_blocked'),
-      value: data.items.filter((item) => item.eventType === 'source_blocked').length,
-    },
-    {
-      key: 'accountLocked',
-      label: t('auth.securityEvent.type.account_locked'),
-      value: data.items.filter((item) => item.eventType === 'account_locked').length,
-    },
-  ];
+  const heroStats = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('common.total'),
+        value: data.total,
+      },
+      {
+        key: 'pending',
+        label: t('auth.securityEvent.status.pending'),
+        value: data.items.filter((item) => !item.acknowledgedAt).length,
+      },
+      {
+        key: 'acknowledged',
+        label: t('auth.securityEvent.status.acknowledged'),
+        value: data.items.filter((item) => Boolean(item.acknowledgedAt)).length,
+      },
+      {
+        key: 'high',
+        label: t('auth.securityEvent.severity.high'),
+        value: data.items.filter((item) => item.severity === 'high').length,
+      },
+    ],
+    [data.items, data.total, t],
+  );
 
   return (
     <PageContainer>
@@ -176,25 +258,27 @@ const SecurityEventList: React.FC = () => {
           eyebrow={t('auth.securityEvent.hero.eyebrow')}
           title={t('system.menu.securityEvent')}
           description={t('auth.securityEvent.hint')}
-          metrics={heroStats}
+          metrics={heroStats.slice(0, 3)}
+          action={
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('auth.securityEvent.subtitle')}
+            </GovernanceRailToggleButton>
+          }
         />
         <FilterPanel>
-          <Form form={form} layout="vertical" initialValues={emptyQuery}>
+          <Form form={form} layout="vertical" initialValues={emptyFilterForm}>
             <Row gutter={16} className="auth-filter-grid">
-              <Col xs={24} md={12} lg={8}>
+              <Col xs={24} md={12} lg={6}>
                 <FormItem field="username" label={t('common.user')}>
-                  <Input
-                    allowClear
-                    placeholder={t('auth.securityEvent.filter.usernamePlaceholder')}
-                  />
+                  <Input allowClear placeholder={t('auth.securityEvent.filter.usernamePlaceholder')} />
                 </FormItem>
               </Col>
-              <Col xs={24} md={12} lg={8}>
+              <Col xs={24} md={12} lg={6}>
                 <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
-                  <Select
-                    allowClear
-                    placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
-                  >
+                  <Select allowClear placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}>
                     <Select.Option value="source_blocked">
                       {t('auth.securityEvent.type.source_blocked')}
                     </Select.Option>
@@ -204,17 +288,26 @@ const SecurityEventList: React.FC = () => {
                   </Select>
                 </FormItem>
               </Col>
-              <Col xs={24} md={12} lg={8}>
+              <Col xs={24} md={12} lg={6}>
                 <FormItem field="severity" label={t('auth.securityEvent.severity')}>
                   <Select allowClear placeholder={t('auth.securityEvent.filter.severityPlaceholder')}>
-                    <Select.Option value="high">
-                      {t('auth.securityEvent.severity.high')}
+                    <Select.Option value="high">{t('auth.securityEvent.severity.high')}</Select.Option>
+                    <Select.Option value="medium">{t('auth.securityEvent.severity.medium')}</Select.Option>
+                    <Select.Option value="low">{t('auth.securityEvent.severity.low')}</Select.Option>
+                  </Select>
+                </FormItem>
+              </Col>
+              <Col xs={24} md={12} lg={6}>
+                <FormItem field="acknowledged" label={t('auth.securityEvent.acknowledgement')}>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.securityEvent.filter.acknowledgedPlaceholder')}
+                  >
+                    <Select.Option value="acknowledged">
+                      {t('auth.securityEvent.status.acknowledged')}
                     </Select.Option>
-                    <Select.Option value="medium">
-                      {t('auth.securityEvent.severity.medium')}
-                    </Select.Option>
-                    <Select.Option value="low">
-                      {t('auth.securityEvent.severity.low')}
+                    <Select.Option value="pending">
+                      {t('auth.securityEvent.status.pending')}
                     </Select.Option>
                   </Select>
                 </FormItem>
@@ -247,11 +340,78 @@ const SecurityEventList: React.FC = () => {
               data={data.items}
               loading={loading}
               pagination={pagination}
-              scroll={{ x: 980 }}
+              scroll={{ x: 1280 }}
             />
           ) : null}
         </Card>
+      </Space>
+      <GovernanceInsightDrawer
+        title={t('auth.securityEvent.subtitle')}
+        visible={governanceRail.expanded}
+        onClose={governanceRail.close}
+        noteTitle={t('system.menu.securityEvent')}
+        noteDescription={t('auth.securityEvent.hint')}
+        noteTone="warning"
+      >
+        <GovernanceRailSummary
+          items={[
+            {
+              label: t('auth.securityEvent.status.pending'),
+              value: heroStats[1]?.value ?? 0,
+              description: t('auth.securityEvent.pendingHint'),
+            },
+            {
+              label: t('auth.securityEvent.status.acknowledged'),
+              value: heroStats[2]?.value ?? 0,
+              description: t('auth.securityEvent.acknowledgedHint'),
+            },
+            {
+              tone: 'warning',
+              label: t('auth.securityEvent.severity.high'),
+              value: heroStats[3]?.value ?? 0,
+              description: t('auth.securityEvent.highSeverityHint'),
+            },
+          ]}
+        />
+      </GovernanceInsightDrawer>
+      <AppModal
+        title={t('auth.securityEvent.acknowledge')}
+        visible={Boolean(ackTarget)}
+        onCancel={() => {
+          if (ackSubmitting) {
+            return;
+          }
+          setAckTarget(null);
+          setAckNote('');
+        }}
+        onOk={async () => {
+          if (!ackTarget) {
+            return;
+          }
+          if (!ackNote.trim()) {
+            message.warning(t('auth.securityEvent.acknowledgeNoteRequired'));
+            return;
+          }
+          setAckSubmitting(true);
+          try {
+            await acknowledgeSecurityEvent(ackTarget.id, { acknowledgementNote: ackNote.trim() });
+            message.success(t('auth.securityEvent.acknowledgeSuccess'));
+            setAckTarget(null);
+            setAckNote('');
+            await fetchData(query);
+          } catch {
+            message.error(t('common.actionFailed'));
+          } finally {
+            setAckSubmitting(false);
+          }
+        }}
+        confirmLoading={ackSubmitting}
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <Typography.Text>{t('auth.securityEvent.acknowledgeDialogHint')}</Typography.Text>
+          <TextArea value={ackNote} onChange={setAckNote} maxLength={500} showWordLimit />
         </Space>
+      </AppModal>
     </PageContainer>
   );
 };

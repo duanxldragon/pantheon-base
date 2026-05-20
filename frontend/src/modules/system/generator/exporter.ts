@@ -90,6 +90,18 @@ export class ModuleExporter {
       language: 'tsx',
     });
 
+    files.push({
+      path: `frontend/src/modules/${scope}/${name}/${this.inferModelName()}Form.tsx`,
+      content: this.frontendGen.generateFormComponent(),
+      language: 'tsx',
+    });
+
+    files.push({
+      path: `frontend/src/modules/${scope}/${name}/${this.inferModelName()}Detail.tsx`,
+      content: this.frontendGen.generateDetailPage(),
+      language: 'tsx',
+    });
+
     return files;
   }
 

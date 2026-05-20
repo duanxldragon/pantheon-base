@@ -8,7 +8,7 @@ export default defineConfig({
     hmr: process.env.PANTHEON_SMOKE === '1' ? { overlay: false } : undefined,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: process.env.PANTHEON_API_PROXY_TARGET || 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
     },

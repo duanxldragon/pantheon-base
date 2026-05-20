@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-19
+updated_at: 2026-05-20
 ---
 
 # 设计文档目录
@@ -58,10 +58,15 @@ English version: [README.en.md](./README.en.md)
 - [system/config 扩展设计](./SYSTEM_CONFIG_EXTENDED_DESIGN.md)
 - [i18n 模块设计](./I18N_MODULE_DESIGN.md)
 - [上传与存储设计](./UPLOAD_AND_STORAGE_DESIGN.md)
+- [业务字典接入指南](./BUSINESS_DICT_INTEGRATION_GUIDE.md)
+
+## platform.lowcode 工作域
+
 - [动态模块治理设计](./DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
 - [模块生成器设计](./GENERATOR_MODULE_DESIGN.md)
+- [运行时模块引擎演进约束](./RUNTIME_MODULE_ENGINE_EVOLUTION.md)
 - [低代码生成器使用指南](./LOWCODE_GENERATOR_GUIDE.md)
-- [业务字典接入指南](./BUSINESS_DICT_INTEGRATION_GUIDE.md)
+- [业务模块建模评审清单](./BUSINESS_MODELING_REVIEW_CHECKLIST.md)
 
 ## 业务模块与模板
 

@@ -12,7 +12,7 @@ updated_at: 2026-04-29
 
 English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_DESIGN.en.md)
 
-本文用于把 `system/config` 已经真实存在的扩展能力重新收口成一个统一设计锚点。
+本文用于把 `system/config` 已经真实存在的配置型公共能力重新收口成一个统一设计锚点。
 
 它不是为了替代：
 
@@ -22,7 +22,7 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 
 而是为了回答一个更上层的问题：
 
-> `system/config` 现在到底包含哪些子域，它们各自负责什么，彼此怎么隔离，哪些属于高敏治理能力？
+> `system/config` 现在到底包含哪些子域，它们各自负责什么，彼此怎么隔离，以及它与低代码工作域如何协作？
 
 ---
 
@@ -30,19 +30,16 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 
 `system/config` 不再只是“字典 + 设置页”。
 
-当前应把它理解为一个复合系统域，负责以下六类能力：
+当前应把它理解为一个复合系统域，负责以下四类配置型公共能力：
 
 1. `dict`：运行时枚举与选项治理
 2. `setting`：平台参数与策略配置
 3. `i18n`：翻译资产与语言治理
 4. `upload`：统一上传入口与存储配置
-5. `dynamicmodule`：动态模块注册治理
-6. `generator`：业务模块脚手架生成器
-
 本文的目标：
 
-- 把六块能力重新归到 `system/config`
-- 明确哪些是普通配置能力，哪些是高敏治理能力
+- 把四块配置能力重新归到 `system/config`
+- 明确 `system/config` 与低代码工作域的协作边界
 - 防止后续继续把 `system/config` 做成“大杂烩”
 - 给验收清单、权限矩阵和后续专项设计文档提供总锚点
 
@@ -56,7 +53,6 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 - 字典和下拉选项的统一治理
 - 翻译资产、语言包、缺失修复与生命周期治理
 - 上传配置与统一上传入口
-- 模块生成、模块注册、模块状态治理
 
 ### 2.2 `system/config` 不负责
 
@@ -65,12 +61,15 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 - 组织结构与组织治理，这属于 `system/org`
 - 操作日志平台本身，这属于 `system/audit`
 - 业务域运行时流程，这属于 `business/*`
+- `/system/modules` 与 `/system/generator` 的工作域导航，这属于 `platform.lowcode`
+- 模块注册与接入状态治理，这属于 `system/dynamicmodule`
+- 模块脚手架生成，这属于 `system/generator`
 
 ### 2.3 关键约束
 
 - `system/config` 可以沉淀“配置型公共能力”，但不能反向接管其他系统域职责
-- `generator` 与 `dynamicmodule` 虽然放在 `system/config`，但不等于普通设置页能力
-- 高敏能力必须和“可公开读配置”严格分开
+- `platform.lowcode` 可以聚合低代码工作域，但不等于能力归属
+- `system/generator` 与 `system/dynamicmodule` 虽然在产品上同属低代码工作域，但实现上必须分离
 
 ---
 
@@ -166,60 +165,19 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 
 - 单独补 `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
 
-## 3.5 dynamicmodule
+## 3.5 低代码相邻能力
 
-职责：
+`system/config` 需要与以下能力协作，但不再拥有它们：
 
-- 动态模块清单查询
-- 模块注册/卸载
-- 生成后模块状态管理
-- generated registry 更新与装配对齐
+- `platform.lowcode`：负责低代码工作域的菜单聚合、入口编排与阅读路径
+- `system/dynamicmodule`：负责模块接入、卸载、清理、注册表一致性与待激活状态治理
+- `system/generator`：负责模块 schema 校验、受控生成与治理摘要输出
 
-判断：
+约束：
 
-- 这不是普通配置能力
-- 这是 **高敏平台治理能力**
-
-原因：
-
-- 它影响工作区源码与模块装配
-- 它改变平台可用模块版图
-- 错误操作会直接影响构建、路由和权限接入
-
-必须坚持：
-
-- 默认按开发/内部治理能力理解
-- 写操作必须受更高权限和二次验证保护
-- 文档中必须单独说明环境限制、审计、回滚和误操作防护
-
-后续建议：
-
-- 单独补 `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
-
-## 3.6 generator
-
-职责：
-
-- 基于 schema 生成业务模块脚手架
-- 生成前后端代码、菜单、权限、i18n 初始骨架
-- 输出模块文件并交给动态模块治理链路注册
-
-判断：
-
-- `generator` 属于 `system/config` 的辅助开发子域
-- 它的产品定位是“研发加速器”，不是“运行时低代码平台”
-
-边界：
-
-- 只能生成受约束的模块骨架
-- 不负责运行时热插拔业务编排
-- 不应反向侵入 `auth / iam / org` 等系统域边界
-
-必须坚持：
-
-- key-first i18n
-- 生成内容遵守模块契约
-- 生成器不绕过动态模块治理与权限检查
+- `generator` 不能跳过 `dynamicmodule` 直接宣告模块生效
+- `dynamicmodule` 不替代 `generator` 做 schema 设计
+- `system/config` 只为低代码链路提供相邻配置能力，例如 i18n、上传与受管数据源元数据，不再吞并其治理归属
 
 ---
 
@@ -231,27 +189,24 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 | `setting` | 中 | 可影响平台运行策略与公开配置 |
 | `i18n` | 中 | 可影响全局文案、导入导出与错误反馈 |
 | `upload` | 中高 | 涉及文件访问路径、存储驱动和对象访问地址 |
-| `dynamicmodule` | 高 | 涉及模块注册、源码写入、模块卸载 |
-| `generator` | 中高 | 涉及生成代码质量与边界收口，通常与 `dynamicmodule` 联动 |
-
 ---
 
 ## 5. 前端页面归属
 
-当前应统一按以下页面理解：
+当前 `system/config` 只直接承载以下页面：
 
 | 页面 | 子域 | 页面归属 |
 | :--- | :--- | :--- |
 | `/system/dict` | `dict` | `system/config` |
 | `/system/setting` | `setting` | `system/config` |
 | `/system/i18n` | `i18n` | `system/config` |
-| `/system/modules` | `dynamicmodule` | `system/config` |
-| `/system/generator` | `generator` | `system/config` |
 
-约束：
+低代码工作域页面另行归属为：
 
-- 这些页面不能再只按“系统设置附属页面”看待
-- 它们都属于 `system/config`，但验收和权限强度不应完全一样
+| 页面 | 能力 | 页面归属 |
+| :--- | :--- | :--- |
+| `/system/modules` | `system/dynamicmodule` | `platform.lowcode` |
+| `/system/generator` | `system/generator` | `platform.lowcode` |
 
 ---
 
@@ -276,6 +231,7 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 
 包括：
 
+- 与 `system/config` 相邻的低代码治理写操作
 - 动态模块注册
 - 动态模块卸载
 - 生成器触发代码生成
@@ -300,8 +256,6 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 - `/system/dict`
 - `/system/setting`
 - `/system/i18n`
-- `/system/modules`
-- `/system/generator`
 
 每页至少检查：
 
@@ -325,18 +279,18 @@ English version: [SYSTEM_CONFIG_EXTENDED_DESIGN.en.md](./SYSTEM_CONFIG_EXTENDED_
 | :--- | :--- | :--- |
 | `docs/designs/DICT_AND_SETTING_DESIGN.md` | 字典与设置细节 | 是 `dict / setting` 子域细化文档 |
 | `docs/designs/ERROR_CODE_AND_I18N.md` | 错误 key 与 i18n 责任边界 | 是 `i18n` 子域的重要配套文档 |
-| `docs/designs/LOWCODE_GENERATOR_GUIDE.md` | 生成器使用与链路说明 | 是 `generator / dynamicmodule` 的操作型文档 |
+| `docs/designs/LOWCODE_GENERATOR_GUIDE.md` | 生成器使用与链路说明 | 是 `platform.lowcode` 工作域下的操作型文档 |
 | `docs/acceptances/ACCEPTANCE_CHECKLIST.md` | 统一验收门槛 | 应补齐 `system/config` 扩展能力验收 |
 
 ---
 
 ## 9. 当前结论
 
-`system/config` 已经成长为一个真正的复合系统域。
+`system/config` 已经成长为一个清晰的配置复合系统域。
 
 接下来必须坚持两件事：
 
-1. 继续按 `dict / setting / i18n / upload / dynamicmodule / generator` 六块能力做逻辑拆分
-2. 对高敏能力单独提高文档、权限、验收和审计标准
+1. 继续按 `dict / setting / i18n / upload` 四块配置能力做逻辑拆分
+2. 把低代码工作域稳定收敛在 `platform.lowcode`，并保持 `system/generator` 与 `system/dynamicmodule` 能力分离
 
 否则它很容易再次退化成“什么都往里塞的 system 杂物间”。

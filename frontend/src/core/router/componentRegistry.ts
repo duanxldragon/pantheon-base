@@ -52,7 +52,7 @@ const staticComponentRegistry = {
     () => import('../../modules/system/dynamicmodule/ModuleManager'),
   ),
   'system/generator/ModuleWizard': defineRegistryEntry(
-    () => import('../../modules/generator/pages/ModuleWizard'),
+    () => import('../../modules/system/generator/pages/ModuleWizard'),
   ),
 } satisfies Record<string, RegistryEntry>;
 

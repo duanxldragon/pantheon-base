@@ -135,6 +135,7 @@ export interface ModuleMetadata {
   sourceDatasourceId?: string;
   sourceDatasourceName?: string;
   sourceTable?: string;
+  autoRecycle?: boolean;
 }
 
 export interface ModuleDependency {
@@ -149,6 +150,9 @@ export interface ModuleRelation {
   targetModule: string;
   localField: string;
   targetField: string;
+  targetLabelField?: string;
+  lookupApi?: string;
+  lookupValueField?: string;
   junctionTable?: string;
 }
 
@@ -1173,6 +1177,30 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
         level: 'error',
         messageKey: 'generator.validation.relationIncomplete',
         detail: relation.name || schema.name,
+      });
+    }
+    if (relation.targetLabelField && !/^[A-Za-z][A-Za-z0-9_]*$/.test(relation.targetLabelField)) {
+      issues.push({
+        code: 'relation_target_label_field_invalid',
+        level: 'error',
+        messageKey: 'generator.validation.relationIncomplete',
+        detail: relation.targetLabelField,
+      });
+    }
+    if (relation.lookupValueField && !/^[A-Za-z][A-Za-z0-9_]*$/.test(relation.lookupValueField)) {
+      issues.push({
+        code: 'relation_lookup_value_field_invalid',
+        level: 'error',
+        messageKey: 'generator.validation.relationIncomplete',
+        detail: relation.lookupValueField,
+      });
+    }
+    if (relation.lookupApi && !String(relation.lookupApi).startsWith('/')) {
+      issues.push({
+        code: 'relation_lookup_api_invalid',
+        level: 'error',
+        messageKey: 'generator.validation.relationIncomplete',
+        detail: relation.lookupApi,
       });
     }
   }

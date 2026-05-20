@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Card,
@@ -258,6 +258,7 @@ const DeptList: React.FC = () => {
   const [postForm] = Form.useForm<OrgPostFormValues>();
   const [queryForm] = Form.useForm<DeptListQuery>();
   const governanceRail = useGovernanceRail({ enabled: activeTab === 'manage' });
+  const loadDataRequestIdRef = useRef(0);
   const invalidateDeptCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       {
@@ -287,27 +288,47 @@ const DeptList: React.FC = () => {
   const loadData = useCallback(
     async (nextQuery: DeptListQuery = query, options?: LoadDataOptions) => {
       const silent = options?.silent === true;
+      const requestId = loadDataRequestIdRef.current + 1;
+      let rowsLoaded = false;
+      loadDataRequestIdRef.current = requestId;
       if (!silent) {
         setLoading(true);
         setError(null);
         setGovernanceLoading(true);
       }
       try {
-        const [rows, overviewResp, taskRows] = await Promise.all([
-          isDefaultDeptListQuery(nextQuery)
-            ? resolveRouteWarmData('/system/dept', 'tree:default', () => getDeptTree(nextQuery))
-            : getDeptTree(nextQuery),
+        const rows = await (isDefaultDeptListQuery(nextQuery)
+          ? resolveRouteWarmData('/system/dept', 'tree:default', () => getDeptTree(nextQuery))
+          : getDeptTree(nextQuery));
+        if (loadDataRequestIdRef.current !== requestId) {
+          return;
+        }
+        setData(rows);
+        rowsLoaded = true;
+        if (!silent) {
+          setLoading(false);
+        }
+        const [overviewResp, taskRows] = await Promise.all([
           resolveRouteWarmData('/system/dept', 'overview', () => getDeptOverview()),
           getDeptGovernanceTasks(buildGovernanceTaskQuery(nextQuery)),
         ]);
-        setData(rows);
+        if (loadDataRequestIdRef.current !== requestId) {
+          return;
+        }
         setOverview(overviewResp);
         setGovernanceTasks(taskRows);
       } catch (requestError) {
-        setError(requestError);
+        if (loadDataRequestIdRef.current !== requestId) {
+          return;
+        }
+        if (!rowsLoaded) {
+          setError(requestError);
+        } else {
+          setOverview(null);
+        }
         setGovernanceTasks([]);
       } finally {
-        if (!silent) {
+        if (!silent && loadDataRequestIdRef.current === requestId) {
           setLoading(false);
           setGovernanceLoading(false);
         }

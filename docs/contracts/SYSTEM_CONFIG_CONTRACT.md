@@ -54,27 +54,24 @@ English version: [SYSTEM_CONFIG_CONTRACT.en.md](./SYSTEM_CONFIG_CONTRACT.en.md)
 
 本文用于定义 Pantheon `system/config` 能力域的执行契约。
 
-它锁定的是配置型公共能力的总边界，避免后续把 `dict / setting / i18n / upload / dynamicmodule / generator` 再次混成一个没有风险分级、没有职责区分的“大配置杂物间”。
+它锁定的是配置型公共能力的总边界，避免后续把 `dict / setting / i18n / upload` 再次混成一个没有风险分级、没有职责区分的“大配置杂物间”。
 
 ---
 
 ## 1. 背景
 
-Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的规模。
+Pantheon 当前的 `system/config` 已经不再只是“字典 + 设置页”。
 
-它现在至少承载 6 类能力：
+它当前承载 4 类配置型公共能力：
 
 1. `dict`
 2. `setting`
 3. `i18n`
 4. `upload`
-5. `dynamicmodule`
-6. `generator`
-
 如果没有 `system/config` 合同，后续最容易继续发生：
 
-- 普通配置能力和高敏治理能力放在一个口径里讨论
-- `i18n / upload / dynamicmodule / generator` 继续被误当成设置页附属功能
+- 普通配置能力继续被混成一个大页、大表单、大杂烩
+- `i18n / upload` 继续被误当成设置页附属功能
 - 设计文档越来越多，但没有统一总锚点
 - `system/config` 重新变成最典型的大杂烩系统域
 
@@ -88,8 +85,6 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - 平台参数与策略配置
 - 翻译资产与语言治理
 - 统一上传入口与存储配置
-- 动态模块治理
-- 模块生成器与辅助开发链路
 
 它不等于：
 
@@ -97,14 +92,17 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - `system/iam` 用户、角色、菜单、权限治理
 - `system/org` 组织结构治理
 - `platform` 壳层导航与工作台聚合
+- `platform.lowcode` 低代码工作域聚合
+- `system/dynamicmodule` 模块注册与接入治理
+- `system/generator` 受控代码生成能力
 
 ## 3. 目标
 
 `system/config` 合同的目标是锁定以下 6 件事：
 
 1. 明确 `config` 是配置型公共能力域，而不是其他系统域的剩余项容器
-2. 明确普通配置能力和高敏治理能力的风险分级
-3. 明确 `dict / setting / i18n / upload / dynamicmodule / generator` 的总边界
+2. 明确 `dict / setting / i18n / upload` 的总边界
+3. 明确 `config` 与低代码工作域、模块生成、动态接入治理之间的协作边界
 4. 明确 `config` 只定义配置与治理，不直接吞掉其他系统域运行时职责
 5. 明确 `system/config` 的完成定义和验收口径
 6. 为后续专题子合同预留稳定扩展位
@@ -117,11 +115,13 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - 角色授权、菜单元数据语义、权限工作台
 - 部门、岗位和组织结构治理
 - 业务域自己的配置语义和生命周期
-- 直接把 `generator` 或 `dynamicmodule` 定义成成熟运行时低代码平台
+- `platform.lowcode` 的工作域导航
+- `system/generator` 的模块骨架生成
+- `system/dynamicmodule` 的模块接入治理
 
 换句话说：
 
-- `system/config` 可以提供公共配置和辅助开发能力；
+- `system/config` 可以提供公共配置能力；
 - 但不能反向接管 `auth / iam / org / platform` 的核心职责。
 
 ## 5. 边界
@@ -131,8 +131,6 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - `/system/dict`
 - `/system/setting`
 - `/system/i18n`
-- `/system/modules`
-- `/system/generator`
 - 统一上传接口与上传配置
 - 配置缓存刷新
 - 配置变更审计
@@ -157,13 +155,12 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 - 负责上传配置、统一上传入口、存储驱动切换、访问 URL 生成
 
-#### `dynamicmodule`
+#### 低代码相邻能力
 
-- 负责模块接入治理、注册状态与 generated registry 对齐
-
-#### `generator`
-
-- 负责业务模块骨架生成、schema 校验、生成链路与受控注册入口
+- `platform.lowcode`：负责 `/system/lowcode`、`/system/modules`、`/system/generator` 的导航聚合与工作域编排
+- `system/dynamicmodule`：负责模块接入治理、注册状态与 generated registry 对齐
+- `system/generator`：负责业务模块骨架生成、schema 校验、生成链路与受控注册入口
+- 上述三者与 `system/config` 相邻，但不再归 `config` 直管
 
 ### 5.3 不覆盖对象
 
@@ -176,6 +173,8 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - `/system/dept`
 - `/system/post`
 - 平台壳层导航和工作台聚合
+- `/system/modules`
+- `/system/generator`
 
 ## 6. 依赖
 
@@ -197,7 +196,7 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 ### 7.1 域边界约束
 
-- `system/config` 只承载配置型公共能力和受控辅助开发能力
+- `system/config` 只承载配置型公共能力
 - 不能反向定义 `auth / iam / org / platform` 的核心职责
 - 子域之间可以共享配置来源，但不能吞并彼此语义
 
@@ -205,7 +204,7 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 - `dict / setting / i18n` 属于普通配置或内容治理能力
 - `upload` 属于公共基础能力，配置在 `config`，运行时在平台公共包
-- `dynamicmodule / generator` 属于高敏治理能力，不按普通设置页口径处理
+- `dynamicmodule / generator` 属于独立高敏系统能力，不按 `system/config` 子域处理
 
 ### 7.3 高敏能力约束
 
@@ -213,7 +212,7 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 - 写操作必须受更高权限、环境限制和二次验证保护
 - `generator` 的高敏动作是“生成并注册”，而不是“查看页面”
 - 真实写操作不得绕过后端 Casbin、环境守卫和二次验证
-- `/system/modules`、`/system/generator`、`/system/i18n`、`/system/setting`、`/system/setting/:groupKey` 必须遵守统一页面准入规则
+- `/system/i18n`、`/system/setting`、`/system/setting/:groupKey` 必须遵守统一页面准入规则
 - 页头只表达当前页主任务，不重复右侧定位菜单
 - 首屏只能保留一个治理摘要容器，禁止再堆“说明卡片墙”
 - 高敏动作只能收束到页头动作区、表头动作区或治理抽屉，不得散在首屏多个位置
@@ -245,17 +244,16 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 ### 8.1 职责完成
 
-- 六类子域边界清晰
-- 普通配置能力和高敏治理能力分级清晰
+- 四类配置子域边界清晰
+- `system/config` 与低代码相邻能力的归属边界清晰
 
 ### 8.2 运行时完成
 
-- 字典、设置、i18n、上传、动态模块、生成器主链路稳定
+- 字典、设置、i18n、上传主链路稳定
 - 配置值与运行时消费语义不再混乱
 
 ### 8.3 风险控制完成
 
-- `dynamicmodule / generator` 高敏动作具备受控边界
 - 上传能力具备统一配置与统一入口
 - `i18n` 已被视为独立子域，而不是设置页附属功能
 - 高敏页面首屏职责清晰：`modules` 负责已接入模块治理，`generator` 负责新模块接入，`i18n` 负责运行时语言资产治理，`setting` 保持总览 / 单组拆分
@@ -334,8 +332,8 @@ Pantheon 当前的 `system/config` 已经明显超过“字典 + 设置页”的
 
 - `system/config -> i18n contract`
 - `system/config -> upload contract`
-- `system/config -> dynamicmodule contract`
-- `system/config -> generator contract`
+- `platform.lowcode -> dynamicmodule governance contract`
+- `platform.lowcode -> generator governance contract`
 
 规则：
 

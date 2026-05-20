@@ -182,6 +182,9 @@ const enUSFallback = {
   'auth.session.revoke': 'Revoke Session',
   'auth.session.revokeConfirm': 'Confirm revoking this session?',
   'auth.session.revokeSuccess': 'Session revoked',
+  'auth.session.revokeSelected': 'Revoke Selected',
+  'auth.session.batchRevokeConfirm': 'Confirm revoking the selected {{count}} session(s)?',
+  'auth.session.batchRevokeSuccess': 'Revoked {{count}} session(s)',
   'auth.session.cleanupAction': 'Clean Historic Sessions',
   'auth.session.cleanupConfirm':
     'Clean up historical sessions older than the recent {{count}} day(s) retention window? Current active sessions will be kept.',
@@ -272,11 +275,28 @@ const enUSFallback = {
   'auth.securityEvent.filter.usernamePlaceholder': 'Filter by account',
   'auth.securityEvent.filter.eventTypePlaceholder': 'Select event type',
   'auth.securityEvent.filter.severityPlaceholder': 'Select severity',
+  'auth.securityEvent.filter.acknowledgedPlaceholder': 'Select acknowledgement state',
   'auth.securityEvent.type.source_blocked': 'Source blocked',
   'auth.securityEvent.type.account_locked': 'Account locked',
   'auth.securityEvent.severity.high': 'High',
   'auth.securityEvent.severity.medium': 'Medium',
   'auth.securityEvent.severity.low': 'Low',
+  'auth.securityEvent.acknowledgement': 'Acknowledgement',
+  'auth.securityEvent.status.pending': 'Pending Review',
+  'auth.securityEvent.status.acknowledged': 'Acknowledged',
+  'auth.securityEvent.acknowledge': 'Acknowledge',
+  'auth.securityEvent.acknowledgePrompt': 'Start writing the acknowledgement note',
+  'auth.securityEvent.acknowledgeDialogHint':
+    'Record the disposition, impact scope, and follow-up actions so the incident has a complete governance trail.',
+  'auth.securityEvent.acknowledgeNoteRequired':
+    'Provide an acknowledgement note before closing the security event',
+  'auth.securityEvent.acknowledgeSuccess': 'Security event acknowledged',
+  'auth.securityEvent.pendingHint':
+    'Pending events should be triaged against the source, account state, and related session posture first.',
+  'auth.securityEvent.acknowledgedHint':
+    'Acknowledged events retain the actor, timestamp, and disposition note for audit traceability.',
+  'auth.securityEvent.highSeverityHint':
+    'High-severity events should be reviewed alongside login logs, session inventory, and operation audits first.',
   'auth.security.event.source_blocked':
     'The source has been temporarily blocked after too many failed attempts.',
   'auth.security.event.account_locked':
@@ -337,6 +357,14 @@ const enUSFallback = {
   'common.clearConfirm': 'Are you sure you want to clear the current data?',
   'common.clearSuccess': 'Cleared successfully',
   'common.cleanupLogs': 'Cleanup Logs',
+  'common.cleanupMode': 'Cleanup Mode',
+  'common.cleanupModeRetention': 'By retention window',
+  'common.cleanupModeRange': 'By time range',
+  'common.cleanupRangeStart': 'Start time',
+  'common.cleanupRangeEnd': 'End time',
+  'common.cleanupRangeRequired':
+    'When using range cleanup, select both the start and end timestamps',
+  'common.cleanupRangeConfirm': 'Clean up records inside the selected time range?',
   'common.deleteSelected': 'Delete Selected',
   'common.batchDeleteSuccess': 'Deleted {{deleted}} record(s)',
   'common.batchDeletePartialSuccess': 'Deleted {{deleted}} record(s), {{failed}} failed',
@@ -666,6 +694,11 @@ const enUSFallback = {
   'i18n.audit.affectedKeys': 'Affected Keys',
   'i18n.not_found': 'Translation entry not found',
   'generator.moduleManager.title': 'Module Registry',
+  'generator.moduleManager.eyebrow': 'Platform Layer / Low-Code',
+  'generator.moduleManager.header.eyebrow': 'Platform Layer / Low-Code',
+  'generator.moduleManager.header.title': 'Module Registry',
+  'generator.moduleManager.header.description':
+    'Review installed platform, system, and business modules. Built-in modules are read-only here and cannot be uninstalled from this page.',
   'generator.moduleManager.description':
     'Review installed platform, system, and business modules. Built-in modules are read-only here and cannot be uninstalled from this page.',
   'generator.moduleManager.positioning':
@@ -682,6 +715,10 @@ const enUSFallback = {
   'generator.moduleManager.owner': 'Owner',
   'generator.moduleManager.boundedContext': 'Bounded Context',
   'generator.moduleManager.tableName': 'Table',
+  'generator.moduleManager.lifecycle': 'Lifecycle',
+  'generator.moduleManager.lifecycle.standard': 'Standard',
+  'generator.moduleManager.lifecycle.autoRecycle': 'Temporary Auto-Recycle',
+  'generator.moduleManager.lifecycle.noTable': 'No Managed Table',
   'generator.moduleManager.status': 'Status',
   'generator.moduleManager.installedAt': 'Installed At',
   'generator.moduleManager.diagnostics': 'Activation Diagnostics',
@@ -689,6 +726,8 @@ const enUSFallback = {
   'generator.moduleManager.diagnostics.failed': 'Issue',
   'generator.moduleManager.registerNew': 'New Module Onboarding',
   'generator.moduleManager.confirmUninstall': 'Uninstall this module?',
+  'generator.moduleManager.confirmUninstallAutoRecycle':
+    'Uninstall this temporary module? Managed table {{table}} will be recycled automatically.',
   'generator.moduleManager.register': 'Re-register',
   'generator.moduleManager.registerSuccess': 'Module re-registered and pending activation',
   'generator.moduleManager.registerError': 'Failed to re-register module',
@@ -728,10 +767,14 @@ const enUSFallback = {
     'The generated backend/frontend source and generated registry references will be cleaned up.',
   'generator.moduleManager.purgeModal.keepTable':
     'The business table {{table}} will be kept by default to avoid accidental data loss.',
+  'generator.moduleManager.purgeModal.autoRecycleTable':
+    'This module is marked temporary, so business table {{table}} will be recycled automatically during purge.',
   'generator.moduleManager.purgeModal.noTable':
     'No business table is registered for this module; only the record and generated source will be removed.',
   'generator.moduleManager.purgeModal.dropTable':
     'Also drop business table {{table}} (high risk, irreversible)',
+  'generator.moduleManager.purgeModal.autoRecycleNotice':
+    'Temporary modules automatically recycle their managed table during purge. No extra opt-in is required.',
   'generator.moduleManager.purgeModal.confirmLabel':
     'I understand this action is irreversible and I want to continue',
   'generator.moduleManager.purgeModal.confirmRequired':
@@ -749,12 +792,20 @@ const enUSFallback = {
   'generator.moduleManager.stats.pending': 'Pending',
   'generator.moduleManager.stats.uninstalled': 'Uninstalled',
   'generator.moduleManager.stats.failed': 'Issues',
+  'generator.moduleManager.stats.autoRecycle': 'Temporary',
   'generator.moduleManager.status.active': 'Installed',
   'generator.moduleManager.status.pending': 'Pending Activation',
   'generator.moduleManager.status.uninstalled': 'Uninstalled',
   'generator.moduleManager.status.failed': 'Failed',
   'generator.wizard.title': 'Module Generator',
   'generator.wizard.openRegistry': 'Open Module Registry',
+  'generator.wizard.header.eyebrow': 'Platform Layer / Low-Code',
+  'generator.wizard.header.title': 'Generate Business Module Scaffolds Within Governed Boundaries',
+  'generator.wizard.header.description':
+    'The generator stays inside the `platform/lowcode` domain: the main work area configures fields, menus, permissions, and contracts, while the summary bar only reports progress, field scale, and generated artifacts.',
+  'generator.wizard.header.steps': 'Steps',
+  'generator.wizard.header.fields': 'Fields',
+  'generator.wizard.header.files': 'Files',
   'generator.wizard.positioning':
     'This capability is a lightweight engineering-assist tool on top of the standard admin platform. It generates business module scaffolds that comply with platform contracts and is not a replacement for the core admin system.',
   'generator.wizard.step1.title': 'Basics',
@@ -863,6 +914,17 @@ const enUSFallback = {
   'generator.wizard.includeDashboardWidget': 'Platform workbench entry',
   'generator.wizard.includeDashboardWidget.help':
     'Only navigable business/* modules can attach to the platform workbench. Relation tables always force this entry off.',
+  'generator.wizard.lifecycle.title': 'Lifecycle Policy',
+  'generator.wizard.lifecycle.desc':
+    'Decide whether this is a long-lived business module or a temporary module used for QA, UAT, or integration rehearsal.',
+  'generator.wizard.lifecycle.autoRecycle':
+    'Mark as temporary module and auto-recycle the managed table during purge',
+  'generator.wizard.lifecycle.autoRecycleHint':
+    'Recommended for QA, master-detail rehearsal, many-to-many verification, and other short-lived generated modules.',
+  'generator.wizard.lifecycle.standardHint':
+    'Standard modules keep their tables by default. Table removal still requires an explicit governance decision.',
+  'generator.wizard.lifecycle.autoRecycleTag': 'Temporary Auto-Recycle',
+  'generator.wizard.lifecycle.standardTag': 'Standard Retention',
   'generator.wizard.dataScopeMode': 'Data Scope Mode',
   'generator.wizard.dataScopeMode.dept': 'Department',
   'generator.wizard.dataScopeMode.owner': 'Owner',
@@ -1823,7 +1885,12 @@ const enUSFallback = {
     'Post governance rule: a post that is still assigned to members cannot be disabled or deleted. Reassign the members before continuing.',
   'system.post.batchStatusSuccess': 'Updated {{count}} post statuses',
   'system.post.empty': 'No posts match the current scope. Adjust filters or create a post first.',
-  'system.post.hero.eyebrow': 'Post Governance',
+  'system.post.hero.eyebrow': 'System Domain / Organization',
+  'system.post.header.eyebrow': 'System Domain / Organization',
+  'system.post.header.title':
+    'Close post status, in-use blockers, and remediation actions in one workbench',
+  'system.post.header.description':
+    'The post page keeps the `system/org` boundary intact: the main task lane owns filtering, maintenance, and batch governance, while the side rail only summarizes in-use risk, disabled inventory, and remediation guidance.',
   'system.post.hero.title':
     'Close post status, in-use blockers, and remediation actions in one workbench',
   'system.post.hero.desc':
@@ -2021,6 +2088,7 @@ const enUSFallback = {
   'system.permission.login_log.export': 'Login Log Export',
   'system.permission.session.delete': 'Session Revoke',
   'system.permission.session.clear': 'Clean Historic Sessions',
+  'system.permission.security_event.acknowledge': 'Security Event Acknowledge',
   'system.permission.operation_log.export': 'Operation Log Export',
   'permission.role.invalid': 'Role key does not exist',
   'permission.policy.exists': 'A policy with the same role, API path, and method already exists',
@@ -2434,7 +2502,12 @@ const enUSFallback = {
   'system.dict.typeEmpty': 'No dictionary types',
   'system.dict.itemEmpty': 'No dictionary items',
   'system.dict.item.empty': 'Select a dictionary type on the left to manage items',
-  'system.dict.hero.eyebrow': 'System Domain / Config Governance Dictionary',
+  'system.dict.hero.eyebrow': 'System Domain / Configuration',
+  'system.dict.header.eyebrow': 'System Domain / Configuration',
+  'system.dict.header.title':
+    'Govern dictionary types, dictionary items, and runtime cache in one workbench',
+  'system.dict.header.description':
+    'The dictionary page keeps a `system/config` boundary: the main lane owns type and item maintenance while the summary rail only surfaces disabled inventory, cache refresh readiness, and import readiness.',
   'system.dict.hero.title':
     'Govern dictionary types, dictionary items, and runtime cache in one workbench',
   'system.dict.hero.desc':

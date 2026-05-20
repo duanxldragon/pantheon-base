@@ -29,7 +29,7 @@ English version: [LOWCODE_GENERATOR_GUIDE.en.md](./LOWCODE_GENERATOR_GUIDE.en.md
 ## 🎯 定位边界
 
 - Pantheon 的主目标仍然是标准企业级后台管理系统
-- 该生成器归属 `system/config -> generator` 补充能力；平台层只负责模块契约、评审标准和验收门禁
+- 该生成器的能力归属是 `system/generator`，产品入口归属 `platform.lowcode`；平台层只负责模块契约、评审标准和验收门禁
 - 它用于研发辅助、脚手架生成、受控注册与治理
 - 它不是运行时低代码平台，也不应驱动 `auth / iam / org / config` 核心边界重构
 

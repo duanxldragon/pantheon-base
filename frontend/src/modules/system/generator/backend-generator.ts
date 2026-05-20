@@ -82,6 +82,8 @@ export class BackendGenerator {
         : `
 \tCreatedAt time.Time \`json:"createdAt"\``;
 
+    const junctionModels = this.generateManyToManyJunctionModels();
+
     return `package ${this.packageName}
 
 import (
@@ -98,6 +100,7 @@ ${fields}${auditFields}
 func (${structName}) TableName() string {
 \treturn "${tableName}"
 }
+${junctionModels ? `\n${junctionModels}` : ''}
 `;
   }
 
@@ -132,6 +135,7 @@ func (${structName}) TableName() string {
   generateDTO(): string {
     const structName = this.modelName;
     const importBlock = this.generateDTOImportBlock();
+    const relationDTOs = this.generateManyToManyRelationDTOs();
 
     return `package ${this.packageName}
 
@@ -178,6 +182,14 @@ ${this.generateDTOFields('create')}
 type ${structName}UpdateReq struct {
 ${this.generateDTOFields('update')}
 }
+
+type ${structName}OptionItem struct {
+\tLabel string \`json:"label"\`
+\tValue uint64 \`json:"value"\`
+\tID    uint64 \`json:"id"\`
+\tName  string \`json:"name"\`
+}
+${relationDTOs ? `\n${relationDTOs}` : ''}
 `;
   }
 
@@ -249,12 +261,17 @@ ${this.generateDTOFields('update')}
     const modelName = this.modelName;
 
     const hasDataScope = this.schema.enableDataScope ?? templateLevel === 'enterprise';
+    const relationMigrations = this.generateManyToManyMigrations();
+    const relationServices = this.generateManyToManyServiceMethods();
+    const requiresStrconv =
+      this.getManyToManyRelations().length > 0 || this.resolveOptionLabelField() === null;
     return `package ${this.packageName}
 
 import (
 \t"errors"
 \t${hasDataScope ? `"pantheon-platform/backend/pkg/common"` : ``}
 \t${hasDataScope ? `"pantheon-platform/backend/pkg/database"` : ``}
+\t${requiresStrconv ? `"strconv"` : ``}
 \t"strings"
 \t"time"
 \t"gorm.io/gorm"
@@ -274,7 +291,10 @@ func (s *${modelName}Service) Migrate() error {
 \tif s.db == nil {
 \t\treturn errors.New("database.not_initialized")
 \t}
-\treturn s.db.AutoMigrate(&${structName}{})
+\tif err := s.db.AutoMigrate(&${structName}{}${relationMigrations}); err != nil {
+\t\treturn err
+\t}
+\treturn nil
 }
 
 // List${modelName}s 分页列表查询
@@ -327,6 +347,24 @@ ${this.generateSortFieldMap()}
 \t\tPage:     query.Page,
 \t\tPageSize: query.PageSize,
 \t}, nil
+}
+
+// List${modelName}Options 关系选择器选项
+func (s *${modelName}Service) List${modelName}Options() ([]${modelName}OptionItem, error) {
+\tvar items []${structName}
+\tif err := s.db.Model(&${structName}{}).Order("id desc").Limit(100).Find(&items).Error; err != nil {
+\t\treturn nil, err
+\t}
+\toptions := make([]${modelName}OptionItem, len(items))
+\tfor i, item := range items {
+\t\toptions[i] = ${modelName}OptionItem{
+\t\t\tLabel: ${this.generateOptionLabelExpression('item')},
+\t\t\tValue: item.ID,
+\t\t\tID: item.ID,
+\t\t\tName: ${this.generateOptionNameExpression('item')},
+\t\t}
+\t}
+\treturn options, nil
 }
 
 // Get${modelName}Detail 详情查询
@@ -408,6 +446,7 @@ func (s *${modelName}Service) fromCreateReq(req *${modelName}CreateReq) ${struct
 ${this.fromCreateReqFields()}
 \t}
 }
+${relationServices ? `\n${relationServices}` : ''}
 `;
   }
 
@@ -508,6 +547,7 @@ ${this.fromCreateReqFields()}
     const modelName = this.modelName;
     const hasAudit = templateLevel === 'enterprise';
     const hasDataScope = this.schema.enableDataScope ?? templateLevel === 'enterprise';
+    const relationHandlers = this.generateManyToManyHandlerMethods();
 
     return `package ${this.packageName}
 
@@ -540,6 +580,16 @@ ${hasDataScope ? '\tdataScope := common.GetDataScope(c)' : ''}
 \t\treturn
 \t}
 \tcommon.Success(c, list)
+}
+
+// Get${modelName}Options 获取关系选项
+func (h *${modelName}Handler) Get${modelName}Options(c *gin.Context) {
+\toptions, err := h.service.List${modelName}Options()
+\tif err != nil {
+\t\tcommon.Fail(c, common.CodeError, "${modelName.toLowerCase()}.options.error")
+\t\treturn
+\t}
+\tcommon.Success(c, options)
 }
 
 // Get${modelName}Detail 获取详情
@@ -618,6 +668,7 @@ ${hasAudit ? `\tcommon.SetAuditMetadata(c, "${buildAuditActionKey(this.schema.sc
 func parseUintParam(c *gin.Context, key string) (uint64, error) {
 \treturn strconv.ParseUint(c.Param(key), 10, 64)
 }
+${relationHandlers ? `\n${relationHandlers}` : ''}
 `;
   }
 
@@ -633,6 +684,7 @@ func parseUintParam(c *gin.Context, key string) (uint64, error) {
     const pageTitleKey = buildTitleKey(scope, this.schema.name);
     const componentKey = buildComponentKey(scope, this.schema.name, modelName);
     const routePath = buildRoutePath(scope, this.schema.name);
+    const relationRoutes = this.generateManyToManyRouteRegistrations();
 
     return `package ${this.packageName}
 
@@ -689,7 +741,9 @@ func Init${modelName}Module(r *gin.RouterGroup, db *gorm.DB) {
 \t\t\tprotected := r.Group("${routePath}").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
 \t\t\t{
 \t\t\t\tprotected.GET("/list", handler.Get${modelName}List)
+\t\t\t\tprotected.GET("/options", handler.Get${modelName}Options)
 \t\t\t\tprotected.GET("/:id", handler.Get${modelName}Detail)
+\t\t\t\t${relationRoutes}
 \t\t\t\tprotected.POST("", handler.Create${modelName})
 \t\t\t\tprotected.PUT("/:id", handler.Update${modelName})
 \t\t\t\tprotected.DELETE("/:id", handler.Delete${modelName})
@@ -1151,6 +1205,327 @@ func seed${modelName}I18n(db *gorm.DB) error {
     return 'page';
   }
 
+  private getManyToManyRelations() {
+    return (this.schema.relations ?? []).filter((relation) => relation.type === 'manyToMany');
+  }
+
+  private generateManyToManyJunctionModels(): string {
+    const relations = this.getManyToManyRelations();
+    if (relations.length === 0) {
+      return '';
+    }
+    return relations
+      .map((relation) => {
+        const structName = this.getManyToManyStructName(relation.name);
+        const ownerColumn = this.getManyToManyOwnerColumn(relation.localField);
+        const targetColumn = this.getManyToManyTargetColumn(relation.targetModule, relation.targetField);
+        const indexName = `idx_${this.toDBColumn(this.modelName)}_${this.toDBColumn(relation.name)}_rel`;
+        return `type ${structName} struct {
+\tOwnerID uint64 \`gorm:"column:${ownerColumn};not null;uniqueIndex:${indexName},priority:1" json:"ownerId"\`
+\tTargetID uint64 \`gorm:"column:${targetColumn};not null;uniqueIndex:${indexName},priority:2" json:"targetId"\`
+}
+
+func (${structName}) TableName() string {
+\treturn "${relation.junctionTable}"
+}`;
+      })
+      .join('\n\n');
+  }
+
+  private generateManyToManyRelationDTOs(): string {
+    const relations = this.getManyToManyRelations();
+    if (relations.length === 0) {
+      return '';
+    }
+    return relations
+      .map((relation) => {
+        const relationName = this.toPascalCase(relation.name);
+        return `type ${relationName}RelationRow struct {
+\tID    uint64 \`json:"id"\`
+\tValue uint64 \`json:"value"\`
+}
+
+type ${relationName}RelationListResp struct {
+\tItems []${relationName}RelationRow \`json:"items"\`
+}
+
+type ${relationName}RelationBindReq struct {
+\tTargetIDs []interface{} \`json:"targetIds" binding:"required"\`
+}`;
+      })
+      .join('\n\n');
+  }
+
+  private generateManyToManyMigrations(): string {
+    const relations = this.getManyToManyRelations();
+    if (relations.length === 0) {
+      return '';
+    }
+    return relations.map((relation) => `, &${this.getManyToManyStructName(relation.name)}{}`).join('');
+  }
+
+  private generateManyToManyServiceMethods(): string {
+    const relations = this.getManyToManyRelations();
+    if (relations.length === 0) {
+      return '';
+    }
+    return relations
+      .map((relation) => {
+        const relationName = this.toPascalCase(relation.name);
+        const ownerColumn = this.getManyToManyOwnerColumn(relation.localField);
+        const targetColumn = this.getManyToManyTargetColumn(relation.targetModule, relation.targetField);
+        const tableName = relation.junctionTable;
+        return `func (s *${this.modelName}Service) List${relationName}Relation(ownerID uint64) (*${relationName}RelationListResp, error) {
+\ttype relationValueRow struct {
+\t\tValue uint64 \`gorm:"column:value"\`
+\t}
+\tvar rows []relationValueRow
+\tif err := s.db.Table("${tableName}").
+\t\tSelect("${targetColumn} AS value").
+\t\tWhere("${ownerColumn} = ?", ownerID).
+\t\tOrder("${targetColumn} ASC").
+\t\tFind(&rows).Error; err != nil {
+\t\treturn nil, err
+\t}
+\titems := make([]${relationName}RelationRow, len(rows))
+\tfor index, row := range rows {
+\t\titems[index] = ${relationName}RelationRow{
+\t\t\tID: row.Value,
+\t\t\tValue: row.Value,
+\t\t}
+\t}
+\treturn &${relationName}RelationListResp{Items: items}, nil
+}
+
+func (s *${this.modelName}Service) Bind${relationName}Relation(ownerID uint64, targetIDs []interface{}) error {
+\tnormalizedTargetIDs, err := normalizeGeneratedRelationTargetIDs(targetIDs)
+\tif err != nil {
+\t\treturn err
+\t}
+\treturn s.db.Transaction(func(tx *gorm.DB) error {
+\t\tfor _, targetID := range normalizedTargetIDs {
+\t\t\tvar count int64
+\t\t\tif err := tx.Table("${tableName}").
+\t\t\t\tWhere("${ownerColumn} = ? AND ${targetColumn} = ?", ownerID, targetID).
+\t\t\t\tCount(&count).Error; err != nil {
+\t\t\t\treturn err
+\t\t\t}
+\t\t\tif count > 0 {
+\t\t\t\tcontinue
+\t\t\t}
+\t\t\tif err := tx.Table("${tableName}").Create(map[string]interface{}{
+\t\t\t\t"${ownerColumn}": ownerID,
+\t\t\t\t"${targetColumn}": targetID,
+\t\t\t}).Error; err != nil {
+\t\t\t\treturn err
+\t\t\t}
+\t\t}
+\t\treturn nil
+\t})
+}
+
+func (s *${this.modelName}Service) Unbind${relationName}Relation(ownerID uint64, targetID uint64) error {
+\treturn s.db.Table("${tableName}").
+\t\tWhere("${ownerColumn} = ? AND ${targetColumn} = ?", ownerID, targetID).
+\t\tDelete(nil).Error
+}`;
+      })
+      .concat([
+        `func normalizeGeneratedRelationTargetIDs(values []interface{}) ([]uint64, error) {
+\tresult := make([]uint64, 0, len(values))
+\tseen := make(map[uint64]struct{}, len(values))
+\tfor _, rawValue := range values {
+\t\tparsed, err := normalizeGeneratedRelationTargetID(rawValue)
+\t\tif err != nil {
+\t\t\treturn nil, err
+\t\t}
+\t\tif _, ok := seen[parsed]; ok {
+\t\t\tcontinue
+\t\t}
+\t\tseen[parsed] = struct{}{}
+\t\tresult = append(result, parsed)
+\t}
+\tif len(result) == 0 {
+\t\treturn nil, errors.New("param.invalid")
+\t}
+\treturn result, nil
+}
+
+func normalizeGeneratedRelationTargetID(value interface{}) (uint64, error) {
+\tswitch typed := value.(type) {
+\tcase string:
+\t\ttrimmed := strings.TrimSpace(typed)
+\t\tif trimmed == "" {
+\t\t\treturn 0, errors.New("param.invalid")
+\t\t}
+\t\tparsed, err := strconv.ParseUint(trimmed, 10, 64)
+\t\tif err != nil || parsed == 0 {
+\t\t\treturn 0, errors.New("param.invalid")
+\t\t}
+\t\treturn parsed, nil
+\tcase float64:
+\t\tparsed := uint64(typed)
+\t\tif parsed == 0 || float64(parsed) != typed {
+\t\t\treturn 0, errors.New("param.invalid")
+\t\t}
+\t\treturn parsed, nil
+\tcase int:
+\t\tif typed <= 0 {
+\t\t\treturn 0, errors.New("param.invalid")
+\t\t}
+\t\treturn uint64(typed), nil
+\tcase int64:
+\t\tif typed <= 0 {
+\t\t\treturn 0, errors.New("param.invalid")
+\t\t}
+\t\treturn uint64(typed), nil
+\tcase uint64:
+\t\tif typed == 0 {
+\t\t\treturn 0, errors.New("param.invalid")
+\t\t}
+\t\treturn typed, nil
+\tdefault:
+\t\treturn 0, errors.New("param.invalid")
+\t}
+}`,
+      ])
+      .join('\n\n');
+  }
+
+  private generateManyToManyHandlerMethods(): string {
+    const relations = this.getManyToManyRelations();
+    if (relations.length === 0) {
+      return '';
+    }
+    return relations
+      .map((relation) => {
+        const relationName = this.toPascalCase(relation.name);
+        return `func (h *${this.modelName}Handler) Get${relationName}Relation(c *gin.Context) {
+\townerID, err := parseUintParam(c, "id")
+\tif err != nil {
+\t\tcommon.Fail(c, common.CodeParamInvalid, "param.invalid")
+\t\treturn
+\t}
+\tresp, err := h.service.List${relationName}Relation(ownerID)
+\tif err != nil {
+\t\tcommon.Fail(c, common.CodeError, "${this.modelName.toLowerCase()}.relation.list.error")
+\t\treturn
+\t}
+\tcommon.Success(c, resp)
+}
+
+func (h *${this.modelName}Handler) Bind${relationName}Relation(c *gin.Context) {
+\townerID, err := parseUintParam(c, "id")
+\tif err != nil {
+\t\tcommon.Fail(c, common.CodeParamInvalid, "param.invalid")
+\t\treturn
+\t}
+\tvar req ${relationName}RelationBindReq
+\tif err := c.ShouldBindJSON(&req); err != nil {
+\t\tcommon.Fail(c, common.CodeParamInvalid, "param.invalid")
+\t\treturn
+\t}
+\tif err := h.service.Bind${relationName}Relation(ownerID, req.TargetIDs); err != nil {
+\t\tcommon.Fail(c, common.CodeError, "${this.modelName.toLowerCase()}.relation.bind.error")
+\t\treturn
+\t}
+\tcommon.Success(c, gin.H{"success": true})
+}
+
+func (h *${this.modelName}Handler) Unbind${relationName}Relation(c *gin.Context) {
+\townerID, err := parseUintParam(c, "id")
+\tif err != nil {
+\t\tcommon.Fail(c, common.CodeParamInvalid, "param.invalid")
+\t\treturn
+\t}
+\ttargetID, err := parseUintParam(c, "targetId")
+\tif err != nil {
+\t\tcommon.Fail(c, common.CodeParamInvalid, "param.invalid")
+\t\treturn
+\t}
+\tif err := h.service.Unbind${relationName}Relation(ownerID, targetID); err != nil {
+\t\tcommon.Fail(c, common.CodeError, "${this.modelName.toLowerCase()}.relation.unbind.error")
+\t\treturn
+\t}
+\tcommon.Success(c, gin.H{"success": true})
+}`;
+      })
+      .join('\n\n');
+  }
+
+  private generateManyToManyRouteRegistrations(): string {
+    const relations = this.getManyToManyRelations();
+    if (relations.length === 0) {
+      return '';
+    }
+    return relations
+      .map((relation) => {
+        const relationName = this.toPascalCase(relation.name);
+        return `protected.GET("/:id/relations/${relation.name}", handler.Get${relationName}Relation)
+\t\t\t\tprotected.POST("/:id/relations/${relation.name}", handler.Bind${relationName}Relation)
+\t\t\t\tprotected.DELETE("/:id/relations/${relation.name}/:targetId", handler.Unbind${relationName}Relation)`;
+      })
+      .join('\n\t\t\t\t');
+  }
+
+  private getManyToManyStructName(relationName: string): string {
+    return `${this.modelName}${this.toPascalCase(relationName)}Relation`;
+  }
+
+  private getManyToManyOwnerColumn(localField: string): string {
+    return `${this.inferCurrentEntityToken()}_${this.toDBColumn(localField)}`;
+  }
+
+  private getManyToManyTargetColumn(targetModule: string, targetField: string): string {
+    return `${this.inferTargetEntityToken(targetModule)}_${this.toDBColumn(targetField)}`;
+  }
+
+  private inferCurrentEntityToken(): string {
+    let tableName = this.schema.model.tableName || '';
+    tableName = tableName.replace(/^(biz_|sys_|system_)/, '');
+    const businessContext = this.toDBColumn(this.schema.metadata?.businessContext || '');
+    if (businessContext && tableName.startsWith(`${businessContext}_`)) {
+      tableName = tableName.slice(businessContext.length + 1);
+    }
+    return tableName || this.toDBColumn(this.schema.name.split('/').pop() || 'item');
+  }
+
+  private inferTargetEntityToken(targetModule: string): string {
+    return this.toDBColumn(targetModule.split('/').pop() || 'item');
+  }
+
+  private resolveOptionLabelField(): string | null {
+    const fields = this.schema.model.fields;
+    const preferred = ['name', 'title', 'label', 'code'];
+    for (const candidate of preferred) {
+      const field = fields.find((item) => item.name === candidate);
+      if (field) {
+        return this.capitalize(field.name);
+      }
+    }
+    const firstStringField = fields.find((item) => item.type === 'string' || item.type === 'text');
+    if (firstStringField) {
+      return this.capitalize(firstStringField.name);
+    }
+    return null;
+  }
+
+  private generateOptionLabelExpression(sourceVar: string): string {
+    const labelField = this.resolveOptionLabelField();
+    if (!labelField) {
+      return `strconv.FormatUint(${sourceVar}.ID, 10)`;
+    }
+    return `${sourceVar}.${labelField}`;
+  }
+
+  private generateOptionNameExpression(sourceVar: string): string {
+    const labelField = this.resolveOptionLabelField();
+    if (!labelField) {
+      return `strconv.FormatUint(${sourceVar}.ID, 10)`;
+    }
+    return `${sourceVar}.${labelField}`;
+  }
+
   /**
    * 辅助函数: 首字母大写
    */
@@ -1167,5 +1542,13 @@ func seed${modelName}I18n(db *gorm.DB) error {
 
   private escapeGoString(value: string): string {
     return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  private toPascalCase(value: string): string {
+    return value
+      .split(/[_-]/)
+      .filter(Boolean)
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join('');
   }
 }

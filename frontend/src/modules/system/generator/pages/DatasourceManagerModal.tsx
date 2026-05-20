@@ -18,7 +18,7 @@ import type { FormInstance } from '@arco-design/web-react';
 import { IconCode, IconDelete, IconEdit } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 
-import { AppModal } from '../../../components';
+import { AppModal } from '../../../../components';
 import type { GeneratorDatasource, UpsertGeneratorDatasourcePayload } from '../api';
 
 const FormItem = Form.Item;

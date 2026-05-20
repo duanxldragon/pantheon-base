@@ -1,6 +1,8 @@
 import React from 'react';
-import { Button, Popconfirm, Select, Typography } from '@arco-design/web-react';
+import { Button, Input, Popconfirm, Select, Space, Typography } from '@arco-design/web-react';
 import { IconDelete } from '@arco-design/web-react/icon';
+
+export type GovernanceCleanupMode = 'retention' | 'range';
 
 interface GovernanceCleanupBarProps {
   showCleanup?: boolean;
@@ -11,6 +13,16 @@ interface GovernanceCleanupBarProps {
   confirmTitle: string;
   actionLabel: string;
   onConfirm: () => void;
+  cleanupMode?: GovernanceCleanupMode;
+  onCleanupModeChange?: (value: GovernanceCleanupMode) => void;
+  cleanupModeLabel?: string;
+  cleanupModeOptions?: Array<{ label: string; value: GovernanceCleanupMode }>;
+  rangeStart?: string;
+  rangeEnd?: string;
+  onRangeStartChange?: (value: string) => void;
+  onRangeEndChange?: (value: string) => void;
+  rangeStartLabel?: string;
+  rangeEndLabel?: string;
   hint?: string;
   extraActions?: React.ReactNode;
   trailing?: React.ReactNode;
@@ -24,6 +36,16 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
   confirmTitle,
   actionLabel,
   onConfirm,
+  cleanupMode = 'retention',
+  onCleanupModeChange,
+  cleanupModeLabel,
+  cleanupModeOptions,
+  rangeStart,
+  rangeEnd,
+  onRangeStartChange,
+  onRangeEndChange,
+  rangeStartLabel,
+  rangeEndLabel,
   hint,
   extraActions,
   trailing,
@@ -33,15 +55,43 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
     <div className="table-batch-action-bar__main">
       {showCleanup ? (
         <div className="table-batch-action-bar__meta">
-          <Select
-            className="table-batch-action-bar__select"
-            value={retentionDays}
-            onChange={(value) => onRetentionChange(Number(value))}
-            options={retentionOptions.map((option) => ({
-              label: retentionLabel(option),
-              value: option,
-            }))}
-          />
+          {cleanupModeOptions && onCleanupModeChange ? (
+            <Select
+              className="table-batch-action-bar__select"
+              value={cleanupMode}
+              placeholder={cleanupModeLabel}
+              onChange={(value) => onCleanupModeChange(value as GovernanceCleanupMode)}
+              options={cleanupModeOptions}
+            />
+          ) : null}
+          {cleanupMode === 'range' ? (
+            <Space size={8}>
+              <Input
+                className="table-batch-action-bar__select"
+                type="datetime-local"
+                value={rangeStart}
+                placeholder={rangeStartLabel}
+                onChange={onRangeStartChange}
+              />
+              <Input
+                className="table-batch-action-bar__select"
+                type="datetime-local"
+                value={rangeEnd}
+                placeholder={rangeEndLabel}
+                onChange={onRangeEndChange}
+              />
+            </Space>
+          ) : (
+            <Select
+              className="table-batch-action-bar__select"
+              value={retentionDays}
+              onChange={(value) => onRetentionChange(Number(value))}
+              options={retentionOptions.map((option) => ({
+                label: retentionLabel(option),
+                value: option,
+              }))}
+            />
+          )}
           <Popconfirm title={confirmTitle} onOk={onConfirm}>
             <Button type="primary" status="danger" icon={<IconDelete />}>
               {actionLabel}

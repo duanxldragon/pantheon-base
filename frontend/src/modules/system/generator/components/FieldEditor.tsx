@@ -12,10 +12,10 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import { message } from '../../../components/feedback/message';
+import { message } from '../../../../components/feedback/message';
 import { IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { AppModal, showAppModalConfirm } from '../../../components';
+import { AppModal, showAppModalConfirm } from '../../../../components';
 import './FieldEditor.css';
 
 import {

@@ -12,7 +12,7 @@ updated_at: 2026-05-05
 
 English version: [SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md](./SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md)
 
-本文把 `/system/i18n`、`/system/modules`、`/system/generator` 纳入固定验收范围，解决此前只有设计和实现、缺少稳定验收基线的问题。
+本文固定 `system/config` 自身的高敏/中敏治理验收范围，并标注与低代码工作域的相邻验收基线。
 
 ---
 
@@ -21,8 +21,13 @@ English version: [SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md](./SYSTEM_CONFIG_GOV
 | 页面 | 子域 | 风险等级 | 固定验收目标 |
 | :--- | :--- | :--- | :--- |
 | `/system/i18n` | `system/config/i18n` | 中 | 翻译资产生命周期、导入导出、缓存刷新 |
-| `/system/modules` | `system/config/dynamicmodule` | 高 | 动态模块注册、卸载、删除记录、清理 |
-| `/system/generator` | `system/config/generator` | 高 | 代码生成、数据源治理、工作台注册开关 |
+
+相邻低代码工作域页面：
+
+| 页面 | 能力归属 | 工作域归属 | 风险等级 | 固定验收目标 |
+| :--- | :--- | :--- | :--- | :--- |
+| `/system/modules` | `system/dynamicmodule` | `platform.lowcode` | 高 | 动态模块注册、卸载、删除记录、清理 |
+| `/system/generator` | `system/generator` | `platform.lowcode` | 高 | 代码生成、数据源治理、工作台注册开关 |
 
 ## 2. 通用验收项
 
@@ -120,4 +125,4 @@ English version: [SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md](./SYSTEM_CONFIG_GOV
 
 ## 7. 完成定义
 
-只有当页面、权限、接口、二次验证、审计、i18n、错误 key、自动化回归都能被解释并复现时，`system/config` 高敏治理才算当前阶段闭环。
+只有当 `system/config` 自身页面，以及与其相邻的低代码高敏页面，在权限、接口、二次验证、审计、i18n、错误 key、自动化回归上都能被解释并复现时，当前阶段治理才算闭环。

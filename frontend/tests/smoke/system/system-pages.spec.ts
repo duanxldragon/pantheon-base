@@ -507,6 +507,7 @@ test('config high-sensitivity pages keep one summary container and no hero wall'
   await expect(page.locator('.module-manager-page__intro')).toHaveCount(0);
   await expect(page.locator('.module-manager-page__stats')).toHaveCount(0);
   await expect(page.locator('.module-manager-page__header-actions .arco-btn-primary')).toBeVisible();
+  await expect(page.getByText('临时模块', { exact: true }).first()).toBeVisible();
 
   await page.goto('/system/generator', { waitUntil: 'networkidle' });
   await expectVisiblePageTitle(page, /模块生成(?:器|向导)/);
@@ -514,6 +515,7 @@ test('config high-sensitivity pages keep one summary container and no hero wall'
   await expect(page.locator('.system-list__hero')).toHaveCount(0);
   await expect(page.locator('.system-list__work-actions .arco-btn')).toBeVisible();
   await expect(page.locator('.generator-wizard__steps')).toBeVisible();
+  await expect(page.locator('.generator-wizard__lifecycle-card')).toBeVisible();
 
   await page.goto('/system/i18n', { waitUntil: 'networkidle' });
   await expectVisiblePageTitle(page, '国际化管理');
@@ -521,6 +523,59 @@ test('config high-sensitivity pages keep one summary container and no hero wall'
   await expect(page.locator('.system-page-hero')).toHaveCount(0);
   await expect(page.locator('.system-list__hero')).toHaveCount(0);
   await expect(page.locator('.system-list__table-card')).toBeVisible();
+});
+
+test('owning domain label smoke: post dict and module manager surface the correct eyebrow', async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  const pageEyebrows = [
+    { path: '/system/post', title: '岗位管理', eyebrow: '系统域 / 组织治理', locale: 'zh-CN' },
+    { path: '/system/dict', title: '字典管理', eyebrow: '系统域 / 配置治理', locale: 'zh-CN' },
+    { path: '/system/modules', title: '模块注册表', eyebrow: '平台层 / 低代码', locale: 'zh-CN' },
+    {
+      path: '/system/post',
+      title: 'Close post status, in-use blockers, and remediation actions in one workbench',
+      eyebrow: 'System Domain / Organization',
+      locale: 'en-US',
+    },
+  ] as const;
+
+  for (const pageMeta of pageEyebrows) {
+    if (pageMeta.locale === 'en-US') {
+      await page.addInitScript((locale) => {
+        localStorage.setItem('pantheon_lang', locale);
+        localStorage.setItem('pantheon_lang_explicit', '1');
+      }, pageMeta.locale);
+    }
+    await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
+    await expectVisiblePageTitle(page, pageMeta.title);
+    await expect(page.locator('.governance-summary-bar__eyebrow')).toContainText(pageMeta.eyebrow);
+    for (const metricLabel of pageMeta.metricLabels ?? []) {
+      await expect(
+        page.locator('.governance-summary-bar__metric-label').getByText(metricLabel, {
+          exact: true,
+        }),
+      ).toBeVisible();
+    }
+  }
+});
+
+test('module generator smoke: governance summary shows low-code ownership and progress metrics', async ({
+  page,
+}) => {
+  await page.goto('/system/generator', { waitUntil: 'networkidle' });
+
+  await expectVisiblePageTitle(page, /模块生成(?:器|向导)/);
+  await expect(page.locator('.governance-summary-bar__eyebrow')).toContainText('平台层 / 低代码');
+  await expect(page.locator('.governance-summary-bar__title')).toContainText(
+    '在受控治理约束内生成业务模块脚手架',
+  );
+  await expect(page.locator('.governance-summary-bar__metric-label')).toContainText([
+    '步骤',
+    '字段',
+    '文件',
+  ]);
 });
 
 test('dict workspace keeps the governance summary outside one tabbed task surface', async ({
@@ -2020,6 +2075,62 @@ test('module permission smoke: list-only role can view registry but cannot regis
   }
 });
 
+test('module manager smoke: auto-recycle module shows explicit lifecycle and purge guidance', async ({
+  page,
+}) => {
+  await signInAsAdmin(page);
+  await page.route(/\/api\/v1\/system\/dynamic-modules$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: [
+          {
+            id: 4101,
+            name: 'business.tempautoqa',
+            displayName: '临时 QA 模块',
+            scope: 'business',
+            source: 'generated',
+            owner: 'codex',
+            boundedContext: 'qa',
+            summary: '用于回收交互验收',
+            tableName: 'biz_temp_auto_qa',
+            autoRecycle: true,
+            status: 1,
+            installedAt: '2026-05-20T10:00:00+08:00',
+            builtIn: false,
+          },
+        ],
+      }),
+    });
+  });
+
+  await page.goto('/system/modules', { waitUntil: 'networkidle' });
+  await expectPageIdentityReady(page, '模块注册表');
+  await expectNoPageError(page);
+
+  const row = page.locator('.arco-table-tr').filter({ hasText: 'business.tempautoqa' }).first();
+  await expect(row).toBeVisible();
+
+  await row.getByRole('button', { name: '卸载', exact: true }).click();
+  await expect(page.getByText('确认卸载该临时模块吗？卸载时会自动回收业务表 biz_temp_auto_qa。')).toBeVisible();
+
+  const popconfirmCancel = page.getByRole('button', { name: '取消' }).last();
+  await popconfirmCancel.click();
+
+  await row.getByRole('button', { name: '彻底删除', exact: true }).click();
+  const purgeDialog = page.getByRole('dialog').filter({ has: page.getByText('彻底删除模块', { exact: true }) });
+  await expect(purgeDialog).toBeVisible();
+  await expect(
+    purgeDialog.getByText('该模块已标记为临时模块，彻底删除时会自动回收业务表 biz_temp_auto_qa。'),
+  ).toBeVisible();
+  await expect(
+    purgeDialog.getByText('临时模块的业务表会随彻底删除一起自动回收，这个动作不需要额外勾选。'),
+  ).toBeVisible();
+  await expect(purgeDialog.getByText('同时删除业务数据表', { exact: false })).toHaveCount(0);
+});
+
 test('login-log governance smoke: selecting rows enables batch delete affordance', async ({ page }) => {
   await signInAsAdmin(page);
   await page.goto('/system/login-log', { waitUntil: 'networkidle' });
@@ -2080,6 +2191,11 @@ test('login-log governance smoke: pager exposes first and last page controls', a
   const lastPageButton = pager.getByRole('button', { name: /^(末页|Last page)$/ });
   const prevPageButton = pager.locator('.arco-pagination-item-prev');
   const nextPageButton = pager.locator('.arco-pagination-item-next');
+  const paginationShell = pager.locator('.app-table__pagination-shell');
+  await expect(paginationShell).toHaveCount(1);
+  await expect(paginationShell.getByRole('button', { name: /^(首页|First page)$/ })).toBeVisible();
+  await expect(paginationShell.getByRole('button', { name: /^(末页|Last page)$/ })).toBeVisible();
+  await expect(paginationShell.locator('.arco-pagination-item-active')).toContainText('1');
   await expect(firstPageButton).toBeVisible();
   await expect(lastPageButton).toBeVisible();
   await expect(firstPageButton).toBeDisabled();
@@ -2269,6 +2385,7 @@ test('operation-log governance smoke: selecting rows enables batch delete afford
   await expectNoPageError(page);
 
   const batchDeleteButton = page.getByRole('button', { name: '删除所选' });
+  await expect(page.locator('.table-batch-action-bar').getByRole('button', { name: '导出' })).toBeVisible();
   await expect(batchDeleteButton).toBeDisabled();
   await page.locator('.system-list__table .arco-checkbox').nth(1).click({ force: true });
   await expect(batchDeleteButton).toBeEnabled();
@@ -2312,6 +2429,56 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
 
 test('session governance smoke: cleanup bar uses the unified governance affordance', async ({ page }) => {
   await signInAsAdmin(page);
+  await page.route(/\/api\/v1\/system\/session\/list(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          items: [
+            {
+              sessionId: 'smoke-self-session',
+              userId: 1,
+              username: adminCredentials.username,
+              nickname: 'Admin',
+              lastIp: '127.0.0.1',
+              browser: 'Chrome',
+              os: 'Windows',
+              device: 'Desktop',
+              userAgent: 'Chrome/136',
+              refreshExpiresAt: '2026-05-21T10:00:00+08:00',
+              lastRefreshAt: '2026-05-20T09:30:00+08:00',
+              lastActivityAt: '2026-05-20T09:30:00+08:00',
+              revokedAt: null,
+              createdAt: '2026-05-20T08:00:00+08:00',
+            },
+            {
+              sessionId: 'smoke-target-session',
+              userId: 2,
+              username: 'other-admin',
+              nickname: 'Other Admin',
+              lastIp: '10.0.0.8',
+              browser: 'Edge',
+              os: 'Windows',
+              device: 'Desktop',
+              userAgent: 'Edge/136',
+              refreshExpiresAt: '2026-05-21T10:00:00+08:00',
+              lastRefreshAt: '2026-05-20T08:30:00+08:00',
+              lastActivityAt: '2026-05-20T08:35:00+08:00',
+              revokedAt: null,
+              createdAt: '2026-05-20T07:00:00+08:00',
+            },
+          ],
+          total: 2,
+          activeCount: 2,
+          revokedCount: 0,
+          page: 1,
+          pageSize: 10,
+        },
+      }),
+    });
+  });
   await page.goto('/system/session', { waitUntil: 'networkidle' });
   await expectPageIdentityReady(page, '会话管理');
   await expectNoPageError(page);
@@ -2319,6 +2486,73 @@ test('session governance smoke: cleanup bar uses the unified governance affordan
   const cleanupBar = page.locator('.page-panel').filter({ has: page.getByRole('button', { name: '清理历史会话' }) }).first();
   await expect(cleanupBar.getByRole('button', { name: '清理历史会话' })).toBeVisible();
   await expect(cleanupBar.getByText('用于清理超出保留窗口的已下线历史会话，减小会话表规模；活跃会话保留。')).toBeVisible();
+  const revokeSelectedButton = cleanupBar.getByRole('button', { name: '下线所选' });
+  await expect(revokeSelectedButton).toBeDisabled();
+  await page.locator('.app-table tbody .arco-checkbox').nth(1).click({ force: true });
+  await expect(revokeSelectedButton).toBeEnabled();
+});
+
+test('security-event governance smoke: pending event can be acknowledged with a note', async ({
+  page,
+}) => {
+  await signInAsAdmin(page);
+  await page.route(/\/api\/v1\/system\/security-event\/list(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          items: [
+            {
+              id: 9001,
+              userId: 7,
+              username: 'risk-user',
+              eventType: 'source_blocked',
+              severity: 'high',
+              sourceKey: 'ip:10.0.0.9',
+              ip: '10.0.0.9',
+              userAgent: 'Chrome',
+              messageKey: 'auth.security.event.source_blocked',
+              metadata: '{}',
+              createdAt: '2026-05-20T10:00:00+08:00',
+              acknowledgedAt: null,
+              acknowledgedBy: 0,
+              acknowledgedByUser: '',
+              acknowledgementNote: '',
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        },
+      }),
+    });
+  });
+
+  let acknowledgePayload: Record<string, unknown> | null = null;
+  await page.route(/\/api\/v1\/system\/security-event\/9001\/acknowledge$/, async (route) => {
+    acknowledgePayload = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 200, data: { acknowledged: true } }),
+    });
+  });
+
+  await page.goto('/system/security-event', { waitUntil: 'networkidle' });
+  await expectPageIdentityReady(page, '安全事件');
+  await expectNoPageError(page);
+
+  await page.getByRole('button', { name: '确认事件' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox').fill('来源已复核，风险已处置');
+  await dialog.locator('.arco-btn-primary').last().click();
+
+  await expect.poll(() => acknowledgePayload).not.toBeNull();
+  expect(acknowledgePayload).toMatchObject({
+    acknowledgementNote: '来源已复核，风险已处置',
+  });
 });
 
 test('refresh sync smoke: setting page auto-updates across isolated contexts', async ({ browser, page }) => {

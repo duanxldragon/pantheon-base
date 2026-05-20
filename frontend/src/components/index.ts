@@ -12,7 +12,10 @@ export {
   GovernanceInsightDrawer,
 } from './patterns/GovernanceRail';
 export { useGovernanceRail } from './patterns/useGovernanceRail';
-export { default as GovernanceCleanupBar } from './patterns/GovernanceCleanupBar';
+export {
+  default as GovernanceCleanupBar,
+  type GovernanceCleanupMode,
+} from './patterns/GovernanceCleanupBar';
 export {
   default as GovernanceSummaryBar,
   type GovernanceSummaryBarProps,

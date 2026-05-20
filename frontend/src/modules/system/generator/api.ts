@@ -1,6 +1,9 @@
-import { apiRequest } from '../../api/request';
+import { apiRequest } from '../../../api/request';
+import { downloadFile } from '../../../api/file';
 import type { GeneratedFile } from './exporter';
 import type { ModuleField, ModuleSchema } from './schema';
+
+export type { GeneratedFile } from './exporter';
 
 export interface GenerateAndRegisterResp {
   module: {
@@ -8,6 +11,7 @@ export interface GenerateAndRegisterResp {
     name: string;
     displayName: string;
     scope: string;
+    autoRecycle?: boolean;
     tableName: string;
     status: number;
     installedAt: string;
@@ -49,9 +53,12 @@ export interface GenerateAndRegisterResp {
   message: string;
 }
 
+export interface PreviewGeneratedFilesResp {
+  files: GeneratedFile[];
+}
+
 export function generateAndRegisterModule(data: {
   schema: ModuleSchema;
-  files: GeneratedFile[];
   overwrite?: boolean;
 }) {
   return apiRequest<GenerateAndRegisterResp>({
@@ -59,6 +66,25 @@ export function generateAndRegisterModule(data: {
     method: 'post',
     data,
     skipErrorMessage: true,
+  });
+}
+
+export function previewGeneratedFiles(data: { schema: ModuleSchema }) {
+  return apiRequest<PreviewGeneratedFilesResp>({
+    url: '/system/generator/preview-files',
+    method: 'post',
+    data,
+    skipErrorMessage: true,
+  });
+}
+
+export function downloadGeneratedSource(data: { schema: ModuleSchema }) {
+  const archiveName = `${data.schema.name || 'module'}-module.zip`.replaceAll('/', '-');
+  return downloadFile({
+    url: '/system/generator/download-source',
+    method: 'post',
+    data,
+    filename: archiveName,
   });
 }
 

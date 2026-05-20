@@ -125,6 +125,17 @@
   margin-top: 24px;
 }
 
+.generator-wizard__lifecycle-card {
+  margin-bottom: 16px;
+  border-style: dashed;
+}
+
+.generator-wizard__lifecycle-card .arco-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .generator-wizard__verification-row {
   width: 100%;
   justify-content: space-between;

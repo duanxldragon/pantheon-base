@@ -15,7 +15,7 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import { message } from '../../../components/feedback/message';
+import { message } from '../../../../components/feedback/message';
 import {
   IconCode,
   IconDelete,
@@ -26,20 +26,28 @@ import {
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { isRequestError } from '../../../api/request';
-import { ensureOperationVerified } from '../../../api/request';
-import PermissionAction from '../../../components/patterns/PermissionAction';
-import { AppModal, PageContainer, showAppModalConfirm } from '../../../components';
-import { usePermission } from '../../../hooks/usePermission';
+import { isRequestError } from '../../../../api/request';
+import { ensureOperationVerified } from '../../../../api/request';
+import PermissionAction from '../../../../components/patterns/PermissionAction';
+import {
+  AppModal,
+  GovernanceSummaryBar,
+  PageContainer,
+  showAppModalConfirm,
+} from '../../../../components';
+import { usePermission } from '../../../../hooks/usePermission';
+import { auditPendingActivations, getModuleStatus } from '../../dynamicmodule/api';
 
-import type { GenerateAndRegisterResp } from '../api';
+import type { GenerateAndRegisterResp, GeneratedFile } from '../api';
 import {
   createGeneratorDatasource,
   deleteGeneratorDatasource,
+  downloadGeneratedSource,
   generateAndRegisterModule,
   listGeneratorDatasources,
   listGeneratorTables,
   previewGeneratorTable,
+  previewGeneratedFiles as requestPreviewGeneratedFiles,
   testGeneratorDatasource,
   updateGeneratorDatasource,
   type GeneratorDatasource,
@@ -49,7 +57,6 @@ import {
 import { FieldEditor } from '../components/FieldEditor';
 import { CodePreview } from '../components/CodePreview';
 import './ModuleWizard.css';
-import { ModuleExporter } from '../exporter';
 import {
   buildDashboardQuickActionDescriptionKey,
   buildEnumOptionKey,
@@ -86,7 +93,7 @@ import {
   type PageActionTemplate,
   type TemplateLevel,
 } from '../schema';
-import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
+import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../../components/feedback/secondaryVerifyController';
 
 const FormItem = Form.Item;
 const { Row, Col } = Grid;
@@ -162,11 +169,11 @@ const ModuleWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm<Partial<ModuleSchema>>();
   const [fields, setFields] = useState<ModuleField[]>([]);
-  const [generatedFiles, setGeneratedFiles] = useState<ReturnType<ModuleExporter['generateAll']>>(
-    [],
-  );
+  const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
+  const [generatedSchemaKey, setGeneratedSchemaKey] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [registering, setRegistering] = useState(false);
+  const [auditingActivation, setAuditingActivation] = useState(false);
   const [registerResult, setRegisterResult] = useState<GenerateAndRegisterResp | null>(null);
   const [dynamicModuleDisabled, setDynamicModuleDisabled] = useState(false);
   const [datasources, setDatasources] = useState<GeneratorDatasource[]>([]);
@@ -302,6 +309,9 @@ const ModuleWizard: React.FC = () => {
           targetModule = '',
           localField = '',
           targetField = '',
+          targetLabelField = '',
+          lookupApi = '',
+          lookupValueField = '',
           junctionTable = '',
         ] = item.split('|').map((part) => part.trim());
         return {
@@ -310,6 +320,9 @@ const ModuleWizard: React.FC = () => {
           targetModule,
           localField,
           targetField,
+          targetLabelField: targetLabelField || undefined,
+          lookupApi: lookupApi || undefined,
+          lookupValueField: lookupValueField || undefined,
           junctionTable: junctionTable || undefined,
         };
       });
@@ -331,6 +344,7 @@ const ModuleWizard: React.FC = () => {
       sourceDatasourceId: metadata?.sourceDatasourceId || undefined,
       sourceDatasourceName: metadata?.sourceDatasourceName || undefined,
       sourceTable: metadata?.sourceTable || undefined,
+      autoRecycle: Boolean(metadata?.autoRecycle),
     };
   };
 
@@ -489,6 +503,7 @@ const ModuleWizard: React.FC = () => {
         sourceDatasourceId: metadata.sourceDatasourceId,
         sourceDatasourceName: metadata.sourceDatasourceName,
         sourceTable: metadata.sourceTable,
+        autoRecycle: metadata.autoRecycle,
       },
       model: {
         tableName: model.tableName,
@@ -546,6 +561,7 @@ const ModuleWizard: React.FC = () => {
   };
 
   const previewSchema = currentStep >= 2 ? buildSchema() : null;
+  const previewSchemaKey = previewSchema ? JSON.stringify(previewSchema) : '';
   const selectedActionTemplate =
     (getAllFormValues().pageActionTemplate as PageActionTemplate | undefined) || 'standard';
 
@@ -610,17 +626,26 @@ const ModuleWizard: React.FC = () => {
     }
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const schema = buildSchema();
     const issues = validateGeneratorCompleteness(schema);
     if (issues.some((issue) => issue.level === 'error')) {
       message.error(t('generator.validation.blocked'));
       return;
     }
-    const exporter = new ModuleExporter(schema);
-    setGeneratedFiles(exporter.generateAll());
-    setRegisterResult(null);
-    setCurrentStep(3);
+    try {
+      const result = await requestPreviewGeneratedFiles({ schema });
+      setGeneratedFiles(result.files);
+      setGeneratedSchemaKey(JSON.stringify(schema));
+      setRegisterResult(null);
+      setCurrentStep(3);
+    } catch (error) {
+      if (isRequestError(error)) {
+        message.error(t(error.messageKey || 'request.failed'));
+        return;
+      }
+      message.error(t('request.failed'));
+    }
   };
 
   const updateTranslationOverride = (key: string, locale: 'zh' | 'en', value: string) => {
@@ -793,14 +818,7 @@ const ModuleWizard: React.FC = () => {
       return;
     }
     try {
-      const exporter = new ModuleExporter(buildSchema());
-      const blob = await exporter.exportAsZip();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${buildSchema().name}-module.zip`;
-      link.click();
-      URL.revokeObjectURL(url);
+      await downloadGeneratedSource({ schema: buildSchema() });
       message.success(t('generator.wizard.downloadSuccess'));
     } catch {
       message.error(t('generator.wizard.downloadError'));
@@ -808,7 +826,10 @@ const ModuleWizard: React.FC = () => {
   };
 
   const oneClickEnabled =
-    currentStep === 3 && buildSchema().scope === 'business' && generatedFiles.length > 0;
+    currentStep === 3 &&
+    buildSchema().scope === 'business' &&
+    generatedSchemaKey === previewSchemaKey &&
+    generatedFiles.length > 0;
   const canGenerateRegister = isAdmin || hasPerm('system:module:generate');
   const canOpenModuleManager = isAdmin || hasPerm('system:module:list');
   const summary = registerResult?.summary;
@@ -817,9 +838,8 @@ const ModuleWizard: React.FC = () => {
     ? validateGeneratorCompleteness(previewSchema)
     : [];
   const previewBlockingIssue = previewCompletenessIssues.some((issue) => issue.level === 'error');
-  const previewGeneratedFiles = previewSchema
-    ? new ModuleExporter(previewSchema).generateAll()
-    : [];
+  const previewGeneratedFiles =
+    generatedSchemaKey === previewSchemaKey ? generatedFiles : [];
   const previewTranslationRows: TranslationPreviewRow[] = previewSchema
     ? Array.from(
         new Set([
@@ -882,7 +902,6 @@ const ModuleWizard: React.FC = () => {
       setRegistering(true);
       const result = await generateAndRegisterModule({
         schema: previewSchema,
-        files: generatedFiles,
         overwrite,
       });
       setDynamicModuleDisabled(false);
@@ -921,6 +940,42 @@ const ModuleWizard: React.FC = () => {
     }
   };
 
+  const handleAuditActivation = async () => {
+    if (!summary?.moduleKey) {
+      return;
+    }
+    try {
+      await ensureOperationVerified();
+      setAuditingActivation(true);
+      const result = await auditPendingActivations();
+      const latest = await getModuleStatus(summary.moduleKey);
+      setRegisterResult((current) =>
+        current
+          ? {
+              ...current,
+              module: {
+                ...current.module,
+                status: latest.status,
+              },
+            }
+          : current,
+      );
+      message.success(
+        t('generator.wizard.result.activationAuditSuccess', {
+          activated: result.summary.activatedModules,
+          pending: result.summary.pendingModules,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
+        return;
+      }
+      message.error(t('generator.wizard.result.activationAuditError'));
+    } finally {
+      setAuditingActivation(false);
+    }
+  };
+
   const wizardSteps = [
     {
       title: t('generator.wizard.step1.title'),
@@ -946,6 +1001,28 @@ const ModuleWizard: React.FC = () => {
         size={12}
         className="system-page-template generator-wizard-page__content"
       >
+        <GovernanceSummaryBar
+          eyebrow={t('generator.wizard.header.eyebrow')}
+          title={t('generator.wizard.header.title')}
+          description={t('generator.wizard.header.description')}
+          metrics={[
+            {
+              key: 'steps',
+              label: t('generator.wizard.header.steps'),
+              value: `${currentStep + 1}/${wizardSteps.length}`,
+            },
+            {
+              key: 'fields',
+              label: t('generator.wizard.header.fields'),
+              value: fields.length,
+            },
+            {
+              key: 'files',
+              label: t('generator.wizard.header.files'),
+              value: generatedFiles.length,
+            },
+          ]}
+        />
         {canOpenModuleManager ? (
           <div className="system-list__work-actions">
             <Button size="small" onClick={() => navigate('/system/modules')}>
@@ -1341,6 +1418,36 @@ const ModuleWizard: React.FC = () => {
                   </FormItem>
                 </Col>
               </Row>
+              <Card
+                size="small"
+                className="generator-wizard__lifecycle-card"
+                title={t('generator.wizard.lifecycle.title')}
+              >
+                <Space direction="vertical" className="generator-wizard__full" size={10}>
+                  <Typography.Text type="secondary">
+                    {t('generator.wizard.lifecycle.desc')}
+                  </Typography.Text>
+                  <FormItem
+                    field="metadata.autoRecycle"
+                    triggerPropName="checked"
+                    initialValue={false}
+                  >
+                    <Checkbox>{t('generator.wizard.lifecycle.autoRecycle')}</Checkbox>
+                  </FormItem>
+                  <Alert
+                    type={
+                      Boolean(form.getFieldValue('metadata.autoRecycle' as keyof ModuleSchema))
+                        ? 'warning'
+                        : 'info'
+                    }
+                    content={t(
+                      Boolean(form.getFieldValue('metadata.autoRecycle' as keyof ModuleSchema))
+                        ? 'generator.wizard.lifecycle.autoRecycleHint'
+                        : 'generator.wizard.lifecycle.standardHint',
+                    )}
+                  />
+                </Space>
+              </Card>
               <Row gutter={16}>
                 <Col xs={24} md={12}>
                   <FormItem
@@ -1366,6 +1473,9 @@ const ModuleWizard: React.FC = () => {
                       autoSize={{ minRows: 2, maxRows: 4 }}
                       placeholder={t('generator.wizard.relations.placeholder')}
                     />
+                    <Typography.Text type="secondary">
+                      {t('generator.wizard.relations.columns')}
+                    </Typography.Text>
                   </FormItem>
                 </Col>
               </Row>
@@ -1807,6 +1917,11 @@ const ModuleWizard: React.FC = () => {
                         {t('generator.wizard.result.templateVersion')}:{' '}
                         {summary.contract.templateVersion}
                       </Tag>
+                      <Tag color={registerResult.module.autoRecycle ? 'orange' : 'gray'}>
+                        {registerResult.module.autoRecycle
+                          ? t('generator.wizard.lifecycle.autoRecycleTag')
+                          : t('generator.wizard.lifecycle.standardTag')}
+                      </Tag>
                       <Tag color={summary.contract.dataScopeEnabled ? 'green' : 'gray'}>
                         {t('generator.wizard.result.dataScope')}: {summary.contract.dataScopeMode}
                       </Tag>
@@ -1841,7 +1956,11 @@ const ModuleWizard: React.FC = () => {
                         </Typography.Text>
                         {summary.contract.relations?.map((relation) => (
                           <Typography.Text key={`${relation.name}-${relation.targetModule}`} code>
-                            {relation.name} · {relation.type} · {relation.targetModule}
+                            {relation.name} · {relation.type} · {relation.targetModule} ·{' '}
+                            {relation.localField} → {relation.targetField}
+                            {relation.targetLabelField ? ` · label:${relation.targetLabelField}` : ''}
+                            {relation.lookupApi ? ` · api:${relation.lookupApi}` : ''}
+                            {relation.lookupValueField ? ` · value:${relation.lookupValueField}` : ''}
                           </Typography.Text>
                         ))}
                       </Space>
@@ -1879,6 +1998,17 @@ const ModuleWizard: React.FC = () => {
                   </Space>
                 </Card>
                 <Space wrap>
+                  {canOpenModuleManager ? (
+                    <Button
+                      loading={auditingActivation}
+                      disabled={registerResult.module.status === 1}
+                      onClick={() => {
+                        void handleAuditActivation();
+                      }}
+                    >
+                      {t('generator.wizard.result.checkActivation')}
+                    </Button>
+                  ) : null}
                   {canOpenModuleManager ? (
                     <Button onClick={() => navigate('/system/modules')}>
                       {t('generator.wizard.result.openModuleManager')}

@@ -30,7 +30,7 @@ English version: [DICT_AND_SETTING_DESIGN.en.md](./DICT_AND_SETTING_DESIGN.en.md
 - 上传配置也已形成基础运行时闭环：平台新增统一上传能力，`upload.max_file_size / upload.allowed_types / upload.local_path / upload.public_base_url` 已接入真实上传接口与文件访问地址生成；当前已支持 `local` 与 `s3-compatible` 两类驱动。
 - 国际化配置治理已补运行时收口：当前平台内置 fallback locale 为 `zh-CN / en-US / ja-JP / ko-KR / fr-FR`；默认语言设置只在“当前会话没有显式语言覆盖且当前用户没有语言偏好”时生效；登录页选择和系统内本次会话切换都属于当前会话显式语言，退出登录后应清理该会话覆盖，避免影响下一位登录主体。
 - 当前语种策略为“按市场扩展，不做无依据预扩”：除非出现明确客户、区域交付或合规需求，否则不继续预置更多 locale；后续新增 locale 时，默认沿现有 i18n 导入导出、缺失检测和 fallback 校验链路扩展。
-- `system/config -> generator` 已补第一阶段“受管数据源”治理：代码生成器保留当前平台库为默认来源，同时允许管理员维护外部 MySQL 只读数据源，并按数据源选择表结构导入。当前只开放元数据读取，不支持任意 SQL 执行。
+- `system/generator` 已补第一阶段“受管数据源”治理：代码生成器保留当前平台库为默认来源，同时允许管理员维护外部 MySQL 只读数据源，并按数据源选择表结构导入。当前只开放元数据读取，不支持任意 SQL 执行。
 
 ## 1. 设计目标
 
@@ -62,10 +62,11 @@ English version: [DICT_AND_SETTING_DESIGN.en.md](./DICT_AND_SETTING_DESIGN.en.md
 - 当前允许的默认语言值：`zh-CN`、`en-US`、`ja-JP`、`ko-KR`、`fr-FR`
 - 后续如需新增默认语言值，必须先完成对应 locale 的 fallback 资源、运行时翻译资产、导入导出模板与回归验证，再进入设置可选项
 
-`generator` 同样归属 `system/config`，但职责与 `setting` 不同：
+`generator` 与 `setting` 相邻协作，但不再归属同一能力域：
 
 - `setting` 管平台运行参数
 - `generator` 管研发接入治理元数据（如受管数据源、导入来源）
+- `system/config` 只为其提供相邻配置支撑，不拥有生成能力本身
 
 ## 2.3 不负责
 

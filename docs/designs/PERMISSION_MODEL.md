@@ -608,7 +608,7 @@ hasAnyPerm(['system:user:create', 'system:user:update'])
 - 菜单树是否只返回授权导航？
 - 无权限页面是否显示 403？
 
-### 18.2 `system/config -> dynamicmodule / generator` 额外验收项
+### 18.2 `platform.lowcode -> dynamicmodule / generator` 额外验收项
 
 - `/system/modules` 的页面权限是否独立于注册/卸载动作权限
 - `/system/generator` 的页面权限是否独立于真正的生成动作权限

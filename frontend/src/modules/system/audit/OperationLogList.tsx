@@ -38,12 +38,12 @@ import {
   AppModal,
   AppTable,
   FilterPanel,
+  type GovernanceCleanupMode,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
-  ListHeaderActions,
   PageContainer,
   PageEmpty,
   PageError,
@@ -117,6 +117,10 @@ const emptyQuery: OperationLogQuery = {
   pageSize: 10,
 };
 const defaultRetentionOptions = [1, 7, 30];
+
+function toCleanupTimestamp(value: string) {
+  return value ? new Date(value).toISOString() : undefined;
+}
 
 function normalizeRetentionOptions(rawValue: string | undefined) {
   if (!rawValue) {
@@ -479,6 +483,9 @@ const OperationLogList: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
+  const [cleanupRangeStart, setCleanupRangeStart] = useState('');
+  const [cleanupRangeEnd, setCleanupRangeEnd] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
@@ -603,8 +610,19 @@ const OperationLogList: React.FC = () => {
   };
 
   const handleCleanup = async () => {
+    if (cleanupMode === 'range' && (!cleanupRangeStart || !cleanupRangeEnd)) {
+      message.warning(t('common.cleanupRangeRequired'));
+      return;
+    }
     try {
-      const resp = await cleanupOperationLogs({ retentionDays });
+      const resp = await cleanupOperationLogs(
+        cleanupMode === 'range'
+          ? {
+              startedAt: toCleanupTimestamp(cleanupRangeStart),
+              endedAt: toCleanupTimestamp(cleanupRangeEnd),
+            }
+          : { retentionDays },
+      );
       message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
       void loadData();
     } catch {
@@ -932,22 +950,7 @@ const OperationLogList: React.FC = () => {
           </FilterPanel>
 
           <Card className="page-panel system-list__table-card">
-            <div className="system-list__work-actions">
-              <ListHeaderActions
-                utility={
-                  <Button
-                    icon={<IconDownload />}
-                    onClick={() => {
-                      void handleExport();
-                    }}
-                    disabled={!canExport}
-                  >
-                    {t('common.export')}
-                  </Button>
-                }
-              />
-            </div>
-            {(canClear || canDelete) && (
+            {(canClear || canDelete || canExport) && (
               <div>
                 <GovernanceCleanupBar
                   showCleanup={canClear}
@@ -955,12 +958,40 @@ const OperationLogList: React.FC = () => {
                   retentionOptions={retentionOptions}
                   onRetentionChange={setRetentionDays}
                   retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                  confirmTitle={t('system.audit.cleanupConfirm', { count: retentionDays })}
+                  cleanupMode={cleanupMode}
+                  onCleanupModeChange={setCleanupMode}
+                  cleanupModeLabel={t('common.cleanupMode')}
+                  cleanupModeOptions={[
+                    { label: t('common.cleanupModeRetention'), value: 'retention' },
+                    { label: t('common.cleanupModeRange'), value: 'range' },
+                  ]}
+                  rangeStart={cleanupRangeStart}
+                  rangeEnd={cleanupRangeEnd}
+                  onRangeStartChange={setCleanupRangeStart}
+                  onRangeEndChange={setCleanupRangeEnd}
+                  rangeStartLabel={t('common.cleanupRangeStart')}
+                  rangeEndLabel={t('common.cleanupRangeEnd')}
+                  confirmTitle={
+                    cleanupMode === 'range'
+                      ? t('common.cleanupRangeConfirm')
+                      : t('system.audit.cleanupConfirm', { count: retentionDays })
+                  }
                   actionLabel={t('common.cleanupLogs')}
                   onConfirm={() => {
                     void handleCleanup();
                   }}
                   hint={t('system.audit.cleanupHint')}
+                  trailing={
+                    <Button
+                      icon={<IconDownload />}
+                      onClick={() => {
+                        void handleExport();
+                      }}
+                      disabled={!canExport}
+                    >
+                      {t('common.export')}
+                    </Button>
+                  }
                   extraActions={
                     <>
                       <Typography.Text type="secondary">

@@ -1990,6 +1990,34 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   gap: 8px;
 }
 
+.app-table__pagination-shell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-table__pagination-native {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.app-table__pagination-native .arco-pagination {
+  align-items: center;
+}
+
+.app-table__pagination-boundary-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-table__pagination-boundary-list {
+  display: inline-flex;
+  align-items: center;
+}
+
 .app-table .arco-pagination {
   gap: 4px;
   font-size: 12px;

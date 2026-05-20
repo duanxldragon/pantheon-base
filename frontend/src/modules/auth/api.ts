@@ -115,6 +115,10 @@ export interface SecurityEventRow {
   userAgent: string;
   messageKey: string;
   metadata: string;
+  acknowledgedAt?: string;
+  acknowledgedBy: number;
+  acknowledgedByUser: string;
+  acknowledgementNote: string;
   createdAt: string;
 }
 
@@ -122,6 +126,7 @@ export interface SecurityEventQuery {
   username?: string;
   eventType?: string;
   severity?: string;
+  acknowledged?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -153,11 +158,23 @@ export interface LoginLogQuery {
 }
 
 export interface LoginLogCleanupPayload {
-  retentionDays: number;
+  retentionDays?: number;
+  startedAt?: string;
+  endedAt?: string;
 }
 
 export interface SessionCleanupPayload {
-  retentionDays: number;
+  retentionDays?: number;
+  startedAt?: string;
+  endedAt?: string;
+}
+
+export interface SessionBatchRevokePayload {
+  sessionIds: string[];
+}
+
+export interface SecurityEventAcknowledgePayload {
+  acknowledgementNote: string;
 }
 
 export interface LoginLogBatchDeletePayload {
@@ -206,6 +223,14 @@ export interface AdminSessionPageResp {
   revokedCount: number;
   page: number;
   pageSize: number;
+}
+
+export function acknowledgeSecurityEvent(id: number, data: SecurityEventAcknowledgePayload) {
+  return apiRequest<{ acknowledged: boolean }>({
+    url: `/system/security-event/${id}/acknowledge`,
+    method: 'post',
+    data,
+  });
 }
 
 export function login(data: LoginPayload) {
@@ -340,6 +365,14 @@ export function revokeAdminSession(sessionId: string) {
 export function cleanupAdminSessions(data: SessionCleanupPayload) {
   return apiRequest<{ clearedCount: number }>({
     url: '/system/session/cleanup',
+    method: 'post',
+    data,
+  });
+}
+
+export function batchRevokeAdminSessions(data: SessionBatchRevokePayload) {
+  return apiRequest<{ revokedCount: number }>({
+    url: '/system/session/batch-revoke',
     method: 'post',
     data,
   });

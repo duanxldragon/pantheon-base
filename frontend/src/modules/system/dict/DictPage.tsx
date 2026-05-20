@@ -164,9 +164,9 @@ const DictPage: React.FC = () => {
       <Space direction="vertical" size={12} className="system-page-template">
         <GovernanceSummaryBar
           className="dict-page__governance-bar"
-          eyebrow={t('system.dict.hero.summaryTitle')}
-          title={t('system.dict.hero.sideLead')}
-          description={t('system.dict.hero.sideDesc')}
+          eyebrow={t('system.dict.header.eyebrow')}
+          title={t('system.dict.header.title')}
+          description={t('system.dict.header.description')}
           metrics={[
             {
               key: 'types',
@@ -188,12 +188,12 @@ const DictPage: React.FC = () => {
             },
           ]}
           action={
-          <GovernanceRailToggleButton
-            expanded={governanceRail.expanded}
-            onToggle={governanceRail.toggle}
-          >
-            {t('system.dict.hero.summaryTitle')}
-          </GovernanceRailToggleButton>
+            <GovernanceRailToggleButton
+              expanded={governanceRail.expanded}
+              onToggle={governanceRail.toggle}
+            >
+              {t('system.dict.hero.summaryTitle')}
+            </GovernanceRailToggleButton>
           }
         />
         <Card className="page-panel system-list__table-card dict-page__table-card">

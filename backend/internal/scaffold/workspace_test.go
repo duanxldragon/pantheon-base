@@ -154,6 +154,22 @@ func TestValidateRegisterRequestRejectsInvalidGovernanceContract(t *testing.T) {
 			},
 			wantError: "module.generate.invalid_relation",
 		},
+		{
+			name: "lookup api must start with slash",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Relations = []ModuleRelation{{
+					Name:             "assetOwner",
+					Type:             "lookup",
+					TargetModule:     "cmdb/vendor",
+					LocalField:       "vendorId",
+					TargetField:      "id",
+					TargetLabelField: "name",
+					LookupAPI:        "system/lookup/vendors",
+					LookupValueField: "id",
+				}}
+			},
+			wantError: "module.generate.invalid_relation",
+		},
 	}
 
 	for _, tt := range tests {
@@ -177,11 +193,14 @@ func TestValidateRegisterRequestAcceptsP2GovernanceContract(t *testing.T) {
 	req.Schema.Dependencies = []ModuleDependency{{Module: "cmdb/vendor", Required: true, Reason: "asset needs vendor"}}
 	req.Schema.Relations = []ModuleRelation{
 		{
-			Name:         "assetVendor",
-			Type:         "lookup",
-			TargetModule: "cmdb/vendor",
-			LocalField:   "vendorId",
-			TargetField:  "id",
+			Name:             "assetVendor",
+			Type:             "lookup",
+			TargetModule:     "cmdb/vendor",
+			LocalField:       "vendorId",
+			TargetField:      "id",
+			TargetLabelField: "name",
+			LookupAPI:        "/business/cmdb/vendor/options",
+			LookupValueField: "id",
 		},
 		{
 			Name:          "assetGroups",
@@ -257,6 +276,54 @@ func TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles(t *testing.T)
 	}
 	if !strings.Contains(string(jaContent), `"business.cmdb.host.title": "Host Management"`) {
 		t.Fatalf("expected ja generated fallback to include English host title, got %s", string(jaContent))
+	}
+}
+
+func TestWriteGeneratedModuleSourceBuildsFilesServerSideWhenFilesOmitted(t *testing.T) {
+	root := prepareScaffoldWorkspaceRoot(t)
+	scriptDir := filepath.Join(root, "frontend", "scripts")
+	if err := os.MkdirAll(scriptDir, 0o755); err != nil {
+		t.Fatalf("mkdir script dir: %v", err)
+	}
+	script := `import { readFileSync } from 'node:fs';
+const schema = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+const files = [
+  {
+    path: 'backend/modules/business/asset/module.go',
+    content: 'package asset\n',
+    language: 'go',
+  },
+  {
+    path: 'frontend/src/modules/business/asset/index.ts',
+    content: 'export const AssetModule = {}\n',
+    language: 'typescript',
+  },
+];
+process.stdout.write(JSON.stringify(files));
+`
+	if err := os.WriteFile(filepath.Join(scriptDir, "export-generated-module.mjs"), []byte(script), 0o644); err != nil {
+		t.Fatalf("write script: %v", err)
+	}
+
+	req := newScaffoldTestRequest()
+	req.Files = nil
+
+	written, err := WriteGeneratedModuleSource(root, req)
+	if err != nil {
+		t.Fatalf("write generated source with server-side generation: %v", err)
+	}
+
+	if len(written) != 3 {
+		t.Fatalf("expected 3 written artifacts, got %d (%v)", len(written), written)
+	}
+	if !fileExists(filepath.Join(root, "backend", "modules", "business", "asset", "module.go")) {
+		t.Fatal("expected backend module file to be generated")
+	}
+	if !fileExists(filepath.Join(root, "frontend", "src", "modules", "business", "asset", "index.ts")) {
+		t.Fatal("expected frontend module file to be generated")
+	}
+	if !fileExists(filepath.Join(root, "schema", "generated", "business", "asset.json")) {
+		t.Fatal("expected schema file to be written")
 	}
 }
 

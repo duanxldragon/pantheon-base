@@ -229,7 +229,9 @@ const I18nList: React.FC = () => {
   const [registeredModuleOptions, setRegisteredModuleOptions] = useState<string[]>([]);
   const [createDuplicateConflict, setCreateDuplicateConflict] =
     useState<I18nDuplicateConflictState | null>(null);
+  const [secondaryReady, setSecondaryReady] = useState(false);
   const detailRequestKeyRef = useRef('');
+  const secondaryBootstrapScheduledRef = useRef(false);
   const governanceRail = useGovernanceRail();
 
   const loadData = useCallback(
@@ -243,6 +245,12 @@ const I18nList: React.FC = () => {
         const resp = await getI18nList(nextQuery);
         setRows(resp.items);
         setTotal(resp.total);
+        if (!secondaryBootstrapScheduledRef.current) {
+          secondaryBootstrapScheduledRef.current = true;
+          window.setTimeout(() => {
+            setSecondaryReady(true);
+          }, 0);
+        }
       } catch (requestError) {
         setError(requestError);
       } finally {
@@ -262,6 +270,9 @@ const I18nList: React.FC = () => {
   }, [loadData, query]);
 
   useEffect(() => {
+    if (!secondaryReady) {
+      return;
+    }
     getRegisteredModules()
       .then((modules) => {
         setRegisteredModuleOptions(
@@ -272,7 +283,7 @@ const I18nList: React.FC = () => {
         );
       })
       .catch(() => setRegisteredModuleOptions([]));
-  }, []);
+  }, [secondaryReady]);
 
   const loadOverview = useCallback(async () => {
     try {
@@ -312,18 +323,23 @@ const I18nList: React.FC = () => {
   }, [loadMissingLocales, missingLocaleModuleFilter, missingLocaleVisible]);
 
   useEffect(() => {
+    if (!secondaryReady) {
+      return undefined;
+    }
     const timer = window.setTimeout(() => {
       void loadOverview();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [loadOverview]);
+  }, [loadOverview, secondaryReady]);
 
   useRefreshSubscription('system:i18n:changed', (payload) => {
     if (payload.source === 'system/i18n') {
       return;
     }
     void loadData(query);
-    void loadOverview();
+    if (secondaryReady) {
+      void loadOverview();
+    }
     void reloadMissingLocaleRows();
     if (auditVisible) {
       void loadAudit();

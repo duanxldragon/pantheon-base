@@ -107,10 +107,17 @@ English version: [README.en.md](./README.en.md)
   - [system/config 扩展设计](./designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
   - [i18n 模块设计](./designs/I18N_MODULE_DESIGN.md)
   - [上传与存储设计](./designs/UPLOAD_AND_STORAGE_DESIGN.md)
-  - [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
-  - [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
   - [业务字典接入指南](./designs/BUSINESS_DICT_INTEGRATION_GUIDE.md)
   - [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
+
+### 2.3A 做低代码工作域与受控生成链路
+
+1. [低代码生成器使用指南](./designs/LOWCODE_GENERATOR_GUIDE.md)
+2. [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
+3. [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
+4. [模块契约设计](./designs/MODULE_CONTRACT.md)
+5. [业务建模评审清单](./designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md)
+6. [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
 
 ### 2.4 做低代码生成器或业务模块接入
 
@@ -182,13 +189,13 @@ English version: [README.en.md](./README.en.md)
 - [system/config 扩展设计](./designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
 - [i18n 模块设计](./designs/I18N_MODULE_DESIGN.md)
 - [上传与存储设计](./designs/UPLOAD_AND_STORAGE_DESIGN.md)
-- [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
-- [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
 - [数据权限 Hook 设计](./designs/DATA_PERMISSION_HOOK.md)
 
 ### 3.4 低代码与辅助开发链路
 
 - [动态菜单能力成熟度评估与演进蓝图](./assessments/DYNAMIC_MENU_MATURITY_20260422.md)
+- [低代码生成链路交付就绪度评估（2026-05-19）](./assessments/LOWCODE_DELIVERY_READINESS_20260519.md)
+- [动态模块治理设计](./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
 - [模块生成器设计](./designs/GENERATOR_MODULE_DESIGN.md)
 - [低代码生成器使用指南](./designs/LOWCODE_GENERATOR_GUIDE.md)
 

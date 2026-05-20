@@ -4,7 +4,7 @@
  * 导出所有生成器类和工具函数
  */
 
-import { defineModule } from '../../core/router/types';
+import { defineModule } from '../../../core/router/types';
 
 // Schema 定义
 export {

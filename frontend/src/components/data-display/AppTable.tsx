@@ -102,25 +102,23 @@ function createBoundaryPaginationItem(
   }
 
   return (
-    <ul className="arco-pagination-list app-table__pagination-boundary-list">
-      <li role="none">
-        <button
-          type="button"
-          className={[...classNames, `app-table__pagination-item-${type}`].join(' ')}
-          aria-label={ariaLabel}
-          disabled={disabled}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (!disabled) {
-              paginationProps.onChange?.(targetPage, pageSize);
-            }
-          }}
-        >
-          {isFirst ? <IconDoubleLeft /> : <IconDoubleRight />}
-        </button>
-      </li>
-    </ul>
+    <li role="none" className="app-table__pagination-boundary-list">
+      <button
+        type="button"
+        className={[...classNames, `app-table__pagination-item-${type}`].join(' ')}
+        aria-label={ariaLabel}
+        disabled={disabled}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!disabled) {
+            paginationProps.onChange?.(targetPage, pageSize);
+          }
+        }}
+      >
+        {isFirst ? <IconDoubleLeft /> : <IconDoubleRight />}
+      </button>
+    </li>
   );
 }
 
@@ -203,9 +201,15 @@ function AppTable<T>(props: AppTableProps<T>) {
 
           return (
             <div className={getPaginationWrapperClassName(pagePosition)}>
-              {createBoundaryPaginationItem('first', paginationNode.props, firstPageAriaLabel)}
-              <div className="app-table__pagination-shell">{callerNode}</div>
-              {createBoundaryPaginationItem('last', paginationNode.props, lastPageAriaLabel)}
+              <div className="app-table__pagination-shell">
+                <ul className="arco-pagination-list app-table__pagination-boundary-group">
+                  {createBoundaryPaginationItem('first', paginationNode.props, firstPageAriaLabel)}
+                </ul>
+                <div className="app-table__pagination-native">{callerNode}</div>
+                <ul className="arco-pagination-list app-table__pagination-boundary-group">
+                  {createBoundaryPaginationItem('last', paginationNode.props, lastPageAriaLabel)}
+                </ul>
+              </div>
             </div>
           );
         }
