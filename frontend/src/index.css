@@ -248,10 +248,12 @@ a {
   .arco-input-inner-wrapper,
   .arco-input-password,
   .arco-input-number,
+  input.arco-input,
   .arco-select-view,
   .arco-tree-select-view,
   .arco-picker,
   .arco-textarea-wrapper,
+  textarea.arco-textarea,
   .arco-input-tag
 ):focus-visible {
   outline: 0;
@@ -952,16 +954,31 @@ a {
   margin-bottom: 0;
 }
 
-.app-dialog .arco-input-inner-wrapper,
 .app-dialog .arco-input-password,
-.app-dialog .arco-input-number,
-.app-dialog input.arco-input,
 .app-dialog .arco-select-view,
 .app-dialog .arco-tree-select-view,
 .app-dialog .arco-picker,
 .app-dialog .arco-textarea-wrapper,
-.app-dialog textarea.arco-textarea,
 .app-dialog .arco-input-tag {
+  border: 1px solid var(--panel-border-strong) !important;
+  background: #fff !important;
+  box-shadow: none;
+}
+
+.app-dialog .arco-input-inner-wrapper {
+  border: 1px solid var(--panel-border-strong);
+  background: #fff;
+  box-shadow: none;
+}
+
+.app-dialog input.arco-input,
+.app-dialog textarea.arco-textarea {
+  border: 1px solid var(--panel-border-strong);
+  background: #fff;
+  box-shadow: none;
+}
+
+.app-dialog .arco-input-number {
   border: 1px solid var(--panel-border-strong);
   background: #fff;
   box-shadow: none;
@@ -975,6 +992,7 @@ a {
 
 .app-dialog .arco-input-inner-wrapper .arco-input,
 .app-dialog .arco-input-password .arco-input,
+.app-dialog .arco-input-password .arco-input-group,
 .app-dialog .arco-input-password .arco-input-inner-wrapper,
 .app-dialog .arco-input-number .arco-input-inner-wrapper,
 .app-dialog .arco-input-number .arco-input,
@@ -986,17 +1004,38 @@ a {
   outline: 0;
 }
 
+.app-dialog .arco-input-password .arco-input,
+.app-dialog .arco-input-number .arco-input,
+.app-dialog .arco-textarea-wrapper .arco-textarea {
+  border-width: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.app-dialog .arco-input-password .arco-input-group,
+.app-dialog .arco-input-password .arco-input-inner-wrapper,
+.app-dialog .arco-input-number .arco-input-inner-wrapper {
+  border-width: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
 .app-dialog .arco-input-inner-wrapper.arco-input-focus,
 .app-dialog .arco-input-password.arco-input-focus,
+.app-dialog .arco-input-password:focus-within,
 .app-dialog .arco-input-number.arco-input-focus,
 .app-dialog .arco-input-number:focus-within,
+.app-dialog .arco-select-focused .arco-select-view,
+.app-dialog .arco-select-open .arco-select-view,
 .app-dialog .arco-select-view.arco-select-view-focus,
 .app-dialog .arco-tree-select.arco-tree-select-focused .arco-tree-select-view,
 .app-dialog .arco-picker-focused,
 .app-dialog .arco-textarea-wrapper-focus,
 .app-dialog .arco-input-tag.arco-input-tag-focus {
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 14%, transparent) !important;
 }
 
 .app-drawer .arco-drawer-header {
@@ -1049,16 +1088,32 @@ a {
   box-shadow: none;
 }
 
-.app-drawer .arco-input-inner-wrapper,
 .app-drawer .arco-input-password,
 .app-drawer .arco-input-number,
-.app-drawer input.arco-input,
 .app-drawer .arco-select-view,
 .app-drawer .arco-tree-select-view,
 .app-drawer .arco-picker,
 .app-drawer .arco-textarea-wrapper,
-.app-drawer textarea.arco-textarea,
 .app-drawer .arco-input-tag {
+  border: 1px solid var(--panel-border-strong) !important;
+  background: #fff !important;
+  box-shadow: none;
+}
+
+.app-drawer .arco-input-inner-wrapper {
+  border: 1px solid var(--panel-border-strong);
+  background: #fff;
+  box-shadow: none;
+}
+
+.app-drawer input.arco-input,
+.app-drawer textarea.arco-textarea {
+  border: 1px solid var(--panel-border-strong);
+  background: #fff;
+  box-shadow: none;
+}
+
+.app-drawer .arco-input-number {
   border: 1px solid var(--panel-border-strong);
   background: #fff;
   box-shadow: none;
@@ -1066,6 +1121,7 @@ a {
 
 .app-drawer .arco-input-inner-wrapper .arco-input,
 .app-drawer .arco-input-password .arco-input,
+.app-drawer .arco-input-password .arco-input-group,
 .app-drawer .arco-input-password .arco-input-inner-wrapper,
 .app-drawer .arco-input-number .arco-input-inner-wrapper,
 .app-drawer .arco-input-number .arco-input,
@@ -1077,10 +1133,31 @@ a {
   outline: 0;
 }
 
+.app-drawer .arco-input-password .arco-input,
+.app-drawer .arco-input-number .arco-input,
+.app-drawer .arco-textarea-wrapper .arco-textarea {
+  border-width: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.app-drawer .arco-input-password .arco-input-group,
+.app-drawer .arco-input-password .arco-input-inner-wrapper,
+.app-drawer .arco-input-number .arco-input-inner-wrapper {
+  border-width: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
 .app-drawer .arco-input-inner-wrapper.arco-input-focus,
 .app-drawer .arco-input-password.arco-input-focus,
+.app-drawer .arco-input-password:focus-within,
 .app-drawer .arco-input-number.arco-input-focus,
 .app-drawer .arco-input-number:focus-within,
+.app-drawer .arco-select-focused .arco-select-view,
+.app-drawer .arco-select-open .arco-select-view,
 .app-drawer .arco-select-view.arco-select-view-focus,
 .app-drawer .arco-tree-select.arco-tree-select-focused .arco-tree-select-view,
 .app-drawer .arco-picker-focused,
@@ -1136,6 +1213,34 @@ a {
   min-height: 44px;
   border-bottom-color: var(--panel-border);
   background: color-mix(in srgb, var(--brand-primary) 2%, #fff);
+}
+
+.app-dialog .dialog-grid-card .arco-card-header-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.app-dialog .dialog-grid-card .arco-card-header-title .arco-space {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px !important;
+  width: 100%;
+  min-width: 0;
+}
+
+.app-dialog .dialog-grid-card .arco-card-header-title .arco-space-item:first-child {
+  min-width: 0;
+}
+
+.app-dialog .dialog-grid-card .arco-card-header-title .arco-typography {
+  white-space: nowrap;
+  line-height: 22px;
+}
+
+.app-dialog .dialog-grid-card .arco-card-header-title .arco-tag {
+  flex: 0 0 auto;
 }
 
 .app-dialog .dialog-grid-card .arco-card-body,
@@ -1226,9 +1331,13 @@ a {
 .filter-panel .arco-input-number,
 .filter-panel .arco-select-view,
 .filter-panel .arco-tree-select-view,
-.filter-panel .arco-picker {
+.filter-panel .arco-picker,
+.filter-panel .arco-textarea-wrapper {
   min-height: var(--shell-filter-control-min-height);
   width: 100%;
+  border: 1px solid var(--panel-border-strong);
+  background: #fff;
+  box-shadow: none;
 }
 
 .filter-panel .arco-space {
@@ -1293,9 +1402,11 @@ a {
 
 .arco-input-inner-wrapper,
 .arco-input-password,
+.arco-input-password .arco-input-inner-wrapper,
 .arco-input-number,
 input.arco-input,
 .arco-select-view,
+.arco-tree-select-view,
 .arco-picker,
 .arco-textarea-wrapper,
 textarea.arco-textarea,
@@ -1350,13 +1461,16 @@ textarea.arco-textarea,
 .arco-input-inner-wrapper,
 .arco-input-password,
 .arco-input-number,
+input.arco-input,
 .arco-select-view,
+.arco-tree-select-view,
 .arco-picker,
 .arco-textarea-wrapper,
 .arco-input-tag {
   min-height: var(--shell-control-min-height);
-  border-color: var(--panel-border-strong);
-  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--panel-border-strong);
+  background: #fff;
+  box-shadow: none;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -1378,9 +1492,12 @@ textarea.arco-textarea:hover,
 
 .arco-input-inner-wrapper.arco-input-focus,
 .arco-input-password.arco-input-focus,
+.arco-input-password:focus-within,
 .arco-input-number.arco-input-focus,
 .arco-input-number:focus-within,
 input.arco-input:focus,
+.arco-select-focused .arco-select-view,
+.arco-select-open .arco-select-view,
 .arco-select-view.arco-select-view-focus,
 .arco-tree-select.arco-tree-select-focused .arco-tree-select-view,
 .arco-picker-focused,
@@ -1393,6 +1510,7 @@ textarea.arco-textarea:focus,
 }
 
 .arco-input-inner-wrapper .arco-input,
+.arco-input-password .arco-input-group,
 .arco-input-password .arco-input,
 .arco-input-password .arco-input-inner-wrapper,
 .arco-input-number .arco-input-inner-wrapper,
@@ -1407,6 +1525,7 @@ textarea.arco-textarea:focus,
 }
 
 html .arco-input-inner-wrapper .arco-input,
+html .arco-input-password .arco-input-group,
 html .arco-input-password .arco-input,
 html .arco-input-password .arco-input-inner-wrapper,
 html .arco-input-number .arco-input-inner-wrapper,
@@ -1422,8 +1541,6 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input {
 .arco-input-inner-wrapper .arco-input:focus-visible,
 .arco-input-password .arco-input:focus,
 .arco-input-password .arco-input:focus-visible,
-.arco-input-password .arco-input-inner-wrapper:focus,
-.arco-input-password .arco-input-inner-wrapper:focus-visible,
 .arco-input-number .arco-input-inner-wrapper:focus,
 .arco-input-number .arco-input-inner-wrapper:focus-visible,
 .arco-input-number .arco-input-inner-wrapper .arco-input:focus,
@@ -1449,9 +1566,17 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-input-password,
+.arco-input-password .arco-input-group,
 .arco-input-password .arco-input-inner-wrapper,
 .arco-input-password .arco-input {
   border-radius: var(--radius-control);
+}
+
+.arco-input-password .arco-input-group,
+.arco-input-password .arco-input-inner-wrapper {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .arco-input-disabled,
@@ -1986,26 +2111,40 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .app-table .arco-table-pagination {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
   padding: var(--shell-table-pagination-padding);
   gap: 8px;
 }
 
 .app-table__pagination-shell {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
   min-width: 0;
-  max-width: 100%;
+  row-gap: 6px;
 }
 
 .app-table__pagination-native {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .app-table__pagination-native .arco-pagination {
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
+  row-gap: 8px;
 }
 
 .app-table__pagination-boundary-group {
@@ -2019,20 +2158,43 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .app-table .arco-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 4px;
   font-size: 12px;
+  line-height: 1.2;
 }
 
 .app-table .arco-pagination-list {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
 .app-table .arco-pagination-item,
-.app-table .arco-pagination-item-link {
-  min-width: 28px;
-  height: 28px;
-  border-radius: 9px;
+.app-table .arco-pagination-item-link,
+.app-table .arco-pagination-item-prev,
+.app-table .arco-pagination-item-next,
+.app-table__pagination-item-first,
+.app-table__pagination-item-last {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 10px;
   font-size: 12px;
+  line-height: 1;
+}
+
+.app-table .arco-pagination-item-prev,
+.app-table .arco-pagination-item-next,
+.app-table__pagination-item-first,
+.app-table__pagination-item-last {
+  color: var(--text-tertiary);
 }
 
 .arco-pagination {
@@ -2050,12 +2212,54 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 
 .app-table .arco-pagination-options,
 .app-table .arco-pagination-jumper {
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
+  line-height: 1.2;
+  min-height: 30px;
 }
 
 .app-table .arco-pagination-jumper input,
 .app-table .arco-pagination-options .arco-select-view {
-  min-height: 28px;
+  min-height: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.app-table .arco-pagination-total,
+.app-table .arco-pagination-item-jumper,
+.app-table .arco-pagination-options .arco-select-view-value,
+.app-table .arco-pagination-options .arco-select-view-single,
+.app-table .arco-pagination-jumper-prepend,
+.app-table .arco-pagination-jumper-append {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-table .arco-pagination-total {
+  min-height: 30px;
+}
+
+.app-table__pagination-total-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.app-table__pagination-total-text strong {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.app-table .arco-pagination-jumper {
+  gap: 6px;
 }
 
 .arco-pagination-item:hover,
@@ -2064,7 +2268,8 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   color: var(--brand-primary);
 }
 
-.arco-pagination-item-active {
+.app-table .arco-pagination-item-active {
+  transform: translateY(-1px);
   background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
   color: var(--brand-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 16%, transparent);
@@ -2072,6 +2277,11 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 
 .arco-pagination-item-jumper input {
   border-radius: 9px;
+}
+
+.app-table .arco-pagination-item-jumper input {
+  width: 42px;
+  text-align: center;
 }
 
 .app-table .arco-btn-size-small {

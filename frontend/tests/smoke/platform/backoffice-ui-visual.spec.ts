@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from '../helpers/auth';
@@ -10,6 +10,21 @@ interface ShellPreferenceOptions {
   language?: string;
   layoutMode?: 'vertical' | 'horizontal';
   densityMode?: 'comfortable' | 'compact';
+}
+
+interface FieldChrome {
+  borderWidth: string;
+  borderStyle: string;
+  borderColor: string;
+  borderRadius: string;
+  backgroundColor: string;
+  boxShadow: string;
+}
+
+async function installEmeraldThemePreference(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('pantheon_theme', 'emerald');
+  });
 }
 
 async function installExplicitZhCNPreference(page: Page) {
@@ -76,6 +91,15 @@ const authenticatedPages = [
   { path: '/auth/security', title: '安全中心', screenshot: 'auth-security-desktop.png' },
 ] as const;
 
+const sharedControlPages = [
+  '/system/user',
+  '/system/role',
+  '/system/menu',
+  '/system/post',
+  '/system/dept',
+  '/system/i18n',
+] as const;
+
 async function ensureArtifactDir() {
   if (!existsSync(artifactDir)) {
     mkdirSync(artifactDir, { recursive: true });
@@ -111,6 +135,108 @@ async function expectNoPageError(page: Page) {
   }
 }
 
+async function readFieldChrome(input: Locator) {
+  await input.scrollIntoViewIfNeeded();
+  await input.focus();
+  return input.evaluate((node) => {
+    const passwordSurface = node.closest('.arco-input-password');
+    const fieldSurface =
+      passwordSurface ||
+      node.closest('.arco-input-inner-wrapper, .arco-textarea-wrapper') ||
+      node.closest('.arco-select-view, .arco-tree-select-view, .arco-picker') ||
+      node;
+    const style = window.getComputedStyle(fieldSurface as Element);
+    return {
+      borderWidth: style.borderTopWidth,
+      borderStyle: style.borderTopStyle,
+      borderColor: style.borderTopColor,
+      borderRadius: style.borderTopLeftRadius,
+      backgroundColor: style.backgroundColor,
+      boxShadow: style.boxShadow,
+    } satisfies FieldChrome;
+  });
+}
+
+async function readSurfaceChrome(surface: Locator) {
+  await surface.scrollIntoViewIfNeeded();
+  return surface.evaluate((node) => {
+    const style = window.getComputedStyle(node as Element);
+    return {
+      borderWidth: style.borderTopWidth,
+      borderStyle: style.borderTopStyle,
+      borderColor: style.borderTopColor,
+      borderRadius: style.borderTopLeftRadius,
+      backgroundColor: style.backgroundColor,
+      boxShadow: style.boxShadow,
+    } satisfies FieldChrome;
+  });
+}
+
+async function readVisibleSurfaceChromes(root: Locator) {
+  return root.evaluate((node) => {
+    const outerSelector = [
+      '.arco-input-password',
+      '.arco-input-number',
+      '.arco-select-view',
+      '.arco-tree-select-view',
+      '.arco-picker',
+      '.arco-textarea-wrapper',
+      'textarea.arco-textarea',
+      '.arco-input-inner-wrapper',
+      'input.arco-input',
+    ].join(',');
+    const read = (element: HTMLElement) => {
+      const style = window.getComputedStyle(element);
+      return {
+        borderWidth: style.borderTopWidth,
+        borderStyle: style.borderTopStyle,
+        borderColor: style.borderTopColor,
+        borderRadius: style.borderTopLeftRadius,
+        backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
+      };
+    };
+    const isOuterControl = (element: HTMLElement) => {
+      if (
+        element.matches('input.arco-input, textarea.arco-textarea') &&
+        element.closest(
+          '.arco-input-inner-wrapper, .arco-input-password, .arco-input-number, .arco-textarea-wrapper',
+        )
+      ) {
+        return false;
+      }
+      if (element.classList.contains('arco-input-inner-wrapper')) {
+        return !element.closest('.arco-input-password, .arco-input-number');
+      }
+      return true;
+    };
+
+    return Array.from(node.querySelectorAll<HTMLElement>(outerSelector))
+      .filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && isOuterControl(element);
+      })
+      .map((element) => read(element));
+  });
+}
+
+function expectMatchingFieldChrome(actual: FieldChrome, expected: FieldChrome) {
+  expect(actual.borderWidth).toBe(expected.borderWidth);
+  expect(actual.borderStyle).toBe(expected.borderStyle);
+  expect(actual.borderColor).not.toBe(actual.backgroundColor);
+  expect(actual.borderColor).not.toBe('rgba(0, 0, 0, 0)');
+  expect(actual.borderRadius).toBe(expected.borderRadius);
+  expect(actual.backgroundColor).toBe(expected.backgroundColor);
+  expect(actual.boxShadow).not.toBe('none');
+}
+
+function expectMatchingSurfaceChrome(actual: FieldChrome, expected: FieldChrome) {
+  expect(actual.borderWidth).toBe(expected.borderWidth);
+  expect(actual.borderStyle).toBe(expected.borderStyle);
+  expect(actual.borderRadius).toBe(expected.borderRadius);
+  expect(actual.backgroundColor).toBe(expected.backgroundColor);
+}
+
 async function expectProfessionalBackofficeSurface(page: Page) {
   await expect(page.locator('.app-shell__header')).toBeVisible();
   await expect(page.locator('.app-shell__content')).toBeVisible();
@@ -134,6 +260,14 @@ async function expectPageIdentity(page: Page, title: string) {
   await expect(breadcrumbs.last()).toContainText(title);
 }
 
+async function openSystemListPage(page: Page, path: string) {
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.app-shell__content')).toBeVisible();
+  await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible({
+    timeout: 20000,
+  });
+}
+
 test.beforeAll(async () => {
   await ensureArtifactDir();
 });
@@ -154,45 +288,12 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(page.getByText('记住我', { exact: false })).toHaveCount(0);
     await expect(page.getByText('忘记密码', { exact: false })).toHaveCount(0);
     await expect(page.getByText('AI', { exact: true })).toHaveCount(0);
-    await page.locator('.auth-login-card .arco-input-inner-wrapper .arco-input').first().focus();
-    const loginInputContract = await page.evaluate(() => {
-      const controls = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          '.auth-login-card .arco-input-inner-wrapper, .auth-login-card .arco-input-password',
-        ),
-      ).filter((control) => {
-        const passwordControl = control.closest('.arco-input-password');
-        return !passwordControl || passwordControl === control;
-      });
-
-      return controls.slice(0, 2).map((wrapper) => {
-        const input = wrapper.querySelector<HTMLElement>('.arco-input');
-        const wrapperStyle = window.getComputedStyle(wrapper);
-        const inputStyle = input ? window.getComputedStyle(input) : null;
-
-        return {
-          wrapperBorderWidth: wrapperStyle.borderTopWidth,
-          wrapperBackground: wrapperStyle.backgroundColor,
-          wrapperBoxShadow: wrapperStyle.boxShadow,
-          inputBorderWidth: inputStyle?.borderTopWidth || null,
-          inputBackground: inputStyle?.backgroundColor || null,
-          inputBoxShadow: inputStyle?.boxShadow || null,
-          inputOutlineStyle: inputStyle?.outlineStyle || null,
-          inputOutlineWidth: inputStyle?.outlineWidth || null,
-        };
-      });
-    });
-    expect(loginInputContract.length).toBeGreaterThanOrEqual(2);
-    for (const control of loginInputContract) {
-      expect(control.wrapperBorderWidth).toBe('1px');
-      expect(control.wrapperBackground).toBe('rgb(255, 255, 255)');
-      expect(control.inputBorderWidth).toBe('0px');
-      expect(control.inputBackground).toBe('rgba(0, 0, 0, 0)');
-      expect(control.inputBoxShadow).toBe('none');
-      expect(control.inputOutlineStyle).toBe('none');
-      expect(control.inputOutlineWidth).toBe('0px');
-    }
-    expect(loginInputContract.some((control) => control.wrapperBoxShadow !== 'none')).toBe(true);
+    const loginUsernameChrome = await readFieldChrome(page.getByPlaceholder(/请输入用户名|username/i));
+    const loginPasswordChrome = await readFieldChrome(page.getByPlaceholder(/请输入密码|password/i));
+    expect(loginUsernameChrome.borderWidth).toBe('1px');
+    expect(loginUsernameChrome.borderStyle).toBe('solid');
+    expect(loginUsernameChrome.backgroundColor).toBe('rgb(255, 255, 255)');
+    expectMatchingFieldChrome(loginPasswordChrome, loginUsernameChrome);
     await page.screenshot({ path: join(artifactDir, 'login-desktop.png'), fullPage: true });
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -200,6 +301,211 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(page.locator('.auth-login-card')).toBeVisible();
     await expect(page.getByRole('button', { name: '登录' })).toBeVisible();
     await page.screenshot({ path: join(artifactDir, 'login-mobile.png'), fullPage: true });
+
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+  });
+
+  test('login and user-management forms keep one shared input border contract', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+
+    await installExplicitZhCNPreference(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/login', { waitUntil: 'networkidle' });
+
+    const baselineChrome = await readFieldChrome(page.getByPlaceholder(/请输入用户名|username/i));
+    const loginPasswordChrome = await readFieldChrome(page.getByPlaceholder(/请输入密码|password/i));
+    expect(baselineChrome.borderWidth).toBe('1px');
+    expect(baselineChrome.borderStyle).toBe('solid');
+    expect(baselineChrome.backgroundColor).toBe('rgb(255, 255, 255)');
+    expectMatchingFieldChrome(loginPasswordChrome, baselineChrome);
+
+    await signInAsAdmin(page);
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+
+    const createDialog = page.getByRole('dialog').filter({ has: page.getByText('新增用户', { exact: true }) });
+    await expect(createDialog).toBeVisible();
+
+    const createUsernameChrome = await readFieldChrome(
+      createDialog.locator('.arco-form-item').filter({ hasText: '用户名' }).locator('input').first(),
+    );
+    const createPasswordChrome = await readFieldChrome(
+      createDialog.locator('.arco-form-item').filter({ hasText: '密码' }).locator('input').first(),
+    );
+    expectMatchingFieldChrome(createUsernameChrome, baselineChrome);
+    expectMatchingFieldChrome(createPasswordChrome, baselineChrome);
+    await createDialog.getByRole('button', { name: '取消', exact: true }).click();
+    await expect(createDialog).toBeHidden();
+
+    await page.locator('.system-user-list__table-card').getByRole('button', { name: '重置密码' }).first().click();
+    const resetDialog = page.getByRole('dialog').filter({ has: page.getByText('重置用户密码', { exact: true }) });
+    await expect(resetDialog).toBeVisible();
+
+    const resetPasswordChrome = await readFieldChrome(
+      resetDialog.locator('.arco-form-item').filter({ hasText: '新密码' }).locator('input').first(),
+    );
+    const resetConfirmPasswordChrome = await readFieldChrome(
+      resetDialog.locator('.arco-form-item').filter({ hasText: '确认新密码' }).locator('input').first(),
+    );
+    expectMatchingFieldChrome(resetPasswordChrome, baselineChrome);
+    expectMatchingFieldChrome(resetConfirmPasswordChrome, baselineChrome);
+    await resetDialog.getByRole('button', { name: '取消', exact: true }).click();
+
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+  });
+
+  test('add dialogs keep one shared control contract under the emerald theme', async ({ page }) => {
+    test.setTimeout(60000);
+    const runtimeErrors = collectRuntimeErrors(page);
+
+    await installExplicitZhCNPreference(page);
+    await installEmeraldThemePreference(page);
+    await signInAsAdmin(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+    const userDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增用户', { exact: true }) });
+    await expect(userDialog).toBeVisible();
+
+    const userNameInput = userDialog
+      .locator('.arco-form-item')
+      .filter({ hasText: '用户名' })
+      .locator('input')
+      .first();
+    const userBaseline = await readFieldChrome(userNameInput);
+    const userPassword = await readFieldChrome(
+      userDialog.locator('.arco-form-item').filter({ hasText: '密码' }).locator('input').first(),
+    );
+    const userDept = await readSurfaceChrome(
+      userDialog.locator('.arco-form-item').filter({ hasText: '部门' }).locator('.arco-select-view').first(),
+    );
+    const userStatus = await readSurfaceChrome(
+      userDialog.locator('.arco-form-item').filter({ hasText: '状态' }).locator('.arco-select-view').first(),
+    );
+    expect(userBaseline.backgroundColor).toBe('rgb(255, 255, 255)');
+    expectMatchingFieldChrome(userPassword, userBaseline);
+    expect(userDept.borderWidth).toBe(userBaseline.borderWidth);
+    expect(userDept.borderStyle).toBe(userBaseline.borderStyle);
+    expect(userDept.borderRadius).toBe(userBaseline.borderRadius);
+    expect(userDept.backgroundColor).toBe(userBaseline.backgroundColor);
+    expect(userStatus.borderWidth).toBe(userBaseline.borderWidth);
+    expect(userStatus.borderStyle).toBe(userBaseline.borderStyle);
+    expect(userStatus.borderRadius).toBe(userBaseline.borderRadius);
+    expect(userStatus.backgroundColor).toBe(userBaseline.backgroundColor);
+    await userDialog.getByRole('button', { name: '取消', exact: true }).click();
+
+    await openSystemListPage(page, '/system/menu');
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+    const menuDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增菜单', { exact: true }) });
+    await expect(menuDialog).toBeVisible();
+    const parentMenu = await readSurfaceChrome(menuDialog.locator('.arco-tree-select-view').first());
+    expect(parentMenu.borderWidth).toBe(userBaseline.borderWidth);
+    expect(parentMenu.borderStyle).toBe(userBaseline.borderStyle);
+    expect(parentMenu.borderRadius).toBe(userBaseline.borderRadius);
+    expect(parentMenu.backgroundColor).toBe(userBaseline.backgroundColor);
+    await menuDialog.getByRole('button', { name: '取消', exact: true }).click();
+    await expect(menuDialog).toHaveCount(0);
+
+    await openSystemListPage(page, '/system/role');
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+    const roleDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增角色', { exact: true }) });
+    await expect(roleDialog).toBeVisible();
+
+    const roleStatus = roleDialog
+      .locator('.arco-form-item')
+      .filter({ hasText: '状态' })
+      .locator('.arco-select-view')
+      .first();
+    await roleStatus.click();
+    const roleStatusFocused = await readSurfaceChrome(roleStatus);
+    expect(roleStatusFocused.borderColor).not.toBe('rgb(22, 93, 255)');
+    expect(roleStatusFocused.boxShadow).not.toContain('190, 218, 255');
+
+    const authorizationTitleMetrics = await roleDialog.evaluate((root) => {
+      return Array.from(root.querySelectorAll('.dialog-grid-card .arco-card-header-title .arco-typography'))
+        .slice(0, 3)
+        .map((node) => {
+          const style = window.getComputedStyle(node);
+          const lineHeight = Number.parseFloat(style.lineHeight || '0');
+          const height = node.getBoundingClientRect().height;
+          return {
+            text: node.textContent?.trim() || '',
+            lines: lineHeight > 0 ? Math.round(height / lineHeight) : 0,
+          };
+        });
+    });
+    expect(authorizationTitleMetrics).toHaveLength(3);
+    for (const title of authorizationTitleMetrics) {
+      expect(title.lines).toBeLessThanOrEqual(1);
+    }
+
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+  });
+
+  test('edit dialogs and filter panels keep one shared control thickness contract', async ({
+    page,
+  }) => {
+    test.setTimeout(120000);
+    const runtimeErrors = collectRuntimeErrors(page);
+
+    await installExplicitZhCNPreference(page);
+    await installEmeraldThemePreference(page);
+    await signInAsAdmin(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+    const createDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增用户', { exact: true }) });
+    await expect(createDialog).toBeVisible();
+    const baselineChrome = await readFieldChrome(
+      createDialog.locator('.arco-form-item').filter({ hasText: '用户名' }).locator('input').first(),
+    );
+    await createDialog.getByRole('button', { name: '取消', exact: true }).click();
+    await expect(createDialog).toBeHidden();
+
+    for (const path of sharedControlPages) {
+      await openSystemListPage(page, path);
+      const filterPanel = page.locator('.filter-panel').first();
+      await expect(filterPanel).toBeVisible();
+      const filterChromes = await readVisibleSurfaceChromes(filterPanel);
+      expect(filterChromes.length, `${path} filter controls`).toBeGreaterThan(0);
+      for (const controlChrome of filterChromes) {
+        expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+      }
+
+      await page.getByRole('button', { name: '新增', exact: true }).first().click();
+      const createModuleDialog = page.getByRole('dialog').first();
+      await expect(createModuleDialog).toBeVisible();
+      const createChromes = await readVisibleSurfaceChromes(createModuleDialog);
+      expect(createChromes.length, `${path} create dialog controls`).toBeGreaterThan(0);
+      for (const controlChrome of createChromes) {
+        expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+      }
+      await createModuleDialog.getByRole('button', { name: '取消', exact: true }).click();
+      await expect(createModuleDialog).toBeHidden();
+
+      const editButton = page.getByRole('button', { name: '编辑', exact: true }).first();
+      await expect(editButton, `${path} edit button`).toBeVisible({ timeout: 20000 });
+      await editButton.click();
+      const editDialog = page.getByRole('dialog').first();
+      await expect(editDialog).toBeVisible();
+      const editChromes = await readVisibleSurfaceChromes(editDialog);
+      expect(editChromes.length, `${path} edit dialog controls`).toBeGreaterThan(0);
+      for (const controlChrome of editChromes) {
+        expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+      }
+      await editDialog.getByRole('button', { name: '取消', exact: true }).click();
+      await expect(editDialog).toBeHidden();
+    }
 
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });

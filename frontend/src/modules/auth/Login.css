@@ -255,18 +255,20 @@
 }
 
 .auth-login-card .arco-input-inner-wrapper.arco-input-focus,
-.auth-login-card .arco-input-password.arco-input-focus,
 .auth-login-card .arco-input-inner-wrapper:focus-within,
+.auth-login-card .arco-input-password.arco-input-focus,
 .auth-login-card .arco-input-password:focus-within {
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 12%, transparent);
 }
 
+.auth-login-card .arco-input-password .arco-input-group,
 .auth-login-card .arco-input-password .arco-input-inner-wrapper {
+  min-height: inherit;
   border: 0;
+  border-radius: inherit;
   background: transparent;
   box-shadow: none;
-  outline: 0;
 }
 
 .auth-login-card .arco-input-inner-wrapper .arco-input,

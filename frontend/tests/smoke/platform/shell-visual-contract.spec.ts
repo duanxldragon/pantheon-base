@@ -18,8 +18,6 @@ const systemTablePages = [
 
 const filterPanelPages = [
   '/system/user',
-  '/system/role',
-  '/system/post',
 ] as const;
 
 const governanceBarPages = [
@@ -32,6 +30,7 @@ const dialogEntryPages = [
   { path: '/system/user', triggerText: '新增' },
   { path: '/system/role', triggerText: '新增' },
   { path: '/system/menu', triggerText: '新增' },
+  { path: '/system/dept', triggerText: '新增' },
   { path: '/system/post', triggerText: '新增' },
   { path: '/system/dict', triggerText: '新增' },
   { path: '/system/i18n', triggerText: '新增' },
@@ -55,6 +54,12 @@ type DialogControlContract = {
   nestedInput: ControlBox;
 };
 
+async function installEmeraldThemePreference(page: import('@playwright/test').Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('pantheon_theme', 'emerald');
+  });
+}
+
 async function navigateInShell(page: import('@playwright/test').Page, path: string) {
   if (page.url() === 'about:blank') {
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
@@ -64,6 +69,14 @@ async function navigateInShell(page: import('@playwright/test').Page, path: stri
     window.dispatchEvent(new PopStateEvent('popstate'));
   }, path);
   await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, '\\/')}$`));
+}
+
+async function openSystemDialogPage(page: import('@playwright/test').Page, path: string) {
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.app-shell__content')).toBeVisible();
+  await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible({
+    timeout: 20000,
+  });
 }
 
 async function readDialogContract(
@@ -1065,8 +1078,9 @@ test('form controls use a single visible focus ring across modal and page surfac
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
 
-  for (const path of ['/system/user'] as const) {
+  for (const path of filterPanelPages) {
     await navigateInShell(page, path);
+    await expect(page.locator('.filter-panel').first(), `${path} filter panel`).toBeVisible();
     const filterContracts = await readVisibleControlContracts(page, '.filter-panel');
     expect(filterContracts.length, `${path} filter controls`).toBeGreaterThan(0);
     for (const controlContract of filterContracts) {
@@ -1115,6 +1129,94 @@ test('form controls use a single visible focus ring across modal and page surfac
       '/system/i18n dialog focused inner shadow',
     ).toBe('none');
   }
+});
+
+test('emerald theme dialogs keep themed select focus and single-line authorization headers', async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await installEmeraldThemePreference(page);
+  await signInAsAdmin(page);
+
+  await navigateInShell(page, '/system/role');
+  const createTrigger = page
+    .locator('.table-batch-action-bar__prefix-actions')
+    .getByRole('button', { name: '新增' })
+    .first();
+  await expect(createTrigger).toBeVisible();
+  await createTrigger.click();
+  const roleDialog = page.locator('.app-dialog').first();
+  await expect(roleDialog).toBeVisible();
+
+  const roleStatusSelect = roleDialog
+    .locator('.arco-form-item')
+    .filter({ hasText: /状态|Status/i })
+    .locator('.arco-select')
+    .first();
+  const roleStatusView = roleStatusSelect.locator('.arco-select-view');
+  await expect(roleStatusView).toBeVisible();
+  await roleStatusView.click();
+  await expect(roleStatusSelect).toHaveClass(/arco-select-open/);
+  await page.waitForTimeout(100);
+  const roleStatusContract = await roleStatusView.evaluate((view) => {
+    const style = window.getComputedStyle(view);
+    return {
+      borderTopColor: style.borderTopColor,
+      boxShadow: style.boxShadow,
+    };
+  });
+  expect(roleStatusContract.borderTopColor).not.toBe('rgb(22, 93, 255)');
+  expect(roleStatusContract.boxShadow).not.toContain('190, 218, 255');
+  expect(roleStatusContract.boxShadow).not.toBe('none');
+
+  const authorizationHeaderMetrics = await roleDialog.evaluate((dialog) => {
+    return Array.from(
+      dialog.querySelectorAll<HTMLElement>('.dialog-grid-card .arco-card-header-title'),
+    )
+      .slice(0, 3)
+      .map((header) => {
+        const text = header.querySelector<HTMLElement>('.arco-typography');
+        const titleStyle = window.getComputedStyle(header);
+        const textStyle = text ? window.getComputedStyle(text) : null;
+        const lineHeight = Number.parseFloat(textStyle?.lineHeight || '0');
+        const height = text?.getBoundingClientRect().height || 0;
+        return {
+          whiteSpace: textStyle?.whiteSpace ?? null,
+          lines: lineHeight > 0 ? Math.round(height / lineHeight) : 0,
+          headerOverflow: titleStyle.overflow,
+        };
+      });
+  });
+  expect(authorizationHeaderMetrics).toHaveLength(3);
+  for (const metric of authorizationHeaderMetrics) {
+    expect(metric.whiteSpace).toBe('nowrap');
+    expect(metric.lines).toBeLessThanOrEqual(1);
+    expect(metric.headerOverflow).toBe('hidden');
+  }
+
+  await roleDialog.locator('.arco-modal-close-icon').click();
+  await expect(page.locator('.app-dialog')).toHaveCount(0);
+
+  await openSystemDialogPage(page, '/system/menu');
+  const menuCreateTrigger = page.getByRole('button', { name: '新增', exact: true }).first();
+  await expect(menuCreateTrigger).toBeVisible();
+  await menuCreateTrigger.click();
+  const menuDialog = page.locator('.app-dialog').first();
+  await expect(menuDialog).toBeVisible();
+
+  const treeSelectContract = await menuDialog.evaluate((dialog) => {
+    const control = dialog.querySelector<HTMLElement>('.arco-tree-select-view');
+    const style = control ? window.getComputedStyle(control) : null;
+    return {
+      borderTopWidth: style?.borderTopWidth ?? null,
+      borderTopStyle: style?.borderTopStyle ?? null,
+      backgroundColor: style?.backgroundColor ?? null,
+    };
+  });
+  expect(treeSelectContract.borderTopWidth).toBe('1px');
+  expect(treeSelectContract.borderTopStyle).toBe('solid');
+  expect(treeSelectContract.backgroundColor).toBe('rgb(255, 255, 255)');
 });
 
 test('governance drawers share overlay spacing and surface contracts', async ({ page }) => {

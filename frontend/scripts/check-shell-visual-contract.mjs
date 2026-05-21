@@ -138,7 +138,10 @@ function requireStandaloneBlock(cssSource, selector, findings) {
 }
 
 function hasDeclaration(block, property, expectedValue) {
-  const pattern = new RegExp(`${property}\\s*:\\s*${expectedValue}\\s*;`, 'i');
+  const pattern = new RegExp(
+    `${property}\\s*:\\s*${expectedValue}(?:\\s*!important)?\\s*;`,
+    'i',
+  );
   return pattern.test(block);
 }
 
@@ -865,6 +868,49 @@ if (appDialogInputNumberInnerBlock) {
   if (!hasDeclaration(appDialogInputNumberInnerBlock, 'outline', '0')) {
     findings.push('.app-dialog InputNumber inner wrapper must not render its own outline.');
   }
+}
+
+const appDialogSelectFocusBlock = requireBlock(
+  globalSource,
+  '.app-dialog .arco-select-open .arco-select-view',
+  findings,
+);
+if (appDialogSelectFocusBlock) {
+  if (!hasDeclaration(appDialogSelectFocusBlock, 'border-color', 'var\\(--brand-primary\\)')) {
+    findings.push('.app-dialog Select open state must use the active brand border color.');
+  }
+  if (
+    !hasDeclaration(
+      appDialogSelectFocusBlock,
+      'box-shadow',
+      '0 0 0 3px color-mix\\(in srgb, var\\(--brand-primary\\) 14%, transparent\\)',
+    )
+  ) {
+    findings.push('.app-dialog Select open state must use the shared brand focus ring.');
+  }
+}
+
+const dialogCardTitleSpaceBlock = requireBlock(
+  globalSource,
+  '.app-dialog .dialog-grid-card .arco-card-header-title .arco-space',
+  findings,
+);
+if (dialogCardTitleSpaceBlock) {
+  if (!hasDeclaration(dialogCardTitleSpaceBlock, 'flex-wrap', 'nowrap')) {
+    findings.push('.dialog-grid-card headers must keep title rows on a single line.');
+  }
+  if (!hasDeclaration(dialogCardTitleSpaceBlock, 'width', '100%')) {
+    findings.push('.dialog-grid-card headers must reserve full width for title and count tag.');
+  }
+}
+
+const dialogCardTitleTextBlock = requireBlock(
+  globalSource,
+  '.app-dialog .dialog-grid-card .arco-card-header-title .arco-typography',
+  findings,
+);
+if (dialogCardTitleTextBlock && !hasDeclaration(dialogCardTitleTextBlock, 'white-space', 'nowrap')) {
+  findings.push('.dialog-grid-card title text must not wrap.');
 }
 
 const appDrawerInnerInputBlock = requireBlock(
