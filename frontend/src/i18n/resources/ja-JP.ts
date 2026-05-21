@@ -1535,7 +1535,7 @@ const jaJPFallback = {
   'i18n.audit.staleDays': '{{count}} 日未解消',
   'i18n.audit.stalePlaceholdersEmpty': '{{days}} 日以上未解消のプレースホルダーはありません。',
   'generator.moduleManager.title': 'モジュールレジストリ',
-  'generator.moduleManager.header.eyebrow': 'プラットフォーム層 / ローコード',
+  'generator.moduleManager.header.eyebrow': 'システム領域 / ローコード',
   'generator.moduleManager.header.title': 'モジュールレジストリ',
   'generator.moduleManager.header.description':
     '導入済みの platform、system、business モジュールを確認します。組み込みモジュールはここでは読み取り専用で、このページからアンインストールできません。',

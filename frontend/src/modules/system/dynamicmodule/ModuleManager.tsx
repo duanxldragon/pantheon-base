@@ -254,12 +254,27 @@ const ModuleManager: React.FC = () => {
       title: t('generator.moduleManager.name'),
       dataIndex: 'name',
       width: TABLE_COLUMN_WIDTH.identity,
-      render: (name: string) => <span>{name}</span>,
+      render: (name: string) => (
+        <Typography.Text
+          className="system-list__ellipsis-text"
+          ellipsis={{ showTooltip: true }}
+        >
+          {name}
+        </Typography.Text>
+      ),
     },
     {
       title: t('generator.moduleManager.displayName'),
       dataIndex: 'displayName',
       width: TABLE_COLUMN_WIDTH.name,
+      render: (displayName?: string) => (
+        <Typography.Text
+          className="system-list__ellipsis-text"
+          ellipsis={{ showTooltip: true }}
+        >
+          {displayName || '-'}
+        </Typography.Text>
+      ),
     },
     {
       title: t('generator.moduleManager.scope'),
@@ -310,7 +325,14 @@ const ModuleManager: React.FC = () => {
         title: t('generator.moduleManager.tableName'),
         dataIndex: 'tableName',
         width: TABLE_COLUMN_WIDTH.name,
-        render: (tableName: string) => (tableName ? <span>{tableName}</span> : <span>-</span>),
+        render: (tableName: string) => (
+          <Typography.Text
+            className="system-list__ellipsis-text"
+            ellipsis={{ showTooltip: true }}
+          >
+            {tableName || '-'}
+          </Typography.Text>
+        ),
       },
       'low',
     ),

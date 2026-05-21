@@ -28,6 +28,29 @@ interface GovernanceCleanupBarProps {
   trailing?: React.ReactNode;
 }
 
+function normalizeDateTimeLocalValue(value?: string) {
+  const normalized = String(value || '').trim();
+  if (!normalized) {
+    return '';
+  }
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(normalized)) {
+    return normalized;
+  }
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
+    return normalized.replace(' ', 'T');
+  }
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return '';
+  }
+  const year = parsed.getFullYear();
+  const month = `${parsed.getMonth() + 1}`.padStart(2, '0');
+  const day = `${parsed.getDate()}`.padStart(2, '0');
+  const hours = `${parsed.getHours()}`.padStart(2, '0');
+  const minutes = `${parsed.getMinutes()}`.padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
   retentionDays,
   retentionOptions,
@@ -67,16 +90,16 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
           {cleanupMode === 'range' ? (
             <Space size={8}>
               <Input
-                className="table-batch-action-bar__select"
+                className="table-batch-action-bar__datetime"
                 type="datetime-local"
-                value={rangeStart}
+                value={normalizeDateTimeLocalValue(rangeStart)}
                 placeholder={rangeStartLabel}
                 onChange={onRangeStartChange}
               />
               <Input
-                className="table-batch-action-bar__select"
+                className="table-batch-action-bar__datetime"
                 type="datetime-local"
-                value={rangeEnd}
+                value={normalizeDateTimeLocalValue(rangeEnd)}
                 placeholder={rangeEndLabel}
                 onChange={onRangeEndChange}
               />

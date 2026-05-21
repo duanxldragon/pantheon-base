@@ -1,5 +1,5 @@
 import { apiRequest } from '../../api/request';
-import { downloadFile } from '../../api/file';
+import { downloadCsvFile, downloadFile } from '../../api/file';
 
 export interface LoginPayload {
   username: string;
@@ -385,6 +385,23 @@ export function exportAdminLoginLogs(data?: LoginLogQuery) {
     data,
     filename: 'system-login-log-export.csv',
   });
+}
+
+export function exportSelectedAdminLoginLogs(rows: LoginLogRow[]) {
+  downloadCsvFile(
+    'system-login-log-export.csv',
+    ['username', 'ipaddr', 'loginLocation', 'browser', 'os', 'status', 'msg', 'loginTime'],
+    rows.map((item) => [
+      item.username || '',
+      item.ipaddr || '',
+      item.loginLocation || '',
+      item.browser || '',
+      item.os || '',
+      String(item.status ?? ''),
+      item.msg || '',
+      item.loginTime || '',
+    ]),
+  );
 }
 
 export function cleanupAdminLoginLogs(data: LoginLogCleanupPayload) {

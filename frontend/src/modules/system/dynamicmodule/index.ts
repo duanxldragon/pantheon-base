@@ -23,7 +23,7 @@ export const DynamicModuleModule = defineModule({
       titleKey: 'system.menu.modules',
       icon: 'apps',
       routeName: 'system-modules',
-      module: 'platform.lowcode',
+      module: 'system.lowcode',
     },
   ],
   permissions: [

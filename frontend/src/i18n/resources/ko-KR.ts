@@ -1472,7 +1472,7 @@ const koKRFallback = {
   'i18n.audit.staleDays': '{{count}}일 미해결',
   'i18n.audit.stalePlaceholdersEmpty': '{{days}}일 이상 미해결된 플레이스홀더가 없습니다.',
   'generator.moduleManager.title': '모듈 레지스트리',
-  'generator.moduleManager.header.eyebrow': '플랫폼 계층 / 로우코드',
+  'generator.moduleManager.header.eyebrow': '시스템 도메인 / 로우코드',
   'generator.moduleManager.header.title': '모듈 레지스트리',
   'generator.moduleManager.header.description':
     '설치된 platform, system, business 모듈을 검토합니다. 내장 모듈은 여기서 읽기 전용이며 이 페이지에서 제거할 수 없습니다.',

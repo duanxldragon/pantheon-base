@@ -614,6 +614,71 @@ func TestSyncBuiltInModules_PreservesUninstalledManagedModuleAndRemovesRegistryR
 	assertFileNotContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/asset/AssetList")
 }
 
+func TestSyncBuiltInModules_NormalizesLegacyLowcodeAlias(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemI18nTable(t, db)
+	mustInsertSystemMenuModule(t, db, "/system/lowcode", "platform.lowcode")
+
+	legacy := ModuleRegistration{
+		Name:        "platform.lowcode",
+		DisplayName: "platform.lowcode",
+		Scope:       "platform",
+		Source:      "core",
+		Status:      ModuleStatusActive,
+		InstalledAt: "2026-05-20T00:00:00Z",
+	}
+	if err := db.Create(&legacy).Error; err != nil {
+		t.Fatalf("seed legacy registration: %v", err)
+	}
+	if err := db.Exec(`INSERT INTO system_i18n (module) VALUES ('platform.lowcode')`).Error; err != nil {
+		t.Fatalf("seed legacy i18n: %v", err)
+	}
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	if err := service.SyncBuiltInModules(); err != nil {
+		t.Fatalf("sync modules: %v", err)
+	}
+
+	var menuModule string
+	if err := db.Table("system_menu").Select("module").Where("path = ?", "/system/lowcode").Scan(&menuModule).Error; err != nil {
+		t.Fatalf("load repaired menu module: %v", err)
+	}
+	if menuModule != "system.lowcode" {
+		t.Fatalf("expected menu module to be normalized, got %s", menuModule)
+	}
+
+	var registration ModuleRegistration
+	if err := db.Where("name = ?", "system.lowcode").First(&registration).Error; err != nil {
+		t.Fatalf("load normalized registration: %v", err)
+	}
+	if registration.Scope != "system" {
+		t.Fatalf("expected normalized scope system, got %s", registration.Scope)
+	}
+
+	var legacyCount int64
+	if err := db.Model(&ModuleRegistration{}).Where("name = ?", "platform.lowcode").Count(&legacyCount).Error; err != nil {
+		t.Fatalf("count legacy registration: %v", err)
+	}
+	if legacyCount != 0 {
+		t.Fatalf("expected legacy registration removed, got %d", legacyCount)
+	}
+
+	var i18nCount int64
+	if err := db.Table("system_i18n").Where("module = ?", "system.lowcode").Count(&i18nCount).Error; err != nil {
+		t.Fatalf("count normalized i18n: %v", err)
+	}
+	if i18nCount != 1 {
+		t.Fatalf("expected normalized i18n row, got %d", i18nCount)
+	}
+}
+
 func TestRebuildGeneratedRegistries_SkipsMissingManagedSource(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)

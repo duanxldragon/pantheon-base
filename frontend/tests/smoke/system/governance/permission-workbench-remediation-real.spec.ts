@@ -83,7 +83,7 @@ async function ensureGeneratePermissionMenu(page: Page, accessToken: string): Pr
       type: 'F',
       icon: '',
       routeName: '',
-      module: 'platform.lowcode',
+      module: 'system.lowcode',
       sort: 99,
       isVisible: 1,
       isCache: 0,

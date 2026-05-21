@@ -37,8 +37,8 @@ VALUES
 
 	assertMenuParent(t, db, "/system/user", "/system/access", "system.iam")
 	assertMenuParent(t, db, "/system/dict", "/system/config", "system.config")
-	assertMenuParent(t, db, "/system/modules", "/system/lowcode", "platform.lowcode")
-	assertMenuParent(t, db, "/system/generator", "/system/lowcode", "platform.lowcode")
+	assertMenuParent(t, db, "/system/modules", "/system/lowcode", "system.lowcode")
+	assertMenuParent(t, db, "/system/generator", "/system/lowcode", "system.lowcode")
 	assertAdminMenuBound(t, db, "/system/access")
 	assertAdminMenuBound(t, db, "/system/user")
 	assertAdminMenuBound(t, db, "/system/lowcode")

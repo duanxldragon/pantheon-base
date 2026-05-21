@@ -1599,7 +1599,7 @@ const frFRFallback = {
   'i18n.audit.stalePlaceholdersEmpty':
     'Aucun placeholder non résolu depuis plus de {{days}} jours.',
   'generator.moduleManager.title': 'Registre des modules',
-  'generator.moduleManager.header.eyebrow': 'Couche plateforme / Low-Code',
+  'generator.moduleManager.header.eyebrow': 'Domaine système / Low-Code',
   'generator.moduleManager.header.title': 'Registre des modules',
   'generator.moduleManager.header.description':
     'Consultez les modules platform, system et business installés. Les modules intégrés sont ici en lecture seule et ne peuvent pas être désinstallés depuis cette page.',
