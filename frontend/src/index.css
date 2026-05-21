@@ -2163,6 +2163,18 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   align-items: center;
 }
 
+.app-table__pagination-step-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app-table__pagination-step-origin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .app-table .arco-pagination {
   display: flex;
   align-items: center;

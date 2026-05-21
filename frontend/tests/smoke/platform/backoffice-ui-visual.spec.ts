@@ -7,6 +7,7 @@ const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];
 
 interface ShellPreferenceOptions {
+  theme?: 'indigo' | 'emerald' | 'violet' | 'slate';
   language?: string;
   layoutMode?: 'vertical' | 'horizontal';
   densityMode?: 'comfortable' | 'compact';
@@ -79,6 +80,84 @@ async function updateCurrentUserPreferences(
   expect(payload.code).toBe(200);
 }
 
+async function getDeptTreeItems(page: Page, accessToken: string) {
+  const response = await page.request.get(`${apiBaseUrl}/system/dept/tree`, {
+    headers: authHeaders(accessToken),
+    params: { sortField: 'sort', sortOrder: 'asc' },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return Array.isArray(payload.data) ? (payload.data as Array<Record<string, unknown>>) : [];
+}
+
+function flattenDeptTree(nodes: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  return nodes.flatMap((node) => [
+    node,
+    ...flattenDeptTree(Array.isArray(node.children) ? (node.children as Array<Record<string, unknown>>) : []),
+  ]);
+}
+
+async function createDeptSeed(page: Page, accessToken: string) {
+  const deptTree = flattenDeptTree(await getDeptTreeItems(page, accessToken));
+  const rootDept = deptTree.find((item) => Boolean(item.isRoot));
+  expect(rootDept).toBeTruthy();
+  const deptName = `视觉巡检部门-${Date.now()}`;
+  const response = await page.request.post(`${apiBaseUrl}/system/dept`, {
+    headers: await requestHeaders(page, accessToken),
+    data: {
+      parentId: rootDept!.id,
+      deptName,
+      sort: 10,
+      phone: '',
+      email: '',
+      status: 1,
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return {
+    id: payload.data.id as number,
+    deptName,
+  };
+}
+
+async function deleteDeptSeed(page: Page, accessToken: string, deptId: number) {
+  await page.request.delete(`${apiBaseUrl}/system/dept/${deptId}`, {
+    headers: await requestHeaders(page, accessToken),
+  }).catch(() => undefined);
+}
+
+async function createPostSeed(page: Page, accessToken: string) {
+  const postCode = `VISUAL_POST_${Date.now()}`;
+  const response = await page.request.post(`${apiBaseUrl}/system/post`, {
+    headers: await requestHeaders(page, accessToken),
+    data: {
+      deptId: (await createDeptSeed(page, accessToken)).id,
+      postCode,
+      postName: `视觉巡检岗位-${postCode}`,
+      sort: 10,
+      status: 1,
+      remark: 'visual smoke seed',
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return {
+    id: payload.data.id as number,
+    postCode,
+    deptId: payload.data.deptId as number,
+  };
+}
+
+async function deletePostSeed(page: Page, accessToken: string, postId: number) {
+  await page.request.delete(`${apiBaseUrl}/system/post/${postId}`, {
+    headers: await requestHeaders(page, accessToken),
+  }).catch(() => undefined);
+}
+
 const authenticatedPages = [
   { path: '/dashboard', title: '工作台', screenshot: 'dashboard-desktop.png' },
   { path: '/system/user', title: '用户管理', screenshot: 'system-user-desktop.png' },
@@ -87,9 +166,24 @@ const authenticatedPages = [
   { path: '/system/menu', title: '菜单管理', screenshot: 'system-menu-desktop.png' },
   { path: '/system/dept', title: '部门管理', screenshot: 'system-dept-desktop.png' },
   { path: '/system/post', title: '岗位管理', screenshot: 'system-post-desktop.png' },
+  { path: '/system/dict', title: '字典管理', screenshot: 'system-dict-desktop.png' },
   { path: '/system/setting', title: '基础信息', screenshot: 'system-setting-desktop.png' },
+  { path: '/system/i18n', title: '国际化管理', screenshot: 'system-i18n-desktop.png' },
+  { path: '/system/login-log', title: '登录日志', screenshot: 'system-login-log-desktop.png' },
+  { path: '/system/session', title: '会话管理', screenshot: 'system-session-desktop.png' },
+  { path: '/system/security-event', title: '安全事件', screenshot: 'system-security-event-desktop.png' },
+  { path: '/system/operation-log', title: '操作日志', screenshot: 'system-operation-log-desktop.png' },
+  {
+    path: '/system/modules',
+    title: '模块注册表',
+    identityTitle: '模块管理',
+    screenshot: 'system-modules-desktop.png',
+  },
+  { path: '/system/generator', title: '模块生成器', screenshot: 'system-generator-desktop.png' },
   { path: '/auth/security', title: '安全中心', screenshot: 'auth-security-desktop.png' },
 ] as const;
+
+const narrowSystemPages = authenticatedPages.filter((page) => page.path.startsWith('/system/'));
 
 const sharedControlPages = [
   '/system/user',
@@ -360,93 +454,101 @@ test.describe('backoffice UI visual acceptance', () => {
 
     await installExplicitZhCNPreference(page);
     await installEmeraldThemePreference(page);
-    await signInAsAdmin(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-
-    await page.goto('/system/user', { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: '新增', exact: true }).click();
-    const userDialog = page
-      .getByRole('dialog')
-      .filter({ has: page.getByText('新增用户', { exact: true }) });
-    await expect(userDialog).toBeVisible();
-
-    const userNameInput = userDialog
-      .locator('.arco-form-item')
-      .filter({ hasText: '用户名' })
-      .locator('input')
-      .first();
-    const userBaseline = await readFieldChrome(userNameInput);
-    const userPassword = await readFieldChrome(
-      userDialog.locator('.arco-form-item').filter({ hasText: '密码' }).locator('input').first(),
-    );
-    const userDept = await readSurfaceChrome(
-      userDialog.locator('.arco-form-item').filter({ hasText: '部门' }).locator('.arco-select-view').first(),
-    );
-    const userStatus = await readSurfaceChrome(
-      userDialog.locator('.arco-form-item').filter({ hasText: '状态' }).locator('.arco-select-view').first(),
-    );
-    expect(userBaseline.backgroundColor).toBe('rgb(255, 255, 255)');
-    expectMatchingFieldChrome(userPassword, userBaseline);
-    expect(userDept.borderWidth).toBe(userBaseline.borderWidth);
-    expect(userDept.borderStyle).toBe(userBaseline.borderStyle);
-    expect(userDept.borderRadius).toBe(userBaseline.borderRadius);
-    expect(userDept.backgroundColor).toBe(userBaseline.backgroundColor);
-    expect(userStatus.borderWidth).toBe(userBaseline.borderWidth);
-    expect(userStatus.borderStyle).toBe(userBaseline.borderStyle);
-    expect(userStatus.borderRadius).toBe(userBaseline.borderRadius);
-    expect(userStatus.backgroundColor).toBe(userBaseline.backgroundColor);
-    await userDialog.getByRole('button', { name: '取消', exact: true }).click();
-
-    await openSystemListPage(page, '/system/menu');
-    await page.getByRole('button', { name: '新增', exact: true }).click();
-    const menuDialog = page
-      .getByRole('dialog')
-      .filter({ has: page.getByText('新增菜单', { exact: true }) });
-    await expect(menuDialog).toBeVisible();
-    const parentMenu = await readSurfaceChrome(menuDialog.locator('.arco-tree-select-view').first());
-    expect(parentMenu.borderWidth).toBe(userBaseline.borderWidth);
-    expect(parentMenu.borderStyle).toBe(userBaseline.borderStyle);
-    expect(parentMenu.borderRadius).toBe(userBaseline.borderRadius);
-    expect(parentMenu.backgroundColor).toBe(userBaseline.backgroundColor);
-    await menuDialog.getByRole('button', { name: '取消', exact: true }).click();
-    await expect(menuDialog).toHaveCount(0);
-
-    await openSystemListPage(page, '/system/role');
-    await page.getByRole('button', { name: '新增', exact: true }).click();
-    const roleDialog = page
-      .getByRole('dialog')
-      .filter({ has: page.getByText('新增角色', { exact: true }) });
-    await expect(roleDialog).toBeVisible();
-
-    const roleStatus = roleDialog
-      .locator('.arco-form-item')
-      .filter({ hasText: '状态' })
-      .locator('.arco-select-view')
-      .first();
-    await roleStatus.click();
-    const roleStatusFocused = await readSurfaceChrome(roleStatus);
-    expect(roleStatusFocused.borderColor).not.toBe('rgb(22, 93, 255)');
-    expect(roleStatusFocused.boxShadow).not.toContain('190, 218, 255');
-
-    const authorizationTitleMetrics = await roleDialog.evaluate((root) => {
-      return Array.from(root.querySelectorAll('.dialog-grid-card .arco-card-header-title .arco-typography'))
-        .slice(0, 3)
-        .map((node) => {
-          const style = window.getComputedStyle(node);
-          const lineHeight = Number.parseFloat(style.lineHeight || '0');
-          const height = node.getBoundingClientRect().height;
-          return {
-            text: node.textContent?.trim() || '',
-            lines: lineHeight > 0 ? Math.round(height / lineHeight) : 0,
-          };
-        });
+    const accessToken = await signInAsAdmin(page);
+    const originalPreferences = await getCurrentUserPreferences(page, accessToken);
+    await updateCurrentUserPreferences(page, accessToken, {
+      ...originalPreferences,
+      theme: 'emerald',
     });
-    expect(authorizationTitleMetrics).toHaveLength(3);
-    for (const title of authorizationTitleMetrics) {
-      expect(title.lines).toBeLessThanOrEqual(1);
-    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    try {
+      await page.goto('/system/user', { waitUntil: 'networkidle' });
+      await page.getByRole('button', { name: '新增', exact: true }).click();
+      const userDialog = page
+        .getByRole('dialog')
+        .filter({ has: page.getByText('新增用户', { exact: true }) });
+      await expect(userDialog).toBeVisible();
 
-    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+      const userNameInput = userDialog
+        .locator('.arco-form-item')
+        .filter({ hasText: '用户名' })
+        .locator('input')
+        .first();
+      const userBaseline = await readFieldChrome(userNameInput);
+      const userPassword = await readFieldChrome(
+        userDialog.locator('.arco-form-item').filter({ hasText: '密码' }).locator('input').first(),
+      );
+      const userDept = await readSurfaceChrome(
+        userDialog.locator('.arco-form-item').filter({ hasText: '部门' }).locator('.arco-select-view').first(),
+      );
+      const userStatus = await readSurfaceChrome(
+        userDialog.locator('.arco-form-item').filter({ hasText: '状态' }).locator('.arco-select-view').first(),
+      );
+      expect(userBaseline.backgroundColor).toBe('rgb(255, 255, 255)');
+      expectMatchingFieldChrome(userPassword, userBaseline);
+      expect(userDept.borderWidth).toBe(userBaseline.borderWidth);
+      expect(userDept.borderStyle).toBe(userBaseline.borderStyle);
+      expect(userDept.borderRadius).toBe(userBaseline.borderRadius);
+      expect(userDept.backgroundColor).toBe(userBaseline.backgroundColor);
+      expect(userStatus.borderWidth).toBe(userBaseline.borderWidth);
+      expect(userStatus.borderStyle).toBe(userBaseline.borderStyle);
+      expect(userStatus.borderRadius).toBe(userBaseline.borderRadius);
+      expect(userStatus.backgroundColor).toBe(userBaseline.backgroundColor);
+      await userDialog.getByRole('button', { name: '取消', exact: true }).click();
+
+      await openSystemListPage(page, '/system/menu');
+      await page.getByRole('button', { name: '新增', exact: true }).click();
+      const menuDialog = page
+        .getByRole('dialog')
+        .filter({ has: page.getByText('新增菜单', { exact: true }) });
+      await expect(menuDialog).toBeVisible();
+      const parentMenu = await readSurfaceChrome(menuDialog.locator('.arco-tree-select-view').first());
+      expect(parentMenu.borderWidth).toBe(userBaseline.borderWidth);
+      expect(parentMenu.borderStyle).toBe(userBaseline.borderStyle);
+      expect(parentMenu.borderRadius).toBe(userBaseline.borderRadius);
+      expect(parentMenu.backgroundColor).toBe(userBaseline.backgroundColor);
+      await menuDialog.getByRole('button', { name: '取消', exact: true }).click();
+      await expect(menuDialog).toHaveCount(0);
+
+      await openSystemListPage(page, '/system/role');
+      await page.getByRole('button', { name: '新增', exact: true }).click();
+      const roleDialog = page
+        .getByRole('dialog')
+        .filter({ has: page.getByText('新增角色', { exact: true }) });
+      await expect(roleDialog).toBeVisible();
+
+      const roleStatus = roleDialog
+        .locator('.arco-form-item')
+        .filter({ hasText: '状态' })
+        .locator('.arco-select-view')
+        .first();
+      await roleStatus.click();
+      const roleStatusFocused = await readSurfaceChrome(roleStatus);
+      expect(roleStatusFocused.borderColor).not.toBe('rgb(22, 93, 255)');
+      expect(roleStatusFocused.boxShadow).not.toContain('190, 218, 255');
+
+      const authorizationTitleMetrics = await roleDialog.evaluate((root) => {
+        return Array.from(root.querySelectorAll('.dialog-grid-card .arco-card-header-title .arco-typography'))
+          .slice(0, 3)
+          .map((node) => {
+            const style = window.getComputedStyle(node);
+            const lineHeight = Number.parseFloat(style.lineHeight || '0');
+            const height = node.getBoundingClientRect().height;
+            return {
+              text: node.textContent?.trim() || '',
+              lines: lineHeight > 0 ? Math.round(height / lineHeight) : 0,
+            };
+          });
+      });
+      expect(authorizationTitleMetrics).toHaveLength(3);
+      for (const title of authorizationTitleMetrics) {
+        expect(title.lines).toBeLessThanOrEqual(1);
+      }
+
+      expectOnlyAllowedRuntimeErrors(runtimeErrors);
+    } finally {
+      await updateCurrentUserPreferences(page, accessToken, originalPreferences);
+    }
   });
 
   test('edit dialogs and filter panels keep one shared control thickness contract', async ({
@@ -457,57 +559,80 @@ test.describe('backoffice UI visual acceptance', () => {
 
     await installExplicitZhCNPreference(page);
     await installEmeraldThemePreference(page);
-    await signInAsAdmin(page);
+    const accessToken = await signInAsAdmin(page);
+    const originalPreferences = await getCurrentUserPreferences(page, accessToken);
+    await updateCurrentUserPreferences(page, accessToken, {
+      ...originalPreferences,
+      theme: 'emerald',
+    });
     await page.setViewportSize({ width: 1440, height: 900 });
+    let seededPost: { id: number; postCode: string } | null = null;
+    try {
+      await page.goto('/system/user', { waitUntil: 'networkidle' });
+      await page.getByRole('button', { name: '新增', exact: true }).click();
+      const createDialog = page
+        .getByRole('dialog')
+        .filter({ has: page.getByText('新增用户', { exact: true }) });
+      await expect(createDialog).toBeVisible();
+      const baselineChrome = await readFieldChrome(
+        createDialog.locator('.arco-form-item').filter({ hasText: '用户名' }).locator('input').first(),
+      );
+      await createDialog.getByRole('button', { name: '取消', exact: true }).click();
+      await expect(createDialog).toBeHidden();
 
-    await page.goto('/system/user', { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: '新增', exact: true }).click();
-    const createDialog = page
-      .getByRole('dialog')
-      .filter({ has: page.getByText('新增用户', { exact: true }) });
-    await expect(createDialog).toBeVisible();
-    const baselineChrome = await readFieldChrome(
-      createDialog.locator('.arco-form-item').filter({ hasText: '用户名' }).locator('input').first(),
-    );
-    await createDialog.getByRole('button', { name: '取消', exact: true }).click();
-    await expect(createDialog).toBeHidden();
+      for (const path of sharedControlPages) {
+        if (path === '/system/post') {
+      seededPost = await createPostSeed(page, accessToken);
+        }
 
-    for (const path of sharedControlPages) {
-      await openSystemListPage(page, path);
-      const filterPanel = page.locator('.filter-panel').first();
-      await expect(filterPanel).toBeVisible();
-      const filterChromes = await readVisibleSurfaceChromes(filterPanel);
-      expect(filterChromes.length, `${path} filter controls`).toBeGreaterThan(0);
-      for (const controlChrome of filterChromes) {
-        expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+        await openSystemListPage(page, path);
+        const filterPanel = page.locator('.filter-panel').first();
+        await expect(filterPanel).toBeVisible();
+        const filterChromes = await readVisibleSurfaceChromes(filterPanel);
+        expect(filterChromes.length, `${path} filter controls`).toBeGreaterThan(0);
+        for (const controlChrome of filterChromes) {
+          expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+        }
+
+        await page.getByRole('button', { name: '新增', exact: true }).first().click();
+        const createModuleDialog = page.getByRole('dialog').first();
+        await expect(createModuleDialog).toBeVisible();
+        const createChromes = await readVisibleSurfaceChromes(createModuleDialog);
+        expect(createChromes.length, `${path} create dialog controls`).toBeGreaterThan(0);
+        for (const controlChrome of createChromes) {
+          expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+        }
+        await createModuleDialog.getByRole('button', { name: '取消', exact: true }).click();
+        await expect(createModuleDialog).toBeHidden();
+
+        const editButton = page.getByRole('button', { name: '编辑', exact: true }).first();
+        await expect(editButton, `${path} edit button`).toBeVisible({ timeout: 20000 });
+        await editButton.click();
+        const editDialog = page.getByRole('dialog').first();
+        await expect(editDialog).toBeVisible();
+        const editChromes = await readVisibleSurfaceChromes(editDialog);
+        expect(editChromes.length, `${path} edit dialog controls`).toBeGreaterThan(0);
+        for (const controlChrome of editChromes) {
+          expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+        }
+        await editDialog.getByRole('button', { name: '取消', exact: true }).click();
+        await expect(editDialog).toBeHidden();
+
+        if (seededPost) {
+          await deletePostSeed(page, accessToken, seededPost.id);
+          await deleteDeptSeed(page, accessToken, seededPost.deptId);
+          seededPost = null;
+        }
       }
 
-      await page.getByRole('button', { name: '新增', exact: true }).first().click();
-      const createModuleDialog = page.getByRole('dialog').first();
-      await expect(createModuleDialog).toBeVisible();
-      const createChromes = await readVisibleSurfaceChromes(createModuleDialog);
-      expect(createChromes.length, `${path} create dialog controls`).toBeGreaterThan(0);
-      for (const controlChrome of createChromes) {
-        expectMatchingSurfaceChrome(controlChrome, baselineChrome);
+      expectOnlyAllowedRuntimeErrors(runtimeErrors);
+    } finally {
+      if (seededPost) {
+        await deletePostSeed(page, accessToken, seededPost.id);
+        await deleteDeptSeed(page, accessToken, seededPost.deptId);
       }
-      await createModuleDialog.getByRole('button', { name: '取消', exact: true }).click();
-      await expect(createModuleDialog).toBeHidden();
-
-      const editButton = page.getByRole('button', { name: '编辑', exact: true }).first();
-      await expect(editButton, `${path} edit button`).toBeVisible({ timeout: 20000 });
-      await editButton.click();
-      const editDialog = page.getByRole('dialog').first();
-      await expect(editDialog).toBeVisible();
-      const editChromes = await readVisibleSurfaceChromes(editDialog);
-      expect(editChromes.length, `${path} edit dialog controls`).toBeGreaterThan(0);
-      for (const controlChrome of editChromes) {
-        expectMatchingSurfaceChrome(controlChrome, baselineChrome);
-      }
-      await editDialog.getByRole('button', { name: '取消', exact: true }).click();
-      await expect(editDialog).toBeHidden();
+      await updateCurrentUserPreferences(page, accessToken, originalPreferences);
     }
-
-    expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
   for (const pageMeta of authenticatedPages) {
@@ -523,10 +648,35 @@ test.describe('backoffice UI visual acceptance', () => {
           ? /\/system\/setting(?:\/[a-z-]+)?$/
           : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
       await expect(page).toHaveURL(expectedUrlPattern);
-      await expectPageIdentity(page, pageMeta.title);
+      await expectPageIdentity(page, pageMeta.identityTitle ?? pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);
       await page.screenshot({ path: join(artifactDir, pageMeta.screenshot), fullPage: true });
+
+      expectOnlyAllowedRuntimeErrors(runtimeErrors);
+    });
+  }
+
+  for (const pageMeta of narrowSystemPages) {
+    test(`${pageMeta.path} keeps screenshot evidence stable at 1280w`, async ({ page }) => {
+      const runtimeErrors = collectRuntimeErrors(page);
+      await signInAsAdmin(page);
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
+
+      const expectedUrlPattern =
+        pageMeta.path === '/system/setting'
+          ? /\/system\/setting(?:\/[a-z-]+)?$/
+          : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
+      await expect(page).toHaveURL(expectedUrlPattern);
+      await expectPageIdentity(page, pageMeta.identityTitle ?? pageMeta.title);
+      await expectNoPageError(page);
+      await expectProfessionalBackofficeSurface(page);
+      await page.screenshot({
+        path: join(artifactDir, pageMeta.screenshot.replace('-desktop.png', '-desktop-1280.png')),
+        fullPage: true,
+      });
 
       expectOnlyAllowedRuntimeErrors(runtimeErrors);
     });

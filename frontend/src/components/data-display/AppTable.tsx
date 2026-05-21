@@ -113,30 +113,28 @@ function createBoundaryPaginationItem(
   };
 
   return (
-    <li role="none" className="app-table__pagination-boundary-list">
-      <button
-        type="button"
-        className={[...classNames, `app-table__pagination-item-${type}`].join(' ')}
-        aria-label={ariaLabel}
-        disabled={disabled}
-        onClick={(event) => {
+    <button
+      type="button"
+      className={[...classNames, `app-table__pagination-item-${type}`].join(' ')}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        triggerBoundaryPageChange();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           event.stopPropagation();
           triggerBoundaryPageChange();
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            event.stopPropagation();
-            triggerBoundaryPageChange();
-          }
-        }}
-      >
-        <span aria-hidden="true" className="app-table__pagination-boundary-glyph">
-          {isFirst ? '《' : '》'}
-        </span>
-      </button>
-    </li>
+        }
+      }}
+    >
+      <span aria-hidden="true" className="app-table__pagination-boundary-glyph">
+        {isFirst ? '《' : '》'}
+      </span>
+    </button>
   );
 }
 
@@ -205,41 +203,60 @@ function AppTable<T>(props: AppTableProps<T>) {
               : renderNativePagination(paginationNode, pagePosition);
           }
 
-          const callerNode = renderPagination ? renderPagination(paginationNode) : paginationNode;
           const shouldDecorate =
-            !paginationNode.props.simple &&
-            getPaginationTotalPages(paginationNode.props) > 1 &&
-            callerNode != null;
+            !paginationNode.props.simple && getPaginationTotalPages(paginationNode.props) > 1;
 
           if (!shouldDecorate) {
             return renderPagination
-              ? callerNode
+              ? renderPagination(paginationNode)
               : renderNativePagination(paginationNode, pagePosition);
           }
 
-          return (
-            <div className={getPaginationWrapperClassName(pagePosition)}>
-              <div className="app-table__pagination-shell">
-                <ul className="arco-pagination-list app-table__pagination-boundary-group">
-                  {createBoundaryPaginationItem(
-                    'first',
-                    paginationNode.props,
-                    firstPageAriaLabel,
-                    rest.onChange,
-                  )}
-                </ul>
-                <div className="app-table__pagination-native">{callerNode}</div>
-                <ul className="arco-pagination-list app-table__pagination-boundary-group">
-                  {createBoundaryPaginationItem(
-                    'last',
-                    paginationNode.props,
-                    lastPageAriaLabel,
-                    rest.onChange,
-                  )}
-                </ul>
-              </div>
-            </div>
-          );
+          const originalItemRender = paginationNode.props.itemRender;
+          const decoratedPaginationNode = React.cloneElement(paginationNode, {
+            itemRender: (page, type, originElement) => {
+              const renderedOrigin = originalItemRender
+                ? originalItemRender(page, type, originElement)
+                : originElement;
+
+              if (type === 'prev') {
+                return (
+                  <span className="app-table__pagination-step-group">
+                    {createBoundaryPaginationItem(
+                      'first',
+                      paginationNode.props,
+                      firstPageAriaLabel,
+                      rest.onChange,
+                    )}
+                    <span className="app-table__pagination-step-origin">{renderedOrigin}</span>
+                  </span>
+                );
+              }
+
+              if (type === 'next') {
+                return (
+                  <span className="app-table__pagination-step-group">
+                    <span className="app-table__pagination-step-origin">{renderedOrigin}</span>
+                    {createBoundaryPaginationItem(
+                      'last',
+                      paginationNode.props,
+                      lastPageAriaLabel,
+                      rest.onChange,
+                    )}
+                  </span>
+                );
+              }
+
+              return renderedOrigin;
+            },
+          });
+          const callerNode = renderPagination
+            ? renderPagination(decoratedPaginationNode)
+            : decoratedPaginationNode;
+
+          return renderPagination
+            ? callerNode
+            : renderNativePagination(callerNode, pagePosition);
         }
       : renderPagination;
 

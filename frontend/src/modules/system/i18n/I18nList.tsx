@@ -1150,7 +1150,7 @@ const I18nList: React.FC = () => {
                     />
                   </FormItem>
                 </Col>
-                <Col span={5}>
+                <Col span={4}>
                   <FormItem label={t('i18n.module')} field="module">
                     <Select allowClear placeholder={t('i18n.module')}>
                       {moduleOptions.map((moduleName) => (
@@ -1161,7 +1161,7 @@ const I18nList: React.FC = () => {
                     </Select>
                   </FormItem>
                 </Col>
-                <Col span={5}>
+                <Col span={4}>
                   <FormItem label={t('i18n.group')} field="group">
                     <Select allowClear placeholder={t('i18n.group.placeholder')}>
                       {groupOptions.map((groupName) => (
@@ -1172,7 +1172,7 @@ const I18nList: React.FC = () => {
                     </Select>
                   </FormItem>
                 </Col>
-                <Col span={3}>
+                <Col span={4}>
                   <FormItem label={t('i18n.locale')} field="locale">
                     <Select allowClear placeholder={t('i18n.locale')}>
                       {(overview?.locales || [...SUPPORTED_LOCALES]).map((locale) => (
@@ -1183,7 +1183,7 @@ const I18nList: React.FC = () => {
                     </Select>
                   </FormItem>
                 </Col>
-                <Col span={3}>
+                <Col span={4}>
                   <FormItem className="filter-panel__action-item">
                     <Space size={6}>
                       <Button size="small" type="primary" htmlType="submit" icon={<IconSearch />}>

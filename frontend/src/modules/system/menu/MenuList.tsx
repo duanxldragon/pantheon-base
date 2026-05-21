@@ -452,7 +452,7 @@ const MenuList: React.FC = () => {
   }, [excludedParentIDs, parentTree, t]);
 
   const renderMenuActions = (row: MenuNode) => (
-    <Space size={4} className="system-list__actions">
+    <Space size={4} className="system-list__actions menu-list-page__row-actions">
       {canCreate && row.type !== 'F' ? (
         <Button
           type="text"
@@ -673,7 +673,7 @@ const MenuList: React.FC = () => {
     ),
     {
       title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.medium,
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
       fixed: 'right',
       render: (_: unknown, row: MenuNode) => renderMenuActions(row),
     },

@@ -49,6 +49,15 @@
   background: color-mix(in srgb, var(--danger-soft) 28%, #fff);
 }
 
+.menu-list-page__row-actions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.menu-list-page__row-actions .arco-btn-text {
+  padding-inline: 2px;
+}
+
 .system-list__ellipsis-text {
   display: inline-block;
   max-width: 100%;

@@ -2389,11 +2389,9 @@ test('login-log governance smoke: pager exposes first and last page controls', a
   const lastPageButton = pager.getByRole('button', { name: /^(末页|Last page)$/ });
   const prevPageButton = pager.locator('.arco-pagination-item-prev');
   const nextPageButton = pager.locator('.arco-pagination-item-next');
-  const paginationShell = pager.locator('.app-table__pagination-shell');
-  await expect(paginationShell).toHaveCount(1);
-  await expect(paginationShell.getByRole('button', { name: /^(首页|First page)$/ })).toBeVisible();
-  await expect(paginationShell.getByRole('button', { name: /^(末页|Last page)$/ })).toBeVisible();
-  await expect(paginationShell.locator('.arco-pagination-item-active')).toContainText('1');
+  await expect(prevPageButton.getByRole('button', { name: /^(首页|First page)$/ })).toBeVisible();
+  await expect(nextPageButton.getByRole('button', { name: /^(末页|Last page)$/ })).toBeVisible();
+  await expect(pager.locator('.arco-pagination-item-active')).toContainText('1');
   await expect(firstPageButton).toBeVisible();
   await expect(lastPageButton).toBeVisible();
   await expect(firstPageButton).toBeDisabled();
@@ -2420,7 +2418,9 @@ test('login-log governance smoke: pager exposes first and last page controls', a
   await expect(lastPageButton).toBeEnabled();
 });
 
-test('login-log governance smoke: single-page data does not show boundary pager controls', async ({ page }) => {
+test('login-log governance smoke: single-page data keeps boundary pager controls disabled', async ({
+  page,
+}) => {
   const pageSize = 10;
   await signInAsAdmin(page);
   await page.route(/\/api\/v1\/system\/login-log\/list(?:\?.*)?$/, async (route) => {
@@ -2557,6 +2557,8 @@ test('security-center smoke: client-side AppTable pagination exposes shared boun
   const lastPageButton = sessionCard.getByRole('button', { name: /^(末页|Last page)$/ });
   const prevPageButton = sessionCard.locator('.arco-pagination-item-prev');
   const nextPageButton = sessionCard.locator('.arco-pagination-item-next');
+  await expect(prevPageButton.getByRole('button', { name: /^(首页|First page)$/ })).toBeVisible();
+  await expect(nextPageButton.getByRole('button', { name: /^(末页|Last page)$/ })).toBeVisible();
   await expect(firstPageButton).toBeVisible();
   await expect(lastPageButton).toBeVisible();
   await expect(firstPageButton).toBeDisabled();
