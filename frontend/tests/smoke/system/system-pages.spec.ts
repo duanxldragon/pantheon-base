@@ -165,6 +165,25 @@ async function deleteUserByUsername(page: Page, accessToken: string, username: s
   }
 }
 
+async function findUserByUsername(page: Page, accessToken: string, username: string) {
+  const response = await page.request.get(`${apiBaseUrl}/system/user/list`, {
+    headers: authHeaders(accessToken),
+    params: { username, page: 1, pageSize: 20 },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+  return items.find((item: { username: string }) => item.username === username) as
+    | {
+        id: number;
+        username: string;
+        nickname: string;
+        email?: string;
+        status: number;
+      }
+    | undefined;
+}
+
 async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string) {
   const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
     headers: authHeaders(accessToken),
@@ -182,6 +201,182 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
       }).catch(() => undefined);
     }
   }
+}
+
+type RoleListItem = {
+  id: number;
+  roleKey: string;
+  roleName: string;
+  status?: number;
+};
+
+type DeptListItem = {
+  id: number;
+  parentId: number;
+  deptName: string;
+  isRoot?: boolean;
+  children?: DeptListItem[];
+};
+
+type PostListItem = {
+  id: number;
+  deptId: number;
+  deptName: string;
+  postCode: string;
+  postName: string;
+};
+
+async function getRoleList(page: Page, accessToken: string, params?: Record<string, unknown>) {
+  const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
+    headers: authHeaders(accessToken),
+    params: { page: 1, pageSize: 100, ...params },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+  return items as RoleListItem[];
+}
+
+async function getFirstActiveRole(page: Page, accessToken: string) {
+  const items = await getRoleList(page, accessToken, { status: 1, sortField: 'sort', sortOrder: 'asc' });
+  const role = items.find((item) => item.roleKey !== 'guest');
+  expect(role).toBeTruthy();
+  return role!;
+}
+
+function flattenDeptTreeNodes(nodes: DeptListItem[]): DeptListItem[] {
+  return nodes.flatMap((node) => [node, ...flattenDeptTreeNodes(node.children || [])]);
+}
+
+async function getDeptTree(page: Page, accessToken: string, params?: Record<string, unknown>) {
+  const response = await page.request.get(`${apiBaseUrl}/system/dept/tree`, {
+    headers: authHeaders(accessToken),
+    params,
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return Array.isArray(payload.data) ? (payload.data as DeptListItem[]) : [];
+}
+
+async function findDeptByName(page: Page, accessToken: string, deptName: string) {
+  const rows = flattenDeptTreeNodes(await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' }));
+  return rows.find((item) => item.deptName === deptName);
+}
+
+async function deleteDeptByName(page: Page, accessToken: string, deptName: string) {
+  const rows = flattenDeptTreeNodes(await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' }));
+  const targets = rows.filter((item) => item.deptName === deptName && !item.isRoot);
+  for (const item of targets.reverse()) {
+    await page.request.delete(`${apiBaseUrl}/system/dept/${item.id}`, {
+      headers: await verifiedHeaders(page, accessToken),
+    }).catch(() => undefined);
+  }
+}
+
+async function createDeptByApi(
+  page: Page,
+  accessToken: string,
+  data: { parentId: number; deptName: string; sort?: number; phone?: string; email?: string; status?: number },
+) {
+  const response = await page.request.post(`${apiBaseUrl}/system/dept`, {
+    headers: await verifiedHeaders(page, accessToken),
+    data: {
+      sort: 10,
+      phone: '',
+      email: '',
+      status: 1,
+      ...data,
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data as DeptListItem;
+}
+
+async function getPostListItems(page: Page, accessToken: string, params?: Record<string, unknown>) {
+  const response = await page.request.get(`${apiBaseUrl}/system/post/list`, {
+    headers: authHeaders(accessToken),
+    params: { page: 1, pageSize: 100, ...params },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+  return items as PostListItem[];
+}
+
+async function findPostByCode(page: Page, accessToken: string, postCode: string) {
+  const items = await getPostListItems(page, accessToken, { postCode });
+  return items.find((item) => item.postCode === postCode);
+}
+
+async function deletePostByCode(page: Page, accessToken: string, postCode: string) {
+  const items = await getPostListItems(page, accessToken, { postCode });
+  for (const item of items) {
+    if (item.postCode === postCode) {
+      await page.request.delete(`${apiBaseUrl}/system/post/${item.id}`, {
+        headers: await verifiedHeaders(page, accessToken),
+      }).catch(() => undefined);
+    }
+  }
+}
+
+async function createPostByApi(
+  page: Page,
+  accessToken: string,
+  data: { deptId: number; postCode: string; postName: string; sort?: number; remark?: string; status?: number },
+) {
+  const response = await page.request.post(`${apiBaseUrl}/system/post`, {
+    headers: await verifiedHeaders(page, accessToken),
+    data: {
+      sort: 10,
+      remark: '',
+      status: 1,
+      ...data,
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data as PostListItem;
+}
+
+async function createUserByApi(
+  page: Page,
+  accessToken: string,
+  data: {
+    username: string;
+    password: string;
+    nickname: string;
+    roleIds: number[];
+    deptId?: number;
+    postId?: number;
+    email?: string;
+    phone?: string;
+    status?: number;
+  },
+) {
+  const response = await page.request.post(`${apiBaseUrl}/system/user`, {
+    headers: await verifiedHeaders(page, accessToken),
+    data: {
+      email: '',
+      phone: '',
+      status: 1,
+      ...data,
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data as { id: number };
+}
+
+async function selectArcoOption(page: Page, trigger: ReturnType<Page['locator']>, optionText: string | RegExp) {
+  await trigger.click();
+  const option = page.locator('.arco-select-option').filter({ hasText: optionText }).first();
+  await expect(option).toBeVisible();
+  await option.click();
 }
 
 async function fetchManageMenuTree(page: Page, accessToken: string): Promise<ManageMenuNode[]> {
@@ -296,8 +491,11 @@ async function expectPageIdentityReady(page: Page, title: string | RegExp) {
   await expect(page.locator(pageIdentitySelectors.join(', ')).first()).toBeVisible();
 }
 
-function formItem(page: Page, label: string) {
-  return page.locator('.arco-form-item').filter({ has: page.getByText(label, { exact: true }) }).first();
+function formItem(scope: Page | ReturnType<Page['locator']>, label: string) {
+  return scope
+    .locator('.arco-form-item')
+    .filter({ has: scope.getByText(label, { exact: true }) })
+    .first();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -532,7 +730,7 @@ test('owning domain label smoke: post dict and module manager surface the correc
   const pageEyebrows = [
     { path: '/system/post', title: '岗位管理', eyebrow: '系统域 / 组织治理', locale: 'zh-CN' },
     { path: '/system/dict', title: '字典管理', eyebrow: '系统域 / 配置治理', locale: 'zh-CN' },
-    { path: '/system/modules', title: '模块注册表', eyebrow: '平台层 / 低代码', locale: 'zh-CN' },
+    { path: '/system/modules', title: '模块注册表', eyebrow: '系统域 / 低代码', locale: 'zh-CN' },
     {
       path: '/system/post',
       title: 'Close post status, in-use blockers, and remediation actions in one workbench',
@@ -567,7 +765,7 @@ test('module generator smoke: governance summary shows low-code ownership and pr
   await page.goto('/system/generator', { waitUntil: 'networkidle' });
 
   await expectVisiblePageTitle(page, /模块生成(?:器|向导)/);
-  await expect(page.locator('.governance-summary-bar__eyebrow')).toContainText('平台层 / 低代码');
+  await expect(page.locator('.governance-summary-bar__eyebrow')).toContainText('系统域 / 低代码');
   await expect(page.locator('.governance-summary-bar__title')).toContainText(
     '在受控治理约束内生成业务模块脚手架',
   );
@@ -2425,6 +2623,257 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
     })
     .toBe('1');
   await expect(selectedText).toContainText('已选 2 条');
+});
+
+test('user smoke: edit and detail work through the UI', async ({
+  page,
+}) => {
+  const accessToken = await signInAsAdmin(page);
+  const now = Date.now();
+  const username = `smoke_user_${now}`;
+  const nickname = `烟测用户${now}`;
+  const nextNickname = `${nickname}-已编辑`;
+  const email = `smoke-user-${now}@example.com`;
+  const nextEmail = `smoke-user-${now}-updated@example.com`;
+  const password = 'ChangeMe123';
+
+  await deleteUserByUsername(page, accessToken, username);
+
+  try {
+    await createUserByApi(page, accessToken, {
+      username,
+      password,
+      nickname,
+      email,
+      roleIds: [(await getFirstActiveRole(page, accessToken)).id],
+    });
+
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await installOperationToken(page, accessToken);
+    await expectVisiblePageTitle(page, '用户管理');
+    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
+
+    await formItem(page, '用户名').locator('input').fill(username);
+    await page.getByRole('button', { name: '搜索' }).click();
+    const userRow = page.getByRole('row', { name: new RegExp(username) }).first();
+    await expect(userRow).toBeVisible();
+    await expect(userRow).toContainText(nickname);
+
+    await userRow.getByRole('button', { name: '编辑' }).click();
+    const editDialog = page.getByRole('dialog').filter({ hasText: '编辑用户' });
+    await expect(editDialog).toBeVisible();
+    await editDialog.getByRole('textbox').nth(1).fill(nextNickname);
+    await editDialog.getByRole('textbox').nth(2).fill(nextEmail);
+    await editDialog.locator('.submit-bar').getByRole('button', { name: '保存' }).click();
+    await expect(page.locator('.arco-message').filter({ hasText: '更新成功' }).first()).toBeVisible();
+    await expect(userRow).toContainText(nextNickname);
+    await expect(userRow).toContainText(nextEmail);
+
+    await userRow.getByRole('button', { name: '详情' }).click();
+    const detailDialog = page.getByRole('dialog').filter({ hasText: username });
+    await expect(detailDialog).toBeVisible();
+    await expect(detailDialog.getByText(nextNickname).first()).toBeVisible();
+    await expect(detailDialog.getByText(nextEmail).first()).toBeVisible();
+    await page.keyboard.press('Escape');
+
+  } finally {
+    await deleteUserByUsername(page, accessToken, username);
+  }
+});
+
+test('user smoke: batch disable enable and delete stay stable through the UI', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const now = Date.now();
+  const username = `smoke_user_batch_${now}`;
+  const password = 'ChangeMe123';
+
+  await deleteUserByUsername(page, accessToken, username);
+
+  try {
+    await createUserByApi(page, accessToken, {
+      username,
+      password,
+      nickname: `批量烟测用户${now}`,
+      email: `smoke-user-batch-${now}@example.com`,
+      roleIds: [(await getFirstActiveRole(page, accessToken)).id],
+    });
+
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await installOperationToken(page, accessToken);
+    await expectVisiblePageTitle(page, '用户管理');
+    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
+
+    await formItem(page, '用户名').locator('input').fill(username);
+    await page.getByRole('button', { name: '搜索' }).click();
+    const userRow = page.getByRole('row', { name: new RegExp(username) }).first();
+    await expect(userRow).toBeVisible();
+
+    await userRow.locator('.arco-checkbox').first().click({ force: true });
+    await expect(page.locator('.table-batch-action-bar__meta')).toContainText('已选 1 条');
+
+    await page.getByRole('button', { name: '批量禁用' }).click();
+    await page.getByRole('button', { name: /确定|OK/ }).last().click();
+    await expect(page.locator('.arco-message').filter({ hasText: '已更新 1 条用户状态' }).first()).toBeVisible();
+    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(2);
+
+    await userRow.locator('.arco-checkbox').first().click({ force: true });
+    await page.getByRole('button', { name: '批量启用' }).click();
+    await page.getByRole('button', { name: /确定|OK/ }).last().click();
+    await expect(page.locator('.arco-message').filter({ hasText: '已更新 1 条用户状态' }).first()).toBeVisible();
+    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(1);
+
+    await userRow.locator('.arco-checkbox').first().click({ force: true });
+    await page.getByRole('button', { name: '删除所选' }).click();
+    await page.getByRole('button', { name: /确定|OK/ }).last().click();
+    await expect(page.locator('.arco-message').filter({ hasText: '已删除 1 条记录' }).first()).toBeVisible();
+    await expect.poll(async () => await findUserByUsername(page, accessToken, username)).toBeUndefined();
+  } finally {
+    await deleteUserByUsername(page, accessToken, username);
+  }
+});
+
+test('dept smoke: create dialog and root edit are reachable through the UI', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  await page.goto('/system/dept', { waitUntil: 'networkidle' });
+  await installOperationToken(page, accessToken);
+  await expectVisiblePageTitle(page, '部门管理');
+  await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
+
+  await page.getByRole('button', { name: '新增' }).click();
+  const createDialog = page.getByRole('dialog').filter({ hasText: '新增部门' });
+  await expect(createDialog).toBeVisible();
+  await expect(createDialog.getByText('Pantheon Base').first()).toBeVisible();
+  await expect(createDialog.getByRole('textbox').first()).toBeVisible();
+  await createDialog.locator('.submit-bar').getByRole('button', { name: '取消' }).click();
+  await expect(createDialog).not.toBeVisible();
+
+  const rootRow = page.getByRole('row', { name: /Pantheon Base/ }).first();
+  await rootRow.getByRole('button', { name: '编辑' }).click();
+  const editDialog = page.getByRole('dialog').filter({ hasText: '编辑部门' });
+  await expect(editDialog).toBeVisible();
+  await expect(editDialog.getByRole('textbox').first()).toHaveValue('Pantheon Base');
+  await expect(editDialog.getByText('启用').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+});
+
+test('dept smoke: blocked delete through API is covered', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const now = Date.now();
+  const deptName = `烟测部门-${now}`;
+  const postCode = `SMOKE_DEPT_POST_${now}`;
+  const postName = `烟测部门岗位-${now}`;
+  const deptTree = await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' });
+  const rootDept = flattenDeptTreeNodes(deptTree).find((item) => item.isRoot || item.parentId === 0);
+  expect(rootDept).toBeTruthy();
+
+  await deletePostByCode(page, accessToken, postCode);
+  await deleteDeptByName(page, accessToken, deptName);
+
+  try {
+    const createdDept = await createDeptByApi(page, accessToken, {
+      parentId: rootDept!.id,
+      deptName,
+      sort: 11,
+      email: `dept-${now}@example.com`,
+      phone: '021-12345678',
+    });
+
+    await createPostByApi(page, accessToken, {
+      deptId: createdDept.id,
+      postCode,
+      postName,
+      sort: 10,
+      remark: 'dept smoke',
+    });
+
+    const deleteResponse = await page.request.delete(`${apiBaseUrl}/system/dept/${createdDept.id}`, {
+      headers: await verifiedHeaders(page, accessToken),
+    });
+    expect(deleteResponse.ok()).toBeTruthy();
+    const deletePayload = await deleteResponse.json();
+    expect(deletePayload.code).not.toBe(200);
+    expect(deletePayload.message).toBe('dept.delete.error.has_posts');
+  } finally {
+    await deletePostByCode(page, accessToken, postCode);
+    await deleteDeptByName(page, accessToken, deptName);
+  }
+});
+
+test('post smoke: edit through UI and blocked delete through API are covered', async ({ page }) => {
+  const accessToken = await signInAsAdmin(page);
+  const now = Date.now();
+  const deptName = `烟测岗位部门-${now}`;
+  const postCode = `SMOKE_POST_${now}`;
+  const postName = `烟测岗位-${now}`;
+  const username = `smoke_post_user_${now}`;
+  const password = 'ChangeMe123';
+  const role = await getFirstActiveRole(page, accessToken);
+  const deptTree = await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' });
+  const rootDept = flattenDeptTreeNodes(deptTree).find((item) => item.isRoot || item.parentId === 0);
+  expect(rootDept).toBeTruthy();
+
+  await deleteUserByUsername(page, accessToken, username);
+  await deletePostByCode(page, accessToken, postCode);
+  await deleteDeptByName(page, accessToken, deptName);
+
+  try {
+    const dept = await createDeptByApi(page, accessToken, {
+      parentId: rootDept!.id,
+      deptName,
+      sort: 10,
+      email: `post-dept-${now}@example.com`,
+      phone: '13800000002',
+    });
+    const createdPost = await createPostByApi(page, accessToken, {
+      deptId: dept.id,
+      postCode,
+      postName,
+      sort: 21,
+      remark: 'post smoke',
+    });
+
+    await page.goto('/system/post', { waitUntil: 'networkidle' });
+    await installOperationToken(page, accessToken);
+    await expectVisiblePageTitle(page, '岗位管理');
+    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
+
+    await formItem(page, '岗位编码').locator('input').fill(postCode);
+    await page.getByRole('button', { name: '搜索' }).click();
+    let postRow = page.getByRole('row', { name: new RegExp(postCode) }).first();
+    await expect(postRow).toBeVisible();
+    await expect(postRow).toContainText(postName);
+
+    await postRow.getByRole('button', { name: '编辑' }).click();
+    const editDialog = page.getByRole('dialog').filter({ hasText: '编辑岗位' });
+    await expect(editDialog).toBeVisible();
+    await expect(editDialog.getByRole('textbox').first()).toHaveValue(postCode);
+    await expect(editDialog.getByRole('textbox').nth(1)).toHaveValue(postName);
+    await page.keyboard.press('Escape');
+
+    const post = await findPostByCode(page, accessToken, postCode);
+    expect(post).toBeTruthy();
+    await createUserByApi(page, accessToken, {
+      username,
+      password,
+      nickname: `岗位占用用户${now}`,
+      roleIds: [role.id],
+      deptId: dept.id,
+      postId: post!.id,
+      email: `post-user-${now}@example.com`,
+    });
+
+    const deleteResponse = await page.request.delete(`${apiBaseUrl}/system/post/${createdPost.id}`, {
+      headers: await verifiedHeaders(page, accessToken),
+    });
+    expect(deleteResponse.ok()).toBeTruthy();
+    const deletePayload = await deleteResponse.json();
+    expect(deletePayload.code).not.toBe(200);
+    expect(deletePayload.message).toBe('post.delete.error.has_users');
+  } finally {
+    await deleteUserByUsername(page, accessToken, username);
+    await deletePostByCode(page, accessToken, postCode);
+    await deleteDeptByName(page, accessToken, deptName);
+  }
 });
 
 test('session governance smoke: cleanup bar uses the unified governance affordance', async ({ page }) => {
