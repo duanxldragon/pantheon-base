@@ -12,7 +12,6 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../components/feedback/message';
-import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +25,7 @@ import {
   batchDeleteAdminLoginLogs,
   cleanupAdminLoginLogs,
   exportAdminLoginLogs,
+  exportSelectedAdminLoginLogs,
   getAdminLoginLogList,
   type LoginLogPageResp,
   type LoginLogQuery,
@@ -34,6 +34,7 @@ import {
 import { renderClientInfo } from './clientInfo';
 import {
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   type GovernanceCleanupMode,
   GovernanceCleanupBar,
@@ -66,7 +67,30 @@ const emptyQuery: LoginLogQuery = {
 const defaultRetentionOptions = [1, 7, 30];
 
 function toCleanupTimestamp(value: string) {
-  return value ? new Date(value).toISOString() : undefined;
+  const normalized = String(value || '').trim();
+  const match = normalized.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/,
+  );
+  if (!match) {
+    return normalized ? undefined : undefined;
+  }
+  const [, year, month, day, hour, minute, second = '00'] = match;
+  const localDate = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+  );
+  if (Number.isNaN(localDate.getTime())) {
+    return undefined;
+  }
+  const offsetMinutes = -localDate.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const offsetHours = `${Math.floor(Math.abs(offsetMinutes) / 60)}`.padStart(2, '0');
+  const offsetRemainMinutes = `${Math.abs(offsetMinutes) % 60}`.padStart(2, '0');
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}${sign}${offsetHours}:${offsetRemainMinutes}`;
 }
 
 function normalizeRetentionOptions(rawValue: string | undefined) {
@@ -306,6 +330,19 @@ const LoginLogList: React.FC = () => {
   ];
 
   const handleExport = async () => {
+    if (selectedRowKeys.length > 0) {
+      const selectedRows = data.filter((item) => selectedRowKeys.includes(item.id));
+      if (selectedRows.length !== selectedRowKeys.length) {
+        message.warning(
+          t('common.exportCurrentPageSelectionOnly', {
+            defaultValue: '已选记录包含跨页项，请切回对应页面后再导出。',
+          }),
+        );
+        return;
+      }
+      exportSelectedAdminLoginLogs(selectedRows);
+      return;
+    }
     await exportAdminLoginLogs(query);
   };
 
@@ -495,19 +532,11 @@ const LoginLogList: React.FC = () => {
                       }
                     : undefined
                 }
-                pagination={
-                  {
-                    current: query.page || emptyQuery.page,
-                    pageSize: query.pageSize || emptyQuery.pageSize,
-                    total,
-                    showJumper: true,
-                    pageSizeChangeResetCurrent: false,
-                    sizeCanChange: true,
-                    sizeOptions: [10, 20, 50, 100],
-                    size: 'small',
-                    showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps
-                }
+                pagination={buildStandardPagination(t, {
+                  current: query.page || emptyQuery.page,
+                  pageSize: query.pageSize || emptyQuery.pageSize,
+                  total,
+                })}
               />
             )}
           </Card>

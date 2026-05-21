@@ -53,6 +53,7 @@ import { useMenuStore } from '../../../store/useMenuStore';
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   GovernanceInsightDrawer,
@@ -134,6 +135,7 @@ const MenuList: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState<MenuNode | null>(null);
   const [viewMode, setViewMode] = useState<MenuViewMode>('table');
+  const [tablePagination, setTablePagination] = useState({ current: 1, pageSize: 10 });
   const [query, setQuery] = useState<MenuListQuery>(emptyQuery);
   const [form] = Form.useForm<MenuFormValues>();
   const [queryForm] = Form.useForm<MenuListQuery>();
@@ -209,6 +211,13 @@ const MenuList: React.FC = () => {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loadParentTree]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(data.length / tablePagination.pageSize));
+    if (tablePagination.current > totalPages) {
+      setTablePagination((current) => ({ ...current, current: totalPages }));
+    }
+  }, [data.length, tablePagination.current, tablePagination.pageSize]);
 
   useRefreshSubscription('system:menu:changed', (payload) => {
     if (payload.source === 'system/menu') {
@@ -310,6 +319,7 @@ const MenuList: React.FC = () => {
 
   const search = () => {
     const values = queryForm.getFieldsValue();
+    setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery({
       ...query,
       ...values,
@@ -318,6 +328,7 @@ const MenuList: React.FC = () => {
 
   const reset = () => {
     queryForm.setFieldsValue(emptyQuery);
+    setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery(emptyQuery);
   };
 
@@ -338,8 +349,12 @@ const MenuList: React.FC = () => {
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
-  const handleTableChange: TableProps<MenuNode>['onChange'] = (_pagination, sorter) => {
+  const handleTableChange: TableProps<MenuNode>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    setTablePagination({
+      current: pagination.current || 1,
+      pageSize: pagination.pageSize || tablePagination.pageSize,
+    });
     const nextQuery: MenuListQuery = {
       ...query,
       sortField: currentSorter?.direction ? String(currentSorter.field) : emptyQuery.sortField,
@@ -863,6 +878,11 @@ const MenuList: React.FC = () => {
                 scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
                 emptyText={t('common.noData')}
+                pagination={buildStandardPagination(t, {
+                  current: tablePagination.current,
+                  pageSize: tablePagination.pageSize,
+                  total: data.length,
+                })}
               />
             ) : null}
             {!loading && !(error && data.length === 0) && data.length > 0 && viewMode === 'list'

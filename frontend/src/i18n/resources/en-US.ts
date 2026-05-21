@@ -694,8 +694,8 @@ const enUSFallback = {
   'i18n.audit.affectedKeys': 'Affected Keys',
   'i18n.not_found': 'Translation entry not found',
   'generator.moduleManager.title': 'Module Registry',
-  'generator.moduleManager.eyebrow': 'Platform Layer / Low-Code',
-  'generator.moduleManager.header.eyebrow': 'Platform Layer / Low-Code',
+  'generator.moduleManager.eyebrow': 'System Domain / Low-Code',
+  'generator.moduleManager.header.eyebrow': 'System Domain / Low-Code',
   'generator.moduleManager.header.title': 'Module Registry',
   'generator.moduleManager.header.description':
     'Review installed platform, system, and business modules. Built-in modules are read-only here and cannot be uninstalled from this page.',
@@ -799,10 +799,10 @@ const enUSFallback = {
   'generator.moduleManager.status.failed': 'Failed',
   'generator.wizard.title': 'Module Generator',
   'generator.wizard.openRegistry': 'Open Module Registry',
-  'generator.wizard.header.eyebrow': 'Platform Layer / Low-Code',
+  'generator.wizard.header.eyebrow': 'System Domain / Low-Code',
   'generator.wizard.header.title': 'Generate Business Module Scaffolds Within Governed Boundaries',
   'generator.wizard.header.description':
-    'The generator stays inside the `platform/lowcode` domain: the main work area configures fields, menus, permissions, and contracts, while the summary bar only reports progress, field scale, and generated artifacts.',
+    'The generator stays inside the `system/lowcode` domain: the main work area configures fields, menus, permissions, and contracts, while the summary bar only reports progress, field scale, and generated artifacts.',
   'generator.wizard.header.steps': 'Steps',
   'generator.wizard.header.fields': 'Fields',
   'generator.wizard.header.files': 'Files',

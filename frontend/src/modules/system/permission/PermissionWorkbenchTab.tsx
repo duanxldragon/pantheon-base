@@ -29,6 +29,7 @@ import {
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   PageEmpty,
   PageError,
@@ -84,6 +85,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
 
   const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
   const [viewMode, setViewMode] = useState<'pending' | 'all'>('all');
+  const [tablePagination, setTablePagination] = useState({ current: 1, pageSize: 10 });
   const [remediationEvents, setRemediationEvents] = useState<PermissionWorkbenchRemediationEvent[]>(
     [],
   );
@@ -120,6 +122,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
 
   const searchWorkbench = () => {
     const values = workbenchForm.getFieldsValue();
+    setTablePagination((current) => ({ ...current, current: 1 }));
     onWorkbenchQueryChange({
       ...workbenchQuery,
       ...values,
@@ -128,6 +131,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
 
   const resetWorkbench = () => {
     workbenchForm.setFieldsValue(emptyWorkbenchQuery);
+    setTablePagination({ current: 1, pageSize: 10 });
     onWorkbenchQueryChange(emptyWorkbenchQuery);
   };
 
@@ -167,6 +171,19 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
     }
     return roles.filter((role) => role.governanceStatus === 'pending');
   }, [viewMode, workbench?.roles]);
+
+  useEffect(() => {
+    setTablePagination((current) => {
+      const totalPages = Math.max(1, Math.ceil(displayedRoles.length / current.pageSize));
+      if (current.current <= totalPages) {
+        return current;
+      }
+      return {
+        ...current,
+        current: totalPages,
+      };
+    });
+  }, [displayedRoles]);
 
   const renderGovernanceStatusTag = (role: PermissionWorkbenchRole) => {
     if (role.governanceStatus === 'pending') {
@@ -309,14 +326,20 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               <Button
                 type={viewMode === 'pending' ? 'primary' : 'secondary'}
                 size="small"
-                onClick={() => setViewMode('pending')}
+                onClick={() => {
+                  setViewMode('pending');
+                  setTablePagination((current) => ({ ...current, current: 1 }));
+                }}
               >
                 {t('system.permission.workbench.view.pending')}
               </Button>
               <Button
                 type={viewMode === 'all' ? 'primary' : 'secondary'}
                 size="small"
-                onClick={() => setViewMode('all')}
+                onClick={() => {
+                  setViewMode('all');
+                  setTablePagination((current) => ({ ...current, current: 1 }));
+                }}
               >
                 {t('system.permission.workbench.view.all')}
               </Button>
@@ -432,7 +455,17 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               columns={workbenchColumns}
               loading={workbenchLoading}
               scroll={{ x: 'max-content' }}
-              pagination={false}
+              pagination={buildStandardPagination(t, {
+                current: tablePagination.current,
+                pageSize: tablePagination.pageSize,
+                total: displayedRoles.length,
+              })}
+              onChange={(pagination) => {
+                setTablePagination({
+                  current: pagination.current || 1,
+                  pageSize: pagination.pageSize || tablePagination.pageSize,
+                });
+              }}
               emptyText={t('common.noData')}
             />
           ) : null}

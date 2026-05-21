@@ -10,7 +10,6 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconCheck, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +18,7 @@ import { formatDateTime } from '../../core/format/dateTime';
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -193,17 +193,14 @@ const SecurityEventList: React.FC = () => {
     },
   ];
 
-  const pagination: PaginationProps = {
+  const pagination = buildStandardPagination(t, {
     current: data.page,
     pageSize: data.pageSize,
     total: data.total,
-    showTotal: true,
-    showJumper: true,
-    sizeCanChange: true,
     onChange: (page, pageSize) => {
       void fetchData({ ...query, page, pageSize });
     },
-  };
+  });
 
   const handleSearch = () => {
     const values = form.getFieldsValue();

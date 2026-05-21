@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button, Card, Space, Tag, Typography } from '@arco-design/web-react';
-import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import {
   AppTable,
+  buildStandardPagination,
   TABLE_ACTION_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
@@ -149,19 +149,12 @@ const SettingAuditCard: React.FC<SettingAuditCardProps> = ({
         loading={loading}
         scroll={{ x: 'max-content' }}
         onChange={onChange}
-        pagination={
-          {
-            current: page,
-            pageSize,
-            total,
-            showJumper: true,
-            pageSizeChangeResetCurrent: false,
-            sizeCanChange: true,
-            sizeOptions: [5, 10, 20, 50],
-            size: 'small',
-            showTotal: (count: number) => t('common.total', { count }),
-          } as PaginationProps
-        }
+        pagination={buildStandardPagination(t, {
+          current: page,
+          pageSize,
+          total,
+          sizeOptions: [5, 10, 20, 50],
+        })}
       />
     </Card>
   );

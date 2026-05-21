@@ -41,7 +41,6 @@ import { usePermission } from '../../../hooks/usePermission';
 import { getDeptTree, type DeptNode } from '../dept/api';
 import { getPostList } from '../post/api';
 import { getRoleList } from '../role/api';
-import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type {
   ColumnProps,
   SorterInfo,
@@ -66,6 +65,7 @@ import {
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   ImportCsvButton,
@@ -1020,7 +1020,7 @@ const UserList: React.FC = () => {
             ) : null}
             {!loading && !(error && data.length === 0) && data.length > 0 ? (
               <AppTable<UserListRow>
-                className="system-user-list__table"
+                className="system-list__table system-user-list__table"
                 data={data}
                 columns={columns}
                 rowKey="id"
@@ -1037,19 +1037,11 @@ const UserList: React.FC = () => {
                 }}
                 onChange={handleTableChange}
                 emptyText={t('common.noData')}
-                pagination={
-                  {
-                    current: query.page || emptyQuery.page,
-                    pageSize: query.pageSize || emptyQuery.pageSize,
-                    total,
-                    showJumper: true,
-                    pageSizeChangeResetCurrent: false,
-                    sizeCanChange: true,
-                    sizeOptions: [10, 20, 50, 100],
-                    size: 'small',
-                    showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps
-                }
+                pagination={buildStandardPagination(t, {
+                  current: query.page || emptyQuery.page,
+                  pageSize: query.pageSize || emptyQuery.pageSize,
+                  total,
+                })}
               />
             ) : null}
           </Card>

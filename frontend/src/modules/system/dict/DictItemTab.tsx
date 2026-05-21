@@ -41,6 +41,7 @@ import {
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   ImportCsvButton,
@@ -772,15 +773,13 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
                 }}
                 emptyText={t('system.dict.itemEmpty')}
                 onChange={handleItemTableChange}
-                pagination={{
+                pagination={buildStandardPagination(t, {
                   total: itemTotal,
                   current: itemQuery.page,
                   pageSize: itemQuery.pageSize,
-                  showTotal: (count: number) => t('common.total', { count }),
-                  pageSizeChangeResetCurrent: false,
                   onChange: (page, pageSize) =>
                     setItemQuery((prev) => ({ ...prev, page, pageSize })),
-                }}
+                })}
                 scroll={{ x: 'max-content' }}
               />
             ) : null}

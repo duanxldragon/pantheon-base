@@ -13,7 +13,6 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type {
   ColumnProps,
   SorterInfo,
@@ -60,6 +59,7 @@ import {
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   GovernanceInsightDrawer,
@@ -699,7 +699,7 @@ const PostList: React.FC = () => {
                     />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={24} lg={6}>
+                <Col xs={24}>
                   <FormItem className="filter-panel__action-item">
                     <Space>
                       <Button type="primary" htmlType="submit" icon={<IconSearch />}>
@@ -851,19 +851,11 @@ const PostList: React.FC = () => {
                 }}
                 onChange={handleTableChange}
                 emptyText={t('system.post.empty')}
-                pagination={
-                  {
-                    current: query.page || emptyQuery.page,
-                    pageSize: query.pageSize || emptyQuery.pageSize,
-                    total,
-                    showJumper: true,
-                    pageSizeChangeResetCurrent: false,
-                    sizeCanChange: true,
-                    sizeOptions: [10, 20, 50, 100],
-                    size: 'small',
-                    showTotal: (count: number) => t('common.total', { count }),
-                  } as PaginationProps
-                }
+                pagination={buildStandardPagination(t, {
+                  current: query.page || emptyQuery.page,
+                  pageSize: query.pageSize || emptyQuery.pageSize,
+                  total,
+                })}
               />
             ) : null}
           </Card>

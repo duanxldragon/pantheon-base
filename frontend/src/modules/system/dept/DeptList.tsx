@@ -75,6 +75,7 @@ import UserDetailContent from '../user/UserDetailContent';
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   GovernanceInsightDrawer,
@@ -252,6 +253,7 @@ const DeptList: React.FC = () => {
   const [leaderCandidates, setLeaderCandidates] = useState<DeptLeaderCandidate[]>([]);
   const [leaderCandidateLoading, setLeaderCandidateLoading] = useState(false);
   const [batchLeaderTasks, setBatchLeaderTasks] = useState<BatchLeaderTask[]>([]);
+  const [tablePagination, setTablePagination] = useState({ current: 1, pageSize: 10 });
   const [query, setQuery] = useState<DeptListQuery>(emptyQuery);
   const [form] = Form.useForm<DeptFormValues>();
   const [leaderForm] = Form.useForm<DeptLeaderFormValues>();
@@ -432,6 +434,19 @@ const DeptList: React.FC = () => {
       }
     },
   );
+
+  useEffect(() => {
+    setTablePagination((current) => {
+      const totalPages = Math.max(1, Math.ceil(data.length / current.pageSize));
+      if (current.current <= totalPages) {
+        return current;
+      }
+      return {
+        ...current,
+        current: totalPages,
+      };
+    });
+  }, [data]);
 
   useEffect(() => {
     const state =
@@ -652,6 +667,7 @@ const DeptList: React.FC = () => {
   const search = () => {
     const values = queryForm.getFieldsValue();
     setSelectedRowKeys([]);
+    setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery({
       ...query,
       ...values,
@@ -668,12 +684,14 @@ const DeptList: React.FC = () => {
       governance,
     });
     setSelectedRowKeys([]);
+    setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery(nextQuery);
   };
 
   const reset = () => {
     queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
+    setTablePagination({ current: 1, pageSize: 10 });
     setQuery(emptyQuery);
   };
 
@@ -694,8 +712,12 @@ const DeptList: React.FC = () => {
     sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
   });
 
-  const handleTableChange: TableProps<DeptNode>['onChange'] = (_pagination, sorter) => {
+  const handleTableChange: TableProps<DeptNode>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    setTablePagination({
+      current: pagination.current || 1,
+      pageSize: pagination.pageSize || tablePagination.pageSize,
+    });
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -1207,7 +1229,7 @@ const DeptList: React.FC = () => {
                         />
                       </FormItem>
                     </Col>
-                    <Col xs={24} md={24} lg={8}>
+                    <Col xs={24}>
                       <FormItem className="filter-panel__action-item">
                         <Space size={6}>
                           <Button
@@ -1379,6 +1401,11 @@ const DeptList: React.FC = () => {
                     }}
                     onChange={handleTableChange}
                     emptyText={t('common.noData')}
+                    pagination={buildStandardPagination(t, {
+                      current: tablePagination.current,
+                      pageSize: tablePagination.pageSize,
+                      total: data.length,
+                    })}
                   />
                 ) : null}
               </Card>

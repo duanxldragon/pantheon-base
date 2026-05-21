@@ -40,6 +40,10 @@ export {
   type CrossPageRowKey,
   type SharedPaginationConfig,
 } from './table/crossPageSelection';
+export {
+  buildStandardPagination,
+  STANDARD_PAGINATION_SIZE_OPTIONS,
+} from './table/standardPagination';
 export { default as FormSection } from './patterns/FormSection';
 export { default as SubmitBar } from './patterns/SubmitBar';
 export { default as AppModal } from './patterns/AppModal';

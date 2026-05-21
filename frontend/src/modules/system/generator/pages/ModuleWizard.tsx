@@ -30,7 +30,9 @@ import { isRequestError } from '../../../../api/request';
 import { ensureOperationVerified } from '../../../../api/request';
 import PermissionAction from '../../../../components/patterns/PermissionAction';
 import {
+  AppTable,
   AppModal,
+  buildStandardPagination,
   GovernanceSummaryBar,
   PageContainer,
   showAppModalConfirm,
@@ -190,6 +192,10 @@ const ModuleWizard: React.FC = () => {
   const [relationContractsText, setRelationContractsText] = useState('');
   const [enableDataScope, setEnableDataScope] = useState(true);
   const [includeDashboardWidget, setIncludeDashboardWidget] = useState(true);
+  const [translationPreviewPagination, setTranslationPreviewPagination] = useState({
+    current: 1,
+    pageSize: 8,
+  });
   const [dataScopeMode, setDataScopeMode] = useState<DataScopeMode>('dept');
   const [translationOverrides, setTranslationOverrides] = useState<
     Record<string, TranslationOverride>
@@ -854,6 +860,10 @@ const ModuleWizard: React.FC = () => {
           en: previewSchema.i18n.translations.en[key] || '',
         }))
     : [];
+  const pagedPreviewTranslationRows = previewTranslationRows.slice(
+    (translationPreviewPagination.current - 1) * translationPreviewPagination.pageSize,
+    translationPreviewPagination.current * translationPreviewPagination.pageSize,
+  );
   const activationStatusKey = registerResult
     ? registerResult.module.status === 1
       ? 'generator.moduleManager.status.active'
@@ -861,6 +871,20 @@ const ModuleWizard: React.FC = () => {
         ? 'generator.moduleManager.status.uninstalled'
         : 'generator.moduleManager.status.pending'
     : '';
+
+  useEffect(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(previewTranslationRows.length / translationPreviewPagination.pageSize),
+    );
+    if (translationPreviewPagination.current > totalPages) {
+      setTranslationPreviewPagination((current) => ({ ...current, current: totalPages }));
+    }
+  }, [
+    previewTranslationRows.length,
+    translationPreviewPagination.current,
+    translationPreviewPagination.pageSize,
+  ]);
 
   const renderMenuPreview = (nodes: GeneratorMenuPreviewNode[]) => (
     <div className="generator-wizard__menu-tree">
@@ -1689,10 +1713,22 @@ const ModuleWizard: React.FC = () => {
                     </Button>
                   </Space>
                 </Space>
-                <Table
+                <AppTable<TranslationPreviewRow>
+                  className="system-list__table"
                   rowKey="key"
-                  data={previewTranslationRows}
-                  pagination={{ pageSize: 8, sizeCanChange: true }}
+                  data={pagedPreviewTranslationRows}
+                  pagination={buildStandardPagination(t, {
+                    current: translationPreviewPagination.current,
+                    pageSize: translationPreviewPagination.pageSize,
+                    total: previewTranslationRows.length,
+                    sizeOptions: [8, 16, 32, 64],
+                    onChange: (page, pageSize) => {
+                      setTranslationPreviewPagination({
+                        current: page,
+                        pageSize: pageSize || translationPreviewPagination.pageSize,
+                      });
+                    },
+                  })}
                   columns={[
                     {
                       title: t('generator.wizard.step3.translationPreview.key'),

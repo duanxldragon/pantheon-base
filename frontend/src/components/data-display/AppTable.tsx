@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from '@arco-design/web-react';
-import { IconDoubleLeft, IconDoubleRight } from '@arco-design/web-react/icon';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
@@ -86,6 +85,7 @@ function createBoundaryPaginationItem(
   type: 'first' | 'last',
   paginationProps: PaginationNodeProps,
   ariaLabel: string,
+  onTableChange?: (...args: any[]) => void,
 ) {
   const currentPage = getPaginationCurrentPage(paginationProps);
   const totalPages = getPaginationTotalPages(paginationProps);
@@ -101,6 +101,17 @@ function createBoundaryPaginationItem(
     classNames.push('arco-pagination-item-disabled');
   }
 
+  const triggerBoundaryPageChange = () => {
+    if (disabled) {
+      return;
+    }
+    if (paginationProps.onChange) {
+      paginationProps.onChange(targetPage, pageSize);
+      return;
+    }
+    onTableChange?.({ current: targetPage, pageSize }, undefined, undefined, undefined);
+  };
+
   return (
     <li role="none" className="app-table__pagination-boundary-list">
       <button
@@ -111,12 +122,19 @@ function createBoundaryPaginationItem(
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          if (!disabled) {
-            paginationProps.onChange?.(targetPage, pageSize);
+          triggerBoundaryPageChange();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            triggerBoundaryPageChange();
           }
         }}
       >
-        {isFirst ? <IconDoubleLeft /> : <IconDoubleRight />}
+        <span aria-hidden="true" className="app-table__pagination-boundary-glyph">
+          {isFirst ? '《' : '》'}
+        </span>
       </button>
     </li>
   );
@@ -203,11 +221,21 @@ function AppTable<T>(props: AppTableProps<T>) {
             <div className={getPaginationWrapperClassName(pagePosition)}>
               <div className="app-table__pagination-shell">
                 <ul className="arco-pagination-list app-table__pagination-boundary-group">
-                  {createBoundaryPaginationItem('first', paginationNode.props, firstPageAriaLabel)}
+                  {createBoundaryPaginationItem(
+                    'first',
+                    paginationNode.props,
+                    firstPageAriaLabel,
+                    rest.onChange,
+                  )}
                 </ul>
                 <div className="app-table__pagination-native">{callerNode}</div>
                 <ul className="arco-pagination-list app-table__pagination-boundary-group">
-                  {createBoundaryPaginationItem('last', paginationNode.props, lastPageAriaLabel)}
+                  {createBoundaryPaginationItem(
+                    'last',
+                    paginationNode.props,
+                    lastPageAriaLabel,
+                    rest.onChange,
+                  )}
                 </ul>
               </div>
             </div>

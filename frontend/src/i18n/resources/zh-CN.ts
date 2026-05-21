@@ -636,8 +636,8 @@ const zhCNFallback = {
   'i18n.audit.affectedKeys': '影响 key',
   'i18n.not_found': '翻译项不存在',
   'generator.moduleManager.title': '模块注册表',
-  'generator.moduleManager.eyebrow': '平台层 / 低代码',
-  'generator.moduleManager.header.eyebrow': '平台层 / 低代码',
+  'generator.moduleManager.eyebrow': '系统域 / 低代码',
+  'generator.moduleManager.header.eyebrow': '系统域 / 低代码',
   'generator.moduleManager.header.title': '模块注册表',
   'generator.moduleManager.header.description':
     '查看平台层、系统域与业务域已接入的平台模块；内置模块仅做注册表展示，不支持在此页直接卸载。',
@@ -734,10 +734,10 @@ const zhCNFallback = {
   'generator.moduleManager.status.failed': '失败',
   'generator.wizard.title': '模块生成器',
   'generator.wizard.openRegistry': '查看模块注册表',
-  'generator.wizard.header.eyebrow': '平台层 / 低代码',
+  'generator.wizard.header.eyebrow': '系统域 / 低代码',
   'generator.wizard.header.title': '在受控治理约束内生成业务模块脚手架',
   'generator.wizard.header.description':
-    '模块生成器保持 `platform/lowcode` 语义：主任务区负责字段、菜单、权限与契约配置，顶部摘要区只显示当前进度、字段规模与产物数量。',
+    '模块生成器保持 `system/lowcode` 语义：主任务区负责字段、菜单、权限与契约配置，顶部摘要区只显示当前进度、字段规模与产物数量。',
   'generator.wizard.header.steps': '步骤',
   'generator.wizard.header.fields': '字段',
   'generator.wizard.header.files': '文件',

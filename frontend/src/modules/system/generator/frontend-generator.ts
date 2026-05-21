@@ -330,7 +330,7 @@ ${extraApi ? `\n${extraApi}\n` : ''}
     const governanceConstants = this.shouldRenderListGovernanceNotice()
       ? `${this.generateListGovernanceConstants()}\n`
       : '';
-    const listImports = ['Card', 'Table', 'Typography'];
+    const listImports = ['Card', 'Typography'];
     if (this.shouldRenderListGovernanceNotice()) {
       listImports.unshift('Alert', 'Space', 'Tag');
     }
@@ -343,7 +343,13 @@ import {
   type ${modelName}ListQuery,
   type ${modelName}ListRow,
 } from './api';
-import { PageContainer, PageError, PageLoading } from '${toSrcRoot}/components';
+import {
+  AppTable,
+  PageContainer,
+  PageError,
+  PageLoading,
+  buildStandardPagination,
+} from '${toSrcRoot}/components';
 
 ${governanceConstants}
 
@@ -392,20 +398,20 @@ const ${modelName}List: React.FC = () => {
 ${this.generateListGovernanceNotice()}
       <Card bordered={false}>
         <Typography.Title heading={5}>{t('${titleKey}')}</Typography.Title>
-        <Table
+        <AppTable
+          className="system-list__table"
           data={data}
           rowKey="id"
-          pagination={{
+          pagination={buildStandardPagination(t, {
             current: query.page,
             pageSize: query.pageSize,
             total,
-            showTotal: true,
             onChange: (page, pageSize) => {
               const nextQuery = { ...query, page, pageSize };
               setQuery(nextQuery);
               void loadData(nextQuery);
             },
-          }}
+          })}
           columns={[
 ${this.generateSimpleTableColumns()}
           ]}

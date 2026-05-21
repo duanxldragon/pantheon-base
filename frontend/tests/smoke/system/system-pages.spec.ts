@@ -2401,8 +2401,7 @@ test('login-log governance smoke: pager exposes first and last page controls', a
   await expect(nextPageButton).not.toHaveClass(/arco-pagination-item-disabled/);
   await expect(lastPageButton).toBeEnabled();
 
-  await lastPageButton.focus();
-  await page.keyboard.press('Enter');
+  await lastPageButton.click();
   await expect
     .poll(async () => pager.locator('.arco-pagination-item-active').innerText())
     .toBe(String(totalPages));
@@ -2411,8 +2410,7 @@ test('login-log governance smoke: pager exposes first and last page controls', a
   await expect(nextPageButton).toHaveClass(/arco-pagination-item-disabled/);
   await expect(lastPageButton).toBeDisabled();
 
-  await firstPageButton.focus();
-  await page.keyboard.press(' ');
+  await firstPageButton.click();
   await expect
     .poll(async () => pager.locator('.arco-pagination-item-active').innerText())
     .toBe('1');
@@ -2566,8 +2564,7 @@ test('security-center smoke: client-side AppTable pagination exposes shared boun
   await expect(nextPageButton).not.toHaveClass(/arco-pagination-item-disabled/);
   await expect(lastPageButton).toBeEnabled();
 
-  await lastPageButton.focus();
-  await page.keyboard.press('Enter');
+  await lastPageButton.click();
   await expect
     .poll(async () => sessionCard.locator('.arco-pagination-item-active').innerText())
     .toBe('2');

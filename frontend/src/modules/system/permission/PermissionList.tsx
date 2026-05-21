@@ -12,7 +12,6 @@ import {
   Tag,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import {
   IconDelete,
@@ -62,6 +61,7 @@ import { PermissionWorkbenchTab } from './PermissionWorkbenchTab';
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   GovernanceInsightDrawer,
@@ -792,19 +792,11 @@ const PermissionList: React.FC = () => {
                     }}
                     onChange={handleTableChange}
                     emptyText={t('common.noData')}
-                    pagination={
-                      {
-                        current: query.page || emptyQuery.page,
-                        pageSize: query.pageSize || emptyQuery.pageSize,
-                        total,
-                        showJumper: true,
-                        pageSizeChangeResetCurrent: false,
-                        sizeCanChange: true,
-                        sizeOptions: [10, 20, 50, 100],
-                        size: 'small',
-                        showTotal: (count: number) => t('common.total', { count }),
-                      } as PaginationProps
-                    }
+                    pagination={buildStandardPagination(t, {
+                      current: query.page || emptyQuery.page,
+                      pageSize: query.pageSize || emptyQuery.pageSize,
+                      total,
+                    })}
                   />
                 ) : null}
               </Card>

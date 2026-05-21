@@ -2120,8 +2120,10 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .app-table__pagination-shell {
-  display: flex;
-  width: 100%;
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  margin-left: auto;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -2134,7 +2136,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -2143,13 +2145,17 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
   row-gap: 8px;
 }
 
 .app-table__pagination-boundary-group {
   display: inline-flex;
   align-items: center;
+  min-height: 30px;
 }
 
 .app-table__pagination-boundary-list {
@@ -2172,6 +2178,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
+  min-height: 30px;
 }
 
 .app-table .arco-pagination-item,
@@ -2197,6 +2204,29 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   color: var(--text-tertiary);
 }
 
+.app-table__pagination-item-first,
+.app-table__pagination-item-last {
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.app-table__pagination-item-first[disabled],
+.app-table__pagination-item-last[disabled] {
+  color: var(--text-quaternary);
+  background: var(--panel-muted);
+  border-color: color-mix(in srgb, var(--panel-border) 70%, transparent);
+  opacity: 1;
+}
+
+.app-table__pagination-boundary-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .arco-pagination {
   color: var(--text-secondary);
 }
@@ -2210,29 +2240,42 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   transition: all 0.2s ease;
 }
 
+.app-table .arco-pagination-option,
 .app-table .arco-pagination-options,
 .app-table .arco-pagination-jumper {
   display: inline-flex;
   align-items: center;
+  align-self: center;
   font-size: 12px;
   line-height: 1.2;
   min-height: 30px;
 }
 
 .app-table .arco-pagination-jumper input,
+.app-table .arco-pagination-option .arco-select-view,
 .app-table .arco-pagination-options .arco-select-view {
   min-height: 30px;
   height: 30px;
   display: inline-flex;
   align-items: center;
+  box-sizing: border-box;
   padding-top: 0;
   padding-bottom: 0;
+  border-radius: 10px;
 }
 
 .app-table .arco-pagination-total,
 .app-table .arco-pagination-item-jumper,
+.app-table .arco-pagination-option .arco-select-view-selector,
+.app-table .arco-pagination-options .arco-select-view-selector,
+.app-table .arco-pagination-option .arco-select-suffix,
+.app-table .arco-pagination-options .arco-select-suffix,
+.app-table .arco-pagination-option .arco-select-arrow-icon,
+.app-table .arco-pagination-options .arco-select-arrow-icon,
 .app-table .arco-pagination-options .arco-select-view-value,
 .app-table .arco-pagination-options .arco-select-view-single,
+.app-table .arco-pagination-option .arco-select-view-value,
+.app-table .arco-pagination-option .arco-select-view-single,
 .app-table .arco-pagination-jumper-prepend,
 .app-table .arco-pagination-jumper-append {
   display: inline-flex;
@@ -2241,12 +2284,14 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 
 .app-table .arco-pagination-total {
   min-height: 30px;
+  align-self: center;
 }
 
 .app-table__pagination-total-text {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 30px;
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -2269,7 +2314,6 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .app-table .arco-pagination-item-active {
-  transform: translateY(-1px);
   background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
   color: var(--brand-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 16%, transparent);
@@ -2281,7 +2325,27 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 
 .app-table .arco-pagination-item-jumper input {
   width: 42px;
+  height: 30px;
+  min-height: 30px;
+  padding-inline: 8px;
   text-align: center;
+}
+
+.app-table .arco-pagination-option .arco-select-view,
+.app-table .arco-pagination-options .arco-select-view {
+  padding-inline: 10px;
+}
+
+.app-table .arco-pagination-option .arco-select-view-selector,
+.app-table .arco-pagination-options .arco-select-view-selector,
+.app-table .arco-pagination-option .arco-select-suffix,
+.app-table .arco-pagination-options .arco-select-suffix {
+  min-height: 100%;
+}
+
+.app-table .arco-pagination-option .arco-select-view-value,
+.app-table .arco-pagination-options .arco-select-view-value {
+  line-height: 1;
 }
 
 .app-table .arco-btn-size-small {
@@ -2438,8 +2502,37 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   .app-table .arco-table-pagination {
     align-items: center;
     justify-content: flex-start;
-    overflow-x: auto;
+    overflow-x: visible;
     padding-bottom: 8px;
+  }
+
+  .app-table__pagination-shell {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    align-items: center;
+    width: 100%;
+    margin-left: 0;
+    column-gap: 6px;
+    row-gap: 8px;
+  }
+
+  .app-table__pagination-native {
+    grid-column: 2;
+    justify-content: center;
+  }
+
+  .app-table__pagination-native .arco-pagination {
+    justify-content: center;
+  }
+
+  .app-table__pagination-boundary-group:first-child {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .app-table__pagination-boundary-group:last-child {
+    grid-column: 3;
+    justify-self: end;
   }
 
   .system-page-hero .arco-card-body {

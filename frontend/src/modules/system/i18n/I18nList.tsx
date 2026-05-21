@@ -41,6 +41,7 @@ import {
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -1346,13 +1347,12 @@ const I18nList: React.FC = () => {
                     : undefined
                 }
                 scroll={{ x: 'max-content' }}
-                pagination={{
+                pagination={buildStandardPagination(t, {
                   total,
                   current: query.page,
                   pageSize: query.pageSize,
-                  showTotal: (count: number) => t('common.total', { count }),
                   onChange: (page, pageSize) => setQuery({ ...query, page, pageSize }),
-                }}
+                })}
               />
             )}
           </Card>
