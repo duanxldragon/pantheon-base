@@ -54,6 +54,7 @@ const emptyWorkbenchQuery: PermissionWorkbenchQuery = {
 
 interface PermissionWorkbenchTabProps {
   roleOptions: Array<{ label: string; value: string }>;
+  utilityActions?: React.ReactNode;
   workbench: PermissionWorkbenchResp | null;
   workbenchLoading: boolean;
   workbenchError: unknown;
@@ -68,6 +69,7 @@ interface PermissionWorkbenchTabProps {
 
 export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
   roleOptions,
+  utilityActions,
   workbench,
   workbenchLoading,
   workbenchError,
@@ -317,12 +319,19 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
 
   return (
     <>
-      <Space direction="vertical" size={14} className="permission-workbench">
-        <Card
-          className="page-panel permission-workbench__positioning"
-          title={t('system.permission.workbench.positioningTitle')}
-          extra={
-            <Space size={8}>
+      <Space direction="vertical" size={12} className="permission-workbench">
+        <div className="page-panel permission-workbench__context">
+          <div className="permission-workbench__context-copy">
+            <span className="permission-workbench__context-kicker">
+              {t('system.permission.workbench.positioningTitle')}
+            </span>
+            <Typography.Text type="secondary" className="permission-workbench__context-desc">
+              {t('system.permission.workbench.positioningHint')}
+            </Typography.Text>
+          </div>
+          <Space size={8} className="permission-workbench__context-tools system-list__work-actions" wrap>
+            {utilityActions}
+            <div className="permission-workbench__view-switch">
               <Button
                 type={viewMode === 'pending' ? 'primary' : 'secondary'}
                 size="small"
@@ -343,13 +352,9 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               >
                 {t('system.permission.workbench.view.all')}
               </Button>
-            </Space>
-          }
-        >
-          <Typography.Text type="secondary">
-            {t('system.permission.workbench.positioningHint')}
-          </Typography.Text>
-        </Card>
+            </div>
+          </Space>
+        </div>
 
         {workbench ? (
           <Row gutter={[12, 12]} className="permission-workbench__overview">

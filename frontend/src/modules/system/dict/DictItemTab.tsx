@@ -624,71 +624,73 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
           </Form>
         </FilterPanel>
 
-        <ListHeaderActions
-          className="dict-page__actions"
-          utility={
-            <>
-              <Button
-                icon={<IconRefresh />}
-                onClick={() => {
-                  void handleRefreshCache();
-                }}
-                disabled={!canRefresh || !selectedType}
-              >
-                {t('system.dict.refreshCache')}
-              </Button>
-              <Button
-                onClick={() => {
-                  void handleOpenUsageAnalysis();
-                }}
-                disabled={!selectedType}
-              >
-                {t('system.dict.usage.action')}
-              </Button>
-              <Button
-                icon={<IconDownload />}
-                onClick={() => {
-                  void handleExportItems();
-                }}
-                disabled={!canExport || !selectedType}
-              >
-                {t('common.export')}
-              </Button>
-              <Button
-                onClick={() => {
-                  void handleDownloadItemTemplate();
-                }}
-                disabled={!canImport}
-              >
-                {t('common.downloadTemplate')}
-              </Button>
-              <ImportCsvButton
-                disabled={!canImport}
-                onSelect={(file) => {
-                  void handleImportItems(file);
-                }}
-              >
-                {t('common.import')}
-              </ImportCsvButton>
-            </>
-          }
-          primary={
-            <Button
-              type="primary"
-              icon={<IconPlus />}
-              onClick={openCreateItem}
-              disabled={!canCreate || !selectedType}
-            >
-              {t('system.dict.itemAdd')}
-            </Button>
-          }
-        />
         <TableBatchActionBar
           selectedCount={selectedItemRowKeys.length}
           selectedText={t('common.selectedCount', { count: selectedItemRowKeys.length })}
           clearText={t('common.clearSelection')}
           clearSuccessText={t('common.clearSelectionSuccess')}
           onClear={() => setSelectedItemRowKeys([])}
+          prefixActions={
+            <ListHeaderActions
+              className="dict-page__actions"
+              utility={
+                <>
+                  <Button
+                    icon={<IconRefresh />}
+                    onClick={() => {
+                      void handleRefreshCache();
+                    }}
+                    disabled={!canRefresh || !selectedType}
+                  >
+                    {t('system.dict.refreshCache')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      void handleOpenUsageAnalysis();
+                    }}
+                    disabled={!selectedType}
+                  >
+                    {t('system.dict.usage.action')}
+                  </Button>
+                  <Button
+                    icon={<IconDownload />}
+                    onClick={() => {
+                      void handleExportItems();
+                    }}
+                    disabled={!canExport || !selectedType}
+                  >
+                    {t('common.export')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      void handleDownloadItemTemplate();
+                    }}
+                    disabled={!canImport}
+                  >
+                    {t('common.downloadTemplate')}
+                  </Button>
+                  <ImportCsvButton
+                    disabled={!canImport}
+                    onSelect={(file) => {
+                      void handleImportItems(file);
+                    }}
+                  >
+                    {t('common.import')}
+                  </ImportCsvButton>
+                </>
+              }
+              primary={
+                <Button
+                  type="primary"
+                  icon={<IconPlus />}
+                  onClick={openCreateItem}
+                  disabled={!canCreate || !selectedType}
+                >
+                  {t('system.dict.itemAdd')}
+                </Button>
+              }
+            />
+          }
           hint={
             !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
           }

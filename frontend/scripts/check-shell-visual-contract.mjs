@@ -78,39 +78,11 @@ const requiredGlobalTokens = [
 ];
 
 function getBlock(cssSource, selector) {
-  let start = cssSource.indexOf(selector);
-  while (start >= 0) {
-    let beforeIndex = start - 1;
-    while (beforeIndex >= 0 && /\s/.test(cssSource[beforeIndex])) {
-      beforeIndex -= 1;
-    }
-    const before = beforeIndex < 0 ? '\n' : cssSource[beforeIndex];
-    const after = cssSource[start + selector.length] || '';
-    if ((/[},]/.test(before) || before === '\n') && (/[\s,{]/.test(after) || after === '')) {
-      break;
-    }
-    start = cssSource.indexOf(selector, start + selector.length);
-  }
-  if (start < 0) {
-    return '';
-  }
-  const open = cssSource.indexOf('{', start);
-  if (open < 0) {
-    return '';
-  }
-  let depth = 0;
-  for (let index = open; index < cssSource.length; index += 1) {
-    const char = cssSource[index];
-    if (char === '{') {
-      depth += 1;
-    } else if (char === '}') {
-      depth -= 1;
-      if (depth === 0) {
-        return cssSource.slice(open + 1, index);
-      }
-    }
-  }
-  return '';
+  return extractCssRules(cssSource)
+    .filter(({ selectorText }) => splitSelectorList(selectorText).includes(selector))
+    .map(({ body }) => body.trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 function requireBlock(cssSource, selector, findings) {
@@ -560,6 +532,57 @@ if (
   findings.push('FilterPanel action buttons must align to --shell-filter-control-min-height.');
 }
 
+const filterPanelBlock = requireBlock(globalSource, '.filter-panel', findings);
+if (filterPanelBlock) {
+  if (
+    !hasDeclaration(
+      filterPanelBlock,
+      'border-color',
+      'color-mix\\(in srgb, var\\(--panel-border\\) 92%, transparent\\)',
+    )
+  ) {
+    findings.push('.filter-panel must use the shared softened panel border.');
+  }
+  if (
+    !hasDeclaration(
+      filterPanelBlock,
+      'background',
+      'color-mix\\(in srgb, var\\(--panel-muted\\) 82%, #fff\\)',
+    )
+  ) {
+    findings.push('.filter-panel must use the shared muted filter background.');
+  }
+  if (!hasDeclaration(filterPanelBlock, 'box-shadow', 'none')) {
+    findings.push('.filter-panel must not render an extra shadow layer.');
+  }
+}
+
+const filterLabelBlock = requireBlock(globalSource, '.filter-panel .arco-form-item-label-col > label', findings);
+if (filterLabelBlock) {
+  if (!hasDeclaration(filterLabelBlock, 'color', 'var\\(--text-secondary\\)')) {
+    findings.push('FilterPanel labels must use the secondary text color.');
+  }
+  if (!hasDeclaration(filterLabelBlock, 'font-weight', '500')) {
+    findings.push('FilterPanel labels must use a stable 500 weight.');
+  }
+}
+
+if (
+  !/\.filter-panel\s+\.arco-input-inner-wrapper:hover,[\s\S]*?border-color\s*:\s*color-mix\(in srgb, var\(--brand-primary\) 34%, var\(--panel-border-strong\)\)\s*;/i.test(
+    globalSource,
+  )
+) {
+  findings.push('FilterPanel hover controls must use the shared softened brand border.');
+}
+
+if (
+  !/\.filter-panel\s+\.arco-input-focus,[\s\S]*?border-color\s*:\s*var\(--brand-primary\)\s*;[\s\S]*?box-shadow\s*:\s*0 0 0 3px color-mix\(in srgb, var\(--brand-primary\) 12%, transparent\)\s*;/i.test(
+    globalSource,
+  )
+) {
+  findings.push('FilterPanel focused controls must use the shared brand focus ring.');
+}
+
 const submitBarBlock = requireBlock(globalSource, '.submit-bar', findings);
 if (submitBarBlock) {
   if (!hasDeclaration(submitBarBlock, 'justify-content', 'flex-end')) {
@@ -615,9 +638,15 @@ if (
 ) {
   findings.push('.list-header-actions must use --shell-list-actions-gap.');
 }
+if (listHeaderActionsBlock && !hasDeclaration(listHeaderActionsBlock, 'align-items', 'center')) {
+  findings.push('.list-header-actions must vertically center grouped page actions.');
+}
 
 const workActionsBlock = requireBlock(listPageSource, '.system-list__work-actions', findings);
 if (workActionsBlock) {
+  if (!hasDeclaration(workActionsBlock, 'align-items', 'center')) {
+    findings.push('.system-list__work-actions must vertically center work-area actions.');
+  }
   if (!hasDeclaration(workActionsBlock, 'justify-content', 'flex-end')) {
     findings.push('.system-list__work-actions must align work-area actions to the right.');
   }
@@ -687,6 +716,77 @@ if (batchMainBlock) {
   }
   if (!hasDeclaration(batchMainBlock, 'min-height', 'var\\(--shell-action-bar-min-height\\)')) {
     findings.push('.table-batch-action-bar__main must use --shell-action-bar-min-height.');
+  }
+}
+
+const systemTableHeadBlock = requireBlock(listPageSource, '.system-list__table-head', findings);
+if (systemTableHeadBlock) {
+  if (!hasDeclaration(systemTableHeadBlock, 'align-items', 'center')) {
+    findings.push('.system-list__table-head must vertically center title and actions.');
+  }
+  if (!hasDeclaration(systemTableHeadBlock, 'gap', 'var\\(--shell-table-head-gap\\)')) {
+    findings.push('.system-list__table-head must use --shell-table-head-gap.');
+  }
+}
+
+const listHeaderButtonBlock = requireBlock(listPageSource, '.list-header-actions .arco-btn', findings);
+if (listHeaderButtonBlock) {
+  if (!hasDeclaration(listHeaderButtonBlock, 'border-radius', 'var\\(--radius-md\\)')) {
+    findings.push('.list-header-actions buttons must use the shared radius and horizontal padding.');
+  }
+  if (!hasDeclaration(listHeaderButtonBlock, 'padding-inline', '14px')) {
+    findings.push('.list-header-actions buttons must use the shared radius and horizontal padding.');
+  }
+}
+
+const batchActionButtonBlock = requireBlock(
+  listPageSource,
+  '.table-batch-action-bar .arco-btn',
+  findings,
+);
+if (batchActionButtonBlock) {
+  if (!hasDeclaration(batchActionButtonBlock, 'border-radius', 'var\\(--radius-md\\)')) {
+    findings.push('.table-batch-action-bar buttons must use the shared radius and horizontal padding.');
+  }
+  if (!hasDeclaration(batchActionButtonBlock, 'padding-inline', '14px')) {
+    findings.push('.table-batch-action-bar buttons must use the shared radius and horizontal padding.');
+  }
+}
+
+const paginationShellBlock = requireBlock(globalSource, '.app-table .arco-table-pagination', findings);
+if (paginationShellBlock) {
+  if (!hasDeclaration(paginationShellBlock, 'justify-content', 'flex-end')) {
+    findings.push('.app-table pagination shell must align controls to the right.');
+  }
+  if (
+    !hasDeclaration(
+      paginationShellBlock,
+      'border-top',
+      '1px solid color-mix\\(in srgb, var\\(--panel-border\\) 88%, transparent\\)',
+    )
+  ) {
+    findings.push('.app-table pagination shell must use the shared top divider.');
+  }
+}
+
+if (
+  !/\.app-table\s+\.arco-pagination-item,[\s\S]*?border\s*:\s*1px solid color-mix\(in srgb, var\(--panel-border\) 82%, transparent\)\s*;[\s\S]*?background\s*:\s*var\(--panel-bg-solid\)\s*;/i.test(
+    globalSource,
+  )
+) {
+  findings.push('.app-table pagination items must use the shared subtle border and background.');
+}
+
+const paginationActiveBlock = requireBlock(globalSource, '.app-table .arco-pagination-item-active', findings);
+if (paginationActiveBlock) {
+  if (
+    !hasDeclaration(
+      paginationActiveBlock,
+      'background',
+      'color-mix\\(in srgb, var\\(--brand-primary\\) 12%, #fff\\)',
+    )
+  ) {
+    findings.push('.app-table active pagination item must use the shared brand-tinted background.');
   }
 }
 

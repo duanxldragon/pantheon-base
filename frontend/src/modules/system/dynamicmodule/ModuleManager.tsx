@@ -10,7 +10,6 @@ import {
   Button,
   Card,
   Checkbox,
-  Descriptions,
   Form,
   Popconfirm,
   Space,
@@ -581,38 +580,6 @@ const ModuleManager: React.FC = () => {
               <Alert type="info" content={t('generator.moduleManager.repairHint')} />
             )}
           </div>
-          <Descriptions
-            column={5}
-            data={[
-              {
-                label: t('generator.moduleManager.stats.total'),
-                value: stats.total,
-              },
-              {
-                label: t('generator.moduleManager.stats.active'),
-                value: stats.active,
-              },
-              {
-                label: t('generator.moduleManager.stats.pending'),
-                value: stats.pending,
-              },
-              {
-                label: t('generator.moduleManager.stats.uninstalled'),
-                value: stats.uninstalled,
-              },
-              {
-                label: t('generator.moduleManager.stats.failed'),
-                value: stats.failed,
-              },
-              {
-                label: t('generator.moduleManager.stats.autoRecycle'),
-                value: stats.autoRecycle,
-              },
-            ]}
-          />
-          <Typography.Text type="secondary" className="module-manager-page__summary-note">
-            {t('generator.moduleManager.positioning')}
-          </Typography.Text>
           <AppTable
             className="system-list__table"
             columns={columns}

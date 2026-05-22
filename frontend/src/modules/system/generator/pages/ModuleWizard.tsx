@@ -34,6 +34,7 @@ import {
   AppModal,
   buildStandardPagination,
   GovernanceSummaryBar,
+  ListHeaderActions,
   PageContainer,
   showAppModalConfirm,
 } from '../../../../components';
@@ -1055,14 +1056,18 @@ const ModuleWizard: React.FC = () => {
             },
           ]}
         />
-        {canOpenModuleManager ? (
-          <div className="system-list__work-actions">
-            <Button size="small" onClick={() => navigate('/system/modules')}>
-              {t('generator.wizard.openRegistry')}
-            </Button>
-          </div>
-        ) : null}
         <Card className="page-panel generator-wizard-card">
+          {canOpenModuleManager ? (
+            <div className="system-list__work-actions">
+              <ListHeaderActions
+                primary={
+                  <Button size="small" onClick={() => navigate('/system/modules')}>
+                    {t('generator.wizard.openRegistry')}
+                  </Button>
+                }
+              />
+            </div>
+          ) : null}
           <div className="generator-wizard__steps generator-wizard__step-grid">
             {wizardSteps.map((step, index) => (
               <div

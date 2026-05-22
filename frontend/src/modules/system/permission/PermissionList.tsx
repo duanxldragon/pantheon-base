@@ -584,33 +584,29 @@ const PermissionList: React.FC = () => {
 
           {activeTab === 'workbench' ? (
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
-              <div className="system-list__work-actions">
-                <ListHeaderActions
-                  utility={
-                    <>
-                      <Button
-                        icon={<IconRefresh />}
-                        onClick={() => {
-                          void loadWorkbench(workbenchQuery);
-                        }}
-                      >
-                        {t('common.refresh')}
-                      </Button>
-                      <Button
-                        icon={<IconDownload />}
-                        onClick={() => {
-                          void exportPermissionWorkbench(workbenchQuery);
-                        }}
-                        disabled={!canExport}
-                      >
-                        {t('system.permission.workbench.export')}
-                      </Button>
-                    </>
-                  }
-                />
-              </div>
               <PermissionWorkbenchTab
                 roleOptions={roleOptions}
+                utilityActions={
+                  <>
+                    <Button
+                      icon={<IconRefresh />}
+                      onClick={() => {
+                        void loadWorkbench(workbenchQuery);
+                      }}
+                    >
+                      {t('common.refresh')}
+                    </Button>
+                    <Button
+                      icon={<IconDownload />}
+                      onClick={() => {
+                        void exportPermissionWorkbench(workbenchQuery);
+                      }}
+                      disabled={!canExport}
+                    >
+                      {t('system.permission.workbench.export')}
+                    </Button>
+                  </>
+                }
                 workbench={workbench}
                 workbenchLoading={workbenchLoading}
                 workbenchError={workbenchError}

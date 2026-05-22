@@ -1201,12 +1201,12 @@ const DeptList: React.FC = () => {
               <FilterPanel>
                 <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
                   <Row gutter={16}>
-                    <Col xs={24} md={12} lg={8}>
+                    <Col xs={24} md={12} lg={6}>
                       <FormItem label={t('system.dept.deptName')} field="deptName">
                         <Input onPressEnter={() => queryForm.submit()} />
                       </FormItem>
                     </Col>
-                    <Col xs={24} md={12} lg={8}>
+                    <Col xs={24} md={12} lg={6}>
                       <FormItem label={t('system.dept.status')} field="status">
                         <Select
                           allowClear
@@ -1217,7 +1217,7 @@ const DeptList: React.FC = () => {
                         />
                       </FormItem>
                     </Col>
-                    <Col xs={24} md={12} lg={8}>
+                    <Col xs={24} md={12} lg={6}>
                       <FormItem label={t('system.dept.governance')} field="governance">
                         <Select
                           allowClear
@@ -1229,7 +1229,7 @@ const DeptList: React.FC = () => {
                         />
                       </FormItem>
                     </Col>
-                    <Col xs={24}>
+                    <Col xs={24} md={12} lg={6}>
                       <FormItem className="filter-panel__action-item">
                         <Space size={6}>
                           <Button

@@ -673,22 +673,22 @@ const PostList: React.FC = () => {
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16}>
-                <Col xs={24} md={12} lg={6}>
+                <Col xs={24} md={12} lg={5}>
                   <FormItem label={t('system.post.postCode')} field="postCode">
                     <Input onPressEnter={() => queryForm.submit()} />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={12} lg={6}>
+                <Col xs={24} md={12} lg={5}>
                   <FormItem label={t('system.post.postName')} field="postName">
                     <Input onPressEnter={() => queryForm.submit()} />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={12} lg={6}>
+                <Col xs={24} md={12} lg={5}>
                   <FormItem label={t('system.post.dept')} field="deptId">
                     <Select allowClear options={deptOptions} />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={12} lg={6}>
+                <Col xs={24} md={12} lg={5}>
                   <FormItem label={t('system.post.status')} field="status">
                     <Select
                       allowClear
@@ -699,7 +699,7 @@ const PostList: React.FC = () => {
                     />
                   </FormItem>
                 </Col>
-                <Col xs={24}>
+                <Col xs={24} md={12} lg={4}>
                   <FormItem className="filter-panel__action-item">
                     <Space>
                       <Button type="primary" htmlType="submit" icon={<IconSearch />}>

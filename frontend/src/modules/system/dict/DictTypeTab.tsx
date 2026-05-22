@@ -32,6 +32,7 @@ import { invalidateRouteWarmDataMany } from '../../../core/router/prefetch';
 import {
   AppModal,
   AppTable,
+  buildStandardPagination,
   FilterPanel,
   FormSection,
   ImportCsvButton,
@@ -127,6 +128,8 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   const { t } = useTranslation();
 
   const [selectedTypeRowKeys, setSelectedTypeRowKeys] = useState<(string | number)[]>([]);
+  const [typeTablePage, setTypeTablePage] = useState(1);
+  const [typeTablePageSize, setTypeTablePageSize] = useState(10);
   const [typeVisible, setTypeVisible] = useState(false);
   const [editingType, setEditingType] = useState<DictTypeRow | null>(null);
   const [typeSubmitting, setTypeSubmitting] = useState(false);
@@ -145,6 +148,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
 
   const handleSearch = () => {
     const values = queryForm.getFieldsValue();
+    setTypeTablePage(1);
     onQueryChange({
       ...emptyTypeQuery,
       ...values,
@@ -153,8 +157,16 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
 
   const handleReset = () => {
     queryForm.setFieldsValue(emptyTypeQuery);
+    setTypeTablePage(1);
     onQueryChange(emptyTypeQuery);
   };
+
+  React.useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(typeRows.length / Math.max(1, typeTablePageSize)));
+    if (typeTablePage > totalPages) {
+      setTypeTablePage(totalPages);
+    }
+  }, [typeRows.length, typeTablePage, typeTablePageSize]);
 
   const openCreateType = () => {
     setEditingType(null);
@@ -365,48 +377,6 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   return (
     <>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <ListHeaderActions
-          className="dict-page__actions"
-          utility={
-            <>
-              <Button
-                icon={<IconDownload />}
-                onClick={() => {
-                  void handleExportTypes();
-                }}
-                disabled={!canExport}
-              >
-                {t('common.export')}
-              </Button>
-              <Button
-                onClick={() => {
-                  void handleDownloadTypeTemplate();
-                }}
-                disabled={!canImport}
-              >
-                {t('common.downloadTemplate')}
-              </Button>
-              <ImportCsvButton
-                disabled={!canImport}
-                onSelect={(file) => {
-                  void handleImportTypes(file);
-                }}
-              >
-                {t('common.import')}
-              </ImportCsvButton>
-            </>
-          }
-          primary={
-            <Button
-              type="primary"
-              icon={<IconPlus />}
-              onClick={openCreateType}
-              disabled={!canCreate}
-            >
-              {t('common.add')}
-            </Button>
-          }
-        />
         <FilterPanel>
           <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
             <Row gutter={16}>
@@ -450,6 +420,50 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
           clearText={t('common.clearSelection')}
           clearSuccessText={t('common.clearSelectionSuccess')}
           onClear={() => setSelectedTypeRowKeys([])}
+          prefixActions={
+            <ListHeaderActions
+              className="dict-page__actions"
+              utility={
+                <>
+                  <Button
+                    icon={<IconDownload />}
+                    onClick={() => {
+                      void handleExportTypes();
+                    }}
+                    disabled={!canExport}
+                  >
+                    {t('common.export')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      void handleDownloadTypeTemplate();
+                    }}
+                    disabled={!canImport}
+                  >
+                    {t('common.downloadTemplate')}
+                  </Button>
+                  <ImportCsvButton
+                    disabled={!canImport}
+                    onSelect={(file) => {
+                      void handleImportTypes(file);
+                    }}
+                  >
+                    {t('common.import')}
+                  </ImportCsvButton>
+                </>
+              }
+              primary={
+                <Button
+                  type="primary"
+                  icon={<IconPlus />}
+                  onClick={openCreateType}
+                  disabled={!canCreate}
+                >
+                  {t('common.add')}
+                </Button>
+              }
+            />
+          }
           hint={
             !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
           }
@@ -524,6 +538,15 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
               onChange: (keys) => setSelectedTypeRowKeys(keys),
             }}
             emptyText={t('system.dict.typeEmpty')}
+            pagination={buildStandardPagination(t, {
+              total: typeRows.length,
+              current: typeTablePage,
+              pageSize: typeTablePageSize,
+              onChange: (page, pageSize) => {
+                setTypeTablePage(page);
+                setTypeTablePageSize(pageSize);
+              },
+            })}
             scroll={{ x: 'max-content' }}
           />
         ) : null}
