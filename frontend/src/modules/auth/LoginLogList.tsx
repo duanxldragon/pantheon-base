@@ -318,6 +318,7 @@ const LoginLogList: React.FC = () => {
     {
       title: t('auth.loginLog.failureReason'),
       dataIndex: 'msg',
+      width: TABLE_COLUMN_WIDTH.diagnostics,
       ellipsis: true,
       render: (value: string) => translateLogMessage(value),
     },
@@ -348,8 +349,9 @@ const LoginLogList: React.FC = () => {
 
   return (
     <PageContainer>
-      <Space direction="vertical" size={16} className="system-page-template">
+      <Space direction="vertical" size={16} className="system-page-template auth-login-log-page">
         <GovernanceSummaryBar
+          className="auth-login-log-page__hero"
           eyebrow={t('auth.loginLog.hero.eyebrow')}
           title={t('auth.loginLog.hero.title')}
           description={t('auth.loginLog.hero.sideDesc')}
@@ -370,13 +372,13 @@ const LoginLogList: React.FC = () => {
         <>
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16} className="auth-filter-grid">
-                <Col xs={24} md={12} lg={8}>
+              <Row gutter={16} className="auth-filter-grid auth-login-log-page__filter-grid">
+                <Col xs={24} md={12} lg={6}>
                   <FormItem label={t('system.user.username')} field="username">
                     <Input onPressEnter={() => queryForm.submit()} />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={12} lg={6}>
+                <Col xs={24} md={12} lg={4}>
                   <FormItem label={t('auth.loginLog.status')} field="status">
                     <Select
                       allowClear
@@ -387,8 +389,8 @@ const LoginLogList: React.FC = () => {
                     />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={24} lg={10}>
-                  <FormItem className="filter-panel__action-item">
+                <Col xs={24} md={24} lg={5}>
+                  <FormItem className="filter-panel__action-item auth-login-log-page__filter-actions">
                     <Space>
                       <Button type="primary" htmlType="submit" icon={<IconSearch />}>
                         {t('common.search')}
@@ -401,7 +403,7 @@ const LoginLogList: React.FC = () => {
             </Form>
           </FilterPanel>
 
-          <Card className="page-panel system-list__table-card">
+          <Card className="page-panel system-list__table-card auth-login-log-page__table-card">
             {(canClear || canDelete || canExport) && (
               <div>
                 <GovernanceCleanupBar
@@ -511,7 +513,7 @@ const LoginLogList: React.FC = () => {
                 data={data}
                 columns={columns}
                 loading={loading}
-                scroll={{ x: 1120 }}
+                scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
                 emptyText={t('auth.loginLog.empty')}
                 rowSelection={

@@ -43,7 +43,7 @@ test.describe('system layout contract', () => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
       for (const target of desktopAuditPages) {
-        await page.goto(target, { waitUntil: 'networkidle' });
+        await page.goto(target, { waitUntil: 'domcontentloaded' });
         await expect(page.locator('.app-shell__content')).toBeVisible();
         await expectNoPageError(page);
 
@@ -59,12 +59,17 @@ test.describe('system layout contract', () => {
             );
           };
 
-          const controls = Array.from(
-            document.querySelectorAll(
-              '.filter-panel .arco-input-inner-wrapper, .filter-panel input.arco-input, .filter-panel .arco-select-view, .filter-panel .arco-tree-select-view, .filter-panel .arco-picker, .filter-panel .arco-textarea-wrapper',
-            ),
-          ).filter(visible);
-          const controlWidths = controls.map((node) =>
+          const controlSelector =
+            '.filter-panel .arco-input-inner-wrapper, .filter-panel input.arco-input, .filter-panel .arco-input-password, .filter-panel .arco-input-number, .filter-panel .arco-select-view, .filter-panel .arco-tree-select-view, .filter-panel .arco-picker, .filter-panel .arco-textarea-wrapper';
+          const controlWrappers = Array.from(document.querySelectorAll(controlSelector))
+            .map((node) =>
+              node.closest(
+                '.arco-input-inner-wrapper, .arco-input-password, .arco-input-number, .arco-select-view, .arco-tree-select-view, .arco-picker, .arco-textarea-wrapper',
+              ) || node,
+            )
+            .filter((node, index, nodes) => nodes.indexOf(node) === index)
+            .filter(visible);
+          const controlWidths = controlWrappers.map((node) =>
             Math.round(node.getBoundingClientRect().width),
           );
 

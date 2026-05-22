@@ -111,6 +111,49 @@
   align-items: flex-end;
 }
 
+.auth-login-log-page__hero {
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px) auto;
+  align-items: start;
+}
+
+.auth-login-log-page__hero .governance-summary-bar__copy {
+  max-width: 64ch;
+}
+
+.auth-login-log-page__hero .governance-summary-bar__metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: stretch;
+}
+
+.auth-login-log-page__hero .governance-summary-bar__metric {
+  min-height: 56px;
+  align-content: start;
+}
+
+.auth-login-log-page__filter-grid {
+  align-items: end;
+}
+
+.auth-login-log-page__filter-grid .arco-col {
+  flex-grow: 0;
+}
+
+.auth-login-log-page__filter-actions .arco-space {
+  gap: 8px !important;
+}
+
+.auth-login-log-page__filter-actions .arco-btn {
+  min-width: 84px;
+}
+
+.auth-login-log-page__table-card .table-batch-action-bar--governance .table-batch-action-bar__meta {
+  flex: 0 1 auto;
+}
+
+.auth-login-log-page__table-card .table-batch-action-bar__main {
+  align-items: start;
+}
+
 .auth-section-stack {
   width: 100%;
 }
@@ -211,6 +254,20 @@
   .auth-security-overview__side {
     border-top: 1px solid var(--panel-border);
     border-left: 0;
+  }
+
+  .auth-login-log-page__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-login-log-page__hero .governance-summary-bar__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .auth-login-log-page__hero .governance-summary-bar__metrics {
+    grid-template-columns: 1fr;
   }
 }
 

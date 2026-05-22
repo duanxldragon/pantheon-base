@@ -1340,6 +1340,13 @@ a {
   box-shadow: none;
 }
 
+.filter-panel .arco-select-view input.arco-input,
+.filter-panel .arco-tree-select-view input.arco-input,
+.filter-panel .arco-picker input.arco-input {
+  width: 100%;
+  min-width: 100%;
+}
+
 .filter-panel .arco-space {
   gap: 8px !important;
 }
@@ -1357,6 +1364,30 @@ a {
 
 .filter-panel__action-item .arco-btn {
   min-height: var(--shell-filter-control-min-height);
+}
+
+@media (min-width: 1280px) {
+  .filter-panel .arco-row > .arco-col {
+    flex: 1 1 168px !important;
+    min-width: 148px;
+    max-width: 184px !important;
+  }
+
+  .filter-panel .arco-row > .arco-col:last-child {
+    flex: 0 0 auto !important;
+    min-width: auto;
+    max-width: none !important;
+    margin-left: auto;
+  }
+
+  .filter-panel__action-item .arco-space {
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .filter-panel__action-item .arco-btn {
+    min-width: 84px;
+  }
 }
 
 .pantheon-theme-menu__item {
