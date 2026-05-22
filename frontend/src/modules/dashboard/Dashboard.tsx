@@ -138,7 +138,6 @@ const DashboardPage: React.FC = () => {
         key: widget.key,
         path: widget.path,
         title: t(widget.titleKey),
-        description: t(widget.descriptionKey),
         icon: widget.icon,
       }));
   }, [hasPerm, isAdmin, menuTree, t]);
@@ -371,18 +370,14 @@ const DashboardPage: React.FC = () => {
                         key={item.key}
                         type="button"
                         className="dashboard-quick-action"
+                        title={item.title}
+                        aria-label={item.title}
                         onClick={() => navigate(item.path)}
                       >
                         <span className="dashboard-quick-action__icon">
                           {renderMenuIcon(item.icon)}
                         </span>
-                        <span className="dashboard-quick-action__main">
-                          <span>
-                            <span className="dashboard-quick-action__title">{item.title}</span>
-                            <span className="dashboard-quick-action__desc">{item.description}</span>
-                          </span>
-                          <IconArrowRight className="dashboard-quick-action__arrow" />
-                        </span>
+                        <span className="dashboard-quick-action__title">{item.title}</span>
                       </button>
                     ))}
                   </div>
