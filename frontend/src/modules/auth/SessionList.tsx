@@ -411,7 +411,7 @@ const SessionList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('auth.session.hero.eyebrow')}
           title={t('auth.session.hero.title')}
-          description={t('auth.session.hero.sideDesc')}
+          description={t('auth.session.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

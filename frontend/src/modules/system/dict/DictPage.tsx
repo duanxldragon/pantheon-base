@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Space, Tabs } from '@arco-design/web-react';
+import { Space, Tabs } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { usePermission } from '../../../hooks/usePermission';
 import { useRefreshSubscription } from '../../../core/refresh/refreshBus';
@@ -166,7 +166,7 @@ const DictPage: React.FC = () => {
           className="dict-page__governance-bar"
           eyebrow={t('system.dict.header.eyebrow')}
           title={t('system.dict.header.title')}
-          description={t('system.dict.header.description')}
+          description={t('system.dict.hero.desc')}
           metrics={[
             {
               key: 'types',
@@ -196,50 +196,52 @@ const DictPage: React.FC = () => {
             </GovernanceRailToggleButton>
           }
         />
-        <Card className="page-panel system-list__table-card dict-page__table-card">
-          <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as DictTabKey)}>
-            <Tabs.TabPane key="types" title={t('system.dict.type')}>
-              <DictTypeTab
-                typeRows={typeRows}
-                typeLoading={typeLoading}
-                typeError={typeError}
-                typeQuery={typeQuery}
-                canCreate={canCreate}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                canBatchUpdate={canBatchUpdate}
-                canBatchDelete={canBatchDelete}
-                canExport={canExport}
-                canImport={canImport}
-                onQueryChange={setTypeQuery}
-                onReload={() => {
-                  void loadTypes();
-                }}
-                onSelectType={selectType}
-                onSwitchToItemsTab={switchToItemsTab}
-              />
-            </Tabs.TabPane>
-            <Tabs.TabPane key="items" title={t('system.dict.item')}>
-              <DictItemTab
-                key={selectedType?.id ?? '__empty__'}
-                selectedType={selectedType}
-                typeRows={typeRows}
-                canCreate={canCreate}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                canBatchUpdate={canBatchUpdate}
-                canBatchDelete={canBatchDelete}
-                canRefresh={canRefresh}
-                canExport={canExport}
-                canImport={canImport}
-                onSelectType={selectType}
-                onReloadTypes={() => {
-                  void loadTypes(typeQuery);
-                }}
-              />
-            </Tabs.TabPane>
-          </Tabs>
-        </Card>
+        <Tabs
+          className="dict-page__tabs"
+          activeTab={activeTab}
+          onChange={(value) => setActiveTab(value as DictTabKey)}
+        >
+          <Tabs.TabPane key="types" title={t('system.dict.type')}>
+            <DictTypeTab
+              typeRows={typeRows}
+              typeLoading={typeLoading}
+              typeError={typeError}
+              typeQuery={typeQuery}
+              canCreate={canCreate}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              canBatchUpdate={canBatchUpdate}
+              canBatchDelete={canBatchDelete}
+              canExport={canExport}
+              canImport={canImport}
+              onQueryChange={setTypeQuery}
+              onReload={() => {
+                void loadTypes();
+              }}
+              onSelectType={selectType}
+              onSwitchToItemsTab={switchToItemsTab}
+            />
+          </Tabs.TabPane>
+          <Tabs.TabPane key="items" title={t('system.dict.item')}>
+            <DictItemTab
+              key={selectedType?.id ?? '__empty__'}
+              selectedType={selectedType}
+              typeRows={typeRows}
+              canCreate={canCreate}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              canBatchUpdate={canBatchUpdate}
+              canBatchDelete={canBatchDelete}
+              canRefresh={canRefresh}
+              canExport={canExport}
+              canImport={canImport}
+              onSelectType={selectType}
+              onReloadTypes={() => {
+                void loadTypes(typeQuery);
+              }}
+            />
+          </Tabs.TabPane>
+        </Tabs>
       </Space>
 
       <GovernanceInsightDrawer

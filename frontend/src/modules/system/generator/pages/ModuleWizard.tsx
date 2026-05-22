@@ -754,6 +754,17 @@ const ModuleWizard: React.FC = () => {
     });
   };
 
+  const showDatasourceRequestError = useCallback(
+    (error: unknown, fallbackKey: string) => {
+      if (isRequestError(error)) {
+        message.error(t(error.messageKey || fallbackKey));
+        return;
+      }
+      message.error(t(fallbackKey));
+    },
+    [t],
+  );
+
   const handleSaveDatasource = async () => {
     try {
       const values = await datasourceForm.validate();
@@ -778,10 +789,7 @@ const ModuleWizard: React.FC = () => {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      if (!isRequestError(error)) {
-        return;
-      }
-      message.error(t('generator.datasource.saveError'));
+      showDatasourceRequestError(error, 'generator.datasource.saveError');
     } finally {
       setDatasourceSaving(false);
     }
@@ -797,7 +805,7 @@ const ModuleWizard: React.FC = () => {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      message.error(t('generator.datasource.testError'));
+      showDatasourceRequestError(error, 'generator.datasource.testError');
     }
   };
 
@@ -815,7 +823,7 @@ const ModuleWizard: React.FC = () => {
       if (error instanceof Error && error.message === SECONDARY_VERIFY_CANCELLED_ERROR) {
         return;
       }
-      message.error(t('generator.datasource.deleteError'));
+      showDatasourceRequestError(error, 'generator.datasource.deleteError');
     }
   };
 

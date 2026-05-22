@@ -654,7 +654,7 @@ const PostList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('system.post.header.eyebrow')}
           title={t('system.post.header.title')}
-          description={t('system.post.header.description')}
+          description={t('system.post.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

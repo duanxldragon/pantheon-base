@@ -555,7 +555,7 @@ const PermissionList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('system.permission.hero.eyebrow')}
           title={t('system.permission.hero.title')}
-          description={t('system.permission.hero.sideDesc')}
+          description={t('system.permission.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

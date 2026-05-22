@@ -308,6 +308,60 @@ test.describe('module governance smoke', () => {
     await expect(page.locator('.arco-message').getByText('模块名格式不正确', { exact: true })).toHaveCount(0);
   });
 
+  test('datasource manager keeps zh placeholders and surfaces translated save failures', async ({ page }) => {
+    const accessToken = await signInAsAdmin(page);
+    await installOperationToken(page, accessToken);
+    let createAttempts = 0;
+
+    await page.route(/\/api\/v1\/system\/generator\/datasources$/, async (route) => {
+      if (route.request().method() === 'POST') {
+        createAttempts += 1;
+        await fulfillJson(route, {
+          code: 400,
+          message: 'generator.datasource.host_invalid',
+        });
+        return;
+      }
+
+      await fulfillJson(route, {
+        code: 200,
+        data: [
+          {
+            id: 'current',
+            name: '当前平台库',
+            driver: 'mysql',
+            databaseName: 'pantheon',
+            status: 1,
+            isCurrent: true,
+          },
+        ],
+      });
+    });
+
+    await page.goto('/system/generator', { waitUntil: 'networkidle' });
+    await openFormSelect(page, '建模来源');
+    await chooseOption(page, '从数据库表导入');
+    await page.getByRole('button', { name: '管理数据源', exact: true }).click();
+
+    const dialog = page.getByRole('dialog', { name: '受管数据源' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByPlaceholder('例如：运维主库')).toBeVisible();
+    await expect(dialog.getByPlaceholder('例如：127.0.0.1')).toBeVisible();
+    await expect(dialog.getByPlaceholder('例如：pantheon_ops')).toBeVisible();
+    await expect(dialog.getByPlaceholder('例如：pantheon_readonly')).toBeVisible();
+    await expect(dialog.getByPlaceholder('请输入只读账号密码')).toBeVisible();
+
+    await dialog.getByPlaceholder('例如：运维主库').fill('测试数据源');
+    await dialog.getByPlaceholder('例如：127.0.0.1').fill('db/internal');
+    await dialog.getByPlaceholder('例如：pantheon_ops').fill('pantheon_ops');
+    await dialog.getByPlaceholder('例如：pantheon_readonly').fill('pantheon_readonly');
+    await dialog.getByPlaceholder('请输入只读账号密码').fill('readonly-secret');
+    await dialog.getByRole('button', { name: '新增', exact: true }).click();
+
+    await expect.poll(() => createAttempts).toBe(1);
+    await expect(dialog).toBeVisible();
+  });
+
   test('generator workbench entry follows business toggle and relation table role', async ({ page }) => {
     await signInAsAdmin(page);
 

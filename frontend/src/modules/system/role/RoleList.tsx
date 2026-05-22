@@ -895,7 +895,7 @@ const RoleList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('system.role.hero.eyebrow')}
           title={t('system.role.hero.title')}
-          description={t('system.role.hero.sideDesc')}
+          description={t('system.role.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

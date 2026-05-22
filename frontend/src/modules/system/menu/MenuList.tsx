@@ -773,7 +773,7 @@ const MenuList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('system.menu.hero.eyebrow')}
           title={t('system.menu.hero.title')}
-          description={t('system.menu.hero.sideDesc')}
+          description={t('system.menu.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

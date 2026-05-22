@@ -254,7 +254,7 @@ const SecurityEventList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('auth.securityEvent.hero.eyebrow')}
           title={t('system.menu.securityEvent')}
-          description={t('auth.securityEvent.hint')}
+          description={t('auth.securityEvent.hero.desc')}
           metrics={heroStats.slice(0, 3)}
           action={
             <GovernanceRailToggleButton

@@ -1134,7 +1134,7 @@ const DeptList: React.FC = () => {
           <GovernanceSummaryBar
             eyebrow={t('system.dept.hero.eyebrow')}
             title={t('system.dept.hero.title')}
-            description={t('system.dept.hero.issuesHint')}
+            description={t('system.dept.hero.desc')}
             metrics={heroStats.slice(0, 4).map((item) => ({
               key: item.key,
               label: item.label,

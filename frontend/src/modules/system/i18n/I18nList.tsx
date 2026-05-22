@@ -1122,7 +1122,7 @@ const I18nList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('i18n.hero.eyebrow')}
           title={t('i18n.hero.title')}
-          description={t('i18n.hero.sideDesc')}
+          description={t('i18n.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

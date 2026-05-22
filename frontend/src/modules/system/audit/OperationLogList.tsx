@@ -879,7 +879,7 @@ const OperationLogList: React.FC = () => {
         <GovernanceSummaryBar
           eyebrow={t('system.audit.hero.eyebrow')}
           title={t('system.audit.hero.title')}
-          description={t('system.audit.hero.sideDesc')}
+          description={t('system.audit.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

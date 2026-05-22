@@ -109,6 +109,21 @@
   white-space: nowrap;
 }
 
+.system-user-list__role-field .arco-select-view {
+  min-height: var(--shell-control-min-height);
+  align-items: flex-start;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.system-user-list__role-field .arco-input-tag {
+  min-height: auto;
+}
+
+.system-user-list__role-field .arco-input-tag-tag {
+  max-width: 100%;
+}
+
 .system-user-list__row-menu {
   display: grid;
   min-width: 132px;

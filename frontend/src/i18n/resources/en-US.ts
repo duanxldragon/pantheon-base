@@ -264,6 +264,8 @@ const enUSFallback = {
   'auth.securityEvent.subtitle':
     'Review authentication risk events such as source locks and account locks.',
   'auth.securityEvent.hero.eyebrow': 'System Domain / Auth Risk Events',
+  'auth.securityEvent.hero.desc':
+    'The security events page stays within `system/auth`: the main task area handles filtering, acknowledgement, and investigation, while the side summary keeps risk distribution, acknowledgement progress, and governance guidance in one place.',
   'auth.securityEvent.createdAt': 'Occurred At',
   'auth.securityEvent.eventType': 'Event Type',
   'auth.securityEvent.severity': 'Severity',
@@ -895,6 +897,22 @@ const enUSFallback = {
   'generator.datasource.deleteSuccess': 'Datasource deleted',
   'generator.datasource.deleteError': 'Failed to delete datasource',
   'generator.datasource.deleteConfirm': 'Delete this datasource?',
+  'generator.datasource.required':
+    'Complete the datasource name, host, port, database, and account fields before saving.',
+  'generator.datasource.host_invalid':
+    'Enter a reachable database hostname or IP address. Loopback addresses and invalid host characters are not allowed.',
+  'generator.datasource.host_private_disabled':
+    'Private network datasources are not enabled in this environment. Use a reachable address or ask an administrator to enable private readonly datasource access.',
+  'generator.datasource.password_required':
+    'A readonly account password is required when creating a datasource.',
+  'generator.datasource.port_invalid': 'Enter a valid database port.',
+  'generator.datasource.not_found':
+    'The datasource no longer exists. Refresh the list and try again.',
+  'generator.datasource.disabled':
+    'This datasource is disabled. Enable it before testing or importing schema data.',
+  'generator.datasource.driver_unsupported': 'Only MySQL readonly datasources are supported right now.',
+  'generator.datasource.connect_failed':
+    'The datasource connection failed. Check the host, port, database, and account permissions.',
   'generator.wizard.sourceTable': 'Source Table',
   'generator.wizard.sourceTable.required': 'Select a table to import first',
   'generator.wizard.sourceTable.placeholder': 'Select a database table',

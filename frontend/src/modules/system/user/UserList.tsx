@@ -1193,6 +1193,7 @@ const UserList: React.FC = () => {
                 />
               </FormItem>
               <FormItem
+                className="system-user-list__role-field"
                 label={t('system.user.roles')}
                 field="roleIds"
                 rules={[
@@ -1204,7 +1205,11 @@ const UserList: React.FC = () => {
                   },
                 ]}
               >
-                <Select mode="multiple" options={roleOptions} />
+                <Select
+                  mode="multiple"
+                  options={roleOptions}
+                  placeholder={t('system.user.role.required')}
+                />
               </FormItem>
             </FormSection>
           </Space>

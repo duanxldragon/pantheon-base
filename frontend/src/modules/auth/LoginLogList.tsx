@@ -354,7 +354,7 @@ const LoginLogList: React.FC = () => {
           className="auth-login-log-page__hero"
           eyebrow={t('auth.loginLog.hero.eyebrow')}
           title={t('auth.loginLog.hero.title')}
-          description={t('auth.loginLog.hero.sideDesc')}
+          description={t('auth.loginLog.hero.desc')}
           metrics={heroStats.slice(0, 3).map((item) => ({
             key: item.key,
             label: item.label,

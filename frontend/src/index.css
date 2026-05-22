@@ -448,16 +448,12 @@ a {
   width: 100%;
 }
 
-.dict-page__table-card .arco-tabs-header {
+.dict-page__tabs .arco-tabs-header {
   margin-bottom: 10px;
 }
 
-.dict-page__table-card .arco-tabs-content {
+.dict-page__tabs .arco-tabs-content {
   min-width: 0;
-}
-
-.dict-page__table-card .arco-card-body {
-  overflow: hidden;
 }
 
 .setting-page__runtime-strip .arco-typography {
@@ -1360,10 +1356,12 @@ a {
 .filter-panel__action-item .arco-space {
   justify-content: flex-end;
   width: 100%;
+  flex-wrap: nowrap;
 }
 
 .filter-panel__action-item .arco-btn {
   min-height: var(--shell-filter-control-min-height);
+  white-space: nowrap;
 }
 
 @media (min-width: 1280px) {
