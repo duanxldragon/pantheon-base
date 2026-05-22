@@ -270,6 +270,15 @@ func (s *AuthService) LoginWithSource(req *LoginReq, sourceKey string) (*user.Sy
 			})
 			return nil, errors.New("user.login.error.locked")
 		}
+		s.recordSecurityEvent(SystemAuthSecurityEvent{
+			UserID:     currentUser.ID,
+			Username:   currentUser.Username,
+			EventType:  "password_wrong",
+			Severity:   "medium",
+			SourceKey:  sourceKey,
+			IP:         loginSourceIP(sourceKey),
+			MessageKey: "auth.security.event.password_wrong",
+		})
 		return nil, errors.New("user.login.error.password_wrong")
 	}
 	if err := s.clearFailedLoginState(currentUser.ID); err != nil {
@@ -1545,6 +1554,14 @@ func (s *AuthService) recordSecurityEvent(event SystemAuthSecurityEvent) {
 	event.SourceKey = strings.TrimSpace(event.SourceKey)
 	event.Username = strings.TrimSpace(event.Username)
 	_ = s.db.Create(&event).Error
+}
+
+func loginSourceIP(sourceKey string) string {
+	trimmed := strings.TrimSpace(sourceKey)
+	if strings.HasPrefix(trimmed, "ip:") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "ip:"))
+	}
+	return ""
 }
 
 type cleanupWindow struct {

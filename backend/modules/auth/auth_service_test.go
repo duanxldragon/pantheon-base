@@ -392,6 +392,44 @@ func TestAuthService_LoginWithSourceRecordsSecurityEventWhenSourceBlocked(t *tes
 	}
 }
 
+func TestAuthService_LoginWithSourceRecordsSecurityEventWhenPasswordWrong(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	testUser := user.SystemUser{
+		Username: "wrong_password_user",
+		Password: string(hash),
+		Status:   1,
+	}
+	db.Create(&testUser)
+	_ = s.ReloadSettings()
+
+	_, err := s.LoginWithSource(&LoginReq{Username: "wrong_password_user", Password: "wrong"}, "ip:10.0.0.8")
+	if err == nil || err.Error() != "user.login.error.password_wrong" {
+		t.Fatalf("expected password wrong error, got %v", err)
+	}
+
+	events, err := s.ListSecurityEvents(&SecurityEventQuery{
+		Username:  "wrong_password_user",
+		EventType: "password_wrong",
+		Page:      1,
+		PageSize:  10,
+	})
+	if err != nil {
+		t.Fatalf("list security events: %v", err)
+	}
+	if events.Total != 1 || len(events.Items) != 1 {
+		t.Fatalf("expected one wrong-password security event, got %+v", events)
+	}
+	if events.Items[0].Severity != "medium" ||
+		events.Items[0].SourceKey != "ip:10.0.0.8" ||
+		events.Items[0].IP != "10.0.0.8" ||
+		events.Items[0].MessageKey != "auth.security.event.password_wrong" {
+		t.Fatalf("unexpected wrong-password security event: %+v", events.Items[0])
+	}
+}
+
 func TestAuthService_AcknowledgeSecurityEventPersistsAuditFields(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)
