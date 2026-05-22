@@ -363,6 +363,7 @@ const BaseLayout: React.FC = () => {
     hasPerm('platform:dashboard:view') ||
     hasPerm('system:login-log:list') ||
     hasPerm('system:session:list') ||
+    hasPerm('system:security-event:list') ||
     hasPerm('system:operation-log:list');
 
   const syncShellActivity = useCallback((value: number) => {
@@ -816,6 +817,16 @@ const BaseLayout: React.FC = () => {
       });
     }
 
+    if (isAdmin || hasPerm('system:security-event:list')) {
+      entries.push({
+        key: 'notice-security-event',
+        title: t('system.menu.securityEvent'),
+        description: t('app.notice.securityEventDesc'),
+        icon: renderMenuIcon('safe'),
+        run: () => navigate('/system/security-event'),
+      });
+    }
+
     if (isAdmin || hasPerm('system:operation-log:list')) {
       entries.push({
         key: 'notice-operation-log',
@@ -833,7 +844,10 @@ const BaseLayout: React.FC = () => {
     if (!noticeSummary) {
       return 0;
     }
-    return Math.min(noticeSummary.loginFailureCount, 99);
+    return Math.min(
+      noticeSummary.loginFailureCount + noticeSummary.pendingSecurityEventCount,
+      99,
+    );
   }, [noticeSummary]);
 
   const noticeStatItems = useMemo(() => {
@@ -852,6 +866,12 @@ const BaseLayout: React.FC = () => {
         label: t('app.notice.activeSessions'),
         value: noticeSummary.activeSessionCount,
         tone: 'neutral',
+      },
+      {
+        key: 'security-events',
+        label: t('app.notice.pendingSecurityEvents'),
+        value: noticeSummary.pendingSecurityEventCount,
+        tone: noticeSummary.pendingSecurityEventCount > 0 ? 'warning' : 'neutral',
       },
       {
         key: 'operations',
@@ -889,6 +909,20 @@ const BaseLayout: React.FC = () => {
         value: noticeSummary.loginFailureCount,
         tone: 'danger',
         run: () => navigate('/system/login-log'),
+      });
+    }
+
+    if (
+      (isAdmin || hasPerm('system:security-event:list')) &&
+      noticeSummary.pendingSecurityEventCount > 0
+    ) {
+      groups.push({
+        key: 'risk-security-event',
+        title: t('app.notice.risk.securityEvent'),
+        description: t('app.notice.risk.securityEventDesc'),
+        value: noticeSummary.pendingSecurityEventCount,
+        tone: 'warning',
+        run: () => navigate('/system/security-event'),
       });
     }
 

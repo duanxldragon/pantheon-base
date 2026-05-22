@@ -78,6 +78,19 @@ export const GeneratorModule = defineModule({
       module: 'system.lowcode',
     },
   ],
+  dashboardWidgets: [
+    {
+      key: 'platform.generator',
+      slot: 'quick-action',
+      sourceDomain: 'system/lowcode',
+      titleKey: 'system.menu.generator',
+      descriptionKey: 'dashboard.quickAction.generator',
+      path: '/system/generator',
+      permission: 'system:generator:use',
+      icon: 'code',
+      cleanupPolicy: 'hide_when_forbidden',
+    },
+  ],
   permissions: [
     'system:generator:use',
     'system:module:generate',

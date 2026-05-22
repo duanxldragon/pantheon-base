@@ -253,7 +253,7 @@ const SecurityEventList: React.FC = () => {
       <Space direction="vertical" size={16} className="system-page-template auth-security-event-page">
         <GovernanceSummaryBar
           eyebrow={t('auth.securityEvent.hero.eyebrow')}
-          title={t('system.menu.securityEvent')}
+          title={t('auth.securityEvent.hero.title')}
           description={t('auth.securityEvent.hero.desc')}
           metrics={heroStats.slice(0, 3)}
           action={
@@ -261,21 +261,24 @@ const SecurityEventList: React.FC = () => {
               expanded={governanceRail.expanded}
               onToggle={governanceRail.toggle}
             >
-              {t('auth.securityEvent.subtitle')}
+              {t('auth.securityEvent.hero.summaryTitle')}
             </GovernanceRailToggleButton>
           }
         />
         <FilterPanel>
           <Form form={form} layout="vertical" initialValues={emptyFilterForm}>
             <Row gutter={16} className="auth-filter-grid">
-              <Col xs={24} md={12} lg={6}>
+              <Col xs={24} md={12} lg={5}>
                 <FormItem field="username" label={t('common.user')}>
                   <Input allowClear placeholder={t('auth.securityEvent.filter.usernamePlaceholder')} />
                 </FormItem>
               </Col>
-              <Col xs={24} md={12} lg={6}>
+              <Col xs={24} md={12} lg={5}>
                 <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
                   <Select allowClear placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}>
+                    <Select.Option value="password_wrong">
+                      {t('auth.securityEvent.type.password_wrong')}
+                    </Select.Option>
                     <Select.Option value="source_blocked">
                       {t('auth.securityEvent.type.source_blocked')}
                     </Select.Option>
@@ -285,7 +288,7 @@ const SecurityEventList: React.FC = () => {
                   </Select>
                 </FormItem>
               </Col>
-              <Col xs={24} md={12} lg={6}>
+              <Col xs={24} md={12} lg={5}>
                 <FormItem field="severity" label={t('auth.securityEvent.severity')}>
                   <Select allowClear placeholder={t('auth.securityEvent.filter.severityPlaceholder')}>
                     <Select.Option value="high">{t('auth.securityEvent.severity.high')}</Select.Option>
@@ -294,7 +297,7 @@ const SecurityEventList: React.FC = () => {
                   </Select>
                 </FormItem>
               </Col>
-              <Col xs={24} md={12} lg={6}>
+              <Col xs={24} md={12} lg={5}>
                 <FormItem field="acknowledged" label={t('auth.securityEvent.acknowledgement')}>
                   <Select
                     allowClear
@@ -309,7 +312,7 @@ const SecurityEventList: React.FC = () => {
                   </Select>
                 </FormItem>
               </Col>
-              <Col xs={24}>
+              <Col xs={24} md={12} lg={4}>
                 <FormItem className="filter-panel__action-item">
                   <Space>
                     <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>

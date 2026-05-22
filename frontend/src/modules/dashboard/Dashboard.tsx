@@ -233,6 +233,14 @@ const DashboardPage: React.FC = () => {
         desc: t('dashboard.attention.successRateDesc'),
       },
       {
+        key: 'security-events',
+        tone: summary.pendingSecurityEventCount > 0 ? 'warning' : 'success',
+        icon: <IconExclamationCircle />,
+        label: t('app.notice.pendingSecurityEvents'),
+        value: summary.pendingSecurityEventCount,
+        desc: t('dashboard.domain.securityDesc'),
+      },
+      {
         key: 'org-tasks',
         tone: summary.orgGovernanceTaskCount > 0 ? 'warning' : 'success',
         icon: <IconExclamationCircle />,
