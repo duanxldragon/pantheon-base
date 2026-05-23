@@ -1,5 +1,6 @@
 const { chromium, request } = require("playwright");
 (async () => {
+  const appBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5173';
   const api = await request.newContext({ baseURL: "http://127.0.0.1:8080/api/v1" });
   const resp = await api.post('/auth/login', { data: { username: 'admin', password: '123456' } });
   if (!resp.ok()) throw new Error('login failed');
@@ -14,8 +15,8 @@ const { chromium, request } = require("playwright");
   }, { accessToken: payload.data.accessToken, refreshToken: payload.data.refreshToken });
 
   const urls = [
-    ['dashboard', 'http://127.0.0.1:5173/dashboard'],
-    ['user', 'http://127.0.0.1:5173/system/user']
+    ['dashboard', `${appBaseUrl}/dashboard`],
+    ['user', `${appBaseUrl}/system/user`]
   ];
 
   for (const [name, url] of urls) {

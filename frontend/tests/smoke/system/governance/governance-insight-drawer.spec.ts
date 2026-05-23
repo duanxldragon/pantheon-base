@@ -17,6 +17,7 @@ const pageIdentitySelectors = [
   '.system-list__table-card',
   '.permission-workbench__tabs',
   '.dict-workbench',
+  '.setting-overview-page',
   '.setting-group-page',
   '.module-manager-page',
   '.generator-wizard-card',

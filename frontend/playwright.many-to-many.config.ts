@@ -1,5 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
+const externalWebServer = process.env.PANTHEON_EXTERNAL_WEB_SERVER === '1';
+const webBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5174';
+
 export default defineConfig({
   testDir: './tests/smoke',
   timeout: 120_000,
@@ -10,14 +13,18 @@ export default defineConfig({
   fullyParallel: false,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5174',
+    baseURL: webBaseUrl,
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command:
-      'cmd /c node scripts/many-to-many-qa-setup.mjs up && set PANTHEON_SMOKE=1 && npm run dev -- --host 127.0.0.1 --port 5174',
-    url: 'http://127.0.0.1:5174',
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  ...(externalWebServer
+    ? {}
+    : {
+        webServer: {
+          command:
+            'node scripts/start-smoke-vite.mjs --host 127.0.0.1 --port 5174 --setup scripts/many-to-many-qa-setup.mjs',
+          url: webBaseUrl,
+          reuseExistingServer: false,
+          timeout: 60_000,
+        },
+      }),
 });

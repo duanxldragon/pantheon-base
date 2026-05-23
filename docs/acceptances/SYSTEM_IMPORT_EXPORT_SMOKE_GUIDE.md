@@ -21,7 +21,7 @@ English version: [SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.en.md](./SYSTEM_IMPORT_EXPORT
 
 ```powershell
 cd frontend
-cmd /c npm run test:smoke:impexp
+cmd /c npm run test:smoke:system:api
 ```
 
 默认会请求 `http://127.0.0.1:8080/api/v1`，并使用 `admin / 123456` 登录；如需覆盖，可设置：

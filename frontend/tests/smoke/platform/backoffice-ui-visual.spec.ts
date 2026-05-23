@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from '../helpers/auth';
+import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
 const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];
@@ -167,7 +168,7 @@ const authenticatedPages = [
   { path: '/system/dept', title: '部门管理', screenshot: 'system-dept-desktop.png' },
   { path: '/system/post', title: '岗位管理', screenshot: 'system-post-desktop.png' },
   { path: '/system/dict', title: '字典管理', screenshot: 'system-dict-desktop.png' },
-  { path: '/system/setting', title: '基础信息', screenshot: 'system-setting-desktop.png' },
+  { path: '/system/setting', title: '系统设置', screenshot: 'system-setting-desktop.png' },
   { path: '/system/i18n', title: '国际化管理', screenshot: 'system-i18n-desktop.png' },
   { path: '/system/login-log', title: '登录日志', screenshot: 'system-login-log-desktop.png' },
   { path: '/system/session', title: '会话管理', screenshot: 'system-session-desktop.png' },
@@ -619,8 +620,11 @@ test.describe('backoffice UI visual acceptance', () => {
         await expect(editDialog).toBeHidden();
 
         if (seededPost) {
-          await deletePostSeed(page, accessToken, seededPost.id);
-          await deleteDeptSeed(page, accessToken, seededPost.deptId);
+          const currentSeed = seededPost;
+          await runOptionalSmokeCleanup(`backoffice-ui:${path}:seeded-post`, async () => {
+            await deletePostSeed(page, accessToken, currentSeed.id);
+            await deleteDeptSeed(page, accessToken, currentSeed.deptId);
+          });
           seededPost = null;
         }
       }
@@ -628,8 +632,11 @@ test.describe('backoffice UI visual acceptance', () => {
       expectOnlyAllowedRuntimeErrors(runtimeErrors);
     } finally {
       if (seededPost) {
-        await deletePostSeed(page, accessToken, seededPost.id);
-        await deleteDeptSeed(page, accessToken, seededPost.deptId);
+        const currentSeed = seededPost;
+        await runOptionalSmokeCleanup('backoffice-ui:final-seeded-post', async () => {
+          await deletePostSeed(page, accessToken, currentSeed.id);
+          await deleteDeptSeed(page, accessToken, currentSeed.deptId);
+        });
       }
       await updateCurrentUserPreferences(page, accessToken, originalPreferences);
     }
@@ -643,11 +650,7 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
-      const expectedUrlPattern =
-        pageMeta.path === '/system/setting'
-          ? /\/system\/setting(?:\/[a-z-]+)?$/
-          : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
-      await expect(page).toHaveURL(expectedUrlPattern);
+      await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
       await expectPageIdentity(page, pageMeta.identityTitle ?? pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);
@@ -665,11 +668,7 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
-      const expectedUrlPattern =
-        pageMeta.path === '/system/setting'
-          ? /\/system\/setting(?:\/[a-z-]+)?$/
-          : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
-      await expect(page).toHaveURL(expectedUrlPattern);
+      await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
       await expectPageIdentity(page, pageMeta.identityTitle ?? pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);
@@ -719,11 +718,14 @@ test.describe('backoffice UI visual acceptance', () => {
         return {
           tabsTop: tabs?.getBoundingClientRect().top ?? null,
           menuTop: menu?.getBoundingClientRect().top ?? null,
+          menuBottom: menu?.getBoundingClientRect().bottom ?? null,
         };
       });
       expect(horizontalShellOrder.tabsTop).not.toBeNull();
       expect(horizontalShellOrder.menuTop).not.toBeNull();
-      expect(horizontalShellOrder.tabsTop!).toBeLessThan(horizontalShellOrder.menuTop!);
+      expect(horizontalShellOrder.menuBottom).not.toBeNull();
+      expect(horizontalShellOrder.menuTop!).toBeLessThan(horizontalShellOrder.tabsTop!);
+      expect(horizontalShellOrder.menuBottom!).toBeLessThanOrEqual(horizontalShellOrder.tabsTop!);
       await page.screenshot({ path: join(artifactDir, 'dashboard-horizontal-compact.png'), fullPage: true });
 
       await page.goto('/system/user', { waitUntil: 'networkidle' });
@@ -809,7 +811,7 @@ test.describe('backoffice UI visual acceptance', () => {
     await signInAsAdmin(page);
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/system/setting', { waitUntil: 'networkidle' });
+    await page.goto('/system/setting/basic', { waitUntil: 'networkidle' });
     await page.locator('.submit-bar').getByRole('button', { name: '保存' }).click();
 
     const verifyDialog = page.getByRole('dialog').filter({ has: page.getByText('敏感操作验证', { exact: true }) });

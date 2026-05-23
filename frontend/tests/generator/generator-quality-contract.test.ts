@@ -213,6 +213,10 @@ assert.match(backendService, /database\.WithDataScope\(dataScope\)/);
 assert.doesNotMatch(backendService, /backend\/modules\/system\//);
 assert.match(backendService, /ListCmdbAssetOptions/);
 assert.match(backendService, /CmdbAssetOptionItem/);
+assert.match(backendService, /db = db\.Where\("asset_code LIKE \?", "%"\+query\.AssetCode\+"%"\)/);
+assert.match(backendService, /db = db\.Where\("status LIKE \?", "%"\+query\.Status\+"%"\)/);
+assert.match(backendService, /"assetCode": "asset_code"/);
+assert.doesNotMatch(backendService, /a_et_code/);
 
 const frontendIndex = files.get('frontend/src/modules/business/cmdb/asset/index.ts') || '';
 assert.match(frontendIndex, /routes:\s*\[/);

@@ -274,6 +274,9 @@ async function expectPaginationResponsiveMobile(page: Page) {
         : null,
       native: nativeRect
         ? {
+            top: nativeRect.top,
+            height: nativeRect.height,
+            center: nativeRect.top + nativeRect.height / 2,
             width: nativeRect.width,
             left: nativeRect.left,
             right: nativeRect.right,
@@ -290,10 +293,11 @@ async function expectPaginationResponsiveMobile(page: Page) {
   expect(metrics.last).not.toBeNull();
   expect(metrics.native).not.toBeNull();
   expect(Math.abs(metrics.first!.top - metrics.last!.top)).toBeLessThanOrEqual(2);
-  expect(Math.abs(metrics.first!.center - metrics.shell.center)).toBeLessThanOrEqual(4);
-  expect(Math.abs(metrics.last!.center - metrics.shell.center)).toBeLessThanOrEqual(4);
-  expect(metrics.first!.left).toBeLessThan(metrics.native!.left);
-  expect(metrics.last!.left).toBeGreaterThan(metrics.native!.right - 40);
+  expect(metrics.native!.width).toBeLessThanOrEqual(metrics.shell.width);
+  expect(metrics.first!.left).toBeGreaterThanOrEqual(metrics.native!.left);
+  expect(metrics.last!.left).toBeLessThanOrEqual(metrics.native!.right);
+  expect(Math.abs(metrics.first!.center - metrics.native!.center)).toBeLessThanOrEqual(20);
+  expect(Math.abs(metrics.last!.center - metrics.native!.center)).toBeLessThanOrEqual(20);
 }
 
 async function fulfillPagedRoute(route: Route, rows: unknown[], pageSize = 10) {

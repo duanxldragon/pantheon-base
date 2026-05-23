@@ -115,14 +115,11 @@ npm run build
 # 系统页 smoke
 npm run test:smoke:system
 
-# 角色授权专项 smoke
-npm run test:smoke:role-auth
+# 平台壳层与全局 UI smoke
+npm run test:smoke:platform
 
-# 导入导出 API smoke
-npm run test:smoke:impexp
-
-# 后台 UI smoke
-npm run test:smoke:backoffice-ui
+# 全量后台 smoke（platform + system + business）
+npm run test:smoke:all
 ```
 
 ## 权限模型摘要

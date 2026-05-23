@@ -1818,7 +1818,6 @@ const BaseLayout: React.FC = () => {
             </Dropdown>
           </Space>
         </Header>
-        {isHorizontalLayout ? openedTabsContent : null}
         {isHorizontalLayout ? (
           <div className="app-shell__top-nav">
             <Spin loading={loading} className="app-shell__menu-loading">
@@ -1834,6 +1833,7 @@ const BaseLayout: React.FC = () => {
             </Spin>
           </div>
         ) : null}
+        {isHorizontalLayout ? openedTabsContent : null}
         {!isHorizontalLayout ? openedTabsContent : null}
         <Content className="app-shell__content">
           <div className="app-shell__content-inner">

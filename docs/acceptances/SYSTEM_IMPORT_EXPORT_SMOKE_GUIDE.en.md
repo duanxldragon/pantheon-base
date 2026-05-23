@@ -21,7 +21,7 @@ The repository already provides reusable API smoke coverage:
 
 ```powershell
 cd frontend
-cmd /c npm run test:smoke:impexp
+cmd /c npm run test:smoke:system:api
 ```
 
 ## Main Coverage

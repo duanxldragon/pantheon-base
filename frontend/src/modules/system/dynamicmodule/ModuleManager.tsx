@@ -86,7 +86,7 @@ const ModuleManager: React.FC = () => {
   const canPurge = isAdmin || hasPerm('system:module:purge');
   const canRepair = isAdmin || hasPerm('system:module:repair');
   const [modules, setModules] = useState<ModuleRegistration[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [featureDisabled, setFeatureDisabled] = useState(false);
   const [purgeTarget, setPurgeTarget] = useState<ModuleRegistration | null>(null);

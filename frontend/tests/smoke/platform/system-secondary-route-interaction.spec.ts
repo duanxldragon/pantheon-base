@@ -90,7 +90,11 @@ async function expectRouteShell(page: Page) {
   await expect(page.locator('.app-shell__header')).toBeVisible();
   await expect(page.locator('.app-shell__content')).toBeVisible();
   await expect(
-    page.locator('.page-panel, .arco-card, .system-list__work-actions, .setting-group-page').first(),
+    page
+      .locator(
+        '.page-panel, .arco-card, .system-list__work-actions, .setting-overview-page, .setting-group-page',
+      )
+      .first(),
   ).toBeVisible();
 }
 
@@ -206,10 +210,12 @@ test.describe('system secondary route interaction states', () => {
       await signInAsAdmin(page);
 
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await page.goto('/system/setting/basic', { waitUntil: 'networkidle' });
+      await page.goto('/system/setting', { waitUntil: 'networkidle' });
 
       await expectRouteShell(page);
       await expectNoPageError(page);
+      await expect(page).toHaveURL(/\/system\/setting$/);
+      await expect(page.locator('.setting-overview-page')).toBeVisible();
 
       const nav = page.locator('.setting-page__group-nav-grid');
       await expect(nav).toBeVisible();

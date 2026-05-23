@@ -1,6 +1,7 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 export const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
+const defaultWebBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5173';
 
 export type BrowserLoginResult = {
   accessToken: string;
@@ -99,7 +100,10 @@ export async function signInAsAdmin(page: Page) {
 
 export async function installClientSession(page: Page, login: BrowserLoginResult) {
   await primeChineseLocale(page);
-  const appBaseUrl = new URL(page.url() === 'about:blank' ? '/' : page.url(), page.url() === 'about:blank' ? 'http://127.0.0.1:5173' : undefined);
+  const appBaseUrl = new URL(
+    page.url() === 'about:blank' ? '/' : page.url(),
+    page.url() === 'about:blank' ? defaultWebBaseUrl : undefined,
+  );
   const cookieUrl = appBaseUrl.origin;
   await page.context().addCookies([
     {

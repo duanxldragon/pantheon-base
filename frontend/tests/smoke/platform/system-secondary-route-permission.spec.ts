@@ -10,6 +10,7 @@ import {
   type BrowserLoginResult,
   verifiedApiHeaders,
 } from '../helpers/auth';
+import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
 
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
@@ -83,7 +84,11 @@ async function expectRouteShell(page: Page) {
   await expect(page.locator('.app-shell__header')).toBeVisible();
   await expect(page.locator('.app-shell__content')).toBeVisible();
   await expect(
-    page.locator('.page-panel, .arco-card, .system-list__work-actions, .setting-group-page').first(),
+    page
+      .locator(
+        '.page-panel, .arco-card, .system-list__work-actions, .setting-overview-page, .setting-group-page',
+      )
+      .first(),
   ).toBeVisible();
 }
 
@@ -296,8 +301,10 @@ test.describe('system secondary route permission and readonly states', () => {
         expectOnlyAllowedRuntimeErrors(runtimeErrors);
       } finally {
         await viewerSession.close();
-        await deleteUserByUsername(page, adminLogin, username);
-        await deleteRoleByKey(page, adminLogin, roleKey);
+        await runOptionalSmokeCleanup('secondary-route-permission:setting-viewer', async () => {
+          await deleteUserByUsername(page, adminLogin, username);
+          await deleteRoleByKey(page, adminLogin, roleKey);
+        });
       }
     });
 
@@ -361,8 +368,10 @@ test.describe('system secondary route permission and readonly states', () => {
         expectOnlyAllowedRuntimeErrors(runtimeErrors);
       } finally {
         await viewerSession.close();
-        await deleteUserByUsername(page, adminLogin, username);
-        await deleteRoleByKey(page, adminLogin, roleKey);
+        await runOptionalSmokeCleanup('secondary-route-permission:user-detail-viewer', async () => {
+          await deleteUserByUsername(page, adminLogin, username);
+          await deleteRoleByKey(page, adminLogin, roleKey);
+        });
       }
     });
   }

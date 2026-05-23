@@ -1346,7 +1346,7 @@ a {
   min-height: var(--shell-filter-control-min-height);
   width: 100%;
   border: 1px solid color-mix(in srgb, var(--panel-border-strong) 90%, #fff);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-control);
   background: var(--panel-bg-solid);
   box-shadow: none;
   transition:

@@ -8,6 +8,7 @@ import {
   verifiedApiHeaders,
   type BrowserLoginResult,
 } from '../../helpers/auth';
+import { runOptionalSmokeCleanup } from '../../helpers/fixture-policy';
 
 type ResponseEnvelope<T> = {
   code: number;
@@ -126,7 +127,9 @@ test.describe.serial('system import/export api smoke', () => {
   });
 
   test.afterAll(async () => {
-    await cleanupSmokeFixtures(apiContext, login);
+    await runOptionalSmokeCleanup('system-api:import-export-fixtures', async () => {
+      await cleanupSmokeFixtures(apiContext, login);
+    });
     await apiContext.dispose();
   });
 

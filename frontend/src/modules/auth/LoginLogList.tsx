@@ -404,99 +404,92 @@ const LoginLogList: React.FC = () => {
           </FilterPanel>
 
           <Card className="page-panel system-list__table-card auth-login-log-page__table-card">
-            {(canClear || canDelete || canExport) && (
-              <div>
-                <GovernanceCleanupBar
-                  showCleanup={canClear}
-                  retentionDays={retentionDays}
-                  retentionOptions={retentionOptions}
-                  onRetentionChange={setRetentionDays}
-                  retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                  cleanupMode={cleanupMode}
-                  onCleanupModeChange={setCleanupMode}
-                  cleanupModeLabel={t('common.cleanupMode')}
-                  cleanupModeOptions={[
-                    { label: t('common.cleanupModeRetention'), value: 'retention' },
-                    { label: t('common.cleanupModeRange'), value: 'range' },
-                  ]}
-                  rangeStart={cleanupRangeStart}
-                  rangeEnd={cleanupRangeEnd}
-                  onRangeStartChange={setCleanupRangeStart}
-                  onRangeEndChange={setCleanupRangeEnd}
-                  rangeStartLabel={t('common.cleanupRangeStart')}
-                  rangeEndLabel={t('common.cleanupRangeEnd')}
-                  confirmTitle={
-                    cleanupMode === 'range'
-                      ? t('common.cleanupRangeConfirm')
-                      : t('auth.loginLog.cleanupConfirm', { count: retentionDays })
-                  }
-                  actionLabel={t('common.cleanupLogs')}
-                  onConfirm={() => {
-                    void handleCleanup();
+            <GovernanceCleanupBar
+              showCleanup={canClear}
+              retentionDays={retentionDays}
+              retentionOptions={retentionOptions}
+              onRetentionChange={setRetentionDays}
+              retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+              cleanupMode={cleanupMode}
+              onCleanupModeChange={setCleanupMode}
+              cleanupModeLabel={t('common.cleanupMode')}
+              cleanupModeOptions={[
+                { label: t('common.cleanupModeRetention'), value: 'retention' },
+                { label: t('common.cleanupModeRange'), value: 'range' },
+              ]}
+              rangeStart={cleanupRangeStart}
+              rangeEnd={cleanupRangeEnd}
+              onRangeStartChange={setCleanupRangeStart}
+              onRangeEndChange={setCleanupRangeEnd}
+              rangeStartLabel={t('common.cleanupRangeStart')}
+              rangeEndLabel={t('common.cleanupRangeEnd')}
+              confirmTitle={
+                cleanupMode === 'range'
+                  ? t('common.cleanupRangeConfirm')
+                  : t('auth.loginLog.cleanupConfirm', { count: retentionDays })
+              }
+              actionLabel={t('common.cleanupLogs')}
+              onConfirm={() => {
+                void handleCleanup();
+              }}
+              hint={t('auth.loginLog.hero.cleanupHint')}
+              trailing={
+                <Button
+                  icon={<IconDownload />}
+                  onClick={() => {
+                    void handleExport();
                   }}
-                  hint={t('auth.loginLog.hero.cleanupHint')}
-                  trailing={
+                  disabled={!canExport}
+                >
+                  {t('common.export')}
+                </Button>
+              }
+              extraActions={
+                canDelete ? (
+                  <>
+                    <Typography.Text type="secondary">
+                      {t('common.selectedCount', { count: selectedRowKeys.length })}
+                    </Typography.Text>
                     <Button
-                      icon={<IconDownload />}
+                      type="text"
+                      size="small"
+                      disabled={selectedRowKeys.length === 0}
                       onClick={() => {
-                        void handleExport();
+                        if (selectedRowKeys.length === 0) {
+                          return;
+                        }
+                        setSelectedRowKeys([]);
+                        message.success(t('common.clearSelectionSuccess'));
                       }}
-                      disabled={!canExport}
                     >
-                      {t('common.export')}
+                      {t('common.clearSelection')}
                     </Button>
-                  }
-                  extraActions={
-                    <>
-                      <Typography.Text type="secondary">
-                        {t('common.selectedCount', { count: selectedRowKeys.length })}
-                      </Typography.Text>
-                      <Button
-                        type="text"
-                        size="small"
-                        disabled={selectedRowKeys.length === 0}
-                        onClick={() => {
-                          if (selectedRowKeys.length === 0) {
-                            return;
-                          }
-                          setSelectedRowKeys([]);
-                          message.success(t('common.clearSelectionSuccess'));
+                    <PermissionAction
+                      allowed={canDelete}
+                      tooltip={t('common.noPermissionAction')}
+                    >
+                      <Popconfirm
+                        disabled={selectedRowKeys.length === 0 || !canDelete}
+                        title={t('auth.loginLog.batchDeleteConfirm', {
+                          count: selectedRowKeys.length,
+                        })}
+                        onOk={() => {
+                          void handleBatchDelete();
                         }}
                       >
-                        {t('common.clearSelection')}
-                      </Button>
-                      <PermissionAction
-                        allowed={canDelete}
-                        tooltip={t('common.noPermissionAction')}
-                      >
-                        <Popconfirm
+                        <Button
+                          status="danger"
+                          icon={<IconDelete />}
                           disabled={selectedRowKeys.length === 0 || !canDelete}
-                          title={t('auth.loginLog.batchDeleteConfirm', {
-                            count: selectedRowKeys.length,
-                          })}
-                          onOk={() => {
-                            void handleBatchDelete();
-                          }}
                         >
-                          <Button
-                            status="danger"
-                            icon={<IconDelete />}
-                            disabled={selectedRowKeys.length === 0 || !canDelete}
-                          >
-                            {t('common.deleteSelected')}
-                          </Button>
-                        </Popconfirm>
-                      </PermissionAction>
-                      {!canDelete ? (
-                        <Typography.Text type="secondary">
-                          {t('common.batchActionPermissionHint')}
-                        </Typography.Text>
-                      ) : null}
-                    </>
-                  }
-                />
-              </div>
-            )}
+                          {t('common.deleteSelected')}
+                        </Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  </>
+                ) : undefined
+              }
+            />
             {loading && data.length === 0 ? <PageLoading /> : null}
             {loadFailed && !loading ? (
               <PageError

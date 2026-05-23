@@ -172,7 +172,11 @@ async function expectProfessionalBackofficeSurface(page: Page) {
   await expect(page.locator('.app-shell__header')).toBeVisible();
   await expect(page.locator('.app-shell__content')).toBeVisible();
   await expect(
-    page.locator('.page-panel, .arco-card, .system-list__work-actions, .setting-group-page').first(),
+    page
+      .locator(
+        '.page-panel, .arco-card, .system-list__work-actions, .setting-overview-page, .setting-group-page',
+      )
+      .first(),
   ).toBeVisible();
   await expect(page.locator('.arco-layout-sider-dark')).toHaveCount(0);
   const usesHorizontalShell = (await page.locator('.app-shell--horizontal').count()) > 0;

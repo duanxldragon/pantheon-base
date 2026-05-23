@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test';
 
-const backendOrigin = process.env.PANTHEON_API_PROXY_TARGET ?? 'http://127.0.0.1:18080';
-const webServerCommand = `cmd /c set PANTHEON_SMOKE=1 && set PANTHEON_API_PROXY_TARGET=${backendOrigin} && npm run dev -- --host 127.0.0.1 --port 5174`;
+const backendOrigin = process.env.PANTHEON_API_PROXY_TARGET ?? 'http://127.0.0.1:8080';
+const webServerCommand = `node scripts/start-smoke-vite.mjs --host 127.0.0.1 --port 5174 --proxy-target ${backendOrigin}`;
+const externalWebServer = process.env.PANTHEON_EXTERNAL_WEB_SERVER === '1';
+const webBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5174';
 
 export default defineConfig({
   testDir: './tests/smoke',
@@ -13,13 +15,17 @@ export default defineConfig({
   fullyParallel: false,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5174',
+    baseURL: webBaseUrl,
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: webServerCommand,
-    url: 'http://127.0.0.1:5174',
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  ...(externalWebServer
+    ? {}
+    : {
+        webServer: {
+          command: webServerCommand,
+          url: webBaseUrl,
+          reuseExistingServer: false,
+          timeout: 60_000,
+        },
+      }),
 });

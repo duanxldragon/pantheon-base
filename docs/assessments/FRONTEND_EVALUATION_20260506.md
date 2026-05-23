@@ -116,13 +116,13 @@ i18n 资源文件（数据文件，非组件）：
 | `RoleList.tsx` | 1236 | 未拆分（此前未在列表中） |
 | `generator/schema.ts` | 1227 | 类型定义文件，合理 |
 | `backend-generator.ts` | 1171 | 生成逻辑，合理 |
-| `SettingPage.tsx` | 1106 | 未拆分 |
+| `SettingOverviewPage.tsx` + `SettingGroupPage.tsx` | 拆分后已收口 | 设置概览入口与分组编辑已拆分 |
 | `MenuList.tsx` | 1001 | 未拆分 |
 | `PostList.tsx` | 900 | 未拆分 |
 | `DictItemTab.tsx` | 849 | 已拆分（P2-1），单项职责 |
 | `PermissionList.tsx` | 792 | 已提取 WorkbenchTab(603) + DataScopeTab(381) |
 
-> **注：** v2 扫描发现了 v1 未包含的 7 个 >300 行文件（OperationLogList、UserList、RoleList、schema、backend-generator、SettingPage、MenuList、PostList）。这些文件 v1 时已被计入总行数但未单独列出。
+> **注：** v2 扫描发现了 v1 未包含的 7 个 >300 行文件（OperationLogList、UserList、RoleList、schema、backend-generator、旧 SettingPage、MenuList、PostList）。这些文件 v1 时已被计入总行数但未单独列出；其中系统设置页现已拆分为 `SettingOverviewPage.tsx` 与 `SettingGroupPage.tsx`。
 
 ## 5. v1 → v2 已修复项
 

@@ -226,7 +226,7 @@ English version: [SYSTEM_MODULE_AUDIT.en.md](./SYSTEM_MODULE_AUDIT.en.md)
 
 - 数据表：`system_setting`
 - 后端模块：`backend/modules/system/setting/`
-- 前端页面：`frontend/src/modules/system/setting/SettingPage.tsx`
+- 前端页面：`frontend/src/modules/system/setting/SettingOverviewPage.tsx`、`frontend/src/modules/system/setting/SettingGroupPage.tsx`
 - 前端模块注册：`frontend/src/modules/system/setting/index.ts`
 
 **已补齐**

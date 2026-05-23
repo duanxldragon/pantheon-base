@@ -5,7 +5,7 @@ layer: system/config
 status: Active
 linked_contracts:
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-05-05
+updated_at: 2026-05-23
 ---
 
 # system/config 高敏治理验收基线
@@ -121,7 +121,24 @@ English version: [SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md](./SYSTEM_CONFIG_GOV
 
 涉及真实浏览器主链路时补充：
 
-- `cd frontend && npm run test:smoke:module-governance-host`
+- `cd frontend && npm run test:smoke:business:database-import`
+
+### 6.1 2026-05-23 相邻高敏页面实测状态
+
+本轮针对 `system/config` 相邻低代码高敏链路，按真实 smoke 日志记录如下：
+
+| 套件/链路 | 当前状态 | 说明 | 证据 |
+| :--- | :--- | :--- | :--- |
+| `platform:full` 覆盖 `/system/modules`、`/system/generator` | 通过 | 稳定后重跑 `57/57` 通过 | `frontend/platform-full-smoke-rerun.log` |
+| `system:pages` 中 `/system/dict` 工作台结构 | 已修复并定向通过 | `dict-page__table-card` 工作面恢复，治理摘要留在工作面外 | `frontend/system-pages-smoke.log`、`frontend/system-pages-smoke-remediation-20260523.log` |
+| `system:governance` 权限工作台真实后端整改 | 已修复并定向通过 | 首次失败是 UI 文案断言漂移，不是整改链路失效 | `frontend/system-governance-smoke.log`、`frontend/system-governance-smoke-remediation-20260523.log` |
+| `business:database-import` | 跳过 | 当前按源表可用性决定是否执行，不应记为失败 | `frontend/business-database-import-smoke.log` |
+| `business:auto-recycle` | 已修复并定向通过 | 修正代理默认端口后，按当前真实契约验证“临时模块 purge 文案 + 自动回收结果”通过 | `frontend/business-auto-recycle-smoke.log`、`frontend/business-auto-recycle-smoke-remediation-20260523.log` |
+
+说明：
+
+- `auto-recycle` 首次失败包含错误代理目标 `127.0.0.1:18080`；修复后默认回到本仓库实际后端 `127.0.0.1:8080`。
+- `auto-recycle` 现行后端契约在 `/generate` 后先进入 `PendingActivation`，因此浏览器 smoke 不再把“同步建表完成”作为唯一通过条件，而是验证临时模块 purge 提示与自动回收结果。
 
 ## 7. 完成定义
 

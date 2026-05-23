@@ -307,7 +307,7 @@ const matrixCases: FormMatrixCase[] = [
   },
   {
     key: 'setting-security-update',
-    path: '/system/setting',
+    path: '/system/setting/security',
     formTitle: '安全策略',
     submitText: '保存',
     openForm: async (page) => {
@@ -387,7 +387,7 @@ test.describe('system form state matrix', () => {
       const cancelButton = page.getByRole('button', { name: '取消', exact: true }).last();
       if (await cancelButton.isVisible().catch(() => false)) {
         await cancelButton.click();
-        if (matrixCase.path !== '/system/setting') {
+        if (matrixCase.key !== 'setting-security-update') {
           await expect(form).toBeHidden();
         }
       }
@@ -453,7 +453,7 @@ test.describe('system form state matrix', () => {
       await expect(submit).toHaveClass(/arco-btn-loading/);
 
       gate.resolve();
-      if (matrixCase.path === '/system/setting') {
+      if (matrixCase.key === 'setting-security-update') {
         await expectToast(page, '更新成功');
       } else {
         await expect(form).toBeHidden();
@@ -490,7 +490,7 @@ test.describe('system form state matrix', () => {
       await expect(form).toBeVisible();
       await expectToast(page, '请求失败，请稍后重试');
 
-      if (matrixCase.path !== '/system/setting') {
+      if (matrixCase.key !== 'setting-security-update') {
         await page.getByRole('button', { name: '取消', exact: true }).last().click();
         await expect(form).toBeHidden();
       }

@@ -144,7 +144,9 @@ function renderNativePagination(
 ) {
   return (
     <div className={getPaginationWrapperClassName(pagePosition)}>
-      {paginationNode}
+      <div className="app-table__pagination-shell">
+        <div className="app-table__pagination-native">{paginationNode}</div>
+      </div>
     </div>
   );
 }

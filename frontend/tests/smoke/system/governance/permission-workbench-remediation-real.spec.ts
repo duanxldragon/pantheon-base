@@ -165,7 +165,8 @@ test('permission workbench can remediate recommended generator policy against re
     await expect(page.locator('.governance-summary-bar, .permission-workbench__tabs').first()).toBeVisible();
     await page.getByRole('tab', { name: '权限工作台', exact: true }).click();
     await expect(page.getByText('整改任务台', { exact: false })).toBeVisible();
-    await expect(page.getByText('待整改', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('待整改角色', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '仅看待整改', exact: true })).toBeVisible();
 
     const remediateResponse = await page.request.post(`${apiBaseUrl}/system/permission/workbench/remediate`, {
       headers: await verifiedHeaders(page, accessToken),

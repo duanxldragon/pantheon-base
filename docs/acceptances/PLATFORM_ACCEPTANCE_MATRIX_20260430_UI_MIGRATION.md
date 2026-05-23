@@ -94,7 +94,7 @@ English version: [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.en.md](./PLAT
 | `frontend/src/modules/system/post/PostList.tsx` | `system/org` | `Target` | `SummaryRail` | 可继续复制 | 已退出旧摘要栏类名 |
 | `frontend/src/modules/system/dict/DictPage.tsx` | `system/config` | `Target` | 风险/说明型 Side Rail | 可继续复制 | 主从布局与辅助栏职责已分离 |
 | `frontend/src/modules/system/i18n/I18nList.tsx` | `system/config` | `Target` | 风险/治理型 Side Rail | 可继续复制 | 已退出第二主内容列式右栏 |
-| `frontend/src/modules/system/setting/SettingPage.tsx` | `system/config` | `Target` | `RiskRail` | 可继续复制 | 已收口到风险提示语义 |
+| `frontend/src/modules/system/setting/SettingOverviewPage.tsx` | `system/config` | `Target` | `RiskRail` | 可继续复制 | 已收口为概览入口，分组编辑收敛到独立工作区 |
 | `frontend/src/modules/system/audit/OperationLogList.tsx` | `system/audit` | `Target` | `RiskRail` | 可继续复制 | 不再重复主内容摘要 |
 | `frontend/src/modules/auth/LoginLogList.tsx` | `system/auth` | `Target` | `RiskRail` | 可继续复制 | 已退出旧摘要栏类名 |
 | `frontend/src/modules/auth/SessionList.tsx` | `system/auth` | `Target` | `RiskRail` | 可继续复制 | 已退出旧摘要栏类名 |

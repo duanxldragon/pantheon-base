@@ -88,10 +88,9 @@ Frontend default: `http://127.0.0.1:5173`
 go test ./backend/modules/auth ./backend/modules/system/...
 cd frontend
 npm run build
+npm run test:smoke:platform
 npm run test:smoke:system
-npm run test:smoke:role-auth
-npm run test:smoke:impexp
-npm run test:smoke:backoffice-ui
+npm run test:smoke:all
 ```
 
 ## Document Entry

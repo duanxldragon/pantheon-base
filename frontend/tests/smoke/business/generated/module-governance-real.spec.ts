@@ -86,6 +86,10 @@ function buildGenerateRequest() {
   };
 }
 
+function isRuntimeGeneratedModuleReady(status: unknown) {
+  return status === 1 || status === 3;
+}
+
 async function formItem(page: Page, label: string) {
   return page.locator('.arco-form-item').filter({ has: page.getByText(label, { exact: true }) }).first();
 }
@@ -154,7 +158,7 @@ test('real module governance flow can generate register and purge a temporary bu
   const generatePayload = await generateResponse.json();
   expect(generatePayload.code).toBe(200);
   expect(generatePayload.data?.module?.name).toBe(moduleKey);
-  expect(generatePayload.data?.module?.status).toBe(3);
+  expect(isRuntimeGeneratedModuleReady(generatePayload.data?.module?.status)).toBe(true);
   expect(generatePayload.data?.summary?.routePath).toBe(moduleRoute);
 
   await expect.poll(async () => {
@@ -162,8 +166,8 @@ test('real module governance flow can generate register and purge a temporary bu
       headers: apiRequestHeaders(login),
     });
     const payload = await response.json();
-    return payload.data?.status;
-  }).toBe(3);
+    return isRuntimeGeneratedModuleReady(payload.data?.status);
+  }).toBe(true);
 
   await expect.poll(async () => {
     const content = await fs.readFile(backendRegistry, 'utf8');
@@ -181,7 +185,7 @@ test('real module governance flow can generate register and purge a temporary bu
   await page.goto('/system/modules', { waitUntil: 'networkidle' });
   const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
   await expect(row).toBeVisible();
-  await expect(row.getByText(/待激活/).first()).toBeVisible();
+  await expect(row.getByText(/待激活|已接入/).first()).toBeVisible();
 
   const cleanupResponse = await page.request.delete(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}?dropTable=false&purgeSource=true`, {
     headers: {

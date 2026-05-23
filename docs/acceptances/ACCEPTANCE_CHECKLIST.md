@@ -9,7 +9,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_ORG_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-04-30
+updated_at: 2026-05-23
 ---
 
 # 设计与实现验收清单
@@ -396,6 +396,7 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 - 是否有角色权限测试账号规划
 - 是否有多语言切换验证方式
 - 是否有关键失败路径验证方式
+- 若本轮改动影响路由、页面职责、组件结构、接口契约、权限判断、i18n key、选择器、fixture、导入导出入口或 smoke 覆盖范围，是否已在同一轮提交里同步更新对应测试、脚本、门禁、截图基线或验收文档
 - 是否覆盖菜单、页头、按钮、导入导出摘要、错误 CSV、重命名报告的语言切换验证
 - 是否保留 `check:i18n-hardcode`、`audit:i18n-locales`、`npm run build` 三条国际化固定门禁的执行记录
 - 是否验证 `GET /api/v1/health` 可被部署平台、探针或运维脚本直接调用
@@ -408,6 +409,7 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 - 是否存在临时兼容逻辑未记录
 - 是否存在未补权限 / i18n / 审计的缺口
 - 是否存在新的用户可见硬编码展示文案未被 `check:i18n-hardcode` 覆盖
+- 是否存在“代码已更新，但测试脚本 / smoke / 门禁 / 验收文档仍引用旧路径、旧标题、旧页面职责或旧选择器”的失配
 
 ## 10. 推荐验收方式
 
@@ -529,7 +531,7 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 
 具体业务模块在独立业务仓库维护时，自动化烟测至少覆盖已实现子模块，并在业务仓库的 smoke README、业务验收文档或等价入口中记录命令与覆盖页面。
 
-如果后续新增供应商、资源类型、资源实例等子模块，必须同步扩展 `test:smoke:full-system` 或业务仓库内等价的全链路烟测脚本，不能只保留父入口页。
+如果后续新增供应商、资源类型、资源实例等子模块，必须同步扩展 `test:smoke:platform:full`、`test:smoke:business` 或业务仓库内等价的全链路烟测脚本，不能只保留父入口页。
 
 至少检查：
 
@@ -543,7 +545,7 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 
 固定命令：
 
-- `cd frontend; npm run test:smoke:full-system`
+- `cd frontend; npm run test:smoke:platform:full`
 
 固定覆盖：
 
@@ -559,6 +561,29 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 - PC：`1440x900`
 - Pad：`1024x768`
 - Phone：`390x844`
+
+#### 14.4.1 2026-05-23 实测快照
+
+以下状态以本仓库内已落盘日志为准，并显式区分“真实失败”和“断言已过但 Playwright 退出挂起”：
+
+| 套件 | 当前状态 | 说明 | 证据 |
+| :--- | :--- | :--- | :--- |
+| `platform:contracts` | 通过 | 聚合 smoke 通过 | `frontend/platform-contracts-smoke.log` |
+| `platform:surfaces` | 断言通过，teardown 挂起 | 95 条用例均为 `✓`，命令停在 Playwright/webServer 退出阶段，不是产品断言失败 | `frontend/platform-surfaces-smoke.log` |
+| `platform:full` | 通过 | 首次聚合曾受 `8080` 后端中断影响；稳定后重跑 `57/57` 通过 | `frontend/platform-full-smoke.log`、`frontend/platform-full-smoke-rerun.log` |
+| `system:pages` | 已修复并定向通过 | 首次聚合有 6 条真实失败；2026-05-23 定向复测 6 条全部通过 | `frontend/system-pages-smoke.log`、`frontend/system-pages-smoke-remediation-20260523.log` |
+| `system:governance` | 已修复并定向通过 | 首次聚合 1 条断言漂移；2026-05-23 定向复测通过 | `frontend/system-governance-smoke.log`、`frontend/system-governance-smoke-remediation-20260523.log` |
+
+`system:pages` 本轮修复项固定为：
+
+- `governance and audit pages remove hero-heavy main-area blocks`
+- `dict workspace keeps the governance summary outside one tabbed task surface`
+- `login-log permission smoke: list-only role can view page but cannot clear, export, or batch delete`
+- `operation-log permission smoke: list-only role can view page but cannot clear, export, or batch delete`
+- `user governance smoke: cross-page selection keeps the full selected set`
+- `user smoke: edit and detail work through the UI`
+
+其中“跨页选择集”在首次聚合失败后已复测通过，应按“已修复/已收敛”管理，不再继续记为开放失败项。
 
 ### 14.5 业务模块专项文档要求
 

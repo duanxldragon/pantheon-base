@@ -10,7 +10,6 @@ const systemTablePages = [
   { path: '/system/post' },
   { path: '/system/dict' },
   { path: '/system/i18n' },
-  { path: '/system/modules' },
   { path: '/system/session' },
   { path: '/system/login-log' },
   { path: '/system/operation-log' },
@@ -561,7 +560,7 @@ test('setting workspace keeps summary and group navigation on the shared page rh
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
   await navigateInShell(page, '/system/setting');
-  await expect(page.locator('.setting-group-page > .page-header')).toHaveCount(0);
+  await expect(page.locator('.setting-overview-page > .page-header')).toHaveCount(0);
   await expect(page.locator('.governance-summary-bar')).toBeVisible();
   await expect(page.locator('.setting-page__group-nav-item').first()).toBeVisible();
   await expect(page.locator('.setting-page__overview-head')).toHaveCount(0);
@@ -573,7 +572,7 @@ test('setting workspace keeps summary and group navigation on the shared page rh
     const groupItem = document.querySelector<HTMLElement>('.setting-page__group-nav-item');
     const groupTitle = document.querySelector<HTMLElement>('.setting-page__group-nav-title');
     const runtimeStrip = document.querySelector<HTMLElement>('.setting-page__runtime-strip');
-    const configCard = document.querySelector<HTMLElement>('.setting-page__config-card');
+    const overviewCard = document.querySelector<HTMLElement>('.setting-overview-page__group-card');
 
     const read = (element?: HTMLElement | null) => {
       if (!element) {
@@ -600,7 +599,7 @@ test('setting workspace keeps summary and group navigation on the shared page rh
       groupItem: read(groupItem),
       groupTitle: read(groupTitle),
       runtimeStrip: read(runtimeStrip),
-      configCard: read(configCard),
+      overviewCard: read(overviewCard),
     };
   });
 
@@ -612,7 +611,7 @@ test('setting workspace keeps summary and group navigation on the shared page rh
   expect(overviewContract.groupItem?.height).toBeLessThanOrEqual(120);
   expect(overviewContract.groupTitle?.fontSize).toBe('13px');
   expect(overviewContract.runtimeStrip?.display).toBe('flex');
-  expect(overviewContract.configCard?.top).toBeGreaterThan(overviewContract.summary!.top);
+  expect(overviewContract.overviewCard?.top).toBeGreaterThan(overviewContract.summary!.top);
 });
 
 test('setting group routes use distinct opened-tab labels', async ({ page }) => {
@@ -656,17 +655,58 @@ test('high-sensitivity config pages keep a single summary shell without hero wal
   await expect(page.locator('.system-list__hero')).toHaveCount(0);
   await expect(page.locator('.module-manager-page__intro')).toHaveCount(0);
   await expect(page.locator('.module-manager-page__stats')).toHaveCount(0);
+  const moduleCssVariables = await readRootCssVariables(page, ['--shell-table-card-padding']);
+  const [modulePaddingTop, modulePaddingRight, modulePaddingBottom, modulePaddingLeft] =
+    expandPaddingValues(moduleCssVariables['--shell-table-card-padding']);
 
   const moduleShellContract = await page.evaluate(() => {
     const alert = document.querySelector<HTMLElement>('.module-manager-page__card .arco-alert');
+    const tableCard = document.querySelector<HTMLElement>('.module-manager-page__card');
+    const tableBody = tableCard?.querySelector<HTMLElement>(':scope > .arco-card-body');
+    const table = document.querySelector<HTMLElement>('.module-manager-page .app-table, .module-manager-page .arco-table');
+    const empty = document.querySelector<HTMLElement>('.module-manager-page .page-empty');
+    const read = (element?: HTMLElement | null) => {
+      if (!element) {
+        return null;
+      }
+      const style = window.getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        borderTopLeftRadius: style.borderTopLeftRadius,
+        borderTopRightRadius: style.borderTopRightRadius,
+        paddingBottom: style.paddingBottom,
+        paddingLeft: style.paddingLeft,
+        paddingRight: style.paddingRight,
+        paddingTop: style.paddingTop,
+      };
+    };
     return {
       alertCount: document.querySelectorAll('.module-manager-page__card .arco-alert').length,
       alertDisplay: alert ? window.getComputedStyle(alert).display : null,
+      hasDataTable: Boolean(table),
+      hasEmptyState: Boolean(empty),
+      tableBody: read(tableBody),
+      tableContainer: read(
+        table?.querySelector<HTMLElement>('.arco-table-container') ?? empty,
+      ),
+      firstHeaderBackground: table?.querySelector<HTMLElement>('.arco-table-th')
+        ? window.getComputedStyle(table.querySelector<HTMLElement>('.arco-table-th')!).backgroundColor
+        : null,
     };
   });
 
   expect(moduleShellContract.alertCount).toBe(1);
   expect(moduleShellContract.alertDisplay).toBeTruthy();
+  expect(moduleShellContract.hasDataTable || moduleShellContract.hasEmptyState).toBeTruthy();
+  expect(moduleShellContract.tableBody?.paddingTop).toBe(modulePaddingTop);
+  expect(moduleShellContract.tableBody?.paddingRight).toBe(modulePaddingRight);
+  expect(moduleShellContract.tableBody?.paddingBottom).toBe(modulePaddingBottom);
+  expect(moduleShellContract.tableBody?.paddingLeft).toBe(modulePaddingLeft ?? modulePaddingRight);
+  if (moduleShellContract.hasDataTable) {
+    expect(moduleShellContract.tableContainer?.borderTopLeftRadius).toBe('0px');
+    expect(moduleShellContract.tableContainer?.borderTopRightRadius).toBe('0px');
+    expect(moduleShellContract.firstHeaderBackground).toBe('rgb(247, 248, 250)');
+  }
 
   await navigateInShell(page, '/system/generator');
   await expect(page.locator('.page-container > .page-header')).toHaveCount(0);
@@ -706,7 +746,7 @@ test('system table pages keep unified table card spacing radius and neutral head
     const cssVariables = await readRootCssVariables(page, ['--shell-table-card-padding']);
     const [tablePaddingTop, tablePaddingRight, tablePaddingBottom, tablePaddingLeft] =
       expandPaddingValues(cssVariables['--shell-table-card-padding']);
-    const tableLocator = page.locator('.app-table').first();
+    const tableLocator = page.locator('.app-table, .arco-table').first();
     const tableCardBodyLocator = page.locator('.system-list__table-card > .arco-card-body').first();
     if (await tableCardBodyLocator.isVisible().catch(() => false)) {
       await expect(tableCardBodyLocator, pageMeta.path).toBeVisible();
@@ -726,7 +766,7 @@ test('system table pages keep unified table card spacing radius and neutral head
     }
 
     const tableContract = await page.evaluate(() => {
-      const table = document.querySelector<HTMLElement>('.app-table');
+      const table = document.querySelector<HTMLElement>('.app-table, .arco-table');
       const tableCard = table?.closest<HTMLElement>('.system-list__table-card');
       const body = tableCard?.querySelector<HTMLElement>(':scope > .arco-card-body');
       const container = table?.querySelector<HTMLElement>('.arco-table-container');

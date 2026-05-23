@@ -1,5 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
+const externalWebServer = process.env.PANTHEON_EXTERNAL_WEB_SERVER === '1';
+const webBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5174';
+
 export default defineConfig({
   testDir: './tests/smoke',
   timeout: 30_000,
@@ -11,13 +14,17 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5174',
+    baseURL: webBaseUrl,
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: 'cmd /c npm run dev -- --host 127.0.0.1 --port 5174',
-    url: 'http://127.0.0.1:5174',
-    reuseExistingServer: true,
-    timeout: 30_000,
-  },
+  ...(externalWebServer
+    ? {}
+    : {
+        webServer: {
+          command: 'cmd /c npm run dev -- --host 127.0.0.1 --port 5174',
+          url: webBaseUrl,
+          reuseExistingServer: true,
+          timeout: 30_000,
+        },
+      }),
 });

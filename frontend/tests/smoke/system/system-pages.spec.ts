@@ -15,6 +15,7 @@ import {
   signInWithUi,
   verifiedHeaders,
 } from '../helpers/auth';
+import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
 import { registerSystemWorkspaceTaskDepthSmokeTests } from './system-workspace-task-depth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
 const pageEmptyTexts = ['暂无数据', '当前筛选范围内没有可展示的数据', '当前筛选下暂无岗位', '暂无系统设置', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
@@ -54,6 +55,7 @@ const pageIdentitySelectors = [
   '.system-list__table-card',
   '.permission-workbench__tabs',
   '.dict-workbench',
+  '.setting-overview-page',
   '.setting-group-page',
   '.module-manager-page',
   '.generator-wizard-card',
@@ -201,6 +203,11 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
       }).catch(() => undefined);
     }
   }
+}
+
+async function cleanupViewerIdentity(page: Page, accessToken: string, username: string, roleKey: string) {
+  await deleteUserByUsername(page, accessToken, username);
+  await deleteRoleByKey(page, accessToken, roleKey);
 }
 
 type RoleListItem = {
@@ -518,11 +525,7 @@ for (const pageMeta of systemPages) {
     });
 
     await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
-    const expectedUrlPattern =
-      pageMeta.path === '/system/setting'
-        ? /\/system\/setting(?:\/[a-z-]+)?$/
-        : new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`);
-    await expect(page).toHaveURL(expectedUrlPattern);
+    await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
     await expectVisiblePageTitle(page, pageMeta.title);
     await expectNoPageError(page);
     await expectPageBodyReady(page);
@@ -578,7 +581,7 @@ test('setting page shows audit table only in audit group and removes governance 
   await expectVisiblePageTitle(page, '系统设置');
   await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(0);
   await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
-  await expect(page.locator('.setting-group-page')).toBeVisible();
+  await expect(page.locator('.setting-overview-page')).toBeVisible();
   await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
 
   await page.getByRole('button', { name: /日志治理/ }).click();
@@ -596,11 +599,11 @@ test('setting route lands in the single workspace with group navigation', async 
   await page.goto('/system/setting', { waitUntil: 'networkidle' });
 
   await expectVisiblePageTitle(page, '系统设置');
-  await expect(page.locator('.setting-group-page')).toBeVisible();
+  await expect(page.locator('.setting-overview-page')).toBeVisible();
   await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
-  await expect(page).toHaveURL(/\/system\/setting\/basic$/);
-  await expect(page.getByRole('tab', { name: '基础信息' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /基础信息/ })).toBeVisible();
+  await expect(page).toHaveURL(/\/system\/setting$/);
+  await expect(page.getByRole('tab', { name: '系统设置' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /基础信息/ }).first()).toBeVisible();
   await expect(page.getByRole('button', { name: /日志治理/ })).toBeVisible();
 });
 
@@ -1888,8 +1891,9 @@ test('setting permission smoke: list-only role can view page but cannot save or 
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:setting-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -1959,8 +1963,9 @@ test('dict permission smoke: list-only role can view page but cannot mutate conf
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:dict-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -2023,8 +2028,9 @@ test('i18n permission smoke: list-only role can view page but cannot mutate tran
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:i18n-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -2085,8 +2091,9 @@ test('login-log permission smoke: list-only role can view page but cannot clear,
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:login-log-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -2146,8 +2153,9 @@ test('session permission smoke: list-only role can view page but cannot revoke o
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:session-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -2208,8 +2216,9 @@ test('operation-log permission smoke: list-only role can view page but cannot cl
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:operation-log-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -2268,8 +2277,9 @@ test('module permission smoke: list-only role can view registry but cannot regis
       await viewerPage.close();
     }
   } finally {
-    await deleteUserByUsername(page, adminAccessToken, username);
-    await deleteRoleByKey(page, adminAccessToken, roleKey);
+    await runOptionalSmokeCleanup('system-pages:module-viewer', async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
   }
 });
 
@@ -2594,15 +2604,16 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
   await expectNoPageError(page);
   await expect(page.locator('.arco-checkbox').nth(1)).toBeVisible();
 
+  const pager = page.locator('.system-user-list__table');
   const selectedText = page.locator('.table-batch-action-bar__meta');
   const firstPageCheckbox = page.locator('.arco-checkbox').nth(1);
   await firstPageCheckbox.click({ force: true });
   await expect(selectedText).toContainText('已选 1 条');
 
-  await page.locator('.system-user-list__table .arco-pagination-item-next').click();
+  await pager.locator('.arco-pagination-item').filter({ hasText: '2' }).first().click();
   await expect
     .poll(async () => {
-      return page.locator('.system-user-list__table .arco-pagination-item-active').innerText();
+      return pager.locator('.arco-pagination-item-active').innerText();
     })
     .toBe('2');
   await expect(selectedText).toContainText('已选 1 条');
@@ -2611,14 +2622,10 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
   await secondPageCheckbox.click({ force: true });
   await expect(selectedText).toContainText('已选 2 条');
 
-  await page
-    .locator('.system-user-list__table .arco-pagination-item')
-    .filter({ hasText: '1' })
-    .first()
-    .click();
+  await pager.locator('.arco-pagination-item').filter({ hasText: '1' }).first().click();
   await expect
     .poll(async () => {
-      return page.locator('.system-user-list__table .arco-pagination-item-active').innerText();
+      return pager.locator('.arco-pagination-item-active').innerText();
     })
     .toBe('1');
   await expect(selectedText).toContainText('已选 2 条');
@@ -2629,21 +2636,34 @@ test('user smoke: edit and detail work through the UI', async ({
 }) => {
   const accessToken = await signInAsAdmin(page);
   const now = Date.now();
+  const deptName = `烟测用户部门-${now}`;
   const username = `smoke_user_${now}`;
   const nickname = `烟测用户${now}`;
   const nextNickname = `${nickname}-已编辑`;
   const email = `smoke-user-${now}@example.com`;
   const nextEmail = `smoke-user-${now}-updated@example.com`;
   const password = 'ChangeMe123';
+  const deptTree = await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' });
+  const rootDept = flattenDeptTreeNodes(deptTree).find((item) => item.isRoot || item.parentId === 0);
+  expect(rootDept).toBeTruthy();
 
   await deleteUserByUsername(page, accessToken, username);
+  await deleteDeptByName(page, accessToken, deptName);
 
   try {
+    const dept = await createDeptByApi(page, accessToken, {
+      parentId: rootDept!.id,
+      deptName,
+      sort: 12,
+      email: `user-dept-${now}@example.com`,
+      phone: '13800000003',
+    });
     await createUserByApi(page, accessToken, {
       username,
       password,
       nickname,
       email,
+      deptId: dept.id,
       roleIds: [(await getFirstActiveRole(page, accessToken)).id],
     });
 
@@ -2676,7 +2696,10 @@ test('user smoke: edit and detail work through the UI', async ({
     await page.keyboard.press('Escape');
 
   } finally {
-    await deleteUserByUsername(page, accessToken, username);
+    await runOptionalSmokeCleanup('system-pages:user-smoke-edit-detail', async () => {
+      await deleteUserByUsername(page, accessToken, username);
+      await deleteDeptByName(page, accessToken, deptName);
+    });
   }
 });
 
@@ -2727,7 +2750,9 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
     await expect(page.locator('.arco-message').filter({ hasText: '已删除 1 条记录' }).first()).toBeVisible();
     await expect.poll(async () => await findUserByUsername(page, accessToken, username)).toBeUndefined();
   } finally {
-    await deleteUserByUsername(page, accessToken, username);
+    await runOptionalSmokeCleanup('system-pages:user-smoke-batch', async () => {
+      await deleteUserByUsername(page, accessToken, username);
+    });
   }
 });
 
@@ -2793,8 +2818,10 @@ test('dept smoke: blocked delete through API is covered', async ({ page }) => {
     expect(deletePayload.code).not.toBe(200);
     expect(deletePayload.message).toBe('dept.delete.error.has_posts');
   } finally {
-    await deletePostByCode(page, accessToken, postCode);
-    await deleteDeptByName(page, accessToken, deptName);
+    await runOptionalSmokeCleanup('system-pages:dept-smoke-blocked-delete', async () => {
+      await deletePostByCode(page, accessToken, postCode);
+      await deleteDeptByName(page, accessToken, deptName);
+    });
   }
 });
 
@@ -2869,9 +2896,11 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
     expect(deletePayload.code).not.toBe(200);
     expect(deletePayload.message).toBe('post.delete.error.has_users');
   } finally {
-    await deleteUserByUsername(page, accessToken, username);
-    await deletePostByCode(page, accessToken, postCode);
-    await deleteDeptByName(page, accessToken, deptName);
+    await runOptionalSmokeCleanup('system-pages:post-smoke-edit-blocked-delete', async () => {
+      await deleteUserByUsername(page, accessToken, username);
+      await deletePostByCode(page, accessToken, postCode);
+      await deleteDeptByName(page, accessToken, deptName);
+    });
   }
 });
 

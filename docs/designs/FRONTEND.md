@@ -142,8 +142,8 @@ export const OrderModule = {
 - **异常态补强**: 已补 `PageServerError`、`PageNetworkError`，请求层也已能区分 `network / timeout / server / business` 基础错误类型。
 - **仪表盘真实数据化**: `src/modules/dashboard/` 已接入平台层汇总接口，不再使用硬编码统计数字。
 - **首页归属澄清**: dashboard 在模块 manifest 中按 `platform` scope 理解，语义上属于跨域聚合页；物理目录已从 `platform/dashboard` 扁平化到顶层 `dashboard`。
-- **系统设置页**: 已新增 `src/modules/system/setting/SettingPage.tsx`，按 `basic/security/login/audit/upload/i18n/ui` 分组维护系统设置，并对敏感配置提供“已加密/留空不变”交互表达。
-- **配置健康总览**: `src/modules/system/setting/SettingPage.tsx` 顶部已补配置治理摘要，展示公开/敏感配置数量、缺失必填项、运行时风险以及当前语言、主题、上传驱动状态。
+- **系统设置页**: 当前已拆分为 `src/modules/system/setting/SettingOverviewPage.tsx` 与 `src/modules/system/setting/SettingGroupPage.tsx`。前者负责 `/system/setting` 概览入口，后者负责 `basic / platform / security / login / audit / upload / i18n / ui` 分组维护，并对敏感配置提供“已加密/留空不变”交互表达。
+- **配置健康总览**: `src/modules/system/setting/SettingOverviewPage.tsx` 展示公开/敏感配置数量、缺失必填项、运行时风险以及当前语言、主题、上传驱动状态；`SettingGroupPage.tsx` 承载单组配置编辑与审计能力。
 - **平台公开设置消费**: `site.name / site.logo / i18n.default_language / ui.default_theme / ui.enable_tab_bar / login.session_idle_minutes` 已接入登录页与应用壳层；其中默认语言仅在“当前会话无显式语言覆盖且当前用户无语言偏好”时生效，标签栏可由 `ui.enable_tab_bar` 控制显隐，空闲时长由 `login.session_idle_minutes` 控制自动退出。
 - **平台能力开关消费**: `platform.app_mode / org.enabled / org.required_for_user` 已进入公开设置链路。`org.enabled=false` 时，壳层会隐藏 `system.org` 导航，用户页隐藏部门/岗位列和表单字段；`org.required_for_user=true` 且组织启用时，用户表单要求选择部门。
 - **用户扩展档案契约**: 用户相关 API 类型已预留 `profileExt`，用于 C 端或混合模式下的扩展档案展示与编辑。后台管理页默认不渲染任意 JSON 字段，后续应由具体业务页面或受控表单定义字段语义，避免把未知 PII 直接散落到通用用户列表。

@@ -5,7 +5,7 @@ layer: business/*
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-05
+updated_at: 2026-05-23
 ---
 
 # business/* 业务模块验收矩阵
@@ -70,3 +70,18 @@ English version: [BUSINESS_MODULE_ACCEPTANCE_MATRIX.en.md](./BUSINESS_MODULE_ACC
 - `cd frontend && npm run build`
 
 如果业务模块提供真实浏览器 smoke，必须在本矩阵或对应业务设计文档中记录命令与证据路径。
+
+### 5.1 2026-05-23 真实浏览器 smoke 快照
+
+| 套件 | 当前状态 | 说明 | 证据 |
+| :--- | :--- | :--- | :--- |
+| `business:generated` | 通过 | 生成/注册基础链路通过 | `frontend/business-generated-smoke.log` |
+| `business:database-import` | 跳过 | 当前依赖源表存在性，日志应按 skip 解释，不记失败 | `frontend/business-database-import-smoke.log` |
+| `business:master-detail` | 断言通过，teardown 挂起 | 用例主体通过，命令停在 Playwright/webServer 退出阶段 | `frontend/business-master-detail-smoke.log` |
+| `business:many-to-many` | 断言通过，teardown 挂起 | 用例主体通过，命令停在 Playwright/webServer 退出阶段 | `frontend/business-many-to-many-smoke.log` |
+| `business:auto-recycle` | 已修复并定向通过 | 首次失败含错误代理端口与前置契约误判；2026-05-23 定向复测通过 | `frontend/business-auto-recycle-smoke.log`、`frontend/business-auto-recycle-smoke-remediation-20260523.log` |
+
+本矩阵后续维护要求：
+
+- “断言通过但 teardown 挂起”必须单列记录，不能直接记成失败产品项。
+- 若真实浏览器 smoke 依赖外部前置数据，必须在用例内自建前置或在文档中明确 `skip` 条件，避免把环境残留误记为模块失败。

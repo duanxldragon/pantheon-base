@@ -12,7 +12,7 @@ import {
 const ownerModuleName = 'm2mqaasset';
 const targetModuleName = 'm2mqatag';
 const ownerRoute = `/business/${ownerModuleName}`;
-const appBaseUrl = 'http://127.0.0.1:5174';
+const appBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5174';
 
 type RelationRow = {
   id: number;

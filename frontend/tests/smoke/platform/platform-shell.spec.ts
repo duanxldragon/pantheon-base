@@ -8,6 +8,7 @@ import {
   signInAsAdmin,
   verifiedApiHeaders,
 } from '../helpers/auth';
+import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
 
 
 function formItem(page: Page, label: string) {
@@ -160,24 +161,26 @@ test.describe('enter submit smoke', () => {
         return createdPermissionId > 0;
       }).toBeTruthy();
     } finally {
-      if (createdPermissionId > 0 || createdI18nId > 0 || createdDictId > 0) {
-        const headers = await verifiedApiHeaders(page.request, adminLogin);
-        if (createdPermissionId > 0) {
-          await page.request.delete(`${apiBaseUrl}/system/permission/${createdPermissionId}`, {
-            headers,
-          }).catch(() => undefined);
+      await runOptionalSmokeCleanup('platform-shell:enter-submit-seeds', async () => {
+        if (createdPermissionId > 0 || createdI18nId > 0 || createdDictId > 0) {
+          const headers = await verifiedApiHeaders(page.request, adminLogin);
+          if (createdPermissionId > 0) {
+            await page.request.delete(`${apiBaseUrl}/system/permission/${createdPermissionId}`, {
+              headers,
+            }).catch(() => undefined);
+          }
+          if (createdI18nId > 0) {
+            await page.request.delete(`${apiBaseUrl}/system/i18n/${createdI18nId}`, {
+              headers,
+            }).catch(() => undefined);
+          }
+          if (createdDictId > 0) {
+            await page.request.delete(`${apiBaseUrl}/system/dict/type/${createdDictId}`, {
+              headers,
+            }).catch(() => undefined);
+          }
         }
-        if (createdI18nId > 0) {
-          await page.request.delete(`${apiBaseUrl}/system/i18n/${createdI18nId}`, {
-            headers,
-          }).catch(() => undefined);
-        }
-        if (createdDictId > 0) {
-          await page.request.delete(`${apiBaseUrl}/system/dict/type/${createdDictId}`, {
-            headers,
-          }).catch(() => undefined);
-        }
-      }
+      });
     }
   });
 });
