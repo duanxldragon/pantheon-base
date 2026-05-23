@@ -1,12 +1,18 @@
 import { spawn } from 'node:child_process';
 import process from 'node:process';
 
+const readyToken = '__PANTHEON_SMOKE_VITE_READY__';
+
 function readArg(flag, fallback = '') {
   const index = process.argv.indexOf(flag);
   if (index < 0 || index + 1 >= process.argv.length) {
     return fallback;
   }
   return process.argv[index + 1];
+}
+
+function normalizeUrl(url) {
+  return String(url || '').replace(/\/+$/, '');
 }
 
 async function waitForHttp(url, timeoutMs) {
@@ -25,6 +31,101 @@ async function waitForHttp(url, timeoutMs) {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw lastError ?? new Error(`Timed out waiting for ${url}`);
+}
+
+function wireServerOutput(server) {
+  let stdoutBuffer = '';
+  let stderrBuffer = '';
+  let readyUrl = null;
+
+  const captureLines = (chunk, buffer, output) => {
+    let nextBuffer = buffer + chunk;
+    const visibleLines = [];
+    let newlineIndex = nextBuffer.indexOf('\n');
+    while (newlineIndex >= 0) {
+      const line = nextBuffer.slice(0, newlineIndex).replace(/\r$/, '');
+      if (line.startsWith(readyToken)) {
+        readyUrl = line.slice(readyToken.length).trim();
+      } else {
+        visibleLines.push(line);
+      }
+      nextBuffer = nextBuffer.slice(newlineIndex + 1);
+      newlineIndex = nextBuffer.indexOf('\n');
+    }
+    if (visibleLines.length > 0) {
+      output.write(`${visibleLines.join('\n')}\n`);
+    }
+    return nextBuffer;
+  };
+
+  server.stdout?.setEncoding('utf8');
+  server.stderr?.setEncoding('utf8');
+
+  server.stdout?.on('data', (chunk) => {
+    stdoutBuffer = captureLines(chunk, stdoutBuffer, process.stdout);
+  });
+  server.stderr?.on('data', (chunk) => {
+    stderrBuffer = captureLines(chunk, stderrBuffer, process.stderr);
+  });
+
+  return () => {
+    for (const line of [stdoutBuffer, stderrBuffer]) {
+      const trimmed = line.replace(/\r$/, '').trim();
+      if (trimmed.startsWith(readyToken)) {
+        readyUrl = trimmed.slice(readyToken.length).trim();
+      }
+    }
+    return readyUrl;
+  };
+}
+
+function waitForServerReady(server, timeoutMs, expectedUrl) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const getReadyUrl = wireServerOutput(server);
+
+    const timer = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      reject(new Error(`Timed out waiting for smoke server ready signal on ${expectedUrl}`));
+    }, timeoutMs);
+
+    const finalize = (callback) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      callback();
+    };
+
+    const pollReady = () => {
+      const url = getReadyUrl();
+      if (!url) {
+        return;
+      }
+      finalize(() => resolve(url));
+    };
+
+    server.stdout?.on('data', pollReady);
+    server.stderr?.on('data', pollReady);
+    server.once('error', (error) => {
+      finalize(() => reject(error));
+    });
+    server.once('exit', (code, signal) => {
+      const url = getReadyUrl();
+      if (url) {
+        finalize(() => resolve(url));
+        return;
+      }
+      const reason = signal ? `signal ${signal}` : `code ${code ?? 0}`;
+      finalize(() =>
+        reject(new Error(`Smoke server exited before ready signal for ${expectedUrl} (${reason})`)),
+      );
+    });
+  });
 }
 
 function spawnChild(command, args, options = {}) {
@@ -47,6 +148,7 @@ const config = readArg('--config');
 const timeoutMs = Number(readArg('--timeout', '60000'));
 const proxyTarget = readArg('--proxy-target');
 const setupScript = readArg('--setup');
+const serverScript = readArg('--server-script', 'scripts/start-smoke-vite.mjs');
 const playwrightCli = readArg('--playwright-cli', './node_modules/playwright/cli.js');
 const playwrightSubcommand = readArg('--playwright-subcommand', 'test');
 const separatorIndex = process.argv.indexOf('--');
@@ -57,7 +159,7 @@ if (!config) {
   throw new Error('--config is required');
 }
 
-const serverArgs = ['scripts/start-smoke-vite.mjs', '--host', host, '--port', port];
+const serverArgs = [serverScript, '--host', host, '--port', port];
 if (setupScript) {
   serverArgs.push('--setup', setupScript);
 }
@@ -70,9 +172,10 @@ const server = spawn(process.execPath, serverArgs, {
   env: {
     ...process.env,
     PANTHEON_EXTERNAL_WEB_SERVER: '1',
+    PANTHEON_SMOKE_READY_TOKEN: readyToken,
     PANTHEON_WEB_BASE_URL: webBaseUrl,
   },
-  stdio: 'inherit',
+  stdio: ['ignore', 'pipe', 'pipe'],
   shell: false,
 });
 
@@ -107,12 +210,11 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
 }
 
 try {
-  server.once('error', async (error) => {
-    console.error(error);
-    await stopServer();
-    process.exit(1);
-  });
-  await waitForHttp(`http://${host}:${port}`, timeoutMs);
+  const readyUrl = await waitForServerReady(server, timeoutMs, webBaseUrl);
+  if (normalizeUrl(readyUrl) !== normalizeUrl(webBaseUrl)) {
+    throw new Error(`Smoke server announced unexpected ready URL ${readyUrl}; expected ${webBaseUrl}`);
+  }
+  await waitForHttp(webBaseUrl, timeoutMs);
   const result = await spawnChild(process.execPath, [playwrightCli, playwrightSubcommand, ...testArgs, '--config', config], {
     cwd: process.cwd(),
     env: {

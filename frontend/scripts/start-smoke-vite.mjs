@@ -32,6 +32,7 @@ const host = readArg('--host', '127.0.0.1');
 const port = Number(readArg('--port', '5173'));
 const setupScript = readArg('--setup');
 const proxyTarget = readArg('--proxy-target');
+const readyToken = process.env.PANTHEON_SMOKE_READY_TOKEN ?? '';
 
 process.env.PANTHEON_SMOKE = '1';
 if (proxyTarget) {
@@ -84,5 +85,8 @@ process.on('unhandledRejection', (error) => {
 await server.listen();
 const urls = server.resolvedUrls?.local ?? [];
 if (urls.length > 0) {
+  if (readyToken) {
+    console.log(`${readyToken} ${urls[0]}`);
+  }
   console.log(`Smoke Vite ready at ${urls[0]}`);
 }

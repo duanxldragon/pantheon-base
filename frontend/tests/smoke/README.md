@@ -20,6 +20,7 @@ Pantheon smoke tests are grouped by ownership boundary.
 - `npm run test:smoke:all` is the top-level smoke command and must cover login, system domains, and business-domain flows together.
 - `npm run check:smoke-coverage-contract` is the executable drift gate for smoke entrypoints, spec files, and this coverage matrix; if routes, page ownership, or smoke files change, update them in the same patch.
 - Browser-based smoke commands must run through `scripts/run-smoke-suite.mjs` so the started Vite server and Playwright `baseURL` stay on the same `PANTHEON_WEB_BASE_URL`.
+- `scripts/run-smoke-suite.mjs` must only continue after receiving the ready signal from the server process it started; if the target port is already occupied, the smoke run must fail fast instead of silently reusing an unrelated server.
 - Do not hard-code `http://127.0.0.1:5173` or `:5174` inside smoke tests, Playwright configs, or QA helper scripts. Read `PANTHEON_WEB_BASE_URL` instead.
 - Do not add compatibility aliases such as `test:smoke:role-auth` or `test:smoke:impexp`; keep names aligned to ownership and actual surface.
 - Add each new business module or business-runtime variant as `test:smoke:business:<module>` and include it in `test:smoke:business`.
