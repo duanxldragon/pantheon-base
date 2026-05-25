@@ -767,6 +767,81 @@ test.describe('backoffice UI visual acceptance', () => {
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
+  test('system setting overview and group pages keep navigation and forms readable on phone', async ({
+    page,
+  }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+    await signInAsAdmin(page);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/system/setting', { waitUntil: 'networkidle' });
+    await expect(page.locator('.setting-overview-page')).toBeVisible();
+    await expect(page.locator('.setting-overview-page__anchor-strip')).toBeVisible();
+    await expect(page.locator('.setting-group-workspace').first()).toBeVisible();
+    await expect(page.locator('.page-side-column .side-rail-panel').first()).toBeVisible();
+    await expectNoPageError(page);
+
+    const overviewContract = await page.evaluate(() => {
+      const nav = document.querySelector<HTMLElement>('.setting-overview-page__anchor-strip');
+      const firstItem = document.querySelector<HTMLElement>('.setting-overview-page__anchor-item');
+      const viewportWidth = window.innerWidth;
+      const bodyScrollWidth = document.documentElement.scrollWidth;
+      const navStyle = nav ? window.getComputedStyle(nav) : null;
+      const firstRect = firstItem?.getBoundingClientRect();
+      return {
+        viewportWidth,
+        bodyScrollWidth,
+        navOverflowX: navStyle?.overflowX || '',
+        navAutoFlow: navStyle?.gridAutoFlow || '',
+        firstWidth: firstRect ? Math.round(firstRect.width) : 0,
+        workspaceCount: document.querySelectorAll('.setting-group-workspace').length,
+      };
+    });
+
+    expect(overviewContract.bodyScrollWidth).toBeLessThanOrEqual(overviewContract.viewportWidth + 1);
+    expect(overviewContract.navOverflowX).toBe('auto');
+    expect(overviewContract.navAutoFlow).toBe('column');
+    expect(overviewContract.firstWidth).toBeGreaterThanOrEqual(160);
+    expect(overviewContract.workspaceCount).toBe(1);
+    await page.screenshot({ path: join(artifactDir, 'system-setting-overview-phone.png'), fullPage: true });
+
+    await page.goto('/system/setting/basic', { waitUntil: 'networkidle' });
+    await expect(page.locator('.setting-group-page')).toBeVisible();
+    await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
+    await expect(page.locator('.setting-page__config-card')).toBeVisible();
+    await expectNoPageError(page);
+
+    const groupContract = await page.evaluate(() => {
+      const viewportWidth = window.innerWidth;
+      const bodyScrollWidth = document.documentElement.scrollWidth;
+      const nav = document.querySelector<HTMLElement>('.setting-page__group-nav-grid');
+      const navStyle = nav ? window.getComputedStyle(nav) : null;
+      const configCard = document.querySelector<HTMLElement>('.setting-page__config-card');
+      const saveButton = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
+        (button) => button.textContent?.includes('保存'),
+      );
+      const configRect = configCard?.getBoundingClientRect();
+      const saveRect = saveButton?.getBoundingClientRect();
+      return {
+        viewportWidth,
+        bodyScrollWidth,
+        navOverflowX: navStyle?.overflowX || '',
+        navAutoFlow: navStyle?.gridAutoFlow || '',
+        configRight: configRect ? Math.round(configRect.right) : 0,
+        saveRight: saveRect ? Math.round(saveRect.right) : 0,
+      };
+    });
+
+    expect(groupContract.bodyScrollWidth).toBeLessThanOrEqual(groupContract.viewportWidth + 1);
+    expect(groupContract.navOverflowX).toBe('auto');
+    expect(groupContract.navAutoFlow).toBe('column');
+    expect(groupContract.configRight).toBeLessThanOrEqual(groupContract.viewportWidth + 1);
+    expect(groupContract.saveRight).toBeLessThanOrEqual(groupContract.viewportWidth + 1);
+    await page.screenshot({ path: join(artifactDir, 'system-setting-group-phone.png'), fullPage: true });
+
+    expectOnlyAllowedRuntimeErrors(runtimeErrors);
+  });
+
   test('module generator keeps step density readable on narrow screens', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     await signInAsAdmin(page);

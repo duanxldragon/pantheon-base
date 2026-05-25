@@ -7,12 +7,14 @@ import {
   adminCredentials,
   apiBaseUrl,
   authHeaders,
+  type BrowserLoginResult,
   installClientSession,
   installOperationToken,
   loginByApi,
   requestHeaders,
   signInAsAdmin,
   signInWithUi,
+  verifiedApiHeaders,
   verifiedHeaders,
 } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
@@ -205,6 +207,42 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
   }
 }
 
+async function deleteUserByIdWithLogin(page: Page, login: BrowserLoginResult, userId: number | null | undefined) {
+  if (!userId) {
+    return;
+  }
+  await page.request.delete(`${apiBaseUrl}/system/user/${userId}`, {
+    headers: await verifiedApiHeaders(page.request, login),
+  }).catch(() => undefined);
+}
+
+async function deleteRoleByIdWithLogin(page: Page, login: BrowserLoginResult, roleId: number | null | undefined) {
+  if (!roleId) {
+    return;
+  }
+  await page.request.delete(`${apiBaseUrl}/system/role/${roleId}`, {
+    headers: await verifiedApiHeaders(page.request, login),
+  }).catch(() => undefined);
+}
+
+async function deleteUserByIdWithHeaders(page: Page, headers: Record<string, string>, userId: number | null | undefined) {
+  if (!userId) {
+    return;
+  }
+  await page.request.delete(`${apiBaseUrl}/system/user/${userId}`, {
+    headers,
+  }).catch(() => undefined);
+}
+
+async function deleteRoleByIdWithHeaders(page: Page, headers: Record<string, string>, roleId: number | null | undefined) {
+  if (!roleId) {
+    return;
+  }
+  await page.request.delete(`${apiBaseUrl}/system/role/${roleId}`, {
+    headers,
+  }).catch(() => undefined);
+}
+
 async function cleanupViewerIdentity(page: Page, accessToken: string, username: string, roleKey: string) {
   await deleteUserByUsername(page, accessToken, username);
   await deleteRoleByKey(page, accessToken, roleKey);
@@ -356,7 +394,7 @@ async function createUserByApi(
     username: string;
     password: string;
     nickname: string;
-    roleIds: number[];
+    roleIds?: number[];
     deptId?: number;
     postId?: number;
     email?: string;
@@ -582,29 +620,28 @@ test('setting page shows audit table only in audit group and removes governance 
   await expect(page.getByRole('button', { name: '治理摘要' })).toHaveCount(0);
   await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
   await expect(page.locator('.setting-overview-page')).toBeVisible();
-  await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
+  await expect(page.locator('.setting-overview-page__anchor-strip')).toBeVisible();
+  await expect(page.locator('.setting-group-workspace')).toHaveCount(1);
 
-  await page.getByRole('button', { name: /日志治理/ }).click();
-  await expect(page).toHaveURL(/\/system\/setting\/audit$/);
+  await page.getByRole('tab', { name: /日志治理/ }).first().click();
+  await expect(page).toHaveURL(/\/system\/setting\?group=audit$/);
+  await expect(page.locator('#setting-group-section-audit')).toBeVisible();
   await expect(page.locator('.setting-page__audit-card')).toBeVisible();
-
-  await page.getByRole('button', { name: /基础信息/ }).click();
-  await expect(page).toHaveURL(/\/system\/setting\/basic$/);
-  await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
 });
 
-test('setting route lands in the single workspace with group navigation', async ({
+test('setting route lands in a single visible group workspace', async ({
   page,
 }) => {
   await page.goto('/system/setting', { waitUntil: 'networkidle' });
 
   await expectVisiblePageTitle(page, '系统设置');
   await expect(page.locator('.setting-overview-page')).toBeVisible();
-  await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
+  await expect(page.locator('.setting-overview-page__anchor-strip')).toBeVisible();
+  await expect(page.locator('.setting-group-workspace')).toHaveCount(1);
   await expect(page).toHaveURL(/\/system\/setting$/);
   await expect(page.getByRole('tab', { name: '系统设置' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /基础信息/ }).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: /日志治理/ })).toBeVisible();
+  await expect(page.locator('#setting-group-section-basic')).toBeVisible();
+  await expect(page.getByRole('button', { name: '保存' }).first()).toBeVisible();
 });
 
 test('setting group route isolates one group context per route', async ({ page }) => {
@@ -952,13 +989,35 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   await formItem(page, '翻译键').locator('input').first().fill(seedKey);
   await page.getByRole('button', { name: '搜索' }).click();
 
+  const seededListResponse = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
+    headers: authHeaders(accessToken),
+    params: { key: seedKey, page: '1', pageSize: '10' },
+  });
+  const seededListPayload = await seededListResponse.json();
+  const rawCreatedAt = seededListPayload.data.items[0]?.createdAt as string | undefined;
+  const rawUpdatedAt = seededListPayload.data.items[0]?.updatedAt as string | undefined;
+
   const targetRow = page.getByRole('row', { name: new RegExp(seedKey) }).first();
   await expect(targetRow).toBeVisible();
+  if (rawCreatedAt) {
+    await expect(targetRow).not.toContainText(rawCreatedAt);
+  }
+  if (rawUpdatedAt) {
+    await expect(targetRow).not.toContainText(rawUpdatedAt);
+  }
 
   await targetRow.getByRole('button', { name: '详情' }).click();
   const detailDialog = page.getByRole('dialog').filter({ has: page.getByText('翻译详情', { exact: true }) });
   await expect(detailDialog).toBeVisible();
   await expect(detailDialog.getByText(seedKey)).toBeVisible();
+  const detailText = (await detailDialog.textContent()) || '';
+  if (rawCreatedAt) {
+    expect(detailText).not.toContain(rawCreatedAt);
+  }
+  if (rawUpdatedAt) {
+    expect(detailText).not.toContain(rawUpdatedAt);
+  }
+  expect(detailText).toMatch(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/);
   await detailDialog.getByRole('button', { name: '关闭' }).click();
 
   await targetRow.getByRole('button', { name: '编辑' }).click();
@@ -2699,6 +2758,138 @@ test('user smoke: edit and detail work through the UI', async ({
     await runOptionalSmokeCleanup('system-pages:user-smoke-edit-detail', async () => {
       await deleteUserByUsername(page, accessToken, username);
       await deleteDeptByName(page, accessToken, deptName);
+    });
+  }
+});
+
+test('user and role smoke: role binding can be deferred to role management and removed there', async ({ page }) => {
+  test.setTimeout(120000);
+  const login = await loginByApi(page.request, adminCredentials);
+  await installClientSession(page, login);
+  const accessToken = login.accessToken;
+  const now = Date.now();
+  const username = `smoke_roleless_${now}`;
+  const nickname = `待分配角色用户${now}`;
+  const password = 'ChangeMe123';
+  const roleKey = `role_member_smoke_${now}`;
+  const roleName = `角色成员烟测${now}`;
+  let createdUserId: number | null = null;
+  let createdRoleId: number | null = null;
+  const verifiedAuthHeaders = await verifiedApiHeaders(page.request, login);
+
+  await deleteUserByUsername(page, accessToken, username);
+  await deleteRoleByKey(page, accessToken, roleKey);
+
+  try {
+    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
+      headers: verifiedAuthHeaders,
+      data: {
+        roleName,
+        roleKey,
+        sort: 10,
+        status: 1,
+        menuIds: [],
+        permissionKeys: [],
+      },
+    });
+    expect(createRoleResponse.ok()).toBeTruthy();
+    const role = await getRoleByKey(page, accessToken, roleKey);
+    expect(role).toBeTruthy();
+    createdRoleId = role?.id ?? null;
+
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await installOperationToken(page, accessToken);
+    await expectVisiblePageTitle(page, '用户管理');
+    await page.getByRole('button', { name: '新增' }).click();
+    const createDialog = page.getByRole('dialog').filter({ hasText: '新增用户' });
+    await expect(createDialog).toBeVisible();
+    await expect(
+      createDialog.locator('.system-user-list__role-field').first().locator('strong'),
+    ).toHaveCount(0);
+    await createDialog.locator('.submit-bar').getByRole('button', { name: '取消' }).click();
+    await expect(createDialog).toHaveCount(0);
+
+    createdUserId = (await createUserByApi(page, accessToken, {
+      username,
+      password,
+      nickname,
+      roleIds: [],
+    })).id;
+    expect(createdUserId).toBeTruthy();
+
+    const userDetailBeforeResponse = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
+      headers: authHeaders(accessToken),
+    });
+    expect(userDetailBeforeResponse.ok()).toBeTruthy();
+    const userDetailBeforePayload = await userDetailBeforeResponse.json();
+    expect(userDetailBeforePayload.data.roleIds).toEqual([]);
+
+    await page.goto('/system/role', { waitUntil: 'networkidle' });
+    await expectVisiblePageTitle(page, '角色管理');
+    await formItem(page, '角色标识').locator('input').fill(roleKey);
+    await page.getByRole('button', { name: '搜索' }).click();
+    const roleRow = page.getByRole('row', { name: new RegExp(roleName) }).first();
+    await expect(roleRow).toBeVisible();
+    await roleRow.getByRole('button', { name: '角色成员' }).click();
+
+    const memberDrawer = page.locator('.role-member-drawer');
+    await expect(memberDrawer).toBeVisible();
+    const candidateResponse = await page.request.get(`${apiBaseUrl}/system/role/${role!.id}/user-candidates`, {
+      headers: authHeaders(accessToken),
+      params: { keyword: username, page: '1', pageSize: '20' },
+    });
+    expect(candidateResponse.ok()).toBeTruthy();
+    const candidatePayload = await candidateResponse.json();
+    expect(
+      Array.isArray(candidatePayload.data?.items) &&
+        candidatePayload.data.items.some((item: { username: string }) => item.username === username),
+    ).toBeTruthy();
+    await memberDrawer.getByPlaceholder('搜索并选择待加入该角色的用户').fill(username);
+    const candidateChip = memberDrawer
+      .locator('.role-member-drawer__candidate-pill')
+      .filter({ hasText: new RegExp(`${username}|${nickname}`) })
+      .first();
+    await expect(candidateChip).toBeVisible();
+    await candidateChip.click({ force: true });
+    await expect(memberDrawer.getByRole('button', { name: '新增' })).toBeEnabled();
+    await memberDrawer.getByRole('button', { name: '新增' }).click();
+    await expect.poll(async () => {
+      const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
+        headers: authHeaders(accessToken),
+      });
+      const payload = await response.json();
+      return payload.data.roleIds;
+    }).toEqual([role!.id]);
+    await memberDrawer.getByPlaceholder('按用户名或昵称搜索当前成员').fill(username);
+    await memberDrawer.getByRole('button', { name: '搜索' }).click();
+    const memberRow = memberDrawer.getByRole('row', { name: new RegExp(username) }).first();
+    await expect(memberRow).toBeVisible();
+    await memberRow.getByRole('button', { name: '删除' }).click();
+    const removeConfirmPopup = page
+      .locator('.arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible')
+      .filter({ has: page.getByRole('button', { name: '确定', exact: true }) })
+      .last();
+    await expect(removeConfirmPopup).toBeVisible();
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes(`/system/role/${role!.id}/users/remove`) &&
+          response.request().method() === 'POST' &&
+          response.ok(),
+      ),
+      removeConfirmPopup.getByRole('button', { name: '确定', exact: true }).click(),
+    ]);
+    await expect.poll(async () => {
+      const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
+        headers: authHeaders(accessToken),
+      });
+      const payload = await response.json();
+      return payload.data.roleIds;
+    }).toEqual([]);
+  } finally {
+    await runOptionalSmokeCleanup('system-pages:user-role-membership-governance', async () => {
+      await deleteUserByIdWithHeaders(page, verifiedAuthHeaders, createdUserId);
+      await deleteRoleByIdWithHeaders(page, verifiedAuthHeaders, createdRoleId);
     });
   }
 });

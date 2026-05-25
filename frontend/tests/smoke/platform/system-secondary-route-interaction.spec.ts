@@ -205,7 +205,7 @@ test.describe('system secondary route interaction states', () => {
       expectOnlyAllowedRuntimeErrors(runtimeErrors);
     });
 
-    test(`/system/setting route switching keeps active state stable at ${viewport.width}w`, async ({ page }) => {
+    test(`/system/setting overview keeps single-tab group switching stable at ${viewport.width}w`, async ({ page }) => {
       const runtimeErrors = collectRuntimeErrors(page);
       await signInAsAdmin(page);
 
@@ -217,19 +217,21 @@ test.describe('system secondary route interaction states', () => {
       await expect(page).toHaveURL(/\/system\/setting$/);
       await expect(page.locator('.setting-overview-page')).toBeVisible();
 
-      const nav = page.locator('.setting-page__group-nav-grid');
+      const nav = page.locator('.setting-overview-page__anchor-strip');
       await expect(nav).toBeVisible();
 
-      const securityItem = nav.locator('.setting-page__group-nav-item').filter({ hasText: '安全策略' }).first();
+      const securityItem = nav.locator('.setting-overview-page__anchor-item').filter({ hasText: '安全策略' }).first();
       await securityItem.click();
-      await expect(page).toHaveURL(/\/system\/setting\/security$/);
-      await expect(securityItem).toHaveClass(/setting-page__group-nav-item--active/);
-      await expect(page.getByText('安全策略', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+      await expect(page).toHaveURL(/\/system\/setting\?group=security$/);
+      await expect(page.locator('#setting-group-section-security')).toBeVisible();
+      await expect(page.locator('.setting-overview-page__anchor-item--active')).toContainText('安全策略');
+      await expect(page.locator('.setting-group-workspace')).toHaveCount(1);
 
-      const auditItem = nav.locator('.setting-page__group-nav-item').filter({ hasText: '日志治理' }).first();
+      const auditItem = nav.locator('.setting-overview-page__anchor-item').filter({ hasText: '日志治理' }).first();
       await auditItem.click();
-      await expect(page).toHaveURL(/\/system\/setting\/audit$/);
-      await expect(auditItem).toHaveClass(/setting-page__group-nav-item--active/);
+      await expect(page).toHaveURL(/\/system\/setting\?group=audit$/);
+      await expect(page.locator('#setting-group-section-audit')).toBeVisible();
+      await expect(page.locator('.setting-overview-page__anchor-item--active')).toContainText('日志治理');
       await expect(page.locator('.setting-page__audit-card')).toBeVisible();
       await expectNoViewportOverflow(page);
       await page.screenshot({

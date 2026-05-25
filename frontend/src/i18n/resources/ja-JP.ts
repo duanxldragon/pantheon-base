@@ -572,6 +572,19 @@ const jaJPFallback = {
   'system.role.sort': '並び順',
   'system.role.status': '状態',
   'system.role.createdAt': '作成日時',
+  'system.role.members': 'ロールメンバー',
+  'system.role.members.subtitle': 'ロール側でメンバー紐付けを直接管理',
+  'system.role.members.hint':
+    'ユーザー作成時にロールを未選択でも構いません。後からこの画面で一括して付与または解除できます。',
+  'system.role.members.candidatePlaceholder':
+    'このロールへ追加するユーザーを検索して選択',
+  'system.role.members.candidateEmpty': '追加できるメンバーはありません',
+  'system.role.members.searchPlaceholder': '現在のメンバーをユーザー名またはニックネームで検索',
+  'system.role.members.filterStatus': 'メンバー状態で絞り込む',
+  'system.role.members.addSuccess': '{{count}} 件のメンバーを追加しました',
+  'system.role.members.removeSuccess': '{{count}} 件のメンバーを解除しました',
+  'system.role.members.removeConfirm': 'このメンバーの現在のロール紐付けを解除しますか？',
+  'system.role.members.empty': 'このロールに紐付くメンバーはまだいません',
   'system.role.menuIds': 'ナビゲーションメニュー',
   'system.role.menuIds.placeholder': 'このロールに表示するナビゲーションメニューを選択してください',
   'system.role.permissionKeys': 'ページ / 操作権限',
@@ -1564,6 +1577,7 @@ const jaJPFallback = {
   'generator.moduleManager.diagnostics': '有効化診断',
   'generator.moduleManager.diagnostics.verified': '検証済み',
   'generator.moduleManager.diagnostics.failed': '異常',
+  'generator.moduleManager.verifiedAt': '検証時間',
   'generator.moduleManager.registerNew': 'ジェネレーターを開く',
   'generator.moduleManager.confirmUninstall': 'このモジュールをアンインストールしますか？',
   'generator.moduleManager.confirmUninstallAutoRecycle':

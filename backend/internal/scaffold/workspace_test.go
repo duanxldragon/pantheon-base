@@ -377,6 +377,28 @@ func TestResolveWorkspaceRootIgnoresEnvWhenExplicitStartProvided(t *testing.T) {
 	}
 }
 
+func TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace(t *testing.T) {
+	originalWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	tempWd := t.TempDir()
+	if err := os.Chdir(tempWd); err != nil {
+		t.Fatalf("chdir temp: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(originalWd)
+	}()
+
+	resolved, err := ResolveWorkspaceRoot("")
+	if err != nil {
+		t.Fatalf("resolve workspace root from source fallback: %v", err)
+	}
+	if !strings.HasSuffix(filepath.ToSlash(resolved), "/pantheon-base") {
+		t.Fatalf("expected source-tree fallback to pantheon-base, got %s", resolved)
+	}
+}
+
 func prepareScaffoldWorkspaceRoot(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()

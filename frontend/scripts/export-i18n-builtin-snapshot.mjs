@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const currentFilePath = fileURLToPath(import.meta.url);
 const frontendRoot = path.resolve(path.dirname(currentFilePath), '..');
 const resourcesRoot = path.join(frontendRoot, 'src', 'i18n', 'resources');
+const overrideResourcesRoot = path.join(resourcesRoot, 'overrides');
 const generatedResourcesRoot = path.join(resourcesRoot, 'generated');
 const outputPath = path.resolve(frontendRoot, '..', 'backend', 'modules', 'system', 'i18n', 'builtin_locale_resources.json');
 
@@ -43,10 +44,13 @@ function loadResourceModule(modulePath, cache = new Map()) {
 
 function loadLocale(locale) {
   const base = loadResourceModule(path.join(resourcesRoot, `${locale}.ts`));
+  const overridePath = path.join(overrideResourcesRoot, `${locale}.ts`);
+  const override = fs.existsSync(overridePath) ? loadResourceModule(overridePath) : {};
   const generatedPath = path.join(generatedResourcesRoot, `${locale}.ts`);
   const generated = fs.existsSync(generatedPath) ? loadResourceModule(generatedPath) : {};
   return {
     ...base,
+    ...override,
     ...generated,
   };
 }

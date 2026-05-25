@@ -16,6 +16,14 @@ const fallbackLoaders: Record<SupportedLocale, () => Promise<FallbackResourceMap
   'fr-FR': async () => (await import('./resources/fr-FR')).default,
 };
 
+const overrideFallbackLoaders: Record<SupportedLocale, () => Promise<FallbackResourceMap>> = {
+  'zh-CN': async () => ({}),
+  'en-US': async () => ({}),
+  'ja-JP': async () => (await import('./resources/overrides/ja-JP')).default,
+  'ko-KR': async () => (await import('./resources/overrides/ko-KR')).default,
+  'fr-FR': async () => (await import('./resources/overrides/fr-FR')).default,
+};
+
 const generatedFallbackLoaders: Record<SupportedLocale, () => Promise<FallbackResourceMap>> = {
   'zh-CN': async () => (await import('./resources/generated/zh-CN')).default,
   'en-US': async () => (await import('./resources/generated/en-US')).default,
@@ -30,12 +38,14 @@ function normalizeLocale(locale: string | null | undefined): SupportedLocale {
 }
 
 async function loadFallbackResources(locale: SupportedLocale) {
-  const [baseResources, generatedResources] = await Promise.all([
+  const [baseResources, overrideResources, generatedResources] = await Promise.all([
     fallbackLoaders[locale](),
+    overrideFallbackLoaders[locale](),
     generatedFallbackLoaders[locale](),
   ]);
   return {
     ...baseResources,
+    ...overrideResources,
     ...generatedResources,
   };
 }

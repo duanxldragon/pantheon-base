@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"text/template"
@@ -15,6 +16,7 @@ import (
 )
 
 var managedTableNamePattern = regexp.MustCompile(`^[a-z0-9_]+$`)
+
 const workspaceRootEnvKey = "PANTHEON_WORKSPACE_ROOT"
 const generatedModuleExporterScript = "frontend/scripts/export-generated-module.mjs"
 
@@ -55,6 +57,20 @@ func ResolveWorkspaceRoot(start string) (string, error) {
 			break
 		}
 		current = parent
+	}
+
+	if _, sourceFile, _, ok := runtime.Caller(0); ok {
+		current = filepath.Dir(sourceFile)
+		for {
+			if isWorkspaceRoot(current) {
+				return current, nil
+			}
+			parent := filepath.Dir(current)
+			if parent == current {
+				break
+			}
+			current = parent
+		}
 	}
 
 	return "", errors.New("workspace.not_found")

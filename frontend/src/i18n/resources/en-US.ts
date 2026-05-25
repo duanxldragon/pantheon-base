@@ -755,6 +755,7 @@ const enUSFallback = {
   'generator.moduleManager.diagnostics': 'Activation Diagnostics',
   'generator.moduleManager.diagnostics.verified': 'Verified',
   'generator.moduleManager.diagnostics.failed': 'Issue',
+  'generator.moduleManager.verifiedAt': 'Verified At',
   'generator.moduleManager.registerNew': 'New Module Onboarding',
   'generator.moduleManager.confirmUninstall': 'Uninstall this module?',
   'generator.moduleManager.confirmUninstallAutoRecycle':
@@ -771,6 +772,15 @@ const enUSFallback = {
   'generator.moduleManager.purge': 'Purge',
   'generator.moduleManager.purgeSuccess': 'Module purged successfully',
   'generator.moduleManager.purgeError': 'Failed to purge the module',
+  'generator.moduleManager.i18nLifecycle.notice':
+    'I18n governance result: orphaned translations for {{module}} have been moved into lifecycle management.',
+  'generator.moduleManager.i18nLifecycle.observe': '{{count}} rows observing',
+  'generator.moduleManager.i18nLifecycle.archive': '{{count}} rows archived',
+  'generator.moduleManager.i18nLifecycle.delete': '{{count}} rows auto-deleted',
+  'generator.moduleManager.i18nLifecycle.retention':
+    'Archived rows auto-delete after {{days}} days',
+  'generator.moduleManager.i18nLifecycle.empty':
+    'No orphaned translations required governance in this run.',
   'generator.moduleManager.repair': 'Audit & Repair Registries',
   'generator.moduleManager.repairHint':
     'Use this when historical dirty data or manual file deletion causes generated registries to drift from the real source state. The platform rewrites generated registries from valid modules and marks records with missing source as uninstalled.',
@@ -1698,6 +1708,19 @@ const enUSFallback = {
   'system.role.sort': 'Sort',
   'system.role.status': 'Status',
   'system.role.createdAt': 'Created At',
+  'system.role.members': 'Role Members',
+  'system.role.members.subtitle': 'Maintain member bindings directly on the role',
+  'system.role.members.hint':
+    'Users can be created without a role first, then assigned or removed here in a single governance entry.',
+  'system.role.members.candidatePlaceholder':
+    'Search and select users to add into this role',
+  'system.role.members.candidateEmpty': 'No available users to add',
+  'system.role.members.searchPlaceholder': 'Search current members by username or nickname',
+  'system.role.members.filterStatus': 'Filter member status',
+  'system.role.members.addSuccess': 'Added {{count}} members',
+  'system.role.members.removeSuccess': 'Removed {{count}} members',
+  'system.role.members.removeConfirm': 'Remove this user from the current role?',
+  'system.role.members.empty': 'No members are currently bound to this role',
   'system.role.menuIds': 'Navigation Menus',
   'system.role.menuIds.placeholder': 'Select navigation menus visible to this role',
   'system.role.permissionKeys': 'Page / Action Permissions',

@@ -9,9 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	systemi18n "pantheon-platform/backend/modules/system/i18n"
 	"pantheon-platform/backend/pkg/testmysql"
 
 	"pantheon-platform/backend/internal/scaffold"
@@ -503,7 +505,7 @@ func TestUnregisterAndRegisterManagedModule_RewritesRegistriesWithoutPurgingSour
 	}
 
 	moduleDir := filepath.Join(workspaceRoot, "backend", "modules", "business", "asset")
-	if err := service.UnregisterModule("business.asset", false, false); err != nil {
+	if _, err := service.UnregisterModule("business.asset", false, false); err != nil {
 		t.Fatalf("unregister generated module: %v", err)
 	}
 	if _, err := os.Stat(moduleDir); err != nil {
@@ -519,6 +521,164 @@ func TestUnregisterAndRegisterManagedModule_RewritesRegistriesWithoutPurgingSour
 		t.Fatalf("expected pending activation, got %d", registration.Status)
 	}
 	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "business/asset")
+}
+
+func TestPurgeManagedModuleAdvancesI18nLifecycle(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+	mustMigrateSystemI18n(t, db)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	req := newGeneratedModuleRequest("business", "asset", "资产管理", "biz_asset")
+	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
+		t.Fatalf("register generated module: %v", err)
+	}
+	mustWriteFile(
+		t,
+		filepath.Join(workspaceRoot, "frontend", "src", "modules", "business", "asset", "i18n-proof.tsx"),
+		`export const assetI18nProof = "business.asset.title"`+"\n",
+	)
+
+	i18nService := systemi18n.NewI18nService(db)
+	if err := i18nService.BatchInsert([]systemi18n.SystemI18n{
+		{Module: "business.asset", Group: "messages", Key: "business.asset.title", Locale: "zh-CN", Value: "资产管理"},
+		{Module: "business.asset", Group: "messages", Key: "business.asset.title", Locale: "en-US", Value: "Asset Management"},
+		{Module: "business.asset", Group: "messages", Key: "business.asset.orphan", Locale: "zh-CN", Value: "遗留翻译", LifecycleStatus: systemi18n.I18nLifecycleStatusObserving},
+		{Module: "business.asset", Group: "messages", Key: "business.asset.orphan", Locale: "en-US", Value: "Legacy translation", LifecycleStatus: systemi18n.I18nLifecycleStatusObserving},
+		{Module: "business.asset", Group: "messages", Key: "business.asset.expired", Locale: "zh-CN", Value: "待清理归档", LifecycleStatus: systemi18n.I18nLifecycleStatusArchived},
+		{Module: "business.asset", Group: "messages", Key: "business.asset.expired", Locale: "en-US", Value: "Expired archived", LifecycleStatus: systemi18n.I18nLifecycleStatusArchived},
+	}); err != nil {
+		t.Fatalf("seed i18n rows: %v", err)
+	}
+	if err := db.Table("system_i18n").
+		Where("module = ? AND `key` = ?", "business.asset", "business.asset.orphan").
+		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(systemi18n.I18nUnusedObservationThresholdDays+1))).Error; err != nil {
+		t.Fatalf("age observing rows: %v", err)
+	}
+	if err := db.Table("system_i18n").
+		Where("module = ? AND `key` = ?", "business.asset", "business.asset.expired").
+		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(systemi18n.I18nArchivedRetentionThresholdDays+1))).Error; err != nil {
+		t.Fatalf("age archived rows: %v", err)
+	}
+
+	summary, err := service.PurgeModule("business.asset", false, true)
+	if err != nil {
+		t.Fatalf("purge managed module: %v", err)
+	}
+	if !summary.Triggered {
+		t.Fatal("expected i18n lifecycle summary to be triggered")
+	}
+	if summary.ObservedRows != 2 {
+		t.Fatalf("expected 2 observed rows, got %d", summary.ObservedRows)
+	}
+	if summary.ArchivedRows != 2 {
+		t.Fatalf("expected 2 archived rows, got %d", summary.ArchivedRows)
+	}
+	if summary.DeletedRows != 2 {
+		t.Fatalf("expected 2 deleted rows, got %d", summary.DeletedRows)
+	}
+
+	var titleRows []systemi18n.SystemI18n
+	if err := db.Where("module = ? AND `key` = ?", "business.asset", "business.asset.title").Find(&titleRows).Error; err != nil {
+		t.Fatalf("load title rows: %v", err)
+	}
+	if len(titleRows) != 2 {
+		t.Fatalf("expected title rows preserved for governance, got %d", len(titleRows))
+	}
+	for _, row := range titleRows {
+		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
+			t.Fatalf("expected title rows observing after purge, got %s", row.LifecycleStatus)
+		}
+		if row.LifecycleMarkedAt == nil {
+			t.Fatal("expected title rows to record lifecycle mark time")
+		}
+	}
+
+	var orphanRows []systemi18n.SystemI18n
+	if err := db.Where("module = ? AND `key` = ?", "business.asset", "business.asset.orphan").Find(&orphanRows).Error; err != nil {
+		t.Fatalf("load orphan rows: %v", err)
+	}
+	if len(orphanRows) != 2 {
+		t.Fatalf("expected orphan rows preserved for governance, got %d", len(orphanRows))
+	}
+	for _, row := range orphanRows {
+		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusArchived {
+			t.Fatalf("expected orphan rows archived after purge, got %s", row.LifecycleStatus)
+		}
+	}
+
+	var expiredCount int64
+	if err := db.Model(&systemi18n.SystemI18n{}).
+		Where("module = ? AND `key` = ?", "business.asset", "business.asset.expired").
+		Count(&expiredCount).Error; err != nil {
+		t.Fatalf("count expired archived rows: %v", err)
+	}
+	if expiredCount != 0 {
+		t.Fatalf("expected expired archived rows deleted, got %d", expiredCount)
+	}
+}
+
+func TestUnregisterManagedModulePreservesI18nLifecycleWhenSourceRemains(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+	mustMigrateSystemI18n(t, db)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	req := newGeneratedModuleRequest("business", "asset", "资产管理", "biz_asset")
+	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
+		t.Fatalf("register generated module: %v", err)
+	}
+	mustWriteFile(
+		t,
+		filepath.Join(workspaceRoot, "frontend", "src", "modules", "business", "asset", "i18n-proof.tsx"),
+		`export const assetI18nProof = "business.asset.title"`+"\n",
+	)
+
+	i18nService := systemi18n.NewI18nService(db)
+	if err := i18nService.BatchInsert([]systemi18n.SystemI18n{
+		{Module: "business.asset", Group: "messages", Key: "business.asset.title", Locale: "zh-CN", Value: "资产管理"},
+		{Module: "business.asset", Group: "messages", Key: "business.asset.title", Locale: "en-US", Value: "Asset Management"},
+	}); err != nil {
+		t.Fatalf("seed i18n rows: %v", err)
+	}
+
+	summary, err := service.UnregisterModule("business.asset", false, false)
+	if err != nil {
+		t.Fatalf("unregister managed module: %v", err)
+	}
+	if summary.Triggered {
+		t.Fatal("expected i18n lifecycle summary to stay idle when source remains")
+	}
+
+	var rows []systemi18n.SystemI18n
+	if err := db.Where("module = ? AND `key` = ?", "business.asset", "business.asset.title").Find(&rows).Error; err != nil {
+		t.Fatalf("load i18n rows: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("expected title rows preserved, got %d", len(rows))
+	}
+	for _, row := range rows {
+		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusActive {
+			t.Fatalf("expected active lifecycle when source remains, got %s", row.LifecycleStatus)
+		}
+		if row.LifecycleMarkedAt != nil {
+			t.Fatal("expected lifecycle mark time to remain empty when source remains")
+		}
+	}
 }
 
 func TestSyncBuiltInModules_PromotesGeneratedSchemaToManagedModule(t *testing.T) {
@@ -901,7 +1061,8 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
 	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
 	mustCreateSystemMenuTable(t, db)
-	mustCreateSystemI18nTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+	mustMigrateSystemI18n(t, db)
 
 	registration := ModuleRegistration{
 		Name:        "business.cmdb",
@@ -917,7 +1078,11 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	if err := db.Exec(`INSERT INTO system_menu (path, type, module) VALUES ('/business/cmdb', 'M', 'business.cmdb')`).Error; err != nil {
 		t.Fatalf("seed menu: %v", err)
 	}
-	if err := db.Exec(`INSERT INTO system_i18n (module) VALUES ('business.cmdb')`).Error; err != nil {
+	i18nService := systemi18n.NewI18nService(db)
+	if err := i18nService.BatchInsert([]systemi18n.SystemI18n{
+		{Module: "business.cmdb", Group: "messages", Key: "business.cmdb.title", Locale: "zh-CN", Value: "配置中心"},
+		{Module: "business.cmdb", Group: "messages", Key: "business.cmdb.title", Locale: "en-US", Value: "CMDB"},
+	}); err != nil {
 		t.Fatalf("seed i18n: %v", err)
 	}
 
@@ -926,8 +1091,15 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 		workspaceRoot: workspaceRoot,
 	}
 
-	if err := service.PurgeModule("business.cmdb", false, true); err != nil {
+	summary, err := service.PurgeModule("business.cmdb", false, true)
+	if err != nil {
 		t.Fatalf("purge business static module: %v", err)
+	}
+	if !summary.Triggered {
+		t.Fatal("expected static module purge to trigger i18n lifecycle governance")
+	}
+	if summary.ObservedRows != 2 {
+		t.Fatalf("expected static module purge to observe 2 rows, got %d", summary.ObservedRows)
 	}
 
 	var count int64
@@ -943,11 +1115,17 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	if count != 0 {
 		t.Fatalf("expected menu rows to be deleted, got %d", count)
 	}
-	if err := db.Table("system_i18n").Where("module = ?", "business.cmdb").Count(&count).Error; err != nil {
-		t.Fatalf("count i18n: %v", err)
+	var rows []systemi18n.SystemI18n
+	if err := db.Where("module = ?", "business.cmdb").Find(&rows).Error; err != nil {
+		t.Fatalf("load i18n rows: %v", err)
 	}
-	if count != 0 {
-		t.Fatalf("expected i18n rows to be deleted, got %d", count)
+	if len(rows) != 2 {
+		t.Fatalf("expected i18n rows preserved for governance, got %d", len(rows))
+	}
+	for _, row := range rows {
+		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
+			t.Fatalf("expected static module i18n rows observing, got %s", row.LifecycleStatus)
+		}
 	}
 }
 
@@ -976,7 +1154,7 @@ func TestPurgeModuleAutoDropsTableForAutoRecycleManagedModule(t *testing.T) {
 		workspaceRoot: workspaceRoot,
 	}
 
-	if err := service.PurgeModule("business.tmpasset", false, false); err != nil {
+	if _, err := service.PurgeModule("business.tmpasset", false, false); err != nil {
 		t.Fatalf("purge managed module: %v", err)
 	}
 	if db.Migrator().HasTable("biz_tmp_asset") {
@@ -1008,7 +1186,7 @@ func TestPurgeModuleDoesNotDropTableForRegularManagedModuleWithoutExplicitDrop(t
 		workspaceRoot: workspaceRoot,
 	}
 
-	if err := service.PurgeModule("business.keepasset", false, false); err != nil {
+	if _, err := service.PurgeModule("business.keepasset", false, false); err != nil {
 		t.Fatalf("purge managed module: %v", err)
 	}
 	if !db.Migrator().HasTable("biz_keep_asset") {
@@ -1040,7 +1218,7 @@ func TestUnregisterModuleRejectsUnsafeManagedTableName(t *testing.T) {
 		workspaceRoot: workspaceRoot,
 	}
 
-	err := service.UnregisterModule("business.asset", true, false)
+	_, err := service.UnregisterModule("business.asset", true, false)
 	if err == nil || err.Error() != "module.generate.invalid_table_name" {
 		t.Fatalf("expected invalid table name error, got %v", err)
 	}
@@ -1100,6 +1278,14 @@ func mustCreateSystemI18nTable(t *testing.T, db *gorm.DB) {
 		module VARCHAR(64)
 	)`).Error; err != nil {
 		t.Fatalf("create system_i18n table: %v", err)
+	}
+}
+
+func mustMigrateSystemI18n(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	service := systemi18n.NewI18nService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate system_i18n: %v", err)
 	}
 }
 

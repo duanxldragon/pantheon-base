@@ -52,7 +52,7 @@ const entityPatterns = {
     exacts: ['smoke_biz_status'],
   },
   i18nKeys: {
-    prefixes: ['i18n.enter.', 'i18n.smoke.', 'i18n.import.'],
+    prefixes: ['i18n.enter.', 'i18n.smoke.', 'i18n.import.', 'i18n.sync.'],
     exacts: [],
   },
   permissionPaths: {

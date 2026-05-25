@@ -621,7 +621,11 @@ const UserList: React.FC = () => {
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         ...sortableColumn('createdAt'),
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
       },
       'low',
     ),
@@ -1112,7 +1116,17 @@ const UserList: React.FC = () => {
               <FormItem
                 label={t('system.user.email')}
                 field="email"
-                rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}
+                rules={[
+                  {
+                    validator: (value, callback) => {
+                      if (!value || /\S+@\S+\.\S+/.test(String(value))) {
+                        callback();
+                        return;
+                      }
+                      callback(t('system.user.email.invalid'));
+                    },
+                  },
+                ]}
               >
                 <Input onPressEnter={() => form.submit()} />
               </FormItem>
@@ -1196,20 +1210,8 @@ const UserList: React.FC = () => {
                 className="system-user-list__role-field"
                 label={t('system.user.roles')}
                 field="roleIds"
-                rules={[
-                  {
-                    required: true,
-                    type: 'array',
-                    minLength: 1,
-                    message: t('system.user.role.required'),
-                  },
-                ]}
               >
-                <Select
-                  mode="multiple"
-                  options={roleOptions}
-                  placeholder={t('system.user.role.required')}
-                />
+                <Select mode="multiple" allowClear options={roleOptions} />
               </FormItem>
             </FormSection>
           </Space>

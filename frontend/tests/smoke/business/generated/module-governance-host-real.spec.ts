@@ -31,12 +31,14 @@ import {
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(currentDir, '../../../../..');
 const platformWorkspaceRoot = path.resolve(repoRoot, '..');
-const moduleName = 'cmdbhostqa';
-const moduleKey = `business.${moduleName}`;
-const routePath = `/business/${moduleName}`;
+const moduleName = 'cmdb/smoke';
+const moduleKey = buildModuleNamespace('business', moduleName);
+const routePath = '/business/cmdb/smoke';
 const backendModuleRelativePath = path.join('backend', 'modules', 'business', moduleName);
 const frontendModuleRelativePath = path.join('frontend', 'src', 'modules', 'business', moduleName);
 const schemaRelativePath = path.join('schema', 'generated', 'business', `${moduleName}.json`);
+const backendLeafName = 'smoke';
+const frontendModelName = 'CmdbSmoke';
 const backendRegistryRelativePath = path.join('backend', 'modules', 'business', 'generated_registry.go');
 const frontendRegistryRelativePath = path.join('frontend', 'src', 'modules', 'generated', 'business.ts');
 const componentRegistryRelativePath = path.join(
@@ -265,16 +267,16 @@ test('cmdb host database-import flow generates a temporary module without droppi
   const files = exporter.generateAll();
   expect(files.length).toBeGreaterThanOrEqual(10);
   expect(files.map((file) => file.path)).toEqual(expect.arrayContaining([
-    `backend/modules/business/${moduleName}/${moduleName}_model.go`,
-    `backend/modules/business/${moduleName}/${moduleName}_dto.go`,
-    `backend/modules/business/${moduleName}/${moduleName}_service.go`,
-    `backend/modules/business/${moduleName}/${moduleName}_handler.go`,
+    `backend/modules/business/${moduleName}/${backendLeafName}_model.go`,
+    `backend/modules/business/${moduleName}/${backendLeafName}_dto.go`,
+    `backend/modules/business/${moduleName}/${backendLeafName}_service.go`,
+    `backend/modules/business/${moduleName}/${backendLeafName}_handler.go`,
     `backend/modules/business/${moduleName}/module.go`,
     `frontend/src/modules/business/${moduleName}/index.ts`,
     `frontend/src/modules/business/${moduleName}/api.ts`,
-    `frontend/src/modules/business/${moduleName}/CmdbhostqaList.tsx`,
-    `frontend/src/modules/business/${moduleName}/CmdbhostqaForm.tsx`,
-    `frontend/src/modules/business/${moduleName}/CmdbhostqaDetail.tsx`,
+    `frontend/src/modules/business/${moduleName}/${frontendModelName}List.tsx`,
+    `frontend/src/modules/business/${moduleName}/${frontendModelName}Form.tsx`,
+    `frontend/src/modules/business/${moduleName}/${frontendModelName}Detail.tsx`,
   ]));
 
   const generateResponse = await page.request.post(`${apiBaseUrl}/system/dynamic-modules/generate`, {
@@ -319,7 +321,7 @@ test('cmdb host database-import flow generates a temporary module without droppi
 
   await expect.poll(async () => readFileContains(backendRegistry, `backend/modules/business/${moduleName}`)).toBe(true);
   await expect.poll(async () => readFileContains(frontendRegistry, `../business/${moduleName}`)).toBe(true);
-  await expect.poll(async () => readFileContains(componentRegistry, `business/${moduleName}/CmdbhostqaList`)).toBe(true);
+  await expect.poll(async () => readFileContains(componentRegistry, `business/${moduleName}/${frontendModelName}List`)).toBe(true);
 
   await page.goto(`${appBaseUrl}/login`, { waitUntil: 'domcontentloaded' });
   await installClientSession(page, login);
@@ -356,8 +358,9 @@ test('cmdb host database-import flow generates a temporary module without droppi
   });
   await page.goto(`${appBaseUrl}${routePath}`, { waitUntil: 'networkidle' });
   await expect(page.getByText('主机管理', { exact: true }).first()).toBeVisible();
-  await expect(page.locator('.arco-table')).toBeVisible();
-  await expect(page.getByText('主机编码', { exact: true })).toBeVisible();
+  const table = page.locator('.arco-table').first();
+  await expect(table).toBeVisible();
+  await expect(table.getByText('主机编码', { exact: true })).toBeVisible();
   await expect(page.getByText('qa-host-001.internal', { exact: true })).toBeVisible();
   await expect(page.getByText('10.20.30.41', { exact: true })).toBeVisible();
 
@@ -380,7 +383,7 @@ test('cmdb host database-import flow generates a temporary module without droppi
   }).toBeFalsy();
   await expect.poll(async () => readFileContains(backendRegistry, `backend/modules/business/${moduleName}`)).toBe(false);
   await expect.poll(async () => readFileContains(frontendRegistry, `../business/${moduleName}`)).toBe(false);
-  await expect.poll(async () => readFileContains(componentRegistry, `business/${moduleName}/CmdbhostqaList`)).toBe(false);
+  await expect.poll(async () => readFileContains(componentRegistry, `business/${moduleName}/${frontendModelName}List`)).toBe(false);
 
   const tableCheck = await page.request.get(`${apiBaseUrl}/system/generator/table-schema`, {
     headers: apiRequestHeaders(login),

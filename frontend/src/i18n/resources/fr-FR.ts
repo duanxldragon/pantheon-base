@@ -599,6 +599,21 @@ const frFRFallback = {
   'system.role.sort': 'Tri',
   'system.role.status': 'Statut',
   'system.role.createdAt': 'Créé le',
+  'system.role.members': 'Membres du rôle',
+  'system.role.members.subtitle': 'Gérer les rattachements directement depuis le rôle',
+  'system.role.members.hint':
+    'Un utilisateur peut être créé sans rôle initial puis être ajouté ou retiré ici depuis une seule entrée de gouvernance.',
+  'system.role.members.candidatePlaceholder':
+    'Rechercher et sélectionner les utilisateurs à ajouter à ce rôle',
+  'system.role.members.candidateEmpty': 'Aucun utilisateur disponible à ajouter',
+  'system.role.members.searchPlaceholder':
+    'Rechercher les membres actuels par identifiant ou surnom',
+  'system.role.members.filterStatus': 'Filtrer par statut du membre',
+  'system.role.members.addSuccess': '{{count}} membres ajoutés',
+  'system.role.members.removeSuccess': '{{count}} membres retirés',
+  'system.role.members.removeConfirm':
+    'Retirer cet utilisateur du rattachement actuel au rôle ?',
+  'system.role.members.empty': 'Aucun membre n’est actuellement rattaché à ce rôle',
   'system.role.menuIds': 'Menus de navigation',
   'system.role.menuIds.placeholder': 'Sélectionnez les menus de navigation visibles pour ce rôle',
   'system.role.permissionKeys': 'Permissions page / action',
@@ -1628,6 +1643,7 @@ const frFRFallback = {
   'generator.moduleManager.diagnostics': 'Diagnostic d’activation',
   'generator.moduleManager.diagnostics.verified': 'Vérifié',
   'generator.moduleManager.diagnostics.failed': 'Incident',
+  'generator.moduleManager.verifiedAt': 'Heure de vérification',
   'generator.moduleManager.registerNew': 'Ouvrir le générateur',
   'generator.moduleManager.confirmUninstall': 'Désinstaller ce module ?',
   'generator.moduleManager.confirmUninstallAutoRecycle':

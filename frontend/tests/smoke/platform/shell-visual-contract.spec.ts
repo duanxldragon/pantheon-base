@@ -554,7 +554,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   expect(settingShellStyles.groupNavItem?.borderStyle).toContain('solid');
 });
 
-test('setting workspace keeps summary and group navigation on the shared page rhythm', async ({
+test('setting workspace keeps summary and single-group config view on the shared page rhythm', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -562,17 +562,24 @@ test('setting workspace keeps summary and group navigation on the shared page rh
   await navigateInShell(page, '/system/setting');
   await expect(page.locator('.setting-overview-page > .page-header')).toHaveCount(0);
   await expect(page.locator('.governance-summary-bar')).toBeVisible();
-  await expect(page.locator('.setting-page__group-nav-item').first()).toBeVisible();
+  await expect(page.locator('.setting-overview-page__anchor-item').first()).toBeVisible();
+  await expect(page.locator('.setting-group-workspace').first()).toBeVisible();
+  await expect(page.locator('.setting-group-workspace')).toHaveCount(1);
+  await expect(page.locator('.setting-overview-page__anchor-strip[role="tablist"]')).toBeVisible();
+  await expect(page.locator('.setting-overview-page__anchor-item[role="tab"][aria-selected="true"]')).toHaveCount(1);
   await expect(page.locator('.setting-page__overview-head')).toHaveCount(0);
   await expect(page.locator('.system-page-hero')).toHaveCount(0);
+  await expect(page.locator('.page-side-column .side-rail-panel').first()).toBeVisible();
+  await expect(page.locator('.setting-overview-page__group-card')).toHaveCount(0);
 
   const overviewContract = await page.evaluate(() => {
     const summary = document.querySelector<HTMLElement>('.governance-summary-bar');
-    const groupGrid = document.querySelector<HTMLElement>('.setting-page__group-nav-grid');
-    const groupItem = document.querySelector<HTMLElement>('.setting-page__group-nav-item');
-    const groupTitle = document.querySelector<HTMLElement>('.setting-page__group-nav-title');
-    const runtimeStrip = document.querySelector<HTMLElement>('.setting-page__runtime-strip');
-    const overviewCard = document.querySelector<HTMLElement>('.setting-overview-page__group-card');
+    const anchorGrid = document.querySelector<HTMLElement>('.setting-overview-page__anchor-strip');
+    const anchorItem = document.querySelector<HTMLElement>('.setting-overview-page__anchor-item');
+    const anchorTitle = document.querySelector<HTMLElement>('.setting-overview-page__anchor-title');
+    const workspace = document.querySelector<HTMLElement>('.setting-group-workspace');
+    const sideColumn = document.querySelector<HTMLElement>('.setting-overview-page__rail');
+    const sideRailPanel = document.querySelector<HTMLElement>('.setting-overview-page__rail .side-rail-panel');
 
     const read = (element?: HTMLElement | null) => {
       if (!element) {
@@ -585,6 +592,7 @@ test('setting workspace keeps summary and group navigation on the shared page rh
         fontSize: style.fontSize,
         gap: style.gap,
         height: Math.round(rect.height),
+        position: style.position,
         paddingTop: style.paddingTop,
         paddingRight: style.paddingRight,
         paddingBottom: style.paddingBottom,
@@ -595,23 +603,26 @@ test('setting workspace keeps summary and group navigation on the shared page rh
 
     return {
       summary: read(summary),
-      groupGrid: read(groupGrid),
-      groupItem: read(groupItem),
-      groupTitle: read(groupTitle),
-      runtimeStrip: read(runtimeStrip),
-      overviewCard: read(overviewCard),
+      anchorGrid: read(anchorGrid),
+      anchorItem: read(anchorItem),
+      anchorTitle: read(anchorTitle),
+      workspace: read(workspace),
+      sideColumn: read(sideColumn),
+      sideRailPanel: read(sideRailPanel),
     };
   });
 
   expect(overviewContract.summary?.display).toBe('grid');
   expect(overviewContract.summary?.paddingTop).toBe('10px');
   expect(overviewContract.summary?.paddingBottom).toBe('10px');
-  expect(overviewContract.groupGrid?.display).toBe('grid');
-  expect(overviewContract.groupGrid?.gap).toBe('8px');
-  expect(overviewContract.groupItem?.height).toBeLessThanOrEqual(120);
-  expect(overviewContract.groupTitle?.fontSize).toBe('13px');
-  expect(overviewContract.runtimeStrip?.display).toBe('flex');
-  expect(overviewContract.overviewCard?.top).toBeGreaterThan(overviewContract.summary!.top);
+  expect(overviewContract.anchorGrid?.display).toBe('flex');
+  expect(overviewContract.anchorGrid?.gap).toBe('0px');
+  expect(overviewContract.anchorItem?.height).toBeLessThanOrEqual(120);
+  expect(overviewContract.anchorTitle?.fontSize).toBe('13px');
+  expect(overviewContract.workspace?.top).toBeGreaterThan(overviewContract.summary!.top);
+  expect(overviewContract.sideColumn?.display).toBe('flex');
+  expect(overviewContract.sideColumn?.position).toBe('sticky');
+  expect(overviewContract.sideRailPanel?.height).toBeGreaterThan(0);
 });
 
 test('setting group routes use distinct opened-tab labels', async ({ page }) => {

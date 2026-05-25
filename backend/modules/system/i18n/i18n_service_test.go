@@ -2,6 +2,8 @@ package system
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -808,6 +810,32 @@ func TestI18nService_GetAudit(t *testing.T) {
 	}
 }
 
+func TestScanI18nKeysDetectsSingleQuotedFrontendReferences(t *testing.T) {
+	workspaceRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(workspaceRoot, "backend"), 0o755); err != nil {
+		t.Fatalf("mkdir backend root: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(workspaceRoot, "frontend", "src"), 0o755); err != nil {
+		t.Fatalf("mkdir frontend root: %v", err)
+	}
+	source := "export function Demo({ t }) { return t('i18n.batchDelete') + t('system.dept.task.title') }\n"
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(source), 0o644); err != nil {
+		t.Fatalf("write demo source: %v", err)
+	}
+	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
+
+	keys, err := scanI18nKeys(true)
+	if err != nil {
+		t.Fatalf("scan i18n keys: %v", err)
+	}
+	if !containsString(keys, "i18n.batchDelete") {
+		t.Fatalf("expected single-quoted i18n key to be detected, got %#v", keys)
+	}
+	if !containsString(keys, "system.dept.task.title") {
+		t.Fatalf("expected single-quoted dept task key to be detected, got %#v", keys)
+	}
+}
+
 func TestI18nService_GetAuditIncludesStalePlaceholders(t *testing.T) {
 	db := newI18nTestDB(t)
 	service := NewI18nService(db)
@@ -1063,6 +1091,11 @@ func TestI18nService_UnusedLifecycleFlow(t *testing.T) {
 	if _, err := service.DeleteArchivedUnusedKeys("system.config", false); err == nil || err.Error() != "i18n.lifecycle.delete.confirm_required" {
 		t.Fatalf("expected confirm required error, got %v", err)
 	}
+	if err := db.Model(&SystemI18n{}).
+		Where("module = ? AND `key` = ?", "system.config", "zz.lifecycle.key").
+		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(I18nArchivedRetentionThresholdDays+1))).Error; err != nil {
+		t.Fatalf("age archived lifecycle rows: %v", err)
+	}
 
 	deleteResp, err := service.DeleteArchivedUnusedKeys("system.config", true)
 	if err != nil {
@@ -1078,5 +1111,62 @@ func TestI18nService_UnusedLifecycleFlow(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("expected archived lifecycle rows deleted, got %d", count)
+	}
+}
+
+func TestI18nService_AdvanceUnusedLifecycleDeletesExpiredArchivedKeys(t *testing.T) {
+	db := newI18nTestDB(t)
+	service := NewI18nService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	if err := service.BatchInsert([]SystemI18n{
+		{Module: "system.config", Group: "messages", Key: "zz.advance.observe", Locale: "zh-CN", Value: "待观察"},
+		{Module: "system.config", Group: "messages", Key: "zz.advance.observe", Locale: "en-US", Value: "Observe"},
+		{Module: "system.config", Group: "messages", Key: "zz.advance.archive", Locale: "zh-CN", Value: "待归档", LifecycleStatus: I18nLifecycleStatusObserving},
+		{Module: "system.config", Group: "messages", Key: "zz.advance.archive", Locale: "en-US", Value: "Archive", LifecycleStatus: I18nLifecycleStatusObserving},
+		{Module: "system.config", Group: "messages", Key: "zz.advance.delete", Locale: "zh-CN", Value: "待删除", LifecycleStatus: I18nLifecycleStatusArchived},
+		{Module: "system.config", Group: "messages", Key: "zz.advance.delete", Locale: "en-US", Value: "Delete", LifecycleStatus: I18nLifecycleStatusArchived},
+	}); err != nil {
+		t.Fatalf("seed items: %v", err)
+	}
+
+	if err := db.Model(&SystemI18n{}).
+		Where("module = ? AND `key` = ?", "system.config", "zz.advance.archive").
+		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(I18nUnusedObservationThresholdDays+1))).Error; err != nil {
+		t.Fatalf("age observing rows: %v", err)
+	}
+	if err := db.Model(&SystemI18n{}).
+		Where("module = ? AND `key` = ?", "system.config", "zz.advance.delete").
+		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(I18nArchivedRetentionThresholdDays+1))).Error; err != nil {
+		t.Fatalf("age archived rows: %v", err)
+	}
+
+	resp, err := service.AdvanceUnusedLifecycle("system.config")
+	if err != nil {
+		t.Fatalf("advance lifecycle: %v", err)
+	}
+	if resp.ObservedRows != 2 {
+		t.Fatalf("expected 2 observed rows, got %d", resp.ObservedRows)
+	}
+	if resp.ArchivedRows != 2 {
+		t.Fatalf("expected 2 archived rows, got %d", resp.ArchivedRows)
+	}
+	if resp.DeletedRows != 2 {
+		t.Fatalf("expected 2 deleted rows, got %d", resp.DeletedRows)
+	}
+	if resp.ArchivedRetentionThresholdDays != I18nArchivedRetentionThresholdDays {
+		t.Fatalf("expected archived retention threshold %d, got %d", I18nArchivedRetentionThresholdDays, resp.ArchivedRetentionThresholdDays)
+	}
+
+	var deletedCount int64
+	if err := db.Model(&SystemI18n{}).
+		Where("module = ? AND `key` = ?", "system.config", "zz.advance.delete").
+		Count(&deletedCount).Error; err != nil {
+		t.Fatalf("count deleted rows: %v", err)
+	}
+	if deletedCount != 0 {
+		t.Fatalf("expected expired archived rows deleted, got %d", deletedCount)
 	}
 }

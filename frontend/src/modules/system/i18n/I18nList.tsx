@@ -33,6 +33,7 @@ import {
   isTimeoutRequestError,
 } from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import {
   getVisibleSelectedRowKeys,
@@ -1038,6 +1039,7 @@ const I18nList: React.FC = () => {
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         sorter: true,
+        render: (value: string) => formatDateTime(value),
       },
       'low',
     ),
@@ -1047,6 +1049,7 @@ const I18nList: React.FC = () => {
         dataIndex: 'updatedAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         sorter: true,
+        render: (value: string) => formatDateTime(value),
       },
       'low',
     ),
@@ -1617,7 +1620,8 @@ const I18nList: React.FC = () => {
                         </Text>
                         {item.lifecycleMarkedAt ? (
                           <Text type="secondary">
-                            {t('i18n.lifecycle.markedAt')}: {item.lifecycleMarkedAt} ·{' '}
+                            {t('i18n.lifecycle.markedAt')}:{' '}
+                            {formatDateTime(item.lifecycleMarkedAt)} ·{' '}
                             {t('i18n.lifecycle.observingDays', { count: item.observingDays })}
                           </Text>
                         ) : null}
@@ -2017,8 +2021,8 @@ const I18nList: React.FC = () => {
             { label: t('i18n.locale'), value: currentRow?.locale || '-' },
             { label: t('i18n.value'), value: currentRow?.value || '-' },
             { label: t('i18n.remark'), value: currentRow?.remark || '-' },
-            { label: t('i18n.createdAt'), value: currentRow?.createdAt || '-' },
-            { label: t('i18n.updatedAt'), value: currentRow?.updatedAt || '-' },
+            { label: t('i18n.createdAt'), value: formatDateTime(currentRow?.createdAt) },
+            { label: t('i18n.updatedAt'), value: formatDateTime(currentRow?.updatedAt) },
           ]}
         />
       </AppModal>

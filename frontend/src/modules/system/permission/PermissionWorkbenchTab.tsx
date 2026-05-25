@@ -18,6 +18,7 @@ import {
   isServerRequestError,
   isTimeoutRequestError,
 } from '../../../api/request';
+import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import {
   getPermissionWorkbenchRemediationEvents,
@@ -648,6 +649,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   {
                     title: t('system.permission.workbench.remediationTime'),
                     dataIndex: 'createdAt',
+                    render: (value: string) => formatDateTime(value),
                   },
                 ]}
                 pagination={false}
