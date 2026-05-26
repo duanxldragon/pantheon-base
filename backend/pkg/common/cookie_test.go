@@ -40,6 +40,16 @@ func TestCSRFCookieKeepsHttpOnlyDisabled(t *testing.T) {
 	}
 }
 
+func TestGenerateCSRFTokenReturnsValue(t *testing.T) {
+	token, err := generateCSRFToken()
+	if err != nil {
+		t.Fatalf("generate csrf token: %v", err)
+	}
+	if token == "" {
+		t.Fatal("expected csrf token to be generated")
+	}
+}
+
 func TestClearTokenCookiesUsesDeletionMarkers(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	ClearTokenCookies(recorder)
