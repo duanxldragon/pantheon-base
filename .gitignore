@@ -15,14 +15,20 @@ Thumbs.db
 *.log
 *.out.log
 *.err.log
+backend-*.log
+.verify-backend.log
+.verify-backend.err.log
 
 # Local caches and temp files
 .tmp/
+backend/.tmp/
+frontend/.tmp/
 .tmp-trace-user/
 .worktrees/
 tmp/
 .gocache/
 .gstack/
+frontend/.gstack/
 coverage/
 
 # Go
