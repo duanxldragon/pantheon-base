@@ -316,7 +316,7 @@ Pantheon 当前的 `system/config` 已经不再只是“字典 + 设置页”。
 
 ### 10.3 Remediation
 
-- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](D:/workspace/go/pantheon-platform/docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
+- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](../remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
 
 ### 10.4 Acceptance
 

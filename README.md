@@ -138,10 +138,10 @@ Pantheon Platform 将权限拆成四层：
 - `DESIGN.md`：顶层架构与领域边界。
 - `docs/README.md`：完整文档索引。
 - `docs/README.en.md`：英文索引入口。
-- `docs/PERMISSION_MODEL.md`：权限模型设计。
-- `docs/FRONTEND.md`：前端架构与 UI 规范。
-- `docs/BACKEND.md`：后端模块化单体规范。
-- `docs/WORKFLOW.md`：开发流程与 AI 协作方式。
+- `docs/designs/PERMISSION_MODEL.md`：权限模型设计。
+- `docs/designs/FRONTEND.md`：前端架构与 UI 规范。
+- `docs/designs/BACKEND.md`：后端模块化单体规范。
+- `docs/designs/WORKFLOW.md`：开发流程与 AI 协作方式。
 
 ## 推荐阅读顺序
 

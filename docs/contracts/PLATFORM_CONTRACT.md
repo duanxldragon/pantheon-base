@@ -257,7 +257,7 @@ Pantheon 当前已经不再是“只有登录 + 菜单 + CRUD”的后台壳。
 
 ### 10.3 Remediation
 
-- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](D:/workspace/go/pantheon-platform/docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
+- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](../remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
 
 ### 10.4 Acceptance
 

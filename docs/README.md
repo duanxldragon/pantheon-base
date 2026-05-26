@@ -254,10 +254,7 @@ English version: [README.en.md](./README.en.md)
 - [菜单 Icon 审计与治理结果（2026-04-28）](./archive/baselines/MENU_ICON_AUDIT_20260428.md)
   - 作为 `platform` 导航图标语义治理样例保留。
 
-以下文档保留为阶段性评估归档，但不再作为主入口推荐阅读：
-
-- `docs/assessments/FRONTEND_EVALUATION_20260506.md`
-- `docs/assessments/RIGHT_SIDE_FUNCTIONAL_PAGES_EVALUATION_20260516.md`
+阶段性评估文档如果已被后续设计、验收或整改基线吸收，不再单列主入口。
 
 ## 6. 本地启动
 
