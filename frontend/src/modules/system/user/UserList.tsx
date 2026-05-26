@@ -330,7 +330,7 @@ const UserList: React.FC = () => {
         deptId: orgEnabled ? detail.deptId : 0,
         postId: orgEnabled ? detail.postId : 0,
         status: detail.status,
-        roleIds: detail.roleIds,
+        roleIds: detail.roleIds || [],
       });
       setVisible(true);
     } catch {
@@ -387,12 +387,13 @@ const UserList: React.FC = () => {
           deptId: orgEnabled ? values.deptId : 0,
           postId: orgEnabled ? values.postId : 0,
           status: values.status,
-          roleIds: values.roleIds,
+          roleIds: values.roleIds || [],
         });
         message.success(t('common.updateSuccess'));
       } else {
         await createUser({
           ...values,
+          roleIds: values.roleIds || [],
           deptId: orgEnabled ? values.deptId : 0,
           postId: orgEnabled ? values.postId : 0,
         });

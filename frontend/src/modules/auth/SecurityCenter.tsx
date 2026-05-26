@@ -78,7 +78,9 @@ const SecurityCenter: React.FC = () => {
         ),
       ]);
       setOverview(overviewResp);
-      setUserInfo(overviewResp.user);
+      if (overviewResp.user) {
+        setUserInfo(overviewResp.user);
+      }
       setSessions(sessionsResp);
       setLoginLogs(loginLogsResp.items);
     } catch {
