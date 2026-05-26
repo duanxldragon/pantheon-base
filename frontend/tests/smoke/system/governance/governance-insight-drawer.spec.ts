@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 import { signInAsAdmin } from '../../helpers/auth';
+import { expectPagePathname } from '../../helpers/url-pattern';
 
 const mainContentSelectors = [
   '.system-page-template',
@@ -33,7 +34,7 @@ async function navigateInShell(page: Page, path: string) {
     window.history.pushState({}, '', nextPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
   }, path);
-  await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, '\\/')}$`));
+  expectPagePathname(page, path);
 }
 
 async function expectPageIdentityReady(page: Page, title: string | RegExp) {
