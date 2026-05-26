@@ -1,3 +1,5 @@
+import zhCNRuntimeFixes from './runtime-fixes.zh-CN';
+
 const zhCNFallback = {
   'app.name': 'Pantheon Base',
   'app.slogan': '赋能企业数字化',
@@ -373,6 +375,7 @@ const zhCNFallback = {
   'common.importErrorField': '字段',
   'common.importErrorMessageKey': '消息键',
   'common.importErrorMessage': '消息内容',
+  'common.username': '用户名',
   'common.forbidden': '你没有访问当前页面的权限',
   'common.serverErrorTitle': '服务异常',
   'common.serverError': '服务暂时不可用，请稍后重试',
@@ -492,14 +495,17 @@ const zhCNFallback = {
   'i18n.syncFailed': '同步失败',
   'i18n.pageDescription': '管理动态文案与翻译包，修改后需刷新缓存生效',
   'i18n.hero.eyebrow': '系统域 / 配置治理国际化',
-  'i18n.hero.title': '统一治理翻译词条、缺失语言位与国际化审计',
+  'i18n.hero.title': '统一治理翻译记录、唯一词条与国际化审计',
   'i18n.hero.desc':
     '国际化页保持 `system/config` 单域语义：主任务区负责词条查询与治理动作，次级摘要区只显示覆盖度和修复提示，不再把统计与审计入口分散在多块头部区域。',
-  'i18n.hero.entriesHint': '当前国际化治理范围内的词条总量。',
+  'i18n.hero.recordsHint': '当前国际化治理范围内的翻译记录总行数，按语言逐条存储。',
+  'i18n.hero.entriesHint': '去重后的唯一翻译键数量，用于判断真实词条规模。',
+  'i18n.hero.records': '记录行数',
+  'i18n.hero.entries': '唯一词条数',
   'i18n.hero.modules': '模块数',
   'i18n.hero.modulesHint': '已接入国际化治理的模块数量。',
-  'i18n.hero.missingLocales': '缺失语言位',
-  'i18n.hero.missingHint': '仍待补齐的 locale 数量，可直接进入缺失明细治理。',
+  'i18n.hero.missingLocales': '缺失语言记录',
+  'i18n.hero.missingHint': '仍待补齐的 locale 记录数，不是缺失语言种类数，可直接进入缺失明细治理。',
   'i18n.hero.selectedHint': '批量刷新和批量删除会基于当前选择集执行。',
   'i18n.hero.summaryTitle': '治理摘要',
   'i18n.hero.groups': '分组数',
@@ -546,9 +552,10 @@ const zhCNFallback = {
   'i18n.create.invalid': '新增翻译参数不完整',
   'i18n.stats.modules': '模块 {{count}} 个',
   'i18n.stats.groups': '分组 {{count}} 个',
-  'i18n.stats.entries': '词条 {{count}} 条',
+  'i18n.stats.records': '记录 {{count}} 条',
+  'i18n.stats.entries': '词条 {{count}} 个',
   'i18n.stats.missingValues': '占位/缺失值 {{count}} 条',
-  'i18n.stats.missingLocales': '缺失 locale {{count}} 项',
+  'i18n.stats.missingLocales': '缺失 locale 记录 {{count}} 条',
   'i18n.stats.localeCoverage': '{{locale}}：{{entries}} 条，缺失 {{missing}} 项',
   'i18n.missingLocales.title': '缺失 locale 明细',
   'i18n.missingLocales.empty': '当前没有缺失 locale 的翻译项',
@@ -2511,6 +2518,7 @@ const zhCNFallback = {
   'business.cmdb.collect.start': '开始采集',
   'business.cmdb.component.name': '组件名称',
   'business.cmdb.component.version': '版本',
+  ...zhCNRuntimeFixes,
 };
 
 export default zhCNFallback;

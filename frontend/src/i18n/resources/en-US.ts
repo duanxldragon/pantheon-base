@@ -1,3 +1,5 @@
+import enUSRuntimeFixes from './runtime-fixes.en-US';
+
 const enUSFallback = {
   'app.name': 'Pantheon Base',
   'app.slogan': 'Empowering Enterprise Digitalization',
@@ -414,6 +416,7 @@ const enUSFallback = {
   'common.importErrorField': 'field',
   'common.importErrorMessageKey': 'messageKey',
   'common.importErrorMessage': 'message',
+  'common.username': 'Username',
   'common.forbidden': 'You do not have permission to access this page',
   'common.serverErrorTitle': 'Service Error',
   'common.serverError': 'The service is temporarily unavailable. Please try again later.',
@@ -537,15 +540,18 @@ const enUSFallback = {
   'i18n.pageDescription': 'Manage dynamic translations and refresh cache after updates',
   'i18n.hero.eyebrow': 'System Domain / Config Governance I18n',
   'i18n.hero.title':
-    'Govern translation entries, missing locale slots, and i18n audit in one workflow',
+    'Govern translation records, unique keys, and i18n audit in one workflow',
   'i18n.hero.desc':
     'The i18n page keeps a strict `system/config` boundary: the main task area owns entry queries and governance actions, while the side rail only summarizes coverage and repair guidance.',
-  'i18n.hero.entriesHint': 'Total translation entries currently in the governance scope.',
+  'i18n.hero.recordsHint': 'Total translation rows in the current governance scope, stored per locale.',
+  'i18n.hero.entriesHint': 'Deduplicated translation key count for the real entry scale.',
+  'i18n.hero.records': 'Record Rows',
+  'i18n.hero.entries': 'Unique Keys',
   'i18n.hero.modules': 'Modules',
   'i18n.hero.modulesHint': 'Modules already onboarded into i18n governance.',
-  'i18n.hero.missingLocales': 'Missing Locale Slots',
+  'i18n.hero.missingLocales': 'Missing Locale Records',
   'i18n.hero.missingHint':
-    'Locale slots that still need completion and can be repaired through missing-locale governance.',
+    'Locale records that still need completion, not the number of locale types, and can be repaired through missing-locale governance.',
   'i18n.hero.selectedHint':
     'Batch refresh and batch delete both run against the current selection.',
   'i18n.hero.summaryTitle': 'Governance Summary',
@@ -596,9 +602,10 @@ const enUSFallback = {
   'i18n.create.invalid': 'Incomplete translation creation parameters',
   'i18n.stats.modules': '{{count}} modules',
   'i18n.stats.groups': '{{count}} groups',
-  'i18n.stats.entries': '{{count}} entries',
+  'i18n.stats.records': '{{count}} records',
+  'i18n.stats.entries': '{{count}} keys',
   'i18n.stats.missingValues': '{{count}} placeholder or missing values',
-  'i18n.stats.missingLocales': '{{count}} missing locale slots',
+  'i18n.stats.missingLocales': '{{count}} missing locale records',
   'i18n.stats.localeCoverage': '{{locale}}: {{entries}} entries, {{missing}} missing',
   'i18n.missingLocales.title': 'Missing Locale Details',
   'i18n.missingLocales.empty': 'There are no translations missing locales.',
@@ -2743,6 +2750,7 @@ const enUSFallback = {
   'business.cmdb.collect.start': 'Start Collection',
   'business.cmdb.component.name': 'Component Name',
   'business.cmdb.component.version': 'Version',
+  ...enUSRuntimeFixes,
 };
 
 export default enUSFallback;

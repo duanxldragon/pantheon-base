@@ -21,6 +21,7 @@
     "test:generator:smoke": "npm run test:generator:dashboard-widget && npm run test:generator:quality && npm run check:menu-contract && npm run check:i18n-hardcode && npm run check:i18n-generated-scope",
     "audit:i18n-locales": "node ./scripts/audit-i18n-locales.mjs",
     "audit:i18n-runtime": "node ./scripts/report-system-i18n-audit.mjs",
+    "cleanup:i18n-unused-placeholders": "node ./scripts/cleanup-unused-i18n-placeholders.mjs",
     "type-check": "tsc -b",
     "export:i18n-builtin-snapshot": "cd .. && node frontend/scripts/export-i18n-builtin-snapshot.mjs",
     "lint": "eslint .",

@@ -52,8 +52,15 @@ const entityPatterns = {
     exacts: ['smoke_biz_status'],
   },
   i18nKeys: {
-    prefixes: ['i18n.enter.', 'i18n.smoke.', 'i18n.import.', 'i18n.sync.'],
-    exacts: [],
+    prefixes: [
+      'i18n.enter.',
+      'i18n.smoke.',
+      'i18n.import.',
+      'i18n.sync.',
+      'dict.smoke_biz_status.',
+      'dict.smoke_batch_delete_dict_.',
+    ],
+    exacts: ['system.smoke'],
   },
   permissionPaths: {
     prefixes: ['/api/v1/system/permission/enter-smoke-', '/api/v1/system/smoke-batch-delete/'],
@@ -262,8 +269,9 @@ async function cleanupDictItems(session, operationToken) {
 
 async function cleanupI18n(session, operationToken) {
   let deleted = 0;
-  for (const prefix of entityPatterns.i18nKeys.prefixes) {
-    const data = await apiGet(session, '/system/i18n/list', { key: prefix, page: 1, pageSize: 500 });
+  const queries = [...entityPatterns.i18nKeys.prefixes, ...entityPatterns.i18nKeys.exacts];
+  for (const keyQuery of queries) {
+    const data = await apiGet(session, '/system/i18n/list', { key: keyQuery, page: 1, pageSize: 500 });
     const items = Array.isArray(data.items) ? data.items : [];
     for (const item of items) {
       if (matchesPattern(String(item.key || ''), entityPatterns.i18nKeys)) {

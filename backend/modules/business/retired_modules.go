@@ -1,6 +1,10 @@
 package business
 
-import "gorm.io/gorm"
+import (
+	"strings"
+
+	"gorm.io/gorm"
+)
 
 type retiredModuleSpec struct {
 	ModuleNames        []string
@@ -99,6 +103,17 @@ func cleanupRetiredModule(tx *gorm.DB, spec retiredModuleSpec) error {
 	if tx.Migrator().HasTable("system_i18n") && len(spec.ModuleNames) > 0 {
 		if err := tx.Table("system_i18n").Where("module IN ?", spec.ModuleNames).Delete(nil).Error; err != nil {
 			return err
+		}
+		for _, moduleName := range spec.ModuleNames {
+			trimmed := strings.TrimSpace(moduleName)
+			if trimmed == "" {
+				continue
+			}
+			if err := tx.Table("system_i18n").
+				Where("module = ? AND (`key` = ? OR `key` LIKE ?)", "system.config", trimmed, trimmed+".%").
+				Delete(nil).Error; err != nil {
+				return err
+			}
 		}
 	}
 

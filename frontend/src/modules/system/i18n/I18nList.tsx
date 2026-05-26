@@ -380,9 +380,15 @@ const I18nList: React.FC = () => {
   const heroStats = useMemo(
     () => [
       {
-        key: 'entries',
-        label: t('i18n.stats.entries', { count: overview?.totalEntries || total }),
+        key: 'records',
+        label: t('i18n.stats.records', { count: overview?.totalEntries || total }),
         value: overview?.totalEntries || total,
+        hint: t('i18n.hero.recordsHint'),
+      },
+      {
+        key: 'entries',
+        label: t('i18n.stats.entries', { count: overview?.uniqueKeyCount || 0 }),
+        value: overview?.uniqueKeyCount || 0,
         hint: t('i18n.hero.entriesHint'),
       },
       {
@@ -409,6 +415,7 @@ const I18nList: React.FC = () => {
       overview?.missingLocaleCount,
       overview?.moduleCount,
       overview?.totalEntries,
+      overview?.uniqueKeyCount,
       summary.selected,
       t,
       total,
@@ -417,6 +424,16 @@ const I18nList: React.FC = () => {
 
   const governanceSummaryItems = useMemo(
     () => [
+      {
+        label: t('i18n.hero.records'),
+        value: overview?.totalEntries || total,
+        description: t('i18n.hero.recordsHint'),
+      },
+      {
+        label: t('i18n.hero.entries'),
+        value: overview?.uniqueKeyCount || 0,
+        description: t('i18n.hero.entriesHint'),
+      },
       {
         label: t('i18n.hero.groups'),
         value: overview?.groupCount || groupOptions.length,
@@ -427,6 +444,12 @@ const I18nList: React.FC = () => {
         label: t('i18n.hero.missingValues'),
         value: overview?.missingValueCount || 0,
         description: t('i18n.hero.missingValuesHint'),
+      },
+      {
+        tone: 'warning' as const,
+        label: t('i18n.hero.missingLocales'),
+        value: overview?.missingLocaleCount || 0,
+        description: t('i18n.hero.missingHint'),
       },
       {
         label: t('i18n.hero.refreshReady'),

@@ -1082,6 +1082,8 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	if err := i18nService.BatchInsert([]systemi18n.SystemI18n{
 		{Module: "business.cmdb", Group: "messages", Key: "business.cmdb.title", Locale: "zh-CN", Value: "配置中心"},
 		{Module: "business.cmdb", Group: "messages", Key: "business.cmdb.title", Locale: "en-US", Value: "CMDB"},
+		{Module: "system.config", Group: "messages", Key: "business.cmdb.host.title", Locale: "zh-CN", Value: "主机管理"},
+		{Module: "system.config", Group: "messages", Key: "business.cmdb.host.title", Locale: "en-US", Value: "Host Management"},
 	}); err != nil {
 		t.Fatalf("seed i18n: %v", err)
 	}
@@ -1098,8 +1100,8 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	if !summary.Triggered {
 		t.Fatal("expected static module purge to trigger i18n lifecycle governance")
 	}
-	if summary.ObservedRows != 2 {
-		t.Fatalf("expected static module purge to observe 2 rows, got %d", summary.ObservedRows)
+	if summary.ObservedRows != 4 {
+		t.Fatalf("expected static module purge to observe 4 rows, got %d", summary.ObservedRows)
 	}
 
 	var count int64
@@ -1125,6 +1127,17 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	for _, row := range rows {
 		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
 			t.Fatalf("expected static module i18n rows observing, got %s", row.LifecycleStatus)
+		}
+	}
+	if err := db.Where("module = ? AND `key` = ?", "system.config", "business.cmdb.host.title").Find(&rows).Error; err != nil {
+		t.Fatalf("load prefixed system config i18n rows: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("expected prefixed system config i18n rows preserved for governance, got %d", len(rows))
+	}
+	for _, row := range rows {
+		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
+			t.Fatalf("expected prefixed system config i18n rows observing, got %s", row.LifecycleStatus)
 		}
 	}
 }
