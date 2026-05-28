@@ -270,7 +270,7 @@ const ModuleWizard: React.FC = () => {
             return;
           }
           const firstID =
-            items.find((item) => item.id === selectedDatasourceId)?.id || items[0]?.id || 'current';
+            items.find(findDatasourceById)?.id || items[0]?.id || 'current';
           setSelectedDatasourceId(firstID);
           return loadTables(firstID);
         })
@@ -731,16 +731,7 @@ const ModuleWizard: React.FC = () => {
         try {
           const rows = parseCsvRows(String(reader.result || ''));
           const nextOverrides: Record<string, TranslationOverride> = {};
-          rows.slice(1).forEach((row) => {
-            const key = String(row[0] || '').trim();
-            if (!key) {
-              return;
-            }
-            nextOverrides[key] = {
-              zh: row[1] ?? '',
-              en: row[2] ?? '',
-            };
-          });
+          rows.slice(1).forEach(applyTranslationRow);
           setTranslationOverrides((current) => ({ ...current, ...nextOverrides }));
           message.success(t('generator.wizard.step3.translationPreview.importSuccess'));
         } catch {
