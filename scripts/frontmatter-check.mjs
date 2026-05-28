@@ -376,11 +376,11 @@ export function runCheck(repoRoot = DEFAULT_REPO_ROOT, options = {}) {
       const resolvedBody = bodyRefs
         .map((ref) => resolveContractBodyReference(ref, docsIndex)?.path ?? null)
         .filter(Boolean)
-        .sort();
+        .sort((a, b) => a.localeCompare(b));
       const resolvedFm = fmRefs
         .map((ref) => resolveContractBodyReference(ref, docsIndex)?.path ?? ref)
         .filter(Boolean)
-        .sort();
+        .sort((a, b) => a.localeCompare(b));
       if (resolvedBody.join('|') !== resolvedFm.join('|')) {
         errors.push(`${relativePath}: frontmatter field "${field}" does not match contract body references`);
       }
