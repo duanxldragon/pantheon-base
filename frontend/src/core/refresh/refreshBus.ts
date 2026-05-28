@@ -119,7 +119,8 @@ export function useRefreshPolling(
   intervalMs = DEFAULT_REFRESH_POLL_INTERVAL_MS,
 ) {
   const versionsRef = useRef<Record<string, number>>({});
-  const topicKey = useMemo(() => normalizeTopics(topics).sort().join(','), [topics]);
+  const normalizedTopics = useMemo(() => normalizeTopics(topics).sort(), [topics]);
+  const topicKey = useMemo(() => normalizedTopics.join(','), [normalizedTopics]);
   const authToken = token || (typeof window !== 'undefined' && hasAuthCookie() ? '_cookie' : null);
 
   useEffect(() => {
@@ -130,7 +131,6 @@ export function useRefreshPolling(
 
     let active = true;
     let timer: number | null = null;
-    const normalizedTopics = normalizeTopics(topics).sort();
 
     const poll = async () => {
       if (isLogoutTransitionActive()) {
@@ -168,5 +168,5 @@ export function useRefreshPolling(
         window.clearInterval(timer);
       }
     };
-  }, [authToken, intervalMs, topicKey, topics]);
+  }, [authToken, intervalMs, topicKey, normalizedTopics]);
 }

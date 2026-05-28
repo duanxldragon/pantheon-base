@@ -738,9 +738,15 @@ func (s *AuthService) TouchSessionActivity(sessionID string, userID uint64, ip s
 		updates["user_agent"] = truncateString(userAgent, 255)
 	}
 
-	return s.db.Model(&SystemUserSession{}).
-		Where("session_id = ? AND user_id = ? AND revoked_at IS NULL AND (last_activity_at IS NULL OR last_activity_at < ?)", sessionID, userID, now.Add(-1*time.Minute)).
-		Updates(updates).Error
+	query := s.db.Model(&SystemUserSession{}).
+		Where("session_id = ?", sessionID).
+		Where("user_id = ?", userID).
+		Where("revoked_at IS NULL")
+	if err := query.Where("last_activity_at IS NULL OR last_activity_at < ?", now.Add(-1*time.Minute)).
+		Updates(updates).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // ListSessions 获取当前用户会话列表
@@ -768,7 +774,10 @@ func (s *AuthService) ListSessions(userID uint64, currentSessionID string) ([]Se
 		result = append(result, buildSessionResp(item, currentSessionID))
 	}
 	sort.SliceStable(result, func(i, j int) bool {
-		return result[i].IsCurrent && !result[j].IsCurrent
+		if result[i].IsCurrent != result[j].IsCurrent {
+			return result[i].IsCurrent
+		}
+		return result[i].CreatedAt > result[j].CreatedAt
 	})
 	return result, nil
 }

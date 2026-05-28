@@ -1237,6 +1237,20 @@ func TestUnregisterModuleRejectsUnsafeManagedTableName(t *testing.T) {
 	}
 }
 
+func TestRegisterManagedModuleRejectsPathTraversalWorkspaceArtifacts(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	if _, err := service.RegisterManagedModule("business../safe"); err == nil || err.Error() != "module.invalid_name" {
+		t.Fatalf("expected invalid module name error, got %v", err)
+	}
+}
+
 func openDynamicModuleTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
