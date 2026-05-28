@@ -6,21 +6,17 @@ import (
 	"testing"
 )
 
-func TestTokenCookiesRespectSecureEnv(t *testing.T) {
-	t.Setenv("PANTHEON_COOKIE_SECURE", "false")
-
+func TestTokenCookiesAlwaysSecure(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	SetAccessTokenCookie(recorder, "token")
 
 	cookie := recorder.Result().Cookies()[0]
-	if cookie.Secure {
-		t.Fatal("expected secure cookie to be disabled by env override")
+	if !cookie.Secure {
+		t.Fatal("expected secure cookie to always be enabled")
 	}
 }
 
-func TestCSRFCookieUsesSecureFlagWhenEnabled(t *testing.T) {
-	t.Setenv("PANTHEON_COOKIE_SECURE", "true")
-
+func TestCSRFCookieAlwaysUsesSecureFlag(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	_, err := SetCSRFCookie(recorder)
 	if err != nil {
@@ -32,7 +28,7 @@ func TestCSRFCookieUsesSecureFlagWhenEnabled(t *testing.T) {
 		t.Fatalf("expected csrf cookie, got %s", cookie.Name)
 	}
 	if !cookie.Secure {
-		t.Fatal("expected csrf cookie to use secure flag when enabled")
+		t.Fatal("expected csrf cookie to always use secure flag")
 	}
 }
 

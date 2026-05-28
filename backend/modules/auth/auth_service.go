@@ -82,11 +82,6 @@ const (
 	sessionUserAgentColumn    = "user_agent"
 )
 
-type sessionActivityUpdate struct {
-	LastActivityAt *time.Time `gorm:"column:last_activity_at"`
-	LastIP         string     `gorm:"column:last_ip"`
-	UserAgent      string     `gorm:"column:user_agent"`
-}
 
 // NewAuthService 构造函数
 func NewAuthService(db *gorm.DB) *AuthService {
@@ -741,27 +736,22 @@ func (s *AuthService) TouchSessionActivity(sessionID string, userID uint64, ip s
 	}
 
 	now := time.Now()
-	updates := sessionActivityUpdate{LastActivityAt: &now}
-	columns := []string{sessionLastActivityColumn}
+	updates := map[string]interface{}{
+		sessionLastActivityColumn: &now,
+	}
 	if clientIP := normalizeSessionClientIP(ip); clientIP != "" {
-		updates.LastIP = clientIP
-		columns = append(columns, sessionLastIPColumn)
+		updates[sessionLastIPColumn] = clientIP
 	}
 	if agent := normalizeSessionUserAgent(userAgent); agent != "" {
-		updates.UserAgent = agent
-		columns = append(columns, sessionUserAgentColumn)
+		updates[sessionUserAgentColumn] = agent
 	}
 
-	query := s.db.Model(&SystemUserSession{}).
+	return s.db.Model(&SystemUserSession{}).
 		Where("session_id = ?", sessionID).
 		Where("user_id = ?", userID).
-		Where("revoked_at IS NULL")
-	if err := query.Where("last_activity_at IS NULL OR last_activity_at < ?", now.Add(-1*time.Minute)).
-		Select(columns).
-		Updates(updates).Error; err != nil {
-		return err
-	}
-	return nil
+		Where("revoked_at IS NULL").
+		Where("(last_activity_at IS NULL OR last_activity_at < ?)", now.Add(-1*time.Minute)).
+		Updates(updates).Error
 }
 
 // ListSessions 获取当前用户会话列表
