@@ -76,7 +76,7 @@ func TestRegisterGeneratedModuleWritesRegistries(t *testing.T) {
 	if summary.ModuleKey != "business.ticket" {
 		t.Fatalf("unexpected summary module key: %s", summary.ModuleKey)
 	}
-	if summary.RoutePath != "/business/ticket" {
+	if summary.RoutePath != "/operations/ticket" {
 		t.Fatalf("unexpected route path: %s", summary.RoutePath)
 	}
 	if summary.ComponentKey != "business/ticket/TicketList" {
@@ -271,7 +271,7 @@ func TestAuditPendingGeneratedModuleActivationsPromotesModuleAfterRuntimeAndBund
 	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
 		t.Fatalf("register generated module: %v", err)
 	}
-	mustInsertSystemMenuModule(t, db, "/business/ticket", "business.ticket")
+	mustInsertSystemMenuModule(t, db, "/operations/ticket", "business.ticket")
 	mustWriteFile(t, filepath.Join(workspaceRoot, "frontend", "dist", "assets", "app.js"), "built")
 
 	summary, err := service.AuditPendingGeneratedModuleActivations()
@@ -308,7 +308,7 @@ func TestAuditPendingGeneratedModuleActivationsKeepsModulePendingWhenFrontendBui
 	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
 		t.Fatalf("register generated module: %v", err)
 	}
-	mustInsertSystemMenuModule(t, db, "/business/ticket", "business.ticket")
+	mustInsertSystemMenuModule(t, db, "/operations/ticket", "business.ticket")
 
 	summary, err := service.AuditPendingGeneratedModuleActivations()
 	if err != nil {
@@ -351,7 +351,7 @@ func TestRegisterGeneratedModuleBuildsInferredParentSummary(t *testing.T) {
 	if summary == nil {
 		t.Fatal("expected registration summary")
 	}
-	if summary.RoutePath != "/business/cmdb/vendor" {
+	if summary.RoutePath != "/operations/cmdb/vendor" {
 		t.Fatalf("unexpected route path: %s", summary.RoutePath)
 	}
 	if summary.RouteName != "business-cmdb-vendor" {
@@ -363,7 +363,7 @@ func TestRegisterGeneratedModuleBuildsInferredParentSummary(t *testing.T) {
 	if summary.PermissionPrefix != "business:cmdb:vendor" {
 		t.Fatalf("unexpected permission prefix: %s", summary.PermissionPrefix)
 	}
-	if summary.ParentMenuPath != "/business/cmdb" {
+	if summary.ParentMenuPath != "/operations/cmdb" {
 		t.Fatalf("unexpected parent menu path: %s", summary.ParentMenuPath)
 	}
 	if summary.ParentMenuSource != "inferred" {
@@ -1234,6 +1234,20 @@ func TestUnregisterModuleRejectsUnsafeManagedTableName(t *testing.T) {
 	_, err := service.UnregisterModule("business.asset", true, false)
 	if err == nil || err.Error() != "module.generate.invalid_table_name" {
 		t.Fatalf("expected invalid table name error, got %v", err)
+	}
+}
+
+func TestRegisterManagedModuleRejectsPathTraversalWorkspaceArtifacts(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	if _, err := service.RegisterManagedModule("business../safe"); err == nil || err.Error() != "module.invalid_name" {
+		t.Fatalf("expected invalid module name error, got %v", err)
 	}
 }
 

@@ -18,6 +18,24 @@ func TestTokenCookiesRespectSecureEnv(t *testing.T) {
 	}
 }
 
+func TestCSRFCookieUsesSecureFlagWhenEnabled(t *testing.T) {
+	t.Setenv("PANTHEON_COOKIE_SECURE", "true")
+
+	recorder := httptest.NewRecorder()
+	_, err := SetCSRFCookie(recorder)
+	if err != nil {
+		t.Fatalf("set csrf cookie: %v", err)
+	}
+
+	cookie := recorder.Result().Cookies()[0]
+	if cookie.Name != CookieCSRFToken {
+		t.Fatalf("expected csrf cookie, got %s", cookie.Name)
+	}
+	if !cookie.Secure {
+		t.Fatal("expected csrf cookie to use secure flag when enabled")
+	}
+}
+
 func TestCSRFCookieKeepsHttpOnlyDisabled(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	token, err := SetCSRFCookie(recorder)

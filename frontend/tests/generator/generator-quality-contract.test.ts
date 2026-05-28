@@ -8,6 +8,7 @@ import {
   buildFieldLabelKey,
   buildFieldPlaceholderKey,
   buildMenuGroupTitleKey,
+  buildPageRoutePath,
   buildPermissionTitleKey,
   buildTitleKey,
   generateDefaultMenus,
@@ -226,12 +227,15 @@ assert.match(frontendIndex, /i18nNamespaces:\s*\['business\.cmdb\.asset'\]/);
 assert.match(frontendIndex, /dashboardWidgets:\s*\[/);
 assert.match(frontendIndex, /componentKey: 'business\/cmdb\/asset\/CmdbAssetList'/);
 assert.match(frontendIndex, /componentKey: 'business\/cmdb\/asset\/CmdbAssetDetail'/);
-assert.match(frontendIndex, /path: 'business\/cmdb\/asset\/:id'/);
+assert.equal(buildPageRoutePath('business', 'cmdb/asset'), '/operations/cmdb/asset');
+assert.match(frontendIndex, /path: 'operations\/cmdb\/asset\/:id'/);
+assert.match(frontendIndex, /activeMenu: '\/operations\/cmdb\/asset'/);
 assert.match(frontendIndex, /pagePermission: 'business:cmdb:asset:view'/);
 
 const frontendList = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx') || '';
-assert.match(frontendList, /t\('business\.cmdb\.asset\.title'\)/);
 assert.match(frontendList, /t\('business\.cmdb\.asset\.field\.assetCode\.label'\)/);
+assert.match(frontendList, /<TableBatchActionBar/);
+assert.doesNotMatch(frontendList, /system-list__table-head/);
 assert.doesNotMatch(frontendList, /generator\.wizard\.result\.relatedModules/);
 assert.doesNotMatch(frontendList, /generator\.wizard\.result\.relatedModuleAction/);
 assert.doesNotMatch(frontendList, />资产管理</);
