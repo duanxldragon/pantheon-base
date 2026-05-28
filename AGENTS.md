@@ -18,6 +18,7 @@ English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 ## 工作方式
 
 - 先确认层级，再决定改动位置。
+- 结构性代码检索先用 CodeGraph 缩小范围：`codegraph status`、`codegraph context -p . "<task>"`、`codegraph query -p . "<symbol>"`、`codegraph impact -p . "<symbol>"`；字面量、日志和文案再用 `rg`。
 - 变更前确认 DDL / 索引是否需要调整。
 - 变更后检查审计、权限、多语言和动态菜单。
 - 需要代码变更时，同步给出验证方式、测试思路或脚本。
