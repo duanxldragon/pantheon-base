@@ -33,7 +33,7 @@ import {
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { beginLogoutTransition, endLogoutTransition } from '../../api/request';
-import type { MenuNode } from '../../modules/system/menu/api';
+import { findFirstNavigableMenuPath, type MenuNode } from '../../modules/system/menu/api';
 import {
   logout as logoutApi,
   reportActivity,
@@ -221,6 +221,13 @@ function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefin
     }
   }
   return undefined;
+}
+
+function findMenuNavigationPath(item: MenuNode): string | undefined {
+  if (item.path && findRouteByPath(item.path)) {
+    return item.path;
+  }
+  return item.children?.length ? findFirstNavigableMenuPath(item.children) || undefined : undefined;
 }
 
 function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): MenuNode[] {
@@ -1323,11 +1330,27 @@ const BaseLayout: React.FC = () => {
       ].join(' ');
 
       if (item.children && item.children.length > 0) {
+        const navigationPath = findMenuNavigationPath(item);
         return (
           <Menu.SubMenu
             key={item.id.toString()}
             title={
-              <span className={entryClassName}>
+              <span
+                className={entryClassName}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (navigationPath) {
+                    handleMenuNavigation(navigationPath);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if ((event.key === 'Enter' || event.key === ' ') && navigationPath) {
+                    event.preventDefault();
+                    handleMenuNavigation(navigationPath);
+                  }
+                }}
+              >
                 <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
                 <span className="app-shell__menu-entry-copy">
                   <span className="app-shell__menu-entry-label">{t(item.titleKey)}</span>
@@ -1557,7 +1580,6 @@ const BaseLayout: React.FC = () => {
             {!collapsed ? (
               <div className="app-shell__brand-text">
                 <span className="app-shell__brand-title">{appName}</span>
-                <span className="app-shell__brand-subtitle">{t('app.workspace')}</span>
               </div>
             ) : null}
           </div>
@@ -1810,9 +1832,9 @@ const BaseLayout: React.FC = () => {
                 </Avatar>
                 <div className="app-shell__user-meta">
                   <span className="app-shell__user-name">{userDisplayName}</span>
-                  <span className="app-shell__user-subtitle">
-                    {roleLabel || t('app.workspace')}
-                  </span>
+                  {roleLabel ? (
+                    <span className="app-shell__user-subtitle">{roleLabel}</span>
+                  ) : null}
                 </div>
               </Button>
             </Dropdown>
