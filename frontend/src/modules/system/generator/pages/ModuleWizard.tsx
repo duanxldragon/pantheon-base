@@ -263,8 +263,8 @@ const ModuleWizard: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    const timer = window.setTimeout(() => {
-      void loadDatasources()
+    const timer = globalThis.setTimeout(() => {
+      loadDatasources()
         .then((items) => {
           if (!active) {
             return;
@@ -283,7 +283,7 @@ const ModuleWizard: React.FC = () => {
     }, 0);
     return () => {
       active = false;
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
     };
   }, [loadDatasources, loadTables, selectedDatasourceId]);
 
@@ -291,16 +291,16 @@ const ModuleWizard: React.FC = () => {
     if (sourceMode !== 'database') {
       return;
     }
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       form.setFieldValue('metadata.sourceDatasourceId' as keyof ModuleSchema, selectedDatasourceId);
       form.setFieldValue(
         'metadata.sourceDatasourceName' as keyof ModuleSchema,
         selectedDatasource?.name || '',
       );
       form.setFieldValue('metadata.sourceTable' as keyof ModuleSchema, undefined);
-      void loadTables(selectedDatasourceId);
+      loadTables(selectedDatasourceId);
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [form, loadTables, selectedDatasource?.name, selectedDatasourceId, sourceMode]);
 
   const getAllFormValues = () => form.getFields() as Partial<ModuleSchema>;
@@ -913,10 +913,10 @@ const ModuleWizard: React.FC = () => {
       Math.ceil(previewTranslationRows.length / translationPreviewPagination.pageSize),
     );
     if (translationPreviewPagination.current > totalPages) {
-      const timer = window.setTimeout(() => {
+      const timer = globalThis.setTimeout(() => {
         setTranslationPreviewPagination((current) => ({ ...current, current: totalPages }));
       }, 0);
-      return () => window.clearTimeout(timer);
+      return () => globalThis.clearTimeout(timer);
     }
     return undefined;
   }, [
@@ -988,7 +988,7 @@ const ModuleWizard: React.FC = () => {
           title: t('generator.wizard.register.overwriteTitle'),
           content: t('generator.wizard.register.overwriteContent'),
           onOk: () => {
-            void submitGenerateAndRegister(true);
+            submitGenerateAndRegister(true);
           },
         });
         return;
@@ -1177,7 +1177,7 @@ const ModuleWizard: React.FC = () => {
                         <Space>
                           <Button
                             size="small"
-                            onClick={() => void loadTables(selectedDatasourceId)}
+                            onClick={() => loadTables(selectedDatasourceId)}
                           >
                             <IconRefresh /> {t('common.refresh')}
                           </Button>
@@ -1238,7 +1238,7 @@ const ModuleWizard: React.FC = () => {
                         if (!tableName) {
                           return;
                         }
-                        void previewGeneratorTable(tableName, selectedDatasourceId)
+                        previewGeneratorTable(tableName, selectedDatasourceId)
                           .then((preview) => {
                             applyPreviewSuggestions(preview);
                           })
@@ -1994,7 +1994,7 @@ const ModuleWizard: React.FC = () => {
                     loading={registering}
                     disabled={!oneClickEnabled}
                     onClick={() => {
-                      void submitGenerateAndRegister();
+                      submitGenerateAndRegister();
                     }}
                   >
                     {t('generator.wizard.register.submit')}
@@ -2170,7 +2170,7 @@ const ModuleWizard: React.FC = () => {
                         loading={auditingActivation}
                         disabled={registerResult.module.status === 1}
                         onClick={() => {
-                          void handleAuditActivation();
+                          handleAuditActivation();
                         }}
                       >
                         {t('generator.wizard.result.checkActivation')}
@@ -2234,7 +2234,7 @@ const ModuleWizard: React.FC = () => {
                     <Button
                       size="mini"
                       type="text"
-                      onClick={() => void handleTestDatasource(record.id)}
+                      onClick={() => handleTestDatasource(record.id)}
                     >
                       <IconCode /> {t('generator.datasource.test')}
                     </Button>
@@ -2264,7 +2264,7 @@ const ModuleWizard: React.FC = () => {
               form={datasourceForm}
               layout="vertical"
               onSubmit={() => {
-                void handleSaveDatasource();
+                handleSaveDatasource();
               }}
             >
               <Row gutter={16}>
@@ -2377,7 +2377,7 @@ const ModuleWizard: React.FC = () => {
                 <Button
                   type="primary"
                   loading={datasourceSaving}
-                  onClick={() => void handleSaveDatasource()}
+                  onClick={() => handleSaveDatasource()}
                 >
                   {editingDatasourceId ? t('common.save') : t('common.create')}
                 </Button>

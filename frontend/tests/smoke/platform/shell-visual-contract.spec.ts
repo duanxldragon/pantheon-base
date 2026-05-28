@@ -75,8 +75,8 @@ async function navigateInShell(page: import('@playwright/test').Page, path: stri
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
   }
   await page.evaluate((nextPath) => {
-    window.history.pushState({}, '', nextPath);
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    globalThis.history.pushState({}, '', nextPath);
+    globalThis.dispatchEvent(new PopStateEvent('popstate'));
   }, path);
   expectPagePathname(page, path);
 }
@@ -127,7 +127,7 @@ async function readDialogContract(
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         alignItems: style.alignItems,
@@ -158,8 +158,8 @@ async function readDialogContract(
     };
 
     return {
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
+      viewportWidth: globalThis.innerWidth,
+      viewportHeight: globalThis.innerHeight,
       dialog: read(dialog),
       header: read(header),
       content: read(content),
@@ -180,7 +180,7 @@ async function readDialogControlContracts(page: import('@playwright/test').Page)
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         backgroundColor: style.backgroundColor,
@@ -252,7 +252,7 @@ async function readVisibleControlContracts(
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         backgroundColor: style.backgroundColor,
@@ -376,7 +376,7 @@ async function readFocusedTextInputContract(
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         backgroundColor: style.backgroundColor,
@@ -408,7 +408,7 @@ async function readRootCssVariables(
   variableNames: string[],
 ) {
   return page.evaluate((names) => {
-    const style = window.getComputedStyle(document.documentElement);
+    const style = globalThis.getComputedStyle(document.documentElement);
     return Object.fromEntries(names.map((name) => [name, style.getPropertyValue(name).trim()]));
   }, variableNames);
 }
@@ -472,7 +472,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         selector,
@@ -532,7 +532,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         selector,
@@ -586,7 +586,7 @@ test('setting workspace keeps summary and single-group config view on the shared
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         display: style.display,
@@ -685,7 +685,7 @@ test('high-sensitivity config pages keep a single summary shell without hero wal
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       return {
         backgroundColor: style.backgroundColor,
         borderTopLeftRadius: style.borderTopLeftRadius,
@@ -698,11 +698,11 @@ test('high-sensitivity config pages keep a single summary shell without hero wal
     };
     return {
       alertCount: document.querySelectorAll('.module-manager-page__card .arco-alert').length,
-      alertDisplay: alert ? window.getComputedStyle(alert).display : null,
+      alertDisplay: alert ? globalThis.getComputedStyle(alert).display : null,
       hasDataTable: Boolean(table),
       hasEmptyState: Boolean(empty),
       governanceColumns: governanceBar
-        ? window.getComputedStyle(governanceBar).gridTemplateColumns
+        ? globalThis.getComputedStyle(governanceBar).gridTemplateColumns
             .split(' ')
             .filter(Boolean).length
         : 0,
@@ -713,7 +713,7 @@ test('high-sensitivity config pages keep a single summary shell without hero wal
         table?.querySelector<HTMLElement>('.arco-table-container') ?? empty,
       ),
       firstHeaderBackground: table?.querySelector<HTMLElement>('.arco-table-th')
-        ? window.getComputedStyle(table.querySelector<HTMLElement>('.arco-table-th')!).backgroundColor
+        ? globalThis.getComputedStyle(table.querySelector<HTMLElement>('.arco-table-th')!).backgroundColor
         : null,
     };
   });
@@ -747,7 +747,7 @@ test('high-sensitivity config pages keep a single summary shell without hero wal
       topAlertCount: document.querySelectorAll(
         '.generator-wizard-card > .arco-card-body > .arco-alert',
       ).length,
-      stepsDisplay: steps ? window.getComputedStyle(steps).display : null,
+      stepsDisplay: steps ? globalThis.getComputedStyle(steps).display : null,
     };
   });
 
@@ -806,7 +806,7 @@ test('system table pages keep unified table card spacing radius and neutral head
         if (!element) {
           return null;
         }
-        const style = window.getComputedStyle(element);
+        const style = globalThis.getComputedStyle(element);
         return {
           backgroundColor: style.backgroundColor,
           borderTopLeftRadius: style.borderTopLeftRadius,
@@ -826,13 +826,13 @@ test('system table pages keep unified table card spacing radius and neutral head
         container: read(container),
         firstHeader: read(firstHeader),
         fixedColumnShadow: fixedColumn
-          ? window.getComputedStyle(fixedColumn, '::after').boxShadow
+          ? globalThis.getComputedStyle(fixedColumn, '::after').boxShadow
           : 'none',
         scrollBeforeShadow: scrollContent
-          ? window.getComputedStyle(scrollContent, '::before').boxShadow
+          ? globalThis.getComputedStyle(scrollContent, '::before').boxShadow
           : 'none',
         scrollAfterShadow: scrollContent
-          ? window.getComputedStyle(scrollContent, '::after').boxShadow
+          ? globalThis.getComputedStyle(scrollContent, '::after').boxShadow
           : 'none',
       };
     });
@@ -920,7 +920,7 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
         if (!element) {
           return null;
         }
-        const style = window.getComputedStyle(element);
+        const style = globalThis.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
         return {
           alignItems: style.alignItems,
@@ -985,7 +985,7 @@ test('business actions stay in the work area and dialogs use single-layer inputs
             /新增/.test(button.textContent || ''),
           ),
       ),
-      prefixGap: prefixActions ? window.getComputedStyle(prefixActions).gap : null,
+      prefixGap: prefixActions ? globalThis.getComputedStyle(prefixActions).gap : null,
     };
   });
 
@@ -1028,7 +1028,7 @@ test('narrow mobile layout keeps actions dialogs and states inside the viewport'
   await expect(page.locator('.table-batch-action-bar__prefix-actions')).toBeVisible();
 
   const mobileContract = await page.evaluate(() => {
-    const viewportWidth = window.innerWidth;
+    const viewportWidth = globalThis.innerWidth;
     const selectors = [
       '.page-container',
       '.governance-summary-bar',
@@ -1042,7 +1042,7 @@ test('narrow mobile layout keeps actions dialogs and states inside the viewport'
       if (!element) {
         return { selector, exists: false };
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         selector,
@@ -1248,7 +1248,7 @@ test('emerald theme dialogs keep themed select focus and single-line authorizati
   await expect(roleStatusSelect).toHaveClass(/arco-select-open/);
   await page.waitForTimeout(100);
   const roleStatusContract = await roleStatusView.evaluate((view) => {
-    const style = window.getComputedStyle(view);
+    const style = globalThis.getComputedStyle(view);
     return {
       borderTopColor: style.borderTopColor,
       boxShadow: style.boxShadow,
@@ -1265,8 +1265,8 @@ test('emerald theme dialogs keep themed select focus and single-line authorizati
       .slice(0, 3)
       .map((header) => {
         const text = header.querySelector<HTMLElement>('.arco-typography');
-        const titleStyle = window.getComputedStyle(header);
-        const textStyle = text ? window.getComputedStyle(text) : null;
+        const titleStyle = globalThis.getComputedStyle(header);
+        const textStyle = text ? globalThis.getComputedStyle(text) : null;
         const lineHeight = Number.parseFloat(textStyle?.lineHeight || '0');
         const height = text?.getBoundingClientRect().height || 0;
         return {
@@ -1295,7 +1295,7 @@ test('emerald theme dialogs keep themed select focus and single-line authorizati
 
   const treeSelectContract = await menuDialog.evaluate((dialog) => {
     const control = dialog.querySelector<HTMLElement>('.arco-tree-select-view');
-    const style = control ? window.getComputedStyle(control) : null;
+    const style = control ? globalThis.getComputedStyle(control) : null;
     return {
       borderTopWidth: style?.borderTopWidth ?? null,
       borderTopStyle: style?.borderTopStyle ?? null,
@@ -1323,7 +1323,7 @@ test('governance drawers share overlay spacing and surface contracts', async ({ 
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         backgroundColor: style.backgroundColor,
@@ -1389,7 +1389,7 @@ test('user create dialog role multi-select keeps a single focus ring', async ({ 
         if (!element) {
           return null;
         }
-        const style = window.getComputedStyle(element);
+        const style = globalThis.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
         return {
           borderTopWidth: style.borderTopWidth,
@@ -1449,7 +1449,7 @@ test('login-log governance action keeps the shared local alignment contract', as
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         alignItems: style.alignItems,
@@ -1502,7 +1502,7 @@ test('empty loading error and destructive controls keep shared visual semantics'
       if (!element) {
         return null;
       }
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
       return {
         backgroundColor: style.backgroundColor,
@@ -1552,7 +1552,7 @@ test('empty loading error and destructive controls keep shared visual semantics'
       },
     );
     return buttons.map((button) => {
-      const style = window.getComputedStyle(button);
+      const style = globalThis.getComputedStyle(button);
       return {
         text: button.textContent?.trim() || '',
         hasDangerClass: Array.from(button.classList).some((className) =>
@@ -1602,7 +1602,7 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
         if (!element) {
           return null;
         }
-        const style = window.getComputedStyle(element);
+        const style = globalThis.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
         return {
           alignItems: style.alignItems,
@@ -1621,9 +1621,9 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
 
       return {
         governanceTop: governanceBar ? Math.round(governanceBar.getBoundingClientRect().top) : null,
-        governancePaddingTop: governanceBar ? window.getComputedStyle(governanceBar).paddingTop : null,
+        governancePaddingTop: governanceBar ? globalThis.getComputedStyle(governanceBar).paddingTop : null,
         governancePaddingBottom: governanceBar
-          ? window.getComputedStyle(governanceBar).paddingBottom
+          ? globalThis.getComputedStyle(governanceBar).paddingBottom
           : null,
         contextTop: contextCard ? Math.round(contextCard.getBoundingClientRect().top) : null,
         filterTop: filterBody ? Math.round(filterBody.getBoundingClientRect().top) : null,
@@ -1734,7 +1734,7 @@ test('table heads actions and pagination keep one shared operational rhythm', as
         if (!element) {
           return null;
         }
-        const style = window.getComputedStyle(element);
+        const style = globalThis.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
         return {
           alignItems: style.alignItems,
@@ -1771,7 +1771,7 @@ test('table heads actions and pagination keep one shared operational rhythm', as
       if (!button) {
         return null;
       }
-      const style = window.getComputedStyle(button);
+      const style = globalThis.getComputedStyle(button);
       const rect = button.getBoundingClientRect();
       return {
         borderRadius: style.borderRadius,
