@@ -1,4 +1,4 @@
-import { lazy, type LazyExoticComponent, type ComponentType } from 'react';
+import { type LazyExoticComponent, type ComponentType } from 'react';
 
 interface RegistryEntry {
 	component: LazyExoticComponent<ComponentType>;
