@@ -37,6 +37,9 @@ jobs:
       - name: Check task packet template
         run: npm run check:task-packet-template
 
+      - name: Check generated modules
+        run: npm run check:generated-modules
+
   frontend-contract:
     name: Frontend menu contract
     runs-on: ubuntu-latest
