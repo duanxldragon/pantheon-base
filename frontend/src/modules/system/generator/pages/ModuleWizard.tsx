@@ -1250,7 +1250,8 @@ const ModuleWizard: React.FC = () => {
                       loading={tableLoading}
                       placeholder={t('generator.wizard.sourceTable.placeholder')}
                       filterOption={(inputValue, option) =>
-                        String(option?.props?.value || '')
+                        String((option as React.ReactElement<{ value?: string | number }> | null)?.props
+                          ?.value || '')
                           .toLowerCase()
                           .includes(inputValue.toLowerCase())
                       }

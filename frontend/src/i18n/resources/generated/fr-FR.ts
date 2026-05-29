@@ -1,3 +1,31 @@
-const generatedfrFRFallback = {};
+const generatedfrFRFallback = {
+  "business.mdqaorder.field.name.label": "Order Name",
+  "business.mdqaorder.field.name.placeholder": "Enter order name",
+  "business.mdqaorder.field.status.label": "Status",
+  "business.mdqaorder.field.status.option.active": "Active",
+  "business.mdqaorder.field.status.option.draft": "Draft",
+  "business.mdqaorder.field.status.placeholder": "Select status",
+  "business.mdqaorder.permission.create": "create Master Detail Order",
+  "business.mdqaorder.permission.delete": "delete Master Detail Order",
+  "business.mdqaorder.permission.detail": "detail Master Detail Order",
+  "business.mdqaorder.permission.update": "update Master Detail Order",
+  "business.mdqaorder.permission.view": "view Master Detail Order",
+  "business.mdqaorder.title": "Master Detail Order",
+  "business.mdqaorderitem.field.enabled.label": "Enabled",
+  "business.mdqaorderitem.field.itemName.label": "Item Name",
+  "business.mdqaorderitem.field.itemName.placeholder": "Enter item name",
+  "business.mdqaorderitem.field.orderId.label": "Order ID",
+  "business.mdqaorderitem.field.orderId.placeholder": "Auto filled",
+  "business.mdqaorderitem.field.quantity.label": "Quantity",
+  "business.mdqaorderitem.field.quantity.placeholder": "Enter quantity",
+  "business.mdqaorderitem.field.remark.label": "Remark",
+  "business.mdqaorderitem.field.remark.placeholder": "Enter remark",
+  "business.mdqaorderitem.permission.create": "create Order Item",
+  "business.mdqaorderitem.permission.delete": "delete Order Item",
+  "business.mdqaorderitem.permission.detail": "detail Order Item",
+  "business.mdqaorderitem.permission.update": "update Order Item",
+  "business.mdqaorderitem.permission.view": "view Order Item",
+  "business.mdqaorderitem.title": "Order Item"
+};
 
 export default generatedfrFRFallback;

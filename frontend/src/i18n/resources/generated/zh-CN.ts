@@ -1,3 +1,31 @@
-const generatedzhCNFallback = {};
+const generatedzhCNFallback = {
+  "business.mdqaorder.field.name.label": "订单名称",
+  "business.mdqaorder.field.name.placeholder": "请输入订单名称",
+  "business.mdqaorder.field.status.label": "状态",
+  "business.mdqaorder.field.status.option.active": "生效",
+  "business.mdqaorder.field.status.option.draft": "草稿",
+  "business.mdqaorder.field.status.placeholder": "请选择状态",
+  "business.mdqaorder.permission.create": "create主从订单",
+  "business.mdqaorder.permission.delete": "delete主从订单",
+  "business.mdqaorder.permission.detail": "detail主从订单",
+  "business.mdqaorder.permission.update": "update主从订单",
+  "business.mdqaorder.permission.view": "view主从订单",
+  "business.mdqaorder.title": "主从订单",
+  "business.mdqaorderitem.field.enabled.label": "启用",
+  "business.mdqaorderitem.field.itemName.label": "明细名称",
+  "business.mdqaorderitem.field.itemName.placeholder": "请输入明细名称",
+  "business.mdqaorderitem.field.orderId.label": "订单ID",
+  "business.mdqaorderitem.field.orderId.placeholder": "自动回填",
+  "business.mdqaorderitem.field.quantity.label": "数量",
+  "business.mdqaorderitem.field.quantity.placeholder": "请输入数量",
+  "business.mdqaorderitem.field.remark.label": "备注",
+  "business.mdqaorderitem.field.remark.placeholder": "请输入备注",
+  "business.mdqaorderitem.permission.create": "create订单明细",
+  "business.mdqaorderitem.permission.delete": "delete订单明细",
+  "business.mdqaorderitem.permission.detail": "detail订单明细",
+  "business.mdqaorderitem.permission.update": "update订单明细",
+  "business.mdqaorderitem.permission.view": "view订单明细",
+  "business.mdqaorderitem.title": "订单明细"
+};
 
 export default generatedzhCNFallback;

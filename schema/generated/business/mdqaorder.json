@@ -1,0 +1,173 @@
+{
+  "name": "mdqaorder",
+  "templateVersion": "v1",
+  "displayName": "主从订单",
+  "displayNameEn": "Master Detail Order",
+  "description": "QA master module for low-code child table flow",
+  "scope": "business",
+  "parentMenu": "",
+  "templateLevel": "enterprise",
+  "pageActionTemplate": "masterData",
+  "pageActions": [
+    "view",
+    "create",
+    "update",
+    "delete",
+    "detail"
+  ],
+  "relations": [
+    {
+      "name": "orderItems",
+      "type": "oneToMany",
+      "targetModule": "mdqaorderitem",
+      "localField": "id",
+      "targetField": "orderId",
+      "targetLabelField": "itemName"
+    }
+  ],
+  "metadata": {
+    "businessContext": "qa",
+    "businessContextTitle": "QA",
+    "businessContextTitleEn": "QA",
+    "tableRole": "main",
+    "primaryTable": "",
+    "relationFromField": "",
+    "relationToField": "",
+    "boundedContext": "qa",
+    "owner": "codex",
+    "summary": "主从表详情编辑链路验证",
+    "sourceMode": "manual",
+    "sourceDatasourceId": "",
+    "sourceDatasourceName": "",
+    "sourceTable": "",
+    "autoRecycle": true
+  },
+  "model": {
+    "tableName": "biz_mdqa_order",
+    "modelName": "Mdqaorder",
+    "fields": [
+      {
+        "name": "name",
+        "type": "string",
+        "label": "订单名称",
+        "labelEn": "Order Name",
+        "required": true,
+        "searchable": true,
+        "sortable": true,
+        "visibleInList": true,
+        "visibleInForm": true,
+        "placeholder": "请输入订单名称",
+        "placeholderEn": "Enter order name"
+      },
+      {
+        "name": "status",
+        "type": "enum",
+        "label": "状态",
+        "labelEn": "Status",
+        "required": true,
+        "searchable": true,
+        "sortable": true,
+        "visibleInList": true,
+        "visibleInForm": true,
+        "placeholder": "请选择状态",
+        "placeholderEn": "Select status",
+        "enumOptions": [
+          {
+            "value": "draft",
+            "label": "草稿",
+            "labelEn": "Draft"
+          },
+          {
+            "value": "active",
+            "label": "生效",
+            "labelEn": "Active"
+          }
+        ]
+      }
+    ]
+  },
+  "menus": [
+    {
+      "key": "business.mdqaorder",
+      "titleKey": "business.mdqaorder.title",
+      "path": "/business/mdqaorder",
+      "component": "business/mdqaorder/MdqaorderList",
+      "pagePermission": "business:mdqaorder:list",
+      "type": "C",
+      "icon": "apps",
+      "routeName": "business-mdqaorder",
+      "module": "business.mdqaorder"
+    }
+  ],
+  "permissions": [
+    {
+      "key": "business:mdqaorder:list",
+      "name": "business.mdqaorder.permission.list",
+      "type": "menu",
+      "module": "business.mdqaorder"
+    },
+    {
+      "key": "business:mdqaorder:view",
+      "name": "business.mdqaorder.permission.view",
+      "type": "button",
+      "module": "business.mdqaorder"
+    },
+    {
+      "key": "business:mdqaorder:create",
+      "name": "business.mdqaorder.permission.create",
+      "type": "button",
+      "module": "business.mdqaorder"
+    },
+    {
+      "key": "business:mdqaorder:update",
+      "name": "business.mdqaorder.permission.update",
+      "type": "button",
+      "module": "business.mdqaorder"
+    },
+    {
+      "key": "business:mdqaorder:delete",
+      "name": "business.mdqaorder.permission.delete",
+      "type": "button",
+      "module": "business.mdqaorder"
+    },
+    {
+      "key": "business:mdqaorder:detail",
+      "name": "business.mdqaorder.permission.detail",
+      "type": "button",
+      "module": "business.mdqaorder"
+    }
+  ],
+  "i18n": {
+    "namespace": "business.mdqaorder",
+    "translations": {
+      "zh": {
+        "business.mdqaorder.field.name.label": "订单名称",
+        "business.mdqaorder.field.name.placeholder": "请输入订单名称",
+        "business.mdqaorder.field.status.label": "状态",
+        "business.mdqaorder.field.status.option.active": "生效",
+        "business.mdqaorder.field.status.option.draft": "草稿",
+        "business.mdqaorder.field.status.placeholder": "请选择状态",
+        "business.mdqaorder.permission.create": "create主从订单",
+        "business.mdqaorder.permission.delete": "delete主从订单",
+        "business.mdqaorder.permission.detail": "detail主从订单",
+        "business.mdqaorder.permission.update": "update主从订单",
+        "business.mdqaorder.permission.view": "view主从订单",
+        "business.mdqaorder.title": "主从订单"
+      },
+      "en": {
+        "business.mdqaorder.field.name.label": "Order Name",
+        "business.mdqaorder.field.name.placeholder": "Enter order name",
+        "business.mdqaorder.field.status.label": "Status",
+        "business.mdqaorder.field.status.option.active": "Active",
+        "business.mdqaorder.field.status.option.draft": "Draft",
+        "business.mdqaorder.field.status.placeholder": "Select status",
+        "business.mdqaorder.permission.create": "create Master Detail Order",
+        "business.mdqaorder.permission.delete": "delete Master Detail Order",
+        "business.mdqaorder.permission.detail": "detail Master Detail Order",
+        "business.mdqaorder.permission.update": "update Master Detail Order",
+        "business.mdqaorder.permission.view": "view Master Detail Order",
+        "business.mdqaorder.title": "Master Detail Order"
+      }
+    }
+  }
+}
