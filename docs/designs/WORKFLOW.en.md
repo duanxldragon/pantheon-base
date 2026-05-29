@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-04-30
+updated_at: 2026-05-29
 ---
 
 # Business Development Workflow and AI Collaboration Guide
@@ -90,7 +90,50 @@ Verify:
 - UI triggers for audit logging
 - validation failures such as uniqueness and admin-protection rules
 
-### Phase 5: Platform Smoke
+### Phase 5: Quality Gates and Independent Review
+
+This phase separates feature acceptance from code-quality protection.
+
+- functional supervision confirms whether the change meets the requirement
+- quality guardianship confirms code quality, security, regression risk, and architectural fit
+- the author or the same implementation-agent session must not be the only reviewer
+- standard changes require at least one non-author approval
+- high-risk changes require at least two non-author approvals, including a domain, security, or architecture reviewer
+
+Default high-risk scope includes:
+
+- `system/auth`
+- `system/iam`
+- `system/config`
+- permission and audit flows
+- shared `pkg/*`
+- generator and dynamic-module flows
+- CI, deploy, secrets, and credential handling
+
+Required gate stack:
+
+- local validation for the touched scope
+- GitHub required checks
+- SonarQube PR analysis and quality gate
+- independent reviewer sign-off
+
+Default SonarQube minimums:
+
+- `0` blocker or critical issues on new code
+- reviewed security hotspots before merge
+- new-code coverage at or above `80%`, or a documented PR exception
+- new-code duplication below `3%`
+- passed reliability, security, and maintainability gates
+
+Recommended GitHub protections:
+
+- branch protection for `main` and release branches
+- required status checks
+- `CODEOWNERS`
+- dismiss stale approvals
+- require conversation resolution
+
+### Phase 6: Platform Smoke
 
 For browser-path QA, screenshots, and interaction inspection on local Windows setups, the default manual tool is `gstack browse / gstack Browser`. Playwright is secondary for CI, API smoke, or explicit requests.
 
@@ -154,6 +197,18 @@ Before submission, confirm:
 3. new design documents link back to the correct contract
 4. new assessment or remediation documents include type, status, and contract linkage
 5. superseded old documents are removed, downgraded, or explicitly marked
+
+### 3.2 Recommended GitHub and SonarQube Repository Controls
+
+Recommended repository defaults:
+
+1. protect `main` and `release/*`
+2. make SonarQube Quality Gate a required status check
+3. require PR reviews, with higher approval counts for high-risk paths through `CODEOWNERS`
+4. dismiss stale approvals after new commits
+5. require conversation resolution before merge
+6. enable secret scanning, dependency review, and code scanning when available
+7. use SonarQube PR decoration so reviewers see issues and gate status directly inside GitHub
 
 ## 4. Smoke SOP for gstack on Windows
 

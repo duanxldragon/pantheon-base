@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-04-30
+updated_at: 2026-05-29
 ---
 
 # 业务开发工作流与 AI 协作指南
@@ -102,7 +102,36 @@ Contract
 7.  **数据校验测试**: 验证用户名唯一、角色标识唯一、邮箱格式、角色必选、菜单路径唯一、管理员保护等约束能返回正确错误码。
 8.  **测试同步规则**: 只要代码改动影响路由路径、页面职责、组件结构、接口契约、权限判断、i18n key、选择器、fixture、菜单标题、导入导出入口或 smoke 覆盖范围，必须在同一轮提交里同步更新对应测试、脚本、门禁、截图基线或验收文档。禁止把“代码先改，测试后补”留到回归阶段才暴露失配。
 
-### 第五阶段：平台层冒烟 (Smoke Phase)
+### 第五阶段：质量门禁与独立评审 (Quality Gate Phase)
+
+1.  **功能监督与质量守护分离**: 功能是否符合需求，由需求方、模块负责人或验收人确认；代码质量、安全与回归风险，由独立 reviewer 守护。功能验收不能替代代码评审，代码评审也不能替代功能验收。
+2.  **禁止作者自证通过**: 提交者、主实现者、生成代码的同一 agent 会话，不能作为该次改动的唯一 reviewer。至少要有一个非作者的独立评审源，可以是同事、指定 reviewer，或独立的人审 / 异步 AI review 流程。
+3.  **SonarQube 质量门**: 所有非 trivial PR 默认接入 SonarQube PR 分析，并把结果回写到 GitHub。最低门槛：
+    - New Code 上 `Blocker / Critical` 问题为 `0`
+    - Security Hotspots 必须完成 review，不允许未处理直接合并
+    - New Code 覆盖率默认不低于 `80%`；若确有例外，必须在 PR 中说明原因和补测计划
+    - New Code 重复率默认低于 `3%`
+    - Reliability / Security / Maintainability Quality Gate 必须为 `Passed`
+4.  **GitHub Checks 门禁**: `main`、`release/*` 等受保护分支禁止直接推送，必须走 PR。PR 至少要求以下状态检查按改动范围通过：
+    - `go test`
+    - `npm run type-check`
+    - `npm run lint`
+    - `npm run build`
+    - i18n / menu / generated contract / smoke 等专项检查
+    - dependency / secret / code scanning 等安全检查（若仓库已配置）
+5.  **第三方评审纪律**: 
+    - 常规改动：至少 `1` 个非作者 approval
+    - 高风险改动：至少 `2` 个 approval，其中一个来自域负责人或安全/架构 reviewer
+    - 高风险范围包括：`system/auth`、`system/iam`、`system/config`、权限模型、审计链路、共享 `pkg/*`、生成器 / 动态模块、CI / deploy、密钥与凭据处理
+6.  **PR 合并保护建议**:
+    - 开启 Branch Protection
+    - 设置 `CODEOWNERS`，自动请求对应域 reviewer
+    - 开启 `Dismiss stale approvals`
+    - 开启 `Require conversation resolution`
+    - 关闭绕过门禁的常态化做法；紧急合并必须留下事故编号、回滚方案和补审记录
+7.  **评审输出必须留痕**: PR 描述至少记录归属层、改动边界、验证命令、SonarQube 结果、GitHub checks 结果、独立 reviewer 结论，以及是否存在挂账风险。
+
+### 第六阶段：平台层冒烟 (Smoke Phase)
 
 > 默认约定：凡是“浏览器页面链路 / UI 冒烟 / 截图验收 / 交互巡检”，本地默认使用 **gstack browse / gstack Browser**。Playwright 仅作为 CI 自动化、API smoke 或明确要求的补充工具，不作为 Windows 本地人工验收默认方案。
 
@@ -161,6 +190,18 @@ Contract
 3. 若新增设计文档，是否已回链对应合同
 4. 若新增评估或整改文档，是否已标明 `类型 / 状态 / 关联合同`
 5. 若旧文档已被覆盖，是否已删除、降级或标记为 `Superseded / Archived`
+
+### 3.2 GitHub 与 SonarQube 仓库配置建议
+
+建议把以下项作为仓库默认治理配置，而不是依赖 reviewer 口头提醒：
+
+1. `main` 与 `release/*` 开启 Branch Protection
+2. 开启 Required Status Checks，并把 SonarQube Quality Gate 设为必过检查
+3. 开启 Pull Request Review 要求，至少 `1` 个 approval；高风险目录结合 `CODEOWNERS` 升级到 `2` 个 approval
+4. 开启 `Dismiss stale approvals`，防止提交新代码后沿用旧结论
+5. 开启 `Require conversation resolution`
+6. 开启 GitHub Secret Scanning、Dependency Review、Code Scanning（仓库支持时）
+7. SonarQube 使用 PR Decoration，把 issue、hotspot 和 quality gate 直接回写到 PR 页面，避免 reviewer 在多个系统间切换
 
 ## 4. 冒烟执行 SOP（gstack / Windows）
 

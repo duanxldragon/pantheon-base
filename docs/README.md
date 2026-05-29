@@ -80,6 +80,7 @@ English version: [README.en.md](./README.en.md)
 ### 4.1 开发与验收
 
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+- [GitHub 治理清单](./GITHUB_GOVERNANCE_CHECKLIST.md)
 - [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
 - [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
 - [代码评审标准](./acceptances/CODE_REVIEW_STANDARD.md)
@@ -165,4 +166,3 @@ English version: [README.en.md](./README.en.md)
 - 设计规范类进入主索引；
 - 模板、样例、基线进入“历史基线与样例”；
 - 一次性评估稿如果被后续文档完全覆盖，应在下一轮文档治理中删除。
-
