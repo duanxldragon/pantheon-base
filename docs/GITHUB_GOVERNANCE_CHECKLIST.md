@@ -25,6 +25,23 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 - `SONAR_HOST_URL`
 - Any additional repository secrets needed by security or deployment workflows
 
+## Local temporary secret file
+
+For local validation without committing credentials:
+
+- create `pantheon-sonarcloud.env` in the repo root
+- keep it git-ignored
+- use `scripts/run-sonar.ps1`
+- install SonarScanner CLI locally before running the script
+- if GitHub secrets are not configured, the GitHub Actions Sonar workflow is informational only and local validation is the active path
+
+Expected file format:
+
+```text
+SONAR_HOST_URL=https://sonarcloud.io
+SONAR_TOKEN=...
+```
+
 ## Workflow triggers
 
 - `pull_request`
