@@ -7,7 +7,6 @@ import {
   adminCredentials,
   apiBaseUrl,
   authHeaders,
-  type BrowserLoginResult,
   installClientSession,
   installOperationToken,
   loginByApi,
@@ -208,24 +207,6 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
   }
 }
 
-async function deleteUserByIdWithLogin(page: Page, login: BrowserLoginResult, userId: number | null | undefined) {
-  if (!userId) {
-    return;
-  }
-  await page.request.delete(`${apiBaseUrl}/system/user/${userId}`, {
-    headers: await verifiedApiHeaders(page.request, login),
-  }).catch(() => undefined);
-}
-
-async function deleteRoleByIdWithLogin(page: Page, login: BrowserLoginResult, roleId: number | null | undefined) {
-  if (!roleId) {
-    return;
-  }
-  await page.request.delete(`${apiBaseUrl}/system/role/${roleId}`, {
-    headers: await verifiedApiHeaders(page.request, login),
-  }).catch(() => undefined);
-}
-
 async function deleteUserByIdWithHeaders(page: Page, headers: Record<string, string>, userId: number | null | undefined) {
   if (!userId) {
     return;
@@ -303,11 +284,6 @@ async function getDeptTree(page: Page, accessToken: string, params?: Record<stri
   const payload = await response.json();
   expect(payload.code).toBe(200);
   return Array.isArray(payload.data) ? (payload.data as DeptListItem[]) : [];
-}
-
-async function findDeptByName(page: Page, accessToken: string, deptName: string) {
-  const rows = flattenDeptTreeNodes(await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' }));
-  return rows.find((item) => item.deptName === deptName);
 }
 
 async function deleteDeptByName(page: Page, accessToken: string, deptName: string) {
@@ -416,13 +392,6 @@ async function createUserByApi(
   const payload = await response.json();
   expect(payload.code).toBe(200);
   return payload.data as { id: number };
-}
-
-async function selectArcoOption(page: Page, trigger: ReturnType<Page['locator']>, optionText: string | RegExp) {
-  await trigger.click();
-  const option = page.locator('.arco-select-option').filter({ hasText: optionText }).first();
-  await expect(option).toBeVisible();
-  await option.click();
 }
 
 async function fetchManageMenuTree(page: Page, accessToken: string): Promise<ManageMenuNode[]> {
@@ -3057,7 +3026,7 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
 
     await formItem(page, '岗位编码').locator('input').fill(postCode);
     await page.getByRole('button', { name: '搜索' }).click();
-    let postRow = page.getByRole('row', { name: new RegExp(postCode) }).first();
+    const postRow = page.getByRole('row', { name: new RegExp(postCode) }).first();
     await expect(postRow).toBeVisible();
     await expect(postRow).toContainText(postName);
 

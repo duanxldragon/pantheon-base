@@ -18,7 +18,7 @@ import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/in
 import { IconDelete, IconDownload, IconSearch, IconEye } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { getSettingGroup } from '../setting/api';
+import { getSettingGroup, type SettingGroup } from '../setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
@@ -515,7 +515,14 @@ const OperationLogList: React.FC = () => {
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {
       getSettingGroup('audit')
-        .then((group: any) => loadRetentionSetting(group, 'audit.operation_log_retention_options', setRetentionOptions, setRetentionDays))
+        .then((group: SettingGroup) =>
+          loadRetentionSetting(
+            group,
+            'audit.operation_log_retention_options',
+            setRetentionOptions,
+            setRetentionDays,
+          ),
+        )
         .catch(() => undefined);
     }, 0);
     return () => globalThis.clearTimeout(timer);

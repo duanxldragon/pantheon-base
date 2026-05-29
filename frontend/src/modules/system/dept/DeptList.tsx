@@ -435,18 +435,14 @@ const DeptList: React.FC = () => {
     },
   );
 
-  useEffect(() => {
-    setTablePagination((current) => {
-      const totalPages = Math.max(1, Math.ceil(data.length / current.pageSize));
-      if (current.current <= totalPages) {
-        return current;
-      }
-      return {
-        ...current,
-        current: totalPages,
-      };
-    });
-  }, [data]);
+  const tableTotalPages = useMemo(
+    () => Math.max(1, Math.ceil(data.length / tablePagination.pageSize)),
+    [data.length, tablePagination.pageSize],
+  );
+  const tableCurrentPage = useMemo(
+    () => Math.min(tablePagination.current, tableTotalPages),
+    [tablePagination.current, tableTotalPages],
+  );
 
   useEffect(() => {
     const state =
@@ -1402,7 +1398,7 @@ const DeptList: React.FC = () => {
                     onChange={handleTableChange}
                     emptyText={t('common.noData')}
                     pagination={buildStandardPagination(t, {
-                      current: tablePagination.current,
+                      current: tableCurrentPage,
                       pageSize: tablePagination.pageSize,
                       total: data.length,
                     })}
