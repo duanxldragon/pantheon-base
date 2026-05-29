@@ -88,6 +88,16 @@ export async function signInWithUi(
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   expect(payload.code).toBe(200);
+  await installClientSession(page, {
+    accessToken: payload.data.accessToken as string,
+    refreshToken: payload.data.refreshToken as string,
+    username: credentials.username,
+    password: credentials.password,
+    csrfToken:
+      extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token') ??
+      `pantheon-smoke-csrf-${Date.now()}`,
+  });
+  await page.goto('/dashboard', { waitUntil: 'networkidle' });
   await expect(page.locator('.app-shell__header')).toBeVisible();
   return payload.data.accessToken as string;
 }

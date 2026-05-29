@@ -7,8 +7,6 @@ import (
 )
 
 func TestTokenCookiesAlwaysSecure(t *testing.T) {
-	t.Setenv("PANTHEON_COOKIE_SECURE", "1")
-
 	recorder := httptest.NewRecorder()
 	SetAccessTokenCookie(recorder, "token")
 
@@ -18,21 +16,7 @@ func TestTokenCookiesAlwaysSecure(t *testing.T) {
 	}
 }
 
-func TestTokenCookiesCanDisableSecureFlagForLocalHTTP(t *testing.T) {
-	t.Setenv("PANTHEON_COOKIE_SECURE", "0")
-
-	recorder := httptest.NewRecorder()
-	SetAccessTokenCookie(recorder, "token")
-
-	cookie := recorder.Result().Cookies()[0]
-	if cookie.Secure {
-		t.Fatal("expected secure cookie flag to be disabled for local http runs")
-	}
-}
-
 func TestCSRFCookieAlwaysUsesSecureFlag(t *testing.T) {
-	t.Setenv("PANTHEON_COOKIE_SECURE", "1")
-
 	recorder := httptest.NewRecorder()
 	_, err := SetCSRFCookie(recorder)
 	if err != nil {
