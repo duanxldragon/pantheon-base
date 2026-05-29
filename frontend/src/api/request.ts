@@ -160,21 +160,18 @@ const createBusinessError = (code?: number, message?: string) => {
 const createTransportError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    let kind: RequestErrorKind = 'unknown';
-
-    if (error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')) {
-      kind = 'timeout';
-    } else if (!error.response) {
-      kind = 'network';
-    } else if (status === 401) {
-      kind = 'unauthorized';
-    } else if (status === 403) {
-      kind = 'forbidden';
-    } else if ((status || 0) >= 500) {
-      kind = 'server';
-    } else {
-      kind = 'business';
-    }
+    const kind: RequestErrorKind =
+      error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')
+        ? 'timeout'
+        : !error.response
+          ? 'network'
+          : status === 401
+            ? 'unauthorized'
+            : status === 403
+              ? 'forbidden'
+              : (status || 0) >= 500
+                ? 'server'
+                : 'business';
 
     const message = error.response?.data?.message || error.message || 'request.failed';
     return new RequestError({

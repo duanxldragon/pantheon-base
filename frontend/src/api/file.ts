@@ -83,7 +83,7 @@ export async function downloadFile(options: DownloadFileOptions) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('request.failed');
+      throw new Error('request.failed', { cause: error });
     }
   }
 
