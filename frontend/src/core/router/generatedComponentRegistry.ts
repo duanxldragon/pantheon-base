@@ -15,8 +15,4 @@ function defineRegistryEntry(loader: ComponentLoader): RegistryEntry {
 }
 
 export const generatedComponentRegistry = {
-  'business/mdqaorder/MdqaorderList': defineRegistryEntry(() => import('../../modules/business/mdqaorder/MdqaorderList')),
-  'business/mdqaorder/MdqaorderDetail': defineRegistryEntry(() => import('../../modules/business/mdqaorder/MdqaorderDetail')),
-  'business/mdqaorderitem/MdqaorderitemList': defineRegistryEntry(() => import('../../modules/business/mdqaorderitem/MdqaorderitemList')),
-  'business/mdqaorderitem/MdqaorderitemDetail': defineRegistryEntry(() => import('../../modules/business/mdqaorderitem/MdqaorderitemDetail')),
 } satisfies Record<string, RegistryEntry>;
