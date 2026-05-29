@@ -34,6 +34,9 @@ jobs:
       - name: Check docs frontmatter
         run: npm run check:docs-frontmatter
 
+      - name: Check task packet template
+        run: npm run check:task-packet-template
+
   frontend-contract:
     name: Frontend menu contract
     runs-on: ubuntu-latest
