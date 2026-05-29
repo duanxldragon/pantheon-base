@@ -561,7 +561,7 @@ const OperationLogList: React.FC = () => {
       getSettingGroup('audit')
         .then((group) => {
           const setting = group.items.find(
-            isOperationLogRetentionSetting,
+            (item) => item.settingKey === 'audit.operation_log_retention_options',
           );
           const nextOptions = normalizeRetentionOptions(setting?.settingValue);
           setRetentionOptions(nextOptions);
