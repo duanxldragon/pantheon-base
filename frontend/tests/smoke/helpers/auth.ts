@@ -141,9 +141,11 @@ export async function getCsrfToken(page: Page) {
 }
 
 export async function requestHeaders(page: Page, accessToken: string) {
+  const csrfToken = await getCsrfToken(page);
   return {
     ...authHeaders(accessToken),
-    'X-CSRF-Token': await getCsrfToken(page),
+    'X-CSRF-Token': csrfToken,
+    Cookie: `pantheon_csrf_token=${csrfToken}`,
   };
 }
 
