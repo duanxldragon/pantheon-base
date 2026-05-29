@@ -1,18 +1,11 @@
 import { lazy, type LazyExoticComponent, type ComponentType } from 'react';
 
-type ComponentLoader = () => Promise<{ default: ComponentType }>;
-
 interface RegistryEntry {
 	component: LazyExoticComponent<ComponentType>;
 	preload: ComponentLoader;
 }
 
-function defineRegistryEntry(loader: ComponentLoader): RegistryEntry {
-	return {
-		component: lazy(loader),
-		preload: loader,
-	};
-}
+type ComponentLoader = () => Promise<{ default: ComponentType }>;
 
 export const generatedComponentRegistry = {
 } satisfies Record<string, RegistryEntry>;
