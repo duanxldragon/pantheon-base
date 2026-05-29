@@ -80,6 +80,7 @@ English version: [README.en.md](./README.en.md)
 ### 4.1 开发与验收
 
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+- [Pantheon Base Task Packet 模板](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)
 - [GitHub 治理清单](./GITHUB_GOVERNANCE_CHECKLIST.md)
 - [GitHub 仓库设置手册](./GITHUB_REPOSITORY_SETUP.md)
 - [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
