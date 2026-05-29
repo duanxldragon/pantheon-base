@@ -81,6 +81,7 @@ English version: [README.en.md](./README.en.md)
 
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
 - [GitHub 治理清单](./GITHUB_GOVERNANCE_CHECKLIST.md)
+- [GitHub 仓库设置手册](./GITHUB_REPOSITORY_SETUP.md)
 - [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
 - [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
 - [代码评审标准](./acceptances/CODE_REVIEW_STANDARD.md)

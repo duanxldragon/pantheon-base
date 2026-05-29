@@ -1,5 +1,5 @@
 ---
-title: GitHub 治理清单
+title: GitHub Governance Checklist
 doc_type: Acceptance
 layer: platform
 status: Active
@@ -11,7 +11,7 @@ updated_at: 2026-05-29
 
 # GitHub Governance Checklist
 
-Use this checklist when enabling the execution flow described in `docs/designs/WORKFLOW.md` and `docs/acceptances/CODE_REVIEW_STANDARD.md`.
+Use this checklist when enabling the workflow described in `docs/designs/WORKFLOW.md` and `docs/acceptances/CODE_REVIEW_STANDARD.md`.
 
 ## Repository settings
 
