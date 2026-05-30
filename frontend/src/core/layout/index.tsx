@@ -142,6 +142,18 @@ interface MenuRenderOptions {
   t: TranslateLabel;
 }
 
+async function resolveSilently<T>(task: Promise<T>): Promise<T | undefined> {
+  try {
+    return await task;
+  } catch {
+    return undefined;
+  }
+}
+
+function runSilently(task: Promise<unknown>) {
+  task.catch(() => undefined);
+}
+
 function buildOpenedPageTab(
   path: string,
   fallbackTitle: string,
@@ -300,7 +312,7 @@ function findMenuNavigationPath(item: MenuNode): string | undefined {
 }
 
 function preloadRouteByPath(path: string) {
-  preloadRouteComponent(path).catch(() => undefined);
+  runSilently(preloadRouteComponent(path));
 }
 
 function renderMenuItems(
@@ -800,12 +812,12 @@ const BaseLayout: React.FC = () => {
         persistLoginNotice(noticeKey);
       }
       if (revokeSession) {
-        await logoutApi().catch(() => undefined);
+        await resolveSilently(logoutApi());
       }
-      await refreshPublicSettings().catch(() => undefined);
+      await resolveSilently(refreshPublicSettings());
       clearPantheonThemePreference();
       const nextLanguage = clearExplicitLanguagePreference();
-      await switchI18nLanguage(nextLanguage).catch(() => undefined);
+      await resolveSilently(switchI18nLanguage(nextLanguage));
       clearShellSessionState();
       setOpenedTabs([]);
       resetMenuTree();
@@ -838,7 +850,7 @@ const BaseLayout: React.FC = () => {
         return;
       }
       lastSyncedActivityAtRef.current = now;
-      reportActivity().catch(() => undefined);
+      runSilently(reportActivity());
     },
     [locked, syncShellActivity, token],
   );
@@ -849,9 +861,9 @@ const BaseLayout: React.FC = () => {
     }
     bootstrappedRef.current = true;
 
-    fetchMenuTree().catch(() => undefined);
+    runSilently(fetchMenuTree());
     if (!useAuthStore.getState().userInfo) {
-      ensureAuthUserInfo().catch(() => undefined);
+      runSilently(ensureAuthUserInfo());
     }
     const initialActivityAt = readShellLastActivityAt();
     syncShellActivity(initialActivityAt && initialActivityAt > 0 ? initialActivityAt : Date.now());
@@ -870,13 +882,11 @@ const BaseLayout: React.FC = () => {
         return;
       }
       if (hasExplicitLanguagePreference()) {
-        refreshPublicSettings().catch(() => undefined);
+        runSilently(refreshPublicSettings());
       } else {
-        refreshPublicSettings()
-          .then((settings) => switchI18nLanguage(settings.defaultLanguage))
-          .catch(() => undefined);
+        runSilently(refreshPublicSettings().then((settings) => switchI18nLanguage(settings.defaultLanguage)));
       }
-      fetchMenuTree({ force: true }).catch(() => undefined);
+      runSilently(fetchMenuTree({ force: true }));
     },
   );
   useRefreshPolling(token, [
@@ -917,7 +927,7 @@ const BaseLayout: React.FC = () => {
         }
       }
     };
-    loadNoticeSummary().catch(() => undefined);
+    runSilently(loadNoticeSummary());
     return () => {
       active = false;
     };
@@ -955,7 +965,7 @@ const BaseLayout: React.FC = () => {
     }
     const timer = globalThis.setInterval(() => {
       if (Date.now() - lastActivityAtRef.current >= sessionIdleMs) {
-        performLogout(true, 'session.idle_timeout').catch(() => undefined);
+        runSilently(performLogout(true, 'session.idle_timeout'));
       }
     }, 15000);
     return () => globalThis.clearInterval(timer);
@@ -1050,7 +1060,7 @@ const BaseLayout: React.FC = () => {
       return;
     }
     if (actionKey === 'logout') {
-      handleLogout().catch(() => undefined);
+      runSilently(handleLogout());
     }
   };
 
@@ -1343,7 +1353,7 @@ const BaseLayout: React.FC = () => {
         preferences.language !== currentLanguage
       ) {
         setExplicitLanguagePreference(preferences.language);
-        switchI18nLanguage(preferences.language).catch(() => undefined);
+        runSilently(switchI18nLanguage(preferences.language));
       }
     }, 0);
     return () => globalThis.clearTimeout(timer);
@@ -1354,7 +1364,7 @@ const BaseLayout: React.FC = () => {
       return;
     }
     setExplicitLanguagePreference(language);
-    switchI18nLanguage(language).catch(() => undefined);
+    runSilently(switchI18nLanguage(language));
   };
 
   const toggleLayoutMode = () => {
@@ -1564,10 +1574,10 @@ const BaseLayout: React.FC = () => {
               draggable={item.path !== '/dashboard'}
               onClick={() => navigate(item.path)}
               onMouseEnter={() => {
-                preloadRouteComponent(item.path).catch(() => undefined);
+                runSilently(preloadRouteComponent(item.path));
               }}
               onFocus={() => {
-                preloadRouteComponent(item.path).catch(() => undefined);
+                runSilently(preloadRouteComponent(item.path));
               }}
               onDoubleClick={() => closeTab(item.path)}
               onMouseDown={(event) => {
@@ -1981,7 +1991,7 @@ const BaseLayout: React.FC = () => {
             placeholder={t('app.lock.passwordPlaceholder')}
             onChange={setUnlockPassword}
             onPressEnter={() => {
-              handleUnlock().catch(() => undefined);
+              runSilently(handleUnlock());
             }}
           />
           <Space>
@@ -1989,14 +1999,14 @@ const BaseLayout: React.FC = () => {
               type="primary"
               loading={unlockLoading}
               onClick={() => {
-                handleUnlock().catch(() => undefined);
+                runSilently(handleUnlock());
               }}
             >
               {t('app.lock.unlock')}
             </Button>
             <Button
               onClick={() => {
-                handleLogout().catch(() => undefined);
+                runSilently(handleLogout());
               }}
             >
               {t('common.logout')}
