@@ -225,15 +225,17 @@ try {
   });
   const exitCode = result.code ?? (result.signal ? 1 : 0);
   await stopServer();
+  let finalExitCode = exitCode;
   if (exitCode === 0) {
-    const cleanupResult = await spawnChild(process.execPath, ['frontend/scripts/cleanup-generated-modules.mjs'], {
+    const cleanupResult = await spawnChild(process.execPath, ['scripts/cleanup-generated-modules.mjs'], {
       cwd: process.cwd(),
     });
     if (cleanupResult.code !== 0) {
       console.error('[smoke-suite] cleanup exited with code %d', cleanupResult.code);
+      finalExitCode = cleanupResult.code;
     }
   }
-  process.exit(exitCode);
+  process.exit(finalExitCode);
 } catch (error) {
   console.error(error);
   await stopServer();
