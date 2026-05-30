@@ -154,25 +154,43 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout
+      - name: Detect SonarCloud autoscan mode
+        id: sonar-mode
         if: steps.sonar-config.outputs.enabled == 'true'
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_PROJECT_KEY: duanxldragon_pantheon-base
+        run: |
+          response="$(curl -fsS -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL}/api/settings/values?component=${SONAR_PROJECT_KEY}&keys=sonar.autoscan.enabled")"
+          if echo "$response" | grep -q '"value":"true"'; then
+            echo "run_scan=false" >> "$GITHUB_OUTPUT"
+            echo "SonarCloud automatic analysis is enabled; skipping CI scanner."
+          else
+            echo "run_scan=true" >> "$GITHUB_OUTPUT"
+            echo "SonarCloud automatic analysis is disabled; running CI scanner."
+          fi
+
+      - name: Checkout
+        if: steps.sonar-mode.outputs.run_scan == 'true'
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Go
-        if: steps.sonar-config.outputs.enabled == 'true'
+        if: steps.sonar-mode.outputs.run_scan == 'true'
         uses: actions/setup-go@v6
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           cache: true
 
       - name: Generate Go coverage
-        if: steps.sonar-config.outputs.enabled == 'true'
+        if: steps.sonar-mode.outputs.run_scan == 'true'
         run: go test -coverprofile=coverage.out ./...
 
       - name: SonarQube PR Analysis
-        if: steps.sonar-config.outputs.enabled == 'true'
+        if: steps.sonar-mode.outputs.run_scan == 'true'
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -186,5 +204,10 @@ jobs:
             -Dsonar.pullrequest.github.repository=${{ github.repository }}
 
       - name: SonarQube skipped
-        if: steps.sonar-config.outputs.enabled != 'true'
-        run: echo "Sonar secrets not configured; configure SONAR_TOKEN and SONAR_HOST_URL secrets."
+        if: steps.sonar-config.outputs.enabled != 'true' || steps.sonar-mode.outputs.run_scan != 'true'
+        run: |
+          if [ "${{ steps.sonar-config.outputs.enabled }}" != "true" ]; then
+            echo "Sonar secrets not configured; configure SONAR_TOKEN and SONAR_HOST_URL secrets."
+          else
+            echo "SonarCloud automatic analysis is enabled; CI scanner skipped."
+          fi
