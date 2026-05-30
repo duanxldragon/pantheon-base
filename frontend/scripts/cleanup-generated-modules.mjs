@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(import.meta.dirname, '..', '..');
 
@@ -57,20 +58,13 @@ const REGISTRY_TEMPLATES = {
   ].join('\n'),
 
   frontendComponentRegistry: [
-    "import { lazy, type LazyExoticComponent, type ComponentType } from 'react';",
+    "import { type LazyExoticComponent, type ComponentType } from 'react';",
     '',
     'type ComponentLoader = () => Promise<{ default: ComponentType }>;',
     '',
     'interface RegistryEntry {',
     '\tcomponent: LazyExoticComponent<ComponentType>;',
     '\tpreload: ComponentLoader;',
-    '}',
-    '',
-    'function defineRegistryEntry(loader: ComponentLoader): RegistryEntry {',
-    '\treturn {',
-    '\t\tcomponent: lazy(loader),',
-    '\t\tpreload: loader,',
-    '\t};',
     '}',
     '',
     'export const generatedComponentRegistry = {',
@@ -124,94 +118,119 @@ function removeFilesByGlob(dir, pattern) {
 
 function writeFile(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, content, 'utf8');
+  if (fs.existsSync(filePath)) {
+    const current = fs.readFileSync(filePath, 'utf8');
+    if (current === content) {
+      return;
+    }
+  }
+  const dir = path.dirname(filePath);
+  const tempPath = path.join(dir, `.${path.basename(filePath)}.${process.pid}.${Date.now()}.tmp`);
+  fs.writeFileSync(tempPath, content, 'utf8');
+  try {
+    fs.rmSync(filePath, { force: true });
+    fs.renameSync(tempPath, filePath);
+  } finally {
+    fs.rmSync(tempPath, { force: true });
+  }
 }
 
-function checkDirty() {
+function hasAnyPattern(content, patterns) {
+  return patterns.some((pattern) => pattern.test(content));
+}
+
+function appendDirtyIfFileMatches(dirty, filePath, message, patterns) {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (hasAnyPattern(content, patterns)) {
+    dirty.push(message);
+  }
+}
+
+function hasGeneratedNamePrefix(name) {
+  return name.startsWith('mdqa');
+}
+
+function appendDirtyGeneratedDirectories(dirty, parentDir, repoBase) {
+  if (!fs.existsSync(parentDir)) {
+    return;
+  }
+  for (const entry of fs.readdirSync(parentDir, { withFileTypes: true })) {
+    if (entry.isDirectory() && hasGeneratedNamePrefix(entry.name)) {
+      dirty.push(`generated module dir still present: ${path.relative(repoBase, path.join(parentDir, entry.name))}`);
+    }
+  }
+}
+
+function appendDirtyGeneratedSchemaFiles(dirty, schemaDir, repoBase) {
+  if (!fs.existsSync(schemaDir)) {
+    return;
+  }
+  for (const entry of fs.readdirSync(schemaDir, { withFileTypes: true })) {
+    if (entry.isFile() && hasGeneratedNamePrefix(entry.name)) {
+      dirty.push(`generated schema file still present: ${path.relative(repoBase, path.join(schemaDir, entry.name))}`);
+    }
+  }
+}
+
+export function checkDirty(paths = GENERATED_PATHS, registryFiles = REGISTRY_FILES, repoBase = repoRoot) {
   const dirty = [];
 
-  // Check backend generated_registry.go — should only import gin and gorm
-  if (fs.existsSync(REGISTRY_FILES.backendRegistry)) {
-    const content = fs.readFileSync(REGISTRY_FILES.backendRegistry, 'utf8');
-    const importMatch = content.match(/import\s*\(([\s\S]*?)\)/);
-    if (importMatch) {
-      const imports = importMatch[1];
-      if (/mdqaorder|mdqaorderitem|"pantheon-platform\/backend\/modules\/business\//.test(imports)) {
-        dirty.push('backend generated_registry.go: has generated module imports');
-      }
-    }
-  }
+  appendDirtyIfFileMatches(
+    dirty,
+    registryFiles.backendRegistry,
+    'backend generated_registry.go: has generated module imports',
+    [/mdqaorder/, /mdqaorderitem/, /"pantheon-platform\/backend\/modules\/business\//],
+  );
+  appendDirtyIfFileMatches(
+    dirty,
+    registryFiles.frontendBusinessRegistry,
+    'frontend generated/business.ts: has generated module imports',
+    [/Mdqaorder/, /Mdqaorderitem/, /from\s+['"]\.\.\/business\//, /business\/mdqa/i],
+  );
+  appendDirtyIfFileMatches(
+    dirty,
+    registryFiles.frontendComponentRegistry,
+    'frontend generatedComponentRegistry.ts: has generated component entries',
+    [/business\/mdqa/],
+  );
+  appendDirtyIfFileMatches(
+    dirty,
+    registryFiles.backendMenuRegistry,
+    'backend generated_component_registry.go: has generated component keys',
+    [/business\/mdqa/],
+  );
 
-  // Check frontend generated/business.ts — should have empty array
-  if (fs.existsSync(REGISTRY_FILES.frontendBusinessRegistry)) {
-    const content = fs.readFileSync(REGISTRY_FILES.frontendBusinessRegistry, 'utf8');
-    if (/Mdqaorder|Mdqaorderitem|from\s+['"]\.\.\/business\//.test(content)) {
-      dirty.push('frontend generated/business.ts: has generated module imports');
-    }
-  }
-
-  // Check frontend generatedComponentRegistry.ts — should have empty object
-  if (fs.existsSync(REGISTRY_FILES.frontendComponentRegistry)) {
-    const content = fs.readFileSync(REGISTRY_FILES.frontendComponentRegistry, 'utf8');
-    if (/business\/mdqa/.test(content)) {
-      dirty.push('frontend generatedComponentRegistry.ts: has generated component entries');
-    }
-  }
-
-  // Check backend generated_component_registry.go — should have empty map
-  if (fs.existsSync(REGISTRY_FILES.backendMenuRegistry)) {
-    const content = fs.readFileSync(REGISTRY_FILES.backendMenuRegistry, 'utf8');
-    if (/business\/mdqa/.test(content)) {
-      dirty.push('backend generated_component_registry.go: has generated component keys');
-    }
-  }
-
-  // Check i18n files for generated keys
   for (const locale of I18N_LOCALES) {
-    const filePath = path.join(GENERATED_PATHS.i18nDir, `${locale}.ts`);
-    if (fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, 'utf8');
-      if (/business\.mdqa/.test(content)) {
-        dirty.push(`i18n ${locale}: contains generated keys`);
-      }
-    }
+    appendDirtyIfFileMatches(
+      dirty,
+      path.join(paths.i18nDir, `${locale}.ts`),
+      `i18n ${locale}: contains generated keys`,
+      [/business\.mdqa/],
+    );
   }
 
-  // Check for leftover generated module directories (by name pattern)
-  for (const dir of [GENERATED_PATHS.backendBusinessDir, GENERATED_PATHS.frontendBusinessDir]) {
-    if (!fs.existsSync(dir)) continue;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory() && /^mdqa/.test(entry.name)) {
-        dirty.push(`generated module dir still present: ${path.relative(repoRoot, path.join(dir, entry.name))}`);
-      }
-    }
+  for (const dir of [paths.backendBusinessDir, paths.frontendBusinessDir]) {
+    appendDirtyGeneratedDirectories(dirty, dir, repoBase);
   }
 
-  // Check for leftover schema files
-  if (fs.existsSync(GENERATED_PATHS.schemaBusinessDir)) {
-    for (const entry of fs.readdirSync(GENERATED_PATHS.schemaBusinessDir, { withFileTypes: true })) {
-      if (entry.isFile() && /^mdqa/.test(entry.name)) {
-        dirty.push(`generated schema file still present: ${path.relative(repoRoot, path.join(GENERATED_PATHS.schemaBusinessDir, entry.name))}`);
-      }
-    }
-  }
+  appendDirtyGeneratedSchemaFiles(dirty, paths.schemaBusinessDir, repoBase);
 
   return dirty;
 }
 
-function cleanup() {
+export function cleanup(paths = GENERATED_PATHS, registryFiles = REGISTRY_FILES) {
   const summary = { modules: 0, schemas: 0, registries: 0, i18n: 0 };
 
-  // 1. Remove generated business module directories
-  const backendRemoved = removeSubdirs(GENERATED_PATHS.backendBusinessDir);
-  const frontendRemoved = removeSubdirs(GENERATED_PATHS.frontendBusinessDir);
+  const backendRemoved = removeSubdirs(paths.backendBusinessDir);
+  const frontendRemoved = removeSubdirs(paths.frontendBusinessDir);
   summary.modules = backendRemoved + frontendRemoved;
 
-  // 2. Remove generated schema files
-  summary.schemas = removeFilesByGlob(GENERATED_PATHS.schemaBusinessDir, '\\.json$');
+  summary.schemas = removeFilesByGlob(paths.schemaBusinessDir, String.raw`\.json$`);
 
-  // 3. Reset registry files
-  for (const [key, filePath] of Object.entries(REGISTRY_FILES)) {
+  for (const [key, filePath] of Object.entries(registryFiles)) {
     const template = REGISTRY_TEMPLATES[key];
     if (template) {
       writeFile(filePath, template);
@@ -219,7 +238,6 @@ function cleanup() {
     }
   }
 
-  // 4. Reset i18n generated locale files
   const i18nVarNames = {
     'zh-CN': 'generatedzhCNFallback',
     'en-US': 'generatedenUSFallback',
@@ -229,7 +247,7 @@ function cleanup() {
   };
 
   for (const locale of I18N_LOCALES) {
-    const filePath = path.join(GENERATED_PATHS.i18nDir, `${locale}.ts`);
+    const filePath = path.join(paths.i18nDir, `${locale}.ts`);
     const varName = i18nVarNames[locale];
     if (varName) {
       writeFile(filePath, i18nTemplate(varName));
@@ -241,20 +259,28 @@ function cleanup() {
   console.info(JSON.stringify(summary, null, 2));
 }
 
-const mode = process.argv.includes('--check') ? 'check' : 'cleanup';
+function main(argv = process.argv.slice(2)) {
+  const mode = argv.includes('--check') ? 'check' : 'cleanup';
 
-if (mode === 'check') {
-  const dirty = checkDirty();
-  if (dirty.length > 0) {
-    console.error('[generated-modules] FAIL: smoke-test generated files detected');
-    for (const item of dirty) {
-      console.error(`  - ${item}`);
+  if (mode === 'check') {
+    const dirty = checkDirty();
+    if (dirty.length > 0) {
+      console.error('[generated-modules] FAIL: smoke-test generated files detected');
+      for (const item of dirty) {
+        console.error(`  - ${item}`);
+      }
+      console.error('');
+      console.error('Run: node frontend/scripts/cleanup-generated-modules.mjs');
+      process.exit(1);
     }
-    console.error('');
-    console.error('Run: node frontend/scripts/cleanup-generated-modules.mjs');
-    process.exit(1);
+    console.info('[generated-modules] OK: no generated modules found');
+    return;
   }
-  console.info('[generated-modules] OK: no generated modules found');
-} else {
+
   cleanup();
+}
+
+const currentFilePath = fileURLToPath(import.meta.url);
+if (process.argv[1] && path.resolve(process.argv[1]) === currentFilePath) {
+  main();
 }

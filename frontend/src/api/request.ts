@@ -2,6 +2,13 @@ import axios from 'axios';
 import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { message as feedbackMessage } from '../components/feedback/message';
 import i18n from 'i18next';
+import {
+  resolveBusinessErrorKind,
+  resolveFallbackMessageKey,
+  resolveTransportErrorKind,
+  shouldSuppressAuthMessage,
+  type RequestErrorKind,
+} from './request-error-utils';
 import { useAuthStore } from '../store/useAuthStore';
 import { clearShellSessionState, persistLoginNotice } from '../core/shellState';
 import { clearExplicitLanguagePreference } from '../core/settings/languagePreference';
@@ -15,15 +22,6 @@ export interface RequestConfig extends AxiosRequestConfig {
   skipAuthRefresh?: boolean;
   skipErrorMessage?: boolean;
 }
-
-export type RequestErrorKind =
-  | 'business'
-  | 'unauthorized'
-  | 'forbidden'
-  | 'server'
-  | 'network'
-  | 'timeout'
-  | 'unknown';
 
 export class RequestError extends Error {
   kind: RequestErrorKind;
@@ -68,7 +66,7 @@ const clearClientSession = () => {
   clearShellSessionState();
   clearPantheonThemePreference();
   const nextLanguage = clearExplicitLanguagePreference();
-  void switchI18nLanguage(nextLanguage).catch(() => undefined);
+  switchI18nLanguage(nextLanguage).catch(() => undefined);
   useAuthStore.getState().clearAuth();
 };
 
@@ -140,17 +138,8 @@ const doRefreshToken = async (): Promise<string | null> => {
 };
 
 const createBusinessError = (code?: number, message?: string) => {
-  let kind: RequestErrorKind = 'business';
-  if (code === 401) {
-    kind = 'unauthorized';
-  } else if (code === 403) {
-    kind = 'forbidden';
-  } else if ((code || 0) >= 500) {
-    kind = 'server';
-  }
-
   return new RequestError({
-    kind,
+    kind: resolveBusinessErrorKind(code),
     code,
     message,
     messageKey: message,
@@ -160,22 +149,9 @@ const createBusinessError = (code?: number, message?: string) => {
 const createTransportError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    let kind: RequestErrorKind = 'business';
-    if (error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')) {
-      kind = 'timeout';
-    } else if (!error.response) {
-      kind = 'network';
-    } else if (status === 401) {
-      kind = 'unauthorized';
-    } else if (status === 403) {
-      kind = 'forbidden';
-    } else if ((status || 0) >= 500) {
-      kind = 'server';
-    }
-
     const message = error.response?.data?.message || error.message || 'request.failed';
     return new RequestError({
-      kind,
+      kind: resolveTransportErrorKind(error),
       status,
       message,
       messageKey: error.response?.data?.message,
@@ -193,25 +169,6 @@ const createTransportError = (error: unknown) => {
 };
 
 const isLikelyI18nKey = (message?: string) => Boolean(message && I18N_KEY_PATTERN.test(message));
-
-const resolveFallbackMessageKey = (
-  error: Pick<RequestError, 'kind'>,
-  explicitFallbackKey?: string,
-) => {
-  if (explicitFallbackKey) {
-    return explicitFallbackKey;
-  }
-  switch (error.kind) {
-    case 'timeout':
-      return 'network.timeout';
-    case 'network':
-      return 'network.error';
-    case 'server':
-      return 'request.failed';
-    default:
-      return 'request.failed';
-  }
-};
 
 const translateMessage = (message: string | undefined, fallbackKey = 'request.failed') => {
   const fallbackText = i18n.t(fallbackKey, { defaultValue: fallbackKey });
@@ -234,18 +191,6 @@ const translateMessage = (message: string | undefined, fallbackKey = 'request.fa
     return `${fallbackText} (${message})`;
   }
   return fallbackText;
-};
-
-const shouldSuppressAuthMessage = (messageKey: string | undefined, kind: RequestErrorKind) => {
-  const isAuthError =
-    kind === 'unauthorized' ||
-    messageKey === 'session.invalid' ||
-    messageKey === 'session.idle_timeout' ||
-    Boolean(messageKey && messageKey.startsWith('token.'));
-  if (!isAuthError) {
-    return false;
-  }
-  return logoutTransition || globalThis.location.pathname === '/login';
 };
 
 export const isRequestError = (error: unknown): error is RequestError =>
@@ -381,12 +326,17 @@ request.interceptors.response.use(
     const requestError = createBusinessError(code, message || 'request.failed');
     if (
       !config.skipErrorMessage &&
-      !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)
+      !shouldSuppressAuthMessage(
+        requestError.messageKey || requestError.message,
+        requestError.kind,
+        globalThis.location.pathname,
+        logoutTransition,
+      )
     ) {
       feedbackMessage.error(
         translateMessage(
           requestError.messageKey || requestError.message,
-          resolveFallbackMessageKey(requestError),
+          resolveFallbackMessageKey(requestError.kind),
         ),
       );
     }
@@ -420,12 +370,17 @@ request.interceptors.response.use(
     const requestError = createTransportError(error);
     if (
       !config?.skipErrorMessage &&
-      !shouldSuppressAuthMessage(requestError.messageKey || requestError.message, requestError.kind)
+      !shouldSuppressAuthMessage(
+        requestError.messageKey || requestError.message,
+        requestError.kind,
+        globalThis.location.pathname,
+        logoutTransition,
+      )
     ) {
       feedbackMessage.error(
         translateMessage(
           requestError.messageKey || requestError.message,
-          resolveFallbackMessageKey(requestError),
+          resolveFallbackMessageKey(requestError.kind),
         ),
       );
     }

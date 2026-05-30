@@ -34,17 +34,19 @@ $env:SONAR_HOST_URL = $vars['SONAR_HOST_URL']
 $env:SONAR_TOKEN = $vars['SONAR_TOKEN']
 
 Write-Host "Running SonarQube scan against $($env:SONAR_HOST_URL)"
-go test -coverprofile=coverage.out ./...
+Remove-Item coverage -Force -ErrorAction SilentlyContinue
+Remove-Item coverage.out -Force -ErrorAction SilentlyContinue
+go test "-coverprofile=coverage.out" ./...
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-if (-not (Get-Command sonar-scanner -ErrorAction SilentlyContinue)) {
+if (-not (Get-Command Sonar-Scanner -ErrorAction SilentlyContinue)) {
     Write-Error "sonar-scanner is not installed. Install SonarScanner CLI locally, then rerun this script."
     exit 1
 }
 
-sonar-scanner `
+Sonar-Scanner `
   "-Dsonar.host.url=$env:SONAR_HOST_URL" `
   "-Dsonar.token=$env:SONAR_TOKEN" `
   "-Dsonar.qualitygate.wait=true"
