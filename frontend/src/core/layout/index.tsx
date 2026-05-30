@@ -535,42 +535,47 @@ const BaseLayout: React.FC = () => {
       pinned: location.pathname === '/dashboard',
     };
 
-    
-  const mergeTabsIntoState = (currentTabs, nextTab, dashboardTitle) => {
-    const existingIndex = currentTabs.findIndex((item) => item.path === nextTab.path);
-        const mergedTabs =
-          existingIndex >= 0
-            ? currentTabs.map((item, index) =>
-                index === existingIndex
-                  ? { ...item, ...nextTab, pinned: item.pinned || nextTab.pinned }
-                  : item,
-              )
-            : [...currentTabs, nextTab];
-        const normalizedTabs = mergedTabs.some((item) => item.path === '/dashboard')
-          ? mergedTabs
-          : [
-              {
-                path: '/dashboard',
-                titleKey: 'dashboard.title',
-                fallbackTitle: t('dashboard.title'),
-                closable: false,
-                pinned: true,
-              },
-              ...mergedTabs,
-            ];
-        const limitedTabs = limitOpenedTabs(
-          normalizedTabs.map((item) => ({
-            ...item,
-            closable: item.path !== '/dashboard' && item.closable !== false,
-            pinned: item.path === '/dashboard' || Boolean(item.pinned),
-          })),
-        );
-        localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(limitedTabs));
-        return limitedTabs;
-  };
+    const mergeTabsIntoState = (
+      currentTabs: OpenedPageTab[],
+      currentNextTab: OpenedPageTab,
+      dashboardTitle: string,
+    ) => {
+      const existingIndex = currentTabs.findIndex((item) => item.path === currentNextTab.path);
+      const mergedTabs =
+        existingIndex >= 0
+          ? currentTabs.map((item, index) =>
+              index === existingIndex
+                ? { ...item, ...currentNextTab, pinned: item.pinned || currentNextTab.pinned }
+                : item,
+            )
+          : [...currentTabs, currentNextTab];
+      const normalizedTabs = mergedTabs.some((item) => item.path === '/dashboard')
+        ? mergedTabs
+        : [
+            {
+              path: '/dashboard',
+              titleKey: 'dashboard.title',
+              fallbackTitle: dashboardTitle,
+              closable: false,
+              pinned: true,
+            },
+            ...mergedTabs,
+          ];
+      const limitedTabs = limitOpenedTabs(
+        normalizedTabs.map((item) => ({
+          ...item,
+          closable: item.path !== '/dashboard' && item.closable !== false,
+          pinned: item.path === '/dashboard' || Boolean(item.pinned),
+        })),
+      );
+      localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(limitedTabs));
+      return limitedTabs;
+    };
 
-const timer = globalThis.setTimeout(() => {
-      (currentTabs) => mergeTabsIntoState(currentTabs, nextTab, t('dashboard.title')));
+    const timer = globalThis.setTimeout(() => {
+      setOpenedTabs((currentTabs) =>
+        mergeTabsIntoState(currentTabs, nextTab, t('dashboard.title')),
+      );
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [currentPageTitle, currentTabTitleKey, location.pathname, t]);
@@ -687,45 +692,44 @@ const timer = globalThis.setTimeout(() => {
     t: (key: string) => string,
   ) => {
     nodes.forEach((item) => {
-        const trail = [...ancestors, item];
-        if (item.path && item.type !== 'F') {
-          const title = t(item.titleKey);
-          const parentTrail = trail
-            .slice(0, -1)
-            .map((node) => t(node.titleKey))
-            .join(' / ');
-          items.push({
-            key: `menu-${item.id}`,
+      const trail = [...ancestors, item];
+      if (item.path && item.type !== 'F') {
+        const title = t(item.titleKey);
+        const parentTrail = trail
+          .slice(0, -1)
+          .map((node) => t(node.titleKey))
+          .join(' / ');
+        items.push({
+          key: `menu-${item.id}`,
+          title,
+          subtitle: parentTrail || item.path,
+          section: t('app.command.section.menu'),
+          searchText: [
             title,
-            subtitle: parentTrail || item.path,
-            section: t('app.command.section.menu'),
-            searchText: [
-              title,
-              parentTrail,
-              item.path,
-              item.routeName,
-              item.component,
-              item.pagePerm,
-              item.perms,
-              item.module,
-            ]
-              .filter(Boolean)
-              .join(' '),
-            icon: renderMenuIcon(item.icon),
-            run: () => {
-              if (item.isExternal === 1) {
-                globalThis.open(item.path, '_blank', 'noopener,noreferrer');
-                return;
-              }
-              navigate(item.path);
-            },
-          });
-        }
-        if (item.children?.length) {
-          walkMenuNodes(item.children, trail, items, t);
-        }
-      });
-    }
+            parentTrail,
+            item.path,
+            item.routeName,
+            item.component,
+            item.pagePerm,
+            item.perms,
+            item.module,
+          ]
+            .filter(Boolean)
+            .join(' '),
+          icon: renderMenuIcon(item.icon),
+          run: () => {
+            if (item.isExternal === 1) {
+              globalThis.open(item.path, '_blank', 'noopener,noreferrer');
+              return;
+            }
+            navigate(item.path);
+          },
+        });
+      }
+      if (item.children?.length) {
+        walkMenuNodes(item.children, trail, items, t);
+      }
+    });
   };
 
   const commandItems = useMemo<CommandSearchItem[]>(() => {
@@ -861,10 +865,7 @@ const timer = globalThis.setTimeout(() => {
     if (!noticeSummary) {
       return 0;
     }
-    return Math.min(
-      noticeSummary.loginFailureCount + noticeSummary.pendingSecurityEventCount,
-      99,
-    );
+    return Math.min(noticeSummary.loginFailureCount + noticeSummary.pendingSecurityEventCount, 99);
   }, [noticeSummary]);
 
   const noticeStatItems = useMemo(() => {
@@ -1842,9 +1843,7 @@ const timer = globalThis.setTimeout(() => {
                 </Avatar>
                 <div className="app-shell__user-meta">
                   <span className="app-shell__user-name">{userDisplayName}</span>
-                  {roleLabel ? (
-                    <span className="app-shell__user-subtitle">{roleLabel}</span>
-                  ) : null}
+                  {roleLabel ? <span className="app-shell__user-subtitle">{roleLabel}</span> : null}
                 </div>
               </Button>
             </Dropdown>

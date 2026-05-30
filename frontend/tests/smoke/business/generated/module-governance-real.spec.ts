@@ -17,7 +17,7 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(currentDir, '../../../../..');
 const moduleName = 'orderqa';
 const moduleKey = `business.${moduleName}`;
-const moduleRoute = `/business/${moduleName}`;
+const modulePageRoute = `/operations/${moduleName}`;
 const backendModuleDir = path.join(workspaceRoot, 'backend', 'modules', 'business', moduleName);
 const frontendModuleDir = path.join(workspaceRoot, 'frontend', 'src', 'modules', 'business', moduleName);
 const schemaFile = path.join(workspaceRoot, 'schema', 'generated', 'business', `${moduleName}.json`);
@@ -159,7 +159,7 @@ test('real module governance flow can generate register and purge a temporary bu
   expect(generatePayload.code).toBe(200);
   expect(generatePayload.data?.module?.name).toBe(moduleKey);
   expect(isRuntimeGeneratedModuleReady(generatePayload.data?.module?.status)).toBe(true);
-  expect(generatePayload.data?.summary?.routePath).toBe(moduleRoute);
+  expect(generatePayload.data?.summary?.routePath).toBe(modulePageRoute);
 
   await expect.poll(async () => {
     const response = await page.request.get(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}`, {

@@ -223,8 +223,17 @@ try {
       PANTHEON_WEB_BASE_URL: webBaseUrl,
     },
   });
+  const exitCode = result.code ?? (result.signal ? 1 : 0);
   await stopServer();
-  process.exit(result.code ?? (result.signal ? 1 : 0));
+  if (exitCode === 0) {
+    const cleanupResult = await spawnChild(process.execPath, ['frontend/scripts/cleanup-generated-modules.mjs'], {
+      cwd: process.cwd(),
+    });
+    if (cleanupResult.code !== 0) {
+      console.error('[smoke-suite] cleanup exited with code %d', cleanupResult.code);
+    }
+  }
+  process.exit(exitCode);
 } catch (error) {
   console.error(error);
   await stopServer();

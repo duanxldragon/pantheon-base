@@ -175,18 +175,14 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
     return roles.filter((role) => role.governanceStatus === 'pending');
   }, [viewMode, workbench?.roles]);
 
-  useEffect(() => {
-    setTablePagination((current) => {
-      const totalPages = Math.max(1, Math.ceil(displayedRoles.length / current.pageSize));
-      if (current.current <= totalPages) {
-        return current;
-      }
-      return {
-        ...current,
-        current: totalPages,
-      };
-    });
-  }, [displayedRoles]);
+  const tableTotalPages = useMemo(
+    () => Math.max(1, Math.ceil(displayedRoles.length / tablePagination.pageSize)),
+    [displayedRoles.length, tablePagination.pageSize],
+  );
+  const tableCurrentPage = useMemo(
+    () => Math.min(tablePagination.current, tableTotalPages),
+    [tablePagination.current, tableTotalPages],
+  );
 
   const renderGovernanceStatusTag = (role: PermissionWorkbenchRole) => {
     if (role.governanceStatus === 'pending') {
@@ -462,7 +458,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               loading={workbenchLoading}
               scroll={{ x: 'max-content' }}
               pagination={buildStandardPagination(t, {
-                current: tablePagination.current,
+                current: tableCurrentPage,
                 pageSize: tablePagination.pageSize,
                 total: displayedRoles.length,
               })}

@@ -33,7 +33,7 @@ const repoRoot = path.resolve(currentDir, '../../../../..');
 const platformWorkspaceRoot = path.resolve(repoRoot, '..');
 const moduleName = 'cmdb/smoke';
 const moduleKey = buildModuleNamespace('business', moduleName);
-const routePath = '/business/cmdb/smoke';
+const pageRoutePath = '/operations/cmdb/smoke';
 const backendModuleRelativePath = path.join('backend', 'modules', 'business', moduleName);
 const frontendModuleRelativePath = path.join('frontend', 'src', 'modules', 'business', moduleName);
 const schemaRelativePath = path.join('schema', 'generated', 'business', `${moduleName}.json`);
@@ -263,6 +263,12 @@ test('cmdb host database-import flow generates a temporary module without droppi
   expect(preview.fields.some((field) => field.name === 'status')).toBeTruthy();
 
   const schema = buildSchema(preview);
+  const hostnameField = preview.fields.find((field) => field.name === 'hostname');
+  const ipField = preview.fields.find((field) => field.name === 'ip');
+  const statusField = preview.fields.find((field) => field.name === 'status');
+  expect(hostnameField).toBeTruthy();
+  expect(ipField).toBeTruthy();
+  expect(statusField).toBeTruthy();
   const exporter = new ModuleExporter(schema);
   const files = exporter.generateAll();
   expect(files.length).toBeGreaterThanOrEqual(10);
@@ -299,7 +305,7 @@ test('cmdb host database-import flow generates a temporary module without droppi
   expect(result.module.name).toBe(moduleKey);
   expect(isRuntimeGeneratedModuleReady(result.module.status)).toBe(true);
   expect(result.module.tableName).toBe(tableName);
-  expect(result.summary.routePath).toBe(routePath);
+  expect(result.summary.routePath).toBe(pageRoutePath);
   expect(result.summary.parentMenuSource).toBe('explicit');
   expect(result.requiresRestart).toBe(true);
   expect(result.requiresFrontendBuild).toBe(true);
@@ -336,17 +342,16 @@ test('cmdb host database-import flow generates a temporary module without droppi
           items: [
             {
               id: 1,
-              hostCode: 'qa-host-001',
               hostname: 'qa-host-001.internal',
               ip: '10.20.30.41',
               os: 'Ubuntu 24.04',
-              environment: 'test',
               status: 'active',
-              arch: 'x86_64',
-              provider: 'aliyun',
-              ownerName: 'QA Team',
               sshPort: 22,
+              osVersion: '24.04',
+              owner: 'QA Team',
+              remark: 'database-import smoke fixture',
               createdAt: '2026-05-23T11:00:00+08:00',
+              updatedAt: '2026-05-23T11:00:00+08:00',
             },
           ],
           total: 1,
@@ -356,11 +361,13 @@ test('cmdb host database-import flow generates a temporary module without droppi
       }),
     });
   });
-  await page.goto(`${appBaseUrl}${routePath}`, { waitUntil: 'networkidle' });
+  await page.goto(`${appBaseUrl}${pageRoutePath}`, { waitUntil: 'networkidle' });
   await expect(page.getByText('主机管理', { exact: true }).first()).toBeVisible();
   const table = page.locator('.arco-table').first();
   await expect(table).toBeVisible();
-  await expect(table.getByText('主机编码', { exact: true })).toBeVisible();
+  await expect(table.getByText(hostnameField!.label, { exact: true })).toBeVisible();
+  await expect(table.getByText(ipField!.label, { exact: true })).toBeVisible();
+  await expect(table.getByText(statusField!.label, { exact: true })).toBeVisible();
   await expect(page.getByText('qa-host-001.internal', { exact: true })).toBeVisible();
   await expect(page.getByText('10.20.30.41', { exact: true })).toBeVisible();
 

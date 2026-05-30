@@ -113,6 +113,40 @@ interface TranslationPreviewRow {
   en: string;
 }
 
+function resolvePreferredDatasourceId(
+  items: Array<Pick<GeneratorDatasource, 'id' | 'isCurrent'>>,
+  selectedDatasourceId: string,
+): string {
+  return (
+    items.find((item) => item.id === selectedDatasourceId)?.id ||
+    items.find((item) => item.isCurrent)?.id ||
+    items[0]?.id ||
+    'current'
+  );
+}
+
+function mergeTranslationOverrides(
+  current: Record<string, TranslationOverride>,
+  rows: string[][],
+): Record<string, TranslationOverride> {
+  return rows.reduce<Record<string, TranslationOverride>>(
+    (acc, row) => {
+      const [key = '', zh = '', en = ''] = row;
+      const normalizedKey = key.trim();
+      if (!normalizedKey) {
+        return acc;
+      }
+      acc[normalizedKey] = {
+        ...acc[normalizedKey],
+        zh,
+        en,
+      };
+      return acc;
+    },
+    { ...current },
+  );
+}
+
 function escapeCsvCell(value: string): string {
   const normalized = String(value ?? '');
   if (!/[",\n\r]/.test(normalized)) {
@@ -219,8 +253,9 @@ const ModuleWizard: React.FC = () => {
   const loadDatasources = useCallback(async () => {
     const items = await listGeneratorDatasources();
     setDatasources(items);
-    if (!items.some((item) => item.id === selectedDatasourceId)) {
-      setSelectedDatasourceId(items[0]?.id || 'current');
+    const nextSelectedDatasourceId = resolvePreferredDatasourceId(items, selectedDatasourceId);
+    if (nextSelectedDatasourceId !== selectedDatasourceId) {
+      setSelectedDatasourceId(nextSelectedDatasourceId);
     }
     return items;
   }, [selectedDatasourceId]);
@@ -269,10 +304,14 @@ const ModuleWizard: React.FC = () => {
           if (!active) {
             return;
           }
-          const firstID =
-            items.find(findDatasourceById)?.id || items[0]?.id || 'current';
-          setSelectedDatasourceId(firstID);
-          return loadTables(firstID);
+          const nextSelectedDatasourceId = resolvePreferredDatasourceId(
+            items,
+            selectedDatasourceId,
+          );
+          if (nextSelectedDatasourceId !== selectedDatasourceId) {
+            setSelectedDatasourceId(nextSelectedDatasourceId);
+          }
+          return loadTables(nextSelectedDatasourceId);
         })
         .catch(() => {
           if (active) {
@@ -730,9 +769,7 @@ const ModuleWizard: React.FC = () => {
       reader.onload = () => {
         try {
           const rows = parseCsvRows(String(reader.result || ''));
-          const nextOverrides: Record<string, TranslationOverride> = {};
-          rows.slice(1).forEach((row) => applyTranslationRow(row));
-          setTranslationOverrides((current) => ({ ...current, ...nextOverrides }));
+          setTranslationOverrides((current) => mergeTranslationOverrides(current, rows.slice(1)));
           message.success(t('generator.wizard.step3.translationPreview.importSuccess'));
         } catch {
           message.error(t('generator.wizard.step3.translationPreview.importError'));
@@ -1166,10 +1203,7 @@ const ModuleWizard: React.FC = () => {
                       <Space align="center" className="generator-wizard__toolbar">
                         <Typography.Text>{t('generator.datasource.selector')}</Typography.Text>
                         <Space>
-                          <Button
-                            size="small"
-                            onClick={() => loadTables(selectedDatasourceId)}
-                          >
+                          <Button size="small" onClick={() => loadTables(selectedDatasourceId)}>
                             <IconRefresh /> {t('common.refresh')}
                           </Button>
                           <PermissionAction
@@ -1216,7 +1250,8 @@ const ModuleWizard: React.FC = () => {
                       loading={tableLoading}
                       placeholder={t('generator.wizard.sourceTable.placeholder')}
                       filterOption={(inputValue, option) =>
-                        String(option?.props?.value || '')
+                        String((option as React.ReactElement<{ value?: string | number }> | null)?.props
+                          ?.value || '')
                           .toLowerCase()
                           .includes(inputValue.toLowerCase())
                       }
@@ -2222,11 +2257,7 @@ const ModuleWizard: React.FC = () => {
                     <Button size="mini" type="text" onClick={() => handleEditDatasource(record)}>
                       <IconEdit /> {t('common.edit')}
                     </Button>
-                    <Button
-                      size="mini"
-                      type="text"
-                      onClick={() => handleTestDatasource(record.id)}
-                    >
+                    <Button size="mini" type="text" onClick={() => handleTestDatasource(record.id)}>
                       <IconCode /> {t('generator.datasource.test')}
                     </Button>
                     <Popconfirm

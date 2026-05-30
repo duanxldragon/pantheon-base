@@ -70,8 +70,6 @@ const SettingGroupWorkspace: React.FC<SettingGroupWorkspaceProps> = ({
 
   const loadAudit = async (page = 1, pageSize = defaultAuditPageSize) => {
     if (!shouldShowAuditCard) {
-      setAuditRows([]);
-      setAuditTotal(0);
       return null;
     }
     setAuditLoading(true);
@@ -94,8 +92,6 @@ const SettingGroupWorkspace: React.FC<SettingGroupWorkspaceProps> = ({
 
   useEffect(() => {
     if (!shouldShowAuditCard) {
-      setAuditRows([]);
-      setAuditTotal(0);
       return;
     }
     const timer = globalThis.setTimeout(() => {

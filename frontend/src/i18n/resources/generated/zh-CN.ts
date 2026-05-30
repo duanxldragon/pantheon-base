@@ -1,3 +1,4 @@
-const generatedzhCNFallback = {};
+const generatedzhCNFallback = {
+};
 
 export default generatedzhCNFallback;

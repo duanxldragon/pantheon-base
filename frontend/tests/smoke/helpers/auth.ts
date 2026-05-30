@@ -88,6 +88,16 @@ export async function signInWithUi(
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   expect(payload.code).toBe(200);
+  await installClientSession(page, {
+    accessToken: payload.data.accessToken as string,
+    refreshToken: payload.data.refreshToken as string,
+    username: credentials.username,
+    password: credentials.password,
+    csrfToken:
+      extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token') ??
+      `pantheon-smoke-csrf-${Date.now()}`,
+  });
+  await page.goto('/dashboard', { waitUntil: 'networkidle' });
   await expect(page.locator('.app-shell__header')).toBeVisible();
   return payload.data.accessToken as string;
 }
@@ -141,9 +151,11 @@ export async function getCsrfToken(page: Page) {
 }
 
 export async function requestHeaders(page: Page, accessToken: string) {
+  const csrfToken = await getCsrfToken(page);
   return {
     ...authHeaders(accessToken),
-    'X-CSRF-Token': await getCsrfToken(page),
+    'X-CSRF-Token': csrfToken,
+    Cookie: `pantheon_csrf_token=${csrfToken}`,
   };
 }
 
