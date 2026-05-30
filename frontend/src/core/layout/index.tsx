@@ -438,9 +438,9 @@ const BaseLayout: React.FC = () => {
     }
     bootstrappedRef.current = true;
 
-    void fetchMenuTree();
+    fetchMenuTree().catch(() => undefined);
     if (!useAuthStore.getState().userInfo) {
-      void ensureAuthUserInfo().catch(() => undefined);
+      ensureAuthUserInfo().catch(() => undefined);
     }
     const initialActivityAt = readShellLastActivityAt();
     syncShellActivity(initialActivityAt && initialActivityAt > 0 ? initialActivityAt : Date.now());
@@ -463,9 +463,9 @@ const BaseLayout: React.FC = () => {
           .then((settings) => switchI18nLanguage(settings.defaultLanguage))
           .catch(() => undefined);
       } else {
-        void refreshPublicSettings().catch(() => undefined);
+        refreshPublicSettings().catch(() => undefined);
       }
-      void fetchMenuTree({ force: true });
+      fetchMenuTree({ force: true }).catch(() => undefined);
     },
   );
   useRefreshPolling(token, [
@@ -586,7 +586,7 @@ const BaseLayout: React.FC = () => {
     }
     const timer = globalThis.setInterval(() => {
       if (Date.now() - lastActivityAtRef.current >= sessionIdleMs) {
-        void performLogout(true, 'session.idle_timeout');
+        performLogout(true, 'session.idle_timeout').catch(() => undefined);
       }
     }, 15000);
     return () => globalThis.clearInterval(timer);
@@ -1892,7 +1892,7 @@ const BaseLayout: React.FC = () => {
             placeholder={t('app.lock.passwordPlaceholder')}
             onChange={setUnlockPassword}
             onPressEnter={() => {
-              void handleUnlock();
+              handleUnlock().catch(() => undefined);
             }}
           />
           <Space>
@@ -1900,7 +1900,7 @@ const BaseLayout: React.FC = () => {
               type="primary"
               loading={unlockLoading}
               onClick={() => {
-                void handleUnlock();
+                handleUnlock().catch(() => undefined);
               }}
             >
               {t('app.lock.unlock')}
