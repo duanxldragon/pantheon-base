@@ -2,8 +2,6 @@ import { spawn } from 'node:child_process';
 import process from 'node:process';
 
 const fixtureTableName = 'biz_cmdb_host';
-const fixtureHostCodes = ['qa-host-001', 'qa-host-002'];
-
 function parseArgs() {
   return {
     action: process.argv[2] || 'up',
@@ -55,7 +53,7 @@ function resolveMysqlConfig() {
     host: process.env.PANTHEON_SMOKE_MYSQL_HOST || parsedDsn?.host || '127.0.0.1',
     port: Number(process.env.PANTHEON_SMOKE_MYSQL_PORT || parsedDsn?.port || 3306),
     username: process.env.PANTHEON_SMOKE_MYSQL_USER || parsedDsn?.username || 'root',
-    password: process.env.PANTHEON_SMOKE_MYSQL_PASSWORD || parsedDsn?.password || 'DHCCroot@2025',
+    password: process.env.PANTHEON_SMOKE_MYSQL_PASSWORD || parsedDsn?.password || '',
     database: process.env.PANTHEON_SMOKE_MYSQL_DATABASE || parsedDsn?.database || 'pantheon_base',
     mysqlBin: process.env.PANTHEON_SMOKE_MYSQL_BIN || 'mysql',
   };
@@ -84,22 +82,12 @@ CREATE TABLE IF NOT EXISTS \`${fixtureTableName}\` (
   UNIQUE KEY \`uidx_biz_cmdb_host_hostname\` (\`hostname\`),
   KEY \`idx_biz_cmdb_host_deleted_at\` (\`deleted_at\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='CMDB 主机 QA 导入源表';
-
-DELETE FROM \`${fixtureTableName}\`
-WHERE \`host_code\` IN (${fixtureHostCodes.map((value) => `'${value}'`).join(', ')});
-
-INSERT INTO \`${fixtureTableName}\`
-  (\`host_code\`, \`hostname\`, \`ip\`, \`os\`, \`environment\`, \`status\`, \`arch\`, \`provider\`, \`owner_name\`, \`ssh_port\`, \`remark\`, \`created_at\`, \`updated_at\`, \`deleted_at\`)
-VALUES
-  ('qa-host-001', 'qa-host-001.internal', '10.20.30.41', 'Ubuntu 24.04', 'test', 'active', 'x86_64', 'aliyun', 'QA Team', 22, 'database-import smoke fixture A', NOW(3), NOW(3), NULL),
-  ('qa-host-002', 'qa-host-002.internal', '10.20.30.42', 'Rocky Linux 9', 'prod', 'inactive', 'arm64', 'tencent', 'Ops Team', 2222, 'database-import smoke fixture B', NOW(3), NOW(3), NULL);
 `;
 }
 
 function buildCleanupSql() {
   return `
-DELETE FROM \`${fixtureTableName}\`
-WHERE \`host_code\` IN (${fixtureHostCodes.map((value) => `'${value}'`).join(', ')});
+SELECT 1;
 `;
 }
 

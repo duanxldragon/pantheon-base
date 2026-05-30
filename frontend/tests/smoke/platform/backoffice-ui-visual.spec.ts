@@ -3,6 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
+import { expectPagePathname } from '../helpers/url-pattern';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
 const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];
@@ -240,7 +241,7 @@ async function readFieldChrome(input: Locator) {
       node.closest('.arco-input-inner-wrapper, .arco-textarea-wrapper') ||
       node.closest('.arco-select-view, .arco-tree-select-view, .arco-picker') ||
       node;
-    const style = window.getComputedStyle(fieldSurface as Element);
+    const style = globalThis.getComputedStyle(fieldSurface as Element);
     return {
       borderWidth: style.borderTopWidth,
       borderStyle: style.borderTopStyle,
@@ -255,7 +256,7 @@ async function readFieldChrome(input: Locator) {
 async function readSurfaceChrome(surface: Locator) {
   await surface.scrollIntoViewIfNeeded();
   return surface.evaluate((node) => {
-    const style = window.getComputedStyle(node as Element);
+    const style = globalThis.getComputedStyle(node as Element);
     return {
       borderWidth: style.borderTopWidth,
       borderStyle: style.borderTopStyle,
@@ -281,7 +282,7 @@ async function readVisibleSurfaceChromes(root: Locator) {
       'input.arco-input',
     ].join(',');
     const read = (element: HTMLElement) => {
-      const style = window.getComputedStyle(element);
+      const style = globalThis.getComputedStyle(element);
       return {
         borderWidth: style.borderTopWidth,
         borderStyle: style.borderTopStyle,
@@ -532,7 +533,7 @@ test.describe('backoffice UI visual acceptance', () => {
         return Array.from(root.querySelectorAll('.dialog-grid-card .arco-card-header-title .arco-typography'))
           .slice(0, 3)
           .map((node) => {
-            const style = window.getComputedStyle(node);
+            const style = globalThis.getComputedStyle(node);
             const lineHeight = Number.parseFloat(style.lineHeight || '0');
             const height = node.getBoundingClientRect().height;
             return {
@@ -650,7 +651,7 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
-      await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
+      expectPagePathname(page, pageMeta.path);
       await expectPageIdentity(page, pageMeta.identityTitle ?? pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);
@@ -668,7 +669,7 @@ test.describe('backoffice UI visual acceptance', () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto(pageMeta.path, { waitUntil: 'networkidle' });
 
-      await expect(page).toHaveURL(new RegExp(`${pageMeta.path.replace(/\//g, '\\/')}$`));
+      expectPagePathname(page, pageMeta.path);
       await expectPageIdentity(page, pageMeta.identityTitle ?? pageMeta.title);
       await expectNoPageError(page);
       await expectProfessionalBackofficeSurface(page);
@@ -784,9 +785,9 @@ test.describe('backoffice UI visual acceptance', () => {
     const overviewContract = await page.evaluate(() => {
       const nav = document.querySelector<HTMLElement>('.setting-overview-page__anchor-strip');
       const firstItem = document.querySelector<HTMLElement>('.setting-overview-page__anchor-item');
-      const viewportWidth = window.innerWidth;
+      const viewportWidth = globalThis.innerWidth;
       const bodyScrollWidth = document.documentElement.scrollWidth;
-      const navStyle = nav ? window.getComputedStyle(nav) : null;
+      const navStyle = nav ? globalThis.getComputedStyle(nav) : null;
       const firstRect = firstItem?.getBoundingClientRect();
       return {
         viewportWidth,
@@ -812,10 +813,10 @@ test.describe('backoffice UI visual acceptance', () => {
     await expectNoPageError(page);
 
     const groupContract = await page.evaluate(() => {
-      const viewportWidth = window.innerWidth;
+      const viewportWidth = globalThis.innerWidth;
       const bodyScrollWidth = document.documentElement.scrollWidth;
       const nav = document.querySelector<HTMLElement>('.setting-page__group-nav-grid');
-      const navStyle = nav ? window.getComputedStyle(nav) : null;
+      const navStyle = nav ? globalThis.getComputedStyle(nav) : null;
       const configCard = document.querySelector<HTMLElement>('.setting-page__config-card');
       const saveButton = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
         (button) => button.textContent?.includes('保存'),

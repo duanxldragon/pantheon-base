@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-06
+updated_at: 2026-05-29
 ---
 
 # Pantheon 代码评审标准流程
@@ -24,6 +24,54 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 - `[PR]` — PR 提交前必查，reviewer 逐项确认
 - `[Phase]` — 阶段深度评审，每个路线图阶段结束后执行
 
+## 0.1 角色分离与独立评审
+
+代码评审必须先区分三类责任：
+
+- **功能监督者**：确认需求、验收口径、业务行为是否正确
+- **质量守护者**：确认代码质量、边界、回归风险、安全与可维护性
+- **提交作者**：负责实现、补测试、补文档、回应 findings
+
+固定规则：
+
+- 作者本人不能作为该次改动的唯一 reviewer。
+- 生成代码的同一 agent 会话，不能既是主实现者又是唯一 code reviewer。
+- 常规改动至少需要 `1` 个非作者 reviewer。
+- 高风险改动至少需要 `2` 个非作者 reviewer，其中一位应来自域负责人、安全 reviewer 或架构 reviewer。
+
+高风险改动默认包括：
+
+- `system/auth`
+- `system/iam`
+- `system/config`
+- 权限模型、审计链路、共享 `pkg/*`
+- 生成器 / 动态模块
+- CI / deploy / secrets / 凭据处理
+
+## 0.2 自动化质量门栈
+
+Pantheon 默认采用“本地验证 + GitHub checks + SonarQube + 独立 reviewer”四层门禁。
+
+- `本地验证`：作者提交前先跑与改动范围匹配的测试、构建和专项脚本
+- `GitHub checks`：PR 上必须通过 required status checks
+- `SonarQube`：PR 分析必须回写 quality gate，不允许把关键安全和可靠性问题留给人工猜测
+- `独立 reviewer`：确认自动化未覆盖的架构边界、设计漂移和业务风险
+
+SonarQube 最低要求：
+
+- New Code 上 `Blocker / Critical` 问题为 `0`
+- Security Hotspots 已 review，不允许未处理直接合并
+- New Code 覆盖率默认不低于 `80%`；例外要在 PR 中说明原因和补测计划
+- New Code 重复率默认低于 `3%`
+- Reliability / Security / Maintainability Quality Gate 必须 `Passed`
+
+GitHub 保护建议：
+
+- `main` / `release/*` 禁止直接 push
+- 开启 Branch Protection、Required Status Checks、`Dismiss stale approvals`
+- 开启 `Require conversation resolution`
+- 使用 `CODEOWNERS` 自动请求域 reviewer
+
 ## 1. 评审入口
 
 每次评审开始前必须先声明本次改动归属层：
@@ -41,6 +89,7 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 - 依赖层是谁
 - 哪些改动是逻辑拆分，哪些改动是物理拆分
 - 是否存在业务域反向侵入系统域的风险
+- 本次评审由谁做功能验收，谁做质量守护，谁拥有最终合并权限
 
 ## 2. 必读上下文
 
@@ -67,6 +116,7 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 - `git diff --name-only`
 - 检查是否存在生成文件、注册表、schema、i18n 资源同时变更
 - 检查是否存在未解释的跨层改动
+- 检查 PR 是否附了 SonarQube 结果、GitHub checks 结果与独立 reviewer 信息
 
 ### 3.2 架构边界
 
@@ -286,6 +336,15 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 - `npm audit --audit-level=high` 无结果（CI 门禁）
 - Go 依赖定期检查更新 `[Phase]`
 
+#### 3.7.10 SonarQube 与 GitHub 检查 `[Auto]` + `[PR]`
+
+- SonarQube PR Decoration 是否已回写到 GitHub PR
+- SonarQube Quality Gate 是否为 `Passed`
+- 是否存在 `Blocker / Critical` New Code 问题未处理
+- Security Hotspots 是否已 review 并记录处理结论
+- GitHub required checks 是否全部通过
+- 新提交后旧 approval 是否已失效并重新 review
+
 ### 3.8 测试副作用
 
 低代码生成器和动态模块测试会重写 generated 注册表。评审时必须检查以下文件没有被误清空：
@@ -455,6 +514,9 @@ npx lighthouse-batch --score=90
 - 已检查 diff 中所有生成物与注册物
 - 已修复可自动修复的 P0 / P1
 - 已记录剩余 P2 和后续处理建议
+- SonarQube Quality Gate 已通过，或有明确的受控豁免记录
+- GitHub required checks 已全部通过
+- 已完成独立 reviewer 审核，且不是作者自审替代
 - 已运行或明确说明未运行的验证命令
 - 若代码影响合同、接口、菜单、权限、i18n、数据库或验收口径，已同步更新文档
 

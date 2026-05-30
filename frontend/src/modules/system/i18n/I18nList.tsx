@@ -249,7 +249,7 @@ const I18nList: React.FC = () => {
         setTotal(resp.total);
         if (!secondaryBootstrapScheduledRef.current) {
           secondaryBootstrapScheduledRef.current = true;
-          window.setTimeout(() => {
+          globalThis.setTimeout(() => {
             setSecondaryReady(true);
           }, 0);
         }
@@ -265,10 +265,10 @@ const I18nList: React.FC = () => {
   );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       void loadData(query);
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
 
   useEffect(() => {
@@ -281,7 +281,7 @@ const I18nList: React.FC = () => {
           modules
             .map((item) => item.name)
             .filter(Boolean)
-            .sort(),
+            .sort((a, b) => a.localeCompare(b)),
         );
       })
       .catch(() => setRegisteredModuleOptions([]));
@@ -324,14 +324,18 @@ const I18nList: React.FC = () => {
     );
   }, [loadMissingLocales, missingLocaleModuleFilter, missingLocaleVisible]);
 
+  const retryLoadData = useCallback(() => {
+    void loadData(query);
+  }, [loadData, query]);
+
   useEffect(() => {
     if (!secondaryReady) {
       return undefined;
     }
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       void loadOverview();
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [loadOverview, secondaryReady]);
 
   useRefreshSubscription('system:i18n:changed', (payload) => {
@@ -352,21 +356,24 @@ const I18nList: React.FC = () => {
     if (!missingLocaleVisible) {
       return;
     }
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       void loadMissingLocales(missingLocaleModuleFilter || undefined);
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [loadMissingLocales, missingLocaleModuleFilter, missingLocaleVisible]);
 
   const moduleOptions = useMemo(
     () =>
       Array.from(
         new Set([...registeredModuleOptions, ...rows.map((item) => item.module).filter(Boolean)]),
-      ).sort(),
+      ).sort((a, b) => a.localeCompare(b)),
     [registeredModuleOptions, rows],
   );
   const groupOptions = useMemo(
-    () => Array.from(new Set(rows.map((item) => item.group).filter(Boolean))).sort(),
+    () =>
+      Array.from(new Set(rows.map((item) => item.group).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b),
+      ),
     [rows],
   );
 
@@ -468,16 +475,6 @@ const I18nList: React.FC = () => {
     ],
     [canRefresh, groupOptions.length, overview, t],
   );
-
-  const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
-    if (isNetworkRequestError(requestError)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(requestError)} onRetry={onRetry} />;
-    }
-    if (isServerRequestError(requestError)) {
-      return <PageServerError onRetry={onRetry} />;
-    }
-    return <PageError onRetry={onRetry} />;
-  };
 
   const handleSearch = () => {
     const values = queryForm.getFieldsValue();
@@ -983,7 +980,7 @@ const I18nList: React.FC = () => {
     }
     const content = buildRenameMigrationReport(renamePreview, t);
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download =
@@ -994,7 +991,7 @@ const I18nList: React.FC = () => {
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
     message.success(t('i18n.rename.report.downloadSuccess'));
   };
 
@@ -1128,7 +1125,11 @@ const I18nList: React.FC = () => {
   };
 
   const visibleSelectedRowKeys = useMemo(
-    () => getVisibleSelectedRowKeys(selectedRowKeys, rows.map((row) => row.id)),
+    () =>
+      getVisibleSelectedRowKeys(
+        selectedRowKeys,
+        rows.map((row) => row.id),
+      ),
     [rows, selectedRowKeys],
   );
 
@@ -1137,9 +1138,13 @@ const I18nList: React.FC = () => {
   }
 
   if (error) {
-    return renderRequestErrorState(error, () => {
-      void loadData(query);
-    });
+    if (isNetworkRequestError(error)) {
+      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={retryLoadData} />;
+    }
+    if (isServerRequestError(error)) {
+      return <PageServerError onRetry={retryLoadData} />;
+    }
+    return <PageError onRetry={retryLoadData} />;
   }
 
   return (
@@ -1256,7 +1261,11 @@ const I18nList: React.FC = () => {
                         >
                           {t('common.refresh')}
                         </Button>
-                        <Button size="small" icon={<IconEye />} onClick={() => void handleOpenAudit()}>
+                        <Button
+                          size="small"
+                          icon={<IconEye />}
+                          onClick={() => void handleOpenAudit()}
+                        >
                           {t('i18n.audit.action')}
                         </Button>
                         {canHydrateBuiltin ? (
@@ -1264,7 +1273,9 @@ const I18nList: React.FC = () => {
                             size="small"
                             status="warning"
                             loading={hydratingBuiltinLocales}
-                            onClick={() => void handleHydrateBuiltinLocales(query.module || undefined)}
+                            onClick={() =>
+                              void handleHydrateBuiltinLocales(query.module || undefined)
+                            }
                           >
                             {t('i18n.hydrateBuiltin.action')}
                           </Button>
@@ -1643,9 +1654,8 @@ const I18nList: React.FC = () => {
                         </Text>
                         {item.lifecycleMarkedAt ? (
                           <Text type="secondary">
-                            {t('i18n.lifecycle.markedAt')}:{' '}
-                            {formatDateTime(item.lifecycleMarkedAt)} ·{' '}
-                            {t('i18n.lifecycle.observingDays', { count: item.observingDays })}
+                            {t('i18n.lifecycle.markedAt')}: {formatDateTime(item.lifecycleMarkedAt)}{' '}
+                            · {t('i18n.lifecycle.observingDays', { count: item.observingDays })}
                           </Text>
                         ) : null}
                       </Space>

@@ -50,7 +50,7 @@ test.describe('system layout contract', () => {
         const metrics = await page.evaluate(() => {
           const visible = (node: Element) => {
             const rect = node.getBoundingClientRect();
-            const style = window.getComputedStyle(node);
+            const style = globalThis.getComputedStyle(node);
             return (
               rect.width > 0 &&
               rect.height > 0 &&

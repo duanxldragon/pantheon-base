@@ -3,9 +3,12 @@
   "scripts": {
     "check:docs-frontmatter": "node scripts/frontmatter-check.mjs",
     "check:docs-frontmatter:legacy": "node scripts/frontmatter-check.mjs --report-legacy",
+    "check:task-packet-template": "node scripts/check-task-packet-template.mjs",
+    "check:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs --check",
+    "cleanup:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs",
     "test:docs-frontmatter": "node --test tests/docs/frontmatter-check.test.mjs"
   },
   "devDependencies": {
-    "playwright": "^1.59.1"
+    "playwright": "^1.60.0"
   }
 }

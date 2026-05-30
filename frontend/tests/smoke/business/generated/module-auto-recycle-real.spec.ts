@@ -82,7 +82,7 @@ function buildGenerateRequest() {
         {
           key: moduleKey,
           titleKey: `${moduleKey}.title`,
-          path: `/business/${moduleName}`,
+          path: `/operations/${moduleName}`,
           component: `business/${moduleName}/AutorecycleqaList`,
           pagePermission: `business:${moduleName}:list`,
           type: 'C',

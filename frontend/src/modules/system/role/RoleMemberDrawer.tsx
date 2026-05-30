@@ -75,6 +75,21 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const resetDrawerState = () => {
+    setMemberRows([]);
+    setMemberTotal(0);
+    setMemberError(false);
+    setMemberQuery(defaultMemberQuery);
+    setCandidateOptions([]);
+    setCandidateKeyword('');
+    setSelectedCandidateIds([]);
+  };
+
+  const handleClose = () => {
+    resetDrawerState();
+    onClose();
+  };
+
   const toggleCandidate = (userId: number) => {
     setSelectedCandidateIds((current) =>
       current.includes(userId)
@@ -137,17 +152,13 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
 
   useEffect(() => {
     if (!visible || !role) {
-      setMemberRows([]);
-      setMemberTotal(0);
-      setMemberError(false);
-      setCandidateOptions([]);
-      setCandidateKeyword('');
-      setSelectedCandidateIds([]);
-      setMemberQuery(defaultMemberQuery);
       return;
     }
-    void loadMembers(defaultMemberQuery);
-    void loadCandidates('');
+    const timer = globalThis.setTimeout(() => {
+      void loadMembers(defaultMemberQuery);
+      void loadCandidates('');
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
   }, [role, visible]);
 
   const handleMemberTableChange: TableProps<RoleMemberRow>['onChange'] = (pagination) => {
@@ -295,7 +306,7 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
       visible={visible}
       size="detail"
       footer={null}
-      onCancel={onClose}
+      onCancel={handleClose}
     >
       <Space direction="vertical" size={16} className="role-member-drawer__stack">
         <Card className="dialog-grid-card role-member-drawer__summary-card" size="small">

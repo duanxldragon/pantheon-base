@@ -1,3 +1,4 @@
-const generatedjaJPFallback = {};
+const generatedjaJPFallback = {
+};
 
 export default generatedjaJPFallback;
