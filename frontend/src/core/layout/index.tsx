@@ -137,6 +137,36 @@ interface NoticeRecentItem {
 
 type TranslateLabel = (key: string, options?: Record<string, unknown>) => string;
 type NavigateToPath = (path: string) => void;
+interface MenuRenderOptions {
+  handleMenuNavigation: NavigateToPath;
+  t: TranslateLabel;
+}
+
+function buildOpenedPageTab(
+  path: string,
+  fallbackTitle: string,
+  options: Partial<OpenedPageTab> = {},
+): OpenedPageTab {
+  return {
+    path,
+    titleKey: options.titleKey,
+    fallbackTitle,
+    closable: options.closable ?? path !== '/dashboard',
+    pinned: options.pinned ?? path === '/dashboard',
+  };
+}
+
+function normalizeOpenedPageTab(item: OpenedPageTab): OpenedPageTab {
+  return {
+    ...item,
+    closable: item.path !== '/dashboard' && item.closable !== false,
+    pinned: item.path === '/dashboard' || Boolean(item.pinned),
+  };
+}
+
+function normalizeOpenedTabs(tabs: OpenedPageTab[]): OpenedPageTab[] {
+  return tabs.map((item) => normalizeOpenedPageTab(item));
+}
 
 function orderOpenedTabs(tabs: OpenedPageTab[]): OpenedPageTab[] {
   const dashboardTabs = tabs.filter((item) => item.path === '/dashboard');
@@ -167,17 +197,38 @@ function readOpenedTabs(): OpenedPageTab[] {
       return [];
     }
     return orderOpenedTabs(
-      parsed
-        .filter((item) => typeof item.path === 'string' && item.path.startsWith('/'))
-        .map((item) => ({
-          ...item,
-          closable: item.path !== '/dashboard' && item.closable !== false,
-          pinned: item.path === '/dashboard' || Boolean(item.pinned),
-        })),
+      normalizeOpenedTabs(
+        parsed.filter((item) => typeof item.path === 'string' && item.path.startsWith('/')),
+      ),
     );
   } catch {
     return [];
   }
+}
+
+function mergeOpenedTabsIntoState(
+  currentTabs: OpenedPageTab[],
+  nextTab: OpenedPageTab,
+  dashboardTitle: string,
+): OpenedPageTab[] {
+  const existingIndex = currentTabs.findIndex((item) => item.path === nextTab.path);
+  const mergedTabs =
+    existingIndex >= 0
+      ? currentTabs.map((item, index) =>
+          index === existingIndex ? { ...item, ...nextTab, pinned: item.pinned || nextTab.pinned } : item,
+        )
+      : [...currentTabs, nextTab];
+  const dashboardTab = buildOpenedPageTab('/dashboard', dashboardTitle, {
+    titleKey: 'dashboard.title',
+    closable: false,
+    pinned: true,
+  });
+  const normalizedTabs = mergedTabs.some((item) => item.path === '/dashboard')
+    ? mergedTabs
+    : [dashboardTab, ...mergedTabs];
+  const limitedTabs = limitOpenedTabs(normalizeOpenedTabs(normalizedTabs));
+  localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(limitedTabs));
+  return limitedTabs;
 }
 
 function findMenuTitleKey(nodes: MenuNode[], path: string): string | undefined {
@@ -246,6 +297,79 @@ function findMenuNavigationPath(item: MenuNode): string | undefined {
     return item.path;
   }
   return item.children?.length ? findFirstNavigableMenuPath(item.children) || undefined : undefined;
+}
+
+function preloadRouteByPath(path: string) {
+  preloadRouteComponent(path).catch(() => undefined);
+}
+
+function renderMenuItems(
+  nodes: MenuNode[],
+  options: MenuRenderOptions,
+  level = 0,
+): React.ReactNode[] {
+  return nodes.map((item) => {
+    const entryClassName = [
+      'app-shell__menu-entry',
+      `app-shell__menu-entry--level-${Math.min(level, 2)}`,
+      item.children && item.children.length > 0
+        ? 'app-shell__menu-entry--group'
+        : 'app-shell__menu-entry--leaf',
+    ].join(' ');
+    const iconClassName = [
+      'app-shell__menu-entry-icon',
+      `app-shell__menu-entry-icon--level-${Math.min(level, 2)}`,
+    ].join(' ');
+
+    if (item.children && item.children.length > 0) {
+      const navigationPath = findMenuNavigationPath(item);
+      const handleGroupNavigation = () => {
+        if (navigationPath) {
+          options.handleMenuNavigation(navigationPath);
+        }
+      };
+
+      return (
+        <Menu.SubMenu
+          key={item.id.toString()}
+          title={
+            <button type="button" className={entryClassName} onClick={handleGroupNavigation}>
+              <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
+              <span className="app-shell__menu-entry-copy">
+                <span className="app-shell__menu-entry-label">{options.t(item.titleKey)}</span>
+              </span>
+            </button>
+          }
+        >
+          {renderMenuItems(item.children, options, level + 1)}
+        </Menu.SubMenu>
+      );
+    }
+
+    const handleLeafNavigation = () => {
+      options.handleMenuNavigation(item.path);
+    };
+    const handleLeafPreload = () => {
+      preloadRouteByPath(item.path);
+    };
+
+    return (
+      <Menu.Item key={item.path}>
+        <button
+          type="button"
+          className={entryClassName}
+          onClick={handleLeafNavigation}
+          onMouseEnter={handleLeafPreload}
+          onFocus={handleLeafPreload}
+        >
+          <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
+          <span className="app-shell__menu-entry-copy">
+            <span className="app-shell__menu-entry-label">{options.t(item.titleKey)}</span>
+          </span>
+        </button>
+      </Menu.Item>
+    );
+  });
 }
 
 function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): MenuNode[] {
@@ -814,55 +938,13 @@ const BaseLayout: React.FC = () => {
   }, [locked]);
 
   useEffect(() => {
-    const nextTab: OpenedPageTab = {
-      path: location.pathname,
+    const nextTab = buildOpenedPageTab(location.pathname, currentPageTitle, {
       titleKey: currentTabTitleKey,
-      fallbackTitle: currentPageTitle,
-      closable: location.pathname !== '/dashboard',
-      pinned: location.pathname === '/dashboard',
-    };
-
-    const mergeTabsIntoState = (
-      currentTabs: OpenedPageTab[],
-      currentNextTab: OpenedPageTab,
-      dashboardTitle: string,
-    ) => {
-      const existingIndex = currentTabs.findIndex((item) => item.path === currentNextTab.path);
-      const mergedTabs =
-        existingIndex >= 0
-          ? currentTabs.map((item, index) =>
-              index === existingIndex
-                ? { ...item, ...currentNextTab, pinned: item.pinned || currentNextTab.pinned }
-                : item,
-            )
-          : [...currentTabs, currentNextTab];
-      const normalizedTabs = mergedTabs.some((item) => item.path === '/dashboard')
-        ? mergedTabs
-        : [
-            {
-              path: '/dashboard',
-              titleKey: 'dashboard.title',
-              fallbackTitle: dashboardTitle,
-              closable: false,
-              pinned: true,
-            },
-            ...mergedTabs,
-          ];
-      const limitedTabs = limitOpenedTabs(
-        normalizedTabs.map((item) => ({
-          ...item,
-          closable: item.path !== '/dashboard' && item.closable !== false,
-          pinned: item.path === '/dashboard' || Boolean(item.pinned),
-        })),
-      );
-      localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(limitedTabs));
-      return limitedTabs;
-    };
+    });
 
     const timer = globalThis.setTimeout(() => {
-      setOpenedTabs((currentTabs) =>
-        mergeTabsIntoState(currentTabs, nextTab, t('dashboard.title')),
-      );
+      const dashboardTitle = t('dashboard.title');
+      setOpenedTabs((currentTabs) => mergeOpenedTabsIntoState(currentTabs, nextTab, dashboardTitle));
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [currentPageTitle, currentTabTitleKey, location.pathname, t]);
@@ -1405,76 +1487,18 @@ const BaseLayout: React.FC = () => {
     </div>
   );
 
-  const handleMenuNavigation = (key: string) => {
+  const handleMenuNavigation = useCallback((key: string) => {
     const selected = findMenuNodeByPath(visibleMenuTree, key);
     if (selected?.isExternal === 1) {
       globalThis.open(selected.path, '_blank', 'noopener,noreferrer');
       return;
     }
     navigate(key);
-  };
-
-  const renderMenuItems = (nodes: MenuNode[], level = 0) =>
-    nodes.map((item) => {
-      const entryClassName = [
-        'app-shell__menu-entry',
-        `app-shell__menu-entry--level-${Math.min(level, 2)}`,
-        item.children && item.children.length > 0
-          ? 'app-shell__menu-entry--group'
-          : 'app-shell__menu-entry--leaf',
-      ].join(' ');
-      const iconClassName = [
-        'app-shell__menu-entry-icon',
-        `app-shell__menu-entry-icon--level-${Math.min(level, 2)}`,
-      ].join(' ');
-
-      if (item.children && item.children.length > 0) {
-        const navigationPath = findMenuNavigationPath(item);
-        return (
-          <Menu.SubMenu
-            key={item.id.toString()}
-            title={
-              <button
-                type="button"
-                className={entryClassName}
-                onClick={() => {
-                  if (navigationPath) {
-                    handleMenuNavigation(navigationPath);
-                  }
-                }}
-              >
-                <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
-                <span className="app-shell__menu-entry-copy">
-                  <span className="app-shell__menu-entry-label">{t(item.titleKey)}</span>
-                </span>
-              </button>
-            }
-          >
-            {renderMenuItems(item.children, level + 1)}
-          </Menu.SubMenu>
-        );
-      }
-      return (
-        <Menu.Item key={item.path}>
-          <button
-            type="button"
-            className={entryClassName}
-            onClick={() => handleMenuNavigation(item.path)}
-            onMouseEnter={() => {
-              preloadRouteComponent(item.path).catch(() => undefined);
-            }}
-            onFocus={() => {
-              preloadRouteComponent(item.path).catch(() => undefined);
-            }}
-          >
-            <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
-            <span className="app-shell__menu-entry-copy">
-              <span className="app-shell__menu-entry-label">{t(item.titleKey)}</span>
-            </span>
-          </button>
-        </Menu.Item>
-      );
-    });
+  }, [navigate, visibleMenuTree]);
+  const renderedMenuItems = useMemo(
+    () => renderMenuItems(visibleMenuTree, { handleMenuNavigation, t }),
+    [handleMenuNavigation, t, visibleMenuTree],
+  );
 
   const openedTabsContent = publicSettings.enableTabBar ? (
     <div
@@ -1752,7 +1776,7 @@ const BaseLayout: React.FC = () => {
               defaultOpenKeys={menuOpenKeys}
               onClickMenuItem={handleMenuNavigation}
             >
-              {renderMenuItems(visibleMenuTree)}
+              {renderedMenuItems}
             </Menu>
           </Spin>
         </Sider>
@@ -1924,7 +1948,7 @@ const BaseLayout: React.FC = () => {
                 triggerProps={{ className: 'app-shell__top-menu-popup' }}
                 onClickMenuItem={handleMenuNavigation}
               >
-                {renderMenuItems(visibleMenuTree)}
+                {renderedMenuItems}
               </Menu>
             </Spin>
           </div>

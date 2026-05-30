@@ -27,7 +27,7 @@ func CasbinMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		allowed, err := authorizeRoleKeys(roleKeys, c.Request.URL.Path, c.Request.Method, func(roleKey string, obj string, act string) (bool, error) {
+		allowed, err := authorizeRoleKeys(roleKeys, c.Request.URL.Path, c.Request.Method, func(roleKey, obj, act string) (bool, error) {
 			return database.Enforcer.Enforce(roleKey, obj, act)
 		})
 		if err != nil || !allowed {
@@ -46,9 +46,8 @@ func failPermissionCheck(c *gin.Context, messageKey string) {
 
 func authorizeRoleKeys(
 	roleKeys []string,
-	obj string,
-	act string,
-	enforce func(roleKey string, obj string, act string) (bool, error),
+	obj, act string,
+	enforce func(roleKey, obj, act string) (bool, error),
 ) (bool, error) {
 	for _, roleKey := range roleKeys {
 		allowed, err := enforce(roleKey, obj, act)

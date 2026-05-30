@@ -41,7 +41,7 @@ func TestReadRoleKeysFromContext_FallsBackToSingleRoleKey(t *testing.T) {
 }
 
 func TestAuthorizeRoleKeys_AllowsWhenAnyRoleSucceeds(t *testing.T) {
-	allowed, err := authorizeRoleKeys([]string{"guest", "admin"}, "/api/v1/system/users", "GET", func(roleKey string, obj string, act string) (bool, error) {
+	allowed, err := authorizeRoleKeys([]string{"guest", "admin"}, "/api/v1/system/users", "GET", func(roleKey, obj, act string) (bool, error) {
 		return roleKey == "admin", nil
 	})
 	if err != nil {
@@ -53,7 +53,7 @@ func TestAuthorizeRoleKeys_AllowsWhenAnyRoleSucceeds(t *testing.T) {
 }
 
 func TestAuthorizeRoleKeys_DeniesWhenNoRoleMatches(t *testing.T) {
-	allowed, err := authorizeRoleKeys([]string{"guest", "operator"}, "/api/v1/system/users", "GET", func(roleKey string, obj string, act string) (bool, error) {
+	allowed, err := authorizeRoleKeys([]string{"guest", "operator"}, "/api/v1/system/users", "GET", func(roleKey, obj, act string) (bool, error) {
 		return false, nil
 	})
 	if err != nil {
@@ -66,7 +66,7 @@ func TestAuthorizeRoleKeys_DeniesWhenNoRoleMatches(t *testing.T) {
 
 func TestAuthorizeRoleKeys_StopsOnEnforcerError(t *testing.T) {
 	expectedErr := errors.New("enforce failed")
-	allowed, err := authorizeRoleKeys([]string{"admin"}, "/api/v1/system/users", "GET", func(roleKey string, obj string, act string) (bool, error) {
+	allowed, err := authorizeRoleKeys([]string{"admin"}, "/api/v1/system/users", "GET", func(roleKey, obj, act string) (bool, error) {
 		return false, expectedErr
 	})
 	if !errors.Is(err, expectedErr) {
