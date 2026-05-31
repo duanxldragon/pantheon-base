@@ -871,6 +871,40 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 	}
 }
 
+func TestAuthService_TouchSessionActivityUpdatesSanitizedFields(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	session := SystemUserSession{
+		SessionID:        "touch-session",
+		UserID:           42,
+		RefreshJTI:       "touch-jti",
+		RefreshExpiresAt: time.Now().Add(24 * time.Hour),
+		CreatedAt:        time.Now().Add(-2 * time.Hour),
+	}
+	if err := db.Create(&session).Error; err != nil {
+		t.Fatalf("seed session: %v", err)
+	}
+
+	if err := s.TouchSessionActivity("touch-session", 42, " 127.0.0.1 ", "  Test Browser\x00  "); err != nil {
+		t.Fatalf("touch session activity: %v", err)
+	}
+
+	var updated SystemUserSession
+	if err := db.Where("session_id = ?", "touch-session").First(&updated).Error; err != nil {
+		t.Fatalf("load updated session: %v", err)
+	}
+	if updated.LastActivityAt == nil {
+		t.Fatalf("expected last activity to be updated")
+	}
+	if updated.LastIP != "127.0.0.1" {
+		t.Fatalf("expected normalized ip, got %q", updated.LastIP)
+	}
+	if updated.UserAgent != "Test Browser" {
+		t.Fatalf("expected sanitized user agent, got %q", updated.UserAgent)
+	}
+}
+
 func TestAuthService_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)
