@@ -101,6 +101,10 @@ function removeSubdirs(parentDir) {
   return removed;
 }
 
+function relativePath(repoBase, targetPath) {
+  return path.relative(repoBase, targetPath).replaceAll('\\', '/');
+}
+
 function removeFilesByGlob(dir, pattern) {
   let removed = 0;
   if (!fs.existsSync(dir)) {
@@ -149,17 +153,13 @@ function appendDirtyIfFileMatches(dirty, filePath, message, patterns) {
   }
 }
 
-function hasGeneratedNamePrefix(name) {
-  return name.startsWith('mdqa');
-}
-
-function appendDirtyGeneratedDirectories(dirty, parentDir, repoBase) {
+function appendDirtyDirectories(dirty, parentDir, repoBase, label) {
   if (!fs.existsSync(parentDir)) {
     return;
   }
   for (const entry of fs.readdirSync(parentDir, { withFileTypes: true })) {
-    if (entry.isDirectory() && hasGeneratedNamePrefix(entry.name)) {
-      dirty.push(`generated module dir still present: ${path.relative(repoBase, path.join(parentDir, entry.name))}`);
+    if (entry.isDirectory()) {
+      dirty.push(`${label}: ${relativePath(repoBase, path.join(parentDir, entry.name))}`);
     }
   }
 }
@@ -169,8 +169,8 @@ function appendDirtyGeneratedSchemaFiles(dirty, schemaDir, repoBase) {
     return;
   }
   for (const entry of fs.readdirSync(schemaDir, { withFileTypes: true })) {
-    if (entry.isFile() && hasGeneratedNamePrefix(entry.name)) {
-      dirty.push(`generated schema file still present: ${path.relative(repoBase, path.join(schemaDir, entry.name))}`);
+    if (entry.isFile()) {
+      dirty.push(`generated schema file still present: ${relativePath(repoBase, path.join(schemaDir, entry.name))}`);
     }
   }
 }
@@ -213,9 +213,10 @@ export function checkDirty(paths = GENERATED_PATHS, registryFiles = REGISTRY_FIL
   }
 
   for (const dir of [paths.backendBusinessDir, paths.frontendBusinessDir]) {
-    appendDirtyGeneratedDirectories(dirty, dir, repoBase);
+    appendDirtyDirectories(dirty, dir, repoBase, 'generated module dir still present');
   }
 
+  appendDirtyDirectories(dirty, paths.schemaBusinessDir, repoBase, 'generated schema dir still present');
   appendDirtyGeneratedSchemaFiles(dirty, paths.schemaBusinessDir, repoBase);
 
   return dirty;
@@ -226,7 +227,8 @@ export function cleanup(paths = GENERATED_PATHS, registryFiles = REGISTRY_FILES)
 
   const backendRemoved = removeSubdirs(paths.backendBusinessDir);
   const frontendRemoved = removeSubdirs(paths.frontendBusinessDir);
-  summary.modules = backendRemoved + frontendRemoved;
+  const schemaRemoved = removeSubdirs(paths.schemaBusinessDir);
+  summary.modules = backendRemoved + frontendRemoved + schemaRemoved;
 
   summary.schemas = removeFilesByGlob(paths.schemaBusinessDir, String.raw`\.json$`);
 

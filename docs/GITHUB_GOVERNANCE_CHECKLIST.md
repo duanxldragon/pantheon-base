@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-05-31
 ---
 
 # GitHub Governance Checklist
@@ -27,31 +27,22 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 ## Required checks
 
 - `Quality Gates`
-- `SonarQube Analysis`
-- Any repo-specific smoke or audit jobs that are part of the merge gate
+- `Security Gates`
+- `Duplication Gate`
+- Any repo-specific smoke or audit jobs that are intentionally required in branch protection
 
 ## Secrets
 
-- `SONAR_TOKEN`
-- `SONAR_HOST_URL`
 - Any additional repository secrets needed by security or deployment workflows
 
-## Local temporary secret file
+## Local validation baseline
 
-For local validation without committing credentials:
+Run the same repository-owned entrypoints before opening a PR:
 
-- create `pantheon-sonarcloud.env` in the repo root
-- keep it git-ignored
-- use `scripts/run-sonar.ps1`
-- install SonarScanner CLI locally before running the script
-- if GitHub secrets are not configured, the GitHub Actions Sonar workflow is informational only and local validation is the active path
-
-Expected file format:
-
-```text
-SONAR_HOST_URL=https://sonarcloud.io
-SONAR_TOKEN=...
-```
+- `npm run check:duplication`
+- `go test -race ./...`
+- `cd frontend && npm run build`
+- run targeted smoke commands when generated modules, governance flows, or security-sensitive routes change
 
 ## Workflow triggers
 
@@ -61,6 +52,6 @@ SONAR_TOKEN=...
 
 ## Review evidence
 
-- PR description records ownership layer, boundary, validation, SonarQube status, and GitHub checks status
+- PR description records ownership layer, boundary, validation, GitHub check status, and duplication/security results
 - PR description names the independent reviewer
 - High-risk PRs record the second approval explicitly

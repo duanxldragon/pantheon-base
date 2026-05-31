@@ -1,8 +1,12 @@
-name: Code Quality Gates
+name: Quality Gates
 
 on:
   workflow_dispatch:
   pull_request:
+  push:
+    branches:
+      - main
+      - release/**
   merge_group:
 
 env:
@@ -10,10 +14,6 @@ env:
   GO_VERSION_FILE: go.mod
 
 jobs:
-  # ============================================================
-  # Phase 1: Fast Checks (Merge Group / PR)
-  # ============================================================
-
   docs-governance:
     name: Docs Governance
     runs-on: ubuntu-latest
@@ -21,21 +21,15 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Checkout pantheon-base foundation
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          repository: duanxldragon/pantheon-base
-          ref: main
-          path: pantheon-base-foundation
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
 
       - name: Install root dependencies
         run: npm ci
@@ -56,14 +50,15 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          package-manager-cache: false
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -88,126 +83,66 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
-          cache: true
+          cache: false
 
       - name: Test backend
         run: go test -race ./...
 
-  # ============================================================
-  # Phase 2: Security Analysis (CodeQL - Auxiliary)
-  # ============================================================
-
-  codeql-security:
-    name: CodeQL Security Scan
+  automation-contracts:
+    name: Automation Contracts
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: read
-      security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
-          languages: go, typescript
-          queries: security-extended
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:go,typescript"
+      - name: Test automation scripts
+        run: node --test tests/scripts/check-duplication.test.mjs frontend/scripts/run-smoke-suite.test.mjs frontend/scripts/cleanup-generated-modules.test.mjs
 
-  # ============================================================
-  # Phase 3: SonarQube Analysis (Primary Quality Gate)
-  # ============================================================
-
-  sonar-preview:
-    name: SonarQube Preview Analysis
-    needs: [docs-governance, frontend-contract, backend-tests]
+  quality-gates:
+    name: Quality Gates
+    needs:
+      - docs-governance
+      - frontend-contract
+      - backend-tests
+      - automation-contracts
+    if: always()
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     permissions:
       contents: read
-      pull-requests: write
-      statuses: write
     steps:
-      - name: Check Sonar configuration
-        id: sonar-config
+      - name: Enforce quality results
         shell: bash
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
+          FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
+          BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
+          AUTOMATION_CONTRACTS_RESULT: ${{ needs.automation-contracts.result }}
         run: |
-          if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Detect SonarCloud autoscan mode
-        id: sonar-mode
-        if: steps.sonar-config.outputs.enabled == 'true'
-        shell: bash
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_PROJECT_KEY: duanxldragon_pantheon-base
-        run: |
-          response="$(curl -fsS -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL}/api/settings/values?component=${SONAR_PROJECT_KEY}&keys=sonar.autoscan.enabled")"
-          if echo "$response" | grep -q '"value":"true"'; then
-            echo "run_scan=false" >> "$GITHUB_OUTPUT"
-            echo "SonarCloud automatic analysis is enabled; skipping CI scanner."
-          else
-            echo "run_scan=true" >> "$GITHUB_OUTPUT"
-            echo "SonarCloud automatic analysis is disabled; running CI scanner."
-          fi
-
-      - name: Checkout
-        if: steps.sonar-mode.outputs.run_scan == 'true'
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Setup Go
-        if: steps.sonar-mode.outputs.run_scan == 'true'
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: ${{ env.GO_VERSION_FILE }}
-          cache: true
-
-      - name: Generate Go coverage
-        if: steps.sonar-mode.outputs.run_scan == 'true'
-        run: go test -coverprofile=coverage.out ./...
-
-      - name: SonarQube PR Analysis
-        if: steps.sonar-mode.outputs.run_scan == 'true'
-        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.pullrequest.branch=${{ github.head_ref }}
-            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
-            -Dsonar.pullrequest.provider=github
-            -Dsonar.pullrequest.github.repository=${{ github.repository }}
-
-      - name: SonarQube skipped
-        if: steps.sonar-config.outputs.enabled != 'true' || steps.sonar-mode.outputs.run_scan != 'true'
-        run: |
-          if [ "${{ steps.sonar-config.outputs.enabled }}" != "true" ]; then
-            echo "Sonar secrets not configured; configure SONAR_TOKEN and SONAR_HOST_URL secrets."
-          else
-            echo "SonarCloud automatic analysis is enabled; CI scanner skipped."
+          echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
+          echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
+          echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
+          echo "Automation Contracts: ${AUTOMATION_CONTRACTS_RESULT}"
+          if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
+             [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
+             [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
+             [ "${AUTOMATION_CONTRACTS_RESULT}" != "success" ]; then
+            exit 1
           fi

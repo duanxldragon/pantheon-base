@@ -3,6 +3,7 @@
   "scripts": {
     "check:docs-frontmatter": "node scripts/frontmatter-check.mjs",
     "check:docs-frontmatter:legacy": "node scripts/frontmatter-check.mjs --report-legacy",
+    "check:duplication": "node scripts/check-duplication.mjs",
     "check:task-packet-template": "node scripts/check-task-packet-template.mjs",
     "check:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs --check",
     "cleanup:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs",

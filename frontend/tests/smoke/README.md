@@ -27,7 +27,7 @@ Pantheon smoke tests are grouped by ownership boundary.
 
 ## Fixture Control
 
-- Default behavior stays unchanged: smoke fixtures are cleaned automatically.
+- Default behavior stays unchanged: browser smoke cleans generated modules before and after the run, and opted-in fixture scopes are cleaned automatically.
 - Simple operator rule:
   - If the operator says `烟测保留数据`, run a preserve entry for the supported suite and keep the seeded records.
   - If the operator says `清理烟测数据`, run the cleanup entry directly.
@@ -44,7 +44,7 @@ Pantheon smoke tests are grouped by ownership boundary.
   - `npm run smoke:cleanup:org`
   - `npm run smoke:cleanup:config`
 - Current preserve coverage is intentionally limited to page-review fixtures such as user, role, dept, post, readonly viewer accounts, dict/i18n/permission UI seeds, and related API smoke records.
-- Generated business modules and codegen/runtime registry mutations are still treated as ephemeral test artifacts and should not be preserved by default.
+- Generated business modules, codegen/runtime registry mutations, schema artifacts, and generated i18n resources are still treated as ephemeral test artifacts and should not be preserved by default.
 
 ## Script Entry Map
 

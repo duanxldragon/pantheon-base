@@ -86,6 +86,19 @@ test('checkDirty detects generated module leftovers by prefix and content marker
   }
 });
 
+test('checkDirty detects any leftover business cmdb smoke directory', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  try {
+    mkdirSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb', 'host'), { recursive: true });
+
+    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot);
+
+    assert.ok(dirty.some((item) => item.includes('schema/generated/business/cmdb')));
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('cleanup removes generated leftovers and restores clean registry templates', () => {
   const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
   const backendGeneratedDir = path.join(generatedPaths.backendBusinessDir, 'mdqa-order');
@@ -121,12 +134,14 @@ test('cleanup removes generated leftovers and restores clean registry templates'
       "const generatedzhCNFallback = {\n  'business.mdqa.order': '订单'\n};\nexport default generatedzhCNFallback;\n",
       'utf8',
     );
+    mkdirSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb', 'host'), { recursive: true });
 
     cleanup(generatedPaths, registryFiles);
 
     assert.equal(existsSync(backendGeneratedDir), false);
     assert.equal(existsSync(frontendGeneratedDir), false);
     assert.equal(existsSync(generatedSchemaPath), false);
+    assert.equal(existsSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb')), false);
     assert.deepEqual(checkDirty(generatedPaths, registryFiles, repoRoot), []);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
