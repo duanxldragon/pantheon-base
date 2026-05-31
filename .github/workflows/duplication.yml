@@ -1,0 +1,48 @@
+name: Duplication Gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - release/**
+  merge_group:
+
+jobs:
+  duplication-gate:
+    name: Duplication Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Run duplication scan
+        id: duplication
+        continue-on-error: true
+        shell: bash
+        run: npm run check:duplication -- --json > duplication-report.json
+
+      - name: Upload duplication report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: duplication-report
+          path: duplication-report.json
+          if-no-files-found: warn
+
+      - name: Enforce duplication gate
+        if: always()
+        shell: bash
+        run: |
+          echo "duplication: ${{ steps.duplication.outcome }}"
+          if [ "${{ steps.duplication.outcome }}" != "success" ]; then
+            exit 1
+          fi

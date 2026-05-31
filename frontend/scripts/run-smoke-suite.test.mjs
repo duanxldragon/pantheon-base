@@ -5,11 +5,13 @@ import { spawn } from 'node:child_process';
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
+import { fileURLToPath } from 'node:url';
 
-const frontendRoot = process.cwd();
+const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runnerScript = path.join(frontendRoot, 'scripts', 'run-smoke-suite.mjs');
 const fixtureServerScript = path.join(frontendRoot, 'scripts', 'test-fixtures', 'bind-ready-server.mjs');
 const fakePlaywrightCli = path.join(frontendRoot, 'scripts', 'test-fixtures', 'fake-playwright-cli.mjs');
+const cleanupRecorderScript = path.join(frontendRoot, 'scripts', 'test-fixtures', 'record-cleanup.mjs');
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pantheon-smoke-runner-'));
 
 after(() => {
@@ -155,4 +157,109 @@ test('run-smoke-suite fails fast when the target port is already occupied', asyn
       });
     });
   }
+});
+
+test('run-smoke-suite cleans generated modules before and after execution and fixtures around opted-in runs', async () => {
+  const port = await getFreePort();
+  const markerPath = path.join(tmpRoot, `cleanup-${port}.jsonl`);
+  const configPath = path.join(tmpRoot, `config-cleanup-${port}.txt`);
+  fs.writeFileSync(configPath, 'placeholder');
+
+  const result = await spawnCommand(process.execPath, [
+    runnerScript,
+    '--host',
+    '127.0.0.1',
+    '--port',
+    String(port),
+    '--timeout',
+    '10000',
+    '--server-script',
+    fixtureServerScript,
+    '--playwright-cli',
+    fakePlaywrightCli,
+    '--generated-cleanup-script',
+    cleanupRecorderScript,
+    '--fixture-cleanup-script',
+    cleanupRecorderScript,
+    '--cleanup-fixtures',
+    'all',
+    '--config',
+    configPath,
+    '--',
+    'tests/smoke/fake.spec.ts',
+  ], {
+    env: {
+      ...process.env,
+      PANTHEON_CLEANUP_MARKER: markerPath,
+    },
+  });
+
+  assert.equal(result.code, 0, `${result.stderr}\n${result.stdout}`);
+  const entries = fs
+    .readFileSync(markerPath, 'utf8')
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.deepEqual(
+    entries.map((entry) => entry.args),
+    [
+      ['--kind', 'generated', '--phase', 'pre'],
+      ['--kind', 'fixture', '--phase', 'pre', '--scope', 'all'],
+      ['--kind', 'fixture', '--phase', 'post', '--scope', 'all'],
+      ['--kind', 'generated', '--phase', 'post'],
+    ],
+  );
+});
+
+test('run-smoke-suite skips fixture cleanup in preserve mode but still cleans generated modules', async () => {
+  const port = await getFreePort();
+  const markerPath = path.join(tmpRoot, `cleanup-preserve-${port}.jsonl`);
+  const configPath = path.join(tmpRoot, `config-cleanup-preserve-${port}.txt`);
+  fs.writeFileSync(configPath, 'placeholder');
+
+  const result = await spawnCommand(process.execPath, [
+    runnerScript,
+    '--host',
+    '127.0.0.1',
+    '--port',
+    String(port),
+    '--timeout',
+    '10000',
+    '--server-script',
+    fixtureServerScript,
+    '--playwright-cli',
+    fakePlaywrightCli,
+    '--generated-cleanup-script',
+    cleanupRecorderScript,
+    '--fixture-cleanup-script',
+    cleanupRecorderScript,
+    '--cleanup-fixtures',
+    'all',
+    '--config',
+    configPath,
+    '--',
+    'tests/smoke/fake.spec.ts',
+  ], {
+    env: {
+      ...process.env,
+      PANTHEON_CLEANUP_MARKER: markerPath,
+      PANTHEON_SMOKE_PRESERVE_FIXTURES: '1',
+    },
+  });
+
+  assert.equal(result.code, 0, `${result.stderr}\n${result.stdout}`);
+  const entries = fs
+    .readFileSync(markerPath, 'utf8')
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.deepEqual(
+    entries.map((entry) => entry.args),
+    [
+      ['--kind', 'generated', '--phase', 'pre'],
+      ['--kind', 'generated', '--phase', 'post'],
+    ],
+  );
 });

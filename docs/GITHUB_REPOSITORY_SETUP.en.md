@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-05-31
 ---
 
 # GitHub Repository Setup Guide
@@ -41,9 +41,8 @@ Recommended approval policy:
 Add these checks to the required checks list:
 
 - `Quality Gates`
-- `SonarQube Analysis`
-
-If the repo has additional merge-gate jobs, add them too.
+- `Security Gates`
+- `Duplication Gate`
 
 ### 1.3 Code owners
 
@@ -51,23 +50,18 @@ Keep `CODEOWNERS` enabled so the owner is always requested for review.
 
 ### 1.4 Secrets
 
-Configure repository secrets:
+Configure the repository secrets required by deployment or security automation.
 
-- `SONAR_TOKEN`
-- `SONAR_HOST_URL`
-
-For SonarCloud:
-
-- `SONAR_HOST_URL=https://sonarcloud.io`
+GitHub-native quality gates do not require Sonar credentials.
 
 ### 1.5 Local validation
 
-For local validation without committing credentials:
+Use the same entrypoints as CI:
 
-1. create `pantheon-sonarcloud.env` in the repo root
-2. keep it ignored by Git
-3. run `scripts/run-sonar.ps1`
-4. install SonarScanner CLI locally before running the script
+1. run `npm run check:duplication`
+2. run `go test -race ./...`
+3. run `cd frontend && npm run build`
+4. run targeted smoke commands when the change touches generated modules or system governance
 
 ## 2. Ops repository
 
@@ -81,6 +75,6 @@ After configuration, verify:
 
 - PRs request the code owner automatically
 - branch protection blocks direct push to protected branches
-- required checks show both `Quality Gates` and `SonarQube Analysis`
+- required checks show `Quality Gates`, `Security Gates`, and `Duplication Gate`
 - stale approvals are dismissed after new commits
-- the PR template records review ownership, SonarQube status, and GitHub checks status
+- the PR template records review ownership, GitHub check status, and duplication/security results

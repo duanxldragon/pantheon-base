@@ -19,6 +19,10 @@ function normalizeUrl(url) {
   return normalized;
 }
 
+function isTruthy(value) {
+  return /^(1|true|yes|on)$/i.test(String(value ?? '').trim());
+}
+
 async function waitForHttp(url, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   let lastError = null;
@@ -155,41 +159,27 @@ const setupScript = readArg('--setup');
 const serverScript = readArg('--server-script', 'scripts/start-smoke-vite.mjs');
 const playwrightCli = readArg('--playwright-cli', './node_modules/playwright/cli.js');
 const playwrightSubcommand = readArg('--playwright-subcommand', 'test');
+const generatedCleanupScript = readArg('--generated-cleanup-script', 'scripts/cleanup-generated-modules.mjs');
+const fixtureCleanupScript = readArg('--fixture-cleanup-script', 'scripts/cleanup-smoke-fixtures.mjs');
+const fixtureCleanupScope = readArg('--cleanup-fixtures', '');
 const separatorIndex = process.argv.indexOf('--');
 const testArgs = separatorIndex >= 0 ? process.argv.slice(separatorIndex + 1) : [];
 const webBaseUrl = `http://${host}:${port}`;
+const preserveFixtures = isTruthy(process.env.PANTHEON_SMOKE_PRESERVE_FIXTURES);
+
+let server = null;
+let shuttingDown = false;
 
 if (!config) {
   throw new Error('--config is required');
 }
 
-const serverArgs = [serverScript, '--host', host, '--port', port];
-if (setupScript) {
-  serverArgs.push('--setup', setupScript);
-}
-if (proxyTarget) {
-  serverArgs.push('--proxy-target', proxyTarget);
-}
-
-const server = spawn(process.execPath, serverArgs, {
-  cwd: process.cwd(),
-  env: {
-    ...process.env,
-    PANTHEON_EXTERNAL_WEB_SERVER: '1',
-    PANTHEON_SMOKE_READY_TOKEN: readyToken,
-    PANTHEON_WEB_BASE_URL: webBaseUrl,
-  },
-  stdio: ['ignore', 'pipe', 'pipe'],
-  shell: false,
-});
-
-let shuttingDown = false;
 async function stopServer() {
   if (shuttingDown) {
     return;
   }
   shuttingDown = true;
-  if (server.exitCode !== null) {
+  if (!server || server.exitCode !== null) {
     return;
   }
   server.kill('SIGTERM');
@@ -206,6 +196,26 @@ async function stopServer() {
   });
 }
 
+function cleanupArgs(kind, phase, scope = '') {
+  const args = ['--kind', kind, '--phase', phase];
+  if (scope) {
+    args.push('--scope', scope);
+  }
+  return args;
+}
+
+async function runCleanup(scriptPath, args, label) {
+  const result = await spawnChild(process.execPath, [scriptPath, ...args], {
+    cwd: process.cwd(),
+    env: process.env,
+  });
+  const exitCode = result.code ?? (result.signal ? 1 : 0);
+  if (exitCode !== 0) {
+    console.error(`[smoke-suite] ${label} cleanup exited with code ${exitCode}`);
+  }
+  return exitCode;
+}
+
 for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
   process.on(signal, async () => {
     await stopServer();
@@ -213,35 +223,99 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
   });
 }
 
-try {
-  const readyUrl = await waitForServerReady(server, timeoutMs, webBaseUrl);
-  if (normalizeUrl(readyUrl) !== normalizeUrl(webBaseUrl)) {
-    throw new Error(`Smoke server announced unexpected ready URL ${readyUrl}; expected ${webBaseUrl}`);
-  }
-  await waitForHttp(webBaseUrl, timeoutMs);
-  const result = await spawnChild(process.execPath, [playwrightCli, playwrightSubcommand, ...testArgs, '--config', config], {
-    cwd: process.cwd(),
-    env: {
-      ...process.env,
-      PANTHEON_EXTERNAL_WEB_SERVER: '1',
-      PANTHEON_WEB_BASE_URL: webBaseUrl,
-    },
-  });
-  const exitCode = result.code ?? (result.signal ? 1 : 0);
-  await stopServer();
-  let finalExitCode = exitCode;
-  if (exitCode === 0) {
-    const cleanupResult = await spawnChild(process.execPath, ['scripts/cleanup-generated-modules.mjs'], {
+async function main() {
+  let finalExitCode = 0;
+
+  try {
+    const preGeneratedCleanup = await runCleanup(
+      generatedCleanupScript,
+      cleanupArgs('generated', 'pre'),
+      'generated',
+    );
+    if (preGeneratedCleanup !== 0) {
+      finalExitCode = preGeneratedCleanup;
+      return;
+    }
+
+    const serverArgs = [serverScript, '--host', host, '--port', port];
+    if (setupScript) {
+      serverArgs.push('--setup', setupScript);
+    }
+    if (proxyTarget) {
+      serverArgs.push('--proxy-target', proxyTarget);
+    }
+
+    server = spawn(process.execPath, serverArgs, {
       cwd: process.cwd(),
+      env: {
+        ...process.env,
+        PANTHEON_EXTERNAL_WEB_SERVER: '1',
+        PANTHEON_SMOKE_READY_TOKEN: readyToken,
+        PANTHEON_WEB_BASE_URL: webBaseUrl,
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
     });
-    if (cleanupResult.code !== 0) {
-      console.error('[smoke-suite] cleanup exited with code %d', cleanupResult.code);
-      finalExitCode = cleanupResult.code;
+
+    const readyUrl = await waitForServerReady(server, timeoutMs, webBaseUrl);
+    if (normalizeUrl(readyUrl) !== normalizeUrl(webBaseUrl)) {
+      throw new Error(`Smoke server announced unexpected ready URL ${readyUrl}; expected ${webBaseUrl}`);
+    }
+    await waitForHttp(webBaseUrl, timeoutMs);
+
+    if (fixtureCleanupScope && !preserveFixtures) {
+      const preFixtureCleanup = await runCleanup(
+        fixtureCleanupScript,
+        cleanupArgs('fixture', 'pre', fixtureCleanupScope),
+        'fixture',
+      );
+      if (preFixtureCleanup !== 0) {
+        finalExitCode = preFixtureCleanup;
+        return;
+      }
+    }
+
+    const result = await spawnChild(
+      process.execPath,
+      [playwrightCli, playwrightSubcommand, ...testArgs, '--config', config],
+      {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          PANTHEON_EXTERNAL_WEB_SERVER: '1',
+          PANTHEON_WEB_BASE_URL: webBaseUrl,
+        },
+      },
+    );
+    finalExitCode = result.code ?? (result.signal ? 1 : 0);
+  } catch (error) {
+    console.error(error);
+    finalExitCode = 1;
+  } finally {
+    await stopServer();
+
+    if (fixtureCleanupScope && !preserveFixtures) {
+      const postFixtureCleanup = await runCleanup(
+        fixtureCleanupScript,
+        cleanupArgs('fixture', 'post', fixtureCleanupScope),
+        'fixture',
+      );
+      if (finalExitCode === 0 && postFixtureCleanup !== 0) {
+        finalExitCode = postFixtureCleanup;
+      }
+    }
+
+    const postGeneratedCleanup = await runCleanup(
+      generatedCleanupScript,
+      cleanupArgs('generated', 'post'),
+      'generated',
+    );
+    if (finalExitCode === 0 && postGeneratedCleanup !== 0) {
+      finalExitCode = postGeneratedCleanup;
     }
   }
+
   process.exit(finalExitCode);
-} catch (error) {
-  console.error(error);
-  await stopServer();
-  process.exit(1);
 }
+
+await main();

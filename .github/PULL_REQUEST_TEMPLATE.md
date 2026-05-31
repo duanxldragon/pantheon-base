@@ -17,10 +17,11 @@
 - [ ] 后端测试：`go test ./...`
 - [ ] 前端构建：`cd frontend && npm run build`
 - [ ] 系统页 smoke：`cd frontend && npm run test:smoke:system`
-- [ ] 角色授权 smoke：`cd frontend && npm run test:smoke:role-auth`
+- [ ] 角色授权 smoke：`cd frontend && npm run test:smoke:system:iam-authz`
 - [ ] 其他专项验证已补充
-- [ ] SonarQube Quality Gate 通过
-- [ ] GitHub required checks 通过
+- [ ] GitHub Quality Gates 通过
+- [ ] GitHub Security Gates 通过
+- [ ] Duplication Gate `<= 3%`
 - [ ] 独立 reviewer 已完成且非作者自审
 
 补充说明：
@@ -29,8 +30,8 @@
 
 - 独立 reviewer：
 - CODEOWNERS 命中：
-- SonarQube 结果链接：
 - GitHub checks 结果：
+- Duplication Gate 结果：
 - 是否高风险改动：
 - 若高风险，第二审批人：
 
