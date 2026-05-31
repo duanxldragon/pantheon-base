@@ -21,22 +21,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version-file: go.mod
-          cache: true
+          cache: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            frontend/package-lock.json
+          package-manager-cache: false
 
       - name: Prepare report directory
         run: mkdir -p security-reports
@@ -63,7 +62,7 @@ jobs:
 
       - name: Upload dependency reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: security-dependency-reports
           path: security-reports/
@@ -87,15 +86,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version-file: go.mod
-          cache: true
+          cache: false
 
       - name: Prepare report directory
         run: mkdir -p security-reports
@@ -103,11 +103,11 @@ jobs:
       - name: Report leaked secrets
         id: gitleaks
         continue-on-error: true
-        run: go run github.com/zricethezav/gitleaks/v8@latest detect --source . --redact --report-format json --report-path security-reports/gitleaks.json
+        run: go run github.com/zricethezav/gitleaks/v8@latest detect --no-git --source . --redact --report-format json --report-path security-reports/gitleaks.json
 
       - name: Upload secret reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: security-secret-reports
           path: security-reports/
@@ -127,13 +127,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Prepare report directory
         run: mkdir -p security-reports
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.x"
 
@@ -148,7 +150,7 @@ jobs:
 
       - name: Upload workflow posture reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: security-workflow-posture-reports
           path: security-reports/
@@ -157,9 +159,11 @@ jobs:
       - name: Enforce workflow posture gate
         if: always()
         shell: bash
+        env:
+          ZIZMOR_RESULT: ${{ steps.zizmor.outcome }}
         run: |
-          echo "zizmor: ${{ steps.zizmor.outcome }}"
-          if [ "${{ steps.zizmor.outcome }}" != "success" ]; then
+          echo "zizmor: ${ZIZMOR_RESULT}"
+          if [ "${ZIZMOR_RESULT}" != "success" ]; then
             exit 1
           fi
 
@@ -172,18 +176,19 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa
         with:
           languages: go, typescript
           queries: security-extended
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa
         with:
           category: "/language:go,typescript"
 
@@ -201,14 +206,19 @@ jobs:
     steps:
       - name: Enforce security results
         shell: bash
+        env:
+          DEPENDENCY_VULNERABILITIES_RESULT: ${{ needs.dependency-vulnerabilities.result }}
+          SECRET_SCAN_RESULT: ${{ needs.secret-scan.result }}
+          WORKFLOW_POSTURE_RESULT: ${{ needs.workflow-posture.result }}
+          CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
         run: |
-          echo "Dependency Vulnerabilities: ${{ needs.dependency-vulnerabilities.result }}"
-          echo "Secret Scan: ${{ needs.secret-scan.result }}"
-          echo "Workflow Posture: ${{ needs.workflow-posture.result }}"
-          echo "CodeQL Security Scan: ${{ needs.codeql-security.result }}"
-          if [ "${{ needs.dependency-vulnerabilities.result }}" != "success" ] || \
-             [ "${{ needs.secret-scan.result }}" != "success" ] || \
-             [ "${{ needs.workflow-posture.result }}" != "success" ] || \
-             [ "${{ needs.codeql-security.result }}" != "success" ]; then
+          echo "Dependency Vulnerabilities: ${DEPENDENCY_VULNERABILITIES_RESULT}"
+          echo "Secret Scan: ${SECRET_SCAN_RESULT}"
+          echo "Workflow Posture: ${WORKFLOW_POSTURE_RESULT}"
+          echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
+          if [ "${DEPENDENCY_VULNERABILITIES_RESULT}" != "success" ] || \
+             [ "${SECRET_SCAN_RESULT}" != "success" ] || \
+             [ "${WORKFLOW_POSTURE_RESULT}" != "success" ] || \
+             [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ]; then
             exit 1
           fi
