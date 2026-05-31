@@ -44,8 +44,10 @@ jobs:
       - name: Enforce duplication gate
         if: always()
         shell: bash
+        env:
+          DUPLICATION_RESULT: ${{ steps.duplication.outcome }}
         run: |
-          echo "duplication: ${{ steps.duplication.outcome }}"
-          if [ "${{ steps.duplication.outcome }}" != "success" ]; then
+          echo "duplication: ${DUPLICATION_RESULT}"
+          if [ "${DUPLICATION_RESULT}" != "success" ]; then
             exit 1
           fi
