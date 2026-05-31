@@ -48,11 +48,13 @@ func Open(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("build test database name: %v", err)
 	}
-	if _, err := adminDB.Exec(buildCreateDatabaseStatement(testDBName)); err != nil {
+	createDatabaseStatement := buildCreateDatabaseStatement(testDBName)
+	if _, err := adminDB.Exec(createDatabaseStatement); err != nil {
 		t.Fatalf("create test database %s: %v", testDBName, err)
 	}
+	dropDatabaseStatement := buildDropDatabaseStatement(testDBName)
 	t.Cleanup(func() {
-		_, _ = adminDB.Exec(buildDropDatabaseStatement(testDBName))
+		_, _ = adminDB.Exec(dropDatabaseStatement)
 	})
 
 	testCfg := *cfg
@@ -86,7 +88,7 @@ func Open(t *testing.T) *gorm.DB {
 var testDBNameSanitizer = regexp.MustCompile(`[^a-z0-9]+`)
 var validMySQLIdentifierPattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 
-func buildTestDBName(base string, testName string) (string, error) {
+func buildTestDBName(base, testName string) (string, error) {
 	normalizedBase := normalizeDBNameSegment(base, "pantheon")
 	if normalizedBase == "" {
 		normalizedBase = "pantheon"
@@ -111,7 +113,7 @@ func buildTestDBName(base string, testName string) (string, error) {
 	return name, nil
 }
 
-func normalizeDBNameSegment(value string, fallback string) string {
+func normalizeDBNameSegment(value, fallback string) string {
 	normalized := strings.ToLower(strings.TrimSpace(value))
 	normalized = testDBNameSanitizer.ReplaceAllString(normalized, "_")
 	normalized = strings.Trim(normalized, "_")
