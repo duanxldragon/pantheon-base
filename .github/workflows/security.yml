@@ -120,7 +120,7 @@ jobs:
 
       - name: Report repository security scorecard
         continue-on-error: true
-        uses: ossf/scorecard-action@v2.4.3
+        uses: ossf/scorecard-action@99c09fe975337306107572b4fdf4db224cf8e2f2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           results_file: security-reports/scorecard.json

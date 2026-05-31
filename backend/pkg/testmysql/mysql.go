@@ -1,9 +1,10 @@
 package testmysql
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"regexp"
 	"strings"
@@ -43,12 +44,17 @@ func Open(t *testing.T) *gorm.DB {
 	}
 	t.Cleanup(func() { _ = adminDB.Close() })
 
-	testDBName := buildTestDBName(cfg.DBName, t.Name())
-	if _, err := adminDB.Exec(fmt.Sprintf("CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci", testDBName)); err != nil {
+	testDBName, err := buildTestDBName(cfg.DBName, t.Name())
+	if err != nil {
+		t.Fatalf("build test database name: %v", err)
+	}
+	createDatabaseStatement := buildCreateDatabaseStatement(testDBName)
+	if _, err := adminDB.Exec(createDatabaseStatement); err != nil {
 		t.Fatalf("create test database %s: %v", testDBName, err)
 	}
+	dropDatabaseStatement := buildDropDatabaseStatement(testDBName)
 	t.Cleanup(func() {
-		_, _ = adminDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS `%s`", testDBName))
+		_, _ = adminDB.Exec(dropDatabaseStatement)
 	})
 
 	testCfg := *cfg
@@ -80,24 +86,63 @@ func Open(t *testing.T) *gorm.DB {
 }
 
 var testDBNameSanitizer = regexp.MustCompile(`[^a-z0-9]+`)
+var validMySQLIdentifierPattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 
-func buildTestDBName(base string, testName string) string {
-	normalizedBase := strings.ToLower(strings.TrimSpace(base))
+func buildTestDBName(base, testName string) (string, error) {
+	normalizedBase := normalizeDBNameSegment(base, "pantheon")
 	if normalizedBase == "" {
 		normalizedBase = "pantheon"
 	}
-	normalizedName := strings.ToLower(strings.TrimSpace(testName))
-	normalizedName = strings.ReplaceAll(normalizedName, "/", "_")
-	normalizedName = testDBNameSanitizer.ReplaceAllString(normalizedName, "_")
-	normalizedName = strings.Trim(normalizedName, "_")
+	normalizedName := normalizeDBNameSegment(strings.ReplaceAll(testName, "/", "_"), "test")
 	if normalizedName == "" {
 		normalizedName = "test"
 	}
 
-	suffix := fmt.Sprintf("%d_%04d", time.Now().UnixNano(), rand.Intn(10000))
+	suffix, err := randomSuffix()
+	if err != nil {
+		return "", err
+	}
 	name := fmt.Sprintf("%s_%s_%s", normalizedBase, normalizedName, suffix)
 	if len(name) > 60 {
 		name = name[:60]
 	}
-	return strings.TrimRight(name, "_")
+	name = strings.TrimRight(name, "_")
+	if !validMySQLIdentifierPattern.MatchString(name) {
+		return "", fmt.Errorf("invalid generated database name %q", name)
+	}
+	return name, nil
+}
+
+func normalizeDBNameSegment(value, fallback string) string {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	normalized = testDBNameSanitizer.ReplaceAllString(normalized, "_")
+	normalized = strings.Trim(normalized, "_")
+	if normalized == "" {
+		return fallback
+	}
+	return normalized
+}
+
+func randomSuffix() (string, error) {
+	value, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		return "", fmt.Errorf("generate random suffix: %w", err)
+	}
+	return fmt.Sprintf("%d_%04d", time.Now().UnixNano(), value.Int64()), nil
+}
+
+func buildCreateDatabaseStatement(name string) string {
+	return "CREATE DATABASE " + quoteMySQLIdentifier(name) + " CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
+}
+
+func buildDropDatabaseStatement(name string) string {
+	return "DROP DATABASE IF EXISTS " + quoteMySQLIdentifier(name)
+}
+
+func quoteMySQLIdentifier(name string) string {
+	normalized := strings.TrimSpace(name)
+	if !validMySQLIdentifierPattern.MatchString(normalized) {
+		panic(fmt.Sprintf("unsafe mysql identifier %q", name))
+	}
+	return "`" + normalized + "`"
 }

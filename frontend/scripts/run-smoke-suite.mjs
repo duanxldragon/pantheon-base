@@ -12,7 +12,11 @@ function readArg(flag, fallback = '') {
 }
 
 function normalizeUrl(url) {
-  return String(url || '').replace(/\/+$/, '');
+  let normalized = String(url || '');
+  while (normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1);
+  }
+  return normalized;
 }
 
 async function waitForHttp(url, timeoutMs) {
