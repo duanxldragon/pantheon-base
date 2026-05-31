@@ -75,21 +75,22 @@ export function parseFrontmatter(source) {
   for (const line of frontmatterLines) {
     if (!line.trim()) continue;
 
-    const arrayItemMatch = line.match(/^\s*-\s+(.*)$/);
-    if (arrayItemMatch) {
+    const trimmedLine = line.trimStart();
+    if (trimmedLine.startsWith('- ')) {
       if (!currentArrayKey) {
         throw new Error(`Array item found before array key: ${line}`);
       }
-      data[currentArrayKey].push(arrayItemMatch[1].trim());
+      data[currentArrayKey].push(trimmedLine.slice(2).trim());
       continue;
     }
 
-    const keyMatch = line.match(/^([A-Za-z0-9_]+):\s*(.*)$/);
-    if (!keyMatch) {
+    const colonIndex = line.indexOf(':');
+    const key = colonIndex > 0 ? line.slice(0, colonIndex) : '';
+    if (colonIndex <= 0 || !isFrontmatterKey(key)) {
       throw new Error(`Unsupported frontmatter line: ${line}`);
     }
 
-    const [, key, rawValue] = keyMatch;
+    const rawValue = line.slice(colonIndex + 1).trimStart();
     if (rawValue === '') {
       data[key] = [];
       currentArrayKey = key;
@@ -105,6 +106,21 @@ export function parseFrontmatter(source) {
     body: lines.slice(closingIndex + 1).join('\n'),
     hasFrontmatter: true,
   };
+}
+
+function isFrontmatterKey(value) {
+  if (!value) {
+    return false;
+  }
+  for (const char of value) {
+    const isLower = char >= 'a' && char <= 'z';
+    const isUpper = char >= 'A' && char <= 'Z';
+    const isDigit = char >= '0' && char <= '9';
+    if (!(isLower || isUpper || isDigit || char === '_')) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function expectedIndexGroup(filePath) {
@@ -202,10 +218,22 @@ export function parseContractBodyReferences(source) {
 
 export function extractReadmeDocLinks(source) {
   const links = [];
-  const regex = /\[[^\]]+\]\(([^)]+)\)/g;
-  let match;
-  while ((match = regex.exec(source)) !== null) {
-    const href = match[1].trim();
+  let cursor = 0;
+  while (cursor < source.length) {
+    const labelStart = source.indexOf('[', cursor);
+    if (labelStart === -1) {
+      break;
+    }
+    const hrefStart = source.indexOf('](', labelStart + 1);
+    if (hrefStart === -1) {
+      break;
+    }
+    const hrefEnd = source.indexOf(')', hrefStart + 2);
+    if (hrefEnd === -1) {
+      break;
+    }
+    const href = source.slice(hrefStart + 2, hrefEnd).trim();
+    cursor = hrefEnd + 1;
     if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('#')) continue;
     links.push(href);
   }
