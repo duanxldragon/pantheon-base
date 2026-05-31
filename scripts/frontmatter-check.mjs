@@ -74,31 +74,7 @@ export function parseFrontmatter(source) {
 
   for (const line of frontmatterLines) {
     if (!line.trim()) continue;
-
-    const trimmedLine = line.trimStart();
-    if (trimmedLine.startsWith('- ')) {
-      if (!currentArrayKey) {
-        throw new Error(`Array item found before array key: ${line}`);
-      }
-      data[currentArrayKey].push(trimmedLine.slice(2).trim());
-      continue;
-    }
-
-    const colonIndex = line.indexOf(':');
-    const key = colonIndex > 0 ? line.slice(0, colonIndex) : '';
-    if (colonIndex <= 0 || !isFrontmatterKey(key)) {
-      throw new Error(`Unsupported frontmatter line: ${line}`);
-    }
-
-    const rawValue = line.slice(colonIndex + 1).trimStart();
-    if (rawValue === '') {
-      data[key] = [];
-      currentArrayKey = key;
-      continue;
-    }
-
-    data[key] = rawValue.trim();
-    currentArrayKey = null;
+    currentArrayKey = parseFrontmatterLine(data, currentArrayKey, line);
   }
 
   return {
@@ -106,6 +82,32 @@ export function parseFrontmatter(source) {
     body: lines.slice(closingIndex + 1).join('\n'),
     hasFrontmatter: true,
   };
+}
+
+function parseFrontmatterLine(data, currentArrayKey, line) {
+  const trimmedLine = line.trimStart();
+  if (trimmedLine.startsWith('- ')) {
+    if (!currentArrayKey) {
+      throw new Error(`Array item found before array key: ${line}`);
+    }
+    data[currentArrayKey].push(trimmedLine.slice(2).trim());
+    return currentArrayKey;
+  }
+
+  const colonIndex = line.indexOf(':');
+  const key = colonIndex > 0 ? line.slice(0, colonIndex) : '';
+  if (colonIndex <= 0 || !isFrontmatterKey(key)) {
+    throw new Error(`Unsupported frontmatter line: ${line}`);
+  }
+
+  const rawValue = line.slice(colonIndex + 1).trimStart();
+  if (rawValue === '') {
+    data[key] = [];
+    return key;
+  }
+
+  data[key] = rawValue.trim();
+  return null;
 }
 
 function isFrontmatterKey(value) {
