@@ -98,6 +98,8 @@ npm run test:smoke:all
 - [DESIGN.md](./DESIGN.md): top-level architecture and domain boundaries
 - [docs/README.md](./docs/README.md): Chinese-first full documentation index
 - [docs/README.en.md](./docs/README.en.md): English companion index
+- [docs/designs/QUALITY_AND_SECURITY_STRATEGY.md](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md): code quality and security governance strategy
+- [SECURITY.md](./SECURITY.md): GitHub Security policy entry
 
 ## GitHub Presentation
 

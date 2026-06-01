@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-31
+updated_at: 2026-05-29
 ---
 
 # Pantheon 代码评审标准流程
@@ -50,18 +50,22 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 
 ## 0.2 自动化质量门栈
 
-Pantheon 默认采用“本地验证 + GitHub 原生门禁 + 独立 reviewer”三层门禁。
+Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + 手动 Sonar 辅助审查 + 独立 reviewer”五层协作。完整策略见 [代码质量与安全治理策略](../designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 - `本地验证`：作者提交前先跑与改动范围匹配的测试、构建和专项脚本
-- `GitHub 原生门禁`：PR 上必须通过 `Quality Gates`、`Security Gates`、`Duplication Gate`
+- `GitHub checks`：PR 上必须通过 required status checks
+- `CodeQL`：代码安全主信号，负责可达安全风险和高危漏洞
+- `SonarQube`：仅作为辅助审查工具，不进入 required checks；需要时手动扫描并查看报告
+- `Codacy`：如果存在，只能作为参考对比，不作为合并门禁
 - `独立 reviewer`：确认自动化未覆盖的架构边界、设计漂移和业务风险
 
-GitHub 原生门禁最低要求：
+手动 Sonar 辅助的最低建议：
 
-- `Quality Gates` 通过，且对应构建、lint、后端测试、自动化脚本合同检查为绿色
-- `Security Gates` 通过，且依赖漏洞、secret scan、workflow posture、CodeQL 检查为绿色
-- `Duplication Gate` 通过，且全库重复率 `<= 3%`
-- smoke 结束后不允许残留 generated registry、schema、临时业务模块目录或 generated i18n 资源
+- New Code 上 `Blocker / Critical` 问题为 `0`
+- Security Hotspots 已 review
+- New Code 覆盖率默认不低于 `80%`；例外要在 PR 中说明原因和补测计划
+- New Code 重复率默认低于 `3%`（`pantheon-base`）或 `5%`（`pantheon-ops`）
+- Reliability / Security / Maintainability 结果作为参考，不作为合并门禁
 
 GitHub 保护建议：
 
@@ -69,6 +73,7 @@ GitHub 保护建议：
 - 开启 Branch Protection、Required Status Checks、`Dismiss stale approvals`
 - 开启 `Require conversation resolution`
 - 使用 `CODEOWNERS` 自动请求域 reviewer
+- 不要把 Sonar 或 Codacy 的外部 check 加入 required checks
 
 ## 1. 评审入口
 
@@ -114,7 +119,7 @@ GitHub 保护建议：
 - `git diff --name-only`
 - 检查是否存在生成文件、注册表、schema、i18n 资源同时变更
 - 检查是否存在未解释的跨层改动
-- 检查 PR 是否附了 GitHub checks 结果、Duplication Gate 结果与独立 reviewer 信息
+- 检查 PR 是否附了 GitHub checks 结果、独立 reviewer 信息，以及如有需要的手动 Sonar 报告
 
 ### 3.2 架构边界
 
@@ -334,13 +339,12 @@ GitHub 保护建议：
 - `npm audit --audit-level=high` 无结果（CI 门禁）
 - Go 依赖定期检查更新 `[Phase]`
 
-#### 3.7.10 GitHub 原生质量与安全检查 `[Auto]` + `[PR]`
+#### 3.7.10 SonarQube 手动辅助审查 `[PR]`
 
-- `Quality Gates` 是否通过
-- `Security Gates` 是否通过
-- `Duplication Gate` 是否通过，且全库重复率 `<= 3%`
-- 是否仍存在 high / critical 依赖漏洞、secret 泄露或 workflow posture 风险未处理
-- 低代码 smoke 结束后 generated modules / registry / schema / i18n 是否已清理
+- 如有手动 Sonar 报告，是否已附在 PR 中
+- 报告中的严重问题是否已被明确处理或豁免
+- 是否存在 `Blocker / Critical` New Code 问题未处理
+- Security Hotspots 是否已 review 并记录处理结论
 - GitHub required checks 是否全部通过
 - 新提交后旧 approval 是否已失效并重新 review
 
@@ -513,7 +517,7 @@ npx lighthouse-batch --score=90
 - 已检查 diff 中所有生成物与注册物
 - 已修复可自动修复的 P0 / P1
 - 已记录剩余 P2 和后续处理建议
-- `Quality Gates`、`Security Gates`、`Duplication Gate` 已通过
+- 如有手动 Sonar 报告，是否有明确的受控豁免记录
 - GitHub required checks 已全部通过
 - 已完成独立 reviewer 审核，且不是作者自审替代
 - 已运行或明确说明未运行的验证命令
@@ -528,7 +532,7 @@ npx lighthouse-batch --score=90
 | 权限菜单 | §3.4 | `check:menu-contract` | 菜单≠权限、按钮权限不代理、生成器权限分离 | 权限工作台缺口扫描 |
 | 多语言 | §3.5 | `check:i18n-hardcode` `audit:i18n-locales` | key-first、日期/货币格式、长文本兼容 | RTL 适配、翻译覆盖率审计 |
 | UI | §3.6 | Token 扫描 | 封装组件合规、状态完整、禁止清单、双模式验收 | A11y 对比度、全视口回归 |
-| 安全 | §3.7 | `npm audit` `CodeQL` `gitleaks` `zizmor` | XSS/CSRF/越权/认证/敏感数据/安全头 | CSP/SSRF/CVE 依赖/接口防滥用策略 |
+| 安全 | §3.7 | `npm audit` | XSS/CSRF/越权/认证/敏感数据/安全头 | CSP/SSRF/CVE 依赖/接口防滥用策略 |
 | 测试副作用 | §3.8 | — | generated registry 完整性 | — |
 | 性能 | §3.9 | — | 虚拟滚动、内存泄漏、懒加载 | Lighthouse 评分/bundle 分析/API 响应时间 |
 | 代码规范 | §3.10 | `lint` `format:check` | 命名、组件拆分、业务解耦、TS 禁 any、Git 规范 | 组件重构审计、技术债追踪 |

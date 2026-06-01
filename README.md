@@ -124,14 +124,14 @@ npm run test:smoke:all
 
 ## 手动 Sonar
 
-Sonar 仅作为本地辅助审查工具，不参与 GitHub required checks。
+Sonar 仅作为辅助审查工具，不参与 GitHub required checks。CodeQL 负责安全主信号，Codacy 如果出现也只看作参考仪表盘。
 
 ```powershell
 Set-Content pantheon-sonarcloud.env "SONAR_HOST_URL=https://sonarcloud.io`nSONAR_TOKEN=..."
 ./scripts/run-sonar.ps1
 ```
 
-扫描结果上传后，直接在 SonarCloud 仪表盘查看热点、重复率和新代码问题。
+扫描结果上传后，直接在 SonarCloud 仪表盘查看热点、重复率和新代码问题。更完整的门禁策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 ## 权限模型摘要
 
@@ -153,6 +153,8 @@ Pantheon Platform 将权限拆成四层：
 - `docs/designs/FRONTEND.md`：前端架构与 UI 规范。
 - `docs/designs/BACKEND.md`：后端模块化单体规范。
 - `docs/designs/WORKFLOW.md`：开发流程与 AI 协作方式。
+- `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`：代码质量与安全治理策略。
+- `SECURITY.md`：GitHub Security policy 入口。
 
 ## 推荐阅读顺序
 

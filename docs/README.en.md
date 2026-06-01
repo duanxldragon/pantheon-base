@@ -58,6 +58,7 @@ For Chinese-first onboarding, read:
 - [designs/PERMISSION_MODEL.md](./designs/PERMISSION_MODEL.md)
 - [designs/DICT_AND_SETTING_DESIGN.md](./designs/DICT_AND_SETTING_DESIGN.md)
 - [designs/WORKFLOW.md](./designs/WORKFLOW.md)
+- [designs/QUALITY_AND_SECURITY_STRATEGY.md](./designs/QUALITY_AND_SECURITY_STRATEGY.md)
 
 ### Acceptance and delivery
 
@@ -68,6 +69,7 @@ For Chinese-first onboarding, read:
 - [acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
 - [GITHUB_GOVERNANCE_CHECKLIST.md](./GITHUB_GOVERNANCE_CHECKLIST.md)
 - [GITHUB_REPOSITORY_SETUP.md](./GITHUB_REPOSITORY_SETUP.md)
+- [../SECURITY.md](../SECURITY.md): security reporting policy
 
 ### Historical and retained material
 

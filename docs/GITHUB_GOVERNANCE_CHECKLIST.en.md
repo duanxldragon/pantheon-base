@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-05-31
+updated_at: 2026-05-29
 ---
 
 # GitHub Governance Checklist
@@ -27,31 +27,34 @@ Use this checklist when enabling the workflow described in `docs/designs/WORKFLO
 ## Required checks
 
 - `Quality Gates`
-- `Security Gates`
-- `Duplication Gate`
-- Any repo-specific smoke or audit jobs that are intentionally required in branch protection
+- Any repo-specific smoke or audit jobs that are part of the merge gate
+- Keep Sonar and Codacy out of required checks
 
 ## Secrets
 
-- Any additional repository secrets needed by security or deployment workflows
+- Any repository secrets needed by active security or deployment workflows
+- Do not configure Sonar secrets in GitHub; Sonar stays auxiliary and manual
 
-## Local validation baseline
+## Local temporary secret file
 
-Run the same repository-owned entrypoints before opening a PR:
+For local Sonar validation without committing credentials:
 
-- `npm run check:duplication`
-- `go test -race ./...`
-- `cd frontend && npm run build`
-- run targeted smoke commands when generated modules, governance flows, or security-sensitive routes change
+- create `pantheon-sonarcloud.env` in the repo root
+- keep it git-ignored
+- use `scripts/run-sonar.ps1`
+- install SonarScanner CLI locally before running the script
+- review the uploaded report in SonarCloud manually after the script completes
+- if Codacy appears, do not require it for merge
 
-## Workflow triggers
+Expected file format:
 
-- `pull_request`
-- `push` to `main` and `release/*`
-- `merge_group` for merge queue compatibility
+```text
+SONAR_HOST_URL=https://sonarcloud.io
+SONAR_TOKEN=...
+```
 
 ## Review evidence
 
-- PR description records ownership layer, boundary, validation, GitHub check status, and duplication/security results
+- PR description records ownership layer, boundary, validation, and GitHub checks status
 - PR description names the independent reviewer
 - High-risk PRs record the second approval explicitly
