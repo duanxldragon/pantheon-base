@@ -1,43 +1,26 @@
 package dynamicmodule
 
-import (
-	"path/filepath"
-	"testing"
-)
+import "testing"
 
-func TestGeneratedWorkspacePathRejectsTraversal(t *testing.T) {
-	workspaceRoot := prepareDynamicModuleWorkspace(t)
-
-	if target, ok := resolveGeneratedWorkspacePath(workspaceRoot, "../escape.txt"); ok || target != "" {
-		t.Fatalf("expected traversal path to be rejected, got target=%q ok=%v", target, ok)
+func TestGeneratedModuleRelativePathRejectsTraversal(t *testing.T) {
+	cases := [][]string{
+		{"schema", "generated", "business", "../secret.json"},
+		{"schema", "generated", "business", "cmdb/../secret.json"},
+		{"schema", "generated", "business", `C:\windows\system.ini`},
 	}
-	if generatedPathExists(workspaceRoot, "../escape.txt") {
-		t.Fatal("expected traversal file lookup to fail")
-	}
-	if generatedDirExists(workspaceRoot, "../escape.txt") {
-		t.Fatal("expected traversal directory lookup to fail")
-	}
-	if generatedFileContainsAll(workspaceRoot, "../escape.txt", "escape") {
-		t.Fatal("expected traversal file read to fail")
+	for _, parts := range cases {
+		if _, ok := generatedModuleRelativePath(parts...); ok {
+			t.Fatalf("expected traversal to be rejected for %v", parts)
+		}
 	}
 }
 
-func TestGeneratedWorkspacePathHelpersUseWorkspaceRoot(t *testing.T) {
-	workspaceRoot := prepareDynamicModuleWorkspace(t)
-
-	dirRelativePath := filepath.Join("backend", "modules", "business", "ticket")
-	fileRelativePath := filepath.Join("schema", "generated", "business", "ticket.json")
-
-	mustWriteFile(t, filepath.Join(workspaceRoot, dirRelativePath, "module.go"), "package ticket\n")
-	mustWriteFile(t, filepath.Join(workspaceRoot, fileRelativePath), `{"name":"ticket","scope":"business"}`)
-
-	if !generatedDirExists(workspaceRoot, dirRelativePath) {
-		t.Fatal("expected generated directory lookup to succeed")
+func TestGeneratedModuleRelativePathAllowsNestedModuleSchema(t *testing.T) {
+	target, ok := generatedModuleRelativePath("schema", "generated", "business", "cmdb/host.json")
+	if !ok {
+		t.Fatal("expected nested generated schema path to be valid")
 	}
-	if !generatedPathExists(workspaceRoot, fileRelativePath) {
-		t.Fatal("expected generated file lookup to succeed")
-	}
-	if !generatedFileContainsAll(workspaceRoot, fileRelativePath, `"name":"ticket"`, `"scope":"business"`) {
-		t.Fatal("expected generated file contents check to succeed")
+	if target != "schema/generated/business/cmdb/host.json" {
+		t.Fatalf("unexpected relative path: %s", target)
 	}
 }
