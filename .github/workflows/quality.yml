@@ -134,3 +134,33 @@ jobs:
         uses: github/codeql-action/analyze@dc73d59c2d7bd4f8194098a91219eeee6d8a1719
         with:
           category: "/language:go,typescript"
+  quality-gates:
+    name: Quality Gates
+    needs:
+      - docs-governance
+      - frontend-contract
+      - backend-tests
+      - codeql-security
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Enforce quality results
+        shell: bash
+        env:
+          DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
+          FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
+          BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
+          CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
+        run: |
+          echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
+          echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
+          echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
+          echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
+          if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
+             [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
+             [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
+             [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ]; then
+            exit 1
+          fi
