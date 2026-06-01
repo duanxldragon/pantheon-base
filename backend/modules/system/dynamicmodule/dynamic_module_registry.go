@@ -60,13 +60,23 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return false
 	}
-	return generatedDirExists(generatedModulePath(s.workspaceRoot, "backend", "modules", scope, name)) &&
-		generatedDirExists(generatedModulePath(s.workspaceRoot, "frontend", "src", "modules", scope, name)) &&
-		generatedPathExists(generatedModulePath(s.workspaceRoot, "schema", "generated", scope, name+".json"))
+	backendRelativePath := filepath.ToSlash(filepath.Join("backend", "modules", scope, name))
+	frontendRelativePath := filepath.ToSlash(filepath.Join("frontend", "src", "modules", scope, name))
+	schemaRelativePath := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
+	if !filepath.IsLocal(backendRelativePath) || !filepath.IsLocal(frontendRelativePath) || !filepath.IsLocal(schemaRelativePath) {
+		return false
+	}
+	return generatedDirExists(filepath.Join(s.workspaceRoot, filepath.FromSlash(backendRelativePath))) &&
+		generatedDirExists(filepath.Join(s.workspaceRoot, filepath.FromSlash(frontendRelativePath))) &&
+		generatedPathExists(filepath.Join(s.workspaceRoot, filepath.FromSlash(schemaRelativePath)))
 }
 
 func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name string) (*scaffold.ModuleSchema, error) {
-	target := generatedModulePath(s.workspaceRoot, "schema", "generated", scope, name+".json")
+	relativeTarget := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
+	if !filepath.IsLocal(relativeTarget) {
+		return nil, errors.New("module.register.schema_invalid")
+	}
+	target := filepath.Join(s.workspaceRoot, filepath.FromSlash(relativeTarget))
 	content, err := os.ReadFile(target)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

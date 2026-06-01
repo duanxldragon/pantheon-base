@@ -156,7 +156,7 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 
 	for _, file := range files {
 		relativePath := filepath.ToSlash(strings.TrimSpace(file.Path))
-		if relativePath == "" || strings.Contains(relativePath, "..") {
+		if relativePath == "" || strings.Contains(relativePath, "..") || !filepath.IsLocal(relativePath) {
 			return nil, errors.New("module.generate.invalid_path")
 		}
 		if !strings.HasPrefix(relativePath, backendPrefix) && !strings.HasPrefix(relativePath, frontendPrefix) {
@@ -180,7 +180,11 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 		written = append(written, relativePath)
 	}
 
-	schemaPath := filepath.Join(workspaceRoot, "schema", "generated", scope, name+".json")
+	schemaRelativePath := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
+	if !filepath.IsLocal(schemaRelativePath) {
+		return nil, errors.New("module.generate.invalid_path")
+	}
+	schemaPath := filepath.Join(workspaceRoot, filepath.FromSlash(schemaRelativePath))
 	if err := os.MkdirAll(filepath.Dir(schemaPath), 0o755); err != nil {
 		return nil, err
 	}
@@ -251,15 +255,16 @@ func RemoveGeneratedModuleSource(workspaceRoot string, scope string, name string
 	}
 
 	targets := []string{
-		filepath.Join(workspaceRoot, "backend", "modules", scope, name),
-		filepath.Join(workspaceRoot, "frontend", "src", "modules", scope, name),
-		filepath.Join(workspaceRoot, "schema", "generated", scope, name+".json"),
+		filepath.ToSlash(filepath.Join("backend", "modules", scope, name)),
+		filepath.ToSlash(filepath.Join("frontend", "src", "modules", scope, name)),
+		filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json")),
 	}
 
-	for _, target := range targets {
-		if !strings.HasPrefix(filepath.Clean(target), filepath.Clean(workspaceRoot)) {
+	for _, relativeTarget := range targets {
+		if !filepath.IsLocal(relativeTarget) {
 			return errors.New("module.generate.invalid_path")
 		}
+		target := filepath.Join(workspaceRoot, filepath.FromSlash(relativeTarget))
 		if err := os.RemoveAll(target); err != nil {
 			return err
 		}

@@ -345,7 +345,7 @@ func normalizeS3Endpoint(raw string) (string, bool, error) {
 func secureJoin(rootPath, relativePath string) (string, error) {
 	cleanRelative := strings.TrimSpace(relativePath)
 	cleanRelative = strings.TrimLeft(filepath.ToSlash(cleanRelative), "/")
-	if cleanRelative == "" {
+	if cleanRelative == "" || !filepath.IsLocal(cleanRelative) {
 		return "", errors.New("upload.path.invalid")
 	}
 	targetPath := filepath.Join(rootPath, filepath.FromSlash(cleanRelative))
