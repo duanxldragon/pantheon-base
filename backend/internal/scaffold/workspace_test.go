@@ -327,6 +327,19 @@ process.stdout.write(JSON.stringify(files));
 	}
 }
 
+func TestWriteGeneratedModuleSourceRejectsEscapingGeneratedFilePath(t *testing.T) {
+	root := prepareScaffoldWorkspaceRoot(t)
+	req := newScaffoldTestRequest()
+	req.Files = []GeneratedFile{{
+		Path:    "backend/modules/business/asset/../../outside.go",
+		Content: "package outside\n",
+	}}
+
+	if _, err := WriteGeneratedModuleSource(root, req); err == nil || err.Error() != "module.generate.invalid_path" {
+		t.Fatalf("expected invalid path error, got %v", err)
+	}
+}
+
 func newScaffoldTestRequest() *RegisterGeneratedModuleRequest {
 	req := &RegisterGeneratedModuleRequest{
 		Schema: ModuleSchema{
