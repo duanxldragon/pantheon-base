@@ -41,7 +41,6 @@ Recommended approval policy:
 Add these checks to the required checks list:
 
 - `Quality Gates`
-- `SonarQube Analysis`
 
 If the repo has additional merge-gate jobs, add them too.
 
@@ -51,27 +50,25 @@ Keep `CODEOWNERS` enabled so the owner is always requested for review.
 
 ### 1.4 Secrets
 
-Configure repository secrets:
+Configure only the repository secrets required by active GitHub Actions workflows.
 
-- `SONAR_TOKEN`
-- `SONAR_HOST_URL`
+Do not add Sonar secrets to the repository. Sonar is a local manual tool, not part of the CI gate.
 
-For SonarCloud:
+### 1.5 Local Sonar validation
 
-- `SONAR_HOST_URL=https://sonarcloud.io`
-
-### 1.5 Local validation
-
-For local validation without committing credentials:
+Use Sonar only as a local auxiliary review step:
 
 1. create `pantheon-sonarcloud.env` in the repo root
 2. keep it ignored by Git
 3. run `scripts/run-sonar.ps1`
 4. install SonarScanner CLI locally before running the script
+5. review the report in SonarCloud manually after the upload completes
 
 ## 2. Ops repository
 
-Repeat the same branch-protection, required-check, CODEOWNERS, and secret steps in `pantheon-ops`.
+Repeat the same branch-protection, required-check, and CODEOWNERS steps in `pantheon-ops`.
+
+Keep Sonar in the ops repository as a local manual tool only.
 
 The ops repository should keep the same review discipline as base, but only own business-specific drift and business-domain changes.
 
@@ -81,6 +78,6 @@ After configuration, verify:
 
 - PRs request the code owner automatically
 - branch protection blocks direct push to protected branches
-- required checks show both `Quality Gates` and `SonarQube Analysis`
+- required checks show only GitHub-native merge gates
 - stale approvals are dismissed after new commits
-- the PR template records review ownership, SonarQube status, and GitHub checks status
+- the PR template records review ownership and GitHub checks status

@@ -50,20 +50,20 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 
 ## 0.2 自动化质量门栈
 
-Pantheon 默认采用“本地验证 + GitHub checks + SonarQube + 独立 reviewer”四层门禁。
+Pantheon 默认采用“本地验证 + GitHub checks + 手动 Sonar 辅助审查 + 独立 reviewer”四层协作。
 
 - `本地验证`：作者提交前先跑与改动范围匹配的测试、构建和专项脚本
 - `GitHub checks`：PR 上必须通过 required status checks
-- `SonarQube`：PR 分析必须回写 quality gate，不允许把关键安全和可靠性问题留给人工猜测
+- `SonarQube`：仅作为辅助审查工具，不进入 required checks；需要时手动扫描并查看报告
 - `独立 reviewer`：确认自动化未覆盖的架构边界、设计漂移和业务风险
 
-SonarQube 最低要求：
+手动 Sonar 辅助的最低建议：
 
 - New Code 上 `Blocker / Critical` 问题为 `0`
-- Security Hotspots 已 review，不允许未处理直接合并
+- Security Hotspots 已 review
 - New Code 覆盖率默认不低于 `80%`；例外要在 PR 中说明原因和补测计划
 - New Code 重复率默认低于 `3%`
-- Reliability / Security / Maintainability Quality Gate 必须 `Passed`
+- Reliability / Security / Maintainability 结果作为参考，不作为合并门禁
 
 GitHub 保护建议：
 
@@ -116,7 +116,7 @@ GitHub 保护建议：
 - `git diff --name-only`
 - 检查是否存在生成文件、注册表、schema、i18n 资源同时变更
 - 检查是否存在未解释的跨层改动
-- 检查 PR 是否附了 SonarQube 结果、GitHub checks 结果与独立 reviewer 信息
+- 检查 PR 是否附了 GitHub checks 结果、独立 reviewer 信息，以及如有需要的手动 Sonar 报告
 
 ### 3.2 架构边界
 
@@ -336,10 +336,10 @@ GitHub 保护建议：
 - `npm audit --audit-level=high` 无结果（CI 门禁）
 - Go 依赖定期检查更新 `[Phase]`
 
-#### 3.7.10 SonarQube 与 GitHub 检查 `[Auto]` + `[PR]`
+#### 3.7.10 SonarQube 手动辅助审查 `[PR]`
 
-- SonarQube PR Decoration 是否已回写到 GitHub PR
-- SonarQube Quality Gate 是否为 `Passed`
+- 如有手动 Sonar 报告，是否已附在 PR 中
+- 报告中的严重问题是否已被明确处理或豁免
 - 是否存在 `Blocker / Critical` New Code 问题未处理
 - Security Hotspots 是否已 review 并记录处理结论
 - GitHub required checks 是否全部通过
@@ -514,7 +514,7 @@ npx lighthouse-batch --score=90
 - 已检查 diff 中所有生成物与注册物
 - 已修复可自动修复的 P0 / P1
 - 已记录剩余 P2 和后续处理建议
-- SonarQube Quality Gate 已通过，或有明确的受控豁免记录
+- 如有手动 Sonar 报告，是否有明确的受控豁免记录
 - GitHub required checks 已全部通过
 - 已完成独立 reviewer 审核，且不是作者自审替代
 - 已运行或明确说明未运行的验证命令

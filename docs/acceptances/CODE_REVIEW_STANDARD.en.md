@@ -50,16 +50,16 @@ Pantheon uses four layers by default:
 
 1. local validation
 2. GitHub required checks
-3. SonarQube PR analysis and quality gate
+3. optional manual Sonar review
 4. independent reviewer sign-off
 
-Minimum SonarQube expectations:
+Minimum manual Sonar guidance:
 
 - zero blocker or critical issues on new code
 - reviewed security hotspots before merge
 - new-code coverage at or above `80%`, unless the PR records a justified exception
 - new-code duplication below `3%`
-- passed reliability, security, and maintainability gates
+- use reliability, security, and maintainability results as reference only
 
 ## Mandatory Review Entry
 
@@ -92,6 +92,6 @@ The Chinese source remains the authoritative detailed standard, including requir
 
 At minimum, the detailed review record should also confirm:
 
-- SonarQube quality gate status
+- any manual Sonar report, if one was produced
 - GitHub required-check status
 - independent reviewer evidence

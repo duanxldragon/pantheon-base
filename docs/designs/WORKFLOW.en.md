@@ -114,16 +114,16 @@ Required gate stack:
 
 - local validation for the touched scope
 - GitHub required checks
-- SonarQube PR analysis and quality gate
+- optional manual Sonar review
 - independent reviewer sign-off
 
-Default SonarQube minimums:
+Default manual Sonar guidance:
 
 - `0` blocker or critical issues on new code
 - reviewed security hotspots before merge
 - new-code coverage at or above `80%`, or a documented PR exception
 - new-code duplication below `3%`
-- passed reliability, security, and maintainability gates
+- use reliability, security, and maintainability results as reference only
 
 Recommended GitHub protections:
 
@@ -198,17 +198,17 @@ Before submission, confirm:
 4. new assessment or remediation documents include type, status, and contract linkage
 5. superseded old documents are removed, downgraded, or explicitly marked
 
-### 3.2 Recommended GitHub and SonarQube Repository Controls
+### 3.2 Recommended GitHub Repository Controls
 
 Recommended repository defaults:
 
 1. protect `main` and `release/*`
-2. make SonarQube Quality Gate a required status check
+2. make GitHub-native checks the only required status checks
 3. require PR reviews, with higher approval counts for high-risk paths through `CODEOWNERS`
 4. dismiss stale approvals after new commits
 5. require conversation resolution before merge
 6. enable secret scanning, dependency review, and code scanning when available
-7. use SonarQube PR decoration so reviewers see issues and gate status directly inside GitHub
+7. use Sonar only as a manual auxiliary report, not as PR decoration or a merge gate
 
 ## 4. Smoke SOP for gstack on Windows
 

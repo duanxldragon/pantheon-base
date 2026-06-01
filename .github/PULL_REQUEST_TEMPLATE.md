@@ -19,7 +19,7 @@
 - [ ] 系统页 smoke：`cd frontend && npm run test:smoke:system`
 - [ ] 角色授权 smoke：`cd frontend && npm run test:smoke:role-auth`
 - [ ] 其他专项验证已补充
-- [ ] SonarQube Quality Gate 通过
+- [ ] 如需 SonarQube，仅完成手动辅助检查（非门禁）
 - [ ] GitHub required checks 通过
 - [ ] 独立 reviewer 已完成且非作者自审
 
@@ -29,7 +29,7 @@
 
 - 独立 reviewer：
 - CODEOWNERS 命中：
-- SonarQube 结果链接：
+- 如有手动 Sonar 结果链接：
 - GitHub checks 结果：
 - 是否高风险改动：
 - 若高风险，第二审批人：
