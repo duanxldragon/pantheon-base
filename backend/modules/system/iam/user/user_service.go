@@ -39,6 +39,20 @@ func (s *UserService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}, &SystemUserProfileExt{}); err != nil {
 		return err
 	}
+	if err := database.RunMigrations(s.db, "system.user", []database.MigrationStep{
+		{
+			Version: "20260601_user_query_indexes",
+			Apply: func(tx *gorm.DB) error {
+				return database.EnsureIndexes(tx, &SystemUser{},
+					"idx_system_user_dept_deleted",
+					"idx_system_user_post_deleted",
+					"idx_system_user_dept_status_post_deleted",
+				)
+			},
+		},
+	}); err != nil {
+		return err
+	}
 	if err := s.normalizeUserPreferenceJSON(); err != nil {
 		return err
 	}

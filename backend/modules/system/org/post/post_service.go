@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/impexp"
 
 	"gorm.io/gorm"
@@ -27,6 +28,19 @@ func (s *PostService) Migrate() error {
 		return errors.New("database.not_initialized")
 	}
 	if err := s.db.AutoMigrate(&SystemPost{}); err != nil {
+		return err
+	}
+	if err := database.RunMigrations(s.db, "system.post", []database.MigrationStep{
+		{
+			Version: "20260601_post_query_indexes",
+			Apply: func(tx *gorm.DB) error {
+				return database.EnsureIndexes(tx, &SystemPost{},
+					"idx_system_post_dept_deleted",
+					"idx_system_post_dept_status_deleted",
+				)
+			},
+		},
+	}); err != nil {
 		return err
 	}
 	return s.releaseDeletedPostCodes()

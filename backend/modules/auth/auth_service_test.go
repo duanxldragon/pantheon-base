@@ -33,6 +33,18 @@ func boolPtr(value bool) *bool {
 	return &value
 }
 
+func TestAuthService_MigrateEnsuresSessionQueryIndexes(t *testing.T) {
+	db := testmysql.Open(t)
+	s := NewAuthService(db)
+
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate auth: %v", err)
+	}
+	if !db.Migrator().HasIndex(&SystemUserSession{}, "idx_system_user_session_user_revoked") {
+		t.Fatalf("expected idx_system_user_session_user_revoked to exist")
+	}
+}
+
 func TestAuthService_MFAChallengeSetupAndVerify(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)

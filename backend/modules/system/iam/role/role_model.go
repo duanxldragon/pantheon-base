@@ -12,10 +12,10 @@ type SystemRole struct {
 	RoleName  string         `gorm:"size:64;not null" json:"roleName"`
 	RoleKey   string         `gorm:"size:64;not null;uniqueIndex" json:"roleKey"`
 	Sort      int            `gorm:"default:0" json:"sort"`
-	Status    int            `gorm:"default:1" json:"status"`
+	Status    int            `gorm:"default:1;index:idx_system_role_status_deleted,priority:1" json:"status"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_system_role_status_deleted,priority:2" json:"-"`
 }
 
 func (SystemRole) TableName() string {

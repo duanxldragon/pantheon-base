@@ -129,6 +129,18 @@ func TestRoleService_MigrateSeedsAdminRoleAndBinding(t *testing.T) {
 	}
 }
 
+func TestRoleService_MigrateEnsuresQueryIndexes(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate role: %v", err)
+	}
+	if !db.Migrator().HasIndex(&SystemRole{}, "idx_system_role_status_deleted") {
+		t.Fatalf("expected idx_system_role_status_deleted to exist")
+	}
+}
+
 func TestRoleService_DeleteRole(t *testing.T) {
 	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
