@@ -42,7 +42,7 @@ Add these checks to the required checks list:
 
 - `Quality Gates`
 
-If the repo has additional merge-gate jobs, add them too.
+If the repo has additional GitHub-native merge-gate jobs, add them too. Keep Sonar and Codacy out of required checks. See [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md) for the gating model and thresholds.
 
 ### 1.3 Code owners
 
@@ -52,7 +52,7 @@ Keep `CODEOWNERS` enabled so the owner is always requested for review.
 
 Configure only the repository secrets that are required by active GitHub Actions workflows.
 
-Do not add Sonar secrets to the repository. Sonar is a local manual tool, not part of the CI gate.
+Do not add Sonar secrets to the repository. Sonar is an auxiliary review tool, not part of the CI gate.
 
 ### 1.5 Local Sonar validation
 
@@ -63,6 +63,7 @@ Use Sonar only as a local auxiliary review step:
 3. run `scripts/run-sonar.ps1`
 4. install SonarScanner CLI locally before running the script
 5. review the report in SonarCloud manually after the upload completes
+6. if Codacy appears in GitHub, treat it as informational only
 
 ## 2. Ops repository
 

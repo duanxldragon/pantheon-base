@@ -50,11 +50,13 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 
 ## 0.2 自动化质量门栈
 
-Pantheon 默认采用“本地验证 + GitHub checks + 手动 Sonar 辅助审查 + 独立 reviewer”四层协作。
+Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + 手动 Sonar 辅助审查 + 独立 reviewer”五层协作。完整策略见 [代码质量与安全治理策略](../designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 - `本地验证`：作者提交前先跑与改动范围匹配的测试、构建和专项脚本
 - `GitHub checks`：PR 上必须通过 required status checks
+- `CodeQL`：代码安全主信号，负责可达安全风险和高危漏洞
 - `SonarQube`：仅作为辅助审查工具，不进入 required checks；需要时手动扫描并查看报告
+- `Codacy`：如果存在，只能作为参考对比，不作为合并门禁
 - `独立 reviewer`：确认自动化未覆盖的架构边界、设计漂移和业务风险
 
 手动 Sonar 辅助的最低建议：
@@ -62,7 +64,7 @@ Pantheon 默认采用“本地验证 + GitHub checks + 手动 Sonar 辅助审查
 - New Code 上 `Blocker / Critical` 问题为 `0`
 - Security Hotspots 已 review
 - New Code 覆盖率默认不低于 `80%`；例外要在 PR 中说明原因和补测计划
-- New Code 重复率默认低于 `3%`
+- New Code 重复率默认低于 `3%`（`pantheon-base`）或 `5%`（`pantheon-ops`）
 - Reliability / Security / Maintainability 结果作为参考，不作为合并门禁
 
 GitHub 保护建议：
@@ -71,6 +73,7 @@ GitHub 保护建议：
 - 开启 Branch Protection、Required Status Checks、`Dismiss stale approvals`
 - 开启 `Require conversation resolution`
 - 使用 `CODEOWNERS` 自动请求域 reviewer
+- 不要把 Sonar 或 Codacy 的外部 check 加入 required checks
 
 ## 1. 评审入口
 

@@ -28,11 +28,12 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 
 - `Quality Gates`
 - Any repo-specific smoke or audit jobs that are part of the merge gate
+- Keep Sonar and Codacy out of required checks
 
 ## Secrets
 
 - Any repository secrets needed by active security or deployment workflows
-- Do not configure Sonar secrets in GitHub; Sonar stays local and manual
+- Do not configure Sonar secrets in GitHub; Sonar stays auxiliary and manual
 
 ## Local temporary secret file
 
@@ -43,6 +44,7 @@ For local Sonar validation without committing credentials:
 - use `scripts/run-sonar.ps1`
 - install SonarScanner CLI locally before running the script
 - review the uploaded report in SonarCloud manually after the script completes
+- if Codacy appears, do not require it for merge
 
 Expected file format:
 

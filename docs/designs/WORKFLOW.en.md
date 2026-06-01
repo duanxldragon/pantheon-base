@@ -115,6 +115,7 @@ Required gate stack:
 - local validation for the touched scope
 - GitHub required checks
 - optional manual Sonar review
+- Codacy, if present, stays informational only
 - independent reviewer sign-off
 
 Default manual Sonar guidance:
@@ -122,8 +123,9 @@ Default manual Sonar guidance:
 - `0` blocker or critical issues on new code
 - reviewed security hotspots before merge
 - new-code coverage at or above `80%`, or a documented PR exception
-- new-code duplication below `3%`
+- new-code duplication below `3%` for `pantheon-base`, or below `5%` for `pantheon-ops`
 - use reliability, security, and maintainability results as reference only
+- if Codacy appears, treat it as informational only
 
 Recommended GitHub protections:
 
@@ -209,6 +211,7 @@ Recommended repository defaults:
 5. require conversation resolution before merge
 6. enable secret scanning, dependency review, and code scanning when available
 7. use Sonar only as a manual auxiliary report, not as PR decoration or a merge gate
+8. keep Codacy informational only if it appears
 
 ## 4. Smoke SOP for gstack on Windows
 

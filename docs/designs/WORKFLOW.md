@@ -106,12 +106,13 @@ Contract
 
 1.  **功能监督与质量守护分离**: 功能是否符合需求，由需求方、模块负责人或验收人确认；代码质量、安全与回归风险，由独立 reviewer 守护。功能验收不能替代代码评审，代码评审也不能替代功能验收。
 2.  **禁止作者自证通过**: 提交者、主实现者、生成代码的同一 agent 会话，不能作为该次改动的唯一 reviewer。至少要有一个非作者的独立评审源，可以是同事、指定 reviewer，或独立的人审 / 异步 AI review 流程。
-3.  **SonarQube 手动辅助**: Sonar 仅作为辅助审查工具，不接入 required checks。需要时可手动运行本地扫描并把报告附在 PR。最低建议：
+3.  **SonarQube 手动辅助**: Sonar 仅作为辅助审查工具，不接入 required checks。需要时可手动运行本地扫描并把报告附在 PR。最低建议见 [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)，核心要求是：
     - New Code 上 `Blocker / Critical` 问题为 `0`
     - Security Hotspots 必须完成 review，不允许未处理直接合并
     - New Code 覆盖率默认不低于 `80%`；若确有例外，必须在 PR 中说明原因和补测计划
-    - New Code 重复率默认低于 `3%`
+    - New Code 重复率默认低于 `3%`（`pantheon-base`）或 `5%`（`pantheon-ops`）
     - Reliability / Security / Maintainability 结果仅作参考，不作为合并门禁
+    - Codacy 如果存在，只能作为对比仪表盘，不得和 Sonar / CodeQL 抢门禁结论
 4.  **GitHub Checks 门禁**: `main`、`release/*` 等受保护分支禁止直接推送，必须走 PR。PR 至少要求以下状态检查按改动范围通过：
     - `go test`
     - `npm run type-check`
@@ -201,7 +202,7 @@ Contract
 4. 开启 `Dismiss stale approvals`，防止提交新代码后沿用旧结论
 5. 开启 `Require conversation resolution`
 6. 开启 GitHub Secret Scanning、Dependency Review、Code Scanning（仓库支持时）
-7. Sonar 如需使用，仅以手动辅助方式执行，不纳入 required checks
+7. Sonar 如需使用，仅以手动辅助方式执行，不纳入 required checks；Codacy 如已启用，也只作为参考，不纳入 required checks
 
 ## 4. 冒烟执行 SOP（gstack / Windows）
 

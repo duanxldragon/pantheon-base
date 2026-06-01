@@ -100,7 +100,7 @@ jobs:
         run: go test -race ./...
 
   # ============================================================
-  # Phase 2: Security Analysis (CodeQL - Auxiliary)
+  # Phase 2: Security Analysis (CodeQL primary security signal)
   # ============================================================
 
   codeql-security:

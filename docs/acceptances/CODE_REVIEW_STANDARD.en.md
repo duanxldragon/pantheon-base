@@ -46,20 +46,22 @@ High-risk scope includes `system/auth`, `system/iam`, `system/config`, permissio
 
 ## Default Gate Stack
 
-Pantheon uses four layers by default:
+Pantheon uses five layers by default. See [code quality and security strategy](../designs/QUALITY_AND_SECURITY_STRATEGY.md) for the full model.
 
 1. local validation
 2. GitHub required checks
-3. optional manual Sonar review
-4. independent reviewer sign-off
+3. CodeQL security signal
+4. optional manual Sonar review
+5. independent reviewer sign-off
 
 Minimum manual Sonar guidance:
 
 - zero blocker or critical issues on new code
 - reviewed security hotspots before merge
 - new-code coverage at or above `80%`, unless the PR records a justified exception
-- new-code duplication below `3%`
+- new-code duplication below `3%` for `pantheon-base`, or below `5%` for `pantheon-ops`
 - use reliability, security, and maintainability results as reference only
+- if Codacy appears, treat it as informational only
 
 ## Mandatory Review Entry
 
