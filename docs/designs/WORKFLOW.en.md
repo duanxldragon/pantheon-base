@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-31
+updated_at: 2026-05-29
 ---
 
 # Business Development Workflow and AI Collaboration Guide
@@ -114,20 +114,23 @@ Required gate stack:
 
 - local validation for the touched scope
 - GitHub required checks
-- GitHub-native quality, security, and duplication gates
+- optional manual Sonar review
+- Codacy, if present, stays informational only
 - independent reviewer sign-off
 
-Default GitHub-native minimums:
+Default manual Sonar guidance:
 
-- `Quality Gates` passes
-- `Security Gates` passes
-- `Duplication Gate` passes with full-repo duplication `<= 3%`
-- generated low-code smoke artifacts are cleaned before and after the run
+- `0` blocker or critical issues on new code
+- reviewed security hotspots before merge
+- new-code coverage at or above `80%`, or a documented PR exception
+- new-code duplication below `3%` for `pantheon-base`, or below `5%` for `pantheon-ops`
+- use reliability, security, and maintainability results as reference only
+- if Codacy appears, treat it as informational only
 
 Recommended GitHub protections:
 
 - branch protection for `main` and release branches
-- required status checks: `Quality Gates`, `Security Gates`, `Duplication Gate`
+- required status checks
 - `CODEOWNERS`
 - dismiss stale approvals
 - require conversation resolution
@@ -146,7 +149,6 @@ Core smoke rules:
 - capture final URL, console errors, screenshot, and `snapshot -i` output for every page
 - distinguish real product failures from Windows or tooling instability
 - preserve JSON summaries, raw logs, and screenshots as acceptance evidence
-- browser smoke and generated business smoke must clean generated modules, registries, schema artifacts, and generated i18n resources before and after the run
 
 ## 2. AI Collaboration Prompt Guide
 
@@ -198,17 +200,18 @@ Before submission, confirm:
 4. new assessment or remediation documents include type, status, and contract linkage
 5. superseded old documents are removed, downgraded, or explicitly marked
 
-### 3.2 Recommended GitHub-Native Repository Controls
+### 3.2 Recommended GitHub Repository Controls
 
 Recommended repository defaults:
 
 1. protect `main` and `release/*`
-2. make `Quality Gates`, `Security Gates`, and `Duplication Gate` required status checks
+2. make GitHub-native checks the only required status checks
 3. require PR reviews, with higher approval counts for high-risk paths through `CODEOWNERS`
 4. dismiss stale approvals after new commits
 5. require conversation resolution before merge
 6. enable secret scanning, dependency review, and code scanning when available
-7. keep GitHub checks as the single merge-gate surface so reviewers stay in one system
+7. use Sonar only as a manual auxiliary report, not as PR decoration or a merge gate
+8. keep Codacy informational only if it appears
 
 ## 4. Smoke SOP for gstack on Windows
 
