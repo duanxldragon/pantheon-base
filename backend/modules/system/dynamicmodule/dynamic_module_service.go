@@ -301,8 +301,8 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 	if err != nil {
 		return nil, err
 	}
-	if !generatedDirExists(filepath.Join(s.workspaceRoot, "backend", "modules", scope, shortName)) ||
-		!generatedDirExists(filepath.Join(s.workspaceRoot, "frontend", "src", "modules", scope, shortName)) {
+	if !generatedDirExists(s.workspaceRoot, filepath.Join("backend", "modules", scope, shortName)) ||
+		!generatedDirExists(s.workspaceRoot, filepath.Join("frontend", "src", "modules", scope, shortName)) {
 		return nil, errors.New("module.register.source_missing")
 	}
 

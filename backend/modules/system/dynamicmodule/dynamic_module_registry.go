@@ -66,9 +66,9 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 	if !filepath.IsLocal(backendRelativePath) || !filepath.IsLocal(frontendRelativePath) || !filepath.IsLocal(schemaRelativePath) {
 		return false
 	}
-	return generatedDirExists(filepath.Join(s.workspaceRoot, filepath.FromSlash(backendRelativePath))) &&
-		generatedDirExists(filepath.Join(s.workspaceRoot, filepath.FromSlash(frontendRelativePath))) &&
-		generatedPathExists(filepath.Join(s.workspaceRoot, filepath.FromSlash(schemaRelativePath)))
+	return generatedDirExists(s.workspaceRoot, backendRelativePath) &&
+		generatedDirExists(s.workspaceRoot, frontendRelativePath) &&
+		generatedPathExists(s.workspaceRoot, schemaRelativePath)
 }
 
 func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name string) (*scaffold.ModuleSchema, error) {
@@ -76,7 +76,10 @@ func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name stri
 	if !filepath.IsLocal(relativeTarget) {
 		return nil, errors.New("module.register.schema_invalid")
 	}
-	target := filepath.Join(s.workspaceRoot, filepath.FromSlash(relativeTarget))
+	target, ok := resolveGeneratedWorkspacePath(s.workspaceRoot, relativeTarget)
+	if !ok {
+		return nil, errors.New("module.register.schema_invalid")
+	}
 	content, err := os.ReadFile(target)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -94,17 +97,46 @@ func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name stri
 	return &schema, nil
 }
 
-func generatedPathExists(path string) bool {
+func resolveGeneratedWorkspacePath(workspaceRoot string, relativePath string) (string, bool) {
+	normalizedRoot := filepath.Clean(strings.TrimSpace(workspaceRoot))
+	normalizedRelative := filepath.ToSlash(strings.TrimSpace(relativePath))
+	if normalizedRoot == "" || normalizedRelative == "" {
+		return "", false
+	}
+	if strings.Contains(normalizedRelative, "..") || !filepath.IsLocal(normalizedRelative) {
+		return "", false
+	}
+	target := filepath.Join(normalizedRoot, filepath.FromSlash(normalizedRelative))
+	relativeToRoot, err := filepath.Rel(normalizedRoot, target)
+	if err != nil || relativeToRoot == ".." || strings.HasPrefix(relativeToRoot, ".."+string(os.PathSeparator)) {
+		return "", false
+	}
+	return target, true
+}
+
+func generatedPathExists(workspaceRoot string, relativePath string) bool {
+	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
+	if !ok {
+		return false
+	}
 	info, err := os.Stat(path)
 	return err == nil && !info.IsDir()
 }
 
-func generatedDirExists(path string) bool {
+func generatedDirExists(workspaceRoot string, relativePath string) bool {
+	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
+	if !ok {
+		return false
+	}
 	info, err := os.Stat(path)
 	return err == nil && info.IsDir()
 }
 
-func generatedFileContainsAll(path string, fragments ...string) bool {
+func generatedFileContainsAll(workspaceRoot string, relativePath string, fragments ...string) bool {
+	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
+	if !ok {
+		return false
+	}
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return false
