@@ -10,17 +10,36 @@ import (
 	"pantheon-platform/backend/internal/scaffold"
 )
 
-func generatedModulePath(root string, parts ...string) string {
-	cleaned := make([]string, 0, len(parts)+1)
-	cleaned = append(cleaned, filepath.Clean(root))
-	for _, part := range parts {
-		trimmed := strings.Trim(strings.ReplaceAll(strings.TrimSpace(part), "\\", "/"), "/")
-		if trimmed == "" || trimmed == "." || trimmed == ".." || strings.Contains(trimmed, "..") {
-			continue
-		}
-		cleaned = append(cleaned, trimmed)
+func generatedModulePath(root string, parts ...string) (string, error) {
+	trimmedRoot := strings.TrimSpace(root)
+	if trimmedRoot == "" {
+		return "", errors.New("workspace.not_found")
 	}
-	return filepath.Join(cleaned...)
+	absRoot, err := filepath.Abs(trimmedRoot)
+	if err != nil {
+		return "", errors.New("workspace.invalid")
+	}
+
+	cleaned := make([]string, 0, len(parts)+1)
+	cleaned = append(cleaned, absRoot)
+	for _, part := range parts {
+		normalized := strings.Trim(strings.ReplaceAll(strings.TrimSpace(part), "\\", "/"), "/")
+		if normalized == "" || !filepath.IsLocal(filepath.FromSlash(normalized)) {
+			return "", errors.New("module.invalid_name")
+		}
+		for _, segment := range strings.Split(normalized, "/") {
+			if segment == "" || segment == "." || segment == ".." || strings.Contains(segment, "..") || strings.ContainsAny(segment, `<>:"|?*`) {
+				return "", errors.New("module.invalid_name")
+			}
+			cleaned = append(cleaned, segment)
+		}
+	}
+	target := filepath.Join(cleaned...)
+	rel, err := filepath.Rel(absRoot, target)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) || filepath.IsAbs(rel) {
+		return "", errors.New("module.invalid_name")
+	}
+	return target, nil
 }
 
 func (s *DynamicModuleService) RebuildGeneratedRegistries() error {
@@ -60,13 +79,28 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return false
 	}
-	return generatedDirExists(generatedModulePath(s.workspaceRoot, "backend", "modules", scope, name)) &&
-		generatedDirExists(generatedModulePath(s.workspaceRoot, "frontend", "src", "modules", scope, name)) &&
-		generatedPathExists(generatedModulePath(s.workspaceRoot, "schema", "generated", scope, name+".json"))
+	backendPath, err := generatedModulePath(s.workspaceRoot, "backend", "modules", scope, name)
+	if err != nil {
+		return false
+	}
+	frontendPath, err := generatedModulePath(s.workspaceRoot, "frontend", "src", "modules", scope, name)
+	if err != nil {
+		return false
+	}
+	schemaPath, err := generatedModulePath(s.workspaceRoot, "schema", "generated", scope, name+".json")
+	if err != nil {
+		return false
+	}
+	return generatedDirExists(backendPath) &&
+		generatedDirExists(frontendPath) &&
+		generatedPathExists(schemaPath)
 }
 
 func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name string) (*scaffold.ModuleSchema, error) {
-	target := generatedModulePath(s.workspaceRoot, "schema", "generated", scope, name+".json")
+	target, err := generatedModulePath(s.workspaceRoot, "schema", "generated", scope, name+".json")
+	if err != nil {
+		return nil, err
+	}
 	content, err := os.ReadFile(target)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
