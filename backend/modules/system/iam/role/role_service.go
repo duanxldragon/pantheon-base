@@ -30,6 +30,16 @@ func (s *RoleService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}); err != nil {
 		return err
 	}
+	if err := database.RunMigrations(s.db, "system.role", []database.MigrationStep{
+		{
+			Version: "20260601_role_query_indexes",
+			Apply: func(tx *gorm.DB) error {
+				return database.EnsureIndexes(tx, &SystemRole{}, "idx_system_role_status_deleted")
+			},
+		},
+	}); err != nil {
+		return err
+	}
 	if err := s.releaseDeletedRoleKeys(); err != nil {
 		return err
 	}

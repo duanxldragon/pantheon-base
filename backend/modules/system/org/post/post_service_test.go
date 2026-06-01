@@ -122,6 +122,21 @@ func TestPostService_MigrateReleasesLegacyDeletedPostCode(t *testing.T) {
 	}
 }
 
+func TestPostService_MigrateEnsuresQueryIndexes(t *testing.T) {
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
+
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate post: %v", err)
+	}
+	if !db.Migrator().HasIndex(&SystemPost{}, "idx_system_post_dept_deleted") {
+		t.Fatalf("expected idx_system_post_dept_deleted to exist")
+	}
+	if !db.Migrator().HasIndex(&SystemPost{}, "idx_system_post_dept_status_deleted") {
+		t.Fatalf("expected idx_system_post_dept_status_deleted to exist")
+	}
+}
+
 func TestPostService_BatchUpdatePostStatus(t *testing.T) {
 	db := setupPostTestDB(t)
 	service := NewPostService(db)

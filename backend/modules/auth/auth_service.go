@@ -219,6 +219,16 @@ func (s *AuthService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &SystemAuthSecurityEvent{}, &SystemUserPasswordHistory{}); err != nil {
 		return err
 	}
+	if err := database.RunMigrations(s.db, "auth.session", []database.MigrationStep{
+		{
+			Version: "20260601_session_query_indexes",
+			Apply: func(tx *gorm.DB) error {
+				return database.EnsureIndexes(tx, &SystemUserSession{}, "idx_system_user_session_user_revoked")
+			},
+		},
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

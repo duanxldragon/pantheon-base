@@ -243,6 +243,26 @@ func TestUserService_MigrateCreatesUserRoleTableAndAdminBinding(t *testing.T) {
 	}
 }
 
+func TestUserService_MigrateEnsuresQueryIndexes(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "development")
+	db := testmysql.Open(t)
+
+	s := NewUserService(db)
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	if !db.Migrator().HasIndex(&SystemUser{}, "idx_system_user_dept_deleted") {
+		t.Fatalf("expected idx_system_user_dept_deleted to exist")
+	}
+	if !db.Migrator().HasIndex(&SystemUser{}, "idx_system_user_post_deleted") {
+		t.Fatalf("expected idx_system_user_post_deleted to exist")
+	}
+	if !db.Migrator().HasIndex(&SystemUser{}, "idx_system_user_dept_status_post_deleted") {
+		t.Fatalf("expected idx_system_user_dept_status_post_deleted to exist")
+	}
+}
+
 func TestUserService_MigrateRejectsMissingInitialAdminPasswordInProduction(t *testing.T) {
 	t.Setenv("PANTHEON_ENV", "production")
 	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "")
