@@ -197,13 +197,9 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		return
 	}
 
-	objectKey := filepath.ToSlash(strings.TrimSpace(strings.TrimLeft(c.Param("filepath"), "/")))
-	if objectKey == "" {
+	objectKey, err := uploadpkg.NormalizeObjectKey(c.Param("filepath"))
+	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "upload.file.not_found")
-		return
-	}
-	if !filepath.IsLocal(objectKey) {
-		common.Fail(c, common.CodeError, "upload.file.not_found")
 		return
 	}
 
