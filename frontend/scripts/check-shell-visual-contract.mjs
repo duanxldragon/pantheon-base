@@ -133,16 +133,54 @@ function splitSelectorList(selectorText) {
 
 function extractCssRules(cssSource) {
   const rules = [];
-  const rulePattern = /([^{}]+)\{([^{}]*)\}/g;
-  let match;
-  while ((match = rulePattern.exec(cssSource))) {
-    const selectorText = match[1].trim();
-    if (!selectorText || selectorText.startsWith('@')) {
+  let selectorStart = 0;
+  for (let index = 0; index < cssSource.length; index += 1) {
+    if (cssSource[index] !== '{') {
       continue;
     }
-    rules.push({ selectorText, body: match[2] });
+    const selectorText = cssSource.slice(selectorStart, index).trim();
+    let depth = 1;
+    let bodyEnd = index + 1;
+    for (; bodyEnd < cssSource.length; bodyEnd += 1) {
+      if (cssSource[bodyEnd] === '{') {
+        depth += 1;
+      } else if (cssSource[bodyEnd] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          break;
+        }
+      }
+    }
+    if (!selectorText || selectorText.startsWith('@')) {
+      selectorStart = bodyEnd + 1;
+      index = bodyEnd;
+      continue;
+    }
+    rules.push({ selectorText, body: cssSource.slice(index + 1, bodyEnd) });
+    selectorStart = bodyEnd + 1;
+    index = bodyEnd;
   }
   return rules;
+}
+
+function getDeclarationValue(block, propertyNames) {
+  const normalizedNames = new Set(propertyNames.map((name) => name.toLowerCase()));
+  for (const row of block.split(';')) {
+    const segment = row.trim();
+    if (!segment) {
+      continue;
+    }
+    const separator = segment.indexOf(':');
+    if (separator < 0) {
+      continue;
+    }
+    const property = segment.slice(0, separator).trim().toLowerCase();
+    if (!normalizedNames.has(property)) {
+      continue;
+    }
+    return segment.slice(separator + 1).trim();
+  }
+  return '';
 }
 
 function selectorTargetsBareArcoInput(selector) {
@@ -1098,9 +1136,16 @@ if (globalInputNumberInnerBlock) {
   }
 }
 
-for (const selectorList of globalSource.match(/[^{}]*\.arco-input-number\s+\.arco-input-inner-wrapper[^{}]*\{[^{}]*\}/g) ?? []) {
-  const borderedDeclaration = selectorList.match(/\b(border|border-color)\s*:\s*([^;]+);/i);
-  if (borderedDeclaration && borderedDeclaration[2].trim() !== '0') {
+for (const rule of extractCssRules(globalSource)) {
+  const targetsInputNumberInnerWrapper = splitSelectorList(rule.selectorText).some(
+    (selector) =>
+      selector.includes('.arco-input-number') && selector.includes('.arco-input-inner-wrapper'),
+  );
+  if (!targetsInputNumberInnerWrapper) {
+    continue;
+  }
+  const borderedDeclaration = getDeclarationValue(rule.body, ['border', 'border-color']);
+  if (borderedDeclaration && borderedDeclaration !== '0') {
     findings.push(
       'InputNumber inner wrapper must not be part of the bordered control group; the outer .arco-input-number owns the border.',
     );
@@ -1128,7 +1173,10 @@ if (globalNestedInputFocusBlock) {
   }
 }
 
-if (/(?:^|\n)\s*\.arco-input:focus\s*,/i.test(globalSource)) {
+const hasBareArcoInputFocusSelectorGroup = globalSource
+  .split('\n')
+  .some((line) => line.trim().toLowerCase().startsWith('.arco-input:focus,'));
+if (hasBareArcoInputFocusSelectorGroup) {
   findings.push(
     'Bare .arco-input:focus must not own the global focus ring; the outer input wrapper owns it.',
   );

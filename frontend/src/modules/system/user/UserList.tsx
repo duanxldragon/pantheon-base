@@ -1120,7 +1120,7 @@ const UserList: React.FC = () => {
                 rules={[
                   {
                     validator: (value, callback) => {
-                      if (!value || /\S+@\S+\.\S+/.test(String(value))) {
+                      if (!value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) {
                         callback();
                         return;
                       }

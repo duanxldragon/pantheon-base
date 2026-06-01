@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"pantheon-platform/backend/pkg/common"
+
 	mysqlDriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -13,6 +15,13 @@ import (
 )
 
 var DB *gorm.DB
+
+func resolveGormLogger() logger.Interface {
+	if common.IsProductionEnv() {
+		return logger.Default.LogMode(logger.Warn)
+	}
+	return logger.Default.LogMode(logger.Info)
+}
 
 func normalizeMySQLDSN(dsn string) (string, error) {
 	parsed, err := mysqlDriver.ParseDSN(dsn)
@@ -49,7 +58,7 @@ func InitDB(dsn string) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // 使用单数表名
 		},
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: resolveGormLogger(),
 	})
 
 	if err != nil {

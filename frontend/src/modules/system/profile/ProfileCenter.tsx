@@ -218,7 +218,7 @@ const ProfileCenter: React.FC = () => {
                   <FormItem
                     label={t('system.profile.email')}
                     field="email"
-                    rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}
+                    rules={[{ match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: t('system.user.email.invalid') }]}
                   >
                     <Input onPressEnter={() => profileForm.submit()} />
                   </FormItem>

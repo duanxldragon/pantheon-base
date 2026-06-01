@@ -26,15 +26,20 @@ func setCookie(w http.ResponseWriter, name, value string, maxAge int, sameSite h
 }
 
 func setReadableCookie(w http.ResponseWriter, name, value string, maxAge int, sameSite http.SameSite) {
+	httpOnly := shouldUseHttpOnly(name)
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Path:     "/",
 		MaxAge:   maxAge,
-		HttpOnly: false,
+		HttpOnly: httpOnly,
 		Secure:   true,
 		SameSite: sameSite,
 	})
+}
+
+func shouldUseHttpOnly(name string) bool {
+	return name != CookieCSRFToken
 }
 
 func SetAccessTokenCookie(w http.ResponseWriter, token string) {

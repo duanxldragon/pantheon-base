@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { loadResourceModule } from './lib/load-resource-module.mjs';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const frontendRoot = path.resolve(path.dirname(currentFilePath), '..');
@@ -9,17 +9,6 @@ const repoRoot = path.resolve(frontendRoot, '..');
 const schemaGeneratedRoot = path.join(repoRoot, 'schema', 'generated');
 const generatedResourcesRoot = path.join(frontendRoot, 'src', 'i18n', 'resources', 'generated');
 const LOCALES = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR'];
-
-function loadResourceModule(modulePath) {
-  const source = fs.readFileSync(modulePath, 'utf8');
-  const sanitized = source.replace(/export default\s+([A-Za-z0-9_$]+);?\s*$/m, 'module.exports = $1;');
-  const context = {
-    module: { exports: {} },
-    exports: {},
-  };
-  vm.runInNewContext(sanitized, context, { filename: modulePath });
-  return context.module.exports;
-}
 
 function collectGeneratedSchemaKeys() {
   const allowedKeys = new Set();

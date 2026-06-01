@@ -1623,7 +1623,7 @@ const DeptList: React.FC = () => {
                   <FormItem
                     label={t('system.dept.email')}
                     field="email"
-                    rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}
+                    rules={[{ match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: t('system.user.email.invalid') }]}
                   >
                     <Input onPressEnter={() => form.submit()} />
                   </FormItem>
