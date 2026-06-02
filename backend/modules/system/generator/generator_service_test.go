@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -171,6 +172,11 @@ process.stdout.write(JSON.stringify(files));
 	if err := os.WriteFile(filepath.Join(scriptDir, "export-generated-module.mjs"), []byte(script), 0o644); err != nil {
 		t.Fatalf("write exporter script: %v", err)
 	}
+	nodeBinary, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node is not installed in PATH")
+	}
+	t.Setenv("PANTHEON_NODE_BIN", nodeBinary)
 
 	service := &GeneratorService{workspaceRoot: root}
 	archive, filename, err := service.BuildGeneratedModuleArchive(&scaffold.ModuleSchema{
