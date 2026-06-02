@@ -25,6 +25,14 @@ const (
 	roleBatchEmptyKey             = "role.batch.empty"
 	roleParamInvalidKey           = "param.invalid"
 	roleProtectedUpdateKey        = "role.update.error.protected"
+	roleDeleteProtectedKey        = "role.delete.error.protected"
+	roleDeleteHasUsersKey         = "role.delete.error.has_users"
+	roleBatchNotFoundKey          = "role.batch.not_found"
+	roleMemberBatchNotFoundKey    = "user.batch.not_found"
+	roleKeyExistsKey              = "role.key.exists"
+	roleMenuInvalidKey            = "role.menu.invalid"
+	rolePermissionInvalidKey      = "role.permission.invalid"
+	userProtectedMutationKey      = "user.update.error.protected"
 )
 
 func NewRoleService(db *gorm.DB) *RoleService {
@@ -290,7 +298,7 @@ func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, e
 	if role.RoleKey == "admin" {
 		for _, userID := range normalizedUserIDs {
 			if userID == 1 {
-				return 0, errors.New("user.update.error.protected")
+				return 0, errors.New(userProtectedMutationKey)
 			}
 		}
 	}
@@ -402,7 +410,7 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 		return err
 	}
 	if role.ID == 1 || role.RoleKey == "admin" {
-		return errors.New("role.delete.error.protected")
+		return errors.New(roleDeleteProtectedKey)
 	}
 
 	var userCount int64
@@ -410,7 +418,7 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 		return err
 	}
 	if userCount > 0 {
-		return errors.New("role.delete.error.has_users")
+		return errors.New(roleDeleteHasUsersKey)
 	}
 
 	roleKey := role.RoleKey
@@ -486,7 +494,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 		return 0, err
 	}
 	if len(roles) != len(normalizedIDs) {
-		return 0, errors.New("role.batch.not_found")
+		return 0, errors.New(roleBatchNotFoundKey)
 	}
 	if status == 2 {
 		for _, role := range roles {
@@ -600,7 +608,7 @@ func (s *RoleService) ensureUsersExist(userIDs []uint64) error {
 		return err
 	}
 	if count != int64(len(userIDs)) {
-		return errors.New("user.batch.not_found")
+		return errors.New(roleMemberBatchNotFoundKey)
 	}
 	return nil
 }
@@ -736,7 +744,7 @@ func (s *RoleService) ensureRoleKeyUnique(roleID uint64, roleKey string) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("role.key.exists")
+		return errors.New(roleKeyExistsKey)
 	}
 	return nil
 }
@@ -752,7 +760,7 @@ func (s *RoleService) ensureMenuIDsExist(menuIDs []uint64) error {
 		return err
 	}
 	if count != int64(len(normalized)) {
-		return errors.New("role.menu.invalid")
+		return errors.New(roleMenuInvalidKey)
 	}
 	return nil
 }
@@ -787,7 +795,7 @@ func (s *RoleService) ensurePermissionKeysExist(permissionKeys []string) error {
 	}
 	for _, key := range normalized {
 		if _, ok := exists[key]; !ok {
-			return errors.New("role.permission.invalid")
+			return errors.New(rolePermissionInvalidKey)
 		}
 	}
 	return nil

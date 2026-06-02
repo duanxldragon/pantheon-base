@@ -88,11 +88,11 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name string) (*scaffold.ModuleSchema, error) {
 	relativeTarget, ok := generatedModuleRelativePath("schema", "generated", scope, name+".json")
 	if !ok {
-		return nil, errors.New("module.register.schema_invalid")
+		return nil, errors.New(moduleRegisterSchemaInvalidErrorKey)
 	}
 	target, resolved := resolveGeneratedWorkspacePath(s.workspaceRoot, relativeTarget)
 	if !resolved {
-		return nil, errors.New("module.register.schema_invalid")
+		return nil, errors.New(moduleRegisterSchemaInvalidErrorKey)
 	}
 	content, err := os.ReadFile(target)
 	if err != nil {
@@ -103,10 +103,10 @@ func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name stri
 	}
 	var schema scaffold.ModuleSchema
 	if err := json.Unmarshal(content, &schema); err != nil {
-		return nil, errors.New("module.register.schema_invalid")
+		return nil, errors.New(moduleRegisterSchemaInvalidErrorKey)
 	}
 	if strings.TrimSpace(schema.Name) == "" || strings.TrimSpace(schema.Scope) == "" || strings.TrimSpace(schema.Model.TableName) == "" {
-		return nil, errors.New("module.register.schema_invalid")
+		return nil, errors.New(moduleRegisterSchemaInvalidErrorKey)
 	}
 	return &schema, nil
 }

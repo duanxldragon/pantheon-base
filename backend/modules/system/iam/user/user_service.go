@@ -32,6 +32,13 @@ const (
 	userProtectedUpdateKey        = "user.update.error.protected"
 	userRoleInvalidKey            = "user.role.invalid"
 	userPostInvalidKey            = "user.post.invalid"
+	userBatchNotFoundKey          = "user.batch.not_found"
+	userPasswordTooShortKey       = "user.update.error.password_too_short"
+	userDeleteProtectedKey        = "user.delete.error.protected"
+	userUsernameExistsKey         = "user.create.error.username_exists"
+	userDeptInvalidKey            = "user.dept.invalid"
+	userEmailInvalidKey           = "user.email.invalid"
+	userProfileExtInvalidKey      = "user.profile_ext.invalid"
 )
 
 // NewUserService 构造函数
@@ -580,7 +587,7 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 
 	trimmedPassword := strings.TrimSpace(newPassword)
 	if len(trimmedPassword) < s.getConfiguredPasswordMinLength() {
-		return 0, errors.New("user.update.error.password_too_short")
+		return 0, errors.New(userPasswordTooShortKey)
 	}
 
 	var user SystemUser
@@ -632,7 +639,7 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 		return 0, err
 	}
 	if len(users) != len(normalizedIDs) {
-		return 0, errors.New("user.batch.not_found")
+		return 0, errors.New(userBatchNotFoundKey)
 	}
 	if status == 2 {
 		for _, user := range users {
@@ -660,7 +667,7 @@ func (s *UserService) DeleteUser(userID uint64) error {
 		return errors.New(userDatabaseNotInitializedKey)
 	}
 	if userID == 1 {
-		return errors.New("user.delete.error.protected")
+		return errors.New(userDeleteProtectedKey)
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
@@ -1039,7 +1046,7 @@ func normalizeUint64IDs(ids []uint64) []uint64 {
 
 func (s *UserService) validateUserCreate(req *UserCreateReq) error {
 	if len(strings.TrimSpace(req.Password)) < s.getConfiguredPasswordMinLength() {
-		return errors.New("user.update.error.password_too_short")
+		return errors.New(userPasswordTooShortKey)
 	}
 	if err := validateOptionalEmail(req.Email); err != nil {
 		return err
@@ -1059,7 +1066,7 @@ func (s *UserService) validateUserCreate(req *UserCreateReq) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("user.create.error.username_exists")
+		return errors.New(userUsernameExistsKey)
 	}
 	return nil
 }
@@ -1161,7 +1168,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("user.dept.invalid")
+		return errors.New(userDeptInvalidKey)
 	}
 	return nil
 }
@@ -1496,7 +1503,7 @@ func validateOptionalEmail(value string) error {
 		return nil
 	}
 	if _, err := mail.ParseAddress(value); err != nil {
-		return errors.New("user.email.invalid")
+		return errors.New(userEmailInvalidKey)
 	}
 	return nil
 }
@@ -1528,7 +1535,7 @@ func marshalUserProfileExt(profileExt map[string]interface{}) (string, error) {
 	}
 	data, err := json.Marshal(profileExt)
 	if err != nil {
-		return "", errors.New("user.profile_ext.invalid")
+		return "", errors.New(userProfileExtInvalidKey)
 	}
 	if len(data) > maxUserProfileExtBytes {
 		return "", errors.New("user.profile_ext.too_large")
@@ -1543,7 +1550,7 @@ func unmarshalUserProfileExt(raw string) (map[string]interface{}, error) {
 	}
 	var profileExt map[string]interface{}
 	if err := json.Unmarshal([]byte(trimmed), &profileExt); err != nil {
-		return nil, errors.New("user.profile_ext.invalid")
+		return nil, errors.New(userProfileExtInvalidKey)
 	}
 	if profileExt == nil {
 		return map[string]interface{}{}, nil

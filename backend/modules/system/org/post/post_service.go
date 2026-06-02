@@ -24,6 +24,10 @@ const (
 	postParamInvalidKey           = "param.invalid"
 	postDeleteHasUsersKey         = "post.delete.error.has_users"
 	postDeptInvalidKey            = "post.dept.invalid"
+	postBatchNotFoundKey          = "post.batch.not_found"
+	postCodeExistsKey             = "post.code.exists"
+	postDeptRequiredKey           = "post.dept.required"
+	postStatusHasUsersKey         = "post.status.error.has_users"
 )
 
 func NewPostService(db *gorm.DB) *PostService {
@@ -206,7 +210,7 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 		return 0, err
 	}
 	if len(posts) != len(normalizedIDs) {
-		return 0, errors.New("post.batch.not_found")
+		return 0, errors.New(postBatchNotFoundKey)
 	}
 	if normalizePostStatus(status) == 2 {
 		activeIDs := make([]uint64, 0, len(posts))
@@ -357,7 +361,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 		}
 		deptID := deptPathToID[deptPath]
 		if deptPath == "" {
-			impexp.AppendImportError(result, rowIndex+1, "deptPath", "post.dept.required")
+			impexp.AppendImportError(result, rowIndex+1, "deptPath", postDeptRequiredKey)
 		} else if deptID == 0 {
 			impexp.AppendImportError(result, rowIndex+1, "deptPath", postDeptInvalidKey)
 		} else if err := s.ensurePostDeptID(deptID); err != nil {
@@ -486,14 +490,14 @@ func (s *PostService) validatePostCreate(postID uint64, postCode string, deptID 
 		return err
 	}
 	if count > 0 {
-		return errors.New("post.code.exists")
+		return errors.New(postCodeExistsKey)
 	}
 	return nil
 }
 
 func (s *PostService) ensurePostDeptID(deptID uint64) error {
 	if deptID == 0 {
-		return errors.New("post.dept.required")
+		return errors.New(postDeptRequiredKey)
 	}
 	type row struct {
 		ID     uint64 `gorm:"column:id"`
@@ -717,7 +721,7 @@ func (s *PostService) ensurePostsNotAssignedToUsers(postIDs []uint64) error {
 		return err
 	}
 	if userCount > 0 {
-		return errors.New("post.status.error.has_users")
+		return errors.New(postStatusHasUsersKey)
 	}
 	return nil
 }

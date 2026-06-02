@@ -24,6 +24,11 @@ const (
 	deptBatchEmptyKey             = "dept.batch.empty"
 	deptParamInvalidKey           = "param.invalid"
 	deptNotFoundKey               = "dept.not_found"
+	deptBatchNotFoundKey          = "dept.batch.not_found"
+	deptParentRequiredKey         = "dept.parent.required"
+	deptLeaderBindAfterCreateKey  = "dept.leader.bind_after_create"
+	deptParentNotFoundKey         = "dept.parent.not_found"
+	deptEmailInvalidKey           = "dept.email.invalid"
 )
 
 func NewDeptService(db *gorm.DB) *DeptService {
@@ -499,7 +504,7 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 		return 0, err
 	}
 	if len(depts) != len(normalizedIDs) {
-		return 0, errors.New("dept.batch.not_found")
+		return 0, errors.New(deptBatchNotFoundKey)
 	}
 	for _, dept := range depts {
 		if dept.IsRoot == 1 {
@@ -539,7 +544,7 @@ func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, e
 		return 0, err
 	}
 	if len(depts) != len(deptIDs) {
-		return 0, errors.New("dept.batch.not_found")
+		return 0, errors.New(deptBatchNotFoundKey)
 	}
 	updates := make([]struct {
 		DeptID       uint64
@@ -716,7 +721,7 @@ func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, err
 		sortValue, sortErr := impexp.ParseCSVInt(impexp.ReadCSVField(record, headerIndex, "sort"))
 		email := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "email"))
 		if parentPath == "" {
-			impexp.AppendImportError(result, rowNumber, "parentDeptPath", "dept.parent.required")
+			impexp.AppendImportError(result, rowNumber, "parentDeptPath", deptParentRequiredKey)
 		}
 		if deptName == "" {
 			impexp.AppendImportError(result, rowNumber, "deptName", "dept.name.required")
@@ -758,7 +763,7 @@ func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, err
 		for _, row := range rows {
 			parentID := pathToID[row.ParentDeptPath]
 			if parentID == 0 {
-				impexp.AppendImportError(result, row.RowNumber, "parentDeptPath", "dept.parent.not_found")
+				impexp.AppendImportError(result, row.RowNumber, "parentDeptPath", deptParentNotFoundKey)
 				return rollbackValidation
 			}
 
@@ -938,10 +943,10 @@ func (s *DeptService) loadPostUserCounts() (map[uint64]int, error) {
 
 func (s *DeptService) validateDeptCreate(req *DeptCreateReq) error {
 	if req.ParentID == 0 {
-		return errors.New("dept.parent.required")
+		return errors.New(deptParentRequiredKey)
 	}
 	if req.LeaderUserID > 0 {
-		return errors.New("dept.leader.bind_after_create")
+		return errors.New(deptLeaderBindAfterCreateKey)
 	}
 	if err := validateDeptOptionalEmail(req.Email); err != nil {
 		return err
@@ -964,7 +969,7 @@ func (s *DeptService) validateDeptUpdate(dept *SystemDept, req *DeptUpdateReq) e
 			return errors.New("dept.root.status_fixed")
 		}
 	} else if req.ParentID == 0 {
-		return errors.New("dept.parent.required")
+		return errors.New(deptParentRequiredKey)
 	}
 	if err := validateDeptOptionalEmail(req.Email); err != nil {
 		return err
@@ -983,7 +988,7 @@ func (s *DeptService) resolveDeptLeaderFields(deptID uint64, leader string, lead
 		return strings.TrimSpace(leader), 0, nil
 	}
 	if deptID == 0 {
-		return "", 0, errors.New("dept.leader.bind_after_create")
+		return "", 0, errors.New(deptLeaderBindAfterCreateKey)
 	}
 
 	type leaderUserRow struct {
@@ -1020,7 +1025,7 @@ func (s *DeptService) ensureDeptParentExists(parentID uint64) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("dept.parent.not_found")
+		return errors.New(deptParentNotFoundKey)
 	}
 	return nil
 }
@@ -1576,7 +1581,7 @@ func validateDeptOptionalEmail(value string) error {
 		return nil
 	}
 	if _, err := mail.ParseAddress(value); err != nil {
-		return errors.New("dept.email.invalid")
+		return errors.New(deptEmailInvalidKey)
 	}
 	return nil
 }
