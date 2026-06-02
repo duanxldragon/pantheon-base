@@ -229,7 +229,11 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, err
 	}
 
-	cmd := exec.Command("node", scriptPath, schemaPath)
+	nodeBinary, err := resolveNodeBinary()
+	if err != nil {
+		return nil, errors.New("module.generate.server_export_failed")
+	}
+	cmd := exec.Command(nodeBinary, scriptPath, schemaPath)
 	cmd.Dir = workspaceRoot
 	output, err := cmd.Output()
 	if err != nil {
@@ -244,6 +248,17 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, errors.New("module.generate.server_export_failed")
 	}
 	return files, nil
+}
+
+func resolveNodeBinary() (string, error) {
+	if configured := strings.TrimSpace(os.Getenv("PANTHEON_NODE_BIN")); configured != "" {
+		if !filepath.IsAbs(configured) {
+			return "", errors.New("module.generate.server_export_failed")
+		}
+		return configured, nil
+	}
+
+	return exec.LookPath("node")
 }
 
 func RemoveGeneratedModuleSource(workspaceRoot string, scope string, name string) error {

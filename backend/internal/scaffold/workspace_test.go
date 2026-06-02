@@ -413,6 +413,26 @@ func TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace(t *testi
 	}
 }
 
+func TestResolveNodeBinaryUsesAbsoluteEnvOverride(t *testing.T) {
+	t.Setenv("PANTHEON_NODE_BIN", filepath.Clean(filepath.Join("C:\\", "Program Files", "nodejs", "node.exe")))
+
+	resolved, err := resolveNodeBinary()
+	if err != nil {
+		t.Fatalf("expected absolute node override accepted, got %v", err)
+	}
+	if !filepath.IsAbs(resolved) {
+		t.Fatalf("expected absolute node binary path, got %s", resolved)
+	}
+}
+
+func TestResolveNodeBinaryRejectsRelativeEnvOverride(t *testing.T) {
+	t.Setenv("PANTHEON_NODE_BIN", filepath.Join("tools", "node.exe"))
+
+	if _, err := resolveNodeBinary(); err == nil {
+		t.Fatal("expected relative node override rejected")
+	}
+}
+
 func prepareScaffoldWorkspaceRoot(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()

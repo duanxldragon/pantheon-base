@@ -36,7 +36,7 @@ import {
   isServerRequestError,
   isTimeoutRequestError,
 } from '../../../api/request';
-import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { isArcoFormValidationError, isLikelyEmailAddress } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
@@ -1623,7 +1623,17 @@ const DeptList: React.FC = () => {
                   <FormItem
                     label={t('system.dept.email')}
                     field="email"
-                    rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}
+                    rules={[
+                      {
+                        validator: (value, callback) => {
+                          if (!value || isLikelyEmailAddress(String(value))) {
+                            callback();
+                            return;
+                          }
+                          callback(t('system.user.email.invalid'));
+                        },
+                      },
+                    ]}
                   >
                     <Input onPressEnter={() => form.submit()} />
                   </FormItem>
