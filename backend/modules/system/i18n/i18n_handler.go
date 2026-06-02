@@ -3,6 +3,7 @@ package system
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,15 @@ import (
 type I18nHandler struct {
 	service *I18nService
 }
+
+const (
+	i18nParamInvalidMessageKey = "param.invalid"
+	i18nIDInvalidMessageKey    = "id.invalid"
+	i18nModuleQueryKey         = "module"
+	i18nIDParamKey             = "id"
+	i18nDeletedFieldKey        = "deleted"
+	i18nCountFieldKey          = "count"
+)
 
 func NewI18nHandler(s *I18nService) *I18nHandler {
 	return &I18nHandler{service: s}
@@ -51,7 +61,7 @@ func (h *I18nHandler) GetAudit(c *gin.Context) {
 
 func (h *I18nHandler) CleanupUnusedKeys(c *gin.Context) {
 	common.SetAuditMetadata(c, "清理未使用国际化键", common.BusinessDelete)
-	resp, err := h.service.CleanupUnusedKeys(c.Query("module"))
+	resp, err := h.service.CleanupUnusedKeys(c.Query(i18nModuleQueryKey))
 	if err != nil {
 		common.Fail(c, common.CodeError, "i18n.cleanup_unused.error")
 		return
@@ -61,7 +71,7 @@ func (h *I18nHandler) CleanupUnusedKeys(c *gin.Context) {
 
 func (h *I18nHandler) StartUnusedObservation(c *gin.Context) {
 	common.SetAuditMetadata(c, "标记国际化键进入观察期", common.BusinessUpdate)
-	module := c.Query("module")
+	module := c.Query(i18nModuleQueryKey)
 	setI18nLifecycleAuditParam(c, "observe", strings.TrimSpace(module), I18nLifecycleStatusActive, I18nLifecycleStatusObserving, false)
 	resp, err := h.service.StartUnusedObservation(module)
 	if err != nil {
@@ -74,7 +84,7 @@ func (h *I18nHandler) StartUnusedObservation(c *gin.Context) {
 
 func (h *I18nHandler) ArchiveObservedUnusedKeys(c *gin.Context) {
 	common.SetAuditMetadata(c, "归档观察期国际化键", common.BusinessUpdate)
-	module := c.Query("module")
+	module := c.Query(i18nModuleQueryKey)
 	setI18nLifecycleAuditParam(c, "archive", strings.TrimSpace(module), I18nLifecycleStatusObserving, I18nLifecycleStatusArchived, false)
 	resp, err := h.service.ArchiveObservedUnusedKeys(module)
 	if err != nil {
@@ -88,19 +98,19 @@ func (h *I18nHandler) ArchiveObservedUnusedKeys(c *gin.Context) {
 func (h *I18nHandler) DeleteArchivedUnusedKeys(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除已归档国际化键", common.BusinessDelete)
 	var req I18nUnusedLifecycleReq
-	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+	if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	if req.Module == "" {
-		req.Module = c.Query("module")
+		req.Module = c.Query(i18nModuleQueryKey)
 	}
 	req.Module = strings.TrimSpace(req.Module)
 	setI18nLifecycleAuditParam(c, "delete", req.Module, I18nLifecycleStatusArchived, "deleted", req.ConfirmArchived)
 	resp, err := h.service.DeleteArchivedUnusedKeys(req.Module, req.ConfirmArchived)
 	if err != nil {
 		if err.Error() == "i18n.lifecycle.delete.confirm_required" {
-			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
+			common.FailWithError(c, common.CodeParamInvalid, err, i18nParamInvalidMessageKey)
 			return
 		}
 		common.Fail(c, common.CodeError, "i18n.lifecycle.delete.error")
@@ -156,14 +166,14 @@ func (h *I18nHandler) PreviewRenameKey(c *gin.Context) {
 
 	var req I18nRenamePreviewReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.PreviewRenameKey(&req)
 	if err != nil {
 		switch err.Error() {
 		case "i18n.rename.invalid":
-			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
+			common.FailWithError(c, common.CodeParamInvalid, err, i18nParamInvalidMessageKey)
 		case "i18n.rename.source_not_found":
 			common.FailWithError(c, common.CodeError, err, "i18n.rename.preview.error")
 		default:
@@ -178,14 +188,14 @@ func (h *I18nHandler) RenameKey(c *gin.Context) {
 	common.SetAuditMetadata(c, "重命名国际化键", common.BusinessUpdate)
 	var req I18nRenameExecuteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.RenameKey(&req)
 	if err != nil {
 		switch err.Error() {
 		case "i18n.rename.invalid", "i18n.rename.source_not_found":
-			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
+			common.FailWithError(c, common.CodeParamInvalid, err, i18nParamInvalidMessageKey)
 		case "i18n.rename.target_exists", "i18n.rename.source_not_confirmed":
 			common.FailWithError(c, common.CodeError, err, "i18n.rename.execute.error")
 		default:
@@ -197,7 +207,7 @@ func (h *I18nHandler) RenameKey(c *gin.Context) {
 }
 
 func (h *I18nHandler) GetMissingLocales(c *gin.Context) {
-	resp, err := h.service.ListMissingLocales(c.Query("module"))
+	resp, err := h.service.ListMissingLocales(c.Query(i18nModuleQueryKey))
 	if err != nil {
 		common.Fail(c, common.CodeError, "i18n.missing_locales.error")
 		return
@@ -207,7 +217,7 @@ func (h *I18nHandler) GetMissingLocales(c *gin.Context) {
 
 func (h *I18nHandler) FillMissingLocales(c *gin.Context) {
 	common.SetAuditMetadata(c, "补齐缺失国际化语言", common.BusinessInsert)
-	resp, err := h.service.FillMissingLocales(c.Query("module"))
+	resp, err := h.service.FillMissingLocales(c.Query(i18nModuleQueryKey))
 	if err != nil {
 		common.Fail(c, common.CodeError, "i18n.fill_missing_locales.error")
 		return
@@ -217,7 +227,7 @@ func (h *I18nHandler) FillMissingLocales(c *gin.Context) {
 
 func (h *I18nHandler) HydrateBuiltinLocales(c *gin.Context) {
 	common.SetAuditMetadata(c, "回填内置国际化翻译", common.BusinessUpdate)
-	resp, err := h.service.HydrateBuiltinLocales(c.Query("module"))
+	resp, err := h.service.HydrateBuiltinLocales(c.Query(i18nModuleQueryKey))
 	if err != nil {
 		common.Fail(c, common.CodeError, "i18n.hydrate_builtin.error")
 		return
@@ -229,7 +239,7 @@ func (h *I18nHandler) HydrateBuiltinLocales(c *gin.Context) {
 func (h *I18nHandler) List(c *gin.Context) {
 	var query I18nQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.List(&query)
@@ -241,9 +251,9 @@ func (h *I18nHandler) List(c *gin.Context) {
 }
 
 func (h *I18nHandler) Get(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param(i18nIDParamKey), 10, 64)
 	if err != nil || id == 0 {
-		common.Fail(c, common.CodeParamInvalid, "id.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nIDInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.Get(id)
@@ -262,14 +272,14 @@ func (h *I18nHandler) Create(c *gin.Context) {
 	common.SetAuditMetadata(c, "新增翻译", common.BusinessInsert)
 	var req I18nCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.Create(&req)
 	if err != nil {
 		switch err.Error() {
 		case "i18n.create.invalid":
-			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
+			common.FailWithError(c, common.CodeParamInvalid, err, i18nParamInvalidMessageKey)
 		case "i18n.key.duplicate":
 			common.FailWithError(c, common.CodeError, err, "i18n.create.error")
 		default:
@@ -283,16 +293,16 @@ func (h *I18nHandler) Create(c *gin.Context) {
 // Update 更新翻译 (管理端)
 func (h *I18nHandler) Update(c *gin.Context) {
 	common.SetAuditMetadata(c, "编辑翻译", common.BusinessUpdate)
-	idStr := c.Param("id")
+	idStr := c.Param(i18nIDParamKey)
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 	if id == 0 {
-		common.Fail(c, common.CodeParamInvalid, "id.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nIDInvalidMessageKey)
 		return
 	}
 
 	var req I18nUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 
@@ -302,7 +312,7 @@ func (h *I18nHandler) Update(c *gin.Context) {
 			return
 		}
 		if err.Error() == "i18n.value.required" {
-			common.FailWithError(c, common.CodeParamInvalid, err, "param.invalid")
+			common.FailWithError(c, common.CodeParamInvalid, err, i18nParamInvalidMessageKey)
 			return
 		}
 		common.Fail(c, common.CodeError, "i18n.update.error")
@@ -313,9 +323,9 @@ func (h *I18nHandler) Update(c *gin.Context) {
 
 func (h *I18nHandler) Delete(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除翻译", common.BusinessDelete)
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	id, err := strconv.ParseUint(c.Param(i18nIDParamKey), 10, 64)
 	if err != nil || id == 0 {
-		common.Fail(c, common.CodeParamInvalid, "id.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nIDInvalidMessageKey)
 		return
 	}
 	if err := h.service.Delete(id); err != nil {
@@ -326,28 +336,28 @@ func (h *I18nHandler) Delete(c *gin.Context) {
 		common.Fail(c, common.CodeError, "i18n.delete.error")
 		return
 	}
-	common.Success(c, gin.H{"deleted": true})
+	common.Success(c, gin.H{i18nDeletedFieldKey: true})
 }
 
 func (h *I18nHandler) DeleteBatch(c *gin.Context) {
 	common.SetAuditMetadata(c, "批量删除翻译", common.BusinessDelete)
 	var req I18nBatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil || len(req.IDs) == 0 {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	if err := h.service.DeleteBatch(req.IDs); err != nil {
 		common.Fail(c, common.CodeError, "i18n.delete.error")
 		return
 	}
-	common.Success(c, gin.H{"deleted": true, "count": len(req.IDs)})
+	common.Success(c, gin.H{i18nDeletedFieldKey: true, i18nCountFieldKey: len(req.IDs)})
 }
 
 func (h *I18nHandler) Export(c *gin.Context) {
 	common.SetAuditMetadata(c, "导出翻译", common.BusinessExport)
 	var query I18nQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	file, err := h.service.Export(&query)
@@ -410,8 +420,8 @@ func (h *I18nHandler) ReloadCache(c *gin.Context) {
 	common.SetAuditMetadata(c, "i18n.cache.refresh.title", common.BusinessUpdate)
 
 	var req I18nCacheRefreshReq
-	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+	if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+		common.Fail(c, common.CodeParamInvalid, i18nParamInvalidMessageKey)
 		return
 	}
 	if err := h.service.ReloadLocales(req.Locales); err != nil {

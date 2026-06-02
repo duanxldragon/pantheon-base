@@ -14,6 +14,23 @@ type DynamicModuleHandler struct {
 	service *DynamicModuleService
 }
 
+const (
+	dynamicModuleParamInvalidMessageKey = "param.invalid"
+	dynamicModuleNameParamKey           = "name"
+	dynamicModuleModuleFieldKey         = "module"
+	dynamicModuleSummaryFieldKey        = "summary"
+	dynamicModuleDeletedFieldKey        = "deleted"
+	dynamicModuleQueryModuleKey         = "module"
+	dynamicModuleMessageFieldKey        = "message"
+	dynamicModuleDropTableQueryKey      = "dropTable"
+	dynamicModulePurgeSourceQueryKey    = "purgeSource"
+	dynamicModuleTrueValue              = "true"
+	dynamicModuleFalseValue             = "false"
+	dynamicModuleInvalidNameErrorKey    = "module.invalid_name"
+	moduleRegisterSourceMissingErrorKey = "module.register.source_missing"
+	moduleRegisterSchemaInvalidErrorKey = "module.register.schema_invalid"
+)
+
 func NewDynamicModuleHandler(s *DynamicModuleService) *DynamicModuleHandler {
 	return &DynamicModuleHandler{service: s}
 }
@@ -27,7 +44,7 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, dynamicModuleParamInvalidMessageKey)
 		return
 	}
 
@@ -35,7 +52,7 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 	if err != nil {
 		code := common.CodeError
 		switch err.Error() {
-		case "module.invalid_name", "module.register.source_missing", "module.register.schema_invalid":
+		case dynamicModuleInvalidNameErrorKey, moduleRegisterSourceMissingErrorKey, moduleRegisterSchemaInvalidErrorKey:
 			code = common.CodeParamInvalid
 		}
 		common.FailWithError(c, code, err, "module.register.error")
@@ -43,9 +60,9 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"registered": true,
-		"module":     registration,
-		"message":    "module.register.success",
+		"registered":                 true,
+		dynamicModuleModuleFieldKey:  registration,
+		dynamicModuleMessageFieldKey: "module.register.success",
 	})
 }
 
@@ -54,7 +71,7 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 
 	rawBody, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, dynamicModuleParamInvalidMessageKey)
 		return
 	}
 	c.Request.Body = io.NopCloser(bytes.NewReader(rawBody))
@@ -64,7 +81,7 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 		Overwrite bool                  `json:"overwrite"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, dynamicModuleParamInvalidMessageKey)
 		return
 	}
 	applyGenerateSchemaRawMetadata(rawBody, &input.Schema)
@@ -85,12 +102,12 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"module":                registration,
-		"summary":               summary,
-		"writtenFiles":          writtenFiles,
-		"requiresRestart":       true,
-		"requiresFrontendBuild": true,
-		"message":               "module.generate.success",
+		dynamicModuleModuleFieldKey:  registration,
+		dynamicModuleSummaryFieldKey: summary,
+		"writtenFiles":               writtenFiles,
+		"requiresRestart":            true,
+		"requiresFrontendBuild":      true,
+		dynamicModuleMessageFieldKey: "module.generate.success",
 	})
 }
 
@@ -98,9 +115,9 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 func (h *DynamicModuleHandler) UnregisterModule(c *gin.Context) {
 	common.SetAuditMetadata(c, "卸载动态模块", common.BusinessDelete)
 
-	moduleName := c.Param("name")
-	dropTable := c.Query("dropTable") == "true"
-	purgeSource := c.Query("purgeSource") == "true"
+	moduleName := c.Param(dynamicModuleNameParamKey)
+	dropTable := c.Query(dynamicModuleDropTableQueryKey) == dynamicModuleTrueValue
+	purgeSource := c.Query(dynamicModulePurgeSourceQueryKey) == dynamicModuleTrueValue
 
 	lifecycle, err := h.service.UnregisterModule(moduleName, dropTable, purgeSource)
 	if err != nil {
@@ -109,31 +126,31 @@ func (h *DynamicModuleHandler) UnregisterModule(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"unregistered":  true,
-		"message":       "module.unregistered",
-		"i18nLifecycle": lifecycle,
+		"unregistered":               true,
+		dynamicModuleMessageFieldKey: "module.unregistered",
+		"i18nLifecycle":              lifecycle,
 	})
 }
 
 func (h *DynamicModuleHandler) DeleteModuleRecord(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除动态模块记录", common.BusinessDelete)
 
-	if err := h.service.DeleteModuleRecord(c.Param("name")); err != nil {
+	if err := h.service.DeleteModuleRecord(c.Param(dynamicModuleNameParamKey)); err != nil {
 		common.FailWithError(c, common.CodeError, err, "module.delete_record.error")
 		return
 	}
 	common.Success(c, gin.H{
-		"deleted": true,
-		"message": "module.record.deleted",
+		dynamicModuleDeletedFieldKey: true,
+		dynamicModuleMessageFieldKey: "module.record.deleted",
 	})
 }
 
 func (h *DynamicModuleHandler) PurgeModule(c *gin.Context) {
 	common.SetAuditMetadata(c, "彻底删除动态模块", common.BusinessDelete)
 
-	moduleName := c.Param("name")
-	dropTable := c.Query("dropTable") == "true"
-	purgeSource := c.Query("purgeSource") != "false"
+	moduleName := c.Param(dynamicModuleNameParamKey)
+	dropTable := c.Query(dynamicModuleDropTableQueryKey) == dynamicModuleTrueValue
+	purgeSource := c.Query(dynamicModulePurgeSourceQueryKey) != dynamicModuleFalseValue
 
 	lifecycle, err := h.service.PurgeModule(moduleName, dropTable, purgeSource)
 	if err != nil {
@@ -141,9 +158,9 @@ func (h *DynamicModuleHandler) PurgeModule(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"deleted":       true,
-		"message":       "module.deleted",
-		"i18nLifecycle": lifecycle,
+		dynamicModuleDeletedFieldKey: true,
+		dynamicModuleMessageFieldKey: "module.deleted",
+		"i18nLifecycle":              lifecycle,
 	})
 }
 
@@ -156,9 +173,9 @@ func (h *DynamicModuleHandler) RepairRegistries(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"repaired": true,
-		"summary":  summary,
-		"message":  "module.registry.repaired",
+		"repaired":                   true,
+		dynamicModuleSummaryFieldKey: summary,
+		dynamicModuleMessageFieldKey: "module.registry.repaired",
 	})
 }
 
@@ -171,16 +188,16 @@ func (h *DynamicModuleHandler) AuditPendingActivations(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"audited": true,
-		"summary": summary,
-		"message": "module.activation.audit.success",
+		"audited":                    true,
+		dynamicModuleSummaryFieldKey: summary,
+		dynamicModuleMessageFieldKey: "module.activation.audit.success",
 	})
 }
 
 func (h *DynamicModuleHandler) GetModuleSchema(c *gin.Context) {
-	moduleName := c.Query("module")
+	moduleName := c.Query(dynamicModuleQueryModuleKey)
 	if moduleName == "" {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, dynamicModuleParamInvalidMessageKey)
 		return
 	}
 
@@ -188,7 +205,7 @@ func (h *DynamicModuleHandler) GetModuleSchema(c *gin.Context) {
 	if err != nil {
 		code := common.CodeError
 		switch err.Error() {
-		case "module.invalid_name", "module.register.source_missing", "module.register.schema_invalid":
+		case dynamicModuleInvalidNameErrorKey, moduleRegisterSourceMissingErrorKey, moduleRegisterSchemaInvalidErrorKey:
 			code = common.CodeParamInvalid
 		}
 		common.FailWithError(c, code, err, "module.schema.error")
@@ -211,7 +228,7 @@ func (h *DynamicModuleHandler) ListModules(c *gin.Context) {
 
 // GetModuleStatus 获取模块状态
 func (h *DynamicModuleHandler) GetModuleStatus(c *gin.Context) {
-	moduleName := c.Param("name")
+	moduleName := c.Param(dynamicModuleNameParamKey)
 
 	module, err := h.service.GetModuleStatus(moduleName)
 	if err != nil {
@@ -258,7 +275,7 @@ func isGenerateValidationError(err error) bool {
 		"module.generate.file_exists",
 		"module.generate.already_exists",
 		"module.generate.business_only",
-		"module.invalid_name":
+		dynamicModuleInvalidNameErrorKey:
 		return true
 	default:
 		return false
