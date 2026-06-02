@@ -26,7 +26,7 @@ func NewSettingHandler(service *SettingService, uploadService *uploadpkg.Service
 func (h *SettingHandler) GetSettingList(c *gin.Context) {
 	var query SettingListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, settingParamInvalidKey)
 		return
 	}
 	items, err := h.service.List(&query)
@@ -47,9 +47,9 @@ func (h *SettingHandler) GetSettingOverview(c *gin.Context) {
 }
 
 func (h *SettingHandler) GetSettingGroup(c *gin.Context) {
-	group, err := h.service.GetGroup(c.Param("groupKey"))
+	group, err := h.service.GetGroup(settingPathParam(c, settingParamGroupKey))
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, settingRequestFailedKey)
 		return
 	}
 	common.Success(c, group)
@@ -60,10 +60,10 @@ func (h *SettingHandler) UpdateSettingGroup(c *gin.Context) {
 
 	var req SettingGroupUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, settingParamInvalidKey)
 		return
 	}
-	groupKey := c.Param("groupKey")
+	groupKey := settingPathParam(c, settingParamGroupKey)
 	successPayload := ""
 	if payload, err := h.service.BuildAuditPayload(groupKey, &req, false); err == nil && payload != "" {
 		c.Set("operationLog.param", payload)
@@ -74,7 +74,7 @@ func (h *SettingHandler) UpdateSettingGroup(c *gin.Context) {
 
 	group, err := h.service.UpdateGroup(groupKey, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, settingRequestFailedKey)
 		return
 	}
 	if successPayload != "" {
@@ -98,6 +98,13 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 const (
 	settingAuditTitle        = "setting.group.update"
 	settingAuditBusinessType = 1001
+	settingParamInvalidKey   = "param.invalid"
+	settingRequestFailedKey  = "request.failed"
+	settingUploadFileField   = "file"
+	settingQueryScope        = "scope"
+	settingDefaultScope      = "general"
+	settingParamGroupKey     = "groupKey"
+	settingParamFilepath     = "filepath"
 )
 
 func (h *SettingHandler) RefreshSettingCache(c *gin.Context) {
@@ -105,7 +112,7 @@ func (h *SettingHandler) RefreshSettingCache(c *gin.Context) {
 
 	var req SettingCacheRefreshReq
 	if err := c.ShouldBindJSON(&req); err != nil && c.Request.ContentLength > 0 {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, settingParamInvalidKey)
 		return
 	}
 	resp, err := h.service.RefreshSettingCache(req.GroupKeys)
@@ -119,7 +126,7 @@ func (h *SettingHandler) RefreshSettingCache(c *gin.Context) {
 func (h *SettingHandler) GetSettingAuditList(c *gin.Context) {
 	var query SettingAuditQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, settingParamInvalidKey)
 		return
 	}
 	page, err := h.service.ListAudit(&query)
@@ -135,7 +142,7 @@ func (h *SettingHandler) ExportSettingAudit(c *gin.Context) {
 
 	var query SettingAuditQuery
 	if err := c.ShouldBindJSON(&query); err != nil && c.Request.ContentLength > 0 {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, settingParamInvalidKey)
 		return
 	}
 	file, err := h.service.ExportAudit(&query)
@@ -161,7 +168,7 @@ func (h *SettingHandler) UploadFile(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBytes)
 	}
 
-	fileHeader, err := c.FormFile("file")
+	fileHeader, err := c.FormFile(settingUploadFileField)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "too large") {
 			common.Fail(c, common.CodeParamInvalid, "upload.file.too_large")
@@ -171,9 +178,9 @@ func (h *SettingHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	stored, err := h.uploadService.Store(fileHeader, c.DefaultQuery("scope", "general"), requestBaseURL(c))
+	stored, err := h.uploadService.Store(fileHeader, c.DefaultQuery(settingQueryScope, settingDefaultScope), requestBaseURL(c))
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, settingRequestFailedKey)
 		return
 	}
 	common.Success(c, stored)
@@ -197,7 +204,7 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		return
 	}
 
-	objectKey, err := uploadpkg.NormalizeObjectKey(c.Param("filepath"))
+	objectKey, err := uploadpkg.NormalizeObjectKey(settingPathParam(c, settingParamFilepath))
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "upload.file.not_found")
 		return
@@ -219,4 +226,8 @@ func requestBaseURL(c *gin.Context) string {
 		}
 	}
 	return scheme + "://" + c.Request.Host
+}
+
+func settingPathParam(c *gin.Context, key string) string {
+	return c.Param(key)
 }

@@ -8,6 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	generatorParamInvalidMessageKey = "param.invalid"
+	generatorParamID                = "id"
+	generatorDeletedField           = "deleted"
+	generatorFilesField             = "files"
+	generatorPreviewFilesErrorKey   = "generator.preview.files.error"
+)
+
 type GeneratorHandler struct {
 	service *GeneratorService
 }
@@ -30,7 +38,7 @@ func (h *GeneratorHandler) CreateDatasource(c *gin.Context) {
 
 	var req UpsertGeneratorDatasourceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, generatorParamInvalidMessageKey)
 		return
 	}
 	item, err := h.service.CreateDatasource(&req)
@@ -46,10 +54,10 @@ func (h *GeneratorHandler) UpdateDatasource(c *gin.Context) {
 
 	var req UpsertGeneratorDatasourceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, generatorParamInvalidMessageKey)
 		return
 	}
-	item, err := h.service.UpdateDatasource(c.Param("id"), &req)
+	item, err := h.service.UpdateDatasource(generatorPathParam(c, generatorParamID), &req)
 	if err != nil {
 		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.save.error")
 		return
@@ -60,17 +68,17 @@ func (h *GeneratorHandler) UpdateDatasource(c *gin.Context) {
 func (h *GeneratorHandler) DeleteDatasource(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除生成器数据源", common.BusinessDelete)
 
-	if err := h.service.DeleteDatasource(c.Param("id")); err != nil {
+	if err := h.service.DeleteDatasource(generatorPathParam(c, generatorParamID)); err != nil {
 		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.delete.error")
 		return
 	}
-	common.Success(c, gin.H{"deleted": true})
+	common.Success(c, gin.H{generatorDeletedField: true})
 }
 
 func (h *GeneratorHandler) TestDatasource(c *gin.Context) {
 	common.SetAuditMetadata(c, "测试生成器数据源", common.BusinessOther)
 
-	item, err := h.service.TestDatasource(c.Param("id"))
+	item, err := h.service.TestDatasource(generatorPathParam(c, generatorParamID))
 	if err != nil {
 		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.datasource.test.error")
 		return
@@ -106,15 +114,15 @@ func (h *GeneratorHandler) PreviewGeneratedFiles(c *gin.Context) {
 		Schema scaffold.ModuleSchema `json:"schema"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, generatorParamInvalidMessageKey)
 		return
 	}
 	files, err := h.service.PreviewGeneratedFiles(&req.Schema)
 	if err != nil {
-		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.preview.files.error")
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, generatorPreviewFilesErrorKey)
 		return
 	}
-	common.Success(c, gin.H{"files": files})
+	common.Success(c, gin.H{generatorFilesField: files})
 }
 
 func (h *GeneratorHandler) DownloadGeneratedSource(c *gin.Context) {
@@ -122,19 +130,23 @@ func (h *GeneratorHandler) DownloadGeneratedSource(c *gin.Context) {
 		Schema scaffold.ModuleSchema `json:"schema"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, generatorParamInvalidMessageKey)
 		return
 	}
 
 	archive, filename, err := h.service.BuildGeneratedModuleArchive(&req.Schema)
 	if err != nil {
-		common.FailWithError(c, mapGeneratorErrorCode(err), err, "generator.preview.files.error")
+		common.FailWithError(c, mapGeneratorErrorCode(err), err, generatorPreviewFilesErrorKey)
 		return
 	}
 
 	c.Header("Content-Type", "application/zip")
 	c.Header("Content-Disposition", `attachment; filename="`+filename+`"`)
 	c.Data(200, "application/zip", archive)
+}
+
+func generatorPathParam(c *gin.Context, key string) string {
+	return c.Param(key)
 }
 
 func mapGeneratorErrorCode(err error) int {

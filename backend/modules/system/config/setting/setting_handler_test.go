@@ -84,3 +84,15 @@ func TestServeUploadedFileRejectsTraversal(t *testing.T) {
 		t.Fatalf("expected upload.file.not_found response, got %s", body)
 	}
 }
+
+func TestSettingPathParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+	context.Params = gin.Params{{Key: settingParamGroupKey, Value: "system"}}
+
+	if value := settingPathParam(context, settingParamGroupKey); value != "system" {
+		t.Fatalf("expected path param system, got %q", value)
+	}
+}
