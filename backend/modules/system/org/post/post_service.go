@@ -18,13 +18,20 @@ type PostService struct {
 
 const deletedPostCodePrefix = "__deleted_post_"
 
+const (
+	postDatabaseNotInitializedKey = "database.not_initialized"
+	postBatchEmptyKey             = "post.batch.empty"
+	postParamInvalidKey           = "param.invalid"
+	postDeleteHasUsersKey         = "post.delete.error.has_users"
+)
+
 func NewPostService(db *gorm.DB) *PostService {
 	return &PostService{db: db}
 }
 
 func (s *PostService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(postDatabaseNotInitializedKey)
 	}
 	if err := s.db.AutoMigrate(&SystemPost{}); err != nil {
 		return err
@@ -34,7 +41,7 @@ func (s *PostService) Migrate() error {
 
 func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(postDatabaseNotInitializedKey)
 	}
 
 	var posts []SystemPost
@@ -92,7 +99,7 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 
 func (s *PostService) CreatePost(req *PostCreateReq) (*PostListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(postDatabaseNotInitializedKey)
 	}
 	if err := s.validatePostCreate(0, req.PostCode, req.DeptID); err != nil {
 		return nil, err
@@ -120,7 +127,7 @@ func (s *PostService) CreatePost(req *PostCreateReq) (*PostListResp, error) {
 
 func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(postDatabaseNotInitializedKey)
 	}
 
 	var post SystemPost
@@ -156,12 +163,12 @@ func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListRe
 
 func (s *PostService) DeletePost(postID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(postDatabaseNotInitializedKey)
 	}
 
 	if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
 		if err.Error() == "post.status.error.has_users" {
-			return errors.New("post.delete.error.has_users")
+			return errors.New(postDeleteHasUsersKey)
 		}
 		return err
 	}
@@ -183,14 +190,14 @@ func (s *PostService) DeletePost(postID uint64) error {
 
 func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(postDatabaseNotInitializedKey)
 	}
 	normalizedIDs := normalizePostIDs(postIDs)
 	if len(normalizedIDs) == 0 {
-		return 0, errors.New("post.batch.empty")
+		return 0, errors.New(postBatchEmptyKey)
 	}
 	if status != 1 && status != 2 {
-		return 0, errors.New("param.invalid")
+		return 0, errors.New(postParamInvalidKey)
 	}
 
 	var posts []SystemPost
@@ -226,7 +233,7 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 
 func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(postDatabaseNotInitializedKey)
 	}
 
 	rows, err := s.listPostsForExport(query)
@@ -292,7 +299,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(postDatabaseNotInitializedKey)
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -463,7 +470,7 @@ func (s *PostService) listPostsForExport(query *PostListQuery) ([]SystemPost, er
 func (s *PostService) validatePostCreate(postID uint64, postCode string, deptID uint64) error {
 	trimmedCode := strings.TrimSpace(postCode)
 	if trimmedCode == "" {
-		return errors.New("param.invalid")
+		return errors.New(postParamInvalidKey)
 	}
 	if err := s.ensurePostDeptID(deptID); err != nil {
 		return err
@@ -639,7 +646,7 @@ func normalizePostIDs(ids []uint64) []uint64 {
 
 func (s *PostService) loadPostUserCounts() (map[uint64]int, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(postDatabaseNotInitializedKey)
 	}
 	if !s.db.Migrator().HasTable("system_user") {
 		return map[uint64]int{}, nil

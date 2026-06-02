@@ -19,13 +19,20 @@ type PermissionService struct {
 	db *gorm.DB
 }
 
+const (
+	permissionDatabaseNotInitializedKey = "database.not_initialized"
+	permissionPolicyExistsKey           = "permission.policy.exists"
+	permissionParamInvalidKey           = "param.invalid"
+	permissionRoleInvalidKey            = "permission.role.invalid"
+)
+
 func NewPermissionService(db *gorm.DB) *PermissionService {
 	return &PermissionService{db: db}
 }
 
 func (s *PermissionService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(permissionDatabaseNotInitializedKey)
 	}
 	if err := s.db.AutoMigrate(&PermissionWorkbenchRemediationEvent{}); err != nil {
 		return err
@@ -53,7 +60,7 @@ WHERE ptype = ?
 
 func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*PermissionPolicyPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 
 	var policies []database.CasbinRule
@@ -105,7 +112,7 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 
 func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*PermissionPolicyResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 	roleKey, path, method, err := s.validatePolicyPayload(0, req.RoleKey, req.Path, req.Method)
 	if err != nil {
@@ -119,7 +126,7 @@ func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*Permi
 		V2:    method,
 	}
 	if err := s.db.Create(&policy).Error; err != nil {
-		return nil, errors.New("permission.policy.exists")
+		return nil, errors.New(permissionPolicyExistsKey)
 	}
 	if err := reloadPermissionPolicies(); err != nil {
 		return nil, err
@@ -136,7 +143,7 @@ func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*Permi
 
 func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyUpdateReq) (*PermissionPolicyResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 
 	var policy database.CasbinRule
@@ -156,7 +163,7 @@ func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyU
 	policy.V4 = ""
 	policy.V5 = ""
 	if err := s.db.Save(&policy).Error; err != nil {
-		return nil, errors.New("permission.policy.exists")
+		return nil, errors.New(permissionPolicyExistsKey)
 	}
 	if err := reloadPermissionPolicies(); err != nil {
 		return nil, err
@@ -173,7 +180,7 @@ func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyU
 
 func (s *PermissionService) DeletePolicy(policyID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(permissionDatabaseNotInitializedKey)
 	}
 	if err := s.db.Delete(&database.CasbinRule{}, policyID).Error; err != nil {
 		return err
@@ -183,7 +190,7 @@ func (s *PermissionService) DeletePolicy(policyID uint64) error {
 
 func (s *PermissionService) ExportPolicies(query *PermissionPolicyQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 
 	policies, err := s.listPoliciesForExport(query)
@@ -216,7 +223,7 @@ func (s *PermissionService) BuildImportTemplate() *impexp.CSVFile {
 
 func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 
 	workbench, err := s.GetWorkbench(query)
@@ -280,11 +287,11 @@ func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*i
 
 func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchRemediateReq) (*PermissionWorkbenchRemediateResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 	roleKey := strings.TrimSpace(req.RoleKey)
 	if roleKey == "" {
-		return nil, errors.New("param.invalid")
+		return nil, errors.New(permissionParamInvalidKey)
 	}
 	if err := s.ensureRoleKeyExists(roleKey); err != nil {
 		return nil, err
@@ -302,7 +309,7 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 		}
 	}
 	if role == nil {
-		return nil, errors.New("permission.role.invalid")
+		return nil, errors.New(permissionRoleInvalidKey)
 	}
 	resp := &PermissionWorkbenchRemediateResp{
 		RoleKey:         roleKey,
@@ -359,7 +366,7 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 
 func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWorkbenchRemediationQuery) ([]PermissionWorkbenchRemediationResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 
 	limit := 20
@@ -433,7 +440,7 @@ func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportRe
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDatabaseNotInitializedKey)
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -593,7 +600,7 @@ func (s *PermissionService) validatePolicyPayload(policyID uint64, roleKey strin
 	path = strings.TrimSpace(path)
 	method = normalizePolicyMethod(method)
 	if roleKey == "" || path == "" || method == "" {
-		return "", "", "", errors.New("param.invalid")
+		return "", "", "", errors.New(permissionParamInvalidKey)
 	}
 	if err := s.ensureRoleKeyExists(roleKey); err != nil {
 		return "", "", "", err
@@ -610,7 +617,7 @@ func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("permission.role.invalid")
+		return errors.New(permissionRoleInvalidKey)
 	}
 	return nil
 }
@@ -625,7 +632,7 @@ func (s *PermissionService) ensurePolicyUnique(policyID uint64, roleKey string, 
 		return err
 	}
 	if count > 0 {
-		return errors.New("permission.policy.exists")
+		return errors.New(permissionPolicyExistsKey)
 	}
 	return nil
 }

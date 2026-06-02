@@ -20,9 +20,14 @@ type permissionDataScopeRoleRow struct {
 	Sort     int    `gorm:"column:sort"`
 }
 
+const (
+	permissionDataScopeDatabaseNotInitializedKey = "database.not_initialized"
+	permissionDataScopeParamInvalidKey           = "param.invalid"
+)
+
 func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuery) (*PermissionDataScopePolicyListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDataScopeDatabaseNotInitializedKey)
 	}
 
 	var roles []permissionDataScopeRoleRow
@@ -78,14 +83,14 @@ func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuer
 
 func (s *PermissionService) UpdateDataScopePolicy(roleKey string, req *PermissionDataScopePolicyUpdateReq) (*PermissionDataScopePolicyResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(permissionDataScopeDatabaseNotInitializedKey)
 	}
 	if req == nil {
-		return nil, errors.New("param.invalid")
+		return nil, errors.New(permissionDataScopeParamInvalidKey)
 	}
 	roleKey = strings.TrimSpace(roleKey)
 	if roleKey == "" {
-		return nil, errors.New("param.invalid")
+		return nil, errors.New(permissionDataScopeParamInvalidKey)
 	}
 	if err := s.ensureRoleKeyExists(roleKey); err != nil {
 		return nil, err

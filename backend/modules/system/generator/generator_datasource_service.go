@@ -14,9 +14,18 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	generatorDatasourceDatabaseNotInitializedKey = "database.not_initialized"
+	generatorDatasourceNotFoundKey               = "generator.datasource.not_found"
+	generatorDatasourceParamInvalidKey           = "param.invalid"
+	generatorDatasourceRequiredKey               = "generator.datasource.required"
+	generatorDatasourceHostInvalidKey            = "generator.datasource.host_invalid"
+	generatorDatasourceDriverUnsupportedKey      = "generator.datasource.driver_unsupported"
+)
+
 func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(generatorDatasourceDatabaseNotInitializedKey)
 	}
 	schemaName, err := s.currentSchema()
 	if err != nil {
@@ -45,7 +54,7 @@ func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) 
 
 func (s *GeneratorService) CreateDatasource(req *UpsertGeneratorDatasourceReq) (*GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(generatorDatasourceDatabaseNotInitializedKey)
 	}
 	row, err := normalizeDatasourceReq(req, true)
 	if err != nil {
@@ -60,7 +69,7 @@ func (s *GeneratorService) CreateDatasource(req *UpsertGeneratorDatasourceReq) (
 
 func (s *GeneratorService) UpdateDatasource(id string, req *UpsertGeneratorDatasourceReq) (*GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(generatorDatasourceDatabaseNotInitializedKey)
 	}
 	numericID, err := parseDatasourceNumericID(id)
 	if err != nil {
@@ -70,7 +79,7 @@ func (s *GeneratorService) UpdateDatasource(id string, req *UpsertGeneratorDatas
 	var existing GeneratorDatasource
 	if err := s.db.First(&existing, numericID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("generator.datasource.not_found")
+			return nil, errors.New(generatorDatasourceNotFoundKey)
 		}
 		return nil, err
 	}
@@ -100,7 +109,7 @@ func (s *GeneratorService) UpdateDatasource(id string, req *UpsertGeneratorDatas
 
 func (s *GeneratorService) DeleteDatasource(id string) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(generatorDatasourceDatabaseNotInitializedKey)
 	}
 	numericID, err := parseDatasourceNumericID(id)
 	if err != nil {
@@ -111,14 +120,14 @@ func (s *GeneratorService) DeleteDatasource(id string) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.New("generator.datasource.not_found")
+		return errors.New(generatorDatasourceNotFoundKey)
 	}
 	return nil
 }
 
 func (s *GeneratorService) TestDatasource(id string) (*GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(generatorDatasourceDatabaseNotInitializedKey)
 	}
 	if strings.TrimSpace(id) == "" || id == generatorDatasourceCurrentID {
 		schemaName, err := s.currentSchema()
@@ -173,7 +182,7 @@ func (s *GeneratorService) TestDatasource(id string) (*GeneratorDatasourceResp, 
 
 func (s *GeneratorService) openSchemaReader(datasourceID string) (*generatorSchemaReader, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(generatorDatasourceDatabaseNotInitializedKey)
 	}
 	if strings.TrimSpace(datasourceID) == "" || datasourceID == generatorDatasourceCurrentID {
 		schemaName, err := s.currentSchema()
@@ -191,7 +200,7 @@ func (s *GeneratorService) openSchemaReader(datasourceID string) (*generatorSche
 		return nil, errors.New("generator.datasource.disabled")
 	}
 	if strings.TrimSpace(row.Driver) != "" && !strings.EqualFold(strings.TrimSpace(row.Driver), "mysql") {
-		return nil, errors.New("generator.datasource.driver_unsupported")
+		return nil, errors.New(generatorDatasourceDriverUnsupportedKey)
 	}
 	password, err := decryptDatasourcePassword(row.PasswordEncrypted)
 	if err != nil {
@@ -237,7 +246,7 @@ func (s *GeneratorService) loadDatasource(id string) (*GeneratorDatasource, erro
 	var row GeneratorDatasource
 	if err := s.db.First(&row, numericID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("generator.datasource.not_found")
+			return nil, errors.New(generatorDatasourceNotFoundKey)
 		}
 		return nil, err
 	}
@@ -257,7 +266,7 @@ func (s *GeneratorService) currentSchema() (string, error) {
 
 func normalizeDatasourceReq(req *UpsertGeneratorDatasourceReq, requirePassword bool) (*GeneratorDatasource, error) {
 	if req == nil {
-		return nil, errors.New("param.invalid")
+		return nil, errors.New(generatorDatasourceParamInvalidKey)
 	}
 	name := strings.TrimSpace(req.Name)
 	host := strings.TrimSpace(req.Host)
@@ -268,10 +277,10 @@ func normalizeDatasourceReq(req *UpsertGeneratorDatasourceReq, requirePassword b
 		driver = "mysql"
 	}
 	if name == "" || host == "" || databaseName == "" || username == "" {
-		return nil, errors.New("generator.datasource.required")
+		return nil, errors.New(generatorDatasourceRequiredKey)
 	}
 	if driver != "mysql" {
-		return nil, errors.New("generator.datasource.driver_unsupported")
+		return nil, errors.New(generatorDatasourceDriverUnsupportedKey)
 	}
 	if err := validateDatasourceHost(host); err != nil {
 		return nil, err
@@ -316,31 +325,31 @@ func normalizeDatasourceReq(req *UpsertGeneratorDatasourceReq, requirePassword b
 func validateDatasourceHost(host string) error {
 	normalizedHost := strings.ToLower(strings.TrimSpace(host))
 	if normalizedHost == "" {
-		return errors.New("generator.datasource.required")
+		return errors.New(generatorDatasourceRequiredKey)
 	}
 	if strings.ContainsAny(normalizedHost, `/\:@`) {
-		return errors.New("generator.datasource.host_invalid")
+		return errors.New(generatorDatasourceHostInvalidKey)
 	}
 
 	if addr, err := netip.ParseAddr(normalizedHost); err == nil {
 		if addr.IsLoopback() || addr.IsMulticast() || addr.IsLinkLocalMulticast() || addr.IsLinkLocalUnicast() || addr.IsUnspecified() {
-			return errors.New("generator.datasource.host_invalid")
+			return errors.New(generatorDatasourceHostInvalidKey)
 		}
 		return nil
 	}
 
 	if normalizedHost == "localhost" || strings.HasSuffix(normalizedHost, ".localhost") {
-		return errors.New("generator.datasource.host_invalid")
+		return errors.New(generatorDatasourceHostInvalidKey)
 	}
 	if !regexp.MustCompile(`^[a-z0-9.-]+$`).MatchString(normalizedHost) {
-		return errors.New("generator.datasource.host_invalid")
+		return errors.New(generatorDatasourceHostInvalidKey)
 	}
 	if strings.HasPrefix(normalizedHost, ".") || strings.HasSuffix(normalizedHost, ".") || strings.Contains(normalizedHost, "..") {
-		return errors.New("generator.datasource.host_invalid")
+		return errors.New(generatorDatasourceHostInvalidKey)
 	}
 	for _, label := range strings.Split(normalizedHost, ".") {
 		if label == "" || strings.HasPrefix(label, "-") || strings.HasSuffix(label, "-") {
-			return errors.New("generator.datasource.host_invalid")
+			return errors.New(generatorDatasourceHostInvalidKey)
 		}
 	}
 	return nil
@@ -349,11 +358,11 @@ func validateDatasourceHost(host string) error {
 func parseDatasourceNumericID(id string) (uint64, error) {
 	trimmed := strings.TrimSpace(id)
 	if trimmed == "" || trimmed == generatorDatasourceCurrentID {
-		return 0, errors.New("generator.datasource.not_found")
+		return 0, errors.New(generatorDatasourceNotFoundKey)
 	}
 	value, err := strconv.ParseUint(trimmed, 10, 64)
 	if err != nil || value == 0 {
-		return 0, errors.New("generator.datasource.not_found")
+		return 0, errors.New(generatorDatasourceNotFoundKey)
 	}
 	return value, nil
 }

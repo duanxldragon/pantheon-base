@@ -19,13 +19,21 @@ type RoleService struct {
 
 const deletedRoleKeyPrefix = "__deleted_role_"
 
+const (
+	roleDatabaseNotInitializedKey = "database.not_initialized"
+	roleMemberBatchEmptyKey       = "user.batch.empty"
+	roleBatchEmptyKey             = "role.batch.empty"
+	roleParamInvalidKey           = "param.invalid"
+	roleProtectedUpdateKey        = "role.update.error.protected"
+)
+
 func NewRoleService(db *gorm.DB) *RoleService {
 	return &RoleService{db: db}
 }
 
 func (s *RoleService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(roleDatabaseNotInitializedKey)
 	}
 	if err := s.db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}); err != nil {
 		return err
@@ -118,7 +126,7 @@ func (s *RoleService) ensureAdminUserBinding() error {
 // ListRoles 获取角色分页列表。
 func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(roleDatabaseNotInitializedKey)
 	}
 
 	var roles []SystemRole
@@ -191,7 +199,7 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 
 func (s *RoleService) ListRoleMembers(roleID uint64, query *RoleMemberQuery) (*RoleMemberPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(roleDatabaseNotInitializedKey)
 	}
 	if _, err := s.getRole(roleID); err != nil {
 		return nil, err
@@ -201,7 +209,7 @@ func (s *RoleService) ListRoleMembers(roleID uint64, query *RoleMemberQuery) (*R
 
 func (s *RoleService) ListAssignableUsers(roleID uint64, query *RoleMemberQuery) (*RoleMemberPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(roleDatabaseNotInitializedKey)
 	}
 	if _, err := s.getRole(roleID); err != nil {
 		return nil, err
@@ -211,7 +219,7 @@ func (s *RoleService) ListAssignableUsers(roleID uint64, query *RoleMemberQuery)
 
 func (s *RoleService) AddRoleMembers(roleID uint64, userIDs []uint64) (int, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(roleDatabaseNotInitializedKey)
 	}
 	if _, err := s.getRole(roleID); err != nil {
 		return 0, err
@@ -219,7 +227,7 @@ func (s *RoleService) AddRoleMembers(roleID uint64, userIDs []uint64) (int, erro
 
 	normalizedUserIDs := normalizeUint64IDs(userIDs)
 	if len(normalizedUserIDs) == 0 {
-		return 0, errors.New("user.batch.empty")
+		return 0, errors.New(roleMemberBatchEmptyKey)
 	}
 	if err := s.ensureUsersExist(normalizedUserIDs); err != nil {
 		return 0, err
@@ -265,7 +273,7 @@ func (s *RoleService) AddRoleMembers(roleID uint64, userIDs []uint64) (int, erro
 
 func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(roleDatabaseNotInitializedKey)
 	}
 	role, err := s.getRole(roleID)
 	if err != nil {
@@ -274,7 +282,7 @@ func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, e
 
 	normalizedUserIDs := normalizeUint64IDs(userIDs)
 	if len(normalizedUserIDs) == 0 {
-		return 0, errors.New("user.batch.empty")
+		return 0, errors.New(roleMemberBatchEmptyKey)
 	}
 	if err := s.ensureUsersExist(normalizedUserIDs); err != nil {
 		return 0, err
@@ -299,7 +307,7 @@ func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, e
 // CreateRole 创建角色。
 func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(roleDatabaseNotInitializedKey)
 	}
 	if err := s.validateRoleCreate(req); err != nil {
 		return nil, err
@@ -341,7 +349,7 @@ func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 // UpdateRole 更新角色。
 func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(roleDatabaseNotInitializedKey)
 	}
 
 	var role SystemRole
@@ -386,7 +394,7 @@ func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListRe
 // DeleteRole 删除角色。
 func (s *RoleService) DeleteRole(roleID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(roleDatabaseNotInitializedKey)
 	}
 
 	var role SystemRole
@@ -435,7 +443,7 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 
 func (s *RoleService) ExportRoles(query *RoleListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(roleDatabaseNotInitializedKey)
 	}
 
 	roles, err := s.listRolesForExport(query)
@@ -463,14 +471,14 @@ func (s *RoleService) ExportRoles(query *RoleListQuery) (*impexp.CSVFile, error)
 
 func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(roleDatabaseNotInitializedKey)
 	}
 	normalizedIDs := normalizeUint64IDs(roleIDs)
 	if len(normalizedIDs) == 0 {
-		return 0, errors.New("role.batch.empty")
+		return 0, errors.New(roleBatchEmptyKey)
 	}
 	if status != 1 && status != 2 {
-		return 0, errors.New("param.invalid")
+		return 0, errors.New(roleParamInvalidKey)
 	}
 
 	var roles []SystemRole
@@ -483,7 +491,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 	if status == 2 {
 		for _, role := range roles {
 			if role.ID == 1 || role.RoleKey == "admin" {
-				return 0, errors.New("role.update.error.protected")
+				return 0, errors.New(roleProtectedUpdateKey)
 			}
 		}
 	}
@@ -691,7 +699,7 @@ func (s *RoleService) listUsersByRoleMembership(roleID uint64, query *RoleMember
 
 func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
-		return errors.New("param.invalid")
+		return errors.New(roleParamInvalidKey)
 	}
 	if err := s.ensureRoleKeyUnique(0, req.RoleKey); err != nil {
 		return err
@@ -704,10 +712,10 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 
 func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
-		return errors.New("param.invalid")
+		return errors.New(roleParamInvalidKey)
 	}
 	if role.RoleKey == "admin" && (strings.TrimSpace(req.RoleKey) != "admin" || req.Status == 2) {
-		return errors.New("role.update.error.protected")
+		return errors.New(roleProtectedUpdateKey)
 	}
 	if err := s.ensureRoleKeyUnique(role.ID, req.RoleKey); err != nil {
 		return err

@@ -25,6 +25,14 @@ type SettingService struct {
 	publicCache *PublicSettingResp
 }
 
+const (
+	settingDatabaseNotInitializedKey = "database.not_initialized"
+	settingGroupInvalidKey           = "setting.group.invalid"
+	settingServiceParamInvalidKey    = "param.invalid"
+	settingValueInvalidJSONKey       = "setting.value.invalid_json"
+	settingValueInvalidOptionKey     = "setting.value.invalid_option"
+)
+
 type defaultSettingSeed struct {
 	SettingKey   string
 	SettingValue string
@@ -116,7 +124,7 @@ func NewSettingService(db *gorm.DB) *SettingService {
 
 func (s *SettingService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(settingDatabaseNotInitializedKey)
 	}
 	if err := s.db.AutoMigrate(&SystemSetting{}); err != nil {
 		return err
@@ -171,7 +179,7 @@ func (s *SettingService) Migrate() error {
 
 func (s *SettingService) List(query *SettingListQuery) ([]SettingResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	groupKey := ""
@@ -214,12 +222,12 @@ func (s *SettingService) List(query *SettingListQuery) ([]SettingResp, error) {
 
 func (s *SettingService) GetGroup(groupKey string) (*SettingGroupResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	groupKey = strings.TrimSpace(groupKey)
 	if groupKey == "" {
-		return nil, errors.New("setting.group.invalid")
+		return nil, errors.New(settingGroupInvalidKey)
 	}
 
 	s.cacheMu.RLock()
@@ -243,7 +251,7 @@ func (s *SettingService) GetGroup(groupKey string) (*SettingGroupResp, error) {
 
 func (s *SettingService) GetByKey(settingKey string) (string, error) {
 	if s.db == nil {
-		return "", errors.New("database.not_initialized")
+		return "", errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	var row SystemSetting
@@ -258,15 +266,15 @@ func (s *SettingService) GetByKey(settingKey string) (string, error) {
 
 func (s *SettingService) UpdateGroup(groupKey string, req *SettingGroupUpdateReq) (*SettingGroupResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	groupKey = strings.TrimSpace(groupKey)
 	if groupKey == "" {
-		return nil, errors.New("setting.group.invalid")
+		return nil, errors.New(settingGroupInvalidKey)
 	}
 	if req == nil || len(req.Items) == 0 {
-		return nil, errors.New("param.invalid")
+		return nil, errors.New(settingServiceParamInvalidKey)
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -392,7 +400,7 @@ func (s *SettingService) BuildAuditPayload(groupKey string, req *SettingGroupUpd
 
 func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	s.cacheMu.RLock()
@@ -421,7 +429,7 @@ func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
 
 func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	var rows []SystemSetting
@@ -553,7 +561,7 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 
 func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheRefreshResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	normalizedGroups := normalizeSettingGroups(groupKeys)
@@ -589,7 +597,7 @@ func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheR
 
 func (s *SettingService) ListAudit(query *SettingAuditQuery) (*SettingAuditPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	page := 1
@@ -652,7 +660,7 @@ func (s *SettingService) ListAudit(query *SettingAuditQuery) (*SettingAuditPageR
 
 func (s *SettingService) ExportAudit(query *SettingAuditQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(settingDatabaseNotInitializedKey)
 	}
 
 	db := s.db.Model(&systemSettingAuditLog{}).Where("title = ?", settingAuditTitle)
@@ -878,11 +886,11 @@ func validateAndNormalizeSettingValue(settingKey string, valueType string, value
 		}
 		var target interface{}
 		if err := json.Unmarshal([]byte(trimmed), &target); err != nil {
-			return "", errors.New("setting.value.invalid_json")
+			return "", errors.New(settingValueInvalidJSONKey)
 		}
 		if settingKey == "upload.allowed_types" {
 			if _, ok := target.([]interface{}); !ok {
-				return "", errors.New("setting.value.invalid_json")
+				return "", errors.New(settingValueInvalidJSONKey)
 			}
 		}
 		if settingKey == "audit.login_log_retention_options" || settingKey == "audit.operation_log_retention_options" || settingKey == "audit.session_cleanup_retention_options" {
@@ -906,7 +914,7 @@ func normalizeSettingValue(settingKey string, value string) (string, error) {
 			trimmed = "enterprise"
 		}
 		if _, ok := allowedAppModeValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingValueInvalidOptionKey)
 		}
 	case "upload.storage_driver":
 		switch trimmed {
@@ -916,7 +924,7 @@ func normalizeSettingValue(settingKey string, value string) (string, error) {
 			trimmed = "local"
 		}
 		if _, ok := allowedStorageDriverValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingValueInvalidOptionKey)
 		}
 	case "ui.default_theme":
 		switch trimmed {
@@ -926,14 +934,14 @@ func normalizeSettingValue(settingKey string, value string) (string, error) {
 			trimmed = "indigo"
 		}
 		if _, ok := allowedThemeValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingValueInvalidOptionKey)
 		}
 	case "i18n.default_language":
 		if trimmed == "" {
 			trimmed = "zh-CN"
 		}
 		if _, ok := allowedLanguageValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingValueInvalidOptionKey)
 		}
 	}
 	return trimmed, nil
@@ -942,17 +950,17 @@ func normalizeSettingValue(settingKey string, value string) (string, error) {
 func normalizeAuditRetentionOptions(raw string) (string, error) {
 	var values []int
 	if err := json.Unmarshal([]byte(strings.TrimSpace(raw)), &values); err != nil {
-		return "", errors.New("setting.value.invalid_json")
+		return "", errors.New(settingValueInvalidJSONKey)
 	}
 	if len(values) == 0 {
-		return "", errors.New("setting.value.invalid_option")
+		return "", errors.New(settingValueInvalidOptionKey)
 	}
 
 	seen := make(map[int]struct{}, len(values))
 	normalized := make([]int, 0, len(values))
 	for _, value := range values {
 		if value <= 0 || value > 365 {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingValueInvalidOptionKey)
 		}
 		if _, ok := seen[value]; ok {
 			continue
@@ -961,13 +969,13 @@ func normalizeAuditRetentionOptions(raw string) (string, error) {
 		normalized = append(normalized, value)
 	}
 	if len(normalized) == 0 {
-		return "", errors.New("setting.value.invalid_option")
+		return "", errors.New(settingValueInvalidOptionKey)
 	}
 
 	sort.Ints(normalized)
 	normalizedJSON, err := json.Marshal(normalized)
 	if err != nil {
-		return "", errors.New("setting.value.invalid_json")
+		return "", errors.New(settingValueInvalidJSONKey)
 	}
 	return string(normalizedJSON), nil
 }
