@@ -15,13 +15,15 @@ type MenuService struct {
 	db *gorm.DB
 }
 
+const menuDatabaseNotInitializedKey = "database.not_initialized"
+
 func NewMenuService(db *gorm.DB) *MenuService {
 	return &MenuService{db: db}
 }
 
 func (s *MenuService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(menuDatabaseNotInitializedKey)
 	}
 	return s.db.AutoMigrate(&SystemMenu{})
 }
@@ -29,7 +31,7 @@ func (s *MenuService) Migrate() error {
 // GetMenuTree 获取全量菜单树。
 func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*MenuTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(menuDatabaseNotInitializedKey)
 	}
 
 	if normalizeMenuScope(query) == "nav" {
@@ -170,7 +172,7 @@ func (s *MenuService) loadAllowedNavigationMenuIDs(roleKeys []string) ([]uint64,
 // CreateMenu 创建菜单。
 func (s *MenuService) CreateMenu(req *MenuCreateReq) (*MenuTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(menuDatabaseNotInitializedKey)
 	}
 	if err := s.validateMenuCreate(req); err != nil {
 		return nil, err
@@ -210,7 +212,7 @@ func (s *MenuService) CreateMenu(req *MenuCreateReq) (*MenuTreeResp, error) {
 // UpdateMenu 更新菜单。
 func (s *MenuService) UpdateMenu(menuID uint64, req *MenuUpdateReq) (*MenuTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(menuDatabaseNotInitializedKey)
 	}
 
 	var menu SystemMenu
@@ -246,7 +248,7 @@ func (s *MenuService) UpdateMenu(menuID uint64, req *MenuUpdateReq) (*MenuTreeRe
 // DeleteMenu 删除菜单。
 func (s *MenuService) DeleteMenu(menuID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(menuDatabaseNotInitializedKey)
 	}
 
 	var childCount int64

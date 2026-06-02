@@ -32,11 +32,14 @@ func NewAuditService(db *gorm.DB) *AuditService {
 const (
 	defaultOperationLogRetentionDays = 180
 	auditAutoCleanupMinInterval      = 15 * time.Minute
+	auditDatabaseNotInitializedKey   = "database.not_initialized"
+	auditCleanupRangeInvalidKey      = "audit.operation_log.cleanup.range_invalid"
+	auditDeleteIDsRequiredKey        = "audit.operation_log.delete.ids_required"
 )
 
 func (s *AuditService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(auditDatabaseNotInitializedKey)
 	}
 	if err := s.db.AutoMigrate(&middleware.SystemLogOper{}); err != nil {
 		return err
@@ -46,7 +49,7 @@ func (s *AuditService) Migrate() error {
 
 func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLogPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(auditDatabaseNotInitializedKey)
 	}
 	s.ensureAutomaticOperationLogRetention()
 
@@ -86,7 +89,7 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 
 func (s *AuditService) GetOperationLog(logID uint64) (*OperationLogResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(auditDatabaseNotInitializedKey)
 	}
 	s.ensureAutomaticOperationLogRetention()
 
@@ -100,7 +103,7 @@ func (s *AuditService) GetOperationLog(logID uint64) (*OperationLogResp, error) 
 
 func (s *AuditService) ExportOperationLogs(query *OperationLogQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(auditDatabaseNotInitializedKey)
 	}
 	s.ensureAutomaticOperationLogRetention()
 
@@ -149,14 +152,14 @@ func (s *AuditService) ExportOperationLogs(query *OperationLogQuery) (*impexp.CS
 
 func (s *AuditService) DeleteOperationLog(logID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(auditDatabaseNotInitializedKey)
 	}
 	return s.db.Delete(&middleware.SystemLogOper{}, logID).Error
 }
 
 func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string, endedAt string) (int64, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(auditDatabaseNotInitializedKey)
 	}
 	window, err := parseOperationCleanupWindow(startedAt, endedAt)
 	if err != nil {
@@ -192,18 +195,18 @@ func parseOperationCleanupWindow(startedAt string, endedAt string) (*operationCl
 		return nil, nil
 	}
 	if startedAt == "" || endedAt == "" {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, errors.New(auditCleanupRangeInvalidKey)
 	}
 	start, err := time.Parse(time.RFC3339, startedAt)
 	if err != nil {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, errors.New(auditCleanupRangeInvalidKey)
 	}
 	end, err := time.Parse(time.RFC3339, endedAt)
 	if err != nil {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, errors.New(auditCleanupRangeInvalidKey)
 	}
 	if end.Before(start) {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, errors.New(auditCleanupRangeInvalidKey)
 	}
 	return &operationCleanupWindow{StartedAt: start, EndedAt: end}, nil
 }
@@ -302,12 +305,12 @@ func (s *AuditService) getRetentionDaysFromSetting(settingKey string, fallback i
 
 func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(auditDatabaseNotInitializedKey)
 	}
 
 	normalized := normalizeAuditLogIDs(ids)
 	if len(normalized) == 0 {
-		return 0, errors.New("audit.operation_log.delete.ids_required")
+		return 0, errors.New(auditDeleteIDsRequiredKey)
 	}
 
 	result := s.db.Where("id IN ?", normalized).Delete(&middleware.SystemLogOper{})
@@ -381,7 +384,7 @@ func operationLogToResp(row middleware.SystemLogOper) OperationLogResp {
 
 func (s *AuditService) backfillOperationLogDerivedFields() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(auditDatabaseNotInitializedKey)
 	}
 
 	var rows []middleware.SystemLogOper

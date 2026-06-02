@@ -23,7 +23,7 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	var registration ModuleRegistration
 	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err == nil {
 		if strings.TrimSpace(registration.ModelTableName) == "" {
-			return nil, errors.New("module.unregister.builtin_forbidden")
+			return nil, errors.New(dynamicModuleBuiltinForbiddenKey)
 		}
 	}
 
@@ -239,7 +239,7 @@ func (s *DynamicModuleService) FinalizeUnregister(moduleName string, purgeSource
 		return nil, err
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, errors.New("workspace.not_found")
+		return nil, errors.New(dynamicModuleWorkspaceNotFoundKey)
 	}
 	refs, err := s.listGeneratedModuleRefs()
 	if err != nil {

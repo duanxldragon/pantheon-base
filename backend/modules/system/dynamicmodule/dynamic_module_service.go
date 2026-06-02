@@ -12,10 +12,15 @@ import (
 )
 
 const (
-	ModuleStatusActive            = 1
-	ModuleStatusUninstalled       = 2
-	ModuleStatusPendingActivation = 3
-	ModuleStatusFailed            = 4
+	ModuleStatusActive                     = 1
+	ModuleStatusUninstalled                = 2
+	ModuleStatusPendingActivation          = 3
+	ModuleStatusFailed                     = 4
+	dynamicModuleDatabaseNotInitializedKey = "database.not_initialized"
+	dynamicModuleWorkspaceNotFoundKey      = "workspace.not_found"
+	dynamicModuleBuiltinForbiddenKey       = "module.register.builtin_forbidden"
+	dynamicModuleInvalidNameKey            = "module.invalid_name"
+	dynamicModuleSourceMissingKey          = "module.register.source_missing"
 )
 
 // DynamicModuleService 动态模块管理服务
@@ -197,7 +202,7 @@ func (s *DynamicModuleService) RegisterModule(module contracts.BackendModule) er
 
 func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGeneratedModuleRequest) (*ModuleRegistration, []string, *GeneratedModuleRegistrationSummary, error) {
 	if s.db == nil {
-		return nil, nil, nil, errors.New("database.not_initialized")
+		return nil, nil, nil, errors.New(dynamicModuleDatabaseNotInitializedKey)
 	}
 	if err := scaffold.ValidateRegisterRequest(req); err != nil {
 		return nil, nil, nil, err
@@ -206,7 +211,7 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 		return nil, nil, nil, errors.New("module.generate.business_only")
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, nil, nil, errors.New("workspace.not_found")
+		return nil, nil, nil, errors.New(dynamicModuleWorkspaceNotFoundKey)
 	}
 
 	moduleKey := buildModuleKey(req.Schema.Scope, req.Schema.Name)
@@ -273,14 +278,14 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 
 func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*ModuleRegistration, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(dynamicModuleDatabaseNotInitializedKey)
 	}
 	scope, shortName, err := splitModuleKey(moduleName)
 	if err != nil {
 		return nil, err
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, errors.New("workspace.not_found")
+		return nil, errors.New(dynamicModuleWorkspaceNotFoundKey)
 	}
 
 	var registration ModuleRegistration
@@ -289,7 +294,7 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 		return nil, err
 	}
 	if err == nil && strings.TrimSpace(registration.ModelTableName) == "" {
-		return nil, errors.New("module.register.builtin_forbidden")
+		return nil, errors.New(dynamicModuleBuiltinForbiddenKey)
 	}
 	if err == nil && registration.Status == ModuleStatusActive {
 		registration.BuiltIn = false
@@ -302,15 +307,15 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 	}
 	backendPath, ok := generatedModuleRelativePath("backend", "modules", scope, shortName)
 	if !ok {
-		return nil, errors.New("module.invalid_name")
+		return nil, errors.New(dynamicModuleInvalidNameKey)
 	}
 	frontendPath, ok := generatedModuleRelativePath("frontend", "src", "modules", scope, shortName)
 	if !ok {
-		return nil, errors.New("module.invalid_name")
+		return nil, errors.New(dynamicModuleInvalidNameKey)
 	}
 	if !generatedDirExists(s.workspaceRoot, backendPath) ||
 		!generatedDirExists(s.workspaceRoot, frontendPath) {
-		return nil, errors.New("module.register.source_missing")
+		return nil, errors.New(dynamicModuleSourceMissingKey)
 	}
 
 	registration.Name = moduleName
@@ -344,7 +349,7 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 
 func (s *DynamicModuleService) GetManagedModuleSchema(moduleName string) (*scaffold.ModuleSchema, error) {
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, errors.New("workspace.not_found")
+		return nil, errors.New(dynamicModuleWorkspaceNotFoundKey)
 	}
 	scope, shortName, err := splitModuleKey(moduleName)
 	if err != nil {

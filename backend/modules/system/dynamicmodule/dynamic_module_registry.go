@@ -33,7 +33,7 @@ func generatedModuleRelativePath(parts ...string) (string, bool) {
 
 func (s *DynamicModuleService) RebuildGeneratedRegistries() error {
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return errors.New("workspace.not_found")
+		return errors.New(dynamicModuleWorkspaceNotFoundKey)
 	}
 	if _, err := s.syncGeneratedModuleRegistrations(); err != nil {
 		return err
@@ -97,7 +97,7 @@ func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name stri
 	content, err := os.ReadFile(target)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, errors.New("module.register.source_missing")
+			return nil, errors.New(dynamicModuleSourceMissingKey)
 		}
 		return nil, err
 	}
