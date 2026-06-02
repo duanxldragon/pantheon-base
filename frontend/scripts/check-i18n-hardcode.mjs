@@ -57,7 +57,7 @@ function isNaturalLanguage(text) {
   if (/^\/[a-z0-9/_:-]+$/i.test(value)) {
     return false;
   }
-  if (/[\p{Script=Han}]/u.test(value)) {
+  if (/\p{Script=Han}/u.test(value)) {
     return true;
   }
   const words = value.split(/\s+/).filter(Boolean);

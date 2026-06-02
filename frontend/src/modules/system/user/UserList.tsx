@@ -32,7 +32,7 @@ import {
   isServerRequestError,
   isTimeoutRequestError,
 } from '../../../api/request';
-import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { isArcoFormValidationError, isLikelyEmailAddress } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
@@ -1120,7 +1120,7 @@ const UserList: React.FC = () => {
                 rules={[
                   {
                     validator: (value, callback) => {
-                      if (!value || /\S+@\S+\.\S+/.test(String(value))) {
+                      if (!value || isLikelyEmailAddress(String(value))) {
                         callback();
                         return;
                       }

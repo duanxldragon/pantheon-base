@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { UserPlatformPreferences } from '../modules/auth/api';
+import { hasAuthSessionHint } from '../core/auth/clientSession';
 
 export interface UserInfo {
   id: number;
@@ -13,8 +14,8 @@ export interface UserInfo {
   preferences?: UserPlatformPreferences;
 }
 
-export function hasAuthCookie(): boolean {
-  return document.cookie.indexOf('pantheon_csrf_token=') >= 0;
+export function hasAuthSession(): boolean {
+  return hasAuthSessionHint();
 }
 
 interface AuthState {
