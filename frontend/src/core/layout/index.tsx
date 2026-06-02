@@ -52,6 +52,7 @@ import { renderMenuIcon } from '../menu/icon';
 import { clearPantheonThemePreference, usePantheonTheme } from '../theme/theme';
 import { AppModal } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/dashboard/api';
+import { clearClientAuthSession } from '../auth/clientSession';
 import {
   getBrandInitial,
   hasExplicitLanguagePreference,
@@ -819,6 +820,7 @@ const BaseLayout: React.FC = () => {
       const nextLanguage = clearExplicitLanguagePreference();
       await resolveSilently(switchI18nLanguage(nextLanguage));
       clearShellSessionState();
+      clearClientAuthSession();
       setOpenedTabs([]);
       resetMenuTree();
       clearAuth();

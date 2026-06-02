@@ -1,7 +1,7 @@
 import { Suspense, lazy, type ReactElement, useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Spin } from '@arco-design/web-react';
-import { hasAuthCookie, useAuthStore } from './store/useAuthStore';
+import { hasAuthSession, useAuthStore } from './store/useAuthStore';
 import { registeredModules } from './core/router/modules';
 import { getRegisteredComponent } from './core/router/componentRegistry';
 import RoutePermissionGuard from './core/router/RoutePermissionGuard';
@@ -25,7 +25,7 @@ const SecondaryVerifyModal = lazy(() =>
 
 const AuthGuard = ({ children }: { children: ReactElement }) => {
   const { token } = useAuthStore();
-  if (!token && !hasAuthCookie()) {
+  if (!token && !hasAuthSession()) {
     return <Navigate to="/login" replace />;
   }
   return children;

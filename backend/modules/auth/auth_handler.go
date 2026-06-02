@@ -171,6 +171,10 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 
 	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
 	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
+	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
+		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+		return
+	}
 
 	common.Success(c, gin.H{
 		"token":            tokenPair.AccessToken,
