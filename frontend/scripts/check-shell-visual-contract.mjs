@@ -96,7 +96,7 @@ function requireBlock(cssSource, selector, findings) {
 function getStandaloneBlock(cssSource, selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = cssSource.match(
-    new RegExp(`(?:^|\\n)${escapedSelector}\\s*\\{([\\s\\S]*?)\\n\\}`, 'i'),
+    new RegExp(String.raw`(?:^|\n)${escapedSelector}\s*\{([\s\S]*?)\n\}`, 'i'),
   );
   return match?.[1] || '';
 }
@@ -111,7 +111,7 @@ function requireStandaloneBlock(cssSource, selector, findings) {
 
 function hasDeclaration(block, property, expectedValue) {
   const pattern = new RegExp(
-    `${property}\\s*:\\s*${expectedValue}(?:\\s*!important)?\\s*;`,
+    String.raw`${property}\s*:\s*${expectedValue}(?:\s*!important)?\s*;`,
     'i',
   );
   return pattern.test(block);
@@ -192,12 +192,14 @@ function selectorTargetsInputNumberInnerWrapper(selector) {
 }
 
 function selectorTargetsBareArcoInput(selector) {
-  return /(?:^|[\s>+~,(])\.arco-input(?=$|[\s:,[{),>+~])/i.test(selector);
+  return containsSelectorToken(selector, '.arco-input');
 }
 
 function selectorTargetsNestedArcoInput(selector) {
-  return /(?:\.arco-input-inner-wrapper|\.arco-input-password|\.arco-input-number)\s+\.arco-input(?=$|[\s:,[{),>+~])/i.test(
-    selector,
+  return (
+    containsSelectorToken(selector, '.arco-input-inner-wrapper .arco-input')
+    || containsSelectorToken(selector, '.arco-input-password .arco-input')
+    || containsSelectorToken(selector, '.arco-input-number .arco-input')
   );
 }
 
@@ -219,6 +221,27 @@ function readFilesRecursive(root, predicate) {
     }
   }
   return files;
+}
+
+function isSelectorBoundary(char) {
+  return !char || /\s|[>+~,:()[\]{}]/.test(char);
+}
+
+function containsSelectorToken(selector, token) {
+  const normalizedSelector = selector.toLowerCase();
+  const normalizedToken = token.toLowerCase();
+  let searchIndex = normalizedSelector.indexOf(normalizedToken);
+
+  while (searchIndex >= 0) {
+    const before = normalizedSelector[searchIndex - 1] || '';
+    const after = normalizedSelector[searchIndex + normalizedToken.length] || '';
+    if (isSelectorBoundary(before) && isSelectorBoundary(after)) {
+      return true;
+    }
+    searchIndex = normalizedSelector.indexOf(normalizedToken, searchIndex + normalizedToken.length);
+  }
+
+  return false;
 }
 
 function extractSelfClosingJsxBlocks(sourceText, tagName) {
@@ -727,7 +750,7 @@ if (!/maskClosable\s*=\s*false/.test(appDrawerSource)) {
 
 for (const actionName of ['Confirm', 'Success', 'Error']) {
   if (
-    !new RegExp(`showAppModal${actionName}[\\s\\S]*?mergeDialogClassName\\('app-dialog'`).test(
+    !new RegExp(String.raw`showAppModal${actionName}[\s\S]*?mergeDialogClassName\('app-dialog'`).test(
       appModalActionsSource,
     )
   ) {

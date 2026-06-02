@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -304,6 +305,11 @@ process.stdout.write(JSON.stringify(files));
 	if err := os.WriteFile(filepath.Join(scriptDir, "export-generated-module.mjs"), []byte(script), 0o644); err != nil {
 		t.Fatalf("write script: %v", err)
 	}
+	nodeBinary, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node is not installed in PATH")
+	}
+	t.Setenv("PANTHEON_NODE_BIN", nodeBinary)
 
 	req := newScaffoldTestRequest()
 	req.Files = nil
@@ -414,7 +420,11 @@ func TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace(t *testi
 }
 
 func TestResolveNodeBinaryUsesAbsoluteEnvOverride(t *testing.T) {
-	t.Setenv("PANTHEON_NODE_BIN", filepath.Clean(filepath.Join("C:\\", "Program Files", "nodejs", "node.exe")))
+	nodeBinary := filepath.Join(t.TempDir(), "node.exe")
+	if err := os.WriteFile(nodeBinary, []byte(""), 0o644); err != nil {
+		t.Fatalf("write fake node binary: %v", err)
+	}
+	t.Setenv("PANTHEON_NODE_BIN", nodeBinary)
 
 	resolved, err := resolveNodeBinary()
 	if err != nil {

@@ -111,9 +111,9 @@ function extractObjectBlocks(arrayBody) {
 
 function extractField(block, fieldName) {
   const patterns = [
-    new RegExp(`\\b${fieldName}\\b\\s*:\\s*'([^']*)'`),
-    new RegExp(`\\b${fieldName}\\b\\s*:\\s*"([^"]*)"`),
-    new RegExp(`\\b${fieldName}\\b\\s*:\\s*([0-9]+)`),
+    new RegExp(String.raw`\b${fieldName}\b\s*:\s*'([^']*)'`),
+    new RegExp(String.raw`\b${fieldName}\b\s*:\s*"([^"]*)"`),
+    new RegExp(String.raw`\b${fieldName}\b\s*:\s*([0-9]+)`),
   ];
   for (const pattern of patterns) {
     const match = block.match(pattern);
@@ -265,7 +265,7 @@ function parseFallbackTranslations() {
 }
 
 function extractMapField(block, fieldName) {
-  const pattern = new RegExp(`"${fieldName}"\\s*:\\s*"([^"]*)"`);
+  const pattern = new RegExp(String.raw`"${fieldName}"\s*:\s*"([^"]*)"`);
   const match = block.match(pattern);
   return match ? match[1] : '';
 }
