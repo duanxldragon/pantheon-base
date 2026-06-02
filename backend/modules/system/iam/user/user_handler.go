@@ -9,6 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	userContextIDKey             = "userId"
+	userParamInvalidMessageKey   = "param.invalid"
+	userParamID                  = "id"
+	userImportFileField          = "file"
+	userPasswordResetField       = "passwordReset"
+	userRevokedSessionCountField = "revokedSessionCount"
+	userUpdatedCountField        = "updatedCount"
+	userDeletedField             = "deleted"
+)
+
 type UserHandler struct {
 	service *UserService
 }
@@ -44,7 +55,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	var req UserProfileUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -60,7 +71,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 func (h *UserHandler) GetUserList(c *gin.Context) {
 	var query UserListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -78,7 +89,7 @@ func (h *UserHandler) ExportUsers(c *gin.Context) {
 
 	var query UserListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 	file, err := h.service.ExportUsers(&query)
@@ -101,7 +112,7 @@ func (h *UserHandler) DownloadImportTemplate(c *gin.Context) {
 func (h *UserHandler) ImportUsers(c *gin.Context) {
 	common.SetAuditMetadata(c, "导入用户", common.BusinessImport)
 
-	fileHeader, err := c.FormFile("file")
+	fileHeader, err := c.FormFile(userImportFileField)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "import.file.required")
 		return
@@ -127,9 +138,9 @@ func (h *UserHandler) ImportUsers(c *gin.Context) {
 
 // GetUserDetail 获取用户详情。
 func (h *UserHandler) GetUserDetail(c *gin.Context) {
-	userID, err := parseUintParam(c, "id")
+	userID, err := parseUserUintParam(c, userParamID)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -146,7 +157,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "新增用户", common.BusinessInsert)
 	var req UserCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -163,13 +174,13 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "编辑用户", common.BusinessUpdate)
 	var req UserUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
-	userID, err := parseUintParam(c, "id")
+	userID, err := parseUserUintParam(c, userParamID)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -185,15 +196,15 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) ResetPassword(c *gin.Context) {
 	common.SetAuditMetadata(c, "重置用户密码", common.BusinessUpdate)
 
-	userID, err := parseUintParam(c, "id")
+	userID, err := parseUserUintParam(c, userParamID)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
 	var req UserResetPasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -203,8 +214,8 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"passwordReset":       true,
-		"revokedSessionCount": revokedSessionCount,
+		userPasswordResetField:       true,
+		userRevokedSessionCountField: revokedSessionCount,
 	})
 }
 
@@ -213,7 +224,7 @@ func (h *UserHandler) BatchUpdateUserStatus(c *gin.Context) {
 
 	var req UserBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -222,7 +233,7 @@ func (h *UserHandler) BatchUpdateUserStatus(c *gin.Context) {
 		common.FailWithError(c, common.CodeError, err, "user.status.batch_update.error")
 		return
 	}
-	common.Success(c, gin.H{"updatedCount": updatedCount})
+	common.Success(c, gin.H{userUpdatedCountField: updatedCount})
 }
 
 func (h *UserHandler) BatchDeleteUsers(c *gin.Context) {
@@ -230,7 +241,7 @@ func (h *UserHandler) BatchDeleteUsers(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.service.DeleteUser)
@@ -240,9 +251,9 @@ func (h *UserHandler) BatchDeleteUsers(c *gin.Context) {
 // DeleteUser 删除用户。
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "删除用户", common.BusinessDelete)
-	userID, err := parseUintParam(c, "id")
+	userID, err := parseUserUintParam(c, userParamID)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, userParamInvalidMessageKey)
 		return
 	}
 
@@ -250,11 +261,11 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		common.FailWithError(c, common.CodeError, err, "user.delete.error")
 		return
 	}
-	common.Success(c, gin.H{"deleted": true})
+	common.Success(c, gin.H{userDeletedField: true})
 }
 
 func getUserIDFromContext(c *gin.Context) (uint64, bool) {
-	userIDValue, ok := c.Get("userId")
+	userIDValue, ok := c.Get(userContextIDKey)
 	if !ok {
 		return 0, false
 	}
@@ -262,7 +273,7 @@ func getUserIDFromContext(c *gin.Context) (uint64, bool) {
 	return userID, ok
 }
 
-func parseUintParam(c *gin.Context, key string) (uint64, error) {
+func parseUserUintParam(c *gin.Context, key string) (uint64, error) {
 	value := c.Param(key)
 	return strconv.ParseUint(value, 10, 64)
 }
