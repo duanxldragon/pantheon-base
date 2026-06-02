@@ -49,6 +49,7 @@ async function login() {
   return {
     accessToken: payload.data.accessToken,
     csrfToken:
+      response.headers.get('x-csrf-token') ??
       extractCookieValue(response.headers.get('set-cookie'), 'pantheon_csrf_token') ??
       `pantheon-audit-csrf-${Date.now()}`,
   };

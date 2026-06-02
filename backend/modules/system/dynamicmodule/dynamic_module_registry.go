@@ -10,17 +10,25 @@ import (
 	"pantheon-platform/backend/internal/scaffold"
 )
 
-func generatedModulePath(root string, parts ...string) string {
-	cleaned := make([]string, 0, len(parts)+1)
-	cleaned = append(cleaned, filepath.Clean(root))
+func generatedModuleRelativePath(parts ...string) (string, bool) {
+	cleaned := make([]string, 0, len(parts))
 	for _, part := range parts {
-		trimmed := strings.Trim(strings.ReplaceAll(strings.TrimSpace(part), "\\", "/"), "/")
-		if trimmed == "" || trimmed == "." || trimmed == ".." || strings.Contains(trimmed, "..") {
-			continue
+		normalized := strings.Trim(strings.ReplaceAll(strings.TrimSpace(part), "\\", "/"), "/")
+		if normalized == "" || !filepath.IsLocal(filepath.FromSlash(normalized)) {
+			return "", false
 		}
-		cleaned = append(cleaned, trimmed)
+		for _, segment := range strings.Split(normalized, "/") {
+			if segment == "" || segment == "." || segment == ".." || strings.Contains(segment, "..") || strings.ContainsAny(segment, `<>:"|?*`) {
+				return "", false
+			}
+			cleaned = append(cleaned, segment)
+		}
 	}
-	return filepath.Join(cleaned...)
+	relativePath := filepath.ToSlash(filepath.Join(cleaned...))
+	if relativePath == "" || !filepath.IsLocal(filepath.FromSlash(relativePath)) {
+		return "", false
+	}
+	return relativePath, true
 }
 
 func (s *DynamicModuleService) RebuildGeneratedRegistries() error {
@@ -60,10 +68,16 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return false
 	}
-	backendRelativePath := filepath.ToSlash(filepath.Join("backend", "modules", scope, name))
-	frontendRelativePath := filepath.ToSlash(filepath.Join("frontend", "src", "modules", scope, name))
-	schemaRelativePath := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
-	if !filepath.IsLocal(backendRelativePath) || !filepath.IsLocal(frontendRelativePath) || !filepath.IsLocal(schemaRelativePath) {
+	backendRelativePath, ok := generatedModuleRelativePath("backend", "modules", scope, name)
+	if !ok {
+		return false
+	}
+	frontendRelativePath, ok := generatedModuleRelativePath("frontend", "src", "modules", scope, name)
+	if !ok {
+		return false
+	}
+	schemaRelativePath, ok := generatedModuleRelativePath("schema", "generated", scope, name+".json")
+	if !ok {
 		return false
 	}
 	return generatedDirExists(s.workspaceRoot, backendRelativePath) &&
@@ -72,12 +86,12 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 }
 
 func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name string) (*scaffold.ModuleSchema, error) {
-	relativeTarget := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
-	if !filepath.IsLocal(relativeTarget) {
+	relativeTarget, ok := generatedModuleRelativePath("schema", "generated", scope, name+".json")
+	if !ok {
 		return nil, errors.New("module.register.schema_invalid")
 	}
-	target, ok := resolveGeneratedWorkspacePath(s.workspaceRoot, relativeTarget)
-	if !ok {
+	target, resolved := resolveGeneratedWorkspacePath(s.workspaceRoot, relativeTarget)
+	if !resolved {
 		return nil, errors.New("module.register.schema_invalid")
 	}
 	content, err := os.ReadFile(target)

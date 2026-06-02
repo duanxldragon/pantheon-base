@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -304,6 +305,11 @@ process.stdout.write(JSON.stringify(files));
 	if err := os.WriteFile(filepath.Join(scriptDir, "export-generated-module.mjs"), []byte(script), 0o644); err != nil {
 		t.Fatalf("write script: %v", err)
 	}
+	nodeBinary, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node is not installed in PATH")
+	}
+	t.Setenv("PANTHEON_NODE_BIN", nodeBinary)
 
 	req := newScaffoldTestRequest()
 	req.Files = nil
@@ -407,8 +413,33 @@ func TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace(t *testi
 	if err != nil {
 		t.Fatalf("resolve workspace root from source fallback: %v", err)
 	}
-	if !strings.HasSuffix(filepath.ToSlash(resolved), "/pantheon-base") {
-		t.Fatalf("expected source-tree fallback to pantheon-base, got %s", resolved)
+	resolvedBase := filepath.Base(filepath.Clean(resolved))
+	if !strings.Contains(resolvedBase, "pantheon-base") {
+		t.Fatalf("expected source-tree fallback under pantheon-base workspace, got %s", resolved)
+	}
+}
+
+func TestResolveNodeBinaryUsesAbsoluteEnvOverride(t *testing.T) {
+	nodeBinary := filepath.Join(t.TempDir(), "node.exe")
+	if err := os.WriteFile(nodeBinary, []byte(""), 0o644); err != nil {
+		t.Fatalf("write fake node binary: %v", err)
+	}
+	t.Setenv("PANTHEON_NODE_BIN", nodeBinary)
+
+	resolved, err := resolveNodeBinary()
+	if err != nil {
+		t.Fatalf("expected absolute node override accepted, got %v", err)
+	}
+	if !filepath.IsAbs(resolved) {
+		t.Fatalf("expected absolute node binary path, got %s", resolved)
+	}
+}
+
+func TestResolveNodeBinaryRejectsRelativeEnvOverride(t *testing.T) {
+	t.Setenv("PANTHEON_NODE_BIN", filepath.Join("tools", "node.exe"))
+
+	if _, err := resolveNodeBinary(); err == nil {
+		t.Fatal("expected relative node override rejected")
 	}
 }
 

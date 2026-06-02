@@ -15,6 +15,7 @@ import { clearExplicitLanguagePreference } from '../core/settings/languagePrefer
 import { clearPantheonThemePreference } from '../core/theme/theme';
 import { showSecondaryVerify } from '../components/feedback/secondaryVerifyController';
 import { switchI18nLanguage } from '../i18n';
+import { clearClientAuthSession, persistCsrfToken, readStoredCsrfToken } from '../core/auth/clientSession';
 
 export interface RequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
@@ -53,9 +54,30 @@ const request = axios.create({
   withCredentials: true,
 });
 
-function readCsrfToken(): string {
-  const match = document.cookie.match(/(?:^|;\s*)pantheon_csrf_token=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : '';
+function readHeaderValue(headers: unknown, name: string): string {
+  if (!headers || typeof headers !== 'object') {
+    return '';
+  }
+
+  if ('get' in headers && typeof headers.get === 'function') {
+    const value = headers.get(name);
+    return typeof value === 'string' ? value : '';
+  }
+
+  const record = headers as Record<string, unknown>;
+  const value = record[name] ?? record[name.toLowerCase()];
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0] : '';
+  }
+  return typeof value === 'string' ? value : '';
+}
+
+function syncCsrfTokenFromHeaders(headers: unknown) {
+  const csrfToken = readHeaderValue(headers, 'X-CSRF-Token').trim();
+  if (!csrfToken) {
+    return;
+  }
+  persistCsrfToken(csrfToken);
 }
 
 let refreshPromise: Promise<string | null> | null = null;
@@ -67,6 +89,7 @@ const clearClientSession = () => {
   clearPantheonThemePreference();
   const nextLanguage = clearExplicitLanguagePreference();
   switchI18nLanguage(nextLanguage).catch(() => undefined);
+  clearClientAuthSession();
   useAuthStore.getState().clearAuth();
 };
 
@@ -116,6 +139,7 @@ const doRefreshToken = async (): Promise<string | null> => {
         },
       )
       .then((response) => {
+        syncCsrfTokenFromHeaders(response.headers);
         const { code, data } = response.data;
         if (code !== 200) {
           throw new Error(response.data.message || 'request.failed');
@@ -270,7 +294,7 @@ const retryWithOperationVerify = async (config: RequestConfig) => {
 
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const csrfToken = readCsrfToken();
+    const csrfToken = readStoredCsrfToken();
     if (
       csrfToken &&
       config.method &&
@@ -292,9 +316,13 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   async (response) => {
+    syncCsrfTokenFromHeaders(response.headers);
     const config = response.config as RequestConfig;
     const { code, data, message } = response.data;
     if (code === 200) {
+      if (config.url?.includes('/auth/logout')) {
+        clearClientAuthSession();
+      }
       return data;
     }
 

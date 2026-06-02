@@ -96,7 +96,7 @@ function requireBlock(cssSource, selector, findings) {
 function getStandaloneBlock(cssSource, selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = cssSource.match(
-    new RegExp(`(?:^|\\n)${escapedSelector}\\s*\\{([\\s\\S]*?)\\n\\}`, 'i'),
+    new RegExp(String.raw`(?:^|\n)${escapedSelector}\s*\{([\s\S]*?)\n\}`, 'i'),
   );
   return match?.[1] || '';
 }
@@ -111,7 +111,7 @@ function requireStandaloneBlock(cssSource, selector, findings) {
 
 function hasDeclaration(block, property, expectedValue) {
   const pattern = new RegExp(
-    `${property}\\s*:\\s*${expectedValue}(?:\\s*!important)?\\s*;`,
+    String.raw`${property}\s*:\s*${expectedValue}(?:\s*!important)?\s*;`,
     'i',
   );
   return pattern.test(block);
@@ -133,25 +133,73 @@ function splitSelectorList(selectorText) {
 
 function extractCssRules(cssSource) {
   const rules = [];
-  const rulePattern = /([^{}]+)\{([^{}]*)\}/g;
-  let match;
-  while ((match = rulePattern.exec(cssSource))) {
-    const selectorText = match[1].trim();
-    if (!selectorText || selectorText.startsWith('@')) {
+  let depth = 0;
+  let selectorStart = 0;
+  let bodyStart = -1;
+
+  for (let index = 0; index < cssSource.length; index += 1) {
+    const char = cssSource[index];
+    if (char === '{') {
+      if (depth === 0) {
+        bodyStart = index + 1;
+      }
+      depth += 1;
       continue;
     }
-    rules.push({ selectorText, body: match[2] });
+    if (char !== '}') {
+      continue;
+    }
+    depth -= 1;
+    if (depth !== 0 || bodyStart < 0) {
+      continue;
+    }
+
+    const selectorText = cssSource.slice(selectorStart, bodyStart - 1).trim();
+    if (selectorText && !selectorText.startsWith('@')) {
+      rules.push({ selectorText, body: cssSource.slice(bodyStart, index) });
+    }
+    selectorStart = index + 1;
+    bodyStart = -1;
   }
   return rules;
 }
 
+function findDeclarationValue(block, properties) {
+  const propertySet = new Set(properties.map((property) => property.toLowerCase()));
+  for (const declaration of block.split(';')) {
+    const separatorIndex = declaration.indexOf(':');
+    if (separatorIndex < 0) {
+      continue;
+    }
+    const property = declaration.slice(0, separatorIndex).trim().toLowerCase();
+    if (!propertySet.has(property)) {
+      continue;
+    }
+    return declaration.slice(separatorIndex + 1).trim();
+  }
+  return '';
+}
+
+function hasBareInputFocusSelector(cssSource) {
+  return cssSource.split('\n').some((line) => line.trimStart().toLowerCase().startsWith('.arco-input:focus,'));
+}
+
+function selectorTargetsInputNumberInnerWrapper(selector) {
+  return selector
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .includes('.arco-input-number .arco-input-inner-wrapper');
+}
+
 function selectorTargetsBareArcoInput(selector) {
-  return /(?:^|[\s>+~,(])\.arco-input(?=$|[\s:,[{),>+~])/i.test(selector);
+  return containsSelectorToken(selector, '.arco-input');
 }
 
 function selectorTargetsNestedArcoInput(selector) {
-  return /(?:\.arco-input-inner-wrapper|\.arco-input-password|\.arco-input-number)\s+\.arco-input(?=$|[\s:,[{),>+~])/i.test(
-    selector,
+  return (
+    containsSelectorToken(selector, '.arco-input-inner-wrapper .arco-input')
+    || containsSelectorToken(selector, '.arco-input-password .arco-input')
+    || containsSelectorToken(selector, '.arco-input-number .arco-input')
   );
 }
 
@@ -173,6 +221,27 @@ function readFilesRecursive(root, predicate) {
     }
   }
   return files;
+}
+
+function isSelectorBoundary(char) {
+  return !char || /\s|[>+~,:()[\]{}]/.test(char);
+}
+
+function containsSelectorToken(selector, token) {
+  const normalizedSelector = selector.toLowerCase();
+  const normalizedToken = token.toLowerCase();
+  let searchIndex = normalizedSelector.indexOf(normalizedToken);
+
+  while (searchIndex >= 0) {
+    const before = normalizedSelector[searchIndex - 1] || '';
+    const after = normalizedSelector[searchIndex + normalizedToken.length] || '';
+    if (isSelectorBoundary(before) && isSelectorBoundary(after)) {
+      return true;
+    }
+    searchIndex = normalizedSelector.indexOf(normalizedToken, searchIndex + normalizedToken.length);
+  }
+
+  return false;
 }
 
 function extractSelfClosingJsxBlocks(sourceText, tagName) {
@@ -681,7 +750,7 @@ if (!/maskClosable\s*=\s*false/.test(appDrawerSource)) {
 
 for (const actionName of ['Confirm', 'Success', 'Error']) {
   if (
-    !new RegExp(`showAppModal${actionName}[\\s\\S]*?mergeDialogClassName\\('app-dialog'`).test(
+    !new RegExp(String.raw`showAppModal${actionName}[\s\S]*?mergeDialogClassName\('app-dialog'`).test(
       appModalActionsSource,
     )
   ) {
@@ -1098,9 +1167,12 @@ if (globalInputNumberInnerBlock) {
   }
 }
 
-for (const selectorList of globalSource.match(/[^{}]*\.arco-input-number\s+\.arco-input-inner-wrapper[^{}]*\{[^{}]*\}/g) ?? []) {
-  const borderedDeclaration = selectorList.match(/\b(border|border-color)\s*:\s*([^;]+);/i);
-  if (borderedDeclaration && borderedDeclaration[2].trim() !== '0') {
+for (const { selectorText, body } of extractCssRules(globalSource)) {
+  if (!splitSelectorList(selectorText).some(selectorTargetsInputNumberInnerWrapper)) {
+    continue;
+  }
+  const borderedDeclaration = findDeclarationValue(body, ['border', 'border-color']);
+  if (borderedDeclaration && borderedDeclaration !== '0') {
     findings.push(
       'InputNumber inner wrapper must not be part of the bordered control group; the outer .arco-input-number owns the border.',
     );
@@ -1128,7 +1200,7 @@ if (globalNestedInputFocusBlock) {
   }
 }
 
-if (/(?:^|\n)\s*\.arco-input:focus\s*,/i.test(globalSource)) {
+if (hasBareInputFocusSelector(globalSource)) {
   findings.push(
     'Bare .arco-input:focus must not own the global focus ring; the outer input wrapper owns it.',
   );

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { getRefreshState } from './api';
-import { hasAuthCookie } from '../../store/useAuthStore';
+import { hasAuthSession } from '../../store/useAuthStore';
 import { isLogoutTransitionActive } from '../../api/request';
 
 export type PantheonRefreshTopic =
@@ -121,7 +121,7 @@ export function useRefreshPolling(
   const versionsRef = useRef<Record<string, number>>({});
   const normalizedTopics = useMemo(() => normalizeTopics(topics).sort((a, b) => a.localeCompare(b)), [topics]);
   const topicKey = useMemo(() => normalizedTopics.join(','), [normalizedTopics]);
-  const authToken = token || (globalThis.document !== undefined && hasAuthCookie() ? '_cookie' : null);
+  const authToken = token || (globalThis.document !== undefined && hasAuthSession() ? '_session' : null);
 
   useEffect(() => {
     versionsRef.current = {};
@@ -136,7 +136,7 @@ export function useRefreshPolling(
       if (isLogoutTransitionActive()) {
         return;
       }
-      if (globalThis.document !== undefined && !hasAuthCookie()) {
+      if (globalThis.document !== undefined && !hasAuthSession()) {
         return;
       }
       try {

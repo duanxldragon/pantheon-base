@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-31
+updated_at: 2026-05-29
 ---
 
 # Pantheon Code Review Standard Flow
@@ -46,18 +46,22 @@ High-risk scope includes `system/auth`, `system/iam`, `system/config`, permissio
 
 ## Default Gate Stack
 
-Pantheon uses three layers by default:
+Pantheon uses five layers by default. See [code quality and security strategy](../designs/QUALITY_AND_SECURITY_STRATEGY.md) for the full model.
 
 1. local validation
-2. GitHub-native required checks
-3. independent reviewer sign-off
+2. GitHub required checks
+3. CodeQL security signal
+4. optional manual Sonar review
+5. independent reviewer sign-off
 
-Minimum GitHub-native expectations:
+Minimum manual Sonar guidance:
 
-- `Quality Gates` passes
-- `Security Gates` passes
-- `Duplication Gate` passes with full-repo duplication at or below `3%`
-- smoke-generated modules, registries, schema artifacts, and generated i18n resources are cleaned after the run
+- zero blocker or critical issues on new code
+- reviewed security hotspots before merge
+- new-code coverage at or above `80%`, unless the PR records a justified exception
+- new-code duplication below `3%` for `pantheon-base`, or below `5%` for `pantheon-ops`
+- use reliability, security, and maintainability results as reference only
+- if Codacy appears, treat it as informational only
 
 ## Mandatory Review Entry
 
@@ -90,6 +94,6 @@ The Chinese source remains the authoritative detailed standard, including requir
 
 At minimum, the detailed review record should also confirm:
 
-- GitHub Quality / Security / Duplication gate status
+- any manual Sonar report, if one was produced
 - GitHub required-check status
 - independent reviewer evidence
