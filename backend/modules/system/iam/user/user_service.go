@@ -31,6 +31,7 @@ const (
 	userParamInvalidKey           = "param.invalid"
 	userProtectedUpdateKey        = "user.update.error.protected"
 	userRoleInvalidKey            = "user.role.invalid"
+	userPostInvalidKey            = "user.post.invalid"
 )
 
 // NewUserService 构造函数
@@ -835,7 +836,7 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 		if postCode != "" {
 			postID = postIDByCode[postCode]
 			if postID == 0 {
-				impexp.AppendImportError(result, rowNumber, "postCode", "user.post.invalid")
+				impexp.AppendImportError(result, rowNumber, "postCode", userPostInvalidKey)
 			}
 		}
 		roleIDs := make([]uint64, 0, len(roleKeys))
@@ -1179,12 +1180,12 @@ func (s *UserService) ensurePostForDept(deptID uint64, postID uint64) error {
 	var post postRow
 	if err := s.db.Table("system_post").Select("id, dept_id").Where("id = ?", postID).First(&post).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("user.post.invalid")
+			return errors.New(userPostInvalidKey)
 		}
 		return err
 	}
 	if post.ID == 0 {
-		return errors.New("user.post.invalid")
+		return errors.New(userPostInvalidKey)
 	}
 	if post.DeptID > 0 && post.DeptID != deptID {
 		return errors.New("user.post.dept_mismatch")

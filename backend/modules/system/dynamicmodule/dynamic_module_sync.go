@@ -174,7 +174,7 @@ func (s *DynamicModuleService) AuditAndRepairGeneratedRegistries() (*RegistryRep
 		return nil, err
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, errors.New("workspace.not_found")
+		return nil, errors.New(dynamicModuleWorkspaceNotFoundKey)
 	}
 	if err := scaffold.WriteGeneratedRegistries(s.workspaceRoot, refs); err != nil {
 		return nil, err

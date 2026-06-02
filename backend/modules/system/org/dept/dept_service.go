@@ -23,6 +23,7 @@ const (
 	deptDatabaseNotInitializedKey = "database.not_initialized"
 	deptBatchEmptyKey             = "dept.batch.empty"
 	deptParamInvalidKey           = "param.invalid"
+	deptNotFoundKey               = "dept.not_found"
 )
 
 func NewDeptService(db *gorm.DB) *DeptService {
@@ -310,13 +311,13 @@ func (s *DeptService) ListLeaderCandidates(deptID uint64) ([]DeptLeaderCandidate
 		return nil, errors.New(deptDatabaseNotInitializedKey)
 	}
 	if deptID == 0 {
-		return nil, errors.New("dept.not_found")
+		return nil, errors.New(deptNotFoundKey)
 	}
 
 	var dept SystemDept
 	if err := s.db.First(&dept, deptID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("dept.not_found")
+			return nil, errors.New(deptNotFoundKey)
 		}
 		return nil, err
 	}
@@ -950,7 +951,7 @@ func (s *DeptService) validateDeptCreate(req *DeptCreateReq) error {
 
 func (s *DeptService) validateDeptUpdate(dept *SystemDept, req *DeptUpdateReq) error {
 	if dept == nil {
-		return errors.New("dept.not_found")
+		return errors.New(deptNotFoundKey)
 	}
 	if req.ParentID == dept.ID {
 		return errors.New("dept.update.error.parent_self")

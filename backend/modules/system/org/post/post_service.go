@@ -23,6 +23,7 @@ const (
 	postBatchEmptyKey             = "post.batch.empty"
 	postParamInvalidKey           = "param.invalid"
 	postDeleteHasUsersKey         = "post.delete.error.has_users"
+	postDeptInvalidKey            = "post.dept.invalid"
 )
 
 func NewPostService(db *gorm.DB) *PostService {
@@ -358,7 +359,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 		if deptPath == "" {
 			impexp.AppendImportError(result, rowIndex+1, "deptPath", "post.dept.required")
 		} else if deptID == 0 {
-			impexp.AppendImportError(result, rowIndex+1, "deptPath", "post.dept.invalid")
+			impexp.AppendImportError(result, rowIndex+1, "deptPath", postDeptInvalidKey)
 		} else if err := s.ensurePostDeptID(deptID); err != nil {
 			impexp.AppendImportError(result, rowIndex+1, "deptPath", err.Error())
 		}
@@ -501,7 +502,7 @@ func (s *PostService) ensurePostDeptID(deptID uint64) error {
 	var dept row
 	if err := s.db.Table("system_dept").Select("id, is_root").Where("id = ?", deptID).First(&dept).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("post.dept.invalid")
+			return errors.New(postDeptInvalidKey)
 		}
 		return err
 	}

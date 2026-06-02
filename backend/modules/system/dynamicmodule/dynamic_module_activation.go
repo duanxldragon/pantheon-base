@@ -13,7 +13,7 @@ func (s *DynamicModuleService) AuditPendingGeneratedModuleActivations() (*Activa
 		return &ActivationAuditSummary{}, nil
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, fmt.Errorf("workspace.not_found")
+		return nil, fmt.Errorf(dynamicModuleWorkspaceNotFoundKey)
 	}
 
 	var modules []ModuleRegistration
