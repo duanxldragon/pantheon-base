@@ -18,9 +18,15 @@ const (
 	ModuleStatusFailed                     = 4
 	dynamicModuleDatabaseNotInitializedKey = "database.not_initialized"
 	dynamicModuleWorkspaceNotFoundKey      = "workspace.not_found"
-	dynamicModuleBuiltinForbiddenKey       = "module.register.builtin_forbidden"
+	dynamicModuleRegisterBuiltinKey        = "module.register.builtin_forbidden"
+	dynamicModuleUnregisterBuiltinKey      = "module.unregister.builtin_forbidden"
 	dynamicModuleInvalidNameKey            = "module.invalid_name"
 	dynamicModuleSourceMissingKey          = "module.register.source_missing"
+	dynamicModuleNotFoundKey               = "module.not_found"
+	dynamicModuleDeleteRequiresKey         = "module.delete_record.requires_uninstalled"
+	dynamicModuleBusinessOnlyKey           = "module.generate.business_only"
+	dynamicModuleReservedKey               = "module.generate.reserved"
+	dynamicModuleAlreadyExistsKey          = "module.generate.already_exists"
 )
 
 // DynamicModuleService 动态模块管理服务
@@ -208,7 +214,7 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 		return nil, nil, nil, err
 	}
 	if strings.TrimSpace(req.Schema.Scope) != "business" {
-		return nil, nil, nil, errors.New("module.generate.business_only")
+		return nil, nil, nil, errors.New(dynamicModuleBusinessOnlyKey)
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return nil, nil, nil, errors.New(dynamicModuleWorkspaceNotFoundKey)
@@ -219,10 +225,10 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 	var existing ModuleRegistration
 	err := s.db.Where("name = ?", moduleKey).First(&existing).Error
 	if err == nil && strings.TrimSpace(existing.ModelTableName) == "" {
-		return nil, nil, nil, errors.New("module.generate.reserved")
+		return nil, nil, nil, errors.New(dynamicModuleReservedKey)
 	}
 	if err == nil && existing.Status != ModuleStatusUninstalled && !req.Overwrite {
-		return nil, nil, nil, errors.New("module.generate.already_exists")
+		return nil, nil, nil, errors.New(dynamicModuleAlreadyExistsKey)
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil, nil, err
@@ -294,7 +300,7 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 		return nil, err
 	}
 	if err == nil && strings.TrimSpace(registration.ModelTableName) == "" {
-		return nil, errors.New(dynamicModuleBuiltinForbiddenKey)
+		return nil, errors.New(dynamicModuleRegisterBuiltinKey)
 	}
 	if err == nil && registration.Status == ModuleStatusActive {
 		registration.BuiltIn = false

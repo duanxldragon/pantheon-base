@@ -32,6 +32,8 @@ const (
 	dictTypeNotFoundKey           = "dict.type.not_found"
 	dictItemValueExistsKey        = "dict.item.value.exists"
 	dictProjectRootNotFoundKey    = "dict.usage.project_root_not_found"
+	dictTypeArchiveConflictKey    = "dict.type.delete.error.archive_code_conflict"
+	dictItemArchiveConflictKey    = "dict.item.delete.error.archive_value_conflict"
 )
 
 type DictService struct {
@@ -1308,7 +1310,7 @@ func (s *DictService) allocateDeletedDictTypeCode(tx *gorm.DB, typeID uint64) (s
 			return candidate, nil
 		}
 	}
-	return "", errors.New("dict.type.delete.error.archive_code_conflict")
+	return "", errors.New(dictTypeArchiveConflictKey)
 }
 
 func (s *DictService) allocateDeletedDictItemValue(tx *gorm.DB, itemID uint64, dictCode string) (string, error) {
@@ -1326,7 +1328,7 @@ func (s *DictService) allocateDeletedDictItemValue(tx *gorm.DB, itemID uint64, d
 			return candidate, nil
 		}
 	}
-	return "", errors.New("dict.item.delete.error.archive_value_conflict")
+	return "", errors.New(dictItemArchiveConflictKey)
 }
 
 func toDictTypeResp(item SystemDictType, stat dictTypeStatRow) DictTypeResp {

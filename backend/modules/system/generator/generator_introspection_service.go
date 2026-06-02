@@ -31,6 +31,12 @@ type generatorSchemaReader struct {
 	close  func() error
 }
 
+const (
+	generatorTableRequiredKey = "generator.table.required"
+	generatorTableInvalidKey  = "generator.table.invalid"
+	generatorTableNotFoundKey = "generator.table.not_found"
+)
+
 func (s *GeneratorService) ListTables(datasourceID string, keyword string) ([]TableOptionResp, error) {
 	reader, err := s.openSchemaReader(datasourceID)
 	if err != nil {
@@ -71,10 +77,10 @@ func (s *GeneratorService) ListTables(datasourceID string, keyword string) ([]Ta
 func (s *GeneratorService) PreviewTable(datasourceID string, tableName string) (*TableSchemaPreviewResp, error) {
 	normalizedTable := strings.TrimSpace(tableName)
 	if normalizedTable == "" {
-		return nil, errors.New("generator.table.required")
+		return nil, errors.New(generatorTableRequiredKey)
 	}
 	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(normalizedTable) {
-		return nil, errors.New("generator.table.invalid")
+		return nil, errors.New(generatorTableInvalidKey)
 	}
 
 	reader, err := s.openSchemaReader(datasourceID)
@@ -91,7 +97,7 @@ func (s *GeneratorService) PreviewTable(datasourceID string, tableName string) (
 		Where("table_schema = ? and table_name = ?", reader.schema, normalizedTable).
 		Take(&table).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("generator.table.not_found")
+			return nil, errors.New(generatorTableNotFoundKey)
 		}
 		return nil, err
 	}

@@ -16,6 +16,11 @@ type GeneratorService struct {
 	workspaceRoot string
 }
 
+const (
+	generatorInvalidPayloadKey    = "module.generate.invalid_payload"
+	generatorWorkspaceNotFoundKey = "workspace.not_found"
+)
+
 func NewGeneratorService(db *gorm.DB) *GeneratorService {
 	workspaceRoot, _ := scaffold.ResolveWorkspaceRoot("")
 	return &GeneratorService{db: db, workspaceRoot: workspaceRoot}
@@ -23,7 +28,7 @@ func NewGeneratorService(db *gorm.DB) *GeneratorService {
 
 func (s *GeneratorService) PreviewGeneratedFiles(schema *scaffold.ModuleSchema) ([]scaffold.GeneratedFile, error) {
 	if schema == nil {
-		return nil, errors.New("module.generate.invalid_payload")
+		return nil, errors.New(generatorInvalidPayloadKey)
 	}
 	req := &scaffold.RegisterGeneratedModuleRequest{
 		Schema: *schema,
@@ -32,7 +37,7 @@ func (s *GeneratorService) PreviewGeneratedFiles(schema *scaffold.ModuleSchema) 
 		return nil, err
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, errors.New("workspace.not_found")
+		return nil, errors.New(generatorWorkspaceNotFoundKey)
 	}
 	return scaffold.GenerateModuleFilesFromSchema(s.workspaceRoot, *schema)
 }

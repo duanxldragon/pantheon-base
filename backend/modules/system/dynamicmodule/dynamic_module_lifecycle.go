@@ -23,7 +23,7 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	var registration ModuleRegistration
 	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err == nil {
 		if strings.TrimSpace(registration.ModelTableName) == "" {
-			return nil, errors.New(dynamicModuleBuiltinForbiddenKey)
+			return nil, errors.New(dynamicModuleUnregisterBuiltinKey)
 		}
 	}
 
@@ -74,15 +74,15 @@ func (s *DynamicModuleService) DeleteModuleRecord(moduleName string) error {
 	var registration ModuleRegistration
 	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("module.not_found")
+			return errors.New(dynamicModuleNotFoundKey)
 		}
 		return err
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
-		return errors.New("module.unregister.builtin_forbidden")
+		return errors.New(dynamicModuleUnregisterBuiltinKey)
 	}
 	if registration.Status != ModuleStatusUninstalled {
-		return errors.New("module.delete_record.requires_uninstalled")
+		return errors.New(dynamicModuleDeleteRequiresKey)
 	}
 
 	if err := s.db.Delete(&registration).Error; err != nil {
@@ -107,12 +107,12 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 	var registration ModuleRegistration
 	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("module.not_found")
+			return nil, errors.New(dynamicModuleNotFoundKey)
 		}
 		return nil, err
 	}
 	if isBuiltInModuleRegistration(registration) {
-		return nil, errors.New("module.unregister.builtin_forbidden")
+		return nil, errors.New(dynamicModuleUnregisterBuiltinKey)
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
 		if err := s.deleteModuleNavigationArtifacts(moduleName); err != nil {
