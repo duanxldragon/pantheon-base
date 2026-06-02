@@ -1,5 +1,5 @@
 import { getMe, type UserInfo } from '../../modules/auth/api';
-import { hasAuthCookie, useAuthStore } from '../../store/useAuthStore';
+import { hasAuthSession, useAuthStore } from '../../store/useAuthStore';
 
 const COOKIE_TOKEN_PLACEHOLDER = '_cookie';
 
@@ -8,7 +8,7 @@ let pendingProfilePromise: Promise<UserInfo | null> | null = null;
 export function ensureAuthUserInfo() {
   const { userInfo, setTokens, setUserInfo } = useAuthStore.getState();
 
-  if (!hasAuthCookie()) {
+  if (!hasAuthSession()) {
     return Promise.resolve(null);
   }
 
