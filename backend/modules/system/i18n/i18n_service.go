@@ -35,7 +35,18 @@ type i18nCanonicalEntry struct {
 	Value  string
 }
 
-const i18nDatabaseNotInitializedKey = "database.not_initialized"
+const (
+	i18nDatabaseNotInitializedKey     = "database.not_initialized"
+	i18nCreateInvalidKey              = "i18n.create.invalid"
+	i18nKeyDuplicateKey               = "i18n.key.duplicate"
+	i18nValueRequiredKey              = "i18n.value.required"
+	i18nLifecycleDeleteConfirmKey     = "i18n.lifecycle.delete.confirm_required"
+	i18nRenameInvalidKey              = "i18n.rename.invalid"
+	i18nRenameSourceNotFoundKey       = "i18n.rename.source_not_found"
+	i18nRenameTargetExistsKey         = "i18n.rename.target_exists"
+	i18nRenameSourceNotConfirmedKey   = "i18n.rename.source_not_confirmed"
+	i18nLifecycleTransitionInvalidKey = "i18n.lifecycle.transition.invalid"
+)
 
 var canonicalMenuLocaleEntries = map[i18nLocaleKey]i18nCanonicalEntry{
 	{Locale: "zh-CN", Key: "system.menu.dashboard"}:     {Module: "platform", Group: "menu", Value: "工作台"},
@@ -285,7 +296,7 @@ func (s *I18nService) Create(req *I18nCreateReq) (*I18nResp, error) {
 		row.Group = "messages"
 	}
 	if row.Module == "" || row.Key == "" || row.Locale == "" || row.Value == "" {
-		return nil, errors.New("i18n.create.invalid")
+		return nil, errors.New(i18nCreateInvalidKey)
 	}
 
 	var count int64
@@ -295,7 +306,7 @@ func (s *I18nService) Create(req *I18nCreateReq) (*I18nResp, error) {
 		return nil, err
 	}
 	if count > 0 {
-		return nil, errors.New("i18n.key.duplicate")
+		return nil, errors.New(i18nKeyDuplicateKey)
 	}
 
 	if err := s.db.Create(&row).Error; err != nil {
@@ -313,7 +324,7 @@ func (s *I18nService) Update(id uint64, req *I18nUpdateReq) error {
 	req.Value = strings.TrimSpace(req.Value)
 	req.Remark = strings.TrimSpace(req.Remark)
 	if req.Value == "" {
-		return errors.New("i18n.value.required")
+		return errors.New(i18nValueRequiredKey)
 	}
 
 	var t SystemI18n
@@ -1292,7 +1303,7 @@ func (s *I18nService) ArchiveObservedUnusedKeys(module string) (*I18nUnusedLifec
 
 func (s *I18nService) DeleteArchivedUnusedKeys(module string, confirmArchived bool) (*I18nUnusedLifecycleResp, error) {
 	if !confirmArchived {
-		return nil, errors.New("i18n.lifecycle.delete.confirm_required")
+		return nil, errors.New(i18nLifecycleDeleteConfirmKey)
 	}
 	return s.deleteArchivedUnusedKeys(module, false)
 }
@@ -1400,7 +1411,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	oldKey := strings.TrimSpace(req.OldKey)
 	newKey := strings.TrimSpace(req.NewKey)
 	if module == "" || oldKey == "" || newKey == "" || oldKey == newKey {
-		return nil, errors.New("i18n.rename.invalid")
+		return nil, errors.New(i18nRenameInvalidKey)
 	}
 
 	resp := &I18nRenamePreviewResp{
@@ -1421,7 +1432,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 	resp.AffectedRows = int64(len(sourceRows))
 	if resp.AffectedRows == 0 {
-		return nil, errors.New("i18n.rename.source_not_found")
+		return nil, errors.New(i18nRenameSourceNotFoundKey)
 	}
 	for _, row := range sourceRows {
 		resp.AffectedLocales = append(resp.AffectedLocales, row.Locale)
@@ -1456,10 +1467,10 @@ func (s *I18nService) RenameKey(req *I18nRenameExecuteReq) (*I18nRenameExecuteRe
 		return nil, err
 	}
 	if preview.ExistingTargetRows > 0 {
-		return nil, errors.New("i18n.rename.target_exists")
+		return nil, errors.New(i18nRenameTargetExistsKey)
 	}
 	if preview.RequiresCodeMigration && !req.ConfirmSourceUpdated {
-		return nil, errors.New("i18n.rename.source_not_confirmed")
+		return nil, errors.New(i18nRenameSourceNotConfirmedKey)
 	}
 
 	resp := &I18nRenameExecuteResp{
@@ -2178,7 +2189,7 @@ func (s *I18nService) resetI18nLifecycle(_ string, module string, key string) er
 
 func (s *I18nService) transitionUnusedLifecycle(module string, fromStatus string, toStatus string, requireConfirm bool) (*I18nUnusedLifecycleResp, error) {
 	if requireConfirm {
-		return nil, errors.New("i18n.lifecycle.transition.invalid")
+		return nil, errors.New(i18nLifecycleTransitionInvalidKey)
 	}
 	return s.transitionUnusedLifecycleWithFilter(module, fromStatus, toStatus, nil)
 }

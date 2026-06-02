@@ -25,6 +25,13 @@ const (
 	dictParamInvalidKey           = "param.invalid"
 	dictTypeBatchEmptyKey         = "dict.type.batch.empty"
 	dictItemBatchEmptyKey         = "dict.item.batch.empty"
+	dictTypeDeleteHasItemsKey     = "dict.type.delete.error.has_items"
+	dictTypeBatchNotFoundKey      = "dict.type.batch.not_found"
+	dictItemBatchNotFoundKey      = "dict.item.batch.not_found"
+	dictTypeCodeExistsKey         = "dict.type.code.exists"
+	dictTypeNotFoundKey           = "dict.type.not_found"
+	dictItemValueExistsKey        = "dict.item.value.exists"
+	dictProjectRootNotFoundKey    = "dict.usage.project_root_not_found"
 )
 
 type DictService struct {
@@ -413,7 +420,7 @@ func (s *DictService) DeleteDictType(typeID uint64) error {
 		return err
 	}
 	if itemCount > 0 {
-		return errors.New("dict.type.delete.error.has_items")
+		return errors.New(dictTypeDeleteHasItemsKey)
 	}
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		deletedCode, err := s.allocateDeletedDictTypeCode(tx, row.ID)
@@ -448,7 +455,7 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
-		return 0, errors.New("dict.type.batch.not_found")
+		return 0, errors.New(dictTypeBatchNotFoundKey)
 	}
 
 	if err := s.db.Model(&SystemDictType{}).
@@ -783,7 +790,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
-		return 0, errors.New("dict.item.batch.not_found")
+		return 0, errors.New(dictItemBatchNotFoundKey)
 	}
 
 	dictCodes := make([]string, 0, len(rows))
@@ -1063,7 +1070,7 @@ func (s *DictService) validateDictType(typeID uint64, dictCode string) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("dict.type.code.exists")
+		return errors.New(dictTypeCodeExistsKey)
 	}
 	return nil
 }
@@ -1080,7 +1087,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 		return err
 	}
 	if typeCount == 0 {
-		return errors.New("dict.type.not_found")
+		return errors.New(dictTypeNotFoundKey)
 	}
 
 	var count int64
@@ -1092,7 +1099,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 		return err
 	}
 	if count > 0 {
-		return errors.New("dict.item.value.exists")
+		return errors.New(dictItemValueExistsKey)
 	}
 	return nil
 }
@@ -1177,7 +1184,7 @@ func resolveProjectRoot() (string, error) {
 		}
 		current = parent
 	}
-	return "", errors.New("dict.usage.project_root_not_found")
+	return "", errors.New(dictProjectRootNotFoundKey)
 }
 
 func fileExists(path string) bool {

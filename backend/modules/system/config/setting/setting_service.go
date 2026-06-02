@@ -31,6 +31,10 @@ const (
 	settingServiceParamInvalidKey    = "param.invalid"
 	settingValueInvalidJSONKey       = "setting.value.invalid_json"
 	settingValueInvalidOptionKey     = "setting.value.invalid_option"
+	settingKeyRequiredKey            = "setting.key.required"
+	settingValueInvalidNumberKey     = "setting.value.invalid_number"
+	settingValueInvalidBooleanKey    = "setting.value.invalid_boolean"
+	settingValueTypeInvalidKey       = "setting.value_type.invalid"
 )
 
 type defaultSettingSeed struct {
@@ -281,7 +285,7 @@ func (s *SettingService) UpdateGroup(groupKey string, req *SettingGroupUpdateReq
 		for _, item := range req.Items {
 			settingKey := strings.TrimSpace(item.SettingKey)
 			if settingKey == "" {
-				return errors.New("setting.key.required")
+				return errors.New(settingKeyRequiredKey)
 			}
 
 			var current SystemSetting
@@ -871,12 +875,12 @@ func validateAndNormalizeSettingValue(settingKey string, valueType string, value
 		return normalizedValue, nil
 	case "number":
 		if _, err := strconv.ParseFloat(strings.TrimSpace(normalizedValue), 64); err != nil {
-			return "", errors.New("setting.value.invalid_number")
+			return "", errors.New(settingValueInvalidNumberKey)
 		}
 		return normalizedValue, nil
 	case "boolean":
 		if _, err := strconv.ParseBool(strings.TrimSpace(normalizedValue)); err != nil {
-			return "", errors.New("setting.value.invalid_boolean")
+			return "", errors.New(settingValueInvalidBooleanKey)
 		}
 		return normalizedValue, nil
 	case "json":
@@ -902,7 +906,7 @@ func validateAndNormalizeSettingValue(settingKey string, valueType string, value
 		}
 		return trimmed, nil
 	default:
-		return "", errors.New("setting.value_type.invalid")
+		return "", errors.New(settingValueTypeInvalidKey)
 	}
 }
 

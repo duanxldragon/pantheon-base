@@ -15,7 +15,20 @@ type MenuService struct {
 	db *gorm.DB
 }
 
-const menuDatabaseNotInitializedKey = "database.not_initialized"
+const (
+	menuDatabaseNotInitializedKey = "database.not_initialized"
+	menuDeleteHasChildrenKey      = "menu.delete.error.has_children"
+	menuParentSelfKey             = "menu.update.error.parent_self"
+	menuRouteNameRequiredKey      = "menu.route_name.required"
+	menuPagePermRequiredKey       = "menu.page_perm.required"
+	menuPermsRequiredKey          = "menu.perms.required"
+	menuPathInvalidExternalKey    = "menu.path.invalid_external"
+	menuComponentRequiredKey      = "menu.component.required"
+	menuComponentInvalidKey       = "menu.component.invalid"
+	menuParentNotFoundKey         = "menu.parent.not_found"
+	menuPathExistsKey             = "menu.path.exists"
+	menuRouteNameExistsKey        = "menu.route_name.exists"
+)
 
 func NewMenuService(db *gorm.DB) *MenuService {
 	return &MenuService{db: db}
@@ -256,7 +269,7 @@ func (s *MenuService) DeleteMenu(menuID uint64) error {
 		return err
 	}
 	if childCount > 0 {
-		return errors.New("menu.delete.error.has_children")
+		return errors.New(menuDeleteHasChildrenKey)
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
@@ -438,7 +451,7 @@ func (s *MenuService) validateMenuUpdate(menuID uint64, req *MenuUpdateReq) erro
 		return err
 	}
 	if req.ParentID == menuID {
-		return errors.New("menu.update.error.parent_self")
+		return errors.New(menuParentSelfKey)
 	}
 	if err := s.ensureParentExists(req.ParentID); err != nil {
 		return err
@@ -452,13 +465,13 @@ func (s *MenuService) validateMenuMeta(menuID uint64, req *MenuCreateReq) error 
 	isExternal := normalizeMenuFlag(req.IsExternal)
 
 	if menuType == "C" && routeName == "" {
-		return errors.New("menu.route_name.required")
+		return errors.New(menuRouteNameRequiredKey)
 	}
 	if menuType == "C" && isExternal != 1 && normalizeMenuPerm(req.PagePerm) == "" {
-		return errors.New("menu.page_perm.required")
+		return errors.New(menuPagePermRequiredKey)
 	}
 	if menuType == "F" && normalizeMenuPerm(req.Perms) == "" {
-		return errors.New("menu.perms.required")
+		return errors.New(menuPermsRequiredKey)
 	}
 	if routeName != "" {
 		if err := s.ensureRouteNameUnique(menuID, routeName); err != nil {
@@ -467,16 +480,16 @@ func (s *MenuService) validateMenuMeta(menuID uint64, req *MenuCreateReq) error 
 	}
 	if isExternal == 1 {
 		if !isValidExternalMenuPath(req.Path) {
-			return errors.New("menu.path.invalid_external")
+			return errors.New(menuPathInvalidExternalKey)
 		}
 		return nil
 	}
 	componentKey := strings.TrimSpace(req.Component)
 	if menuType == "C" && componentKey == "" {
-		return errors.New("menu.component.required")
+		return errors.New(menuComponentRequiredKey)
 	}
 	if menuType == "C" && requiresRegisteredMenuComponent(normalizeMenuModule(req.Module)) && !isRegisteredMenuComponentKey(componentKey) {
-		return errors.New("menu.component.invalid")
+		return errors.New(menuComponentInvalidKey)
 	}
 	return nil
 }
@@ -491,7 +504,7 @@ func (s *MenuService) ensureParentExists(parentID uint64) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("menu.parent.not_found")
+		return errors.New(menuParentNotFoundKey)
 	}
 	return nil
 }
@@ -510,7 +523,7 @@ func (s *MenuService) ensurePathUnique(menuID uint64, path string) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("menu.path.exists")
+		return errors.New(menuPathExistsKey)
 	}
 	return nil
 }
@@ -525,7 +538,7 @@ func (s *MenuService) ensureRouteNameUnique(menuID uint64, routeName string) err
 		return err
 	}
 	if count > 0 {
-		return errors.New("menu.route_name.exists")
+		return errors.New(menuRouteNameExistsKey)
 	}
 	return nil
 }

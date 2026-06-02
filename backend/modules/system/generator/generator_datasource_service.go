@@ -21,6 +21,11 @@ const (
 	generatorDatasourceRequiredKey               = "generator.datasource.required"
 	generatorDatasourceHostInvalidKey            = "generator.datasource.host_invalid"
 	generatorDatasourceDriverUnsupportedKey      = "generator.datasource.driver_unsupported"
+	generatorDatasourceDisabledKey               = "generator.datasource.disabled"
+	generatorDatasourceConnectFailedKey          = "generator.datasource.connect_failed"
+	generatorDatasourceSchemaUnknownKey          = "database.schema_unknown"
+	generatorDatasourcePortInvalidKey            = "generator.datasource.port_invalid"
+	generatorDatasourcePasswordRequiredKey       = "generator.datasource.password_required"
 )
 
 func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) {
@@ -197,7 +202,7 @@ func (s *GeneratorService) openSchemaReader(datasourceID string) (*generatorSche
 		return nil, err
 	}
 	if row.Status != generatorDatasourceEnabled {
-		return nil, errors.New("generator.datasource.disabled")
+		return nil, errors.New(generatorDatasourceDisabledKey)
 	}
 	if strings.TrimSpace(row.Driver) != "" && !strings.EqualFold(strings.TrimSpace(row.Driver), "mysql") {
 		return nil, errors.New(generatorDatasourceDriverUnsupportedKey)
@@ -222,7 +227,7 @@ func (s *GeneratorService) openSchemaReader(datasourceID string) (*generatorSche
 
 	db, err := gorm.Open(mysqlgorm.Open(cfg.FormatDSN()), &gorm.Config{})
 	if err != nil {
-		return nil, errors.New("generator.datasource.connect_failed")
+		return nil, errors.New(generatorDatasourceConnectFailedKey)
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -259,7 +264,7 @@ func (s *GeneratorService) currentSchema() (string, error) {
 		return "", err
 	}
 	if strings.TrimSpace(schemaName) == "" {
-		return "", errors.New("database.schema_unknown")
+		return "", errors.New(generatorDatasourceSchemaUnknownKey)
 	}
 	return schemaName, nil
 }
@@ -290,14 +295,14 @@ func normalizeDatasourceReq(req *UpsertGeneratorDatasourceReq, requirePassword b
 		port = 3306
 	}
 	if port > 65535 {
-		return nil, errors.New("generator.datasource.port_invalid")
+		return nil, errors.New(generatorDatasourcePortInvalidKey)
 	}
 	if req.Status != generatorDatasourceEnabled && req.Status != generatorDatasourceDisabled {
 		req.Status = generatorDatasourceEnabled
 	}
 	password := strings.TrimSpace(req.Password)
 	if requirePassword && password == "" {
-		return nil, errors.New("generator.datasource.password_required")
+		return nil, errors.New(generatorDatasourcePasswordRequiredKey)
 	}
 	encrypted := ""
 	var err error
