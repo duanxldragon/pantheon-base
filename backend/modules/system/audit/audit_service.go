@@ -33,6 +33,7 @@ const (
 	defaultOperationLogRetentionDays = 180
 	auditAutoCleanupMinInterval      = 15 * time.Minute
 	auditDatabaseNotInitializedKey   = "database.not_initialized"
+	auditCleanupDaysInvalidKey       = "audit.operation_log.cleanup.days_invalid"
 	auditCleanupRangeInvalidKey      = "audit.operation_log.cleanup.range_invalid"
 	auditDeleteIDsRequiredKey        = "audit.operation_log.delete.ids_required"
 )
@@ -171,7 +172,7 @@ func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string,
 		db = db.Where("oper_time >= ? AND oper_time <= ?", window.StartedAt, window.EndedAt)
 	} else {
 		if !s.isAllowedOperationLogRetentionDays(retentionDays) {
-			return 0, errors.New("audit.operation_log.cleanup.days_invalid")
+			return 0, errors.New(auditCleanupDaysInvalidKey)
 		}
 		cutoff := time.Now().AddDate(0, 0, -retentionDays)
 		db = db.Where("oper_time < ?", cutoff)

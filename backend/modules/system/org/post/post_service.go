@@ -28,6 +28,8 @@ const (
 	postCodeExistsKey             = "post.code.exists"
 	postDeptRequiredKey           = "post.dept.required"
 	postStatusHasUsersKey         = "post.status.error.has_users"
+	postDeptRootForbiddenKey      = "post.dept.root_forbidden"
+	postDeleteArchiveConflictKey  = "post.delete.error.archive_code_conflict"
 )
 
 func NewPostService(db *gorm.DB) *PostService {
@@ -511,7 +513,7 @@ func (s *PostService) ensurePostDeptID(deptID uint64) error {
 		return err
 	}
 	if dept.IsRoot == 1 {
-		return errors.New("post.dept.root_forbidden")
+		return errors.New(postDeptRootForbiddenKey)
 	}
 	return nil
 }
@@ -763,5 +765,5 @@ func (s *PostService) allocateDeletedPostCode(tx *gorm.DB, postID uint64) (strin
 			return candidate, nil
 		}
 	}
-	return "", errors.New("post.delete.error.archive_code_conflict")
+	return "", errors.New(postDeleteArchiveConflictKey)
 }

@@ -29,6 +29,15 @@ const (
 	deptLeaderBindAfterCreateKey  = "dept.leader.bind_after_create"
 	deptParentNotFoundKey         = "dept.parent.not_found"
 	deptEmailInvalidKey           = "dept.email.invalid"
+	deptRootDeleteForbiddenKey    = "dept.root.delete_forbidden"
+	deptDeleteHasChildrenKey      = "dept.delete.error.has_children"
+	deptDeleteHasPostsKey         = "dept.delete.error.has_posts"
+	deptDeleteHasUsersKey         = "dept.delete.error.has_users"
+	deptRootStatusFixedKey        = "dept.root.status_fixed"
+	deptUpdateParentSelfKey       = "dept.update.error.parent_self"
+	deptRootParentFixedKey        = "dept.root.parent_fixed"
+	deptLeaderUserInvalidKey      = "dept.leader.user_invalid"
+	deptUpdateParentDescKey       = "dept.update.error.parent_descendant"
 )
 
 func NewDeptService(db *gorm.DB) *DeptService {
@@ -457,7 +466,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if dept.IsRoot == 1 {
-		return errors.New("dept.root.delete_forbidden")
+		return errors.New(deptRootDeleteForbiddenKey)
 	}
 
 	var childCount int64
@@ -465,7 +474,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if childCount > 0 {
-		return errors.New("dept.delete.error.has_children")
+		return errors.New(deptDeleteHasChildrenKey)
 	}
 
 	var postCount int64
@@ -473,7 +482,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if postCount > 0 {
-		return errors.New("dept.delete.error.has_posts")
+		return errors.New(deptDeleteHasPostsKey)
 	}
 
 	var userCount int64
@@ -481,7 +490,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if userCount > 0 {
-		return errors.New("dept.delete.error.has_users")
+		return errors.New(deptDeleteHasUsersKey)
 	}
 
 	return s.db.Delete(&SystemDept{}, deptID).Error
@@ -508,7 +517,7 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 	}
 	for _, dept := range depts {
 		if dept.IsRoot == 1 {
-			return 0, errors.New("dept.root.status_fixed")
+			return 0, errors.New(deptRootStatusFixedKey)
 		}
 	}
 
@@ -959,14 +968,14 @@ func (s *DeptService) validateDeptUpdate(dept *SystemDept, req *DeptUpdateReq) e
 		return errors.New(deptNotFoundKey)
 	}
 	if req.ParentID == dept.ID {
-		return errors.New("dept.update.error.parent_self")
+		return errors.New(deptUpdateParentSelfKey)
 	}
 	if dept.IsRoot == 1 {
 		if req.ParentID != 0 {
-			return errors.New("dept.root.parent_fixed")
+			return errors.New(deptRootParentFixedKey)
 		}
 		if normalizeSystemStatus(req.Status) != 1 {
-			return errors.New("dept.root.status_fixed")
+			return errors.New(deptRootStatusFixedKey)
 		}
 	} else if req.ParentID == 0 {
 		return errors.New(deptParentRequiredKey)
@@ -1003,7 +1012,7 @@ func (s *DeptService) resolveDeptLeaderFields(deptID uint64, leader string, lead
 		Where("u.deleted_at IS NULL AND u.status = ? AND u.id = ? AND u.dept_id = ? AND u.post_id > 0", 1, leaderUserID, deptID).
 		Take(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", 0, errors.New("dept.leader.user_invalid")
+			return "", 0, errors.New(deptLeaderUserInvalidKey)
 		}
 		return "", 0, err
 	}
@@ -1042,7 +1051,7 @@ func (s *DeptService) ensureDeptParentNotDescendant(deptID uint64, parentID uint
 	ancestors := splitAncestors(parent.Ancestors)
 	for _, ancestorID := range ancestors {
 		if ancestorID == deptID {
-			return errors.New("dept.update.error.parent_descendant")
+			return errors.New(deptUpdateParentDescKey)
 		}
 	}
 	return nil
