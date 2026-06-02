@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,19 @@ type AuthHandler struct {
 	service *AuthService
 }
 
+const (
+	authLoginSuccessMessageKey  = "auth.loginSuccess"
+	csrfGenerateErrorMessageKey = "csrf.generate.error"
+	paramInvalidMessageKey      = "param.invalid"
+	sessionIDContextKey         = "sessionId"
+	sessionIDFieldKey           = "sessionId"
+	usernameContextKey          = "username"
+	usernameFieldKey            = "username"
+	userAgentHeaderKey          = "User-Agent"
+	authTimestampLayout         = "2006-01-02 15:04:05"
+	idParamKey                  = "id"
+)
+
 func NewAuthHandler(s *AuthService) *AuthHandler {
 	return &AuthHandler{service: s}
 }
@@ -25,12 +39,12 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	var req LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
 	ip := c.ClientIP()
-	userAgent := c.GetHeader("User-Agent")
+	userAgent := c.GetHeader(userAgentHeaderKey)
 	clientInfo := parseClientInfo(userAgent)
 
 	sourceKey := buildLoginSourceKey(ip)
@@ -76,12 +90,10 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	h.service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
+	h.service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 1, authLoginSuccessMessageKey)
 
-	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
-	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
-		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+	if err := writeSessionCookies(c.Writer, tokenPair.AccessToken, tokenPair.RefreshToken); err != nil {
+		common.FailWithError(c, common.CodeError, err, csrfGenerateErrorMessageKey)
 		return
 	}
 
@@ -90,8 +102,8 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		AccessToken:      tokenPair.AccessToken,
 		RefreshToken:     tokenPair.RefreshToken,
 		TokenType:        tokenPair.TokenType,
-		AccessExpiresAt:  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
-		RefreshExpiresAt: tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
+		AccessExpiresAt:  tokenPair.AccessExpiresAt.Format(authTimestampLayout),
+		RefreshExpiresAt: tokenPair.RefreshExpiresAt.Format(authTimestampLayout),
 		SessionID:        tokenPair.SessionID,
 		User:             userInfo,
 	})
@@ -102,12 +114,12 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 
 	var req MFAVerifyReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
 	ip := c.ClientIP()
-	userAgent := c.GetHeader("User-Agent")
+	userAgent := c.GetHeader(userAgentHeaderKey)
 	clientInfo := parseClientInfo(userAgent)
 	resp, err := h.service.VerifyMFAChallenge(&req, ip, userAgent)
 	if err != nil {
@@ -121,16 +133,10 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	if resp.User != nil {
 		username = resp.User.Username
 	}
-	h.service.RecordLoginLog(common.GetRequestID(c), username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
+	h.service.RecordLoginLog(common.GetRequestID(c), username, ip, clientInfo.Browser, clientInfo.OS, 1, authLoginSuccessMessageKey)
 
-	if resp.Token != "" {
-		common.SetAccessTokenCookie(c.Writer, resp.Token)
-	}
-	if resp.RefreshToken != "" {
-		common.SetRefreshTokenCookie(c.Writer, resp.RefreshToken)
-	}
-	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
-		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+	if err := writeSessionCookies(c.Writer, resp.Token, resp.RefreshToken); err != nil {
+		common.FailWithError(c, common.CodeError, err, csrfGenerateErrorMessageKey)
 		return
 	}
 
@@ -147,7 +153,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 	if refreshToken == "" {
 		var req RefreshTokenReq
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.Fail(c, common.CodeParamInvalid, "param.invalid")
+			common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 			return
 		}
 		refreshToken = req.RefreshToken
@@ -163,16 +169,14 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.RefreshSession(claims, c.ClientIP(), c.GetHeader("User-Agent"))
+	tokenPair, err := h.service.RefreshSession(claims, c.ClientIP(), c.GetHeader(userAgentHeaderKey))
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.session.refresh.error")
 		return
 	}
 
-	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
-	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
-		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+	if err := writeSessionCookies(c.Writer, tokenPair.AccessToken, tokenPair.RefreshToken); err != nil {
+		common.FailWithError(c, common.CodeError, err, csrfGenerateErrorMessageKey)
 		return
 	}
 
@@ -181,9 +185,9 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		"accessToken":      tokenPair.AccessToken,
 		"refreshToken":     tokenPair.RefreshToken,
 		"tokenType":        tokenPair.TokenType,
-		"accessExpiresAt":  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
-		"refreshExpiresAt": tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
-		"sessionId":        tokenPair.SessionID,
+		"accessExpiresAt":  tokenPair.AccessExpiresAt.Format(authTimestampLayout),
+		"refreshExpiresAt": tokenPair.RefreshExpiresAt.Format(authTimestampLayout),
+		sessionIDFieldKey:  tokenPair.SessionID,
 	})
 }
 func (h *AuthHandler) GetCurrentUserInfo(c *gin.Context) {
@@ -200,7 +204,7 @@ func (h *AuthHandler) UpdateCurrentUserPreferences(c *gin.Context) {
 
 	var req UserPlatformPreferenceUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
@@ -222,10 +226,10 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 
 	var req PasswordUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
-	if err := h.service.UpdatePassword(common.GetUserID(c), c.GetString("sessionId"), &req); err != nil {
+	if err := h.service.UpdatePassword(common.GetUserID(c), c.GetString(sessionIDContextKey), &req); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.password.update.error")
 		return
 	}
@@ -234,7 +238,7 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 func (h *AuthHandler) GetLoginLogList(c *gin.Context) {
 	var query LoginLogQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.ListLoginLogs(&query)
@@ -248,7 +252,7 @@ func (h *AuthHandler) GetLoginLogList(c *gin.Context) {
 func (h *AuthHandler) GetSecurityEventList(c *gin.Context) {
 	var query SecurityEventQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.ListSecurityEvents(&query)
@@ -262,22 +266,22 @@ func (h *AuthHandler) GetSecurityEventList(c *gin.Context) {
 func (h *AuthHandler) AcknowledgeSecurityEvent(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.security_event.acknowledge.title", common.BusinessUpdate)
 
-	eventID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	eventID, err := strconv.ParseUint(c.Param(idParamKey), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
 	var req SecurityEventAcknowledgeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
 	if err := h.service.AcknowledgeSecurityEvent(
 		eventID,
 		common.GetUserID(c),
-		c.GetString("username"),
+		c.GetString(usernameContextKey),
 		req.AcknowledgementNote,
 	); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.security_event.acknowledge.error")
@@ -291,7 +295,7 @@ func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 
 	var query LoginLogQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 	file, err := h.service.ExportLoginLogs(&query)
@@ -314,10 +318,10 @@ func buildPreferenceAuditPayload(previous *user.UserPlatformPreferenceResp, curr
 
 func buildPreferenceAuditResult(resp *UserInfoResp, previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) string {
 	return marshalAuthAuditPayload(gin.H{
-		"userId":      resp.ID,
-		"username":    resp.Username,
-		"preferences": current,
-		"changed":     !preferencesEqual(previous, current),
+		"userId":         resp.ID,
+		usernameFieldKey: resp.Username,
+		"preferences":    current,
+		"changed":        !preferencesEqual(previous, current),
 	})
 }
 
@@ -347,7 +351,7 @@ func (h *AuthHandler) CleanupLoginLogs(c *gin.Context) {
 
 	var req LoginLogCleanupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
@@ -364,7 +368,7 @@ func (h *AuthHandler) CleanupHistoricSessions(c *gin.Context) {
 
 	var req SessionCleanupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
@@ -381,11 +385,11 @@ func (h *AuthHandler) BatchRevokeSessions(c *gin.Context) {
 
 	var req SessionBatchRevokeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
-	revokedCount, err := h.service.BatchRevokeSessions(c.GetString("sessionId"), req.SessionIDs)
+	revokedCount, err := h.service.BatchRevokeSessions(c.GetString(sessionIDContextKey), req.SessionIDs)
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.session.revoke.error")
 		return
@@ -398,7 +402,7 @@ func (h *AuthHandler) BatchDeleteLoginLogs(c *gin.Context) {
 
 	var req LoginLogBatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 
@@ -412,7 +416,7 @@ func (h *AuthHandler) BatchDeleteLoginLogs(c *gin.Context) {
 func (h *AuthHandler) GetSessionList(c *gin.Context) {
 	var query AdminSessionQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
 	resp, err := h.service.ListAllSessions(&query)
@@ -425,14 +429,14 @@ func (h *AuthHandler) GetSessionList(c *gin.Context) {
 func (h *AuthHandler) RevokeAnySession(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.session.revoke.title", common.BusinessForce)
 
-	if err := h.service.RevokeAnySession(c.GetString("sessionId"), strings.TrimSpace(c.Param("id"))); err != nil {
+	if err := h.service.RevokeAnySession(c.GetString(sessionIDContextKey), strings.TrimSpace(c.Param(idParamKey))); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.session.revoke.error")
 		return
 	}
 	common.Success(c, gin.H{"revoked": true})
 }
 func (h *AuthHandler) GetSecurityOverview(c *gin.Context) {
-	resp, err := h.service.GetSecurityOverview(common.GetUserID(c), c.GetString("username"), c.GetString("sessionId"))
+	resp, err := h.service.GetSecurityOverview(common.GetUserID(c), c.GetString(usernameContextKey), c.GetString(sessionIDContextKey))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.security.overview.error")
 		return
@@ -447,10 +451,10 @@ func (h *AuthHandler) VerifyOperationPassword(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
-	token, err := h.service.VerifyPasswordForOperation(common.GetUserID(c), c.GetString("sessionId"), req.Password)
+	token, err := h.service.VerifyPasswordForOperation(common.GetUserID(c), c.GetString(sessionIDContextKey), req.Password)
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.operation.verify.error")
 		return
@@ -461,7 +465,7 @@ func (h *AuthHandler) VerifyOperationPassword(c *gin.Context) {
 func (h *AuthHandler) TouchActivity(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.session.touch.title", common.BusinessUpdate)
 
-	if err := h.service.TouchSessionActivity(c.GetString("sessionId"), common.GetUserID(c), c.ClientIP(), c.GetHeader("User-Agent")); err != nil {
+	if err := h.service.TouchSessionActivity(c.GetString(sessionIDContextKey), common.GetUserID(c), c.ClientIP(), c.GetHeader(userAgentHeaderKey)); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.session.touch.error")
 		return
 	}
@@ -471,7 +475,7 @@ func (h *AuthHandler) TouchActivity(c *gin.Context) {
 func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.logout.title", common.BusinessForce)
 
-	if err := h.service.RevokeSession(c.GetString("sessionId")); err != nil {
+	if err := h.service.RevokeSession(c.GetString(sessionIDContextKey)); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.logout.error")
 		return
 	}
@@ -479,7 +483,7 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 	common.Success(c, gin.H{"loggedOut": true})
 }
 func (h *AuthHandler) GetSessions(c *gin.Context) {
-	resp, err := h.service.ListSessions(common.GetUserID(c), c.GetString("sessionId"))
+	resp, err := h.service.ListSessions(common.GetUserID(c), c.GetString(sessionIDContextKey))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.session.current_list.error")
 		return
@@ -489,7 +493,7 @@ func (h *AuthHandler) GetSessions(c *gin.Context) {
 func (h *AuthHandler) RevokeSession(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.session.revoke_self.title", common.BusinessForce)
 
-	if err := h.service.RevokeSession(strings.TrimSpace(c.Param("id"))); err != nil {
+	if err := h.service.RevokeSession(strings.TrimSpace(c.Param(idParamKey))); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.session.revoke_self.error")
 		return
 	}
@@ -498,10 +502,10 @@ func (h *AuthHandler) RevokeSession(c *gin.Context) {
 func (h *AuthHandler) GetOwnLoginLogs(c *gin.Context) {
 	var query LoginLogQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, paramInvalidMessageKey)
 		return
 	}
-	resp, err := h.service.ListOwnLoginLogs(c.GetString("username"), &query)
+	resp, err := h.service.ListOwnLoginLogs(c.GetString(usernameContextKey), &query)
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.login_log.current_user.error")
 		return
@@ -515,4 +519,15 @@ func buildLoginSourceKey(ip string) string {
 		return "ip:unknown"
 	}
 	return "ip:" + trimmed
+}
+
+func writeSessionCookies(w http.ResponseWriter, accessToken, refreshToken string) error {
+	if accessToken != "" {
+		common.SetAccessTokenCookie(w, accessToken)
+	}
+	if refreshToken != "" {
+		common.SetRefreshTokenCookie(w, refreshToken)
+	}
+	_, err := common.SetCSRFCookie(w)
+	return err
 }
