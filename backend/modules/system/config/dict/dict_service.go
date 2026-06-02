@@ -34,6 +34,9 @@ const (
 	dictProjectRootNotFoundKey    = "dict.usage.project_root_not_found"
 	dictTypeArchiveConflictKey    = "dict.type.delete.error.archive_code_conflict"
 	dictItemArchiveConflictKey    = "dict.item.delete.error.archive_value_conflict"
+	dictImportFileEmptyKey        = "import.file.empty"
+	dictImportHeaderMissingKey    = "import.header.missing"
+	dictTypeCodeRequiredKey       = "dict.type.code.required"
 )
 
 type DictService struct {
@@ -268,7 +271,7 @@ func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult,
 		return nil, errors.New(dictDatabaseNotInitializedKey)
 	}
 	if len(records) == 0 {
-		impexp.AppendImportError(result, 0, "file", "import.file.empty")
+		impexp.AppendImportError(result, 0, "file", dictImportFileEmptyKey)
 		return result, nil
 	}
 
@@ -279,7 +282,7 @@ func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult,
 	requiredHeaders := []string{"dictCode", "dictName", "module", "status", "remark"}
 	for _, header := range requiredHeaders {
 		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
+			impexp.AppendImportError(result, 0, header, dictImportHeaderMissingKey)
 		}
 	}
 	if result.Failed > 0 {
@@ -305,7 +308,7 @@ func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult,
 		dictCode := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "dictCode"))
 		dictName := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "dictName"))
 		if dictCode == "" {
-			impexp.AppendImportError(result, rowNumber, "dictCode", "dict.type.code.required")
+			impexp.AppendImportError(result, rowNumber, "dictCode", dictTypeCodeRequiredKey)
 		}
 		if dictName == "" {
 			impexp.AppendImportError(result, rowNumber, "dictName", "dict.type.name.required")
@@ -592,7 +595,7 @@ func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult,
 		return nil, errors.New(dictDatabaseNotInitializedKey)
 	}
 	if len(records) == 0 {
-		impexp.AppendImportError(result, 0, "file", "import.file.empty")
+		impexp.AppendImportError(result, 0, "file", dictImportFileEmptyKey)
 		return result, nil
 	}
 
@@ -603,7 +606,7 @@ func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult,
 	requiredHeaders := []string{"dictCode", "itemLabelKey", "itemValue", "itemColor", "sort", "status", "remark"}
 	for _, header := range requiredHeaders {
 		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
+			impexp.AppendImportError(result, 0, header, dictImportHeaderMissingKey)
 		}
 	}
 	if result.Failed > 0 {
@@ -634,7 +637,7 @@ func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult,
 		sortValue, sortErr := impexp.ParseCSVInt(impexp.ReadCSVField(record, headerIndex, "sort"))
 
 		if dictCode == "" {
-			impexp.AppendImportError(result, rowNumber, "dictCode", "dict.type.code.required")
+			impexp.AppendImportError(result, rowNumber, "dictCode", dictTypeCodeRequiredKey)
 		}
 		if itemLabelKey == "" {
 			impexp.AppendImportError(result, rowNumber, "itemLabelKey", "dict.item.label_key.required")
