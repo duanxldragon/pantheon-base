@@ -32,6 +32,8 @@ type RefreshStateQuery struct {
 	Topics string `form:"topics" json:"topics"`
 }
 
+const refreshParamInvalidMessageKey = "param.invalid"
+
 type RefreshSyncService struct {
 	db *gorm.DB
 }
@@ -102,10 +104,10 @@ func NewRefreshSyncHandler(service *RefreshSyncService) *RefreshSyncHandler {
 func (h *RefreshSyncHandler) GetState(c *gin.Context) {
 	var query RefreshStateQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, refreshParamInvalidMessageKey)
 		return
 	}
-	resp, err := h.service.GetState(parseRefreshTopicQuery(query.Topics))
+	resp, err := h.service.GetState(refreshTopicsFromQuery(query))
 	if err != nil {
 		common.Fail(c, common.CodeError, "refresh.state.error")
 		return
@@ -188,6 +190,10 @@ func parseRefreshTopicQuery(raw string) []string {
 		return nil
 	}
 	return strings.Split(raw, ",")
+}
+
+func refreshTopicsFromQuery(query RefreshStateQuery) []string {
+	return parseRefreshTopicQuery(query.Topics)
 }
 
 func normalizeRefreshTopics(topics []string) []string {

@@ -98,7 +98,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	role, err := h.service.UpdateRole(roleID, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, roleRequestFailedMessageKey)
 		return
 	}
 	common.Success(c, role)

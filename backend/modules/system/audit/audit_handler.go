@@ -9,6 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	auditParamInvalidMessageKey  = "param.invalid"
+	auditRequestFailedMessageKey = "request.failed"
+	auditParamID                 = "id"
+	auditDeletedField            = "deleted"
+	auditClearedCountField       = "clearedCount"
+	auditDeletedCountField       = "deletedCount"
+)
+
 type AuditHandler struct {
 	service *AuditService
 }
@@ -20,7 +29,7 @@ func NewAuditHandler(s *AuditService) *AuditHandler {
 func (h *AuditHandler) GetOperationLogList(c *gin.Context) {
 	var query OperationLogQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, auditParamInvalidMessageKey)
 		return
 	}
 
@@ -33,9 +42,9 @@ func (h *AuditHandler) GetOperationLogList(c *gin.Context) {
 }
 
 func (h *AuditHandler) GetOperationLog(c *gin.Context) {
-	logID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	logID, err := parseAuditUintPathParam(c, auditParamID)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, auditParamInvalidMessageKey)
 		return
 	}
 
@@ -49,17 +58,17 @@ func (h *AuditHandler) GetOperationLog(c *gin.Context) {
 
 func (h *AuditHandler) DeleteOperationLog(c *gin.Context) {
 	common.SetAuditMetadata(c, "audit.operation_log.delete.title", common.BusinessDelete)
-	logID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	logID, err := parseAuditUintPathParam(c, auditParamID)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, auditParamInvalidMessageKey)
 		return
 	}
 
 	if err := h.service.DeleteOperationLog(logID); err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, auditRequestFailedMessageKey)
 		return
 	}
-	common.Success(c, gin.H{"deleted": true})
+	common.Success(c, gin.H{auditDeletedField: true})
 }
 
 func (h *AuditHandler) CleanupOperationLogs(c *gin.Context) {
@@ -67,16 +76,16 @@ func (h *AuditHandler) CleanupOperationLogs(c *gin.Context) {
 
 	var req OperationLogCleanupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, auditParamInvalidMessageKey)
 		return
 	}
 
 	clearedCount, err := h.service.CleanupOperationLogs(req.RetentionDays, req.StartedAt, req.EndedAt)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, auditRequestFailedMessageKey)
 		return
 	}
-	common.Success(c, gin.H{"clearedCount": clearedCount})
+	common.Success(c, gin.H{auditClearedCountField: clearedCount})
 }
 
 func (h *AuditHandler) BatchDeleteOperationLogs(c *gin.Context) {
@@ -84,16 +93,16 @@ func (h *AuditHandler) BatchDeleteOperationLogs(c *gin.Context) {
 
 	var req OperationLogBatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, auditParamInvalidMessageKey)
 		return
 	}
 
 	deletedCount, err := h.service.BatchDeleteOperationLogs(req.IDs)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "request.failed")
+		common.FailWithError(c, common.CodeError, err, auditRequestFailedMessageKey)
 		return
 	}
-	common.Success(c, gin.H{"deletedCount": deletedCount})
+	common.Success(c, gin.H{auditDeletedCountField: deletedCount})
 }
 
 func (h *AuditHandler) ExportOperationLogs(c *gin.Context) {
@@ -101,7 +110,7 @@ func (h *AuditHandler) ExportOperationLogs(c *gin.Context) {
 
 	var query OperationLogQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, auditParamInvalidMessageKey)
 		return
 	}
 	file, err := h.service.ExportOperationLogs(&query)
@@ -112,4 +121,8 @@ func (h *AuditHandler) ExportOperationLogs(c *gin.Context) {
 	if err := impexp.WriteCSV(c, *file); err != nil {
 		common.Fail(c, common.CodeError, "audit.operation_log.export.error")
 	}
+}
+
+func parseAuditUintPathParam(c *gin.Context, key string) (uint64, error) {
+	return strconv.ParseUint(c.Param(key), 10, 64)
 }
