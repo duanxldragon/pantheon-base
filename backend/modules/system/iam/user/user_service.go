@@ -26,19 +26,27 @@ type UserService struct {
 const deletedUsernamePrefix = "__deleted_user_"
 
 const (
-	userDatabaseNotInitializedKey = "database.not_initialized"
-	userBatchEmptyKey             = "user.batch.empty"
-	userParamInvalidKey           = "param.invalid"
-	userProtectedUpdateKey        = "user.update.error.protected"
-	userRoleInvalidKey            = "user.role.invalid"
-	userPostInvalidKey            = "user.post.invalid"
-	userBatchNotFoundKey          = "user.batch.not_found"
-	userPasswordTooShortKey       = "user.update.error.password_too_short"
-	userDeleteProtectedKey        = "user.delete.error.protected"
-	userUsernameExistsKey         = "user.create.error.username_exists"
-	userDeptInvalidKey            = "user.dept.invalid"
-	userEmailInvalidKey           = "user.email.invalid"
-	userProfileExtInvalidKey      = "user.profile_ext.invalid"
+	userDatabaseNotInitializedKey   = "database.not_initialized"
+	userBatchEmptyKey               = "user.batch.empty"
+	userParamInvalidKey             = "param.invalid"
+	userUsernameRequiredKey         = "user.username.required"
+	userPasswordRequiredKey         = "user.password.required"
+	userProtectedUpdateKey          = "user.update.error.protected"
+	userRoleInvalidKey              = "user.role.invalid"
+	userPostInvalidKey              = "user.post.invalid"
+	userPostDeptRequiredKey         = "user.post.dept_required"
+	userPostDeptMismatchKey         = "user.post.dept_mismatch"
+	userBatchNotFoundKey            = "user.batch.not_found"
+	userPasswordTooShortKey         = "user.update.error.password_too_short"
+	userDeleteProtectedKey          = "user.delete.error.protected"
+	userArchiveUsernameConflictKey  = "user.delete.error.archive_username_conflict"
+	userUsernameExistsKey           = "user.create.error.username_exists"
+	userDeptInvalidKey              = "user.dept.invalid"
+	userEmailInvalidKey             = "user.email.invalid"
+	userProfileExtInvalidKey        = "user.profile_ext.invalid"
+	userProfileExtTooLargeKey       = "user.profile_ext.too_large"
+	adminInitialPasswordRequiredKey = "admin.initial_password_required"
+	adminInitialPasswordTooShortKey = "admin.initial_password_too_short"
 )
 
 // NewUserService 构造函数
@@ -147,10 +155,10 @@ func resolveInitialAdminPassword() (string, error) {
 		return defaultDevInitialAdminPassword, nil
 	}
 	if password == "" {
-		return "", errors.New("admin.initial_password_required")
+		return "", errors.New(adminInitialPasswordRequiredKey)
 	}
 	if len(password) < productionInitialAdminMinLength {
-		return "", errors.New("admin.initial_password_too_short")
+		return "", errors.New(adminInitialPasswordTooShortKey)
 	}
 	return password, nil
 }
@@ -821,7 +829,7 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 		roleKeys := impexp.SplitPipeValues(impexp.ReadCSVField(record, headerIndex, "roleKeys"))
 
 		if username == "" {
-			impexp.AppendImportError(result, rowNumber, "username", "user.username.required")
+			impexp.AppendImportError(result, rowNumber, "username", userUsernameRequiredKey)
 		}
 		if firstRow, ok := seenUsernames[username]; ok && username != "" {
 			impexp.AppendImportError(result, rowNumber, "username", fmt.Sprintf("import.duplicate.row.%d", firstRow))
@@ -836,7 +844,7 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 		if deptPath != "" {
 			deptID = deptPathToID[deptPath]
 			if deptID == 0 {
-				impexp.AppendImportError(result, rowNumber, "deptPath", "user.dept.invalid")
+				impexp.AppendImportError(result, rowNumber, "deptPath", userDeptInvalidKey)
 			}
 		}
 		var postID uint64
@@ -892,7 +900,7 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 			RoleIDs:  roleIDs,
 		}
 		if strings.TrimSpace(password) == "" {
-			impexp.AppendImportError(result, rowNumber, "password", "user.password.required")
+			impexp.AppendImportError(result, rowNumber, "password", userPasswordRequiredKey)
 		}
 		if err := s.validateUserCreate(createReq); err != nil {
 			impexp.AppendImportError(result, rowNumber, "username", err.Error())
@@ -1178,7 +1186,7 @@ func (s *UserService) ensurePostForDept(deptID uint64, postID uint64) error {
 		return nil
 	}
 	if deptID == 0 {
-		return errors.New("user.post.dept_required")
+		return errors.New(userPostDeptRequiredKey)
 	}
 	type postRow struct {
 		ID     uint64 `gorm:"column:id"`
@@ -1195,7 +1203,7 @@ func (s *UserService) ensurePostForDept(deptID uint64, postID uint64) error {
 		return errors.New(userPostInvalidKey)
 	}
 	if post.DeptID > 0 && post.DeptID != deptID {
-		return errors.New("user.post.dept_mismatch")
+		return errors.New(userPostDeptMismatchKey)
 	}
 	return nil
 }
@@ -1495,7 +1503,7 @@ func (s *UserService) allocateDeletedUsername(tx *gorm.DB, userID uint64) (strin
 		}
 	}
 
-	return "", errors.New("user.delete.error.archive_username_conflict")
+	return "", errors.New(userArchiveUsernameConflictKey)
 }
 
 func validateOptionalEmail(value string) error {
@@ -1538,7 +1546,7 @@ func marshalUserProfileExt(profileExt map[string]interface{}) (string, error) {
 		return "", errors.New(userProfileExtInvalidKey)
 	}
 	if len(data) > maxUserProfileExtBytes {
-		return "", errors.New("user.profile_ext.too_large")
+		return "", errors.New(userProfileExtTooLargeKey)
 	}
 	return string(data), nil
 }
