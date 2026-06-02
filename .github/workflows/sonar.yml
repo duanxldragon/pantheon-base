@@ -1,10 +1,17 @@
 name: SonarCloud Auxiliary Scan
 
 on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: sonar-${{ github.ref }}
@@ -31,15 +38,27 @@ jobs:
       - name: Generate Go coverage
         run: go test ./... -coverprofile=coverage.out
 
-      - name: Run SonarCloud scan
-        if: ${{ github.ref_name == 'main' }}
+      - name: Run SonarCloud PR scan
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+            -Dsonar.pullrequest.branch=${{ github.head_ref }}
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+
+      - name: Run SonarCloud main scan
+        if: ${{ github.event_name != 'pull_request' && github.ref_name == 'main' }}
         uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
 
       - name: Run SonarCloud branch scan
-        if: ${{ github.ref_name != 'main' }}
+        if: ${{ github.event_name != 'pull_request' && github.ref_name != 'main' }}
         uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
