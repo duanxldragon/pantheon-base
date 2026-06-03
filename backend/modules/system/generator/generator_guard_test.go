@@ -68,4 +68,40 @@ func TestGeneratorService_GuardBranches(t *testing.T) {
 	if _, err := normalizeDatasourceReq(&UpsertGeneratorDatasourceReq{Name: "demo", Driver: "mysql", Host: "db.example.com", DatabaseName: "pantheon", Username: "root"}, true); err == nil || err.Error() != "generator.datasource.password_required" {
 		t.Fatalf("expected missing password error, got %v", err)
 	}
+	if err := validateDatasourceHost("localhost"); err == nil || err.Error() != generatorDatasourceHostInvalidKey {
+		t.Fatalf("expected localhost host error, got %v", err)
+	}
+	if _, err := parseDatasourceNumericID(" "); err == nil || err.Error() != generatorDatasourceNotFoundKey {
+		t.Fatalf("expected blank datasource id error, got %v", err)
+	}
+}
+
+func TestGeneratorService_NilDBDatasourceGuards(t *testing.T) {
+	service := NewGeneratorService(nil)
+
+	cases := []struct {
+		name string
+		run  func() error
+	}{
+		{"list datasources", func() error { _, err := service.ListDatasources(); return err }},
+		{"create datasource", func() error {
+			_, err := service.CreateDatasource(&UpsertGeneratorDatasourceReq{Name: "primary", Driver: "mysql", Host: "db.example.com", DatabaseName: "pantheon", Username: "root", Password: "secret"})
+			return err
+		}},
+		{"update datasource", func() error {
+			_, err := service.UpdateDatasource("1", &UpsertGeneratorDatasourceReq{Name: "primary", Driver: "mysql", Host: "db.example.com", DatabaseName: "pantheon", Username: "root"})
+			return err
+		}},
+		{"delete datasource", func() error { return service.DeleteDatasource("1") }},
+		{"test datasource", func() error { _, err := service.TestDatasource("1"); return err }},
+		{"open schema reader", func() error { _, err := service.openSchemaReader("1"); return err }},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.run(); err == nil || err.Error() != generatorDatasourceDatabaseNotInitializedKey {
+				t.Fatalf("expected %s, got %v", generatorDatasourceDatabaseNotInitializedKey, err)
+			}
+		})
+	}
 }

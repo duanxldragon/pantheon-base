@@ -67,4 +67,59 @@ func TestDeptService_GuardBranches(t *testing.T) {
 	if _, err := service.BatchUpdateDeptLeader(nil); err == nil || err.Error() != "dept.batch.empty" {
 		t.Fatalf("expected empty dept leader batch error, got %v", err)
 	}
+	if err := service.validateDeptUpdate(&SystemDept{ID: 1, IsRoot: 1}, &DeptUpdateReq{ParentID: 2, Status: 1}); err == nil || err.Error() != "dept.root.parent_fixed" {
+		t.Fatalf("expected root-parent-fixed error, got %v", err)
+	}
+	if err := service.validateDeptUpdate(&SystemDept{ID: 1, IsRoot: 1}, &DeptUpdateReq{ParentID: 0, Status: 2}); err == nil || err.Error() != "dept.root.status_fixed" {
+		t.Fatalf("expected root-status-fixed error, got %v", err)
+	}
+	if err := service.validateDeptUpdate(&SystemDept{ID: 9}, &DeptUpdateReq{ParentID: 0, Status: 1}); err == nil || err.Error() != "dept.parent.required" {
+		t.Fatalf("expected non-root parent-required error, got %v", err)
+	}
+	if _, _, err := service.resolveDeptLeaderFields(0, "", 1); err == nil || err.Error() != "dept.leader.bind_after_create" {
+		t.Fatalf("expected leader-bind-after-create resolve error, got %v", err)
+	}
+}
+
+func TestDeptService_NilDBPublicGuards(t *testing.T) {
+	service := NewDeptService(nil)
+
+	cases := []struct {
+		name string
+		run  func() error
+	}{
+		{"migrate", service.Migrate},
+		{"get tree", func() error { _, err := service.GetDeptTree(nil); return err }},
+		{"get overview", func() error { _, err := service.GetOverview(); return err }},
+		{"list governance tasks", func() error { _, err := service.ListGovernanceTasks(nil); return err }},
+		{"list leader candidates", func() error { _, err := service.ListLeaderCandidates(1); return err }},
+		{"create dept", func() error {
+			_, err := service.CreateDept(&DeptCreateReq{ParentID: 1, DeptName: "研发中心", Status: 1})
+			return err
+		}},
+		{"update dept", func() error {
+			_, err := service.UpdateDept(1, &DeptUpdateReq{ParentID: 1, DeptName: "研发中心", Status: 1})
+			return err
+		}},
+		{"delete dept", func() error { return service.DeleteDept(1) }},
+		{"batch update status", func() error { _, err := service.BatchUpdateDeptStatus([]uint64{1}, 1); return err }},
+		{"batch update leader", func() error {
+			_, err := service.BatchUpdateDeptLeader([]DeptBatchLeaderItem{{DeptID: 1, LeaderUserID: 1}})
+			return err
+		}},
+		{"export depts", func() error { _, err := service.ExportDepts(nil); return err }},
+		{"import depts", func() error { _, err := service.ImportDepts([][]string{{"deptName"}}); return err }},
+		{"load dept post counts", func() error { _, err := service.loadDeptPostCounts(); return err }},
+		{"load dept child counts", func() error { _, err := service.loadDeptChildCounts(); return err }},
+		{"load dept user counts", func() error { _, err := service.loadDeptUserCounts(); return err }},
+		{"load post user counts", func() error { _, err := service.loadPostUserCounts(); return err }},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.run(); err == nil || err.Error() != deptDatabaseNotInitializedKey {
+				t.Fatalf("expected %s, got %v", deptDatabaseNotInitializedKey, err)
+			}
+		})
+	}
 }

@@ -54,4 +54,45 @@ func TestMenuService_GuardBranches(t *testing.T) {
 	if err := service.ensurePathUnique(0, "/demo"); err == nil || err.Error() != "menu.path.exists" {
 		t.Fatalf("expected duplicate path error, got %v", err)
 	}
+	if err := service.validateMenuCreate(&MenuCreateReq{Type: "C", RouteName: "demo"}); err == nil || err.Error() != menuPagePermRequiredKey {
+		t.Fatalf("expected page-perm-required error, got %v", err)
+	}
+	if err := service.validateMenuCreate(&MenuCreateReq{Type: "F", ParentID: 1, Path: "/demo"}); err == nil || err.Error() != menuPermsRequiredKey {
+		t.Fatalf("expected perms-required error, got %v", err)
+	}
+	if err := service.validateMenuCreate(&MenuCreateReq{Type: "C", ParentID: 1, RouteName: "external", Path: "demo", IsExternal: 1}); err == nil || err.Error() != menuPathInvalidExternalKey {
+		t.Fatalf("expected invalid-external-path error, got %v", err)
+	}
+	if err := service.validateMenuCreate(&MenuCreateReq{Type: "C", ParentID: 1, RouteName: "comp", PagePerm: "system:demo:list"}); err == nil || err.Error() != menuComponentRequiredKey {
+		t.Fatalf("expected component-required error, got %v", err)
+	}
+}
+
+func TestMenuService_NilDBPublicGuards(t *testing.T) {
+	service := NewMenuService(nil)
+
+	cases := []struct {
+		name string
+		run  func() error
+	}{
+		{"migrate", service.Migrate},
+		{"get menu tree", func() error { _, err := service.GetMenuTree(nil, nil); return err }},
+		{"create menu", func() error {
+			_, err := service.CreateMenu(&MenuCreateReq{Type: "M", TitleKey: "system.menu.demo", Path: "/demo"})
+			return err
+		}},
+		{"update menu", func() error {
+			_, err := service.UpdateMenu(1, &MenuUpdateReq{Type: "M", TitleKey: "system.menu.demo", Path: "/demo"})
+			return err
+		}},
+		{"delete menu", func() error { return service.DeleteMenu(1) }},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.run(); err == nil || err.Error() != menuDatabaseNotInitializedKey {
+				t.Fatalf("expected %s, got %v", menuDatabaseNotInitializedKey, err)
+			}
+		})
+	}
 }

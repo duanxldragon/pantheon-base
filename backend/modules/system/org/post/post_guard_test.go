@@ -29,7 +29,8 @@ func TestPostHandler_NilDBServicePaths(t *testing.T) {
 }
 
 func TestPostService_GuardBranches(t *testing.T) {
-	service := NewPostService(setupPostTestDB(t))
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
 
 	if _, err := service.BatchUpdatePostStatus(nil, 1); err == nil || err.Error() != "post.batch.empty" {
 		t.Fatalf("expected empty post batch error, got %v", err)
@@ -45,5 +46,41 @@ func TestPostService_GuardBranches(t *testing.T) {
 	}
 	if err := service.ensurePostDeptID(999); err == nil || err.Error() != "post.dept.invalid" {
 		t.Fatalf("expected invalid dept error, got %v", err)
+	}
+	if err := service.ensurePostDeptID(1); err == nil || err.Error() != postDeptRootForbiddenKey {
+		t.Fatalf("expected root-dept forbidden error, got %v", err)
+	}
+}
+
+func TestPostService_NilDBPublicGuards(t *testing.T) {
+	service := NewPostService(nil)
+
+	cases := []struct {
+		name string
+		run  func() error
+	}{
+		{"migrate", service.Migrate},
+		{"list posts", func() error { _, err := service.ListPosts(nil); return err }},
+		{"create post", func() error {
+			_, err := service.CreatePost(&PostCreateReq{DeptID: 1, PostCode: "developer", PostName: "研发工程师", Status: 1})
+			return err
+		}},
+		{"update post", func() error {
+			_, err := service.UpdatePost(1, &PostUpdateReq{DeptID: 1, PostCode: "developer", PostName: "研发工程师", Status: 1})
+			return err
+		}},
+		{"delete post", func() error { return service.DeletePost(1) }},
+		{"batch update status", func() error { _, err := service.BatchUpdatePostStatus([]uint64{1}, 1); return err }},
+		{"export posts", func() error { _, err := service.ExportPosts(nil); return err }},
+		{"import posts", func() error { _, err := service.ImportPosts([][]string{{"deptPath"}}); return err }},
+		{"load post user counts", func() error { _, err := service.loadPostUserCounts(); return err }},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.run(); err == nil || err.Error() != postDatabaseNotInitializedKey {
+				t.Fatalf("expected %s, got %v", postDatabaseNotInitializedKey, err)
+			}
+		})
 	}
 }

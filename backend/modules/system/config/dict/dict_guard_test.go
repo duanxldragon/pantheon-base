@@ -107,4 +107,70 @@ func TestDictService_GuardBranches(t *testing.T) {
 	if result.Failed != 1 {
 		t.Fatalf("expected one import-item error for empty file, got %+v", result)
 	}
+
+	headerOnly, err := service.ImportDictTypes([][]string{{"dictCode"}})
+	if err != nil {
+		t.Fatalf("expected import-type header validation result, got %v", err)
+	}
+	if headerOnly.Failed == 0 {
+		t.Fatalf("expected header validation failures for dict-type import, got %+v", headerOnly)
+	}
+
+	itemHeaderOnly, err := service.ImportDictItems([][]string{{"dictCode"}})
+	if err != nil {
+		t.Fatalf("expected import-item header validation result, got %v", err)
+	}
+	if itemHeaderOnly.Failed == 0 {
+		t.Fatalf("expected header validation failures for dict-item import, got %+v", itemHeaderOnly)
+	}
+
+	if err := service.validateDictItem(0, " ", " "); err == nil || err.Error() != dictParamInvalidKey {
+		t.Fatalf("expected blank dict-item param error, got %v", err)
+	}
+}
+
+func TestDictService_NilDBPublicGuards(t *testing.T) {
+	service := NewDictService(nil)
+
+	cases := []struct {
+		name string
+		run  func() error
+	}{
+		{"migrate", service.Migrate},
+		{"list dict types", func() error { _, err := service.ListDictTypes(nil); return err }},
+		{"create dict type", func() error {
+			_, err := service.CreateDictType(&DictTypeCreateReq{DictCode: "biz_status", DictName: "业务状态", Status: 1})
+			return err
+		}},
+		{"import dict types", func() error { _, err := service.ImportDictTypes([][]string{{"dictCode"}}); return err }},
+		{"update dict type", func() error {
+			_, err := service.UpdateDictType(1, &DictTypeUpdateReq{DictCode: "biz_status", DictName: "业务状态", Status: 1})
+			return err
+		}},
+		{"delete dict type", func() error { return service.DeleteDictType(1) }},
+		{"batch update dict type status", func() error { _, err := service.BatchUpdateDictTypeStatus([]uint64{1}, 1); return err }},
+		{"list dict items", func() error { _, err := service.ListDictItems(&DictItemListQuery{DictCode: "biz_status"}); return err }},
+		{"create dict item", func() error {
+			_, err := service.CreateDictItem(&DictItemCreateReq{DictCode: "biz_status", ItemLabelKey: "dict.biz_status.enabled", ItemValue: "enabled", Status: 1})
+			return err
+		}},
+		{"import dict items", func() error { _, err := service.ImportDictItems([][]string{{"dictCode"}}); return err }},
+		{"update dict item", func() error {
+			_, err := service.UpdateDictItem(1, &DictItemUpdateReq{DictCode: "biz_status", ItemLabelKey: "dict.biz_status.enabled", ItemValue: "enabled", Status: 1})
+			return err
+		}},
+		{"delete dict item", func() error { return service.DeleteDictItem(1) }},
+		{"batch update dict item status", func() error { _, err := service.BatchUpdateDictItemStatus([]uint64{1}, 1); return err }},
+		{"reorder dict item", func() error { _, err := service.ReorderDictItem(1, "up"); return err }},
+		{"get dict options", func() error { _, err := service.GetDictOptions([]string{"biz_status"}); return err }},
+		{"refresh dict cache", func() error { _, err := service.RefreshDictOptionsCache([]string{"biz_status"}); return err }},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.run(); err == nil || err.Error() != dictDatabaseNotInitializedKey {
+				t.Fatalf("expected %s, got %v", dictDatabaseNotInitializedKey, err)
+			}
+		})
+	}
 }

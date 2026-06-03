@@ -116,3 +116,43 @@ func TestI18nService_RenameGuardBranches(t *testing.T) {
 		t.Fatalf("expected target-exists rename error, got %v", err)
 	}
 }
+
+func TestI18nHandler_InvalidGuardBranches(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler := NewI18nHandler(NewI18nService(nil))
+
+	handler.DeleteArchivedUnusedKeys(newI18nJSONContext(http.MethodPost, "/", "{"))
+	handler.ReloadCache(newI18nJSONContext(http.MethodPost, "/", "{"))
+
+	context := newI18nJSONContext(http.MethodGet, "/", "")
+	context.Params = gin.Params{{Key: i18nIDParamKey, Value: "bad"}}
+	handler.Get(context)
+
+	context = newI18nJSONContext(http.MethodPut, "/", `{"value":"ok"}`)
+	context.Params = gin.Params{{Key: i18nIDParamKey, Value: "bad"}}
+	handler.Update(context)
+
+	context = newI18nJSONContext(http.MethodDelete, "/", "")
+	context.Params = gin.Params{{Key: i18nIDParamKey, Value: "bad"}}
+	handler.Delete(context)
+}
+
+func TestI18nService_GuardBranches(t *testing.T) {
+	service := NewI18nService(nil)
+
+	if _, err := service.Create(&I18nCreateReq{}); err == nil || err.Error() != i18nCreateInvalidKey {
+		t.Fatalf("expected create-invalid error, got %v", err)
+	}
+	if err := service.Update(1, &I18nUpdateReq{Value: " "}); err == nil || err.Error() != i18nValueRequiredKey {
+		t.Fatalf("expected value-required error, got %v", err)
+	}
+	if _, err := service.Import([][]string{{"module"}}); err == nil || err.Error() != i18nDatabaseNotInitializedKey {
+		t.Fatalf("expected import nil-db guard, got %v", err)
+	}
+	if _, err := service.DeleteArchivedUnusedKeys("system.config", false); err == nil || err.Error() != i18nLifecycleDeleteConfirmKey {
+		t.Fatalf("expected delete confirm-required error, got %v", err)
+	}
+	if _, err := service.transitionUnusedLifecycle("system.config", I18nLifecycleStatusActive, I18nLifecycleStatusObserving, true); err == nil || err.Error() != i18nLifecycleTransitionInvalidKey {
+		t.Fatalf("expected lifecycle transition invalid error, got %v", err)
+	}
+}
