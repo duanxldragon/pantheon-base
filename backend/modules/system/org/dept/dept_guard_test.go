@@ -39,6 +39,9 @@ func TestDeptHandler_NilDBServicePaths(t *testing.T) {
 
 func TestDeptService_GuardBranches(t *testing.T) {
 	service := NewDeptService(setupDeptTestDB(t))
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate dept service: %v", err)
+	}
 
 	if err := service.validateDeptCreate(&DeptCreateReq{}); err == nil || err.Error() != "dept.parent.required" {
 		t.Fatalf("expected missing-parent create error, got %v", err)

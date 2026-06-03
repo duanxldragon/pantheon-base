@@ -1704,9 +1704,6 @@ func (s *I18nService) ListMissingLocales(module string) (*I18nMissingLocaleResp,
 		missing := make([]string, 0, len(locales))
 		for _, locale := range locales {
 			if _, ok := meta.locales[locale]; !ok {
-				if _, builtinOk := getBuiltinLocaleValue(locale, key); builtinOk {
-					continue
-				}
 				missing = append(missing, locale)
 			}
 		}

@@ -182,7 +182,7 @@ func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query str
 		if service.db.Dialector.Name() == "mysql" {
 			for index, column := range columns {
 				if strings.EqualFold(column, "key") && values[index] != nil {
-					plan = append(plan, fmt.Sprint(values[index]))
+					plan = append(plan, explainPlanValue(values[index]))
 					break
 				}
 			}
@@ -196,6 +196,15 @@ func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query str
 		t.Fatal("expected query plan rows")
 	}
 	return plan
+}
+
+func explainPlanValue(value any) string {
+	switch typed := value.(type) {
+	case []byte:
+		return string(typed)
+	default:
+		return fmt.Sprint(value)
+	}
 }
 
 func containsAnyPlanToken(plan []string, token string) bool {

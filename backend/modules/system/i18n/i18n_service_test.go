@@ -808,7 +808,7 @@ func TestI18nService_GetAudit(t *testing.T) {
 
 	items := []SystemI18n{
 		{Module: "test.config", Group: "messages", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "配置冲突"},
-		{Module: "test.iam", Group: "labels", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "用户冲突"},
+		{Module: "test.iam", Group: "labels", Key: "shared.audit.conflict", Locale: "en-US", Value: "User conflict"},
 		{Module: "test.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "zh-CN", Value: "未使用"},
 		{Module: "test.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "en-US", Value: "[zz.audit.unused.key]"},
 	}
@@ -1045,7 +1045,7 @@ func TestI18nService_CleanupUnusedKeysByModule(t *testing.T) {
 
 	items := []SystemI18n{
 		{Module: "test.config", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "清理我"},
-		{Module: "test.iam", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "别删我"},
+		{Module: "test.iam", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "en-US", Value: "别删我"},
 	}
 	if err := service.BatchInsert(items); err != nil {
 		t.Fatalf("seed items: %v", err)

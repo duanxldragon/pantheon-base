@@ -826,6 +826,7 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 			UserID:           7,
 			RefreshJTI:       "jti-other-active",
 			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
 			CreatedAt:        now.Add(-time.Hour),
 		},
 		{
@@ -833,6 +834,7 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 			UserID:           7,
 			RefreshJTI:       "jti-current-active",
 			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-2 * time.Minute)),
 			CreatedAt:        now.Add(-2 * time.Hour),
 		},
 		{
@@ -1271,7 +1273,6 @@ func TestAuthService_CleanupHistoricSessionsDeletesRevokedHistoryOnly(t *testing
 	db := setupTestDB(t)
 	s := NewAuthService(db)
 	now := time.Now()
-	revokedAt := now.Add(-time.Hour)
 
 	testUser := user.SystemUser{Username: "session-clean-user", Status: 1}
 	if err := db.Create(&testUser).Error; err != nil {
@@ -1283,7 +1284,7 @@ func TestAuthService_CleanupHistoricSessionsDeletesRevokedHistoryOnly(t *testing
 			UserID:           testUser.ID,
 			RefreshJTI:       "revoked-jti",
 			RefreshExpiresAt: now.AddDate(0, 0, -1),
-			RevokedAt:        &revokedAt,
+			RevokedAt:        timePtr(now.AddDate(0, 0, -2)),
 			CreatedAt:        now.AddDate(0, 0, -10),
 		},
 		{
@@ -1365,7 +1366,7 @@ func TestAuditService_ExportOperationLogs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("export operation logs: %v", err)
 	}
-	if len(exported.Rows) != 1 || exported.Rows[0][0] != "导出用户" {
+	if len(exported.Rows) != 1 || exported.Rows[0][1] != "导出用户" {
 		t.Fatalf("unexpected exported operation log rows: %+v", exported.Rows)
 	}
 }

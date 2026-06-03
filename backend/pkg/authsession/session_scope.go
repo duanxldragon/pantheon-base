@@ -43,19 +43,21 @@ func CleanupInactiveSessions(db *gorm.DB, now time.Time, idleMinutes int) error 
 }
 
 func CleanupUserOverflowSessions(db *gorm.DB, userID uint64, now time.Time, idleMinutes int, maxActiveSessions int) error {
-	if db == nil || userID == 0 || maxActiveSessions <= 0 {
+	if db == nil || userID == 0 {
 		return nil
 	}
 
 	var keepIDs []string
-	query := ApplyActiveScope(db.Table("system_user_session"), "", now, idleMinutes).
-		Select("session_id").
-		Where("user_id = ?", userID).
-		Order(lastSeenExpr("") + " desc").
-		Order("created_at desc").
-		Limit(maxActiveSessions)
-	if err := query.Pluck("session_id", &keepIDs).Error; err != nil {
-		return err
+	if maxActiveSessions > 0 {
+		query := ApplyActiveScope(db.Table("system_user_session"), "", now, idleMinutes).
+			Select("session_id").
+			Where("user_id = ?", userID).
+			Order(lastSeenExpr("") + " desc").
+			Order("created_at desc").
+			Limit(maxActiveSessions)
+		if err := query.Pluck("session_id", &keepIDs).Error; err != nil {
+			return err
+		}
 	}
 
 	overflow := db.Table("system_user_session").

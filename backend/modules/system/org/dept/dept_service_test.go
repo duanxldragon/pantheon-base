@@ -20,14 +20,12 @@ func TestDeptService_MigrateCreatesRootAndReparentsTopLevel(t *testing.T) {
 	if err := db.AutoMigrate(&SystemDept{}); err != nil {
 		t.Fatalf("migrate dept table: %v", err)
 	}
-	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status) VALUES (10, 0, '', 0, '研发中心', 1)`).Error; err != nil {
-		t.Fatalf("seed dept 10: %v", err)
-	}
-	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status) VALUES (11, 10, '10', 0, '平台研发部', 1)`).Error; err != nil {
-		t.Fatalf("seed dept 11: %v", err)
-	}
-	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status) VALUES (12, 0, '', 0, '财务部', 1)`).Error; err != nil {
-		t.Fatalf("seed dept 12: %v", err)
+	if err := db.Create(&[]SystemDept{
+		{ID: 10, ParentID: 0, Ancestors: "", IsRoot: 0, DeptName: "研发中心", Status: 1},
+		{ID: 11, ParentID: 10, Ancestors: "10", IsRoot: 0, DeptName: "平台研发部", Status: 1},
+		{ID: 12, ParentID: 0, Ancestors: "", IsRoot: 0, DeptName: "财务部", Status: 1},
+	}).Error; err != nil {
+		t.Fatalf("seed depts: %v", err)
 	}
 
 	service := NewDeptService(db)
@@ -95,6 +93,9 @@ func TestDeptService_DeleteIgnoresSoftDeletedUsers(t *testing.T) {
 	}
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user (id INTEGER PRIMARY KEY, dept_id INTEGER, deleted_at DATETIME)").Error; err != nil {
 		t.Fatalf("create user fixture: %v", err)
+	}
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_post (id INTEGER PRIMARY KEY, dept_id INTEGER, deleted_at DATETIME)").Error; err != nil {
+		t.Fatalf("create post fixture: %v", err)
 	}
 
 	var root SystemDept
@@ -410,7 +411,9 @@ func TestDeptService_GetDeptTreeSupportsGovernanceFilter(t *testing.T) {
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
-		status INTEGER
+		sort INTEGER,
+		status INTEGER,
+		deleted_at DATETIME
 	)`).Error; err != nil {
 		t.Fatalf("create post table: %v", err)
 	}

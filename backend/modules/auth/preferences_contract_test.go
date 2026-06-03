@@ -29,6 +29,9 @@ func setupPreferenceContractRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT)").Error; err != nil {
 		t.Fatalf("create role table: %v", err)
 	}
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(191) PRIMARY KEY, setting_value TEXT)").Error; err != nil {
+		t.Fatalf("create setting table: %v", err)
+	}
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)").Error; err != nil {
 		t.Fatalf("create user role table: %v", err)
 	}
