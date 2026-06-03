@@ -28,7 +28,8 @@ For Chinese-first onboarding, read:
 6. [designs/BACKEND.md](./designs/BACKEND.md)
 7. [designs/FRONTEND.md](./designs/FRONTEND.md)
 8. [acceptances/ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
-9. [designs/README.md](./designs/README.md)
+9. [acceptances/AGENT_EXECUTION_CHECKLIST.md](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
+10. [designs/README.md](./designs/README.md)
 
 ## Active Document Groups
 
@@ -63,6 +64,7 @@ For Chinese-first onboarding, read:
 ### Acceptance and delivery
 
 - [acceptances/ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
+- [acceptances/AGENT_EXECUTION_CHECKLIST.md](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 - [acceptances/TASK_PACKET_BASE_TEMPLATE.md](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)
 - [acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
 - [acceptances/CODE_REVIEW_STANDARD.md](./acceptances/CODE_REVIEW_STANDARD.md)
