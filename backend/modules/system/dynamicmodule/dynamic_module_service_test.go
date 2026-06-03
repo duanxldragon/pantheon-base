@@ -157,6 +157,49 @@ func TestRegisterGeneratedModulePersistsAutoRecycleFlag(t *testing.T) {
 	}
 }
 
+func TestRegisterGeneratedModuleRejectsReservedAndExistingManagedModule(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	reserved := ModuleRegistration{
+		Name:        "business.asset",
+		DisplayName: "资产管理",
+		Scope:       "business",
+		Source:      "static",
+		Status:      ModuleStatusActive,
+		InstalledAt: "2026-05-01T00:00:00Z",
+	}
+	if err := db.Create(&reserved).Error; err != nil {
+		t.Fatalf("seed reserved registration: %v", err)
+	}
+
+	if _, _, _, err := service.RegisterGeneratedModule(newGeneratedModuleRequest("business", "asset", "资产管理", "biz_asset")); err == nil || err.Error() != dynamicModuleReservedKey {
+		t.Fatalf("expected reserved generated-module error, got %v", err)
+	}
+
+	existing := ModuleRegistration{
+		Name:           "business.vendor",
+		DisplayName:    "供应商管理",
+		Scope:          "business",
+		Source:         "generated",
+		ModelTableName: "biz_vendor",
+		Status:         ModuleStatusActive,
+		InstalledAt:    "2026-05-01T00:00:00Z",
+	}
+	if err := db.Create(&existing).Error; err != nil {
+		t.Fatalf("seed existing registration: %v", err)
+	}
+
+	if _, _, _, err := service.RegisterGeneratedModule(newGeneratedModuleRequest("business", "vendor", "供应商管理", "biz_vendor")); err == nil || err.Error() != dynamicModuleAlreadyExistsKey {
+		t.Fatalf("expected existing generated-module error, got %v", err)
+	}
+}
+
 func TestGenerateAndRegisterModuleHandlerPersistsAutoRecycleMetadata(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
@@ -227,6 +270,43 @@ func TestGenerateAndRegisterModuleHandlerPersistsAutoRecycleMetadata(t *testing.
 	}
 	if !schema.Metadata.AutoRecycle {
 		t.Fatal("expected generated schema file to preserve auto recycle flag")
+	}
+}
+
+func TestRegisterManagedModuleRejectsBuiltinAndMissingArtifacts(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	builtin := ModuleRegistration{
+		Name:        "business.cmdb",
+		DisplayName: "配置中心",
+		Scope:       "business",
+		Source:      "static",
+		Status:      ModuleStatusActive,
+		InstalledAt: "2026-05-01T00:00:00Z",
+	}
+	if err := db.Create(&builtin).Error; err != nil {
+		t.Fatalf("seed builtin registration: %v", err)
+	}
+
+	if _, err := service.RegisterManagedModule("business.cmdb"); err == nil || err.Error() != dynamicModuleRegisterBuiltinKey {
+		t.Fatalf("expected builtin managed-module error, got %v", err)
+	}
+
+	mustWriteFile(t, filepath.Join(workspaceRoot, "schema", "generated", "business", "orphan.json"), `{
+  "name": "orphan",
+  "displayName": "孤儿模块",
+  "scope": "business",
+  "model": { "tableName": "biz_orphan" }
+}`)
+
+	if _, err := service.RegisterManagedModule("business.orphan"); err == nil || err.Error() != dynamicModuleSourceMissingKey {
+		t.Fatalf("expected missing-artifact managed-module error, got %v", err)
 	}
 }
 
@@ -456,6 +536,35 @@ func TestGetManagedModuleSchemaLoadsGeneratedSchema(t *testing.T) {
 	}
 	if len(schema.Relations) != 1 || schema.Relations[0].TargetField != "assetId" {
 		t.Fatalf("unexpected schema relations: %+v", schema.Relations)
+	}
+}
+
+func TestGetManagedModuleSchemaRejectsMissingAndInvalidSchema(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	if _, err := service.GetManagedModuleSchema("business.missing"); err == nil || err.Error() != dynamicModuleSourceMissingKey {
+		t.Fatalf("expected missing schema error, got %v", err)
+	}
+
+	mustWriteFile(t, filepath.Join(workspaceRoot, "schema", "generated", "business", "broken.json"), "{")
+	if _, err := service.GetManagedModuleSchema("business.broken"); err == nil || err.Error() != moduleRegisterSchemaInvalidErrorKey {
+		t.Fatalf("expected invalid-json schema error, got %v", err)
+	}
+
+	mustWriteFile(t, filepath.Join(workspaceRoot, "schema", "generated", "business", "incomplete.json"), `{
+  "name": "incomplete",
+  "displayName": "未完成模块",
+  "scope": "business",
+  "model": {}
+}`)
+	if _, err := service.GetManagedModuleSchema("business.incomplete"); err == nil || err.Error() != moduleRegisterSchemaInvalidErrorKey {
+		t.Fatalf("expected incomplete schema error, got %v", err)
 	}
 }
 
@@ -1139,6 +1248,51 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
 			t.Fatalf("expected prefixed system config i18n rows observing, got %s", row.LifecycleStatus)
 		}
+	}
+}
+
+func TestDeleteAndPurgeModuleRejectProtectedStates(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	activeManaged := ModuleRegistration{
+		Name:           "business.asset",
+		DisplayName:    "资产管理",
+		Scope:          "business",
+		Source:         "generated",
+		ModelTableName: "biz_asset",
+		Status:         ModuleStatusActive,
+		InstalledAt:    "2026-05-20T00:00:00Z",
+	}
+	if err := db.Create(&activeManaged).Error; err != nil {
+		t.Fatalf("seed active managed registration: %v", err)
+	}
+	if err := service.DeleteModuleRecord("business.asset"); err == nil || err.Error() != dynamicModuleDeleteRequiresKey {
+		t.Fatalf("expected delete-record protected-state error, got %v", err)
+	}
+
+	staticModule := ModuleRegistration{
+		Name:        "business.cmdb",
+		DisplayName: "配置中心",
+		Scope:       "business",
+		Source:      "static",
+		Status:      ModuleStatusActive,
+		InstalledAt: "2026-05-20T00:00:00Z",
+	}
+	if err := db.Create(&staticModule).Error; err != nil {
+		t.Fatalf("seed static registration: %v", err)
+	}
+
+	if err := service.DeleteModuleRecord("business.cmdb"); err == nil || err.Error() != dynamicModuleUnregisterBuiltinKey {
+		t.Fatalf("expected builtin delete-record error, got %v", err)
+	}
+	if _, err := service.PurgeModule("business.cmdb", false, false); err == nil || err.Error() != dynamicModuleUnregisterBuiltinKey {
+		t.Fatalf("expected builtin purge error, got %v", err)
 	}
 }
 
