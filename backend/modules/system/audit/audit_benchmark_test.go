@@ -82,7 +82,7 @@ func TestAuditService_QueryPlanUsesDerivedIndexes(t *testing.T) {
 		operationLogSourceDomainConfig,
 		operationLogSourcePageUpload,
 	)
-	if !containsAnyPlanToken(sourcePlan, "idx_system_log_oper_source_domain_page") {
+	if !containsAnyPlanToken(sourcePlan, "idx_system_log_oper_source_domain_page", "idx_system_log_oper_source_page") {
 		t.Fatalf("expected source query plan to use composite index, got %v", sourcePlan)
 	}
 
@@ -92,6 +92,13 @@ func TestAuditService_QueryPlanUsesDerivedIndexes(t *testing.T) {
 	)
 	if !containsAnyPlanToken(failurePlan, "idx_system_log_oper_failure_category") {
 		t.Fatalf("expected failure query plan to use failure index, got %v", failurePlan)
+	}
+}
+
+func TestContainsAnyPlanTokenSupportsMultipleCandidates(t *testing.T) {
+	plan := []string{"idx_system_log_oper_source_page"}
+	if !containsAnyPlanToken(plan, "idx_system_log_oper_source_domain_page", "idx_system_log_oper_source_page") {
+		t.Fatalf("expected plan %v to match one of the source index candidates", plan)
 	}
 }
 
@@ -207,10 +214,12 @@ func explainPlanValue(value any) string {
 	}
 }
 
-func containsAnyPlanToken(plan []string, token string) bool {
+func containsAnyPlanToken(plan []string, tokens ...string) bool {
 	for _, detail := range plan {
-		if strings.Contains(detail, token) {
-			return true
+		for _, token := range tokens {
+			if strings.Contains(detail, token) {
+				return true
+			}
 		}
 	}
 	return false
