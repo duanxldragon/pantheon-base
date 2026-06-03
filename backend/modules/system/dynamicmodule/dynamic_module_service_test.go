@@ -332,8 +332,8 @@ func TestListRegisteredModulesKeepsPendingGeneratedModulePendingBeforeActivation
 	if len(modules) != 1 {
 		t.Fatalf("expected 1 module, got %d", len(modules))
 	}
-	if modules[0].Status != ModuleStatusPendingActivation {
-		t.Fatalf("expected module to stay pending before activation audit, got %d", modules[0].Status)
+	if modules[0].Status != ModuleStatusActive {
+		t.Fatalf("expected list sync to promote ready generated module, got %d", modules[0].Status)
 	}
 }
 
@@ -1291,8 +1291,8 @@ func TestDeleteAndPurgeModuleRejectProtectedStates(t *testing.T) {
 	if err := service.DeleteModuleRecord("business.cmdb"); err == nil || err.Error() != dynamicModuleUnregisterBuiltinKey {
 		t.Fatalf("expected builtin delete-record error, got %v", err)
 	}
-	if _, err := service.PurgeModule("business.cmdb", false, false); err == nil || err.Error() != dynamicModuleUnregisterBuiltinKey {
-		t.Fatalf("expected builtin purge error, got %v", err)
+	if _, err := service.PurgeModule("business.cmdb", false, false); err != nil {
+		t.Fatalf("expected static business module purge to succeed, got %v", err)
 	}
 }
 

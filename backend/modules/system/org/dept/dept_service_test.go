@@ -197,7 +197,7 @@ func TestDeptService_BatchUpdateDeptLeader(t *testing.T) {
 	db := setupDeptTestDB(t)
 	service := NewDeptService(db)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
@@ -207,7 +207,7 @@ func TestDeptService_BatchUpdateDeptLeader(t *testing.T) {
 		t.Fatalf("create post table: %v", err)
 	}
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		username TEXT,
 		password TEXT,
 		nickname TEXT,
@@ -275,7 +275,7 @@ func TestDeptService_ListLeaderCandidatesAndUpdateWithLeaderUser(t *testing.T) {
 	db := setupDeptTestDB(t)
 	service := NewDeptService(db)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
@@ -285,7 +285,7 @@ func TestDeptService_ListLeaderCandidatesAndUpdateWithLeaderUser(t *testing.T) {
 		t.Fatalf("create post table: %v", err)
 	}
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		username TEXT,
 		password TEXT,
 		nickname TEXT,
@@ -406,7 +406,7 @@ func TestDeptService_GetDeptTreeIncludesAncestorsForSearch(t *testing.T) {
 func TestDeptService_GetDeptTreeSupportsGovernanceFilter(t *testing.T) {
 	db := setupDeptTestDB(t)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
@@ -527,7 +527,7 @@ func TestDeptService_ImportTemplateAndExport(t *testing.T) {
 func TestDeptService_ExportDeptsSupportsGovernanceFilter(t *testing.T) {
 	db := setupDeptTestDB(t)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
@@ -583,7 +583,7 @@ func TestDeptService_ExportDeptsSupportsGovernanceFilter(t *testing.T) {
 func TestDeptService_ExportDeptsIncludesGovernanceMetrics(t *testing.T) {
 	db := setupDeptTestDB(t)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
@@ -592,7 +592,7 @@ func TestDeptService_ExportDeptsIncludesGovernanceMetrics(t *testing.T) {
 		t.Fatalf("create post table: %v", err)
 	}
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		status INTEGER,
 		deleted_at DATETIME
@@ -667,7 +667,7 @@ func TestDeptService_ExportDeptsIncludesGovernanceMetrics(t *testing.T) {
 func TestDeptService_ListGovernanceTasks(t *testing.T) {
 	db := setupDeptTestDB(t)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,
@@ -676,7 +676,7 @@ func TestDeptService_ListGovernanceTasks(t *testing.T) {
 		t.Fatalf("create post table: %v", err)
 	}
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_id INTEGER,
 		status INTEGER,
@@ -771,7 +771,7 @@ func TestDeptService_ExportGovernanceTasks(t *testing.T) {
 func TestDeptService_GetOverview(t *testing.T) {
 	db := setupDeptTestDB(t)
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_post (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		dept_id INTEGER,
 		post_code TEXT,
 		post_name TEXT,

@@ -256,7 +256,7 @@ func TestPostService_ExportPostsIncludesGovernanceColumns(t *testing.T) {
 	}
 
 	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTO_INCREMENT,
 		post_id INTEGER,
 		deleted_at DATETIME
 	)`).Error; err != nil {

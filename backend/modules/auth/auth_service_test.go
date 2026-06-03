@@ -22,10 +22,10 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 	// 迁移模型
 	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &SystemAuthSecurityEvent{}, &SystemUserPasswordHistory{})
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY AUTOINCREMENT, role_key TEXT, status INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id INTEGER PRIMARY KEY AUTOINCREMENT, role_id INTEGER, permission_key TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(191) PRIMARY KEY, setting_value TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_key TEXT, status INTEGER)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_id BIGINT, permission_key TEXT)")
 	return db
 }
 

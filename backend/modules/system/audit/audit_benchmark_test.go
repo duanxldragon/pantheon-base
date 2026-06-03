@@ -155,22 +155,42 @@ func buildAuditBenchmarkRow(index int) (domain string, page string, failureCateg
 func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query string, args ...any) []string {
 	t.Helper()
 
-	rows, err := service.db.Raw("EXPLAIN QUERY PLAN "+query, args...).Rows()
+	explainSQL := "EXPLAIN QUERY PLAN " + query
+	if service.db.Dialector.Name() == "mysql" {
+		explainSQL = "EXPLAIN " + query
+	}
+	rows, err := service.db.Raw(explainSQL, args...).Rows()
 	if err != nil {
 		t.Fatalf("explain query plan: %v", err)
 	}
 	defer rows.Close()
 
+	columns, err := rows.Columns()
+	if err != nil {
+		t.Fatalf("list explain columns: %v", err)
+	}
 	plan := make([]string, 0, 4)
+	values := make([]any, len(columns))
+	dest := make([]any, len(columns))
+	for index := range values {
+		dest[index] = &values[index]
+	}
 	for rows.Next() {
-		var selectID int
-		var order int
-		var from int
-		var detail string
-		if err := rows.Scan(&selectID, &order, &from, &detail); err != nil {
+		if err := rows.Scan(dest...); err != nil {
 			t.Fatalf("scan query plan row: %v", err)
 		}
-		plan = append(plan, detail)
+		if service.db.Dialector.Name() == "mysql" {
+			for index, column := range columns {
+				if strings.EqualFold(column, "key") && values[index] != nil {
+					plan = append(plan, fmt.Sprint(values[index]))
+					break
+				}
+			}
+			continue
+		}
+		if len(values) > 0 {
+			plan = append(plan, fmt.Sprint(values[len(values)-1]))
+		}
 	}
 	if len(plan) == 0 {
 		t.Fatal("expected query plan rows")

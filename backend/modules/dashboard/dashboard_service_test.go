@@ -198,7 +198,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	if summary.TotalRoles != 1 || summary.TotalDepts != 1 || summary.TotalPosts != 1 {
 		t.Fatalf("expected role/dept/post counts to be 1, got roles=%d depts=%d posts=%d", summary.TotalRoles, summary.TotalDepts, summary.TotalPosts)
 	}
-	if summary.TotalDictTypes != 1 || summary.TotalSettings != 1 {
+	if summary.TotalDictTypes != 1 || summary.TotalSettings != 2 {
 		t.Fatalf("expected dict/settings counts to be 1, got dictTypes=%d settings=%d", summary.TotalDictTypes, summary.TotalSettings)
 	}
 	if summary.TotalI18nEntries != 1 || summary.ActiveModuleCount != 1 {

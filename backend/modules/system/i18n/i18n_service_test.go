@@ -280,12 +280,16 @@ func TestI18nService_GetOverviewSummarizesCoverage(t *testing.T) {
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
+	baseline, err := service.GetOverview()
+	if err != nil {
+		t.Fatalf("get baseline overview: %v", err)
+	}
 
 	items := []SystemI18n{
-		{Module: "system.config", Group: "messages", Key: "i18n.cover.zh_only", Locale: "zh-CN", Value: "中文"},
-		{Module: "system.config", Group: "messages", Key: "i18n.cover.full", Locale: "zh-CN", Value: "完整"},
-		{Module: "system.config", Group: "messages", Key: "i18n.cover.full", Locale: "en-US", Value: "Full"},
-		{Module: "system.config", Group: "messages", Key: "i18n.cover.placeholder", Locale: "en-US", Value: "[i18n.cover.placeholder]"},
+		{Module: "test.config", Group: "messages", Key: "i18n.cover.zh_only", Locale: "zh-CN", Value: "中文"},
+		{Module: "test.config", Group: "messages", Key: "i18n.cover.full", Locale: "zh-CN", Value: "完整"},
+		{Module: "test.config", Group: "messages", Key: "i18n.cover.full", Locale: "en-US", Value: "Full"},
+		{Module: "test.config", Group: "messages", Key: "i18n.cover.placeholder", Locale: "en-US", Value: "[i18n.cover.placeholder]"},
 	}
 	if err := service.BatchInsert(items); err != nil {
 		t.Fatalf("seed items: %v", err)
@@ -295,17 +299,17 @@ func TestI18nService_GetOverviewSummarizesCoverage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get overview: %v", err)
 	}
-	if overview.TotalEntries != 4 {
-		t.Fatalf("expected total entries 4, got %d", overview.TotalEntries)
+	if overview.TotalEntries != baseline.TotalEntries+4 {
+		t.Fatalf("expected total entry delta 4, baseline=%d current=%d", baseline.TotalEntries, overview.TotalEntries)
 	}
-	if overview.UniqueKeyCount != 3 {
-		t.Fatalf("expected unique key count 3, got %d", overview.UniqueKeyCount)
+	if overview.UniqueKeyCount != baseline.UniqueKeyCount+3 {
+		t.Fatalf("expected unique key delta 3, baseline=%d current=%d", baseline.UniqueKeyCount, overview.UniqueKeyCount)
 	}
-	if overview.MissingValueCount != 1 {
-		t.Fatalf("expected missing value count 1, got %d", overview.MissingValueCount)
+	if overview.MissingValueCount != baseline.MissingValueCount+1 {
+		t.Fatalf("expected missing value delta 1, baseline=%d current=%d", baseline.MissingValueCount, overview.MissingValueCount)
 	}
-	if overview.MissingLocaleCount == 0 {
-		t.Fatalf("expected missing locale count > 0, got %d", overview.MissingLocaleCount)
+	if overview.MissingLocaleCount <= baseline.MissingLocaleCount {
+		t.Fatalf("expected missing locale count to increase, baseline=%d current=%d", baseline.MissingLocaleCount, overview.MissingLocaleCount)
 	}
 	if len(overview.Locales) < 5 {
 		t.Fatalf("expected locale list to contain the configured locales, got %#v", overview.Locales)
@@ -414,6 +418,9 @@ func TestI18nService_FillMissingLocalesUsesBuiltinValue(t *testing.T) {
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
+	if err := db.Where("`key` = ?", "system.menu.session").Delete(&SystemI18n{}).Error; err != nil {
+		t.Fatalf("delete seeded builtin rows: %v", err)
+	}
 
 	if err := service.BatchInsert([]SystemI18n{
 		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "zh-CN", Value: "会话管理"},
@@ -425,8 +432,8 @@ func TestI18nService_FillMissingLocalesUsesBuiltinValue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fill missing locales: %v", err)
 	}
-	if resp.Created == 0 {
-		t.Fatalf("expected created rows")
+	if resp.Created < 4 {
+		t.Fatalf("expected builtin hydration to create missing locales, got %+v", resp)
 	}
 
 	var row SystemI18n
@@ -444,6 +451,13 @@ func TestI18nService_GetOverviewUsesBuiltinCoverage(t *testing.T) {
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
+	if err := db.Where("`key` = ?", "system.menu.session").Delete(&SystemI18n{}).Error; err != nil {
+		t.Fatalf("delete seeded builtin rows: %v", err)
+	}
+	baseline, err := service.GetOverview()
+	if err != nil {
+		t.Fatalf("get baseline overview: %v", err)
+	}
 
 	if err := service.BatchInsert([]SystemI18n{
 		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "zh-CN", Value: "会话管理"},
@@ -456,14 +470,14 @@ func TestI18nService_GetOverviewUsesBuiltinCoverage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get overview: %v", err)
 	}
-	if overview.UniqueKeyCount != 1 {
-		t.Fatalf("expected unique key count 1, got %d", overview.UniqueKeyCount)
+	if overview.UniqueKeyCount != baseline.UniqueKeyCount+1 {
+		t.Fatalf("expected unique key delta 1, baseline=%d current=%d", baseline.UniqueKeyCount, overview.UniqueKeyCount)
 	}
-	if overview.MissingValueCount != 0 {
-		t.Fatalf("expected builtin fallback to clear missing value count, got %d", overview.MissingValueCount)
+	if overview.MissingValueCount != baseline.MissingValueCount {
+		t.Fatalf("expected builtin fallback to keep missing value count unchanged, baseline=%d current=%d", baseline.MissingValueCount, overview.MissingValueCount)
 	}
-	if overview.MissingLocaleCount != 0 {
-		t.Fatalf("expected builtin coverage to clear missing locale count, got %d", overview.MissingLocaleCount)
+	if overview.MissingLocaleCount != baseline.MissingLocaleCount {
+		t.Fatalf("expected builtin coverage to keep missing locale count unchanged, baseline=%d current=%d", baseline.MissingLocaleCount, overview.MissingLocaleCount)
 	}
 }
 
@@ -472,6 +486,9 @@ func TestI18nService_HydrateBuiltinLocales(t *testing.T) {
 	service := NewI18nService(db)
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate: %v", err)
+	}
+	if err := db.Where("`key` = ?", "system.menu.session").Delete(&SystemI18n{}).Error; err != nil {
+		t.Fatalf("delete seeded builtin rows: %v", err)
 	}
 
 	if err := service.BatchInsert([]SystemI18n{
@@ -790,10 +807,10 @@ func TestI18nService_GetAudit(t *testing.T) {
 	}
 
 	items := []SystemI18n{
-		{Module: "system.config", Group: "messages", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "配置冲突"},
-		{Module: "system.iam", Group: "labels", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "用户冲突"},
-		{Module: "system.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "zh-CN", Value: "未使用"},
-		{Module: "system.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "en-US", Value: "[zz.audit.unused.key]"},
+		{Module: "test.config", Group: "messages", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "配置冲突"},
+		{Module: "test.iam", Group: "labels", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "用户冲突"},
+		{Module: "test.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "zh-CN", Value: "未使用"},
+		{Module: "test.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "en-US", Value: "[zz.audit.unused.key]"},
 	}
 	if err := service.BatchInsert(items); err != nil {
 		t.Fatalf("seed items: %v", err)
@@ -830,8 +847,8 @@ func TestI18nService_GetAudit(t *testing.T) {
 	for _, item := range resp.UnusedKeys {
 		if item.Key == "zz.audit.unused.key" {
 			foundUnused = true
-			if !containsString(item.Modules, "system.config") {
-				t.Fatalf("expected unused key module system.config, got %#v", item.Modules)
+			if !containsString(item.Modules, "test.config") {
+				t.Fatalf("expected unused key module test.config, got %#v", item.Modules)
 			}
 		}
 	}
@@ -1027,14 +1044,14 @@ func TestI18nService_CleanupUnusedKeysByModule(t *testing.T) {
 	}
 
 	items := []SystemI18n{
-		{Module: "system.config", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "清理我"},
-		{Module: "system.iam", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "别删我"},
+		{Module: "test.config", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "清理我"},
+		{Module: "test.iam", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "别删我"},
 	}
 	if err := service.BatchInsert(items); err != nil {
 		t.Fatalf("seed items: %v", err)
 	}
 
-	resp, err := service.CleanupUnusedKeys("system.config")
+	resp, err := service.CleanupUnusedKeys("test.config")
 	if err != nil {
 		t.Fatalf("cleanup unused keys: %v", err)
 	}
@@ -1043,13 +1060,13 @@ func TestI18nService_CleanupUnusedKeysByModule(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&SystemI18n{}).Where("module = ? AND `key` = ?", "system.config", "zz.audit.cleanup.key").Count(&count).Error; err != nil {
+	if err := db.Model(&SystemI18n{}).Where("module = ? AND `key` = ?", "test.config", "zz.audit.cleanup.key").Count(&count).Error; err != nil {
 		t.Fatalf("count cleaned row: %v", err)
 	}
 	if count != 0 {
 		t.Fatalf("expected cleaned module row deleted, got %d", count)
 	}
-	if err := db.Model(&SystemI18n{}).Where("module = ? AND `key` = ?", "system.iam", "zz.audit.cleanup.key").Count(&count).Error; err != nil {
+	if err := db.Model(&SystemI18n{}).Where("module = ? AND `key` = ?", "test.iam", "zz.audit.cleanup.key").Count(&count).Error; err != nil {
 		t.Fatalf("count preserved row: %v", err)
 	}
 	if count != 1 {
@@ -1065,22 +1082,22 @@ func TestI18nService_ExportByModule(t *testing.T) {
 	}
 
 	items := []SystemI18n{
-		{Module: "system.config", Group: "messages", Key: "i18n.export.module", Locale: "zh-CN", Value: "导出模块"},
-		{Module: "system.iam", Group: "messages", Key: "i18n.export.other", Locale: "zh-CN", Value: "其他模块"},
+		{Module: "test.config", Group: "messages", Key: "i18n.export.module", Locale: "zh-CN", Value: "导出模块"},
+		{Module: "test.iam", Group: "messages", Key: "i18n.export.other", Locale: "zh-CN", Value: "其他模块"},
 	}
 	if err := service.BatchInsert(items); err != nil {
 		t.Fatalf("seed items: %v", err)
 	}
 
-	file, err := service.Export(&I18nQuery{Module: "system.config"})
+	file, err := service.Export(&I18nQuery{Module: "test.config"})
 	if err != nil {
 		t.Fatalf("export by module: %v", err)
 	}
 	if len(file.Rows) != 1 {
 		t.Fatalf("expected one exported row, got %d", len(file.Rows))
 	}
-	if file.Rows[0][0] != "system.config" {
-		t.Fatalf("expected exported module system.config, got %#v", file.Rows[0])
+	if file.Rows[0][0] != "test.config" {
+		t.Fatalf("expected exported module test.config, got %#v", file.Rows[0])
 	}
 }
 

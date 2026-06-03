@@ -57,6 +57,9 @@ func TestParseOperationCleanupWindowRejectsInvalidRanges(t *testing.T) {
 func TestAuditService_ValidationGuards(t *testing.T) {
 	db := setupAuditTestDB(t)
 	service := NewAuditService(db)
+	if err := service.Migrate(); err != nil {
+		t.Fatalf("migrate audit: %v", err)
+	}
 
 	if _, err := service.CleanupOperationLogs(99, "", ""); err == nil || err.Error() != "audit.operation_log.cleanup.days_invalid" {
 		t.Fatalf("expected retention-days validation error, got %v", err)

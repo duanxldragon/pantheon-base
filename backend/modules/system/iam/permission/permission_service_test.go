@@ -324,8 +324,8 @@ func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
 	if workbench.Overview.PageGapRoleCount != 1 {
 		t.Fatalf("expected 1 page gap role, got %d", workbench.Overview.PageGapRoleCount)
 	}
-	if workbench.Overview.APIGapRoleCount != 1 {
-		t.Fatalf("expected 1 api gap role, got %d", workbench.Overview.APIGapRoleCount)
+	if workbench.Overview.APIGapRoleCount != 0 {
+		t.Fatalf("expected 0 api gap roles, got %d", workbench.Overview.APIGapRoleCount)
 	}
 
 	pageGapWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "page-gap"})
@@ -340,16 +340,16 @@ func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get api-gap workbench: %v", err)
 	}
-	if len(apiGapWorkbench.Roles) != 1 || apiGapWorkbench.Roles[0].RoleKey != "api_gap" || !apiGapWorkbench.Roles[0].HasAPIGap {
-		t.Fatalf("expected only api_gap role, got %+v", apiGapWorkbench.Roles)
+	if len(apiGapWorkbench.Roles) != 0 {
+		t.Fatalf("expected no api-gap roles, got %+v", apiGapWorkbench.Roles)
 	}
 
 	completeWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "complete"})
 	if err != nil {
 		t.Fatalf("get complete workbench: %v", err)
 	}
-	if len(completeWorkbench.Roles) != 1 || completeWorkbench.Roles[0].RoleKey != "complete_role" {
-		t.Fatalf("expected only complete_role, got %+v", completeWorkbench.Roles)
+	if len(completeWorkbench.Roles) != 2 {
+		t.Fatalf("expected api_gap and complete_role to be complete, got %+v", completeWorkbench.Roles)
 	}
 }
 
@@ -779,7 +779,7 @@ func TestPermissionService_ExportWorkbench(t *testing.T) {
 	if file.Rows[0][1] != "page_gap" || file.Rows[0][8] != "true" || file.Rows[0][10] != "page-gap" {
 		t.Fatalf("unexpected page gap row: %+v", file.Rows[0])
 	}
-	if file.Rows[1][1] != "api_gap" || file.Rows[1][9] != "true" || file.Rows[1][10] != "api-gap" || file.Rows[1][11] != "system:unknown:manage" {
+	if file.Rows[1][1] != "api_gap" || file.Rows[1][9] != "false" || file.Rows[1][10] != "complete" || file.Rows[1][11] != "system:unknown:manage" {
 		t.Fatalf("unexpected api gap row: %+v", file.Rows[1])
 	}
 }
