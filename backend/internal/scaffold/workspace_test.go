@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -413,9 +414,24 @@ func TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace(t *testi
 	if err != nil {
 		t.Fatalf("resolve workspace root from source fallback: %v", err)
 	}
-	resolvedBase := filepath.Base(filepath.Clean(resolved))
-	if !strings.Contains(resolvedBase, "pantheon-base") {
-		t.Fatalf("expected source-tree fallback under pantheon-base workspace, got %s", resolved)
+	if !isWorkspaceRoot(resolved) {
+		t.Fatalf("expected source-tree fallback to a valid workspace root, got %s", resolved)
+	}
+
+	_, sourceFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("resolve source file path: runtime caller unavailable")
+	}
+	sourceFile, err = filepath.Abs(sourceFile)
+	if err != nil {
+		t.Fatalf("resolve absolute source file path: %v", err)
+	}
+	relativeToRoot, err := filepath.Rel(resolved, sourceFile)
+	if err != nil {
+		t.Fatalf("resolve source file relative path: %v", err)
+	}
+	if relativeToRoot == "." || relativeToRoot == ".." || strings.HasPrefix(relativeToRoot, ".."+string(os.PathSeparator)) {
+		t.Fatalf("expected source file %s to stay under workspace root %s", sourceFile, resolved)
 	}
 }
 
