@@ -38,7 +38,7 @@ type i18nCanonicalEntry struct {
 const (
 	i18nDatabaseNotInitializedKey     = "database.not_initialized"
 	i18nCreateInvalidKey              = "i18n.create.invalid"
-	i18nDuplicateKeyMessageKey        = "i18n.key.duplicate"
+	i18nDuplicateMessageCode          = "i18n.key.duplicate"
 	i18nValueRequiredKey              = "i18n.value.required"
 	i18nLifecycleDeleteConfirmKey     = "i18n.lifecycle.delete.confirm_required"
 	i18nRenameInvalidKey              = "i18n.rename.invalid"
@@ -306,7 +306,7 @@ func (s *I18nService) Create(req *I18nCreateReq) (*I18nResp, error) {
 		return nil, err
 	}
 	if count > 0 {
-		return nil, errors.New(i18nDuplicateKeyMessageKey)
+		return nil, errors.New(i18nDuplicateMessageCode)
 	}
 
 	if err := s.db.Create(&row).Error; err != nil {
