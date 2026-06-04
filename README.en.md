@@ -91,6 +91,8 @@ npm run build
 npm run test:smoke:platform
 npm run test:smoke:system
 npm run test:smoke:all
+npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
 ```
 
 ## Document Entry
@@ -98,7 +100,10 @@ npm run test:smoke:all
 - [DESIGN.md](./DESIGN.md): top-level architecture and domain boundaries
 - [docs/README.md](./docs/README.md): Chinese-first full documentation index
 - [docs/README.en.md](./docs/README.en.md): English companion index
+- [.agents/skills/README.md](./.agents/skills/README.md): repository-local Codex workflow skills
 - [docs/designs/QUALITY_AND_SECURITY_STRATEGY.md](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md): code quality and security governance strategy
+- [docs/designs/FOUNDATION_RELEASE_MODEL.md](./docs/designs/FOUNDATION_RELEASE_MODEL.md): foundation release and consumer-upgrade model
+- [docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md](./docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md): foundation release generation and consumer upgrade runbook
 - [SECURITY.md](./SECURITY.md): GitHub Security policy entry
 
 ## GitHub Presentation
