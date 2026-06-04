@@ -55,7 +55,7 @@ const zhCNFallback = {
   'app.lock.title': '会话已锁定',
   'app.lock.description':
     '锁屏后不会退出当前会话，也不会关闭已打开菜单。若连续 {{minutes}} 分钟无操作，系统仍会自动退出。',
-  'app.lock.passwordPlaceholder': '请输入当前账号密码以解锁', // NOSONAR: i18n copy references the password concept, not a credential
+  'app.lock.passwordPlaceholder': '请输入当前账号密码以解锁',
   'app.lock.unlock': '解锁',
   'app.lock.unlockSuccess': '已解锁当前会话',
   'app.layoutMode.vertical': '竖版导航',
@@ -141,7 +141,7 @@ const zhCNFallback = {
   'auth.security.subtitle': '统一查看当前账号的设备、登录活动与密码安全状态',
   'auth.security.overview': '账号安全概览',
   'auth.security.currentSessionSummary': '当前会话摘要',
-  'auth.security.passwordTip': '修改后将自动下线其他会话', // NOSONAR: password policy copy, not credential material
+  'auth.security.passwordTip': '修改后将自动下线其他会话',
   'auth.security.passwordExpired': '密码已过期',
   'auth.security.policy': '当前安全策略',
   'auth.security.policyHint': '以下策略由认证域实时生效',
@@ -276,7 +276,7 @@ const zhCNFallback = {
   'auth.securityEvent.pendingHint': '待确认事件应先核实来源、账号状态与是否需要联动会话治理。',
   'auth.securityEvent.acknowledgedHint': '已确认事件会保留确认人、时间与处置说明，便于审计追踪。',
   'auth.securityEvent.highSeverityHint': '高风险事件优先联动登录日志、会话管理和操作审计复盘。',
-  'auth.security.event.password_wrong': '账号发生了一次错误密码登录尝试', // NOSONAR: i18n copy references the password concept, not a credential
+  'auth.security.event.password_wrong': '账号发生了一次错误密码登录尝试',
   'auth.security.event.source_blocked': '同一来源失败次数过多，已被临时锁定',
   'auth.security.event.account_locked': '账号失败次数过多，已被临时锁定',
   'auth.login_log.cleanup.days_invalid': '当前保留期不在系统设置允许范围内，请到系统设置调整后重试',
@@ -855,8 +855,8 @@ const zhCNFallback = {
   'generator.datasource.username': '用户名',
   'generator.datasource.usernamePlaceholder': '例如：pantheon_readonly',
   'generator.datasource.password': '密码',
-  'generator.datasource.passwordPlaceholder': '请输入只读账号密码', // NOSONAR: i18n copy references the password concept, not a credential
-  'generator.datasource.passwordOptional': '留空表示保持当前密码不变。', // NOSONAR: i18n copy references the password concept, not a credential
+  'generator.datasource.passwordPlaceholder': '请输入只读账号密码',
+  'generator.datasource.passwordOptional': '留空表示保持当前密码不变。',
   'generator.datasource.status': '状态',
   'generator.datasource.test': '测试连接',
   'generator.datasource.createTitle': '新增数据源',
@@ -873,7 +873,7 @@ const zhCNFallback = {
   'generator.datasource.host_invalid': '请填写可访问的数据库主机名或 IP 地址，不能使用本地回环或非法字符。',
   'generator.datasource.host_private_disabled':
     '当前环境未开放私网数据源接入，请改用可访问地址或联系管理员开启私网只读数据源能力。',
-  'generator.datasource.password_required': '新增数据源时必须填写只读账号密码。', // NOSONAR: i18n copy references the password concept, not a credential
+  'generator.datasource.password_required': '新增数据源时必须填写只读账号密码。',
   'generator.datasource.port_invalid': '请输入有效的数据库端口。',
   'generator.datasource.not_found': '数据源不存在或已被删除，请刷新后重试。',
   'generator.datasource.disabled': '该数据源已停用，请先启用后再测试或导入。',
@@ -1504,8 +1504,8 @@ const zhCNFallback = {
   'system.profile.newPassword': '新密码',
   'system.profile.confirmPassword': '确认新密码',
   'system.profile.confirmPasswordRequired': '请再次输入新密码',
-  'system.profile.confirmPasswordMismatch': '两次输入的新密码不一致', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.profile.passwordHint': '修改密码后，其他设备上的登录会话会被自动下线。', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.profile.confirmPasswordMismatch': '两次输入的新密码不一致',
+  'system.profile.passwordHint': '修改密码后，其他设备上的登录会话会被自动下线。',
   'system.profile.savePassword': '更新密码',
   'system.profile.passwordSuccess': '密码更新成功',
   'system.user.username': '用户名',
@@ -1519,12 +1519,12 @@ const zhCNFallback = {
   'system.user.createdAt': '创建时间',
   'system.user.updatedAt': '更新时间',
   'system.user.password': '密码',
-  'system.user.password.rule': '密码长度需符合当前安全策略', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.user.password.rule': '密码长度需符合当前安全策略',
   'system.user.password.keep': '留空则不修改密码',
   'system.user.resetPassword': '重置密码',
   'system.user.resetPasswordTitle': '重置用户密码',
   'system.user.resetPasswordTarget': '目标用户',
-  'system.user.resetPasswordHint': '重置后，该用户当前所有活跃会话会被强制下线。', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.user.resetPasswordHint': '重置后，该用户当前所有活跃会话会被强制下线。',
   'system.user.resetPasswordSuccess': '密码已重置，已下线 {{count}} 个会话',
   'system.user.newPassword': '新密码',
   'system.user.confirmPassword': '确认新密码',
@@ -1557,8 +1557,8 @@ const zhCNFallback = {
   'user.dept.invalid': '所选部门不存在',
   'user.post.invalid': '所选岗位不存在',
   'user.update.error.protected': '内置管理员账号不允许这样修改',
-  'user.update.error.password_too_short': '密码长度不符合最小长度策略', // NOSONAR: i18n copy references the password concept, not a credential
-  'user.update.error.password_weak': '密码复杂度不符合当前安全策略', // NOSONAR: i18n copy references the password concept, not a credential
+  'user.update.error.password_too_short': '密码长度不符合最小长度策略',
+  'user.update.error.password_weak': '密码复杂度不符合当前安全策略',
   'user.login.error.locked': '账号已被临时锁定，请稍后再试',
   'user.login.error.not_found': '用户名或密码错误',
   'user.login.error.password_wrong': '用户名或密码错误',
@@ -2137,7 +2137,7 @@ const zhCNFallback = {
   'system.setting.item.org.required_for_user': '用户必须绑定组织',
   'system.setting.item.security.password_min_length': '最小密码长度',
   'system.setting.item.security.password_require_digit': '密码必须包含数字',
-  'system.setting.item.security.password_require_uppercase': '密码必须包含大写字母', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.setting.item.security.password_require_uppercase': '密码必须包含大写字母',
   'system.setting.item.security.password_history_limit': '历史密码复用限制',
   'system.setting.item.security.password_expire_days': '密码过期天数',
   'system.setting.item.login.max_failed_attempts': '最大失败次数',
@@ -2177,7 +2177,7 @@ const zhCNFallback = {
   'system.setting.option.platform.app_mode.consumer': 'C 端应用',
   'system.setting.option.platform.app_mode.hybrid': '混合模式',
   'system.setting.remark.security.password_min_length':
-    '已接入当前用户改密、用户创建与管理员重置密码等密码长度校验。', // NOSONAR: i18n copy references the password concept, not a credential
+    '已接入当前用户改密、用户创建与管理员重置密码等密码长度校验。',
   'system.setting.remark.security.password_require_digit':
     '开启后，当前用户改密必须包含至少 1 个数字。',
   'system.setting.remark.security.password_require_uppercase':
