@@ -17,6 +17,12 @@ function readArg(flag, fallback = '') {
   return String(process.argv[index + 1] ?? '').trim();
 }
 
+function sanitizeAuditLogToken(value) {
+  return String(value ?? '')
+    .replace(/[^a-zA-Z0-9._:-]/g, '?')
+    .slice(0, 160);
+}
+
 function extractCookieValue(setCookieHeader, name) {
   if (!setCookieHeader) {
     return null;
@@ -200,7 +206,7 @@ async function main() {
   } else {
     for (const item of smokeKeys) {
       console.log(
-        `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
+        `- ${sanitizeAuditLogToken(item.module)} :: ${sanitizeAuditLogToken(item.key)} [${sanitizeAuditLogToken(item.lifecycleStatus)}] observingDays=${item.observingDays}`,
       );
     }
   }
@@ -212,7 +218,7 @@ async function main() {
   } else {
     for (const item of deleteEligible) {
       console.log(
-        `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
+        `- ${sanitizeAuditLogToken(item.module)} :: ${sanitizeAuditLogToken(item.key)} [${sanitizeAuditLogToken(item.lifecycleStatus)}] observingDays=${item.observingDays}`,
       );
     }
   }
