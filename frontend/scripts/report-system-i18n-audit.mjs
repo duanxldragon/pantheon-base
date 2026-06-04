@@ -23,6 +23,47 @@ function sanitizeAuditLogToken(value) {
     .slice(0, 160);
 }
 
+function sanitizeAuditLogNumber(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function sanitizeAuditSummaryItem(item) {
+  return {
+    module: sanitizeAuditLogToken(item.module),
+    entryCount: sanitizeAuditLogNumber(item.entryCount),
+    unusedKeyCount: sanitizeAuditLogNumber(item.unusedKeyCount),
+    observingKeyCount: sanitizeAuditLogNumber(item.observingKeyCount),
+    archivedKeyCount: sanitizeAuditLogNumber(item.archivedKeyCount),
+    deleteEligibleKeyCount: sanitizeAuditLogNumber(item.deleteEligibleKeyCount),
+  };
+}
+
+function sanitizeAuditUnusedItem(item) {
+  return {
+    module: sanitizeAuditLogToken(item.module),
+    key: sanitizeAuditLogToken(item.key),
+    lifecycleStatus: sanitizeAuditLogToken(item.lifecycleStatus),
+    observingDays: sanitizeAuditLogNumber(item.observingDays),
+    eligibleForArchive: Boolean(item.eligibleForArchive),
+    eligibleForDelete: Boolean(item.eligibleForDelete),
+  };
+}
+
+function sanitizeAuditPayload(payload) {
+  return {
+    generatedAt: sanitizeAuditLogToken(payload.generatedAt),
+    module: payload.module === null ? null : sanitizeAuditLogToken(payload.module),
+    totalUnusedKeys: sanitizeAuditLogNumber(payload.totalUnusedKeys),
+    totalModules: sanitizeAuditLogNumber(payload.totalModules),
+    observationThresholdDays: sanitizeAuditLogNumber(payload.observationThresholdDays),
+    archivedRetentionThresholdDays: sanitizeAuditLogNumber(payload.archivedRetentionThresholdDays),
+    modules: payload.modules.map(sanitizeAuditSummaryItem),
+    smokeKeys: payload.smokeKeys.map(sanitizeAuditUnusedItem),
+    deleteEligible: payload.deleteEligible.map(sanitizeAuditUnusedItem),
+  };
+}
+
 function extractCookieValue(setCookieHeader, name) {
   if (!setCookieHeader) {
     return null;
@@ -171,28 +212,31 @@ async function main() {
     smokeKeys,
     deleteEligible,
   };
+  const safePayload = sanitizeAuditPayload(payload);
 
   if (jsonOnly) {
-    console.log(JSON.stringify(payload, null, 2));
+    console.log(JSON.stringify(safePayload, null, 2));
     return;
   }
 
   const deleteThresholdLabel =
-    payload.archivedRetentionThresholdDays === null
+    safePayload.archivedRetentionThresholdDays === null
       ? 'n/a'
-      : `${payload.archivedRetentionThresholdDays}d`;
+      : `${safePayload.archivedRetentionThresholdDays}d`;
+  const observationThresholdLabel =
+    safePayload.observationThresholdDays === null ? 'n/a' : `${safePayload.observationThresholdDays}d`;
 
-  console.log(`system_i18n runtime audit @ ${payload.generatedAt}`);
+  console.log(`system_i18n runtime audit @ ${safePayload.generatedAt}`);
   console.log(
-    `unused=${payload.totalUnusedKeys} modules=${payload.totalModules} observe>=${payload.observationThresholdDays}d delete>=${deleteThresholdLabel}`,
+    `unused=${safePayload.totalUnusedKeys} modules=${safePayload.totalModules} observe>=${observationThresholdLabel} delete>=${deleteThresholdLabel}`,
   );
   console.log('');
 
-  if (filteredModules.length === 0) {
+  if (safePayload.modules.length === 0) {
     console.log('No unused/observing/archived modules found.');
   } else {
     console.log('Modules');
-    for (const item of filteredModules) {
+    for (const item of safePayload.modules) {
       console.log(
         `- ${item.module}: unused=${item.unusedKeyCount}, observing=${item.observingKeyCount}, archived=${item.archivedKeyCount}, deleteEligible=${item.deleteEligibleKeyCount}`,
       );
@@ -200,25 +244,25 @@ async function main() {
   }
 
   console.log('');
-  console.log(`Smoke keys (${smokeKeys.length})`);
-  if (smokeKeys.length === 0) {
+  console.log(`Smoke keys (${safePayload.smokeKeys.length})`);
+  if (safePayload.smokeKeys.length === 0) {
     console.log('- none');
   } else {
-    for (const item of smokeKeys) {
+    for (const item of safePayload.smokeKeys) {
       console.log(
-        `- ${sanitizeAuditLogToken(item.module)} :: ${sanitizeAuditLogToken(item.key)} [${sanitizeAuditLogToken(item.lifecycleStatus)}] observingDays=${item.observingDays}`,
+        `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
       );
     }
   }
 
   console.log('');
-  console.log(`Delete-eligible keys (${deleteEligible.length})`);
-  if (deleteEligible.length === 0) {
+  console.log(`Delete-eligible keys (${safePayload.deleteEligible.length})`);
+  if (safePayload.deleteEligible.length === 0) {
     console.log('- none');
   } else {
-    for (const item of deleteEligible) {
+    for (const item of safePayload.deleteEligible) {
       console.log(
-        `- ${sanitizeAuditLogToken(item.module)} :: ${sanitizeAuditLogToken(item.key)} [${sanitizeAuditLogToken(item.lifecycleStatus)}] observingDays=${item.observingDays}`,
+        `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
       );
     }
   }
