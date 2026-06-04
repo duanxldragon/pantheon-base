@@ -20,6 +20,14 @@ var managedTableNamePattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 const workspaceRootEnvKey = "PANTHEON_WORKSPACE_ROOT"
 const generatedModuleExporterScript = "frontend/scripts/export-generated-module.mjs"
 
+var defaultNodeBinaryCandidates = []string{
+	`C:\Program Files\nodejs\node.exe`,
+	`C:\Program Files (x86)\nodejs\node.exe`,
+	`/usr/bin/node`,
+	`/usr/local/bin/node`,
+	`/opt/homebrew/bin/node`,
+}
+
 func isWorkspaceRoot(candidate string) bool {
 	return fileExists(filepath.Join(candidate, "go.mod")) &&
 		dirExists(filepath.Join(candidate, "backend")) &&
@@ -229,7 +237,11 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, err
 	}
 
-	cmd := exec.Command("node", scriptPath, schemaPath)
+	nodeBinary, err := resolveNodeBinary()
+	if err != nil {
+		return nil, errors.New("module.generate.server_export_failed")
+	}
+	cmd := exec.Command(nodeBinary, scriptPath, schemaPath)
 	cmd.Dir = workspaceRoot
 	output, err := cmd.Output()
 	if err != nil {
@@ -244,6 +256,26 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, errors.New("module.generate.server_export_failed")
 	}
 	return files, nil
+}
+
+func resolveNodeBinary() (string, error) {
+	if configured := strings.TrimSpace(os.Getenv("PANTHEON_NODE_BIN")); configured != "" {
+		if !filepath.IsAbs(configured) {
+			return "", errors.New("module.generate.server_export_failed")
+		}
+		if !fileExists(configured) {
+			return "", errors.New("module.generate.server_export_failed")
+		}
+		return configured, nil
+	}
+
+	for _, candidate := range defaultNodeBinaryCandidates {
+		if fileExists(candidate) {
+			return candidate, nil
+		}
+	}
+
+	return "", errors.New("module.generate.server_export_failed")
 }
 
 func RemoveGeneratedModuleSource(workspaceRoot string, scope string, name string) error {

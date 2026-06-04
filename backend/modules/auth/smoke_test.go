@@ -57,6 +57,7 @@ func setupSmokeTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	v1 := r.Group("/api/v1")
 	{
 		v1.POST("/auth/login", handler.LoginHandler)
+		v1.POST("/auth/refresh", handler.RefreshTokenHandler)
 	}
 
 	return r, db
@@ -124,5 +125,125 @@ func TestSmoke_LoginFlow(t *testing.T) {
 	}
 	if loginLogCount != int64(len(tests)) {
 		t.Fatalf("expected %d login logs, got %d", len(tests), loginLogCount)
+	}
+}
+
+func TestSmoke_LoginFlowSetsHttpOnlyCSRFCookieAndHeader(t *testing.T) {
+	r, _ := setupSmokeTestRouter(t)
+
+	body, _ := json.Marshal(LoginReq{
+		Username: "admin",
+		Password: "123456",
+	})
+	req, _ := http.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", recorder.Code)
+	}
+
+	var resp struct {
+		Code int `json:"code"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode login response: %v", err)
+	}
+	if resp.Code != common.CodeSuccess {
+		t.Fatalf("expected business success code, got %d", resp.Code)
+	}
+
+	var csrfCookieFound bool
+	for _, cookie := range recorder.Result().Cookies() {
+		if cookie.Name != common.CookieCSRFToken {
+			continue
+		}
+		csrfCookieFound = true
+		if !cookie.HttpOnly {
+			t.Fatal("expected csrf cookie to be httpOnly after login")
+		}
+		if recorder.Header().Get("X-CSRF-Token") == "" {
+			t.Fatal("expected login response to expose csrf token header")
+		}
+		if recorder.Header().Get("X-CSRF-Token") != cookie.Value {
+			t.Fatalf("expected csrf header and cookie to match, got header=%q cookie=%q", recorder.Header().Get("X-CSRF-Token"), cookie.Value)
+		}
+	}
+	if !csrfCookieFound {
+		t.Fatal("expected login response to set csrf cookie")
+	}
+}
+
+func TestSmoke_RefreshFlowReissuesCSRFCookieAndHeader(t *testing.T) {
+	r, _ := setupSmokeTestRouter(t)
+
+	loginBody, _ := json.Marshal(LoginReq{
+		Username: "admin",
+		Password: "123456",
+	})
+	loginReq, _ := http.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(loginBody))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginRecorder := httptest.NewRecorder()
+	r.ServeHTTP(loginRecorder, loginReq)
+
+	if loginRecorder.Code != http.StatusOK {
+		t.Fatalf("expected login status 200, got %d", loginRecorder.Code)
+	}
+
+	var loginResp struct {
+		Code int `json:"code"`
+		Data struct {
+			RefreshToken string `json:"refreshToken"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(loginRecorder.Body.Bytes(), &loginResp); err != nil {
+		t.Fatalf("decode login response: %v", err)
+	}
+	if loginResp.Code != common.CodeSuccess {
+		t.Fatalf("expected login business success code, got %d", loginResp.Code)
+	}
+	if loginResp.Data.RefreshToken == "" {
+		t.Fatal("expected login response to include refresh token")
+	}
+
+	refreshBody, _ := json.Marshal(RefreshTokenReq{RefreshToken: loginResp.Data.RefreshToken})
+	refreshReq, _ := http.NewRequest("POST", "/api/v1/auth/refresh", bytes.NewBuffer(refreshBody))
+	refreshReq.Header.Set("Content-Type", "application/json")
+	refreshRecorder := httptest.NewRecorder()
+	r.ServeHTTP(refreshRecorder, refreshReq)
+
+	if refreshRecorder.Code != http.StatusOK {
+		t.Fatalf("expected refresh status 200, got %d", refreshRecorder.Code)
+	}
+
+	var refreshResp struct {
+		Code int `json:"code"`
+	}
+	if err := json.Unmarshal(refreshRecorder.Body.Bytes(), &refreshResp); err != nil {
+		t.Fatalf("decode refresh response: %v", err)
+	}
+	if refreshResp.Code != common.CodeSuccess {
+		t.Fatalf("expected refresh business success code, got %d", refreshResp.Code)
+	}
+
+	var csrfCookieFound bool
+	for _, cookie := range refreshRecorder.Result().Cookies() {
+		if cookie.Name != common.CookieCSRFToken {
+			continue
+		}
+		csrfCookieFound = true
+		if !cookie.HttpOnly {
+			t.Fatal("expected refreshed csrf cookie to be httpOnly")
+		}
+		if refreshRecorder.Header().Get("X-CSRF-Token") == "" {
+			t.Fatal("expected refresh response to expose csrf token header")
+		}
+		if refreshRecorder.Header().Get("X-CSRF-Token") != cookie.Value {
+			t.Fatalf("expected refresh csrf header and cookie to match, got header=%q cookie=%q", refreshRecorder.Header().Get("X-CSRF-Token"), cookie.Value)
+		}
+	}
+	if !csrfCookieFound {
+		t.Fatal("expected refresh response to set csrf cookie")
 	}
 }

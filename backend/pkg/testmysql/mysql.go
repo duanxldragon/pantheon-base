@@ -38,6 +38,7 @@ func Open(t *testing.T) *gorm.DB {
 
 	adminCfg := *cfg
 	adminCfg.DBName = ""
+	adminCfg.MultiStatements = true
 	adminDB, err := sql.Open("mysql", adminCfg.FormatDSN())
 	if err != nil {
 		t.Fatalf("open mysql admin connection: %v", err)
@@ -48,13 +49,11 @@ func Open(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("build test database name: %v", err)
 	}
-	createDatabaseStatement := buildCreateDatabaseStatement(testDBName)
-	if _, err := adminDB.Exec(createDatabaseStatement); err != nil {
+	if err := createDatabase(adminDB, testDBName); err != nil {
 		t.Fatalf("create test database %s: %v", testDBName, err)
 	}
-	dropDatabaseStatement := buildDropDatabaseStatement(testDBName)
 	t.Cleanup(func() {
-		_, _ = adminDB.Exec(dropDatabaseStatement)
+		_ = dropDatabase(adminDB, testDBName)
 	})
 
 	testCfg := *cfg
@@ -131,18 +130,45 @@ func randomSuffix() (string, error) {
 	return fmt.Sprintf("%d_%04d", time.Now().UnixNano(), value.Int64()), nil
 }
 
-func buildCreateDatabaseStatement(name string) string {
-	return "CREATE DATABASE " + quoteMySQLIdentifier(name) + " CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
+const createDatabaseWithBoundNameSQL = "SET @pantheon_db_name = ?;" +
+	"SET @pantheon_create_stmt = CONCAT('CREATE DATABASE `', REPLACE(@pantheon_db_name, '`', '``'), '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');" +
+	"PREPARE pantheon_stmt FROM @pantheon_create_stmt;" +
+	"EXECUTE pantheon_stmt;" +
+	"DEALLOCATE PREPARE pantheon_stmt;"
+
+const dropDatabaseWithBoundNameSQL = "SET @pantheon_db_name = ?;" +
+	"SET @pantheon_drop_stmt = CONCAT('DROP DATABASE IF EXISTS `', REPLACE(@pantheon_db_name, '`', '``'), '`');" +
+	"PREPARE pantheon_stmt FROM @pantheon_drop_stmt;" +
+	"EXECUTE pantheon_stmt;" +
+	"DEALLOCATE PREPARE pantheon_stmt;"
+
+func createDatabase(db *sql.DB, name string) error {
+	return executeAdminDDL(db, createDatabaseWithBoundNameSQL, name)
 }
 
-func buildDropDatabaseStatement(name string) string {
-	return "DROP DATABASE IF EXISTS " + quoteMySQLIdentifier(name)
+func dropDatabase(db *sql.DB, name string) error {
+	return executeAdminDDL(db, dropDatabaseWithBoundNameSQL, name)
+}
+
+func executeAdminDDL(db *sql.DB, statement, name string) error {
+	if err := validateMySQLIdentifier(name); err != nil {
+		return err
+	}
+	_, err := db.Exec(statement, strings.TrimSpace(name))
+	return err
+}
+
+func validateMySQLIdentifier(name string) error {
+	normalized := strings.TrimSpace(name)
+	if !validMySQLIdentifierPattern.MatchString(normalized) {
+		return fmt.Errorf("unsafe mysql identifier %q", name)
+	}
+	return nil
 }
 
 func quoteMySQLIdentifier(name string) string {
-	normalized := strings.TrimSpace(name)
-	if !validMySQLIdentifierPattern.MatchString(normalized) {
-		panic(fmt.Sprintf("unsafe mysql identifier %q", name))
+	if err := validateMySQLIdentifier(name); err != nil {
+		panic(err.Error())
 	}
-	return "`" + normalized + "`"
+	return "`" + strings.TrimSpace(name) + "`"
 }

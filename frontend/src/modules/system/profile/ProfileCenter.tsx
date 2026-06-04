@@ -16,7 +16,7 @@ import { IconLock, IconUpload, IconUser } from '@arco-design/web-react/icon';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { uploadSystemFile } from '../../../api/upload';
-import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { isArcoFormValidationError, isLikelyEmailAddress } from '../../../core/arco/formValidation';
 import {
   getProfile,
   updateProfile,
@@ -218,7 +218,17 @@ const ProfileCenter: React.FC = () => {
                   <FormItem
                     label={t('system.profile.email')}
                     field="email"
-                    rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]}
+                    rules={[
+                      {
+                        validator: (value, callback) => {
+                          if (!value || isLikelyEmailAddress(String(value))) {
+                            callback();
+                            return;
+                          }
+                          callback(t('system.user.email.invalid'));
+                        },
+                      },
+                    ]}
                   >
                     <Input onPressEnter={() => profileForm.submit()} />
                   </FormItem>

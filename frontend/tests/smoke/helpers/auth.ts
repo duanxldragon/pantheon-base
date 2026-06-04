@@ -60,9 +60,9 @@ export async function loginByApi(
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   expect(payload.code).toBe(200);
-  const csrfToken =
-    extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token') ??
-    `pantheon-smoke-csrf-${Date.now()}`;
+  const csrfToken = response.headers()['x-csrf-token']
+    ?? extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token')
+    ?? `pantheon-smoke-csrf-${Date.now()}`;
   return {
     accessToken: payload.data.accessToken as string,
     refreshToken: payload.data.refreshToken as string,
@@ -94,8 +94,9 @@ export async function signInWithUi(
     username: credentials.username,
     password: credentials.password,
     csrfToken:
-      extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token') ??
-      `pantheon-smoke-csrf-${Date.now()}`,
+      response.headers()['x-csrf-token']
+      ?? extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token')
+      ?? `pantheon-smoke-csrf-${Date.now()}`,
   });
   await page.goto('/dashboard', { waitUntil: 'networkidle' });
   await expect(page.locator('.app-shell__header')).toBeVisible();
@@ -110,6 +111,10 @@ export async function signInAsAdmin(page: Page) {
 
 export async function installClientSession(page: Page, login: BrowserLoginResult) {
   await primeChineseLocale(page);
+  await page.addInitScript((csrfToken) => {
+    localStorage.setItem('pantheon_session_hint', '1');
+    localStorage.setItem('pantheon_csrf_token', csrfToken);
+  }, login.csrfToken);
   const appBaseUrl = new URL(
     page.url() === 'about:blank' ? '/' : page.url(),
     page.url() === 'about:blank' ? defaultWebBaseUrl : undefined,
@@ -136,11 +141,19 @@ export async function installClientSession(page: Page, login: BrowserLoginResult
       name: 'pantheon_csrf_token',
       value: login.csrfToken,
       url: cookieUrl,
-      httpOnly: false,
+      httpOnly: true,
       secure: false,
       sameSite: 'Strict',
     },
   ]);
+  try {
+    await page.evaluate((csrfToken) => {
+      localStorage.setItem('pantheon_session_hint', '1');
+      localStorage.setItem('pantheon_csrf_token', csrfToken);
+    }, login.csrfToken);
+  } catch {
+    // about:blank setup paths rely on the init script above.
+  }
 }
 
 export async function getCsrfToken(page: Page) {
