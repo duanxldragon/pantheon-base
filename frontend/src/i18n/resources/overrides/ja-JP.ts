@@ -6,7 +6,7 @@ const jaJPOverrideFallback = {
   'app.notice.securityEventDesc':
     'サインインリスク、送信元ロック、アカウントのセキュリティイベントを処理します',
   'auth.security.event.password_wrong':
-    'このアカウントで誤ったパスワードによるサインイン試行が検出されました。', // NOSONAR: i18n copy references the password concept, not a credential
+    'このアカウントで誤ったパスワードによるサインイン試行が検出されました。',
   'auth.securityEvent.acknowledge': '受付',
   'auth.securityEvent.acknowledgeDialogHint':
     '判定結果、影響範囲、フォローアップを記録し、インシデントのガバナンストレイルを完結させます。',

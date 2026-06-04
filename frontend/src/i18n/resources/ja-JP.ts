@@ -44,7 +44,7 @@ const jaJPFallback = {
   'app.lock.title': 'セッションはロックされています',
   'app.lock.description':
     'ロックしても現在のセッションと開いているタブは保持されます。{{minutes}} 分間操作がない場合、システムは自動的にサインアウトします。',
-  'app.lock.passwordPlaceholder': '解除するには現在のアカウントのパスワードを入力してください', // NOSONAR: i18n copy references the password concept, not a credential
+  'app.lock.passwordPlaceholder': '解除するには現在のアカウントのパスワードを入力してください',
   'app.lock.unlock': 'ロック解除',
   'app.lock.unlockSuccess': 'セッションのロックを解除しました',
   'app.layoutMode.vertical': 'サイドナビ',
@@ -65,7 +65,7 @@ const jaJPFallback = {
   'auth.username': 'ユーザー名',
   'auth.usernamePlaceholder': 'ユーザー名を入力してください',
   'auth.password': 'パスワード',
-  'auth.passwordPlaceholder': 'パスワードを入力してください', // NOSONAR: i18n copy references the password concept, not a credential
+  'auth.passwordPlaceholder': 'パスワードを入力してください',
   'auth.signIn': 'サインイン',
   'auth.loginFailed': 'サインインに失敗しました',
   'auth.loginSuccess': 'ログインしました',
@@ -109,7 +109,7 @@ const jaJPFallback = {
   'auth.mfa.codeRequired': '二要素コードを入力してください',
   'auth.mfa.codePlaceholder': '6 桁コードを入力',
   'auth.mfa.verifyAndSignIn': '確認してサインイン',
-  'auth.mfa.backToPassword': 'パスワードログインに戻る', // NOSONAR: i18n copy references the password concept, not a credential
+  'auth.mfa.backToPassword': 'パスワードログインに戻る',
   'auth.mfa.code_invalid': '二要素コードが正しくないか期限切れです',
   'auth.mfa.challenge_expired': '二要素認証の有効期限が切れました。再度サインインしてください',
   'auth.mfa.challenge_invalid': '二要素認証が無効です。再度サインインしてください',
@@ -117,7 +117,7 @@ const jaJPFallback = {
   'auth.mfa.factor_missing': '二要素認証の設定が見つかりません。管理者に連絡してください',
   'auth.mfa.disabled': '二要素認証は有効化されていません',
   'auth.usernameRequired': 'ユーザー名を入力してください',
-  'auth.passwordRequired': 'パスワードを入力してください', // NOSONAR: i18n copy references the password concept, not a credential
+  'auth.passwordRequired': 'パスワードを入力してください',
   'common.action': '操作',
   'common.add': '追加',
   'common.edit': '編集',
@@ -224,10 +224,10 @@ const jaJPFallback = {
   'system.setting.item.org.required_for_user': 'ユーザーに組織紐付けを必須化',
   'system.setting.item.site.logo': 'サイトロゴ',
   'system.setting.item.security.password_min_length': '最小パスワード長',
-  'system.setting.item.security.password_require_digit': 'パスワードに数字を必須化', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.setting.item.security.password_require_uppercase': 'パスワードに大文字を必須化', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.setting.item.security.password_history_limit': '履歴パスワード再利用制限', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.setting.item.security.password_expire_days': 'パスワード有効期限日数', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.setting.item.security.password_require_digit': 'パスワードに数字を必須化',
+  'system.setting.item.security.password_require_uppercase': 'パスワードに大文字を必須化',
+  'system.setting.item.security.password_history_limit': '履歴パスワード再利用制限',
+  'system.setting.item.security.password_expire_days': 'パスワード有効期限日数',
   'system.setting.item.login.max_failed_attempts': '最大失敗回数',
   'system.setting.item.login.lock_minutes': 'ロック時間（分）',
   'system.setting.item.login.session_idle_minutes': 'アイドルサインアウト時間（分）',
@@ -330,7 +330,7 @@ const jaJPFallback = {
     '{{updated}} 件のプレースホルダー値を補完し、{{created}} 件の内蔵翻訳を追加しました。',
   'i18n.hydrate_builtin.error': '内蔵翻訳の補完に失敗しました',
   'auth.security.title': 'セキュリティセンター',
-  'auth.security.password': 'パスワードセキュリティ', // NOSONAR: i18n copy references the password concept, not a credential
+  'auth.security.password': 'パスワードセキュリティ',
   'auth.security.sessions': 'アクティブセッション',
   'auth.security.loginLogs': '最近のログイン',
   'auth.security.activeSessionCount': 'アクティブセッション',
@@ -341,8 +341,8 @@ const jaJPFallback = {
     '現在のアカウントの端末、ログイン活動、パスワードセキュリティを確認します。',
   'auth.security.overview': 'アカウントセキュリティ概要',
   'auth.security.currentSessionSummary': '現在のセッション概要',
-  'auth.security.passwordTip': 'パスワードを変更すると他のセッションはサインアウトされます', // NOSONAR: i18n copy references the password concept, not a credential
-  'auth.security.passwordExpired': 'パスワード期限切れ', // NOSONAR: i18n copy references the password concept, not a credential
+  'auth.security.passwordTip': 'パスワードを変更すると他のセッションはサインアウトされます',
+  'auth.security.passwordExpired': 'パスワード期限切れ',
   'auth.security.policy': '現在のセキュリティポリシー',
   'auth.security.policyHint': 'これらのルールは auth ドメインで実行時に適用されます',
   'auth.security.policy.passwordMinLength': '{{count}} 文字以上',
@@ -541,9 +541,9 @@ const jaJPFallback = {
   'system.user.createdAt': '作成日時',
   'system.user.updatedAt': '更新日時',
   'system.user.password': 'パスワード',
-  'system.user.resetPassword': 'パスワードをリセット', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.user.resetPassword': 'パスワードをリセット',
   'system.user.newPassword': '新しいパスワード',
-  'system.user.confirmPassword': '新しいパスワードを確認', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.user.confirmPassword': '新しいパスワードを確認',
   'system.user.phone': '電話番号',
   'system.user.roles': 'ロール',
   'system.user.avatar': 'アバター',
@@ -1027,21 +1027,21 @@ const jaJPFallback = {
   'system.profile.createdAt': '作成日時',
   'system.profile.saveProfile': 'プロフィールを保存',
   'system.profile.oldPassword': '現在のパスワード',
-  'system.profile.oldPasswordRequired': '現在のパスワードを入力してください', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.profile.oldPasswordRequired': '現在のパスワードを入力してください',
   'system.profile.newPassword': '新しいパスワード',
   'system.profile.confirmPassword': 'パスワード確認',
-  'system.profile.confirmPasswordRequired': '新しいパスワードを確認してください', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.profile.confirmPasswordMismatch': 'パスワードが一致しません', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.profile.confirmPasswordRequired': '新しいパスワードを確認してください',
+  'system.profile.confirmPasswordMismatch': 'パスワードが一致しません',
   'system.profile.passwordHint':
-    'パスワードを変更すると、他の有効なセッションは自動的にサインアウトされます。', // NOSONAR: i18n copy references the password concept, not a credential
+    'パスワードを変更すると、他の有効なセッションは自動的にサインアウトされます。',
   'system.profile.savePassword': 'パスワードを更新',
-  'system.profile.passwordSuccess': 'パスワードを更新しました', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.user.password.rule': 'パスワード長は現在のセキュリティポリシーに従う必要があります', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.user.password.keep': '空欄のままにすると現在のパスワードを維持します', // NOSONAR: i18n copy references the password concept, not a credential
-  'system.user.resetPasswordTitle': 'ユーザーパスワードをリセット', // NOSONAR: i18n copy references the password concept, not a credential
+  'system.profile.passwordSuccess': 'パスワードを更新しました',
+  'system.user.password.rule': 'パスワード長は現在のセキュリティポリシーに従う必要があります',
+  'system.user.password.keep': '空欄のままにすると現在のパスワードを維持します',
+  'system.user.resetPasswordTitle': 'ユーザーパスワードをリセット',
   'system.user.resetPasswordTarget': '対象ユーザー',
   'system.user.resetPasswordHint':
-    'パスワードをリセットすると、このユーザーの有効なセッションはすべて取り消されます。', // NOSONAR: i18n copy references the password concept, not a credential
+    'パスワードをリセットすると、このユーザーの有効なセッションはすべて取り消されます。',
   'system.user.resetPasswordSuccess':
     'パスワードのリセットが完了し、{{count}} 件のセッションを取り消しました',
   'system.user.summary': 'アカウント概要',
@@ -1064,12 +1064,12 @@ const jaJPFallback = {
   'user.role.invalid': '選択したロールが不正または無効です',
   'user.dept.invalid': '選択した部門は存在しません',
   'user.update.error.protected': '組み込み管理者はこの方法では変更できません',
-  'user.update.error.password_too_short': 'パスワードが最小長ポリシーを満たしていません', // NOSONAR: i18n copy references the password concept, not a credential
-  'user.update.error.password_weak': 'パスワードが現在の複雑度ポリシーを満たしていません', // NOSONAR: i18n copy references the password concept, not a credential
+  'user.update.error.password_too_short': 'パスワードが最小長ポリシーを満たしていません',
+  'user.update.error.password_weak': 'パスワードが現在の複雑度ポリシーを満たしていません',
   'user.login.error.locked':
     'このアカウントは一時的にロックされています。しばらくしてから再試行してください。',
   'user.login.error.not_found': 'ユーザー名またはパスワードが正しくありません。',
-  'user.login.error.password_wrong': 'ユーザー名またはパスワードが正しくありません。', // NOSONAR: i18n copy references the password concept, not a credential
+  'user.login.error.password_wrong': 'ユーザー名またはパスワードが正しくありません。',
   'user.login.error.disabled': 'このアカウントは無効です。管理者に連絡してください。',
   'auth.login.error.source_blocked':
     'この送信元からのログイン失敗が多すぎます。しばらくしてから再試行してください。',
@@ -2309,7 +2309,7 @@ const jaJPFallback = {
   'system.setting.option.platform.app_mode.hybrid': 'ハイブリッド',
   'system.setting.remark.site.logo': 'サイト Logo の URL です。空欄可。',
   'system.setting.remark.security.password_min_length':
-    'ユーザーのパスワード変更、新規作成、管理者リセットなどの長さ検証に適用されます。', // NOSONAR: i18n copy references the password concept, not a credential
+    'ユーザーのパスワード変更、新規作成、管理者リセットなどの長さ検証に適用されます。',
   'system.setting.remark.security.password_require_digit':
     '有効にすると、パスワード変更時に少なくとも 1 つの数字が必要です。',
   'system.setting.remark.security.password_require_uppercase':
@@ -2404,7 +2404,7 @@ const jaJPFallback = {
   'system.setting.remark.audit.operation_log_retention_options':
     '操作ログ整理で選択可能な保持日数を JSON 配列で管理します。例: [1,7,30]。',
   'user.username.required': 'ユーザー名は必須です',
-  'user.password.required': 'パスワードは必須です', // NOSONAR: i18n copy references the password concept, not a credential
+  'user.password.required': 'パスワードは必須です',
   'auth.security.policy.sourceMaxFailedAttempts':
     '同一ソースはウィンドウ内で最大 {{count}} 回失敗可能',
   'auth.security.policy.sourceWindowMinutes': 'ソース失敗の集計ウィンドウは {{count}} 分',
