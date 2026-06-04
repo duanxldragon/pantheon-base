@@ -120,6 +120,12 @@ npm run test:smoke:platform
 
 # 全量后台 smoke（platform + system + business）
 npm run test:smoke:all
+
+# 生成 foundation release metadata
+npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+
+# 一次性生成 release metadata + dist bundle
+npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
 ```
 
 ## 手动 Sonar
@@ -149,11 +155,14 @@ Pantheon Platform 将权限拆成四层：
 - `DESIGN.md`：顶层架构与领域边界。
 - `docs/README.md`：完整文档索引。
 - `docs/README.en.md`：英文索引入口。
+- `.agents/skills/README.zh.md`：本仓库的 repo-local Codex skills 入口。
 - `docs/designs/PERMISSION_MODEL.md`：权限模型设计。
 - `docs/designs/FRONTEND.md`：前端架构与 UI 规范。
 - `docs/designs/BACKEND.md`：后端模块化单体规范。
 - `docs/designs/WORKFLOW.md`：开发流程与 AI 协作方式。
 - `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`：代码质量与安全治理策略。
+- `docs/designs/FOUNDATION_RELEASE_MODEL.md`：底座 release 与 consumer upgrade 模型。
+- `docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md`：foundation release 生成与 consumer upgrade 运行手册。
 - `SECURITY.md`：GitHub Security policy 入口。
 
 ## 推荐阅读顺序
