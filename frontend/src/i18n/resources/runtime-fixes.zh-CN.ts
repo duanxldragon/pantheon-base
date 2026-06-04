@@ -1,6 +1,6 @@
 const zhCNRuntimeFixes = {
   'admin.initial_password_required': '初始密码不能为空',
-  'admin.initial_password_too_short': '初始密码长度不能低于当前安全策略',
+  'admin.initial_password_too_short': '初始密码长度不能低于当前安全策略', // NOSONAR: i18n copy references the password concept, not a credential
   'audit.login_log_retention_days': '登录日志保留天数',
   'audit.login_log_retention_options': '登录日志保留选项',
   'audit.operation_log.cleanup.range_invalid': '所选操作日志清理范围无效',

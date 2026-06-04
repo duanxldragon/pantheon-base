@@ -118,7 +118,7 @@ export function analyzeDuplication(rootDir = process.cwd(), overrides = {}) {
     walkFiles(rootDir, relativeRoot, config, files);
   }
 
-  const uniqueFiles = [...new Set(files)].sort();
+  const uniqueFiles = [...new Set(files)].sort((left, right) => left.localeCompare(right));
   const fileReports = uniqueFiles.map((relativePath) => {
     const absolutePath = path.join(rootDir, relativePath);
     const content = fs.readFileSync(absolutePath, 'utf8');
