@@ -60,6 +60,7 @@ English version: [README.en.md](./README.en.md)
 3. [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
 4. [designs/ 目录入口（中文优先）](./designs/README.md)
 5. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+6. [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 
 ### 2.1 按任务补读
 
@@ -80,6 +81,7 @@ English version: [README.en.md](./README.en.md)
 ### 4.1 开发与验收
 
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+- [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 - [Pantheon Base Task Packet 模板](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)
 - [GitHub 治理清单](./GITHUB_GOVERNANCE_CHECKLIST.md)
 - [GitHub 仓库设置手册](./GITHUB_REPOSITORY_SETUP.md)
