@@ -34,7 +34,7 @@ jobs:
           cache: true
 
       - name: Setup Java
-        uses: actions/setup-java@5ee3471b8c4f3b0b93c8f4f460e2e1c35b5275f2
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
