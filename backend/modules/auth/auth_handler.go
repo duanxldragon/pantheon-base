@@ -30,6 +30,63 @@ func failOnCSRFCookieError(c *gin.Context, err error) bool {
 	return true
 }
 
+func writeLoginSuccessResponse(c *gin.Context, tokenPair *common.TokenPair, userInfo *UserInfoResp) bool {
+	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
+	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
+	_, csrfErr := common.SetCSRFCookie(c.Writer)
+	if failOnCSRFCookieError(c, csrfErr) {
+		return false
+	}
+
+	common.Success(c, AuthTokenResp{
+		Token:            tokenPair.AccessToken,
+		AccessToken:      tokenPair.AccessToken,
+		RefreshToken:     tokenPair.RefreshToken,
+		TokenType:        tokenPair.TokenType,
+		AccessExpiresAt:  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
+		RefreshExpiresAt: tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
+		SessionID:        tokenPair.SessionID,
+		User:             userInfo,
+	})
+	return true
+}
+
+func writeMFASuccessResponse(c *gin.Context, resp *AuthTokenResp) bool {
+	if resp.Token != "" {
+		common.SetAccessTokenCookie(c.Writer, resp.Token)
+	}
+	if resp.RefreshToken != "" {
+		common.SetRefreshTokenCookie(c.Writer, resp.RefreshToken)
+	}
+	_, csrfErr := common.SetCSRFCookie(c.Writer)
+	if failOnCSRFCookieError(c, csrfErr) {
+		return false
+	}
+
+	common.Success(c, resp)
+	return true
+}
+
+func writeRefreshSuccessResponse(c *gin.Context, tokenPair *common.TokenPair) bool {
+	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
+	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
+	_, csrfErr := common.SetCSRFCookie(c.Writer)
+	if failOnCSRFCookieError(c, csrfErr) {
+		return false
+	}
+
+	common.Success(c, gin.H{
+		"token":            tokenPair.AccessToken,
+		"accessToken":      tokenPair.AccessToken,
+		"refreshToken":     tokenPair.RefreshToken,
+		"tokenType":        tokenPair.TokenType,
+		"accessExpiresAt":  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
+		"refreshExpiresAt": tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
+		"sessionId":        tokenPair.SessionID,
+	})
+	return true
+}
+
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.login.title", common.BusinessOther)
 
@@ -87,24 +144,9 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	}
 
 	h.service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
-
-	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
-	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	_, csrfErr := common.SetCSRFCookie(c.Writer)
-	if failOnCSRFCookieError(c, csrfErr) {
+	if !writeLoginSuccessResponse(c, tokenPair, userInfo) {
 		return
 	}
-
-	common.Success(c, AuthTokenResp{
-		Token:            tokenPair.AccessToken,
-		AccessToken:      tokenPair.AccessToken,
-		RefreshToken:     tokenPair.RefreshToken,
-		TokenType:        tokenPair.TokenType,
-		AccessExpiresAt:  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
-		RefreshExpiresAt: tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
-		SessionID:        tokenPair.SessionID,
-		User:             userInfo,
-	})
 }
 
 func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
@@ -133,18 +175,9 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	}
 	h.service.RecordLoginLog(common.GetRequestID(c), username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
 
-	if resp.Token != "" {
-		common.SetAccessTokenCookie(c.Writer, resp.Token)
-	}
-	if resp.RefreshToken != "" {
-		common.SetRefreshTokenCookie(c.Writer, resp.RefreshToken)
-	}
-	_, csrfErr := common.SetCSRFCookie(c.Writer)
-	if failOnCSRFCookieError(c, csrfErr) {
+	if !writeMFASuccessResponse(c, resp) {
 		return
 	}
-
-	common.Success(c, resp)
 }
 
 func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
@@ -179,22 +212,9 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
-	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	_, csrfErr := common.SetCSRFCookie(c.Writer)
-	if failOnCSRFCookieError(c, csrfErr) {
+	if !writeRefreshSuccessResponse(c, tokenPair) {
 		return
 	}
-
-	common.Success(c, gin.H{
-		"token":            tokenPair.AccessToken,
-		"accessToken":      tokenPair.AccessToken,
-		"refreshToken":     tokenPair.RefreshToken,
-		"tokenType":        tokenPair.TokenType,
-		"accessExpiresAt":  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
-		"refreshExpiresAt": tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
-		"sessionId":        tokenPair.SessionID,
-	})
 }
 func (h *AuthHandler) GetCurrentUserInfo(c *gin.Context) {
 	resp, err := h.service.GetCurrentUserInfo(common.GetUserID(c))

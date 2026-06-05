@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"pantheon-platform/backend/pkg/common"
 
@@ -39,7 +40,126 @@ func TestFailOnCSRFCookieErrorWritesErrorResponse(t *testing.T) {
 	if got := recorder.Header().Get("Content-Type"); got == "" {
 		t.Fatal("expected failure response content type to be set")
 	}
-	if body := recorder.Body.String(); body == "" || !strings.Contains(body, `"code":`+strconv.Itoa(common.CodeError)) {
+	if body := recorder.Body.String(); !strings.Contains(body, `"code":`+strconv.Itoa(common.CodeError)) {
 		t.Fatalf("expected failure response to include code %d, got %q", common.CodeError, body)
 	}
+}
+
+func TestWriteLoginSuccessResponseSetsCookiesAndPayload(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+
+	expiresAt := time.Date(2026, time.June, 5, 10, 0, 0, 0, time.UTC)
+	tokenPair := &common.TokenPair{
+		AccessToken:      "access-token",
+		RefreshToken:     "refresh-token",
+		TokenType:        "Bearer",
+		AccessExpiresAt:  expiresAt,
+		RefreshExpiresAt: expiresAt.Add(24 * time.Hour),
+		SessionID:        "session-1",
+	}
+	userInfo := &UserInfoResp{ID: 7, Username: "admin"}
+
+	if !writeLoginSuccessResponse(context, tokenPair, userInfo) {
+		t.Fatal("expected login response helper to succeed")
+	}
+
+	resp := decodeAuthResponse[AuthTokenResp](t, recorder)
+	if resp.Code != common.CodeSuccess {
+		t.Fatalf("expected success code, got %d", resp.Code)
+	}
+	if resp.Data.AccessToken != tokenPair.AccessToken || resp.Data.RefreshToken != tokenPair.RefreshToken {
+		t.Fatalf("unexpected token payload: %+v", resp.Data)
+	}
+	if resp.Data.SessionID != tokenPair.SessionID {
+		t.Fatalf("expected session id %q, got %q", tokenPair.SessionID, resp.Data.SessionID)
+	}
+	if resp.Data.User == nil || resp.Data.User.Username != userInfo.Username {
+		t.Fatalf("expected user payload %+v, got %+v", userInfo, resp.Data.User)
+	}
+
+	assertCSRFCookieAndHeader(
+		t,
+		recorder,
+		"expected login helper to set an httpOnly csrf cookie",
+		"expected login helper to expose csrf header",
+	)
+}
+
+func TestWriteMFASuccessResponseSetsCookiesAndPayload(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+
+	respPayload := &AuthTokenResp{
+		Token:            "mfa-access",
+		AccessToken:      "mfa-access",
+		RefreshToken:     "mfa-refresh",
+		TokenType:        "Bearer",
+		AccessExpiresAt:  "2026-06-05 10:00:00",
+		RefreshExpiresAt: "2026-06-06 10:00:00",
+		SessionID:        "session-mfa",
+		User:             &UserInfoResp{ID: 8, Username: "mfa-user"},
+	}
+
+	if !writeMFASuccessResponse(context, respPayload) {
+		t.Fatal("expected mfa response helper to succeed")
+	}
+
+	resp := decodeAuthResponse[AuthTokenResp](t, recorder)
+	if resp.Code != common.CodeSuccess {
+		t.Fatalf("expected success code, got %d", resp.Code)
+	}
+	if resp.Data.AccessToken != respPayload.AccessToken || resp.Data.RefreshToken != respPayload.RefreshToken {
+		t.Fatalf("unexpected mfa payload: %+v", resp.Data)
+	}
+	if resp.Data.User == nil || resp.Data.User.Username != respPayload.User.Username {
+		t.Fatalf("expected user payload %+v, got %+v", respPayload.User, resp.Data.User)
+	}
+
+	assertCSRFCookieAndHeader(
+		t,
+		recorder,
+		"expected mfa helper to set an httpOnly csrf cookie",
+		"expected mfa helper to expose csrf header",
+	)
+}
+
+func TestWriteRefreshSuccessResponseSetsCookiesAndPayload(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+
+	expiresAt := time.Date(2026, time.June, 5, 10, 0, 0, 0, time.UTC)
+	tokenPair := &common.TokenPair{
+		AccessToken:      "refresh-access",
+		RefreshToken:     "refresh-refresh",
+		TokenType:        "Bearer",
+		AccessExpiresAt:  expiresAt,
+		RefreshExpiresAt: expiresAt.Add(24 * time.Hour),
+		SessionID:        "session-refresh",
+	}
+
+	if !writeRefreshSuccessResponse(context, tokenPair) {
+		t.Fatal("expected refresh response helper to succeed")
+	}
+
+	resp := decodeAuthResponse[map[string]any](t, recorder)
+	if resp.Code != common.CodeSuccess {
+		t.Fatalf("expected success code, got %d", resp.Code)
+	}
+	if resp.Data["accessToken"] != tokenPair.AccessToken || resp.Data["refreshToken"] != tokenPair.RefreshToken {
+		t.Fatalf("unexpected refresh payload: %#v", resp.Data)
+	}
+	if resp.Data["sessionId"] != tokenPair.SessionID {
+		t.Fatalf("expected session id %q, got %#v", tokenPair.SessionID, resp.Data["sessionId"])
+	}
+
+	assertCSRFCookieAndHeader(
+		t,
+		recorder,
+		"expected refresh helper to set an httpOnly csrf cookie",
+		"expected refresh helper to expose csrf header",
+	)
 }
