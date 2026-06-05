@@ -43,7 +43,7 @@ const (
 	canonicalMenuGeneratorKey = "system.menu.generator"
 )
 
-func canonicalMenuEntry(module string, value string) i18nCanonicalEntry {
+func canonicalMenuEntry(module, value string) i18nCanonicalEntry {
 	return i18nCanonicalEntry{
 		Module: module,
 		Group:  canonicalMenuGroup,
