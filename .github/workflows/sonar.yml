@@ -33,6 +33,12 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Setup Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Generate Go coverage
         run: go test ./... -coverprofile=coverage.out
 
@@ -45,6 +51,7 @@ jobs:
         with:
           args: >
             -Dsonar.projectVersion=${{ steps.sonar_version.outputs.project_version }}
+            -Dsonar.scanner.skipJreProvisioning=true
 
       - name: Run SonarCloud branch scan
         if: ${{ github.ref_name != 'main' }}
@@ -55,5 +62,6 @@ jobs:
         with:
           args: >
             -Dsonar.projectVersion=${{ steps.sonar_version.outputs.project_version }}
+            -Dsonar.scanner.skipJreProvisioning=true
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.branch.target=main
