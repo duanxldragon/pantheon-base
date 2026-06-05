@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import { FrontendGenerator } from '../../src/modules/system/generator/frontend-generator';
 import type { ModuleSchema } from '../../src/modules/system/generator/schema';
@@ -71,16 +72,16 @@ function assertOmitsDashboardWidget(source: string) {
   assert.doesNotMatch(source, /registrationOwner:/);
 }
 
-assertHasDashboardWidget(generateIndex(createSchema()));
+test('includes dashboard widget only for business main tables with widget enabled', () => {
+  assertHasDashboardWidget(generateIndex(createSchema()));
 
-assertOmitsDashboardWidget(generateIndex(createSchema({ includeDashboardWidget: false })));
+  assertOmitsDashboardWidget(generateIndex(createSchema({ includeDashboardWidget: false })));
 
-assertOmitsDashboardWidget(generateIndex(createSchema({
-  includeDashboardWidget: true,
-  metadata: {
-    businessContext: 'cmdb',
-    tableRole: 'relation',
-  },
-})));
-
-console.log('generator dashboard widget contract tests passed');
+  assertOmitsDashboardWidget(generateIndex(createSchema({
+    includeDashboardWidget: true,
+    metadata: {
+      businessContext: 'cmdb',
+      tableRole: 'relation',
+    },
+  })));
+});
