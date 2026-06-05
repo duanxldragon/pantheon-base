@@ -87,6 +87,7 @@ function buildManifest(options) {
     qualityBaselines: {
       sonarProjectVersion: options.releaseVersion,
     },
+    bundleExclusions: ['backend/cmd/server/uploads', 'backend/uploads', 'uploads'],
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],
       frontend: ['frontend/src/core', 'frontend/src/components', 'frontend/src/modules/system'],

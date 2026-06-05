@@ -23,7 +23,9 @@ Each foundation release produces:
 1. `releases/<version>/`
 2. `dist/foundation-releases/<version>/`
 
-The first path is the long-term review and audit surface. The second path is the machine-consumable bundle surface.
+The first path is the long-term review and audit surface. The second path is the machine-consumable bundle surface. `dist/foundation-releases/` is a regenerable local bundle output and should not be treated as a long-term checked-in asset by default.
+
+Important: `dist/foundation-releases/<version>/bundle` must contain only shared foundation code and documentation. Do not let runtime artifacts such as `uploads/`, local caches, or temporary generated files leak into the bundle; the build should honor the exclusion rules declared in the release manifest.
 
 ## 2. Cut a Release in `pantheon-base`
 

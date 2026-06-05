@@ -42,6 +42,7 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
       sourceRepo: 'pantheon-base',
       consumerMode: 'foundation-release-consumer',
+      bundleExclusions: ['backend/cmd/server/uploads'],
       sharedPaths: {
         backend: ['backend/cmd'],
         frontend: ['frontend/src/core'],
@@ -57,6 +58,8 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
 
     fs.mkdirSync(path.join(root, 'backend', 'cmd'), { recursive: true });
     fs.writeFileSync(path.join(root, 'backend', 'cmd', 'server.go'), 'package main\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'backend', 'cmd', 'server', 'uploads'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'backend', 'cmd', 'server', 'uploads', 'ignored.txt'), 'ignore me\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'core'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'core', 'app.ts'), 'export const app = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
@@ -67,6 +70,10 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
 
     const bundleRoot = path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'bundle');
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-backend', 'backend', 'cmd', 'server.go')), true);
+    assert.equal(
+      fs.existsSync(path.join(bundleRoot, 'shared-backend', 'backend', 'cmd', 'server', 'uploads', 'ignored.txt')),
+      false,
+    );
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'core', 'app.ts')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'docs', 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'manifest.paths.json')), true);
