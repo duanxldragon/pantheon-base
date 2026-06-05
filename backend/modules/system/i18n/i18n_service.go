@@ -35,6 +35,22 @@ type i18nCanonicalEntry struct {
 	Value  string
 }
 
+const (
+	canonicalMenuGroup        = "menu"
+	canonicalSystemLowCode    = "system.lowcode"
+	canonicalMenuLowCodeKey   = "system.menu.lowcode"
+	canonicalMenuModulesKey   = "system.menu.modules"
+	canonicalMenuGeneratorKey = "system.menu.generator"
+)
+
+func canonicalMenuEntry(module string, value string) i18nCanonicalEntry {
+	return i18nCanonicalEntry{
+		Module: module,
+		Group:  canonicalMenuGroup,
+		Value:  value,
+	}
+}
+
 var canonicalMenuLocaleEntries = map[i18nLocaleKey]i18nCanonicalEntry{
 	{Locale: "zh-CN", Key: "system.menu.dashboard"}:     {Module: "platform", Group: "menu", Value: "工作台"},
 	{Locale: "en-US", Key: "system.menu.dashboard"}:     {Module: "platform", Group: "menu", Value: "Workbench"},
@@ -56,11 +72,11 @@ var canonicalMenuLocaleEntries = map[i18nLocaleKey]i18nCanonicalEntry{
 	{Locale: "ja-JP", Key: "system.menu.config"}:        {Module: "system.config", Group: "menu", Value: "システム設定"},
 	{Locale: "ko-KR", Key: "system.menu.config"}:        {Module: "system.config", Group: "menu", Value: "시스템 설정"},
 	{Locale: "fr-FR", Key: "system.menu.config"}:        {Module: "system.config", Group: "menu", Value: "Configuration système"},
-	{Locale: "zh-CN", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "低代码平台"},
-	{Locale: "en-US", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "Low-Code"},
-	{Locale: "ja-JP", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "モジュール開発"},
-	{Locale: "ko-KR", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "모듈 개발"},
-	{Locale: "fr-FR", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "Développement de modules"},
+	{Locale: "zh-CN", Key: canonicalMenuLowCodeKey}:     canonicalMenuEntry(canonicalSystemLowCode, "低代码平台"),
+	{Locale: "en-US", Key: canonicalMenuLowCodeKey}:     canonicalMenuEntry(canonicalSystemLowCode, "Low-Code"),
+	{Locale: "ja-JP", Key: canonicalMenuLowCodeKey}:     canonicalMenuEntry(canonicalSystemLowCode, "モジュール開発"),
+	{Locale: "ko-KR", Key: canonicalMenuLowCodeKey}:     canonicalMenuEntry(canonicalSystemLowCode, "모듈 개발"),
+	{Locale: "fr-FR", Key: canonicalMenuLowCodeKey}:     canonicalMenuEntry(canonicalSystemLowCode, "Développement de modules"),
 	{Locale: "zh-CN", Key: "system.menu.security"}:      {Module: "system.auth", Group: "menu", Value: "安全审计"},
 	{Locale: "en-US", Key: "system.menu.security"}:      {Module: "system.auth", Group: "menu", Value: "Security & Audit"},
 	{Locale: "ja-JP", Key: "system.menu.security"}:      {Module: "system.auth", Group: "menu", Value: "セキュリティと監査"},
@@ -111,16 +127,16 @@ var canonicalMenuLocaleEntries = map[i18nLocaleKey]i18nCanonicalEntry{
 	{Locale: "ja-JP", Key: "system.menu.i18n"}:          {Module: "system.config", Group: "menu", Value: "国際化管理"},
 	{Locale: "ko-KR", Key: "system.menu.i18n"}:          {Module: "system.config", Group: "menu", Value: "국제화 관리"},
 	{Locale: "fr-FR", Key: "system.menu.i18n"}:          {Module: "system.config", Group: "menu", Value: "Gestion de l'internationalisation"},
-	{Locale: "zh-CN", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "模块管理"},
-	{Locale: "en-US", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "Modules"},
-	{Locale: "ja-JP", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "モジュール登録"},
-	{Locale: "ko-KR", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "모듈 등록"},
-	{Locale: "fr-FR", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "Registre des modules"},
-	{Locale: "zh-CN", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "模块生成器"},
-	{Locale: "en-US", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "Code Generator"},
-	{Locale: "ja-JP", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "モジュール生成"},
-	{Locale: "ko-KR", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "모듈 생성기"},
-	{Locale: "fr-FR", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "Générateur de modules"},
+	{Locale: "zh-CN", Key: canonicalMenuModulesKey}:     canonicalMenuEntry(canonicalSystemLowCode, "模块管理"),
+	{Locale: "en-US", Key: canonicalMenuModulesKey}:     canonicalMenuEntry(canonicalSystemLowCode, "Modules"),
+	{Locale: "ja-JP", Key: canonicalMenuModulesKey}:     canonicalMenuEntry(canonicalSystemLowCode, "モジュール登録"),
+	{Locale: "ko-KR", Key: canonicalMenuModulesKey}:     canonicalMenuEntry(canonicalSystemLowCode, "모듈 등록"),
+	{Locale: "fr-FR", Key: canonicalMenuModulesKey}:     canonicalMenuEntry(canonicalSystemLowCode, "Registre des modules"),
+	{Locale: "zh-CN", Key: canonicalMenuGeneratorKey}:   canonicalMenuEntry(canonicalSystemLowCode, "模块生成器"),
+	{Locale: "en-US", Key: canonicalMenuGeneratorKey}:   canonicalMenuEntry(canonicalSystemLowCode, "Code Generator"),
+	{Locale: "ja-JP", Key: canonicalMenuGeneratorKey}:   canonicalMenuEntry(canonicalSystemLowCode, "モジュール生成"),
+	{Locale: "ko-KR", Key: canonicalMenuGeneratorKey}:   canonicalMenuEntry(canonicalSystemLowCode, "모듈 생성기"),
+	{Locale: "fr-FR", Key: canonicalMenuGeneratorKey}:   canonicalMenuEntry(canonicalSystemLowCode, "Générateur de modules"),
 	{Locale: "zh-CN", Key: "system.menu.loginLog"}:      {Module: "system.auth", Group: "menu", Value: "登录日志"},
 	{Locale: "en-US", Key: "system.menu.loginLog"}:      {Module: "system.auth", Group: "menu", Value: "Login Logs"},
 	{Locale: "ja-JP", Key: "system.menu.loginLog"}:      {Module: "system.auth", Group: "menu", Value: "ログインログ"},

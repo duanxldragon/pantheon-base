@@ -528,6 +528,46 @@ func TestI18nService_SeedI18nModuleI18nHydratesBuiltinLocales(t *testing.T) {
 	}
 }
 
+func TestCanonicalMenuLocaleEntriesIncludeLowCodeKeys(t *testing.T) {
+	const (
+		englishLocale = "en-US"
+		lowCodeModule = canonicalSystemLowCode
+	)
+
+	lowCodeEntry, ok := canonicalMenuLocaleEntries[i18nLocaleKey{
+		Locale: englishLocale,
+		Key:    canonicalMenuLowCodeKey,
+	}]
+	if !ok {
+		t.Fatalf("expected low-code menu entry")
+	}
+	if lowCodeEntry != canonicalMenuEntry(lowCodeModule, "Low-Code") {
+		t.Fatalf("unexpected low-code entry: %#v", lowCodeEntry)
+	}
+
+	modulesEntry, ok := canonicalMenuLocaleEntries[i18nLocaleKey{
+		Locale: englishLocale,
+		Key:    canonicalMenuModulesKey,
+	}]
+	if !ok {
+		t.Fatalf("expected modules menu entry")
+	}
+	if modulesEntry != canonicalMenuEntry(lowCodeModule, "Modules") {
+		t.Fatalf("unexpected modules entry: %#v", modulesEntry)
+	}
+
+	generatorEntry, ok := canonicalMenuLocaleEntries[i18nLocaleKey{
+		Locale: englishLocale,
+		Key:    canonicalMenuGeneratorKey,
+	}]
+	if !ok {
+		t.Fatalf("expected generator menu entry")
+	}
+	if generatorEntry != canonicalMenuEntry(lowCodeModule, "Code Generator") {
+		t.Fatalf("unexpected generator entry: %#v", generatorEntry)
+	}
+}
+
 func TestI18nService_GetLangPackIncludesCommonUsernameFallback(t *testing.T) {
 	db := newI18nTestDB(t)
 	service := NewI18nService(db)
