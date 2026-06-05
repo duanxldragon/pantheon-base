@@ -3,6 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
+import { expectOnlyAllowedRuntimeErrors } from '../helpers/runtime-errors';
 import { expectPagePathname } from '../helpers/url-pattern';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
@@ -216,13 +217,6 @@ function collectRuntimeErrors(page: Page) {
   });
 
   return runtimeErrors;
-}
-
-function expectOnlyAllowedRuntimeErrors(runtimeErrors: string[], allowedPatterns: RegExp[] = []) {
-  const unexpectedErrors = runtimeErrors.filter(
-    (message) => !allowedPatterns.some((pattern) => pattern.test(message)),
-  );
-  expect(unexpectedErrors).toEqual([]);
 }
 
 async function expectNoPageError(page: Page) {

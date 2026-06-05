@@ -2,6 +2,7 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { signInAsAdmin } from '../helpers/auth';
+import { expectOnlyAllowedRuntimeErrors } from '../helpers/runtime-errors';
 
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
@@ -36,13 +37,6 @@ function collectRuntimeErrors(page: Page) {
   });
 
   return runtimeErrors;
-}
-
-function expectOnlyAllowedRuntimeErrors(runtimeErrors: string[], allowedPatterns: RegExp[] = []) {
-  const unexpectedErrors = runtimeErrors.filter(
-    (message) => !allowedPatterns.some((pattern) => pattern.test(message)),
-  );
-  expect(unexpectedErrors).toEqual([]);
 }
 
 async function expectRouteShell(page: Page) {
