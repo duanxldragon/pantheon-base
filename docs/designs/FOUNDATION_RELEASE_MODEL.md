@@ -138,6 +138,12 @@ consumer repo -> consume base foundation release
 - 共享 shell / shared table / upload / smoke helpers
 - `.github/workflows/*`
 
+此外，foundation release tag 同时承担 Sonar `projectVersion` 基线职责：
+
+- `pantheon-base` 的手动 Sonar 扫描默认解析当前可达的最新 `base-v*` tag 作为 `sonar.projectVersion`
+- 切出新的 foundation release 后，下一次 Sonar 扫描会把 new-code period 基线推进到该 release
+- 这保证 Sonar 的“新代码”窗口跟随标准 release 演进，而不是长期挂在无版本或历史临时状态上
+
 ## 6. Consumer Upgrade 模型
 
 消费仓升级时，默认顺序是：
