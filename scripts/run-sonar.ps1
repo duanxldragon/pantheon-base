@@ -32,8 +32,18 @@ if (-not $vars.ContainsKey('SONAR_HOST_URL') -or -not $vars.ContainsKey('SONAR_T
 
 $env:SONAR_HOST_URL = $vars['SONAR_HOST_URL']
 $env:SONAR_TOKEN = $vars['SONAR_TOKEN']
+$projectVersion = node (Join-Path $repoRoot "scripts\foundation-release\resolve-sonar-project-version.mjs")
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
 
-Write-Host "Running SonarQube scan against $($env:SONAR_HOST_URL)"
+$projectVersion = $projectVersion.Trim()
+if (-not $projectVersion) {
+    Write-Error "Unable to resolve Sonar project version"
+    exit 1
+}
+
+Write-Host "Running SonarQube scan against $($env:SONAR_HOST_URL) with project version $projectVersion"
 Remove-Item coverage -Force -ErrorAction SilentlyContinue
 Remove-Item coverage.out -Force -ErrorAction SilentlyContinue
 go test "-coverprofile=coverage.out" ./...
@@ -49,6 +59,7 @@ if (-not (Get-Command Sonar-Scanner -ErrorAction SilentlyContinue)) {
 Sonar-Scanner `
   "-Dsonar.host.url=$env:SONAR_HOST_URL" `
   "-Dsonar.token=$env:SONAR_TOKEN" `
+  "-Dsonar.projectVersion=$projectVersion" `
   "-Dsonar.qualitygate.wait=true"
 
 exit $LASTEXITCODE

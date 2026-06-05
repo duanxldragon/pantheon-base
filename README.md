@@ -137,6 +137,8 @@ Set-Content pantheon-sonarcloud.env "SONAR_HOST_URL=https://sonarcloud.io`nSONAR
 ./scripts/run-sonar.ps1
 ```
 
+`run-sonar.ps1` 会自动把 Sonar `projectVersion` 解析为当前可达的最新 foundation release tag（例如 `base-v0.8.1`）；切出新的 foundation release 后，再次扫描就会以该 release 作为新的 Sonar new-code baseline。
+
 扫描结果上传后，直接在 SonarCloud 仪表盘查看热点、重复率和新代码问题。更完整的门禁策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 ## 权限模型摘要
