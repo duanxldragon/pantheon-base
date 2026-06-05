@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const DEFAULT_ROOT = process.cwd();
@@ -34,13 +33,6 @@ function parseArgs(argv) {
   }
 
   return options;
-}
-
-function runGit(root, args) {
-  return spawnSync('git', args, {
-    cwd: root,
-    encoding: 'utf8',
-  });
 }
 
 function parseReleaseVersion(version) {
@@ -87,23 +79,6 @@ function resolveFromEnvironment() {
   };
 }
 
-function resolveFromGitTag(root) {
-  const result = runGit(root, ['describe', '--tags', '--match', 'base-v*', '--abbrev=0']);
-  if (result.status !== 0) {
-    return null;
-  }
-
-  const projectVersion = result.stdout.trim();
-  if (!projectVersion) {
-    return null;
-  }
-
-  return {
-    projectVersion,
-    source: 'git-tag',
-  };
-}
-
 function resolveFromReleaseManifest(root) {
   const releasesRoot = path.join(root, 'releases');
   if (!fs.existsSync(releasesRoot)) {
@@ -147,7 +122,6 @@ export function resolveSonarProjectVersion(options = {}) {
 
   return (
     resolveFromEnvironment() ??
-    resolveFromGitTag(normalizedOptions.root) ??
     resolveFromReleaseManifest(normalizedOptions.root) ??
     resolveFromDefault(normalizedOptions)
   );

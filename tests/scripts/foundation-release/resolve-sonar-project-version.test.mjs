@@ -27,23 +27,14 @@ function runScript(args, cwd, env = process.env) {
   });
 }
 
-function runGit(root, args) {
-  const result = spawnSync('git', args, {
-    cwd: root,
-    encoding: 'utf8',
-  });
-  assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
-}
-
-test('resolve-sonar-project-version prefers the latest reachable base release tag', () => {
+test('resolve-sonar-project-version prefers the latest release manifest version', () => {
   withTempDir((root) => {
-    runGit(root, ['init']);
-    runGit(root, ['config', 'user.email', 'codex@example.com']);
-    runGit(root, ['config', 'user.name', 'Codex']);
-    fs.writeFileSync(path.join(root, 'README.md'), '# temp\n', 'utf8');
-    runGit(root, ['add', 'README.md']);
-    runGit(root, ['commit', '-m', 'init']);
-    runGit(root, ['tag', 'base-v0.8.1']);
+    fs.mkdirSync(path.join(root, 'releases', 'base-v0.8.1'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'releases', 'base-v0.8.1', 'manifest.json'),
+      `${JSON.stringify({ releaseVersion: 'base-v0.8.1' }, null, 2)}\n`,
+      'utf8',
+    );
 
     const result = runScript([], root);
     assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
@@ -51,7 +42,7 @@ test('resolve-sonar-project-version prefers the latest reachable base release ta
   });
 });
 
-test('resolve-sonar-project-version falls back to releases metadata when git tags are unavailable', () => {
+test('resolve-sonar-project-version picks the highest release manifest version', () => {
   withTempDir((root) => {
     fs.mkdirSync(path.join(root, 'releases', 'base-v0.8.1'), { recursive: true });
     fs.writeFileSync(
@@ -67,6 +58,14 @@ test('resolve-sonar-project-version falls back to releases metadata when git tag
     );
 
     const result = runScript([], root);
+    assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
+    assert.equal(result.stdout.trim(), 'base-v0.8.2');
+  });
+});
+
+test('resolve-sonar-project-version falls back to the default version when no release metadata exists', () => {
+  withTempDir((root) => {
+    const result = runScript(['--default', 'base-v0.8.2'], root);
     assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
     assert.equal(result.stdout.trim(), 'base-v0.8.2');
   });
