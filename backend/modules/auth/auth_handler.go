@@ -16,8 +16,19 @@ type AuthHandler struct {
 	service *AuthService
 }
 
+const csrfGenerateErrorKey = "csrf.generate.error"
+
 func NewAuthHandler(s *AuthService) *AuthHandler {
 	return &AuthHandler{service: s}
+}
+
+func failOnCSRFCookieError(c *gin.Context) bool {
+	if _, err := common.SetCSRFCookie(c.Writer); err != nil {
+		common.FailWithError(c, common.CodeError, err, csrfGenerateErrorKey)
+		return true
+	}
+
+	return false
 }
 
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
@@ -80,8 +91,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
 	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
-		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+	if failOnCSRFCookieError(c) {
 		return
 	}
 
@@ -129,8 +139,7 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	if resp.RefreshToken != "" {
 		common.SetRefreshTokenCookie(c.Writer, resp.RefreshToken)
 	}
-	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
-		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+	if failOnCSRFCookieError(c) {
 		return
 	}
 
@@ -171,8 +180,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 
 	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
 	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	if _, csrfErr := common.SetCSRFCookie(c.Writer); csrfErr != nil {
-		common.FailWithError(c, common.CodeError, csrfErr, "csrf.generate.error")
+	if failOnCSRFCookieError(c) {
 		return
 	}
 

@@ -92,3 +92,13 @@ test('build-release-manifest fails when release version is missing', () => {
     assert.match(result.stderr || result.error?.message || '', /release-version|cannot find/i);
   });
 });
+
+test('build-release-manifest help lists the supported release metadata flags', () => {
+  const result = runScript(['--help'], repoRoot);
+
+  assert.equal(result.status, 0, result.stderr || result.error?.message);
+  assert.match(result.stdout, /--release-version <version>/);
+  assert.match(result.stdout, /--release-line <line>/);
+  assert.match(result.stdout, /--base-commit <sha>/);
+  assert.match(result.stdout, /--consumer-impact <text>/);
+});
