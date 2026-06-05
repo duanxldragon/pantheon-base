@@ -23,7 +23,9 @@ English version: [FOUNDATION_RELEASE_RUNBOOK_20260604.en.md](./FOUNDATION_RELEAS
 1. `releases/<version>/`
 2. `dist/foundation-releases/<version>/`
 
-前者用于长期留档、review 和审计，后者用于脚本消费和本地升级演练。
+前者用于长期留档、review 和审计，后者用于脚本消费和本地升级演练。`dist/foundation-releases/` 属于可重建的本地 bundle 输出，默认不作为长期入库资产。
+
+注意：`dist/foundation-releases/<version>/bundle` 只应包含共享底座代码与文档，不应混入运行时产物，例如 `uploads/`、本地缓存或临时生成文件。bundle 构建应遵循 release manifest 中声明的排除规则。
 
 ## 2. 在 `pantheon-base` 切 release
 

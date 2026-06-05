@@ -59,7 +59,22 @@ function readManifest(releaseRoot) {
   return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 }
 
-function copyEntry(root, relativePath, targetRoot) {
+function normalizeRelativePath(relativePath) {
+  return relativePath.replaceAll(path.sep, '/');
+}
+
+function isExcludedPath(relativePath, exclusions) {
+  const normalizedRelativePath = normalizeRelativePath(relativePath);
+  return exclusions.some((entry) => {
+    const normalizedEntry = normalizeRelativePath(entry);
+    return (
+      normalizedRelativePath === normalizedEntry ||
+      normalizedRelativePath.startsWith(`${normalizedEntry}/`)
+    );
+  });
+}
+
+function copyEntry(root, relativePath, targetRoot, exclusions) {
   const sourcePath = path.join(root, relativePath);
   if (!fs.existsSync(sourcePath)) {
     throw new Error(`shared path is missing: ${relativePath}`);
@@ -67,7 +82,10 @@ function copyEntry(root, relativePath, targetRoot) {
 
   const targetPath = path.join(targetRoot, relativePath);
   fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-  fs.cpSync(sourcePath, targetPath, { recursive: true });
+  fs.cpSync(sourcePath, targetPath, {
+    recursive: true,
+    filter: (source) => !isExcludedPath(path.relative(root, source), exclusions),
+  });
 
   return {
     source: relativePath,
@@ -92,6 +110,7 @@ export function createReleaseBundle(options) {
   const pathReport = {
     releaseVersion: manifest.releaseVersion,
     copiedAt: new Date().toISOString(),
+    exclusions: manifest.bundleExclusions ?? [],
     backend: [],
     frontend: [],
     docs: [],
@@ -101,13 +120,19 @@ export function createReleaseBundle(options) {
   copyMetadataFiles(releaseRoot, distRoot);
 
   for (const relativePath of manifest.sharedPaths?.backend || []) {
-    pathReport.backend.push(copyEntry(options.root, relativePath, path.join(bundleRoot, 'shared-backend')));
+    pathReport.backend.push(
+      copyEntry(options.root, relativePath, path.join(bundleRoot, 'shared-backend'), manifest.bundleExclusions ?? []),
+    );
   }
   for (const relativePath of manifest.sharedPaths?.frontend || []) {
-    pathReport.frontend.push(copyEntry(options.root, relativePath, path.join(bundleRoot, 'shared-frontend')));
+    pathReport.frontend.push(
+      copyEntry(options.root, relativePath, path.join(bundleRoot, 'shared-frontend'), manifest.bundleExclusions ?? []),
+    );
   }
   for (const relativePath of manifest.sharedPaths?.docs || []) {
-    pathReport.docs.push(copyEntry(options.root, relativePath, path.join(bundleRoot, 'docs')));
+    pathReport.docs.push(
+      copyEntry(options.root, relativePath, path.join(bundleRoot, 'docs'), manifest.bundleExclusions ?? []),
+    );
   }
 
   fs.writeFileSync(path.join(bundleRoot, 'manifest.paths.json'), `${JSON.stringify(pathReport, null, 2)}\n`, 'utf8');
