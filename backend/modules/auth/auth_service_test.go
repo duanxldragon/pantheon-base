@@ -1,17 +1,20 @@
 package auth
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
 	"pantheon-platform/backend/internal/middleware"
 	auditmod "pantheon-platform/backend/modules/system/audit"
 	settingmod "pantheon-platform/backend/modules/system/config/setting"
+	rolemod "pantheon-platform/backend/modules/system/iam/role"
 	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/contracts"
 	"pantheon-platform/backend/pkg/testmysql"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -22,11 +25,93 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 	// 迁移模型
 	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &SystemAuthSecurityEvent{}, &SystemUserPasswordHistory{})
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY AUTOINCREMENT, role_key TEXT, status INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id INTEGER PRIMARY KEY AUTOINCREMENT, role_id INTEGER, permission_key TEXT)")
+	_ = db.AutoMigrate(&settingmod.SystemSetting{}, &rolemod.SystemRole{}, &user.SystemUserRole{}, &rolemod.SystemRolePermission{})
 	return db
+}
+
+func TestNewAuthService_InitializesSessionBoundary(t *testing.T) {
+	s := NewAuthService(nil)
+
+	field, ok := reflect.TypeOf(*s).FieldByName("sessions")
+	if !ok {
+		t.Fatalf("expected AuthService to expose a dedicated sessions boundary")
+	}
+	if field.Type.Kind() != reflect.Ptr {
+		t.Fatalf("expected sessions boundary to be stored as a pointer, got %s", field.Type.Kind())
+	}
+
+	value := reflect.ValueOf(s).Elem().FieldByName("sessions")
+	if !value.IsValid() || value.IsNil() {
+		t.Fatalf("expected sessions boundary to be initialized")
+	}
+}
+
+func TestNewAuthService_InitializesLoginBoundary(t *testing.T) {
+	s := NewAuthService(nil)
+
+	field, ok := reflect.TypeOf(*s).FieldByName("logins")
+	if !ok {
+		t.Fatalf("expected AuthService to expose a dedicated logins boundary")
+	}
+	if field.Type.Kind() != reflect.Ptr {
+		t.Fatalf("expected logins boundary to be stored as a pointer, got %s", field.Type.Kind())
+	}
+
+	value := reflect.ValueOf(s).Elem().FieldByName("logins")
+	if !value.IsValid() || value.IsNil() {
+		t.Fatalf("expected logins boundary to be initialized")
+	}
+}
+
+func TestNewAuthService_InitializesMFABoundary(t *testing.T) {
+	s := NewAuthService(nil)
+
+	field, ok := reflect.TypeOf(*s).FieldByName("mfa")
+	if !ok {
+		t.Fatalf("expected AuthService to expose a dedicated mfa boundary")
+	}
+	if field.Type.Kind() != reflect.Ptr {
+		t.Fatalf("expected mfa boundary to be stored as a pointer, got %s", field.Type.Kind())
+	}
+
+	value := reflect.ValueOf(s).Elem().FieldByName("mfa")
+	if !value.IsValid() || value.IsNil() {
+		t.Fatalf("expected mfa boundary to be initialized")
+	}
+}
+
+func TestNewAuthService_InitializesPasswordBoundary(t *testing.T) {
+	s := NewAuthService(nil)
+
+	field, ok := reflect.TypeOf(*s).FieldByName("passwords")
+	if !ok {
+		t.Fatalf("expected AuthService to expose a dedicated passwords boundary")
+	}
+	if field.Type.Kind() != reflect.Ptr {
+		t.Fatalf("expected passwords boundary to be stored as a pointer, got %s", field.Type.Kind())
+	}
+
+	value := reflect.ValueOf(s).Elem().FieldByName("passwords")
+	if !value.IsValid() || value.IsNil() {
+		t.Fatalf("expected passwords boundary to be initialized")
+	}
+}
+
+func TestNewAuthService_InitializesOverviewBoundary(t *testing.T) {
+	s := NewAuthService(nil)
+
+	field, ok := reflect.TypeOf(*s).FieldByName("overview")
+	if !ok {
+		t.Fatalf("expected AuthService to expose a dedicated overview boundary")
+	}
+	if field.Type.Kind() != reflect.Ptr {
+		t.Fatalf("expected overview boundary to be stored as a pointer, got %s", field.Type.Kind())
+	}
+
+	value := reflect.ValueOf(s).Elem().FieldByName("overview")
+	if !value.IsValid() || value.IsNil() {
+		t.Fatalf("expected overview boundary to be initialized")
+	}
 }
 
 func boolPtr(value bool) *bool {
@@ -1207,6 +1292,89 @@ func TestAuthService_CreateSessionRevokesOlderActiveSessionsByConfiguredLimit(t 
 	}
 	if current.RevokedAt != nil {
 		t.Fatalf("expected new session to stay active")
+	}
+}
+
+func TestAuthService_CreateSessionNormalizesClientMetadata(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+
+	testUser := user.SystemUser{
+		Username: "normalized-session-user",
+		Status:   1,
+	}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+
+	pair, err := s.CreateSession(&testUser, nil, " 127.0.0.1 ", "  Test Browser\x00  ")
+	if err != nil {
+		t.Fatalf("create session: %v", err)
+	}
+
+	var created SystemUserSession
+	if err := db.Where("session_id = ?", pair.SessionID).First(&created).Error; err != nil {
+		t.Fatalf("load created session: %v", err)
+	}
+	if created.LastIP != "127.0.0.1" {
+		t.Fatalf("expected normalized ip, got %q", created.LastIP)
+	}
+	if created.UserAgent != "Test Browser" {
+		t.Fatalf("expected sanitized user agent, got %q", created.UserAgent)
+	}
+}
+
+func TestAuthService_RefreshSessionRejectsIdleSessionOutsidePolicy(t *testing.T) {
+	db := setupTestDB(t)
+	s := NewAuthService(db)
+	now := time.Now()
+
+	testUser := user.SystemUser{
+		Username: "idle-refresh-user",
+		Status:   1,
+	}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.session_idle_minutes', '30'), ('audit.session_retention_days', '90')").Error; err != nil {
+		t.Fatalf("seed session settings: %v", err)
+	}
+	if err := s.ReloadSettings(); err != nil {
+		t.Fatalf("reload settings: %v", err)
+	}
+
+	session := SystemUserSession{
+		SessionID:        "idle-refresh-session",
+		UserID:           testUser.ID,
+		RefreshJTI:       "idle-refresh-jti",
+		RefreshExpiresAt: now.Add(24 * time.Hour),
+		LastRefreshAt:    timePtr(now.Add(-2 * time.Hour)),
+		LastActivityAt:   timePtr(now.Add(-45 * time.Minute)),
+		CreatedAt:        now.Add(-3 * time.Hour),
+	}
+	if err := db.Create(&session).Error; err != nil {
+		t.Fatalf("seed session: %v", err)
+	}
+
+	_, err := s.RefreshSession(&common.CustomClaims{
+		UserID:    testUser.ID,
+		Username:  testUser.Username,
+		TokenType: common.TokenTypeRefresh,
+		SessionID: session.SessionID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID: session.RefreshJTI,
+		},
+	}, "127.0.0.1", "refresh-agent")
+	if err == nil || err.Error() != "refresh_token.invalid" {
+		t.Fatalf("expected refresh_token.invalid for idle session, got %v", err)
+	}
+
+	var refreshed SystemUserSession
+	if err := db.Where("session_id = ?", session.SessionID).First(&refreshed).Error; err != nil {
+		t.Fatalf("load refreshed session: %v", err)
+	}
+	if refreshed.RevokedAt == nil {
+		t.Fatalf("expected idle session to be revoked during refresh attempt")
 	}
 }
 

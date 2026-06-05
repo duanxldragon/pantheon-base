@@ -11,6 +11,7 @@ import {
   verifiedApiHeaders,
 } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
+import { expectOnlyAllowedRuntimeErrors } from '../helpers/runtime-errors';
 
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
@@ -65,13 +66,6 @@ function collectRuntimeErrors(page: Page) {
   });
 
   return runtimeErrors;
-}
-
-function expectOnlyAllowedRuntimeErrors(runtimeErrors: string[], allowedPatterns: RegExp[] = []) {
-  const unexpectedErrors = runtimeErrors.filter(
-    (message) => !allowedPatterns.some((pattern) => pattern.test(message)),
-  );
-  expect(unexpectedErrors).toEqual([]);
 }
 
 async function expectNoPageError(page: Page) {

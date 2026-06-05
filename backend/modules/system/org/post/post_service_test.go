@@ -28,6 +28,23 @@ func setupPostTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
+type postFixtureUser struct {
+	ID        uint64         `gorm:"primaryKey;autoIncrement"`
+	PostID    uint64         `gorm:"column:post_id"`
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at"`
+}
+
+func (postFixtureUser) TableName() string {
+	return "system_user"
+}
+
+func migratePostFixtureUsers(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	if err := db.AutoMigrate(&postFixtureUser{}); err != nil {
+		t.Fatalf("migrate user fixture: %v", err)
+	}
+}
+
 func TestPostService_DeleteReleasesPostCode(t *testing.T) {
 	db := setupPostTestDB(t)
 	service := NewPostService(db)
@@ -255,13 +272,7 @@ func TestPostService_ExportPostsIncludesGovernanceColumns(t *testing.T) {
 		t.Fatalf("migrate post service: %v", err)
 	}
 
-	if err := db.Exec(`CREATE TABLE IF NOT EXISTS system_user (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		post_id INTEGER,
-		deleted_at DATETIME
-	)`).Error; err != nil {
-		t.Fatalf("create user table: %v", err)
-	}
+	migratePostFixtureUsers(t, db)
 
 	activePost := SystemPost{
 		DeptID:   10,
