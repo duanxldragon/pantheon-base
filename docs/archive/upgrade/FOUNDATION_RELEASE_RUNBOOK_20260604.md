@@ -2,7 +2,7 @@
 title: Foundation Release 执行 Runbook（2026-06-04）
 doc_type: Design
 layer: platform
-status: Active
+status: Archived
 index_group: archive/upgrade
 retention_reason: 作为底座 release metadata、bundle 生成与 consumer upgrade 的首版执行 SOP 保留
 linked_contracts:

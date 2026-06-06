@@ -2,7 +2,7 @@
 title: Foundation Release Runbook (2026-06-04)
 doc_type: Design
 layer: platform
-status: Active
+status: Archived
 index_group: archive/upgrade
 retention_reason: Retained as the first operational SOP for foundation release metadata, bundle generation, and downstream consumer upgrade
 linked_contracts:
