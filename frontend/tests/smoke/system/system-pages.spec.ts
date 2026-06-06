@@ -171,24 +171,49 @@ async function waitForOkApiResponse(
 }
 
 async function clickVisibleConfirmButton(page: Page, titleText?: string) {
-  const allVisibleConfirmDialogs = page.locator(
-    '.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="alertdialog"]:visible, [role="tooltip"]:visible',
-  );
-  const titledConfirmDialog = titleText
-    ? allVisibleConfirmDialogs.filter({ hasText: titleText }).last()
-    : null;
-  const confirmDialog =
-    titledConfirmDialog && await titledConfirmDialog.count()
-      ? titledConfirmDialog
-      : allVisibleConfirmDialogs.last();
+  const confirmDialog = getVisibleConfirmDialog(page, titleText);
   await expect(confirmDialog).toBeVisible();
   await confirmDialog.getByRole('button', { name: '确定', exact: true }).click();
 }
 
-async function clickVisibleRowAction(row: Locator, actionName: string) {
-  const actionButton = row.locator('button:visible').filter({ hasText: new RegExp(`^${actionName}$`) }).last();
-  await expect(actionButton).toBeVisible();
-  await actionButton.click();
+function getVisibleConfirmDialog(page: Page, titleText?: string) {
+  const allVisibleConfirmDialogs = page.locator(
+    '.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="alertdialog"]:visible, [role="tooltip"]:visible',
+  );
+  return titleText
+    ? allVisibleConfirmDialogs.filter({ hasText: titleText }).last()
+    : allVisibleConfirmDialogs.last();
+}
+
+async function waitForVisibleConfirmDialog(page: Page, titleText?: string, timeout = 1000) {
+  try {
+    await expect(getVisibleConfirmDialog(page, titleText)).toBeVisible({ timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function clickVisibleRowAction(
+  page: Page,
+  row: Locator,
+  actionName: string,
+  confirmTitleText?: string,
+) {
+  const actionButtons = row.locator('button:visible').filter({
+    hasText: new RegExp(`^${actionName}$`),
+  });
+  const actionCount = await actionButtons.count();
+  expect(actionCount).toBeGreaterThan(0);
+  for (let index = actionCount - 1; index >= 0; index -= 1) {
+    const actionButton = actionButtons.nth(index);
+    await expect(actionButton).toBeVisible();
+    await actionButton.click();
+    if (!confirmTitleText || await waitForVisibleConfirmDialog(page, confirmTitleText)) {
+      return;
+    }
+  }
+  throw new Error(`Failed to trigger "${actionName}" row action dialog`);
 }
 
 async function dismissVisibleSuccessDialog(page: Page) {
@@ -2984,7 +3009,7 @@ test('user and role smoke: role binding can be deferred to role management and r
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
     const memberRow = memberDrawer.getByRole('row', { name: new RegExp(username) }).first();
     await expect(memberRow).toBeVisible();
-    await clickVisibleRowAction(memberRow, '删除');
+    await clickVisibleRowAction(page, memberRow, '删除', '确认移除该成员的当前角色绑定？');
     await Promise.all([
       waitForOkApiResponse(
         page,
