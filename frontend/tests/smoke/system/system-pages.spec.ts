@@ -233,6 +233,26 @@ async function clickVisibleFixedRightRowAction(
   throw new Error(`Failed to trigger "${actionName}" row action dialog`);
 }
 
+async function waitForVisibleTableRowIndexByText(
+  container: Locator,
+  text: string,
+  timeout = 5000,
+) {
+  await expect
+    .poll(
+      async () => {
+        try {
+          return await findVisibleTableRowIndexByText(container, text);
+        } catch {
+          return -1;
+        }
+      },
+      { timeout },
+    )
+    .toBeGreaterThanOrEqual(0);
+  return findVisibleTableRowIndexByText(container, text);
+}
+
 async function dismissVisibleSuccessDialog(page: Page) {
   const successDialog = page.locator('.app-dialog:visible, [role="dialog"]:visible').filter({
     has: page.getByRole('button', { name: '确定', exact: true }),
@@ -3022,9 +3042,28 @@ test('user and role smoke: role binding can be deferred to role management and r
       const payload = await response.json();
       return payload.data.roleIds;
     }).toEqual([role!.id]);
+    await expect.poll(async () => {
+      const response = await page.request.get(`${apiBaseUrl}/system/role/${role!.id}/users`, {
+        headers: authHeaders(accessToken),
+        params: { keyword: username, page: 1, pageSize: 10 },
+      });
+      const payload = await response.json();
+      const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+      return items.some((item: { username: string }) => item.username === username);
+    }).toBeTruthy();
     await memberDrawer.getByPlaceholder('按用户名或昵称搜索当前成员').fill(username);
+    const memberSearchResponse = waitForOkApiResponse(
+      page,
+      (response) => {
+        const url = new URL(response.url());
+        return url.pathname.endsWith(`/system/role/${role!.id}/users`)
+          && response.request().method() === 'GET'
+          && (url.searchParams.get('keyword') || '') === username;
+      },
+    );
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
-    const memberRowIndex = await findVisibleTableRowIndexByText(memberDrawer, username);
+    await memberSearchResponse;
+    const memberRowIndex = await waitForVisibleTableRowIndexByText(memberDrawer, username);
     await clickVisibleFixedRightRowAction(
       page,
       memberDrawer,
