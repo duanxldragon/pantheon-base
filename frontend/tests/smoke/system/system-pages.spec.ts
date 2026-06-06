@@ -171,9 +171,16 @@ async function waitForOkApiResponse(
 }
 
 async function clickVisibleConfirmButton(page: Page, titleText?: string) {
-  const confirmDialog = titleText
-    ? page.locator('.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, [role="dialog"]:visible, [role="alertdialog"]:visible').filter({ hasText: titleText }).last()
-    : page.locator('.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="alertdialog"]:visible, [role="tooltip"]:visible').last();
+  const allVisibleConfirmDialogs = page.locator(
+    '.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="alertdialog"]:visible, [role="tooltip"]:visible',
+  );
+  const titledConfirmDialog = titleText
+    ? allVisibleConfirmDialogs.filter({ hasText: titleText }).last()
+    : null;
+  const confirmDialog =
+    titledConfirmDialog && await titledConfirmDialog.count()
+      ? titledConfirmDialog
+      : allVisibleConfirmDialogs.last();
   await expect(confirmDialog).toBeVisible();
   await confirmDialog.getByRole('button', { name: '确定', exact: true }).click();
 }
