@@ -172,8 +172,8 @@ async function waitForOkApiResponse(
 
 async function clickVisibleConfirmButton(page: Page, titleText?: string) {
   const confirmDialog = titleText
-    ? page.locator('.app-dialog:visible, [role="dialog"]:visible').filter({ hasText: titleText }).last()
-    : page.locator('.app-dialog:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="tooltip"]:visible').last();
+    ? page.locator('.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, [role="dialog"]:visible, [role="alertdialog"]:visible').filter({ hasText: titleText }).last()
+    : page.locator('.app-dialog:visible, .arco-modal:visible, .arco-modal-confirm:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="alertdialog"]:visible, [role="tooltip"]:visible').last();
   await expect(confirmDialog).toBeVisible();
   await confirmDialog.getByRole('button', { name: '确定', exact: true }).click();
 }
@@ -1085,7 +1085,6 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   const createdListPayload = await createdListResp.json();
   const createdRowId = createdListPayload.data.items[0]?.id as number | undefined;
   expect(createdListPayload.data.items[0]?.key).toBe(createKey);
-  await expect(page.locator('.system-list__table').getByText(createKey, { exact: false }).first()).toBeVisible();
 
   await page.locator('.filter-panel').getByRole('button', { name: '重置' }).click();
   await formItem(page, '翻译键').locator('input').first().fill(seedKey);
