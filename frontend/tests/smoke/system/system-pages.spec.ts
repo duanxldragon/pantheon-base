@@ -194,13 +194,30 @@ async function waitForVisibleConfirmDialog(page: Page, titleText?: string, timeo
   }
 }
 
-async function clickVisibleRowAction(
+async function findVisibleTableRowIndexByText(container: Locator, text: string) {
+  const rows = container.locator('.arco-table-body .arco-table-tr:visible');
+  const rowCount = await rows.count();
+  for (let index = 0; index < rowCount; index += 1) {
+    const row = rows.nth(index);
+    const rowText = await row.innerText();
+    if (rowText.includes(text)) {
+      return index;
+    }
+  }
+  throw new Error(`Failed to find visible table row containing "${text}"`);
+}
+
+async function clickVisibleFixedRightRowAction(
   page: Page,
-  row: Locator,
+  container: Locator,
+  rowIndex: number,
   actionName: string,
   confirmTitleText?: string,
 ) {
-  const actionButtons = row.locator('button:visible').filter({
+  const actionRows = container.locator('.arco-table-fixed-right .arco-table-body .arco-table-tr:visible');
+  const actionRowCount = await actionRows.count();
+  expect(actionRowCount).toBeGreaterThan(rowIndex);
+  const actionButtons = actionRows.nth(rowIndex).locator('button:visible').filter({
     hasText: new RegExp(`^${actionName}$`),
   });
   const actionCount = await actionButtons.count();
@@ -214,19 +231,6 @@ async function clickVisibleRowAction(
     }
   }
   throw new Error(`Failed to trigger "${actionName}" row action dialog`);
-}
-
-async function findVisibleTableRowByText(container: Locator, text: string) {
-  const rows = container.locator('.arco-table-body .arco-table-tr:visible');
-  const rowCount = await rows.count();
-  for (let index = 0; index < rowCount; index += 1) {
-    const row = rows.nth(index);
-    const rowText = await row.innerText();
-    if (rowText.includes(text)) {
-      return row;
-    }
-  }
-  throw new Error(`Failed to find visible table row containing "${text}"`);
 }
 
 async function dismissVisibleSuccessDialog(page: Page) {
@@ -3020,9 +3024,14 @@ test('user and role smoke: role binding can be deferred to role management and r
     }).toEqual([role!.id]);
     await memberDrawer.getByPlaceholder('按用户名或昵称搜索当前成员').fill(username);
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
-    const memberRow = await findVisibleTableRowByText(memberDrawer, username);
-    await expect(memberRow).toBeVisible();
-    await clickVisibleRowAction(page, memberRow, '删除', '确认移除该成员的当前角色绑定？');
+    const memberRowIndex = await findVisibleTableRowIndexByText(memberDrawer, username);
+    await clickVisibleFixedRightRowAction(
+      page,
+      memberDrawer,
+      memberRowIndex,
+      '删除',
+      '确认移除该成员的当前角色绑定？',
+    );
     await Promise.all([
       waitForOkApiResponse(
         page,
