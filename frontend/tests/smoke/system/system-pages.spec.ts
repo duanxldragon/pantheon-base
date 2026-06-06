@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import syncFs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import {
   adminCredentials,
   apiBaseUrl,
@@ -183,6 +183,12 @@ async function clickVisibleConfirmButton(page: Page, titleText?: string) {
       : allVisibleConfirmDialogs.last();
   await expect(confirmDialog).toBeVisible();
   await confirmDialog.getByRole('button', { name: '确定', exact: true }).click();
+}
+
+async function clickVisibleRowAction(row: Locator, actionName: string) {
+  const actionButton = row.locator('button:visible').filter({ hasText: new RegExp(`^${actionName}$`) }).last();
+  await expect(actionButton).toBeVisible();
+  await actionButton.click();
 }
 
 async function dismissVisibleSuccessDialog(page: Page) {
@@ -2978,7 +2984,7 @@ test('user and role smoke: role binding can be deferred to role management and r
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
     const memberRow = memberDrawer.getByRole('row', { name: new RegExp(username) }).first();
     await expect(memberRow).toBeVisible();
-    await memberRow.getByRole('button', { name: '删除' }).click();
+    await clickVisibleRowAction(memberRow, '删除');
     await Promise.all([
       waitForOkApiResponse(
         page,
