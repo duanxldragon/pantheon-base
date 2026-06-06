@@ -216,6 +216,19 @@ async function clickVisibleRowAction(
   throw new Error(`Failed to trigger "${actionName}" row action dialog`);
 }
 
+async function findVisibleTableRowByText(container: Locator, text: string) {
+  const rows = container.locator('.arco-table-body .arco-table-tr:visible');
+  const rowCount = await rows.count();
+  for (let index = 0; index < rowCount; index += 1) {
+    const row = rows.nth(index);
+    const rowText = await row.innerText();
+    if (rowText.includes(text)) {
+      return row;
+    }
+  }
+  throw new Error(`Failed to find visible table row containing "${text}"`);
+}
+
 async function dismissVisibleSuccessDialog(page: Page) {
   const successDialog = page.locator('.app-dialog:visible, [role="dialog"]:visible').filter({
     has: page.getByRole('button', { name: '确定', exact: true }),
@@ -3007,7 +3020,7 @@ test('user and role smoke: role binding can be deferred to role management and r
     }).toEqual([role!.id]);
     await memberDrawer.getByPlaceholder('按用户名或昵称搜索当前成员').fill(username);
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
-    const memberRow = memberDrawer.getByRole('row', { name: new RegExp(username) }).first();
+    const memberRow = await findVisibleTableRowByText(memberDrawer, username);
     await expect(memberRow).toBeVisible();
     await clickVisibleRowAction(page, memberRow, '删除', '确认移除该成员的当前角色绑定？');
     await Promise.all([
