@@ -2,7 +2,9 @@
 title: GitHub Quality and Sonar Refactor Design
 doc_type: Design
 layer: platform
-status: Active
+status: Approved
+index_group: superpowers-specs
+retention_reason: retained as the design and reflection anchor for refactoring GitHub merge gates around fast PR feedback, auxiliary Sonar usage, and non-blocking full-regression strategy
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-06
@@ -82,7 +84,7 @@ Keep only fast, deterministic quality checks in the PR merge gate:
 - docs governance
 - frontend contract
 - backend tests
-- duplication gate
+- duplication review
 - lightweight `smoke-sanity`
 
 `smoke-sanity` should prove baseline browser-path availability without expanding into full system regression. The chosen scope is:
@@ -91,6 +93,8 @@ Keep only fast, deterministic quality checks in the PR merge gate:
 - `npm run test:smoke:system:pages`
 
 This preserves a real browser sanity signal while cutting out heavier form, IAM-authz, governance, and business-runtime suites from every PR.
+
+Duplication still runs in GitHub, but the repository is currently at `3.03%` full-repository duplication. Because the governance target is new-code duplication, not full-repository baseline duplication, PR runs should surface duplication as a report instead of letting baseline debt block unrelated changes. Threshold enforcement belongs on protected-branch push, scheduled review, or manual quality review until a proper new-code duplication gate exists.
 
 ### 4.2 `security.yml`
 
