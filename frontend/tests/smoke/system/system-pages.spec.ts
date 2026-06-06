@@ -194,40 +194,46 @@ async function waitForVisibleConfirmDialog(page: Page, titleText?: string, timeo
   }
 }
 
-async function findVisibleTableRowIndexByText(container: Locator, text: string) {
-  const rows = container.locator('.arco-table').last().locator('.arco-table-body .arco-table-tr');
+async function findVisibleRowByText(container: Locator, text: string, actionName?: string) {
+  const rows = container.getByRole('row').filter({ hasText: text });
   const rowCount = await rows.count();
-  for (let index = 0; index < rowCount; index += 1) {
+  for (let index = rowCount - 1; index >= 0; index -= 1) {
     const row = rows.nth(index);
-    const rowText = (await row.textContent()) || '';
-    if (rowText.includes(text)) {
-      return index;
+    if (!await row.isVisible()) {
+      continue;
     }
+    const rowText = (await row.textContent()) || '';
+    if (!rowText.includes(text)) {
+      continue;
+    }
+    if (actionName) {
+      const actionButton = row.getByRole('button', { name: actionName, exact: true }).last();
+      if (!await actionButton.count()) {
+        continue;
+      }
+      if (!await actionButton.isVisible()) {
+        continue;
+      }
+    }
+    return row;
   }
   throw new Error(`Failed to find visible table row containing "${text}"`);
 }
 
-async function clickVisibleFixedRightRowAction(
+async function clickVisibleRowAction(
   page: Page,
-  container: Locator,
-  rowIndex: number,
+  row: Locator,
   actionName: string,
   confirmTitleText?: string,
 ) {
-  const actionRows = container
-    .locator('.arco-table')
-    .last()
-    .locator('.arco-table-fixed-right .arco-table-body .arco-table-tr');
-  const actionRowCount = await actionRows.count();
-  expect(actionRowCount).toBeGreaterThan(rowIndex);
-  const actionButtons = actionRows.nth(rowIndex).locator('button:visible').filter({
-    hasText: new RegExp(`^${actionName}$`),
-  });
+  const actionButtons = row.getByRole('button', { name: actionName, exact: true });
   const actionCount = await actionButtons.count();
   expect(actionCount).toBeGreaterThan(0);
   for (let index = actionCount - 1; index >= 0; index -= 1) {
     const actionButton = actionButtons.nth(index);
-    await expect(actionButton).toBeVisible();
+    if (!await actionButton.isVisible()) {
+      continue;
+    }
     await actionButton.click();
     if (!confirmTitleText || await waitForVisibleConfirmDialog(page, confirmTitleText)) {
       return;
@@ -236,15 +242,16 @@ async function clickVisibleFixedRightRowAction(
   throw new Error(`Failed to trigger "${actionName}" row action dialog`);
 }
 
-async function waitForVisibleTableRowIndexByText(
+async function waitForVisibleRowByText(
   container: Locator,
   text: string,
+  actionName?: string,
   timeout = 15000,
 ) {
   await expect(
     container.getByRole('row', { name: new RegExp(text) }).last(),
   ).toBeVisible({ timeout });
-  return findVisibleTableRowIndexByText(container, text);
+  return findVisibleRowByText(container, text, actionName);
 }
 
 async function dismissVisibleSuccessDialog(page: Page) {
@@ -3057,11 +3064,10 @@ test('user and role smoke: role binding can be deferred to role management and r
     );
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
     await memberSearchResponse;
-    const memberRowIndex = await waitForVisibleTableRowIndexByText(memberDrawer, username);
-    await clickVisibleFixedRightRowAction(
+    const memberRow = await waitForVisibleRowByText(memberDrawer, username, '删除');
+    await clickVisibleRowAction(
       page,
-      memberDrawer,
-      memberRowIndex,
+      memberRow,
       '删除',
       '确认移除该成员的当前角色绑定？',
     );
