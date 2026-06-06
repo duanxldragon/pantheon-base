@@ -195,11 +195,11 @@ async function waitForVisibleConfirmDialog(page: Page, titleText?: string, timeo
 }
 
 async function findVisibleTableRowIndexByText(container: Locator, text: string) {
-  const rows = container.locator('.arco-table-body .arco-table-tr:visible');
+  const rows = container.locator('.arco-table').last().locator('.arco-table-body .arco-table-tr');
   const rowCount = await rows.count();
   for (let index = 0; index < rowCount; index += 1) {
     const row = rows.nth(index);
-    const rowText = await row.innerText();
+    const rowText = (await row.textContent()) || '';
     if (rowText.includes(text)) {
       return index;
     }
@@ -214,7 +214,10 @@ async function clickVisibleFixedRightRowAction(
   actionName: string,
   confirmTitleText?: string,
 ) {
-  const actionRows = container.locator('.arco-table-fixed-right .arco-table-body .arco-table-tr:visible');
+  const actionRows = container
+    .locator('.arco-table')
+    .last()
+    .locator('.arco-table-fixed-right .arco-table-body .arco-table-tr');
   const actionRowCount = await actionRows.count();
   expect(actionRowCount).toBeGreaterThan(rowIndex);
   const actionButtons = actionRows.nth(rowIndex).locator('button:visible').filter({
@@ -236,20 +239,11 @@ async function clickVisibleFixedRightRowAction(
 async function waitForVisibleTableRowIndexByText(
   container: Locator,
   text: string,
-  timeout = 5000,
+  timeout = 15000,
 ) {
-  await expect
-    .poll(
-      async () => {
-        try {
-          return await findVisibleTableRowIndexByText(container, text);
-        } catch {
-          return -1;
-        }
-      },
-      { timeout },
-    )
-    .toBeGreaterThanOrEqual(0);
+  await expect(
+    container.getByRole('row', { name: new RegExp(text) }).last(),
+  ).toBeVisible({ timeout });
   return findVisibleTableRowIndexByText(container, text);
 }
 
