@@ -521,7 +521,7 @@ func TestI18nService_HydrateBuiltinLocales(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get fr lang pack: %v", err)
 	}
-	if pack["system.permission.session.delete"] != "Session Revoke" {
+	if pack["system.permission.session.delete"] != "Révocation de session" {
 		t.Fatalf("expected builtin fr value, got %q", pack["system.permission.session.delete"])
 	}
 }
