@@ -429,16 +429,24 @@ func TestI18nService_FillMissingLocalesUsesBuiltinValue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fill missing locales: %v", err)
 	}
-	if resp.Created == 0 {
-		t.Fatalf("expected created rows")
+	if resp.Created != 0 {
+		t.Fatalf("expected builtin coverage to avoid stored rows, got %+v", resp)
 	}
 
-	var row SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.permission.session.delete", "en-US").First(&row).Error; err != nil {
-		t.Fatalf("load hydrated locale: %v", err)
+	var count int64
+	if err := db.Model(&SystemI18n{}).Where("`key` = ? AND locale = ?", "system.permission.session.delete", "en-US").Count(&count).Error; err != nil {
+		t.Fatalf("count hydrated locale: %v", err)
 	}
-	if row.Value != "Session Revoke" {
-		t.Fatalf("expected builtin value, got %q", row.Value)
+	if count != 0 {
+		t.Fatalf("expected no persisted builtin row, got %d", count)
+	}
+
+	pack, err := service.GetLangPack("en-US")
+	if err != nil {
+		t.Fatalf("get lang pack: %v", err)
+	}
+	if pack["system.permission.session.delete"] != "Session Revoke" {
+		t.Fatalf("expected builtin value, got %q", pack["system.permission.session.delete"])
 	}
 }
 
@@ -489,8 +497,8 @@ func TestI18nService_HydrateBuiltinLocales(t *testing.T) {
 	if err != nil {
 		t.Fatalf("hydrate builtin locales: %v", err)
 	}
-	if resp.Updated == 0 || resp.Created == 0 {
-		t.Fatalf("expected updated and created rows, got %+v", resp)
+	if resp.Updated == 0 || resp.Created != 0 {
+		t.Fatalf("expected placeholder update without extra rows, got %+v", resp)
 	}
 
 	var enRow SystemI18n
@@ -501,12 +509,20 @@ func TestI18nService_HydrateBuiltinLocales(t *testing.T) {
 		t.Fatalf("expected hydrated en value, got %q", enRow.Value)
 	}
 
-	var frRow SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.permission.session.delete", "fr-FR").First(&frRow).Error; err != nil {
-		t.Fatalf("load fr row: %v", err)
+	var frCount int64
+	if err := db.Model(&SystemI18n{}).Where("`key` = ? AND locale = ?", "system.permission.session.delete", "fr-FR").Count(&frCount).Error; err != nil {
+		t.Fatalf("count fr row: %v", err)
 	}
-	if frRow.Value != "Session Revoke" {
-		t.Fatalf("expected created fr value, got %q", frRow.Value)
+	if frCount != 0 {
+		t.Fatalf("expected builtin fr value to stay virtual, got %d stored rows", frCount)
+	}
+
+	pack, err := service.GetLangPack("fr-FR")
+	if err != nil {
+		t.Fatalf("get fr lang pack: %v", err)
+	}
+	if pack["system.permission.session.delete"] != "Session Revoke" {
+		t.Fatalf("expected builtin fr value, got %q", pack["system.permission.session.delete"])
 	}
 }
 

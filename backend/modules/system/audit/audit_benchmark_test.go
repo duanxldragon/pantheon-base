@@ -155,6 +155,27 @@ func buildAuditBenchmarkRow(index int) (domain string, page string, failureCateg
 func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query string, args ...any) []string {
 	t.Helper()
 
+	if service.db.Dialector.Name() == "mysql" {
+		rows, err := service.db.Raw("EXPLAIN FORMAT=JSON "+query, args...).Rows()
+		if err != nil {
+			t.Fatalf("explain query plan: %v", err)
+		}
+		defer rows.Close()
+
+		plan := make([]string, 0, 1)
+		for rows.Next() {
+			var detail string
+			if err := rows.Scan(&detail); err != nil {
+				t.Fatalf("scan query plan row: %v", err)
+			}
+			plan = append(plan, detail)
+		}
+		if len(plan) == 0 {
+			t.Fatal("expected query plan rows")
+		}
+		return plan
+	}
+
 	rows, err := service.db.Raw("EXPLAIN QUERY PLAN "+query, args...).Rows()
 	if err != nil {
 		t.Fatalf("explain query plan: %v", err)
