@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	settingmod "pantheon-platform/backend/modules/system/config/setting"
 	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/testmysql"
@@ -31,9 +32,10 @@ func setupSmokeTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	_ = db.Exec("DROP TABLE IF EXISTS system_role")
 	_ = db.Exec("DROP TABLE IF EXISTS system_user_role")
 	_ = db.Exec("DROP TABLE IF EXISTS system_role_permission")
+	_ = db.Exec("DROP TABLE IF EXISTS system_setting")
 
 	// 迁移所有核心表
-	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{})
+	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &settingmod.SystemSetting{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), status INT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")

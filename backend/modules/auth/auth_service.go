@@ -1497,13 +1497,13 @@ func (s *AuthService) getAuthRuntimePolicy() authRuntimePolicy {
 		PasswordExpireDays:      s.settingsCache[settingPasswordExpireDaysKey],
 		MaxFailedAttempts:       s.settingsCache[settingMaxFailedAttemptsKey],
 		LockMinutes:             s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts: maxInt(s.settingsCache[settingSourceMaxFailedAttemptsKey], defaultSourceMaxFailedAttempts),
-		SourceWindowMinutes:     maxInt(s.settingsCache[settingSourceWindowMinutesKey], defaultSourceWindowMinutes),
-		SourceLockMinutes:       maxInt(s.settingsCache[settingSourceLockMinutesKey], defaultSourceLockMinutes),
-		SessionIdleMinutes:      s.settingsCache[settingSessionIdleMinutesKey],
-		MaxActiveSessions:       maxInt(s.settingsCache[settingMaxActiveSessionsKey], defaultMaxActiveSessions),
-		LoginLogRetentionDays:   maxInt(s.settingsCache[settingLoginLogRetentionDaysKey], defaultLoginLogRetentionDays),
-		SessionRetentionDays:    maxInt(s.settingsCache[settingSessionRetentionDaysKey], defaultSessionRetentionDays),
+		SourceMaxFailedAttempts: fallbackPositiveInt(s.settingsCache[settingSourceMaxFailedAttemptsKey], defaultSourceMaxFailedAttempts),
+		SourceWindowMinutes:     fallbackPositiveInt(s.settingsCache[settingSourceWindowMinutesKey], defaultSourceWindowMinutes),
+		SourceLockMinutes:       fallbackPositiveInt(s.settingsCache[settingSourceLockMinutesKey], defaultSourceLockMinutes),
+		SessionIdleMinutes:      fallbackPositiveInt(s.settingsCache[settingSessionIdleMinutesKey], defaultSessionIdleMinutes),
+		MaxActiveSessions:       fallbackPositiveInt(s.settingsCache[settingMaxActiveSessionsKey], defaultMaxActiveSessions),
+		LoginLogRetentionDays:   fallbackPositiveInt(s.settingsCache[settingLoginLogRetentionDaysKey], defaultLoginLogRetentionDays),
+		SessionRetentionDays:    fallbackPositiveInt(s.settingsCache[settingSessionRetentionDaysKey], defaultSessionRetentionDays),
 		SecurityEventEnabled:    s.settingsCache[settingSecurityEventEnabledKey] == 1,
 		CaptchaEnabled:          s.settingsCache[settingCaptchaEnabledKey] == 1,
 		MFAEnabled:              s.settingsCache[settingMFAEnabledKey] == 1,
@@ -1940,6 +1940,13 @@ func maxInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func fallbackPositiveInt(value, fallback int) int {
+	if value > 0 {
+		return value
+	}
+	return fallback
 }
 
 func boolToInt(value bool) int {

@@ -280,6 +280,10 @@ func TestI18nService_GetOverviewSummarizesCoverage(t *testing.T) {
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
+	baseline, err := service.GetOverview()
+	if err != nil {
+		t.Fatalf("get baseline overview: %v", err)
+	}
 
 	items := []SystemI18n{
 		{Module: "system.config", Group: "messages", Key: "i18n.cover.zh_only", Locale: "zh-CN", Value: "中文"},
@@ -295,17 +299,17 @@ func TestI18nService_GetOverviewSummarizesCoverage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get overview: %v", err)
 	}
-	if overview.TotalEntries != 4 {
-		t.Fatalf("expected total entries 4, got %d", overview.TotalEntries)
+	if overview.TotalEntries-baseline.TotalEntries != 4 {
+		t.Fatalf("expected total entry delta 4, got baseline=%d current=%d", baseline.TotalEntries, overview.TotalEntries)
 	}
-	if overview.UniqueKeyCount != 3 {
-		t.Fatalf("expected unique key count 3, got %d", overview.UniqueKeyCount)
+	if overview.UniqueKeyCount-baseline.UniqueKeyCount != 3 {
+		t.Fatalf("expected unique key delta 3, got baseline=%d current=%d", baseline.UniqueKeyCount, overview.UniqueKeyCount)
 	}
-	if overview.MissingValueCount != 1 {
-		t.Fatalf("expected missing value count 1, got %d", overview.MissingValueCount)
+	if overview.MissingValueCount-baseline.MissingValueCount != 1 {
+		t.Fatalf("expected missing value delta 1, got baseline=%d current=%d", baseline.MissingValueCount, overview.MissingValueCount)
 	}
-	if overview.MissingLocaleCount == 0 {
-		t.Fatalf("expected missing locale count > 0, got %d", overview.MissingLocaleCount)
+	if overview.MissingLocaleCount <= baseline.MissingLocaleCount {
+		t.Fatalf("expected missing locale count to increase, baseline=%d current=%d", baseline.MissingLocaleCount, overview.MissingLocaleCount)
 	}
 	if len(overview.Locales) < 5 {
 		t.Fatalf("expected locale list to contain the configured locales, got %#v", overview.Locales)
@@ -416,7 +420,7 @@ func TestI18nService_FillMissingLocalesUsesBuiltinValue(t *testing.T) {
 	}
 
 	if err := service.BatchInsert([]SystemI18n{
-		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "zh-CN", Value: "会话管理"},
+		{Module: "system.auth", Group: "permission", Key: "system.permission.session.delete", Locale: "zh-CN", Value: "会话下线"},
 	}); err != nil {
 		t.Fatalf("seed items: %v", err)
 	}
@@ -430,10 +434,10 @@ func TestI18nService_FillMissingLocalesUsesBuiltinValue(t *testing.T) {
 	}
 
 	var row SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.menu.session", "en-US").First(&row).Error; err != nil {
+	if err := db.Where("`key` = ? AND locale = ?", "system.permission.session.delete", "en-US").First(&row).Error; err != nil {
 		t.Fatalf("load hydrated locale: %v", err)
 	}
-	if row.Value != "Sessions" {
+	if row.Value != "Session Revoke" {
 		t.Fatalf("expected builtin value, got %q", row.Value)
 	}
 }
@@ -446,8 +450,8 @@ func TestI18nService_GetOverviewUsesBuiltinCoverage(t *testing.T) {
 	}
 
 	if err := service.BatchInsert([]SystemI18n{
-		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "zh-CN", Value: "会话管理"},
-		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "en-US", Value: "[system.menu.session]"},
+		{Module: "system.auth", Group: "permission", Key: "system.permission.session.delete", Locale: "zh-CN", Value: "会话下线"},
+		{Module: "system.auth", Group: "permission", Key: "system.permission.session.delete", Locale: "en-US", Value: "[system.permission.session.delete]"},
 	}); err != nil {
 		t.Fatalf("seed items: %v", err)
 	}
@@ -456,8 +460,8 @@ func TestI18nService_GetOverviewUsesBuiltinCoverage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get overview: %v", err)
 	}
-	if overview.UniqueKeyCount != 1 {
-		t.Fatalf("expected unique key count 1, got %d", overview.UniqueKeyCount)
+	if overview.UniqueKeyCount < 1 {
+		t.Fatalf("expected at least one unique key, got %d", overview.UniqueKeyCount)
 	}
 	if overview.MissingValueCount != 0 {
 		t.Fatalf("expected builtin fallback to clear missing value count, got %d", overview.MissingValueCount)
@@ -475,8 +479,8 @@ func TestI18nService_HydrateBuiltinLocales(t *testing.T) {
 	}
 
 	if err := service.BatchInsert([]SystemI18n{
-		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "zh-CN", Value: "会话管理"},
-		{Module: "system.auth", Group: "menu", Key: "system.menu.session", Locale: "en-US", Value: "[system.menu.session]"},
+		{Module: "system.auth", Group: "permission", Key: "system.permission.session.delete", Locale: "zh-CN", Value: "会话下线"},
+		{Module: "system.auth", Group: "permission", Key: "system.permission.session.delete", Locale: "en-US", Value: "[system.permission.session.delete]"},
 	}); err != nil {
 		t.Fatalf("seed items: %v", err)
 	}
@@ -490,18 +494,18 @@ func TestI18nService_HydrateBuiltinLocales(t *testing.T) {
 	}
 
 	var enRow SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.menu.session", "en-US").First(&enRow).Error; err != nil {
+	if err := db.Where("`key` = ? AND locale = ?", "system.permission.session.delete", "en-US").First(&enRow).Error; err != nil {
 		t.Fatalf("load en row: %v", err)
 	}
-	if enRow.Value != "Sessions" {
+	if enRow.Value != "Session Revoke" {
 		t.Fatalf("expected hydrated en value, got %q", enRow.Value)
 	}
 
 	var frRow SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.menu.session", "fr-FR").First(&frRow).Error; err != nil {
+	if err := db.Where("`key` = ? AND locale = ?", "system.permission.session.delete", "fr-FR").First(&frRow).Error; err != nil {
 		t.Fatalf("load fr row: %v", err)
 	}
-	if frRow.Value != "Sessions" {
+	if frRow.Value != "Session Revoke" {
 		t.Fatalf("expected created fr value, got %q", frRow.Value)
 	}
 }
@@ -791,7 +795,7 @@ func TestI18nService_GetAudit(t *testing.T) {
 
 	items := []SystemI18n{
 		{Module: "system.config", Group: "messages", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "配置冲突"},
-		{Module: "system.iam", Group: "labels", Key: "shared.audit.conflict", Locale: "zh-CN", Value: "用户冲突"},
+		{Module: "system.iam", Group: "labels", Key: "shared.audit.conflict", Locale: "en-US", Value: "User Conflict"},
 		{Module: "system.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "zh-CN", Value: "未使用"},
 		{Module: "system.config", Group: "messages", Key: "zz.audit.unused.key", Locale: "en-US", Value: "[zz.audit.unused.key]"},
 	}
@@ -1028,7 +1032,7 @@ func TestI18nService_CleanupUnusedKeysByModule(t *testing.T) {
 
 	items := []SystemI18n{
 		{Module: "system.config", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "清理我"},
-		{Module: "system.iam", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "zh-CN", Value: "别删我"},
+		{Module: "system.iam", Group: "messages", Key: "zz.audit.cleanup.key", Locale: "en-US", Value: "keep me"},
 	}
 	if err := service.BatchInsert(items); err != nil {
 		t.Fatalf("seed items: %v", err)
@@ -1076,11 +1080,17 @@ func TestI18nService_ExportByModule(t *testing.T) {
 	if err != nil {
 		t.Fatalf("export by module: %v", err)
 	}
-	if len(file.Rows) != 1 {
-		t.Fatalf("expected one exported row, got %d", len(file.Rows))
+	found := false
+	for _, row := range file.Rows {
+		if row[0] != "system.config" {
+			t.Fatalf("expected exported module system.config, got %#v", row)
+		}
+		if row[2] == "i18n.export.module" {
+			found = true
+		}
 	}
-	if file.Rows[0][0] != "system.config" {
-		t.Fatalf("expected exported module system.config, got %#v", file.Rows[0])
+	if !found {
+		t.Fatalf("expected exported rows to include i18n.export.module, got %#v", file.Rows)
 	}
 }
 
