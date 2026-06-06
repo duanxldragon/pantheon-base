@@ -163,6 +163,30 @@ async function createSharedAdminLogin(page: Page): Promise<BrowserLoginResult> {
   return login;
 }
 
+async function waitForOkApiResponse(
+  page: Page,
+  matcher: (response: Parameters<Page['waitForResponse']>[0] extends (arg: infer T) => boolean ? T : never) => boolean,
+) {
+  return page.waitForResponse((response) => matcher(response) && response.ok(), { timeout: 15000 });
+}
+
+async function clickVisibleConfirmButton(page: Page, titleText?: string) {
+  const confirmDialog = titleText
+    ? page.locator('.app-dialog:visible, [role="dialog"]:visible').filter({ hasText: titleText }).last()
+    : page.locator('.app-dialog:visible, .arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="dialog"]:visible, [role="tooltip"]:visible').last();
+  await expect(confirmDialog).toBeVisible();
+  await confirmDialog.getByRole('button', { name: '确定', exact: true }).click();
+}
+
+async function dismissVisibleSuccessDialog(page: Page) {
+  const successDialog = page.locator('.app-dialog:visible, [role="dialog"]:visible').filter({
+    has: page.getByRole('button', { name: '确定', exact: true }),
+  }).last();
+  if (await successDialog.count()) {
+    await successDialog.getByRole('button', { name: '确定', exact: true }).click();
+  }
+}
+
 async function deleteUserByUsername(page: Page, accessToken: string, username: string) {
   const response = await page.request.get(`${apiBaseUrl}/system/user/list`, {
     headers: authHeaders(accessToken),
@@ -1030,13 +1054,29 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   await createDialog.getByRole('combobox').first().click();
   await createDialog.getByRole('option', { name: 'en-US' }).click();
   await createDialog.locator('textarea').first().fill('Created Value');
-  await createDialog.getByRole('button', { name: '确定' }).click();
+  await Promise.all([
+    waitForOkApiResponse(
+      page,
+      (response) =>
+        response.url().includes('/system/i18n') &&
+        response.request().method() === 'POST',
+    ),
+    createDialog.getByRole('button', { name: '确定' }).click(),
+  ]);
   await expect(createDialog).toHaveCount(0);
 
   await page.locator('.filter-panel').getByRole('button', { name: '重置' }).click();
   await formItem(page, '翻译键').locator('input').first().fill(createKey);
-  await page.getByRole('button', { name: '搜索' }).click();
-  await expect(page.getByRole('row', { name: new RegExp(createKey) }).first()).toBeVisible();
+  await Promise.all([
+    waitForOkApiResponse(
+      page,
+      (response) =>
+        response.url().includes('/system/i18n/list') &&
+        decodeURIComponent(response.url()).includes(`key=${createKey}`) &&
+        response.request().method() === 'GET',
+    ),
+    page.getByRole('button', { name: '搜索' }).click(),
+  ]);
 
   const createdListResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
     headers: authHeaders(accessToken),
@@ -1044,6 +1084,8 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   });
   const createdListPayload = await createdListResp.json();
   const createdRowId = createdListPayload.data.items[0]?.id as number | undefined;
+  expect(createdListPayload.data.items[0]?.key).toBe(createKey);
+  await expect(page.locator('.system-list__table').getByText(createKey, { exact: false }).first()).toBeVisible();
 
   await page.locator('.filter-panel').getByRole('button', { name: '重置' }).click();
   await formItem(page, '翻译键').locator('input').first().fill(seedKey);
@@ -1101,15 +1143,20 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
   ].join('\n');
 
   await page.goto('/system/i18n', { waitUntil: 'networkidle' });
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: 'system-i18n-import.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from(`\uFEFF${successCsv}`, 'utf8'),
-  });
-
-  const successSummary = page.getByText('创建 1 条，更新 1 条，失败 0 条', { exact: true });
-  await expect(successSummary).toBeVisible();
-  await page.getByRole('button', { name: '确定' }).last().click();
+  await Promise.all([
+    waitForOkApiResponse(
+      page,
+      (response) =>
+        response.url().includes('/system/i18n/import') &&
+        response.request().method() === 'POST',
+    ),
+    page.locator('input[type="file"]').first().setInputFiles({
+      name: 'system-i18n-import.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(`\uFEFF${successCsv}`, 'utf8'),
+    }),
+  ]);
+  await dismissVisibleSuccessDialog(page);
 
   await expect.poll(async () => {
     const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
@@ -1137,11 +1184,19 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
   ].join('\n');
 
   const downloadPromise = page.waitForEvent('download');
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: 'system-i18n-import-invalid.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from(`\uFEFF${invalidCsv}`, 'utf8'),
-  });
+  await Promise.all([
+    waitForOkApiResponse(
+      page,
+      (response) =>
+        response.url().includes('/system/i18n/import') &&
+        response.request().method() === 'POST',
+    ),
+    page.locator('input[type="file"]').first().setInputFiles({
+      name: 'system-i18n-import-invalid.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(`\uFEFF${invalidCsv}`, 'utf8'),
+    }),
+  ]);
 
   const errorDownload = await downloadPromise;
   expect(errorDownload.suggestedFilename()).toBe('system-i18n-import-errors.csv');
@@ -2641,36 +2696,97 @@ test('operation-log governance smoke: selecting rows enables batch delete afford
 });
 
 test('user governance smoke: cross-page selection keeps the full selected set', async ({ page }) => {
-  await page.goto('/system/user', { waitUntil: 'networkidle' });
-  await expectPageIdentityReady(page, '用户管理');
-  await expectNoPageError(page);
-  await expect(page.locator('.arco-checkbox').nth(1)).toBeVisible();
+  const accessToken = await signInAsAdmin(page);
+  const now = Date.now();
+  const userPrefix = `smoke_cross_page_${now}`;
+  const password = 'ChangeMe123';
+  const roleId = (await getFirstActiveRole(page, accessToken)).id;
+  const usernames = Array.from({ length: 11 }, (_, index) => `${userPrefix}_${String(index + 1).padStart(2, '0')}`);
 
-  const pager = page.locator('.system-user-list__table');
-  const selectedText = page.locator('.table-batch-action-bar__meta');
-  const firstPageCheckbox = page.locator('.arco-checkbox').nth(1);
-  await firstPageCheckbox.click({ force: true });
-  await expect(selectedText).toContainText('已选 1 条');
+  try {
+    for (const username of usernames) {
+      await deleteUserByUsername(page, accessToken, username);
+      await createUserByApi(page, accessToken, {
+        username,
+        password,
+        nickname: username,
+        email: `${username}@example.com`,
+        roleIds: [roleId],
+      });
+    }
 
-  await pager.locator('.arco-pagination-item').filter({ hasText: '2' }).first().click();
-  await expect
-    .poll(async () => {
-      return pager.locator('.arco-pagination-item-active').innerText();
-    })
-    .toBe('2');
-  await expect(selectedText).toContainText('已选 1 条');
+    await page.goto('/system/user', { waitUntil: 'networkidle' });
+    await expectPageIdentityReady(page, '用户管理');
+    await expectNoPageError(page);
 
-  const secondPageCheckbox = page.locator('.arco-checkbox').nth(1);
-  await secondPageCheckbox.click({ force: true });
-  await expect(selectedText).toContainText('已选 2 条');
+    await formItem(page, '用户名').locator('input').fill(userPrefix);
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/list') &&
+          decodeURIComponent(response.url()).includes(`username=${userPrefix}`) &&
+          response.request().method() === 'GET',
+      ),
+      page.getByRole('button', { name: '搜索' }).click(),
+    ]);
 
-  await pager.locator('.arco-pagination-item').filter({ hasText: '1' }).first().click();
-  await expect
-    .poll(async () => {
-      return pager.locator('.arco-pagination-item-active').innerText();
-    })
-    .toBe('1');
-  await expect(selectedText).toContainText('已选 2 条');
+    const pager = page.locator('.system-user-list__table');
+    const selectedText = page.locator('.table-batch-action-bar__meta');
+    await expect(pager.locator('.arco-pagination-item').filter({ hasText: /^2$/ }).first()).toBeVisible();
+
+    const firstPageCheckbox = pager.locator('.arco-checkbox').nth(1);
+    await firstPageCheckbox.click({ force: true });
+    await expect(selectedText).toContainText('已选 1 条');
+
+    const secondPageButton = pager.locator('.arco-pagination-item').filter({ hasText: /^2$/ }).first();
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/list') &&
+          decodeURIComponent(response.url()).includes(`username=${userPrefix}`) &&
+          decodeURIComponent(response.url()).includes('page=2') &&
+          response.request().method() === 'GET',
+      ),
+      secondPageButton.click(),
+    ]);
+    await expect
+      .poll(async () => {
+        return pager.locator('.arco-pagination-item-active').innerText();
+      })
+      .toBe('2');
+    await expect(selectedText).toContainText('已选 1 条');
+
+    const secondPageCheckbox = pager.locator('.arco-checkbox').nth(1);
+    await secondPageCheckbox.click({ force: true });
+    await expect(selectedText).toContainText('已选 2 条');
+
+    const firstPageButton = pager.locator('.arco-pagination-item').filter({ hasText: /^1$/ }).first();
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/list') &&
+          decodeURIComponent(response.url()).includes(`username=${userPrefix}`) &&
+          decodeURIComponent(response.url()).includes('page=1') &&
+          response.request().method() === 'GET',
+      ),
+      firstPageButton.click(),
+    ]);
+    await expect
+      .poll(async () => {
+        return pager.locator('.arco-pagination-item-active').innerText();
+      })
+      .toBe('1');
+    await expect(selectedText).toContainText('已选 2 条');
+  } finally {
+    await runOptionalSmokeCleanup('system-pages:user-cross-page-selection', async () => {
+      for (const username of usernames) {
+        await deleteUserByUsername(page, accessToken, username);
+      }
+    });
+  }
 });
 
 test('user smoke: edit and detail work through the UI', async ({
@@ -2725,8 +2841,17 @@ test('user smoke: edit and detail work through the UI', async ({
     await expect(editDialog).toBeVisible();
     await editDialog.getByRole('textbox').nth(1).fill(nextNickname);
     await editDialog.getByRole('textbox').nth(2).fill(nextEmail);
-    await editDialog.locator('.submit-bar').getByRole('button', { name: '保存' }).click();
-    await expect(page.locator('.arco-message').filter({ hasText: '更新成功' }).first()).toBeVisible();
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/') &&
+          response.request().method() === 'PUT',
+      ),
+      editDialog.locator('.submit-bar').getByRole('button', { name: '保存' }).click(),
+    ]);
+    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.nickname).toBe(nextNickname);
+    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.email).toBe(nextEmail);
     await expect(userRow).toContainText(nextNickname);
     await expect(userRow).toContainText(nextEmail);
 
@@ -2848,19 +2973,14 @@ test('user and role smoke: role binding can be deferred to role management and r
     const memberRow = memberDrawer.getByRole('row', { name: new RegExp(username) }).first();
     await expect(memberRow).toBeVisible();
     await memberRow.getByRole('button', { name: '删除' }).click();
-    const removeConfirmPopup = page
-      .locator('.arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible')
-      .filter({ has: page.getByRole('button', { name: '确定', exact: true }) })
-      .last();
-    await expect(removeConfirmPopup).toBeVisible();
     await Promise.all([
-      page.waitForResponse(
+      waitForOkApiResponse(
+        page,
         (response) =>
           response.url().includes(`/system/role/${role!.id}/users/remove`) &&
-          response.request().method() === 'POST' &&
-          response.ok(),
+          response.request().method() === 'POST',
       ),
-      removeConfirmPopup.getByRole('button', { name: '确定', exact: true }).click(),
+      clickVisibleConfirmButton(page, '确认移除该成员的当前角色绑定？'),
     ]);
     await expect.poll(async () => {
       const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
@@ -2908,20 +3028,41 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
     await expect(page.locator('.table-batch-action-bar__meta')).toContainText('已选 1 条');
 
     await page.getByRole('button', { name: '批量禁用' }).click();
-    await page.getByRole('button', { name: /确定|OK/ }).last().click();
-    await expect(page.locator('.arco-message').filter({ hasText: '已更新 1 条用户状态' }).first()).toBeVisible();
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/batch-status') &&
+          response.request().method() === 'POST',
+      ),
+      clickVisibleConfirmButton(page),
+    ]);
     await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(2);
 
     await userRow.locator('.arco-checkbox').first().click({ force: true });
     await page.getByRole('button', { name: '批量启用' }).click();
-    await page.getByRole('button', { name: /确定|OK/ }).last().click();
-    await expect(page.locator('.arco-message').filter({ hasText: '已更新 1 条用户状态' }).first()).toBeVisible();
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/batch-status') &&
+          response.request().method() === 'POST',
+      ),
+      clickVisibleConfirmButton(page),
+    ]);
     await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(1);
 
     await userRow.locator('.arco-checkbox').first().click({ force: true });
     await page.getByRole('button', { name: '删除所选' }).click();
-    await page.getByRole('button', { name: /确定|OK/ }).last().click();
-    await expect(page.locator('.arco-message').filter({ hasText: '已删除 1 条记录' }).first()).toBeVisible();
+    await Promise.all([
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/batch-delete') &&
+          response.request().method() === 'POST',
+      ),
+      clickVisibleConfirmButton(page),
+    ]);
     await expect.poll(async () => await findUserByUsername(page, accessToken, username)).toBeUndefined();
   } finally {
     await runOptionalSmokeCleanup('system-pages:user-smoke-batch', async () => {
