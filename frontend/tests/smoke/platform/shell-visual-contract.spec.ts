@@ -88,23 +88,6 @@ function getVisibleDialog(page: import('@playwright/test').Page) {
   return page.locator('.app-dialog:visible').last();
 }
 
-function getVisibleOuterControlLocator(root: import('@playwright/test').Locator) {
-  return root.locator(
-    [
-      '.arco-input-password:visible',
-      '.arco-input-number:visible',
-      '.arco-select-view:visible',
-      '.arco-tree-select-view:visible',
-      '.arco-picker:visible',
-      '.arco-textarea-wrapper:visible',
-      '.arco-input-inner-wrapper:visible',
-      'input.arco-input:visible',
-    ].join(', '),
-  ).filter({
-    hasNot: root.locator('.arco-input-password .arco-input-inner-wrapper, .arco-input-number .arco-input-inner-wrapper'),
-  }).first();
-}
-
 async function readVisibleFilterPanelContract(page: import('@playwright/test').Page) {
   return page.evaluate(() => {
     const visibleFilterPanels = Array.from(document.querySelectorAll<HTMLElement>('.filter-panel'))
