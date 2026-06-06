@@ -20,6 +20,7 @@ type deptFixturePost struct {
 	DeptID    uint64         `gorm:"column:dept_id"`
 	PostCode  string         `gorm:"column:post_code;size:64"`
 	PostName  string         `gorm:"column:post_name;size:128"`
+	Sort      int            `gorm:"column:sort"`
 	Status    int            `gorm:"column:status"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at"`
 }
@@ -62,13 +63,13 @@ func TestDeptService_MigrateCreatesRootAndReparentsTopLevel(t *testing.T) {
 	if err := db.AutoMigrate(&SystemDept{}); err != nil {
 		t.Fatalf("migrate dept table: %v", err)
 	}
-	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status) VALUES (10, 0, '', 0, '研发中心', 1)`).Error; err != nil {
+	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status, created_at, updated_at) VALUES (10, 0, '', 0, '研发中心', 1, NOW(), NOW())`).Error; err != nil {
 		t.Fatalf("seed dept 10: %v", err)
 	}
-	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status) VALUES (11, 10, '10', 0, '平台研发部', 1)`).Error; err != nil {
+	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status, created_at, updated_at) VALUES (11, 10, '10', 0, '平台研发部', 1, NOW(), NOW())`).Error; err != nil {
 		t.Fatalf("seed dept 11: %v", err)
 	}
-	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status) VALUES (12, 0, '', 0, '财务部', 1)`).Error; err != nil {
+	if err := db.Exec(`INSERT INTO system_dept (id, parent_id, ancestors, is_root, dept_name, status, created_at, updated_at) VALUES (12, 0, '', 0, '财务部', 1, NOW(), NOW())`).Error; err != nil {
 		t.Fatalf("seed dept 12: %v", err)
 	}
 
@@ -135,6 +136,7 @@ func TestDeptService_DeleteIgnoresSoftDeletedUsers(t *testing.T) {
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate dept service: %v", err)
 	}
+	migrateDeptFixturePosts(t, db)
 	migrateDeptFixtureUsers(t, db)
 
 	var root SystemDept

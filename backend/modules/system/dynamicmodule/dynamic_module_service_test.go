@@ -334,7 +334,7 @@ func TestRegisterGeneratedModuleBuildsInferredParentSummary(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
 	mustCreateSystemMenuTable(t, db)
-	mustInsertSystemMenuPath(t, db, "/business/cmdb")
+	mustInsertSystemMenuPath(t, db, "/operations/cmdb")
 
 	service := &DynamicModuleService{
 		db:            db,

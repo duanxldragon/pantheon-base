@@ -16,7 +16,7 @@ func setupPostTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&SystemPost{}); err != nil {
 		t.Fatalf("migrate post: %v", err)
 	}
-	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user (id INTEGER PRIMARY KEY, post_id INTEGER, deleted_at DATETIME)").Error; err != nil {
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user (id BIGINT PRIMARY KEY AUTO_INCREMENT, post_id BIGINT, deleted_at DATETIME NULL)").Error; err != nil {
 		t.Fatalf("create user fixture: %v", err)
 	}
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id INTEGER PRIMARY KEY, parent_id INTEGER, is_root INTEGER, dept_name TEXT)").Error; err != nil {

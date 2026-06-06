@@ -20,6 +20,7 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 	_ = db.AutoMigrate(&SystemUser{}, &SystemUserProfileExt{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), role_name VARCHAR(128), status INT, deleted_at DATETIME NULL)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id VARCHAR(128), user_id BIGINT, revoked_at DATETIME NULL)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id BIGINT PRIMARY KEY, parent_id BIGINT, dept_name VARCHAR(128))")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id BIGINT PRIMARY KEY, post_code VARCHAR(64), post_name VARCHAR(128), dept_id BIGINT)")

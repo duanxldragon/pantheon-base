@@ -407,8 +407,10 @@ func TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace(t *testi
 	if err != nil {
 		t.Fatalf("resolve workspace root from source fallback: %v", err)
 	}
-	resolvedBase := filepath.Base(filepath.Clean(resolved))
-	if !strings.Contains(resolvedBase, "pantheon-base") {
+	if !isWorkspaceRoot(resolved) {
+		t.Fatalf("expected source-tree fallback to resolve a workspace root, got %s", resolved)
+	}
+	if !strings.Contains(filepath.ToSlash(filepath.Clean(resolved)), "pantheon-base") {
 		t.Fatalf("expected source-tree fallback under pantheon-base workspace, got %s", resolved)
 	}
 }
