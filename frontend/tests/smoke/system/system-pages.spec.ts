@@ -7,6 +7,7 @@ import {
   adminCredentials,
   apiBaseUrl,
   authHeaders,
+  type BrowserLoginResult,
   installClientSession,
   installOperationToken,
   loginByApi,
@@ -21,6 +22,7 @@ import { expectPagePathname } from '../helpers/url-pattern';
 import { registerSystemWorkspaceTaskDepthSmokeTests } from './system-workspace-task-depth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
 const pageEmptyTexts = ['暂无数据', '当前筛选范围内没有可展示的数据', '当前筛选下暂无岗位', '暂无系统设置', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
+const reactElementRefWarningPattern = /Accessing element\.ref was removed in React 19/i;
 type SettingItem = { settingKey: string; settingValue: string };
 type UserPlatformPreferences = {
   theme?: string;
@@ -148,6 +150,17 @@ async function closeExtraBrowserContext(context: BrowserContext) {
     }
     throw error;
   }
+}
+
+function isIgnorableConsoleError(text: string) {
+  return text.includes('Failed to load resource: the server responded with a status of 404')
+    || reactElementRefWarningPattern.test(text);
+}
+
+async function createSharedAdminLogin(page: Page): Promise<BrowserLoginResult> {
+  const login = await loginByApi(page.request, adminCredentials);
+  await installClientSession(page, login);
+  return login;
 }
 
 async function deleteUserByUsername(page: Page, accessToken: string, username: string) {
@@ -527,7 +540,7 @@ for (const pageMeta of systemPages) {
   test(`system smoke: ${pageMeta.path}`, async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on('console', (message) => {
-      if (message.type() === 'error' && !message.text().includes('Failed to load resource: the server responded with a status of 404')) {
+      if (message.type() === 'error' && !isIgnorableConsoleError(message.text())) {
         consoleErrors.push(message.text());
       }
     });
@@ -3195,7 +3208,8 @@ test('security-event governance smoke: pending event can be acknowledged with a 
 
 test('refresh sync smoke: setting page auto-updates across isolated contexts', async ({ browser, page }) => {
   test.setTimeout(45000);
-  const accessToken = await signInAsAdmin(page);
+  const adminLogin = await createSharedAdminLogin(page);
+  const accessToken = adminLogin.accessToken;
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/basic`, {
     headers: authHeaders(accessToken),
   });
@@ -3214,8 +3228,7 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
   const syncPage = await syncContext.newPage();
 
   try {
-    const adminTokens = await loginByApi(page.request, adminCredentials);
-    await installClientSession(syncPage, adminTokens);
+    await installClientSession(syncPage, adminLogin);
     const refreshBootstrap = waitForRefreshBootstrap(syncPage);
     await syncPage.goto('/system/setting/basic', { waitUntil: 'networkidle' });
     const siteNameInput = formItem(syncPage, '站点名称').locator('input').first();
@@ -3236,7 +3249,8 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
 
 test('refresh sync smoke: dict page auto-updates across isolated contexts', async ({ browser, page }) => {
   test.setTimeout(45000);
-  const accessToken = await signInAsAdmin(page);
+  const adminLogin = await createSharedAdminLogin(page);
+  const accessToken = adminLogin.accessToken;
   const dictCode = `system_sync_${Date.now()}`;
   const dictName = `system.dict.sync.${Date.now()}`;
 
@@ -3244,8 +3258,7 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
   const syncPage = await syncContext.newPage();
 
   try {
-    const adminTokens = await loginByApi(page.request, adminCredentials);
-    await installClientSession(syncPage, adminTokens);
+    await installClientSession(syncPage, adminLogin);
     const refreshBootstrap = waitForRefreshBootstrap(syncPage);
     await syncPage.goto('/system/dict', { waitUntil: 'networkidle' });
     await formItem(syncPage, '字典编码').locator('input').first().fill(dictCode);
@@ -3280,15 +3293,15 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
 
 test('refresh sync smoke: i18n page auto-updates across isolated contexts', async ({ browser, page }) => {
   test.setTimeout(45000);
-  const accessToken = await signInAsAdmin(page);
+  const adminLogin = await createSharedAdminLogin(page);
+  const accessToken = adminLogin.accessToken;
   const i18nKey = `i18n.sync.${Date.now()}`;
 
   const syncContext = await browser.newContext();
   const syncPage = await syncContext.newPage();
 
   try {
-    const adminTokens = await loginByApi(page.request, adminCredentials);
-    await installClientSession(syncPage, adminTokens);
+    await installClientSession(syncPage, adminLogin);
     await syncPage.goto('/system/i18n', { waitUntil: 'networkidle' });
     await formItem(syncPage, '翻译键').locator('input').first().fill(i18nKey);
     await syncPage.getByRole('button', { name: '搜索' }).click();
