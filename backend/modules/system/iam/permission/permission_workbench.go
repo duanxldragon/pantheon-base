@@ -551,6 +551,14 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 			{Path: "/api/v1/system/generator/datasources/:id", Method: "DELETE"},
 			{Path: "/api/v1/system/generator/datasources/:id/test", Method: "POST"},
 		}
+	case "system:user:list":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/list", Method: "GET"},
+		}
+	case "system:user:create":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/create", Method: "POST"},
+		}
 	default:
 		return nil
 	}
