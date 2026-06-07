@@ -27,11 +27,14 @@ import (
 type AuthService struct {
 	db *gorm.DB
 
-	// 核心安全策略缓存
+	// 账号安全策略缓存
 	settingsMu    sync.RWMutex
 	settingsCache map[string]int
 	cleanupMu     sync.Mutex
 	lastCleanupAt map[string]time.Time
+
+	sessions  *authSessionService
+	passwords *authPasswordService
 }
 
 type UserPreferenceUpdateResult struct {
@@ -144,6 +147,8 @@ func NewAuthService(db *gorm.DB) *AuthService {
 		settingsCache: make(map[string]int),
 		lastCleanupAt: make(map[string]time.Time),
 	}
+	s.sessions = newAuthSessionService(s)
+	s.passwords = newAuthPasswordService(s)
 	// 启动时同步加载一次核心设置
 	_ = s.ReloadSettings()
 	return s
@@ -551,29 +556,6 @@ func (s *AuthService) finalizeMFAChallenge(challenge SystemAuthMFAChallenge, sec
 		}
 		return nil
 	})
-}
-
-func upsertMFAFactor(tx *gorm.DB, userID uint64, encryptedSecret string, now time.Time) error {
-	var factor SystemAuthFactor
-	err := tx.Where(userIDAndFactorTypeWhereClause, userID, "totp").First(&factor).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		factor = SystemAuthFactor{
-			UserID:          userID,
-			FactorType:      "totp",
-			SecretEncrypted: encryptedSecret,
-			Enabled:         1,
-			ConfirmedAt:     &now,
-		}
-		return tx.Create(&factor).Error
-	}
-	if err != nil {
-		return err
-	}
-	return tx.Model(&factor).Updates(map[string]any{
-		"secret_encrypted": encryptedSecret,
-		"enabled":          1,
-		"confirmed_at":     &now,
-	}).Error
 }
 
 // GetUserRoles 获取用户角色标识
