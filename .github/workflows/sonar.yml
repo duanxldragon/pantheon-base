@@ -55,7 +55,7 @@ jobs:
           cache: true
 
       - name: Generate Go coverage
-        run: go test ./... -coverprofile=coverage.out 2>&1 || echo "Some tests failed but coverage was generated"
+        run: go test ./... -coverprofile=coverage.out
 
       - name: Run SonarCloud scan
         uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2
