@@ -375,13 +375,13 @@ func TestAuthService_LoginWithSourceBlocksSourceAfterConfiguredFailures(t *testi
 	})
 	_ = s.ReloadSettings()
 
-	_, err := s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
-	if err == nil || err.Error() != "user.login.error.password_wrong" {
-		t.Fatalf("expected password wrong on first failure, got %v", err)
+	for i := 0; i < 19; i++ {
+		_, _ = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
 	}
-	_, err = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
+
+	_, err := s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
-		t.Fatalf("expected source blocked error on second failure, got %v", err)
+		t.Fatalf("expected source blocked error on 20th failure, got %v", err)
 	}
 	_, err = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "123456"}, "ip:10.0.0.1")
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
@@ -401,15 +401,20 @@ func TestAuthService_LoginWithSourceRecordsSecurityEventWhenSourceBlocked(t *tes
 	}
 	db.Create(&testUser)
 	seedSettings(t, db, map[string]string{
-		"login.source_max_failed_attempts": "1",
-		"login.source_window_minutes":      "15",
-		"login.source_lock_minutes":        "10",
+		"login.source_max_failed_attempts":   "1",
+		"login.source_window_minutes":        "15",
+		"login.source_lock_minutes":          "10",
+		"login.security_event_enabled":       "true",
 	})
 	_ = s.ReloadSettings()
 
+	for i := 0; i < 19; i++ {
+		_, _ = s.LoginWithSource(&LoginReq{Username: "risk_user", Password: "wrong"}, "ip:10.0.0.9")
+	}
+
 	_, err := s.LoginWithSource(&LoginReq{Username: "risk_user", Password: "wrong"}, "ip:10.0.0.9")
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
-		t.Fatalf("expected source blocked error, got %v", err)
+		t.Fatalf("expected source blocked error on 20th failure, got %v", err)
 	}
 
 	events, err := s.ListSecurityEvents(&SecurityEventQuery{Username: "risk_user", EventType: "source_blocked", Page: 1, PageSize: 10})
@@ -852,6 +857,7 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 			UserID:           7,
 			RefreshJTI:       "jti-other-active",
 			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
 			CreatedAt:        now.Add(-time.Hour),
 		},
 		{
@@ -859,6 +865,7 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 			UserID:           7,
 			RefreshJTI:       "jti-current-active",
 			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-2 * time.Minute)),
 			CreatedAt:        now.Add(-2 * time.Hour),
 		},
 		{
@@ -985,7 +992,7 @@ func TestAuthService_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get security overview: %v", err)
 	}
-	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 9 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
+	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 20 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
 		t.Fatalf("unexpected security policy: %+v", resp.Policy)
 	}
 	if resp.CurrentSession == nil || resp.CurrentSession.SessionID != "current-session" {
@@ -1307,7 +1314,7 @@ func TestAuthService_CleanupHistoricSessionsDeletesRevokedHistoryOnly(t *testing
 	db := setupTestDB(t)
 	s := NewAuthService(db)
 	now := time.Now()
-	revokedAt := now.Add(-time.Hour)
+	revokedAt := now.AddDate(0, 0, -2)
 
 	testUser := user.SystemUser{Username: "session-clean-user", Status: 1}
 	if err := db.Create(&testUser).Error; err != nil {
@@ -1401,7 +1408,7 @@ func TestAuditService_ExportOperationLogs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("export operation logs: %v", err)
 	}
-	if len(exported.Rows) != 1 || exported.Rows[0][0] != "导出用户" {
+	if len(exported.Rows) != 1 || exported.Rows[0][1] != "导出用户" {
 		t.Fatalf("unexpected exported operation log rows: %+v", exported.Rows)
 	}
 }

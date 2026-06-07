@@ -302,7 +302,7 @@ func (s *AuthService) ensureSourceThrottleAllowed(sourceKey string, policy authR
 
 func (s *AuthService) loadLoginUserWithSource(username, sourceKey string, policy authRuntimePolicy, now time.Time) (*user.SystemUser, error) {
 	if username == "" {
-		_ = s.failLoginSourceBlocked(sourceKey, policy, now)
+		_ = s.failLoginSourceBlocked(nil, sourceKey, policy, now)
 		return nil, errors.New("user.login.error.not_found")
 	}
 
@@ -312,7 +312,7 @@ func (s *AuthService) loadLoginUserWithSource(username, sourceKey string, policy
 		return &currentUser, nil
 	}
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		if err := s.failLoginSourceBlocked(sourceKey, policy, now); err != nil {
+		if err := s.failLoginSourceBlocked(nil, sourceKey, policy, now); err != nil {
 			return nil, err
 		}
 		return nil, errors.New("user.login.error.not_found")
@@ -322,13 +322,13 @@ func (s *AuthService) loadLoginUserWithSource(username, sourceKey string, policy
 
 func (s *AuthService) ensureLoginUserAvailable(currentUser *user.SystemUser, sourceKey string, policy authRuntimePolicy, now time.Time) error {
 	if currentUser.Status == 2 {
-		if err := s.failLoginSourceBlocked(sourceKey, policy, now); err != nil {
+		if err := s.failLoginSourceBlocked(currentUser, sourceKey, policy, now); err != nil {
 			return err
 		}
 		return errors.New("user.login.error.disabled")
 	}
 	if currentUser.LoginLockedUntil != nil && currentUser.LoginLockedUntil.After(now) {
-		if err := s.failLoginSourceBlocked(sourceKey, policy, now); err != nil {
+		if err := s.failLoginSourceBlocked(currentUser, sourceKey, policy, now); err != nil {
 			return err
 		}
 		return errors.New("user.login.error.locked")
@@ -1812,12 +1812,22 @@ func (s *AuthService) checkSourceThrottle(sourceKey string, policy authRuntimePo
 	return false, nil
 }
 
-func (s *AuthService) failLoginSourceBlocked(sourceKey string, policy authRuntimePolicy, now time.Time) error {
+func (s *AuthService) failLoginSourceBlocked(currentUser *user.SystemUser, sourceKey string, policy authRuntimePolicy, now time.Time) error {
 	blocked, err := s.recordSourceFailure(sourceKey, policy, now)
 	if err != nil {
 		return err
 	}
 	if blocked {
+		if currentUser != nil {
+			s.recordSecurityEvent(SystemAuthSecurityEvent{
+				UserID:     currentUser.ID,
+				Username:   currentUser.Username,
+				EventType:  "source_blocked",
+				Severity:   "high",
+				SourceKey:  sourceKey,
+				MessageKey: "auth.security.event.source_blocked",
+			})
+		}
 		return errors.New(errAuthLoginSourceBlocked)
 	}
 	return nil
