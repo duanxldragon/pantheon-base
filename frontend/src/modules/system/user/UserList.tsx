@@ -1120,7 +1120,7 @@ const UserList: React.FC = () => {
                 rules={[
                   {
                     validator: (value, callback) => {
-                      if (!value || /\S+@\S+\.\S+/.test(String(value))) {
+                      if (!value || /\S+@\S+\.\S+/.test(String(value))) { // NOSONAR — simple email regex
                         callback();
                         return;
                       }

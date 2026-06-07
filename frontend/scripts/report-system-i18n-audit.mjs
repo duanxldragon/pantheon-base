@@ -166,7 +166,7 @@ async function main() {
   };
 
   if (jsonOnly) {
-    console.log(JSON.stringify(payload, null, 2));
+    console.log(JSON.stringify(payload, null, 2)); // NOSONAR — build-only audit script, not a production service
     return;
   }
 
@@ -175,8 +175,8 @@ async function main() {
       ? 'n/a'
       : `${payload.archivedRetentionThresholdDays}d`;
 
-  console.log(`system_i18n runtime audit @ ${payload.generatedAt}`);
-  console.log(
+  console.log(`system_i18n runtime audit @ ${payload.generatedAt}`); // NOSONAR — build-only audit script
+  console.log( // NOSONAR — build-only audit script
     `unused=${payload.totalUnusedKeys} modules=${payload.totalModules} observe>=${payload.observationThresholdDays}d delete>=${deleteThresholdLabel}`,
   );
   console.log('');

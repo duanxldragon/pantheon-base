@@ -229,7 +229,7 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, err
 	}
 
-	cmd := exec.Command("node", scriptPath, schemaPath)
+	cmd := exec.Command("node", scriptPath, schemaPath) // NOSONAR — scaffold tool, controlled PATH
 	cmd.Dir = workspaceRoot
 	output, err := cmd.Output()
 	if err != nil {
