@@ -103,7 +103,7 @@ export const PHASES = [
     category: 'auxiliary-sonar',
     cwd: '.',
     cwdLabel: 'pantheon-base',
-    displayCommand: '.\\scripts\\run-sonar.ps1',
+    displayCommand: String.raw`.\scripts\run-sonar.ps1`,
     command: ({ envFile = DEFAULT_ENV_FILE } = {}) =>
       process.platform === 'win32'
         ? `powershell -ExecutionPolicy Bypass -File scripts/run-sonar.ps1 -EnvFile "${envFile}"`
@@ -328,11 +328,11 @@ function mergeEvidence(existing, rootDir, taskId) {
   merged.agent = {
     tool: 'codex',
     adapter: '.agents/adapters/codex.md',
-    ...(existing.agent ?? {}),
+    ...existing.agent,
   };
   merged.linkage = {
     ...createDefaultEvidence(rootDir, taskId).linkage,
-    ...(existing.linkage ?? {}),
+    ...existing.linkage,
   };
   merged.commands = Array.isArray(existing.commands) ? [...existing.commands] : [];
   merged.knownGaps = Array.isArray(existing.knownGaps) ? [...existing.knownGaps] : [];

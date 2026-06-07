@@ -63,7 +63,7 @@ func TestReadCSV_BOM(t *testing.T) {
 func TestReadCSV_NilFile(t *testing.T) {
 	func() {
 		defer func() {
-			if r := recover(); r != nil {
+			if recover() != nil {
 				t.Log("recovered from panic (expected with nil file)")
 			}
 		}()
