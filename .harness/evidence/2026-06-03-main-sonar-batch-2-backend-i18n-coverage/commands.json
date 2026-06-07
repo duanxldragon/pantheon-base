@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-06-03-main-sonar-batch-2-backend-i18n-coverage",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": ".agents/adapters/codex.md"
+  },
+  "commands": [
+    {
+      "command": "go test ./backend/modules/system/i18n -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "new fast tests run without MySQL DSN; existing MySQL fixture tests skip cleanly when the DSN is absent"
+    },
+    {
+      "command": "go test -count=1 -coverprofile coverage.out",
+      "cwd": "pantheon-base/backend/modules/system/i18n",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "package-visible coverage increased from 5.2% to 12.6% after adding self-contained coverage for builtin locale helpers, lang-pack merging, nil-db guard paths, and helper normalization"
+    },
+    {
+      "command": "go test ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "repository-wide backend regression check remained green"
+    },
+    {
+      "command": "node scripts/run-sonar-remediation.mjs --task 2026-06-03-main-sonar-remediation --phase backend-tests --execute",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "parent remediation backend phase passed; local Windows execution still records the expected fallback from go test -race ./... to go test ./..."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "No fresh SonarCloud dashboard sample was captured in this turn; the current evidence is local test and coverage output plus the parent backend-tests phase log.",
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "I18nHandler -> I18nService -> locale cache/seed helpers"
+    ],
+    "checks": [
+      "call-depth",
+      "hub"
+    ],
+    "findings": [],
+    "notes": "scaffolded from task packet Structural Scope; replace after graph review"
+  },
+  "linkage": {
+    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-batch-2-backend-i18n-coverage.task.md",
+    "evidenceDir": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/",
+    "reviewFile": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "The larger MySQL-backed i18n service suite still skips when PANTHEON_TEST_DSN is unset, so service-file coverage is improved but not fully closed.",
+    "A fresh SonarCloud scan is still required to turn the local 12.6% package coverage improvement into updated dashboard evidence."
+  ],
+  "completedAt": "2026-06-05T15:21:00.000Z"
+}

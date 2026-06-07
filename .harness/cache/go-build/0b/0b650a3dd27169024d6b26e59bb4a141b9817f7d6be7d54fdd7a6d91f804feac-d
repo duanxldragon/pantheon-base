@@ -1,0 +1,3 @@
+# test log
+getenv PANTHEON_TEST_DSN
+getenv PANTHEON_DSN

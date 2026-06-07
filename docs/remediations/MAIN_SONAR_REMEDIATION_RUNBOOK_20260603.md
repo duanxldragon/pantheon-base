@@ -1,0 +1,82 @@
+---
+title: Main Sonar Remediation Runbook
+doc_type: Remediation
+layer: platform
+status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
+updated_at: 2026-06-07
+---
+
+# Main Sonar Remediation Runbook
+
+English version: [MAIN_SONAR_REMEDIATION_RUNBOOK_20260603.en.md](./MAIN_SONAR_REMEDIATION_RUNBOOK_20260603.en.md)
+
+## 1. 整改流程（三步）
+
+```
+本地 CI gates 通过 → 写测试/重构 → 合并后触发远端 Sonar
+```
+
+**Step 1 — 确定修复范围**
+
+每次只修一个层或一个域，不要一次修所有 Sonar issues：
+
+- `pkg/`、`system/auth`、`system/iam`、`system/config`、`system/org`
+- 前端共享组件、真实页面（非 fixture/smoke）
+
+**Step 2 — 修复 + 验证**
+
+```bash
+# 跑本地 CI gates（quality.yml 的门禁子集）
+npm ci
+go test ./...                  # 后端测试
+cd frontend && npm ci && npm run lint && npm run build   # 前端构建
+```
+
+修复原则：
+
+- 补测试优先于重构代码（覆盖率从 3.5% 起步，每一行新测试都直接改善指标）
+- 改 Sonar issues 时要附带对应包的测试，不要只删代码不补覆盖
+- 前端重复率通过提取共享组件治理，不做无意义的抽象
+
+**Step 3 — 合并后触发 Sonar**
+
+```bash
+gh workflow run sonar.yml --ref main
+```
+
+远端 Sonar 完成后，确认结果。如果质量门仍为 ERROR，记录具体恶化指标并进入下一轮。
+
+## 2. 证据要求
+
+每轮整改只需一个文件：`.harness/evidence/<task-id>/summary.md`，包含：
+
+- 本轮修了哪些 issues
+- 覆盖率和重复率变化
+- 还有哪些已知 gap
+
+不再需要 `commands.json` + `review.md` + 分 phase logs。如果修复涉及运行时敏感变更（登录、权限、导入导出），补一条简单的 runtime evidence 说明即可。
+
+## 3. 环境准备
+
+### 本地 Sonar（可选）
+
+```bash
+# 1. 复制模板，填入 token
+cp pantheon-sonarcloud.env.example pantheon-sonarcloud.env
+# 编辑填入 SONAR_TOKEN
+
+# 2. 安装 SonarScanner CLI
+# 参考 https://docs.sonarsource.com/sonarcloud/advanced-setup/cli/
+
+# 3. 扫描
+pwsh -File scripts/run-sonar.ps1
+```
+
+日常不要求本地 Sonar。CI 上的 PR Sonar 分析已提供足够反馈，本地 Sonar 仅用于调试 coverage 生成或复现 CI 差异。
+
+### Windows 说明
+
+`go test -race` 在 Windows 不支持，本地用 `go test ./...`。含 race 的测试以 Ubuntu CI 为准，已由 `quality.yml` 覆盖。

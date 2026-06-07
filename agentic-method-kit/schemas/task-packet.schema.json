@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portable Task Packet",
+  "type": "object",
+  "required": [
+    "taskId",
+    "goal",
+    "primaryLayer",
+    "harnessProfile",
+    "contractAnchors",
+    "scope",
+    "verificationPlan",
+    "linkage",
+    "evidenceRequired",
+    "humanGates"
+  ],
+  "properties": {
+    "taskId": { "type": "string" },
+    "goal": { "type": "string" },
+    "primaryLayer": { "type": "string" },
+    "harnessProfile": {
+      "type": "object",
+      "required": ["template", "overlay", "coverageDimensions"],
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": [
+            "admin-platform",
+            "api-service",
+            "event-processor",
+            "dashboard",
+            "ui-heavy-product",
+            "custom"
+          ]
+        },
+        "overlay": { "type": "string" },
+        "coverageDimensions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "behaviour",
+              "maintainability",
+              "architecture-fitness",
+              "runtime-quality",
+              "method-health"
+            ]
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "contractAnchors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "scope": {
+      "type": "object",
+      "required": ["in", "out"],
+      "properties": {
+        "in": { "type": "array", "items": { "type": "string" } },
+        "out": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "structuralScope": {
+      "type": "object",
+      "properties": {
+        "affectedSubgraph": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ]
+        },
+        "boundaryCrossings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "riskNodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "graphFocus": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "cycle-check",
+              "hub-check",
+              "call-depth",
+              "sensitive-input-flow"
+            ]
+          }
+        }
+      }
+    },
+    "verificationPlan": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "executionRoles": {
+      "type": "object",
+      "required": ["implementerPosture", "reviewerPosture"],
+      "properties": {
+        "implementerPosture": { "type": "string" },
+        "reviewerPosture": { "type": "string" }
+      }
+    },
+    "stopPoints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "statePlan": {
+      "type": "object",
+      "required": ["checkpointExpectation"],
+      "properties": {
+        "checkpointExpectation": { "type": "string" },
+        "resumeArtifacts": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "linkage": {
+      "type": "object",
+      "required": ["taskId", "taskPacket", "evidenceDir", "reviewFile", "changeRef", "planRefs"],
+      "properties": {
+        "taskId": { "type": "string" },
+        "taskPacket": { "type": "string" },
+        "evidenceDir": { "type": "string" },
+        "reviewFile": { "type": "string" },
+        "changeRef": { "type": "string" },
+        "planRefs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "evidenceRequired": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "humanGates": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

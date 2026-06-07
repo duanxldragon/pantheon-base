@@ -17,6 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const errDatabaseNotInitialized = "database.not_initialized"
+
 type I18nService struct {
 	db *gorm.DB
 	mu sync.RWMutex
@@ -409,7 +411,7 @@ func (s *I18nService) Import(records [][]string) (*impexp.ImportResult, error) {
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -1410,7 +1412,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 		ReferenceFiles:        make([]I18nKeyReferenceFile, 0),
 	}
 	if s.db == nil {
-		return resp, errors.New("database.not_initialized")
+		return resp, errors.New(errDatabaseNotInitialized)
 	}
 
 	var sourceRows []SystemI18n

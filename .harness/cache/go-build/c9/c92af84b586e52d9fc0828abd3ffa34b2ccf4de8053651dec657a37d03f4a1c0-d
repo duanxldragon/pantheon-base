@@ -1,0 +1,7 @@
+./casbin.go
+./casbin_adapter.go
+./gorm.go
+./redis.go
+./scope.go
+./gorm_test.go
+./scope_test.go

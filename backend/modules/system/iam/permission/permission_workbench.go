@@ -49,7 +49,7 @@ type permissionRequiredAPIPolicy struct {
 
 func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*PermissionWorkbenchResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var roles []permissionWorkbenchRoleRow

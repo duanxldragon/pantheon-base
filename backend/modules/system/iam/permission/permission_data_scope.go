@@ -22,7 +22,7 @@ type permissionDataScopeRoleRow struct {
 
 func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuery) (*PermissionDataScopePolicyListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var roles []permissionDataScopeRoleRow
@@ -78,7 +78,7 @@ func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuer
 
 func (s *PermissionService) UpdateDataScopePolicy(roleKey string, req *PermissionDataScopePolicyUpdateReq) (*PermissionDataScopePolicyResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if req == nil {
 		return nil, errors.New("param.invalid")
