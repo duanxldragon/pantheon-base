@@ -152,6 +152,7 @@ func buildAuditBenchmarkRow(index int) (domain string, page string, failureCateg
 	}
 }
 
+// NOSONAR - test helper with SQL explain iteration, complexity is inherent
 func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query string, args ...any) []string {
 	t.Helper()
 

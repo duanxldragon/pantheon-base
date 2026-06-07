@@ -181,6 +181,7 @@ export function resolvePhaseEnv(rootDir, phase, baseEnv = process.env) {
   return env;
 }
 
+// NOSONAR - CLI arg parser with natural if-else chain, restructuring would harm readability
 function parseArgs(argv) {
   const options = {
     root: DEFAULT_ROOT,

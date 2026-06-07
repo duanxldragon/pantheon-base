@@ -166,7 +166,7 @@ async function main() {
   };
 
   if (jsonOnly) {
-    console.log(JSON.stringify(payload, null, 2)); // NOSONAR — build-only audit script, not a production service
+    console.log(JSON.stringify(payload, null, 2)); // NOSONAR - build-only audit script, not a production service
     return;
   }
 
@@ -175,8 +175,8 @@ async function main() {
       ? 'n/a'
       : `${payload.archivedRetentionThresholdDays}d`;
 
-  console.log(`system_i18n runtime audit @ ${payload.generatedAt}`); // NOSONAR — build-only audit script
-  console.log( // NOSONAR — build-only audit script
+  console.log(`system_i18n runtime audit @ ${payload.generatedAt}`); // NOSONAR - build-only audit script
+  console.log( // NOSONAR - build-only audit script
     `unused=${payload.totalUnusedKeys} modules=${payload.totalModules} observe>=${payload.observationThresholdDays}d delete>=${deleteThresholdLabel}`,
   );
   console.log('');
@@ -184,33 +184,33 @@ async function main() {
   if (filteredModules.length === 0) {
     console.log('No unused/observing/archived modules found.');
   } else {
-    console.log('Modules');
+    console.log('Modules'); // NOSONAR - build-only audit script
     for (const item of filteredModules) {
-      console.log(
+      console.log( // NOSONAR - build-only audit script
         `- ${item.module}: unused=${item.unusedKeyCount}, observing=${item.observingKeyCount}, archived=${item.archivedKeyCount}, deleteEligible=${item.deleteEligibleKeyCount}`,
       );
     }
   }
 
   console.log('');
-  console.log(`Smoke keys (${smokeKeys.length})`);
+  console.log(`Smoke keys (${smokeKeys.length})`); // NOSONAR - build-only audit script
   if (smokeKeys.length === 0) {
-    console.log('- none');
+    console.log('- none'); // NOSONAR - build-only audit script
   } else {
     for (const item of smokeKeys) {
-      console.log(
+      console.log( // NOSONAR - build-only audit script
         `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
       );
     }
   }
 
   console.log('');
-  console.log(`Delete-eligible keys (${deleteEligible.length})`);
+  console.log(`Delete-eligible keys (${deleteEligible.length})`); // NOSONAR - build-only audit script
   if (deleteEligible.length === 0) {
-    console.log('- none');
+    console.log('- none'); // NOSONAR - build-only audit script
   } else {
     for (const item of deleteEligible) {
-      console.log(
+      console.log( // NOSONAR - build-only audit script
         `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
       );
     }
