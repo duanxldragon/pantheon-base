@@ -516,6 +516,10 @@ func diffMissingAPIPolicies(required []permissionRequiredAPIPolicy, actual []Per
 
 func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequiredAPIPolicy {
 	switch strings.TrimSpace(permissionKey) {
+	case "system:user:list":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/list", Method: "GET"},
+		}
 	case "system:security-event:list":
 		return []permissionRequiredAPIPolicy{
 			{Path: "/api/v1/system/security-event/list", Method: "GET"},

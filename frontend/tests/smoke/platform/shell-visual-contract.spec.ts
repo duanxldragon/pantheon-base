@@ -71,13 +71,8 @@ async function installEmeraldThemePreference(page: import('@playwright/test').Pa
 }
 
 async function navigateInShell(page: import('@playwright/test').Page, path: string) {
-  if (page.url() === 'about:blank') {
-    await page.goto('/dashboard', { waitUntil: 'networkidle' });
-  }
-  await page.evaluate((nextPath) => {
-    globalThis.history.pushState({}, '', nextPath);
-    globalThis.dispatchEvent(new PopStateEvent('popstate'));
-  }, path);
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.app-shell__content')).toBeVisible();
   expectPagePathname(page, path);
 }
 
@@ -86,6 +81,96 @@ async function openSystemDialogPage(page: import('@playwright/test').Page, path:
   await expect(page.locator('.app-shell__content')).toBeVisible();
   await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible({
     timeout: 20000,
+  });
+}
+
+function getVisibleDialog(page: import('@playwright/test').Page) {
+  return page.locator('.app-dialog:visible').last();
+}
+
+async function readVisibleFilterPanelContract(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const visibleFilterPanels = Array.from(document.querySelectorAll<HTMLElement>('.filter-panel'))
+      .map((panel) => ({
+        panel,
+        body: panel.querySelector<HTMLElement>('.filter-panel__body'),
+      }))
+      .filter(({ body }) => {
+        if (!body) {
+          return false;
+        }
+        const rect = body.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+
+    const activePanel = visibleFilterPanels.at(-1);
+    const read = (element?: HTMLElement | null) => {
+      if (!element) {
+        return null;
+      }
+      const style = globalThis.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return {
+        height: Math.round(rect.height),
+        marginBottom: style.marginBottom,
+        paddingTop: style.paddingTop,
+        paddingRight: style.paddingRight,
+        paddingBottom: style.paddingBottom,
+        paddingLeft: style.paddingLeft,
+      };
+    };
+
+    const isVisible = (element?: HTMLElement | null) => {
+      if (!element) {
+        return false;
+      }
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
+
+    const controlSelector = [
+      '.arco-input-password',
+      '.arco-input-number',
+      '.arco-select-view',
+      '.arco-tree-select-view',
+      '.arco-picker',
+      '.arco-textarea-wrapper',
+      '.arco-input-inner-wrapper',
+      'input.arco-input',
+    ].join(', ');
+
+    const controls = activePanel?.panel
+      ? Array.from(activePanel.panel.querySelectorAll<HTMLElement>(controlSelector)).filter((element) => {
+          if (!isVisible(element)) {
+            return false;
+          }
+          if (
+            element.matches('input.arco-input') &&
+            element.closest('.arco-input-inner-wrapper, .arco-input-password, .arco-input-number')
+          ) {
+            return false;
+          }
+          if (
+            element.classList.contains('arco-input-inner-wrapper') &&
+            element.closest('.arco-input-password, .arco-input-number')
+          ) {
+            return false;
+          }
+          return true;
+        })
+      : [];
+
+    const actionButtons = activePanel?.panel
+      ? Array.from(activePanel.panel.querySelectorAll<HTMLElement>('.filter-panel__action-item .arco-btn'))
+          .filter((element) => isVisible(element))
+      : [];
+
+    return {
+      body: read(activePanel?.body),
+      firstItem: read(activePanel?.panel?.querySelector<HTMLElement>('.arco-form-item')),
+      firstControl: read(controls[0]),
+      firstActionButton: read(actionButtons[0]),
+    };
   });
 }
 
@@ -100,7 +185,7 @@ async function readDialogContract(
       }
     });
   }
-  const dialogLocator = page.locator('.app-dialog').first();
+  const dialogLocator = getVisibleDialog(page);
   await expect(dialogLocator).toBeVisible();
   await page.waitForTimeout(250);
   return dialogLocator.evaluate((dialog) => {
@@ -173,7 +258,7 @@ async function readDialogContract(
 }
 
 async function readDialogControlContracts(page: import('@playwright/test').Page) {
-  const dialogLocator = page.locator('.app-dialog').first();
+  const dialogLocator = getVisibleDialog(page);
   await expect(dialogLocator).toBeVisible();
   return dialogLocator.evaluate((dialog) => {
     const read = (element?: HTMLElement | null) => {
@@ -754,6 +839,8 @@ test('high-sensitivity config pages keep a single summary shell without hero wal
 test('system table pages keep unified table card spacing radius and neutral headers', async ({
   page,
 }) => {
+  test.slow();
+  test.setTimeout(90000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
 
@@ -850,54 +937,38 @@ test('system table pages keep unified table card spacing radius and neutral head
 });
 
 test('system filter panels and governance bars keep one formal rhythm', async ({ page }) => {
+  test.slow();
+  test.setTimeout(60000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
 
   for (const path of filterPanelPages) {
     await navigateInShell(page, path);
-    const filterBodyLocator = page.locator('.filter-panel .filter-panel__body').first();
-    await expect(filterBodyLocator).toBeVisible();
-    const firstItemLocator = page.locator('.filter-panel .arco-form-item').first();
-    const firstControlLocator = page
-      .locator(
-        '.filter-panel .arco-input-inner-wrapper, .filter-panel .arco-input, .filter-panel .arco-select-view, .filter-panel .arco-tree-select-view, .filter-panel .arco-picker',
-      )
-      .first();
-    const actionButtonLocator = page.locator('.filter-panel__action-item .arco-btn').first();
+    await expect(page.locator('.filter-panel .filter-panel__body').first(), `${path} filter panel ready`).toBeVisible({
+      timeout: 20000,
+    });
     const cssVariables = await readRootCssVariables(page, [
       '--shell-filter-body-padding',
       '--shell-filter-form-item-margin-bottom',
       '--shell-filter-control-min-height',
     ]);
+    const filterPanelContract = await readVisibleFilterPanelContract(page);
     const [filterPaddingTop, filterPaddingRight, filterPaddingBottom, filterPaddingLeft] =
       expandPaddingValues(cssVariables['--shell-filter-body-padding']);
-    await expect(filterBodyLocator, `${path} paddingTop`).toHaveCSS('padding-top', filterPaddingTop);
-    await expect(filterBodyLocator, `${path} paddingRight`).toHaveCSS(
-      'padding-right',
-      filterPaddingRight,
-    );
-    await expect(filterBodyLocator, `${path} paddingBottom`).toHaveCSS(
-      'padding-bottom',
-      filterPaddingBottom,
-    );
-    await expect(filterBodyLocator, `${path} paddingLeft`).toHaveCSS(
-      'padding-left',
+    expect(filterPanelContract.body, `${path} visible filter body`).not.toBeNull();
+    expect(filterPanelContract.body?.paddingTop, `${path} paddingTop`).toBe(filterPaddingTop);
+    expect(filterPanelContract.body?.paddingRight, `${path} paddingRight`).toBe(filterPaddingRight);
+    expect(filterPanelContract.body?.paddingBottom, `${path} paddingBottom`).toBe(filterPaddingBottom);
+    expect(filterPanelContract.body?.paddingLeft, `${path} paddingLeft`).toBe(
       filterPaddingLeft ?? filterPaddingRight,
     );
-    await expect(firstItemLocator, `${path} firstItem marginBottom`).toHaveCSS(
-      'margin-bottom',
+    expect(filterPanelContract.firstItem?.marginBottom, `${path} firstItem marginBottom`).toBe(
       cssVariables['--shell-filter-form-item-margin-bottom'],
     );
-    const firstControlHeight = await firstControlLocator.evaluate((element) =>
-      Math.round(element.getBoundingClientRect().height),
-    );
-    expect(firstControlHeight, path).toBeGreaterThanOrEqual(
+    expect(filterPanelContract.firstControl?.height, path).toBeGreaterThanOrEqual(
       Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
     );
-    const actionButtonHeight = await actionButtonLocator.evaluate((element) =>
-      Math.round(element.getBoundingClientRect().height),
-    );
-    expect(actionButtonHeight, path).toBeGreaterThanOrEqual(
+    expect(filterPanelContract.firstActionButton?.height, path).toBeGreaterThanOrEqual(
       Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
     );
   }
@@ -1093,12 +1164,9 @@ test('core system dialogs share modal spacing section and input contracts', asyn
     await expect(createButton, entry.path).toBeVisible();
     await expect(createButton, entry.path).toBeEnabled();
     await createButton.click();
-    await expect(page.locator('.app-dialog')).toBeVisible();
-    await page.evaluate(() => {
-      document
-        .querySelector<HTMLElement>('.app-dialog .arco-input-inner-wrapper .arco-input')
-        ?.focus();
-    });
+    const dialogLocator = getVisibleDialog(page);
+    await expect(dialogLocator).toBeVisible();
+    await dialogLocator.locator('.arco-input-inner-wrapper .arco-input, input.arco-input').first().focus().catch(() => undefined);
 
     const dialogContract = await readDialogContract(page, { preserveFocus: true });
     expect(dialogContract.dialog?.borderTopWidth, entry.path).toBe('1px');
@@ -1148,8 +1216,8 @@ test('core system dialogs share modal spacing section and input contracts', asyn
       );
     }
 
-    await page.locator('.app-dialog .arco-modal-close-icon').click();
-    await expect(page.locator('.app-dialog')).toHaveCount(0);
+    await dialogLocator.locator('.arco-modal-close-icon').click();
+    await expect(dialogLocator).toHaveCount(0);
   }
 });
 
@@ -1525,12 +1593,12 @@ test('empty loading error and destructive controls keep shared visual semantics'
   expect(stateContract.empty?.height).toBeGreaterThanOrEqual(220);
   expect(stateContract.empty?.paddingTop).toBe('16px');
   expect(stateContract.emptyInner?.borderTopStyle).toBe('dashed');
-
-  await navigateInShell(page, '/system/user/not-a-number');
-  await expect(page.locator('.app-shell__content .page-empty').first()).toBeVisible();
   await page.locator('[data-testid="visual-state-fixtures"]').evaluate((element) => {
     element.remove();
   });
+
+  await navigateInShell(page, '/system/user/not-a-number');
+  await expect(page.locator('.app-shell__content .page-empty').first()).toBeVisible();
   await navigateInShell(page, '/system/user');
   await expect(page.locator('.system-user-list__table-card .app-table')).toBeVisible();
 

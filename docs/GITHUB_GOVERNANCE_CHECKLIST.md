@@ -27,7 +27,9 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 ## Required checks
 
 - `Quality Gates`
-- Any repo-specific smoke or audit jobs that are part of the merge gate
+- `Security Gates`
+- Keep PR-required checks limited to fast, deterministic merge-gate jobs
+- Keep `Full Smoke Suite` manual, scheduled, or release-precheck only
 - Keep Sonar and Codacy out of required checks
 
 ## Secrets

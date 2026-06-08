@@ -41,8 +41,9 @@ Recommended approval policy:
 Add these checks to the required checks list:
 
 - `Quality Gates`
+- `Security Gates`
 
-If the repo has additional GitHub-native merge-gate jobs, add them too. Keep Sonar and Codacy out of required checks. See [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md) for the gating model and thresholds.
+Do not add `Full Smoke Suite` or `Sonar` to required checks. `Quality Gates` should stay fast and deterministic for PR feedback, while `Full Smoke Suite` remains manual or release-precheck only. Keep Sonar and Codacy out of required checks. See [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md) for the gating model and thresholds.
 
 ### 1.3 Code owners
 
