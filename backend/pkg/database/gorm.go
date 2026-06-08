@@ -3,10 +3,11 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	mysqlDriver "github.com/go-sql-driver/mysql"
-	"pantheon-platform/backend/pkg/common"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -14,13 +15,6 @@ import (
 )
 
 var DB *gorm.DB
-
-func gormLogLevel() logger.LogLevel {
-	if common.IsProductionEnv() {
-		return logger.Warn
-	}
-	return logger.Info
-}
 
 func normalizeMySQLDSN(dsn string) (string, error) {
 	parsed, err := mysqlDriver.ParseDSN(dsn)
@@ -43,6 +37,13 @@ func normalizeMySQLDSN(dsn string) (string, error) {
 		parsed.Loc = time.Local
 	}
 	return parsed.FormatDSN(), nil
+}
+
+func gormLogLevel() logger.LogLevel {
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("PANTHEON_ENV")), "production") {
+		return logger.Warn
+	}
+	return logger.Info
 }
 
 // InitDB 初始化数据库连接

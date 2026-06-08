@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harness-engineering.local/schemas/doc-frontmatter.schema.json",
+  "title": "Harness Document Frontmatter",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "doc_type": {
+      "type": "string",
+      "enum": ["Contract", "Design", "Assessment", "Remediation", "Acceptance"]
+    },
+    "layer": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["Draft", "Active", "Approved", "Superseded", "Archived"]
+    },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "linked_contracts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "related_designs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "related_assessments": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "related_remediations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "related_acceptances": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "index_group": { "type": "string", "minLength": 1 },
+    "retention_reason": { "type": "string", "minLength": 1 },
+    "superseded_by": { "type": "string", "minLength": 1 }
+  },
+  "required": ["title", "doc_type", "layer", "status", "updated_at"],
+  "additionalProperties": true
+}

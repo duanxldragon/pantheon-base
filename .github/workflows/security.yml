@@ -18,10 +18,11 @@ permissions:
 jobs:
   dependency-vulnerabilities:
     name: Dependency Vulnerabilities
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           persist-credentials: false
 
@@ -90,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -133,7 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           persist-credentials: false
 
@@ -182,7 +183,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -201,7 +202,6 @@ jobs:
   security-gates:
     name: Security Gates
     needs:
-      - dependency-vulnerabilities
       - secret-scan
       - workflow-posture
       - codeql-security
@@ -213,17 +213,14 @@ jobs:
       - name: Enforce security results
         shell: bash
         env:
-          DEPENDENCY_VULNERABILITIES_RESULT: ${{ needs.dependency-vulnerabilities.result }}
           SECRET_SCAN_RESULT: ${{ needs.secret-scan.result }}
           WORKFLOW_POSTURE_RESULT: ${{ needs.workflow-posture.result }}
           CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
         run: |
-          echo "Dependency Vulnerabilities: ${DEPENDENCY_VULNERABILITIES_RESULT}"
           echo "Secret Scan: ${SECRET_SCAN_RESULT}"
           echo "Workflow Posture: ${WORKFLOW_POSTURE_RESULT}"
           echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
-          if [ "${DEPENDENCY_VULNERABILITIES_RESULT}" != "success" ] || \
-             [ "${SECRET_SCAN_RESULT}" != "success" ] || \
+          if [ "${SECRET_SCAN_RESULT}" != "success" ] || \
              [ "${WORKFLOW_POSTURE_RESULT}" != "success" ] || \
              [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ]; then
             exit 1

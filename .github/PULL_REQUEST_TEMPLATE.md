@@ -16,11 +16,12 @@
 
 - [ ] 后端测试：`go test ./...`
 - [ ] 前端构建：`cd frontend && npm run build`
-- [ ] 系统页 smoke：`cd frontend && npm run test:smoke:system`
-- [ ] 角色授权 smoke：`cd frontend && npm run test:smoke:role-auth`
+- [ ] 轻量 smoke：`cd frontend && npm run test:smoke:platform:contracts && npm run test:smoke:system:pages`
+- [ ] 如涉及系统域深链路，已补充专项 smoke：`cd frontend && npm run test:smoke:system:iam-authz`
 - [ ] 其他专项验证已补充
 - [ ] 如需 SonarQube，仅完成手动辅助检查（非门禁）
 - [ ] CodeQL 结果已检查并解释
+- [ ] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
 - [ ] Codacy（如出现）仅作为参考，未作为门禁
 - [ ] GitHub required checks 通过
 - [ ] 独立 reviewer 已完成且非作者自审

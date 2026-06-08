@@ -20,6 +20,7 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 	_ = db.AutoMigrate(&SystemUser{}, &SystemUserProfileExt{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY, role_key VARCHAR(64), role_name VARCHAR(128), status INT, deleted_at DATETIME NULL)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id BIGINT, role_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_id BIGINT, permission_key VARCHAR(128) NOT NULL DEFAULT '')")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id VARCHAR(128), user_id BIGINT, revoked_at DATETIME NULL)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id BIGINT PRIMARY KEY, parent_id BIGINT, dept_name VARCHAR(128))")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id BIGINT PRIMARY KEY, post_code VARCHAR(64), post_name VARCHAR(128), dept_id BIGINT)")
@@ -585,7 +586,7 @@ func TestUserService_GetUserDetail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create user: %v", err)
 	}
-	loginTime := time.Date(2026, 5, 16, 17, 4, 9, 0, time.UTC)
+	loginTime := time.Date(2026, 5, 16, 17, 4, 9, 0, time.Local)
 	if err := db.Exec(
 		"INSERT INTO system_log_login (username, status, login_time) VALUES (?, ?, ?)",
 		"detail_test",

@@ -1,0 +1,10 @@
+./generator_crypto.go
+./generator_datasource_model.go
+./generator_datasource_service.go
+./generator_dto.go
+./generator_field_inference.go
+./generator_handler.go
+./generator_introspection_service.go
+./generator_service.go
+./module.go
+./generator_service_test.go

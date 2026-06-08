@@ -1,0 +1,17 @@
+# test log
+getenv PANTHEON_ENV
+getenv TEST_SECRET
+getenv PANTHEON_ENV
+getenv TEST_SECRET
+getenv TEST_SECRET
+getenv PANTHEON_ENV
+getenv TEST_SECRET
+getenv TEST_SECRET
+getenv PANTHEON_ENV
+getenv TEST_SECRET
+getenv PANTHEON_ENV
+getenv TEST_SECRET
+getenv PANTHEON_ENV
+getenv APP_ENV
+getenv GO_ENV
+getenv GIN_MODE

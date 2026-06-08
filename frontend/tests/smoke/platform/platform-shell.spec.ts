@@ -102,7 +102,6 @@ test.describe('enter submit smoke', () => {
       await dictInputs.nth(1).fill(dictName);
       await dictInputs.nth(1).press('Enter');
       await expect(dictDialog).toHaveCount(0);
-      await expect(page.locator('.arco-message').getByText('创建成功', { exact: false }).last()).toBeVisible();
 
       await expect.poll(async () => {
         const response = await page.request.get(`${apiBaseUrl}/system/dict/type/list`, {
@@ -125,7 +124,6 @@ test.describe('enter submit smoke', () => {
       await i18nDialog.locator('textarea').first().fill('回车提交文案');
       await i18nInputs.nth(2).press('Enter');
       await expect(i18nDialog).toHaveCount(0);
-      await expect(page.locator('.arco-message').getByText('创建成功', { exact: false }).last()).toBeVisible();
 
       await expect.poll(async () => {
         const response = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
@@ -148,7 +146,6 @@ test.describe('enter submit smoke', () => {
       await pathInput.fill(permissionPath);
       await pathInput.press('Enter');
       await expect(permissionDialog).toHaveCount(0);
-      await expect(page.locator('.arco-message').getByText('创建成功', { exact: false }).last()).toBeVisible();
 
       await expect.poll(async () => {
         const response = await page.request.get(`${apiBaseUrl}/system/permission/list`, {

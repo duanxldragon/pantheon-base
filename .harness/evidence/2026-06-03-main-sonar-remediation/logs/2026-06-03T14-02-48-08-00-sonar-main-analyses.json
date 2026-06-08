@@ -1,0 +1,31 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 2,
+    "total": 5
+  },
+  "analyses": [
+    {
+      "key": "analysis-1",
+      "date": "2026-06-03T14:02:48+08:00",
+      "events": [
+        {
+          "key": "event-version-1",
+          "category": "VERSION",
+          "name": "not provided"
+        }
+      ],
+      "projectVersion": "not provided",
+      "manualNewCodePeriodBaseline": false,
+      "revision": "2f70c2da40fe4c0a59d3c0c77522d27d3727f6f4"
+    },
+    {
+      "key": "analysis-2",
+      "date": "2026-06-03T13:06:50+08:00",
+      "events": [],
+      "projectVersion": "not provided",
+      "manualNewCodePeriodBaseline": false,
+      "revision": "2f70c2da40fe4c0a59d3c0c77522d27d3727f6f4"
+    }
+  ]
+}

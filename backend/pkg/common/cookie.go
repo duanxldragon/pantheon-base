@@ -11,7 +11,6 @@ const (
 	CookieAccessToken  = "pantheon_access_token"
 	CookieRefreshToken = "pantheon_refresh_token"
 	CookieCSRFToken    = "pantheon_csrf_token"
-	HeaderCSRFToken    = "X-CSRF-Token"
 )
 
 func setCookie(w http.ResponseWriter, name, value string, maxAge int, sameSite http.SameSite) {
@@ -40,7 +39,7 @@ func ClearTokenCookies(w http.ResponseWriter) {
 	setCookie(w, CookieAccessToken, "", -1, http.SameSiteStrictMode)
 	setCookie(w, CookieRefreshToken, "", -1, http.SameSiteStrictMode)
 	setCookie(w, CookieCSRFToken, "", -1, http.SameSiteStrictMode)
-	w.Header().Set(HeaderCSRFToken, "")
+	w.Header().Del("X-CSRF-Token")
 }
 
 func SetCSRFCookie(w http.ResponseWriter) (string, error) {
@@ -49,7 +48,7 @@ func SetCSRFCookie(w http.ResponseWriter) (string, error) {
 		return "", err
 	}
 	setCookie(w, CookieCSRFToken, token, int((24 * time.Hour).Seconds()), http.SameSiteStrictMode)
-	w.Header().Set(HeaderCSRFToken, token)
+	w.Header().Set("X-CSRF-Token", token)
 	return token, nil
 }
 

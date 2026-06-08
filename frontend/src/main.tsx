@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '@arco-design/web-react/es/_util/react-19-adapter.js';
 import { BrowserRouter } from 'react-router-dom';
 import './core/arco/style';
 import './index.css';

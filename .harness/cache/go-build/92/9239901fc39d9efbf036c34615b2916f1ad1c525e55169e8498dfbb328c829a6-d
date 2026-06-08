@@ -1,0 +1,13 @@
+./adapter.go
+./adapter_context.go
+./adapter_filtered.go
+./adapter_filtered_context.go
+./batch_adapter.go
+./batch_adapter_context.go
+./dispatcher.go
+./transaction.go
+./update_adapter.go
+./update_adapter_context.go
+./watcher.go
+./watcher_ex.go
+./watcher_update.go

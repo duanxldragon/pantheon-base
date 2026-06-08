@@ -1,0 +1,124 @@
+name: Full Smoke Suite
+
+on:
+  schedule:
+    - cron: "37 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-full-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  GO_VERSION_FILE: go.mod
+  MYSQL_ROOT_PASSWORD: "DHCCroot@2025"
+  MYSQL_DATABASE: "pantheon_base"
+  PANTHEON_DSN: "root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+  PANTHEON_TEST_DSN: "root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+
+jobs:
+  smoke-full:
+    name: Full Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: DHCCroot@2025
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pDHCCroot@2025"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_TEST_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
+      PANTHEON_PORT: "8080"
+      PANTHEON_API_BASE_URL: http://127.0.0.1:8080/api/v1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start backend
+        shell: bash
+        run: |
+          nohup go run ./backend/cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/pantheon-backend.pid"
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
+          exit 1
+
+      - name: Run full smoke suite
+        working-directory: frontend
+        run: npm run test:smoke:all
+
+      - name: Upload smoke artifacts
+        if: failure()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: smoke-full-artifacts
+          path: |
+            frontend/test-results
+            ${{ runner.temp }}/pantheon-backend.log
+          if-no-files-found: ignore
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/pantheon-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
+          fi

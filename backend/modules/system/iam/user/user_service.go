@@ -19,6 +19,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const errDatabaseNotInitialized = "database.not_initialized"
+
 type UserService struct {
 	db *gorm.DB
 }
@@ -33,7 +35,7 @@ func NewUserService(db *gorm.DB) *UserService {
 // Migrate 初始化表结构和种子数据
 func (s *UserService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(errDatabaseNotInitialized)
 	}
 
 	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}, &SystemUserProfileExt{}); err != nil {
@@ -53,7 +55,7 @@ func (s *UserService) Migrate() error {
 
 func (s *UserService) normalizeUserPreferenceJSON() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(errDatabaseNotInitialized)
 	}
 
 	type userPreferenceRow struct {
@@ -165,7 +167,7 @@ func (s *UserService) ensureAdminRoleBinding() error {
 // GetUserRoles 获取用户角色标识。
 func (s *UserService) GetUserRoles(userID uint64) ([]string, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var roles []string
@@ -183,7 +185,7 @@ func (s *UserService) GetUserRoles(userID uint64) ([]string, error) {
 // GetUserPerms 获取用户按钮/接口权限标识。
 func (s *UserService) GetUserPerms(userID uint64) ([]string, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var permissionKeys []string
@@ -201,7 +203,7 @@ func (s *UserService) GetUserPerms(userID uint64) ([]string, error) {
 // GetProfile 获取当前登录用户个人中心信息。
 func (s *UserService) GetProfile(userID uint64) (*UserProfileResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var user SystemUser
@@ -243,7 +245,7 @@ func (s *UserService) GetProfile(userID uint64) (*UserProfileResp, error) {
 // ListUsers 获取用户列表。
 func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScopeReq) (*UserListPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var users []SystemUser
@@ -332,7 +334,7 @@ func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScop
 // GetUserDetail 获取用户详情。
 func (s *UserService) GetUserDetail(userID uint64) (*UserDetailResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var user SystemUser
@@ -386,7 +388,7 @@ func (s *UserService) GetUserDetail(userID uint64) (*UserDetailResp, error) {
 // CreateUser 创建用户。
 func (s *UserService) CreateUser(req *UserCreateReq) (*UserListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if err := s.validateUserCreate(req); err != nil {
 		return nil, err
@@ -449,7 +451,7 @@ func (s *UserService) CreateUser(req *UserCreateReq) (*UserListResp, error) {
 // UpdateUser 更新用户。
 func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var user SystemUser
@@ -527,7 +529,7 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 // UpdateProfile 更新当前登录用户个人资料。
 func (s *UserService) UpdateProfile(userID uint64, req *UserProfileUpdateReq) (*UserProfileResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if err := validateOptionalEmail(req.Email); err != nil {
 		return nil, err
@@ -566,7 +568,7 @@ func (s *UserService) UpdateProfile(userID uint64, req *UserProfileUpdateReq) (*
 // ResetPassword 重置指定用户密码，并吊销该用户全部活跃会话。
 func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(errDatabaseNotInitialized)
 	}
 
 	trimmedPassword := strings.TrimSpace(newPassword)
@@ -608,7 +610,7 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 
 func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(errDatabaseNotInitialized)
 	}
 	normalizedIDs := normalizeUint64IDs(userIDs)
 	if len(normalizedIDs) == 0 {
@@ -648,7 +650,7 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 // DeleteUser 删除用户。
 func (s *UserService) DeleteUser(userID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(errDatabaseNotInitialized)
 	}
 	if userID == 1 {
 		return errors.New("user.delete.error.protected")
@@ -678,7 +680,7 @@ func (s *UserService) DeleteUser(userID uint64) error {
 
 func (s *UserService) ExportUsers(query *UserListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	users, err := s.listUsersForExport(query)
@@ -741,7 +743,7 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -1157,7 +1159,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 	return nil
 }
 
-func (s *UserService) ensurePostForDept(deptID uint64, postID uint64) error {
+func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 	if postID == 0 {
 		return nil
 	}

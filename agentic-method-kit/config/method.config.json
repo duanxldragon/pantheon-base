@@ -1,0 +1,19 @@
+{
+  "taskPacketDir": "docs/harness/tasks",
+  "evidenceDir": ".harness/evidence",
+  "failureRegistryTemplate": "agentic-method-kit/templates/failure-registry.template.md",
+  "harnessCoverageReviewTemplate": "agentic-method-kit/templates/harness-coverage-review.template.md",
+  "pullRequestTemplate": ".github/pull_request_template.md",
+  "openSpecChangesDir": "openspec/changes",
+  "implementationRoots": [
+    "src/",
+    "app/",
+    "backend/",
+    "frontend/",
+    "services/",
+    "packages/",
+    "docs/contracts/",
+    "docs/designs/",
+    "docs/acceptances/"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "usedCodeGraph": true,
+  "affectedSubgraph": [
+    "task packet -> evidence -> review"
+  ],
+  "checks": [
+    "cycle",
+    "hub"
+  ],
+  "findings": [],
+  "notes": "example normalized import file derived from a saved graph review result"
+}

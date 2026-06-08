@@ -18,15 +18,8 @@ import (
 var managedTableNamePattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 const workspaceRootEnvKey = "PANTHEON_WORKSPACE_ROOT"
+const nodeBinaryEnvKey = "PANTHEON_NODE_BIN"
 const generatedModuleExporterScript = "frontend/scripts/export-generated-module.mjs"
-
-var defaultNodeBinaryCandidates = []string{
-	`C:\Program Files\nodejs\node.exe`,
-	`C:\Program Files (x86)\nodejs\node.exe`,
-	`/usr/bin/node`,
-	`/usr/local/bin/node`,
-	`/opt/homebrew/bin/node`,
-}
 
 func isWorkspaceRoot(candidate string) bool {
 	return fileExists(filepath.Join(candidate, "go.mod")) &&
@@ -113,7 +106,7 @@ func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 	return nil
 }
 
-func ValidateManagedTableName(scope string, tableName string) error {
+func ValidateManagedTableName(scope, tableName string) error {
 	normalizedScope := strings.TrimSpace(scope)
 	normalizedTableName := strings.TrimSpace(tableName)
 	if normalizedTableName == "" {
@@ -216,6 +209,10 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 	if !fileExists(scriptPath) {
 		return nil, errors.New("module.generate.server_export_failed")
 	}
+	nodeBinary, err := resolveNodeBinary()
+	if err != nil {
+		return nil, errors.New("module.generate.server_export_failed")
+	}
 
 	schemaFile, err := os.CreateTemp("", "pantheon-module-schema-*.json")
 	if err != nil {
@@ -237,10 +234,6 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, err
 	}
 
-	nodeBinary, err := resolveNodeBinary()
-	if err != nil {
-		return nil, errors.New("module.generate.server_export_failed")
-	}
 	cmd := exec.Command(nodeBinary, scriptPath, schemaPath)
 	cmd.Dir = workspaceRoot
 	output, err := cmd.Output()
@@ -259,26 +252,16 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 }
 
 func resolveNodeBinary() (string, error) {
-	if configured := strings.TrimSpace(os.Getenv("PANTHEON_NODE_BIN")); configured != "" {
+	if configured := strings.TrimSpace(os.Getenv(nodeBinaryEnvKey)); configured != "" {
 		if !filepath.IsAbs(configured) {
-			return "", errors.New("module.generate.server_export_failed")
-		}
-		if !fileExists(configured) {
-			return "", errors.New("module.generate.server_export_failed")
+			return "", errors.New("module.generate.invalid_node_binary")
 		}
 		return configured, nil
 	}
-
-	for _, candidate := range defaultNodeBinaryCandidates {
-		if fileExists(candidate) {
-			return candidate, nil
-		}
-	}
-
-	return "", errors.New("module.generate.server_export_failed")
+	return exec.LookPath("node")
 }
 
-func RemoveGeneratedModuleSource(workspaceRoot string, scope string, name string) error {
+func RemoveGeneratedModuleSource(workspaceRoot, scope, name string) error {
 	if !isValidModulePath(name, scope == "business") {
 		return errors.New("module.generate.invalid_name")
 	}

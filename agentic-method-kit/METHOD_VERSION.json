@@ -1,0 +1,13 @@
+{
+  "name": "agentic-method-kit",
+  "version": "1.0.0",
+  "releasedAt": "2026-05-18",
+  "compatibleRepoShell": "1.0.0",
+  "minimumNode": "20",
+  "artifacts": {
+    "playbook": "METHOD_PLAYBOOK.md",
+    "install": "INSTALL.md",
+    "migration": "MIGRATION.md",
+    "changelog": "CHANGELOG.md"
+  }
+}

@@ -113,7 +113,10 @@ Default high-risk scope includes:
 Required gate stack:
 
 - local validation for the touched scope
-- GitHub required checks
+- `Quality Gates` for docs governance, frontend contract, backend tests, duplication, and lightweight `smoke-sanity`
+- `Security Gates` for secret scan, workflow posture, and CodeQL
+- `Full Smoke Suite` only for manual, scheduled, or release-precheck regression runs
+- dependency-vulnerability scans on `main/release`, scheduled, or manual workflows rather than every PR
 - optional manual Sonar review
 - Codacy, if present, stays informational only
 - independent reviewer sign-off
@@ -210,8 +213,9 @@ Recommended repository defaults:
 4. dismiss stale approvals after new commits
 5. require conversation resolution before merge
 6. enable secret scanning, dependency review, and code scanning when available
-7. use Sonar only as a manual auxiliary report, not as PR decoration or a merge gate
-8. keep Codacy informational only if it appears
+7. keep full-browser regression out of the default PR merge gate unless the repository is intentionally optimized for that cost
+8. use Sonar only as a manual auxiliary report, not as PR decoration or a merge gate
+9. keep Codacy informational only if it appears
 
 ## 4. Smoke SOP for gstack on Windows
 

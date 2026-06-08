@@ -49,7 +49,7 @@ type permissionRequiredAPIPolicy struct {
 
 func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*PermissionWorkbenchResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var roles []permissionWorkbenchRoleRow
@@ -460,7 +460,7 @@ func (s *PermissionService) countRecentWorkbenchRemediationEvents(roleKeys []str
 	return len(events), nil
 }
 
-func collectRequiredAPIPolicies(pagePermissions []PermissionWorkbenchPermissionResp, actionPermissions []PermissionWorkbenchPermissionResp) []permissionRequiredAPIPolicy {
+func collectRequiredAPIPolicies(pagePermissions, actionPermissions []PermissionWorkbenchPermissionResp) []permissionRequiredAPIPolicy {
 	seen := make(map[string]struct{})
 	result := make([]permissionRequiredAPIPolicy, 0)
 	appendPolicy := func(path string, method string) {
@@ -516,6 +516,10 @@ func diffMissingAPIPolicies(required []permissionRequiredAPIPolicy, actual []Per
 
 func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequiredAPIPolicy {
 	switch strings.TrimSpace(permissionKey) {
+	case "system:user:list":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/list", Method: "GET"},
+		}
 	case "system:security-event:list":
 		return []permissionRequiredAPIPolicy{
 			{Path: "/api/v1/system/security-event/list", Method: "GET"},
@@ -550,6 +554,10 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 			{Path: "/api/v1/system/generator/datasources/:id", Method: "PUT"},
 			{Path: "/api/v1/system/generator/datasources/:id", Method: "DELETE"},
 			{Path: "/api/v1/system/generator/datasources/:id/test", Method: "POST"},
+		}
+	case "system:user:create":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/create", Method: "POST"},
 		}
 	default:
 		return nil

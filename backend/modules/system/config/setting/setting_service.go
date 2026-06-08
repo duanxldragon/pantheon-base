@@ -17,6 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const errDatabaseNotInitialized = "database.not_initialized"
+
 type SettingService struct {
 	db          *gorm.DB
 	cacheMu     sync.RWMutex
@@ -116,7 +118,7 @@ func NewSettingService(db *gorm.DB) *SettingService {
 
 func (s *SettingService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(errDatabaseNotInitialized)
 	}
 	if err := s.db.AutoMigrate(&SystemSetting{}); err != nil {
 		return err
@@ -171,7 +173,7 @@ func (s *SettingService) Migrate() error {
 
 func (s *SettingService) List(query *SettingListQuery) ([]SettingResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	groupKey := ""
@@ -214,7 +216,7 @@ func (s *SettingService) List(query *SettingListQuery) ([]SettingResp, error) {
 
 func (s *SettingService) GetGroup(groupKey string) (*SettingGroupResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	groupKey = strings.TrimSpace(groupKey)
@@ -243,7 +245,7 @@ func (s *SettingService) GetGroup(groupKey string) (*SettingGroupResp, error) {
 
 func (s *SettingService) GetByKey(settingKey string) (string, error) {
 	if s.db == nil {
-		return "", errors.New("database.not_initialized")
+		return "", errors.New(errDatabaseNotInitialized)
 	}
 
 	var row SystemSetting
@@ -258,7 +260,7 @@ func (s *SettingService) GetByKey(settingKey string) (string, error) {
 
 func (s *SettingService) UpdateGroup(groupKey string, req *SettingGroupUpdateReq) (*SettingGroupResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	groupKey = strings.TrimSpace(groupKey)
@@ -392,7 +394,7 @@ func (s *SettingService) BuildAuditPayload(groupKey string, req *SettingGroupUpd
 
 func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	s.cacheMu.RLock()
@@ -421,7 +423,7 @@ func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
 
 func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var rows []SystemSetting
@@ -553,7 +555,7 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 
 func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheRefreshResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	normalizedGroups := normalizeSettingGroups(groupKeys)
@@ -589,7 +591,7 @@ func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheR
 
 func (s *SettingService) ListAudit(query *SettingAuditQuery) (*SettingAuditPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	page := 1
@@ -652,7 +654,7 @@ func (s *SettingService) ListAudit(query *SettingAuditQuery) (*SettingAuditPageR
 
 func (s *SettingService) ExportAudit(query *SettingAuditQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	db := s.db.Model(&systemSettingAuditLog{}).Where("title = ?", settingAuditTitle)
@@ -716,7 +718,7 @@ func (s *SettingService) normalizeLegacySettingValue(settingKey string) error {
 	return s.db.Model(&row).Update("setting_value", normalizedValue).Error
 }
 
-func (s *SettingService) migrateLegacySettingValue(settingKey string, legacyValue string, nextValue string) error {
+func (s *SettingService) migrateLegacySettingValue(settingKey, legacyValue, nextValue string) error {
 	var row SystemSetting
 	if err := s.db.Where("setting_key = ?", settingKey).First(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -737,7 +739,7 @@ func (s *SettingService) migrateLegacySettingValue(settingKey string, legacyValu
 	return s.db.Model(&row).Update("setting_value", normalizedValue).Error
 }
 
-func settingListCacheKey(groupKey string, module string) string {
+func settingListCacheKey(groupKey, module string) string {
 	return strings.TrimSpace(groupKey) + "|" + strings.TrimSpace(module)
 }
 
@@ -852,7 +854,7 @@ func safeSettingOverviewValue(item SystemSetting, fallback string) string {
 	return item.SettingValue
 }
 
-func validateAndNormalizeSettingValue(settingKey string, valueType string, value string) (string, error) {
+func validateAndNormalizeSettingValue(settingKey, valueType, value string) (string, error) {
 	normalizedValue, err := normalizeSettingValue(settingKey, value)
 	if err != nil {
 		return "", err
@@ -898,7 +900,7 @@ func validateAndNormalizeSettingValue(settingKey string, valueType string, value
 	}
 }
 
-func normalizeSettingValue(settingKey string, value string) (string, error) {
+func normalizeSettingValue(settingKey, value string) (string, error) {
 	trimmed := strings.TrimSpace(value)
 	switch settingKey {
 	case "platform.app_mode":

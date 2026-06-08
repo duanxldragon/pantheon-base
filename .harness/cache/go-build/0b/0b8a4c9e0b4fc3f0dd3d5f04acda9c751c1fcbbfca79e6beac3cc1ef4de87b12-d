@@ -1,0 +1,5 @@
+./generated_registry.go
+./refresh_sync.go
+./seed.go
+./system.go
+./seed_test.go

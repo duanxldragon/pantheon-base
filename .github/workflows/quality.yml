@@ -3,11 +3,19 @@ name: Code Quality Gates
 on:
   workflow_dispatch:
   pull_request:
+  push:
+    branches:
+      - main
+      - release/**
   merge_group:
 
 env:
   NODE_VERSION: "22"
   GO_VERSION_FILE: go.mod
+  MYSQL_ROOT_PASSWORD: "DHCCroot@2025"
+  MYSQL_DATABASE: "pantheon_base"
+  PANTHEON_DSN: "root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+  PANTHEON_TEST_DSN: "root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
 
 jobs:
   # ============================================================
@@ -21,12 +29,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           persist-credentials: false
 
       - name: Checkout pantheon-base foundation
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           repository: duanxldragon/pantheon-base
           ref: main
@@ -37,8 +45,7 @@ jobs:
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
 
       - name: Install root dependencies
         run: npm ci
@@ -59,7 +66,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           persist-credentials: false
 
@@ -67,8 +74,7 @@ jobs:
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          package-manager-cache: false
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -91,6 +97,129 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: DHCCroot@2025
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pDHCCroot@2025"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_TEST_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: false
+
+      - name: Test backend
+        run: go test -race ./...
+
+  duplication:
+    name: Duplication Gate
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Run duplication scan
+        id: duplication
+        continue-on-error: true
+        shell: bash
+        run: npm run check:duplication -- --json > duplication-report.json
+
+      - name: Upload duplication report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: duplication-report
+          path: duplication-report.json
+          if-no-files-found: warn
+
+      - name: Enforce duplication gate
+        if: always()
+        shell: bash
+        env:
+          DUPLICATION_RESULT: ${{ steps.duplication.outcome }}
+        run: |
+          echo "duplication: ${DUPLICATION_RESULT}"
+          if [ "${DUPLICATION_RESULT}" != "success" ]; then
+            exit 1
+          fi
+
+  smoke-sanity:
+    name: Smoke Sanity
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: DHCCroot@2025
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pDHCCroot@2025"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_TEST_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
+      PANTHEON_PORT: "8080"
+      PANTHEON_API_BASE_URL: http://127.0.0.1:8080/api/v1
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -101,46 +230,70 @@ jobs:
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
-          cache: true
+          cache: false
 
-      - name: Test backend
-        run: go test -race ./...
-
-  # ============================================================
-  # Phase 2: Security Analysis (CodeQL primary security signal)
-  # ============================================================
-
-  codeql-security:
-    name: CodeQL Security Scan
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@dc73d59c2d7bd4f8194098a91219eeee6d8a1719
-        with:
-          languages: go, typescript
-          queries: security-extended
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@dc73d59c2d7bd4f8194098a91219eeee6d8a1719
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start backend
+        shell: bash
+        run: |
+          nohup go run ./backend/cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/pantheon-backend.pid"
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
+          exit 1
+
+      - name: Run smoke sanity suite
+        working-directory: frontend
+        run: npm run test:smoke:platform:contracts && npm run test:smoke:system:pages
+
+      - name: Upload smoke artifacts
+        if: failure()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          category: "/language:go,typescript"
+          name: smoke-sanity-artifacts
+          path: |
+            frontend/test-results
+            ${{ runner.temp }}/pantheon-backend.log
+          if-no-files-found: ignore
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/pantheon-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
+          fi
+
   quality-gates:
     name: Quality Gates
     needs:
       - docs-governance
       - frontend-contract
       - backend-tests
-      - codeql-security
+      - smoke-sanity
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -152,15 +305,15 @@ jobs:
           DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
           FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
           BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
-          CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
+          SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
         run: |
           echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
           echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
           echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
-          echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
+          echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
              [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
              [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
-             [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ]; then
+             [ "${SMOKE_SANITY_RESULT}" != "success" ]; then
             exit 1
           fi

@@ -334,7 +334,7 @@ func TestRegisterGeneratedModuleBuildsInferredParentSummary(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
 	mustCreateSystemMenuTable(t, db)
-	mustInsertSystemMenuPath(t, db, "/business/cmdb")
+	mustInsertSystemMenuPath(t, db, "/operations/cmdb")
 
 	service := &DynamicModuleService{
 		db:            db,
@@ -681,7 +681,7 @@ func TestUnregisterManagedModulePreservesI18nLifecycleWhenSourceRemains(t *testi
 	}
 }
 
-func TestSyncBuiltInModules_PromotesGeneratedSchemaToManagedModule(t *testing.T) {
+func TestSyncBuiltInModules_LeavesGeneratedSchemaPendingWithoutActivationSignal(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
 	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
@@ -713,7 +713,7 @@ func TestSyncBuiltInModules_PromotesGeneratedSchemaToManagedModule(t *testing.T)
 	if registration.ModelTableName != "biz_cmdb_host" {
 		t.Fatalf("unexpected table name: %s", registration.ModelTableName)
 	}
-	if registration.Status != ModuleStatusActive {
+	if registration.Status != ModuleStatusPendingActivation {
 		t.Fatalf("unexpected status: %d", registration.Status)
 	}
 	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "backend/modules/business/cmdb/host")

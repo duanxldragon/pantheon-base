@@ -114,12 +114,11 @@ Contract
     - Reliability / Security / Maintainability 结果仅作参考，不作为合并门禁
     - Codacy 如果存在，只能作为对比仪表盘，不得和 Sonar / CodeQL 抢门禁结论
 4.  **GitHub Checks 门禁**: `main`、`release/*` 等受保护分支禁止直接推送，必须走 PR。PR 至少要求以下状态检查按改动范围通过：
-    - `go test`
-    - `npm run type-check`
-    - `npm run lint`
-    - `npm run build`
-    - i18n / menu / generated contract / smoke 等专项检查
-    - dependency / secret / code scanning 等安全检查（若仓库已配置）
+    - `Quality Gates`：聚合 docs governance、frontend contract、backend tests、duplication、轻量 `smoke-sanity`
+    - `Security Gates`：聚合 secret scan、workflow posture、CodeQL
+    - `Full Smoke Suite` 只用于手动、定时或预发布回归，不得作为每个 PR 的默认阻塞项
+    - dependency vulnerability 扫描适合 `main/release`、定时或手动巡检，不适合阻塞所有 PR
+    - Sonar 仅用于本地辅助审查，不纳入 required checks
 5.  **第三方评审纪律**: 
     - 常规改动：至少 `1` 个非作者 approval
     - 高风险改动：至少 `2` 个 approval，其中一个来自域负责人或安全/架构 reviewer

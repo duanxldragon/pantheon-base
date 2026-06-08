@@ -308,13 +308,11 @@ func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed role permissions: %v", err)
 	}
-	if err := db.Create(&database.CasbinRule{
-		PType: "p",
-		V0:    "complete_role",
-		V1:    "/api/v1/system/user/list",
-		V2:    "GET",
+	if err := db.Create(&[]database.CasbinRule{
+		{PType: "p", V0: "complete_role", V1: "/api/v1/system/user/list", V2: "GET"},
+		{PType: "p", V0: "complete_role", V1: "/api/v1/system/user/create", V2: "POST"},
 	}).Error; err != nil {
-		t.Fatalf("seed casbin rule: %v", err)
+		t.Fatalf("seed casbin rules: %v", err)
 	}
 
 	workbench, err := service.GetWorkbench(nil)
