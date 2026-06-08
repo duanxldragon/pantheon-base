@@ -4,7 +4,7 @@ doc_type: Acceptance
 layer: system/config
 depends_on_layers:
   - platform
-status: Completed
+status: Approved
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md

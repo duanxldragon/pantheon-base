@@ -6,13 +6,7 @@ depends_on_layers:
   - system/auth
   - system/config
   - system/org
-status: Batched
-resolution_note: >
-  Parent task batched on 2026-06-08 after batch 1 (i18n resource dedup) and
-  batch 2 (backend i18n coverage) completed with approved reviews.
-  Remaining ~749 Sonar issues deferred; resume when next main-branch Sonar
-  scan triggers a new finding-reduction cycle. Refer to this task packet
-  to avoid re-discovering architecture and contract context.
+status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md

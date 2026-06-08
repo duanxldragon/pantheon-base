@@ -3,6 +3,8 @@ title: Session Decisions 2026-06-08
 doc_type: Remediation
 layer: platform
 status: Active
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-08
 ---
 
