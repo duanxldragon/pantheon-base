@@ -1,7 +1,0 @@
-./permission_data_scope.go
-./permission_data_scope_model.go
-./permission_dto.go
-./permission_handler.go
-./permission_service.go
-./permission_workbench.go
-./permission_workbench_remediation_model.go

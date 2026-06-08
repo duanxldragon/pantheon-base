@@ -1,5 +1,0 @@
-./builtin_locale_resources.go
-./i18n_handler.go
-./i18n_model.go
-./i18n_service.go
-./seed_data.go

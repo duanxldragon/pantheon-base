@@ -113,8 +113,9 @@ Default high-risk scope includes:
 Required gate stack:
 
 - local validation for the touched scope
-- `Quality Gates` for docs governance, frontend contract, backend tests, duplication, and lightweight `smoke-sanity`
+- `Quality Gates` for docs governance, frontend contract, backend tests, the Duplication Gate result, and lightweight `smoke-sanity`
 - `Security Gates` for secret scan, workflow posture, and CodeQL
+- `Duplication Gate` as a visible PR and merge-queue report; enforce the full-repository baseline on protected-branch push, manual quality review, or after a new-code duplication gate exists
 - `Full Smoke Suite` only for manual, scheduled, or release-precheck regression runs
 - dependency-vulnerability scans on `main/release`, scheduled, or manual workflows rather than every PR
 - optional manual Sonar review

@@ -1,5 +1,0 @@
-./post_dto.go
-./post_handler.go
-./post_model.go
-./post_service.go
-./post_service_test.go

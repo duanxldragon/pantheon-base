@@ -5,8 +5,12 @@
   "required": [
     "failureId",
     "category",
+    "failureClass",
     "example",
     "impact",
+    "ownerLayer",
+    "occurrenceCount",
+    "promotionDecision",
     "recommendedHarnessChange",
     "status"
   ],
@@ -22,8 +26,36 @@
         "method-health"
       ]
     },
+    "failureClass": {
+      "type": "string",
+      "enum": [
+        "instruction-gap",
+        "task-boundary-gap",
+        "architecture-drift",
+        "test-gap",
+        "static-sensor-gap",
+        "runtime-evidence-gap",
+        "security-boundary-gap",
+        "ci-signal-noise",
+        "method-health-gap"
+      ]
+    },
     "example": { "type": "string" },
     "impact": { "type": "string" },
+    "ownerLayer": {
+      "type": "string",
+      "enum": [
+        "portable-method",
+        "consumer-template",
+        "consumer-repository",
+        "agent-adapter",
+        "no-action"
+      ]
+    },
+    "occurrenceCount": {
+      "type": "integer",
+      "minimum": 1
+    },
     "currentGuide": { "type": "string" },
     "currentSensor": { "type": "string" },
     "currentGate": { "type": "string" },
@@ -36,7 +68,32 @@
         "sensor",
         "gate",
         "template",
+        "adapter",
+        "registry-only",
         "no-action"
+      ]
+    },
+    "promotionDecision": {
+      "type": "string",
+      "enum": [
+        "no-repeat-observed",
+        "guide-updated",
+        "sensor-added",
+        "gate-updated",
+        "template-updated",
+        "adapter-updated",
+        "registry-only"
+      ]
+    },
+    "promotionDeadline": { "type": "string" },
+    "githubSignal": {
+      "type": "string",
+      "enum": [
+        "method-gate",
+        "repo-quality-gate",
+        "runtime-evidence-gate",
+        "external-flaky",
+        "not-applicable"
       ]
     },
     "status": {

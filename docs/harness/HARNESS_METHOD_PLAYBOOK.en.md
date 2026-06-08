@@ -22,7 +22,9 @@ This file no longer carries the full method definition.
 4. Then read `agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md`
 5. Then read `agentic-method-kit/TOOL_ADAPTER_MATRIX.md`
 6. Then read `agentic-method-kit/METHOD_PLAYBOOK.md`
-7. Then read the contracts this repository executes locally:
+7. Then read `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
+8. Then read `docs/harness/AI_QUALITY_GOVERNANCE.md`
+9. Then read the contracts this repository executes locally:
    - `HARNESS_ENGINEERING_CONTRACT.md`
    - `TRIVIALITY_CLASSIFICATION_POLICY.en.md`
    - `TASK_PACKET_SPEC.md`
@@ -33,7 +35,6 @@ This file no longer carries the full method definition.
    - `FAILURE_RATCHET_POLICY.en.md`
    - `FAILURE_REGISTRY_PROMOTION_POLICY.en.md`
    - `HARNESS_RETIREMENT_REVIEW.en.md`
-   - `INHERITANCE_HARNESS_PROTOCOL.md`
 
 ## Responsibilities In This Repository
 

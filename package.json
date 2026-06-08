@@ -9,6 +9,7 @@
     "release:foundation:manifest": "node scripts/foundation-release/build-release-manifest.mjs",
     "run:sonar-remediation": "node scripts/run-sonar-remediation.mjs",
     "check:task-packet-template": "node scripts/check-task-packet-template.mjs",
+    "check:failure-registry": "node scripts/harness/check-failure-registry.mjs --root . --strict",
     "check:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs --check",
     "cleanup:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs",
     "test:docs-frontmatter": "node --test tests/docs/frontmatter-check.test.mjs",

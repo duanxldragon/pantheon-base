@@ -5,6 +5,35 @@
 - 目标问题：
 - 预期影响：
 
+## Harness 链路
+
+- Task Packet：
+- Task packet：
+- Evidence：
+- Verification evidence：
+- Review Artifact：
+- OpenSpec change：
+- Trivial change：yes / no
+- Quality Profile：auth-security / permission-policy / i18n / ui-runtime / generator / ci-workflow / none
+- Ratchet Decision：no-repeat-observed / guide-updated / sensor-added / gate-updated / template-updated / adapter-updated / registry-only
+- GitHub Signal：method-gate / repo-quality-gate / runtime-evidence-gate / external-flaky / not-applicable
+
+## Harness adoption markers
+
+> 保留本区块的英文 marker，供 `scripts/harness/check-adoption.mjs` 做机械检查。
+
+- task packet:
+- evidence:
+- boundaries:
+- backend response contract:
+- backend DTO contract:
+- permission contract:
+- audit coverage:
+- visual evidence:
+- inheritance contract:
+- base drift:
+- Base/ops inheritance:
+
 ## 边界说明
 
 - [ ] 本次改动仅涉及单一层级
@@ -21,6 +50,7 @@
 - [ ] 其他专项验证已补充
 - [ ] 如需 SonarQube，仅完成手动辅助检查（非门禁）
 - [ ] CodeQL 结果已检查并解释
+- [ ] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up
 - [ ] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
 - [ ] Codacy（如出现）仅作为参考，未作为门禁
 - [ ] GitHub required checks 通过
@@ -36,6 +66,7 @@
 - 如有手动 Sonar 结果链接：
 - 如有 Codacy 结果，仅记录为参考：
 - GitHub checks 结果：
+- Duplication Gate 结果：
 - 是否高风险改动：
 - 若高风险，第二审批人：
 

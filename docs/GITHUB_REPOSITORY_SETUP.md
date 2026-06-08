@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-06-08
 ---
 
 # GitHub Repository Setup Guide
@@ -42,8 +42,9 @@ Add these checks to the required checks list:
 
 - `Quality Gates`
 - `Security Gates`
+- `Duplication Gate`
 
-Do not add `Full Smoke Suite` or `Sonar` to required checks. `Quality Gates` should stay fast and deterministic for PR feedback, while `Full Smoke Suite` remains manual or release-precheck only. Keep Sonar and Codacy out of required checks. See [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md) for the gating model and thresholds.
+Do not add `Full Smoke Suite` or `Sonar` to required checks. `Quality Gates` should stay fast and deterministic for PR feedback, while `Full Smoke Suite` remains manual or release-precheck only. `Duplication Gate` is required as a visible GitHub-native signal; PR and merge queue runs are report-only for the current full-repository baseline, while protected-branch push and manual quality review enforce the repository threshold until a new-code duplication gate exists. Keep Sonar and Codacy out of required checks. See [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md) for the gating model and thresholds.
 
 ### 1.3 Code owners
 

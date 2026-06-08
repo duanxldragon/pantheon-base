@@ -12,13 +12,11 @@ It also carries a minimal graph-review closure path:
 - normalize saved CodeGraph-style output into `graph-review.json`
 - import that normalized result back into evidence/review closure
 
-Use it with:
+When adopting the method in `pantheon-base`, use it with:
 
-- `agentic-repo-shell/`
-
-Optional overlay:
-
-- `pantheon-overlay/`
+- repo-local harness docs under `docs/harness/`
+- consumer-specific quality governance in `docs/harness/AI_QUALITY_GOVERNANCE.md`
+- delivery orchestration in `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
 
 ## What This Kit Defines
 

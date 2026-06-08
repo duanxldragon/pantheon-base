@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-06-08
 ---
 
 # GitHub Governance Checklist
@@ -28,7 +28,9 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 
 - `Quality Gates`
 - `Security Gates`
+- `Duplication Gate`
 - Keep PR-required checks limited to fast, deterministic merge-gate jobs
+- Run duplication on PR and merge queue as a visible report; enforce the full-repository threshold on protected-branch push or manual quality review until a new-code duplication gate exists
 - Keep `Full Smoke Suite` manual, scheduled, or release-precheck only
 - Keep Sonar and Codacy out of required checks
 
