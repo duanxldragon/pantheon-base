@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const errDatabaseNotInitialized = "database.not_initialized"
+
 type PostService struct {
 	db *gorm.DB
 }
@@ -24,7 +26,7 @@ func NewPostService(db *gorm.DB) *PostService {
 
 func (s *PostService) Migrate() error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(errDatabaseNotInitialized)
 	}
 	if err := s.db.AutoMigrate(&SystemPost{}); err != nil {
 		return err
@@ -34,7 +36,7 @@ func (s *PostService) Migrate() error {
 
 func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var posts []SystemPost
@@ -92,7 +94,7 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 
 func (s *PostService) CreatePost(req *PostCreateReq) (*PostListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if err := s.validatePostCreate(0, req.PostCode, req.DeptID); err != nil {
 		return nil, err
@@ -120,7 +122,7 @@ func (s *PostService) CreatePost(req *PostCreateReq) (*PostListResp, error) {
 
 func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var post SystemPost
@@ -156,7 +158,7 @@ func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListRe
 
 func (s *PostService) DeletePost(postID uint64) error {
 	if s.db == nil {
-		return errors.New("database.not_initialized")
+		return errors.New(errDatabaseNotInitialized)
 	}
 
 	if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
@@ -183,7 +185,7 @@ func (s *PostService) DeletePost(postID uint64) error {
 
 func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New("database.not_initialized")
+		return 0, errors.New(errDatabaseNotInitialized)
 	}
 	normalizedIDs := normalizePostIDs(postIDs)
 	if len(normalizedIDs) == 0 {
@@ -226,7 +228,7 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 
 func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	rows, err := s.listPostsForExport(query)
@@ -292,7 +294,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -639,7 +641,7 @@ func normalizePostIDs(ids []uint64) []uint64 {
 
 func (s *PostService) loadPostUserCounts() (map[uint64]int, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	if !s.db.Migrator().HasTable("system_user") {
 		return map[uint64]int{}, nil

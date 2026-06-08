@@ -1,0 +1,135 @@
+{
+  "taskId": "2026-06-03-main-sonar-remediation",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": ".agents/adapters/codex.md"
+  },
+  "commands": [
+    {
+      "command": "npm ci",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 1455,
+      "notes": "install root dependencies before docs and duplication checks; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-12-10-068Z-root-install.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-12-10-068Z-root-install.log"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 232,
+      "notes": "repo-local docs governance gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-12-10-302Z-docs-frontmatter.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-12-10-302Z-docs-frontmatter.log"
+    },
+    {
+      "command": "node scripts/check-task-packet-template.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 118,
+      "notes": "repo-local task-packet template gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-12-10-422Z-task-packet-template.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-12-10-422Z-task-packet-template.log"
+    },
+    {
+      "command": "node frontend/scripts/cleanup-generated-modules.mjs --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 129,
+      "notes": "repo-local generated-module hygiene gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-12-10-552Z-generated-modules.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-12-10-552Z-generated-modules.log"
+    },
+    {
+      "command": "go test -race ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 8833,
+      "notes": "backend and shared package gate; local Windows execution fell back to `go test ./...`; `quality.yml` remains the authoritative `go test -race ./...` gate on ubuntu-latest; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-20-49-723Z-backend-tests.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-20-49-723Z-backend-tests.log"
+    },
+    {
+      "command": "cd frontend && npm ci",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 21831,
+      "notes": "install frontend dependencies before contract and build checks; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-12-38-165Z-frontend-install.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-12-38-165Z-frontend-install.log"
+    },
+    {
+      "command": "cd frontend && npm run check:menu-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 956,
+      "notes": "frontend menu-contract gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-12-39-124Z-frontend-menu-contract.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-12-39-124Z-frontend-menu-contract.log"
+    },
+    {
+      "command": "cd frontend && npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 35253,
+      "notes": "frontend lint gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-13-14-380Z-frontend-lint.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-13-14-380Z-frontend-lint.log"
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 25960,
+      "notes": "frontend build gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-13-40-342Z-frontend-build.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-13-40-342Z-frontend-build.log"
+    },
+    {
+      "command": "npm run check:duplication -- --json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 1290,
+      "notes": "repository-wide duplication gate; log: .harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-05T15-13-41-637Z-duplication.log",
+      "logPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-06-03-main-sonar-remediation\\logs\\2026-06-05T15-13-41-637Z-duplication.log"
+    },
+    {
+      "command": ".\\scripts\\run-sonar.ps1",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "durationMs": 0,
+      "notes": "planned auxiliary-sonar phase; local phase not executed on this workstation because `pantheon-sonarcloud.env` is absent and `Sonar-Scanner` is not installed; merged-main Sonar evidence captured separately via GitHub Actions run 26866784416"
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Merged-main Sonar runtime evidence is fresh, but the workstation-specific local Sonar phase still has not been executed on this machine.",
+  "linkage": {
+    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-06-03-main-sonar-remediation/",
+    "reviewFile": ".harness/evidence/2026-06-03-main-sonar-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/superpowers/plans/2026-06-03-main-sonar-remediation-method.md"
+    ]
+  },
+  "knownGaps": [
+    "Local backend-tests evidence used `go test ./...` instead of `go test -race ./...` because this Windows environment does not mirror the ubuntu-latest race toolchain.",
+    "Local Sonar was not run on this workstation because `pantheon-sonarcloud.env` is absent and `Sonar-Scanner` is not installed locally.",
+    "The fresh merged-main Sonar scan for revision `2f70c2da40fe4c0a59d3c0c77522d27d3727f6f4` completed successfully, but the project-level quality gate remains `ERROR` with low coverage and high duplication debt."
+  ],
+  "completedAt": "2026-06-05T15:20:49.724Z",
+  "runtimeLogs": [
+    ".harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-03T06-04-17Z-merged-main-sonar-workflow.log"
+  ],
+  "runtimeMetrics": [
+    ".harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-03T14-02-48-08-00-sonar-main-analyses.json",
+    ".harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-03T14-02-48-08-00-sonar-main-metrics.json",
+    ".harness/evidence/2026-06-03-main-sonar-remediation/logs/2026-06-03T14-02-48-08-00-sonar-main-hotspots.json"
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "quality workflow -> remediation runner -> batch task evidence"
+    ],
+    "checks": [
+      "call-depth",
+      "cycle",
+      "hub"
+    ],
+    "findings": [],
+    "notes": "scaffolded from task packet Structural Scope; replace after graph review"
+  }
+}

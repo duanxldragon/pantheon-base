@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
-import { loadResourceModule } from './lib/load-resource-module.mjs';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const frontendRoot = path.resolve(path.dirname(currentFilePath), '..');
@@ -9,15 +9,25 @@ const repoRoot = path.resolve(frontendRoot, '..');
 const schemaGeneratedRoot = path.join(repoRoot, 'schema', 'generated');
 const generatedResourcesRoot = path.join(frontendRoot, 'src', 'i18n', 'resources', 'generated');
 const LOCALES = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR'];
-const GENERATED_SCHEMA_LOCALES = ['zh', 'en'];
 
-function collectGeneratedSchemaFiles(rootPath) {
-  const files = [];
-  if (!fs.existsSync(rootPath)) {
-    return files;
+function loadResourceModule(modulePath) {
+  const source = fs.readFileSync(modulePath, 'utf8');
+  const sanitized = source.replace(/export default\s+([A-Za-z0-9_$]+);?\s*$/m, 'module.exports = $1;');
+  const context = {
+    module: { exports: {} },
+    exports: {},
+  };
+  vm.runInNewContext(sanitized, context, { filename: modulePath }); // NOSONAR — build-only script, controlled source
+  return context.module.exports;
+}
+
+function collectGeneratedSchemaKeys() {
+  const allowedKeys = new Set();
+  if (!fs.existsSync(schemaGeneratedRoot)) {
+    return allowedKeys;
   }
 
-  const pending = [rootPath];
+  const pending = [schemaGeneratedRoot];
   while (pending.length > 0) {
     const currentDir = pending.pop();
     for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
@@ -26,31 +36,22 @@ function collectGeneratedSchemaFiles(rootPath) {
         pending.push(fullPath);
         continue;
       }
-      if (entry.isFile() && path.extname(entry.name).toLowerCase() === '.json') {
-        files.push(fullPath);
+      if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== '.json') {
+        continue;
+      }
+      const raw = fs.readFileSync(fullPath, 'utf8');
+      const schema = JSON.parse(raw);
+      const translations = schema?.i18n?.translations;
+      for (const locale of ['zh', 'en']) {
+        for (const key of Object.keys(translations?.[locale] || {})) {
+          if (key.trim()) {
+            allowedKeys.add(key);
+          }
+        }
       }
     }
   }
-  return files;
-}
 
-function addTranslationKeys(allowedKeys, translations) {
-  for (const locale of GENERATED_SCHEMA_LOCALES) {
-    for (const key of Object.keys(translations?.[locale] || {})) {
-      if (key.trim()) {
-        allowedKeys.add(key);
-      }
-    }
-  }
-}
-
-function collectGeneratedSchemaKeys() {
-  const allowedKeys = new Set();
-  for (const fullPath of collectGeneratedSchemaFiles(schemaGeneratedRoot)) {
-    const raw = fs.readFileSync(fullPath, 'utf8');
-    const schema = JSON.parse(raw);
-    addTranslationKeys(allowedKeys, schema?.i18n?.translations);
-  }
   return allowedKeys;
 }
 

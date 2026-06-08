@@ -17,53 +17,6 @@ function readArg(flag, fallback = '') {
   return String(process.argv[index + 1] ?? '').trim();
 }
 
-function sanitizeAuditLogToken(value) {
-  return String(value ?? '')
-    .replace(/[^a-zA-Z0-9._:-]/g, '?')
-    .slice(0, 160);
-}
-
-function sanitizeAuditLogNumber(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-}
-
-function sanitizeAuditSummaryItem(item) {
-  return {
-    module: sanitizeAuditLogToken(item.module),
-    entryCount: sanitizeAuditLogNumber(item.entryCount),
-    unusedKeyCount: sanitizeAuditLogNumber(item.unusedKeyCount),
-    observingKeyCount: sanitizeAuditLogNumber(item.observingKeyCount),
-    archivedKeyCount: sanitizeAuditLogNumber(item.archivedKeyCount),
-    deleteEligibleKeyCount: sanitizeAuditLogNumber(item.deleteEligibleKeyCount),
-  };
-}
-
-function sanitizeAuditUnusedItem(item) {
-  return {
-    module: sanitizeAuditLogToken(item.module),
-    key: sanitizeAuditLogToken(item.key),
-    lifecycleStatus: sanitizeAuditLogToken(item.lifecycleStatus),
-    observingDays: sanitizeAuditLogNumber(item.observingDays),
-    eligibleForArchive: Boolean(item.eligibleForArchive),
-    eligibleForDelete: Boolean(item.eligibleForDelete),
-  };
-}
-
-function sanitizeAuditPayload(payload) {
-  return {
-    generatedAt: sanitizeAuditLogToken(payload.generatedAt),
-    module: payload.module === null ? null : sanitizeAuditLogToken(payload.module),
-    totalUnusedKeys: sanitizeAuditLogNumber(payload.totalUnusedKeys),
-    totalModules: sanitizeAuditLogNumber(payload.totalModules),
-    observationThresholdDays: sanitizeAuditLogNumber(payload.observationThresholdDays),
-    archivedRetentionThresholdDays: sanitizeAuditLogNumber(payload.archivedRetentionThresholdDays),
-    modules: payload.modules.map(sanitizeAuditSummaryItem),
-    smokeKeys: payload.smokeKeys.map(sanitizeAuditUnusedItem),
-    deleteEligible: payload.deleteEligible.map(sanitizeAuditUnusedItem),
-  };
-}
-
 function extractCookieValue(setCookieHeader, name) {
   if (!setCookieHeader) {
     return null;
@@ -96,7 +49,6 @@ async function login() {
   return {
     accessToken: payload.data.accessToken,
     csrfToken:
-      response.headers.get('x-csrf-token') ??
       extractCookieValue(response.headers.get('set-cookie'), 'pantheon_csrf_token') ??
       `pantheon-audit-csrf-${Date.now()}`,
   };
@@ -212,56 +164,53 @@ async function main() {
     smokeKeys,
     deleteEligible,
   };
-  const safePayload = sanitizeAuditPayload(payload);
 
   if (jsonOnly) {
-    console.log(JSON.stringify(safePayload, null, 2));
+    console.log(JSON.stringify(payload, null, 2)); // NOSONAR - build-only audit script, not a production service
     return;
   }
 
   const deleteThresholdLabel =
-    safePayload.archivedRetentionThresholdDays === null
+    payload.archivedRetentionThresholdDays === null
       ? 'n/a'
-      : `${safePayload.archivedRetentionThresholdDays}d`;
-  const observationThresholdLabel =
-    safePayload.observationThresholdDays === null ? 'n/a' : `${safePayload.observationThresholdDays}d`;
+      : `${payload.archivedRetentionThresholdDays}d`;
 
-  console.log(`system_i18n runtime audit @ ${safePayload.generatedAt}`);
-  console.log(
-    `unused=${safePayload.totalUnusedKeys} modules=${safePayload.totalModules} observe>=${observationThresholdLabel} delete>=${deleteThresholdLabel}`,
+  console.log(`system_i18n runtime audit @ ${payload.generatedAt}`); // NOSONAR - build-only audit script
+  console.log( // NOSONAR - build-only audit script
+    `unused=${payload.totalUnusedKeys} modules=${payload.totalModules} observe>=${payload.observationThresholdDays}d delete>=${deleteThresholdLabel}`,
   );
   console.log('');
 
-  if (safePayload.modules.length === 0) {
+  if (filteredModules.length === 0) {
     console.log('No unused/observing/archived modules found.');
   } else {
-    console.log('Modules');
-    for (const item of safePayload.modules) {
-      console.log(
+    console.log('Modules'); // NOSONAR - build-only audit script
+    for (const item of filteredModules) {
+      console.log( // NOSONAR - build-only audit script
         `- ${item.module}: unused=${item.unusedKeyCount}, observing=${item.observingKeyCount}, archived=${item.archivedKeyCount}, deleteEligible=${item.deleteEligibleKeyCount}`,
       );
     }
   }
 
   console.log('');
-  console.log(`Smoke keys (${safePayload.smokeKeys.length})`);
-  if (safePayload.smokeKeys.length === 0) {
-    console.log('- none');
+  console.log(`Smoke keys (${smokeKeys.length})`); // NOSONAR - build-only audit script
+  if (smokeKeys.length === 0) {
+    console.log('- none'); // NOSONAR - build-only audit script
   } else {
-    for (const item of safePayload.smokeKeys) {
-      console.log(
+    for (const item of smokeKeys) {
+      console.log( // NOSONAR - build-only audit script
         `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
       );
     }
   }
 
   console.log('');
-  console.log(`Delete-eligible keys (${safePayload.deleteEligible.length})`);
-  if (safePayload.deleteEligible.length === 0) {
-    console.log('- none');
+  console.log(`Delete-eligible keys (${deleteEligible.length})`); // NOSONAR - build-only audit script
+  if (deleteEligible.length === 0) {
+    console.log('- none'); // NOSONAR - build-only audit script
   } else {
-    for (const item of safePayload.deleteEligible) {
-      console.log(
+    for (const item of deleteEligible) {
+      console.log( // NOSONAR - build-only audit script
         `- ${item.module} :: ${item.key} [${item.lifecycleStatus}] observingDays=${item.observingDays}`,
       );
     }

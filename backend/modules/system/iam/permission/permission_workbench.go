@@ -49,7 +49,7 @@ type permissionRequiredAPIPolicy struct {
 
 func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*PermissionWorkbenchResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 
 	var roles []permissionWorkbenchRoleRow
@@ -550,6 +550,14 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 			{Path: "/api/v1/system/generator/datasources/:id", Method: "PUT"},
 			{Path: "/api/v1/system/generator/datasources/:id", Method: "DELETE"},
 			{Path: "/api/v1/system/generator/datasources/:id/test", Method: "POST"},
+		}
+	case "system:user:list":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/list", Method: "GET"},
+		}
+	case "system:user:create":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/user/create", Method: "POST"},
 		}
 	default:
 		return nil

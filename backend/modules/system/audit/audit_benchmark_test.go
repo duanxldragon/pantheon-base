@@ -152,25 +152,43 @@ func buildAuditBenchmarkRow(index int) (domain string, page string, failureCateg
 	}
 }
 
+// NOSONAR - test helper with SQL explain iteration, complexity is inherent
 func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query string, args ...any) []string {
 	t.Helper()
 
-	rows, err := service.db.Raw("EXPLAIN QUERY PLAN "+query, args...).Rows()
+	rows, err := service.db.Raw("EXPLAIN "+query, args...).Rows()
 	if err != nil {
 		t.Fatalf("explain query plan: %v", err)
 	}
 	defer rows.Close()
 
+	cols, err := rows.Columns()
+	if err != nil {
+		t.Fatalf("get explain columns: %v", err)
+	}
+
 	plan := make([]string, 0, 4)
 	for rows.Next() {
-		var selectID int
-		var order int
-		var from int
-		var detail string
-		if err := rows.Scan(&selectID, &order, &from, &detail); err != nil {
+		values := make([]interface{}, len(cols))
+		valuePtrs := make([]interface{}, len(cols))
+		for i := range cols {
+			valuePtrs[i] = &values[i]
+		}
+		if err := rows.Scan(valuePtrs...); err != nil {
 			t.Fatalf("scan query plan row: %v", err)
 		}
-		plan = append(plan, detail)
+		parts := make([]string, 0, len(cols))
+		for i := range values {
+			if values[i] != nil {
+				switch v := values[i].(type) {
+				case []byte:
+					parts = append(parts, string(v))
+				default:
+					parts = append(parts, fmt.Sprintf("%v", v))
+				}
+			}
+		}
+		plan = append(plan, strings.Join(parts, " "))
 	}
 	if len(plan) == 0 {
 		t.Fatal("expected query plan rows")

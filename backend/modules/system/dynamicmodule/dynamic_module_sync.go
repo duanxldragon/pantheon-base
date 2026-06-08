@@ -310,9 +310,9 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 				"auto_recycle":    registration.AutoRecycle,
 				"table_name":      tableName,
 			}
-			if existing.Status != ModuleStatusUninstalled {
-				updates["status"] = ModuleStatusActive
-			}
+				if existing.Status != ModuleStatusUninstalled && existing.Status != ModuleStatusPendingActivation {
+					updates["status"] = ModuleStatusActive
+				}
 			if strings.TrimSpace(existing.InstalledAt) == "" {
 				updates["installed_at"] = registration.InstalledAt
 			}

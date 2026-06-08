@@ -1,0 +1,7 @@
+./user_dto.go
+./user_handler.go
+./user_model.go
+./user_preferences.go
+./user_role_model.go
+./user_service.go
+./user_service_test.go

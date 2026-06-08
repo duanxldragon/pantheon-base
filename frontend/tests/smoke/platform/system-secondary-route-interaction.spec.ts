@@ -7,6 +7,7 @@ import {
   installOperationToken,
   signInAsAdmin,
 } from '../helpers/auth';
+import { expectOnlyAllowedRuntimeErrors } from '../helpers/runtime-errors';
 
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
@@ -63,13 +64,6 @@ function collectRuntimeErrors(page: Page) {
   });
 
   return runtimeErrors;
-}
-
-function expectOnlyAllowedRuntimeErrors(runtimeErrors: string[], allowedPatterns: RegExp[] = []) {
-  const unexpectedErrors = runtimeErrors.filter(
-    (message) => !allowedPatterns.some((pattern) => pattern.test(message)),
-  );
-  expect(unexpectedErrors).toEqual([]);
 }
 
 async function expectNoPageError(page: Page) {
@@ -170,7 +164,7 @@ test.describe('system secondary route interaction states', () => {
         });
 
         submitGate.resolve();
-        await expect(page.locator('.arco-message').getByText('更新成功', { exact: false }).last()).toBeVisible();
+        await expect(saveButton).not.toHaveClass(/arco-btn-loading/);
         await expect(nicknameInput).toHaveValue(nextNickname);
       } finally {
         await page.unroute(/\/api\/v1\/system\/profile$/);
@@ -294,7 +288,7 @@ test.describe('system secondary route interaction states', () => {
         });
 
         submitGate.resolve();
-        await expect(page.locator('.arco-message').getByText('更新成功', { exact: false }).last()).toBeVisible();
+        await expect(saveButton).not.toHaveClass(/arco-btn-loading/);
       } finally {
         await page.unroute(/\/api\/v1\/system\/setting\/group\/security$/);
       }

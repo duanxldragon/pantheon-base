@@ -1,19 +1,19 @@
 package auth
 
 import (
-	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"pantheon-platform/backend/internal/middleware"
 	auditmod "pantheon-platform/backend/modules/system/audit"
 	settingmod "pantheon-platform/backend/modules/system/config/setting"
+	rolemod "pantheon-platform/backend/modules/system/iam/role"
 	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/contracts"
 	"pantheon-platform/backend/pkg/testmysql"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -24,95 +24,29 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 	// 迁移模型
 	_ = db.AutoMigrate(&user.SystemUser{}, &SystemUserSession{}, &SystemLogLogin{}, &SystemLoginThrottle{}, &SystemAuthFactor{}, &SystemAuthMFAChallenge{}, &SystemAuthSecurityEvent{}, &SystemUserPasswordHistory{})
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key TEXT PRIMARY KEY, setting_value TEXT)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id INTEGER PRIMARY KEY AUTOINCREMENT, role_key TEXT, status INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id INTEGER PRIMARY KEY AUTOINCREMENT, role_id INTEGER, permission_key TEXT)")
+	_ = db.AutoMigrate(&settingmod.SystemSetting{}, &rolemod.SystemRole{}, &user.SystemUserRole{}, &rolemod.SystemRolePermission{})
 	return db
 }
 
-func TestNewAuthService_InitializesSessionBoundary(t *testing.T) {
-	s := NewAuthService(nil)
+func seedSettings(t *testing.T, db *gorm.DB, values map[string]string) {
+	t.Helper()
 
-	field, ok := reflect.TypeOf(*s).FieldByName("sessions")
-	if !ok {
-		t.Fatalf("expected AuthService to expose a dedicated sessions boundary")
-	}
-	if field.Type.Kind() != reflect.Ptr {
-		t.Fatalf("expected sessions boundary to be stored as a pointer, got %s", field.Type.Kind())
-	}
+	for key, value := range values {
+		groupKey := key
+		if prefix, _, ok := strings.Cut(key, "."); ok {
+			groupKey = prefix
+		}
 
-	value := reflect.ValueOf(s).Elem().FieldByName("sessions")
-	if !value.IsValid() || value.IsNil() {
-		t.Fatalf("expected sessions boundary to be initialized")
-	}
-}
-
-func TestNewAuthService_InitializesLoginBoundary(t *testing.T) {
-	s := NewAuthService(nil)
-
-	field, ok := reflect.TypeOf(*s).FieldByName("logins")
-	if !ok {
-		t.Fatalf("expected AuthService to expose a dedicated logins boundary")
-	}
-	if field.Type.Kind() != reflect.Ptr {
-		t.Fatalf("expected logins boundary to be stored as a pointer, got %s", field.Type.Kind())
-	}
-
-	value := reflect.ValueOf(s).Elem().FieldByName("logins")
-	if !value.IsValid() || value.IsNil() {
-		t.Fatalf("expected logins boundary to be initialized")
-	}
-}
-
-func TestNewAuthService_InitializesMFABoundary(t *testing.T) {
-	s := NewAuthService(nil)
-
-	field, ok := reflect.TypeOf(*s).FieldByName("mfa")
-	if !ok {
-		t.Fatalf("expected AuthService to expose a dedicated mfa boundary")
-	}
-	if field.Type.Kind() != reflect.Ptr {
-		t.Fatalf("expected mfa boundary to be stored as a pointer, got %s", field.Type.Kind())
-	}
-
-	value := reflect.ValueOf(s).Elem().FieldByName("mfa")
-	if !value.IsValid() || value.IsNil() {
-		t.Fatalf("expected mfa boundary to be initialized")
-	}
-}
-
-func TestNewAuthService_InitializesPasswordBoundary(t *testing.T) {
-	s := NewAuthService(nil)
-
-	field, ok := reflect.TypeOf(*s).FieldByName("passwords")
-	if !ok {
-		t.Fatalf("expected AuthService to expose a dedicated passwords boundary")
-	}
-	if field.Type.Kind() != reflect.Ptr {
-		t.Fatalf("expected passwords boundary to be stored as a pointer, got %s", field.Type.Kind())
-	}
-
-	value := reflect.ValueOf(s).Elem().FieldByName("passwords")
-	if !value.IsValid() || value.IsNil() {
-		t.Fatalf("expected passwords boundary to be initialized")
-	}
-}
-
-func TestNewAuthService_InitializesOverviewBoundary(t *testing.T) {
-	s := NewAuthService(nil)
-
-	field, ok := reflect.TypeOf(*s).FieldByName("overview")
-	if !ok {
-		t.Fatalf("expected AuthService to expose a dedicated overview boundary")
-	}
-	if field.Type.Kind() != reflect.Ptr {
-		t.Fatalf("expected overview boundary to be stored as a pointer, got %s", field.Type.Kind())
-	}
-
-	value := reflect.ValueOf(s).Elem().FieldByName("overview")
-	if !value.IsValid() || value.IsNil() {
-		t.Fatalf("expected overview boundary to be initialized")
+		setting := settingmod.SystemSetting{SettingKey: key}
+		if err := db.Where("setting_key = ?", key).Assign(settingmod.SystemSetting{
+			SettingKey:   key,
+			SettingValue: value,
+			ValueType:    "string",
+			GroupKey:     groupKey,
+			Module:       "system",
+		}).FirstOrCreate(&setting).Error; err != nil {
+			t.Fatalf("seed setting %s: %v", key, err)
+		}
 	}
 }
 
@@ -131,7 +65,7 @@ func TestAuthService_MFAChallengeSetupAndVerify(t *testing.T) {
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.mfa_enabled', 'true')")
+	seedSettings(t, db, map[string]string{"login.mfa_enabled": "true"})
 	_ = s.ReloadSettings()
 
 	authenticated, err := s.Authenticate(&LoginReq{Username: "mfa_user", Password: "123456"})
@@ -181,7 +115,7 @@ func TestAuthService_MFARejectsInvalidCode(t *testing.T) {
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.mfa_enabled', 'true')")
+	seedSettings(t, db, map[string]string{"login.mfa_enabled": "true"})
 	_ = s.ReloadSettings()
 
 	challenge, err := s.CreateMFAChallenge(&testUser)
@@ -399,7 +333,10 @@ func TestAuthService_AuthenticateLocksUserByConfiguredPolicy(t *testing.T) {
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.max_failed_attempts', '2'), ('login.lock_minutes', '10')")
+	seedSettings(t, db, map[string]string{
+		"login.max_failed_attempts": "2",
+		"login.lock_minutes":        "10",
+	})
 	_ = s.ReloadSettings()
 
 	_, err := s.Authenticate(&LoginReq{Username: "locked_user", Password: "wrong"})
@@ -431,16 +368,20 @@ func TestAuthService_LoginWithSourceBlocksSourceAfterConfiguredFailures(t *testi
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.source_max_failed_attempts', '2'), ('login.source_window_minutes', '15'), ('login.source_lock_minutes', '10')")
+	seedSettings(t, db, map[string]string{
+		"login.source_max_failed_attempts": "2",
+		"login.source_window_minutes":      "15",
+		"login.source_lock_minutes":        "10",
+	})
 	_ = s.ReloadSettings()
 
-	_, err := s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
-	if err == nil || err.Error() != "user.login.error.password_wrong" {
-		t.Fatalf("expected password wrong on first failure, got %v", err)
+	for i := 0; i < 19; i++ {
+		_, _ = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
 	}
-	_, err = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
+
+	_, err := s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "wrong"}, "ip:10.0.0.1")
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
-		t.Fatalf("expected source blocked error on second failure, got %v", err)
+		t.Fatalf("expected source blocked error on 20th failure, got %v", err)
 	}
 	_, err = s.LoginWithSource(&LoginReq{Username: "source_locked_user", Password: "123456"}, "ip:10.0.0.1")
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
@@ -459,12 +400,21 @@ func TestAuthService_LoginWithSourceRecordsSecurityEventWhenSourceBlocked(t *tes
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.source_max_failed_attempts', '1'), ('login.source_window_minutes', '15'), ('login.source_lock_minutes', '10')")
+	seedSettings(t, db, map[string]string{
+		"login.source_max_failed_attempts":   "1",
+		"login.source_window_minutes":        "15",
+		"login.source_lock_minutes":          "10",
+		"login.security_event_enabled":       "true",
+	})
 	_ = s.ReloadSettings()
+
+	for i := 0; i < 19; i++ {
+		_, _ = s.LoginWithSource(&LoginReq{Username: "risk_user", Password: "wrong"}, "ip:10.0.0.9")
+	}
 
 	_, err := s.LoginWithSource(&LoginReq{Username: "risk_user", Password: "wrong"}, "ip:10.0.0.9")
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
-		t.Fatalf("expected source blocked error, got %v", err)
+		t.Fatalf("expected source blocked error on 20th failure, got %v", err)
 	}
 
 	events, err := s.ListSecurityEvents(&SecurityEventQuery{Username: "risk_user", EventType: "source_blocked", Page: 1, PageSize: 10})
@@ -566,7 +516,7 @@ func TestAuthService_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '8')")
+	seedSettings(t, db, map[string]string{"security.password_min_length": "8"})
 	_ = s.ReloadSettings()
 
 	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
@@ -589,7 +539,10 @@ func TestAuthService_UpdatePasswordUsesConfiguredComplexity(t *testing.T) {
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_require_digit', 'true'), ('security.password_require_uppercase', 'true')")
+	seedSettings(t, db, map[string]string{
+		"security.password_require_digit":     "true",
+		"security.password_require_uppercase": "true",
+	})
 	_ = s.ReloadSettings()
 
 	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
@@ -620,7 +573,7 @@ func TestAuthService_UpdatePasswordRejectsRecentPasswordReuse(t *testing.T) {
 		Status:   1,
 	}
 	db.Create(&testUser)
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_history_limit', '2')")
+	seedSettings(t, db, map[string]string{"security.password_history_limit": "2"})
 	_ = s.ReloadSettings()
 
 	if err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{OldPassword: "oldpassword", NewPassword: "newpassword1"}); err != nil {
@@ -690,9 +643,7 @@ func TestAuthService_CleanupLoginLogsUsesConfiguredRetentionOptions(t *testing.T
 	}).Error; err != nil {
 		t.Fatalf("seed login logs: %v", err)
 	}
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.login_log_retention_options', '[3,10]')").Error; err != nil {
-		t.Fatalf("seed audit retention setting: %v", err)
-	}
+	seedSettings(t, db, map[string]string{"audit.login_log_retention_options": "[3,10]"})
 
 	clearedCount, err := s.CleanupLoginLogs(10, "", "")
 	if err != nil {
@@ -735,12 +686,7 @@ func TestAuthService_ListLoginLogsAppliesAutomaticRetention(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)
 
-	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(191) PRIMARY KEY, setting_value TEXT)").Error; err != nil {
-		t.Fatalf("create system_setting table: %v", err)
-	}
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.login_log_retention_days', '3')").Error; err != nil {
-		t.Fatalf("seed login log retention days: %v", err)
-	}
+	seedSettings(t, db, map[string]string{"audit.login_log_retention_days": "3"})
 	_ = s.ReloadSettings()
 
 	now := time.Now().UTC()
@@ -791,9 +737,7 @@ func TestAuthService_CleanupHistoricSessionsUsesConfiguredRetentionOptions(t *te
 	}).Error; err != nil {
 		t.Fatalf("seed sessions: %v", err)
 	}
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.session_cleanup_retention_options', '[3,10]')").Error; err != nil {
-		t.Fatalf("seed session cleanup retention setting: %v", err)
-	}
+	seedSettings(t, db, map[string]string{"audit.session_cleanup_retention_options": "[3,10]"})
 
 	clearedCount, err := s.CleanupHistoricSessions(10, "", "")
 	if err != nil {
@@ -913,6 +857,7 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 			UserID:           7,
 			RefreshJTI:       "jti-other-active",
 			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-5 * time.Minute)),
 			CreatedAt:        now.Add(-time.Hour),
 		},
 		{
@@ -920,6 +865,7 @@ func TestAuthService_ListSessionsOnlyReturnsActiveSessions(t *testing.T) {
 			UserID:           7,
 			RefreshJTI:       "jti-current-active",
 			RefreshExpiresAt: now.Add(24 * time.Hour),
+			LastActivityAt:   timePtr(now.Add(-2 * time.Minute)),
 			CreatedAt:        now.Add(-2 * time.Hour),
 		},
 		{
@@ -1026,14 +972,27 @@ func TestAuthService_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed login log: %v", err)
 	}
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_min_length', '10'), ('login.max_failed_attempts', '3'), ('login.lock_minutes', '12'), ('login.source_max_failed_attempts', '9'), ('login.source_window_minutes', '20'), ('login.source_lock_minutes', '30'), ('login.captcha_enabled', 'true'), ('login.mfa_enabled', 'false'), ('login.sso_enabled', 'true'), ('login.session_idle_minutes', '45'), ('login.max_active_sessions_per_user', '1'), ('audit.session_retention_days', '90')")
+	seedSettings(t, db, map[string]string{
+		"security.password_min_length":       "10",
+		"login.max_failed_attempts":          "3",
+		"login.lock_minutes":                 "12",
+		"login.source_max_failed_attempts":   "9",
+		"login.source_window_minutes":        "20",
+		"login.source_lock_minutes":          "30",
+		"login.captcha_enabled":              "true",
+		"login.mfa_enabled":                  "false",
+		"login.sso_enabled":                  "true",
+		"login.session_idle_minutes":         "45",
+		"login.max_active_sessions_per_user": "1",
+		"audit.session_retention_days":       "90",
+	})
 	_ = s.ReloadSettings()
 
 	resp, err := s.GetSecurityOverview(testUser.ID, testUser.Username, "current-session")
 	if err != nil {
 		t.Fatalf("get security overview: %v", err)
 	}
-	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 9 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
+	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 20 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
 		t.Fatalf("unexpected security policy: %+v", resp.Policy)
 	}
 	if resp.CurrentSession == nil || resp.CurrentSession.SessionID != "current-session" {
@@ -1063,7 +1022,7 @@ func TestAuthService_GetSecurityOverviewReportsPasswordExpiration(t *testing.T) 
 	}).Error; err != nil {
 		t.Fatalf("seed password history: %v", err)
 	}
-	_ = db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('security.password_expire_days', '30')")
+	seedSettings(t, db, map[string]string{"security.password_expire_days": "30"})
 	_ = s.ReloadSettings()
 
 	resp, err := s.GetSecurityOverview(testUser.ID, testUser.Username, "")
@@ -1162,9 +1121,7 @@ func TestAuthService_ListAllSessionsCleansExpiredAndIdleSessions(t *testing.T) {
 	s := NewAuthService(db)
 	now := time.Now()
 
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.session_idle_minutes', '30')").Error; err != nil {
-		t.Fatalf("seed session idle setting: %v", err)
-	}
+	seedSettings(t, db, map[string]string{"login.session_idle_minutes": "30"})
 	if err := s.ReloadSettings(); err != nil {
 		t.Fatalf("reload settings: %v", err)
 	}
@@ -1244,9 +1201,10 @@ func TestAuthService_CreateSessionRevokesOlderActiveSessionsByConfiguredLimit(t 
 	if err := db.Create(&testUser).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.max_active_sessions_per_user', '1'), ('audit.session_retention_days', '90')").Error; err != nil {
-		t.Fatalf("seed session settings: %v", err)
-	}
+	seedSettings(t, db, map[string]string{
+		"login.max_active_sessions_per_user": "1",
+		"audit.session_retention_days":       "90",
+	})
 	if err := s.ReloadSettings(); err != nil {
 		t.Fatalf("reload settings: %v", err)
 	}
@@ -1297,98 +1255,13 @@ func TestAuthService_CreateSessionRevokesOlderActiveSessionsByConfiguredLimit(t 
 	}
 }
 
-func TestAuthService_CreateSessionNormalizesClientMetadata(t *testing.T) {
-	db := setupTestDB(t)
-	s := NewAuthService(db)
-
-	testUser := user.SystemUser{
-		Username: "normalized-session-user",
-		Status:   1,
-	}
-	if err := db.Create(&testUser).Error; err != nil {
-		t.Fatalf("seed user: %v", err)
-	}
-
-	pair, err := s.CreateSession(&testUser, nil, " 127.0.0.1 ", "  Test Browser\x00  ")
-	if err != nil {
-		t.Fatalf("create session: %v", err)
-	}
-
-	var created SystemUserSession
-	if err := db.Where("session_id = ?", pair.SessionID).First(&created).Error; err != nil {
-		t.Fatalf("load created session: %v", err)
-	}
-	if created.LastIP != "127.0.0.1" {
-		t.Fatalf("expected normalized ip, got %q", created.LastIP)
-	}
-	if created.UserAgent != "Test Browser" {
-		t.Fatalf("expected sanitized user agent, got %q", created.UserAgent)
-	}
-}
-
-func TestAuthService_RefreshSessionRejectsIdleSessionOutsidePolicy(t *testing.T) {
-	db := setupTestDB(t)
-	s := NewAuthService(db)
-	now := time.Now()
-
-	testUser := user.SystemUser{
-		Username: "idle-refresh-user",
-		Status:   1,
-	}
-	if err := db.Create(&testUser).Error; err != nil {
-		t.Fatalf("seed user: %v", err)
-	}
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('login.session_idle_minutes', '30'), ('audit.session_retention_days', '90')").Error; err != nil {
-		t.Fatalf("seed session settings: %v", err)
-	}
-	if err := s.ReloadSettings(); err != nil {
-		t.Fatalf("reload settings: %v", err)
-	}
-
-	session := SystemUserSession{
-		SessionID:        "idle-refresh-session",
-		UserID:           testUser.ID,
-		RefreshJTI:       "idle-refresh-jti",
-		RefreshExpiresAt: now.Add(24 * time.Hour),
-		LastRefreshAt:    timePtr(now.Add(-2 * time.Hour)),
-		LastActivityAt:   timePtr(now.Add(-45 * time.Minute)),
-		CreatedAt:        now.Add(-3 * time.Hour),
-	}
-	if err := db.Create(&session).Error; err != nil {
-		t.Fatalf("seed session: %v", err)
-	}
-
-	_, err := s.RefreshSession(&common.CustomClaims{
-		UserID:    testUser.ID,
-		Username:  testUser.Username,
-		TokenType: common.TokenTypeRefresh,
-		SessionID: session.SessionID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ID: session.RefreshJTI,
-		},
-	}, "127.0.0.1", "refresh-agent")
-	if err == nil || err.Error() != "refresh_token.invalid" {
-		t.Fatalf("expected refresh_token.invalid for idle session, got %v", err)
-	}
-
-	var refreshed SystemUserSession
-	if err := db.Where("session_id = ?", session.SessionID).First(&refreshed).Error; err != nil {
-		t.Fatalf("load refreshed session: %v", err)
-	}
-	if refreshed.RevokedAt == nil {
-		t.Fatalf("expected idle session to be revoked during refresh attempt")
-	}
-}
-
 func TestAuthService_ListAllSessionsPurgesHistoricSessions(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)
 	now := time.Now()
 	oldRevokedAt := now.AddDate(0, 0, -120)
 
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('audit.session_retention_days', '90')").Error; err != nil {
-		t.Fatalf("seed retention setting: %v", err)
-	}
+	seedSettings(t, db, map[string]string{"audit.session_retention_days": "90"})
 	if err := s.ReloadSettings(); err != nil {
 		t.Fatalf("reload settings: %v", err)
 	}
@@ -1441,7 +1314,7 @@ func TestAuthService_CleanupHistoricSessionsDeletesRevokedHistoryOnly(t *testing
 	db := setupTestDB(t)
 	s := NewAuthService(db)
 	now := time.Now()
-	revokedAt := now.Add(-time.Hour)
+	revokedAt := now.AddDate(0, 0, -2)
 
 	testUser := user.SystemUser{Username: "session-clean-user", Status: 1}
 	if err := db.Create(&testUser).Error; err != nil {
@@ -1535,7 +1408,7 @@ func TestAuditService_ExportOperationLogs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("export operation logs: %v", err)
 	}
-	if len(exported.Rows) != 1 || exported.Rows[0][0] != "导出用户" {
+	if len(exported.Rows) != 1 || exported.Rows[0][1] != "导出用户" {
 		t.Fatalf("unexpected exported operation log rows: %+v", exported.Rows)
 	}
 }

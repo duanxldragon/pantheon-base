@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Harness Failure Registry Entry",
+  "type": "object",
+  "required": [
+    "failureId",
+    "category",
+    "example",
+    "impact",
+    "recommendedHarnessChange",
+    "status"
+  ],
+  "properties": {
+    "failureId": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": [
+        "behaviour",
+        "maintainability",
+        "architecture-fitness",
+        "runtime-quality",
+        "method-health"
+      ]
+    },
+    "example": { "type": "string" },
+    "impact": { "type": "string" },
+    "currentGuide": { "type": "string" },
+    "currentSensor": { "type": "string" },
+    "currentGate": { "type": "string" },
+    "detectedBy": { "type": "string" },
+    "missedBy": { "type": "string" },
+    "recommendedHarnessChange": {
+      "type": "string",
+      "enum": [
+        "guide",
+        "sensor",
+        "gate",
+        "template",
+        "no-action"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "accepted",
+        "implemented",
+        "rejected"
+      ]
+    }
+  }
+}
