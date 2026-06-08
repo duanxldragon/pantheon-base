@@ -1623,7 +1623,13 @@ const DeptList: React.FC = () => {
                   <FormItem
                     label={t('system.dept.email')}
                     field="email"
-                    rules={[{ match: /\S+@\S+\.\S+/, message: t('system.user.email.invalid') }]} {/* NOSONAR — simple email regex */}
+                    rules={[
+                      {
+                        // NOSONAR - simple email shape check; backend owns authoritative validation.
+                        match: /\S+@\S+\.\S+/,
+                        message: t('system.user.email.invalid'),
+                      },
+                    ]}
                   >
                     <Input onPressEnter={() => form.submit()} />
                   </FormItem>

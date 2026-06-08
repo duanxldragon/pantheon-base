@@ -18,6 +18,7 @@ import (
 var managedTableNamePattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 const workspaceRootEnvKey = "PANTHEON_WORKSPACE_ROOT"
+const nodeBinaryEnvKey = "PANTHEON_NODE_BIN"
 const generatedModuleExporterScript = "frontend/scripts/export-generated-module.mjs"
 
 func isWorkspaceRoot(candidate string) bool {
@@ -208,6 +209,10 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 	if !fileExists(scriptPath) {
 		return nil, errors.New("module.generate.server_export_failed")
 	}
+	nodeBinary, err := resolveNodeBinary()
+	if err != nil {
+		return nil, errors.New("module.generate.server_export_failed")
+	}
 
 	schemaFile, err := os.CreateTemp("", "pantheon-module-schema-*.json")
 	if err != nil {
@@ -229,7 +234,7 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, err
 	}
 
-	cmd := exec.Command("node", scriptPath, schemaPath) // NOSONAR — scaffold tool, controlled PATH
+	cmd := exec.Command(nodeBinary, scriptPath, schemaPath)
 	cmd.Dir = workspaceRoot
 	output, err := cmd.Output()
 	if err != nil {
@@ -244,6 +249,16 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, errors.New("module.generate.server_export_failed")
 	}
 	return files, nil
+}
+
+func resolveNodeBinary() (string, error) {
+	if configured := strings.TrimSpace(os.Getenv(nodeBinaryEnvKey)); configured != "" {
+		if !filepath.IsAbs(configured) {
+			return "", errors.New("module.generate.invalid_node_binary")
+		}
+		return configured, nil
+	}
+	return exec.LookPath("node")
 }
 
 func RemoveGeneratedModuleSource(workspaceRoot, scope, name string) error {

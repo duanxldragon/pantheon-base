@@ -3,6 +3,8 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	mysqlDriver "github.com/go-sql-driver/mysql"
@@ -37,6 +39,13 @@ func normalizeMySQLDSN(dsn string) (string, error) {
 	return parsed.FormatDSN(), nil
 }
 
+func gormLogLevel() logger.LogLevel {
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("PANTHEON_ENV")), "production") {
+		return logger.Warn
+	}
+	return logger.Info
+}
+
 // InitDB 初始化数据库连接
 func InitDB(dsn string) {
 	var err error
@@ -49,7 +58,7 @@ func InitDB(dsn string) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // 使用单数表名
 		},
-		Logger: logger.Default.LogMode(logger.Info), // NOSONAR — dev-friendly default; make configurable in production
+		Logger: logger.Default.LogMode(gormLogLevel()),
 	})
 
 	if err != nil {

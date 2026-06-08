@@ -25,19 +25,6 @@ func setCookie(w http.ResponseWriter, name, value string, maxAge int, sameSite h
 	})
 }
 
-func setReadableCookie(w http.ResponseWriter, name, value string, maxAge int, sameSite http.SameSite) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     name,
-		Value:    value,
-		Path:     "/",
-		MaxAge:   maxAge,
-		// NOSONAR - intentional: JS needs to read CSRF cookie value
-		HttpOnly: false,
-		Secure:   true,
-		SameSite: sameSite,
-	})
-}
-
 func SetAccessTokenCookie(w http.ResponseWriter, token string) {
 	ttl := int((15 * time.Minute).Seconds())
 	setCookie(w, CookieAccessToken, token, ttl, http.SameSiteStrictMode)
@@ -51,7 +38,8 @@ func SetRefreshTokenCookie(w http.ResponseWriter, token string) {
 func ClearTokenCookies(w http.ResponseWriter) {
 	setCookie(w, CookieAccessToken, "", -1, http.SameSiteStrictMode)
 	setCookie(w, CookieRefreshToken, "", -1, http.SameSiteStrictMode)
-	setReadableCookie(w, CookieCSRFToken, "", -1, http.SameSiteStrictMode)
+	setCookie(w, CookieCSRFToken, "", -1, http.SameSiteStrictMode)
+	w.Header().Del("X-CSRF-Token")
 }
 
 func SetCSRFCookie(w http.ResponseWriter) (string, error) {
@@ -59,7 +47,8 @@ func SetCSRFCookie(w http.ResponseWriter) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	setReadableCookie(w, CookieCSRFToken, token, int((24 * time.Hour).Seconds()), http.SameSiteStrictMode)
+	setCookie(w, CookieCSRFToken, token, int((24 * time.Hour).Seconds()), http.SameSiteStrictMode)
+	w.Header().Set("X-CSRF-Token", token)
 	return token, nil
 }
 

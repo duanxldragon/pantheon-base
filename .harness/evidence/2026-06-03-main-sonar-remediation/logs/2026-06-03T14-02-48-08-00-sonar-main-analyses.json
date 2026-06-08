@@ -6,11 +6,11 @@
   },
   "analyses": [
     {
-      "key": "08bb2881-4326-41e9-ae2b-b0cd7c3fc3e2",
+      "key": "analysis-1",
       "date": "2026-06-03T14:02:48+08:00",
       "events": [
         {
-          "key": "AZ6MFSJip2VFTZekiTDX",
+          "key": "event-version-1",
           "category": "VERSION",
           "name": "not provided"
         }
@@ -20,7 +20,7 @@
       "revision": "2f70c2da40fe4c0a59d3c0c77522d27d3727f6f4"
     },
     {
-      "key": "299a2576-592a-43b9-a618-9ea434f57127",
+      "key": "analysis-2",
       "date": "2026-06-03T13:06:50+08:00",
       "events": [],
       "projectVersion": "not provided",
