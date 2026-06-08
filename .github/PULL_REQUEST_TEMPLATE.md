@@ -8,11 +8,31 @@
 ## Harness 链路
 
 - Task Packet：
+- Task packet：
 - Evidence：
+- Verification evidence：
 - Review Artifact：
+- OpenSpec change：
+- Trivial change：yes / no
 - Quality Profile：auth-security / permission-policy / i18n / ui-runtime / generator / ci-workflow / none
 - Ratchet Decision：no-repeat-observed / guide-updated / sensor-added / gate-updated / template-updated / adapter-updated / registry-only
 - GitHub Signal：method-gate / repo-quality-gate / runtime-evidence-gate / external-flaky / not-applicable
+
+## Harness adoption markers
+
+> 保留本区块的英文 marker，供 `scripts/harness/check-adoption.mjs` 做机械检查。
+
+- task packet:
+- evidence:
+- boundaries:
+- backend response contract:
+- backend DTO contract:
+- permission contract:
+- audit coverage:
+- visual evidence:
+- inheritance contract:
+- base drift:
+- Base/ops inheritance:
 
 ## 边界说明
 

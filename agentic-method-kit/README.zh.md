@@ -12,13 +12,11 @@ English version: [README.md](./README.md)
 - 把保存下来的 CodeGraph 风格输出整理成 `graph-review.json`
 - 再把这个导入结果写回 evidence / review 收口件
 
-建议与下列目录一起使用：
+在 `pantheon-base` 中采用本方法时，配合以下本地落地层使用：
 
-- `agentic-repo-shell/`
-
-可选 overlay：
-
-- `pantheon-overlay/`
+- `docs/harness/` 下的仓库本地 harness 文档
+- `docs/harness/AI_QUALITY_GOVERNANCE.md` 中的消费方质量治理
+- `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md` 中的多 agent 交付调度
 
 ## 这个方法包定义什么
 

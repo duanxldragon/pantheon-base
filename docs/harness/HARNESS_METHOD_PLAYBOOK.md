@@ -26,7 +26,9 @@ English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md
 4. 再读 `agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md`
 5. 再读 `agentic-method-kit/TOOL_ADAPTER_MATRIX.md`
 6. 再读 `agentic-method-kit/METHOD_PLAYBOOK.md`
-7. 再读当前仓库需要落地执行的合同：
+7. 再读 `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
+8. 再读 `docs/harness/AI_QUALITY_GOVERNANCE.md`
+9. 再读当前仓库需要落地执行的合同：
    - `HARNESS_ENGINEERING_CONTRACT.md`
    - `TRIVIALITY_CLASSIFICATION_POLICY.md`
    - `TASK_PACKET_SPEC.md`
@@ -38,7 +40,6 @@ English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md
    - `FAILURE_RATCHET_POLICY.md`
    - `FAILURE_REGISTRY_PROMOTION_POLICY.md`
    - `HARNESS_RETIREMENT_REVIEW.md`
-   - `INHERITANCE_HARNESS_PROTOCOL.md`
 
 ## 当前仓库职责
 
