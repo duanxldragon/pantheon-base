@@ -1,10 +1,14 @@
+---
+title: Verification Evidence Spec
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Verification Evidence Spec
 
 English version: [VERIFICATION_EVIDENCE_SPEC.en.md](./VERIFICATION_EVIDENCE_SPEC.en.md)
-
-类型：Contract
-归属层：platform
-状态：Active
 
 本文定义 Pantheon 任务验证证据的格式。证据格式必须工具无关。
 

@@ -1,10 +1,14 @@
+---
+title: Failure Ratchet Policy
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Failure Ratchet Policy
 
 English version: [FAILURE_RATCHET_POLICY.en.md](./FAILURE_RATCHET_POLICY.en.md)
-
-类型：Policy
-归属层：platform
-状态：Active
 
 本文定义 repeated failure 应如何从一次性问题，升级为仓库级方法资产。
 

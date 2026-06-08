@@ -1,8 +1,15 @@
-# Tool Adapters
+---
+title: Tool Adapters
+doc_type: Design
+layer: method
+status: Active
+linked_contracts:
+  - docs/harness/HARNESS_METHOD_PLAYBOOK.md
+  - docs/harness/AGENT_INTERFACE_CONTRACT.md
+updated_at: 2026-06-08
+---
 
-类型：Design
-归属层：method
-状态：Active
+# Tool Adapters
 
 本文说明方法层如何支持多种 agent 工具而不被某个工具锁死。
 

@@ -1,10 +1,14 @@
+---
+title: Harness Method Playbook
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Harness Method Playbook
 
 English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md)
-
-类型：Playbook
-归属层：platform
-状态：Active
 
 本文件不再承载完整方法定义。
 
@@ -26,6 +30,7 @@ English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md
    - `HARNESS_ENGINEERING_CONTRACT.md`
    - `TRIVIALITY_CLASSIFICATION_POLICY.md`
    - `TASK_PACKET_SPEC.md`
+   - `TOOL_ADAPTERS.md`
    - `VERIFICATION_EVIDENCE_SPEC.md`
    - `REVIEW_LOOP_SPEC.md`
    - `VISUAL_QUALITY_PROTOCOL.md`

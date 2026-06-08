@@ -1,8 +1,12 @@
-# Visual Quality Protocol
+---
+title: Visual Quality Protocol
+doc_type: Contract
+layer: method
+status: Active
+updated_at: 2026-06-08
+---
 
-类型：Contract
-归属层：method
-状态：Active
+# Visual Quality Protocol
 
 本文定义 UI 任务的视觉质量门。它是工具无关 Harness 协议的一部分。
 

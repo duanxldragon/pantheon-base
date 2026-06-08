@@ -2,7 +2,9 @@
 title: GitHub 质量门禁与 Sonar 重构设计
 doc_type: Design
 layer: platform
-status: Proposed
+status: Approved
+index_group: superpowers-specs
+retention_reason: 作为 GitHub 主质量门禁、Sonar 辅助扫描和 smoke 分层治理的设计锚点保留
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/designs/WORKFLOW.md

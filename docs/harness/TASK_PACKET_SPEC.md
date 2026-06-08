@@ -1,10 +1,14 @@
+---
+title: Task Packet Spec
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Task Packet Spec
 
 English version: [TASK_PACKET_SPEC.en.md](./TASK_PACKET_SPEC.en.md)
-
-类型：Contract
-归属层：platform
-状态：Active
 
 Task packet 是非 trivial 任务的工具无关输入格式。它让 Codex、Claude Code、Cursor、Copilot、OpenHands、Aider 和人工工程师共享同一份任务边界。
 

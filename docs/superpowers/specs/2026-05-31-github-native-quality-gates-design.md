@@ -9,9 +9,10 @@ depends_on_layers:
   - system/config
   - system/audit
   - system/lowcode
-status: Approved
+status: Superseded
+superseded_by: docs/superpowers/specs/2026-06-06-github-quality-and-sonar-refactor-design.md
 index_group: superpowers-specs
-retention_reason: 将 Sonar 迁出主门禁，收敛为 GitHub 原生质量门，并把低代码烟测产物纳入强制清理策略
+retention_reason: 作为早期 GitHub 原生质量门设计保留，已被 2026-06-06 的质量门禁与 Sonar 分层设计取代
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/designs/WORKFLOW.md

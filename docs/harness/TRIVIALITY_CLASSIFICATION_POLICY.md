@@ -1,10 +1,14 @@
+---
+title: Triviality Classification Policy
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Triviality Classification Policy
 
 English version: [TRIVIALITY_CLASSIFICATION_POLICY.en.md](./TRIVIALITY_CLASSIFICATION_POLICY.en.md)
-
-类型：Policy
-归属层：platform
-状态：Active
 
 本文定义如何把任务归类为 `trivial` 或 `non-trivial`，避免仓库只靠个人判断决定是否需要 task packet、evidence 和 review artifact。
 

@@ -1,10 +1,14 @@
+---
+title: Failure Registry Promotion Policy
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Failure Registry Promotion Policy
 
 English version: [FAILURE_REGISTRY_PROMOTION_POLICY.en.md](./FAILURE_REGISTRY_PROMOTION_POLICY.en.md)
-
-类型：Policy
-归属层：platform
-状态：Active
 
 本文定义 failure registry 何时从“建议存在”升级为“必需 landing file”。
 
