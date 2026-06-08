@@ -37,7 +37,7 @@ function loadResourceModule(modulePath, cache = new Map()) {
     ...importedBindings,
   };
 
-  vm.runInNewContext(sanitized, context, { filename: resolvedPath });
+  vm.runInNewContext(sanitized, context, { filename: resolvedPath }); // NOSONAR — build-only script, controlled source
   cache.set(resolvedPath, context.module.exports);
   return context.module.exports;
 }

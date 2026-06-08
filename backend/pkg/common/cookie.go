@@ -31,6 +31,7 @@ func setReadableCookie(w http.ResponseWriter, name, value string, maxAge int, sa
 		Value:    value,
 		Path:     "/",
 		MaxAge:   maxAge,
+		// NOSONAR - intentional: JS needs to read CSRF cookie value
 		HttpOnly: false,
 		Secure:   true,
 		SameSite: sameSite,

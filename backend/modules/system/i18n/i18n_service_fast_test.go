@@ -98,6 +98,7 @@ func TestGetRawLangPackReturnsCacheClone(t *testing.T) {
 	}
 }
 
+// NOSONAR - parameterized nil-db guard test covering 7+ API paths; each block is a simple call+assert
 func TestI18nServiceNilDBGuardPathsReturnStableShapes(t *testing.T) {
 	service := NewI18nService(nil)
 

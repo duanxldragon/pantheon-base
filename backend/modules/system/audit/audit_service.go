@@ -186,7 +186,7 @@ type operationCleanupWindow struct {
 	EndedAt   time.Time
 }
 
-func parseOperationCleanupWindow(startedAt string, endedAt string) (*operationCleanupWindow, error) {
+func parseOperationCleanupWindow(startedAt, endedAt string) (*operationCleanupWindow, error) {
 	startedAt = strings.TrimSpace(startedAt)
 	endedAt = strings.TrimSpace(endedAt)
 	if startedAt == "" && endedAt == "" {

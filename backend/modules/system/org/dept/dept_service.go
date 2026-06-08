@@ -1020,7 +1020,7 @@ func (s *DeptService) ensureDeptParentExists(parentID uint64) error {
 	return nil
 }
 
-func (s *DeptService) ensureDeptParentNotDescendant(deptID uint64, parentID uint64) error {
+func (s *DeptService) ensureDeptParentNotDescendant(deptID, parentID uint64) error {
 	if parentID == 0 {
 		return nil
 	}
@@ -1289,7 +1289,7 @@ func buildDeptGovernanceTags(dept SystemDept, childDeptCount int, postCount int)
 	return tags
 }
 
-func buildDeptDeleteBlockers(childDeptCount int, postCount int, userCount int) []string {
+func buildDeptDeleteBlockers(childDeptCount, postCount, userCount int) []string {
 	blockers := make([]string, 0, 3)
 	if childDeptCount > 0 {
 		blockers = append(blockers, "children")
@@ -1306,7 +1306,7 @@ func buildDeptDeleteBlockers(childDeptCount int, postCount int, userCount int) [
 	return blockers
 }
 
-func buildDeptGovernanceActions(tags []string, deleteBlockedBy []string) []string {
+func buildDeptGovernanceActions(tags, deleteBlockedBy []string) []string {
 	actions := make([]string, 0, 6)
 	seen := make(map[string]struct{}, 6)
 	appendAction := func(value string) {
@@ -1346,7 +1346,7 @@ func buildDeptGovernanceActions(tags []string, deleteBlockedBy []string) []strin
 	return actions
 }
 
-func buildLocalPostGovernanceTags(status int, assignedUserCount int) []string {
+func buildLocalPostGovernanceTags(status, assignedUserCount int) []string {
 	tags := make([]string, 0, 2)
 	if assignedUserCount > 0 {
 		tags = append(tags, "in-use")
@@ -1367,7 +1367,7 @@ func buildLocalPostGovernanceBlockers(assignedUserCount int) []string {
 	return []string{"none"}
 }
 
-func buildLocalPostGovernanceActions(status int, assignedUserCount int) []string {
+func buildLocalPostGovernanceActions(status, assignedUserCount int) []string {
 	if assignedUserCount > 0 {
 		if normalizeSystemStatus(status) == 2 {
 			return []string{"reassign-users", "review-status"}

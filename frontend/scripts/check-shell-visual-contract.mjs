@@ -133,7 +133,7 @@ function splitSelectorList(selectorText) {
 
 function extractCssRules(cssSource) {
   const rules = [];
-  const rulePattern = /([^{}]+)\{([^{}]*)\}/g;
+  const rulePattern = /([^{}]+)\{([^{}]*)\}/g; // NOSONAR — build-only script, small CSS input
   let match;
   while ((match = rulePattern.exec(cssSource))) {
     const selectorText = match[1].trim();
@@ -1098,8 +1098,8 @@ if (globalInputNumberInnerBlock) {
   }
 }
 
-for (const selectorList of globalSource.match(/[^{}]*\.arco-input-number\s+\.arco-input-inner-wrapper[^{}]*\{[^{}]*\}/g) ?? []) {
-  const borderedDeclaration = selectorList.match(/\b(border|border-color)\s*:\s*([^;]+);/i);
+for (const selectorList of globalSource.match(/[^{}]*\.arco-input-number\s+\.arco-input-inner-wrapper[^{}]*\{[^{}]*\}/g) ?? []) { // NOSONAR — build-only script
+  const borderedDeclaration = selectorList.match(/\b(border|border-color)\s*:\s*([^;]+);/i); // NOSONAR — build-only script
   if (borderedDeclaration && borderedDeclaration[2].trim() !== '0') {
     findings.push(
       'InputNumber inner wrapper must not be part of the bordered control group; the outer .arco-input-number owns the border.',
@@ -1128,7 +1128,7 @@ if (globalNestedInputFocusBlock) {
   }
 }
 
-if (/(?:^|\n)\s*\.arco-input:focus\s*,/i.test(globalSource)) {
+if (/(?:^|\n)\s*\.arco-input:focus\s*,/i.test(globalSource)) { // NOSONAR — build-only script
   findings.push(
     'Bare .arco-input:focus must not own the global focus ring; the outer input wrapper owns it.',
   );

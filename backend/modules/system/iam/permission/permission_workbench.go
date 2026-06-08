@@ -460,7 +460,7 @@ func (s *PermissionService) countRecentWorkbenchRemediationEvents(roleKeys []str
 	return len(events), nil
 }
 
-func collectRequiredAPIPolicies(pagePermissions []PermissionWorkbenchPermissionResp, actionPermissions []PermissionWorkbenchPermissionResp) []permissionRequiredAPIPolicy {
+func collectRequiredAPIPolicies(pagePermissions, actionPermissions []PermissionWorkbenchPermissionResp) []permissionRequiredAPIPolicy {
 	seen := make(map[string]struct{})
 	result := make([]permissionRequiredAPIPolicy, 0)
 	appendPolicy := func(path string, method string) {

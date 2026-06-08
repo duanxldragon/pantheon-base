@@ -668,7 +668,7 @@ func (s *PostService) loadPostUserCounts() (map[uint64]int, error) {
 	return result, nil
 }
 
-func buildPostGovernanceTags(status int, assignedUserCount int) []string {
+func buildPostGovernanceTags(status, assignedUserCount int) []string {
 	tags := make([]string, 0, 2)
 	if assignedUserCount > 0 {
 		tags = append(tags, "in-use")
@@ -689,7 +689,7 @@ func buildPostGovernanceBlockers(assignedUserCount int) []string {
 	return []string{"none"}
 }
 
-func buildPostGovernanceActions(status int, assignedUserCount int) []string {
+func buildPostGovernanceActions(status, assignedUserCount int) []string {
 	if assignedUserCount > 0 {
 		if normalizePostStatus(status) == 2 {
 			return []string{"reassign-users", "review-status"}

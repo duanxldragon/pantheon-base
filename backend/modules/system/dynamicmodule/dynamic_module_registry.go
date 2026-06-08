@@ -64,7 +64,7 @@ func (s *DynamicModuleService) listGeneratedModuleRefs() ([]scaffold.GeneratedMo
 	return refs, nil
 }
 
-func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name string) bool {
+func (s *DynamicModuleService) generatedModuleArtifactsExist(scope, name string) bool {
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return false
 	}
@@ -85,7 +85,7 @@ func (s *DynamicModuleService) generatedModuleArtifactsExist(scope string, name 
 		generatedPathExists(s.workspaceRoot, schemaRelativePath)
 }
 
-func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name string) (*scaffold.ModuleSchema, error) {
+func (s *DynamicModuleService) loadGeneratedModuleSchema(scope, name string) (*scaffold.ModuleSchema, error) {
 	relativeTarget, ok := generatedModuleRelativePath("schema", "generated", scope, name+".json")
 	if !ok {
 		return nil, errors.New("module.register.schema_invalid")
@@ -111,7 +111,7 @@ func (s *DynamicModuleService) loadGeneratedModuleSchema(scope string, name stri
 	return &schema, nil
 }
 
-func resolveGeneratedWorkspacePath(workspaceRoot string, relativePath string) (string, bool) {
+func resolveGeneratedWorkspacePath(workspaceRoot, relativePath string) (string, bool) {
 	normalizedRoot := filepath.Clean(strings.TrimSpace(workspaceRoot))
 	normalizedRelative := filepath.ToSlash(strings.TrimSpace(relativePath))
 	if normalizedRoot == "" || normalizedRelative == "" {
@@ -128,7 +128,7 @@ func resolveGeneratedWorkspacePath(workspaceRoot string, relativePath string) (s
 	return target, true
 }
 
-func generatedPathExists(workspaceRoot string, relativePath string) bool {
+func generatedPathExists(workspaceRoot, relativePath string) bool {
 	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
 	if !ok {
 		return false
@@ -137,7 +137,7 @@ func generatedPathExists(workspaceRoot string, relativePath string) bool {
 	return err == nil && !info.IsDir()
 }
 
-func generatedDirExists(workspaceRoot string, relativePath string) bool {
+func generatedDirExists(workspaceRoot, relativePath string) bool {
 	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
 	if !ok {
 		return false

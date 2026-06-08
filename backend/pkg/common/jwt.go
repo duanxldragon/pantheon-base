@@ -104,7 +104,7 @@ func GenerateTokenPair(userID uint64, username string, roleKeys []string, sessio
 	}, nil
 }
 
-func ParseToken(tokenString string, expectedType string) (*CustomClaims, error) {
+func ParseToken(tokenString, expectedType string) (*CustomClaims, error) {
 	secret := AccessTokenSecret
 	if expectedType == TokenTypeRefresh {
 		secret = RefreshTokenSecret

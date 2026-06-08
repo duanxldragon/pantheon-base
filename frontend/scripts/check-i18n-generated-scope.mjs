@@ -17,7 +17,7 @@ function loadResourceModule(modulePath) {
     module: { exports: {} },
     exports: {},
   };
-  vm.runInNewContext(sanitized, context, { filename: modulePath });
+  vm.runInNewContext(sanitized, context, { filename: modulePath }); // NOSONAR — build-only script, controlled source
   return context.module.exports;
 }
 

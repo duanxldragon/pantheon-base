@@ -300,7 +300,7 @@ func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 	}
 }
 
-func buildPreferenceAuditPayload(previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) string {
+func buildPreferenceAuditPayload(previous, current *user.UserPlatformPreferenceResp) string {
 	return marshalAuthAuditPayload(gin.H{
 		"scope":  "platform.shell.preferences",
 		"before": previous,
@@ -317,7 +317,7 @@ func buildPreferenceAuditResult(resp *UserInfoResp, previous *user.UserPlatformP
 	})
 }
 
-func preferencesEqual(previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) bool {
+func preferencesEqual(previous, current *user.UserPlatformPreferenceResp) bool {
 	if previous == nil && current == nil {
 		return true
 	}

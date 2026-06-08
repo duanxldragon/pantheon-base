@@ -17,7 +17,14 @@ import (
 	"gorm.io/gorm"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
+const (
+	errDatabaseNotInitialized = "database.not_initialized"
+
+	moduleLowcode        = "system.lowcode"
+	keyMenuLowcode       = "system.menu.lowcode"
+	keyMenuModules       = "system.menu.modules"
+	keyMenuGenerator     = "system.menu.generator"
+)
 
 type I18nService struct {
 	db *gorm.DB
@@ -58,11 +65,11 @@ var canonicalMenuLocaleEntries = map[i18nLocaleKey]i18nCanonicalEntry{
 	{Locale: "ja-JP", Key: "system.menu.config"}:        {Module: "system.config", Group: "menu", Value: "システム設定"},
 	{Locale: "ko-KR", Key: "system.menu.config"}:        {Module: "system.config", Group: "menu", Value: "시스템 설정"},
 	{Locale: "fr-FR", Key: "system.menu.config"}:        {Module: "system.config", Group: "menu", Value: "Configuration système"},
-	{Locale: "zh-CN", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "低代码平台"},
-	{Locale: "en-US", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "Low-Code"},
-	{Locale: "ja-JP", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "モジュール開発"},
-	{Locale: "ko-KR", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "모듈 개발"},
-	{Locale: "fr-FR", Key: "system.menu.lowcode"}:       {Module: "system.lowcode", Group: "menu", Value: "Développement de modules"},
+	{Locale: "zh-CN", Key: keyMenuLowcode}:       {Module: moduleLowcode, Group: "menu", Value: "低代码平台"},
+	{Locale: "en-US", Key: keyMenuLowcode}:       {Module: moduleLowcode, Group: "menu", Value: "Low-Code"},
+	{Locale: "ja-JP", Key: keyMenuLowcode}:       {Module: moduleLowcode, Group: "menu", Value: "モジュール開発"},
+	{Locale: "ko-KR", Key: keyMenuLowcode}:       {Module: moduleLowcode, Group: "menu", Value: "모듈 개발"},
+	{Locale: "fr-FR", Key: keyMenuLowcode}:       {Module: moduleLowcode, Group: "menu", Value: "Développement de modules"},
 	{Locale: "zh-CN", Key: "system.menu.security"}:      {Module: "system.auth", Group: "menu", Value: "安全审计"},
 	{Locale: "en-US", Key: "system.menu.security"}:      {Module: "system.auth", Group: "menu", Value: "Security & Audit"},
 	{Locale: "ja-JP", Key: "system.menu.security"}:      {Module: "system.auth", Group: "menu", Value: "セキュリティと監査"},
@@ -113,16 +120,16 @@ var canonicalMenuLocaleEntries = map[i18nLocaleKey]i18nCanonicalEntry{
 	{Locale: "ja-JP", Key: "system.menu.i18n"}:          {Module: "system.config", Group: "menu", Value: "国際化管理"},
 	{Locale: "ko-KR", Key: "system.menu.i18n"}:          {Module: "system.config", Group: "menu", Value: "국제화 관리"},
 	{Locale: "fr-FR", Key: "system.menu.i18n"}:          {Module: "system.config", Group: "menu", Value: "Gestion de l'internationalisation"},
-	{Locale: "zh-CN", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "模块管理"},
-	{Locale: "en-US", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "Modules"},
-	{Locale: "ja-JP", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "モジュール登録"},
-	{Locale: "ko-KR", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "모듈 등록"},
-	{Locale: "fr-FR", Key: "system.menu.modules"}:       {Module: "system.lowcode", Group: "menu", Value: "Registre des modules"},
-	{Locale: "zh-CN", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "模块生成器"},
-	{Locale: "en-US", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "Code Generator"},
-	{Locale: "ja-JP", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "モジュール生成"},
-	{Locale: "ko-KR", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "모듈 생성기"},
-	{Locale: "fr-FR", Key: "system.menu.generator"}:     {Module: "system.lowcode", Group: "menu", Value: "Générateur de modules"},
+	{Locale: "zh-CN", Key: keyMenuModules}:       {Module: moduleLowcode, Group: "menu", Value: "模块管理"},
+	{Locale: "en-US", Key: keyMenuModules}:       {Module: moduleLowcode, Group: "menu", Value: "Modules"},
+	{Locale: "ja-JP", Key: keyMenuModules}:       {Module: moduleLowcode, Group: "menu", Value: "モジュール登録"},
+	{Locale: "ko-KR", Key: keyMenuModules}:       {Module: moduleLowcode, Group: "menu", Value: "모듈 등록"},
+	{Locale: "fr-FR", Key: keyMenuModules}:       {Module: moduleLowcode, Group: "menu", Value: "Registre des modules"},
+	{Locale: "zh-CN", Key: keyMenuGenerator}:     {Module: moduleLowcode, Group: "menu", Value: "模块生成器"},
+	{Locale: "en-US", Key: keyMenuGenerator}:     {Module: moduleLowcode, Group: "menu", Value: "Code Generator"},
+	{Locale: "ja-JP", Key: keyMenuGenerator}:     {Module: moduleLowcode, Group: "menu", Value: "モジュール生成"},
+	{Locale: "ko-KR", Key: keyMenuGenerator}:     {Module: moduleLowcode, Group: "menu", Value: "모듈 생성기"},
+	{Locale: "fr-FR", Key: keyMenuGenerator}:     {Module: moduleLowcode, Group: "menu", Value: "Générateur de modules"},
 	{Locale: "zh-CN", Key: "system.menu.loginLog"}:      {Module: "system.auth", Group: "menu", Value: "登录日志"},
 	{Locale: "en-US", Key: "system.menu.loginLog"}:      {Module: "system.auth", Group: "menu", Value: "Login Logs"},
 	{Locale: "ja-JP", Key: "system.menu.loginLog"}:      {Module: "system.auth", Group: "menu", Value: "ログインログ"},
@@ -660,7 +667,7 @@ func (s *I18nService) BatchInsert(items []SystemI18n) error {
 	return s.ReloadCache()
 }
 
-func canonicalEntryFor(locale string, key string) (i18nCanonicalEntry, bool) {
+func canonicalEntryFor(locale, key string) (i18nCanonicalEntry, bool) {
 	entry, ok := canonicalMenuLocaleEntries[i18nLocaleKey{
 		Locale: strings.TrimSpace(locale),
 		Key:    strings.TrimSpace(key),
@@ -1615,7 +1622,7 @@ func hasStoredLocaleValue(value string) bool {
 	return trimmed != "" && !isI18nPlaceholderValue(trimmed)
 }
 
-func hasEffectiveLocaleValue(locale string, key string, value string) bool {
+func hasEffectiveLocaleValue(locale, key, value string) bool {
 	if hasStoredLocaleValue(value) {
 		return true
 	}
@@ -2056,7 +2063,7 @@ func scanI18nKeyReferenceFiles(targetKey string, newKey string, excludeCatalog b
 	return results, nil
 }
 
-func buildI18nKeyReferenceMatches(content string, oldKey string, newKey string) []I18nKeyReferenceMatch {
+func buildI18nKeyReferenceMatches(content, oldKey, newKey string) []I18nKeyReferenceMatch {
 	lines := strings.Split(content, "\n")
 	matches := make([]I18nKeyReferenceMatch, 0)
 	for index, line := range lines {
@@ -2167,7 +2174,7 @@ func normalizeI18nLifecycleStatus(status string) string {
 	}
 }
 
-func (s *I18nService) resetI18nLifecycle(_ string, module string, key string) error {
+func (s *I18nService) resetI18nLifecycle(_ string, module, key string) error {
 	return s.db.Model(&SystemI18n{}).
 		Where("module = ? AND `key` = ?", module, key).
 		Updates(map[string]interface{}{

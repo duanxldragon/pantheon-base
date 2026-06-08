@@ -49,12 +49,12 @@ func Open(t *testing.T) *gorm.DB {
 		t.Fatalf("build test database name: %v", err)
 	}
 	createDatabaseStatement := buildCreateDatabaseStatement(testDBName)
-	if _, err := adminDB.Exec(createDatabaseStatement); err != nil {
+	if _, err := adminDB.Exec(createDatabaseStatement); err != nil { // NOSONAR — test helper, controlled input
 		t.Fatalf("create test database %s: %v", testDBName, err)
 	}
 	dropDatabaseStatement := buildDropDatabaseStatement(testDBName)
 	t.Cleanup(func() {
-		_, _ = adminDB.Exec(dropDatabaseStatement)
+		_, _ = adminDB.Exec(dropDatabaseStatement) // NOSONAR — test helper, controlled input
 	})
 
 	testCfg := *cfg

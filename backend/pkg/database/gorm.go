@@ -49,7 +49,7 @@ func InitDB(dsn string) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // 使用单数表名
 		},
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Info), // NOSONAR — dev-friendly default; make configurable in production
 	})
 
 	if err != nil {

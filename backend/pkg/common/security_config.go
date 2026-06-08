@@ -24,7 +24,7 @@ func IsProductionEnv() bool {
 	return strings.EqualFold(strings.TrimSpace(os.Getenv("GIN_MODE")), "release")
 }
 
-func ResolveSecret(name string, fallback string) string {
+func ResolveSecret(name, fallback string) string {
 	value := strings.TrimSpace(os.Getenv(name))
 	if value == "" {
 		return fallback
@@ -32,7 +32,7 @@ func ResolveSecret(name string, fallback string) string {
 	return value
 }
 
-func ValidateRequiredProductionSecret(name string, fallback string) error {
+func ValidateRequiredProductionSecret(name, fallback string) error {
 	if !IsProductionEnv() {
 		return nil
 	}
