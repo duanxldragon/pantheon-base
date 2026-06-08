@@ -1,10 +1,14 @@
+---
+title: Review Loop Spec
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Review Loop Spec
 
 English version: [REVIEW_LOOP_SPEC.en.md](./REVIEW_LOOP_SPEC.en.md)
-
-类型：Contract
-归属层：platform
-状态：Active
 
 本文定义 Pantheon 的工具无关 review loop。实现者和 reviewer 可以是不同工具或人工，但输出格式必须一致。
 

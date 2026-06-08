@@ -1,8 +1,12 @@
-# Agent Interface Contract
+---
+title: Agent Interface Contract
+doc_type: Contract
+layer: method
+status: Active
+updated_at: 2026-06-08
+---
 
-类型：Contract
-归属层：method
-状态：Active
+# Agent Interface Contract
 
 本文定义任何 agent 或人工工程师进入仓库时的输入、输出和行为协议。工具可以不同，协议必须一致。
 

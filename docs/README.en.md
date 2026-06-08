@@ -71,7 +71,9 @@ For Chinese-first onboarding, read:
 - [acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
 - [GITHUB_GOVERNANCE_CHECKLIST.md](./GITHUB_GOVERNANCE_CHECKLIST.md)
 - [GITHUB_REPOSITORY_SETUP.md](./GITHUB_REPOSITORY_SETUP.md)
+- [AI_QUALITY_GOVERNANCE.md](./harness/AI_QUALITY_GOVERNANCE.md)
 - [../SECURITY.md](../SECURITY.md): security reporting policy
+- [DEFERRED_CODE_BACKLOG_20260608.md](./harness/DEFERRED_CODE_BACKLOG_20260608.md)
 
 ### Historical and retained material
 
@@ -84,5 +86,6 @@ For Chinese-first onboarding, read:
 ## Notes
 
 - `docs/superpowers/specs/` should retain only adopted or still-referenced AI design anchors
+- `docs/superpowers/plans/` should retain only active plans linked by task packets, evidence, or current execution context
 - documents with no reuse value, no linkage, and no baseline role should be deleted rather than archived
 - the Chinese index remains the more detailed source for local working context

@@ -1,10 +1,14 @@
+---
+title: Harness Engineering Contract
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Harness Engineering Contract
 
 English version: [HARNESS_ENGINEERING_CONTRACT.en.md](./HARNESS_ENGINEERING_CONTRACT.en.md)
-
-类型：Contract
-归属层：platform
-状态：Active
 
 本文定义 Pantheon 工作区的工具无关 Harness Engineering 协议。它约束所有 AI agent、自动化工具和人工工程师如何接收任务、读取上下文、修改代码、验证结果、提交证据和进入 review。
 

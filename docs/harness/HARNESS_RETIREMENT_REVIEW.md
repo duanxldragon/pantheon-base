@@ -1,10 +1,14 @@
+---
+title: Harness Retirement Review
+doc_type: Contract
+layer: platform
+status: Active
+updated_at: 2026-06-08
+---
+
 # Harness Retirement Review
 
 English version: [HARNESS_RETIREMENT_REVIEW.en.md](./HARNESS_RETIREMENT_REVIEW.en.md)
-
-类型：Policy
-归属层：platform
-状态：Active
 
 本文定义 Harness 约束何时应该被降级、替换或删除，而不是无限累积。
 

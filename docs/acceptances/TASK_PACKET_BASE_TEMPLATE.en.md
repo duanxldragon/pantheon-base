@@ -31,6 +31,15 @@ Default evidence: .harness/evidence/<task-id>/
 Target repo: pantheon-base
 Layer: platform / system/auth / system/iam / system/org / system/config / system/lowcode
 Task mode: review / implement / ui / smoke / docs
+Quality Profile: auth-security / permission-policy / i18n / ui-runtime / generator / ci-workflow / none
+Portable Failure Class: instruction-gap / task-boundary-gap / architecture-drift / test-gap / static-sensor-gap / runtime-evidence-gap / security-boundary-gap / ci-signal-noise / method-health-gap / none
+Consumer-Specific Controls:
+- `pantheon-base` contract / checker / smoke path / none
+Required Sensors:
+- command or `none`
+Required Evidence:
+- command summary / screenshot / smoke result / runtime gap / review summary
+Ratchet Decision: no-repeat-observed / guide-updated / sensor-added / gate-updated / template-updated / adapter-updated / registry-only
 Read first:
 - pantheon-base/AGENTS.md
 - pantheon-base/DESIGN.md
@@ -64,6 +73,8 @@ Implementation and review:
 Additional rule:
 
 - if the work touches shared pagination, upload, tables, i18n, or the shared admin shell, treat it as base-owned by default
+- if the work touches login, permissions, i18n, UI runtime, generator, or CI workflow, choose the matching Quality Profile; pure docs or read-only diagnosis may use `none`
+- if the same failure pattern has already appeared before, Ratchet Decision must not be `no-repeat-observed`
 - if the turn changes downstream inheritance behavior, explicitly state whether a `base -> ops` sync is required
 - if the task touches login, permissions, menu routing, import/export, generator, dynamic modules, async chains, or external integrations, add a runtime-sensitive evidence plan by default
 - if the same failure pattern has already appeared before, state whether this turn only patches code or also promotes the issue into a rule, checker, or smoke path

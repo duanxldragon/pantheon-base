@@ -196,7 +196,7 @@ func (s *DynamicModuleService) ListRegisteredModules() ([]ModuleRegistrationResp
 	return resp, nil
 }
 
-func (s *DynamicModuleService) dropManagedModuleTable(scope string, tableName string) error {
+func (s *DynamicModuleService) dropManagedModuleTable(scope, tableName string) error {
 	if err := scaffold.ValidateManagedTableName(scope, tableName); err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (s *DynamicModuleService) advanceModuleI18nLifecycle(moduleName string) (*M
 	return buildModuleI18nLifecycleSummary(moduleName, true, resp), nil
 }
 
-func mergeI18nLifecycleAdvanceResp(target *systemi18n.I18nUnusedLifecycleAdvanceResp, source *systemi18n.I18nUnusedLifecycleAdvanceResp) {
+func mergeI18nLifecycleAdvanceResp(target, source *systemi18n.I18nUnusedLifecycleAdvanceResp) {
 	if target == nil || source == nil {
 		return
 	}

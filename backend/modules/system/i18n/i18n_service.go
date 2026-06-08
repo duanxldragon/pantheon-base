@@ -1622,7 +1622,7 @@ func hasStoredLocaleValue(value string) bool {
 	return trimmed != "" && !isI18nPlaceholderValue(trimmed)
 }
 
-func hasEffectiveLocaleValue(locale string, key string, value string) bool {
+func hasEffectiveLocaleValue(locale, key, value string) bool {
 	if hasStoredLocaleValue(value) {
 		return true
 	}
@@ -2063,7 +2063,7 @@ func scanI18nKeyReferenceFiles(targetKey string, newKey string, excludeCatalog b
 	return results, nil
 }
 
-func buildI18nKeyReferenceMatches(content string, oldKey string, newKey string) []I18nKeyReferenceMatch {
+func buildI18nKeyReferenceMatches(content, oldKey, newKey string) []I18nKeyReferenceMatch {
 	lines := strings.Split(content, "\n")
 	matches := make([]I18nKeyReferenceMatch, 0)
 	for index, line := range lines {
@@ -2174,7 +2174,7 @@ func normalizeI18nLifecycleStatus(status string) string {
 	}
 }
 
-func (s *I18nService) resetI18nLifecycle(_ string, module string, key string) error {
+func (s *I18nService) resetI18nLifecycle(_ string, module, key string) error {
 	return s.db.Model(&SystemI18n{}).
 		Where("module = ? AND `key` = ?", module, key).
 		Updates(map[string]interface{}{

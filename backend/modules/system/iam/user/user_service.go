@@ -1159,7 +1159,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 	return nil
 }
 
-func (s *UserService) ensurePostForDept(deptID uint64, postID uint64) error {
+func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 	if postID == 0 {
 		return nil
 	}

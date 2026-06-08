@@ -718,7 +718,7 @@ func (s *SettingService) normalizeLegacySettingValue(settingKey string) error {
 	return s.db.Model(&row).Update("setting_value", normalizedValue).Error
 }
 
-func (s *SettingService) migrateLegacySettingValue(settingKey string, legacyValue string, nextValue string) error {
+func (s *SettingService) migrateLegacySettingValue(settingKey, legacyValue, nextValue string) error {
 	var row SystemSetting
 	if err := s.db.Where("setting_key = ?", settingKey).First(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -739,7 +739,7 @@ func (s *SettingService) migrateLegacySettingValue(settingKey string, legacyValu
 	return s.db.Model(&row).Update("setting_value", normalizedValue).Error
 }
 
-func settingListCacheKey(groupKey string, module string) string {
+func settingListCacheKey(groupKey, module string) string {
 	return strings.TrimSpace(groupKey) + "|" + strings.TrimSpace(module)
 }
 
@@ -854,7 +854,7 @@ func safeSettingOverviewValue(item SystemSetting, fallback string) string {
 	return item.SettingValue
 }
 
-func validateAndNormalizeSettingValue(settingKey string, valueType string, value string) (string, error) {
+func validateAndNormalizeSettingValue(settingKey, valueType, value string) (string, error) {
 	normalizedValue, err := normalizeSettingValue(settingKey, value)
 	if err != nil {
 		return "", err
@@ -900,7 +900,7 @@ func validateAndNormalizeSettingValue(settingKey string, valueType string, value
 	}
 }
 
-func normalizeSettingValue(settingKey string, value string) (string, error) {
+func normalizeSettingValue(settingKey, value string) (string, error) {
 	trimmed := strings.TrimSpace(value)
 	switch settingKey {
 	case "platform.app_mode":

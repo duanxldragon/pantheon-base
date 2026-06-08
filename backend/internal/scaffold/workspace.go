@@ -105,7 +105,7 @@ func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 	return nil
 }
 
-func ValidateManagedTableName(scope string, tableName string) error {
+func ValidateManagedTableName(scope, tableName string) error {
 	normalizedScope := strings.TrimSpace(scope)
 	normalizedTableName := strings.TrimSpace(tableName)
 	if normalizedTableName == "" {
@@ -246,7 +246,7 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 	return files, nil
 }
 
-func RemoveGeneratedModuleSource(workspaceRoot string, scope string, name string) error {
+func RemoveGeneratedModuleSource(workspaceRoot, scope, name string) error {
 	if !isValidModulePath(name, scope == "business") {
 		return errors.New("module.generate.invalid_name")
 	}

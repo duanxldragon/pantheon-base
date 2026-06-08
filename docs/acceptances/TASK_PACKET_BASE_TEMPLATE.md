@@ -31,6 +31,15 @@ English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.e
 目标仓库：pantheon-base
 层级：platform / system/auth / system/iam / system/org / system/config / system/lowcode
 任务模式：review / implement / ui / smoke / docs
+Quality Profile: auth-security / permission-policy / i18n / ui-runtime / generator / ci-workflow / none
+Portable Failure Class: instruction-gap / task-boundary-gap / architecture-drift / test-gap / static-sensor-gap / runtime-evidence-gap / security-boundary-gap / ci-signal-noise / method-health-gap / none
+Consumer-Specific Controls:
+- `pantheon-base` contract / checker / smoke path / none
+Required Sensors:
+- command or `none`
+Required Evidence:
+- command summary / screenshot / smoke result / runtime gap / review summary
+Ratchet Decision: no-repeat-observed / guide-updated / sensor-added / gate-updated / template-updated / adapter-updated / registry-only
 先读：
 - pantheon-base/AGENTS.md
 - pantheon-base/DESIGN.md
@@ -64,6 +73,8 @@ English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.e
 补充约束：
 
 - 如果任务触碰共享分页、共享上传、共享表格、共享 i18n、共享后台壳层，默认视为 base-owned。
+- 如果任务触碰登录、权限、i18n、UI runtime、生成器或 CI workflow，必须选择对应 Quality Profile；纯文档或只读诊断可写 `none`。
+- 如果这是同类错误再次出现，Ratchet Decision 不能写 `no-repeat-observed`。
 - 如果本轮会改变 `pantheon-ops` 的继承行为，最终说明里必须明确是否需要 `base -> ops` 同步。
 - 如果任务属于登录、权限、菜单路由、导入导出、生成器、动态模块、异步链路或外部集成，默认补一条 runtime-sensitive 证据计划。
 - 如果这是同类错误的再次出现，任务包里要明确：本轮只是修复代码，还是顺带把问题升级成规则、脚本或 smoke。

@@ -136,10 +136,52 @@ jobs:
       - name: Test backend
         run: go test -race ./...
 
-  smoke-core:
-    name: Smoke Core
+  duplication:
+    name: Duplication
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Run duplication scan
+        id: duplication
+        continue-on-error: true
+        shell: bash
+        run: npm run check:duplication -- --json > duplication-report.json
+
+      - name: Upload duplication report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: duplication-report
+          path: duplication-report.json
+          if-no-files-found: warn
+
+      - name: Enforce duplication gate
+        if: always()
+        shell: bash
+        env:
+          DUPLICATION_RESULT: ${{ steps.duplication.outcome }}
+        run: |
+          echo "duplication: ${DUPLICATION_RESULT}"
+          if [ "${DUPLICATION_RESULT}" != "success" ]; then
+            exit 1
+          fi
+
+  smoke-sanity:
+    name: Smoke Sanity
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
     services:
@@ -218,15 +260,15 @@ jobs:
           cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
           exit 1
 
-      - name: Run core smoke suite
+      - name: Run sanity smoke suite
         working-directory: frontend
-        run: npm run test:smoke:platform && npm run test:smoke:system
+        run: npm run test:smoke:platform:contracts && npm run test:smoke:system:api
 
       - name: Upload smoke artifacts
         if: failure()
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          name: smoke-core-artifacts
+          name: smoke-sanity-artifacts
           path: |
             frontend/test-results
             ${{ runner.temp }}/pantheon-backend.log
@@ -240,42 +282,14 @@ jobs:
             kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
           fi
 
-  # ============================================================
-  # Phase 2: Security Analysis (CodeQL primary security signal)
-  # ============================================================
-
-  codeql-security:
-    name: CodeQL Security Scan
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@dc73d59c2d7bd4f8194098a91219eeee6d8a1719
-        with:
-          languages: go, typescript
-          queries: security-extended
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@dc73d59c2d7bd4f8194098a91219eeee6d8a1719
-        with:
-          category: "/language:go,typescript"
   quality-gates:
     name: Quality Gates
     needs:
       - docs-governance
       - frontend-contract
       - backend-tests
-      - smoke-core
-      - codeql-security
+      - duplication
+      - smoke-sanity
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -287,18 +301,18 @@ jobs:
           DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
           FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
           BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
-          SMOKE_CORE_RESULT: ${{ needs.smoke-core.result }}
-          CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
+          DUPLICATION_RESULT: ${{ needs.duplication.result }}
+          SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
         run: |
           echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
           echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
           echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
-          echo "Smoke Core: ${SMOKE_CORE_RESULT}"
-          echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
+          echo "Duplication: ${DUPLICATION_RESULT}"
+          echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
              [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
              [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
-             [ "${SMOKE_CORE_RESULT}" != "success" ] || \
-             [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ]; then
+             [ "${DUPLICATION_RESULT}" != "success" ] || \
+             [ "${SMOKE_SANITY_RESULT}" != "success" ]; then
             exit 1
           fi

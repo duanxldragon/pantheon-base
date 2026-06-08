@@ -1,6 +1,8 @@
 name: SonarCloud Auxiliary Scan
 
 on:
+  schedule:
+    - cron: "17 19 * * *"
   workflow_dispatch:
 
 permissions:

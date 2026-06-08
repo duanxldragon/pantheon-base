@@ -85,6 +85,7 @@ English version: [README.en.md](./README.en.md)
 - [Pantheon Base Task Packet 模板](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)
 - [GitHub 治理清单](./GITHUB_GOVERNANCE_CHECKLIST.md)
 - [GitHub 仓库设置手册](./GITHUB_REPOSITORY_SETUP.md)
+- [AI 质量治理策略](./harness/AI_QUALITY_GOVERNANCE.md)
 - [安全问题报告政策](../SECURITY.md)
 - [system/config 高敏治理验收基线](./acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md)
 - [business/* 业务模块验收矩阵](./acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)
@@ -93,6 +94,7 @@ English version: [README.en.md](./README.en.md)
 - [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md)
 - [系统模块审计](./assessments/SYSTEM_MODULE_AUDIT.md)
 - [平台缺口审计（2026-04-29）](./assessments/PLATFORM_GAP_AUDIT_20260429.md)
+- [延后代码修复 Backlog（2026-06-08）](./harness/DEFERRED_CODE_BACKLOG_20260608.md)
 
 ### 4.2 壳层治理模板
 
@@ -121,6 +123,7 @@ English version: [README.en.md](./README.en.md)
 与 `docs/superpowers/specs/` 的边界也应固定：
 
 - `specs/` 放当前仍有设计锚点价值的 AI design anchor
+- `plans/` 只保留仍被 task packet、evidence 或当前执行上下文引用的活跃计划；无引用的一次性执行计划应删除
 - `archive/examples/` 放已发生过、可复用的交付样例
 - `archive/baselines/` 放被新版本覆盖但仍要保留对照关系的旧基线
 - `archive/upgrade/` 放升级迁移材料
