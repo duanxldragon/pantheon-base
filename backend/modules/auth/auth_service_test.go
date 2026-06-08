@@ -401,10 +401,10 @@ func TestAuthService_LoginWithSourceRecordsSecurityEventWhenSourceBlocked(t *tes
 	}
 	db.Create(&testUser)
 	seedSettings(t, db, map[string]string{
-		"login.source_max_failed_attempts":   "1",
-		"login.source_window_minutes":        "15",
-		"login.source_lock_minutes":          "10",
-		"login.security_event_enabled":       "true",
+		"login.source_max_failed_attempts": "1",
+		"login.source_window_minutes":      "15",
+		"login.source_lock_minutes":        "10",
+		"login.security_event_enabled":     "true",
 	})
 	_ = s.ReloadSettings()
 
@@ -992,7 +992,7 @@ func TestAuthService_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get security overview: %v", err)
 	}
-	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 20 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
+	if resp.Policy.PasswordMinLength != 10 || resp.Policy.MaxFailedAttempts != 3 || resp.Policy.LockMinutes != 12 || resp.Policy.SourceMaxFailedAttempts != 9 || resp.Policy.SourceWindowMinutes != 20 || resp.Policy.SourceLockMinutes != 30 || resp.Policy.SessionIdleMinutes != 45 || resp.Policy.MaxActiveSessions != 1 || resp.Policy.SessionRetentionDays != 90 || !resp.Policy.CaptchaEnabled || resp.Policy.MFAEnabled || !resp.Policy.SSOEnabled {
 		t.Fatalf("unexpected security policy: %+v", resp.Policy)
 	}
 	if resp.CurrentSession == nil || resp.CurrentSession.SessionID != "current-session" {

@@ -287,7 +287,7 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 			SourceTable:    strings.TrimSpace(schema.Metadata.SourceTable),
 			AutoRecycle:    schema.Metadata.AutoRecycle,
 			ModelTableName: tableName,
-			Status:         ModuleStatusActive,
+			Status:         ModuleStatusPendingActivation,
 			InstalledAt:    now,
 		}
 
@@ -310,9 +310,9 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 				"auto_recycle":    registration.AutoRecycle,
 				"table_name":      tableName,
 			}
-				if existing.Status != ModuleStatusUninstalled && existing.Status != ModuleStatusPendingActivation {
-					updates["status"] = ModuleStatusActive
-				}
+			if existing.Status != ModuleStatusUninstalled && existing.Status != ModuleStatusPendingActivation {
+				updates["status"] = ModuleStatusActive
+			}
 			if strings.TrimSpace(existing.InstalledAt) == "" {
 				updates["installed_at"] = registration.InstalledAt
 			}
