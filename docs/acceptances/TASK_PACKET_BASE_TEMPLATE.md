@@ -5,14 +5,14 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-06-03
+updated_at: 2026-06-08
 ---
 
 # Pantheon Base Task Packet Template
 
 English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.en.md)
 
-这是一份给 `pantheon-base` 使用的最小 task packet 样例。
+这是一份给 `pantheon-base` 使用的结构化 task packet 样例。它继承 `agentic-method-kit` 的通用方法，只补充当前后台基础平台的业务架构约束。
 
 适用范围：
 
@@ -25,56 +25,169 @@ English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.e
 
 直接复制后补全即可：
 
-```text
-默认落点：docs/harness/tasks/YYYY-MM-DD-<task-name>.task.md
-默认 evidence：.harness/evidence/<task-id>/
-目标仓库：pantheon-base
-层级：platform / system/auth / system/iam / system/org / system/config / system/lowcode
-任务模式：review / implement / ui / smoke / docs
-Quality Profile: auth-security / permission-policy / i18n / ui-runtime / generator / ci-workflow / none
-Portable Failure Class: instruction-gap / task-boundary-gap / architecture-drift / test-gap / static-sensor-gap / runtime-evidence-gap / security-boundary-gap / ci-signal-noise / method-health-gap / none
-Consumer-Specific Controls:
-- `pantheon-base` contract / checker / smoke path / none
-Required Sensors:
-- command or `none`
-Required Evidence:
-- command summary / screenshot / smoke result / runtime gap / review summary
-Ratchet Decision: no-repeat-observed / guide-updated / sensor-added / gate-updated / template-updated / adapter-updated / registry-only
-先读：
-- pantheon-base/AGENTS.md
-- pantheon-base/DESIGN.md
-- pantheon-base/docs/README.md
-- 对应 contract / design / acceptance
+目标仓库：pantheon-base。同步要求：见模板中的 `## Sync expectation`。
 
-实现范围：
-- 本次明确要完成的闭环
-- 本次明确不做的部分
+```md
+# Task Packet: <task-name>
 
-同步要求：
+## Goal
+
+<one sentence>
+
+## Primary Layer
+
+platform | system/auth | system/iam | system/org | system/config | business/*
+
+## Dependency Layers
+
+- none
+
+## Harness Profile
+
+- Template: admin-platform
+- Overlay: pantheon-base
+- Quality Profile: auth-security | permission-policy | i18n | ui-runtime | generator | ci-workflow | none
+- Portable Failure Class: instruction-gap | task-boundary-gap | architecture-drift | test-gap | static-sensor-gap | runtime-evidence-gap | security-boundary-gap | ci-signal-noise | method-health-gap | none
+- Owner Layer: portable-method | consumer-template | consumer-repository | agent-adapter | no-action
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - runtime-quality
+  - method-health
+
+## Contract Anchors
+
+- `pantheon-base/AGENTS.md`
+- `pantheon-base/DESIGN.md`
+- `pantheon-base/docs/README.md`
+- `<matching contract / design / acceptance>`
+
+## Scope
+
+### In
+
+- <explicit closure for this turn>
+
+### Out
+
+- <explicit non-goals for this turn>
+
+## Structural Scope
+
+- Affected Subgraph: `<entry -> core path -> exit/side effect>` | `none`
+- Boundary Crossings: `none | platform -> system/auth | system/* -> pkg/* | base -> ops`
+- Risk Nodes: `none | auth handler | permission service | menu registry | generator orchestrator`
+- Graph Focus: `none | cycle-check | hub-check | call-depth | sensitive-input-flow`
+
+## Expected Files
+
+### Create
+
+- `path` | none
+
+### Modify
+
+- `path` | none
+
+### Do Not Touch
+
+- `path` | none
+
+## Implementation Notes
+
+- 如果任务触碰共享分页、共享上传、共享表格、共享 i18n 或共享后台壳层，默认视为 base-owned。
+- 如果任务改变 `pantheon-ops` 继承行为，最终说明必须写清是否需要 `base -> ops` 同步。
+
+## Method Readiness
+
+- Consumer-Specific Controls: `pantheon-base` contract | checker | smoke path | none
+- Required Sensors: command | review | runtime evidence | none
+- Required Evidence: command summary | screenshot | smoke result | runtime gap | review summary
+- Ratchet Decision: no-repeat-observed | guide-updated | sensor-added | gate-updated | template-updated | adapter-updated | registry-only
+- Deferred Code Issues: none | symptom plus recommended follow-up task
+
+## Delivery Governance
+
+- Design Gate: spec reference | short boundary note | none
+- Development Gate: expected files declared | do-not-touch declared | none
+- QA Acceptance Gate: command | browser | runtime | human review | none
+- GitHub Governance Gate: method-gate | repo-quality-gate | runtime-evidence-gate | external-flaky | not-applicable
+
+## Execution Roles
+
+- Implementer Posture: implementer | reviewer-assisted | docs-only | none
+- Reviewer Posture: architecture | security | UX-QA | mechanical | none
+
+## Stop Points
+
+- `none`
+- 或在 schema / contract / delete / release gate 前停下
+
+## State Plan
+
+- Checkpoint Expectation: none | path | artifact name
+- Resume Artifacts: none | path
+
+## Verification Plan
+
+### Backend
+
+- `go test ...` | `go test ./...` | none
+
+### Frontend
+
+- `npm run build` | none
+
+### Browser / Smoke
+
+- `node scripts/run-smoke-suite.mjs ...` | none
+
+### Runtime Evidence
+
+- focused logs | smoke path | metrics sample | trace | explicit runtime gap | none
+
+## Linkage
+
+- Task ID: `<YYYY-MM-DD-task-name>`
+- OpenSpec Change: `openspec/changes/<name>/` | none
+- Superpowers Plan: `docs/superpowers/plans/<file>.md` | none
+- Evidence Directory: `.harness/evidence/<task-id>/`
+- Review File: `.harness/evidence/<task-id>/review.md` | none
+
+## Evidence Required
+
+- command result summary
+- screenshots if UI changed
+- smoke JSON if browser flow changed
+- runtime logs / metrics / traces / performance signal, or explicit runtime gap if runtime-sensitive
+- review summary
+
+## Human Gates
+
+- none
+- schema / contract / deletion / high-risk permission / release gate
+
+## Sync expectation
+
 - 仅修改 pantheon-base
 - 如果共享能力会影响 pantheon-ops，只记录“后续需要同步”或“本轮同步”
+- 如果 `base -> ops` sync is required，写明触发条件、同步范围和验证命令
 
-验证方式：
-- Backend: `go test ...` / `go test ./...`
-- Frontend: `npm run build`
-- Smoke: `node scripts/run-smoke-suite.mjs ...` 或 `none`
-- UI 任务补 rendered evidence，或明确说明无法渲染原因
-- Runtime evidence: `none` / focused logs / smoke path / metrics sample / trace / explicit runtime gap
+## Completion Checklist
 
-停点：
-- none
-- 或在 schema / contract / 删除文件 / 高风险操作前停下确认
-
-实现与评审：
-- 实现者视角：
-- 评审视角：architecture / security / UX-QA / mechanical
+- [ ] Layer and boundary declared
+- [ ] Quality profile or explicit `none` declared
+- [ ] Ratchet decision declared for repeated failures
+- [ ] Delivery governance gates declared
+- [ ] Contract anchors read
+- [ ] Verification run or exception recorded
+- [ ] Evidence saved or summarized
+- [ ] Review completed
 ```
 
 补充约束：
 
-- 如果任务触碰共享分页、共享上传、共享表格、共享 i18n、共享后台壳层，默认视为 base-owned。
-- 如果任务触碰登录、权限、i18n、UI runtime、生成器或 CI workflow，必须选择对应 Quality Profile；纯文档或只读诊断可写 `none`。
-- 如果这是同类错误再次出现，Ratchet Decision 不能写 `no-repeat-observed`。
-- 如果本轮会改变 `pantheon-ops` 的继承行为，最终说明里必须明确是否需要 `base -> ops` 同步。
-- 如果任务属于登录、权限、菜单路由、导入导出、生成器、动态模块、异步链路或外部集成，默认补一条 runtime-sensitive 证据计划。
-- 如果这是同类错误的再次出现，任务包里要明确：本轮只是修复代码，还是顺带把问题升级成规则、脚本或 smoke。
+- 登录、权限、菜单路由、导入导出、生成器、动态模块、异步链路或外部集成默认需要 runtime-sensitive 证据计划。
+- 如果同类错误再次出现，Ratchet Decision 不能写 `no-repeat-observed`。
+- 如果本轮只是修代码而没有提升为规则、脚本或 smoke，需要在 Deferred Code Issues 或 failure registry 中说明原因。

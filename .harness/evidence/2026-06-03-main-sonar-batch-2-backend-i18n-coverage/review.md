@@ -5,7 +5,7 @@
 ```json
 {
   "taskId": "2026-06-03-main-sonar-batch-2-backend-i18n-coverage",
-  "verdict": "approved with documented follow-up",
+  "verdict": "approved with documented P2 follow-up",
   "structuralReview": {
     "affectedSubgraph": [
       "I18nHandler -> I18nService -> locale cache/seed helpers"

@@ -1,5 +1,0 @@
-./module.go
-./route_groups.go
-./runtime_settings.go
-./module_test.go
-./runtime_settings_test.go

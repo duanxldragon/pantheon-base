@@ -30,6 +30,7 @@ tmp/
 .gocache/
 .gstack/
 frontend/.gstack/
+.harness/cache/
 .codegraph/
 coverage/
 

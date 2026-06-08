@@ -14,6 +14,7 @@ const DEFAULT_CONFIG = {
     '/dist/',
     '/.git/',
     '/.codegraph/',
+    '/scripts/harness/',
     '/frontend/src/i18n/resources/',
     '/frontend/src/modules/generated/',
     '/frontend/src/modules/business/',

@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-01
+updated_at: 2026-06-08
 ---
 
 # Code Quality and Security Governance Strategy
@@ -54,7 +54,7 @@ Targets:
 - New Code coverage at or above `80%` by default, with PR-level exceptions only.
 - High-risk changes need at least two non-author approvals, including a domain, security, or architecture reviewer.
 
-Frontend duplication is the current main hotspot. Fix runtime pages, shared components, layouts, forms, tables, and generator templates first. Clean smoke, fixture, and example duplication when it pollutes runtime quality signals or repeated security triage. Do not create premature abstractions for isolated business leaf logic.
+Frontend duplication is the current main hotspot. Fix runtime pages, shared components, layouts, forms, tables, and generator templates first. Clean smoke, fixture, and example duplication when it pollutes runtime quality signals or repeated security triage. Vendored method-shell scripts such as `scripts/harness/` are excluded from product duplication and governed in `harness-engineering`. Do not create premature abstractions for isolated business leaf logic.
 
 ### pantheon-ops
 
@@ -77,6 +77,8 @@ Targets:
 GitHub Actions is the primary gate for backend tests, frontend lint/build, contract checks, documentation checks, menu checks, i18n checks, and generated-module checks. Branch Protection should require only GitHub-native checks. Do not add SonarCloud or Codacy external checks to required checks.
 
 CodeQL is the primary code-security signal. In `pantheon-base`, CodeQL findings block by default unless they are documented false positives. In `pantheon-ops`, business-domain findings can be risk-tiered, but high-risk foundation areas still follow the base standard.
+
+A successful CodeQL analysis job does not prove there are zero open alerts. `Security Gates` must record an open-alert report. Existing high/critical baseline alerts are report-only for PR and merge queue, then enforced on protected-branch push, scheduled security review, or manual security review.
 
 Dependency, secret, and workflow-posture scans complement CodeQL. New dependencies, dependency upgrades, workflow changes, and credential-handling changes must review these reports. Real secret leaks, reachable high-severity dependency issues, and dangerous workflow permissions must be fixed immediately.
 

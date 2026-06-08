@@ -1,5 +1,32 @@
 # Review: 2026-05-18-pantheon-base-audit-and-qa
 
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-05-18-pantheon-base-audit-and-qa",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "shared list page -> form action handler -> smoke/visual contract"
+    ],
+    "checks": [
+      "hub",
+      "call-depth"
+    ],
+    "findings": [],
+    "notes": "Historical review was upgraded with machine-readable linkage without changing the original findings."
+  },
+  "linkage": {
+    "taskPacket": "docs/harness/tasks/2026-05-18-pantheon-base-audit-and-qa.task.md",
+    "evidence": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/commands.json",
+    "reviewFile": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```
+
 ## Findings
 
 1. `frontend/tests/smoke/system/system-workspace-task-depth.ts`

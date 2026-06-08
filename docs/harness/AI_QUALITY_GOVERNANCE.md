@@ -45,10 +45,14 @@ For non-trivial work, add this block to the task packet or implementation note:
 ```text
 Quality Profile:
 Portable Failure Class:
+Owner Layer:
 Consumer-Specific Controls:
 Required Sensors:
 Required Evidence:
 Ratchet Decision:
+Delivery Governance:
+GitHub Signal:
+Deferred Code Issues:
 ```
 
 `Ratchet Decision` must be one of:
@@ -85,6 +89,7 @@ Rules:
 
 - Sonar is a trend and debt dashboard, not the only merge gate.
 - Full smoke is valuable but should not block every ordinary PR.
+- Duplication must be visible in PR and merge queue checks, but the current full-repository baseline is enforced on protected-branch push or manual quality review until a new-code duplication gate exists.
 - CodeQL should have one primary execution path in the security workflow.
 - A slow or flaky sensor must either be narrowed, moved later, or made advisory until it is reliable.
 

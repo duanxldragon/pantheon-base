@@ -56,6 +56,9 @@ jobs:
       - name: Check task packet template
         run: npm run check:task-packet-template
 
+      - name: Check failure registry
+        run: npm run check:failure-registry
+
       - name: Check generated modules
         run: npm run check:generated-modules
 
@@ -140,7 +143,6 @@ jobs:
 
   duplication:
     name: Duplication Gate
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -178,8 +180,14 @@ jobs:
         shell: bash
         env:
           DUPLICATION_RESULT: ${{ steps.duplication.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           echo "duplication: ${DUPLICATION_RESULT}"
+          echo "event: ${EVENT_NAME}"
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+            echo "Duplication is report-only for PR and merge_group until a new-code duplication gate exists."
+            exit 0
+          fi
           if [ "${DUPLICATION_RESULT}" != "success" ]; then
             exit 1
           fi
@@ -293,6 +301,7 @@ jobs:
       - docs-governance
       - frontend-contract
       - backend-tests
+      - duplication
       - smoke-sanity
     if: always()
     runs-on: ubuntu-latest
@@ -305,15 +314,18 @@ jobs:
           DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
           FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
           BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
+          DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
         run: |
           echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
           echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
           echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
+          echo "Duplication Gate: ${DUPLICATION_RESULT}"
           echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
              [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
              [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
+             [ "${DUPLICATION_RESULT}" != "success" ] || \
              [ "${SMOKE_SANITY_RESULT}" != "success" ]; then
             exit 1
           fi

@@ -1,5 +1,0 @@
-./adapter.go
-./adapter_context.go
-./adapter_filtered.go
-./adapter_filtered_context.go
-./adapter_mock.go

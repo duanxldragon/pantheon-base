@@ -44,7 +44,7 @@ jobs:
       - name: Report Go vulnerabilities
         id: govulncheck
         continue-on-error: true
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest -json ./... > security-reports/govulncheck.json
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 -json ./... > security-reports/govulncheck.json
 
       - name: Report root npm vulnerabilities
         id: npm-audit-root
@@ -108,7 +108,7 @@ jobs:
       - name: Report leaked secrets
         id: gitleaks
         continue-on-error: true
-        run: go run github.com/zricethezav/gitleaks/v8@latest detect --no-git --source . --redact --report-format json --report-path security-reports/gitleaks.json
+        run: go run github.com/zricethezav/gitleaks/v8@v8.30.1 detect --source . --redact --report-format json --report-path security-reports/gitleaks.json
 
       - name: Upload secret reports
         if: always()
@@ -151,7 +151,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          python -m pip install --user zizmor
+          python -m pip install --user zizmor==1.25.2
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/zizmor" --format json .github/workflows > security-reports/zizmor.json
 
@@ -199,12 +199,65 @@ jobs:
         with:
           category: "/language:go,typescript"
 
+  codeql-alerts:
+    name: CodeQL Alert Gate
+    needs:
+      - codeql-security
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - name: Prepare report directory
+        run: mkdir -p security-reports
+
+      - name: Check open CodeQL alerts
+        id: codeql-alerts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if ! gh api "repos/${GITHUB_REPOSITORY}/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" > security-reports/codeql-alerts.json; then
+            if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+              echo '{"apiError":"code-scanning alerts were not readable for this event"}' > security-reports/codeql-alerts.json
+              echo "CodeQL alert API unavailable for ${EVENT_NAME}; recording report-only gap."
+              exit 0
+            fi
+            exit 1
+          fi
+
+          high_or_critical_count="$(jq '[.[] | select((.rule.security_severity_level // "") == "high" or (.rule.security_severity_level // "") == "critical")] | length' security-reports/codeql-alerts.json)"
+          total_count="$(jq 'length' security-reports/codeql-alerts.json)"
+          echo "open CodeQL alerts: ${total_count}"
+          echo "open high/critical CodeQL alerts: ${high_or_critical_count}"
+
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+            echo "CodeQL open-alert baseline is report-only for PR and merge_group until existing alerts are remediated."
+            exit 0
+          fi
+
+          if [ "${high_or_critical_count}" != "0" ]; then
+            exit 1
+          fi
+
+      - name: Upload CodeQL alert report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: security-codeql-alert-report
+          path: security-reports/codeql-alerts.json
+          if-no-files-found: warn
+
   security-gates:
     name: Security Gates
     needs:
       - secret-scan
       - workflow-posture
       - codeql-security
+      - codeql-alerts
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -216,12 +269,15 @@ jobs:
           SECRET_SCAN_RESULT: ${{ needs.secret-scan.result }}
           WORKFLOW_POSTURE_RESULT: ${{ needs.workflow-posture.result }}
           CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
+          CODEQL_ALERT_RESULT: ${{ needs.codeql-alerts.result }}
         run: |
           echo "Secret Scan: ${SECRET_SCAN_RESULT}"
           echo "Workflow Posture: ${WORKFLOW_POSTURE_RESULT}"
           echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
+          echo "CodeQL Alert Gate: ${CODEQL_ALERT_RESULT}"
           if [ "${SECRET_SCAN_RESULT}" != "success" ] || \
              [ "${WORKFLOW_POSTURE_RESULT}" != "success" ] || \
-             [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ]; then
+             [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ] || \
+             [ "${CODEQL_ALERT_RESULT}" != "success" ]; then
             exit 1
           fi
