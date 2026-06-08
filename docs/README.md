@@ -74,7 +74,30 @@ English version: [README.en.md](./README.en.md)
 - `lowcode` / generator：`./designs/LOWCODE_GENERATOR_GUIDE.md`，`./designs/GENERATOR_MODULE_DESIGN.md`，`./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
 - `business/*`：对应 `./designs/BUSINESS_<MODULE>_DESIGN.md` 和 `./acceptances/BUSINESS_<MODULE>_ACCEPTANCE.md`
 
-### 2.2 继续深入
+### 2.2 Harness 方法层
+
+Harness Engineering 方法源文件，用于理解方法和运行检查：
+
+1. [agentic-method-kit/README.md](../agentic-method-kit/README.md)
+2. [agentic-method-kit/HARNESS_CORE_MODEL.md](../agentic-method-kit/HARNESS_CORE_MODEL.md)
+3. [agentic-method-kit/HARNESS_COVERAGE_MODEL.md](../agentic-method-kit/HARNESS_COVERAGE_MODEL.md)
+4. [agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md](../agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md)
+5. [agentic-method-kit/TOOL_ADAPTER_MATRIX.md](../agentic-method-kit/TOOL_ADAPTER_MATRIX.md)
+6. [agentic-method-kit/METHOD_PLAYBOOK.md](../agentic-method-kit/METHOD_PLAYBOOK.md)
+
+### 2.3 Harness 落地层
+
+当前仓库的 Harness 合同与落地规则：
+
+1. [docs/harness/HARNESS_ENGINEERING_CONTRACT.md](./harness/HARNESS_ENGINEERING_CONTRACT.md)
+2. [docs/harness/HARNESS_METHOD_PLAYBOOK.md](./harness/HARNESS_METHOD_PLAYBOOK.md)
+3. [scripts/harness/README.md](../scripts/harness/README.md)
+
+### 2.4 历史决策与治理延伸
+
+- [Session Decisions 2026-06-08](./harness/SESSION_DECISIONS_20260608.md) — 架构审查、Sonar 覆盖率、多 Agent 流程、模型层级配置
+
+### 2.5 继续深入
 
 - 需要更全的目录时，直接看 `./designs/README.md`、`./acceptances/ACCEPTANCE_CHECKLIST.md` 和本文件的 archive 段。
 

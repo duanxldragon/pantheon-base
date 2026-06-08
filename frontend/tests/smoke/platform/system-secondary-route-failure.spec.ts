@@ -1,4 +1,5 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { test } from '../../fixtures/coverage';
+import { expect, type Page, type Route } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { signInAsAdmin } from '../helpers/auth';

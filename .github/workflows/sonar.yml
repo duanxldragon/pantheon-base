@@ -70,6 +70,60 @@ jobs:
       - name: Generate Go coverage
         run: go test ./... -coverprofile=coverage.out
 
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 22
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start backend for frontend smoke coverage
+        shell: bash
+        run: |
+          nohup go run ./backend/cmd/server > /tmp/pantheon-backend.log 2>&1 &
+          echo $! > /tmp/pantheon-backend.pid
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              echo "Backend healthy after ${attempt} attempts."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat /tmp/pantheon-backend.log >&2 || true
+          exit 1
+
+      - name: Collect frontend smoke coverage
+        shell: bash
+        working-directory: frontend
+        env:
+          PANTHEON_COLLECT_COVERAGE: '1'
+          PANTHEON_EXTERNAL_WEB_SERVER: '1'
+          PANTHEON_WEB_BASE_URL: 'http://127.0.0.1:5173'
+        run: |
+          # Run platform contracts and system pages smoke; Vite dev server
+          # starts automatically via playwright.config.ts webServer with
+          # PANTHEON_COLLECT_COVERAGE=1 so vite-plugin-istanbul instruments
+          # the source.
+          npm run test:smoke:platform:contracts
+          npm run test:smoke:system:pages
+          # Merge raw coverage JSON into lcov.info for SonarCloud
+          node scripts/merge-coverage-to-lcov.mjs
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/pantheon-backend.pid ]; then
+            kill "$(cat /tmp/pantheon-backend.pid)" 2>/dev/null || true
+          fi
+
       - name: Run SonarCloud scan
         if: ${{ github.ref_name == 'main' }}
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995

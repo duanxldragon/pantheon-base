@@ -101,14 +101,14 @@ Low-code capabilities may exist inside platform governance, but must not rewrite
 
 This contract depends on:
 
-- [DESIGN.md](D:/workspace/go/pantheon-platform/DESIGN.md)
-- [AGENTS.md](D:/workspace/go/pantheon-platform/AGENTS.md)
-- [BACKEND.md](D:/workspace/go/pantheon-platform/docs/designs/BACKEND.md)
-- [FRONTEND.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND.md)
-- [FRONTEND_UI_SPEC.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND_UI_SPEC.md)
-- [FRONTEND_PAGE_TEMPLATES.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND_PAGE_TEMPLATES.md)
-- [PLATFORM_DASHBOARD_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/PLATFORM_DASHBOARD_DESIGN.md)
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DESIGN.md](../../DESIGN.md)
+- [AGENTS.md](../../AGENTS.md)
+- [BACKEND.md](../designs/BACKEND.md)
+- [FRONTEND.md](../designs/FRONTEND.md)
+- [FRONTEND_UI_SPEC.md](../designs/FRONTEND_UI_SPEC.md)
+- [FRONTEND_PAGE_TEMPLATES.md](../designs/FRONTEND_PAGE_TEMPLATES.md)
+- [PLATFORM_DASHBOARD_DESIGN.md](../designs/PLATFORM_DASHBOARD_DESIGN.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 
 ## 7. Hard Constraints
 
@@ -187,14 +187,14 @@ Platform-related changes must at least pass:
 
 ### 9.1 Documentation Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [DOCUMENT_GOVERNANCE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
-- [DOCUMENT_METADATA_AND_STATUS.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_METADATA_AND_STATUS.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DOCUMENT_GOVERNANCE_CONTRACT.md](../contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
+- [DOCUMENT_METADATA_AND_STATUS.md](../contracts/DOCUMENT_METADATA_AND_STATUS.md)
 
 ### 9.2 UI Acceptance
 
-- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
+- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md](../acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
 
 ### 9.3 Fixed Scans
 
@@ -211,13 +211,13 @@ Platform-related changes must at least pass:
 
 ### 10.1 Design
 
-- [PLATFORM_DASHBOARD_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/PLATFORM_DASHBOARD_DESIGN.md)
-- [FRONTEND_UI_SPEC.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND_UI_SPEC.md)
-- [FRONTEND_PAGE_TEMPLATES.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND_PAGE_TEMPLATES.md)
+- [PLATFORM_DASHBOARD_DESIGN.md](../designs/PLATFORM_DASHBOARD_DESIGN.md)
+- [FRONTEND_UI_SPEC.md](../designs/FRONTEND_UI_SPEC.md)
+- [FRONTEND_PAGE_TEMPLATES.md](../designs/FRONTEND_PAGE_TEMPLATES.md)
 
 ### 10.2 Assessment
 
-- [PLATFORM_GAP_AUDIT_20260429.md](D:/workspace/go/pantheon-platform/docs/assessments/PLATFORM_GAP_AUDIT_20260429.md)
+- [PLATFORM_GAP_AUDIT_20260429.md](../assessments/PLATFORM_GAP_AUDIT_20260429.md)
 
 ### 10.3 Remediation
 
@@ -225,8 +225,8 @@ Platform-related changes must at least pass:
 
 ### 10.4 Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
-- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md](D:/workspace/go/pantheon-platform/docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
-- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/examples/QA_SMOKE_REPORT_20260420.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md](../acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md)
+- [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md](../archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
+- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)

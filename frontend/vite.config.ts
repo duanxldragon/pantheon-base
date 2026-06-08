@@ -1,9 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import istanbul from 'vite-plugin-istanbul'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    ...(process.env.PANTHEON_COLLECT_COVERAGE === '1'
+      ? [istanbul({
+          include: 'src/*',
+          exclude: ['src/modules/generated/**', 'node_modules/**'],
+          extension: ['.ts', '.tsx'],
+          cypress: true,
+        })]
+      : []),
+    react(),
+  ],
   server: {
     hmr: process.env.PANTHEON_SMOKE === '1' ? { overlay: false } : undefined,
     proxy: {

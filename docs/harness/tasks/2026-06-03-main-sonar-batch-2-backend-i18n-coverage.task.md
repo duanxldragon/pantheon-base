@@ -4,11 +4,11 @@ doc_type: Acceptance
 layer: system/config
 depends_on_layers:
   - platform
-status: Active
+status: Completed
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-06-03
+updated_at: 2026-06-08
 ---
 
 # Task Packet: 2026-06-03-main-sonar-batch-2-backend-i18n-coverage
