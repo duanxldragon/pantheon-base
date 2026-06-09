@@ -2,6 +2,7 @@
 // vite-plugin-istanbul instruments the source during Vite dev serving and
 // populates window.__coverage__ as pages load. This fixture extracts that
 // data so it can be merged into an lcov report after the smoke run.
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -14,6 +15,7 @@ export const test = base.extend({
     await use(page);
     if (!COLLECT) return;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const coverage = await page.evaluate(() => (window as any).__coverage__);
       if (coverage) {
         fs.mkdirSync(COVERAGE_DIR, { recursive: true });
