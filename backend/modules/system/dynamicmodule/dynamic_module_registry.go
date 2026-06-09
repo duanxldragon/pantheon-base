@@ -94,6 +94,9 @@ func (s *DynamicModuleService) loadGeneratedModuleSchema(scope, name string) (*s
 	if !resolved {
 		return nil, errors.New("module.register.schema_invalid")
 	}
+	if !filepath.IsLocal(relativeTarget) {
+		return nil, errors.New("module.register.schema_invalid")
+	}
 	content, err := os.ReadFile(target)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
