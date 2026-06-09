@@ -1,4 +1,5 @@
-import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
+import { test } from '../../fixtures/coverage';
+import { expect, type Locator, type Page, type Route } from '@playwright/test';
 import { apiBaseUrl, authHeaders, installOperationToken, signInAsAdmin } from '../helpers/auth';
 
 type Deferred<T = void> = {

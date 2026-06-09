@@ -1,4 +1,5 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { test } from '../../fixtures/coverage';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { apiBaseUrl, authHeaders, requestHeaders, signInAsAdmin } from '../helpers/auth';

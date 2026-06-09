@@ -12,7 +12,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
   - docs/contracts/SYSTEM_ORG_CONTRACT.md
-updated_at: 2026-06-03
+updated_at: 2026-06-08
 ---
 
 # Task Packet: 2026-06-03-main-sonar-remediation

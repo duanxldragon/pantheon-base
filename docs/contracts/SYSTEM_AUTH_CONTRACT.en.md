@@ -108,14 +108,14 @@ In other words:
 
 This contract depends on:
 
-- [DESIGN.md](D:/workspace/go/pantheon-platform/DESIGN.md)
-- [AGENTS.md](D:/workspace/go/pantheon-platform/AGENTS.md)
-- [BACKEND.md](D:/workspace/go/pantheon-platform/docs/designs/BACKEND.md)
-- [FRONTEND.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND.md)
-- [AUTH_MODULE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/AUTH_MODULE_DESIGN.md)
-- [SECURITY_CENTER_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/SECURITY_CENTER_DESIGN.md)
-- [ERROR_CODE_AND_I18N.md](D:/workspace/go/pantheon-platform/docs/designs/ERROR_CODE_AND_I18N.md)
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DESIGN.md](../../DESIGN.md)
+- [AGENTS.md](../../AGENTS.md)
+- [BACKEND.md](../designs/BACKEND.md)
+- [FRONTEND.md](../designs/FRONTEND.md)
+- [AUTH_MODULE_DESIGN.md](../designs/AUTH_MODULE_DESIGN.md)
+- [SECURITY_CENTER_DESIGN.md](../designs/SECURITY_CENTER_DESIGN.md)
+- [ERROR_CODE_AND_I18N.md](../designs/ERROR_CODE_AND_I18N.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 
 ## 7. Hard Constraints
 
@@ -187,9 +187,9 @@ Changes in `system/auth` must at least pass:
 
 ### 9.1 Documentation Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [DOCUMENT_GOVERNANCE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
-- [DOCUMENT_METADATA_AND_STATUS.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_METADATA_AND_STATUS.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DOCUMENT_GOVERNANCE_CONTRACT.md](../contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
+- [DOCUMENT_METADATA_AND_STATUS.md](../contracts/DOCUMENT_METADATA_AND_STATUS.md)
 
 ### 9.2 Backend and API Acceptance
 
@@ -224,19 +224,19 @@ Additional checks:
 
 ### 10.1 Design
 
-- [AUTH_MODULE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/AUTH_MODULE_DESIGN.md)
-- [SECURITY_CENTER_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/SECURITY_CENTER_DESIGN.md)
-- [ERROR_CODE_AND_I18N.md](D:/workspace/go/pantheon-platform/docs/designs/ERROR_CODE_AND_I18N.md)
+- [AUTH_MODULE_DESIGN.md](../designs/AUTH_MODULE_DESIGN.md)
+- [SECURITY_CENTER_DESIGN.md](../designs/SECURITY_CENTER_DESIGN.md)
+- [ERROR_CODE_AND_I18N.md](../designs/ERROR_CODE_AND_I18N.md)
 
 ### 10.2 Assessment
 
-- [SYSTEM_MODULE_AUDIT.md](D:/workspace/go/pantheon-platform/docs/assessments/SYSTEM_MODULE_AUDIT.md)
+- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
 
 ### 10.3 Remediation
 
-- [PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md](D:/workspace/go/pantheon-platform/docs/archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
+- [PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md](../archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
 
 ### 10.4 Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/examples/QA_SMOKE_REPORT_20260420.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)

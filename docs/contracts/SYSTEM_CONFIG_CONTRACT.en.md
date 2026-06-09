@@ -137,17 +137,17 @@ In other words:
 
 This contract depends on:
 
-- [DESIGN.md](D:/workspace/go/pantheon-platform/DESIGN.md)
-- [AGENTS.md](D:/workspace/go/pantheon-platform/AGENTS.md)
-- [BACKEND.md](D:/workspace/go/pantheon-platform/docs/designs/BACKEND.md)
-- [FRONTEND.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND.md)
-- [DICT_AND_SETTING_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/DICT_AND_SETTING_DESIGN.md)
-- [SYSTEM_CONFIG_EXTENDED_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
-- [I18N_MODULE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/I18N_MODULE_DESIGN.md)
-- [UPLOAD_AND_STORAGE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/UPLOAD_AND_STORAGE_DESIGN.md)
-- [DYNAMIC_MODULE_GOVERNANCE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
-- [GENERATOR_MODULE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/GENERATOR_MODULE_DESIGN.md)
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DESIGN.md](../../DESIGN.md)
+- [AGENTS.md](../../AGENTS.md)
+- [BACKEND.md](../designs/BACKEND.md)
+- [FRONTEND.md](../designs/FRONTEND.md)
+- [DICT_AND_SETTING_DESIGN.md](../designs/DICT_AND_SETTING_DESIGN.md)
+- [SYSTEM_CONFIG_EXTENDED_DESIGN.md](../designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
+- [I18N_MODULE_DESIGN.md](../designs/I18N_MODULE_DESIGN.md)
+- [UPLOAD_AND_STORAGE_DESIGN.md](../designs/UPLOAD_AND_STORAGE_DESIGN.md)
+- [DYNAMIC_MODULE_GOVERNANCE_DESIGN.md](../designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
+- [GENERATOR_MODULE_DESIGN.md](../designs/GENERATOR_MODULE_DESIGN.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 
 ## 7. Hard Constraints
 
@@ -227,9 +227,9 @@ Changes in `system/config` must at least pass:
 
 ### 9.1 Documentation Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [DOCUMENT_GOVERNANCE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
-- [DOCUMENT_METADATA_AND_STATUS.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_METADATA_AND_STATUS.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DOCUMENT_GOVERNANCE_CONTRACT.md](../contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
+- [DOCUMENT_METADATA_AND_STATUS.md](../contracts/DOCUMENT_METADATA_AND_STATUS.md)
 
 ### 9.2 Backend and Configuration Acceptance
 
@@ -260,17 +260,17 @@ Changes in `system/config` must at least pass:
 
 ### 10.1 Design
 
-- [DICT_AND_SETTING_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/DICT_AND_SETTING_DESIGN.md)
-- [SYSTEM_CONFIG_EXTENDED_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
-- [I18N_MODULE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/I18N_MODULE_DESIGN.md)
-- [UPLOAD_AND_STORAGE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/UPLOAD_AND_STORAGE_DESIGN.md)
-- [DYNAMIC_MODULE_GOVERNANCE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
-- [GENERATOR_MODULE_DESIGN.md](D:/workspace/go/pantheon-platform/docs/designs/GENERATOR_MODULE_DESIGN.md)
+- [DICT_AND_SETTING_DESIGN.md](../designs/DICT_AND_SETTING_DESIGN.md)
+- [SYSTEM_CONFIG_EXTENDED_DESIGN.md](../designs/SYSTEM_CONFIG_EXTENDED_DESIGN.md)
+- [I18N_MODULE_DESIGN.md](../designs/I18N_MODULE_DESIGN.md)
+- [UPLOAD_AND_STORAGE_DESIGN.md](../designs/UPLOAD_AND_STORAGE_DESIGN.md)
+- [DYNAMIC_MODULE_GOVERNANCE_DESIGN.md](../designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
+- [GENERATOR_MODULE_DESIGN.md](../designs/GENERATOR_MODULE_DESIGN.md)
 
 ### 10.2 Assessment
 
-- [SYSTEM_MODULE_AUDIT.md](D:/workspace/go/pantheon-platform/docs/assessments/SYSTEM_MODULE_AUDIT.md)
-- [PLATFORM_GAP_AUDIT_20260429.md](D:/workspace/go/pantheon-platform/docs/assessments/PLATFORM_GAP_AUDIT_20260429.md)
+- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
+- [PLATFORM_GAP_AUDIT_20260429.md](../assessments/PLATFORM_GAP_AUDIT_20260429.md)
 
 ### 10.3 Remediation
 
@@ -278,9 +278,9 @@ Changes in `system/config` must at least pass:
 
 ### 10.4 Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/examples/QA_SMOKE_REPORT_20260420.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 
 ## 11. Reserved Topic Subcontracts
 

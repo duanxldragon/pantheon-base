@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import syncFs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import { test } from '../../fixtures/coverage';
+import { expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import {
   adminCredentials,
   apiBaseUrl,

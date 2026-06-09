@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { test } from '../../fixtures/coverage';
+import { expect } from '@playwright/test';
 import { signInAsAdmin } from '../helpers/auth';
 
 async function readWidth(locator: import('@playwright/test').Locator) {

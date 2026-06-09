@@ -103,15 +103,15 @@ Navigation style belongs to `platform`; navigation metadata and authorization se
 
 This contract depends on:
 
-- [DESIGN.md](D:/workspace/go/pantheon-platform/DESIGN.md)
-- [AGENTS.md](D:/workspace/go/pantheon-platform/AGENTS.md)
-- [BACKEND.md](D:/workspace/go/pantheon-platform/docs/designs/BACKEND.md)
-- [FRONTEND.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND.md)
-- [PERMISSION_MODEL.md](D:/workspace/go/pantheon-platform/docs/designs/PERMISSION_MODEL.md)
-- [MODULE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/designs/MODULE_CONTRACT.md)
-- [FRONTEND_PAGE_TEMPLATES.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND_PAGE_TEMPLATES.md)
-- [ERROR_CODE_AND_I18N.md](D:/workspace/go/pantheon-platform/docs/designs/ERROR_CODE_AND_I18N.md)
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DESIGN.md](../../DESIGN.md)
+- [AGENTS.md](../../AGENTS.md)
+- [BACKEND.md](../designs/BACKEND.md)
+- [FRONTEND.md](../designs/FRONTEND.md)
+- [PERMISSION_MODEL.md](../designs/PERMISSION_MODEL.md)
+- [MODULE_CONTRACT.md](../designs/MODULE_CONTRACT.md)
+- [FRONTEND_PAGE_TEMPLATES.md](../designs/FRONTEND_PAGE_TEMPLATES.md)
+- [ERROR_CODE_AND_I18N.md](../designs/ERROR_CODE_AND_I18N.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 
 ## 7. Hard Constraints
 
@@ -161,7 +161,7 @@ This contract depends on:
 ### 7.5 Documentation Constraints
 
 - all `system/iam` design, assessment, remediation, and acceptance docs must link back to this contract
-- no new permission-model change may bypass [PERMISSION_MODEL.md](D:/workspace/go/pantheon-platform/docs/designs/PERMISSION_MODEL.md)
+- no new permission-model change may bypass [PERMISSION_MODEL.md](../designs/PERMISSION_MODEL.md)
 
 ### 7.6 Batch-Governance Interaction Constraints
 
@@ -214,9 +214,9 @@ Changes in `system/iam` must at least pass:
 
 ### 9.1 Documentation Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [DOCUMENT_GOVERNANCE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
-- [DOCUMENT_METADATA_AND_STATUS.md](D:/workspace/go/pantheon-platform/docs/contracts/DOCUMENT_METADATA_AND_STATUS.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [DOCUMENT_GOVERNANCE_CONTRACT.md](../contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
+- [DOCUMENT_METADATA_AND_STATUS.md](../contracts/DOCUMENT_METADATA_AND_STATUS.md)
 
 ### 9.2 Backend and Permission Acceptance
 
@@ -247,14 +247,14 @@ Changes in `system/iam` must at least pass:
 
 ### 10.1 Design
 
-- [PERMISSION_MODEL.md](D:/workspace/go/pantheon-platform/docs/designs/PERMISSION_MODEL.md)
-- [MODULE_CONTRACT.md](D:/workspace/go/pantheon-platform/docs/designs/MODULE_CONTRACT.md)
-- [FRONTEND_PAGE_TEMPLATES.md](D:/workspace/go/pantheon-platform/docs/designs/FRONTEND_PAGE_TEMPLATES.md)
+- [PERMISSION_MODEL.md](../designs/PERMISSION_MODEL.md)
+- [MODULE_CONTRACT.md](../designs/MODULE_CONTRACT.md)
+- [FRONTEND_PAGE_TEMPLATES.md](../designs/FRONTEND_PAGE_TEMPLATES.md)
 
 ### 10.2 Assessment
 
-- [SYSTEM_MODULE_AUDIT.md](D:/workspace/go/pantheon-platform/docs/assessments/SYSTEM_MODULE_AUDIT.md)
-- [DYNAMIC_MENU_MATURITY_20260422.md](D:/workspace/go/pantheon-platform/docs/assessments/DYNAMIC_MENU_MATURITY_20260422.md)
+- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
+- [DYNAMIC_MENU_MATURITY_20260422.md](../assessments/DYNAMIC_MENU_MATURITY_20260422.md)
 
 ### 10.3 Remediation
 
@@ -262,6 +262,6 @@ Changes in `system/iam` must at least pass:
 
 ### 10.4 Acceptance
 
-- [ACCEPTANCE_CHECKLIST.md](D:/workspace/go/pantheon-platform/docs/acceptances/ACCEPTANCE_CHECKLIST.md)
-- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](D:/workspace/go/pantheon-platform/docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](D:/workspace/go/pantheon-platform/docs/archive/examples/QA_SMOKE_REPORT_20260420.md)
+- [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+- [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
+- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
