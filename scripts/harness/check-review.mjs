@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 const DEFAULT_CONFIG = 'agentic-method-kit/config/method.config.json';
 const DEFAULT_EVIDENCE_DIR = '.harness/evidence';
@@ -70,7 +72,7 @@ function discoverReviewFiles(root, evidenceDir) {
     }
   }
   walk(base);
-  return files.sort();
+  return sortStrings(files);
 }
 
 function toRepoPath(filePath, root) {

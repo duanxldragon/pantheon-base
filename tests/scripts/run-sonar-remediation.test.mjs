@@ -45,8 +45,9 @@ test('resolvePhaseIds uses the baseline group by default and deduplicates explic
     'frontend-menu-contract',
     'frontend-lint',
     'frontend-build',
-    'duplication',
   ]);
+
+  assert.deepEqual(resolvePhaseIds({ group: 'local-sonar' }), ['local-sonar', 'sonar-report']);
 
   assert.deepEqual(
     resolvePhaseIds({ phaseArgs: ['docs-frontmatter,task-packet-template', 'docs-frontmatter'] }),
@@ -80,7 +81,30 @@ test('ensureEvidenceState seeds commands, summary, review, and plan linkage', ()
       evidence.commands.some((entry) => entry.command === '.\\scripts\\run-sonar.ps1'),
       true,
     );
+    assert.equal(
+      evidence.commands.some((entry) => entry.command.includes('fetch-sonarcloud-report.mjs')),
+      true,
+    );
   });
+});
+
+test('resolvePhaseExecution resolves the sonar report phase for the current task', () => {
+  const phase = {
+    id: 'sonar-report',
+    displayCommand: 'node scripts/fetch-sonarcloud-report.mjs',
+    command: ({ envFile, taskId }) =>
+      `node scripts/fetch-sonarcloud-report.mjs --root "." --task "${taskId}" --env-file "${envFile}"`,
+  };
+
+  const execution = resolvePhaseExecution(phase, {
+    envFile: 'pantheon-sonarcloud.env',
+    taskId: '2026-06-03-main-sonar-remediation',
+  });
+
+  assert.equal(
+    execution.command,
+    'node scripts/fetch-sonarcloud-report.mjs --root "." --task "2026-06-03-main-sonar-remediation" --env-file "pantheon-sonarcloud.env"',
+  );
 });
 
 test('resolvePhaseExecution falls back to portable backend tests on Windows', () => {
@@ -133,6 +157,37 @@ test('recordPhaseResult updates command status and captures runtime logs for loc
     assert.match(command.notes, /sonar executed/);
     assert.deepEqual(evidence.runtimeLogs, [
       '.harness/evidence/2026-06-03-main-sonar-remediation/logs/sonar.log',
+    ]);
+    assert.equal('runtimeGap' in evidence, false);
+  });
+});
+
+test('recordPhaseResult captures runtime logs for the sonar report phase', () => {
+  withFixtureRepo((repoRoot) => {
+    const taskId = '2026-06-03-main-sonar-remediation';
+    const evidence = createDefaultEvidence(repoRoot, taskId);
+    const logPath = path.join(repoRoot, '.harness', 'evidence', taskId, 'logs', 'sonar-report.log');
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    fs.writeFileSync(logPath, 'report ok\n', 'utf8');
+
+    recordPhaseResult(
+      evidence,
+      'sonar-report',
+      {
+        status: 'passed',
+        durationMs: 456,
+        notes: 'sonar report captured',
+        logPath,
+      },
+      repoRoot,
+      taskId,
+    );
+
+    const command = evidence.commands.find((entry) => entry.command.includes('fetch-sonarcloud-report.mjs'));
+    assert.equal(command.status, 'passed');
+    assert.match(command.notes, /sonar report captured/);
+    assert.deepEqual(evidence.runtimeLogs, [
+      '.harness/evidence/2026-06-03-main-sonar-remediation/logs/sonar-report.log',
     ]);
     assert.equal('runtimeGap' in evidence, false);
   });

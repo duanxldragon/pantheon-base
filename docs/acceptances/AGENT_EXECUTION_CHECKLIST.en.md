@@ -9,7 +9,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_ORG_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-06-03
+updated_at: 2026-06-10
 ---
 
 # Pantheon Base Agent Execution Checklist
@@ -122,3 +122,5 @@ Every handoff should state:
 - evidence location
 - remaining gaps or risks
 - whether `base -> ops` sync is required
+- merged PR URL and merge commit
+- branch cleanup status: whether the remote head branch was deleted and the local worktree was cleaned up

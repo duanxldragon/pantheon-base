@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-08
+updated_at: 2026-06-10
 ---
 
 # GitHub Governance Checklist
@@ -23,6 +23,7 @@ Use this checklist when enabling the workflow described in `docs/designs/WORKFLO
 - Dismiss stale approvals on new commits
 - Require conversation resolution
 - Restrict direct pushes to protected branches
+- Automatically delete head branches after merge
 
 ## Required checks
 
@@ -45,9 +46,10 @@ For local Sonar validation without committing credentials:
 
 - create `pantheon-sonarcloud.env` in the repo root
 - keep it git-ignored
-- use `scripts/run-sonar.ps1`
-- install SonarScanner CLI locally before running the script
-- review the uploaded report in SonarCloud manually after the script completes
+- use `npm run run:sonar-remediation -- --group local-sonar --execute`
+- install SonarScanner CLI locally before running the scan phase
+- review the uploaded `sonarcloud-report.md` / `sonarcloud-report.json` in `.harness/evidence/<task-id>/logs/` or the workflow artifact, not the SonarCloud UI
+- `scripts/run-sonar.ps1` remains the lower-level scan-only entry point if you need to debug upload behavior
 - if Codacy appears, do not require it for merge
 
 Expected file format:
@@ -62,3 +64,4 @@ SONAR_TOKEN=...
 - PR description records ownership layer, boundary, validation, and GitHub checks status
 - PR description names the independent reviewer
 - High-risk PRs record the second approval explicitly
+- Closeout records merged PR URL, merge commit, and branch cleanup status

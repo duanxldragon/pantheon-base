@@ -48,7 +48,7 @@
 - [ ] 轻量 smoke：`cd frontend && npm run test:smoke:platform:contracts && npm run test:smoke:system:pages`
 - [ ] 如涉及系统域深链路，已补充专项 smoke：`cd frontend && npm run test:smoke:system:iam-authz`
 - [ ] 其他专项验证已补充
-- [ ] 如需 SonarQube，仅完成手动辅助检查（非门禁）
+- [ ] 如需 SonarQube，仅完成自动抓取报告后的辅助检查（非门禁）
 - [ ] CodeQL 结果已检查并解释
 - [ ] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up
 - [ ] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
@@ -63,7 +63,7 @@
 - 独立 reviewer：
 - CODEOWNERS 命中：
 - CodeQL 结果：
-- 如有手动 Sonar 结果链接：
+- 如有 Sonar 报告 artifact / evidence 链接：
 - 如有 Codacy 结果，仅记录为参考：
 - GitHub checks 结果：
 - Duplication Gate 结果：

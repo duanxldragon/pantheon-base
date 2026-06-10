@@ -85,6 +85,8 @@ Auxiliary or scheduled:
 - deep dependency audit
 - broad ecosystem drift checks
 
+SonarCloud auxiliary scans should also publish the fetched report into repo evidence or an upload artifact so the next remediation round can continue from the captured report instead of a manual SonarCloud browse.
+
 Rules:
 
 - Sonar is a trend and debt dashboard, not the only merge gate.

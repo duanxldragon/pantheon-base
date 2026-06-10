@@ -175,3 +175,25 @@ jobs:
             -d "issues=${ISSUES}" \
             -d "transition=wontfix" \
             -d "comment=S2083 false positive: guarded with filepath.IsLocal() and os.DirFS. Exclusion configured in sonar-project.properties."
+
+      - name: Fetch SonarCloud report
+        if: always()
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          rm -rf sonar-report
+          node scripts/fetch-sonarcloud-report.mjs \
+            --root . \
+            --branch "${SONAR_BRANCH_NAME}" \
+            --output-dir sonar-report
+
+      - name: Upload SonarCloud report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: sonarcloud-report-${{ github.run_id }}-${{ github.ref_name }}
+          path: sonar-report
+          if-no-files-found: error
