@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
-import { setTimeout as sleep } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 
 const DEFAULT_ROOT = process.cwd();
@@ -205,10 +204,12 @@ function parseArgs(argv) {
     help: false,
   };
 
-  for (let index = 0; index < argv.length; index += 1) {
+  let index = 0;
+  while (index < argv.length) {
     const arg = argv[index];
     if (arg === '--help' || arg === '-h') {
       options.help = true;
+      index += 1;
       continue;
     }
 
@@ -217,7 +218,7 @@ function parseArgs(argv) {
       throw new Error(`Unknown argument: ${arg}`);
     }
 
-    index = handler(options, argv, index);
+    index = handler(options, argv, index) + 1;
   }
 
   return options;
@@ -257,7 +258,7 @@ function buildUrl(hostUrl, endpoint, params) {
 }
 
 function authHeader(token) {
-  return `Basic ${Buffer.from(`${token}:`, 'utf8').toString('base64')}`;
+  return 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64');
 }
 
 function responseSnippet(body) {
@@ -485,9 +486,11 @@ function renderMarkdown(report) {
     '- Host: `' + report.hostUrl + '`',
   ];
 
-  lines.push(formatLatestAnalysisLine(report.latestAnalysis));
-  lines.push('- Quality gate: ' + (report.qualityGate?.status ?? 'n/a'));
-  lines.push('- Open issues: ' + (report.issues?.total ?? 'n/a'));
+  lines.push(
+    formatLatestAnalysisLine(report.latestAnalysis),
+    '- Quality gate: ' + (report.qualityGate?.status ?? 'n/a'),
+    '- Open issues: ' + (report.issues?.total ?? 'n/a'),
+  );
 
   appendMetricLines(lines, report.metrics);
   appendTopRuleLines(lines, report.issues);
@@ -644,7 +647,7 @@ function printSummary(result) {
   }
   if (report.errors?.length) {
     for (const error of report.errors) {
-      console.log(`error: ${error.message}${error.status ? ` (${error.status})` : ''}`);
+      console.log('error: ' + error.message + (error.status ? ' (' + error.status + ')' : ''));
     }
   }
 }

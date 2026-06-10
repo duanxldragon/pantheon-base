@@ -70,7 +70,12 @@ export async function downloadFile(options: DownloadFileOptions) {
     validateStatus: () => true,
   });
 
-  const contentType = String(response.headers['content-type'] || '');
+  const contentTypeHeader = response.headers['content-type'];
+  const contentType = Array.isArray(contentTypeHeader)
+    ? contentTypeHeader.join(',')
+    : typeof contentTypeHeader === 'string'
+      ? contentTypeHeader
+      : '';
   if (response.status >= 400 || contentType.includes('application/json')) {
     try {
       const text = await response.data.text();

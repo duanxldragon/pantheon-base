@@ -760,7 +760,7 @@ const BaseLayout: React.FC = () => {
     () => menuTrail.slice(0, -1).map((item) => item.id.toString()),
     [menuTrail],
   );
-  const currentPageTitle = breadcrumbItems[breadcrumbItems.length - 1]?.label || t('app.workspace');
+  const currentPageTitle = breadcrumbItems.at(-1)?.label || t('app.workspace');
   const currentTabTitleKey = currentRouteTitleKey || currentMenuTitleKey;
   const userDisplayName = userInfo?.nickname || userInfo?.username || t('common.user');
   const roleLabel = userInfo?.roles?.[0] || '';

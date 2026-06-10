@@ -1324,7 +1324,7 @@ if (/\.dict-page__governance-bar\s+\.arco-card-body/i.test(globalSource + listPa
   findings.push('Dict governance bar must not define card-body overrides.');
 }
 
-const tableHeaderRule = globalSource.match(/(?:^|\n)\.arco-table-th\s*\{[\s\S]*?\n\}/)?.[0] || '';
+const tableHeaderRule = /(?:^|\n)\.arco-table-th\s*\{[\s\S]*?\n\}/.exec(globalSource)?.[0] || '';
 if (!tableHeaderRule) {
   findings.push('Missing CSS block: .arco-table-th');
 } else {
