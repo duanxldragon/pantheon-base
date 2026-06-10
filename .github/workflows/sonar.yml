@@ -190,10 +190,18 @@ jobs:
             --branch "${SONAR_BRANCH_NAME}" \
             --output-dir sonar-report
 
+      - name: Sanitize Sonar artifact ref
+        if: always()
+        id: sanitize_sonar_ref
+        shell: bash
+        run: |
+          SAFE_REF="${GITHUB_REF_NAME//\//-}"
+          echo "safe_ref=${SAFE_REF}" >> "$GITHUB_OUTPUT"
+
       - name: Upload SonarCloud report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: sonarcloud-report-${{ github.run_id }}-${{ github.ref_name }}
+          name: sonarcloud-report-${{ github.run_id }}-${{ steps.sanitize_sonar_ref.outputs.safe_ref }}
           path: sonar-report
           if-no-files-found: error
