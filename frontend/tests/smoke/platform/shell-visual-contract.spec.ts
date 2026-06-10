@@ -563,9 +563,14 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
         borderStyle: style.borderStyle,
         borderWidth: style.borderWidth,
         boxShadow: style.boxShadow,
+        cursor: style.cursor,
         height: style.height,
         lineHeight: style.lineHeight,
         overflow: style.overflow,
+        paddingLeft: style.paddingLeft,
+        paddingRight: style.paddingRight,
+        paddingTop: style.paddingTop,
+        paddingBottom: style.paddingBottom,
         top: rect.top,
         bottom: rect.bottom,
       };
@@ -575,6 +580,7 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
       header: read('.app-shell__header'),
       breadcrumb: read('.app-shell__header-breadcrumb'),
       breadcrumbItem: read('.app-shell__header .arco-breadcrumb-item'),
+      menuEntry: read('.app-shell__menu .arco-menu-selected .app-shell__menu-entry'),
       tab: read('.app-shell__tab--active'),
       tabLabel: read('.app-shell__tab--active .app-shell__tab-label'),
       batchBar: read('.table-batch-action-bar'),
@@ -594,6 +600,15 @@ test('platform shell breadcrumb and function bars do not clip text or use inset 
   expect(userShellStyles.breadcrumbItem?.bottom).toBeLessThanOrEqual(
     userShellStyles.breadcrumb!.bottom + 1,
   );
+  expect(userShellStyles.menuEntry?.borderWidth).toBe('0px');
+  expect(userShellStyles.menuEntry?.borderStyle).toBe('none');
+  expect(userShellStyles.menuEntry?.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(userShellStyles.menuEntry?.paddingLeft).toBe('0px');
+  expect(userShellStyles.menuEntry?.paddingRight).toBe('0px');
+  expect(userShellStyles.menuEntry?.paddingTop).toBe('0px');
+  expect(userShellStyles.menuEntry?.paddingBottom).toBe('0px');
+  expect(userShellStyles.menuEntry?.boxShadow).toBe('none');
+  expect(userShellStyles.menuEntry?.cursor).toBe('pointer');
   expect(userShellStyles.tab?.boxShadow).toBe('none');
   expect(userShellStyles.tab?.lineHeight).toBe('20px');
   expect(userShellStyles.tab?.borderColor).toBe('rgba(0, 0, 0, 0)');

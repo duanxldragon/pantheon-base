@@ -25,11 +25,6 @@ import {
   IconUnorderedList,
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany } from '../../../core/router/prefetch';
@@ -54,6 +49,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
+  getPagedItems,
   FilterPanel,
   FormSection,
   GovernanceInsightDrawer,
@@ -63,10 +59,8 @@ import {
   PageActions,
   PageContainer,
   PageEmpty,
-  PageError,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
@@ -212,13 +206,10 @@ const MenuList: React.FC = () => {
     return () => globalThis.clearTimeout(timer);
   }, [loadParentTree]);
 
-  const tableTotalPages = useMemo(
-    () => Math.max(1, Math.ceil(data.length / tablePagination.pageSize)),
-    [data.length, tablePagination.pageSize],
-  );
-  const tableCurrentPage = useMemo(
-    () => Math.min(tablePagination.current, tableTotalPages),
-    [tablePagination.current, tableTotalPages],
+  const { currentPage: tableCurrentPage } = getPagedItems(
+    data,
+    tablePagination.current,
+    tablePagination.pageSize,
   );
 
   useRefreshSubscription('system:menu:changed', (payload) => {
@@ -681,35 +672,6 @@ const MenuList: React.FC = () => {
     },
   ];
 
-  const renderErrorState = () => {
-    if (isNetworkRequestError(error)) {
-      return (
-        <PageNetworkError
-          timeout={isTimeoutRequestError(error)}
-          onRetry={() => {
-            loadData(query);
-          }}
-        />
-      );
-    }
-    if (isServerRequestError(error)) {
-      return (
-        <PageServerError
-          onRetry={() => {
-            loadData(query);
-          }}
-        />
-      );
-    }
-    return (
-      <PageError
-        onRetry={() => {
-          loadData(query);
-        }}
-      />
-    );
-  };
-
   const totalMenus = flattenedMenus.length;
   const visibleMenus = useMemo(
     () => flattenedMenus.filter(({ node }) => node.isVisible === 1).length,
@@ -863,7 +825,14 @@ const MenuList: React.FC = () => {
               </PageActions>
             </div>
             {loading && data.length === 0 ? <PageLoading /> : null}
-            {error && data.length === 0 ? renderErrorState() : null}
+            {error && data.length === 0 ? (
+              <PageRequestError
+                error={error}
+                onRetry={() => {
+                  loadData(query);
+                }}
+              />
+            ) : null}
             {!loading && !error && data.length === 0 ? (
               <PageEmpty description={t('common.noData')} />
             ) : null}

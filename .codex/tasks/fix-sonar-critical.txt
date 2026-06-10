@@ -1,0 +1,41 @@
+Read the task packet at docs/harness/tasks/2026-06-09-sonar-critical-fixes.task.md for full context, then implement all 5 changes.
+
+## Fix 1: security.yml — Move permissions to job level
+File: .github/workflows/security.yml
+Remove the top-level `permissions` block. Add job-level permissions:
+- dependency-vulnerabilities: `permissions: { contents: read }`
+- secret-scan: `permissions: { contents: read }`
+- workflow-posture: `permissions: { contents: read }`
+- security-gates: `permissions: { contents: read }`
+- codeql-security: `permissions: { contents: read, security-events: write }`
+- codeql-alerts: `permissions: { contents: read, security-events: read }`
+
+## Fix 2: audit_benchmark_test.go — Reduce cognitive complexity
+File: backend/modules/system/audit/audit_benchmark_test.go
+Find the function with cognitive complexity 17. Extract a helper sub-function or simplify nested conditionals to get complexity ≤15. Preserve all existing benchmark assertions exactly.
+
+## Fix 3: i18n_service.go — Define constants for duplicated string literals
+File: backend/modules/system/i18n/i18n_service.go
+Define package-level constants and replace all occurrences:
+- `"system.lowcode"` (15 occurrences) -> use a const
+- `"system.menu.lowcode"` (5 occurrences) -> use a const
+- `"system.menu.modules"` (5 occurrences) -> use a const
+
+## Fix 4: check-duplication.mjs — Add sort compare function
+File: scripts/check-duplication.mjs
+Find the `.sort()` call without a compare function. Add a locale-aware compare function or a numeric comparator as appropriate for the sorted data type.
+
+## Fix 5: sonar-project.properties — Exclude S2068 on i18n resource files
+File: sonar-project.properties
+Add exclusion for typescript:S2068 on i18n resource files. These are translation strings containing the word "password" in Chinese (密码), not hardcoded credentials.
+- Update multicriteria list to add e5
+- Add e5 entries targeting `**/i18n/resources/**` with ruleKey `typescript:S2068`
+
+## Verification
+After all changes:
+```bash
+go build ./...
+go test ./backend/modules/system/audit/... -count=1
+go test ./backend/modules/system/i18n/... -count=1
+node scripts/check-duplication.mjs --json > /dev/null
+```

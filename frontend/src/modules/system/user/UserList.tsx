@@ -27,11 +27,6 @@ import {
 import { uploadSystemFile } from '../../../api/upload';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
-import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
@@ -78,8 +73,7 @@ import {
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   SubmitBar,
   SystemRowActions,
   TableBatchActionBar,
@@ -681,35 +675,6 @@ const UserList: React.FC = () => {
     },
   ];
 
-  const renderErrorState = () => {
-    if (isNetworkRequestError(error)) {
-      return (
-        <PageNetworkError
-          timeout={isTimeoutRequestError(error)}
-          onRetry={() => {
-            void loadData(query);
-          }}
-        />
-      );
-    }
-    if (isServerRequestError(error)) {
-      return (
-        <PageServerError
-          onRetry={() => {
-            void loadData(query);
-          }}
-        />
-      );
-    }
-    return (
-      <PageError
-        onRetry={() => {
-          void loadData(query);
-        }}
-      />
-    );
-  };
-
   const handleExport = async () => {
     await exportUsers(query);
   };
@@ -1019,7 +984,14 @@ const UserList: React.FC = () => {
               }
             />
             {loading && data.length === 0 ? <PageLoading /> : null}
-            {error && data.length === 0 ? renderErrorState() : null}
+            {error && data.length === 0 ? (
+              <PageRequestError
+                error={error}
+                onRetry={() => {
+                  void loadData(query);
+                }}
+              />
+            ) : null}
             {!loading && !error && data.length === 0 ? (
               <PageEmpty description={t('common.noData')} />
             ) : null}

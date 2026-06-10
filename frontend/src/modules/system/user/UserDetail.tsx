@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@arco-design/web-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { PageContainer, PageEmpty, PageError, PageLoading } from '../../../components';
+import { PageContainer, PageEmpty, PageLoading, PageRequestError } from '../../../components';
 import { getUserDetail, type UserDetail as UserDetailData } from './api';
 import UserDetailContent from './UserDetailContent';
 
@@ -12,7 +12,7 @@ const UserDetail: React.FC = () => {
   const { t } = useTranslation();
   const [detail, setDetail] = useState<UserDetailData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   const userId = useMemo(() => Number(id), [id]);
   const invalidUserId = !Number.isInteger(userId) || userId <= 0;
@@ -20,18 +20,18 @@ const UserDetail: React.FC = () => {
   const loadDetail = useCallback(async () => {
     if (invalidUserId) {
       setDetail(null);
-      setError(false);
+      setError(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    setError(false);
+    setError(null);
     try {
       const result = await getUserDetail(userId);
       setDetail(result);
-    } catch {
-      setError(true);
+    } catch (requestError) {
+      setError(requestError);
       setDetail(null);
     } finally {
       setLoading(false);
@@ -55,7 +55,8 @@ const UserDetail: React.FC = () => {
 
   if (error) {
     return (
-      <PageError
+      <PageRequestError
+        error={error}
         onRetry={() => {
           void loadDetail();
         }}

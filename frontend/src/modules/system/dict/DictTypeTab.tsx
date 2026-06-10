@@ -21,11 +21,6 @@ import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import { message } from '../../../components/feedback/message';
 import { showImportResult } from '../../../api/importExport';
-import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany } from '../../../core/router/prefetch';
@@ -38,10 +33,8 @@ import {
   ImportCsvButton,
   ListHeaderActions,
   PageEmpty,
-  PageError,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
@@ -357,16 +350,6 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
     [t, onSelectType, onSwitchToItemsTab, canEdit, canDelete, openEditType, removeType],
   );
 
-  const renderRequestErrorState = useCallback((requestError: unknown, onRetry: () => void) => {
-    if (isNetworkRequestError(requestError)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(requestError)} onRetry={onRetry} />;
-    }
-    if (isServerRequestError(requestError)) {
-      return <PageServerError onRetry={onRetry} />;
-    }
-    return <PageError onRetry={onRetry} />;
-  }, []);
-
   const typeBatchActionDisabled = !canBatchUpdate || selectedTypeRowKeys.length === 0;
   const typeBatchDeleteDisabled = !canBatchDelete || selectedTypeRowKeys.length === 0;
 
@@ -514,11 +497,14 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
         />
 
         {typeLoading && typeRows.length === 0 ? <PageLoading /> : null}
-        {typeError && typeRows.length === 0
-          ? renderRequestErrorState(typeError, () => {
+        {typeError && typeRows.length === 0 ? (
+          <PageRequestError
+            error={typeError}
+            onRetry={() => {
               onReload();
-            })
-          : null}
+            }}
+          />
+        ) : null}
         {!typeLoading && !typeError && typeRows.length === 0 ? (
           <PageEmpty description={t('system.dict.typeEmpty')} />
         ) : null}
