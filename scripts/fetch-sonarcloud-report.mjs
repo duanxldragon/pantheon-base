@@ -131,6 +131,67 @@ function resolveToken(env, envFileVars) {
   return env.SONAR_TOKEN?.trim() || envFileVars.SONAR_TOKEN?.trim() || '';
 }
 
+function readRequiredOptionValue(argv, index, flag, label) {
+  const value = argv[index + 1];
+  if (!value) {
+    throw new Error(`${flag} requires ${label}`);
+  }
+  return value;
+}
+
+function parseIntegerOption(value, flag, minimum, description) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < minimum) {
+    throw new Error(`${flag} must be ${description}`);
+  }
+  return parsed;
+}
+
+const ARGUMENT_HANDLERS = {
+  '--root': (options, argv, index) => {
+    options.root = path.resolve(readRequiredOptionValue(argv, index, '--root', 'a path'));
+    return index + 1;
+  },
+  '--env-file': (options, argv, index) => {
+    options.envFile = readRequiredOptionValue(argv, index, '--env-file', 'a file path').trim();
+    return index + 1;
+  },
+  '--task': (options, argv, index) => {
+    options.taskId = readRequiredOptionValue(argv, index, '--task', 'a value').trim();
+    return index + 1;
+  },
+  '--project-key': (options, argv, index) => {
+    options.projectKey = readRequiredOptionValue(argv, index, '--project-key', 'a value').trim();
+    return index + 1;
+  },
+  '--branch': (options, argv, index) => {
+    options.branch = readRequiredOptionValue(argv, index, '--branch', 'a value').trim();
+    return index + 1;
+  },
+  '--output-dir': (options, argv, index) => {
+    options.outputDir = path.resolve(readRequiredOptionValue(argv, index, '--output-dir', 'a path'));
+    return index + 1;
+  },
+  '--attempts': (options, argv, index) => {
+    options.attempts = parseIntegerOption(
+      readRequiredOptionValue(argv, index, '--attempts', 'a number'),
+      '--attempts',
+      1,
+      'a positive integer',
+    );
+    return index + 1;
+  },
+  '--wait-ms': (options, argv, index) => {
+    options.waitMs = parseIntegerOption(
+      readRequiredOptionValue(argv, index, '--wait-ms', 'a number'),
+      '--wait-ms',
+      0,
+      'a non-negative integer',
+    );
+    return index + 1;
+  },
+};
+
 function parseArgs(argv) {
   const options = {
     root: DEFAULT_ROOT,
@@ -146,73 +207,17 @@ function parseArgs(argv) {
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--root') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--root requires a path');
-      }
-      options.root = path.resolve(value);
-      index += 1;
-    } else if (arg === '--env-file') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--env-file requires a file path');
-      }
-      options.envFile = value.trim();
-      index += 1;
-    } else if (arg === '--task') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--task requires a value');
-      }
-      options.taskId = value.trim();
-      index += 1;
-    } else if (arg === '--project-key') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--project-key requires a value');
-      }
-      options.projectKey = value.trim();
-      index += 1;
-    } else if (arg === '--branch') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--branch requires a value');
-      }
-      options.branch = value.trim();
-      index += 1;
-    } else if (arg === '--output-dir') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--output-dir requires a path');
-      }
-      options.outputDir = path.resolve(value);
-      index += 1;
-    } else if (arg === '--attempts') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--attempts requires a number');
-      }
-      options.attempts = Number.parseInt(value, 10);
-      if (!Number.isFinite(options.attempts) || options.attempts < 1) {
-        throw new Error('--attempts must be a positive integer');
-      }
-      index += 1;
-    } else if (arg === '--wait-ms') {
-      const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--wait-ms requires a number');
-      }
-      options.waitMs = Number.parseInt(value, 10);
-      if (!Number.isFinite(options.waitMs) || options.waitMs < 0) {
-        throw new Error('--wait-ms must be a non-negative integer');
-      }
-      index += 1;
-    } else if (arg === '--help' || arg === '-h') {
+    if (arg === '--help' || arg === '-h') {
       options.help = true;
-    } else {
+      continue;
+    }
+
+    const handler = ARGUMENT_HANDLERS[arg];
+    if (!handler) {
       throw new Error(`Unknown argument: ${arg}`);
     }
+
+    index = handler(options, argv, index);
   }
 
   return options;
@@ -241,7 +246,7 @@ function resolveOutputDir(options, rootDir) {
 }
 
 function buildUrl(hostUrl, endpoint, params) {
-  const url = new URL(endpoint, hostUrl.endsWith('/') ? hostUrl : `${hostUrl}/`);
+  const url = new URL(endpoint, hostUrl.endsWith('/') ? hostUrl : hostUrl + '/');
   for (const [key, value] of Object.entries(params)) {
     if (value === undefined || value === null || value === '') {
       continue;
@@ -260,7 +265,7 @@ function responseSnippet(body) {
   if (!text) {
     return '';
   }
-  return text.length > 240 ? `${text.slice(0, 240)}...` : text;
+  return text.length > 240 ? text.slice(0, 240) + '...' : text;
 }
 
 async function fetchJson(url, token, fetchImpl = globalThis.fetch) {
@@ -313,6 +318,20 @@ function formatMetricValue(metricKey, value) {
   }
 
   return String(value);
+}
+
+function formatLatestAnalysisLine(latestAnalysis) {
+  if (!latestAnalysis) {
+    return '- Latest analysis: n/a';
+  }
+
+  const revisionSuffix = latestAnalysis.revision ? ' (`' + latestAnalysis.revision + '`)' : '';
+  return '- Latest analysis: ' + (latestAnalysis.date ?? 'n/a') + revisionSuffix;
+}
+
+function formatErrorLine(error) {
+  const statusSuffix = error.status ? ' (' + error.status + ')' : '';
+  return '- ' + error.message + statusSuffix;
 }
 
 function simplifyAnalysis(analysisResponse) {
@@ -405,59 +424,79 @@ function shouldRetry(snapshot) {
   return !(readyQualityGate && readyAnalysis);
 }
 
+function resolveReportStatus(snapshot, errors) {
+  if (errors.length > 0) {
+    return snapshot?.latestAnalysis ? 'partial' : 'error';
+  }
+
+  if (shouldRetry(snapshot)) {
+    return 'pending';
+  }
+
+  return 'complete';
+}
+
+function appendMetricLines(lines, metrics) {
+  if (!metrics || Object.keys(metrics).length === 0) {
+    return;
+  }
+
+  lines.push('', '## Metrics');
+  for (const metricKey of DEFAULT_METRIC_KEYS) {
+    const metric = metrics[metricKey];
+    if (!metric) {
+      continue;
+    }
+    lines.push('- ' + metricKey + ': ' + formatMetricValue(metricKey, metric.value));
+  }
+}
+
+function appendTopRuleLines(lines, issues) {
+  const rules = issues?.facets?.rules ?? [];
+  if (rules.length === 0) {
+    return;
+  }
+
+  lines.push('', '## Top Rules');
+  for (const facet of rules.slice(0, 10)) {
+    lines.push('- ' + facet.value + ': ' + facet.count);
+  }
+}
+
+function appendErrorLines(lines, errors) {
+  if (!errors?.length) {
+    return;
+  }
+
+  lines.push('', '## Errors');
+  for (const error of errors) {
+    lines.push(formatErrorLine(error));
+  }
+}
+
 function renderMarkdown(report) {
   const lines = [
     '# SonarCloud Report',
     '',
-    `- Project: \`${report.projectKey}\``,
-    `- Branch: \`${report.branch}\``,
-    `- Fetched at: ${report.fetchedAt}`,
-    `- Status: ${report.status}`,
-    `- Host: \`${report.hostUrl}\``,
+    '- Project: `' + report.projectKey + '`',
+    '- Branch: `' + report.branch + '`',
+    '- Fetched at: ' + report.fetchedAt,
+    '- Status: ' + report.status,
+    '- Host: `' + report.hostUrl + '`',
   ];
 
-  if (report.latestAnalysis) {
-    lines.push(
-      `- Latest analysis: ${report.latestAnalysis.date ?? 'n/a'}${report.latestAnalysis.revision ? ` (\`${report.latestAnalysis.revision}\`)` : ''}`,
-    );
-  } else {
-    lines.push('- Latest analysis: n/a');
-  }
+  lines.push(formatLatestAnalysisLine(report.latestAnalysis));
+  lines.push('- Quality gate: ' + (report.qualityGate?.status ?? 'n/a'));
+  lines.push('- Open issues: ' + (report.issues?.total ?? 'n/a'));
 
-  lines.push(
-    `- Quality gate: ${report.qualityGate?.status ?? 'n/a'}`,
-    `- Open issues: ${report.issues?.total ?? 'n/a'}`,
-  );
+  appendMetricLines(lines, report.metrics);
+  appendTopRuleLines(lines, report.issues);
+  appendErrorLines(lines, report.errors);
 
-  if (report.metrics && Object.keys(report.metrics).length > 0) {
-    lines.push('', '## Metrics');
-    for (const metricKey of DEFAULT_METRIC_KEYS) {
-      const metric = report.metrics[metricKey];
-      if (!metric) {
-        continue;
-      }
-      lines.push(`- ${metricKey}: ${formatMetricValue(metricKey, metric.value)}`);
-    }
-  }
-
-  if (report.issues?.facets?.rules?.length) {
-    lines.push('', '## Top Rules');
-    for (const facet of report.issues.facets.rules.slice(0, 10)) {
-      lines.push(`- ${facet.value}: ${facet.count}`);
-    }
-  }
-
-  if (report.errors?.length) {
-    lines.push('', '## Errors');
-    for (const error of report.errors) {
-      lines.push(`- ${error.message}${error.status ? ` (${error.status})` : ''}`);
-    }
-  }
-
-  return `${lines.join('\n')}\n`;
+  return lines.join('\n') + '\n';
 }
 
-async function collectSonarCloudReport({
+function resolveSonarCloudContext({
   rootDir,
   outputDir,
   taskId,
@@ -466,7 +505,6 @@ async function collectSonarCloudReport({
   branch,
   attempts,
   waitMs,
-  fetchImpl = globalThis.fetch,
 } = {}) {
   const resolvedRoot = path.resolve(rootDir ?? DEFAULT_ROOT);
   const envFileVars = readEnvFile(resolvedRoot, envFile ?? DEFAULT_ENV_FILE);
@@ -484,86 +522,107 @@ async function collectSonarCloudReport({
   const resolvedOutputDir = path.resolve(resolveOutputDir({ outputDir, taskId }, resolvedRoot));
   fs.mkdirSync(resolvedOutputDir, { recursive: true });
 
-  const resolvedAttempts = Number.isFinite(attempts) && attempts > 0 ? attempts : DEFAULT_ATTEMPTS;
-  const resolvedWaitMs = Number.isFinite(waitMs) && waitMs >= 0 ? waitMs : DEFAULT_WAIT_MS;
+  return {
+    resolvedRoot,
+    hostUrl,
+    token,
+    resolvedProjectKey,
+    resolvedBranch,
+    resolvedOutputDir,
+    resolvedAttempts: Number.isFinite(attempts) && attempts > 0 ? attempts : DEFAULT_ATTEMPTS,
+    resolvedWaitMs: Number.isFinite(waitMs) && waitMs >= 0 ? waitMs : DEFAULT_WAIT_MS,
+  };
+}
 
-  let snapshot = null;
-  let errors = [];
-  for (let attempt = 1; attempt <= resolvedAttempts; attempt += 1) {
-    const analysesUrl = buildUrl(hostUrl, '/api/project_analyses/search', {
-      project: resolvedProjectKey,
-      branch: resolvedBranch,
+function buildSonarCloudUrls(hostUrl, projectKey, branch) {
+  return {
+    analysesUrl: buildUrl(hostUrl, '/api/project_analyses/search', {
+      project: projectKey,
+      branch,
       ps: 1,
-    });
-    const qualityGateUrl = buildUrl(hostUrl, '/api/qualitygates/project_status', {
-      projectKey: resolvedProjectKey,
-      branch: resolvedBranch,
-    });
-    const measuresUrl = buildUrl(hostUrl, '/api/measures/component', {
-      component: resolvedProjectKey,
-      branch: resolvedBranch,
+    }),
+    qualityGateUrl: buildUrl(hostUrl, '/api/qualitygates/project_status', {
+      projectKey,
+      branch,
+    }),
+    measuresUrl: buildUrl(hostUrl, '/api/measures/component', {
+      component: projectKey,
+      branch,
       metricKeys: DEFAULT_METRIC_KEYS.join(','),
-    });
-    const issuesUrl = buildUrl(hostUrl, '/api/issues/search', {
-      componentKeys: resolvedProjectKey,
-      branch: resolvedBranch,
+    }),
+    issuesUrl: buildUrl(hostUrl, '/api/issues/search', {
+      componentKeys: projectKey,
+      branch,
       resolved: false,
       ps: 100,
       facets: 'rules,severities,types,directories',
-    });
+    }),
+  };
+}
 
-    const [analysesResult, qualityGateResult, measuresResult, issuesResult] = await Promise.all([
-      safeFetchJson(analysesUrl, token, fetchImpl),
-      safeFetchJson(qualityGateUrl, token, fetchImpl),
-      safeFetchJson(measuresUrl, token, fetchImpl),
-      safeFetchJson(issuesUrl, token, fetchImpl),
-    ]);
+async function fetchSonarCloudSnapshot(urls, token, fetchImpl = globalThis.fetch) {
+  const [analysesResult, qualityGateResult, measuresResult, issuesResult] = await Promise.all([
+    safeFetchJson(urls.analysesUrl, token, fetchImpl),
+    safeFetchJson(urls.qualityGateUrl, token, fetchImpl),
+    safeFetchJson(urls.measuresUrl, token, fetchImpl),
+    safeFetchJson(urls.issuesUrl, token, fetchImpl),
+  ]);
 
-    snapshot = {
-      analysesResult,
-      qualityGateResult,
-      measuresResult,
-      issuesResult,
-      latestAnalysis: analysesResult.ok ? simplifyAnalysis(analysesResult.data) : null,
-      qualityGate: qualityGateResult.ok ? simplifyQualityGate(qualityGateResult.data) : null,
-      measures: measuresResult.ok ? simplifyMeasures(measuresResult.data) : {},
-      issues: issuesResult.ok ? simplifyIssues(issuesResult.data) : { total: 0, issues: [], facets: {} },
-    };
-    errors = [analysesResult, qualityGateResult, measuresResult, issuesResult]
-      .filter((result) => !result.ok)
-      .map((result) => result.error);
+  const snapshot = {
+    analysesResult,
+    qualityGateResult,
+    measuresResult,
+    issuesResult,
+    latestAnalysis: analysesResult.ok ? simplifyAnalysis(analysesResult.data) : null,
+    qualityGate: qualityGateResult.ok ? simplifyQualityGate(qualityGateResult.data) : null,
+    measures: measuresResult.ok ? simplifyMeasures(measuresResult.data) : {},
+    issues: issuesResult.ok ? simplifyIssues(issuesResult.data) : { total: 0, issues: [], facets: {} },
+  };
+  const errors = [analysesResult, qualityGateResult, measuresResult, issuesResult]
+    .filter((result) => !result.ok)
+    .map((result) => result.error);
 
-    if (!shouldRetry(snapshot) || attempt === resolvedAttempts) {
-      break;
-    }
+  return { snapshot, errors };
+}
 
-    await sleep(resolvedWaitMs);
-  }
-
-  const status = errors.length > 0 ? (snapshot?.latestAnalysis ? 'partial' : 'error') : shouldRetry(snapshot) ? 'pending' : 'complete';
+function createSonarCloudReport(context, snapshot, errors) {
   const report = {
-    projectKey: resolvedProjectKey,
-    branch: resolvedBranch,
-    hostUrl,
+    projectKey: context.resolvedProjectKey,
+    branch: context.resolvedBranch,
+    hostUrl: context.hostUrl,
     fetchedAt: new Date().toISOString(),
-    status,
-    latestAnalysis: snapshot?.latestAnalysis ?? null,
-    qualityGate: snapshot?.qualityGate ?? null,
-    metrics: snapshot?.measures ?? {},
-    issues: snapshot?.issues ?? { total: 0, issues: [], facets: {} },
+    status: resolveReportStatus(snapshot, errors),
+    latestAnalysis: snapshot.latestAnalysis ?? null,
+    qualityGate: snapshot.qualityGate ?? null,
+    metrics: snapshot.measures ?? {},
+    issues: snapshot.issues ?? { total: 0, issues: [], facets: {} },
     errors,
   };
+  return report;
+}
 
-  const jsonPath = path.join(resolvedOutputDir, `${DEFAULT_OUTPUT_NAME}.json`);
-  const markdownPath = path.join(resolvedOutputDir, `${DEFAULT_OUTPUT_NAME}.md`);
+function writeSonarCloudReportArtifacts(report, outputDir) {
+  const jsonPath = path.join(outputDir, `${DEFAULT_OUTPUT_NAME}.json`);
+  const markdownPath = path.join(outputDir, `${DEFAULT_OUTPUT_NAME}.md`);
   fs.writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   fs.writeFileSync(markdownPath, renderMarkdown(report), 'utf8');
 
   return {
-    report,
     jsonPath,
     markdownPath,
-    outputDir: resolvedOutputDir,
+    outputDir,
+  };
+}
+
+async function collectSonarCloudReport(options = {}) {
+  const context = resolveSonarCloudContext(options);
+  const urls = buildSonarCloudUrls(context.hostUrl, context.resolvedProjectKey, context.resolvedBranch);
+  const { snapshot, errors } = await fetchSonarCloudSnapshot(urls, context.token, options.fetchImpl ?? globalThis.fetch);
+  const report = createSonarCloudReport(context, snapshot, errors);
+  const artifacts = writeSonarCloudReportArtifacts(report, context.resolvedOutputDir);
+  return {
+    report,
+    ...artifacts,
   };
 }
 
@@ -626,6 +685,8 @@ async function main() {
 
 export {
   collectSonarCloudReport,
+  formatErrorLine,
+  formatLatestAnalysisLine,
   parseArgs,
   parseKeyValueFile,
   readEnvFile,
@@ -634,6 +695,7 @@ export {
   resolveHostUrl,
   resolveProjectKey,
   resolveToken,
+  resolveReportStatus,
   renderMarkdown,
 };
 

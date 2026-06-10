@@ -4,7 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { collectSonarCloudReport, parseArgs } from '../../scripts/fetch-sonarcloud-report.mjs';
+import {
+  collectSonarCloudReport,
+  formatErrorLine,
+  formatLatestAnalysisLine,
+  parseArgs,
+  resolveReportStatus,
+} from '../../scripts/fetch-sonarcloud-report.mjs';
 
 async function withFixtureRepo(callback) {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pantheon-sonar-report-'));
@@ -123,6 +129,29 @@ test('parseArgs accepts task and output directory options', () => {
   assert.equal(options.taskId, '2026-06-03-main-sonar-remediation');
   assert.equal(options.branch, 'main');
   assert.match(options.outputDir, /report-output$/);
+});
+
+test('formatLatestAnalysisLine and formatErrorLine render report rows', () => {
+  assert.equal(
+    formatLatestAnalysisLine({
+      date: '2026-06-10T05:42:45+0000',
+      revision: 'abc123',
+    }),
+    '- Latest analysis: 2026-06-10T05:42:45+0000 (`abc123`)',
+  );
+  assert.equal(formatLatestAnalysisLine(null), '- Latest analysis: n/a');
+  assert.equal(formatErrorLine({ message: 'Network timeout', status: 504 }), '- Network timeout (504)');
+  assert.equal(formatErrorLine({ message: 'Permission denied' }), '- Permission denied');
+});
+
+test('resolveReportStatus maps analysis and fetch results to a report status', () => {
+  assert.equal(
+    resolveReportStatus({ latestAnalysis: { key: 'analysis-1' }, qualityGate: { status: 'ERROR' } }, []),
+    'complete',
+  );
+  assert.equal(resolveReportStatus({ latestAnalysis: { key: 'analysis-1' } }, [{ message: 'boom' }]), 'partial');
+  assert.equal(resolveReportStatus({ latestAnalysis: null }, [{ message: 'boom' }]), 'error');
+  assert.equal(resolveReportStatus({ latestAnalysis: null }, []), 'pending');
 });
 
 test('collectSonarCloudReport writes a SonarCloud report artifact', async () => {

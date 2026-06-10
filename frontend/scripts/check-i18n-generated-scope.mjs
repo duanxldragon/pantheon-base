@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const frontendRoot = path.resolve(path.dirname(currentFilePath), '..');
@@ -10,14 +10,38 @@ const schemaGeneratedRoot = path.join(repoRoot, 'schema', 'generated');
 const generatedResourcesRoot = path.join(frontendRoot, 'src', 'i18n', 'resources', 'generated');
 const LOCALES = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR'];
 
-function loadResourceModule(modulePath) {
-  const source = fs.readFileSync(modulePath, 'utf8');
-  const sanitized = source.replace(/export default\s+([A-Za-z0-9_$]+);?\s*$/m, 'module.exports = $1;');
+function resolveImportedModulePath(modulePath, specifier) {
+  const basePath = path.resolve(path.dirname(modulePath), specifier);
+  const candidates = [basePath, `${basePath}.ts`, `${basePath}.js`, `${basePath}.mjs`];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error(`Unable to resolve imported module '${specifier}' from ${modulePath}`);
+}
+
+function loadResourceModule(modulePath, cache = new Map()) {
+  const resolvedModulePath = path.resolve(modulePath);
+  if (cache.has(resolvedModulePath)) {
+    return cache.get(resolvedModulePath);
+  }
+
+  const source = fs.readFileSync(resolvedModulePath, 'utf8');
+  const sanitized = source
+    .replace(
+      /^import\s+([A-Za-z0-9_$]+)\s+from\s+['"](.+?)['"];?\s*$/gm,
+      (_, binding, specifier) => `const ${binding} = __loadResourceModule(${JSON.stringify(specifier)});`,
+    )
+    .replace(/export default\s+([A-Za-z0-9_$]+);?\s*$/m, 'module.exports = $1;');
   const context = {
     module: { exports: {} },
     exports: {},
+    __loadResourceModule: (specifier) => loadResourceModule(resolveImportedModulePath(resolvedModulePath, specifier), cache),
   };
-  vm.runInNewContext(sanitized, context, { filename: modulePath }); // NOSONAR — build-only script, controlled source
+  vm.runInNewContext(sanitized, context, { filename: resolvedModulePath }); // NOSONAR — build-only script, controlled source
+  cache.set(resolvedModulePath, context.module.exports);
   return context.module.exports;
 }
 
@@ -88,4 +112,8 @@ function main() {
   process.exitCode = 1;
 }
 
-main();
+export { loadResourceModule };
+
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main();
+}
