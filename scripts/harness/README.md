@@ -32,6 +32,10 @@ node scripts/harness/check-visual-evidence.mjs
 - `check-graph-review.mjs` — validate graph review consistency
 - `scaffold-graph-review.mjs` — seed graphChecks from task packet structural scope
 
+## Shared utilities
+
+- `sort-utils.mjs` — shared string sorting helper used by harness checks
+
 ## Pantheon-base additions
 
 The following scripts are repo-specific and not part of the portable method:
