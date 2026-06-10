@@ -186,7 +186,7 @@ English version: [PLATFORM_GAP_AUDIT_20260429.en.md](./PLATFORM_GAP_AUDIT_202604
 
 关键问题：
 
-- 文档已迁移为 [BUSINESS_CMDB_MODULE_DESIGN.md](../designs/BUSINESS_CMDB_MODULE_DESIGN.md)，并明确纳入 `cmdb/host` 与后续 `cmdb/vendor`
+- 相关设计已收敛到 [BUSINESS_RESOURCE_LIST_PATTERN.md](../designs/BUSINESS_RESOURCE_LIST_PATTERN.md) 与 [LOWCODE_GENERATOR_GUIDE.md](../designs/LOWCODE_GENERATOR_GUIDE.md)，并明确纳入 `cmdb/host` 与后续 `cmdb/vendor`
 - `vendor` 当前不再按“已实现”统计，而是按“设计归属已明确，待实现”管理
 - 后续实现 `vendor` 前必须补 DDL、菜单、权限、i18n、审计与 smoke 验收证据
 
