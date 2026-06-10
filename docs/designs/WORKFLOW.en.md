@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-06-10
 ---
 
 # Business Development Workflow and AI Collaboration Guide
@@ -118,11 +118,11 @@ Required gate stack:
 - `Duplication Gate` as a visible PR and merge-queue report; enforce the full-repository baseline on protected-branch push, manual quality review, or after a new-code duplication gate exists
 - `Full Smoke Suite` only for manual, scheduled, or release-precheck regression runs
 - dependency-vulnerability scans on `main/release`, scheduled, or manual workflows rather than every PR
-- optional manual Sonar review
+- Sonar report review, with the report fetched automatically into evidence/artifact
 - Codacy, if present, stays informational only
 - independent reviewer sign-off
 
-Default manual Sonar guidance:
+Default Sonar report guidance:
 
 - `0` blocker or critical issues on new code
 - reviewed security hotspots before merge
@@ -138,6 +138,9 @@ Recommended GitHub protections:
 - `CODEOWNERS`
 - dismiss stale approvals
 - require conversation resolution
+- enable automatic deletion of head branches so merged worktree branches do not keep accumulating
+
+The delivery loop does not end at local validation; it ends only after the PR is merged into `main`, the head branch is deleted or manually deleted during closeout, the local worktree is cleaned up, and the closeout records the PR URL, merge commit, and branch cleanup status.
 
 ### Phase 6: Platform Smoke
 

@@ -3,6 +3,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+
+import { sortStrings } from './sort-utils.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DEFAULT_ROOT = process.cwd();
@@ -141,14 +143,16 @@ function discoverChangedFiles(root) {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    return Array.from(new Set([...tracked, ...untracked])).sort();
+    return sortStrings(Array.from(new Set([...tracked, ...untracked])));
   } catch {
     return [];
   }
 }
 
 function scanChangedFiles(root, findings, warnings, changedFiles) {
-  const normalizedFiles = Array.from(new Set(changedFiles.map((file) => file.replaceAll('\\', '/')))).sort();
+  const normalizedFiles = sortStrings(
+    Array.from(new Set(changedFiles.map((file) => file.replaceAll('\\', '/')))),
+  );
   if (normalizedFiles.length === 0) {
     warnings.push({
       file: '.',
@@ -196,7 +200,7 @@ function listActiveOpenSpecChanges(root) {
     .readdirSync(changesRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name !== 'archive')
     .map((entry) => `${OPEN_SPEC_CHANGES_ROOT}/${entry.name}/`)
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function parseTaskPacketChangeRef(root, repoPath) {

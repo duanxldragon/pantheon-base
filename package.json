@@ -14,7 +14,7 @@
     "cleanup:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs",
     "test:docs-frontmatter": "node --test tests/docs/frontmatter-check.test.mjs",
     "test:foundation-release": "node --test tests/scripts/foundation-release/*.test.mjs",
-    "test:sonar-remediation": "node --test tests/scripts/run-sonar-remediation.test.mjs"
+    "test:sonar-remediation": "node --test tests/scripts/fetch-sonarcloud-report.test.mjs tests/scripts/run-sonar-remediation.test.mjs"
   },
   "devDependencies": {
     "playwright": "^1.60.0"

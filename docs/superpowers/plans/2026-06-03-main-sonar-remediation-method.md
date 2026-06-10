@@ -4,7 +4,7 @@
 
 **Goal:** Stabilize `pantheon-base` main-branch quality remediation by separating CI gate closure, Sonar auxiliary review, and module-by-module debt cleanup into one repeatable workflow.
 
-**Architecture:** Treat GitHub-native checks as the correctness gate and Sonar as the main-branch debt dashboard. Work in batches: document baseline first, reproduce whole-repo checks locally, classify findings by layer and risk, land small verified fixes to `main`, then run a fresh full-repo Sonar scan on real merged code.
+**Architecture:** Treat GitHub-native checks as the correctness gate and Sonar as the main-branch debt dashboard. Work in batches: document baseline first, reproduce whole-repo checks locally, classify findings by layer and risk, land small verified fixes to `main`, then run a fresh full-repo Sonar scan on real merged code and automatically fetch the latest report into evidence.
 
 **Tech Stack:** Go, Node.js, GitHub Actions, SonarCloud, PowerShell, MySQL-backed backend tests, frontend lint/build/smoke contracts.
 
@@ -157,16 +157,16 @@ npm run check:duplication -- --json
 
 Expected: a real duplication percentage for the whole repository, with generated and fixture exclusions defined by the in-repo script instead of by Sonar guesswork.
 
-- [ ] **Step 4: Only after local green or known residual failures, run the manual Sonar path**
+- [ ] **Step 4: Only after local green or known residual failures, run the Sonar scan + report fetch path**
 
 Run:
 
 ```powershell
 go test ./... -coverprofile=coverage.out
-.\scripts\run-sonar.ps1
+npm run run:sonar-remediation -- --group local-sonar --execute
 ```
 
-Expected: Sonar receives a coverage file generated from the same repository state that already passed or nearly passed local CI reproduction.
+Expected: Sonar receives a coverage file generated from the same repository state that already passed or nearly passed local CI reproduction, and the latest report is fetched into evidence automatically.
 
 ### Task 4: Triage by finding class, not by whatever failed last
 
@@ -294,7 +294,7 @@ npm run check:duplication -- --json
 
 Expected: the PR is used to transport already-verified changes, not to discover the first real failures.
 
-- [ ] **Step 2: Merge to `main`, then trigger the manual Sonar scan on merged code**
+- [ ] **Step 2: Merge to `main`, then trigger the Sonar workflow on merged code**
 
 Run:
 
@@ -306,7 +306,7 @@ gh workflow run sonar.yml --ref main
 gh run watch <sonar-run-id>
 ```
 
-Expected: the Sonar result corresponds to the real `main` branch, which matches the user's stated target.
+Expected: the Sonar result corresponds to the real `main` branch, and the workflow fetches the report artifact automatically.
 
 - [ ] **Step 3: Treat stale Sonar screenshots as a workflow or prerequisite problem first**
 
@@ -317,7 +317,8 @@ If the dashboard still shows an old result, check:
 1. Was main actually updated?
 2. Did the manual sonar workflow run on main?
 3. Did coverage generation succeed before the scan?
-4. Is Sonar still displaying the last successful analysis because the new run failed early?
+4. Did the report fetch step run and upload its artifact?
+5. Is Sonar still displaying the last successful analysis because the new run failed early?
 ```
 
 Expected: stale dashboards are debugged systematically instead of triggering more random code edits.

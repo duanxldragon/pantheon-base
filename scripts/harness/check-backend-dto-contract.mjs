@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 const REPOSITORIES = ['pantheon-base', 'pantheon-ops'];
 const DTO_LIKE_SUFFIXES = [
@@ -110,7 +112,7 @@ function walkFiles(rootDir, extensions) {
     }
   }
 
-  return files.sort();
+  return sortStrings(files);
 }
 
 function toRepoPath(root, filePath) {

@@ -64,7 +64,7 @@ function readTaskFiles(root) {
   return fs
     .readdirSync(dir)
     .filter((name) => name.endsWith('.task.md'))
-    .sort()
+    .sort((left, right) => left.localeCompare(right))
     .map((name) => path.join(dir, name));
 }
 
@@ -80,7 +80,7 @@ function extractSection(content, title) {
   const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const heading = new RegExp(`^## ${escapedTitle}\\s*$`, 'm');
   const match = heading.exec(content);
-  if (!match || match.index === undefined) {
+  if (!match) {
     return null;
   }
 
@@ -116,7 +116,7 @@ function normalizeTaskGraphFocus(value) {
   return normalizeListValue(value)
     .map((entry) => mapping.get(entry) || entry)
     .filter((entry) => entry !== 'none')
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeChecks(value) {
@@ -124,7 +124,7 @@ function normalizeChecks(value) {
   return items
     .map((entry) => String(entry).trim())
     .filter((entry) => entry && entry.toLowerCase() !== 'none')
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeAffectedSubgraph(value) {
@@ -132,7 +132,7 @@ function normalizeAffectedSubgraph(value) {
   return items
     .map((entry) => String(entry).trim())
     .filter((entry) => entry && entry.toLowerCase() !== 'none')
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function parseTaskStructuralScope(content) {

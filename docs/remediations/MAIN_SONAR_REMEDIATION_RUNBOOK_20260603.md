@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-07
+updated_at: 2026-06-10
 ---
 
 # Main Sonar Remediation Runbook
@@ -47,7 +47,7 @@ cd frontend && npm ci && npm run lint && npm run build   # 前端构建
 gh workflow run sonar.yml --ref main
 ```
 
-远端 Sonar 完成后，确认结果。如果质量门仍为 ERROR，记录具体恶化指标并进入下一轮。
+远端 Sonar 完成后，workflow 会自动抓取最新报告并上传 artifact / evidence。直接根据该报告确认结果；如果质量门仍为 ERROR，记录具体恶化指标并进入下一轮，不再手工回 SonarCloud 页面找报告。
 
 ## 2. 证据要求
 
@@ -75,7 +75,7 @@ cp pantheon-sonarcloud.env.example pantheon-sonarcloud.env
 pwsh -File scripts/run-sonar.ps1
 ```
 
-日常不要求本地 Sonar。CI 上的 PR Sonar 分析已提供足够反馈，本地 Sonar 仅用于调试 coverage 生成或复现 CI 差异。
+日常不要求本地 Sonar。CI 上的 PR Sonar 分析已提供足够反馈；如果需要本地闭环，请优先使用 `npm run run:sonar-remediation -- --group local-sonar --execute`，它会在扫描后自动抓取最新报告并写入 evidence。`scripts/run-sonar.ps1` 仍可作为更低层的扫描调试入口。
 
 ### Windows 说明
 

@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-06-10
 ---
 
 # Pantheon 代码评审标准流程
@@ -50,16 +50,16 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 
 ## 0.2 自动化质量门栈
 
-Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + 手动 Sonar 辅助审查 + 独立 reviewer”五层协作。完整策略见 [代码质量与安全治理策略](../designs/QUALITY_AND_SECURITY_STRATEGY.md)。
+Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + 自动抓取的 Sonar 报告 + 独立 reviewer”五层协作。完整策略见 [代码质量与安全治理策略](../designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 - `本地验证`：作者提交前先跑与改动范围匹配的测试、构建和专项脚本
 - `GitHub checks`：PR 上必须通过 required status checks
 - `CodeQL`：代码安全主信号，负责可达安全风险和高危漏洞
-- `SonarQube`：仅作为辅助审查工具，不进入 required checks；需要时手动扫描并查看报告
+- `SonarQube`：仅作为辅助审查工具，不进入 required checks；需要时触发扫描，但报告由固定流程自动抓取并附到 evidence / artifact
 - `Codacy`：如果存在，只能作为参考对比，不作为合并门禁
 - `独立 reviewer`：确认自动化未覆盖的架构边界、设计漂移和业务风险
 
-手动 Sonar 辅助的最低建议：
+自动抓取的 Sonar 辅助审查最低建议：
 
 - New Code 上 `Blocker / Critical` 问题为 `0`
 - Security Hotspots 已 review
@@ -119,7 +119,7 @@ GitHub 保护建议：
 - `git diff --name-only`
 - 检查是否存在生成文件、注册表、schema、i18n 资源同时变更
 - 检查是否存在未解释的跨层改动
-- 检查 PR 是否附了 GitHub checks 结果、独立 reviewer 信息，以及如有需要的手动 Sonar 报告
+- 检查 PR 是否附了 GitHub checks 结果、独立 reviewer 信息，以及如有需要的 Sonar 报告 artifact / evidence
 
 ### 3.2 架构边界
 
@@ -341,7 +341,7 @@ GitHub 保护建议：
 
 #### 3.7.10 SonarQube 手动辅助审查 `[PR]`
 
-- 如有手动 Sonar 报告，是否已附在 PR 中
+- 如有 Sonar 报告，是否已附在 PR 中或 evidence / artifact 中
 - 报告中的严重问题是否已被明确处理或豁免
 - 是否存在 `Blocker / Critical` New Code 问题未处理
 - Security Hotspots 是否已 review 并记录处理结论
@@ -517,7 +517,7 @@ npx lighthouse-batch --score=90
 - 已检查 diff 中所有生成物与注册物
 - 已修复可自动修复的 P0 / P1
 - 已记录剩余 P2 和后续处理建议
-- 如有手动 Sonar 报告，是否有明确的受控豁免记录
+- 如有 Sonar 报告，是否有明确的受控豁免记录
 - GitHub required checks 已全部通过
 - 已完成独立 reviewer 审核，且不是作者自审替代
 - 已运行或明确说明未运行的验证命令

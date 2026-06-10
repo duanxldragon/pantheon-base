@@ -23,7 +23,7 @@ export const PHASES = [
     cwdLabel: 'pantheon-base',
     displayCommand: 'npm ci',
     command: () => 'npm ci',
-    notes: 'install root dependencies before docs and duplication checks',
+    notes: 'install root dependencies before docs and repository quality checks',
   },
   {
     id: 'docs-frontmatter',
@@ -111,6 +111,17 @@ export const PHASES = [
     notes: 'local auxiliary Sonar scan after local whole-repo gate closure',
     runtimeSensitive: true,
   },
+  {
+    id: 'sonar-report',
+    category: 'auxiliary-sonar',
+    cwd: '.',
+    cwdLabel: 'pantheon-base',
+    displayCommand: 'node scripts/fetch-sonarcloud-report.mjs',
+    command: ({ envFile = DEFAULT_ENV_FILE, taskId = DEFAULT_TASK_ID } = {}) =>
+      `node scripts/fetch-sonarcloud-report.mjs --root "." --task "${taskId}" --env-file "${envFile}"`,
+    notes: 'fetch the latest SonarCloud report into remediation evidence after the scan uploads',
+    runtimeSensitive: true,
+  },
 ];
 
 export const GROUPS = {
@@ -125,7 +136,7 @@ export const GROUPS = {
     'frontend-lint',
     'frontend-build',
   ],
-  'local-sonar': ['local-sonar'],
+  'local-sonar': ['local-sonar', 'sonar-report'],
   all: PHASES.map((phase) => phase.id),
 };
 
@@ -161,6 +172,7 @@ export function resolvePhaseExecution(phase, options = {}) {
   const command = phase.command({
     envFile: options.envFile,
     platform: options.platform ?? process.platform,
+    taskId: options.taskId ?? DEFAULT_TASK_ID,
   });
   const execution = { command };
   if (phase.id === 'backend-tests' && command !== phase.displayCommand) {
@@ -252,7 +264,7 @@ Examples:
   node scripts/run-sonar-remediation.mjs --task 2026-06-03-main-sonar-remediation
   node scripts/run-sonar-remediation.mjs --task 2026-06-03-main-sonar-remediation --phase docs-frontmatter --phase task-packet-template --execute
   node scripts/run-sonar-remediation.mjs --task 2026-06-03-main-sonar-remediation --group baseline --execute
-  node scripts/run-sonar-remediation.mjs --task 2026-06-03-main-sonar-remediation --phase local-sonar --env-file pantheon-sonarcloud.env --execute`);
+  node scripts/run-sonar-remediation.mjs --task 2026-06-03-main-sonar-remediation --group local-sonar --env-file pantheon-sonarcloud.env --execute`);
 }
 
 function evidenceDir(rootDir, taskId) {

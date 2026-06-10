@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-07
+updated_at: 2026-06-10
 ---
 
 # Main Sonar Remediation Runbook (EN)
@@ -46,7 +46,7 @@ Principles:
 gh workflow run sonar.yml --ref main
 ```
 
-After the remote Sonar completes, check the result. If the quality gate is still ERROR, document the regressed metric and start the next round.
+After the remote Sonar completes, the workflow automatically fetches the latest report and uploads it as an artifact/evidence. Check that report directly; if the quality gate is still ERROR, document the regressed metric and start the next round without manually browsing SonarCloud.
 
 ## 2. Evidence
 
@@ -68,7 +68,7 @@ cp pantheon-sonarcloud.env.example pantheon-sonarcloud.env
 pwsh -File scripts/run-sonar.ps1
 ```
 
-Local Sonar is not required for daily work. PR Sonar analysis provides sufficient feedback.
+Local Sonar is not required for daily work. PR Sonar analysis provides sufficient feedback. When you need a local closed loop, prefer `npm run run:sonar-remediation -- --group local-sonar --execute`; it automatically fetches the latest report after the scan and writes it into evidence. `scripts/run-sonar.ps1` remains the lower-level scan-only entry point.
 
 ### Windows note
 

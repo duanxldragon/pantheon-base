@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 const REPOSITORIES = ['pantheon-base', 'pantheon-ops'];
 const WRITE_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
@@ -78,7 +80,7 @@ function walkGoFiles(rootDir) {
     }
   }
 
-  return files.sort();
+  return sortStrings(files);
 }
 
 function toRepoPath(filePath, root) {

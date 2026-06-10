@@ -5,6 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 function printHelp() {
@@ -142,7 +144,7 @@ function normalizeChecks(value) {
   return items
     .map((entry) => String(entry).trim())
     .filter(Boolean)
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeFindings(value) {
@@ -195,7 +197,7 @@ function normalizeAffectedSubgraph(payload) {
     return values
       .map((entry) => String(entry).trim())
       .filter(Boolean)
-      .sort();
+      .sort((left, right) => left.localeCompare(right));
   }
 
   if (Array.isArray(payload.trace)) {
@@ -212,7 +214,7 @@ function normalizeAffectedSubgraph(payload) {
     return payload.paths
       .map((entry) => normalizeChain(entry))
       .filter(Boolean)
-      .sort();
+      .sort((left, right) => left.localeCompare(right));
   }
 
   return [];
@@ -309,7 +311,7 @@ function runCodegraphJson(options, args) {
 }
 
 function uniqueSorted(values) {
-  return Array.from(new Set(values.filter(Boolean))).sort();
+  return sortStrings(Array.from(new Set(values.filter(Boolean))));
 }
 
 function buildImportFromLive(options) {

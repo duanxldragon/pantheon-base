@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 const DEFAULT_BASE = 'pantheon-base';
 const DEFAULT_BUSINESS = 'pantheon-ops';
@@ -99,7 +101,7 @@ function walkFiles(rootDir) {
     }
   }
 
-  return files.sort();
+  return sortStrings(files);
 }
 
 function relativeUnix(root, filePath) {
@@ -271,7 +273,7 @@ function scan(options) {
 
   const baseFiles = new Map(walkFiles(baseRoot).map((filePath) => [relativeUnix(baseRoot, filePath), filePath]));
   const businessFiles = new Map(walkFiles(businessRoot).map((filePath) => [relativeUnix(businessRoot, filePath), filePath]));
-  const allPaths = Array.from(new Set([...baseFiles.keys(), ...businessFiles.keys()])).sort();
+  const allPaths = sortStrings(Array.from(new Set([...baseFiles.keys(), ...businessFiles.keys()])));
 
   for (const relativePath of allPaths) {
     const basePath = baseFiles.get(relativePath);

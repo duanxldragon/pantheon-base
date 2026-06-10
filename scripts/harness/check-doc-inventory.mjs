@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 const REQUIRED_DOC_README_ENTRIES = [
@@ -50,12 +52,13 @@ function readIfExists(filePath) {
 function listCheckScripts(root, dir) {
   const fullDir = path.join(root, dir);
   if (!fs.existsSync(fullDir)) return [];
-  return fs
-    .readdirSync(fullDir, { withFileTypes: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => entry.name)
-    .filter((name) => name.endsWith('.mjs') && !name.endsWith('.test.mjs'))
-    .sort();
+  return sortStrings(
+    fs
+      .readdirSync(fullDir, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => name.endsWith('.mjs') && !name.endsWith('.test.mjs')),
+  );
 }
 
 function validateScriptInventory(root, dir, readmePath, findings) {

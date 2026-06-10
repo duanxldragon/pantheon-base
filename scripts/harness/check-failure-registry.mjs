@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 const REQUIRED_COLUMNS = [
@@ -152,7 +154,7 @@ function discoverRegistryFiles(root) {
   );
   const registryDir = path.join(root, 'docs', 'harness', 'failure-registry');
   if (fs.existsSync(registryDir) && fs.statSync(registryDir).isDirectory()) {
-    for (const fileName of fs.readdirSync(registryDir).sort()) {
+    for (const fileName of sortStrings(fs.readdirSync(registryDir))) {
       if (fileName.endsWith('.md')) {
         discovered.push(path.join(registryDir, fileName));
       }
