@@ -13,11 +13,6 @@ import {
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import {
@@ -31,12 +26,11 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
+  getPagedItems,
   FilterPanel,
   PageEmpty,
-  PageError,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
@@ -175,13 +169,10 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
     return roles.filter((role) => role.governanceStatus === 'pending');
   }, [viewMode, workbench?.roles]);
 
-  const tableTotalPages = useMemo(
-    () => Math.max(1, Math.ceil(displayedRoles.length / tablePagination.pageSize)),
-    [displayedRoles.length, tablePagination.pageSize],
-  );
-  const tableCurrentPage = useMemo(
-    () => Math.min(tablePagination.current, tableTotalPages),
-    [tablePagination.current, tableTotalPages],
+  const { currentPage: tableCurrentPage } = getPagedItems(
+    displayedRoles,
+    tablePagination.current,
+    tablePagination.pageSize,
   );
 
   const renderGovernanceStatusTag = (role: PermissionWorkbenchRole) => {
@@ -206,16 +197,6 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
       })),
     [remediationEvents, t],
   );
-
-  const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
-    if (isNetworkRequestError(requestError)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(requestError)} onRetry={onRetry} />;
-    }
-    if (isServerRequestError(requestError)) {
-      return <PageServerError onRetry={onRetry} />;
-    }
-    return <PageError onRetry={onRetry} />;
-  };
 
   const workbenchColumns: ColumnProps<PermissionWorkbenchRole>[] = [
     { title: t('system.role.roleName'), dataIndex: 'roleName', width: TABLE_COLUMN_WIDTH.name },
@@ -441,9 +422,9 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
 
         <Card className="page-panel system-list__table-card">
           {workbenchLoading && !workbench ? <PageLoading /> : null}
-          {workbenchError && !workbench
-            ? renderRequestErrorState(workbenchError, onRetryLoadWorkbench)
-            : null}
+          {workbenchError && !workbench ? (
+            <PageRequestError error={workbenchError} onRetry={onRetryLoadWorkbench} />
+          ) : null}
           {!workbenchLoading && !workbenchError && displayedRoles.length === 0 ? (
             <PageEmpty description={t('common.noData')} />
           ) : null}

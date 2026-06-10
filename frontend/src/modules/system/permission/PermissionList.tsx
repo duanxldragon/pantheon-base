@@ -23,11 +23,6 @@ import {
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
-import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
@@ -72,10 +67,8 @@ import {
   ListHeaderActions,
   PageContainer,
   PageEmpty,
-  PageError,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   PermissionAction,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
@@ -489,16 +482,6 @@ const PermissionList: React.FC = () => {
     [activeTab, canExport, t, workbench?.overview.unknownPermissionAssignmentCount],
   );
 
-  const renderRequestErrorState = (requestError: unknown, onRetry: () => void) => {
-    if (isNetworkRequestError(requestError)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(requestError)} onRetry={onRetry} />;
-    }
-    if (isServerRequestError(requestError)) {
-      return <PageServerError onRetry={onRetry} />;
-    }
-    return <PageError onRetry={onRetry} />;
-  };
-
   const columns: ColumnProps<PermissionPolicyRow>[] = [
     {
       title: t('system.permission.roleKey'),
@@ -758,11 +741,14 @@ const PermissionList: React.FC = () => {
                   }
                 />
                 {loading && data.length === 0 ? <PageLoading /> : null}
-                {policyError && data.length === 0
-                  ? renderRequestErrorState(policyError, () => {
+                {policyError && data.length === 0 ? (
+                  <PageRequestError
+                    error={policyError}
+                    onRetry={() => {
                       loadData(query);
-                    })
-                  : null}
+                    }}
+                  />
+                ) : null}
                 {!loading && !policyError && data.length === 0 ? (
                   <PageEmpty description={t('common.noData')} />
                 ) : null}

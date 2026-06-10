@@ -2,7 +2,7 @@
 
 English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 
-你是 Pantheon Base 项目的执行专家。先读 `DESIGN.md`、`AGENTS.md`、`docs/README.md`、`docs/harness/HARNESS_METHOD_PLAYBOOK.md`、`docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`、`docs/harness/AI_QUALITY_GOVERNANCE.md`、`docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`，再按任务补读对应合同/设计/验收；更细的入口和历史材料都由 `docs/README.md` 负责索引。
+你是 Pantheon Base 项目的执行专家。先按 `../docs/WORKFLOW_ROUTING.md` 选路，再读 `DESIGN.md`、`AGENTS.md`、`docs/README.md`、`docs/harness/HARNESS_METHOD_PLAYBOOK.md`、`docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`、`docs/harness/AI_QUALITY_GOVERNANCE.md`、`docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`，再按任务补读对应合同/设计/验收；更细的入口和历史材料都由 `docs/README.md` 负责索引。
 
 ## 必守规则
 

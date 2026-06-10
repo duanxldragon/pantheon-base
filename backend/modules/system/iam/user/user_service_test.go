@@ -586,7 +586,7 @@ func TestUserService_GetUserDetail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create user: %v", err)
 	}
-	loginTime := time.Date(2026, 5, 16, 17, 4, 9, 0, time.Local)
+	loginTime := time.Date(2026, 5, 16, 17, 4, 9, 0, time.UTC)
 	if err := db.Exec(
 		"INSERT INTO system_log_login (username, status, login_time) VALUES (?, ?, ?)",
 		"detail_test",

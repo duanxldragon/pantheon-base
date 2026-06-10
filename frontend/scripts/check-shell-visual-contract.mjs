@@ -353,6 +353,22 @@ if (headerBlock) {
   }
 }
 
+const menuEntryBlock = requireBlock(source, '.app-shell__menu-entry', findings);
+if (menuEntryBlock) {
+  if (!hasDeclaration(menuEntryBlock, 'border', '0')) {
+    findings.push('.app-shell__menu-entry must remove the browser default button border.');
+  }
+  if (!hasDeclaration(menuEntryBlock, 'background', 'transparent')) {
+    findings.push('.app-shell__menu-entry must keep a transparent button background.');
+  }
+  if (!hasDeclaration(menuEntryBlock, 'padding', '0')) {
+    findings.push('.app-shell__menu-entry must remove the browser default button padding.');
+  }
+  if (!hasDeclaration(menuEntryBlock, 'appearance', 'none')) {
+    findings.push('.app-shell__menu-entry must disable native button appearance.');
+  }
+}
+
 const headerMetaBlock = requireBlock(source, '.app-shell__header-meta', findings);
 if (headerMetaBlock) {
   if (!hasDeclaration(headerMetaBlock, 'align-items', 'center')) {
