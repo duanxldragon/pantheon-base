@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-08
+updated_at: 2026-06-10
 ---
 
 # GitHub Repository Setup Guide
@@ -30,6 +30,7 @@ Enable:
 - Dismiss stale pull request approvals when new commits are pushed
 - Require conversation resolution before merging
 - Restrict pushes that create matching branches
+- Automatically delete head branches after merge so merged worktree branches do not linger on GitHub
 
 Recommended approval policy:
 
@@ -62,10 +63,11 @@ Use Sonar only as a local auxiliary review step:
 
 1. create `pantheon-sonarcloud.env` in the repo root
 2. keep it ignored by Git
-3. run `scripts/run-sonar.ps1`
-4. install SonarScanner CLI locally before running the script
-5. review the report in SonarCloud manually after the upload completes
-6. if Codacy appears in GitHub, treat it as informational only
+3. run `npm run run:sonar-remediation -- --group local-sonar --execute`
+4. install SonarScanner CLI locally before running the scan phase
+5. review the generated `sonarcloud-report.md` / `sonarcloud-report.json` in `.harness/evidence/<task-id>/logs/` or the uploaded artifact, not the SonarCloud UI
+6. `scripts/run-sonar.ps1` remains the lower-level scan-only entry point if you need to debug upload behavior
+7. if Codacy appears in GitHub, treat it as informational only
 
 ## 2. Ops repository
 
@@ -83,4 +85,5 @@ After configuration, verify:
 - branch protection blocks direct push to protected branches
 - required checks show only GitHub-native merge gates
 - stale approvals are dismissed after new commits
+- merged PR head branches are deleted automatically
 - the PR template records review ownership and GitHub checks status

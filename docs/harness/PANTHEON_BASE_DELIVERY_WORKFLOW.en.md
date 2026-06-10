@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-08
+updated_at: 2026-06-10
 ---
 
 # Pantheon Base Multi-Agent Delivery Workflow
@@ -43,6 +43,7 @@ Human Goal
   -> Claude reviewer
   -> Codex fixer when needed
   -> GitHub / CI governance
+  -> PR merge and branch cleanup
   -> Ratchet or closeout
 ```
 
@@ -52,7 +53,9 @@ Use `acpx` as the deterministic dispatch surface for named agents, sessions, and
 
 Use `omc` for discovery, capability routing, and future orchestration. Do not rely on `omc -q` for non-trivial or high-risk tasks unless its routing is explicitly configured to keep Claude as planner/reviewer and Codex as executor.
 
-GitHub Actions are mechanical gates. `Quality Gates` and `Security Gates` are PR-required signals. `SonarCloud Auxiliary Scan` and `Full Smoke Suite` are advisory, scheduled, or manual deep signals.
+GitHub Actions are mechanical gates. `Quality Gates` and `Security Gates` are PR-required signals. `SonarCloud Auxiliary Scan` automatically fetches the latest report into evidence/artifact after the scan so the dispatcher can keep the loop moving without manual SonarCloud navigation. `Full Smoke Suite` remains advisory, scheduled, or manual deep signal.
+
+Worktrees are for local implementation and validation, not as long-lived delivery artifacts. The fuller worktree -> push -> PR -> merge -> cleanup loop lives in `docs/designs/WORKFLOW.md`.
 
 ## Human Gates
 
@@ -66,6 +69,8 @@ Every non-trivial task needs:
 - evidence path or command summary
 - reviewer role and review result
 - GitHub signal classification
+- merged PR URL and merge commit
+- branch cleanup status
 - known gaps
 - ratchet decision
 

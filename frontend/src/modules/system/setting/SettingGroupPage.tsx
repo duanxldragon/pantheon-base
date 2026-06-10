@@ -3,17 +3,10 @@ import { Space, Tag, Typography } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
-import {
   PageContainer,
   PageEmpty,
-  PageError,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   GovernanceSummaryBar,
 } from '../../../components';
 import { usePermission } from '../../../hooks/usePermission';
@@ -87,40 +80,18 @@ const SettingGroupPage: React.FC = () => {
     navigate(getSettingGroupPath(settingGroups[0].key), { replace: true });
   }, [groupKey, navigate]);
 
-  const renderErrorState = () => {
-    if (isNetworkRequestError(error)) {
-      return (
-        <PageNetworkError
-          timeout={isTimeoutRequestError(error)}
-          onRetry={() => {
-            void reload();
-          }}
-        />
-      );
-    }
-    if (isServerRequestError(error)) {
-      return (
-        <PageServerError
-          onRetry={() => {
-            void reload();
-          }}
-        />
-      );
-    }
-    return (
-      <PageError
-        onRetry={() => {
-          void reload();
-        }}
-      />
-    );
-  };
-
   return (
     <PageContainer>
       <Space direction="vertical" size={12} className="system-page-template setting-page setting-group-page">
         {loading && settings.length === 0 ? <PageLoading /> : null}
-        {error && settings.length === 0 ? renderErrorState() : null}
+        {error && settings.length === 0 ? (
+          <PageRequestError
+            error={error}
+            onRetry={() => {
+              void reload();
+            }}
+          />
+        ) : null}
         {!loading && !error && settings.length === 0 ? (
           <PageEmpty description={t('system.setting.empty')} />
         ) : null}

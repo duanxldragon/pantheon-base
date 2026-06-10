@@ -3,19 +3,12 @@ import { Button, Space, Tag, Typography } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
-  isNetworkRequestError,
-  isServerRequestError,
-  isTimeoutRequestError,
-} from '../../../api/request';
-import {
   GovernanceSummaryBar,
   PageSplitLayout,
   PageContainer,
   PageEmpty,
-  PageError,
   PageLoading,
-  PageNetworkError,
-  PageServerError,
+  PageRequestError,
   SideRailItem,
   SideRailPanel,
   SideRailStack,
@@ -134,16 +127,6 @@ const SettingOverviewPage: React.FC = () => {
     setSearchParams(nextParams, { replace: true });
   };
 
-  const renderErrorState = () => {
-    if (isNetworkRequestError(error)) {
-      return <PageNetworkError timeout={isTimeoutRequestError(error)} onRetry={() => globalThis.location.reload()} />;
-    }
-    if (isServerRequestError(error)) {
-      return <PageServerError onRetry={() => globalThis.location.reload()} />;
-    }
-    return <PageError onRetry={() => globalThis.location.reload()} />;
-  };
-
   return (
     <PageContainer>
       <Space
@@ -152,7 +135,14 @@ const SettingOverviewPage: React.FC = () => {
         className="system-page-template setting-page setting-overview-page"
       >
         {loading && settings.length === 0 ? <PageLoading /> : null}
-        {error && settings.length === 0 ? renderErrorState() : null}
+        {error && settings.length === 0 ? (
+          <PageRequestError
+            error={error}
+            onRetry={() => {
+              globalThis.location.reload();
+            }}
+          />
+        ) : null}
         {!loading && !error && settings.length === 0 ? (
           <PageEmpty description={t('system.setting.empty')} />
         ) : null}

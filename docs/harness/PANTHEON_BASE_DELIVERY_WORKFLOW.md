@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-08
+updated_at: 2026-06-10
 ---
 
 # Pantheon Base 多 Agent 交付流程
@@ -61,6 +61,7 @@ Human Goal
   -> Claude reviewer
   -> Codex fixer when needed
   -> GitHub / CI governance
+  -> PR 合并与分支收口
   -> Ratchet or closeout
 ```
 
@@ -165,6 +166,8 @@ acpx --cwd D:\workspace\go\pantheon-platform\pantheon-base --approve-reads claud
 
 GitHub Actions 是 mechanical gates，不是 planner。
 
+worktree 只负责本地实现和验证，不是长期保留的交付物。更完整的 worktree -> push -> PR -> merge -> cleanup 约定见 `docs/designs/WORKFLOW.md`。
+
 PR required:
 
 - `Quality Gates`
@@ -175,7 +178,7 @@ PR required:
 - `SonarCloud Auxiliary Scan`
 - `Full Smoke Suite`
 
-Sonar 是趋势和债务治理工具，不是唯一质量目标。Full Smoke 是深度信号，不应替代本轮 focused evidence。
+Sonar 是趋势和债务治理工具，不是唯一质量目标。`SonarCloud Auxiliary Scan` 在扫描完成后会自动抓取最新报告并落到 evidence / artifact，dispatcher 继续根据这份报告推进下一轮修复，不再手工回 SonarCloud 页面确认。Full Smoke 是深度信号，不应替代本轮 focused evidence。
 
 ## 6. 自动调度时的停点
 
@@ -196,6 +199,8 @@ Dispatcher 必须在以下情况停下来请求 Human Owner 决策：
 - evidence 路径或命令摘要。
 - reviewer 角色和 review 结论。
 - GitHub signal 分类：required、advisory、scheduled、manual。
+- 合并后的 PR URL 和 merge commit。
+- 分支收口状态。
 - known gaps。
 - ratchet decision。
 

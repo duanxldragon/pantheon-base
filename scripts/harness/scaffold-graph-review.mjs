@@ -176,14 +176,14 @@ function normalizeTaskGraphFocus(value) {
   return normalizeListValue(value)
     .map((entry) => mapping.get(entry) || entry)
     .filter((entry) => entry !== 'none')
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function extractSection(content, title) {
   const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const heading = new RegExp(`^## ${escapedTitle}\\s*$`, 'm');
   const match = heading.exec(content);
-  if (!match || match.index === undefined) {
+  if (!match) {
     return null;
   }
 
@@ -271,7 +271,7 @@ function normalizeChecks(value) {
   return items
     .map((entry) => String(entry).trim())
     .filter(Boolean)
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeAffectedSubgraph(value) {
@@ -279,7 +279,7 @@ function normalizeAffectedSubgraph(value) {
   return items
     .map((entry) => String(entry).trim())
     .filter(Boolean)
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeFindings(value) {
@@ -510,7 +510,6 @@ function scaffold(root, target, write, importFile, options = {}) {
 
   const existingEvidence = readJsonObjectIfExists(evidencePath);
   const nextEvidence = {
-    taskId,
     repo: existingEvidence?.repo ?? path.basename(root),
     agent: existingEvidence?.agent ?? { tool: 'other' },
     commands: existingEvidence?.commands ?? [],

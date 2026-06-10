@@ -11,15 +11,13 @@ on:
     - cron: "17 2 * * 1"
   workflow_dispatch:
 
-permissions:
-  actions: read
-  contents: read
-
 jobs:
   dependency-vulnerabilities:
     name: Dependency Vulnerabilities
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
@@ -89,6 +87,8 @@ jobs:
   secret-scan:
     name: Secret Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
@@ -153,6 +153,8 @@ jobs:
   workflow-posture:
     name: Workflow Posture
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10

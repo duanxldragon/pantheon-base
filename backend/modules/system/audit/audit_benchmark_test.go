@@ -1,6 +1,7 @@
 package system
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -152,7 +153,6 @@ func buildAuditBenchmarkRow(index int) (domain string, page string, failureCateg
 	}
 }
 
-// NOSONAR - test helper with SQL explain iteration, complexity is inherent
 func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query string, args ...any) []string {
 	t.Helper()
 
@@ -162,38 +162,61 @@ func explainOperationLogQueryPlan(t *testing.T, service *AuditService, query str
 	}
 	defer rows.Close()
 
-	cols, err := rows.Columns()
+	plan, err := collectOperationLogQueryPlan(rows)
 	if err != nil {
-		t.Fatalf("get explain columns: %v", err)
-	}
-
-	plan := make([]string, 0, 4)
-	for rows.Next() {
-		values := make([]interface{}, len(cols))
-		valuePtrs := make([]interface{}, len(cols))
-		for i := range cols {
-			valuePtrs[i] = &values[i]
-		}
-		if err := rows.Scan(valuePtrs...); err != nil {
-			t.Fatalf("scan query plan row: %v", err)
-		}
-		parts := make([]string, 0, len(cols))
-		for i := range values {
-			if values[i] != nil {
-				switch v := values[i].(type) {
-				case []byte:
-					parts = append(parts, string(v))
-				default:
-					parts = append(parts, fmt.Sprintf("%v", v))
-				}
-			}
-		}
-		plan = append(plan, strings.Join(parts, " "))
+		t.Fatalf("collect query plan: %v", err)
 	}
 	if len(plan) == 0 {
 		t.Fatal("expected query plan rows")
 	}
 	return plan
+}
+
+func collectOperationLogQueryPlan(rows *sql.Rows) ([]string, error) {
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("get explain columns: %w", err)
+	}
+	plan := make([]string, 0, 4)
+	for rows.Next() {
+		row, err := scanOperationLogQueryPlanRow(rows, cols)
+		if err != nil {
+			return nil, err
+		}
+		plan = append(plan, row)
+	}
+	return plan, nil
+}
+
+func scanOperationLogQueryPlanRow(rows *sql.Rows, cols []string) (string, error) {
+	values := make([]any, len(cols))
+	valuePtrs := make([]any, len(cols))
+	for i := range cols {
+		valuePtrs[i] = &values[i]
+	}
+	if err := rows.Scan(valuePtrs...); err != nil {
+		return "", fmt.Errorf("scan query plan row: %w", err)
+	}
+
+	parts := make([]string, 0, len(cols))
+	for _, value := range values {
+		part := formatOperationLogQueryPlanValue(value)
+		if part != "" {
+			parts = append(parts, part)
+		}
+	}
+	return strings.Join(parts, " "), nil
+}
+
+func formatOperationLogQueryPlanValue(value any) string {
+	switch v := value.(type) {
+	case nil:
+		return ""
+	case []byte:
+		return string(v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 func containsAnyPlanToken(plan []string, token string) bool {

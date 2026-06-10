@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 const UI_PATTERNS = [
@@ -68,7 +70,7 @@ function readFiles(dir, suffix) {
     .readdirSync(dir)
     .filter((name) => name.endsWith(suffix))
     .map((name) => path.join(dir, name))
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function toRepoPath(filePath, root) {

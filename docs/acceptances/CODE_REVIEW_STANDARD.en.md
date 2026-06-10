@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-06-10
 ---
 
 # Pantheon Code Review Standard Flow
@@ -51,10 +51,10 @@ Pantheon uses five layers by default. See [code quality and security strategy](.
 1. local validation
 2. GitHub required checks
 3. CodeQL security signal
-4. optional manual Sonar review
+4. Sonar report review, with the report fetched automatically into evidence/artifact
 5. independent reviewer sign-off
 
-Minimum manual Sonar guidance:
+Minimum Sonar report guidance:
 
 - zero blocker or critical issues on new code
 - reviewed security hotspots before merge
@@ -94,6 +94,6 @@ The Chinese source remains the authoritative detailed standard, including requir
 
 At minimum, the detailed review record should also confirm:
 
-- any manual Sonar report, if one was produced
+- any Sonar report artifact/evidence, if one was produced
 - GitHub required-check status
 - independent reviewer evidence

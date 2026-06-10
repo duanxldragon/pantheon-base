@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { sortStrings } from './sort-utils.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 function parseArgs(argv) {
@@ -39,7 +41,7 @@ function discoverEvidenceFiles(root) {
     }
   }
   walk(base);
-  return files.sort();
+  return sortStrings(files);
 }
 
 function containsRuntimeSignal(value) {

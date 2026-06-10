@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-29
+updated_at: 2026-06-10
 ---
 
 # 业务开发工作流与 AI 协作指南
@@ -119,7 +119,7 @@ Contract
     - `Duplication Gate`：PR / merge queue 产出可见报告；全库基线阈值在 protected-branch push、手动质量复核或具备 new-code gate 后执行
     - `Full Smoke Suite` 只用于手动、定时或预发布回归，不得作为每个 PR 的默认阻塞项
     - dependency vulnerability 扫描适合 `main/release`、定时或手动巡检，不适合阻塞所有 PR
-    - Sonar 仅用于本地辅助审查，不纳入 required checks
+    - Sonar 仅用于辅助审查，不纳入 required checks；报告由固定流程自动抓取并附到 evidence / artifact
 5.  **第三方评审纪律**: 
     - 常规改动：至少 `1` 个非作者 approval
     - 高风险改动：至少 `2` 个 approval，其中一个来自域负责人或安全/架构 reviewer
@@ -130,7 +130,10 @@ Contract
     - 开启 `Dismiss stale approvals`
     - 开启 `Require conversation resolution`
     - 关闭绕过门禁的常态化做法；紧急合并必须留下事故编号、回滚方案和补审记录
-7.  **评审输出必须留痕**: PR 描述至少记录归属层、改动边界、验证命令、GitHub checks 结果、独立 reviewer 结论，以及如有手动 Sonar 报告时的链接和结论。
+    - 开启自动删除 head branches，避免已合并的 worktree 分支继续堆积
+7.  **评审输出必须留痕**: PR 描述至少记录归属层、改动边界、验证命令、GitHub checks 结果、独立 reviewer 结论，以及如有 Sonar 报告 artifact / evidence 时的链接和结论。
+
+本流程的结束条件不是“本地验证完”，而是“PR 已合并到 `main`，head branch 已删除或在 closeout 中手动删除，本地 worktree 已清理，且 closeout 记录了 PR URL、merge commit 和分支收口状态”。
 
 ### 第六阶段：平台层冒烟 (Smoke Phase)
 
