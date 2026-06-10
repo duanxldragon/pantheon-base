@@ -10,7 +10,6 @@ const compilerOptions = {
   target: ts.ScriptTarget.ES2023,
   module: ts.ModuleKind.CommonJS,
   esModuleInterop: true,
-  importsNotUsedAsValues: ts.ImportsNotUsedAsValues.Remove,
 };
 
 function transpileFile(sourcePath, outputPath) {
