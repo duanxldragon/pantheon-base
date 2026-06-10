@@ -287,10 +287,14 @@ const ModuleWizard: React.FC = () => {
   }, []);
 
   const applyPreviewSuggestions = (preview: Awaited<ReturnType<typeof previewGeneratorTable>>) => {
-    const currentName = normalizeModulePath(String(form.getFieldValue('name') || ''));
-    const currentDisplayName = String(form.getFieldValue('displayName') || '').trim();
-    const currentDisplayNameEn = String(form.getFieldValue('displayNameEn') || '').trim();
-    const currentScope = String(form.getFieldValue('scope') || '').trim();
+    const readTextField = (fieldName: keyof ModuleSchema) => {
+      const value = form.getFieldValue(fieldName);
+      return typeof value === 'string' ? value : '';
+    };
+    const currentName = normalizeModulePath(readTextField('name'));
+    const currentDisplayName = readTextField('displayName').trim();
+    const currentDisplayNameEn = readTextField('displayNameEn').trim();
+    const currentScope = readTextField('scope').trim();
     const currentScopedValue =
       currentScope === 'system' || currentScope === 'business'
         ? currentScope

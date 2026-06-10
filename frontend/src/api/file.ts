@@ -71,11 +71,12 @@ export async function downloadFile(options: DownloadFileOptions) {
   });
 
   const contentTypeHeader = response.headers['content-type'];
-  const contentType = Array.isArray(contentTypeHeader)
-    ? contentTypeHeader.join(',')
-    : typeof contentTypeHeader === 'string'
-      ? contentTypeHeader
-      : '';
+  let contentType = '';
+  if (Array.isArray(contentTypeHeader)) {
+    contentType = contentTypeHeader.join(',');
+  } else if (typeof contentTypeHeader === 'string') {
+    contentType = contentTypeHeader;
+  }
   if (response.status >= 400 || contentType.includes('application/json')) {
     try {
       const text = await response.data.text();

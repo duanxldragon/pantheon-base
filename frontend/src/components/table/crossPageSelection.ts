@@ -34,18 +34,18 @@ export function getPaginationTotalPages(pagination: SharedPaginationConfig) {
   return Math.max(1, Math.ceil(total / pageSize));
 }
 
-export function getVisibleSelectedRowKeys(
-  selectedRowKeys: CrossPageRowKey[],
-  visibleRowKeys: CrossPageRowKey[],
+export function getVisibleSelectedRowKeys<T extends CrossPageRowKey>(
+  selectedRowKeys: T[],
+  visibleRowKeys: T[],
 ) {
   const visibleKeySet = new Set(visibleRowKeys.map(normalizeRowKey));
   return selectedRowKeys.filter((key) => visibleKeySet.has(normalizeRowKey(key)));
 }
 
-export function mergeCrossPageSelection(
-  selectedRowKeys: CrossPageRowKey[],
-  nextVisibleSelectedRowKeys: CrossPageRowKey[],
-  visibleRowKeys: CrossPageRowKey[],
+export function mergeCrossPageSelection<T extends CrossPageRowKey>(
+  selectedRowKeys: T[],
+  nextVisibleSelectedRowKeys: T[],
+  visibleRowKeys: T[],
 ) {
   const visibleKeySet = new Set(visibleRowKeys.map(normalizeRowKey));
   const hiddenSelectedRowKeys = selectedRowKeys.filter(

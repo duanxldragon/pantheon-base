@@ -329,7 +329,7 @@ const LoginPage: React.FC = () => {
                             value={mfaChallenge.totpProvisionUri}
                             size={168}
                             level="M"
-                            includeMargin
+                            marginSize={4}
                           />
                         </div>
                         <Typography.Text className="auth-login-mfa-qr__hint">

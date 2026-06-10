@@ -2045,8 +2045,7 @@ const BaseLayout: React.FC = () => {
         <div className="app-command__results">
           {filteredCommandItems.length > 0 ? (
             filteredCommandItems.map((item, index) => {
-              const previousItem = filteredCommandItems[index - 1];
-              const showSection = !previousItem || previousItem.section !== item.section;
+              const showSection = filteredCommandItems[index - 1]?.section !== item.section;
               return (
                 <React.Fragment key={item.key}>
                   {showSection ? <div className="app-command__section">{item.section}</div> : null}

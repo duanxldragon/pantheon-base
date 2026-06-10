@@ -564,14 +564,14 @@ const SessionList: React.FC = () => {
                         checkCrossPage: true,
                         preserveSelectedRowKeys: true,
                         onChange: (keys) =>
-                          setSelectedRowKeys(
-                            (currentKeys) =>
-                              mergeCrossPageSelection(
-                                currentKeys,
-                                keys as string[],
-                                data.map((item) => item.sessionId),
-                              ) as string[],
-                          ),
+                            setSelectedRowKeys(
+                              (currentKeys) =>
+                                mergeCrossPageSelection(
+                                  currentKeys,
+                                  keys.filter((key): key is string => typeof key === 'string'),
+                                  data.map((item) => item.sessionId),
+                                ),
+                            ),
                         checkboxProps: (record: AdminSessionRow) => ({
                           disabled:
                             record.username === currentUsername || Boolean(record.revokedAt),

@@ -473,14 +473,14 @@ const LoginLogList: React.FC = () => {
                         checkCrossPage: true,
                         preserveSelectedRowKeys: true,
                         onChange: (keys) =>
-                          setSelectedRowKeys(
-                            (currentKeys) =>
-                              mergeCrossPageSelection(
-                                currentKeys,
-                                keys as number[],
-                                data.map((item) => item.id),
-                              ) as number[],
-                          ),
+                            setSelectedRowKeys(
+                              (currentKeys) =>
+                                mergeCrossPageSelection(
+                                  currentKeys,
+                                  keys.filter((key): key is number => typeof key === 'number'),
+                                  data.map((item) => item.id),
+                                ),
+                            ),
                       }
                     : undefined
                 }
