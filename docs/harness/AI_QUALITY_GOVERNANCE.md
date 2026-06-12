@@ -35,7 +35,7 @@ Every non-trivial task should choose one primary profile. Multiple profiles are 
 | `permission-policy` | IAM policy, menu policy, role/user/dept/post permissions | `docs/contracts/SYSTEM_IAM_CONTRACT.md`, `docs/designs/PERMISSION_MODEL.md` | policy mapping tests, backend tests, focused smoke if UI permissions changed | before/after policy mapping or route authorization note |
 | `i18n` | locale resources, hardcoded text, generated i18n scope | `docs/designs/I18N_MODULE_DESIGN.md`, frontend i18n scripts | i18n hardcode check, generated-scope check, relevant backend tests | locale key/resource summary |
 | `ui-runtime` | user-facing pages, layout, forms, tables, dashboards | UI design docs and acceptance docs | frontend lint/build, focused Playwright smoke, rendered evidence when visual behavior changed | screenshot or explicit no-UI-change statement |
-| `generator` | low-code generator, dynamic modules, scaffolded modules | generator and dynamic module design docs | generator contract tests, generated-module cleanup check, smoke if runtime module path changed | generated diff and cleanup result |
+| `generator` | low-code generator, dynamic modules, scaffolded modules, generated feature ledger | generator and dynamic module design docs | generator contract tests, feature-ledger drift checker, generated-module cleanup check, smoke if runtime module path changed | generated diff, ledger snapshot status, cleanup result |
 | `ci-workflow` | GitHub Actions, Sonar, security, duplication, smoke topology | `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`, `docs/GITHUB_GOVERNANCE_CHECKLIST.md` | workflow posture, YAML inspection, affected workflow run when available | workflow intent and gate classification |
 
 ## 3. Required Task Packet Addendum
@@ -77,6 +77,7 @@ PR required:
 - duplication gate
 - smoke sanity
 - security gates
+- feature-ledger drift checker for generated-module / schema-generated changes
 
 Auxiliary or scheduled:
 
@@ -105,6 +106,8 @@ When a failure recurs:
 4. Measure recurrence in the next two weeks or next three related tasks.
 
 If the same pattern reaches human review three times and no control was promoted, the harness work is incomplete even if the code patch passed CI.
+
+For generated-capability drift, the smallest useful control is usually the feature-ledger checker plus the `schema/generated/feature-ledger.json` snapshot, not another manual review note.
 
 ## 6. Metrics
 

@@ -79,6 +79,28 @@ English version: [DYNAMIC_MODULE_GOVERNANCE_DESIGN.en.md](./DYNAMIC_MODULE_GOVER
 
 ---
 
+## 2.4 Feature Ledger 与 drift ratchet
+
+`dynamicmodule` 还负责生成能力的可校验投影，不只是写注册表。
+
+它会把现有 `system_module_registration` 记录与 `schema/generated/**.json` 联合起来，生成：
+
+- `schema/generated/feature-ledger.json`
+
+这个 snapshot 必须满足：
+
+- 只读派生，不允许手工编辑
+- 不能被模块扫描逻辑再当成一个业务模块
+- 必须能暴露 owner、bounded context、source mode、maturity 以及 drift 线索
+
+配套的严格检查器是：
+
+- `scripts/harness/check-feature-ledger.mjs`
+
+它会被 method-health 纳入日常治理，作为 generated capability drift 的第一道机器门。
+
+---
+
 ## 3. 当前能力范围
 
 当前真实能力至少包括：

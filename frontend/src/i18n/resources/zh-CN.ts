@@ -1179,6 +1179,8 @@ const zhCNFallback = {
   'module.generate.verify.activation_ready': '激活信号已齐备，模块状态已切换为已接入',
   'module.generate.verify.registry_check_failed': '注册表校验未完全通过，请检查 generated 文件',
   'module.generate.verify.artifacts_missing': '模块源码或 schema 缺失，已从运行注册表移除',
+  'module.generate.verify.feature_ledger_updated': '功能账本快照已刷新',
+  'module.generate.verify.feature_ledger_drift': '功能账本检测到漂移，请复核',
   'module.artifacts_missing': '模块源码或 schema 缺失',
   'module.generate.invalid_payload': '模块生成请求体无效',
   'module.generate.invalid_name': '模块名格式不正确',

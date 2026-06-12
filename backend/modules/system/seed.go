@@ -766,7 +766,7 @@ func lookupMenuIDByPath(db *gorm.DB, path string) (uint64, error) {
 
 func normalizeSeedMenuType(value string) string {
 	switch value {
-	case "M", "C", "F":
+	case "M", "C", "D", "F":
 		return value
 	default:
 		return "C"

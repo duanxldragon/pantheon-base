@@ -169,14 +169,8 @@ func (s *DynamicModuleService) AuditAndRepairGeneratedRegistries() (*RegistryRep
 	if err != nil {
 		return nil, err
 	}
-	refs, err := s.listGeneratedModuleRefs()
+	_, generatedRegistryRefs, err := s.refreshGeneratedWorkspaceArtifacts()
 	if err != nil {
-		return nil, err
-	}
-	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, errors.New("workspace.not_found")
-	}
-	if err := scaffold.WriteGeneratedRegistries(s.workspaceRoot, refs); err != nil {
 		return nil, err
 	}
 
@@ -187,7 +181,7 @@ func (s *DynamicModuleService) AuditAndRepairGeneratedRegistries() (*RegistryRep
 
 	summary := &RegistryRepairSummary{
 		CheckedModules:           len(modules),
-		GeneratedRegistryRefs:    len(refs),
+		GeneratedRegistryRefs:    generatedRegistryRefs,
 		MarkedUninstalledModules: markedUninstalled,
 	}
 	for _, module := range modules {
@@ -247,6 +241,9 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 			return walkErr
 		}
 		if d.IsDir() || !strings.EqualFold(filepath.Ext(path), ".json") {
+			return nil
+		}
+		if strings.EqualFold(filepath.Base(path), filepath.Base(scaffold.GeneratedFeatureLedgerRelativePath)) {
 			return nil
 		}
 

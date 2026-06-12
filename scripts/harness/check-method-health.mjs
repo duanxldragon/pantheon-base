@@ -35,6 +35,7 @@ const REQUIRED_REPO_SHELL_FILES = [
   'scripts/harness/scaffold-graph-review.mjs',
   'scripts/harness/build-graph-review-import.mjs',
   'scripts/harness/check-failure-registry.mjs',
+  'scripts/harness/check-feature-ledger.mjs',
   'scripts/harness/check-template-health.mjs',
   'scripts/harness/check-runtime-evidence.mjs',
   'scripts/harness/check-doc-links.mjs',
@@ -52,6 +53,7 @@ Checks:
 - compatible versions agree
 - required method files exist
 - required repo shell landing files exist
+- feature-ledger checker exists for generated capability drift
 - portable/runtime boundary directories exist`);
 }
 
@@ -116,7 +118,10 @@ function validateMethodKit(root, findings) {
   if (fs.existsSync(versionTextPath)) {
     const value = fs.readFileSync(versionTextPath, 'utf8').trim();
     if (!/^\d+\.\d+\.\d+$/.test(value)) {
-      findings.push({ file: 'agentic-method-kit/VERSION', reason: 'version must use semver-like x.y.z format' });
+      findings.push({
+        file: 'agentic-method-kit/VERSION',
+        reason: 'version must use semver-like x.y.z format',
+      });
     }
   }
 

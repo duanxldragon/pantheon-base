@@ -1,4 +1,5 @@
 import enUSFallback from './en-US';
+import koKRRuntimeFixes from './runtime-fixes.ko-KR';
 
 const koKRFallback = {
   ...enUSFallback,
@@ -1104,6 +1105,8 @@ const koKRFallback = {
     '레지스트리 검증이 완료되지 않았습니다. 생성된 파일을 확인하세요',
   'module.generate.verify.artifacts_missing':
     '모듈 소스 또는 schema 가 누락되어 런타임 레지스트리에서 제외했습니다',
+  'module.generate.verify.feature_ledger_updated': '기능 원장 스냅샷을 갱신했습니다',
+  'module.generate.verify.feature_ledger_drift': '기능 원장 드리프트가 감지되었습니다',
   'module.artifacts_missing': '모듈 소스 또는 schema 가 누락되었습니다',
   'module.generate.invalid_payload': '모듈 생성 요청이 올바르지 않습니다',
   'module.generate.invalid_name': '모듈 이름 형식이 올바르지 않습니다',
@@ -2399,6 +2402,7 @@ const koKRFallback = {
     '로그인 시 TOTP 2차 인증을 요구할지 제어합니다. 꺼져 있으면 기존 비밀번호 로그인 흐름을 유지합니다.',
   'system.setting.remark.login.sso_enabled':
     '향후 SSO / OIDC 연동을 위한 기능 플래그입니다. 꺼져 있으면 로컬 계정 로그인만 허용합니다.',
+  ...koKRRuntimeFixes,
 };
 
 export default koKRFallback;

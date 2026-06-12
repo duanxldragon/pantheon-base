@@ -84,6 +84,7 @@ Claude 只负责规划输出：
 - 受影响合同、设计、验收文档
 - 最小验证集合
 - runtime evidence 或 visual evidence 预期
+- 若任务触及 generated capability，还要说明 feature ledger 和 drift checker 的预期产物
 - human gate 和 stop points
 - 是否需要分阶段执行
 
@@ -97,6 +98,7 @@ Codex 负责把计划映射到真实仓库：
 - 字面量、文案、日志、配置用 `rg`。
 - 找到现有测试、fixture、smoke、contract checker。
 - 识别 runtime-sensitive、UI-sensitive、security-sensitive 范围。
+- 如果任务会改动 generated module 或 schema/generated，顺手确认 feature ledger 快照和 checker 影响面。
 
 如果 exploration 发现 planner 假设错误，dispatcher 先回到 Claude 或 human gate，而不是让 Codex自行扩大实现范围。
 
@@ -107,6 +109,7 @@ Codex 执行时必须遵守：
 - 只改 task packet 范围内的文件。
 - 先固定可验证行为，再实现。
 - 更新对应文档、测试、fixture、smoke 或 checker。
+- generated module 变更时要同步更新 generated registries 和 `schema/generated/feature-ledger.json`，不能只改一半。
 - 保存或摘要 evidence。
 - 明确 known gaps。
 
@@ -203,6 +206,7 @@ Dispatcher 必须在以下情况停下来请求 Human Owner 决策：
 - 分支收口状态。
 - known gaps。
 - ratchet decision。
+- generated capability 任务还要包含 feature ledger snapshot 路径或严格 checker 的 evidence 摘要。
 
 如果缺少其中任意一项，不能把任务描述为完整闭环，只能描述为阶段性进展。
 

@@ -66,7 +66,7 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 		return nil, err
 	}
 
-	return buildMenuTree(menus, 0), nil
+	return normalizeManageMenuTree(buildMenuTree(menus, 0), 0), nil
 }
 
 func (s *MenuService) HasManageAccess(roleKeys []string) (bool, error) {
@@ -97,7 +97,7 @@ func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTre
 		return []*MenuTreeResp{}, nil
 	}
 	if hasRoleKey(roleKeys, "admin") {
-		return buildMenuTree(allMenus, 0), nil
+		return normalizeScopedNavigationMenuTree(buildMenuTree(allMenus, 0), 0), nil
 	}
 
 	allowedIDs, err := s.loadAllowedNavigationMenuIDs(roleKeys)
@@ -135,7 +135,7 @@ func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTre
 			selectedMenus = append(selectedMenus, menu)
 		}
 	}
-	return buildMenuTree(selectedMenus, 0), nil
+	return normalizeScopedNavigationMenuTree(buildMenuTree(selectedMenus, 0), 0), nil
 }
 
 func (s *MenuService) loadNavigationMenus() ([]SystemMenu, error) {
@@ -277,6 +277,57 @@ func buildMenuTree(menus []SystemMenu, parentID uint64) []*MenuTreeResp {
 		}
 	}
 	return tree
+}
+
+func normalizeManageMenuTree(nodes []*MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	normalized := make([]*MenuTreeResp, 0, len(nodes))
+	for _, node := range nodes {
+		normalized = append(normalized, normalizeManageMenuNode(node, parentID)...)
+	}
+	return normalized
+}
+
+func normalizeManageMenuNode(node *MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	if shouldHideManageMenuNode(node) {
+		return normalizeManageMenuTree(node.Children, parentID)
+	}
+
+	cloned := *node
+	cloned.ParentID = parentID
+	cloned.Children = normalizeManageMenuTree(node.Children, cloned.ID)
+	return []*MenuTreeResp{&cloned}
+}
+
+func shouldHideManageMenuNode(node *MenuTreeResp) bool {
+	return strings.TrimSpace(node.Path) == "/workspace"
+}
+
+func normalizeScopedNavigationMenuTree(nodes []*MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	normalized := make([]*MenuTreeResp, 0, len(nodes))
+	for _, node := range nodes {
+		normalized = append(normalized, normalizeScopedNavigationMenuNode(node, parentID)...)
+	}
+	return normalized
+}
+
+func normalizeScopedNavigationMenuNode(node *MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	if shouldHideScopedNavigationMenuNode(node) {
+		return normalizeScopedNavigationMenuTree(node.Children, parentID)
+	}
+
+	cloned := *node
+	cloned.ParentID = parentID
+	cloned.Children = normalizeScopedNavigationMenuTree(node.Children, cloned.ID)
+	return []*MenuTreeResp{&cloned}
+}
+
+func shouldHideScopedNavigationMenuNode(node *MenuTreeResp) bool {
+	switch strings.TrimSpace(node.Path) {
+	case "/workspace", "/operations":
+		return true
+	default:
+		return false
+	}
 }
 
 func toMenuTreeResp(menu SystemMenu) *MenuTreeResp {

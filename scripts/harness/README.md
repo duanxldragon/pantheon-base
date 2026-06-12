@@ -18,6 +18,7 @@ node scripts/harness/check-runtime-evidence.mjs
 node scripts/harness/check-doc-links.mjs --strict
 node scripts/harness/check-doc-inventory.mjs --strict
 node scripts/harness/check-sync-drift.mjs --strict
+node scripts/harness/check-feature-ledger.mjs --strict
 node scripts/harness/check-doc-frontmatter.mjs --report-legacy
 node scripts/harness/check-task-packet.mjs
 node scripts/harness/check-evidence.mjs --strict

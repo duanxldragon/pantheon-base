@@ -1298,6 +1298,8 @@ const enUSFallback = {
     'Registry verification is incomplete; inspect the generated files',
   'module.generate.verify.artifacts_missing':
     'Module source or schema is missing and has been removed from runtime registries',
+  'module.generate.verify.feature_ledger_updated': 'Feature ledger snapshot was updated',
+  'module.generate.verify.feature_ledger_drift': 'Feature ledger drift was detected',
   'module.artifacts_missing': 'Module source or schema is missing',
   'module.generate.invalid_payload': 'The module generation payload is invalid',
   'module.generate.invalid_name': 'The module name format is invalid',

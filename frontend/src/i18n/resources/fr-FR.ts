@@ -1,4 +1,5 @@
 import enUSFallback from './en-US';
+import frFRRuntimeFixes from './runtime-fixes.fr-FR';
 
 const frFRFallback = {
   ...enUSFallback,
@@ -1197,6 +1198,10 @@ const frFRFallback = {
     'La vérification du registre est incomplète. Inspectez les fichiers générés',
   'module.generate.verify.artifacts_missing':
     'La source ou le schema du module est manquant et a été retiré des registres runtime',
+  'module.generate.verify.feature_ledger_updated':
+    'La capture du registre de fonctionnalités a été mise à jour',
+  'module.generate.verify.feature_ledger_drift':
+    'Une dérive du registre de fonctionnalités a été détectée',
   'module.artifacts_missing': 'La source ou le schema du module est manquant',
   'module.generate.invalid_payload': 'La charge de génération du module est invalide',
   'module.generate.invalid_name': 'Le format du nom du module est invalide',
@@ -2584,6 +2589,7 @@ const frFRFallback = {
     'Contrôle si la vérification TOTP de second facteur est requise à la connexion. Désactivé, la connexion par mot de passe reste inchangée.',
   'system.setting.remark.login.sso_enabled':
     'Indicateur réservé à une future intégration SSO / OIDC. Lorsqu’il est désactivé, seule la connexion locale est disponible.',
+  ...frFRRuntimeFixes,
 };
 
 export default frFRFallback;

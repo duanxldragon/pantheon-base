@@ -146,13 +146,11 @@ export async function installClientSession(page: Page, login: BrowserLoginResult
       sameSite: 'Strict',
     },
   ]);
-  try {
+  if (page.url() !== 'about:blank') {
     await page.evaluate((csrfToken) => {
       localStorage.setItem('pantheon_session_hint', '1');
       localStorage.setItem('pantheon_csrf_token', csrfToken);
     }, login.csrfToken);
-  } catch {
-    // about:blank setup paths rely on the init script above.
   }
 }
 
@@ -222,12 +220,9 @@ export async function installOperationToken(page: Page, accessToken: string) {
   await page.addInitScript((value) => {
     sessionStorage.setItem('pantheon_op_token', value);
   }, token);
-  try {
+  if (page.url() !== 'about:blank') {
     await page.evaluate((value) => {
       sessionStorage.setItem('pantheon_op_token', value);
     }, token);
-  } catch {
-    // The current document can still be about:blank in setup-heavy smoke tests.
-    // The init script above installs the token on the next app navigation.
   }
 }

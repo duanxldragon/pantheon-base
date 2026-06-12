@@ -44,6 +44,12 @@ VALUES
 	assertAdminMenuBound(t, db, "/system/lowcode")
 }
 
+func TestNormalizeSeedMenuTypePreservesDirectoryMarker(t *testing.T) {
+	if got := normalizeSeedMenuType("D"); got != "D" {
+		t.Fatalf("expected D to be preserved, got %s", got)
+	}
+}
+
 func TestOrgAccessControlSeedContract(t *testing.T) {
 	db := testmysql.Open(t)
 	if err := createSeedTestTables(db); err != nil {
