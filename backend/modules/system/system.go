@@ -85,20 +85,23 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			MigrateFunc: func(_ *gorm.DB) error { return userSvc.Migrate() },
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemDataScoped := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(middleware.DataScopeMiddleware(db)).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/profile", userHandler.GetProfile)
 					systemProtected.PUT("/profile", userHandler.UpdateProfile)
-					systemProtected.GET("/user/list", userHandler.GetUserList)
 					systemProtected.GET("/user/import-template", userHandler.DownloadImportTemplate)
 					systemProtected.GET("/user/:id", userHandler.GetUserDetail)
 					systemProtected.POST("/user", userHandler.CreateUser)
-					systemProtected.POST("/user/export", userHandler.ExportUsers)
 					systemProtected.POST("/user/import", userHandler.ImportUsers)
 					systemProtected.POST("/user/batch-status", userHandler.BatchUpdateUserStatus)
 					systemProtected.POST("/user/batch-delete", middleware.SecureActionMiddleware(), userHandler.BatchDeleteUsers)
 					systemProtected.PUT("/user/:id", userHandler.UpdateUser)
 					systemProtected.PUT("/user/:id/reset-password", userHandler.ResetPassword)
 					systemProtected.DELETE("/user/:id", userHandler.DeleteUser)
+				}
+				{
+					systemDataScoped.GET("/user/list", userHandler.GetUserList)
+					systemDataScoped.POST("/user/export", userHandler.ExportUsers)
 				}
 			},
 		},

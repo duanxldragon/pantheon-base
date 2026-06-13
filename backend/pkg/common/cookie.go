@@ -26,12 +26,12 @@ func setCookie(w http.ResponseWriter, name, value string, maxAge int, sameSite h
 }
 
 func SetAccessTokenCookie(w http.ResponseWriter, token string) {
-	ttl := int((15 * time.Minute).Seconds())
+	ttl := int(AccessTokenTTL.Seconds())
 	setCookie(w, CookieAccessToken, token, ttl, http.SameSiteStrictMode)
 }
 
 func SetRefreshTokenCookie(w http.ResponseWriter, token string) {
-	ttl := int((7 * 24 * time.Hour).Seconds())
+	ttl := int(RefreshTokenTTL.Seconds())
 	setCookie(w, CookieRefreshToken, token, ttl, http.SameSiteStrictMode)
 }
 

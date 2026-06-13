@@ -19,18 +19,33 @@ export function hasAuthSession(): boolean {
 }
 
 interface AuthState {
+  /**
+   * In Cookie auth mode, this is only a boolean flag for "is logged in" state
+   * (non-empty = logged in), not the actual JWT. The actual access/refresh tokens
+   * are stored in HttpOnly cookies managed by the backend and are never accessible
+   * to JavaScript.
+   */
   token: string | null;
+  /**
+   * In Cookie auth mode, this field is unused — the actual refresh token is held
+   * in an HttpOnly cookie. Kept for type compatibility only.
+   */
   refreshToken: string | null;
   userInfo: UserInfo | null;
+  /** Whether the user is currently authenticated (token is non-empty). */
+  isAuthenticated: boolean;
   setTokens: (token: string, refreshToken: string) => void;
   setUserInfo: (userInfo: UserInfo) => void;
   clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>()((set) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
   token: null,
   refreshToken: null,
   userInfo: null,
+  get isAuthenticated() {
+    return !!get().token;
+  },
   setTokens: (token, refreshToken) => set({ token, refreshToken }),
   setUserInfo: (userInfo) => set({ userInfo }),
   clearAuth: () => set({ token: null, refreshToken: null, userInfo: null }),

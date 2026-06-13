@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"strings"
 	"time"
@@ -18,7 +19,7 @@ func newAuthOverviewService(auth *AuthService) *authOverviewService {
 
 func (s *authOverviewService) GetSecurityOverview(userID uint64, username, currentSessionID string) (*SecurityOverviewResp, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	policy := s.auth.getAuthRuntimePolicy()
 	now := time.Now()

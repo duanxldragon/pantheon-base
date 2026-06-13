@@ -22,6 +22,7 @@ type menuSeed struct {
 	IsCache    int
 	IsExternal int
 	ActiveMenu string
+	HideInNav  int
 }
 
 func seedAuditModuleMenus(db *gorm.DB) error {
@@ -157,6 +158,7 @@ func coreMenuSeeds() []menuSeed {
 			RouteName: "workspace",
 			Module:    "platform",
 			Sort:      10,
+			HideInNav: 1,
 		},
 		{
 			Key:       "dashboard",
@@ -181,6 +183,7 @@ func coreMenuSeeds() []menuSeed {
 			RouteName: "operations",
 			Module:    "platform",
 			Sort:      20,
+			HideInNav: 1,
 		},
 		{
 			Key:       "user",
@@ -493,6 +496,7 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 			"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
 			"is_external": normalizeSeedMenuFlag(seed.IsExternal),
 			"active_menu": strings.TrimSpace(seed.ActiveMenu),
+			"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
 		}
 		if err := db.Table("system_menu").Create(payload).Error; err != nil {
 			return err
@@ -521,6 +525,7 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 			"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
 			"is_external": normalizeSeedMenuFlag(seed.IsExternal),
 			"active_menu": strings.TrimSpace(seed.ActiveMenu),
+			"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
 		}
 		updates["path"] = seed.Path
 		updates["perms"] = seed.Perms

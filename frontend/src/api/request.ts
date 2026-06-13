@@ -84,7 +84,7 @@ let refreshPromise: Promise<string | null> | null = null;
 let logoutTransition = false;
 
 const clearClientSession = () => {
-  axios.post('/api/v1/auth/logout', {}, { withCredentials: true }).catch(() => undefined);
+  request.post('/auth/logout', {}).catch(() => undefined);
   clearShellSessionState();
   clearPantheonThemePreference();
   const nextLanguage = clearExplicitLanguagePreference();
@@ -115,8 +115,6 @@ const shouldRefresh = (config?: RequestConfig, code?: number) => {
     return false;
   }
   if (
-    config.url?.includes('/system/login') ||
-    config.url?.includes('/system/refresh') ||
     config.url?.includes('/auth/login') ||
     config.url?.includes('/auth/refresh')
   ) {

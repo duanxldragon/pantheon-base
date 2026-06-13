@@ -1,6 +1,7 @@
 package dynamicmodule
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -92,7 +93,7 @@ func (s *DynamicModuleService) refreshGeneratedWorkspaceArtifactsIfAvailable() (
 
 func (s *DynamicModuleService) buildFeatureLedgerSnapshot() (*FeatureLedgerSnapshot, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	schemaFiles, err := s.collectFeatureLedgerSchemaFiles()

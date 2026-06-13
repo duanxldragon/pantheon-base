@@ -442,6 +442,10 @@ func TestUserService_MigrateReleasesLegacyDeletedUsername(t *testing.T) {
 	if err := s.Migrate(); err != nil {
 		t.Fatalf("expected migrate to succeed, got %v", err)
 	}
+	// releaseDeletedUsernames is now a separate cleanup step
+	if err := s.CleanupDeletedUsernames(); err != nil {
+		t.Fatalf("expected cleanup to succeed, got %v", err)
+	}
 
 	var repaired SystemUser
 	if err := db.Unscoped().First(&repaired, legacyUser.ID).Error; err != nil {
@@ -623,8 +627,18 @@ func TestUserService_GetUserDetail(t *testing.T) {
 	if detail.UpdatedAt == "" {
 		t.Fatal("expected updatedAt to be populated")
 	}
-	if detail.LastLoginAt == nil || *detail.LastLoginAt != loginTime.Format(time.RFC3339) {
-		t.Fatalf("expected lastLoginAt to be populated, got %v", detail.LastLoginAt)
+	var storedLoginTime time.Time
+	if err := db.Table("system_log_login").
+		Select("login_time").
+		Where("username = ? AND status = ?", "detail_test", 1).
+		Order("login_time desc, id desc").
+		Limit(1).
+		Scan(&storedLoginTime).Error; err != nil {
+		t.Fatalf("load stored login time: %v", err)
+	}
+	expectedLastLoginAt := storedLoginTime.Format(time.RFC3339)
+	if detail.LastLoginAt == nil || *detail.LastLoginAt != expectedLastLoginAt {
+		t.Fatalf("expected lastLoginAt %s, got %v", expectedLastLoginAt, detail.LastLoginAt)
 	}
 
 	if _, err := s.GetUserDetail(999); err == nil {
@@ -659,7 +673,7 @@ func TestUserService_ImportTemplateAndExport(t *testing.T) {
 		t.Fatalf("unexpected import result: %+v", result)
 	}
 
-	exported, err := s.ExportUsers(&UserListQuery{Username: "sample_user"})
+	exported, err := s.ExportUsers(&UserListQuery{Username: "sample_user"}, nil)
 	if err != nil {
 		t.Fatalf("export user: %v", err)
 	}

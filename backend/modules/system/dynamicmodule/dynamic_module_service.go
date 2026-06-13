@@ -1,6 +1,7 @@
 package dynamicmodule
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
 
 const (
 	ModuleStatusActive            = 1
@@ -199,7 +199,7 @@ func (s *DynamicModuleService) RegisterModule(module contracts.BackendModule) er
 
 func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGeneratedModuleRequest) (*ModuleRegistration, []string, *GeneratedModuleRegistrationSummary, error) {
 	if s.db == nil {
-		return nil, nil, nil, errors.New(errDatabaseNotInitialized)
+		return nil, nil, nil, common.ErrDatabaseNotInitialized
 	}
 	if err := scaffold.ValidateRegisterRequest(req); err != nil {
 		return nil, nil, nil, err
@@ -273,7 +273,7 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 
 func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*ModuleRegistration, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	scope, shortName, err := splitModuleKey(moduleName)
 	if err != nil {

@@ -405,7 +405,7 @@ func TestDeleteUser_DBNil(t *testing.T) {
 
 func TestExportUsers_DBNil(t *testing.T) {
 	s := &UserService{db: nil}
-	_, err := s.ExportUsers(nil)
+	_, err := s.ExportUsers(nil, nil)
 	if err == nil {
 		t.Fatal("expected error when db is nil")
 	}

@@ -38,7 +38,7 @@ func (s *authSessionService) countActiveSessions(userID uint64, now time.Time, p
 
 func (s *authSessionService) CreateSession(currentUser *user.SystemUser, roles []string, ip, userAgent string) (*common.TokenPair, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	policy := s.auth.getAuthRuntimePolicy()
 	now := time.Now()
@@ -53,7 +53,7 @@ func (s *authSessionService) CreateSession(currentUser *user.SystemUser, roles [
 		SessionID:        uuid.NewString(),
 		UserID:           currentUser.ID,
 		RefreshJTI:       uuid.NewString(),
-		RefreshExpiresAt: now.Add(7 * 24 * time.Hour),
+		RefreshExpiresAt: now.Add(common.RefreshTokenTTL),
 		LastActivityAt:   &now,
 		LastIP:           ip,
 		UserAgent:        truncateString(userAgent, 255),
@@ -67,7 +67,7 @@ func (s *authSessionService) CreateSession(currentUser *user.SystemUser, roles [
 
 func (s *authSessionService) RefreshSession(claims *common.CustomClaims, ip, userAgent string) (*common.TokenPair, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var session SystemUserSession
@@ -93,7 +93,7 @@ func (s *authSessionService) RefreshSession(claims *common.CustomClaims, ip, use
 
 	now := time.Now()
 	session.RefreshJTI = uuid.NewString()
-	session.RefreshExpiresAt = now.Add(7 * 24 * time.Hour)
+	session.RefreshExpiresAt = now.Add(common.RefreshTokenTTL)
 	session.LastRefreshAt = &now
 	session.LastActivityAt = &now
 	session.LastIP = ip
@@ -140,7 +140,7 @@ func (s *authSessionService) TouchSessionActivity(sessionID string, userID uint6
 
 func (s *authSessionService) ListSessions(userID uint64, currentSessionID string) ([]SessionResp, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	now := time.Now()
@@ -172,7 +172,7 @@ func (s *authSessionService) ListSessions(userID uint64, currentSessionID string
 
 func (s *authSessionService) RevokeOwnedSession(userID uint64, currentSessionID, targetSessionID string) error {
 	if s.auth.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if strings.TrimSpace(targetSessionID) == "" {
 		return errors.New(errSessionInvalid)
@@ -200,7 +200,7 @@ func (s *authSessionService) RevokeOwnedSession(userID uint64, currentSessionID,
 
 func (s *authSessionService) CleanupHistoricSessions(retentionDays int, startedAt, endedAt string) (int64, error) {
 	if s.auth.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 	window, err := parseCleanupWindow(startedAt, endedAt, "auth.session.cleanup.range_invalid")
 	if err != nil {
@@ -232,7 +232,7 @@ func (s *authSessionService) CleanupHistoricSessions(retentionDays int, startedA
 
 func (s *authSessionService) BatchRevokeSessions(currentSessionID string, sessionIDs []string) (int64, error) {
 	if s.auth.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 
 	normalized := normalizeSessionIDs(sessionIDs)
@@ -257,7 +257,7 @@ func (s *authSessionService) BatchRevokeSessions(currentSessionID string, sessio
 
 func (s *authSessionService) ListAllSessions(query *AdminSessionQuery) (*AdminSessionPageResp, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	now := time.Now()
@@ -315,7 +315,7 @@ func (s *authSessionService) ListAllSessions(query *AdminSessionQuery) (*AdminSe
 
 func (s *authSessionService) RevokeAnySession(currentSessionID, targetSessionID string) error {
 	if s.auth.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if strings.TrimSpace(targetSessionID) == "" {
 		return errors.New(errSessionInvalid)

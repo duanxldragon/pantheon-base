@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"strings"
 	"time"
@@ -29,7 +30,7 @@ func (s *authLoginService) Authenticate(req *LoginReq) (*user.SystemUser, error)
 
 func (s *authLoginService) LoginWithSource(req *LoginReq, sourceKey string) (*user.SystemUser, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	policy := s.auth.getAuthRuntimePolicy()
 	now := time.Now()
@@ -147,7 +148,7 @@ func (s *authLoginService) handlePasswordMismatch(currentUser *user.SystemUser, 
 
 func (s *authLoginService) recordFailedLoginAttempt(currentUser *user.SystemUser, policy authRuntimePolicy) (bool, error) {
 	if s.auth.db == nil || currentUser == nil {
-		return false, errors.New(errDatabaseNotInitialized)
+		return false, common.ErrDatabaseNotInitialized
 	}
 
 	nextAttempts := currentUser.FailedLoginAttempts + 1
@@ -301,7 +302,7 @@ func (s *authLoginService) isSourceThrottleWindowExpired(windowStartedAt *time.T
 
 func (s *authLoginService) clearFailedLoginState(userID uint64) error {
 	if s.auth.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.auth.db.Model(&user.SystemUser{}).
 		Where("id = ? AND (failed_login_attempts <> 0 OR login_locked_until IS NOT NULL)", userID).

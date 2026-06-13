@@ -1,6 +1,7 @@
 package config
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"bufio"
 	"errors"
 	"fmt"
@@ -17,7 +18,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
 
 const (
 	defaultDictItemPage     = 1
@@ -83,7 +83,7 @@ func NewDictService(db *gorm.DB) *DictService {
 
 func (s *DictService) Migrate() error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.db.AutoMigrate(&SystemDictType{}, &SystemDictItem{}); err != nil {
 		return err
@@ -142,7 +142,7 @@ func (s *DictService) Migrate() error {
 
 func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var rows []SystemDictType
@@ -197,7 +197,7 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 
 func (s *DictService) CreateDictType(req *DictTypeCreateReq) (*DictTypeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if err := s.validateDictType(0, req.DictCode); err != nil {
 		return nil, err
@@ -254,7 +254,7 @@ func (s *DictService) BuildDictTypeImportTemplate() *impexp.CSVFile {
 func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{Applied: false, Errors: []impexp.ImportError{}}
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -360,7 +360,7 @@ func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult,
 
 func (s *DictService) UpdateDictType(typeID uint64, req *DictTypeUpdateReq) (*DictTypeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var row SystemDictType
@@ -398,7 +398,7 @@ func (s *DictService) UpdateDictType(typeID uint64, req *DictTypeUpdateReq) (*Di
 
 func (s *DictService) DeleteDictType(typeID uint64) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 
 	var row SystemDictType
@@ -431,7 +431,7 @@ func (s *DictService) DeleteDictType(typeID uint64) error {
 
 func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 	normalizedIDs := normalizeUint64IDs(typeIDs)
 	if len(normalizedIDs) == 0 {
@@ -466,7 +466,7 @@ func (s *DictService) ListDictItems(query *DictItemListQuery) (*DictItemPageResp
 
 func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*DictItemPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if query == nil || strings.TrimSpace(query.DictCode) == "" {
 		page, pageSize := normalizeDictItemPageQuery(query)
@@ -517,7 +517,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 
 func (s *DictService) CreateDictItem(req *DictItemCreateReq) (*DictItemResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if err := s.validateDictItem(0, req.DictCode, req.ItemValue); err != nil {
 		return nil, err
@@ -578,7 +578,7 @@ func (s *DictService) BuildDictItemImportTemplate() *impexp.CSVFile {
 func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{Applied: false, Errors: []impexp.ImportError{}}
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -710,7 +710,7 @@ func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult,
 
 func (s *DictService) UpdateDictItem(itemID uint64, req *DictItemUpdateReq) (*DictItemResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var row SystemDictItem
@@ -740,7 +740,7 @@ func (s *DictService) UpdateDictItem(itemID uint64, req *DictItemUpdateReq) (*Di
 
 func (s *DictService) DeleteDictItem(itemID uint64) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 
 	var row SystemDictItem
@@ -766,7 +766,7 @@ func (s *DictService) DeleteDictItem(itemID uint64) error {
 
 func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 	normalizedIDs := normalizeUint64IDs(itemIDs)
 	if len(normalizedIDs) == 0 {
@@ -803,7 +803,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 
 func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictItemResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if direction != "up" && direction != "down" {
 		return nil, errors.New("param.invalid")
@@ -858,7 +858,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 
 func (s *DictService) GetDictOptions(codes []string) (DictOptionMapResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	normalizedCodes := normalizeDictCodes(codes)
@@ -903,7 +903,7 @@ func (s *DictService) GetDictOptions(codes []string) (DictOptionMapResp, error) 
 
 func (s *DictService) RefreshDictOptionsCache(codes []string) (*DictCacheRefreshResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	normalizedCodes := normalizeDictCodes(codes)

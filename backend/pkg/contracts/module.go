@@ -1,7 +1,9 @@
 package contracts
 
 import (
-	"log"
+	"log/slog"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -64,8 +66,16 @@ func (m FuncModule) SeedI18n(db *gorm.DB) error {
 }
 
 func RegisterBackendModules(r *gin.RouterGroup, db *gorm.DB, modules ...BackendModule) {
-	for _, module := range modules {
-		runModuleSeed(module.Name(), "migrate", db, module.Migrate)
+	// When PANTHEON_AUTO_MIGRATE=true, run module Migrate() (GORM AutoMigrate).
+	// When false (default), versioned migrations are handled by golang-migrate at startup,
+	// so we skip the module-level AutoMigrate calls.
+	autoMigrate := strings.EqualFold(strings.TrimSpace(os.Getenv("PANTHEON_AUTO_MIGRATE")), "true")
+	if autoMigrate {
+		for _, module := range modules {
+			runModuleSeed(module.Name(), "migrate", db, module.Migrate)
+		}
+	} else {
+		slog.Info("versioned migrations mode: skipping module AutoMigrate (use PANTHEON_AUTO_MIGRATE=true for dev)")
 	}
 	for _, module := range modules {
 		runModuleSeed(module.Name(), "menus", db, module.SeedMenus)
@@ -86,6 +96,6 @@ func runModuleSeed(moduleName string, seedType string, db *gorm.DB, seedFunc fun
 		return
 	}
 	if err := seedFunc(db); err != nil {
-		log.Printf("%s module seed %s error: %v", moduleName, seedType, err)
+		slog.Warn("module seed error", "module", moduleName, "seed", seedType, "error", err)
 	}
 }

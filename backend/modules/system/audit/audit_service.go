@@ -1,6 +1,7 @@
 package system
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,7 +19,7 @@ import (
 
 type AuditService struct {
 	db            *gorm.DB
-	cleanupMu     sync.Mutex
+	lastCleanupAtMu sync.Mutex
 	lastCleanupAt map[string]time.Time
 }
 
@@ -30,14 +31,13 @@ func NewAuditService(db *gorm.DB) *AuditService {
 }
 
 const (
-	errDatabaseNotInitialized              = "database.not_initialized"
 	defaultOperationLogRetentionDays        = 180
 	auditAutoCleanupMinInterval             = 15 * time.Minute
 )
 
 func (s *AuditService) Migrate() error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.db.AutoMigrate(&middleware.SystemLogOper{}); err != nil {
 		return err
@@ -47,7 +47,7 @@ func (s *AuditService) Migrate() error {
 
 func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLogPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	s.ensureAutomaticOperationLogRetention()
 
@@ -87,7 +87,7 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 
 func (s *AuditService) GetOperationLog(logID uint64) (*OperationLogResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	s.ensureAutomaticOperationLogRetention()
 
@@ -101,7 +101,7 @@ func (s *AuditService) GetOperationLog(logID uint64) (*OperationLogResp, error) 
 
 func (s *AuditService) ExportOperationLogs(query *OperationLogQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	s.ensureAutomaticOperationLogRetention()
 
@@ -150,14 +150,14 @@ func (s *AuditService) ExportOperationLogs(query *OperationLogQuery) (*impexp.CS
 
 func (s *AuditService) DeleteOperationLog(logID uint64) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.db.Delete(&middleware.SystemLogOper{}, logID).Error
 }
 
 func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string, endedAt string) (int64, error) {
 	if s.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 	window, err := parseOperationCleanupWindow(startedAt, endedAt)
 	if err != nil {
@@ -265,14 +265,14 @@ func (s *AuditService) ensureAutomaticOperationLogRetention() {
 	}
 
 	now := time.Now()
-	s.cleanupMu.Lock()
+	s.lastCleanupAtMu.Lock()
 	lastRun := s.lastCleanupAt["operation_log_retention"]
 	if !lastRun.IsZero() && now.Sub(lastRun) < auditAutoCleanupMinInterval {
-		s.cleanupMu.Unlock()
+		s.lastCleanupAtMu.Unlock()
 		return
 	}
 	s.lastCleanupAt["operation_log_retention"] = now
-	s.cleanupMu.Unlock()
+	s.lastCleanupAtMu.Unlock()
 
 	retentionDays := s.getRetentionDaysFromSetting("audit.operation_log_retention_days", defaultOperationLogRetentionDays)
 	if retentionDays <= 0 {
@@ -303,7 +303,7 @@ func (s *AuditService) getRetentionDaysFromSetting(settingKey string, fallback i
 
 func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 	if s.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 
 	normalized := normalizeAuditLogIDs(ids)
@@ -382,7 +382,7 @@ func operationLogToResp(row middleware.SystemLogOper) OperationLogResp {
 
 func (s *AuditService) backfillOperationLogDerivedFields() error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 
 	var rows []middleware.SystemLogOper
