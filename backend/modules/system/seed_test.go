@@ -17,12 +17,12 @@ func TestEnsureMenuSeedsReparentsLegacyFlatMenus(t *testing.T) {
 		t.Fatalf("seed admin role: %v", err)
 	}
 	if err := db.Exec(`
-INSERT INTO system_menu (id, parent_id, title_key, path, component, page_perm, perms, type, icon, route_name, module, sort, is_visible, is_cache, is_external, active_menu)
+INSERT INTO system_menu (id, parent_id, title_key, path, component, page_perm, perms, type, icon, route_name, module, sort, is_visible, is_cache, is_external, active_menu, hide_in_nav)
 VALUES
-(100, 0, 'system.menu.user', '/system/user', 'system/user/UserList', 'system:user:list', '', 'C', 'user', 'system-user', 'system', 2, 1, 0, 0, ''),
-(101, 0, 'system.menu.dict', '/system/dict', 'system/dict/DictPage', 'system:dict:list', '', 'C', 'list', 'system-dict', 'system', 11, 1, 1, 0, ''),
-(102, 0, 'system.menu.modules', '/system/modules', 'system/dynamicmodule/ModuleManager', 'system:module:list', '', 'C', 'apps', 'system-modules', 'system', 12, 1, 0, 0, ''),
-(103, 0, 'system.menu.generator', '/system/generator', 'system/generator/ModuleWizard', 'system:generator:use', '', 'C', 'code', 'system-generator', 'system', 13, 1, 0, 0, '')
+(100, 0, 'system.menu.user', '/system/user', 'system/user/UserList', 'system:user:list', '', 'C', 'user', 'system-user', 'system', 2, 1, 0, 0, '', 0),
+(101, 0, 'system.menu.dict', '/system/dict', 'system/dict/DictPage', 'system:dict:list', '', 'C', 'list', 'system-dict', 'system', 11, 1, 1, 0, '', 0),
+(102, 0, 'system.menu.modules', '/system/modules', 'system/dynamicmodule/ModuleManager', 'system:module:list', '', 'C', 'apps', 'system-modules', 'system', 12, 1, 0, 0, '', 0),
+(103, 0, 'system.menu.generator', '/system/generator', 'system/generator/ModuleWizard', 'system:generator:use', '', 'C', 'code', 'system-generator', 'system', 13, 1, 0, 0, '', 0)
 `).Error; err != nil {
 		t.Fatalf("seed legacy menus: %v", err)
 	}
@@ -88,10 +88,10 @@ func TestEnsureMenuSeedsCleansObsoleteMenuMatrixEntries(t *testing.T) {
 		t.Fatalf("seed admin role: %v", err)
 	}
 	if err := db.Exec(`
-INSERT INTO system_menu (id, parent_id, title_key, path, component, page_perm, perms, type, icon, route_name, module, sort, is_visible, is_cache, is_external, active_menu)
+INSERT INTO system_menu (id, parent_id, title_key, path, component, page_perm, perms, type, icon, route_name, module, sort, is_visible, is_cache, is_external, active_menu, hide_in_nav)
 VALUES
-(200, 0, 'system.menu-matrix', '/system/menu-matrix', 'system/menu/MenuMatrix', 'system:menu:matrix', '', 'C', 'menu', 'system-menu-matrix', 'system.iam', 99, 1, 0, 0, ''),
-(201, 200, 'system.permission.menu.matrix.export', '', '', '', 'system:menu:matrix', 'F', '', '', 'system.iam', 1, 1, 0, 0, '')
+(200, 0, 'system.menu-matrix', '/system/menu-matrix', 'system/menu/MenuMatrix', 'system:menu:matrix', '', 'C', 'menu', 'system-menu-matrix', 'system.iam', 99, 1, 0, 0, '', 0),
+(201, 200, 'system.permission.menu.matrix.export', '', '', '', 'system:menu:matrix', 'F', '', '', 'system.iam', 1, 1, 0, 0, '', 0)
 `).Error; err != nil {
 		t.Fatalf("seed obsolete menu matrix: %v", err)
 	}
@@ -153,7 +153,8 @@ CREATE TABLE system_menu (
 	is_visible TINYINT DEFAULT 1,
 	is_cache TINYINT DEFAULT 0,
 	is_external TINYINT DEFAULT 0,
-	active_menu VARCHAR(255) DEFAULT ''
+	active_menu VARCHAR(255) DEFAULT '',
+	hide_in_nav TINYINT DEFAULT 0
 )`).Error; err != nil {
 		return err
 	}

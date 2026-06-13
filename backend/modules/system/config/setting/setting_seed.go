@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -14,14 +15,14 @@ import (
 )
 
 type defaultSettingSeed struct {
-	SettingKey   string
-	SettingValue string
-	ValueType    string
-	GroupKey     string
-	Module       string
-	IsPublic     int
-	IsEncrypted  int
-	Remark       string
+	SettingKey   string `yaml:"settingKey"`
+	SettingValue string `yaml:"settingValue"`
+	ValueType    string `yaml:"valueType"`
+	GroupKey     string `yaml:"groupKey"`
+	Module       string `yaml:"module"`
+	IsPublic     int    `yaml:"isPublic"`
+	IsEncrypted  int    `yaml:"isEncrypted"`
+	Remark       string `yaml:"remark"`
 }
 
 var defaultSettingSeeds = []defaultSettingSeed{
@@ -77,9 +78,11 @@ type settingSeedsYAML struct {
 
 // loadedSettingSeeds holds the seeds loaded from YAML (with Go fallback).
 var loadedSettingSeeds []defaultSettingSeed
+var defaultSettingSeedMap map[string]defaultSettingSeed
 
 func init() {
 	loadedSettingSeeds = loadSettingSeedsFromYAML()
+	defaultSettingSeedMap = buildDefaultSettingSeedMap(loadedSettingSeeds)
 }
 
 func loadSettingSeedsFromYAML() []defaultSettingSeed {
@@ -96,6 +99,10 @@ func loadSettingSeedsFromYAML() []defaultSettingSeed {
 		log.Println("[config] WARNING: setting seed YAML has no entries, falling back to hardcoded defaults")
 		return defaultSettingSeeds
 	}
+	if err := validateSettingSeeds(data.Settings); err != nil {
+		log.Printf("[config] WARNING: setting seed YAML has invalid entries: %v, falling back to hardcoded defaults", err)
+		return defaultSettingSeeds
+	}
 	return data.Settings
 }
 
@@ -103,8 +110,6 @@ func loadSettingSeedsFromYAML() []defaultSettingSeed {
 func settingSeeds() []defaultSettingSeed {
 	return loadedSettingSeeds
 }
-
-var defaultSettingSeedMap = buildDefaultSettingSeedMap(loadedSettingSeeds)
 
 var (
 	allowedLanguageValues = map[string]struct{}{
@@ -420,6 +425,24 @@ func buildDefaultSettingSeedMap(seeds []defaultSettingSeed) map[string]defaultSe
 		result[seed.SettingKey] = seed
 	}
 	return result
+}
+
+func validateSettingSeeds(seeds []defaultSettingSeed) error {
+	for index, seed := range seeds {
+		switch {
+		case strings.TrimSpace(seed.SettingKey) == "":
+			return fmt.Errorf("seed[%d] missing settingKey", index)
+		case strings.TrimSpace(seed.ValueType) == "":
+			return fmt.Errorf("seed[%d] missing valueType for %s", index, seed.SettingKey)
+		case strings.TrimSpace(seed.GroupKey) == "":
+			return fmt.Errorf("seed[%d] missing groupKey for %s", index, seed.SettingKey)
+		case strings.TrimSpace(seed.Module) == "":
+			return fmt.Errorf("seed[%d] missing module for %s", index, seed.SettingKey)
+		case strings.TrimSpace(seed.Remark) == "":
+			return fmt.Errorf("seed[%d] missing remark for %s", index, seed.SettingKey)
+		}
+	}
+	return nil
 }
 
 func defaultSettingValue(settingKey string) string {
