@@ -64,6 +64,11 @@ import { clearExplicitLanguagePreference } from '../settings/languagePreference'
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
 import { preloadRouteComponent } from '../router/prefetch';
 import {
+  shouldLoadShellNoticeSummary,
+  shouldPollServerRefreshState,
+  shouldReportShellActivity,
+} from '../runtime/automationPolicy';
+import {
   OPENED_TABS_STORAGE_KEY,
   persistShellDensityMode,
   persistShellLastActivityAt,
@@ -783,6 +788,7 @@ const BaseLayout: React.FC = () => {
   const sessionIdleMinutes =
     publicSettings.sessionIdleMinutes > 0 ? publicSettings.sessionIdleMinutes : 30;
   const sessionIdleMs = sessionIdleMinutes * 60 * 1000;
+  const backgroundNetworkEnabled = shouldPollServerRefreshState();
   const hasDashboardEntry = useMemo(
     () => Boolean(findMenuNodeByPath(visibleMenuTree, '/dashboard')),
     [visibleMenuTree],
@@ -848,7 +854,11 @@ const BaseLayout: React.FC = () => {
         lastInteractionAtRef.current = now;
       }
       syncShellActivity(now);
-      if (!syncRemote || now - lastSyncedActivityAtRef.current < 60000) {
+      if (
+        !shouldReportShellActivity() ||
+        !syncRemote ||
+        now - lastSyncedActivityAtRef.current < 60000
+      ) {
         return;
       }
       lastSyncedActivityAtRef.current = now;
@@ -891,7 +901,7 @@ const BaseLayout: React.FC = () => {
       runSilently(fetchMenuTree({ force: true }));
     },
   );
-  useRefreshPolling(token, [
+  useRefreshPolling(backgroundNetworkEnabled ? token : null, [
     'system:user:changed',
     'system:role:changed',
     'system:menu:changed',
@@ -906,7 +916,7 @@ const BaseLayout: React.FC = () => {
   useEffect(() => {
     let active = true;
     const loadNoticeSummary = async () => {
-      if (!token || !canViewNoticeSummary) {
+      if (!shouldLoadShellNoticeSummary() || !token || !canViewNoticeSummary) {
         if (active) {
           setNoticeSummary(null);
           setNoticeLoading(false);

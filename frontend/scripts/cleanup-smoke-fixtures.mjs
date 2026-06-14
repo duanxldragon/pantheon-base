@@ -1,8 +1,13 @@
 import process from 'node:process';
+import { createCleanupFixtureCache } from './lib/cleanup-fixture-cache.mjs';
+import { fetchCleanupJson, getCleanupGetRetryOptions } from './lib/cleanup-http.mjs';
+import { buildCleanupI18nQueries } from './lib/cleanup-fixture-query-plan.mjs';
 
 const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const adminUsername = process.env.PANTHEON_SMOKE_ADMIN_USERNAME ?? 'admin';
 const adminPassword = process.env.PANTHEON_SMOKE_ADMIN_PASSWORD ?? '123456';
+const cleanupPhase = readArg('--phase', '');
+const fixtureCache = createCleanupFixtureCache();
 
 const entityPatterns = {
   roles: {
@@ -149,17 +154,11 @@ async function apiGet(session, path, params = {}) {
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, String(value));
   }
-  const response = await fetch(url, {
+  return fetchCleanupJson(fetch, url, {
+    path,
     headers: authHeaders(session),
+    ...getCleanupGetRetryOptions(cleanupPhase),
   });
-  if (!response.ok) {
-    throw new Error(`GET ${path} failed: HTTP ${response.status}`);
-  }
-  const payload = await response.json();
-  if (payload.code !== 200) {
-    throw new Error(`GET ${path} failed: code ${payload.code}`);
-  }
-  return payload.data;
 }
 
 async function apiDelete(session, operationToken, path) {
@@ -237,7 +236,7 @@ async function cleanupDepts(session, operationToken) {
 }
 
 async function cleanupDictTypes(session, operationToken) {
-  const data = await apiGet(session, '/system/dict/type/list', {});
+  const data = await fixtureCache.getDictTypes(() => apiGet(session, '/system/dict/type/list', {}));
   const items = Array.isArray(data) ? data : [];
   let deleted = 0;
   for (const item of items) {
@@ -246,11 +245,14 @@ async function cleanupDictTypes(session, operationToken) {
       deleted += 1;
     }
   }
+  if (deleted > 0) {
+    fixtureCache.clearDictTypes();
+  }
   return deleted;
 }
 
 async function cleanupDictItems(session, operationToken) {
-  const typeData = await apiGet(session, '/system/dict/type/list', {});
+  const typeData = await fixtureCache.getDictTypes(() => apiGet(session, '/system/dict/type/list', {}));
   const types = Array.isArray(typeData) ? typeData : [];
   let deleted = 0;
   for (const type of types) {
@@ -270,15 +272,21 @@ async function cleanupDictItems(session, operationToken) {
 
 async function cleanupI18n(session, operationToken) {
   let deleted = 0;
-  const queries = [...entityPatterns.i18nKeys.prefixes, ...entityPatterns.i18nKeys.exacts];
+  const queries = buildCleanupI18nQueries(entityPatterns.i18nKeys);
   for (const keyQuery of queries) {
-    const data = await apiGet(session, '/system/i18n/list', { key: keyQuery, page: 1, pageSize: 500 });
+    const data = await fixtureCache.getI18nList(
+      keyQuery,
+      () => apiGet(session, '/system/i18n/list', { key: keyQuery, page: 1, pageSize: 500 }),
+    );
     const items = Array.isArray(data.items) ? data.items : [];
     for (const item of items) {
       if (matchesPattern(String(item.key || ''), entityPatterns.i18nKeys)) {
         await apiDelete(session, operationToken, `/system/i18n/${item.id}`);
         deleted += 1;
       }
+    }
+    if (items.length > 0) {
+      fixtureCache.clearI18nList(keyQuery);
     }
   }
   return deleted;

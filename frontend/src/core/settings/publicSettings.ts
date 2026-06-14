@@ -34,6 +34,7 @@ const PUBLIC_SETTINGS_FALLBACK_SITE_NAME = 'Pantheon Base';
 
 let publicSettingsState: PublicSettingsState = readStoredPublicSettings();
 const listeners = new Set<() => void>();
+let publicSettingsRefreshTask: Promise<PublicSettingsState> | null = null;
 
 function readStoredPublicSettings(): PublicSettingsState {
   if (globalThis.document === undefined) {
@@ -105,9 +106,17 @@ export function applyPublicSettings(settings: Record<string, string>) {
 }
 
 export async function refreshPublicSettings() {
-  const response = await getPublicSettingList();
-  applyPublicSettings(response.settings);
-  return publicSettingsState;
+  if (!publicSettingsRefreshTask) {
+    publicSettingsRefreshTask = getPublicSettingList()
+      .then((response) => {
+        applyPublicSettings(response.settings);
+        return publicSettingsState;
+      })
+      .finally(() => {
+        publicSettingsRefreshTask = null;
+      });
+  }
+  return publicSettingsRefreshTask;
 }
 
 export async function initializePublicSettings() {

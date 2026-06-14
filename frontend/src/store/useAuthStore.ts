@@ -1,18 +1,11 @@
 import { create } from 'zustand';
-import type { UserPlatformPreferences } from '../modules/auth/api';
 import { hasAuthSessionHint } from '../core/auth/clientSession';
-
-export interface UserInfo {
-  id: number;
-  username: string;
-  nickname: string;
-  avatar?: string;
-  email?: string;
-  phone?: string;
-  roles?: string[];
-  perms?: string[];
-  preferences?: UserPlatformPreferences;
-}
+import {
+  clearStoredAuthUser,
+  getBootstrappedAuthSession,
+  persistAuthUser,
+} from '../core/auth/sessionSnapshot';
+import type { UserInfo } from './authTypes';
 
 export function hasAuthSession(): boolean {
   return hasAuthSessionHint();
@@ -40,13 +33,17 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
-  token: null,
-  refreshToken: null,
-  userInfo: null,
+  ...getBootstrappedAuthSession(),
   get isAuthenticated() {
     return !!get().token;
   },
   setTokens: (token, refreshToken) => set({ token, refreshToken }),
-  setUserInfo: (userInfo) => set({ userInfo }),
-  clearAuth: () => set({ token: null, refreshToken: null, userInfo: null }),
+  setUserInfo: (userInfo) => {
+    persistAuthUser(userInfo);
+    set({ userInfo });
+  },
+  clearAuth: () => {
+    clearStoredAuthUser();
+    set({ token: null, refreshToken: null, userInfo: null });
+  },
 }));

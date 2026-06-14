@@ -1,7 +1,6 @@
 import { getMe, type UserInfo } from '../../modules/auth/api';
 import { hasAuthSession, useAuthStore } from '../../store/useAuthStore';
-
-const COOKIE_TOKEN_PLACEHOLDER = '_cookie';
+import { COOKIE_TOKEN_PLACEHOLDER } from './sessionSnapshot';
 
 let pendingProfilePromise: Promise<UserInfo | null> | null = null;
 
