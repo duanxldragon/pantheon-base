@@ -1,7 +1,6 @@
 package dynamicmodule
 
 import (
-	"pantheon-platform/backend/pkg/common"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"pantheon-platform/backend/internal/scaffold"
+	"pantheon-platform/backend/pkg/common"
 )
 
 const featureLedgerVersion = 1
@@ -60,6 +60,41 @@ type featureLedgerSchemaFile struct {
 	AbsolutePath string
 }
 
+type featureLedgerEvaluationRule struct {
+	File            featureLedgerSchemaFile
+	SchemaPresent   bool
+	Registration    ModuleRegistration
+	HasRegistration bool
+}
+
+type featureLedgerEvaluationResult struct {
+	Entry  FeatureLedgerEntry
+	Issues []FeatureLedgerIssue
+}
+
+type featureLedgerEntryContext struct {
+	File            featureLedgerSchemaFile
+	ModuleKey       string
+	Schema          *scaffold.ModuleSchema
+	SchemaPresent   bool
+	Registration    ModuleRegistration
+	HasRegistration bool
+}
+
+type featureLedgerRegistrationField struct {
+	Target *string
+	Value  string
+	Code   string
+	Field  string
+}
+
+type featureLedgerRequiredField struct {
+	Value  string
+	Code   string
+	Field  string
+	Detail string
+}
+
 func (s *DynamicModuleService) refreshGeneratedWorkspaceArtifacts() (*FeatureLedgerSnapshot, int, error) {
 	if strings.TrimSpace(s.workspaceRoot) == "" {
 		return nil, 0, errors.New("workspace.not_found")
@@ -105,23 +140,26 @@ func (s *DynamicModuleService) buildFeatureLedgerSnapshot() (*FeatureLedgerSnaps
 		return nil, err
 	}
 
-	entries := make([]FeatureLedgerEntry, 0, len(schemaFiles)+len(registrations))
+	rules, issues := collectFeatureLedgerEvaluationRules(schemaFiles, registrations)
+	results := evaluateFeatureLedgerRules(rules)
+
+	return formatFeatureLedgerSnapshot(results, issues), nil
+}
+
+func collectFeatureLedgerEvaluationRules(schemaFiles []featureLedgerSchemaFile, registrations map[string]ModuleRegistration) ([]featureLedgerEvaluationRule, []FeatureLedgerIssue) {
+	rules := make([]featureLedgerEvaluationRule, 0, len(schemaFiles)+len(registrations))
 	issues := make([]FeatureLedgerIssue, 0)
 	seen := make(map[string]struct{}, len(schemaFiles))
 
 	for _, file := range schemaFiles {
 		moduleKey := buildModuleKey(file.Scope, file.Name)
-		schema, schemaIssues := loadFeatureLedgerSchema(file.AbsolutePath)
 		registration, hasRegistration := registrations[moduleKey]
-		entry, entryIssues := buildFeatureLedgerEntry(file, schema, true, registration, hasRegistration)
-		entries = append(entries, entry)
-		for index := range schemaIssues {
-			if schemaIssues[index].ModuleKey == "" {
-				schemaIssues[index].ModuleKey = moduleKey
-			}
-		}
-		issues = append(issues, schemaIssues...)
-		issues = append(issues, entryIssues...)
+		rules = append(rules, featureLedgerEvaluationRule{
+			File:            file,
+			SchemaPresent:   true,
+			Registration:    registration,
+			HasRegistration: hasRegistration,
+		})
 		seen[moduleKey] = struct{}{}
 	}
 
@@ -129,47 +167,86 @@ func (s *DynamicModuleService) buildFeatureLedgerSnapshot() (*FeatureLedgerSnaps
 		if _, ok := seen[moduleKey]; ok {
 			continue
 		}
-		scope, name, err := splitModuleKey(moduleKey)
+		rule, err := buildRegistrationOnlyFeatureLedgerRule(moduleKey, registration)
 		if err != nil {
-			issues = append(issues, FeatureLedgerIssue{
-				ModuleKey: moduleKey,
-				Severity:  "error",
-				Code:      "registration_key_invalid",
-				Detail:    err.Error(),
-			})
+			issues = append(issues, invalidFeatureLedgerRegistrationIssue(moduleKey, err))
 			continue
 		}
-		file := featureLedgerSchemaFile{
+		rules = append(rules, rule)
+	}
+
+	return rules, issues
+}
+
+func buildRegistrationOnlyFeatureLedgerRule(moduleKey string, registration ModuleRegistration) (featureLedgerEvaluationRule, error) {
+	scope, name, err := splitModuleKey(moduleKey)
+	if err != nil {
+		return featureLedgerEvaluationRule{}, err
+	}
+	return featureLedgerEvaluationRule{
+		File: featureLedgerSchemaFile{
 			Scope:        scope,
 			Name:         name,
 			RelativePath: filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json")),
-		}
-		entry, entryIssues := buildFeatureLedgerEntry(file, nil, false, registration, true)
-		entries = append(entries, entry)
-		issues = append(issues, entryIssues...)
+		},
+		SchemaPresent:   false,
+		Registration:    registration,
+		HasRegistration: true,
+	}, nil
+}
+
+func invalidFeatureLedgerRegistrationIssue(moduleKey string, err error) FeatureLedgerIssue {
+	return FeatureLedgerIssue{
+		ModuleKey: moduleKey,
+		Severity:  "error",
+		Code:      "registration_key_invalid",
+		Detail:    err.Error(),
+	}
+}
+
+func evaluateFeatureLedgerRules(rules []featureLedgerEvaluationRule) []featureLedgerEvaluationResult {
+	results := make([]featureLedgerEvaluationResult, 0, len(rules))
+	for _, rule := range rules {
+		results = append(results, evaluateFeatureLedgerRule(rule))
+	}
+	return results
+}
+
+func evaluateFeatureLedgerRule(rule featureLedgerEvaluationRule) featureLedgerEvaluationResult {
+	var schema *scaffold.ModuleSchema
+	var issues []FeatureLedgerIssue
+	moduleKey := buildModuleKey(rule.File.Scope, rule.File.Name)
+
+	if rule.SchemaPresent {
+		schema, issues = loadFeatureLedgerSchema(rule.File.AbsolutePath)
+		applyFeatureLedgerIssueModuleKey(issues, moduleKey)
 	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].Scope == entries[j].Scope {
-			return entries[i].Name < entries[j].Name
+	entry, entryIssues := buildFeatureLedgerEntry(rule.File, schema, rule.SchemaPresent, rule.Registration, rule.HasRegistration)
+	issues = append(issues, entryIssues...)
+	return featureLedgerEvaluationResult{
+		Entry:  entry,
+		Issues: issues,
+	}
+}
+
+func applyFeatureLedgerIssueModuleKey(issues []FeatureLedgerIssue, moduleKey string) {
+	for index := range issues {
+		if issues[index].ModuleKey == "" {
+			issues[index].ModuleKey = moduleKey
 		}
-		return entries[i].Scope < entries[j].Scope
-	})
-	sort.SliceStable(issues, func(i, j int) bool {
-		if issues[i].ModuleKey != issues[j].ModuleKey {
-			return issues[i].ModuleKey < issues[j].ModuleKey
-		}
-		if issues[i].Code != issues[j].Code {
-			return issues[i].Code < issues[j].Code
-		}
-		if issues[i].Field != issues[j].Field {
-			return issues[i].Field < issues[j].Field
-		}
-		if issues[i].Severity != issues[j].Severity {
-			return issues[i].Severity < issues[j].Severity
-		}
-		return issues[i].Detail < issues[j].Detail
-	})
+	}
+}
+
+func formatFeatureLedgerSnapshot(results []featureLedgerEvaluationResult, issues []FeatureLedgerIssue) *FeatureLedgerSnapshot {
+	entries := make([]FeatureLedgerEntry, 0, len(results))
+	for _, result := range results {
+		entries = append(entries, result.Entry)
+		issues = append(issues, result.Issues...)
+	}
+
+	sortFeatureLedgerEntries(entries)
+	sortFeatureLedgerIssues(issues)
 
 	return &FeatureLedgerSnapshot{
 		Version: featureLedgerVersion,
@@ -180,7 +257,7 @@ func (s *DynamicModuleService) buildFeatureLedgerSnapshot() (*FeatureLedgerSnaps
 		},
 		Entries: entries,
 		Issues:  issues,
-	}, nil
+	}
 }
 
 func (s *DynamicModuleService) collectFeatureLedgerSchemaFiles() ([]featureLedgerSchemaFile, error) {
@@ -198,13 +275,10 @@ func (s *DynamicModuleService) collectFeatureLedgerSchemaFiles() ([]featureLedge
 
 	files := make([]featureLedgerSchemaFile, 0)
 	walkErr := filepath.WalkDir(schemaRoot, func(path string, d os.DirEntry, walkErr error) error {
-		if walkErr != nil {
+		if hasFeatureLedgerWalkError(walkErr) {
 			return walkErr
 		}
-		if d.IsDir() || !strings.EqualFold(filepath.Ext(path), ".json") {
-			return nil
-		}
-		if strings.EqualFold(filepath.Base(path), filepath.Base(scaffold.GeneratedFeatureLedgerRelativePath)) {
+		if !isFeatureLedgerSchemaCandidate(path, d) {
 			return nil
 		}
 
@@ -228,12 +302,7 @@ func (s *DynamicModuleService) collectFeatureLedgerSchemaFiles() ([]featureLedge
 		return nil, walkErr
 	}
 
-	sort.Slice(files, func(i, j int) bool {
-		if files[i].Scope == files[j].Scope {
-			return files[i].Name < files[j].Name
-		}
-		return files[i].Scope < files[j].Scope
-	})
+	sortFeatureLedgerSchemaFiles(files)
 
 	return files, nil
 }
@@ -276,150 +345,255 @@ func loadFeatureLedgerSchema(path string) (*scaffold.ModuleSchema, []FeatureLedg
 }
 
 func buildFeatureLedgerEntry(file featureLedgerSchemaFile, schema *scaffold.ModuleSchema, schemaPresent bool, registration ModuleRegistration, hasRegistration bool) (FeatureLedgerEntry, []FeatureLedgerIssue) {
-	moduleKey := buildModuleKey(file.Scope, file.Name)
-	entry := FeatureLedgerEntry{
-		ModuleKey:  moduleKey,
-		Name:       file.Name,
-		Scope:      file.Scope,
-		SchemaPath: file.RelativePath,
+	ctx := featureLedgerEntryContext{
+		File:            file,
+		ModuleKey:       buildModuleKey(file.Scope, file.Name),
+		Schema:          schema,
+		SchemaPresent:   schemaPresent,
+		Registration:    registration,
+		HasRegistration: hasRegistration,
 	}
+	entry := newFeatureLedgerEntry(ctx)
 	issues := make([]FeatureLedgerIssue, 0, 8)
 
-	if schema != nil {
-		entry.DisplayName = strings.TrimSpace(schema.DisplayName)
-		entry.Owner = strings.TrimSpace(schema.Metadata.Owner)
-		entry.BoundedContext = strings.TrimSpace(schema.Metadata.BoundedContext)
-		entry.SourceMode = strings.TrimSpace(schema.Metadata.SourceMode)
-		entry.TableName = strings.TrimSpace(schema.Model.TableName)
-		entry.AutoRecycle = schema.Metadata.AutoRecycle
-		if strings.TrimSpace(schema.Name) != "" && strings.TrimSpace(schema.Name) != file.Name {
-			issues = append(issues, featureLedgerMismatchIssue(moduleKey, "schema_name_mismatch", "name", schema.Name, file.Name))
+	issues = append(issues, applyFeatureLedgerSchema(&entry, ctx)...)
+	issues = append(issues, applyFeatureLedgerRegistration(&entry, ctx)...)
+	applyFeatureLedgerDefaults(&entry, ctx)
+	issues = append(issues, validateFeatureLedgerCompleteness(entry, ctx.ModuleKey)...)
+
+	return entry, dedupeFeatureLedgerIssues(issues)
+}
+
+func newFeatureLedgerEntry(ctx featureLedgerEntryContext) FeatureLedgerEntry {
+	entry := FeatureLedgerEntry{
+		ModuleKey:  ctx.ModuleKey,
+		Name:       ctx.File.Name,
+		Scope:      ctx.File.Scope,
+		SchemaPath: ctx.File.RelativePath,
+	}
+	return entry
+}
+
+func applyFeatureLedgerSchema(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	if ctx.Schema == nil {
+		if ctx.SchemaPresent {
+			return nil
 		}
-		if strings.TrimSpace(schema.Scope) != "" && strings.TrimSpace(schema.Scope) != file.Scope {
-			issues = append(issues, featureLedgerMismatchIssue(moduleKey, "schema_scope_mismatch", "scope", schema.Scope, file.Scope))
-		}
-	} else if !schemaPresent {
-		issues = append(issues, FeatureLedgerIssue{
-			ModuleKey: moduleKey,
+		return []FeatureLedgerIssue{{
+			ModuleKey: ctx.ModuleKey,
 			Severity:  "error",
 			Code:      "schema_missing",
-			Detail:    file.RelativePath,
-		})
+			Detail:    ctx.File.RelativePath,
+		}}
 	}
 
-	if hasRegistration {
-		entry.Source = strings.TrimSpace(registration.Source)
-		entry.Status = featureLedgerStatusLabel(registration.Status)
-		entry.BuiltIn = registration.ModelTableName == ""
-		if strings.TrimSpace(registration.DisplayName) != "" {
-			if entry.DisplayName == "" {
-				entry.DisplayName = strings.TrimSpace(registration.DisplayName)
-			} else if strings.TrimSpace(registration.DisplayName) != entry.DisplayName {
-				issues = append(issues, featureLedgerMismatchIssue(moduleKey, "display_name_mismatch", "displayName", registration.DisplayName, entry.DisplayName))
-			}
-		}
-		if strings.TrimSpace(registration.Owner) != "" {
-			if entry.Owner == "" {
-				entry.Owner = strings.TrimSpace(registration.Owner)
-			} else if strings.TrimSpace(registration.Owner) != entry.Owner {
-				issues = append(issues, featureLedgerMismatchIssue(moduleKey, "owner_mismatch", "owner", registration.Owner, entry.Owner))
-			}
-		}
-		if strings.TrimSpace(registration.BoundedContext) != "" {
-			if entry.BoundedContext == "" {
-				entry.BoundedContext = strings.TrimSpace(registration.BoundedContext)
-			} else if strings.TrimSpace(registration.BoundedContext) != entry.BoundedContext {
-				issues = append(issues, featureLedgerMismatchIssue(moduleKey, "bounded_context_mismatch", "boundedContext", registration.BoundedContext, entry.BoundedContext))
-			}
-		}
-		if strings.TrimSpace(registration.ModelTableName) != "" {
-			if entry.TableName == "" {
-				entry.TableName = strings.TrimSpace(registration.ModelTableName)
-			} else if strings.TrimSpace(registration.ModelTableName) != entry.TableName {
-				issues = append(issues, featureLedgerMismatchIssue(moduleKey, "table_name_mismatch", "tableName", registration.ModelTableName, entry.TableName))
-			}
-		}
-		if schema == nil {
-			entry.AutoRecycle = registration.AutoRecycle
-		} else if registration.AutoRecycle != entry.AutoRecycle {
-			issues = append(issues, featureLedgerMismatchIssue(moduleKey, "auto_recycle_mismatch", "autoRecycle", fmt.Sprintf("%t", registration.AutoRecycle), fmt.Sprintf("%t", entry.AutoRecycle)))
-		}
-		if schema != nil {
-			derivedSource := inferRegistrationSource(file.Scope, entry.SourceMode, file.Name, true)
-			if strings.TrimSpace(registration.Source) != "" && strings.TrimSpace(registration.Source) != derivedSource {
-				issues = append(issues, featureLedgerMismatchIssue(moduleKey, "source_mismatch", "source", registration.Source, derivedSource))
-			}
-			entry.Source = strings.TrimSpace(registration.Source)
-			entry.Maturity = featureLedgerMaturity(registration)
-		}
-	} else {
-		issues = append(issues, FeatureLedgerIssue{
-			ModuleKey: moduleKey,
-			Severity:  "error",
-			Code:      "registration_missing",
-			Detail:    file.RelativePath,
-		})
-		if entry.Source == "" {
-			entry.Source = inferRegistrationSource(file.Scope, entry.SourceMode, file.Name, true)
-		}
+	entry.DisplayName = strings.TrimSpace(ctx.Schema.DisplayName)
+	entry.Owner = strings.TrimSpace(ctx.Schema.Metadata.Owner)
+	entry.BoundedContext = strings.TrimSpace(ctx.Schema.Metadata.BoundedContext)
+	entry.SourceMode = strings.TrimSpace(ctx.Schema.Metadata.SourceMode)
+	entry.TableName = strings.TrimSpace(ctx.Schema.Model.TableName)
+	entry.AutoRecycle = ctx.Schema.Metadata.AutoRecycle
+	return validateFeatureLedgerSchemaIdentity(ctx)
+}
+
+func validateFeatureLedgerSchemaIdentity(ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	issues := make([]FeatureLedgerIssue, 0, 2)
+	if hasFeatureLedgerSchemaNameMismatch(ctx.Schema, ctx.File) {
+		issues = append(issues, featureLedgerMismatchIssue(ctx.ModuleKey, "schema_name_mismatch", "name", ctx.Schema.Name, ctx.File.Name))
+	}
+	if hasFeatureLedgerSchemaScopeMismatch(ctx.Schema, ctx.File) {
+		issues = append(issues, featureLedgerMismatchIssue(ctx.ModuleKey, "schema_scope_mismatch", "scope", ctx.Schema.Scope, ctx.File.Scope))
+	}
+	return issues
+}
+
+func hasFeatureLedgerSchemaNameMismatch(schema *scaffold.ModuleSchema, file featureLedgerSchemaFile) bool {
+	return strings.TrimSpace(schema.Name) != "" && strings.TrimSpace(schema.Name) != file.Name
+}
+
+func hasFeatureLedgerSchemaScopeMismatch(schema *scaffold.ModuleSchema, file featureLedgerSchemaFile) bool {
+	return strings.TrimSpace(schema.Scope) != "" && strings.TrimSpace(schema.Scope) != file.Scope
+}
+
+func applyFeatureLedgerRegistration(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	if !ctx.HasRegistration {
+		return applyMissingFeatureLedgerRegistration(entry, ctx)
+	}
+
+	entry.Source = strings.TrimSpace(ctx.Registration.Source)
+	entry.Status = featureLedgerStatusLabel(ctx.Registration.Status)
+	entry.BuiltIn = ctx.Registration.ModelTableName == ""
+
+	issues := applyFeatureLedgerRegistrationFields(entry, ctx)
+	issues = append(issues, applyFeatureLedgerRegistrationAutoRecycle(entry, ctx)...)
+	issues = append(issues, applyFeatureLedgerRegistrationSource(entry, ctx)...)
+	return issues
+}
+
+func applyFeatureLedgerRegistrationFields(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	fields := []featureLedgerRegistrationField{
+		{Target: &entry.DisplayName, Value: ctx.Registration.DisplayName, Code: "display_name_mismatch", Field: "displayName"},
+		{Target: &entry.Owner, Value: ctx.Registration.Owner, Code: "owner_mismatch", Field: "owner"},
+		{Target: &entry.BoundedContext, Value: ctx.Registration.BoundedContext, Code: "bounded_context_mismatch", Field: "boundedContext"},
+		{Target: &entry.TableName, Value: ctx.Registration.ModelTableName, Code: "table_name_mismatch", Field: "tableName"},
+	}
+
+	issues := make([]FeatureLedgerIssue, 0, len(fields))
+	for _, field := range fields {
+		issues = append(issues, applyFeatureLedgerRegistrationField(ctx.ModuleKey, field)...)
+	}
+	return issues
+}
+
+func applyFeatureLedgerRegistrationField(moduleKey string, field featureLedgerRegistrationField) []FeatureLedgerIssue {
+	value := strings.TrimSpace(field.Value)
+	if value == "" {
+		return nil
+	}
+	if *field.Target == "" {
+		*field.Target = value
+		return nil
+	}
+	if value == *field.Target {
+		return nil
+	}
+	return []FeatureLedgerIssue{featureLedgerMismatchIssue(moduleKey, field.Code, field.Field, field.Value, *field.Target)}
+}
+
+func applyFeatureLedgerRegistrationAutoRecycle(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	if ctx.Schema == nil {
+		entry.AutoRecycle = ctx.Registration.AutoRecycle
+		return nil
+	}
+	if !hasFeatureLedgerAutoRecycleMismatch(entry, ctx.Registration) {
+		return nil
+	}
+	return []FeatureLedgerIssue{featureLedgerMismatchIssue(ctx.ModuleKey, "auto_recycle_mismatch", "autoRecycle", fmt.Sprintf("%t", ctx.Registration.AutoRecycle), fmt.Sprintf("%t", entry.AutoRecycle))}
+}
+
+func hasFeatureLedgerAutoRecycleMismatch(entry *FeatureLedgerEntry, registration ModuleRegistration) bool {
+	return registration.AutoRecycle != entry.AutoRecycle
+}
+
+func applyFeatureLedgerRegistrationSource(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	if ctx.Schema == nil {
+		return nil
+	}
+
+	derivedSource := inferFeatureLedgerSource(*entry, ctx.File)
+	entry.Source = strings.TrimSpace(ctx.Registration.Source)
+	entry.Maturity = featureLedgerMaturity(ctx.Registration)
+	if !hasFeatureLedgerSourceMismatch(ctx.Registration, derivedSource) {
+		return nil
+	}
+	return []FeatureLedgerIssue{featureLedgerMismatchIssue(ctx.ModuleKey, "source_mismatch", "source", ctx.Registration.Source, derivedSource)}
+}
+
+func hasFeatureLedgerSourceMismatch(registration ModuleRegistration, derivedSource string) bool {
+	return strings.TrimSpace(registration.Source) != "" && strings.TrimSpace(registration.Source) != derivedSource
+}
+
+func applyMissingFeatureLedgerRegistration(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) []FeatureLedgerIssue {
+	if entry.Source == "" {
+		entry.Source = inferFeatureLedgerSource(*entry, ctx.File)
+	}
+	entry.Maturity = "draft"
+	entry.Status = "missing_registration"
+	return []FeatureLedgerIssue{{
+		ModuleKey: ctx.ModuleKey,
+		Severity:  "error",
+		Code:      "registration_missing",
+		Detail:    ctx.File.RelativePath,
+	}}
+}
+
+func applyFeatureLedgerDefaults(entry *FeatureLedgerEntry, ctx featureLedgerEntryContext) {
+	if shouldInferFeatureLedgerMaturity(*entry, ctx) {
+		entry.Maturity = featureLedgerMaturity(ctx.Registration)
+	}
+	if isFeatureLedgerDisplayNameMissing(*entry) {
+		entry.DisplayName = ctx.ModuleKey
+	}
+	if isFeatureLedgerSourceMissing(*entry) {
+		entry.Source = inferFeatureLedgerSource(*entry, ctx.File)
+	}
+	if isFeatureLedgerStatusMissing(*entry) && ctx.HasRegistration {
+		entry.Status = featureLedgerStatusLabel(ctx.Registration.Status)
+	}
+	if isFeatureLedgerMaturityMissing(*entry) {
 		entry.Maturity = "draft"
-		entry.Status = "missing_registration"
+	}
+}
+
+func shouldInferFeatureLedgerMaturity(entry FeatureLedgerEntry, ctx featureLedgerEntryContext) bool {
+	return ctx.HasRegistration && entry.Maturity == ""
+}
+
+func isFeatureLedgerDisplayNameMissing(entry FeatureLedgerEntry) bool {
+	return strings.TrimSpace(entry.DisplayName) == ""
+}
+
+func isFeatureLedgerSourceMissing(entry FeatureLedgerEntry) bool {
+	return strings.TrimSpace(entry.Source) == ""
+}
+
+func isFeatureLedgerStatusMissing(entry FeatureLedgerEntry) bool {
+	return strings.TrimSpace(entry.Status) == ""
+}
+
+func isFeatureLedgerMaturityMissing(entry FeatureLedgerEntry) bool {
+	return entry.Maturity == ""
+}
+
+func inferFeatureLedgerSource(entry FeatureLedgerEntry, file featureLedgerSchemaFile) string {
+	return inferRegistrationSource(file.Scope, entry.SourceMode, file.Name, true)
+}
+
+func validateFeatureLedgerCompleteness(entry FeatureLedgerEntry, moduleKey string) []FeatureLedgerIssue {
+	requiredFields := []featureLedgerRequiredField{
+		{
+			Value:  entry.Owner,
+			Code:   "owner_missing",
+			Field:  "owner",
+			Detail: "owner is required for feature ledger completeness",
+		},
+		{
+			Value:  entry.BoundedContext,
+			Code:   "bounded_context_missing",
+			Field:  "boundedContext",
+			Detail: "bounded context is required for feature ledger completeness",
+		},
+		{
+			Value:  entry.SourceMode,
+			Code:   "source_mode_missing",
+			Field:  "sourceMode",
+			Detail: "source mode is required for feature ledger completeness",
+		},
+		{
+			Value:  entry.TableName,
+			Code:   "table_name_missing",
+			Field:  "tableName",
+			Detail: "table name is required for feature ledger completeness",
+		},
 	}
 
-	if hasRegistration && entry.Maturity == "" {
-		entry.Maturity = featureLedgerMaturity(registration)
+	issues := make([]FeatureLedgerIssue, 0, len(requiredFields))
+	for _, field := range requiredFields {
+		if strings.TrimSpace(field.Value) == "" {
+			issues = append(issues, missingFeatureLedgerFieldIssue(moduleKey, field))
+		}
 	}
-	if strings.TrimSpace(entry.DisplayName) == "" {
-		entry.DisplayName = moduleKey
-	}
-	if strings.TrimSpace(entry.Source) == "" {
-		entry.Source = inferRegistrationSource(file.Scope, entry.SourceMode, file.Name, true)
-	}
-	if strings.TrimSpace(entry.Status) == "" && hasRegistration {
-		entry.Status = featureLedgerStatusLabel(registration.Status)
-	}
+	return issues
+}
 
-	if strings.TrimSpace(entry.Owner) == "" {
-		issues = append(issues, FeatureLedgerIssue{
-			ModuleKey: moduleKey,
-			Severity:  "warn",
-			Code:      "owner_missing",
-			Field:     "owner",
-			Detail:    "owner is required for feature ledger completeness",
-		})
+func missingFeatureLedgerFieldIssue(moduleKey string, field featureLedgerRequiredField) FeatureLedgerIssue {
+	return FeatureLedgerIssue{
+		ModuleKey: moduleKey,
+		Severity:  "warn",
+		Code:      field.Code,
+		Field:     field.Field,
+		Detail:    field.Detail,
 	}
-	if strings.TrimSpace(entry.BoundedContext) == "" {
-		issues = append(issues, FeatureLedgerIssue{
-			ModuleKey: moduleKey,
-			Severity:  "warn",
-			Code:      "bounded_context_missing",
-			Field:     "boundedContext",
-			Detail:    "bounded context is required for feature ledger completeness",
-		})
-	}
-	if strings.TrimSpace(entry.SourceMode) == "" {
-		issues = append(issues, FeatureLedgerIssue{
-			ModuleKey: moduleKey,
-			Severity:  "warn",
-			Code:      "source_mode_missing",
-			Field:     "sourceMode",
-			Detail:    "source mode is required for feature ledger completeness",
-		})
-	}
-	if strings.TrimSpace(entry.TableName) == "" {
-		issues = append(issues, FeatureLedgerIssue{
-			ModuleKey: moduleKey,
-			Severity:  "warn",
-			Code:      "table_name_missing",
-			Field:     "tableName",
-			Detail:    "table name is required for feature ledger completeness",
-		})
-	}
-
-	if entry.Maturity == "" {
-		entry.Maturity = "draft"
-	}
-	return entry, dedupeFeatureLedgerIssues(issues)
 }
 
 func featureLedgerMaturity(registration ModuleRegistration) string {
@@ -455,7 +629,7 @@ func featureLedgerStatusLabel(status int) string {
 	}
 }
 
-func featureLedgerMismatchIssue(moduleKey string, code string, field string, actual string, expected string) FeatureLedgerIssue {
+func featureLedgerMismatchIssue(moduleKey, code, field, actual, expected string) FeatureLedgerIssue {
 	return FeatureLedgerIssue{
 		ModuleKey: moduleKey,
 		Severity:  "warn",
@@ -482,9 +656,65 @@ func dedupeFeatureLedgerIssues(issues []FeatureLedgerIssue) []FeatureLedgerIssue
 	return filtered
 }
 
+func sortFeatureLedgerEntries(entries []FeatureLedgerEntry) {
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].Scope == entries[j].Scope {
+			return entries[i].Name < entries[j].Name
+		}
+		return entries[i].Scope < entries[j].Scope
+	})
+}
+
+func sortFeatureLedgerIssues(issues []FeatureLedgerIssue) {
+	sort.SliceStable(issues, func(i, j int) bool {
+		return lessFeatureLedgerIssue(issues[i], issues[j])
+	})
+}
+
+func lessFeatureLedgerIssue(left, right FeatureLedgerIssue) bool {
+	if left.ModuleKey != right.ModuleKey {
+		return left.ModuleKey < right.ModuleKey
+	}
+	if left.Code != right.Code {
+		return left.Code < right.Code
+	}
+	if left.Field != right.Field {
+		return left.Field < right.Field
+	}
+	if left.Severity != right.Severity {
+		return left.Severity < right.Severity
+	}
+	return left.Detail < right.Detail
+}
+
+func sortFeatureLedgerSchemaFiles(files []featureLedgerSchemaFile) {
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].Scope == files[j].Scope {
+			return files[i].Name < files[j].Name
+		}
+		return files[i].Scope < files[j].Scope
+	})
+}
+
+func hasFeatureLedgerWalkError(walkErr error) bool {
+	return walkErr != nil
+}
+
+func isFeatureLedgerSchemaCandidate(path string, d os.DirEntry) bool {
+	return !d.IsDir() && isFeatureLedgerJSONFile(path) && !isFeatureLedgerSnapshotFile(path)
+}
+
+func isFeatureLedgerJSONFile(path string) bool {
+	return strings.EqualFold(filepath.Ext(path), ".json")
+}
+
+func isFeatureLedgerSnapshotFile(path string) bool {
+	return strings.EqualFold(filepath.Base(path), filepath.Base(scaffold.GeneratedFeatureLedgerRelativePath))
+}
+
 func splitFeatureLedgerSchemaRelativePath(relativePath string) (string, string, bool) {
 	normalized := filepath.ToSlash(strings.TrimSpace(relativePath))
-	if normalized == "" || strings.EqualFold(filepath.Base(normalized), filepath.Base(scaffold.GeneratedFeatureLedgerRelativePath)) {
+	if isInvalidFeatureLedgerSchemaPath(normalized) {
 		return "", "", false
 	}
 	parts := strings.Split(normalized, "/")
@@ -492,7 +722,7 @@ func splitFeatureLedgerSchemaRelativePath(relativePath string) (string, string, 
 		return "", "", false
 	}
 	scope := strings.TrimSpace(parts[0])
-	if scope != "system" && scope != "business" {
+	if !isFeatureLedgerSchemaScope(scope) {
 		return "", "", false
 	}
 	name := strings.TrimSuffix(strings.Join(parts[1:], "/"), ".json")
@@ -501,4 +731,12 @@ func splitFeatureLedgerSchemaRelativePath(relativePath string) (string, string, 
 		return "", "", false
 	}
 	return scope, name, true
+}
+
+func isInvalidFeatureLedgerSchemaPath(normalized string) bool {
+	return normalized == "" || isFeatureLedgerSnapshotFile(normalized)
+}
+
+func isFeatureLedgerSchemaScope(scope string) bool {
+	return scope == "system" || scope == "business"
 }
