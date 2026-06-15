@@ -667,7 +667,7 @@ test('setting workspace keeps summary and single-group config view on the shared
   await expect(page.locator('.setting-overview-page__anchor-item[role="tab"][aria-selected="true"]')).toHaveCount(1);
   await expect(page.locator('.setting-page__overview-head')).toHaveCount(0);
   await expect(page.locator('.system-page-hero')).toHaveCount(0);
-  await expect(page.locator('.page-side-column .side-rail-panel').first()).toBeVisible();
+  await expect(page.locator('.setting-page__governance-stack .side-rail-panel').first()).toBeVisible();
   await expect(page.locator('.setting-overview-page__group-card')).toHaveCount(0);
 
   const overviewContract = await page.evaluate(() => {
@@ -677,7 +677,7 @@ test('setting workspace keeps summary and single-group config view on the shared
     const anchorTitle = document.querySelector<HTMLElement>('.setting-overview-page__anchor-title');
     const workspace = document.querySelector<HTMLElement>('.setting-group-workspace');
     const sideColumn = document.querySelector<HTMLElement>('.setting-overview-page__rail');
-    const sideRailPanel = document.querySelector<HTMLElement>('.setting-overview-page__rail .side-rail-panel');
+    const sideRailPanel = document.querySelector<HTMLElement>('.setting-page__governance-stack .side-rail-panel');
 
     const read = (element?: HTMLElement | null) => {
       if (!element) {
