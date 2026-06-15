@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"fmt"
 	"net/netip"
@@ -14,11 +15,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
 
 func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	schemaName, err := s.currentSchema()
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) 
 
 func (s *GeneratorService) CreateDatasource(req *UpsertGeneratorDatasourceReq) (*GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	row, err := normalizeDatasourceReq(req, true)
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *GeneratorService) CreateDatasource(req *UpsertGeneratorDatasourceReq) (
 
 func (s *GeneratorService) UpdateDatasource(id string, req *UpsertGeneratorDatasourceReq) (*GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	numericID, err := parseDatasourceNumericID(id)
 	if err != nil {
@@ -102,7 +102,7 @@ func (s *GeneratorService) UpdateDatasource(id string, req *UpsertGeneratorDatas
 
 func (s *GeneratorService) DeleteDatasource(id string) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	numericID, err := parseDatasourceNumericID(id)
 	if err != nil {
@@ -120,7 +120,7 @@ func (s *GeneratorService) DeleteDatasource(id string) error {
 
 func (s *GeneratorService) TestDatasource(id string) (*GeneratorDatasourceResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if strings.TrimSpace(id) == "" || id == generatorDatasourceCurrentID {
 		schemaName, err := s.currentSchema()
@@ -175,7 +175,7 @@ func (s *GeneratorService) TestDatasource(id string) (*GeneratorDatasourceResp, 
 
 func (s *GeneratorService) openSchemaReader(datasourceID string) (*generatorSchemaReader, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if strings.TrimSpace(datasourceID) == "" || datasourceID == generatorDatasourceCurrentID {
 		schemaName, err := s.currentSchema()

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@arco-design/web-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { PageContainer, PageEmpty, PageLoading, PageRequestError } from '../../../components';
+import { PageContainer, PageEmpty, PageError, PageLoading } from '../../../components';
 import { getUserDetail, type UserDetail as UserDetailData } from './api';
 import UserDetailContent from './UserDetailContent';
 
@@ -55,8 +55,7 @@ const UserDetail: React.FC = () => {
 
   if (error) {
     return (
-      <PageRequestError
-        error={error}
+      <PageError
         onRetry={() => {
           void loadDetail();
         }}

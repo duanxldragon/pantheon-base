@@ -3,15 +3,16 @@ package iam
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"pantheon-platform/backend/pkg/capability"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
 
 type MenuService struct {
 	db *gorm.DB
@@ -23,7 +24,7 @@ func NewMenuService(db *gorm.DB) *MenuService {
 
 func (s *MenuService) Migrate() error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.db.AutoMigrate(&SystemMenu{})
 }
@@ -31,7 +32,7 @@ func (s *MenuService) Migrate() error {
 // GetMenuTree 获取全量菜单树。
 func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*MenuTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	if normalizeMenuScope(query) == "nav" {
@@ -66,7 +67,7 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 		return nil, err
 	}
 
-	return buildMenuTree(menus, 0), nil
+	return normalizeManageMenuTree(buildMenuTree(menus, 0), 0), nil
 }
 
 func (s *MenuService) HasManageAccess(roleKeys []string) (bool, error) {
@@ -97,7 +98,7 @@ func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTre
 		return []*MenuTreeResp{}, nil
 	}
 	if hasRoleKey(roleKeys, "admin") {
-		return buildMenuTree(allMenus, 0), nil
+		return normalizeScopedNavigationMenuTree(buildMenuTree(allMenus, 0), 0), nil
 	}
 
 	allowedIDs, err := s.loadAllowedNavigationMenuIDs(roleKeys)
@@ -135,7 +136,7 @@ func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTre
 			selectedMenus = append(selectedMenus, menu)
 		}
 	}
-	return buildMenuTree(selectedMenus, 0), nil
+	return normalizeScopedNavigationMenuTree(buildMenuTree(selectedMenus, 0), 0), nil
 }
 
 func (s *MenuService) loadNavigationMenus() ([]SystemMenu, error) {
@@ -172,7 +173,7 @@ func (s *MenuService) loadAllowedNavigationMenuIDs(roleKeys []string) ([]uint64,
 // CreateMenu 创建菜单。
 func (s *MenuService) CreateMenu(req *MenuCreateReq) (*MenuTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if err := s.validateMenuCreate(req); err != nil {
 		return nil, err
@@ -194,6 +195,7 @@ func (s *MenuService) CreateMenu(req *MenuCreateReq) (*MenuTreeResp, error) {
 		IsCache:    normalizeMenuFlag(req.IsCache),
 		IsExternal: normalizeMenuFlag(req.IsExternal),
 		ActiveMenu: normalizeMenuActiveMenu(req.ActiveMenu),
+		HideInNav:  normalizeMenuFlag(req.HideInNav),
 	}
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -212,7 +214,7 @@ func (s *MenuService) CreateMenu(req *MenuCreateReq) (*MenuTreeResp, error) {
 // UpdateMenu 更新菜单。
 func (s *MenuService) UpdateMenu(menuID uint64, req *MenuUpdateReq) (*MenuTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var menu SystemMenu
@@ -238,6 +240,7 @@ func (s *MenuService) UpdateMenu(menuID uint64, req *MenuUpdateReq) (*MenuTreeRe
 	menu.IsCache = normalizeMenuFlag(req.IsCache)
 	menu.IsExternal = normalizeMenuFlag(req.IsExternal)
 	menu.ActiveMenu = normalizeMenuActiveMenu(req.ActiveMenu)
+	menu.HideInNav = normalizeMenuFlag(req.HideInNav)
 
 	if err := s.db.Save(&menu).Error; err != nil {
 		return nil, err
@@ -248,7 +251,7 @@ func (s *MenuService) UpdateMenu(menuID uint64, req *MenuUpdateReq) (*MenuTreeRe
 // DeleteMenu 删除菜单。
 func (s *MenuService) DeleteMenu(menuID uint64) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 
 	var childCount int64
@@ -260,7 +263,7 @@ func (s *MenuService) DeleteMenu(menuID uint64) error {
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Exec("DELETE FROM system_role_menu WHERE menu_id = ?", menuID).Error; err != nil {
+		if err := tx.Table("system_role_menu").Where("menu_id = ?", menuID).Delete(nil).Error; err != nil {
 			return err
 		}
 		return tx.Delete(&SystemMenu{}, menuID).Error
@@ -268,15 +271,80 @@ func (s *MenuService) DeleteMenu(menuID uint64) error {
 }
 
 func buildMenuTree(menus []SystemMenu, parentID uint64) []*MenuTreeResp {
-	var tree []*MenuTreeResp
-	for _, menu := range menus {
-		if menu.ParentID == parentID {
-			node := toMenuTreeResp(menu)
-			node.Children = buildMenuTree(menus, menu.ID)
-			tree = append(tree, node)
+	// Build index: parentID -> menus with that parent
+	index := make(map[uint64][]*MenuTreeResp)
+	for i := range menus {
+		node := toMenuTreeResp(menus[i])
+		index[menus[i].ParentID] = append(index[menus[i].ParentID], node)
+	}
+	// Recursively attach children using the index — O(n) total
+	var attachChildren func(parentID uint64)
+	attachChildren = func(parentID uint64) {
+		children := index[parentID]
+		for _, child := range children {
+			child.Children = index[child.ID]
+			if len(child.Children) > 0 {
+				attachChildren(child.ID)
+			}
 		}
 	}
-	return tree
+	attachChildren(parentID)
+	return index[parentID]
+}
+
+func normalizeManageMenuTree(nodes []*MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	normalized := make([]*MenuTreeResp, 0, len(nodes))
+	for _, node := range nodes {
+		normalized = append(normalized, normalizeManageMenuNode(node, parentID)...)
+	}
+	return normalized
+}
+
+func normalizeManageMenuNode(node *MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	if shouldHideManageMenuNode(node) {
+		return normalizeManageMenuTree(node.Children, parentID)
+	}
+
+	cloned := *node
+	cloned.ParentID = parentID
+	cloned.Children = normalizeManageMenuTree(node.Children, cloned.ID)
+	return []*MenuTreeResp{&cloned}
+}
+
+func shouldHideManageMenuNode(node *MenuTreeResp) bool {
+	return node.HideInNav == 1 || isLegacyHiddenContainer(node.Path)
+}
+
+func normalizeScopedNavigationMenuTree(nodes []*MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	normalized := make([]*MenuTreeResp, 0, len(nodes))
+	for _, node := range nodes {
+		normalized = append(normalized, normalizeScopedNavigationMenuNode(node, parentID)...)
+	}
+	return normalized
+}
+
+func normalizeScopedNavigationMenuNode(node *MenuTreeResp, parentID uint64) []*MenuTreeResp {
+	if shouldHideScopedNavigationMenuNode(node) {
+		return normalizeScopedNavigationMenuTree(node.Children, parentID)
+	}
+
+	cloned := *node
+	cloned.ParentID = parentID
+	cloned.Children = normalizeScopedNavigationMenuTree(node.Children, cloned.ID)
+	return []*MenuTreeResp{&cloned}
+}
+
+func shouldHideScopedNavigationMenuNode(node *MenuTreeResp) bool {
+	return node.HideInNav == 1 || isLegacyHiddenContainer(node.Path)
+}
+
+func isLegacyHiddenContainer(path string) bool {
+	switch strings.TrimSpace(path) {
+	case "/workspace", "/operations":
+		return true
+	default:
+		return false
+	}
 }
 
 func toMenuTreeResp(menu SystemMenu) *MenuTreeResp {
@@ -297,6 +365,7 @@ func toMenuTreeResp(menu SystemMenu) *MenuTreeResp {
 		IsCache:    menu.IsCache,
 		IsExternal: menu.IsExternal,
 		ActiveMenu: menu.ActiveMenu,
+		HideInNav:  menu.HideInNav,
 	}
 }
 
@@ -402,6 +471,14 @@ func bindMenuToAdmin(tx *gorm.DB, menuID uint64) error {
 		return err
 	}
 	if roleID == 0 {
+		slog.Warn("bindMenuToAdmin: admin role not found, skipping menu binding", "menuID", menuID)
+		return nil
+	}
+	var count int64
+	if err := tx.Table("system_role_menu").Where("role_id = ? AND menu_id = ?", roleID, menuID).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
 		return nil
 	}
 	return tx.Exec("INSERT INTO system_role_menu (role_id, menu_id) VALUES (?, ?)", roleID, menuID).Error

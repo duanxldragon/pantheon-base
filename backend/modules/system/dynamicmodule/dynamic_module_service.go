@@ -1,6 +1,7 @@
 package dynamicmodule
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
 
 const (
 	ModuleStatusActive            = 1
@@ -199,7 +199,7 @@ func (s *DynamicModuleService) RegisterModule(module contracts.BackendModule) er
 
 func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGeneratedModuleRequest) (*ModuleRegistration, []string, *GeneratedModuleRegistrationSummary, error) {
 	if s.db == nil {
-		return nil, nil, nil, errors.New(errDatabaseNotInitialized)
+		return nil, nil, nil, common.ErrDatabaseNotInitialized
 	}
 	if err := scaffold.ValidateRegisterRequest(req); err != nil {
 		return nil, nil, nil, err
@@ -251,11 +251,8 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 		return nil, nil, nil, err
 	}
 
-	refs, err := s.listGeneratedModuleRefs()
+	snapshot, _, err := s.refreshGeneratedWorkspaceArtifacts()
 	if err != nil {
-		return nil, nil, nil, err
-	}
-	if err := scaffold.WriteGeneratedRegistries(s.workspaceRoot, refs); err != nil {
 		_ = s.persistModuleDiagnostics(&existing, ModuleStatusFailed, err.Error(), []GeneratedModuleVerification{{
 			Code:       "registry_write",
 			Status:     "warn",
@@ -267,6 +264,7 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 
 	existing.BuiltIn = false
 	summary := s.buildGeneratedModuleSummary(&serverReq, writtenFiles)
+	summary.Verifications = append(summary.Verifications, verifyFeatureLedgerSnapshot(snapshot))
 	if err := s.persistModuleDiagnostics(&existing, ModuleStatusPendingActivation, "", summary.Verifications); err != nil {
 		return nil, nil, nil, err
 	}
@@ -275,7 +273,7 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 
 func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*ModuleRegistration, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	scope, shortName, err := splitModuleKey(moduleName)
 	if err != nil {
@@ -332,11 +330,7 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 		return nil, err
 	}
 
-	refs, err := s.listGeneratedModuleRefs()
-	if err != nil {
-		return nil, err
-	}
-	if err := scaffold.WriteGeneratedRegistries(s.workspaceRoot, refs); err != nil {
+	if _, _, err := s.refreshGeneratedWorkspaceArtifacts(); err != nil {
 		return nil, err
 	}
 

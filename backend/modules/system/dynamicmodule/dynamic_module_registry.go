@@ -38,16 +38,13 @@ func (s *DynamicModuleService) RebuildGeneratedRegistries() error {
 	if _, err := s.syncGeneratedModuleRegistrations(); err != nil {
 		return err
 	}
-	refs, err := s.listGeneratedModuleRefs()
-	if err != nil {
-		return err
-	}
-	return scaffold.WriteGeneratedRegistries(s.workspaceRoot, refs)
+	_, _, err := s.refreshGeneratedWorkspaceArtifacts()
+	return err
 }
 
 func (s *DynamicModuleService) listGeneratedModuleRefs() ([]scaffold.GeneratedModuleRef, error) {
 	var modules []ModuleRegistration
-	if err := s.db.Where("table_name <> '' AND status <> ?", ModuleStatusUninstalled).Find(&modules).Error; err != nil {
+	if err := s.db.Where("table_name <> '' AND status <> ?", ModuleStatusUninstalled).Order("scope ASC").Order("name ASC").Find(&modules).Error; err != nil {
 		return nil, err
 	}
 	refs := make([]scaffold.GeneratedModuleRef, 0, len(modules))

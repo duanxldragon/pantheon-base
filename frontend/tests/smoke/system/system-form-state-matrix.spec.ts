@@ -1,6 +1,9 @@
 import { test } from '../../fixtures/coverage';
 import { expect, type Locator, type Page, type Route } from '@playwright/test';
 import { apiBaseUrl, authHeaders, installOperationToken, signInAsAdmin } from '../helpers/auth';
+import {
+  installSharedPageReadCache,
+} from '../helpers/shared-read-cache';
 
 type Deferred<T = void> = {
   promise: Promise<T>;
@@ -24,6 +27,8 @@ type FormMatrixCase = {
   };
   submitLocator?: (form: Locator, page: Page) => Locator;
 };
+
+let cachedAdminRoleIndex: number | null = null;
 
 function createDeferred<T = void>(): Deferred<T> {
   let resolve!: (value: T | PromiseLike<T>) => void;
@@ -91,24 +96,26 @@ async function fulfillJson(route: Route, status: number, body: Record<string, un
 }
 
 async function selectAdminRoleInVirtualizedList(form: Locator, page: Page, accessToken: string) {
-  const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
-    headers: authHeaders(accessToken),
-    params: {
-      page: '1',
-      pageSize: '100',
-      sortField: 'sort',
-      sortOrder: 'asc',
-      status: '1',
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
-  const adminIndex = items.findIndex((item: { roleKey?: string }) => item.roleKey === 'admin');
-  expect(adminIndex).toBeGreaterThanOrEqual(0);
+  if (cachedAdminRoleIndex === null) {
+    const response = await page.request.get(`${apiBaseUrl}/system/role/list`, {
+      headers: authHeaders(accessToken),
+      params: {
+        page: '1',
+        pageSize: '100',
+        sortField: 'sort',
+        sortOrder: 'asc',
+        status: '1',
+      },
+    });
+    expect(response.ok()).toBeTruthy();
+    const payload = await response.json();
+    const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+    cachedAdminRoleIndex = items.findIndex((item: { roleKey?: string }) => item.roleKey === 'admin');
+  }
+  expect(cachedAdminRoleIndex).toBeGreaterThanOrEqual(0);
 
   await form.locator('.arco-select-view').first().click();
-  for (let index = 0; index < adminIndex; index += 1) {
+  for (let index = 0; index < cachedAdminRoleIndex; index += 1) {
     await page.keyboard.press('ArrowDown');
   }
   await page.keyboard.press('Enter');
@@ -366,6 +373,7 @@ test.describe('system form state matrix', () => {
   test('required state matrix uses natural prompts', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     const accessToken = await signInAsAdmin(page);
+    await installSharedPageReadCache(page);
 
     for (const matrixCase of matrixCases) {
       if (!matrixCase.requiredMessages?.length) {
@@ -400,6 +408,7 @@ test.describe('system form state matrix', () => {
   test('format state matrix keeps validation copy natural', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     const accessToken = await signInAsAdmin(page);
+    await installSharedPageReadCache(page);
 
     const formatCases = matrixCases.filter((matrixCase) => matrixCase.formatScenario);
     expect(formatCases.length).toBeGreaterThan(0);
@@ -426,6 +435,7 @@ test.describe('system form state matrix', () => {
   test('submitting state matrix shows deterministic loading feedback', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     const accessToken = await signInAsAdmin(page);
+    await installSharedPageReadCache(page);
 
     for (const matrixCase of matrixCases) {
       const gate = createDeferred<void>();
@@ -468,6 +478,7 @@ test.describe('system form state matrix', () => {
   test('server error matrix keeps modal state and shows friendly copy', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     const accessToken = await signInAsAdmin(page);
+    await installSharedPageReadCache(page);
 
     for (const matrixCase of matrixCases) {
       await page.route(matrixCase.submitRoutePattern, async (route) => {

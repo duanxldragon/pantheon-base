@@ -244,6 +244,32 @@ func TestUserService_MigrateCreatesUserRoleTableAndAdminBinding(t *testing.T) {
 	}
 }
 
+func TestUserService_BootstrapCreatesAdminBindingOnVersionedSchema(t *testing.T) {
+	t.Setenv("PANTHEON_ENV", "development")
+	db := setupUserTestDB(t)
+
+	s := NewUserService(db)
+	if err := s.Bootstrap(); err != nil {
+		t.Fatalf("bootstrap: %v", err)
+	}
+
+	var admin SystemUser
+	if err := db.First(&admin, 1).Error; err != nil {
+		t.Fatalf("load admin user: %v", err)
+	}
+	if admin.Username != "admin" {
+		t.Fatalf("expected admin username, got %s", admin.Username)
+	}
+
+	var bindingCount int64
+	if err := db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, 1).Count(&bindingCount).Error; err != nil {
+		t.Fatalf("count admin binding: %v", err)
+	}
+	if bindingCount != 1 {
+		t.Fatalf("expected admin user-role binding, got %d", bindingCount)
+	}
+}
+
 func TestUserService_MigrateRejectsMissingInitialAdminPasswordInProduction(t *testing.T) {
 	t.Setenv("PANTHEON_ENV", "production")
 	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "")
@@ -442,6 +468,10 @@ func TestUserService_MigrateReleasesLegacyDeletedUsername(t *testing.T) {
 	if err := s.Migrate(); err != nil {
 		t.Fatalf("expected migrate to succeed, got %v", err)
 	}
+	// releaseDeletedUsernames is now a separate cleanup step
+	if err := s.CleanupDeletedUsernames(); err != nil {
+		t.Fatalf("expected cleanup to succeed, got %v", err)
+	}
 
 	var repaired SystemUser
 	if err := db.Unscoped().First(&repaired, legacyUser.ID).Error; err != nil {
@@ -623,8 +653,18 @@ func TestUserService_GetUserDetail(t *testing.T) {
 	if detail.UpdatedAt == "" {
 		t.Fatal("expected updatedAt to be populated")
 	}
-	if detail.LastLoginAt == nil || *detail.LastLoginAt != loginTime.Format(time.RFC3339) {
-		t.Fatalf("expected lastLoginAt to be populated, got %v", detail.LastLoginAt)
+	var storedLoginTime time.Time
+	if err := db.Table("system_log_login").
+		Select("login_time").
+		Where("username = ? AND status = ?", "detail_test", 1).
+		Order("login_time desc, id desc").
+		Limit(1).
+		Scan(&storedLoginTime).Error; err != nil {
+		t.Fatalf("load stored login time: %v", err)
+	}
+	expectedLastLoginAt := storedLoginTime.Format(time.RFC3339)
+	if detail.LastLoginAt == nil || *detail.LastLoginAt != expectedLastLoginAt {
+		t.Fatalf("expected lastLoginAt %s, got %v", expectedLastLoginAt, detail.LastLoginAt)
 	}
 
 	if _, err := s.GetUserDetail(999); err == nil {
@@ -659,7 +699,7 @@ func TestUserService_ImportTemplateAndExport(t *testing.T) {
 		t.Fatalf("unexpected import result: %+v", result)
 	}
 
-	exported, err := s.ExportUsers(&UserListQuery{Username: "sample_user"})
+	exported, err := s.ExportUsers(&UserListQuery{Username: "sample_user"}, nil)
 	if err != nil {
 		t.Fatalf("export user: %v", err)
 	}

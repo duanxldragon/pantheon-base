@@ -3,6 +3,7 @@ package iam
 import (
 	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,8 +16,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const errDatabaseNotInitialized = "database.not_initialized"
-
 type PermissionService struct {
 	db *gorm.DB
 }
@@ -27,13 +26,20 @@ func NewPermissionService(db *gorm.DB) *PermissionService {
 
 func (s *PermissionService) Migrate() error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.db.AutoMigrate(&PermissionWorkbenchRemediationEvent{}); err != nil {
 		return err
 	}
 	if err := s.db.AutoMigrate(&PermissionRoleDataScopePolicy{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *PermissionService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	if !s.db.Migrator().HasTable("system_role") || !s.db.Migrator().HasTable("casbin_rule") {
 		return nil
@@ -55,7 +61,7 @@ WHERE ptype = ?
 
 func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*PermissionPolicyPageResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var policies []database.CasbinRule
@@ -107,7 +113,7 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 
 func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*PermissionPolicyResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	roleKey, path, method, err := s.validatePolicyPayload(0, req.RoleKey, req.Path, req.Method)
 	if err != nil {
@@ -138,7 +144,7 @@ func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*Permi
 
 func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyUpdateReq) (*PermissionPolicyResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var policy database.CasbinRule
@@ -175,7 +181,7 @@ func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyU
 
 func (s *PermissionService) DeletePolicy(policyID uint64) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.db.Delete(&database.CasbinRule{}, policyID).Error; err != nil {
 		return err
@@ -185,7 +191,7 @@ func (s *PermissionService) DeletePolicy(policyID uint64) error {
 
 func (s *PermissionService) ExportPolicies(query *PermissionPolicyQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	policies, err := s.listPoliciesForExport(query)
@@ -218,7 +224,7 @@ func (s *PermissionService) BuildImportTemplate() *impexp.CSVFile {
 
 func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	workbench, err := s.GetWorkbench(query)
@@ -282,7 +288,7 @@ func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*i
 
 func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchRemediateReq) (*PermissionWorkbenchRemediateResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	roleKey := strings.TrimSpace(req.RoleKey)
 	if roleKey == "" {
@@ -292,16 +298,11 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 		return nil, err
 	}
 
-	workbench, err := s.GetWorkbench(&PermissionWorkbenchQuery{RoleKey: roleKey})
+	// Fetch only the missing API policies for the target role,
+	// avoiding the full workbench computation overhead.
+	role, err := s.getRoleMissingAPIPolicies(roleKey)
 	if err != nil {
 		return nil, err
-	}
-	var role *PermissionWorkbenchRoleResp
-	for index := range workbench.Roles {
-		if workbench.Roles[index].RoleKey == roleKey {
-			role = &workbench.Roles[index]
-			break
-		}
 	}
 	if role == nil {
 		return nil, errors.New("permission.role.invalid")
@@ -361,7 +362,7 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 
 func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWorkbenchRemediationQuery) ([]PermissionWorkbenchRemediationResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	limit := 20
@@ -435,13 +436,62 @@ func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportRe
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
 		return result, nil
 	}
 
+	// Step 1: Validate header
+	headerIndex, err := validateImportHeader(records, result)
+	if err != nil {
+		return result, nil
+	}
+
+	// Step 2: Validate and deduplicate rows
+	rows, err := validateImportRows(records, headerIndex, result)
+	if err != nil {
+		return result, nil
+	}
+
+	// Step 3: Validate role keys exist
+	if err := validateImportRoleKeys(s.db, rows, result); err != nil {
+		return result, nil
+	}
+
+	// Step 4: Load existing policies for dedup
+	existingByKey, err := loadExistingPolicyMap(s.db)
+	if err != nil {
+		return nil, err
+	}
+
+	// Step 5: Write new policies in transaction
+	if err := writeImportPolicies(s.db, rows, existingByKey, result); err != nil {
+		return nil, err
+	}
+
+	// Step 6: Reload enforcer
+	if result.Created > 0 {
+		if err := reloadPermissionPolicies(); err != nil {
+			return nil, err
+		}
+	}
+
+	result.Applied = true
+	return result, nil
+}
+
+// policyImportRow represents a validated import row.
+type policyImportRow struct {
+	RowNumber int
+	RoleKey   string
+	Path      string
+	Method    string
+}
+
+// validateImportHeader checks that required headers are present.
+func validateImportHeader(records [][]string, result *impexp.ImportResult) (map[string]int, error) {
 	headerIndex := make(map[string]int, len(records[0]))
 	for index, header := range records[0] {
 		headerIndex[strings.TrimSpace(header)] = index
@@ -453,17 +503,14 @@ func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportRe
 		}
 	}
 	if result.Failed > 0 {
-		return result, nil
+		return nil, errors.New("import.header.missing")
 	}
+	return headerIndex, nil
+}
 
-	type importRow struct {
-		RowNumber int
-		RoleKey   string
-		Path      string
-		Method    string
-	}
-
-	rows := make([]importRow, 0, len(records)-1)
+// validateImportRows parses, validates, and deduplicates CSV rows.
+func validateImportRows(records [][]string, headerIndex map[string]int, result *impexp.ImportResult) ([]policyImportRow, error) {
+	rows := make([]policyImportRow, 0, len(records)-1)
 	seenKeys := make(map[string]int, len(records)-1)
 	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
 		record := records[rowIndex]
@@ -491,46 +538,61 @@ func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportRe
 		} else {
 			seenKeys[compositeKey] = rowNumber
 		}
-		rows = append(rows, importRow{
+		rows = append(rows, policyImportRow{
 			RowNumber: rowNumber,
 			RoleKey:   roleKey,
 			Path:      path,
 			Method:    method,
 		})
 	}
-
 	if result.Failed > 0 {
-		return result, nil
+		return nil, errors.New("import.row.invalid")
 	}
+	return rows, nil
+}
 
+// validateImportRoleKeys checks that all role keys in the import exist.
+func validateImportRoleKeys(db *gorm.DB, rows []policyImportRow, result *impexp.ImportResult) error {
 	roleKeys := make([]string, 0, len(rows))
 	for _, row := range rows {
 		roleKeys = append(roleKeys, row.RoleKey)
 	}
 	var existingRoleCount int64
-	if err := s.db.Table("system_role").Where("role_key IN ? AND deleted_at IS NULL", roleKeys).Count(&existingRoleCount).Error; err != nil {
-		return nil, err
+	if err := db.Table("system_role").Where("role_key IN ? AND deleted_at IS NULL", roleKeys).Count(&existingRoleCount).Error; err != nil {
+		return err
 	}
 	normalizedRoleKeys := impexp.SplitPipeValues(strings.Join(roleKeys, "|"))
 	if existingRoleCount != int64(len(normalizedRoleKeys)) {
 		for _, row := range rows {
-			if err := s.ensureRoleKeyExists(row.RoleKey); err != nil {
-				impexp.AppendImportError(result, row.RowNumber, "roleKey", err.Error())
+			var count int64
+			if err := db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", row.RoleKey).Count(&count).Error; err != nil {
+				return err
+			}
+			if count == 0 {
+				impexp.AppendImportError(result, row.RowNumber, "roleKey", "permission.role.invalid")
 			}
 		}
-		return result, nil
+		return errors.New("import.role.invalid")
 	}
+	return nil
+}
 
-	policies, err := s.listPoliciesForExport(nil)
-	if err != nil {
+// loadExistingPolicyMap loads all existing policies into a dedup map.
+func loadExistingPolicyMap(db *gorm.DB) (map[string]database.CasbinRule, error) {
+	var policies []database.CasbinRule
+	if err := db.Model(&database.CasbinRule{}).Where("ptype = ?", "p").Find(&policies).Error; err != nil {
 		return nil, err
 	}
 	existingByKey := make(map[string]database.CasbinRule, len(policies))
 	for _, policy := range policies {
 		existingByKey[fmt.Sprintf("%s|%s|%s", policy.V0, policy.V1, policy.V2)] = policy
 	}
+	return existingByKey, nil
+}
 
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
+// writeImportPolicies writes new (non-duplicate) policies in a transaction.
+func writeImportPolicies(db *gorm.DB, rows []policyImportRow, existingByKey map[string]database.CasbinRule, result *impexp.ImportResult) error {
+	return db.Transaction(func(tx *gorm.DB) error {
 		for _, row := range rows {
 			compositeKey := fmt.Sprintf("%s|%s|%s", row.RoleKey, row.Path, row.Method)
 			if _, ok := existingByKey[compositeKey]; ok {
@@ -549,15 +611,7 @@ func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportRe
 			result.Created++
 		}
 		return nil
-	}); err != nil {
-		return nil, err
-	}
-	if err := reloadPermissionPolicies(); err != nil {
-		return nil, err
-	}
-
-	result.Applied = true
-	return result, nil
+	})
 }
 
 func (s *PermissionService) listPoliciesForExport(query *PermissionPolicyQuery) ([]database.CasbinRule, error) {

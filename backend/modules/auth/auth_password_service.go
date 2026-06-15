@@ -22,7 +22,7 @@ func newAuthPasswordService(auth *AuthService) *authPasswordService {
 
 func (s *authPasswordService) VerifyPasswordForOperation(userID uint64, sessionID, password string) (string, error) {
 	if s.auth.db == nil {
-		return "", errors.New(errDatabaseNotInitialized)
+		return "", common.ErrDatabaseNotInitialized
 	}
 	if strings.TrimSpace(sessionID) == "" {
 		return "", errors.New("auth.operation.verification_mismatch")
@@ -45,7 +45,7 @@ func (s *authPasswordService) VerifyPasswordForOperation(userID uint64, sessionI
 
 func (s *authPasswordService) UpdatePassword(userID uint64, currentSessionID string, req *PasswordUpdateReq) error {
 	if s.auth.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 
 	oldPassword := strings.TrimSpace(req.OldPassword)

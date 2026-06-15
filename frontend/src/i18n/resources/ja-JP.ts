@@ -1,4 +1,5 @@
 import enUSFallback from './en-US';
+import jaJPRuntimeFixes from './runtime-fixes.ja-JP';
 
 const jaJPFallback = {
   ...enUSFallback,
@@ -1161,6 +1162,8 @@ const jaJPFallback = {
     'レジストリ検証が不完全です。生成ファイルを確認してください',
   'module.generate.verify.artifacts_missing':
     'モジュールソースまたは schema が欠落しているため、実行時レジストリから除外しました',
+  'module.generate.verify.feature_ledger_updated': '機能台帳スナップショットを更新しました',
+  'module.generate.verify.feature_ledger_drift': '機能台帳のドリフトが検出されました',
   'module.artifacts_missing': 'モジュールソースまたは schema が欠落しています',
   'module.generate.invalid_payload': 'モジュール生成リクエストが不正です',
   'module.generate.invalid_name': 'モジュール名の形式が不正です',
@@ -2429,6 +2432,7 @@ const jaJPFallback = {
     'ログイン時に TOTP 二要素認証を要求するかを制御します。オフ時は従来のパスワードログインのままです。',
   'system.setting.remark.login.sso_enabled':
     '将来の SSO / OIDC 連携向けの機能フラグです。オフ時はローカルアカウントのみを使用します。',
+  ...jaJPRuntimeFixes,
 };
 
 export default jaJPFallback;

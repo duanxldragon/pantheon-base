@@ -1,7 +1,6 @@
 import { expect } from '@playwright/test';
 
 const knownThirdPartyRuntimeErrorPatterns = [
-  /Accessing element\.ref was removed in React 19/i,
   /^CopyReactDOM\.render is not a function$/,
 ];
 

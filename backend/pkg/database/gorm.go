@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -46,12 +46,38 @@ func gormLogLevel() logger.LogLevel {
 	return logger.Info
 }
 
-// InitDB 初始化数据库连接
+// DBDriver represents the database driver type.
+// Currently only MySQL is supported; additional drivers can be added here.
+type DBDriver string
+
+const (
+	DriverMySQL DBDriver = "mysql"
+)
+
+// InitDB initializes the database connection.
+// The driver is determined by the DSN prefix or PANTHEON_DB_DRIVER env var.
+// Currently only MySQL is supported; this abstraction allows future expansion.
 func InitDB(dsn string) {
+	driver := DBDriver(strings.ToLower(strings.TrimSpace(os.Getenv("PANTHEON_DB_DRIVER"))))
+	if driver == "" {
+		driver = DriverMySQL // default
+	}
+
+	switch driver {
+	case DriverMySQL:
+		initMySQL(dsn)
+	default:
+		slog.Error("unsupported database driver", "driver", driver)
+		os.Exit(1)
+	}
+}
+
+func initMySQL(dsn string) {
 	var err error
 	normalizedDSN, err := normalizeMySQLDSN(dsn)
 	if err != nil {
-		log.Fatalf("PANTHEON_DSN must be a valid MySQL DSN: %v", err)
+		slog.Error("PANTHEON_DSN must be a valid MySQL DSN", "error", err)
+		os.Exit(1)
 	}
 
 	DB, err = gorm.Open(mysql.Open(normalizedDSN), &gorm.Config{
@@ -62,7 +88,8 @@ func InitDB(dsn string) {
 	})
 
 	if err != nil {
-		log.Fatalf("failed to connect database: %v", err)
+		slog.Error("failed to connect database", "error", err)
+		os.Exit(1)
 	}
 
 	sqlDB, _ := DB.DB()
@@ -70,5 +97,5 @@ func InitDB(dsn string) {
 	sqlDB.SetMaxOpenConns(100)          // 最大开放连接数
 	sqlDB.SetConnMaxLifetime(time.Hour) // 连接最大存活时间
 
-	fmt.Println("Database connection successful")
+	slog.Info("Database connection successful", "driver", "mysql")
 }

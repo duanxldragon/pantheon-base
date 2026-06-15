@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLangPack } from '../modules/system/i18n/api';
+import { shouldFetchRemoteI18nPack } from '../core/runtime/automationPolicy.ts';
 
 export const SUPPORTED_LOCALES = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR'] as const;
 
@@ -31,6 +32,7 @@ const generatedFallbackLoaders: Record<SupportedLocale, () => Promise<FallbackRe
   'ko-KR': async () => (await import('./resources/generated/ko-KR')).default,
   'fr-FR': async () => (await import('./resources/generated/fr-FR')).default,
 };
+const localeResourceTasks = new Map<SupportedLocale, Promise<void>>();
 
 function normalizeLocale(locale: string | null | undefined): SupportedLocale {
   const normalized = (locale || '').trim() as SupportedLocale;
@@ -52,6 +54,9 @@ async function loadFallbackResources(locale: SupportedLocale) {
 
 // 获取全量语言包 API
 async function fetchLangPack(locale: string) {
+  if (!shouldFetchRemoteI18nPack()) {
+    return {};
+  }
   try {
     const data = await getLangPack(locale);
     return data;
@@ -75,16 +80,35 @@ async function buildLocaleResources(locale: SupportedLocale) {
   };
 }
 
+function hasLocaleResources(locale: SupportedLocale) {
+  return i18n.hasResourceBundle(locale, 'translation');
+}
+
+async function ensureSingleLocaleResources(locale: SupportedLocale) {
+  if (hasLocaleResources(locale)) {
+    return;
+  }
+  const currentTask = localeResourceTasks.get(locale);
+  if (currentTask) {
+    return currentTask;
+  }
+
+  const nextTask = buildLocaleResources(locale)
+    .then((resources) => {
+      i18n.addResourceBundle(locale, 'translation', resources.translation, true, true);
+    })
+    .finally(() => {
+      localeResourceTasks.delete(locale);
+    });
+  localeResourceTasks.set(locale, nextTask);
+  return nextTask;
+}
+
 async function ensureLocaleResources(locale: SupportedLocale) {
   const fallbackLocale: SupportedLocale = 'zh-CN';
   const localesToLoad = locale === fallbackLocale ? [fallbackLocale] : [fallbackLocale, locale];
 
-  await Promise.all(
-    localesToLoad.map(async (item) => {
-      const resources = await buildLocaleResources(item);
-      i18n.addResourceBundle(item, 'translation', resources.translation, true, true);
-    }),
-  );
+  await Promise.all(localesToLoad.map((item) => ensureSingleLocaleResources(item)));
 }
 
 // 初始化 i18n
@@ -110,8 +134,13 @@ export async function initI18n() {
 
 export async function switchI18nLanguage(locale: string) {
   const nextLocale = normalizeLocale(locale);
+  if (i18n.language === nextLocale && hasLocaleResources(nextLocale)) {
+    return;
+  }
   await ensureLocaleResources(nextLocale);
-  await i18n.changeLanguage(nextLocale);
+  if (i18n.language !== nextLocale) {
+    await i18n.changeLanguage(nextLocale);
+  }
 }
 
 // 供页面手动刷新翻译资源使用

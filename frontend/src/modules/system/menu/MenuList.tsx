@@ -879,7 +879,8 @@ const MenuList: React.FC = () => {
       <AppModal
         title={editing ? t('system.menu.edit') : t('system.menu.create')}
         visible={visible}
-        size="lg"
+        size="xl"
+        autoFocus={false}
         onCancel={() => setVisible(false)}
         footer={
           <SubmitBar
@@ -902,192 +903,201 @@ const MenuList: React.FC = () => {
         >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
-              <FormItem label={t('system.menu.parentId')} field="parentId">
-                <TreeSelect
-                  allowClear
-                  showSearch
-                  treeData={parentOptions}
-                  placeholder={t('system.menu.parentId')}
-                />
-              </FormItem>
-              <FormItem
-                label={t('system.menu.titleKey')}
-                field="titleKey"
-                rules={[{ required: true, message: t('system.menu.titleRequired') }]}
-              >
-                <Input
-                  placeholder={t('system.menu.titleKey.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.path')} field="path">
-                <Input
-                  placeholder={t('system.menu.path.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem
-                label={t('system.menu.component')}
-                field="component"
-                rules={[
-                  {
-                    validator: (value, callback) => {
-                      const type = form.getFieldValue('type');
-                      const isExternal = form.getFieldValue('isExternal');
-                      const moduleName = String(form.getFieldValue('module') || '').trim();
-                      const componentKey = String(value || '').trim();
-                      if (type === 'C' && isExternal !== 1 && !componentKey) {
-                        callback(t('system.menu.componentRequired'));
-                        return;
-                      }
-                      const requiresRegisteredComponent =
-                        moduleName === 'platform' ||
-                        moduleName.startsWith('system.') ||
-                        moduleName.startsWith('business.');
-                      if (
-                        type === 'C' &&
-                        isExternal !== 1 &&
-                        requiresRegisteredComponent &&
-                        !isRegisteredComponentKey(componentKey)
-                      ) {
-                        callback(t('system.menu.componentInvalid'));
-                        return;
-                      }
-                      callback();
+              <div className="menu-list-form__grid">
+                <FormItem label={t('system.menu.parentId')} field="parentId">
+                  <TreeSelect
+                    allowClear
+                    showSearch
+                    treeData={parentOptions}
+                    placeholder={t('system.menu.parentId')}
+                  />
+                </FormItem>
+                <FormItem
+                  label={t('system.menu.titleKey')}
+                  field="titleKey"
+                  rules={[{ required: true, message: t('system.menu.titleRequired') }]}
+                >
+                  <Input
+                    placeholder={t('system.menu.titleKey.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.path')} field="path">
+                  <Input
+                    placeholder={t('system.menu.path.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+                <FormItem
+                  label={t('system.menu.routeName')}
+                  field="routeName"
+                  rules={[
+                    {
+                      validator: (value, callback) => {
+                        const type = form.getFieldValue('type');
+                        if (type === 'C' && !String(value || '').trim()) {
+                          callback(t('system.menu.routeNameRequired'));
+                          return;
+                        }
+                        callback();
+                      },
                     },
-                  },
-                ]}
-              >
-                <AutoComplete
-                  allowClear
-                  data={registeredComponentKeys}
-                  placeholder={t('system.menu.component.placeholder')}
-                  filterOption
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem
-                label={t('system.menu.routeName')}
-                field="routeName"
-                rules={[
-                  {
-                    validator: (value, callback) => {
-                      const type = form.getFieldValue('type');
-                      if (type === 'C' && !String(value || '').trim()) {
-                        callback(t('system.menu.routeNameRequired'));
-                        return;
-                      }
-                      callback();
+                  ]}
+                >
+                  <Input
+                    placeholder={t('system.menu.routeName.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+                <FormItem
+                  className="menu-list-form__field--full"
+                  label={t('system.menu.component')}
+                  field="component"
+                  rules={[
+                    {
+                      validator: (value, callback) => {
+                        const type = form.getFieldValue('type');
+                        const isExternal = form.getFieldValue('isExternal');
+                        const moduleName = String(form.getFieldValue('module') || '').trim();
+                        const componentKey = String(value || '').trim();
+                        if (type === 'C' && isExternal !== 1 && !componentKey) {
+                          callback(t('system.menu.componentRequired'));
+                          return;
+                        }
+                        const requiresRegisteredComponent =
+                          moduleName === 'platform' ||
+                          moduleName.startsWith('system.') ||
+                          moduleName.startsWith('business.');
+                        if (
+                          type === 'C' &&
+                          isExternal !== 1 &&
+                          requiresRegisteredComponent &&
+                          !isRegisteredComponentKey(componentKey)
+                        ) {
+                          callback(t('system.menu.componentInvalid'));
+                          return;
+                        }
+                        callback();
+                      },
                     },
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t('system.menu.routeName.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.module')} field="module">
-                <Input
-                  placeholder={t('system.menu.module.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem
-                label={t('system.menu.pagePerm')}
-                field="pagePerm"
-                rules={[
-                  {
-                    validator: (value, callback) => {
-                      const type = form.getFieldValue('type');
-                      const isExternal = form.getFieldValue('isExternal');
-                      if (type === 'C' && isExternal !== 1 && !String(value || '').trim()) {
-                        callback(t('system.menu.pagePermRequired'));
-                        return;
-                      }
-                      callback();
+                  ]}
+                >
+                  <AutoComplete
+                    allowClear
+                    data={registeredComponentKeys}
+                    placeholder={t('system.menu.component.placeholder')}
+                    filterOption
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+                <FormItem
+                  className="menu-list-form__field--full"
+                  label={t('system.menu.pagePerm')}
+                  field="pagePerm"
+                  rules={[
+                    {
+                      validator: (value, callback) => {
+                        const type = form.getFieldValue('type');
+                        const isExternal = form.getFieldValue('isExternal');
+                        if (type === 'C' && isExternal !== 1 && !String(value || '').trim()) {
+                          callback(t('system.menu.pagePermRequired'));
+                          return;
+                        }
+                        callback();
+                      },
                     },
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t('system.menu.pagePerm.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem
-                label={t('system.menu.perms')}
-                field="perms"
-                rules={[
-                  {
-                    validator: (value, callback) => {
-                      const type = form.getFieldValue('type');
-                      if (type === 'F' && !String(value || '').trim()) {
-                        callback(t('system.menu.permsRequired'));
-                        return;
-                      }
-                      callback();
+                  ]}
+                >
+                  <Input
+                    placeholder={t('system.menu.pagePerm.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+                <FormItem
+                  className="menu-list-form__field--full"
+                  label={t('system.menu.perms')}
+                  field="perms"
+                  rules={[
+                    {
+                      validator: (value, callback) => {
+                        const type = form.getFieldValue('type');
+                        if (type === 'F' && !String(value || '').trim()) {
+                          callback(t('system.menu.permsRequired'));
+                          return;
+                        }
+                        callback();
+                      },
                     },
-                  },
-                ]}
-              >
-                <Input
-                  placeholder={t('system.menu.perms.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.type')} field="type">
-                <Select
-                  options={[
-                    { label: t('system.menu.type.menuGroup'), value: 'M' },
-                    { label: t('system.menu.type.menu'), value: 'C' },
-                    { label: t('system.menu.type.button'), value: 'F' },
                   ]}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.icon')} field="icon">
-                <Select
-                  allowClear
-                  placeholder={t('system.menu.icon.placeholder')}
-                  options={MENU_ICON_OPTIONS.map((item) => ({
-                    label: t(item.labelKey),
-                    value: item.value,
-                  }))}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.sort')} field="sort">
-                <InputNumber min={0} />
-              </FormItem>
-              <FormItem label={t('system.menu.visible')} field="isVisible">
-                <Select
-                  options={[
-                    { label: t('common.yes'), value: 1 },
-                    { label: t('common.no'), value: 0 },
-                  ]}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.cache')} field="isCache">
-                <Select
-                  options={[
-                    { label: t('common.yes'), value: 1 },
-                    { label: t('common.no'), value: 0 },
-                  ]}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.external')} field="isExternal">
-                <Select
-                  options={[
-                    { label: t('common.yes'), value: 1 },
-                    { label: t('common.no'), value: 0 },
-                  ]}
-                />
-              </FormItem>
-              <FormItem label={t('system.menu.activeMenu')} field="activeMenu">
-                <Input
-                  placeholder={t('system.menu.activeMenu.placeholder')}
-                  onPressEnter={() => form.submit()}
-                />
-              </FormItem>
+                >
+                  <Input
+                    placeholder={t('system.menu.perms.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+              </div>
+            </FormSection>
+            <FormSection title={t('system.menu.metadata')}>
+              <div className="menu-list-form__grid">
+                <FormItem label={t('system.menu.module')} field="module">
+                  <Input
+                    placeholder={t('system.menu.module.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.type')} field="type">
+                  <Select
+                    options={[
+                      { label: t('system.menu.type.menuGroup'), value: 'M' },
+                      { label: t('system.menu.type.menu'), value: 'C' },
+                      { label: t('system.menu.type.button'), value: 'F' },
+                    ]}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.icon')} field="icon">
+                  <Select
+                    allowClear
+                    placeholder={t('system.menu.icon.placeholder')}
+                    options={MENU_ICON_OPTIONS.map((item) => ({
+                      label: t(item.labelKey),
+                      value: item.value,
+                    }))}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.sort')} field="sort">
+                  <InputNumber min={0} style={{ width: '100%' }} />
+                </FormItem>
+                <FormItem label={t('system.menu.visible')} field="isVisible">
+                  <Select
+                    options={[
+                      { label: t('common.yes'), value: 1 },
+                      { label: t('common.no'), value: 0 },
+                    ]}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.cache')} field="isCache">
+                  <Select
+                    options={[
+                      { label: t('common.yes'), value: 1 },
+                      { label: t('common.no'), value: 0 },
+                    ]}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.external')} field="isExternal">
+                  <Select
+                    options={[
+                      { label: t('common.yes'), value: 1 },
+                      { label: t('common.no'), value: 0 },
+                    ]}
+                  />
+                </FormItem>
+                <FormItem label={t('system.menu.activeMenu')} field="activeMenu">
+                  <Input
+                    placeholder={t('system.menu.activeMenu.placeholder')}
+                    onPressEnter={() => form.submit()}
+                  />
+                </FormItem>
+              </div>
             </FormSection>
           </Space>
         </Form>

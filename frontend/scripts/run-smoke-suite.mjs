@@ -138,14 +138,28 @@ function waitForServerReady(server, timeoutMs, expectedUrl) {
 
 function spawnChild(command, args, options = {}) {
   const child = spawn(command, args, {
-    stdio: 'inherit',
+    stdio: options.captureOutput ? ['ignore', 'pipe', 'pipe'] : 'inherit',
     shell: false,
     ...options,
   });
   return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    if (options.captureOutput) {
+      child.stdout?.setEncoding('utf8');
+      child.stderr?.setEncoding('utf8');
+      child.stdout?.on('data', (chunk) => {
+        stdout += chunk;
+        process.stdout.write(chunk);
+      });
+      child.stderr?.on('data', (chunk) => {
+        stderr += chunk;
+        process.stderr.write(chunk);
+      });
+    }
     child.once('error', reject);
     child.once('exit', (code, signal) => {
-      resolve({ code: code ?? 0, signal: signal ?? null });
+      resolve({ code: code ?? 0, signal: signal ?? null, stdout, stderr });
     });
   });
 }
@@ -208,12 +222,17 @@ async function runCleanup(scriptPath, args, label) {
   const result = await spawnChild(process.execPath, [scriptPath, ...args], {
     cwd: process.cwd(),
     env: process.env,
+    captureOutput: true,
   });
   const exitCode = result.code ?? (result.signal ? 1 : 0);
   if (exitCode !== 0) {
     console.error(`[smoke-suite] ${label} cleanup exited with code ${exitCode}`);
   }
-  return exitCode;
+  return {
+    exitCode,
+    stdout: result.stdout ?? '',
+    stderr: result.stderr ?? '',
+  };
 }
 
 for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
@@ -232,8 +251,8 @@ async function main() {
       cleanupArgs('generated', 'pre'),
       'generated',
     );
-    if (preGeneratedCleanup !== 0) {
-      finalExitCode = preGeneratedCleanup;
+    if (preGeneratedCleanup.exitCode !== 0) {
+      finalExitCode = preGeneratedCleanup.exitCode;
       return;
     }
 
@@ -269,8 +288,8 @@ async function main() {
         cleanupArgs('fixture', 'pre', fixtureCleanupScope),
         'fixture',
       );
-      if (preFixtureCleanup !== 0) {
-        finalExitCode = preFixtureCleanup;
+      if (preFixtureCleanup.exitCode !== 0) {
+        finalExitCode = preFixtureCleanup.exitCode;
         return;
       }
     }
@@ -300,8 +319,8 @@ async function main() {
         cleanupArgs('fixture', 'post', fixtureCleanupScope),
         'fixture',
       );
-      if (finalExitCode === 0 && postFixtureCleanup !== 0) {
-        finalExitCode = postFixtureCleanup;
+      if (finalExitCode === 0 && postFixtureCleanup.exitCode !== 0) {
+        finalExitCode = postFixtureCleanup.exitCode;
       }
     }
 
@@ -310,8 +329,8 @@ async function main() {
       cleanupArgs('generated', 'post'),
       'generated',
     );
-    if (finalExitCode === 0 && postGeneratedCleanup !== 0) {
-      finalExitCode = postGeneratedCleanup;
+    if (finalExitCode === 0 && postGeneratedCleanup.exitCode !== 0) {
+      finalExitCode = postGeneratedCleanup.exitCode;
     }
   }
 

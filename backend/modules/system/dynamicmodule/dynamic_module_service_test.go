@@ -94,6 +94,7 @@ func TestRegisterGeneratedModuleWritesRegistries(t *testing.T) {
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "modules", "generated", "business.ts"), "TicketModule")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "'business/ticket/TicketList'")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "'business/ticket/TicketDetail'")
+	assertFileContains(t, filepath.Join(workspaceRoot, "schema", "generated", "feature-ledger.json"), `"moduleKey": "business.ticket"`)
 }
 
 func TestRegisterGeneratedModulePersistsActivationDiagnostics(t *testing.T) {

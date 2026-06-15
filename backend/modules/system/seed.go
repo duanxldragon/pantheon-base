@@ -22,6 +22,7 @@ type menuSeed struct {
 	IsCache    int
 	IsExternal int
 	ActiveMenu string
+	HideInNav  int
 }
 
 func seedAuditModuleMenus(db *gorm.DB) error {
@@ -60,7 +61,7 @@ func ensureMenuSeeds(db *gorm.DB, seeds []menuSeed) error {
 	if db == nil {
 		return nil
 	}
-	if err := cleanupObsoleteMenus(db); err != nil {
+	if err := CleanupObsoleteMenus(db); err != nil {
 		return err
 	}
 	for _, seed := range seeds {
@@ -78,6 +79,7 @@ type obsoleteMenuRule struct {
 	Components []string
 	PagePerms  []string
 	Perms      []string
+	Cascade    bool
 }
 
 var obsoleteMenuRules = []obsoleteMenuRule{
@@ -88,6 +90,17 @@ var obsoleteMenuRules = []obsoleteMenuRule{
 		Components: []string{"system/menu/MenuMatrix"},
 		PagePerms:  []string{"system:menu:matrix"},
 		Perms:      []string{"system:menu:matrix"},
+		Cascade:    true,
+	},
+	{
+		TitleKeys:  []string{"app.workspace"},
+		Paths:      []string{"/workspace"},
+		RouteNames: []string{"workspace"},
+	},
+	{
+		TitleKeys:  []string{"operations.menu"},
+		Paths:      []string{"/operations"},
+		RouteNames: []string{"operations"},
 	},
 }
 
@@ -149,18 +162,7 @@ func baseMenuGroupSeeds() []menuSeed {
 func coreMenuSeeds() []menuSeed {
 	return []menuSeed{
 		{
-			Key:       "workspace",
-			TitleKey:  "app.workspace",
-			Path:      "/workspace",
-			Type:      "D",
-			Icon:      "dashboard",
-			RouteName: "workspace",
-			Module:    "platform",
-			Sort:      10,
-		},
-		{
 			Key:       "dashboard",
-			ParentKey: "workspace",
 			TitleKey:  "system.menu.dashboard",
 			Path:      "/dashboard",
 			Component: "dashboard",
@@ -170,17 +172,6 @@ func coreMenuSeeds() []menuSeed {
 			RouteName: "dashboard",
 			Module:    "platform",
 			Sort:      1,
-		},
-		{
-			Key:       "operations",
-			ParentKey: "workspace",
-			TitleKey:  "operations.menu",
-			Path:      "/operations",
-			Type:      "M",
-			Icon:      "desktop",
-			RouteName: "operations",
-			Module:    "platform",
-			Sort:      20,
 		},
 		{
 			Key:       "user",
@@ -493,6 +484,7 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 			"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
 			"is_external": normalizeSeedMenuFlag(seed.IsExternal),
 			"active_menu": strings.TrimSpace(seed.ActiveMenu),
+			"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
 		}
 		if err := db.Table("system_menu").Create(payload).Error; err != nil {
 			return err
@@ -521,6 +513,7 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 			"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
 			"is_external": normalizeSeedMenuFlag(seed.IsExternal),
 			"active_menu": strings.TrimSpace(seed.ActiveMenu),
+			"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
 		}
 		updates["path"] = seed.Path
 		updates["perms"] = seed.Perms
@@ -586,7 +579,7 @@ WHERE menu_id IN (
 )`).Error
 }
 
-func cleanupObsoleteMenus(db *gorm.DB) error {
+func CleanupObsoleteMenus(db *gorm.DB) error {
 	if db == nil || !db.Migrator().HasTable("system_menu") {
 		return nil
 	}
@@ -610,6 +603,10 @@ func cleanupObsoleteMenus(db *gorm.DB) error {
 		menuIDs := make([]uint64, 0, len(obsoleteIDs))
 		for id := range obsoleteIDs {
 			menuIDs = append(menuIDs, id)
+		}
+
+		if err := reparentRetainedMenuChildren(tx, menuIDs); err != nil {
+			return err
 		}
 
 		if tx.Migrator().HasTable("system_role_menu") {
@@ -637,6 +634,65 @@ func cleanupObsoleteMenus(db *gorm.DB) error {
 	})
 }
 
+func reparentRetainedMenuChildren(tx *gorm.DB, obsoleteIDs []uint64) error {
+	if len(obsoleteIDs) == 0 {
+		return nil
+	}
+
+	var obsoleteMenus []struct {
+		ID       uint64
+		ParentID uint64
+	}
+	if err := tx.Table("system_menu").
+		Select("id, parent_id").
+		Where("id IN ?", obsoleteIDs).
+		Scan(&obsoleteMenus).Error; err != nil {
+		return err
+	}
+
+	parentByID := make(map[uint64]uint64, len(obsoleteMenus))
+	for _, menu := range obsoleteMenus {
+		parentByID[menu.ID] = menu.ParentID
+	}
+
+	var retainedChildren []struct {
+		ID       uint64
+		ParentID uint64
+	}
+	if err := tx.Table("system_menu").
+		Select("id, parent_id").
+		Where("parent_id IN ? AND id NOT IN ?", obsoleteIDs, obsoleteIDs).
+		Scan(&retainedChildren).Error; err != nil {
+		return err
+	}
+
+	for _, child := range retainedChildren {
+		parentID := resolveRetainedMenuParent(parentByID, child.ParentID)
+		if err := tx.Table("system_menu").
+			Where("id = ?", child.ID).
+			Update("parent_id", parentID).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func resolveRetainedMenuParent(parentByID map[uint64]uint64, parentID uint64) uint64 {
+	seen := make(map[uint64]struct{}, len(parentByID))
+	for parentID != 0 {
+		nextParentID, obsolete := parentByID[parentID]
+		if !obsolete {
+			return parentID
+		}
+		if _, ok := seen[parentID]; ok {
+			return 0
+		}
+		seen[parentID] = struct{}{}
+		parentID = nextParentID
+	}
+	return 0
+}
+
 func collectObsoleteMenuIDs(tx *gorm.DB, rule obsoleteMenuRule) ([]uint64, error) {
 	collected := make(map[uint64]struct{})
 
@@ -650,6 +706,10 @@ func collectObsoleteMenuIDs(tx *gorm.DB, rule obsoleteMenuRule) ([]uint64, error
 				continue
 			}
 			collected[id] = struct{}{}
+
+			if !rule.Cascade {
+				continue
+			}
 
 			var children []uint64
 			if err := tx.Table("system_menu").Select("id").Where("parent_id = ?", id).Pluck("id", &children).Error; err != nil {
@@ -766,7 +826,7 @@ func lookupMenuIDByPath(db *gorm.DB, path string) (uint64, error) {
 
 func normalizeSeedMenuType(value string) string {
 	switch value {
-	case "M", "C", "F":
+	case "M", "C", "D", "F":
 		return value
 	default:
 		return "C"

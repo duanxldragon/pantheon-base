@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ func newAuthMFAService(auth *AuthService) *authMFAService {
 
 func (s *authMFAService) CreateMFAChallenge(currentUser *user.SystemUser) (*MFAChallengeResp, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if currentUser == nil || currentUser.ID == 0 {
 		return nil, errors.New("auth.mfa.user_invalid")
@@ -78,7 +79,7 @@ func (s *authMFAService) CreateMFAChallenge(currentUser *user.SystemUser) (*MFAC
 
 func (s *authMFAService) VerifyMFAChallenge(req *MFAVerifyReq, ip, userAgent string) (*AuthTokenResp, error) {
 	if s.auth.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if req == nil || strings.TrimSpace(req.ChallengeID) == "" {
 		return nil, errors.New("auth.mfa.challenge_required")

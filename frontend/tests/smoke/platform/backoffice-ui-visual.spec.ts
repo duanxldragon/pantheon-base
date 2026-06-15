@@ -26,6 +26,15 @@ interface FieldChrome {
   boxShadow: string;
 }
 
+interface TreeSelectLayoutContract {
+  selectorDisplay: string;
+  selectorPosition: string;
+  selectorOverflow: string;
+  inputPosition: string;
+  mirrorOpacity: string;
+  suffixDisplay: string;
+}
+
 async function installEmeraldThemePreference(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem('pantheon_theme', 'emerald');
@@ -263,6 +272,36 @@ async function readSurfaceChrome(surface: Locator) {
   });
 }
 
+async function readTreeSelectLayoutContract(root: Locator) {
+  await root.scrollIntoViewIfNeeded();
+  return root.evaluate((node) => {
+    const selector = node.querySelector('.arco-tree-select-view-selector');
+    const input = node.querySelector('.arco-tree-select-view-input');
+    const mirror = node.querySelector('.arco-tree-select-view-value-mirror');
+    const suffix = node.querySelector('.arco-tree-select-suffix');
+    const readStyle = (element: Element | null) => {
+      if (!element) {
+        return null;
+      }
+      const style = globalThis.getComputedStyle(element);
+      return {
+        display: style.display,
+        position: style.position,
+        overflow: style.overflow,
+        opacity: style.opacity,
+      };
+    };
+    return {
+      selectorDisplay: readStyle(selector)?.display || '',
+      selectorPosition: readStyle(selector)?.position || '',
+      selectorOverflow: readStyle(selector)?.overflow || '',
+      inputPosition: readStyle(input)?.position || '',
+      mirrorOpacity: readStyle(mirror)?.opacity || '',
+      suffixDisplay: readStyle(suffix)?.display || '',
+    } satisfies TreeSelectLayoutContract;
+  });
+}
+
 async function readVisibleSurfaceChromes(root: Locator) {
   return root.evaluate((node) => {
     const outerSelector = [
@@ -326,6 +365,15 @@ function expectMatchingSurfaceChrome(actual: FieldChrome, expected: FieldChrome)
   expect(actual.borderStyle).toBe(expected.borderStyle);
   expect(actual.borderRadius).toBe(expected.borderRadius);
   expect(actual.backgroundColor).toBe(expected.backgroundColor);
+}
+
+function expectTreeSelectLayoutContract(contract: TreeSelectLayoutContract) {
+  expect(contract.selectorDisplay).toBe('flex');
+  expect(contract.selectorPosition).toBe('relative');
+  expect(contract.selectorOverflow).toBe('hidden');
+  expect(contract.inputPosition).toBe('absolute');
+  expect(contract.mirrorOpacity).toBe('0');
+  expect(contract.suffixDisplay).toBe('flex');
 }
 
 async function expectProfessionalBackofficeSurface(page: Page) {
@@ -500,10 +548,14 @@ test.describe('backoffice UI visual acceptance', () => {
         .filter({ has: page.getByText('新增菜单', { exact: true }) });
       await expect(menuDialog).toBeVisible();
       const parentMenu = await readSurfaceChrome(menuDialog.locator('.arco-tree-select-view').first());
+      const parentMenuLayout = await readTreeSelectLayoutContract(
+        menuDialog.locator('.arco-tree-select').first(),
+      );
       expect(parentMenu.borderWidth).toBe(userBaseline.borderWidth);
       expect(parentMenu.borderStyle).toBe(userBaseline.borderStyle);
       expect(parentMenu.borderRadius).toBe(userBaseline.borderRadius);
       expect(parentMenu.backgroundColor).toBe(userBaseline.backgroundColor);
+      expectTreeSelectLayoutContract(parentMenuLayout);
       await menuDialog.getByRole('button', { name: '取消', exact: true }).click();
       await expect(menuDialog).toHaveCount(0);
 
@@ -607,6 +659,12 @@ test.describe('backoffice UI visual acceptance', () => {
         await editButton.click();
         const editDialog = page.getByRole('dialog').first();
         await expect(editDialog).toBeVisible();
+        if (path === '/system/menu') {
+          const editTreeSelectLayout = await readTreeSelectLayoutContract(
+            editDialog.locator('.arco-tree-select').first(),
+          );
+          expectTreeSelectLayoutContract(editTreeSelectLayout);
+        }
         const editChromes = await readVisibleSurfaceChromes(editDialog);
         expect(editChromes.length, `${path} edit dialog controls`).toBeGreaterThan(0);
         for (const controlChrome of editChromes) {
@@ -774,7 +832,7 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(page.locator('.setting-overview-page')).toBeVisible();
     await expect(page.locator('.setting-overview-page__anchor-strip')).toBeVisible();
     await expect(page.locator('.setting-group-workspace').first()).toBeVisible();
-    await expect(page.locator('.page-side-column .side-rail-panel').first()).toBeVisible();
+    await expect(page.locator('.setting-overview-page .side-rail-panel').first()).toBeVisible();
     await expectNoPageError(page);
 
     const overviewContract = await page.evaluate(() => {

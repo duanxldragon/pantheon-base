@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"time"
 
@@ -12,8 +13,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-const errDatabaseNotInitialized = "database.not_initialized"
 
 type DeptService struct {
 	db *gorm.DB
@@ -27,17 +26,24 @@ func NewDeptService(db *gorm.DB) *DeptService {
 
 func (s *DeptService) Migrate() error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.db.AutoMigrate(&SystemDept{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *DeptService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.ensureRootDept()
 }
 
 func (s *DeptService) GetDeptTree(query *DeptListQuery) ([]*DeptTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var depts []SystemDept
@@ -59,7 +65,7 @@ func (s *DeptService) GetDeptTree(query *DeptListQuery) ([]*DeptTreeResp, error)
 
 func (s *DeptService) GetOverview() (*DeptOverviewResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var depts []SystemDept
@@ -132,7 +138,7 @@ func (s *DeptService) GetOverview() (*DeptOverviewResp, error) {
 
 func (s *DeptService) ListGovernanceTasks(query *DeptGovernanceTaskQuery) ([]DeptGovernanceTaskResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var depts []SystemDept
@@ -303,7 +309,7 @@ func (s *DeptService) ExportGovernanceTasks(query *DeptGovernanceTaskQuery) (*im
 
 func (s *DeptService) ListLeaderCandidates(deptID uint64) ([]DeptLeaderCandidateResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if deptID == 0 {
 		return nil, errors.New("dept.not_found")
@@ -364,7 +370,7 @@ func (s *DeptService) ListLeaderCandidates(deptID uint64) ([]DeptLeaderCandidate
 
 func (s *DeptService) CreateDept(req *DeptCreateReq) (*DeptTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if err := s.validateDeptCreate(req); err != nil {
 		return nil, err
@@ -394,7 +400,7 @@ func (s *DeptService) CreateDept(req *DeptCreateReq) (*DeptTreeResp, error) {
 
 func (s *DeptService) UpdateDept(deptID uint64, req *DeptUpdateReq) (*DeptTreeResp, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var dept SystemDept
@@ -439,7 +445,7 @@ func (s *DeptService) UpdateDept(deptID uint64, req *DeptUpdateReq) (*DeptTreeRe
 
 func (s *DeptService) DeleteDept(deptID uint64) error {
 	if s.db == nil {
-		return errors.New(errDatabaseNotInitialized)
+		return common.ErrDatabaseNotInitialized
 	}
 
 	var dept SystemDept
@@ -479,7 +485,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 
 func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 	normalizedIDs := normalizeDeptIDs(deptIDs)
 	if len(normalizedIDs) == 0 {
@@ -516,7 +522,7 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 
 func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, error) {
 	if s.db == nil {
-		return 0, errors.New(errDatabaseNotInitialized)
+		return 0, common.ErrDatabaseNotInitialized
 	}
 	normalizedItems := normalizeDeptLeaderItems(items)
 	if len(normalizedItems) == 0 {
@@ -586,7 +592,7 @@ func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, e
 
 func (s *DeptService) ExportDepts(query *DeptListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	depts, err := s.listDeptsForExport(query)
@@ -666,7 +672,7 @@ func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, err
 		Errors:  []impexp.ImportError{},
 	}
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if len(records) == 0 {
 		impexp.AppendImportError(result, 0, "file", "import.file.empty")
@@ -830,7 +836,7 @@ func (s *DeptService) listDeptsForExport(query *DeptListQuery) ([]SystemDept, er
 
 func (s *DeptService) loadDeptPostCounts() (map[uint64]int, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if !s.db.Migrator().HasTable("system_post") {
 		return map[uint64]int{}, nil
@@ -858,7 +864,7 @@ func (s *DeptService) loadDeptPostCounts() (map[uint64]int, error) {
 
 func (s *DeptService) loadDeptChildCounts() (map[uint64]int, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var depts []SystemDept
@@ -875,7 +881,7 @@ func (s *DeptService) loadDeptChildCounts() (map[uint64]int, error) {
 
 func (s *DeptService) loadDeptUserCounts() (map[uint64]int, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if !s.db.Migrator().HasTable("system_user") {
 		return map[uint64]int{}, nil
@@ -904,7 +910,7 @@ func (s *DeptService) loadDeptUserCounts() (map[uint64]int, error) {
 
 func (s *DeptService) loadPostUserCounts() (map[uint64]int, error) {
 	if s.db == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+		return nil, common.ErrDatabaseNotInitialized
 	}
 	if !s.db.Migrator().HasTable("system_user") {
 		return map[uint64]int{}, nil
