@@ -5,26 +5,13 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"pantheon-platform/backend/internal/scaffold"
 )
 
 func TestBuildFeatureLedgerSnapshot_ProjectsGeneratedModuleMetadata(t *testing.T) {
-	db := openDynamicModuleTestDB(t)
-	workspaceRoot := prepareDynamicModuleWorkspace(t)
-
-	service := &DynamicModuleService{
-		db:            db,
-		workspaceRoot: workspaceRoot,
-	}
-
-	req := newGeneratedModuleRequest("business", "ticket", "工单管理", "biz_ticket")
-	req.Schema.Metadata.Owner = "platform"
-	req.Schema.Metadata.BoundedContext = "ticketing"
-	req.Schema.Metadata.SourceMode = "manual"
-	req.Schema.Metadata.SourceTable = "biz_ticket_source"
-
-	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
-		t.Fatalf("register generated module: %v", err)
-	}
+	service, workspaceRoot := newFeatureLedgerTestService(t)
+	registerFeatureLedgerTicketModuleWithMetadata(t, service)
 
 	snapshot, err := service.buildFeatureLedgerSnapshot()
 	if err != nil {
@@ -65,19 +52,8 @@ func TestBuildFeatureLedgerSnapshot_ProjectsGeneratedModuleMetadata(t *testing.T
 }
 
 func TestBuildFeatureLedgerSnapshot_ReportsMissingGeneratedMetadata(t *testing.T) {
-	db := openDynamicModuleTestDB(t)
-	workspaceRoot := prepareDynamicModuleWorkspace(t)
-
-	service := &DynamicModuleService{
-		db:            db,
-		workspaceRoot: workspaceRoot,
-	}
-
-	req := newGeneratedModuleRequest("business", "ticket", "工单管理", "biz_ticket")
-
-	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
-		t.Fatalf("register generated module: %v", err)
-	}
+	service, workspaceRoot := newFeatureLedgerTestService(t)
+	registerFeatureLedgerTicketModule(t, service)
 
 	snapshot, err := service.buildFeatureLedgerSnapshot()
 	if err != nil {
@@ -98,8 +74,7 @@ func TestBuildFeatureLedgerSnapshot_ReportsMissingGeneratedMetadata(t *testing.T
 }
 
 func TestBuildFeatureLedgerSnapshot_SortsIssuesDeterministically(t *testing.T) {
-	db := openDynamicModuleTestDB(t)
-	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	service, workspaceRoot := newFeatureLedgerTestService(t)
 
 	mustWriteFile(t, filepath.Join(workspaceRoot, "schema", "generated", "business", "zeta.json"), `{
   "name": "zeta",
@@ -111,7 +86,56 @@ func TestBuildFeatureLedgerSnapshot_SortsIssuesDeterministically(t *testing.T) {
   }
 }`)
 
-	if err := db.Create(&ModuleRegistration{
+	seedFeatureLedgerAlphaRegistration(t, service)
+
+	snapshot, err := service.buildFeatureLedgerSnapshot()
+	if err != nil {
+		t.Fatalf("build feature ledger snapshot: %v", err)
+	}
+
+	sortedIssues := sortedFeatureLedgerIssues(snapshot.Issues)
+
+	if !reflect.DeepEqual(snapshot.Issues, sortedIssues) {
+		t.Fatalf("expected issues to be sorted deterministically, got %#v want %#v", snapshot.Issues, sortedIssues)
+	}
+}
+
+func newFeatureLedgerTestService(t *testing.T) (*DynamicModuleService, string) {
+	t.Helper()
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	return &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}, workspaceRoot
+}
+
+func registerFeatureLedgerTicketModuleWithMetadata(t *testing.T, service *DynamicModuleService) {
+	t.Helper()
+	req := newGeneratedModuleRequest("business", "ticket", "工单管理", "biz_ticket")
+	req.Schema.Metadata.Owner = "platform"
+	req.Schema.Metadata.BoundedContext = "ticketing"
+	req.Schema.Metadata.SourceMode = "manual"
+	req.Schema.Metadata.SourceTable = "biz_ticket_source"
+	registerFeatureLedgerModule(t, service, req)
+}
+
+func registerFeatureLedgerTicketModule(t *testing.T, service *DynamicModuleService) {
+	t.Helper()
+	req := newGeneratedModuleRequest("business", "ticket", "工单管理", "biz_ticket")
+	registerFeatureLedgerModule(t, service, req)
+}
+
+func registerFeatureLedgerModule(t *testing.T, service *DynamicModuleService, req *scaffold.RegisterGeneratedModuleRequest) {
+	t.Helper()
+	if _, _, _, err := service.RegisterGeneratedModule(req); err != nil {
+		t.Fatalf("register generated module: %v", err)
+	}
+}
+
+func seedFeatureLedgerAlphaRegistration(t *testing.T, service *DynamicModuleService) {
+	t.Helper()
+	if err := service.db.Create(&ModuleRegistration{
 		Name:           "business.alpha",
 		DisplayName:    "Alpha",
 		Scope:          "business",
@@ -122,40 +146,33 @@ func TestBuildFeatureLedgerSnapshot_SortsIssuesDeterministically(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed registration: %v", err)
 	}
-
-	service := &DynamicModuleService{
-		db:            db,
-		workspaceRoot: workspaceRoot,
-	}
-
-	snapshot, err := service.buildFeatureLedgerSnapshot()
-	if err != nil {
-		t.Fatalf("build feature ledger snapshot: %v", err)
-	}
-
-	sortedIssues := append([]FeatureLedgerIssue(nil), snapshot.Issues...)
-	sort.Slice(sortedIssues, func(i, j int) bool {
-		if sortedIssues[i].ModuleKey == sortedIssues[j].ModuleKey {
-			if sortedIssues[i].Code == sortedIssues[j].Code {
-				if sortedIssues[i].Field == sortedIssues[j].Field {
-					if sortedIssues[i].Severity == sortedIssues[j].Severity {
-						return sortedIssues[i].Detail < sortedIssues[j].Detail
-					}
-					return sortedIssues[i].Severity < sortedIssues[j].Severity
-				}
-				return sortedIssues[i].Field < sortedIssues[j].Field
-			}
-			return sortedIssues[i].Code < sortedIssues[j].Code
-		}
-		return sortedIssues[i].ModuleKey < sortedIssues[j].ModuleKey
-	})
-
-	if !reflect.DeepEqual(snapshot.Issues, sortedIssues) {
-		t.Fatalf("expected issues to be sorted deterministically, got %#v want %#v", snapshot.Issues, sortedIssues)
-	}
 }
 
-func assertFeatureLedgerIssue(t *testing.T, issues []FeatureLedgerIssue, moduleKey string, code string) {
+func sortedFeatureLedgerIssues(issues []FeatureLedgerIssue) []FeatureLedgerIssue {
+	sortedIssues := append([]FeatureLedgerIssue(nil), issues...)
+	sort.Slice(sortedIssues, func(i, j int) bool {
+		return lessFeatureLedgerIssueForTest(sortedIssues[i], sortedIssues[j])
+	})
+	return sortedIssues
+}
+
+func lessFeatureLedgerIssueForTest(left, right FeatureLedgerIssue) bool {
+	if left.ModuleKey != right.ModuleKey {
+		return left.ModuleKey < right.ModuleKey
+	}
+	if left.Code != right.Code {
+		return left.Code < right.Code
+	}
+	if left.Field != right.Field {
+		return left.Field < right.Field
+	}
+	if left.Severity != right.Severity {
+		return left.Severity < right.Severity
+	}
+	return left.Detail < right.Detail
+}
+
+func assertFeatureLedgerIssue(t *testing.T, issues []FeatureLedgerIssue, moduleKey, code string) {
 	t.Helper()
 	for _, issue := range issues {
 		if issue.ModuleKey == moduleKey && issue.Code == code {
