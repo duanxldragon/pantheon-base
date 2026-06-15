@@ -29,8 +29,8 @@ export function shouldFetchRemoteI18nPack(runtime: AutomationRuntime = {}) {
   return shouldRunBackgroundNetworkTasks(runtime);
 }
 
-export function shouldPollServerRefreshState(runtime: AutomationRuntime = {}) {
-  void runtime;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function shouldPollServerRefreshState(_runtime: AutomationRuntime = {}) {
   // Refresh state polling must remain active even in automated browser
   // environments so refresh sync smoke tests can verify cross-context
   // data propagation. The polling is a lightweight GET and does not affect

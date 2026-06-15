@@ -54,8 +54,13 @@ function readStoredPublicSettings(): PublicSettingsState {
 
 function buildPublicSettingsState(settings: Record<string, string>): PublicSettingsState {
   const appMode = normalizeAppMode(settings['platform.app_mode']);
+  let siteName = settings['site.name']?.trim();
+  siteName ??= PUBLIC_SETTINGS_FALLBACK_SITE_NAME;
+  if (siteName === '') {
+    siteName = PUBLIC_SETTINGS_FALLBACK_SITE_NAME;
+  }
   return {
-    siteName: settings['site.name']?.trim() || PUBLIC_SETTINGS_FALLBACK_SITE_NAME,
+    siteName,
     siteLogo: settings['site.logo']?.trim() || '',
     appMode,
     orgEnabled: settings['org.enabled']?.trim() !== 'false',
