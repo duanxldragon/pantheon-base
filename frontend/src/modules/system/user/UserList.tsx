@@ -1,6 +1,4 @@
 import React, { useMemo } from 'react';
-// NOSONAR — suppress S3863: Arco Form import triggers duplicate warning
-import { Form } from '@arco-design/web-react';
 import {
   Button,
   Card,
@@ -12,6 +10,7 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Form,
 } from '@arco-design/web-react';
 import {
   IconDelete,
