@@ -1,6 +1,7 @@
 package config
 
 import (
+	// Required for the go:embed seed_data.yaml directive below.
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -13,6 +14,8 @@ import (
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
+
+const settingModuleAuth = "system.auth"
 
 type defaultSettingSeed struct {
 	SettingKey   string `yaml:"settingKey"`
@@ -32,16 +35,16 @@ var defaultSettingSeeds = []defaultSettingSeed{
 	{SettingKey: "org.enabled", SettingValue: "true", ValueType: "boolean", GroupKey: "platform", Module: "system.org", IsPublic: 1, Remark: "system.setting.remark.org.enabled"},
 	{SettingKey: "org.required_for_user", SettingValue: "false", ValueType: "boolean", GroupKey: "platform", Module: "system.org", IsPublic: 1, Remark: "system.setting.remark.org.required_for_user"},
 	{SettingKey: "security.password_min_length", SettingValue: "6", ValueType: "number", GroupKey: "security", Module: "system", IsPublic: 0, Remark: "system.setting.remark.security.password_min_length"},
-	{SettingKey: "security.password_require_digit", SettingValue: "false", ValueType: "boolean", GroupKey: "security", Module: "system.auth", IsPublic: 0, Remark: "system.setting.remark.security.password_require_digit"},
-	{SettingKey: "security.password_require_uppercase", SettingValue: "false", ValueType: "boolean", GroupKey: "security", Module: "system.auth", IsPublic: 0, Remark: "system.setting.remark.security.password_require_uppercase"},
-	{SettingKey: "security.password_history_limit", SettingValue: "0", ValueType: "number", GroupKey: "security", Module: "system.auth", IsPublic: 0, Remark: "system.setting.remark.security.password_history_limit"},
-	{SettingKey: "security.password_expire_days", SettingValue: "0", ValueType: "number", GroupKey: "security", Module: "system.auth", IsPublic: 0, Remark: "system.setting.remark.security.password_expire_days"},
+	{SettingKey: "security.password_require_digit", SettingValue: "false", ValueType: "boolean", GroupKey: "security", Module: settingModuleAuth, IsPublic: 0, Remark: "system.setting.remark.security.password_require_digit"},
+	{SettingKey: "security.password_require_uppercase", SettingValue: "false", ValueType: "boolean", GroupKey: "security", Module: settingModuleAuth, IsPublic: 0, Remark: "system.setting.remark.security.password_require_uppercase"},
+	{SettingKey: "security.password_history_limit", SettingValue: "0", ValueType: "number", GroupKey: "security", Module: settingModuleAuth, IsPublic: 0, Remark: "system.setting.remark.security.password_history_limit"},
+	{SettingKey: "security.password_expire_days", SettingValue: "0", ValueType: "number", GroupKey: "security", Module: settingModuleAuth, IsPublic: 0, Remark: "system.setting.remark.security.password_expire_days"},
 	{SettingKey: "login.max_failed_attempts", SettingValue: "5", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.max_failed_attempts"},
 	{SettingKey: "login.lock_minutes", SettingValue: "15", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.lock_minutes"},
 	{SettingKey: "login.source_max_failed_attempts", SettingValue: "20", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.source_max_failed_attempts"},
 	{SettingKey: "login.source_window_minutes", SettingValue: "15", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.source_window_minutes"},
 	{SettingKey: "login.source_lock_minutes", SettingValue: "15", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.source_lock_minutes"},
-	{SettingKey: "login.security_event_enabled", SettingValue: "true", ValueType: "boolean", GroupKey: "login", Module: "system.auth", IsPublic: 0, Remark: "system.setting.remark.login.security_event_enabled"},
+	{SettingKey: "login.security_event_enabled", SettingValue: "true", ValueType: "boolean", GroupKey: "login", Module: settingModuleAuth, IsPublic: 0, Remark: "system.setting.remark.login.security_event_enabled"},
 	{SettingKey: "login.captcha_enabled", SettingValue: "false", ValueType: "boolean", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.captcha_enabled"},
 	{SettingKey: "login.mfa_enabled", SettingValue: "false", ValueType: "boolean", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.mfa_enabled"},
 	{SettingKey: "login.sso_enabled", SettingValue: "false", ValueType: "boolean", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.sso_enabled"},
@@ -274,40 +277,70 @@ func validateAndNormalizeSettingValue(settingKey, valueType, value string) (stri
 	case "string":
 		return normalizedValue, nil
 	case "number":
-		if _, err := strconv.ParseFloat(strings.TrimSpace(normalizedValue), 64); err != nil {
-			return "", errors.New("setting.value.invalid_number")
-		}
-		return normalizedValue, nil
+		return validateNumberSettingValue(normalizedValue)
 	case "boolean":
-		if _, err := strconv.ParseBool(strings.TrimSpace(normalizedValue)); err != nil {
-			return "", errors.New("setting.value.invalid_boolean")
-		}
-		return normalizedValue, nil
+		return validateBooleanSettingValue(normalizedValue)
 	case "json":
-		trimmed := strings.TrimSpace(normalizedValue)
-		if trimmed == "" {
-			return normalizedValue, nil
-		}
-		var target interface{}
-		if err := json.Unmarshal([]byte(trimmed), &target); err != nil {
-			return "", errors.New("setting.value.invalid_json")
-		}
-		if settingKey == "upload.allowed_types" {
-			if _, ok := target.([]interface{}); !ok {
-				return "", errors.New("setting.value.invalid_json")
-			}
-		}
-		if settingKey == "audit.login_log_retention_options" || settingKey == "audit.operation_log_retention_options" || settingKey == "audit.session_cleanup_retention_options" {
-			normalizedJSON, err := normalizeAuditRetentionOptions(trimmed)
-			if err != nil {
-				return "", err
-			}
-			return normalizedJSON, nil
-		}
-		return trimmed, nil
+		return validateJSONSettingValue(settingKey, normalizedValue)
 	default:
 		return "", errors.New("setting.value_type.invalid")
 	}
+}
+
+func validateNumberSettingValue(normalizedValue string) (string, error) {
+	if _, err := strconv.ParseFloat(strings.TrimSpace(normalizedValue), 64); err != nil {
+		return "", errors.New("setting.value.invalid_number")
+	}
+	return normalizedValue, nil
+}
+
+func validateBooleanSettingValue(normalizedValue string) (string, error) {
+	if _, err := strconv.ParseBool(strings.TrimSpace(normalizedValue)); err != nil {
+		return "", errors.New("setting.value.invalid_boolean")
+	}
+	return normalizedValue, nil
+}
+
+func validateJSONSettingValue(settingKey, normalizedValue string) (string, error) {
+	trimmed := strings.TrimSpace(normalizedValue)
+	if trimmed == "" {
+		return normalizedValue, nil
+	}
+	target, err := parseSettingJSON(trimmed)
+	if err != nil {
+		return "", err
+	}
+	if err := validateSettingJSONShape(settingKey, target); err != nil {
+		return "", err
+	}
+	if isAuditRetentionOptionsSetting(settingKey) {
+		return normalizeAuditRetentionOptions(trimmed)
+	}
+	return trimmed, nil
+}
+
+func parseSettingJSON(raw string) (interface{}, error) {
+	var target interface{}
+	if err := json.Unmarshal([]byte(raw), &target); err != nil {
+		return nil, errors.New("setting.value.invalid_json")
+	}
+	return target, nil
+}
+
+func validateSettingJSONShape(settingKey string, target interface{}) error {
+	if settingKey != "upload.allowed_types" {
+		return nil
+	}
+	if _, ok := target.([]interface{}); !ok {
+		return errors.New("setting.value.invalid_json")
+	}
+	return nil
+}
+
+func isAuditRetentionOptionsSetting(settingKey string) bool {
+	return settingKey == "audit.login_log_retention_options" ||
+		settingKey == "audit.operation_log_retention_options" ||
+		settingKey == "audit.session_cleanup_retention_options"
 }
 
 // SettingNormalizer normalizes a setting value for a specific key.

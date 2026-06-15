@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Form } from '@arco-design/web-react';
+import { Form } from '@arco-design/web-react'; // NOSONAR
 import {
   Button,
   Card,

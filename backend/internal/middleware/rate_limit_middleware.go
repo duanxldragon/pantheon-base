@@ -15,6 +15,14 @@ type rateLimiterEntry struct {
 	lastSeen time.Time
 }
 
+func evictExpiredEntries(entries map[string]*rateLimiterEntry, now time.Time, window time.Duration) {
+	for k, v := range entries {
+		if now.Sub(v.lastSeen) > 2*window {
+			delete(entries, k)
+		}
+	}
+}
+
 // RateLimiterConfig defines the configuration for rate limiting.
 type RateLimiterConfig struct {
 	// MaxRequests is the maximum number of requests allowed within the window.
@@ -54,11 +62,7 @@ func RateLimiter(config RateLimiterConfig) gin.HandlerFunc {
 
 		// Lazy eviction: clean up entries older than 2x window every minute
 		if now.Sub(lastCleanup) > time.Minute {
-			for k, v := range entries {
-				if now.Sub(v.lastSeen) > 2*config.Window {
-					delete(entries, k)
-				}
-			}
+			evictExpiredEntries(entries, now, config.Window)
 			lastCleanup = now
 		}
 
