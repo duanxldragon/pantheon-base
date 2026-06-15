@@ -13,6 +13,10 @@ type orderedModule struct {
 }
 
 func (m orderedModule) Name() string { return m.name }
+func (m orderedModule) Bootstrap(_ *gorm.DB) error {
+	*m.steps = append(*m.steps, m.name+":bootstrap")
+	return nil
+}
 func (m orderedModule) Migrate(_ *gorm.DB) error {
 	*m.steps = append(*m.steps, m.name+":migrate")
 	return nil
@@ -45,6 +49,7 @@ func TestRegisterBackendModules_PhasedExecution(t *testing.T) {
 	)
 
 	expected := []string{
+		"a:bootstrap", "b:bootstrap",
 		"a:menus", "b:menus",
 		"a:perms", "b:perms",
 		"a:i18n", "b:i18n",

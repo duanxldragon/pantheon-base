@@ -14,7 +14,7 @@ import {
 import { getDictTypeList } from '../../modules/system/dict/api';
 import { getSettingList, getSettingOverview } from '../../modules/system/setting/api';
 import type { MenuNode } from '../../modules/system/menu/api';
-import type { UserInfo } from '../../store/useAuthStore';
+import type { UserInfo } from '../../store/authTypes';
 import { shouldWarmHighFrequencyRouteData } from './warmupPolicy';
 
 const warmedRoutes = new Set<string>();

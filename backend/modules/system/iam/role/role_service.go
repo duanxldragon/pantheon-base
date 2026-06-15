@@ -29,6 +29,13 @@ func (s *RoleService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}); err != nil {
 		return err
 	}
+	return s.Bootstrap()
+}
+
+func (s *RoleService) Bootstrap() error {
+	if s.db == nil {
+		return errors.New("database.not_initialized")
+	}
 	if err := s.releaseDeletedRoleKeys(); err != nil {
 		return err
 	}

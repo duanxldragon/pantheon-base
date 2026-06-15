@@ -1,12 +1,12 @@
 package config
 
 import (
-	"pantheon-platform/backend/pkg/common"
 	"bufio"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
+	"pantheon-platform/backend/pkg/common"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -17,7 +17,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
 
 const (
 	defaultDictItemPage     = 1
@@ -87,6 +86,13 @@ func (s *DictService) Migrate() error {
 	}
 	if err := s.db.AutoMigrate(&SystemDictType{}, &SystemDictItem{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *DictService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.releaseDeletedDictTypeCodes(); err != nil {
 		return err

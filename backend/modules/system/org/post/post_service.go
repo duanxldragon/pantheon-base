@@ -1,9 +1,9 @@
 package org
 
 import (
-	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"time"
 
@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
 
 type PostService struct {
 	db *gorm.DB
@@ -30,6 +29,13 @@ func (s *PostService) Migrate() error {
 	}
 	if err := s.db.AutoMigrate(&SystemPost{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *PostService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.releaseDeletedPostCodes()
 }

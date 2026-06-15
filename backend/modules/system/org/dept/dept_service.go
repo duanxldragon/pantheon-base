@@ -1,10 +1,10 @@
 package org
 
 import (
-	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"fmt"
 	"net/mail"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"time"
 
@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
 
 type DeptService struct {
 	db *gorm.DB
@@ -31,6 +30,13 @@ func (s *DeptService) Migrate() error {
 	}
 	if err := s.db.AutoMigrate(&SystemDept{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *DeptService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.ensureRootDept()
 }

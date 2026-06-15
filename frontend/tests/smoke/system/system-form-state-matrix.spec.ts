@@ -3,7 +3,6 @@ import { expect, type Locator, type Page, type Route } from '@playwright/test';
 import { apiBaseUrl, authHeaders, installOperationToken, signInAsAdmin } from '../helpers/auth';
 import {
   installSharedPageReadCache,
-  type CachedReadResponse,
 } from '../helpers/shared-read-cache';
 
 type Deferred<T = void> = {
@@ -29,7 +28,6 @@ type FormMatrixCase = {
   submitLocator?: (form: Locator, page: Page) => Locator;
 };
 
-const sharedPageReadCache = new Map<string, CachedReadResponse>();
 let cachedAdminRoleIndex: number | null = null;
 
 function createDeferred<T = void>(): Deferred<T> {

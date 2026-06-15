@@ -31,6 +31,10 @@ func (s *I18nService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemI18n{}); err != nil {
 		return err
 	}
+	return s.Bootstrap()
+}
+
+func (s *I18nService) Bootstrap() error {
 	if err := s.normalizeLocaleKeyDuplicates(); err != nil {
 		return err
 	}

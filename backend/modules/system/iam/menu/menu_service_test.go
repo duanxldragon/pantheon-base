@@ -15,9 +15,42 @@ func setupMenuTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("migrate menu: %v", err)
 	}
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_key VARCHAR(64), status INT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_menu (role_id BIGINT, menu_id BIGINT, PRIMARY KEY (role_id, menu_id))")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(128) PRIMARY KEY, setting_value TEXT)")
 	return db
+}
+
+func TestMenuServiceCreateMenuBindsAdminRole(t *testing.T) {
+	db := setupMenuTestDB(t)
+	service := NewMenuService(db)
+
+	if err := db.Exec("INSERT INTO system_role (id, role_key, status) VALUES (1, 'admin', 1)").Error; err != nil {
+		t.Fatalf("seed admin role: %v", err)
+	}
+
+	menu, err := service.CreateMenu(&MenuCreateReq{
+		TitleKey:   "system.menu.user",
+		Path:       "/system/user-smoke",
+		Component:  "system/user/UserList",
+		PagePerm:   "system:user:list",
+		Type:       "C",
+		RouteName:  "system-user-smoke",
+		Module:     "system.iam",
+		IsVisible:  1,
+		IsExternal: 0,
+	})
+	if err != nil {
+		t.Fatalf("create menu: %v", err)
+	}
+
+	var count int64
+	if err := db.Table("system_role_menu").Where("role_id = ? AND menu_id = ?", 1, menu.ID).Count(&count).Error; err != nil {
+		t.Fatalf("count admin role menu bindings: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected admin role to bind created menu, got count=%d", count)
+	}
 }
 
 func TestMenuServiceValidateMenuMetaRejectsUnknownRegisteredComponent(t *testing.T) {

@@ -1,10 +1,10 @@
 package system
 
 import (
-	"pantheon-platform/backend/pkg/common"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,9 +18,9 @@ import (
 )
 
 type AuditService struct {
-	db            *gorm.DB
+	db              *gorm.DB
 	lastCleanupAtMu sync.Mutex
-	lastCleanupAt map[string]time.Time
+	lastCleanupAt   map[string]time.Time
 }
 
 func NewAuditService(db *gorm.DB) *AuditService {
@@ -31,8 +31,8 @@ func NewAuditService(db *gorm.DB) *AuditService {
 }
 
 const (
-	defaultOperationLogRetentionDays        = 180
-	auditAutoCleanupMinInterval             = 15 * time.Minute
+	defaultOperationLogRetentionDays = 180
+	auditAutoCleanupMinInterval      = 15 * time.Minute
 )
 
 func (s *AuditService) Migrate() error {
@@ -41,6 +41,13 @@ func (s *AuditService) Migrate() error {
 	}
 	if err := s.db.AutoMigrate(&middleware.SystemLogOper{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *AuditService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	return s.backfillOperationLogDerivedFields()
 }

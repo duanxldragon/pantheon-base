@@ -1,9 +1,9 @@
 package iam
 
 import (
-	"pantheon-platform/backend/pkg/common"
 	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,7 +15,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
 
 type PermissionService struct {
 	db *gorm.DB
@@ -34,6 +33,13 @@ func (s *PermissionService) Migrate() error {
 	}
 	if err := s.db.AutoMigrate(&PermissionRoleDataScopePolicy{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *PermissionService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	if !s.db.Migrator().HasTable("system_role") || !s.db.Migrator().HasTable("casbin_rule") {
 		return nil

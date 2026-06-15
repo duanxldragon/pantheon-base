@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-
 type UserService struct {
 	db *gorm.DB
 }
@@ -31,6 +30,13 @@ func (s *UserService) Migrate() error {
 
 	if err := s.db.AutoMigrate(&SystemUser{}, &SystemUserRole{}, &SystemUserProfileExt{}); err != nil {
 		return err
+	}
+	return s.Bootstrap()
+}
+
+func (s *UserService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
 	}
 	if err := s.normalizeUserPreferenceJSON(); err != nil {
 		return err

@@ -24,6 +24,11 @@ import (
 
 // InitSystemModule 初始化系统模块
 func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
+	// 清理历史废弃菜单（/workspace、/operations 等）
+	if err := CleanupObsoleteMenus(db); err != nil {
+		panic(err)
+	}
+
 	// 用户模块注入
 	userSvc := user.NewUserService(db)
 	userHandler := user.NewUserHandler(userSvc)
@@ -81,8 +86,9 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			},
 		},
 		contracts.FuncModule{
-			ModuleName:  "user",
-			MigrateFunc: func(_ *gorm.DB) error { return userSvc.Migrate() },
+			ModuleName:    "user",
+			MigrateFunc:   func(_ *gorm.DB) error { return userSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return userSvc.Bootstrap() },
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				systemDataScoped := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(middleware.DataScopeMiddleware(db)).Use(RefreshSyncMiddleware(refreshSyncSvc))
@@ -120,8 +126,9 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			},
 		},
 		contracts.FuncModule{
-			ModuleName:  "role",
-			MigrateFunc: func(_ *gorm.DB) error { return roleSvc.Migrate() },
+			ModuleName:    "role",
+			MigrateFunc:   func(_ *gorm.DB) error { return roleSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return roleSvc.Bootstrap() },
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
@@ -142,6 +149,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		contracts.FuncModule{
 			ModuleName:    "dept",
 			MigrateFunc:   func(_ *gorm.DB) error { return deptSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return deptSvc.Bootstrap() },
 			SeedMenusFunc: seedDeptModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
@@ -166,6 +174,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		contracts.FuncModule{
 			ModuleName:    "post",
 			MigrateFunc:   func(_ *gorm.DB) error { return postSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return postSvc.Bootstrap() },
 			SeedMenusFunc: seedPostModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
@@ -190,6 +199,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 				}
 				return permissionSvc.Migrate()
 			},
+			BootstrapFunc: func(_ *gorm.DB) error { return permissionSvc.Bootstrap() },
 			SeedMenusFunc: seedPermissionModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
@@ -214,6 +224,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		contracts.FuncModule{
 			ModuleName:    "dict",
 			MigrateFunc:   func(_ *gorm.DB) error { return dictSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return dictSvc.Bootstrap() },
 			SeedMenusFunc: seedDictModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemPublic := r.Group("/system")
@@ -250,6 +261,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		contracts.FuncModule{
 			ModuleName:    "setting",
 			MigrateFunc:   func(_ *gorm.DB) error { return settingSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return settingSvc.Bootstrap() },
 			SeedMenusFunc: seedSettingModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemPublic := r.Group("/system")
@@ -278,6 +290,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		contracts.FuncModule{
 			ModuleName:    "i18n",
 			MigrateFunc:   func(_ *gorm.DB) error { return i18nSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return i18nSvc.Bootstrap() },
 			SeedMenusFunc: seedI18nModuleMenus,
 			SeedI18nFunc:  func(db *gorm.DB) error { return i18nSvc.SeedI18nModuleI18n(db) },
 			Register: func(r *gin.RouterGroup) {
@@ -316,6 +329,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		contracts.FuncModule{
 			ModuleName:    "audit",
 			MigrateFunc:   func(_ *gorm.DB) error { return auditSvc.Migrate() },
+			BootstrapFunc: func(_ *gorm.DB) error { return auditSvc.Bootstrap() },
 			SeedMenusFunc: seedAuditModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())

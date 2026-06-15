@@ -14,7 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 type SettingService struct {
 	db          *gorm.DB
 	cacheMu     sync.RWMutex
@@ -38,7 +37,13 @@ func (s *SettingService) Migrate() error {
 	if err := s.db.AutoMigrate(&SystemSetting{}); err != nil {
 		return err
 	}
+	return s.Bootstrap()
+}
 
+func (s *SettingService) Bootstrap() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
+	}
 	for _, item := range settingSeeds() {
 		var count int64
 		if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", item.SettingKey).Count(&count).Error; err != nil {
@@ -408,7 +413,8 @@ func (s *SettingService) RefreshSettingCache(groupKeys []string) (*SettingCacheR
 	for _, gk := range normalizedGroups {
 		s.invalidateSettingCacheForGroup(gk)
 	}
-	if err := s.notifyRuntimeSettingsChanged(); err != nil {		return nil, err
+	if err := s.notifyRuntimeSettingsChanged(); err != nil {
+		return nil, err
 	}
 	for _, groupKey := range normalizedGroups {
 		if _, err := s.GetGroup(groupKey); err != nil {
