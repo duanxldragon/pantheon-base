@@ -30,7 +30,12 @@ export function shouldFetchRemoteI18nPack(runtime: AutomationRuntime = {}) {
 }
 
 export function shouldPollServerRefreshState(runtime: AutomationRuntime = {}) {
-  return shouldRunBackgroundNetworkTasks(runtime);
+  void runtime;
+  // Refresh state polling must remain active even in automated browser
+  // environments so refresh sync smoke tests can verify cross-context
+  // data propagation. The polling is a lightweight GET and does not affect
+  // page state or cause visual flakiness.
+  return true;
 }
 
 export function shouldReportShellActivity(runtime: AutomationRuntime = {}) {

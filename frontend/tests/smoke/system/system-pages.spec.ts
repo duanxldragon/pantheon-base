@@ -3469,7 +3469,6 @@ test('security-event governance smoke: pending event can be acknowledged with a 
 });
 
 test('refresh sync smoke: setting page auto-updates across isolated contexts', async ({ browser, page }) => {
-  test.fixme(true, 'Known issue: /system/refresh/state endpoint timeout in CI; tracked separately');
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
@@ -3511,7 +3510,6 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
 });
 
 test('refresh sync smoke: dict page auto-updates across isolated contexts', async ({ browser, page }) => {
-  test.fixme(true, 'Known issue: /system/refresh/state endpoint timeout in CI; tracked separately');
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
@@ -3556,7 +3554,6 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
 });
 
 test('refresh sync smoke: i18n page auto-updates across isolated contexts', async ({ browser, page }) => {
-  test.fixme(true, 'Known issue: /system/refresh/state endpoint timeout in CI; tracked separately');
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
