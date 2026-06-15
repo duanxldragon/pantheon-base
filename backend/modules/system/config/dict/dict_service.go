@@ -101,6 +101,17 @@ func (s *DictService) Bootstrap() error {
 		return err
 	}
 
+	if err := s.bootstrapDefaultDictTypes(); err != nil {
+		return err
+	}
+	if err := s.bootstrapDefaultDictItems(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *DictService) bootstrapDefaultDictTypes() error {
 	for _, item := range defaultDictTypeSeeds {
 		var count int64
 		if err := s.db.Model(&SystemDictType{}).Where("dict_code = ?", item.DictCode).Count(&count).Error; err != nil {
@@ -119,7 +130,10 @@ func (s *DictService) Bootstrap() error {
 			return err
 		}
 	}
+	return nil
+}
 
+func (s *DictService) bootstrapDefaultDictItems() error {
 	for _, item := range defaultDictItemSeeds {
 		var count int64
 		if err := s.db.Model(&SystemDictItem{}).
