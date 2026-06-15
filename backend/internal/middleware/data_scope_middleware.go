@@ -142,31 +142,9 @@ func applyRoleDataScopePolicy(db *gorm.DB, scope *common.DataScopeReq) {
 		return
 	}
 
-	// Check role policy cache
-	cacheKey := buildRolePolicyCacheKey(db, scope.RoleKeys)
-	rolePolicyCacheMu.RLock()
-	var policies []SystemRoleDataScope
-	if entry, ok := rolePolicyCache[cacheKey]; ok && time.Since(entry.cachedAt) < rolePolicyTTL {
-		policies = entry.policies
-		rolePolicyCacheMu.RUnlock()
-	} else {
-		rolePolicyCacheMu.RUnlock()
-		if err := db.Where("role_key IN ?", scope.RoleKeys).Find(&policies).Error; err != nil {
-			slog.Warn("data scope: failed to load role policies", "roles", strings.Join(scope.RoleKeys, ","), "error", err)
-			return
-		}
-		// Store in cache
-		rolePolicyCacheMu.Lock()
-		rolePolicyCache[cacheKey] = rolePolicyEntry{policies: policies, cachedAt: time.Now()}
-		if len(rolePolicyCache) > 1000 {
-			now := time.Now()
-			for k, v := range rolePolicyCache {
-				if now.Sub(v.cachedAt) > rolePolicyTTL {
-					delete(rolePolicyCache, k)
-				}
-			}
-		}
-		rolePolicyCacheMu.Unlock()
+	policies, ok := loadRoleDataScopePolicies(db, scope.RoleKeys)
+	if !ok {
+		return
 	}
 
 	if len(policies) == 0 {
@@ -184,6 +162,36 @@ func applyRoleDataScopePolicy(db *gorm.DB, scope *common.DataScopeReq) {
 	case common.DataScopeModeAll:
 		scope.DeptIDs = nil
 	}
+}
+
+func loadRoleDataScopePolicies(db *gorm.DB, roleKeys []string) ([]SystemRoleDataScope, bool) {
+	cacheKey := buildRolePolicyCacheKey(db, roleKeys)
+	rolePolicyCacheMu.RLock()
+	if entry, ok := rolePolicyCache[cacheKey]; ok && time.Since(entry.cachedAt) < rolePolicyTTL {
+		rolePolicyCacheMu.RUnlock()
+		return entry.policies, true
+	}
+	rolePolicyCacheMu.RUnlock()
+
+	var policies []SystemRoleDataScope
+	if err := db.Where("role_key IN ?", roleKeys).Find(&policies).Error; err != nil {
+		slog.Warn("data scope: failed to load role policies", "roles", strings.Join(roleKeys, ","), "error", err)
+		return nil, false
+	}
+
+	rolePolicyCacheMu.Lock()
+	rolePolicyCache[cacheKey] = rolePolicyEntry{policies: policies, cachedAt: time.Now()}
+	if len(rolePolicyCache) > 1000 {
+		now := time.Now()
+		for k, v := range rolePolicyCache {
+			if now.Sub(v.cachedAt) > rolePolicyTTL {
+				delete(rolePolicyCache, k)
+			}
+		}
+	}
+	rolePolicyCacheMu.Unlock()
+
+	return policies, true
 }
 
 // cachedHasTable caches the result of db.Migrator().HasTable() to avoid

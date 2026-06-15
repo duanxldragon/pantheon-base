@@ -585,53 +585,73 @@ func CleanupObsoleteMenus(db *gorm.DB) error {
 	}
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		obsoleteIDs := make(map[uint64]struct{})
-		for _, rule := range obsoleteMenuRules {
-			ids, err := collectObsoleteMenuIDs(tx, rule)
-			if err != nil {
-				return err
-			}
-			for _, id := range ids {
-				obsoleteIDs[id] = struct{}{}
-			}
+		menuIDs, err := collectAllObsoleteMenuIDs(tx)
+		if err != nil {
+			return err
 		}
-
-		if len(obsoleteIDs) == 0 {
+		if len(menuIDs) == 0 {
 			return nil
 		}
-
-		menuIDs := make([]uint64, 0, len(obsoleteIDs))
-		for id := range obsoleteIDs {
-			menuIDs = append(menuIDs, id)
-		}
-
 		if err := reparentRetainedMenuChildren(tx, menuIDs); err != nil {
 			return err
 		}
-
-		if tx.Migrator().HasTable("system_role_menu") {
-			if err := tx.Table("system_role_menu").Where("menu_id IN ?", menuIDs).Delete(nil).Error; err != nil {
-				return err
-			}
+		if err := deleteObsoleteMenuRoleBindings(tx, menuIDs); err != nil {
+			return err
 		}
-
-		if tx.Migrator().HasTable("system_role_permission") {
-			for _, rule := range obsoleteMenuRules {
-				if len(rule.PagePerms) > 0 {
-					if err := tx.Table("system_role_permission").Where("permission_key IN ?", rule.PagePerms).Delete(nil).Error; err != nil {
-						return err
-					}
-				}
-				if len(rule.Perms) > 0 {
-					if err := tx.Table("system_role_permission").Where("permission_key IN ?", rule.Perms).Delete(nil).Error; err != nil {
-						return err
-					}
-				}
-			}
+		if err := deleteObsoleteMenuPermissions(tx); err != nil {
+			return err
 		}
 
 		return tx.Table("system_menu").Where("id IN ?", menuIDs).Delete(nil).Error
 	})
+}
+
+func collectAllObsoleteMenuIDs(tx *gorm.DB) ([]uint64, error) {
+	obsoleteIDs := make(map[uint64]struct{})
+	for _, rule := range obsoleteMenuRules {
+		ids, err := collectObsoleteMenuIDs(tx, rule)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			obsoleteIDs[id] = struct{}{}
+		}
+	}
+
+	menuIDs := make([]uint64, 0, len(obsoleteIDs))
+	for id := range obsoleteIDs {
+		menuIDs = append(menuIDs, id)
+	}
+	return menuIDs, nil
+}
+
+func deleteObsoleteMenuRoleBindings(tx *gorm.DB, menuIDs []uint64) error {
+	if !tx.Migrator().HasTable("system_role_menu") {
+		return nil
+	}
+	return tx.Table("system_role_menu").Where("menu_id IN ?", menuIDs).Delete(nil).Error
+}
+
+func deleteObsoleteMenuPermissions(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable("system_role_permission") {
+		return nil
+	}
+	for _, rule := range obsoleteMenuRules {
+		if err := deleteObsoletePermissionKeys(tx, rule.PagePerms); err != nil {
+			return err
+		}
+		if err := deleteObsoletePermissionKeys(tx, rule.Perms); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteObsoletePermissionKeys(tx *gorm.DB, permissionKeys []string) error {
+	if len(permissionKeys) == 0 {
+		return nil
+	}
+	return tx.Table("system_role_permission").Where("permission_key IN ?", permissionKeys).Delete(nil).Error
 }
 
 func reparentRetainedMenuChildren(tx *gorm.DB, obsoleteIDs []uint64) error {
