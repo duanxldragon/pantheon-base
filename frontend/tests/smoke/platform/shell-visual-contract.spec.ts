@@ -676,8 +676,8 @@ test('setting workspace keeps summary and single-group config view on the shared
     const anchorItem = document.querySelector<HTMLElement>('.setting-overview-page__anchor-item');
     const anchorTitle = document.querySelector<HTMLElement>('.setting-overview-page__anchor-title');
     const workspace = document.querySelector<HTMLElement>('.setting-group-workspace');
-    const sideColumn = document.querySelector<HTMLElement>('.setting-overview-page__rail');
     const sideRailPanel = document.querySelector<HTMLElement>('.setting-page__governance-stack .side-rail-panel');
+    const sideRailBody = sideRailPanel?.querySelector<HTMLElement>('.arco-card-body');
 
     const read = (element?: HTMLElement | null) => {
       if (!element) {
@@ -705,8 +705,8 @@ test('setting workspace keeps summary and single-group config view on the shared
       anchorItem: read(anchorItem),
       anchorTitle: read(anchorTitle),
       workspace: read(workspace),
-      sideColumn: read(sideColumn),
       sideRailPanel: read(sideRailPanel),
+      sideRailBody: read(sideRailBody),
     };
   });
 
@@ -718,8 +718,8 @@ test('setting workspace keeps summary and single-group config view on the shared
   expect(overviewContract.anchorItem?.height).toBeLessThanOrEqual(120);
   expect(overviewContract.anchorTitle?.fontSize).toBe('13px');
   expect(overviewContract.workspace?.top).toBeGreaterThan(overviewContract.summary!.top);
-  expect(overviewContract.sideColumn?.display).toBe('flex');
-  expect(overviewContract.sideColumn?.position).toBe('sticky');
+  expect(overviewContract.sideRailPanel?.position).toBe('relative');
+  expect(overviewContract.sideRailBody?.display).toBe('flex');
   expect(overviewContract.sideRailPanel?.height).toBeGreaterThan(0);
 });
 
