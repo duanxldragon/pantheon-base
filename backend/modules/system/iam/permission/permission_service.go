@@ -16,6 +16,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const permissionPtypeClause = "ptype = ?"
+
 type PermissionService struct {
 	db *gorm.DB
 }
@@ -46,7 +48,7 @@ func (s *PermissionService) Bootstrap() error {
 	}
 	if err := s.db.Exec(`
 DELETE FROM casbin_rule
-WHERE ptype = ?
+WHERE `+permissionPtypeClause+`
   AND NOT EXISTS (
     SELECT 1
     FROM system_role
@@ -65,7 +67,7 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 	}
 
 	var policies []database.CasbinRule
-	db := s.db.Model(&database.CasbinRule{}).Where("ptype = ?", "p")
+	db := s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p")
 	page, pageSize := normalizePermissionPageQuery(query)
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
@@ -580,7 +582,7 @@ func validateImportRoleKeys(db *gorm.DB, rows []policyImportRow, result *impexp.
 // loadExistingPolicyMap loads all existing policies into a dedup map.
 func loadExistingPolicyMap(db *gorm.DB) (map[string]database.CasbinRule, error) {
 	var policies []database.CasbinRule
-	if err := db.Model(&database.CasbinRule{}).Where("ptype = ?", "p").Find(&policies).Error; err != nil {
+	if err := db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p").Find(&policies).Error; err != nil {
 		return nil, err
 	}
 	existingByKey := make(map[string]database.CasbinRule, len(policies))
@@ -616,7 +618,7 @@ func writeImportPolicies(db *gorm.DB, rows []policyImportRow, existingByKey map[
 
 func (s *PermissionService) listPoliciesForExport(query *PermissionPolicyQuery) ([]database.CasbinRule, error) {
 	var policies []database.CasbinRule
-	db := s.db.Model(&database.CasbinRule{}).Where("ptype = ?", "p")
+	db := s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p")
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("v0 LIKE ?", "%"+strings.TrimSpace(query.RoleKey)+"%")
@@ -673,7 +675,7 @@ func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {
 
 func (s *PermissionService) ensurePolicyUnique(policyID uint64, roleKey string, path string, method string) error {
 	var count int64
-	db := s.db.Model(&database.CasbinRule{}).Where("ptype = ? AND v0 = ? AND v1 = ? AND v2 = ?", "p", roleKey, path, method)
+	db := s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause+" AND v0 = ? AND v1 = ? AND v2 = ?", "p", roleKey, path, method)
 	if policyID > 0 {
 		db = db.Where("id <> ?", policyID)
 	}
