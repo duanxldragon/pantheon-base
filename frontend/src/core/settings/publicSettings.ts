@@ -61,14 +61,14 @@ function buildPublicSettingsState(settings: Record<string, string>): PublicSetti
   }
   return {
     siteName,
-    siteLogo: settings['site.logo']?.trim() || '',
+    siteLogo: settings['site.logo']?.trim() ?? '',
     appMode,
     orgEnabled: settings['org.enabled']?.trim() !== 'false',
     orgRequiredForUser: settings['org.required_for_user']?.trim() === 'true',
-    defaultLanguage: settings['i18n.default_language']?.trim() || 'zh-CN',
-    defaultTheme: settings['ui.default_theme']?.trim() || 'indigo',
+    defaultLanguage: settings['i18n.default_language']?.trim() ?? 'zh-CN',
+    defaultTheme: settings['ui.default_theme']?.trim() ?? 'indigo',
     enableTabBar: settings['ui.enable_tab_bar']?.trim() !== 'false',
-    sessionIdleMinutes: Number(settings['login.session_idle_minutes']?.trim() || '30') || 30,
+    sessionIdleMinutes: Number(settings['login.session_idle_minutes']?.trim() ?? '30') || 30,
   };
 }
 

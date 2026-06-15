@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import { Form } from '@arco-design/web-react'; // NOSONAR
+// NOSONAR
+// eslint-disable-next-line import/no-duplicates
+import { Form } from '@arco-design/web-react';
 import {
   Button,
   Card,
