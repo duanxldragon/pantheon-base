@@ -12,19 +12,45 @@ import (
 	"gorm.io/gorm"
 )
 
+type settingAuditPayload struct {
+	GroupKey string                   `json:"groupKey"`
+	Changes  []SettingAuditChangeResp `json:"changes"`
+}
+
 func (s *SettingService) BuildAuditPayload(groupKey string, req *SettingGroupUpdateReq, includeOld bool) (string, error) {
 	if s.db == nil || req == nil || len(req.Items) == 0 {
 		return "", nil
 	}
 
-	type auditPayload struct {
-		GroupKey string                   `json:"groupKey"`
-		Changes  []SettingAuditChangeResp `json:"changes"`
+	keys, requestValueMap := collectAuditRequestValues(req.Items)
+	if len(keys) == 0 {
+		return "", nil
 	}
 
-	keys := make([]string, 0, len(req.Items))
-	requestValueMap := make(map[string]string, len(req.Items))
-	for _, item := range req.Items {
+	rows, err := s.findAuditRows(groupKey, keys)
+	if err != nil {
+		return "", err
+	}
+	changes, err := buildAuditChanges(rows, requestValueMap, includeOld)
+	if err != nil {
+		return "", err
+	}
+
+	payload := settingAuditPayload{
+		GroupKey: strings.TrimSpace(groupKey),
+		Changes:  changes,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func collectAuditRequestValues(items []SettingUpdateItemReq) ([]string, map[string]string) {
+	keys := make([]string, 0, len(items))
+	requestValueMap := make(map[string]string, len(items))
+	for _, item := range items {
 		settingKey := strings.TrimSpace(item.SettingKey)
 		if settingKey == "" {
 			continue
@@ -32,64 +58,71 @@ func (s *SettingService) BuildAuditPayload(groupKey string, req *SettingGroupUpd
 		keys = append(keys, settingKey)
 		requestValueMap[settingKey] = strings.TrimSpace(item.SettingValue)
 	}
-	if len(keys) == 0 {
-		return "", nil
-	}
+	return keys, requestValueMap
+}
 
+func (s *SettingService) findAuditRows(groupKey string, keys []string) ([]SystemSetting, error) {
 	var rows []SystemSetting
-	if err := s.db.Where("group_key = ? AND setting_key IN ?", strings.TrimSpace(groupKey), keys).Find(&rows).Error; err != nil {
-		return "", err
-	}
+	err := s.db.Where("group_key = ? AND setting_key IN ?", strings.TrimSpace(groupKey), keys).Find(&rows).Error
+	return rows, err
+}
 
-	payload := auditPayload{
-		GroupKey: strings.TrimSpace(groupKey),
-		Changes:  make([]SettingAuditChangeResp, 0, len(rows)),
-	}
-
+func buildAuditChanges(rows []SystemSetting, requestValueMap map[string]string, includeOld bool) ([]SettingAuditChangeResp, error) {
+	changes := make([]SettingAuditChangeResp, 0, len(rows))
 	for _, row := range rows {
-		rawNewValue := requestValueMap[row.SettingKey]
-		if row.IsEncrypted == 1 {
-			if includeOld && strings.TrimSpace(rawNewValue) == "" {
-				continue
-			}
-			change := SettingAuditChangeResp{
-				SettingKey:  row.SettingKey,
-				IsEncrypted: row.IsEncrypted,
-			}
-			if includeOld && strings.TrimSpace(row.SettingValue) != "" {
-				change.OldValue = "***"
-			}
-			if strings.TrimSpace(rawNewValue) != "" {
-				change.NewValue = "***"
-			}
-			payload.Changes = append(payload.Changes, change)
-			continue
-		}
-
-		normalizedNewValue, err := normalizeSettingValue(row.SettingKey, rawNewValue)
+		change, ok, err := buildAuditChange(row, requestValueMap[row.SettingKey], includeOld)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		if includeOld && row.SettingValue == normalizedNewValue {
-			continue
+		if ok {
+			changes = append(changes, change)
 		}
-
-		change := SettingAuditChangeResp{
-			SettingKey:  row.SettingKey,
-			IsEncrypted: row.IsEncrypted,
-			NewValue:    normalizedNewValue,
-		}
-		if includeOld {
-			change.OldValue = row.SettingValue
-		}
-		payload.Changes = append(payload.Changes, change)
 	}
+	return changes, nil
+}
 
-	data, err := json.Marshal(payload)
+func buildAuditChange(row SystemSetting, rawNewValue string, includeOld bool) (SettingAuditChangeResp, bool, error) {
+	if row.IsEncrypted == 1 {
+		return buildEncryptedAuditChange(row, rawNewValue, includeOld), shouldIncludeEncryptedAuditChange(rawNewValue, includeOld), nil
+	}
+	return buildPlainAuditChange(row, rawNewValue, includeOld)
+}
+
+func shouldIncludeEncryptedAuditChange(rawNewValue string, includeOld bool) bool {
+	return !includeOld || strings.TrimSpace(rawNewValue) != ""
+}
+
+func buildEncryptedAuditChange(row SystemSetting, rawNewValue string, includeOld bool) SettingAuditChangeResp {
+	change := SettingAuditChangeResp{
+		SettingKey:  row.SettingKey,
+		IsEncrypted: row.IsEncrypted,
+	}
+	if includeOld && strings.TrimSpace(row.SettingValue) != "" {
+		change.OldValue = "***"
+	}
+	if strings.TrimSpace(rawNewValue) != "" {
+		change.NewValue = "***"
+	}
+	return change
+}
+
+func buildPlainAuditChange(row SystemSetting, rawNewValue string, includeOld bool) (SettingAuditChangeResp, bool, error) {
+	normalizedNewValue, err := normalizeSettingValue(row.SettingKey, rawNewValue)
 	if err != nil {
-		return "", err
+		return SettingAuditChangeResp{}, false, err
 	}
-	return string(data), nil
+	if includeOld && row.SettingValue == normalizedNewValue {
+		return SettingAuditChangeResp{}, false, nil
+	}
+	change := SettingAuditChangeResp{
+		SettingKey:  row.SettingKey,
+		IsEncrypted: row.IsEncrypted,
+		NewValue:    normalizedNewValue,
+	}
+	if includeOld {
+		change.OldValue = row.SettingValue
+	}
+	return change, true, nil
 }
 
 // applyAuditFilters applies common filter conditions for audit queries.
