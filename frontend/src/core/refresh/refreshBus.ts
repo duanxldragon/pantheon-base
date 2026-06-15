@@ -156,7 +156,7 @@ export function useRefreshPolling(
         }
         normalizedTopics.forEach((topic) => {
           const nextVersion = Number(resp.topics?.[topic] || 0);
-          const previousVersion = Object.prototype.hasOwnProperty.call(versionsRef.current, topic)
+          const previousVersion = Object.hasOwn(versionsRef.current, topic)
             ? Number(versionsRef.current[topic])
             : undefined;
           if (shouldPublishRefreshForVersionChange(previousVersion, nextVersion)) {

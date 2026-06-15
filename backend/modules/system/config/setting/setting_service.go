@@ -14,6 +14,13 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	settingKeyUITheme      = "ui.default_theme"
+	settingKeyUploadDriver = "upload.storage_driver"
+	settingKeyI18nLanguage = "i18n.default_language"
+	settingKeyAppMode      = "platform.app_mode"
+)
+
 type SettingService struct {
 	db          *gorm.DB
 	cacheMu     sync.RWMutex
@@ -45,40 +52,15 @@ func (s *SettingService) Bootstrap() error {
 		return common.ErrDatabaseNotInitialized
 	}
 	for _, item := range settingSeeds() {
-		var count int64
-		if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", item.SettingKey).Count(&count).Error; err != nil {
-			return err
-		}
-		if count > 0 {
-			continue
-		}
-
-		normalizedValue, err := normalizeSettingValue(item.SettingKey, item.SettingValue)
-		if err != nil {
-			return err
-		}
-		storedValue, err := prepareSettingStoredValue(normalizedValue, item.IsEncrypted)
-		if err != nil {
-			return err
-		}
-		if err := s.db.Create(&SystemSetting{
-			SettingKey:   item.SettingKey,
-			SettingValue: storedValue,
-			ValueType:    item.ValueType,
-			GroupKey:     item.GroupKey,
-			Module:       item.Module,
-			IsPublic:     item.IsPublic,
-			IsEncrypted:  item.IsEncrypted,
-			Remark:       item.Remark,
-		}).Error; err != nil {
+		if err := s.bootstrapSettingSeed(item); err != nil {
 			return err
 		}
 	}
 
-	if err := s.normalizeLegacySettingValue("ui.default_theme"); err != nil {
+	if err := s.normalizeLegacySettingValue(settingKeyUITheme); err != nil {
 		return err
 	}
-	if err := s.normalizeLegacySettingValue("upload.storage_driver"); err != nil {
+	if err := s.normalizeLegacySettingValue(settingKeyUploadDriver); err != nil {
 		return err
 	}
 	if err := s.migrateLegacySettingValue("upload.allowed_types", "[\"jpg\",\"jpeg\",\"png\",\"pdf\",\"doc\",\"docx\",\"xls\",\"xlsx\"]", "[\"jpg\",\"jpeg\",\"png\",\"pdf\",\"doc\",\"docx\",\"xls\",\"xlsx\",\"zip\",\"gz\",\"tgz\",\"tar\"]"); err != nil {
@@ -89,6 +71,35 @@ func (s *SettingService) Bootstrap() error {
 	}
 
 	return nil
+}
+
+func (s *SettingService) bootstrapSettingSeed(item defaultSettingSeed) error {
+	var count int64
+	if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", item.SettingKey).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	normalizedValue, err := normalizeSettingValue(item.SettingKey, item.SettingValue)
+	if err != nil {
+		return err
+	}
+	storedValue, err := prepareSettingStoredValue(normalizedValue, item.IsEncrypted)
+	if err != nil {
+		return err
+	}
+	return s.db.Create(&SystemSetting{
+		SettingKey:   item.SettingKey,
+		SettingValue: storedValue,
+		ValueType:    item.ValueType,
+		GroupKey:     item.GroupKey,
+		Module:       item.Module,
+		IsPublic:     item.IsPublic,
+		IsEncrypted:  item.IsEncrypted,
+		Remark:       item.Remark,
+	}).Error
 }
 
 func (s *SettingService) List(query *SettingListQuery) ([]SettingResp, error) {
@@ -286,13 +297,13 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 		byKey[row.SettingKey] = row
 	}
 
-	resp.StorageDriver = safeSettingOverviewValue(byKey["upload.storage_driver"], "local")
-	resp.DefaultLanguage = safeSettingOverviewValue(byKey["i18n.default_language"], "zh-CN")
-	resp.DefaultTheme = safeSettingOverviewValue(byKey["ui.default_theme"], "indigo")
+	resp.StorageDriver = safeSettingOverviewValue(byKey[settingKeyUploadDriver], "local")
+	resp.DefaultLanguage = safeSettingOverviewValue(byKey[settingKeyI18nLanguage], "zh-CN")
+	resp.DefaultTheme = safeSettingOverviewValue(byKey[settingKeyUITheme], "indigo")
 
 	requiredKeys := []string{
 		"site.name",
-		"platform.app_mode",
+		settingKeyAppMode,
 		"org.enabled",
 		"org.required_for_user",
 		"security.password_min_length",
@@ -312,10 +323,10 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 		"login.session_idle_minutes",
 		"login.max_active_sessions_per_user",
 		"audit.session_retention_days",
-		"i18n.default_language",
-		"ui.default_theme",
+		settingKeyI18nLanguage,
+		settingKeyUITheme,
 		"ui.enable_tab_bar",
-		"upload.storage_driver",
+		settingKeyUploadDriver,
 		"upload.max_file_size",
 		"upload.allowed_types",
 	}
@@ -357,7 +368,7 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 
 	if _, ok := allowedStorageDriverValues[resp.StorageDriver]; !ok {
 		resp.Issues = appendSettingOverviewIssue(resp.Issues, seenIssues, SettingOverviewIssueResp{
-			SettingKey: "upload.storage_driver",
+			SettingKey: settingKeyUploadDriver,
 			GroupKey:   "upload",
 			Severity:   "critical",
 			ReasonKey:  "setting.overview.issue.invalid_storage_driver",
@@ -365,7 +376,7 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 	}
 	if _, ok := allowedLanguageValues[resp.DefaultLanguage]; !ok {
 		resp.Issues = appendSettingOverviewIssue(resp.Issues, seenIssues, SettingOverviewIssueResp{
-			SettingKey: "i18n.default_language",
+			SettingKey: settingKeyI18nLanguage,
 			GroupKey:   "i18n",
 			Severity:   "warning",
 			ReasonKey:  "setting.overview.issue.invalid_default_language",
@@ -373,16 +384,16 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 	}
 	if _, ok := allowedThemeValues[resp.DefaultTheme]; !ok {
 		resp.Issues = appendSettingOverviewIssue(resp.Issues, seenIssues, SettingOverviewIssueResp{
-			SettingKey: "ui.default_theme",
+			SettingKey: settingKeyUITheme,
 			GroupKey:   "ui",
 			Severity:   "warning",
 			ReasonKey:  "setting.overview.issue.invalid_default_theme",
 		})
 	}
-	appMode := safeSettingOverviewValue(byKey["platform.app_mode"], "enterprise")
+	appMode := safeSettingOverviewValue(byKey[settingKeyAppMode], "enterprise")
 	if _, ok := allowedAppModeValues[appMode]; !ok {
 		resp.Issues = appendSettingOverviewIssue(resp.Issues, seenIssues, SettingOverviewIssueResp{
-			SettingKey: "platform.app_mode",
+			SettingKey: settingKeyAppMode,
 			GroupKey:   "platform",
 			Severity:   "warning",
 			ReasonKey:  "setting.overview.issue.invalid_app_mode",
