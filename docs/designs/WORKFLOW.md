@@ -102,36 +102,27 @@ Contract
 7.  **数据校验测试**: 验证用户名唯一、角色标识唯一、邮箱格式、角色必选、菜单路径唯一、管理员保护等约束能返回正确错误码。
 8.  **测试同步规则**: 只要代码改动影响路由路径、页面职责、组件结构、接口契约、权限判断、i18n key、选择器、fixture、菜单标题、导入导出入口或 smoke 覆盖范围，必须在同一轮提交里同步更新对应测试、脚本、门禁、截图基线或验收文档。禁止把“代码先改，测试后补”留到回归阶段才暴露失配。
 
-### 第五阶段：质量门禁与独立评审 (Quality Gate Phase)
+### 第五阶段：质量门禁与自动评审 (Quality Gate Phase)
 
-1.  **功能监督与质量守护分离**: 功能是否符合需求，由需求方、模块负责人或验收人确认；代码质量、安全与回归风险，由独立 reviewer 守护。功能验收不能替代代码评审，代码评审也不能替代功能验收。
-2.  **禁止作者自证通过**: 提交者、主实现者、生成代码的同一 agent 会话，不能作为该次改动的唯一 reviewer。至少要有一个非作者的独立评审源，可以是同事、指定 reviewer，或独立的人审 / 异步 AI review 流程。
-3.  **SonarQube 手动辅助**: Sonar 仅作为辅助审查工具，不接入 required checks。需要时可手动运行本地扫描并把报告附在 PR。最低建议见 [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)，核心要求是：
-    - New Code 上 `Blocker / Critical` 问题为 `0`
-    - Security Hotspots 必须完成 review，不允许未处理直接合并
-    - New Code 覆盖率默认不低于 `80%`；若确有例外，必须在 PR 中说明原因和补测计划
-    - New Code 重复率默认低于 `3%`（`pantheon-base`）或 `5%`（`pantheon-ops`）
-    - Reliability / Security / Maintainability 结果仅作参考，不作为合并门禁
-    - Codacy 如果存在，只能作为对比仪表盘，不得和 Sonar / CodeQL 抢门禁结论
+1.  **功能监督与质量守护分离**: 功能是否符合需求，由需求方或最终验收人确认；代码质量、安全与回归风险，由 GitHub required checks、CodeQL 和 Copilot review 共同守护。功能验收不能替代代码门禁。
+2.  **禁止把 AI 评论当审批**: Copilot review 只作为 comment 信号，不替代 required checks，也不计作 required approval。
+3.  **PR 留痕代替额外人审依赖**: 扫描器不能替代设计和业务判断。需要在 PR 中记录 Copilot review 状态、架构边界、业务风险、测试缺口、residual risk 和回滚方式。
 4.  **GitHub Checks 门禁**: `main`、`release/*` 等受保护分支禁止直接推送，必须走 PR。PR 至少要求以下状态检查按改动范围通过：
     - `Quality Gates`：聚合 docs governance、frontend contract、backend tests、Duplication Gate 结果与轻量 `smoke-sanity`
     - `Security Gates`：聚合 secret scan、workflow posture、CodeQL
-    - `Duplication Gate`：PR / merge queue 产出可见报告；全库基线阈值在 protected-branch push、手动质量复核或具备 new-code gate 后执行
     - `Full Smoke Suite` 只用于手动、定时或预发布回归，不得作为每个 PR 的默认阻塞项
     - dependency vulnerability 扫描适合 `main/release`、定时或手动巡检，不适合阻塞所有 PR
-    - Sonar 仅用于辅助审查，不纳入 required checks；报告由固定流程自动抓取并附到 evidence / artifact
-5.  **第三方评审纪律**: 
-    - 常规改动：至少 `1` 个非作者 approval
-    - 高风险改动：至少 `2` 个 approval，其中一个来自域负责人或安全/架构 reviewer
+5.  **高风险改动纪律**:
+    - 常规改动走 `Quality Gates` + `Security Gates` + squash auto-merge
+    - 高风险改动额外要求在 PR 中明确 residual risk、回滚步骤和补充验证
     - 高风险范围包括：`system/auth`、`system/iam`、`system/config`、权限模型、审计链路、共享 `pkg/*`、生成器 / 动态模块、CI / deploy、密钥与凭据处理
 6.  **PR 合并保护建议**:
     - 开启 Branch Protection
-    - 设置 `CODEOWNERS`，自动请求对应域 reviewer
-    - 开启 `Dismiss stale approvals`
+    - 如已启用 Copilot code review，可自动请求或自动评审 PR
     - 开启 `Require conversation resolution`
     - 关闭绕过门禁的常态化做法；紧急合并必须留下事故编号、回滚方案和补审记录
     - 开启自动删除 head branches，避免已合并的 worktree 分支继续堆积
-7.  **评审输出必须留痕**: PR 描述至少记录归属层、改动边界、验证命令、GitHub checks 结果、独立 reviewer 结论，以及如有 Sonar 报告 artifact / evidence 时的链接和结论。
+7.  **评审输出必须留痕**: PR 描述至少记录归属层、改动边界、验证命令、GitHub checks 结果、CodeQL 结果、Copilot review 状态、residual risk 和回滚方式。
 
 本流程的结束条件不是“本地验证完”，而是“PR 已合并到 `main`，head branch 已删除或在 closeout 中手动删除，本地 worktree 已清理，且 closeout 记录了 PR URL、merge commit 和分支收口状态”。
 
@@ -201,11 +192,11 @@ Contract
 
 1. `main` 与 `release/*` 开启 Branch Protection
 2. 开启 Required Status Checks，只纳入 GitHub-native checks
-3. 开启 Pull Request Review 要求，至少 `1` 个 approval；高风险目录结合 `CODEOWNERS` 升级到 `2` 个 approval
-4. 开启 `Dismiss stale approvals`，防止提交新代码后沿用旧结论
+3. 开启 Pull Request Review 流程或 Copilot 自动评审策略，但不要把额外审批人数设成单人维护的硬阻塞
+4. 若启用人工 approval，继续开启 `Dismiss stale approvals`
 5. 开启 `Require conversation resolution`
 6. 开启 GitHub Secret Scanning、Dependency Review、Code Scanning（仓库支持时）
-7. Sonar 如需使用，仅以手动辅助方式执行，不纳入 required checks；Codacy 如已启用，也只作为参考，不纳入 required checks
+7. 不要启用 Codacy 或 OCR 作为 required checks
 
 ## 4. 冒烟执行 SOP（gstack / Windows）
 

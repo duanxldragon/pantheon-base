@@ -37,9 +37,6 @@ function buildManifest(options) {
     createdAt: new Date().toISOString(),
     sourceRepo: 'pantheon-base',
     consumerMode: 'foundation-release-consumer',
-    qualityBaselines: {
-      sonarProjectVersion: options.releaseVersion,
-    },
     bundleExclusions: ['backend/cmd/server/uploads', 'backend/uploads', 'uploads'],
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],

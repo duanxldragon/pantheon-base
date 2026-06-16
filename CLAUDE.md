@@ -25,7 +25,7 @@ Claude is allowed to modify only these categories directly:
 - `docs/harness/` — harness policy, task packets, failure registry, review artifacts
 - `.harness/` — evidence and audit reports
 - `CLAUDE.md`, `AGENTS.md`, `DESIGN.md` — governance documents
-- Root config files: `sonar-project.properties`, `.gitignore`, `package.json` (scripts only)
+- Root config files: `.gitignore`, `package.json` (scripts only)
 - Workflow files: `.github/workflows/` (CI configuration)
 
 ## Codex Model Tiers

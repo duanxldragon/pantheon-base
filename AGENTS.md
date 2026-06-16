@@ -14,7 +14,7 @@ English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 - 改动接口、路由、权限、i18n、菜单、数据库、导入导出、seed 或 smoke 范围时，同步更新测试、脚本、fixture、门禁或截图基线。
 - 非 trivial 任务默认先声明实现者视角、评审视角、最小 evidence 和 human gate。
 - 多 agent 工作默认由当前协调 agent 调度：Claude 负责规划和 review，Codex 负责探索、实现和修复；人只负责目标、范围、风险接受和关键 gate 决策，不需要手动在工具间搬运上下文。
-- **Claude 不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现统一通过 `codex exec "<task prompt>" -C pantheon-base -s read-write` 交给 Codex 执行。Claude 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`sonar-project.properties`、`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
+- **Claude 不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现统一通过 `codex exec "<task prompt>" -C pantheon-base -s read-write` 交给 Codex 执行。Claude 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
 - 触碰 UI 时先用 `impeccable`，并提供渲染证据或说明未产出证据的原因。
 - 登录、权限、菜单路由、导入导出、lowcode、动态模块、异步链路和外部集成等 runtime-sensitive 改动，除测试外还要给 runtime evidence 或显式 runtime gap。
 - 用户说“烟测保留数据”时使用 preserve 入口或 `PANTHEON_SMOKE_PRESERVE_FIXTURES=1`；说“清理烟测数据”时执行对应 cleanup。

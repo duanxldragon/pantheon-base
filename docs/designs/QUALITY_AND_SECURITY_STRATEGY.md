@@ -13,14 +13,14 @@ updated_at: 2026-06-08
 
 English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_STRATEGY.en.md)
 
-本文定义 Pantheon 的代码质量、安全扫描和第三方工具使用策略。目标是建立可持续的质量体系，而不是让 Sonar、CodeQL、Codacy 同时抢合并权，拖慢日常开发。
+本文定义 Pantheon 的代码质量、安全扫描和第三方工具使用策略。目标是建立可持续的质量体系，让 GitHub Actions、CodeQL 和 GitHub 原生 AI 评审各司其职，不让多套外部扫描器同时抢合并权。
 
 ## 1. 总原则
 
 1. **只保留一个主门禁体系**：GitHub Actions + Branch Protection 是合并依据。
 2. **只保留一个主安全信号**：CodeQL 是代码安全分析的主信号。
-3. **Sonar 只做辅助**：用于重复率、热点、长期技术债趋势和阶段性复核，不进入 required checks。
-4. **Codacy 只做参考**：如果仓库已启用 Codacy，它只能作为对比仪表盘，不作为 required check，不覆盖 GitHub/CodeQL/Sonar 的结论。
+3. **架构与意图风险要有 AI 评审补位**：GitHub Copilot review 可作为架构边界、业务意图和可维护性补充信号，但不替代 required checks。
+4. **不再依赖 Codacy / OCR**：当前流程不使用 Codacy 或 open-code-review 作为 required check 或合并前置条件。
 5. **风险优先，不追求零噪音**：只阻塞会影响安全、正确性、共享底座稳定性或可回归性的事项。纯风格、低风险重复和无可达风险的建议进入 backlog。
 
 当工具结论冲突时，优先级固定为：
@@ -28,8 +28,8 @@ English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_ST
 ```text
 功能正确性：GitHub Actions 测试/构建/契约检查
 安全可达性：CodeQL + secret/dependency/workflow posture
-质量趋势：Sonar
-外部对比：Codacy
+质量与设计兜底：Copilot review + PR 说明中的 residual risk
+外部对比：无
 ```
 
 ## 2. 仓库分层
@@ -43,14 +43,10 @@ English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_ST
 - GitHub required checks 未通过。
 - CodeQL 命中可达的高危安全问题。
 - `system/auth`、`system/iam`、`system/config`、权限、审计、共享 `pkg/*`、生成器、CI、凭据处理出现未解释的高风险变更。
-- New Code 出现 `Blocker / Critical` 且没有明确的误报依据。
-- Security Hotspots 未 review。
-
 目标阈值：
 
-- New Code 重复率低于 `3%`。
 - New Code 覆盖率默认不低于 `80%`，例外必须在 PR 中说明补测计划。
-- 高风险改动至少 `2` 个非作者 approval，其中一个来自域负责人、安全 reviewer 或架构 reviewer。
+- 高风险改动必须在 PR 中写明 residual risk、回滚方式和补充验证，而不是依赖额外人工审批才允许合并。
 
 前端重复率是当前主要热点。治理顺序固定为：
 
@@ -71,7 +67,6 @@ English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_ST
 
 建议阈值：
 
-- New Code 重复率默认低于 `5%`。
 - 核心业务链路新增或修改时必须有测试、smoke 或验收记录。
 - 业务叶子模块的低风险重复可以先记录 backlog，但不能扩散到共享包、平台壳层或系统域。
 
@@ -86,7 +81,7 @@ GitHub Actions 是主门禁，负责：
 - 文档、菜单、i18n、generated module 等项目专项检查。
 - PR 和 merge queue 的 required checks。
 
-Branch Protection 只要求 GitHub-native checks。不要把 SonarCloud 或 Codacy 的外部 check 加入 required checks。
+Branch Protection 只要求 GitHub-native checks。不要把 Codacy、OCR 或其他外部扫描器的 check 加入 required checks。
 
 ### 3.2 CodeQL
 
@@ -94,7 +89,7 @@ CodeQL 是主安全信号，负责代码级安全分析。
 
 - `pantheon-base` 上 CodeQL finding 默认按阻塞项处理，除非确认误报并留下依据。
 - `pantheon-ops` 上业务域 finding 可按风险分级处理，但触达高风险域时必须按 base 标准处理。
-- CodeQL 发现的高危问题优先于 Sonar/Codacy 的质量建议。
+- CodeQL 发现的高危问题优先于任何 AI review 评论或非阻塞质量建议。
 - CodeQL analysis job 成功不等于仓库没有 open alerts；`Security Gates` 必须记录 open alert 报告。既有 high/critical baseline 在 PR / merge queue 上先 report-only，在 protected-branch push、scheduled 或 manual 安全复核上执行。
 
 ### 3.3 Dependency、Secret、Workflow Posture
@@ -105,39 +100,20 @@ CodeQL 是主安全信号，负责代码级安全分析。
 - 非可达、开发依赖或低风险噪音可进入 backlog，但必须说明为什么不阻塞。
 - 真实 secret 泄露、可达高危依赖漏洞和危险 workflow 权限必须立即处理。
 
-### 3.4 Sonar
+### 3.4 Copilot review
 
-Sonar 保留为辅助工具，适合做：
+Copilot review 是 GitHub 原生的辅助信号，负责补充扫描器覆盖不到的事项：
 
-- 重复率趋势跟踪。
-- Security Hotspots review。
-- 复杂度和长期技术债观察。
-- 大批量 AI 生成代码之后的二次扫描。
+- 架构边界是否明显漂移
+- 业务意图是否可能被误实现
+- 是否存在低成本即可修复的可维护性或安全提示
 
-Sonar 不做：
+规则如下：
 
-- 不进入 required checks。
-- 不替代 CodeQL 的安全结论。
-- 不替代 GitHub Actions 的测试/构建结论。
-- 不因低风险 maintainability 建议阻塞常规业务开发。
-
-推荐使用时机：
-
-- 大 PR 合并前。
-- 阶段收口前。
-- 前端重复率治理批次结束后。
-- 每周或每个里程碑做一次趋势复核。
-
-### 3.5 Codacy
-
-Codacy 如果保留，只能作为第三方对比视角：
-
-- 不加入 required checks。
-- 不作为安全主信号。
-- 不要求逐条清零。
-- 仅当它指出了 GitHub/CodeQL/Sonar 未覆盖的真实风险时，才转成 PR finding。
-
-如果 Codacy 和 Sonar 对同一问题给出不同严重度，以 CodeQL 的安全判断和 Sonar 的重复率/热点趋势为准。
+- Copilot review 默认自动请求，或在仓库/账号能力允许时启用自动评审
+- Copilot review 只产生 comment，不作为 required approval
+- Copilot 不可用时，PR 仍可依赖 `Quality Gates`、`Security Gates` 和 PR 留痕继续推进
+- 高风险改动必须在 PR 中显式记录 residual risk、回滚方式和后续跟进
 
 ## 4. 例外处理
 
@@ -146,7 +122,7 @@ Codacy 如果保留，只能作为第三方对比视角：
 - PR 描述写明例外原因。
 - 标明是否影响 `pantheon-base` 底座稳定性。
 - 给出补测、重构或清理计划。
-- 高风险例外必须有第二审批人。
+- 高风险例外必须有明确 residual risk、回滚方案和 follow-up。
 
 禁止的例外：
 
@@ -171,7 +147,6 @@ PR 至少记录：
 
 - GitHub required checks 结果。
 - CodeQL 结果或链接。
-- 是否运行 Sonar；如果运行，附报告链接和结论。
-- 如果 Codacy 出现，说明它仅作为参考，是否转化为真实 finding。
+- Copilot review 是否已请求、是否自动评审、是否存在关键评论。
 - 是否触达高风险域。
-- 如果触达高风险域，第二审批人是谁。
+- 如果触达高风险域，residual risk 和回滚方式是什么。

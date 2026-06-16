@@ -1,5 +1,5 @@
 // Merge vite-plugin-istanbul JSON coverage dumps into a single lcov.info
-// for SonarCloud ingestion.
+// for downstream CI artifacts and coverage analysis.
 //
 // Usage: node scripts/merge-coverage-to-lcov.mjs
 //

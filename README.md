@@ -128,18 +128,14 @@ npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-l
 npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
 ```
 
-## 手动 Sonar
+## 代码质量与安全门禁
 
-Sonar 仅作为辅助审查工具，不参与 GitHub required checks。CodeQL 负责安全主信号，Codacy 如果出现也只看作参考仪表盘。
+当前仓库只保留 GitHub-native 合并门禁：
 
-```powershell
-Set-Content pantheon-sonarcloud.env "SONAR_HOST_URL=https://sonarcloud.io`nSONAR_TOKEN=..."
-./scripts/run-sonar.ps1
-```
+- `Quality Gates`：文档治理、前端契约、后端测试、重复率与轻量 smoke
+- `Security Gates`：secret scan、workflow posture、dependency reports、CodeQL scan 与 CodeQL alert gate
 
-`run-sonar.ps1` 会自动把 Sonar `projectVersion` 解析为当前可达的最新 foundation release tag（例如 `base-v0.8.1`）；切出新的 foundation release 后，再次扫描就会以该 release 作为新的 Sonar new-code baseline。
-
-扫描结果上传后，直接在 SonarCloud 仪表盘查看热点、重复率和新代码问题。更完整的门禁策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
+CodeQL 是唯一主安全信号。代码质量由 GitHub required checks、CodeQL、分支保护和可选的 Copilot review 共同兜底；不再依赖 Codacy 或 OCR 作为合并门禁。更完整的策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 ## 权限模型摘要
 

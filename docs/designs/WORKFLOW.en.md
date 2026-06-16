@@ -90,15 +90,15 @@ Verify:
 - UI triggers for audit logging
 - validation failures such as uniqueness and admin-protection rules
 
-### Phase 5: Quality Gates and Independent Review
+### Phase 5: Quality Gates and Automated Review
 
 This phase separates feature acceptance from code-quality protection.
 
 - functional supervision confirms whether the change meets the requirement
-- quality guardianship confirms code quality, security, regression risk, and architectural fit
-- the author or the same implementation-agent session must not be the only reviewer
-- standard changes require at least one non-author approval
-- high-risk changes require at least two non-author approvals, including a domain, security, or architecture reviewer
+- quality guardianship is handled by GitHub required checks, CodeQL, and optional Copilot review
+- Copilot review comments do not replace required checks or approvals
+- standard changes flow through `Quality Gates`, `Security Gates`, and squash auto-merge
+- high-risk changes must document residual risk, rollback steps, and added verification
 
 Default high-risk scope includes:
 
@@ -115,28 +115,16 @@ Required gate stack:
 - local validation for the touched scope
 - `Quality Gates` for docs governance, frontend contract, backend tests, the Duplication Gate result, and lightweight `smoke-sanity`
 - `Security Gates` for secret scan, workflow posture, and CodeQL
-- `Duplication Gate` as a visible PR and merge-queue report; enforce the full-repository baseline on protected-branch push, manual quality review, or after a new-code duplication gate exists
 - `Full Smoke Suite` only for manual, scheduled, or release-precheck regression runs
 - dependency-vulnerability scans on `main/release`, scheduled, or manual workflows rather than every PR
-- Sonar report review, with the report fetched automatically into evidence/artifact
-- Codacy, if present, stays informational only
-- independent reviewer sign-off
-
-Default Sonar report guidance:
-
-- `0` blocker or critical issues on new code
-- reviewed security hotspots before merge
-- new-code coverage at or above `80%`, or a documented PR exception
-- new-code duplication below `3%` for `pantheon-base`, or below `5%` for `pantheon-ops`
-- use reliability, security, and maintainability results as reference only
-- if Codacy appears, treat it as informational only
+- Copilot review status for architecture, intent, and maintainability context
+- no Codacy or OCR dependency in the merge gate
 
 Recommended GitHub protections:
 
 - branch protection for `main` and release branches
 - required status checks
-- `CODEOWNERS`
-- dismiss stale approvals
+- optional Copilot automatic review policy
 - require conversation resolution
 - enable automatic deletion of head branches so merged worktree branches do not keep accumulating
 
@@ -213,13 +201,12 @@ Recommended repository defaults:
 
 1. protect `main` and `release/*`
 2. make GitHub-native checks the only required status checks
-3. require PR reviews, with higher approval counts for high-risk paths through `CODEOWNERS`
-4. dismiss stale approvals after new commits
-5. require conversation resolution before merge
+3. enable auto-merge and prefer squash merge
+4. require conversation resolution before merge
+5. enable automatic branch deletion
 6. enable secret scanning, dependency review, and code scanning when available
 7. keep full-browser regression out of the default PR merge gate unless the repository is intentionally optimized for that cost
-8. use Sonar only as a manual auxiliary report, not as PR decoration or a merge gate
-9. keep Codacy informational only if it appears
+8. do not add Codacy or OCR as required checks
 
 ## 4. Smoke SOP for gstack on Windows
 
