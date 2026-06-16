@@ -147,7 +147,8 @@ export function usePublicSettings() {
 }
 
 export function getBrandInitial(siteName: string) {
-  return siteName.trim().charAt(0).toUpperCase() || 'P';
+  const initial = siteName.trim().charAt(0).toUpperCase();
+  return initial === '' ? 'P' : initial;
 }
 
 export function clearExplicitLanguagePreference() {

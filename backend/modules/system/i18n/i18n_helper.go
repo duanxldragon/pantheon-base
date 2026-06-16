@@ -33,6 +33,79 @@ func hasEffectiveLocaleValue(locale, key, value string) bool {
 	return ok
 }
 
+type i18nAuditRow struct {
+	ID                uint64
+	Module            string
+	Group             string
+	Key               string
+	Locale            string
+	Value             string
+	LifecycleStatus   string
+	LifecycleMarkedAt *time.Time
+	UpdatedAt         time.Time
+}
+
+type i18nAuditRowValues struct {
+	module string
+	group  string
+	key    string
+	locale string
+	value  string
+}
+
+type i18nKeyAudit struct {
+	modules map[string]struct{}
+	groups  map[string]struct{}
+	locales map[string]struct{}
+	values  map[string]struct{}
+	rows    int64
+}
+
+type i18nModuleAudit struct {
+	entryCount         int64
+	keys               map[string]struct{}
+	unusedKeys         map[string]struct{}
+	duplicateKeys      map[string]struct{}
+	missingLocaleKeys  map[string]struct{}
+	placeholderCount   int64
+	stalePlaceholders  int64
+	observingKeys      map[string]struct{}
+	archivedKeys       map[string]struct{}
+	deleteEligibleKeys map[string]struct{}
+}
+
+type i18nUnusedKeyAudit struct {
+	module            string
+	key               string
+	groups            map[string]struct{}
+	locales           map[string]struct{}
+	values            map[string]struct{}
+	lifecycleStatus   string
+	lifecycleMarkedAt *time.Time
+}
+
+type i18nMissingLocaleRow struct {
+	Module string
+	Group  string
+	Key    string
+	Locale string
+}
+
+type i18nMissingLocaleMeta struct {
+	module  string
+	group   string
+	locales map[string]struct{}
+}
+
+type i18nHydrateBuiltinLocaleRow struct {
+	ID     uint64
+	Module string
+	Group  string
+	Key    string
+	Locale string
+	Value  string
+}
+
 func (s *I18nService) ScanErrorKeys() ([]string, error) {
 	return scanI18nKeys(true)
 }
@@ -81,7 +154,37 @@ func (s *I18nService) SyncMissingKeys() (*I18nSyncResp, error) {
 }
 
 func (s *I18nService) GetAudit() (*I18nAuditResp, error) {
-	resp := &I18nAuditResp{
+	resp := newI18nAuditResp()
+	if s.db == nil {
+		return resp, nil
+	}
+
+	rows, err := s.loadI18nAuditRows()
+	if err != nil {
+		return nil, err
+	}
+
+	usedSet, err := scanUsedI18nKeySet()
+	if err != nil {
+		return nil, err
+	}
+
+	locales, err := s.ListSupportedLocales()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	keyAudits, unusedKeyAudits, moduleAudits := buildI18nAuditMaps(rows, now, resp)
+	appendDuplicateAndMissingLocaleAudits(resp, keyAudits, moduleAudits, locales)
+	s.appendUnusedKeyAudits(resp, unusedKeyAudits, moduleAudits, usedSet, now)
+	appendModuleAuditItems(resp, moduleAudits)
+	sortI18nAuditResp(resp)
+	return resp, nil
+}
+
+func newI18nAuditResp() *I18nAuditResp {
+	return &I18nAuditResp{
 		DuplicateKeys:                  make([]I18nDuplicateKeyConflict, 0),
 		UnusedKeys:                     make([]I18nUnusedKeyItem, 0),
 		StalePlaceholders:              make([]I18nStalePlaceholderItem, 0),
@@ -90,32 +193,21 @@ func (s *I18nService) GetAudit() (*I18nAuditResp, error) {
 		UnusedObservationThresholdDays: I18nUnusedObservationThresholdDays,
 		ArchivedRetentionThresholdDays: I18nArchivedRetentionThresholdDays,
 	}
-	if s.db == nil {
-		return resp, nil
-	}
+}
 
-	type row struct {
-		ID                uint64
-		Module            string
-		Group             string
-		Key               string
-		Locale            string
-		Value             string
-		LifecycleStatus   string
-		LifecycleMarkedAt *time.Time
-		UpdatedAt         time.Time
-	}
-	var rows []row
-	if err := s.db.Model(&SystemI18n{}).
+func (s *I18nService) loadI18nAuditRows() ([]i18nAuditRow, error) {
+	var rows []i18nAuditRow
+	err := s.db.Model(&SystemI18n{}).
 		Select("id, module, group_name as `group`, `key`, locale, value, lifecycle_status, lifecycle_marked_at, updated_at").
-		Order("module ASC").
-		Order("group_name ASC").
-		Order("`key` ASC").
-		Order("locale ASC").
-		Find(&rows).Error; err != nil {
-		return nil, err
-	}
+		Order(I18nSortModuleASC).
+		Order(I18nSortGroupNameASC).
+		Order(I18nSortKeyASC).
+		Order(I18nSortLocaleASC).
+		Find(&rows).Error
+	return rows, err
+}
 
+func scanUsedI18nKeySet() (map[string]struct{}, error) {
 	usedKeys, err := scanI18nKeys(true)
 	if err != nil {
 		return nil, err
@@ -124,252 +216,335 @@ func (s *I18nService) GetAudit() (*I18nAuditResp, error) {
 	for _, key := range usedKeys {
 		usedSet[key] = struct{}{}
 	}
+	return usedSet, nil
+}
 
-	locales, err := s.ListSupportedLocales()
-	if err != nil {
-		return nil, err
-	}
-
-	type keyAudit struct {
-		modules map[string]struct{}
-		groups  map[string]struct{}
-		locales map[string]struct{}
-		values  map[string]struct{}
-		rows    int64
-	}
-	type moduleAudit struct {
-		entryCount         int64
-		keys               map[string]struct{}
-		unusedKeys         map[string]struct{}
-		duplicateKeys      map[string]struct{}
-		missingLocaleKeys  map[string]struct{}
-		placeholderCount   int64
-		stalePlaceholders  int64
-		observingKeys      map[string]struct{}
-		archivedKeys       map[string]struct{}
-		deleteEligibleKeys map[string]struct{}
-	}
-
-	keyAudits := make(map[string]*keyAudit)
-	type unusedKeyAudit struct {
-		module            string
-		key               string
-		groups            map[string]struct{}
-		locales           map[string]struct{}
-		values            map[string]struct{}
-		lifecycleStatus   string
-		lifecycleMarkedAt *time.Time
-	}
-	unusedKeyAudits := make(map[string]*unusedKeyAudit)
-	moduleAudits := make(map[string]*moduleAudit)
-	now := time.Now()
+func buildI18nAuditMaps(rows []i18nAuditRow, now time.Time, resp *I18nAuditResp) (
+	map[string]*i18nKeyAudit,
+	map[string]*i18nUnusedKeyAudit,
+	map[string]*i18nModuleAudit,
+) {
+	keyAudits := make(map[string]*i18nKeyAudit)
+	unusedKeyAudits := make(map[string]*i18nUnusedKeyAudit)
+	moduleAudits := make(map[string]*i18nModuleAudit)
 	for _, item := range rows {
-		key := strings.TrimSpace(item.Key)
-		if key == "" {
-			continue
-		}
-		module := strings.TrimSpace(item.Module)
-		group := strings.TrimSpace(item.Group)
-		locale := strings.TrimSpace(item.Locale)
-		value := strings.TrimSpace(item.Value)
+		collectI18nAuditRow(item, now, resp, keyAudits, unusedKeyAudits, moduleAudits)
+	}
+	return keyAudits, unusedKeyAudits, moduleAudits
+}
 
-		keyMeta, ok := keyAudits[key]
-		if !ok {
-			keyMeta = &keyAudit{
-				modules: make(map[string]struct{}),
-				groups:  make(map[string]struct{}),
-				locales: make(map[string]struct{}),
-				values:  make(map[string]struct{}),
-			}
-			keyAudits[key] = keyMeta
-		}
-		keyMeta.rows++
-		if module != "" {
-			keyMeta.modules[module] = struct{}{}
-		}
-		if group != "" {
-			keyMeta.groups[group] = struct{}{}
-		}
-		if locale != "" {
-			keyMeta.locales[locale] = struct{}{}
-		}
-		if value != "" {
-			keyMeta.values[value] = struct{}{}
-		}
-
-		moduleMeta, ok := moduleAudits[module]
-		if !ok {
-			moduleMeta = &moduleAudit{
-				keys:               make(map[string]struct{}),
-				unusedKeys:         make(map[string]struct{}),
-				duplicateKeys:      make(map[string]struct{}),
-				missingLocaleKeys:  make(map[string]struct{}),
-				observingKeys:      make(map[string]struct{}),
-				archivedKeys:       make(map[string]struct{}),
-				deleteEligibleKeys: make(map[string]struct{}),
-			}
-			moduleAudits[module] = moduleMeta
-		}
-		moduleMeta.entryCount++
-		moduleMeta.keys[key] = struct{}{}
-		if !hasEffectiveLocaleValue(locale, key, value) {
-			moduleMeta.placeholderCount++
-			staleDays := int64(now.Sub(item.UpdatedAt).Hours() / 24)
-			if staleDays >= I18nStalePlaceholderThresholdDays {
-				moduleMeta.stalePlaceholders++
-				resp.StalePlaceholders = append(resp.StalePlaceholders, I18nStalePlaceholderItem{
-					ID:        item.ID,
-					Module:    module,
-					Group:     group,
-					Key:       key,
-					Locale:    locale,
-					Value:     value,
-					UpdatedAt: item.UpdatedAt.Format(time.RFC3339),
-					StaleDays: staleDays,
-				})
-			}
-		}
-
-		unusedCompositeKey := module + "|" + key
-		unusedMeta, exists := unusedKeyAudits[unusedCompositeKey]
-		if !exists {
-			unusedMeta = &unusedKeyAudit{
-				module:            module,
-				key:               key,
-				groups:            make(map[string]struct{}),
-				locales:           make(map[string]struct{}),
-				values:            make(map[string]struct{}),
-				lifecycleStatus:   normalizeI18nLifecycleStatus(item.LifecycleStatus),
-				lifecycleMarkedAt: item.LifecycleMarkedAt,
-			}
-			unusedKeyAudits[unusedCompositeKey] = unusedMeta
-		}
-		if group != "" {
-			unusedMeta.groups[group] = struct{}{}
-		}
-		if locale != "" {
-			unusedMeta.locales[locale] = struct{}{}
-		}
-		if value != "" {
-			unusedMeta.values[value] = struct{}{}
-		}
+func collectI18nAuditRow(
+	item i18nAuditRow,
+	now time.Time,
+	resp *I18nAuditResp,
+	keyAudits map[string]*i18nKeyAudit,
+	unusedKeyAudits map[string]*i18nUnusedKeyAudit,
+	moduleAudits map[string]*i18nModuleAudit,
+) {
+	values := normalizeI18nAuditRowValues(item)
+	if values.key == "" {
+		return
 	}
 
+	recordI18nKeyAudit(ensureI18nKeyAudit(keyAudits, values.key), values)
+	moduleMeta := ensureI18nModuleAudit(moduleAudits, values.module)
+	recordI18nModuleAudit(moduleMeta, values, item, now, resp)
+	recordI18nUnusedKeyAudit(ensureI18nUnusedKeyAudit(unusedKeyAudits, values, item), values)
+}
+
+func normalizeI18nAuditRowValues(item i18nAuditRow) i18nAuditRowValues {
+	return i18nAuditRowValues{
+		module: strings.TrimSpace(item.Module),
+		group:  strings.TrimSpace(item.Group),
+		key:    strings.TrimSpace(item.Key),
+		locale: strings.TrimSpace(item.Locale),
+		value:  strings.TrimSpace(item.Value),
+	}
+}
+
+func ensureI18nKeyAudit(audits map[string]*i18nKeyAudit, key string) *i18nKeyAudit {
+	meta, ok := audits[key]
+	if ok {
+		return meta
+	}
+	meta = &i18nKeyAudit{
+		modules: make(map[string]struct{}),
+		groups:  make(map[string]struct{}),
+		locales: make(map[string]struct{}),
+		values:  make(map[string]struct{}),
+	}
+	audits[key] = meta
+	return meta
+}
+
+func ensureI18nModuleAudit(audits map[string]*i18nModuleAudit, module string) *i18nModuleAudit {
+	meta, ok := audits[module]
+	if ok {
+		return meta
+	}
+	meta = &i18nModuleAudit{
+		keys:               make(map[string]struct{}),
+		unusedKeys:         make(map[string]struct{}),
+		duplicateKeys:      make(map[string]struct{}),
+		missingLocaleKeys:  make(map[string]struct{}),
+		observingKeys:      make(map[string]struct{}),
+		archivedKeys:       make(map[string]struct{}),
+		deleteEligibleKeys: make(map[string]struct{}),
+	}
+	audits[module] = meta
+	return meta
+}
+
+func ensureI18nUnusedKeyAudit(audits map[string]*i18nUnusedKeyAudit, values i18nAuditRowValues, item i18nAuditRow) *i18nUnusedKeyAudit {
+	compositeKey := values.module + "|" + values.key
+	meta, ok := audits[compositeKey]
+	if ok {
+		return meta
+	}
+	meta = &i18nUnusedKeyAudit{
+		module:            values.module,
+		key:               values.key,
+		groups:            make(map[string]struct{}),
+		locales:           make(map[string]struct{}),
+		values:            make(map[string]struct{}),
+		lifecycleStatus:   normalizeI18nLifecycleStatus(item.LifecycleStatus),
+		lifecycleMarkedAt: item.LifecycleMarkedAt,
+	}
+	audits[compositeKey] = meta
+	return meta
+}
+
+func recordI18nKeyAudit(meta *i18nKeyAudit, values i18nAuditRowValues) {
+	meta.rows++
+	addNonBlankI18nSetValue(meta.modules, values.module)
+	addNonBlankI18nSetValue(meta.groups, values.group)
+	addNonBlankI18nSetValue(meta.locales, values.locale)
+	addNonBlankI18nSetValue(meta.values, values.value)
+}
+
+func recordI18nModuleAudit(meta *i18nModuleAudit, values i18nAuditRowValues, item i18nAuditRow, now time.Time, resp *I18nAuditResp) {
+	meta.entryCount++
+	meta.keys[values.key] = struct{}{}
+	if hasEffectiveLocaleValue(values.locale, values.key, values.value) {
+		return
+	}
+	meta.placeholderCount++
+	appendStaleI18nPlaceholder(resp, meta, values, item, now)
+}
+
+func appendStaleI18nPlaceholder(resp *I18nAuditResp, meta *i18nModuleAudit, values i18nAuditRowValues, item i18nAuditRow, now time.Time) {
+	staleDays := int64(now.Sub(item.UpdatedAt).Hours() / 24)
+	if staleDays < I18nStalePlaceholderThresholdDays {
+		return
+	}
+	meta.stalePlaceholders++
+	resp.StalePlaceholders = append(resp.StalePlaceholders, I18nStalePlaceholderItem{
+		ID:        item.ID,
+		Module:    values.module,
+		Group:     values.group,
+		Key:       values.key,
+		Locale:    values.locale,
+		Value:     values.value,
+		UpdatedAt: item.UpdatedAt.Format(time.RFC3339),
+		StaleDays: staleDays,
+	})
+}
+
+func recordI18nUnusedKeyAudit(meta *i18nUnusedKeyAudit, values i18nAuditRowValues) {
+	addNonBlankI18nSetValue(meta.groups, values.group)
+	addNonBlankI18nSetValue(meta.locales, values.locale)
+	addNonBlankI18nSetValue(meta.values, values.value)
+}
+
+func addNonBlankI18nSetValue(values map[string]struct{}, value string) {
+	if value != "" {
+		values[value] = struct{}{}
+	}
+}
+
+func appendDuplicateAndMissingLocaleAudits(
+	resp *I18nAuditResp,
+	keyAudits map[string]*i18nKeyAudit,
+	moduleAudits map[string]*i18nModuleAudit,
+	locales []string,
+) {
 	for key, meta := range keyAudits {
-		for _, locale := range locales {
-			if _, ok := meta.locales[locale]; ok {
-				continue
-			}
-			if _, builtinOk := getBuiltinLocaleValue(locale, key); builtinOk {
-				meta.locales[locale] = struct{}{}
-			}
-		}
-		if len(meta.modules) > 1 || len(meta.groups) > 1 {
-			modules := sortedSetKeys(meta.modules)
-			for _, module := range modules {
-				moduleAudits[module].duplicateKeys[key] = struct{}{}
-			}
-			suggestions := make([]I18nRenameSuggestion, 0, len(modules))
-			for _, module := range modules {
-				suggestions = append(suggestions, I18nRenameSuggestion{
-					Module:       module,
-					SuggestedKey: suggestScopedI18nKey(module, key),
-				})
-			}
-			resp.DuplicateKeys = append(resp.DuplicateKeys, I18nDuplicateKeyConflict{
-				Key:         key,
-				Modules:     modules,
-				Groups:      sortedSetKeys(meta.groups),
-				Locales:     sortedSetKeys(meta.locales),
-				Values:      sortedSetKeys(meta.values),
-				RowCount:    meta.rows,
-				Suggestions: suggestions,
-			})
-		}
-		if int64(len(meta.locales)) < int64(len(locales)) {
-			for _, module := range sortedSetKeys(meta.modules) {
-				moduleAudits[module].missingLocaleKeys[key] = struct{}{}
-			}
-		}
+		addBuiltinLocalesToAudit(meta, key, locales)
+		appendDuplicateKeyAudit(resp, key, meta, moduleAudits)
+		markMissingLocaleAuditKeys(key, meta, moduleAudits, locales)
 	}
+}
 
-	for compositeKey, meta := range unusedKeyAudits {
-		if _, ok := usedSet[meta.key]; ok {
-			if meta.lifecycleStatus != I18nLifecycleStatusActive {
-				if err := s.resetI18nLifecycle(compositeKey, meta.module, meta.key); err == nil {
-					meta.lifecycleStatus = I18nLifecycleStatusActive
-					meta.lifecycleMarkedAt = nil
-				}
-			}
+func addBuiltinLocalesToAudit(meta *i18nKeyAudit, key string, locales []string) {
+	for _, locale := range locales {
+		if _, ok := meta.locales[locale]; ok {
 			continue
 		}
-		moduleMeta := moduleAudits[meta.module]
-		moduleMeta.unusedKeys[meta.key] = struct{}{}
-		observingDays := int64(0)
-		markedAt := ""
-		if meta.lifecycleMarkedAt != nil {
-			markedAt = meta.lifecycleMarkedAt.Format(time.RFC3339)
-			observingDays = int64(now.Sub(*meta.lifecycleMarkedAt).Hours() / 24)
+		if _, builtinOk := getBuiltinLocaleValue(locale, key); builtinOk {
+			meta.locales[locale] = struct{}{}
 		}
-		if meta.lifecycleStatus == I18nLifecycleStatusObserving {
-			moduleMeta.observingKeys[meta.key] = struct{}{}
+	}
+}
+
+func appendDuplicateKeyAudit(resp *I18nAuditResp, key string, meta *i18nKeyAudit, moduleAudits map[string]*i18nModuleAudit) {
+	if len(meta.modules) <= 1 && len(meta.groups) <= 1 {
+		return
+	}
+	modules := sortedSetKeys(meta.modules)
+	for _, module := range modules {
+		if moduleMeta, ok := moduleAudits[module]; ok {
+			moduleMeta.duplicateKeys[key] = struct{}{}
 		}
-		if meta.lifecycleStatus == I18nLifecycleStatusArchived {
-			moduleMeta.archivedKeys[meta.key] = struct{}{}
-		}
-		eligibleForDelete := meta.lifecycleStatus == I18nLifecycleStatusArchived && observingDays >= I18nArchivedRetentionThresholdDays
-		if eligibleForDelete {
-			moduleMeta.deleteEligibleKeys[meta.key] = struct{}{}
-		}
-		resp.UnusedKeys = append(resp.UnusedKeys, I18nUnusedKeyItem{
-			Key:                meta.key,
-			Module:             meta.module,
-			Modules:            []string{meta.module},
-			Groups:             sortedSetKeys(meta.groups),
-			Locales:            sortedSetKeys(meta.locales),
-			Placeholder:        allValuesMissing(meta.values),
-			LifecycleStatus:    meta.lifecycleStatus,
-			LifecycleMarkedAt:  markedAt,
-			ObservingDays:      observingDays,
-			EligibleForArchive: meta.lifecycleStatus == I18nLifecycleStatusObserving && observingDays >= I18nUnusedObservationThresholdDays,
-			EligibleForDelete:  eligibleForDelete,
+	}
+	resp.DuplicateKeys = append(resp.DuplicateKeys, I18nDuplicateKeyConflict{
+		Key:         key,
+		Modules:     modules,
+		Groups:      sortedSetKeys(meta.groups),
+		Locales:     sortedSetKeys(meta.locales),
+		Values:      sortedSetKeys(meta.values),
+		RowCount:    meta.rows,
+		Suggestions: buildI18nRenameSuggestions(modules, key),
+	})
+}
+
+func buildI18nRenameSuggestions(modules []string, key string) []I18nRenameSuggestion {
+	suggestions := make([]I18nRenameSuggestion, 0, len(modules))
+	for _, module := range modules {
+		suggestions = append(suggestions, I18nRenameSuggestion{
+			Module:       module,
+			SuggestedKey: suggestScopedI18nKey(module, key),
 		})
 	}
+	return suggestions
+}
 
+func markMissingLocaleAuditKeys(key string, meta *i18nKeyAudit, moduleAudits map[string]*i18nModuleAudit, locales []string) {
+	if int64(len(meta.locales)) >= int64(len(locales)) {
+		return
+	}
+	for _, module := range sortedSetKeys(meta.modules) {
+		if moduleMeta, ok := moduleAudits[module]; ok {
+			moduleMeta.missingLocaleKeys[key] = struct{}{}
+		}
+	}
+}
+
+func (s *I18nService) appendUnusedKeyAudits(
+	resp *I18nAuditResp,
+	unusedKeyAudits map[string]*i18nUnusedKeyAudit,
+	moduleAudits map[string]*i18nModuleAudit,
+	usedSet map[string]struct{},
+	now time.Time,
+) {
+	for compositeKey, meta := range unusedKeyAudits {
+		if _, ok := usedSet[meta.key]; ok {
+			s.resetActiveUsedI18nLifecycle(compositeKey, meta)
+			continue
+		}
+		moduleMeta, ok := moduleAudits[meta.module]
+		if !ok {
+			continue
+		}
+		appendUnusedKeyAudit(resp, moduleMeta, meta, now)
+	}
+}
+
+func (s *I18nService) resetActiveUsedI18nLifecycle(compositeKey string, meta *i18nUnusedKeyAudit) {
+	if meta.lifecycleStatus == I18nLifecycleStatusActive {
+		return
+	}
+	if err := s.resetI18nLifecycle(compositeKey, meta.module, meta.key); err == nil {
+		meta.lifecycleStatus = I18nLifecycleStatusActive
+		meta.lifecycleMarkedAt = nil
+	}
+}
+
+func appendUnusedKeyAudit(resp *I18nAuditResp, moduleMeta *i18nModuleAudit, meta *i18nUnusedKeyAudit, now time.Time) {
+	moduleMeta.unusedKeys[meta.key] = struct{}{}
+	observingDays, markedAt := i18nLifecycleAge(meta.lifecycleMarkedAt, now)
+	recordUnusedLifecycleStatus(moduleMeta, meta, observingDays)
+	resp.UnusedKeys = append(resp.UnusedKeys, buildUnusedKeyAuditItem(meta, observingDays, markedAt))
+}
+
+func i18nLifecycleAge(markedAt *time.Time, now time.Time) (int64, string) {
+	if markedAt == nil {
+		return 0, ""
+	}
+	return int64(now.Sub(*markedAt).Hours() / 24), markedAt.Format(time.RFC3339)
+}
+
+func recordUnusedLifecycleStatus(moduleMeta *i18nModuleAudit, meta *i18nUnusedKeyAudit, observingDays int64) {
+	if meta.lifecycleStatus == I18nLifecycleStatusObserving {
+		moduleMeta.observingKeys[meta.key] = struct{}{}
+	}
+	if meta.lifecycleStatus == I18nLifecycleStatusArchived {
+		moduleMeta.archivedKeys[meta.key] = struct{}{}
+	}
+	if meta.lifecycleStatus == I18nLifecycleStatusArchived && observingDays >= I18nArchivedRetentionThresholdDays {
+		moduleMeta.deleteEligibleKeys[meta.key] = struct{}{}
+	}
+}
+
+func buildUnusedKeyAuditItem(meta *i18nUnusedKeyAudit, observingDays int64, markedAt string) I18nUnusedKeyItem {
+	eligibleForDelete := meta.lifecycleStatus == I18nLifecycleStatusArchived && observingDays >= I18nArchivedRetentionThresholdDays
+	return I18nUnusedKeyItem{
+		Key:                meta.key,
+		Module:             meta.module,
+		Modules:            []string{meta.module},
+		Groups:             sortedSetKeys(meta.groups),
+		Locales:            sortedSetKeys(meta.locales),
+		Placeholder:        allValuesMissing(meta.values),
+		LifecycleStatus:    meta.lifecycleStatus,
+		LifecycleMarkedAt:  markedAt,
+		ObservingDays:      observingDays,
+		EligibleForArchive: meta.lifecycleStatus == I18nLifecycleStatusObserving && observingDays >= I18nUnusedObservationThresholdDays,
+		EligibleForDelete:  eligibleForDelete,
+	}
+}
+
+func appendModuleAuditItems(resp *I18nAuditResp, moduleAudits map[string]*i18nModuleAudit) {
 	moduleNames := make([]string, 0, len(moduleAudits))
 	for module := range moduleAudits {
 		moduleNames = append(moduleNames, module)
 	}
 	sort.Strings(moduleNames)
 	for _, module := range moduleNames {
-		item := moduleAudits[module]
-		resp.Modules = append(resp.Modules, I18nModuleAuditItem{
-			Module:                 module,
-			EntryCount:             item.entryCount,
-			KeyCount:               int64(len(item.keys)),
-			UnusedKeyCount:         int64(len(item.unusedKeys)),
-			DuplicateKeyCount:      int64(len(item.duplicateKeys)),
-			MissingLocaleCount:     int64(len(item.missingLocaleKeys)),
-			PlaceholderCount:       item.placeholderCount,
-			StalePlaceholderCount:  item.stalePlaceholders,
-			ObservingKeyCount:      int64(len(item.observingKeys)),
-			ArchivedKeyCount:       int64(len(item.archivedKeys)),
-			DeleteEligibleKeyCount: int64(len(item.deleteEligibleKeys)),
-		})
+		resp.Modules = append(resp.Modules, buildModuleAuditItem(module, moduleAudits[module]))
 	}
+}
 
+func buildModuleAuditItem(module string, item *i18nModuleAudit) I18nModuleAuditItem {
+	return I18nModuleAuditItem{
+		Module:                 module,
+		EntryCount:             item.entryCount,
+		KeyCount:               int64(len(item.keys)),
+		UnusedKeyCount:         int64(len(item.unusedKeys)),
+		DuplicateKeyCount:      int64(len(item.duplicateKeys)),
+		MissingLocaleCount:     int64(len(item.missingLocaleKeys)),
+		PlaceholderCount:       item.placeholderCount,
+		StalePlaceholderCount:  item.stalePlaceholders,
+		ObservingKeyCount:      int64(len(item.observingKeys)),
+		ArchivedKeyCount:       int64(len(item.archivedKeys)),
+		DeleteEligibleKeyCount: int64(len(item.deleteEligibleKeys)),
+	}
+}
+
+func sortI18nAuditResp(resp *I18nAuditResp) {
 	sort.Slice(resp.DuplicateKeys, func(i, j int) bool { return resp.DuplicateKeys[i].Key < resp.DuplicateKeys[j].Key })
 	sort.Slice(resp.UnusedKeys, func(i, j int) bool { return resp.UnusedKeys[i].Key < resp.UnusedKeys[j].Key })
 	sort.Slice(resp.StalePlaceholders, func(i, j int) bool {
-		if resp.StalePlaceholders[i].StaleDays == resp.StalePlaceholders[j].StaleDays {
-			if resp.StalePlaceholders[i].Key == resp.StalePlaceholders[j].Key {
-				return resp.StalePlaceholders[i].Locale < resp.StalePlaceholders[j].Locale
-			}
-			return resp.StalePlaceholders[i].Key < resp.StalePlaceholders[j].Key
-		}
-		return resp.StalePlaceholders[i].StaleDays > resp.StalePlaceholders[j].StaleDays
+		return stalePlaceholderLess(resp.StalePlaceholders[i], resp.StalePlaceholders[j])
 	})
-	return resp, nil
+}
+
+func stalePlaceholderLess(left I18nStalePlaceholderItem, right I18nStalePlaceholderItem) bool {
+	if left.StaleDays != right.StaleDays {
+		return left.StaleDays > right.StaleDays
+	}
+	if left.Key != right.Key {
+		return left.Key < right.Key
+	}
+	return left.Locale < right.Locale
 }
 
 func (s *I18nService) CleanupUnusedKeys(module string) (*I18nCleanupUnusedResp, error) {
@@ -399,7 +574,7 @@ func (s *I18nService) CleanupUnusedKeys(module string) (*I18nCleanupUnusedResp, 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		query := tx.Where("`key` IN ?", keys)
 		if resp.Module != "" {
-			query = query.Where("module = ?", resp.Module)
+			query = query.Where(I18nWhereModule, resp.Module)
 		}
 		deleteResult := query.Delete(&SystemI18n{})
 		if deleteResult.Error != nil {
@@ -620,7 +795,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 
 	var sourceRows []SystemI18n
-	if err := s.db.Where("module = ? AND `key` = ?", module, oldKey).Order("locale ASC").Find(&sourceRows).Error; err != nil {
+	if err := s.db.Where("module = ? AND `key` = ?", module, oldKey).Order(I18nSortLocaleASC).Find(&sourceRows).Error; err != nil {
 		return nil, err
 	}
 	resp.AffectedRows = int64(len(sourceRows))
@@ -632,7 +807,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 
 	var targetRows []SystemI18n
-	if err := s.db.Where("module = ? AND `key` = ?", module, newKey).Order("locale ASC").Find(&targetRows).Error; err != nil {
+	if err := s.db.Where("module = ? AND `key` = ?", module, newKey).Order(I18nSortLocaleASC).Find(&targetRows).Error; err != nil {
 		return nil, err
 	}
 	resp.ExistingTargetRows = int64(len(targetRows))
@@ -696,7 +871,7 @@ func (s *I18nService) ListSupportedLocales() ([]string, error) {
 	}
 
 	var rows []string
-	if err := s.db.Model(&SystemI18n{}).Distinct("locale").Order("locale ASC").Pluck("locale", &rows).Error; err != nil {
+	if err := s.db.Model(&SystemI18n{}).Distinct("locale").Order(I18nSortLocaleASC).Pluck("locale", &rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -821,83 +996,113 @@ func (s *I18nService) ListMissingLocales(module string) (*I18nMissingLocaleResp,
 		return resp, nil
 	}
 
-	type row struct {
-		Module string
-		Group  string
-		Key    string
-		Locale string
-	}
-	var rows []row
-	query := s.db.Model(&SystemI18n{})
-	module = strings.TrimSpace(module)
-	if module != "" {
-		query = query.Where("module = ?", module)
-	}
-	if err := query.
-		Select("module, group_name as `group`, `key`, locale").
-		Order("module ASC").
-		Order("group_name ASC").
-		Order("`key` ASC").
-		Find(&rows).Error; err != nil {
+	rows, err := s.loadMissingLocaleRows(module)
+	if err != nil {
 		return nil, err
 	}
 
-	type keyMeta struct {
-		module  string
-		group   string
-		locales map[string]struct{}
+	resp.Items = buildMissingLocaleItems(rows, locales)
+	resp.Total = int64(len(resp.Items))
+	return resp, nil
+}
+
+func (s *I18nService) loadMissingLocaleRows(module string) ([]i18nMissingLocaleRow, error) {
+	var rows []i18nMissingLocaleRow
+	query := s.db.Model(&SystemI18n{})
+	module = strings.TrimSpace(module)
+	if module != "" {
+		query = query.Where(I18nWhereModule, module)
 	}
-	keyMap := make(map[string]*keyMeta, len(rows))
+	err := query.
+		Select("module, group_name as `group`, `key`, locale").
+		Order(I18nSortModuleASC).
+		Order(I18nSortGroupNameASC).
+		Order(I18nSortKeyASC).
+		Find(&rows).Error
+	return rows, err
+}
+
+func buildMissingLocaleItems(rows []i18nMissingLocaleRow, locales []string) []I18nMissingLocaleItem {
+	keyMap := buildMissingLocaleKeyMap(rows, locales)
+	keys := sortedMissingLocaleKeys(keyMap)
+	items := make([]I18nMissingLocaleItem, 0, len(keys))
+	for _, key := range keys {
+		if item, ok := buildMissingLocaleItem(key, keyMap[key], locales); ok {
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
+func buildMissingLocaleKeyMap(rows []i18nMissingLocaleRow, locales []string) map[string]*i18nMissingLocaleMeta {
+	keyMap := make(map[string]*i18nMissingLocaleMeta, len(rows))
 	for _, item := range rows {
 		key := strings.TrimSpace(item.Key)
 		if key == "" {
 			continue
 		}
-		meta, ok := keyMap[key]
-		if !ok {
-			meta = &keyMeta{
-				module:  strings.TrimSpace(item.Module),
-				group:   strings.TrimSpace(item.Group),
-				locales: make(map[string]struct{}, len(locales)),
-			}
-			keyMap[key] = meta
-		}
+		meta := ensureMissingLocaleMeta(keyMap, item, key, locales)
 		locale := strings.TrimSpace(item.Locale)
 		if locale != "" {
 			meta.locales[locale] = struct{}{}
 		}
 	}
+	return keyMap
+}
 
+func ensureMissingLocaleMeta(
+	keyMap map[string]*i18nMissingLocaleMeta,
+	item i18nMissingLocaleRow,
+	key string,
+	locales []string,
+) *i18nMissingLocaleMeta {
+	meta, ok := keyMap[key]
+	if ok {
+		return meta
+	}
+	meta = &i18nMissingLocaleMeta{
+		module:  strings.TrimSpace(item.Module),
+		group:   strings.TrimSpace(item.Group),
+		locales: make(map[string]struct{}, len(locales)),
+	}
+	keyMap[key] = meta
+	return meta
+}
+
+func sortedMissingLocaleKeys(keyMap map[string]*i18nMissingLocaleMeta) []string {
 	keys := make([]string, 0, len(keyMap))
 	for key := range keyMap {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+	return keys
+}
 
-	for _, key := range keys {
-		meta := keyMap[key]
-		missing := make([]string, 0, len(locales))
-		for _, locale := range locales {
-			if _, ok := meta.locales[locale]; !ok {
-				if _, builtinOk := getBuiltinLocaleValue(locale, key); builtinOk {
-					continue
-				}
-				missing = append(missing, locale)
-			}
-		}
-		if len(missing) == 0 {
+func buildMissingLocaleItem(key string, meta *i18nMissingLocaleMeta, locales []string) (I18nMissingLocaleItem, bool) {
+	missing := collectMissingLocales(key, meta.locales, locales)
+	if len(missing) == 0 {
+		return I18nMissingLocaleItem{}, false
+	}
+	return I18nMissingLocaleItem{
+		Module:         meta.module,
+		Group:          meta.group,
+		Key:            key,
+		MissingLocales: missing,
+	}, true
+}
+
+func collectMissingLocales(key string, presentLocales map[string]struct{}, locales []string) []string {
+	missing := make([]string, 0, len(locales))
+	for _, locale := range locales {
+		if _, ok := presentLocales[locale]; ok {
 			continue
 		}
-		resp.Items = append(resp.Items, I18nMissingLocaleItem{
-			Module:         meta.module,
-			Group:          meta.group,
-			Key:            key,
-			MissingLocales: missing,
-		})
+		if _, builtinOk := getBuiltinLocaleValue(locale, key); builtinOk {
+			continue
+		}
+		missing = append(missing, locale)
 	}
-
-	resp.Total = int64(len(resp.Items))
-	return resp, nil
+	return missing
 }
 
 func (s *I18nService) FillMissingLocales(module string) (*I18nFillMissingLocaleResp, error) {
@@ -963,20 +1168,8 @@ func (s *I18nService) HydrateBuiltinLocales(module string) (*I18nHydrateBuiltinR
 		return resp, nil
 	}
 
-	type row struct {
-		ID     uint64
-		Module string
-		Group  string
-		Key    string
-		Locale string
-		Value  string
-	}
-	var rows []row
-	query := s.db.Model(&SystemI18n{}).Select("id, module, group_name as `group`, `key`, locale, value")
-	if module != "" {
-		query = query.Where("module = ?", module)
-	}
-	if err := query.Order("module ASC").Order("group_name ASC").Order("`key` ASC").Order("locale ASC").Find(&rows).Error; err != nil {
+	rows, err := s.loadHydrateBuiltinLocaleRows(module)
+	if err != nil {
 		return nil, err
 	}
 
@@ -988,43 +1181,7 @@ func (s *I18nService) HydrateBuiltinLocales(module string) (*I18nHydrateBuiltinR
 	localeSet := make(map[string]struct{})
 	keySet := make(map[string]struct{})
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		for _, item := range rows {
-			if hasStoredLocaleValue(item.Value) {
-				continue
-			}
-			builtinValue, ok := getBuiltinLocaleValue(item.Locale, item.Key)
-			if !ok {
-				continue
-			}
-			if err := tx.Model(&SystemI18n{}).Where("id = ?", item.ID).Update("value", builtinValue).Error; err != nil {
-				return err
-			}
-			resp.Updated++
-			localeSet[item.Locale] = struct{}{}
-			keySet[item.Key] = struct{}{}
-		}
-
-		for _, item := range missing.Items {
-			for _, locale := range item.MissingLocales {
-				builtinValue, ok := getBuiltinLocaleValue(locale, item.Key)
-				if !ok {
-					continue
-				}
-				if err := tx.Create(&SystemI18n{
-					Module: item.Module,
-					Group:  item.Group,
-					Key:    item.Key,
-					Locale: locale,
-					Value:  builtinValue,
-				}).Error; err != nil {
-					return err
-				}
-				resp.Created++
-				localeSet[locale] = struct{}{}
-				keySet[item.Key] = struct{}{}
-			}
-		}
-		return nil
+		return hydrateBuiltinLocaleRows(tx, rows, missing.Items, resp, localeSet, keySet)
 	}); err != nil {
 		return nil, err
 	}
@@ -1038,6 +1195,103 @@ func (s *I18nService) HydrateBuiltinLocales(module string) (*I18nHydrateBuiltinR
 	sort.Strings(resp.Locales)
 	sort.Strings(resp.Keys)
 	return resp, s.ReloadCache()
+}
+
+func (s *I18nService) loadHydrateBuiltinLocaleRows(module string) ([]i18nHydrateBuiltinLocaleRow, error) {
+	var rows []i18nHydrateBuiltinLocaleRow
+	query := s.db.Model(&SystemI18n{}).Select("id, module, group_name as `group`, `key`, locale, value")
+	if module != "" {
+		query = query.Where(I18nWhereModule, module)
+	}
+	err := query.
+		Order(I18nSortModuleASC).
+		Order(I18nSortGroupNameASC).
+		Order(I18nSortKeyASC).
+		Order(I18nSortLocaleASC).
+		Find(&rows).Error
+	return rows, err
+}
+
+func hydrateBuiltinLocaleRows(
+	tx *gorm.DB,
+	rows []i18nHydrateBuiltinLocaleRow,
+	missingItems []I18nMissingLocaleItem,
+	resp *I18nHydrateBuiltinResp,
+	localeSet map[string]struct{},
+	keySet map[string]struct{},
+) error {
+	if err := updateStoredBuiltinLocaleRows(tx, rows, resp, localeSet, keySet); err != nil {
+		return err
+	}
+	return createMissingBuiltinLocaleRows(tx, missingItems, resp, localeSet, keySet)
+}
+
+func updateStoredBuiltinLocaleRows(
+	tx *gorm.DB,
+	rows []i18nHydrateBuiltinLocaleRow,
+	resp *I18nHydrateBuiltinResp,
+	localeSet map[string]struct{},
+	keySet map[string]struct{},
+) error {
+	for _, item := range rows {
+		if hasStoredLocaleValue(item.Value) {
+			continue
+		}
+		builtinValue, ok := getBuiltinLocaleValue(item.Locale, item.Key)
+		if !ok {
+			continue
+		}
+		if err := tx.Model(&SystemI18n{}).Where("id = ?", item.ID).Update("value", builtinValue).Error; err != nil {
+			return err
+		}
+		resp.Updated++
+		localeSet[item.Locale] = struct{}{}
+		keySet[item.Key] = struct{}{}
+	}
+	return nil
+}
+
+func createMissingBuiltinLocaleRows(
+	tx *gorm.DB,
+	missingItems []I18nMissingLocaleItem,
+	resp *I18nHydrateBuiltinResp,
+	localeSet map[string]struct{},
+	keySet map[string]struct{},
+) error {
+	for _, item := range missingItems {
+		if err := createMissingBuiltinLocaleItemRows(tx, item, resp, localeSet, keySet); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createMissingBuiltinLocaleItemRows(
+	tx *gorm.DB,
+	item I18nMissingLocaleItem,
+	resp *I18nHydrateBuiltinResp,
+	localeSet map[string]struct{},
+	keySet map[string]struct{},
+) error {
+	for _, locale := range item.MissingLocales {
+		builtinValue, ok := getBuiltinLocaleValue(locale, item.Key)
+		if !ok {
+			continue
+		}
+		if err := tx.Create(&SystemI18n{
+			Module: item.Module,
+			Group:  item.Group,
+			Key:    item.Key,
+			Locale: locale,
+			Value:  builtinValue,
+		}).Error; err != nil {
+			return err
+		}
+		resp.Created++
+		localeSet[locale] = struct{}{}
+		keySet[item.Key] = struct{}{}
+	}
+	return nil
 }
 
 func resolveI18nScanRoots() []string {

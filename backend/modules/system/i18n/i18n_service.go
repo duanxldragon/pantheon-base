@@ -95,7 +95,7 @@ func (s *I18nService) List(query *I18nQuery) (*I18nPageResp, error) {
 
 	db := s.db.Model(&SystemI18n{})
 	if query.Module != "" {
-		db = db.Where("module = ?", query.Module)
+		db = db.Where(I18nWhereModule, query.Module)
 	}
 	if query.Group != "" {
 		db = db.Where("group_name = ?", query.Group)
@@ -127,7 +127,7 @@ func (s *I18nService) List(query *I18nQuery) (*I18nPageResp, error) {
 	if strings.EqualFold(query.SortOrder, "desc") {
 		orderDirection = "DESC"
 	}
-	err := db.Order(fmt.Sprintf("%s %s", orderField, orderDirection)).Order("module ASC").Order("`key` ASC").
+	err := db.Order(fmt.Sprintf("%s %s", orderField, orderDirection)).Order(I18nSortModuleASC).Order(I18nSortKeyASC).
 		Offset((query.Page - 1) * query.PageSize).
 		Limit(query.PageSize).
 		Find(&items).Error
