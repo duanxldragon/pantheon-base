@@ -178,10 +178,10 @@ PR required:
 
 辅助或周期性：
 
-- `SonarCloud Auxiliary Scan`
 - `Full Smoke Suite`
+- `Deep Dependency Audit`
 
-Sonar 是趋势和债务治理工具，不是唯一质量目标。`SonarCloud Auxiliary Scan` 在扫描完成后会自动抓取最新报告并落到 evidence / artifact，dispatcher 继续根据这份报告推进下一轮修复，不再手工回 SonarCloud 页面确认。Full Smoke 是深度信号，不应替代本轮 focused evidence。
+CodeQL 在 `Security Gates` 中承担主安全信号；质量和设计风险则通过 Copilot review 状态与 PR residual-risk 留痕补齐。`Full Smoke Suite` 是深度信号，不应替代本轮 focused evidence。
 
 ## 6. 自动调度时的停点
 

@@ -53,7 +53,7 @@ Use `acpx` as the deterministic dispatch surface for named agents, sessions, and
 
 Use `omc` for discovery, capability routing, and future orchestration. Do not rely on `omc -q` for non-trivial or high-risk tasks unless its routing is explicitly configured to keep Claude as planner/reviewer and Codex as executor.
 
-GitHub Actions are mechanical gates. `Quality Gates` and `Security Gates` are PR-required signals. `SonarCloud Auxiliary Scan` automatically fetches the latest report into evidence/artifact after the scan so the dispatcher can keep the loop moving without manual SonarCloud navigation. `Full Smoke Suite` remains advisory, scheduled, or manual deep signal.
+GitHub Actions are mechanical gates. `Quality Gates` and `Security Gates` are PR-required signals. CodeQL is the primary security signal in `Security Gates`, while Copilot review status plus PR residual-risk notes cover architecture, intent, and maintainability gaps that scanners do not prove. `Full Smoke Suite` remains advisory, scheduled, or manual deep signal.
 
 Worktrees are for local implementation and validation, not as long-lived delivery artifacts. The fuller worktree -> push -> PR -> merge -> cleanup loop lives in `docs/designs/WORKFLOW.md`.
 

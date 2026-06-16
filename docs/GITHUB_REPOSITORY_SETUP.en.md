@@ -25,17 +25,11 @@ Open `Settings -> Branches -> Branch protection rules` and add rules for:
 Enable:
 
 - Require a pull request before merging
-- Require approvals
-- Require review from Code Owners
-- Dismiss stale pull request approvals when new commits are pushed
 - Require conversation resolution before merging
 - Restrict pushes that create matching branches
+- Allow auto-merge
+- Prefer squash merge as the standard merge method
 - Automatically delete head branches after merge so merged worktree branches do not linger on GitHub
-
-Recommended approval policy:
-
-- normal changes: at least 1 non-author approval
-- high-risk changes: at least 2 approvals, one from a domain, security, or architecture reviewer
 
 ### 1.2 Required status checks
 
@@ -43,37 +37,33 @@ Add these checks to the required checks list:
 
 - `Quality Gates`
 - `Security Gates`
-- `Duplication Gate`
 
-Do not add `Full Smoke Suite` or `Sonar` to required checks. `Quality Gates` must stay fast and deterministic for PR feedback, while `Full Smoke Suite` remains manual or release-precheck only. `Duplication Gate` is required as a visible GitHub-native signal; PR and merge queue runs are report-only for the current full-repository baseline, while protected-branch push and manual quality review enforce the repository threshold until a new-code duplication gate exists. Keep Sonar and Codacy out of required checks. See [code quality and security strategy](./designs/QUALITY_AND_SECURITY_STRATEGY.md) for the gating model and thresholds.
+Do not add `Full Smoke Suite`, Codacy, OCR, or other external scanners to required checks. `Quality Gates` must stay fast and deterministic for PR feedback, while `Security Gates` is the only required GitHub-native security aggregate and already includes CodeQL.
 
-### 1.3 Code owners
+### 1.3 Copilot review
 
-Keep `CODEOWNERS` enabled so the owner is always requested for review.
+If your account or organization supports GitHub Copilot code review, enable automatic review or let the repository workflow request `@copilot` for each PR.
 
 ### 1.4 Secrets
 
 Configure only the repository secrets required by active GitHub Actions workflows.
 
-Do not add Sonar secrets to the repository. Sonar is an auxiliary review tool, not part of the CI gate.
+Do not add inactive scanner secrets to the repository. The active workflow stack is GitHub-native plus CodeQL.
 
-### 1.5 Local Sonar validation
+### 1.5 Review gate evidence
 
-Use Sonar only as a local auxiliary review step:
+Require the PR template to record:
 
-1. create `pantheon-sonarcloud.env` in the repo root
-2. keep it ignored by Git
-3. run `npm run run:sonar-remediation -- --group local-sonar --execute`
-4. install SonarScanner CLI locally before running the scan phase
-5. review the generated `sonarcloud-report.md` / `sonarcloud-report.json` in `.harness/evidence/<task-id>/logs/` or the uploaded artifact, not the SonarCloud UI
-6. `scripts/run-sonar.ps1` remains the lower-level scan-only entry point if you need to debug upload behavior
-7. if Codacy appears in GitHub, treat it as informational only
+1. `Quality Gates` result
+2. `Security Gates` result
+3. CodeQL result or alert link
+4. Copilot review status
+5. auto-merge status
+6. residual-risk / rollback note for high-risk changes
 
 ## 2. Ops repository
 
-Repeat the same branch-protection, required-check, and CODEOWNERS steps in `pantheon-ops`.
-
-Keep Sonar in the ops repository as a local manual tool only.
+Repeat the same branch-protection, required-check, and Copilot/auto-merge steps in `pantheon-ops`.
 
 The ops repository should keep the same review discipline as base, but only own business-specific drift and business-domain changes.
 
@@ -81,9 +71,9 @@ The ops repository should keep the same review discipline as base, but only own 
 
 After configuration, verify:
 
-- PRs request the code owner automatically
 - branch protection blocks direct push to protected branches
 - required checks show only GitHub-native merge gates
-- stale approvals are dismissed after new commits
+- PRs enable auto-merge after the gate workflow runs
+- Copilot review is requested automatically when available
 - merged PR head branches are deleted automatically
-- the PR template records review ownership and GitHub checks status
+- the PR template records gate status, Copilot status, and rollback notes

@@ -19,7 +19,7 @@ Specific to `pantheon-base`:
 - system module contracts
 - auth, IAM, config, org, i18n, generator, and dynamic module quality profiles
 - GitHub Actions topology
-- SonarCloud project scope
+- GitHub gate and review-evidence scope
 - Playwright smoke route selection
 - base-to-ops inheritance constraints
 
@@ -36,7 +36,7 @@ Every non-trivial task should choose one primary profile. Multiple profiles are 
 | `i18n` | locale resources, hardcoded text, generated i18n scope | `docs/designs/I18N_MODULE_DESIGN.md`, frontend i18n scripts | i18n hardcode check, generated-scope check, relevant backend tests | locale key/resource summary |
 | `ui-runtime` | user-facing pages, layout, forms, tables, dashboards | UI design docs and acceptance docs | frontend lint/build, focused Playwright smoke, rendered evidence when visual behavior changed | screenshot or explicit no-UI-change statement |
 | `generator` | low-code generator, dynamic modules, scaffolded modules, generated feature ledger | generator and dynamic module design docs | generator contract tests, feature-ledger drift checker, generated-module cleanup check, smoke if runtime module path changed | generated diff, ledger snapshot status, cleanup result |
-| `ci-workflow` | GitHub Actions, Sonar, security, duplication, smoke topology | `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`, `docs/GITHUB_GOVERNANCE_CHECKLIST.md` | workflow posture, YAML inspection, affected workflow run when available | workflow intent and gate classification |
+| `ci-workflow` | GitHub Actions, CodeQL, duplication, review evidence, smoke topology | `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`, `docs/GITHUB_GOVERNANCE_CHECKLIST.md` | workflow posture, YAML inspection, affected workflow run when available | workflow intent and gate classification |
 
 ## 3. Required Task Packet Addendum
 
@@ -81,19 +81,16 @@ PR required:
 
 Auxiliary or scheduled:
 
-- SonarCloud auxiliary scan
 - full smoke suite
 - deep dependency audit
 - broad ecosystem drift checks
 
-SonarCloud auxiliary scans should also publish the fetched report into repo evidence or an upload artifact so the next remediation round can continue from the captured report instead of a manual SonarCloud browse.
-
 Rules:
 
-- Sonar is a trend and debt dashboard, not the only merge gate.
 - Full smoke is valuable but should not block every ordinary PR.
 - Duplication must be visible in PR and merge queue checks, but the current full-repository baseline is enforced on protected-branch push or manual quality review until a new-code duplication gate exists.
 - CodeQL should have one primary execution path in the security workflow.
+- Non-trivial PRs should carry Copilot review status plus residual-risk notes when automation cannot fully prove architecture, intent, or maintainability.
 - A slow or flaky sensor must either be narrowed, moved later, or made advisory until it is reliable.
 
 ## 5. Ratchet Operating Rule
@@ -116,8 +113,8 @@ Track weekly:
 - AI first-pass local gate success rate
 - repeated failure recurrence rate
 - PR quality gate P50 and P95 duration
-- manual remediation hours spent on CI/Sonar/security issues
-- new-code Sonar issues
+- manual remediation hours spent on CI/security/review issues
+- new-code CodeQL alerts or review-gate exceptions
 - new-code duplication
 - new-code backend coverage for included modules
 - sensor false positive and false negative counts

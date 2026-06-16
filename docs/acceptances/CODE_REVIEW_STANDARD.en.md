@@ -29,7 +29,7 @@ The goal is to catch drift in:
 - `[PR]`: required before merge or PR submission
 - `[Phase]`: deeper review at the end of a roadmap phase
 
-## Role Separation and Independent Review
+## Role Separation and Automated Review
 
 Pantheon review distinguishes:
 
@@ -37,31 +37,21 @@ Pantheon review distinguishes:
 - code-quality guardianship
 - implementation ownership
 
-The author, or the same implementation-agent session, must not be the only reviewer.
+The author, or the same implementation-agent session, must not bypass required checks and PR traceability.
 
-- standard changes: at least one non-author approval
-- high-risk changes: at least two non-author approvals, including a domain, security, or architecture reviewer
+- standard changes rely on GitHub required checks, CodeQL, Copilot review, and squash auto-merge
+- high-risk changes must record residual risk, rollback notes, and added verification
 
 High-risk scope includes `system/auth`, `system/iam`, `system/config`, permission and audit flows, shared `pkg/*`, generator or dynamic-module flows, and CI, deploy, secret, or credential changes.
 
 ## Default Gate Stack
 
-Pantheon uses five layers by default. See [code quality and security strategy](../designs/QUALITY_AND_SECURITY_STRATEGY.md) for the full model.
+Pantheon uses four layers by default. See [code quality and security strategy](../designs/QUALITY_AND_SECURITY_STRATEGY.md) for the full model.
 
 1. local validation
 2. GitHub required checks
 3. CodeQL security signal
-4. Sonar report review, with the report fetched automatically into evidence/artifact
-5. independent reviewer sign-off
-
-Minimum Sonar report guidance:
-
-- zero blocker or critical issues on new code
-- reviewed security hotspots before merge
-- new-code coverage at or above `80%`, unless the PR records a justified exception
-- new-code duplication below `3%` for `pantheon-base`, or below `5%` for `pantheon-ops`
-- use reliability, security, and maintainability results as reference only
-- if Codacy appears, treat it as informational only
+4. Copilot review status
 
 ## Mandatory Review Entry
 
@@ -94,6 +84,5 @@ The Chinese source remains the authoritative detailed standard, including requir
 
 At minimum, the detailed review record should also confirm:
 
-- any Sonar report artifact/evidence, if one was produced
 - GitHub required-check status
-- independent reviewer evidence
+- Copilot review status and residual-risk notes
