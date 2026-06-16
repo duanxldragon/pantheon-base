@@ -68,7 +68,7 @@ function buildPublicSettingsState(settings: Record<string, string>): PublicSetti
     defaultLanguage: settings['i18n.default_language']?.trim() ?? 'zh-CN',
     defaultTheme: settings['ui.default_theme']?.trim() ?? 'indigo',
     enableTabBar: settings['ui.enable_tab_bar']?.trim() !== 'false',
-    sessionIdleMinutes: Number(settings['login.session_idle_minutes']?.trim() ?? '30') || 30,
+    sessionIdleMinutes: Number(settings['login.session_idle_minutes']?.trim() ?? '30'),
   };
 }
 
