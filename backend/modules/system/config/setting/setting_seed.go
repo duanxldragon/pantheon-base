@@ -16,6 +16,9 @@ import (
 )
 
 const settingModuleAuth = "system.auth"
+const settingErrInvalidJSON = "setting.value.invalid_json"
+const settingErrInvalidOption = "setting.value.invalid_option"
+const settingValueRetentionDaysDefault = "[1,7,30]"
 
 type defaultSettingSeed struct {
 	SettingKey   string `yaml:"settingKey"`
@@ -50,9 +53,9 @@ var defaultSettingSeeds = []defaultSettingSeed{
 	{SettingKey: "login.sso_enabled", SettingValue: "false", ValueType: "boolean", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.sso_enabled"},
 	{SettingKey: "login.session_idle_minutes", SettingValue: "30", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 1, Remark: "system.setting.remark.login.session_idle_minutes"},
 	{SettingKey: "login.max_active_sessions_per_user", SettingValue: "1", ValueType: "number", GroupKey: "login", Module: "system", IsPublic: 0, Remark: "system.setting.remark.login.max_active_sessions_per_user"},
-	{SettingKey: "audit.login_log_retention_options", SettingValue: "[1,7,30]", ValueType: "json", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.login_log_retention_options"},
-	{SettingKey: "audit.operation_log_retention_options", SettingValue: "[1,7,30]", ValueType: "json", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.operation_log_retention_options"},
-	{SettingKey: "audit.session_cleanup_retention_options", SettingValue: "[1,7,30]", ValueType: "json", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.session_cleanup_retention_options"},
+	{SettingKey: "audit.login_log_retention_options", SettingValue: settingValueRetentionDaysDefault, ValueType: "json", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.login_log_retention_options"},
+	{SettingKey: "audit.operation_log_retention_options", SettingValue: settingValueRetentionDaysDefault, ValueType: "json", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.operation_log_retention_options"},
+	{SettingKey: "audit.session_cleanup_retention_options", SettingValue: settingValueRetentionDaysDefault, ValueType: "json", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.session_cleanup_retention_options"},
 	{SettingKey: "audit.login_log_retention_days", SettingValue: "90", ValueType: "number", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.login_log_retention_days"},
 	{SettingKey: "audit.operation_log_retention_days", SettingValue: "180", ValueType: "number", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.operation_log_retention_days"},
 	{SettingKey: "audit.session_retention_days", SettingValue: "90", ValueType: "number", GroupKey: "audit", Module: "system", IsPublic: 0, Remark: "system.setting.remark.audit.session_retention_days"},
@@ -322,7 +325,7 @@ func validateJSONSettingValue(settingKey, normalizedValue string) (string, error
 func parseSettingJSON(raw string) (interface{}, error) {
 	var target interface{}
 	if err := json.Unmarshal([]byte(raw), &target); err != nil {
-		return nil, errors.New("setting.value.invalid_json")
+		return nil, errors.New(settingErrInvalidJSON)
 	}
 	return target, nil
 }
@@ -332,7 +335,7 @@ func validateSettingJSONShape(settingKey string, target interface{}) error {
 		return nil
 	}
 	if _, ok := target.([]interface{}); !ok {
-		return errors.New("setting.value.invalid_json")
+		return errors.New(settingErrInvalidJSON)
 	}
 	return nil
 }
@@ -356,7 +359,7 @@ var settingNormalizers = map[string]SettingNormalizer{
 			trimmed = "enterprise"
 		}
 		if _, ok := allowedAppModeValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingErrInvalidOption)
 		}
 		return trimmed, nil
 	},
@@ -369,7 +372,7 @@ var settingNormalizers = map[string]SettingNormalizer{
 			trimmed = "local"
 		}
 		if _, ok := allowedStorageDriverValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingErrInvalidOption)
 		}
 		return trimmed, nil
 	},
@@ -382,7 +385,7 @@ var settingNormalizers = map[string]SettingNormalizer{
 			trimmed = "indigo"
 		}
 		if _, ok := allowedThemeValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingErrInvalidOption)
 		}
 		return trimmed, nil
 	},
@@ -392,7 +395,7 @@ var settingNormalizers = map[string]SettingNormalizer{
 			trimmed = "zh-CN"
 		}
 		if _, ok := allowedLanguageValues[trimmed]; !ok {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingErrInvalidOption)
 		}
 		return trimmed, nil
 	},
@@ -414,17 +417,17 @@ func normalizeSettingValue(settingKey, value string) (string, error) {
 func normalizeAuditRetentionOptions(raw string) (string, error) {
 	var values []int
 	if err := json.Unmarshal([]byte(strings.TrimSpace(raw)), &values); err != nil {
-		return "", errors.New("setting.value.invalid_json")
+		return "", errors.New(settingErrInvalidJSON)
 	}
 	if len(values) == 0 {
-		return "", errors.New("setting.value.invalid_option")
+		return "", errors.New(settingErrInvalidOption)
 	}
 
 	seen := make(map[int]struct{}, len(values))
 	normalized := make([]int, 0, len(values))
 	for _, value := range values {
 		if value <= 0 || value > 365 {
-			return "", errors.New("setting.value.invalid_option")
+			return "", errors.New(settingErrInvalidOption)
 		}
 		if _, ok := seen[value]; ok {
 			continue
@@ -433,13 +436,13 @@ func normalizeAuditRetentionOptions(raw string) (string, error) {
 		normalized = append(normalized, value)
 	}
 	if len(normalized) == 0 {
-		return "", errors.New("setting.value.invalid_option")
+		return "", errors.New(settingErrInvalidOption)
 	}
 
 	sort.Ints(normalized)
 	normalizedJSON, err := json.Marshal(normalized)
 	if err != nil {
-		return "", errors.New("setting.value.invalid_json")
+		return "", errors.New(settingErrInvalidJSON)
 	}
 	return string(normalizedJSON), nil
 }
