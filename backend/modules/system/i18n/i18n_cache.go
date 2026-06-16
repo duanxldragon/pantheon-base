@@ -5,13 +5,16 @@ import (
 )
 
 const (
-	i18nSortModuleASC = "module ASC"
-	i18nSortKeyASC    = "`key` ASC"
+	I18nSortModuleASC    = "module ASC"
+	I18nSortKeyASC       = "`key` ASC"
+	I18nSortLocaleASC    = "locale ASC"
+	I18nSortGroupNameASC = "group_name ASC"
+	I18nWhereModule      = "module = ?"
 )
 
 func (s *I18nService) ReloadCache() error {
 	var items []SystemI18n
-	if err := s.db.Order("locale ASC").Order(i18nSortModuleASC).Order(i18nSortKeyASC).Find(&items).Error; err != nil {
+	if err := s.db.Order("locale ASC").Order(I18nSortModuleASC).Order(I18nSortKeyASC).Find(&items).Error; err != nil {
 		return err
 	}
 	s.mu.Lock()
@@ -38,7 +41,7 @@ func (s *I18nService) ReloadLocales(locales []string) error {
 			continue
 		}
 		var items []SystemI18n
-		if err := s.db.Where("locale = ?", normalized).Order(i18nSortModuleASC).Order(i18nSortKeyASC).Find(&items).Error; err != nil {
+		if err := s.db.Where("locale = ?", normalized).Order(I18nSortModuleASC).Order(I18nSortKeyASC).Find(&items).Error; err != nil {
 			return err
 		}
 		pack := make(map[string]string, len(items))
@@ -52,7 +55,7 @@ func (s *I18nService) ReloadLocales(locales []string) error {
 
 func (s *I18nService) LoadAndCache(locale string) (map[string]string, error) {
 	var items []SystemI18n
-	if err := s.db.Where("locale = ?", locale).Order(i18nSortModuleASC).Order(i18nSortKeyASC).Find(&items).Error; err != nil {
+	if err := s.db.Where("locale = ?", locale).Order(I18nSortModuleASC).Order(I18nSortKeyASC).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	pack := make(map[string]string)

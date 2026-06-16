@@ -108,10 +108,10 @@ func (s *I18nService) GetAudit() (*I18nAuditResp, error) {
 	var rows []row
 	if err := s.db.Model(&SystemI18n{}).
 		Select("id, module, group_name as `group`, `key`, locale, value, lifecycle_status, lifecycle_marked_at, updated_at").
-		Order("module ASC").
-		Order("group_name ASC").
-		Order("`key` ASC").
-		Order("locale ASC").
+		Order(I18nSortModuleASC).
+		Order(I18nSortGroupNameASC).
+		Order("I18nSortKeyASC").
+		Order(I18nSortLocaleASC).
 		Find(&rows).Error; err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func (s *I18nService) CleanupUnusedKeys(module string) (*I18nCleanupUnusedResp, 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		query := tx.Where("`key` IN ?", keys)
 		if resp.Module != "" {
-			query = query.Where("module = ?", resp.Module)
+			query = query.Where(I18nWhereModule, resp.Module)
 		}
 		deleteResult := query.Delete(&SystemI18n{})
 		if deleteResult.Error != nil {
@@ -620,7 +620,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 
 	var sourceRows []SystemI18n
-	if err := s.db.Where("module = ? AND `key` = ?", module, oldKey).Order("locale ASC").Find(&sourceRows).Error; err != nil {
+	if err := s.db.Where("module = ? AND `key` = ?", module, oldKey).Order(I18nSortLocaleASC).Find(&sourceRows).Error; err != nil {
 		return nil, err
 	}
 	resp.AffectedRows = int64(len(sourceRows))
@@ -632,7 +632,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 
 	var targetRows []SystemI18n
-	if err := s.db.Where("module = ? AND `key` = ?", module, newKey).Order("locale ASC").Find(&targetRows).Error; err != nil {
+	if err := s.db.Where("module = ? AND `key` = ?", module, newKey).Order(I18nSortLocaleASC).Find(&targetRows).Error; err != nil {
 		return nil, err
 	}
 	resp.ExistingTargetRows = int64(len(targetRows))
@@ -696,7 +696,7 @@ func (s *I18nService) ListSupportedLocales() ([]string, error) {
 	}
 
 	var rows []string
-	if err := s.db.Model(&SystemI18n{}).Distinct("locale").Order("locale ASC").Pluck("locale", &rows).Error; err != nil {
+	if err := s.db.Model(&SystemI18n{}).Distinct("locale").Order(I18nSortLocaleASC).Pluck("locale", &rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -831,13 +831,13 @@ func (s *I18nService) ListMissingLocales(module string) (*I18nMissingLocaleResp,
 	query := s.db.Model(&SystemI18n{})
 	module = strings.TrimSpace(module)
 	if module != "" {
-		query = query.Where("module = ?", module)
+		query = query.Where(I18nWhereModule, module)
 	}
 	if err := query.
 		Select("module, group_name as `group`, `key`, locale").
-		Order("module ASC").
-		Order("group_name ASC").
-		Order("`key` ASC").
+		Order(I18nSortModuleASC).
+		Order(I18nSortGroupNameASC).
+		Order("I18nSortKeyASC").
 		Find(&rows).Error; err != nil {
 		return nil, err
 	}
@@ -974,9 +974,9 @@ func (s *I18nService) HydrateBuiltinLocales(module string) (*I18nHydrateBuiltinR
 	var rows []row
 	query := s.db.Model(&SystemI18n{}).Select("id, module, group_name as `group`, `key`, locale, value")
 	if module != "" {
-		query = query.Where("module = ?", module)
+		query = query.Where(I18nWhereModule, module)
 	}
-	if err := query.Order("module ASC").Order("group_name ASC").Order("`key` ASC").Order("locale ASC").Find(&rows).Error; err != nil {
+	if err := query.Order(I18nSortModuleASC).Order(I18nSortGroupNameASC).Order("I18nSortKeyASC").Order(I18nSortLocaleASC).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 
