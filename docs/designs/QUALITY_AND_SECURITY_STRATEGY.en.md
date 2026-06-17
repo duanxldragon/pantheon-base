@@ -22,7 +22,7 @@ Pantheon uses one primary merge-gate system and one primary code-security signal
 - GitHub Actions plus Branch Protection is the merge authority.
 - CodeQL is the primary code-security signal.
 - Copilot review can add architectural, intent, and maintainability signals, but it does not replace required checks.
-- Codacy and OCR are no longer part of the merge gate.
+- Codacy is no longer part of the merge gate.
 - Block only security, correctness, shared-foundation stability, and regression risks. Low-risk style or maintainability suggestions should go to backlog.
 
 Tool precedence is fixed:
@@ -69,7 +69,7 @@ Targets:
 
 ## Tool Responsibilities
 
-GitHub Actions is the primary gate for backend tests, frontend lint/build, contract checks, documentation checks, menu checks, i18n checks, and generated-module checks. Branch Protection should require only GitHub-native checks. Do not add Codacy, OCR, or other external scanner checks to required checks.
+GitHub Actions is the primary gate for backend tests, frontend lint/build, contract checks, documentation checks, menu checks, i18n checks, and generated-module checks. Branch Protection should require only GitHub-native checks. Do not add Codacy or other external scanner checks to required checks.
 
 CodeQL is the primary code-security signal. In `pantheon-base`, CodeQL findings block by default unless they are documented false positives. In `pantheon-ops`, business-domain findings can be risk-tiered, but high-risk foundation areas still follow the base standard.
 

@@ -42,7 +42,7 @@ Add these checks to the required checks list:
 
 Set the required status checks policy to non-strict (`strict=false`) so auto-merge does not stall on "must be up to date with base branch" in a single-maintainer flow.
 
-Do not add `Full Smoke Suite`, Sonar, Codacy, OCR, or other external scanners to required checks. `Quality Gates` must stay fast and deterministic for PR feedback, while `Security Gates` is the only required GitHub-native security aggregate and already includes CodeQL.
+Do not add `Full Smoke Suite`, Sonar, Codacy, or other external scanners to required checks. `Quality Gates` must stay fast and deterministic for PR feedback, while `Security Gates` is the only required GitHub-native security aggregate and already includes CodeQL.
 
 ### 1.3 Copilot review
 
