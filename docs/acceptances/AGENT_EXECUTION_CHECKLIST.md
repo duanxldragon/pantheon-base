@@ -18,6 +18,8 @@ English version: [AGENT_EXECUTION_CHECKLIST.en.md](./AGENT_EXECUTION_CHECKLIST.e
 
 这份清单把 Harness Engineering 里最值得保留的几条实践压缩成 `pantheon-base` 的默认执行动作。
 
+当前个人维护阶段的默认分级，先看 [harness-engineering/docs/methodology/SOLO_DELIVERY_TIERS.md](../../../harness-engineering/docs/methodology/SOLO_DELIVERY_TIERS.md)。本清单主要服务 `L1 / L2`，其中 `pantheon-base` 的共享合同、系统域、生成器、权限、审计、i18n 生命周期和继承边界任务默认按 `L2` 处理。
+
 它不是新的模块合同，也不替代 [设计与实现验收清单](./ACCEPTANCE_CHECKLIST.md) 或 [代码评审标准](./CODE_REVIEW_STANDARD.md)。它解决的是更前置的问题：
 
 - 一个任务开始前，先判断什么；
@@ -28,6 +30,7 @@ English version: [AGENT_EXECUTION_CHECKLIST.en.md](./AGENT_EXECUTION_CHECKLIST.e
 ## 1. 什么时候使用
 
 - 所有 `non-trivial` 开发、修复、review、验收、drift 收敛任务都应使用。
+- 对个人维护者，普通 `pantheon-base` 小中型任务可先按 `L1` 轻量闭环执行；一旦涉及共享底座高风险边界，直接升级 `L2`。
 - 名义上是 trivial，但只要触碰 `schema`、权限、菜单、审计、i18n、路由、lowcode、动态模块、导入导出或继承边界，也应升级到这份清单。
 - 建议与以下文档一起使用：
   - [../AGENTS.md](../../AGENTS.md)

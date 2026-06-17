@@ -15,6 +15,8 @@ English version: [PANTHEON_BASE_DELIVERY_WORKFLOW.en.md](./PANTHEON_BASE_DELIVER
 
 本文定义 `pantheon-base` 如何使用 Claude、Codex、`acpx` 和 `omc` 执行 Harness Engineering 流程。
 
+当前个人维护阶段，先按 `../../../harness-engineering/docs/methodology/SOLO_DELIVERY_TIERS.md` 判断任务属于 `L0 / L1 / L2`。本文主要定义 `L2` 和需要多 agent / 多 gate 的 `L1` 任务；`L0` 与普通 `L1` 不必强行套完整多 agent 调度。
+
 目标是让人只提出目标和关键决策，不需要手动调度每个 agent。调度由当前协调 agent 负责完成，并把结果沉淀到仓库 artifact。
 
 ## 1. 角色分工
@@ -72,7 +74,8 @@ Human Goal
 Dispatcher 先判断任务类型：
 
 - `trivial`：可直接执行，但仍要说明验证方式。
-- `non-trivial`：必须有 task packet 或明确继承父 task packet。
+- `L1`：必须有轻量计划、明确 In / Out 和最小验证集合。
+- `L2`：必须有 task packet 或明确继承父 task packet。
 - `high-risk`：涉及 schema、权限、认证、审计、CI、secrets、删除、发布或外部服务时，必须停下来请求 human gate。
 
 ### 4.2 Claude Planning
