@@ -3138,15 +3138,29 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
     await page.goto('/system/user', { waitUntil: 'networkidle' });
     await installOperationToken(page, accessToken);
     await expectVisiblePageTitle(page, '用户管理');
-    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
+    const tableCard = page.locator('.system-list__table-card');
+    const userTable = page.locator('.system-user-list__table');
+    const selectedText = page.locator('.table-batch-action-bar__meta');
+    await expect(tableCard).toBeVisible({ timeout: 30000 });
 
     await formItem(page, '用户名').locator('input').fill(username);
-    await page.getByRole('button', { name: '搜索' }).click();
-    const userRow = page.getByRole('row', { name: new RegExp(username) }).first();
-    await expect(userRow).toBeVisible();
+    const waitForFilteredUserList = () =>
+      waitForOkApiResponse(
+        page,
+        (response) =>
+          response.url().includes('/system/user/list') &&
+          decodeURIComponent(response.url()).includes(`username=${username}`) &&
+          response.request().method() === 'GET',
+      );
+    const selectBatchUser = async () => {
+      const rowCheckbox = userTable.locator('.arco-checkbox').nth(1);
+      await expect(rowCheckbox).toBeVisible();
+      await rowCheckbox.click({ force: true });
+      await expect(selectedText).toContainText('已选 1 条');
+    };
 
-    await userRow.locator('.arco-checkbox').first().click({ force: true });
-    await expect(page.locator('.table-batch-action-bar__meta')).toContainText('已选 1 条');
+    await Promise.all([waitForFilteredUserList(), page.getByRole('button', { name: '搜索' }).click()]);
+    await selectBatchUser();
 
     await page.getByRole('button', { name: '批量禁用' }).click();
     await Promise.all([
@@ -3158,9 +3172,11 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       ),
       clickVisibleConfirmButton(page),
     ]);
+    await waitForFilteredUserList();
     await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(2);
+    await expect(selectedText).toContainText('已选 0 条');
 
-    await userRow.locator('.arco-checkbox').first().click({ force: true });
+    await selectBatchUser();
     await page.getByRole('button', { name: '批量启用' }).click();
     await Promise.all([
       waitForOkApiResponse(
@@ -3171,9 +3187,11 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       ),
       clickVisibleConfirmButton(page),
     ]);
+    await waitForFilteredUserList();
     await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(1);
+    await expect(selectedText).toContainText('已选 0 条');
 
-    await userRow.locator('.arco-checkbox').first().click({ force: true });
+    await selectBatchUser();
     await page.getByRole('button', { name: '删除所选' }).click();
     await Promise.all([
       waitForOkApiResponse(
@@ -3184,6 +3202,7 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       ),
       clickVisibleConfirmButton(page),
     ]);
+    await waitForFilteredUserList();
     await expect.poll(async () => await findUserByUsername(page, accessToken, username)).toBeUndefined();
   } finally {
     await runOptionalSmokeCleanup('system-pages:user-smoke-batch', async () => {

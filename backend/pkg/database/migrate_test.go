@@ -72,6 +72,9 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 		"system_role_data_scope": {
 			"dept_ids",
 		},
+		"permission_workbench_remediation_event": {
+			"issue_key", "before_state", "after_state", "action", "created_count", "skipped_count",
+		},
 	}
 
 	for table, columns := range expectedColumns {
@@ -115,6 +118,27 @@ func TestRunMigrationsAppliesLatestCompatWhenBootstrappedSchemaMissesMenuHideInN
 	}
 
 	assertMigrationColumnExists(t, db, "system_menu", "hide_in_nav")
+	assertLatestMigrationVersion(t, db)
+}
+
+func TestRunMigrationsAppliesLatestCompatWhenBootstrappedSchemaMissesPermissionWorkbenchRemediationColumns(t *testing.T) {
+	db := testmysql.Open(t)
+	dsn := migrationTestDSN(t, db)
+
+	seedCurrentSchemaBootstrapMarkers(t, db)
+	reseedLegacyPermissionWorkbenchRemediationEventSchema(t, db)
+
+	if err := RunMigrations(dsn); err != nil {
+		t.Fatalf("run migrations on pre-remediation current schema: %v", err)
+	}
+
+	assertMigrationColumnExists(t, db, "permission_workbench_remediation_event", "issue_key")
+	assertMigrationColumnExists(t, db, "permission_workbench_remediation_event", "before_state")
+	assertMigrationColumnExists(t, db, "permission_workbench_remediation_event", "after_state")
+	assertMigrationColumnExists(t, db, "permission_workbench_remediation_event", "action")
+	assertMigrationColumnExists(t, db, "permission_workbench_remediation_event", "created_count")
+	assertMigrationColumnExists(t, db, "permission_workbench_remediation_event", "skipped_count")
+	assertPermissionWorkbenchRemediationRuntimeWriteSucceeds(t, db, "legacy-role")
 	assertLatestMigrationVersion(t, db)
 }
 
@@ -352,6 +376,26 @@ INSERT INTO system_generator_datasource (
 `, "runtime-metadata", "mysql", "db.example.com", 3306, "metadata_schema", "reader", "ciphertext", 1, "metadata_only", "compat", "", "").Error; err != nil {
 		t.Fatalf("insert current runtime generator datasource row: %v", err)
 	}
+
+	if err := db.Exec(`
+INSERT INTO permission_workbench_remediation_event (
+	role_key, issue_type, issue_key, before_state, after_state, action, created_count, skipped_count, created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(3))
+`, "runtime-role", "api-gap", "POST /api/v1/system/dynamic-modules/generate", "api-gap", "complete", "remediated", 1, 0).Error; err != nil {
+		t.Fatalf("insert current runtime remediation event row: %v", err)
+	}
+}
+
+func assertPermissionWorkbenchRemediationRuntimeWriteSucceeds(t *testing.T, db *gorm.DB, roleKey string) {
+	t.Helper()
+
+	if err := db.Exec(`
+INSERT INTO permission_workbench_remediation_event (
+	role_key, issue_type, issue_key, before_state, after_state, action, created_count, skipped_count, created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(3))
+`, roleKey, "api-gap", "POST /api/v1/system/dynamic-modules/generate", "api-gap", "complete", "remediated", 1, 0).Error; err != nil {
+		t.Fatalf("insert current runtime remediation event row for %s: %v", roleKey, err)
+	}
 }
 
 func assertMigrationVersion(t *testing.T, db *gorm.DB, expectedVersion int) {
@@ -499,11 +543,52 @@ func seedCurrentSchemaBootstrapMarkers(t *testing.T, db *gorm.DB) {
 			updated_at DATETIME(3) DEFAULT NULL,
 			PRIMARY KEY (id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE permission_workbench_remediation_event (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			role_key VARCHAR(64) NOT NULL,
+			issue_type VARCHAR(32) NOT NULL,
+			issue_key VARCHAR(255) NOT NULL,
+			before_state VARCHAR(32) NOT NULL,
+			after_state VARCHAR(32) NOT NULL,
+			action VARCHAR(32) NOT NULL,
+			created_count INT DEFAULT 0,
+			skipped_count INT DEFAULT 0,
+			created_at DATETIME(3) DEFAULT NULL,
+			PRIMARY KEY (id),
+			INDEX idx_permission_remediation_role_created (role_key, created_at),
+			INDEX idx_permission_remediation_issue_type (issue_type),
+			INDEX idx_permission_remediation_action (action)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 	}
 
 	for _, statement := range statements {
 		if err := db.Exec(statement).Error; err != nil {
 			t.Fatalf("seed current schema bootstrap markers: %v", err)
 		}
+	}
+}
+
+func reseedLegacyPermissionWorkbenchRemediationEventSchema(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	if err := db.Exec("DROP TABLE IF EXISTS permission_workbench_remediation_event").Error; err != nil {
+		t.Fatalf("drop current remediation event table: %v", err)
+	}
+	if err := db.Exec(`
+CREATE TABLE permission_workbench_remediation_event (
+	id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	role_key VARCHAR(64) NOT NULL,
+	issue_type VARCHAR(32) NOT NULL,
+	severity VARCHAR(16) NOT NULL DEFAULT 'medium',
+	detail TEXT,
+	remediated TINYINT DEFAULT 0,
+	created_at DATETIME(3) DEFAULT NULL,
+	updated_at DATETIME(3) DEFAULT NULL,
+	PRIMARY KEY (id),
+	INDEX idx_permission_remediation_role_created (role_key, created_at),
+	INDEX idx_permission_remediation_issue_type (issue_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+`).Error; err != nil {
+		t.Fatalf("create legacy remediation event table: %v", err)
 	}
 }
