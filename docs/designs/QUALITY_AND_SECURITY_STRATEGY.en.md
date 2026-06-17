@@ -13,7 +13,7 @@ updated_at: 2026-06-08
 
 Chinese version: [QUALITY_AND_SECURITY_STRATEGY.md](./QUALITY_AND_SECURITY_STRATEGY.md)
 
-This document defines how Pantheon uses code-quality and security tools without letting multiple external analyzers compete for merge authority.
+This document defines how Pantheon uses code-quality and security tools so GitHub Actions, CodeQL, and GitHub-native AI review each keep a clear role without competing for merge authority.
 
 ## Principles
 
@@ -21,8 +21,8 @@ Pantheon uses one primary merge-gate system and one primary code-security signal
 
 - GitHub Actions plus Branch Protection is the merge authority.
 - CodeQL is the primary code-security signal.
-- Sonar is auxiliary for duplication, hotspots, maintainability trend review, and large AI-generated changes.
-- Codacy, if enabled, is informational only and must not be a required check.
+- Copilot review can add architectural, intent, and maintainability signals, but it does not replace required checks.
+- Codacy and OCR are no longer part of the merge gate.
 - Block only security, correctness, shared-foundation stability, and regression risks. Low-risk style or maintainability suggestions should go to backlog.
 
 Tool precedence is fixed:
@@ -30,8 +30,8 @@ Tool precedence is fixed:
 ```text
 Correctness: GitHub Actions tests, builds, and contract checks
 Security reachability: CodeQL plus secret, dependency, and workflow posture scans
-Quality trend: Sonar
-External comparison: Codacy
+Architecture and maintainability judgment: Copilot review plus PR residual-risk notes
+External comparison: none
 ```
 
 ## Repository Tiers
@@ -45,14 +45,10 @@ Merge blockers:
 - GitHub required checks are failing.
 - CodeQL reports a reachable high-severity security issue.
 - High-risk areas change without explanation: `system/auth`, `system/iam`, `system/config`, permissions, audit, shared `pkg/*`, generator, CI, or credential handling.
-- New Code has unresolved `Blocker` or `Critical` issues without a documented false-positive reason.
-- Security Hotspots are not reviewed.
-
 Targets:
 
-- New Code duplication below `3%`.
 - New Code coverage at or above `80%` by default, with PR-level exceptions only.
-- High-risk changes need at least two non-author approvals, including a domain, security, or architecture reviewer.
+- High-risk changes must document residual risk, rollback steps, and added verification instead of depending on extra human approvals.
 
 Frontend duplication is the current main hotspot. Fix runtime pages, shared components, layouts, forms, tables, and generator templates first. Clean smoke, fixture, and example duplication when it pollutes runtime quality signals or repeated security triage. Vendored method-shell scripts such as `scripts/harness/` are excluded from product duplication and governed in `harness-engineering`. Do not create premature abstractions for isolated business leaf logic.
 
@@ -68,13 +64,12 @@ Rules:
 
 Targets:
 
-- New Code duplication below `5%` by default.
 - Core business-path changes need tests, smoke evidence, or acceptance evidence.
 - Low-risk duplication inside business leaf modules can be tracked as backlog, but must not spread into shared packages, platform shell, or system domains.
 
 ## Tool Responsibilities
 
-GitHub Actions is the primary gate for backend tests, frontend lint/build, contract checks, documentation checks, menu checks, i18n checks, and generated-module checks. Branch Protection should require only GitHub-native checks. Do not add SonarCloud or Codacy external checks to required checks.
+GitHub Actions is the primary gate for backend tests, frontend lint/build, contract checks, documentation checks, menu checks, i18n checks, and generated-module checks. Branch Protection should require only GitHub-native checks. Do not add Codacy, OCR, or other external scanner checks to required checks.
 
 CodeQL is the primary code-security signal. In `pantheon-base`, CodeQL findings block by default unless they are documented false positives. In `pantheon-ops`, business-domain findings can be risk-tiered, but high-risk foundation areas still follow the base standard.
 
@@ -82,9 +77,7 @@ A successful CodeQL analysis job does not prove there are zero open alerts. `Sec
 
 Dependency, secret, and workflow-posture scans complement CodeQL. New dependencies, dependency upgrades, workflow changes, and credential-handling changes must review these reports. Real secret leaks, reachable high-severity dependency issues, and dangerous workflow permissions must be fixed immediately.
 
-Sonar stays auxiliary. Use it for duplication trend review, Security Hotspot review, complexity and technical-debt trends, and large AI-generated-code review. It must not replace CodeQL or GitHub Actions and must not become a required check.
-
-Codacy stays informational. If it reports a real issue not covered by the primary stack, convert it into a PR finding. Otherwise do not require every Codacy item to be cleared.
+Copilot review is the preferred GitHub-native supplemental signal for what scanners do not prove: architecture boundaries, business intent, test adequacy, and exception handling. Copilot comments do not count as approvals and must not replace required checks.
 
 ## Exceptions
 
@@ -93,10 +86,10 @@ Exceptions are allowed only with lightweight traceability:
 - record the reason in the PR
 - state whether `pantheon-base` foundation stability is affected
 - record follow-up testing, cleanup, or refactoring
-- require a second approver for high-risk exceptions
+- require residual-risk and rollback notes for high-risk exceptions
 
 No exception is allowed for confirmed reachable high-severity vulnerabilities, unreviewed Security Hotspots, real secret leaks, or changes that break authentication, authorization, audit, or secure configuration boundaries.
 
 ## PR Evidence
 
-Each PR should record GitHub required-check status, CodeQL status or link, optional Sonar report and conclusion, whether Codacy was consulted, high-risk scope, and the second approver when required.
+Each PR should record GitHub required-check status, CodeQL status or link, Copilot review status, high-risk scope, residual risk, and rollback notes when required.

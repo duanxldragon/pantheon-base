@@ -24,7 +24,7 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 - `[PR]` — PR 提交前必查，reviewer 逐项确认
 - `[Phase]` — 阶段深度评审，每个路线图阶段结束后执行
 
-## 0.1 角色分离与独立评审
+## 0.1 角色分离与自动化评审
 
 代码评审必须先区分三类责任：
 
@@ -34,10 +34,10 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 
 固定规则：
 
-- 作者本人不能作为该次改动的唯一 reviewer。
-- 生成代码的同一 agent 会话，不能既是主实现者又是唯一 code reviewer。
-- 常规改动至少需要 `1` 个非作者 reviewer。
-- 高风险改动至少需要 `2` 个非作者 reviewer，其中一位应来自域负责人、安全 reviewer 或架构 reviewer。
+- 作者本人不能把未通过的 required checks 当作“已完成”。
+- 生成代码的同一 agent 会话不能跳过 GitHub required checks、CodeQL 和 PR 留痕。
+- 常规改动默认依赖 GitHub required checks、CodeQL、Copilot review 和 squash auto-merge。
+- 高风险改动必须额外记录 residual risk、回滚方式和补充验证，不把“等人审批”当成唯一治理手段。
 
 高风险改动默认包括：
 
@@ -50,30 +50,22 @@ English version: [CODE_REVIEW_STANDARD.en.md](./CODE_REVIEW_STANDARD.en.md)
 
 ## 0.2 自动化质量门栈
 
-Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + 自动抓取的 Sonar 报告 + 独立 reviewer”五层协作。完整策略见 [代码质量与安全治理策略](../designs/QUALITY_AND_SECURITY_STRATEGY.md)。
+Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + Copilot review 补充信号”四层协作。完整策略见 [代码质量与安全治理策略](../designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 - `本地验证`：作者提交前先跑与改动范围匹配的测试、构建和专项脚本
 - `GitHub checks`：PR 上必须通过 required status checks
 - `CodeQL`：代码安全主信号，负责可达安全风险和高危漏洞
-- `SonarQube`：仅作为辅助审查工具，不进入 required checks；需要时触发扫描，但报告由固定流程自动抓取并附到 evidence / artifact
-- `Codacy`：如果存在，只能作为参考对比，不作为合并门禁
-- `独立 reviewer`：确认自动化未覆盖的架构边界、设计漂移和业务风险
-
-自动抓取的 Sonar 辅助审查最低建议：
-
-- New Code 上 `Blocker / Critical` 问题为 `0`
-- Security Hotspots 已 review
-- New Code 覆盖率默认不低于 `80%`；例外要在 PR 中说明原因和补测计划
-- New Code 重复率默认低于 `3%`（`pantheon-base`）或 `5%`（`pantheon-ops`）
-- Reliability / Security / Maintainability 结果作为参考，不作为合并门禁
+- `Copilot review`：补充自动化未覆盖的架构边界、设计漂移、业务风险和测试缺口
+- `Codacy / OCR`：不纳入当前合并门禁
 
 GitHub 保护建议：
 
 - `main` / `release/*` 禁止直接 push
-- 开启 Branch Protection、Required Status Checks、`Dismiss stale approvals`
+- 开启 Branch Protection、Required Status Checks、Allow auto-merge
 - 开启 `Require conversation resolution`
-- 使用 `CODEOWNERS` 自动请求域 reviewer
-- 不要把 Sonar 或 Codacy 的外部 check 加入 required checks
+- 开启自动删除已合并分支
+- 如支持 GitHub Copilot code review，开启自动评审或自动请求 `@copilot`
+- 不要把 Codacy 或 OCR 的外部 check 加入 required checks
 
 ## 1. 评审入口
 
@@ -119,7 +111,7 @@ GitHub 保护建议：
 - `git diff --name-only`
 - 检查是否存在生成文件、注册表、schema、i18n 资源同时变更
 - 检查是否存在未解释的跨层改动
-- 检查 PR 是否附了 GitHub checks 结果、独立 reviewer 信息，以及如有需要的 Sonar 报告 artifact / evidence
+- 检查 PR 是否附了 GitHub checks 结果、Copilot review 状态和 residual risk 说明
 
 ### 3.2 架构边界
 
@@ -339,14 +331,13 @@ GitHub 保护建议：
 - `npm audit --audit-level=high` 无结果（CI 门禁）
 - Go 依赖定期检查更新 `[Phase]`
 
-#### 3.7.10 SonarQube 手动辅助审查 `[PR]`
+#### 3.7.10 CodeQL 与评审证据审查 `[PR]`
 
-- 如有 Sonar 报告，是否已附在 PR 中或 evidence / artifact 中
-- 报告中的严重问题是否已被明确处理或豁免
-- 是否存在 `Blocker / Critical` New Code 问题未处理
-- Security Hotspots 是否已 review 并记录处理结论
+- `Security Gates` / CodeQL 是否全部通过
+- 新增的 code scanning / dependency review 风险是否已明确处理或受控豁免
+- 是否已附上 Copilot review 状态或不可用说明
+- 自动化未覆盖的架构边界、业务意图、测试缺口是否已有 residual risk 说明
 - GitHub required checks 是否全部通过
-- 新提交后旧 approval 是否已失效并重新 review
 
 ### 3.8 测试副作用
 
@@ -517,9 +508,9 @@ npx lighthouse-batch --score=90
 - 已检查 diff 中所有生成物与注册物
 - 已修复可自动修复的 P0 / P1
 - 已记录剩余 P2 和后续处理建议
-- 如有 Sonar 报告，是否有明确的受控豁免记录
+- 如有 CodeQL / review 例外，是否有明确的受控豁免记录
 - GitHub required checks 已全部通过
-- 已完成独立 reviewer 审核，且不是作者自审替代
+- 已记录 Copilot review 状态，且没有把 AI 评论误当成 required approval
 - 已运行或明确说明未运行的验证命令
 - 若代码影响合同、接口、菜单、权限、i18n、数据库或验收口径，已同步更新文档
 

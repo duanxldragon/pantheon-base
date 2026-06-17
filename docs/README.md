@@ -95,7 +95,7 @@ Harness Engineering 方法源文件，用于理解方法和运行检查：
 
 ### 2.4 历史决策与治理延伸
 
-- [Session Decisions 2026-06-08](./harness/SESSION_DECISIONS_20260608.md) — 架构审查、Sonar 覆盖率、多 Agent 流程、模型层级配置
+- [Session Decisions 2026-06-08](./harness/SESSION_DECISIONS_20260608.md) — 架构审查、历史质量门禁演进、多 Agent 流程、模型层级配置
 
 ### 2.5 继续深入
 

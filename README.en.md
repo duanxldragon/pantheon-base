@@ -95,6 +95,15 @@ npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-l
 npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
 ```
 
+## Quality and Security Gates
+
+This repository keeps GitHub-native merge gates only:
+
+- `Quality Gates` for docs governance, frontend contract checks, backend tests, duplication, and lightweight smoke
+- `Security Gates` for secret scan, workflow posture, dependency reports, CodeQL scan, and the CodeQL alert gate
+
+CodeQL is the primary security signal. Code quality is gated by GitHub required checks, CodeQL, branch protection, and optional Copilot review; Codacy and OCR are no longer part of the merge gate.
+
 ## Document Entry
 
 - [DESIGN.md](./DESIGN.md): top-level architecture and domain boundaries
