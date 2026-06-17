@@ -22,6 +22,36 @@ jobs:
   # Phase 1: Fast Checks (Merge Group / PR)
   # ============================================================
 
+  change-scope:
+    name: Change Scope
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      docs_only: ${{ steps.scope.outputs.docs_only || 'false' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+
+      - name: Detect docs-only pull requests
+        id: scope
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        with:
+          predicate-quantifier: every
+          filters: |
+            docs_only:
+              - 'README.md'
+              - 'README.en.md'
+              - 'DESIGN.md'
+              - 'SECURITY.md'
+              - 'AGENTS.md'
+              - 'CLAUDE.md'
+              - 'docs/**'
+
   docs-governance:
     name: Docs Governance
     runs-on: ubuntu-latest
@@ -194,6 +224,9 @@ jobs:
 
   smoke-sanity:
     name: Smoke Sanity
+    needs:
+      - change-scope
+    if: ${{ github.event_name != 'pull_request' || needs.change-scope.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -298,6 +331,7 @@ jobs:
   quality-gates:
     name: Quality Gates
     needs:
+      - change-scope
       - docs-governance
       - frontend-contract
       - backend-tests
@@ -311,21 +345,29 @@ jobs:
       - name: Enforce quality results
         shell: bash
         env:
+          DOCS_ONLY: ${{ needs.change-scope.outputs.docs_only }}
           DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
           FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
           BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
           DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
         run: |
+          SMOKE_SANITY_REQUIRED=true
+          if [ "${DOCS_ONLY}" = "true" ]; then
+            SMOKE_SANITY_REQUIRED=false
+          fi
           echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
           echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
           echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
           echo "Duplication Gate: ${DUPLICATION_RESULT}"
           echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
+          echo "Smoke Sanity Required: ${SMOKE_SANITY_REQUIRED}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
              [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
              [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
-             [ "${DUPLICATION_RESULT}" != "success" ] || \
-             [ "${SMOKE_SANITY_RESULT}" != "success" ]; then
+             [ "${DUPLICATION_RESULT}" != "success" ]; then
+            exit 1
+          fi
+          if [ "${SMOKE_SANITY_REQUIRED}" = "true" ] && [ "${SMOKE_SANITY_RESULT}" != "success" ]; then
             exit 1
           fi
