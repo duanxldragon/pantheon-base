@@ -19,6 +19,7 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 - Require conversation resolution
 - Restrict direct pushes to protected branches
 - Allow auto-merge
+- Keep required approvals at `0` for the current solo-maintainer workflow
 - Prefer squash merge
 - Automatically delete head branches after merge
 
@@ -27,8 +28,9 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 - `Quality Gates`
 - `Security Gates`
 - Keep PR-required checks limited to fast, deterministic merge-gate jobs
+- Set branch-protection status checks to non-strict (`strict=false`) so auto-merge does not stall on "must be up to date"
 - Keep `Full Smoke Suite` manual, scheduled, or release-precheck only
-- Keep Codacy and OCR out of required checks
+- Keep Sonar、Codacy 和 OCR out of required checks
 
 ## Secrets
 
@@ -36,7 +38,8 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 
 ## Review evidence
 
-- PR description records ownership layer, boundary, validation, and GitHub checks status
-- PR description records Copilot review status
+- PR description records ownership layer, boundary, validation, `Quality Gates`, `Security Gates`, and CodeQL status
+- PR description records Copilot review status or explicit unavailability
+- PR description records auto-merge status
 - High-risk PRs record residual risk and rollback notes explicitly
 - Closeout records merged PR URL, merge commit, and branch cleanup status

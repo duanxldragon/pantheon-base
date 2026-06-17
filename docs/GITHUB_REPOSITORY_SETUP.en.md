@@ -31,6 +31,8 @@ Enable:
 - Prefer squash merge as the standard merge method
 - Automatically delete head branches after merge so merged worktree branches do not linger on GitHub
 
+For a solo-maintainer repository, keep required approvals at `0` and let GitHub-native required checks plus PR traceability carry the merge gate.
+
 ### 1.2 Required status checks
 
 Add these checks to the required checks list:
@@ -38,7 +40,9 @@ Add these checks to the required checks list:
 - `Quality Gates`
 - `Security Gates`
 
-Do not add `Full Smoke Suite`, Codacy, OCR, or other external scanners to required checks. `Quality Gates` must stay fast and deterministic for PR feedback, while `Security Gates` is the only required GitHub-native security aggregate and already includes CodeQL.
+Set the required status checks policy to non-strict (`strict=false`) so auto-merge does not stall on "must be up to date with base branch" in a single-maintainer flow.
+
+Do not add `Full Smoke Suite`, Sonar, Codacy, OCR, or other external scanners to required checks. `Quality Gates` must stay fast and deterministic for PR feedback, while `Security Gates` is the only required GitHub-native security aggregate and already includes CodeQL.
 
 ### 1.3 Copilot review
 

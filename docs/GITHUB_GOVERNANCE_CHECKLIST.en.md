@@ -20,6 +20,7 @@ Use this checklist when enabling the workflow described in `docs/designs/WORKFLO
 - Restrict direct pushes to protected branches
 - Allow auto-merge
 - Prefer squash merge
+- Keep required approvals at `0` for the current solo-maintainer workflow
 - Automatically delete head branches after merge
 
 ## Required checks
@@ -27,8 +28,9 @@ Use this checklist when enabling the workflow described in `docs/designs/WORKFLO
 - `Quality Gates`
 - `Security Gates`
 - Keep PR-required checks limited to fast, deterministic merge-gate jobs
+- Set branch-protection status checks to non-strict (`strict=false`) so auto-merge does not stall on "must be up to date"
 - Keep `Full Smoke Suite` manual, scheduled, or release-precheck only
-- Keep Codacy and OCR out of required checks
+- Keep Sonar, Codacy, and OCR out of required checks
 
 ## Secrets
 
@@ -36,7 +38,8 @@ Use this checklist when enabling the workflow described in `docs/designs/WORKFLO
 
 ## Review evidence
 
-- PR description records ownership layer, boundary, validation, and GitHub checks status
-- PR description records Copilot review status
+- PR description records ownership layer, boundary, validation, `Quality Gates`, `Security Gates`, and CodeQL status
+- PR description records Copilot review status or explicit unavailability
+- PR description records auto-merge status
 - High-risk PRs record residual risk and rollback notes explicitly
 - Closeout records merged PR URL, merge commit, and branch cleanup status
