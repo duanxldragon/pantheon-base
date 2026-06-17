@@ -56,7 +56,7 @@ Pantheon 默认采用“本地验证 + GitHub checks + CodeQL 安全信号 + Cop
 - `GitHub checks`：PR 上必须通过 required status checks
 - `CodeQL`：代码安全主信号，负责可达安全风险和高危漏洞
 - `Copilot review`：补充自动化未覆盖的架构边界、设计漂移、业务风险和测试缺口
-- `Codacy / OCR`：不纳入当前合并门禁
+- `Codacy`：不纳入当前合并门禁
 
 GitHub 保护建议：
 
@@ -65,7 +65,7 @@ GitHub 保护建议：
 - 开启 `Require conversation resolution`
 - 开启自动删除已合并分支
 - 如支持 GitHub Copilot code review，开启自动评审或自动请求 `@copilot`
-- 不要把 Codacy 或 OCR 的外部 check 加入 required checks
+- 不要把 Codacy 的外部 check 加入 required checks
 
 ## 1. 评审入口
 

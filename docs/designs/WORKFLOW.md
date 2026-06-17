@@ -196,7 +196,7 @@ Contract
 4. 若启用人工 approval，继续开启 `Dismiss stale approvals`
 5. 开启 `Require conversation resolution`
 6. 开启 GitHub Secret Scanning、Dependency Review、Code Scanning（仓库支持时）
-7. 不要启用 Codacy 或 OCR 作为 required checks
+7. 不要启用 Codacy 作为 required checks
 
 ## 4. 冒烟执行 SOP（gstack / Windows）
 

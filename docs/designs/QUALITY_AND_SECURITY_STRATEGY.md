@@ -20,7 +20,7 @@ English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_ST
 1. **只保留一个主门禁体系**：GitHub Actions + Branch Protection 是合并依据。
 2. **只保留一个主安全信号**：CodeQL 是代码安全分析的主信号。
 3. **架构与意图风险要有 AI 评审补位**：GitHub Copilot review 可作为架构边界、业务意图和可维护性补充信号，但不替代 required checks。
-4. **不再依赖 Codacy / OCR**：当前流程不使用 Codacy 或 open-code-review 作为 required check 或合并前置条件。
+4. **不再依赖 Codacy**：当前流程不使用 Codacy 作为 required check 或合并前置条件。
 5. **风险优先，不追求零噪音**：只阻塞会影响安全、正确性、共享底座稳定性或可回归性的事项。纯风格、低风险重复和无可达风险的建议进入 backlog。
 
 当工具结论冲突时，优先级固定为：
@@ -81,7 +81,7 @@ GitHub Actions 是主门禁，负责：
 - 文档、菜单、i18n、generated module 等项目专项检查。
 - PR 和 merge queue 的 required checks。
 
-Branch Protection 只要求 GitHub-native checks。不要把 Codacy、OCR 或其他外部扫描器的 check 加入 required checks。
+Branch Protection 只要求 GitHub-native checks。不要把 Codacy 或其他外部扫描器的 check 加入 required checks。
 
 ### 3.2 CodeQL
 

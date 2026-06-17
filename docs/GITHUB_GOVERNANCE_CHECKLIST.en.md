@@ -30,7 +30,7 @@ Use this checklist when enabling the workflow described in `docs/designs/WORKFLO
 - Keep PR-required checks limited to fast, deterministic merge-gate jobs
 - Set branch-protection status checks to non-strict (`strict=false`) so auto-merge does not stall on "must be up to date"
 - Keep `Full Smoke Suite` manual, scheduled, or release-precheck only
-- Keep Sonar, Codacy, and OCR out of required checks
+- Keep Sonar and Codacy out of required checks
 
 ## Secrets
 

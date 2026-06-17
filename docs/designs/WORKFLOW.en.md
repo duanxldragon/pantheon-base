@@ -118,7 +118,7 @@ Required gate stack:
 - `Full Smoke Suite` only for manual, scheduled, or release-precheck regression runs
 - dependency-vulnerability scans on `main/release`, scheduled, or manual workflows rather than every PR
 - Copilot review status for architecture, intent, and maintainability context
-- no Codacy or OCR dependency in the merge gate
+- no Codacy dependency in the merge gate
 
 Recommended GitHub protections:
 
@@ -206,7 +206,7 @@ Recommended repository defaults:
 5. enable automatic branch deletion
 6. enable secret scanning, dependency review, and code scanning when available
 7. keep full-browser regression out of the default PR merge gate unless the repository is intentionally optimized for that cost
-8. do not add Codacy or OCR as required checks
+8. do not add Codacy as required checks
 
 ## 4. Smoke SOP for gstack on Windows
 
