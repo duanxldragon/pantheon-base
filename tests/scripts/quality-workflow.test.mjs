@@ -9,6 +9,11 @@ const workflowSource = fs.readFileSync(workflowPath, 'utf8');
 test('docs-only pull requests can skip smoke sanity without failing Quality Gates', () => {
   assert.match(
     workflowSource,
+    /uses:\s*dorny\/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d/i,
+    'quality workflow should pin paths-filter to a revision that supports predicate-quantifier',
+  );
+  assert.match(
+    workflowSource,
     /paths-filter[\s\S]*predicate-quantifier:\s*every/i,
     'quality workflow should detect docs-only pull requests',
   );
