@@ -11,8 +11,9 @@ Close the change before PR. Do not rely on the PR conversation to discover missi
 
 1. Run `repo-verify` for the touched scope.
 2. Classify risk.
-3. Attach evidence.
-4. Request independent review.
+3. Run `gh-address-comments` if the branch PR or linked issue/discussion already has actionable GitHub feedback.
+4. Attach evidence.
+5. Request independent review.
 
 ## Risk Split
 
@@ -35,6 +36,8 @@ High-risk scope in this repo includes:
 
 ## Extra Gates
 
+- Open GitHub feedback:
+  - use `gh-address-comments` before calling the PR ready
 - UI change:
   - use `impeccable`
   - attach rendered evidence or a concrete runtime gap

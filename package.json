@@ -1,9 +1,13 @@
 {
   "license": "MIT",
   "scripts": {
+    "apply:github-feedback": "node scripts/address-github-feedback.mjs",
+    "run:github-feedback-loop": "node scripts/run-github-feedback-loop.mjs",
     "check:docs-frontmatter": "node scripts/frontmatter-check.mjs",
     "check:docs-frontmatter:legacy": "node scripts/frontmatter-check.mjs --report-legacy",
     "check:duplication": "node scripts/check-duplication.mjs",
+    "check:github-feedback": "node scripts/fetch-github-feedback.mjs --check",
+    "check:pr-governance": "node scripts/check-pr-governance.mjs",
     "release:foundation:bundle": "node scripts/foundation-release/build-release-bundle.mjs",
     "release:foundation:cut": "node scripts/foundation-release/cut-foundation-release.mjs",
     "release:foundation:manifest": "node scripts/foundation-release/build-release-manifest.mjs",
@@ -12,7 +16,13 @@
     "check:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs --check",
     "cleanup:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs",
     "test:docs-frontmatter": "node --test tests/docs/frontmatter-check.test.mjs",
+    "test:address-github-feedback": "node --test tests/scripts/address-github-feedback.test.mjs",
+    "test:github-feedback": "node --test tests/scripts/fetch-github-feedback.test.mjs",
+    "test:github-feedback-loop": "node --test tests/scripts/run-github-feedback-loop.test.mjs",
     "test:foundation-release": "node --test tests/scripts/foundation-release/*.test.mjs",
+    "test:pr-governance": "node --test tests/scripts/check-pr-governance.test.mjs",
+    "test:pr-automation-workflow": "node --test tests/scripts/pr-automation-workflow.test.mjs",
+    "test:security-workflow": "node --test tests/scripts/security-workflow.test.mjs",
     "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs"
   },
   "devDependencies": {

@@ -277,6 +277,7 @@ jobs:
   security-gates:
     name: Security Gates
     needs:
+      - dependency-vulnerabilities
       - secret-scan
       - workflow-posture
       - codeql-security
@@ -289,15 +290,21 @@ jobs:
       - name: Enforce security results
         shell: bash
         env:
+          DEPENDENCY_VULNERABILITIES_RESULT: ${{ needs.dependency-vulnerabilities.result }}
           SECRET_SCAN_RESULT: ${{ needs.secret-scan.result }}
           WORKFLOW_POSTURE_RESULT: ${{ needs.workflow-posture.result }}
           CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
           CODEQL_ALERT_RESULT: ${{ needs.codeql-alerts.result }}
         run: |
+          echo "Dependency Vulnerabilities: ${DEPENDENCY_VULNERABILITIES_RESULT}"
           echo "Secret Scan: ${SECRET_SCAN_RESULT}"
           echo "Workflow Posture: ${WORKFLOW_POSTURE_RESULT}"
           echo "CodeQL Security Scan: ${CODEQL_SECURITY_SCAN_RESULT}"
           echo "CodeQL Alert Gate: ${CODEQL_ALERT_RESULT}"
+          if [ "${DEPENDENCY_VULNERABILITIES_RESULT}" != "success" ] && \
+             [ "${DEPENDENCY_VULNERABILITIES_RESULT}" != "skipped" ]; then
+            exit 1
+          fi
           if [ "${SECRET_SCAN_RESULT}" != "success" ] || \
              [ "${WORKFLOW_POSTURE_RESULT}" != "success" ] || \
              [ "${CODEQL_SECURITY_SCAN_RESULT}" != "success" ] || \
