@@ -1,0 +1,2 @@
+Pantheon Base branch hygiene hosted validation residue branch.
+Branch: verify/branch-hygiene-residue-base-20260618b
