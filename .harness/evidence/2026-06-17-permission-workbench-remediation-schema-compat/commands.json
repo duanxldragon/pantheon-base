@@ -72,11 +72,12 @@
   ],
   "runtimeGap": "CI does not currently replay a persisted pre-current database through bootstrapExistingCurrentSchema; runtime proof came from local startup logs and focused real-stack smoke.",
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat.task.md",
     "evidenceDir": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/",
     "reviewFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat/manifest.json",
+    "summaryFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/summary.md"
   },
   "knownGaps": [
     "Runtime verification is workstation-local and depends on the persisted local database that previously carried the old remediation-event table shape.",
