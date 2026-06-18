@@ -32,6 +32,22 @@ const RELEASE_OPTION_HANDLERS = {
     options.consumerImpact = requireOptionValue('--consumer-impact', value);
     return 1;
   },
+  '--repo': (options, value) => {
+    options.repoFullName = requireOptionValue('--repo', value);
+    return 1;
+  },
+  '--remote': (options, value) => {
+    options.remote = requireOptionValue('--remote', value);
+    return 1;
+  },
+  '--target-commit': (options, value) => {
+    options.targetCommit = requireOptionValue('--target-commit', value);
+    return 1;
+  },
+  '--dry-run': (options) => {
+    options.dryRun = true;
+    return 0;
+  },
   '--help': (options) => {
     options.help = true;
     return 0;
@@ -53,6 +69,8 @@ function requireOptionValue(flag, value) {
 export function parseReleaseArgs(argv) {
   const options = {
     root: DEFAULT_ROOT,
+    remote: 'origin',
+    dryRun: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -79,5 +97,9 @@ Options:
   --base-commit <sha>
   --release-notes <text>
   --upgrade-notes <text>
-  --consumer-impact <text>`;
+  --consumer-impact <text>
+  --repo <owner/repo>
+  --remote <name>
+  --target-commit <sha>
+  --dry-run`;
 }

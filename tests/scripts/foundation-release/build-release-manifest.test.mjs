@@ -58,6 +58,15 @@ test('build-release-manifest writes release metadata files into releases/<versio
     assert.equal(manifest.baseCommit, 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef');
     assert.equal(manifest.sourceRepo, 'pantheon-base');
     assert.equal(manifest.consumerMode, 'foundation-release-consumer');
+    assert.deepEqual(manifest.sharedPaths.frontend, [
+      'frontend/src/components',
+      'frontend/src/core',
+      'frontend/src/store',
+      'frontend/src/modules/auth',
+      'frontend/src/modules/dashboard',
+      'frontend/src/modules/system',
+      'frontend/src/index.css',
+    ]);
 
     assert.match(fs.readFileSync(path.join(releaseRoot, 'release-notes.md'), 'utf8'), /shared auth cleanup/);
     assert.match(fs.readFileSync(path.join(releaseRoot, 'upgrade-notes.md'), 'utf8'), /run inheritance checks/);

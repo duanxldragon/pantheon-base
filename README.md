@@ -126,6 +126,9 @@ npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-l
 
 # 一次性生成 release metadata + dist bundle
 npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+
+# 正式发布 foundation release：同步本地产物、Git tag 与 GitHub Release
+npm run release:foundation:publish -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
 ```
 
 ## 代码质量与安全门禁

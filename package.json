@@ -12,6 +12,7 @@
     "release:foundation:bundle": "node scripts/foundation-release/build-release-bundle.mjs",
     "release:foundation:cut": "node scripts/foundation-release/cut-foundation-release.mjs",
     "release:foundation:manifest": "node scripts/foundation-release/build-release-manifest.mjs",
+    "release:foundation:publish": "node scripts/foundation-release/publish-foundation-release.mjs",
     "check:task-packet-template": "node scripts/check-task-packet-template.mjs",
     "check:failure-registry": "node scripts/harness/check-failure-registry.mjs --root . --strict",
     "check:generated-modules": "node frontend/scripts/cleanup-generated-modules.mjs --check",
