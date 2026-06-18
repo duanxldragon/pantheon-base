@@ -1,8 +1,35 @@
 # Review Summary: 2026-06-17-permission-workbench-remediation-schema-compat
 
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-06-17-permission-workbench-remediation-schema-compat",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "server startup -> bootstrapExistingCurrentSchema -> permission_workbench_remediation_event -> permission workbench governance summary"
+    ],
+    "checks": [
+      "call-depth",
+      "hub"
+    ],
+    "findings": [],
+    "notes": "The review stays scoped to migration bootstrap alignment and permission-workbench remediation tracking. No new cross-layer drift or hub growth was introduced beyond the intended system/iam -> pkg boundary."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat/manifest.json",
+    "evidence": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/commands.json",
+    "reviewFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```
+
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat.task.md`
+- Task Manifest: `.harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat/manifest.json`
 - Evidence: `.harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/commands.json`
 - OpenSpec Change: `none`
 - Review Mode: `independent-review`
