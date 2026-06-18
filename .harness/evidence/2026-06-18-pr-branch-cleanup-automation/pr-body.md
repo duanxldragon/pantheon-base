@@ -13,7 +13,7 @@
 - Review Artifact：`.harness/evidence/2026-06-18-pr-branch-cleanup-automation/review.md`
 - OpenSpec change：`none`
 - Trivial change：`no`
-- Quality Profile：`repo-governance`
+- Quality Profile：`ci-workflow`
 - Ratchet Decision：`gate-updated`
 - GitHub Signal：`repo-quality-gate`
 
@@ -22,8 +22,14 @@
 - task packet: `docs/harness/tasks/2026-06-18-pr-branch-cleanup-automation.task.md`
 - evidence: `.harness/evidence/2026-06-18-pr-branch-cleanup-automation/`
 - boundaries: `repository-governance only`
+- backend response contract: `none - repository-governance only`
+- backend DTO contract: `none - repository-governance only`
+- permission contract: `none - repository-governance only`
+- audit coverage: `workflow test + governance checks + explicit remote branch cleanup verification`
 - visual evidence: `none`
+- inheritance contract: `none - repository-governance only`
 - base drift: `none`
+- Base/ops inheritance: `ops mirrors the same merged-branch cleanup rule in its own follow-up PR`
 
 ## 边界说明
 
@@ -48,7 +54,8 @@
 - Copilot review：`requested-or-nonblocking`
 - CodeQL 结果：`not-applicable-repo-governance-only`
 - GitHub checks 结果：`pending-github-checks`
-- Auto-merge：`expected`
+- Auto-merge：`pending-github-checks`
+- Duplication Gate 结果：`report-only-on-pr`
 - 是否高风险改动：`no`
 - Residual risk / follow-up：`historical closed-but-unmerged branches still need one-time cleanup policy`
 
