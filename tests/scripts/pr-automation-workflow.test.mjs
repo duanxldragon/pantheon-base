@@ -34,6 +34,11 @@ test('pr automation validates PR governance before enabling auto-merge', () => {
   );
   assert.match(
     workflowSource,
+    /pull_request:\s*\n\s*types:\s*\n[\s\S]*-\s*edited/i,
+    'pr automation should rerun when the pull request body is edited',
+  );
+  assert.match(
+    workflowSource,
     /Check GitHub feedback gate[\s\S]*npm run check:github-feedback -- --repo "\$GITHUB_REPOSITORY" --pr "\$PR_NUMBER"/i,
     'pr automation should run the unified GitHub feedback gate before enabling auto-merge',
   );
