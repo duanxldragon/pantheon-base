@@ -12,6 +12,17 @@ const PLACEHOLDER_RELEASE_TEXTS = new Set([
   'No consumer impact summary provided.',
 ]);
 
+export function buildGitHubReleaseTitle(releaseVersion) {
+  const normalizedReleaseVersion = String(releaseVersion ?? '').trim();
+  if (!normalizedReleaseVersion) {
+    throw new Error('releaseVersion is required to build GitHub release title');
+  }
+  if (normalizedReleaseVersion.startsWith('base-')) {
+    return `pantheon-${normalizedReleaseVersion}`;
+  }
+  return `pantheon-base-${normalizedReleaseVersion}`;
+}
+
 function printHelp() {
   console.log(buildReleaseHelp('publish-foundation-release.mjs'));
 }
@@ -170,7 +181,7 @@ function checkGitHubReleaseExists(root, repoFullName, tagName) {
   }
 }
 
-function createGitHubRelease(root, repoFullName, tagName, targetCommit, notes) {
+function createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, notes) {
   runCommand(
     'gh',
     [
@@ -182,7 +193,7 @@ function createGitHubRelease(root, repoFullName, tagName, targetCommit, notes) {
       '--target',
       targetCommit,
       '--title',
-      tagName,
+      releaseTitle,
       '--notes',
       notes,
     ],
@@ -191,7 +202,7 @@ function createGitHubRelease(root, repoFullName, tagName, targetCommit, notes) {
   );
 }
 
-function updateGitHubRelease(root, repoFullName, tagName, notes) {
+function updateGitHubRelease(root, repoFullName, tagName, releaseTitle, notes) {
   runCommand(
     'gh',
     [
@@ -201,7 +212,7 @@ function updateGitHubRelease(root, repoFullName, tagName, notes) {
       '--repo',
       repoFullName,
       '--title',
-      tagName,
+      releaseTitle,
       '--notes',
       notes,
     ],
@@ -217,6 +228,7 @@ export function publishFoundationRelease(options) {
   const targetCommit =
     options.targetCommit || runCommand('git', ['rev-parse', 'HEAD'], 'git rev-parse HEAD', { cwd: root });
   const tagName = options.releaseVersion;
+  const releaseTitle = buildGitHubReleaseTitle(options.releaseVersion);
   const tagMessage = `Foundation release ${tagName}`;
   const releaseNotes = readReleaseFile(releasePaths.releaseRoot, 'release-notes.md');
   const upgradeNotes = readReleaseFile(releasePaths.releaseRoot, 'upgrade-notes.md');
@@ -265,12 +277,14 @@ export function publishFoundationRelease(options) {
       ? {
           type: 'update-github-release',
           tagName,
+          releaseTitle,
           repoFullName,
-          command: ['gh', 'release', 'edit', tagName, '--repo', repoFullName, '--title', tagName],
+          command: ['gh', 'release', 'edit', tagName, '--repo', repoFullName, '--title', releaseTitle],
         }
       : {
           type: 'create-github-release',
           tagName,
+          releaseTitle,
           repoFullName,
           targetCommit,
           command: [
@@ -283,7 +297,7 @@ export function publishFoundationRelease(options) {
             '--target',
             targetCommit,
             '--title',
-            tagName,
+            releaseTitle,
           ],
         },
   );
@@ -297,6 +311,7 @@ export function publishFoundationRelease(options) {
       remote: options.remote,
       targetCommit,
       tagName,
+      releaseTitle,
       tagExists,
       releaseExists,
       releaseBody,
@@ -313,9 +328,9 @@ export function publishFoundationRelease(options) {
   }
 
   if (releaseExists) {
-    updateGitHubRelease(root, repoFullName, tagName, releaseBody);
+    updateGitHubRelease(root, repoFullName, tagName, releaseTitle, releaseBody);
   } else {
-    createGitHubRelease(root, repoFullName, tagName, targetCommit, releaseBody);
+    createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, releaseBody);
   }
 
   return {
@@ -326,6 +341,7 @@ export function publishFoundationRelease(options) {
     remote: options.remote,
     targetCommit,
     tagName,
+    releaseTitle,
     tagExists,
     releaseExists,
     releaseBody,
