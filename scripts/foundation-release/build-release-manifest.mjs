@@ -40,7 +40,15 @@ function buildManifest(options) {
     bundleExclusions: ['backend/cmd/server/uploads', 'backend/uploads', 'uploads'],
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],
-      frontend: ['frontend/src/core', 'frontend/src/components', 'frontend/src/modules/system'],
+      frontend: [
+        'frontend/src/components',
+        'frontend/src/core',
+        'frontend/src/store',
+        'frontend/src/modules/auth',
+        'frontend/src/modules/dashboard',
+        'frontend/src/modules/system',
+        'frontend/src/index.css',
+      ],
       docs: ['docs/designs/FOUNDATION_RELEASE_MODEL.md', 'docs/designs/WORKFLOW.md'],
     },
     verification: {

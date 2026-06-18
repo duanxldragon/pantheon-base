@@ -40,8 +40,15 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'core', 'app.ts'), 'export const app = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'components'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'components', 'card.tsx'), 'export const Card = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'store'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'store', 'useAuthStore.ts'), 'export const store = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'auth'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'auth', 'Login.tsx'), 'export const Login = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'dashboard'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'dashboard', 'Dashboard.tsx'), 'export const Dashboard = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'system'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'system', 'index.ts'), 'export const system = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'index.css'), 'body { margin: 0; }\n', 'utf8');
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md'), '# Model\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'WORKFLOW.md'), '# Workflow\n', 'utf8');
@@ -70,6 +77,23 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     assert.equal(fs.existsSync(path.join(root, 'releases', 'base-v0.8.0', 'manifest.json')), true);
     assert.equal(
       fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'bundle', 'manifest.paths.json')),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          'base-v0.8.0',
+          'bundle',
+          'shared-frontend',
+          'frontend',
+          'src',
+          'store',
+          'useAuthStore.ts',
+        ),
+      ),
       true,
     );
   });
