@@ -18,6 +18,7 @@ import (
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/impexp"
+	"pantheon-platform/backend/pkg/platformprefs"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -39,8 +40,8 @@ type AuthService struct {
 
 type UserPreferenceUpdateResult struct {
 	User      *UserInfoResp
-	Previous  *user.UserPlatformPreferenceResp
-	Current   *user.UserPlatformPreferenceResp
+	Previous  *platformprefs.PlatformPreference
+	Current   *platformprefs.PlatformPreference
 	Persisted string
 }
 
@@ -622,7 +623,7 @@ func (s *AuthService) GetCurrentUserInfo(userID uint64) (*UserInfoResp, error) {
 		Phone:       currentUser.Phone,
 		Roles:       roles,
 		Perms:       perms,
-		Preferences: user.ParseUserPlatformPreferences(currentUser.PreferenceJSON),
+		Preferences: platformprefs.Parse(currentUser.PreferenceJSON),
 	}, nil
 }
 
@@ -636,14 +637,14 @@ func (s *AuthService) UpdateCurrentUserPreferences(userID uint64, req *UserPlatf
 		return nil, err
 	}
 
-	previousPreferences := user.ParseUserPlatformPreferences(currentUser.PreferenceJSON)
-	nextPreferences := user.NormalizeUserPlatformPreferences(&user.UserPlatformPreferenceResp{
+	previousPreferences := platformprefs.Parse(currentUser.PreferenceJSON)
+	nextPreferences := platformprefs.Normalize(&platformprefs.PlatformPreference{
 		Theme:       req.Theme,
 		Language:    req.Language,
 		LayoutMode:  req.LayoutMode,
 		DensityMode: req.DensityMode,
 	})
-	preferenceJSON, err := user.MarshalUserPlatformPreferences(nextPreferences)
+	preferenceJSON, err := platformprefs.Marshal(nextPreferences)
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,15 @@ var preMenuHideInNavRuntimeSchemaMarkers = []schemaColumnMarker{
 }
 
 var currentRuntimeSchemaMarkers = append(
-	[]schemaColumnMarker{{table: "system_menu", column: "hide_in_nav"}},
+	[]schemaColumnMarker{
+		{table: "system_menu", column: "hide_in_nav"},
+		{table: "permission_workbench_remediation_event", column: "issue_key"},
+		{table: "permission_workbench_remediation_event", column: "before_state"},
+		{table: "permission_workbench_remediation_event", column: "after_state"},
+		{table: "permission_workbench_remediation_event", column: "action"},
+		{table: "permission_workbench_remediation_event", column: "created_count"},
+		{table: "permission_workbench_remediation_event", column: "skipped_count"},
+	},
 	preMenuHideInNavRuntimeSchemaMarkers...,
 )
 

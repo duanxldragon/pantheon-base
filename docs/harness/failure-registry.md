@@ -7,7 +7,7 @@ This registry turns repeated agent or process failures into concrete harness cha
 - Repository: `pantheon-base`
 - Owner: repository maintainer
 - Review cadence: weekly during quality remediation, then after each release or repeated agent failure
-- Last reviewed: 2026-06-08
+- Last reviewed: 2026-06-17
 
 ## Registry
 
@@ -21,6 +21,7 @@ This registry turns repeated agent or process failures into concrete harness cha
 | `FR-006` | method-health | method-health-gap | consumer-repository | 2 | Repeated failures existed in commits and sessions while this registry still used the old table schema. | Lessons stayed in chat history and branch history instead of becoming reusable harness controls. | method-gate | `docs/harness/FAILURE_RATCHET_POLICY.md` | `scripts/harness/check-failure-registry.mjs` | repository review | governance review | previous method-health checks | sensor | sensor-added | none | implemented |
 | `FR-007` | maintainability | static-sensor-gap | consumer-repository | 1 | `.harness/cache` was tracked with thousands of cache files. | Generated or transient state polluted repository history and increased review noise. | repo-quality-gate | `.gitignore` | `git ls-files .harness/cache` | repository review | governance review | previous hygiene checks | gate | gate-updated | none | implemented |
 | `FR-008` | method-health | method-health-gap | consumer-repository | 1 | `scripts/harness/*.mjs` depended on `../../../harness-engineering/...` sibling paths. | Another project or standalone checkout would need the same sibling workspace to run method checks. | method-gate | `agentic-method-kit/INSTALL.md` | `scripts/harness/check-method-health.mjs` | `Docs Governance` | team-mode governance review | previous repo-shell sync checks | adapter | adapter-updated | none | implemented |
+| `FR-009` | runtime-quality | static-sensor-gap | consumer-repository | 2 | Current-schema bootstrap markers covered `system_menu.hide_in_nav`, then later missed the new `permission_workbench_remediation_event` compat columns, so persisted local databases were misclassified as already current. | Versioned startup can report migration success while runtime permission-workbench reads or writes still fail against legacy persisted schemas. | runtime-evidence-gate | `backend/pkg/database/migrate.go`, `docs/contracts/SYSTEM_IAM_CONTRACT.md` | `backend/pkg/database/migrate_test.go`, `backend/modules/system/iam/permission/permission_service_test.go`, focused governance smoke | backend tests, focused system smoke | local startup logs plus real-stack governance smoke | previous bootstrap regression coverage | sensor | sensor-added | none | implemented |
 
 ## Review Notes
 

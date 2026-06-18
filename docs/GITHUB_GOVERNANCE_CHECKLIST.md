@@ -41,5 +41,7 @@ Use this checklist when enabling the execution flow described in `docs/designs/W
 - PR description records ownership layer, boundary, validation, `Quality Gates`, `Security Gates`, and CodeQL status
 - PR description records Copilot review status or explicit unavailability
 - PR description records auto-merge status
+- Auto-merge automation only opens after the PR body passes repository governance validation
+- Auto-merge automation only opens after `npm run check:github-feedback -- --repo <owner/repo> --pr <number>` confirms that PR, linked issue, and linked discussion feedback are fully closed
 - High-risk PRs record residual risk and rollback notes explicitly
 - Closeout records merged PR URL, merge commit, and branch cleanup status

@@ -63,14 +63,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout pantheon-base foundation
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
-        with:
-          repository: duanxldragon/pantheon-base
-          ref: main
-          path: pantheon-base-foundation
-          persist-credentials: false
-
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
@@ -85,6 +77,13 @@ jobs:
 
       - name: Check task packet template
         run: npm run check:task-packet-template
+
+      - name: Check PR governance template
+        run: npm run check:pr-governance
+
+      - name: Validate PR governance body
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-pr-governance.mjs --event "$GITHUB_EVENT_PATH"
 
       - name: Check failure registry
         run: npm run check:failure-registry

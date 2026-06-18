@@ -52,6 +52,7 @@ func main() {
 
 	// 3. 初始化 Gin
 	r := gin.Default()
+	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.BodySizeLimit(middleware.DefaultMaxBodyBytes))
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.RequestContextMiddleware(), middleware.OperationLogMiddleware(database.DB))

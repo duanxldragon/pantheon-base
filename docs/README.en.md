@@ -39,6 +39,7 @@ For Chinese-first onboarding, read:
 
 - [../DESIGN.md](../DESIGN.md)
 - [../AGENTS.md](../AGENTS.md)
+- [../.agents/skills/README.md](../.agents/skills/README.md)
 - [contracts/DOCUMENT_GOVERNANCE_CONTRACT.md](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
 - [contracts/DOCUMENT_METADATA_AND_STATUS.md](./contracts/DOCUMENT_METADATA_AND_STATUS.md)
 - [contracts/DOCUMENT_FRONTMATTER_SCHEMA.md](./contracts/DOCUMENT_FRONTMATTER_SCHEMA.md)

@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { readAuthCookieSession } from './lib/auth-cookie-session.mjs';
 
 const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const adminUsername = process.env.PANTHEON_SMOKE_ADMIN_USERNAME ?? 'admin';
@@ -15,14 +16,6 @@ function readArg(flag, fallback = '') {
     return fallback;
   }
   return String(process.argv[index + 1] ?? '').trim();
-}
-
-function extractCookieValue(setCookieHeader, name) {
-  if (!setCookieHeader) {
-    return null;
-  }
-  const match = setCookieHeader.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`));
-  return match?.[1] ?? null;
 }
 
 function authHeaders(session) {
@@ -46,12 +39,10 @@ async function login() {
   if (payload.code !== 200) {
     throw new Error(`Login failed: code ${payload.code}`);
   }
-  return {
-    accessToken: payload.data.accessToken,
-    csrfToken:
-      extractCookieValue(response.headers.get('set-cookie'), 'pantheon_csrf_token') ??
-      `pantheon-audit-csrf-${Date.now()}`,
-  };
+  return readAuthCookieSession(response.headers, {
+    includeRefreshToken: false,
+    csrfFallback: `pantheon-audit-csrf-${Date.now()}`,
+  });
 }
 
 async function apiGet(session, path, params = {}) {

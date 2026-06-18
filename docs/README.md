@@ -91,7 +91,8 @@ Harness Engineering 方法源文件，用于理解方法和运行检查：
 
 1. [docs/harness/HARNESS_ENGINEERING_CONTRACT.md](./harness/HARNESS_ENGINEERING_CONTRACT.md)
 2. [docs/harness/HARNESS_METHOD_PLAYBOOK.md](./harness/HARNESS_METHOD_PLAYBOOK.md)
-3. [scripts/harness/README.md](../scripts/harness/README.md)
+3. [../.agents/skills/README.zh.md](../.agents/skills/README.zh.md)
+4. [scripts/harness/README.md](../scripts/harness/README.md)
 
 ### 2.4 历史决策与治理延伸
 
@@ -118,6 +119,7 @@ Harness Engineering 方法源文件，用于理解方法和运行检查：
 - [代码评审标准](./acceptances/CODE_REVIEW_STANDARD.md)
 - [业务开发与 AI 协作](./designs/WORKFLOW.md)
 - [代码质量与安全治理策略](./designs/QUALITY_AND_SECURITY_STRATEGY.md)
+- [当前治理与代码审计基线（2026-06-17）](./assessments/CURRENT_GOVERNANCE_AND_CODE_AUDIT_2026-06-17.md)
 - [系统模块审计](./assessments/SYSTEM_MODULE_AUDIT.md)
 - [平台缺口审计（2026-04-29）](./assessments/PLATFORM_GAP_AUDIT_20260429.md)
 - [延后代码修复 Backlog（2026-06-08）](./harness/DEFERRED_CODE_BACKLOG_20260608.md)

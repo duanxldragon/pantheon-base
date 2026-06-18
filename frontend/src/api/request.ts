@@ -16,6 +16,7 @@ import { clearPantheonThemePreference } from '../core/theme/theme';
 import { showSecondaryVerify } from '../components/feedback/secondaryVerifyController';
 import { switchI18nLanguage } from '../i18n';
 import { clearClientAuthSession, persistCsrfToken, readStoredCsrfToken } from '../core/auth/clientSession';
+import { COOKIE_TOKEN_PLACEHOLDER } from '../core/auth/sessionSnapshot';
 
 export interface RequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
@@ -80,7 +81,7 @@ function syncCsrfTokenFromHeaders(headers: unknown) {
   persistCsrfToken(csrfToken);
 }
 
-let refreshPromise: Promise<string | null> | null = null;
+let refreshPromise: Promise<boolean> | null = null;
 let logoutTransition = false;
 
 const clearClientSession = () => {
@@ -123,7 +124,7 @@ const shouldRefresh = (config?: RequestConfig, code?: number) => {
   return code === 401;
 };
 
-const doRefreshToken = async (): Promise<string | null> => {
+const doRefreshToken = async (): Promise<boolean> => {
   if (!refreshPromise) {
     refreshPromise = axios
       .post(
@@ -142,14 +143,12 @@ const doRefreshToken = async (): Promise<string | null> => {
         if (code !== 200) {
           throw new Error(response.data.message || 'request.failed');
         }
-        return data;
-      })
-      .then((data) => {
-        return data.accessToken;
+        useAuthStore.getState().setTokens(COOKIE_TOKEN_PLACEHOLDER, COOKIE_TOKEN_PLACEHOLDER);
+        return Boolean(data);
       })
       .catch(() => {
         clearClientSession();
-        return null;
+        return false;
       })
       .finally(() => {
         refreshPromise = null;
@@ -339,11 +338,9 @@ request.interceptors.response.use(
     }
 
     if (shouldRefresh(config, code)) {
-      const nextToken = await doRefreshToken();
-      if (nextToken) {
+      const refreshed = await doRefreshToken();
+      if (refreshed) {
         config._retry = true;
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${nextToken}`;
         return request(config);
       }
       redirectToLogin();
@@ -383,11 +380,9 @@ request.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && shouldRefresh(config, 401)) {
-      const nextToken = await doRefreshToken();
-      if (nextToken && config) {
+      const refreshed = await doRefreshToken();
+      if (refreshed && config) {
         config._retry = true;
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${nextToken}`;
         return request(config);
       }
       redirectToLogin();
