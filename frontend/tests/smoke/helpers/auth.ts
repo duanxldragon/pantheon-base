@@ -1,4 +1,6 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { readAuthCookieSession } from '../../../scripts/lib/auth-cookie-session.mjs';
+import { COOKIE_TOKEN_PLACEHOLDER } from '../../../src/core/auth/sessionSnapshot.ts';
 
 export const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const defaultWebBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5173';
@@ -23,8 +25,12 @@ export const adminCredentials: LoginCredentials = {
 
 export async function primeChineseLocale(page: Page) {
   await page.addInitScript(() => {
-    localStorage.setItem('pantheon_lang', 'zh-CN');
-    localStorage.setItem('pantheon_lang_explicit', '1');
+    try {
+      globalThis.localStorage?.setItem('pantheon_lang', 'zh-CN');
+      globalThis.localStorage?.setItem('pantheon_lang_explicit', '1');
+    } catch {
+      // about:blank and other opaque origins do not expose storage.
+    }
   });
 }
 
@@ -41,14 +47,6 @@ function resolveRequestContext(requestLike: APIRequestContext | Page) {
   return (requestLike as Page).request;
 }
 
-function extractCookieValue(setCookieHeader: string | undefined, name: string) {
-  if (!setCookieHeader) {
-    return null;
-  }
-  const match = setCookieHeader.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`));
-  return match?.[1] ?? null;
-}
-
 export async function loginByApi(
   requestLike: APIRequestContext | Page,
   credentials: LoginCredentials,
@@ -60,15 +58,15 @@ export async function loginByApi(
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   expect(payload.code).toBe(200);
-  const csrfToken = response.headers()['x-csrf-token']
-    ?? extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token')
-    ?? `pantheon-smoke-csrf-${Date.now()}`;
+  const session = readAuthCookieSession(response.headers(), {
+    csrfFallback: `pantheon-smoke-csrf-${Date.now()}`,
+  });
   return {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
     username: credentials.username,
     password: credentials.password,
-    csrfToken,
+    csrfToken: session.csrfToken,
   };
 }
 
@@ -88,19 +86,9 @@ export async function signInWithUi(
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   expect(payload.code).toBe(200);
-  await installClientSession(page, {
-    accessToken: payload.data.accessToken as string,
-    refreshToken: payload.data.refreshToken as string,
-    username: credentials.username,
-    password: credentials.password,
-    csrfToken:
-      response.headers()['x-csrf-token']
-      ?? extractCookieValue(response.headers()['set-cookie'], 'pantheon_csrf_token')
-      ?? `pantheon-smoke-csrf-${Date.now()}`,
-  });
   await page.goto('/dashboard', { waitUntil: 'networkidle' });
   await expect(page.locator('.app-shell__header')).toBeVisible();
-  return payload.data.accessToken as string;
+  return COOKIE_TOKEN_PLACEHOLDER;
 }
 
 export async function signInAsAdmin(page: Page) {
@@ -112,8 +100,12 @@ export async function signInAsAdmin(page: Page) {
 export async function installClientSession(page: Page, login: BrowserLoginResult) {
   await primeChineseLocale(page);
   await page.addInitScript((csrfToken) => {
-    localStorage.setItem('pantheon_session_hint', '1');
-    localStorage.setItem('pantheon_csrf_token', csrfToken);
+    try {
+      globalThis.localStorage?.setItem('pantheon_session_hint', '1');
+      globalThis.localStorage?.setItem('pantheon_csrf_token', csrfToken);
+    } catch {
+      // about:blank and other opaque origins do not expose storage.
+    }
   }, login.csrfToken);
   const appBaseUrl = new URL(
     page.url() === 'about:blank' ? '/' : page.url(),
@@ -148,8 +140,12 @@ export async function installClientSession(page: Page, login: BrowserLoginResult
   ]);
   if (page.url() !== 'about:blank') {
     await page.evaluate((csrfToken) => {
-      localStorage.setItem('pantheon_session_hint', '1');
-      localStorage.setItem('pantheon_csrf_token', csrfToken);
+      try {
+        globalThis.localStorage?.setItem('pantheon_session_hint', '1');
+        globalThis.localStorage?.setItem('pantheon_csrf_token', csrfToken);
+      } catch {
+        // Ignore opaque-origin storage failures for smoke setup.
+      }
     }, login.csrfToken);
   }
 }
@@ -218,11 +214,19 @@ export async function verifiedApiHeaders(requestLike: APIRequestContext | Page, 
 export async function installOperationToken(page: Page, accessToken: string) {
   const token = await getOperationToken(page, accessToken);
   await page.addInitScript((value) => {
-    sessionStorage.setItem('pantheon_op_token', value);
+    try {
+      globalThis.sessionStorage?.setItem('pantheon_op_token', value);
+    } catch {
+      // about:blank and other opaque origins do not expose storage.
+    }
   }, token);
   if (page.url() !== 'about:blank') {
     await page.evaluate((value) => {
-      sessionStorage.setItem('pantheon_op_token', value);
+      try {
+        globalThis.sessionStorage?.setItem('pantheon_op_token', value);
+      } catch {
+        // Ignore opaque-origin storage failures for smoke setup.
+      }
     }, token);
   }
 }

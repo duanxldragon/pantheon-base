@@ -69,11 +69,14 @@ func TestWriteLoginSuccessResponseSetsCookiesAndPayload(t *testing.T) {
 	if resp.Code != common.CodeSuccess {
 		t.Fatalf("expected success code, got %d", resp.Code)
 	}
-	if resp.Data.AccessToken != tokenPair.AccessToken || resp.Data.RefreshToken != tokenPair.RefreshToken {
-		t.Fatalf("unexpected token payload: %+v", resp.Data)
+	if resp.Data.Token != "" || resp.Data.AccessToken != "" || resp.Data.RefreshToken != "" {
+		t.Fatalf("expected login payload to omit raw tokens, got %+v", resp.Data)
 	}
 	if resp.Data.SessionID != tokenPair.SessionID {
 		t.Fatalf("expected session id %q, got %q", tokenPair.SessionID, resp.Data.SessionID)
+	}
+	if resp.Data.TokenType != tokenPair.TokenType {
+		t.Fatalf("expected token type %q, got %q", tokenPair.TokenType, resp.Data.TokenType)
 	}
 	if resp.Data.User == nil || resp.Data.User.Username != userInfo.Username {
 		t.Fatalf("expected user payload %+v, got %+v", userInfo, resp.Data.User)
@@ -111,11 +114,14 @@ func TestWriteMFASuccessResponseSetsCookiesAndPayload(t *testing.T) {
 	if resp.Code != common.CodeSuccess {
 		t.Fatalf("expected success code, got %d", resp.Code)
 	}
-	if resp.Data.AccessToken != respPayload.AccessToken || resp.Data.RefreshToken != respPayload.RefreshToken {
-		t.Fatalf("unexpected mfa payload: %+v", resp.Data)
+	if resp.Data.Token != "" || resp.Data.AccessToken != "" || resp.Data.RefreshToken != "" {
+		t.Fatalf("expected mfa payload to omit raw tokens, got %+v", resp.Data)
 	}
 	if resp.Data.User == nil || resp.Data.User.Username != respPayload.User.Username {
 		t.Fatalf("expected user payload %+v, got %+v", respPayload.User, resp.Data.User)
+	}
+	if resp.Data.SessionID != respPayload.SessionID {
+		t.Fatalf("expected session id %q, got %q", respPayload.SessionID, resp.Data.SessionID)
 	}
 
 	assertCSRFCookieAndHeader(
@@ -149,11 +155,20 @@ func TestWriteRefreshSuccessResponseSetsCookiesAndPayload(t *testing.T) {
 	if resp.Code != common.CodeSuccess {
 		t.Fatalf("expected success code, got %d", resp.Code)
 	}
-	if resp.Data["accessToken"] != tokenPair.AccessToken || resp.Data["refreshToken"] != tokenPair.RefreshToken {
-		t.Fatalf("unexpected refresh payload: %#v", resp.Data)
+	if _, ok := resp.Data["token"]; ok {
+		t.Fatalf("expected refresh payload to omit token, got %#v", resp.Data)
+	}
+	if _, ok := resp.Data["accessToken"]; ok {
+		t.Fatalf("expected refresh payload to omit access token, got %#v", resp.Data)
+	}
+	if _, ok := resp.Data["refreshToken"]; ok {
+		t.Fatalf("expected refresh payload to omit refresh token, got %#v", resp.Data)
 	}
 	if resp.Data["sessionId"] != tokenPair.SessionID {
 		t.Fatalf("expected session id %q, got %#v", tokenPair.SessionID, resp.Data["sessionId"])
+	}
+	if resp.Data["tokenType"] != tokenPair.TokenType {
+		t.Fatalf("expected token type %q, got %#v", tokenPair.TokenType, resp.Data["tokenType"])
 	}
 
 	assertCSRFCookieAndHeader(

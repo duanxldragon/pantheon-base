@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/impexp"
+	"pantheon-platform/backend/pkg/platformprefs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,15 +30,8 @@ func failOnCSRFCookieError(c *gin.Context, err error) bool {
 	return true
 }
 
-func writeLoginSuccessResponse(c *gin.Context, tokenPair *common.TokenPair, userInfo *UserInfoResp) bool {
-	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
-	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
-	_, csrfErr := common.SetCSRFCookie(c.Writer)
-	if failOnCSRFCookieError(c, csrfErr) {
-		return false
-	}
-
-	common.Success(c, AuthTokenResp{
+func buildAuthSessionResponse(tokenPair *common.TokenPair, userInfo *UserInfoResp) AuthTokenResp {
+	return AuthTokenResp{
 		Token:            tokenPair.AccessToken,
 		AccessToken:      tokenPair.AccessToken,
 		RefreshToken:     tokenPair.RefreshToken,
@@ -47,7 +40,18 @@ func writeLoginSuccessResponse(c *gin.Context, tokenPair *common.TokenPair, user
 		RefreshExpiresAt: tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
 		SessionID:        tokenPair.SessionID,
 		User:             userInfo,
-	})
+	}
+}
+
+func writeLoginSuccessResponse(c *gin.Context, tokenPair *common.TokenPair, userInfo *UserInfoResp) bool {
+	common.SetAccessTokenCookie(c.Writer, tokenPair.AccessToken)
+	common.SetRefreshTokenCookie(c.Writer, tokenPair.RefreshToken)
+	_, csrfErr := common.SetCSRFCookie(c.Writer)
+	if failOnCSRFCookieError(c, csrfErr) {
+		return false
+	}
+
+	common.Success(c, buildAuthSessionResponse(tokenPair, userInfo))
 	return true
 }
 
@@ -75,15 +79,7 @@ func writeRefreshSuccessResponse(c *gin.Context, tokenPair *common.TokenPair) bo
 		return false
 	}
 
-	common.Success(c, gin.H{
-		"token":            tokenPair.AccessToken,
-		"accessToken":      tokenPair.AccessToken,
-		"refreshToken":     tokenPair.RefreshToken,
-		"tokenType":        tokenPair.TokenType,
-		"accessExpiresAt":  tokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
-		"refreshExpiresAt": tokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
-		"sessionId":        tokenPair.SessionID,
-	})
+	common.Success(c, buildAuthSessionResponse(tokenPair, nil))
 	return true
 }
 
@@ -334,7 +330,7 @@ func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 	}
 }
 
-func buildPreferenceAuditPayload(previous, current *user.UserPlatformPreferenceResp) string {
+func buildPreferenceAuditPayload(previous, current *platformprefs.PlatformPreference) string {
 	return marshalAuthAuditPayload(gin.H{
 		"scope":  "platform.shell.preferences",
 		"before": previous,
@@ -342,7 +338,7 @@ func buildPreferenceAuditPayload(previous, current *user.UserPlatformPreferenceR
 	})
 }
 
-func buildPreferenceAuditResult(resp *UserInfoResp, previous *user.UserPlatformPreferenceResp, current *user.UserPlatformPreferenceResp) string {
+func buildPreferenceAuditResult(resp *UserInfoResp, previous *platformprefs.PlatformPreference, current *platformprefs.PlatformPreference) string {
 	return marshalAuthAuditPayload(gin.H{
 		"userId":      resp.ID,
 		"username":    resp.Username,
@@ -351,7 +347,7 @@ func buildPreferenceAuditResult(resp *UserInfoResp, previous *user.UserPlatformP
 	})
 }
 
-func preferencesEqual(previous, current *user.UserPlatformPreferenceResp) bool {
+func preferencesEqual(previous, current *platformprefs.PlatformPreference) bool {
 	if previous == nil && current == nil {
 		return true
 	}

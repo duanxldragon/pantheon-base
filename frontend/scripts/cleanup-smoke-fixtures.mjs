@@ -2,6 +2,7 @@ import process from 'node:process';
 import { createCleanupFixtureCache } from './lib/cleanup-fixture-cache.mjs';
 import { fetchCleanupJson, getCleanupGetRetryOptions } from './lib/cleanup-http.mjs';
 import { buildCleanupI18nQueries } from './lib/cleanup-fixture-query-plan.mjs';
+import { readAuthCookieSession } from './lib/auth-cookie-session.mjs';
 
 const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const adminUsername = process.env.PANTHEON_SMOKE_ADMIN_USERNAME ?? 'admin';
@@ -85,14 +86,6 @@ function matchesPattern(value, pattern) {
   return pattern.exacts.includes(value) || pattern.prefixes.some((prefix) => value.startsWith(prefix));
 }
 
-function extractCookieValue(setCookieHeader, name) {
-  if (!setCookieHeader) {
-    return null;
-  }
-  const match = setCookieHeader.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`));
-  return match?.[1] ?? null;
-}
-
 async function login() {
   const response = await fetch(`${apiBaseUrl}/auth/login`, {
     method: 'POST',
@@ -106,13 +99,10 @@ async function login() {
   if (payload.code !== 200) {
     throw new Error(`Login failed: code ${payload.code}`);
   }
-  return {
-    accessToken: payload.data.accessToken,
-    csrfToken:
-      response.headers.get('x-csrf-token') ??
-      extractCookieValue(response.headers.get('set-cookie'), 'pantheon_csrf_token') ??
-      `pantheon-smoke-csrf-${Date.now()}`,
-  };
+  return readAuthCookieSession(response.headers, {
+    includeRefreshToken: false,
+    csrfFallback: `pantheon-smoke-csrf-${Date.now()}`,
+  });
 }
 
 async function getOperationToken(session) {

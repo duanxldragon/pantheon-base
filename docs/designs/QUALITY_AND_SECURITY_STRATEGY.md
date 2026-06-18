@@ -113,6 +113,7 @@ Copilot review 是 GitHub 原生的辅助信号，负责补充扫描器覆盖不
 - Copilot review 默认自动请求，或在仓库/账号能力允许时启用自动评审
 - Copilot review 只产生 comment，不作为 required approval
 - Copilot 不可用时，PR 仍可依赖 `Quality Gates`、`Security Gates` 和 PR 留痕继续推进
+- 自动打开 squash auto-merge 前，PR body 仍必须先通过仓库治理校验，避免 auto-merge 绕开留痕要求
 - 高风险改动必须在 PR 中显式记录 residual risk、回滚方式和后续跟进
 
 ## 4. 例外处理

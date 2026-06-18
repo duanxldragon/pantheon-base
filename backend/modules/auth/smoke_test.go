@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	settingmod "pantheon-platform/backend/modules/system/config/setting"
@@ -198,9 +199,18 @@ func TestSmoke_LoginFlowSetsHttpOnlyCSRFCookieAndHeader(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", recorder.Code)
 	}
 
-	resp := decodeAuthResponse[struct{}](t, recorder)
+	resp := decodeAuthResponse[map[string]any](t, recorder)
 	if resp.Code != common.CodeSuccess {
 		t.Fatalf("expected business success code, got %d", resp.Code)
+	}
+	if _, ok := resp.Data["token"]; ok {
+		t.Fatalf("expected login response to omit token body, got %#v", resp.Data)
+	}
+	if _, ok := resp.Data["accessToken"]; ok {
+		t.Fatalf("expected login response to omit access token body, got %#v", resp.Data)
+	}
+	if _, ok := resp.Data["refreshToken"]; ok {
+		t.Fatalf("expected login response to omit refresh token body, got %#v", resp.Data)
 	}
 
 	assertCSRFCookieAndHeader(
@@ -223,31 +233,51 @@ func TestSmoke_RefreshFlowReissuesCSRFCookieAndHeader(t *testing.T) {
 		t.Fatalf("expected login status 200, got %d", loginRecorder.Code)
 	}
 
-	loginResp := decodeAuthResponse[struct {
-		RefreshToken string `json:"refreshToken"`
-	}](t, loginRecorder)
+	loginResp := decodeAuthResponse[map[string]any](t, loginRecorder)
 	if loginResp.Code != common.CodeSuccess {
 		t.Fatalf("expected login business success code, got %d", loginResp.Code)
 	}
-	if loginResp.Data.RefreshToken == "" {
-		t.Fatal("expected login response to include refresh token")
+	if _, ok := loginResp.Data["refreshToken"]; ok {
+		t.Fatalf("expected login response to omit refresh token body, got %#v", loginResp.Data)
 	}
 
-	refreshRecorder := performJSONRequest(
-		t,
-		r,
-		http.MethodPost,
-		"/api/v1/auth/refresh",
-		RefreshTokenReq{RefreshToken: loginResp.Data.RefreshToken},
-	)
+	loginResult := loginRecorder.Result()
+	var refreshCookie *http.Cookie
+	for _, cookie := range loginResult.Cookies() {
+		if cookie.Name == common.CookieRefreshToken {
+			refreshCookie = cookie
+			break
+		}
+	}
+	if refreshCookie == nil || strings.TrimSpace(refreshCookie.Value) == "" {
+		t.Fatal("expected login response to set refresh token cookie")
+	}
+
+	refreshReq, err := http.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewBufferString(`{}`))
+	if err != nil {
+		t.Fatalf("build refresh request: %v", err)
+	}
+	refreshReq.Header.Set("Content-Type", "application/json")
+	refreshReq.AddCookie(refreshCookie)
+	refreshRecorder := httptest.NewRecorder()
+	r.ServeHTTP(refreshRecorder, refreshReq)
 
 	if refreshRecorder.Code != http.StatusOK {
 		t.Fatalf("expected refresh status 200, got %d", refreshRecorder.Code)
 	}
 
-	refreshResp := decodeAuthResponse[struct{}](t, refreshRecorder)
+	refreshResp := decodeAuthResponse[map[string]any](t, refreshRecorder)
 	if refreshResp.Code != common.CodeSuccess {
 		t.Fatalf("expected refresh business success code, got %d", refreshResp.Code)
+	}
+	if _, ok := refreshResp.Data["token"]; ok {
+		t.Fatalf("expected refresh response to omit token body, got %#v", refreshResp.Data)
+	}
+	if _, ok := refreshResp.Data["accessToken"]; ok {
+		t.Fatalf("expected refresh response to omit access token body, got %#v", refreshResp.Data)
+	}
+	if _, ok := refreshResp.Data["refreshToken"]; ok {
+		t.Fatalf("expected refresh response to omit refresh token body, got %#v", refreshResp.Data)
 	}
 
 	assertCSRFCookieAndHeader(

@@ -1,3 +1,5 @@
+import { readAuthCookieSession } from './lib/auth-cookie-session.mjs';
+
 const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const adminUsername = process.env.PANTHEON_SMOKE_ADMIN_USERNAME ?? 'admin';
 const adminPassword = process.env.PANTHEON_SMOKE_ADMIN_PASSWORD ?? '123456';
@@ -255,10 +257,18 @@ async function request(path, options = {}) {
 }
 
 async function login() {
-  return request('/auth/login', {
+  const response = await fetch(`${apiBaseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: adminUsername, password: adminPassword }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload.code !== 200) {
+    throw new Error(`/auth/login failed: ${response.status} ${payload.message || payload.msg || ''}`);
+  }
+  return readAuthCookieSession(response.headers, {
+    includeRefreshToken: false,
+    csrfFallback: `pantheon-smoke-csrf-${Date.now()}`,
   });
 }
 
@@ -319,7 +329,7 @@ async function main() {
   const action = process.argv[2] || 'up';
   const loginData = await login();
   const accessToken = loginData.accessToken;
-  const csrfToken = `pantheon-smoke-csrf-${Date.now()}`;
+  const csrfToken = loginData.csrfToken;
   const operationToken = await getOperationToken(accessToken, csrfToken);
 
   if (action === 'down') {

@@ -65,6 +65,9 @@ Require the PR template to record:
 5. Auto-merge status
 6. residual risk / rollback note for high-risk changes
 
+The repository automation should only enable auto-merge after that PR body passes the same governance validation in CI. Auto-merge is an accelerator, not a bypass around PR traceability.
+The same automation should also run `npm run check:github-feedback -- --repo <owner/repo> --pr <number>` and keep auto-merge disabled until PR review comments plus linked issue/discussion feedback are fully closed.
+
 ## 2. Ops repository
 
 Repeat the same branch-protection, required-check, and Copilot/auto-merge steps in `pantheon-ops`.

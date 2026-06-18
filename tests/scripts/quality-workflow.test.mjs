@@ -33,3 +33,29 @@ test('docs-only pull requests can skip smoke sanity without failing Quality Gate
     'quality gates should only require smoke sanity when the change is not docs-only',
   );
 });
+
+test('docs governance validates the PR governance template and pull request body', () => {
+  assert.match(
+    workflowSource,
+    /Check PR governance template[\s\S]*npm run check:pr-governance/i,
+    'docs governance should check the PR governance template',
+  );
+  assert.match(
+    workflowSource,
+    /Validate PR governance body[\s\S]*if:\s*github\.event_name\s*==\s*'pull_request'[\s\S]*node scripts\/check-pr-governance\.mjs --event "\$GITHUB_EVENT_PATH"/i,
+    'docs governance should validate the pull request body on pull request events',
+  );
+});
+
+test('docs governance does not checkout an unused pantheon-base foundation copy', () => {
+  assert.doesNotMatch(
+    workflowSource,
+    /Checkout pantheon-base foundation/i,
+    'quality workflow should not spend CI time on an unused secondary checkout',
+  );
+  assert.doesNotMatch(
+    workflowSource,
+    /path:\s*pantheon-base-foundation/i,
+    'quality workflow should not materialize an unused pantheon-base-foundation path',
+  );
+});
