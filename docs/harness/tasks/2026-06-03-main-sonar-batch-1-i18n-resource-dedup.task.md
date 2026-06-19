@@ -124,6 +124,7 @@ system/config
 ## Linkage
 
 - Task ID: `2026-06-03-main-sonar-batch-1-i18n-resource-dedup`
+- Task Manifest: `.harness/tasks/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `docs/superpowers/plans/2026-06-03-main-sonar-priority-batches.md`
 - Evidence Directory: `.harness/evidence/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/`

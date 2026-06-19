@@ -3,6 +3,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {
+  buildTaskManifestPath,
+  readTaskManifest,
+} from './task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 
@@ -477,7 +481,14 @@ function validateLinkage(content, headings, result, root, filePath) {
 
   const sectionContent = getSectionContent(content, headings, section);
   const linkage = parseLinkageItems(sectionContent);
-  const requiredItems = ['Task ID', 'OpenSpec Change', 'Superpowers Plan', 'Evidence Directory', 'Review File'];
+  const requiredItems = [
+    'Task ID',
+    'Task Manifest',
+    'OpenSpec Change',
+    'Superpowers Plan',
+    'Evidence Directory',
+    'Review File',
+  ];
 
   for (const item of requiredItems) {
     if (!linkage.has(item)) {
@@ -489,6 +500,26 @@ function validateLinkage(content, headings, result, root, filePath) {
   const taskId = linkage.get('Task ID');
   if (taskId && stripBackticks(taskId) !== expectedTaskId) {
     result.errors.push(`Linkage Task ID "${stripBackticks(taskId)}" must match file name task id "${expectedTaskId}".`);
+  }
+
+  const taskManifest = linkage.get('Task Manifest');
+  if (taskManifest) {
+    const normalized = stripBackticks(taskManifest);
+    const expectedManifest = buildTaskManifestPath(expectedTaskId);
+    if (normalized !== expectedManifest) {
+      result.errors.push(`Linkage Task Manifest must be "${expectedManifest}".`);
+    } else {
+      try {
+        const manifest = readTaskManifest(root, normalized);
+        if (manifest.payload.taskId !== expectedTaskId) {
+          result.errors.push(
+            `Linked task manifest task id "${manifest.payload.taskId}" must match "${expectedTaskId}".`,
+          );
+        }
+      } catch (error) {
+        result.errors.push(error.message);
+      }
+    }
   }
 
   const evidenceDir = linkage.get('Evidence Directory');

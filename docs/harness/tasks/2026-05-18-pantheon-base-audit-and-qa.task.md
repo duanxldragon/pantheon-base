@@ -132,6 +132,7 @@ platform
 ## Linkage
 
 - Task ID: `2026-05-18-pantheon-base-audit-and-qa`
+- Task Manifest: `.harness/tasks/2026-05-18-pantheon-base-audit-and-qa/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `none`
 - Evidence Directory: `.harness/evidence/2026-05-18-pantheon-base-audit-and-qa/`

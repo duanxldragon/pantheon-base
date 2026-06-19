@@ -7,8 +7,8 @@
 
 ## Harness 链路
 
-- Task Packet：
-- Task packet：
+- Task ID：
+- Task Manifest：
 - Evidence：
 - Verification evidence：
 - Review Artifact：
@@ -22,7 +22,8 @@
 
 > 保留本区块的英文 marker，供 `scripts/harness/check-adoption.mjs` 做机械检查。
 
-- task packet:
+- task id:
+- task manifest:
 - evidence:
 - boundaries:
 - backend response contract:

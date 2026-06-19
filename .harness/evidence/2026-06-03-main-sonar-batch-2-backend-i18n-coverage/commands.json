@@ -50,11 +50,12 @@
     "notes": "scaffolded from task packet Structural Scope; replace after graph review"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-batch-2-backend-i18n-coverage.task.md",
     "evidenceDir": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/",
     "reviewFile": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/manifest.json",
+    "summaryFile": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/summary.md"
   },
   "knownGaps": [
     "The larger MySQL-backed i18n service suite still skips when PANTHEON_TEST_DSN is unset, so service-file coverage is improved but not fully closed.",

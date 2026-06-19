@@ -7,7 +7,8 @@
 
 ## Harness 链路
 
-- Task Packet：`docs/harness/tasks/2026-06-18-pr-branch-cleanup-automation.task.md`
+- Task ID：`2026-06-18-pr-branch-cleanup-automation`
+- Task Manifest：`.harness/tasks/2026-06-18-pr-branch-cleanup-automation/manifest.json`
 - Evidence：`.harness/evidence/2026-06-18-pr-branch-cleanup-automation/commands.json`
 - Verification evidence：`.harness/evidence/2026-06-18-pr-branch-cleanup-automation/summary.md`
 - Review Artifact：`.harness/evidence/2026-06-18-pr-branch-cleanup-automation/review.md`
@@ -19,7 +20,7 @@
 
 ## Harness adoption markers
 
-- task packet: `docs/harness/tasks/2026-06-18-pr-branch-cleanup-automation.task.md`
+- Task ID：`2026-06-18-pr-branch-cleanup-automation`
 - evidence: `.harness/evidence/2026-06-18-pr-branch-cleanup-automation/`
 - boundaries: `repository-governance only`
 - backend response contract: `none - repository-governance only`

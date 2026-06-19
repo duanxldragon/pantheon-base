@@ -2,6 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import {
+  extractTaskIdFromManifestPath,
+  normalizeRepoRelativePath,
+  readTaskManifest,
+} from './task-manifest.mjs';
 
 const root = process.cwd();
 const TEMPLATE_CANDIDATES = [
@@ -24,8 +29,8 @@ const REQUIRED_FIELDS = [
   { label: '改动模块', allowExplicitNone: false },
   { label: '目标问题', allowExplicitNone: false },
   { label: '预期影响', allowExplicitNone: false },
-  { label: 'Task Packet', allowExplicitNone: true },
-  { label: 'Task packet', allowExplicitNone: true },
+  { label: 'Task ID', allowExplicitNone: true },
+  { label: 'Task Manifest', allowExplicitNone: true },
   { label: 'Evidence', allowExplicitNone: true },
   { label: 'Verification evidence', allowExplicitNone: true },
   { label: 'Review Artifact', allowExplicitNone: true },
@@ -34,7 +39,8 @@ const REQUIRED_FIELDS = [
   { label: 'Quality Profile', allowExplicitNone: false },
   { label: 'Ratchet Decision', allowExplicitNone: false },
   { label: 'GitHub Signal', allowExplicitNone: false },
-  { label: 'task packet', allowExplicitNone: true },
+  { label: 'task id', allowExplicitNone: true },
+  { label: 'task manifest', allowExplicitNone: true },
   { label: 'evidence', allowExplicitNone: true },
   { label: 'boundaries', allowExplicitNone: true },
   { label: 'backend response contract', allowExplicitNone: true },
@@ -106,10 +112,6 @@ function isPlaceholder(value) {
   return PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(value));
 }
 
-function normalizeRepoRelativePath(value) {
-  return value.replaceAll('\\', '/').replace(/^\.\/+/, '').replace(/^\/+/, '');
-}
-
 function hasExistingRepoFile(rootDir, value) {
   if (value.includes('://')) {
     return false;
@@ -119,11 +121,6 @@ function hasExistingRepoFile(rootDir, value) {
     return false;
   }
   return fs.existsSync(path.join(rootDir, normalized));
-}
-
-function extractTaskIdFromTaskPacketPath(value) {
-  const match = normalizeRepoRelativePath(value).match(/^docs\/harness\/tasks\/(.+)\.task\.md$/i);
-  return match ? match[1] : null;
 }
 
 function extractTaskIdFromArtifactPath(value, suffix) {
@@ -161,26 +158,18 @@ function validateFileReference({
 }
 
 function validateArtifactLinkage(content, rootDir, findings) {
-  const taskPacketValue = parseField(content, 'Task Packet');
-  const legacyTaskPacketValue = parseField(content, 'Task packet');
+  const taskIdValue = parseField(content, 'Task ID');
+  const taskManifestValue = parseField(content, 'Task Manifest');
   const evidenceValue = parseField(content, 'Evidence');
   const verificationEvidenceValue = parseField(content, 'Verification evidence');
   const reviewArtifactValue = parseField(content, 'Review Artifact');
   const trivialValue = parseField(content, 'Trivial change')?.toLowerCase() ?? '';
   const isTrivial = YES_VALUES.has(trivialValue);
 
-  if (
-    taskPacketValue !== null &&
-    legacyTaskPacketValue !== null &&
-    taskPacketValue !== legacyTaskPacketValue
-  ) {
-    findings.push('Task Packet and Task packet must match');
-  }
-
   if (!isTrivial) {
     for (const [fieldLabel, value] of [
-      ['Task Packet', taskPacketValue],
-      ['Task packet', legacyTaskPacketValue],
+      ['Task ID', taskIdValue],
+      ['Task Manifest', taskManifestValue],
       ['Evidence', evidenceValue],
       ['Verification evidence', verificationEvidenceValue],
       ['Review Artifact', reviewArtifactValue],
@@ -191,21 +180,22 @@ function validateArtifactLinkage(content, rootDir, findings) {
     }
   }
 
+  if (taskIdValue !== null) {
+    const normalizedTaskId = normalizeValue(taskIdValue);
+    if (
+      !EXPLICIT_NONE.has(normalizedTaskId.toLowerCase()) &&
+      !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(normalizedTaskId)
+    ) {
+      findings.push('Task ID must be a normalized task identifier such as YYYY-MM-DD-task-name');
+    }
+  }
   validateFileReference({
     findings,
-    fieldLabel: 'Task Packet',
-    value: taskPacketValue,
+    fieldLabel: 'Task Manifest',
+    value: taskManifestValue,
     rootDir,
-    pattern: /^docs\/harness\/tasks\/.+\.task\.md$/i,
-    placeholderMessage: 'docs/harness/tasks/<task-id>.task.md',
-  });
-  validateFileReference({
-    findings,
-    fieldLabel: 'Task packet',
-    value: legacyTaskPacketValue,
-    rootDir,
-    pattern: /^docs\/harness\/tasks\/.+\.task\.md$/i,
-    placeholderMessage: 'docs/harness/tasks/<task-id>.task.md',
+    pattern: /^\.harness\/tasks\/.+\/manifest\.json$/i,
+    placeholderMessage: '.harness/tasks/<task-id>/manifest.json',
   });
   validateFileReference({
     findings,
@@ -232,9 +222,8 @@ function validateArtifactLinkage(content, rootDir, findings) {
     placeholderMessage: '.harness/evidence/<task-id>/review.md',
   });
 
-  const taskPacketTaskId = taskPacketValue ? extractTaskIdFromTaskPacketPath(taskPacketValue) : null;
-  const legacyTaskPacketTaskId = legacyTaskPacketValue
-    ? extractTaskIdFromTaskPacketPath(legacyTaskPacketValue)
+  const taskManifestTaskId = taskManifestValue
+    ? extractTaskIdFromManifestPath(taskManifestValue)
     : null;
   const evidenceTaskId = evidenceValue
     ? extractTaskIdFromArtifactPath(evidenceValue, 'commands\\.json')
@@ -245,19 +234,31 @@ function validateArtifactLinkage(content, rootDir, findings) {
   const reviewTaskId = reviewArtifactValue
     ? extractTaskIdFromArtifactPath(reviewArtifactValue, 'review\\.md')
     : null;
-  const canonicalTaskId = taskPacketTaskId ?? legacyTaskPacketTaskId;
+  const canonicalTaskId =
+    (taskIdValue && !EXPLICIT_NONE.has(taskIdValue.toLowerCase()) ? normalizeValue(taskIdValue) : null) ??
+    taskManifestTaskId;
 
-  if (canonicalTaskId && legacyTaskPacketTaskId && canonicalTaskId !== legacyTaskPacketTaskId) {
-    findings.push('Task Packet and Task packet must reference the same task-id');
+  if (canonicalTaskId && taskManifestTaskId && canonicalTaskId !== taskManifestTaskId) {
+    findings.push('Task ID and Task Manifest must reference the same task-id');
   }
   if (canonicalTaskId && evidenceTaskId && canonicalTaskId !== evidenceTaskId) {
-    findings.push('Task Packet and Evidence must reference the same task-id');
+    findings.push('Task ID and Evidence must reference the same task-id');
   }
   if (canonicalTaskId && verificationTaskId && canonicalTaskId !== verificationTaskId) {
-    findings.push('Task Packet and Verification evidence must reference the same task-id');
+    findings.push('Task ID and Verification evidence must reference the same task-id');
   }
   if (canonicalTaskId && reviewTaskId && canonicalTaskId !== reviewTaskId) {
-    findings.push('Task Packet and Review Artifact must reference the same task-id');
+    findings.push('Task ID and Review Artifact must reference the same task-id');
+  }
+  if (taskManifestValue && !EXPLICIT_NONE.has(taskManifestValue.toLowerCase())) {
+    try {
+      const manifest = readTaskManifest(rootDir, taskManifestValue);
+      if (canonicalTaskId && manifest.payload.taskId !== canonicalTaskId) {
+        findings.push('Task Manifest payload taskId must match Task ID and artifact task-id');
+      }
+    } catch (error) {
+      findings.push(error.message);
+    }
   }
 }
 

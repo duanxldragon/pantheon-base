@@ -5,10 +5,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import {
+  normalizeRepoRelativePath,
+  readTaskManifest,
+  resolveRepoPath,
+} from '../task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
-const DEFAULT_TASK_DIR = 'docs/harness/tasks';
-const DEFAULT_NOTE = 'scaffolded from task packet Structural Scope; replace after graph review';
+const DEFAULT_NOTE = 'scaffolded from task manifest structural scope; replace after graph review';
 const DEFAULT_REVIEW_FINDING = 'Graph review scaffold generated. Replace with real findings after review.';
 const DEFAULT_REVIEW_RISK = 'Graph review scaffold only; final review not completed.';
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -16,15 +20,15 @@ const BUILD_GRAPH_REVIEW_IMPORT_SCRIPT = path.resolve(CURRENT_DIR, 'build-graph-
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/harness/scaffold-graph-review.mjs [--json] [--write] [--import <file>] [--root <path>] <task-id | task-packet>
-  node scripts/harness/scaffold-graph-review.mjs [--json] [--write] [--root <path>] --codegraph-path <repo> [--codegraph-bin <path>] [--sync] [--live-callers <symbol>] [--live-callees <symbol>] [--live-impact <symbol>] [--live-context <task>] <task-id | task-packet>
+  node scripts/harness/scaffold-graph-review.mjs [--json] [--write] [--import <file>] [--root <path>] <task-id | manifest-path>
+  node scripts/harness/scaffold-graph-review.mjs [--json] [--write] [--root <path>] --codegraph-path <repo> [--codegraph-bin <path>] [--sync] [--live-callers <symbol>] [--live-callees <symbol>] [--live-impact <symbol>] [--live-context <task>] <task-id | manifest-path>
 
 Default behavior:
   Report the derived graph review scaffold without writing files. Use --write to create or update files.
 
 Examples:
   node scripts/harness/scaffold-graph-review.mjs sample
-  node scripts/harness/scaffold-graph-review.mjs docs/harness/tasks/sample.task.md --json
+  node scripts/harness/scaffold-graph-review.mjs .harness/tasks/sample/manifest.json --json
   node scripts/harness/scaffold-graph-review.mjs --write sample
   node scripts/harness/scaffold-graph-review.mjs --write --import graph-review.json sample
   node scripts/harness/scaffold-graph-review.mjs --write --codegraph-path D:\\repo\\pantheon-base --live-context "permission service" sample`);
@@ -125,7 +129,7 @@ function parseArgs(argv) {
     (options.liveCallers || options.liveCallees || options.liveImpact || options.liveContext);
 
   if (!options.help && !options.target) {
-    throw new Error('A task id or task packet path is required.');
+    throw new Error('A task id or manifest path is required.');
   }
   if (options.importFile && hasLiveMode) {
     throw new Error('Use either --import or live CodeGraph options, not both.');
@@ -148,124 +152,6 @@ function toRepoPath(filePath, root) {
   return path.relative(root, filePath).replaceAll(path.sep, '/');
 }
 
-function stripBackticks(value) {
-  return value.replace(/^`+/, '').replace(/`+$/, '').trim();
-}
-
-function normalizeListValue(value) {
-  const normalized = stripBackticks(value);
-  if (!normalized || normalized.toLowerCase() === 'none') {
-    return [];
-  }
-
-  return normalized
-    .split('|')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
-
-function normalizeTaskGraphFocus(value) {
-  const mapping = new Map([
-    ['cycle-check', 'cycle'],
-    ['hub-check', 'hub'],
-    ['call-depth', 'call-depth'],
-    ['sensitive-input-flow', 'sensitive-flow'],
-    ['none', 'none'],
-  ]);
-
-  return normalizeListValue(value)
-    .map((entry) => mapping.get(entry) || entry)
-    .filter((entry) => entry !== 'none')
-    .sort((left, right) => left.localeCompare(right));
-}
-
-function extractSection(content, title) {
-  const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const heading = new RegExp(`^## ${escapedTitle}\\s*$`, 'm');
-  const match = heading.exec(content);
-  if (!match) {
-    return null;
-  }
-
-  const body = content.slice(match.index + match[0].length);
-  const nextSection = /^##\s/m.exec(body);
-  const section = (nextSection ? body.slice(0, nextSection.index) : body).trim();
-  return section || null;
-}
-
-function parseTaskStructuralScope(content) {
-  const section = extractSection(content, 'Structural Scope');
-  if (!section) {
-    throw new Error('Task packet is missing ## Structural Scope.');
-  }
-
-  const affectedSubgraphMatch = section.match(/^- Affected Subgraph:\s*(.+)$/m);
-  const graphFocusMatch = section.match(/^- Graph Focus:\s*(.+)$/m);
-  if (!affectedSubgraphMatch) {
-    throw new Error('Task packet Structural Scope is missing "- Affected Subgraph:".');
-  }
-  if (!graphFocusMatch) {
-    throw new Error('Task packet Structural Scope is missing "- Graph Focus:".');
-  }
-
-  return {
-    affectedSubgraph: normalizeListValue(affectedSubgraphMatch[1]),
-    checks: normalizeTaskGraphFocus(graphFocusMatch[1]),
-  };
-}
-
-function parseLinkage(content, fallbackTaskId) {
-  const section = extractSection(content, 'Linkage');
-  if (!section) {
-    return {
-      taskId: fallbackTaskId,
-      changeRef: 'none',
-      planRefs: [],
-      evidenceDir: `.harness/evidence/${fallbackTaskId}/`,
-      reviewFile: `.harness/evidence/${fallbackTaskId}/review.md`,
-    };
-  }
-
-  function extract(pattern) {
-    const match = section.match(pattern);
-    return match ? stripBackticks(match[1]) : null;
-  }
-
-  const taskId = extract(/^- Task ID:\s*(.+)$/m) || fallbackTaskId;
-  const changeRef = extract(/^- OpenSpec Change:\s*(.+)$/m) || 'none';
-  const planRefValue = extract(/^- Superpowers Plan:\s*(.+)$/m) || 'none';
-  const evidenceDir = extract(/^- Evidence Directory:\s*(.+)$/m) || `.harness/evidence/${taskId}/`;
-  const reviewFile = extract(/^- Review File:\s*(.+)$/m) || `.harness/evidence/${taskId}/review.md`;
-
-  return {
-    taskId,
-    changeRef,
-    planRefs: normalizeListValue(planRefValue),
-    evidenceDir,
-    reviewFile,
-  };
-}
-
-function resolveTaskPacket(root, target) {
-  const directPath = path.isAbsolute(target) ? target : path.join(root, target);
-  if (target.endsWith('.task.md') || target.includes('/') || target.includes('\\')) {
-    if (!fs.existsSync(directPath)) {
-      throw new Error(`Task packet not found: ${target}`);
-    }
-    return directPath;
-  }
-
-  const byTaskId = path.join(root, DEFAULT_TASK_DIR, `${target}.task.md`);
-  if (!fs.existsSync(byTaskId)) {
-    throw new Error(`Task packet not found for task id "${target}". Expected ${toRepoPath(byTaskId, root)}`);
-  }
-  return byTaskId;
-}
-
-function ensureTrailingSlash(value) {
-  return value.endsWith('/') ? value : `${value}/`;
-}
-
 function normalizeChecks(value) {
   const items = Array.isArray(value) ? value : typeof value === 'string' ? [value] : [];
   return items
@@ -278,6 +164,23 @@ function normalizeAffectedSubgraph(value) {
   const items = Array.isArray(value) ? value : typeof value === 'string' ? [value] : [];
   return items
     .map((entry) => String(entry).trim())
+    .filter(Boolean)
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function normalizeManifestGraphFocus(value) {
+  const mapping = new Map([
+    ['cycle-check', 'cycle'],
+    ['hub-check', 'hub'],
+    ['call-depth', 'call-depth'],
+    ['sensitive-input-flow', 'sensitive-flow'],
+    ['cycle', 'cycle'],
+    ['hub', 'hub'],
+    ['sensitive-flow', 'sensitive-flow'],
+  ]);
+
+  return (Array.isArray(value) ? value : [])
+    .map((entry) => mapping.get(String(entry).trim()) || String(entry).trim())
     .filter(Boolean)
     .sort((left, right) => left.localeCompare(right));
 }
@@ -440,7 +343,7 @@ function renderReview(taskId, review, linkage, structuralReview) {
     '',
     '## Linkage',
     '',
-    `- Task Packet: \`${linkage.taskPacket}\``,
+    `- Task Manifest: \`${linkage.taskManifest}\``,
     `- Evidence: \`${linkage.evidence}\``,
     `- OpenSpec Change: ${changeRefText}`,
     '',
@@ -476,36 +379,57 @@ function replaceReviewMachineReadable(content, review) {
   );
 }
 
+function resolveManifest(root, target) {
+  return readTaskManifest(root, target);
+}
+
+function buildManifestScope(payload) {
+  const scope = payload.structuralScope;
+  if (!scope || typeof scope !== 'object' || Array.isArray(scope)) {
+    throw new Error('Task manifest is missing structuralScope.');
+  }
+
+  const affectedSubgraph = normalizeAffectedSubgraph(scope.affectedSubgraph);
+  const checks = normalizeManifestGraphFocus(scope.graphFocus);
+  if (affectedSubgraph.length === 0) {
+    throw new Error('Task manifest structuralScope.affectedSubgraph must include at least one value.');
+  }
+  if (checks.length === 0) {
+    throw new Error('Task manifest structuralScope.graphFocus must include at least one value.');
+  }
+
+  return { affectedSubgraph, checks };
+}
+
 function scaffold(root, target, write, importFile, options = {}) {
-  const taskPacketPath = resolveTaskPacket(root, target);
-  const taskPacketRepoPath = toRepoPath(taskPacketPath, root);
-  const taskPacket = fs.readFileSync(taskPacketPath, 'utf8');
-  const fallbackTaskId = path.basename(taskPacketPath).replace(/\.task\.md$/, '');
-  const taskScope = parseTaskStructuralScope(taskPacket);
+  const manifest = resolveManifest(root, target);
+  const taskId = manifest.payload.taskId;
+  const taskScope = buildManifestScope(manifest.payload);
   const imported = hasLiveCodegraphOptions(options) ? readLiveGraphReview(root, options) : readImportedGraphReview(root, importFile);
-  const parsedLinkage = parseLinkage(taskPacket, fallbackTaskId);
-  const taskId = parsedLinkage.taskId;
-  const evidenceDirRepoPath = ensureTrailingSlash(parsedLinkage.evidenceDir);
-  const reviewRepoPath = parsedLinkage.reviewFile;
+  const evidenceDirRepoPath = normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir).replace(/\/?$/, '/');
+  const reviewRepoPath = normalizeRepoRelativePath(manifest.payload.linkage.reviewFile);
   const evidenceRepoPath = `${evidenceDirRepoPath}commands.json`;
-  const evidencePath = path.join(root, evidenceRepoPath);
-  const reviewPath = path.join(root, reviewRepoPath);
+  const evidencePath = resolveRepoPath(root, evidenceRepoPath);
+  const reviewPath = resolveRepoPath(root, reviewRepoPath);
   const graphChecks = applyImportedGraphReview(buildGraphChecks(taskScope), imported, true);
   const structuralReview = applyImportedGraphReview(buildStructuralReview(taskScope), imported, false);
 
   const evidenceLinkage = {
-    taskPacket: taskPacketRepoPath,
+    taskManifest: manifest.path,
     evidenceDir: evidenceDirRepoPath,
     reviewFile: reviewRepoPath,
-    changeRef: parsedLinkage.changeRef,
-    planRefs: parsedLinkage.planRefs,
+    changeRef: manifest.payload.linkage.changeRef,
+    planRefs: manifest.payload.linkage.planRefs,
+    summaryFile: normalizeRepoRelativePath(
+      manifest.payload.linkage.summaryFile ?? `${evidenceDirRepoPath}summary.md`,
+    ),
   };
   const reviewLinkage = {
-    taskPacket: taskPacketRepoPath,
+    taskManifest: manifest.path,
     evidence: evidenceRepoPath,
     reviewFile: reviewRepoPath,
-    changeRef: parsedLinkage.changeRef,
-    planRefs: parsedLinkage.planRefs,
+    changeRef: manifest.payload.linkage.changeRef,
+    planRefs: manifest.payload.linkage.planRefs,
   };
 
   const existingEvidence = readJsonObjectIfExists(evidencePath);
@@ -553,7 +477,7 @@ function scaffold(root, target, write, importFile, options = {}) {
     taskId,
     written: write,
     importedFrom: imported?.file ?? null,
-    taskPacket: taskPacketRepoPath,
+    taskManifest: manifest.path,
     evidence: evidenceRepoPath,
     review: reviewRepoPath,
     graphChecks,
@@ -588,7 +512,7 @@ function main() {
   } else {
     console.log(
       `Graph review scaffold (${options.write ? 'write' : 'report-only'}): ${result.taskId}\n` +
-        `  task packet: ${result.taskPacket}\n` +
+        `  task manifest: ${result.taskManifest}\n` +
         `  evidence: ${result.evidence}\n` +
         `  review: ${result.review}`,
     );

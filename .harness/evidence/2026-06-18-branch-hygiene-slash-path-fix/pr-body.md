@@ -7,8 +7,9 @@
 
 ## Harness 链路
 
-- Task Packet：`docs/harness/tasks/2026-06-18-branch-hygiene-slash-path-fix.task.md`
-- Task packet：`docs/harness/tasks/2026-06-18-branch-hygiene-slash-path-fix.task.md`
+- Task ID：`2026-06-18-branch-hygiene-slash-path-fix`
+- Task Manifest：`.harness/tasks/2026-06-18-branch-hygiene-slash-path-fix/manifest.json`
+- Task ID：`2026-06-18-branch-hygiene-slash-path-fix`
 - Evidence：`.harness/evidence/2026-06-18-branch-hygiene-slash-path-fix/commands.json`
 - Verification evidence：`.harness/evidence/2026-06-18-branch-hygiene-slash-path-fix/summary.md`
 - Review Artifact：`.harness/evidence/2026-06-18-branch-hygiene-slash-path-fix/review.md`
@@ -20,7 +21,7 @@
 
 ## Harness adoption markers
 
-- task packet: `docs/harness/tasks/2026-06-18-branch-hygiene-slash-path-fix.task.md`
+- Task ID：`2026-06-18-branch-hygiene-slash-path-fix`
 - evidence: `.harness/evidence/2026-06-18-branch-hygiene-slash-path-fix/`
 - boundaries: `platform repository-governance + hosted GitHub branch endpoint path handling`
 - backend response contract: `not-applicable - no product runtime API response change`

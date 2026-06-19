@@ -79,13 +79,14 @@
     "notes": "scaffolded from task packet Structural Scope; replace after graph review"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-batch-1-i18n-resource-dedup.task.md",
     "evidenceDir": ".harness/evidence/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/",
     "reviewFile": ".harness/evidence/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/review.md",
     "changeRef": "none",
     "planRefs": [
-      "docs/superpowers/plans/2026-06-03-main-sonar-batch-1-i18n-resource-dedup-implementation.md"
-    ]
+      "docs/superpowers/plans/2026-06-03-main-sonar-priority-batches.md"
+    ],
+    "taskManifest": ".harness/tasks/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/manifest.json",
+    "summaryFile": ".harness/evidence/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/summary.md"
   },
   "knownGaps": [
     "Runtime i18n audit still requires a live backend session at PANTHEON_API_BASE_URL and currently fails against 127.0.0.1:8080.",

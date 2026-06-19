@@ -90,7 +90,7 @@
       "pull_request.closed -> merged branch cleanup job -> remote branch deletion"
     ],
     "checks": [
-      "hub-check"
+      "hub"
     ],
     "findings": [],
     "notes": "Repository governance only; no runtime product flow changes."
@@ -100,11 +100,12 @@
   "runtimeLogs": [],
   "runtimeGap": "This patch changes repository-governance automation only; runtime product evidence is not applicable.",
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-18-pr-branch-cleanup-automation.task.md",
     "evidenceDir": ".harness/evidence/2026-06-18-pr-branch-cleanup-automation/",
     "reviewFile": ".harness/evidence/2026-06-18-pr-branch-cleanup-automation/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-06-18-pr-branch-cleanup-automation/manifest.json",
+    "summaryFile": ".harness/evidence/2026-06-18-pr-branch-cleanup-automation/summary.md"
   },
   "knownGaps": [
     "Local feature branches with unpublished or divergent commits still require explicit human or agent cleanup decisions.",

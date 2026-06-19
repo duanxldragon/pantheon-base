@@ -6,12 +6,14 @@ import process from 'node:process';
 
 const DEFAULT_ROOT = process.cwd();
 const KEY_MIRRORS = [
+  ['scripts/task-manifest.mjs', 'agentic-repo-shell/scripts/task-manifest.mjs'],
   ['scripts/harness/check-review.mjs', 'agentic-repo-shell/scripts/harness/check-review.mjs'],
   ['scripts/harness/check-evidence.mjs', 'agentic-repo-shell/scripts/harness/check-evidence.mjs'],
   ['scripts/harness/check-failure-registry.mjs', 'agentic-repo-shell/scripts/harness/check-failure-registry.mjs'],
   ['scripts/harness/check-graph-review.mjs', 'agentic-repo-shell/scripts/harness/check-graph-review.mjs'],
   ['scripts/harness/scaffold-graph-review.mjs', 'agentic-repo-shell/scripts/harness/scaffold-graph-review.mjs'],
   ['scripts/harness/build-graph-review-import.mjs', 'agentic-repo-shell/scripts/harness/build-graph-review-import.mjs'],
+  ['scripts/harness/check-visual-evidence.mjs', 'agentic-repo-shell/scripts/harness/check-visual-evidence.mjs'],
   ['scripts/harness/check-template-health.mjs', 'agentic-repo-shell/scripts/harness/check-template-health.mjs'],
   ['scripts/harness/check-runtime-evidence.mjs', 'agentic-repo-shell/scripts/harness/check-runtime-evidence.mjs'],
   ['scripts/harness/check-doc-links.mjs', 'agentic-repo-shell/scripts/harness/check-doc-links.mjs'],
@@ -51,7 +53,7 @@ function scan(root) {
     if (!fs.existsSync(leftPath) || !fs.existsSync(rightPath)) continue;
     const leftContent = normalizeExport(fs.readFileSync(leftPath, 'utf8'));
     const rightContent = normalizeExport(fs.readFileSync(rightPath, 'utf8'));
-    if (rightContent !== `export * from '../../../${left}';` && leftContent !== rightContent) {
+    if (leftContent !== rightContent) {
       findings.push({
         file: right,
         reason: `mirror drift detected against ${left}`,

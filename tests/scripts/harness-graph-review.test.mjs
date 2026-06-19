@@ -37,15 +37,37 @@ function spawnNodeScript(scriptPath, args, cwd) {
 
 function createFixtureRepo() {
   const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pantheon-graph-review-'));
-  fs.mkdirSync(path.join(fixtureRoot, 'docs', 'harness', 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(fixtureRoot, '.harness', 'evidence', 'graph-review-sample'), { recursive: true });
   return fixtureRoot;
 }
 
-function writeTaskPacket(fixtureRoot, taskId) {
+function writeManifest(fixtureRoot, taskId, overrides = {}) {
+  fs.mkdirSync(path.join(fixtureRoot, '.harness', 'tasks', taskId), { recursive: true });
+  const manifest = {
+    taskId,
+    goal: 'Keep graph review linkage manifest-first.',
+    primaryLayer: 'platform',
+    scope: {
+      in: ['graph review scaffold'],
+      out: ['runtime changes'],
+    },
+    structuralScope: {
+      affectedSubgraph: ['alpha', 'beta'],
+      boundaryCrossings: ['none'],
+      riskNodes: ['node-a'],
+      graphFocus: ['cycle-check', 'call-depth', 'hub-check'],
+    },
+    linkage: {
+      evidenceDir: `.harness/evidence/${taskId}/`,
+      reviewFile: `.harness/evidence/${taskId}/review.md`,
+      changeRef: 'none',
+      planRefs: [],
+    },
+    ...overrides,
+  };
   fs.writeFileSync(
-    path.join(fixtureRoot, 'docs', 'harness', 'tasks', `${taskId}.task.md`),
-    `# Task Packet: ${taskId}\n\n## Structural Scope\n\n- Affected Subgraph: alpha | beta\n- Boundary Crossings: none\n- Risk Nodes: node-a\n- Graph Focus: cycle-check | call-depth | hub-check\n`,
+    path.join(fixtureRoot, '.harness', 'tasks', taskId, 'manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   );
 }
@@ -86,7 +108,7 @@ test('check-graph-review accepts matching task packet, evidence, and review scop
   const fixtureRoot = createFixtureRepo();
   const taskId = 'graph-review-sample';
   try {
-    writeTaskPacket(fixtureRoot, taskId);
+    writeManifest(fixtureRoot, taskId);
     writeConsistentGraphReviewEvidence(fixtureRoot, taskId);
 
     const result = await spawnNodeScript(
@@ -107,7 +129,7 @@ test('scaffold-graph-review writes consistent graph review artifacts from task s
   const fixtureRoot = createFixtureRepo();
   const taskId = 'graph-review-sample';
   try {
-    writeTaskPacket(fixtureRoot, taskId);
+    writeManifest(fixtureRoot, taskId);
 
     const result = await spawnNodeScript(
       scaffoldScript,
@@ -120,7 +142,7 @@ test('scaffold-graph-review writes consistent graph review artifacts from task s
     assert.equal(payload.taskId, taskId);
     assert.equal(payload.written, true);
     assert.equal(payload.importedFrom, null);
-    assert.equal(payload.taskPacket, `docs/harness/tasks/${taskId}.task.md`);
+    assert.equal(payload.taskManifest, `.harness/tasks/${taskId}/manifest.json`);
     assert.equal(payload.evidence, `.harness/evidence/${taskId}/commands.json`);
     assert.equal(payload.review, `.harness/evidence/${taskId}/review.md`);
     assert.deepEqual(payload.graphChecks, {
@@ -128,13 +150,13 @@ test('scaffold-graph-review writes consistent graph review artifacts from task s
       affectedSubgraph: ['alpha', 'beta'],
       checks: ['call-depth', 'cycle', 'hub'],
       findings: [],
-      notes: 'scaffolded from task packet Structural Scope; replace after graph review',
+      notes: 'scaffolded from task manifest structural scope; replace after graph review',
     });
     assert.deepEqual(payload.structuralReview, {
       affectedSubgraph: ['alpha', 'beta'],
       checks: ['call-depth', 'cycle', 'hub'],
       findings: [],
-      notes: 'scaffolded from task packet Structural Scope; replace after graph review',
+      notes: 'scaffolded from task manifest structural scope; replace after graph review',
     });
 
     const writtenEvidence = JSON.parse(

@@ -3,6 +3,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {
+  buildTaskManifestPath,
+  readTaskManifest,
+} from './task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 const DEFAULT_CONFIG = 'agentic-method-kit/config/method.config.json';
@@ -118,7 +122,7 @@ function validateReview(filePath, root) {
     result.errors.push('root.linkage must be an object.');
     return result;
   }
-  requireNonEmptyString(review.linkage, 'taskPacket', result.errors, 'root.linkage');
+  requireNonEmptyString(review.linkage, 'taskManifest', result.errors, 'root.linkage');
   requireNonEmptyString(review.linkage, 'evidence', result.errors, 'root.linkage');
   requireNonEmptyString(review.linkage, 'reviewFile', result.errors, 'root.linkage');
   requireNonEmptyString(review.linkage, 'changeRef', result.errors, 'root.linkage');
@@ -133,11 +137,21 @@ function validateReview(filePath, root) {
 
   const expectedTaskId = path.basename(path.dirname(filePath));
   if (review.taskId !== expectedTaskId) result.errors.push(`root.taskId must match evidence directory name "${expectedTaskId}".`);
-  const expectedTaskPacket = `docs/harness/tasks/${expectedTaskId}.task.md`;
+  const expectedTaskManifest = buildTaskManifestPath(expectedTaskId);
   const expectedEvidence = `.harness/evidence/${expectedTaskId}/commands.json`;
   const expectedReview = `.harness/evidence/${expectedTaskId}/review.md`;
-  if (review.linkage.taskPacket !== expectedTaskPacket) result.errors.push(`root.linkage.taskPacket must be "${expectedTaskPacket}".`);
-  else if (!fs.existsSync(path.join(root, review.linkage.taskPacket))) result.errors.push(`linked task packet missing: ${review.linkage.taskPacket}`);
+  if (review.linkage.taskManifest !== expectedTaskManifest) {
+    result.errors.push(`root.linkage.taskManifest must be "${expectedTaskManifest}".`);
+  } else {
+    try {
+      const manifest = readTaskManifest(root, review.linkage.taskManifest);
+      if (manifest.payload.taskId !== expectedTaskId) {
+        result.errors.push(`linked task manifest task id "${manifest.payload.taskId}" must match "${expectedTaskId}".`);
+      }
+    } catch (error) {
+      result.errors.push(error.message);
+    }
+  }
   if (review.linkage.evidence !== expectedEvidence) result.errors.push(`root.linkage.evidence must be "${expectedEvidence}".`);
   else if (!fs.existsSync(path.join(root, review.linkage.evidence))) result.errors.push(`linked evidence missing: ${review.linkage.evidence}`);
   if (review.linkage.reviewFile !== expectedReview) result.errors.push(`root.linkage.reviewFile must be "${expectedReview}".`);

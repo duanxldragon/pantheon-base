@@ -42,9 +42,9 @@
     },
     "linkage": {
       "type": "object",
-      "required": ["taskPacket", "evidence", "reviewFile", "changeRef", "planRefs"],
+      "required": ["taskManifest", "evidence", "reviewFile", "changeRef", "planRefs"],
       "properties": {
-        "taskPacket": { "type": "string" },
+        "taskManifest": { "type": "string" },
         "evidence": { "type": "string" },
         "reviewFile": { "type": "string" },
         "changeRef": { "type": "string" },

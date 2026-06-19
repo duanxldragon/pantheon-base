@@ -30,8 +30,8 @@ node scripts/harness/check-visual-evidence.mjs
 ## Graph review tools
 
 - `build-graph-review-import.mjs` — normalize CodeGraph JSON for import
-- `check-graph-review.mjs` — validate graph review consistency
-- `scaffold-graph-review.mjs` — seed graphChecks from task packet structural scope
+- `check-graph-review.mjs` — validate manifest structural scope, evidence `graphChecks`, and review `structuralReview` consistency
+- `scaffold-graph-review.mjs` — seed `graphChecks` and `structuralReview` from task manifest structural scope
 
 ## Shared utilities
 

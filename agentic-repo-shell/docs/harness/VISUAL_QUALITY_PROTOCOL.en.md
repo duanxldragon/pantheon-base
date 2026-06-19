@@ -42,15 +42,17 @@ If the current tool does not support Codex skills, it must still execute under t
 - Specific brand style, component lists, token names, and banned styles belong in the downstream repository design system or overlay.
 - The portable method core does not store product-specific visual rules.
 
-## 4. UI Task Packet Requirements
+## 4. UI Task Manifest Requirements
 
-UI tasks must add the following to the task packet or equivalent plan:
+UI tasks must declare the following in `verificationPlan.visualEvidence` within the task manifest:
 
 - UI surface type
 - target visual feel or design-system reference
 - desktop, mobile, or relevant viewport verification plan
 - loading, empty, error, permission, disabled, and other relevant state checks
-- screenshot, browser evidence, or explicit visual gap record
+- route verification plan when the task has a stable entry route
+
+If the repository still keeps a task packet, it may mirror the same human-readable notes, but automation is expected to read the task manifest and must not infer visual-validation semantics from task-packet prose.
 
 ## 5. Review Gate
 
@@ -103,6 +105,14 @@ If screenshots cannot be produced, the task must record:
 
 "It should probably look fine" is not an acceptable visual verification conclusion.
 
+For tasks that declare `verificationPlan.visualEvidence`, the machine-checkable closure lives in `browserEvidence` within `commands.json`:
+
+- `viewport`
+- `checkedStates`
+- `url` for route coverage
+
+Screenshots and explicit visual-gap notes remain useful supporting evidence, but they do not replace `browserEvidence` coverage for the manifest plan.
+
 ## 6.1 Blocking Rule
 
-If a UI task packet declares UI scope and strict mode is enabled in CI, missing screenshot evidence or a missing explicit visual gap record is a blocking harness failure.
+If a UI task manifest declares a visual verification plan and strict mode is enabled in CI, missing `browserEvidence` coverage for the declared viewport/state/route plan is a blocking harness failure. Missing screenshots and missing explicit visual-gap records remain warnings when no other visual signal exists.

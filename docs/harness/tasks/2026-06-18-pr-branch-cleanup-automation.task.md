@@ -124,6 +124,7 @@ platform
 ## Linkage
 
 - Task ID: `2026-06-18-pr-branch-cleanup-automation`
+- Task Manifest: `.harness/tasks/2026-06-18-pr-branch-cleanup-automation/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `none`
 - Evidence Directory: `.harness/evidence/2026-06-18-pr-branch-cleanup-automation/`

@@ -157,6 +157,7 @@ platform
 ## Linkage
 
 - Task ID: `2026-06-03-main-sonar-remediation`
+- Task Manifest: `.harness/tasks/2026-06-03-main-sonar-remediation/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `docs/superpowers/plans/2026-06-03-main-sonar-remediation-method.md`
 - Evidence Directory: `.harness/evidence/2026-06-03-main-sonar-remediation/`

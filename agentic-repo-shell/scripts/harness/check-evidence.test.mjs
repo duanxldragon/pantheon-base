@@ -12,9 +12,29 @@ const SCRIPT = path.resolve(TEST_DIR, 'check-evidence.mjs');
 function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'check-evidence-'));
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(root, 'docs', 'superpowers', 'plans'), { recursive: true });
   fs.writeFileSync(path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'), '# Task');
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    `${JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Validate evidence against manifest-first linkage.',
+        primaryLayer: 'platform',
+        scope: { in: ['evidence check'], out: ['runtime changes'] },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'none',
+          planRefs: ['docs/superpowers/plans/sample-plan.md'],
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
   fs.writeFileSync(path.join(root, 'docs', 'superpowers', 'plans', 'sample-plan.md'), '# Plan');
   fs.writeFileSync(path.join(root, '.harness', 'evidence', 'sample', 'review.md'), '# Review');
   return root;
@@ -39,7 +59,7 @@ const VALID_PAYLOAD = {
     },
   ],
   linkage: {
-    taskPacket: 'docs/harness/tasks/sample.task.md',
+    taskManifest: '.harness/tasks/sample/manifest.json',
     evidenceDir: '.harness/evidence/sample/',
     reviewFile: '.harness/evidence/sample/review.md',
     changeRef: 'none',
@@ -204,7 +224,7 @@ test('check-evidence rejects linkage when task packet path does not match taskId
     ...VALID_PAYLOAD,
     linkage: {
       ...VALID_PAYLOAD.linkage,
-      taskPacket: 'docs/harness/tasks/other.task.md',
+      taskManifest: '.harness/tasks/other/manifest.json',
     },
   });
 
@@ -213,7 +233,7 @@ test('check-evidence rejects linkage when task packet path does not match taskId
   });
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /root\.linkage\.taskPacket does not exist|must match root\.taskId/);
+  assert.match(result.stdout, /root\.linkage\.taskManifest does not exist|must match root\.taskId/);
 });
 
 test('check-evidence rejects malformed graph checks metadata', () => {

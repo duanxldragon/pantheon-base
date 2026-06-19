@@ -2,12 +2,38 @@
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/2026-06-18-pr-branch-cleanup-automation.task.md`
+- Task Manifest: `.harness/tasks/2026-06-18-pr-branch-cleanup-automation/manifest.json`
 - Evidence: `.harness/evidence/2026-06-18-pr-branch-cleanup-automation/commands.json`
 - Verification Summary: `.harness/evidence/2026-06-18-pr-branch-cleanup-automation/summary.md`
 - OpenSpec Change: `none`
 - Review Mode: `independent-review`
 - Reviewer Roles: `mechanical`, `governance`
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-06-18-pr-branch-cleanup-automation",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "pull_request.closed -> merged branch cleanup job -> remote branch deletion"
+    ],
+    "checks": [
+      "hub"
+    ],
+    "findings": [],
+    "notes": "Repository governance only; no runtime product flow changes."
+  },
+  "linkage": {
+    "evidence": ".harness/evidence/2026-06-18-pr-branch-cleanup-automation/commands.json",
+    "reviewFile": ".harness/evidence/2026-06-18-pr-branch-cleanup-automation/review.md",
+    "changeRef": "none",
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-06-18-pr-branch-cleanup-automation/manifest.json"
+  }
+}
+```
 
 ## Verdict
 

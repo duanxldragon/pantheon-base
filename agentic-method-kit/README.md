@@ -8,7 +8,7 @@ Copy this directory into another repository when you want explicit delivery cont
 
 It also carries a minimal graph-review closure path:
 
-- scaffold `graphChecks` / `structuralReview` from task packet `## Structural Scope`
+- scaffold `graphChecks` / `structuralReview` from task manifest `structuralScope`
 - normalize saved CodeGraph-style output into `graph-review.json`
 - import that normalized result back into evidence/review closure
 

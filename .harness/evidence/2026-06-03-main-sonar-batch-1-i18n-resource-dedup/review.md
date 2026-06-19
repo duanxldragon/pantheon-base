@@ -19,13 +19,13 @@
     "notes": "scaffolded from task packet Structural Scope; replace after graph review"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-batch-1-i18n-resource-dedup.task.md",
     "evidence": ".harness/evidence/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/commands.json",
     "reviewFile": ".harness/evidence/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/review.md",
     "changeRef": "none",
     "planRefs": [
-      "docs/superpowers/plans/2026-06-03-main-sonar-batch-1-i18n-resource-dedup-implementation.md"
-    ]
+      "docs/superpowers/plans/2026-06-03-main-sonar-priority-batches.md"
+    ],
+    "taskManifest": ".harness/tasks/2026-06-03-main-sonar-batch-1-i18n-resource-dedup/manifest.json"
   }
 }
 ```

@@ -7,8 +7,9 @@
 
 ## Harness 链路
 
-- Task Packet：`docs/harness/tasks/2026-06-18-auth-http-posture-and-github-feedback.task.md`
-- Task packet：`docs/harness/tasks/2026-06-18-auth-http-posture-and-github-feedback.task.md`
+- Task ID：`2026-06-18-auth-http-posture-and-github-feedback`
+- Task Manifest：`.harness/tasks/2026-06-18-auth-http-posture-and-github-feedback/manifest.json`
+- Task ID：`2026-06-18-auth-http-posture-and-github-feedback`
 - Evidence：`.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/commands.json`
 - Verification evidence：`.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/summary.md`
 - Review Artifact：`.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/review.md`
@@ -20,7 +21,7 @@
 
 ## Harness adoption markers
 
-- task packet: `docs/harness/tasks/2026-06-18-auth-http-posture-and-github-feedback.task.md`
+- Task ID：`2026-06-18-auth-http-posture-and-github-feedback`
 - evidence: `.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/`
 - boundaries: `system/auth + platform middleware + repository-governance`
 - backend response contract: `browser auth success payloads stop exposing raw accessToken/refreshToken/token fields`

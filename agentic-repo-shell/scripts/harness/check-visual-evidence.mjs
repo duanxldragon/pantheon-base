@@ -4,23 +4,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-const DEFAULT_ROOT = process.cwd();
+import {
+  ensureTrailingSlash,
+  listTaskManifestPaths,
+  normalizeRepoRelativePath,
+  readTaskManifest,
+  resolveRepoPath,
+} from '../task-manifest.mjs';
 
-const UI_PATTERNS = [
-  /frontend\/src/i,
-  /\bUI\b/i,
-  /\bvisual\b/i,
-  /\blayout\b/i,
-  /\bpage\b/i,
-  /\bcomponent\b/i,
-  /\bdashboard\b/i,
-  /\btable\b/i,
-  /\bform\b/i,
-  /\bchart\b/i,
-  /\bnavigation\b/i,
-  /\bscreenshot/i,
-  /\bviewport/i,
-];
+const DEFAULT_ROOT = process.cwd();
 
 function printHelp() {
   console.log(`Usage:
@@ -60,122 +52,215 @@ function parseArgs(argv) {
   return options;
 }
 
-function readFiles(dir, suffix) {
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
-  return fs
-    .readdirSync(dir)
-    .filter((name) => name.endsWith(suffix))
-    .map((name) => path.join(dir, name))
-    .sort();
-}
-
-function toRepoPath(filePath, root) {
-  return path.relative(root, filePath).replaceAll(path.sep, '/');
-}
-
-function taskIdFromPath(taskPath) {
-  return path.basename(taskPath).replace(/\.task\.md$/, '');
-}
-
-function isUiTask(content) {
-  return UI_PATTERNS.some((pattern) => pattern.test(content));
-}
-
-function hasViewportPlan(content) {
-  return /\bviewport\b/i.test(content) && /\b(desktop|mobile|narrow|wide)\b/i.test(content);
-}
-
-function hasStatePlan(content) {
-  return /\b(empty|loading|error|permission|forbidden|denied)\b/i.test(content);
-}
-
-function readEvidence(taskId, root) {
-  const evidenceDir = path.join(root, '.harness', 'evidence', taskId);
-  const commandsPath = path.join(evidenceDir, 'commands.json');
-  const summaryPath = path.join(evidenceDir, 'summary.md');
-  const screenshotsDir = path.join(evidenceDir, 'screenshots');
+function readEvidence(manifestPayload, root) {
+  const evidenceDirRepoPath = ensureTrailingSlash(
+    normalizeRepoRelativePath(manifestPayload.linkage.evidenceDir),
+  );
+  const evidenceDir = resolveRepoPath(root, evidenceDirRepoPath);
+  const commandsPath = resolveRepoPath(
+    root,
+    `${evidenceDirRepoPath}commands.json`,
+  );
+  const screenshotsDir = evidenceDir ? path.join(evidenceDir, 'screenshots') : null;
   const evidence = {
     dir: evidenceDir,
-    exists: fs.existsSync(evidenceDir),
+    exists: evidenceDir ? fs.existsSync(evidenceDir) : false,
+    commandsPath,
+    commandsExists: commandsPath ? fs.existsSync(commandsPath) : false,
+    commandsError: null,
     hasScreenshots: false,
     hasBrowserEvidence: false,
     hasScreenshotGap: false,
+    browserEvidence: [],
   };
 
-  if (fs.existsSync(screenshotsDir)) {
+  if (screenshotsDir && fs.existsSync(screenshotsDir)) {
     evidence.hasScreenshots = fs
       .readdirSync(screenshotsDir)
       .some((name) => /\.(png|jpe?g|webp)$/i.test(name));
   }
 
-  if (fs.existsSync(commandsPath)) {
+  if (commandsPath && fs.existsSync(commandsPath)) {
     try {
       const data = JSON.parse(fs.readFileSync(commandsPath, 'utf8'));
-      evidence.hasBrowserEvidence = Array.isArray(data.browserEvidence) && data.browserEvidence.length > 0;
+      evidence.browserEvidence = Array.isArray(data.browserEvidence)
+        ? data.browserEvidence.filter((entry) => entry && typeof entry === 'object')
+        : [];
+      evidence.hasBrowserEvidence = evidence.browserEvidence.length > 0;
       evidence.hasScreenshotGap =
         Array.isArray(data.knownGaps) &&
         data.knownGaps.some((gap) => /screenshot|visual|browser|viewport/i.test(String(gap)));
-    } catch {
-      evidence.hasScreenshotGap = true;
+      evidence.hasScreenshotGap ||=
+        evidence.browserEvidence.some(
+          (entry) => typeof entry.visualGap === 'string' && entry.visualGap.trim() !== '',
+        );
+    } catch (error) {
+      evidence.commandsError = error.message;
     }
-  }
-
-  if (fs.existsSync(summaryPath)) {
-    const summary = fs.readFileSync(summaryPath, 'utf8');
-    evidence.hasScreenshotGap ||= /screenshot|visual|browser|viewport/i.test(summary) && /not run|gap|unable|未运行|未截图|原因/i.test(summary);
   }
 
   return evidence;
 }
 
+function getVisualPlan(manifestPayload) {
+  const plan = manifestPayload.verificationPlan?.visualEvidence;
+  if (!plan || typeof plan !== 'object' || Array.isArray(plan)) {
+    return null;
+  }
+  return {
+    viewports: Array.isArray(plan.viewports) ? plan.viewports.map((entry) => String(entry).trim()).filter(Boolean) : [],
+    states: Array.isArray(plan.states) ? plan.states.map((entry) => String(entry).trim()).filter(Boolean) : [],
+    routes: Array.isArray(plan.routes) ? plan.routes.map((entry) => String(entry).trim()).filter(Boolean) : [],
+  };
+}
+
+function normalizeRouteToken(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  let candidate = raw;
+  try {
+    if (raw.includes('://')) {
+      candidate = new URL(raw).pathname || raw;
+    } else if (raw.startsWith('/')) {
+      candidate = new URL(raw, 'https://example.invalid').pathname || raw;
+    }
+  } catch {
+    candidate = raw;
+  }
+
+  candidate = candidate.replace(/[?#].*$/, '').replace(/\/+$/, '');
+  return (candidate || '/').toLowerCase();
+}
+
+function normalizeEvidenceTokens(entries, field) {
+  const values = new Set();
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') {
+      continue;
+    }
+    if (field === 'checkedStates') {
+      if (!Array.isArray(entry.checkedStates)) {
+        continue;
+      }
+      for (const state of entry.checkedStates) {
+        const normalized = String(state).trim().toLowerCase();
+        if (normalized) {
+          values.add(normalized);
+        }
+      }
+      continue;
+    }
+    const normalized =
+      field === 'url'
+        ? normalizeRouteToken(entry[field])
+        : String(entry[field] ?? '').trim().toLowerCase();
+    if (normalized) {
+      values.add(normalized);
+    }
+  }
+  return values;
+}
+
 function scanTasks(root) {
   const warnings = [];
   const uiTasks = [];
-  const taskDir = path.join(root, 'docs', 'harness', 'tasks');
 
-  for (const taskPath of readFiles(taskDir, '.task.md')) {
-    const content = fs.readFileSync(taskPath, 'utf8');
-    if (!isUiTask(content)) {
+  for (const manifestPath of listTaskManifestPaths(root)) {
+    let manifest;
+    try {
+      manifest = readTaskManifest(root, manifestPath);
+    } catch (error) {
+      warnings.push({
+        file: manifestPath,
+        taskId: normalizeRepoRelativePath(manifestPath),
+        reason: `task manifest is unreadable: ${error.message}`,
+      });
       continue;
     }
 
-    const taskId = taskIdFromPath(taskPath);
+    const visualPlan = getVisualPlan(manifest.payload);
+    if (!visualPlan) {
+      continue;
+    }
+
+    const taskId = manifest.payload.taskId;
     uiTasks.push(taskId);
 
-    if (!hasViewportPlan(content)) {
-      warnings.push({
-        file: toRepoPath(taskPath, root),
-        taskId,
-        reason: 'UI task packet does not declare desktop/mobile viewport verification plan',
-      });
-    }
-
-    if (!hasStatePlan(content)) {
-      warnings.push({
-        file: toRepoPath(taskPath, root),
-        taskId,
-        reason: 'UI task packet does not declare empty/loading/error/permission state verification plan',
-      });
-    }
-
-    const evidence = readEvidence(taskId, root);
+    const evidence = readEvidence(manifest.payload, root);
     if (!evidence.exists) {
       warnings.push({
-        file: toRepoPath(taskPath, root),
+        file: manifest.path,
         taskId,
         reason: 'UI task has no matching .harness/evidence directory',
       });
       continue;
     }
 
+    if (evidence.commandsError) {
+      warnings.push({
+        file: normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir),
+        taskId,
+        reason: `UI task evidence commands.json is unreadable: ${evidence.commandsError}`,
+      });
+      continue;
+    }
+
     if (!evidence.hasScreenshots && !evidence.hasBrowserEvidence && !evidence.hasScreenshotGap) {
       warnings.push({
-        file: toRepoPath(evidence.dir, root),
+        file: normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir),
         taskId,
         reason: 'UI task evidence has no screenshots/browser evidence and no recorded visual evidence gap',
       });
+      continue;
+    }
+
+    if (!evidence.hasBrowserEvidence) {
+      warnings.push({
+        file: normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir),
+        taskId,
+        reason: 'UI task evidence is missing browserEvidence entries for the manifest visual plan',
+      });
+      continue;
+    }
+
+    const coveredViewports = normalizeEvidenceTokens(evidence.browserEvidence, 'viewport');
+    const coveredStates = normalizeEvidenceTokens(evidence.browserEvidence, 'checkedStates');
+    const coveredRoutes = normalizeEvidenceTokens(evidence.browserEvidence, 'url');
+    const plannedRoutes = visualPlan.routes
+      .map((route) => normalizeRouteToken(route))
+      .filter(Boolean);
+
+    for (const viewport of visualPlan.viewports) {
+      if (!coveredViewports.has(viewport.toLowerCase())) {
+        warnings.push({
+          file: normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir),
+          taskId,
+          reason: `UI task evidence is missing browserEvidence coverage for viewport "${viewport}"`,
+        });
+      }
+    }
+
+    for (const state of visualPlan.states) {
+      if (!coveredStates.has(state.toLowerCase())) {
+        warnings.push({
+          file: normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir),
+          taskId,
+          reason: `UI task evidence is missing browserEvidence coverage for state "${state}"`,
+        });
+      }
+    }
+
+    for (const route of plannedRoutes) {
+      if (!coveredRoutes.has(route)) {
+        warnings.push({
+          file: normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir),
+          taskId,
+          reason: `UI task evidence is missing browserEvidence coverage for route "${route}"`,
+        });
+      }
     }
   }
 

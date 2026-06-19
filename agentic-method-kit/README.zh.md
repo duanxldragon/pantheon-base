@@ -8,7 +8,7 @@ English version: [README.md](./README.md)
 
 它也内置了一条最小图审查收口路径：
 
-- 从 task packet 的 `## Structural Scope` 生成 `graphChecks` / `structuralReview` 骨架
+- 从 task manifest 的 `structuralScope` 生成 `graphChecks` / `structuralReview` 骨架
 - 把保存下来的 CodeGraph 风格输出整理成 `graph-review.json`
 - 再把这个导入结果写回 evidence / review 收口件
 

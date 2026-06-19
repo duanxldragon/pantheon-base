@@ -16,11 +16,31 @@ function makeFixture() {
   fs.mkdirSync(path.join(root, 'docs', 'superpowers', 'plans'), { recursive: true });
   fs.mkdirSync(path.join(root, 'openspec', 'changes', 'sample-change'), { recursive: true });
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
     path.join(root, 'agentic-method-kit', 'config', 'method.config.json'),
     JSON.stringify({ evidenceDir: '.harness/evidence' }),
   );
   fs.writeFileSync(path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'), '# Task');
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    `${JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Validate review artifacts against manifest-first linkage.',
+        primaryLayer: 'platform',
+        scope: { in: ['review check'], out: ['runtime changes'] },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'openspec/changes/sample-change/',
+          planRefs: ['docs/superpowers/plans/sample-plan.md'],
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
   fs.writeFileSync(path.join(root, 'docs', 'superpowers', 'plans', 'sample-plan.md'), '# Plan');
   fs.writeFileSync(path.join(root, '.harness', 'evidence', 'sample', 'commands.json'), '{}');
   return root;
@@ -47,7 +67,7 @@ function validReview() {
           notes: 'none',
         },
         linkage: {
-          taskPacket: 'docs/harness/tasks/sample.task.md',
+          taskManifest: '.harness/tasks/sample/manifest.json',
           evidence: '.harness/evidence/sample/commands.json',
           reviewFile: '.harness/evidence/sample/review.md',
           changeRef: 'openspec/changes/sample-change/',
@@ -89,7 +109,7 @@ test('check-review fails when machine-readable block is missing', () => {
 test('check-review fails when linkage does not match the task id', () => {
   const root = makeFixture();
   const parsed = JSON.parse(validReview().match(/```json\s*([\s\S]*?)\s*```/m)[1]);
-  parsed.linkage.taskPacket = 'docs/harness/tasks/other.task.md';
+  parsed.linkage.taskManifest = '.harness/tasks/other/manifest.json';
   writeReview(
     root,
     ['# Review', '', '## Machine Readable', '```json', JSON.stringify(parsed, null, 2), '```'].join('\n'),
@@ -100,7 +120,7 @@ test('check-review fails when linkage does not match the task id', () => {
   });
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /root\.linkage\.taskPacket must be "docs\/harness\/tasks\/sample\.task\.md"/);
+  assert.match(result.stdout, /root\.linkage\.taskManifest must be ".harness\/tasks\/sample\/manifest\.json"/);
 });
 
 test('check-review fails on malformed structural review metadata', () => {

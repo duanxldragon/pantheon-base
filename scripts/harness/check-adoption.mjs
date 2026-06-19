@@ -15,9 +15,13 @@ const IMPLEMENTATION_ROOTS = [
   'docs/designs/',
   'docs/acceptances/',
 ];
-const TASK_PACKET_ROOT = 'docs/harness/tasks/';
+const TASK_MANIFEST_ROOT = '.harness/tasks/';
 const EVIDENCE_ROOT = '.harness/evidence/';
 const OPEN_SPEC_CHANGES_ROOT = 'openspec/changes';
+const PR_TEMPLATE_CANDIDATES = [
+  '.github/PULL_REQUEST_TEMPLATE.md',
+  '.github/pull_request_template.md',
+];
 
 const REQUIRED_FILES = [
   'agentic-method-kit/HARNESS_CORE_MODEL.md',
@@ -43,16 +47,18 @@ const REQUIRED_FILES = [
   '.agents/adapters/github-copilot.md',
   '.agents/adapters/openhands.md',
   '.agents/adapters/human.md',
-  '.github/pull_request_template.md',
 ];
 
 const REQUIRED_PR_MARKERS = [
-  'Task packet',
-  'Trivial change',
+  'Task ID',
+  'Task Manifest',
   'Verification evidence',
   'OpenSpec change',
-  'task packet',
+  'task id',
+  'task manifest',
   'evidence',
+  'review artifact',
+  'Trivial change',
   'boundaries',
   'backend response contract',
   'backend DTO contract',
@@ -65,7 +71,7 @@ const REQUIRED_PR_MARKERS = [
 ];
 
 const REQUIRED_AGENT_PROMPT_MARKERS = [
-  'Task packet',
+  'Task manifest',
   'Record verification results',
   'Do not claim completion without fresh verification evidence',
 ];
@@ -79,7 +85,7 @@ Checks that Phase 7 Harness adoption entrypoints are present:
 - tool adapters
 - PR template task/evidence/trivial markers
 - implementation prompt completion evidence rules
-- implementation changes are paired with task packet and evidence files`);
+- implementation changes are paired with task manifest and evidence files`);
 }
 
 function parseArgs(argv) {
@@ -117,6 +123,10 @@ function readText(root, repoPath) {
   return fs.readFileSync(path.join(root, repoPath), 'utf8');
 }
 
+function findExistingRepoPath(root, candidates) {
+  return candidates.find((candidate) => fs.existsSync(path.join(root, candidate))) ?? null;
+}
+
 function hasAllMarkers(content, markers) {
   return markers.filter((marker) => !content.includes(marker));
 }
@@ -149,6 +159,10 @@ function discoverChangedFiles(root) {
   }
 }
 
+function isTaskManifestFile(file) {
+  return /^\.harness\/tasks\/.+\/manifest\.json$/u.test(file);
+}
+
 function scanChangedFiles(root, findings, warnings, changedFiles) {
   const normalizedFiles = sortStrings(
     Array.from(new Set(changedFiles.map((file) => file.replaceAll('\\', '/')))),
@@ -168,17 +182,15 @@ function scanChangedFiles(root, findings, warnings, changedFiles) {
     return;
   }
 
-  const hasTaskPacketChange = normalizedFiles.some(
-    (file) => file.startsWith(TASK_PACKET_ROOT) && file.endsWith('.task.md'),
-  );
+  const hasTaskManifestChange = normalizedFiles.some((file) => isTaskManifestFile(file));
   const hasEvidenceChange = normalizedFiles.some(
     (file) => file.startsWith(EVIDENCE_ROOT) && /\/commands\.json$/.test(file),
   );
 
-  if (!hasTaskPacketChange) {
+  if (!hasTaskManifestChange) {
     findings.push({
       file: implementationChanges[0],
-      reason: 'implementation change detected without a matching task packet change',
+      reason: 'implementation change detected without a matching task manifest change',
     });
   }
 
@@ -203,18 +215,18 @@ function listActiveOpenSpecChanges(root) {
     .sort((left, right) => left.localeCompare(right));
 }
 
-function parseTaskPacketChangeRef(root, repoPath) {
+function parseManifestChangeRef(root, repoPath) {
   const fullPath = path.join(root, repoPath);
   if (!fs.existsSync(fullPath)) {
     return null;
   }
 
-  const content = fs.readFileSync(fullPath, 'utf8');
-  const match = content.match(/^- OpenSpec Change:\s+(.+)$/m);
-  if (!match) {
+  try {
+    const payload = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+    return payload?.linkage?.changeRef ?? null;
+  } catch {
     return null;
   }
-  return match[1].trim();
 }
 
 function parseEvidenceChangeRef(root, repoPath) {
@@ -237,26 +249,24 @@ function scanOpenSpecLinkage(root, findings, changedFiles) {
     return;
   }
 
-  const changedTaskPackets = changedFiles.filter(
-    (file) => file.startsWith(TASK_PACKET_ROOT) && file.endsWith('.task.md'),
-  );
+  const changedTaskManifests = changedFiles.filter((file) => isTaskManifestFile(file));
   const changedEvidenceFiles = changedFiles.filter(
     (file) => file.startsWith(EVIDENCE_ROOT) && /\/commands\.json$/.test(file),
   );
 
-  for (const taskPacket of changedTaskPackets) {
-    const changeRef = parseTaskPacketChangeRef(root, taskPacket);
+  for (const taskManifest of changedTaskManifests) {
+    const changeRef = parseManifestChangeRef(root, taskManifest);
     if (!changeRef || changeRef === 'none') {
       findings.push({
-        file: taskPacket,
-        reason: 'active OpenSpec change exists; changed task packet must declare a real OpenSpec Change linkage',
+        file: taskManifest,
+        reason: 'active OpenSpec change exists; changed task manifest must declare a real linkage.changeRef',
       });
       continue;
     }
     if (!activeChanges.includes(changeRef)) {
       findings.push({
-        file: taskPacket,
-        reason: `task packet OpenSpec Change must reference an active change: ${activeChanges.join(', ')}`,
+        file: taskManifest,
+        reason: `task manifest linkage.changeRef must reference an active change: ${activeChanges.join(', ')}`,
       });
     }
   }
@@ -292,8 +302,13 @@ function scanAdoption(root, changedFiles) {
     }
   }
 
-  const prTemplatePath = '.github/pull_request_template.md';
-  if (fs.existsSync(path.join(root, prTemplatePath))) {
+  const prTemplatePath = findExistingRepoPath(root, PR_TEMPLATE_CANDIDATES);
+  if (!prTemplatePath) {
+    findings.push({
+      file: PR_TEMPLATE_CANDIDATES[0],
+      reason: 'required Harness adoption file is missing',
+    });
+  } else {
     const missing = hasAllMarkers(readText(root, prTemplatePath), REQUIRED_PR_MARKERS);
     for (const marker of missing) {
       findings.push({

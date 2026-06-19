@@ -42,15 +42,17 @@ impeccable
 - 任何具体品牌风格、组件名单、token 名称和禁用样式都应由下游仓库的设计系统或 overlay 定义。
 - 方法核心不沉淀产品专属视觉规则。
 
-## 4. UI Task Packet 要求
+## 4. UI Task Manifest 要求
 
-UI 任务必须在 task packet 中补充：
+UI 任务必须在 task manifest 的 `verificationPlan.visualEvidence` 中补充：
 
 - UI surface 类型。
 - 目标视觉感受或设计系统引用。
 - desktop / mobile / relevant viewport 验证计划。
 - loading / empty / error / permission / disabled 等状态验证计划。
-- 截图、浏览器证据或明确 visual gap。
+- 如有固定入口，补充 route 验证计划。
+
+如果仓库仍保留 task packet，它可以镜像这些说明供人阅读；但自动化闭环以 task manifest 为准，不再从 task packet 推断视觉校验语义。
 
 ## 5. Review Gate
 
@@ -103,6 +105,14 @@ P0/P1 视觉问题不能 approved。
 
 不能用“看起来应该没问题”作为视觉验证结论。
 
+对声明了 `verificationPlan.visualEvidence` 的任务，`commands.json` 中的 `browserEvidence` 负责承载机器可校验的覆盖结果：
+
+- `viewport`
+- `checkedStates`
+- `url`（用于 route 覆盖）
+
+截图和 visual gap 仍然是有价值的辅助证据；但如果没有 `browserEvidence` 覆盖，任务不算完成了 manifest 声明的视觉计划。
+
 ## 6.1 Blocking Rule
 
-If a UI task packet declares UI scope and strict mode is enabled in CI, missing screenshot evidence or missing an explicit visual gap record is a blocking harness failure.
+If a UI task manifest declares a visual verification plan and strict mode is enabled in CI, missing `browserEvidence` coverage for the declared viewport/state/route plan is a blocking harness failure. Missing screenshots and missing explicit visual-gap records remain warnings when no other visual signal exists.

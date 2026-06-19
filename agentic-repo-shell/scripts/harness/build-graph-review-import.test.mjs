@@ -34,8 +34,9 @@ test('repo-shell build-graph-review-import mirrors root behavior', () => {
 
 test('repo-shell build-graph-review-import supports live codegraph mode', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'build-graph-review-import-live-shell-'));
+  const helperPath = path.join(root, 'codegraph-helper.js');
   fs.writeFileSync(
-    path.join(root, 'codegraph-helper.js'),
+    helperPath,
     `const command = process.argv[2];
 if (command === 'callers') {
   console.log(JSON.stringify({ symbol: 'Authenticate', callers: [{ name: 'LoginHandler' }] }, null, 2));
@@ -49,7 +50,6 @@ console.error('unknown');
 process.exit(1);
 `,
   );
-  fs.writeFileSync(path.join(root, 'codegraph.cmd'), `@echo off\r\nnode "%~dp0\\codegraph-helper.js" %*\r\n`);
 
   const output = execFileSync(
     process.execPath,
@@ -58,19 +58,40 @@ process.exit(1);
       '--codegraph-path',
       'D:\\repo\\example-app',
       '--codegraph-bin',
-      path.join(root, 'codegraph.cmd'),
+      helperPath,
       '--live-callers',
       'Authenticate',
       '--live-callees',
       'Authenticate',
     ],
-    {
-      encoding: 'utf8',
-      env: { ...process.env, PATH: `${root};${process.env.PATH ?? ''}` },
-    },
+    { encoding: 'utf8' },
   );
   const result = JSON.parse(output);
 
   assert.deepEqual(result.affectedSubgraph, ['Authenticate -> Login', 'LoginHandler -> Authenticate']);
   assert.deepEqual(result.checks, ['call-depth']);
+});
+
+test('repo-shell build-graph-review-import rejects windows cmd wrappers', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'build-graph-review-import-cmd-shell-'));
+  const wrapperPath = path.join(root, 'codegraph.cmd');
+  fs.writeFileSync(wrapperPath, '@echo off\r\nexit /b 0\r\n');
+
+  assert.throws(
+    () =>
+      execFileSync(
+        process.execPath,
+        [
+          SCRIPT,
+          '--codegraph-path',
+          'D:\\repo\\example-app',
+          '--codegraph-bin',
+          wrapperPath,
+          '--live-callers',
+          'Authenticate',
+        ],
+        { encoding: 'utf8' },
+      ),
+    /Windows \.cmd\/\.bat wrappers are not supported/u,
+  );
 });

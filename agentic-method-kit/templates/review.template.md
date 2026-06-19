@@ -20,7 +20,7 @@
     "notes": "none"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/<task-id>.task.md",
+    "taskManifest": ".harness/tasks/<task-id>/manifest.json",
     "evidence": ".harness/evidence/<task-id>/commands.json",
     "reviewFile": ".harness/evidence/<task-id>/review.md",
     "changeRef": "openspec/changes/<name>/",
@@ -33,7 +33,7 @@
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/<task-id>.task.md`
+- Task Manifest: `.harness/tasks/<task-id>/manifest.json`
 - Evidence: `.harness/evidence/<task-id>/commands.json`
 - OpenSpec Change: `openspec/changes/<name>/` | none
 

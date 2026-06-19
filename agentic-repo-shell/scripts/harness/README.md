@@ -73,11 +73,11 @@ Validates machine-readable review artifacts under `.harness/evidence/**/review.m
 
 ### `check-graph-review.mjs`
 
-Checks whether task packet `Structural Scope`, evidence `graphChecks`, and review `structuralReview` stay consistent.
+Checks whether task manifest `structuralScope`, evidence `graphChecks`, and review `structuralReview` stay consistent.
 
 ### `scaffold-graph-review.mjs`
 
-Seeds `graphChecks` and `structuralReview` from a task packet's `## Structural Scope` without replacing the rest of the evidence/review content.
+Seeds `graphChecks` and `structuralReview` from a task manifest's `structuralScope` without replacing the rest of the evidence/review content.
 
 It also accepts `--import <file>` to merge reviewed graph results into those structural fields only.
 
@@ -90,7 +90,7 @@ node scripts/harness/build-graph-review-import.mjs --codegraph-path D:\workspace
 node scripts/harness/scaffold-graph-review.mjs --write --import graph-review.json sample
 ```
 
-Use `--sync` to refresh the index first, and `--codegraph-bin` or `CODEGRAPH_BIN` when the CLI is not resolvable on `PATH`.
+Use `--sync` to refresh the index first, and `--codegraph-bin` or `CODEGRAPH_BIN` when the CLI is not resolvable on `PATH`. On Windows, point `--codegraph-bin` to a direct executable, a `.ps1` wrapper, or a `.js/.mjs` script instead of a `.cmd/.bat` launcher.
 
 Direct live task-write shortcut:
 
@@ -127,7 +127,7 @@ Checks whether key root scripts and repo-shell mirrors remain synchronized.
 
 ### `check-visual-evidence.mjs`
 
-Reports UI task packet and evidence gaps for the visual quality protocol.
+Reports UI task-manifest visual-plan and evidence gaps for the visual quality protocol.
 
 Default report-only mode:
 
@@ -151,8 +151,9 @@ Exit behavior:
 
 - exits `0` in report-only mode
 - exits `1` in `--strict` mode when warnings exist (CI observed with `continue-on-error: true`)
-- warnings identify UI task packets missing viewport/state plans
-- warnings identify UI evidence missing screenshots/browser evidence or an explicit visual evidence gap
+- warnings identify invalid UI task manifests whose `verificationPlan.visualEvidence` cannot be read
+- warnings identify UI evidence missing `browserEvidence` entries or missing viewport/state/route coverage for the manifest plan
+- warnings identify UI evidence missing any usable visual signal at all (screenshots, browser evidence, or explicit visual gap)
 
 ### `check-adoption.mjs`
 
