@@ -68,7 +68,7 @@ node scripts/harness/build-graph-review-import.mjs --codegraph-path D:\workspace
 node scripts/harness/scaffold-graph-review.mjs --write --import graph-review.json sample
 ```
 
-如果需要先同步索引，或本机 `PATH` 找不到 `codegraph`，可改用 `--sync` 与 `--codegraph-bin` / `CODEGRAPH_BIN`。
+如果需要先同步索引，或本机 `PATH` 找不到 `codegraph`，可改用 `--sync` 与 `--codegraph-bin` / `CODEGRAPH_BIN`。Windows 下请把 `--codegraph-bin` 指向直接可执行文件、`.ps1` 包装脚本，或 `.js/.mjs` 脚本，不要再用 `.cmd/.bat` 启动器。
 
 实时直写 task evidence：
 

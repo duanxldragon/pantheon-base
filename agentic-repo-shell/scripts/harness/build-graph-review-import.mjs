@@ -21,7 +21,7 @@ Examples:
   node scripts/harness/build-graph-review-import.mjs --source trace.json
   node scripts/harness/build-graph-review-import.mjs --source trace.json --write graph-review.json
   node scripts/harness/build-graph-review-import.mjs --codegraph-path D:\\repo\\pantheon-base --live-callers Authenticate --live-callees Authenticate
-  node scripts/harness/build-graph-review-import.mjs --codegraph-path D:\\repo\\pantheon-base --codegraph-bin C:\\tools\\codegraph.cmd --live-impact AuthService`);
+  node scripts/harness/build-graph-review-import.mjs --codegraph-path D:\\repo\\pantheon-base --codegraph-bin C:\\tools\\codegraph.exe --live-impact AuthService`);
 }
 
 function parseArgs(argv) {
@@ -237,14 +237,6 @@ function resolveCodegraphBin(options) {
   return resolveFile(options.root, options.codegraphBin);
 }
 
-function quoteWindowsShellArg(value) {
-  const stringValue = String(value);
-  if (!/[\s"]/u.test(stringValue)) {
-    return stringValue;
-  }
-  return `"${stringValue.replace(/"/g, '""')}"`;
-}
-
 function getWindowsPowerShellBin() {
   const systemRoot = process.env.SystemRoot;
   if (systemRoot) {
@@ -255,6 +247,16 @@ function getWindowsPowerShellBin() {
 
 function quotePowerShellLiteral(value) {
   return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function isNodeScript(command) {
+  return /\.(?:cjs|mjs|js)$/iu.test(command);
+}
+
+function unsupportedWindowsWrapperError(command) {
+  return new Error(
+    `Windows .cmd/.bat wrappers are not supported for codegraph execution: ${command}. Use a direct executable, a .ps1 wrapper, or a .js/.mjs script instead.`,
+  );
 }
 
 function resolveWindowsShellCommand(command) {
@@ -275,11 +277,14 @@ function resolveWindowsShellCommand(command) {
 }
 
 function runProgram(command, args) {
-  if (process.platform === 'win32' && /\.(cmd|bat)$/iu.test(command)) {
-    const commandLine = [quoteWindowsShellArg(command), ...args.map((entry) => quoteWindowsShellArg(entry))].join(' ');
-    return execFileSync(process.env.ComSpec ?? 'cmd.exe', ['/d', '/s', '/c', commandLine], {
+  if (isNodeScript(command)) {
+    return execFileSync(process.execPath, [command, ...args], {
       encoding: 'utf8',
     });
+  }
+
+  if (process.platform === 'win32' && /\.(cmd|bat)$/iu.test(command)) {
+    throw unsupportedWindowsWrapperError(command);
   }
 
   if (process.platform === 'win32' && /\.ps1$/iu.test(command)) {
@@ -295,9 +300,16 @@ function runProgram(command, args) {
       encoding: 'utf8',
     });
   } catch (error) {
-    if (process.platform === 'win32' && error?.code === 'ENOENT' && !path.isAbsolute(command)) {
+    if (
+      process.platform === 'win32' &&
+      (error?.code === 'ENOENT' || error?.code === 'EINVAL') &&
+      !path.isAbsolute(command)
+    ) {
       const resolved = resolveWindowsShellCommand(command);
       if (resolved && resolved !== command) {
+        if (/\.(cmd|bat)$/iu.test(resolved)) {
+          throw unsupportedWindowsWrapperError(resolved);
+        }
         return runProgram(resolved, args);
       }
     }

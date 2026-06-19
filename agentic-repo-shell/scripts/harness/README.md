@@ -90,7 +90,7 @@ node scripts/harness/build-graph-review-import.mjs --codegraph-path D:\workspace
 node scripts/harness/scaffold-graph-review.mjs --write --import graph-review.json sample
 ```
 
-Use `--sync` to refresh the index first, and `--codegraph-bin` or `CODEGRAPH_BIN` when the CLI is not resolvable on `PATH`.
+Use `--sync` to refresh the index first, and `--codegraph-bin` or `CODEGRAPH_BIN` when the CLI is not resolvable on `PATH`. On Windows, point `--codegraph-bin` to a direct executable, a `.ps1` wrapper, or a `.js/.mjs` script instead of a `.cmd/.bat` launcher.
 
 Direct live task-write shortcut:
 

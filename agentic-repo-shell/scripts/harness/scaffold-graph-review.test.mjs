@@ -111,6 +111,7 @@ test('repo-shell scaffold-graph-review accepts imported graph review payload', (
 
 test('repo-shell scaffold-graph-review supports direct live codegraph task writes', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-graph-review-shell-live-'));
+  const helperPath = path.join(root, 'codegraph-helper.js');
   fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
     path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
@@ -138,7 +139,7 @@ test('repo-shell scaffold-graph-review supports direct live codegraph task write
     ),
   );
   fs.writeFileSync(
-    path.join(root, 'codegraph-helper.js'),
+    helperPath,
     `const command = process.argv[2];
 if (command === 'callers') {
   console.log(JSON.stringify({ symbol: 'Authenticate', callers: [{ name: 'LoginHandler' }] }, null, 2));
@@ -148,7 +149,6 @@ console.error('unknown');
 process.exit(1);
 `,
   );
-  fs.writeFileSync(path.join(root, 'codegraph.cmd'), `@echo off\r\nnode "%~dp0\\codegraph-helper.js" %*\r\n`);
 
   const output = execFileSync(
     process.execPath,
@@ -161,7 +161,7 @@ process.exit(1);
       '--codegraph-path',
       'D:\\repo\\example-app',
       '--codegraph-bin',
-      path.join(root, 'codegraph.cmd'),
+      helperPath,
       '--live-callers',
       'Authenticate',
       'sample',
