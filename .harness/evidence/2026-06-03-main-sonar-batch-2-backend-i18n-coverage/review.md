@@ -18,13 +18,13 @@
     "notes": "scaffolded from task packet Structural Scope; replace after graph review"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-batch-2-backend-i18n-coverage.task.md",
     "evidence": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/commands.json",
     "reviewFile": ".harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/review.md",
     "changeRef": "none",
     "planRefs": [
       "docs/superpowers/plans/2026-06-03-main-sonar-priority-batches.md"
-    ]
+    ],
+    "taskManifest": ".harness/tasks/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/manifest.json"
   }
 }
 ```

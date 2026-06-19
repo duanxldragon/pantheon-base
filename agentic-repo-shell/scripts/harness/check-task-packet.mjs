@@ -3,6 +3,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {
+  buildTaskManifestPath,
+  readTaskManifest,
+} from '../task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 
@@ -27,19 +31,20 @@ const REQUIRED_SUBSECTIONS = {
   'Expected Files': ['Create', 'Modify', 'Do Not Touch'],
 };
 
-const PRIMARY_LAYER_PATTERN = /^[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-*]*)*$/;
+const VALID_PRIMARY_LAYERS = new Set([
+  'platform',
+  'system/auth',
+  'system/iam',
+  'system/org',
+  'system/config',
+  'business/*',
+  'app',
+]);
 
 const VALID_HARNESS_TEMPLATES = new Set([
   'admin-platform',
   'api-service',
-  'backend-service',
-  'cli-tool',
-  'data-pipeline',
-  'docs-governance',
   'event-processor',
-  'infra-change',
-  'library',
-  'mobile-app',
   'dashboard',
   'ui-heavy-product',
   'custom',
@@ -113,7 +118,7 @@ function discoverTaskFiles(root) {
   return fs
     .readdirSync(taskDir)
     .filter((fileName) => fileName.endsWith('.task.md'))
-    .sort()
+    .sort((left, right) => left.localeCompare(right))
     .map((fileName) => path.join(taskDir, fileName));
 }
 
@@ -290,9 +295,9 @@ function validatePrimaryLayer(content, headings, result) {
     return;
   }
 
-  if (value.includes('|') || value.includes('<') || value.includes('>') || !PRIMARY_LAYER_PATTERN.test(value)) {
+  if (!VALID_PRIMARY_LAYERS.has(value)) {
     result.errors.push(
-      `Invalid primary layer "${value}". Use one repository-defined layer key, for example "app", "domain/auth", "service/api", "platform", or "method".`,
+      `Invalid primary layer "${value}". Expected one of: ${Array.from(VALID_PRIMARY_LAYERS).join(', ')}.`,
     );
   }
 }
@@ -476,7 +481,14 @@ function validateLinkage(content, headings, result, root, filePath) {
 
   const sectionContent = getSectionContent(content, headings, section);
   const linkage = parseLinkageItems(sectionContent);
-  const requiredItems = ['Task ID', 'OpenSpec Change', 'Superpowers Plan', 'Evidence Directory', 'Review File'];
+  const requiredItems = [
+    'Task ID',
+    'Task Manifest',
+    'OpenSpec Change',
+    'Superpowers Plan',
+    'Evidence Directory',
+    'Review File',
+  ];
 
   for (const item of requiredItems) {
     if (!linkage.has(item)) {
@@ -488,6 +500,26 @@ function validateLinkage(content, headings, result, root, filePath) {
   const taskId = linkage.get('Task ID');
   if (taskId && stripBackticks(taskId) !== expectedTaskId) {
     result.errors.push(`Linkage Task ID "${stripBackticks(taskId)}" must match file name task id "${expectedTaskId}".`);
+  }
+
+  const taskManifest = linkage.get('Task Manifest');
+  if (taskManifest) {
+    const normalized = stripBackticks(taskManifest);
+    const expectedManifest = buildTaskManifestPath(expectedTaskId);
+    if (normalized !== expectedManifest) {
+      result.errors.push(`Linkage Task Manifest must be "${expectedManifest}".`);
+    } else {
+      try {
+        const manifest = readTaskManifest(root, normalized);
+        if (manifest.payload.taskId !== expectedTaskId) {
+          result.errors.push(
+            `Linked task manifest task id "${manifest.payload.taskId}" must match "${expectedTaskId}".`,
+          );
+        }
+      } catch (error) {
+        result.errors.push(error.message);
+      }
+    }
   }
 
   const evidenceDir = linkage.get('Evidence Directory');

@@ -1,22 +1,12 @@
 {
   "taskId": "2026-06-17-permission-workbench-remediation-schema-compat",
-  "title": "Permission Workbench Remediation Schema Compat",
+  "title": "Permission Workbench Remediation Schema Compat Task Packet",
   "goal": "Align permission-workbench remediation tracking with the versioned remediation table and compat migrations so persisted pre-current databases can boot, migrate, and render governance status without manual schema repair.",
   "primaryLayer": "system/iam",
   "dependencyLayers": [
     "platform"
   ],
   "taskDoc": "docs/harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat.task.md",
-  "contractAnchors": [
-    "AGENTS.md",
-    "DESIGN.md",
-    "docs/README.md",
-    "docs/contracts/PLATFORM_CONTRACT.md",
-    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
-    "docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md",
-    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
-    "docs/acceptances/AGENT_EXECUTION_CHECKLIST.md"
-  ],
   "scope": {
     "in": [
       "point the remediation-event model at the versioned table `permission_workbench_remediation_event`",
@@ -32,19 +22,21 @@
       "syncing `pantheon-ops`"
     ]
   },
-  "harnessProfile": {
-    "template": "admin-platform",
-    "overlay": "pantheon-base",
-    "qualityProfile": "permission-policy",
-    "portableFailureClass": "static-sensor-gap",
-    "ownerLayer": "consumer-repository",
-    "coverageDimensions": [
-      "behaviour",
-      "architecture-fitness",
-      "runtime-quality",
-      "method-health"
-    ]
-  },
+  "implementationNotes": [
+    "The real-world failure was not the table rename itself; it was current-schema bootstrap drift. Existing local databases with the old remediation table shape were classified as current, so versioned startup skipped the compat migration and governance reads later hit missing-column failures.",
+    "The compat migration keeps old `detail` and `remediated` columns intact and only backfills the new fields conservatively when those old columns exist.",
+    "Focused smoke evidence is enough for this packet because there is no new UI surface or visual change; the risk is runtime schema compatibility, not layout regression."
+  ],
+  "contractAnchors": [
+    "pantheon-base/AGENTS.md",
+    "pantheon-base/DESIGN.md",
+    "pantheon-base/docs/README.md",
+    "pantheon-base/docs/contracts/PLATFORM_CONTRACT.md",
+    "pantheon-base/docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "pantheon-base/docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md",
+    "pantheon-base/docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "pantheon-base/docs/acceptances/AGENT_EXECUTION_CHECKLIST.md"
+  ],
   "expectedFiles": {
     "create": [
       "backend/pkg/database/migrations/000007_permission_workbench_remediation_compat.up.sql",
@@ -59,8 +51,7 @@
       "backend/modules/system/iam/permission/permission_service_test.go",
       "backend/pkg/database/migrate.go",
       "backend/pkg/database/migrate_test.go",
-      "docs/harness/failure-registry.md",
-      "frontend/tests/smoke/system/system-pages.spec.ts"
+      "docs/harness/failure-registry.md"
     ],
     "doNotTouch": [
       "frontend/src/**",
@@ -68,26 +59,17 @@
       "unrelated auth, middleware, and CI workflow changes already present in the worktree"
     ]
   },
-  "implementationNotes": [
-    "The real-world failure was not the table rename itself; it was current-schema bootstrap drift. Existing local databases with the old remediation table shape were classified as current, so versioned startup skipped the compat migration and governance reads later hit missing-column failures.",
-    "The compat migration keeps old `detail` and `remediated` columns intact and only backfills the new fields conservatively when those old columns exist.",
-    "Focused smoke evidence is enough for this packet because there is no new UI surface or visual change; the risk is runtime schema compatibility, not layout regression."
-  ],
-  "structuralScope": {
-    "affectedSubgraph": [
-      "server startup -> bootstrapExistingCurrentSchema -> permission_workbench_remediation_event -> permission workbench governance summary"
-    ],
-    "boundaryCrossings": [
-      "system/iam -> pkg/*"
-    ],
-    "riskNodes": [
-      "migration bootstrap",
-      "permission workbench governance summary",
-      "legacy runtime schema"
-    ],
-    "graphFocus": [
-      "call-depth",
-      "hub"
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "runtime-quality",
+      "method-health"
     ]
   },
   "methodReadiness": {
@@ -107,10 +89,10 @@
       "runtime logs",
       "review summary"
     ],
+    "ratchetDecision": "sensor-added",
     "deferredCodeIssues": [
       "legacy remediation rows backfill severity/detail into new fields conservatively; historical semantic perfection stays out of scope"
-    ],
-    "ratchetDecision": "sensor-added"
+    ]
   },
   "deliveryGovernance": {
     "designGate": [
@@ -134,20 +116,48 @@
       "mechanical"
     ]
   },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "server startup -> bootstrapExistingCurrentSchema -> permission_workbench_remediation_event -> permission workbench governance summary"
+    ],
+    "boundaryCrossings": [
+      "system/iam -> pkg/*"
+    ],
+    "riskNodes": [
+      "migration bootstrap",
+      "permission workbench governance summary",
+      "legacy runtime schema"
+    ],
+    "graphFocus": [
+      "call-depth",
+      "hub-check"
+    ]
+  },
   "verificationPlan": {
     "commands": [
       "go test ./backend/pkg/database -count=1",
       "go test ./backend/modules/system/iam/permission -count=1",
-      "node scripts/frontmatter-check.mjs",
-      "node scripts/check-task-packet-template.mjs",
-      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts"
-    ],
-    "runtimeEvidence": [
+      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts",
       "focused startup logs proving migration alignment",
       "focused governance smoke against the local persisted database"
+    ],
+    "runtimeEvidence": [
+      "go test ./backend/modules/system/iam/permission -count=1",
+      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts",
+      "focused governance smoke against the local persisted database",
+      "targeted migration and permission-workbench test output",
+      "runtime log summary showing migration-state alignment and successful startup",
+      "focused smoke result proving the permission-workbench remediation path works against the local persisted database"
     ]
   },
   "runtimeSensitive": true,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/",
+    "reviewFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/review.md",
+    "summaryFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
   "evidenceRequired": [
     "targeted migration and permission-workbench test output",
     "runtime log summary showing migration-state alignment and successful startup",
@@ -167,12 +177,5 @@
     "Verification run or exception recorded",
     "Evidence saved or summarized",
     "Review completed"
-  ],
-  "linkage": {
-    "evidenceDir": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/",
-    "reviewFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/review.md",
-    "summaryFile": ".harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/summary.md",
-    "changeRef": "none",
-    "planRefs": []
-  }
+  ]
 }

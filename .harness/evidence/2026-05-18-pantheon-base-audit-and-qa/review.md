@@ -18,11 +18,11 @@
     "notes": "Historical review was upgraded with machine-readable linkage without changing the original findings."
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-05-18-pantheon-base-audit-and-qa.task.md",
     "evidence": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/commands.json",
     "reviewFile": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-05-18-pantheon-base-audit-and-qa/manifest.json"
   }
 }
 ```

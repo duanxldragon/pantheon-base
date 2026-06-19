@@ -10,12 +10,15 @@ const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPT = path.resolve(TEST_DIR, 'check-adoption.mjs');
 
 const REQUIRED_PR_MARKERS = [
-  'Task packet',
-  'Trivial change',
+  'Task ID',
+  'Task manifest',
   'Verification evidence',
   'OpenSpec change',
-  'task packet',
+  'task id',
+  'task manifest',
   'evidence',
+  'Review artifact',
+  'Trivial change',
   'visual evidence',
   'method health',
 ];
@@ -61,7 +64,7 @@ function makeFixture() {
   fs.writeFileSync(
     path.join(root, '.agents', 'prompts', 'implementation.md'),
     [
-      'Task packet',
+      'Task manifest',
       'Record verification results',
       'Do not claim completion without fresh verification evidence',
     ].join('\n'),
@@ -131,7 +134,7 @@ test('check-adoption warns when implementation prompt is missing evidence rules'
   );
 });
 
-test('check-adoption fails when implementation files change without task packet or evidence linkage', () => {
+test('check-adoption fails when implementation files change without task manifest or evidence linkage', () => {
   const root = makeFixture();
 
   const result = spawnSync(
@@ -148,14 +151,28 @@ test('check-adoption fails when implementation files change without task packet 
   );
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /implementation change detected without a matching task packet change/);
+  assert.match(result.stdout, /implementation change detected without a matching task manifest change/);
   assert.match(result.stdout, /implementation change detected without matching verification evidence/);
 });
 
-test('check-adoption passes when implementation changes include task packet and evidence linkage', () => {
+test('check-adoption passes when implementation changes include task manifest and evidence linkage', () => {
   const root = makeFixture();
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'), '# task');
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    JSON.stringify({
+      taskId: 'sample',
+      goal: 'Manifest-only adoption fixture.',
+      primaryLayer: 'app',
+      scope: { in: ['automation'], out: ['runtime changes'] },
+      linkage: {
+        evidenceDir: '.harness/evidence/sample/',
+        reviewFile: '.harness/evidence/sample/review.md',
+        changeRef: 'none',
+        planRefs: [],
+      },
+    }),
+  );
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
   fs.writeFileSync(path.join(root, '.harness', 'evidence', 'sample', 'commands.json'), '{}');
 
@@ -170,7 +187,7 @@ test('check-adoption passes when implementation changes include task packet and 
       '--changed-file',
       'frontend/src/modules/auth/Login.tsx',
       '--changed-file',
-      'docs/harness/tasks/sample.task.md',
+      '.harness/tasks/sample/manifest.json',
       '--changed-file',
       '.harness/evidence/sample/commands.json',
     ],
@@ -184,91 +201,21 @@ test('check-adoption passes when implementation changes include task packet and 
 test('check-adoption requires real openspec linkage when an active change exists', () => {
   const root = makeFixture();
   fs.mkdirSync(path.join(root, 'openspec', 'changes', 'sample-change'), { recursive: true });
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'),
-    [
-      '# Task Packet: Sample',
-      '',
-      '## Goal',
-      '',
-      'goal',
-      '',
-      '## Primary Layer',
-      '',
-      'platform',
-      '',
-      '## Dependency Layers',
-      '',
-      '- none',
-      '',
-      '## Harness Profile',
-      '',
-      '- Template: custom',
-      '- Overlay: none',
-      '- Coverage Dimensions:',
-      '  - method-health',
-      '',
-      '## Contract Anchors',
-      '',
-      '- `docs/harness/HARNESS_ENGINEERING_CONTRACT.md`',
-      '',
-      '## Scope',
-      '',
-      '### In',
-      '',
-      '- in',
-      '',
-      '### Out',
-      '',
-      '- out',
-      '',
-      '## Expected Files',
-      '',
-      '### Create',
-      '',
-      '- none',
-      '',
-      '### Modify',
-      '',
-      '- none',
-      '',
-      '### Do Not Touch',
-      '',
-      '- none',
-      '',
-      '## Implementation Notes',
-      '',
-      '- note',
-      '',
-      '## Verification Plan',
-      '',
-      '- command',
-      '',
-      '## Linkage',
-      '',
-      '- Task ID: sample',
-      '- OpenSpec Change: none',
-      '- Superpowers Plan: none',
-      '- Evidence Directory: .harness/evidence/sample/',
-      '- Review File: .harness/evidence/sample/review.md',
-      '',
-      '## Evidence Required',
-      '',
-      '- commands',
-      '',
-      '## Human Gates',
-      '',
-      '- none',
-      '',
-      '## Completion Checklist',
-      '',
-      '- [x] Layer and boundary declared',
-      '- [x] Contract anchors read',
-      '- [x] Verification run or exception recorded',
-      '- [x] Evidence saved or summarized',
-      '- [x] Review completed',
-    ].join('\n'),
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    JSON.stringify({
+      taskId: 'sample',
+      goal: 'Manifest linkage must point to active OpenSpec change.',
+      primaryLayer: 'app',
+      scope: { in: ['automation'], out: ['runtime changes'] },
+      linkage: {
+        evidenceDir: '.harness/evidence/sample/',
+        reviewFile: '.harness/evidence/sample/review.md',
+        changeRef: 'none',
+        planRefs: [],
+      },
+    }),
   );
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
   fs.writeFileSync(
@@ -279,7 +226,7 @@ test('check-adoption requires real openspec linkage when an active change exists
       agent: { tool: 'codex' },
       commands: [{ command: 'echo', cwd: '.', status: 'passed' }],
       linkage: {
-        taskPacket: 'docs/harness/tasks/sample.task.md',
+        taskManifest: '.harness/tasks/sample/manifest.json',
         evidenceDir: '.harness/evidence/sample/',
         reviewFile: '.harness/evidence/sample/review.md',
         changeRef: 'none',
@@ -299,7 +246,7 @@ test('check-adoption requires real openspec linkage when an active change exists
       '--changed-file',
       'backend/modules/auth/service.go',
       '--changed-file',
-      'docs/harness/tasks/sample.task.md',
+      '.harness/tasks/sample/manifest.json',
       '--changed-file',
       '.harness/evidence/sample/commands.json',
     ],
@@ -307,6 +254,6 @@ test('check-adoption requires real openspec linkage when an active change exists
   );
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /changed task packet must declare a real OpenSpec Change linkage/);
+  assert.match(result.stdout, /changed task manifest must declare a real linkage\.changeRef/);
   assert.match(result.stdout, /changed evidence must declare a real linkage\.changeRef/);
 });

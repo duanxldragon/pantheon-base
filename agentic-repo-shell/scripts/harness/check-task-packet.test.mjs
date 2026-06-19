@@ -76,6 +76,7 @@ write the script.
 ## Linkage
 
 - Task ID: \`sample\`
+- Task Manifest: \`.harness/tasks/sample/manifest.json\`
 - OpenSpec Change: none
 - Superpowers Plan: none
 - Evidence Directory: \`.harness/evidence/sample/\`
@@ -102,9 +103,29 @@ function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'check-task-packet-'));
   fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(root, 'docs', 'harness'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
     path.join(root, 'docs', 'harness', 'HARNESS_ENGINEERING_CONTRACT.md'),
     'anchor stub',
+  );
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    `${JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Validate task packet linkage against task manifest.',
+        primaryLayer: 'platform',
+        scope: { in: ['task packet check'], out: ['runtime changes'] },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'none',
+          planRefs: [],
+        },
+      },
+      null,
+      2,
+    )}\n`,
   );
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
   fs.writeFileSync(path.join(root, '.harness', 'evidence', 'sample', 'review.md'), '# Review');

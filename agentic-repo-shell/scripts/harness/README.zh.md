@@ -49,11 +49,11 @@ node scripts/harness/check-task-packet.mjs --json
 
 ### `check-graph-review.mjs`
 
-检查 task packet `Structural Scope`、evidence `graphChecks` 与 review `structuralReview` 是否保持一致。
+检查 task manifest `structuralScope`、evidence `graphChecks` 与 review `structuralReview` 是否保持一致。
 
 ### `scaffold-graph-review.mjs`
 
-根据 task packet 的 `## Structural Scope` 生成或刷新 `graphChecks` 与 `structuralReview`，但不覆盖其余 evidence / review 内容。
+根据 task manifest 的 `structuralScope` 生成或刷新 `graphChecks` 与 `structuralReview`，但不覆盖其余 evidence / review 内容。
 
 也支持 `--import <file>` 导入一次图审查结果，仅合并这些结构化字段。
 
@@ -129,7 +129,7 @@ node scripts/harness/check-evidence.mjs --strict
 
 ### `check-visual-evidence.mjs`
 
-针对 visual quality protocol，报告 UI task packet 和 evidence 缺口。
+针对 visual quality protocol，报告 UI task manifest visual plan 和 evidence 缺口。
 
 默认 report-only 模式：
 
@@ -153,8 +153,9 @@ node scripts/harness/check-visual-evidence.mjs --strict
 
 - report-only 模式下退出 `0`
 - `--strict` 模式下，只要存在 warnings 就退出 `1`（CI 可配合 `continue-on-error: true` 观察）
-- warnings 会指出缺少 viewport/state plan 的 UI task packets
-- warnings 会指出缺少截图、浏览器 evidence 或显式 visual evidence gap 的 UI evidence
+- warnings 会指出 `verificationPlan.visualEvidence` 非法、无法被读取的 UI task manifests
+- warnings 会指出缺少 `browserEvidence` 条目，或未覆盖 manifest 里 viewport/state/route 计划的 UI evidence
+- warnings 会指出完全缺少可用视觉信号（截图、browser evidence、显式 visual gap）的 UI evidence
 
 ### `check-adoption.mjs`
 

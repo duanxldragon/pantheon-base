@@ -163,6 +163,7 @@ platform
 ## Linkage
 
 - Task ID: `2026-06-18-foundation-release-v0.8.3-publish`
+- Task Manifest: `.harness/tasks/2026-06-18-foundation-release-v0.8.3-publish/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `none`
 - Evidence Directory: `.harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/`

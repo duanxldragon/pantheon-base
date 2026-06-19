@@ -50,6 +50,7 @@ function createFixture() {
   fs.writeFileSync(path.join(root, 'scripts', 'harness', 'check-graph-review.mjs'), '#!/usr/bin/env node\n');
   fs.writeFileSync(path.join(root, 'scripts', 'harness', 'scaffold-graph-review.mjs'), '#!/usr/bin/env node\n');
   fs.writeFileSync(path.join(root, 'scripts', 'harness', 'build-graph-review-import.mjs'), '#!/usr/bin/env node\n');
+  fs.writeFileSync(path.join(root, 'scripts', 'harness', 'check-visual-evidence.mjs'), '#!/usr/bin/env node\n');
   fs.writeFileSync(path.join(root, 'scripts', 'harness', 'check-doc-frontmatter.mjs'), '#!/usr/bin/env node\n');
   fs.writeFileSync(path.join(root, 'scripts', 'harness', 'check-doc-links.mjs'), '#!/usr/bin/env node\n');
   fs.writeFileSync(path.join(root, 'scripts', 'harness', 'check-doc-inventory.mjs'), '#!/usr/bin/env node\n');

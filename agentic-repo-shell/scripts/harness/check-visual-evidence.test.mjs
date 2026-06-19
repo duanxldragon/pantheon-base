@@ -11,13 +11,49 @@ const SCRIPT = path.resolve(TEST_DIR, 'check-visual-evidence.mjs');
 
 function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'check-visual-evidence-'));
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(root, '.harness', 'evidence'), { recursive: true });
   return root;
 }
 
-function writeUiTask(root, taskId, body) {
-  fs.writeFileSync(path.join(root, 'docs', 'harness', 'tasks', `${taskId}.task.md`), body);
+function writeUiManifest(root, taskId, visualEvidence = {}, overrides = {}) {
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', taskId), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', taskId, 'manifest.json'),
+    JSON.stringify(
+      {
+        taskId,
+        goal: 'Verify visual evidence.',
+        primaryLayer: 'platform',
+        scope: {
+          in: ['ui verification'],
+          out: ['runtime'],
+        },
+        verificationPlan: {
+          commands: ['npm run test:ui'],
+          runtimeEvidence: ['browser evidence'],
+          visualEvidence,
+        },
+        linkage: {
+          evidenceDir: `.harness/evidence/${taskId}/`,
+          reviewFile: `.harness/evidence/${taskId}/review.md`,
+          changeRef: 'none',
+          planRefs: [],
+        },
+        ...overrides,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+function writeRawManifest(root, taskId, payload) {
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', taskId), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', taskId, 'manifest.json'),
+    JSON.stringify(payload, null, 2),
+  );
 }
 
 function writeEvidenceDir(root, taskId, files) {
@@ -38,25 +74,31 @@ function runJson(root) {
   return JSON.parse(output);
 }
 
-test('check-visual-evidence passes when UI task declares viewport, states and has a screenshot', () => {
+test('check-visual-evidence passes when browserEvidence covers viewport, state, and route plans', () => {
   const root = makeFixture();
-  writeUiTask(
-    root,
-    'good-ui-task',
-    [
-      '# Task Packet: Good UI',
-      'frontend/src/modules/auth/Login.tsx',
-      'desktop viewport 1280x800',
-      'mobile viewport 390x844',
-      'verify empty, loading, error and permission denied states.',
-    ].join('\n'),
-  );
-  const screenshotsDir = path.join(
-    writeEvidenceDir(root, 'good-ui-task', { 'commands.json': '{"knownGaps":[]}' }),
-    'screenshots',
-  );
-  fs.mkdirSync(screenshotsDir, { recursive: true });
-  fs.writeFileSync(path.join(screenshotsDir, 'desktop.png'), 'fake-png');
+  writeUiManifest(root, 'good-ui-task', {
+    viewports: ['desktop', 'mobile'],
+    states: ['empty', 'loading', 'error', 'permission'],
+    routes: ['/auth/login'],
+  });
+  writeEvidenceDir(root, 'good-ui-task', {
+    'commands.json': JSON.stringify({
+      knownGaps: [],
+      browserEvidence: [
+        {
+          viewport: 'desktop',
+          url: '/auth/login',
+          checkedStates: ['empty', 'loading', 'error', 'permission'],
+        },
+        {
+          viewport: 'mobile',
+          url: 'https://example.test/auth/login?mode=compact#login',
+          checkedStates: ['empty', 'loading', 'error', 'permission'],
+        },
+      ],
+    }),
+    'review.md': '# Review\n',
+  });
 
   const result = runJson(root);
 
@@ -64,35 +106,45 @@ test('check-visual-evidence passes when UI task declares viewport, states and ha
   assert.equal(result.warningCount, 0);
 });
 
-test('check-visual-evidence warns when viewport plan and state plan are missing', () => {
+test('check-visual-evidence warns when the task manifest visual plan is invalid', () => {
   const root = makeFixture();
-  writeUiTask(
-    root,
-    'no-plans',
-    '# Task Packet: No Plans\n\nfrontend/src thing\n',
-  );
+  writeRawManifest(root, 'no-plans', {
+    taskId: 'no-plans',
+    goal: 'Invalid manifest should surface schema errors.',
+    primaryLayer: 'platform',
+    scope: {
+      in: ['ui verification'],
+      out: ['runtime'],
+    },
+    verificationPlan: {
+      commands: ['npm run test:ui'],
+      runtimeEvidence: ['browser evidence'],
+      visualEvidence: {},
+    },
+    linkage: {
+      evidenceDir: '.harness/evidence/no-plans/',
+      reviewFile: '.harness/evidence/no-plans/review.md',
+      changeRef: 'none',
+      planRefs: [],
+    },
+  });
   writeEvidenceDir(root, 'no-plans', { 'commands.json': '{"knownGaps":[]}' });
 
   const result = runJson(root);
 
-  assert.equal(result.uiTaskCount, 1);
+  assert.equal(result.uiTaskCount, 0);
+  assert.equal(result.warningCount, 1);
   const reasons = result.warnings.map((w) => w.reason).join('|');
-  assert.match(reasons, /viewport verification plan/);
-  assert.match(reasons, /state verification plan/);
+  assert.match(reasons, /visualEvidence\.viewports is required/);
+  assert.match(reasons, /visualEvidence\.states is required/);
 });
 
 test('check-visual-evidence warns when evidence directory is missing', () => {
   const root = makeFixture();
-  writeUiTask(
-    root,
-    'orphan-ui-task',
-    [
-      '# Task Packet: Orphan',
-      'frontend/src layout work',
-      'desktop and mobile viewport check',
-      'states: empty, loading, error',
-    ].join('\n'),
-  );
+  writeUiManifest(root, 'orphan-ui-task', {
+    viewports: ['desktop', 'mobile'],
+    states: ['empty', 'loading', 'error'],
+  });
 
   const result = runJson(root);
 
@@ -106,16 +158,10 @@ test('check-visual-evidence warns when evidence directory is missing', () => {
 
 test('check-visual-evidence fails strict mode when warnings exist', () => {
   const root = makeFixture();
-  writeUiTask(
-    root,
-    'strict-failure',
-    [
-      '# Task Packet: Strict Failure',
-      'frontend/src layout work',
-      'desktop and mobile viewport check',
-      'states: empty, loading, error',
-    ].join('\n'),
-  );
+  writeUiManifest(root, 'strict-failure', {
+    viewports: ['desktop', 'mobile'],
+    states: ['empty', 'loading', 'error'],
+  });
 
   const result = spawnSync(process.execPath, [SCRIPT, '--strict', '--root', root], {
     encoding: 'utf8',
@@ -127,16 +173,10 @@ test('check-visual-evidence fails strict mode when warnings exist', () => {
 
 test('check-visual-evidence accepts a recorded screenshot gap as evidence', () => {
   const root = makeFixture();
-  writeUiTask(
-    root,
-    'gap-recorded',
-    [
-      '# Task Packet: Gap',
-      'frontend/src thing',
-      'desktop and mobile viewport',
-      'states: empty, loading, error, permission denied',
-    ].join('\n'),
-  );
+  writeUiManifest(root, 'gap-recorded', {
+    viewports: ['desktop', 'mobile'],
+    states: ['empty', 'loading', 'error', 'permission denied'],
+  });
   writeEvidenceDir(root, 'gap-recorded', {
     'commands.json': JSON.stringify({
       knownGaps: ['screenshot capture not run in this environment'],
@@ -146,8 +186,9 @@ test('check-visual-evidence accepts a recorded screenshot gap as evidence', () =
   const result = runJson(root);
 
   assert.equal(result.uiTaskCount, 1);
+  assert.equal(result.warningCount, 1);
   assert.equal(
-    result.warnings.filter((w) => w.reason.includes('no screenshots')).length,
-    0,
+    result.warnings.filter((w) => w.reason.includes('missing browserEvidence entries')).length,
+    1,
   );
 });

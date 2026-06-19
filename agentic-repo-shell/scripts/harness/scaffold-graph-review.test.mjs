@@ -11,27 +11,31 @@ const SCRIPT = path.resolve(TEST_DIR, 'scaffold-graph-review.mjs');
 
 test('repo-shell scaffold-graph-review mirrors root behavior', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-graph-review-shell-'));
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'),
-    [
-      '# Task Packet: sample',
-      '',
-      '## Structural Scope',
-      '',
-      '- Affected Subgraph: `route -> handler -> service -> repo`',
-      '- Boundary Crossings: `none`',
-      '- Risk Nodes: `none`',
-      '- Graph Focus: `hub-check | cycle-check`',
-      '',
-      '## Linkage',
-      '',
-      '- Task ID: `sample`',
-      '- OpenSpec Change: `none`',
-      '- Superpowers Plan: `none`',
-      '- Evidence Directory: `.harness/evidence/sample/`',
-      '- Review File: `.harness/evidence/sample/review.md`',
-    ].join('\n'),
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Mirror root graph review scaffold behavior.',
+        primaryLayer: 'platform',
+        scope: { in: ['graph review'], out: ['runtime'] },
+        structuralScope: {
+          affectedSubgraph: ['route -> handler -> service -> repo'],
+          boundaryCrossings: ['none'],
+          riskNodes: ['none'],
+          graphFocus: ['hub-check', 'cycle-check'],
+        },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'none',
+          planRefs: [],
+        },
+      },
+      null,
+      2,
+    ),
   );
 
   const output = execFileSync(
@@ -50,27 +54,31 @@ test('repo-shell scaffold-graph-review mirrors root behavior', () => {
 
 test('repo-shell scaffold-graph-review accepts imported graph review payload', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-graph-review-shell-import-'));
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'),
-    [
-      '# Task Packet: sample',
-      '',
-      '## Structural Scope',
-      '',
-      '- Affected Subgraph: `route -> handler -> service -> repo`',
-      '- Boundary Crossings: `none`',
-      '- Risk Nodes: `none`',
-      '- Graph Focus: `hub-check | cycle-check`',
-      '',
-      '## Linkage',
-      '',
-      '- Task ID: `sample`',
-      '- OpenSpec Change: `none`',
-      '- Superpowers Plan: `none`',
-      '- Evidence Directory: `.harness/evidence/sample/`',
-      '- Review File: `.harness/evidence/sample/review.md`',
-    ].join('\n'),
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Import graph review payload.',
+        primaryLayer: 'platform',
+        scope: { in: ['graph review'], out: ['runtime'] },
+        structuralScope: {
+          affectedSubgraph: ['route -> handler -> service -> repo'],
+          boundaryCrossings: ['none'],
+          riskNodes: ['none'],
+          graphFocus: ['hub-check', 'cycle-check'],
+        },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'none',
+          planRefs: [],
+        },
+      },
+      null,
+      2,
+    ),
   );
   const importPath = path.join(root, 'graph-review.json');
   fs.writeFileSync(
@@ -103,27 +111,31 @@ test('repo-shell scaffold-graph-review accepts imported graph review payload', (
 
 test('repo-shell scaffold-graph-review supports direct live codegraph task writes', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-graph-review-shell-live-'));
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'),
-    [
-      '# Task Packet: sample',
-      '',
-      '## Structural Scope',
-      '',
-      '- Affected Subgraph: `route -> handler -> service -> repo`',
-      '- Boundary Crossings: `none`',
-      '- Risk Nodes: `none`',
-      '- Graph Focus: `hub-check | cycle-check`',
-      '',
-      '## Linkage',
-      '',
-      '- Task ID: `sample`',
-      '- OpenSpec Change: `none`',
-      '- Superpowers Plan: `none`',
-      '- Evidence Directory: `.harness/evidence/sample/`',
-      '- Review File: `.harness/evidence/sample/review.md`',
-    ].join('\n'),
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Write live codegraph results.',
+        primaryLayer: 'platform',
+        scope: { in: ['graph review'], out: ['runtime'] },
+        structuralScope: {
+          affectedSubgraph: ['route -> handler -> service -> repo'],
+          boundaryCrossings: ['none'],
+          riskNodes: ['none'],
+          graphFocus: ['hub-check', 'cycle-check'],
+        },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'none',
+          planRefs: [],
+        },
+      },
+      null,
+      2,
+    ),
   );
   fs.writeFileSync(
     path.join(root, 'codegraph-helper.js'),

@@ -145,6 +145,7 @@ system/auth
 ## Linkage
 
 - Task ID: `2026-06-17-auth-platform-preference-boundary`
+- Task Manifest: `.harness/tasks/2026-06-17-auth-platform-preference-boundary/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `none`
 - Evidence Directory: `none`

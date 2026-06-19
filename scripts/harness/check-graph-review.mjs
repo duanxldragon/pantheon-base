@@ -4,19 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import {
+  listTaskManifestPaths,
+  normalizeRepoRelativePath,
+  readTaskManifest,
+  resolveRepoPath,
+} from '../task-manifest.mjs';
+
 const DEFAULT_ROOT = process.cwd();
-const HIGH_RISK_PATTERNS = [
-  /\barchitecture-fitness\b/i,
-  /\bruntime-sensitive\b/i,
-  /\bpermission\b/i,
-  /\bmenu\b/i,
-  /\bi18n\b/i,
-  /\baudit\b/i,
-  /\bgenerator\b/i,
-  /\bdynamic[- ]module\b/i,
-  /\bcross-layer\b/i,
-  /\bboundary\b/i,
-];
 
 function printHelp() {
   console.log(`Usage:
@@ -56,67 +51,8 @@ function parseArgs(argv) {
   return options;
 }
 
-function readTaskFiles(root) {
-  const dir = path.join(root, 'docs', 'harness', 'tasks');
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
-  return fs
-    .readdirSync(dir)
-    .filter((name) => name.endsWith('.task.md'))
-    .sort((left, right) => left.localeCompare(right))
-    .map((name) => path.join(dir, name));
-}
-
 function toRepoPath(filePath, root) {
   return path.relative(root, filePath).replaceAll(path.sep, '/');
-}
-
-function taskIdFromPath(taskPath) {
-  return path.basename(taskPath).replace(/\.task\.md$/, '');
-}
-
-function extractSection(content, title) {
-  const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const heading = new RegExp(`^## ${escapedTitle}\\s*$`, 'm');
-  const match = heading.exec(content);
-  if (!match) {
-    return null;
-  }
-
-  const body = content.slice(match.index + match[0].length);
-  const nextSection = /^##\s/m.exec(body);
-  const section = (nextSection ? body.slice(0, nextSection.index) : body).trim();
-  return section || null;
-}
-
-function stripBackticks(value) {
-  return value.replace(/^`+/, '').replace(/`+$/, '').trim();
-}
-
-function normalizeListValue(value) {
-  const normalized = stripBackticks(value);
-  if (!normalized || normalized.toLowerCase() === 'none') {
-    return [];
-  }
-  return normalized
-    .split('|')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
-
-function normalizeTaskGraphFocus(value) {
-  const mapping = new Map([
-    ['cycle-check', 'cycle'],
-    ['hub-check', 'hub'],
-    ['call-depth', 'call-depth'],
-    ['sensitive-input-flow', 'sensitive-flow'],
-    ['none', 'none'],
-  ]);
-  return normalizeListValue(value)
-    .map((entry) => mapping.get(entry) || entry)
-    .filter((entry) => entry !== 'none')
-    .sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeChecks(value) {
@@ -135,27 +71,24 @@ function normalizeAffectedSubgraph(value) {
     .sort((left, right) => left.localeCompare(right));
 }
 
-function parseTaskStructuralScope(content) {
-  const section = extractSection(content, 'Structural Scope');
-  if (!section) {
-    return null;
-  }
-
-  const affectedSubgraphMatch = section.match(/^- Affected Subgraph:\s*(.+)$/m);
-  const boundaryCrossingsMatch = section.match(/^- Boundary Crossings:\s*(.+)$/m);
-  const riskNodesMatch = section.match(/^- Risk Nodes:\s*(.+)$/m);
-  const graphFocusMatch = section.match(/^- Graph Focus:\s*(.+)$/m);
-
-  return {
-    affectedSubgraph: affectedSubgraphMatch ? normalizeListValue(affectedSubgraphMatch[1]) : [],
-    boundaryCrossings: boundaryCrossingsMatch ? normalizeListValue(boundaryCrossingsMatch[1]) : [],
-    riskNodes: riskNodesMatch ? normalizeListValue(riskNodesMatch[1]) : [],
-    checks: graphFocusMatch ? normalizeTaskGraphFocus(graphFocusMatch[1]) : [],
-  };
+function normalizeManifestGraphFocus(value) {
+  const mapping = new Map([
+    ['cycle-check', 'cycle'],
+    ['hub-check', 'hub'],
+    ['call-depth', 'call-depth'],
+    ['sensitive-input-flow', 'sensitive-flow'],
+    ['cycle', 'cycle'],
+    ['hub', 'hub'],
+    ['sensitive-flow', 'sensitive-flow'],
+  ]);
+  return (Array.isArray(value) ? value : [])
+    .map((entry) => mapping.get(String(entry).trim()) || String(entry).trim())
+    .filter((entry) => entry && entry.toLowerCase() !== 'none')
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function readJsonIfExists(filePath) {
-  if (!fs.existsSync(filePath)) {
+  if (!filePath || !fs.existsSync(filePath)) {
     return { exists: false, value: null, error: null };
   }
   try {
@@ -166,7 +99,7 @@ function readJsonIfExists(filePath) {
 }
 
 function extractReviewMachineReadable(filePath) {
-  if (!fs.existsSync(filePath)) {
+  if (!filePath || !fs.existsSync(filePath)) {
     return { exists: false, value: null, error: null };
   }
   const content = fs.readFileSync(filePath, 'utf8');
@@ -201,15 +134,19 @@ function parseStructuralReview(payload) {
   };
 }
 
-function arraysEqual(left, right) {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
+function buildManifestScope(manifestPayload) {
+  const scope = manifestPayload.structuralScope;
+  if (!scope || typeof scope !== 'object' || Array.isArray(scope)) {
+    return null;
+  }
+  return {
+    affectedSubgraph: normalizeAffectedSubgraph(scope.affectedSubgraph),
+    checks: normalizeManifestGraphFocus(scope.graphFocus),
+  };
 }
 
-function taskNeedsGraphReview(content, taskScope, graphChecks, structuralReview) {
-  if (taskScope || graphChecks || structuralReview) {
-    return true;
-  }
-  return HIGH_RISK_PATTERNS.some((pattern) => pattern.test(content));
+function arraysEqual(left, right) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function compareMetadata(taskId, label, left, right, warnings) {
@@ -236,30 +173,35 @@ function scan(root) {
   const warnings = [];
   const reviewedTasks = [];
 
-  for (const taskPath of readTaskFiles(root)) {
-    const taskId = taskIdFromPath(taskPath);
-    const content = fs.readFileSync(taskPath, 'utf8');
-    const taskScope = parseTaskStructuralScope(content);
-    const evidencePath = path.join(root, '.harness', 'evidence', taskId, 'commands.json');
-    const reviewPath = path.join(root, '.harness', 'evidence', taskId, 'review.md');
+  for (const manifestPath of listTaskManifestPaths(root)) {
+    let manifest;
+    try {
+      manifest = readTaskManifest(root, manifestPath);
+    } catch (error) {
+      warnings.push({
+        file: manifestPath,
+        taskId: normalizeRepoRelativePath(manifestPath),
+        reason: `task manifest is unreadable: ${error.message}`,
+      });
+      continue;
+    }
+
+    const taskId = manifest.payload.taskId;
+    const manifestScope = buildManifestScope(manifest.payload);
+    if (!manifestScope) {
+      continue;
+    }
+    reviewedTasks.push(taskId);
+
+    const evidencePath = resolveRepoPath(
+      root,
+      `${normalizeRepoRelativePath(manifest.payload.linkage.evidenceDir)}commands.json`,
+    );
+    const reviewPath = resolveRepoPath(root, manifest.payload.linkage.reviewFile);
     const evidence = readJsonIfExists(evidencePath);
     const review = extractReviewMachineReadable(reviewPath);
     const graphChecks = parseGraphChecks(evidence.value);
     const structuralReview = parseStructuralReview(review.value);
-
-    if (taskNeedsGraphReview(content, taskScope, graphChecks, structuralReview)) {
-      reviewedTasks.push(taskId);
-    } else {
-      continue;
-    }
-
-    if (!taskScope) {
-      warnings.push({
-        file: toRepoPath(taskPath, root),
-        taskId,
-        reason: 'task packet appears high-risk or graph-reviewed but is missing ## Structural Scope',
-      });
-    }
 
     if (evidence.exists && evidence.error) {
       warnings.push({
@@ -269,7 +211,7 @@ function scan(root) {
       });
     } else if (!graphChecks) {
       warnings.push({
-        file: toRepoPath(evidencePath, root),
+        file: manifest.payload.linkage.evidenceDir,
         taskId,
         reason: 'graph-reviewed task is missing evidence.graphChecks',
       });
@@ -277,20 +219,20 @@ function scan(root) {
 
     if (review.exists && review.error) {
       warnings.push({
-        file: toRepoPath(reviewPath, root),
+        file: manifest.payload.linkage.reviewFile,
         taskId,
         reason: `review structural consistency could not be checked because review.md is unreadable: ${review.error}`,
       });
     } else if (!structuralReview) {
       warnings.push({
-        file: toRepoPath(reviewPath, root),
+        file: manifest.payload.linkage.reviewFile,
         taskId,
         reason: 'graph-reviewed task is missing review.structuralReview',
       });
     }
 
-    compareMetadata(taskId, 'task packet vs evidence', taskScope, graphChecks, warnings);
-    compareMetadata(taskId, 'task packet vs review', taskScope, structuralReview, warnings);
+    compareMetadata(taskId, 'manifest vs evidence', manifestScope, graphChecks, warnings);
+    compareMetadata(taskId, 'manifest vs review', manifestScope, structuralReview, warnings);
     compareMetadata(taskId, 'evidence vs review', graphChecks, structuralReview, warnings);
   }
 

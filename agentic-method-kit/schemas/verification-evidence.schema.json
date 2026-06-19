@@ -99,16 +99,17 @@
     "runtimeGap": { "type": "string" },
     "linkage": {
       "type": "object",
-      "required": ["taskPacket", "evidenceDir", "reviewFile", "changeRef", "planRefs"],
+      "required": ["taskManifest", "evidenceDir", "reviewFile", "changeRef", "planRefs"],
       "properties": {
-        "taskPacket": { "type": "string" },
+        "taskManifest": { "type": "string" },
         "evidenceDir": { "type": "string" },
         "reviewFile": { "type": "string" },
         "changeRef": { "type": "string" },
         "planRefs": {
           "type": "array",
           "items": { "type": "string" }
-        }
+        },
+        "summaryFile": { "type": "string" }
       }
     },
     "knownGaps": {

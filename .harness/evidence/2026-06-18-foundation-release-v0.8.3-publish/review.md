@@ -18,18 +18,18 @@
     "notes": "The patch keeps the stable base-v* tag contract while aligning GitHub release display titles to pantheon-base-v*. The publisher updates an existing release without retagging or mutating the target commit."
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md",
     "evidence": ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/commands.json",
     "reviewFile": ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-06-18-foundation-release-v0.8.3-publish/manifest.json"
   }
 }
 ```
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md`
+- Task Manifest: `.harness/tasks/2026-06-18-foundation-release-v0.8.3-publish/manifest.json`
 - Evidence: `.harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/commands.json`
 - OpenSpec Change: `none`
 

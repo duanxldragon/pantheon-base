@@ -92,15 +92,21 @@
       "consoleErrors": [
         "ResizeObserver loop completed with undelivered notifications"
       ],
-      "checkedStates": ["loading", "empty", "error", "permission"]
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission"
+      ]
     }
   ],
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-05-18-pantheon-base-audit-and-qa.task.md",
     "evidenceDir": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/",
     "reviewFile": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "taskManifest": ".harness/tasks/2026-05-18-pantheon-base-audit-and-qa/manifest.json",
+    "summaryFile": ".harness/evidence/2026-05-18-pantheon-base-audit-and-qa/summary.md"
   },
   "knownGaps": [
     "vite dev server still reports ResizeObserver loop notifications during smoke",

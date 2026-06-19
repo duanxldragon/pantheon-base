@@ -2,12 +2,41 @@
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/2026-06-18-auth-http-posture-and-github-feedback.task.md`
+- Task Manifest: `.harness/tasks/2026-06-18-auth-http-posture-and-github-feedback/manifest.json`
 - Evidence: `.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/commands.json`
 - Verification Summary: `.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/summary.md`
 - OpenSpec Change: `none`
 - Review Mode: `independent-review`
 - Reviewer Roles: `architecture`, `security`, `mechanical`
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-06-18-auth-http-posture-and-github-feedback",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "browser auth request -> cookie-first auth response -> platform preference contract -> allowlisted CORS/security headers -> GitHub feedback gate -> solo PR auto-merge"
+    ],
+    "checks": [
+      "sensitive-flow",
+      "hub"
+    ],
+    "findings": [],
+    "notes": "This packet spans auth contract hardening, platform-owned middleware posture, and repository-governance automation."
+  },
+  "linkage": {
+    "evidence": ".harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/commands.json",
+    "reviewFile": ".harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/superpowers/plans/2026-06-17-auth-cookie-first-and-http-posture-plan.md"
+    ],
+    "taskManifest": ".harness/tasks/2026-06-18-auth-http-posture-and-github-feedback/manifest.json"
+  }
+}
+```
 
 ## Verdict
 

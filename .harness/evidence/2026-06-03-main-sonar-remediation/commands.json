@@ -97,13 +97,14 @@
   "runtimeSensitive": true,
   "runtimeGap": "Merged-main Sonar runtime evidence is fresh, but the workstation-specific local Sonar phase still has not been executed on this machine.",
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-remediation.task.md",
     "evidenceDir": ".harness/evidence/2026-06-03-main-sonar-remediation/",
     "reviewFile": ".harness/evidence/2026-06-03-main-sonar-remediation/review.md",
     "changeRef": "none",
     "planRefs": [
       "docs/superpowers/plans/2026-06-03-main-sonar-remediation-method.md"
-    ]
+    ],
+    "taskManifest": ".harness/tasks/2026-06-03-main-sonar-remediation/manifest.json",
+    "summaryFile": ".harness/evidence/2026-06-03-main-sonar-remediation/summary.md"
   },
   "knownGaps": [
     "Local backend-tests evidence used `go test ./...` instead of `go test -race ./...` because this Windows environment does not mirror the ubuntu-latest race toolchain.",

@@ -3,24 +3,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+
+import { sortStrings } from './sort-utils.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DEFAULT_ROOT = process.cwd();
 const IMPLEMENTATION_ROOTS = [
   'src/',
   'app/',
-  'lib/',
-  'packages/',
-  'services/',
   'backend/',
   'frontend/',
+  'services/',
+  'packages/',
   'docs/contracts/',
   'docs/designs/',
   'docs/acceptances/',
 ];
-const TASK_PACKET_ROOT = 'docs/harness/tasks/';
 const EVIDENCE_ROOT = '.harness/evidence/';
 const OPEN_SPEC_CHANGES_ROOT = 'openspec/changes';
+const PR_TEMPLATE_CANDIDATES = [
+  '.github/PULL_REQUEST_TEMPLATE.md',
+  '.github/pull_request_template.md',
+];
 
 const REQUIRED_FILES = [
   'agentic-method-kit/HARNESS_CORE_MODEL.md',
@@ -45,22 +49,23 @@ const REQUIRED_FILES = [
   '.agents/adapters/github-copilot.md',
   '.agents/adapters/openhands.md',
   '.agents/adapters/human.md',
-  '.github/pull_request_template.md',
 ];
 
 const REQUIRED_PR_MARKERS = [
-  'Task packet',
-  'Trivial change',
+  'Task ID',
+  'Task manifest',
   'Verification evidence',
+  'Review artifact',
   'OpenSpec change',
-  'task packet',
+  'task manifest',
   'evidence',
+  'Trivial change',
   'visual evidence',
   'method health',
 ];
 
 const REQUIRED_AGENT_PROMPT_MARKERS = [
-  'Task Packet',
+  'Task manifest',
   'Record verification results',
   'Do not claim completion without fresh verification evidence',
 ];
@@ -69,36 +74,29 @@ function printHelp() {
   console.log(`Usage:
   node scripts/harness/check-adoption.mjs [--json] [--strict] [--root <path>] [--changed-file <path> ...]
 
-Checks that Phase 7 Harness adoption entrypoints are present:
+Checks that portable Harness adoption entrypoints are present:
 - shared contracts
 - tool adapters
 - PR template task/evidence/trivial markers
 - implementation prompt completion evidence rules
-- implementation changes are paired with task packet and evidence files`);
+- implementation changes are paired with task manifest and evidence files`);
 }
 
 function parseArgs(argv) {
   const options = { json: false, strict: false, help: false, root: DEFAULT_ROOT, changedFiles: [] };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--json') {
-      options.json = true;
-    } else if (arg === '--strict') {
-      options.strict = true;
-    } else if (arg === '--help' || arg === '-h') {
-      options.help = true;
-    } else if (arg === '--root') {
+    if (arg === '--json') options.json = true;
+    else if (arg === '--strict') options.strict = true;
+    else if (arg === '--help' || arg === '-h') options.help = true;
+    else if (arg === '--root') {
       const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--root requires a path');
-      }
+      if (!value) throw new Error('--root requires a path');
       options.root = path.resolve(value);
       index += 1;
     } else if (arg === '--changed-file') {
       const value = argv[index + 1];
-      if (!value) {
-        throw new Error('--changed-file requires a path');
-      }
+      if (!value) throw new Error('--changed-file requires a path');
       options.changedFiles.push(value.replaceAll('\\', '/'));
       index += 1;
     } else {
@@ -112,12 +110,12 @@ function readText(root, repoPath) {
   return fs.readFileSync(path.join(root, repoPath), 'utf8');
 }
 
-function hasAllMarkers(content, markers) {
-  return markers.filter((marker) => !content.includes(marker));
+function findExistingRepoPath(root, candidates) {
+  return candidates.find((candidate) => fs.existsSync(path.join(root, candidate))) ?? null;
 }
 
-function toRepoPath(filePath, root) {
-  return path.relative(root, filePath).replaceAll(path.sep, '/');
+function hasAllMarkers(content, markers) {
+  return markers.filter((marker) => !content.includes(marker));
 }
 
 function discoverChangedFiles(root) {
@@ -138,14 +136,20 @@ function discoverChangedFiles(root) {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    return Array.from(new Set([...tracked, ...untracked])).sort();
+    return sortStrings(Array.from(new Set([...tracked, ...untracked])));
   } catch {
     return [];
   }
 }
 
-function scanChangedFiles(root, findings, warnings, changedFiles) {
-  const normalizedFiles = Array.from(new Set(changedFiles.map((file) => file.replaceAll('\\', '/')))).sort();
+function isTaskManifestFile(file) {
+  return /^\.harness\/tasks\/.+\/manifest\.json$/u.test(file);
+}
+
+function scanChangedFiles(findings, warnings, changedFiles) {
+  const normalizedFiles = sortStrings(
+    Array.from(new Set(changedFiles.map((file) => file.replaceAll('\\', '/')))),
+  );
   if (normalizedFiles.length === 0) {
     warnings.push({
       file: '.',
@@ -161,17 +165,15 @@ function scanChangedFiles(root, findings, warnings, changedFiles) {
     return;
   }
 
-  const hasTaskPacketChange = normalizedFiles.some(
-    (file) => file.startsWith(TASK_PACKET_ROOT) && file.endsWith('.task.md'),
-  );
+  const hasTaskManifestChange = normalizedFiles.some((file) => isTaskManifestFile(file));
   const hasEvidenceChange = normalizedFiles.some(
     (file) => file.startsWith(EVIDENCE_ROOT) && /\/commands\.json$/.test(file),
   );
 
-  if (!hasTaskPacketChange) {
+  if (!hasTaskManifestChange) {
     findings.push({
       file: implementationChanges[0],
-      reason: 'implementation change detected without a matching task packet change',
+      reason: 'implementation change detected without a matching task manifest change',
     });
   }
 
@@ -185,37 +187,15 @@ function scanChangedFiles(root, findings, warnings, changedFiles) {
 
 function listActiveOpenSpecChanges(root) {
   const changesRoot = path.join(root, OPEN_SPEC_CHANGES_ROOT);
-  if (!fs.existsSync(changesRoot)) {
-    return [];
-  }
-
-  return fs
-    .readdirSync(changesRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && entry.name !== 'archive')
-    .map((entry) => `${OPEN_SPEC_CHANGES_ROOT}/${entry.name}/`)
-    .sort();
+  if (!fs.existsSync(changesRoot)) return [];
+  return fs.readdirSync(changesRoot, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && e.name !== 'archive')
+    .map((e) => `${OPEN_SPEC_CHANGES_ROOT}/${e.name}/`);
 }
 
-function parseTaskPacketChangeRef(root, repoPath) {
+function parseJsonChangeRef(root, repoPath) {
   const fullPath = path.join(root, repoPath);
-  if (!fs.existsSync(fullPath)) {
-    return null;
-  }
-
-  const content = fs.readFileSync(fullPath, 'utf8');
-  const match = content.match(/^- OpenSpec Change:\s+(.+)$/m);
-  if (!match) {
-    return null;
-  }
-  return match[1].trim();
-}
-
-function parseEvidenceChangeRef(root, repoPath) {
-  const fullPath = path.join(root, repoPath);
-  if (!fs.existsSync(fullPath)) {
-    return null;
-  }
-
+  if (!fs.existsSync(fullPath)) return null;
   try {
     const payload = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
     return payload?.linkage?.changeRef ?? null;
@@ -226,36 +206,32 @@ function parseEvidenceChangeRef(root, repoPath) {
 
 function scanOpenSpecLinkage(root, findings, changedFiles) {
   const activeChanges = listActiveOpenSpecChanges(root);
-  if (activeChanges.length === 0) {
-    return;
-  }
+  if (activeChanges.length === 0) return;
 
-  const changedTaskPackets = changedFiles.filter(
-    (file) => file.startsWith(TASK_PACKET_ROOT) && file.endsWith('.task.md'),
-  );
+  const changedTaskManifests = changedFiles.filter((file) => isTaskManifestFile(file));
   const changedEvidenceFiles = changedFiles.filter(
     (file) => file.startsWith(EVIDENCE_ROOT) && /\/commands\.json$/.test(file),
   );
 
-  for (const taskPacket of changedTaskPackets) {
-    const changeRef = parseTaskPacketChangeRef(root, taskPacket);
+  for (const taskManifest of changedTaskManifests) {
+    const changeRef = parseJsonChangeRef(root, taskManifest);
     if (!changeRef || changeRef === 'none') {
       findings.push({
-        file: taskPacket,
-        reason: 'active OpenSpec change exists; changed task packet must declare a real OpenSpec Change linkage',
+        file: taskManifest,
+        reason: 'active OpenSpec change exists; changed task manifest must declare a real linkage.changeRef',
       });
       continue;
     }
     if (!activeChanges.includes(changeRef)) {
       findings.push({
-        file: taskPacket,
-        reason: `task packet OpenSpec Change must reference an active change: ${activeChanges.join(', ')}`,
+        file: taskManifest,
+        reason: `task manifest linkage.changeRef must reference an active change: ${activeChanges.join(', ')}`,
       });
     }
   }
 
   for (const evidenceFile of changedEvidenceFiles) {
-    const changeRef = parseEvidenceChangeRef(root, evidenceFile);
+    const changeRef = parseJsonChangeRef(root, evidenceFile);
     if (!changeRef || changeRef === 'none') {
       findings.push({
         file: evidenceFile,
@@ -278,30 +254,23 @@ function scanAdoption(root, changedFiles) {
 
   for (const repoPath of REQUIRED_FILES) {
     if (!fs.existsSync(path.join(root, repoPath))) {
-      findings.push({
-        file: repoPath,
-        reason: 'required Harness adoption file is missing',
-      });
+      findings.push({ file: repoPath, reason: 'required Harness adoption file is missing' });
     }
   }
 
-  const prTemplatePath = '.github/pull_request_template.md';
-  if (fs.existsSync(path.join(root, prTemplatePath))) {
+  const prTemplatePath = findExistingRepoPath(root, PR_TEMPLATE_CANDIDATES);
+  if (!prTemplatePath) {
+    findings.push({ file: PR_TEMPLATE_CANDIDATES[0], reason: 'required Harness adoption file is missing' });
+  } else {
     const missing = hasAllMarkers(readText(root, prTemplatePath), REQUIRED_PR_MARKERS);
     for (const marker of missing) {
-      findings.push({
-        file: prTemplatePath,
-        reason: `PR template missing adoption marker: ${marker}`,
-      });
+      findings.push({ file: prTemplatePath, reason: `PR template missing adoption marker: ${marker}` });
     }
   }
 
   const implementationPromptPath = '.agents/prompts/implementation.md';
   if (!fs.existsSync(path.join(root, implementationPromptPath))) {
-    findings.push({
-      file: implementationPromptPath,
-      reason: 'implementation prompt is missing',
-    });
+    findings.push({ file: implementationPromptPath, reason: 'implementation prompt is missing' });
   } else {
     const missing = hasAllMarkers(readText(root, implementationPromptPath), REQUIRED_AGENT_PROMPT_MARKERS);
     for (const marker of missing) {
@@ -312,7 +281,7 @@ function scanAdoption(root, changedFiles) {
     }
   }
 
-  scanChangedFiles(root, findings, warnings, changedFiles);
+  scanChangedFiles(findings, warnings, changedFiles);
   scanOpenSpecLinkage(root, findings, changedFiles);
 
   return { findings, warnings };
@@ -320,9 +289,7 @@ function scanAdoption(root, changedFiles) {
 
 function printTextReport(result, strict) {
   const mode = strict ? 'strict' : 'report-only';
-  console.log(
-    `Adoption check (${mode}): ${result.findings.length} finding(s), ${result.warnings.length} warning(s)`,
-  );
+  console.log(`Adoption check (${mode}): ${result.findings.length} finding(s), ${result.warnings.length} warning(s)`);
   if (result.findings.length === 0 && result.warnings.length === 0) {
     console.log('\nno findings');
   }
@@ -344,33 +311,23 @@ function main() {
     console.error(error.message);
     return 1;
   }
-  if (options.help) {
-    printHelp();
-    return 0;
-  }
+  if (options.help) return printHelp(), 0;
 
   const changedFiles = options.changedFiles.length > 0 ? options.changedFiles : discoverChangedFiles(options.root);
   const result = scanAdoption(options.root, changedFiles);
   if (options.json) {
-    console.log(
-      JSON.stringify(
-        {
-          mode: options.strict ? 'strict' : 'report-only',
-          changedFileCount: changedFiles.length,
-          findingCount: result.findings.length,
-          warningCount: result.warnings.length,
-          changedFiles,
-          findings: result.findings,
-          warnings: result.warnings,
-        },
-        null,
-        2,
-      ),
-    );
+    console.log(JSON.stringify({
+      mode: options.strict ? 'strict' : 'report-only',
+      changedFileCount: changedFiles.length,
+      findingCount: result.findings.length,
+      warningCount: result.warnings.length,
+      changedFiles,
+      findings: result.findings,
+      warnings: result.warnings,
+    }, null, 2));
   } else {
     printTextReport(result, options.strict);
   }
-
   return options.strict && result.findings.length > 0 ? 1 : 0;
 }
 

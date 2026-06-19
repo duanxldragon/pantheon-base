@@ -19,13 +19,13 @@
     "notes": "scaffolded from task packet Structural Scope; replace after graph review"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/2026-06-03-main-sonar-remediation.task.md",
     "evidence": ".harness/evidence/2026-06-03-main-sonar-remediation/commands.json",
     "reviewFile": ".harness/evidence/2026-06-03-main-sonar-remediation/review.md",
     "changeRef": "none",
     "planRefs": [
       "docs/superpowers/plans/2026-06-03-main-sonar-remediation-method.md"
-    ]
+    ],
+    "taskManifest": ".harness/tasks/2026-06-03-main-sonar-remediation/manifest.json"
   }
 }
 ```

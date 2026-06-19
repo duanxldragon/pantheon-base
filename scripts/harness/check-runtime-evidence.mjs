@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { sortStrings } from './sort-utils.mjs';
+import { readTaskManifest } from '../task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 
@@ -60,11 +61,19 @@ function scanFile(filePath, root) {
   }
 
   const taskId = typeof payload.taskId === 'string' ? payload.taskId : path.basename(path.dirname(filePath));
-  const taskPacket = typeof payload.linkage?.taskPacket === 'string' ? path.join(root, payload.linkage.taskPacket) : null;
+  const taskManifestReference =
+    typeof payload.linkage?.taskManifest === 'string' ? payload.linkage.taskManifest : null;
   let runtimeSensitive = payload.runtimeSensitive === true;
-  if (taskPacket && fs.existsSync(taskPacket)) {
-    const source = fs.readFileSync(taskPacket, 'utf8');
-    runtimeSensitive ||= /\bruntime quality\b/i.test(source) || /\blogs\b/i.test(source) || /\bmetrics\b/i.test(source) || /\btraces\b/i.test(source) || /\bperformance\b/i.test(source);
+  if (taskManifestReference) {
+    try {
+      const taskManifest = readTaskManifest(root, taskManifestReference);
+      runtimeSensitive ||=
+        Array.isArray(taskManifest.payload.verificationPlan?.runtimeEvidence) &&
+        taskManifest.payload.verificationPlan.runtimeEvidence.length > 0;
+      runtimeSensitive ||= taskManifest.payload.runtimeSensitive === true;
+    } catch {
+      // ignore invalid manifests here; structural validators report that separately
+    }
   }
 
   if (!runtimeSensitive) return result;

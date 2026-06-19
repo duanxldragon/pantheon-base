@@ -34,6 +34,7 @@ const REQUIRED_REPO_SHELL_FILES = [
   'scripts/harness/check-graph-review.mjs',
   'scripts/harness/scaffold-graph-review.mjs',
   'scripts/harness/build-graph-review-import.mjs',
+  'scripts/harness/check-visual-evidence.mjs',
   'scripts/harness/check-failure-registry.mjs',
   'scripts/harness/check-feature-ledger.mjs',
   'scripts/harness/check-template-health.mjs',

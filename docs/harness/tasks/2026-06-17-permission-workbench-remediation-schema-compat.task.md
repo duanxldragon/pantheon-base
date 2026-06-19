@@ -157,6 +157,7 @@ system/iam
 ## Linkage
 
 - Task ID: `2026-06-17-permission-workbench-remediation-schema-compat`
+- Task Manifest: `.harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `none`
 - Evidence Directory: `.harness/evidence/2026-06-17-permission-workbench-remediation-schema-compat/`

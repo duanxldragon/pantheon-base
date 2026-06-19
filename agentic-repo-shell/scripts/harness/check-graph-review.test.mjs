@@ -11,15 +11,40 @@ const SCRIPT = path.resolve(TEST_DIR, 'check-graph-review.mjs');
 
 function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'graph-review-shell-'));
-  fs.mkdirSync(path.join(root, 'docs', 'harness', 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
   return root;
 }
 
-function writeTaskPacket(root) {
+function writeManifest(root, overrides = {}) {
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(
-    path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'),
-    ['# Task Packet: sample', '', '## Structural Scope', '', '- Affected Subgraph: `route -> handler -> service -> repo`', '- Boundary Crossings: `none`', '- Risk Nodes: `none`', '- Graph Focus: `cycle-check | hub-check`'].join('\n'),
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Check graph review consistency.',
+        primaryLayer: 'platform',
+        scope: {
+          in: ['graph review'],
+          out: ['runtime'],
+        },
+        structuralScope: {
+          affectedSubgraph: ['route -> handler -> service -> repo'],
+          boundaryCrossings: ['none'],
+          riskNodes: ['none'],
+          graphFocus: ['cycle-check', 'hub-check'],
+        },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'none',
+          planRefs: [],
+        },
+        ...overrides,
+      },
+      null,
+      2,
+    ),
   );
 }
 
@@ -36,7 +61,7 @@ function writeReview(root, payload) {
 
 test('repo-shell check-graph-review accepts matching structural metadata', () => {
   const root = makeFixture();
-  writeTaskPacket(root);
+  writeManifest(root);
   writeEvidence(root, {
     graphChecks: {
       affectedSubgraph: ['route -> handler -> service -> repo'],
@@ -57,7 +82,7 @@ test('repo-shell check-graph-review accepts matching structural metadata', () =>
 
 test('repo-shell check-graph-review warns on mismatched checks', () => {
   const root = makeFixture();
-  writeTaskPacket(root);
+  writeManifest(root);
   writeEvidence(root, {
     graphChecks: {
       affectedSubgraph: ['route -> handler -> service -> repo'],

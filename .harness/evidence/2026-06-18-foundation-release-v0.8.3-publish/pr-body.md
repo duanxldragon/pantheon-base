@@ -7,8 +7,9 @@
 
 ## Harness 链路
 
-- Task Packet：`docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md`
-- Task packet：`docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md`
+- Task ID：`2026-06-18-foundation-release-v0.8.3-publish`
+- Task Manifest：`.harness/tasks/2026-06-18-foundation-release-v0.8.3-publish/manifest.json`
+- Task ID：`2026-06-18-foundation-release-v0.8.3-publish`
 - Evidence：`.harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/commands.json`
 - Verification evidence：`.harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/summary.md`
 - Review Artifact：`.harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/review.md`
@@ -20,7 +21,7 @@
 
 ## Harness adoption markers
 
-- task packet: `docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md`
+- Task ID：`2026-06-18-foundation-release-v0.8.3-publish`
 - evidence: `.harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/`
 - boundaries: `platform release tooling -> GitHub release API`
 - backend response contract: `none`

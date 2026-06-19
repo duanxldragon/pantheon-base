@@ -4,6 +4,7 @@ You are implementing a repository task using the tool-agnostic Harness process.
 
 ## Required Inputs
 
+- Task manifest: `.harness/tasks/<task-id>/manifest.json`
 - Task Packet: `docs/harness/tasks/<task-id>.task.md`
 - Harness contract: `docs/harness/HARNESS_ENGINEERING_CONTRACT.md`
 - Agent interface contract: `docs/harness/AGENT_INTERFACE_CONTRACT.md`
@@ -13,7 +14,7 @@ You are implementing a repository task using the tool-agnostic Harness process.
 ## Execution Rules
 
 1. Declare the primary layer before editing.
-2. Read contract anchors listed in the Task Packet.
+2. Read contract anchors listed in the task manifest or Task Packet.
 3. Keep changes inside `Scope / In`.
 4. Do not touch paths listed in `Expected Files / Do Not Touch`.
 5. Prefer shared scripts under `scripts/harness/` over tool-specific checks.

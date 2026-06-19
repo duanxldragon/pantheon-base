@@ -16,8 +16,28 @@ function makeFixture() {
   fs.mkdirSync(path.join(root, 'docs', 'superpowers', 'plans'), { recursive: true });
   fs.mkdirSync(path.join(root, 'openspec', 'changes', 'sample-change'), { recursive: true });
   fs.mkdirSync(path.join(root, '.harness', 'evidence', 'sample'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.harness', 'tasks', 'sample'), { recursive: true });
   fs.writeFileSync(path.join(root, 'agentic-method-kit', 'config', 'method.config.json'), JSON.stringify({ evidenceDir: '.harness/evidence' }));
   fs.writeFileSync(path.join(root, 'docs', 'harness', 'tasks', 'sample.task.md'), '# Task');
+  fs.writeFileSync(
+    path.join(root, '.harness', 'tasks', 'sample', 'manifest.json'),
+    `${JSON.stringify(
+      {
+        taskId: 'sample',
+        goal: 'Validate repo-shell review artifacts.',
+        primaryLayer: 'platform',
+        scope: { in: ['review check'], out: ['runtime changes'] },
+        linkage: {
+          evidenceDir: '.harness/evidence/sample/',
+          reviewFile: '.harness/evidence/sample/review.md',
+          changeRef: 'openspec/changes/sample-change/',
+          planRefs: ['docs/superpowers/plans/sample-plan.md'],
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
   fs.writeFileSync(path.join(root, 'docs', 'superpowers', 'plans', 'sample-plan.md'), '# Plan');
   fs.writeFileSync(path.join(root, '.harness', 'evidence', 'sample', 'commands.json'), '{}');
   return root;
@@ -28,7 +48,7 @@ function writeReview(root, content) {
 }
 
 function validReview() {
-  return ['# Review', '', '## Machine Readable', '```json', JSON.stringify({ taskId: 'sample', verdict: 'approved', structuralReview: { affectedSubgraph: ['route -> handler -> service -> repo'], checks: ['cycle', 'hub'], findings: [], notes: 'none' }, linkage: { taskPacket: 'docs/harness/tasks/sample.task.md', evidence: '.harness/evidence/sample/commands.json', reviewFile: '.harness/evidence/sample/review.md', changeRef: 'openspec/changes/sample-change/', planRefs: ['docs/superpowers/plans/sample-plan.md'] } }, null, 2), '```'].join('\n');
+  return ['# Review', '', '## Machine Readable', '```json', JSON.stringify({ taskId: 'sample', verdict: 'approved', structuralReview: { affectedSubgraph: ['route -> handler -> service -> repo'], checks: ['cycle', 'hub'], findings: [], notes: 'none' }, linkage: { taskManifest: '.harness/tasks/sample/manifest.json', evidence: '.harness/evidence/sample/commands.json', reviewFile: '.harness/evidence/sample/review.md', changeRef: 'openspec/changes/sample-change/', planRefs: ['docs/superpowers/plans/sample-plan.md'] } }, null, 2), '```'].join('\n');
 }
 
 test('repo-shell check-review accepts a valid review artifact', () => {

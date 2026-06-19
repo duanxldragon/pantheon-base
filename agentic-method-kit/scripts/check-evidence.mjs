@@ -3,6 +3,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {
+  extractTaskIdFromManifestPath,
+  normalizeRepoRelativePath,
+  readTaskManifest,
+} from './task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 const VALID_AGENT_TOOLS = new Set([
@@ -157,25 +162,34 @@ function validateLinkage(evidence, filePath, root, errors) {
     return;
   }
 
-  const requiredFields = ['taskPacket', 'evidenceDir', 'reviewFile', 'changeRef', 'planRefs'];
+  const requiredFields = ['taskManifest', 'evidenceDir', 'reviewFile', 'changeRef', 'planRefs'];
   for (const field of requiredFields) {
     if (!(field in evidence.linkage)) {
       errors.push(`root.linkage.${field} is required.`);
     }
   }
 
-  if (typeof evidence.linkage.taskPacket === 'string') {
-    const taskPacketPath = path.join(root, evidence.linkage.taskPacket);
-    if (!fs.existsSync(taskPacketPath)) {
-      errors.push(`root.linkage.taskPacket does not exist: ${evidence.linkage.taskPacket}`);
+  if (typeof evidence.linkage.taskManifest === 'string') {
+    const manifestRepoPath = normalizeRepoRelativePath(evidence.linkage.taskManifest);
+    const manifestTaskId = extractTaskIdFromManifestPath(manifestRepoPath);
+    const taskManifestPath = path.join(root, manifestRepoPath);
+    if (!fs.existsSync(taskManifestPath)) {
+      errors.push(`root.linkage.taskManifest does not exist: ${evidence.linkage.taskManifest}`);
     } else {
-      const expectedTaskId = path.basename(evidence.linkage.taskPacket).replace(/\.task\.md$/, '');
-      if (expectedTaskId !== evidence.taskId) {
-        errors.push(`root.linkage.taskPacket task id "${expectedTaskId}" must match root.taskId "${evidence.taskId}".`);
+      try {
+        const manifest = readTaskManifest(root, manifestRepoPath);
+        if (manifest.payload.taskId !== evidence.taskId) {
+          errors.push(`root.linkage.taskManifest task id "${manifest.payload.taskId}" must match root.taskId "${evidence.taskId}".`);
+        }
+      } catch (error) {
+        errors.push(error.message);
+      }
+      if (manifestTaskId && manifestTaskId !== evidence.taskId) {
+        errors.push(`root.linkage.taskManifest path task id "${manifestTaskId}" must match root.taskId "${evidence.taskId}".`);
       }
     }
   } else {
-    errors.push('root.linkage.taskPacket must be a non-empty string.');
+    errors.push('root.linkage.taskManifest must be a non-empty string.');
   }
 
   if (typeof evidence.linkage.evidenceDir === 'string') {
@@ -214,6 +228,15 @@ function validateLinkage(evidence, filePath, root, errors) {
         errors.push(`root.linkage.planRefs[${index}] does not exist: ${planRef}`);
       }
     });
+  }
+
+  if (
+    'summaryFile' in evidence.linkage &&
+    typeof evidence.linkage.summaryFile === 'string' &&
+    evidence.linkage.summaryFile !== 'none' &&
+    !fs.existsSync(path.join(root, evidence.linkage.summaryFile))
+  ) {
+    errors.push(`root.linkage.summaryFile does not exist: ${evidence.linkage.summaryFile}`);
   }
 }
 

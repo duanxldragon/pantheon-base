@@ -2161,3 +2161,26 @@ func queryPageSizeFromAdminSession(query *AdminSessionQuery) int {
 	}
 	return query.PageSize
 }
+
+func upsertMFAFactor(tx *gorm.DB, userID uint64, encryptedSecret string, now time.Time) error {
+	var factor SystemAuthFactor
+	err := tx.Where(userIDAndFactorTypeWhereClause, userID, "totp").First(&factor).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		factor = SystemAuthFactor{
+			UserID:          userID,
+			FactorType:      "totp",
+			SecretEncrypted: encryptedSecret,
+			Enabled:         1,
+			ConfirmedAt:     &now,
+		}
+		return tx.Create(&factor).Error
+	}
+	if err != nil {
+		return err
+	}
+	return tx.Model(&factor).Updates(map[string]any{
+		"secret_encrypted": encryptedSecret,
+		"enabled":          1,
+		"confirmed_at":     &now,
+	}).Error
+}

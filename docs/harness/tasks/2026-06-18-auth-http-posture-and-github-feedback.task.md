@@ -200,6 +200,7 @@ system/auth
 ## Linkage
 
 - Task ID: `2026-06-18-auth-http-posture-and-github-feedback`
+- Task Manifest: `.harness/tasks/2026-06-18-auth-http-posture-and-github-feedback/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `docs/superpowers/plans/2026-06-17-auth-cookie-first-and-http-posture-plan.md`
 - Evidence Directory: `.harness/evidence/2026-06-18-auth-http-posture-and-github-feedback/`

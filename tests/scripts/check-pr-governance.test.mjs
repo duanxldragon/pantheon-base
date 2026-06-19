@@ -25,6 +25,53 @@ function withFixtureRepo(callback) {
   }
 }
 
+function writeTaskManifest(repoRoot, taskId) {
+  const manifestPath = path.join(repoRoot, '.harness', 'tasks', taskId, 'manifest.json');
+  fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify(
+      {
+        taskId,
+        title: 'Sample manifest',
+        goal: 'Keep PR governance machine-linkage manifest-first.',
+        primaryLayer: 'platform',
+        scope: {
+          in: ['PR governance checks', 'GitHub automation governance'],
+          out: ['runtime behavior changes'],
+        },
+        implementationNotes: [
+          'This stays in pantheon-base because the governance gate is shared platform policy.',
+        ],
+        linkage: {
+          evidenceDir: `.harness/evidence/${taskId}/`,
+          reviewFile: `.harness/evidence/${taskId}/review.md`,
+          changeRef: 'none',
+          planRefs: [],
+          summaryFile: `.harness/evidence/${taskId}/summary.md`,
+        },
+        verificationPlan: {
+          commands: ['node --test tests/scripts/check-pr-governance.test.mjs'],
+          runtimeEvidence: [],
+        },
+        runtimeSensitive: false,
+        evidenceRequired: ['commands.json', 'summary.md'],
+        humanGates: ['none'],
+        completionChecklist: [
+          'Layer and boundary declared',
+          'Contract anchors read',
+          'Verification run or exception recorded',
+          'Evidence saved or summarized',
+          'Review completed',
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  );
+}
+
 const validTemplate = `## 变更摘要
 
 - 改动层级：
@@ -34,8 +81,8 @@ const validTemplate = `## 变更摘要
 
 ## Harness 链路
 
-- Task Packet：
-- Task packet：
+- Task ID：
+- Task Manifest：
 - Evidence：
 - Verification evidence：
 - Review Artifact：
@@ -47,7 +94,8 @@ const validTemplate = `## 变更摘要
 
 ## Harness adoption markers
 
-- task packet:
+- task id:
+- task manifest:
 - evidence:
 - boundaries:
 - backend response contract:
@@ -106,8 +154,8 @@ test('validatePrBody accepts trivial changes without harness artifacts', () => {
 
 ## Harness 链路
 
-- Task Packet：\`none\`
-- Task packet：\`none\`
+- Task ID：\`none\`
+- Task Manifest：\`none\`
 - Evidence：\`none\`
 - Verification evidence：\`none\`
 - Review Artifact：\`none\`
@@ -119,7 +167,8 @@ test('validatePrBody accepts trivial changes without harness artifacts', () => {
 
 ## Harness adoption markers
 
-- task packet: \`none\`
+- task id: \`none\`
+- task manifest: \`none\`
 - evidence: \`none\`
 - boundaries: \`single-layer\`
 - backend response contract: \`none\`
@@ -153,7 +202,7 @@ test('validatePrBody accepts trivial changes without harness artifacts', () => {
 ## 检查清单
 
 - [x] 已明确本次改动归属
-` );
+`);
 
   assert.deepEqual(findings, []);
 });
@@ -168,8 +217,8 @@ test('validatePrBody rejects missing artifact files for non-trivial changes', ()
 
 ## Harness 链路
 
-- Task Packet：\`docs/harness/tasks/2026-06-17-missing.task.md\`
-- Task packet：\`docs/harness/tasks/2026-06-17-missing.task.md\`
+- Task ID：\`2026-06-17-missing\`
+- Task Manifest：\`.harness/tasks/2026-06-17-missing/manifest.json\`
 - Evidence：\`.harness/evidence/2026-06-17-missing/commands.json\`
 - Verification evidence：\`.harness/evidence/2026-06-17-missing/summary.md\`
 - Review Artifact：\`.harness/evidence/2026-06-17-missing/review.md\`
@@ -181,7 +230,8 @@ test('validatePrBody rejects missing artifact files for non-trivial changes', ()
 
 ## Harness adoption markers
 
-- task packet: \`docs/harness/tasks/2026-06-17-missing.task.md\`
+- task id: \`2026-06-17-missing\`
+- task manifest: \`.harness/tasks/2026-06-17-missing/manifest.json\`
 - evidence: \`.harness/evidence/2026-06-17-missing/\`
 - boundaries: \`platform only\`
 - backend response contract: \`none\`
@@ -217,7 +267,7 @@ test('validatePrBody rejects missing artifact files for non-trivial changes', ()
 - [x] 已明确本次改动归属
 `, { rootDir: path.resolve(testDir, '../..') });
 
-  assert.match(findings.join('\n'), /Task Packet/);
+  assert.match(findings.join('\n'), /Task Manifest/);
   assert.match(findings.join('\n'), /Evidence/);
   assert.match(findings.join('\n'), /Verification evidence/);
   assert.match(findings.join('\n'), /Review Artifact/);
@@ -226,7 +276,6 @@ test('validatePrBody rejects missing artifact files for non-trivial changes', ()
 test('validatePrBody accepts existing artifact linkage for non-trivial changes', () => {
   withFixtureRepo((repoRoot) => {
     const taskId = '2026-06-17-sample';
-    const taskPacketPath = path.join(repoRoot, 'docs', 'harness', 'tasks', `${taskId}.task.md`);
     const commandsArtifactPath = path.join(
       repoRoot,
       '.harness',
@@ -249,9 +298,8 @@ test('validatePrBody accepts existing artifact linkage for non-trivial changes',
       'review.md',
     );
 
-    fs.mkdirSync(path.dirname(taskPacketPath), { recursive: true });
+    writeTaskManifest(repoRoot, taskId);
     fs.mkdirSync(path.dirname(commandsArtifactPath), { recursive: true });
-    fs.writeFileSync(taskPacketPath, '# Task Packet: sample\n', 'utf8');
     fs.writeFileSync(commandsArtifactPath, '{"commands":[]}\n', 'utf8');
     fs.writeFileSync(summaryArtifactPath, '# Verification Summary: sample\n', 'utf8');
     fs.writeFileSync(reviewArtifactPath, '# Review Summary: sample\n', 'utf8');
@@ -265,8 +313,8 @@ test('validatePrBody accepts existing artifact linkage for non-trivial changes',
 
 ## Harness 链路
 
-- Task Packet：\`docs/harness/tasks/${taskId}.task.md\`
-- Task packet：\`docs/harness/tasks/${taskId}.task.md\`
+- Task ID：\`${taskId}\`
+- Task Manifest：\`.harness/tasks/${taskId}/manifest.json\`
 - Evidence：\`.harness/evidence/${taskId}/commands.json\`
 - Verification evidence：\`.harness/evidence/${taskId}/summary.md\`
 - Review Artifact：\`.harness/evidence/${taskId}/review.md\`
@@ -278,7 +326,8 @@ test('validatePrBody accepts existing artifact linkage for non-trivial changes',
 
 ## Harness adoption markers
 
-- task packet: \`docs/harness/tasks/${taskId}.task.md\`
+- task id: \`${taskId}\`
+- task manifest: \`.harness/tasks/${taskId}/manifest.json\`
 - evidence: \`.harness/evidence/${taskId}/\`
 - boundaries: \`platform only\`
 - backend response contract: \`none\`
@@ -307,7 +356,7 @@ test('validatePrBody accepts existing artifact linkage for non-trivial changes',
 - Auto-merge：\`not-enabled\`
 - Duplication Gate 结果：\`report-only\`
 - 是否高风险改动：\`no\`
-- Residual risk / follow-up：\`follow-up tracked in task packet\`
+- Residual risk / follow-up：\`follow-up tracked in task manifest\`
 
 ## 检查清单
 
@@ -320,39 +369,33 @@ test('validatePrBody accepts existing artifact linkage for non-trivial changes',
 
 test('validatePrBody rejects mismatched task-id linkage for non-trivial changes', () => {
   withFixtureRepo((repoRoot) => {
-    const taskPacketPath = path.join(
-      repoRoot,
-      'docs',
-      'harness',
-      'tasks',
-      '2026-06-17-sample.task.md',
-    );
+    const taskId = '2026-06-17-sample';
+    const evidenceTaskId = '2026-06-17-other';
     const commandsArtifactPath = path.join(
       repoRoot,
       '.harness',
       'evidence',
-      '2026-06-17-other',
+      evidenceTaskId,
       'commands.json',
     );
     const summaryArtifactPath = path.join(
       repoRoot,
       '.harness',
       'evidence',
-      '2026-06-17-sample',
+      taskId,
       'summary.md',
     );
     const reviewArtifactPath = path.join(
       repoRoot,
       '.harness',
       'evidence',
-      '2026-06-17-sample',
+      taskId,
       'review.md',
     );
 
-    fs.mkdirSync(path.dirname(taskPacketPath), { recursive: true });
+    writeTaskManifest(repoRoot, taskId);
     fs.mkdirSync(path.dirname(commandsArtifactPath), { recursive: true });
     fs.mkdirSync(path.dirname(summaryArtifactPath), { recursive: true });
-    fs.writeFileSync(taskPacketPath, '# Task Packet: sample\n', 'utf8');
     fs.writeFileSync(commandsArtifactPath, '{"commands":[]}\n', 'utf8');
     fs.writeFileSync(summaryArtifactPath, '# Verification Summary: sample\n', 'utf8');
     fs.writeFileSync(reviewArtifactPath, '# Review Summary: sample\n', 'utf8');
@@ -366,11 +409,11 @@ test('validatePrBody rejects mismatched task-id linkage for non-trivial changes'
 
 ## Harness 链路
 
-- Task Packet：\`docs/harness/tasks/2026-06-17-sample.task.md\`
-- Task packet：\`docs/harness/tasks/2026-06-17-sample.task.md\`
-- Evidence：\`.harness/evidence/2026-06-17-other/commands.json\`
-- Verification evidence：\`.harness/evidence/2026-06-17-sample/summary.md\`
-- Review Artifact：\`.harness/evidence/2026-06-17-sample/review.md\`
+- Task ID：\`${taskId}\`
+- Task Manifest：\`.harness/tasks/${taskId}/manifest.json\`
+- Evidence：\`.harness/evidence/${evidenceTaskId}/commands.json\`
+- Verification evidence：\`.harness/evidence/${taskId}/summary.md\`
+- Review Artifact：\`.harness/evidence/${taskId}/review.md\`
 - OpenSpec change：\`none\`
 - Trivial change：\`no\`
 - Quality Profile：\`ci-workflow\`
@@ -379,8 +422,9 @@ test('validatePrBody rejects mismatched task-id linkage for non-trivial changes'
 
 ## Harness adoption markers
 
-- task packet: \`docs/harness/tasks/2026-06-17-sample.task.md\`
-- evidence: \`.harness/evidence/2026-06-17-other/\`
+- task id: \`${taskId}\`
+- task manifest: \`.harness/tasks/${taskId}/manifest.json\`
+- evidence: \`.harness/evidence/${evidenceTaskId}/\`
 - boundaries: \`platform only\`
 - backend response contract: \`none\`
 - backend DTO contract: \`none\`
@@ -408,7 +452,7 @@ test('validatePrBody rejects mismatched task-id linkage for non-trivial changes'
 - Auto-merge：\`not-enabled\`
 - Duplication Gate 结果：\`report-only\`
 - 是否高风险改动：\`no\`
-- Residual risk / follow-up：\`follow-up tracked in task packet\`
+- Residual risk / follow-up：\`follow-up tracked in task manifest\`
 
 ## 检查清单
 

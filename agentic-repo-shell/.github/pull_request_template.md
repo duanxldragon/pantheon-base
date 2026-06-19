@@ -5,14 +5,16 @@
 ## Harness
 
 - OpenSpec change:
-- Task packet:
+- Task ID:
+- Task manifest:
 - Trivial change: no | yes, reason:
 - Verification evidence:
-- [ ] Task packet linked, or trivial-change justification recorded
+- Review artifact:
+- [ ] Task manifest linked, or trivial-change justification recorded
 - [ ] Verification evidence linked or committed under `.harness/evidence/`
 - [ ] UI changes include screenshots or an explicit visual gap record
 - Harness reports reviewed:
-  - [ ] task packet
+  - [ ] task manifest
   - [ ] evidence
   - [ ] visual evidence
   - [ ] method health
@@ -32,13 +34,14 @@
 ## Linkage
 
 - OpenSpec change:
-- Task packet:
+- Task ID:
+- Task manifest:
 - Evidence:
 - Review:
 
 ## Review Checklist
 
-- [ ] Scope matches task packet
+- [ ] Scope matches task manifest and task packet
 - [ ] `Do Not Touch` paths respected
 - [ ] P0/P1 findings resolved or explicitly blocked
 - [ ] Tool-specific assumptions are not used as source of truth

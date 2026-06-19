@@ -112,6 +112,7 @@ system/config
 ## Linkage
 
 - Task ID: `2026-06-03-main-sonar-batch-2-backend-i18n-coverage`
+- Task Manifest: `.harness/tasks/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `docs/superpowers/plans/2026-06-03-main-sonar-priority-batches.md`
 - Evidence Directory: `.harness/evidence/2026-06-03-main-sonar-batch-2-backend-i18n-coverage/`

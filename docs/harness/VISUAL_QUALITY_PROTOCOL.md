@@ -3,7 +3,7 @@ title: Visual Quality Protocol
 doc_type: Contract
 layer: method
 status: Active
-updated_at: 2026-06-08
+updated_at: 2026-06-18
 ---
 
 # Visual Quality Protocol
@@ -50,15 +50,17 @@ C:\Users\xiaolong\.codex\skills\impeccable\SKILL.md
 - gstack/browser/Playwright/人工截图可用于视觉证据。
 - Figma 或其他设计工具只能作为输入或证据，不是唯一事实源。
 
-## 4. UI Task Packet 要求
+## 4. UI Task Manifest 要求
 
-UI 任务必须在 task packet 中补充：
+UI 任务必须在 task manifest 的 `verificationPlan.visualEvidence` 中补充：
 
 - UI surface 类型。
 - 目标视觉感受。
-- desktop/mobile viewport 验证计划。
-- empty/loading/error/permission state 验证计划。
-- 是否需要截图或浏览器证据。
+- desktop/mobile/relevant viewport 验证计划。
+- empty/loading/error/permission 等 state 验证计划。
+- 如有固定入口，补充 route 验证计划。
+
+如果仓库仍保留 task packet，它可以保留同样的人类可读说明；但自动化闭环以 task manifest 为准，不再从 task packet 推断视觉校验语义。
 
 ## 5. Review Gate
 
@@ -111,6 +113,14 @@ P0/P1 视觉问题不能 approved。
 
 不能用“看起来应该没问题”作为视觉验证结论。
 
+对于声明了 `verificationPlan.visualEvidence` 的任务，`commands.json` 中的 `browserEvidence` 负责承载机器可校验的覆盖结果：
+
+- `viewport`
+- `checkedStates`
+- `url`（用于 route 覆盖）
+
+截图和 visual gap 仍然有价值，但它们是辅助证据；没有 `browserEvidence` 覆盖时，任务不会被视为完成了 manifest 里的视觉计划。
+
 ## 6.1 Blocking Rule
 
-If a UI task packet declares UI scope and strict mode is enabled in CI, missing screenshot evidence or missing an explicit visual gap record is a blocking harness failure.
+If a UI task manifest declares a visual verification plan and strict mode is enabled in CI, missing `browserEvidence` coverage for the declared viewport/state/route plan is a blocking harness failure. Missing screenshots and missing explicit visual-gap records remain warnings when no other visual signal exists.

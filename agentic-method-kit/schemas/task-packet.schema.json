@@ -126,17 +126,18 @@
     },
     "linkage": {
       "type": "object",
-      "required": ["taskId", "taskPacket", "evidenceDir", "reviewFile", "changeRef", "planRefs"],
+      "required": ["taskId", "taskManifest", "evidenceDir", "reviewFile", "changeRef", "planRefs"],
       "properties": {
         "taskId": { "type": "string" },
-        "taskPacket": { "type": "string" },
+        "taskManifest": { "type": "string" },
         "evidenceDir": { "type": "string" },
         "reviewFile": { "type": "string" },
         "changeRef": { "type": "string" },
         "planRefs": {
           "type": "array",
           "items": { "type": "string" }
-        }
+        },
+        "summaryFile": { "type": "string" }
       }
     },
     "evidenceRequired": {
