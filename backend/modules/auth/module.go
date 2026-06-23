@@ -6,6 +6,7 @@ import (
 
 	"pantheon-platform/backend/internal/middleware"
 	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					apiAuth.POST("/refresh", authHandler.RefreshTokenHandler)
 				}
 
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.POST("/logout", authHandler.LogoutHandler)
 					systemProtected.GET("/user/info", authHandler.GetCurrentUserInfo)
@@ -60,7 +61,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.DELETE("/session/:id", authHandler.RevokeAnySession)
 				}
 
-				authV2 := r.Group("/auth").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				authV2 := r.Group("/auth").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
 				{
 					authV2.POST("/logout", authHandler.LogoutHandler)
 					authV2.POST("/activity", authHandler.TouchActivity)

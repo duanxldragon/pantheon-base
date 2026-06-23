@@ -1,7 +1,7 @@
 package dashboard
 
 import (
-	"errors"
+	"pantheon-platform/backend/pkg/common"
 	"time"
 
 	auth "pantheon-platform/backend/modules/auth"
@@ -24,7 +24,7 @@ func NewDashboardService(db *gorm.DB) *DashboardService {
 
 func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, common.NewBadRequest("database.not_initialized")
 	}
 
 	now := time.Now()

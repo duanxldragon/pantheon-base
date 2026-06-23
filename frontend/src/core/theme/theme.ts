@@ -42,7 +42,7 @@ export const pantheonThemeOptions: PantheonThemeOption[] = [
 
 const themeKeys = new Set<PantheonThemeKey>(pantheonThemeOptions.map((item) => item.key));
 
-function normalizeTheme(value?: string | null): PantheonThemeKey {
+export function normalizeTheme(value?: string | null): PantheonThemeKey {
   return value && themeKeys.has(value as PantheonThemeKey) ? (value as PantheonThemeKey) : 'indigo';
 }
 

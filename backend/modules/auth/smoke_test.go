@@ -19,8 +19,9 @@ import (
 )
 
 type authResponseEnvelope[T any] struct {
-	Code int `json:"code"`
-	Data T   `json:"data"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    T      `json:"data"`
 }
 
 func setupSmokeTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
@@ -170,7 +171,7 @@ func TestSmoke_LoginFlow(t *testing.T) {
 				t.Errorf("expected http code %d, got %d", tt.expectedCode, recorder.Code)
 			}
 
-			var resp common.Response
+			var resp authResponseEnvelope[any]
 			_ = json.Unmarshal(recorder.Body.Bytes(), &resp)
 			if resp.Code != tt.expectedBizCode {
 				t.Errorf("expected biz code %d, got %d. Msg: %s", tt.expectedBizCode, resp.Code, resp.Message)

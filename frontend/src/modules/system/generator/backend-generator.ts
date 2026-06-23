@@ -739,7 +739,7 @@ func Init${modelName}Module(r *gin.RouterGroup, db *gorm.DB) {
 \t\tSeedMenusFunc: seed${modelName}Menus,
 \t\tSeedI18nFunc: seed${modelName}I18n,
 \t\tRegister: func(r *gin.RouterGroup) {
-\t\t\tprotected := r.Group("${routePath}").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+\t\t\tprotected := r.Group("${routePath}").Use(middleware.TokenAuthMiddleware()).Use(middleware.CasbinMiddleware())
 \t\t\t{
 \t\t\t\tprotected.GET("/list", handler.Get${modelName}List)
 \t\t\t\tprotected.GET("/options", handler.Get${modelName}Options)

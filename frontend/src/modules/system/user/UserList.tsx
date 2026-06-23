@@ -58,7 +58,7 @@ import UserDetailContent from './UserDetailContent';
 import UserFormModal from './UserFormModal';
 import ResetPasswordModal from './ResetPasswordModal';
 import { useUserList, emptyQuery } from './useUserList';
-import '../list-page.css';
+import '../components/shared/list-page.css';
 import './user.css';
 
 const Row = Grid.Row;

@@ -98,12 +98,14 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 
 - 如果任务触碰共享分页、共享上传、共享表格、共享 i18n 或共享后台壳层，默认视为 base-owned。
 - 如果任务改变 `pantheon-ops` 继承行为，最终说明必须写清是否需要 `base -> ops` 同步。
+- 先应用最小复杂度阶梯：不做 / 复用 / 标准库 / 平台原生 / 已安装依赖 / 一条局部表达式 / 最小新增代码；不得用简化削弱鉴权、审计、i18n、可访问性或运行态证据。
 
 ## Method Readiness
 
 - Consumer-Specific Controls: `pantheon-base` contract | checker | smoke path | none
 - Required Sensors: command | review | runtime evidence | none
 - Required Evidence: command summary | screenshot | smoke result | runtime gap | review summary
+- Minimal Complexity Rung: skip | reuse | stdlib | native-platform | installed-dependency | one-local-expression | minimum-new-code
 - Ratchet Decision: no-repeat-observed | guide-updated | sensor-added | gate-updated | template-updated | adapter-updated | registry-only
 - Deferred Code Issues: none | symptom plus recommended follow-up task
 

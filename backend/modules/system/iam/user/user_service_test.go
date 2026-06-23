@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"errors"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"testing"
 	"time"
@@ -60,7 +62,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	// 2. 用户名重复
 	_, err = s.CreateUser(req)
-	if err == nil || err.Error() != "user.create.error.username_exists" {
+	if err == nil || !errors.Is(err, common.ErrConflict) {
 		t.Errorf("expected username exists error, got %v", err)
 	}
 
@@ -68,7 +70,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	req.Username = "invalid_role"
 	req.RoleIDs = []uint64{99}
 	_, err = s.CreateUser(req)
-	if err == nil || err.Error() != "user.role.invalid" {
+	if err == nil || !errors.Is(err, common.ErrBadRequest) {
 		t.Errorf("expected role invalid error, got %v", err)
 	}
 }
@@ -212,7 +214,7 @@ func TestUserService_BatchUpdateUserStatus(t *testing.T) {
 		t.Fatalf("expected user status 2, got %d", disabled.Status)
 	}
 
-	if _, err := s.BatchUpdateUserStatus([]uint64{1}, 2); err == nil || err.Error() != "user.update.error.protected" {
+	if _, err := s.BatchUpdateUserStatus([]uint64{1}, 2); err == nil || !errors.Is(err, common.ErrForbidden) {
 		t.Fatalf("expected protected admin error, got %v", err)
 	}
 }
@@ -276,7 +278,7 @@ func TestUserService_MigrateRejectsMissingInitialAdminPasswordInProduction(t *te
 	db := testmysql.Open(t)
 
 	s := NewUserService(db)
-	if err := s.Migrate(); err == nil || err.Error() != "admin.initial_password_required" {
+	if err := s.Migrate(); err == nil || !errors.Is(err, common.ErrBadRequest) {
 		t.Fatalf("expected production initial admin password guard, got %v", err)
 	}
 }
@@ -305,7 +307,7 @@ func TestResolveInitialAdminPasswordRequiresProductionOverride(t *testing.T) {
 	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "")
 
 	_, err := resolveInitialAdminPassword()
-	if err == nil || err.Error() != "admin.initial_password_required" {
+	if err == nil || !errors.Is(err, common.ErrBadRequest) {
 		t.Fatalf("expected production guard error, got %v", err)
 	}
 }
@@ -328,7 +330,7 @@ func TestResolveInitialAdminPasswordRejectsWeakProductionOverride(t *testing.T) 
 	t.Setenv("PANTHEON_INITIAL_ADMIN_PASSWORD", "123456")
 
 	_, err := resolveInitialAdminPassword()
-	if err == nil || err.Error() != "admin.initial_password_too_short" {
+	if err == nil || !errors.Is(err, common.ErrBadRequest) {
 		t.Fatalf("expected weak production password error, got %v", err)
 	}
 }
@@ -436,7 +438,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 
 	// 2. 删除超级管理员 (ID=1)
 	err = s.DeleteUser(1)
-	if err == nil || err.Error() != "user.delete.error.protected" {
+	if err == nil || !errors.Is(err, common.ErrForbidden) {
 		t.Errorf("expected protected error for admin, got %v", err)
 	}
 }
@@ -575,7 +577,7 @@ func TestUserService_CreateAndResetPasswordUseConfiguredMinLength(t *testing.T) 
 		RoleIDs:  []uint64{2},
 		Status:   1,
 	})
-	if err == nil || err.Error() != "user.update.error.password_too_short" {
+	if err == nil || !errors.Is(err, common.ErrBadRequest) {
 		t.Fatalf("expected create user to respect configured min length, got %v", err)
 	}
 
@@ -589,7 +591,7 @@ func TestUserService_CreateAndResetPasswordUseConfiguredMinLength(t *testing.T) 
 		t.Fatalf("create long policy user: %v", err)
 	}
 
-	if _, err := s.ResetPassword(userResp.ID, "1234567"); err == nil || err.Error() != "user.update.error.password_too_short" {
+	if _, err := s.ResetPassword(userResp.ID, "1234567"); err == nil || !errors.Is(err, common.ErrBadRequest) {
 		t.Fatalf("expected reset password to respect configured min length, got %v", err)
 	}
 }

@@ -1,13 +1,17 @@
 package auth
 
-import "pantheon-platform/backend/pkg/platformprefs"
+import (
+	"pantheon-platform/backend/modules/auth/login"
+	"pantheon-platform/backend/modules/auth/mfa"
+	"pantheon-platform/backend/modules/auth/security"
+	"pantheon-platform/backend/modules/auth/session"
+	"pantheon-platform/backend/pkg/platformprefs"
+)
 
 // LoginReq 登录请求 DTO
-type LoginReq struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
+type LoginReq = login.LoginReq
 
+// MFAVerifyReq MFA验证请求
 type MFAVerifyReq struct {
 	ChallengeID string `json:"challengeId" binding:"required"`
 	Code        string `json:"code" binding:"required"`
@@ -78,20 +82,7 @@ type MFAChallengeResp struct {
 }
 
 // SessionResp 当前用户会话信息 DTO
-type SessionResp struct {
-	SessionID        string  `json:"sessionId"`
-	IsCurrent        bool    `json:"isCurrent"`
-	LastIP           string  `json:"lastIp"`
-	Browser          string  `json:"browser"`
-	OS               string  `json:"os"`
-	Device           string  `json:"device"`
-	UserAgent        string  `json:"userAgent"`
-	RefreshExpiresAt string  `json:"refreshExpiresAt"`
-	LastRefreshAt    *string `json:"lastRefreshAt"`
-	LastActivityAt   *string `json:"lastActivityAt"`
-	RevokedAt        *string `json:"revokedAt"`
-	CreatedAt        string  `json:"createdAt"`
-}
+type SessionResp = session.SessionResp
 
 type SecurityOverviewResp struct {
 	User                 *UserInfoResp       `json:"user"`
@@ -158,12 +149,7 @@ type SecurityEventPageResp struct {
 }
 
 // LoginLogQuery 登录日志查询
-type LoginLogQuery struct {
-	Username string `form:"username" json:"username"`
-	Status   *int   `form:"status" json:"status"`
-	Page     int    `form:"page" json:"page"`
-	PageSize int    `form:"pageSize" json:"pageSize"`
-}
+type LoginLogQuery = login.LoginLogQuery
 
 type LoginLogCleanupReq struct {
 	RetentionDays int    `json:"retentionDays"`
@@ -176,17 +162,7 @@ type LoginLogBatchDeleteReq struct {
 }
 
 // LoginLogResp 登录日志 DTO
-type LoginLogResp struct {
-	ID            uint64 `json:"id"`
-	Username      string `json:"username"`
-	Ipaddr        string `json:"ipaddr"`
-	LoginLocation string `json:"loginLocation"`
-	Browser       string `json:"browser"`
-	Os            string `json:"os"`
-	Status        int    `json:"status"`
-	Msg           string `json:"msg"`
-	LoginTime     string `json:"loginTime"`
-}
+type LoginLogResp = login.LoginLogResp
 
 type LoginLogPageResp struct {
 	Items    []LoginLogResp `json:"items"`
@@ -255,3 +231,20 @@ type AdminSessionPageResp struct {
 	Page         int                `json:"page"`
 	PageSize     int                `json:"pageSize"`
 }
+
+// TokenRefreshClaims is used for refresh token parsing in auth handler.
+// This is a minimal struct since the current implementation uses Redis session data.
+type TokenRefreshClaims struct {
+	UserID    uint64
+	SessionID string
+	ID        string
+}
+
+// Model type aliases for backward compatibility
+type SystemLogLogin = login.SystemLogLogin
+type SystemLoginThrottle = login.SystemLoginThrottle
+type SystemAuthFactor = mfa.SystemAuthFactor
+type SystemAuthMFAChallenge = mfa.SystemAuthMFAChallenge
+type SystemUserSession = session.SystemUserSession
+type SystemAuthSecurityEvent = security.SystemAuthSecurityEvent
+type SystemUserPasswordHistory = security.SystemUserPasswordHistory

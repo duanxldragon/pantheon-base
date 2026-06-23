@@ -93,7 +93,7 @@ import {
   type I18nQuery,
   type SystemI18n,
 } from './api';
-import '../list-page.css';
+import '../components/shared/list-page.css';
 
 interface I18nRenameFormValues {
   module: string;

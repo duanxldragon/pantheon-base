@@ -431,7 +431,7 @@ func (s *DictService) DeleteDictType(typeID uint64) error {
 		return err
 	}
 	if itemCount > 0 {
-		return errors.New("dict.type.delete.error.has_items")
+		return common.NewInternal("dict.type.delete.error.has_items")
 	}
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		deletedCode, err := s.allocateDeletedDictTypeCode(tx, row.ID)
@@ -455,10 +455,10 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 	}
 	normalizedIDs := normalizeUint64IDs(typeIDs)
 	if len(normalizedIDs) == 0 {
-		return 0, errors.New("dict.type.batch.empty")
+		return 0, common.NewBadRequest("dict.type.batch.empty")
 	}
 	if status != 1 && status != 2 {
-		return 0, errors.New("param.invalid")
+		return 0, common.NewBadRequest("param.invalid")
 	}
 
 	var rows []SystemDictType
@@ -466,7 +466,7 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
-		return 0, errors.New("dict.type.batch.not_found")
+		return 0, common.NewNotFound("dict.type.batch.not_found")
 	}
 
 	if err := s.db.Model(&SystemDictType{}).
@@ -790,10 +790,10 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 	}
 	normalizedIDs := normalizeUint64IDs(itemIDs)
 	if len(normalizedIDs) == 0 {
-		return 0, errors.New("dict.item.batch.empty")
+		return 0, common.NewBadRequest("dict.item.batch.empty")
 	}
 	if status != 1 && status != 2 {
-		return 0, errors.New("param.invalid")
+		return 0, common.NewBadRequest("param.invalid")
 	}
 
 	var rows []SystemDictItem
@@ -801,7 +801,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
-		return 0, errors.New("dict.item.batch.not_found")
+		return 0, common.NewNotFound("dict.item.batch.not_found")
 	}
 
 	dictCodes := make([]string, 0, len(rows))
@@ -826,7 +826,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	if direction != "up" && direction != "down" {
-		return nil, errors.New("param.invalid")
+		return nil, common.NewBadRequest("param.invalid")
 	}
 
 	var current SystemDictItem
@@ -957,7 +957,7 @@ func (s *DictService) RefreshDictOptionsCache(codes []string) (*DictCacheRefresh
 func (s *DictService) AnalyzeDictUsage(dictCode string) (*DictUsageAnalysisResp, error) {
 	trimmedCode := strings.TrimSpace(dictCode)
 	if trimmedCode == "" {
-		return nil, errors.New("param.invalid")
+		return nil, common.NewBadRequest("param.invalid")
 	}
 	projectRoot, err := resolveProjectRoot()
 	if err != nil {
@@ -1069,7 +1069,7 @@ func (s *DictService) queryEnabledDictOptions(codes []string) (DictOptionMapResp
 func (s *DictService) validateDictType(typeID uint64, dictCode string) error {
 	trimmedCode := strings.TrimSpace(dictCode)
 	if trimmedCode == "" {
-		return errors.New("param.invalid")
+		return common.NewBadRequest("param.invalid")
 	}
 
 	var count int64
@@ -1081,7 +1081,7 @@ func (s *DictService) validateDictType(typeID uint64, dictCode string) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("dict.type.code.exists")
+		return common.NewConflict("dict.type.code.exists")
 	}
 	return nil
 }
@@ -1090,7 +1090,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 	trimmedCode := strings.TrimSpace(dictCode)
 	trimmedValue := strings.TrimSpace(itemValue)
 	if trimmedCode == "" || trimmedValue == "" {
-		return errors.New("param.invalid")
+		return common.NewBadRequest("param.invalid")
 	}
 
 	var typeCount int64
@@ -1098,7 +1098,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 		return err
 	}
 	if typeCount == 0 {
-		return errors.New("dict.type.not_found")
+		return common.NewNotFound("dict.type.not_found")
 	}
 
 	var count int64
@@ -1110,7 +1110,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 		return err
 	}
 	if count > 0 {
-		return errors.New("dict.item.value.exists")
+		return common.NewConflict("dict.item.value.exists")
 	}
 	return nil
 }
@@ -1195,7 +1195,7 @@ func resolveProjectRoot() (string, error) {
 		}
 		current = parent
 	}
-	return "", errors.New("dict.usage.project_root_not_found")
+	return "", common.NewNotFound("dict.usage.project_root_not_found")
 }
 
 func fileExists(path string) bool {
@@ -1319,7 +1319,7 @@ func (s *DictService) allocateDeletedDictTypeCode(tx *gorm.DB, typeID uint64) (s
 			return candidate, nil
 		}
 	}
-	return "", errors.New("dict.type.delete.error.archive_code_conflict")
+	return "", common.NewConflict("dict.type.delete.error.archive_code_conflict")
 }
 
 func (s *DictService) allocateDeletedDictItemValue(tx *gorm.DB, itemID uint64, dictCode string) (string, error) {
@@ -1337,7 +1337,7 @@ func (s *DictService) allocateDeletedDictItemValue(tx *gorm.DB, itemID uint64, d
 			return candidate, nil
 		}
 	}
-	return "", errors.New("dict.item.delete.error.archive_value_conflict")
+	return "", common.NewConflict("dict.item.delete.error.archive_value_conflict")
 }
 
 func toDictTypeResp(item SystemDictType, stat dictTypeStatRow) DictTypeResp {

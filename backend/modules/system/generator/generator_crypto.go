@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"io"
 	"strings"
 
@@ -62,7 +61,7 @@ func decryptDatasourcePassword(value string) (string, error) {
 		return "", err
 	}
 	if len(raw) < gcm.NonceSize() {
-		return "", errors.New("generator.datasource.decrypt.invalid")
+		return "", common.NewBadRequest("generator.datasource.decrypt.invalid")
 	}
 
 	nonce, cipherText := raw[:gcm.NonceSize()], raw[gcm.NonceSize():]

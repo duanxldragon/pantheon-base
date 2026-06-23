@@ -14,6 +14,7 @@ import (
 	"unicode"
 
 	user "pantheon-platform/backend/modules/system/iam/user"
+	"pantheon-platform/backend/modules/auth/mfa"
 	"pantheon-platform/backend/pkg/authsession"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
@@ -33,9 +34,6 @@ type AuthService struct {
 	settingsCache map[string]int
 	cleanupMu     sync.Mutex
 	lastCleanupAt map[string]time.Time
-
-	sessions  *authSessionService
-	passwords *authPasswordService
 }
 
 type UserPreferenceUpdateResult struct {
@@ -147,8 +145,6 @@ func NewAuthService(db *gorm.DB) *AuthService {
 		settingsCache: make(map[string]int),
 		lastCleanupAt: make(map[string]time.Time),
 	}
-	s.sessions = newAuthSessionService(s)
-	s.passwords = newAuthPasswordService(s)
 	// 启动时同步加载一次核心设置
 	_ = s.ReloadSettings()
 	return s
@@ -247,8 +243,7 @@ func (s *AuthService) VerifyPasswordForOperation(userID uint64, sessionID, passw
 	}
 
 	// 生成操作令牌 (Operation Token)，有效期 5 分钟
-	// 这里复用 JWT 逻辑，但添加一个特定的 Claim
-	token, err := common.GenerateOperationToken(userID, sessionID, "secure_action", 5*time.Minute)
+	token, err := common.GenerateOperationToken(userID, sessionID, "secure_action", 5*time.Minute, database.RDB)
 	if err != nil {
 		return "", err
 	}
@@ -404,12 +399,12 @@ func (s *AuthService) CreateMFAChallenge(currentUser *user.SystemUser) (*MFAChal
 	secret := ""
 	if setupRequired {
 		var secretErr error
-		secret, secretErr = generateTOTPSecret()
+		secret, secretErr = mfa.GenerateTOTPSecret()
 		if secretErr != nil {
 			return nil, secretErr
 		}
 	}
-	encryptedSecret, err := encryptMFASecret(secret)
+	encryptedSecret, err := mfa.EncryptMFASecret(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +430,7 @@ func (s *AuthService) CreateMFAChallenge(currentUser *user.SystemUser) (*MFAChal
 	}
 	if setupRequired {
 		resp.TOTPSecret = secret
-		resp.TOTPProvisionURI = buildTOTPURL(currentUser.Username, secret)
+		resp.TOTPProvisionURI = mfa.BuildTOTPURL(currentUser.Username, secret)
 	}
 	return resp, nil
 }
@@ -458,7 +453,7 @@ func (s *AuthService) VerifyMFAChallenge(req *MFAVerifyReq, ip, userAgent string
 	if err != nil {
 		return nil, err
 	}
-	if !validateTOTPCode(secret, req.Code, now) {
+	if !mfa.ValidateTOTPCode(secret, req.Code, now) {
 		return nil, errors.New("auth.mfa.code_invalid")
 	}
 
@@ -512,14 +507,14 @@ func (s *AuthService) loadActiveMFAChallenge(challengeID string, now time.Time) 
 
 func (s *AuthService) loadMFAChallengeSecret(challenge SystemAuthMFAChallenge) (string, error) {
 	if challenge.SetupRequired == 1 {
-		return decryptMFASecret(challenge.SecretEncrypted)
+		return mfa.DecryptMFASecret(challenge.SecretEncrypted)
 	}
 
 	var factor SystemAuthFactor
 	if err := s.db.Where(userIDAndFactorTypeEnabledWhereClause, challenge.UserID, "totp", 1).First(&factor).Error; err != nil {
 		return "", errors.New("auth.mfa.factor_missing")
 	}
-	return decryptMFASecret(factor.SecretEncrypted)
+	return mfa.DecryptMFASecret(factor.SecretEncrypted)
 }
 
 func (s *AuthService) loadMFAChallengeUser(userID uint64) (*user.SystemUser, error) {
@@ -536,7 +531,7 @@ func (s *AuthService) loadMFAChallengeUser(userID uint64) (*user.SystemUser, err
 func (s *AuthService) finalizeMFAChallenge(challenge SystemAuthMFAChallenge, secret string, now time.Time) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		if challenge.SetupRequired == 1 {
-			encryptedSecret, err := encryptMFASecret(secret)
+			encryptedSecret, err := mfa.EncryptMFASecret(secret)
 			if err != nil {
 				return err
 			}
@@ -739,25 +734,22 @@ func (s *AuthService) CreateSession(currentUser *user.SystemUser, roles []string
 }
 
 // RefreshSession 轮换 refresh token 并返回新的 token pair
-func (s *AuthService) RefreshSession(claims *common.CustomClaims, ip, userAgent string) (*common.TokenPair, error) {
+func (s *AuthService) RefreshSession(sessionID string, userID uint64, ip, userAgent string) (*common.TokenPair, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var session SystemUserSession
-	err := s.db.Where(sessionIDAndUserIDWhereClause, claims.SessionID, claims.UserID).First(&session).Error
+	err := s.db.Where(sessionIDAndUserIDWhereClause, sessionID, userID).First(&session).Error
 	if err != nil {
 		return nil, err
 	}
 	if session.RevokedAt != nil || session.RefreshExpiresAt.Before(time.Now()) {
 		return nil, errors.New("refresh_token.invalid")
 	}
-	if session.RefreshJTI != claims.ID {
-		return nil, errors.New("refresh_token.rotated")
-	}
 
 	var currentUser user.SystemUser
-	if err := s.db.First(&currentUser, claims.UserID).Error; err != nil {
+	if err := s.db.First(&currentUser, userID).Error; err != nil {
 		return nil, err
 	}
 	roles, err := s.GetUserRoles(currentUser.ID)
@@ -1949,13 +1941,38 @@ func boolToInt(value bool) int {
 }
 
 func (s *AuthService) issueTokenPair(currentUser *user.SystemUser, roles []string, session *SystemUserSession) (*common.TokenPair, error) {
-	accessJTI := uuid.NewString()
-	pair, err := common.GenerateTokenPair(currentUser.ID, currentUser.Username, roles, session.SessionID, accessJTI, session.RefreshJTI)
-	if err != nil {
+	accessToken := common.NewAccessToken()
+	refreshToken := common.NewRefreshToken()
+
+	now := time.Now()
+	accessTTL := common.AccessTokenTTL
+	refreshTTL := common.RefreshTokenTTL
+
+	accessData := &common.TokenSessionData{
+		UserID:         currentUser.ID,
+		Username:       currentUser.Username,
+		RoleKeys:       roles,
+		SessionID:      session.SessionID,
+		LastActivityAt: now.Unix(),
+	}
+	if err := common.TokenStoreSession(context.Background(), database.RDB, accessToken, accessData, accessTTL); err != nil {
 		return nil, err
 	}
-	session.RefreshExpiresAt = pair.RefreshExpiresAt
-	return pair, nil
+
+	if err := common.TokenStoreRefresh(context.Background(), database.RDB, refreshToken, currentUser.ID, session.SessionID, refreshTTL); err != nil {
+		return nil, err
+	}
+
+	session.RefreshExpiresAt = now.Add(refreshTTL)
+
+	return &common.TokenPair{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		TokenType:        common.TokenTypeAccess,
+		AccessExpiresAt:  now.Add(accessTTL),
+		RefreshExpiresAt: now.Add(refreshTTL),
+		SessionID:        session.SessionID,
+	}, nil
 }
 
 func (s *AuthService) persistPasswordUpdate(currentUser user.SystemUser, userID uint64, currentSessionID, passwordHash string, keepHistory bool) error {

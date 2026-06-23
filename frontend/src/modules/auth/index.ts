@@ -1,5 +1,56 @@
 import { defineModule } from '../../core/router/types';
 
+export { LoginPageComponent as LoginPage } from './login/components/Login';
+export { LoginPayload, MFAVerifyPayload, LoginResp, login, verifyMFA } from './login/api';
+
+export { default as SessionList } from './session/components/SessionList';
+export { default as SessionDetailModal } from './session/components/SessionDetailModal';
+export {
+  AuthSession,
+  AuthSessionPayload,
+  AdminSessionRow,
+  AdminSessionQuery,
+  AdminSessionPageResp,
+  SessionCleanupPayload,
+  SessionBatchRevokePayload,
+  getSessions,
+  revokeSession,
+  getAdminSessionList,
+  revokeAdminSession,
+  cleanupAdminSessions,
+  batchRevokeAdminSessions,
+} from './session/api';
+
+export { default as LoginLogList } from './security/components/LoginLogList';
+export { default as SecurityEventList } from './security/components/SecurityEventList';
+export { default as SecurityCenter } from './security/components/SecurityCenter';
+export {
+  SecurityOverview,
+  SecurityPolicy,
+  SecurityEventRow,
+  SecurityEventQuery,
+  SecurityEventPageResp,
+  SecurityEventAcknowledgePayload,
+  LoginLogRow,
+  LoginLogQuery,
+  LoginLogCleanupPayload,
+  LoginLogBatchDeletePayload,
+  LoginLogPageResp,
+  UserPasswordUpdatePayload,
+  acknowledgeSecurityEvent,
+  getSecurityOverview,
+  getOwnLoginLogs,
+  getAdminLoginLogList,
+  getAdminSecurityEventList,
+  exportAdminLoginLogs,
+  exportSelectedAdminLoginLogs,
+  cleanupAdminLoginLogs,
+  batchDeleteAdminLoginLogs,
+  updatePassword,
+} from './security/api';
+
+export { formatClientSummary, renderClientInfo } from './clientInfo';
+
 export const AuthModule = defineModule({
   name: 'auth',
   scope: 'system',

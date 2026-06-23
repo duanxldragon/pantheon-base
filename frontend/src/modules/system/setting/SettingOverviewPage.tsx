@@ -18,7 +18,7 @@ import {
 } from './settingGroups';
 import SettingGroupWorkspace from './SettingGroupWorkspace';
 import { useSettingCatalog } from './useSettingCatalog';
-import '../list-page.css';
+import '../components/shared/list-page.css';
 
 const SettingOverviewPage: React.FC = () => {
   const { t } = useTranslation();

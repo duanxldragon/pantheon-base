@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"io"
 	"pantheon-platform/backend/pkg/common"
 	"strings"
@@ -63,7 +62,7 @@ func decryptSettingValue(value string) (string, error) {
 	}
 
 	if len(raw) < gcm.NonceSize() {
-		return "", errors.New("setting.decrypt.invalid")
+		return "", common.NewBadRequest("setting.decrypt.invalid")
 	}
 
 	nonce, cipherText := raw[:gcm.NonceSize()], raw[gcm.NonceSize():]

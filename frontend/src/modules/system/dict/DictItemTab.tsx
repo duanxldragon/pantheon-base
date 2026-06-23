@@ -71,7 +71,7 @@ import {
   type DictTypeRow,
   type DictUsageAnalysisResp,
 } from './api';
-import '../list-page.css';
+import '../components/shared/list-page.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;

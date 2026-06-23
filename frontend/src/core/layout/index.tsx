@@ -49,7 +49,8 @@ import { useRefreshPolling, useRefreshSubscription } from '../refresh/refreshBus
 import { findRouteByPath, systemRouteTitleMap } from '../router/modules';
 import { formatDateTime } from '../format/dateTime';
 import { renderMenuIcon } from '../menu/icon';
-import { clearPantheonThemePreference, usePantheonTheme } from '../theme/theme';
+import { useTheme } from '../../hooks';
+import { clearPantheonThemePreference } from '../theme/theme';
 import { AppModal } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/dashboard/api';
 import { clearClientAuthSession } from '../auth/clientSession';
@@ -783,7 +784,7 @@ const BaseLayout: React.FC = () => {
   const appName = publicSettings.siteName || t('app.name');
   const brandInitial = getBrandInitial(appName);
   const showExpandedBrand = !collapsed;
-  const { theme, setTheme, options: themeOptions } = usePantheonTheme();
+  const { theme, setTheme, options: themeOptions } = useTheme();
   const activeTheme = themeOptions.find((item) => item.key === theme) ?? themeOptions[0];
   const sessionIdleMinutes =
     publicSettings.sessionIdleMinutes > 0 ? publicSettings.sessionIdleMinutes : 30;

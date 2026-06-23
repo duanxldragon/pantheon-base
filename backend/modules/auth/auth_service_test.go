@@ -1,6 +1,12 @@
 package auth
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base32"
+	"encoding/binary"
+	"fmt"
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -12,7 +18,9 @@ import (
 	user "pantheon-platform/backend/modules/system/iam/user"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/testmysql"
+	"pantheon-platform/backend/pkg/testredis"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -81,7 +89,7 @@ func TestAuthService_MFAChallengeSetupAndVerify(t *testing.T) {
 		t.Fatalf("expected setup challenge with provisioning data, got %+v", challenge)
 	}
 
-	code := generateTOTPCode(challenge.TOTPSecret, time.Now().Unix()/totpPeriod)
+	code := generateTestTOTPCode(t, challenge.TOTPSecret, time.Now())
 	resp, err := s.VerifyMFAChallenge(&MFAVerifyReq{ChallengeID: challenge.ChallengeID, Code: code}, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("verify mfa challenge: %v", err)
@@ -237,6 +245,12 @@ func TestAuthService_AuthenticateTrimsUsername(t *testing.T) {
 func TestAuthService_VerifyPasswordForOperationBindsSession(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewAuthService(db)
+	rdb := testredis.Open(t)
+	previousRDB := database.RDB
+	database.RDB = rdb
+	t.Cleanup(func() {
+		database.RDB = previousRDB
+	})
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
 	testUser := user.SystemUser{
@@ -250,15 +264,15 @@ func TestAuthService_VerifyPasswordForOperationBindsSession(t *testing.T) {
 	if err != nil {
 		t.Fatalf("verify password for operation: %v", err)
 	}
-	claims, err := common.ParseOperationToken(token)
+	claims, err := common.ParseOperationToken(token, rdb)
 	if err != nil {
 		t.Fatalf("parse operation token: %v", err)
 	}
 	if claims.SessionID != "session-verify-1" {
 		t.Fatalf("expected bound session id, got %s", claims.SessionID)
 	}
-	if claims.OperationScope != "secure_action" {
-		t.Fatalf("expected secure_action scope, got %s", claims.OperationScope)
+	if claims.Scope != "secure_action" {
+		t.Fatalf("expected secure_action scope, got %s", claims.Scope)
 	}
 }
 
@@ -1419,4 +1433,37 @@ func timePtr(value time.Time) *time.Time {
 
 func intPtr(value int) *int {
 	return &value
+}
+
+func generateTestTOTPCode(t *testing.T, secret string, now time.Time) string {
+	t.Helper()
+
+	key, err := decodeTestBase32NoPadding(secret)
+	if err != nil {
+		t.Fatalf("decode TOTP secret: %v", err)
+	}
+
+	var payload [8]byte
+	binary.BigEndian.PutUint64(payload[:], uint64(now.Unix()/30))
+	mac := hmac.New(sha1.New, key)
+	_, _ = mac.Write(payload[:])
+	sum := mac.Sum(nil)
+	offset := sum[len(sum)-1] & 0x0f
+	binaryCode := (int(sum[offset])&0x7f)<<24 |
+		(int(sum[offset+1])&0xff)<<16 |
+		(int(sum[offset+2])&0xff)<<8 |
+		(int(sum[offset+3]) & 0xff)
+
+	return fmt.Sprintf("%06d", binaryCode%int(math.Pow10(6)))
+}
+
+func decodeTestBase32NoPadding(secret string) ([]byte, error) {
+	normalized := strings.ToUpper(strings.TrimSpace(secret))
+	if normalized == "" {
+		return nil, fmt.Errorf("empty TOTP secret")
+	}
+	if padding := len(normalized) % 8; padding != 0 {
+		normalized += strings.Repeat("=", 8-padding)
+	}
+	return base32.StdEncoding.DecodeString(normalized)
 }

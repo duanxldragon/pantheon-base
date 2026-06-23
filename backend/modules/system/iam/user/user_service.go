@@ -1,10 +1,10 @@
 package iam
 
 import (
-	"errors"
 	"strings"
 	"time"
 
+	authsession "pantheon-platform/backend/modules/auth/session"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
 
@@ -14,12 +14,16 @@ import (
 )
 
 type UserService struct {
-	db *gorm.DB
+	db               *gorm.DB
+	sessionLifecycle *authsession.LifecycleService
 }
 
 // NewUserService 构造函数
 func NewUserService(db *gorm.DB) *UserService {
-	return &UserService{db: db}
+	return &UserService{
+		db:               db,
+		sessionLifecycle: authsession.NewLifecycleService(db),
+	}
 }
 
 // Migrate 初始化表结构和种子数据
@@ -449,7 +453,7 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 
 	trimmedPassword := strings.TrimSpace(newPassword)
 	if len(trimmedPassword) < s.getConfiguredPasswordMinLength() {
-		return 0, errors.New("user.update.error.password_too_short")
+		return 0, common.NewBadRequest("user.update.error.password_too_short")
 	}
 
 	var user SystemUser
@@ -468,15 +472,9 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 			return err
 		}
 
-		now := time.Now()
-		result := tx.Table("system_user_session").
-			Where("user_id = ? AND revoked_at IS NULL", userID).
-			Updates(map[string]interface{}{"revoked_at": &now})
-		if result.Error != nil {
-			return result.Error
-		}
-		revokedSessionCount = result.RowsAffected
-		return nil
+		var err error
+		revokedSessionCount, err = s.sessionLifecycle.WithDB(tx).RevokeUserSessions(userID, time.Now())
+		return err
 	}); err != nil {
 		return 0, err
 	}
@@ -490,10 +488,10 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 	}
 	normalizedIDs := normalizeUint64IDs(userIDs)
 	if len(normalizedIDs) == 0 {
-		return 0, errors.New("user.batch.empty")
+		return 0, common.NewBadRequest("user.batch.empty")
 	}
 	if status != 1 && status != 2 {
-		return 0, errors.New("param.invalid")
+		return 0, common.NewBadRequest("param.invalid")
 	}
 
 	var users []SystemUser
@@ -501,12 +499,12 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 		return 0, err
 	}
 	if len(users) != len(normalizedIDs) {
-		return 0, errors.New("user.batch.not_found")
+		return 0, common.NewNotFound("user.batch.not_found")
 	}
 	if status == 2 {
 		for _, user := range users {
 			if user.ID == 1 {
-				return 0, errors.New("user.update.error.protected")
+				return 0, common.NewForbidden("user.update.error.protected")
 			}
 		}
 	}
@@ -529,7 +527,7 @@ func (s *UserService) DeleteUser(userID uint64) error {
 		return common.ErrDatabaseNotInitialized
 	}
 	if userID == 1 {
-		return errors.New("user.delete.error.protected")
+		return common.NewForbidden("user.delete.error.protected")
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
@@ -537,7 +535,7 @@ func (s *UserService) DeleteUser(userID uint64) error {
 		if err := tx.First(&user, userID).Error; err != nil {
 			return err
 		}
-		if err := tx.Exec("DELETE FROM system_user_session WHERE user_id = ?", userID).Error; err != nil {
+		if err := s.sessionLifecycle.WithDB(tx).DeleteUserSessions(userID); err != nil {
 			return err
 		}
 		if err := tx.Exec("DELETE FROM system_user_role WHERE user_id = ?", userID).Error; err != nil {

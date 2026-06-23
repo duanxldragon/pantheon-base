@@ -33,7 +33,7 @@ English version: [BACKEND.en.md](./BACKEND.en.md)
 - **Handler**: 调用 Service，通过 `common.Success` 或 `common.Fail` 返回标准响应。
 
 ## 4. 关键底座能力
-- **鉴权**: JWT access + refresh token 机制，Access Token 15 分钟有效，Refresh Token 7 天有效。
+- **鉴权**: Redis Token (opaque token) + access/refresh token 机制，Access Token 15 分钟有效，Refresh Token 7 天有效。
 - **会话**: `system_user_session` 保存 refresh token 当前 JTI，刷新时轮换 JTI，注销时吊销会话；同时记录 `last_activity_at`，用于空闲超时判定。
 - **权限**: Access Token 携带 `userId`、`username`、`roleKeys`、`sessionId`；Casbin 按 RESTful 路由匹配，`admin` 角色默认拥有 `/api/v1/*` 权限。
 - **Casbin 持久化**: `database/system_init.sql` 会预建 `casbin_rule`，启动时再通过本地 GORM Adapter 自动迁移并同步策略，避免“只初始化 SQL 但没启动服务时表不存在”的落差。

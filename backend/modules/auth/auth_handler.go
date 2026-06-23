@@ -1,11 +1,14 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 
 	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/impexp"
 	"pantheon-platform/backend/pkg/platformprefs"
 
@@ -196,13 +199,13 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	claims, err := common.ParseToken(refreshToken, common.TokenTypeRefresh)
+	refreshClaims, err := parseRefreshToken(refreshToken)
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "token.invalid")
 		return
 	}
 
-	tokenPair, err := h.service.RefreshSession(claims, c.ClientIP(), c.GetHeader("User-Agent"))
+	tokenPair, err := h.service.RefreshSession(refreshClaims.SessionID, refreshClaims.UserID, c.ClientIP(), c.GetHeader("User-Agent"))
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.session.refresh.error")
 		return
@@ -541,4 +544,24 @@ func buildLoginSourceKey(ip string) string {
 		return "ip:unknown"
 	}
 	return "ip:" + trimmed
+}
+
+// parseRefreshToken parses the refresh token and extracts session info from Redis.
+// This replaces the non-existent common.ParseToken call.
+func parseRefreshToken(refreshToken string) (*TokenRefreshClaims, error) {
+	if refreshToken == "" {
+		return nil, errors.New("token.invalid")
+	}
+
+	ctx := context.Background()
+	userID, sessionID, err := common.TokenValidateRefresh(ctx, database.RDB, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TokenRefreshClaims{
+		UserID:    userID,
+		SessionID: sessionID,
+		ID:        refreshToken,
+	}, nil
 }

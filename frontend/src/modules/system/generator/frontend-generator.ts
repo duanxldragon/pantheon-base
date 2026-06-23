@@ -2407,7 +2407,7 @@ function buildRelationRuntimeColumns(
   }
 
   private relativeToSystemListPageCss(): string {
-    return `${this.relativeToSrcRoot()}/modules/system/list-page.css`;
+    return `${this.relativeToSrcRoot()}/modules/system/components/shared/list-page.css`;
   }
 
   private toPascalCase(value: string): string {
