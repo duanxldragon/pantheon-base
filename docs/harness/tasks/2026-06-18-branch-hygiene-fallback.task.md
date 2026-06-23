@@ -37,12 +37,12 @@ platform
 
 ## Contract Anchors
 
-- `pantheon-base/AGENTS.md`
-- `pantheon-base/DESIGN.md`
-- `pantheon-base/docs/README.md`
-- `pantheon-base/docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
-- `pantheon-base/docs/harness/AI_QUALITY_GOVERNANCE.md`
-- `pantheon-base/docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
+- `docs/harness/AI_QUALITY_GOVERNANCE.md`
+- `docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
 
 ## Scope
 

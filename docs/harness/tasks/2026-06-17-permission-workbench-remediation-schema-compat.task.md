@@ -40,14 +40,14 @@ system/iam
 
 ## Contract Anchors
 
-- `pantheon-base/AGENTS.md`
-- `pantheon-base/DESIGN.md`
-- `pantheon-base/docs/README.md`
-- `pantheon-base/docs/contracts/PLATFORM_CONTRACT.md`
-- `pantheon-base/docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `pantheon-base/docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
-- `pantheon-base/docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
-- `pantheon-base/docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+- `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
+- `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
+- `docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
 
 ## Scope
 
