@@ -1,66 +1,190 @@
-# Task: 速率限制从内存迁移到 Redis
+---
+title: Rate Limit Redis Migration Task Packet
+doc_type: Acceptance
+layer: platform
+depends_on_layers:
+  - system/auth
+status: Approved
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-06-23
+---
 
-- **Task ID**: 2026-06-21-rate-limit-redis
-- **Target**: pantheon-base
-- **Layer**: platform
-- **Mode**: implement
-- **Model Tier**: standard
+# Task Packet: 2026-06-21-rate-limit-redis
 
-## Context
+## Goal
 
-`backend/internal/middleware/rate_limit_middleware.go` 使用内存 `map` 做计数器。多实例部署时各自计数，限流失效。Redis 依赖已在 `go.mod` 中存在（`go-redis/v9`）。
+Move request and login-source rate limiting from process-local memory into a Redis-backed store so multi-instance deployments enforce the same limit window consistently.
 
-## Required Reading
+## Primary Layer
 
-1. `backend/internal/middleware/rate_limit_middleware.go` — 当前实现
-2. `backend/pkg/database/redis.go` — Redis 连接
-3. `backend/modules/auth/auth_service.go` — 登录限流消费方（`ensureSourceThrottleAllowed`）
-4. `designs/SECURITY_POLICY_ROADMAP.md` — 安全策略路线图
+platform
 
-## Design
+## Dependency Layers
 
-### Redis Key Schema
+- `system/auth`
 
-```
-rate_limit:ip:{ip}           → counter, TTL = window
-rate_limit:source:{source}   → counter, TTL = window (登录来源级，如 "login:/api/v1/auth/login")
-```
+## Harness Profile
 
-### 接口设计
+- Template: `admin-platform`
+- Overlay: `pantheon-base`
+- Quality Profile: `security-runtime`
+- Portable Failure Class: `runtime-evidence-gap`
+- Owner Layer: `consumer-repository`
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - runtime-quality
+  - method-health
 
-```go
-// RateLimitStore 速率限制存储接口
-type RateLimitStore interface {
-    // Increment 自增并返回当前计数，首次调用时设置 TTL
-    Increment(ctx context.Context, key string, window time.Duration) (int64, error)
-    // Reset 重置计数器
-    Reset(ctx context.Context, key string) error
-}
-```
+## Contract Anchors
 
-### 实现要求
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/designs/SECURITY_POLICY_ROADMAP.md`
+- `backend/internal/middleware/rate_limit_middleware.go`
+- `backend/pkg/database/redis.go`
 
-1. 新建 `RedisRateLimitStore` 实现 `RateLimitStore` 接口
-2. 使用 Redis `INCR` + `EXPIRE`（Lua 脚本或 pipeline 保证原子性）
-3. 保留 `MemoryRateLimitStore` 用于本地开发和测试（Redis 不可用时 fallback）
-4. `RateLimitMiddleware` 接受 `RateLimitStore` 依赖注入
-5. `pantheon-base` 的 `backend/cmd/server/main.go` 中根据 `PANTHEON_REDIS_ADDR` 环境变量选择 store
+## Scope
 
-### 文件变更
+### In
 
-| 文件 | 变更 |
-|---|---|
-| `backend/internal/middleware/rate_limit_middleware.go` | 重构为注入 `RateLimitStore` 接口 |
-| `backend/internal/middleware/rate_limit_store_redis.go` | **新文件** — Redis 实现 |
-| `backend/internal/middleware/rate_limit_store_memory.go` | **新文件** — 内存 fallback |
-| `backend/internal/middleware/rate_limit_middleware_test.go` | 适配新接口，测试两种 store |
-| `backend/modules/auth/auth_service.go` | 确认 `ensureSourceThrottleAllowed` 无需改动（它调的是 middleware 暴露的 API） |
+- introduce a `RateLimitStore` abstraction that can back counters with Redis for shared runtime enforcement
+- keep a memory-backed fallback store for local development and tests
+- let `backend/cmd/server/main.go` choose the store from Redis configuration without changing auth caller semantics
 
-## Verification
+### Out
 
-```bash
-cd D:/workspace/go/pantheon-platform/pantheon-base
-go build ./backend/...
-go test -race ./backend/internal/middleware/...
-go vet ./backend/...
-```
+- redesigning auth throttling policy or source-key semantics
+- changing frontend behavior, menu exposure, or route contracts
+- introducing a new external dependency beyond the already-installed Redis client
+
+## Assumptions and Open Questions
+
+- Confirmed Facts: the old middleware used in-memory counters and the repository already carried a Redis dependency.
+- Working Assumptions: caller APIs such as `ensureSourceThrottleAllowed` stay stable while the storage backend changes underneath.
+- Open Questions: `none`
+
+## Expected Files
+
+### Create
+
+- `backend/internal/middleware/rate_limit_store_redis.go`
+- `backend/internal/middleware/rate_limit_store_memory.go`
+- `docs/harness/tasks/2026-06-21-rate-limit-redis.task.md`
+- `.harness/evidence/2026-06-21-rate-limit-redis/summary.md`
+- `.harness/evidence/2026-06-21-rate-limit-redis/commands.json`
+- `.harness/evidence/2026-06-21-rate-limit-redis/review.md`
+
+### Modify
+
+- `backend/internal/middleware/rate_limit_middleware.go`
+- `backend/internal/middleware/rate_limit_middleware_test.go`
+- `backend/cmd/server/main.go`
+- `backend/modules/auth/auth_service.go`
+
+### Do Not Touch
+
+- `frontend/**`
+- `../pantheon-ops/**`
+- unrelated IAM, org, config, and generator modules
+
+## Implementation Notes
+
+- The Redis store should use `INCR` plus TTL initialization atomically enough that the first hit defines the window without racey double initialization.
+- The memory store remains valid for local dev and tests; the production-value shift is that multi-instance runtime should no longer diverge by process.
+- `ensureSourceThrottleAllowed` remains a consumer of the middleware/store contract rather than owning Redis logic directly.
+
+## Minimum Viable Approach
+
+- Selected Rung: `installed dependency`
+- Why This Is Enough: `Redis was already part of the platform stack, so the migration only needed a new store adapter and server wiring`
+- Upgrade Trigger: `if rate limiting later needs quota introspection, distributed burst control, or richer policy dimensions, promote the store contract instead of embedding new policy in one middleware file`
+
+## Success Criteria
+
+- Behaviour Outcome: `rate-limit counters are shared across instances when Redis is configured, while local memory fallback remains available for development and tests`
+- Verification Signal: `go build ./backend/...`, `go test -race ./backend/internal/middleware/...`, and `go vet ./backend/...` pass
+- Regression Watch: `auth callers keep using the same throttling API and local development still has a working fallback path`
+
+## Context Strategy
+
+- Entry Sources: `AGENTS.md`, `DESIGN.md`, `docs/README.md`, current task packet, `docs/designs/SECURITY_POLICY_ROADMAP.md`
+- Retrieval Order: `entry -> summary -> raw`
+- Sensitive Context: `none`
+
+## Method Readiness
+
+- Consumer-Specific Controls: `middleware contract`, `Redis store adapter`, `rate-limit middleware tests`
+- Required Sensors: `command`, `review`, `runtime evidence`
+- Required Evidence: `command summary`, `runtime gap`, `review summary`
+- Ratchet Decision: `sensor-added`
+- Deferred Code Issues: `none`
+
+## Delivery Governance
+
+- Design Gate: `short boundary note`
+- Development Gate: `expected files declared`
+- QA Acceptance Gate: `command`, `runtime`
+- GitHub Governance Gate: `repo-quality-gate`
+
+## Structural Scope
+
+- Affected Subgraph: `request source -> rate-limit middleware -> RateLimitStore -> Redis or memory counter backend`
+- Boundary Crossings: `platform -> Redis`, `platform -> system/auth`
+- Risk Nodes: `store selection`, `counter TTL initialization`, `auth source-throttle callers`
+- Graph Focus: `sensitive-input-flow | hub-check`
+
+## Execution Roles
+
+- Implementer Posture: `implementer`
+- Reviewer Posture: `architecture | mechanical`
+
+## Stop Points
+
+- stop before changing rate-limit policy semantics beyond the storage backend migration
+- stop before removing the local development fallback path
+
+## State Plan
+
+- Checkpoint Expectation: `none`
+- Resume Artifacts: `docs/harness/tasks/2026-06-21-rate-limit-redis.task.md`
+
+## Verification Plan
+
+- `go build ./backend/...`
+- `go test -race ./backend/internal/middleware/...`
+- `go vet ./backend/...`
+
+## Linkage
+
+- Task ID: `2026-06-21-rate-limit-redis`
+- Task Manifest: `.harness/tasks/2026-06-21-rate-limit-redis/manifest.json`
+- OpenSpec Change: `none`
+- Superpowers Plan: `none`
+- Evidence Directory: `.harness/evidence/2026-06-21-rate-limit-redis/`
+- Review File: `none`
+
+## Evidence Required
+
+- targeted middleware build/test/vet command summaries
+- explicit note about Redis-backed versus memory-fallback store selection
+- review summary tied back to the same task boundary
+
+## Human Gates
+
+- none
+
+## Completion Checklist
+
+- [ ] Layer and boundary declared
+- [ ] Quality profile or explicit `none` declared
+- [ ] Ratchet decision declared for repeated failures
+- [ ] Delivery governance gates declared
+- [ ] Contract anchors read
+- [ ] Verification run or exception recorded
+- [ ] Evidence saved or summarized
+- [ ] Review completed

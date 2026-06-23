@@ -37,10 +37,10 @@ platform
 
 ## Contract Anchors
 
-- `pantheon-base/AGENTS.md`
-- `pantheon-base/DESIGN.md`
-- `pantheon-base/docs/README.md`
-- `pantheon-base/docs/contracts/PLATFORM_CONTRACT.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
 
 ## Scope
 
@@ -144,6 +144,7 @@ platform
 
 - [ ] Layer and boundary declared
 - [ ] Workflow cleanup rule added
+- [ ] Contract anchors read
 - [ ] Verification run or exception recorded
 - [ ] Evidence saved or summarized
 - [ ] Review completed

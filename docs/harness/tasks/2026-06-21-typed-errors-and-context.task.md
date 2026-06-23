@@ -1,159 +1,202 @@
-# Task: 建立类型化错误体系 + HTTP context.Context 传播
+---
+title: Typed Errors And Context Propagation Task Packet
+doc_type: Acceptance
+layer: platform
+depends_on_layers:
+  - system/auth
+  - system/iam
+  - system/org
+  - system/config
+status: Approved
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-06-23
+---
 
-- **Task ID**: 2026-06-21-typed-errors-and-context
-- **Target**: pantheon-base
-- **Layer**: platform
-- **Mode**: implement
-- **Model Tier**: standard
+# Task Packet: 2026-06-21-typed-errors-and-context
 
-## Context
+## Goal
 
-当前项目存在两个基础问题：
-1. **398 处裸 `errors.New()` / `fmt.Errorf()`**，0 个类型化错误变量。调用方无法用 `errors.Is()` 判断错误类型。
-2. **33,005 行代码仅 5 处使用 `context.Context`**。HTTP 请求无超时控制，客户端断开后服务端仍在执行。
+Establish typed error sentinels and request-context propagation on the core HTTP request path so handlers, services, and persistence boundaries can classify failures and respect cancellation or timeout signals consistently.
 
-## Part A: 类型化错误体系
+## Primary Layer
 
-### Required Reading
+platform
 
-1. `backend/pkg/common/errors.go` — 当前错误定义
-2. `backend/modules/auth/auth_service.go` — auth 模块错误示例
-3. `backend/modules/system/iam/user/user_service.go` — IAM 模块错误示例
+## Dependency Layers
 
-### Design
+- `system/auth`
+- `system/iam`
+- `system/org`
+- `system/config`
 
-```go
-// backend/pkg/common/errors.go
+## Harness Profile
 
-package common
+- Template: `admin-platform`
+- Overlay: `pantheon-base`
+- Quality Profile: `platform-correctness`
+- Portable Failure Class: `architecture-drift`
+- Owner Layer: `consumer-repository`
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - runtime-quality
+  - method-health
 
-import "errors"
+## Contract Anchors
 
-// 通用错误哨兵
-var (
-    ErrNotFound   = errors.New("not_found")
-    ErrConflict   = errors.New("conflict")
-    ErrForbidden  = errors.New("forbidden")
-    ErrBadRequest = errors.New("bad_request")
-    ErrInternal   = errors.New("internal_error")
-)
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
+- `backend/pkg/common/error.go`
+- `backend/internal/middleware/request_context_middleware.go`
+- `backend/cmd/server/main.go`
 
-// ErrorResponse 统一错误响应
-type ErrorResponse struct {
-    Code    string `json:"code"`    // 机器可读错误码
-    Message string `json:"message"` // 人类可读消息（前端 i18n key）
-    Detail  string `json:"detail,omitempty"`
-}
-```
+## Scope
 
-### 各模块需做的事
+### In
 
-在每个业务模块的 service 文件中，定义模块级错误变量：
+- define and use typed common or module-local error sentinels so callers can rely on `errors.Is`
+- propagate `c.Request.Context()` and timeout-wrapped request contexts from middleware through selected handler, service, and database boundaries
+- roll the change out incrementally, starting with auth and high-churn system modules rather than forcing an all-package rewrite in one cut
 
-```go
-// backend/modules/auth/errors.go (示例)
-package auth
+### Out
 
-import "errors"
+- redesigning the full user-facing error taxonomy or i18n contract in one pass
+- converting every background job, async worker, or helper package to request-bound contexts
+- broad service API redesign beyond the context-first or typed-error boundary
 
-var (
-    ErrInvalidCredentials = errors.New("auth.invalid_credentials")
-    ErrPasswordExpired    = errors.New("auth.password_expired")
-    ErrAccountLocked      = errors.New("auth.account_locked")
-    ErrMFARequired        = errors.New("auth.mfa_required")
-    ErrMFACodeInvalid     = errors.New("auth.mfa_code_invalid")
-    ErrSessionRevoked     = errors.New("auth.session_revoked")
-    ErrSessionNotFound    = errors.New("auth.session_not_found")
-    ErrTokenExpired       = errors.New("auth.token_expired")
-)
-```
+## Assumptions and Open Questions
 
-### 变更范围
+- Confirmed Facts: by 2026-06-23 `backend/pkg/common/error.go` already carried shared typed errors and `RequestContextMiddleware` already wrapped requests with a timeout, which confirms the historical direction of this task.
+- Working Assumptions: the task packet should capture the intended cross-cutting migration boundary while acknowledging that service-level propagation can land incrementally by module.
+- Open Questions: `none`
 
-| 模块 | 文件 | 说明 |
-|---|---|---|
-| `pkg/common` | `errors.go` | 添加 5 个通用哨兵 + `ErrorResponse` 结构体 |
-| `modules/auth` | `errors.go` (新) | auth 模块错误定义 |
-| `modules/auth` | `auth_service.go` | 替换裸 `errors.New()` 为类型化错误 |
-| `modules/system/iam/user` | `errors.go` (新) | user 模块错误定义 |
-| `modules/system/iam/role` | `errors.go` (新) | role 模块错误定义 |
-| `modules/system/iam/menu` | `errors.go` (新) | menu 模块错误定义 |
-| `modules/system/iam/permission` | `errors.go` (新) | permission 模块错误定义 |
-| `modules/system/org/dept` | `errors.go` (新) | dept 模块错误定义 |
-| `modules/system/org/post` | `errors.go` (新) | post 模块错误定义 |
-| `modules/system/config/dict` | `errors.go` (新) | dict 模块错误定义 |
-| `modules/system/config/setting` | `errors.go` (新) | setting 模块错误定义 |
+## Expected Files
 
-**注意**：每个模块只替换已有的裸 `errors.New()`，不引入新的错误分支。保持功能不变。
+### Create
 
-## Part B: context.Context 传播
+- `backend/modules/auth/errors.go`
+- `backend/modules/system/iam/user/errors.go`
+- `backend/modules/system/iam/role/errors.go`
+- `backend/modules/system/org/dept/errors.go`
+- `docs/harness/tasks/2026-06-21-typed-errors-and-context.task.md`
+- `.harness/evidence/2026-06-21-typed-errors-and-context/summary.md`
+- `.harness/evidence/2026-06-21-typed-errors-and-context/commands.json`
+- `.harness/evidence/2026-06-21-typed-errors-and-context/review.md`
 
-### Required Reading
+### Modify
 
-1. `backend/cmd/server/main.go` — 启动入口
-2. `backend/internal/middleware/request_context_middleware.go` — 请求上下文
-3. `backend/pkg/common/request_context.go` — 上下文工具
-4. 任意一个 service 文件 — 理解当前请求处理流程
+- `backend/pkg/common/error.go`
+- `backend/internal/middleware/request_context_middleware.go`
+- `backend/modules/auth/**/*.go`
+- `backend/modules/system/iam/user/user_service.go`
+- `backend/modules/system/iam/role/role_service.go`
+- `backend/modules/system/org/dept/dept_service.go`
+- `backend/modules/system/config/setting/**/*.go`
 
-### Design
+### Do Not Touch
 
-在 HTTP handler 层注入带超时的 context：
+- `frontend/**`
+- `../pantheon-ops/**`
+- unrelated code-generation or deployment automation
 
-```go
-// request_context_middleware.go 改造
-func RequestContextMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
-        defer cancel()
-        c.Request = c.Request.WithContext(ctx)
-        c.Next()
-    }
-}
-```
+## Implementation Notes
 
-Service 层接收 context 并传递给数据库查询：
+- Shared sentinels belong in `backend/pkg/common/error.go`; module-local error keys stay close to the domain service that emits them.
+- Request context should enter once in middleware and then flow through handler and persistence boundaries with `WithContext` rather than ad hoc background contexts.
+- The safe rollout is staged: tighten the core request path first, then expand into less central modules only when the signature churn is justified.
 
-```go
-// 改造前
-func (s *UserService) GetByID(userID uint64) (*SystemUser, error) {
-    var user SystemUser
-    err := s.db.First(&user, userID).Error  // 无 context
-    return &user, err
-}
+## Minimum Viable Approach
 
-// 改造后
-func (s *UserService) GetByID(ctx context.Context, userID uint64) (*SystemUser, error) {
-    var user SystemUser
-    err := s.db.WithContext(ctx).First(&user, userID).Error
-    return &user, err
-}
-```
+- Selected Rung: `stdlib`
+- Why This Is Enough: `typed errors and context propagation rely on existing Go stdlib primitives plus the repository's current handler and GORM patterns`
+- Upgrade Trigger: `if cross-module signature churn becomes too disruptive, formalize a narrower migration program per subsystem instead of forcing one repo-wide sweep`
 
-### 变更范围
+## Success Criteria
 
-| 文件 | 说明 |
-|---|---|
-| `backend/internal/middleware/request_context_middleware.go` | 注入 `context.WithTimeout` |
-| 所有 `*_service.go` | 方法签名加 `ctx context.Context` 首参数，`s.db` → `s.db.WithContext(ctx)` |
-| 所有 `*_handler.go` | 调用 service 方法时传 `c.Request.Context()` |
+- Behaviour Outcome: `handlers and services can classify core failure modes with typed errors and honor request cancellation or timeout signals on the selected HTTP request path`
+- Verification Signal: `go build ./backend/cmd/server`, `go test -race ./backend/...`, and `go vet ./backend/...` pass for the staged rollout`
+- Regression Watch: `existing auth and system request flows keep their current outward behavior while the internal error and context contracts become more explicit`
 
-### 实施策略（渐进式）
+## Context Strategy
 
-1. 先改 middleware + `pkg/database/gorm.go` 中 `InitDB` 返回 `*gorm.DB`
-2. 先从 `modules/auth/` 开始（业务影响最大），其次 `modules/system/iam/`，最后 `modules/system/org/`、`modules/system/config/`
-3. 每个模块改完后 `go build` + `go test` 确认不破坏编译
+- Entry Sources: `AGENTS.md`, `DESIGN.md`, `docs/README.md`, current task packet, `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
+- Retrieval Order: `entry -> summary -> raw`
+- Sensitive Context: `none`
 
-## Verification
+## Method Readiness
 
-```bash
-cd D:/workspace/go/pantheon-platform/pantheon-base
-go build ./backend/cmd/server
-go test -race ./backend/...
-go vet ./backend/...
-```
+- Consumer-Specific Controls: `typed error contract`, `request timeout middleware`, `context-aware persistence calls`
+- Required Sensors: `command`, `review`, `runtime evidence`
+- Required Evidence: `command summary`, `runtime gap`, `review summary`
+- Ratchet Decision: `gate-updated`
+- Deferred Code Issues: `full-repository context propagation remains incremental and should not be misreported as complete from one packet alone`
 
-## Notes
+## Delivery Governance
 
-- 这是一个较大的跨模块改动。建议分批实施：先 errors，再 context
-- Context 传播不需要一次性改完所有 service — 可以按模块逐步推进
-- Handler 层的 `c.Request.Context()` 已有 gin 默认 context，只需在 middleware 中加 timeout wrapper
+- Design Gate: `short boundary note`
+- Development Gate: `expected files declared`
+- QA Acceptance Gate: `command`, `runtime`
+- GitHub Governance Gate: `repo-quality-gate`
+
+## Structural Scope
+
+- Affected Subgraph: `HTTP request -> request-context middleware -> handler -> service -> GORM or Redis call; typed error source -> service boundary -> HTTP response mapping`
+- Boundary Crossings: `platform -> system/auth`, `platform -> system/iam`, `service -> datastore`
+- Risk Nodes: `request timeout wrapper`, `service method signature churn`, `typed error mapping`, `persistence calls without context`
+- Graph Focus: `call-depth | hub-check`
+
+## Execution Roles
+
+- Implementer Posture: `implementer`
+- Reviewer Posture: `architecture | mechanical`
+
+## Stop Points
+
+- stop before forcing a repository-wide service signature rewrite in one unreviewable patch
+- stop before changing external API payloads or error-response semantics beyond the typed-error boundary
+
+## State Plan
+
+- Checkpoint Expectation: `none`
+- Resume Artifacts: `docs/harness/tasks/2026-06-21-typed-errors-and-context.task.md`
+
+## Verification Plan
+
+- `go build ./backend/cmd/server`
+- `go test -race ./backend/...`
+- `go vet ./backend/...`
+
+## Linkage
+
+- Task ID: `2026-06-21-typed-errors-and-context`
+- Task Manifest: `.harness/tasks/2026-06-21-typed-errors-and-context/manifest.json`
+- OpenSpec Change: `none`
+- Superpowers Plan: `none`
+- Evidence Directory: `.harness/evidence/2026-06-21-typed-errors-and-context/`
+- Review File: `none`
+
+## Evidence Required
+
+- targeted build, test, and vet command summaries for the staged rollout
+- explicit note about which modules received typed-error or context propagation in this slice
+- review summary tied back to the same task boundary
+
+## Human Gates
+
+- broad cross-module service signature churn that would materially expand review scope
+
+## Completion Checklist
+
+- [ ] Layer and boundary declared
+- [ ] Quality profile or explicit `none` declared
+- [ ] Ratchet decision declared for repeated failures
+- [ ] Delivery governance gates declared
+- [ ] Contract anchors read
+- [ ] Verification run or exception recorded
+- [ ] Evidence saved or summarized
+- [ ] Review completed

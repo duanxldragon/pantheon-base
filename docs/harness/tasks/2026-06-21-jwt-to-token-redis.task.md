@@ -1,149 +1,202 @@
-# Task: JWT → Token+Redis 鉴权方案迁移
+---
+title: JWT To Token Redis Migration Task Packet
+doc_type: Acceptance
+layer: system/auth
+depends_on_layers:
+  - platform
+  - system/config
+status: Approved
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-06-23
+---
 
-- **Task ID**: 2026-06-21-jwt-to-token-redis
-- **Target**: pantheon-base
-- **Layer**: system/auth
-- **Mode**: implement
-- **Model Tier**: deep
+# Task Packet: 2026-06-21-jwt-to-token-redis
 
-## Context
+## Goal
 
-当前架构：使用 `crypto/rand` 生成的 opaque token + Redis 存储。✅ 已完成迁移
+Replace JWT-based browser auth with opaque token pairs backed by Redis while preserving the existing auth response, cookie, and middleware contract expected by the rest of `pantheon-base`.
 
-目标：用 `crypto/rand` 生成的 opaque token + Redis 存储替代 JWT。
+## Primary Layer
 
-## Required Reading
+system/auth
 
-1. `backend/pkg/common/token.go` — Token 生成/Redis 存储（已实现）
-2. `backend/pkg/common/cookie.go` — Cookie 设置
-3. `backend/pkg/common/response.go` — 统一响应
-4. `backend/pkg/database/redis.go` — Redis 连接
-5. `backend/internal/middleware/token_middleware.go` — Token 中间件（已实现）
-6. `backend/modules/auth/auth_service.go` — Login/Refresh/Revoke
-7. `backend/modules/auth/auth_session_service.go` — 会话管理
-8. `backend/modules/auth/session_model.go` — Session 模型
-9. `backend/modules/auth/auth_dto.go` — AuthTokenResp / TokenPair
-10. `backend/modules/auth/auth_handler.go` — Handler 层
-11. `backend/pkg/common/security_config.go` — DefaultDevSecrets
-12. `designs/AUTH_MODULE_DESIGN.md`
+## Dependency Layers
 
-> **2026-06-22 更新**：JWT 相关文件已全部删除（jwt.go、jwt_middleware.go 已移除），统一使用 Redis Token。
+- `platform`
+- `system/config`
 
-## Design
+## Harness Profile
 
-### Token 模型
+- Template: `admin-platform`
+- Overlay: `pantheon-base`
+- Quality Profile: `auth-runtime`
+- Portable Failure Class: `security-boundary-gap`
+- Owner Layer: `consumer-repository`
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - runtime-quality
+  - method-health
 
-```go
-// Token 类型
-type TokenPair struct {
-    AccessToken      string    `json:"accessToken"`       // 32 字节 hex (crypto/rand)
-    RefreshToken     string    `json:"refreshToken"`      // 32 字节 hex
-    AccessExpiresAt  time.Time `json:"accessExpiresAt"`   // 15 分钟
-    RefreshExpiresAt time.Time `json:"refreshExpiresAt"`  // 7 天
-    TokenType        string    `json:"tokenType"`         // "Bearer"
-    SessionID        string    `json:"sessionId"`         // UUIDv4
-}
+## Contract Anchors
 
-// Redis 中存储的 Session 数据
-type SessionData struct {
-    UserID       uint64    `json:"uid"`
-    Username     string    `json:"uname"`
-    RoleKeys     []string  `json:"roles"`
-    CreatedAt    time.Time `json:"cat"`
-    LastAccessAt time.Time `json:"lat"`
-    LastIP       string    `json:"ip"`
-    UserAgent    string    `json:"ua"`
-}
-```
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+- `docs/designs/AUTH_MODULE_DESIGN.md`
+- `backend/pkg/common/token.go`
+- `backend/internal/middleware/token_middleware.go`
 
-### Redis Key Schema
+## Scope
 
-```
-pantheon:session:{access_token}   → SessionData JSON, TTL = access_token TTL (15min)
-pantheon:refresh:{refresh_token}  → {userID}:{sessionID}, TTL = refresh TTL (7d)
-pantheon:user_sessions:{userID}   → SET of sessionIDs (用于列出所有会话)
-```
+### In
 
-### 核心流程
+- use `crypto/rand`-generated opaque access and refresh tokens stored in Redis instead of JWT payloads
+- keep cookie names, bearer parsing, and auth DTO field names backward compatible for callers
+- rotate refresh tokens, keep Redis unavailable as a hard auth failure, and retain session-table history only for audit continuity
 
-**登录**:
-1. 验证用户名密码
-2. 生成 `accessToken = hex(rand(32))` + `refreshToken = hex(rand(32))`
-3. `SET pantheon:session:{accessToken} {sessionJSON} EX 900`
-4. `SET pantheon:refresh:{refreshToken} {userID}:{sessionID} EX 604800`
-5. `SADD pantheon:user_sessions:{userID} {sessionID}`
-6. 返回 TokenPair（Set HttpOnly Cookie）
+### Out
 
-**鉴权（中间件）**:
-1. 从 `Authorization: Bearer <token>` 或 Cookie 读取 access token
-2. `GET pantheon:session:{token}`
-3. 若存在且未过期 → 放行，更新 `LastAccessAt`（异步 EXPIRE 续期）
-4. 若不存在 → 401
+- changing frontend menu, route, or i18n behavior
+- introducing a permissive fallback that bypasses auth when Redis is unavailable
+- deleting historical `system_user_session` audit data
 
-**Refresh**:
-1. 从 Cookie 读取 refresh token
-2. `GET pantheon:refresh:{refreshToken}` 获取 `{userID}:{sessionID}`
-3. 验证 userID/sessionID 存在
-4. 生成新的 token pair，更新 Redis
-5. `DEL pantheon:refresh:{oldRefreshToken}`（刷新旋转）
-6. 返回新 TokenPair
+## Assumptions and Open Questions
 
-**吊销**:
-1. `DEL pantheon:session:{accessToken}`
-2. `DEL pantheon:refresh:{refreshToken}`
-3. `SREM pantheon:user_sessions:{userID} {sessionID}`
+- Confirmed Facts: by 2026-06-22 the JWT-specific files had already been removed and the repository had standardized on Redis-backed tokens.
+- Working Assumptions: the historical task packet should capture the migration boundary and compatibility expectations rather than reopen the token design.
+- Open Questions: `none`
 
-### 文件变更
+## Expected Files
 
-| 文件 | 状态 |
-|---|---|
-| `backend/pkg/common/token.go` | ✅ 已实现 — Token 生成、Redis 读写 |
-| `backend/pkg/common/jwt.go` | ✅ 已删除 |
-| `backend/pkg/common/security_config.go` | ✅ 已清理 JWT secret |
-| `backend/internal/middleware/token_middleware.go` | ✅ 已实现 — Redis Token 中间件 |
-| `backend/internal/middleware/jwt_middleware.go` | ✅ 已删除 |
-| `backend/modules/auth/auth_service.go` | ✅ 已适配 Token 登录 |
-| `backend/modules/auth/auth_session_service.go` | ✅ 已简化 |
+### Create
 
-### 向后兼容
+- `backend/pkg/common/token_test.go`
+- `docs/harness/tasks/2026-06-21-jwt-to-token-redis.task.md`
+- `.harness/evidence/2026-06-21-jwt-to-token-redis/summary.md`
+- `.harness/evidence/2026-06-21-jwt-to-token-redis/commands.json`
+- `.harness/evidence/2026-06-21-jwt-to-token-redis/review.md`
 
-1. `TokenPair` 结构体字段名不变（`accessToken` / `refreshToken` / `expiresAt`），前端无需改动
-2. Cookie 名称不变（`pantheon_access_token` / `pantheon_refresh_token`）
-3. `Authorization: Bearer` header 解析方式不变
-4. `gin.Context` 中注入的 `userID` / `username` / `roleKeys` key 不变
+### Modify
 
-### 数据库迁移
+- `backend/pkg/common/token.go`
+- `backend/pkg/common/cookie.go`
+- `backend/pkg/common/response.go`
+- `backend/pkg/common/security_config.go`
+- `backend/pkg/database/redis.go`
+- `backend/internal/middleware/token_middleware.go`
+- `backend/modules/auth/auth_service.go`
+- `backend/modules/auth/auth_session_service.go`
+- `backend/modules/auth/session_model.go`
+- `backend/modules/auth/auth_dto.go`
+- `backend/modules/auth/auth_handler.go`
 
-- `system_user_session` 表不删除（保留历史数据），但新增 `ALTER TABLE` 标记为 deprecated
-- 或新增迁移脚本：`-- 2026-06-21: session auth migrated to Redis; system_user_session retained for audit`
+### Do Not Touch
 
-### 测试策略
+- `frontend/**`
+- `../pantheon-ops/**`
+- unrelated IAM, org, and config business flows
 
-- `backend/pkg/common/token_test.go` — Token 生成/验证/刷新/吊销/过期 的单元测试
-- `backend/internal/middleware/auth_middleware_test.go` — 中间件单元测试
-- `backend/modules/auth/auth_service_test.go` — 适配已有测试
-- 集成测试：Redis 不可用时 fallback 到 503 错误（不静默降级为无认证状态）
+## Implementation Notes
 
-## Verification
+- Keep the transport opaque: token contents are random identifiers and Redis becomes the source of session truth.
+- Preserve the caller-facing contract by keeping cookie names, bearer parsing, and auth DTO field names stable even though the backend storage model changes.
+- Redis unavailability remains a `503`-style hard failure rather than a silent auth bypass.
 
-```bash
-cd D:/workspace/go/pantheon-platform/pantheon-base
+## Minimum Viable Approach
 
-# 单元测试
-go test -race ./backend/pkg/common/...
-go test -race ./backend/internal/middleware/...
-go test -race ./backend/modules/auth/...
+- Selected Rung: `installed dependency`
+- Why This Is Enough: `Redis was already present in the repository dependency set, so the migration only needed new token storage and middleware logic rather than another auth technology`
+- Upgrade Trigger: `if token lifecycle or cross-region session semantics outgrow simple Redis keys, revisit the storage model instead of reintroducing JWT complexity by default`
 
-# 编译
-go build ./backend/cmd/server
+## Success Criteria
 
-# vet
-go vet ./backend/...
-```
+- Behaviour Outcome: `login, refresh, revoke, and middleware auth all run through Redis-backed opaque tokens without changing caller-facing cookie or bearer conventions`
+- Verification Signal: `go test -race ./backend/pkg/common/...`, `go test -race ./backend/internal/middleware/...`, `go test -race ./backend/modules/auth/...`, `go build ./backend/cmd/server`, and `go vet ./backend/...` pass
+- Regression Watch: `auth DTO field names, cookie names, bearer parsing, and injected auth context keys remain backward compatible`
 
-## Key Decisions
+## Context Strategy
 
-1. **Redis 不可用时的行为**：返回 503（不降级为无认证）— 安全优先
-2. **session 表**：保留但标记 deprecated，不删除（审计需求）
-3. **refresh token rotation**：每次 refresh 后旧 refresh token 立即失效（防重用）
-4. **access token 续期**：不自动续期，依靠 refresh token 换新
+- Entry Sources: `AGENTS.md`, `DESIGN.md`, `docs/README.md`, current task packet, `docs/designs/AUTH_MODULE_DESIGN.md`
+- Retrieval Order: `entry -> summary -> raw`
+- Sensitive Context: `keep live tokens out of shared durable artifacts`
+
+## Method Readiness
+
+- Consumer-Specific Controls: `auth runtime contract`, `Redis-backed token middleware`, `token lifecycle tests`
+- Required Sensors: `command`, `review`, `runtime evidence`
+- Required Evidence: `command summary`, `runtime gap`, `review summary`
+- Ratchet Decision: `gate-updated`
+- Deferred Code Issues: `system_user_session remains retained for audit and deprecation follow-up rather than deletion in the same change`
+
+## Delivery Governance
+
+- Design Gate: `short boundary note`
+- Development Gate: `expected files declared`
+- QA Acceptance Gate: `command`, `runtime`
+- GitHub Governance Gate: `repo-quality-gate`
+
+## Structural Scope
+
+- Affected Subgraph: `login|refresh|revoke handlers -> auth service -> token store -> Redis session keys -> token middleware`
+- Boundary Crossings: `system/auth -> pkg/*`, `platform -> Redis`
+- Risk Nodes: `token pair generation`, `refresh rotation`, `Redis availability handling`, `middleware auth context injection`
+- Graph Focus: `sensitive-input-flow | hub-check`
+
+## Execution Roles
+
+- Implementer Posture: `implementer`
+- Reviewer Posture: `architecture | security | mechanical`
+
+## Stop Points
+
+- stop before changing caller-facing cookie names, bearer parsing, or auth DTO field names
+- stop before deleting the historical session audit table or introducing an auth bypass on Redis failure
+
+## State Plan
+
+- Checkpoint Expectation: `none`
+- Resume Artifacts: `docs/harness/tasks/2026-06-21-jwt-to-token-redis.task.md`
+
+## Verification Plan
+
+- `go test -race ./backend/pkg/common/...`
+- `go test -race ./backend/internal/middleware/...`
+- `go test -race ./backend/modules/auth/...`
+- `go build ./backend/cmd/server`
+- `go vet ./backend/...`
+
+## Linkage
+
+- Task ID: `2026-06-21-jwt-to-token-redis`
+- Task Manifest: `.harness/tasks/2026-06-21-jwt-to-token-redis/manifest.json`
+- OpenSpec Change: `none`
+- Superpowers Plan: `none`
+- Evidence Directory: `.harness/evidence/2026-06-21-jwt-to-token-redis/`
+- Review File: `none`
+
+## Evidence Required
+
+- targeted token-store, middleware, and auth command summaries
+- explicit note that JWT-specific files were retired as part of the migration boundary
+- review summary tied back to the same task boundary
+
+## Human Gates
+
+- deleting historical session audit data or weakening Redis-auth failure handling
+
+## Completion Checklist
+
+- [ ] Layer and boundary declared
+- [ ] Quality profile or explicit `none` declared
+- [ ] Ratchet decision declared for repeated failures
+- [ ] Delivery governance gates declared
+- [ ] Contract anchors read
+- [ ] Verification run or exception recorded
+- [ ] Evidence saved or summarized
+- [ ] Review completed

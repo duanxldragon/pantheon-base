@@ -1,152 +1,196 @@
-# Task: 拆分 auth_service.go 为功能子服务
+---
+title: Auth Service Split Task Packet
+doc_type: Acceptance
+layer: system/auth
+depends_on_layers:
+  - platform
+status: Approved
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-06-23
+---
 
-- **Task ID**: 2026-06-21-auth-service-split
-- **Target**: pantheon-base
-- **Layer**: system/auth
-- **Mode**: implement
-- **Model Tier**: deep
+# Task Packet: 2026-06-21-auth-service-split
 
-## Context
+## Goal
 
-`backend/modules/auth/auth_service.go` 当前 2186 行、101 个方法，包含 9 种职责：
-登录、密码、MFA、会话、节流、安全事件、登录日志、偏好、设置重载。
+Split the legacy monolithic `backend/modules/auth/auth_service.go` into focused internal auth subservices while keeping the `AuthService` public facade and auth HTTP contract stable.
 
-需要按功能域拆分为独立的 service 文件，AuthService 作为编排层保留最小门面。
+## Primary Layer
 
-## Required Reading
+system/auth
 
-1. `backend/modules/auth/auth_service.go` — 当前实现
-2. `backend/modules/auth/auth_session_service.go` — 已拆出的会话子服务
-3. `backend/modules/auth/auth_password_service.go` — 已拆出的密码子服务
-4. `backend/modules/auth/auth_dto.go` — 请求/响应 DTO
-5. `backend/modules/auth/auth_handler.go` — HTTP handler 层
-6. `backend/modules/auth/module.go` — 路由注册
-7. `designs/AUTH_MODULE_DESIGN.md` — Auth 模块设计文档
+## Dependency Layers
 
-## Target Structure
+- `platform`
 
-拆分后文件结构：
+## Harness Profile
 
-```
-backend/modules/auth/
-├── auth_service.go          # AuthService 编排层 (~200 lines)
-│   - NewAuthService()       构造函数，组装子服务
-│   - ReloadSettings()       设置重载
-│   - WatchSettings()        设置监听
-│   - Migrate()              数据库迁移
-│   - GetCurrentUserInfo()   当前用户信息
-│   - GetUserRoles()         用户角色
-│   - GetUserPerms()         用户权限
-│   - GetSecurityOverview()  安全概览
-│   - UpdateCurrentUserPreferences()  偏好更新
-│
-├── auth_login_service.go    # 登录域 (~250 lines)
-│   - Login / LoginWithSource
-│   - Authenticate
-│   - ensureSourceThrottleAllowed
-│   - loadLoginUserWithSource
-│   - ensureLoginUserAvailable
-│   - handlePasswordMismatch
-│   - 以及登录节流相关私有方法
-│
-├── auth_password_service.go # 密码域（已有，保持~140 lines）
-│
-├── auth_mfa_service.go      # MFA 域 (~250 lines)
-│   - CreateMFAChallenge
-│   - VerifyMFAChallenge
-│   - loadActiveMFAChallenge
-│   - loadMFAChallengeSecret
-│   - loadMFAChallengeUser
-│   - finalizeMFAChallenge
-│   - VerifyPasswordForOperation
-│   - upsertMFAFactor
-│
-├── auth_session_service.go  # 会话域（已有，保持~290 lines）
-│
-├── auth_security_service.go # 安全事件域 (~200 lines)
-│   - ListSecurityEvents
-│   - AcknowledgeSecurityEvent
-│   - ListLoginLogs / ListOwnLoginLogs
-│   - ExportLoginLogs
-│   - CleanupLoginLogs
-│   - BatchDeleteLoginLogs
-│   - 保留策略相关私有方法
-│
-├── auth_dto.go              # DTO（不变）
-├── auth_handler.go           # Handler（不变）
-├── auth_handler_test.go      # 测试（适配拆分）
-├── module.go                 # 路由（不变）
-│
-├── login_log_model.go        # 模型（不变）
-├── login_throttle_model.go
-├── mfa_crypto.go
-├── mfa_model.go
-├── security_event_model.go
-├── session_model.go
-├── totp.go
-├── user_agent.go
-│
-├── auth_service_test.go      # 测试按子服务拆分
-├── module_test.go
-├── preferences_contract_test.go
-├── smoke_test.go
-├── totp_test.go
-├── user_agent_test.go
-```
+- Template: `admin-platform`
+- Overlay: `pantheon-base`
+- Quality Profile: `auth-maintainability`
+- Portable Failure Class: `architecture-drift`
+- Owner Layer: `consumer-repository`
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - runtime-quality
+  - method-health
 
-## Design Constraints
+## Contract Anchors
 
-1. **向后兼容**：`AuthService` 保持所有公开方法签名不变，内部委托给子服务
-2. **子服务不导出**：子服务通过 `authLoginService` / `authMFAService` / `authSecurityService` 小写结构体访问，不暴露到模块外
-3. **依赖注入**：子服务通过 `NewAuthService` 时注入 `*gorm.DB`，不创建自己的全局变量
-4. **测试兼容**：现有测试文件中通过 `AuthService` 公开方法调用的逻辑保持不变
-5. **import 路径**：使用 `pantheon-platform/backend/modules/auth` 模块名
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+- `docs/designs/AUTH_MODULE_DESIGN.md`
 
-## Implementation Steps
+## Scope
 
-### Phase 1: 提取登录域
+### In
 
-1. 创建 `auth_login_service.go`
-2. 将以下方法从 `auth_service.go` 移动到 `auth_login_service.go`：
-   - `Login` / `LoginWithSource`
-   - `Authenticate`
-   - `ensureSourceThrottleAllowed`
-   - `loadLoginUserWithSource`
-   - `ensureLoginUserAvailable`
-   - `handlePasswordMismatch`
-3. 创建 `authLoginService` 小写结构体
-4. 在 `AuthService` 中嵌入 `*authLoginService`
-5. 在 `NewAuthService` 中初始化
-6. 运行 `go build ./backend/... && go test ./backend/modules/auth/...`
+- split login, MFA, security-event, and login-log responsibilities out of the legacy auth service into focused internal subservices
+- keep `AuthService` public methods and route wiring backward compatible while delegating to the new internal services
+- preserve existing auth DTO shapes, handler entry points, and focused auth tests while the service internals are reorganized
 
-### Phase 2: 提取 MFA 域
+### Out
 
-1. 创建 `auth_mfa_service.go`
-2. 移动 MFA 相关方法
-3. 验证
+- changing browser auth cookie or token semantics
+- introducing new auth features or policy branches beyond the service split
+- syncing downstream consumer repositories such as `pantheon-ops`
 
-### Phase 3: 提取安全事件域
+## Assumptions and Open Questions
 
-1. 创建 `auth_security_service.go`
-2. 移动安全事件、登录日志相关方法
-3. 验证
+- Confirmed Facts: `auth_service.go` was carrying multiple responsibility clusters, and session/password logic already provided the reference pattern for focused subservice extraction.
+- Working Assumptions: `AuthService` remains the module facade while the new internal services stay unexported.
+- Open Questions: `none`
 
-### Phase 4: 清理验证
+## Expected Files
 
-1. 确认 `auth_service.go` 缩减到 ~200-300 行
-2. 运行 `go build ./backend/cmd/server`
-3. 运行 `go test -race ./backend/modules/auth/...`
-4. 运行 `go vet ./backend/...`
+### Create
 
-## Verification
+- `backend/modules/auth/auth_login_service.go`
+- `backend/modules/auth/auth_mfa_service.go`
+- `backend/modules/auth/auth_security_service.go`
+- `docs/harness/tasks/2026-06-21-auth-service-split.task.md`
+- `.harness/evidence/2026-06-21-auth-service-split/summary.md`
+- `.harness/evidence/2026-06-21-auth-service-split/commands.json`
+- `.harness/evidence/2026-06-21-auth-service-split/review.md`
 
-```bash
-cd D:/workspace/go/pantheon-platform/pantheon-base
-go build ./backend/cmd/server          # 编译通过
-go test -race ./backend/modules/auth/...  # 所有测试通过
-go vet ./backend/...                   # 无新增 vet 警告
-```
+### Modify
+
+- `backend/modules/auth/auth_service.go`
+- `backend/modules/auth/auth_dto.go`
+- `backend/modules/auth/auth_handler.go`
+- `backend/modules/auth/auth_handler_test.go`
+- `backend/modules/auth/module.go`
+- `backend/modules/auth/auth_service_test.go`
+- `backend/modules/auth/module_test.go`
+- `backend/modules/auth/preferences_contract_test.go`
+- `backend/modules/auth/smoke_test.go`
+
+### Do Not Touch
+
+- `frontend/**`
+- `../pantheon-ops/**`
+- unrelated IAM, org, and config modules
+
+## Implementation Notes
+
+- The split is internal-only: `AuthService` remains the module facade and should delegate to unexported child services.
+- The smallest successful cut keeps constructor wiring, handler signatures, and tests stable while moving cohesive method clusters behind internal service structs.
+- Existing partially split services such as password and session remain the reference pattern for the new shards.
+
+## Minimum Viable Approach
+
+- Selected Rung: `small local code`
+- Why This Is Enough: `the repository already has the auth facade, DTOs, handlers, and partial service shards, so the remaining work is a focused internal split rather than a new abstraction or dependency`
+- Upgrade Trigger: `if the split still leaves auth orchestration as a large cross-domain hub, promote the next cut into package-level boundaries rather than adding more helpers to one file`
+
+## Success Criteria
+
+- Behaviour Outcome: `AuthService public methods and routes continue to work while login, MFA, and security flows are delegated through focused internal services`
+- Verification Signal: `go build ./backend/cmd/server`, `go test -race ./backend/modules/auth/...`, and `go vet ./backend/...` all pass without introducing new auth contract regressions
+- Regression Watch: `auth DTO shape, route registration, and existing auth tests stay backward compatible`
+
+## Context Strategy
+
+- Entry Sources: `AGENTS.md`, `DESIGN.md`, `docs/README.md`, current task packet, `docs/designs/AUTH_MODULE_DESIGN.md`
+- Retrieval Order: `entry -> summary -> raw`
+- Sensitive Context: `none`
+
+## Method Readiness
+
+- Consumer-Specific Controls: `auth module design`, `auth facade compatibility`, `focused auth build/test commands`
+- Required Sensors: `command`, `review`
+- Required Evidence: `command summary`, `review summary`
+- Ratchet Decision: `template-updated`
+- Deferred Code Issues: `none`
+
+## Delivery Governance
+
+- Design Gate: `short boundary note`
+- Development Gate: `expected files declared`
+- QA Acceptance Gate: `command`
+- GitHub Governance Gate: `repo-quality-gate`
+
+## Structural Scope
+
+- Affected Subgraph: `auth handlers -> AuthService facade -> login|mfa|security subservices -> persistence and audit side effects`
+- Boundary Crossings: `system/auth -> pkg/*`
+- Risk Nodes: `AuthService facade`, `login orchestration`, `MFA challenge flow`, `security event and login-log paths`
+- Graph Focus: `call-depth | hub-check`
+
+## Execution Roles
+
+- Implementer Posture: `implementer`
+- Reviewer Posture: `architecture | mechanical`
 
 ## Stop Points
 
-每个 Phase 完成后暂停，确认编译+测试通过再继续下一阶段。
+- stop before changing public auth API, cookie, or token semantics
+- stop before widening the refactor into unrelated IAM, org, or downstream repository synchronization
+
+## State Plan
+
+- Checkpoint Expectation: `none`
+- Resume Artifacts: `docs/harness/tasks/2026-06-21-auth-service-split.task.md`
+
+## Verification Plan
+
+- `go build ./backend/cmd/server`
+- `go test -race ./backend/modules/auth/...`
+- `go vet ./backend/...`
+
+## Linkage
+
+- Task ID: `2026-06-21-auth-service-split`
+- Task Manifest: `.harness/tasks/2026-06-21-auth-service-split/manifest.json`
+- OpenSpec Change: `none`
+- Superpowers Plan: `none`
+- Evidence Directory: `.harness/evidence/2026-06-21-auth-service-split/`
+- Review File: `none`
+
+## Evidence Required
+
+- targeted auth build, race-test, and vet command summaries
+- explicit note if the final split shape differs from the original root-file proposal
+- review summary tied back to the same task boundary
+
+## Human Gates
+
+- public auth API contract changes beyond the internal service split
+
+## Completion Checklist
+
+- [ ] Layer and boundary declared
+- [ ] Quality profile or explicit `none` declared
+- [ ] Ratchet decision declared for repeated failures
+- [ ] Delivery governance gates declared
+- [ ] Contract anchors read
+- [ ] Verification run or exception recorded
+- [ ] Evidence saved or summarized
+- [ ] Review completed
