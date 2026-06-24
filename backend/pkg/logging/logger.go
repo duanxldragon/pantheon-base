@@ -14,6 +14,7 @@ package logging
 import (
 	"os"
 	"strings"
+	"unicode"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -95,35 +96,48 @@ func Sync() {
 //	fields: 结构化字段，如 zap.String("key", "value")
 func Info(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Info(msg, fields...)
+		Logger.Info(sanitizeLogMessage(msg), fields...)
 	}
 }
 
 // Warn 记录 Warn 级别的警告日志
 func Warn(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Warn(msg, fields...)
+		Logger.Warn(sanitizeLogMessage(msg), fields...)
 	}
 }
 
 // Error 记录 Error 级别的错误日志
 func Error(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Error(msg, fields...)
+		Logger.Error(sanitizeLogMessage(msg), fields...)
 	}
 }
 
 // Debug 记录 Debug 级别的调试日志
 func Debug(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Debug(msg, fields...)
+		Logger.Debug(sanitizeLogMessage(msg), fields...)
 	}
 }
 
 // Fatal 记录 Fatal 级别日志并退出程序（exit code 1）
 func Fatal(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Fatal(msg, fields...)
+		Logger.Fatal(sanitizeLogMessage(msg), fields...)
 	}
 	os.Exit(1)
+}
+
+func sanitizeLogMessage(msg string) string {
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case '\n', '\r', '\u2028', '\u2029':
+			return ' '
+		}
+		if unicode.IsControl(r) && r != '\t' {
+			return -1
+		}
+		return r
+	}, msg)
 }

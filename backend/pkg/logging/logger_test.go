@@ -105,3 +105,11 @@ func TestLoggerWithNilLogger(t *testing.T) {
 		Sync()
 	})
 }
+
+func TestSanitizeLogMessage(t *testing.T) {
+	got := sanitizeLogMessage("login failed\r\nuser=admin\u0000next\u2028line\tkept")
+	want := "login failed  user=adminnext line\tkept"
+	if got != want {
+		t.Fatalf("sanitizeLogMessage() = %q, want %q", got, want)
+	}
+}
