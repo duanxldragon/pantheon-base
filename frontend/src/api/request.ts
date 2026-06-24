@@ -8,14 +8,18 @@ import {
   resolveTransportErrorKind,
   shouldSuppressAuthMessage,
   type RequestErrorKind,
-} from './request-error-utils';
+} from './requestErrorUtils';
 import { useAuthStore } from '../store/useAuthStore';
 import { clearShellSessionState, persistLoginNotice } from '../core/shellState';
 import { clearExplicitLanguagePreference } from '../core/settings/languagePreference';
 import { clearPantheonThemePreference } from '../core/theme/theme';
 import { showSecondaryVerify } from '../components/feedback/secondaryVerifyController';
 import { switchI18nLanguage } from '../i18n';
-import { clearClientAuthSession, persistCsrfToken, readStoredCsrfToken } from '../core/auth/clientSession';
+import {
+  clearClientAuthSession,
+  persistCsrfToken,
+  readStoredCsrfToken,
+} from '../core/auth/clientSession';
 import { COOKIE_TOKEN_PLACEHOLDER } from '../core/auth/sessionSnapshot';
 
 export interface RequestConfig extends AxiosRequestConfig {
@@ -115,10 +119,7 @@ const shouldRefresh = (config?: RequestConfig, code?: number) => {
   if (!config || config.skipAuthRefresh || config._retry || logoutTransition) {
     return false;
   }
-  if (
-    config.url?.includes('/auth/login') ||
-    config.url?.includes('/auth/refresh')
-  ) {
+  if (config.url?.includes('/auth/login') || config.url?.includes('/auth/refresh')) {
     return false;
   }
   return code === 401;

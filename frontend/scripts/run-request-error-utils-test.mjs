@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { prepareTranspiledWorkspace } from './transpile-typescript-files.mjs';
 
 const files = [
-  'src/api/request-error-utils.ts',
+  'src/api/requestErrorUtils.ts',
   'tests/api/request-error-utils.test.ts',
 ];
 

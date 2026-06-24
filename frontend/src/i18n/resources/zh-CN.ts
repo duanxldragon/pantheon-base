@@ -247,7 +247,7 @@ const zhCNFallback = {
   'auth.securityEvent.hero.title': '围绕风险事件确认、来源锁定与账号处置完成统一治理',
   'auth.securityEvent.hero.summaryTitle': '治理摘要',
   'auth.securityEvent.hero.desc':
-      '安全事件页保持 `system/auth` 语义：主任务区负责筛选、确认与事件排查，右侧只保留风险分布、确认进度与治理提示，不再把说明文案散落到表格区。',
+    '安全事件页保持 `system/auth` 语义：主任务区负责筛选、确认与事件排查，右侧只保留风险分布、确认进度与治理提示，不再把说明文案散落到表格区。',
   'auth.securityEvent.createdAt': '发生时间',
   'auth.securityEvent.eventType': '事件类型',
   'auth.securityEvent.severity': '风险等级',
@@ -270,7 +270,8 @@ const zhCNFallback = {
   'auth.securityEvent.status.acknowledged': '已确认',
   'auth.securityEvent.acknowledge': '确认事件',
   'auth.securityEvent.acknowledgePrompt': '开始填写确认说明',
-  'auth.securityEvent.acknowledgeDialogHint': '记录你的处置结论、影响范围和后续动作，形成可追踪的治理闭环。',
+  'auth.securityEvent.acknowledgeDialogHint':
+    '记录你的处置结论、影响范围和后续动作，形成可追踪的治理闭环。',
   'auth.securityEvent.acknowledgeNoteRequired': '请先填写安全事件确认说明',
   'auth.securityEvent.acknowledgeSuccess': '安全事件已确认',
   'auth.securityEvent.pendingHint': '待确认事件应先核实来源、账号状态与是否需要联动会话治理。',
@@ -870,7 +871,8 @@ const zhCNFallback = {
   'generator.datasource.deleteError': '数据源删除失败',
   'generator.datasource.deleteConfirm': '确认删除该数据源吗？',
   'generator.datasource.required': '请完整填写数据源名称、主机、端口、数据库名与账号信息。',
-  'generator.datasource.host_invalid': '请填写可访问的数据库主机名或 IP 地址，不能使用本地回环或非法字符。',
+  'generator.datasource.host_invalid':
+    '请填写可访问的数据库主机名或 IP 地址，不能使用本地回环或非法字符。',
   'generator.datasource.host_private_disabled':
     '当前环境未开放私网数据源接入，请改用可访问地址或联系管理员开启私网只读数据源能力。',
   'generator.datasource.password_required': '新增数据源时必须填写只读账号密码。',
@@ -1032,7 +1034,8 @@ const zhCNFallback = {
   'generator.wizard.result.relatedData': '关联数据',
   'generator.wizard.result.relatedDataBind': '新增关联',
   'generator.wizard.result.relatedDataLoadFailed': '关联数据加载失败',
-  'generator.wizard.result.relatedDataUnsupported': '当前关系类型需要专用运行时协议，生成模板暂不自动加载。',
+  'generator.wizard.result.relatedDataUnsupported':
+    '当前关系类型需要专用运行时协议，生成模板暂不自动加载。',
   'generator.wizard.result.relatedDataUnbind': '移除关联',
   'generator.wizard.result.openRelatedModule': '打开关联模块',
   'generator.wizard.result.childTableActions': '子表操作',
@@ -1040,9 +1043,11 @@ const zhCNFallback = {
   'generator.wizard.result.childTableEdit': '编辑子表行',
   'generator.wizard.result.childTableDialogCreate': '新增子表记录',
   'generator.wizard.result.childTableDialogEdit': '编辑子表记录',
-  'generator.wizard.result.childTableSchemaLoadFailed': '子表 schema 加载失败，当前无法执行新增/编辑。',
+  'generator.wizard.result.childTableSchemaLoadFailed':
+    '子表 schema 加载失败，当前无法执行新增/编辑。',
   'generator.wizard.result.childTableNoEditableFields': '子表未声明可编辑字段，当前无法提交。',
-  'generator.wizard.result.relatedModuleHint': '当前生成页仅输出主表/关系表协作骨架，真实跳转与联动需在接入后补线。',
+  'generator.wizard.result.relatedModuleHint':
+    '当前生成页仅输出主表/关系表协作骨架，真实跳转与联动需在接入后补线。',
   'generator.wizard.result.relatedModuleAction': '待接入',
   'generator.wizard.result.primaryTableContext': '主表上下文',
   'generator.wizard.result.scaffoldOnly': '当前为脚手架占位能力，不包含运行时关系编排。',
@@ -1174,7 +1179,8 @@ const zhCNFallback = {
   'module.generate.verify.contract_governance': '生成前治理契约已校验并写入摘要',
   'module.generate.verify.restart_required': '需要重启后端，加载新的 Go 模块与 generated registry',
   'module.generate.verify.frontend_bundle_ready': '前端构建产物已晚于生成源码，前端资源已完成刷新',
-  'module.generate.verify.frontend_bundle_pending': '前端构建产物缺失或仍旧过旧，尚未覆盖当前生成源码',
+  'module.generate.verify.frontend_bundle_pending':
+    '前端构建产物缺失或仍旧过旧，尚未覆盖当前生成源码',
   'module.generate.verify.frontend_build_required': '需要重新构建前端，让新页面组件进入路由树',
   'module.generate.verify.activation_ready': '激活信号已齐备，模块状态已切换为已接入',
   'module.generate.verify.registry_check_failed': '注册表校验未完全通过，请检查 generated 文件',
@@ -1449,8 +1455,7 @@ const zhCNFallback = {
   'system.audit.hero.exportHint': '统一审计导出仍遵循独立权限控制。',
   'system.audit.hero.summaryTitle': '审计摘要',
   'system.audit.hero.cleanupReady': '清理能力',
-  'system.audit.hero.cleanupHint':
-    '保留期清理和所选删除都要求独立权限与二次验证，不提供全量清空。',
+  'system.audit.hero.cleanupHint': '保留期清理和所选删除都要求独立权限与二次验证，不提供全量清空。',
   'system.audit.hero.selectedHint': '当前选择集会在二次验证后进入定向删除。',
   'system.audit.hero.sideTitle': '治理提示',
   'system.audit.hero.sideDesc':

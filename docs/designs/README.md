@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-20
+updated_at: 2026-06-23
 ---
 
 # 设计文档目录
@@ -26,6 +26,7 @@ English version: [README.en.md](./README.en.md)
 6. [权限模型设计](./PERMISSION_MODEL.md)
 7. [业务开发工作流与 AI 协作指南](./WORKFLOW.md)
 8. [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
+9. [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
 
 ## 平台与前端
 
@@ -83,6 +84,7 @@ English version: [README.en.md](./README.en.md)
 - [数据库设计规范与详细说明](./DATABASE.md)
 - [错误码与多语言设计](./ERROR_CODE_AND_I18N.md)
 - [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
+- [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
 - [P2 规模化能力路线图](./P2_SCALE_ROADMAP.md)
 - [GStack Windows 使用说明](./GSTACK_WINDOWS_GUIDE.md)
 

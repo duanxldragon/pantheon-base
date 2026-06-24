@@ -27,7 +27,7 @@ import {
   type FieldType,
   type ModuleField,
 } from '../schema';
-import { TYPE_MAPPING } from '../type-mapping';
+import { TYPE_MAPPING } from '../typeMapping';
 
 interface FieldEditorProps {
   fields: ModuleField[];

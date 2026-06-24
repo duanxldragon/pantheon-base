@@ -3,7 +3,7 @@ title: Harness Engineering Contract
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-08
+updated_at: 2026-06-23
 ---
 
 # Harness Engineering Contract
@@ -114,6 +114,15 @@ Agent 负责：
 
 同样，旧 workaround 不应永久累积。重大模型或工具升级后，应按 `HARNESS_RETIREMENT_REVIEW.md` 评估哪些约束可以降级、替换或删除。
 
+### 4.7 默认执行护栏
+
+除明确属于 trivial 的任务外，执行前默认应应用 `agentic-method-kit/EXECUTION_GUARDRAILS.zh.md`：
+
+- 先思考再编码：区分已确认事实、工作假设和未决问题。
+- 简单优先：在 task packet `## Minimum Viable Approach` 中写清所选最小方案及升级触发器。
+- 手术式改动：先声明 `Do Not Touch` 和 `Structural Scope`，再修改文件。
+- 目标驱动验证：先写 `Success Criteria` 和验证信号，再收集 evidence / review。
+
 ## 5. 标准工作流
 
 所有非 trivial 任务必须按以下流程推进：
@@ -158,6 +167,8 @@ Intake -> Context -> Plan -> Red -> Green -> Verify -> Evidence -> Review -> Han
 ### 5.3 Plan
 
 非 trivial 任务必须有最小计划。跨层任务、新功能、重构、drift 治理和高敏配置变更必须使用 task packet。
+
+如果当前仓库启用了 manifest-first 自动化，task packet 还必须配对 `.harness/tasks/<task-id>/manifest.json`，供 evidence 和 review 校验复用。
 
 `trivial` 与 `non-trivial` 的判定，按 `TRIVIALITY_CLASSIFICATION_POLICY.md` 执行。
 

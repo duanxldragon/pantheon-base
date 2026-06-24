@@ -21,7 +21,13 @@ When adopting the method in `pantheon-base`, use it with:
 ## What This Kit Defines
 
 - A tool-agnostic harness core model
+- A context-engineering protocol for layered context surfaces, progressive retrieval, resumable work, and sensitive-context boundaries
+- A method-first delivery policy that keeps process design ahead of production-code fixes
+- Execution guardrails for ambiguity handling, simplicity, surgical diffs, and verifiable completion
+- A minimal complexity ladder for avoiding unnecessary code, dependencies, and abstractions without weakening safety
 - A coverage model for guides, sensors, gates, and failure capture
+- A cross-agent ratchet model for promoting repeated failures without coupling the method to one product repository
+- A delivery governance loop from design through development, QA acceptance, GitHub PR governance, and ratchet closeout
 - A template taxonomy for different repository shapes
 - A tool adapter matrix so concrete tools remain usable without becoming prerequisites
 - A default playbook for change selection, task packets, implementation, evidence, and review
@@ -42,13 +48,19 @@ Specific tools can be recommended by a repository. They do not define the method
 
 1. Read [README.zh.md](./README.zh.md) if your team is Chinese-first
 2. Read [HARNESS_CORE_MODEL.zh.md](./HARNESS_CORE_MODEL.zh.md)
-3. Read [HARNESS_COVERAGE_MODEL.zh.md](./HARNESS_COVERAGE_MODEL.zh.md)
-4. Read [HARNESS_TEMPLATE_TAXONOMY.zh.md](./HARNESS_TEMPLATE_TAXONOMY.zh.md)
-5. Read [TOOL_ADAPTER_MATRIX.zh.md](./TOOL_ADAPTER_MATRIX.zh.md)
-6. Read [METHOD_PLAYBOOK.zh.md](./METHOD_PLAYBOOK.zh.md)
-7. Copy the templates you need
-8. Adjust [config/method.config.json](./config/method.config.json) if your repo uses different paths
-9. Run the portable checks under [scripts/](./scripts/)
+3. Read [EXECUTION_GUARDRAILS.md](./EXECUTION_GUARDRAILS.md)
+4. Read [CONTEXT_ENGINEERING_PROTOCOL.md](./CONTEXT_ENGINEERING_PROTOCOL.md)
+5. Read [METHOD_FIRST_DELIVERY_POLICY.md](./METHOD_FIRST_DELIVERY_POLICY.md)
+6. Read [MINIMAL_COMPLEXITY_LADDER.md](./MINIMAL_COMPLEXITY_LADDER.md)
+7. Read [HARNESS_COVERAGE_MODEL.zh.md](./HARNESS_COVERAGE_MODEL.zh.md)
+8. Read [CROSS_AGENT_RATCHET_MODEL.md](./CROSS_AGENT_RATCHET_MODEL.md)
+9. Read [DESIGN_DEV_QA_GITHUB_GOVERNANCE.md](./DESIGN_DEV_QA_GITHUB_GOVERNANCE.md)
+10. Read [HARNESS_TEMPLATE_TAXONOMY.zh.md](./HARNESS_TEMPLATE_TAXONOMY.zh.md)
+11. Read [TOOL_ADAPTER_MATRIX.zh.md](./TOOL_ADAPTER_MATRIX.zh.md)
+12. Read [METHOD_PLAYBOOK.zh.md](./METHOD_PLAYBOOK.zh.md)
+13. Copy the templates you need
+14. Adjust [config/method.config.json](./config/method.config.json) if your repo uses different paths
+15. Run the portable checks under [scripts/](./scripts/)
 
 ## Closed Loop
 

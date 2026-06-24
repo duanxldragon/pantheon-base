@@ -36,7 +36,8 @@ const enUSFallback = {
   'app.notice.securityDesc': 'Review device, login, and password security for the current account',
   'app.notice.sessionDesc': 'Manage active sessions and revoke device access',
   'app.notice.loginLogDesc': 'Inspect recent login activity and suspicious sign-in clues',
-  'app.notice.securityEventDesc': 'Handle sign-in risk, source lockouts, and account security events',
+  'app.notice.securityEventDesc':
+    'Handle sign-in risk, source lockouts, and account security events',
   'app.notice.operationLogDesc': 'Review unified audit records for critical write operations',
   'app.toggleLanguage': 'Switch display language',
   'app.toggleTheme': 'Switch theme style',
@@ -269,13 +270,13 @@ const enUSFallback = {
   'auth.loginLog.batchDeleteConfirm': 'Delete {{count}} selected login log record(s)?',
   'auth.loginLog.batchDeleteSuccess': '{{count}} selected login log record(s) deleted',
   'auth.securityEvent.subtitle':
-      'Review authentication risk events such as source locks and account locks.',
+    'Review authentication risk events such as source locks and account locks.',
   'auth.securityEvent.hero.eyebrow': 'System Domain / Auth Risk Events',
   'auth.securityEvent.hero.title':
-      'Govern risk-event acknowledgement, source lockouts, and account remediation in one place',
+    'Govern risk-event acknowledgement, source lockouts, and account remediation in one place',
   'auth.securityEvent.hero.summaryTitle': 'Governance Summary',
   'auth.securityEvent.hero.desc':
-      'The security events page stays within `system/auth`: the main task area handles filtering, acknowledgement, and investigation, while the side summary keeps risk distribution, acknowledgement progress, and governance guidance in one place.',
+    'The security events page stays within `system/auth`: the main task area handles filtering, acknowledgement, and investigation, while the side summary keeps risk distribution, acknowledgement progress, and governance guidance in one place.',
   'auth.securityEvent.createdAt': 'Occurred At',
   'auth.securityEvent.eventType': 'Event Type',
   'auth.securityEvent.severity': 'Severity',
@@ -469,10 +470,13 @@ const enUSFallback = {
   'dashboard.quickAction.loginLog': 'Review sign-in trails, failure reasons, and source behavior',
   'dashboard.quickAction.session': 'Govern active devices, live sessions, and forced sign-outs',
   'dashboard.quickAction.securityEvent': 'Handle pending risk events and account security alerts',
-  'dashboard.quickAction.permission': 'Calibrate button permissions, data scope, and access boundaries',
+  'dashboard.quickAction.permission':
+    'Calibrate button permissions, data scope, and access boundaries',
   'dashboard.quickAction.post': 'Maintain positions, responsibility mapping, and org attachments',
-  'dashboard.quickAction.moduleManager': 'Manage dynamic module registration, status, and repair actions',
-  'dashboard.quickAction.generator': 'Generate business module scaffolds, menus, and permission contracts',
+  'dashboard.quickAction.moduleManager':
+    'Manage dynamic module registration, status, and repair actions',
+  'dashboard.quickAction.generator':
+    'Generate business module scaffolds, menus, and permission contracts',
   'dashboard.quickAction.i18n': 'Govern translation entries, missing locales, and lifecycle status',
   'dashboard.quickAction.audit': 'Review critical write operations and governance trails',
   'dashboard.emptyQuickActions': 'No direct modules are available for the current account',
@@ -486,7 +490,8 @@ const enUSFallback = {
   'dashboard.domain.accessDesc': 'Users, roles, and navigation authorization baseline',
   'dashboard.domain.orgDesc': 'Scale of departments and positions',
   'dashboard.domain.configDesc': 'Dictionaries, settings, and platform parameters',
-  'dashboard.domain.securityDesc': 'Current posture of sign-in risk, security events, and session governance',
+  'dashboard.domain.securityDesc':
+    'Current posture of sign-in risk, security events, and session governance',
   'dashboard.domain.lowcodeDesc': 'Current scale of module registrations and translation assets',
   'dashboard.domain.governanceDesc': 'Pressure from critical operations and pending security work',
   'dashboard.usersAndRoles': '{{users}} users / {{roles}} roles',
@@ -539,11 +544,11 @@ const enUSFallback = {
   'i18n.syncFailed': 'Sync failed',
   'i18n.pageDescription': 'Manage dynamic translations and refresh cache after updates',
   'i18n.hero.eyebrow': 'System Domain / Config Governance I18n',
-  'i18n.hero.title':
-    'Govern translation records, unique keys, and i18n audit in one workflow',
+  'i18n.hero.title': 'Govern translation records, unique keys, and i18n audit in one workflow',
   'i18n.hero.desc':
     'The i18n page keeps a strict `system/config` boundary: the main task area owns entry queries and governance actions, while the side rail only summarizes coverage and repair guidance.',
-  'i18n.hero.recordsHint': 'Total translation rows in the current governance scope, stored per locale.',
+  'i18n.hero.recordsHint':
+    'Total translation rows in the current governance scope, stored per locale.',
   'i18n.hero.entriesHint': 'Deduplicated translation key count for the real entry scale.',
   'i18n.hero.records': 'Record Rows',
   'i18n.hero.entries': 'Unique Keys',
@@ -956,7 +961,8 @@ const enUSFallback = {
     'The datasource no longer exists. Refresh the list and try again.',
   'generator.datasource.disabled':
     'This datasource is disabled. Enable it before testing or importing schema data.',
-  'generator.datasource.driver_unsupported': 'Only MySQL readonly datasources are supported right now.',
+  'generator.datasource.driver_unsupported':
+    'Only MySQL readonly datasources are supported right now.',
   'generator.datasource.connect_failed':
     'The datasource connection failed. Check the host, port, database, and account permissions.',
   'generator.wizard.sourceTable': 'Source Table',
@@ -1721,8 +1727,7 @@ const enUSFallback = {
   'system.role.members.subtitle': 'Maintain member bindings directly on the role',
   'system.role.members.hint':
     'Users can be created without a role first, then assigned or removed here in a single governance entry.',
-  'system.role.members.candidatePlaceholder':
-    'Search and select users to add into this role',
+  'system.role.members.candidatePlaceholder': 'Search and select users to add into this role',
   'system.role.members.candidateEmpty': 'No available users to add',
   'system.role.members.searchPlaceholder': 'Search current members by username or nickname',
   'system.role.members.filterStatus': 'Filter member status',
@@ -2068,7 +2073,8 @@ const enUSFallback = {
   'system.permission.workbench.remediateSuccess': 'Applied {{count}} recommended API policies',
   'system.permission.workbench.remediateNoop':
     'No recommended API policies are missing for this role',
-  'system.permission.workbench.noRemediationActions': 'No remediation action is required right now.',
+  'system.permission.workbench.noRemediationActions':
+    'No remediation action is required right now.',
   'system.permission.workbench.remediationSection': 'Recent Remediation',
   'system.permission.workbench.remediationAction': 'Action',
   'system.permission.workbench.remediationState': 'State',
@@ -2748,7 +2754,8 @@ const enUSFallback = {
   'business.cmdb.collect.modalTitle': 'SSH Configuration Collection',
   'business.cmdb.collect.authMode.password': 'Password',
   'business.cmdb.collect.authMode.privateKey': 'Private Key',
-  'business.cmdb.collect.hint': 'Credentials are used only for this collection and will not be stored on the server.',
+  'business.cmdb.collect.hint':
+    'Credentials are used only for this collection and will not be stored on the server.',
   'business.cmdb.collect.start': 'Start Collection',
   'business.cmdb.component.name': 'Component Name',
   'business.cmdb.component.version': 'Version',

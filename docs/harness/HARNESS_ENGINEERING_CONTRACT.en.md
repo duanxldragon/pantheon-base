@@ -110,6 +110,15 @@ Repeated failures should not only patch code. They should ratchet into guides, t
 
 Likewise, old workarounds must not accumulate forever. After major model or tool upgrades, review which constraints can be downgraded, replaced, or removed according to `HARNESS_RETIREMENT_REVIEW.en.md`.
 
+### 4.7 Default Execution Guardrails
+
+Unless work is explicitly trivial, execution should apply `agentic-method-kit/EXECUTION_GUARDRAILS.md` by default:
+
+- think before coding: separate confirmed facts, working assumptions, and open questions
+- simplicity first: record the smallest viable approach and its upgrade trigger in task packet `## Minimum Viable Approach`
+- surgical changes: declare `Do Not Touch` and `Structural Scope` before editing files
+- goal-driven verification: define `Success Criteria` and the verification signal before collecting evidence and review
+
 ## 5. Standard Workflow
 
 All non-trivial tasks must follow this flow:
@@ -154,6 +163,8 @@ For `pantheon-ops`, the default reading order is:
 ### 5.3 Plan
 
 Non-trivial tasks must have a minimum plan. Cross-layer tasks, new features, refactors, drift governance, and sensitive configuration changes must use a task packet.
+
+When the repository enables manifest-first automation, the task packet must also be paired with `.harness/tasks/<task-id>/manifest.json` so evidence and review checks can share the same machine-readable linkage.
 
 Classification between `trivial` and `non-trivial` follows `TRIVIALITY_CLASSIFICATION_POLICY.en.md`.
 

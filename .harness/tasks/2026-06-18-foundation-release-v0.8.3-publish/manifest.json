@@ -9,7 +9,6 @@
     "system/org",
     "system/config"
   ],
-  "taskDoc": "docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md",
   "scope": {
     "in": [
       "publish the `base-v0.8.3` release metadata and release artifact set under `releases/base-v0.8.3/`",
@@ -46,11 +45,9 @@
       "releases/base-v0.8.3/verification-summary.json",
       "scripts/foundation-release/publish-foundation-release.mjs",
       "tests/scripts/foundation-release/publish-foundation-release.test.mjs",
-      "docs/harness/tasks/2026-06-18-foundation-release-v0.8.3-publish.task.md",
       ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/summary.md",
       ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/commands.json",
-      ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/review.md",
-      ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/pr-body.md"
+      ".harness/evidence/2026-06-18-foundation-release-v0.8.3-publish/review.md"
     ],
     "modify": [
       "README.md",

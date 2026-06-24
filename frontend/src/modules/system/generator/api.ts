@@ -57,10 +57,7 @@ export interface PreviewGeneratedFilesResp {
   files: GeneratedFile[];
 }
 
-export function generateAndRegisterModule(data: {
-  schema: ModuleSchema;
-  overwrite?: boolean;
-}) {
+export function generateAndRegisterModule(data: { schema: ModuleSchema; overwrite?: boolean }) {
   return apiRequest<GenerateAndRegisterResp>({
     url: '/system/dynamic-modules/generate',
     method: 'post',

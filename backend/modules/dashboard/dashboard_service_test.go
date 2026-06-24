@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"pantheon-platform/backend/internal/middleware"
-	auth "pantheon-platform/backend/modules/auth"
+	authlogin "pantheon-platform/backend/modules/auth/login"
+	authsecurity "pantheon-platform/backend/modules/auth/security"
+	authsession "pantheon-platform/backend/modules/auth/session"
 	dict "pantheon-platform/backend/modules/system/config/dict"
 	setting "pantheon-platform/backend/modules/system/config/setting"
 	dynamicmodule "pantheon-platform/backend/modules/system/dynamicmodule"
@@ -33,9 +35,9 @@ func setupDashboardTestDB(t *testing.T) *gorm.DB {
 		&dict.SystemDictType{},
 		&setting.SystemSetting{},
 		&menu.SystemMenu{},
-		&auth.SystemUserSession{},
-		&auth.SystemLogLogin{},
-		&auth.SystemAuthSecurityEvent{},
+		&authsession.SystemUserSession{},
+		&authlogin.SystemLogLogin{},
+		&authsecurity.SystemAuthSecurityEvent{},
 		&dynamicmodule.ModuleRegistration{},
 		&systemi18n.SystemI18n{},
 		&middleware.SystemLogOper{},
@@ -99,7 +101,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed module registration: %v", err)
 	}
-	if err := db.Create(&auth.SystemUserSession{
+	if err := db.Create(&authsession.SystemUserSession{
 		SessionID:        "session-1",
 		UserID:           1,
 		RefreshJTI:       "jti-1",
@@ -112,7 +114,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed session: %v", err)
 	}
-	if err := db.Create(&auth.SystemUserSession{
+	if err := db.Create(&authsession.SystemUserSession{
 		SessionID:        "session-expired",
 		UserID:           1,
 		RefreshJTI:       "jti-expired",
@@ -126,7 +128,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed expired session: %v", err)
 	}
-	if err := db.Create(&auth.SystemUserSession{
+	if err := db.Create(&authsession.SystemUserSession{
 		SessionID:        "session-idle",
 		UserID:           1,
 		RefreshJTI:       "jti-idle",
@@ -140,7 +142,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed idle session: %v", err)
 	}
-	if err := db.Create(&auth.SystemLogLogin{
+	if err := db.Create(&authlogin.SystemLogLogin{
 		Username:  "admin",
 		Ipaddr:    "127.0.0.1",
 		Browser:   "Chrome",
@@ -151,7 +153,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed success login: %v", err)
 	}
-	if err := db.Model(&auth.SystemLogLogin{}).Create(map[string]any{
+	if err := db.Model(&authlogin.SystemLogLogin{}).Create(map[string]any{
 		"username":   "disabled",
 		"ipaddr":     "127.0.0.2",
 		"browser":    "Chrome",
@@ -162,7 +164,7 @@ func TestDashboardService_GetSummary(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed failure login: %v", err)
 	}
-	if err := db.Create(&auth.SystemAuthSecurityEvent{
+	if err := db.Create(&authsecurity.SystemAuthSecurityEvent{
 		UserID:     1,
 		Username:   "admin",
 		EventType:  "password_wrong",

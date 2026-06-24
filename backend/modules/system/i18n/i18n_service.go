@@ -1,8 +1,8 @@
 package system
 
 import (
-	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"sync"
 
@@ -160,7 +160,7 @@ func (s *I18nService) Create(req *I18nCreateReq) (*I18nResp, error) {
 		row.Group = "messages"
 	}
 	if row.Module == "" || row.Key == "" || row.Locale == "" || row.Value == "" {
-		return nil, errors.New("i18n.create.invalid")
+		return nil, common.NewBadRequest("i18n.create.invalid")
 	}
 
 	var count int64
@@ -170,7 +170,7 @@ func (s *I18nService) Create(req *I18nCreateReq) (*I18nResp, error) {
 		return nil, err
 	}
 	if count > 0 {
-		return nil, errors.New("i18n.key.duplicate")
+		return nil, common.NewConflict("i18n.key.duplicate")
 	}
 
 	if err := s.db.Create(&row).Error; err != nil {
@@ -188,7 +188,7 @@ func (s *I18nService) Update(id uint64, req *I18nUpdateReq) error {
 	req.Value = strings.TrimSpace(req.Value)
 	req.Remark = strings.TrimSpace(req.Remark)
 	if req.Value == "" {
-		return errors.New("i18n.value.required")
+		return common.NewBadRequest("i18n.value.required")
 	}
 
 	var t SystemI18n

@@ -21,8 +21,7 @@ const jaJPOverrideFallback = {
   'auth.securityEvent.hero.desc':
     'セキュリティイベントページは `system/auth` に留まり、主作業領域で絞り込み、受付、調査を処理し、サイド概要でリスク分布、受付進捗、ガバナンス指針を一か所に集約します。',
   'auth.securityEvent.hero.summaryTitle': 'ガバナンス概要',
-  'auth.securityEvent.hero.title':
-    'リスクイベント受付、送信元ロック、アカウント是正を一元管理',
+  'auth.securityEvent.hero.title': 'リスクイベント受付、送信元ロック、アカウント是正を一元管理',
   'auth.securityEvent.highSeverityHint':
     '高リスクイベントは、まずログインログ、セッション一覧、操作監査と合わせて確認してください。',
   'auth.securityEvent.pendingHint':
@@ -35,8 +34,7 @@ const jaJPOverrideFallback = {
   'auth.session.revokeSelected': '選択したセッションを失効',
   'business.cmdb.collect.authMode.password': 'パスワード',
   'business.cmdb.collect.authMode.privateKey': '秘密鍵',
-  'business.cmdb.collect.hint':
-    '認証情報は今回の収集にのみ使用し、サーバーには保存されません。',
+  'business.cmdb.collect.hint': '認証情報は今回の収集にのみ使用し、サーバーには保存されません。',
   'business.cmdb.collect.modalTitle': 'SSH 設定収集',
   'business.cmdb.collect.start': '収集開始',
   'business.cmdb.component.name': 'コンポーネント名',
@@ -92,8 +90,7 @@ const jaJPOverrideFallback = {
   'business.cmdb.host.deleteConfirm': 'このホストを削除してよろしいですか？',
   'business.cmdb.host.diskGb': 'ディスク (GB)',
   'business.cmdb.host.editTitle': 'ホスト編集',
-  'business.cmdb.host.empty':
-    'ホストがありません。手動追加するか SSH 収集を利用してください。',
+  'business.cmdb.host.empty': 'ホストがありません。手動追加するか SSH 収集を利用してください。',
   'business.cmdb.host.hero.componentsHint':
     '現在のホストにインストール済みのコンポーネント数です。',
   'business.cmdb.host.hero.eyebrow': '運用 / ホスト台帳',
@@ -149,14 +146,11 @@ const jaJPOverrideFallback = {
   'dashboard.governanceSummary': '本日 {{operations}} 件の操作 / 未処理 {{pending}} 件',
   'dashboard.lowcodeSummary': '有効モジュール {{modules}} 件 / 翻訳 {{i18n}} 件',
   'dashboard.quickAction.audit': '重要な書き込み操作と監査証跡を確認',
-  'dashboard.quickAction.generator':
-    '業務モジュールの雛形、メニュー、権限契約を生成',
+  'dashboard.quickAction.generator': '業務モジュールの雛形、メニュー、権限契約を生成',
   'dashboard.quickAction.i18n': '翻訳項目、欠落言語、ライフサイクル状態を統制',
   'dashboard.quickAction.loginLog': 'サインイン履歴、失敗理由、送信元挙動を確認',
-  'dashboard.quickAction.moduleManager':
-    '動的モジュール登録、状態、修復アクションを管理',
-  'dashboard.quickAction.permission':
-    'ボタン権限、データ範囲、アクセス境界を調整',
+  'dashboard.quickAction.moduleManager': '動的モジュール登録、状態、修復アクションを管理',
+  'dashboard.quickAction.permission': 'ボタン権限、データ範囲、アクセス境界を調整',
   'dashboard.quickAction.post': '役職、責任マッピング、組織紐付けを維持',
   'dashboard.quickAction.securityEvent': '未処理リスクイベントとアカウント警告を処理',
   'dashboard.quickAction.session': 'アクティブ端末、オンラインセッション、強制失効を統制',
@@ -170,8 +164,7 @@ const jaJPOverrideFallback = {
   'system.permission.workbench.currentGapSection': '現在の不足概要',
   'system.permission.workbench.currentStatusSection': '現在のガバナンス状態',
   'system.permission.workbench.governanceStatus': 'ガバナンス状態',
-  'system.permission.workbench.noRemediationActions':
-    '現時点で必要な是正アクションはありません。',
+  'system.permission.workbench.noRemediationActions': '現時点で必要な是正アクションはありません。',
   'system.permission.workbench.pendingRoles': '対応待ちロール',
   'system.permission.workbench.positioningHint':
     'まず是正が必要なロールから着手し、その後ロール詳細、実行可能アクション、最新タイムラインへ掘り下げてください。全ロール表示への切替は、在庫全体を確認する必要がある場合に限ります。',

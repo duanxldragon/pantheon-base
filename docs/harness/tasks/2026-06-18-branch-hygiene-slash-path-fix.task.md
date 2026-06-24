@@ -36,13 +36,13 @@ platform
 
 ## Contract Anchors
 
-- `pantheon-base/AGENTS.md`
-- `pantheon-base/DESIGN.md`
-- `pantheon-base/docs/README.md`
-- `pantheon-base/docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
-- `pantheon-base/docs/harness/AI_QUALITY_GOVERNANCE.md`
-- `pantheon-base/docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
-- `pantheon-base/docs/harness/tasks/2026-06-18-branch-hygiene-fallback.task.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
+- `docs/harness/AI_QUALITY_GOVERNANCE.md`
+- `docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
+- `docs/harness/tasks/2026-06-18-branch-hygiene-fallback.task.md`
 
 ## Scope
 
@@ -152,8 +152,11 @@ platform
 
 ## Completion Checklist
 
-- [ ] hosted slash-path root cause recorded
-- [ ] regression coverage added
-- [ ] local branch-hygiene tests rerun
-- [ ] hosted residue cleanup rerun after merge
-- [ ] residual risk updated
+- [ ] Layer and boundary declared
+- [ ] Quality profile or explicit `none` declared
+- [ ] Ratchet decision declared for repeated failures
+- [ ] Delivery governance gates declared
+- [ ] Contract anchors read
+- [ ] Verification run or exception recorded
+- [ ] Evidence saved or summarized
+- [ ] Review completed

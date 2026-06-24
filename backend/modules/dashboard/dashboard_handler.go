@@ -22,7 +22,7 @@ func (h *DashboardHandler) GetSummary(c *gin.Context) {
 
 	summary, err := h.service.GetSummary()
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "platform.dashboard.summary.error")
+		common.FailWithError(c, common.CodeError, err, "dashboard.summary.error")
 		return
 	}
 	common.Success(c, summary)

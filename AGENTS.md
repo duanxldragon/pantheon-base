@@ -8,14 +8,15 @@ English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 
 - 任务先分层：`platform / system/auth / system/iam / system/org / system/config / business/*`；跨层先说边界再动手。
 - 个人维护阶段默认先选最轻可行档位：`L0` 直接改、`L1` 轻量闭环、`L2` 完整治理。`pantheon-base` 触碰共享合同、系统域、生成器、权限、审计、i18n 生命周期或继承边界时，直接升到 `L2`。
+- 实现前应用最小复杂度阶梯：先判断是否不需要做、能否复用现有 helper/component/script/contract、能否用标准库、平台原生能力或已安装依赖；只有这些都不满足时才写最小新增代码。不得用“简化”削弱鉴权、审计、i18n、可访问性、运行态证据或用户明确需求。
 - `platform` 只管聚合页、工作台、首页概览等跨域视图，不要塞回单域。
 - 认证、用户、角色、菜单、权限、组织、配置不能混成一个模块。
 - 共享底座保持垂直切片和模块隔离；`modules/business/*` 不可直接依赖 `modules/system/*` 的 Service / Repository。
 - 前端默认 Arco Design；所有展示文本走 i18n；菜单与权限解耦；页面要覆盖 loading / empty / error / forbidden / submitting。
 - 改动接口、路由、权限、i18n、菜单、数据库、导入导出、seed 或 smoke 范围时，同步更新测试、脚本、fixture、门禁或截图基线。
 - `L1/L2` 任务默认先声明实现者视角、评审视角、最小 evidence 和 human gate；`L2` 必须带 task packet 或父 task packet 引用。
-- 多 agent 工作默认由当前协调 agent 调度：Claude 负责规划和 review，Codex 负责探索、实现和修复；人只负责目标、范围、风险接受和关键 gate 决策，不需要手动在工具间搬运上下文。
-- **Claude 不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现统一通过 `codex exec "<task prompt>" -C pantheon-base -s read-write` 交给 Codex 执行。Claude 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
+- 多 agent 工作默认由当前协调 agent 调度，但方法按角色定义：Planner/Dispatcher 负责规划、上下文整理和 review 路由；Generator 负责探索、实现和修复；Reviewer/Evaluator 负责审查和证据判断；人只负责目标、范围、风险接受和关键 gate 决策，不需要手动在工具间搬运上下文。
+- **Planner/Dispatcher 角色默认不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现交给 Generator adapter 执行。当前常用 adapter 可以是 `codex exec "<task prompt>" -C pantheon-base -s read-write`，但具体工具不改变角色边界。Planner/Dispatcher 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
 - 涉及 PR 收口、GitHub comments 收敛或 GitHub Actions 红灯时，优先看 `.agents/skills/` 下的 `repo-verify`、`repo-pr-gate`、`gh-address-comments`、`repo-ci-triage`、`gh-fix-ci`。
 - 触碰 UI 时先用 `impeccable`，并提供渲染证据或说明未产出证据的原因。
 - 登录、权限、菜单路由、导入导出、lowcode、动态模块、异步链路和外部集成等 runtime-sensitive 改动，除测试外还要给 runtime evidence 或显式 runtime gap。

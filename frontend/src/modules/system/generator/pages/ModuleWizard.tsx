@@ -963,11 +963,7 @@ const ModuleWizard: React.FC = () => {
       return () => globalThis.clearTimeout(timer);
     }
     return undefined;
-  }, [
-    previewTranslationRows.length,
-    translationPreviewPage,
-    translationPreviewPageSize,
-  ]);
+  }, [previewTranslationRows.length, translationPreviewPage, translationPreviewPageSize]);
 
   const renderMenuPreview = (nodes: GeneratorMenuPreviewNode[]) => (
     <div className="generator-wizard__menu-tree">
@@ -1266,8 +1262,10 @@ const ModuleWizard: React.FC = () => {
                       loading={tableLoading}
                       placeholder={t('generator.wizard.sourceTable.placeholder')}
                       filterOption={(inputValue, option) =>
-                        String((option as React.ReactElement<{ value?: string | number }> | null)?.props
-                          ?.value || '')
+                        String(
+                          (option as React.ReactElement<{ value?: string | number }> | null)?.props
+                            ?.value || '',
+                        )
                           .toLowerCase()
                           .includes(inputValue.toLowerCase())
                       }

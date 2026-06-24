@@ -2,7 +2,10 @@ package system
 
 import (
 	"pantheon-platform/backend/internal/middleware"
+	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/backend/pkg/database"
 
+	authsession "pantheon-platform/backend/modules/auth/session"
 	audit "pantheon-platform/backend/modules/system/audit"
 	dict "pantheon-platform/backend/modules/system/config/dict"
 	setting "pantheon-platform/backend/modules/system/config/setting"
@@ -15,7 +18,6 @@ import (
 	user "pantheon-platform/backend/modules/system/iam/user"
 	dept "pantheon-platform/backend/modules/system/org/dept"
 	post "pantheon-platform/backend/modules/system/org/post"
-	"pantheon-platform/backend/pkg/contracts"
 	uploadpkg "pantheon-platform/backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +32,9 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 	}
 
 	// 用户模块注入
-	userSvc := user.NewUserService(db)
+	userSvc := user.NewUserService(db, user.WithSessionLifecycle(func(db *gorm.DB) user.SessionLifecycle {
+		return authsession.NewLifecycleService(db)
+	}))
 	userHandler := user.NewUserHandler(userSvc)
 
 	// 菜单模块注入
@@ -79,7 +83,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			ModuleName:  "refresh-sync",
 			MigrateFunc: func(_ *gorm.DB) error { return refreshSyncSvc.Migrate() },
 			Register: func(r *gin.RouterGroup) {
-				systemAuth := r.Group("/system").Use(middleware.JWTAuthMiddleware())
+				systemAuth := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB))
 				{
 					systemAuth.GET("/refresh/state", refreshSyncHandler.GetState)
 				}
@@ -90,8 +94,8 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			MigrateFunc:   func(_ *gorm.DB) error { return userSvc.Migrate() },
 			BootstrapFunc: func(_ *gorm.DB) error { return userSvc.Bootstrap() },
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
-				systemDataScoped := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(middleware.DataScopeMiddleware(db)).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemDataScoped := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(middleware.DataScopeMiddleware(db)).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/profile", userHandler.GetProfile)
 					systemProtected.PUT("/profile", userHandler.UpdateProfile)
@@ -116,7 +120,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			MigrateFunc:   func(_ *gorm.DB) error { return menuSvc.Migrate() },
 			SeedMenusFunc: seedMenuModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/menu/tree", menuHandler.GetMenuTree)
 					systemProtected.POST("/menu", menuHandler.CreateMenu)
@@ -130,7 +134,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			MigrateFunc:   func(_ *gorm.DB) error { return roleSvc.Migrate() },
 			BootstrapFunc: func(_ *gorm.DB) error { return roleSvc.Bootstrap() },
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/role/list", roleHandler.GetRoleList)
 					systemProtected.GET("/role/:id/users", roleHandler.GetRoleMembers)
@@ -152,7 +156,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			BootstrapFunc: func(_ *gorm.DB) error { return deptSvc.Bootstrap() },
 			SeedMenusFunc: seedDeptModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/dept/overview", deptHandler.GetDeptOverview)
 					systemProtected.GET("/dept/governance/tasks", deptHandler.GetGovernanceTasks)
@@ -177,7 +181,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			BootstrapFunc: func(_ *gorm.DB) error { return postSvc.Bootstrap() },
 			SeedMenusFunc: seedPostModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/post/list", postHandler.GetPostList)
 					systemProtected.GET("/post/import-template", postHandler.DownloadImportTemplate)
@@ -202,7 +206,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			BootstrapFunc: func(_ *gorm.DB) error { return permissionSvc.Bootstrap() },
 			SeedMenusFunc: seedPermissionModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(refreshSyncSvc))
 				{
 					systemProtected.GET("/permission/workbench", permissionHandler.GetWorkbench)
 					systemProtected.GET("/permission/workbench/remediation", permissionHandler.ListWorkbenchRemediationEvents)
@@ -232,7 +236,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemPublic.GET("/dict/options", dictHandler.GetDictOptions)
 				}
 
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/dict/type/list", dictHandler.GetDictTypeList)
 					systemProtected.GET("/dict/type/import-template", dictHandler.DownloadDictTypeImportTemplate)
@@ -270,12 +274,12 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemPublic.GET("/upload/files/*filepath", settingHandler.ServeUploadedFile)
 				}
 
-				systemAuth := r.Group("/system").Use(middleware.JWTAuthMiddleware())
+				systemAuth := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB))
 				{
 					systemAuth.POST("/upload", RefreshSyncMiddleware(refreshSyncSvc), settingHandler.UploadFile)
 				}
 
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/setting/overview", settingHandler.GetSettingOverview)
 					systemProtected.GET("/setting/list", settingHandler.GetSettingList)
@@ -299,7 +303,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 					sysPublic.GET("/i18n/pack", i18nHandler.GetLangPack)
 				}
 
-				sysProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				sysProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
 				{
 					sysProtected.GET("/i18n/overview", i18nHandler.GetOverview)
 					sysProtected.GET("/i18n/audit", i18nHandler.GetAudit)
@@ -332,7 +336,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 			BootstrapFunc: func(_ *gorm.DB) error { return auditSvc.Bootstrap() },
 			SeedMenusFunc: seedAuditModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group("/system").Use(middleware.JWTAuthMiddleware()).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/operation-log/list", auditHandler.GetOperationLogList)
 					systemProtected.GET("/operation-log/:id", auditHandler.GetOperationLog)
