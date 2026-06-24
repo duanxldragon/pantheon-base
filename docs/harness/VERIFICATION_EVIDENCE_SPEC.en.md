@@ -47,6 +47,13 @@ Whether `.harness/evidence/` is committed can be chosen by project policy. CI ar
 - Structural checks: `cycle` / `hub` / `call-depth` / `sensitive-flow`
 - Findings: none | `<finding>`
 
+## Session Economics
+
+- Response mode: `terse | standard | detailed | none`
+- Cost sensitivity: `low | medium | high | none`
+- Tokens / cost / retries / delegations: `none | concise summary`
+- Notes: `none | provenance or caveat`
+
 ## Browser Evidence
 
 - none
@@ -87,6 +94,18 @@ complete | blocked | partial
     "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
     "findings": [],
     "notes": ""
+  },
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "medium",
+    "inputTokens": 12000,
+    "outputTokens": 3400,
+    "cacheReadTokens": 9000,
+    "cacheWriteTokens": 800,
+    "estimatedCostUsd": 1.42,
+    "retryCount": 1,
+    "delegationCount": 0,
+    "notes": "derived from tool-native session log"
   },
   "browserEvidence": [],
   "runtimeSensitive": true,
@@ -149,6 +168,33 @@ Where:
 - `runtimeLogs` / `runtimeMetrics` / `runtimeTraces` / `runtimePerformance`: runtime signals
 - `runtimeGap`: an explicit explanation when signals cannot be collected in the current environment
 
+For long-running, delegated, or cost-sensitive work, `commands.json` should also prefer recording:
+
+```json
+{
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "high",
+    "inputTokens": 12000,
+    "outputTokens": 3400,
+    "cacheReadTokens": 9000,
+    "cacheWriteTokens": 800,
+    "estimatedCostUsd": 1.42,
+    "retryCount": 1,
+    "delegationCount": 2,
+    "notes": "derived from tool-native session log"
+  }
+}
+```
+
+Where:
+
+- `responseMode`: the default narration budget for the session
+- `costSensitivity`: whether token/cost should be treated as an explicit throughput constraint
+- `inputTokens` / `outputTokens` / `cacheReadTokens` / `cacheWriteTokens` / `estimatedCostUsd`: session-economics signals to record when available
+- `retryCount` / `delegationCount`: lightweight indicators that retries or subagent usage may be driving cost
+- `notes`: provenance, estimation method, or an explicit caveat
+
 ## 4.2 Artifact Linkage
 
 `commands.json` should record artifact linkage explicitly:
@@ -207,3 +253,7 @@ If verification was not run, the reason must be recorded:
 “Not enough time” or “should be fine” are not valid verification exemptions.
 
 For runtime-sensitive work, “tests passed” is also insufficient if there is neither a runtime signal nor an explicit runtime gap.
+
+For long-running, delegated, or cost-sensitive work, “done” is also insufficient if there is neither `sessionEconomics` nor an explicit note that the current tool cannot expose those signals.
+
+This sync is docs-only. `pantheon-base` has not yet upgraded its local evidence checker for these new fields, so `sessionEconomics` is a method recommendation today rather than a mechanical hard requirement.

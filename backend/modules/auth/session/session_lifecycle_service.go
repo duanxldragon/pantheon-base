@@ -26,7 +26,7 @@ func (s *LifecycleService) RevokeUserSessions(userID uint64, now time.Time) (int
 
 	result := s.db.Model(&SystemUserSession{}).
 		Where("user_id = ? AND revoked_at IS NULL", userID).
-		Update("revoked_at", now)
+		UpdateColumn("revoked_at", now)
 	return result.RowsAffected, result.Error
 }
 

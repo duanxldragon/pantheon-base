@@ -3,7 +3,7 @@ title: Verification Evidence Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-23
+updated_at: 2026-06-24
 ---
 
 # Verification Evidence Spec
@@ -51,6 +51,13 @@ English version: [VERIFICATION_EVIDENCE_SPEC.en.md](./VERIFICATION_EVIDENCE_SPEC
 - Structural checks: `cycle` / `hub` / `call-depth` / `sensitive-flow`
 - Findings: none | `<finding>`
 
+## Session Economics
+
+- Response mode: `terse | standard | detailed | none`
+- Cost sensitivity: `low | medium | high | none`
+- Tokens / cost / retries / delegations: `none | concise summary`
+- Notes: `none | provenance or caveat`
+
 ## Browser Evidence
 
 - none
@@ -91,6 +98,18 @@ complete | blocked | partial
     "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
     "findings": [],
     "notes": ""
+  },
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "medium",
+    "inputTokens": 12000,
+    "outputTokens": 3400,
+    "cacheReadTokens": 9000,
+    "cacheWriteTokens": 800,
+    "estimatedCostUsd": 1.42,
+    "retryCount": 1,
+    "delegationCount": 0,
+    "notes": "derived from tool-native session log"
   },
   "browserEvidence": [],
   "runtimeSensitive": true,
@@ -153,6 +172,33 @@ complete | blocked | partial
 - `runtimeLogs` / `runtimeMetrics` / `runtimeTraces` / `runtimePerformance`：运行态信号
 - `runtimeGap`：当前环境拿不到信号时的显式说明
 
+对于长会话、存在 delegation，或对成本敏感的任务，`commands.json` 还推荐补充：
+
+```json
+{
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "high",
+    "inputTokens": 12000,
+    "outputTokens": 3400,
+    "cacheReadTokens": 9000,
+    "cacheWriteTokens": 800,
+    "estimatedCostUsd": 1.42,
+    "retryCount": 1,
+    "delegationCount": 2,
+    "notes": "derived from tool-native session log"
+  }
+}
+```
+
+其中：
+
+- `responseMode`：本轮默认叙述预算
+- `costSensitivity`：是否显式把 token / cost 视为吞吐约束
+- `inputTokens` / `outputTokens` / `cacheReadTokens` / `cacheWriteTokens` / `estimatedCostUsd`：可拿到就记录的会话经济性信号
+- `retryCount` / `delegationCount`：用于暴露重试和分派是否在吞噬成本
+- `notes`：注明数据来源、估算方式或缺口
+
 ## 4.2 Artifact Linkage
 
 `commands.json` 应显式记录 artifact linkage：
@@ -211,3 +257,7 @@ For UI-affecting tasks, evidence must include:
 不能用“时间不够”“应该没问题”作为验证豁免。
 
 对于 runtime-sensitive 任务，也不能只写“测试通过”，却既没有 runtime signal，也没有 runtime gap。
+
+对于长会话、存在 delegation，或成本敏感任务，也不应只写“做完了”，却既没有 `sessionEconomics`，也没有显式说明当前工具拿不到这些信号。
+
+本轮只同步文档，不改 `pantheon-base` 的 evidence checker。因此 `sessionEconomics` 目前是方法推荐项，而不是本仓库的机械必填项；需要强制时，再同步 `scripts/harness/check-evidence.mjs`。

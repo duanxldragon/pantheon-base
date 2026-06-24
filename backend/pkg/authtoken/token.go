@@ -94,11 +94,17 @@ func randHex(n int) string {
 }
 
 func StoreSession(ctx context.Context, rdb *redis.Client, tok string, d *SessionData, ttl time.Duration) error {
+	if rdb == nil {
+		return ErrStoreNotInitialized
+	}
 	b, _ := json.Marshal(d)
 	return rdb.Set(ctx, SessionKey(tok), b, ttl).Err()
 }
 
 func ValidateSession(ctx context.Context, rdb *redis.Client, tok string) (*SessionData, error) {
+	if rdb == nil {
+		return nil, ErrStoreNotInitialized
+	}
 	b, err := rdb.Get(ctx, SessionKey(tok)).Bytes()
 	if err == redis.Nil {
 		return nil, ErrNotFound
@@ -114,10 +120,16 @@ func ValidateSession(ctx context.Context, rdb *redis.Client, tok string) (*Sessi
 }
 
 func DeleteSession(ctx context.Context, rdb *redis.Client, tok string) error {
+	if rdb == nil {
+		return nil
+	}
 	return rdb.Del(ctx, SessionKey(tok)).Err()
 }
 
 func RefreshSessionActivity(ctx context.Context, rdb *redis.Client, tok string, d *SessionData) error {
+	if rdb == nil {
+		return ErrStoreNotInitialized
+	}
 	b, _ := json.Marshal(d)
 	ttl, err := rdb.TTL(ctx, SessionKey(tok)).Result()
 	if err != nil || ttl <= 0 {
@@ -127,11 +139,17 @@ func RefreshSessionActivity(ctx context.Context, rdb *redis.Client, tok string, 
 }
 
 func StoreRefresh(ctx context.Context, rdb *redis.Client, tok string, uid uint64, sid string, ttl time.Duration) error {
+	if rdb == nil {
+		return ErrStoreNotInitialized
+	}
 	b, _ := json.Marshal(refreshEntry{UserID: uid, SessionID: sid})
 	return rdb.Set(ctx, RefreshKey(tok), b, ttl).Err()
 }
 
 func ValidateRefresh(ctx context.Context, rdb *redis.Client, tok string) (uint64, string, error) {
+	if rdb == nil {
+		return 0, "", ErrStoreNotInitialized
+	}
 	b, err := rdb.Get(ctx, RefreshKey(tok)).Bytes()
 	if err == redis.Nil {
 		return 0, "", ErrNotFound
@@ -147,6 +165,9 @@ func ValidateRefresh(ctx context.Context, rdb *redis.Client, tok string) (uint64
 }
 
 func DeleteRefresh(ctx context.Context, rdb *redis.Client, tok string) error {
+	if rdb == nil {
+		return nil
+	}
 	return rdb.Del(ctx, RefreshKey(tok)).Err()
 }
 
@@ -162,11 +183,17 @@ func DeleteSessionPair(ctx context.Context, rdb *redis.Client, accessToken, refr
 }
 
 func StoreOperation(ctx context.Context, rdb *redis.Client, tok string, data *OperationData, ttl time.Duration) error {
+	if rdb == nil {
+		return ErrStoreNotInitialized
+	}
 	b, _ := json.Marshal(data)
 	return rdb.Set(ctx, OperationKey(tok), b, ttl).Err()
 }
 
 func ValidateOperation(ctx context.Context, rdb *redis.Client, tok string) (*OperationData, error) {
+	if rdb == nil {
+		return nil, ErrStoreNotInitialized
+	}
 	b, err := rdb.Get(ctx, OperationKey(tok)).Bytes()
 	if err == redis.Nil {
 		return nil, ErrOperationTokenAbsent
@@ -182,6 +209,9 @@ func ValidateOperation(ctx context.Context, rdb *redis.Client, tok string) (*Ope
 }
 
 func DeleteOperation(ctx context.Context, rdb *redis.Client, tok string) error {
+	if rdb == nil {
+		return nil
+	}
 	return rdb.Del(ctx, OperationKey(tok)).Err()
 }
 

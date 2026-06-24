@@ -49,6 +49,7 @@ Before implementation, run through `agentic-method-kit/EXECUTION_GUARDRAILS.md` 
 - separate confirmed facts, working assumptions, and open questions instead of guessing through permission, audit, or boundary ambiguity
 - walk `MINIMAL_COMPLEXITY_LADDER.md` and keep the approach at the smallest load-bearing rung
 - use `agentic-method-kit/CONTEXT_ENGINEERING_PROTOCOL.md` to decide entry sources, retrieval order, and sensitive-context boundaries before implementation
+- for long-running, cross-session, delegated, or cost-sensitive work, also declare `Response Budget`, `Retrieval Helpers`, `Promotion Target`, and `Economics Watch`
 - declare `Do Not Touch` and `Structural Scope` before making surgical edits
 - define `Success Criteria`, `Verification Plan`, and evidence linkage before declaring the task done
 

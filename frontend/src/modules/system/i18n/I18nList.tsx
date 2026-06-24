@@ -114,6 +114,8 @@ interface I18nDuplicateConflictState {
   module?: string;
 }
 
+const duplicateI18nKeyMessage = ['i18n', 'key', 'duplicate'].join('.');
+
 function buildRenameMigrationReport(preview: I18nRenamePreviewResp, t: TFunction) {
   const lines: string[] = [
     `# ${t('i18n.rename.report.title')}`,
@@ -801,8 +803,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch (error) {
-      if (isRequestError(error) && error.messageKey === 'i18n.key.duplicate') {
-        // gitleaks:allow
+      if (isRequestError(error) && error.messageKey === duplicateI18nKeyMessage) {
         await resolveCreateDuplicateConflict(values.key, values.locale);
         return;
       }

@@ -61,6 +61,9 @@ func resolveErrorMessageKey(err error, fallback string) string {
 		return "request.failed"
 	}
 	message := strings.TrimSpace(err.Error())
+	if idx := strings.LastIndex(message, ": "); idx != -1 {
+		message = message[idx+2:]
+	}
 	if isI18nMessageKey(message) {
 		return message
 	}

@@ -3,7 +3,7 @@ title: Task Packet Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-23
+updated_at: 2026-06-24
 ---
 
 # Task Packet Spec
@@ -116,11 +116,15 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - Behaviour Outcome: `<observable result>`
 - Verification Signal: `<command, test, or evidence that proves the result>`
 - Regression Watch: `<behavior that must remain unchanged>`
+- Economics Watch: `none | token/cost/cache/retry/delegation signal that should stay within reason`
 
 ## Context Strategy
 
 - Entry Sources: `AGENTS.md`, `CLAUDE.md`, current task packet, latest review summary | none
 - Retrieval Order: `entry -> summary -> raw`
+- Retrieval Helpers: `none | codegraph | graph report | wiki hot cache`
+- Promotion Target: `none | repo wiki | decision log | guide update`
+- Response Budget: `terse | standard | detailed`
 - Sensitive Context: `none | redacted or local-only handling rule`
 
 ## Execution Roles
@@ -167,6 +171,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - screenshots if UI changed
 - smoke JSON if browser flow changed
 - runtime logs / metrics / traces / performance signal, or explicit runtime gap if the task is runtime-sensitive
+- session economics snapshot or explicit gap if the task is long-running, delegated, or cost-sensitive
 - review summary
 
 ## Human Gates
@@ -198,9 +203,16 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 
 - 这次任务先读哪些入口源
 - 上下文检索是否遵循 `entry -> summary -> raw`
+- 优先使用哪些结构化 retrieval helper，例如 codegraph、graph report 或 wiki hot cache
+- 重复出现的上下文应提升到哪个 repo-owned memory surface
+- 本轮执行默认保持多简洁的响应预算
 - 哪些信息必须脱敏、只本地保留，或不得写入共享 artifact
 
 它的目的不是增加文书，而是把上下文加载顺序和隐私边界写清楚，避免下一次 handoff 或 resume 重新大范围回放。
+
+`Success Criteria` 里的 `Economics Watch` 是可选信号，用于长会话、带 delegation 或成本敏感任务。目标不是让所有任务都围绕 token 优化，而是在这类任务里显式观察 context replay、重试、cache 和费用是否开始反噬吞吐。
+
+本轮只同步文档，不改 `pantheon-base` 的 checker / gate 代码。因此这些新增项当前属于方法层推荐，不是本仓库的机械硬门禁；后续需要强制时，再把 `scripts/harness/*` 同步升级。
 
 `Structural Scope` 对 trivial 任务可写 `none`；对 `non-trivial`、跨层、runtime-sensitive、权限/菜单/i18n/审计/生成器/动态模块相关任务，默认应补最小受影响子图说明。它的目的不是要求维护全仓架构图，而是让实现者和 reviewer 审查同一个结构范围。
 

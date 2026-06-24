@@ -168,7 +168,7 @@ func (s *PostService) DeletePost(postID uint64) error {
 	}
 
 	if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
-		if err.Error() == "post.status.error.has_users" {
+		if common.ErrMessage(err) == "post.status.error.has_users" {
 			return common.NewInternal("post.delete.error.has_users")
 		}
 		return err

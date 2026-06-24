@@ -22,6 +22,7 @@ import (
 	"pantheon-platform/backend/pkg/testmysql"
 	"pantheon-platform/backend/pkg/testredis"
 
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -62,9 +63,21 @@ func boolPtr(value bool) *bool {
 	return &value
 }
 
+func setupTestRedis(t *testing.T) *redis.Client {
+	t.Helper()
+	rdb := testredis.Open(t)
+	previousRDB := database.RDB
+	database.RDB = rdb
+	t.Cleanup(func() {
+		database.RDB = previousRDB
+	})
+	return rdb
+}
+
 func TestRuntime_MFAChallengeSetupAndVerify(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
+	setupTestRedis(t)
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
 	testUser := user.SystemUser{
@@ -245,12 +258,7 @@ func TestRuntime_AuthenticateTrimsUsername(t *testing.T) {
 func TestRuntime_VerifyPasswordForOperationBindsSession(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
-	rdb := testredis.Open(t)
-	previousRDB := database.RDB
-	database.RDB = rdb
-	t.Cleanup(func() {
-		database.RDB = previousRDB
-	})
+	rdb := setupTestRedis(t)
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
 	testUser := user.SystemUser{

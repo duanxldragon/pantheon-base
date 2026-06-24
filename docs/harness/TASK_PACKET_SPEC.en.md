@@ -112,11 +112,15 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - Behaviour Outcome: `<observable result>`
 - Verification Signal: `<command, test, or evidence that proves the result>`
 - Regression Watch: `<behavior that must remain unchanged>`
+- Economics Watch: `none | token/cost/cache/retry/delegation signal that should stay within reason`
 
 ## Context Strategy
 
 - Entry Sources: `AGENTS.md`, `CLAUDE.md`, current task packet, latest review summary | none
 - Retrieval Order: `entry -> summary -> raw`
+- Retrieval Helpers: `none | codegraph | graph report | wiki hot cache`
+- Promotion Target: `none | repo wiki | decision log | guide update`
+- Response Budget: `terse | standard | detailed`
 - Sensitive Context: `none | redacted or local-only handling rule`
 
 ## Execution Roles
@@ -163,6 +167,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - screenshots if UI changed
 - smoke JSON if browser flow changed
 - runtime logs / metrics / traces / performance signal, or an explicit runtime gap if the task is runtime-sensitive
+- session economics snapshot or an explicit gap if the task is long-running, delegated, or cost-sensitive
 - review summary
 
 ## Human Gates
@@ -194,9 +199,16 @@ For long-running, high-context, cross-session, or sensitive work, `## Context St
 
 - which entry sources should be read first
 - whether retrieval follows `entry -> summary -> raw`
+- which structured retrieval helpers exist, such as codegraph, a graph report, or a wiki hot cache
+- where repeated context should be promoted inside repo-owned memory
+- how terse or detailed the execution loop should stay by default
 - which inputs must be redacted, kept local-only, or excluded from shared durable artifacts
 
 The goal is not extra paperwork. The goal is to make context-loading order and privacy boundaries explicit before the next handoff or resume.
+
+`Economics Watch` in `Success Criteria` is an optional signal for long-running, delegated, or cost-sensitive work. The point is not to optimize every task around tokens. The point is to make retry churn, context replay, cache behavior, and spend visible when they materially affect throughput.
+
+This sync is docs-only. `pantheon-base` has not yet upgraded its local checker or gate code for these new fields, so they are method-level recommendations today rather than mechanical hard requirements.
 
 `Structural Scope` may be `none` for trivial work. For `non-trivial`, cross-layer, runtime-sensitive, permission/menu/i18n/audit/generator/dynamic-module tasks, it should usually capture the smallest affected subgraph so implementers and reviewers inspect the same structural boundary.
 

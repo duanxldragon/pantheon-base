@@ -67,8 +67,8 @@ func ErrMessage(err error) string {
 	if err == nil {
 		return ""
 	}
-	msg := err.Error()
-	if idx := strings.Index(msg, ": "); idx != -1 {
+	msg := strings.TrimSpace(err.Error())
+	if idx := strings.LastIndex(msg, ": "); idx != -1 {
 		return msg[idx+2:]
 	}
 	return msg
@@ -96,7 +96,7 @@ func ResolveErrorMessageKey(err error, fallback string) string {
 		}
 		return "request.failed"
 	}
-	message := strings.TrimSpace(err.Error())
+	message := ErrMessage(err)
 	if IsI18nMessageKey(message) {
 		return message
 	}

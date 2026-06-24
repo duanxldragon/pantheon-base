@@ -3,7 +3,7 @@ title: Harness Method Playbook
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-23
+updated_at: 2026-06-24
 ---
 
 # Harness Method Playbook
@@ -54,6 +54,7 @@ English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md
 - 先区分 confirmed facts、working assumptions 和 open questions，不要在权限、审计、边界问题上静默猜测。
 - 先走 `agentic-method-kit/MINIMAL_COMPLEXITY_LADDER.zh.md`，把方案压到最小可承重复杂度。
 - 先按 `agentic-method-kit/CONTEXT_ENGINEERING_PROTOCOL.zh.md` 明确 entry sources、检索顺序和敏感上下文边界。
+- 如果任务是长会话、跨 session、带 delegation 或成本敏感，再额外声明 `Response Budget`、`Retrieval Helpers`、`Promotion Target` 和 `Economics Watch`。
 - 先声明 `Do Not Touch` 和 `Structural Scope`，再做手术式修改。
 - 先写 `Success Criteria`、`Verification Plan` 和 evidence linkage，再声明完成。
 

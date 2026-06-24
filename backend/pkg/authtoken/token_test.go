@@ -57,3 +57,34 @@ func TestDeleteSessionPairAllowsNilRedis(t *testing.T) {
 		t.Fatalf("expected nil redis delete to be ignored, got %v", err)
 	}
 }
+
+func TestTokenStoreOperationsHandleNilRedis(t *testing.T) {
+	ctx := context.Background()
+	if err := StoreSession(ctx, nil, "access", &SessionData{}, time.Minute); !errors.Is(err, ErrStoreNotInitialized) {
+		t.Fatalf("expected session store init error, got %v", err)
+	}
+	if _, err := ValidateSession(ctx, nil, "access"); !errors.Is(err, ErrStoreNotInitialized) {
+		t.Fatalf("expected session validate init error, got %v", err)
+	}
+	if err := DeleteSession(ctx, nil, "access"); err != nil {
+		t.Fatalf("expected nil session delete to be ignored, got %v", err)
+	}
+	if err := StoreRefresh(ctx, nil, "refresh", 1, "session", time.Minute); !errors.Is(err, ErrStoreNotInitialized) {
+		t.Fatalf("expected refresh store init error, got %v", err)
+	}
+	if _, _, err := ValidateRefresh(ctx, nil, "refresh"); !errors.Is(err, ErrStoreNotInitialized) {
+		t.Fatalf("expected refresh validate init error, got %v", err)
+	}
+	if err := DeleteRefresh(ctx, nil, "refresh"); err != nil {
+		t.Fatalf("expected nil refresh delete to be ignored, got %v", err)
+	}
+	if err := StoreOperation(ctx, nil, "operation", &OperationData{}, time.Minute); !errors.Is(err, ErrStoreNotInitialized) {
+		t.Fatalf("expected operation store init error, got %v", err)
+	}
+	if _, err := ValidateOperation(ctx, nil, "operation"); !errors.Is(err, ErrStoreNotInitialized) {
+		t.Fatalf("expected operation validate init error, got %v", err)
+	}
+	if err := DeleteOperation(ctx, nil, "operation"); err != nil {
+		t.Fatalf("expected nil operation delete to be ignored, got %v", err)
+	}
+}

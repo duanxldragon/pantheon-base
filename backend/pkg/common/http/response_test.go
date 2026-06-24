@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -12,6 +13,13 @@ func TestResolveErrorMessageKeyPrefersI18nKey(t *testing.T) {
 	message := resolveErrorMessageKey(assertErr("user.create.error.username_exists"), "request.failed")
 	if message != "user.create.error.username_exists" {
 		t.Fatalf("expected original message key, got %s", message)
+	}
+}
+
+func TestResolveErrorMessageKeyPrefersWrappedI18nKey(t *testing.T) {
+	message := resolveErrorMessageKey(fmt.Errorf("%w: %s", assertErr("internal"), "dept.delete.error.has_posts"), "request.failed")
+	if message != "dept.delete.error.has_posts" {
+		t.Fatalf("expected wrapped message key, got %s", message)
 	}
 }
 
