@@ -28,6 +28,6 @@
     "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs"
   },
   "devDependencies": {
-    "playwright": "^1.60.0"
+    "playwright": "^1.61.0"
   }
 }
