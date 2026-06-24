@@ -612,8 +612,7 @@ const frFRFallback = {
   'system.role.members.filterStatus': 'Filtrer par statut du membre',
   'system.role.members.addSuccess': '{{count}} membres ajoutés',
   'system.role.members.removeSuccess': '{{count}} membres retirés',
-  'system.role.members.removeConfirm':
-    'Retirer cet utilisateur du rattachement actuel au rôle ?',
+  'system.role.members.removeConfirm': 'Retirer cet utilisateur du rattachement actuel au rôle ?',
   'system.role.members.empty': 'Aucun membre n’est actuellement rattaché à ce rôle',
   'system.role.menuIds': 'Menus de navigation',
   'system.role.menuIds.placeholder': 'Sélectionnez les menus de navigation visibles pour ce rôle',
@@ -1668,7 +1667,8 @@ const frFRFallback = {
   'generator.moduleManager.activationAudit': 'Vérifier l’activation',
   'generator.moduleManager.activationAuditSuccess':
     'Vérification terminée : {{activated}} modules sont maintenant actifs et {{pending}} restent en attente',
-  'generator.moduleManager.activationAuditError': 'Échec de la vérification de l’activation des modules',
+  'generator.moduleManager.activationAuditError':
+    'Échec de la vérification de l’activation des modules',
   'generator.moduleManager.builtIn': 'Intégré',
   'generator.moduleManager.purgeModal.autoRecycleTable':
     'Ce module est marqué comme temporaire ; la table métier {{table}} sera recyclée automatiquement pendant le purge.',
@@ -2519,8 +2519,7 @@ const frFRFallback = {
     'Confirmer l’activation en lot des types de dictionnaire sélectionnés ?',
   'system.dict.type.batchDisableConfirm':
     'Confirmer la désactivation en lot des types de dictionnaire sélectionnés ?',
-  'system.dict.type.batchDeleteConfirm':
-    'Supprimer tous les types de dictionnaire sélectionnés ?',
+  'system.dict.type.batchDeleteConfirm': 'Supprimer tous les types de dictionnaire sélectionnés ?',
   'system.dict.item.batchEnableConfirm':
     'Confirmer l’activation en lot des éléments de dictionnaire sélectionnés ?',
   'system.dict.item.batchDisableConfirm':

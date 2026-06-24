@@ -7,27 +7,73 @@ const currentFilePath = fileURLToPath(import.meta.url);
 const frontendRoot = path.resolve(path.dirname(currentFilePath), '..');
 const layoutCssPath = path.join(frontendRoot, 'src', 'core', 'layout', 'index.css');
 const globalCssPath = path.join(frontendRoot, 'src', 'index.css');
-const listPageCssPath = path.join(frontendRoot, 'src', 'modules', 'system', 'list-page.css');
-const loginCssPath = path.join(frontendRoot, 'src', 'modules', 'auth', 'Login.css');
+const listPageCssPath = path.join(
+  frontendRoot,
+  'src',
+  'modules',
+  'system',
+  'components',
+  'shared',
+  'list-page.css',
+);
+const loginCssPath = path.join(
+  frontendRoot,
+  'src',
+  'modules',
+  'auth',
+  'login',
+  'components',
+  'Login.css',
+);
 const modulesRoot = path.join(frontendRoot, 'src', 'modules');
 const tableBatchActionBarPath = path.join(
   frontendRoot,
   'src',
   'components',
   'patterns',
+  'table',
   'TableBatchActionBar.tsx',
 );
-const appModalPath = path.join(frontendRoot, 'src', 'components', 'patterns', 'AppModal.tsx');
-const appDrawerPath = path.join(frontendRoot, 'src', 'components', 'patterns', 'AppDrawer.tsx');
+const appModalPath = path.join(
+  frontendRoot,
+  'src',
+  'components',
+  'patterns',
+  'modals',
+  'AppModal.tsx',
+);
+const appDrawerPath = path.join(
+  frontendRoot,
+  'src',
+  'components',
+  'patterns',
+  'modals',
+  'AppDrawer.tsx',
+);
 const appModalActionsPath = path.join(
   frontendRoot,
   'src',
   'components',
   'patterns',
+  'modals',
   'AppModalActions.ts',
 );
-const formSectionPath = path.join(frontendRoot, 'src', 'components', 'patterns', 'FormSection.tsx');
-const submitBarPath = path.join(frontendRoot, 'src', 'components', 'patterns', 'SubmitBar.tsx');
+const formSectionPath = path.join(
+  frontendRoot,
+  'src',
+  'components',
+  'patterns',
+  'feedback',
+  'FormSection.tsx',
+);
+const submitBarPath = path.join(
+  frontendRoot,
+  'src',
+  'components',
+  'patterns',
+  'actions',
+  'SubmitBar.tsx',
+);
 const pageEmptyPath = path.join(frontendRoot, 'src', 'components', 'feedback', 'PageEmpty.tsx');
 const pageLoadingPath = path.join(frontendRoot, 'src', 'components', 'feedback', 'PageLoading.tsx');
 const pageErrorPath = path.join(frontendRoot, 'src', 'components', 'feedback', 'PageError.tsx');
@@ -110,10 +156,7 @@ function requireStandaloneBlock(cssSource, selector, findings) {
 }
 
 function hasDeclaration(block, property, expectedValue) {
-  const pattern = new RegExp(
-    `${property}\\s*:\\s*${expectedValue}(?:\\s*!important)?\\s*;`,
-    'i',
-  );
+  const pattern = new RegExp(`${property}\\s*:\\s*${expectedValue}(?:\\s*!important)?\\s*;`, 'i');
   return pattern.test(block);
 }
 
@@ -221,11 +264,17 @@ for (const sourcePath of moduleSourceFiles) {
   const moduleSource = fs.readFileSync(sourcePath, 'utf8');
   const relativePath = path.relative(frontendRoot, sourcePath).replaceAll(path.sep, '/');
   if (/<PageHeader\b/.test(moduleSource)) {
-    findings.push(`${relativePath} must not render page-level PageHeader inside functional modules.`);
+    findings.push(
+      `${relativePath} must not render page-level PageHeader inside functional modules.`,
+    );
   }
 
   for (const block of extractSelfClosingJsxBlocks(moduleSource, 'GovernanceSummaryBar')) {
-    if (/(IconPlus|IconDownload|ImportCsvButton|common\.add|common\.export|common\.import|common\.refresh)/.test(block)) {
+    if (
+      /(IconPlus|IconDownload|ImportCsvButton|common\.add|common\.export|common\.import|common\.refresh)/.test(
+        block,
+      )
+    ) {
       findings.push(
         `${relativePath} must not put CRUD/import/export/refresh actions inside GovernanceSummaryBar.`,
       );
@@ -495,9 +544,7 @@ const systemTableCardBlock = requireBlock(
 );
 if (systemTableCardBlock) {
   if (
-    !/padding\s*:\s*var\(--shell-table-card-padding\)\s*!important\s*;/i.test(
-      systemTableCardBlock,
-    )
+    !/padding\s*:\s*var\(--shell-table-card-padding\)\s*!important\s*;/i.test(systemTableCardBlock)
   ) {
     findings.push(
       '.system-list__table-card must use --shell-table-card-padding so table left/right spacing is consistent.',
@@ -573,7 +620,11 @@ if (filterPanelBlock) {
   }
 }
 
-const filterLabelBlock = requireBlock(globalSource, '.filter-panel .arco-form-item-label-col > label', findings);
+const filterLabelBlock = requireBlock(
+  globalSource,
+  '.filter-panel .arco-form-item-label-col > label',
+  findings,
+);
 if (filterLabelBlock) {
   if (!hasDeclaration(filterLabelBlock, 'color', 'var\\(--text-secondary\\)')) {
     findings.push('FilterPanel labels must use the secondary text color.');
@@ -619,9 +670,8 @@ if (pageEmptyLoadingBlock) {
   }
 }
 
-const pageLoadingHasMinHeight = /(?:^|\n)\.page-loading\s*\{[\s\S]*?min-height\s*:\s*240px\s*;/i.test(
-  globalSource,
-);
+const pageLoadingHasMinHeight =
+  /(?:^|\n)\.page-loading\s*\{[\s\S]*?min-height\s*:\s*240px\s*;/i.test(globalSource);
 if (!pageLoadingHasMinHeight) {
   requireBlock(globalSource, '.page-loading', findings);
   findings.push('.page-loading must keep a stable 240px minimum height.');
@@ -745,13 +795,21 @@ if (systemTableHeadBlock) {
   }
 }
 
-const listHeaderButtonBlock = requireBlock(listPageSource, '.list-header-actions .arco-btn', findings);
+const listHeaderButtonBlock = requireBlock(
+  listPageSource,
+  '.list-header-actions .arco-btn',
+  findings,
+);
 if (listHeaderButtonBlock) {
   if (!hasDeclaration(listHeaderButtonBlock, 'border-radius', 'var\\(--radius-md\\)')) {
-    findings.push('.list-header-actions buttons must use the shared radius and horizontal padding.');
+    findings.push(
+      '.list-header-actions buttons must use the shared radius and horizontal padding.',
+    );
   }
   if (!hasDeclaration(listHeaderButtonBlock, 'padding-inline', '14px')) {
-    findings.push('.list-header-actions buttons must use the shared radius and horizontal padding.');
+    findings.push(
+      '.list-header-actions buttons must use the shared radius and horizontal padding.',
+    );
   }
 }
 
@@ -762,14 +820,22 @@ const batchActionButtonBlock = requireBlock(
 );
 if (batchActionButtonBlock) {
   if (!hasDeclaration(batchActionButtonBlock, 'border-radius', 'var\\(--radius-md\\)')) {
-    findings.push('.table-batch-action-bar buttons must use the shared radius and horizontal padding.');
+    findings.push(
+      '.table-batch-action-bar buttons must use the shared radius and horizontal padding.',
+    );
   }
   if (!hasDeclaration(batchActionButtonBlock, 'padding-inline', '14px')) {
-    findings.push('.table-batch-action-bar buttons must use the shared radius and horizontal padding.');
+    findings.push(
+      '.table-batch-action-bar buttons must use the shared radius and horizontal padding.',
+    );
   }
 }
 
-const paginationShellBlock = requireBlock(globalSource, '.app-table .arco-table-pagination', findings);
+const paginationShellBlock = requireBlock(
+  globalSource,
+  '.app-table .arco-table-pagination',
+  findings,
+);
 if (paginationShellBlock) {
   if (!hasDeclaration(paginationShellBlock, 'justify-content', 'flex-end')) {
     findings.push('.app-table pagination shell must align controls to the right.');
@@ -793,7 +859,11 @@ if (
   findings.push('.app-table pagination items must use the shared subtle border and background.');
 }
 
-const paginationActiveBlock = requireBlock(globalSource, '.app-table .arco-pagination-item-active', findings);
+const paginationActiveBlock = requireBlock(
+  globalSource,
+  '.app-table .arco-pagination-item-active',
+  findings,
+);
 if (paginationActiveBlock) {
   if (
     !hasDeclaration(
@@ -812,7 +882,9 @@ const appDialogControlBlock = requireBlock(
   findings,
 );
 if (appDialogControlBlock) {
-  if (!hasDeclaration(appDialogControlBlock, 'border', '1px solid var\\(--panel-border-strong\\)')) {
+  if (
+    !hasDeclaration(appDialogControlBlock, 'border', '1px solid var\\(--panel-border-strong\\)')
+  ) {
     findings.push('.app-dialog controls must render one shared outer border.');
   }
   if (!hasDeclaration(appDialogControlBlock, 'background', '#fff')) {
@@ -830,7 +902,11 @@ const appDialogInputNumberControlBlock = requireBlock(
 );
 if (appDialogInputNumberControlBlock) {
   if (
-    !hasDeclaration(appDialogInputNumberControlBlock, 'border', '1px solid var\\(--panel-border-strong\\)')
+    !hasDeclaration(
+      appDialogInputNumberControlBlock,
+      'border',
+      '1px solid var\\(--panel-border-strong\\)',
+    )
   ) {
     findings.push('.app-dialog InputNumber outer control must render one shared border.');
   }
@@ -842,7 +918,9 @@ const appDrawerControlBlock = requireBlock(
   findings,
 );
 if (appDrawerControlBlock) {
-  if (!hasDeclaration(appDrawerControlBlock, 'border', '1px solid var\\(--panel-border-strong\\)')) {
+  if (
+    !hasDeclaration(appDrawerControlBlock, 'border', '1px solid var\\(--panel-border-strong\\)')
+  ) {
     findings.push('.app-drawer controls must render one shared outer border.');
   }
   if (!hasDeclaration(appDrawerControlBlock, 'background', '#fff')) {
@@ -883,11 +961,7 @@ if (!/@keyframes\s+app-dialog-no-scale/i.test(globalSource)) {
   findings.push('.app-dialog must define app-dialog-no-scale keyframes.');
 }
 
-const appDialogHeaderBlock = requireBlock(
-  globalSource,
-  '.app-dialog .arco-modal-header',
-  findings,
-);
+const appDialogHeaderBlock = requireBlock(globalSource, '.app-dialog .arco-modal-header', findings);
 if (appDialogHeaderBlock) {
   if (!/height\s*:\s*64px\s*!important\s*;/i.test(appDialogHeaderBlock)) {
     findings.push('.app-dialog header must keep a stable 64px height.');
@@ -917,11 +991,7 @@ if (appDialogContentBlock) {
   }
 }
 
-const appDialogFooterBlock = requireBlock(
-  globalSource,
-  '.app-dialog .arco-modal-footer',
-  findings,
-);
+const appDialogFooterBlock = requireBlock(globalSource, '.app-dialog .arco-modal-footer', findings);
 if (appDialogFooterBlock && !hasDeclaration(appDialogFooterBlock, 'padding', '16px 24px 20px')) {
   findings.push('.app-dialog footer must use shared dialog padding.');
 }
@@ -1025,7 +1095,10 @@ const dialogCardTitleTextBlock = requireBlock(
   '.app-dialog .dialog-grid-card .arco-card-header-title .arco-typography',
   findings,
 );
-if (dialogCardTitleTextBlock && !hasDeclaration(dialogCardTitleTextBlock, 'white-space', 'nowrap')) {
+if (
+  dialogCardTitleTextBlock &&
+  !hasDeclaration(dialogCardTitleTextBlock, 'white-space', 'nowrap')
+) {
   findings.push('.dialog-grid-card title text must not wrap.');
 }
 
@@ -1114,7 +1187,10 @@ if (globalInputNumberInnerBlock) {
   }
 }
 
-for (const selectorList of globalSource.match(/[^{}]*\.arco-input-number\s+\.arco-input-inner-wrapper[^{}]*\{[^{}]*\}/g) ?? []) { // NOSONAR — build-only script
+for (const selectorList of globalSource.match(
+  /[^{}]*\.arco-input-number\s+\.arco-input-inner-wrapper[^{}]*\{[^{}]*\}/g,
+) ?? []) {
+  // NOSONAR — build-only script
   const borderedDeclaration = selectorList.match(/\b(border|border-color)\s*:\s*([^;]+);/i); // NOSONAR — build-only script
   if (borderedDeclaration && borderedDeclaration[2].trim() !== '0') {
     findings.push(
@@ -1144,7 +1220,8 @@ if (globalNestedInputFocusBlock) {
   }
 }
 
-if (/(?:^|\n)\s*\.arco-input:focus\s*,/i.test(globalSource)) { // NOSONAR — build-only script
+if (/(?:^|\n)\s*\.arco-input:focus\s*,/i.test(globalSource)) {
+  // NOSONAR — build-only script
   findings.push(
     'Bare .arco-input:focus must not own the global focus ring; the outer input wrapper owns it.',
   );
@@ -1203,7 +1280,9 @@ if (loginPasswordInnerInputBlock) {
     findings.push('.auth-login-card password inner inputs must not render their own shadow.');
   }
   if (!hasDeclaration(loginPasswordInnerInputBlock, 'outline', '0')) {
-    findings.push('.auth-login-card password inner inputs must not render their own focus outline.');
+    findings.push(
+      '.auth-login-card password inner inputs must not render their own focus outline.',
+    );
   }
 }
 
@@ -1301,7 +1380,9 @@ if (
     settingGroupPageSource,
   )
 ) {
-  findings.push('SettingGroupPage must use the shared GovernanceSummaryBar for governance summary.');
+  findings.push(
+    'SettingGroupPage must use the shared GovernanceSummaryBar for governance summary.',
+  );
 }
 
 if (/<PageHeader/.test(settingGroupPageSource)) {
@@ -1312,7 +1393,10 @@ if (/setting-page__overview(?:-|_)/.test(settingGroupPageSource)) {
   findings.push('SettingGroupPage must not use legacy setting-page__overview* styles.');
 }
 
-if (/setting-page__overview(?:-|_)/.test(globalSource) || /setting-page__overview(?:-|_)/.test(listPageSource)) {
+if (
+  /setting-page__overview(?:-|_)/.test(globalSource) ||
+  /setting-page__overview(?:-|_)/.test(listPageSource)
+) {
   findings.push('Legacy setting-page__overview* CSS is forbidden; use GovernanceSummaryBar.');
 }
 

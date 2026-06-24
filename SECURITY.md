@@ -38,7 +38,7 @@ Pantheon Base 当前优先维护以下范围：
 
 ## Runtime Security Baseline
 
-- `system/auth` 浏览器主链路采用 cookie-first：`/api/v1/auth/login`、`/api/v1/auth/mfa/verify`、`/api/v1/auth/refresh` 负责设置 HttpOnly 会话 cookie 与 CSRF header/cookie，同步返回会话元数据，但不把原始 JWT 作为前端运行时合同暴露。
+- `system/auth` 浏览器主链路采用 cookie-first：`/api/v1/auth/login`、`/api/v1/auth/mfa/verify`、`/api/v1/auth/refresh` 负责设置 HttpOnly 会话 cookie 与 CSRF header/cookie，同步返回会话元数据，但 token 存储在 Redis 而非暴露给前端。
 - 跨域策略由应用层 allowlist 控制。通过 `PANTHEON_ALLOWED_ORIGINS` 配置允许来源；未命中的 `Origin` 不授予 credentialed CORS。
 - 应用层默认补齐最小安全响应头：`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`、`Referrer-Policy: strict-origin-when-cross-origin`。
 - `Content-Security-Policy` 与 `Strict-Transport-Security` 仍属于后续收口项；在当前仓库里不应被误解为“已经默认完成”。

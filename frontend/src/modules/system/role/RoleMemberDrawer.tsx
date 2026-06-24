@@ -1,18 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Button,
-  Card,
-  Input,
-  Select,
-  Space,
-  Tag,
-  Typography,
-} from '@arco-design/web-react';
+import { Button, Card, Input, Select, Space, Tag, Typography } from '@arco-design/web-react';
 import { IconDelete, IconPlus, IconRefresh, IconSearch } from '@arco-design/web-react/icon';
-import type {
-  ColumnProps,
-  TableProps,
-} from '@arco-design/web-react/es/Table/interface';
+import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import {
   AppDrawer,
@@ -92,9 +81,7 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
 
   const toggleCandidate = (userId: number) => {
     setSelectedCandidateIds((current) =>
-      current.includes(userId)
-        ? current.filter((item) => item !== userId)
-        : [...current, userId],
+      current.includes(userId) ? current.filter((item) => item !== userId) : [...current, userId],
     );
   };
 
@@ -140,9 +127,7 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
         });
         setCandidateOptions(
           result.items.map((item) => ({
-            label: item.nickname
-              ? `${item.username} / ${item.nickname}`
-              : item.username,
+            label: item.nickname ? `${item.username} / ${item.nickname}` : item.username,
             value: item.id,
           })),
         );
@@ -309,9 +294,7 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
 
   const drawerTitle = role ? (
     <div className="role-member-drawer__title">
-      <Typography.Text className="role-member-drawer__title-main">
-        {role.roleName}
-      </Typography.Text>
+      <Typography.Text className="role-member-drawer__title-main">{role.roleName}</Typography.Text>
       <Typography.Text type="secondary" className="role-member-drawer__title-sub">
         {role.roleKey} · {t('system.role.members')}
       </Typography.Text>
@@ -336,9 +319,7 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
               <Typography.Text className="role-member-drawer__summary-title">
                 {t('system.role.members.subtitle')}
               </Typography.Text>
-              <Typography.Text type="secondary">
-                {t('system.role.members.hint')}
-              </Typography.Text>
+              <Typography.Text type="secondary">{t('system.role.members.hint')}</Typography.Text>
             </div>
             <div className="role-member-drawer__summary-meta">
               <Tag color={role?.status === 1 ? 'green' : 'red'}>

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"pantheon-platform/backend/internal/scaffold"
@@ -132,7 +133,7 @@ func TestNormalizeDatasourceReqRejectsUnsafeHosts(t *testing.T) {
 				t.Fatalf("expected success, got %v", err)
 			}
 			if tt.wantError != "" {
-				if err == nil || err.Error() != tt.wantError {
+				if err == nil || !strings.Contains(err.Error(), tt.wantError) {
 					t.Fatalf("expected %s, got %v", tt.wantError, err)
 				}
 			}

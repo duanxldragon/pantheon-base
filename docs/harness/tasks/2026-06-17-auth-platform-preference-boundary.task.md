@@ -39,14 +39,14 @@ system/auth
 
 ## Contract Anchors
 
-- `pantheon-base/AGENTS.md`
-- `pantheon-base/DESIGN.md`
-- `pantheon-base/docs/README.md`
-- `pantheon-base/docs/contracts/PLATFORM_CONTRACT.md`
-- `pantheon-base/docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-- `pantheon-base/docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `pantheon-base/docs/designs/AUTH_MODULE_DESIGN.md`
-- `pantheon-base/docs/assessments/CURRENT_GOVERNANCE_AND_CODE_AUDIT_2026-06-17.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+- `docs/designs/AUTH_MODULE_DESIGN.md`
+- `docs/assessments/CURRENT_GOVERNANCE_AND_CODE_AUDIT_2026-06-17.md`
 
 ## Scope
 
@@ -92,6 +92,12 @@ system/auth
 - `backend/internal/middleware/*`
 - `frontend/src/**`
 - `../pantheon-ops/**`
+
+## Implementation Notes
+
+- Keep platform preference parsing in a base-owned package so auth and iam consume the same normalized contract without cross-module helper leakage.
+- Preserve `preference_json` persistence format and auth payload compatibility while moving only the parsing and DTO boundary.
+- The local shim in `system/iam/user` is transitional and should prevent a wider caller migration in the same slice.
 
 ## Method Readiness
 
@@ -148,7 +154,7 @@ system/auth
 - Task Manifest: `.harness/tasks/2026-06-17-auth-platform-preference-boundary/manifest.json`
 - OpenSpec Change: `none`
 - Superpowers Plan: `none`
-- Evidence Directory: `none`
+- Evidence Directory: `.harness/evidence/2026-06-17-auth-platform-preference-boundary/`
 - Review File: `none`
 
 ## Evidence Required
@@ -174,5 +180,5 @@ system/auth
 - [ ] Delivery governance gates declared
 - [ ] Contract anchors read
 - [ ] Verification run or exception recorded
-- [ ] Evidence summarized
+- [ ] Evidence saved or summarized
 - [ ] Review completed

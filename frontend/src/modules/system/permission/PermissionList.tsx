@@ -76,7 +76,7 @@ import {
   TableBatchActionBar,
   useGovernanceRail,
 } from '../../../components';
-import '../list-page.css';
+import '../components/shared/list-page.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -395,7 +395,10 @@ const PermissionList: React.FC = () => {
   };
 
   const visibleSelectedRowKeys = useMemo(() => {
-    return getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id));
+    return getVisibleSelectedRowKeys(
+      selectedRowKeys,
+      data.map((item) => item.id),
+    );
   }, [data, selectedRowKeys]);
 
   const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
@@ -769,7 +772,11 @@ const PermissionList: React.FC = () => {
                       checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
                       onChange: (rowKeys) =>
                         setSelectedRowKeys((keys) =>
-                          mergeCrossPageSelection(keys, rowKeys, data.map((item) => item.id)),
+                          mergeCrossPageSelection(
+                            keys,
+                            rowKeys,
+                            data.map((item) => item.id),
+                          ),
                         ),
                     }}
                     onChange={handleTableChange}

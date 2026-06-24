@@ -2,10 +2,10 @@ package scaffold
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"pantheon-platform/backend/pkg/common"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -37,7 +37,7 @@ func ResolveWorkspaceRoot(start string) (string, error) {
 				return "", err
 			}
 			if !isWorkspaceRoot(resolved) {
-				return "", errors.New("workspace.not_found")
+				return "", common.NewNotFound("workspace.not_found")
 			}
 			return resolved, nil
 		}
@@ -75,31 +75,31 @@ func ResolveWorkspaceRoot(start string) (string, error) {
 		}
 	}
 
-	return "", errors.New("workspace.not_found")
+	return "", common.NewNotFound("workspace.not_found")
 }
 
 func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
 	if req == nil {
-		return errors.New("module.generate.invalid_payload")
+		return common.NewBadRequest("module.generate.invalid_payload")
 	}
 	name := strings.TrimSpace(req.Schema.Name)
 	scope := strings.TrimSpace(req.Schema.Scope)
 	displayName := strings.TrimSpace(req.Schema.DisplayName)
 	tableName := strings.TrimSpace(req.Schema.Model.TableName)
 	if !isValidModulePath(name, scope == "business") {
-		return errors.New("module.generate.invalid_name")
+		return common.NewBadRequest("module.generate.invalid_name")
 	}
 	if scope != "system" && scope != "business" {
-		return errors.New("module.generate.invalid_scope")
+		return common.NewBadRequest("module.generate.invalid_scope")
 	}
 	if displayName == "" {
-		return errors.New("module.generate.display_name_required")
+		return common.NewBadRequest("module.generate.display_name_required")
 	}
 	if tableName == "" {
-		return errors.New("module.generate.table_name_required")
+		return common.NewBadRequest("module.generate.table_name_required")
 	}
 	if err := ValidateManagedTableName(scope, tableName); err != nil {
-		return errors.New("module.generate.invalid_table_name")
+		return common.NewBadRequest("module.generate.invalid_table_name")
 	}
 	if err := validateGovernanceContract(req); err != nil {
 		return err
@@ -111,25 +111,25 @@ func ValidateManagedTableName(scope, tableName string) error {
 	normalizedScope := strings.TrimSpace(scope)
 	normalizedTableName := strings.TrimSpace(tableName)
 	if normalizedTableName == "" {
-		return errors.New("module.generate.invalid_table_name")
+		return common.NewBadRequest("module.generate.invalid_table_name")
 	}
 	if !managedTableNamePattern.MatchString(normalizedTableName) {
-		return errors.New("module.generate.invalid_table_name")
+		return common.NewBadRequest("module.generate.invalid_table_name")
 	}
 	if strings.Contains(normalizedTableName, "__") {
-		return errors.New("module.generate.invalid_table_name")
+		return common.NewBadRequest("module.generate.invalid_table_name")
 	}
 	switch normalizedScope {
 	case "system":
 		if !strings.HasPrefix(normalizedTableName, "system_") {
-			return errors.New("module.generate.invalid_table_name")
+			return common.NewBadRequest("module.generate.invalid_table_name")
 		}
 	case "business":
 		if !strings.HasPrefix(normalizedTableName, "biz_") {
-			return errors.New("module.generate.invalid_table_name")
+			return common.NewBadRequest("module.generate.invalid_table_name")
 		}
 	default:
-		return errors.New("module.generate.invalid_table_name")
+		return common.NewBadRequest("module.generate.invalid_table_name")
 	}
 	return nil
 }
@@ -159,13 +159,13 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 	for _, file := range files {
 		relativePath := filepath.ToSlash(strings.TrimSpace(file.Path))
 		if relativePath == "" || strings.Contains(relativePath, "..") || !filepath.IsLocal(relativePath) {
-			return nil, errors.New("module.generate.invalid_path")
+			return nil, common.NewBadRequest("module.generate.invalid_path")
 		}
 		if !strings.HasPrefix(relativePath, backendPrefix) && !strings.HasPrefix(relativePath, frontendPrefix) {
-			return nil, errors.New("module.generate.invalid_path")
+			return nil, common.NewBadRequest("module.generate.invalid_path")
 		}
 		if _, ok := seen[relativePath]; ok {
-			return nil, errors.New("module.generate.duplicate_file")
+			return nil, common.NewConflict("module.generate.duplicate_file")
 		}
 		seen[relativePath] = struct{}{}
 
@@ -174,7 +174,7 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 			return nil, err
 		}
 		if !req.Overwrite && fileExists(absolutePath) {
-			return nil, errors.New("module.generate.file_exists")
+			return nil, common.NewConflict("module.generate.file_exists")
 		}
 		if err := os.WriteFile(absolutePath, []byte(file.Content), 0o644); err != nil {
 			return nil, err
@@ -184,7 +184,7 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 
 	schemaRelativePath := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
 	if !filepath.IsLocal(schemaRelativePath) {
-		return nil, errors.New("module.generate.invalid_path")
+		return nil, common.NewBadRequest("module.generate.invalid_path")
 	}
 	schemaPath := filepath.Join(workspaceRoot, filepath.FromSlash(schemaRelativePath))
 	if err := os.MkdirAll(filepath.Dir(schemaPath), 0o755); err != nil {
@@ -208,11 +208,11 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([]GeneratedFile, error) {
 	scriptPath := filepath.Join(workspaceRoot, filepath.FromSlash(generatedModuleExporterScript))
 	if !fileExists(scriptPath) {
-		return nil, errors.New("module.generate.server_export_failed")
+		return nil, common.NewInternal("module.generate.server_export_failed")
 	}
 	nodeBinary, err := resolveNodeBinary()
 	if err != nil {
-		return nil, errors.New("module.generate.server_export_failed")
+		return nil, common.NewInternal("module.generate.server_export_failed")
 	}
 
 	schemaFile, err := os.CreateTemp("", "pantheon-module-schema-*.json")
@@ -239,15 +239,15 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 	cmd.Dir = workspaceRoot
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, errors.New("module.generate.server_export_failed")
+		return nil, common.NewInternal("module.generate.server_export_failed")
 	}
 
 	var files []GeneratedFile
 	if err := json.Unmarshal(output, &files); err != nil {
-		return nil, errors.New("module.generate.server_export_failed")
+		return nil, common.NewInternal("module.generate.server_export_failed")
 	}
 	if len(files) == 0 {
-		return nil, errors.New("module.generate.server_export_failed")
+		return nil, common.NewInternal("module.generate.server_export_failed")
 	}
 	return files, nil
 }
@@ -255,7 +255,7 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 func resolveNodeBinary() (string, error) {
 	if configured := strings.TrimSpace(os.Getenv(nodeBinaryEnvKey)); configured != "" {
 		if !filepath.IsAbs(configured) {
-			return "", errors.New("module.generate.invalid_node_binary")
+			return "", common.NewBadRequest("module.generate.invalid_node_binary")
 		}
 		return configured, nil
 	}
@@ -264,10 +264,10 @@ func resolveNodeBinary() (string, error) {
 
 func RemoveGeneratedModuleSource(workspaceRoot, scope, name string) error {
 	if !isValidModulePath(name, scope == "business") {
-		return errors.New("module.generate.invalid_name")
+		return common.NewBadRequest("module.generate.invalid_name")
 	}
 	if scope != "system" && scope != "business" {
-		return errors.New("module.generate.invalid_scope")
+		return common.NewBadRequest("module.generate.invalid_scope")
 	}
 
 	targets := []string{
@@ -278,7 +278,7 @@ func RemoveGeneratedModuleSource(workspaceRoot, scope, name string) error {
 
 	for _, relativeTarget := range targets {
 		if !filepath.IsLocal(relativeTarget) {
-			return errors.New("module.generate.invalid_path")
+			return common.NewBadRequest("module.generate.invalid_path")
 		}
 		target := filepath.Join(workspaceRoot, filepath.FromSlash(relativeTarget))
 		if err := os.RemoveAll(target); err != nil {

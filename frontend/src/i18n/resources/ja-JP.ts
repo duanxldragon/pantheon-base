@@ -577,8 +577,7 @@ const jaJPFallback = {
   'system.role.members.subtitle': 'ロール側でメンバー紐付けを直接管理',
   'system.role.members.hint':
     'ユーザー作成時にロールを未選択でも構いません。後からこの画面で一括して付与または解除できます。',
-  'system.role.members.candidatePlaceholder':
-    'このロールへ追加するユーザーを検索して選択',
+  'system.role.members.candidatePlaceholder': 'このロールへ追加するユーザーを検索して選択',
   'system.role.members.candidateEmpty': '追加できるメンバーはありません',
   'system.role.members.searchPlaceholder': '現在のメンバーをユーザー名またはニックネームで検索',
   'system.role.members.filterStatus': 'メンバー状態で絞り込む',
@@ -871,7 +870,8 @@ const jaJPFallback = {
     '現在の範囲に一致する役職はありません。フィルタを調整するか先に役職を作成してください。',
   'system.post.hero.eyebrow': '役職ガバナンス',
   'system.post.header.eyebrow': 'システムドメイン / 組織',
-  'system.post.header.title': '役職状態、使用中ブロッカー、改善アクションを 1 つのワークベンチで解決',
+  'system.post.header.title':
+    '役職状態、使用中ブロッカー、改善アクションを 1 つのワークベンチで解決',
   'system.post.header.description':
     '役職ページは `system/org` の境界を維持しています。メイン作業レーンがフィルタ、保守、一括ガバナンスを担当し、サイドレールは使用中リスク、無効在庫、改善ガイダンスのみを要約します。',
   'system.post.hero.title': '役職状態、使用中ブロッカー、改善アクションを 1 つのワークベンチで解決',

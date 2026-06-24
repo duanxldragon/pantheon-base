@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -12,7 +11,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
 
 type MenuService struct {
 	db *gorm.DB
@@ -259,7 +257,7 @@ func (s *MenuService) DeleteMenu(menuID uint64) error {
 		return err
 	}
 	if childCount > 0 {
-		return errors.New("menu.delete.error.has_children")
+		return common.NewInternal("menu.delete.error.has_children")
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
@@ -515,7 +513,7 @@ func (s *MenuService) validateMenuUpdate(menuID uint64, req *MenuUpdateReq) erro
 		return err
 	}
 	if req.ParentID == menuID {
-		return errors.New("menu.update.error.parent_self")
+		return common.NewInternal("menu.update.error.parent_self")
 	}
 	if err := s.ensureParentExists(req.ParentID); err != nil {
 		return err
@@ -529,13 +527,13 @@ func (s *MenuService) validateMenuMeta(menuID uint64, req *MenuCreateReq) error 
 	isExternal := normalizeMenuFlag(req.IsExternal)
 
 	if menuType == "C" && routeName == "" {
-		return errors.New("menu.route_name.required")
+		return common.NewBadRequest("menu.route_name.required")
 	}
 	if menuType == "C" && isExternal != 1 && normalizeMenuPerm(req.PagePerm) == "" {
-		return errors.New("menu.page_perm.required")
+		return common.NewBadRequest("menu.page_perm.required")
 	}
 	if menuType == "F" && normalizeMenuPerm(req.Perms) == "" {
-		return errors.New("menu.perms.required")
+		return common.NewBadRequest("menu.perms.required")
 	}
 	if routeName != "" {
 		if err := s.ensureRouteNameUnique(menuID, routeName); err != nil {
@@ -544,16 +542,16 @@ func (s *MenuService) validateMenuMeta(menuID uint64, req *MenuCreateReq) error 
 	}
 	if isExternal == 1 {
 		if !isValidExternalMenuPath(req.Path) {
-			return errors.New("menu.path.invalid_external")
+			return common.NewBadRequest("menu.path.invalid_external")
 		}
 		return nil
 	}
 	componentKey := strings.TrimSpace(req.Component)
 	if menuType == "C" && componentKey == "" {
-		return errors.New("menu.component.required")
+		return common.NewBadRequest("menu.component.required")
 	}
 	if menuType == "C" && requiresRegisteredMenuComponent(normalizeMenuModule(req.Module)) && !isRegisteredMenuComponentKey(componentKey) {
-		return errors.New("menu.component.invalid")
+		return common.NewBadRequest("menu.component.invalid")
 	}
 	return nil
 }
@@ -568,7 +566,7 @@ func (s *MenuService) ensureParentExists(parentID uint64) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("menu.parent.not_found")
+		return common.NewNotFound("menu.parent.not_found")
 	}
 	return nil
 }
@@ -587,7 +585,7 @@ func (s *MenuService) ensurePathUnique(menuID uint64, path string) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("menu.path.exists")
+		return common.NewConflict("menu.path.exists")
 	}
 	return nil
 }
@@ -602,7 +600,7 @@ func (s *MenuService) ensureRouteNameUnique(menuID uint64, routeName string) err
 		return err
 	}
 	if count > 0 {
-		return errors.New("menu.route_name.exists")
+		return common.NewConflict("menu.route_name.exists")
 	}
 	return nil
 }

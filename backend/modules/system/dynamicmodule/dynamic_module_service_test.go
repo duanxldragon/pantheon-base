@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	systemi18n "pantheon-platform/backend/modules/system/i18n"
+	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/testmysql"
 
 	"pantheon-platform/backend/internal/scaffold"
@@ -30,7 +31,7 @@ func TestRegisterGeneratedModuleBusinessOnly(t *testing.T) {
 
 	req := newGeneratedModuleRequest("system", "alert", "系统告警", "system_alert")
 
-	if _, _, _, err := service.RegisterGeneratedModule(req); err == nil || err.Error() != "module.generate.business_only" {
+	if _, _, _, err := service.RegisterGeneratedModule(req); err == nil || common.ErrMessage(err) != "module.generate.business_only" {
 		t.Fatalf("expected business-only error, got %v", err)
 	}
 }
@@ -1233,7 +1234,7 @@ func TestUnregisterModuleRejectsUnsafeManagedTableName(t *testing.T) {
 	}
 
 	_, err := service.UnregisterModule("business.asset", true, false)
-	if err == nil || err.Error() != "module.generate.invalid_table_name" {
+	if err == nil || common.ErrMessage(err) != "module.generate.invalid_table_name" {
 		t.Fatalf("expected invalid table name error, got %v", err)
 	}
 }
@@ -1247,7 +1248,7 @@ func TestRegisterManagedModuleRejectsPathTraversalWorkspaceArtifacts(t *testing.
 		workspaceRoot: workspaceRoot,
 	}
 
-	if _, err := service.RegisterManagedModule("business../safe"); err == nil || err.Error() != "module.invalid_name" {
+	if _, err := service.RegisterManagedModule("business../safe"); err == nil || common.ErrMessage(err) != "module.invalid_name" {
 		t.Fatalf("expected invalid module name error, got %v", err)
 	}
 }

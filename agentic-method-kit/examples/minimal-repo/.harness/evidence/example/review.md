@@ -18,7 +18,7 @@
     "notes": "none"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/example.task.md",
+    "taskManifest": ".harness/tasks/example/manifest.json",
     "evidence": ".harness/evidence/example/commands.json",
     "reviewFile": ".harness/evidence/example/review.md",
     "changeRef": "openspec/changes/example-change/",
@@ -31,7 +31,7 @@
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/example.task.md`
+- Task Manifest: `.harness/tasks/example/manifest.json`
 - Evidence: `.harness/evidence/example/commands.json`
 - OpenSpec Change: `openspec/changes/example-change/`
 
@@ -55,4 +55,4 @@ No P0/P1/P2 findings found.
 
 ## Verification Checked
 
-- `node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo --config ../../config/method.config.json`
+- `node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo`

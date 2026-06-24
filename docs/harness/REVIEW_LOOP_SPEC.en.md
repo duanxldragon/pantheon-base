@@ -50,7 +50,7 @@ The following should default to an independent reviewer or explicit review gate:
 
 The reviewer must read:
 
-- the task packet or user request
+- the task packet, task manifest, or user request
 - the declared implementer posture and reviewer posture
 - the Structural Scope / Affected Subgraph statement, if provided
 - the diff
@@ -117,7 +117,7 @@ Allowed combinations include:
 - human implementation, agent review
 - agent implementation, human final approval
 
-But every review must reference the same task packet and verification evidence.
+But every review must reference the same task manifest and verification evidence. If the repository also keeps a task packet, it should point to the same task id.
 
 ## 8. Review Artifact Linkage
 
@@ -129,16 +129,45 @@ If the review result is retained as an in-repository artifact, the default locat
 
 Recommended minimum template:
 
-```md
+````md
 # Review Summary: <task-id>
+
+## Machine Readable
+
+```json
+{
+  "taskId": "<task-id>",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "entry -> core path -> exit/side effect"
+    ],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "none"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/<task-id>/manifest.json",
+    "evidence": ".harness/evidence/<task-id>/commands.json",
+    "reviewFile": ".harness/evidence/<task-id>/review.md",
+    "changeRef": "openspec/changes/<name>/",
+    "planRefs": [
+      "docs/superpowers/plans/<file>.md"
+    ]
+  }
+}
+```
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/<task-id>.task.md`
+- Task Manifest: `.harness/tasks/<task-id>/manifest.json`
 - Evidence: `.harness/evidence/<task-id>/commands.json`
 - OpenSpec Change: `openspec/changes/<name>/` | none
-- Review Mode: `self-review` | `independent-review`
-- Reviewer Roles: `architect` / `security` / `ux-qa` / `mechanical`
 
 ## Verdict
 
@@ -148,6 +177,12 @@ approved | changes requested | blocked | approved with documented P2 follow-up
 
 No P0/P1/P2 findings found.
 
+## Structural Notes
+
+- Affected subgraph: `entry -> core path -> exit/side effect`
+- Checks: `cycle`, `hub`, `call-depth`, `sensitive-flow`
+- Findings: none
+
 ## Residual Risk
 
 - none
@@ -155,6 +190,6 @@ No P0/P1/P2 findings found.
 ## Verification Checked
 
 - `command`
-```
+````
 
-Even if the review is not saved as a file, the PR or review comment must still reference the same task packet and evidence paths.
+If the repository keeps a human-readable task packet, it may also be referenced under `## Linkage` or in the PR / review comment. The machine-readable closure keys are `taskManifest`, `evidence`, `reviewFile`, `changeRef`, and `planRefs`.

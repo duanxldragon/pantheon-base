@@ -312,13 +312,13 @@ func (s *DeptService) ListLeaderCandidates(deptID uint64) ([]DeptLeaderCandidate
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	if deptID == 0 {
-		return nil, errors.New("dept.not_found")
+		return nil, common.NewNotFound("dept.not_found")
 	}
 
 	var dept SystemDept
 	if err := s.db.First(&dept, deptID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("dept.not_found")
+			return nil, common.NewNotFound("dept.not_found")
 		}
 		return nil, err
 	}
@@ -453,7 +453,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if dept.IsRoot == 1 {
-		return errors.New("dept.root.delete_forbidden")
+		return common.NewForbidden("dept.root.delete_forbidden")
 	}
 
 	var childCount int64
@@ -461,7 +461,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if childCount > 0 {
-		return errors.New("dept.delete.error.has_children")
+		return common.NewInternal("dept.delete.error.has_children")
 	}
 
 	var postCount int64
@@ -469,7 +469,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if postCount > 0 {
-		return errors.New("dept.delete.error.has_posts")
+		return common.NewInternal("dept.delete.error.has_posts")
 	}
 
 	var userCount int64
@@ -477,7 +477,7 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return err
 	}
 	if userCount > 0 {
-		return errors.New("dept.delete.error.has_users")
+		return common.NewInternal("dept.delete.error.has_users")
 	}
 
 	return s.db.Delete(&SystemDept{}, deptID).Error
@@ -489,10 +489,10 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 	}
 	normalizedIDs := normalizeDeptIDs(deptIDs)
 	if len(normalizedIDs) == 0 {
-		return 0, errors.New("dept.batch.empty")
+		return 0, common.NewBadRequest("dept.batch.empty")
 	}
 	if status != 1 && status != 2 {
-		return 0, errors.New("param.invalid")
+		return 0, common.NewBadRequest("param.invalid")
 	}
 
 	var depts []SystemDept
@@ -500,11 +500,11 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 		return 0, err
 	}
 	if len(depts) != len(normalizedIDs) {
-		return 0, errors.New("dept.batch.not_found")
+		return 0, common.NewNotFound("dept.batch.not_found")
 	}
 	for _, dept := range depts {
 		if dept.IsRoot == 1 {
-			return 0, errors.New("dept.root.status_fixed")
+			return 0, common.NewBadRequest("dept.root.status_fixed")
 		}
 	}
 
@@ -526,7 +526,7 @@ func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, e
 	}
 	normalizedItems := normalizeDeptLeaderItems(items)
 	if len(normalizedItems) == 0 {
-		return 0, errors.New("dept.batch.empty")
+		return 0, common.NewBadRequest("dept.batch.empty")
 	}
 
 	deptIDs := make([]uint64, 0, len(normalizedItems))
@@ -540,7 +540,7 @@ func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, e
 		return 0, err
 	}
 	if len(depts) != len(deptIDs) {
-		return 0, errors.New("dept.batch.not_found")
+		return 0, common.NewNotFound("dept.batch.not_found")
 	}
 	updates := make([]struct {
 		DeptID       uint64
@@ -549,11 +549,11 @@ func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, e
 	}, 0, len(depts))
 	for _, dept := range depts {
 		if dept.IsRoot == 1 {
-			return 0, errors.New("dept.root.update_forbidden")
+			return 0, common.NewForbidden("dept.root.update_forbidden")
 		}
 		item := deptToLeader[dept.ID]
 		if item.LeaderUserID == 0 {
-			return 0, errors.New("dept.leader.required")
+			return 0, common.NewBadRequest("dept.leader.required")
 		}
 		leader, leaderUserID, err := s.resolveDeptLeaderFields(dept.ID, "", item.LeaderUserID)
 		if err != nil {
@@ -754,7 +754,7 @@ func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, err
 	if err != nil {
 		return nil, err
 	}
-	rollbackValidation := errors.New("dept.import.validation_failed")
+	rollbackValidation := common.NewInternal("dept.import.validation_failed")
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, row := range rows {
 			parentID := pathToID[row.ParentDeptPath]
@@ -939,10 +939,10 @@ func (s *DeptService) loadPostUserCounts() (map[uint64]int, error) {
 
 func (s *DeptService) validateDeptCreate(req *DeptCreateReq) error {
 	if req.ParentID == 0 {
-		return errors.New("dept.parent.required")
+		return common.NewBadRequest("dept.parent.required")
 	}
 	if req.LeaderUserID > 0 {
-		return errors.New("dept.leader.bind_after_create")
+		return common.NewBadRequest("dept.leader.bind_after_create")
 	}
 	if err := validateDeptOptionalEmail(req.Email); err != nil {
 		return err
@@ -952,20 +952,20 @@ func (s *DeptService) validateDeptCreate(req *DeptCreateReq) error {
 
 func (s *DeptService) validateDeptUpdate(dept *SystemDept, req *DeptUpdateReq) error {
 	if dept == nil {
-		return errors.New("dept.not_found")
+		return common.NewNotFound("dept.not_found")
 	}
 	if req.ParentID == dept.ID {
-		return errors.New("dept.update.error.parent_self")
+		return common.NewInternal("dept.update.error.parent_self")
 	}
 	if dept.IsRoot == 1 {
 		if req.ParentID != 0 {
-			return errors.New("dept.root.parent_fixed")
+			return common.NewBadRequest("dept.root.parent_fixed")
 		}
 		if normalizeSystemStatus(req.Status) != 1 {
-			return errors.New("dept.root.status_fixed")
+			return common.NewBadRequest("dept.root.status_fixed")
 		}
 	} else if req.ParentID == 0 {
-		return errors.New("dept.parent.required")
+		return common.NewBadRequest("dept.parent.required")
 	}
 	if err := validateDeptOptionalEmail(req.Email); err != nil {
 		return err
@@ -984,7 +984,7 @@ func (s *DeptService) resolveDeptLeaderFields(deptID uint64, leader string, lead
 		return strings.TrimSpace(leader), 0, nil
 	}
 	if deptID == 0 {
-		return "", 0, errors.New("dept.leader.bind_after_create")
+		return "", 0, common.NewBadRequest("dept.leader.bind_after_create")
 	}
 
 	type leaderUserRow struct {
@@ -999,7 +999,7 @@ func (s *DeptService) resolveDeptLeaderFields(deptID uint64, leader string, lead
 		Where("u.deleted_at IS NULL AND u.status = ? AND u.id = ? AND u.dept_id = ? AND u.post_id > 0", 1, leaderUserID, deptID).
 		Take(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", 0, errors.New("dept.leader.user_invalid")
+			return "", 0, common.NewBadRequest("dept.leader.user_invalid")
 		}
 		return "", 0, err
 	}
@@ -1021,7 +1021,7 @@ func (s *DeptService) ensureDeptParentExists(parentID uint64) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("dept.parent.not_found")
+		return common.NewNotFound("dept.parent.not_found")
 	}
 	return nil
 }
@@ -1038,7 +1038,7 @@ func (s *DeptService) ensureDeptParentNotDescendant(deptID, parentID uint64) err
 	ancestors := splitAncestors(parent.Ancestors)
 	for _, ancestorID := range ancestors {
 		if ancestorID == deptID {
-			return errors.New("dept.update.error.parent_descendant")
+			return common.NewInternal("dept.update.error.parent_descendant")
 		}
 	}
 	return nil
@@ -1577,7 +1577,7 @@ func validateDeptOptionalEmail(value string) error {
 		return nil
 	}
 	if _, err := mail.ParseAddress(value); err != nil {
-		return errors.New("dept.email.invalid")
+		return common.NewBadRequest("dept.email.invalid")
 	}
 	return nil
 }

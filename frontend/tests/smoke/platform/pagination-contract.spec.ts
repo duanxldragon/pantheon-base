@@ -346,7 +346,7 @@ test('paginated module sources use the shared AppTable pagination contract', asy
 
 test('generator list templates emit the shared standard pagination helper', async () => {
   const repoRoot = process.cwd();
-  const relativePath = 'src/modules/system/generator/frontend-generator.ts';
+  const relativePath = 'src/modules/system/generator/frontendGenerator.ts';
   const source = readFileSync(join(repoRoot, relativePath), 'utf8');
   const offenders = source.includes('buildStandardPagination(') ? [] : [relativePath];
 
