@@ -127,14 +127,14 @@ func (s *LoginService) handlePasswordMismatch(currentUser *user.SystemUser, sour
 		return err
 	}
 	if blocked {
-		s.emitSecurityEvent(currentUser, "source_blocked", "high", sourceKey, errLoginSourceBlocked, "")
+		s.emitSecurityEvent(currentUser, "source_blocked", "high", sourceKey, msgSecurityEventSourceBlocked, "")
 		return errors.New(errLoginSourceBlocked)
 	}
 	if locked {
-		s.emitSecurityEvent(currentUser, "account_locked", "high", sourceKey, errUserLocked, "")
+		s.emitSecurityEvent(currentUser, "account_locked", "high", sourceKey, msgSecurityEventAccountLocked, "")
 		return errors.New(errUserLocked)
 	}
-	s.emitSecurityEvent(currentUser, "password_wrong", "medium", sourceKey, errPasswordWrong, loginSourceIP(sourceKey))
+	s.emitSecurityEvent(currentUser, "password_wrong", "medium", sourceKey, msgSecurityEventPasswordWrong, loginSourceIP(sourceKey))
 	return errors.New(errPasswordWrong)
 }
 
@@ -312,8 +312,8 @@ func (s *LoginService) ensureAutomaticLoginLogRetention() {
 		return
 	}
 	now := time.Now()
-	// Simple check without mutex for auto-cleanup trigger
-	cutoff := now.AddDate(0, 0, -90)
+	policy := s.policy.GetRuntimePolicy()
+	cutoff := now.AddDate(0, 0, -maxInt(policy.LoginLogRetentionDays, 1))
 	_ = s.db.Where("login_time < ?", cutoff).Delete(&SystemLogLogin{}).Error
 }
 
@@ -376,7 +376,7 @@ func (s *LoginService) failLoginSourceBlocked(currentUser *user.SystemUser, sour
 		return err
 	}
 	if blocked {
-		s.emitSecurityEvent(currentUser, "source_blocked", "high", sourceKey, errLoginSourceBlocked, "")
+		s.emitSecurityEvent(currentUser, "source_blocked", "high", sourceKey, msgSecurityEventSourceBlocked, "")
 		return errors.New(errLoginSourceBlocked)
 	}
 	return nil
@@ -482,6 +482,7 @@ type RuntimePolicy struct {
 	SourceWindowMinutes          int
 	SourceLockMinutes            int
 	SecurityEventEnabled         bool
+	LoginLogRetentionDays        int
 	LoginLogCleanupRetentionDays []int
 }
 
@@ -495,6 +496,9 @@ const (
 	errLoginLogCleanupRangeInvalid = "auth.login_log.cleanup.range_invalid"
 	errLoginLogCleanupDaysInvalid  = "auth.login_log.cleanup.days_invalid"
 	errLoginLogDeleteIdsRequired   = "auth.login_log.delete.ids_required"
+	msgSecurityEventPasswordWrong  = "auth.security.event.password_wrong"
+	msgSecurityEventSourceBlocked  = "auth.security.event.source_blocked"
+	msgSecurityEventAccountLocked  = "auth.security.event.account_locked"
 
 	usernameLikeWhereClause  = "username LIKE ?"
 	loginTimeDescOrderClause = "login_time desc, id desc"

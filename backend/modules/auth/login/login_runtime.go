@@ -183,6 +183,7 @@ func (s *Runtime) GetRuntimePolicy() RuntimePolicy {
 		SourceWindowMinutes:          s.settingsCache[settingSourceWindowMinutesKey],
 		SourceLockMinutes:            s.settingsCache[settingSourceLockMinutesKey],
 		SecurityEventEnabled:         s.settingsCache[settingSecurityEventEnabledKey] == 1,
+		LoginLogRetentionDays:        s.settingsCache[settingLoginLogRetentionDaysKey],
 		LoginLogCleanupRetentionDays: cloneIntSlice(s.loginLogCleanupRetentionDays),
 	}
 }
@@ -352,14 +353,17 @@ func (s *Runtime) ListOwnLoginLogs(username string, query *LoginLogQuery) (*Logi
 }
 
 func (s *Runtime) ListLoginLogs(query *LoginLogQuery) (*LoginLogPageResp, error) {
+	_ = s.ReloadSettings()
 	return s.loginSvc.ListLoginLogs(query)
 }
 
 func (s *Runtime) ExportLoginLogs(query *LoginLogQuery) (*impexp.CSVFile, error) {
+	_ = s.ReloadSettings()
 	return s.loginSvc.ExportLoginLogs(query)
 }
 
 func (s *Runtime) CleanupLoginLogs(retentionDays int, startedAt, endedAt string) (int64, error) {
+	_ = s.ReloadSettings()
 	return s.loginSvc.CleanupLoginLogs(retentionDays, startedAt, endedAt)
 }
 
@@ -368,6 +372,7 @@ func (s *Runtime) BatchDeleteLoginLogs(ids []uint64) (int64, error) {
 }
 
 func (s *Runtime) RecordLoginLog(requestID, username, ip, browser, os string, status int, msg string) {
+	_ = s.ReloadSettings()
 	s.loginSvc.RecordLoginLog(requestID, username, ip, browser, os, status, msg)
 }
 
@@ -421,6 +426,7 @@ func (s *Runtime) RevokeOwnedSession(userID uint64, currentSessionID, targetSess
 }
 
 func (s *Runtime) CleanupHistoricSessions(retentionDays int, startedAt, endedAt string) (int64, error) {
+	_ = s.ReloadSettings()
 	return s.sessionSvc.CleanupHistoricSessions(retentionDays, startedAt, endedAt)
 }
 

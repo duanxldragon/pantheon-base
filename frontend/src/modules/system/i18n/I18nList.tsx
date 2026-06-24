@@ -194,6 +194,13 @@ function requiredRule(t: TFunction, labelKey: string) {
   return { required: true, message: t('common.requiredField', { field: t(labelKey) }) };
 }
 
+function isDuplicateI18nKeyRequestError(error: unknown) {
+  if (!isRequestError(error)) {
+    return false;
+  }
+  return [duplicateI18nKeyMessage].includes(error.messageKey || '');
+}
+
 interface LoadDataOptions {
   silent?: boolean;
 }
@@ -822,7 +829,7 @@ const I18nList: React.FC = () => {
         await loadAudit();
       }
     } catch (error) {
-      if (isRequestError(error) && error.messageKey === duplicateI18nKeyMessage) {
+      if (isDuplicateI18nKeyRequestError(error)) {
         await resolveCreateDuplicateConflict(values.key, values.locale);
         return;
       }
