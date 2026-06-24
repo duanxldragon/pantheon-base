@@ -98,12 +98,14 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 
 - If the work touches shared pagination, upload, tables, i18n, or the shared admin shell, treat it as base-owned by default.
 - If the turn changes downstream inheritance behavior, explicitly state whether a `base -> ops` sync is required.
+- Apply the minimal complexity ladder first: skip | reuse | standard library | native platform | installed dependency | one local expression | minimum new code. Do not simplify away authorization, audit, i18n, accessibility, or runtime evidence.
 
 ## Method Readiness
 
 - Consumer-Specific Controls: `pantheon-base` contract | checker | smoke path | none
 - Required Sensors: command | review | runtime evidence | none
 - Required Evidence: command summary | screenshot | smoke result | runtime gap | review summary
+- Minimal Complexity Rung: skip | reuse | stdlib | native-platform | installed-dependency | one-local-expression | minimum-new-code
 - Ratchet Decision: no-repeat-observed | guide-updated | sensor-added | gate-updated | template-updated | adapter-updated | registry-only
 - Deferred Code Issues: none | symptom plus recommended follow-up task
 

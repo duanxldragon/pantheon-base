@@ -3,7 +3,7 @@ title: Verification Evidence Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-08
+updated_at: 2026-06-24
 ---
 
 # Verification Evidence Spec
@@ -51,6 +51,13 @@ English version: [VERIFICATION_EVIDENCE_SPEC.en.md](./VERIFICATION_EVIDENCE_SPEC
 - Structural checks: `cycle` / `hub` / `call-depth` / `sensitive-flow`
 - Findings: none | `<finding>`
 
+## Session Economics
+
+- Response mode: `terse | standard | detailed | none`
+- Cost sensitivity: `low | medium | high | none`
+- Tokens / cost / retries / delegations: `none | concise summary`
+- Notes: `none | provenance or caveat`
+
 ## Browser Evidence
 
 - none
@@ -92,13 +99,25 @@ complete | blocked | partial
     "findings": [],
     "notes": ""
   },
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "medium",
+    "inputTokens": 12000,
+    "outputTokens": 3400,
+    "cacheReadTokens": 9000,
+    "cacheWriteTokens": 800,
+    "estimatedCostUsd": 1.42,
+    "retryCount": 1,
+    "delegationCount": 0,
+    "notes": "derived from tool-native session log"
+  },
   "browserEvidence": [],
   "runtimeSensitive": true,
   "runtimeLogs": ["logs/auth-smoke.log"],
   "runtimeMetrics": ["p95=120ms"],
   "runtimeGap": "",
   "linkage": {
-    "taskPacket": "docs/harness/tasks/YYYY-MM-DD-task-name.task.md",
+    "taskManifest": ".harness/tasks/YYYY-MM-DD-task-name/manifest.json",
     "evidenceDir": ".harness/evidence/YYYY-MM-DD-task-name/",
     "reviewFile": ".harness/evidence/YYYY-MM-DD-task-name/review.md",
     "changeRef": "openspec/changes/<name>/",
@@ -153,11 +172,38 @@ complete | blocked | partial
 - `runtimeLogs` / `runtimeMetrics` / `runtimeTraces` / `runtimePerformance`：运行态信号
 - `runtimeGap`：当前环境拿不到信号时的显式说明
 
+对于长会话、存在 delegation，或对成本敏感的任务，`commands.json` 还推荐补充：
+
+```json
+{
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "high",
+    "inputTokens": 12000,
+    "outputTokens": 3400,
+    "cacheReadTokens": 9000,
+    "cacheWriteTokens": 800,
+    "estimatedCostUsd": 1.42,
+    "retryCount": 1,
+    "delegationCount": 2,
+    "notes": "derived from tool-native session log"
+  }
+}
+```
+
+其中：
+
+- `responseMode`：本轮默认叙述预算
+- `costSensitivity`：是否显式把 token / cost 视为吞吐约束
+- `inputTokens` / `outputTokens` / `cacheReadTokens` / `cacheWriteTokens` / `estimatedCostUsd`：可拿到就记录的会话经济性信号
+- `retryCount` / `delegationCount`：用于暴露重试和分派是否在吞噬成本
+- `notes`：注明数据来源、估算方式或缺口
+
 ## 4.2 Artifact Linkage
 
 `commands.json` 应显式记录 artifact linkage：
 
-- `linkage.taskPacket`
+- `linkage.taskManifest`
 - `linkage.evidenceDir`
 - `linkage.reviewFile`
 - `linkage.changeRef`
@@ -167,10 +213,12 @@ complete | blocked | partial
 
 规则：
 
-- `taskId` 必须与 `linkage.taskPacket` 文件名和 `linkage.evidenceDir` 目录名一致
+- `taskId` 必须与 `linkage.taskManifest` 路径中的 task id 和 `linkage.evidenceDir` 目录名一致
 - `reviewFile` 如存在应放在对应 evidence 目录下
 - `changeRef` 如无 OpenSpec change，写 `none`
 - `planRefs` 如无 superpowers plan，可为空数组
+
+如果仓库同时保留人类可读 task packet，保持它与 `taskManifest` 使用同一个 task id；证据校验闭环以 `taskManifest` 为 machine-readable 主键。
 
 ## 4. UI 证据
 
@@ -209,3 +257,7 @@ For UI-affecting tasks, evidence must include:
 不能用“时间不够”“应该没问题”作为验证豁免。
 
 对于 runtime-sensitive 任务，也不能只写“测试通过”，却既没有 runtime signal，也没有 runtime gap。
+
+对于长会话、存在 delegation，或成本敏感任务，也不应只写“做完了”，却既没有 `sessionEconomics`，也没有显式说明当前工具拿不到这些信号。
+
+本轮只同步文档，不改 `pantheon-base` 的 evidence checker。因此 `sessionEconomics` 目前是方法推荐项，而不是本仓库的机械必填项；需要强制时，再同步 `scripts/harness/check-evidence.mjs`。

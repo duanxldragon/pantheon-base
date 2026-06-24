@@ -40,7 +40,7 @@ Each feature package must own its full stack. Do not split a domain into horizon
 
 ## 4. Key Platform Capabilities
 
-- Authentication uses JWT access and refresh tokens.
+- Authentication uses opaque Redis Token with access and refresh tokens.
 - Sessions persist refresh-token JTI in `system_user_session`, rotate on refresh, and revoke on logout.
 - Access tokens carry `userId`, `username`, `roleKeys`, and `sessionId`.
 - Casbin enforces RESTful route policies, with `admin` as the default full-access role.

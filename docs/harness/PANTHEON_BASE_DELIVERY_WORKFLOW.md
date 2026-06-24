@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-10
+updated_at: 2026-06-23
 ---
 
 # Pantheon Base 多 Agent 交付流程
@@ -25,7 +25,7 @@ English version: [PANTHEON_BASE_DELIVERY_WORKFLOW.en.md](./PANTHEON_BASE_DELIVER
 |---|---|---|---|
 | Human Owner | 人 | 给目标、优先级、风险接受、human gate 决策 | 不手动搬运 Claude/Codex 上下文 |
 | Dispatcher | 当前协调 agent | 调用 planner、executor、reviewer，维护 task/evidence/review 链路 | 不把聊天记录当事实源 |
-| Planner | Claude | 需求澄清、设计边界、task packet、验收标准、stop points | 不直接改业务代码 |
+| Planner | Claude | 需求澄清、设计边界、task packet、task manifest linkage、验收标准、stop points | 不直接改业务代码 |
 | Explorer | Codex | 代码结构、影响面、CodeGraph、现有测试和文档定位 | 不扩大任务范围 |
 | Executor | Codex | 实现、测试、证据、修复 review finding | 不跳过 task packet 和 evidence |
 | Reviewer | Claude | findings-first review，检查范围、证据、安全、质量和剩余风险 | 不直接修代码 |
@@ -57,7 +57,7 @@ Human Goal
   -> Claude planner
   -> Dispatcher scope check
   -> Codex explorer
-  -> Task packet finalized
+  -> Task packet and task manifest finalized
   -> Codex executor
   -> Local sensors and evidence
   -> Claude reviewer
@@ -84,14 +84,18 @@ Claude 只负责规划输出：
 
 - 任务归属层：`platform / system/auth / system/iam / system/org / system/config / business/*`
 - In / Out / Do Not Touch
+- Assumptions and Open Questions
+- Minimum Viable Approach
+- Success Criteria
 - 受影响合同、设计、验收文档
 - 最小验证集合
 - runtime evidence 或 visual evidence 预期
 - 若任务触及 generated capability，还要说明 feature ledger 和 drift checker 的预期产物
 - human gate 和 stop points
+- task manifest / evidence / review linkage
 - 是否需要分阶段执行
 
-Planner 输出必须能落到 `docs/harness/tasks/*.task.md` 或当前任务说明，不得只留在对话里。
+Planner 输出必须能落到 `docs/harness/tasks/*.task.md` 与 `.harness/tasks/<task-id>/manifest.json`，不得只留在对话里。
 
 ### 4.3 Codex Exploration
 
@@ -111,6 +115,7 @@ Codex 执行时必须遵守：
 
 - 只改 task packet 范围内的文件。
 - 先固定可验证行为，再实现。
+- 保持 task packet、task manifest、evidence、review 的 linkage 一致。
 - 更新对应文档、测试、fixture、smoke 或 checker。
 - generated module 变更时要同步更新 generated registries 和 `schema/generated/feature-ledger.json`，不能只改一半。
 - 保存或摘要 evidence。
@@ -202,6 +207,7 @@ Dispatcher 必须在以下情况停下来请求 Human Owner 决策：
 非 trivial 任务收口时至少要有：
 
 - task packet 或父 task packet 链接。
+- task manifest 路径。
 - evidence 路径或命令摘要。
 - reviewer 角色和 review 结论。
 - GitHub signal 分类：required、advisory、scheduled、manual。

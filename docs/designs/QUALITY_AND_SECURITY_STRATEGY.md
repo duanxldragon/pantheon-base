@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-08
+updated_at: 2026-06-23
 ---
 
 # 代码质量与安全治理策略
@@ -14,6 +14,8 @@ updated_at: 2026-06-08
 English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_STRATEGY.en.md)
 
 本文定义 Pantheon 的代码质量、安全扫描和第三方工具使用策略。目标是建立可持续的质量体系，让 GitHub Actions、CodeQL 和 GitHub 原生 AI 评审各司其职，不让多套外部扫描器同时抢合并权。
+
+代码重复率仍然是维护性信号，但不再以 Sonar 或任何单一工具分数作为治理目标。重复治理必须回到工程语义：消除重复业务决策、重复安全规则和重复协议转换；允许低风险语法重复，避免为了数字制造无 owner 的抽象。
 
 ## 1. 总原则
 
@@ -48,12 +50,36 @@ English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_ST
 - New Code 覆盖率默认不低于 `80%`，例外必须在 PR 中说明补测计划。
 - 高风险改动必须在 PR 中写明 residual risk、回滚方式和补充验证，而不是依赖额外人工审批才允许合并。
 
-前端重复率是当前主要热点。治理顺序固定为：
+前端重复代码是当前主要维护性热点。治理顺序固定为：
 
 1. 优先治理真实运行时页面、共享组件、布局、表单、表格和生成模板。
 2. 其次治理 smoke、fixture、示例代码中的重复，避免它们被误当成生产代码或反复触发安全扫描。
 3. vendored 方法层脚本如 `scripts/harness/` 不计入产品重复率；它们由 `harness-engineering` 统一治理。
 4. 不为了压低数字盲目抽象业务叶子逻辑；只有当重复影响维护、安全或生成模板时才抽公共层。
+
+### 2.1.1 重复治理与抽象边界
+
+重复治理遵循：
+
+- **重复业务决策必须治理**：认证策略、权限判断、数据范围、审计规则、导入导出协议、生成器模板等不能多处各自实现。
+- **重复安全规则必须治理**：登录失败节流、会话有效性、密码策略、token/cookie 处理、CSRF/CSP 等必须有唯一 owner。
+- **重复页面模板应进入模板或生成器**：列表页、筛选区、批量操作、治理侧栏等稳定模式可以抽象。
+- **重复 JSX/类名/数字不自动抽象**：除非它已经是设计系统 token、布局契约或可访问性交互规范。
+- **公共层必须有 owner**：`pkg`、`components`、`hooks` 不能成为为了减少重复而产生的杂物层。
+
+反例：
+
+- 只为减少 `div className` 重复而新增组件。
+- 只为减少列宽数字重复而新增业务常量中心。
+- 把 auth/session 的领域动作放进 `pkg`。
+- 新增无人真实调用的通用 hook。
+
+正例：
+
+- 同一认证策略只在 `system/auth` 一个 owner 内实现。
+- 页面模板重复进入 generator 或 page template。
+- 治理洞察、侧栏摘要等产品语义沉淀为共享组件。
+- 平台契约通过 `pkg/contracts` 暴露，而不是暴露领域实现细节。
 
 ### 2.2 pantheon-ops
 
@@ -137,7 +163,7 @@ Copilot review 是 GitHub 原生的辅助信号，负责补充扫描器覆盖不
 质量治理不能变成开发阻力。默认执行以下规则：
 
 - 先修阻塞风险，再处理趋势问题。
-- 前端重复率优先通过共享组件、页面模板和生成模板治理。
+- 前端重复代码优先通过共享组件、页面模板和生成模板治理，但共享组件必须有设计系统或产品语义。
 - 后端重复只在共享包、系统域、高风险链路或真实维护成本出现时治理。
 - 生成代码、smoke 代码和 fixture 代码必须能清理、隔离或明确排除，避免长期污染运行时代码质量。
 - 对低风险质量建议使用 backlog，不在功能 PR 里无限扩张重构范围。

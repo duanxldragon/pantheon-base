@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/mail"
+	"pantheon-platform/backend/pkg/common"
 	"strconv"
 	"strings"
 	"time"
@@ -105,7 +106,7 @@ func normalizeUint64IDs(ids []uint64) []uint64 {
 
 func (s *UserService) validateUserCreate(req *UserCreateReq) error {
 	if len(strings.TrimSpace(req.Password)) < s.getConfiguredPasswordMinLength() {
-		return errors.New("user.update.error.password_too_short")
+		return common.NewBadRequest("user.update.error.password_too_short")
 	}
 	if err := validateOptionalEmail(req.Email); err != nil {
 		return err
@@ -125,7 +126,7 @@ func (s *UserService) validateUserCreate(req *UserCreateReq) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("user.create.error.username_exists")
+		return common.NewConflict("user.create.error.username_exists")
 	}
 	return nil
 }
@@ -145,7 +146,7 @@ func (s *UserService) validateUserUpdate(user *SystemUser, req *UserUpdateReq) e
 	}
 
 	if user.ID == 1 && req.Status == 2 {
-		return errors.New("user.update.error.protected")
+		return common.NewForbidden("user.update.error.protected")
 	}
 	if user.ID == 1 {
 		adminRoleID, err := s.getAdminRoleID()
@@ -161,7 +162,7 @@ func (s *UserService) validateUserUpdate(user *SystemUser, req *UserUpdateReq) e
 				}
 			}
 			if !hasAdmin {
-				return errors.New("user.update.error.protected")
+				return common.NewForbidden("user.update.error.protected")
 			}
 		}
 	}
@@ -179,7 +180,7 @@ func (s *UserService) ensureUserRoleIDs(roleIDs []uint64) error {
 		return err
 	}
 	if count != int64(len(normalized)) {
-		return errors.New("user.role.invalid")
+		return common.NewBadRequest("user.role.invalid")
 	}
 	return nil
 }
@@ -227,7 +228,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("user.dept.invalid")
+		return common.NewBadRequest("user.dept.invalid")
 	}
 	return nil
 }
@@ -237,7 +238,7 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 		return nil
 	}
 	if deptID == 0 {
-		return errors.New("user.post.dept_required")
+		return common.NewBadRequest("user.post.dept_required")
 	}
 	type postRow struct {
 		ID     uint64 `gorm:"column:id"`
@@ -246,15 +247,15 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 	var post postRow
 	if err := s.db.Table("system_post").Select("id, dept_id").Where("id = ?", postID).First(&post).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("user.post.invalid")
+			return common.NewBadRequest("user.post.invalid")
 		}
 		return err
 	}
 	if post.ID == 0 {
-		return errors.New("user.post.invalid")
+		return common.NewBadRequest("user.post.invalid")
 	}
 	if post.DeptID > 0 && post.DeptID != deptID {
-		return errors.New("user.post.dept_mismatch")
+		return common.NewBadRequest("user.post.dept_mismatch")
 	}
 	return nil
 }
@@ -475,7 +476,7 @@ func validateOptionalEmail(value string) error {
 		return nil
 	}
 	if _, err := mail.ParseAddress(value); err != nil {
-		return errors.New("user.email.invalid")
+		return common.NewBadRequest("user.email.invalid")
 	}
 	return nil
 }
@@ -507,10 +508,10 @@ func marshalUserProfileExt(profileExt map[string]interface{}) (string, error) {
 	}
 	data, err := json.Marshal(profileExt)
 	if err != nil {
-		return "", errors.New("user.profile_ext.invalid")
+		return "", common.NewBadRequest("user.profile_ext.invalid")
 	}
 	if len(data) > maxUserProfileExtBytes {
-		return "", errors.New("user.profile_ext.too_large")
+		return "", common.NewBadRequest("user.profile_ext.too_large")
 	}
 	return string(data), nil
 }
@@ -522,7 +523,7 @@ func unmarshalUserProfileExt(raw string) (map[string]interface{}, error) {
 	}
 	var profileExt map[string]interface{}
 	if err := json.Unmarshal([]byte(trimmed), &profileExt); err != nil {
-		return nil, errors.New("user.profile_ext.invalid")
+		return nil, common.NewBadRequest("user.profile_ext.invalid")
 	}
 	if profileExt == nil {
 		return map[string]interface{}{}, nil

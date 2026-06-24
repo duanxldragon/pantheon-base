@@ -6,7 +6,7 @@
   },
   "commands": [
     {
-      "command": "node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo --config ../../config/method.config.json",
+      "command": "node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo",
       "cwd": ".",
       "status": "passed"
     }
@@ -24,7 +24,7 @@
     "notes": "fixture has no structural findings"
   },
   "linkage": {
-    "taskPacket": "docs/harness/tasks/example.task.md",
+    "taskManifest": ".harness/tasks/example/manifest.json",
     "evidenceDir": ".harness/evidence/example/",
     "reviewFile": ".harness/evidence/example/review.md",
     "changeRef": "openspec/changes/example-change/",

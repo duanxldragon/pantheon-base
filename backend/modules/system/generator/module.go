@@ -3,6 +3,7 @@ package generator
 import (
 	"pantheon-platform/backend/internal/middleware"
 	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -16,8 +17,9 @@ func InitGeneratorModule(r *gin.RouterGroup, db *gorm.DB) {
 	contracts.RegisterBackendModules(r, db, contracts.FuncModule{
 		ModuleName: "generator",
 		Register: func(r *gin.RouterGroup) {
+			tokenMiddleware := middleware.TokenAuthMiddleware(database.RDB)
 			readAPI := r.Group("/system/generator").
-				Use(middleware.JWTAuthMiddleware()).
+				Use(tokenMiddleware).
 				Use(middleware.CasbinMiddleware())
 			{
 				readAPI.GET("/datasources", handler.ListDatasources)
@@ -28,7 +30,7 @@ func InitGeneratorModule(r *gin.RouterGroup, db *gorm.DB) {
 			}
 
 			writeAPI := r.Group("/system/generator").
-				Use(middleware.JWTAuthMiddleware()).
+				Use(tokenMiddleware).
 				Use(middleware.CasbinMiddleware()).
 				Use(middleware.SecureActionMiddleware())
 			{

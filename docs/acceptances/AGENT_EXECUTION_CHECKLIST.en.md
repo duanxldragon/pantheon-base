@@ -49,11 +49,13 @@ Treat the following as `pantheon-base` work unless proven otherwise:
 
 Default execution rules:
 
+- apply the minimal complexity ladder first: skip, reuse, standard library, native platform, installed dependency, one local expression, then minimum new code
 - one task closes one bounded slice
 - no opportunistic unrelated refactors
 - split cross-domain work at explicit gates
 - use CodeGraph first for structure, `rg` for literal strings and logs
 - record `In / Out / Do Not Touch` instead of relying on chat memory
+- do not use simplification to weaken authorization, audit, i18n, accessibility, runtime evidence, or explicit user requirements
 
 ## External Evaluator Default
 

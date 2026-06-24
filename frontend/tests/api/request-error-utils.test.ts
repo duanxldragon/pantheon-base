@@ -7,7 +7,7 @@ import {
   resolveTransportErrorKind,
   shouldSuppressAuthMessage,
   type RequestErrorKind,
-} from '../../src/api/request-error-utils.ts';
+} from '../../src/api/requestErrorUtils.js';
 
 function createAxiosError(overrides: Record<string, unknown>) {
   return {

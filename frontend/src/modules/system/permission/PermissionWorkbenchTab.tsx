@@ -307,7 +307,11 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               {t('system.permission.workbench.positioningHint')}
             </Typography.Text>
           </div>
-          <Space size={8} className="permission-workbench__context-tools system-list__work-actions" wrap>
+          <Space
+            size={8}
+            className="permission-workbench__context-tools system-list__work-actions"
+            wrap
+          >
             {utilityActions}
             <div className="permission-workbench__view-switch">
               <Button
@@ -428,9 +432,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
           {!workbenchLoading && !workbenchError && displayedRoles.length === 0 ? (
             <PageEmpty description={t('common.noData')} />
           ) : null}
-          {!workbenchLoading &&
-          !(workbenchError && !workbench) &&
-          displayedRoles.length > 0 ? (
+          {!workbenchLoading && !(workbenchError && !workbench) && displayedRoles.length > 0 ? (
             <AppTable<PermissionWorkbenchRole>
               className="system-list__table"
               rowKey="id"
@@ -600,7 +602,9 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               className="detail-panel-card"
               title={t('system.permission.workbench.remediationTimelineSection')}
             >
-              <AppTable<(PermissionWorkbenchRemediationEvent & { actionLabel: string; stateLabel: string })>
+              <AppTable<
+                PermissionWorkbenchRemediationEvent & { actionLabel: string; stateLabel: string }
+              >
                 rowKey="id"
                 data={remediationTimelineRows}
                 columns={[
@@ -634,7 +638,10 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               />
             </Card>
 
-            <Card className="detail-panel-card" title={t('system.permission.workbench.rawCoverageSection')}>
+            <Card
+              className="detail-panel-card"
+              title={t('system.permission.workbench.rawCoverageSection')}
+            >
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
                 <Space direction="vertical" size={6} style={{ width: '100%' }}>
                   <Typography.Text bold>

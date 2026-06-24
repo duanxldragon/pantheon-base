@@ -39,6 +39,7 @@ Examples:
 Rules:
 
 - Guides should be short at the entry point and deep by link.
+- Load guide context progressively: entry metadata first, task-specific instructions second, linked resources only when needed.
 - Every durable guide should have an owner or source of truth.
 - Rules that repeatedly matter should eventually become sensors or gates.
 
@@ -81,6 +82,7 @@ Rules:
 - State must live in versioned repository files or explicit artifact locations.
 - State must be linkable by stable IDs.
 - Long-running work must survive context resets through state artifacts.
+- Retrieve historical state in layers: index first, summary or timeline second, raw detail last.
 
 ### 2.4 Gates
 
@@ -110,6 +112,12 @@ Examples:
 - event processor template
 - dashboard template
 - UI-heavy product template
+- CLI tool template
+- library / SDK template
+- data pipeline template
+- infrastructure change template
+- mobile app template
+- documentation governance template
 
 Rules:
 
@@ -214,6 +222,61 @@ TaskIntake
 ```
 
 Not every task needs every event. Trivial tasks can skip task packets when repository rules allow it, but they still need scope, verification, and known-gap clarity.
+
+### 4.1 Human-Agent Collaboration Loop
+
+Human-agent collaboration is not "a human gives one sentence and the agent improvises," and it is not "the human repeatedly shuttles context between tools." The default loop should be:
+
+```text
+HumanIntent
+  -> AgentClarifies
+  -> BoundedTask
+  -> AgentExecutes
+  -> SensorsProduceEvidence
+  -> ReviewerJudges
+  -> HumanDecidesOnlyWhenNeeded
+  -> StateUpdated
+```
+
+Collaboration rules:
+
+- The human owns goals, priority, risk acceptance, product judgment, and high-impact gates; the human should not be responsible for manually moving context between tools.
+- The agent or dispatcher turns intent into a bounded task packet, chooses the smallest useful sensors, executes or delegates work, and assembles evidence and review artifacts.
+- When information is missing but progress is safe, the agent should first perform reversible repo-local exploration; escalate to the human only for missing goals, risk acceptance, credentials, external production authority, or destructive authorization.
+- Every human decision must be written back into state: what was decided, what evidence supported it, which risks were accepted, and who owns the next step.
+- If the human has to explain the same context repeatedly, the guide, template, adapter, or state linkage is insufficient; ratchet the method instead of relying on human memory.
+
+### 4.2 Execution Guardrails
+
+The harness should make four common failure modes explicit before they become review churn:
+
+- ambiguity that was never surfaced
+- complexity that was never justified
+- diff expansion that was never scoped
+- completion claims that were never verified
+
+Portable execution guardrails for these cases live in [EXECUTION_GUARDRAILS.md](./EXECUTION_GUARDRAILS.md).
+
+In practice, this means the harness should give the agent a place to record:
+
+- confirmed facts, working assumptions, and open questions
+- the smallest viable approach and its upgrade trigger
+- the boundaries of the intended diff
+- the observable signal that proves completion
+
+### 4.3 Context Engineering
+
+The harness should retrieve context in layers instead of front-loading every prior artifact.
+
+Portable context-loading rules live in [CONTEXT_ENGINEERING_PROTOCOL.md](./CONTEXT_ENGINEERING_PROTOCOL.md).
+
+In practice:
+
+- start with repo entry guides and the current task packet
+- retrieve summaries or timeline-style state before raw logs
+- prefer file-local, task-local, or affected-subgraph-local history over broad replay
+- write winning decisions back into repo state so future sessions do not depend on chat memory
+- keep non-retainable or sensitive input out of shared durable state unless the repository explicitly requires and approves it
 
 ## 5. Agent Roles
 

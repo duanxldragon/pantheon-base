@@ -2,7 +2,6 @@ package system
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"pantheon-platform/backend/pkg/common"
 	"sort"
@@ -33,6 +32,8 @@ func NewAuditService(db *gorm.DB) *AuditService {
 const (
 	defaultOperationLogRetentionDays = 180
 	auditAutoCleanupMinInterval      = 15 * time.Minute
+	maxOperationLogPageSize          = 100
+	maxOperationLogExportRows        = 10000
 )
 
 func (s *AuditService) Migrate() error {
@@ -58,16 +59,7 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	}
 	s.ensureAutomaticOperationLogRetention()
 
-	page := 1
-	pageSize := 10
-	if query != nil {
-		if query.Page > 0 {
-			page = query.Page
-		}
-		if query.PageSize > 0 {
-			pageSize = query.PageSize
-		}
-	}
+	page, pageSize := normalizeOperationLogPageQuery(query)
 
 	db := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query)
 	var total int64
@@ -176,7 +168,7 @@ func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string,
 		db = db.Where("oper_time >= ? AND oper_time <= ?", window.StartedAt, window.EndedAt)
 	} else {
 		if !s.isAllowedOperationLogRetentionDays(retentionDays) {
-			return 0, errors.New("audit.operation_log.cleanup.days_invalid")
+			return 0, common.NewBadRequest("audit.operation_log.cleanup.days_invalid")
 		}
 		cutoff := time.Now().AddDate(0, 0, -retentionDays)
 		db = db.Where("oper_time < ?", cutoff)
@@ -200,18 +192,18 @@ func parseOperationCleanupWindow(startedAt, endedAt string) (*operationCleanupWi
 		return nil, nil
 	}
 	if startedAt == "" || endedAt == "" {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
 	}
 	start, err := time.Parse(time.RFC3339, startedAt)
 	if err != nil {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
 	}
 	end, err := time.Parse(time.RFC3339, endedAt)
 	if err != nil {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
 	}
 	if end.Before(start) {
-		return nil, errors.New("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
 	}
 	return &operationCleanupWindow{StartedAt: start, EndedAt: end}, nil
 }
@@ -315,7 +307,7 @@ func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 
 	normalized := normalizeAuditLogIDs(ids)
 	if len(normalized) == 0 {
-		return 0, errors.New("audit.operation_log.delete.ids_required")
+		return 0, common.NewBadRequest("audit.operation_log.delete.ids_required")
 	}
 
 	result := s.db.Where("id IN ?", normalized).Delete(&middleware.SystemLogOper{})
@@ -328,10 +320,27 @@ func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 func (s *AuditService) listOperationLogsForExport(query *OperationLogQuery) ([]middleware.SystemLogOper, error) {
 	var rows []middleware.SystemLogOper
 	db := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query)
-	if err := db.Order("id desc").Find(&rows).Error; err != nil {
+	if err := db.Order("id desc").Limit(maxOperationLogExportRows).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	return rows, nil
+}
+
+func normalizeOperationLogPageQuery(query *OperationLogQuery) (int, int) {
+	page := 1
+	pageSize := 10
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.PageSize > 0 {
+			pageSize = query.PageSize
+		}
+	}
+	if pageSize > maxOperationLogPageSize {
+		pageSize = maxOperationLogPageSize
+	}
+	return page, pageSize
 }
 
 func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationLogQuery) *gorm.DB {

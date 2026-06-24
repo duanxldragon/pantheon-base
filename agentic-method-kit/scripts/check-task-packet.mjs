@@ -66,6 +66,12 @@ const REQUIRED_CHECKLIST_ITEMS = [
   'Review completed',
 ];
 
+const RECOMMENDED_GUARDRAIL_SECTIONS = [
+  'Assumptions and Open Questions',
+  'Minimum Viable Approach',
+  'Success Criteria',
+];
+
 function printHelp() {
   console.log(`Usage:
   node scripts/harness/check-task-packet.mjs [--json] [--root <path>] [task-file ...]
@@ -228,9 +234,25 @@ function validateTaskPacket(filePath, root) {
   validateOptionalExecutionRoles(content, headings, result);
   validateOptionalStopPoints(content, headings, result);
   validateOptionalStatePlan(content, headings, result);
+  validateRecommendedGuardrailSections(content, headings, result);
   validateChecklist(content, headings, result);
 
   return result;
+}
+
+function validateRecommendedGuardrailSections(content, headings, result) {
+  for (const title of RECOMMENDED_GUARDRAIL_SECTIONS) {
+    const section = findSection(headings, title);
+    if (!section) {
+      result.warnings.push(`Recommended section missing: "## ${title}".`);
+      continue;
+    }
+
+    const sectionContent = getSectionContent(content, headings, section);
+    if (!sectionContent || !hasListItem(sectionContent)) {
+      result.warnings.push(`Recommended section "## ${title}" should include at least one list item.`);
+    }
+  }
 }
 
 function validateHarnessProfile(content, headings, result) {
