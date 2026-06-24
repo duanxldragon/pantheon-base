@@ -107,9 +107,29 @@ func TestLoggerWithNilLogger(t *testing.T) {
 }
 
 func TestSanitizeLogMessage(t *testing.T) {
-	got := sanitizeLogMessage("login failed\r\nuser=admin\u0000next\u2028line\tkept")
+	got := SanitizeLogValue("login failed\r\nuser=admin\u0000next\u2028line\tkept")
 	want := "login failed  user=adminnext line\tkept"
 	if got != want {
-		t.Fatalf("sanitizeLogMessage() = %q, want %q", got, want)
+		t.Fatalf("SanitizeLogValue() = %q, want %q", got, want)
 	}
+}
+
+func TestSanitizeLogFields(t *testing.T) {
+	fields := sanitizeLogFields([]zap.Field{
+		zap.String("path\nkey", "/users\r\nadmin"),
+		zap.Error(testLogError("bad\r\nline")),
+	})
+
+	if fields[0].Key != "path key" || fields[0].String != "/users  admin" {
+		t.Fatalf("unexpected sanitized string field: %+v", fields[0])
+	}
+	if fields[1].String != "bad  line" {
+		t.Fatalf("unexpected sanitized error field: %+v", fields[1])
+	}
+}
+
+type testLogError string
+
+func (e testLogError) Error() string {
+	return string(e)
 }

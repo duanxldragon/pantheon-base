@@ -2,7 +2,9 @@ package login
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -38,24 +40,26 @@ const (
 )
 
 const (
-	settingPasswordMinLengthKey       = "security.password_min_length"
-	settingPasswordRequireDigitKey    = "security.password_require_digit"
-	settingPasswordRequireUpperKey    = "security.password_require_uppercase"
-	settingPasswordHistoryLimitKey    = "security.password_history_limit"
-	settingPasswordExpireDaysKey      = "security.password_expire_days"
-	settingMaxFailedAttemptsKey       = "login.max_failed_attempts"
-	settingLockMinutesKey             = "login.lock_minutes"
-	settingSourceMaxFailedAttemptsKey = "login.source_max_failed_attempts"
-	settingSourceWindowMinutesKey     = "login.source_window_minutes"
-	settingSourceLockMinutesKey       = "login.source_lock_minutes"
-	settingSessionIdleMinutesKey      = "login.session_idle_minutes"
-	settingMaxActiveSessionsKey       = "login.max_active_sessions_per_user"
-	settingLoginLogRetentionDaysKey   = "audit.login_log_retention_days"
-	settingSessionRetentionDaysKey    = "audit.session_retention_days"
-	settingSecurityEventEnabledKey    = "login.security_event_enabled"
-	settingCaptchaEnabledKey          = "login.captcha_enabled"
-	settingMFAEnabledKey              = "login.mfa_enabled"
-	settingSSOEnabledKey              = "login.sso_enabled"
+	settingPasswordMinLengthKey        = "security.password_min_length"
+	settingPasswordRequireDigitKey     = "security.password_require_digit"
+	settingPasswordRequireUpperKey     = "security.password_require_uppercase"
+	settingPasswordHistoryLimitKey     = "security.password_history_limit"
+	settingPasswordExpireDaysKey       = "security.password_expire_days"
+	settingMaxFailedAttemptsKey        = "login.max_failed_attempts"
+	settingLockMinutesKey              = "login.lock_minutes"
+	settingSourceMaxFailedAttemptsKey  = "login.source_max_failed_attempts"
+	settingSourceWindowMinutesKey      = "login.source_window_minutes"
+	settingSourceLockMinutesKey        = "login.source_lock_minutes"
+	settingSessionIdleMinutesKey       = "login.session_idle_minutes"
+	settingMaxActiveSessionsKey        = "login.max_active_sessions_per_user"
+	settingLoginLogRetentionDaysKey    = "audit.login_log_retention_days"
+	settingSessionRetentionDaysKey     = "audit.session_retention_days"
+	settingLoginLogRetentionOptionsKey = "audit.login_log_retention_options"
+	settingSessionCleanupOptionsKey    = "audit.session_cleanup_retention_options"
+	settingSecurityEventEnabledKey     = "login.security_event_enabled"
+	settingCaptchaEnabledKey           = "login.captcha_enabled"
+	settingMFAEnabledKey               = "login.mfa_enabled"
+	settingSSOEnabledKey               = "login.sso_enabled"
 
 	errSessionInvalid                = "session.invalid"
 	errCurrentSessionRevokeForbidden = "auth.session.current_revoke_forbidden"
@@ -89,10 +93,12 @@ type Runtime struct {
 	sessionSvc  *session.Service
 
 	// 账号安全策略缓存
-	settingsMu    sync.RWMutex
-	settingsCache map[string]int
-	cleanupMu     sync.Mutex
-	lastCleanupAt map[string]time.Time
+	settingsMu                   sync.RWMutex
+	settingsCache                map[string]int
+	loginLogCleanupRetentionDays []int
+	sessionCleanupRetentionDays  []int
+	cleanupMu                    sync.Mutex
+	lastCleanupAt                map[string]time.Time
 }
 
 // NewRuntime constructs the root auth service and its sub-services.
@@ -143,6 +149,7 @@ func (s *Runtime) GetSessionPolicy() session.AuthRuntimePolicy {
 		SessionIdleMinutes:   policy.SessionIdleMinutes,
 		SessionRetentionDays: policy.SessionRetentionDays,
 		MaxActiveSessions:    policy.MaxActiveSessions,
+		CleanupRetentionDays: cloneIntSlice(policy.SessionCleanupRetentionDays),
 	}
 }
 
@@ -170,12 +177,13 @@ func (s *Runtime) GetRuntimePolicy() RuntimePolicy {
 	s.settingsMu.RLock()
 	defer s.settingsMu.RUnlock()
 	return RuntimePolicy{
-		MaxFailedAttempts:       s.settingsCache[settingMaxFailedAttemptsKey],
-		LockMinutes:             s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts: s.settingsCache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:     s.settingsCache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:       s.settingsCache[settingSourceLockMinutesKey],
-		SecurityEventEnabled:    s.settingsCache[settingSecurityEventEnabledKey] == 1,
+		MaxFailedAttempts:            s.settingsCache[settingMaxFailedAttemptsKey],
+		LockMinutes:                  s.settingsCache[settingLockMinutesKey],
+		SourceMaxFailedAttempts:      s.settingsCache[settingSourceMaxFailedAttemptsKey],
+		SourceWindowMinutes:          s.settingsCache[settingSourceWindowMinutesKey],
+		SourceLockMinutes:            s.settingsCache[settingSourceLockMinutesKey],
+		SecurityEventEnabled:         s.settingsCache[settingSecurityEventEnabledKey] == 1,
+		LoginLogCleanupRetentionDays: cloneIntSlice(s.loginLogCleanupRetentionDays),
 	}
 }
 
@@ -614,24 +622,26 @@ func (s *Runtime) AcknowledgeSecurityEvent(eventID, actorID uint64, actorUsernam
 
 func (s *Runtime) ReloadSettings() error {
 	policy := authRuntimePolicy{
-		PasswordMinLength:       s.fetchSettingIntFromDB(settingPasswordMinLengthKey, defaultPasswordMinLength),
-		PasswordRequireDigit:    s.fetchSettingBoolFromDB(settingPasswordRequireDigitKey, false),
-		PasswordRequireUpper:    s.fetchSettingBoolFromDB(settingPasswordRequireUpperKey, false),
-		PasswordHistoryLimit:    s.fetchSettingIntFromDB(settingPasswordHistoryLimitKey, 0),
-		PasswordExpireDays:      s.fetchSettingIntFromDB(settingPasswordExpireDaysKey, 0),
-		MaxFailedAttempts:       s.fetchSettingIntFromDB(settingMaxFailedAttemptsKey, defaultMaxFailedAttempts),
-		LockMinutes:             s.fetchSettingIntFromDB(settingLockMinutesKey, defaultLockMinutes),
-		SourceMaxFailedAttempts: s.fetchSettingIntFromDB(settingSourceMaxFailedAttemptsKey, defaultSourceMaxFailedAttempts),
-		SourceWindowMinutes:     s.fetchSettingIntFromDB(settingSourceWindowMinutesKey, defaultSourceWindowMinutes),
-		SourceLockMinutes:       s.fetchSettingIntFromDB(settingSourceLockMinutesKey, defaultSourceLockMinutes),
-		SessionIdleMinutes:      s.fetchSettingIntFromDB(settingSessionIdleMinutesKey, defaultSessionIdleMinutes),
-		MaxActiveSessions:       s.fetchSettingIntFromDB(settingMaxActiveSessionsKey, defaultMaxActiveSessions),
-		LoginLogRetentionDays:   s.fetchSettingIntFromDB(settingLoginLogRetentionDaysKey, defaultLoginLogRetentionDays),
-		SessionRetentionDays:    s.fetchSettingIntFromDB(settingSessionRetentionDaysKey, defaultSessionRetentionDays),
-		SecurityEventEnabled:    s.fetchSettingBoolFromDB(settingSecurityEventEnabledKey, true),
-		CaptchaEnabled:          s.fetchSettingBoolFromDB(settingCaptchaEnabledKey, false),
-		MFAEnabled:              s.fetchSettingBoolFromDB(settingMFAEnabledKey, false),
-		SSOEnabled:              s.fetchSettingBoolFromDB(settingSSOEnabledKey, false),
+		PasswordMinLength:            s.fetchSettingIntFromDB(settingPasswordMinLengthKey, defaultPasswordMinLength),
+		PasswordRequireDigit:         s.fetchSettingBoolFromDB(settingPasswordRequireDigitKey, false),
+		PasswordRequireUpper:         s.fetchSettingBoolFromDB(settingPasswordRequireUpperKey, false),
+		PasswordHistoryLimit:         s.fetchSettingIntFromDB(settingPasswordHistoryLimitKey, 0),
+		PasswordExpireDays:           s.fetchSettingIntFromDB(settingPasswordExpireDaysKey, 0),
+		MaxFailedAttempts:            s.fetchSettingIntFromDB(settingMaxFailedAttemptsKey, defaultMaxFailedAttempts),
+		LockMinutes:                  s.fetchSettingIntFromDB(settingLockMinutesKey, defaultLockMinutes),
+		SourceMaxFailedAttempts:      s.fetchSettingIntFromDB(settingSourceMaxFailedAttemptsKey, defaultSourceMaxFailedAttempts),
+		SourceWindowMinutes:          s.fetchSettingIntFromDB(settingSourceWindowMinutesKey, defaultSourceWindowMinutes),
+		SourceLockMinutes:            s.fetchSettingIntFromDB(settingSourceLockMinutesKey, defaultSourceLockMinutes),
+		SessionIdleMinutes:           s.fetchSettingIntFromDB(settingSessionIdleMinutesKey, defaultSessionIdleMinutes),
+		MaxActiveSessions:            s.fetchSettingIntFromDB(settingMaxActiveSessionsKey, defaultMaxActiveSessions),
+		LoginLogRetentionDays:        s.fetchSettingIntFromDB(settingLoginLogRetentionDaysKey, defaultLoginLogRetentionDays),
+		SessionRetentionDays:         s.fetchSettingIntFromDB(settingSessionRetentionDaysKey, defaultSessionRetentionDays),
+		LoginLogCleanupRetentionDays: s.fetchSettingIntSliceFromDB(settingLoginLogRetentionOptionsKey, defaultCleanupRetentionDays()),
+		SessionCleanupRetentionDays:  s.fetchSettingIntSliceFromDB(settingSessionCleanupOptionsKey, defaultCleanupRetentionDays()),
+		SecurityEventEnabled:         s.fetchSettingBoolFromDB(settingSecurityEventEnabledKey, true),
+		CaptchaEnabled:               s.fetchSettingBoolFromDB(settingCaptchaEnabledKey, false),
+		MFAEnabled:                   s.fetchSettingBoolFromDB(settingMFAEnabledKey, false),
+		SSOEnabled:                   s.fetchSettingBoolFromDB(settingSSOEnabledKey, false),
 	}
 
 	s.settingsMu.Lock()
@@ -649,6 +659,8 @@ func (s *Runtime) ReloadSettings() error {
 	s.settingsCache[settingMaxActiveSessionsKey] = policy.MaxActiveSessions
 	s.settingsCache[settingLoginLogRetentionDaysKey] = policy.LoginLogRetentionDays
 	s.settingsCache[settingSessionRetentionDaysKey] = policy.SessionRetentionDays
+	s.loginLogCleanupRetentionDays = cloneIntSlice(policy.LoginLogCleanupRetentionDays)
+	s.sessionCleanupRetentionDays = cloneIntSlice(policy.SessionCleanupRetentionDays)
 	s.settingsCache[settingSecurityEventEnabledKey] = boolToInt(policy.SecurityEventEnabled)
 	s.settingsCache[settingCaptchaEnabledKey] = boolToInt(policy.CaptchaEnabled)
 	s.settingsCache[settingMFAEnabledKey] = boolToInt(policy.MFAEnabled)
@@ -676,24 +688,26 @@ func (s *Runtime) getAuthRuntimePolicy() authRuntimePolicy {
 	defer s.settingsMu.RUnlock()
 
 	return authRuntimePolicy{
-		PasswordMinLength:       s.settingsCache[settingPasswordMinLengthKey],
-		PasswordRequireDigit:    s.settingsCache[settingPasswordRequireDigitKey] == 1,
-		PasswordRequireUpper:    s.settingsCache[settingPasswordRequireUpperKey] == 1,
-		PasswordHistoryLimit:    s.settingsCache[settingPasswordHistoryLimitKey],
-		PasswordExpireDays:      s.settingsCache[settingPasswordExpireDaysKey],
-		MaxFailedAttempts:       s.settingsCache[settingMaxFailedAttemptsKey],
-		LockMinutes:             s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts: s.settingsCache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:     s.settingsCache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:       s.settingsCache[settingSourceLockMinutesKey],
-		SessionIdleMinutes:      s.settingsCache[settingSessionIdleMinutesKey],
-		MaxActiveSessions:       s.settingsCache[settingMaxActiveSessionsKey],
-		LoginLogRetentionDays:   s.settingsCache[settingLoginLogRetentionDaysKey],
-		SessionRetentionDays:    s.settingsCache[settingSessionRetentionDaysKey],
-		SecurityEventEnabled:    s.settingsCache[settingSecurityEventEnabledKey] == 1,
-		CaptchaEnabled:          s.settingsCache[settingCaptchaEnabledKey] == 1,
-		MFAEnabled:              s.settingsCache[settingMFAEnabledKey] == 1,
-		SSOEnabled:              s.settingsCache[settingSSOEnabledKey] == 1,
+		PasswordMinLength:            s.settingsCache[settingPasswordMinLengthKey],
+		PasswordRequireDigit:         s.settingsCache[settingPasswordRequireDigitKey] == 1,
+		PasswordRequireUpper:         s.settingsCache[settingPasswordRequireUpperKey] == 1,
+		PasswordHistoryLimit:         s.settingsCache[settingPasswordHistoryLimitKey],
+		PasswordExpireDays:           s.settingsCache[settingPasswordExpireDaysKey],
+		MaxFailedAttempts:            s.settingsCache[settingMaxFailedAttemptsKey],
+		LockMinutes:                  s.settingsCache[settingLockMinutesKey],
+		SourceMaxFailedAttempts:      s.settingsCache[settingSourceMaxFailedAttemptsKey],
+		SourceWindowMinutes:          s.settingsCache[settingSourceWindowMinutesKey],
+		SourceLockMinutes:            s.settingsCache[settingSourceLockMinutesKey],
+		SessionIdleMinutes:           s.settingsCache[settingSessionIdleMinutesKey],
+		MaxActiveSessions:            s.settingsCache[settingMaxActiveSessionsKey],
+		LoginLogRetentionDays:        s.settingsCache[settingLoginLogRetentionDaysKey],
+		SessionRetentionDays:         s.settingsCache[settingSessionRetentionDaysKey],
+		LoginLogCleanupRetentionDays: cloneIntSlice(s.loginLogCleanupRetentionDays),
+		SessionCleanupRetentionDays:  cloneIntSlice(s.sessionCleanupRetentionDays),
+		SecurityEventEnabled:         s.settingsCache[settingSecurityEventEnabledKey] == 1,
+		CaptchaEnabled:               s.settingsCache[settingCaptchaEnabledKey] == 1,
+		MFAEnabled:                   s.settingsCache[settingMFAEnabledKey] == 1,
+		SSOEnabled:                   s.settingsCache[settingSSOEnabledKey] == 1,
 	}
 }
 
@@ -753,13 +767,20 @@ func (s *Runtime) fetchSettingBoolFromDB(settingKey string, fallback bool) bool 
 	return parsed
 }
 
-func (s *Runtime) isAllowedSessionCleanupRetentionDays(retentionDays int) bool {
-	for _, allowed := range []int{1, 7, 30} {
-		if allowed == retentionDays {
-			return true
-		}
+func (s *Runtime) fetchSettingIntSliceFromDB(settingKey string, fallback []int) []int {
+	if s.db == nil {
+		return cloneIntSlice(fallback)
 	}
-	return false
+	var rawValue string
+	err := s.db.Table("system_setting").
+		Select("setting_value").
+		Where(settingKeyWhereClause, settingKey).
+		Limit(1).
+		Pluck("setting_value", &rawValue).Error
+	if err != nil {
+		return cloneIntSlice(fallback)
+	}
+	return normalizeRetentionDays(rawValue, fallback)
 }
 
 func (s *Runtime) governSessionInventory(now time.Time, policy authRuntimePolicy) error {
@@ -836,24 +857,26 @@ func (s *Runtime) issueTokenPairForSession(userID uint64, username string, roles
 // ─────────────────────────────────────────────────────────────
 
 type authRuntimePolicy struct {
-	PasswordMinLength       int
-	PasswordRequireDigit    bool
-	PasswordRequireUpper    bool
-	PasswordHistoryLimit    int
-	PasswordExpireDays      int
-	MaxFailedAttempts       int
-	LockMinutes             int
-	SourceMaxFailedAttempts int
-	SourceWindowMinutes     int
-	SourceLockMinutes       int
-	SessionIdleMinutes      int
-	MaxActiveSessions       int
-	LoginLogRetentionDays   int
-	SessionRetentionDays    int
-	SecurityEventEnabled    bool
-	CaptchaEnabled          bool
-	MFAEnabled              bool
-	SSOEnabled              bool
+	PasswordMinLength            int
+	PasswordRequireDigit         bool
+	PasswordRequireUpper         bool
+	PasswordHistoryLimit         int
+	PasswordExpireDays           int
+	MaxFailedAttempts            int
+	LockMinutes                  int
+	SourceMaxFailedAttempts      int
+	SourceWindowMinutes          int
+	SourceLockMinutes            int
+	SessionIdleMinutes           int
+	MaxActiveSessions            int
+	LoginLogRetentionDays        int
+	SessionRetentionDays         int
+	LoginLogCleanupRetentionDays []int
+	SessionCleanupRetentionDays  []int
+	SecurityEventEnabled         bool
+	CaptchaEnabled               bool
+	MFAEnabled                   bool
+	SSOEnabled                   bool
 }
 
 func toSecurityEventRespList(events []security.SecurityEventResp) []SecurityEventResp {
@@ -904,4 +927,41 @@ func boolToInt(value bool) int {
 		return 1
 	}
 	return 0
+}
+
+func defaultCleanupRetentionDays() []int {
+	return []int{1, 7, 30}
+}
+
+func cloneIntSlice(values []int) []int {
+	if len(values) == 0 {
+		return nil
+	}
+	cloned := make([]int, len(values))
+	copy(cloned, values)
+	return cloned
+}
+
+func normalizeRetentionDays(rawValue string, fallback []int) []int {
+	var values []int
+	if err := json.Unmarshal([]byte(strings.TrimSpace(rawValue)), &values); err != nil {
+		return cloneIntSlice(fallback)
+	}
+	seen := make(map[int]struct{}, len(values))
+	normalized := make([]int, 0, len(values))
+	for _, value := range values {
+		if value <= 0 {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		normalized = append(normalized, value)
+	}
+	if len(normalized) == 0 {
+		return cloneIntSlice(fallback)
+	}
+	sort.Ints(normalized)
+	return normalized
 }

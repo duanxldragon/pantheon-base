@@ -1212,6 +1212,7 @@ func TestRuntime_ListAllSessionsCleansExpiredAndIdleSessions(t *testing.T) {
 func TestRuntime_CreateSessionRevokesOlderActiveSessionsByConfiguredLimit(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
+	setupTestRedis(t)
 	now := time.Now()
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)

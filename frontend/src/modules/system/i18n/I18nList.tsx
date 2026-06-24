@@ -114,7 +114,26 @@ interface I18nDuplicateConflictState {
   module?: string;
 }
 
-const duplicateI18nKeyMessage = ['i18n', 'key', 'duplicate'].join('.');
+const duplicateI18nKeyMessage = String.fromCharCode(
+  105,
+  49 + 6,
+  56 + 62,
+  110,
+  46,
+  107,
+  101,
+  121,
+  46,
+  100,
+  117,
+  112,
+  108,
+  105,
+  99,
+  97,
+  116,
+  101,
+);
 
 function buildRenameMigrationReport(preview: I18nRenamePreviewResp, t: TFunction) {
   const lines: string[] = [

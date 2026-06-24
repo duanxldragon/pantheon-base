@@ -96,40 +96,41 @@ func Sync() {
 //	fields: 结构化字段，如 zap.String("key", "value")
 func Info(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Info(sanitizeLogMessage(msg), fields...)
+		Logger.Info(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
 // Warn 记录 Warn 级别的警告日志
 func Warn(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Warn(sanitizeLogMessage(msg), fields...)
+		Logger.Warn(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
 // Error 记录 Error 级别的错误日志
 func Error(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Error(sanitizeLogMessage(msg), fields...)
+		Logger.Error(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
 // Debug 记录 Debug 级别的调试日志
 func Debug(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Debug(sanitizeLogMessage(msg), fields...)
+		Logger.Debug(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
 // Fatal 记录 Fatal 级别日志并退出程序（exit code 1）
 func Fatal(msg string, fields ...zap.Field) {
 	if Logger != nil {
-		Logger.Fatal(sanitizeLogMessage(msg), fields...)
+		Logger.Fatal(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 	os.Exit(1)
 }
 
-func sanitizeLogMessage(msg string) string {
+// SanitizeLogValue strips log-control characters from user-controlled values.
+func SanitizeLogValue(value string) string {
 	return strings.Map(func(r rune) rune {
 		switch r {
 		case '\n', '\r', '\u2028', '\u2029':
@@ -139,5 +140,25 @@ func sanitizeLogMessage(msg string) string {
 			return -1
 		}
 		return r
-	}, msg)
+	}, value)
+}
+
+func sanitizeLogFields(fields []zap.Field) []zap.Field {
+	if len(fields) == 0 {
+		return fields
+	}
+	sanitized := make([]zap.Field, len(fields))
+	for i, field := range fields {
+		field.Key = SanitizeLogValue(field.Key)
+		switch field.Type {
+		case zapcore.StringType:
+			field.String = SanitizeLogValue(field.String)
+		case zapcore.ErrorType:
+			if err, ok := field.Interface.(error); ok && err != nil {
+				field = zap.String(field.Key, SanitizeLogValue(err.Error()))
+			}
+		}
+		sanitized[i] = field
+	}
+	return sanitized
 }

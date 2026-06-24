@@ -466,7 +466,7 @@ func (s *LoginService) emitSecurityEvent(currentUser *user.SystemUser, eventType
 }
 
 func (s *LoginService) isAllowedLoginLogRetentionDays(retentionDays int) bool {
-	for _, allowed := range []int{1, 7, 30} {
+	for _, allowed := range s.policy.GetRuntimePolicy().LoginLogCleanupRetentionDays {
 		if allowed == retentionDays {
 			return true
 		}
@@ -476,12 +476,13 @@ func (s *LoginService) isAllowedLoginLogRetentionDays(retentionDays int) bool {
 
 // RuntimePolicy mirrors the subset of auth policy needed by LoginService.
 type RuntimePolicy struct {
-	MaxFailedAttempts       int
-	LockMinutes             int
-	SourceMaxFailedAttempts int
-	SourceWindowMinutes     int
-	SourceLockMinutes       int
-	SecurityEventEnabled    bool
+	MaxFailedAttempts            int
+	LockMinutes                  int
+	SourceMaxFailedAttempts      int
+	SourceWindowMinutes          int
+	SourceLockMinutes            int
+	SecurityEventEnabled         bool
+	LoginLogCleanupRetentionDays []int
 }
 
 const (

@@ -195,7 +195,7 @@ func (s *Service) CleanupHistoricSessions(retentionDays int, startedAt, endedAt 
 	if window != nil {
 		db = db.Where("revoked_at >= ? AND revoked_at <= ?", window.StartedAt, window.EndedAt)
 	} else {
-		if !isAllowedSessionCleanupRetentionDays(retentionDays) {
+		if !isAllowedSessionCleanupRetentionDays(retentionDays, policy.CleanupRetentionDays) {
 			return 0, errors.New("auth.session.cleanup.days_invalid")
 		}
 		cutoff := now.AddDate(0, 0, -retentionDays)
@@ -216,7 +216,7 @@ func (s *Service) BatchRevokeSessions(currentSessionID string, sessionIDs []stri
 	}
 	for _, sid := range normalized {
 		if sid == currentSessionID {
-			return 0, common.ErrUnauthorized
+			return 0, errors.New("auth.session.current_revoke_forbidden")
 		}
 	}
 	now := time.Now()

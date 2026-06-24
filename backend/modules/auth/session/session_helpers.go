@@ -16,6 +16,7 @@ type AuthRuntimePolicy struct {
 	SessionIdleMinutes   int
 	SessionRetentionDays int
 	MaxActiveSessions    int
+	CleanupRetentionDays []int
 }
 
 type cleanupWindow struct {
@@ -46,8 +47,11 @@ func parseCleanupWindow(startedAt, endedAt, invalidErr string) (*cleanupWindow, 
 	return &cleanupWindow{StartedAt: start, EndedAt: end}, nil
 }
 
-func isAllowedSessionCleanupRetentionDays(retentionDays int) bool {
-	for _, allowed := range []int{1, 7, 30} {
+func isAllowedSessionCleanupRetentionDays(retentionDays int, allowedDays []int) bool {
+	if len(allowedDays) == 0 {
+		allowedDays = []int{1, 7, 30}
+	}
+	for _, allowed := range allowedDays {
 		if allowed == retentionDays {
 			return true
 		}
