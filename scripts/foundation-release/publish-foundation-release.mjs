@@ -90,6 +90,18 @@ function ensureReleaseDirectory(root, releaseVersion) {
   };
 }
 
+function ensureReleaseAssetFiles(releasePaths, releaseVersion) {
+  const archivePath = path.join(releasePaths.distRoot, `foundation-release-${releaseVersion}.tgz`);
+  const checksumPath = `${archivePath}.sha256`;
+  const missingFiles = [archivePath, checksumPath].filter((filePath) => !fs.existsSync(filePath));
+  if (missingFiles.length > 0) {
+    throw new Error(
+      `release asset files are missing: ${missingFiles.join(', ')}. Run release:foundation:bundle first.`,
+    );
+  }
+  return [archivePath, checksumPath];
+}
+
 function readReleaseFile(releaseRoot, fileName) {
   const filePath = path.join(releaseRoot, fileName);
   if (!fs.existsSync(filePath)) {
@@ -221,10 +233,20 @@ function updateGitHubRelease(root, repoFullName, tagName, releaseTitle, notes) {
   );
 }
 
+function uploadGitHubReleaseAssets(root, repoFullName, tagName, assetPaths) {
+  runCommand(
+    'gh',
+    ['release', 'upload', tagName, '--repo', repoFullName, '--clobber', ...assetPaths],
+    `gh release upload ${tagName}`,
+    { cwd: root },
+  );
+}
+
 export function publishFoundationRelease(options) {
   const root = path.resolve(options.root);
   const repoFullName = resolveRepoFullName(root, options.repoFullName);
   const releasePaths = ensureReleaseDirectory(root, options.releaseVersion);
+  const assetPaths = ensureReleaseAssetFiles(releasePaths, options.releaseVersion);
   const targetCommit =
     options.targetCommit || runCommand('git', ['rev-parse', 'HEAD'], 'git rev-parse HEAD', { cwd: root });
   const tagName = options.releaseVersion;
@@ -301,6 +323,13 @@ export function publishFoundationRelease(options) {
           ],
         },
   );
+  operations.push({
+    type: 'upload-github-release-assets',
+    tagName,
+    repoFullName,
+    assetPaths,
+    command: ['gh', 'release', 'upload', tagName, '--repo', repoFullName, '--clobber', ...assetPaths],
+  });
 
   if (options.dryRun) {
     return {
@@ -316,6 +345,7 @@ export function publishFoundationRelease(options) {
       releaseExists,
       releaseBody,
       operations,
+      assetPaths,
       dryRun: true,
     };
   }
@@ -332,6 +362,7 @@ export function publishFoundationRelease(options) {
   } else {
     createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, releaseBody);
   }
+  uploadGitHubReleaseAssets(root, repoFullName, tagName, assetPaths);
 
   return {
     releaseRoot: releasePaths.releaseRoot,
@@ -346,6 +377,7 @@ export function publishFoundationRelease(options) {
     releaseExists,
     releaseBody,
     operations,
+    assetPaths,
     dryRun: false,
   };
 }

@@ -167,7 +167,11 @@ func (s *Runtime) GetUserByID(userID uint64) (*session.UserRef, error) {
 
 // session.TokenIssuer — issues token pairs for session operations.
 func (s *Runtime) IssueTokenPair(userID uint64, username string, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
-	return s.issueTokenPairForSession(userID, username, roles, sess)
+	return s.IssueTokenPairWithContext(context.Background(), userID, username, roles, sess)
+}
+
+func (s *Runtime) IssueTokenPairWithContext(ctx context.Context, userID uint64, username string, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+	return s.issueTokenPairForSession(ctx, userID, username, roles, sess)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -272,8 +276,15 @@ func (s *Runtime) GetUserRoles(userID uint64) ([]string, error) {
 // mfa.SessionCreator implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) CreateSession(userID uint64, roles []string, ip, userAgent string) (*authtoken.Pair, error) {
+	return s.CreateSessionWithContext(context.Background(), userID, roles, ip, userAgent)
+}
+
+func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, roles []string, ip, userAgent string) (*authtoken.Pair, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
+	}
+	if ctx == nil {
+		ctx = context.Background()
 	}
 	policy := s.getAuthRuntimePolicy()
 	now := time.Now()
@@ -302,7 +313,7 @@ func (s *Runtime) CreateSession(userID uint64, roles []string, ip, userAgent str
 	if err := s.db.Create(&sess).Error; err != nil {
 		return nil, err
 	}
-	return s.issueTokenPair(&u, roles, &sess)
+	return s.issueTokenPair(ctx, &u, roles, &sess)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -390,7 +401,11 @@ func (s *Runtime) CreateMFAChallenge(currentUser *iamuser.SystemUser) (*mfa.MFAC
 }
 
 func (s *Runtime) VerifyMFAChallenge(req *MFAVerifyReq, ip, userAgent string) (*AuthTokenResp, error) {
-	result, err := s.mfaSvc.VerifyChallenge(req, ip, userAgent)
+	return s.VerifyMFAChallengeWithContext(context.Background(), req, ip, userAgent)
+}
+
+func (s *Runtime) VerifyMFAChallengeWithContext(ctx context.Context, req *MFAVerifyReq, ip, userAgent string) (*AuthTokenResp, error) {
+	result, err := s.mfaSvc.VerifyChallengeWithContext(ctx, req, ip, userAgent)
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +421,11 @@ func (s *Runtime) VerifyMFAChallenge(req *MFAVerifyReq, ip, userAgent string) (*
 }
 
 func (s *Runtime) RefreshSession(sessionID string, userID uint64, ip, userAgent string) (*authtoken.Pair, error) {
-	return s.sessionSvc.RefreshSession(sessionID, userID, ip, userAgent)
+	return s.RefreshSessionWithContext(context.Background(), sessionID, userID, ip, userAgent)
+}
+
+func (s *Runtime) RefreshSessionWithContext(ctx context.Context, sessionID string, userID uint64, ip, userAgent string) (*authtoken.Pair, error) {
+	return s.sessionSvc.RefreshSessionWithContext(ctx, sessionID, userID, ip, userAgent)
 }
 
 func (s *Runtime) RevokeSession(sessionID string) error {
@@ -524,6 +543,10 @@ func (s *Runtime) UpdateCurrentUserPreferences(userID uint64, req *UserPlatformP
 
 func (s *Runtime) VerifyPasswordForOperation(userID uint64, sessionID, password string) (string, error) {
 	return s.securitySvc.VerifyPasswordForOperation(userID, sessionID, password)
+}
+
+func (s *Runtime) VerifyPasswordForOperationWithContext(ctx context.Context, userID uint64, sessionID, password string) (string, error) {
+	return s.securitySvc.VerifyPasswordForOperationWithContext(ctx, userID, sessionID, password)
 }
 
 func (s *Runtime) UpdatePassword(userID uint64, currentSessionID string, req *PasswordUpdateReq) error {
@@ -796,7 +819,10 @@ func (s *Runtime) governSessionInventory(now time.Time, policy authRuntimePolicy
 	return authsession.PurgeHistoricSessions(s.db, now, policy.SessionRetentionDays)
 }
 
-func (s *Runtime) issueTokenPair(u *iamuser.SystemUser, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+func (s *Runtime) issueTokenPair(ctx context.Context, u *iamuser.SystemUser, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	accessToken := authtoken.NewAccessToken()
 	refreshToken := authtoken.NewRefreshToken()
 	now := time.Now()
@@ -810,10 +836,10 @@ func (s *Runtime) issueTokenPair(u *iamuser.SystemUser, roles []string, sess *se
 		SessionID:      sess.SessionID,
 		LastActivityAt: now.Unix(),
 	}
-	if err := authtoken.StoreSession(context.Background(), database.RDB, accessToken, accessData, accessTTL); err != nil {
+	if err := authtoken.StoreSession(ctx, database.RDB, accessToken, accessData, accessTTL); err != nil {
 		return nil, err
 	}
-	if err := authtoken.StoreRefresh(context.Background(), database.RDB, refreshToken, u.ID, sess.SessionID, refreshTTL); err != nil {
+	if err := authtoken.StoreRefresh(ctx, database.RDB, refreshToken, u.ID, sess.SessionID, refreshTTL); err != nil {
 		return nil, err
 	}
 	sess.RefreshExpiresAt = now.Add(refreshTTL)
@@ -827,7 +853,10 @@ func (s *Runtime) issueTokenPair(u *iamuser.SystemUser, roles []string, sess *se
 	}, nil
 }
 
-func (s *Runtime) issueTokenPairForSession(userID uint64, username string, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+func (s *Runtime) issueTokenPairForSession(ctx context.Context, userID uint64, username string, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	accessToken := authtoken.NewAccessToken()
 	refreshToken := authtoken.NewRefreshToken()
 	now := time.Now()
@@ -841,10 +870,10 @@ func (s *Runtime) issueTokenPairForSession(userID uint64, username string, roles
 		SessionID:      sess.SessionID,
 		LastActivityAt: now.Unix(),
 	}
-	if err := authtoken.StoreSession(context.Background(), database.RDB, accessToken, accessData, accessTTL); err != nil {
+	if err := authtoken.StoreSession(ctx, database.RDB, accessToken, accessData, accessTTL); err != nil {
 		return nil, err
 	}
-	if err := authtoken.StoreRefresh(context.Background(), database.RDB, refreshToken, userID, sess.SessionID, refreshTTL); err != nil {
+	if err := authtoken.StoreRefresh(ctx, database.RDB, refreshToken, userID, sess.SessionID, refreshTTL); err != nil {
 		return nil, err
 	}
 	sess.RefreshExpiresAt = now.Add(refreshTTL)

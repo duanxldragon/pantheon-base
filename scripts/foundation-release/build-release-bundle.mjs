@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const DEFAULT_ROOT = process.cwd();
@@ -104,6 +106,39 @@ function copyMetadataFiles(releaseRoot, distRoot) {
   }
 }
 
+function writeReleaseModuleBoundary(distRoot, releaseVersion) {
+  fs.writeFileSync(
+    path.join(distRoot, 'go.mod'),
+    `module pantheon-foundation-release/${releaseVersion}\n\ngo 1.24.0\n`,
+    'utf8',
+  );
+}
+
+function createArchive(distRoot, releaseVersion) {
+  const archiveName = `foundation-release-${releaseVersion}.tgz`;
+  const archivePath = path.join(distRoot, archiveName);
+  const entries = [
+    ...METADATA_FILES.filter((fileName) => fs.existsSync(path.join(distRoot, fileName))),
+    'go.mod',
+    'bundle',
+  ];
+  const result = spawnSync('tar', ['-czf', archivePath, '-C', distRoot, ...entries], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    throw new Error(result.stderr?.trim() || `failed to create ${archiveName}`);
+  }
+
+  const checksum = crypto.createHash('sha256').update(fs.readFileSync(archivePath)).digest('hex');
+  fs.writeFileSync(path.join(distRoot, `${archiveName}.sha256`), `${checksum}  ${archiveName}\n`, 'utf8');
+
+  return {
+    archiveName,
+    archivePath,
+    checksum,
+  };
+}
+
 export function createReleaseBundle(options) {
   const { releaseRoot, distRoot, bundleRoot } = resolveReleaseRoots(options.root, options.releaseVersion);
   const manifest = readManifest(releaseRoot);
@@ -118,6 +153,7 @@ export function createReleaseBundle(options) {
 
   fs.mkdirSync(bundleRoot, { recursive: true });
   copyMetadataFiles(releaseRoot, distRoot);
+  writeReleaseModuleBoundary(distRoot, manifest.releaseVersion);
 
   for (const relativePath of manifest.sharedPaths?.backend || []) {
     pathReport.backend.push(
@@ -136,12 +172,14 @@ export function createReleaseBundle(options) {
   }
 
   fs.writeFileSync(path.join(bundleRoot, 'manifest.paths.json'), `${JSON.stringify(pathReport, null, 2)}\n`, 'utf8');
+  const archive = createArchive(distRoot, manifest.releaseVersion);
 
   return {
     distRoot,
     bundleRoot,
     manifest,
     pathReport,
+    archive,
   };
 }
 

@@ -19,9 +19,14 @@ func SecureActionMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := authtoken.ParseOperationToken(token, database.RDB)
+		claims, err := authtoken.ParseOperationTokenWithContext(c.Request.Context(), token, database.RDB)
 		if err != nil {
 			common.FailWithCode(c, 403, "auth.operation.verification_expired")
+			c.Abort()
+			return
+		}
+		if claims.Scope != authtoken.ScopeSecureAction {
+			common.FailWithCode(c, 403, "auth.operation.verification_mismatch")
 			c.Abort()
 			return
 		}

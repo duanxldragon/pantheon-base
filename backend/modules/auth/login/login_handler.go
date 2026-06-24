@@ -129,7 +129,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.CreateSession(currentUser.ID, roles, ip, userAgent)
+	tokenPair, err := h.service.CreateSessionWithContext(c.Request.Context(), currentUser.ID, roles, ip, userAgent)
 	if err != nil {
 		messageKey := common.ResolveErrorMessageKey(err, "auth.session.create.error")
 		h.service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
@@ -163,7 +163,7 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	ip := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
 	clientInfo := authsessiondomain.ParseClientInfo(userAgent)
-	resp, err := h.service.VerifyMFAChallenge(&req, ip, userAgent)
+	resp, err := h.service.VerifyMFAChallengeWithContext(c.Request.Context(), &req, ip, userAgent)
 	if err != nil {
 		messageKey := common.ResolveErrorMessageKey(err, "auth.mfa.verify.error")
 		h.service.RecordLoginLog(common.GetRequestID(c), "", ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
@@ -202,13 +202,13 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	refreshClaims, err := parseRefreshToken(refreshToken)
+	refreshClaims, err := parseRefreshTokenWithContext(c.Request.Context(), refreshToken)
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "token.invalid")
 		return
 	}
 
-	tokenPair, err := h.service.RefreshSession(refreshClaims.SessionID, refreshClaims.UserID, c.ClientIP(), c.GetHeader("User-Agent"))
+	tokenPair, err := h.service.RefreshSessionWithContext(c.Request.Context(), refreshClaims.SessionID, refreshClaims.UserID, c.ClientIP(), c.GetHeader("User-Agent"))
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.session.refresh.error")
 		return
@@ -482,7 +482,7 @@ func (h *AuthHandler) VerifyOperationPassword(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
 		return
 	}
-	token, err := h.service.VerifyPasswordForOperation(common.GetUserID(c), c.GetString("sessionId"), req.Password)
+	token, err := h.service.VerifyPasswordForOperationWithContext(c.Request.Context(), common.GetUserID(c), c.GetString("sessionId"), req.Password)
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.operation.verify.error")
 		return
@@ -550,11 +550,17 @@ func buildLoginSourceKey(ip string) string {
 }
 
 func parseRefreshToken(refreshToken string) (*TokenRefreshClaims, error) {
+	return parseRefreshTokenWithContext(context.Background(), refreshToken)
+}
+
+func parseRefreshTokenWithContext(ctx context.Context, refreshToken string) (*TokenRefreshClaims, error) {
 	if refreshToken == "" {
 		return nil, errors.New("token.invalid")
 	}
 
-	ctx := context.Background()
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	userID, sessionID, err := authtoken.ValidateRefresh(ctx, database.RDB, refreshToken)
 	if err != nil {
 		return nil, err

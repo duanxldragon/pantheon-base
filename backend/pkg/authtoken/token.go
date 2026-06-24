@@ -16,6 +16,8 @@ const (
 	TypeRefresh   = "refresh"
 	TypeOperation = "operation"
 
+	ScopeSecureAction = "secure_action"
+
 	DefaultAccessTokenTTL  = 15 * time.Minute
 	DefaultRefreshTokenTTL = 7 * 24 * time.Hour
 )
@@ -215,22 +217,36 @@ func DeleteOperation(ctx context.Context, rdb *redis.Client, tok string) error {
 	return rdb.Del(ctx, OperationKey(tok)).Err()
 }
 
-func GenerateOperationToken(userID uint64, sessionID string, operationScope string, ttl time.Duration, rdb *redis.Client) (string, error) {
+func GenerateOperationTokenWithContext(ctx context.Context, userID uint64, sessionID string, operationScope string, ttl time.Duration, rdb *redis.Client) (string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	opToken := NewOperationToken()
 	data := &OperationData{
 		UserID:    userID,
 		SessionID: sessionID,
 		Scope:     operationScope,
 	}
-	if err := StoreOperation(context.Background(), rdb, opToken, data, ttl); err != nil {
+	if err := StoreOperation(ctx, rdb, opToken, data, ttl); err != nil {
 		return "", err
 	}
 	return opToken, nil
 }
 
-func ParseOperationToken(tokenString string, rdb *redis.Client) (*OperationData, error) {
+func GenerateOperationToken(userID uint64, sessionID string, operationScope string, ttl time.Duration, rdb *redis.Client) (string, error) {
+	return GenerateOperationTokenWithContext(context.Background(), userID, sessionID, operationScope, ttl, rdb)
+}
+
+func ParseOperationTokenWithContext(ctx context.Context, tokenString string, rdb *redis.Client) (*OperationData, error) {
 	if rdb == nil {
 		return nil, ErrStoreNotInitialized
 	}
-	return ValidateOperation(context.Background(), rdb, tokenString)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return ValidateOperation(ctx, rdb, tokenString)
+}
+
+func ParseOperationToken(tokenString string, rdb *redis.Client) (*OperationData, error) {
+	return ParseOperationTokenWithContext(context.Background(), tokenString, rdb)
 }

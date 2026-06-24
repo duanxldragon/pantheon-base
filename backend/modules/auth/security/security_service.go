@@ -1,6 +1,7 @@
 package security
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -95,8 +96,15 @@ func NewService(db *gorm.DB, policy PolicyProvider) *Service {
 
 // VerifyPasswordForOperation checks the password and issues a short-lived operation token.
 func (s *Service) VerifyPasswordForOperation(userID uint64, sessionID, password string) (string, error) {
+	return s.VerifyPasswordForOperationWithContext(context.Background(), userID, sessionID, password)
+}
+
+func (s *Service) VerifyPasswordForOperationWithContext(ctx context.Context, userID uint64, sessionID, password string) (string, error) {
 	if s.db == nil {
 		return "", common.ErrDatabaseNotInitialized
+	}
+	if ctx == nil {
+		ctx = context.Background()
 	}
 	if strings.TrimSpace(sessionID) == "" {
 		return "", errors.New("auth.operation.verification_mismatch")
@@ -108,7 +116,7 @@ func (s *Service) VerifyPasswordForOperation(userID uint64, sessionID, password 
 	if err := bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(password)); err != nil {
 		return "", errors.New("auth.password.verify_failed")
 	}
-	token, err := authtoken.GenerateOperationToken(userID, sessionID, "secure_action", 5*time.Minute, database.RDB)
+	token, err := authtoken.GenerateOperationTokenWithContext(ctx, userID, sessionID, authtoken.ScopeSecureAction, 5*time.Minute, database.RDB)
 	if err != nil {
 		return "", err
 	}

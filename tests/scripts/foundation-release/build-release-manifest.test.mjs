@@ -58,6 +58,9 @@ test('build-release-manifest writes release metadata files into releases/<versio
     assert.equal(manifest.baseCommit, 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef');
     assert.equal(manifest.sourceRepo, 'pantheon-base');
     assert.equal(manifest.consumerMode, 'foundation-release-consumer');
+    assert.deepEqual(manifest.releaseArtifact, {
+      assetName: 'foundation-release-base-v0.8.0.tgz',
+    });
     assert.deepEqual(manifest.sharedPaths.frontend, [
       'frontend/src/components',
       'frontend/src/core',

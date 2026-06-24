@@ -37,6 +37,9 @@ function buildManifest(options) {
     createdAt: new Date().toISOString(),
     sourceRepo: 'pantheon-base',
     consumerMode: 'foundation-release-consumer',
+    releaseArtifact: {
+      assetName: `foundation-release-${options.releaseVersion}.tgz`,
+    },
     bundleExclusions: ['backend/cmd/server/uploads', 'backend/uploads', 'uploads'],
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],
