@@ -1,4 +1,5 @@
 import { defineModule } from '../../core/router/types';
+import { getDashboardSummary } from './api';
 
 export const DashboardModule = defineModule({
   name: 'dashboard',
@@ -22,6 +23,7 @@ export const DashboardModule = defineModule({
       module: 'platform',
     },
   ],
+  routeDataWarmers: [{ path: '/dashboard', key: 'summary', load: () => getDashboardSummary() }],
   dashboardWidgets: [
     {
       key: 'platform.security',

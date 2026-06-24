@@ -44,17 +44,17 @@ system/auth
 
 ## Contract Anchors
 
-- `pantheon-base/AGENTS.md`
-- `pantheon-base/DESIGN.md`
-- `pantheon-base/docs/README.md`
-- `pantheon-base/docs/contracts/PLATFORM_CONTRACT.md`
-- `pantheon-base/docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-- `pantheon-base/docs/contracts/SYSTEM_IAM_CONTRACT.md`
-- `pantheon-base/docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
-- `pantheon-base/docs/superpowers/specs/2026-06-17-auth-cookie-first-and-http-posture-design.md`
-- `pantheon-base/docs/superpowers/plans/2026-06-17-auth-cookie-first-and-http-posture-plan.md`
-- `pantheon-base/docs/harness/tasks/2026-06-17-auth-platform-preference-boundary.task.md`
-- `pantheon-base/docs/harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat.task.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `docs/README.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
+- `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
+- `docs/contracts/SYSTEM_IAM_CONTRACT.md`
+- `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
+- `docs/superpowers/specs/2026-06-17-auth-cookie-first-and-http-posture-design.md`
+- `docs/superpowers/plans/2026-06-17-auth-cookie-first-and-http-posture-plan.md`
+- `docs/harness/tasks/2026-06-17-auth-platform-preference-boundary.task.md`
+- `docs/harness/tasks/2026-06-17-permission-workbench-remediation-schema-compat.task.md`
 
 ## Scope
 

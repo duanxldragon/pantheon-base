@@ -2,16 +2,19 @@
 title: Main Sonar Remediation Runbook
 doc_type: Remediation
 layer: platform
-status: Active
+status: Superseded
+superseded_by: docs/remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-10
+updated_at: 2026-06-23
 ---
 
 # Main Sonar Remediation Runbook
 
 English version: [MAIN_SONAR_REMEDIATION_RUNBOOK_20260603.en.md](./MAIN_SONAR_REMEDIATION_RUNBOOK_20260603.en.md)
+
+> 当前状态：已弃用。本文仅作为历史整改记录保留，不再作为代码质量或重复代码治理入口。新的维护性与重复代码整改以 [可维护性与重复代码整改计划](./MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md) 为准。
 
 ## 1. 整改流程（三步）
 

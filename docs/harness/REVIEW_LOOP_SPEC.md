@@ -3,7 +3,7 @@ title: Review Loop Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-08
+updated_at: 2026-06-23
 ---
 
 # Review Loop Spec
@@ -54,7 +54,7 @@ Review 不是总结变更，而是发现：
 
 Reviewer 必须读取：
 
-- task packet 或用户请求
+- task packet、task manifest 或用户请求
 - implementer posture 与 reviewer posture 说明
 - Structural Scope / Affected Subgraph 说明，如任务已提供
 - diff
@@ -121,7 +121,7 @@ P0/P1 未解决时不能 approved。
 - 人工实现，agent review。
 - Agent 实现，人工 final approval。
 
-但所有 review 都必须引用同一 task packet 和 verification evidence。
+但所有 review 都必须引用同一 task manifest 和 verification evidence；如仓库保留 task packet，也应引用同一 task id 的 task packet。
 
 ## 8. Review Artifact Linkage
 
@@ -133,16 +133,45 @@ P0/P1 未解决时不能 approved。
 
 推荐最小模板：
 
-```md
+````md
 # Review Summary: <task-id>
+
+## Machine Readable
+
+```json
+{
+  "taskId": "<task-id>",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "entry -> core path -> exit/side effect"
+    ],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "none"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/<task-id>/manifest.json",
+    "evidence": ".harness/evidence/<task-id>/commands.json",
+    "reviewFile": ".harness/evidence/<task-id>/review.md",
+    "changeRef": "openspec/changes/<name>/",
+    "planRefs": [
+      "docs/superpowers/plans/<file>.md"
+    ]
+  }
+}
+```
 
 ## Linkage
 
-- Task Packet: `docs/harness/tasks/<task-id>.task.md`
+- Task Manifest: `.harness/tasks/<task-id>/manifest.json`
 - Evidence: `.harness/evidence/<task-id>/commands.json`
 - OpenSpec Change: `openspec/changes/<name>/` | none
-- Review Mode: `self-review` | `independent-review`
-- Reviewer Roles: `architect` / `security` / `ux-qa` / `mechanical`
 
 ## Verdict
 
@@ -152,6 +181,12 @@ approved | changes requested | blocked | approved with documented P2 follow-up
 
 No P0/P1/P2 findings found.
 
+## Structural Notes
+
+- Affected subgraph: `entry -> core path -> exit/side effect`
+- Checks: `cycle`, `hub`, `call-depth`, `sensitive-flow`
+- Findings: none
+
 ## Residual Risk
 
 - none
@@ -159,6 +194,6 @@ No P0/P1/P2 findings found.
 ## Verification Checked
 
 - `command`
-```
+````
 
-即使 review 不单独落盘，也必须在 PR / review comment 中引用同一 task packet 和 evidence 路径。
+如仓库保留人类可读 task packet，可在 `## Linkage` 或 PR / review comment 中一起引用；但 machine-readable 闭环字段以 `taskManifest`、`evidence`、`reviewFile`、`changeRef`、`planRefs` 为准。

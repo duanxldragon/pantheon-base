@@ -79,14 +79,11 @@ const jaJPRuntimeFixes = {
   'dict.cache.refresh.error': '辞書キャッシュの更新に失敗しました',
   'dict.item.batch.empty': '先に辞書項目を選択してください',
   'dict.item.batch.not_found': '選択した辞書項目は存在しません',
-  'dict.item.delete.error.archive_value_conflict':
-    'アーカイブ済み辞書に同じ項目値が既に存在します',
+  'dict.item.delete.error.archive_value_conflict': 'アーカイブ済み辞書に同じ項目値が既に存在します',
   'dict.item.export.error': '辞書項目のエクスポートに失敗しました',
-  'dict.item.import_template.error':
-    '辞書項目インポートテンプレートのダウンロードに失敗しました',
+  'dict.item.import_template.error': '辞書項目インポートテンプレートのダウンロードに失敗しました',
   'dict.item.import.error': '辞書項目のインポートに失敗しました',
-  'dict.item.import.template.error':
-    '辞書項目インポートテンプレートのダウンロードに失敗しました',
+  'dict.item.import.template.error': '辞書項目インポートテンプレートのダウンロードに失敗しました',
   'dict.item.list.error': '辞書項目の読み込みに失敗しました',
   'dict.options.error': '辞書オプションの読み込みに失敗しました',
   'dict.type.batch.empty': '先に辞書タイプを選択してください',
@@ -94,11 +91,9 @@ const jaJPRuntimeFixes = {
   'dict.type.delete.error.archive_code_conflict':
     'アーカイブ済み辞書に同じ辞書コードが既に存在します',
   'dict.type.export.error': '辞書タイプのエクスポートに失敗しました',
-  'dict.type.import_template.error':
-    '辞書タイプインポートテンプレートのダウンロードに失敗しました',
+  'dict.type.import_template.error': '辞書タイプインポートテンプレートのダウンロードに失敗しました',
   'dict.type.import.error': '辞書タイプのインポートに失敗しました',
-  'dict.type.import.template.error':
-    '辞書タイプインポートテンプレートのダウンロードに失敗しました',
+  'dict.type.import.template.error': '辞書タイプインポートテンプレートのダウンロードに失敗しました',
   'dict.type.list.error': '辞書タイプの読み込みに失敗しました',
   'dict.type.not_found': '辞書タイプが見つかりません',
   'dict.usage.error': '辞書の利用状況の読み込みに失敗しました',

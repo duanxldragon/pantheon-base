@@ -76,7 +76,7 @@ import {
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
-import '../list-page.css';
+import '../components/shared/list-page.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -350,7 +350,10 @@ const RoleList: React.FC = () => {
   );
 
   const visibleSelectedRowKeys = useMemo(() => {
-    return getVisibleSelectedRowKeys(selectedRowKeys, data.map((item) => item.id));
+    return getVisibleSelectedRowKeys(
+      selectedRowKeys,
+      data.map((item) => item.id),
+    );
   }, [data, selectedRowKeys]);
 
   const permissionCatalog = useMemo(() => {
@@ -1007,11 +1010,7 @@ const RoleList: React.FC = () => {
                       }}
                       disabled={batchDeleteDisabled}
                     >
-                      <Button
-                        status="danger"
-                        icon={<IconDelete />}
-                        disabled={batchDeleteDisabled}
-                      >
+                      <Button status="danger" icon={<IconDelete />} disabled={batchDeleteDisabled}>
                         {t('common.deleteSelected')}
                       </Button>
                     </Popconfirm>
@@ -1039,18 +1038,22 @@ const RoleList: React.FC = () => {
                 rowKey="id"
                 loading={loading}
                 scroll={{ x: 'max-content' }}
-                    rowSelection={{
-                      type: 'checkbox',
-                      selectedRowKeys: visibleSelectedRowKeys,
-                      checkCrossPage: true,
-                      preserveSelectedRowKeys: true,
-                      fixed: true,
-                      checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                      onChange: (rowKeys) =>
-                        setSelectedRowKeys((keys) =>
-                          mergeCrossPageSelection(keys, rowKeys, data.map((item) => item.id)),
-                        ),
-                    }}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: visibleSelectedRowKeys,
+                  checkCrossPage: true,
+                  preserveSelectedRowKeys: true,
+                  fixed: true,
+                  checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+                  onChange: (rowKeys) =>
+                    setSelectedRowKeys((keys) =>
+                      mergeCrossPageSelection(
+                        keys,
+                        rowKeys,
+                        data.map((item) => item.id),
+                      ),
+                    ),
+                }}
                 onChange={handleTableChange}
                 emptyText={t('common.noData')}
                 pagination={buildStandardPagination(t, {

@@ -1,8 +1,8 @@
 package iam
 
 import (
-	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"time"
 
@@ -13,7 +13,7 @@ import (
 
 func (s *RoleService) ExportRoles(query *RoleListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
-		return nil, errors.New("database.not_initialized")
+		return nil, common.NewBadRequest("database.not_initialized")
 	}
 
 	roles, err := s.listRolesForExport(query)

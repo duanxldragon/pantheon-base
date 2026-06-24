@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"pantheon-platform/backend/pkg/authtoken"
 	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +19,7 @@ func SecureActionMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := common.ParseOperationToken(token)
+		claims, err := authtoken.ParseOperationToken(token, database.RDB)
 		if err != nil {
 			common.FailWithCode(c, 403, "auth.operation.verification_expired")
 			c.Abort()

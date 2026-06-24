@@ -3,6 +3,7 @@ package iam
 import (
 	"errors"
 	"fmt"
+	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"time"
 
@@ -83,7 +84,7 @@ func (s *RoleService) ensureAdminUserBinding() error {
 
 func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
-		return errors.New("param.invalid")
+		return common.NewBadRequest("param.invalid")
 	}
 	if err := s.ensureRoleKeyUnique(0, req.RoleKey); err != nil {
 		return err
@@ -96,10 +97,10 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 
 func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
-		return errors.New("param.invalid")
+		return common.NewBadRequest("param.invalid")
 	}
 	if role.RoleKey == "admin" && (strings.TrimSpace(req.RoleKey) != "admin" || req.Status == 2) {
-		return errors.New("role.update.error.protected")
+		return common.NewConflict("role.update.error.protected")
 	}
 	if err := s.ensureRoleKeyUnique(role.ID, req.RoleKey); err != nil {
 		return err
@@ -120,7 +121,7 @@ func (s *RoleService) ensureRoleKeyUnique(roleID uint64, roleKey string) error {
 		return err
 	}
 	if count > 0 {
-		return errors.New("role.key.exists")
+		return common.NewConflict("role.key.exists")
 	}
 	return nil
 }
@@ -155,7 +156,7 @@ func (s *RoleService) ensurePermissionKeysExist(permissionKeys []string) error {
 	}
 	for _, key := range normalized {
 		if _, ok := exists[key]; !ok {
-			return errors.New("role.permission.invalid")
+			return common.NewBadRequest("role.permission.invalid")
 		}
 	}
 	return nil
@@ -167,7 +168,7 @@ func (s *RoleService) ensureUsersExist(userIDs []uint64) error {
 		return err
 	}
 	if count != int64(len(userIDs)) {
-		return errors.New("user.batch.not_found")
+		return common.NewNotFound("user.batch.not_found")
 	}
 	return nil
 }
@@ -224,7 +225,7 @@ func (s *RoleService) allocateDeletedRoleKey(tx *gorm.DB, roleID uint64) (string
 			return candidate, nil
 		}
 	}
-	return "", errors.New("role.delete.error.archive_key_conflict")
+	return "", common.NewConflict("role.delete.error.archive_key_conflict")
 }
 
 func (s *RoleService) backfillRolePermissions() error {

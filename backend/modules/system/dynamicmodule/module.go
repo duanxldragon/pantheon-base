@@ -3,7 +3,9 @@ package dynamicmodule
 import (
 	"pantheon-platform/backend/internal/middleware"
 	"pantheon-platform/backend/pkg/common"
+	commonsecurity "pantheon-platform/backend/pkg/common/security"
 	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/backend/pkg/database"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -11,14 +13,14 @@ import (
 )
 
 func dynamicModuleEnabled() bool {
-	value := strings.ToLower(strings.TrimSpace(common.ResolveSecret("PANTHEON_ENABLE_DYNAMIC_MODULES", "")))
+	value := strings.ToLower(strings.TrimSpace(commonsecurity.ResolveSecret("PANTHEON_ENABLE_DYNAMIC_MODULES", "")))
 	switch value {
 	case "1", "true", "yes", "on":
 		return true
 	case "0", "false", "no", "off":
 		return false
 	}
-	return !common.IsProductionEnv()
+	return !commonsecurity.IsProductionEnv()
 }
 
 func DynamicModuleEnvGuard() gin.HandlerFunc {
@@ -39,6 +41,8 @@ func InitDynamicModule(r *gin.RouterGroup, db *gorm.DB) {
 	service := NewDynamicModuleService(db)
 	handler := NewDynamicModuleHandler(service)
 
+	tokenMiddleware := middleware.TokenAuthMiddleware(database.RDB)
+
 	modules := []contracts.BackendModule{
 		contracts.FuncModule{
 			ModuleName: "dynamic-module",
@@ -47,7 +51,7 @@ func InitDynamicModule(r *gin.RouterGroup, db *gorm.DB) {
 			},
 			Register: func(r *gin.RouterGroup) {
 				readAPI := r.Group("/system/dynamic-modules").
-					Use(middleware.JWTAuthMiddleware()).
+					Use(tokenMiddleware).
 					Use(middleware.CasbinMiddleware()).
 					Use(DynamicModuleEnvGuard())
 				{
@@ -57,7 +61,7 @@ func InitDynamicModule(r *gin.RouterGroup, db *gorm.DB) {
 				}
 
 				writeAPI := r.Group("/system/dynamic-modules").
-					Use(middleware.JWTAuthMiddleware()).
+					Use(tokenMiddleware).
 					Use(middleware.CasbinMiddleware()).
 					Use(DynamicModuleEnvGuard()).
 					Use(middleware.SecureActionMiddleware())

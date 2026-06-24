@@ -1,11 +1,15 @@
 import type { MenuNode } from '../system/menu/api';
 import { registeredModules } from '../../core/router/modules';
-import {
-  buildDashboardWidgetRegistry,
-  type DashboardDomainOverviewWidget,
-  type DashboardQuickActionWidget,
-  type DashboardWidgetDefinition,
-} from '../../core/workbench/dashboard';
+import type {
+  DashboardDomainOverviewWidget,
+  DashboardQuickActionWidget,
+  DashboardWidgetDefinition,
+} from '../../core/router/types';
+
+interface DashboardWidgetModuleLike {
+  name: string;
+  dashboardWidgets?: DashboardWidgetDefinition[];
+}
 
 interface DashboardWidgetVisibilityContext {
   menuTree: MenuNode[];
@@ -26,6 +30,52 @@ function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefin
     }
   }
   return undefined;
+}
+
+function assertDashboardWidgetDefinition(widget: DashboardWidgetDefinition) {
+  if (!widget.key.trim()) {
+    throw new Error('Dashboard widget key is required.');
+  }
+  if (!widget.path.startsWith('/')) {
+    throw new Error(`Dashboard widget "${widget.key}" must use an absolute route path.`);
+  }
+  if (widget.sourceDomain.startsWith('business/')) {
+    if (!widget.permission) {
+      throw new Error(`Business dashboard widget "${widget.key}" must declare a permission.`);
+    }
+    if (!widget.registrationOwner?.trim()) {
+      throw new Error(
+        `Business dashboard widget "${widget.key}" must declare a registration owner.`,
+      );
+    }
+    if (widget.cleanupPolicy !== 'remove_with_source_module') {
+      throw new Error(
+        `Business dashboard widget "${widget.key}" must declare remove_with_source_module cleanup.`,
+      );
+    }
+  }
+}
+
+function buildDashboardWidgetRegistry(
+  modules: DashboardWidgetModuleLike[],
+): DashboardWidgetDefinition[] {
+  const widgets: DashboardWidgetDefinition[] = [];
+  const keys = new Set<string>();
+
+  modules.forEach((module) => {
+    module.dashboardWidgets?.forEach((widget) => {
+      assertDashboardWidgetDefinition(widget);
+      if (keys.has(widget.key)) {
+        throw new Error(
+          `Duplicate dashboard widget key "${widget.key}" declared by module "${module.name}".`,
+        );
+      }
+      keys.add(widget.key);
+      widgets.push(widget);
+    });
+  });
+
+  return widgets;
 }
 
 export function isDashboardWidgetVisible(

@@ -1636,8 +1636,7 @@ const koKRFallback = {
   'generator.wizard.lifecycle.title': '수명주기 정책',
   'generator.wizard.lifecycle.desc':
     '이 모듈을 장기 운영용으로 둘지, QA·인수·연동 검증용 임시 모듈로 둘지 정의합니다.',
-  'generator.wizard.lifecycle.autoRecycle':
-    '임시 모듈로 표시하고 purge 시 관리 테이블을 자동 회수',
+  'generator.wizard.lifecycle.autoRecycle': '임시 모듈로 표시하고 purge 시 관리 테이블을 자동 회수',
   'generator.wizard.lifecycle.autoRecycleHint':
     '마스터-디테일, 다대다, 검증 데이터처럼 수명이 짧은 생성 모듈에 적합합니다.',
   'generator.wizard.lifecycle.standardHint':

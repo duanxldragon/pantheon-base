@@ -1,0 +1,174 @@
+{
+  "taskId": "2026-06-21-typed-errors-and-context",
+  "title": "Typed Errors And Context Propagation Task Packet",
+  "goal": "Establish typed error sentinels and request-context propagation on the core HTTP request path so handlers, services, and persistence boundaries can classify failures and respect cancellation or timeout signals consistently.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "taskDoc": "docs/harness/tasks/2026-06-21-typed-errors-and-context.task.md",
+  "scope": {
+    "in": [
+      "define and use typed common or module-local error sentinels so callers can rely on `errors.Is`",
+      "propagate `c.Request.Context()` and timeout-wrapped request contexts from middleware through selected handler, service, and database boundaries",
+      "roll the change out incrementally, starting with auth and high-churn system modules rather than forcing an all-package rewrite in one cut"
+    ],
+    "out": [
+      "redesigning the full user-facing error taxonomy or i18n contract in one pass",
+      "converting every background job, async worker, or helper package to request-bound contexts",
+      "broad service API redesign beyond the context-first or typed-error boundary"
+    ]
+  },
+  "implementationNotes": [
+    "Shared sentinels belong in `backend/pkg/common/error.go`; module-local error keys stay close to the domain service that emits them.",
+    "Request context should enter once in middleware and then flow through handler and persistence boundaries with `WithContext` rather than ad hoc background contexts.",
+    "The safe rollout is staged: tighten the core request path first, then expand into less central modules only when the signature churn is justified."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "backend/pkg/common/error.go",
+    "backend/internal/middleware/request_context_middleware.go",
+    "backend/cmd/server/main.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/modules/auth/errors.go",
+      "backend/modules/system/iam/user/errors.go",
+      "backend/modules/system/iam/role/errors.go",
+      "backend/modules/system/org/dept/errors.go",
+      "docs/harness/tasks/2026-06-21-typed-errors-and-context.task.md",
+      ".harness/evidence/2026-06-21-typed-errors-and-context/summary.md",
+      ".harness/evidence/2026-06-21-typed-errors-and-context/commands.json",
+      ".harness/evidence/2026-06-21-typed-errors-and-context/review.md"
+    ],
+    "modify": [
+      "backend/pkg/common/error.go",
+      "backend/internal/middleware/request_context_middleware.go",
+      "backend/modules/auth/**/*.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/org/dept/dept_service.go",
+      "backend/modules/system/config/setting/**/*.go"
+    ],
+    "doNotTouch": [
+      "frontend/**",
+      "../pantheon-ops/**",
+      "unrelated code-generation or deployment automation"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "platform-correctness",
+    "portableFailureClass": "architecture-drift",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": [
+      "typed error contract",
+      "request timeout middleware",
+      "context-aware persistence calls"
+    ],
+    "requiredSensors": [
+      "command",
+      "review",
+      "runtime evidence"
+    ],
+    "requiredEvidence": [
+      "command summary",
+      "runtime gap",
+      "review summary"
+    ],
+    "ratchetDecision": "gate-updated",
+    "deferredCodeIssues": [
+      "full-repository context propagation remains incremental and should not be misreported as complete from one packet alone"
+    ]
+  },
+  "deliveryGovernance": {
+    "designGate": [
+      "short boundary note"
+    ],
+    "developmentGate": [
+      "expected files declared"
+    ],
+    "qaAcceptanceGate": [
+      "command",
+      "runtime"
+    ],
+    "githubGovernanceGate": [
+      "repo-quality-gate"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "architecture",
+      "mechanical"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "HTTP request -> request-context middleware -> handler -> service -> GORM or Redis call; typed error source -> service boundary -> HTTP response mapping"
+    ],
+    "boundaryCrossings": [
+      "platform -> system/auth",
+      "platform -> system/iam",
+      "service -> datastore"
+    ],
+    "riskNodes": [
+      "request timeout wrapper",
+      "service method signature churn",
+      "typed error mapping",
+      "persistence calls without context"
+    ],
+    "graphFocus": [
+      "call-depth",
+      "hub-check"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go build ./backend/cmd/server",
+      "go test -race ./backend/...",
+      "go vet ./backend/..."
+    ]
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-06-21-typed-errors-and-context/",
+    "reviewFile": "none",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "targeted build, test, and vet command summaries for the staged rollout",
+    "explicit note about which modules received typed-error or context propagation in this slice",
+    "review summary tied back to the same task boundary"
+  ],
+  "humanGates": [
+    "broad cross-module service signature churn that would materially expand review scope"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Quality profile or explicit `none` declared",
+    "Ratchet decision declared for repeated failures",
+    "Delivery governance gates declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

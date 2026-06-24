@@ -1,0 +1,163 @@
+{
+  "taskId": "2026-06-21-rate-limit-redis",
+  "title": "Rate Limit Redis Migration Task Packet",
+  "goal": "Move request and login-source rate limiting from process-local memory into a Redis-backed store so multi-instance deployments enforce the same limit window consistently.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "taskDoc": "docs/harness/tasks/2026-06-21-rate-limit-redis.task.md",
+  "scope": {
+    "in": [
+      "introduce a `RateLimitStore` abstraction that can back counters with Redis for shared runtime enforcement",
+      "keep a memory-backed fallback store for local development and tests",
+      "let `backend/cmd/server/main.go` choose the store from Redis configuration without changing auth caller semantics"
+    ],
+    "out": [
+      "redesigning auth throttling policy or source-key semantics",
+      "changing frontend behavior, menu exposure, or route contracts",
+      "introducing a new external dependency beyond the already-installed Redis client"
+    ]
+  },
+  "implementationNotes": [
+    "The Redis store should use `INCR` plus TTL initialization atomically enough that the first hit defines the window without racey double initialization.",
+    "The memory store remains valid for local dev and tests; the production-value shift is that multi-instance runtime should no longer diverge by process.",
+    "`ensureSourceThrottleAllowed` remains a consumer of the middleware/store contract rather than owning Redis logic directly."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/designs/SECURITY_POLICY_ROADMAP.md",
+    "backend/internal/middleware/rate_limit_middleware.go",
+    "backend/pkg/database/redis.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/internal/middleware/rate_limit_store_redis.go",
+      "backend/internal/middleware/rate_limit_store_memory.go",
+      "docs/harness/tasks/2026-06-21-rate-limit-redis.task.md",
+      ".harness/evidence/2026-06-21-rate-limit-redis/summary.md",
+      ".harness/evidence/2026-06-21-rate-limit-redis/commands.json",
+      ".harness/evidence/2026-06-21-rate-limit-redis/review.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/rate_limit_middleware.go",
+      "backend/internal/middleware/rate_limit_middleware_test.go",
+      "backend/cmd/server/main.go",
+      "backend/modules/auth/auth_service.go"
+    ],
+    "doNotTouch": [
+      "frontend/**",
+      "../pantheon-ops/**",
+      "unrelated IAM, org, config, and generator modules"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "security-runtime",
+    "portableFailureClass": "runtime-evidence-gap",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": [
+      "middleware contract",
+      "Redis store adapter",
+      "rate-limit middleware tests"
+    ],
+    "requiredSensors": [
+      "command",
+      "review",
+      "runtime evidence"
+    ],
+    "requiredEvidence": [
+      "command summary",
+      "runtime gap",
+      "review summary"
+    ],
+    "ratchetDecision": "sensor-added",
+    "deferredCodeIssues": [
+      "none"
+    ]
+  },
+  "deliveryGovernance": {
+    "designGate": [
+      "short boundary note"
+    ],
+    "developmentGate": [
+      "expected files declared"
+    ],
+    "qaAcceptanceGate": [
+      "command",
+      "runtime"
+    ],
+    "githubGovernanceGate": [
+      "repo-quality-gate"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "architecture",
+      "mechanical"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "request source -> rate-limit middleware -> RateLimitStore -> Redis or memory counter backend"
+    ],
+    "boundaryCrossings": [
+      "platform -> Redis",
+      "platform -> system/auth"
+    ],
+    "riskNodes": [
+      "store selection",
+      "counter TTL initialization",
+      "auth source-throttle callers"
+    ],
+    "graphFocus": [
+      "sensitive-input-flow",
+      "hub-check"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go build ./backend/...",
+      "go test -race ./backend/internal/middleware/...",
+      "go vet ./backend/..."
+    ]
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-06-21-rate-limit-redis/",
+    "reviewFile": "none",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "targeted middleware build, test, and vet command summaries",
+    "explicit note about Redis-backed versus memory-fallback store selection",
+    "review summary tied back to the same task boundary"
+  ],
+  "humanGates": [
+    "none"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Quality profile or explicit `none` declared",
+    "Ratchet decision declared for repeated failures",
+    "Delivery governance gates declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

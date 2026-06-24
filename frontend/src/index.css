@@ -546,7 +546,7 @@ a {
 }
 
 .setting-overview-page__anchor-item--active::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 0;
   bottom: -1px;

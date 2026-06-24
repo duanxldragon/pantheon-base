@@ -27,7 +27,7 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Layer | Technology |
 | --- | --- |
-| Backend | Go, Gin, GORM, Casbin, JWT, MySQL, Redis |
+| 后端 | Go、Gin、GORM、Casbin、Redis Token、MySQL、Redis |
 | Frontend | React, TypeScript, Vite, Arco Design, Zustand, i18next |
 | Engineering | Docker Compose, Playwright, GitHub Actions, gstack QA flow |
 

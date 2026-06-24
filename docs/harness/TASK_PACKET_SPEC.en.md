@@ -18,6 +18,14 @@ docs/harness/tasks/YYYY-MM-DD-<task-name>.task.md
 
 If the task comes from an existing superpowers plan, the task packet may reference that plan instead of repeating it in full.
 
+`pantheon-base` also requires each task packet to be paired with a machine-readable task manifest:
+
+```text
+.harness/tasks/<task-id>/manifest.json
+```
+
+The task packet carries the human-readable boundary. The task manifest carries evidence, review, and automation linkage.
+
 ## 2. Required Template
 
 ```md
@@ -62,6 +70,12 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 
 - <explicit non-goals>
 
+## Assumptions and Open Questions
+
+- Confirmed Facts: `none | facts already verified from code, contracts, logs, or user input`
+- Working Assumptions: `none | current assumption that keeps work moving`
+- Open Questions: `none | ambiguity that should stop execution or change the plan`
+
 ## Structural Scope
 
 - Affected Subgraph: `<entry -> core path -> exit/side effect>` | `none`
@@ -86,6 +100,28 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 ## Implementation Notes
 
 - <boundary or sequencing notes>
+
+## Minimum Viable Approach
+
+- Selected Rung: `skip | reuse | stdlib | native platform | installed dependency | small local code | new dependency`
+- Why This Is Enough: `<one sentence>`
+- Upgrade Trigger: `none | condition that would justify the next rung`
+
+## Success Criteria
+
+- Behaviour Outcome: `<observable result>`
+- Verification Signal: `<command, test, or evidence that proves the result>`
+- Regression Watch: `<behavior that must remain unchanged>`
+- Economics Watch: `none | token/cost/cache/retry/delegation signal that should stay within reason`
+
+## Context Strategy
+
+- Entry Sources: `AGENTS.md`, `CLAUDE.md`, current task packet, latest review summary | none
+- Retrieval Order: `entry -> summary -> raw`
+- Retrieval Helpers: `none | codegraph | graph report | wiki hot cache`
+- Promotion Target: `none | repo wiki | decision log | guide update`
+- Response Budget: `terse | standard | detailed`
+- Sensitive Context: `none | redacted or local-only handling rule`
 
 ## Execution Roles
 
@@ -119,6 +155,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 ## Linkage
 
 - Task ID: `YYYY-MM-DD-task-name`
+- Task Manifest: `.harness/tasks/<task-id>/manifest.json`
 - OpenSpec Change: `openspec/changes/<name>/` | none
 - Superpowers Plan: `docs/superpowers/plans/<file>.md` | none
 - Evidence Directory: `.harness/evidence/<task-id>/`
@@ -130,6 +167,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - screenshots if UI changed
 - smoke JSON if browser flow changed
 - runtime logs / metrics / traces / performance signal, or an explicit runtime gap if the task is runtime-sensitive
+- session economics snapshot or an explicit gap if the task is long-running, delegated, or cost-sensitive
 - review summary
 
 ## Human Gates
@@ -147,7 +185,30 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - [ ] Review completed
 ```
 
-`Execution Roles`, `Stop Points`, and `State Plan` are optional sections, but once a repository contract requires them or a task declares them explicitly, their content must be complete, interpretable, and checkable.
+`Execution Roles`, `Stop Points`, `State Plan`, and `Context Strategy` are optional sections, but once a repository contract requires them or a task declares them explicitly, their content must be complete, interpretable, and checkable.
+
+To operationalize `EXECUTION_GUARDRAILS.md`, `non-trivial` work should also default to three short sections:
+
+- `## Assumptions and Open Questions`
+- `## Minimum Viable Approach`
+- `## Success Criteria`
+
+The current `pantheon-base` checker treats missing sections as warnings because they carry the method signals for thinking first, keeping complexity small, and defining falsifiable completion.
+
+For long-running, high-context, cross-session, or sensitive work, `## Context Strategy` is also recommended. It should make three things explicit:
+
+- which entry sources should be read first
+- whether retrieval follows `entry -> summary -> raw`
+- which structured retrieval helpers exist, such as codegraph, a graph report, or a wiki hot cache
+- where repeated context should be promoted inside repo-owned memory
+- how terse or detailed the execution loop should stay by default
+- which inputs must be redacted, kept local-only, or excluded from shared durable artifacts
+
+The goal is not extra paperwork. The goal is to make context-loading order and privacy boundaries explicit before the next handoff or resume.
+
+`Economics Watch` in `Success Criteria` is an optional signal for long-running, delegated, or cost-sensitive work. The point is not to optimize every task around tokens. The point is to make retry churn, context replay, cache behavior, and spend visible when they materially affect throughput.
+
+This sync is docs-only. `pantheon-base` has not yet upgraded its local checker or gate code for these new fields, so they are method-level recommendations today rather than mechanical hard requirements.
 
 `Structural Scope` may be `none` for trivial work. For `non-trivial`, cross-layer, runtime-sensitive, permission/menu/i18n/audit/generator/dynamic-module tasks, it should usually capture the smallest affected subgraph so implementers and reviewers inspect the same structural boundary.
 
@@ -185,6 +246,7 @@ Tool adapters may translate a task packet into their execution format, but they 
 - execution roles when declared
 - stop points when declared
 - state/checkpoint expectations when declared
+- context strategy when declared
 - contract anchors
 - verification plan
 - evidence required
@@ -195,9 +257,10 @@ Tool adapters may translate a task packet into their execution format, but they 
 The following fields are the minimum closed-loop keys linking a task packet to later artifacts:
 
 - `Task ID`: primary key; must match the `<task-id>.task.md` filename
+- `Task Manifest`: must point to `.harness/tasks/<task-id>/manifest.json`
 - `Evidence Directory`: must point to `.harness/evidence/<task-id>/`
 - `Review File`: if a review artifact is retained, it must point to a file under the evidence directory
 - `OpenSpec Change`: if the task comes from OpenSpec, the change path must be recorded explicitly; otherwise use `none`
-- `Superpowers Plan`: if the task comes from `docs/superpowers/plans/*`, it must be recorded explicitly; otherwise use `none`
+- `Superpowers Plan`: if the task comes from `docs/superpowers/plans/*`, it must be recorded explicitly; otherwise use `none`. Downstream manifest, evidence, and review artifacts should carry the same value under `planRefs`
 
-These linkage fields connect `OpenSpec change / superpowers plan / task packet / evidence / review` into a traceable chain.
+These linkage fields connect `task packet / task manifest / OpenSpec change / superpowers plan / evidence / review` into a traceable chain.

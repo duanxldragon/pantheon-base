@@ -60,14 +60,20 @@ export function clearClientAuthSession() {
 
 export function hasAuthSessionHint(): boolean {
   hydrateLegacyAuthSession();
-  return readStorage(CLIENT_SESSION_HINT_STORAGE_KEY) === '1' || readStorage(CLIENT_CSRF_TOKEN_STORAGE_KEY) !== '';
+  return (
+    readStorage(CLIENT_SESSION_HINT_STORAGE_KEY) === '1' ||
+    readStorage(CLIENT_CSRF_TOKEN_STORAGE_KEY) !== ''
+  );
 }
 
 export function hydrateLegacyAuthSession() {
   if (globalThis.document === undefined) {
     return;
   }
-  if (readStorage(CLIENT_SESSION_HINT_STORAGE_KEY) === '1' && readStorage(CLIENT_CSRF_TOKEN_STORAGE_KEY) !== '') {
+  if (
+    readStorage(CLIENT_SESSION_HINT_STORAGE_KEY) === '1' &&
+    readStorage(CLIENT_CSRF_TOKEN_STORAGE_KEY) !== ''
+  ) {
     return;
   }
   const match = globalThis.document.cookie.match(LEGACY_CSRF_COOKIE_PATTERN);

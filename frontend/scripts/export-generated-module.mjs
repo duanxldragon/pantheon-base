@@ -11,9 +11,9 @@ if (!schemaPath) {
 
 const files = [
   'src/modules/system/generator/schema.ts',
-  'src/modules/system/generator/type-mapping.ts',
-  'src/modules/system/generator/backend-generator.ts',
-  'src/modules/system/generator/frontend-generator.ts',
+  'src/modules/system/generator/typeMapping.ts',
+  'src/modules/system/generator/backendGenerator.ts',
+  'src/modules/system/generator/frontendGenerator.ts',
   'src/modules/system/generator/exporter.ts',
 ];
 

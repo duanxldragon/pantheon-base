@@ -29,7 +29,8 @@ Before substantial work, read in order:
 Additional defaults:
 
 - for non-trivial work, state the implementer posture, reviewer posture, minimum evidence set, and human gates up front
-- multi-agent work is coordinated by the active orchestrating agent: Claude plans and reviews, Codex explores, implements, and fixes; the human owns goals, scope, risk acceptance, and key gates, not manual tool handoff
+- before implementation, apply the minimal complexity ladder: skip if unnecessary, reuse existing helpers/components/scripts/contracts, prefer standard library, native platform features, or installed dependencies, and only then write the minimum new code
+- multi-agent work is coordinated by the active orchestrating agent, but the method is role-based: Planner/Dispatcher plans and routes review, Generator explores/implements/fixes, Reviewer/Evaluator judges evidence; the human owns goals, scope, risk acceptance, and key gates, not manual tool handoff
 - runtime-sensitive changes such as auth, permissions, menu routing, import/export, lowcode, dynamic modules, async chains, and external integrations need runtime evidence or an explicit runtime gap in addition to tests
 - when the same failure pattern repeats, ratchet it from closeout note to repo rule and then to checker, smoke path, or failure-registry entry
 

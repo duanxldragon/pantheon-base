@@ -79,26 +79,20 @@ const koKRRuntimeFixes = {
   'dict.cache.refresh.error': '사전 캐시를 새로고침하지 못했습니다',
   'dict.item.batch.empty': '먼저 사전 항목을 선택하세요',
   'dict.item.batch.not_found': '선택한 사전 항목이 존재하지 않습니다',
-  'dict.item.delete.error.archive_value_conflict':
-    '보관된 사전에 같은 항목 값이 이미 있습니다',
+  'dict.item.delete.error.archive_value_conflict': '보관된 사전에 같은 항목 값이 이미 있습니다',
   'dict.item.export.error': '사전 항목을 내보내지 못했습니다',
-  'dict.item.import_template.error':
-    '사전 항목 가져오기 템플릿을 내려받지 못했습니다',
+  'dict.item.import_template.error': '사전 항목 가져오기 템플릿을 내려받지 못했습니다',
   'dict.item.import.error': '사전 항목을 가져오지 못했습니다',
-  'dict.item.import.template.error':
-    '사전 항목 가져오기 템플릿을 내려받지 못했습니다',
+  'dict.item.import.template.error': '사전 항목 가져오기 템플릿을 내려받지 못했습니다',
   'dict.item.list.error': '사전 항목을 불러오지 못했습니다',
   'dict.options.error': '사전 옵션을 불러오지 못했습니다',
   'dict.type.batch.empty': '먼저 사전 유형을 선택하세요',
   'dict.type.batch.not_found': '선택한 사전 유형이 존재하지 않습니다',
-  'dict.type.delete.error.archive_code_conflict':
-    '보관된 사전에 같은 사전 코드가 이미 있습니다',
+  'dict.type.delete.error.archive_code_conflict': '보관된 사전에 같은 사전 코드가 이미 있습니다',
   'dict.type.export.error': '사전 유형을 내보내지 못했습니다',
-  'dict.type.import_template.error':
-    '사전 유형 가져오기 템플릿을 내려받지 못했습니다',
+  'dict.type.import_template.error': '사전 유형 가져오기 템플릿을 내려받지 못했습니다',
   'dict.type.import.error': '사전 유형을 가져오지 못했습니다',
-  'dict.type.import.template.error':
-    '사전 유형 가져오기 템플릿을 내려받지 못했습니다',
+  'dict.type.import.template.error': '사전 유형 가져오기 템플릿을 내려받지 못했습니다',
   'dict.type.list.error': '사전 유형을 불러오지 못했습니다',
   'dict.type.not_found': '사전 유형을 찾을 수 없습니다',
   'dict.usage.error': '사전 사용 현황을 불러오지 못했습니다',

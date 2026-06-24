@@ -68,15 +68,13 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
 }: WorkspaceTaskDepthDeps) {
   test.describe('workspace task-depth smoke', () => {
     test('dashboard keeps narrow reflow stable and task widgets ready', async ({ page }) => {
-      await signInAsAdmin(page);
+      const accessToken = await signInAsAdmin(page);
       await page.setViewportSize({ width: 520, height: 960 });
 
       const summaryPayloadPromise = expectOkJson<DashboardSummary>(
-        page.waitForResponse(
-          (response) =>
-            response.url().includes('/api/v1/platform/dashboard/summary') &&
-            response.request().method() === 'GET',
-        ),
+        page.request.get(`${apiBaseUrl}/platform/dashboard/summary`, {
+          headers: authHeaders(accessToken),
+        }),
       );
 
       await page.goto('/dashboard', { waitUntil: 'networkidle' });
