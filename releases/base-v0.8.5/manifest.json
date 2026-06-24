@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "releaseVersion": "base-v0.8.5",
+  "releaseLine": "release/0.8",
+  "baseCommit": "185e31f030108ad0e85cf8a6c87912222656ba3a",
+  "createdAt": "2026-06-24T08:07:09.924Z",
+  "sourceRepo": "pantheon-base",
+  "consumerMode": "foundation-release-consumer",
+  "releaseArtifact": {
+    "assetName": "foundation-release-base-v0.8.5.tgz"
+  },
+  "bundleExclusions": [
+    "backend/cmd/server/uploads",
+    "backend/uploads",
+    "uploads"
+  ],
+  "sharedPaths": {
+    "backend": [
+      "backend/cmd",
+      "backend/internal",
+      "backend/modules",
+      "backend/pkg"
+    ],
+    "frontend": [
+      "frontend/src/components",
+      "frontend/src/core",
+      "frontend/src/store",
+      "frontend/src/modules/auth",
+      "frontend/src/modules/dashboard",
+      "frontend/src/modules/system",
+      "frontend/src/index.css"
+    ],
+    "docs": [
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/designs/WORKFLOW.md"
+    ]
+  },
+  "verification": {
+    "summaryFile": "verification-summary.json",
+    "requiredChecks": []
+  },
+  "consumerCompatibility": {
+    "pantheon-ops": {
+      "minimumCurrentRelease": "release/0.8",
+      "notesFile": "consumer-impact.md"
+    }
+  }
+}
