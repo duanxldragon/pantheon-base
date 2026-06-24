@@ -513,7 +513,11 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
   const itemBatchActionDisabled = !canBatchUpdate || selectedItemRowKeys.length === 0;
   const itemBatchDeleteDisabled = !canBatchDelete || selectedItemRowKeys.length === 0;
   const visibleSelectedItemRowKeys = useMemo(
-    () => getVisibleSelectedRowKeys(selectedItemRowKeys, itemRows.map((item) => item.id)),
+    () =>
+      getVisibleSelectedRowKeys(
+        selectedItemRowKeys,
+        itemRows.map((item) => item.id),
+      ),
     [itemRows, selectedItemRowKeys],
   );
 
@@ -715,11 +719,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
                   }}
                   disabled={itemBatchDeleteDisabled}
                 >
-                  <Button
-                    status="danger"
-                    icon={<IconDelete />}
-                    disabled={itemBatchDeleteDisabled}
-                  >
+                  <Button status="danger" icon={<IconDelete />} disabled={itemBatchDeleteDisabled}>
                     {t('common.deleteSelected')}
                   </Button>
                 </Popconfirm>
@@ -757,7 +757,11 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
                   preserveSelectedRowKeys: true,
                   onChange: (keys) =>
                     setSelectedItemRowKeys((currentKeys) =>
-                      mergeCrossPageSelection(currentKeys, keys, itemRows.map((item) => item.id)),
+                      mergeCrossPageSelection(
+                        currentKeys,
+                        keys,
+                        itemRows.map((item) => item.id),
+                      ),
                     ),
                 }}
                 emptyText={t('system.dict.itemEmpty')}

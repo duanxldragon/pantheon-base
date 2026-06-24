@@ -3,6 +3,7 @@ package dynamicmodule
 import (
 	"pantheon-platform/backend/internal/middleware"
 	"pantheon-platform/backend/pkg/common"
+	commonsecurity "pantheon-platform/backend/pkg/common/security"
 	"pantheon-platform/backend/pkg/contracts"
 	"pantheon-platform/backend/pkg/database"
 	"strings"
@@ -12,14 +13,14 @@ import (
 )
 
 func dynamicModuleEnabled() bool {
-	value := strings.ToLower(strings.TrimSpace(common.ResolveSecret("PANTHEON_ENABLE_DYNAMIC_MODULES", "")))
+	value := strings.ToLower(strings.TrimSpace(commonsecurity.ResolveSecret("PANTHEON_ENABLE_DYNAMIC_MODULES", "")))
 	switch value {
 	case "1", "true", "yes", "on":
 		return true
 	case "0", "false", "no", "off":
 		return false
 	}
-	return !common.IsProductionEnv()
+	return !commonsecurity.IsProductionEnv()
 }
 
 func DynamicModuleEnvGuard() gin.HandlerFunc {

@@ -14,13 +14,28 @@ const frontendRegistryFiles = [
 ];
 const backendRegistryFiles = [
   path.join(workspaceRoot, 'backend', 'modules', 'system', 'iam', 'menu', 'component_registry.go'),
-  path.join(workspaceRoot, 'backend', 'modules', 'system', 'iam', 'menu', 'generated_component_registry.go'),
+  path.join(
+    workspaceRoot,
+    'backend',
+    'modules',
+    'system',
+    'iam',
+    'menu',
+    'generated_component_registry.go',
+  ),
 ];
 const frontendI18nFiles = new Map([
   ['zh-CN', path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'zh-CN.ts')],
   ['en-US', path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'en-US.ts')],
 ]);
-const frontendGeneratedI18nRoot = path.join(workspaceRoot, 'frontend', 'src', 'i18n', 'resources', 'generated');
+const frontendGeneratedI18nRoot = path.join(
+  workspaceRoot,
+  'frontend',
+  'src',
+  'i18n',
+  'resources',
+  'generated',
+);
 
 function readFile(filePath) {
   return fs.readFileSync(filePath, 'utf8');
@@ -86,7 +101,7 @@ function findMatchingBlock(source, startChar, endChar, startIndex) {
       escaped = true;
       continue;
     }
-    if (!inDoubleQuote && char === '\'') {
+    if (!inDoubleQuote && char === "'") {
       inSingleQuote = !inSingleQuote;
       continue;
     }
@@ -170,7 +185,9 @@ function normalizeRoutePath(routePath) {
 }
 
 function parseFrontendModules() {
-  const files = walkFiles(frontendModulesRoot, (filePath) => filePath.endsWith(`${path.sep}index.ts`));
+  const files = walkFiles(frontendModulesRoot, (filePath) =>
+    filePath.endsWith(`${path.sep}index.ts`),
+  );
   const modules = [];
 
   for (const filePath of files) {
@@ -212,8 +229,15 @@ function parseFrontendModules() {
 
 function parseBackendSeeds() {
   const backendSeedFiles = [
-    path.join(workspaceRoot, 'backend', 'modules', 'system', 'seed.go'),
-    ...walkFiles(backendModulesRoot, (filePath) => path.basename(filePath) === 'module.go'),
+    ...new Set([
+      path.join(workspaceRoot, 'backend', 'modules', 'system', 'seed.go'),
+      ...walkFiles(backendModulesRoot, (filePath) => path.basename(filePath) === 'module.go'),
+      ...walkFiles(
+        backendModulesRoot,
+        (filePath) =>
+          /(?:_menu|seed)\.go$/.test(path.basename(filePath)) && !filePath.endsWith('_test.go'),
+      ),
+    ]),
   ];
   const seeds = [];
 
@@ -310,7 +334,9 @@ function parseBackendMenuI18nSeeds() {
   for (const filePath of files) {
     const source = readFile(filePath);
 
-    for (const match of source.matchAll(/\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"menu"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms)) {
+    for (const match of source.matchAll(
+      /\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"menu"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms,
+    )) {
       const block = match[1];
       const locale = extractField(block, 'Locale');
       const key = extractField(block, 'Key');
@@ -319,7 +345,9 @@ function parseBackendMenuI18nSeeds() {
       }
     }
 
-    for (const match of source.matchAll(/\{([^{}]*"locale"\s*:\s*"[^"]+"[^{}]*"group_name"\s*:\s*"menu"[^{}]*"key"\s*:\s*"[^"]+"[^{}]*)\}/gms)) {
+    for (const match of source.matchAll(
+      /\{([^{}]*"locale"\s*:\s*"[^"]+"[^{}]*"group_name"\s*:\s*"menu"[^{}]*"key"\s*:\s*"[^"]+"[^{}]*)\}/gms,
+    )) {
       const block = match[1];
       const locale = extractMapField(block, 'locale');
       const key = extractMapField(block, 'key');
@@ -343,7 +371,9 @@ function parseBackendScopedI18nSeeds(groupNames) {
   for (const filePath of files) {
     const source = readFile(filePath);
 
-    for (const match of source.matchAll(/\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"[^"]+"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms)) {
+    for (const match of source.matchAll(
+      /\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"[^"]+"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms,
+    )) {
       const block = match[1];
       const locale = extractField(block, 'Locale');
       const group = extractField(block, 'Group');
@@ -353,7 +383,9 @@ function parseBackendScopedI18nSeeds(groupNames) {
       }
     }
 
-    for (const match of source.matchAll(/\{([^{}]*"locale"\s*:\s*"[^"]+"[^{}]*"group_name"\s*:\s*"[^"]+"[^{}]*"key"\s*:\s*"[^"]+"[^{}]*)\}/gms)) {
+    for (const match of source.matchAll(
+      /\{([^{}]*"locale"\s*:\s*"[^"]+"[^{}]*"group_name"\s*:\s*"[^"]+"[^{}]*"key"\s*:\s*"[^"]+"[^{}]*)\}/gms,
+    )) {
       const block = match[1];
       const locale = extractMapField(block, 'locale');
       const group = extractMapField(block, 'group_name');
@@ -415,15 +447,45 @@ function collectContracts() {
     }
   }
 
-  return { frontendModules, backendSeeds, registryKeys, backendRegistryKeys, fallbackTranslations, backendMenuI18nSeeds, backendPageI18nSeeds, backendPermissionI18nSeeds, routes, menus, permissions, routeMap, menuMap };
+  return {
+    frontendModules,
+    backendSeeds,
+    registryKeys,
+    backendRegistryKeys,
+    fallbackTranslations,
+    backendMenuI18nSeeds,
+    backendPageI18nSeeds,
+    backendPermissionI18nSeeds,
+    routes,
+    menus,
+    permissions,
+    routeMap,
+    menuMap,
+  };
 }
 
 function main() {
-  const { frontendModules, backendSeeds, registryKeys, backendRegistryKeys, fallbackTranslations, backendMenuI18nSeeds, backendPageI18nSeeds, backendPermissionI18nSeeds, routes, menus, permissions, routeMap, menuMap } = collectContracts();
+  const {
+    frontendModules,
+    backendSeeds,
+    registryKeys,
+    backendRegistryKeys,
+    fallbackTranslations,
+    backendMenuI18nSeeds,
+    backendPageI18nSeeds,
+    backendPermissionI18nSeeds,
+    routes,
+    menus,
+    permissions,
+    routeMap,
+    menuMap,
+  } = collectContracts();
   const errors = [];
   const backendPageSeeds = backendSeeds.filter((item) => item.path && item.type === 'C');
   const backendActionSeeds = backendSeeds.filter((item) => item.perms && item.type === 'F');
-  const backendPermissionKeys = new Set(backendSeeds.flatMap((item) => [item.pagePerm, item.perms]).filter(Boolean));
+  const backendPermissionKeys = new Set(
+    backendSeeds.flatMap((item) => [item.pagePerm, item.perms]).filter(Boolean),
+  );
   const frontendPermissionKeys = new Set(permissions.map((item) => item.key));
 
   function reportDuplicates(items, keySelector, label) {
@@ -481,18 +543,22 @@ function main() {
       continue;
     }
     if (!registryKeys.has(route.componentKey)) {
-      errors.push(`未注册 component key: ${route.componentKey} (${route.filePath} -> ${routePath})`);
+      errors.push(
+        `未注册 component key: ${route.componentKey} (${route.filePath} -> ${routePath})`,
+      );
     }
     if (route.pagePermission && !frontendPermissionKeys.has(route.pagePermission)) {
-      errors.push(`路由 pagePermission 未声明到 permissions: ${route.pagePermission} (${route.filePath} -> ${routePath})`);
+      errors.push(
+        `路由 pagePermission 未声明到 permissions: ${route.pagePermission} (${route.filePath} -> ${routePath})`,
+      );
     }
     for (const locale of ['zh-CN', 'en-US']) {
       if (!fallbackTranslations.get(locale)?.has(route.titleKey)) {
         errors.push(`fallback 语言包缺少页面 key: ${route.titleKey} (${locale}, ${routePath})`);
       }
       const backendRouteKeyExists =
-        backendMenuI18nSeeds.get(locale)?.has(route.titleKey)
-        || backendPageI18nSeeds.get(locale)?.has(route.titleKey);
+        backendMenuI18nSeeds.get(locale)?.has(route.titleKey) ||
+        backendPageI18nSeeds.get(locale)?.has(route.titleKey);
       if (!backendRouteKeyExists) {
         errors.push(`后端 i18n seed 缺少页面 key: ${route.titleKey} (${locale}, ${routePath})`);
       }
@@ -509,14 +575,21 @@ function main() {
     if (!menu.module) {
       errors.push(`菜单缺少 module: ${menuPath} (${menu.filePath})`);
     }
-    if (menu.scope === 'platform' && !(menu.module === 'platform' || menu.module.startsWith('platform.'))) {
-      errors.push(`platform 菜单 module 必须为 platform 或 platform.*: ${menuPath} (${menu.filePath})`);
+    if (
+      menu.scope === 'platform' &&
+      !(menu.module === 'platform' || menu.module.startsWith('platform.'))
+    ) {
+      errors.push(
+        `platform 菜单 module 必须为 platform 或 platform.*: ${menuPath} (${menu.filePath})`,
+      );
     }
     if (
-      menu.scope === 'system'
-      && !(menu.module.startsWith('system.') || menu.module.startsWith('platform.'))
+      menu.scope === 'system' &&
+      !(menu.module.startsWith('system.') || menu.module.startsWith('platform.'))
     ) {
-      errors.push(`system 菜单 module 必须以 system. 或 platform. 开头: ${menuPath} (${menu.filePath})`);
+      errors.push(
+        `system 菜单 module 必须以 system. 或 platform. 开头: ${menuPath} (${menu.filePath})`,
+      );
     }
     if (menu.scope === 'business' && !menu.module.startsWith('business.')) {
       errors.push(`business 菜单 module 必须以 business. 开头: ${menuPath} (${menu.filePath})`);
@@ -534,19 +607,29 @@ function main() {
     }
 
     if (menu.titleKey !== backendSeed.titleKey) {
-      errors.push(`titleKey 不一致: ${menuPath} frontend=${menu.titleKey} backend=${backendSeed.titleKey}`);
+      errors.push(
+        `titleKey 不一致: ${menuPath} frontend=${menu.titleKey} backend=${backendSeed.titleKey}`,
+      );
     }
     if (menu.module !== backendSeed.module) {
-      errors.push(`module 不一致: ${menuPath} frontend=${menu.module} backend=${backendSeed.module}`);
+      errors.push(
+        `module 不一致: ${menuPath} frontend=${menu.module} backend=${backendSeed.module}`,
+      );
     }
     if (menu.routeName !== backendSeed.routeName) {
-      errors.push(`routeName 不一致: ${menuPath} frontend=${menu.routeName || '<empty>'} backend=${backendSeed.routeName || '<empty>'}`);
+      errors.push(
+        `routeName 不一致: ${menuPath} frontend=${menu.routeName || '<empty>'} backend=${backendSeed.routeName || '<empty>'}`,
+      );
     }
     if (route.pagePermission !== backendSeed.pagePerm) {
-      errors.push(`pagePermission 不一致: ${menuPath} frontend=${route.pagePermission || '<empty>'} backend=${backendSeed.pagePerm || '<empty>'}`);
+      errors.push(
+        `pagePermission 不一致: ${menuPath} frontend=${route.pagePermission || '<empty>'} backend=${backendSeed.pagePerm || '<empty>'}`,
+      );
     }
     if (route.componentKey !== backendSeed.component) {
-      errors.push(`component key 不一致: ${menuPath} frontend=${route.componentKey || '<empty>'} backend=${backendSeed.component || '<empty>'}`);
+      errors.push(
+        `component key 不一致: ${menuPath} frontend=${route.componentKey || '<empty>'} backend=${backendSeed.component || '<empty>'}`,
+      );
     }
     for (const locale of ['zh-CN', 'en-US']) {
       if (!fallbackTranslations.get(locale)?.has(menu.titleKey)) {
@@ -597,7 +680,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`✅ manifest / menu seed 一致性检查通过（${menuMap.size} 个菜单，${routeMap.size} 条路由，${frontendPermissionKeys.size} 个权限，${registryKeys.size} 个组件键）`);
+  console.log(
+    `✅ manifest / menu seed 一致性检查通过（${menuMap.size} 个菜单，${routeMap.size} 条路由，${frontendPermissionKeys.size} 个权限，${registryKeys.size} 个组件键）`,
+  );
 }
 
 main();

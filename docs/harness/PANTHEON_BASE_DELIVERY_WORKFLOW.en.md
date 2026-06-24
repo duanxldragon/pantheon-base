@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-10
+updated_at: 2026-06-23
 ---
 
 # Pantheon Base Multi-Agent Delivery Workflow
@@ -23,7 +23,7 @@ The goal is that the human states goals and key decisions, while the active disp
 |---|---|---|---|
 | Human Owner | Human | goals, priority, risk acceptance, human gates | manually shuttle Claude/Codex context |
 | Dispatcher | active coordinating agent | call planner, executor, reviewer; preserve task/evidence/review linkage | treat chat as the source of truth |
-| Planner | Claude | scope, task packet, acceptance, stop points | edit business code |
+| Planner | Claude | scope, task packet, task manifest linkage, acceptance, stop points | edit business code |
 | Explorer | Codex | code structure, impact, CodeGraph, tests and docs | expand scope |
 | Executor | Codex | implementation, tests, evidence, finding fixes | skip task packets or evidence |
 | Reviewer | Claude | findings-first review | fix code directly |
@@ -37,7 +37,7 @@ Human Goal
   -> Claude planner
   -> Dispatcher scope check
   -> Codex explorer
-  -> Task packet finalized
+  -> Task packet and task manifest finalized
   -> Codex executor
   -> Local sensors and evidence
   -> Claude reviewer
@@ -66,6 +66,7 @@ The dispatcher must stop for human approval before schema, permissions, auth, au
 Every non-trivial task needs:
 
 - task packet or parent task packet linkage
+- task manifest path
 - evidence path or command summary
 - reviewer role and review result
 - GitHub signal classification
@@ -75,3 +76,20 @@ Every non-trivial task needs:
 - ratchet decision
 
 If any item is missing, the task is only partially closed.
+
+## Planning Expectations
+
+Planner output should include at least:
+
+- In / Out / Do Not Touch
+- Assumptions and Open Questions
+- Minimum Viable Approach
+- Success Criteria
+- the minimum verification set
+- task manifest / evidence / review linkage
+
+Those artifacts should land in `docs/harness/tasks/*.task.md` and `.harness/tasks/<task-id>/manifest.json`, not remain only in chat.
+
+## Execution Expectations
+
+Executor work must keep task packet, task manifest, evidence, and review linkage aligned while implementation, verification, and closeout proceed.

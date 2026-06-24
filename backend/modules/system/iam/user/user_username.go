@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"pantheon-platform/backend/pkg/common"
+	commonsecurity "pantheon-platform/backend/pkg/common/security"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -87,7 +88,7 @@ func (s *UserService) ensureAdminUserSeed() error {
 
 func resolveInitialAdminPassword() (string, error) {
 	password := strings.TrimSpace(os.Getenv("PANTHEON_INITIAL_ADMIN_PASSWORD"))
-	if !common.IsProductionEnv() {
+	if !commonsecurity.IsProductionEnv() {
 		if password != "" {
 			return password, nil
 		}

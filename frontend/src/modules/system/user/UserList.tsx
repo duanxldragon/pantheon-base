@@ -228,10 +228,10 @@ const UserList: React.FC = () => {
         const roleText = roleNames?.length
           ? roleNames.join(' / ')
           : roleLabels?.length
-          ? roleLabels.join(' / ')
-          : row.roleKeys?.length
-            ? row.roleKeys.join(' / ')
-            : undefined;
+            ? roleLabels.join(' / ')
+            : row.roleKeys?.length
+              ? row.roleKeys.join(' / ')
+              : undefined;
         return renderCellText(roleText, 'system-user-list__role-text');
       },
     },
@@ -334,7 +334,8 @@ const UserList: React.FC = () => {
             : undefined,
     } as import('./api').UserListQuery;
     const sortChanged =
-      nextQuery.sortField !== state.query.sortField || nextQuery.sortOrder !== state.query.sortOrder;
+      nextQuery.sortField !== state.query.sortField ||
+      nextQuery.sortOrder !== state.query.sortOrder;
     if (sortChanged) {
       setSelectedRowKeys([]);
     }
@@ -360,10 +361,21 @@ const UserList: React.FC = () => {
       { key: 'total', label: t('system.menu.user'), value: state.total },
       { key: 'enabled', label: t('system.user.status.enabled'), value: enabledUserCount },
       { key: 'disabled', label: t('system.user.hero.disabledRows'), value: disabledUserCount },
-      { key: 'unassigned', label: t('system.user.hero.unassignedRoles'), value: unassignedRoleUserCount },
+      {
+        key: 'unassigned',
+        label: t('system.user.hero.unassignedRoles'),
+        value: unassignedRoleUserCount,
+      },
       { key: 'roles', label: t('system.user.hero.rolesReady'), value: assignableRoleCount },
     ],
-    [assignableRoleCount, disabledUserCount, enabledUserCount, t, state.total, unassignedRoleUserCount],
+    [
+      assignableRoleCount,
+      disabledUserCount,
+      enabledUserCount,
+      t,
+      state.total,
+      unassignedRoleUserCount,
+    ],
   );
 
   const governanceSummaryItems = useMemo(
@@ -510,7 +522,10 @@ const UserList: React.FC = () => {
               }
               actions={
                 <>
-                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
                     <Popconfirm
                       title={t('system.user.batchEnableConfirm')}
                       onOk={() => {
@@ -521,7 +536,10 @@ const UserList: React.FC = () => {
                       <Button disabled={batchActionDisabled}>{t('system.user.batchEnable')}</Button>
                     </Popconfirm>
                   </PermissionAction>
-                  <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+                  <PermissionAction
+                    allowed={canBatchUpdate}
+                    tooltip={t('common.noPermissionAction')}
+                  >
                     <Popconfirm
                       title={t('system.user.batchDisableConfirm')}
                       onOk={() => {
@@ -537,7 +555,10 @@ const UserList: React.FC = () => {
                       </Button>
                     </Popconfirm>
                   </PermissionAction>
-                  <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
+                  <PermissionAction
+                    allowed={canBatchDelete}
+                    tooltip={t('common.noPermissionAction')}
+                  >
                     <Popconfirm
                       title={t('system.user.batchDeleteConfirm')}
                       onOk={() => {
@@ -569,7 +590,9 @@ const UserList: React.FC = () => {
             {!state.loading && !state.error && state.data.length === 0 ? (
               <PageEmpty description={t('common.noData')} />
             ) : null}
-            {!state.loading && !(state.error && state.data.length === 0) && state.data.length > 0 ? (
+            {!state.loading &&
+            !(state.error && state.data.length === 0) &&
+            state.data.length > 0 ? (
               <AppTable<UserListRow>
                 className="system-list__table system-user-list__table"
                 data={state.data}

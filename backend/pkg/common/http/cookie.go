@@ -55,7 +55,7 @@ func SetCSRFCookie(w http.ResponseWriter) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	setCookie(w, CookieCSRFToken, token, int((24*time.Hour).Seconds()), http.SameSiteStrictMode)
+	setCookie(w, CookieCSRFToken, token, int((24 * time.Hour).Seconds()), http.SameSiteStrictMode)
 	w.Header().Set("X-CSRF-Token", token)
 	return token, nil
 }

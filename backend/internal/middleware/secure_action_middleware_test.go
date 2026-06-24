@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"pantheon-platform/backend/pkg/authtoken"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/testredis"
 
@@ -15,7 +16,7 @@ func TestSecureActionMiddlewareRejectsSessionMismatch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	rdb := testredis.Open(t)
 
-	token, err := common.GenerateOperationToken(7, "session-a", "secure_action", common.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, rdb)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}
@@ -44,7 +45,7 @@ func TestSecureActionMiddlewareAllowsMatchingSession(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	rdb := testredis.Open(t)
 
-	token, err := common.GenerateOperationToken(7, "session-a", "secure_action", common.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, rdb)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}
@@ -95,7 +96,7 @@ func TestSecureActionMiddlewareRejectsUserMismatch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	rdb := testredis.Open(t)
 
-	token, err := common.GenerateOperationToken(7, "session-a", "secure_action", common.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, rdb)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}

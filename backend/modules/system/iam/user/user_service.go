@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	authsession "pantheon-platform/backend/modules/auth/session"
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
 
@@ -13,17 +12,46 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type SessionLifecycle interface {
+	RevokeUserSessions(userID uint64, now time.Time) (int64, error)
+	DeleteUserSessions(userID uint64) error
+}
+
+type SessionLifecycleFactory func(db *gorm.DB) SessionLifecycle
+
+type UserServiceOption func(*UserService)
+
 type UserService struct {
-	db               *gorm.DB
-	sessionLifecycle *authsession.LifecycleService
+	db                      *gorm.DB
+	sessionLifecycleFactory SessionLifecycleFactory
+}
+
+func WithSessionLifecycle(factory SessionLifecycleFactory) UserServiceOption {
+	return func(s *UserService) {
+		s.sessionLifecycleFactory = factory
+	}
 }
 
 // NewUserService 构造函数
-func NewUserService(db *gorm.DB) *UserService {
-	return &UserService{
-		db:               db,
-		sessionLifecycle: authsession.NewLifecycleService(db),
+func NewUserService(db *gorm.DB, options ...UserServiceOption) *UserService {
+	s := &UserService{
+		db: db,
 	}
+	for _, option := range options {
+		option(s)
+	}
+	return s
+}
+
+func (s *UserService) withSessionLifecycle(db *gorm.DB, fn func(SessionLifecycle) error) error {
+	if s == nil || s.sessionLifecycleFactory == nil {
+		return nil
+	}
+	lifecycle := s.sessionLifecycleFactory(db)
+	if lifecycle == nil {
+		return nil
+	}
+	return fn(lifecycle)
 }
 
 // Migrate 初始化表结构和种子数据
@@ -472,9 +500,11 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 			return err
 		}
 
-		var err error
-		revokedSessionCount, err = s.sessionLifecycle.WithDB(tx).RevokeUserSessions(userID, time.Now())
-		return err
+		return s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
+			var err error
+			revokedSessionCount, err = lifecycle.RevokeUserSessions(userID, time.Now())
+			return err
+		})
 	}); err != nil {
 		return 0, err
 	}
@@ -535,7 +565,9 @@ func (s *UserService) DeleteUser(userID uint64) error {
 		if err := tx.First(&user, userID).Error; err != nil {
 			return err
 		}
-		if err := s.sessionLifecycle.WithDB(tx).DeleteUserSessions(userID); err != nil {
+		if err := s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
+			return lifecycle.DeleteUserSessions(userID)
+		}); err != nil {
 			return err
 		}
 		if err := tx.Exec("DELETE FROM system_user_role WHERE user_id = ?", userID).Error; err != nil {

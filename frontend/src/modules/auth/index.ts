@@ -1,11 +1,25 @@
 import { defineModule } from '../../core/router/types';
+import { getOwnLoginLogs, getSecurityOverview } from './security/api';
+import { getSessions } from './session/api';
 
 export { LoginPageComponent as LoginPage } from './login/components/Login';
-export { LoginPayload, MFAVerifyPayload, LoginResp, login, verifyMFA } from './login/api';
+export { login } from './login/api';
+export type { LoginPayload, LoginResp } from './login/api';
 
-export { default as SessionList } from './session/components/SessionList';
-export { default as SessionDetailModal } from './session/components/SessionDetailModal';
+export { verifyMFA } from './mfa/api';
+export type { MFAVerifyPayload } from './mfa/api';
+
 export {
+  getSessions,
+  revokeSession,
+  getAdminSessionList,
+  revokeAdminSession,
+  cleanupAdminSessions,
+  batchRevokeAdminSessions,
+  logout,
+  reportActivity,
+} from './session/api';
+export type {
   AuthSession,
   AuthSessionPayload,
   AdminSessionRow,
@@ -13,18 +27,24 @@ export {
   AdminSessionPageResp,
   SessionCleanupPayload,
   SessionBatchRevokePayload,
-  getSessions,
-  revokeSession,
-  getAdminSessionList,
-  revokeAdminSession,
-  cleanupAdminSessions,
-  batchRevokeAdminSessions,
 } from './session/api';
 
-export { default as LoginLogList } from './security/components/LoginLogList';
-export { default as SecurityEventList } from './security/components/SecurityEventList';
-export { default as SecurityCenter } from './security/components/SecurityCenter';
 export {
+  acknowledgeSecurityEvent,
+  getSecurityOverview,
+  getOwnLoginLogs,
+  getAdminLoginLogList,
+  getAdminSecurityEventList,
+  exportAdminLoginLogs,
+  exportSelectedAdminLoginLogs,
+  cleanupAdminLoginLogs,
+  batchDeleteAdminLoginLogs,
+  updatePassword,
+  getMe,
+  verifyOperationPassword,
+  updateCurrentUserPreferences,
+} from './security/api';
+export type {
   SecurityOverview,
   SecurityPolicy,
   SecurityEventRow,
@@ -37,19 +57,11 @@ export {
   LoginLogBatchDeletePayload,
   LoginLogPageResp,
   UserPasswordUpdatePayload,
-  acknowledgeSecurityEvent,
-  getSecurityOverview,
-  getOwnLoginLogs,
-  getAdminLoginLogList,
-  getAdminSecurityEventList,
-  exportAdminLoginLogs,
-  exportSelectedAdminLoginLogs,
-  cleanupAdminLoginLogs,
-  batchDeleteAdminLoginLogs,
-  updatePassword,
+  UserInfo,
+  UserPlatformPreferences,
 } from './security/api';
 
-export { formatClientSummary, renderClientInfo } from './clientInfo';
+export { formatClientSummary, renderClientInfo } from './session/clientInfo';
 
 export const AuthModule = defineModule({
   name: 'auth',
@@ -108,6 +120,15 @@ export const AuthModule = defineModule({
       icon: 'safe',
       routeName: 'system-security-event',
       module: 'system.auth',
+    },
+  ],
+  routeDataWarmers: [
+    { path: '/auth/security', key: 'overview', load: () => getSecurityOverview() },
+    { path: '/auth/security', key: 'sessions', load: () => getSessions() },
+    {
+      path: '/auth/security',
+      key: 'login-logs',
+      load: () => getOwnLoginLogs({ page: 1, pageSize: 10 }),
     },
   ],
   dashboardWidgets: [

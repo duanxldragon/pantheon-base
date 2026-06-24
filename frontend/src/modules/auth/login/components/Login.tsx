@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
 } from '@arco-design/web-react';
-import { message } from '../../../components/feedback/message';
+import { message } from '../../../../components/feedback/message';
 import {
   IconCheckCircle,
   IconLanguage,
@@ -28,20 +28,21 @@ import {
   isRequestError,
   isServerRequestError,
   isTimeoutRequestError,
-} from '../../../api/request';
-import { login, verifyMFA, type LoginPayload, type LoginResp } from '../api';
-import { findFirstNavigableMenuPath } from '../../system/menu/api';
-import { useAuthStore } from '../../../store/useAuthStore';
-import { useMenuStore } from '../../../store/useMenuStore';
-import ThemeSwitcher from '../../../core/theme/ThemeSwitcher';
-import { clearShellSessionState, LOGIN_NOTICE_STORAGE_KEY } from '../../../core/shellState';
+} from '../../../../api/request';
+import { login, type LoginPayload, type LoginResp } from '../api';
+import { verifyMFA } from '../../mfa/api';
+import { findFirstNavigableMenuPath } from '../../../system/menu/api';
+import { useAuthStore } from '../../../../store/useAuthStore';
+import { useMenuStore } from '../../../../store/useMenuStore';
+import ThemeSwitcher from '../../../../core/theme/ThemeSwitcher';
+import { clearShellSessionState, LOGIN_NOTICE_STORAGE_KEY } from '../../../../core/shellState';
 import {
   getBrandInitial,
   setExplicitLanguagePreference,
   usePublicSettings,
-} from '../../../core/settings/publicSettings';
-import { COOKIE_TOKEN_PLACEHOLDER } from '../../../core/auth/sessionSnapshot';
-import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../../i18n';
+} from '../../../../core/settings/publicSettings';
+import { COOKIE_TOKEN_PLACEHOLDER } from '../../../../core/auth/sessionSnapshot';
+import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../../../i18n';
 import './Login.css';
 
 const FormItem = Form.Item;
@@ -110,7 +111,26 @@ export function LoginPageComponent() {
     sessionStorage.removeItem(LOGIN_NOTICE_STORAGE_KEY);
   }, [loginNotice]);
 
-  const completeLogin = async (res: LoginResp & { user?: { id: number; username: string; nickname: string; avatar?: string; email?: string; phone?: string; roles?: string[]; perms?: string[]; preferences?: { theme?: 'indigo' | 'emerald' | 'violet' | 'slate'; language?: 'zh-CN' | 'en-US' | 'ja-JP' | 'ko-KR' | 'fr-FR'; layoutMode?: 'vertical' | 'horizontal'; densityMode?: 'comfortable' | 'compact' } } }) => {
+  const completeLogin = async (
+    res: LoginResp & {
+      user?: {
+        id: number;
+        username: string;
+        nickname: string;
+        avatar?: string;
+        email?: string;
+        phone?: string;
+        roles?: string[];
+        perms?: string[];
+        preferences?: {
+          theme?: 'indigo' | 'emerald' | 'violet' | 'slate';
+          language?: 'zh-CN' | 'en-US' | 'ja-JP' | 'ko-KR' | 'fr-FR';
+          layoutMode?: 'vertical' | 'horizontal';
+          densityMode?: 'comfortable' | 'compact';
+        };
+      };
+    },
+  ) => {
     if (!res.user) {
       throw new Error('auth.login.response_invalid');
     }

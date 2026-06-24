@@ -10,18 +10,18 @@ import {
   Space,
   Tag,
 } from '@arco-design/web-react';
-import { message } from '../../../components/feedback/message';
+import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { getSettingGroup, type SettingGroup } from '../../system/setting/api';
+import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
-} from '../../../components/table/crossPageSelection';
-import { formatDateTime } from '../../../core/format/dateTime';
-import { useAuthStore } from '../../../store/useAuthStore';
-import { usePermission } from '../../../hooks/usePermission';
+} from '../../../../components/table/crossPageSelection';
+import { formatDateTime } from '../../../../core/format/dateTime';
+import { useAuthStore } from '../../../../store/useAuthStore';
+import { usePermission } from '../../../../hooks/usePermission';
 import {
   batchRevokeAdminSessions,
   cleanupAdminSessions,
@@ -48,12 +48,12 @@ import {
   TABLE_ACTION_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
-} from '../../../components';
+} from '../../../../components';
 import { formatClientSummary } from '../clientInfo';
 import SessionDetailModal from './SessionDetailModal';
 import '../../../system/components/shared/list-page.css';
-import '../auth.css';
-import { toCleanupTimestamp, loadRetentionSetting } from '../../system/audit/retentionSetting';
+import '../../auth.css';
+import { toCleanupTimestamp, loadRetentionSetting } from '../../../system/audit/retentionSetting';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -130,7 +130,6 @@ const SessionList: React.FC = () => {
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
-
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {

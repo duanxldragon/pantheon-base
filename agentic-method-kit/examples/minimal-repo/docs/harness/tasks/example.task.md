@@ -33,6 +33,12 @@ platform
 
 - any real implementation work
 
+## Assumptions and Open Questions
+
+- Confirmed Facts: `example.task.md` is a fixture consumed by method checks
+- Working Assumptions: no repository-specific runtime behavior is needed for this fixture
+- Open Questions: none
+
 ## Expected Files
 
 ### Create
@@ -51,6 +57,18 @@ platform
 ## Implementation Notes
 
 - fixture only
+
+## Minimum Viable Approach
+
+- Selected Rung: `small local code`
+- Why This Is Enough: the fixture only needs enough structure to exercise the checker
+- Upgrade Trigger: `none`
+
+## Success Criteria
+
+- Behaviour Outcome: the sample task packet passes the mechanical checker
+- Verification Signal: `node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo`
+- Regression Watch: required linkage and checklist fields stay present
 
 ## Execution Roles
 
@@ -75,11 +93,12 @@ platform
 
 ## Verification Plan
 
-- `node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo --config ../../config/method.config.json`
+- `node agentic-method-kit/scripts/check-task-packet.mjs --root agentic-method-kit/examples/minimal-repo`
 
 ## Linkage
 
 - Task ID: example
+- Task Manifest: .harness/tasks/example/manifest.json
 - OpenSpec Change: openspec/changes/example-change/
 - Superpowers Plan: docs/superpowers/plans/example-plan.md
 - Evidence Directory: .harness/evidence/example/

@@ -12,14 +12,12 @@ const frFROverrideFallback = {
     'Consignez la décision, le périmètre d’impact et les suites afin de garder une piste de gouvernance complète.',
   'auth.securityEvent.acknowledgeNoteRequired':
     'Ajoutez une note d’accusé de réception avant de clôturer cet événement de sécurité',
-  'auth.securityEvent.acknowledgePrompt':
-    'Commencez à rédiger la note d’accusé de réception',
+  'auth.securityEvent.acknowledgePrompt': 'Commencez à rédiger la note d’accusé de réception',
   'auth.securityEvent.acknowledgeSuccess': 'Événement de sécurité accusé',
   'auth.securityEvent.acknowledgedHint':
     'Les événements accusés conservent l’acteur, l’horodatage et la note de traitement pour l’audit.',
   'auth.securityEvent.acknowledgement': 'Accusé de réception',
-  'auth.securityEvent.filter.acknowledgedPlaceholder':
-    'Choisir l’état d’accusé de réception',
+  'auth.securityEvent.filter.acknowledgedPlaceholder': 'Choisir l’état d’accusé de réception',
   'auth.securityEvent.hero.desc':
     'La page des événements de sécurité reste dans `system/auth` : la zone principale gère filtrage, accusé de réception et investigation, tandis que le résumé latéral rassemble la répartition des risques, la progression de traitement et les consignes de gouvernance.',
   'auth.securityEvent.hero.summaryTitle': 'Résumé de gouvernance',
@@ -71,8 +69,7 @@ const frFROverrideFallback = {
   'business.cmdb.group.hero.scope': 'Périmètre des données',
   'business.cmdb.group.hero.scopeHint':
     'Le calcul des membres suit le périmètre de requête courant.',
-  'business.cmdb.group.hero.scopeValue':
-    'Visible dans le contexte de connexion courant',
+  'business.cmdb.group.hero.scopeValue': 'Visible dans le contexte de connexion courant',
   'business.cmdb.group.hero.title':
     'Gérer des ensembles d’hôtes réutilisables avec des conditions de labels',
   'business.cmdb.group.hero.total': 'Total des groupes',
@@ -91,8 +88,7 @@ const frFROverrideFallback = {
   'business.cmdb.host.collectAuthMode': 'Mode d’authentification',
   'business.cmdb.host.collectPassword': 'Mot de passe',
   'business.cmdb.host.collectPrivateKey': 'Clé privée',
-  'business.cmdb.host.collectPrivateKeyPlaceholder':
-    'Collez une clé privée OpenSSH',
+  'business.cmdb.host.collectPrivateKeyPlaceholder': 'Collez une clé privée OpenSSH',
   'business.cmdb.host.collectSshUser': 'Utilisateur SSH',
   'business.cmdb.host.collectSshUserPlaceholder': 'Ex. : root',
   'business.cmdb.host.collectSuccess': 'Configuration collectée avec succès',
@@ -103,13 +99,11 @@ const frFROverrideFallback = {
   'business.cmdb.host.editTitle': 'Modifier l’hôte',
   'business.cmdb.host.empty':
     'Aucun hôte trouvé. Ajoutez-en un manuellement ou utilisez la collecte SSH.',
-  'business.cmdb.host.hero.componentsHint':
-    'Nombre de composants installés sur l’hôte courant.',
+  'business.cmdb.host.hero.componentsHint': 'Nombre de composants installés sur l’hôte courant.',
   'business.cmdb.host.hero.eyebrow': 'Opérations / Inventaire des hôtes',
   'business.cmdb.host.hero.labelsHint': 'Nombre de labels associés à l’hôte courant.',
   'business.cmdb.host.hero.maintenance': 'En maintenance',
-  'business.cmdb.host.hero.maintenanceHint':
-    'Hôtes dont le statut est en maintenance.',
+  'business.cmdb.host.hero.maintenanceHint': 'Hôtes dont le statut est en maintenance.',
   'business.cmdb.host.hero.online': 'Hôtes en ligne',
   'business.cmdb.host.hero.onlineHint': 'Hôtes dont le statut est en ligne.',
   'business.cmdb.host.hero.osHint': 'Type du système d’exploitation courant.',
@@ -118,11 +112,9 @@ const frFROverrideFallback = {
     'Les listes et détails d’hôtes suivent le périmètre de données du système.',
   'business.cmdb.host.hero.scopeValue': 'Visible dans le contexte de connexion courant',
   'business.cmdb.host.hero.statusHint': 'Statut actuel de l’hôte.',
-  'business.cmdb.host.hero.title':
-    'Gérer hôtes, labels et collecte dans une seule vue',
+  'business.cmdb.host.hero.title': 'Gérer hôtes, labels et collecte dans une seule vue',
   'business.cmdb.host.hero.total': 'Total des hôtes',
-  'business.cmdb.host.hero.totalHint':
-    'Nombre total d’hôtes sous le filtre courant.',
+  'business.cmdb.host.hero.totalHint': 'Nombre total d’hôtes sous le filtre courant.',
   'business.cmdb.host.installedComponents': 'Composants installés',
   'business.cmdb.host.ip': 'Adresse IP',
   'business.cmdb.host.labels': 'Étiquettes',
@@ -148,8 +140,7 @@ const frFROverrideFallback = {
   'common.cleanupMode': 'Mode de nettoyage',
   'common.cleanupModeRange': 'Par plage horaire',
   'common.cleanupModeRetention': 'Par fenêtre de rétention',
-  'common.cleanupRangeConfirm':
-    'Nettoyer les enregistrements dans la plage horaire sélectionnée ?',
+  'common.cleanupRangeConfirm': 'Nettoyer les enregistrements dans la plage horaire sélectionnée ?',
   'common.cleanupRangeEnd': 'Heure de fin',
   'common.cleanupRangeRequired':
     'Pour un nettoyage par plage, sélectionnez à la fois l’heure de début et l’heure de fin',
@@ -167,10 +158,8 @@ const frFROverrideFallback = {
     'Posture actuelle des risques de connexion, événements de sécurité et gouvernance des sessions',
   'dashboard.governanceSummary':
     '{{operations}} opérations aujourd’hui / {{pending}} événements en attente',
-  'dashboard.lowcodeSummary':
-    '{{modules}} modules actifs / {{i18n}} traductions',
-  'dashboard.quickAction.audit':
-    'Examiner les écritures critiques et les pistes de gouvernance',
+  'dashboard.lowcodeSummary': '{{modules}} modules actifs / {{i18n}} traductions',
+  'dashboard.quickAction.audit': 'Examiner les écritures critiques et les pistes de gouvernance',
   'dashboard.quickAction.generator':
     'Générer des squelettes de modules métier, menus et contrats de permission',
   'dashboard.quickAction.i18n':
@@ -195,8 +184,7 @@ const frFROverrideFallback = {
   'operations.cmdb.menu': 'Base de configuration',
   'operations.menu': 'Opérations',
   'system.menu.session': 'Gestion des sessions',
-  'system.permission.security_event.acknowledge':
-    'Accuser réception des événements de sécurité',
+  'system.permission.security_event.acknowledge': 'Accuser réception des événements de sécurité',
   'system.permission.workbench.currentGapSection': 'Résumé des écarts courants',
   'system.permission.workbench.currentStatusSection': 'État courant de gouvernance',
   'system.permission.workbench.governanceStatus': 'État de gouvernance',
@@ -209,17 +197,13 @@ const frFROverrideFallback = {
   'system.permission.workbench.rawCoverageSection': 'Couverture brute des permissions',
   'system.permission.workbench.recentRemediations': 'Remédiations récentes',
   'system.permission.workbench.remediatedRoles': 'Rôles remédiés',
-  'system.permission.workbench.remediationActionSection':
-    'Actions correctives exécutables',
-  'system.permission.workbench.remediationTimelineSection':
-    'Chronologie récente des remédiations',
+  'system.permission.workbench.remediationActionSection': 'Actions correctives exécutables',
+  'system.permission.workbench.remediationTimelineSection': 'Chronologie récente des remédiations',
   'system.permission.workbench.status.clean': 'Aucune action requise',
   'system.permission.workbench.status.pending': 'En attente',
   'system.permission.workbench.status.remediated': 'Remédié',
-  'system.permission.workbench.timeline.noop':
-    'Aucune politique supplémentaire n’est nécessaire',
-  'system.permission.workbench.timeline.remediated':
-    'Politiques recommandées appliquées',
+  'system.permission.workbench.timeline.noop': 'Aucune politique supplémentaire n’est nécessaire',
+  'system.permission.workbench.timeline.remediated': 'Politiques recommandées appliquées',
   'system.permission.workbench.view.all': 'Tout afficher',
   'system.permission.workbench.view.pending': 'En attente uniquement',
   'system.setting.hero.summaryTitle': 'Résumé de gouvernance',

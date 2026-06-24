@@ -2,47 +2,39 @@ package common
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"pantheon-platform/backend/pkg/common/http"
+	"pantheon-platform/backend/pkg/authtoken"
+	commonhttp "pantheon-platform/backend/pkg/common/http"
 )
 
 const (
-	TokenTypeAccess    = "access"
-	TokenTypeRefresh   = "refresh"
-	TokenTypeOperation = "operation"
+	TokenTypeAccess    = authtoken.TypeAccess
+	TokenTypeRefresh   = authtoken.TypeRefresh
+	TokenTypeOperation = authtoken.TypeOperation
 
-	// DefaultAccessTokenTTL is the default lifetime for access tokens.
-	DefaultAccessTokenTTL = 15 * time.Minute
-	// DefaultRefreshTokenTTL is the default lifetime for refresh tokens.
-	DefaultRefreshTokenTTL = 7 * 24 * time.Hour
-)
-
-const (
-	tokenSessionPrefix   = "pantheon:session:"
-	tokenRefreshPrefix  = "pantheon:refresh:"
-	tokenOperationPrefix = "pantheon:op:"
+	DefaultAccessTokenTTL  = authtoken.DefaultAccessTokenTTL
+	DefaultRefreshTokenTTL = authtoken.DefaultRefreshTokenTTL
 )
 
 var (
-	// AccessTokenTTL is the effective TTL for access tokens, overridable via SetTokenTTL.
-	AccessTokenTTL = http.AccessTokenTTL
-	// RefreshTokenTTL is the effective TTL for refresh tokens, overridable via SetTokenTTL.
-	RefreshTokenTTL = http.RefreshTokenTTL
+	AccessTokenTTL  = authtoken.AccessTokenTTL
+	RefreshTokenTTL = authtoken.RefreshTokenTTL
 
 	ErrTokenInvalid = NewUnauthorized("token.invalid")
 	ErrTokenExpired = NewUnauthorized("token.expired")
 	ErrTokenType    = NewUnauthorized("token.type.invalid")
 )
 
-// SetTokenTTL overrides the effective token TTLs. Pass zero to use defaults.
+type TokenPair = authtoken.Pair
+type TokenSessionData = authtoken.SessionData
+type OperationTokenData = authtoken.OperationData
+
 func SetTokenTTL(accessTTL, refreshTTL time.Duration) {
-	http.SetTokenTTL(accessTTL, refreshTTL)
+	authtoken.SetTokenTTL(accessTTL, refreshTTL)
+	commonhttp.SetTokenTTL(accessTTL, refreshTTL)
 	if accessTTL > 0 {
 		AccessTokenTTL = accessTTL
 	}
@@ -51,156 +43,87 @@ func SetTokenTTL(accessTTL, refreshTTL time.Duration) {
 	}
 }
 
-type TokenPair struct {
-	AccessToken      string    `json:"accessToken"`
-	RefreshToken     string    `json:"refreshToken"`
-	TokenType       string    `json:"tokenType"`
-	AccessExpiresAt time.Time `json:"accessExpiresAt"`
-	RefreshExpiresAt time.Time `json:"refreshExpiresAt"`
-	SessionID       string    `json:"sessionId"`
-}
+func TokenSessionKey(tok string) string   { return authtoken.SessionKey(tok) }
+func TokenRefreshKey(tok string) string   { return authtoken.RefreshKey(tok) }
+func TokenOperationKey(tok string) string { return authtoken.OperationKey(tok) }
 
-type TokenSessionData struct {
-	UserID         uint64   `json:"uid"`
-	Username       string   `json:"un"`
-	RoleKeys       []string `json:"rk"`
-	SessionID      string   `json:"sid"`
-	LastIP         string   `json:"ip"`
-	UserAgent      string   `json:"ua"`
-	LastActivityAt int64    `json:"lat"`
-}
-
-type tokenRefreshEntry struct {
-	UserID    uint64 `json:"uid"`
-	SessionID string `json:"sid"`
-}
-
-type OperationTokenData struct {
-	UserID    uint64 `json:"uid"`
-	SessionID string `json:"sid"`
-	Scope     string `json:"scope"`
-}
-
-func TokenSessionKey(tok string) string    { return tokenSessionPrefix + tok }
-func TokenRefreshKey(tok string) string   { return tokenRefreshPrefix + tok }
-func TokenOperationKey(tok string) string { return tokenOperationPrefix + tok }
-
-func NewAccessToken() string   { return randHex(32) }
-func NewRefreshToken() string  { return randHex(32) }
-func NewOperationToken() string { return randHex(32) }
-
-func randHex(n int) string {
-	b := make([]byte, n)
-	rand.Read(b)
-	return hex.EncodeToString(b)
-}
+func NewAccessToken() string    { return authtoken.NewAccessToken() }
+func NewRefreshToken() string   { return authtoken.NewRefreshToken() }
+func NewOperationToken() string { return authtoken.NewOperationToken() }
 
 func TokenStoreSession(ctx context.Context, rdb *redis.Client, tok string, d *TokenSessionData, ttl time.Duration) error {
-	b, _ := json.Marshal(d)
-	return rdb.Set(ctx, TokenSessionKey(tok), b, ttl).Err()
+	return authtoken.StoreSession(ctx, rdb, tok, d, ttl)
 }
 
 func TokenValidateSession(ctx context.Context, rdb *redis.Client, tok string) (*TokenSessionData, error) {
-	b, err := rdb.Get(ctx, TokenSessionKey(tok)).Bytes()
-	if err == redis.Nil {
-		return nil, ErrNotFound
-	}
-	if err != nil {
-		return nil, err
-	}
-	var d TokenSessionData
-	json.Unmarshal(b, &d)
-	return &d, nil
+	data, err := authtoken.ValidateSession(ctx, rdb, tok)
+	return data, mapAuthTokenError(err)
 }
 
 func TokenDeleteSession(ctx context.Context, rdb *redis.Client, tok string) error {
-	return rdb.Del(ctx, TokenSessionKey(tok)).Err()
+	return authtoken.DeleteSession(ctx, rdb, tok)
 }
 
 func TokenRefreshSessionActivity(ctx context.Context, rdb *redis.Client, tok string, d *TokenSessionData) error {
-	b, _ := json.Marshal(d)
-	ttl, err := rdb.TTL(ctx, TokenSessionKey(tok)).Result()
-	if err != nil || ttl <= 0 {
-		ttl = AccessTokenTTL
-	}
-	return rdb.Set(ctx, TokenSessionKey(tok), b, ttl).Err()
+	return authtoken.RefreshSessionActivity(ctx, rdb, tok, d)
 }
 
 func TokenStoreRefresh(ctx context.Context, rdb *redis.Client, tok string, uid uint64, sid string, ttl time.Duration) error {
-	b, _ := json.Marshal(tokenRefreshEntry{UserID: uid, SessionID: sid})
-	return rdb.Set(ctx, TokenRefreshKey(tok), b, ttl).Err()
+	return authtoken.StoreRefresh(ctx, rdb, tok, uid, sid, ttl)
 }
 
 func TokenValidateRefresh(ctx context.Context, rdb *redis.Client, tok string) (uint64, string, error) {
-	b, err := rdb.Get(ctx, TokenRefreshKey(tok)).Bytes()
-	if err == redis.Nil {
-		return 0, "", ErrNotFound
-	}
-	if err != nil {
-		return 0, "", err
-	}
-	var e tokenRefreshEntry
-	json.Unmarshal(b, &e)
-	return e.UserID, e.SessionID, nil
+	userID, sessionID, err := authtoken.ValidateRefresh(ctx, rdb, tok)
+	return userID, sessionID, mapAuthTokenError(err)
 }
 
 func TokenDeleteRefresh(ctx context.Context, rdb *redis.Client, tok string) error {
-	return rdb.Del(ctx, TokenRefreshKey(tok)).Err()
+	return authtoken.DeleteRefresh(ctx, rdb, tok)
 }
 
 func TokenDeleteSessionPair(ctx context.Context, rdb *redis.Client, accessToken, refreshToken string) error {
-	if rdb == nil {
-		return nil
-	}
-	pipe := rdb.Pipeline()
-	pipe.Del(ctx, TokenSessionKey(accessToken))
-	pipe.Del(ctx, TokenRefreshKey(refreshToken))
-	_, err := pipe.Exec(ctx)
-	return err
+	return authtoken.DeleteSessionPair(ctx, rdb, accessToken, refreshToken)
 }
 
 func TokenStoreOperation(ctx context.Context, rdb *redis.Client, tok string, data *OperationTokenData, ttl time.Duration) error {
-	b, _ := json.Marshal(data)
-	return rdb.Set(ctx, TokenOperationKey(tok), b, ttl).Err()
+	return authtoken.StoreOperation(ctx, rdb, tok, data, ttl)
 }
 
 func TokenValidateOperation(ctx context.Context, rdb *redis.Client, tok string) (*OperationTokenData, error) {
-	b, err := rdb.Get(ctx, TokenOperationKey(tok)).Bytes()
-	if err == redis.Nil {
-		return nil, errors.New("operation token not found or expired")
-	}
-	if err != nil {
-		return nil, err
-	}
-	var d OperationTokenData
-	json.Unmarshal(b, &d)
-	return &d, nil
+	data, err := authtoken.ValidateOperation(ctx, rdb, tok)
+	return data, mapAuthTokenError(err)
 }
 
 func TokenDeleteOperation(ctx context.Context, rdb *redis.Client, tok string) error {
-	return rdb.Del(ctx, TokenOperationKey(tok)).Err()
+	return authtoken.DeleteOperation(ctx, rdb, tok)
 }
 
-// GenerateOperationToken creates a Redis-based operation token.
-// Deprecated: Use AuthService.VerifyPasswordForOperationToken instead.
+// Deprecated: use authtoken.GenerateOperationToken or auth/security operation verification.
 func GenerateOperationToken(userID uint64, sessionID string, operationScope string, ttl time.Duration, rdb *redis.Client) (string, error) {
-	opToken := NewOperationToken()
-	data := &OperationTokenData{
-		UserID:    userID,
-		SessionID: sessionID,
-		Scope:     operationScope,
-	}
-	ctx := context.Background()
-	if err := TokenStoreOperation(ctx, rdb, opToken, data, ttl); err != nil {
-		return "", err
-	}
-	return opToken, nil
+	return authtoken.GenerateOperationToken(userID, sessionID, operationScope, ttl, rdb)
 }
 
-// ParseOperationToken validates a Redis-based operation token.
+// Deprecated: use authtoken.ParseOperationToken.
 func ParseOperationToken(tokenString string, rdb *redis.Client) (*OperationTokenData, error) {
-	if rdb == nil {
-		return nil, ErrDatabaseNotInitialized
+	data, err := authtoken.ParseOperationToken(tokenString, rdb)
+	return data, mapAuthTokenError(err)
+}
+
+func mapAuthTokenError(err error) error {
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, authtoken.ErrNotFound):
+		return ErrNotFound
+	case errors.Is(err, authtoken.ErrInvalid):
+		return ErrTokenInvalid
+	case errors.Is(err, authtoken.ErrExpired):
+		return ErrTokenExpired
+	case errors.Is(err, authtoken.ErrType):
+		return ErrTokenType
+	case errors.Is(err, authtoken.ErrStoreNotInitialized):
+		return ErrDatabaseNotInitialized
+	default:
+		return err
 	}
-	return TokenValidateOperation(context.Background(), rdb, tokenString)
 }

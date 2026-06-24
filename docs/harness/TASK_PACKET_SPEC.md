@@ -3,7 +3,7 @@ title: Task Packet Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-08
+updated_at: 2026-06-23
 ---
 
 # Task Packet Spec
@@ -21,6 +21,14 @@ docs/harness/tasks/YYYY-MM-DD-<task-name>.task.md
 ```
 
 如果任务来自已有 superpowers plan，可以在 task packet 中引用该 plan，而不是重复全文。
+
+`pantheon-base` 还要求 task packet 配对 machine-readable task manifest：
+
+```text
+.harness/tasks/<task-id>/manifest.json
+```
+
+task packet 负责人类可读边界，task manifest 负责 evidence / review / automation linkage。
 
 ## 2. 必填模板
 
@@ -66,6 +74,12 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 
 - <explicit non-goals>
 
+## Assumptions and Open Questions
+
+- Confirmed Facts: `none | facts already verified from code, contracts, logs, or user input`
+- Working Assumptions: `none | current assumption that keeps work moving`
+- Open Questions: `none | ambiguity that should stop execution or change the plan`
+
 ## Structural Scope
 
 - Affected Subgraph: `<entry -> core path -> exit/side effect>` | `none`
@@ -90,6 +104,24 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 ## Implementation Notes
 
 - <boundary or sequencing notes>
+
+## Minimum Viable Approach
+
+- Selected Rung: `skip | reuse | stdlib | native platform | installed dependency | small local code | new dependency`
+- Why This Is Enough: `<one sentence>`
+- Upgrade Trigger: `none | condition that would justify the next rung`
+
+## Success Criteria
+
+- Behaviour Outcome: `<observable result>`
+- Verification Signal: `<command, test, or evidence that proves the result>`
+- Regression Watch: `<behavior that must remain unchanged>`
+
+## Context Strategy
+
+- Entry Sources: `AGENTS.md`, `CLAUDE.md`, current task packet, latest review summary | none
+- Retrieval Order: `entry -> summary -> raw`
+- Sensitive Context: `none | redacted or local-only handling rule`
 
 ## Execution Roles
 
@@ -123,6 +155,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 ## Linkage
 
 - Task ID: `YYYY-MM-DD-task-name`
+- Task Manifest: `.harness/tasks/<task-id>/manifest.json`
 - OpenSpec Change: `openspec/changes/<name>/` | none
 - Superpowers Plan: `docs/superpowers/plans/<file>.md` | none
 - Evidence Directory: `.harness/evidence/<task-id>/`
@@ -151,7 +184,23 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - [ ] Review completed
 ```
 
-`Execution Roles`、`Stop Points`、`State Plan` 是可选 section，但一旦仓库合同要求或任务显式声明这些 section，内容就必须完整、可解释、可校验。
+`Execution Roles`、`Stop Points`、`State Plan`、`Context Strategy` 是可选 section，但一旦仓库合同要求或任务显式声明这些 section，内容就必须完整、可解释、可校验。
+
+为落实 `EXECUTION_GUARDRAILS.zh.md`，对 `non-trivial` 任务，默认推荐补齐这三个短 section：
+
+- `## Assumptions and Open Questions`
+- `## Minimum Viable Approach`
+- `## Success Criteria`
+
+`pantheon-base` 当前 checker 会把这些 section 的缺失视为 warning，因为它们分别承担“先思考、控复杂度、定义可证伪完成信号”的方法职责。
+
+对长任务、高上下文任务、跨 session 任务或涉及敏感信息的任务，推荐补 `## Context Strategy`。它用于显式记录：
+
+- 这次任务先读哪些入口源
+- 上下文检索是否遵循 `entry -> summary -> raw`
+- 哪些信息必须脱敏、只本地保留，或不得写入共享 artifact
+
+它的目的不是增加文书，而是把上下文加载顺序和隐私边界写清楚，避免下一次 handoff 或 resume 重新大范围回放。
 
 `Structural Scope` 对 trivial 任务可写 `none`；对 `non-trivial`、跨层、runtime-sensitive、权限/菜单/i18n/审计/生成器/动态模块相关任务，默认应补最小受影响子图说明。它的目的不是要求维护全仓架构图，而是让实现者和 reviewer 审查同一个结构范围。
 
@@ -189,6 +238,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - execution roles when declared
 - stop points when declared
 - state/checkpoint expectations when declared
+- context strategy when declared
 - contract anchors
 - verification plan
 - evidence required
@@ -199,9 +249,10 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 以下字段是 task packet 与后续 artifact 的最小闭环键：
 
 - `Task ID`：主键，必须与文件名 `<task-id>.task.md` 一致
+- `Task Manifest`：必须指向 `.harness/tasks/<task-id>/manifest.json`
 - `Evidence Directory`：必须指向 `.harness/evidence/<task-id>/`
 - `Review File`：如保留 review artifact，必须指向 evidence 目录下文件
 - `OpenSpec Change`：如任务来自 OpenSpec，必须显式记录 change 路径；否则写 `none`
-- `Superpowers Plan`：如任务来自 `docs/superpowers/plans/*`，必须显式记录；否则写 `none`
+- `Superpowers Plan`：如任务来自 `docs/superpowers/plans/*`，必须显式记录；否则写 `none`。下游 manifest / evidence / review 统一写入 `planRefs`
 
-这组 linkage 字段用于把 `OpenSpec change / superpowers plan / task packet / evidence / review` 串成可追踪链路。
+这组 linkage 字段用于把 `task packet / task manifest / OpenSpec change / superpowers plan / evidence / review` 串成可追踪链路。

@@ -83,6 +83,21 @@ export function revokeSession(sessionId: string) {
   });
 }
 
+export function logout() {
+  return apiRequest<{ loggedOut: boolean }>({
+    url: '/auth/logout',
+    method: 'post',
+  });
+}
+
+export function reportActivity() {
+  return apiRequest<{ touched: boolean }>({
+    url: '/auth/activity',
+    method: 'post',
+    skipErrorMessage: true,
+  });
+}
+
 export function getAdminSessionList(params?: AdminSessionQuery) {
   return apiRequest<AdminSessionPageResp>({
     url: '/system/session/list',

@@ -7,7 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"pantheon-platform/backend/pkg/authtoken"
 	"pantheon-platform/backend/pkg/common"
+	commonhttp "pantheon-platform/backend/pkg/common/http"
 	"pantheon-platform/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
@@ -23,9 +25,9 @@ var (
 )
 
 type tokenCachedSession struct {
-	data       *common.TokenSessionData
-	cachedAt   time.Time
-	expiresAt  time.Time
+	data      *authtoken.SessionData
+	cachedAt  time.Time
+	expiresAt time.Time
 }
 
 func tokenSessionCacheKey(token string) string {
@@ -45,7 +47,7 @@ func lookupTokenSessionCache(token string) (*tokenCachedSession, bool) {
 	return entry, true
 }
 
-func storeTokenSessionCache(token string, data *common.TokenSessionData, expiresAt time.Time) {
+func storeTokenSessionCache(token string, data *authtoken.SessionData, expiresAt time.Time) {
 	tokenSessionCacheMu.Lock()
 	defer tokenSessionCacheMu.Unlock()
 	tokenSessionCache[tokenSessionCacheKey(token)] = &tokenCachedSession{
@@ -70,14 +72,14 @@ func invalidateTokenSessionCache(token string) {
 }
 
 var (
-	sessionIdleMinutesMu         sync.RWMutex
-	cachedSessionIdleMinutes    = defaultSessionIdleMinutes
-	cachedSessionIdleMinutesAt  time.Time
+	sessionIdleMinutesMu       sync.RWMutex
+	cachedSessionIdleMinutes   = defaultSessionIdleMinutes
+	cachedSessionIdleMinutesAt time.Time
 )
 
 // extractToken extracts the access token from Authorization header or cookie.
 func extractToken(c *gin.Context) string {
-	if token, err := c.Cookie(common.CookieAccessToken); err == nil && token != "" {
+	if token, err := c.Cookie(commonhttp.CookieAccessToken); err == nil && token != "" {
 		return token
 	}
 	authHeader := c.GetHeader("Authorization")
@@ -107,7 +109,7 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
-		var sessionData *common.TokenSessionData
+		var sessionData *authtoken.SessionData
 		var err error
 
 		// Try cache first
@@ -116,7 +118,7 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 			sessionData = cached.data
 		} else {
 			// Cache miss or expired - query Redis
-			sessionData, err = common.TokenValidateSession(ctx, rdb, token)
+			sessionData, err = authtoken.ValidateSession(ctx, rdb, token)
 			if err != nil {
 				invalidateTokenSessionCache(token)
 				common.Fail(c, common.CodeUnauthorized, "token.invalid")
@@ -125,7 +127,7 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 			}
 
 			// Get TTL from Redis for cache expiry
-			ttl, ttlErr := rdb.TTL(ctx, common.TokenSessionKey(token)).Result()
+			ttl, ttlErr := rdb.TTL(ctx, authtoken.SessionKey(token)).Result()
 			if ttlErr == nil && ttl > 0 {
 				storeTokenSessionCache(token, sessionData, time.Now().Add(ttl))
 			}
@@ -150,7 +152,7 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 			if lastActivity.Add(time.Duration(idleMinutes) * time.Minute).Before(time.Now()) {
 				invalidateTokenSessionCache(token)
 				// Clean up the expired session from Redis
-				_ = common.TokenDeleteSession(ctx, rdb, token)
+				_ = authtoken.DeleteSession(ctx, rdb, token)
 				common.Fail(c, common.CodeUnauthorized, "session.idle_timeout")
 				c.Abort()
 				return
@@ -160,7 +162,7 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		// Update activity timestamp in Redis (best-effort, don't fail the request)
 		if sessionData.LastActivityAt == 0 || time.Since(time.Unix(sessionData.LastActivityAt, 0)) > time.Minute {
 			sessionData.LastActivityAt = time.Now().Unix()
-			if err := common.TokenRefreshSessionActivity(ctx, rdb, token, sessionData); err == nil {
+			if err := authtoken.RefreshSessionActivity(ctx, rdb, token, sessionData); err == nil {
 				// Update cache with new activity time
 				if cached, ok := lookupTokenSessionCache(token); ok {
 					cached.data.LastActivityAt = sessionData.LastActivityAt

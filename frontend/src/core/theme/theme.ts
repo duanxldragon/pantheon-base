@@ -71,7 +71,9 @@ export function applyPantheonTheme(theme: PantheonThemeKey) {
 
   document.documentElement.dataset.pantheonTheme = theme;
   globalThis.localStorage.setItem(PANTHEON_THEME_STORAGE_KEY, theme);
-  globalThis.dispatchEvent(new CustomEvent<PantheonThemeKey>(PANTHEON_THEME_EVENT, { detail: theme }));
+  globalThis.dispatchEvent(
+    new CustomEvent<PantheonThemeKey>(PANTHEON_THEME_EVENT, { detail: theme }),
+  );
 }
 
 export function applyPantheonDefaultTheme(theme: PantheonThemeKey) {

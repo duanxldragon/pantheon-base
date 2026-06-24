@@ -18,11 +18,7 @@ export interface UsePaginationResult {
 }
 
 export function usePagination(options: UsePaginationOptions = {}): UsePaginationResult {
-  const {
-    defaultCurrent = 1,
-    defaultPageSize = 10,
-    total = 0,
-  } = options;
+  const { defaultCurrent = 1, defaultPageSize = 10, total = 0 } = options;
 
   const [current, setCurrent] = useState(defaultCurrent);
   const [pageSize, setPageSizeState] = useState(defaultPageSize);
@@ -37,16 +33,19 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     setPageSizeState(defaultPageSize);
   }, [defaultCurrent, defaultPageSize]);
 
-  const paginationProps = useMemo<PaginationProps>(() => ({
-    current,
-    pageSize,
-    total,
-    onChange: (page) => setCurrent(page),
-    showJumper: true,
-    sizeCanChange: true,
-    sizeOptions: [10, 20, 50, 100],
-    size: 'small' as const,
-  }), [current, pageSize, total]);
+  const paginationProps = useMemo<PaginationProps>(
+    () => ({
+      current,
+      pageSize,
+      total,
+      onChange: (page) => setCurrent(page),
+      showJumper: true,
+      sizeCanChange: true,
+      sizeOptions: [10, 20, 50, 100],
+      size: 'small' as const,
+    }),
+    [current, pageSize, total],
+  );
 
   return {
     current,

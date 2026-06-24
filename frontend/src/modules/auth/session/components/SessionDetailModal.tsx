@@ -1,9 +1,10 @@
 import React from 'react';
 import { Card, Descriptions, Space, Tag, Typography } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
-import { AppModal, PageEmpty } from '../../../components';
-import { formatDateTime } from '../../../core/format/dateTime';
+import { AppModal, PageEmpty } from '../../../../components';
+import { formatDateTime } from '../../../../core/format/dateTime';
 import { formatClientSummary } from '../clientInfo';
+import '../../auth.css';
 
 type SessionDetailRecord = {
   sessionId: string;

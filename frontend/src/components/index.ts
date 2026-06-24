@@ -29,7 +29,10 @@ export {
   type TableActionColumnWidthPreset,
 } from './patterns/table/TableAction';
 export { TABLE_COLUMN_WIDTH, type TableColumnWidthPreset } from './patterns/table/TableColumnWidth';
-export { withTableColumnPriority, type TableColumnPriority } from './patterns/table/TableColumnPriority';
+export {
+  withTableColumnPriority,
+  type TableColumnPriority,
+} from './patterns/table/TableColumnPriority';
 export {
   getPaginationCurrentPage,
   getPaginationPageSize,
@@ -55,7 +58,12 @@ export {
 } from './patterns/modals/AppModalActions';
 export { default as AppDrawer } from './patterns/modals/AppDrawer';
 export { default as PageSplitLayout } from './patterns/layout/PageSplitLayout';
-export { SideRailPanel, SideRailStack, SideRailItem, SideRailNote } from './patterns/rails/SideRail';
+export {
+  SideRailPanel,
+  SideRailStack,
+  SideRailItem,
+  SideRailNote,
+} from './patterns/rails/SideRail';
 export { StandardRailSummary, StandardRailNotePanel } from './patterns/rails/StandardRail';
 export type { RailSummaryItem, RailSummaryTone } from './patterns/rails/RailSummary';
 export { default as ImportCsvButton } from './patterns/actions/ImportCsvButton';

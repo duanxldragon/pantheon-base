@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Typography } from '@arco-design/web-react';
-import { message } from '../feedback/message';
+import { message } from '../../feedback/message';
 
 interface TableBatchActionBarProps {
   selectedCount: number;

@@ -3,7 +3,7 @@ title: Verification Evidence Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-08
+updated_at: 2026-06-23
 ---
 
 # Verification Evidence Spec
@@ -98,7 +98,7 @@ complete | blocked | partial
   "runtimeMetrics": ["p95=120ms"],
   "runtimeGap": "",
   "linkage": {
-    "taskPacket": "docs/harness/tasks/YYYY-MM-DD-task-name.task.md",
+    "taskManifest": ".harness/tasks/YYYY-MM-DD-task-name/manifest.json",
     "evidenceDir": ".harness/evidence/YYYY-MM-DD-task-name/",
     "reviewFile": ".harness/evidence/YYYY-MM-DD-task-name/review.md",
     "changeRef": "openspec/changes/<name>/",
@@ -157,7 +157,7 @@ complete | blocked | partial
 
 `commands.json` 应显式记录 artifact linkage：
 
-- `linkage.taskPacket`
+- `linkage.taskManifest`
 - `linkage.evidenceDir`
 - `linkage.reviewFile`
 - `linkage.changeRef`
@@ -167,10 +167,12 @@ complete | blocked | partial
 
 规则：
 
-- `taskId` 必须与 `linkage.taskPacket` 文件名和 `linkage.evidenceDir` 目录名一致
+- `taskId` 必须与 `linkage.taskManifest` 路径中的 task id 和 `linkage.evidenceDir` 目录名一致
 - `reviewFile` 如存在应放在对应 evidence 目录下
 - `changeRef` 如无 OpenSpec change，写 `none`
 - `planRefs` 如无 superpowers plan，可为空数组
+
+如果仓库同时保留人类可读 task packet，保持它与 `taskManifest` 使用同一个 task id；证据校验闭环以 `taskManifest` 为 machine-readable 主键。
 
 ## 4. UI 证据
 

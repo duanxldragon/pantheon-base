@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"pantheon-platform/backend/pkg/common"
+	commonsecurity "pantheon-platform/backend/pkg/common/security"
 )
 
 const generatorEncryptedPrefix = "enc:v1:"
@@ -73,9 +74,9 @@ func decryptDatasourcePassword(value string) (string, error) {
 }
 
 func getDatasourceCipherKey() []byte {
-	value := common.ResolveSecret("PANTHEON_GENERATOR_DATASOURCE_SECRET", "")
+	value := commonsecurity.ResolveSecret("PANTHEON_GENERATOR_DATASOURCE_SECRET", "")
 	if strings.TrimSpace(value) == "" {
-		value = common.ResolveSecret("PANTHEON_SETTING_SECRET", common.DefaultDevSecrets.Setting)
+		value = commonsecurity.ResolveSecret("PANTHEON_SETTING_SECRET", commonsecurity.DefaultDevSecrets.Setting)
 	}
 
 	key := []byte(value)

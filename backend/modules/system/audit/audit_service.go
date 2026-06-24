@@ -32,6 +32,8 @@ func NewAuditService(db *gorm.DB) *AuditService {
 const (
 	defaultOperationLogRetentionDays = 180
 	auditAutoCleanupMinInterval      = 15 * time.Minute
+	maxOperationLogPageSize          = 100
+	maxOperationLogExportRows        = 10000
 )
 
 func (s *AuditService) Migrate() error {
@@ -57,16 +59,7 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	}
 	s.ensureAutomaticOperationLogRetention()
 
-	page := 1
-	pageSize := 10
-	if query != nil {
-		if query.Page > 0 {
-			page = query.Page
-		}
-		if query.PageSize > 0 {
-			pageSize = query.PageSize
-		}
-	}
+	page, pageSize := normalizeOperationLogPageQuery(query)
 
 	db := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query)
 	var total int64
@@ -327,10 +320,27 @@ func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 func (s *AuditService) listOperationLogsForExport(query *OperationLogQuery) ([]middleware.SystemLogOper, error) {
 	var rows []middleware.SystemLogOper
 	db := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query)
-	if err := db.Order("id desc").Find(&rows).Error; err != nil {
+	if err := db.Order("id desc").Limit(maxOperationLogExportRows).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	return rows, nil
+}
+
+func normalizeOperationLogPageQuery(query *OperationLogQuery) (int, int) {
+	page := 1
+	pageSize := 10
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.PageSize > 0 {
+			pageSize = query.PageSize
+		}
+	}
+	if pageSize > maxOperationLogPageSize {
+		pageSize = maxOperationLogPageSize
+	}
+	return page, pageSize
 }
 
 func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationLogQuery) *gorm.DB {

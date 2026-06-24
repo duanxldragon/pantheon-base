@@ -43,9 +43,7 @@ const GovernanceSummaryBar: React.FC<GovernanceSummaryBarProps> = ({
         {mainTitle ? (
           <div className="governance-summary-bar__title-row">
             {icon ? <span className="governance-summary-bar__icon">{icon}</span> : null}
-            <Typography.Text className="governance-summary-bar__title">
-              {mainTitle}
-            </Typography.Text>
+            <Typography.Text className="governance-summary-bar__title">{mainTitle}</Typography.Text>
           </div>
         ) : null}
       </div>

@@ -94,7 +94,7 @@ complete | blocked | partial
   "runtimeMetrics": ["p95=120ms"],
   "runtimeGap": "",
   "linkage": {
-    "taskPacket": "docs/harness/tasks/YYYY-MM-DD-task-name.task.md",
+    "taskManifest": ".harness/tasks/YYYY-MM-DD-task-name/manifest.json",
     "evidenceDir": ".harness/evidence/YYYY-MM-DD-task-name/",
     "reviewFile": ".harness/evidence/YYYY-MM-DD-task-name/review.md",
     "changeRef": "openspec/changes/<name>/",
@@ -153,7 +153,7 @@ Where:
 
 `commands.json` should record artifact linkage explicitly:
 
-- `linkage.taskPacket`
+- `linkage.taskManifest`
 - `linkage.evidenceDir`
 - `linkage.reviewFile`
 - `linkage.changeRef`
@@ -163,10 +163,12 @@ For structural, high-risk, or cross-layer changes, `commands.json` should also r
 
 Rules:
 
-- `taskId` must match the `linkage.taskPacket` filename and the `linkage.evidenceDir` directory name
+- `taskId` must match the task id encoded in `linkage.taskManifest` and the `linkage.evidenceDir` directory name
 - if `reviewFile` exists, it should live under the matching evidence directory
 - if there is no OpenSpec change, `changeRef` must be `none`
 - if there is no superpowers plan, `planRefs` may be an empty array
+
+If the repository also keeps a human-readable task packet, keep it paired to the same task id; the machine-readable evidence closure keys off `taskManifest`.
 
 ## 4. UI Evidence
 

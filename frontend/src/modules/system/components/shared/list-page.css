@@ -404,8 +404,10 @@
   line-height: 20px;
 }
 
-.list-header-actions .arco-btn:not(.arco-btn-disabled):not(.arco-btn-primary):not(.arco-btn-text):hover,
-.table-batch-action-bar .arco-btn:not(.arco-btn-disabled):not(.arco-btn-primary):not(.arco-btn-text):hover {
+.list-header-actions
+  .arco-btn:not(.arco-btn-disabled):not(.arco-btn-primary):not(.arco-btn-text):hover,
+.table-batch-action-bar
+  .arco-btn:not(.arco-btn-disabled):not(.arco-btn-primary):not(.arco-btn-text):hover {
   border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border-strong));
   background: color-mix(in srgb, var(--brand-primary) 6%, #fff);
 }

@@ -49,7 +49,7 @@ export interface DashboardSummary {
 
 export function getDashboardSummary() {
   return apiRequest<DashboardSummary>({
-    url: '/platform/dashboard/summary',
+    url: '/dashboard/summary',
     method: 'get',
     skipErrorMessage: true,
   });

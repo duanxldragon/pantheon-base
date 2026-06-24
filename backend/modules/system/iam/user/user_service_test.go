@@ -2,13 +2,14 @@ package iam
 
 import (
 	"errors"
-	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	authsession "pantheon-platform/backend/modules/auth/session"
+	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/testmysql"
 )
 
@@ -34,6 +35,12 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 	_ = db.Exec("INSERT INTO system_role (id, role_key, role_name, status) VALUES (2, 'test', '测试角色', 1)")
 
 	return db
+}
+
+func newUserServiceWithSessionLifecycle(db *gorm.DB) *UserService {
+	return NewUserService(db, WithSessionLifecycle(func(db *gorm.DB) SessionLifecycle {
+		return authsession.NewLifecycleService(db)
+	}))
 }
 
 func TestUserService_CreateUser(t *testing.T) {
@@ -525,7 +532,7 @@ func TestUserService_MigrateNormalizesLegacyPreferenceJSON(t *testing.T) {
 
 func TestUserService_ResetPassword(t *testing.T) {
 	db := setupUserTestDB(t)
-	s := NewUserService(db)
+	s := newUserServiceWithSessionLifecycle(db)
 
 	createReq := &UserCreateReq{
 		Username: "reset_test",

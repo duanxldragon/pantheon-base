@@ -5,6 +5,7 @@ import (
 	"pantheon-platform/backend/pkg/contracts"
 	"pantheon-platform/backend/pkg/database"
 
+	authsession "pantheon-platform/backend/modules/auth/session"
 	audit "pantheon-platform/backend/modules/system/audit"
 	dict "pantheon-platform/backend/modules/system/config/dict"
 	setting "pantheon-platform/backend/modules/system/config/setting"
@@ -31,7 +32,9 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 	}
 
 	// 用户模块注入
-	userSvc := user.NewUserService(db)
+	userSvc := user.NewUserService(db, user.WithSessionLifecycle(func(db *gorm.DB) user.SessionLifecycle {
+		return authsession.NewLifecycleService(db)
+	}))
 	userHandler := user.NewUserHandler(userSvc)
 
 	// 菜单模块注入

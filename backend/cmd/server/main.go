@@ -13,6 +13,7 @@ import (
 	"pantheon-platform/backend/modules/platform"
 	"pantheon-platform/backend/modules/system"
 	"pantheon-platform/backend/pkg/common"
+	commonsecurity "pantheon-platform/backend/pkg/common/security"
 	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/logging"
 	"pantheon-platform/backend/pkg/telemetry"
@@ -61,7 +62,7 @@ func main() {
 
 	// 1. 初始化核心基础能力
 	common.InitLocationService()
-	if err := common.InitSecurityConfig(); err != nil {
+	if err := commonsecurity.InitSecurityConfig(); err != nil {
 		logging.Error("Security configuration invalid", zap.Error(err))
 		os.Exit(1)
 	}
@@ -107,7 +108,7 @@ func main() {
 
 	// 4. 注册底座模块
 	api := r.Group("/api/v1")
-	platform.RegisterHealthRoutes(api, database.DB)
+	platform.InitPlatformModule(api, database.DB)
 	dashboard.InitDashboardModule(api, database.DB)
 	system.InitSystemModule(api, database.DB)
 	auth.InitAuthModule(api, database.DB)

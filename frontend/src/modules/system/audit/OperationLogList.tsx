@@ -511,7 +511,6 @@ const OperationLogList: React.FC = () => {
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
 
-
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {
       getSettingGroup('audit')

@@ -5,11 +5,6 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface MFAVerifyPayload {
-  challengeId: string;
-  code: string;
-}
-
 export interface LoginResp {
   mfaRequired?: boolean;
   challengeId?: string;
@@ -22,15 +17,6 @@ export interface LoginResp {
 export function login(data: LoginPayload) {
   return apiRequest<LoginResp>({
     url: '/auth/login',
-    method: 'post',
-    data,
-    skipErrorMessage: true,
-  });
-}
-
-export function verifyMFA(data: MFAVerifyPayload) {
-  return apiRequest<LoginResp>({
-    url: '/auth/mfa/verify',
     method: 'post',
     data,
     skipErrorMessage: true,

@@ -82,7 +82,11 @@ const SettingGroupPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Space direction="vertical" size={12} className="system-page-template setting-page setting-group-page">
+      <Space
+        direction="vertical"
+        size={12}
+        className="system-page-template setting-page setting-group-page"
+      >
         {loading && settings.length === 0 ? <PageLoading /> : null}
         {error && settings.length === 0 ? (
           <PageRequestError

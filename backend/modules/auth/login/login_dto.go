@@ -6,6 +6,11 @@ type LoginReq struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// RefreshTokenReq 刷新令牌请求 DTO
+type RefreshTokenReq struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
 // LoginLogQuery 登录日志查询
 type LoginLogQuery struct {
 	Username string `form:"username" json:"username"`

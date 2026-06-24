@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RequestConfig } from '../api/request';
 
 export interface UseRequestOptions<T> {
@@ -31,43 +31,52 @@ export function useRequest<T>(
   const [error, setError] = useState<unknown>(null);
 
   const serviceRef = useRef(service);
-  serviceRef.current = service;
 
-  const run = useCallback(async (config?: RequestConfig): Promise<T | undefined> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await serviceRef.current(config);
-      setData(result);
-      onSuccess?.(result, defaultParams);
-      return result;
-    } catch (err) {
-      setError(err);
-      onError?.(err, defaultParams);
-      return undefined;
-    } finally {
-      setLoading(false);
-      onFinally?.(defaultParams);
-    }
-  }, [defaultParams, onSuccess, onError, onFinally]);
+  useEffect(() => {
+    serviceRef.current = service;
+  }, [service]);
 
-  const runAsync = useCallback(async (config?: RequestConfig): Promise<T> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await serviceRef.current(config);
-      setData(result);
-      onSuccess?.(result, defaultParams);
-      return result;
-    } catch (err) {
-      setError(err);
-      onError?.(err, defaultParams);
-      throw err;
-    } finally {
-      setLoading(false);
-      onFinally?.(defaultParams);
-    }
-  }, [defaultParams, onSuccess, onError, onFinally]);
+  const run = useCallback(
+    async (config?: RequestConfig): Promise<T | undefined> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await serviceRef.current(config);
+        setData(result);
+        onSuccess?.(result, defaultParams);
+        return result;
+      } catch (err) {
+        setError(err);
+        onError?.(err, defaultParams);
+        return undefined;
+      } finally {
+        setLoading(false);
+        onFinally?.(defaultParams);
+      }
+    },
+    [defaultParams, onSuccess, onError, onFinally],
+  );
+
+  const runAsync = useCallback(
+    async (config?: RequestConfig): Promise<T> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await serviceRef.current(config);
+        setData(result);
+        onSuccess?.(result, defaultParams);
+        return result;
+      } catch (err) {
+        setError(err);
+        onError?.(err, defaultParams);
+        throw err;
+      } finally {
+        setLoading(false);
+        onFinally?.(defaultParams);
+      }
+    },
+    [defaultParams, onSuccess, onError, onFinally],
+  );
 
   const refresh = useCallback(async (): Promise<T | undefined> => {
     return run();
@@ -80,7 +89,9 @@ export function useRequest<T>(
   }, [manual]);
 
   const mutate = useCallback((newData: T | ((prev: T | undefined) => T)) => {
-    setData((prev) => (typeof newData === 'function' ? (newData as (prev: T | undefined) => T)(prev) : newData));
+    setData((prev) =>
+      typeof newData === 'function' ? (newData as (prev: T | undefined) => T)(prev) : newData,
+    );
   }, []);
 
   return {

@@ -13,8 +13,8 @@ import {
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconCheck, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { message } from '../../../components/feedback/message';
-import { formatDateTime } from '../../../core/format/dateTime';
+import { message } from '../../../../components/feedback/message';
+import { formatDateTime } from '../../../../core/format/dateTime';
 import {
   AppModal,
   AppTable,
@@ -30,8 +30,8 @@ import {
   PageRequestError,
   TABLE_COLUMN_WIDTH,
   useGovernanceRail,
-} from '../../../components';
-import { usePermission } from '../../../hooks/usePermission';
+} from '../../../../components';
+import { usePermission } from '../../../../hooks/usePermission';
 import {
   acknowledgeSecurityEvent,
   getAdminSecurityEventList,
@@ -39,7 +39,7 @@ import {
   type SecurityEventQuery,
   type SecurityEventRow,
 } from '../api';
-import '../auth.css';
+import '../../auth.css';
 import '../../../system/components/shared/list-page.css';
 
 const Row = Grid.Row;
@@ -253,7 +253,11 @@ const SecurityEventList: React.FC = () => {
 
   return (
     <PageContainer>
-      <Space direction="vertical" size={16} className="system-page-template auth-security-event-page">
+      <Space
+        direction="vertical"
+        size={16}
+        className="system-page-template auth-security-event-page"
+      >
         <GovernanceSummaryBar
           eyebrow={t('auth.securityEvent.hero.eyebrow')}
           title={t('auth.securityEvent.hero.title')}
@@ -273,12 +277,18 @@ const SecurityEventList: React.FC = () => {
             <Row gutter={16} className="auth-filter-grid auth-security-event-page__filter-grid">
               <Col xs={24} md={12} lg={5}>
                 <FormItem field="username" label={t('common.user')}>
-                  <Input allowClear placeholder={t('auth.securityEvent.filter.usernamePlaceholder')} />
+                  <Input
+                    allowClear
+                    placeholder={t('auth.securityEvent.filter.usernamePlaceholder')}
+                  />
                 </FormItem>
               </Col>
               <Col xs={24} md={12} lg={5}>
                 <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
-                  <Select allowClear placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
+                  >
                     <Select.Option value="password_wrong">
                       {t('auth.securityEvent.type.password_wrong')}
                     </Select.Option>
@@ -293,10 +303,19 @@ const SecurityEventList: React.FC = () => {
               </Col>
               <Col xs={24} md={12} lg={5}>
                 <FormItem field="severity" label={t('auth.securityEvent.severity')}>
-                  <Select allowClear placeholder={t('auth.securityEvent.filter.severityPlaceholder')}>
-                    <Select.Option value="high">{t('auth.securityEvent.severity.high')}</Select.Option>
-                    <Select.Option value="medium">{t('auth.securityEvent.severity.medium')}</Select.Option>
-                    <Select.Option value="low">{t('auth.securityEvent.severity.low')}</Select.Option>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.securityEvent.filter.severityPlaceholder')}
+                  >
+                    <Select.Option value="high">
+                      {t('auth.securityEvent.severity.high')}
+                    </Select.Option>
+                    <Select.Option value="medium">
+                      {t('auth.securityEvent.severity.medium')}
+                    </Select.Option>
+                    <Select.Option value="low">
+                      {t('auth.securityEvent.severity.low')}
+                    </Select.Option>
                   </Select>
                 </FormItem>
               </Col>
@@ -315,11 +334,11 @@ const SecurityEventList: React.FC = () => {
                   </Select>
                 </FormItem>
               </Col>
-                <Col xs={24} md={12} lg={4}>
-                  <FormItem className="filter-panel__action-item auth-security-event-page__filter-actions">
-                    <Space>
-                      <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
-                        {t('common.search')}
+              <Col xs={24} md={12} lg={4}>
+                <FormItem className="filter-panel__action-item auth-security-event-page__filter-actions">
+                  <Space>
+                    <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
+                      {t('common.search')}
                     </Button>
                     <Button onClick={handleReset}>{t('common.reset')}</Button>
                   </Space>

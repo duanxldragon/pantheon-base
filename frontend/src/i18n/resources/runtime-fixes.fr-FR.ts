@@ -17,8 +17,7 @@ const frFRRuntimeFixes = {
   'auth.login_log.cleanup.error': 'Échec du nettoyage des journaux de connexion',
   'auth.login_log.cleanup.range_invalid':
     'La plage de nettoyage des journaux de connexion sélectionnée est invalide',
-  'auth.login_log.current_user.error':
-    'Échec du chargement de l’utilisateur actuellement connecté',
+  'auth.login_log.current_user.error': 'Échec du chargement de l’utilisateur actuellement connecté',
   'auth.login_log.export.error': 'Échec de l’export des journaux de connexion',
   'auth.login_log.list.error': 'Échec du chargement des journaux de connexion',
   'auth.login.error': 'Échec de connexion',
@@ -41,7 +40,8 @@ const frFRRuntimeFixes = {
   'auth.password.verify_failed': 'Échec de la vérification du mot de passe',
   'auth.preference.update.error': 'Échec de la mise à jour des préférences',
   'auth.role.list.error': 'Échec du chargement de la liste des rôles',
-  'auth.security_event.acknowledge.error': 'Échec de l’accusé de réception de l’événement de sécurité',
+  'auth.security_event.acknowledge.error':
+    'Échec de l’accusé de réception de l’événement de sécurité',
   'auth.security_event.acknowledge.note_required': 'Une note d’accusé de réception est requise',
   'auth.security_event.acknowledge.title': 'Accuser réception de l’événement de sécurité',
   'auth.security_event.list.error': 'Échec du chargement des événements de sécurité',
@@ -56,14 +56,14 @@ const frFRRuntimeFixes = {
   'auth.session.list.error': 'Échec du chargement des sessions',
   'auth.session.refresh.error': 'Échec de l’actualisation de la session',
   'auth.session.refresh.title': 'Actualiser la session',
-  'auth.session.revoke_self.error':
-    'La révocation de votre propre session courante est interdite',
+  'auth.session.revoke_self.error': 'La révocation de votre propre session courante est interdite',
   'auth.session.revoke_self.title': 'Révoquer la session courante',
   'auth.session.revoke.error': 'Échec de la révocation de la session',
   'auth.session.touch.error': 'Échec de la mise à jour de l’activité de la session',
   'auth.session.touch.title': 'Mettre à jour l’activité de la session',
   'common.comingSoon': 'Bientôt disponible',
-  'common.exportCurrentPageSelectionOnly': 'Exporter uniquement les données sélectionnées sur la page courante',
+  'common.exportCurrentPageSelectionOnly':
+    'Exporter uniquement les données sélectionnées sur la page courante',
   'common.importSuccess': 'Import réussi',
   'common.module': 'Module fonctionnel',
   'common.required': 'Requis',
@@ -74,14 +74,12 @@ const frFRRuntimeFixes = {
   'database.not_initialized': 'La base de données n’est pas initialisée',
   'dept.export.error': 'Échec de l’export des départements',
   'dept.import.error': 'Échec de l’import des départements',
-  'dept.import.template.error':
-    'Échec du téléchargement du modèle d’import des départements',
-  'dept.import.validation_failed': "La validation de l’import des départements a échoué",
+  'dept.import.template.error': 'Échec du téléchargement du modèle d’import des départements',
+  'dept.import.validation_failed': 'La validation de l’import des départements a échoué',
   'dept.list.error': 'Échec du chargement des départements',
   'dept.not_found': 'Département introuvable',
-  'dept.path.circular': "La hiérarchie des départements ne peut pas former de cycle",
-  'dept.root.update_forbidden':
-    'Le département racine ne peut pas être modifié de cette manière',
+  'dept.path.circular': 'La hiérarchie des départements ne peut pas former de cycle',
+  'dept.root.update_forbidden': 'Le département racine ne peut pas être modifié de cette manière',
   'dict.biz_status.enabled': 'Activé',
   'dict.cache.refresh.error': 'Échec de l’actualisation du cache des dictionnaires',
   'dict.item.batch.empty': 'Sélectionnez d’abord des éléments de dictionnaire',
@@ -91,7 +89,7 @@ const frFRRuntimeFixes = {
   'dict.item.export.error': 'Échec de l’export des éléments de dictionnaire',
   'dict.item.import_template.error':
     'Échec du téléchargement du modèle d’import des éléments de dictionnaire',
-  'dict.item.import.error': "Échec de l’import des éléments de dictionnaire",
+  'dict.item.import.error': 'Échec de l’import des éléments de dictionnaire',
   'dict.item.import.template.error':
     'Échec du téléchargement du modèle d’import des éléments de dictionnaire',
   'dict.item.list.error': 'Échec du chargement des éléments de dictionnaire',
@@ -103,12 +101,12 @@ const frFRRuntimeFixes = {
   'dict.type.export.error': 'Échec de l’export des types de dictionnaire',
   'dict.type.import_template.error':
     'Échec du téléchargement du modèle d’import des types de dictionnaire',
-  'dict.type.import.error': "Échec de l’import des types de dictionnaire",
+  'dict.type.import.error': 'Échec de l’import des types de dictionnaire',
   'dict.type.import.template.error':
     'Échec du téléchargement du modèle d’import des types de dictionnaire',
   'dict.type.list.error': 'Échec du chargement des types de dictionnaire',
   'dict.type.not_found': 'Type de dictionnaire introuvable',
-  'dict.usage.error': "Échec du chargement de l’utilisation du dictionnaire",
+  'dict.usage.error': 'Échec du chargement de l’utilisation du dictionnaire',
   'dict.usage.project_root_not_found': 'Racine du projet introuvable',
   'i18n.hero.entries': 'Clés uniques',
   'i18n.hero.records': 'Lignes de traduction',

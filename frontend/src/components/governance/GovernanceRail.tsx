@@ -2,7 +2,12 @@ import React from 'react';
 import { Button } from '@arco-design/web-react';
 import { IconStorage } from '@arco-design/web-react/icon';
 import AppDrawer from '../patterns/modals/AppDrawer';
-import { SideRailItem, SideRailNote, SideRailPanel, SideRailStack } from '../patterns/rails/SideRail';
+import {
+  SideRailItem,
+  SideRailNote,
+  SideRailPanel,
+  SideRailStack,
+} from '../patterns/rails/SideRail';
 import type { RailSummaryItem, RailSummaryTone } from '../patterns/rails/RailSummary';
 
 interface GovernanceRailToggleButtonProps {

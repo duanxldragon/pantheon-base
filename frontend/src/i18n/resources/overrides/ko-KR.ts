@@ -3,10 +3,8 @@ const koKROverrideFallback = {
   'app.notice.risk.securityEvent': '보안 이벤트 대기열',
   'app.notice.risk.securityEventDesc':
     '처리되지 않은 보안 이벤트가 있어 신속한 검토와 확인이 필요합니다',
-  'app.notice.securityEventDesc':
-    '로그인 위험, 출처 잠금, 계정 보안 이벤트를 처리합니다',
-  'auth.security.event.password_wrong':
-    '이 계정에서 잘못된 비밀번호 로그인 시도가 감지되었습니다.',
+  'app.notice.securityEventDesc': '로그인 위험, 출처 잠금, 계정 보안 이벤트를 처리합니다',
+  'auth.security.event.password_wrong': '이 계정에서 잘못된 비밀번호 로그인 시도가 감지되었습니다.',
   'auth.securityEvent.acknowledge': '확인 처리',
   'auth.securityEvent.acknowledgeDialogHint':
     '판정 결과, 영향 범위, 후속 조치를 기록해 사고 거버넌스 추적을 완결하세요.',
@@ -21,8 +19,7 @@ const koKROverrideFallback = {
   'auth.securityEvent.hero.desc':
     '보안 이벤트 페이지는 `system/auth` 안에서 동작하며, 주 작업 영역에서 필터링, 확인 처리, 조사를 수행하고, 우측 요약에서 위험 분포, 확인 진행률, 거버넌스 지침을 한곳에 모아 보여줍니다.',
   'auth.securityEvent.hero.summaryTitle': '거버넌스 요약',
-  'auth.securityEvent.hero.title':
-    '위험 이벤트 확인, 출처 잠금, 계정 조치를 한곳에서 관리',
+  'auth.securityEvent.hero.title': '위험 이벤트 확인, 출처 잠금, 계정 조치를 한곳에서 관리',
   'auth.securityEvent.highSeverityHint':
     '고위험 이벤트는 먼저 로그인 로그, 세션 인벤토리, 작업 감사와 함께 검토하세요.',
   'auth.securityEvent.pendingHint':
@@ -35,8 +32,7 @@ const koKROverrideFallback = {
   'auth.session.revokeSelected': '선택 세션 해지',
   'business.cmdb.collect.authMode.password': '비밀번호',
   'business.cmdb.collect.authMode.privateKey': '개인 키',
-  'business.cmdb.collect.hint':
-    '인증 정보는 이번 수집에만 사용되며 서버에는 저장되지 않습니다.',
+  'business.cmdb.collect.hint': '인증 정보는 이번 수집에만 사용되며 서버에는 저장되지 않습니다.',
   'business.cmdb.collect.modalTitle': 'SSH 설정 수집',
   'business.cmdb.collect.start': '수집 시작',
   'business.cmdb.component.name': '컴포넌트 이름',
@@ -92,10 +88,8 @@ const koKROverrideFallback = {
   'business.cmdb.host.deleteConfirm': '이 호스트를 삭제하시겠습니까?',
   'business.cmdb.host.diskGb': '디스크 (GB)',
   'business.cmdb.host.editTitle': '호스트 수정',
-  'business.cmdb.host.empty':
-    '호스트가 없습니다. 수동으로 추가하거나 SSH 수집을 사용하세요.',
-  'business.cmdb.host.hero.componentsHint':
-    '현재 호스트에 설치된 컴포넌트 수입니다.',
+  'business.cmdb.host.empty': '호스트가 없습니다. 수동으로 추가하거나 SSH 수집을 사용하세요.',
+  'business.cmdb.host.hero.componentsHint': '현재 호스트에 설치된 컴포넌트 수입니다.',
   'business.cmdb.host.hero.eyebrow': '운영 / 호스트 인벤토리',
   'business.cmdb.host.hero.labelsHint': '현재 호스트에 연결된 라벨 수입니다.',
   'business.cmdb.host.hero.maintenance': '점검 중',
@@ -144,23 +138,18 @@ const koKROverrideFallback = {
   'dashboard.domain.lowcode': '로우코드 자산',
   'dashboard.domain.lowcodeDesc': '모듈 등록과 번역 자산의 현재 규모',
   'dashboard.domain.security': '보안 거버넌스',
-  'dashboard.domain.securityDesc':
-    '로그인 위험, 보안 이벤트, 세션 통제의 현재 상태',
+  'dashboard.domain.securityDesc': '로그인 위험, 보안 이벤트, 세션 통제의 현재 상태',
   'dashboard.governanceSummary': '오늘 작업 {{operations}}건 / 대기 이벤트 {{pending}}건',
   'dashboard.lowcodeSummary': '활성 모듈 {{modules}}개 / 번역 {{i18n}}건',
   'dashboard.quickAction.audit': '중요 쓰기 작업과 거버넌스 추적을 검토',
-  'dashboard.quickAction.generator':
-    '업무 모듈 스캐폴드, 메뉴, 권한 계약을 생성',
+  'dashboard.quickAction.generator': '업무 모듈 스캐폴드, 메뉴, 권한 계약을 생성',
   'dashboard.quickAction.i18n': '번역 항목, 누락 로케일, 수명 주기 상태를 관리',
   'dashboard.quickAction.loginLog': '로그인 추적, 실패 사유, 출처 행태를 점검',
-  'dashboard.quickAction.moduleManager':
-    '동적 모듈 등록, 상태, 복구 작업을 관리',
-  'dashboard.quickAction.permission':
-    '버튼 권한, 데이터 범위, 접근 경계를 조정',
+  'dashboard.quickAction.moduleManager': '동적 모듈 등록, 상태, 복구 작업을 관리',
+  'dashboard.quickAction.permission': '버튼 권한, 데이터 범위, 접근 경계를 조정',
   'dashboard.quickAction.post': '직책, 책임 매핑, 조직 연결을 유지',
   'dashboard.quickAction.securityEvent': '대기 위험 이벤트와 계정 보안 경고를 처리',
-  'dashboard.quickAction.session':
-    '활성 장치, 실시간 세션, 강제 로그아웃을 관리',
+  'dashboard.quickAction.session': '활성 장치, 실시간 세션, 강제 로그아웃을 관리',
   'dashboard.securityDomainSummary': '대기 이벤트 {{pending}}건 / 로그인 실패 {{failed}}건',
   'operations.cmdb.group.menu': '호스트 그룹',
   'operations.cmdb.host.detail': '호스트 상세',
@@ -171,8 +160,7 @@ const koKROverrideFallback = {
   'system.permission.workbench.currentGapSection': '현재 누락 요약',
   'system.permission.workbench.currentStatusSection': '현재 거버넌스 상태',
   'system.permission.workbench.governanceStatus': '거버넌스 상태',
-  'system.permission.workbench.noRemediationActions':
-    '현재 필요한 보완 작업이 없습니다.',
+  'system.permission.workbench.noRemediationActions': '현재 필요한 보완 작업이 없습니다.',
   'system.permission.workbench.pendingRoles': '보완 대기 역할',
   'system.permission.workbench.positioningHint':
     '먼저 보완이 필요한 역할부터 시작한 다음 역할 상세, 실행 가능한 작업, 최신 타임라인으로 내려가세요. 전체 역할 보기는 전체 인벤토리를 확인해야 할 때만 사용하세요.',

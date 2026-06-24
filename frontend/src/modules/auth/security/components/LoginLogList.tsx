@@ -11,16 +11,16 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import { message } from '../../../components/feedback/message';
+import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { getSettingGroup, type SettingGroup } from '../../system/setting/api';
+import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
-} from '../../../components/table/crossPageSelection';
-import { formatDateTime } from '../../../core/format/dateTime';
+} from '../../../../components/table/crossPageSelection';
+import { formatDateTime } from '../../../../core/format/dateTime';
 import {
   batchDeleteAdminLoginLogs,
   cleanupAdminLoginLogs,
@@ -31,7 +31,7 @@ import {
   type LoginLogQuery,
   type LoginLogRow,
 } from '../api';
-import { renderClientInfo } from '../clientInfo';
+import { renderClientInfo } from '../../session/clientInfo';
 import {
   AppTable,
   buildStandardPagination,
@@ -49,11 +49,11 @@ import {
   PermissionAction,
   TABLE_COLUMN_WIDTH,
   useGovernanceRail,
-} from '../../../components';
-import { usePermission } from '../../../hooks/usePermission';
-import '../auth.css';
+} from '../../../../components';
+import { usePermission } from '../../../../hooks/usePermission';
+import '../../auth.css';
 import '../../../system/components/shared/list-page.css';
-import { toCleanupTimestamp, loadRetentionSetting } from '../../system/audit/retentionSetting';
+import { toCleanupTimestamp, loadRetentionSetting } from '../../../system/audit/retentionSetting';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -112,7 +112,6 @@ const LoginLogList: React.FC = () => {
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
-
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {

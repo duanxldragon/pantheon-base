@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"pantheon-platform/backend/pkg/common"
+	commonsecurity "pantheon-platform/backend/pkg/common/security"
 )
 
 const encryptedMFASecretPrefix = "mfa:v1:"
@@ -66,7 +66,7 @@ func DecryptMFASecret(value string) (string, error) {
 }
 
 func getMFACipherKey() []byte {
-	value := common.ResolveSecret("PANTHEON_MFA_SECRET", common.DefaultDevSecrets.MFA)
+	value := commonsecurity.ResolveSecret("PANTHEON_MFA_SECRET", commonsecurity.DefaultDevSecrets.MFA)
 	key := []byte(value)
 	if len(key) >= 32 {
 		return key[:32]

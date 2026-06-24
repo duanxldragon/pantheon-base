@@ -5,8 +5,8 @@ import { prepareTranspiledWorkspace } from './transpile-typescript-files.mjs';
 
 const files = [
   'src/modules/system/generator/schema.ts',
-  'src/modules/system/generator/type-mapping.ts',
-  'src/modules/system/generator/frontend-generator.ts',
+  'src/modules/system/generator/typeMapping.ts',
+  'src/modules/system/generator/frontendGenerator.ts',
   'tests/generator/frontend-generator.dashboard-widget.test.ts',
 ];
 

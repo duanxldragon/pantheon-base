@@ -11,6 +11,8 @@ import (
 
 // ── Re-exports from http package ─────────────────────────────────────
 
+type Response = commonhttp.Response
+
 // Response codes (re-exported from http)
 const (
 	CodeSuccess      = commonhttp.CodeSuccess
@@ -25,7 +27,7 @@ const (
 const (
 	CookieAccessToken  = commonhttp.CookieAccessToken
 	CookieRefreshToken = commonhttp.CookieRefreshToken
-	CookieCSRFToken   = commonhttp.CookieCSRFToken
+	CookieCSRFToken    = commonhttp.CookieCSRFToken
 )
 
 // Request context constants

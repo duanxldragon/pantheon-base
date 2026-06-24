@@ -10,11 +10,11 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import { message } from '../../../components/feedback/message';
+import { message } from '../../../../components/feedback/message';
 import { IconEye, IconLock } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { formatDateTime } from '../../../core/format/dateTime';
-import { resolveRouteWarmData } from '../../../core/router/prefetch';
+import { formatDateTime } from '../../../../core/format/dateTime';
+import { resolveRouteWarmData } from '../../../../core/router/prefetch';
 import {
   getOwnLoginLogs,
   getSecurityOverview,
@@ -27,8 +27,8 @@ import {
   type SecurityOverview,
   type UserPasswordUpdatePayload,
 } from '../api';
-import { formatClientSummary, renderClientInfo } from '../clientInfo';
-import { useAuthStore } from '../../../store/useAuthStore';
+import { formatClientSummary, renderClientInfo } from '../../session/clientInfo';
+import { useAuthStore } from '../../../../store/useAuthStore';
 import {
   AppTable,
   buildStandardPagination,
@@ -44,10 +44,10 @@ import {
   SubmitBar,
   getPagedItems,
   TABLE_ACTION_COLUMN_WIDTH,
-} from '../../../components';
+} from '../../../../components';
 import SessionDetailModal from '../../session/components/SessionDetailModal';
 import '../../../system/components/shared/list-page.css';
-import '../auth.css';
+import '../../auth.css';
 
 const FormItem = Form.Item;
 const Row = Grid.Row;

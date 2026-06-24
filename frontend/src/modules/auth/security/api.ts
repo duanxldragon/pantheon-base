@@ -1,5 +1,10 @@
 import { apiRequest } from '../../../api/request';
 import { downloadCsvFile, downloadFile } from '../../../api/file';
+import type { UserInfo, UserPlatformPreferences } from './types';
+
+export { getSessions, revokeSession } from '../session/api';
+export type { AuthSession } from '../session/api';
+export type { UserInfo, UserPlatformPreferences } from './types';
 
 export interface SecurityOverview {
   user?: {
@@ -145,6 +150,29 @@ export function getSecurityOverview() {
   return apiRequest<SecurityOverview>({
     url: '/auth/security',
     method: 'get',
+  });
+}
+
+export function getMe() {
+  return apiRequest<UserInfo>({
+    url: '/auth/me',
+    method: 'get',
+  });
+}
+
+export function verifyOperationPassword(password: string) {
+  return apiRequest<{ operationToken: string }>({
+    url: '/auth/operation-verify',
+    method: 'post',
+    data: { password },
+  });
+}
+
+export function updateCurrentUserPreferences(data: UserPlatformPreferences) {
+  return apiRequest<UserInfo>({
+    url: '/auth/me/preferences',
+    method: 'put',
+    data,
   });
 }
 
