@@ -113,4 +113,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh pr merge "$PR_NUMBER" --repo "$GH_REPO" --auto --squash --delete-branch
+          if gh pr merge "$PR_NUMBER" --repo "$GH_REPO" --auto --squash --delete-branch; then
+            echo "Squash auto-merge enabled for PR #${PR_NUMBER}."
+          else
+            echo "Unable to enable auto-merge for PR #${PR_NUMBER}; continuing without blocking."
+          fi
