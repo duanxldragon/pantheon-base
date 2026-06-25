@@ -1,10 +1,13 @@
+# Override credentials via .env file in production:
+#   MYSQL_ROOT_PASSWORD=your_secure_password
+#   REDIS_PASSWORD=your_secure_redis_password
 services:
   mysql:
     image: mysql:8.0
     container_name: pantheon-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: DHCCroot@2025
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-dev_password_change_me}
       MYSQL_DATABASE: pantheon_base
       TZ: Asia/Shanghai
     ports:
@@ -21,7 +24,7 @@ services:
     image: redis:7-alpine
     container_name: pantheon-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "DHCCdhcc2025"]
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-dev_redis_password_change_me}"]
     ports:
       - "6379:6379"
     volumes:

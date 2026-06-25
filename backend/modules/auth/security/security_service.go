@@ -334,7 +334,7 @@ func applySecurityEventFilters(db *gorm.DB, query *SecurityEventQuery) *gorm.DB 
 		return db
 	}
 	if strings.TrimSpace(query.Username) != "" {
-		db = db.Where("username LIKE ?", "%"+strings.TrimSpace(query.Username)+"%")
+		db = db.Where("username LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Username))+"%")
 	}
 	if strings.TrimSpace(query.EventType) != "" {
 		db = db.Where("event_type = ?", strings.TrimSpace(query.EventType))

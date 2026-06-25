@@ -10,11 +10,11 @@ if (!schemaPath) {
 }
 
 const files = [
-  'src/modules/system/generator/schema.ts',
-  'src/modules/system/generator/typeMapping.ts',
-  'src/modules/system/generator/backendGenerator.ts',
-  'src/modules/system/generator/frontendGenerator.ts',
-  'src/modules/system/generator/exporter.ts',
+  'src/modules/lowcode/generator/schema.ts',
+  'src/modules/lowcode/generator/typeMapping.ts',
+  'src/modules/lowcode/generator/backendGenerator.ts',
+  'src/modules/lowcode/generator/frontendGenerator.ts',
+  'src/modules/lowcode/generator/exporter.ts',
 ];
 
 const { tempDir } = prepareTranspiledWorkspace('generator-server-export', files);

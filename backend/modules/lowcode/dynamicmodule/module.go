@@ -50,7 +50,7 @@ func InitDynamicModule(r *gin.RouterGroup, db *gorm.DB) {
 				return db.AutoMigrate(&ModuleRegistration{})
 			},
 			Register: func(r *gin.RouterGroup) {
-				readAPI := r.Group("/system/dynamic-modules").
+				readAPI := r.Group("/lowcode/dynamic-modules").
 					Use(tokenMiddleware).
 					Use(middleware.CasbinMiddleware()).
 					Use(DynamicModuleEnvGuard())
@@ -60,7 +60,7 @@ func InitDynamicModule(r *gin.RouterGroup, db *gorm.DB) {
 					readAPI.GET("/:name", handler.GetModuleStatus)
 				}
 
-				writeAPI := r.Group("/system/dynamic-modules").
+				writeAPI := r.Group("/lowcode/dynamic-modules").
 					Use(tokenMiddleware).
 					Use(middleware.CasbinMiddleware()).
 					Use(DynamicModuleEnvGuard()).

@@ -9,8 +9,6 @@ import (
 	audit "pantheon-platform/backend/modules/system/audit"
 	dict "pantheon-platform/backend/modules/system/config/dict"
 	setting "pantheon-platform/backend/modules/system/config/setting"
-	"pantheon-platform/backend/modules/system/dynamicmodule"
-	generator "pantheon-platform/backend/modules/system/generator"
 	i18n "pantheon-platform/backend/modules/system/i18n"
 	menu "pantheon-platform/backend/modules/system/iam/menu"
 	permission "pantheon-platform/backend/modules/system/iam/permission"
@@ -349,10 +347,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		},
 	}
 
-	// 注册动态模块管理
-	dynamicmodule.InitDynamicModule(r, db)
-	generator.InitGeneratorModule(r, db)
-
+	// 注册底座模块
 	contracts.RegisterBackendModules(r, db, modules...)
 	InitGeneratedSystemModules(r, db)
 }

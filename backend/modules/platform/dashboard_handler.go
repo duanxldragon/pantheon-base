@@ -1,4 +1,4 @@
-package dashboard
+package platform
 
 import (
 	"pantheon-platform/backend/pkg/common"

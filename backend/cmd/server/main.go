@@ -11,7 +11,7 @@ import (
 	"pantheon-platform/backend/internal/middleware"
 	"pantheon-platform/backend/modules/auth"
 	"pantheon-platform/backend/modules/business"
-	"pantheon-platform/backend/modules/dashboard"
+	"pantheon-platform/backend/modules/lowcode"
 	"pantheon-platform/backend/modules/platform"
 	"pantheon-platform/backend/modules/system"
 	"pantheon-platform/backend/pkg/common"
@@ -47,14 +47,16 @@ func main() {
 	// 0b. 初始化 OpenTelemetry 追踪
 	otlpEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if otlpEndpoint != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		tp, err := telemetry.InitTracer("pantheon-base", otlpEndpoint)
 		if err != nil {
 			logging.Error("Failed to initialize tracer", zap.Error(err))
 		} else {
 			defer func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				if err := tp.Shutdown(ctx); err != nil {
+				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer shutdownCancel()
+				if err := tp.Shutdown(shutdownCtx); err != nil {
 					logging.Error("Error shutting down tracer", zap.Error(err))
 				}
 			}()
@@ -114,8 +116,8 @@ func main() {
 
 	// 4. 注册底座模块
 	api := r.Group("/api/v1")
-	platform.InitPlatformModule(api, database.DB)
-	dashboard.InitDashboardModule(api, database.DB)
+	platform.RegisterPlatformRoutes(api, database.DB)
+	lowcode.InitLowcodeModule(api, database.DB)
 	system.InitSystemModule(api, database.DB)
 	auth.InitAuthModule(api, database.DB)
 	business.InitBusinessModules(api, database.DB)

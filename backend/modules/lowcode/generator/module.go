@@ -18,7 +18,7 @@ func InitGeneratorModule(r *gin.RouterGroup, db *gorm.DB) {
 		ModuleName: "generator",
 		Register: func(r *gin.RouterGroup) {
 			tokenMiddleware := middleware.TokenAuthMiddleware(database.RDB)
-			readAPI := r.Group("/system/generator").
+			readAPI := r.Group("/lowcode/generator").
 				Use(tokenMiddleware).
 				Use(middleware.CasbinMiddleware())
 			{
@@ -29,7 +29,7 @@ func InitGeneratorModule(r *gin.RouterGroup, db *gorm.DB) {
 				readAPI.POST("/download-source", handler.DownloadGeneratedSource)
 			}
 
-			writeAPI := r.Group("/system/generator").
+			writeAPI := r.Group("/lowcode/generator").
 				Use(tokenMiddleware).
 				Use(middleware.CasbinMiddleware()).
 				Use(middleware.SecureActionMiddleware())

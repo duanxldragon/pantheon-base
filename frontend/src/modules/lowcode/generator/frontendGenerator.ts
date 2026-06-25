@@ -633,7 +633,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '${toSrcRoot}/api/request';
 import { message } from '${toSrcRoot}/components/feedback/message';
 import { isArcoFormValidationError } from '${toSrcRoot}/core/arco/formValidation';
-import { getGeneratedModuleSchema } from '${toSrcRoot}/modules/system/dynamicmodule/api';
+import { getGeneratedModuleSchema } from '${toSrcRoot}/modules/lowcode/dynamicmodule/api';
 import { get${modelName}Detail, type ${modelName}Detail } from './api';
 import {
   AppModal,
@@ -651,6 +651,11 @@ const FormItem = Form.Item;
 const TextArea = Input.TextArea;
 
 const ${modelName}DetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const scope = '${this.schema.scope}';
+  const moduleName = '${this.schema.name}';
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const scope = '${this.schema.scope}';
   const moduleName = '${this.schema.name}';

@@ -56,7 +56,7 @@ const moduleManagerDiagnosticsColumnWidth = 112;
 const moduleManagerTimeColumnWidth = 128;
 
 function invalidateModuleManagerWarmData() {
-  invalidateRouteWarmData('/system/modules', moduleManagerWarmDataKeys);
+  invalidateRouteWarmData('/lowcode/modules', moduleManagerWarmDataKeys);
 }
 
 function isManagedRegistration(record: ModuleRegistration) {
@@ -117,7 +117,7 @@ const ModuleManager: React.FC = () => {
     try {
       const result = options?.force
         ? await getRegisteredModules()
-        : await resolveRouteWarmData('/system/modules', 'modules:registered', () =>
+        : await resolveRouteWarmData('/lowcode/modules', 'modules:registered', () =>
             getRegisteredModules(),
           );
       setModules(result);
@@ -590,7 +590,7 @@ const ModuleManager: React.FC = () => {
                     size="small"
                     type="primary"
                     disabled={featureDisabled}
-                    onClick={() => navigate('/system/generator')}
+                    onClick={() => navigate('/lowcode/generator')}
                   >
                     <IconPlus /> {t('generator.moduleManager.registerNew')}
                   </Button>

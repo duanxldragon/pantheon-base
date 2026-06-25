@@ -309,10 +309,10 @@ func applyUserListFilters(db *gorm.DB, query *UserListQuery) *gorm.DB {
 		return db
 	}
 	if strings.TrimSpace(query.Username) != "" {
-		db = db.Where("username LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.Username)))
+		db = db.Where("username LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Username))))
 	}
 	if strings.TrimSpace(query.Nickname) != "" {
-		db = db.Where("nickname LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.Nickname)))
+		db = db.Where("nickname LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Nickname))))
 	}
 	if query.DeptID > 0 {
 		db = db.Where("dept_id = ?", query.DeptID)

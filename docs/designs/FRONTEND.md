@@ -134,7 +134,7 @@ export const OrderModule = {
 - **头像上传**: 个人中心已新增基于统一上传接口的头像上传入口，上传行为受 `system/config` 的上传配置实时约束，不再只能手工输入头像 URL。
 - **安全入口**: 顶部用户区和个人中心页均已提供“安全中心”入口，安全能力不再继续堆叠在 `ProfileCenter` 内。
 - **审计入口**: 管理员可通过动态菜单进入“登录日志”“会话管理”页面。
-- **模块治理兜底**: `src/modules/system/dynamicmodule/ModuleManager.tsx` 已补“注册表自检/修复”动作，用于在历史脏数据、手工删改源码或注册表漂移时重写 generated registries，并把缺失源码的接入记录自动校正为已卸载。
+- **模块治理兜底**: `src/modules/lowcode/dynamicmodule/ModuleManager.tsx` 已补“注册表自检/修复”动作，用于在历史脏数据、手工删改源码或注册表漂移时重写 generated registries，并把缺失源码的接入记录自动校正为已卸载。
 - **基础布局**: `src/core/layout/index.tsx`，支持动态菜单、语言切换、登出，并按当前用户权限渲染侧边导航。
 - **页面骨架第一批组件**: 已新增 `src/components/` 下的 `PageContainer`、`PageHeader`、`FilterPanel`、`PageLoading`、`PageEmpty`、`PageError`、`PageForbidden`，并优先接入 `auth` 相关页面。
 - **页面骨架第二批组件**: 已新增 `AppTable`、`PageActions`、`FormSection`、`SubmitBar`，并开始接入 `UserList`、`RoleList`、`PermissionList`、`ProfileCenter`。

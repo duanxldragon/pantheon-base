@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"pantheon-platform/backend/pkg/authsession"
+	"pantheon-platform/backend/pkg/common"
 
 	"gorm.io/gorm"
 )
@@ -125,10 +126,10 @@ func applyAdminSessionFilters(db *gorm.DB, query *AdminSessionQuery, now time.Ti
 		return db
 	}
 	if strings.TrimSpace(query.Username) != "" {
-		db = db.Where("system_user.username LIKE ?", "%"+strings.TrimSpace(query.Username)+"%")
+		db = db.Where("system_user.username LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Username))+"%")
 	}
 	if strings.TrimSpace(query.LastIP) != "" {
-		db = db.Where("system_user_session.last_ip LIKE ?", "%"+strings.TrimSpace(query.LastIP)+"%")
+		db = db.Where("system_user_session.last_ip LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.LastIP))+"%")
 	}
 	if query.Status == nil {
 		return db

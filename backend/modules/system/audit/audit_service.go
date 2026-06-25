@@ -348,13 +348,13 @@ func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationL
 		return db
 	}
 	if strings.TrimSpace(query.Title) != "" {
-		db = db.Where("title LIKE ?", "%"+strings.TrimSpace(query.Title)+"%")
+		db = db.Where("title LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Title))+"%")
 	}
 	if strings.TrimSpace(query.RequestID) != "" {
 		db = db.Where("request_id = ?", strings.TrimSpace(query.RequestID))
 	}
 	if strings.TrimSpace(query.OperName) != "" {
-		db = db.Where("oper_name LIKE ?", "%"+strings.TrimSpace(query.OperName)+"%")
+		db = db.Where("oper_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.OperName))+"%")
 	}
 	if query.Status != nil {
 		db = db.Where("status = ?", *query.Status)

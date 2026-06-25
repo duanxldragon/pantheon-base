@@ -58,24 +58,24 @@ export { ModuleExporter, type GeneratedFile } from './exporter';
 
 export const GeneratorModule = defineModule({
   name: 'generator',
-  scope: 'system',
+  scope: 'lowcode',
   routes: [
     {
-      path: 'system/generator',
-      routeName: 'system-generator',
+      path: 'lowcode/generator',
+      routeName: 'lowcode-generator',
       titleKey: 'system.menu.generator',
       icon: 'code',
       pagePermission: 'system:generator:use',
-      componentKey: 'system/generator/ModuleWizard',
+      componentKey: 'lowcode/generator/ModuleWizard',
     },
   ],
   menus: [
     {
-      path: '/system/generator',
+      path: '/lowcode/generator',
       titleKey: 'system.menu.generator',
       icon: 'code',
-      routeName: 'system-generator',
-      module: 'system.lowcode',
+      routeName: 'lowcode-generator',
+      module: 'lowcode',
     },
   ],
   dashboardWidgets: [
@@ -85,7 +85,7 @@ export const GeneratorModule = defineModule({
       sourceDomain: 'system/lowcode',
       titleKey: 'system.menu.generator',
       descriptionKey: 'dashboard.quickAction.generator',
-      path: '/system/generator',
+      path: '/lowcode/generator',
       permission: 'system:generator:use',
       icon: 'code',
       cleanupPolicy: 'hide_when_forbidden',

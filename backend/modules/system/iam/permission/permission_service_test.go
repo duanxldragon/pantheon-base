@@ -368,8 +368,8 @@ func TestPermissionService_GetWorkbenchIncludesRemediationGovernanceSummary(t *t
 	}
 
 	menus := []permissionTestMenu{
-		{ID: 10, TitleKey: "system.menu.generator", Path: "/system/generator", Module: "system.lowcode", Type: "C", PagePerm: "system:generator:use"},
-		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/system/generator", Module: "system.lowcode", Type: "F", Perms: "system:module:generate"},
+		{ID: 10, TitleKey: "system.menu.generator", Path: "/lowcode/generator", Module: "lowcode", Type: "C", PagePerm: "system:generator:use"},
+		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/lowcode/generator", Module: "lowcode", Type: "F", Perms: "system:module:generate"},
 	}
 	if err := db.Create(&menus).Error; err != nil {
 		t.Fatalf("seed menus: %v", err)
@@ -498,8 +498,8 @@ func TestPermissionService_GetWorkbenchUsesVersionedRemediationTableName(t *test
 	if err := db.Create(&permissionTestMenu{
 		ID:       10,
 		TitleKey: "system.menu.generator",
-		Path:     "/system/generator",
-		Module:   "system.lowcode",
+		Path:     "/lowcode/generator",
+		Module:   "lowcode",
 		Type:     "C",
 		PagePerm: "system:generator:use",
 	}).Error; err != nil {
@@ -574,8 +574,8 @@ func TestPermissionService_GetWorkbenchDetectsSpecificRequiredAPIPolicyGap(t *te
 	}
 
 	menus := []permissionTestMenu{
-		{ID: 10, TitleKey: "system.menu.generator", Path: "/system/generator", Module: "system.lowcode", Type: "C", PagePerm: "system:generator:use"},
-		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/system/generator", Module: "system.lowcode", Type: "F", Perms: "system:module:generate"},
+		{ID: 10, TitleKey: "system.menu.generator", Path: "/lowcode/generator", Module: "lowcode", Type: "C", PagePerm: "system:generator:use"},
+		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/lowcode/generator", Module: "lowcode", Type: "F", Perms: "system:module:generate"},
 	}
 	if err := db.Create(&menus).Error; err != nil {
 		t.Fatalf("seed menus: %v", err)
@@ -652,8 +652,8 @@ func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 		t.Fatalf("seed role: %v", err)
 	}
 	menus := []permissionTestMenu{
-		{ID: 10, TitleKey: "system.menu.generator", Path: "/system/generator", Module: "system.lowcode", Type: "C", PagePerm: "system:generator:use"},
-		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/system/generator", Module: "system.lowcode", Type: "F", Perms: "system:module:generate"},
+		{ID: 10, TitleKey: "system.menu.generator", Path: "/lowcode/generator", Module: "lowcode", Type: "C", PagePerm: "system:generator:use"},
+		{ID: 11, TitleKey: "system.permission.module.generate", Path: "/lowcode/generator", Module: "lowcode", Type: "F", Perms: "system:module:generate"},
 	}
 	if err := db.Create(&menus).Error; err != nil {
 		t.Fatalf("seed menus: %v", err)

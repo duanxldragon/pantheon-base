@@ -41,10 +41,10 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 	db := s.db.Model(&SystemMenu{})
 	if query != nil {
 		if strings.TrimSpace(query.TitleKey) != "" {
-			db = db.Where("title_key LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.TitleKey)))
+			db = db.Where("title_key LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.TitleKey))))
 		}
 		if strings.TrimSpace(query.Path) != "" {
-			db = db.Where("path LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.Path)))
+			db = db.Where("path LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Path))))
 		}
 		if query.IsVisible != nil && (*query.IsVisible == 0 || *query.IsVisible == 1) {
 			db = db.Where("is_visible = ?", *query.IsVisible)

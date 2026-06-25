@@ -144,7 +144,7 @@ Install the frontend dependencies required by the wizard and its archive or expo
 
 ### 2. Current One-Click Registration Boundary
 
-The current service object is only `business/*` module generation and registration through `system/generator` plus `system/dynamicmodule`.
+The current service object is only `business/*` module generation and registration through `lowcode/generator` plus `lowcode/dynamicmodule`.
 
 ### 3. Add Internationalization Translations
 
@@ -212,7 +212,47 @@ Future optimization should focus on stronger governance metadata, safer relation
 
 ## 12. Related Files
 
-Core implementation, dynamic module governance, module contracts, and i18n governance documents should all be read alongside this guide.
+### Generation Architecture
+
+**Current architecture: Frontend TypeScript generators execute inside Go backend via Node.js delegation.**
+
+Full call chain:
+
+1. Frontend wizard (`ModuleWizard.tsx`) collects user schema, calls `/api/lowcode/generator/preview`
+2. Backend handler (`generator_handler.go`) passes schema to `GeneratorService.PreviewGeneratedFiles`
+3. `scaffold/workspace.go`'s `GenerateModuleFilesFromSchema` writes schema to temp JSON file
+4. Via `exec.Command(node, script, schemaPath)` calls `frontend/scripts/export-generated-module.mjs`
+5. Script temporarily compiles TypeScript → Node.js, executes `ModuleExporter.generateAll()`
+6. Result JSON streams back to Go, returns `[]GeneratedFile` to frontend
+
+Key files:
+
+- `frontend/scripts/export-generated-module.mjs` — Node.js entry, delegates to `exporter.ts`
+- `frontend/src/modules/lowcode/generator/exporter.ts` — Orchestrates backend + frontend generators
+- `frontend/src/modules/lowcode/generator/backendGenerator.ts` — Go code generator
+- `frontend/src/modules/lowcode/generator/frontendGenerator.ts` — TypeScript/React code generator
+- `frontend/src/modules/lowcode/generator/schema.ts` — Shared schema type definition
+- `backend/internal/scaffold/workspace.go` — Go-side entry, `text/template` generates registries
+- `backend/internal/scaffold/engine.go` — Template engine stub (planned: replace Node delegation)
+- `backend/internal/scaffold/types.go` — Shared type definitions
+
+### Known Technical Debt
+
+- `frontendGenerator.ts` (2439 LOC) and `backendGenerator.ts` (~800+ LOC) are monolithic template generators
+- Detail page generator (`generateDetailPage`) contains ~1200 lines of inline template string
+- `templates/` directory extracted: `detailTemplate_clean.txt`, `indexTemplate.ts`, `apiTemplate.ts`, `listTemplate.ts`, `formTemplate.ts`
+- Plan: migrate backend Go code generation to `scaffold/engine.go`, eliminate Node delegation
+- `frontendGenerator.ts`'s `generateDetailPage` (~1810 lines) needs further extraction into separate template segments
+
+### Other Core Files
+- `frontend/src/modules/lowcode/generator/pages/ModuleWizard.tsx` — Configuration wizard
+- `frontend/src/modules/lowcode/generator/pages/components/FieldEditor.tsx` — Field editor
+- `frontend/src/modules/lowcode/generator/pages/components/CodePreview.tsx` — Code preview
+- `backend/modules/lowcode/dynamicmodule/dynamic_module_service.go` — Service layer
+- `backend/modules/lowcode/dynamicmodule/dynamic_module_handler.go` — Handler
+- `backend/modules/lowcode/dynamicmodule/module.go` — Module registration
+- `frontend/src/modules/lowcode/dynamicmodule/api.ts` — API
+- `frontend/src/modules/lowcode/dynamicmodule/ModuleManager.tsx` — Manager page
 
 ## 13. Acceptance Standard
 

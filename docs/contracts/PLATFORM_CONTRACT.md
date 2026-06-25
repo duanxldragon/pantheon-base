@@ -267,3 +267,8 @@ Pantheon 当前已经不再是“只有登录 + 菜单 + CRUD”的后台壳。
 - [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md](../archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md)
 - [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 
+## 变更日志
+| 日期 | 版本 | 变更内容 | 原因 |
+|------|------|---------|------|
+| 2026-06-25 | v1.0 | 初始版本 | 评估审计添加 |
+

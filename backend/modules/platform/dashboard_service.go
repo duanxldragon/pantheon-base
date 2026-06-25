@@ -1,12 +1,11 @@
-package dashboard
+package platform
 
 import (
 	"sync"
 	"time"
 
-	"pantheon-platform/backend/pkg/common"
-
 	"pantheon-platform/backend/pkg/authsession"
+	"pantheon-platform/backend/pkg/common"
 
 	"gorm.io/gorm"
 )
@@ -101,76 +100,54 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 		Msg       string    `gorm:"column:msg"`
 		LoginTime time.Time `gorm:"column:login_time"`
 	}
-
-	var rawRows []rawLoginRow
+	var recentLoginsRaw []rawLoginRow
 	if err := s.db.Table("system_log_login").
 		Select("id, username, ipaddr, browser, os, status, msg, login_time").
-		Order("login_time desc, id desc").
-		Limit(8).
-		Scan(&rawRows).Error; err != nil {
+		Where("login_time >= ?", since).
+		Order("login_time desc").
+		Limit(20).
+		Scan(&recentLoginsRaw).Error; err != nil {
 		return nil, err
 	}
-
-	resp.RecentLogins = make([]RecentLoginActivityResp, 0, len(rawRows))
-	for _, row := range rawRows {
+	resp.RecentLogins = make([]RecentLoginActivityResp, 0, len(recentLoginsRaw))
+	for _, r := range recentLoginsRaw {
 		resp.RecentLogins = append(resp.RecentLogins, RecentLoginActivityResp{
-			ID:        row.ID,
-			Username:  row.Username,
-			Ipaddr:    row.Ipaddr,
-			Browser:   row.Browser,
-			OS:        row.OS,
-			Status:    row.Status,
-			Msg:       row.Msg,
-			LoginTime: row.LoginTime.Format(time.RFC3339),
+			ID:        r.ID,
+			Username:  r.Username,
+			Ipaddr:    r.Ipaddr,
+			Browser:   r.Browser,
+			OS:        r.OS,
+			Status:    r.Status,
+			Msg:       r.Msg,
+			LoginTime: r.LoginTime.Format(time.RFC3339),
 		})
 	}
 
-	orgTasks, err := s.loadOrgGovernanceTasks()
-	if err != nil {
-		return nil, err
-	}
-	resp.OrgGovernanceTaskCount = len(orgTasks)
-	resp.OrgGovernanceTasks = make([]DashboardTodoResp, 0, minInt(len(orgTasks), 6))
-	for _, task := range orgTasks {
-		if len(resp.OrgGovernanceTasks) >= 6 {
-			break
+	if s.orgGovernanceTaskLoader != nil {
+		tasks, err := s.orgGovernanceTaskLoader.ListOrgGovernanceTasks()
+		if err != nil {
+			return nil, err
 		}
-		resourceLabel := task.DeptName
-		if task.GovernanceScope == "post" && task.PostName != "" {
-			resourceLabel = task.PostName + " / " + task.DeptName
+		resp.OrgGovernanceTaskCount = len(tasks)
+		resp.OrgGovernanceTasks = make([]DashboardTodoResp, 0, len(tasks))
+		for _, task := range tasks {
+			resp.OrgGovernanceTasks = append(resp.OrgGovernanceTasks, DashboardTodoResp{
+				TaskKey:          task.TaskKey,
+				Domain:           task.GovernanceScope,
+				ScopeLabel:       task.GovernanceScopeLabel,
+				IssueLabel:       task.GovernanceTagLabel,
+				ActionLabel:      task.GovernanceActionLabel,
+				RelatedUserCount: task.RelatedUserCount,
+			})
 		}
-		resp.OrgGovernanceTasks = append(resp.OrgGovernanceTasks, DashboardTodoResp{
-			TaskKey:          task.TaskKey,
-			Domain:           "system.org",
-			ScopeLabel:       task.GovernanceScopeLabel,
-			IssueLabel:       task.GovernanceTagLabel,
-			ActionLabel:      task.GovernanceActionLabel,
-			ResourceLabel:    resourceLabel,
-			RelatedUserCount: task.RelatedUserCount,
-			RoutePath:        "/system/dept",
-			RouteStateDeptID: task.DeptID,
-		})
 	}
 
 	return resp, nil
 }
 
-func (s *DashboardService) loadOrgGovernanceTasks() ([]OrgGovernanceTask, error) {
-	if s.orgGovernanceTaskLoader == nil {
-		return nil, nil
-	}
-	return s.orgGovernanceTaskLoader.ListOrgGovernanceTasks()
-}
-
 type summaryCountJob struct {
 	count func() (int64, error)
 	apply func(int64)
-}
-
-type summaryCountResult struct {
-	index int
-	value int64
-	err   error
 }
 
 func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, todayStart time.Time, idleMinutes int, hasI18nTable, hasDynamicModuleTable, hasSecurityEventTable bool) error {
@@ -192,14 +169,18 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 		{count: func() (int64, error) {
 			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 0, since)
 		}, apply: func(value int64) { resp.LoginFailureCount = value }},
-		{count: func() (int64, error) { return s.countTable("system_log_oper", "oper_time >= ?", todayStart) }, apply: func(value int64) { resp.TodayOperationCount = value }},
+		{count: func() (int64, error) {
+			return s.countTable("system_log_operation", "created_at >= ?", todayStart)
+		}, apply: func(value int64) { resp.TodayOperationCount = value }},
 	}
+
 	if hasI18nTable {
 		jobs = append(jobs, summaryCountJob{
 			count: func() (int64, error) { return s.countTable("system_i18n", "") },
 			apply: func(value int64) { resp.TotalI18nEntries = value },
 		})
 	}
+
 	if hasDynamicModuleTable {
 		jobs = append(jobs, summaryCountJob{
 			count: func() (int64, error) {
@@ -208,68 +189,66 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 			apply: func(value int64) { resp.ActiveModuleCount = value },
 		})
 	}
+
 	if hasSecurityEventTable {
-		securityEventTable := authSecurityEventTableName
 		jobs = append(jobs,
 			summaryCountJob{
-				count: func() (int64, error) { return s.countTable(securityEventTable, "created_at >= ?", since) },
+				count: func() (int64, error) { return s.countTable(authSecurityEventTableName, "") },
 				apply: func(value int64) { resp.TotalSecurityEventCount = value },
 			},
 			summaryCountJob{
 				count: func() (int64, error) {
-					return s.countTable(securityEventTable, "acknowledged_at IS NULL AND created_at >= ?", since)
+					return s.countTable(authSecurityEventTableName, "status = ?", 0)
 				},
 				apply: func(value int64) { resp.PendingSecurityEventCount = value },
 			},
 		)
 	}
 
-	results := make(chan summaryCountResult, len(jobs))
 	var wg sync.WaitGroup
-	for index, job := range jobs {
-		index, job := index, job
+	var mu sync.Mutex
+	errs := make([]error, 0, len(jobs))
+
+	for _, job := range jobs {
 		wg.Add(1)
-		go func() {
+		go func(j summaryCountJob) {
 			defer wg.Done()
-			value, err := job.count()
-			results <- summaryCountResult{index: index, value: value, err: err}
-		}()
+			count, err := j.count()
+			if err != nil {
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+				return
+			}
+			mu.Lock()
+			j.apply(count)
+			mu.Unlock()
+		}(job)
 	}
 	wg.Wait()
-	close(results)
 
-	values := make([]int64, len(jobs))
-	for result := range results {
-		if result.err != nil {
-			return result.err
-		}
-		values[result.index] = result.value
-	}
-	for index, value := range values {
-		jobs[index].apply(value)
+	if len(errs) > 0 {
+		return errs[0]
 	}
 	return nil
 }
 
-func (s *DashboardService) countTable(tableName, where string, args ...any) (int64, error) {
-	db := s.db.Table(tableName)
-	if where != "" {
-		db = db.Where(where, args...)
-	}
-	return countQuery(db)
-}
-
-func countQuery(db *gorm.DB) (int64, error) {
+func (s *DashboardService) countTable(tableName string, where string, args ...interface{}) (int64, error) {
 	var count int64
-	if err := db.Count(&count).Error; err != nil {
+	query := s.db.Table(tableName)
+	if where != "" {
+		query = query.Where(where, args...)
+	}
+	if err := query.Count(&count).Error; err != nil {
 		return 0, err
 	}
 	return count, nil
 }
 
-func minInt(a, b int) int {
-	if a < b {
-		return a
+func countQuery(q *gorm.DB) (int64, error) {
+	var count int64
+	if err := q.Count(&count).Error; err != nil {
+		return 0, err
 	}
-	return b
+	return count, nil
 }

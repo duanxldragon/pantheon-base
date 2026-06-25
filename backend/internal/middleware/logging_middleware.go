@@ -1,8 +1,10 @@
 package middleware
 
 import (
-	"pantheon-platform/backend/pkg/logging"
+	"context"
 	"time"
+
+	"pantheon-platform/backend/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -23,10 +25,13 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 		end := time.Now()
 		latency := end.Sub(start)
 
+		// Inject trace ID from OpenTelemetry context for log correlation
+		logger := logging.LogFromContext(c.Request.Context())
+
 		if len(c.Errors) > 0 {
 			// 记录错误
 			for _, e := range c.Errors.Errors() {
-				logging.Error("HTTP Request Error",
+				logger.Error("HTTP Request Error",
 					zap.String("method", method),
 					zap.String("path", path),
 					zap.String("query", query),
@@ -39,7 +44,7 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 			}
 		} else {
 			// 记录正常请求
-			logging.Info("HTTP Request",
+			logger.Info("HTTP Request",
 				zap.String("method", method),
 				zap.String("path", path),
 				zap.String("query", query),

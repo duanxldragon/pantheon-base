@@ -6,24 +6,24 @@ import { defineModule } from '../../../core/router/types';
 
 export const DynamicModuleModule = defineModule({
   name: 'dynamic-module',
-  scope: 'system',
+  scope: 'lowcode',
   routes: [
     {
-      path: 'system/modules',
-      routeName: 'system-modules',
+      path: 'lowcode/modules',
+      routeName: 'lowcode-modules',
       titleKey: 'system.menu.modules',
       icon: 'apps',
       pagePermission: 'system:module:list',
-      componentKey: 'system/dynamicmodule/ModuleManager',
+      componentKey: 'lowcode/dynamicmodule/ModuleManager',
     },
   ],
   menus: [
     {
-      path: '/system/modules',
+      path: '/lowcode/modules',
       titleKey: 'system.menu.modules',
       icon: 'apps',
-      routeName: 'system-modules',
-      module: 'system.lowcode',
+      routeName: 'lowcode-modules',
+      module: 'lowcode',
     },
   ],
   dashboardWidgets: [
@@ -33,7 +33,7 @@ export const DynamicModuleModule = defineModule({
       sourceDomain: 'system/lowcode',
       titleKey: 'system.menu.modules',
       descriptionKey: 'dashboard.quickAction.moduleManager',
-      path: '/system/modules',
+      path: '/lowcode/modules',
       permission: 'system:module:list',
       icon: 'apps',
       cleanupPolicy: 'hide_when_forbidden',
@@ -44,7 +44,7 @@ export const DynamicModuleModule = defineModule({
       sourceDomain: 'system/lowcode',
       titleKey: 'dashboard.domain.lowcode',
       descriptionKey: 'dashboard.domain.lowcodeDesc',
-      path: '/system/modules',
+      path: '/lowcode/modules',
       permission: 'system:module:list',
       cleanupPolicy: 'hide_when_forbidden',
       summary: (summary, t) =>

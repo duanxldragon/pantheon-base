@@ -62,10 +62,10 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 	page, pageSize := normalizeRolePageQuery(query)
 	if query != nil {
 		if strings.TrimSpace(query.RoleName) != "" {
-			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.RoleName)))
+			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleName))))
 		}
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("role_key LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.RoleKey)))
+			db = db.Where("role_key LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))))
 		}
 		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 			db = db.Where("status = ?", *query.Status)
@@ -485,13 +485,13 @@ func (s *RoleService) listUsersByRoleMembership(roleID uint64, query *RoleMember
 
 	if query != nil {
 		keyword := strings.TrimSpace(query.Keyword)
-		if keyword != "" {
-			db = db.Where(
-				"(system_user.username LIKE ? OR system_user.nickname LIKE ?)",
-				fmt.Sprintf("%%%s%%", keyword),
-				fmt.Sprintf("%%%s%%", keyword),
-			)
-		}
+	if keyword != "" {
+		db = db.Where(
+			"(system_user.username LIKE ? OR system_user.nickname LIKE ?)",
+			fmt.Sprintf("%%%s%%", common.EscapeLikePattern(keyword)),
+			fmt.Sprintf("%%%s%%", common.EscapeLikePattern(keyword)),
+		)
+	}
 		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 			db = db.Where("system_user.status = ?", *query.Status)
 		}

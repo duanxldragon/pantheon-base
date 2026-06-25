@@ -1,8 +1,8 @@
 import { defineModule } from '../../core/router/types';
 import { getDashboardSummary } from './api';
 
-export const DashboardModule = defineModule({
-  name: 'dashboard',
+export const PlatformModule = defineModule({
+  name: 'platform',
   scope: 'platform',
   routes: [
     {
