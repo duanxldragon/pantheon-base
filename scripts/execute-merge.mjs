@@ -3,6 +3,7 @@
  * execute-merge.mjs
  * Executes the actual merge of PRs and branches.
  * Merges PRs first, then pushes branches to create PRs if needed.
+ * Supports solo developer mode (self-approval).
  */
 
 import { execSync } from 'child_process';
@@ -38,11 +39,30 @@ function gh(cmd, options = {}) {
   }
 }
 
+// Self-approve PR for solo developer mode
+async function selfApprovePR(prNumber) {
+  log(`Self-approving PR #${prNumber} for solo developer mode...`);
+  try {
+    execSync(
+      `gh api repos/{owner}/{repo}/pulls/${prNumber}/reviews -X POST -f event=APPROVE -f body="Auto-approved by auto-merge workflow (solo developer mode)" --repo ${GH_REPO}`,
+      { encoding: 'utf-8' }
+    );
+    log(`✓ PR #${prNumber} self-approved`);
+    return true;
+  } catch (e) {
+    warn(`Could not self-approve PR #${prNumber}: ${e.message}`);
+    return false;
+  }
+}
+
 // Merge a PR with squash
 async function mergePR(pr) {
   log(`\nMerging PR #${pr.number}: ${pr.title}`);
 
   try {
+    // Self-approve for solo developer
+    await selfApprovePR(pr.number);
+
     // Enable auto-merge
     gh(`pr merge ${pr.number} --auto --squash --delete-branch --admin --force`);
     log(`✓ PR #${pr.number} merged successfully`);
