@@ -15,7 +15,6 @@ import (
 	"pantheon-platform/backend/modules/platform"
 	"pantheon-platform/backend/modules/system"
 	"pantheon-platform/backend/pkg/common"
-	commonsecurity "pantheon-platform/backend/pkg/common/security"
 	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/logging"
 	"pantheon-platform/backend/pkg/telemetry"
@@ -66,7 +65,7 @@ func main() {
 
 	// 1. 初始化核心基础能力
 	common.InitLocationService()
-	if err := commonsecurity.InitSecurityConfig(); err != nil {
+	if err := common.InitSecurityConfig(); err != nil {
 		logging.Error("Security configuration invalid", zap.Error(err))
 		os.Exit(1)
 	}
