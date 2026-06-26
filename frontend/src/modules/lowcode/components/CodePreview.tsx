@@ -9,10 +9,10 @@ import { Tree, Typography, Space, Button, Tag } from '@arco-design/web-react';
 import { IconCode, IconDownload } from '@arco-design/web-react/icon';
 import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
 import { useTranslation } from 'react-i18next';
-import { AppDrawer } from '../../../../components';
+import { AppDrawer } from '../../../components';
 import './CodePreview.css';
 
-import type { GeneratedFile } from '../exporter';
+import type { GeneratedFile } from '../generator/exporter';
 
 interface CodePreviewProps {
   visible: boolean;

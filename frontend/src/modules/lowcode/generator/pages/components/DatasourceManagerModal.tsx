@@ -2,33 +2,32 @@ import React from 'react';
 import {
   Button,
   Card,
-  Col,
+  Grid,
   Form,
   Input,
   InputNumber,
   Popconfirm,
-  Row,
   Space,
   Table,
   Tag,
-  Typography,
 } from '@arco-design/web-react';
+const { Row, Col } = Grid;
 import { IconEdit } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import type {
   GeneratorDatasource,
   UpsertGeneratorDatasourcePayload,
-} from '../api';
+} from '../../api';
 
 const FormItem = Form.Item;
 
 export interface DatasourceManagerProps {
-  visible: boolean;
+  visible?: boolean;
   editingId: string | null;
   saving: boolean;
   form: ReturnType<typeof Form.useForm<UpsertGeneratorDatasourcePayload>>[0];
   items: GeneratorDatasource[];
-  onClose: () => void;
+  onClose?: () => void;
   onEditItem: (item: GeneratorDatasource) => void;
   onDeleteItem: (id: string) => void;
   onTestItem: (id: string) => void;
@@ -41,7 +40,6 @@ const DatasourceManagerModal: React.FC<DatasourceManagerProps> = ({
   saving,
   form,
   items,
-  onClose,
   onEditItem,
   onDeleteItem,
   onTestItem,

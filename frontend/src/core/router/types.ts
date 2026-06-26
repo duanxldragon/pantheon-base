@@ -3,7 +3,7 @@ import type { RegisteredComponentKey } from './componentRegistry';
 import type { MenuIconKey } from '../menu/icon';
 import type { TFunction } from 'i18next';
 
-export type ModuleScope = 'platform' | 'system' | 'business';
+export type ModuleScope = 'platform' | 'system' | 'business' | 'lowcode';
 
 export type DashboardWidgetSourceDomain =
   | 'platform'

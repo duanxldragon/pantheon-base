@@ -13,8 +13,10 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import {
+  IconCode,
   IconDownload,
   IconPlus,
+  IconRefresh,
 } from '@arco-design/web-react/icon';
 import { message } from '../../../../components/feedback/message';
 import { isRequestError, ensureOperationVerified } from '../../../../api/request';
@@ -29,7 +31,9 @@ import {
   showAppModalConfirm,
 } from '../../../../components';
 import { usePermission } from '../../../../hooks/usePermission';
-import { auditPendingActivations, getModuleStatus } from '../../dynamicmodule/api';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { auditPendingActivations, getModuleStatus } from '../../../lowcode/dynamicmodule/api';
 
 import type { GenerateAndRegisterResp, GeneratedFile } from '../api';
 import {
@@ -47,10 +51,10 @@ import {
   type GeneratorTableOption,
   type UpsertGeneratorDatasourcePayload,
 } from '../api';
-import { FieldEditor } from '../components/FieldEditor';
-import { CodePreview } from '../components/CodePreview';
-import { DatasourceManagerModal } from './components/DatasourceManagerModal';
-import { MenuPreviewTree } from './components/MenuPreviewTree';
+import { FieldEditor } from '../../components/FieldEditor';
+import { CodePreview } from '../../components/CodePreview';
+import DatasourceManagerModal from './components/DatasourceManagerModal';
+import MenuPreviewTree from './components/MenuPreviewTree';
 import './ModuleWizard.css';
 import {
   buildDashboardQuickActionDescriptionKey,

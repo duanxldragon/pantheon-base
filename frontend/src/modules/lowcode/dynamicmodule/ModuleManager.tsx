@@ -49,7 +49,7 @@ import {
   withTableColumnPriority,
 } from '../../../components';
 import { SECONDARY_VERIFY_CANCELLED_ERROR } from '../../../components/feedback/secondaryVerifyController';
-import '../components/shared/list-page.css';
+import '../../system/components/shared/list-page.css';
 
 const moduleManagerWarmDataKeys = ['modules:registered'];
 const moduleManagerDiagnosticsColumnWidth = 112;

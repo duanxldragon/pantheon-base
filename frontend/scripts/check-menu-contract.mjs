@@ -186,7 +186,8 @@ function normalizeRoutePath(routePath) {
 
 function parseFrontendModules() {
   const files = walkFiles(frontendModulesRoot, (filePath) =>
-    filePath.endsWith(`${path.sep}index.ts`),
+    filePath.endsWith(`${path.sep}index.ts`) &&
+    !filePath.includes(`${path.sep}templates${path.sep}`),
   );
   const modules = [];
 
@@ -511,7 +512,7 @@ function main() {
   reportDuplicates(permissions, (item) => item.key, '权限 key');
 
   for (const module of frontendModules) {
-    if (!['platform', 'system', 'business'].includes(module.scope)) {
+    if (!['platform', 'system', 'business', 'lowcode'].includes(module.scope)) {
       errors.push(`非法模块 scope: ${module.scope} (${module.filePath})`);
     }
     if (module.i18nNamespaces.length === 0) {
