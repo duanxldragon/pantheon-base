@@ -1,7 +1,7 @@
 import React from 'react';
 import { Space, Tag, Typography } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
-import type { GeneratorMenuPreviewNode } from '../schema';
+import type { GeneratorMenuPreviewNode } from '../../schema';
 
 interface MenuPreviewTreeProps {
   nodes: GeneratorMenuPreviewNode[];
