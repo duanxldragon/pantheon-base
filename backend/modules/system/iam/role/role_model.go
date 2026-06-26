@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// SystemRole 系统角色模型
+// SystemRole represents a system role with RBAC permissions.
 type SystemRole struct {
 	ID        uint64         `gorm:"primaryKey;autoIncrement" json:"id"`
 	RoleName  string         `gorm:"size:64;not null" json:"roleName"`
@@ -18,6 +18,7 @@ type SystemRole struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+// TableName returns the database table name for SystemRole.
 func (SystemRole) TableName() string {
 	return "system_role"
 }

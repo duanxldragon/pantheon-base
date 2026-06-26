@@ -51,7 +51,7 @@ func (s *RoleService) Bootstrap() error {
 	return s.backfillRolePermissions()
 }
 
-// ListRoles 获取角色分页列表。
+// ListRoles retrieves paginated role list with optional filters.
 func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error) {
 	if s.db == nil {
 		return nil, common.NewBadRequest("database.not_initialized")
@@ -232,7 +232,7 @@ func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, e
 	return int(result.RowsAffected), nil
 }
 
-// CreateRole 创建角色。
+// CreateRole creates a new role with menu and permission assignments.
 func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 	if s.db == nil {
 		return nil, common.NewBadRequest("database.not_initialized")
@@ -274,7 +274,7 @@ func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 	}, nil
 }
 
-// UpdateRole 更新角色。
+// UpdateRole updates an existing role with new menu and permission assignments.
 func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListResp, error) {
 	if s.db == nil {
 		return nil, common.NewBadRequest("database.not_initialized")
@@ -319,7 +319,7 @@ func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListRe
 	}, nil
 }
 
-// DeleteRole 删除角色。
+// DeleteRole soft-deletes a role and releases its role_key for reuse.
 func (s *RoleService) DeleteRole(roleID uint64) error {
 	if s.db == nil {
 		return common.NewBadRequest("database.not_initialized")

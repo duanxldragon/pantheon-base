@@ -9,16 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// Enforcer is the global Casbin enforcer for RBAC policy enforcement.
 var Enforcer *casbin.SyncedEnforcer
 
-// InitCasbin 初始化权限引擎
+// InitCasbin initializes the Casbin permission engine with GORM adapter.
+// Loads the RBAC model and policy from the database.
 func InitCasbin(db *gorm.DB) {
 	if db == nil {
 		slog.Error("casbin init error: database not initialized")
 		os.Exit(1)
 	}
 
-	// 模型 (定义在 system 模块内部或本地配置)
+	// RBAC model definition (subject, object, action)
 	m, err := model.NewModelFromString(`
 		[request_definition]
 		r = sub, obj, act
@@ -52,6 +54,7 @@ func InitCasbin(db *gorm.DB) {
 		os.Exit(1)
 	}
 
+	// Seed default admin policy for /api/v1/* (all methods)
 	changed := false
 	for _, method := range []string{"GET", "POST", "PUT", "PATCH", "DELETE"} {
 		added, err := Enforcer.AddPolicy("admin", "/api/v1/*", method)

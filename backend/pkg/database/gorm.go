@@ -15,8 +15,11 @@ import (
 	"pantheon-platform/backend/pkg/metrics"
 )
 
+// DB is the global GORM database instance.
 var DB *gorm.DB
 
+// normalizeMySQLDSN normalizes the MySQL DSN by setting defaults for charset,
+// parseTime, and location if not specified.
 func normalizeMySQLDSN(dsn string) (string, error) {
 	parsed, err := mysqlDriver.ParseDSN(dsn)
 	if err != nil {
@@ -40,6 +43,8 @@ func normalizeMySQLDSN(dsn string) (string, error) {
 	return parsed.FormatDSN(), nil
 }
 
+// gormLogLevel returns the appropriate GORM log level based on environment.
+// Returns Warn in production, Info in development.
 func gormLogLevel() logger.LogLevel {
 	if strings.EqualFold(strings.TrimSpace(os.Getenv("PANTHEON_ENV")), "production") {
 		return logger.Warn
@@ -73,6 +78,7 @@ func InitDB(dsn string) {
 	}
 }
 
+// initMySQL initializes MySQL connection with normalized DSN and connection pool settings.
 func initMySQL(dsn string) {
 	var err error
 	normalizedDSN, err := normalizeMySQLDSN(dsn)
@@ -83,7 +89,7 @@ func initMySQL(dsn string) {
 
 	DB, err = gorm.Open(mysql.Open(normalizedDSN), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
-			SingularTable: true, // 使用单数表名
+			SingularTable: true, // use singular table names
 		},
 		Logger: logger.Default.LogMode(gormLogLevel()),
 	})
@@ -94,11 +100,11 @@ func initMySQL(dsn string) {
 	}
 
 	sqlDB, _ := DB.DB()
-	sqlDB.SetMaxIdleConns(10)           // 最大空闲连接数
-	sqlDB.SetMaxOpenConns(100)          // 最大开放连接数
-	sqlDB.SetConnMaxLifetime(time.Hour) // 连接最大存活时间
+	sqlDB.SetMaxIdleConns(10)           // max idle connections
+	sqlDB.SetMaxOpenConns(100)          // max open connections
+	sqlDB.SetConnMaxLifetime(time.Hour) // connection max lifetime
 
-	// 启动后台协程采集数据库连接池指标
+	// Start background goroutine to collect database connection pool metrics
 	go func() {
 		ticker := time.NewTicker(10 * time.Second)
 		defer ticker.Stop()

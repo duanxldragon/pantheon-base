@@ -1,6 +1,6 @@
-// Package logging 提供基于 zap 的高性能结构化日志功能
+// Package logging provides high-performance structured logging based on zap.
 //
-// 基本用法:
+// Basic usage:
 //
 //	if err := logging.InitLogger("production"); err != nil {
 //	    log.Fatal(err)
@@ -9,6 +9,8 @@
 //
 //	logging.Info("user login", zap.String("username", "alice"), zap.String("ip", "192.168.1.1"))
 //	logging.Error("database error", zap.Error(err))
+//
+// Supports development (console output with colors) and production (JSON format) environments.
 package logging
 
 import (
@@ -22,28 +24,26 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Logger 是全局 zap logger 实例
+// Logger is the global zap logger instance.
 var Logger *zap.Logger
 
-// InitLogger 初始化全局结构化日志系统
-// 根据环境配置选择不同的日志格式：
-// - development: 控制台格式，彩色输出，debug 级别
-// - production: JSON 格式，输出到 stdout，info 级别
+// InitLogger initializes the global structured logging system.
+// Selects different log formats based on environment:
+// - development: console format with colors, debug level
+// - production: JSON format, output to stdout, info level
 //
-// 参数:
+// Parameters:
+//   - environment: environment identifier, supports "development", "production"
 //
-//	environment: 环境标识，支持 "development", "production"
-//
-// 返回:
-//
-//	error: 初始化失败时返回错误
+// Returns:
+//   - error: returns error on initialization failure
 func InitLogger(environment string) error {
 	env := strings.ToLower(strings.TrimSpace(environment))
 
 	var config zap.Config
 
 	if env == "production" {
-		// 生产环境：JSON 格式，输出到文件和 stdout
+		// Production: JSON format, output to stdout
 		config = zap.Config{
 			Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
 			Encoding:         "json",
@@ -64,7 +64,7 @@ func InitLogger(environment string) error {
 			},
 		}
 	} else {
-		// 开发环境：控制台格式，彩色输出
+		// Development: console format with colors
 		config = zap.NewDevelopmentConfig()
 		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -72,7 +72,7 @@ func InitLogger(environment string) error {
 
 	logger, err := config.Build(
 		zap.AddCaller(),
-		zap.AddCallerSkip(1), // 跳过封装层
+		zap.AddCallerSkip(1), // Skip wrapper layers
 	)
 	if err != nil {
 		return err
@@ -82,48 +82,47 @@ func InitLogger(environment string) error {
 	return nil
 }
 
-// Sync 刷新日志缓冲区，确保所有日志写入完成
-// 应在程序退出前调用，通常使用 defer
+// Sync flushes the log buffer to ensure all logs are written.
+// Should be called before program exit, typically with defer.
 func Sync() {
 	if Logger != nil {
 		_ = Logger.Sync()
 	}
 }
 
-// Info 记录 Info 级别的结构化日志
+// Info logs a message at Info level.
 //
-// 参数:
-//
-//	msg: 日志消息
-//	fields: 结构化字段，如 zap.String("key", "value")
+// Parameters:
+//   - msg: log message
+//   - fields: structured fields, e.g., zap.String("key", "value")
 func Info(msg string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Info(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
-// Warn 记录 Warn 级别的警告日志
+// Warn logs a message at Warn level (warnings).
 func Warn(msg string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Warn(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
-// Error 记录 Error 级别的错误日志
+// Error logs a message at Error level.
 func Error(msg string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Error(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
-// Debug 记录 Debug 级别的调试日志
+// Debug logs a message at Debug level.
 func Debug(msg string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Debug(SanitizeLogValue(msg), sanitizeLogFields(fields)...)
 	}
 }
 
-// Fatal 记录 Fatal 级别日志并退出程序（exit code 1）
+// Fatal logs a message at Fatal level and exits the program (exit code 1).
 func Fatal(msg string, fields ...zap.Field) {
 	if Logger != nil {
 		Logger.Fatal(SanitizeLogValue(msg), sanitizeLogFields(fields)...)

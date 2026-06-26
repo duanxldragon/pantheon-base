@@ -32,7 +32,7 @@ func WithSessionLifecycle(factory SessionLifecycleFactory) UserServiceOption {
 	}
 }
 
-// NewUserService 构造函数
+// NewUserService creates a new UserService instance.
 func NewUserService(db *gorm.DB, options ...UserServiceOption) *UserService {
 	s := &UserService{
 		db: db,
@@ -54,7 +54,7 @@ func (s *UserService) withSessionLifecycle(db *gorm.DB, fn func(SessionLifecycle
 	return fn(lifecycle)
 }
 
-// Migrate 初始化表结构和种子数据
+// Migrate initializes table structure and seed data.
 func (s *UserService) Migrate() error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
@@ -88,7 +88,7 @@ func (s *UserService) CleanupDeletedUsernames() error {
 	return s.releaseDeletedUsernames()
 }
 
-// GetUserRoles 获取用户角色标识。
+// GetUserRoles retrieves all role keys assigned to a user.
 func (s *UserService) GetUserRoles(userID uint64) ([]string, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized

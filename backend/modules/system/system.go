@@ -22,57 +22,58 @@ import (
 	"gorm.io/gorm"
 )
 
-// InitSystemModule 初始化系统模块
+// InitSystemModule initializes the system module with all its sub-modules.
+// Cleans up obsolete menus, creates service instances with DI, and registers routes.
 func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
-	// 清理历史废弃菜单（/workspace、/operations 等）
+	// Clean up obsolete menus (/workspace, /operations, etc.)
 	if err := CleanupObsoleteMenus(db); err != nil {
 		panic(err)
 	}
 
-	// 用户模块注入
+	// User module injection
 	userSvc := user.NewUserService(db, user.WithSessionLifecycle(func(db *gorm.DB) user.SessionLifecycle {
 		return authsession.NewLifecycleService(db)
 	}))
 	userHandler := user.NewUserHandler(userSvc)
 
-	// 菜单模块注入
+	// Menu module injection
 	menuSvc := menu.NewMenuService(db)
 	menuHandler := menu.NewMenuHandler(menuSvc)
 
-	// 部门模块注入
+	// Department module injection
 	deptSvc := dept.NewDeptService(db)
 	deptHandler := dept.NewDeptHandler(deptSvc)
 
-	// 字典模块注入
+	// Dictionary module injection
 	dictSvc := dict.NewDictService(db)
 	dictHandler := dict.NewDictHandler(dictSvc)
 
-	// 岗位模块注入
+	// Post module injection
 	postSvc := post.NewPostService(db)
 	postHandler := post.NewPostHandler(postSvc)
 
-	// 权限模块注入
+	// Permission module injection
 	permissionSvc := permission.NewPermissionService(db)
 	permissionHandler := permission.NewPermissionHandler(permissionSvc)
 
-	// 角色模块注入
+	// Role module injection
 	roleSvc := role.NewRoleService(db)
 	roleHandler := role.NewRoleHandler(roleSvc)
 
-	// 设置模块注入
+	// Settings module injection
 	settingSvc := setting.NewSettingService(db)
 	uploadSvc := uploadpkg.NewService(settingSvc)
 	settingHandler := setting.NewSettingHandler(settingSvc, uploadSvc)
 
-	// 平台刷新同步注入
+	// Refresh-sync module injection
 	refreshSyncSvc := NewRefreshSyncService(db)
 	refreshSyncHandler := NewRefreshSyncHandler(refreshSyncSvc)
 
-	// 多语言模块注入
+	// i18n module injection
 	i18nSvc := i18n.NewI18nService(db)
 	i18nHandler := i18n.NewI18nHandler(i18nSvc)
 
-	// 审计模块注入
+	// Audit module injection
 	auditSvc := audit.NewAuditService(db)
 	auditHandler := audit.NewAuditHandler(auditSvc)
 
@@ -347,7 +348,7 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
 		},
 	}
 
-	// 注册底座模块
+	// Register base platform modules
 	contracts.RegisterBackendModules(r, db, modules...)
 	InitGeneratedSystemModules(r, db)
 }

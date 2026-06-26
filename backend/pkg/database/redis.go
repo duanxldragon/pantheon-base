@@ -9,17 +9,19 @@ import (
 	"pantheon-platform/backend/pkg/metrics"
 )
 
+// RDB is the global Redis client instance.
 var RDB *redis.Client
 
-// InitRedis 初始化 Redis 连接（可选依赖，连接失败不阻止服务启动）
+// InitRedis initializes the Redis connection.
+// This is an optional dependency; connection failure will not block server startup.
 func InitRedis(addr string, password string, db int) {
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: password, // 如果没有密码则留空
-		DB:       db,       // 默认使用 DB 0
+		Password: password, // empty if no password
+		DB:       db,       // default to DB 0
 	})
 
-	// 测试连接
+	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -30,7 +32,7 @@ func InitRedis(addr string, password string, db int) {
 		return
 	}
 
-	// 启动后台协程采集 Redis 连接池指标
+	// Start background goroutine to collect Redis connection pool metrics
 	go func() {
 		ticker := time.NewTicker(10 * time.Second)
 		defer ticker.Stop()
@@ -44,12 +46,13 @@ func InitRedis(addr string, password string, db int) {
 	slog.Info("Redis connection successful")
 }
 
-// SetEx 设置带过期时间的缓存 (对底座后续业务很有用)
+// SetEx sets a cache entry with expiration time.
+// Useful for caching across the platform.
 func SetEx(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
 	return RDB.Set(ctx, key, value, expiration).Err()
 }
 
-// Get 获取缓存
+// Get retrieves a cache entry by key.
 func Get(ctx context.Context, key string) (string, error) {
 	return RDB.Get(ctx, key).Result()
 }
