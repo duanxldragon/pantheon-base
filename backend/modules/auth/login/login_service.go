@@ -102,7 +102,7 @@ func (s *LoginService) loadLoginUser(username, sourceKey string, policy RuntimeP
 }
 
 func (s *LoginService) ensureUserAvailable(currentUser *user.SystemUser, sourceKey string, policy RuntimePolicy, now time.Time) error {
-	if currentUser.Status == 2 {
+	if currentUser.Status == common.StatusDisabled {
 		if err := s.failLoginSourceBlocked(currentUser, sourceKey, policy, now); err != nil {
 			return err
 		}
@@ -178,7 +178,7 @@ func (s *LoginService) listLoginLogs(query *LoginLogQuery, filterUsername string
 	} else if query != nil && strings.TrimSpace(query.Username) != "" {
 		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
 	}
-	if query != nil && query.Status != nil && (*query.Status == 0 || *query.Status == 1) {
+	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
 		db = db.Where("status = ?", *query.Status)
 	}
 
@@ -280,7 +280,7 @@ func (s *LoginService) listLoginLogsForExport(query *LoginLogQuery) ([]SystemLog
 	if query != nil && strings.TrimSpace(query.Username) != "" {
 		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
 	}
-	if query != nil && query.Status != nil && (*query.Status == 0 || *query.Status == 1) {
+	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
 		db = db.Where("status = ?", *query.Status)
 	}
 	return logs, db.Order(loginTimeDescOrderClause).Limit(maxLoginLogExportRows).Find(&logs).Error

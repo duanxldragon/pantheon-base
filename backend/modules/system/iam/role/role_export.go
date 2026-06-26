@@ -49,7 +49,7 @@ func (s *RoleService) listRolesForExport(query *RoleListQuery) ([]SystemRole, er
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("role_key LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))))
 		}
-		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 			db = db.Where("status = ?", *query.Status)
 		}
 	}

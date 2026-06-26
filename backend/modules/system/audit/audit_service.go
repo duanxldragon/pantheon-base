@@ -403,7 +403,7 @@ func (s *AuditService) backfillOperationLogDerivedFields() error {
 
 	var rows []middleware.SystemLogOper
 	if err := s.db.
-		Where("COALESCE(source_domain, '') = '' OR COALESCE(source_page, '') = '' OR (status = ? AND COALESCE(failure_category, '') = '')", 2).
+		Where("COALESCE(source_domain, '') = '' OR COALESCE(source_page, '') = '' OR (status = ? AND COALESCE(failure_category, '') = '')", common.OperationStatusFailure).
 		Find(&rows).Error; err != nil {
 		return err
 	}

@@ -58,7 +58,7 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("role_key LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
 		}
-		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 			db = db.Where("status = ?", *query.Status)
 		}
 	}
@@ -85,7 +85,7 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 		roleIDs = append(roleIDs, item.ID)
 		roleKeys = append(roleKeys, item.RoleKey)
 		roleIndex[item.ID] = index
-		if item.Status == 1 {
+		if item.Status == common.StatusEnabled {
 			resp.Overview.EnabledRoleCount++
 		}
 		resp.Roles = append(resp.Roles, PermissionWorkbenchRoleResp{
@@ -265,7 +265,7 @@ func summarizeWorkbenchOverview(roles []PermissionWorkbenchRoleResp) PermissionW
 		RoleCount: len(roles),
 	}
 	for _, role := range roles {
-		if role.Status == 1 {
+		if role.Status == common.StatusEnabled {
 			overview.EnabledRoleCount++
 		}
 		overview.NavigationAssignmentCount += role.MenuCount

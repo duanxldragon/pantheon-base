@@ -267,7 +267,7 @@ func (s *Runtime) GetUserRoles(userID uint64) ([]string, error) {
 	err := s.db.Table("system_role").
 		Select("system_role.role_key").
 		Joins("JOIN system_user_role ON system_user_role.role_id = system_role.id").
-		Where("system_user_role.user_id = ? AND system_role.status = ?", userID, 1).
+		Where("system_user_role.user_id = ? AND system_role.status = ?", userID, common.StatusEnabled).
 		Pluck("system_role.role_key", &roles).Error
 	return roles, err
 }
@@ -595,7 +595,7 @@ func (s *Runtime) GetSecurityOverview(userID uint64, username, currentSessionID 
 
 	var lastLoginAt *string
 	var lastLogin SystemLogLogin
-	err = s.db.Where("username = ? AND status = ?", username, 1).
+	err = s.db.Where("username = ? AND status = ?", username, common.LoginStatusSuccess).
 		Order(loginTimeDescOrderClause).
 		First(&lastLogin).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

@@ -164,7 +164,7 @@ func (s *Service) VerifyChallengeWithContext(ctx context.Context, req *MFAVerify
 	if err != nil {
 		return nil, err
 	}
-	if currentUser.Status == 2 {
+	if currentUser.Status == common.StatusDisabled {
 		return nil, errors.New("user.login.error.disabled")
 	}
 
@@ -260,7 +260,7 @@ func upsertMFAFactor(tx *gorm.DB, userID uint64, encryptedSecret string, now tim
 	}
 	return tx.Model(&factor).Updates(map[string]any{
 		"secret_encrypted": encryptedSecret,
-		"enabled":          1,
+		"enabled":          common.StatusEnabled,
 		"confirmed_at":     &now,
 	}).Error
 }

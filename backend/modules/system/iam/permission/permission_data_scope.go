@@ -30,7 +30,7 @@ func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuer
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("role_key LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
 		}
-		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 			db = db.Where("status = ?", *query.Status)
 		}
 	}

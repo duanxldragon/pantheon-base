@@ -67,7 +67,7 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("role_key LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))))
 		}
-		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 			db = db.Where("status = ?", *query.Status)
 		}
 	}
@@ -377,7 +377,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 	if len(normalizedIDs) == 0 {
 		return 0, common.NewBadRequest("role.batch.empty")
 	}
-	if status != 1 && status != 2 {
+	if !common.IsEnabledStatus(status) {
 		return 0, common.NewBadRequest("param.invalid")
 	}
 
@@ -388,7 +388,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 	if len(roles) != len(normalizedIDs) {
 		return 0, common.NewNotFound("role.batch.not_found")
 	}
-	if status == 2 {
+	if status == common.StatusDisabled {
 		for _, role := range roles {
 			if role.ID == 1 || role.RoleKey == "admin" {
 				return 0, common.NewConflict("role.update.error.protected")
@@ -485,14 +485,14 @@ func (s *RoleService) listUsersByRoleMembership(roleID uint64, query *RoleMember
 
 	if query != nil {
 		keyword := strings.TrimSpace(query.Keyword)
-	if keyword != "" {
-		db = db.Where(
-			"(system_user.username LIKE ? OR system_user.nickname LIKE ?)",
-			fmt.Sprintf("%%%s%%", common.EscapeLikePattern(keyword)),
-			fmt.Sprintf("%%%s%%", common.EscapeLikePattern(keyword)),
-		)
-	}
-		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+		if keyword != "" {
+			db = db.Where(
+				"(system_user.username LIKE ? OR system_user.nickname LIKE ?)",
+				fmt.Sprintf("%%%s%%", common.EscapeLikePattern(keyword)),
+				fmt.Sprintf("%%%s%%", common.EscapeLikePattern(keyword)),
+			)
+		}
+		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 			db = db.Where("system_user.status = ?", *query.Status)
 		}
 	}

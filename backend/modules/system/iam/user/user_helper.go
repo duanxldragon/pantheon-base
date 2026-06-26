@@ -14,10 +14,7 @@ import (
 )
 
 func normalizeStatus(status int) int {
-	if status == 2 {
-		return 2
-	}
-	return 1
+	return common.NormalizeEnabledStatus(status)
 }
 
 func normalizeUserPageQuery(query *UserListQuery) (int, int) {
@@ -145,7 +142,7 @@ func (s *UserService) validateUserUpdate(user *SystemUser, req *UserUpdateReq) e
 		return err
 	}
 
-	if user.ID == 1 && req.Status == 2 {
+	if user.ID == 1 && req.Status == common.StatusDisabled {
 		return common.NewForbidden("user.update.error.protected")
 	}
 	if user.ID == 1 {
@@ -176,7 +173,7 @@ func (s *UserService) ensureUserRoleIDs(roleIDs []uint64) error {
 	}
 
 	var count int64
-	if err := s.db.Table("system_role").Where("id IN ? AND status = ?", normalized, 1).Count(&count).Error; err != nil {
+	if err := s.db.Table("system_role").Where("id IN ? AND status = ?", normalized, common.StatusEnabled).Count(&count).Error; err != nil {
 		return err
 	}
 	if count != int64(len(normalized)) {
@@ -314,7 +311,7 @@ func (s *UserService) loadUserLastLoginAt(username string) (*string, error) {
 	var lastLogin loginRow
 	err := s.db.Table("system_log_login").
 		Select("login_time").
-		Where("username = ? AND status = ?", trimmedUsername, 1).
+		Where("username = ? AND status = ?", trimmedUsername, common.LoginStatusSuccess).
 		Order("login_time desc, id desc").
 		Limit(1).
 		Scan(&lastLogin).Error
@@ -452,7 +449,7 @@ func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 	}
 	result := make(map[string]uint64, len(rows))
 	for _, row := range rows {
-		if row.Status == 1 {
+		if row.Status == common.StatusEnabled {
 			result[row.RoleKey] = row.ID
 		}
 	}

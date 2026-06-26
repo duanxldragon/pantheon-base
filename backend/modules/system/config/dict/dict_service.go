@@ -62,15 +62,15 @@ type dictTypeStatRow struct {
 }
 
 var defaultDictTypeSeeds = []dictTypeSeed{
-	{DictCode: "system_yes_no", DictName: "system.dict.seed.system_yes_no", Module: "system", Status: 1, Remark: "system.dict.remark.system_yes_no"},
-	{DictCode: "system_user_status", DictName: "system.dict.seed.system_user_status", Module: "system", Status: 1, Remark: "system.dict.remark.system_user_status"},
+	{DictCode: "system_yes_no", DictName: "system.dict.seed.system_yes_no", Module: "system", Status: common.StatusEnabled, Remark: "system.dict.remark.system_yes_no"},
+	{DictCode: "system_user_status", DictName: "system.dict.seed.system_user_status", Module: "system", Status: common.StatusEnabled, Remark: "system.dict.remark.system_user_status"},
 }
 
 var defaultDictItemSeeds = []dictItemSeed{
-	{DictCode: "system_yes_no", ItemLabelKey: "dict.system_yes_no.yes", ItemValue: "1", ItemColor: "green", Sort: 1, Status: 1},
-	{DictCode: "system_yes_no", ItemLabelKey: "dict.system_yes_no.no", ItemValue: "0", ItemColor: "gray", Sort: 2, Status: 1},
-	{DictCode: "system_user_status", ItemLabelKey: "dict.system_user_status.enabled", ItemValue: "1", ItemColor: "green", Sort: 1, Status: 1},
-	{DictCode: "system_user_status", ItemLabelKey: "dict.system_user_status.disabled", ItemValue: "2", ItemColor: "red", Sort: 2, Status: 1},
+	{DictCode: "system_yes_no", ItemLabelKey: "dict.system_yes_no.yes", ItemValue: "1", ItemColor: "green", Sort: 1, Status: common.StatusEnabled},
+	{DictCode: "system_yes_no", ItemLabelKey: "dict.system_yes_no.no", ItemValue: "0", ItemColor: "gray", Sort: 2, Status: common.StatusEnabled},
+	{DictCode: "system_user_status", ItemLabelKey: "dict.system_user_status.enabled", ItemValue: "1", ItemColor: "green", Sort: 1, Status: common.StatusEnabled},
+	{DictCode: "system_user_status", ItemLabelKey: "dict.system_user_status.disabled", ItemValue: "2", ItemColor: "red", Sort: 2, Status: common.StatusEnabled},
 }
 
 func NewDictService(db *gorm.DB) *DictService {
@@ -174,7 +174,7 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 		if strings.TrimSpace(query.DictName) != "" {
 			db = db.Where("dict_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.DictName))+"%")
 		}
-		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 			db = db.Where("status = ?", *query.Status)
 		}
 	}
@@ -194,10 +194,10 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 			Select(`
 				dict_code,
 				COUNT(*) AS item_count,
-				SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS active_item_count,
-				SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS disabled_item_count,
+				SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS active_item_count,
+				SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS disabled_item_count,
 				MAX(updated_at) AS last_item_updated_at
-			`).
+			`, common.StatusEnabled, common.StatusDisabled).
 			Where("dict_code IN ?", dictCodes).
 			Group("dict_code").
 			Scan(&statRows).Error; err != nil {
@@ -457,7 +457,7 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 	if len(normalizedIDs) == 0 {
 		return 0, common.NewBadRequest("dict.type.batch.empty")
 	}
-	if status != 1 && status != 2 {
+	if !common.IsEnabledStatus(status) {
 		return 0, common.NewBadRequest("param.invalid")
 	}
 
@@ -504,7 +504,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
 		db = db.Where("item_label_key LIKE ? OR item_value LIKE ? OR remark LIKE ?", keyword, keyword, keyword)
 	}
-	if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+	if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 		db = db.Where("status = ?", *query.Status)
 	}
 	page, pageSize := normalizeDictItemPageQuery(query)
@@ -792,7 +792,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 	if len(normalizedIDs) == 0 {
 		return 0, common.NewBadRequest("dict.item.batch.empty")
 	}
-	if status != 1 && status != 2 {
+	if !common.IsEnabledStatus(status) {
 		return 0, common.NewBadRequest("param.invalid")
 	}
 
@@ -1049,7 +1049,7 @@ func (s *DictService) queryEnabledDictOptions(codes []string) (DictOptionMapResp
 
 	var rows []SystemDictItem
 	if err := s.db.Model(&SystemDictItem{}).
-		Where("dict_code IN ? AND status = ?", codes, 1).
+		Where("dict_code IN ? AND status = ?", codes, common.StatusEnabled).
 		Order("dict_code asc, sort asc, id asc").
 		Find(&rows).Error; err != nil {
 		return nil, err
@@ -1116,10 +1116,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 }
 
 func normalizeDictStatus(status int) int {
-	if status == 2 {
-		return 2
-	}
-	return 1
+	return common.NormalizeEnabledStatus(status)
 }
 
 func normalizeDictModule(module string) string {

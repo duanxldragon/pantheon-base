@@ -98,7 +98,7 @@ func (s *UserService) GetUserRoles(userID uint64) ([]string, error) {
 	err := s.db.Table("system_role").
 		Select("system_role.role_key").
 		Joins("JOIN system_user_role ON system_user_role.role_id = system_role.id").
-		Where("system_user_role.user_id = ? AND system_role.status = ?", userID, 1).
+		Where("system_user_role.user_id = ? AND system_role.status = ?", userID, common.StatusEnabled).
 		Pluck("system_role.role_key", &roles).Error
 	if err != nil {
 		return nil, err
@@ -383,7 +383,7 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 		"dept_id":  req.DeptID,
 		"post_id":  req.PostID,
 	}
-	if req.Status == 1 || req.Status == 2 {
+	if common.IsEnabledStatus(req.Status) {
 		updates["status"] = req.Status
 	}
 
@@ -520,7 +520,7 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 	if len(normalizedIDs) == 0 {
 		return 0, common.NewBadRequest("user.batch.empty")
 	}
-	if status != 1 && status != 2 {
+	if !common.IsEnabledStatus(status) {
 		return 0, common.NewBadRequest("param.invalid")
 	}
 
@@ -531,7 +531,7 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 	if len(users) != len(normalizedIDs) {
 		return 0, common.NewNotFound("user.batch.not_found")
 	}
-	if status == 2 {
+	if status == common.StatusDisabled {
 		for _, user := range users {
 			if user.ID == 1 {
 				return 0, common.NewForbidden("user.update.error.protected")

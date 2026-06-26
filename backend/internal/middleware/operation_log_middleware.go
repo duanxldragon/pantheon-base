@@ -169,14 +169,14 @@ func OperationLogMiddleware(db *gorm.DB) gin.HandlerFunc {
 			username, _ = value.(string)
 		}
 
-		status := 1
+		status := common.OperationStatusSuccess
 		errorMessage := ""
 		if c.Writer.Status() >= http.StatusBadRequest {
-			status = 2
+			status = common.OperationStatusFailure
 			errorMessage = http.StatusText(c.Writer.Status())
 		}
 		if code, message := parseBusinessResult(responseBody.String()); code != 0 && code != 200 {
-			status = 2
+			status = common.OperationStatusFailure
 			errorMessage = message
 		}
 		if overrideStatus, ok := readOperationLogStatus(c); ok {
@@ -410,7 +410,7 @@ func DetectOperationLogSourcePage(operURL string) string {
 }
 
 func DetectOperationLogFailureCategory(status int, errorMsg string, jsonResult string) string {
-	if status != 2 {
+	if status != common.OperationStatusFailure {
 		return ""
 	}
 	errorText := strings.ToLower(strings.TrimSpace(errorMsg) + " " + strings.TrimSpace(jsonResult))
