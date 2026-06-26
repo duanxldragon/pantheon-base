@@ -10,7 +10,7 @@ docs/harness/tasks/YYYY-MM-DD-<task-name>.task.md
 
 Use:
 
-- `agentic-method-kit/templates/task-packet.template.md`
+- `pantheon-harness/architecture/methodology/task-packet-template.md`
 - `docs/harness/TASK_PACKET_SPEC.md`
 
 Retention:
@@ -21,3 +21,4 @@ Retention:
 - One-off release publication task packets may be deleted once the retained `releases/<version>/` artifact set, release runbook, and release design docs fully capture the enduring record.
 - Delete ad hoc process notes such as `.note.md` files once their content is absorbed by a task packet, evidence artifact, release note, or stable contract doc.
 - Delete one-off PR body drafts such as `.harness/evidence/*/pr-body.md` once the retained task/evidence/review chain or release artifacts already preserve the enduring record.
+

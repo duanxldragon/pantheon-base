@@ -79,7 +79,7 @@ Agents are responsible for:
 
 ### 4.4 Evidence First
 
-It is not enough to say “done”, “verified”, or “should be fine”. The executor must provide:
+It is not enough to say “done�? “verified�? or “should be fine�? The executor must provide:
 
 - commands that were run
 - pass or fail results
@@ -94,7 +94,7 @@ For `non-trivial` work, the harness should explicitly separate:
 - implementer posture
 - reviewer posture
 
-The implementer may provide self-check notes, but “I checked it myself” is not the default completion decision.
+The implementer may provide self-check notes, but “I checked it myself�?is not the default completion decision.
 
 The following work should default to an independent reviewer or explicit review gate:
 
@@ -112,7 +112,7 @@ Likewise, old workarounds must not accumulate forever. After major model or tool
 
 ### 4.7 Default Execution Guardrails
 
-Unless work is explicitly trivial, execution should apply `agentic-method-kit/EXECUTION_GUARDRAILS.md` by default:
+Unless work is explicitly trivial, execution should apply `pantheon-harness/architecture/EXECUTION_GUARDRAILS.md` by default:
 
 - think before coding: separate confirmed facts, working assumptions, and open questions
 - simplicity first: record the smallest viable approach and its upgrade trigger in task packet `## Minimum Viable Approach`
@@ -180,7 +180,7 @@ Exceptions must be explained:
 
 ### 5.5 Green
 
-Implementation must stay within the task packet scope. Do not opportunistically refactor unrelated code or “fix” issues that have not been attributed.
+Implementation must stay within the task packet scope. Do not opportunistically refactor unrelated code or “fix�?issues that have not been attributed.
 
 ### 5.6 Verify
 
@@ -281,3 +281,4 @@ Harness maturity progresses in three stages:
 1. protocol layer: establish `docs/harness/*` and `.agents/*` so the workflow is tool-agnostic
 2. evidence layer: establish task packet, evidence schema, and evidence directory conventions
 3. gate layer: push architecture boundaries, permission, i18n, audit, drift, and document frontmatter governance down into scripts and CI
+

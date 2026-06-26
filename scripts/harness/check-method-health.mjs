@@ -7,14 +7,14 @@ import process from 'node:process';
 const DEFAULT_ROOT = process.cwd();
 
 const REQUIRED_METHOD_KIT_FILES = [
-  'agentic-method-kit/VERSION',
-  'agentic-method-kit/METHOD_VERSION.json',
-  'agentic-method-kit/HARNESS_CORE_MODEL.md',
-  'agentic-method-kit/HARNESS_COVERAGE_MODEL.md',
-  'agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md',
-  'agentic-method-kit/TOOL_ADAPTER_MATRIX.md',
-  'agentic-method-kit/CHANGELOG.md',
-  'agentic-method-kit/UPGRADE.md',
+  'pantheon-harness/architecture/VERSION',
+  'pantheon-harness/architecture/METHOD_VERSION.json',
+  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
+  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
+  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
+  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
+  'pantheon-harness/architecture/CHANGELOG.md',
+  'pantheon-harness/architecture/UPGRADE.md',
 ];
 
 const REQUIRED_REPO_SHELL_FILES = [
@@ -120,13 +120,13 @@ function validateMethodKit(root, findings) {
     const value = fs.readFileSync(versionTextPath, 'utf8').trim();
     if (!/^\d+\.\d+\.\d+$/.test(value)) {
       findings.push({
-        file: 'agentic-method-kit/VERSION',
+        file: 'pantheon-harness/architecture/VERSION',
         reason: 'version must use semver-like x.y.z format',
       });
     }
   }
 
-  return readJson(root, 'agentic-method-kit/METHOD_VERSION.json', findings);
+  return readJson(root, 'pantheon-harness/architecture/METHOD_VERSION.json', findings);
 }
 
 function validateRepoShell(root, findings) {
@@ -153,7 +153,7 @@ function validateCompatibility(methodVersion, shellVersion, findings) {
 
   if (shellVersion.compatibleMethodKit !== methodVersion.version) {
     findings.push({
-      file: 'agentic-method-kit/METHOD_VERSION.json',
+      file: 'pantheon-harness/architecture/METHOD_VERSION.json',
       reason: `method kit version "${methodVersion.version}" does not match repo shell compatibleMethodKit "${shellVersion.compatibleMethodKit}"`,
     });
   }
@@ -247,3 +247,4 @@ function main() {
 }
 
 process.exitCode = main();
+

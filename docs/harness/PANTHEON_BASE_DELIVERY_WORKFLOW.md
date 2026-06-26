@@ -15,7 +15,7 @@ English version: [PANTHEON_BASE_DELIVERY_WORKFLOW.en.md](./PANTHEON_BASE_DELIVER
 
 本文定义 `pantheon-base` 如何使用 Claude、Codex、`acpx` 和 `omc` 执行 Harness Engineering 流程。
 
-当前个人维护阶段，先按 `../../../harness-engineering/docs/methodology/SOLO_DELIVERY_TIERS.md` 判断任务属于 `L0 / L1 / L2`。本文主要定义 `L2` 和需要多 agent / 多 gate 的 `L1` 任务；`L0` 与普通 `L1` 不必强行套完整多 agent 调度。
+当前个人维护阶段，先按 `../../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md` 判断任务属于 `L0 / L1 / L2`。本文主要定义 `L2` 和需要多 agent / 多 gate 的 `L1` 任务；`L0` 与普通 `L1` 不必强行套完整多 agent 调度。
 
 目标是让人只提出目标和关键决策，不需要手动调度每个 agent。调度由当前协调 agent 负责完成，并把结果沉淀到仓库 artifact。
 
