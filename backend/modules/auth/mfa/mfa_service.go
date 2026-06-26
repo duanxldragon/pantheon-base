@@ -1,6 +1,7 @@
 package mfa
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ type IdentityProvider interface {
 
 // SessionCreator abstracts session creation after MFA verification.
 type SessionCreator interface {
-	CreateSession(userID uint64, roles []string, ip, userAgent string) (*authtoken.Pair, error)
+	CreateSessionWithContext(ctx context.Context, userID uint64, roles []string, ip, userAgent string) (*authtoken.Pair, error)
 }
 
 // MFAVerifyResult is the result of a successful MFA challenge verification.
@@ -131,8 +132,15 @@ func (s *Service) CreateChallenge(currentUser *UserRecord) (*MFAChallengeResp, e
 
 // VerifyChallenge verifies a TOTP code and creates a session on success.
 func (s *Service) VerifyChallenge(req *MFAVerifyReq, ip, userAgent string) (*MFAVerifyResult, error) {
+	return s.VerifyChallengeWithContext(context.Background(), req, ip, userAgent)
+}
+
+func (s *Service) VerifyChallengeWithContext(ctx context.Context, req *MFAVerifyReq, ip, userAgent string) (*MFAVerifyResult, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
+	}
+	if ctx == nil {
+		ctx = context.Background()
 	}
 	if req == nil || strings.TrimSpace(req.ChallengeID) == "" {
 		return nil, errors.New("auth.mfa.challenge_required")
@@ -168,7 +176,7 @@ func (s *Service) VerifyChallenge(req *MFAVerifyReq, ip, userAgent string) (*MFA
 	if err != nil {
 		return nil, err
 	}
-	tokenPair, err := s.creator.CreateSession(currentUser.ID, roles, ip, userAgent)
+	tokenPair, err := s.creator.CreateSessionWithContext(ctx, currentUser.ID, roles, ip, userAgent)
 	if err != nil {
 		return nil, err
 	}

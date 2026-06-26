@@ -104,7 +104,7 @@ func (s *I18nService) List(query *I18nQuery) (*I18nPageResp, error) {
 		db = db.Where("locale = ?", query.Locale)
 	}
 	if query.Key != "" {
-		db = db.Where("`key` LIKE ?", "%"+query.Key+"%")
+		db = db.Where("`key` LIKE ?", "%"+common.EscapeLikePattern(query.Key)+"%")
 	}
 
 	var total int64

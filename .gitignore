@@ -6,6 +6,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Husky
+.husky/
+
 # Environment and secrets
 .env
 .env.*

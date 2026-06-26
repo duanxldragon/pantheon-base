@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"pantheon-platform/backend/internal/middleware"
 	"pantheon-platform/backend/modules/auth"
 	"pantheon-platform/backend/modules/business"
-	"pantheon-platform/backend/modules/dashboard"
+	"pantheon-platform/backend/modules/lowcode"
 	"pantheon-platform/backend/modules/platform"
 	"pantheon-platform/backend/modules/system"
 	"pantheon-platform/backend/pkg/common"
@@ -45,14 +47,16 @@ func main() {
 	// 0b. 初始化 OpenTelemetry 追踪
 	otlpEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if otlpEndpoint != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		tp, err := telemetry.InitTracer("pantheon-base", otlpEndpoint)
 		if err != nil {
 			logging.Error("Failed to initialize tracer", zap.Error(err))
 		} else {
 			defer func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				if err := tp.Shutdown(ctx); err != nil {
+				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer shutdownCancel()
+				if err := tp.Shutdown(shutdownCtx); err != nil {
 					logging.Error("Error shutting down tracer", zap.Error(err))
 				}
 			}()
@@ -103,13 +107,17 @@ func main() {
 	r.Use(middleware.RequestContextMiddleware(), middleware.OperationLogMiddleware(database.DB))
 	r.Use(middleware.CSRFMiddleware())
 
-	// 3. 注册 Prometheus metrics 端点（不需要认证）
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	// 3. 注册 Prometheus metrics 端点。生产环境默认要求显式 token 或公开开关。
+	if shouldExposeMetrics(env) {
+		r.GET("/metrics", metricsAccessMiddleware(), gin.WrapH(promhttp.Handler()))
+	} else {
+		logging.Warn("Prometheus metrics endpoint disabled; set PANTHEON_METRICS_BEARER_TOKEN or PANTHEON_METRICS_PUBLIC=true to expose it")
+	}
 
 	// 4. 注册底座模块
 	api := r.Group("/api/v1")
-	platform.InitPlatformModule(api, database.DB)
-	dashboard.InitDashboardModule(api, database.DB)
+	platform.RegisterPlatformRoutes(api, database.DB)
+	lowcode.InitLowcodeModule(api, database.DB)
 	system.InitSystemModule(api, database.DB)
 	auth.InitAuthModule(api, database.DB)
 	business.InitBusinessModules(api, database.DB)
@@ -120,8 +128,56 @@ func main() {
 		port = "8080"
 	}
 	slog.Info("starting server", "port", port)
-	if err := r.Run(":" + port); err != nil {
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("failed to run server", "error", err)
 		os.Exit(1)
+	}
+}
+
+func shouldExposeMetrics(env string) bool {
+	if envFlag("PANTHEON_METRICS_ENABLED") == "false" {
+		return false
+	}
+	if !strings.EqualFold(strings.TrimSpace(env), "production") {
+		return true
+	}
+	if strings.TrimSpace(os.Getenv("PANTHEON_METRICS_BEARER_TOKEN")) != "" {
+		return true
+	}
+	return envFlag("PANTHEON_METRICS_PUBLIC") == "true"
+}
+
+func metricsAccessMiddleware() gin.HandlerFunc {
+	expectedToken := strings.TrimSpace(os.Getenv("PANTHEON_METRICS_BEARER_TOKEN"))
+	return func(c *gin.Context) {
+		if expectedToken == "" {
+			c.Next()
+			return
+		}
+		header := strings.TrimSpace(c.GetHeader("Authorization"))
+		if header != "Bearer "+expectedToken {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		c.Next()
+	}
+}
+
+func envFlag(name string) string {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv(name))) {
+	case "1", "true", "yes", "on":
+		return "true"
+	case "0", "false", "no", "off":
+		return "false"
+	default:
+		return ""
 	}
 }

@@ -12,10 +12,8 @@ on:
 env:
   NODE_VERSION: "22"
   GO_VERSION_FILE: go.mod
-  MYSQL_ROOT_PASSWORD: "DHCCroot@2025"
+  MYSQL_ROOT_PASSWORD: "root"
   MYSQL_DATABASE: "pantheon_base"
-  PANTHEON_DSN: "root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
-  PANTHEON_TEST_DSN: "root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
 
 jobs:
   # ============================================================
@@ -133,13 +131,13 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: DHCCroot@2025
+          MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: pantheon_base
           TZ: Asia/Shanghai
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pDHCCroot@2025"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=12
@@ -153,7 +151,7 @@ jobs:
           --health-timeout=5s
           --health-retries=12
     env:
-      PANTHEON_TEST_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
       PANTHEON_REDIS_ADDR: 127.0.0.1:6379
     steps:
       - name: Checkout
@@ -234,13 +232,13 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: DHCCroot@2025
+          MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: pantheon_base
           TZ: Asia/Shanghai
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pDHCCroot@2025"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=12
@@ -254,8 +252,8 @@ jobs:
           --health-timeout=5s
           --health-retries=12
     env:
-      PANTHEON_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
-      PANTHEON_TEST_DSN: root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+      PANTHEON_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
       PANTHEON_REDIS_ADDR: 127.0.0.1:6379
       PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
       PANTHEON_PORT: "8080"

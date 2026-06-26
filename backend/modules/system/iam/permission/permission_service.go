@@ -620,10 +620,10 @@ func (s *PermissionService) listPoliciesForExport(query *PermissionPolicyQuery) 
 	db := s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p")
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("v0 LIKE ?", "%"+strings.TrimSpace(query.RoleKey)+"%")
+			db = db.Where("v0 LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
 		}
 		if strings.TrimSpace(query.Path) != "" {
-			db = db.Where("v1 LIKE ?", "%"+strings.TrimSpace(query.Path)+"%")
+			db = db.Where("v1 LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Path))+"%")
 		}
 		if strings.TrimSpace(query.Method) != "" {
 			db = db.Where("v2 = ?", normalizePolicyMethod(query.Method))

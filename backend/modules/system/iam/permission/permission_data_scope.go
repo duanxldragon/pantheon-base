@@ -28,7 +28,7 @@ func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuer
 	db := s.db.Table("system_role").Where("deleted_at IS NULL")
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("role_key LIKE ?", "%"+strings.TrimSpace(query.RoleKey)+"%")
+			db = db.Where("role_key LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
 		}
 		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 			db = db.Where("status = ?", *query.Status)

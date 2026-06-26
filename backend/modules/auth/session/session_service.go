@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"errors"
 	"sort"
 	"strings"
@@ -33,7 +34,7 @@ type UserRoleLoader interface {
 
 // TokenIssuer abstracts token issuance so SessionService stays decoupled from AuthService.
 type TokenIssuer interface {
-	IssueTokenPair(userID uint64, username string, roles []string, sess *SystemUserSession) (*authtoken.Pair, error)
+	IssueTokenPairWithContext(ctx context.Context, userID uint64, username string, roles []string, sess *SystemUserSession) (*authtoken.Pair, error)
 }
 
 // Service owns session lifecycle and query operations for the auth domain.
@@ -58,8 +59,15 @@ func (s *Service) governSessionInventory(now time.Time, policy AuthRuntimePolicy
 
 // RefreshSession refreshes an active session and issues a new token pair.
 func (s *Service) RefreshSession(sessionID string, userID uint64, ip, userAgent string) (*authtoken.Pair, error) {
+	return s.RefreshSessionWithContext(context.Background(), sessionID, userID, ip, userAgent)
+}
+
+func (s *Service) RefreshSessionWithContext(ctx context.Context, sessionID string, userID uint64, ip, userAgent string) (*authtoken.Pair, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
+	}
+	if ctx == nil {
+		ctx = context.Background()
 	}
 	var sess SystemUserSession
 	if err := s.db.Where(sessionIDAndUserIDWhereClause, sessionID, userID).First(&sess).Error; err != nil {
@@ -88,7 +96,7 @@ func (s *Service) RefreshSession(sessionID string, userID uint64, ip, userAgent 
 	if err := s.db.Save(&sess).Error; err != nil {
 		return nil, err
 	}
-	return s.issuer.IssueTokenPair(u.ID, u.Username, roles, &sess)
+	return s.issuer.IssueTokenPairWithContext(ctx, u.ID, u.Username, roles, &sess)
 }
 
 // RevokeSession marks a session as revoked.

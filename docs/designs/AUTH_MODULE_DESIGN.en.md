@@ -103,11 +103,18 @@ Those belong to `iam` or `org`.
 
 ### 5.1 Backend
 
-Keep a dedicated `backend/modules/auth/` area for auth handlers, services, DTOs, session models, and login-log logic, while user-management logic remains in the `system/iam` area.
+Keep `backend/modules/auth/` as a thin module root. The root owns only `module.go`; concrete auth capabilities live in cohesive subdirectories:
+
+- `login/`: login handlers, login runtime facade, login DTOs, login logs, and preference-facing auth endpoints
+- `session/`: session lifecycle, refresh, revocation, admin session queries, and session DTO/model helpers
+- `mfa/`: TOTP challenge lifecycle, factor persistence, MFA crypto, and MFA DTO/model helpers
+- `security/`: password policy, operation-token issuance, security overview, password history, and security events
+
+User-management logic remains in the `system/iam` area.
 
 ### 5.2 Frontend
 
-Keep auth-specific screens under `frontend/src/modules/auth/`, including login, security center, sessions, API bindings, and module registration.
+Keep auth-specific screens under `frontend/src/modules/auth/` with the same capability split: `login/`, `session/`, `mfa/`, and `security/`. The auth module root keeps only module registration, shared auth styles, and exports.
 
 ## 6. API Boundary Recommendations
 

@@ -4,9 +4,9 @@ import { pathToFileURL } from 'node:url';
 import { prepareTranspiledWorkspace } from './transpile-typescript-files.mjs';
 
 const files = [
-  'src/modules/system/generator/schema.ts',
-  'src/modules/system/generator/typeMapping.ts',
-  'src/modules/system/generator/frontendGenerator.ts',
+  'src/modules/lowcode/generator/schema.ts',
+  'src/modules/lowcode/generator/typeMapping.ts',
+  'src/modules/lowcode/generator/frontendGenerator.ts',
   'tests/generator/frontend-generator.dashboard-widget.test.ts',
 ];
 

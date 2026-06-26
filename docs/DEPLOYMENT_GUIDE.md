@@ -445,6 +445,10 @@ kubectl scale deployment pantheon-base --replicas=5 -n pantheon
 | `PANTHEON_PORT` | `8080` | 服务端口 |
 | `CSP_REPORT_URI` | - | CSP 违规报告端点 |
 | `PANTHEON_ALLOWED_ORIGINS` | - | CORS 允许的源（逗号分隔） |
+| `PANTHEON_METRICS_ENABLED` | `true` | 是否注册 `/metrics` 端点；设为 `false` 可完全关闭 |
+| `PANTHEON_METRICS_BEARER_TOKEN` | - | `/metrics` Bearer token；生产环境推荐配置 |
+| `PANTHEON_METRICS_PUBLIC` | `false` | 生产环境是否允许无 token 暴露 `/metrics`；仅限内网或网关已保护场景 |
+| `PANTHEON_OPERATION_LOG_QUEUE_SIZE` | `1024` | 操作日志异步写入队列大小；队列满时会短超时同步降级写入 |
 
 ---
 
@@ -457,6 +461,7 @@ kubectl scale deployment pantheon-base --replicas=5 -n pantheon
 - [ ] 配置防火墙规则
 - [ ] 设置 `PANTHEON_ENV=production`
 - [ ] 配置 `PANTHEON_ALLOWED_ORIGINS`（严格 CORS）
+- [ ] 为 `/metrics` 配置 `PANTHEON_METRICS_BEARER_TOKEN`，或确认仅内网暴露后显式设置 `PANTHEON_METRICS_PUBLIC=true`
 - [ ] 启用 Redis（速率限制）
 - [ ] 定期备份数据库
 - [ ] 配置日志轮转
@@ -477,6 +482,9 @@ scrape_configs:
     static_configs:
       - targets: ['pantheon-base:8080']
     metrics_path: '/metrics'
+    authorization:
+      type: Bearer
+      credentials: '${PANTHEON_METRICS_BEARER_TOKEN}'
 ```
 
 ### Grafana 仪表板导入

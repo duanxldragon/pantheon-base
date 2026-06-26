@@ -5,7 +5,7 @@ layer: system/auth
 status: Active
 linked_contracts:
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
-updated_at: 2026-04-29
+updated_at: 2026-06-24
 ---
 
 # Auth 模块拆分设计
@@ -121,22 +121,32 @@ English version: [AUTH_MODULE_DESIGN.en.md](./AUTH_MODULE_DESIGN.en.md)
 backend/modules/
   auth/
     module.go
-    auth_handler.go
-    auth_service.go
-    auth_dto.go
-    session_model.go
-    login_log_model.go
+    login/
+      login_handler.go
+      login_runtime.go
+      login_dto.go
+      login_log_model.go
+    session/
+      session_service.go
+      session_model.go
+      session_dto.go
+    mfa/
+      mfa_service.go
+      mfa_model.go
+      mfa_crypto.go
+    security/
+      security_service.go
+      security_model.go
+      security_dto.go
   system/
-  user/
-    user_handler.go
-    user_service.go
-    user_dto.go
-    user_model.go
-  role/
-  menu/
-  permission/
-  dept/
-  post/
+    iam/
+      user/
+      role/
+      menu/
+      permission/
+    org/
+      dept/
+      post/
 ```
 
 ### 5.2 前端
@@ -144,19 +154,31 @@ backend/modules/
 ```text
 frontend/src/modules/
   auth/
-    Login.tsx
-    SecurityCenter.tsx
-    SessionList.tsx
-    api.ts
     index.ts
+    api.ts
+    auth.css
+    login/
+      api.ts
+      components/Login.tsx
+    session/
+      api.ts
+      clientInfo.tsx
+      components/SessionList.tsx
+      components/SessionDetailModal.tsx
+    mfa/
+      api.ts
+    security/
+      api.ts
+      types.ts
+      components/SecurityCenter.tsx
+      components/LoginLogList.tsx
+      components/SecurityEventList.tsx
   system/
-  user/
-  role/
-  menu/
-  permission/
-  dept/
-  post/
-  profile/
+    iam/
+    org/
+    config/
+    audit/
+    i18n/
 ```
 
 ## 6. API 边界建议

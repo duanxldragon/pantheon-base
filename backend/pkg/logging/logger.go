@@ -12,10 +12,12 @@
 package logging
 
 import (
+	"context"
 	"os"
 	"strings"
 	"unicode"
 
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -161,4 +163,18 @@ func sanitizeLogFields(fields []zap.Field) []zap.Field {
 		sanitized[i] = field
 	}
 	return sanitized
+}
+
+// LogFromContext extracts trace ID from OpenTelemetry context and returns
+// a logger with the trace_id field injected for log correlation.
+func LogFromContext(ctx context.Context) *zap.Logger {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	span := trace.SpanFromContext(ctx)
+	sc := span.SpanContext()
+	if sc.HasTraceID() {
+		return Logger.With(zap.String("trace_id", sc.TraceID().String()))
+	}
+	return Logger
 }

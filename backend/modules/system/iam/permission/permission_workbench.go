@@ -56,7 +56,7 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 	db := s.db.Table("system_role").Where("deleted_at IS NULL")
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("role_key LIKE ?", "%"+strings.TrimSpace(query.RoleKey)+"%")
+			db = db.Where("role_key LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
 		}
 		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 			db = db.Where("status = ?", *query.Status)
@@ -546,14 +546,14 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 		}
 	case "system:module:generate":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/dynamic-modules/generate", Method: "POST"},
+			{Path: "/api/v1/lowcode/dynamic-modules/generate", Method: "POST"},
 		}
 	case "system:generator:datasource:manage":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/generator/datasources", Method: "POST"},
-			{Path: "/api/v1/system/generator/datasources/:id", Method: "PUT"},
-			{Path: "/api/v1/system/generator/datasources/:id", Method: "DELETE"},
-			{Path: "/api/v1/system/generator/datasources/:id/test", Method: "POST"},
+			{Path: "/api/v1/lowcode/generator/datasources", Method: "POST"},
+			{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "PUT"},
+			{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "DELETE"},
+			{Path: "/api/v1/lowcode/generator/datasources/:id/test", Method: "POST"},
 		}
 	case "system:user:create":
 		return []permissionRequiredAPIPolicy{

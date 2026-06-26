@@ -16,7 +16,7 @@ function defineRegistryEntry(loader: ComponentLoader): RegistryEntry {
 }
 
 const staticComponentRegistry = {
-  'dashboard': defineRegistryEntry(() => import('../../modules/dashboard/Dashboard')),
+  'dashboard': defineRegistryEntry(() => import('../../modules/platform/Dashboard')),
   'auth/SecurityCenter': defineRegistryEntry(
     () => import('../../modules/auth/security/components/SecurityCenter'),
   ),
@@ -54,11 +54,11 @@ const staticComponentRegistry = {
   'system/audit/OperationLogList': defineRegistryEntry(
     () => import('../../modules/system/audit/OperationLogList'),
   ),
-  'system/dynamicmodule/ModuleManager': defineRegistryEntry(
-    () => import('../../modules/system/dynamicmodule/ModuleManager'),
+  'lowcode/dynamicmodule/ModuleManager': defineRegistryEntry(
+    () => import('../../modules/lowcode/dynamicmodule/ModuleManager'),
   ),
-  'system/generator/ModuleWizard': defineRegistryEntry(
-    () => import('../../modules/system/generator/pages/ModuleWizard'),
+  'lowcode/generator/ModuleWizard': defineRegistryEntry(
+    () => import('../../modules/lowcode/generator/pages/ModuleWizard'),
   ),
 } satisfies Record<string, RegistryEntry>;
 

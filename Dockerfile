@@ -43,7 +43,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     ./backend/cmd/server/main.go
 
 # 阶段 3: 最终镜像
-FROM alpine:latest
+FROM alpine:3.19
 
 # 安装运行时依赖
 RUN apk --no-cache add ca-certificates tzdata curl

@@ -77,6 +77,15 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'core', 'app.ts')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'docs', 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'manifest.paths.json')), true);
+    assert.equal(fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'go.mod')), true);
+    assert.equal(
+      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'foundation-release-base-v0.8.0.tgz')),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'foundation-release-base-v0.8.0.tgz.sha256')),
+      true,
+    );
   });
 });
 

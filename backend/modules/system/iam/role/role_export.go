@@ -44,10 +44,10 @@ func (s *RoleService) listRolesForExport(query *RoleListQuery) ([]SystemRole, er
 	db := s.db.Model(&SystemRole{})
 	if query != nil {
 		if strings.TrimSpace(query.RoleName) != "" {
-			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.RoleName)))
+			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleName))))
 		}
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("role_key LIKE ?", fmt.Sprintf("%%%s%%", strings.TrimSpace(query.RoleKey)))
+			db = db.Where("role_key LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))))
 		}
 		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 			db = db.Where("status = ?", *query.Status)

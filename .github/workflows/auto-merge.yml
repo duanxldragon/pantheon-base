@@ -1,0 +1,266 @@
+name: Auto Merge
+
+on:
+  schedule:
+    # Run every 4 hours: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      force_mode:
+        description: 'Force merge mode (skip some checks)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+          - 'dry-run'
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: read
+
+jobs:
+  # ============================================================
+  # Phase 1: Collect targets to merge
+  # ============================================================
+  collect-merge-targets:
+    name: Collect Merge Targets
+    runs-on: ubuntu-latest
+    outputs:
+      has_prs: ${{ steps.collect.outputs.has_prs }}
+      pr_list: ${{ steps.collect.outputs.pr_list }}
+      has_branches: ${{ steps.collect.outputs.has_branches }}
+      branch_list: ${{ steps.collect.outputs.branch_list }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d1991bb908d89e4e9dddfe3e0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Collect merge targets
+        id: collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          FORCE_MODE: ${{ github.event.inputs.force_mode || 'false' }}
+        run: node scripts/collect-merge-targets.mjs
+
+  # ============================================================
+  # Phase 2: Pre-merge Quality Gate
+  # ============================================================
+  pre-merge-quality:
+    name: Pre-Merge Quality
+    needs: collect-merge-targets
+    if: needs.collect-merge-targets.outputs.has_prs == 'true' || needs.collect-merge-targets.outputs.has_branches == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: read
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
+      PANTHEON_PORT: "8080"
+      NODE_VERSION: "22"
+      GO_VERSION_FILE: go.mod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d1991bb908d89e4e9dddfe3e0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start backend
+        shell: bash
+        run: |
+          nohup go run ./backend/cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/pantheon-backend.pid"
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
+          exit 1
+
+      - name: Run quality checks
+        run: |
+          set -euo pipefail
+          npm run check:docs-frontmatter
+          npm run check:pr-governance
+          npm run check:failure-registry
+
+      - name: Run frontend checks
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          npm run check:menu-contract
+          npm run lint
+
+      - name: Run backend tests
+        run: |
+          set -euo pipefail
+          go test -race ./...
+
+      - name: Run smoke sanity
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          npm run test:smoke:platform:contracts
+          npm run test:smoke:system:pages
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/pantheon-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
+          fi
+
+      - name: Upload smoke artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pre-merge-artifacts
+          path: |
+            frontend/test-results
+            ${{ runner.temp }}/pantheon-backend.log
+          if-no-files-found: ignore
+
+  # ============================================================
+  # Phase 3: Execute Merge
+  # ============================================================
+  execute-merge:
+    name: Execute Merge
+    needs: [collect-merge-targets, pre-merge-quality]
+    if: >
+      always() &&
+      needs.pre-merge-quality.result == 'success' &&
+      (needs.collect-merge-targets.outputs.has_prs == 'true' || needs.collect-merge-targets.outputs.has_branches == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d1991bb908d89e4e9dddfe3e0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Execute merge
+        id: execute
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_LIST: ${{ needs.collect-merge-targets.outputs.pr_list }}
+          BRANCH_LIST: ${{ needs.collect-merge-targets.outputs.branch_list }}
+        run: node scripts/execute-merge.mjs
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Auto-Merge Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Merged PRs | ${{ needs.collect-merge-targets.outputs.has_prs }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Merged Branches | ${{ needs.collect-merge-targets.outputs.has_branches }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gate | ${{ needs.pre-merge-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # Phase 4: Post-Merge Cleanup
+  # ============================================================
+  post-merge-cleanup:
+    name: Post-Merge Cleanup
+    needs: execute-merge
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Cleanup merged branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: node scripts/cleanup-github-branches.mjs

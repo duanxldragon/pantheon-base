@@ -50,10 +50,10 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 	page, pageSize := normalizePostPageQuery(query)
 	if query != nil {
 		if strings.TrimSpace(query.PostCode) != "" {
-			db = db.Where("post_code LIKE ?", "%"+strings.TrimSpace(query.PostCode)+"%")
+			db = db.Where("post_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostCode))+"%")
 		}
 		if strings.TrimSpace(query.PostName) != "" {
-			db = db.Where("post_name LIKE ?", "%"+strings.TrimSpace(query.PostName)+"%")
+			db = db.Where("post_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostName))+"%")
 		}
 		if query.DeptID > 0 {
 			db = db.Where("dept_id = ?", query.DeptID)
@@ -445,10 +445,10 @@ func (s *PostService) listPostsForExport(query *PostListQuery) ([]SystemPost, er
 	db := s.db.Model(&SystemPost{})
 	if query != nil {
 		if strings.TrimSpace(query.PostCode) != "" {
-			db = db.Where("post_code LIKE ?", "%"+strings.TrimSpace(query.PostCode)+"%")
+			db = db.Where("post_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostCode))+"%")
 		}
 		if strings.TrimSpace(query.PostName) != "" {
-			db = db.Where("post_name LIKE ?", "%"+strings.TrimSpace(query.PostName)+"%")
+			db = db.Where("post_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostName))+"%")
 		}
 		if query.DeptID > 0 {
 			db = db.Where("dept_id = ?", query.DeptID)

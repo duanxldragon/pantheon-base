@@ -25,10 +25,6 @@ type healthResp struct {
 	Dependencies map[string]healthDependency `json:"dependencies"`
 }
 
-func InitPlatformModule(r *gin.RouterGroup, db *gorm.DB) {
-	RegisterHealthRoutes(r, db)
-}
-
 func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 	r.GET("/health", func(c *gin.Context) {
 		resp := healthResp{

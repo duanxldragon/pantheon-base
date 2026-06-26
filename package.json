@@ -25,9 +25,18 @@
     "test:pr-governance": "node --test tests/scripts/check-pr-governance.test.mjs",
     "test:pr-automation-workflow": "node --test tests/scripts/pr-automation-workflow.test.mjs",
     "test:security-workflow": "node --test tests/scripts/security-workflow.test.mjs",
-    "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs"
+    "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{ts,tsx}": ["tsc --noEmit", "eslint --fix"],
+    "frontend/src/**/*.{css,scss}": ["stylelint --fix"],
+    "backend/**/*.go": ["gofmt -w"],
+    "**/*.md": ["prettier --write"]
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "playwright": "^1.61.0"
   }
 }

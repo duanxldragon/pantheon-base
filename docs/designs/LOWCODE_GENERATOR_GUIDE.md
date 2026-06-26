@@ -29,7 +29,7 @@ English version: [LOWCODE_GENERATOR_GUIDE.en.md](./LOWCODE_GENERATOR_GUIDE.en.md
 ## 🎯 定位边界
 
 - Pantheon 的主目标仍然是标准企业级后台管理系统
-- 该生成器的能力归属是 `system/generator`，产品入口归属 `platform.lowcode`；平台层只负责模块契约、评审标准和验收门禁
+- 该生成器的能力归属是 `lowcode/generator`，产品入口归属 `lowcode`；平台层只负责模块契约、评审标准和验收门禁
 - 它用于研发辅助、脚手架生成、受控注册与治理
 - 它不是运行时低代码平台，也不应驱动 `auth / iam / org / config` 核心边界重构
 
@@ -279,7 +279,7 @@ npm install --save-dev @types/jszip
 
 ### 2. 当前一键注册边界
 
-- **系统域归属**：`system/generator` + `system/dynamicmodule`
+- **系统域归属**：`lowcode/generator` + `lowcode/dynamicmodule`
 - **服务对象**：仅支持 `business/*` 模块一键生成并注册
 - **不支持**：直接一键生成 `system/*` 模块。系统域仍需先明确是 `auth / iam / org / config` 哪个子域，再做手工接入
 - **激活方式**：生成成功后写入 `system_module_registration`，状态为“待激活”，随后需要**重启后端 + 重建前端**
@@ -348,7 +348,7 @@ npm install --save-dev @types/jszip
 
 ### 4. 生成后的产品化反馈
 
-当前 `system/generator` 在“一键生成并注册”完成后，会直接返回一份结构化结果摘要，前端结果面板会同步展示：
+当前 `lowcode/generator` 在“一键生成并注册”完成后，会直接返回一份结构化结果摘要，前端结果面板会同步展示：
 
 - **父菜单归属**：显示本次模块最终挂载到哪个父菜单路径，以及来源是“手动指定 / 自动推断 / 顶层模块”
 - **重启 / 重建状态**：明确提示当前模块仍处于“待激活”，需要重启后端并重新构建前端
@@ -364,7 +364,7 @@ npm install --save-dev @types/jszip
 
 ### 示例1: 使用可视化界面生成订单模块
 
-1. 访问 `/system/generator`
+1. 访问 `/lowcode/generator`
 2. **步骤1**: 填写基本信息
    - 模块名称: `order`
    - 显示名称: `订单管理`
@@ -475,7 +475,7 @@ cd backend
 go build ./...
 
 # 运行测试
-go test ./modules/system/dynamicmodule/...
+go test ./modules/lowcode/dynamicmodule/...
 ```
 
 ### 前端测试
@@ -589,11 +589,11 @@ npm run dev
 - `frontend/src/modules/generator/components/CodePreview.tsx` - 代码预览
 
 ### 动态模块管理
-- `backend/modules/system/dynamicmodule/dynamic_module_service.go` - 服务层
-- `backend/modules/system/dynamicmodule/dynamic_module_handler.go` - Handler层
-- `backend/modules/system/dynamicmodule/module.go` - 模块注册
-- `frontend/src/modules/system/dynamicmodule/api.ts` - API接口
-- `frontend/src/modules/system/dynamicmodule/ModuleManager.tsx` - 管理页面
+- `backend/modules/lowcode/dynamicmodule/dynamic_module_service.go` - 服务层
+- `backend/modules/lowcode/dynamicmodule/dynamic_module_handler.go` - Handler层
+- `backend/modules/lowcode/dynamicmodule/module.go` - 模块注册
+- `frontend/src/modules/lowcode/dynamicmodule/api.ts` - API接口
+- `frontend/src/modules/lowcode/dynamicmodule/ModuleManager.tsx` - 管理页面
 
 ## ✅ 验收标准
 

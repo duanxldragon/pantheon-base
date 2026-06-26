@@ -169,10 +169,10 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 	db := s.db.Model(&SystemDictType{})
 	if query != nil {
 		if strings.TrimSpace(query.DictCode) != "" {
-			db = db.Where("dict_code LIKE ?", "%"+strings.TrimSpace(query.DictCode)+"%")
+			db = db.Where("dict_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.DictCode))+"%")
 		}
 		if strings.TrimSpace(query.DictName) != "" {
-			db = db.Where("dict_name LIKE ?", "%"+strings.TrimSpace(query.DictName)+"%")
+			db = db.Where("dict_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.DictName))+"%")
 		}
 		if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
 			db = db.Where("status = ?", *query.Status)
@@ -501,7 +501,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 	var rows []SystemDictItem
 	db := s.db.Model(&SystemDictItem{}).Where("dict_code = ?", strings.TrimSpace(query.DictCode))
 	if strings.TrimSpace(query.Keyword) != "" {
-		keyword := "%" + strings.TrimSpace(query.Keyword) + "%"
+		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
 		db = db.Where("item_label_key LIKE ? OR item_value LIKE ? OR remark LIKE ?", keyword, keyword, keyword)
 	}
 	if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
