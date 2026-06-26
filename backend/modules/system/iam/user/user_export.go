@@ -320,7 +320,7 @@ func applyUserListFilters(db *gorm.DB, query *UserListQuery) *gorm.DB {
 	if query.PostID > 0 {
 		db = db.Where("post_id = ?", query.PostID)
 	}
-	if query.Status != nil && (*query.Status == 1 || *query.Status == 2) {
+	if query.Status != nil && common.IsEnabledStatus(*query.Status) {
 		db = db.Where("status = ?", *query.Status)
 	}
 	return db

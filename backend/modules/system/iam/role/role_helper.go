@@ -21,7 +21,7 @@ func (s *RoleService) ensureAdminRoleSeed() error {
 			RoleName: "role.admin.name",
 			RoleKey:  "admin",
 			Sort:     1,
-			Status:   1,
+			Status:   common.StatusEnabled,
 		}
 		var count int64
 		if err := s.db.Unscoped().Model(&SystemRole{}).Where("id = ?", 1).Count(&count).Error; err != nil {
@@ -41,8 +41,8 @@ func (s *RoleService) ensureAdminRoleSeed() error {
 		if adminRole.Sort == 0 {
 			updates["sort"] = 1
 		}
-		if adminRole.Status != 1 {
-			updates["status"] = 1
+		if adminRole.Status != common.StatusEnabled {
+			updates["status"] = common.StatusEnabled
 		}
 		if len(updates) == 0 {
 			return nil
@@ -99,7 +99,7 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
 		return common.NewBadRequest("param.invalid")
 	}
-	if role.RoleKey == "admin" && (strings.TrimSpace(req.RoleKey) != "admin" || req.Status == 2) {
+	if role.RoleKey == "admin" && (strings.TrimSpace(req.RoleKey) != "admin" || req.Status == common.StatusDisabled) {
 		return common.NewConflict("role.update.error.protected")
 	}
 	if err := s.ensureRoleKeyUnique(role.ID, req.RoleKey); err != nil {
@@ -272,10 +272,7 @@ func reloadRolePolicies() error {
 }
 
 func normalizeRoleStatus(status int) int {
-	if status == 2 {
-		return 2
-	}
-	return 1
+	return common.NormalizeEnabledStatus(status)
 }
 
 func normalizeRolePageQuery(query *RoleListQuery) (int, int) {

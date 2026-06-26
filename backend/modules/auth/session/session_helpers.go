@@ -134,10 +134,10 @@ func applyAdminSessionFilters(db *gorm.DB, query *AdminSessionQuery, now time.Ti
 	if query.Status == nil {
 		return db
 	}
-	if *query.Status == 1 {
+	if *query.Status == common.SessionStatusActive {
 		return authsession.ApplyActiveScope(db, "system_user_session", now, policy.SessionIdleMinutes)
 	}
-	if *query.Status == 2 {
+	if *query.Status == common.SessionStatusRevoked {
 		return db.Where("system_user_session.revoked_at IS NOT NULL")
 	}
 	return db

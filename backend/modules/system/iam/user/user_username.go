@@ -80,7 +80,7 @@ func (s *UserService) ensureAdminUserSeed() error {
 		Username: "admin",
 		Password: string(passwordHash),
 		Nickname: "Administrator",
-		Status:   1,
+		Status:   common.StatusEnabled,
 	}
 	admin.ID = 1
 	return s.db.Create(&admin).Error
