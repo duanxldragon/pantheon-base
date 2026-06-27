@@ -8,9 +8,14 @@ import { sortStrings } from './sort-utils.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DEFAULT_ROOT = process.cwd();
+
+// Calculate workspace root (parent of pantheon-base)
+const WORKSPACE_ROOT = path.resolve(DEFAULT_ROOT, '..');
+const PANTHEON_HARNESS_ROOT = path.join(WORKSPACE_ROOT, 'pantheon-harness');
+
 const IMPLEMENTATION_ROOTS = [
-  'pantheon-base/backend/',
-  'pantheon-base/frontend/',
+  'backend/',
+  'frontend/',
   'docs/contracts/',
   'docs/designs/',
   'docs/acceptances/',
@@ -24,10 +29,6 @@ const PR_TEMPLATE_CANDIDATES = [
 ];
 
 const REQUIRED_FILES = [
-  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
-  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
   'docs/harness/HARNESS_CORE_MODEL.md',
   'docs/harness/HARNESS_COVERAGE_MODEL.md',
   'docs/harness/HARNESS_TEMPLATE_TAXONOMY.md',
@@ -128,7 +129,8 @@ function findExistingRepoPath(root, candidates) {
 }
 
 function hasAllMarkers(content, markers) {
-  return markers.filter((marker) => !content.includes(marker));
+  const lowerContent = content.toLowerCase();
+  return markers.filter((marker) => !lowerContent.includes(marker.toLowerCase()));
 }
 
 function toRepoPath(filePath, root) {
