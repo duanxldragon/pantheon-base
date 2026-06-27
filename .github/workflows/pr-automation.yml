@@ -87,7 +87,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Auto-approve PR (solo mode)
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
         with:
           script: |
             const owner = context.repo.owner;
@@ -107,13 +107,21 @@ jobs:
 
             if (!hasApproval) {
               // Self-approve for solo developer
-              await github.rest.pulls.createReview({
-                owner, repo,
-                pull_number: prNumber,
-                event: 'APPROVE',
-                body: 'Auto-approved by auto-merge workflow (solo developer mode)'
-              });
-              console.log(`Self-approved PR #${prNumber}`);
+              try {
+                await github.rest.pulls.createReview({
+                  owner, repo,
+                  pull_number: prNumber,
+                  event: 'APPROVE',
+                  body: 'Auto-approved by auto-merge workflow (solo developer mode)'
+                });
+                console.log(`Self-approved PR #${prNumber}`);
+              } catch (error) {
+                if (error.status === 422 && String(error.message).includes('not permitted to approve pull requests')) {
+                  core.warning('GitHub Actions is not permitted to approve pull requests; continuing without auto-approval.');
+                } else {
+                  throw error;
+                }
+              }
             }
 
       - name: Enable squash auto-merge
