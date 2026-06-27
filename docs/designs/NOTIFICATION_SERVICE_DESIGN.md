@@ -3,6 +3,8 @@ title: 消息通知服务设计
 doc_type: Design
 layer: platform
 status: Draft
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-26
 ---
 
@@ -16,21 +18,21 @@ English version: [NOTIFICATION_SERVICE_DESIGN.en.md](./NOTIFICATION_SERVICE_DESI
 
 ### 1.1 支持的渠道
 
-| 渠道 | 实现 | 说明 |
-|------|------|------|
-| 站内信 | 自建 | 通知中心 |
-| Email | SMTP | 需要配置邮箱服务器 |
-| SMS | 阿里云/腾讯云 | 需要配置云短信服务 |
-| WebSocket | Gin WebSocket | 即时通知 |
+| 渠道      | 实现          | 说明               |
+| --------- | ------------- | ------------------ |
+| 站内信    | 自建          | 通知中心           |
+| Email     | SMTP          | 需要配置邮箱服务器 |
+| SMS       | 阿里云/腾讯云 | 需要配置云短信服务 |
+| WebSocket | Gin WebSocket | 即时通知           |
 
 ### 1.2 通知类型
 
-| 类型 | 触发场景 | 优先级 |
-|------|----------|--------|
-| 审批通知 | 提交审批、审批完成 | 高 |
-| 任务通知 | 任务分配、到期提醒 | 高 |
-| 系统通知 | 计划任务完成、系统公告 | 中 |
-| 安全通知 | 异地登录、密码修改 | 高 |
+| 类型     | 触发场景               | 优先级 |
+| -------- | ---------------------- | ------ |
+| 审批通知 | 提交审批、审批完成     | 高     |
+| 任务通知 | 任务分配、到期提醒     | 高     |
+| 系统通知 | 计划任务完成、系统公告 | 中     |
+| 安全通知 | 异地登录、密码修改     | 高     |
 
 ---
 
@@ -176,16 +178,16 @@ var templates = map[string]NotificationTemplate{
 
 ### 4.1 后端接口
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/notification/list` | GET | 通知列表 |
-| `/notification/:id` | GET | 通知详情 |
-| `/notification/:id/read` | PUT | 标记已读 |
-| `/notification/read-all` | PUT | 全部已读 |
-| `/notification/unread-count` | GET | 未读数量 |
-| `/notification/preference` | GET | 用户偏好 |
-| `/notification/preference` | PUT | 更新偏好 |
-| `/notification/send` | POST | 发送通知（内部） |
+| 接口                         | 方法 | 说明             |
+| ---------------------------- | ---- | ---------------- |
+| `/notification/list`         | GET  | 通知列表         |
+| `/notification/:id`          | GET  | 通知详情         |
+| `/notification/:id/read`     | PUT  | 标记已读         |
+| `/notification/read-all`     | PUT  | 全部已读         |
+| `/notification/unread-count` | GET  | 未读数量         |
+| `/notification/preference`   | GET  | 用户偏好         |
+| `/notification/preference`   | PUT  | 更新偏好         |
+| `/notification/send`         | POST | 发送通知（内部） |
 
 ### 4.2 WebSocket 接口
 
@@ -214,7 +216,7 @@ GET /ws/notifications?token=xxx
 ```typescript
 // frontend/src/modules/notification/components/NotificationCenter.tsx
 interface NotificationCenterProps {
-  placement?: 'dropdown' | 'drawer' | 'modal'
+  placement?: "dropdown" | "drawer" | "modal";
 }
 
 // 功能：
@@ -254,17 +256,20 @@ interface NotificationPreferenceProps {
 ## 7. 迁移路径
 
 ### Phase 1: 基础通知
+
 - [ ] 数据模型和迁移
 - [ ] 站内信渠道实现
 - [ ] 通知列表 API
 - [ ] 通知中心组件
 
 ### Phase 2: 多渠道
+
 - [ ] Email 渠道
 - [ ] WebSocket 实时推送
 - [ ] 用户偏好设置
 
 ### Phase 3: 高级功能
+
 - [ ] SMS 渠道
 - [ ] 通知模板管理
 - [ ] 通知聚合

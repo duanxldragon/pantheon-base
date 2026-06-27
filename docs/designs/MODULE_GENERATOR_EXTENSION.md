@@ -3,6 +3,8 @@ title: 模块生成模板扩展设计
 doc_type: Design
 layer: platform
 status: Draft
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-26
 ---
 
@@ -26,23 +28,23 @@ English version: [MODULE_GENERATOR_EXTENSION.en.md](./MODULE_GENERATOR_EXTENSION
 
 ### 2.1 已支持的功能
 
-| 功能 | 文件 | 说明 |
-|------|------|------|
-| 后端模块注册 | `generated_module.go` | 模块初始化 |
-| 后端 CRUD | `*_service.go` | 基础增删改查 |
-| 后端 Handler | `*_handler.go` | HTTP 路由 |
-| 前端模块注册 | `frontend/src/modules/*/index.ts` | 路由注册 |
-| 前端组件注册 | `frontend/src/modules/*/components/*.tsx` | 组件懒加载 |
+| 功能         | 文件                                      | 说明         |
+| ------------ | ----------------------------------------- | ------------ |
+| 后端模块注册 | `generated_module.go`                     | 模块初始化   |
+| 后端 CRUD    | `*_service.go`                            | 基础增删改查 |
+| 后端 Handler | `*_handler.go`                            | HTTP 路由    |
+| 前端模块注册 | `frontend/src/modules/*/index.ts`         | 路由注册     |
+| 前端组件注册 | `frontend/src/modules/*/components/*.tsx` | 组件懒加载   |
 
 ### 2.2 缺失的最佳实践
 
-| 缺失项 | 影响 |
-|--------|------|
-| `pkg/common` 导入 | 状态常量、错误处理 |
-| 分页工具 | `NormalizePageQuery` |
-| 导入导出 | `uploadImportFile`, `downloadFile` |
-| 软删除支持 | `deleted_at` 过滤 |
-| 审计字段 | `created_by`, `updated_by` |
+| 缺失项            | 影响                               |
+| ----------------- | ---------------------------------- |
+| `pkg/common` 导入 | 状态常量、错误处理                 |
+| 分页工具          | `NormalizePageQuery`               |
+| 导入导出          | `uploadImportFile`, `downloadFile` |
+| 软删除支持        | `deleted_at` 过滤                  |
+| 审计字段          | `created_by`, `updated_by`         |
 
 ---
 
@@ -99,9 +101,9 @@ func (s *{{.ServiceName}}Service) List{{.ModelName}}(query *{{.ModelName}}ListQu
 
 ```typescript
 // 新增通用工具导入
-import { normalizePageQuery } from '@/utils/pagination';
-import { downloadFile, uploadImportFile } from '@/api';
-import { useNotification } from '@/hooks/useNotification';
+import { normalizePageQuery } from "@/utils/pagination";
+import { downloadFile, uploadImportFile } from "@/api";
+import { useNotification } from "@/hooks/useNotification";
 ```
 
 #### 3.2.2 API 调用扩展
@@ -119,15 +121,15 @@ export const import{{.ModelName}}s = (file: File) => uploadImportFile('/{{.Modul
 
 ### 4.1 后端
 
-| 文件 | 修改内容 |
-|------|----------|
+| 文件           | 修改内容                                    |
+| -------------- | ------------------------------------------- |
 | `workspace.go` | 新增 `generatedBackendServiceTemplate` 扩展 |
-| `types.go` | 新增 `CommonHelpers bool` 配置项 |
+| `types.go`     | 新增 `CommonHelpers bool` 配置项            |
 
 ### 4.2 前端
 
-| 文件 | 修改内容 |
-|------|----------|
+| 文件                                   | 修改内容            |
+| -------------------------------------- | ------------------- |
 | `frontend/scripts/generate-module.mjs` | 新增 common imports |
 
 ---
@@ -196,31 +198,33 @@ func (s *ExampleService) BatchUpdateStatus(ids []uint64, status int) (int, error
 
 ```typescript
 // 自动生成的 API 文件
-import { request } from '@/core/request';
-import { downloadFile, uploadImportFile } from '@/api';  // 新增
+import { request } from "@/core/request";
+import { downloadFile, uploadImportFile } from "@/api"; // 新增
 
 export const getExampleList = (params: ExampleListQuery) =>
-  request.get<{ list: Example[]; total: number }>('/business/example/list', { params });
+  request.get<{ list: Example[]; total: number }>("/business/example/list", {
+    params,
+  });
 
 export const createExample = (data: ExampleCreateReq) =>
-  request.post<Example>('/business/example', data);
+  request.post<Example>("/business/example", data);
 
 export const downloadExampleTemplate = () =>
-  downloadFile('/business/example/import-template');
+  downloadFile("/business/example/import-template");
 
 export const exportExamples = (params?: ExampleExportQuery) =>
-  downloadFile('/business/example/export', params);
+  downloadFile("/business/example/export", params);
 
 export const importExamples = (file: File) =>
-  uploadImportFile('/business/example/import', file);
+  uploadImportFile("/business/example/import", file);
 ```
 
 ---
 
 ## 7. 迁移路径
 
-| 阶段 | 任务 |
-|------|------|
+| 阶段    | 任务             |
+| ------- | ---------------- |
 | Phase 1 | 更新后端生成模板 |
 | Phase 2 | 更新前端生成模板 |
-| Phase 3 | 文档和验收 |
+| Phase 3 | 文档和验收       |

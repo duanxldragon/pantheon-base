@@ -16,19 +16,19 @@ This file no longer carries the full method definition.
 
 ## Reading Order
 
-1. First read `../../pantheon-harness/architecture/methodology/harness-methodology.md`
-2. Then read `../../pantheon-harness/architecture/methodology/workflow-routing.md`
-3. Then read `../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md`
-4. Then read `../../pantheon-harness/architecture/harness/harness-core-model.md`
-5. Then read `../../pantheon-harness/architecture/harness/harness-coverage-model.md`
-6. Then read `../../pantheon-harness/architecture/harness/tool-adapter-matrix.md`
-7. Then read `../../pantheon-harness/architecture/harness/triviality-classification-policy.md`
-8. Then read `../../pantheon-harness/architecture/harness/task-packet-spec.md`
-9. Then read `../../pantheon-harness/architecture/harness/verification-evidence-spec.md`
-10. Then read `../../pantheon-harness/architecture/harness/review-loop-spec.md`
-11. Then read `../../pantheon-harness/architecture/harness/failure-ratchet-policy.md`
-12. Then read `../../pantheon-harness/architecture/methodology/context-engineering-guide.md`
-13. Then read `../../pantheon-harness/architecture/methodology/codex-workflow-quick-reference.md`
+1. First read `../../../pantheon-harness/patterns/README.md`
+2. Then read `../../../pantheon-harness/patterns/harness-core-model.md`
+3. Then read `../../../pantheon-harness/patterns/harness-coverage-model.md`
+4. Then read `../../../pantheon-harness/patterns/harness-template-taxonomy.md`
+5. Then read `../../../pantheon-harness/patterns/tool-adapter-matrix.md`
+6. Then read `../../../pantheon-harness/patterns/method-playbook.md`
+7. Then read `../../../pantheon-harness/patterns/execution-guardrails.md`
+8. Then read `../../../pantheon-harness/patterns/context-engineering-protocol.md`
+9. Then read `../../../pantheon-harness/patterns/method-first-delivery-policy.md`
+10. Then read `../../../pantheon-harness/patterns/cross-agent-ratchet-model.md`
+11. Then read `../../../pantheon-harness/patterns/minimal-complexity-ladder.md`
+12. Then read `../../../pantheon-harness/patterns/templates/task-packet.template.md`
+13. Then read `../../../pantheon-harness/patterns/templates/review.template.md`
 14. Then read `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
 15. Then read `docs/harness/AI_QUALITY_GOVERNANCE.md`
 16. Then read the contracts this repository executes locally:
@@ -45,7 +45,7 @@ This file no longer carries the full method definition.
 
 ## Default Execution Guardrails
 
-Before implementation, run through `../../pantheon-harness/architecture/methodology/context-engineering-guide.md` by default:
+Before implementation, run through `../../../pantheon-harness/patterns/context-engineering-protocol.md` by default:
 
 - separate confirmed facts, working assumptions, and open questions instead of guessing through permission, audit, or boundary ambiguity
 - walk the minimal complexity ladder and keep the approach at the smallest load-bearing rung

@@ -3,6 +3,8 @@ title: Global Exception Handling Design
 doc_type: Design
 layer: platform
 status: Draft
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-26
 ---
 
@@ -13,6 +15,7 @@ Chinese version: [GLOBAL_EXCEPTION_HANDLING.md](./GLOBAL_EXCEPTION_HANDLING.md)
 ## 1. Background & Goals
 
 Current backend lacks unified exception handling:
+
 - Handlers return error responses directly
 - Repeated error -> HTTP response conversion code
 - Panic causing unhandled crashes
@@ -85,12 +88,12 @@ type ErrorResponse struct {
 
 ## 3. Migration Path
 
-| Phase | Tasks |
-|-------|-------|
+| Phase   | Tasks                                           |
+| ------- | ----------------------------------------------- |
 | Phase 1 | Create `pkg/errors/errors.go`, middleware files |
-| Phase 2 | Unified response package |
-| Phase 3 | i18n integration |
-| Phase 4 | Monitoring & alerting |
+| Phase 2 | Unified response package                        |
+| Phase 3 | i18n integration                                |
+| Phase 4 | Monitoring & alerting                           |
 
 ---
 

@@ -4,17 +4,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { formatExternalPath, resolvePantheonHarnessRoot } from './upstream-root.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 const REQUIRED_METHOD_KIT_FILES = [
-  'pantheon-harness/architecture/VERSION',
-  'pantheon-harness/architecture/METHOD_VERSION.json',
-  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
-  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
-  'pantheon-harness/architecture/CHANGELOG.md',
-  'pantheon-harness/architecture/UPGRADE.md',
+  'VERSION',
+  'patterns/METHOD_VERSION.json',
+  'patterns/README.md',
+  'patterns/harness-core-model.md',
+  'patterns/harness-coverage-model.md',
+  'patterns/harness-template-taxonomy.md',
+  'patterns/tool-adapter-matrix.md',
+  'patterns/method-playbook.md',
+  'patterns/changelog.md',
+  'patterns/upgrade.md',
 ];
 
 const REQUIRED_REPO_SHELL_FILES = [
@@ -36,17 +40,20 @@ const REQUIRED_REPO_SHELL_FILES = [
   'scripts/harness/build-graph-review-import.mjs',
   'scripts/harness/check-visual-evidence.mjs',
   'scripts/harness/check-failure-registry.mjs',
-  'scripts/harness/check-feature-ledger.mjs',
   'scripts/harness/check-template-health.mjs',
   'scripts/harness/check-runtime-evidence.mjs',
   'scripts/harness/check-doc-links.mjs',
   'scripts/harness/check-doc-inventory.mjs',
+  'scripts/harness/check-doc-frontmatter.mjs',
   'scripts/harness/check-sync-drift.mjs',
+  'scripts/harness/check-task-packet.mjs',
+  'scripts/harness/check-evidence.mjs',
+  'config/method.config.json',
 ];
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/harness/check-method-health.mjs [--json] [--strict] [--root <path>]
+  node scripts/harness/check-method-health.mjs [--json] [--strict] [--root <path>] [--method-root <path>] [--config <path>]
 
 Checks:
 - method kit version metadata exists and parses
@@ -64,6 +71,8 @@ function parseArgs(argv) {
     strict: false,
     help: false,
     root: DEFAULT_ROOT,
+    methodRoot: null,
+    config: undefined,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -80,6 +89,20 @@ function parseArgs(argv) {
         throw new Error('--root requires a path');
       }
       options.root = path.resolve(value);
+      index += 1;
+    } else if (arg === '--method-root') {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error('--method-root requires a path');
+      }
+      options.methodRoot = value;
+      index += 1;
+    } else if (arg === '--config') {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error('--config requires a path');
+      }
+      options.config = value;
       index += 1;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
@@ -108,25 +131,28 @@ function readJson(root, repoPath, findings) {
   }
 }
 
-function validateMethodKit(root, findings) {
+function validateMethodKit(root, methodRoot, findings) {
   for (const repoPath of REQUIRED_METHOD_KIT_FILES) {
-    if (!exists(root, repoPath)) {
-      findings.push({ file: repoPath, reason: 'required method kit file is missing' });
+    if (!exists(methodRoot, repoPath)) {
+      findings.push({
+        file: formatExternalPath(root, methodRoot, repoPath),
+        reason: 'required upstream method kit file is missing',
+      });
     }
   }
 
-  const versionTextPath = path.join(root, 'agentic-method-kit', 'VERSION');
+  const versionTextPath = path.join(methodRoot, 'VERSION');
   if (fs.existsSync(versionTextPath)) {
     const value = fs.readFileSync(versionTextPath, 'utf8').trim();
     if (!/^\d+\.\d+\.\d+$/.test(value)) {
       findings.push({
-        file: 'pantheon-harness/architecture/VERSION',
+        file: formatExternalPath(root, methodRoot, 'VERSION'),
         reason: 'version must use semver-like x.y.z format',
       });
     }
   }
 
-  return readJson(root, 'pantheon-harness/architecture/METHOD_VERSION.json', findings);
+  return readJson(methodRoot, 'patterns/METHOD_VERSION.json', findings);
 }
 
 function validateRepoShell(root, findings) {
@@ -153,7 +179,7 @@ function validateCompatibility(methodVersion, shellVersion, findings) {
 
   if (shellVersion.compatibleMethodKit !== methodVersion.version) {
     findings.push({
-      file: 'pantheon-harness/architecture/METHOD_VERSION.json',
+      file: 'patterns/METHOD_VERSION.json',
       reason: `method kit version "${methodVersion.version}" does not match repo shell compatibleMethodKit "${shellVersion.compatibleMethodKit}"`,
     });
   }
@@ -168,11 +194,12 @@ function validateBoundaries(root, warnings) {
   }
 }
 
-function scan(root) {
+function scan(root, options = {}) {
   const findings = [];
   const warnings = [];
+  const methodRoot = resolvePantheonHarnessRoot(root, options);
 
-  const methodVersion = validateMethodKit(root, findings);
+  const methodVersion = validateMethodKit(root, methodRoot, findings);
   const shellVersion = validateRepoShell(root, findings);
   validateCompatibility(methodVersion, shellVersion, findings);
   validateBoundaries(root, warnings);
@@ -182,6 +209,7 @@ function scan(root) {
     warnings,
     methodVersion: methodVersion?.version ?? null,
     repoShellVersion: shellVersion?.version ?? null,
+    methodRoot,
   };
 }
 
@@ -221,7 +249,7 @@ function main() {
     return 0;
   }
 
-  const result = scan(options.root);
+  const result = scan(options.root, options);
 
   if (options.json) {
     console.log(
@@ -230,6 +258,7 @@ function main() {
           mode: options.strict ? 'strict' : 'report-only',
           methodVersion: result.methodVersion,
           repoShellVersion: result.repoShellVersion,
+          methodRoot: result.methodRoot,
           findingCount: result.findings.length,
           warningCount: result.warnings.length,
           findings: result.findings,
@@ -247,4 +276,3 @@ function main() {
 }
 
 process.exitCode = main();
-

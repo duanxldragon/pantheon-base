@@ -6,14 +6,16 @@ English version: [README.md](./README.md)
 
 事实源不是某一个单独 adapter。建议先读：
 
-1. `agentic-method-kit/README.md`
-2. `agentic-method-kit/METHOD_PLAYBOOK.md`
-3. `docs/harness/HARNESS_METHOD_PLAYBOOK.md`
-4. `docs/harness/HARNESS_ENGINEERING_CONTRACT.md`
-5. `docs/harness/AGENT_INTERFACE_CONTRACT.md`
-6. `docs/harness/TASK_PACKET_SPEC.md`
-7. `docs/harness/VERIFICATION_EVIDENCE_SPEC.md`
-8. `docs/harness/REVIEW_LOOP_SPEC.md`
+1. `../../pantheon-harness/patterns/README.md`
+2. `../../pantheon-harness/patterns/method-playbook.md`
+3. `../../pantheon-harness/patterns/execution-guardrails.md`
+4. `../../pantheon-harness/patterns/context-engineering-protocol.md`
+5. `docs/harness/HARNESS_METHOD_PLAYBOOK.md`
+6. `docs/harness/HARNESS_ENGINEERING_CONTRACT.md`
+7. `docs/harness/AGENT_INTERFACE_CONTRACT.md`
+8. `docs/harness/TASK_PACKET_SPEC.md`
+9. `docs/harness/VERIFICATION_EVIDENCE_SPEC.md`
+10. `docs/harness/REVIEW_LOOP_SPEC.md`
 
 这些 adapters 的作用，是把这套共享协议映射到不同工具：
 

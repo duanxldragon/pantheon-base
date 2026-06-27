@@ -76,16 +76,16 @@ English version: [README.en.md](./README.en.md)
 
 ### 2.2 Harness 方法层
 
-Harness Engineering 方法源文件（来自 pantheon-harness）：
+Pantheon Harness 方法源文件（来自 workspace sibling `../../pantheon-harness/`）：
 
-1. [harness-methodology.zh.md](../../pantheon-harness/architecture/methodology/harness-methodology.zh.md) — 方法总纲
-2. [workflow-routing.md](../../pantheon-harness/architecture/methodology/workflow-routing.md) — 工具路由决策树
-3. [solo-delivery-tiers.md](../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md) — 个人交付层级
-4. [context-engineering-guide.md](../../pantheon-harness/architecture/methodology/context-engineering-guide.md) — 上下文工程规范
-5. [branch-pr-workflow.md](../../pantheon-harness/architecture/methodology/branch-pr-workflow.md) — 分支与 PR 工作流
-6. [workflow-templates.md](../../pantheon-harness/architecture/methodology/workflow-templates.md) — 工作流模板
-7. [codex-workflow-quick-reference.md](../../pantheon-harness/architecture/methodology/codex-workflow-quick-reference.md) — Codex 工作流命令速查
-8. [ci-cd-integration.md](../../pantheon-harness/architecture/methodology/ci-cd-integration.md) — CI/CD 集成指南
+1. [patterns/README.md](../../pantheon-harness/patterns/README.md) — 方法包入口
+2. [harness-core-model.md](../../pantheon-harness/patterns/harness-core-model.md) — 核心模型
+3. [harness-coverage-model.md](../../pantheon-harness/patterns/harness-coverage-model.md) — 覆盖模型
+4. [harness-template-taxonomy.md](../../pantheon-harness/patterns/harness-template-taxonomy.md) — 模板分类
+5. [tool-adapter-matrix.md](../../pantheon-harness/patterns/tool-adapter-matrix.md) — 工具适配矩阵
+6. [method-playbook.md](../../pantheon-harness/patterns/method-playbook.md) — 方法执行手册
+7. [execution-guardrails.md](../../pantheon-harness/patterns/execution-guardrails.md) — 执行护栏
+8. [context-engineering-protocol.md](../../pantheon-harness/patterns/context-engineering-protocol.md) — 上下文工程协议
 
 ### 2.3 Harness 落地层
 
