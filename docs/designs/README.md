@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-06-23
+updated_at: 2026-06-27
 ---
 
 # 设计文档目录
@@ -19,14 +19,15 @@ English version: [README.en.md](./README.en.md)
 ## 推荐阅读顺序
 
 1. [Pantheon Base 架构总览](./PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md)
-2. [总体架构与后端规范](./BACKEND.md)
-3. [前端架构与模块接入](./FRONTEND.md)
-4. [前端 UI 详细规范](./FRONTEND_UI_SPEC.md)
-5. [模块契约设计](./MODULE_CONTRACT.md)
-6. [权限模型设计](./PERMISSION_MODEL.md)
-7. [业务开发工作流与 AI 协作指南](./WORKFLOW.md)
-8. [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
-9. [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
+2. [仓库目录布局](./REPOSITORY_LAYOUT.md)
+3. [总体架构与后端规范](./BACKEND.md)
+4. [前端架构与模块接入](./FRONTEND.md)
+5. [前端 UI 详细规范](./FRONTEND_UI_SPEC.md)
+6. [模块契约设计](./MODULE_CONTRACT.md)
+7. [权限模型设计](./PERMISSION_MODEL.md)
+8. [业务开发工作流与 AI 协作指南](./WORKFLOW.md)
+9. [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
+10. [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
 
 ## 平台与前端
 
@@ -81,6 +82,7 @@ English version: [README.en.md](./README.en.md)
 
 ## 基础规则与参考
 
+- [仓库目录布局](./REPOSITORY_LAYOUT.md)
 - [数据库设计规范与详细说明](./DATABASE.md)
 - [错误码与多语言设计](./ERROR_CODE_AND_I18N.md)
 - [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)

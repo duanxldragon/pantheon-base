@@ -56,7 +56,7 @@ frontend/dist/
 frontend/build/
 frontend/coverage/
 frontend/.vite/
-dist/foundation-releases/
+dist/
 
 # Test artifacts
 playwright-report/

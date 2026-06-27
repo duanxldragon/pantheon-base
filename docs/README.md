@@ -61,12 +61,14 @@ English version: [README.en.md](./README.en.md)
 4. [AI 质量治理策略](./harness/AI_QUALITY_GOVERNANCE.md)
 5. [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
 6. [designs/ 目录入口（中文优先）](./designs/README.md)
-7. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
-8. [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
+7. [仓库目录布局](./designs/REPOSITORY_LAYOUT.md)
+8. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
+9. [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 
 ### 2.1 按任务补读
 
 - `platform` / 共享 UI：`./contracts/PLATFORM_CONTRACT.md`，`./designs/FRONTEND_UI_SPEC.md`，`./designs/BACKOFFICE_STYLE_CONSTRAINTS.md`，`./designs/PLATFORM_DASHBOARD_DESIGN.md`
+- 根目录与文件放置：`./designs/REPOSITORY_LAYOUT.md`
 - `system/auth`：`./contracts/SYSTEM_AUTH_CONTRACT.md`，`./designs/AUTH_MODULE_DESIGN.md`，`./designs/SECURITY_CENTER_DESIGN.md`
 - `system/iam`：`./contracts/SYSTEM_IAM_CONTRACT.md`，`./designs/PERMISSION_MODEL.md`，`./designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
 - `system/org`：`./contracts/SYSTEM_ORG_CONTRACT.md`，`./designs/SYSTEM_ORG_DESIGN.md`

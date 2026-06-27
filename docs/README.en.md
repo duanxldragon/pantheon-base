@@ -27,11 +27,12 @@ For Chinese-first onboarding, read:
 5. [harness/AI_QUALITY_GOVERNANCE.md](./harness/AI_QUALITY_GOVERNANCE.md)
 6. [contracts/DOCUMENT_GOVERNANCE_CONTRACT.md](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
 7. [contracts/PLATFORM_CONTRACT.md](./contracts/PLATFORM_CONTRACT.md)
-8. [designs/BACKEND.md](./designs/BACKEND.md)
-9. [designs/FRONTEND.md](./designs/FRONTEND.md)
-10. [acceptances/ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
-11. [acceptances/AGENT_EXECUTION_CHECKLIST.md](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
-12. [designs/README.md](./designs/README.md)
+8. [designs/REPOSITORY_LAYOUT.en.md](./designs/REPOSITORY_LAYOUT.en.md)
+9. [designs/BACKEND.md](./designs/BACKEND.md)
+10. [designs/FRONTEND.md](./designs/FRONTEND.md)
+11. [acceptances/ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
+12. [acceptances/AGENT_EXECUTION_CHECKLIST.md](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
+13. [designs/README.md](./designs/README.md)
 
 ## Active Document Groups
 
@@ -55,6 +56,7 @@ For Chinese-first onboarding, read:
 ### Architecture and design
 
 - [designs/README.md](./designs/README.md)
+- [designs/REPOSITORY_LAYOUT.en.md](./designs/REPOSITORY_LAYOUT.en.md)
 - [designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md](./designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md)
 - [designs/BACKEND.md](./designs/BACKEND.md)
 - [designs/FRONTEND.md](./designs/FRONTEND.md)
