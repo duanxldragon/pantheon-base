@@ -5,20 +5,27 @@ import path from 'node:path';
 import process from 'node:process';
 
 const DEFAULT_ROOT = process.cwd();
+
+// Calculate workspace root (parent of pantheon-base)
+const WORKSPACE_ROOT = path.resolve(DEFAULT_ROOT, '..');
+const PANTHEON_HARNESS_ROOT = path.join(WORKSPACE_ROOT, 'pantheon-harness');
+
+// Compare pantheon-base harness scripts with pantheon-harness source
 const KEY_MIRRORS = [
-  ['scripts/task-manifest.mjs', 'agentic-repo-shell/scripts/task-manifest.mjs'],
-  ['scripts/harness/check-review.mjs', 'agentic-repo-shell/scripts/harness/check-review.mjs'],
-  ['scripts/harness/check-evidence.mjs', 'agentic-repo-shell/scripts/harness/check-evidence.mjs'],
-  ['scripts/harness/check-failure-registry.mjs', 'agentic-repo-shell/scripts/harness/check-failure-registry.mjs'],
-  ['scripts/harness/check-graph-review.mjs', 'agentic-repo-shell/scripts/harness/check-graph-review.mjs'],
-  ['scripts/harness/scaffold-graph-review.mjs', 'agentic-repo-shell/scripts/harness/scaffold-graph-review.mjs'],
-  ['scripts/harness/build-graph-review-import.mjs', 'agentic-repo-shell/scripts/harness/build-graph-review-import.mjs'],
-  ['scripts/harness/check-visual-evidence.mjs', 'agentic-repo-shell/scripts/harness/check-visual-evidence.mjs'],
-  ['scripts/harness/check-template-health.mjs', 'agentic-repo-shell/scripts/harness/check-template-health.mjs'],
-  ['scripts/harness/check-runtime-evidence.mjs', 'agentic-repo-shell/scripts/harness/check-runtime-evidence.mjs'],
-  ['scripts/harness/check-doc-links.mjs', 'agentic-repo-shell/scripts/harness/check-doc-links.mjs'],
-  ['scripts/harness/check-doc-inventory.mjs', 'agentic-repo-shell/scripts/harness/check-doc-inventory.mjs'],
-];
+  'check-review.mjs',
+  'check-evidence.mjs',
+  'check-failure-registry.mjs',
+  'check-graph-review.mjs',
+  'scaffold-graph-review.mjs',
+  'build-graph-review-import.mjs',
+  'check-visual-evidence.mjs',
+  'check-template-health.mjs',
+  'check-runtime-evidence.mjs',
+  'check-doc-links.mjs',
+  'check-doc-inventory.mjs',
+  'check-adoption.mjs',
+  'check-method-health.mjs',
+].map(f => ['scripts/harness/' + f, 'scripts/harness/' + f]);
 
 function parseArgs(argv) {
   const options = { json: false, strict: false, help: false, root: DEFAULT_ROOT };
@@ -47,16 +54,26 @@ function normalizeExport(content) {
 
 function scan(root) {
   const findings = [];
-  for (const [left, right] of KEY_MIRRORS) {
-    const leftPath = path.join(root, left);
-    const rightPath = path.join(root, right);
-    if (!fs.existsSync(leftPath) || !fs.existsSync(rightPath)) continue;
+  for (const [localFile, harnessFile] of KEY_MIRRORS) {
+    const leftPath = path.join(root, localFile);
+    const rightPath = path.join(PANTHEON_HARNESS_ROOT, harnessFile);
+    if (!fs.existsSync(leftPath)) {
+      findings.push({
+        file: localFile,
+        reason: 'local file does not exist',
+      });
+      continue;
+    }
+    if (!fs.existsSync(rightPath)) {
+      // Harness source file doesn't exist, skip comparison
+      continue;
+    }
     const leftContent = normalizeExport(fs.readFileSync(leftPath, 'utf8'));
     const rightContent = normalizeExport(fs.readFileSync(rightPath, 'utf8'));
     if (leftContent !== rightContent) {
       findings.push({
-        file: right,
-        reason: `mirror drift detected against ${left}`,
+        file: localFile,
+        reason: `out of sync with pantheon-harness source: ${harnessFile}`,
       });
     }
   }

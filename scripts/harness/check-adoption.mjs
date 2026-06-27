@@ -8,9 +8,14 @@ import { sortStrings } from './sort-utils.mjs';
 import { execFileSync } from 'node:child_process';
 
 const DEFAULT_ROOT = process.cwd();
+
+// Calculate workspace root (parent of pantheon-base)
+const WORKSPACE_ROOT = path.resolve(DEFAULT_ROOT, '..');
+const PANTHEON_HARNESS_ROOT = path.join(WORKSPACE_ROOT, 'pantheon-harness');
+
 const IMPLEMENTATION_ROOTS = [
-  'pantheon-base/backend/',
-  'pantheon-base/frontend/',
+  'backend/',
+  'frontend/',
   'docs/contracts/',
   'docs/designs/',
   'docs/acceptances/',
@@ -23,11 +28,9 @@ const PR_TEMPLATE_CANDIDATES = [
   '.github/pull_request_template.md',
 ];
 
-const REQUIRED_FILES = [
-  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
-  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
+// Files required for method adoption
+// Local harness files (case-sensitive filenames)
+const LOCAL_HARNESS_FILES = [
   'docs/harness/HARNESS_CORE_MODEL.md',
   'docs/harness/HARNESS_COVERAGE_MODEL.md',
   'docs/harness/HARNESS_TEMPLATE_TAXONOMY.md',
@@ -39,15 +42,19 @@ const REQUIRED_FILES = [
   'docs/harness/VERIFICATION_EVIDENCE_SPEC.md',
   'docs/harness/REVIEW_LOOP_SPEC.md',
   'docs/harness/VISUAL_QUALITY_PROTOCOL.md',
-  'scripts/harness/check-inheritance-contract.mjs',
-  '.agents/README.md',
-  '.agents/adapters/codex.md',
-  '.agents/adapters/claude-code.md',
-  '.agents/adapters/cursor.md',
-  '.agents/adapters/github-copilot.md',
-  '.agents/adapters/openhands.md',
-  '.agents/adapters/human.md',
 ];
+
+// pantheon-harness source files (at workspace level)
+const HARNESS_SOURCE_FILES = [
+  PANTHEON_HARNESS_ROOT + '/architecture/harness/harness-core-model.md',
+  PANTHEON_HARNESS_ROOT + '/architecture/harness/harness-coverage-model.md',
+  PANTHEON_HARNESS_ROOT + '/architecture/harness/harness-template-taxonomy.md',
+  PANTHEON_HARNESS_ROOT + '/architecture/harness/tool-adapter-matrix.md',
+  PANTHEON_HARNESS_ROOT + '/architecture/methodology/harness-methodology.zh.md',
+  PANTHEON_HARNESS_ROOT + '/architecture/methodology/workflow-routing.md',
+];
+
+const REQUIRED_FILES = [...LOCAL_HARNESS_FILES, ...HARNESS_SOURCE_FILES];
 
 const REQUIRED_PR_MARKERS = [
   'Task ID',
@@ -128,7 +135,8 @@ function findExistingRepoPath(root, candidates) {
 }
 
 function hasAllMarkers(content, markers) {
-  return markers.filter((marker) => !content.includes(marker));
+  const lowerContent = content.toLowerCase();
+  return markers.filter((marker) => !lowerContent.includes(marker.toLowerCase()));
 }
 
 function toRepoPath(filePath, root) {
@@ -293,11 +301,22 @@ function scanAdoption(root, changedFiles) {
   const findings = [];
   const warnings = [];
 
-  for (const repoPath of REQUIRED_FILES) {
+  // Check local files
+  for (const repoPath of LOCAL_HARNESS_FILES) {
     if (!fs.existsSync(path.join(root, repoPath))) {
       findings.push({
         file: repoPath,
-        reason: 'required Harness adoption file is missing',
+        reason: 'required local harness adoption file is missing',
+      });
+    }
+  }
+
+  // Check harness source files (absolute paths)
+  for (const sourceFile of HARNESS_SOURCE_FILES) {
+    if (!fs.existsSync(sourceFile)) {
+      findings.push({
+        file: sourceFile,
+        reason: 'required harness source file is missing (ensure pantheon-harness exists at workspace root)',
       });
     }
   }

@@ -6,16 +6,24 @@ import process from 'node:process';
 
 const DEFAULT_ROOT = process.cwd();
 
+// Calculate workspace root (parent of pantheon-base)
+const WORKSPACE_ROOT = path.resolve(DEFAULT_ROOT, '..');
+
+// pantheon-harness paths - relative to workspace root
+const PANTHEON_HARNESS_ROOT = path.join(WORKSPACE_ROOT, 'pantheon-harness');
+
 const REQUIRED_METHOD_KIT_FILES = [
-  'pantheon-harness/architecture/VERSION',
-  'pantheon-harness/architecture/METHOD_VERSION.json',
-  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
-  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
-  'pantheon-harness/architecture/CHANGELOG.md',
-  'pantheon-harness/architecture/UPGRADE.md',
-];
+  'VERSION',
+  'CHANGELOG.md',
+  'README.md',
+  'architecture/methodology/harness-methodology.zh.md',
+  'architecture/methodology/workflow-routing.md',
+  'architecture/methodology/solo-delivery-tiers.md',
+  'architecture/harness/harness-core-model.md',
+  'architecture/harness/harness-coverage-model.md',
+  'architecture/harness/harness-template-taxonomy.md',
+  'architecture/harness/tool-adapter-matrix.md',
+].map(f => path.join(PANTHEON_HARNESS_ROOT, f));
 
 const REQUIRED_REPO_SHELL_FILES = [
   'SHELL_VERSION.json',
@@ -110,23 +118,24 @@ function readJson(root, repoPath, findings) {
 
 function validateMethodKit(root, findings) {
   for (const repoPath of REQUIRED_METHOD_KIT_FILES) {
-    if (!exists(root, repoPath)) {
+    // repoPath is already a full absolute path, use it directly
+    if (!fs.existsSync(repoPath)) {
       findings.push({ file: repoPath, reason: 'required method kit file is missing' });
     }
   }
 
-  const versionTextPath = path.join(root, 'agentic-method-kit', 'VERSION');
+  const versionTextPath = path.join(WORKSPACE_ROOT, 'pantheon-harness', 'VERSION');
   if (fs.existsSync(versionTextPath)) {
     const value = fs.readFileSync(versionTextPath, 'utf8').trim();
     if (!/^\d+\.\d+\.\d+$/.test(value)) {
       findings.push({
-        file: 'pantheon-harness/architecture/VERSION',
+        file: 'pantheon-harness/VERSION',
         reason: 'version must use semver-like x.y.z format',
       });
     }
   }
 
-  return readJson(root, 'pantheon-harness/architecture/METHOD_VERSION.json', findings);
+  // No METHOD_VERSION.json required in new structure
 }
 
 function validateRepoShell(root, findings) {
@@ -136,25 +145,27 @@ function validateRepoShell(root, findings) {
     }
   }
 
-  return readJson(root, 'SHELL_VERSION.json', findings);
+  // Read local VERSION instead of SHELL_VERSION.json
+  const versionTextPath = path.join(root, 'VERSION');
+  if (fs.existsSync(versionTextPath)) {
+    const value = fs.readFileSync(versionTextPath, 'utf8').trim();
+    if (/^\d+\.\d+\.\d+$/.test(value)) {
+      return { version: value };
+    }
+  }
+  return null;
 }
 
-function validateCompatibility(methodVersion, shellVersion, findings) {
-  if (!methodVersion || !shellVersion) {
+function validateCompatibility(pantheonHarnessVersion, baseVersion, findings) {
+  if (!pantheonHarnessVersion || !baseVersion) {
     return;
   }
 
-  if (methodVersion.compatibleRepoShell !== shellVersion.version) {
+  // Both should use the same version format (x.y.z)
+  if (pantheonHarnessVersion !== baseVersion) {
     findings.push({
-      file: 'SHELL_VERSION.json',
-      reason: `repo shell version "${shellVersion.version}" does not match method kit compatibleRepoShell "${methodVersion.compatibleRepoShell}"`,
-    });
-  }
-
-  if (shellVersion.compatibleMethodKit !== methodVersion.version) {
-    findings.push({
-      file: 'pantheon-harness/architecture/METHOD_VERSION.json',
-      reason: `method kit version "${methodVersion.version}" does not match repo shell compatibleMethodKit "${shellVersion.compatibleMethodKit}"`,
+      file: 'VERSION',
+      reason: `pantheon-harness version "${pantheonHarnessVersion}" does not match pantheon-base version "${baseVersion}"`,
     });
   }
 }
@@ -172,16 +183,30 @@ function scan(root) {
   const findings = [];
   const warnings = [];
 
-  const methodVersion = validateMethodKit(root, findings);
-  const shellVersion = validateRepoShell(root, findings);
-  validateCompatibility(methodVersion, shellVersion, findings);
+  // Validate pantheon-harness exists and get its version
+  let pantheonHarnessVersion = null;
+  const harnessVersionPath = path.join(WORKSPACE_ROOT, 'pantheon-harness', 'VERSION');
+  if (fs.existsSync(harnessVersionPath)) {
+    pantheonHarnessVersion = fs.readFileSync(harnessVersionPath, 'utf8').trim();
+  }
+
+  // Validate local VERSION
+  let baseVersion = null;
+  const baseVersionPath = path.join(root, 'VERSION');
+  if (fs.existsSync(baseVersionPath)) {
+    baseVersion = fs.readFileSync(baseVersionPath, 'utf8').trim();
+  }
+
+  validateMethodKit(root, findings);
+  validateRepoShell(root, findings);
+  validateCompatibility(pantheonHarnessVersion, baseVersion, findings);
   validateBoundaries(root, warnings);
 
   return {
     findings,
     warnings,
-    methodVersion: methodVersion?.version ?? null,
-    repoShellVersion: shellVersion?.version ?? null,
+    pantheonHarnessVersion,
+    baseVersion,
   };
 }
 
@@ -190,9 +215,9 @@ function printTextReport(result, strict) {
   console.log(
     `Method health check (${mode}): ${result.findings.length} finding(s), ${result.warnings.length} warning(s)`,
   );
-  if (result.methodVersion || result.repoShellVersion) {
-    console.log(`method kit version: ${result.methodVersion ?? 'unknown'}`);
-    console.log(`repo shell version: ${result.repoShellVersion ?? 'unknown'}`);
+  if (result.pantheonHarnessVersion || result.baseVersion) {
+    console.log(`pantheon-harness version: ${result.pantheonHarnessVersion ?? 'unknown'}`);
+    console.log(`pantheon-base version: ${result.baseVersion ?? 'unknown'}`);
   }
   if (result.findings.length === 0 && result.warnings.length === 0) {
     console.log('\nno findings');
@@ -228,8 +253,8 @@ function main() {
       JSON.stringify(
         {
           mode: options.strict ? 'strict' : 'report-only',
-          methodVersion: result.methodVersion,
-          repoShellVersion: result.repoShellVersion,
+          pantheonHarnessVersion: result.pantheonHarnessVersion,
+          pantheonBaseVersion: result.baseVersion,
           findingCount: result.findings.length,
           warningCount: result.warnings.length,
           findings: result.findings,
