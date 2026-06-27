@@ -25,7 +25,7 @@ Repository-governance linkage only. No backend, frontend, schema, permission, me
 
 - Latest PR run confirmed PR automation and Security Gates pass after workflow hardening.
 - Docs Governance failure was narrowed to Linux-only filename casing: latest method shell requires `.github/pull_request_template.md`; the repo previously tracked `.github/PULL_REQUEST_TEMPLATE.md`.
-- `quality.yml` now treats governance-only changes as docs/governance scope, so backend/frontend/smoke runtime gates are not required for method-only follow-up PRs.
+- `quality.yml` now treats governance-only changes as docs/governance scope by comparing all changed-file count with governance-matched count, so backend/frontend/smoke runtime gates are not required for method-only follow-up PRs.
 - Backend Tests still fail in existing Go suites unrelated to this harness linkage change.
 
 ## Known Gaps
