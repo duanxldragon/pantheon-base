@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-19
+updated_at: 2026-06-27
 ---
 
 # Design Document Index
@@ -21,13 +21,14 @@ The Chinese index remains the primary reading surface for local development. Thi
 For Chinese-first onboarding, start with:
 
 1. [PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md](./PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md)
-2. [BACKEND.md](./BACKEND.md)
-3. [FRONTEND.md](./FRONTEND.md)
-4. [FRONTEND_UI_SPEC.md](./FRONTEND_UI_SPEC.md)
-5. [MODULE_CONTRACT.md](./MODULE_CONTRACT.md)
-6. [PERMISSION_MODEL.md](./PERMISSION_MODEL.md)
-7. [WORKFLOW.md](./WORKFLOW.md)
-8. [QUALITY_AND_SECURITY_STRATEGY.md](./QUALITY_AND_SECURITY_STRATEGY.md)
+2. [REPOSITORY_LAYOUT.en.md](./REPOSITORY_LAYOUT.en.md)
+3. [BACKEND.md](./BACKEND.md)
+4. [FRONTEND.md](./FRONTEND.md)
+5. [FRONTEND_UI_SPEC.md](./FRONTEND_UI_SPEC.md)
+6. [MODULE_CONTRACT.md](./MODULE_CONTRACT.md)
+7. [PERMISSION_MODEL.md](./PERMISSION_MODEL.md)
+8. [WORKFLOW.md](./WORKFLOW.md)
+9. [QUALITY_AND_SECURITY_STRATEGY.md](./QUALITY_AND_SECURITY_STRATEGY.md)
 
 ## Platform and Frontend
 
@@ -77,6 +78,7 @@ For Chinese-first onboarding, start with:
 
 ## Foundational Rules and References
 
+- [REPOSITORY_LAYOUT.en.md](./REPOSITORY_LAYOUT.en.md)
 - [DATABASE.md](./DATABASE.md)
 - [ERROR_CODE_AND_I18N.md](./ERROR_CODE_AND_I18N.md)
 - [QUALITY_AND_SECURITY_STRATEGY.md](./QUALITY_AND_SECURITY_STRATEGY.md)

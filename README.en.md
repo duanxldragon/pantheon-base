@@ -25,11 +25,31 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Backend | Go、Gin、GORM、Casbin、Redis Token、MySQL、Redis |
-| Frontend | React, TypeScript, Vite, Arco Design, Zustand, i18next |
+| Layer       | Technology                                                 |
+| ----------- | ---------------------------------------------------------- |
+| Backend     | Go、Gin、GORM、Casbin、Redis Token、MySQL、Redis           |
+| Frontend    | React, TypeScript, Vite, Arco Design, Zustand, i18next     |
 | Engineering | Docker Compose, Playwright, GitHub Actions, gstack QA flow |
+
+## Repository Layout
+
+```text
+backend/                  # Go backend entrypoint, modules, shared packages
+frontend/                 # React shell, page modules, smoke tests, frontend scripts
+docs/                     # contracts, designs, acceptance docs, retained history
+scripts/                  # root automation, GitHub collaboration, harness checks, releases
+tests/                    # root script tests, docs tests, performance scripts
+.harness/                 # method evidence, task manifests, governance state
+.agents/                  # repo-local agent notes, skills, schemas
+.github/                  # GitHub workflows, templates, CODEOWNERS, Dependabot
+config/method.config.json # pantheon-harness method-source config
+database/system_init.sql  # first-run schema, seed, i18n initialization
+grafana/                  # local observability config
+releases/                 # foundation release metadata
+schema/generated/         # generated governance outputs
+```
+
+See [Repository Layout](./docs/designs/REPOSITORY_LAYOUT.en.md) for root placement rules and local noise directories.
 
 ## Recommended Reading Order
 
@@ -111,6 +131,7 @@ CodeQL is the primary security signal. Code quality is gated by GitHub required 
 - [docs/README.md](./docs/README.md): Chinese-first full documentation index
 - [docs/README.en.md](./docs/README.en.md): English companion index
 - [.agents/skills/README.md](./.agents/skills/README.md): repository-local Codex workflow skills for PR closure, GitHub comment automation, and CI triage
+- [docs/designs/REPOSITORY_LAYOUT.en.md](./docs/designs/REPOSITORY_LAYOUT.en.md): root layout and file placement rules
 - [docs/designs/QUALITY_AND_SECURITY_STRATEGY.md](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md): code quality and security governance strategy
 - [docs/designs/FOUNDATION_RELEASE_MODEL.md](./docs/designs/FOUNDATION_RELEASE_MODEL.md): foundation release and consumer-upgrade model
 - [docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md](./docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md): foundation release generation and consumer upgrade runbook

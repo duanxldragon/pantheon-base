@@ -1,0 +1,110 @@
+{
+  "taskId": "2026-06-27-repository-layout-tidy",
+  "title": "Repository Layout Tidy",
+  "goal": "Make the pantheon-base root directory easier to understand by documenting stable root ownership, local noise directories, and file placement rules without moving product runtime code.",
+  "primaryLayer": "platform",
+  "taskDoc": "docs/harness/tasks/2026-06-27-repository-layout-tidy.task.md",
+  "scope": {
+    "in": [
+      "add Chinese and English repository layout design documents",
+      "update README and docs indexes with the layout entry",
+      "mark root dist as generated output",
+      "preserve current runtime and harness paths"
+    ],
+    "out": [
+      "moving backend, frontend, harness, database, release, schema, or CI paths",
+      "deleting local ignored artifact directories",
+      "refactoring runtime application code"
+    ]
+  },
+  "contractAnchors": [
+    "README.md",
+    "docs/README.md",
+    "docs/designs/README.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    ".gitignore"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      "docs/harness/tasks/2026-06-27-repository-layout-tidy.task.md",
+      ".harness/tasks/2026-06-27-repository-layout-tidy/manifest.json",
+      ".harness/evidence/2026-06-27-repository-layout-tidy/commands.json",
+      ".harness/evidence/2026-06-27-repository-layout-tidy/summary.md",
+      ".harness/evidence/2026-06-27-repository-layout-tidy/review.md"
+    ],
+    "modify": [
+      ".gitignore",
+      "README.md",
+      "README.en.md",
+      "docs/README.md",
+      "docs/README.en.md",
+      "docs/designs/README.md",
+      "docs/designs/README.en.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      "database/system_init.sql",
+      "config/method.config.json",
+      "local ignored artifact directories"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "repo-governance",
+    "portableFailureClass": "layout-governance-gap",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-docs",
+      "npm run check:harness-inventory",
+      "npm run check:harness-method",
+      "npm run check:harness-sync",
+      "npm run check:harness-adoption",
+      "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-06-27-repository-layout-tidy.task.md",
+      "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-06-27-repository-layout-tidy/commands.json",
+      "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-06-27-repository-layout-tidy/review.md",
+      "git diff --check"
+    ],
+    "runtimeEvidence": [
+      "not applicable; repository-layout documentation only"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-06-27-repository-layout-tidy/",
+    "reviewFile": ".harness/evidence/2026-06-27-repository-layout-tidy/review.md",
+    "summaryFile": ".harness/evidence/2026-06-27-repository-layout-tidy/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "docs frontmatter output",
+    "docs link output",
+    "docs inventory output",
+    "method health output",
+    "sync drift output",
+    "adoption output",
+    "task packet output",
+    "evidence and review output",
+    "diff whitespace output"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}
