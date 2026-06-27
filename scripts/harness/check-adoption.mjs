@@ -24,10 +24,10 @@ const PR_TEMPLATE_CANDIDATES = [
 ];
 
 const REQUIRED_FILES = [
-  'agentic-method-kit/HARNESS_CORE_MODEL.md',
-  'agentic-method-kit/HARNESS_COVERAGE_MODEL.md',
-  'agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md',
-  'agentic-method-kit/TOOL_ADAPTER_MATRIX.md',
+  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
+  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
+  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
+  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
   'docs/harness/HARNESS_CORE_MODEL.md',
   'docs/harness/HARNESS_COVERAGE_MODEL.md',
   'docs/harness/HARNESS_TEMPLATE_TAXONOMY.md',
@@ -397,3 +397,4 @@ function main() {
 }
 
 process.exitCode = main();
+

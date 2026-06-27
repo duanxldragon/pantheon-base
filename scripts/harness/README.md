@@ -4,7 +4,7 @@ Chinese version: [README.zh.md](./README.zh.md)
 
 Repo-local Harness Engineering checks for `pantheon-base`.
 
-The portable method source of truth lives in `agentic-method-kit/` and `agentic-repo-shell/`.
+The portable method source of truth lives in `pantheon-harness/architecture/` and `agentic-repo-shell/`.
 This directory is the pantheon-base execution layer.
 
 ## Quick validation
@@ -29,27 +29,28 @@ node scripts/harness/check-visual-evidence.mjs
 
 ## Graph review tools
 
-- `build-graph-review-import.mjs` â€” normalize CodeGraph JSON for import
-- `check-graph-review.mjs` â€” validate manifest structural scope, evidence `graphChecks`, and review `structuralReview` consistency
-- `scaffold-graph-review.mjs` â€” seed `graphChecks` and `structuralReview` from task manifest structural scope
+- `build-graph-review-import.mjs` â€?normalize CodeGraph JSON for import
+- `check-graph-review.mjs` â€?validate manifest structural scope, evidence `graphChecks`, and review `structuralReview` consistency
+- `scaffold-graph-review.mjs` â€?seed `graphChecks` and `structuralReview` from task manifest structural scope
 
 ## Shared utilities
 
-- `sort-utils.mjs` â€” shared string sorting helper used by harness checks
+- `sort-utils.mjs` â€?shared string sorting helper used by harness checks
 
 ## Pantheon-base additions
 
 The following scripts are repo-specific and not part of the portable method:
 
-- `check-audit-coverage.mjs` â€” audit coverage validation
-- `check-backend-dto-contract.mjs` â€” backend DTO contract checks
-- `check-backend-response-contract.mjs` â€” backend response contract checks
-- `check-inheritance-contract.mjs` â€” base-to-ops inheritance validation
-- `check-permission-contract.mjs` â€” permission model contract checks
-- `triage-base-drift.mjs` â€” base drift triage
+- `check-audit-coverage.mjs` â€?audit coverage validation
+- `check-backend-dto-contract.mjs` â€?backend DTO contract checks
+- `check-backend-response-contract.mjs` â€?backend response contract checks
+- `check-inheritance-contract.mjs` â€?base-to-ops inheritance validation
+- `check-permission-contract.mjs` â€?permission model contract checks
+- `triage-base-drift.mjs` â€?base drift triage
 
 ## Tests
 
 ```powershell
 node --test agentic-repo-shell/scripts/harness/*.test.mjs
 ```
+

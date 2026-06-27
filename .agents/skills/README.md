@@ -6,7 +6,7 @@ This directory contains Pantheon Base repository-local Codex skills.
 
 Shared template source:
 
-- `harness-engineering/.agents/skills/README.md` at the workspace level
+- `pantheon-harness/.agents/skills/README.md` at the workspace level
 
 Use these before falling back to generic workflow skills when the task is specific to this repository:
 
@@ -27,3 +27,4 @@ Recommended order:
 3. `gh-address-comments` when open GitHub feedback needs action
 4. `repo-ci-triage` when GitHub Actions is red
 5. `gh-fix-ci` when the failure still needs GitHub-run-level investigation
+

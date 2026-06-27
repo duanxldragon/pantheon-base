@@ -9,12 +9,12 @@ import { sortStrings } from './sort-utils.mjs';
 const DEFAULT_ROOT = process.cwd();
 
 const REQUIRED_DOC_README_ENTRIES = [
-  'agentic-method-kit/README.md',
-  'agentic-method-kit/HARNESS_CORE_MODEL.md',
-  'agentic-method-kit/HARNESS_COVERAGE_MODEL.md',
-  'agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md',
-  'agentic-method-kit/TOOL_ADAPTER_MATRIX.md',
-  'agentic-method-kit/METHOD_PLAYBOOK.md',
+  'pantheon-harness/architecture/README.md',
+  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
+  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
+  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
+  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
+  'pantheon-harness/architecture/METHOD_PLAYBOOK.md',
   'docs/harness/HARNESS_ENGINEERING_CONTRACT.md',
   'docs/harness/HARNESS_METHOD_PLAYBOOK.md',
 ];
@@ -163,3 +163,4 @@ function main() {
 }
 
 process.exitCode = main();
+

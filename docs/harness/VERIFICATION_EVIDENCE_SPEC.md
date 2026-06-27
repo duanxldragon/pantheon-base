@@ -3,7 +3,8 @@ title: Verification Evidence Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-24
+updated_at: 2026-06-26
+version: v1.1
 ---
 
 # Verification Evidence Spec
@@ -12,18 +13,39 @@ English version: [VERIFICATION_EVIDENCE_SPEC.en.md](./VERIFICATION_EVIDENCE_SPEC
 
 本文定义 Pantheon 任务验证证据的格式。证据格式必须工具无关。
 
-## 1. 证据目录
+## 0. 版本历史
+
+| 版本 | 日期 | 变更 |
+|---|---|---|
+| v1.0 | 2026-06-15 | 初始版本 |
+| v1.1 | 2026-06-26 | 增强证据目录结构、质量标准、Negative Evidence 处理 |
+
+## 1. 证据目录（v1.1+ 增强结构）
 
 默认目录：
 
-```text
+```
 .harness/evidence/<task-id>/
-  summary.md
-  commands.json
-  screenshots/
-  smoke-results/
-  logs/
-  review.md
+├── summary.md              # 验证摘要（必需）
+├── commands.json           # 命令结果（必需）
+├── commands.log            # 原始命令输出
+├── screenshots/            # UI 截图
+│   ├── desktop/           # 桌面端截图
+│   └── mobile/            # 移动端截图
+├── smoke-results/          # Smoke 测试结果
+│   └── report.html        # 报告文件
+├── logs/                   # 日志文件
+│   ├── server.log
+│   └── test.log
+├── review.md               # Review 结论
+├── artifacts/              # 其他产物
+│   ├── openapi.json       # API 文档
+│   └── coverage/          # 覆盖率报告
+└── _meta.yaml             # Evidence 元信息
+    ├── generatedAt: ISO8601
+    ├── agent: string
+    ├── taskId: string
+    └── verificationVersion: string
 ```
 
 `.harness/evidence/` 可按项目策略选择是否提交。CI artifacts 可以使用相同结构。
@@ -261,3 +283,55 @@ For UI-affecting tasks, evidence must include:
 对于长会话、存在 delegation，或成本敏感任务，也不应只写“做完了”，却既没有 `sessionEconomics`，也没有显式说明当前工具拿不到这些信号。
 
 本轮只同步文档，不改 `pantheon-base` 的 evidence checker。因此 `sessionEconomics` 目前是方法推荐项，而不是本仓库的机械必填项；需要强制时，再同步 `scripts/harness/check-evidence.mjs`。
+
+## 6. Evidence 质量标准（v1.1+）
+
+### 截图标准
+
+| 属性 | 值 |
+|---|---|
+| 分辨率 - 桌面 | 1920x1080 |
+| 分辨率 - 移动 | 375x812 |
+| 格式 | PNG |
+| 最大文件大小 | 2MB |
+| 命名规范 | `<page>-<viewport>-<timestamp>.png` |
+
+### 日志标准
+
+| 属性 | 值 |
+|---|---|
+| 格式 | `[LEVEL] [TIMESTAMP] [SOURCE] MESSAGE` |
+| 级别 | DEBUG, INFO, WARN, ERROR |
+| 单文件最大 | 10MB |
+| 轮转 | 5 files |
+
+### 命令输出标准
+
+| 属性 | 值 |
+|---|---|
+| 格式 | JSON |
+| 必需字段 | taskId, agent, commands, sessionEconomics |
+| 可选字段 | graphChecks, browserEvidence, runtimeSensitive |
+
+## 7. Negative Evidence 处理（v1.1+）
+
+当某项验证无法执行时，必须显式记录：
+
+```json
+{
+  "verificationSkipped": true,
+  "skippedVerification": {
+    "command": "go test ./...",
+    "skipReason": "environment limitation | dependency missing | design decision",
+    "alternativeVerification": "description of alternative verification performed",
+    "riskAcceptedBy": "human | Human Gate",
+    "riskNote": "explanation of residual risk"
+  }
+}
+```
+
+规则：
+- `skipReason` 必须是具体原因，不能是"太忙"或"不需要"
+- 如果有替代验证，必须在 `alternativeVerification` 中记录
+- 必须有 `riskAcceptedBy` 确认风险已被接受
+- 所有 skipped verification 都应在 `summary.md` 的 `Known Gaps` 中列出

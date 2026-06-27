@@ -3,7 +3,8 @@ title: Task Packet Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-24
+updated_at: 2026-06-26
+version: v1.1
 ---
 
 # Task Packet Spec
@@ -11,6 +12,13 @@ updated_at: 2026-06-24
 English version: [TASK_PACKET_SPEC.en.md](./TASK_PACKET_SPEC.en.md)
 
 Task packet 是非 trivial 任务的工具无关输入格式。它让 Codex、Claude Code、Cursor、Copilot、OpenHands、Aider 和人工工程师共享同一份任务边界。
+
+## 0. 版本历史
+
+| 版本 | 日期 | 变更 |
+|---|---|---|
+| v1.0 | 2026-06-15 | 初始版本 |
+| v1.1 | 2026-06-26 | 新增 priority/estimatedComplexity/technicalDebtFlag/rollBackPlan/dependencies 字段，增强边界定义量化 |
 
 ## 1. 存放位置
 
@@ -39,6 +47,14 @@ task packet 负责人类可读边界，task manifest 负责 evidence / review / 
 
 <one sentence>
 
+## Priority (v1.1+)
+
+`critical | high | medium | low` (default: `medium`)
+
+## Estimated Complexity (v1.1+)
+
+`trivial | simple | moderate | complex | epic`
+
 ## Primary Layer
 
 platform | system/auth | system/iam | system/org | system/config | business/*
@@ -46,6 +62,11 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 ## Dependency Layers
 
 - none
+
+## Dependencies (v1.1+)
+
+- blockedBy: `none | task-ids that must complete first`
+- blocks: `none | task-ids that depend on this task`
 
 ## Harness Profile
 
@@ -80,7 +101,20 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - Working Assumptions: `none | current assumption that keeps work moving`
 - Open Questions: `none | ambiguity that should stop execution or change the plan`
 
-## Structural Scope
+## Structural Scope (v1.1+ Enhanced)
+
+### Scope Quantification
+- Modules affected: N
+- Files: N (create N, modify N, delete N)
+- API endpoints: N
+- Database migrations: yes/no
+
+### Risk Nodes
+
+1. [Risk description] - Mitigation approach
+2. [Risk description] - Mitigation approach
+
+### Legacy Fields (for compatibility)
 
 - Affected Subgraph: `<entry -> core path -> exit/side effect>` | `none`
 - Boundary Crossings: `none | platform -> system/auth | system/* -> pkg/* | base -> ops`
@@ -136,6 +170,25 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 
 - `none`
 - 或在 schema / contract / delete / release gate 前停下
+
+## Technical Debt (v1.1+)
+
+- technicalDebtFlag: `yes | no`
+- technicalDebtNote: `none | description of technical debt introduced or addressed`
+
+## Rollback Plan (v1.1+)
+
+**Required for destructive changes. Format:**
+
+- Trigger Condition: `none | condition that would trigger rollback`
+- Rollback Steps:
+  1. `git revert <commit-hash>`
+  2. `restore <backup-files>`
+  3. `redeploy <if applicable>`
+- Rollback Verification:
+  - [ ] Functionality verified
+  - [ ] Data integrity verified
+  - [ ] No side effects observed
 
 ## State Plan
 

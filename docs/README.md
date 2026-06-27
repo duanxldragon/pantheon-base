@@ -76,14 +76,16 @@ English version: [README.en.md](./README.en.md)
 
 ### 2.2 Harness 方法层
 
-Harness Engineering 方法源文件，用于理解方法和运行检查：
+Harness Engineering 方法源文件（来自 pantheon-harness）：
 
-1. [agentic-method-kit/README.md](../agentic-method-kit/README.md)
-2. [agentic-method-kit/HARNESS_CORE_MODEL.md](../agentic-method-kit/HARNESS_CORE_MODEL.md)
-3. [agentic-method-kit/HARNESS_COVERAGE_MODEL.md](../agentic-method-kit/HARNESS_COVERAGE_MODEL.md)
-4. [agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md](../agentic-method-kit/HARNESS_TEMPLATE_TAXONOMY.md)
-5. [agentic-method-kit/TOOL_ADAPTER_MATRIX.md](../agentic-method-kit/TOOL_ADAPTER_MATRIX.md)
-6. [agentic-method-kit/METHOD_PLAYBOOK.md](../agentic-method-kit/METHOD_PLAYBOOK.md)
+1. [harness-methodology.zh.md](../../pantheon-harness/architecture/methodology/harness-methodology.zh.md) — 方法总纲
+2. [workflow-routing.md](../../pantheon-harness/architecture/methodology/workflow-routing.md) — 工具路由决策树
+3. [solo-delivery-tiers.md](../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md) — 个人交付层级
+4. [context-engineering-guide.md](../../pantheon-harness/architecture/methodology/context-engineering-guide.md) — 上下文工程规范
+5. [branch-pr-workflow.md](../../pantheon-harness/architecture/methodology/branch-pr-workflow.md) — 分支与 PR 工作流
+6. [workflow-templates.md](../../pantheon-harness/architecture/methodology/workflow-templates.md) — 工作流模板
+7. [codex-workflow-quick-reference.md](../../pantheon-harness/architecture/methodology/codex-workflow-quick-reference.md) — Codex 工作流命令速查
+8. [ci-cd-integration.md](../../pantheon-harness/architecture/methodology/ci-cd-integration.md) — CI/CD 集成指南
 
 ### 2.3 Harness 落地层
 
