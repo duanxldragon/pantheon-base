@@ -10,8 +10,8 @@ import {
 
 const root = process.cwd();
 const TEMPLATE_CANDIDATES = [
-  path.join(root, '.github', 'PULL_REQUEST_TEMPLATE.md'),
   path.join(root, '.github', 'pull_request_template.md'),
+  path.join(root, '.github', 'PULL_REQUEST_TEMPLATE.md'),
 ];
 
 const REQUIRED_SECTIONS = [

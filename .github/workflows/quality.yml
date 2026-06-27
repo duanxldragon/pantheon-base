@@ -28,6 +28,7 @@ jobs:
       pull-requests: read
     outputs:
       docs_only: ${{ steps.scope.outputs.docs_only || 'false' }}
+      governance_only: ${{ steps.scope.outputs.governance_only || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -36,7 +37,7 @@ jobs:
 
       - name: Detect docs-only pull requests
         id: scope
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
         with:
           predicate-quantifier: every
@@ -49,6 +50,27 @@ jobs:
               - 'AGENTS.md'
               - 'CLAUDE.md'
               - 'docs/**'
+            governance_only:
+              - 'README.md'
+              - 'README.en.md'
+              - 'DESIGN.md'
+              - 'SECURITY.md'
+              - 'AGENTS.md'
+              - 'AGENTS.en.md'
+              - 'CLAUDE.md'
+              - '.agents/**'
+              - '.github/pull_request_template.md'
+              - '.github/PULL_REQUEST_TEMPLATE.md'
+              - '.github/pr-body.txt'
+              - '.github/workflows/**'
+              - '.harness/**'
+              - 'config/method.config.json'
+              - 'docs/**'
+              - 'scripts/check-pr-governance.mjs'
+              - 'scripts/check-task-packet-template.mjs'
+              - 'scripts/frontmatter-check.mjs'
+              - 'scripts/harness/**'
+              - 'tests/scripts/**'
 
   docs-governance:
     name: Docs Governance
@@ -116,6 +138,9 @@ jobs:
 
   frontend-contract:
     name: Frontend Contract
+    needs:
+      - change-scope
+    if: ${{ github.event_name == 'merge_group' || needs.change-scope.outputs.governance_only != 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -149,6 +174,9 @@ jobs:
 
   backend-tests:
     name: Backend Tests
+    needs:
+      - change-scope
+    if: ${{ github.event_name == 'merge_group' || needs.change-scope.outputs.governance_only != 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -248,7 +276,7 @@ jobs:
     name: Smoke Sanity
     needs:
       - change-scope
-    if: ${{ github.event_name != 'pull_request' || needs.change-scope.outputs.docs_only != 'true' }}
+    if: ${{ github.event_name == 'merge_group' || needs.change-scope.outputs.governance_only != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -368,28 +396,32 @@ jobs:
         shell: bash
         env:
           DOCS_ONLY: ${{ needs.change-scope.outputs.docs_only }}
+          GOVERNANCE_ONLY: ${{ needs.change-scope.outputs.governance_only }}
           DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
           FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
           BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
           DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
         run: |
-          SMOKE_SANITY_REQUIRED=true
-          if [ "${DOCS_ONLY}" = "true" ]; then
-            SMOKE_SANITY_REQUIRED=false
+          RUNTIME_GATES_REQUIRED=true
+          if [ "${GOVERNANCE_ONLY}" = "true" ]; then
+            RUNTIME_GATES_REQUIRED=false
           fi
+          echo "Docs Only: ${DOCS_ONLY}"
+          echo "Governance Only: ${GOVERNANCE_ONLY}"
           echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
           echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
           echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
           echo "Duplication Gate: ${DUPLICATION_RESULT}"
           echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
-          echo "Smoke Sanity Required: ${SMOKE_SANITY_REQUIRED}"
+          echo "Runtime Gates Required: ${RUNTIME_GATES_REQUIRED}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
-             [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
-             [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
              [ "${DUPLICATION_RESULT}" != "success" ]; then
             exit 1
           fi
-          if [ "${SMOKE_SANITY_REQUIRED}" = "true" ] && [ "${SMOKE_SANITY_RESULT}" != "success" ]; then
+          if [ "${RUNTIME_GATES_REQUIRED}" = "true" ] && \
+             { [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
+               [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
+               [ "${SMOKE_SANITY_RESULT}" != "success" ]; }; then
             exit 1
           fi

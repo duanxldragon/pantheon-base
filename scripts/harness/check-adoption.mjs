@@ -20,8 +20,8 @@ const TASK_MANIFEST_ROOT = '.harness/tasks/';
 const EVIDENCE_ROOT = '.harness/evidence/';
 const OPEN_SPEC_CHANGES_ROOT = 'openspec/changes';
 const PR_TEMPLATE_CANDIDATES = [
-  '.github/PULL_REQUEST_TEMPLATE.md',
   '.github/pull_request_template.md',
+  '.github/PULL_REQUEST_TEMPLATE.md',
 ];
 
 const REQUIRED_METHOD_FILES = [
