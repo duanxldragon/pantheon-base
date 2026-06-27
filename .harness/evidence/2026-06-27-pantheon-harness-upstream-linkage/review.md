@@ -46,7 +46,7 @@ No blocking findings. The change keeps base-adapted scripts local while making t
 - CI behavior depends on the `duanxldragon/pantheon-harness` checkout remaining accessible.
 - Portable frontmatter migration warnings remain in older English harness docs, but the CI frontmatter gate passes.
 - Latest PR Backend Tests failure is outside the touched harness/docs/workflow surface and remains a separate backend baseline/follow-up risk.
-- Governance-only workflow scope now prevents method-only PRs from being blocked by unrelated runtime gate failures while preserving full gates for merge queue/runtime changes.
+- Governance-only workflow scope now uses changed-file count comparison, preventing method-only PRs from being blocked by unrelated runtime gate failures while preserving full gates for merge queue/runtime changes.
 
 ## Verification Checked
 

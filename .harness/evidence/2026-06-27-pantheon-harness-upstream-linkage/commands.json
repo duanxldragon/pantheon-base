@@ -102,7 +102,7 @@
       "cwd": "pantheon-base",
       "status": "passed",
       "durationMs": 0,
-      "notes": "validated governance-only changes skip runtime gates while merge_group and runtime changes keep full gates"
+      "notes": "validated governance-only changes use all-file count comparison to skip runtime gates while merge_group and runtime changes keep full gates"
     },
     {
       "command": "gh pr checks 125 --repo duanxldragon/pantheon-base",

@@ -14,13 +14,23 @@ test('governance-only changes can skip runtime gates without failing Quality Gat
   );
   assert.match(
     workflowSource,
-    /paths-filter[\s\S]*predicate-quantifier:\s*every/i,
-    'quality workflow should require every changed file to match a scope filter',
+    /filters:\s*\|[\s\S]*all:\s*\n\s*-\s*'\*\*'/i,
+    'quality workflow should count all changed files before classifying scopes',
   );
   assert.match(
     workflowSource,
-    /governance_only:\s*\$\{\{\s*steps\.scope\.outputs\.governance_only\s*\|\|\s*'false'\s*\}\}/i,
-    'change scope should default governance_only to false outside scoped events',
+    /docs_only:\s*\$\{\{[\s\S]*steps\.scope\.outputs\.all_count\s*==\s*steps\.scope\.outputs\.docs_only_count[\s\S]*\}\}/i,
+    'change scope should classify docs-only by comparing matched docs count with all changed files',
+  );
+  assert.match(
+    workflowSource,
+    /governance_only:\s*\$\{\{[\s\S]*steps\.scope\.outputs\.all_count\s*==\s*steps\.scope\.outputs\.governance_only_count[\s\S]*\}\}/i,
+    'change scope should classify governance-only by comparing matched governance count with all changed files',
+  );
+  assert.doesNotMatch(
+    workflowSource,
+    /predicate-quantifier:\s*every/i,
+    'quality workflow should not require every whitelist glob to match the same file',
   );
   assert.match(
     workflowSource,

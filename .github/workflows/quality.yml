@@ -27,8 +27,8 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      docs_only: ${{ steps.scope.outputs.docs_only || 'false' }}
-      governance_only: ${{ steps.scope.outputs.governance_only || 'false' }}
+      docs_only: ${{ steps.scope.outputs.all_count != '' && steps.scope.outputs.all_count == steps.scope.outputs.docs_only_count }}
+      governance_only: ${{ steps.scope.outputs.all_count != '' && steps.scope.outputs.all_count == steps.scope.outputs.governance_only_count }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -40,8 +40,9 @@ jobs:
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
         with:
-          predicate-quantifier: every
           filters: |
+            all:
+              - '**'
             docs_only:
               - 'README.md'
               - 'README.en.md'
