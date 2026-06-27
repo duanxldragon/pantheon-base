@@ -3,6 +3,8 @@ title: Notification Service Design
 doc_type: Design
 layer: platform
 status: Draft
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-26
 ---
 
@@ -16,21 +18,21 @@ The notification service provides multi-channel notifications for users.
 
 ### 1.1 Supported Channels
 
-| Channel | Implementation | Notes |
-|---------|---------------|-------|
-| In-App | Self-built | Notification center |
-| Email | SMTP | Requires mail server config |
-| SMS | Alibaba/Tencent Cloud | Requires cloud SMS service |
-| WebSocket | Gin WebSocket | Real-time push |
+| Channel   | Implementation        | Notes                       |
+| --------- | --------------------- | --------------------------- |
+| In-App    | Self-built            | Notification center         |
+| Email     | SMTP                  | Requires mail server config |
+| SMS       | Alibaba/Tencent Cloud | Requires cloud SMS service  |
+| WebSocket | Gin WebSocket         | Real-time push              |
 
 ### 1.2 Notification Types
 
-| Type | Trigger | Priority |
-|------|---------|----------|
-| Approval | Submit, approve, reject | High |
-| Task | Assign, reminder | High |
-| System | Scheduled task, announcement | Medium |
-| Security | Login from new location | High |
+| Type     | Trigger                      | Priority |
+| -------- | ---------------------------- | -------- |
+| Approval | Submit, approve, reject      | High     |
+| Task     | Assign, reminder             | High     |
+| System   | Scheduled task, announcement | Medium   |
+| Security | Login from new location      | High     |
 
 ---
 
@@ -54,22 +56,22 @@ CREATE TABLE system_notification (
 
 ## 3. API Design
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/notification/list` | GET | List notifications |
-| `/notification/:id/read` | PUT | Mark as read |
-| `/notification/preference` | PUT | Update preferences |
-| `/ws/notifications` | WS | Real-time push |
+| Endpoint                   | Method | Description        |
+| -------------------------- | ------ | ------------------ |
+| `/notification/list`       | GET    | List notifications |
+| `/notification/:id/read`   | PUT    | Mark as read       |
+| `/notification/preference` | PUT    | Update preferences |
+| `/ws/notifications`        | WS     | Real-time push     |
 
 ---
 
 ## 4. Migration Path
 
-| Phase | Tasks |
-|-------|-------|
+| Phase   | Tasks                          |
+| ------- | ------------------------------ |
 | Phase 1 | In-app notifications, list API |
-| Phase 2 | Email, WebSocket |
-| Phase 3 | SMS, templates |
+| Phase 2 | Email, WebSocket               |
+| Phase 3 | SMS, templates                 |
 
 ---
 

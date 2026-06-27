@@ -3,6 +3,8 @@ title: Module Generator Extension Design
 doc_type: Design
 layer: platform
 status: Draft
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-06-26
 ---
 
@@ -44,13 +46,14 @@ ids := common.NormalizeUint64IDs(req.IDs)
 
 ```typescript
 // New imports
-import { normalizePageQuery } from '@/utils/pagination';
-import { downloadFile, uploadImportFile } from '@/api';
+import { normalizePageQuery } from "@/utils/pagination";
+import { downloadFile, uploadImportFile } from "@/api";
 
 // Auto-generated API methods
-export const downloadTemplate = () => downloadFile('/module/import-template');
-export const exportItems = (params) => downloadFile('/module/export', params);
-export const importItems = (file: File) => uploadImportFile('/module/import', file);
+export const downloadTemplate = () => downloadFile("/module/import-template");
+export const exportItems = (params) => downloadFile("/module/export", params);
+export const importItems = (file: File) =>
+  uploadImportFile("/module/import", file);
 ```
 
 ---

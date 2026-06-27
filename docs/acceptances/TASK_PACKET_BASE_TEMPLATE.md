@@ -12,7 +12,7 @@ updated_at: 2026-06-08
 
 English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.en.md)
 
-这是一份给 `pantheon-base` 使用的结构化 task packet 样例。它继承 `agentic-method-kit` 的通用方法，只补充当前后台基础平台的业务架构约束。
+这是一份给 `pantheon-base` 使用的结构化 task packet 样例。它继承 `pantheon-harness` 的通用方法，只补充当前后台基础平台的业务架构约束。
 
 适用范围：
 

@@ -9,6 +9,12 @@
     "check:duplication": "node scripts/check-duplication.mjs",
     "check:github-feedback": "node scripts/fetch-github-feedback.mjs --check",
     "check:pr-governance": "node scripts/check-pr-governance.mjs",
+    "check:harness-method": "node scripts/harness/check-method-health.mjs --root . --strict",
+    "check:harness-adoption": "node scripts/harness/check-adoption.mjs --root . --strict",
+    "check:harness-template": "node scripts/harness/check-template-health.mjs --root . --strict",
+    "check:harness-docs": "node scripts/harness/check-doc-links.mjs --root . --strict",
+    "check:harness-inventory": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+    "check:harness-sync": "node scripts/harness/check-sync-drift.mjs --root . --strict",
     "release:foundation:bundle": "node scripts/foundation-release/build-release-bundle.mjs",
     "release:foundation:cut": "node scripts/foundation-release/cut-foundation-release.mjs",
     "release:foundation:manifest": "node scripts/foundation-release/build-release-manifest.mjs",
@@ -29,14 +35,24 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "frontend/src/**/*.{ts,tsx}": ["tsc --noEmit", "eslint --fix"],
-    "frontend/src/**/*.{css,scss}": ["stylelint --fix"],
-    "backend/**/*.go": ["gofmt -w"],
-    "**/*.md": ["prettier --write"]
+    "frontend/src/**/*.{ts,tsx}": [
+      "tsc --noEmit",
+      "eslint --fix"
+    ],
+    "frontend/src/**/*.{css,scss}": [
+      "stylelint --fix"
+    ],
+    "backend/**/*.go": [
+      "gofmt -w"
+    ],
+    "**/*.md": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "playwright": "^1.61.0"
+    "playwright": "^1.61.0",
+    "prettier": "^3.9.0"
   }
 }

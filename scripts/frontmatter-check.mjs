@@ -155,6 +155,29 @@ function normalizeSlash(p) {
   return p.replace(/\\/g, '/');
 }
 
+function resolvePantheonHarnessLink(repoRoot, href) {
+  const normalized = href.replace(/#.*$/u, '').replaceAll('\\', '/');
+  const match = normalized.match(/(?:^|\/)pantheon-harness\/(.+)$/u);
+  if (!match) return null;
+
+  const relativeTarget = match[1];
+  return [
+    path.resolve(repoRoot, '..', 'pantheon-harness', relativeTarget),
+    path.resolve(repoRoot, 'pantheon-harness', relativeTarget),
+  ];
+}
+
+function docLinkExists(repoRoot, baseDir, href, docsIndex) {
+  const resolvedAbsolute = path.resolve(baseDir, href);
+  const resolved = normalizeSlash(path.relative(repoRoot, resolvedAbsolute));
+  if (docsIndex.byPath.has(resolved) || fs.existsSync(resolvedAbsolute)) {
+    return true;
+  }
+
+  const pantheonHarnessTargets = resolvePantheonHarnessLink(repoRoot, href);
+  return pantheonHarnessTargets !== null && pantheonHarnessTargets.some((target) => fs.existsSync(target));
+}
+
 function buildDocsIndex(repoRoot) {
   const files = walkMarkdownFiles(path.resolve(repoRoot, DOC_ROOT));
   const byPath = new Map();
@@ -438,8 +461,7 @@ export function runCheck(repoRoot = DEFAULT_REPO_ROOT, options = {}) {
   if (readmeEntry) {
     for (const href of extractReadmeDocLinks(readmeEntry.source)) {
       const baseDir = path.resolve(repoRoot, 'docs');
-      const resolved = normalizeSlash(path.relative(repoRoot, path.resolve(baseDir, href)));
-      if (!docsIndex.byPath.has(resolved) && !fs.existsSync(path.resolve(repoRoot, resolved))) {
+      if (!docLinkExists(repoRoot, baseDir, href, docsIndex)) {
         errors.push(`docs/README.md: link target does not exist: ${href}`);
       }
     }

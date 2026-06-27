@@ -15,16 +15,20 @@ Core expectations:
 
 Before substantial work, read in order:
 
-1. `DESIGN.md`
-2. `AGENTS.md`
-3. `docs/README.md`
-4. `docs/harness/HARNESS_METHOD_PLAYBOOK.md`
-5. `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
-6. `docs/harness/AI_QUALITY_GOVERNANCE.md`
-7. `docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
-8. matching contracts
-9. matching designs
-10. matching acceptances
+1. `../pantheon-harness/patterns/README.md`
+2. `../pantheon-harness/patterns/method-playbook.md`
+3. `../pantheon-harness/patterns/execution-guardrails.md`
+4. `../pantheon-harness/patterns/context-engineering-protocol.md`
+5. `DESIGN.md`
+6. `AGENTS.md`
+7. `docs/README.md`
+8. `docs/harness/HARNESS_METHOD_PLAYBOOK.md`
+9. `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
+10. `docs/harness/AI_QUALITY_GOVERNANCE.md`
+11. `docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`
+12. matching contracts
+13. matching designs
+14. matching acceptances
 
 Additional defaults:
 

@@ -17,8 +17,8 @@ on:
           - 'dry-run'
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
   statuses: read
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d1991bb908d89e4e9dddfe3e0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: "22"
           package-manager-cache: false
@@ -115,7 +115,7 @@ jobs:
           cache: false
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d1991bb908d89e4e9dddfe3e0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
           package-manager-cache: false
@@ -213,7 +213,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d1991bb908d89e4e9dddfe3e0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: "22"
           package-manager-cache: false
@@ -232,14 +232,18 @@ jobs:
 
       - name: Summary
         if: always()
+        env:
+          HAS_PRS: ${{ needs.collect-merge-targets.outputs.has_prs }}
+          HAS_BRANCHES: ${{ needs.collect-merge-targets.outputs.has_branches }}
+          QUALITY_RESULT: ${{ needs.pre-merge-quality.result }}
         run: |
           echo "## Auto-Merge Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Merged PRs | ${{ needs.collect-merge-targets.outputs.has_prs }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Merged Branches | ${{ needs.collect-merge-targets.outputs.has_branches }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Quality Gate | ${{ needs.pre-merge-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          printf '| Merged PRs | %s |\n' "$HAS_PRS" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Merged Branches | %s |\n' "$HAS_BRANCHES" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Quality Gate | %s |\n' "$QUALITY_RESULT" >> "$GITHUB_STEP_SUMMARY"
 
   # ============================================================
   # Phase 4: Post-Merge Cleanup

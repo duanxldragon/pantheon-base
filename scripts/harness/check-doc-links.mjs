@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { resolvePantheonHarnessRoot } from './upstream-root.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 
 function parseArgs(argv) {
@@ -50,14 +52,28 @@ function extractLinks(source) {
   return links;
 }
 
+function resolvePantheonHarnessTarget(methodRoot, href) {
+  const withoutAnchor = href.replace(/#.*$/u, '').replaceAll('\\', '/');
+  const match = withoutAnchor.match(/(?:^|\/)pantheon-harness\/(.+)$/u);
+  if (!match) {
+    return null;
+  }
+  return path.join(methodRoot, match[1]);
+}
+
 function scan(root) {
   const findings = [];
-  for (const dir of ['docs', 'agentic-method-kit', 'agentic-repo-shell', 'pantheon-overlay']) {
+  const methodRoot = resolvePantheonHarnessRoot(root);
+  for (const dir of ['docs', '.agents', 'scripts/harness', 'config']) {
     for (const filePath of walkMarkdownFiles(path.join(root, dir))) {
       const source = fs.readFileSync(filePath, 'utf8');
       for (const href of extractLinks(source)) {
         const target = path.resolve(path.dirname(filePath), href);
-        const targetExists = fs.existsSync(target) || fs.existsSync(target.replace(/#.*$/, ''));
+        const externalTarget = resolvePantheonHarnessTarget(methodRoot, href);
+        const targetExists =
+          fs.existsSync(target) ||
+          fs.existsSync(target.replace(/#.*$/, '')) ||
+          (externalTarget !== null && fs.existsSync(externalTarget));
         if (!targetExists) {
           findings.push({
             file: path.relative(root, filePath).replaceAll(path.sep, '/'),

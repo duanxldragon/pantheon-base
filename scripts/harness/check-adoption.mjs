@@ -6,11 +6,12 @@ import process from 'node:process';
 
 import { sortStrings } from './sort-utils.mjs';
 import { execFileSync } from 'node:child_process';
+import { formatExternalPath, resolvePantheonHarnessRoot } from './upstream-root.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 const IMPLEMENTATION_ROOTS = [
-  'pantheon-base/backend/',
-  'pantheon-base/frontend/',
+  'backend/',
+  'frontend/',
   'docs/contracts/',
   'docs/designs/',
   'docs/acceptances/',
@@ -23,11 +24,14 @@ const PR_TEMPLATE_CANDIDATES = [
   '.github/pull_request_template.md',
 ];
 
+const REQUIRED_METHOD_FILES = [
+  'patterns/harness-core-model.md',
+  'patterns/harness-coverage-model.md',
+  'patterns/harness-template-taxonomy.md',
+  'patterns/tool-adapter-matrix.md',
+];
+
 const REQUIRED_FILES = [
-  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
-  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
   'docs/harness/HARNESS_CORE_MODEL.md',
   'docs/harness/HARNESS_COVERAGE_MODEL.md',
   'docs/harness/HARNESS_TEMPLATE_TAXONOMY.md',
@@ -57,7 +61,7 @@ const REQUIRED_PR_MARKERS = [
   'task id',
   'task manifest',
   'evidence',
-  'review artifact',
+  'Review Artifact',
   'Trivial change',
   'boundaries',
   'backend response contract',
@@ -89,7 +93,15 @@ Checks that Phase 7 Harness adoption entrypoints are present:
 }
 
 function parseArgs(argv) {
-  const options = { json: false, strict: false, help: false, root: DEFAULT_ROOT, changedFiles: [] };
+  const options = {
+    json: false,
+    strict: false,
+    help: false,
+    root: DEFAULT_ROOT,
+    changedFiles: [],
+    methodRoot: null,
+    config: undefined,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--json') {
@@ -104,6 +116,20 @@ function parseArgs(argv) {
         throw new Error('--root requires a path');
       }
       options.root = path.resolve(value);
+      index += 1;
+    } else if (arg === '--method-root') {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error('--method-root requires a path');
+      }
+      options.methodRoot = value;
+      index += 1;
+    } else if (arg === '--config') {
+      const value = argv[index + 1];
+      if (!value) {
+        throw new Error('--config requires a path');
+      }
+      options.config = value;
       index += 1;
     } else if (arg === '--changed-file') {
       const value = argv[index + 1];
@@ -289,9 +315,19 @@ function scanOpenSpecLinkage(root, findings, changedFiles) {
   }
 }
 
-function scanAdoption(root, changedFiles) {
+function scanAdoption(root, changedFiles, options = {}) {
   const findings = [];
   const warnings = [];
+  const methodRoot = resolvePantheonHarnessRoot(root, options);
+
+  for (const repoPath of REQUIRED_METHOD_FILES) {
+    if (!fs.existsSync(path.join(methodRoot, repoPath))) {
+      findings.push({
+        file: formatExternalPath(root, methodRoot, repoPath),
+        reason: 'required upstream Harness method file is missing',
+      });
+    }
+  }
 
   for (const repoPath of REQUIRED_FILES) {
     if (!fs.existsSync(path.join(root, repoPath))) {
@@ -372,7 +408,7 @@ function main() {
   }
 
   const changedFiles = options.changedFiles.length > 0 ? options.changedFiles : discoverChangedFiles(options.root);
-  const result = scanAdoption(options.root, changedFiles);
+  const result = scanAdoption(options.root, changedFiles, options);
   if (options.json) {
     console.log(
       JSON.stringify(
@@ -397,4 +433,3 @@ function main() {
 }
 
 process.exitCode = main();
-

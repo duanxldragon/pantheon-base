@@ -20,19 +20,19 @@ English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md
 
 ## 阅读顺序
 
-1. 先读 `../../pantheon-harness/architecture/methodology/harness-methodology.zh.md`
-2. 再读 `../../pantheon-harness/architecture/methodology/workflow-routing.md`
-3. 再读 `../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md`
-4. 再读 `../../pantheon-harness/architecture/harness/harness-core-model.md`
-5. 再读 `../../pantheon-harness/architecture/harness/harness-coverage-model.md`
-6. 再读 `../../pantheon-harness/architecture/harness/tool-adapter-matrix.md`
-7. 再读 `../../pantheon-harness/architecture/harness/triviality-classification-policy.md`
-8. 再读 `../../pantheon-harness/architecture/harness/task-packet-spec.md`
-9. 再读 `../../pantheon-harness/architecture/harness/verification-evidence-spec.md`
-10. 再读 `../../pantheon-harness/architecture/harness/review-loop-spec.md`
-11. 再读 `../../pantheon-harness/architecture/harness/failure-ratchet-policy.md`
-12. 再读 `../../pantheon-harness/architecture/methodology/context-engineering-guide.md`
-13. 再读 `../../pantheon-harness/architecture/methodology/codex-workflow-quick-reference.md`
+1. 先读 `../../../pantheon-harness/patterns/README.md`
+2. 再读 `../../../pantheon-harness/patterns/harness-core-model.md`
+3. 再读 `../../../pantheon-harness/patterns/harness-coverage-model.md`
+4. 再读 `../../../pantheon-harness/patterns/harness-template-taxonomy.md`
+5. 再读 `../../../pantheon-harness/patterns/tool-adapter-matrix.md`
+6. 再读 `../../../pantheon-harness/patterns/method-playbook.md`
+7. 再读 `../../../pantheon-harness/patterns/execution-guardrails.md`
+8. 再读 `../../../pantheon-harness/patterns/context-engineering-protocol.md`
+9. 再读 `../../../pantheon-harness/patterns/method-first-delivery-policy.md`
+10. 再读 `../../../pantheon-harness/patterns/cross-agent-ratchet-model.md`
+11. 再读 `../../../pantheon-harness/patterns/minimal-complexity-ladder.md`
+12. 再读 `../../../pantheon-harness/patterns/templates/task-packet.template.md`
+13. 再读 `../../../pantheon-harness/patterns/templates/review.template.md`
 14. 再读 `docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`
 15. 再读 `docs/harness/AI_QUALITY_GOVERNANCE.md`
 16. 再读当前仓库需要落地执行的合同：
@@ -50,7 +50,7 @@ English version: [HARNESS_METHOD_PLAYBOOK.en.md](./HARNESS_METHOD_PLAYBOOK.en.md
 
 ## 默认执行护栏
 
-在进入实现前，默认先过一遍 `../../../pantheon-harness/architecture/methodology/context-engineering-guide.md`：
+在进入实现前，默认先过一遍 `../../../pantheon-harness/patterns/context-engineering-protocol.md`：
 
 - 先区分 confirmed facts、working assumptions 和 open questions，不要在权限、审计、边界问题上静默猜测。
 - 先走最小复杂度阶梯，把方案压到最小可承重复杂度。

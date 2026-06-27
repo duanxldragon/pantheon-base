@@ -5,22 +5,28 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { sortStrings } from './sort-utils.mjs';
+import { resolvePantheonHarnessRoot } from './upstream-root.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 
-const REQUIRED_DOC_README_ENTRIES = [
-  'pantheon-harness/architecture/README.md',
-  'pantheon-harness/architecture/HARNESS_CORE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_COVERAGE_MODEL.md',
-  'pantheon-harness/architecture/HARNESS_TEMPLATE_TAXONOMY.md',
-  'pantheon-harness/architecture/TOOL_ADAPTER_MATRIX.md',
-  'pantheon-harness/architecture/METHOD_PLAYBOOK.md',
+const REQUIRED_UPSTREAM_DOC_README_ENTRIES = [
+  'patterns/README.md',
+  'patterns/harness-core-model.md',
+  'patterns/harness-coverage-model.md',
+  'patterns/harness-template-taxonomy.md',
+  'patterns/tool-adapter-matrix.md',
+  'patterns/method-playbook.md',
+  'patterns/execution-guardrails.md',
+  'patterns/context-engineering-protocol.md',
+];
+
+const REQUIRED_LOCAL_DOC_README_ENTRIES = [
   'docs/harness/HARNESS_ENGINEERING_CONTRACT.md',
   'docs/harness/HARNESS_METHOD_PLAYBOOK.md',
 ];
 
 function parseArgs(argv) {
-  const options = { json: false, strict: false, help: false, root: DEFAULT_ROOT };
+  const options = { json: false, strict: false, help: false, root: DEFAULT_ROOT, methodRoot: null, config: undefined };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--json') options.json = true;
@@ -30,6 +36,16 @@ function parseArgs(argv) {
       const value = argv[index + 1];
       if (!value) throw new Error('--root requires a path');
       options.root = path.resolve(value);
+      index += 1;
+    } else if (arg === '--method-root') {
+      const value = argv[index + 1];
+      if (!value) throw new Error('--method-root requires a path');
+      options.methodRoot = value;
+      index += 1;
+    } else if (arg === '--config') {
+      const value = argv[index + 1];
+      if (!value) throw new Error('--config requires a path');
+      options.config = value;
       index += 1;
     } else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -79,7 +95,7 @@ function validateScriptInventory(root, dir, readmePath, findings) {
   }
 }
 
-function validateDocsReadme(root, findings) {
+function validateDocsReadme(root, methodRoot, findings) {
   const readmePath = 'docs/README.md';
   const readme = readIfExists(path.join(root, readmePath));
   if (readme === null) {
@@ -88,7 +104,7 @@ function validateDocsReadme(root, findings) {
   }
 
   const normalized = readme.replaceAll('\\', '/');
-  for (const repoPath of REQUIRED_DOC_README_ENTRIES) {
+  for (const repoPath of REQUIRED_LOCAL_DOC_README_ENTRIES) {
     if (!fs.existsSync(path.join(root, repoPath))) {
       continue;
     }
@@ -106,19 +122,34 @@ function validateDocsReadme(root, findings) {
       });
     }
   }
+
+  for (const repoPath of REQUIRED_UPSTREAM_DOC_README_ENTRIES) {
+    if (!fs.existsSync(path.join(methodRoot, repoPath))) {
+      continue;
+    }
+
+    const normalizedRepoPath = repoPath.replaceAll('\\', '/');
+    const acceptableRefs = new Set([
+      `../pantheon-harness/${normalizedRepoPath}`,
+      `../../pantheon-harness/${normalizedRepoPath}`,
+      normalizedRepoPath,
+    ]);
+    if (![...acceptableRefs].some((entry) => normalized.includes(entry))) {
+      findings.push({
+        file: `../pantheon-harness/${normalizedRepoPath}`,
+        inventory: readmePath,
+        reason: 'required upstream method document is missing from docs README',
+      });
+    }
+  }
 }
 
-function scan(root) {
+function scan(root, options = {}) {
   const findings = [];
+  const methodRoot = resolvePantheonHarnessRoot(root, options);
 
   validateScriptInventory(root, 'scripts/harness', 'scripts/harness/README.md', findings);
-  validateScriptInventory(
-    root,
-    'agentic-repo-shell/scripts/harness',
-    'agentic-repo-shell/scripts/harness/README.md',
-    findings,
-  );
-  validateDocsReadme(root, findings);
+  validateDocsReadme(root, methodRoot, findings);
 
   return findings;
 }
@@ -137,7 +168,7 @@ function main() {
     return 0;
   }
 
-  const findings = scan(options.root);
+  const findings = scan(options.root, options);
   if (options.json) {
     console.log(
       JSON.stringify(
@@ -163,4 +194,3 @@ function main() {
 }
 
 process.exitCode = main();
-

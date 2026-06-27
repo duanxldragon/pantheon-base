@@ -10,7 +10,7 @@ on:
   merge_group:
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
   GO_VERSION_FILE: go.mod
   MYSQL_ROOT_PASSWORD: "root"
   MYSQL_DATABASE: "pantheon_base"
@@ -61,6 +61,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Checkout Pantheon Harness
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          repository: duanxldragon/pantheon-harness
+          path: pantheon-harness
+          persist-credentials: false
+
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
@@ -85,6 +92,24 @@ jobs:
 
       - name: Check failure registry
         run: npm run check:failure-registry
+
+      - name: Check harness method linkage
+        run: npm run check:harness-method
+
+      - name: Check harness adoption
+        run: npm run check:harness-adoption
+
+      - name: Check harness template health
+        run: npm run check:harness-template
+
+      - name: Check harness docs
+        run: npm run check:harness-docs
+
+      - name: Check harness inventory
+        run: npm run check:harness-inventory
+
+      - name: Check harness sync drift
+        run: npm run check:harness-sync
 
       - name: Check generated modules
         run: npm run check:generated-modules

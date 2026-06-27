@@ -15,21 +15,21 @@ English version: [PANTHEON_BASE_DELIVERY_WORKFLOW.en.md](./PANTHEON_BASE_DELIVER
 
 本文定义 `pantheon-base` 如何使用 Claude、Codex、`acpx` 和 `omc` 执行 Harness Engineering 流程。
 
-当前个人维护阶段，先按 `../../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md` 判断任务属于 `L0 / L1 / L2`。本文主要定义 `L2` 和需要多 agent / 多 gate 的 `L1` 任务；`L0` 与普通 `L1` 不必强行套完整多 agent 调度。
+当前个人维护阶段，先按 `../../../pantheon-harness/patterns/method-playbook.md`、`../../../pantheon-harness/patterns/minimal-complexity-ladder.md` 和 `../../../pantheon-harness/patterns/execution-guardrails.md` 判断任务档位与治理强度。本文主要定义 `L2` 和需要多 agent / 多 gate 的 `L1` 任务；`L0` 与普通 `L1` 不必强行套完整多 agent 调度。
 
 目标是让人只提出目标和关键决策，不需要手动调度每个 agent。调度由当前协调 agent 负责完成，并把结果沉淀到仓库 artifact。
 
 ## 1. 角色分工
 
-| 角色 | 默认工具 | 职责 | 禁止事项 |
-|---|---|---|---|
-| Human Owner | 人 | 给目标、优先级、风险接受、human gate 决策 | 不手动搬运 Claude/Codex 上下文 |
-| Dispatcher | 当前协调 agent | 调用 planner、executor、reviewer，维护 task/evidence/review 链路 | 不把聊天记录当事实源 |
-| Planner | Claude | 需求澄清、设计边界、task packet、task manifest linkage、验收标准、stop points | 不直接改业务代码 |
-| Explorer | Codex | 代码结构、影响面、CodeGraph、现有测试和文档定位 | 不扩大任务范围 |
-| Executor | Codex | 实现、测试、证据、修复 review finding | 不跳过 task packet 和 evidence |
-| Reviewer | Claude | findings-first review，检查范围、证据、安全、质量和剩余风险 | 不直接修代码 |
-| Mechanical Gates | GitHub Actions / local scripts | 可重复验证、CI、security、smoke、docs governance | 不替代人工高风险决策 |
+| 角色             | 默认工具                       | 职责                                                                          | 禁止事项                       |
+| ---------------- | ------------------------------ | ----------------------------------------------------------------------------- | ------------------------------ |
+| Human Owner      | 人                             | 给目标、优先级、风险接受、human gate 决策                                     | 不手动搬运 Claude/Codex 上下文 |
+| Dispatcher       | 当前协调 agent                 | 调用 planner、executor、reviewer，维护 task/evidence/review 链路              | 不把聊天记录当事实源           |
+| Planner          | Claude                         | 需求澄清、设计边界、task packet、task manifest linkage、验收标准、stop points | 不直接改业务代码               |
+| Explorer         | Codex                          | 代码结构、影响面、CodeGraph、现有测试和文档定位                               | 不扩大任务范围                 |
+| Executor         | Codex                          | 实现、测试、证据、修复 review finding                                         | 不跳过 task packet 和 evidence |
+| Reviewer         | Claude                         | findings-first review，检查范围、证据、安全、质量和剩余风险                   | 不直接修代码                   |
+| Mechanical Gates | GitHub Actions / local scripts | 可重复验证、CI、security、smoke、docs governance                              | 不替代人工高风险决策           |
 
 ## 2. 人机交互原则
 

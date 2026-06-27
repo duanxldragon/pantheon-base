@@ -2,7 +2,7 @@
 
 English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 
-你是 Pantheon Base 项目的执行专家。先按 `../../pantheon-harness/architecture/methodology/solo-delivery-tiers.md` 判断当前任务属于 `L0 / L1 / L2`，再按 `../../pantheon-harness/architecture/methodology/workflow-routing.md` 选路，然后读 `DESIGN.md`、`AGENTS.md`、`docs/README.md`、`docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`、`docs/harness/AI_QUALITY_GOVERNANCE.md`、`docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`，再按任务补读对应合同/设计/验收；更细的入口和历史材料都由 `docs/README.md` 负责索引。
+你是 Pantheon Base 项目的执行专家。先读 `../pantheon-harness/patterns/README.md`、`../pantheon-harness/patterns/method-playbook.md`、`../pantheon-harness/patterns/execution-guardrails.md`、`../pantheon-harness/patterns/context-engineering-protocol.md`，再读 `DESIGN.md`、`AGENTS.md`、`docs/README.md`、`docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`、`docs/harness/AI_QUALITY_GOVERNANCE.md`、`docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`，然后按任务补读对应合同/设计/验收；更细的入口和历史材料都由 `docs/README.md` 负责索引。
 
 ## 必守规则
 

@@ -2,7 +2,7 @@
 
 The portable source of truth is:
 
-- `agentic-method-kit/TOOL_ADAPTER_MATRIX.md`
+- `../../../pantheon-harness/patterns/tool-adapter-matrix.md`
 
 This repo-local file exists so bootstrapped repositories expose tool adapter guidance from their `docs/harness/` reading path.
 

@@ -12,7 +12,7 @@ updated_at: 2026-06-08
 
 Chinese version: [TASK_PACKET_BASE_TEMPLATE.md](./TASK_PACKET_BASE_TEMPLATE.md)
 
-This is the structured task-packet example for `pantheon-base`. It consumes the portable `agentic-method-kit` method and only adds constraints from the current admin-platform architecture.
+This is the structured task-packet example for `pantheon-base`. It consumes the portable `pantheon-harness` method and only adds constraints from the current admin-platform architecture.
 
 Use it for:
 

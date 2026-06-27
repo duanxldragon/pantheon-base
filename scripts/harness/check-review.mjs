@@ -12,7 +12,7 @@ import {
 } from '../task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
-const DEFAULT_CONFIG = 'pantheon-harness/architecture/config/method.config.json';
+const DEFAULT_CONFIG = 'config/method.config.json';
 const DEFAULT_EVIDENCE_DIR = '.harness/evidence';
 const VALID_VERDICTS = new Set([
   'approved',
@@ -268,4 +268,3 @@ function main() {
 }
 
 process.exitCode = main();
-
