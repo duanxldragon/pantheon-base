@@ -135,13 +135,13 @@ test('validatePrTemplate accepts the pantheon-base governance template structure
   assert.deepEqual(validatePrTemplate(validTemplate), []);
 });
 
-test('resolveTemplatePath prefers the uppercase GitHub template filename', () => {
+test('resolveTemplatePath prefers the lowercase harness template filename', () => {
   const resolved = resolveTemplatePath([
-    path.resolve(testDir, '../../.github/PULL_REQUEST_TEMPLATE.md'),
     path.resolve(testDir, '../../.github/pull_request_template.md'),
+    path.resolve(testDir, '../../.github/PULL_REQUEST_TEMPLATE.md'),
   ]);
 
-  assert.match(resolved, /PULL_REQUEST_TEMPLATE\.md$/);
+  assert.match(resolved, /pull_request_template\.md$/);
 });
 
 test('validatePrBody accepts trivial changes without harness artifacts', () => {
