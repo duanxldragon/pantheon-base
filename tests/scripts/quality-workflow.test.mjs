@@ -52,6 +52,19 @@ test('governance-only changes can skip runtime gates without failing Quality Gat
     /if\s+\[\s*"\$\{GOVERNANCE_ONLY\}"\s*=\s*"true"\s*\];\s*then[\s\S]*RUNTIME_GATES_REQUIRED=false/i,
     'quality gates should only require runtime gates when the change is not governance-only',
   );
+  for (const governancePath of [
+    'package.json',
+    'package-lock.json',
+    'scripts/cleanup-github-branches.mjs',
+    'scripts/collect-merge-targets.mjs',
+    'scripts/execute-merge.mjs',
+  ]) {
+    assert.match(
+      workflowSource,
+      new RegExp(`- '${governancePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`),
+      `${governancePath} should be classified as governance-only`,
+    );
+  }
 });
 
 test('docs governance validates the PR governance template and pull request body', () => {

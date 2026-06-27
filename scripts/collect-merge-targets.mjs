@@ -7,15 +7,15 @@
  * - Branches without corresponding PRs
  */
 
-import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { execSync } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const DRY_RUN = process.env.FORCE_MODE === 'dry-run';
 const FORCE_MODE = process.env.FORCE_MODE === 'true';
 
 const log = (msg) => console.log(`[collect-merge-targets] ${msg}`);
 const warn = (msg) => console.warn(`[collect-merge-targets] WARN: ${msg}`);
-const error = (msg) => console.error(`[collect-merge-targets] ERROR: ${msg}`);
 
 // Run gh command with JSON output
 function ghJson(cmd) {
@@ -32,18 +32,17 @@ function ghJson(cmd) {
 }
 
 // Check if PR has all CI checks passing
-function getPRStatus(prNumber) {
+export function getPRStatus(prNumber, { ghJsonFn = ghJson } = {}) {
   try {
-    const statuses = ghJson(`pr status ${prNumber} --json statusCheckRollup`);
-    if (statuses.length > 0 && statuses[0].statusCheckRollup) {
-      const checks = statuses[0].statusCheckRollup;
-      if (checks.length === 0) {
-        return { passing: true, checks: [], hasChecks: false };
-      }
-      const allPassing = checks.every(c => c.conclusion === 'SUCCESS');
-      return { passing: allPassing, checks, hasChecks: true };
+    const pullRequest = ghJsonFn(`pr view ${prNumber} --json statusCheckRollup`);
+    const checks = Array.isArray(pullRequest?.statusCheckRollup)
+      ? pullRequest.statusCheckRollup
+      : [];
+    if (checks.length === 0) {
+      return { passing: true, checks: [], hasChecks: false };
     }
-    return { passing: true, checks: [], hasChecks: false };
+    const allPassing = checks.every((check) => check.conclusion === 'SUCCESS');
+    return { passing: allPassing, checks, hasChecks: true };
   } catch (e) {
     warn(`Could not get status for PR #${prNumber}: ${e.message}`);
     return { passing: true, checks: [], hasChecks: false };
@@ -51,9 +50,9 @@ function getPRStatus(prNumber) {
 }
 
 // Get open PRs eligible for merge
-function collectOpenPRs() {
+export function collectOpenPRs({ ghJsonFn = ghJson, forceMode = FORCE_MODE } = {}) {
   log('Collecting open PRs...');
-  const prs = ghJson('pr list --state open --json number,title,headRefName,isDraft,mergeable,additions,deletions,author');
+  const prs = ghJsonFn('pr list --state open --json number,title,headRefName,isDraft,mergeable,additions,deletions,author');
 
   log(`Found ${prs.length} open PR(s)`);
 
@@ -74,10 +73,10 @@ function collectOpenPRs() {
     }
 
     // Check CI status
-    const status = getPRStatus(pr.number);
+    const status = getPRStatus(pr.number, { ghJsonFn });
 
     if (status.hasChecks && !status.passing) {
-      if (FORCE_MODE) {
+      if (forceMode) {
         warn(`PR #${pr.number} has failing checks, but FORCE_MODE=true, including anyway`);
       } else {
         skipped.push({ type: 'pr', number: pr.number, reason: 'CI checks failing', checks: status.checks });
@@ -98,25 +97,26 @@ function collectOpenPRs() {
 }
 
 // Get local branches that have a tracking relationship or corresponding PR
-function collectLocalBranches() {
+export function collectLocalBranches({
+  ghJsonFn = ghJson,
+  forceMode = FORCE_MODE,
+  now = new Date(),
+} = {}) {
   log('Collecting local branches...');
 
   // Get all branches that are NOT main
-  const branches = ghJson('api repos/{owner}/{repo}/branches?protected=false')
+  const branches = ghJsonFn('api repos/{owner}/{repo}/branches?protected=false')
     .filter(b => b.name !== 'main' && !b.name.startsWith('release/'));
 
   log(`Found ${branches.length} non-main branch(es)`);
 
   // Get PRs that are already merged
-  const mergedPRs = ghJson('pr list --state merged --limit 100');
+  const mergedPRs = ghJsonFn('pr list --state merged --limit 100 --json number,headRefName');
 
   const eligible = [];
   const skipped = [];
 
   for (const branch of branches) {
-    // Check if this branch has an associated open PR
-    const associatedPRs = branches.filter(b => b.name === branch.name);
-
     // Find if there's a merged PR for this branch
     const mergedPR = mergedPRs.find(pr => pr.headRefName === branch.name);
 
@@ -126,12 +126,12 @@ function collectLocalBranches() {
     }
 
     // Get the last commit date
-    const lastCommit = new Date(branch.commit.commit.author.date);
-    const now = new Date();
+    const branchCommitDate = getBranchCommitDate(branch, { ghJsonFn });
+    const lastCommit = new Date(branchCommitDate);
     const daysOld = (now - lastCommit) / (1000 * 60 * 60 * 24);
 
     // Skip branches older than 30 days without activity
-    if (daysOld > 30 && !FORCE_MODE) {
+    if (daysOld > 30 && !forceMode) {
       skipped.push({ type: 'branch', name: branch.name, reason: `Stale branch (${Math.round(daysOld)} days old)` });
       continue;
     }
@@ -139,7 +139,7 @@ function collectLocalBranches() {
     eligible.push({
       type: 'branch',
       name: branch.name,
-      lastCommit: branch.commit.commit.author.date,
+      lastCommit: branchCommitDate,
       daysOld: Math.round(daysOld)
     });
   }
@@ -147,15 +147,64 @@ function collectLocalBranches() {
   return { eligible, skipped };
 }
 
+export function getBranchCommitDate(branch, { ghJsonFn = ghJson } = {}) {
+  const inlineDate = branch.commit?.commit?.author?.date;
+  if (inlineDate) {
+    return inlineDate;
+  }
+
+  const sha = branch.commit?.sha;
+  if (!sha) {
+    throw new Error(`Branch ${branch.name} does not include a commit sha`);
+  }
+
+  const commit = ghJsonFn(`api repos/{owner}/{repo}/commits/${sha}`);
+  const commitDate = commit?.commit?.author?.date;
+  if (!commitDate) {
+    throw new Error(`Commit ${sha} for branch ${branch.name} does not include an author date`);
+  }
+  return commitDate;
+}
+
+export function buildGithubOutput(outputs) {
+  return Object.entries(outputs).map(([key, value]) => `${key}<<EOF\n${value}\nEOF`).join('\n');
+}
+
+export function collectMergeTargets({
+  ghJsonFn = ghJson,
+  forceMode = FORCE_MODE,
+  now = new Date(),
+} = {}) {
+  const prs = collectOpenPRs({ ghJsonFn, forceMode });
+  const branches = collectLocalBranches({ ghJsonFn, forceMode, now });
+  const hasPRs = prs.eligible.length > 0;
+  const hasBranches = branches.eligible.length > 0;
+  return {
+    prs,
+    branches,
+    hasPRs,
+    hasBranches,
+    outputs: {
+      has_prs: hasPRs ? 'true' : 'false',
+      has_branches: hasBranches ? 'true' : 'false',
+      pr_list: JSON.stringify(prs.eligible),
+      branch_list: JSON.stringify(branches.eligible),
+    },
+  };
+}
+
+function writeGithubOutput(outputs, outputPath = process.env.GITHUB_OUTPUT) {
+  if (!outputPath) {
+    return;
+  }
+  appendFileSync(outputPath, `${buildGithubOutput(outputs)}\n`);
+}
+
 function main() {
   log('Starting merge target collection...');
   log(`Mode: ${DRY_RUN ? 'DRY-RUN' : FORCE_MODE ? 'FORCE' : 'NORMAL'}`);
 
-  const prs = collectOpenPRs();
-  const branches = collectLocalBranches();
-
-  const hasPRs = prs.eligible.length > 0;
-  const hasBranches = branches.eligible.length > 0;
+  const { prs, branches, hasPRs, hasBranches, outputs } = collectMergeTargets();
 
   log(`\nSummary:`);
   log(`  Eligible PRs: ${prs.eligible.length}`);
@@ -178,26 +227,16 @@ function main() {
   }
 
   // Output for GitHub Actions
-  const outputs = {
-    has_prs: hasPRs ? 'true' : 'false',
-    has_branches: hasBranches ? 'true' : 'false',
-    pr_list: JSON.stringify(prs.eligible),
-    branch_list: JSON.stringify(branches.eligible)
-  };
-
-  // Write outputs to temp file for GitHub Actions
-  if (process.env.GITHUB_OUTPUT) {
-    const outputLines = Object.entries(outputs).map(([k, v]) => `${k}<<EOF\n${v}\nEOF`).join('\n');
-    execSync(`echo "${outputLines}" >> ${process.env.GITHUB_OUTPUT}`, { shell: 'bash' });
-  }
+  writeGithubOutput(outputs);
 
   log('\nCollection complete.');
 
   // Exit with error if there are issues but not in dry-run mode
-  if (!DRY_RUN && (prs.skipped.length > 0 || branches.skipped.length > 0) && !hasPRs && !hasBranches) {
+  if (!hasPRs && !hasBranches) {
     warn('No eligible merge targets found.');
-    process.exit(1);
   }
 }
 
-main();
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}
