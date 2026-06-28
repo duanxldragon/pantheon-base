@@ -17,10 +17,12 @@ export function buildGitHubReleaseTitle(releaseVersion) {
   if (!normalizedReleaseVersion) {
     throw new Error('releaseVersion is required to build GitHub release title');
   }
-  if (normalizedReleaseVersion.startsWith('base-')) {
-    return `pantheon-${normalizedReleaseVersion}`;
+  const shortVersionMatch = normalizedReleaseVersion.match(/(?:^|-)v\d+\.\d+\.\d+(?:-(?:rc|beta|alpha)\.\d+)?$/u);
+  if (shortVersionMatch) {
+    const matched = shortVersionMatch[0];
+    return matched.startsWith('v') ? matched : matched.slice(1);
   }
-  return `pantheon-base-${normalizedReleaseVersion}`;
+  return normalizedReleaseVersion;
 }
 
 function printHelp() {

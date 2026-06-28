@@ -44,8 +44,10 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'store', 'useAuthStore.ts'), 'export const store = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'auth'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'auth', 'Login.tsx'), 'export const Login = 1;\n', 'utf8');
-    fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'dashboard'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'dashboard', 'Dashboard.tsx'), 'export const Dashboard = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'lowcode'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'lowcode', 'index.ts'), 'export const lowcode = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'platform'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'platform', 'index.ts'), 'export const platform = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'modules', 'system'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'modules', 'system', 'index.ts'), 'export const system = 1;\n', 'utf8');
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'index.css'), 'body { margin: 0; }\n', 'utf8');
