@@ -15,6 +15,7 @@ const (
 	dynamicModuleTable         = "system_module_registration"
 	dynamicModuleStatusActive  = 1
 	authSecurityEventTableName = "system_auth_security_event"
+	operationLogTableName      = "system_log_oper"
 )
 
 type OrgGovernanceTask struct {
@@ -170,7 +171,7 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 0, since)
 		}, apply: func(value int64) { resp.LoginFailureCount = value }},
 		{count: func() (int64, error) {
-			return s.countTable("system_log_operation", "created_at >= ?", todayStart)
+			return s.countTable(operationLogTableName, "created_at >= ?", todayStart)
 		}, apply: func(value int64) { resp.TodayOperationCount = value }},
 	}
 
@@ -198,7 +199,7 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 			},
 			summaryCountJob{
 				count: func() (int64, error) {
-					return s.countTable(authSecurityEventTableName, "status = ?", 0)
+					return s.countTable(authSecurityEventTableName, "acknowledged_at IS NULL")
 				},
 				apply: func(value int64) { resp.PendingSecurityEventCount = value },
 			},

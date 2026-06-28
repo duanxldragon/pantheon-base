@@ -72,7 +72,7 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
       await page.setViewportSize({ width: 520, height: 960 });
 
       const summaryPayloadPromise = expectOkJson<DashboardSummary>(
-        page.request.get(`${apiBaseUrl}/platform/dashboard/summary`, {
+        page.request.get(`${apiBaseUrl}/dashboard/summary`, {
           headers: authHeaders(accessToken),
         }),
       );

@@ -320,7 +320,7 @@ async function getOperationToken(accessToken, csrfToken) {
 }
 
 async function generateModule(schema, accessToken, csrfToken, operationToken) {
-  return request('/system/dynamic-modules/generate', {
+  return request('/lowcode/dynamic-modules/generate', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -335,7 +335,7 @@ async function generateModule(schema, accessToken, csrfToken, operationToken) {
 
 async function purgeModule(moduleKey, accessToken, csrfToken, operationToken) {
   const response = await fetch(
-    `${apiBaseUrl}/system/dynamic-modules/${moduleKey}/purge?dropTable=false&purgeSource=true`,
+    `${apiBaseUrl}/lowcode/dynamic-modules/${moduleKey}/purge?dropTable=false&purgeSource=true`,
     {
       method: 'DELETE',
       headers: {

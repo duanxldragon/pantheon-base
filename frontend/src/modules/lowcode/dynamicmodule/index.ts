@@ -9,8 +9,8 @@ export const DynamicModuleModule = defineModule({
   scope: 'lowcode',
   routes: [
     {
-      path: 'lowcode/modules',
-      routeName: 'lowcode-modules',
+      path: 'system/modules',
+      routeName: 'system-modules',
       titleKey: 'system.menu.modules',
       icon: 'apps',
       pagePermission: 'system:module:list',
@@ -19,11 +19,11 @@ export const DynamicModuleModule = defineModule({
   ],
   menus: [
     {
-      path: '/lowcode/modules',
+      path: '/system/modules',
       titleKey: 'system.menu.modules',
       icon: 'apps',
-      routeName: 'lowcode-modules',
-      module: 'lowcode',
+      routeName: 'system-modules',
+      module: 'system.lowcode',
     },
   ],
   dashboardWidgets: [
@@ -33,7 +33,7 @@ export const DynamicModuleModule = defineModule({
       sourceDomain: 'system/lowcode',
       titleKey: 'system.menu.modules',
       descriptionKey: 'dashboard.quickAction.moduleManager',
-      path: '/lowcode/modules',
+      path: '/system/modules',
       permission: 'system:module:list',
       icon: 'apps',
       cleanupPolicy: 'hide_when_forbidden',
@@ -44,7 +44,7 @@ export const DynamicModuleModule = defineModule({
       sourceDomain: 'system/lowcode',
       titleKey: 'dashboard.domain.lowcode',
       descriptionKey: 'dashboard.domain.lowcodeDesc',
-      path: '/lowcode/modules',
+      path: '/system/modules',
       permission: 'system:module:list',
       cleanupPolicy: 'hide_when_forbidden',
       summary: (summary, t) =>

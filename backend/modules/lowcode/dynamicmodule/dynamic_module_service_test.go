@@ -171,7 +171,7 @@ func TestGenerateAndRegisterModuleHandlerPersistsAutoRecycleMetadata(t *testing.
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.POST("/system/dynamic-modules/generate", handler.GenerateAndRegisterModule)
+	router.POST("/lowcode/dynamic-modules/generate", handler.GenerateAndRegisterModule)
 
 	body := map[string]any{
 		"schema": map[string]any{
@@ -193,7 +193,7 @@ func TestGenerateAndRegisterModuleHandlerPersistsAutoRecycleMetadata(t *testing.
 		t.Fatalf("marshal request body: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "/system/dynamic-modules/generate", bytes.NewReader(payload))
+	req := httptest.NewRequest(http.MethodPost, "/lowcode/dynamic-modules/generate", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, req)

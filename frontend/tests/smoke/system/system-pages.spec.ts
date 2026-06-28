@@ -2439,7 +2439,7 @@ test('module permission smoke: list-only role can view registry but cannot regis
       },
     });
     expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/dynamic-modules', 'GET');
+    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/lowcode/dynamic-modules', 'GET');
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
@@ -2482,7 +2482,7 @@ test('module manager smoke: auto-recycle module shows explicit lifecycle and pur
   page,
 }) => {
   await signInAsAdmin(page);
-  await page.route(/\/api\/v1\/system\/dynamic-modules$/, async (route) => {
+  await page.route(/\/api\/v1\/lowcode\/dynamic-modules(?:\?.*)?$/, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

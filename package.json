@@ -36,11 +36,11 @@
   },
   "lint-staged": {
     "frontend/src/**/*.{ts,tsx}": [
-      "tsc --noEmit",
-      "eslint --fix"
+      "node scripts/run-frontend-typecheck.mjs",
+      "npx --prefix frontend eslint --fix"
     ],
     "frontend/src/**/*.{css,scss}": [
-      "stylelint --fix"
+      "npx --prefix frontend prettier --write"
     ],
     "backend/**/*.go": [
       "gofmt -w"
