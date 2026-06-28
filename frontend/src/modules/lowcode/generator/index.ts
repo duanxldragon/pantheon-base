@@ -61,8 +61,8 @@ export const GeneratorModule = defineModule({
   scope: 'lowcode',
   routes: [
     {
-      path: 'lowcode/generator',
-      routeName: 'lowcode-generator',
+      path: 'system/generator',
+      routeName: 'system-generator',
       titleKey: 'system.menu.generator',
       icon: 'code',
       pagePermission: 'system:generator:use',
@@ -71,11 +71,11 @@ export const GeneratorModule = defineModule({
   ],
   menus: [
     {
-      path: '/lowcode/generator',
+      path: '/system/generator',
       titleKey: 'system.menu.generator',
       icon: 'code',
-      routeName: 'lowcode-generator',
-      module: 'lowcode',
+      routeName: 'system-generator',
+      module: 'system.lowcode',
     },
   ],
   dashboardWidgets: [
@@ -85,7 +85,7 @@ export const GeneratorModule = defineModule({
       sourceDomain: 'system/lowcode',
       titleKey: 'system.menu.generator',
       descriptionKey: 'dashboard.quickAction.generator',
-      path: '/lowcode/generator',
+      path: '/system/generator',
       permission: 'system:generator:use',
       icon: 'code',
       cleanupPolicy: 'hide_when_forbidden',

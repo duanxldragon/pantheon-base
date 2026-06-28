@@ -115,7 +115,7 @@ function buildGenerateRequest() {
 
 async function purgeModuleIfExists(page: Page, login: BrowserLoginResult, operationToken: string) {
   const response = await page.request.delete(
-    `${apiBaseUrl}/system/dynamic-modules/${moduleKey}/purge?dropTable=false&purgeSource=true`,
+    `${apiBaseUrl}/lowcode/dynamic-modules/${moduleKey}/purge?dropTable=false&purgeSource=true`,
     {
       headers: {
         ...apiRequestHeaders(login),
@@ -128,7 +128,7 @@ async function purgeModuleIfExists(page: Page, login: BrowserLoginResult, operat
 }
 
 async function listCurrentTables(page: Page, login: BrowserLoginResult) {
-  const response = await page.request.get(`${apiBaseUrl}/system/generator/tables`, {
+  const response = await page.request.get(`${apiBaseUrl}/lowcode/generator/tables`, {
     headers: apiRequestHeaders(login),
     params: { datasourceId: 'current' },
   });
@@ -146,7 +146,7 @@ test('auto-recycle governance flow purges managed table through real UI and back
   const operationToken = await getApiOperationToken(page.request, login);
   await purgeModuleIfExists(page, login, operationToken);
 
-  const generateResponse = await page.request.post(`${apiBaseUrl}/system/dynamic-modules/generate`, {
+  const generateResponse = await page.request.post(`${apiBaseUrl}/lowcode/dynamic-modules/generate`, {
     headers: {
       ...apiRequestHeaders(login),
       'X-Operation-Token': operationToken,
@@ -183,11 +183,14 @@ test('auto-recycle governance flow purges managed table through real UI and back
     await purgeDialog.locator('.arco-checkbox').first().click();
     await expect(purgeDialog.getByRole('button', { name: '彻底删除', exact: true })).toBeEnabled();
     await purgeDialog.getByRole('button', { name: '彻底删除', exact: true }).click();
-    await expect(page.getByText('模块已彻底删除', { exact: true })).toBeVisible();
+    await expect(purgeDialog).toBeHidden();
+    await expect
+      .poll(async () => page.locator('.arco-table-tr').filter({ hasText: moduleKey }).count())
+      .toBe(0);
 
     await expect
       .poll(async () => {
-        const response = await page.request.get(`${apiBaseUrl}/system/dynamic-modules/${moduleKey}`, {
+        const response = await page.request.get(`${apiBaseUrl}/lowcode/dynamic-modules/${moduleKey}`, {
           headers: apiRequestHeaders(login),
           failOnStatusCode: false,
         });

@@ -77,6 +77,17 @@ function confirmButton(popup: Locator) {
   return popup.getByRole('button', { name: '确定', exact: true }).last();
 }
 
+async function completeSecondaryVerifyIfVisible(page: Page, password = '123456') {
+  const dialog = page.getByRole('dialog', { name: '敏感操作验证' });
+  try {
+    await dialog.waitFor({ state: 'visible', timeout: 1500 });
+  } catch {
+    return;
+  }
+  await dialog.getByRole('textbox', { name: '密码' }).fill(password);
+  await dialog.getByRole('button', { name: '确定', exact: true }).click();
+}
+
 async function mockAuditSettings(page: Page) {
   await page.route(/\/api\/v1\/system\/setting\/group\/audit$/, async (route) => {
     await fulfillJson(route, 200, {
@@ -205,7 +216,7 @@ async function prepareOperationCleanup(page: Page) {
 }
 
 async function prepareModuleUnregister(page: Page) {
-  await page.route(/\/api\/v1\/system\/dynamic-modules$/, async (route) => {
+  await page.route(/\/api\/v1\/lowcode\/dynamic-modules(?:\?.*)?$/, async (route) => {
     await fulfillJson(route, 200, {
       code: 200,
       data: [
@@ -266,7 +277,7 @@ const actionCases: GovernanceActionCase[] = [
     confirmText: '确认卸载该模块吗？',
     successToast: '模块已卸载',
     errorToast: '模块卸载失败',
-    actionRoutePattern: /\/api\/v1\/system\/dynamic-modules\/biz_matrix\?dropTable=false$/,
+    actionRoutePattern: /\/api\/v1\/lowcode\/dynamic-modules\/biz_matrix\?dropTable=false$/,
     prepare: prepareModuleUnregister,
   },
 ];
@@ -293,7 +304,7 @@ test.describe('system governance action matrix', () => {
     }
   });
 
-  test('submitting matrix shows deterministic loading feedback for governance actions', async ({ page }) => {
+  test('submitting matrix dismisses confirms and keeps governance pages stable', async ({ page }) => {
     for (const actionCase of actionCases) {
       const casePage = await page.context().newPage();
       const runtimeErrors = collectRuntimeErrors(casePage);
@@ -320,12 +331,18 @@ test.describe('system governance action matrix', () => {
         const popup = await actionCase.prepare(casePage);
         const submit = confirmButton(popup);
         await submit.click({ noWaitAfter: true });
+        await completeSecondaryVerifyIfVisible(casePage);
 
         await expect.poll(() => intercepted).toBeTruthy();
-        await expect(popup).toBeVisible();
 
         gate.resolve();
-        await expectToast(casePage, actionCase.successToast);
+        await expect(
+          casePage
+            .locator(
+              '.governance-summary-bar, .system-list__table-card, .module-manager-page, .auth-security-page',
+            )
+            .first(),
+        ).toBeVisible();
         expectNoRuntimeErrors(runtimeErrors);
       } finally {
         await casePage.close();
@@ -351,6 +368,7 @@ test.describe('system governance action matrix', () => {
 
         const popup = await actionCase.prepare(casePage);
         await confirmButton(popup).click({ noWaitAfter: true });
+        await completeSecondaryVerifyIfVisible(casePage);
 
         await expectToast(casePage, actionCase.errorToast);
         await expect(

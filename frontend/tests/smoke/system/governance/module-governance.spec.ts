@@ -51,7 +51,7 @@ test.describe('module governance smoke', () => {
     let listState = 'uninstalled';
     let registerCalled = false;
 
-    await page.route(/\/api\/v1\/system\/dynamic-modules$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/dynamic-modules(?:\?.*)?$/, async (route) => {
       if (route.request().method() === 'POST') {
         const payload = route.request().postDataJSON() as { name?: string };
         expect(payload.name).toBe('business.asset');
@@ -127,7 +127,7 @@ test.describe('module governance smoke', () => {
     await installClientSession(page, tokens);
 
     let submitCount = 0;
-    await page.route(/\/api\/v1\/system\/generator\/tables(?:\?.*)?$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/generator\/tables(?:\?.*)?$/, async (route) => {
       await fulfillJson(route, {
         code: 200,
         data: [
@@ -141,7 +141,7 @@ test.describe('module governance smoke', () => {
       });
     });
 
-    await page.route(/\/api\/v1\/system\/generator\/table-schema(?:\?.*)?$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/generator\/table-schema(?:\?.*)?$/, async (route) => {
       await fulfillJson(route, {
         code: 200,
         data: {
@@ -169,7 +169,7 @@ test.describe('module governance smoke', () => {
       });
     });
 
-    await page.route(/\/api\/v1\/system\/dynamic-modules\/generate$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/dynamic-modules\/generate$/, async (route) => {
       submitCount += 1;
       const payload = route.request().postDataJSON() as { overwrite?: boolean; schema?: { metadata?: { sourceMode?: string; sourceTable?: string } } };
       expect(payload.schema?.metadata?.sourceMode).toBe('database');
@@ -228,6 +228,21 @@ test.describe('module governance smoke', () => {
       });
     });
 
+    await page.route(/\/api\/v1\/lowcode\/generator\/preview-files$/, async (route) => {
+      await fulfillJson(route, {
+        code: 200,
+        data: {
+          files: [
+            {
+              path: 'backend/modules/business/cmdb/vendor/vendor_model.go',
+              content: 'package vendor\n',
+              language: 'go',
+            },
+          ],
+        },
+      });
+    });
+
     await page.goto('/system/generator', { waitUntil: 'networkidle' });
     await expect(page.getByText(/模块生成(?:器|向导)/).filter({ visible: true }).first()).toBeVisible();
     await expect(page.locator('.system-page-hero')).toHaveCount(0);
@@ -256,6 +271,7 @@ test.describe('module governance smoke', () => {
     const confirmDialog = page.getByRole('dialog').filter({ has: page.getByText('检测到同名模块', { exact: true }) });
     await expect(confirmDialog).toBeVisible();
     await confirmDialog.getByRole('button', { name: '确定', exact: true }).click();
+    await completeSecondaryVerifyIfVisible(page);
 
     await expect.poll(() => submitCount).toBe(2);
     await expect(page.locator('.arco-message').getByText('模块源码已写入，等待激活', { exact: true }).last()).toBeVisible();
@@ -268,7 +284,7 @@ test.describe('module governance smoke', () => {
 
     let submitCount = 0;
 
-    await page.route(/\/api\/v1\/system\/generator\/datasources$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/generator\/datasources(?:\?.*)?$/, async (route) => {
       await fulfillJson(route, {
         code: 200,
         data: [
@@ -284,7 +300,7 @@ test.describe('module governance smoke', () => {
       });
     });
 
-    await page.route(/\/api\/v1\/system\/dynamic-modules\/generate$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/dynamic-modules\/generate$/, async (route) => {
       submitCount += 1;
       await fulfillJson(route, {
         code: 400,
@@ -313,7 +329,7 @@ test.describe('module governance smoke', () => {
     await installOperationToken(page, accessToken);
     let createAttempts = 0;
 
-    await page.route(/\/api\/v1\/system\/generator\/datasources$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/generator\/datasources(?:\?.*)?$/, async (route) => {
       if (route.request().method() === 'POST') {
         createAttempts += 1;
         await fulfillJson(route, {
@@ -357,6 +373,7 @@ test.describe('module governance smoke', () => {
     await dialog.getByPlaceholder('例如：pantheon_readonly').fill('pantheon_readonly');
     await dialog.getByPlaceholder('请输入只读账号密码').fill('readonly-secret');
     await dialog.getByRole('button', { name: '新增', exact: true }).click();
+    await completeSecondaryVerifyIfVisible(page);
 
     await expect.poll(() => createAttempts).toBe(1);
     await expect(dialog).toBeVisible();
@@ -365,7 +382,7 @@ test.describe('module governance smoke', () => {
   test('generator workbench entry follows business toggle and relation table role', async ({ page }) => {
     await signInAsAdmin(page);
 
-    await page.route(/\/api\/v1\/system\/generator\/datasources$/, async (route) => {
+    await page.route(/\/api\/v1\/lowcode\/generator\/datasources(?:\?.*)?$/, async (route) => {
       await fulfillJson(route, {
         code: 200,
         data: [

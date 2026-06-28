@@ -20,7 +20,7 @@ const files = [
 const { tempDir } = prepareTranspiledWorkspace('generator-server-export', files);
 
 const { ModuleExporter } = await import(
-  pathToFileURL(join(tempDir, 'src', 'modules', 'system', 'generator', 'exporter.js'))
+  pathToFileURL(join(tempDir, 'src', 'modules', 'lowcode', 'generator', 'exporter.js'))
 );
 
 const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));

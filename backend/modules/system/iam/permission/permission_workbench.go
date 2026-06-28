@@ -526,23 +526,23 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 		}
 	case "system:module:list":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/dynamic-modules", Method: "GET"},
+			{Path: "/api/v1/lowcode/dynamic-modules", Method: "GET"},
 		}
 	case "system:module:register":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/dynamic-modules", Method: "POST"},
+			{Path: "/api/v1/lowcode/dynamic-modules", Method: "POST"},
 		}
 	case "system:module:unregister":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/dynamic-modules/:name", Method: "DELETE"},
+			{Path: "/api/v1/lowcode/dynamic-modules/:name", Method: "DELETE"},
 		}
 	case "system:module:delete_record":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/dynamic-modules/:name/record", Method: "DELETE"},
+			{Path: "/api/v1/lowcode/dynamic-modules/:name/record", Method: "DELETE"},
 		}
 	case "system:module:purge":
 		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/dynamic-modules/:name/purge", Method: "DELETE"},
+			{Path: "/api/v1/lowcode/dynamic-modules/:name/purge", Method: "DELETE"},
 		}
 	case "system:module:generate":
 		return []permissionRequiredAPIPolicy{

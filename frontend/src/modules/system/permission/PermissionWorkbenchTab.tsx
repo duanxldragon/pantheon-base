@@ -17,6 +17,7 @@ import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import {
   getPermissionWorkbenchRemediationEvents,
+  type PermissionWorkbenchPermission,
   type PermissionWorkbenchQuery,
   type PermissionWorkbenchRemediationEvent,
   type PermissionWorkbenchRole,
@@ -39,6 +40,18 @@ import {
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
+
+function dedupePermissions(items: PermissionWorkbenchPermission[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const identity = `${item.kind}:${item.key}:${item.path || ''}`;
+    if (seen.has(identity)) {
+      return false;
+    }
+    seen.add(identity);
+    return true;
+  });
+}
 
 const emptyWorkbenchQuery: PermissionWorkbenchQuery = {
   roleKey: '',
@@ -196,6 +209,19 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
         stateLabel: `${event.beforeState} -> ${event.afterState}`,
       })),
     [remediationEvents, t],
+  );
+
+  const detailPagePermissions = useMemo(
+    () => dedupePermissions(detailRole?.pagePermissions ?? []),
+    [detailRole?.pagePermissions],
+  );
+  const detailActionPermissions = useMemo(
+    () => dedupePermissions(detailRole?.actionPermissions ?? []),
+    [detailRole?.actionPermissions],
+  );
+  const detailUnknownPermissions = useMemo(
+    () => dedupePermissions(detailRole?.unknownPermissions ?? []),
+    [detailRole?.unknownPermissions],
   );
 
   const workbenchColumns: ColumnProps<PermissionWorkbenchRole>[] = [
@@ -665,9 +691,9 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                     {t('system.permission.workbench.pageSection')}
                   </Typography.Text>
                   <Space wrap>
-                    {detailRole.pagePermissions.length > 0 ? (
-                      detailRole.pagePermissions.map((item) => (
-                        <Tag key={item.key} color="arcoblue">
+                    {detailPagePermissions.length > 0 ? (
+                      detailPagePermissions.map((item) => (
+                        <Tag key={`${item.kind}:${item.key}:${item.path || ''}`} color="arcoblue">
                           {translateTitleKey(item.titleKey, item.key)}
                         </Tag>
                       ))
@@ -682,9 +708,9 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                     {t('system.permission.workbench.actionSection')}
                   </Typography.Text>
                   <Space wrap>
-                    {detailRole.actionPermissions.length > 0 ? (
-                      detailRole.actionPermissions.map((item) => (
-                        <Tag key={item.key} color="green">
+                    {detailActionPermissions.length > 0 ? (
+                      detailActionPermissions.map((item) => (
+                        <Tag key={`${item.kind}:${item.key}:${item.path || ''}`} color="green">
                           {translateTitleKey(item.titleKey, item.key)}
                         </Tag>
                       ))
@@ -717,14 +743,14 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   />
                 </Space>
 
-                {detailRole.unknownPermissions.length > 0 ? (
+                {detailUnknownPermissions.length > 0 ? (
                   <Space direction="vertical" size={6} style={{ width: '100%' }}>
                     <Typography.Text bold>
                       {t('system.permission.workbench.unknownSection')}
                     </Typography.Text>
                     <Space wrap>
-                      {detailRole.unknownPermissions.map((item) => (
-                        <Tag key={item.key} color="orange">
+                      {detailUnknownPermissions.map((item) => (
+                        <Tag key={`${item.kind}:${item.key}:${item.path || ''}`} color="orange">
                           {item.key}
                         </Tag>
                       ))}

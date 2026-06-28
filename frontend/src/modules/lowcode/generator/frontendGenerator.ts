@@ -656,11 +656,6 @@ const ${modelName}DetailPage: React.FC = () => {
   const moduleName = '${this.schema.name}';
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
-  const scope = '${this.schema.scope}';
-  const moduleName = '${this.schema.name}';
-  const navigate = useNavigate();
-  const { t } = useTranslation();
   const [detail, setDetail] = useState<${modelName}Detail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);

@@ -1103,7 +1103,7 @@ const ModuleWizard: React.FC = () => {
             <div className="system-list__work-actions">
               <ListHeaderActions
                 primary={
-                  <Button size="small" onClick={() => navigate('/lowcode/modules')}>
+                  <Button size="small" onClick={() => navigate('/system/modules')}>
                     {t('generator.wizard.openRegistry')}
                   </Button>
                 }
@@ -1789,7 +1789,7 @@ const ModuleWizard: React.FC = () => {
                     </Typography.Text>
                   ) : (
                     previewSchema.permissions.map((permission) => (
-                      <Tag key={permission.key}>{permission.key}</Tag>
+                      <Tag key={`${permission.type}:${permission.key}`}>{permission.key}</Tag>
                     ))
                   )}
                 </Space>
@@ -2189,7 +2189,7 @@ const ModuleWizard: React.FC = () => {
                       </Button>
                     ) : null}
                     {canOpenModuleManager ? (
-                      <Button onClick={() => navigate('/lowcode/modules')}>
+                      <Button onClick={() => navigate('/system/modules')}>
                         {t('generator.wizard.result.openModuleManager')}
                       </Button>
                     ) : null}

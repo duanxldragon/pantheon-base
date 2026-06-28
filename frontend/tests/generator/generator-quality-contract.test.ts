@@ -402,6 +402,9 @@ test('emits many-to-many and master-detail runtime contracts', () => {
   assert.match(manyToManyDetail, /submitManyToManyBinding/);
   assert.match(manyToManyDetail, /unbindManyToManyRelation/);
   assert.match(manyToManyDetail, /multiple/);
+  assert.equal((manyToManyDetail.match(/const \{ id \} = useParams/g) || []).length, 1);
+  assert.equal((manyToManyDetail.match(/const scope = 'business';/g) || []).length, 1);
+  assert.equal((manyToManyDetail.match(/const navigate = useNavigate\(\);/g) || []).length, 1);
   assert.match(manyToManyService, /BindAssetTagsRelation/);
   assert.match(manyToManyService, /UnbindAssetTagsRelation/);
   assert.match(manyToManyService, /biz_cmdb_asset_tag_rel/);
@@ -465,4 +468,7 @@ test('emits many-to-many and master-detail runtime contracts', () => {
   assert.match(masterDetailPage, /generator\.wizard\.result\.childTableDialogCreate/);
   assert.match(masterDetailPage, /generator\.wizard\.result\.childTableDialogEdit/);
   assert.match(masterDetailPage, /generator\.wizard\.result\.childTableSchemaLoadFailed/);
+  assert.equal((masterDetailPage.match(/const \{ id \} = useParams/g) || []).length, 1);
+  assert.equal((masterDetailPage.match(/const scope = 'business';/g) || []).length, 1);
+  assert.equal((masterDetailPage.match(/const navigate = useNavigate\(\);/g) || []).length, 1);
 });
