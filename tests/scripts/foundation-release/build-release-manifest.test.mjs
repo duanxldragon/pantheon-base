@@ -66,7 +66,8 @@ test('build-release-manifest writes release metadata files into releases/<versio
       'frontend/src/core',
       'frontend/src/store',
       'frontend/src/modules/auth',
-      'frontend/src/modules/dashboard',
+      'frontend/src/modules/lowcode',
+      'frontend/src/modules/platform',
       'frontend/src/modules/system',
       'frontend/src/index.css',
     ]);

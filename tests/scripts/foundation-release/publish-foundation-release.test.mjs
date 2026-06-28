@@ -38,9 +38,10 @@ test('buildGitHubReleaseBody combines release notes, upgrade notes, and consumer
   assert.match(body, /ops should review business overlays/);
 });
 
-test('buildGitHubReleaseTitle uses the pantheon-base prefix', () => {
-  assert.equal(buildGitHubReleaseTitle('base-v0.8.3'), 'pantheon-base-v0.8.3');
-  assert.equal(buildGitHubReleaseTitle('v0.8.3'), 'pantheon-base-v0.8.3');
+test('buildGitHubReleaseTitle uses the short semver display title', () => {
+  assert.equal(buildGitHubReleaseTitle('base-v0.8.3'), 'v0.8.3');
+  assert.equal(buildGitHubReleaseTitle('pantheon-base-v0.8.3'), 'v0.8.3');
+  assert.equal(buildGitHubReleaseTitle('v0.8.3'), 'v0.8.3');
 });
 
 test('release body title stripping keeps section content only', () => {
