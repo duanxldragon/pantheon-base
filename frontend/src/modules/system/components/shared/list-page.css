@@ -404,8 +404,8 @@
 .list-header-actions .arco-btn,
 .table-batch-action-bar .arco-btn {
   min-height: var(--shell-action-bar-min-height);
-  padding-inline: 12px;
-  border-radius: var(--radius-action);
+  padding-inline: 14px;
+  border-radius: var(--radius-md);
   box-shadow: none;
   transition:
     border-color 0.16s ease,

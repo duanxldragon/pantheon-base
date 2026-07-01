@@ -6,8 +6,8 @@ import { chromium } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const BASE_URL = 'http://127.0.0.1:5173';
-const API_URL = 'http://127.0.0.1:8080/api/v1';
+const BASE_URL = process.env.PANTHEON_WEB_BASE_URL || 'http://127.0.0.1:5173';
+const API_URL = process.env.PANTHEON_API_BASE_URL || 'http://127.0.0.1:8080/api/v1';
 const OUTPUT_DIR = path.join(process.cwd(), 'screenshots/components');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
