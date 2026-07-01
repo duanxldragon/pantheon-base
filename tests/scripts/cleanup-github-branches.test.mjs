@@ -6,6 +6,7 @@ import {
   buildBranchLookupPath,
   buildDeletionDecision,
   collectBranchCleanupCandidates,
+  deleteBranch,
 } from '../../scripts/cleanup-github-branches.mjs';
 
 test('collectBranchCleanupCandidates keeps only latest closed same-repo default-branch pull request heads', () => {
@@ -143,4 +144,37 @@ test('branch path helpers preserve slash-separated branch names for GitHub branc
     }),
     '/repos/duanxldragon/pantheon-base/git/refs/heads/verify/branch-hygiene-residue-base-20260618',
   );
+});
+
+test('deleteBranch returns skip result for protected (422) and missing (404) branches', async () => {
+  const originalFetch = globalThis.fetch;
+
+  // 422 - protected branch
+  globalThis.fetch = async () => ({ status: 422, ok: false, text: async () => '{"message":"Repository rule violations"}' });
+  const protectedResult = await deleteBranch('owner', 'repo', 'release/v1', { token: 'test', apiBase: 'https://api.test' });
+  assert.deepEqual(protectedResult, { deleted: false, reason: 'protected-or-rejected' });
+
+  // 403 - insufficient permissions
+  globalThis.fetch = async () => ({ status: 403, ok: false, text: async () => '{"message":"forbidden"}' });
+  const forbiddenResult = await deleteBranch('owner', 'repo', 'protected-branch', { token: 'test', apiBase: 'https://api.test' });
+  assert.deepEqual(forbiddenResult, { deleted: false, reason: 'protected-or-rejected' });
+
+  // 404 - already gone
+  globalThis.fetch = async () => ({ status: 404, ok: false, text: async () => '{"message":"Not Found"}' });
+  const goneResult = await deleteBranch('owner', 'repo', 'deleted-branch', { token: 'test', apiBase: 'https://api.test' });
+  assert.deepEqual(goneResult, { deleted: false, reason: 'already-gone' });
+
+  // 204 - success
+  globalThis.fetch = async () => ({ status: 204, ok: true, text: async () => '' });
+  const successResult = await deleteBranch('owner', 'repo', 'stale-branch', { token: 'test', apiBase: 'https://api.test' });
+  assert.deepEqual(successResult, { deleted: true, reason: 'deleted' });
+
+  // 500 - unexpected error should throw
+  globalThis.fetch = async () => ({ status: 500, ok: false, text: async () => 'Internal Server Error' });
+  await assert.rejects(
+    () => deleteBranch('owner', 'repo', 'broken', { token: 'test', apiBase: 'https://api.test' }),
+    { message: /failed: 500/ },
+  );
+
+  globalThis.fetch = originalFetch;
 });
