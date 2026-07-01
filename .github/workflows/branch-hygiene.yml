@@ -1,9 +1,6 @@
 name: Branch Hygiene
 
 on:
-  push:
-    branches:
-      - main
   schedule:
     - cron: "19 3 * * *"
   workflow_dispatch:

@@ -251,7 +251,7 @@ jobs:
   post-merge-cleanup:
     name: Post-Merge Cleanup
     needs: execute-merge
-    if: always()
+    if: needs.execute-merge.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
