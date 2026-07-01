@@ -1728,6 +1728,7 @@ const enUSFallback = {
     'Too many failed sign-in attempts from this source. Please try again later.',
   'user.batch.empty': 'Please select users first',
   'user.batch.not_found': 'Some users no longer exist. Please refresh and try again',
+  'role.admin.name': 'Administrator',
   'system.role.roleName': 'Role Name',
   'system.role.roleName.required': 'Please input role name',
   'system.role.roleKey': 'Role Key',
@@ -1797,6 +1798,10 @@ const enUSFallback = {
   'system.role.batchStatusSuccess': 'Updated {{count}} role statuses',
   'system.role.create': 'Create Role',
   'system.role.edit': 'Edit Role',
+  'system.role.governanceHint':
+    'Role created. Please configure API access boundaries in 【Permission Management → API Policies】.',
+  'system.role.governanceHintAction': 'Configure Now',
+  'system.role.dataScope': 'Data Scope',
   'system.role.hero.eyebrow': 'System Domain / IAM Role Governance',
   'system.role.hero.title': 'Govern role authorization across navigation, page, and action layers',
   'system.role.hero.desc':

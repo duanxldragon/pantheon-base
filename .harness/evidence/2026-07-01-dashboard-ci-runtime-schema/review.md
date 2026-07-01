@@ -10,9 +10,7 @@
     "affectedSubgraph": [
       "platform dashboard tests -> dashboard service -> authsession runtime helpers -> runtime tables"
     ],
-    "checks": [
-      "call-depth"
-    ],
+    "checks": ["call-depth"],
     "findings": [],
     "notes": "The fix is test-only and restores CI fixture parity with the runtime schema expected by DashboardService.GetSummary."
   },

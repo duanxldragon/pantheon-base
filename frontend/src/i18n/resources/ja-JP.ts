@@ -566,6 +566,7 @@ const jaJPFallback = {
   'system.user.hero.batchActions': '一括操作準備完了',
   'system.user.hero.sideTitle': '利用ガイダンス',
   'system.user.hero.sideLead': '先に組織を紐付け、次にロールを付与',
+  'role.admin.name': 'システム管理者',
   'system.role.roleName': 'ロール名',
   'system.role.roleName.required': 'ロール名を入力してください',
   'system.role.roleKey': 'ロールキー',

@@ -546,6 +546,7 @@ const koKRFallback = {
   'system.user.batchDisable': '일괄 비활성화',
   'system.user.hero.eyebrow': '시스템 도메인 / IAM 사용자 거버넌스',
   'system.user.hero.title': '계정, 역할, 조직 바인딩을 중심으로 사용자 거버넌스 수행',
+  'role.admin.name': '시스템 관리자',
   'system.role.roleName': '역할 이름',
   'system.role.roleName.required': '역할 이름을 입력하세요',
   'system.role.roleKey': '역할 키',

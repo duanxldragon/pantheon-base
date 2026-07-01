@@ -593,6 +593,7 @@ const frFRFallback = {
   'system.user.hero.eyebrow': 'Domaine système / Gouvernance IAM utilisateur',
   'system.user.hero.title':
     'Piloter la gouvernance utilisateur autour des comptes, rôles et rattachements organisationnels',
+  'role.admin.name': 'Administrateur système',
   'system.role.roleName': 'Nom du rôle',
   'system.role.roleName.required': 'Veuillez saisir le nom du rôle',
   'system.role.roleKey': 'Clé du rôle',
