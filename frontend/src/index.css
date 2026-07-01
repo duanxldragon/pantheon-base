@@ -1581,9 +1581,11 @@ a {
 }
 
 .filter-panel {
-  border-color: color-mix(in srgb, var(--panel-border) 94%, transparent);
-  background: color-mix(in srgb, var(--panel-muted) 64%, #ffffff);
-  box-shadow: var(--panel-shadow-soft);
+  border-width: 1px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--panel-border) 92%, transparent);
+  background: color-mix(in srgb, var(--panel-muted) 82%, #fff);
+  box-shadow: none;
 }
 
 .filter-panel__header {
@@ -1637,7 +1639,7 @@ a {
 
 .filter-panel .arco-form-item-label-col > label {
   min-height: 20px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
   line-height: 1.45;
@@ -1671,7 +1673,7 @@ a {
 .filter-panel .arco-tree-select-view:hover,
 .filter-panel .arco-picker:hover,
 .filter-panel .arco-textarea-wrapper:hover {
-  border-color: color-mix(in srgb, var(--brand-primary) 26%, var(--panel-border-strong));
+  border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border-strong));
   background: #fff;
 }
 
@@ -1685,7 +1687,7 @@ a {
 .filter-panel .arco-picker-focused,
 .filter-panel .arco-textarea-wrapper-focus {
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 12%, transparent);
   background: #fff;
 }
 

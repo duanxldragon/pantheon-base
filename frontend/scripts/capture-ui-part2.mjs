@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const BASE_URL = 'http://127.0.0.1:5173';
+const BASE_URL = process.env.PANTHEON_WEB_BASE_URL || 'http://127.0.0.1:5173';
 const OUTPUT_DIR = path.join(process.cwd(), 'screenshots/components');
 
 async function login(page) {
