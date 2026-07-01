@@ -17,9 +17,8 @@ func setupRoleTestDB(t *testing.T) *gorm.DB {
 	db := testmysql.Open(t)
 
 	// 迁移模型
-	_ = db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &database.CasbinRule{})
+	_ = db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}, &roleDataScopePolicy{}, &database.CasbinRule{})
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_menu (id INTEGER PRIMARY KEY, page_perm TEXT, perms TEXT, type TEXT)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_menu (role_id INTEGER, menu_id INTEGER)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (user_id INTEGER, role_id INTEGER)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user (id INTEGER PRIMARY KEY, username TEXT, nickname TEXT, dept_id INTEGER, post_id INTEGER, status INTEGER, created_at DATETIME, updated_at DATETIME, deleted_at DATETIME)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id INTEGER PRIMARY KEY, dept_name TEXT)")
