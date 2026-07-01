@@ -70,7 +70,7 @@
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 12px 16px;
   align-items: center;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 94%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--panel-muted) 48%, #ffffff);
@@ -405,12 +405,17 @@
 .table-batch-action-bar .arco-btn {
   min-height: var(--shell-action-bar-min-height);
   padding-inline: 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-action);
   box-shadow: none;
   transition:
     border-color 0.16s ease,
     background-color 0.16s ease,
     color 0.16s ease;
+}
+
+.list-header-actions .arco-btn.arco-btn-primary,
+.table-batch-action-bar .arco-btn.arco-btn-primary {
+  border-radius: var(--radius-md);
 }
 
 .list-header-actions .arco-btn:not(.arco-btn-primary):not(.arco-btn-text),
@@ -685,7 +690,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px 14px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background: color-mix(in srgb, var(--panel-muted) 56%, #ffffff);
 }

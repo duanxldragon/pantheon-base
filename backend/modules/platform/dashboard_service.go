@@ -186,7 +186,7 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 0, since)
 		}, apply: func(value int64) { resp.LoginFailureCount = value }},
 		{count: func() (int64, error) {
-			return s.countTable(operationLogTableName, "created_at >= ?", todayStart)
+			return s.countTable(operationLogTableName, "oper_time >= ?", todayStart)
 		}, apply: func(value int64) { resp.TodayOperationCount = value }},
 	}
 
