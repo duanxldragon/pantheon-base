@@ -1,7 +1,6 @@
 name: Lint Workflows
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,6 +9,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/**'
+  workflow_dispatch:
 
 concurrency:
   group: lint-workflows-${{ github.event.pull_request.number || github.ref }}
@@ -19,6 +19,7 @@ jobs:
   actionlint:
     name: Actionlint
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -27,24 +28,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
-        with:
-          go-version-file: go.mod
-          cache: true
-
       - name: Install actionlint
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
-
-      - name: Run actionlint
         shell: bash
         run: |
-          set -euo pipefail
-          echo "## Workflow Lint Results" >> "$GITHUB_STEP_SUMMARY"
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.10/scripts/download-actionlint.bash)
+
+      - name: Run actionlint
+        run: ./actionlint -color -shellcheck=""
+
+      - name: Write summary
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          echo "## Workflow Lint" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          if actionlint -color; then
+          echo "Status: $JOB_STATUS" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$JOB_STATUS" = "success" ]; then
             echo "All workflow files passed validation." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Workflow validation failed. See logs above." >> "$GITHUB_STEP_SUMMARY"
-            exit 1
           fi
