@@ -113,7 +113,14 @@ function removeFilesByGlob(dir, pattern) {
   const re = new RegExp(pattern);
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.isFile() && re.test(entry.name)) {
-      fs.unlinkSync(path.join(dir, entry.name));
+      try {
+        fs.rmSync(path.join(dir, entry.name), { force: true });
+      } catch (error) {
+        if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+          continue;
+        }
+        throw error;
+      }
       removed++;
     }
   }

@@ -17,7 +17,7 @@ const files = [
   'src/modules/lowcode/generator/exporter.ts',
 ];
 
-const { tempDir } = prepareTranspiledWorkspace('generator-server-export', files);
+const { tempDir } = prepareTranspiledWorkspace(`generator-server-export-${process.pid}`, files);
 
 const { ModuleExporter } = await import(
   pathToFileURL(join(tempDir, 'src', 'modules', 'lowcode', 'generator', 'exporter.js'))

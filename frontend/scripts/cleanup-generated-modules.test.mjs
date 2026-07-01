@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import fs, { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -144,6 +144,41 @@ test('cleanup removes generated leftovers and restores clean registry templates'
     assert.equal(existsSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb')), false);
     assert.deepEqual(checkDirty(generatedPaths, registryFiles, repoRoot), []);
   } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('cleanup tolerates schema files disappearing during removal', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  const generatedSchemaPath = path.join(generatedPaths.schemaBusinessDir, 'mdqa-order.json');
+  const originalRmSync = fs.rmSync;
+  let firstSchemaDelete = true;
+
+  try {
+    writeFileSync(generatedSchemaPath, '{}\n', 'utf8');
+
+    fs.rmSync = ((targetPath, options) => {
+      if (
+        firstSchemaDelete
+        && targetPath === generatedSchemaPath
+        && options
+        && typeof options === 'object'
+        && 'force' in options
+      ) {
+        firstSchemaDelete = false;
+        originalRmSync(targetPath, options);
+        const error = new Error(`ENOENT: no such file or directory, unlink '${targetPath}'`);
+        error.code = 'ENOENT';
+        throw error;
+      }
+      return originalRmSync(targetPath, options);
+    });
+
+    cleanup(generatedPaths, registryFiles);
+
+    assert.equal(existsSync(generatedSchemaPath), false);
+  } finally {
+    fs.rmSync = originalRmSync;
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });

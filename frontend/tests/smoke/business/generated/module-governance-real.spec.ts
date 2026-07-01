@@ -144,8 +144,10 @@ test('real module governance flow can generate register and purge a temporary bu
   await expect(page.getByText('默认权限', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '生成代码', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: '预览与接入' })).toBeVisible();
   await expect(page.getByText('共生成 10 个文件', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '一键生成并注册', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '下载源码包', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '预览代码', exact: true })).toBeVisible();
 
   const generateResponse = await page.request.post(`${apiBaseUrl}/lowcode/dynamic-modules/generate`, {
     headers: {

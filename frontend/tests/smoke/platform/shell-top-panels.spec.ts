@@ -6,10 +6,25 @@ async function readWidth(locator: import('@playwright/test').Locator) {
   return locator.evaluate((element) => Math.round(element.getBoundingClientRect().width));
 }
 
+type Box = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+async function readBox(locator: import('@playwright/test').Locator): Promise<Box> {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  return box as Box;
+}
+
 async function expectNoViewportOverflow(page: import('@playwright/test').Page) {
   await expect
     .poll(async () =>
-      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      ),
     )
     .toBeLessThanOrEqual(1);
 }
@@ -39,16 +54,27 @@ test('shell top panels keep readable desktop widths', async ({ page }) => {
   await expect(await readWidth(preferencePanel)).toBeGreaterThanOrEqual(380);
 });
 
-test('shell top panels and profile page stay contained on narrow viewports', async ({ page }) => {
+test('shell top panels and profile page stay contained on narrow viewports', async ({
+  page,
+}, testInfo) => {
   await signInAsAdmin(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/dashboard', { waitUntil: 'networkidle' });
 
+  const searchTrigger = page.locator('.app-shell__search-trigger');
+  await expect(searchTrigger).toBeVisible();
+  const searchBox = await readBox(searchTrigger);
+
   const noticeTrigger = page.getByRole('button', { name: /通知中心|Notification Center/ });
+  await expect(noticeTrigger).toBeVisible();
   await noticeTrigger.click();
+
   const noticePanel = page.locator('.app-shell__notice-panel');
   await expect(noticePanel).toBeVisible();
+  const noticeBox = await readBox(noticePanel);
+  expect(noticeBox.y).toBeGreaterThanOrEqual(searchBox.y + searchBox.height - 1);
   await expect(await readWidth(noticePanel)).toBeLessThanOrEqual(358);
+  await page.screenshot({ path: testInfo.outputPath('shell-top-panels-narrow-notice.png') });
   await expectNoViewportOverflow(page);
 
   await page.mouse.click(20, 20);
