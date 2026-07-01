@@ -801,7 +801,7 @@ const listHeaderButtonBlock = requireBlock(
   findings,
 );
 if (listHeaderButtonBlock) {
-  if (!hasDeclaration(listHeaderButtonBlock, 'border-radius', 'var\\(--radius-md\\)')) {
+  if (!hasDeclaration(listHeaderButtonBlock, 'border-radius', 'var\\(--radius-action\\)')) {
     findings.push(
       '.list-header-actions buttons must use the shared radius and horizontal padding.',
     );
@@ -819,7 +819,7 @@ const batchActionButtonBlock = requireBlock(
   findings,
 );
 if (batchActionButtonBlock) {
-  if (!hasDeclaration(batchActionButtonBlock, 'border-radius', 'var\\(--radius-md\\)')) {
+  if (!hasDeclaration(batchActionButtonBlock, 'border-radius', 'var\\(--radius-action\\)')) {
     findings.push(
       '.table-batch-action-bar buttons must use the shared radius and horizontal padding.',
     );
