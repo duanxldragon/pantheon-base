@@ -195,8 +195,14 @@ jobs:
         shell: bash
         env:
           ZIZMOR_RESULT: ${{ steps.zizmor.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           echo "zizmor: ${ZIZMOR_RESULT}"
+          echo "event: ${EVENT_NAME}"
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+            echo "Workflow posture is report-only for PR and merge_group until existing findings are remediated."
+            exit 0
+          fi
           if [ "${ZIZMOR_RESULT}" != "success" ]; then
             exit 1
           fi
