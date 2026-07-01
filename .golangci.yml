@@ -19,7 +19,6 @@ linters:
     - copyloopvar   # loop variable aliasing (Go 1.22+ fix)
     - gosec         # security checks
     - goconst       # repeated string literals → constants
-    - gofmt         # format check
     - revive        # drop-in golint replacement
     - misspell      # spelling in comments
     - unconvert     # unnecessary type conversions
@@ -31,6 +30,13 @@ linters:
     - nestif        # manageable
     - cyclop        # covered by gocyclo analysis
     - testpackage   # test files live next to source
+
+formatters:
+  enable:
+    - gofmt         # format check
+  settings:
+    gofmt:
+      simplify: true
 
 linters-settings:
   gosec:
