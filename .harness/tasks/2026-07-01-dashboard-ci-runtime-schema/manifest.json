@@ -1,0 +1,127 @@
+{
+  "taskId": "2026-07-01-dashboard-ci-runtime-schema",
+  "title": "Dashboard Runtime Summary CI Schema Fix",
+  "goal": "Repair the post-merge dashboard backend regression by aligning platform summary tests with the runtime schema that GetSummary now depends on in CI.",
+  "primaryLayer": "platform",
+  "scope": {
+    "in": [
+      "dashboard platform backend test setup for runtime summary coverage",
+      "minimal runtime schema migration used by dashboard service tests",
+      "regression coverage for auth session, login log, and menu tables required by GetSummary"
+    ],
+    "out": [
+      "dashboard frontend layout or todo i18n behavior",
+      "production dashboard service logic",
+      "unrelated IAM, role, permission, seed, or lowcode work"
+    ]
+  },
+  "implementationNotes": [
+    "The merged dashboard change now calls authsession runtime helpers during GetSummary, so the existing test fixture must provision the runtime tables those helpers query.",
+    "The fix stays in test code because CI failed on missing tables rather than incorrect production behavior.",
+    "The shared migration helper keeps both dashboard tests on the same minimal runtime schema."
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-01-dashboard-ci-runtime-schema/manifest.json",
+      ".harness/evidence/2026-07-01-dashboard-ci-runtime-schema/commands.json",
+      ".harness/evidence/2026-07-01-dashboard-ci-runtime-schema/summary.md",
+      ".harness/evidence/2026-07-01-dashboard-ci-runtime-schema/review.md"
+    ],
+    "modify": [
+      "backend/modules/platform/dashboard_service_test.go"
+    ],
+    "doNotTouch": [
+      "backend/modules/platform/dashboard_service.go",
+      "frontend/**"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "ci-regression",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": [
+      "GitHub Actions backend test parity",
+      "dashboard runtime schema fixture coverage"
+    ],
+    "requiredSensors": [
+      "command",
+      "review"
+    ],
+    "requiredEvidence": [
+      "targeted platform go test output",
+      "GitHub backend failure root cause"
+    ],
+    "ratchetDecision": "sensor-added"
+  },
+  "deliveryGovernance": {
+    "designGate": [
+      "CI failure root cause captured from GitHub Actions logs"
+    ],
+    "developmentGate": [
+      "test-only fix stays scoped to dashboard runtime schema setup"
+    ],
+    "qaAcceptanceGate": [
+      "command"
+    ],
+    "githubGovernanceGate": [
+      "runtime-evidence-gate"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "mechanical",
+      "regression"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "platform dashboard tests -> dashboard service -> authsession runtime helpers -> runtime tables"
+    ],
+    "boundaryCrossings": [
+      "platform -> auth/session runtime schema"
+    ],
+    "riskNodes": [
+      "system_user_session fixture coverage",
+      "system_log_login fixture coverage",
+      "system_menu fixture coverage"
+    ],
+    "graphFocus": [
+      "call-depth"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./backend/modules/platform/..."
+    ],
+    "runtimeEvidence": [
+      "GitHub Actions backend failure log for PR #136",
+      "local platform go test run in fix/dashboard-ci-runtime-schema worktree"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-01-dashboard-ci-runtime-schema/",
+    "reviewFile": ".harness/evidence/2026-07-01-dashboard-ci-runtime-schema/review.md",
+    "summaryFile": ".harness/evidence/2026-07-01-dashboard-ci-runtime-schema/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "targeted platform go test output",
+    "GitHub backend failure root cause"
+  ],
+  "completionChecklist": [
+    "dashboard runtime schema helper added",
+    "platform backend tests pass locally",
+    "repair PR opened for post-merge CI regression"
+  ]
+}
