@@ -39,7 +39,7 @@ func (s *RoleService) Migrate() error {
 	if s.db == nil {
 		return common.NewBadRequest("database.not_initialized")
 	}
-	if err := s.db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}); err != nil {
+	if err := s.db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}, &roleDataScopePolicy{}); err != nil {
 		return err
 	}
 	return s.Bootstrap()
