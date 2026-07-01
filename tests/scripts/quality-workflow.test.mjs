@@ -64,6 +64,16 @@ test('governance-only changes can skip runtime gates without failing Quality Gat
   );
   assert.match(
     workflowSource,
+    /Run golangci-lint[\s\S]*continue-on-error:\s*true/i,
+    'go-lint step should use continue-on-error so findings are reported without failing the job',
+  );
+  assert.match(
+    workflowSource,
+    /Enforce go-lint gate[\s\S]*EVENT_NAME[\s\S]*pull_request[\s\S]*merge_group[\s\S]*report-only/i,
+    'go-lint gate should be report-only for pull_request and merge_group events',
+  );
+  assert.match(
+    workflowSource,
     /Quality Gates Summary[\s\S]*GITHUB_STEP_SUMMARY/i,
     'quality gates should write a job summary to GITHUB_STEP_SUMMARY',
   );

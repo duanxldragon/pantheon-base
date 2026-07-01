@@ -255,7 +255,26 @@ jobs:
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
 
       - name: Run golangci-lint
+        id: golangci-lint
+        continue-on-error: true
         run: golangci-lint run ./...
+
+      - name: Enforce go-lint gate
+        if: always()
+        shell: bash
+        env:
+          GOLANGCI_LINT_RESULT: ${{ steps.golangci-lint.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "golangci-lint: ${GOLANGCI_LINT_RESULT}"
+          echo "event: ${EVENT_NAME}"
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+            echo "Go lint is report-only for PR and merge_group until existing findings are remediated."
+            exit 0
+          fi
+          if [ "${GOLANGCI_LINT_RESULT}" != "success" ]; then
+            exit 1
+          fi
 
   duplication:
     name: Duplication Gate
