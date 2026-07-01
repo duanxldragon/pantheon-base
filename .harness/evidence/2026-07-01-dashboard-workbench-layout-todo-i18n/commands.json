@@ -1,0 +1,48 @@
+{
+  "taskId": "2026-07-01-dashboard-workbench-layout-todo-i18n",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": ".agents/adapters/codex.md"
+  },
+  "commands": [
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "TypeScript build passes after dashboard layout and todo i18n updates."
+    },
+    {
+      "command": "go test ./backend/modules/platform/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Platform dashboard response contract tests pass."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5175 --config playwright.config.ts -- tests/smoke/platform/backoffice-ui-visual.spec.ts --grep \"/dashboard has unified shell and no runtime UI regression\"",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Desktop render confirms balanced dashboard card sizing."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5175 --config playwright.config.ts -- tests/smoke/system/system-pages.spec.ts --grep \"dashboard keeps narrow reflow stable and task widgets ready\"",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Unified todo remains localized and stable on the narrow viewport smoke path."
+    }
+  ],
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-01-dashboard-workbench-layout-todo-i18n/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-01-dashboard-workbench-layout-todo-i18n/",
+    "reviewFile": ".harness/evidence/2026-07-01-dashboard-workbench-layout-todo-i18n/review.md",
+    "summaryFile": ".harness/evidence/2026-07-01-dashboard-workbench-layout-todo-i18n/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "Full repository backend coverage was not rerun because this change is scoped to the platform dashboard contract.",
+    "The visual evidence artifact is a local smoke output and is summarized in the PR body instead of being committed."
+  ],
+  "completedAt": "2026-07-01T01:35:00Z"
+}

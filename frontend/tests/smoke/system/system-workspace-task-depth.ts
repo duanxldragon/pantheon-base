@@ -8,7 +8,7 @@ type ApiEnvelope<T> = {
 
 type DashboardSummary = {
   recentLogins: Array<{ id: number }>;
-  orgGovernanceTasks: Array<{ taskKey: string }>;
+  orgGovernanceTasks: Array<{ taskKey: string; issueLabel?: string; actionLabel?: string }>;
 };
 
 type SecurityOverview = {
@@ -100,6 +100,9 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
       const todoCard = cardByTitle(page, /统一待办|Unified Todo/);
       if (summaryPayload.data.orgGovernanceTasks.length > 0) {
         await expect(todoCard.locator('.dashboard-task-card').first()).toBeVisible();
+        await expect(todoCard).not.toContainText(
+          /Leader Missing|No Posts|Empty Department|Assigned Members|Assign Leader|Create Post|Review Status|Delete or Keep Disabled/,
+        );
       } else {
         await expect(todoCard.locator('.arco-empty')).toBeVisible();
       }
