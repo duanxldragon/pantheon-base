@@ -49,6 +49,26 @@ test('governance-only changes can skip runtime gates without failing Quality Gat
   );
   assert.match(
     workflowSource,
+    /go-lint:[\s\S]*if:\s*\$\{\{\s*github\.event_name\s*==\s*'merge_group'\s*\|\|[\s\S]*needs\.change-scope\.outputs\.governance_only\s*!=\s*'true'/i,
+    'go lint should be skipped for governance-only pull requests and pushes',
+  );
+  assert.match(
+    workflowSource,
+    /quality-gates:[\s\S]*needs:[\s\S]*- go-lint[\s\S]*if:\s*always\(\)/i,
+    'quality gates should depend on go-lint results',
+  );
+  assert.match(
+    workflowSource,
+    /GO_LINT_RESULT.*!=.*"success"/i,
+    'quality gates should enforce go-lint as a runtime gate',
+  );
+  assert.match(
+    workflowSource,
+    /Quality Gates Summary[\s\S]*GITHUB_STEP_SUMMARY/i,
+    'quality gates should write a job summary to GITHUB_STEP_SUMMARY',
+  );
+  assert.match(
+    workflowSource,
     /if\s+\[\s*"\$\{GOVERNANCE_ONLY\}"\s*=\s*"true"\s*\];\s*then[\s\S]*RUNTIME_GATES_REQUIRED=false/i,
     'quality gates should only require runtime gates when the change is not governance-only',
   );

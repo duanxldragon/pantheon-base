@@ -300,6 +300,15 @@ jobs:
           CODEQL_SECURITY_SCAN_RESULT: ${{ needs.codeql-security.result }}
           CODEQL_ALERT_RESULT: ${{ needs.codeql-alerts.result }}
         run: |
+          echo "## Security Gates Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Gate | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Dependency Vulnerabilities | %s |\n' "$DEPENDENCY_VULNERABILITIES_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Secret Scan | %s |\n' "$SECRET_SCAN_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Workflow Posture | %s |\n' "$WORKFLOW_POSTURE_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| CodeQL Security Scan | %s |\n' "$CODEQL_SECURITY_SCAN_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| CodeQL Alert Gate | %s |\n' "$CODEQL_ALERT_RESULT" >> "$GITHUB_STEP_SUMMARY"
           echo "Dependency Vulnerabilities: ${DEPENDENCY_VULNERABILITIES_RESULT}"
           echo "Secret Scan: ${SECRET_SCAN_RESULT}"
           echo "Workflow Posture: ${WORKFLOW_POSTURE_RESULT}"
