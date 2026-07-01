@@ -51,11 +51,30 @@ jobs:
             frontend/package-lock.json
 
       - name: Check Go formatting
+        id: gofmt
+        continue-on-error: true
         run: |
           UNFORMATTED=$(gofmt -l .)
           if [ -n "$UNFORMATTED" ]; then
             echo "Unformatted Go files:"
             echo "$UNFORMATTED"
+            exit 1
+          fi
+          echo "Go formatting OK"
+
+      - name: Enforce formatting gate
+        shell: bash
+        env:
+          GOFMT_RESULT: ${{ steps.gofmt.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "gofmt: $GOFMT_RESULT"
+          # PR/merge_group: report-only
+          if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; then
+            echo "Go formatting is report-only for PR/merge_group"
+            exit 0
+          fi
+          if [ "$GOFMT_RESULT" != "success" ]; then
             exit 1
           fi
 

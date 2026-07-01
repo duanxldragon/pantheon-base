@@ -28,14 +28,16 @@ jobs:
     steps:
       - name: Check PR title
         id: check-title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          TITLE="${{ github.event.pull_request.title }}"
+          TITLE="${PR_TITLE:-}"
           # Basic check: ensure PR has a meaningful title
           if [ ${#TITLE} -lt 5 ]; then
             echo "PR title too short: $TITLE"
             exit 1
           fi
-          echo "PR title: $TITLE"
+          echo "PR title validated (length: ${#TITLE})"
           echo "title_valid=true" >> "$GITHUB_OUTPUT"
 
       - name: Auto-approve (solo mode)
