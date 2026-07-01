@@ -5,19 +5,23 @@ import (
 	"time"
 
 	"pantheon-platform/backend/internal/middleware"
+	login "pantheon-platform/backend/modules/auth/login"
 	security "pantheon-platform/backend/modules/auth/security"
+	session "pantheon-platform/backend/modules/auth/session"
 	dictcfg "pantheon-platform/backend/modules/system/config/dict"
 	settingcfg "pantheon-platform/backend/modules/system/config/setting"
+	menu "pantheon-platform/backend/modules/system/iam/menu"
 	role "pantheon-platform/backend/modules/system/iam/role"
 	user "pantheon-platform/backend/modules/system/iam/user"
 	dept "pantheon-platform/backend/modules/system/org/dept"
 	post "pantheon-platform/backend/modules/system/org/post"
 	"pantheon-platform/backend/pkg/testmysql"
+
+	"gorm.io/gorm"
 )
 
-func TestDashboardServiceGetSummaryUsesCurrentRuntimeSchema(t *testing.T) {
-	db := testmysql.Open(t)
-
+func migrateDashboardRuntimeSchema(t *testing.T, db *gorm.DB) {
+	t.Helper()
 	if err := db.AutoMigrate(
 		&user.SystemUser{},
 		&role.SystemRole{},
@@ -25,11 +29,19 @@ func TestDashboardServiceGetSummaryUsesCurrentRuntimeSchema(t *testing.T) {
 		&post.SystemPost{},
 		&dictcfg.SystemDictType{},
 		&settingcfg.SystemSetting{},
+		&menu.SystemMenu{},
+		&session.SystemUserSession{},
+		&login.SystemLogLogin{},
 		&middleware.SystemLogOper{},
 		&security.SystemAuthSecurityEvent{},
 	); err != nil {
 		t.Fatalf("auto migrate: %v", err)
 	}
+}
+
+func TestDashboardServiceGetSummaryUsesCurrentRuntimeSchema(t *testing.T) {
+	db := testmysql.Open(t)
+	migrateDashboardRuntimeSchema(t, db)
 
 	now := time.Now()
 	if err := db.Create(&user.SystemUser{Username: "admin", Status: 1}).Error; err != nil {
@@ -108,6 +120,7 @@ func (l staticGovernanceLoader) ListOrgGovernanceTasks() ([]OrgGovernanceTask, e
 
 func TestDashboardServiceGetSummaryMapsGovernanceTodoFields(t *testing.T) {
 	db := testmysql.Open(t)
+	migrateDashboardRuntimeSchema(t, db)
 	svc := NewDashboardService(db, WithOrgGovernanceTaskLoader(staticGovernanceLoader{
 		tasks: []OrgGovernanceTask{
 			{
