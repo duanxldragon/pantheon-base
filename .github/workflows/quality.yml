@@ -9,8 +9,12 @@ on:
       - release/**
   merge_group:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
-  NODE_VERSION: "24"
+  NODE_VERSION: "22"
   GO_VERSION_FILE: go.mod
   MYSQL_ROOT_PASSWORD: "root"
   MYSQL_DATABASE: "pantheon_base"
@@ -222,10 +226,55 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
-          cache: false
+          cache: true
 
       - name: Test backend
         run: go test -race ./...
+
+  go-lint:
+    name: Go Lint
+    needs:
+      - change-scope
+    if: ${{ github.event_name == 'merge_group' || needs.change-scope.outputs.governance_only != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
+
+      - name: Run golangci-lint
+        id: golangci-lint
+        continue-on-error: true
+        run: golangci-lint run ./...
+
+      - name: Enforce go-lint gate
+        if: always()
+        shell: bash
+        env:
+          GOLANGCI_LINT_RESULT: ${{ steps.golangci-lint.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "golangci-lint: ${GOLANGCI_LINT_RESULT}"
+          echo "event: ${EVENT_NAME}"
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+            echo "Go lint is report-only for PR and merge_group until existing findings are remediated."
+            exit 0
+          fi
+          if [ "${GOLANGCI_LINT_RESULT}" != "success" ]; then
+            exit 1
+          fi
 
   duplication:
     name: Duplication Gate
@@ -327,7 +376,7 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
-          cache: false
+          cache: true
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -391,6 +440,7 @@ jobs:
       - docs-governance
       - frontend-contract
       - backend-tests
+      - go-lint
       - duplication
       - smoke-sanity
     if: always()
@@ -406,6 +456,7 @@ jobs:
           DOCS_GOVERNANCE_RESULT: ${{ needs.docs-governance.result }}
           FRONTEND_CONTRACT_RESULT: ${{ needs.frontend-contract.result }}
           BACKEND_TESTS_RESULT: ${{ needs.backend-tests.result }}
+          GO_LINT_RESULT: ${{ needs.go-lint.result }}
           DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
         run: |
@@ -413,11 +464,23 @@ jobs:
           if [ "${GOVERNANCE_ONLY}" = "true" ]; then
             RUNTIME_GATES_REQUIRED=false
           fi
+          echo "## Quality Gates Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Gate | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Docs Governance | %s |\n' "$DOCS_GOVERNANCE_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Frontend Contract | %s |\n' "$FRONTEND_CONTRACT_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Backend Tests | %s |\n' "$BACKEND_TESTS_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Go Lint | %s |\n' "$GO_LINT_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Duplication Gate | %s |\n' "$DUPLICATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Smoke Sanity | %s |\n' "$SMOKE_SANITY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Runtime Gates Required | %s |\n' "$RUNTIME_GATES_REQUIRED" >> "$GITHUB_STEP_SUMMARY"
           echo "Docs Only: ${DOCS_ONLY}"
           echo "Governance Only: ${GOVERNANCE_ONLY}"
           echo "Docs Governance: ${DOCS_GOVERNANCE_RESULT}"
           echo "Frontend Contract: ${FRONTEND_CONTRACT_RESULT}"
           echo "Backend Tests: ${BACKEND_TESTS_RESULT}"
+          echo "Go Lint: ${GO_LINT_RESULT}"
           echo "Duplication Gate: ${DUPLICATION_RESULT}"
           echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
           echo "Runtime Gates Required: ${RUNTIME_GATES_REQUIRED}"
@@ -428,6 +491,7 @@ jobs:
           if [ "${RUNTIME_GATES_REQUIRED}" = "true" ] && \
              { [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
                [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
+               [ "${GO_LINT_RESULT}" != "success" ] || \
                [ "${SMOKE_SANITY_RESULT}" != "success" ]; }; then
             exit 1
           fi

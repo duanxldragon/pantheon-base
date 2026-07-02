@@ -415,7 +415,7 @@
 
 .list-header-actions .arco-btn.arco-btn-primary,
 .table-batch-action-bar .arco-btn.arco-btn-primary {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-action);
 }
 
 .list-header-actions .arco-btn:not(.arco-btn-primary):not(.arco-btn-text),

@@ -1,0 +1,52 @@
+name: Lint Workflows
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+concurrency:
+  group: lint-workflows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        shell: bash
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.10/scripts/download-actionlint.bash)
+
+      - name: Run actionlint
+        run: ./actionlint -color -shellcheck=""
+
+      - name: Write summary
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          echo "## Workflow Lint" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Status: $JOB_STATUS" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$JOB_STATUS" = "success" ]; then
+            echo "All workflow files passed validation." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Workflow validation failed. See logs above." >> "$GITHUB_STEP_SUMMARY"
+          fi

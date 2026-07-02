@@ -255,8 +255,6 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
       expect(detailPayload.code).toBe(200);
       expect(detailPayload.data.username).toBeTruthy();
       expect(detailPayload.data.roleKeys.length).toBeGreaterThan(0);
-      const expectedRoleLabel =
-        detailPayload.data.roleNames?.find(Boolean) || detailPayload.data.roleKeys[0];
 
       const detailLoadPayloadPromise = expectOkJson<UserDetail>(
         page.waitForResponse(
@@ -277,14 +275,19 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
         }),
       ).toBeVisible();
       await expect(page.getByText(detailPayload.data.username, { exact: true }).first()).toBeVisible();
+      await expect(page.getByText('基础信息', { exact: true })).toBeVisible();
+      await expect(page.getByText('账号摘要', { exact: true })).toBeVisible();
       await expect(
         page.getByRole('row', {
           name: new RegExp(`用户名\\s+${detailPayload.data.username}`),
         }).first(),
       ).toBeVisible();
-      await expect(page.getByRole('row', { name: new RegExp(`角色\\s+${expectedRoleLabel}`) }).first()).toBeVisible();
-      await expect(page.getByText('基础信息', { exact: true })).toBeVisible();
-      await expect(page.getByText('账号摘要', { exact: true })).toBeVisible();
+      // The UI applies translateRoleName() to roleNames, converting i18n keys
+      // like 'role.admin.name' to display names like '系统管理员'. Verify the
+      // role row exists and shows a role tag rather than matching the raw value.
+      const roleRow = page.getByRole('row', { name: /角色/ }).first();
+      await expect(roleRow).toBeVisible();
+      await expect(roleRow.locator('.arco-tag').first()).toBeVisible();
       await expect(page.locator('.arco-card').first()).toContainText(
         detailPayload.data.nickname || detailPayload.data.username,
       );

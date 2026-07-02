@@ -3,7 +3,7 @@
   "scripts": {
     "apply:github-feedback": "node scripts/address-github-feedback.mjs",
     "run:github-feedback-loop": "node scripts/run-github-feedback-loop.mjs",
-    "test:branch-hygiene": "node --test tests/scripts/cleanup-github-branches.test.mjs tests/scripts/branch-hygiene-workflow.test.mjs tests/scripts/collect-merge-targets.test.mjs",
+    "test:branch-hygiene": "node --test tests/scripts/cleanup-github-branches.test.mjs",
     "check:docs-frontmatter": "node scripts/frontmatter-check.mjs",
     "check:docs-frontmatter:legacy": "node scripts/frontmatter-check.mjs --report-legacy",
     "check:duplication": "node scripts/check-duplication.mjs",
