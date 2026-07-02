@@ -331,6 +331,24 @@
   width: 148px;
 }
 
+.table-batch-action-bar__range-controls,
+.table-batch-action-bar__range-inputs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.table-batch-action-bar__range-controls {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.table-batch-action-bar__range-inputs {
+  flex-wrap: nowrap;
+}
+
 .table-batch-action-bar--governance .table-batch-action-bar__meta {
   flex: 1 1 420px;
   gap: 6px;
@@ -354,6 +372,11 @@
 @media (max-width: 1280px) {
   .table-batch-action-bar--governance .table-batch-action-bar__meta,
   .table-batch-action-bar--governance .table-batch-action-bar__actions {
+    flex-wrap: wrap;
+  }
+
+  .table-batch-action-bar__range-controls,
+  .table-batch-action-bar__range-inputs {
     flex-wrap: wrap;
   }
 }
