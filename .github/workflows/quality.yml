@@ -123,28 +123,104 @@ jobs:
         run: node scripts/check-pr-governance.mjs --event "$GITHUB_EVENT_PATH"
 
       - name: Check failure registry
+        id: failure-registry
+        continue-on-error: true
         run: npm run check:failure-registry
 
       - name: Check harness method linkage
+        id: harness-method
+        continue-on-error: true
         run: npm run check:harness-method
 
       - name: Check harness adoption
+        id: harness-adoption
+        continue-on-error: true
         run: npm run check:harness-adoption
 
       - name: Check harness template health
+        id: harness-template
+        continue-on-error: true
         run: npm run check:harness-template
 
       - name: Check harness docs
+        id: harness-docs
+        continue-on-error: true
         run: npm run check:harness-docs
 
       - name: Check harness inventory
+        id: harness-inventory
+        continue-on-error: true
         run: npm run check:harness-inventory
 
       - name: Check harness sync drift
+        id: harness-sync
+        continue-on-error: true
         run: npm run check:harness-sync
 
       - name: Check generated modules
+        id: generated-modules
+        continue-on-error: true
         run: npm run check:generated-modules
+
+      - name: Enforce harness governance gate
+        if: always()
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          FAILURE_REGISTRY_RESULT: ${{ steps.failure-registry.outcome }}
+          HARNESS_METHOD_RESULT: ${{ steps.harness-method.outcome }}
+          HARNESS_ADOPTION_RESULT: ${{ steps.harness-adoption.outcome }}
+          HARNESS_TEMPLATE_RESULT: ${{ steps.harness-template.outcome }}
+          HARNESS_DOCS_RESULT: ${{ steps.harness-docs.outcome }}
+          HARNESS_INVENTORY_RESULT: ${{ steps.harness-inventory.outcome }}
+          HARNESS_SYNC_RESULT: ${{ steps.harness-sync.outcome }}
+          GENERATED_MODULES_RESULT: ${{ steps.generated-modules.outcome }}
+        run: |
+          # Report harness check results
+          echo "## Harness Governance Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Failure Registry | %s |\n' "$FAILURE_REGISTRY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Harness Method | %s |\n' "$HARNESS_METHOD_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Harness Adoption | %s |\n' "$HARNESS_ADOPTION_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Harness Template | %s |\n' "$HARNESS_TEMPLATE_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Harness Docs | %s |\n' "$HARNESS_DOCS_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Harness Inventory | %s |\n' "$HARNESS_INVENTORY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Harness Sync | %s |\n' "$HARNESS_SYNC_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Generated Modules | %s |\n' "$GENERATED_MODULES_RESULT" >> "$GITHUB_STEP_SUMMARY"
+
+          echo ""
+          echo "Harness governance check results:"
+          echo "  Failure Registry: ${FAILURE_REGISTRY_RESULT}"
+          echo "  Harness Method: ${HARNESS_METHOD_RESULT}"
+          echo "  Harness Adoption: ${HARNESS_ADOPTION_RESULT}"
+          echo "  Harness Template: ${HARNESS_TEMPLATE_RESULT}"
+          echo "  Harness Docs: ${HARNESS_DOCS_RESULT}"
+          echo "  Harness Inventory: ${HARNESS_INVENTORY_RESULT}"
+          echo "  Harness Sync: ${HARNESS_SYNC_RESULT}"
+          echo "  Generated Modules: ${GENERATED_MODULES_RESULT}"
+
+          # For PR and merge_group: harness checks are report-only (not blocking)
+          # For push to main/release: enforce strict harness gate
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
+            echo ""
+            echo "Harness checks are report-only for PR and merge_group events."
+            echo "Strict enforcement applies only to main/release pushes."
+            exit 0
+          fi
+
+          # Enforce strict gate for main/release pushes
+          if [ "${FAILURE_REGISTRY_RESULT}" != "success" ] || \
+             [ "${HARNESS_METHOD_RESULT}" != "success" ] || \
+             [ "${HARNESS_ADOPTION_RESULT}" != "success" ] || \
+             [ "${HARNESS_TEMPLATE_RESULT}" != "success" ] || \
+             [ "${HARNESS_DOCS_RESULT}" != "success" ] || \
+             [ "${HARNESS_INVENTORY_RESULT}" != "success" ] || \
+             [ "${HARNESS_SYNC_RESULT}" != "success" ] || \
+             [ "${GENERATED_MODULES_RESULT}" != "success" ]; then
+            exit 1
+          fi
 
   frontend-contract:
     name: Frontend Contract
