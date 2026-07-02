@@ -1,0 +1,190 @@
+{
+  "taskId": "2026-07-03-base-release-v0-8-8-readiness",
+  "title": "Pantheon Base v0.8.8 Release Readiness",
+  "goal": "Close the Pantheon Base release-readiness gate by fixing data-scope and governance cleanup layout blockers, validating the full system smoke suite, and preparing the next foundation release.",
+  "primaryLayer": "system/iam",
+  "scope": {
+    "in": [
+      "system/iam role data-scope default normalization",
+      "shared database self data-scope SQL generation",
+      "system governance cleanup range layout",
+      "full backend, frontend, governance, and smoke validation evidence",
+      "foundation release PR and release publication gate"
+    ],
+    "out": [
+      "new business-domain features",
+      "production credential or environment changes",
+      "manual copying from base to ops",
+      "unrelated lint baseline remediation outside this release blocker"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "platform shared database scope",
+    "frontend system governance UI"
+  ],
+  "implementationNotes": [
+    "Invalid or blank role data-scope values now normalize to all instead of narrowing seeded/admin roles to self.",
+    "Self data-scope now inspects the GORM model schema and uses created_by/create_by when present, falls back to id for self-owned tables, and fails closed if the schema has no viable owner column.",
+    "Governance cleanup range controls were grouped without the Arco Space wrapper so datetime inputs and the cleanup action remain aligned in the system workbench action bar.",
+    "Full local smoke passed after serializing generated-module smoke execution and fixing the cleanup range UI regression."
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-03-base-release-v0-8-8-readiness/manifest.json",
+      ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/commands.json",
+      ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/summary.md",
+      ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/review.md"
+    ],
+    "modify": [
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/role/role_service_test.go",
+      "backend/pkg/database/scope.go",
+      "backend/pkg/database/scope_test.go",
+      "frontend/src/components/governance/GovernanceCleanupBar.tsx",
+      "frontend/src/modules/system/components/shared/list-page.css"
+    ],
+    "doNotTouch": [
+      "modules/business/**",
+      "pantheon-ops/**",
+      "local smoke helper scripts containing workstation credentials"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "release-readiness",
+    "ownerLayer": "base-foundation",
+    "coverageDimensions": [
+      "security",
+      "behaviour",
+      "runtime",
+      "visual"
+    ]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": [
+      "foundation release artifact generation",
+      "base-to-ops inheritance boundary remains unchanged"
+    ],
+    "requiredSensors": [
+      "backend tests",
+      "frontend lint type-check build",
+      "full smoke suite",
+      "GitHub PR checks",
+      "security gates"
+    ],
+    "requiredEvidence": [
+      "local full smoke pass",
+      "backend and frontend validation pass",
+      "GitHub PR security and quality gate results",
+      "race-mode toolchain gap recorded"
+    ],
+    "deferredCodeIssues": [
+      "local Windows race-mode requires MinGW cgo toolchain",
+      "independent non-author review was unavailable in this session"
+    ],
+    "ratchetDecision": "gate-updated"
+  },
+  "deliveryGovernance": {
+    "designGate": [
+      "impeccable UI gate applied to governance cleanup range controls",
+      "rendered evidence supplied by Playwright smoke covering the cleanup range UI"
+    ],
+    "developmentGate": [
+      "changes stay scoped to IAM data-scope behavior, shared database scope helper, and governance action bar layout"
+    ],
+    "qaAcceptanceGate": [
+      "go test ./backend/...",
+      "frontend lint, type-check, build",
+      "npm run test:smoke:all"
+    ],
+    "githubGovernanceGate": [
+      "PR branch required by protected main",
+      "Security Gates and Code Quality Gates must pass before merge"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "release-governance",
+      "permission-policy",
+      "runtime-evidence"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "role service -> normalizeRoleDataScope -> role data-scope persistence",
+      "database WithDataScope -> self mode -> GORM statement schema -> SQL predicate",
+      "GovernanceCleanupBar -> table batch action bar CSS -> system governance pages"
+    ],
+    "boundaryCrossings": [
+      "system/iam -> shared backend database package",
+      "system governance UI -> shared system list-page CSS"
+    ],
+    "riskNodes": [
+      "data-scope default widening for invalid role data",
+      "self-scope fail-closed behavior when model schema is unavailable",
+      "governance cleanup range action layout on constrained widths"
+    ],
+    "graphFocus": [
+      "permission-policy",
+      "runtime-smoke",
+      "visual-layout"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./backend/...",
+      "go test -race ./backend/...",
+      "cd frontend && npm run lint",
+      "cd frontend && npm run type-check",
+      "cd frontend && npm run build",
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "npm run check:generated-modules",
+      "npm run test:smoke:all"
+    ],
+    "runtimeEvidence": [
+      "local backend, frontend, and smoke command outcomes in commands.json",
+      "GitHub PR checks for #144"
+    ],
+    "visualEvidence": {
+      "viewports": [
+        "Playwright smoke desktop viewport for system governance cleanup range UI"
+      ],
+      "states": [
+        "cleanup range controls visible and actionable",
+        "system smoke page/form/authz/governance flows"
+      ],
+      "routes": [
+        "system governance cleanup smoke coverage",
+        "platform/system/business smoke suites"
+      ]
+    }
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/",
+    "reviewFile": ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/review.md",
+    "summaryFile": ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/summary.md",
+    "changeRef": "PR #144",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "full smoke pass",
+    "GitHub security gates pass",
+    "release artifact publication evidence"
+  ],
+  "humanGates": [
+    "GitHub branch protection requires PR merge",
+    "independent non-author review is recorded as unavailable rather than claimed"
+  ],
+  "completionChecklist": [
+    "no open PRs remain",
+    "no extra remote branches remain",
+    "main aligns with origin/main",
+    "base-v0.8.8 foundation release is published"
+  ]
+}

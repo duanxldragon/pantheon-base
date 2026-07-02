@@ -1,0 +1,163 @@
+{
+  "taskId": "2026-07-03-base-release-v0-8-8-readiness",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": ".agents/adapters/codex.md"
+  },
+  "commands": [
+    {
+      "command": "gh pr list --state open --json number,title,headRefName,baseRefName,isDraft,url",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No open PRs existed before creating release PR #144."
+    },
+    {
+      "command": "git ls-remote --heads origin",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Only origin/main existed before the temporary PR branch was created."
+    },
+    {
+      "command": "gofmt -w backend/modules/system/iam/role/role_service.go backend/modules/system/iam/role/role_service_test.go backend/pkg/database/scope.go backend/pkg/database/scope_test.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Go files formatted before commit."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors in the staged release fix."
+    },
+    {
+      "command": "go test ./backend/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Backend package tests passed against the local test database."
+    },
+    {
+      "command": "go test -race ./backend/...",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Blocked by local Windows cgo toolchain: race mode requires cgo, and the available Cygwin gcc is rejected for native Windows builds; MinGW is required."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Frontend lint passed."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Frontend TypeScript type-check passed."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Frontend production build passed, including menu/i18n/system visual/smoke prechecks."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Docs frontmatter governance check passed."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Task packet template check passed."
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Generated-module cleanup ownership check passed."
+    },
+    {
+      "command": "npm run test:smoke:all",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Full smoke suite passed, covering platform, system pages/forms/authz/governance/API, and business generated module flows."
+    },
+    {
+      "command": "git commit -m \"fix: harden data scope and cleanup layout\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Pre-commit reran frontend type-check, ESLint/Prettier, and gofmt before creating commit 3c6b7b3."
+    },
+    {
+      "command": "git push origin main",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "GitHub rejected direct main push because repository rules require changes through a pull request."
+    },
+    {
+      "command": "gh pr create --base main --head release/base-v0.8.8-readiness",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Created PR #144 for the protected-branch merge path."
+    },
+    {
+      "command": "gh run watch 28626187687 --interval 10",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Pull-request CI run passed Fast Checks, Unit Tests, Go Lint, and CI Summary."
+    },
+    {
+      "command": "gh run watch 28626187676 --interval 10",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Pull-request Security Gates passed Workflow Security, CodeQL Security, Dependency Vulnerabilities, Secret Scan, and Security Summary."
+    },
+    {
+      "command": "gh run watch 28626187677 --interval 10",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Code Quality Gates passed backend tests, frontend contract, Go lint, smoke sanity, and duplication; Docs Governance failed because the initial PR body did not use the repository governance template."
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "role service -> normalizeRoleDataScope",
+      "database WithDataScope -> self mode predicates",
+      "GovernanceCleanupBar -> list-page.css action-bar layout"
+    ],
+    "checks": [
+      "diff review",
+      "runtime smoke",
+      "GitHub checks"
+    ],
+    "findings": [],
+    "notes": "The release fix was scoped by direct diff and existing tests; no symbol-level CodeGraph query was required after the affected files were already isolated."
+  },
+  "browserEvidence": [
+    {
+      "surface": "system governance cleanup range controls",
+      "tool": "Playwright smoke suite",
+      "status": "passed",
+      "notes": "The cleanup range UI blocker was reproduced before the fix and passed in the final full smoke run."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Race-mode backend validation is blocked on this Windows workstation until a MinGW cgo toolchain is available.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-03-base-release-v0-8-8-readiness/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/",
+    "reviewFile": ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/review.md",
+    "changeRef": "PR #144",
+    "planRefs": [],
+    "summaryFile": ".harness/evidence/2026-07-03-base-release-v0-8-8-readiness/summary.md"
+  },
+  "knownGaps": [
+    "go test -race ./backend/... could not run locally because the Windows C toolchain is Cygwin gcc rather than MinGW.",
+    "The code-review skill requires independent code-reviewer and architect lanes before approval, but subagent delegation was not available under this session's tool constraints.",
+    "The first PR body failed Docs Governance and was corrected by adding this task packet and updating the PR body."
+  ],
+  "completedAt": "2026-07-02T22:55:00Z"
+}
