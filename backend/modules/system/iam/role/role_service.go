@@ -637,7 +637,7 @@ func normalizeRoleDataScope(dataScope string) string {
 	case common.DataScopeModeSelf, common.DataScopeModeDept, common.DataScopeModeDeptAndChildren, common.DataScopeModeCustom:
 		return mode
 	default:
-		return common.DataScopeModeSelf
+		return common.DataScopeModeAll
 	}
 }
 

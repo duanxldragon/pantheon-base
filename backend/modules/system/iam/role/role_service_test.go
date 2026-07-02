@@ -98,6 +98,17 @@ func TestRoleService_ListRolesExcludesActionMenuBindings(t *testing.T) {
 	}
 }
 
+func TestNormalizeRoleDataScopeDefaultsToAll(t *testing.T) {
+	for _, value := range []string{"", " ", "invalid"} {
+		if got := normalizeRoleDataScope(value); got != common.DataScopeModeAll {
+			t.Fatalf("expected %q to normalize to all, got %q", value, got)
+		}
+	}
+	if got := normalizeRoleDataScope(common.DataScopeModeSelf); got != common.DataScopeModeSelf {
+		t.Fatalf("expected self to remain self, got %q", got)
+	}
+}
+
 func TestRoleService_MigrateSeedsAdminRoleAndBinding(t *testing.T) {
 	db := setupRoleTestDB(t)
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user (id INTEGER PRIMARY KEY, username TEXT)").Error; err != nil {
