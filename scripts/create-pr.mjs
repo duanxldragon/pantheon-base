@@ -35,38 +35,40 @@ const GITHUB_REPO = execFileSync('git', ['remote', 'get-url', 'origin'], { encod
 
 const prBody = `## 变更摘要
 
-- 改动层级：platform
-- 改动模块：docs
-- 目标问题：提升代码可读性和国际化支持
-- 预期影响：便于国际开发者理解和参与项目
+- 改动层级：\`platform\`
+- 改动模块：\`backend/internal/middleware\`, \`scripts\`
+- 目标问题：\`修复 GitHub CodeQL 扫描出的 log injection 和 command injection 告警\`
+- 预期影响：\`关闭现有 open CodeQL alerts，同时保留现有请求日志和 PR 自动化行为\`
 
 ## Harness 链路
 
-- Task ID：none
-- Task Manifest：none
-- Evidence：none
-- Verification evidence：none
-- Review Artifact：none
-- OpenSpec change：none
-- Trivial change：${isTrivial ? 'yes' : 'no'}
-- Quality Profile：${qualityProfile}
-- Ratchet Decision：registry-only
-- GitHub Signal：repo-quality-gate
+- Task ID：\`2026-07-03-codeql-alert-remediation\`
+- Task Manifest：\`.harness/tasks/2026-07-03-codeql-alert-remediation/manifest.json\`
+- Evidence：\`.harness/evidence/2026-07-03-codeql-alert-remediation/commands.json\`
+- Verification evidence：\`.harness/evidence/2026-07-03-codeql-alert-remediation/summary.md\`
+- Review Artifact：\`.harness/evidence/2026-07-03-codeql-alert-remediation/review.md\`
+- OpenSpec change：\`none\`
+- Trivial change：\`no\`
+- Quality Profile：\`ci-workflow\`
+- Ratchet Decision：\`sensor-added\`
+- GitHub Signal：\`repo-quality-gate\`
 
 ## Harness adoption markers
 
-- task id: none
-- task manifest: none
-- evidence: none
-- boundaries: none
-- backend response contract: none
-- backend DTO contract: none
-- permission contract: none
-- audit coverage: none
-- visual evidence: none
-- inheritance contract: none
-- base drift: none
-- Base/ops inheritance: none
+> 保留本区块的英文 marker，供 \`scripts/harness/check-adoption.mjs\` 做机械检查。
+
+- task id: \`2026-07-03-codeql-alert-remediation\`
+- task manifest: \`.harness/tasks/2026-07-03-codeql-alert-remediation/manifest.json\`
+- evidence: \`.harness/evidence/2026-07-03-codeql-alert-remediation/commands.json\`
+- boundaries: \`platform only\`
+- backend response contract: \`none\`
+- backend DTO contract: \`none\`
+- permission contract: \`none\`
+- audit coverage: \`none\`
+- visual evidence: \`none\`
+- inheritance contract: \`none\`
+- base drift: \`none\`
+- Base/ops inheritance: \`none\`
 
 ## 边界说明
 
@@ -75,11 +77,11 @@ const prBody = `## 变更摘要
 
 ## 验证记录
 
-- [x] 后端测试：\`go build ./...\`
+- [x] 后端测试：\`go test ./backend/...\`
 - [ ] 前端构建：
 - [ ] 轻量 smoke：
 - [ ] 如涉及系统域深链路，已补充专项 smoke：
-- [ ] 其他专项验证已补充
+- [x] 其他专项验证已补充：\`node --check scripts/create-pr.mjs\`
 - [x] CodeQL 结果已检查并解释
 - [x] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up
 - [x] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
@@ -87,17 +89,17 @@ const prBody = `## 变更摘要
 - [ ] Copilot review 已请求，或已说明当前仓库/账号不可用
 - [x] 已启用或确认将启用 squash auto-merge
 
-补充说明：仅添加代码注释，未改变业务逻辑。
+补充说明：本次改动只修复安全扫描告警，未改变业务流程。
 
 ## 审核留痕
 
-- Copilot review：unavailable
-- CodeQL 结果：not-applicable
-- GitHub checks 结果：pending
-- Auto-merge：enabled
-- Duplication Gate 结果：not-applicable
-- 是否高风险改动：no
-- Residual risk / follow-up：none
+- Copilot review：\`unavailable\`
+- CodeQL 结果：\`open alerts addressed in branch\`
+- GitHub checks 结果：\`pending\`
+- Auto-merge：\`enabled\`
+- Duplication Gate 结果：\`not-applicable\`
+- 是否高风险改动：\`no\`
+- Residual risk / follow-up：\`wait for GitHub CodeQL re-analysis and merge checks\`
 
 ## 检查清单
 
