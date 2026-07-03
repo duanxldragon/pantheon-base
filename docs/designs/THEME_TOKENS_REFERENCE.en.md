@@ -117,7 +117,8 @@ The Chinese primary reference remains the authoritative size and line-height tab
 Radius tokens define:
 
 - small radius for inputs and tags
-- medium radius for buttons and controls
+- small radius for action buttons
+- medium radius for inputs and controls
 - large radius for cards, modals, and drawers
 - extra-large radius for hero containers
 - pill radius for chips and circular elements

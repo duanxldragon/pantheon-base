@@ -1,0 +1,147 @@
+{
+  "taskId": "2026-07-03-codeql-alert-remediation",
+  "title": "CodeQL Alert Remediation",
+  "goal": "Close the open CodeQL alerts in pantheon-base by removing the request-header log injection path in the backend logging middleware and hardening the PR helper so shell commands are executed with argv arrays.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform shared logging",
+    "platform PR automation"
+  ],
+  "scope": {
+    "in": [
+      "remove the user_agent log field from the shared request logging middleware",
+      "convert the PR creation helper to execFileSync argv-based command execution",
+      "add task packet and evidence artifacts for PR governance"
+    ],
+    "out": [
+      "pantheon-ops sync or release publication",
+      "unrelated backend or frontend runtime changes",
+      "rewriting the broader PR governance ruleset"
+    ]
+  },
+  "implementationNotes": [
+    "The logging change is intentionally small: remove the flagged user-controlled field instead of broadening the logging surface.",
+    "The PR helper fix keeps the current behavior but removes shell interpolation by passing argv arrays directly to execFileSync."
+  ],
+  "contractAnchors": [
+    "pantheon-base/AGENTS.md",
+    "pantheon-base/DESIGN.md",
+    "pantheon-base/docs/README.md",
+    "pantheon-base/docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "pantheon-base/docs/harness/TASK_PACKET_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-07-03-codeql-alert-remediation.task.md",
+      ".harness/tasks/2026-07-03-codeql-alert-remediation/manifest.json",
+      ".harness/evidence/2026-07-03-codeql-alert-remediation/commands.json",
+      ".harness/evidence/2026-07-03-codeql-alert-remediation/summary.md",
+      ".harness/evidence/2026-07-03-codeql-alert-remediation/review.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/logging_middleware.go",
+      "scripts/create-pr.mjs"
+    ],
+    "doNotTouch": [
+      "pantheon-ops/**",
+      "unrelated release metadata"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "security-boundary-gap",
+    "ownerLayer": "base-foundation",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": [
+      "GitHub PR governance validation",
+      "CodeQL alert closure verification"
+    ],
+    "requiredSensors": [
+      "command",
+      "review"
+    ],
+    "requiredEvidence": [
+      "go test ./backend/...",
+      "node --check scripts/create-pr.mjs",
+      "PR governance validation"
+    ],
+    "ratchetDecision": "sensor-added"
+  },
+  "deliveryGovernance": {
+    "designGate": [
+      "no UI design change"
+    ],
+    "developmentGate": [
+      "changes stay scoped to logging middleware, PR helper automation, and governance artifacts"
+    ],
+    "qaAcceptanceGate": [
+      "go test ./backend/...",
+      "node --check scripts/create-pr.mjs"
+    ],
+    "githubGovernanceGate": [
+      "Docs Governance and PR automation gates must pass before merge"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "security",
+      "mechanical"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "request context -> structured logging middleware -> log sink",
+      "PR helper inputs -> child process invocation -> GitHub PR creation"
+    ],
+    "boundaryCrossings": [
+      "platform -> pkg/*"
+    ],
+    "riskNodes": [
+      "request logging sink",
+      "shell command interpolation"
+    ],
+    "graphFocus": [
+      "sensitive-input-flow"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./backend/...",
+      "node --check scripts/create-pr.mjs",
+      "node scripts/check-pr-governance.mjs --event <PR event payload>"
+    ],
+    "runtimeEvidence": [
+      "no application runtime change; verification is limited to tests and PR governance artifacts"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-03-codeql-alert-remediation/",
+    "reviewFile": ".harness/evidence/2026-07-03-codeql-alert-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-03-codeql-alert-remediation/summary.md",
+    "changeRef": "PR #146",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "command result summary",
+    "review summary"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

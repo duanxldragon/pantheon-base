@@ -17,7 +17,6 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 		path := logging.SanitizeLogValue(c.Request.URL.Path)
 		query := logging.SanitizeLogValue(c.Request.URL.RawQuery)
 		clientIP := logging.SanitizeLogValue(c.ClientIP())
-		userAgent := logging.SanitizeLogValue(c.Request.UserAgent())
 
 		c.Next()
 
@@ -37,7 +36,6 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 					zap.Int("status", c.Writer.Status()),
 					zap.Duration("latency", latency),
 					zap.String("ip", clientIP),
-					zap.String("user_agent", userAgent),
 					zap.String("error", logging.SanitizeLogValue(e)),
 				)
 			}
@@ -50,7 +48,6 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 				zap.Int("status", c.Writer.Status()),
 				zap.Duration("latency", latency),
 				zap.String("ip", clientIP),
-				zap.String("user_agent", userAgent),
 			)
 		}
 	}
