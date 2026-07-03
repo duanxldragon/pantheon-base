@@ -1,8 +1,10 @@
 ---
 title: CodeQL Alert Remediation Task Packet
-doc_type: Task Packet
+doc_type: Acceptance
 layer: platform
 status: Active
+linked_contracts:
+  - docs/harness/TASK_PACKET_SPEC.md
 updated_at: 2026-07-03
 ---
 
