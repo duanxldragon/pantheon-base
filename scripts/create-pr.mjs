@@ -8,7 +8,7 @@
  */
 
 import { parseArgs } from 'node:util';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -28,7 +28,7 @@ const message = values.message || process.env.PR_MESSAGE || 'Routine update';
 const isTrivial = values.trivial;
 const qualityProfile = isTrivial ? 'none' : values.profile;
 
-const GITHUB_REPO = execSync('git remote get-url origin', { encoding: 'utf8' })
+const GITHUB_REPO = execFileSync('git', ['remote', 'get-url', 'origin'], { encoding: 'utf8' })
   .trim()
   .replace(/.*github\.com[/:]/, '')
   .replace(/\.git$/, '');
@@ -112,23 +112,24 @@ const prBody = `## 变更摘要
 
 function run(cmd) {
   console.log(`$ ${cmd}`);
-  execSync(cmd, { stdio: 'inherit' });
+  execFileSync(cmd[0], cmd.slice(1), { stdio: 'inherit' });
 }
 
 // Create branch and commit if not exists
 try {
-  run(`git checkout -b ${branch}`);
+  run(['git', 'checkout', '-b', branch]);
 } catch {
-  run(`git checkout ${branch}`);
+  run(['git', 'checkout', branch]);
 }
 
-run('git add -A');
-run(`git commit --no-verify -m "${message}"`);
-run(`git push -u origin ${branch}`);
+run(['git', 'add', '-A']);
+run(['git', 'commit', '--no-verify', '-m', message]);
+run(['git', 'push', '-u', 'origin', branch]);
 
 // Create PR
-const prUrl = execSync(
-  `gh pr create --title "${title}" --body-file - --repo ${GITHUB_REPO}`,
+const prUrl = execFileSync(
+  'gh',
+  ['pr', 'create', '--title', title, '--body-file', '-', '--repo', GITHUB_REPO],
   { input: prBody, encoding: 'utf8' }
 ).trim();
 
