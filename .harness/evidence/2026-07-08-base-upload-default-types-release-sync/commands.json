@@ -1,0 +1,94 @@
+{
+  "taskId": "2026-07-08-base-upload-default-types-release-sync",
+  "repo": "pantheon-platform",
+  "summary": {
+    "baseFeatureCommit": "a201a13f05615903f2d57df4809e2a923a87c668",
+    "baseReleaseCommit": "709c7889f36293294483e04d1ed4c938d78ed6ca",
+    "baseReleaseTag": "base-v0.8.11",
+    "opsBaseSyncCommit": "6b54c1e002a8505b8d2337b829a8b327d84e57b8",
+    "opsCurrentBranch": "feat/deploy-task-main-flow-closeout",
+    "opsLocalUserChangeRetained": "frontend/tests/smoke/system/system-pages.spec.ts"
+  },
+  "commands": [
+    {
+      "command": "go test ./backend/pkg/upload ./backend/modules/system/config/setting",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Shared upload defaults and setting migration tests passed."
+    },
+    {
+      "command": "npm run release:foundation:cut -- --release-version base-v0.8.11 --release-line release/0.8 --base-commit a201a13f05615903f2d57df4809e2a923a87c668 --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Generated release metadata and bundle for base-v0.8.11."
+    },
+    {
+      "command": "npm run upgrade:foundation:local-plan -- --release-version base-v0.8.11",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Previewed the consumer upgrade from base-v0.8.10 to base-v0.8.11."
+    },
+    {
+      "command": "node scripts/foundation-release/consume-foundation-release.mjs --manifest ..\\pantheon-base\\dist\\foundation-releases\\base-v0.8.11\\manifest.json --bundle ..\\pantheon-base\\dist\\foundation-releases\\base-v0.8.11 --apply-shared-backend --apply-shared-frontend --update-inheritance-docs --dry-run",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Dry-run showed only the expected shared backend and inheritance docs changes."
+    },
+    {
+      "command": "npm run upgrade:foundation:local-apply -- --release-version base-v0.8.11",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Applied the locked foundation release and updated ops inheritance docs."
+    },
+    {
+      "command": "npm run check:inheritance",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Inheritance contract, backend sync, frontend sync, and overlay compile all passed."
+    },
+    {
+      "command": "npm run check:base-sync",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Locked release alignment check passed."
+    },
+    {
+      "command": "npm run check:base-sync:workspace",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Workspace-head comparison also passed after the upgrade."
+    }
+  ],
+  "releaseArtifact": {
+    "releaseRoot": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\releases\\base-v0.8.11",
+    "bundleRoot": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\dist\\foundation-releases\\base-v0.8.11",
+    "manifest": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\releases\\base-v0.8.11\\manifest.json",
+    "archive": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\dist\\foundation-releases\\base-v0.8.11\\foundation-release-base-v0.8.11.tgz"
+  },
+  "opsLock": {
+    "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-ops\\foundation-release.lock.json",
+    "releaseVersion": "base-v0.8.11",
+    "baseCommit": "a201a13f05615903f2d57df4809e2a923a87c668"
+  },
+  "review": {
+    "verdict": "pass",
+    "findings": [],
+    "notes": [
+      "The base change is narrowly scoped to shared upload allowlist defaults, setting migration, and matching documentation/seed data.",
+      "The release metadata uses a real base commit and the consumer release notes avoid placeholder content.",
+      "Ops consumed the new release through the existing foundation-release pipeline and all required inheritance/base-sync checks passed.",
+      "The only remaining uncommitted change in ops is the pre-existing smoke test edit that was intentionally restored after sync."
+    ]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-08-base-upload-default-types-release-sync/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-08-base-upload-default-types-release-sync/",
+    "summaryFile": ".harness/evidence/2026-07-08-base-upload-default-types-release-sync/summary.md",
+    "reviewFile": ".harness/evidence/2026-07-08-base-upload-default-types-release-sync/review.md"
+  },
+  "knownGaps": [
+    "The ops worktree still contains the user-owned smoke test change in frontend/tests/smoke/system/system-pages.spec.ts.",
+    "No GitHub remote release publish was attempted in this session; the foundation release was cut locally and consumed locally.",
+    "No separate browser/UI verification was needed because this change only touched shared backend configuration and release plumbing."
+  ]
+}
