@@ -27,7 +27,7 @@ English version: [DICT_AND_SETTING_DESIGN.en.md](./DICT_AND_SETTING_DESIGN.en.md
 - `system/setting` 已补配置健康总览：可直接查看公开配置数量、敏感配置数量、缺失必填项、运行时风险与当前驱动/语言/主题摘要。
 - 运行时接线状态已补第一批：`site.name/site.logo` 已接入登录页与应用壳层，`security.password_min_length` 已接入当前用户改密、用户创建与管理员重置密码，`login.max_failed_attempts/login.lock_minutes` 已接入登录失败锁定策略，`login.session_idle_minutes` 已接入平台壳层空闲超时与 `system/auth` 会话失效判定，`login.max_active_sessions_per_user` 已接入同账号活跃会话上限治理，`audit.login_log_retention_days/audit.operation_log_retention_days/audit.session_retention_days` 已接入登录日志、操作日志与历史会话的自动保留治理，`i18n.default_language` 已接入“当前会话无显式语言覆盖且当前用户无语言偏好”时的默认语言初始化，`ui.default_theme/ui.enable_tab_bar` 已接入平台壳层主题与标签栏显示策略。
 - 平台壳层显式偏好已完成与默认值解耦：`i18n.default_language`、`ui.default_theme` 仍只负责公开默认值；`theme / layoutMode / densityMode` 可继续由 `auth/me/preferences` 持久化并优先于默认值生效；语言运行时采用 `本次登录选择 > 用户偏好 > 系统默认`，系统内切换默认仅作用于本次会话，不自动写入 `preference_json.language`。
-- 上传配置也已形成基础运行时闭环：平台新增统一上传能力，`upload.max_file_size / upload.allowed_types / upload.local_path / upload.public_base_url` 已接入真实上传接口与文件访问地址生成；当前已支持 `local` 与 `s3-compatible` 两类驱动。
+- 上传配置也已形成基础运行时闭环：平台新增统一上传能力，`upload.max_file_size / upload.allowed_types / upload.local_path / upload.public_base_url` 已接入真实上传接口与文件访问地址生成；默认白名单已补齐 `webp` 和 `gif`，当前已支持 `local` 与 `s3-compatible` 两类驱动。
 - 国际化配置治理已补运行时收口：当前平台内置 fallback locale 为 `zh-CN / en-US / ja-JP / ko-KR / fr-FR`；默认语言设置只在“当前会话没有显式语言覆盖且当前用户没有语言偏好”时生效；登录页选择和系统内本次会话切换都属于当前会话显式语言，退出登录后应清理该会话覆盖，避免影响下一位登录主体。
 - 当前语种策略为“按市场扩展，不做无依据预扩”：除非出现明确客户、区域交付或合规需求，否则不继续预置更多 locale；后续新增 locale 时，默认沿现有 i18n 导入导出、缺失检测和 fallback 校验链路扩展。
 - `system/generator` 已补第一阶段“受管数据源”治理：代码生成器保留当前平台库为默认来源，同时允许管理员维护外部 MySQL 只读数据源，并按数据源选择表结构导入。当前只开放元数据读取，不支持任意 SQL 执行。
@@ -108,17 +108,17 @@ system/config
 
 字段建议：
 
-| 字段 | 说明 |
-| :--- | :--- |
-| `id` | 主键 |
-| `dict_code` | 字典编码，唯一 |
-| `dict_name` | 字典名称 |
-| `module` | 模块归属 |
-| `status` | 状态 |
-| `remark` | 备注 |
-| `created_at` | 创建时间 |
-| `updated_at` | 更新时间 |
-| `deleted_at` | 软删除 |
+| 字段         | 说明           |
+| :----------- | :------------- |
+| `id`         | 主键           |
+| `dict_code`  | 字典编码，唯一 |
+| `dict_name`  | 字典名称       |
+| `module`     | 模块归属       |
+| `status`     | 状态           |
+| `remark`     | 备注           |
+| `created_at` | 创建时间       |
+| `updated_at` | 更新时间       |
+| `deleted_at` | 软删除         |
 
 示例：
 
@@ -132,19 +132,19 @@ biz_order_status
 
 字段建议：
 
-| 字段 | 说明 |
-| :--- | :--- |
-| `id` | 主键 |
-| `dict_code` | 字典编码 |
+| 字段             | 说明              |
+| :--------------- | :---------------- |
+| `id`             | 主键              |
+| `dict_code`      | 字典编码          |
 | `item_label_key` | 展示文案 i18n key |
-| `item_value` | 实际值 |
-| `item_color` | 标签颜色 |
-| `sort` | 排序 |
-| `status` | 状态 |
-| `remark` | 备注 |
-| `created_at` | 创建时间 |
-| `updated_at` | 更新时间 |
-| `deleted_at` | 软删除 |
+| `item_value`     | 实际值            |
+| `item_color`     | 标签颜色          |
+| `sort`           | 排序              |
+| `status`         | 状态              |
+| `remark`         | 备注              |
+| `created_at`     | 创建时间          |
+| `updated_at`     | 更新时间          |
+| `deleted_at`     | 软删除            |
 
 ## 4.4 字典 i18n 规则
 
@@ -212,19 +212,19 @@ dict.system_user_status.disabled
 
 字段建议：
 
-| 字段 | 说明 |
-| :--- | :--- |
-| `id` | 主键 |
-| `setting_key` | 配置 key |
-| `setting_value` | 配置值 |
-| `value_type` | 值类型 |
-| `group_key` | 配置分组 |
-| `module` | 模块归属 |
-| `is_public` | 是否允许前端公开读取 |
-| `is_encrypted` | 是否加密存储 |
-| `remark` | 备注 |
-| `created_at` | 创建时间 |
-| `updated_at` | 更新时间 |
+| 字段            | 说明                 |
+| :-------------- | :------------------- |
+| `id`            | 主键                 |
+| `setting_key`   | 配置 key             |
+| `setting_value` | 配置值               |
+| `value_type`    | 值类型               |
+| `group_key`     | 配置分组             |
+| `module`        | 模块归属             |
+| `is_public`     | 是否允许前端公开读取 |
+| `is_encrypted`  | 是否加密存储         |
+| `remark`        | 备注                 |
+| `created_at`    | 创建时间             |
+| `updated_at`    | 更新时间             |
 
 当前管理接口返回的 `SettingResp` 除了当前值外，还会额外下发 `defaultValue` 元数据，供前端实现“恢复默认值”这类通用设置治理交互；前端不应再把默认值硬编码回页面。
 
@@ -304,7 +304,7 @@ ui.default_theme
   - 单文件最大体积，单位 MB
   - 已接入 `/api/v1/system/upload`
 - `upload.allowed_types`
-  - JSON 数组，例如 `["jpg","jpeg","png"]`
+  - JSON 数组，例如 `["jpg","jpeg","png","webp","gif"]`
   - 已接入上传扩展名白名单校验
 - `upload.local_path`
   - 本地存储根目录
@@ -356,38 +356,38 @@ slate
 
 管理接口：
 
-| 方法 | 路径 | 说明 |
-| :--- | :--- | :--- |
-| `GET` | `/api/v1/system/dict/type/list` | 字典类型列表 |
-| `POST` | `/api/v1/system/dict/type` | 创建字典类型 |
-| `PUT` | `/api/v1/system/dict/type/:id` | 更新字典类型 |
-| `DELETE` | `/api/v1/system/dict/type/:id` | 删除字典类型 |
-| `GET` | `/api/v1/system/dict/item/list` | 字典项列表 |
-| `POST` | `/api/v1/system/dict/item` | 创建字典项 |
-| `PUT` | `/api/v1/system/dict/item/:id` | 更新字典项 |
-| `DELETE` | `/api/v1/system/dict/item/:id` | 删除字典项 |
+| 方法     | 路径                            | 说明         |
+| :------- | :------------------------------ | :----------- |
+| `GET`    | `/api/v1/system/dict/type/list` | 字典类型列表 |
+| `POST`   | `/api/v1/system/dict/type`      | 创建字典类型 |
+| `PUT`    | `/api/v1/system/dict/type/:id`  | 更新字典类型 |
+| `DELETE` | `/api/v1/system/dict/type/:id`  | 删除字典类型 |
+| `GET`    | `/api/v1/system/dict/item/list` | 字典项列表   |
+| `POST`   | `/api/v1/system/dict/item`      | 创建字典项   |
+| `PUT`    | `/api/v1/system/dict/item/:id`  | 更新字典项   |
+| `DELETE` | `/api/v1/system/dict/item/:id`  | 删除字典项   |
 
 公共读取接口：
 
-| 方法 | 路径 | 说明 |
-| :--- | :--- | :--- |
+| 方法  | 路径                                    | 说明             |
+| :---- | :-------------------------------------- | :--------------- |
 | `GET` | `/api/v1/system/dict/options?codes=a,b` | 批量获取字典选项 |
 
 ## 6.2 设置接口
 
 管理接口：
 
-| 方法 | 路径 | 说明 |
-| :--- | :--- | :--- |
-| `GET` | `/api/v1/system/setting/list` | 配置列表 |
-| `GET` | `/api/v1/system/setting/group/:groupKey` | 按分组获取配置 |
-| `POST` | `/api/v1/system/setting/cache/refresh` | 刷新设置缓存 |
-| `PUT` | `/api/v1/system/setting/group/:groupKey` | 批量保存配置 |
+| 方法   | 路径                                     | 说明           |
+| :----- | :--------------------------------------- | :------------- |
+| `GET`  | `/api/v1/system/setting/list`            | 配置列表       |
+| `GET`  | `/api/v1/system/setting/group/:groupKey` | 按分组获取配置 |
+| `POST` | `/api/v1/system/setting/cache/refresh`   | 刷新设置缓存   |
+| `PUT`  | `/api/v1/system/setting/group/:groupKey` | 批量保存配置   |
 
 公开读取接口：
 
-| 方法 | 路径 | 说明 |
-| :--- | :--- | :--- |
+| 方法  | 路径                            | 说明         |
+| :---- | :------------------------------ | :----------- |
 | `GET` | `/api/v1/system/setting/public` | 获取公开配置 |
 
 ## 7. 前端页面设计
