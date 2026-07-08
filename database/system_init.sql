@@ -429,7 +429,7 @@ INSERT INTO `system_setting` (`setting_key`, `setting_value`, `value_type`, `gro
 ('ui.enable_tab_bar', 'true', 'boolean', 'ui', 'system', 1, 0, 'system.setting.remark.ui.enable_tab_bar', NOW(), NOW()),
 ('upload.storage_driver', 'local', 'string', 'upload', 'system', 0, 0, 'system.setting.remark.upload.storage_driver', NOW(), NOW()),
 ('upload.max_file_size', '20', 'number', 'upload', 'system', 0, 0, 'system.setting.remark.upload.max_file_size', NOW(), NOW()),
-('upload.allowed_types', '["jpg","jpeg","png","pdf","doc","docx","xls","xlsx"]', 'json', 'upload', 'system', 0, 0, 'system.setting.remark.upload.allowed_types', NOW(), NOW()),
+('upload.allowed_types', '["jpg","jpeg","png","webp","gif","pdf","doc","docx","xls","xlsx","zip","gz","tgz","tar"]', 'json', 'upload', 'system', 0, 0, 'system.setting.remark.upload.allowed_types', NOW(), NOW()),
 ('upload.local_path', './uploads', 'string', 'upload', 'system', 0, 0, 'system.setting.remark.upload.local_path', NOW(), NOW()),
 ('upload.public_base_url', '', 'string', 'upload', 'system', 0, 0, 'system.setting.remark.upload.public_base_url', NOW(), NOW()),
 ('upload.s3_endpoint', '', 'string', 'upload', 'system', 0, 0, 'system.setting.remark.upload.s3_endpoint', NOW(), NOW()),

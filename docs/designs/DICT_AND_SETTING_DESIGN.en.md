@@ -18,7 +18,7 @@ Current baseline closure already covers:
 
 - `system/setting`: model, migration, defaults, public reads, grouped admin reads and writes, setting page, cache refresh, runtime health summary
 - `system/dict`: model, migration, seed data, type and item CRUD, public options API, frontend workbench, server-side item pagination, aggregate counts, cache refresh
-- upload configuration groups, encrypted sensitive settings, change-audit details, and cache strategy
+- upload configuration groups, encrypted sensitive settings, change-audit details, and cache strategy; the shared upload allowlist now includes `webp` and `gif` to stay aligned with shared frontend upload consumers
 - first-batch runtime wiring for site identity, password rules, login lock policy, session idle timeout, audit retention, default language, default theme, tab-bar visibility, and upload drivers
 
 ## 1. Design Goals

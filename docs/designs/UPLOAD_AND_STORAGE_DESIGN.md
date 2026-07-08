@@ -264,6 +264,7 @@ English version: [UPLOAD_AND_STORAGE_DESIGN.en.md](./UPLOAD_AND_STORAGE_DESIGN.e
 - `POST /system/upload` 可工作
 - 本地驱动下文件 URL 可访问
 - S3 驱动下对象 URL 生成正确
+- 默认 `upload.allowed_types` 覆盖 `jpg/jpeg/png/webp/gif/pdf/doc/docx/xls/xlsx/zip/gz/tgz/tar`，其中 `webp` 和 `gif` 用来和前端共享上传消费保持一致，避免下游仓再补本地白名单
 
 ### 11.2 校验链路
 

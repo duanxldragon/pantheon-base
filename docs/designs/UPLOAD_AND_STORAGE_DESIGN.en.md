@@ -229,6 +229,7 @@ Verify:
 - upload-group settings can be read and written
 - upload entry works end to end
 - local file access works where applicable
+- the shared default `upload.allowed_types` covers `jpg/jpeg/png/webp/gif/pdf/doc/docx/xls/xlsx/zip/gz/tgz/tar`, with `webp` and `gif` keeping the base allowlist aligned with shared frontend upload consumers so downstream repos do not need local overrides
 
 ### 11.2 Validation Flow
 
