@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -29,7 +30,9 @@ func RequestContextMiddleware() gin.HandlerFunc {
 		c.Header(common.HeaderRequestID, requestID)
 		c.Header(common.HeaderTraceID, requestID)
 
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+		ctx := logging.WithRequestID(c.Request.Context(), requestID)
+		ctx = context.WithValue(ctx, common.ContextKeyTraceID, requestID)
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 		c.Request = c.Request.WithContext(ctx)
 

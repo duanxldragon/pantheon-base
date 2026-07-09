@@ -13,20 +13,14 @@ import (
 func StructuredLoggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		route := c.FullPath()
-		if route == "" {
-			route = "unmatched-route"
-		}
-
 		c.Next()
 
 		end := time.Now()
 		latency := end.Sub(start)
 
-		// Inject trace ID from OpenTelemetry context for log correlation
+		// Inject request-scoped context into the structured log sink.
 		logger := logging.LogFromContext(c.Request.Context())
 		fields := []zap.Field{
-			zap.String("route", logging.SanitizeLogValue(route)),
 			zap.Int("status", c.Writer.Status()),
 			zap.Duration("latency", latency),
 		}
