@@ -92,18 +92,10 @@ func FailWithError(c *gin.Context, code int, err error, fallback string) {
 		logging.Error("request failed with unclassified error",
 			zap.Int("code", code),
 			zap.String("requestId", GetRequestID(c)),
-			zap.String("path", requestPath(c)),
 			zap.String("error", err.Error()),
 		)
 	}
 	Fail(c, code, resolveErrorMessageKey(err, fallback))
-}
-
-func requestPath(c *gin.Context) string {
-	if c == nil || c.Request == nil || c.Request.URL == nil {
-		return ""
-	}
-	return c.Request.URL.Path
 }
 
 func FailWithCode(c *gin.Context, code int, message string) {
