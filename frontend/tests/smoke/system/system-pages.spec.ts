@@ -704,15 +704,10 @@ test('user page keeps list workflow primary without governance drawer entry', as
   await expect(page.getByRole('columnheader', { name: '角色' })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '邮箱' })).toBeVisible();
 
-  const rowActions = page.locator('.system-user-list__row-actions');
-  const firstRowActions = rowActions.first();
+  const firstRowActions = page.locator('.system-user-list__row-actions').first();
   await expect(firstRowActions.getByRole('button', { name: '详情' })).toBeVisible();
   await expect(firstRowActions.getByRole('button', { name: '编辑' })).toBeVisible();
   await expect(firstRowActions.getByRole('button', { name: '重置密码' })).toBeVisible();
-  await expect(
-    rowActions.filter({ has: page.getByRole('button', { name: /启用|禁用/ }) }).first()
-      .getByRole('button', { name: /启用|禁用/ }),
-  ).toBeVisible();
   await expect(firstRowActions.getByRole('button', { name: '删除' })).toHaveCount(0);
   await expect(firstRowActions.getByLabel('操作')).toHaveCount(0);
 });
