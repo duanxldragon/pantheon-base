@@ -6,6 +6,7 @@ import (
 	"pantheon-platform/backend/pkg/logging"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -24,30 +25,37 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 		latency := end.Sub(start)
 
 		// Inject trace ID from OpenTelemetry context for log correlation
-		logger := logging.LogFromContext(c.Request.Context())
+		span := trace.SpanFromContext(c.Request.Context())
+		sc := span.SpanContext()
+		traceID := ""
+		if sc.HasTraceID() {
+			traceID = sc.TraceID().String()
+		}
 
 		if len(c.Errors) > 0 {
 			// 记录错误
 			for _, e := range c.Errors.Errors() {
-				logger.Error("HTTP Request Error",
+				logging.Error("HTTP Request Error",
 					zap.String("method", method),
 					zap.String("path", path),
 					zap.String("query", query),
 					zap.Int("status", c.Writer.Status()),
 					zap.Duration("latency", latency),
 					zap.String("ip", clientIP),
+					zap.String("trace_id", traceID),
 					zap.String("error", logging.SanitizeLogValue(e)),
 				)
 			}
 		} else {
 			// 记录正常请求
-			logger.Info("HTTP Request",
+			logging.Info("HTTP Request",
 				zap.String("method", method),
 				zap.String("path", path),
 				zap.String("query", query),
 				zap.Int("status", c.Writer.Status()),
 				zap.Duration("latency", latency),
 				zap.String("ip", clientIP),
+				zap.String("trace_id", traceID),
 			)
 		}
 	}
