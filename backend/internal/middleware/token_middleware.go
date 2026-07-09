@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,7 +22,7 @@ const defaultSessionIdleMinutes = 30
 var (
 	tokenSessionCacheMu  sync.RWMutex
 	tokenSessionCache    = make(map[string]*tokenCachedSession)
-	tokenSessionCacheTTL = 60 * time.Second
+	tokenSessionCacheTTL = loadTokenSessionCacheTTL()
 )
 
 type tokenCachedSession struct {
@@ -35,6 +36,9 @@ func tokenSessionCacheKey(token string) string {
 }
 
 func lookupTokenSessionCache(token string) (*tokenCachedSession, bool) {
+	if tokenSessionCacheTTL <= 0 {
+		return nil, false
+	}
 	tokenSessionCacheMu.RLock()
 	defer tokenSessionCacheMu.RUnlock()
 	entry, ok := tokenSessionCache[tokenSessionCacheKey(token)]
@@ -48,6 +52,9 @@ func lookupTokenSessionCache(token string) (*tokenCachedSession, bool) {
 }
 
 func storeTokenSessionCache(token string, data *authtoken.SessionData, expiresAt time.Time) {
+	if tokenSessionCacheTTL <= 0 {
+		return
+	}
 	tokenSessionCacheMu.Lock()
 	defer tokenSessionCacheMu.Unlock()
 	tokenSessionCache[tokenSessionCacheKey(token)] = &tokenCachedSession{
@@ -63,6 +70,18 @@ func storeTokenSessionCache(token string, data *authtoken.SessionData, expiresAt
 			}
 		}
 	}
+}
+
+func loadTokenSessionCacheTTL() time.Duration {
+	raw := strings.TrimSpace(os.Getenv("PANTHEON_TOKEN_CACHE_TTL_SECONDS"))
+	if raw == "" {
+		return 60 * time.Second
+	}
+	seconds, err := strconv.Atoi(raw)
+	if err != nil || seconds < 0 {
+		return 60 * time.Second
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 func invalidateTokenSessionCache(token string) {

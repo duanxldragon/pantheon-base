@@ -1,0 +1,15 @@
+You are implementing well-scoped backend quality fixes in pantheon-base (Go modular monolith, Gin+GORM+Casbin). Make ONLY these changes. Match surrounding code style. When done run: cd backend && gofmt -w . && go build ./... && go vet ./... and fix anything you broke. Add tests for non-trivial logic. Keep existing tests passing.
+
+1) backend/pkg/database/gorm.go initMySQL(): handle the ignored error from DB.DB() (slog.Error + os.Exit(1), consistent with this func). Make pool params env-configurable keeping SAME defaults: MaxIdleConns=10 (PANTHEON_DB_MAX_IDLE_CONNS), MaxOpenConns=100 (PANTHEON_DB_MAX_OPEN_CONNS), ConnMaxLifetime=1h (PANTHEON_DB_CONN_MAX_LIFETIME_MINUTES), plus SetConnMaxIdleTime=30min (PANTHEON_DB_CONN_MAX_IDLE_MINUTES). Add unexported envInt(name string, def int) int (fallback on empty/invalid/<=0) + a unit test.
+
+2) AutoMigrate guards: backend/modules/system/refresh_sync.go and backend/modules/lowcode/dynamicmodule/dynamic_module_sync.go call AutoMigrate without database.ShouldAutoMigrate() guard. Wrap so AutoMigrate only runs when ShouldAutoMigrate() is true. Verify those tables exist in backend/pkg/database/migrations; if missing add a NEW migration pair rather than dropping the guard.
+
+3) Casbin reload logging: permission_service.go reloadPermissionPolicies() and role_helper.go reloadRolePolicies() must log the LoadPolicy() error ("casbin policy reload failed after DB write") before returning it. No control-flow change.
+
+4) casbin.go: near model line g = _, _ add a comment: g role inheritance is DEFINED but NOT populated; multi-role auth is OR of roleKeys in middleware authorizeRoleKeys, not via g.
+
+5) Deep pagination guard in user_helper.go pagination normalization: reject (page-1)*pageSize beyond cap 100000 with i18n key param.page.too_large instead of a huge OFFSET. Add a test.
+
+6) Batch insert: role_service.go AddRoleMembers, role_helper.go replaceRolePermissions, role_menu.go replaceRoleMenus insert one row at a time. Switch to batched inserts where idempotency/uniqueness is preserved, consistent with replaceUserRoles. Do NOT break pkg/rbacbind helpers; reuse/extend them if a batch variant is cleaner.
+
+Deliver: concise summary of changed files + final go build/vet output.

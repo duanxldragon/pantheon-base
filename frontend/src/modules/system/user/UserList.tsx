@@ -49,6 +49,7 @@ import {
   PermissionAction,
   SystemRowActions,
   TableBatchActionBar,
+  TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   useGovernanceRail,
   withTableColumnPriority,
@@ -270,7 +271,7 @@ const UserList: React.FC = () => {
     ),
     {
       title: t('common.action'),
-      width: 316,
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
       fixed: 'right',
       render: (_: unknown, row: UserListRow) => (
         <SystemRowActions

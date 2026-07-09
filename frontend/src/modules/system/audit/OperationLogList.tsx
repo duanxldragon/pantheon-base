@@ -50,6 +50,7 @@ import {
   PageLoading,
   PageRequestError,
   PermissionAction,
+  SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   useGovernanceRail,
@@ -744,18 +745,27 @@ const OperationLogList: React.FC = () => {
       fixed: 'right',
       width: TABLE_ACTION_COLUMN_WIDTH.compact,
       render: (_, record) => (
-        <Space size={4} className="system-list__actions">
-          <Button type="text" size="small" icon={<IconEye />} onClick={() => showDetail(record)}>
-            {t('common.detail')}
-          </Button>
-          {canDelete && (
-            <Popconfirm title={t('common.deleteConfirm')} onOk={() => handleDelete(record.id)}>
-              <Button type="text" status="danger" size="small" icon={<IconDelete />}>
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+        <SystemRowActions
+          actions={[
+            {
+              key: 'detail',
+              text: t('common.detail'),
+              icon: <IconEye />,
+              onClick: () => showDetail(record),
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('common.deleteConfirm'),
+                onOk: () => handleDelete(record.id),
+              },
+            },
+          ]}
+        />
       ),
     },
   ];

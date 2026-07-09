@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"log/slog"
 	"pantheon-platform/backend/pkg/common"
 	"sort"
 	"strconv"
@@ -16,6 +17,11 @@ import (
 )
 
 const permissionPtypeClause = "ptype = ?"
+
+const (
+	protectedManagementPolicyPrefixPermission = "/api/v1/system/permission"
+	protectedManagementPolicyPrefixRole       = "/api/v1/system/role"
+)
 
 type PermissionService struct {
 	db *gorm.DB
@@ -112,11 +118,11 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 	}, nil
 }
 
-func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*PermissionPolicyResp, error) {
+func (s *PermissionService) CreatePolicy(operatorRoleKeys []string, req *PermissionPolicyCreateReq) (*PermissionPolicyResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	roleKey, path, method, err := s.validatePolicyPayload(0, req.RoleKey, req.Path, req.Method)
+	roleKey, path, method, err := s.validatePolicyPayload(0, operatorRoleKeys, req.RoleKey, req.Path, req.Method)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +149,7 @@ func (s *PermissionService) CreatePolicy(req *PermissionPolicyCreateReq) (*Permi
 	}, nil
 }
 
-func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyUpdateReq) (*PermissionPolicyResp, error) {
+func (s *PermissionService) UpdatePolicy(operatorRoleKeys []string, policyID uint64, req *PermissionPolicyUpdateReq) (*PermissionPolicyResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -152,7 +158,7 @@ func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyU
 	if err := s.db.First(&policy, policyID).Error; err != nil {
 		return nil, err
 	}
-	roleKey, path, method, err := s.validatePolicyPayload(policyID, req.RoleKey, req.Path, req.Method)
+	roleKey, path, method, err := s.validatePolicyPayload(policyID, operatorRoleKeys, req.RoleKey, req.Path, req.Method)
 	if err != nil {
 		return nil, err
 	}
@@ -180,9 +186,16 @@ func (s *PermissionService) UpdatePolicy(policyID uint64, req *PermissionPolicyU
 	}, nil
 }
 
-func (s *PermissionService) DeletePolicy(policyID uint64) error {
+func (s *PermissionService) DeletePolicy(operatorRoleKeys []string, policyID uint64) error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
+	}
+	var policy database.CasbinRule
+	if err := s.db.First(&policy, policyID).Error; err != nil {
+		return err
+	}
+	if err := ensurePolicyWriteAllowed(operatorRoleKeys, policy.V1); err != nil {
+		return err
 	}
 	if err := s.db.Delete(&database.CasbinRule{}, policyID).Error; err != nil {
 		return err
@@ -431,7 +444,7 @@ func joinWorkbenchPolicyKeys(policies []PermissionWorkbenchAPIPolicyResp) string
 	return strings.Join(keys, "|")
 }
 
-func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportResult, error) {
+func (s *PermissionService) ImportPolicies(operatorRoleKeys []string, records [][]string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{
 		Applied: false,
 		Errors:  []impexp.ImportError{},
@@ -456,23 +469,28 @@ func (s *PermissionService) ImportPolicies(records [][]string) (*impexp.ImportRe
 		return result, nil
 	}
 
-	// Step 3: Validate role keys exist
+	// Step 3: Reject protected management policies for non-admin operators.
+	if err := validateImportPolicyWriteScope(operatorRoleKeys, rows); err != nil {
+		return nil, err
+	}
+
+	// Step 4: Validate role keys exist
 	if err := validateImportRoleKeys(s.db, rows, result); err != nil {
 		return result, nil
 	}
 
-	// Step 4: Load existing policies for dedup
+	// Step 5: Load existing policies for dedup
 	existingByKey, err := loadExistingPolicyMap(s.db)
 	if err != nil {
 		return nil, err
 	}
 
-	// Step 5: Write new policies in transaction
+	// Step 6: Write new policies in transaction
 	if err := writeImportPolicies(s.db, rows, existingByKey, result); err != nil {
 		return nil, err
 	}
 
-	// Step 6: Reload enforcer
+	// Step 7: Reload enforcer
 	if result.Created > 0 {
 		if err := reloadPermissionPolicies(); err != nil {
 			return nil, err
@@ -645,12 +663,15 @@ func boolToCSVValue(value bool) string {
 	return "false"
 }
 
-func (s *PermissionService) validatePolicyPayload(policyID uint64, roleKey string, path string, method string) (string, string, string, error) {
+func (s *PermissionService) validatePolicyPayload(policyID uint64, operatorRoleKeys []string, roleKey string, path string, method string) (string, string, string, error) {
 	roleKey = strings.TrimSpace(roleKey)
 	path = strings.TrimSpace(path)
 	method = normalizePolicyMethod(method)
 	if roleKey == "" || path == "" || method == "" {
 		return "", "", "", common.NewBadRequest("param.invalid")
+	}
+	if err := ensurePolicyWriteAllowed(operatorRoleKeys, path); err != nil {
+		return "", "", "", err
 	}
 	if err := s.ensureRoleKeyExists(roleKey); err != nil {
 		return "", "", "", err
@@ -705,6 +726,37 @@ func normalizePermissionPageQuery(query *PermissionPolicyQuery) (int, int) {
 	return page, pageSize
 }
 
+func isProtectedManagementPolicy(path string) bool {
+	normalized := strings.TrimSpace(path)
+	return strings.HasPrefix(normalized, protectedManagementPolicyPrefixPermission) ||
+		strings.HasPrefix(normalized, protectedManagementPolicyPrefixRole)
+}
+
+func canWritePolicy(operatorRoleKeys []string, path string) bool {
+	for _, roleKey := range operatorRoleKeys {
+		if strings.TrimSpace(roleKey) == "admin" {
+			return true
+		}
+	}
+	return !isProtectedManagementPolicy(path)
+}
+
+func ensurePolicyWriteAllowed(operatorRoleKeys []string, path string) error {
+	if canWritePolicy(operatorRoleKeys, path) {
+		return nil
+	}
+	return common.NewForbidden("permission.escalation.forbidden")
+}
+
+func validateImportPolicyWriteScope(operatorRoleKeys []string, rows []policyImportRow) error {
+	for _, row := range rows {
+		if err := ensurePolicyWriteAllowed(operatorRoleKeys, row.Path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func normalizePolicyMethod(method string) string {
 	method = strings.ToUpper(strings.TrimSpace(method))
 	switch method {
@@ -719,5 +771,10 @@ func reloadPermissionPolicies() error {
 	if database.Enforcer == nil {
 		return nil
 	}
-	return database.Enforcer.LoadPolicy()
+	if err := database.Enforcer.LoadPolicy(); err != nil {
+		slog.Error("casbin policy reload failed after DB write", "component", "system/iam/permission", "error", err)
+		return err
+	}
+	database.NotifyCasbinWatcher()
+	return nil
 }

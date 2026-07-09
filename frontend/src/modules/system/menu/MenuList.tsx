@@ -7,7 +7,6 @@ import {
   Grid,
   Input,
   InputNumber,
-  Popconfirm,
   Select,
   Space,
   Tag,
@@ -61,6 +60,7 @@ import {
   PageEmpty,
   PageLoading,
   PageRequestError,
+  SystemRowActions,
   SubmitBar,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
@@ -445,25 +445,36 @@ const MenuList: React.FC = () => {
   }, [excludedParentIDs, parentTree, t]);
 
   const renderMenuActions = (row: MenuNode) => (
-    <Space size={4} className="system-list__actions menu-list-page__row-actions">
-      {canCreate && row.type !== 'F' ? (
-        <Button type="text" size="small" icon={<IconPlus />} onClick={() => openCreateChild(row)}>
-          {t('system.menu.createChild')}
-        </Button>
-      ) : null}
-      {canEdit ? (
-        <Button type="text" size="small" icon={<IconEdit />} onClick={() => openEdit(row)}>
-          {t('common.edit')}
-        </Button>
-      ) : null}
-      {canDelete ? (
-        <Popconfirm title={t('common.deleteConfirm')} onOk={() => removeMenu(row.id)}>
-          <Button type="text" size="small" status="danger" icon={<IconDelete />}>
-            {t('common.delete')}
-          </Button>
-        </Popconfirm>
-      ) : null}
-    </Space>
+    <SystemRowActions
+      className="menu-list-page__row-actions"
+      actions={[
+        {
+          key: 'create-child',
+          text: t('system.menu.createChild'),
+          icon: <IconPlus />,
+          onClick: () => openCreateChild(row),
+          hidden: !canCreate || row.type === 'F',
+        },
+        {
+          key: 'edit',
+          text: t('common.edit'),
+          icon: <IconEdit />,
+          onClick: () => openEdit(row),
+          hidden: !canEdit,
+        },
+        {
+          key: 'delete',
+          text: t('common.delete'),
+          icon: <IconDelete />,
+          hidden: !canDelete,
+          status: 'danger',
+          confirm: {
+            title: t('common.deleteConfirm'),
+            onOk: () => removeMenu(row.id),
+          },
+        },
+      ]}
+    />
   );
 
   const renderListView = () => (

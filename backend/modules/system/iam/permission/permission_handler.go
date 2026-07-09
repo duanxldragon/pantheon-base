@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"errors"
 	"strconv"
 
 	"pantheon-platform/backend/pkg/common"
@@ -10,6 +11,18 @@ import (
 )
 
 const errRequestFailed = "request.failed"
+
+func permissionServiceErrorCode(err error) int {
+	if errors.Is(err, common.ErrForbidden) {
+		return common.CodeForbidden
+	}
+	return common.CodeError
+}
+
+func failPermissionServiceError(c *gin.Context, err error) {
+	code := permissionServiceErrorCode(err)
+	common.FailWithError(c, code, err, errRequestFailed)
+}
 
 type PermissionHandler struct {
 	service *PermissionService
@@ -140,9 +153,9 @@ func (h *PermissionHandler) CreatePolicy(c *gin.Context) {
 		return
 	}
 
-	policy, err := h.service.CreatePolicy(&req)
+	policy, err := h.service.CreatePolicy(common.GetRoleKeys(c), &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		failPermissionServiceError(c, err)
 		return
 	}
 	common.Success(c, policy)
@@ -162,9 +175,9 @@ func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
 		return
 	}
 
-	policy, err := h.service.UpdatePolicy(policyID, &req)
+	policy, err := h.service.UpdatePolicy(common.GetRoleKeys(c), policyID, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		failPermissionServiceError(c, err)
 		return
 	}
 	common.Success(c, policy)
@@ -178,8 +191,8 @@ func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeletePolicy(policyID); err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+	if err := h.service.DeletePolicy(common.GetRoleKeys(c), policyID); err != nil {
+		failPermissionServiceError(c, err)
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -193,7 +206,10 @@ func (h *PermissionHandler) BatchDeletePolicies(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
 		return
 	}
-	resp := common.BatchDelete(req.IDs, h.service.DeletePolicy)
+	operatorRoleKeys := common.GetRoleKeys(c)
+	resp := common.BatchDelete(req.IDs, func(id uint64) error {
+		return h.service.DeletePolicy(operatorRoleKeys, id)
+	})
 	common.Success(c, resp)
 }
 
@@ -241,9 +257,9 @@ func (h *PermissionHandler) ImportPolicies(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ImportPolicies(records)
+	result, err := h.service.ImportPolicies(common.GetRoleKeys(c), records)
 	if err != nil {
-		common.Fail(c, common.CodeError, "permission.policy.import.error")
+		failPermissionServiceError(c, err)
 		return
 	}
 	common.Success(c, result)

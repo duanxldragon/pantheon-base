@@ -34,12 +34,12 @@ English version: [PERMISSION_MODEL.en.md](./PERMISSION_MODEL.en.md)
 
 Pantheon Base 权限分四层：
 
-| 层级 | 名称 | 控制内容 | 示例 |
-| :--- | :--- | :--- | :--- |
-| L1 | 导航权限 | 是否能在侧边栏看到菜单 | 用户管理菜单 |
-| L2 | 页面权限 | 是否能访问页面路由 | `/system/user` |
-| L3 | 操作权限 | 是否能看到/点击按钮 | 新增、编辑、删除 |
-| L4 | 接口权限 | 是否能请求后端接口 | `POST /api/v1/system/user` |
+| 层级 | 名称     | 控制内容               | 示例                       |
+| :--- | :------- | :--------------------- | :------------------------- |
+| L1   | 导航权限 | 是否能在侧边栏看到菜单 | 用户管理菜单               |
+| L2   | 页面权限 | 是否能访问页面路由     | `/system/user`             |
+| L3   | 操作权限 | 是否能看到/点击按钮    | 新增、编辑、删除           |
+| L4   | 接口权限 | 是否能请求后端接口     | `POST /api/v1/system/user` |
 
 四层之间有关联，但不能混为一谈。
 
@@ -100,10 +100,10 @@ Pantheon Base 权限分四层：
 
 当前采用的是“双轨模型”：
 
-| 轨道 | 数据来源 | 用途 |
-| :--- | :--- | :--- |
-| 菜单/按钮权限 | `system_menu` + `system_role_menu` | 导航树、按钮显隐 |
-| 接口权限 | `casbin_rule` | 后端 API 访问控制 |
+| 轨道          | 数据来源                           | 用途              |
+| :------------ | :--------------------------------- | :---------------- |
+| 菜单/按钮权限 | `system_menu` + `system_role_menu` | 导航树、按钮显隐  |
+| 接口权限      | `casbin_rule`                      | 后端 API 访问控制 |
 
 这比“只有 Casbin”更接近产品化权限，但还需要统一认知和命名。
 
@@ -133,13 +133,13 @@ Pantheon Base 权限分四层：
 
 建议长期演进为以下概念：
 
-| 概念 | 说明 |
-| :--- | :--- |
-| `Menu` | 导航结构 |
-| `PagePermission` | 页面访问权限 |
-| `ActionPermission` | 按钮/操作权限 |
-| `ApiPermission` | 后端接口权限 |
-| `DataPermission` | 数据范围权限，后续预留 |
+| 概念               | 说明                   |
+| :----------------- | :--------------------- |
+| `Menu`             | 导航结构               |
+| `PagePermission`   | 页面访问权限           |
+| `ActionPermission` | 按钮/操作权限          |
+| `ApiPermission`    | 后端接口权限           |
+| `DataPermission`   | 数据范围权限，后续预留 |
 
 ## 5.2 数据关系
 
@@ -195,11 +195,11 @@ business:deploy:task:start
 
 ## 6.2 scope 规范
 
-| scope | 说明 |
-| :--- | :--- |
-| `system` | 系统底座 |
-| `auth` | 认证与安全中心 |
-| `business` | 业务模块 |
+| scope      | 说明           |
+| :--------- | :------------- |
+| `system`   | 系统底座       |
+| `auth`     | 认证与安全中心 |
+| `business` | 业务模块       |
 
 说明：
 
@@ -241,24 +241,24 @@ business:deploy:task:start
 
 基础 action：
 
-| action | 说明 |
-| :--- | :--- |
-| `view` | 查看页面或详情 |
-| `list` | 查询列表 |
-| `create` | 新增 |
-| `update` | 编辑 |
-| `delete` | 删除 |
-| `reset` | 重置敏感凭据，如管理员重置密码 |
-| `export` | 导出 |
-| `import` | 导入 |
-| `enable` | 启用 |
-| `disable` | 禁用 |
-| `assign` | 授权/分配 |
-| `manage` | 管理型兜底权限，谨慎使用 |
-| `refresh` | 刷新缓存或重载运行时资产 |
-| `register` | 注册模块、挂接模块接入状态 |
-| `unregister` | 卸载模块、解除模块接入状态 |
-| `generate` | 触发受控代码生成 |
+| action       | 说明                           |
+| :----------- | :----------------------------- |
+| `view`       | 查看页面或详情                 |
+| `list`       | 查询列表                       |
+| `create`     | 新增                           |
+| `update`     | 编辑                           |
+| `delete`     | 删除                           |
+| `reset`      | 重置敏感凭据，如管理员重置密码 |
+| `export`     | 导出                           |
+| `import`     | 导入                           |
+| `enable`     | 启用                           |
+| `disable`    | 禁用                           |
+| `assign`     | 授权/分配                      |
+| `manage`     | 管理型兜底权限，谨慎使用       |
+| `refresh`    | 刷新缓存或重载运行时资产       |
+| `register`   | 注册模块、挂接模块接入状态     |
+| `unregister` | 卸载模块、解除模块接入状态     |
+| `generate`   | 触发受控代码生成               |
 
 ### 6.4.1 `view` 与 `list` 的区别
 
@@ -514,11 +514,11 @@ p, admin, /api/v1/system/user, POST
 
 建议菜单类型：
 
-| 类型 | 说明 |
-| :--- | :--- |
-| `M` | 目录 |
-| `C` | 页面菜单 |
-| `F` | 按钮/功能点 |
+| 类型 | 说明        |
+| :--- | :---------- |
+| `M`  | 目录        |
+| `C`  | 页面菜单    |
+| `F`  | 按钮/功能点 |
 
 规则：
 
@@ -558,8 +558,8 @@ system:post:batch-update
 前端只能通过统一 hooks 使用权限：
 
 ```ts
-hasPerm('system:user:create')
-hasAnyPerm(['system:user:create', 'system:user:update'])
+hasPerm("system:user:create");
+hasAnyPerm(["system:user:create", "system:user:update"]);
 ```
 
 禁止：
@@ -584,17 +584,18 @@ hasAnyPerm(['system:user:create', 'system:user:update'])
 
 ## 17. 数据权限预留
 
-当前不实现数据权限，但设计上预留。
+数据权限最小基线已落地，包括中间件注入、角色数据范围策略、GORM Scope 与业务样板，当前覆盖面仍在扩展。
 
-未来可能包含：
+未来演进方向继续保留：
 
 - 本人数据
 - 本部门数据
 - 本部门及下级
 - 指定部门
-- 全部数据
+- 自定义范围
+- 租户维度
 
-不要现在把数据权限硬编码进业务模块。
+不要把数据权限退回到每个业务模块的散装硬编码里。
 
 ## 18. 验收清单
 
@@ -646,7 +647,7 @@ hasAnyPerm(['system:user:create', 'system:user:update'])
 当前仍缺：
 
 - 权限命名统一文档落地
-- 数据权限、多租户等 L5 能力
+- 数据权限覆盖面继续扩展到更多业务模块与租户维度
 
 ## 20. 下一份建议补的文档
 

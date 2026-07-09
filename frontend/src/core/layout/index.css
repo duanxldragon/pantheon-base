@@ -627,15 +627,15 @@
 }
 
 .app-shell__icon-btn--attention {
-  border-color: color-mix(in srgb, var(--danger-color, #f53f3f) 18%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-color, #f53f3f) 5%, #ffffff);
-  color: var(--danger-color, #f53f3f);
+  border-color: color-mix(in srgb, var(--color-error) 18%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error) 5%, #ffffff);
+  color: var(--color-error);
 }
 
 .app-shell__icon-btn--attention:hover {
-  border-color: color-mix(in srgb, var(--danger-color, #f53f3f) 28%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-color, #f53f3f) 7%, #ffffff);
-  color: var(--danger-color, #f53f3f);
+  border-color: color-mix(in srgb, var(--color-error) 28%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error) 7%, #ffffff);
+  color: var(--color-error);
 }
 
 .app-shell__top-nav {
@@ -1455,8 +1455,8 @@
 }
 
 .app-shell__notice-stat--danger {
-  border-color: color-mix(in srgb, var(--danger-soft) 82%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-soft) 42%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-error-bg) 82%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error-bg) 42%, #ffffff);
 }
 
 .app-shell__notice-stat-label {
@@ -1521,13 +1521,13 @@
 }
 
 .app-shell__notice-risk--danger {
-  border-color: color-mix(in srgb, var(--danger-soft) 88%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-soft) 42%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-error-bg) 88%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error-bg) 42%, #ffffff);
 }
 
 .app-shell__notice-risk--warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 88%, var(--panel-border));
-  background: color-mix(in srgb, var(--status-warning-soft) 42%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-warning-bg) 88%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-warning-bg) 42%, #ffffff);
 }
 
 .app-shell__notice-risk-copy {
@@ -1654,11 +1654,11 @@
 }
 
 .app-shell__notice-log-dot--success {
-  background: #00b42a;
+  background: var(--color-success);
 }
 
 .app-shell__notice-log-dot--danger {
-  background: #f53f3f;
+  background: var(--color-error);
 }
 
 .app-shell__notice-log-copy {
@@ -1699,7 +1699,7 @@
   height: 16px;
   padding-inline: 4px;
   border-radius: 999px;
-  background: #f53f3f;
+  background: var(--color-error);
   color: #fff;
   font-size: 10px;
   font-weight: 700;

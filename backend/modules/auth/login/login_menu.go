@@ -3,6 +3,8 @@ package login
 import (
 	"strings"
 
+	"pantheon-platform/backend/pkg/rbacbind"
+
 	"gorm.io/gorm"
 )
 
@@ -163,14 +165,7 @@ func ensureAdminRoleMenuBinding(db *gorm.DB, menuID uint64) error {
 		return err
 	}
 
-	var count int64
-	if err := db.Table("system_role_menu").Where("role_id = ? AND menu_id = ?", adminRoleID, menuID).Count(&count).Error; err != nil {
-		return err
-	}
-	if count == 0 {
-		return db.Exec("INSERT INTO system_role_menu (role_id, menu_id) VALUES (?, ?)", adminRoleID, menuID).Error
-	}
-	return nil
+	return rbacbind.EnsureRoleMenu(db, adminRoleID, menuID)
 }
 
 func lookupAdminRoleID(db *gorm.DB) (uint64, error) {

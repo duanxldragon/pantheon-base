@@ -1,0 +1,20 @@
+在 pantheon-base 实现多实例部署的权限/会话一致性。这是架构+安全敏感改动，保持向后兼容：单实例默认行为不变，多实例通过环境变量开启。
+
+背景：
+- Casbin 用 casbin.NewSyncedEnforcer（backend/pkg/database/casbin.go），策略写入后调 LoadPolicy() 全量重载，但多副本间无同步——实例 A 改策略，实例 B/C 内存策略不更新。
+- Token 会话有 60s 进程内内存缓存（backend/internal/middleware/token_middleware.go 的 tokenSessionCache），多实例下登出/改权限后最多 60s 仍放行。
+
+要求：
+1. Casbin Redis Watcher：
+   - 复用现有 Redis（database.RDB / InitRedis）。优先用成熟库 github.com/casbin/redis-watcher/v2；若不便加依赖，用 database.RDB 的 Pub/Sub 手写一个最小 watcher。
+   - 仅当 Redis 已配置且环境变量 PANTHEON_CASBIN_WATCHER=true 时启用。启用后本实例策略写入后通过 watcher 通知其他实例；收到通知的实例执行 LoadPolicy()。
+   - 未启用时行为与现在完全一致。InitCasbin 里用 SyncedEnforcer 的 SetWatcher 接线。
+2. 会话缓存多实例安全：
+   - 给 token_middleware 的内存缓存加开关：环境变量 PANTHEON_TOKEN_CACHE_TTL_SECONDS，默认 60（保持现状）；设为 0 时禁用内存缓存（每次走 Redis 校验，保证多实例强一致）。
+   - 现有黑名单强制下线路径保持不变。
+3. 文档：在 docs/designs 对应部署/架构文档补一段"多实例部署开关"说明（PANTHEON_CASBIN_WATCHER、PANTHEON_TOKEN_CACHE_TTL_SECONDS）。
+4. 测试：watcher 启用/禁用的构造不 panic；TTL=0 时缓存禁用逻辑有单测。
+
+约束：不改 Casbin model；不改鉴权语义；只加"可选的同步能力"。若新增 go 依赖，更新 go.mod/go.sum。
+
+完成后运行 cd backend && gofmt -w . && go build ./... && go vet ./... && go test ./... 并贴结果。输出改动清单、新增依赖、新增环境变量说明。

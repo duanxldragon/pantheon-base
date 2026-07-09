@@ -114,6 +114,12 @@ The backend entry:
 
 The system-domain assembler collects migrations, menu seeds, permission seeds, i18n seeds, and route registration into one controlled path.
 
+Optional multi-instance deployment switches are available without changing the single-instance default behavior:
+
+- When `PANTHEON_CASBIN_WATCHER=true` and Redis is available, policy writes fan out through a Redis watcher and trigger `LoadPolicy()` on peer instances.
+- When `PANTHEON_TOKEN_CACHE_TTL_SECONDS=0`, the in-process token cache is disabled and session / permission checks go directly to Redis.
+- If both switches stay off, the default single-instance behavior remains unchanged.
+
 ### 4.2 Frontend Main Path
 
 The frontend runtime is organized around:

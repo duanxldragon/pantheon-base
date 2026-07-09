@@ -8,6 +8,7 @@ import (
 
 	"pantheon-platform/backend/pkg/common"
 	commonsecurity "pantheon-platform/backend/pkg/common/security"
+	"pantheon-platform/backend/pkg/rbacbind"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -116,14 +117,7 @@ func (s *UserService) ensureAdminRoleBinding() error {
 		return nil
 	}
 
-	var count int64
-	if err := s.db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, adminRoleID).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-	return s.db.Exec("INSERT INTO system_user_role (user_id, role_id) VALUES (?, ?)", 1, adminRoleID).Error
+	return rbacbind.EnsureUserRole(s.db, 1, adminRoleID)
 }
 
 func (s *UserService) releaseDeletedUsernames() error {

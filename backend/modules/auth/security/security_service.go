@@ -110,7 +110,7 @@ func (s *Service) VerifyPasswordForOperationWithContext(ctx context.Context, use
 		return "", errors.New("auth.operation.verification_mismatch")
 	}
 	var currentUser user.SystemUser
-	if err := s.db.First(&currentUser, userID).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&currentUser, userID).Error; err != nil {
 		return "", err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(password)); err != nil {

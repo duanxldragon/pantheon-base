@@ -2,119 +2,132 @@
 title: Dark Mode Design
 doc_type: Design
 layer: platform
-status: Active
+status: Deferred
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-11
+updated_at: 2026-07-09
 ---
 
 # Dark Mode Design
 
 Chinese version: [DARK_MODE_DESIGN.md](./DARK_MODE_DESIGN.md)
 
-This document defines Pantheon Base dark-mode behavior, token inversion strategy, component adaptation rules, and switching behavior.
+This document is kept as a future design note. The current runtime only ships light mode with four theme keys. There is no `data-color-mode`, no dark token set, and no dark screenshot baseline. The real token source of truth is `THEME_TOKENS_REFERENCE.md`.
 
-Concrete token values live in `THEME_TOKENS_REFERENCE.md`. This document focuses on mode behavior rather than raw numbers.
+---
 
 ## 1. Design Goals
 
-- dark mode is not a naive color inversion
-- each brand theme must stay recognizable in dark mode
-- neutral backgrounds should use deep blue-gray rather than pure black
-- text should avoid pure white glare
-- focus rings must still meet contrast requirements
+These are future requirements for a dark-mode rollout:
+
+- do not rely on naive inversion
+- keep each brand theme recognizable in dark mode
+- avoid pure black backgrounds
+- avoid pure white text
+- keep focus rings readable and accessible
+
+---
 
 ## 2. Token Inversion Strategy
 
-Tokens are not inverted mechanically. They are redefined by semantic role.
+Not implemented today. If this document is revived, semantic roles should be redefined instead of mechanically inverted.
 
-Core principles:
+Guiding direction:
 
-- app background becomes deep gray, not black
-- card and overlay surfaces step up in brightness
-- foreground text becomes near-white, not pure white
-- accent colors become brighter and less saturated
-- subtle accent backgrounds become deep, low-light background tones
-- shadows become darker and more pronounced to remain visible
+| Semantic role            | Future dark direction                     |
+| ------------------------ | ----------------------------------------- |
+| App background           | deep blue-gray, not pure black            |
+| Default surface          | one step brighter than the app background |
+| Elevated surface         | one more step brighter                    |
+| Primary text             | near-white, not pure white                |
+| Brand accent             | brighter and slightly less saturated      |
+| Subtle accent background | deep brand-tinted panels                  |
+| Shadow                   | darker and more opaque                    |
 
-## 3. Brand-Color Adjustment Rules in Dark Mode
+---
 
-For accent colors in dark mode:
+## 3. Brand-Color Adjustment Rules
 
-1. raise lightness
-2. reduce saturation slightly
-3. preserve hue
-4. invert subtle background usage into deep accent-tinted panels
+If dark mode is added later, accent colors should:
+
+1. get brighter
+2. lose a little saturation
+3. keep the same hue
+4. flip subtle accent backgrounds into dark brand panels
+
+---
 
 ## 4. Elements That Cannot Be Naively Inverted
 
-Examples:
+These elements will still need explicit treatment:
 
 - screenshots
-- company logos
+- logos
 - business charts
 - code blocks
 - zebra tables
-- toast and notification borders
+- toast / notification borders
 
-Each of these needs explicit dark-mode treatment rather than generic inversion.
+---
 
 ## 5. Shadow Strategy
 
-Dark mode uses deeper, more opaque shadows and sometimes subtle highlight rims so overlays still separate from dark surfaces.
+Future dark mode should use deeper, higher-opacity shadows, sometimes with a subtle highlight edge so overlays remain visually separated.
+
+---
 
 ## 6. Focus Rings
 
-Dark-mode focus rings should use the brightened accent color and still keep contrast above the accessibility threshold.
+If dark mode is ever implemented, focus rings should use the brightened accent color and remain clearly visible.
+
+---
 
 ## 7. Switching Behavior
 
-### 7.1 User-Preference Priority
+The current runtime does **not** provide a switch. If this is restored later:
 
-Priority order:
+- switching should only change root attributes
+- CSS variables should recalculate
+- the page should not reload
+- the component tree should not rebuild
 
-- explicit user choice
-- platform default
-- system `prefers-color-scheme`
-
-### 7.2 No Reload on Switch
-
-Switching color mode should:
-
-- change root attributes
-- recalculate CSS variables
-- avoid page reload
-- avoid component-tree rebuild
-
-### 7.3 Persistence
-
-- signed-in users persist through platform preferences
-- unauthenticated users may persist locally
-- user choice overrides defaults
+---
 
 ## 8. Dark-Mode-Specific Notes
 
-Special care is needed for:
+Future work will need to account for:
 
-- PNG edges and transparent assets
-- iframe dark-mode support
-- print mode forcing light output
-- screenshot evidence across light and dark mode
+- transparent PNG edges
+- iframe mode synchronization
+- print output forced back to light
+- light / dark screenshot evidence
+
+---
 
 ## 9. Implementation Checklist
 
-Verify:
+Everything below is currently unshipped:
 
-- initial HTML attributes are mounted early enough to avoid flash
-- CSS references only shared Pantheon variables
-- all theme and mode combinations pass contrast checks
-- switching does not flash or reload
-- overlays remain clearly layered
-- charts and code blocks have dark-mode variants
+- `<html data-color-mode="light|dark">`
+- early boot-time color-mode hydration
+- dark token variables
+- contrast checks across 4 themes × 2 modes
+- no-flash switching
+- clear overlay layering
+- dark variants for charts and code blocks
+
+---
 
 ## 10. Acceptance
 
-Acceptance should archive screenshots across all theme and color-mode combinations, preserve user preference across refresh, honor system preference when no explicit user preference exists, and maintain CSS fallback when JavaScript is disabled.
+If dark mode is reintroduced later, acceptance should include:
+
+- screenshots for the main pages across 4 themes × 2 modes
+- user preference preserved after refresh
+- system preference honored when no explicit choice exists
+- CSS fallback working without JavaScript
+
+---
 
 ## 11. Related Documents
 

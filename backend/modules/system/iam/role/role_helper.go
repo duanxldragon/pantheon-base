@@ -3,11 +3,13 @@ package iam
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"pantheon-platform/backend/pkg/common"
 	"strings"
 	"time"
 
 	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/backend/pkg/rbacbind"
 
 	"gorm.io/gorm"
 )
@@ -72,14 +74,7 @@ func (s *RoleService) ensureAdminUserBinding() error {
 		return nil
 	}
 
-	var bindingCount int64
-	if err := s.db.Table("system_user_role").Where("user_id = ? AND role_id = ?", 1, adminRoleID).Count(&bindingCount).Error; err != nil {
-		return err
-	}
-	if bindingCount > 0 {
-		return nil
-	}
-	return s.db.Exec("INSERT INTO system_user_role (user_id, role_id) VALUES (?, ?)", 1, adminRoleID).Error
+	return rbacbind.EnsureUserRole(s.db, 1, adminRoleID)
 }
 
 func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
@@ -177,15 +172,18 @@ func (s *RoleService) replaceRolePermissions(tx *gorm.DB, roleID uint64, permiss
 	if err := tx.Exec("DELETE FROM system_role_permission WHERE role_id = ?", roleID).Error; err != nil {
 		return err
 	}
-	for _, permissionKey := range normalizePermissionKeys(permissionKeys) {
-		if err := tx.Create(&SystemRolePermission{
+	normalized := normalizePermissionKeys(permissionKeys)
+	if len(normalized) == 0 {
+		return nil
+	}
+	permissions := make([]SystemRolePermission, 0, len(normalized))
+	for _, permissionKey := range normalized {
+		permissions = append(permissions, SystemRolePermission{
 			RoleID:        roleID,
 			PermissionKey: permissionKey,
-		}).Error; err != nil {
-			return err
-		}
+		})
 	}
-	return nil
+	return tx.CreateInBatches(permissions, 100).Error
 }
 
 func (s *RoleService) releaseDeletedRoleKeys() error {
@@ -268,7 +266,11 @@ func reloadRolePolicies() error {
 	if database.Enforcer == nil {
 		return nil
 	}
-	return database.Enforcer.LoadPolicy()
+	if err := database.Enforcer.LoadPolicy(); err != nil {
+		slog.Error("casbin policy reload failed after DB write", "component", "system/iam/role", "error", err)
+		return err
+	}
+	return nil
 }
 
 func normalizeRoleStatus(status int) int {

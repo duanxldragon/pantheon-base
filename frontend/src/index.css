@@ -53,10 +53,18 @@
   --login-glow: rgba(22, 93, 255, 0.12);
   --login-metric-secondary: rgba(0, 180, 42, 0.12);
   --login-metric-tertiary: rgba(255, 125, 0, 0.12);
-  --danger-soft: rgba(245, 63, 63, 0.12);
-  --danger-border: rgba(245, 63, 63, 0.32);
-  --status-success-soft: rgba(0, 180, 42, 0.12);
-  --status-warning-soft: rgba(255, 125, 0, 0.12);
+  --color-success: #00b42a;
+  --color-success-bg: rgba(0, 180, 42, 0.12);
+  --color-warning: #ff7d00;
+  --color-warning-bg: rgba(255, 125, 0, 0.12);
+  --color-error: #f53f3f;
+  --color-error-bg: rgba(245, 63, 63, 0.12);
+  --color-info: #3491fa;
+  --color-info-bg: rgba(52, 145, 250, 0.12);
+  --danger-soft: var(--color-error-bg);
+  --danger-border: color-mix(in srgb, var(--color-error) 32%, transparent);
+  --status-success-soft: var(--color-success-bg);
+  --status-warning-soft: var(--color-warning-bg);
   --primary-1: 232, 243, 255;
   --primary-2: 190, 218, 255;
   --primary-3: 148, 191, 255;
@@ -631,13 +639,13 @@ a {
 }
 
 .setting-overview-page__risk-item--warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 58%, var(--panel-border));
-  background: color-mix(in srgb, var(--status-warning-soft) 18%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-warning-bg) 58%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-warning-bg) 18%, #ffffff);
 }
 
 .setting-overview-page__risk-item--critical {
-  border-color: color-mix(in srgb, var(--danger-soft) 62%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-soft) 14%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-error-bg) 62%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error-bg) 14%, #ffffff);
 }
 
 .setting-overview-page__risk-header {
@@ -825,13 +833,13 @@ a {
 }
 
 .side-rail-item--warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 58%, var(--panel-border));
-  background: color-mix(in srgb, var(--status-warning-soft) 20%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-warning-bg) 58%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-warning-bg) 20%, #ffffff);
 }
 
 .side-rail-item--danger {
-  border-color: color-mix(in srgb, var(--danger-soft) 62%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-soft) 18%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-error-bg) 62%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error-bg) 18%, #ffffff);
 }
 
 .side-rail-item__label {
@@ -866,13 +874,13 @@ a {
 }
 
 .side-rail-note--warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 58%, var(--panel-border));
-  background: color-mix(in srgb, var(--status-warning-soft) 20%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-warning-bg) 58%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-warning-bg) 20%, #ffffff);
 }
 
 .side-rail-note--danger {
-  border-color: color-mix(in srgb, var(--danger-soft) 62%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-soft) 18%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-error-bg) 62%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error-bg) 18%, #ffffff);
 }
 
 .side-rail-note__title {
@@ -1379,7 +1387,7 @@ a {
 }
 
 .dialog-grid-card--danger {
-  background: color-mix(in srgb, var(--danger-soft) 60%, #fff) !important;
+  background: color-mix(in srgb, var(--color-error-bg) 60%, #fff) !important;
 }
 
 .detail-panel-card {
@@ -1397,8 +1405,8 @@ a {
 
 .app-dialog .dialog-grid-card--danger,
 .app-dialog .detail-panel-card--danger {
-  border-color: var(--danger-border) !important;
-  background: color-mix(in srgb, var(--danger-soft) 24%, #fff) !important;
+  border-color: color-mix(in srgb, var(--color-error) 32%, transparent) !important;
+  background: color-mix(in srgb, var(--color-error-bg) 24%, #fff) !important;
 }
 
 .app-dialog .dialog-grid-card .arco-card-head,
@@ -1871,7 +1879,7 @@ textarea.arco-textarea,
 .arco-form-item-error .arco-picker,
 .arco-form-item-error .arco-textarea-wrapper,
 .arco-form-item-error .arco-input-tag {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger-soft) 62%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error-bg) 62%, transparent);
 }
 
 .arco-input-inner-wrapper,
@@ -2073,23 +2081,23 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-alert-info {
-  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 7%, #fff);
+  border-color: color-mix(in srgb, var(--color-info) 18%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-info) 7%, #fff);
 }
 
 .arco-alert-success {
-  border-color: color-mix(in srgb, var(--status-success-soft) 85%, var(--panel-border));
-  background: color-mix(in srgb, var(--status-success-soft) 48%, #fff);
+  border-color: color-mix(in srgb, var(--color-success-bg) 85%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-success-bg) 48%, #fff);
 }
 
 .arco-alert-warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 85%, var(--panel-border));
-  background: color-mix(in srgb, var(--status-warning-soft) 48%, #fff);
+  border-color: color-mix(in srgb, var(--color-warning-bg) 85%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-warning-bg) 48%, #fff);
 }
 
 .arco-alert-error {
-  border-color: color-mix(in srgb, var(--danger-soft) 92%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger-soft) 52%, #fff);
+  border-color: color-mix(in srgb, var(--color-error-bg) 92%, var(--panel-border));
+  background: color-mix(in srgb, var(--color-error-bg) 52%, #fff);
 }
 
 .arco-alert-title {
@@ -2151,19 +2159,19 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-message-info {
-  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-info) 18%, var(--panel-border));
 }
 
 .arco-message-success {
-  border-color: color-mix(in srgb, var(--status-success-soft) 85%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-success-bg) 85%, var(--panel-border));
 }
 
 .arco-message-warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 85%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-warning-bg) 85%, var(--panel-border));
 }
 
 .arco-message-error {
-  border-color: color-mix(in srgb, var(--danger-soft) 95%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-error-bg) 95%, var(--panel-border));
 }
 
 .arco-message-close-btn {
@@ -2192,19 +2200,19 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-notification-info {
-  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-info) 18%, var(--panel-border));
 }
 
 .arco-notification-success {
-  border-color: color-mix(in srgb, var(--status-success-soft) 85%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-success-bg) 85%, var(--panel-border));
 }
 
 .arco-notification-warning {
-  border-color: color-mix(in srgb, var(--status-warning-soft) 85%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-warning-bg) 85%, var(--panel-border));
 }
 
 .arco-notification-error {
-  border-color: color-mix(in srgb, var(--danger-soft) 95%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--color-error-bg) 95%, var(--panel-border));
 }
 
 .arco-notification .arco-notification-close-btn {
@@ -2234,7 +2242,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-popconfirm-title-icon .arco-icon-exclamation-circle-fill {
-  color: #ff7d00;
+  color: var(--color-warning);
 }
 
 .arco-popconfirm .arco-popconfirm-btn {

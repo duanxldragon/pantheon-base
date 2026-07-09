@@ -62,6 +62,8 @@ func (s *Service) RefreshSession(sessionID string, userID uint64, ip, userAgent 
 	return s.RefreshSessionWithContext(context.Background(), sessionID, userID, ip, userAgent)
 }
 
+// RefreshSessionWithContext refreshes an active session and issues a new token
+// pair, propagating ctx to the underlying database and token operations.
 func (s *Service) RefreshSessionWithContext(ctx context.Context, sessionID string, userID uint64, ip, userAgent string) (*authtoken.Pair, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
@@ -69,8 +71,9 @@ func (s *Service) RefreshSessionWithContext(ctx context.Context, sessionID strin
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	db := s.db.WithContext(ctx)
 	var sess SystemUserSession
-	if err := s.db.Where(sessionIDAndUserIDWhereClause, sessionID, userID).First(&sess).Error; err != nil {
+	if err := db.Where(sessionIDAndUserIDWhereClause, sessionID, userID).First(&sess).Error; err != nil {
 		return nil, err
 	}
 	if sess.RevokedAt != nil || sess.RefreshExpiresAt.Before(time.Now()) {
@@ -93,7 +96,7 @@ func (s *Service) RefreshSessionWithContext(ctx context.Context, sessionID strin
 	sess.LastActivityAt = &now
 	sess.LastIP = NormalizeSessionClientIP(ip)
 	sess.UserAgent = TruncateString(userAgent, 255)
-	if err := s.db.Save(&sess).Error; err != nil {
+	if err := db.Save(&sess).Error; err != nil {
 		return nil, err
 	}
 	return s.issuer.IssueTokenPairWithContext(ctx, u.ID, u.Username, roles, &sess)

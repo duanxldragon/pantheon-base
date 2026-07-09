@@ -49,6 +49,7 @@ import {
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
   PermissionAction,
+  SystemRowActions,
   TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
@@ -459,53 +460,57 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
           </Tag>
         ),
       },
-      {
-        title: t('common.action'),
-        width: TABLE_ACTION_COLUMN_WIDTH.wide,
-        fixed: 'right',
-        render: (_: unknown, row: DictItemRow) => (
-          <Space
-            size={4}
-            className="system-list__actions dict-page__row-actions dict-page__row-actions--items"
-          >
-            <Button
-              size="small"
-              type="text"
-              icon={<IconCaretUp />}
-              onClick={() => {
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      fixed: 'right',
+      render: (_: unknown, row: DictItemRow) => (
+        <SystemRowActions
+          className="dict-page__row-actions dict-page__row-actions--items"
+          actions={[
+            {
+              key: 'move-up',
+              text: t('system.dict.moveUp'),
+              icon: <IconCaretUp />,
+              iconOnly: true,
+              onClick: () => {
                 void handleReorderItem(row, 'up');
-              }}
-              disabled={!canEdit}
-            />
-            <Button
-              size="small"
-              type="text"
-              icon={<IconCaretDown />}
-              onClick={() => {
+              },
+              disabled: !canEdit,
+            },
+            {
+              key: 'move-down',
+              text: t('system.dict.moveDown'),
+              icon: <IconCaretDown />,
+              iconOnly: true,
+              onClick: () => {
                 void handleReorderItem(row, 'down');
-              }}
-              disabled={!canEdit}
-            />
-            <Button
-              size="small"
-              icon={<IconEdit />}
-              onClick={() => openEditItem(row)}
-              disabled={!canEdit}
-            >
-              {t('common.edit')}
-            </Button>
-            <Popconfirm
-              title={t('common.deleteConfirm')}
-              onOk={() => removeItem(row)}
-              disabled={!canDelete}
-            >
-              <Button size="small" status="danger" icon={<IconDelete />} disabled={!canDelete}>
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          </Space>
-        ),
-      },
+              },
+              disabled: !canEdit,
+            },
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              onClick: () => openEditItem(row),
+              hidden: !canEdit,
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('common.deleteConfirm'),
+                onOk: () => removeItem(row),
+                disabled: !canDelete,
+              },
+            },
+          ]}
+        />
+      ),
+    },
     ],
     [t, canEdit, canDelete, handleReorderItem, openEditItem, removeItem],
   );

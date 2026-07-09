@@ -39,6 +39,7 @@ import {
   TABLE_ACTION_COLUMN_WIDTH,
   TableBatchActionBar,
   PermissionAction,
+  SystemRowActions,
   TABLE_COLUMN_WIDTH,
   withTableColumnPriority,
 } from '../../../components';
@@ -320,35 +321,42 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
           </Tag>
         ),
       },
-      {
-        title: t('common.action'),
-        width: TABLE_ACTION_COLUMN_WIDTH.wide,
-        fixed: 'right',
-        render: (_: unknown, row: DictTypeRow) => (
-          <Space size={4} className="system-list__actions dict-page__row-actions">
-            <Button size="small" type="text" onClick={() => onSwitchToItemsTab(row)}>
-              {t('system.dict.item')}
-            </Button>
-            <Button
-              size="small"
-              icon={<IconEdit />}
-              onClick={() => openEditType(row)}
-              disabled={!canEdit}
-            >
-              {t('common.edit')}
-            </Button>
-            <Popconfirm
-              title={t('common.deleteConfirm')}
-              onOk={() => removeType(row)}
-              disabled={!canDelete}
-            >
-              <Button size="small" status="danger" icon={<IconDelete />} disabled={!canDelete}>
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          </Space>
-        ),
-      },
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      fixed: 'right',
+      render: (_: unknown, row: DictTypeRow) => (
+        <SystemRowActions
+          className="dict-page__row-actions"
+          actions={[
+            {
+              key: 'items',
+              text: t('system.dict.item'),
+              onClick: () => onSwitchToItemsTab(row),
+            },
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              onClick: () => openEditType(row),
+              hidden: !canEdit,
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('common.deleteConfirm'),
+                onOk: () => removeType(row),
+                disabled: !canDelete,
+              },
+            },
+          ]}
+        />
+      ),
+    },
     ],
     [t, onSelectType, onSwitchToItemsTab, canEdit, canDelete, openEditType, removeType],
   );

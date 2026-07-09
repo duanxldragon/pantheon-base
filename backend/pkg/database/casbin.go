@@ -17,8 +17,11 @@ func InitCasbin(db *gorm.DB) {
 		slog.Error("casbin init error: database not initialized")
 		os.Exit(1)
 	}
+	setCasbinWatcher(nil)
 
 	// 模型 (定义在 system 模块内部或本地配置)
+	// Role inheritance (g) is defined but not populated; multi-role authorization is
+	// implemented by OR-ing roleKeys in authorizeRoleKeys, not via g policies.
 	m, err := model.NewModelFromString(`
 		[request_definition]
 		r = sub, obj, act
@@ -67,6 +70,15 @@ func InitCasbin(db *gorm.DB) {
 		if err := Enforcer.LoadPolicy(); err != nil {
 			slog.Error("casbin reload policy error", "error", err)
 			os.Exit(1)
+		}
+	}
+
+	if watcher := initCasbinWatcher(RDB); watcher != nil {
+		if err := Enforcer.SetWatcher(watcher); err != nil {
+			slog.Warn("casbin watcher init failed", "error", err)
+			watcher.Close()
+		} else {
+			setCasbinWatcher(watcher)
 		}
 	}
 }

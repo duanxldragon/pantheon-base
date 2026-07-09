@@ -175,7 +175,10 @@ func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScop
 	var users []SystemUser
 	db := s.db.Model(&SystemUser{}).Scopes(database.WithDataScope(dataScope))
 	db = applyUserListFilters(db, query)
-	page, pageSize := normalizeUserPageQuery(query)
+	page, pageSize, err := normalizeUserPageQuery(query)
+	if err != nil {
+		return nil, err
+	}
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {

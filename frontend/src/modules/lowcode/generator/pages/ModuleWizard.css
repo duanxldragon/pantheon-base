@@ -34,7 +34,7 @@
 }
 
 .generator-wizard__step-card--done {
-  background: color-mix(in srgb, var(--status-success-soft) 20%, #fff);
+  background: color-mix(in srgb, var(--color-success-bg) 20%, #fff);
 }
 
 .generator-wizard__step-index {

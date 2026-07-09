@@ -14,6 +14,7 @@ import {
 } from './components/feedback/secondaryVerifyController';
 import { findFirstNavigableMenuPath } from './modules/system/menu/api';
 import { useMenuStore } from './store/useMenuStore';
+import { checkPermission } from './core/permissions/checkPermission';
 
 const BaseLayout = lazy(() => import('./core/layout'));
 const LoginPage = lazy(() =>
@@ -64,9 +65,7 @@ const DefaultHomeRedirect = () => {
   }
 
   const targetPath = resolveDefaultAuthedPath(
-    Boolean(
-      userInfo.roles?.includes('admin') || userInfo.perms?.includes('platform:dashboard:view'),
-    ),
+    Boolean(checkPermission(userInfo, 'platform:dashboard:view')),
     findFirstNavigableMenuPath(menuTree),
   );
 
