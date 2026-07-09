@@ -246,7 +246,16 @@ Permission seeds must be deterministic, domain-aware, and versionable. New modul
 
 ## 17. Data Permission Reservation
 
-Data-scope authorization is not fully implemented yet, but the model must leave room for row scope, tenant scope, and organizational scope in future work.
+The minimum data-permission baseline is already in place, including middleware injection, role data-scope policy, GORM Scope, and business samples. Coverage is still expanding.
+
+Future evolution should continue to leave room for:
+
+- self-owned data
+- department-owned data
+- department plus descendants
+- designated departments
+- custom scope
+- tenant dimension
 
 ## 18. Acceptance Checklist
 
@@ -268,7 +277,7 @@ Verify dedicated high-sensitivity permissions, controlled remediation, and the a
 
 ## 19. Current Delivery Gaps
 
-The remaining gap is mostly governance clarity: naming consistency, workbench guidance, and synchronized frontend-backend understanding.
+The remaining gap is mostly governance clarity: naming consistency, workbench guidance, synchronized frontend-backend understanding, and broader data-scope coverage across more modules and tenant-aware scenarios.
 
 ## 20. Recommended Next Document
 

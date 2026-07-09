@@ -41,13 +41,13 @@
 }
 
 .system-list__actions .arco-btn-status-danger.arco-btn-text {
-  color: #f53f3f;
+  color: var(--color-error);
 }
 
 .system-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):hover,
 .system-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):focus {
-  color: #f53f3f;
-  background: color-mix(in srgb, var(--danger-soft) 28%, #fff);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error-bg) 28%, #fff);
 }
 
 .menu-list-page__row-actions {
@@ -215,6 +215,41 @@
 .dict-page__row-actions--items .arco-btn-text {
   min-width: 28px;
   padding-inline: 4px;
+}
+
+.system-row-actions__overflow-trigger {
+  padding-inline: 4px;
+}
+
+.system-row-actions__overflow-menu {
+  min-width: 160px;
+}
+
+.system-row-actions__overflow-item-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.system-row-actions__overflow-item-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.system-row-actions__overflow-item-label {
+  min-width: 0;
+}
+
+.system-row-actions__overflow-item--danger {
+  color: var(--color-error);
+}
+
+.system-row-actions__overflow-item--danger:hover,
+.system-row-actions__overflow-item--danger:focus {
+  color: var(--color-error);
 }
 
 .table-batch-action-bar {

@@ -2013,6 +2013,7 @@ const zhCNFallback = {
   'permission.policy.exists': '相同角色、接口路径和请求方法的策略已存在',
   'permission.path.required': '接口路径不能为空',
   'permission.method.invalid': '请求方法不合法',
+  'permission.escalation.forbidden': '禁止对管理端策略进行越权写入',
   'system.menu.title': '标题',
   'system.menu.titleKey': '标题键',
   'system.menu.titleRequired': '请输入标题键',

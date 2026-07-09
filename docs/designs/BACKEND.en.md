@@ -45,6 +45,9 @@ Each feature package must own its full stack. Do not split a domain into horizon
 - Access tokens carry `userId`, `username`, `roleKeys`, and `sessionId`.
 - Casbin enforces RESTful route policies, with `admin` as the default full-access role.
 - Casbin persistence is bootstrapped by SQL initialization plus runtime migration through the GORM adapter.
+- Non-admin users cannot create, update, or delete Casbin policies whose target path matches `/api/v1/system/permission*` or `/api/v1/system/role*`; the service returns `permission.escalation.forbidden`.
+- When `PANTHEON_CASBIN_WATCHER=true` and Redis is available, policy writes fan out through a Redis watcher and trigger `LoadPolicy()` on peer instances. The default remains single-instance behavior.
+- `PANTHEON_TOKEN_CACHE_TTL_SECONDS` controls the in-process token cache TTL. The default is `60` seconds; setting it to `0` disables the process-local cache so every check goes through Redis.
 - Operation audit logs are written asynchronously to `system_log_oper`, with recursive masking for sensitive keys.
 - Preference updates from `PUT /api/v1/auth/me/preferences` are audited without leaking secrets.
 - Request tracing is normalized through `X-Request-ID` and `X-Trace-ID`, and persisted into audit records.

@@ -101,7 +101,7 @@ Given:
 The frontend must display:
 
 ```ts
-t('permission.denied')
+t("permission.denied");
 ```
 
 ### 4.2 Current Runtime Behavior
@@ -180,6 +180,7 @@ Shared keys include:
 - `success`
 - `param.invalid`
 - `permission.denied`
+- `permission.escalation.forbidden`
 - `permission.engine.not_initialized`
 - `database.not_initialized`
 - `network.error`
@@ -282,6 +283,8 @@ Auth-related failures such as user-not-found, password mismatch, MFA challenge e
 ## 13. Permission Error Rules
 
 Permission denials should be normalized through consistent forbidden keys and page-level or action-level UI treatment.
+
+The current permission key set should also include `permission.escalation.forbidden` for guarded management-policy writes.
 
 ## 14. What Every New Module Must Add
 

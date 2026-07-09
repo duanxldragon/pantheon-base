@@ -17,11 +17,13 @@ func normalizeStatus(status int) int {
 	return common.NormalizeEnabledStatus(status)
 }
 
-func normalizeUserPageQuery(query *UserListQuery) (int, int) {
+const maxUserPageOffset = 100000
+
+func normalizeUserPageQuery(query *UserListQuery) (int, int, error) {
 	page := 1
 	pageSize := 10
 	if query == nil {
-		return page, pageSize
+		return page, pageSize, nil
 	}
 	if query.Page > 0 {
 		page = query.Page
@@ -32,7 +34,10 @@ func normalizeUserPageQuery(query *UserListQuery) (int, int) {
 	if pageSize > 100 {
 		pageSize = 100
 	}
-	return page, pageSize
+	if int64(page-1)*int64(pageSize) > maxUserPageOffset {
+		return 0, 0, common.NewBadRequest("param.page.too_large")
+	}
+	return page, pageSize, nil
 }
 
 func normalizeUserSort(query *UserListQuery) (string, bool) {

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"pantheon-platform/backend/internal/scaffold"
+	"pantheon-platform/backend/pkg/database"
 )
 
 func (s *DynamicModuleService) SyncBuiltInModules() error {
@@ -21,8 +22,10 @@ func (s *DynamicModuleService) syncModuleRegistrationRecords(rewriteGeneratedReg
 	if s.db == nil {
 		return nil
 	}
-	if err := s.db.AutoMigrate(&ModuleRegistration{}); err != nil {
-		return err
+	if database.ShouldAutoMigrate() {
+		if err := s.db.AutoMigrate(&ModuleRegistration{}); err != nil {
+			return err
+		}
 	}
 	if _, err := s.syncGeneratedModuleRegistrations(); err != nil {
 		return err
@@ -162,8 +165,10 @@ func (s *DynamicModuleService) AuditAndRepairGeneratedRegistries() (*RegistryRep
 	if s.db == nil {
 		return nil, nil
 	}
-	if err := s.db.AutoMigrate(&ModuleRegistration{}); err != nil {
-		return nil, err
+	if database.ShouldAutoMigrate() {
+		if err := s.db.AutoMigrate(&ModuleRegistration{}); err != nil {
+			return nil, err
+		}
 	}
 	markedUninstalled, err := s.syncGeneratedModuleRegistrations()
 	if err != nil {

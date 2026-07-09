@@ -3,6 +3,8 @@ package system
 import (
 	"strings"
 
+	"pantheon-platform/backend/pkg/rbacbind"
+
 	"gorm.io/gorm"
 )
 
@@ -538,14 +540,8 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 	}
 
 	if normalizeSeedMenuType(seed.Type) != "F" {
-		var count int64
-		if err := db.Table("system_role_menu").Where("role_id = ? AND menu_id = ?", adminRoleID, menuID).Count(&count).Error; err != nil {
+		if err := rbacbind.EnsureRoleMenu(db, adminRoleID, menuID); err != nil {
 			return err
-		}
-		if count == 0 {
-			if err := db.Exec("INSERT INTO system_role_menu (role_id, menu_id) VALUES (?, ?)", adminRoleID, menuID).Error; err != nil {
-				return err
-			}
 		}
 	}
 	if err := ensureAdminPermissionSeed(db, adminRoleID, seed.PagePerm); err != nil {

@@ -211,6 +211,12 @@ Pantheon 明确把系统域拆成四块，而不是继续维护一个“大 syst
 
 统一收口。
 
+多实例部署是可选能力，默认不开启：
+
+- `PANTHEON_CASBIN_WATCHER=true` 且 Redis 可用时，Casbin 策略写入会通过 Redis watcher 广播到其他实例，并触发 `LoadPolicy()`。
+- `PANTHEON_TOKEN_CACHE_TTL_SECONDS=0` 时，进程内 token 缓存关闭，所有会话和权限校验都直接走 Redis。
+- 以上开关都不启用时，单实例默认行为保持不变。
+
 ### 4.2 前端主链路
 
 前端运行时大致分三层：

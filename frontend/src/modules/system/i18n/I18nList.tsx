@@ -50,6 +50,7 @@ import {
   PageLoading,
   PageRequestError,
   PermissionAction,
+  SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   TableBatchActionBar,
@@ -1099,35 +1100,38 @@ const I18nList: React.FC = () => {
       width: TABLE_ACTION_COLUMN_WIDTH.medium,
       fixed: 'right',
       render: (_: unknown, row: SystemI18n) => (
-        <Space className="system-list__actions">
-          <Button
-            type="text"
-            icon={<IconEye />}
-            loading={detailLoadingKey === `${row.id}:view`}
-            disabled={detailLoading && detailLoadingKey !== `${row.id}:view`}
-            onClick={() => void loadDetail(row, 'view')}
-          >
-            {t('common.detail')}
-          </Button>
-          {canEdit ? (
-            <Button
-              type="text"
-              icon={<IconEdit />}
-              loading={detailLoadingKey === `${row.id}:edit`}
-              disabled={detailLoading && detailLoadingKey !== `${row.id}:edit`}
-              onClick={() => void loadDetail(row, 'edit')}
-            >
-              {t('common.edit')}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm title={t('common.deleteConfirm')} onOk={() => handleDelete(row)}>
-              <Button type="text" status="danger" icon={<IconDelete />}>
-                {t('common.delete')}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+        <SystemRowActions
+          actions={[
+            {
+              key: 'detail',
+              text: t('common.detail'),
+              icon: <IconEye />,
+              loading: detailLoadingKey === `${row.id}:view`,
+              disabled: detailLoading && detailLoadingKey !== `${row.id}:view`,
+              onClick: () => void loadDetail(row, 'view'),
+            },
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              loading: detailLoadingKey === `${row.id}:edit`,
+              disabled: detailLoading && detailLoadingKey !== `${row.id}:edit`,
+              onClick: () => void loadDetail(row, 'edit'),
+              hidden: !canEdit,
+            },
+            {
+              key: 'delete',
+              text: t('common.delete'),
+              icon: <IconDelete />,
+              hidden: !canDelete,
+              status: 'danger',
+              confirm: {
+                title: t('common.deleteConfirm'),
+                onOk: () => handleDelete(row),
+              },
+            },
+          ]}
+        />
       ),
     },
   ];

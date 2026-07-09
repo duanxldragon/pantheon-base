@@ -22,6 +22,7 @@ var migrationFS embed.FS
 
 const migrationsTableName = "schema_migrations"
 const menuHideInNavCompatMigrationVersion = 6
+const moduleRegistrationCompatMigrationVersion = 8
 
 type schemaColumnMarker struct {
 	table  string
@@ -40,7 +41,7 @@ var preMenuHideInNavRuntimeSchemaMarkers = []schemaColumnMarker{
 	{table: "system_generator_datasource", column: "password_encrypted"},
 }
 
-var currentRuntimeSchemaMarkers = append(
+var preModuleRegistrationRuntimeSchemaMarkers = append(
 	[]schemaColumnMarker{
 		{table: "system_menu", column: "hide_in_nav"},
 		{table: "permission_workbench_remediation_event", column: "issue_key"},
@@ -51,6 +52,13 @@ var currentRuntimeSchemaMarkers = append(
 		{table: "permission_workbench_remediation_event", column: "skipped_count"},
 	},
 	preMenuHideInNavRuntimeSchemaMarkers...,
+)
+
+var currentRuntimeSchemaMarkers = append(
+	[]schemaColumnMarker{
+		{table: "system_module_registration", column: "table_name"},
+	},
+	preModuleRegistrationRuntimeSchemaMarkers...,
 )
 
 // RunMigrations executes all pending database migrations.
@@ -112,6 +120,14 @@ func bootstrapExistingCurrentSchema(dsn string) error {
 	}
 	if looksCurrent {
 		return bootstrapMigrationVersion(db, latestVersion)
+	}
+
+	looksPreModuleRegistration, err := looksLikePreModuleRegistrationRuntimeSchema(db)
+	if err != nil {
+		return err
+	}
+	if looksPreModuleRegistration && latestVersion >= moduleRegistrationCompatMigrationVersion {
+		return bootstrapMigrationVersion(db, moduleRegistrationCompatMigrationVersion-1)
 	}
 
 	looksPreMenuHideInNav, err := looksLikePreMenuHideInNavRuntimeSchema(db)
@@ -197,6 +213,10 @@ func recordedMigrationVersion(db *sql.DB) (int, bool, bool, error) {
 
 func looksLikeCurrentRuntimeSchema(db *sql.DB) (bool, error) {
 	return looksLikeRuntimeSchema(db, currentRuntimeSchemaMarkers)
+}
+
+func looksLikePreModuleRegistrationRuntimeSchema(db *sql.DB) (bool, error) {
+	return looksLikeRuntimeSchema(db, preModuleRegistrationRuntimeSchemaMarkers)
 }
 
 func looksLikePreMenuHideInNavRuntimeSchema(db *sql.DB) (bool, error) {

@@ -318,22 +318,22 @@ func toDeptTreeResp(dept SystemDept, childDeptCount int, postCount int) *DeptTre
 	isNoPost := dept.IsRoot != common.StatusFlagYes && postCount == 0
 	isEmpty := dept.IsRoot != common.StatusFlagYes && childDeptCount == 0 && postCount == 0
 	return &DeptTreeResp{
-		ID:              dept.ID,
-		ParentID:        dept.ParentID,
-		Ancestors:       dept.Ancestors,
-		IsRoot:          dept.IsRoot == common.StatusFlagYes,
-		DeptName:        dept.DeptName,
-		Sort:            dept.Sort,
-		LeaderUserID:    dept.LeaderUserID,
-		Leader:          dept.Leader,
-		Phone:           dept.Phone,
-		Email:           dept.Email,
-		Status:          dept.Status,
-		ChildDeptCount:  childDeptCount,
-		PostCount:       postCount,
-		IsLeaderless:    isLeaderless,
-		IsNoPost:        isNoPost,
-		IsEmpty:         isEmpty,
+		ID:             dept.ID,
+		ParentID:       dept.ParentID,
+		Ancestors:      dept.Ancestors,
+		IsRoot:         dept.IsRoot == common.StatusFlagYes,
+		DeptName:       dept.DeptName,
+		Sort:           dept.Sort,
+		LeaderUserID:   dept.LeaderUserID,
+		Leader:         dept.Leader,
+		Phone:          dept.Phone,
+		Email:          dept.Email,
+		Status:         dept.Status,
+		ChildDeptCount: childDeptCount,
+		PostCount:      postCount,
+		IsLeaderless:   isLeaderless,
+		IsNoPost:       isNoPost,
+		IsEmpty:        isEmpty,
 	}
 }
 

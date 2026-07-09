@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
-  Breadcrumb,
   Button,
   Dropdown,
   Empty,
@@ -10,13 +9,11 @@ import {
   Menu,
   Message,
   Space,
-  Spin,
   Tooltip,
   Typography,
 } from '@arco-design/web-react';
 import {
   IconCheck,
-  IconClose,
   IconLanguage,
   IconLayout,
   IconLock,
@@ -33,7 +30,7 @@ import {
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { beginLogoutTransition, endLogoutTransition } from '../../api/request';
-import { findFirstNavigableMenuPath, type MenuNode } from '../../modules/system/menu/api';
+import { type MenuNode } from '../../modules/system/menu/api';
 import { logout as logoutApi, reportActivity } from '../../modules/auth/session/api';
 import {
   updateCurrentUserPreferences,
@@ -62,7 +59,6 @@ import {
 } from '../settings/publicSettings';
 import { clearExplicitLanguagePreference } from '../settings/languagePreference';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
-import { preloadRouteComponent } from '../router/prefetch';
 import {
   shouldLoadShellNoticeSummary,
   shouldPollServerRefreshState,
@@ -83,20 +79,14 @@ import {
   type ShellDensityMode,
   type ShellLayoutMode,
 } from '../shellState';
+import LayoutBreadcrumb from './LayoutBreadcrumb';
+import LayoutOpenedTabs from './LayoutOpenedTabs';
+import LayoutSideMenu from './LayoutSideMenu';
+import { buildOpenedPageTab, mergeOpenedTabsIntoState, orderOpenedTabs, readOpenedTabs, type OpenedPageTab, type TabActionKey } from './layoutTabs';
+import { findMenuNodeByPath, useLayoutMenu } from './useLayoutMenu';
 import './index.css';
 
-const { Header, Footer, Sider, Content } = Layout;
-const MAX_OPENED_TABS = 8;
-
-interface OpenedPageTab {
-  path: string;
-  titleKey?: string;
-  fallbackTitle: string;
-  closable: boolean;
-  pinned?: boolean;
-}
-
-type TabActionKey = 'close' | 'closeOthers' | 'closeRight' | 'closeAll' | 'togglePin';
+const { Header, Footer, Content } = Layout;
 type UserMenuActionKey = 'profile' | 'security' | 'lock' | 'logout';
 
 interface CommandSearchItem {
@@ -143,10 +133,6 @@ interface NoticeRecentItem {
 
 type TranslateLabel = (key: string, options?: Record<string, unknown>) => string;
 type NavigateToPath = (path: string) => void;
-interface MenuRenderOptions {
-  handleMenuNavigation: NavigateToPath;
-  t: TranslateLabel;
-}
 
 async function resolveSilently<T>(task: Promise<T>): Promise<T | undefined> {
   try {
@@ -158,249 +144,6 @@ async function resolveSilently<T>(task: Promise<T>): Promise<T | undefined> {
 
 function runSilently(task: Promise<unknown>) {
   task.catch(() => undefined);
-}
-
-function buildOpenedPageTab(
-  path: string,
-  fallbackTitle: string,
-  options: Partial<OpenedPageTab> = {},
-): OpenedPageTab {
-  return {
-    path,
-    titleKey: options.titleKey,
-    fallbackTitle,
-    closable: options.closable ?? path !== '/dashboard',
-    pinned: options.pinned ?? path === '/dashboard',
-  };
-}
-
-function normalizeOpenedPageTab(item: OpenedPageTab): OpenedPageTab {
-  return {
-    ...item,
-    closable: item.path !== '/dashboard' && item.closable !== false,
-    pinned: item.path === '/dashboard' || Boolean(item.pinned),
-  };
-}
-
-function normalizeOpenedTabs(tabs: OpenedPageTab[]): OpenedPageTab[] {
-  return tabs.map((item) => normalizeOpenedPageTab(item));
-}
-
-function orderOpenedTabs(tabs: OpenedPageTab[]): OpenedPageTab[] {
-  const dashboardTabs = tabs.filter((item) => item.path === '/dashboard');
-  const pinnedTabs = tabs.filter((item) => item.path !== '/dashboard' && item.pinned);
-  const regularTabs = tabs.filter((item) => item.path !== '/dashboard' && !item.pinned);
-  return [...dashboardTabs, ...pinnedTabs, ...regularTabs];
-}
-
-function limitOpenedTabs(tabs: OpenedPageTab[]): OpenedPageTab[] {
-  const orderedTabs = orderOpenedTabs(tabs);
-  const protectedTabs = orderedTabs.filter((item) => item.pinned);
-  const regularTabs = orderedTabs.filter((item) => !item.pinned);
-  const regularCapacity = MAX_OPENED_TABS - protectedTabs.length;
-  if (regularCapacity <= 0) {
-    return protectedTabs;
-  }
-  return [...protectedTabs, ...regularTabs.slice(-regularCapacity)];
-}
-
-function readOpenedTabs(): OpenedPageTab[] {
-  try {
-    const rawValue = localStorage.getItem(OPENED_TABS_STORAGE_KEY);
-    if (!rawValue) {
-      return [];
-    }
-    const parsed = JSON.parse(rawValue) as OpenedPageTab[];
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return orderOpenedTabs(
-      normalizeOpenedTabs(
-        parsed.filter((item) => typeof item.path === 'string' && item.path.startsWith('/')),
-      ),
-    );
-  } catch {
-    return [];
-  }
-}
-
-function mergeOpenedTabsIntoState(
-  currentTabs: OpenedPageTab[],
-  nextTab: OpenedPageTab,
-  dashboardTitle: string,
-): OpenedPageTab[] {
-  const existingIndex = currentTabs.findIndex((item) => item.path === nextTab.path);
-  const mergedTabs =
-    existingIndex >= 0
-      ? currentTabs.map((item, index) =>
-          index === existingIndex
-            ? { ...item, ...nextTab, pinned: item.pinned || nextTab.pinned }
-            : item,
-        )
-      : [...currentTabs, nextTab];
-  const dashboardTab = buildOpenedPageTab('/dashboard', dashboardTitle, {
-    titleKey: 'dashboard.title',
-    closable: false,
-    pinned: true,
-  });
-  const normalizedTabs = mergedTabs.some((item) => item.path === '/dashboard')
-    ? mergedTabs
-    : [dashboardTab, ...mergedTabs];
-  const limitedTabs = limitOpenedTabs(normalizeOpenedTabs(normalizedTabs));
-  localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(limitedTabs));
-  return limitedTabs;
-}
-
-function findMenuTitleKey(nodes: MenuNode[], path: string): string | undefined {
-  for (const item of nodes) {
-    if (item.path === path || item.activeMenu === path) {
-      return item.titleKey;
-    }
-    if (item.children?.length) {
-      const childTitleKey = findMenuTitleKey(item.children, path);
-      if (childTitleKey) {
-        return childTitleKey;
-      }
-    }
-  }
-  return undefined;
-}
-
-function findSelectedMenuPath(nodes: MenuNode[], path: string): string {
-  for (const item of nodes) {
-    if (item.path === path || item.activeMenu === path) {
-      return item.path;
-    }
-    if (item.children?.length) {
-      const childPath = findSelectedMenuPath(item.children, path);
-      if (childPath) {
-        return childPath;
-      }
-    }
-  }
-  return path;
-}
-
-function findMenuTrail(nodes: MenuNode[], path: string, ancestors: MenuNode[] = []): MenuNode[] {
-  for (const item of nodes) {
-    const trail = [...ancestors, item];
-    if (item.path === path || item.activeMenu === path) {
-      return trail;
-    }
-    if (item.children?.length) {
-      const childTrail = findMenuTrail(item.children, path, trail);
-      if (childTrail.length > 0) {
-        return childTrail;
-      }
-    }
-  }
-  return [];
-}
-
-function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | undefined {
-  for (const item of nodes) {
-    if (item.path === path) {
-      return item;
-    }
-    if (item.children?.length) {
-      const child = findMenuNodeByPath(item.children, path);
-      if (child) {
-        return child;
-      }
-    }
-  }
-  return undefined;
-}
-
-function findMenuNavigationPath(item: MenuNode): string | undefined {
-  if (item.path && findRouteByPath(item.path)) {
-    return item.path;
-  }
-  return item.children?.length ? findFirstNavigableMenuPath(item.children) || undefined : undefined;
-}
-
-function preloadRouteByPath(path: string) {
-  runSilently(preloadRouteComponent(path));
-}
-
-function renderMenuItems(
-  nodes: MenuNode[],
-  options: MenuRenderOptions,
-  level = 0,
-): React.ReactNode[] {
-  return nodes.map((item) => {
-    const entryClassName = [
-      'app-shell__menu-entry',
-      `app-shell__menu-entry--level-${Math.min(level, 2)}`,
-      item.children && item.children.length > 0
-        ? 'app-shell__menu-entry--group'
-        : 'app-shell__menu-entry--leaf',
-    ].join(' ');
-    const iconClassName = [
-      'app-shell__menu-entry-icon',
-      `app-shell__menu-entry-icon--level-${Math.min(level, 2)}`,
-    ].join(' ');
-
-    if (item.children && item.children.length > 0) {
-      const navigationPath = findMenuNavigationPath(item);
-      const handleGroupNavigation = () => {
-        if (navigationPath) {
-          options.handleMenuNavigation(navigationPath);
-        }
-      };
-
-      return (
-        <Menu.SubMenu
-          key={item.id.toString()}
-          title={
-            <button type="button" className={entryClassName} onClick={handleGroupNavigation}>
-              <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
-              <span className="app-shell__menu-entry-copy">
-                <span className="app-shell__menu-entry-label">{options.t(item.titleKey)}</span>
-              </span>
-            </button>
-          }
-        >
-          {renderMenuItems(item.children, options, level + 1)}
-        </Menu.SubMenu>
-      );
-    }
-
-    const handleLeafNavigation = () => {
-      options.handleMenuNavigation(item.path);
-    };
-    const handleLeafPreload = () => {
-      preloadRouteByPath(item.path);
-    };
-
-    return (
-      <Menu.Item key={item.path}>
-        <button
-          type="button"
-          className={entryClassName}
-          onClick={handleLeafNavigation}
-          onMouseEnter={handleLeafPreload}
-          onFocus={handleLeafPreload}
-        >
-          <span className={iconClassName}>{renderMenuIcon(item.icon)}</span>
-          <span className="app-shell__menu-entry-copy">
-            <span className="app-shell__menu-entry-label">{options.t(item.titleKey)}</span>
-          </span>
-        </button>
-      </Menu.Item>
-    );
-  });
-}
-
-function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): MenuNode[] {
-  return nodes
-    .filter((item) => orgEnabled || item.module !== 'system.org')
-    .map((item) => ({
-      ...item,
-      children: item.children?.length
-        ? filterMenuTreeByCapabilities(item.children, orgEnabled)
-        : [],
-    }));
 }
 
 function walkMenuNodes(
@@ -680,8 +423,6 @@ const BaseLayout: React.FC = () => {
   const [layoutMode, setLayoutMode] = useState<ShellLayoutMode>(() => readShellLayoutMode());
   const [densityMode, setDensityMode] = useState<ShellDensityMode>(() => readShellDensityMode());
   const [openedTabs, setOpenedTabs] = useState<OpenedPageTab[]>(() => readOpenedTabs());
-  const [draggingTabPath, setDraggingTabPath] = useState<string | null>(null);
-  const [dragOverTabPath, setDragOverTabPath] = useState<string | null>(null);
   const [commandVisible, setCommandVisible] = useState(false);
   const [commandQuery, setCommandQuery] = useState('');
   const [noticeSummary, setNoticeSummary] = useState<DashboardSummary | null>(null);
@@ -701,78 +442,39 @@ const BaseLayout: React.FC = () => {
   const lastInteractionAtRef = useRef(0);
   const idleLogoutInFlightRef = useRef(false);
   const matchedRoute = useMemo(() => findRouteByPath(location.pathname), [location.pathname]);
+  const handleMenuNavigation = useCallback(
+    (key: string) => {
+      const selected = findMenuNodeByPath(menuTree, key);
+      if (selected?.isExternal === 1) {
+        globalThis.open(selected.path, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      navigate(key);
+    },
+    [menuTree, navigate],
+  );
   const currentRouteTitleKey =
     matchedRoute?.resolveTitleKey?.(location.pathname) ||
     matchedRoute?.titleKey ||
     systemRouteTitleMap[location.pathname];
   const activeMenuPath = matchedRoute?.activeMenu || location.pathname;
-  const visibleMenuTree = useMemo(
-    () => filterMenuTreeByCapabilities(menuTree, publicSettings.orgEnabled),
-    [menuTree, publicSettings.orgEnabled],
-  );
-  const currentMenuTitleKey = useMemo(
-    () => findMenuTitleKey(visibleMenuTree, activeMenuPath),
-    [activeMenuPath, visibleMenuTree],
-  );
-  const menuTrail = useMemo(
-    () => findMenuTrail(visibleMenuTree, activeMenuPath),
-    [activeMenuPath, visibleMenuTree],
-  );
-  const selectedMenuPath = useMemo(
-    () => findSelectedMenuPath(visibleMenuTree, activeMenuPath),
-    [activeMenuPath, visibleMenuTree],
-  );
-  const breadcrumbItems = useMemo(() => {
-    const root = [{ path: '/', label: t('common.home') }];
-    if (menuTrail.length > 0) {
-      const trailItems = [
-        ...root,
-        ...menuTrail.map((item) => ({
-          path: item.path,
-          label: t(item.titleKey),
-        })),
-      ];
-      if (
-        matchedRoute?.activeMenu &&
-        currentRouteTitleKey &&
-        currentRouteTitleKey !== currentMenuTitleKey
-      ) {
-        return [
-          ...trailItems,
-          {
-            path: location.pathname,
-            label: t(currentRouteTitleKey),
-          },
-        ];
-      }
-      return trailItems;
-    }
-    let currentLabel = location.pathname;
-    if (currentMenuTitleKey) {
-      currentLabel = t(currentMenuTitleKey);
-    } else if (currentRouteTitleKey) {
-      currentLabel = t(currentRouteTitleKey);
-    }
-    return [
-      ...root,
-      {
-        path: activeMenuPath,
-        label: currentLabel,
-      },
-    ];
-  }, [
-    activeMenuPath,
+  const {
+    visibleMenuTree,
     currentMenuTitleKey,
+    selectedMenuPath,
+    breadcrumbItems,
+    menuOpenKeys,
+    renderedMenuItems,
+  } = useLayoutMenu({
+    menuTree,
+    orgEnabled: publicSettings.orgEnabled,
+    currentPath: location.pathname,
+    activeMenuPath,
+    routeActiveMenu: matchedRoute?.activeMenu,
     currentRouteTitleKey,
-    location.pathname,
-    matchedRoute?.activeMenu,
-    menuTrail,
     t,
-  ]);
-  const menuOpenKeys = useMemo(
-    () => menuTrail.slice(0, -1).map((item) => item.id.toString()),
-    [menuTrail],
-  );
+    handleMenuNavigation,
+  });
   const currentPageTitle = breadcrumbItems.at(-1)?.label || t('app.workspace');
   const currentTabTitleKey = currentRouteTitleKey || currentMenuTitleKey;
   const userDisplayName = userInfo?.nickname || userInfo?.username || t('common.user');
@@ -1315,6 +1017,19 @@ const BaseLayout: React.FC = () => {
     closeAllTabs();
   };
 
+  const openedTabsContent = (
+    <LayoutOpenedTabs
+      enabled={publicSettings.enableTabBar}
+      layoutMode={layoutMode}
+      tabs={openedTabs}
+      currentPath={location.pathname}
+      onNavigate={navigate}
+      onMoveTab={moveTab}
+      onTabAction={handleTabAction}
+      t={t}
+    />
+  );
+
   const currentLanguage = (
     SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN'
   ) as SupportedLocale;
@@ -1518,178 +1233,6 @@ const BaseLayout: React.FC = () => {
     </div>
   );
 
-  const handleMenuNavigation = useCallback(
-    (key: string) => {
-      const selected = findMenuNodeByPath(visibleMenuTree, key);
-      if (selected?.isExternal === 1) {
-        globalThis.open(selected.path, '_blank', 'noopener,noreferrer');
-        return;
-      }
-      navigate(key);
-    },
-    [navigate, visibleMenuTree],
-  );
-  const renderedMenuItems = useMemo(
-    () => renderMenuItems(visibleMenuTree, { handleMenuNavigation, t }),
-    [handleMenuNavigation, t, visibleMenuTree],
-  );
-
-  const openedTabsContent = publicSettings.enableTabBar ? (
-    <div
-      className={[
-        'app-shell__tabs',
-        isHorizontalLayout ? 'app-shell__tabs--horizontal' : 'app-shell__tabs--vertical',
-      ].join(' ')}
-      role="tablist"
-      aria-label={t('app.openedTabs')}
-    >
-      {openedTabs.map((item) => {
-        const active = item.path === location.pathname;
-        const itemIndex = openedTabs.findIndex((tab) => tab.path === item.path);
-        const canCloseCurrent = item.closable && !item.pinned;
-        const canCloseOthers = openedTabs.some(
-          (tab) => tab.path !== item.path && tab.closable && !tab.pinned,
-        );
-        const canCloseRight = openedTabs
-          .slice(itemIndex + 1)
-          .some((tab) => tab.closable && !tab.pinned);
-        const canCloseAll = openedTabs.some((tab) => tab.closable && !tab.pinned);
-        return (
-          <Dropdown
-            key={item.path}
-            trigger="contextMenu"
-            position="bl"
-            droplist={
-              <Menu
-                onClickMenuItem={(key) => handleTabAction(item.path, key as TabActionKey)}
-                className="app-shell__tab-menu"
-              >
-                <Menu.Item key="togglePin" disabled={item.path === '/dashboard'}>
-                  {item.pinned ? t('app.tab.unpin') : t('app.tab.pin')}
-                </Menu.Item>
-                <Menu.Item key="close" disabled={!canCloseCurrent}>
-                  {t('common.close')}
-                </Menu.Item>
-                <Menu.Item key="closeOthers" disabled={!canCloseOthers}>
-                  {t('app.tab.closeOthers')}
-                </Menu.Item>
-                <Menu.Item key="closeRight" disabled={!canCloseRight}>
-                  {t('app.tab.closeRight')}
-                </Menu.Item>
-                <Menu.Item key="closeAll" disabled={!canCloseAll}>
-                  {t('app.tab.closeAll')}
-                </Menu.Item>
-              </Menu>
-            }
-          >
-            <div
-              role="tab"
-              tabIndex={0}
-              aria-selected={active}
-              className={[
-                'app-shell__tab',
-                active ? 'app-shell__tab--active' : '',
-                item.pinned ? 'app-shell__tab--pinned' : '',
-                draggingTabPath === item.path ? 'app-shell__tab--dragging' : '',
-                dragOverTabPath === item.path ? 'app-shell__tab--drag-over' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              draggable={item.path !== '/dashboard'}
-              onClick={() => navigate(item.path)}
-              onMouseEnter={() => {
-                runSilently(preloadRouteComponent(item.path));
-              }}
-              onFocus={() => {
-                runSilently(preloadRouteComponent(item.path));
-              }}
-              onDoubleClick={() => closeTab(item.path)}
-              onMouseDown={(event) => {
-                if (event.button === 1) {
-                  event.preventDefault();
-                }
-              }}
-              onAuxClick={(event) => {
-                if (event.button === 1) {
-                  event.preventDefault();
-                  closeTab(item.path);
-                }
-              }}
-              onDragStart={(event) => {
-                if (item.path === '/dashboard') {
-                  event.preventDefault();
-                  return;
-                }
-                setDraggingTabPath(item.path);
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', item.path);
-              }}
-              onDragOver={(event) => {
-                if (!draggingTabPath || draggingTabPath === item.path) {
-                  return;
-                }
-                const dragTab = openedTabs.find((tab) => tab.path === draggingTabPath);
-                if (
-                  !dragTab ||
-                  dragTab.path === '/dashboard' ||
-                  Boolean(dragTab.pinned) !== Boolean(item.pinned)
-                ) {
-                  return;
-                }
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'move';
-                if (dragOverTabPath !== item.path) {
-                  setDragOverTabPath(item.path);
-                }
-              }}
-              onDragLeave={() => {
-                if (dragOverTabPath === item.path) {
-                  setDragOverTabPath(null);
-                }
-              }}
-              onDrop={(event) => {
-                event.preventDefault();
-                if (draggingTabPath) {
-                  moveTab(draggingTabPath, item.path);
-                }
-                setDraggingTabPath(null);
-                setDragOverTabPath(null);
-              }}
-              onDragEnd={() => {
-                setDraggingTabPath(null);
-                setDragOverTabPath(null);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  navigate(item.path);
-                }
-              }}
-            >
-              {item.pinned ? <IconPushpin className="app-shell__tab-pin" /> : null}
-              <span className="app-shell__tab-label">
-                {item.titleKey ? t(item.titleKey) : item.fallbackTitle}
-              </span>
-              {canCloseCurrent ? (
-                <button
-                  type="button"
-                  aria-label={t('common.close')}
-                  className="app-shell__tab-close"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    closeTab(item.path);
-                  }}
-                >
-                  <IconClose />
-                </button>
-              ) : null}
-            </div>
-          </Dropdown>
-        );
-      })}
-    </div>
-  ) : null;
-
   let noticePanelBody: React.ReactNode = (
     <div className="app-shell__notice-empty">{t('app.notice.empty')}</div>
   );
@@ -1776,48 +1319,20 @@ const BaseLayout: React.FC = () => {
       ].join(' ')}
     >
       {isVerticalLayout ? (
-        <Sider
-          className="app-shell__sider"
-          theme="light"
-          trigger={null}
-          width={248}
-          collapsedWidth={76}
+        <LayoutSideMenu
+          appName={appName}
+          brandInitial={brandInitial}
           collapsed={collapsed}
-          collapsible
-          breakpoint="xl"
+          isHorizontalLayout={false}
+          loading={loading}
+          menuOpenKeys={menuOpenKeys}
+          renderedMenuItems={renderedMenuItems}
+          selectedMenuPath={selectedMenuPath}
+          showExpandedBrand={showExpandedBrand}
+          siteLogo={publicSettings.siteLogo}
           onCollapse={setCollapsed}
-        >
-          <div
-            className={
-              collapsed ? 'app-shell__brand app-shell__brand--collapsed' : 'app-shell__brand'
-            }
-          >
-            <div className="app-shell__brand-mark">
-              {publicSettings.siteLogo ? (
-                <img src={publicSettings.siteLogo} alt={appName} />
-              ) : (
-                brandInitial
-              )}
-            </div>
-            {showExpandedBrand ? (
-              <div className="app-shell__brand-text">
-                <span className="app-shell__brand-title">{appName}</span>
-              </div>
-            ) : null}
-          </div>
-          <Spin loading={loading} className="app-shell__menu-loading">
-            <Menu
-              key={`${collapsed ? 'collapsed' : 'expanded'}-${menuOpenKeys.join(',')}`}
-              className="app-shell__menu"
-              theme="light"
-              selectedKeys={[selectedMenuPath]}
-              defaultOpenKeys={menuOpenKeys}
-              onClickMenuItem={handleMenuNavigation}
-            >
-              {renderedMenuItems}
-            </Menu>
-          </Spin>
-        </Sider>
+          onMenuItemClick={handleMenuNavigation}
+        />
       ) : null}
       <Layout className="app-shell__main">
         <Header className="app-shell__header">
@@ -1842,11 +1357,7 @@ const BaseLayout: React.FC = () => {
               </div>
             )}
             <div className="app-shell__header-meta">
-              <Breadcrumb className="app-shell__header-breadcrumb">
-                {breadcrumbItems.map((item) => (
-                  <Breadcrumb.Item key={`${item.path}-${item.label}`}>{item.label}</Breadcrumb.Item>
-                ))}
-              </Breadcrumb>
+              <LayoutBreadcrumb items={breadcrumbItems} />
             </div>
           </div>
           <Space size={12} className="app-shell__header-actions">
@@ -1978,22 +1489,22 @@ const BaseLayout: React.FC = () => {
           </Space>
         </Header>
         {isHorizontalLayout ? (
-          <div className="app-shell__top-nav">
-            <Spin loading={loading} className="app-shell__menu-loading">
-              <Menu
-                mode="horizontal"
-                className="app-shell__top-menu"
-                selectedKeys={[selectedMenuPath]}
-                triggerProps={{ className: 'app-shell__top-menu-popup' }}
-                onClickMenuItem={handleMenuNavigation}
-              >
-                {renderedMenuItems}
-              </Menu>
-            </Spin>
-          </div>
+          <LayoutSideMenu
+            appName={appName}
+            brandInitial={brandInitial}
+            collapsed={collapsed}
+            isHorizontalLayout
+            loading={loading}
+            menuOpenKeys={menuOpenKeys}
+            renderedMenuItems={renderedMenuItems}
+            selectedMenuPath={selectedMenuPath}
+            showExpandedBrand={showExpandedBrand}
+            siteLogo={publicSettings.siteLogo}
+            onCollapse={setCollapsed}
+            onMenuItemClick={handleMenuNavigation}
+          />
         ) : null}
-        {isHorizontalLayout ? openedTabsContent : null}
-        {isVerticalLayout ? openedTabsContent : null}
+        {openedTabsContent}
         <Content className="app-shell__content">
           <div className="app-shell__content-inner">
             <Outlet />

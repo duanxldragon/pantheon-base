@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/backend/pkg/rbacbind"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -191,27 +192,24 @@ func (s *RoleService) AddRoleMembers(roleID uint64, userIDs []uint64) (int, erro
 		existing[row.UserID] = struct{}{}
 	}
 
-	addedCount := 0
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		for _, userID := range normalizedUserIDs {
-			if _, ok := existing[userID]; ok {
-				continue
-			}
-			if err := tx.Exec(
-				"INSERT INTO system_user_role (user_id, role_id) VALUES (?, ?)",
-				userID,
-				roleID,
-			).Error; err != nil {
-				return err
-			}
-			addedCount++
+	userIDsToAdd := make([]uint64, 0, len(normalizedUserIDs))
+	for _, userID := range normalizedUserIDs {
+		if _, ok := existing[userID]; ok {
+			continue
 		}
-		return nil
+		userIDsToAdd = append(userIDsToAdd, userID)
+	}
+	if len(userIDsToAdd) == 0 {
+		return 0, nil
+	}
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		return rbacbind.InsertUserRoles(tx, userIDsToAdd, roleID)
 	}); err != nil {
 		return 0, err
 	}
 
-	return addedCount, nil
+	return len(userIDsToAdd), nil
 }
 
 func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, error) {

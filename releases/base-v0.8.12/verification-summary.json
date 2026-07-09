@@ -1,0 +1,13 @@
+{
+  "releaseVersion": "base-v0.8.12",
+  "releaseLine": "release/0.8",
+  "baseCommit": "63bfe170b87625dfcc8f83af5275c764c3ecbdfc",
+  "generatedAt": "2026-07-09T10:12:35.027Z",
+  "requiredChecks": [
+    "backend go build ./...",
+    "backend go vet ./...",
+    "backend go test ./modules/system/iam/...",
+    "backend go test ./internal/middleware/... ./pkg/database/... ./modules/auth/security/...",
+    "frontend npm run build"
+  ]
+}

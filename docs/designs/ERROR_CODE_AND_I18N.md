@@ -84,23 +84,23 @@ refresh_token.invalid
 
 ## 3.2 后端错误分三层
 
-| 层级 | 说明 | 示例 |
-| :--- | :--- | :--- |
-| `platform` | 基础设施错误 | `database.not_initialized` |
-| `domain` | 业务规则错误 | `user.role.required` |
-| `security` | 认证/授权错误 | `permission.denied` |
+| 层级       | 说明          | 示例                       |
+| :--------- | :------------ | :------------------------- |
+| `platform` | 基础设施错误  | `database.not_initialized` |
+| `domain`   | 业务规则错误  | `user.role.required`       |
+| `security` | 认证/授权错误 | `permission.denied`        |
 
 ## 3.3 后端业务码规则
 
 当前业务码：
 
-| Code | 说明 |
-| :--- | :--- |
-| `200` | 成功 |
-| `400` | 参数错误 |
+| Code  | 说明              |
+| :---- | :---------------- |
+| `200` | 成功              |
+| `400` | 参数错误          |
 | `401` | 未认证 / 认证失效 |
-| `403` | 无权限 |
-| `500` | 通用失败 |
+| `403` | 无权限            |
+| `500` | 通用失败          |
 
 短期允许继续使用这组码。
 
@@ -122,13 +122,13 @@ refresh_token.invalid
 默认展示应为：
 
 ```ts
-t('permission.denied')
+t("permission.denied");
 ```
 
 而不是直接显示：
 
 ```ts
-"permission.denied"
+"permission.denied";
 ```
 
 ## 4.2 当前运行时行为
@@ -235,6 +235,7 @@ user.post.dept_mismatch
 - `success`
 - `param.invalid`
 - `permission.denied`
+- `permission.escalation.forbidden`
 - `permission.engine.not_initialized`
 - `database.not_initialized`
 - `network.error`
@@ -586,6 +587,7 @@ locale 资源治理门禁：
 统一使用：
 
 - `permission.denied`
+- `permission.escalation.forbidden`
 - `permission.role.invalid`
 - `permission.policy.exists`
 

@@ -11,7 +11,8 @@
 }
 
 .dashboard-hero-card {
-  background: linear-gradient(180deg, var(--color-fill-bg) 0%, var(--color-fill-bg-1) 100%);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 8%, var(--panel-border));
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--panel-bg-solid));
 }
 
 .dashboard-hero-card__top {
@@ -27,8 +28,8 @@
   min-height: 24px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(var(--arcoblue-6), 0.08);
-  color: rgb(var(--arcoblue-6));
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -41,8 +42,8 @@
 .dashboard-stat-card {
   min-height: 128px;
   padding: 16px 18px;
-  background: var(--color-bg-1);
-  border: 1px solid var(--color-fill-bg-3);
+  background: var(--panel-bg-solid);
+  border: 1px solid var(--panel-border);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -54,7 +55,7 @@
 
 .dashboard-stat-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-color: var(--color-fill-bg-4);
+  border-color: var(--panel-border-strong);
 }
 
 .dashboard-stat-card__title {
@@ -63,7 +64,7 @@
   justify-content: space-between;
   gap: 12px;
   font-size: 13px;
-  color: var(--color-text-3);
+  color: var(--text-tertiary);
 }
 
 .dashboard-stat-card__title .arco-tag {
@@ -74,12 +75,12 @@
 .dashboard-stat-card__value {
   font-size: 28px;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--text-primary);
 }
 
 .dashboard-stat-card__hint {
   font-size: 12px;
-  color: var(--color-text-4);
+  color: var(--text-tertiary);
   line-height: 1.6;
   margin-top: auto;
 }
@@ -89,7 +90,7 @@
 }
 
 .dashboard-panel-card .arco-card-header {
-  border-bottom-color: var(--color-fill-bg-3);
+  border-bottom-color: var(--panel-border);
 }
 
 .dashboard-panel-card--attention .arco-card-body,
@@ -118,39 +119,39 @@
 }
 
 .dashboard-focus-item--danger {
-  background: rgba(240, 68, 69, 0.06);
-  border-color: rgba(240, 68, 69, 0.16);
-  border-left-color: #f04b45;
+  background: color-mix(in srgb, var(--color-error-bg) 48%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-error) 16%, var(--panel-border));
+  border-left-color: var(--color-error);
 }
 
 .dashboard-focus-item--warning {
-  background: rgba(250, 173, 20, 0.06);
-  border-color: rgba(250, 173, 20, 0.16);
-  border-left-color: #faad14;
+  background: color-mix(in srgb, var(--color-warning-bg) 48%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-warning) 16%, var(--panel-border));
+  border-left-color: var(--color-warning);
 }
 
 .dashboard-focus-item--success {
-  background: rgba(22, 183, 81, 0.06);
-  border-color: rgba(22, 183, 81, 0.16);
-  border-left-color: #16b755;
+  background: color-mix(in srgb, var(--color-success-bg) 48%, #ffffff);
+  border-color: color-mix(in srgb, var(--color-success) 16%, var(--panel-border));
+  border-left-color: var(--color-success);
 }
 
 .dashboard-focus-item--neutral {
-  background: var(--color-fill-bg-1);
-  border-color: var(--color-fill-bg-3);
-  border-left-color: var(--color-fill-bg-4);
+  background: var(--panel-muted);
+  border-color: var(--panel-border);
+  border-left-color: var(--panel-border-strong);
 }
 
 .dashboard-focus-item__icon {
   font-size: 16px;
-  color: var(--color-text-3);
+  color: var(--text-tertiary);
   width: 32px;
   height: 32px;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--arcoblue-6), 0.08);
+  background: var(--brand-primary-soft);
 }
 
 .dashboard-focus-item__body {
@@ -169,14 +170,14 @@
 
 .dashboard-focus-item__label {
   font-size: 13px;
-  color: var(--color-text-2);
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .dashboard-focus-item__value {
   font-size: 22px;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--text-primary);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -184,14 +185,14 @@
 .dashboard-focus-item__value--meta {
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-text-3);
+  color: var(--text-tertiary);
   white-space: normal;
   text-align: right;
 }
 
 .dashboard-focus-item__desc {
   font-size: 12px;
-  color: var(--color-text-4);
+  color: var(--text-tertiary);
   line-height: 1.6;
 }
 
@@ -305,9 +306,9 @@
   min-height: 112px;
   padding: 14px 16px;
   border-radius: 8px;
-  border: 1px solid rgba(250, 173, 20, 0.16);
-  border-left: 3px solid #faad14;
-  background: rgba(250, 173, 20, 0.06);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 16%, var(--panel-border));
+  border-left: 3px solid var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning-bg) 48%, #ffffff);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -316,28 +317,28 @@
 }
 
 .dashboard-task-card:hover {
-  border-color: rgba(250, 173, 20, 0.3);
-  box-shadow: 0 4px 12px rgba(250, 173, 20, 0.1);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, var(--panel-border));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 10%, transparent);
 }
 
 .dashboard-task-card:focus-visible {
   outline: none;
-  border-color: rgba(250, 173, 20, 0.38);
+  border-color: color-mix(in srgb, var(--color-warning) 38%, var(--panel-border));
   box-shadow:
-    0 0 0 2px rgba(250, 173, 20, 0.14),
-    0 4px 12px rgba(250, 173, 20, 0.1);
+    0 0 0 2px color-mix(in srgb, var(--color-warning) 14%, transparent),
+    0 4px 12px color-mix(in srgb, var(--color-warning) 10%, transparent);
 }
 
 .dashboard-task-card__icon {
   font-size: 16px;
-  color: #faad14;
+  color: var(--color-warning);
   width: 32px;
   height: 32px;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(250, 173, 20, 0.12);
+  background: color-mix(in srgb, var(--color-warning) 12%, #ffffff);
   flex-shrink: 0;
   align-self: flex-start;
 }
@@ -358,7 +359,7 @@
 
 .dashboard-task-card__title {
   font-size: 13px;
-  color: var(--color-text-1);
+  color: var(--text-primary);
   font-weight: 500;
   line-height: 1.5;
   flex: 1;
@@ -370,7 +371,7 @@
 
 .dashboard-task-card__desc {
   font-size: 12px;
-  color: var(--color-text-4);
+  color: var(--text-tertiary);
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;

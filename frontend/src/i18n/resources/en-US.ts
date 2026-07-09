@@ -2196,6 +2196,7 @@ const enUSFallback = {
   'permission.policy.exists': 'A policy with the same role, API path, and method already exists',
   'permission.path.required': 'API path is required',
   'permission.method.invalid': 'Invalid request method',
+  'permission.escalation.forbidden': 'Writing management policies is forbidden.',
   'system.menu.title': 'Title',
   'system.menu.titleKey': 'Title Key',
   'system.menu.titleRequired': 'Please input title key',

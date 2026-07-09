@@ -5,232 +5,243 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-05-11
+updated_at: 2026-07-09
 ---
 
 # 主题 Token 参考表 (Theme Tokens Reference)
 
 English version: [THEME_TOKENS_REFERENCE.en.md](./THEME_TOKENS_REFERENCE.en.md)
 
-本文是 Pantheon Base 4 个内置主题（`indigo / emerald / violet / slate`）的**具体 token 值参考表**，配合 `FRONTEND_UI_SPEC.md` §3 (Design Token) 使用。
-
-UI Spec §3 定义了 token 命名结构和语义；本文给出每个 token 在每个主题下的**具体值**，作为前端实现和 AI 代码生成的事实表。
-
-优先级约束：
-
-- 涉及 **颜色 / 圆角 / 间距 / 字号 / 阴影 / 动效 / z-index** 的最终数值时，**一律以本文为准**
-- `FRONTEND_UI_SPEC.md`、`FRONTEND.md`、`DESIGN.md` 只负责说明语义、原则和交互目标，不再作为数值真相源
-- 若其他文档中仍出现旧数值，应视为历史描述，后续实现不得按旧值落地
+本文记录当前 `frontend/src/index.css` 的真实实现。它是 light-mode 的单一真相源；文档里不再保留尚未落地的 `--pantheon-*`、暗色模式、通用 spacing/type/motion/z-index 承诺。后续改样式时，优先对齐这里和 `frontend/src/index.css`。
 
 ---
 
 ## 1. Token 命名约定
 
-```
---pantheon-<category>-<role>[-<state>][-<scale>]
+当前实现主要使用以下几组变量：
 
-category  : color | space | radius | shadow | type | motion | z
-role      : bg | fg | border | accent | success | warning | error | info | ...
-state     : default | hover | active | disabled | focus
-scale     : xs | sm | md | lg | xl | 数字
-```
+- `--brand-*`：品牌色及其透明度衍生
+- `--panel-*`：表面、边框、阴影
+- `--text-*`：文本颜色
+- `--radius-*`：圆角
+- `--shell-*`：壳层间距与布局节奏
+- `--color-*`：状态语义色
+- `--primary-1..10`：主题 RGB ramp，供 `color-mix()` / `rgba()` 组合使用
 
-示例：`--pantheon-color-bg-default`、`--pantheon-color-bg-elevated`、`--pantheon-space-md`。
+兼容别名仍存在，但只用于老代码过渡，不是新语义入口：
 
-**禁止**：在业务代码里出现裸 Arco token、裸 hex 色值、裸 px 值（除 0 和 1px 边）。
-
----
-
-## 2. 中性色 Token（所有主题共享）
-
-| Token                             | Light            | Dark             | 用途                                 |
-| --------------------------------- | ---------------- | ---------------- | ------------------------------------ |
-| `--pantheon-color-bg-app`         | `#F7F8FA`        | `#0F1115`        | 页面整体背景                         |
-| `--pantheon-color-bg-default`     | `#FFFFFF`        | `#16181D`        | 卡片/Surface 默认背景                |
-| `--pantheon-color-bg-elevated`    | `#FFFFFF`        | `#1C1F26`        | 浮层、Modal 背景                     |
-| `--pantheon-color-bg-muted`       | `#F0F2F5`        | `#1A1D23`        | 弱化区域（折叠面板、placeholder 区） |
-| `--pantheon-color-bg-hover`       | `#F3F4F7`        | `#1F222A`        | Hover 态背景                         |
-| `--pantheon-color-fg-default`     | `#1D2129`        | `#E4E7EC`        | 主文本                               |
-| `--pantheon-color-fg-secondary`   | `#4E5969`        | `#A0A6B0`        | 次文本                               |
-| `--pantheon-color-fg-tertiary`    | `#86909C`        | `#6B7280`        | 占位、辅助文本                       |
-| `--pantheon-color-fg-disabled`    | `#C9CDD4`        | `#3F4452`        | 禁用文本                             |
-| `--pantheon-color-fg-inverse`     | `#FFFFFF`        | `#0F1115`        | 反色文本（深色背景上的白字）         |
-| `--pantheon-color-border-default` | `#E5E6EB`        | `#2A2E37`        | 默认边框                             |
-| `--pantheon-color-border-strong`  | `#C9CDD4`        | `#3F4452`        | 强调边框                             |
-| `--pantheon-color-border-focus`   | per-theme accent | per-theme accent | 焦点环                               |
-| `--pantheon-color-divider`        | `#EAECEF`        | `#262A33`        | 分隔线                               |
-
-对比度自检：所有 `fg-default / bg-default` 对都 ≥ 4.5:1。
+- `--danger-soft`
+- `--danger-border`
+- `--status-success-soft`
+- `--status-warning-soft`
 
 ---
 
-## 3. 品牌主题色
+## 2. 中性色 Token
 
-每个主题只改变 **accent (品牌色)** 与少量氛围背景。中性色完全共享。
-
-### 3.1 indigo（默认企业后台）
-
-| Token                               | Light     | Dark      |
-| ----------------------------------- | --------- | --------- |
-| `--pantheon-color-accent`           | `#4F46E5` | `#818CF8` |
-| `--pantheon-color-accent-hover`     | `#4338CA` | `#A5B4FC` |
-| `--pantheon-color-accent-active`    | `#3730A3` | `#C7D2FE` |
-| `--pantheon-color-accent-bg-subtle` | `#EEF2FF` | `#1E1B4B` |
-| `--pantheon-color-accent-fg-on`     | `#FFFFFF` | `#0F1115` |
-| `--pantheon-color-border-focus`     | `#4F46E5` | `#818CF8` |
-
-### 3.2 emerald（协作/运营氛围）
-
-| Token                               | Light     | Dark      |
-| ----------------------------------- | --------- | --------- |
-| `--pantheon-color-accent`           | `#059669` | `#34D399` |
-| `--pantheon-color-accent-hover`     | `#047857` | `#6EE7B7` |
-| `--pantheon-color-accent-active`    | `#065F46` | `#A7F3D0` |
-| `--pantheon-color-accent-bg-subtle` | `#ECFDF5` | `#022C22` |
-| `--pantheon-color-accent-fg-on`     | `#FFFFFF` | `#0F1115` |
-| `--pantheon-color-border-focus`     | `#059669` | `#34D399` |
-
-### 3.3 violet（平台化/智能氛围）
-
-| Token                               | Light     | Dark      |
-| ----------------------------------- | --------- | --------- |
-| `--pantheon-color-accent`           | `#7C3AED` | `#A78BFA` |
-| `--pantheon-color-accent-hover`     | `#6D28D9` | `#C4B5FD` |
-| `--pantheon-color-accent-active`    | `#5B21B6` | `#DDD6FE` |
-| `--pantheon-color-accent-bg-subtle` | `#F5F3FF` | `#2E1065` |
-| `--pantheon-color-accent-fg-on`     | `#FFFFFF` | `#0F1115` |
-| `--pantheon-color-border-focus`     | `#7C3AED` | `#A78BFA` |
-
-### 3.4 slate（低饱和稳态办公）
-
-| Token                               | Light     | Dark      |
-| ----------------------------------- | --------- | --------- |
-| `--pantheon-color-accent`           | `#475569` | `#94A3B8` |
-| `--pantheon-color-accent-hover`     | `#334155` | `#CBD5E1` |
-| `--pantheon-color-accent-active`    | `#1E293B` | `#E2E8F0` |
-| `--pantheon-color-accent-bg-subtle` | `#F1F5F9` | `#0F172A` |
-| `--pantheon-color-accent-fg-on`     | `#FFFFFF` | `#0F1115` |
-| `--pantheon-color-border-focus`     | `#475569` | `#94A3B8` |
+| Token                   | 值                                                                    | 用途          |
+| ----------------------- | --------------------------------------------------------------------- | ------------- |
+| `--app-bg`              | `#f7f8fa`                                                             | 页面背景      |
+| `--app-grid-line`       | `rgba(29, 33, 41, 0.035)`                                             | 背景网格      |
+| `--app-shell-overlay`   | `#ffffff`                                                             | 壳层浮层底色  |
+| `--panel-bg`            | `#ffffff`                                                             | 默认表面      |
+| `--panel-bg-solid`      | `#ffffff`                                                             | 卡片/控件实底 |
+| `--panel-muted`         | `#f7f8fa`                                                             | 弱化区域      |
+| `--panel-border`        | `rgba(229, 230, 235, 0.82)`                                           | 默认边框      |
+| `--panel-border-strong` | `rgba(209, 213, 219, 0.78)`                                           | 强边框        |
+| `--panel-shadow`        | `0 12px 28px rgba(15, 23, 42, 0.055)`                                 | 主阴影        |
+| `--panel-shadow-soft`   | `0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 18px rgba(15, 23, 42, 0.03)` | 轻阴影        |
+| `--panel-shadow-strong` | `0 18px 42px rgba(15, 23, 42, 0.14)`                                  | 强阴影        |
+| `--text-primary`        | `#1f2329`                                                             | 主文本        |
+| `--text-secondary`      | `#4e5969`                                                             | 次文本        |
+| `--text-tertiary`       | `#86909c`                                                             | 辅助文本      |
 
 ---
 
-## 4. 状态色 Token（所有主题共享）
+## 3. 品牌主题
 
-| Token                         | Light     | Dark      | 用途     |
-| ----------------------------- | --------- | --------- | -------- |
-| `--pantheon-color-success`    | `#00B42A` | `#23C343` | 成功     |
-| `--pantheon-color-success-bg` | `#E8FFEA` | `#0A3D1E` | 成功背景 |
-| `--pantheon-color-warning`    | `#FF7D00` | `#FF9A2E` | 警告     |
-| `--pantheon-color-warning-bg` | `#FFF7E8` | `#3D2A0A` | 警告背景 |
-| `--pantheon-color-error`      | `#F53F3F` | `#F76965` | 错误     |
-| `--pantheon-color-error-bg`   | `#FFECE8` | `#3D1212` | 错误背景 |
-| `--pantheon-color-info`       | `#3491FA` | `#5AA9FF` | 信息     |
-| `--pantheon-color-info-bg`    | `#E8F4FF` | `#0A2540` | 信息背景 |
+四个内置主题都来自 `:root[data-pantheon-theme=...]`。
+
+### 3.1 indigo
+
+- `--brand-primary`: `#165dff`
+- `--brand-primary-soft`: `rgba(22, 93, 255, 0.12)`
+- `--brand-primary-muted`: `rgba(22, 93, 255, 0.08)`
+- `--brand-gradient`: `#165dff`
+- `--shell-sider-bg`: `#162033`
+- `--shell-sider-elevated`: `#1d2940`
+- `--shell-brand-shadow`: `0 12px 28px rgba(22, 93, 255, 0.24)`
+- `--login-glow`: `rgba(22, 93, 255, 0.12)`
+
+### 3.2 emerald
+
+- `--brand-primary`: `#00a870`
+- `--brand-primary-soft`: `rgba(0, 168, 112, 0.13)`
+- `--brand-primary-muted`: `rgba(0, 168, 112, 0.08)`
+- `--brand-gradient`: `#00a870`
+- `--shell-sider-bg`: `#143126`
+- `--shell-sider-elevated`: `#1a3d32`
+- `--shell-brand-shadow`: `0 12px 28px rgba(0, 168, 112, 0.26)`
+- `--login-glow`: `rgba(0, 168, 112, 0.14)`
+
+### 3.3 violet
+
+- `--brand-primary`: `#722ed1`
+- `--brand-primary-soft`: `rgba(114, 46, 209, 0.13)`
+- `--brand-primary-muted`: `rgba(114, 46, 209, 0.08)`
+- `--brand-gradient`: `#722ed1`
+- `--shell-sider-bg`: `#22193b`
+- `--shell-sider-elevated`: `#2c2350`
+- `--shell-brand-shadow`: `0 12px 28px rgba(114, 46, 209, 0.26)`
+- `--login-glow`: `rgba(114, 46, 209, 0.14)`
+
+### 3.4 slate
+
+- `--brand-primary`: `#334155`
+- `--brand-primary-soft`: `rgba(51, 65, 85, 0.12)`
+- `--brand-primary-muted`: `rgba(51, 65, 85, 0.08)`
+- `--brand-gradient`: `#334155`
+- `--shell-sider-bg`: `#182235`
+- `--shell-sider-elevated`: `#243148`
+- `--shell-brand-shadow`: `0 12px 28px rgba(51, 65, 85, 0.24)`
+- `--login-glow`: `rgba(51, 65, 85, 0.12)`
+
+> 每个主题还会定义 `--primary-1..10` 的 RGB ramp，用于 `color-mix()` 和透明度叠加。那组数值保持在 `frontend/src/index.css`，这里不重复抄录。
+
+---
+
+## 4. 状态色 Token
+
+| Token                | 值                         | 用途     |
+| -------------------- | -------------------------- | -------- |
+| `--color-success`    | `#00b42a`                  | 成功     |
+| `--color-success-bg` | `rgba(0, 180, 42, 0.12)`   | 成功背景 |
+| `--color-warning`    | `#ff7d00`                  | 警告     |
+| `--color-warning-bg` | `rgba(255, 125, 0, 0.12)`  | 警告背景 |
+| `--color-error`      | `#f53f3f`                  | 错误     |
+| `--color-error-bg`   | `rgba(245, 63, 63, 0.12)`  | 错误背景 |
+| `--color-info`       | `#3491fa`                  | 信息     |
+| `--color-info-bg`    | `rgba(52, 145, 250, 0.12)` | 信息背景 |
+
+别名映射：
+
+- `--danger-soft` -> `--color-error-bg`
+- `--danger-border` -> `color-mix(in srgb, var(--color-error) 32%, transparent)`
+- `--status-success-soft` -> `--color-success-bg`
+- `--status-warning-soft` -> `--color-warning-bg`
 
 ---
 
 ## 5. 间距 Scale
 
-| Token                  | 值     | 用途                   |
-| ---------------------- | ------ | ---------------------- |
-| `--pantheon-space-2xs` | `2px`  | icon 与文字微间隙      |
-| `--pantheon-space-xs`  | `4px`  | 标签与值之间           |
-| `--pantheon-space-sm`  | `8px`  | 按钮内边距、表单 cell  |
-| `--pantheon-space-md`  | `12px` | 卡片内距、表单组间     |
-| `--pantheon-space-lg`  | `16px` | 卡片边距、对话框内距   |
-| `--pantheon-space-xl`  | `24px` | 区块间距、页面 padding |
-| `--pantheon-space-2xl` | `32px` | 大区块间距             |
-| `--pantheon-space-3xl` | `48px` | 页面 hero 区段间距     |
+当前没有通用 `--space-*` 阶梯，壳层直接用 `--shell-*` 变量控制节奏：
 
-约定：禁止出现非 token 的 px 值；唯一例外是 `1px` 边框和 `0`。
+| Token                                    | 值              | 用途                 |
+| ---------------------------------------- | --------------- | -------------------- |
+| `--shell-page-gap`                       | `16px`          | 页面主间距           |
+| `--shell-page-header-gap`                | `12px`          | 页面头部间距         |
+| `--shell-panel-body-padding`             | `18px`          | 面板内边距           |
+| `--shell-panel-head-min-height`          | `56px`          | 面板头最小高度       |
+| `--shell-page-split-gap`                 | `16px`          | 分栏间距             |
+| `--shell-page-main-gap`                  | `16px`          | 主栏间距             |
+| `--shell-page-side-gap`                  | `12px`          | 侧栏间距             |
+| `--shell-table-cell-padding-y`           | `10px`          | 表格单元纵向内边距   |
+| `--shell-table-cell-padding-x`           | `14px`          | 表格单元横向内边距   |
+| `--shell-table-card-padding`             | `12px 14px 6px` | 表格卡片 body 内边距 |
+| `--shell-table-pagination-padding`       | `12px 14px 2px` | 表格分页区内边距     |
+| `--shell-table-action-min-height`        | `32px`          | 表格动作按钮最小高度 |
+| `--shell-control-min-height`             | `32px`          | 通用控件最小高度     |
+| `--shell-filter-body-padding`            | `14px 16px 6px` | 筛选面板内边距       |
+| `--shell-filter-control-min-height`      | `34px`          | 筛选控件最小高度     |
+| `--shell-filter-form-item-margin-bottom` | `12px`          | 筛选表单项间距       |
+| `--shell-filter-label-padding-bottom`    | `4px`           | 筛选标签下边距       |
+| `--shell-list-actions-gap`               | `8px 12px`      | 列表动作间距         |
+| `--shell-action-bar-gap`                 | `8px 12px`      | 批量动作条间距       |
+| `--shell-action-bar-min-height`          | `32px`          | 批量动作条最小高度   |
+| `--shell-table-head-gap`                 | `8px 12px`      | 表头动作区间距       |
+| `--shell-governance-select-width`        | `200px`         | 治理面板选择器宽度   |
 
 ---
 
-## 6. 字号 Scale
+## 6. 字号
 
-| Token                        | 字号 / 行高   | 用途                     |
-| ---------------------------- | ------------- | ------------------------ |
-| `--pantheon-type-caption`    | `12px / 18px` | 辅助说明、表格细字       |
-| `--pantheon-type-body-sm`    | `13px / 20px` | 紧凑表格、密度 compact   |
-| `--pantheon-type-body`       | `14px / 22px` | 默认正文                 |
-| `--pantheon-type-body-lg`    | `16px / 24px` | 强调段落                 |
-| `--pantheon-type-heading-sm` | `16px / 24px` | 卡片标题                 |
-| `--pantheon-type-heading`    | `18px / 26px` | 区块标题                 |
-| `--pantheon-type-heading-lg` | `20px / 28px` | 页面 H2                  |
-| `--pantheon-type-display`    | `24px / 32px` | 页面 hero / 仪表盘大数字 |
+当前实现没有共享的字号阶梯 token。`body` 仍使用系统字体栈，页面和组件里的字号由各自 CSS 直接写入。
 
-字重：常规 `400`、强调 `500`、标题 `600`。**不允许** `700` 及以上。
+真相是：
+
+- 没有 `--font-size-*` / `--line-height-*`
+- 没有 `Source Sans 3` 全局加载
+- 代码字体与数据字体的特殊处理只存在于局部组件样式里
+
+如果后续要做字号统一，需要先补实现，再补文档。
 
 ---
 
 ## 7. 圆角
 
-| Token                    | 值       | 用途                             |
-| ------------------------ | -------- | -------------------------------- |
-| `--pantheon-radius-sm`   | `4px`    | 操作按钮、tag、徽标              |
-| `--pantheon-radius-md`   | `6px`    | 输入框、checkbox、单选、普通控件 |
-| `--pantheon-radius-lg`   | `8px`    | 卡片、Modal、Drawer              |
-| `--pantheon-radius-xl`   | `12px`   | hero 容器、提示框                |
-| `--pantheon-radius-pill` | `9999px` | 圆形头像、状态点                 |
+| Token              | 值                 | 用途                 |
+| ------------------ | ------------------ | -------------------- |
+| `--radius-xs`      | `4px`              | 最小圆角             |
+| `--radius-sm`      | `4px`              | 小按钮 / tag         |
+| `--radius-md`      | `6px`              | 输入框 / 普通控件    |
+| `--radius-lg`      | `8px`              | 卡片 / 浮层          |
+| `--radius-overlay` | `8px`              | Overlay / Modal 基线 |
+| `--radius-control` | `var(--radius-md)` | 控件语义别名         |
+| `--radius-action`  | `var(--radius-sm)` | 动作按钮语义别名     |
+| `--radius-pill`    | `999px`            | 胶囊 / 徽标          |
 
-实现层别名必须与代码保持一致：`--radius-action` 用于 Button，并绑定 `--radius-sm`；`--radius-control` 用于 Input / Select / Picker / Textarea，并绑定 `--radius-md`。
-
-**禁止**：胶囊形卡片、超过 `12px` 的非 pill 圆角。
+当前没有 `--radius-xl`，也不鼓励超出这条阶梯的自由圆角。
 
 ---
 
 ## 8. 阴影
 
-| Token                  | Light                         | Dark                         | 用途                  |
-| ---------------------- | ----------------------------- | ---------------------------- | --------------------- |
-| `--pantheon-shadow-xs` | `0 1px 2px rgba(0,0,0,0.04)`  | `0 1px 2px rgba(0,0,0,0.4)`  | 微提升（按钮 active） |
-| `--pantheon-shadow-sm` | `0 2px 6px rgba(0,0,0,0.06)`  | `0 2px 6px rgba(0,0,0,0.5)`  | 卡片 hover            |
-| `--pantheon-shadow-md` | `0 4px 12px rgba(0,0,0,0.08)` | `0 4px 12px rgba(0,0,0,0.6)` | Dropdown、Tooltip     |
-| `--pantheon-shadow-lg` | `0 8px 24px rgba(0,0,0,0.10)` | `0 8px 24px rgba(0,0,0,0.7)` | Modal、Drawer         |
+| Token                   | 值                                                                    | 用途       |
+| ----------------------- | --------------------------------------------------------------------- | ---------- |
+| `--panel-shadow`        | `0 12px 28px rgba(15, 23, 42, 0.055)`                                 | 主卡片阴影 |
+| `--panel-shadow-soft`   | `0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 18px rgba(15, 23, 42, 0.03)` | 轻提升     |
+| `--panel-shadow-strong` | `0 18px 42px rgba(15, 23, 42, 0.14)`                                  | 强浮层     |
 
-**禁止**：大面积渐变阴影、超过 `24px` 模糊半径、彩色阴影。
-
----
-
-## 9. 动效时长与缓动
-
-| Token                                 | 值                             | 用途              |
-| ------------------------------------- | ------------------------------ | ----------------- |
-| `--pantheon-motion-duration-fast`     | `120ms`                        | hover/focus 反馈  |
-| `--pantheon-motion-duration-base`     | `200ms`                        | 默认过渡          |
-| `--pantheon-motion-duration-slow`     | `320ms`                        | Modal/Drawer 进出 |
-| `--pantheon-motion-easing-standard`   | `cubic-bezier(0.4, 0, 0.2, 1)` | 默认              |
-| `--pantheon-motion-easing-emphasized` | `cubic-bezier(0.4, 0, 0.6, 1)` | 强调动效          |
-
-`prefers-reduced-motion: reduce` 时所有动效降到 ≤ 80ms 或直接禁用。
+没有单独的 dark-mode 阴影 token，因为当前运行时不提供 dark mode。
 
 ---
 
-## 10. Z-index 层级
+## 9. 动效
 
-| Token                       | 值     | 用途                        |
-| --------------------------- | ------ | --------------------------- |
-| `--pantheon-z-base`         | `0`    | 默认                        |
-| `--pantheon-z-sticky`       | `100`  | 表格头吸顶、PageHeader 吸顶 |
-| `--pantheon-z-dropdown`     | `1000` | 下拉、Tooltip               |
-| `--pantheon-z-overlay`      | `2000` | Drawer 遮罩                 |
-| `--pantheon-z-modal`        | `2100` | Modal                       |
-| `--pantheon-z-notification` | `2200` | Toast、全局通知             |
+当前实现没有 `--motion-*` token。组件里直接写了 `0.18s`、`0.2s` 这类过渡时间，并通过 `prefers-reduced-motion` 做降级。
+
+这意味着：
+
+- 动效是实现细节，不是文档承诺
+- 如果未来要抽象 motion token，需要先改代码，再改文档
+
+---
+
+## 10. Z-index
+
+当前没有共享 `--z-*` 阶梯。层级主要依赖 Arco 默认层级和局部布局实现。
+
+这意味着：
+
+- 下拉、Tooltip、Modal、Drawer 的层级裁决仍在组件库和局部代码里
+- 如果后续需要统一浮层层级，先补实现，再补 token 文档
 
 ---
 
 ## 11. 主题切换实现约定
 
-- 主题 token 通过 `:root[data-theme="indigo"]` 等属性选择器挂载
-- 切换主题只改 CSS 变量值，**不重建** DOM
-- 同时支持 `data-color-mode="light|dark"` 二级属性
-- 用户偏好持久化见 `FRONTEND.md` §平台壳层偏好持久化
+- 主题通过 `:root[data-pantheon-theme="indigo|emerald|violet|slate"]` 挂载
+- 切换主题只改 CSS 变量值，不重建 DOM
+- 当前只支持 light mode
+- 运行时没有 `data-color-mode`
+- `DARK_MODE_DESIGN.md` 目前是 Deferred，不是已落地规范
 
 ---
 
 ## 12. 验收
 
-- 4 个主题 × 2 个模式 = 8 个组合下，所有页面对比度满足 AA
-- 所有业务代码 grep 不出裸 hex / px (除 `1px`)
-- 切换主题不重新加载页面
-- `prefers-reduced-motion` 生效
+- 4 个主题都能在同一套壳层里正常渲染
+- Dashboard、列表页、row actions、状态提示都消费语义 token
+- 业务代码不再新增 `--pantheon-*` 运行时引用
+- `dashboard.css` 已纳入 shell visual contract 检查
+- 暗色模式不再被当成已交付能力描述

@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"pantheon-platform/backend/pkg/capability"
 	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/backend/pkg/rbacbind"
 	"strings"
 
 	"gorm.io/gorm"
@@ -499,14 +500,7 @@ func bindMenuToAdmin(tx *gorm.DB, menuID uint64) error {
 		slog.Warn("bindMenuToAdmin: admin role not found, skipping menu binding", "menuID", menuID)
 		return nil
 	}
-	var count int64
-	if err := tx.Table("system_role_menu").Where("role_id = ? AND menu_id = ?", roleID, menuID).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-	return tx.Exec("INSERT INTO system_role_menu (role_id, menu_id) VALUES (?, ?)", roleID, menuID).Error
+	return rbacbind.EnsureRoleMenu(tx, roleID, menuID)
 }
 
 func (s *MenuService) validateMenuCreate(req *MenuCreateReq) error {

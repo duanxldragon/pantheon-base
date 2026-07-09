@@ -1,10 +1,12 @@
 package iam
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
+	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
 	"pantheon-platform/backend/pkg/testmysql"
 
@@ -641,6 +643,96 @@ func TestPermissionWorkbenchRequiresSecurityEventListPolicy(t *testing.T) {
 	}
 }
 
+func TestProtectedManagementPolicyGuard(t *testing.T) {
+	cases := []struct {
+		name     string
+		roleKeys []string
+		path     string
+		want     bool
+	}{
+		{name: "admin can write protected", roleKeys: []string{"admin"}, path: "/api/v1/system/permission/list", want: true},
+		{name: "non-admin blocked on permission", roleKeys: []string{"editor"}, path: "/api/v1/system/permission/list", want: false},
+		{name: "non-admin blocked on role", roleKeys: []string{"editor"}, path: "/api/v1/system/role/list", want: false},
+		{name: "non-admin can write business policy", roleKeys: []string{"editor"}, path: "/api/v1/system/user/list", want: true},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := canWritePolicy(tt.roleKeys, tt.path); got != tt.want {
+				t.Fatalf("canWritePolicy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+
+	if !isProtectedManagementPolicy("/api/v1/system/permission/list") {
+		t.Fatal("expected permission list to be protected")
+	}
+	if !isProtectedManagementPolicy("/api/v1/system/role/list") {
+		t.Fatal("expected role list to be protected")
+	}
+	if isProtectedManagementPolicy("/api/v1/system/user/list") {
+		t.Fatal("expected user list to remain writable")
+	}
+}
+
+func TestPermissionService_PolicyWriteProtection(t *testing.T) {
+	db := setupPermissionTestDB(t)
+	service := NewPermissionService(db)
+
+	roles := []permissionTestRole{
+		{ID: 1, RoleName: "管理员", RoleKey: "admin", Status: 1, Sort: 1},
+		{ID: 2, RoleName: "编辑", RoleKey: "editor", Status: 1, Sort: 2},
+	}
+	if err := db.Create(&roles).Error; err != nil {
+		t.Fatalf("seed roles: %v", err)
+	}
+
+	protectedReq := &PermissionPolicyCreateReq{
+		RoleKey: "editor",
+		Path:    "/api/v1/system/permission/list",
+		Method:  "GET",
+	}
+	adminProtected, err := service.CreatePolicy([]string{"admin"}, protectedReq)
+	if err != nil {
+		t.Fatalf("admin create protected policy: %v", err)
+	}
+	if adminProtected.Path != protectedReq.Path {
+		t.Fatalf("unexpected protected policy path: %+v", adminProtected)
+	}
+
+	if _, err := service.CreatePolicy([]string{"editor"}, protectedReq); err == nil || !errors.Is(err, common.ErrForbidden) || common.ErrMessage(err) != "permission.escalation.forbidden" {
+		t.Fatalf("expected forbidden create for non-admin, got %v", err)
+	}
+
+	normalResp, err := service.CreatePolicy([]string{"editor"}, &PermissionPolicyCreateReq{
+		RoleKey: "editor",
+		Path:    "/api/v1/system/user/list",
+		Method:  "GET",
+	})
+	if err != nil {
+		t.Fatalf("editor create normal policy: %v", err)
+	}
+
+	if _, err := service.UpdatePolicy([]string{"editor"}, normalResp.ID, &PermissionPolicyUpdateReq{
+		RoleKey: "editor",
+		Path:    "/api/v1/system/role/list",
+		Method:  "GET",
+	}); err == nil || !errors.Is(err, common.ErrForbidden) || common.ErrMessage(err) != "permission.escalation.forbidden" {
+		t.Fatalf("expected forbidden update for non-admin, got %v", err)
+	}
+
+	if err := service.DeletePolicy([]string{"editor"}, adminProtected.ID); err == nil || !errors.Is(err, common.ErrForbidden) || common.ErrMessage(err) != "permission.escalation.forbidden" {
+		t.Fatalf("expected forbidden delete for non-admin, got %v", err)
+	}
+
+	importResult, err := service.ImportPolicies([]string{"editor"}, [][]string{
+		{"roleKey", "path", "method"},
+		{"editor", "/api/v1/system/permission/list", "GET"},
+	})
+	if err == nil || !errors.Is(err, common.ErrForbidden) || common.ErrMessage(err) != "permission.escalation.forbidden" {
+		t.Fatalf("expected forbidden import for non-admin, got result=%+v err=%v", importResult, err)
+	}
+}
+
 func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 	db := setupPermissionTestDB(t)
 	service := NewPermissionService(db)
@@ -786,7 +878,7 @@ func TestPermissionService_ImportTemplateAndExport(t *testing.T) {
 	if len(template.Rows) == 0 || !strings.HasPrefix(template.Rows[0][0], "#") {
 		t.Fatalf("expected template to include ignored instruction rows, got %+v", template.Rows)
 	}
-	templateResult, err := service.ImportPolicies(append([][]string{template.Headers}, template.Rows...))
+	templateResult, err := service.ImportPolicies(nil, append([][]string{template.Headers}, template.Rows...))
 	if err != nil {
 		t.Fatalf("import template comments: %v", err)
 	}
@@ -794,7 +886,7 @@ func TestPermissionService_ImportTemplateAndExport(t *testing.T) {
 		t.Fatalf("expected template comments to be ignored, got %+v", templateResult)
 	}
 
-	result, err := service.ImportPolicies([][]string{
+	result, err := service.ImportPolicies(nil, [][]string{
 		template.Headers,
 		{"admin", "/api/v1/system/user/list", "GET"},
 	})
