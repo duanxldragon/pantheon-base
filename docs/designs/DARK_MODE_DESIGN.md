@@ -2,7 +2,7 @@
 title: 暗色模式设计 (Dark Mode Design)
 doc_type: Design
 layer: platform
-status: Deferred
+status: Draft
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
 updated_at: 2026-07-09
