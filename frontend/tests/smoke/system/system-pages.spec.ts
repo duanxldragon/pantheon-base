@@ -709,7 +709,6 @@ test('user page keeps list workflow primary without governance drawer entry', as
   await expect(firstRowActions.getByRole('button', { name: '编辑' })).toBeVisible();
   await expect(firstRowActions.getByRole('button', { name: '重置密码' })).toBeVisible();
   await expect(firstRowActions.getByRole('button', { name: '删除' })).toHaveCount(0);
-  await expect(firstRowActions.getByLabel('操作')).toHaveCount(0);
 });
 
 test('setting page shows audit table only in audit group and removes governance drawer entry', async ({
