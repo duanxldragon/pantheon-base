@@ -174,7 +174,7 @@ func LogFromContext(ctx context.Context) *zap.Logger {
 	span := trace.SpanFromContext(ctx)
 	sc := span.SpanContext()
 	if sc.HasTraceID() {
-		return Logger.With(zap.String("trace_id", sc.TraceID().String()))
+		return Logger.With(zap.String("trace_id", SanitizeLogValue(sc.TraceID().String())))
 	}
 	return Logger
 }

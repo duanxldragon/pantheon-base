@@ -26,7 +26,7 @@ func StructuredLoggingMiddleware() gin.HandlerFunc {
 		// Inject trace ID from OpenTelemetry context for log correlation
 		logger := logging.LogFromContext(c.Request.Context())
 		fields := []zap.Field{
-			zap.String("route", route),
+			zap.String("route", logging.SanitizeLogValue(route)),
 			zap.Int("status", c.Writer.Status()),
 			zap.Duration("latency", latency),
 		}

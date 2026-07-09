@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/backend/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -53,7 +54,12 @@ func RateLimiter(config RateLimiterConfig) gin.HandlerFunc {
 			return
 		}
 		if !allowed {
-			slog.Warn("rate limit exceeded", "key", key, "path", c.Request.URL.Path, "limit", config.MaxRequests)
+			slog.Warn(
+				"rate limit exceeded",
+				"key", logging.SanitizeLogValue(key),
+				"path", logging.SanitizeLogValue(c.Request.URL.Path),
+				"limit", config.MaxRequests,
+			)
 			c.JSON(http.StatusTooManyRequests, gin.H{"code": 429, "message": "too many requests"})
 			c.Abort()
 			return
