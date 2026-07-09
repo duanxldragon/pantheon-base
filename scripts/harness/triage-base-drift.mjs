@@ -156,7 +156,7 @@ function shouldSkipDirectory(name) {
 }
 
 function normalizeModuleName(content, options) {
-  const baseBackend = `${options.base.replace(/-/g, '-')}/backend`;
+  const baseBackend = `${options.base}/backend`;
   const businessBackend = `${options.business}/backend`;
   return content
     .replaceAll('pantheon-platform/backend', 'MODNAME/backend')
