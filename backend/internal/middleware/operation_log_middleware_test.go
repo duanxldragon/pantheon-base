@@ -46,7 +46,7 @@ func TestOperationLogMiddleware_UsesAuditOverrides(t *testing.T) {
 	db := setupOperationLogTestDB(t)
 
 	engine := gin.New()
-	engine.Use(OperationLogMiddleware(db))
+	engine.Use(RequestContextMiddleware(), OperationLogMiddleware(db))
 	engine.POST("/import", func(c *gin.Context) {
 		common.SetAuditMetadata(c, "导入测试", common.BusinessImport)
 		common.SetAuditParam(c, `{"fileName":"demo.csv","fileSize":128}`)
@@ -104,7 +104,7 @@ func TestOperationLogMiddleware_SanitizesResponseResult(t *testing.T) {
 	db := setupOperationLogTestDB(t)
 
 	engine := gin.New()
-	engine.Use(OperationLogMiddleware(db))
+	engine.Use(RequestContextMiddleware(), OperationLogMiddleware(db))
 	engine.POST("/login", func(c *gin.Context) {
 		common.Success(c, gin.H{
 			"accessToken":  "access-secret",
