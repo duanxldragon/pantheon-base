@@ -22,8 +22,5 @@ func GetRequestID(c *gin.Context) string {
 			return strings.TrimSpace(requestID)
 		}
 	}
-	if c.Request == nil {
-		return ""
-	}
-	return strings.TrimSpace(c.GetHeader(HeaderRequestID))
+	return ""
 }
