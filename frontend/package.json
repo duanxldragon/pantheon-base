@@ -57,7 +57,9 @@
     "smoke:cleanup": "node scripts/cleanup-smoke-fixtures.mjs",
     "smoke:cleanup:iam": "node scripts/cleanup-smoke-fixtures.mjs --scope iam",
     "smoke:cleanup:org": "node scripts/cleanup-smoke-fixtures.mjs --scope org",
-    "smoke:cleanup:config": "node scripts/cleanup-smoke-fixtures.mjs --scope config"
+    "smoke:cleanup:config": "node scripts/cleanup-smoke-fixtures.mjs --scope config",
+    "check:contrast": "node ./scripts/check-contrast.mjs",
+    "check:important-budget": "node ./scripts/check-important-budget.mjs"
   },
   "dependencies": {
     "@arco-design/web-react": "2.66.15",

@@ -21,6 +21,7 @@ import '@arco-design/web-react/es/Progress/style/css.js';
 import '@arco-design/web-react/es/Result/style/css.js';
 import '@arco-design/web-react/es/Select/style/css.js';
 import '@arco-design/web-react/es/Space/style/css.js';
+import '@arco-design/web-react/es/Skeleton/style/css.js';
 import '@arco-design/web-react/es/Spin/style/css.js';
 import '@arco-design/web-react/es/Statistic/style/css.js';
 import '@arco-design/web-react/es/Switch/style/css.js';

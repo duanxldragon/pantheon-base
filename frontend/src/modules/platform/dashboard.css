@@ -119,19 +119,19 @@
 }
 
 .dashboard-focus-item--danger {
-  background: color-mix(in srgb, var(--color-error-bg) 48%, #ffffff);
+  background: color-mix(in srgb, var(--color-error-bg) 48%, var(--surface-lift));
   border-color: color-mix(in srgb, var(--color-error) 16%, var(--panel-border));
   border-left-color: var(--color-error);
 }
 
 .dashboard-focus-item--warning {
-  background: color-mix(in srgb, var(--color-warning-bg) 48%, #ffffff);
+  background: color-mix(in srgb, var(--color-warning-bg) 48%, var(--surface-lift));
   border-color: color-mix(in srgb, var(--color-warning) 16%, var(--panel-border));
   border-left-color: var(--color-warning);
 }
 
 .dashboard-focus-item--success {
-  background: color-mix(in srgb, var(--color-success-bg) 48%, #ffffff);
+  background: color-mix(in srgb, var(--color-success-bg) 48%, var(--surface-lift));
   border-color: color-mix(in srgb, var(--color-success) 16%, var(--panel-border));
   border-left-color: var(--color-success);
 }
@@ -214,7 +214,7 @@
   padding: 13px 14px 12px;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--panel-muted) 34%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 34%, var(--surface-lift));
   cursor: pointer;
   transition:
     border-color var(--motion-duration-base) ease,
@@ -231,7 +231,7 @@
 .dashboard-quick-action:hover,
 .dashboard-domain-card:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift));
   box-shadow: var(--panel-shadow-soft);
   transform: translateY(-1px);
 }
@@ -240,7 +240,7 @@
   outline: none;
   border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border));
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--brand-primary) 12%, #ffffff),
+    0 0 0 2px color-mix(in srgb, var(--brand-primary) 12%, var(--surface-lift)),
     var(--panel-shadow-soft);
 }
 
@@ -254,7 +254,7 @@
   flex: 0 0 36px;
   font-size: 16px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
   border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
 }
 
@@ -308,7 +308,7 @@
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--color-warning) 16%, var(--panel-border));
   border-left: 3px solid var(--color-warning);
-  background: color-mix(in srgb, var(--color-warning-bg) 48%, #ffffff);
+  background: color-mix(in srgb, var(--color-warning-bg) 48%, var(--surface-lift));
   transition:
     border-color var(--motion-duration-base) ease,
     box-shadow var(--motion-duration-base) ease;
@@ -338,7 +338,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--color-warning) 12%, #ffffff);
+  background: color-mix(in srgb, var(--color-warning) 12%, var(--surface-lift));
   flex-shrink: 0;
   align-self: flex-start;
 }
@@ -412,7 +412,7 @@
   padding: 3px 4px;
   border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
   color: var(--brand-primary);
   font-size: 10px;
   font-weight: 600;

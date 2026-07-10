@@ -1,6 +1,6 @@
 # Review 修复任务清单（Codex 执行）
 
-来源：ENTERPRISE_REVIEW_REPORT.md / CASBIN_REVIEW.md / IMPROVEMENT_ROADMAP.md
+来源：docs/assessments/ENTERPRISE_REVIEW_REPORT.md / docs/assessments/CASBIN_REVIEW.md / docs/assessments/IMPROVEMENT_ROADMAP.md
 决策：P1-1 采用「窄口径」；范围「全部含前端大重构 + 多实例」。
 
 执行方式：
