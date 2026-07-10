@@ -6,6 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>pantheon platform</title>
     <script>
+      // Pre-paint color mode: set the root attribute before first paint so the
+      // page background never flashes light-on-dark. Body's arco-theme is set
+      // by colorMode.ts before React renders.
+      (() => {
+        try {
+          let mode = localStorage.getItem('pantheon_color_mode');
+          if (mode !== 'light' && mode !== 'dark') {
+            mode =
+              window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          }
+          document.documentElement.dataset.colorMode = mode;
+        } catch (error) {
+          /* ignore storage access errors */
+        }
+      })();
+    </script>
+    <script>
       (() => {
         const resizeObserverNoise = 'ResizeObserver loop completed with undelivered notifications.';
         const isKnownNoise = (value) =>

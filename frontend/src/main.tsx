@@ -7,7 +7,10 @@ import './index.css';
 import App from './App';
 import { initI18n } from './i18n';
 import { initializePantheonTheme } from './core/theme/theme';
+import { initializePantheonColorMode } from './core/theme/colorMode';
 import { initializePublicSettings } from './core/settings/publicSettings';
+
+initializePantheonColorMode();
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 

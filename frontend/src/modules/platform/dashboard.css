@@ -49,8 +49,8 @@
   flex-direction: column;
   gap: 10px;
   transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+    box-shadow var(--motion-duration-base) ease,
+    border-color var(--motion-duration-base) ease;
 }
 
 .dashboard-stat-card:hover {
@@ -217,10 +217,10 @@
   background: color-mix(in srgb, var(--panel-muted) 34%, #ffffff);
   cursor: pointer;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--motion-duration-base) ease,
+    box-shadow var(--motion-duration-base) ease,
+    background-color var(--motion-duration-base) ease,
+    transform var(--motion-duration-base) ease;
   width: 100%;
   text-align: left;
   color: inherit;
@@ -310,8 +310,8 @@
   border-left: 3px solid var(--color-warning);
   background: color-mix(in srgb, var(--color-warning-bg) 48%, #ffffff);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color var(--motion-duration-base) ease,
+    box-shadow var(--motion-duration-base) ease;
   overflow: hidden;
   cursor: pointer;
 }

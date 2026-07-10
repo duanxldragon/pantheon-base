@@ -34,6 +34,11 @@ const koKRFallback = {
   'app.preference.navigation': '내비게이션',
   'app.preference.navigationMode': '현재 내비게이션 레이아웃',
   'app.preference.language': '언어',
+  'app.preference.appearance': '외관 모드',
+  'app.appearance.light': '라이트',
+  'app.appearance.light.description': '밝은 환경에 적합한 밝은 표면.',
+  'app.appearance.dark': '다크',
+  'app.appearance.dark.description': '어두운 환경에서 눈부심을 줄이는 어두운 표면.',
   'app.preference.theme': '테마',
   'app.density.comfortable': '여유',
   'app.density.comfortable.description':

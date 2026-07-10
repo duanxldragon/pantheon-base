@@ -94,6 +94,36 @@
   --shell-action-bar-min-height: 32px;
   --shell-table-head-gap: 8px 12px;
   --shell-governance-select-width: 200px;
+  /* P2-2 通用阶梯 token —— 供浮层与业务页优先消费；壳层专用变量继续保留 */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --font-size-caption: 12px;
+  --font-size-body-sm: 13px;
+  --font-size-body: 14px;
+  --font-size-body-lg: 16px;
+  --font-size-heading-sm: 18px;
+  --font-size-heading: 20px;
+  --font-size-display: 24px;
+  --line-height-tight: 1.3;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.7;
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 200ms;
+  --motion-duration-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-dropdown: 1000;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-notification: 1400;
 }
 
 body {
@@ -167,6 +197,68 @@ body {
   --primary-8: 15, 23, 42;
   --primary-9: 8, 15, 29;
   --primary-10: 2, 6, 23;
+}
+
+/* ===========================================================================
+   P3-1 暗色模式 —— 语义角色重定义（非机械反色）
+   仅覆盖中性 surface/text/shadow/软背景等 token；品牌色按主题在下方提亮。
+   Arco 组件通过 body[arco-theme='dark'] 联动，二者由 colorMode.ts 同步设置。
+   =========================================================================== */
+:root[data-color-mode='dark'] {
+  color: #e5e8ee;
+  background: #0d1118;
+  --app-bg: #0f141c;
+  --app-shell-overlay: #171e28;
+  --panel-bg: #171e28;
+  --panel-bg-solid: #171e28;
+  --panel-muted: #1b2530;
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --panel-border-strong: rgba(255, 255, 255, 0.18);
+  --panel-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  --panel-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.32);
+  --panel-shadow-strong: 0 18px 42px rgba(0, 0, 0, 0.58);
+  --text-primary: #e5e8ee;
+  --text-secondary: #a9b2c0;
+  --text-tertiary: #727d8f;
+  /* 软背景在暗色下略提高透明度，保证语义色可辨 */
+  --color-success-bg: rgba(0, 180, 42, 0.2);
+  --color-warning-bg: rgba(255, 125, 0, 0.2);
+  --color-error-bg: rgba(245, 63, 63, 0.2);
+  --color-info-bg: rgba(52, 145, 250, 0.2);
+  /* 侧栏在暗色下与内容区统一为深表面，弱化边界差 */
+  --shell-sider-bg: #12161f;
+  --shell-sider-elevated: #1a212c;
+  --shell-sider-border: rgba(255, 255, 255, 0.08);
+}
+
+/* 品牌色在暗色下提亮、略降饱和、保持色相 */
+:root[data-color-mode='dark'][data-pantheon-theme='indigo'],
+:root[data-color-mode='dark']:not([data-pantheon-theme]) {
+  --brand-primary: #4c7cff;
+  --brand-primary-soft: rgba(76, 124, 255, 0.22);
+  --brand-primary-muted: rgba(76, 124, 255, 0.14);
+  --brand-gradient: #4c7cff;
+}
+
+:root[data-color-mode='dark'][data-pantheon-theme='emerald'] {
+  --brand-primary: #1fc78f;
+  --brand-primary-soft: rgba(31, 199, 143, 0.22);
+  --brand-primary-muted: rgba(31, 199, 143, 0.14);
+  --brand-gradient: #1fc78f;
+}
+
+:root[data-color-mode='dark'][data-pantheon-theme='violet'] {
+  --brand-primary: #9a6cf0;
+  --brand-primary-soft: rgba(154, 108, 240, 0.22);
+  --brand-primary-muted: rgba(154, 108, 240, 0.14);
+  --brand-gradient: #9a6cf0;
+}
+
+:root[data-color-mode='dark'][data-pantheon-theme='slate'] {
+  --brand-primary: #7c8ba3;
+  --brand-primary-soft: rgba(124, 139, 163, 0.24);
+  --brand-primary-muted: rgba(124, 139, 163, 0.16);
+  --brand-gradient: #7c8ba3;
 }
 
 :root[data-pantheon-density='compact'] {
@@ -411,8 +503,8 @@ a {
   background: var(--panel-bg-solid);
   text-align: left;
   transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+    border-color var(--motion-duration-base) ease,
+    background-color var(--motion-duration-base) ease;
   cursor: pointer;
 }
 
@@ -516,9 +608,9 @@ a {
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    color 0.2s ease;
+    border-color var(--motion-duration-base) ease,
+    background-color var(--motion-duration-base) ease,
+    color var(--motion-duration-base) ease;
 }
 
 .setting-overview-page__anchor-item:hover,
@@ -532,7 +624,7 @@ a {
 }
 
 .setting-overview-page__anchor-item--active {
-  z-index: 1;
+  z-index: var(--z-base);
   border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--panel-border));
   background: var(--panel-bg-solid);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--brand-primary) 10%, transparent);
@@ -1882,9 +1974,9 @@ input.arco-input,
   background: #fff;
   box-shadow: none;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    border-color var(--motion-duration-base) ease,
+    box-shadow var(--motion-duration-base) ease,
+    background var(--motion-duration-base) ease;
 }
 
 .arco-input-inner-wrapper:hover,
@@ -2027,9 +2119,9 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   border-color: var(--panel-border-strong);
   background: rgba(255, 255, 255, 0.94);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+    border-color var(--motion-duration-base) ease,
+    box-shadow var(--motion-duration-base) ease,
+    background var(--motion-duration-base) ease;
 }
 
 .arco-tree-node-title:hover {
@@ -2690,7 +2782,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 .arco-pagination-item-jumper {
   min-height: 28px;
   border-radius: 9px;
-  transition: all 0.2s ease;
+  transition: all var(--motion-duration-base) ease;
 }
 
 .app-table .arco-pagination-option,

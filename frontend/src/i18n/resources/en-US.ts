@@ -51,6 +51,11 @@ const enUSFallback = {
   'app.preference.navigationMode': 'Current navigation layout',
   'app.preference.density': 'Density',
   'app.preference.language': 'Language',
+  'app.preference.appearance': 'Appearance',
+  'app.appearance.light': 'Light',
+  'app.appearance.light.description': 'Bright surfaces for well-lit environments.',
+  'app.appearance.dark': 'Dark',
+  'app.appearance.dark.description': 'Dimmed surfaces to reduce glare in low light.',
   'app.preference.theme': 'Theme',
   'app.density.comfortable': 'Comfortable',
   'app.density.comfortable.description':
