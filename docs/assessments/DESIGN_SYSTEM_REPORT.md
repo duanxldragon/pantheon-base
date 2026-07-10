@@ -1,12 +1,3 @@
----
-title: Pantheon Base 设计系统规范分析报告
-doc_type: Review
-layer: platform
-status: Active
-updated_at: 2026-07-09
-reviewer: Claude Code (Opus 4.8)
----
-
 # Pantheon Base 设计系统规范分析报告
 
 > 配套阅读：`UI_REVIEW_REPORT.md`（评分与页面审查）、`UI_IMPROVEMENT_ROADMAP.md`（分级修复）。

@@ -1,12 +1,3 @@
----
-title: Pantheon Base UI 改进路线图
-doc_type: Roadmap
-layer: platform
-status: Active
-updated_at: 2026-07-09
-reviewer: Claude Code (Opus 4.8)
----
-
 # Pantheon Base UI 改进路线图
 
 > 配套：`UI_REVIEW_REPORT.md`（审查+评分）、`DESIGN_SYSTEM_REPORT.md`（token+对标）。
