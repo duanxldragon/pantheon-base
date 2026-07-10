@@ -513,9 +513,16 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 		return nil, err
 	}
 
-	resultDB := db.
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "sort"}, Desc: false}).
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false})
+	resultDB := db
+	if sortColumn, sortDesc, ok := normalizeDictItemSort(query); ok {
+		resultDB = resultDB.
+			Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc}).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false})
+	} else {
+		resultDB = resultDB.
+			Order(clause.OrderByColumn{Column: clause.Column{Name: "sort"}, Desc: false}).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false})
+	}
 	if paginate {
 		resultDB = resultDB.Offset((page - 1) * pageSize).Limit(pageSize)
 	}
@@ -1142,6 +1149,32 @@ func normalizeDictItemPageQuery(query *DictItemListQuery) (int, int) {
 		pageSize = maxDictItemPageSize
 	}
 	return page, pageSize
+}
+
+// normalizeDictItemSort maps a client-supplied sort field to a whitelisted
+// dict item column, guarding against ORDER BY injection. The third return value
+// is false when no explicit sort was requested, in which case callers keep the
+// default (sort asc, id asc) ordering.
+func normalizeDictItemSort(query *DictItemListQuery) (string, bool, bool) {
+	if query == nil {
+		return "", false, false
+	}
+
+	sortWhitelist := map[string]string{
+		"itemLabelKey":   "item_label_key",
+		"item_label_key": "item_label_key",
+		"itemValue":      "item_value",
+		"item_value":     "item_value",
+		"sort":           "sort",
+		"status":         "status",
+	}
+
+	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
+	if !ok {
+		return "", false, false
+	}
+
+	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc", true
 }
 
 func normalizeDictCodes(codes []string) []string {

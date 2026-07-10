@@ -16,6 +16,8 @@ export interface PermissionPolicyQuery {
   method?: string;
   page?: number;
   pageSize?: number;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface PermissionPolicyPageResp {

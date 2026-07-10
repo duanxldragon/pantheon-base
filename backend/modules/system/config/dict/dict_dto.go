@@ -58,11 +58,13 @@ type DictItemPageResp struct {
 }
 
 type DictItemListQuery struct {
-	DictCode string `form:"dictCode" json:"dictCode"`
-	Keyword  string `form:"keyword" json:"keyword"`
-	Status   *int   `form:"status" json:"status"`
-	Page     int    `form:"page" json:"page"`
-	PageSize int    `form:"pageSize" json:"pageSize"`
+	DictCode  string `form:"dictCode" json:"dictCode"`
+	Keyword   string `form:"keyword" json:"keyword"`
+	Status    *int   `form:"status" json:"status"`
+	Page      int    `form:"page" json:"page"`
+	PageSize  int    `form:"pageSize" json:"pageSize"`
+	SortField string `form:"sortField" json:"sortField"`
+	SortOrder string `form:"sortOrder" json:"sortOrder"`
 }
 
 type DictItemCreateReq struct {

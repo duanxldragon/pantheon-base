@@ -14,7 +14,11 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconDownload, IconSearch, IconEye } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -638,11 +642,41 @@ const OperationLogList: React.FC = () => {
     }
   };
 
-  const handleTableChange: TableProps<OperationLogRow>['onChange'] = (pagination) => {
+  const toArcoSortOrder = (sortOrder?: OperationLogQuery['sortOrder']) => {
+    if (sortOrder === 'asc') {
+      return 'ascend';
+    }
+    if (sortOrder === 'desc') {
+      return 'descend';
+    }
+    return undefined;
+  };
+
+  const sortableColumn = (
+    field: NonNullable<OperationLogQuery['sortField']>,
+  ): Partial<ColumnProps<OperationLogRow>> => ({
+    sorter: true,
+    sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
+  });
+
+  const handleTableChange: TableProps<OperationLogRow>['onChange'] = (pagination, sorter) => {
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    const nextSortField = currentSorter?.direction ? String(currentSorter.field) : undefined;
+    const nextSortOrder =
+      currentSorter?.direction === 'ascend'
+        ? 'asc'
+        : currentSorter?.direction === 'descend'
+          ? 'desc'
+          : undefined;
+    if (nextSortField !== query.sortField || nextSortOrder !== query.sortOrder) {
+      setSelectedRowKeys([]);
+    }
     setQuery({
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
+      sortField: nextSortField,
+      sortOrder: nextSortOrder,
     });
   };
 
@@ -661,6 +695,7 @@ const OperationLogList: React.FC = () => {
       dataIndex: 'title',
       width: TABLE_COLUMN_WIDTH.tagGroup,
       ellipsis: true,
+      ...sortableColumn('title'),
       render: (value: string) => t(value, { defaultValue: value || '-' }),
     },
     {
@@ -676,6 +711,7 @@ const OperationLogList: React.FC = () => {
         title: t('system.audit.operName'),
         dataIndex: 'operName',
         width: TABLE_COLUMN_WIDTH.identity,
+        ...sortableColumn('operName'),
         render: (value: string) => value || '-',
       },
       'low',
@@ -707,6 +743,7 @@ const OperationLogList: React.FC = () => {
       title: t('system.audit.status'),
       dataIndex: 'status',
       width: TABLE_COLUMN_WIDTH.diagnostics,
+      ...sortableColumn('status'),
       render: (value: number, record) => (
         <Space direction="vertical" size={4}>
           <Tag color={value === 1 ? 'green' : 'red'}>
@@ -736,6 +773,7 @@ const OperationLogList: React.FC = () => {
         title: t('system.audit.operTime'),
         dataIndex: 'operTime',
         width: TABLE_COLUMN_WIDTH.datetime,
+        ...sortableColumn('operTime'),
         render: (value: string) => formatDateTime(value),
       },
       'medium',

@@ -12,7 +12,11 @@ import {
   Tag,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
 import {
   IconDelete,
   IconDownload,
@@ -388,11 +392,36 @@ const PermissionList: React.FC = () => {
     setQuery(emptyQuery);
   };
 
-  const handleTableChange: TableProps<PermissionPolicyRow>['onChange'] = (pagination) => {
+  const toArcoSortOrder = (sortOrder?: PermissionPolicyQuery['sortOrder']) => {
+    if (sortOrder === 'asc') {
+      return 'ascend';
+    }
+    if (sortOrder === 'desc') {
+      return 'descend';
+    }
+    return undefined;
+  };
+
+  const sortableColumn = (
+    field: NonNullable<PermissionPolicyQuery['sortField']>,
+  ): Partial<ColumnProps<PermissionPolicyRow>> => ({
+    sorter: true,
+    sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
+  });
+
+  const handleTableChange: TableProps<PermissionPolicyRow>['onChange'] = (pagination, sorter) => {
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     setQuery({
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
+      sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
+      sortOrder:
+        currentSorter?.direction === 'ascend'
+          ? 'asc'
+          : currentSorter?.direction === 'descend'
+            ? 'desc'
+            : undefined,
     });
   };
 
@@ -492,17 +521,20 @@ const PermissionList: React.FC = () => {
       title: t('system.permission.roleKey'),
       dataIndex: 'roleKey',
       width: TABLE_COLUMN_WIDTH.code,
+      ...sortableColumn('roleKey'),
     },
     {
       title: t('system.permission.method'),
       dataIndex: 'method',
       width: TABLE_COLUMN_WIDTH.method,
+      ...sortableColumn('method'),
       render: (value: string) => <Tag color="arcoblue">{value}</Tag>,
     },
     {
       title: t('system.permission.path'),
       dataIndex: 'path',
       width: TABLE_COLUMN_WIDTH.routePath,
+      ...sortableColumn('path'),
     },
     {
       title: t('common.action'),

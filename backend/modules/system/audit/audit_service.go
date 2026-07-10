@@ -14,6 +14,7 @@ import (
 	"pantheon-platform/backend/pkg/impexp"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AuditService struct {
@@ -67,7 +68,12 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
-	if err := db.Order("id desc").Offset((page - 1) * pageSize).Limit(pageSize).Find(&rows).Error; err != nil {
+	sortColumn, sortDesc := normalizeOperationLogSort(query)
+	orderedDB := db.Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc})
+	if sortColumn != "id" {
+		orderedDB = orderedDB.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
+	}
+	if err := orderedDB.Offset((page - 1) * pageSize).Limit(pageSize).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -341,6 +347,38 @@ func normalizeOperationLogPageQuery(query *OperationLogQuery) (int, int) {
 		pageSize = maxOperationLogPageSize
 	}
 	return page, pageSize
+}
+
+// normalizeOperationLogSort maps a client-supplied sort field to a whitelisted
+// database column, guarding against ORDER BY injection. Unknown fields fall back
+// to id. Default order is id desc (newest first).
+func normalizeOperationLogSort(query *OperationLogQuery) (string, bool) {
+	if query == nil {
+		return "id", true
+	}
+
+	sortWhitelist := map[string]string{
+		"id":               "id",
+		"operTime":         "oper_time",
+		"oper_time":        "oper_time",
+		"status":           "status",
+		"businessType":     "business_type",
+		"business_type":    "business_type",
+		"operName":         "oper_name",
+		"oper_name":        "oper_name",
+		"title":            "title",
+		"sourceDomain":     "source_domain",
+		"source_domain":    "source_domain",
+		"failureCategory":  "failure_category",
+		"failure_category": "failure_category",
+	}
+
+	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
+	if !ok {
+		return "id", true
+	}
+
+	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
 }
 
 func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationLogQuery) *gorm.DB {
