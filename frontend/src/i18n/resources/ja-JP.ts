@@ -36,6 +36,7 @@ const jaJPFallback = {
   'app.preference.navigation': 'ナビゲーション',
   'app.preference.navigationMode': '現在のナビゲーションレイアウト',
   'app.preference.language': '言語',
+  'app.nav.toggle': 'ナビゲーション切替',
   'app.preference.appearance': '外観モード',
   'app.appearance.light': 'ライト',
   'app.appearance.light.description': '明るい環境に適した明色サーフェス。',

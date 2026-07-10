@@ -37,7 +37,7 @@
 .system-list__actions .arco-btn-text:not(.arco-btn-disabled):hover,
 .system-list__actions .arco-btn-text:not(.arco-btn-disabled):focus {
   color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
 .system-list__actions .arco-btn-status-danger.arco-btn-text {
@@ -47,7 +47,7 @@
 .system-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):hover,
 .system-list__actions .arco-btn-status-danger.arco-btn-text:not(.arco-btn-disabled):focus {
   color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error-bg) 28%, #fff);
+  background: color-mix(in srgb, var(--color-error-bg) 28%, var(--surface-lift));
 }
 
 .menu-list-page__row-actions {
@@ -73,7 +73,7 @@
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 94%, transparent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-muted) 48%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 48%, var(--surface-lift));
 }
 
 .governance-summary-bar__copy {
@@ -90,7 +90,7 @@
   height: 32px;
   border-radius: var(--radius-md);
   color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
   flex: 0 0 auto;
 }
 
@@ -138,7 +138,7 @@
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--surface-lift);
   align-content: start;
 }
 
@@ -478,8 +478,8 @@
 
 .list-header-actions .arco-btn:not(.arco-btn-primary):not(.arco-btn-text),
 .table-batch-action-bar .arco-btn:not(.arco-btn-primary):not(.arco-btn-text) {
-  border-color: color-mix(in srgb, var(--panel-border-strong) 80%, #ffffff);
-  background: color-mix(in srgb, var(--panel-muted) 32%, #ffffff);
+  border-color: color-mix(in srgb, var(--panel-border-strong) 80%, var(--surface-lift));
+  background: color-mix(in srgb, var(--panel-muted) 32%, var(--surface-lift));
   box-shadow: none;
 }
 
@@ -494,7 +494,7 @@
 .table-batch-action-bar
   .arco-btn:not(.arco-btn-disabled):not(.arco-btn-primary):not(.arco-btn-text):hover {
   border-color: color-mix(in srgb, var(--brand-primary) 24%, var(--panel-border-strong));
-  background: color-mix(in srgb, var(--brand-primary) 5%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--surface-lift));
 }
 
 :root[data-pantheon-density='compact'] .system-list__table-card > .arco-card-body {
@@ -750,7 +750,7 @@
   gap: 10px 14px;
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
-  background: color-mix(in srgb, var(--panel-muted) 56%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 56%, var(--surface-lift));
 }
 
 .permission-workbench__context-copy {
@@ -797,7 +797,7 @@
   padding: 2px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface-lift);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
@@ -809,19 +809,19 @@
 
 .permission-workbench__view-button.arco-btn-text:not(.arco-btn-disabled):hover,
 .permission-workbench__view-button.arco-btn-text:not(.arco-btn-disabled):focus {
-  background: color-mix(in srgb, var(--brand-primary) 5%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--surface-lift));
 }
 
 .permission-workbench__view-button--active,
 .permission-workbench__view-button--active.arco-btn-text {
   color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 11%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 11%, var(--surface-lift));
 }
 
 .permission-workbench__overview-card {
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-muted) 72%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 72%, var(--surface-lift));
   box-shadow: none;
 }
 
@@ -914,7 +914,7 @@
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--brand-primary) 2%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 2%, var(--surface-lift));
 }
 
 .dept-list-page .system-dept-tabs .arco-tabs-header {
@@ -975,7 +975,7 @@
   padding: 12px 14px;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--brand-primary) 2%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 2%, var(--surface-lift));
 }
 
 .dept-governance-rail__task-head {
@@ -1329,7 +1329,7 @@
 
 .org-structure__summary-card--active {
   border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 4%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift));
 }
 
 .org-structure__notice .arco-card-body {
@@ -1460,7 +1460,7 @@
 .org-chart__post {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  background: #fff;
+  background: var(--surface-lift);
   padding: 10px;
 }
 
@@ -1610,7 +1610,7 @@
 
 .org-structure__rule {
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--brand-primary) 7%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--surface-lift));
   padding: 10px 12px;
 }
 
@@ -1618,7 +1618,7 @@
   padding: 2px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel-muted) 72%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 72%, var(--surface-lift));
 }
 
 .menu-view-switcher .arco-btn {

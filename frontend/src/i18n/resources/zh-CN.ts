@@ -46,6 +46,7 @@ const zhCNFallback = {
   'app.preference.navigationMode': '当前导航布局',
   'app.preference.density': '视觉密度',
   'app.preference.language': '显示语言',
+  'app.nav.toggle': '切换导航',
   'app.preference.appearance': '外观模式',
   'app.appearance.light': '浅色',
   'app.appearance.light.description': '明亮表面，适合光线充足的环境。',
@@ -1658,7 +1659,8 @@ const zhCNFallback = {
   'system.role.batchStatusSuccess': '已更新 {{count}} 条角色状态',
   'system.role.create': '新增角色',
   'system.role.edit': '编辑角色',
-  'system.role.governanceHint': '角色已创建，请在【权限管理 → 接口策略】中配置该角色的接口访问边界。',
+  'system.role.governanceHint':
+    '角色已创建，请在【权限管理 → 接口策略】中配置该角色的接口访问边界。',
   'system.role.governanceHintAction': '去配置',
   'system.role.dataScope': '数据权限',
   'system.role.importSuccess': '导入成功：新增 {{created}} 条，更新 {{updated}} 条',

@@ -44,7 +44,7 @@
   color: var(--brand-primary);
   font-size: 20px;
   font-weight: 700;
-  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
   overflow: hidden;
 }
 
@@ -203,7 +203,7 @@
   height: 188px;
   border: 1px solid color-mix(in srgb, var(--text-primary) 8%, var(--panel-border));
   border-radius: var(--radius-sm);
-  background: #ffffff;
+  background: var(--surface-lift);
 }
 
 .auth-login-mfa-qr__image svg {
@@ -245,7 +245,7 @@
   min-height: 40px;
   border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-control);
-  background: #ffffff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 

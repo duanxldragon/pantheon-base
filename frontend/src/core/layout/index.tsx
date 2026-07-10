@@ -83,7 +83,14 @@ import {
 import LayoutBreadcrumb from './LayoutBreadcrumb';
 import LayoutOpenedTabs from './LayoutOpenedTabs';
 import LayoutSideMenu from './LayoutSideMenu';
-import { buildOpenedPageTab, mergeOpenedTabsIntoState, orderOpenedTabs, readOpenedTabs, type OpenedPageTab, type TabActionKey } from './layoutTabs';
+import {
+  buildOpenedPageTab,
+  mergeOpenedTabsIntoState,
+  orderOpenedTabs,
+  readOpenedTabs,
+  type OpenedPageTab,
+  type TabActionKey,
+} from './layoutTabs';
 import { findMenuNodeByPath, useLayoutMenu } from './useLayoutMenu';
 import './index.css';
 
@@ -421,6 +428,8 @@ function buildNoticeRiskGroups(options: {
 const BaseLayout: React.FC = () => {
   const bootstrappedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [layoutMode, setLayoutMode] = useState<ShellLayoutMode>(() => readShellLayoutMode());
   const [densityMode, setDensityMode] = useState<ShellDensityMode>(() => readShellDensityMode());
   const [openedTabs, setOpenedTabs] = useState<OpenedPageTab[]>(() => readOpenedTabs());
@@ -451,6 +460,7 @@ const BaseLayout: React.FC = () => {
         return;
       }
       navigate(key);
+      setMobileNavOpen(false);
     },
     [menuTree, navigate],
   );
@@ -731,6 +741,25 @@ const BaseLayout: React.FC = () => {
     document.documentElement.dataset.pantheonDensity = densityMode;
     persistShellDensityMode(densityMode);
   }, [densityMode]);
+
+  // Mobile detection drives the overlay drawer behaviour (≤768px). The desktop
+  // shell is untouched; below the breakpoint the sider becomes a slide-in drawer.
+  useEffect(() => {
+    if (globalThis.matchMedia === undefined) {
+      return undefined;
+    }
+    const query = globalThis.matchMedia('(max-width: 768px)');
+    const apply = () => setIsMobile(query.matches);
+    apply();
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+      if (!event.matches) {
+        setMobileNavOpen(false);
+      }
+    };
+    query.addEventListener('change', handleChange);
+    return () => query.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     recordActivity('route');
@@ -1342,13 +1371,16 @@ const BaseLayout: React.FC = () => {
       className={[
         'app-shell',
         isHorizontalLayout ? 'app-shell--horizontal' : 'app-shell--vertical',
-      ].join(' ')}
+        isMobile && mobileNavOpen ? 'app-shell--mobile-open' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {isVerticalLayout ? (
         <LayoutSideMenu
           appName={appName}
           brandInitial={brandInitial}
-          collapsed={collapsed}
+          collapsed={isMobile ? false : collapsed}
           isHorizontalLayout={false}
           loading={loading}
           menuOpenKeys={menuOpenKeys}
@@ -1360,6 +1392,14 @@ const BaseLayout: React.FC = () => {
           onMenuItemClick={handleMenuNavigation}
         />
       ) : null}
+      {isVerticalLayout && isMobile && mobileNavOpen ? (
+        <button
+          type="button"
+          className="app-shell__mobile-backdrop"
+          aria-label={t('common.close')}
+          onClick={() => setMobileNavOpen(false)}
+        />
+      ) : null}
       <Layout className="app-shell__main">
         <Header className="app-shell__header">
           <div className="app-shell__header-left">
@@ -1367,8 +1407,13 @@ const BaseLayout: React.FC = () => {
               <Button
                 type="text"
                 className="app-shell__collapse-btn"
-                icon={collapsed ? <IconMenuUnfold /> : <IconMenuFold />}
-                onClick={() => setCollapsed((value) => !value)}
+                aria-label={t('app.nav.toggle')}
+                icon={
+                  isMobile ? <IconMenuUnfold /> : collapsed ? <IconMenuUnfold /> : <IconMenuFold />
+                }
+                onClick={() =>
+                  isMobile ? setMobileNavOpen((value) => !value) : setCollapsed((value) => !value)
+                }
               />
             ) : (
               <div className="app-shell__header-brand" aria-label={appName}>

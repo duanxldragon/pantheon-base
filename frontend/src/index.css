@@ -27,6 +27,10 @@
   --panel-bg: #ffffff;
   --panel-bg-solid: #ffffff;
   --panel-muted: #f7f8fa;
+  --control-bg: #ffffff;
+  /* surface-lift = the "elevate toward" color used by color-mix surfaces.
+     #ffffff in light (zero change) → a lifted dark surface in dark mode. */
+  --surface-lift: #ffffff;
   --panel-border: rgba(229, 230, 235, 0.82);
   --panel-border-strong: rgba(209, 213, 219, 0.78);
   --panel-shadow: 0 12px 28px rgba(15, 23, 42, 0.055);
@@ -46,8 +50,16 @@
   --shell-sider-text-muted: rgba(255, 255, 255, 0.72);
   --shell-sider-active-bg: rgba(255, 255, 255, 0.14);
   --shell-sider-hover-bg: rgba(255, 255, 255, 0.1);
-  --shell-sider-menu-surface: color-mix(in srgb, var(--shell-sider-bg) 78%, #ffffff 22%);
-  --shell-sider-menu-nested-surface: color-mix(in srgb, var(--shell-sider-bg) 86%, #ffffff 14%);
+  --shell-sider-menu-surface: color-mix(
+    in srgb,
+    var(--shell-sider-bg) 78%,
+    var(--surface-lift) 22%
+  );
+  --shell-sider-menu-nested-surface: color-mix(
+    in srgb,
+    var(--shell-sider-bg) 86%,
+    var(--surface-lift) 14%
+  );
   --shell-sider-menu-divider: rgba(255, 255, 255, 0.08);
   --shell-brand-shadow: 0 12px 28px rgba(22, 93, 255, 0.24);
   --color-success: #00b42a;
@@ -220,6 +232,8 @@ body {
   --text-primary: #e5e8ee;
   --text-secondary: #a9b2c0;
   --text-tertiary: #727d8f;
+  --control-bg: #10161e;
+  --surface-lift: #26313f;
   /* 软背景在暗色下略提高透明度，保证语义色可辨 */
   --color-success-bg: rgba(0, 180, 42, 0.2);
   --color-warning-bg: rgba(255, 125, 0, 0.2);
@@ -234,10 +248,10 @@ body {
 /* 品牌色在暗色下提亮、略降饱和、保持色相 */
 :root[data-color-mode='dark'][data-pantheon-theme='indigo'],
 :root[data-color-mode='dark']:not([data-pantheon-theme]) {
-  --brand-primary: #4c7cff;
-  --brand-primary-soft: rgba(76, 124, 255, 0.22);
-  --brand-primary-muted: rgba(76, 124, 255, 0.14);
-  --brand-gradient: #4c7cff;
+  --brand-primary: #5b88ff;
+  --brand-primary-soft: rgba(91, 136, 255, 0.22);
+  --brand-primary-muted: rgba(91, 136, 255, 0.14);
+  --brand-gradient: #5b88ff;
 }
 
 :root[data-color-mode='dark'][data-pantheon-theme='emerald'] {
@@ -511,13 +525,13 @@ a {
 .setting-page__group-nav-item:hover,
 .setting-page__group-nav-item:focus-visible {
   border-color: color-mix(in srgb, var(--brand-primary) 26%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 3%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--surface-lift));
   outline: none;
 }
 
 .setting-page__group-nav-item--active {
   border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 5%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--surface-lift));
 }
 
 .setting-page__group-nav-title-row {
@@ -615,7 +629,7 @@ a {
 
 .setting-overview-page__anchor-item:hover,
 .setting-overview-page__anchor-item:focus-visible {
-  background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift));
   outline: none;
 }
 
@@ -717,12 +731,12 @@ a {
 
 .setting-overview-page__risk-item--warning {
   border-color: color-mix(in srgb, var(--color-warning-bg) 58%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-warning-bg) 18%, #ffffff);
+  background: color-mix(in srgb, var(--color-warning-bg) 18%, var(--surface-lift));
 }
 
 .setting-overview-page__risk-item--critical {
   border-color: color-mix(in srgb, var(--color-error-bg) 62%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-error-bg) 14%, #ffffff);
+  background: color-mix(in srgb, var(--color-error-bg) 14%, var(--surface-lift));
 }
 
 .setting-overview-page__risk-header {
@@ -906,17 +920,17 @@ a {
   padding: 11px 12px;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-muted) 76%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 76%, var(--surface-lift));
 }
 
 .side-rail-item--warning {
   border-color: color-mix(in srgb, var(--color-warning-bg) 58%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-warning-bg) 20%, #ffffff);
+  background: color-mix(in srgb, var(--color-warning-bg) 20%, var(--surface-lift));
 }
 
 .side-rail-item--danger {
   border-color: color-mix(in srgb, var(--color-error-bg) 62%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-error-bg) 18%, #ffffff);
+  background: color-mix(in srgb, var(--color-error-bg) 18%, var(--surface-lift));
 }
 
 .side-rail-item__label {
@@ -947,17 +961,17 @@ a {
   padding: 13px 14px;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--panel-muted) 72%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 72%, var(--surface-lift));
 }
 
 .side-rail-note--warning {
   border-color: color-mix(in srgb, var(--color-warning-bg) 58%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-warning-bg) 20%, #ffffff);
+  background: color-mix(in srgb, var(--color-warning-bg) 20%, var(--surface-lift));
 }
 
 .side-rail-note--danger {
   border-color: color-mix(in srgb, var(--color-error-bg) 62%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-error-bg) 18%, #ffffff);
+  background: color-mix(in srgb, var(--color-error-bg) 18%, var(--surface-lift));
 }
 
 .side-rail-note__title {
@@ -1027,7 +1041,7 @@ a {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
   color: var(--brand-primary);
   font-size: 11px;
   font-weight: 600;
@@ -1192,7 +1206,7 @@ a {
   width: 100%;
   max-height: calc(100dvh - 32px - 64px - 74px);
   padding: 20px 24px 24px;
-  background: color-mix(in srgb, var(--panel-muted) 78%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 78%, var(--surface-lift));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1215,7 +1229,7 @@ a {
 }
 
 .app-dialog .arco-modal-close-icon:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
 .app-dialog .arco-modal-header,
@@ -1239,33 +1253,33 @@ a {
 .app-dialog .arco-textarea-wrapper,
 .app-dialog .arco-input-tag {
   border: 1px solid var(--panel-border-strong) !important;
-  background: #fff !important;
+  background: var(--control-bg) !important;
   box-shadow: none;
 }
 
 .app-dialog .arco-input-inner-wrapper {
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 
 .app-dialog input.arco-input,
 .app-dialog textarea.arco-textarea {
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 
 .app-dialog .arco-input-number {
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 
 .app-dialog .arco-select-view,
 .app-dialog .arco-tree-select-view,
 .app-dialog .arco-picker {
-  background: #fff !important;
+  background: var(--control-bg) !important;
 }
 
 .app-dialog .arco-input-inner-wrapper .arco-input,
@@ -1333,7 +1347,7 @@ a {
 .app-drawer .arco-drawer-body,
 .app-drawer .arco-drawer-content {
   padding: 20px 24px 24px;
-  background: color-mix(in srgb, var(--panel-muted) 82%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 82%, var(--surface-lift));
 }
 
 .app-drawer .arco-drawer-footer {
@@ -1347,7 +1361,7 @@ a {
 }
 
 .app-drawer .arco-drawer-close-btn:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
 .app-drawer.arco-drawer,
@@ -1374,26 +1388,26 @@ a {
 .app-drawer .arco-textarea-wrapper,
 .app-drawer .arco-input-tag {
   border: 1px solid var(--panel-border-strong) !important;
-  background: #fff !important;
+  background: var(--control-bg) !important;
   box-shadow: none;
 }
 
 .app-drawer .arco-input-inner-wrapper {
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 
 .app-drawer input.arco-input,
 .app-drawer textarea.arco-textarea {
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 
 .app-drawer .arco-input-number {
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
 }
 
@@ -1460,11 +1474,11 @@ a {
 
 .dialog-grid-card {
   height: 100%;
-  background: color-mix(in srgb, var(--brand-primary) 4%, #fff) !important;
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift)) !important;
 }
 
 .dialog-grid-card--danger {
-  background: color-mix(in srgb, var(--color-error-bg) 60%, #fff) !important;
+  background: color-mix(in srgb, var(--color-error-bg) 60%, var(--surface-lift)) !important;
 }
 
 .detail-panel-card {
@@ -1483,14 +1497,14 @@ a {
 .app-dialog .dialog-grid-card--danger,
 .app-dialog .detail-panel-card--danger {
   border-color: color-mix(in srgb, var(--color-error) 32%, transparent) !important;
-  background: color-mix(in srgb, var(--color-error-bg) 24%, #fff) !important;
+  background: color-mix(in srgb, var(--color-error-bg) 24%, var(--surface-lift)) !important;
 }
 
 .app-dialog .dialog-grid-card .arco-card-head,
 .app-dialog .detail-panel-card .arco-card-head {
   min-height: 44px;
   border-bottom-color: var(--panel-border);
-  background: color-mix(in srgb, var(--panel-muted) 86%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 86%, var(--surface-lift));
 }
 
 .app-dialog .dialog-grid-card .arco-card-header-title {
@@ -1669,7 +1683,7 @@ a {
   border-width: 1px;
   border-style: solid;
   border-color: color-mix(in srgb, var(--panel-border) 92%, transparent);
-  background: color-mix(in srgb, var(--panel-muted) 82%, #fff);
+  background: color-mix(in srgb, var(--panel-muted) 82%, var(--surface-lift));
   box-shadow: none;
 }
 
@@ -1740,7 +1754,7 @@ a {
 .filter-panel .arco-textarea-wrapper {
   min-height: var(--shell-filter-control-min-height);
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--panel-border-strong) 82%, #fff);
+  border: 1px solid color-mix(in srgb, var(--panel-border-strong) 82%, var(--surface-lift));
   border-radius: var(--radius-control);
   background: var(--panel-bg-solid);
   box-shadow: none;
@@ -1759,7 +1773,7 @@ a {
 .filter-panel .arco-picker:hover,
 .filter-panel .arco-textarea-wrapper:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border-strong));
-  background: #fff;
+  background: var(--control-bg);
 }
 
 .filter-panel .arco-input-focus,
@@ -1773,7 +1787,7 @@ a {
 .filter-panel .arco-textarea-wrapper-focus {
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 12%, transparent);
-  background: #fff;
+  background: var(--control-bg);
 }
 
 .filter-panel .arco-select-view input.arco-input,
@@ -1808,7 +1822,7 @@ a {
 }
 
 .filter-panel__action-item .arco-btn:not(.arco-btn-primary) {
-  border-color: color-mix(in srgb, var(--panel-border-strong) 92%, #fff);
+  border-color: color-mix(in srgb, var(--panel-border-strong) 92%, var(--surface-lift));
   background: var(--panel-bg-solid);
 }
 
@@ -1836,7 +1850,7 @@ a {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .role-member-drawer__summary,
   .role-member-drawer__toolbar,
   .role-member-drawer__filter-row {
@@ -1971,7 +1985,7 @@ input.arco-input,
 .arco-input-tag {
   min-height: var(--shell-control-min-height);
   border: 1px solid var(--panel-border-strong);
-  background: #fff;
+  background: var(--control-bg);
   box-shadow: none;
   transition:
     border-color var(--motion-duration-base) ease,
@@ -2010,7 +2024,7 @@ textarea.arco-textarea:focus,
 .arco-input-tag.arco-input-tag-focus {
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 14%, transparent);
-  background: #fff;
+  background: var(--control-bg);
 }
 
 .arco-input-inner-wrapper .arco-input,
@@ -2105,19 +2119,19 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-input-number-mode-embed .arco-input-number-step-layer .arco-input-number-step-button {
-  background: color-mix(in srgb, var(--brand-primary) 6%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--surface-lift));
 }
 
 .arco-input-number-mode-embed
   .arco-input-inner-wrapper:not(.arco-input-inner-wrapper-focus)
   .arco-input-number-step-button:not(.arco-input-number-step-button-disabled):hover {
-  background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--surface-lift));
 }
 
 .arco-tree-select .arco-tree-select-view {
   border-radius: var(--radius-control);
   border-color: var(--panel-border-strong);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--control-bg);
   transition:
     border-color var(--motion-duration-base) ease,
     box-shadow var(--motion-duration-base) ease,
@@ -2125,12 +2139,12 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-tree-node-title:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
 .arco-tree-node-selected .arco-tree-node-title {
   color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 10%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
 }
 
 .arco-select-view-value,
@@ -2159,22 +2173,22 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 
 .arco-alert-info {
   border-color: color-mix(in srgb, var(--color-info) 18%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-info) 7%, #fff);
+  background: color-mix(in srgb, var(--color-info) 7%, var(--surface-lift));
 }
 
 .arco-alert-success {
   border-color: color-mix(in srgb, var(--color-success-bg) 85%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-success-bg) 48%, #fff);
+  background: color-mix(in srgb, var(--color-success-bg) 48%, var(--surface-lift));
 }
 
 .arco-alert-warning {
   border-color: color-mix(in srgb, var(--color-warning-bg) 85%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-warning-bg) 48%, #fff);
+  background: color-mix(in srgb, var(--color-warning-bg) 48%, var(--surface-lift));
 }
 
 .arco-alert-error {
   border-color: color-mix(in srgb, var(--color-error-bg) 92%, var(--panel-border));
-  background: color-mix(in srgb, var(--color-error-bg) 52%, #fff);
+  background: color-mix(in srgb, var(--color-error-bg) 52%, var(--surface-lift));
 }
 
 .arco-alert-title {
@@ -2256,7 +2270,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-message-close-btn:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
 .arco-notification {
@@ -2297,7 +2311,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .arco-notification .arco-notification-close-btn:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
 .arco-popconfirm-content {
@@ -2378,7 +2392,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 .arco-tabs-header-nav-rounded .arco-tabs-header-title-active,
 .arco-tabs-header-nav-rounded .arco-tabs-header-title-active:hover {
   border-color: var(--panel-border-strong);
-  background: color-mix(in srgb, var(--brand-primary) 10%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
   box-shadow: none;
 }
 
@@ -2479,7 +2493,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .filter-panel {
-  background: color-mix(in srgb, var(--panel-muted) 52%, #ffffff);
+  background: color-mix(in srgb, var(--panel-muted) 52%, var(--surface-lift));
   border-color: color-mix(in srgb, var(--panel-border) 94%, transparent);
 }
 
@@ -2497,7 +2511,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   padding: 8px 10px;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--brand-primary) 4%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift));
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.5;
@@ -2856,13 +2870,13 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 .arco-pagination-item-prev:hover,
 .arco-pagination-item-next:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--panel-border));
-  background: color-mix(in srgb, var(--brand-primary) 6%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--surface-lift));
   color: var(--brand-primary);
 }
 
 .app-table .arco-pagination-item-active {
   border-color: color-mix(in srgb, var(--brand-primary) 24%, transparent);
-  background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--surface-lift));
   color: var(--brand-primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 16%, transparent);
 }
@@ -2904,7 +2918,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   min-height: var(--shell-table-action-min-height);
 }
 
-@media (max-width: 1440px) {
+@media (max-width: 1280px) {
   .app-table .app-table__col--hide-lg {
     display: none;
   }
@@ -2949,7 +2963,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .page-header {
     flex-direction: column;
     align-items: stretch;
@@ -2960,7 +2974,7 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   }
 }
 
-@media (max-width: 840px) {
+@media (max-width: 768px) {
   .setting-page__field-grid {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -3153,5 +3167,46 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 
   .system-page-kpi-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ===========================================================================
+   P3-3 移动端抽屉式侧栏 —— ≤768px 时 sider 变为覆盖式抽屉（点击 toggle 弹出）。
+   桌面端结构不受影响；仅在移动断点内改变定位与位移。
+   =========================================================================== */
+@media (max-width: 768px) {
+  .app-shell--vertical .app-shell__sider {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    z-index: var(--z-overlay);
+    transform: translateX(-100%);
+    transition: transform var(--motion-duration-base) var(--motion-ease-standard);
+    box-shadow: var(--panel-shadow-strong);
+  }
+
+  .app-shell--vertical.app-shell--mobile-open .app-shell__sider {
+    transform: translateX(0);
+  }
+
+  .app-shell__mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-overlay) - 1);
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.45);
+    animation: appShellBackdropIn var(--motion-duration-fast) var(--motion-ease-standard);
+  }
+}
+
+@keyframes appShellBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

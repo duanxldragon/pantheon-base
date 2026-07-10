@@ -31,7 +31,8 @@
           value instanceof ErrorEvent
             ? value.message === resizeObserverNoise
             : value instanceof PromiseRejectionEvent
-              ? value.reason?.message === resizeObserverNoise || value.reason === resizeObserverNoise
+              ? value.reason?.message === resizeObserverNoise ||
+                value.reason === resizeObserverNoise
               : false;
 
         window.addEventListener(

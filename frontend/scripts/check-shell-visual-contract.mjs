@@ -16,13 +16,7 @@ const listPageCssPath = path.join(
   'shared',
   'list-page.css',
 );
-const dashboardCssPath = path.join(
-  frontendRoot,
-  'src',
-  'modules',
-  'platform',
-  'dashboard.css',
-);
+const dashboardCssPath = path.join(frontendRoot, 'src', 'modules', 'platform', 'dashboard.css');
 const loginCssPath = path.join(
   frontendRoot,
   'src',
@@ -623,7 +617,7 @@ if (filterPanelBlock) {
     !hasDeclaration(
       filterPanelBlock,
       'background',
-      'color-mix\\(in srgb, var\\(--panel-muted\\) 82%, #fff\\)',
+      'color-mix\\(in srgb, var\\(--panel-muted\\) 82%, var\\(--surface-lift\\)\\)',
     )
   ) {
     findings.push('.filter-panel must use the shared muted filter background.');
@@ -882,7 +876,7 @@ if (paginationActiveBlock) {
     !hasDeclaration(
       paginationActiveBlock,
       'background',
-      'color-mix\\(in srgb, var\\(--brand-primary\\) 12%, #fff\\)',
+      'color-mix\\(in srgb, var\\(--brand-primary\\) 12%, var\\(--surface-lift\\)\\)',
     )
   ) {
     findings.push('.app-table active pagination item must use the shared brand-tinted background.');
@@ -900,8 +894,8 @@ if (appDialogControlBlock) {
   ) {
     findings.push('.app-dialog controls must render one shared outer border.');
   }
-  if (!hasDeclaration(appDialogControlBlock, 'background', '#fff')) {
-    findings.push('.app-dialog controls must use a single white control background.');
+  if (!hasDeclaration(appDialogControlBlock, 'background', 'var\\(--control-bg\\)')) {
+    findings.push('.app-dialog controls must use a single control background token.');
   }
   if (!hasDeclaration(appDialogControlBlock, 'box-shadow', 'none')) {
     findings.push('.app-dialog controls must not render a second idle shadow layer.');
@@ -936,8 +930,8 @@ if (appDrawerControlBlock) {
   ) {
     findings.push('.app-drawer controls must render one shared outer border.');
   }
-  if (!hasDeclaration(appDrawerControlBlock, 'background', '#fff')) {
-    findings.push('.app-drawer controls must use a single white control background.');
+  if (!hasDeclaration(appDrawerControlBlock, 'background', 'var\\(--control-bg\\)')) {
+    findings.push('.app-drawer controls must use a single control background token.');
   }
   if (!hasDeclaration(appDrawerControlBlock, 'box-shadow', 'none')) {
     findings.push('.app-drawer controls must not render a second idle shadow layer.');
@@ -1249,8 +1243,8 @@ if (loginControlBlock) {
   if (!hasDeclaration(loginControlBlock, 'border', '1px solid var\\(--panel-border-strong\\)')) {
     findings.push('.auth-login-card controls must render one shared outer border.');
   }
-  if (!hasDeclaration(loginControlBlock, 'background', '#ffffff')) {
-    findings.push('.auth-login-card controls must use a single white control background.');
+  if (!hasDeclaration(loginControlBlock, 'background', 'var\\(--control-bg\\)')) {
+    findings.push('.auth-login-card controls must use a single control background token.');
   }
   if (!hasDeclaration(loginControlBlock, 'box-shadow', 'none')) {
     findings.push('.auth-login-card controls must not render a second idle shadow layer.');

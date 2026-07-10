@@ -67,6 +67,8 @@ export { StandardRailSummary, StandardRailNotePanel } from './patterns/rails/Sta
 export type { RailSummaryItem, RailSummaryTone } from './patterns/rails/RailSummary';
 export { default as ImportCsvButton } from './patterns/actions/ImportCsvButton';
 export { default as PageLoading } from './feedback/PageLoading';
+export { default as PageSkeleton } from './feedback/PageSkeleton';
+export { default as Sparkline } from './data-display/Sparkline';
 export { default as RouteContentFallback } from './feedback/RouteContentFallback';
 export { default as PageEmpty } from './feedback/PageEmpty';
 export { default as PageError } from './feedback/PageError';

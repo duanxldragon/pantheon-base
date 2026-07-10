@@ -51,6 +51,7 @@ const enUSFallback = {
   'app.preference.navigationMode': 'Current navigation layout',
   'app.preference.density': 'Density',
   'app.preference.language': 'Language',
+  'app.nav.toggle': 'Toggle navigation',
   'app.preference.appearance': 'Appearance',
   'app.appearance.light': 'Light',
   'app.appearance.light.description': 'Bright surfaces for well-lit environments.',

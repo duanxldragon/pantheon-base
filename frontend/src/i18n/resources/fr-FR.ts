@@ -36,11 +36,13 @@ const frFRFallback = {
   'app.preference.navigation': 'Navigation',
   'app.preference.navigationMode': 'Disposition actuelle de navigation',
   'app.preference.language': 'Langue',
+  'app.nav.toggle': 'Basculer la navigation',
   'app.preference.appearance': 'Apparence',
   'app.appearance.light': 'Clair',
   'app.appearance.light.description': 'Surfaces claires pour les environnements bien éclairés.',
   'app.appearance.dark': 'Sombre',
-  'app.appearance.dark.description': 'Surfaces atténuées pour réduire l’éblouissement en faible luminosité.',
+  'app.appearance.dark.description':
+    'Surfaces atténuées pour réduire l’éblouissement en faible luminosité.',
   'app.preference.theme': 'Thème',
   'app.density.comfortable': 'Aérée',
   'app.density.comfortable.description':
