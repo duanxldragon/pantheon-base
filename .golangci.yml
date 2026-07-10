@@ -59,7 +59,9 @@ linters:
           severity: warning
     errcheck:
       check-type-assertions: true
-      check-blank: true
+      # check-blank:false — idiomatic `_ = err` for deliberately ignored errors is
+      # allowed (cleanup/best-effort paths). Avoids no-op ignoreError() helpers.
+      check-blank: false
       exclude-functions:
         - (*database/sql/Rows).Close
         - (*database/sql/Stmt).Close

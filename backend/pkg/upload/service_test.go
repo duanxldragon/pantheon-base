@@ -128,6 +128,7 @@ func TestServiceStoreRespectsLocalConfigAndReturnsURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("resolve local path: %v", err)
 	}
+	// #nosec G304 -- the path is derived from the service's normalized object key.
 	data, err := os.ReadFile(absolutePath)
 	if err != nil {
 		t.Fatalf("read stored file: %v", err)
@@ -199,13 +200,14 @@ func TestServiceStoreWithContextPassesContextToS3Client(t *testing.T) {
 		return fakeClient, nil
 	}
 
-	ctx := context.WithValue(context.Background(), "request-id", "req-upload-001")
+	type requestIDKey string
+	ctx := context.WithValue(context.Background(), requestIDKey("request-id"), "req-upload-001")
 	fileHeader := buildFileHeader(t, "avatar.png", "image/png", []byte("avatar-demo"))
 	if _, err := service.StoreWithContext(ctx, fileHeader, "profile/avatar", "http://localhost:8080"); err != nil {
 		t.Fatalf("store s3 file with context: %v", err)
 	}
 
-	if fakeClient.lastContext == nil || fakeClient.lastContext.Value("request-id") != "req-upload-001" {
+	if fakeClient.lastContext == nil || fakeClient.lastContext.Value(requestIDKey("request-id")) != "req-upload-001" {
 		t.Fatalf("expected request context to reach s3 client, got %#v", fakeClient.lastContext)
 	}
 }

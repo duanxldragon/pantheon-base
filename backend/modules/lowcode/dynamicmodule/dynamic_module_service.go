@@ -1,3 +1,4 @@
+//nolint:revive // Dynamic module service exports a large facade intentionally.
 package dynamicmodule
 
 import (
@@ -27,7 +28,10 @@ type DynamicModuleService struct {
 
 // NewDynamicModuleService 创建服务实例
 func NewDynamicModuleService(db *gorm.DB) *DynamicModuleService {
-	workspaceRoot, _ := scaffold.ResolveWorkspaceRoot("")
+	workspaceRoot, err := scaffold.ResolveWorkspaceRoot("")
+	if err != nil {
+		workspaceRoot = ""
+	}
 	return &DynamicModuleService{db: db, workspaceRoot: workspaceRoot}
 }
 
@@ -75,26 +79,7 @@ type ModuleRegistrationResp struct {
 }
 
 func toModuleRegistrationResp(module ModuleRegistration) ModuleRegistrationResp {
-	return ModuleRegistrationResp{
-		ID:                     module.ID,
-		Name:                   module.Name,
-		DisplayName:            module.DisplayName,
-		Scope:                  module.Scope,
-		Source:                 module.Source,
-		Owner:                  module.Owner,
-		BoundedContext:         module.BoundedContext,
-		Summary:                module.Summary,
-		SourceTable:            module.SourceTable,
-		AutoRecycle:            module.AutoRecycle,
-		ModelTableName:         module.ModelTableName,
-		Status:                 module.Status,
-		InstalledAt:            module.InstalledAt,
-		UninstalledAt:          module.UninstalledAt,
-		LastVerifiedAt:         module.LastVerifiedAt,
-		LastError:              module.LastError,
-		LastVerificationResult: module.LastVerificationResult,
-		BuiltIn:                module.BuiltIn,
-	}
+	return ModuleRegistrationResp(module)
 }
 
 type GeneratedModuleVerification struct {

@@ -1,3 +1,4 @@
+//nolint:revive // Dynamic module lifecycle methods are part of the module facade.
 package dynamicmodule
 
 import (
@@ -159,11 +160,6 @@ func (s *DynamicModuleService) deleteModuleNavigationArtifacts(moduleName string
 		}
 	}
 	return nil
-}
-
-func (s *DynamicModuleService) rewriteGeneratedRegistriesIfWorkspaceAvailable() error {
-	_, err := s.refreshGeneratedWorkspaceArtifactsIfAvailable()
-	return err
 }
 
 // ListRegisteredModules 获取已注册模块列表

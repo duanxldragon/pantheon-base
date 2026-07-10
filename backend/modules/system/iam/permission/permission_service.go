@@ -1,3 +1,4 @@
+//nolint:revive // Permission service intentionally exposes a broad administrative facade.
 package iam
 
 import (
@@ -21,6 +22,12 @@ const permissionPtypeClause = "ptype = ?"
 const (
 	protectedManagementPolicyPrefixPermission = "/api/v1/system/permission"
 	protectedManagementPolicyPrefixRole       = "/api/v1/system/role"
+)
+
+const (
+	workbenchCoverageComplete = "complete"
+	workbenchCoveragePageGap  = "page-gap"
+	workbenchCoverageAPIGap   = "api-gap"
 )
 
 type PermissionService struct {
@@ -248,14 +255,14 @@ func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*i
 
 	rows := make([][]string, 0, len(workbench.Roles))
 	for _, role := range workbench.Roles {
-		coverage := "complete"
+		coverage := workbenchCoverageComplete
 		switch {
 		case role.HasPageGap && role.HasAPIGap:
-			coverage = "page-gap,api-gap"
+			coverage = workbenchCoveragePageGap + "," + workbenchCoverageAPIGap
 		case role.HasPageGap:
-			coverage = "page-gap"
+			coverage = workbenchCoveragePageGap
 		case role.HasAPIGap:
-			coverage = "api-gap"
+			coverage = workbenchCoverageAPIGap
 		}
 		unknownKeys := make([]string, 0, len(role.UnknownPermissions))
 		for _, item := range role.UnknownPermissions {
