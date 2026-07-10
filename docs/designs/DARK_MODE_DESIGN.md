@@ -2,17 +2,17 @@
 title: 暗色模式设计 (Dark Mode Design)
 doc_type: Design
 layer: platform
-status: Draft
+status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-07-09
+updated_at: 2026-07-10
 ---
 
 # 暗色模式设计 (Dark Mode Design)
 
 English version: [DARK_MODE_DESIGN.en.md](./DARK_MODE_DESIGN.en.md)
 
-本文保留为未来设计说明，不代表当前运行时已交付。现在的实现只有 light mode 与四个主题键，**没有** `data-color-mode`、没有暗色 token、没有暗色截图基线。真正的 token 真相源见 `THEME_TOKENS_REFERENCE.md`。
+暗色模式已落地（2026-07-10）。运行时通过 `<html data-color-mode="light|dark">` + `body[arco-theme]` 双属性切换，token 真相源见 `frontend/src/index.css` 的 `:root[data-color-mode='dark']` 块与 `THEME_TOKENS_REFERENCE.md`。实现要点：`frontend/src/core/theme/colorMode.ts`（读取顺序：本地偏好 → 系统 `prefers-color-scheme`；`index.html` 内联脚本在首绘前写入属性以防闪烁）；切换入口在应用壳层的“外观模式”偏好区。对比度由 `frontend/scripts/check-contrast.mjs` 校验（正文/链接文本双模式 WCAG AA）。下文保留设计原则作为后续演进依据。
 
 ---
 

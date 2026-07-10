@@ -27,12 +27,10 @@ reviewer: Claude Code (Opus 4.8)
 - **影响范围**：纯文档（A）或全 CSS（B）。
 - **验收**：不存在“Active 文档描述一套代码里没有的 token 体系”。
 
-### P0-2　`DARK_MODE_DESIGN.md` 状态归位
+### P0-2　`DARK_MODE_DESIGN.md` 状态归位 ✅（已闭合，走“做”路径）
 
-- **问题**：status: Active，但 CSS 中 `dark` 命中 0 次、无 `data-color-mode`。
-- **动作**：改为 `Planned` 或 `Deferred`（若不做）；若做则进入 P3-1。
-- **影响范围**：文档 frontmatter。
-- **验收**：文档状态与实现一致。
+- **问题**：status 与实现不一致。
+- **结果**：暗色模式已落地（见 P3-1），`DARK_MODE_DESIGN.md` 回到 `status: Active` 并在开篇记录真实实现入口。文档状态与实现一致。
 
 ---
 
@@ -104,24 +102,24 @@ reviewer: Claude Code (Opus 4.8)
 
 ## P3 —— 能力增强（按产品需要，独立排期）
 
-### P3-1　暗色模式落地（若 P0-2 选“做”）
+### P3-1　暗色模式落地 ✅（2026-07-10 已落地）
 
-- 实现 `data-color-mode="light|dark"` 二级属性；按 `THEME_TOKENS_REFERENCE.md §2/§4/§8` 暗色列填值；ThemeSwitcher 加 light/dark 开关；验收 4 主题 × 2 模式 = 8 组合 AA 对比度。成本：高。
+- 已实现 `data-color-mode="light|dark"` 二级属性 + `body[arco-theme]` 联动；暗色 token 块见 `index.css` `:root[data-color-mode='dark']`（中性 surface + 各主题品牌提亮）。切换入口在壳层“外观模式”偏好区（5 语言 i18n）；首绘前内联脚本防闪烁，读取顺序为本地偏好 → 系统 `prefers-color-scheme`。对比度由 `scripts/check-contrast.mjs` 校验（正文/链接双模式 AA 通过）。实现文件：`core/theme/colorMode.ts`。
 
-### P3-2　系统化无障碍（WCAG AA）
+### P3-2　系统化无障碍（WCAG AA）✅（部分落地）
 
-- 补 `role=` 语义；写对比度自检脚本（验证 THEME_TOKENS_REFERENCE §12 承诺）；键盘 Tab 顺序与屏幕阅读器抽查；表格操作按钮 tooltip 全覆盖。成本：中高。
+- ✅ 对比度自检脚本 `scripts/check-contrast.mjs`（`npm run check:contrast`，验证 §12 承诺，双模式 AA）；表格操作按钮已带 `aria-label`/`title`（见 `SystemRowActions`），导航 toggle 已加 `aria-label`。
+- 剩余（可继续）：全站 `role=` 语义补齐、键盘 Tab 顺序与屏幕阅读器系统化抽查。
 
-### P3-3　移动端抽屉式侧栏 + 断点 token 化
+### P3-3　移动端抽屉式侧栏 + 断点 token 化 ✅（2026-07-10 已落地）
 
-- 按 `MOBILE_RESPONSIVE_BREAKPOINTS.md`：`md/sm/xs` 下 sider → overlay drawer（点击 toggle）；把 14 种发散断点收敛到 480/768/1024/1280/1600 五档 token。成本：中高。
+- ✅ `≤768px` 下 sider 变为 overlay drawer（header toggle 弹出 + 背景遮罩，点击菜单/遮罩关闭）；14 种发散断点已收敛到 canonical `768/1280` 两档。实现：`core/layout/index.tsx` + `index.css` 移动抽屉块。
 
-### P3-4　可选增强
+### P3-4　可选增强 ✅（原语已落地）
 
-- 轻量图表原语（SVG sparkline / 环图，不引重型库）补 Dashboard 趋势表达。
-- 删除操作 Undo（Toast 内“撤销”）。
-- 权限继承关系图形化（Casbin policy 树/矩阵视图）。
-- 页面级 Skeleton（把 Arco Skeleton 纳入 `arco/style.ts`）。
+- ✅ 轻量图表原语：`Sparkline`（无依赖 SVG，跟随主题 token）已加入共享层。
+- ✅ 页面级 Skeleton：Arco Skeleton 已纳入 `arco/style.ts`，新增 `PageSkeleton` 原语（table/form 变体）。
+- 剩余（可继续）：删除操作 Undo（Toast 内“撤销”）、权限继承关系图形化（Casbin policy 树/矩阵视图）。
 
 ---
 
