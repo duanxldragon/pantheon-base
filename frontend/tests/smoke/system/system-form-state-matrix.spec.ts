@@ -10,6 +10,31 @@ type Deferred<T = void> = {
   resolve: (value: T | PromiseLike<T>) => void;
 };
 
+const pageIdentitySelectors = [
+  '.governance-summary-bar',
+  '.system-list__table-card',
+  '.permission-workbench__tabs',
+  '.dict-workbench',
+  '.setting-overview-page',
+  '.setting-group-page',
+  '.setting-page__config-card',
+  '.module-manager-page',
+  '.generator-wizard-card',
+  '.auth-security-page',
+];
+
+const systemPageTitles = new Map<string, string>([
+  ['/system/user', '用户管理'],
+  ['/system/role', '角色管理'],
+  ['/system/menu', '菜单管理'],
+  ['/system/dept', '部门管理'],
+  ['/system/dict', '字典管理'],
+  ['/system/post', '岗位管理'],
+  ['/system/permission', '权限管理'],
+  ['/system/setting/security', '系统设置'],
+  ['/system/i18n', '国际化管理'],
+]);
+
 type FormMatrixCase = {
   key: string;
   path: string;
@@ -61,6 +86,23 @@ function expectNoRuntimeErrors(runtimeErrors: string[], allowedPatterns: RegExp[
     || allowedPatterns.some((pattern) => pattern.test(message))
   ));
   expect(filteredErrors).toEqual([]);
+}
+
+async function expectVisiblePageTitle(page: Page, title: string | RegExp) {
+  await expect(page.getByText(title, { exact: false }).filter({ visible: true }).first()).toBeVisible();
+}
+
+async function expectPageIdentityReady(page: Page, title: string | RegExp) {
+  await expectVisiblePageTitle(page, title);
+  await expect(page.locator(pageIdentitySelectors.join(', ')).first()).toBeVisible();
+}
+
+async function openSystemPage(page: Page, path: string) {
+  await page.goto(path, { waitUntil: 'networkidle' });
+  const title = systemPageTitles.get(path);
+  if (title) {
+    await expectPageIdentityReady(page, title);
+  }
 }
 
 async function waitForDialog(page: Page, title: string) {
@@ -128,7 +170,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '重置用户密码',
     submitText: '重置密码',
     openForm: async (page) => {
-      await page.goto('/system/user', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/user');
       await page.locator('.system-user-list__table-card').getByRole('button', { name: '重置密码' }).first().click();
       return waitForDialog(page, '重置用户密码');
     },
@@ -159,8 +201,8 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增角色',
     submitText: '新增',
     openForm: async (page) => {
-      await page.goto('/system/role', { waitUntil: 'networkidle' });
-      await page.getByRole('button', { name: '新增', exact: true }).click();
+      await openSystemPage(page, '/system/role');
+      await page.locator('.table-batch-action-bar__prefix-actions').getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增角色');
     },
     fillValid: async (form) => {
@@ -182,7 +224,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增菜单',
     submitText: '新增',
     openForm: async (page) => {
-      await page.goto('/system/menu', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/menu');
       await page.getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增菜单');
     },
@@ -220,7 +262,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增部门',
     submitText: '新增',
     openForm: async (page) => {
-      await page.goto('/system/dept', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/dept');
       await page.getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增部门');
     },
@@ -249,7 +291,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增字典类型',
     submitText: '新增',
     openForm: async (page) => {
-      await page.goto('/system/dict', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/dict');
       await page.locator('.dict-page__actions').first().getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增字典类型');
     },
@@ -272,7 +314,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增岗位',
     submitText: '新增',
     openForm: async (page) => {
-      await page.goto('/system/post', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/post');
       await page.getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增岗位');
     },
@@ -295,7 +337,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增策略',
     submitText: '新增',
     openForm: async (page) => {
-      await page.goto('/system/permission', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/permission');
       await page.getByRole('tab', { name: '接口策略', exact: true }).click();
       await page.getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增策略');
@@ -319,7 +361,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '安全策略',
     submitText: '保存',
     openForm: async (page) => {
-      await page.goto('/system/setting/security', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/setting/security');
       const form = page.locator('.setting-page__config-card').first();
       await expect(form.getByText('安全策略', { exact: true }).first()).toBeVisible();
       return form;
@@ -346,7 +388,7 @@ const matrixCases: FormMatrixCase[] = [
     formTitle: '新增翻译',
     submitText: '确定',
     openForm: async (page) => {
-      await page.goto('/system/i18n', { waitUntil: 'networkidle' });
+      await openSystemPage(page, '/system/i18n');
       await page.getByRole('button', { name: '新增', exact: true }).click();
       return waitForDialog(page, '新增翻译');
     },

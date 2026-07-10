@@ -1,0 +1,99 @@
+{
+  "taskId": "2026-07-10-p1-3-schema-single-source",
+  "title": "P1-3 数据库 schema 单源化",
+  "goal": "消除 database/system_init.sql 与权威迁移的分歧，统一建库到 golang-migrate。",
+  "primaryLayer": "system/config",
+  "dependencyLayers": [],
+  "taskDoc": "docs/harness/tasks/2026-07-10-p1-3-schema-single-source.task.md",
+  "scope": {
+    "in": [
+      "将 system_init.sql 的建表部分移除或整体归档",
+      "文档与脚本统一建库路径到 golang-migrate",
+      "更新引用 system_init.sql 的文档/脚本"
+    ],
+    "out": [
+      "不改运行时迁移逻辑",
+      "不新增/修改任何表结构"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "backend/pkg/database/migrations/000001_init_schema.up.sql",
+    "database/system_init.sql"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "architecture-drift",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "database/system_init.sql",
+      "docs/README.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "运行时迁移代码"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "database/system_init.sql -> golang-migrate 建库路径"
+    ],
+    "boundaryCrossings": [
+      "none"
+    ],
+    "riskNodes": [
+      "schema init 路径"
+    ],
+    "graphFocus": [
+      "none"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "architecture"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./..."
+    ],
+    "runtimeEvidence": [
+      "migrate up 之后的新库表数",
+      "旧/新表差异清单"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-10-p1-3-schema-single-source/",
+    "reviewFile": ".harness/evidence/2026-07-10-p1-3-schema-single-source/review.md",
+    "summaryFile": ".harness/evidence/2026-07-10-p1-3-schema-single-source/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "command result summary",
+    "runtime gap",
+    "review summary"
+  ],
+  "humanGates": [
+    "schema 单源化 = schema-touching -> 必须 human gate"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}
