@@ -38,6 +38,8 @@ type OperationLogQuery struct {
 	FailureCategory string `form:"failureCategory" json:"failureCategory"`
 	Page            int    `form:"page" json:"page"`
 	PageSize        int    `form:"pageSize" json:"pageSize"`
+	SortField       string `form:"sortField" json:"sortField"`
+	SortOrder       string `form:"sortOrder" json:"sortOrder"`
 }
 
 type OperationLogCleanupReq struct {

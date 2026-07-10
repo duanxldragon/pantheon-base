@@ -16,11 +16,13 @@ type PermissionPolicyPageResp struct {
 }
 
 type PermissionPolicyQuery struct {
-	RoleKey  string `form:"roleKey" json:"roleKey"`
-	Path     string `form:"path" json:"path"`
-	Method   string `form:"method" json:"method"`
-	Page     int    `form:"page" json:"page"`
-	PageSize int    `form:"pageSize" json:"pageSize"`
+	RoleKey   string `form:"roleKey" json:"roleKey"`
+	Path      string `form:"path" json:"path"`
+	Method    string `form:"method" json:"method"`
+	Page      int    `form:"page" json:"page"`
+	PageSize  int    `form:"pageSize" json:"pageSize"`
+	SortField string `form:"sortField" json:"sortField"`
+	SortOrder string `form:"sortOrder" json:"sortOrder"`
 }
 
 type PermissionPolicyCreateReq struct {

@@ -57,6 +57,8 @@ export interface DictItemQuery {
   status?: number;
   page?: number;
   pageSize?: number;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface DictItemPayload {

@@ -1,0 +1,130 @@
+{
+  "taskId": "2026-07-10-lint-baseline-clean",
+  "title": "Lint baseline cleanup — ignoreError revert + errcheck policy",
+  "goal": "Wrap up the 2026-07-09 pantheon-base review by landing the reviewed backend lint remediation: drop the no-op ignoreError() helpers, relax errcheck check-blank to allow idiomatic _ = err, and document the remaining lint debt without changing runtime behavior.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/config"
+  ],
+  "taskDoc": "docs/harness/tasks/2026-07-10-lint-baseline-clean/TASK_PACKET.md",
+  "scope": {
+    "in": [
+      "remove 8 no-op ignoreError() helpers and 22 call sites, restoring idiomatic _ = err",
+      "set errcheck.check-blank:false in .golangci.yml",
+      "keep reviewed genuine lint fixes (godoc, gosec perms, json.Marshal error handling, dead-code removal, type conversions)",
+      "document the remaining 807 lint issues and a batched remediation plan"
+    ],
+    "out": [
+      "clearing the remaining 807 lint issues in this change",
+      "any runtime behavior change beyond the reviewed real fixes",
+      "unrelated frontend/DESIGN.md working-tree changes from a parallel task"
+    ]
+  },
+  "implementationNotes": [
+    "Claude acted as planner/reviewer; the backend .go revert was authored by Codex per the repo role split.",
+    "The ignoreError() helpers only existed to satisfy errcheck check-blank:true; relaxing that policy makes _ = err legal and idiomatic.",
+    "One real bug fix rode along: token_middleware blacklist check was swallowing the Redis error."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/harness/DOCUMENT_FRONTMATTER_SPEC.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-07-10-lint-baseline-clean/TASK_PACKET.md",
+      "docs/harness/tasks/2026-07-10-lint-baseline-clean/LINT_DEBT.md",
+      ".harness/tasks/2026-07-10-lint-baseline-clean/manifest.json",
+      ".harness/evidence/2026-07-10-lint-baseline-clean/commands.json",
+      ".harness/evidence/2026-07-10-lint-baseline-clean/summary.md",
+      ".harness/evidence/2026-07-10-lint-baseline-clean/review.md"
+    ],
+    "modify": [
+      ".golangci.yml",
+      "backend/internal/middleware/token_middleware.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/system/iam/permission/permission_service.go",
+      "backend/pkg/authtoken/token.go",
+      "backend/pkg/upload/service.go"
+    ],
+    "doNotTouch": [
+      "frontend/**",
+      "DESIGN.md",
+      "database/**"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "linter config -> backend error-ignore sites -> idiomatic _ = err"
+    ],
+    "boundaryCrossings": [
+      "none"
+    ],
+    "riskNodes": [
+      "token middleware blacklist check",
+      "upload file store",
+      "permission workbench remediation"
+    ],
+    "graphFocus": [
+      "sensitive-input-flow"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": [
+      "mechanical",
+      "security"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "golangci-lint run ./backend/...",
+      "grep -rn ignoreError backend/"
+    ],
+    "runtimeEvidence": [
+      "command baseline for build, vet, and golangci-lint",
+      "grep confirmation that ignoreError is fully removed"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-10-lint-baseline-clean/",
+    "reviewFile": ".harness/evidence/2026-07-10-lint-baseline-clean/review.md",
+    "summaryFile": ".harness/evidence/2026-07-10-lint-baseline-clean/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-07-10-lint-baseline-clean/TASK_PACKET.md",
+      "docs/harness/tasks/2026-07-10-lint-baseline-clean/LINT_DEBT.md"
+    ]
+  },
+  "evidenceRequired": [
+    "command baseline for build, vet, and golangci-lint",
+    "review notes describing the reviewed diff and the ignoreError revert"
+  ],
+  "humanGates": [
+    "approve before merging the PR (release/merge is a human gate)"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

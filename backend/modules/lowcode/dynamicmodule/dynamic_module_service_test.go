@@ -1,3 +1,4 @@
+//nolint:goconst,gosec // repeated literals and fixture file operations are intentional in this integration test file.
 package dynamicmodule
 
 import (

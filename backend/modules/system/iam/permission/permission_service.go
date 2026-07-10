@@ -1,3 +1,4 @@
+//nolint:revive // Permission service intentionally exposes a broad administrative facade.
 package iam
 
 import (
@@ -21,6 +22,12 @@ const permissionPtypeClause = "ptype = ?"
 const (
 	protectedManagementPolicyPrefixPermission = "/api/v1/system/permission"
 	protectedManagementPolicyPrefixRole       = "/api/v1/system/role"
+)
+
+const (
+	workbenchCoverageComplete = "complete"
+	workbenchCoveragePageGap  = "page-gap"
+	workbenchCoverageAPIGap   = "api-gap"
 )
 
 type PermissionService struct {
@@ -91,8 +98,12 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 		return nil, err
 	}
 
-	if err := db.
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true}).
+	sortColumn, sortDesc := normalizePermissionPolicySort(query)
+	orderedDB := db.Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc})
+	if sortColumn != "id" {
+		orderedDB = orderedDB.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
+	}
+	if err := orderedDB.
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&policies).Error; err != nil {
@@ -248,14 +259,14 @@ func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*i
 
 	rows := make([][]string, 0, len(workbench.Roles))
 	for _, role := range workbench.Roles {
-		coverage := "complete"
+		coverage := workbenchCoverageComplete
 		switch {
 		case role.HasPageGap && role.HasAPIGap:
-			coverage = "page-gap,api-gap"
+			coverage = workbenchCoveragePageGap + "," + workbenchCoverageAPIGap
 		case role.HasPageGap:
-			coverage = "page-gap"
+			coverage = workbenchCoveragePageGap
 		case role.HasAPIGap:
-			coverage = "api-gap"
+			coverage = workbenchCoverageAPIGap
 		}
 		unknownKeys := make([]string, 0, len(role.UnknownPermissions))
 		for _, item := range role.UnknownPermissions {
@@ -724,6 +735,29 @@ func normalizePermissionPageQuery(query *PermissionPolicyQuery) (int, int) {
 		pageSize = 100
 	}
 	return page, pageSize
+}
+
+// normalizePermissionPolicySort maps a client-supplied sort field to a
+// whitelisted Casbin rule column (v0=roleKey, v1=path, v2=method), guarding
+// against ORDER BY injection. Unknown fields fall back to id desc.
+func normalizePermissionPolicySort(query *PermissionPolicyQuery) (string, bool) {
+	if query == nil {
+		return "id", true
+	}
+
+	sortWhitelist := map[string]string{
+		"id":      "id",
+		"roleKey": "v0",
+		"path":    "v1",
+		"method":  "v2",
+	}
+
+	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
+	if !ok {
+		return "id", true
+	}
+
+	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
 }
 
 func isProtectedManagementPolicy(path string) bool {

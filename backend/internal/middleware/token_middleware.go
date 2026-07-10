@@ -106,7 +106,7 @@ func extractToken(c *gin.Context) string {
 		return ""
 	}
 	parts := strings.SplitN(authHeader, " ", 2)
-	if !(len(parts) == 2 && parts[0] == "Bearer") {
+	if len(parts) != 2 || parts[0] != "Bearer" {
 		return ""
 	}
 	return parts[1]
@@ -155,8 +155,8 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		// Check blacklist
 		if rdb != nil {
 			blacklistKey := fmt.Sprintf("blacklist:%d", sessionData.UserID)
-			val, _ := rdb.Get(ctx, blacklistKey).Result()
-			if val != "" {
+			val, err := rdb.Get(ctx, blacklistKey).Result()
+			if err == nil && val != "" {
 				invalidateTokenSessionCache(token)
 				common.Fail(c, common.CodeUnauthorized, "token.expired.force")
 				c.Abort()

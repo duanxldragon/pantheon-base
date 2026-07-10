@@ -167,7 +167,7 @@
   width: 22px;
   height: 22px;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
   box-shadow: none;
@@ -186,7 +186,7 @@
 .app-shell__menu .arco-menu-item {
   position: relative;
   min-height: 42px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   margin-bottom: 2px;
   overflow: hidden;
   transition:
@@ -496,7 +496,7 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
@@ -659,7 +659,7 @@
   min-height: 52px;
   padding: 6px 8px;
   border: 1px solid color-mix(in srgb, var(--brand-primary) 6%, var(--panel-border));
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   background: rgba(255, 255, 255, 0.94) !important;
   border-bottom: none !important;
   box-shadow: none;
@@ -687,7 +687,7 @@
   height: 42px;
   padding: 0 14px 0 16px !important;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--text-secondary);
   font-weight: 500;
@@ -738,7 +738,7 @@
 .app-shell__top-menu .app-shell__menu-entry-icon--level-2 {
   width: 22px;
   height: 22px;
-  border-radius: 7px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
 }
@@ -833,7 +833,7 @@
   min-width: 220px;
   padding: 8px;
   border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);
 }
@@ -845,7 +845,7 @@
   min-height: 42px;
   margin-bottom: 2px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--text-secondary);
   transition:
@@ -871,7 +871,7 @@
 .app-shell__top-menu-popup .app-shell__menu-entry-icon--level-2 {
   width: 22px;
   height: 22px;
-  border-radius: 7px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
 }
@@ -1020,7 +1020,7 @@
   width: min(392px, calc(100vw - 32px));
   padding: 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   background: var(--panel-bg-solid);
   box-shadow: var(--panel-shadow-soft);
 }
@@ -1091,7 +1091,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
   flex-shrink: 0;
@@ -1146,7 +1146,7 @@
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid rgba(229, 230, 235, 0.9);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: var(--panel-bg-solid);
   color: var(--text-secondary);
   font-size: 13px;
@@ -1256,7 +1256,7 @@
   min-height: 30px;
   padding: 0 8px 0 10px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-lg);
   background: var(--panel-bg-solid);
   color: var(--text-secondary);
   font: inherit;
@@ -1608,7 +1608,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 9px;
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
   flex-shrink: 0;
@@ -1735,7 +1735,7 @@
   width: 100%;
   padding: 8px 10px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: inherit;
   text-align: left;
@@ -1760,7 +1760,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 9px;
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--brand-primary) 8%, #ffffff);
   color: var(--brand-primary);
   flex-shrink: 0;
@@ -1855,7 +1855,7 @@
   }
 
   .app-shell__top-menu {
-    border-radius: 14px;
+    border-radius: var(--radius-xl);
   }
 
   .app-shell__search-shortcut {

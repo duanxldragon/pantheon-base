@@ -1,3 +1,4 @@
+//nolint:revive // Runtime exposes a broad auth facade and interface surface.
 package login
 
 import (
@@ -61,25 +62,7 @@ const (
 	settingMFAEnabledKey               = "login.mfa_enabled"
 	settingSSOEnabledKey               = "login.sso_enabled"
 
-	errSessionInvalid                = "session.invalid"
-	errCurrentSessionRevokeForbidden = "auth.session.current_revoke_forbidden"
-
-	userIDWhereClause     = "user_id = ?"
 	settingKeyWhereClause = "setting_key = ?"
-
-	sessionIDAndUserIDWhereClause            = "session_id = ? AND " + userIDWhereClause
-	sessionIDAndActiveUserIDWhereClause      = sessionIDAndUserIDWhereClause + " AND revoked_at IS NULL"
-	otherActiveSessionsByUserWhereClause     = userIDWhereClause + " AND session_id <> ? AND revoked_at IS NULL"
-	systemUserRoleUserIDAndStatusWhereClause = "system_user_role.user_id = ? AND system_role.status = ?"
-	systemUserRoleUserIDAndPermsWhereClause  = "system_user_role.user_id = ? AND system_role_permission.permission_key <> ''"
-	systemUserUsernameLikeWhereClause        = "system_user.username LIKE ?"
-
-	touchSessionActivitySQL = `UPDATE system_user_session
-SET last_activity_at = ?,
-    last_ip = CASE WHEN ? <> '' THEN ? ELSE last_ip END,
-    user_agent = CASE WHEN ? <> '' THEN ? ELSE user_agent END
-WHERE session_id = ? AND user_id = ? AND revoked_at IS NULL
-  AND (last_activity_at IS NULL OR last_activity_at < ?)`
 )
 
 // Runtime is the root auth service that composes sub-domain services.
@@ -97,7 +80,6 @@ type Runtime struct {
 	settingsCache                map[string]int
 	loginLogCleanupRetentionDays []int
 	sessionCleanupRetentionDays  []int
-	cleanupMu                    sync.Mutex
 	lastCleanupAt                map[string]time.Time
 }
 
@@ -705,7 +687,9 @@ func (s *Runtime) WatchSettings() {
 	}
 	pubsub := database.RDB.Subscribe(context.TODO(), "settings:refresh")
 	go func() {
-		defer pubsub.Close()
+		defer func() {
+			_ = pubsub.Close()
+		}()
 		for range pubsub.Channel() {
 			_ = s.ReloadSettings()
 		}
@@ -744,16 +728,6 @@ func (s *Runtime) getSecurityEventEnabled() bool {
 	s.settingsMu.RLock()
 	defer s.settingsMu.RUnlock()
 	return s.settingsCache[settingSecurityEventEnabledKey] == 1
-}
-
-func (s *Runtime) getSettingInt(settingKey string, fallback int) int {
-	s.settingsMu.RLock()
-	if val, ok := s.settingsCache[settingKey]; ok {
-		s.settingsMu.RUnlock()
-		return val
-	}
-	s.settingsMu.RUnlock()
-	return s.fetchSettingIntFromDB(settingKey, fallback)
 }
 
 func (s *Runtime) fetchSettingIntFromDB(settingKey string, fallback int) int {
@@ -916,25 +890,7 @@ type authRuntimePolicy struct {
 
 func toSecurityEventRespList(events []security.SecurityEventResp) []SecurityEventResp {
 	result := make([]SecurityEventResp, 0, len(events))
-	for _, item := range events {
-		result = append(result, SecurityEventResp{
-			ID:                  item.ID,
-			UserID:              item.UserID,
-			Username:            item.Username,
-			EventType:           item.EventType,
-			Severity:            item.Severity,
-			SourceKey:           item.SourceKey,
-			IP:                  item.IP,
-			UserAgent:           item.UserAgent,
-			MessageKey:          item.MessageKey,
-			Metadata:            item.Metadata,
-			AcknowledgedAt:      item.AcknowledgedAt,
-			AcknowledgedBy:      item.AcknowledgedBy,
-			AcknowledgedByUser:  item.AcknowledgedByUser,
-			AcknowledgementNote: item.AcknowledgementNote,
-			CreatedAt:           item.CreatedAt,
-		})
-	}
+	result = append(result, events...)
 	return result
 }
 

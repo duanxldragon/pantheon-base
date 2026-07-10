@@ -22,7 +22,11 @@ import {
   IconRefresh,
   IconSearch,
 } from '@arco-design/web-react/icon';
-import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
+import type {
+  ColumnProps,
+  SorterInfo,
+  TableProps,
+} from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import { message } from '../../../components/feedback/message';
 import { showImportResult } from '../../../api/importExport';
@@ -408,20 +412,44 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
     }
   };
 
-  const handleItemTableChange: TableProps<DictItemRow>['onChange'] = (pagination) => {
+  const handleItemTableChange: TableProps<DictItemRow>['onChange'] = (pagination, sorter) => {
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    const nextSortField = currentSorter?.direction ? String(currentSorter.field) : undefined;
+    const nextSortOrder =
+      currentSorter?.direction === 'ascend'
+        ? 'asc'
+        : currentSorter?.direction === 'descend'
+          ? 'desc'
+          : undefined;
     setItemQuery((prev) => ({
       ...prev,
       page: pagination.current || prev.page || emptyItemQuery.page,
       pageSize: pagination.pageSize || prev.pageSize || emptyItemQuery.pageSize,
+      sortField: nextSortField,
+      sortOrder: nextSortOrder,
     }));
   };
 
-  const itemColumns: ColumnProps<DictItemRow>[] = useMemo(
-    () => [
+  const itemColumns: ColumnProps<DictItemRow>[] = useMemo(() => {
+    const sortableItemColumn = (
+      field: NonNullable<DictItemQuery['sortField']>,
+    ): Partial<ColumnProps<DictItemRow>> => ({
+      sorter: true,
+      sortOrder:
+        itemQuery.sortField === field
+          ? itemQuery.sortOrder === 'asc'
+            ? 'ascend'
+            : itemQuery.sortOrder === 'desc'
+              ? 'descend'
+              : undefined
+          : undefined,
+    });
+    return [
       {
         title: t('system.dict.itemLabelKey'),
         dataIndex: 'itemLabelKey',
         width: TABLE_COLUMN_WIDTH.treeLabel,
+        ...sortableItemColumn('itemLabelKey'),
         render: (value: string) => (
           <Space direction="vertical" size={2}>
             <Text ellipsis={{ showTooltip: true }}>{t(value, value)}</Text>
@@ -436,6 +464,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
         dataIndex: 'itemValue',
         width: TABLE_COLUMN_WIDTH.name,
         ellipsis: true,
+        ...sortableItemColumn('itemValue'),
       },
       withTableColumnPriority(
         {
@@ -447,73 +476,87 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
         'medium',
       ),
       withTableColumnPriority(
-        { title: t('system.dict.sort'), dataIndex: 'sort', width: TABLE_COLUMN_WIDTH.count },
+        {
+          title: t('system.dict.sort'),
+          dataIndex: 'sort',
+          width: TABLE_COLUMN_WIDTH.count,
+          ...sortableItemColumn('sort'),
+        },
         'low',
       ),
       {
         title: t('system.dict.status'),
         dataIndex: 'status',
         width: TABLE_COLUMN_WIDTH.status,
+        ...sortableItemColumn('status'),
         render: (value: number) => (
           <Tag color={value === 1 ? 'green' : 'red'}>
             {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
           </Tag>
         ),
       },
-    {
-      title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.wide,
-      fixed: 'right',
-      render: (_: unknown, row: DictItemRow) => (
-        <SystemRowActions
-          className="dict-page__row-actions dict-page__row-actions--items"
-          actions={[
-            {
-              key: 'move-up',
-              text: t('system.dict.moveUp'),
-              icon: <IconCaretUp />,
-              iconOnly: true,
-              onClick: () => {
-                void handleReorderItem(row, 'up');
+      {
+        title: t('common.action'),
+        width: TABLE_ACTION_COLUMN_WIDTH.wide,
+        fixed: 'right',
+        render: (_: unknown, row: DictItemRow) => (
+          <SystemRowActions
+            className="dict-page__row-actions dict-page__row-actions--items"
+            actions={[
+              {
+                key: 'move-up',
+                text: t('system.dict.moveUp'),
+                icon: <IconCaretUp />,
+                iconOnly: true,
+                onClick: () => {
+                  void handleReorderItem(row, 'up');
+                },
+                disabled: !canEdit,
               },
-              disabled: !canEdit,
-            },
-            {
-              key: 'move-down',
-              text: t('system.dict.moveDown'),
-              icon: <IconCaretDown />,
-              iconOnly: true,
-              onClick: () => {
-                void handleReorderItem(row, 'down');
+              {
+                key: 'move-down',
+                text: t('system.dict.moveDown'),
+                icon: <IconCaretDown />,
+                iconOnly: true,
+                onClick: () => {
+                  void handleReorderItem(row, 'down');
+                },
+                disabled: !canEdit,
               },
-              disabled: !canEdit,
-            },
-            {
-              key: 'edit',
-              text: t('common.edit'),
-              icon: <IconEdit />,
-              onClick: () => openEditItem(row),
-              hidden: !canEdit,
-            },
-            {
-              key: 'delete',
-              text: t('common.delete'),
-              icon: <IconDelete />,
-              hidden: !canDelete,
-              status: 'danger',
-              confirm: {
-                title: t('common.deleteConfirm'),
-                onOk: () => removeItem(row),
-                disabled: !canDelete,
+              {
+                key: 'edit',
+                text: t('common.edit'),
+                icon: <IconEdit />,
+                onClick: () => openEditItem(row),
+                hidden: !canEdit,
               },
-            },
-          ]}
-        />
-      ),
-    },
-    ],
-    [t, canEdit, canDelete, handleReorderItem, openEditItem, removeItem],
-  );
+              {
+                key: 'delete',
+                text: t('common.delete'),
+                icon: <IconDelete />,
+                hidden: !canDelete,
+                status: 'danger',
+                confirm: {
+                  title: t('common.deleteConfirm'),
+                  onOk: () => removeItem(row),
+                  disabled: !canDelete,
+                },
+              },
+            ]}
+          />
+        ),
+      },
+    ];
+  }, [
+    t,
+    canEdit,
+    canDelete,
+    handleReorderItem,
+    openEditItem,
+    removeItem,
+    itemQuery.sortField,
+    itemQuery.sortOrder,
+  ]);
 
   const itemBatchActionDisabled = !canBatchUpdate || selectedItemRowKeys.length === 0;
   const itemBatchDeleteDisabled = !canBatchDelete || selectedItemRowKeys.length === 0;

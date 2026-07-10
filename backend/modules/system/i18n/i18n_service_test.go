@@ -1,3 +1,4 @@
+//nolint:goconst,gosec // repeated assertion literals and fixture file operations in this test file are intentional.
 package system
 
 import (
@@ -222,7 +223,7 @@ func TestI18nService_SyncMissingKeysReturnsCreatedKeys(t *testing.T) {
 	if resp == nil {
 		t.Fatalf("expected sync response")
 	}
-	if resp.Count < 0 || len(resp.Keys) < 0 {
+	if resp.Count < 0 || len(resp.Keys) == 0 {
 		t.Fatalf("invalid sync response: %#v", resp)
 	}
 	for _, key := range resp.Keys {
@@ -877,7 +878,7 @@ func TestScanI18nKeysDetectsSingleQuotedFrontendReferences(t *testing.T) {
 		t.Fatalf("mkdir frontend root: %v", err)
 	}
 	source := "export function Demo({ t }) { return t('i18n.batchDelete') + t('system.dept.task.title') }\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(source), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(source), 0o600); err != nil {
 		t.Fatalf("write demo source: %v", err)
 	}
 	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
@@ -910,15 +911,15 @@ func TestScanI18nKeysExcludesSmokeAndCleanupSources(t *testing.T) {
 	}
 
 	productionSource := "export function Demo({ t }) { return t('system.user.detail') }\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(productionSource), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(productionSource), 0o600); err != nil {
 		t.Fatalf("write demo source: %v", err)
 	}
 	smokeSource := "test('smoke', () => t('i18n.smoke.123') && t('dict.smoke_biz_status.enabled') && t('system.smoke'))\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "tests", "smoke", "system", "demo.spec.ts"), []byte(smokeSource), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "tests", "smoke", "system", "demo.spec.ts"), []byte(smokeSource), 0o600); err != nil {
 		t.Fatalf("write smoke source: %v", err)
 	}
 	cleanupScript := "const prefixes = ['i18n.enter.', 'i18n.smoke.', 'i18n.import.', 'i18n.sync.', 'dict.smoke_biz_status.']\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "scripts", "cleanup-smoke-fixtures.mjs"), []byte(cleanupScript), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "scripts", "cleanup-smoke-fixtures.mjs"), []byte(cleanupScript), 0o600); err != nil {
 		t.Fatalf("write cleanup script: %v", err)
 	}
 	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
@@ -953,15 +954,15 @@ func TestScanI18nKeysExcludesFrontendCatalogAndNodeModules(t *testing.T) {
 	}
 
 	productionSource := "export function Demo({ t }) { return t('system.user.detail') }\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(productionSource), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "demo.tsx"), []byte(productionSource), 0o600); err != nil {
 		t.Fatalf("write demo source: %v", err)
 	}
 	resourceSource := "const zhCNFallback = { 'system.menu.fake': 'fake' }\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "i18n", "resources", "zh-CN.ts"), []byte(resourceSource), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "src", "i18n", "resources", "zh-CN.ts"), []byte(resourceSource), 0o600); err != nil {
 		t.Fatalf("write resource source: %v", err)
 	}
 	nodeModuleSource := "export const CDP = 'Accessibility.getRootAXNode'\n"
-	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "node_modules", "demo", "index.ts"), []byte(nodeModuleSource), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "frontend", "node_modules", "demo", "index.ts"), []byte(nodeModuleSource), 0o600); err != nil {
 		t.Fatalf("write node module source: %v", err)
 	}
 	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)

@@ -22,10 +22,12 @@ import (
 
 const defaultServePath = "/api/v1/system/upload/files"
 
+// ConfigReader reads upload settings by key.
 type ConfigReader interface {
 	GetByKey(settingKey string) (string, error)
 }
 
+// Config describes the active upload storage settings.
 type Config struct {
 	StorageDriver string
 	MaxFileSizeMB int64
@@ -39,6 +41,7 @@ type Config struct {
 	S3SecretKey   string
 }
 
+// StoredFile describes a file persisted through the upload service.
 type StoredFile struct {
 	FileName     string `json:"fileName"`
 	OriginalName string `json:"originalName"`
@@ -54,12 +57,14 @@ type objectStorageClient interface {
 	PutObject(ctx context.Context, bucketName, objectName string, reader io.Reader, objectSize int64, opts minio.PutObjectOptions) (minio.UploadInfo, error)
 }
 
+// Service loads upload configuration and stores files.
 type Service struct {
 	reader          ConfigReader
 	now             func() time.Time
 	s3ClientFactory func(cfg *Config) (objectStorageClient, error)
 }
 
+// NewService creates an upload service backed by the provided config reader.
 func NewService(reader ConfigReader) *Service {
 	return &Service{
 		reader:          reader,
@@ -68,6 +73,7 @@ func NewService(reader ConfigReader) *Service {
 	}
 }
 
+// LoadConfig resolves the current upload configuration from settings.
 func (s *Service) LoadConfig() (*Config, error) {
 	if s.reader == nil {
 		return nil, errors.New("upload.config.unavailable")
@@ -122,6 +128,7 @@ func (s *Service) LoadConfig() (*Config, error) {
 	return cfg, nil
 }
 
+// MaxBytes returns the configured maximum upload size in bytes.
 func (s *Service) MaxBytes() (int64, error) {
 	cfg, err := s.LoadConfig()
 	if err != nil {
@@ -130,10 +137,12 @@ func (s *Service) MaxBytes() (int64, error) {
 	return cfg.MaxFileSizeMB * 1024 * 1024, nil
 }
 
+// Store writes an uploaded file using the background context.
 func (s *Service) Store(fileHeader *multipart.FileHeader, scope, requestBaseURL string) (*StoredFile, error) {
 	return s.StoreWithContext(context.Background(), fileHeader, scope, requestBaseURL)
 }
 
+// StoreWithContext writes an uploaded file using the provided context.
 func (s *Service) StoreWithContext(ctx context.Context, fileHeader *multipart.FileHeader, scope, requestBaseURL string) (*StoredFile, error) {
 	if fileHeader == nil {
 		return nil, errors.New("upload.file.required")
@@ -188,7 +197,7 @@ func (s *Service) storeLocal(cfg *Config, fileHeader *multipart.FileHeader, obje
 	if err != nil {
 		return nil, errors.New("upload.path.invalid")
 	}
-	if err := os.MkdirAll(filepath.Dir(absolutePath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(absolutePath), 0o750); err != nil {
 		return nil, errors.New("upload.file.save.error")
 	}
 
@@ -196,13 +205,18 @@ func (s *Service) storeLocal(cfg *Config, fileHeader *multipart.FileHeader, obje
 	if err != nil {
 		return nil, errors.New("upload.file.open.error")
 	}
-	defer source.Close()
+	defer func() {
+		_ = source.Close()
+	}()
 
+	// #nosec G304 -- absolutePath has been normalized by secureJoin.
 	target, err := os.Create(absolutePath)
 	if err != nil {
 		return nil, errors.New("upload.file.save.error")
 	}
-	defer target.Close()
+	defer func() {
+		_ = target.Close()
+	}()
 
 	if _, err := target.ReadFrom(source); err != nil {
 		return nil, errors.New("upload.file.save.error")
@@ -248,7 +262,9 @@ func (s *Service) storeS3(ctx context.Context, cfg *Config, fileHeader *multipar
 	if err != nil {
 		return nil, errors.New("upload.file.open.error")
 	}
-	defer source.Close()
+	defer func() {
+		_ = source.Close()
+	}()
 
 	if _, err := client.PutObject(ctx, cfg.S3Bucket, objectKey, source, fileHeader.Size, minio.PutObjectOptions{
 		ContentType: contentType,
@@ -266,6 +282,7 @@ func (s *Service) storeS3(ctx context.Context, cfg *Config, fileHeader *multipar
 	}, nil
 }
 
+// ResolveLocalPath resolves a stored object key to a filesystem path.
 func (s *Service) ResolveLocalPath(objectKey string) (string, error) {
 	cfg, err := s.LoadConfig()
 	if err != nil {
@@ -285,6 +302,7 @@ func (s *Service) ResolveLocalPath(objectKey string) (string, error) {
 	return secureJoin(rootPath, normalizedKey)
 }
 
+// BuildFileURL builds the public URL for a stored file.
 func BuildFileURL(publicBaseURL, requestBaseURL, objectKey string) string {
 	normalizedKey := strings.TrimLeft(filepath.ToSlash(objectKey), "/")
 	base := strings.TrimSpace(publicBaseURL)
@@ -373,6 +391,7 @@ func secureJoin(rootPath, relativePath string) (string, error) {
 	return absTarget, nil
 }
 
+// NormalizeObjectKey validates and normalizes an upload object key.
 func NormalizeObjectKey(objectKey string) (string, error) {
 	normalized := strings.TrimLeft(filepath.ToSlash(strings.TrimSpace(objectKey)), "/")
 	if normalized == "" || !filepath.IsLocal(filepath.FromSlash(normalized)) {

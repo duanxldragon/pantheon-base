@@ -279,6 +279,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
         title: t('system.dict.dictCode'),
         dataIndex: 'dictCode',
         width: TABLE_COLUMN_WIDTH.code,
+        sorter: (a: DictTypeRow, b: DictTypeRow) => a.dictCode.localeCompare(b.dictCode),
         render: (value: string, row: DictTypeRow) => (
           <Button type="text" style={{ padding: 0 }} onClick={() => onSelectType(row)}>
             {value}
@@ -289,6 +290,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
         title: t('system.dict.dictName'),
         dataIndex: 'dictName',
         width: TABLE_COLUMN_WIDTH.name,
+        sorter: (a: DictTypeRow, b: DictTypeRow) => a.dictName.localeCompare(b.dictName),
         render: (value: string) => <Text ellipsis={{ showTooltip: true }}>{t(value, value)}</Text>,
       },
       withTableColumnPriority(
@@ -297,6 +299,8 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
           dataIndex: 'module',
           width: TABLE_COLUMN_WIDTH.code,
           ellipsis: true,
+          sorter: (a: DictTypeRow, b: DictTypeRow) =>
+            (a.module ?? '').localeCompare(b.module ?? ''),
         },
         'medium',
       ),
@@ -305,6 +309,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
           title: t('system.dict.item'),
           dataIndex: 'itemCount',
           width: TABLE_COLUMN_WIDTH.count,
+          sorter: (a: DictTypeRow, b: DictTypeRow) => a.itemCount - b.itemCount,
           render: (_: unknown, row: DictTypeRow) => (
             <Text>{`${row.activeItemCount}/${row.itemCount}`}</Text>
           ),
@@ -315,48 +320,49 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
         title: t('system.dict.status'),
         dataIndex: 'status',
         width: TABLE_COLUMN_WIDTH.status,
+        sorter: (a: DictTypeRow, b: DictTypeRow) => a.status - b.status,
         render: (value: number) => (
           <Tag color={value === 1 ? 'green' : 'red'}>
             {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
           </Tag>
         ),
       },
-    {
-      title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.wide,
-      fixed: 'right',
-      render: (_: unknown, row: DictTypeRow) => (
-        <SystemRowActions
-          className="dict-page__row-actions"
-          actions={[
-            {
-              key: 'items',
-              text: t('system.dict.item'),
-              onClick: () => onSwitchToItemsTab(row),
-            },
-            {
-              key: 'edit',
-              text: t('common.edit'),
-              icon: <IconEdit />,
-              onClick: () => openEditType(row),
-              hidden: !canEdit,
-            },
-            {
-              key: 'delete',
-              text: t('common.delete'),
-              icon: <IconDelete />,
-              hidden: !canDelete,
-              status: 'danger',
-              confirm: {
-                title: t('common.deleteConfirm'),
-                onOk: () => removeType(row),
-                disabled: !canDelete,
+      {
+        title: t('common.action'),
+        width: TABLE_ACTION_COLUMN_WIDTH.wide,
+        fixed: 'right',
+        render: (_: unknown, row: DictTypeRow) => (
+          <SystemRowActions
+            className="dict-page__row-actions"
+            actions={[
+              {
+                key: 'items',
+                text: t('system.dict.item'),
+                onClick: () => onSwitchToItemsTab(row),
               },
-            },
-          ]}
-        />
-      ),
-    },
+              {
+                key: 'edit',
+                text: t('common.edit'),
+                icon: <IconEdit />,
+                onClick: () => openEditType(row),
+                hidden: !canEdit,
+              },
+              {
+                key: 'delete',
+                text: t('common.delete'),
+                icon: <IconDelete />,
+                hidden: !canDelete,
+                status: 'danger',
+                confirm: {
+                  title: t('common.deleteConfirm'),
+                  onOk: () => removeType(row),
+                  disabled: !canDelete,
+                },
+              },
+            ]}
+          />
+        ),
+      },
     ],
     [t, onSelectType, onSwitchToItemsTab, canEdit, canDelete, openEditType, removeType],
   );

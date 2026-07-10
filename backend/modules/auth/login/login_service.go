@@ -1,3 +1,4 @@
+//nolint:revive // Legacy login facade keeps the package API stable.
 package login
 
 import (
@@ -491,12 +492,12 @@ const (
 	errUserNotFound                = "user.login.error.not_found"
 	errUserDisabled                = "user.login.error.disabled"
 	errUserLocked                  = "user.login.error.locked"
-	errPasswordWrong               = "user.login.error.password_wrong"
+	errPasswordWrong               = "user.login.error.password_wrong" // #nosec G101 -- application error code, not a credential.
 	errTokenInvalid                = "token.invalid"
 	errLoginLogCleanupRangeInvalid = "auth.login_log.cleanup.range_invalid"
 	errLoginLogCleanupDaysInvalid  = "auth.login_log.cleanup.days_invalid"
 	errLoginLogDeleteIdsRequired   = "auth.login_log.delete.ids_required"
-	msgSecurityEventPasswordWrong  = "auth.security.event.password_wrong"
+	msgSecurityEventPasswordWrong  = "auth.security.event.password_wrong" // #nosec G101 -- application event code, not a credential.
 	msgSecurityEventSourceBlocked  = "auth.security.event.source_blocked"
 	msgSecurityEventAccountLocked  = "auth.security.event.account_locked"
 

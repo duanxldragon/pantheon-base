@@ -1,3 +1,4 @@
+//nolint:revive // Dashboard service intentionally exposes a broad summary facade.
 package platform
 
 import (

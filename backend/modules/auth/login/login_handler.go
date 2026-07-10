@@ -1,3 +1,4 @@
+//nolint:revive // HTTP handler surface is intentionally exported for the auth module.
 package login
 
 import (
@@ -547,10 +548,6 @@ func buildLoginSourceKey(ip string) string {
 		return "ip:unknown"
 	}
 	return "ip:" + trimmed
-}
-
-func parseRefreshToken(refreshToken string) (*TokenRefreshClaims, error) {
-	return parseRefreshTokenWithContext(context.Background(), refreshToken)
 }
 
 func parseRefreshTokenWithContext(ctx context.Context, refreshToken string) (*TokenRefreshClaims, error) {
