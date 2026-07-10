@@ -47,6 +47,7 @@ import { formatDateTime } from '../format/dateTime';
 import { renderMenuIcon } from '../menu/icon';
 import { useTheme } from '../../hooks';
 import { clearPantheonThemePreference } from '../theme/theme';
+import { usePantheonColorMode, type PantheonColorMode } from '../theme/colorMode';
 import { AppModal } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/platform/api';
 import { clearClientAuthSession } from '../auth/clientSession';
@@ -494,6 +495,7 @@ const BaseLayout: React.FC = () => {
   const brandInitial = getBrandInitial(appName);
   const showExpandedBrand = !collapsed;
   const { theme, setTheme, options: themeOptions } = useTheme();
+  const { colorMode, setColorMode } = usePantheonColorMode();
   const activeTheme = themeOptions.find((item) => item.key === theme) ?? themeOptions[0];
   const sessionIdleMinutes =
     publicSettings.sessionIdleMinutes > 0 ? publicSettings.sessionIdleMinutes : 30;
@@ -1166,6 +1168,30 @@ const BaseLayout: React.FC = () => {
             >
               <span>{t(`app.density.${mode}`)}</span>
               <span>{t(`app.density.${mode}.description`)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="app-shell__preference-section">
+        <span className="app-shell__preference-section-title">
+          {t('app.preference.appearance')}
+        </span>
+        <div className="app-shell__preference-pills">
+          {(['light', 'dark'] as PantheonColorMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              className={[
+                'app-shell__preference-pill',
+                colorMode === mode ? 'app-shell__preference-pill--active' : '',
+              ]
+                .join(' ')
+                .trim()}
+              onClick={() => setColorMode(mode)}
+            >
+              <span>{t(`app.appearance.${mode}`)}</span>
+              <span>{t(`app.appearance.${mode}.description`)}</span>
             </button>
           ))}
         </div>
