@@ -119,7 +119,10 @@ jobs:
         run: npm run check:pr-governance
 
       - name: Validate PR governance body
-        if: github.event_name == 'pull_request'
+        # Heavy ceremony (full template + harness artifact linkage) is enforced for
+        # agent PRs but skipped when the maintainer labels the PR `solo-override`.
+        # Cheap structural checks (frontmatter, task-packet, PR template) still run above.
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'solo-override')
         run: node scripts/check-pr-governance.mjs --event "$GITHUB_EVENT_PATH"
 
       - name: Check failure registry
@@ -535,7 +538,20 @@ jobs:
           GO_LINT_RESULT: ${{ needs.go-lint.result }}
           DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
+          SOLO_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'solo-override') }}
         run: |
+          # Maintainer escape hatch: a PR labelled `solo-override` treats every gate
+          # as advisory so the solo human is never blocked. Agents must not self-apply
+          # this label — see AGENTS.md. Real quality signals still run and stay visible.
+          if [ "${SOLO_OVERRIDE}" = "true" ]; then
+            echo "::notice::solo-override label present — maintainer bypass; quality gates advisory for this PR"
+            {
+              echo "## Quality Gates Summary"
+              echo ""
+              echo "Bypassed via \`solo-override\` label (maintainer). Gate results are advisory for this PR."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           RUNTIME_GATES_REQUIRED=true
           if [ "${GOVERNANCE_ONLY}" = "true" ]; then
             RUNTIME_GATES_REQUIRED=false
