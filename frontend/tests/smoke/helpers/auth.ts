@@ -1,9 +1,11 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 import { readAuthCookieSession } from '../../../scripts/lib/auth-cookie-session.mjs';
 import { COOKIE_TOKEN_PLACEHOLDER } from '../../../src/core/auth/sessionSnapshot.ts';
+import type { UserInfo } from '../../../src/modules/auth/security/types.ts';
 
 export const apiBaseUrl = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const defaultWebBaseUrl = process.env.PANTHEON_WEB_BASE_URL ?? 'http://127.0.0.1:5173';
+const AUTH_USER_STORAGE_KEY = 'pantheon_auth_user';
 
 export type BrowserLoginResult = {
   accessToken: string;
@@ -94,7 +96,45 @@ export async function signInWithUi(
 export async function signInAsAdmin(page: Page) {
   const login = await loginByApi(page.request, adminCredentials);
   await installClientSession(page, login);
+  await installAuthUserSnapshot(page, await getCurrentUserInfo(page.request, login.accessToken));
   return login.accessToken;
+}
+
+async function getCurrentUserInfo(
+  requestLike: APIRequestContext | Page,
+  accessToken: string,
+): Promise<UserInfo> {
+  const request = resolveRequestContext(requestLike);
+  const response = await request.get(`${apiBaseUrl}/auth/me`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data as UserInfo;
+}
+
+async function installAuthUserSnapshot(page: Page, userInfo: UserInfo) {
+  const serializedUser = JSON.stringify({
+    ...userInfo,
+    preferences: undefined,
+  } satisfies UserInfo);
+  await page.addInitScript((value) => {
+    try {
+      globalThis.localStorage?.setItem('pantheon_auth_user', value);
+    } catch {
+      // about:blank and other opaque origins do not expose storage.
+    }
+  }, serializedUser);
+  if (page.url() !== 'about:blank') {
+    await page.evaluate(([storageKey, value]) => {
+      try {
+        globalThis.localStorage?.setItem(storageKey, value);
+      } catch {
+        // Ignore opaque-origin storage failures for smoke setup.
+      }
+    }, [AUTH_USER_STORAGE_KEY, serializedUser] as const);
+  }
 }
 
 export async function installClientSession(page: Page, login: BrowserLoginResult) {
