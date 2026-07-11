@@ -3,6 +3,18 @@
   background: transparent;
 }
 
+/*
+ * Vertical (sidebar) layout: the Sider must sit side-by-side with the main
+ * column. Arco normally sets `flex-direction: row` via `.arco-layout-has-sider`,
+ * but that class is not emitted here because the Sider is rendered inside the
+ * <LayoutSideMenu> wrapper (behind a conditional + backdrop sibling), so Arco's
+ * child-type detection misses it and `.arco-layout` keeps its default `column`.
+ * Force row explicitly so the sidebar and content render as columns, not stacked.
+ */
+.app-shell--vertical {
+  flex-direction: row;
+}
+
 .app-shell--horizontal {
   flex-direction: column;
 }
