@@ -15,7 +15,13 @@
 
 ## P1 — 规模化 / 安全前必做
 
-### P1-1 · 权限管理 API 增加防自提权纵深校验 【需确认：权限设计】
+> **状态更新（2026-07-10，经代码核实）**：本节大部分已在代码中落地，roadmap（2026-07-09）已落后于代码。
+>
+> - **P1-1 ✅ 已完成**：`permission_service.go` 的 `canWritePolicy` / `ensurePolicyWriteAllowed(operatorRoleKeys, path)` 防提权守卫已应用于 Create/Update/Delete/Import 全部写路径，handler 经 `common.GetRoleKeys(c)` 传入操作者 roleKeys，越权返回 `permission.escalation.forbidden`；测试 `TestPermissionService_PolicyWriteProtection`、`TestProtectedManagementPolicyGuard` 覆盖。
+> - **P1-2 ✅ 已完成**：`backend/pkg/database/casbin_watcher.go` 完整 Redis Watcher（`PANTHEON_CASBIN_WATCHER` 开关，默认关），`casbin.go` 已 `SetWatcher`，`reloadPermissionPolicies()` 写后 `NotifyCasbinWatcher()` 广播；会话缓存 `token_middleware.go` TTL≤0 可禁用。
+> - **P1-3 ✅ 本次修复**：`docker-compose.yml` 移除陈旧 `system_init.sql` 挂载，schema 统一到 golang-migrate（见 `database/README.md`）。剩余：`docker-compose up` bring-up smoke 待跑确认。
+
+### P1-1 · 权限管理 API 增加防自提权纵深校验 【需确认：权限设计】 — ✅ 已完成
 
 - **问题**：权限/角色写 API 无"防自提权/防改高权角色"校验，安全依赖运维纪律。若普通角色被误授 `/system/permission*` 或 `/system/role*` 写策略，可提权到近似 admin。
 - **位置**：`backend/modules/system/iam/permission/permission_service.go:115,146,183`（CreatePolicy/UpdatePolicy/DeletePolicy）；`backend/modules/system/iam/role/role_service.go:248,298`。
