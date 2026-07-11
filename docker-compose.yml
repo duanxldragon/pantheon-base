@@ -18,13 +18,25 @@ services:
       - --collation-server=utf8mb4_general_ci
     volumes:
       - pantheon_mysql_data:/var/lib/mysql
-      - ./database/system_init.sql:/docker-entrypoint-initdb.d/01-system_init.sql:ro
+      # NOTE: schema is single-sourced through golang-migrate (run by the app on
+      # startup) + runtime seed (backend/modules/system/seed.go, i18n seed).
+      # MYSQL_DATABASE above creates the empty `pantheon_base` database; the app
+      # then migrates (29 tables) and seeds. The legacy `database/system_init.sql`
+      # (stale 16-table DDL, DEPRECATED) is intentionally NOT mounted here so the
+      # container never builds the outdated schema. See database/README.md.
 
   redis:
     image: redis:7-alpine
     container_name: pantheon-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-dev_redis_password_change_me}"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:-dev_redis_password_change_me}",
+      ]
     ports:
       - "6379:6379"
     volumes:
