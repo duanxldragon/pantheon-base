@@ -742,7 +742,7 @@ const OperationLogList: React.FC = () => {
     {
       title: t('system.audit.status'),
       dataIndex: 'status',
-      width: TABLE_COLUMN_WIDTH.diagnostics,
+      width: TABLE_COLUMN_WIDTH.identity,
       ...sortableColumn('status'),
       render: (value: number, record) => (
         <Space direction="vertical" size={4}>
@@ -1093,7 +1093,7 @@ const OperationLogList: React.FC = () => {
                 data={data}
                 columns={columns}
                 loading={loading}
-                scroll={{ x: 1240 }}
+                scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
                 rowSelection={
                   canDelete

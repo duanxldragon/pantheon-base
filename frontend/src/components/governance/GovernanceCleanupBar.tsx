@@ -1,6 +1,11 @@
 import React from 'react';
-import { Button, Input, Popconfirm, Select, Typography } from '@arco-design/web-react';
+import { Button, DatePicker, Popconfirm, Select, Typography } from '@arco-design/web-react';
 import { IconDelete } from '@arco-design/web-react/icon';
+
+const { RangePicker } = DatePicker;
+
+// Value format shared with toCleanupTimestamp() on the consumer side.
+const CLEANUP_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
 
 export type GovernanceCleanupMode = 'retention' | 'range';
 
@@ -98,22 +103,21 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
             ) : null}
             {cleanupMode === 'range' ? (
               <div className="table-batch-action-bar__range-controls">
-                <div className="table-batch-action-bar__range-inputs">
-                  <Input
-                    className="table-batch-action-bar__datetime"
-                    type="datetime-local"
-                    value={normalizeDateTimeLocalValue(rangeStart)}
-                    placeholder={rangeStartLabel}
-                    onChange={onRangeStartChange}
-                  />
-                  <Input
-                    className="table-batch-action-bar__datetime"
-                    type="datetime-local"
-                    value={normalizeDateTimeLocalValue(rangeEnd)}
-                    placeholder={rangeEndLabel}
-                    onChange={onRangeEndChange}
-                  />
-                </div>
+                <RangePicker
+                  className="table-batch-action-bar__range-picker"
+                  showTime={{ format: 'HH:mm' }}
+                  format={CLEANUP_DATETIME_FORMAT}
+                  value={[
+                    normalizeDateTimeLocalValue(rangeStart),
+                    normalizeDateTimeLocalValue(rangeEnd),
+                  ]}
+                  placeholder={[rangeStartLabel ?? '', rangeEndLabel ?? '']}
+                  onChange={(valueStrings) => {
+                    const [start, end] = valueStrings ?? [];
+                    onRangeStartChange?.(start ?? '');
+                    onRangeEndChange?.(end ?? '');
+                  }}
+                />
                 {cleanupAction}
               </div>
             ) : (
@@ -135,7 +139,9 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
         ) : (
           trailing
         )}
-        {extraActions ? <div className="table-batch-action-bar__actions">{extraActions}</div> : null}
+        {extraActions ? (
+          <div className="table-batch-action-bar__actions">{extraActions}</div>
+        ) : null}
       </div>
       {hint ? (
         <Typography.Text type="secondary" className="table-batch-action-bar__hint">

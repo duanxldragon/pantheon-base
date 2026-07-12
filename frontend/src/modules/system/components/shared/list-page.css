@@ -366,6 +366,28 @@
   width: 148px;
 }
 
+.table-batch-action-bar__range-picker {
+  width: 380px;
+  min-width: 320px;
+}
+
+/*
+ * Force the Arco RangePicker to render its two date fields horizontally. The
+ * global .arco-picker rules in index.css (authored before any DatePicker was
+ * used in the app) leave the range picker's inner wrapper stacking vertically;
+ * pin the inner layout to a single row here.
+ */
+.table-batch-action-bar__range-picker.arco-picker-range {
+  display: inline-flex;
+  align-items: center;
+}
+
+.table-batch-action-bar__range-picker.arco-picker-range .arco-picker-input {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 auto;
+}
+
 .table-batch-action-bar__range-controls,
 .table-batch-action-bar__range-inputs {
   display: inline-flex;

@@ -1438,7 +1438,7 @@ const DeptList: React.FC = () => {
               </div>
               <Space wrap>
                 <Typography.Text type="secondary">
-                  {t('common.total', { count: governanceTasks.length })}
+                  {t('common.totalWithCount', { count: governanceTasks.length })}
                 </Typography.Text>
                 <Button
                   size="small"

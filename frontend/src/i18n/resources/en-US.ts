@@ -367,6 +367,7 @@ const enUSFallback = {
   'common.tableRecordSummary': '{{count}} records',
   'common.tableSwipeHint': 'Swipe horizontally to see more columns',
   'common.total': 'Total',
+  'common.totalWithCount': '{{count}} in total',
   'common.pagination.firstPage': 'First page',
   'common.pagination.lastPage': 'Last page',
   'common.requiredField': 'Please input {{field}}',
@@ -1808,6 +1809,8 @@ const enUSFallback = {
     'Role created. Please configure API access boundaries in 【Permission Management → API Policies】.',
   'system.role.governanceHintAction': 'Configure Now',
   'system.role.dataScope': 'Data Scope',
+  'system.role.importSuccess': 'Import completed: {{created}} added, {{updated}} updated',
+  'system.role.importFailed': 'Import failed. Please check the file format.',
   'system.role.hero.eyebrow': 'System Domain / IAM Role Governance',
   'system.role.hero.title': 'Govern role authorization across navigation, page, and action layers',
   'system.role.hero.desc':

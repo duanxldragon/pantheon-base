@@ -328,6 +328,7 @@ const zhCNFallback = {
   'common.tableRecordSummary': '共 {{count}} 条',
   'common.tableSwipeHint': '左右滑动查看更多字段',
   'common.total': '总数',
+  'common.totalWithCount': '共 {{count}} 项',
   'common.pagination.firstPage': '首页',
   'common.pagination.lastPage': '末页',
   'common.requiredField': '请输入{{field}}',
