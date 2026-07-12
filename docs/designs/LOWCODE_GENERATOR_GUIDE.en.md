@@ -1,18 +1,32 @@
 ---
-title: Lightweight Low-Code Assistant Generator - Integration and Usage Guide
+title: Low-Code Module Code Generation Platform - Integration and Usage Guide
 doc_type: Design
 layer: system/config
 status: Active
 linked_contracts:
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-05-04
+updated_at: 2026-07-12
 ---
 
-# Lightweight Low-Code Assistant Generator - Integration and Usage Guide
+# Low-Code Module Code Generation Platform - Integration and Usage Guide
 
 Chinese version: [LOWCODE_GENERATOR_GUIDE.md](./LOWCODE_GENERATOR_GUIDE.md)
 
-This guide describes the Pantheon lightweight generator as a development-assistance capability, not as the core architecture driver of the platform.
+> **Positioning: P2+ business module code generation platform (not a skeleton, not a runtime low-code).**
+>
+> The current `lowcode/generator` inside `pantheon-base` goes well beyond a
+> "code skeleton" target — it provides a full stack: schema, i18n, datasource,
+> relation, menu, permission, audit, registry rewrite, and dashboard widget
+> injection, and closes the loop of "source generation + workspace write +
+> generated registry rewrite + pending activation registration".
+>
+> Within this document, "skeleton" means: **a wizard run with the default
+> `enterprise` template produces code that is sufficient to ship a CRUD business
+> module** — not that the generator itself is a skeleton.
+
+## 1. Overview
+
+This guide describes the Pantheon low-code module code generation platform as a development-acceleration capability that helps engineers ship modules conforming to the P2+ enterprise contract, rather than redefining the core platform architecture.
 
 The current closed loop already covers:
 

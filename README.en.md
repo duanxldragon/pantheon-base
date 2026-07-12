@@ -92,6 +92,16 @@ go run ./backend/cmd/server
 
 Backend default: `http://127.0.0.1:8080`
 
+### Low-code module environment variables
+
+| Variable | Default (per env) | Meaning |
+|----------|-------------------|---------|
+| `PANTHEON_ENABLE_DYNAMIC_MODULES` | production `false` / others `true` | Whether runtime registration/activation of dynamic business modules is allowed. Production must keep it disabled |
+| `PANTHEON_WORKSPACE_ROOT` | inferred from git root | Workspace root used by the low-code generator when writing source/schema; must be an absolute path when set |
+| `PANTHEON_NODE_BIN` | `node` from `PATH` | Forces the Node.js absolute binary path; mainly needed in multi-version Node setups or containerized deployments |
+
+Full description lives in `.env.example` and [Low-Code Module Code Generation Platform Guide](./docs/designs/LOWCODE_GENERATOR_GUIDE.en.md).
+
 ### 3. Start frontend
 
 ```bash

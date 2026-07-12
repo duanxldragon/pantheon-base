@@ -1,22 +1,33 @@
 ---
-title: 轻量级低代码辅助生成器 - 集成与使用指南
+title: 低代码模块代码生成平台 - 集成与使用指南
 doc_type: Design
 layer: system/config
 status: Active
 linked_contracts:
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-05-04
+updated_at: 2026-07-12
 ---
 
-# 轻量级低代码辅助生成器 - 集成与使用指南
+# 低代码模块代码生成平台 - 集成与使用指南
 
 English version: [LOWCODE_GENERATOR_GUIDE.en.md](./LOWCODE_GENERATOR_GUIDE.en.md)
 
+> **定位：P2+ 业务模块代码生成平台（不是骨架，不是运行时低代码）**
+>
+> 当前 `pantheon-base` 中的 `lowcode/generator` 已经远超"代码骨架生成"的目标——
+> 它包含完整 schema / i18n / 数据源 / 关系 / 菜单 / 权限 / 审计 / 注册表重写 /
+> dashboard widget 注入等一整套能力，并已闭环"源码生成 + 工作区写入 +
+> generated 注册表重写 + 待激活态注册"。
+>
+> "骨架"在本文语境下指的是：**wizard 四步 + 默认 enterprise 模板产出的代码已足以
+> 驱动一个 CRUD 业务模块上线**，而不是"生成器本身是骨架"。
+
 ## 📋 概述
 
-该生成器是 Pantheon 标准后台底座上的**补充功能**，目标是辅助研发快速接入业务模块，而不是反向定义平台核心架构。
+该生成器是 Pantheon 标准后台底座上的**业务模块代码生成平台**，目标是辅助研发快速
+接入符合 P2+ 企业级契约的业务模块，而不是反向定义平台核心架构。
 
-当前已经打通“**生成源码 + 写入工作区 + 重写 generated 注册表 + 注册待激活状态**”闭环，包含以下核心能力:
+当前已经打通"**生成源码 + 写入工作区 + 重写 generated 注册表 + 注册待激活状态**"闭环，包含以下核心能力:
 
 1. ✅ 模块描述规范与模板引擎
 2. ✅ 前后端代码生成器

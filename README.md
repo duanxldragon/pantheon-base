@@ -90,6 +90,16 @@ go run ./backend/cmd/server
 `pantheon-base` 作为底座仓库，应独占 `pantheon_base` 数据库，不与业务仓库混用。
 如果你在 `git worktree` 中运行动态模块生成、卸载或彻底删除，务必显式设置 `PANTHEON_WORKSPACE_ROOT` 指向当前 worktree 根目录，避免 generated 源码和注册表被写入另一套仓目录。
 
+### 低代码模块相关环境变量
+
+| 变量 | 默认值（按环境） | 含义 |
+|------|---------------|------|
+| `PANTHEON_ENABLE_DYNAMIC_MODULES` | 生产 `false` / 其他 `true` | 是否允许运行时注册/激活动态业务模块。生产默认关闭，必须显式开启 |
+| `PANTHEON_WORKSPACE_ROOT` | 自动按 git 根推断 | 低代码生成器写入源码/schema 的工作区根目录；显式给定时必须为绝对路径 |
+| `PANTHEON_NODE_BIN` | 走 `PATH` 中的 `node` | 强制指定 Node.js 绝对路径，主要用于多版本 Node 或容器化部署 |
+
+完整说明见 `.env.example` 与 [低代码模块代码生成平台指南](./docs/designs/LOWCODE_GENERATOR_GUIDE.md)。
+
 ### 3. 启动前端
 
 ```bash

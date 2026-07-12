@@ -13,48 +13,9 @@ type retiredModuleSpec struct {
 	ComponentKeys      []string
 }
 
-var retiredBusinessModules = []retiredModuleSpec{
-	{
-		ModuleNames: []string{
-			"business.cmdb",
-			"business.cmdb.host",
-			"business.cmdbhostqa",
-			"business.cmdb.group",
-			"business.cmdb.label",
-			"cmdb",
-			"cmdb.host",
-			"cmdbhostqa",
-			"cmdb.group",
-		},
-		PermissionPrefixes: []string{
-			"business:cmdb:",
-			"business:cmdbhostqa:",
-			"cmdb:",
-		},
-		MenuPaths: []string{
-			"/business/cmdb",
-			"/business/cmdb/host",
-			"/business/cmdb/host/:id",
-			"/business/cmdbhostqa",
-			"/business/cmdbhostqa/:id",
-			"/business/cmdb/group",
-			"/business/cmdb/label",
-			"/operations/cmdb",
-			"/operations/cmdb/host",
-			"/operations/cmdb/host/:id",
-			"/operations/cmdb/group",
-			"/operations/cmdb/label",
-		},
-		ComponentKeys: []string{
-			"business/cmdb/host/CmdbHostList",
-			"business/cmdb/host/CmdbHostDetail",
-			"business/cmdbhostqa/CmdbhostqaList",
-			"business/cmdbhostqa/CmdbhostqaDetail",
-			"business/cmdb/group/CmdbGroupList",
-			"business/cmdb/label/CmdbLabelSchemaList",
-		},
-	},
-}
+// retiredBusinessModules 在 pantheon-base 留作通用 hook，business/* 退役条目
+// 属于 ops 业务语义，应由 pantheon-ops 维护。base 不再内置 cmdb 等业务模块。
+var retiredBusinessModules = []retiredModuleSpec{}
 
 func CleanupRetiredBusinessModules(db *gorm.DB) error {
 	return cleanupRetiredBusinessModules(db)
