@@ -238,6 +238,8 @@ const enUSFallback = {
   'auth.loginLog.loginTime': 'Login Time',
   'auth.loginLog.ip': 'IP Address',
   'auth.loginLog.location': 'Location',
+  'location.intranet': 'Intranet IP',
+  'location.unknown': 'Unknown location',
   'auth.loginLog.browser': 'Browser',
   'auth.loginLog.os': 'Operating System',
   'auth.loginLog.status': 'Status',

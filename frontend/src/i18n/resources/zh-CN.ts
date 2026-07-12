@@ -218,6 +218,8 @@ const zhCNFallback = {
   'auth.loginLog.loginTime': '登录时间',
   'auth.loginLog.ip': '登录 IP',
   'auth.loginLog.location': '地理位置',
+  'location.intranet': '内网 IP',
+  'location.unknown': '未知位置',
   'auth.loginLog.browser': '浏览器',
   'auth.loginLog.os': '操作系统',
   'auth.loginLog.status': '登录状态',

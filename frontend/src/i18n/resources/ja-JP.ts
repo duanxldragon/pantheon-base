@@ -420,6 +420,8 @@ const jaJPFallback = {
   'auth.loginLog.loginTime': 'ログイン時刻',
   'auth.loginLog.ip': 'IP アドレス',
   'auth.loginLog.location': '位置情報',
+  'location.intranet': 'イントラネット IP',
+  'location.unknown': '不明な場所',
   'auth.loginLog.browser': 'ブラウザ',
   'auth.loginLog.os': 'OS',
   'auth.loginLog.status': '状態',

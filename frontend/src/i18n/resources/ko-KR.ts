@@ -414,6 +414,8 @@ const koKRFallback = {
   'auth.loginLog.loginTime': '로그인 시간',
   'auth.loginLog.ip': 'IP 주소',
   'auth.loginLog.location': '위치',
+  'location.intranet': '인트라넷 IP',
+  'location.unknown': '알 수 없는 위치',
   'auth.loginLog.browser': '브라우저',
   'auth.loginLog.os': '운영체제',
   'auth.loginLog.status': '상태',

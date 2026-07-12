@@ -443,6 +443,8 @@ const frFRFallback = {
   'auth.loginLog.loginTime': 'Heure de connexion',
   'auth.loginLog.ip': 'Adresse IP',
   'auth.loginLog.location': 'Localisation',
+  'location.intranet': 'IP intranet',
+  'location.unknown': 'Localisation inconnue',
   'auth.loginLog.browser': 'Navigateur',
   'auth.loginLog.os': 'Système d’exploitation',
   'auth.loginLog.status': 'Statut',
