@@ -562,7 +562,9 @@ const SecurityCenter: React.FC = () => {
           <Card
             className="page-panel"
             title={t('auth.security.sessions')}
-            extra={<Tag color="arcoblue">{t('common.total', { count: sessions.length })}</Tag>}
+            extra={
+              <Tag color="arcoblue">{t('common.totalWithCount', { count: sessions.length })}</Tag>
+            }
           >
             <Space direction="vertical" size={16} className="auth-table-stack">
               <div className="auth-inline-note">
@@ -607,7 +609,7 @@ const SecurityCenter: React.FC = () => {
             title={t('auth.security.loginLogs')}
             extra={
               <Tag color={failedCount > 0 ? 'orange' : 'green'}>
-                {t('common.total', { count: loginLogs.length })}
+                {t('common.totalWithCount', { count: loginLogs.length })}
               </Tag>
             }
           >

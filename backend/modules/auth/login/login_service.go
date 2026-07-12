@@ -223,7 +223,7 @@ func (s *LoginService) ExportLoginLogs(query *LoginLogQuery) (*impexp.CSVFile, e
 	rows := make([][]string, 0, len(logs))
 	for _, item := range logs {
 		rows = append(rows, []string{
-			item.Username, item.Ipaddr, item.LoginLocation, item.Browser, item.Os,
+			item.Username, item.Ipaddr, common.LocationDisplayText(item.LoginLocation), item.Browser, item.Os,
 			fmt.Sprintf("%d", item.Status), item.Msg, item.LoginTime.Format(time.RFC3339),
 		})
 	}

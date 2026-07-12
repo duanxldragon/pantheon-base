@@ -254,6 +254,9 @@ const LoginLogList: React.FC = () => {
       dataIndex: 'loginLocation',
       width: TABLE_COLUMN_WIDTH.location,
       ellipsis: true,
+      // Backend stores a stable i18n key (location.*); legacy rows keep raw text,
+      // which passes through via defaultValue.
+      render: (value: string) => (value ? t(value, { defaultValue: value }) : '-'),
     },
     {
       title: t('auth.loginLog.browser'),

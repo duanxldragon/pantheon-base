@@ -1256,7 +1256,7 @@ const I18nList: React.FC = () => {
                   {t('i18n.viewTitle')}
                 </Typography.Text>
                 <Typography.Paragraph type="secondary" className="system-list__table-head-desc">
-                  {t('common.total', { count: summary.total })}
+                  {t('common.totalWithCount', { count: summary.total })}
                 </Typography.Paragraph>
               </div>
             </div>

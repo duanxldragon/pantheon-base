@@ -126,7 +126,7 @@ const SettingAuditCard: React.FC<SettingAuditCardProps> = ({
             {t('system.setting.audit.title')}
           </Typography.Text>
           <Typography.Paragraph type="secondary" style={{ margin: '4px 0 0' }}>
-            {t('common.total', { count: total })}
+            {t('common.totalWithCount', { count: total })}
           </Typography.Paragraph>
         </div>
         <Space>

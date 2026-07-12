@@ -1,6 +1,8 @@
 import { Suspense, lazy, type ReactElement, useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Spin } from '@arco-design/web-react';
+import { ConfigProvider, Spin } from '@arco-design/web-react';
+import { useTranslation } from 'react-i18next';
+import { resolveArcoLocale } from './core/arco/arcoLocale';
 import { hasAuthSession, useAuthStore } from './store/useAuthStore';
 import { registeredModules } from './core/router/modules';
 import { getRegisteredComponent } from './core/router/componentRegistry';
@@ -87,6 +89,8 @@ function App() {
   const warmupTokenRef = useRef<string | null>(null);
   const { token } = useAuthStore();
   const { menuTree, fetchMenuTree } = useMenuStore();
+  const { i18n } = useTranslation();
+  const arcoLocale = resolveArcoLocale(i18n.language);
 
   useEffect(() => {
     const showHandler = () => setVerifyVisible(true);
@@ -140,46 +144,48 @@ function App() {
   const allRoutes = registeredModules.flatMap((m) => m.routes);
 
   return (
-    <Suspense fallback={<Spin loading />}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <AuthGuard>
-              <BaseLayout />
-            </AuthGuard>
-          }
-        >
-          <Route index element={<DefaultHomeRedirect />} />
-          {allRoutes.map((route) => {
-            const Component = route.component || getRegisteredComponent(route.componentKey);
-            if (!Component) return null;
-            return (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={
-                  <Suspense fallback={<RouteContentFallback />}>
-                    <RoutePermissionGuard permission={route.pagePermission}>
-                      <Component />
-                    </RoutePermissionGuard>
-                  </Suspense>
-                }
-              />
-            );
-          })}
-        </Route>
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-      {verifyVisible ? (
-        <SecondaryVerifyModal
-          visible={verifyVisible}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
-      ) : null}
-    </Suspense>
+    <ConfigProvider locale={arcoLocale}>
+      <Suspense fallback={<Spin loading />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <AuthGuard>
+                <BaseLayout />
+              </AuthGuard>
+            }
+          >
+            <Route index element={<DefaultHomeRedirect />} />
+            {allRoutes.map((route) => {
+              const Component = route.component || getRegisteredComponent(route.componentKey);
+              if (!Component) return null;
+              return (
+                <Route
+                  key={route.path}
+                  path={route.path}
+                  element={
+                    <Suspense fallback={<RouteContentFallback />}>
+                      <RoutePermissionGuard permission={route.pagePermission}>
+                        <Component />
+                      </RoutePermissionGuard>
+                    </Suspense>
+                  }
+                />
+              );
+            })}
+          </Route>
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+        {verifyVisible ? (
+          <SecondaryVerifyModal
+            visible={verifyVisible}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        ) : null}
+      </Suspense>
+    </ConfigProvider>
   );
 }
 

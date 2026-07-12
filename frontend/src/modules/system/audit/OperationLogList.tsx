@@ -730,6 +730,9 @@ const OperationLogList: React.FC = () => {
         dataIndex: 'operLocation',
         width: TABLE_COLUMN_WIDTH.location,
         ellipsis: true,
+        // Backend stores a stable i18n key (location.*); legacy rows keep raw
+        // text, which passes through via defaultValue.
+        render: (value: string) => (value ? t(value, { defaultValue: value }) : '-'),
       },
       'low',
     ),
@@ -772,7 +775,9 @@ const OperationLogList: React.FC = () => {
       {
         title: t('system.audit.operTime'),
         dataIndex: 'operTime',
-        width: TABLE_COLUMN_WIDTH.datetime,
+        // Full "YYYY-MM-DD HH:mm:ss" plus the sort affordance needs more than the
+        // shared datetime width, otherwise the timestamp wraps to two lines.
+        width: 200,
         ...sortableColumn('operTime'),
         render: (value: string) => formatDateTime(value),
       },
@@ -1093,7 +1098,7 @@ const OperationLogList: React.FC = () => {
                 data={data}
                 columns={columns}
                 loading={loading}
-                scroll={{ x: 1240 }}
+                scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
                 rowSelection={
                   canDelete
