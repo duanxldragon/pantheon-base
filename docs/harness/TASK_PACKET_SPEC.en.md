@@ -6,7 +6,7 @@ Type: Contract
 Layer: platform
 Status: Active
 
-A task packet is the tool-agnostic input format for non-trivial work. It lets Codex, Claude Code, Cursor, Copilot, OpenHands, Aider, and human engineers share the same task boundary.
+A task packet is the tool-agnostic input format for non-trivial work. It lets various agent tools and human engineers share the same task boundary.
 
 ## 1. Location
 

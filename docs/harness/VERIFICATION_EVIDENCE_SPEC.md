@@ -100,8 +100,8 @@ complete | blocked | partial
   "taskId": "YYYY-MM-DD-task-name",
   "repo": "pantheon-platform",
   "agent": {
-    "tool": "codex",
-    "adapter": ".agents/adapters/codex.md"
+    "tool": "agent",
+    "adapter": "repository-defined adapter"
   },
   "commands": [
     {
@@ -131,7 +131,7 @@ complete | blocked | partial
     "estimatedCostUsd": 1.42,
     "retryCount": 1,
     "delegationCount": 0,
-    "notes": "derived from tool-native session log"
+    "notes": "derived from agent session record"
   },
   "browserEvidence": [],
   "runtimeSensitive": true,
@@ -143,7 +143,11 @@ complete | blocked | partial
     "evidenceDir": ".harness/evidence/YYYY-MM-DD-task-name/",
     "reviewFile": ".harness/evidence/YYYY-MM-DD-task-name/review.md",
     "changeRef": "openspec/changes/<name>/",
-    "planRefs": ["docs/superpowers/plans/<file>.md"]
+    "planRefs": [
+      "plan references",
+      "workflow references",
+      "resumable execution artifacts"
+    ]
   },
   "knownGaps": [],
   "completedAt": "YYYY-MM-DDTHH:mm:ssZ"
@@ -152,14 +156,11 @@ complete | blocked | partial
 
 `agent.tool` 可取值：
 
-- `codex`
-- `claude-code`
-- `cursor`
-- `github-copilot`
-- `openhands`
-- `aider`
+- `agent`
 - `human`
 - `other`
+
+具体工具示例包括 `codex`、`claude-code`、`cursor`、`github-copilot`、`openhands`、`aider`。
 
 当任务包含 UI/路由/权限态浏览器验证时，`browserEvidence` 条目至少应包含：
 
@@ -208,7 +209,7 @@ complete | blocked | partial
     "estimatedCostUsd": 1.42,
     "retryCount": 1,
     "delegationCount": 2,
-    "notes": "derived from tool-native session log"
+    "notes": "derived from agent session record"
   }
 }
 ```

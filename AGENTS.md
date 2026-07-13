@@ -16,7 +16,7 @@ English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 - 改动接口、路由、权限、i18n、菜单、数据库、导入导出、seed 或 smoke 范围时，同步更新测试、脚本、fixture、门禁或截图基线。
 - `L1/L2` 任务默认先声明实现者视角、评审视角、最小 evidence 和 human gate；`L2` 必须带 task packet 或父 task packet 引用。
 - 多 agent 工作默认由当前协调 agent 调度，但方法按角色定义：Planner/Dispatcher 负责规划、上下文整理和 review 路由；Generator 负责探索、实现和修复；Reviewer/Evaluator 负责审查和证据判断；人只负责目标、范围、风险接受和关键 gate 决策，不需要手动在工具间搬运上下文。
-- **Planner/Dispatcher 角色默认不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现交给 Generator adapter 执行。当前常用 adapter 可以是 `codex exec "<task prompt>" -C pantheon-base -s read-write`，但具体工具不改变角色边界。Planner/Dispatcher 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
+- **Planner/Dispatcher 角色默认不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现交给 Generator adapter 执行。具体工具不改变角色边界；Planner/Dispatcher 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
 - 涉及 PR 收口、GitHub comments 收敛或 GitHub Actions 红灯时，优先看 `.agents/skills/` 下的 `repo-verify`、`repo-pr-gate`、`gh-address-comments`、`repo-ci-triage`、`gh-fix-ci`。
 - **合并门禁 `Quality Gates` 是必过检查，但 `solo-override` label 是「人类维护者专属」逃生舱**：贴上该 label 会让所有门禁降级为 advisory（含 docs-governance 的 PR-body harness ceremony），仅供维护者本人在门禁误挡开发流程时手动使用。**Agent（Planner/Generator/Reviewer）严禁给自己的 PR 贴 `solo-override`**；agent PR 必须把门禁跑绿或修好门禁本身，除非维护者明确指示。真实质量信号（build/test/lint/security）始终运行并可见。
 - 触碰 UI 时先用 `impeccable`，并提供渲染证据或说明未产出证据的原因。
