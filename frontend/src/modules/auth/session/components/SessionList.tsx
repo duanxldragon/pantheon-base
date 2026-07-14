@@ -9,6 +9,7 @@ import {
   Select,
   Space,
   Tag,
+  Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
@@ -53,7 +54,10 @@ import { formatClientSummary } from '../clientInfo';
 import SessionDetailModal from './SessionDetailModal';
 import '../../../system/components/shared/list-page.css';
 import '../../auth.css';
-import { toCleanupTimestamp, loadRetentionSetting } from '../../../system/audit/retentionSetting';
+import {
+  toCleanupTimestampFromParts,
+  loadRetentionSetting,
+} from '../../../system/audit/retentionSetting';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -93,8 +97,10 @@ const SessionList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStart, setCleanupRangeStart] = useState('');
-  const [cleanupRangeEnd, setCleanupRangeEnd] = useState('');
+  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
+  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
+  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
+  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
@@ -198,19 +204,27 @@ const SessionList: React.FC = () => {
   };
 
   const clearHistoricSessions = async () => {
-    if (cleanupMode === 'range' && (!cleanupRangeStart || !cleanupRangeEnd)) {
-      message.warning(t('common.cleanupRangeRequired'));
-      return;
-    }
     try {
-      const resp = await cleanupAdminSessions(
-        cleanupMode === 'range'
-          ? {
-              startedAt: toCleanupTimestamp(cleanupRangeStart),
-              endedAt: toCleanupTimestamp(cleanupRangeEnd),
-            }
-          : { retentionDays },
-      );
+      if (cleanupMode === 'range') {
+        const startedAt = toCleanupTimestampFromParts(
+          cleanupRangeStartDate,
+          cleanupRangeStartTime,
+        );
+        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
+        if (!startedAt || !endedAt) {
+          message.warning(t('common.cleanupRangeRequired'));
+          return;
+        }
+        const resp = await cleanupAdminSessions({
+          startedAt,
+          endedAt,
+        });
+        message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
+        await loadData(query, { silent: true });
+        return;
+      }
+
+      const resp = await cleanupAdminSessions({ retentionDays });
       message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
       await loadData(query, { silent: true });
     } catch {
@@ -315,8 +329,11 @@ const SessionList: React.FC = () => {
         title: t('auth.session.lastActive'),
         dataIndex: 'lastActivityAt',
         width: 150,
-        render: (_: unknown, row: AdminSessionRow) =>
-          formatDateTime(row.lastActivityAt || row.lastRefreshAt),
+        render: (_: unknown, row: AdminSessionRow) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(row.lastActivityAt || row.lastRefreshAt, { withSeconds: true })}
+          </Typography.Text>
+        ),
       },
       'medium',
     ),
@@ -325,7 +342,11 @@ const SessionList: React.FC = () => {
         title: t('auth.session.refreshExpiresAt'),
         dataIndex: 'refreshExpiresAt',
         width: 160,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value, { withSeconds: true })}
+          </Typography.Text>
+        ),
       },
       'low',
     ),
@@ -478,12 +499,18 @@ const SessionList: React.FC = () => {
                     { label: t('common.cleanupModeRetention'), value: 'retention' },
                     { label: t('common.cleanupModeRange'), value: 'range' },
                   ]}
-                  rangeStart={cleanupRangeStart}
-                  rangeEnd={cleanupRangeEnd}
-                  onRangeStartChange={setCleanupRangeStart}
-                  onRangeEndChange={setCleanupRangeEnd}
-                  rangeStartLabel={t('common.cleanupRangeStart')}
-                  rangeEndLabel={t('common.cleanupRangeEnd')}
+                  rangeStartDate={cleanupRangeStartDate}
+                  rangeStartTime={cleanupRangeStartTime}
+                  rangeEndDate={cleanupRangeEndDate}
+                  rangeEndTime={cleanupRangeEndTime}
+                  onRangeStartDateChange={setCleanupRangeStartDate}
+                  onRangeStartTimeChange={setCleanupRangeStartTime}
+                  onRangeEndDateChange={setCleanupRangeEndDate}
+                  onRangeEndTimeChange={setCleanupRangeEndTime}
+                  rangeStartDateLabel={t('common.cleanupRangeStartDate')}
+                  rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
+                  rangeEndDateLabel={t('common.cleanupRangeEndDate')}
+                  rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
                   confirmTitle={
                     cleanupMode === 'range'
                       ? t('common.cleanupRangeConfirm')

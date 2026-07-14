@@ -128,8 +128,12 @@ const koKROverrideFallback = {
   'common.cleanupModeRetention': '보관 기간 기준',
   'common.cleanupRangeConfirm': '선택한 기간의 레코드를 정리하시겠습니까?',
   'common.cleanupRangeEnd': '종료 시각',
+  'common.cleanupRangeStartDate': '시작 날짜',
+  'common.cleanupRangeStartTime': '시작 시각',
+  'common.cleanupRangeEndDate': '종료 날짜',
+  'common.cleanupRangeEndTime': '종료 시각',
   'common.cleanupRangeRequired':
-    '기간 지정 정리를 사용할 때는 시작 시각과 종료 시각을 모두 선택하세요',
+    '기간 지정 정리를 사용할 때는 시작/종료 날짜와 시간을 모두 선택하세요',
   'common.cleanupRangeStart': '시작 시각',
   'common.pagination.firstPage': '첫 페이지',
   'common.pagination.lastPage': '마지막 페이지',

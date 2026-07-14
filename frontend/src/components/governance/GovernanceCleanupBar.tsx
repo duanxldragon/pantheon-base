@@ -1,11 +1,17 @@
+import dayjs from 'dayjs';
 import React from 'react';
-import { Button, DatePicker, Popconfirm, Select, Typography } from '@arco-design/web-react';
+import {
+  Button,
+  DatePicker,
+  Popconfirm,
+  Select,
+  TimePicker,
+  Typography,
+} from '@arco-design/web-react';
 import { IconDelete } from '@arco-design/web-react/icon';
 
-const { RangePicker } = DatePicker;
-
-// Value format shared with toCleanupTimestamp() on the consumer side.
-const CLEANUP_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
+const CLEANUP_DATE_FORMAT = 'YYYY-MM-DD';
+const CLEANUP_TIME_FORMAT = 'HH:mm';
 
 export type GovernanceCleanupMode = 'retention' | 'range';
 
@@ -22,38 +28,62 @@ interface GovernanceCleanupBarProps {
   onCleanupModeChange?: (value: GovernanceCleanupMode) => void;
   cleanupModeLabel?: string;
   cleanupModeOptions?: Array<{ label: string; value: GovernanceCleanupMode }>;
-  rangeStart?: string;
-  rangeEnd?: string;
-  onRangeStartChange?: (value: string) => void;
-  onRangeEndChange?: (value: string) => void;
-  rangeStartLabel?: string;
-  rangeEndLabel?: string;
+  rangeStartDate?: string;
+  rangeStartTime?: string;
+  rangeEndDate?: string;
+  rangeEndTime?: string;
+  onRangeStartDateChange?: (value: string) => void;
+  onRangeStartTimeChange?: (value: string) => void;
+  onRangeEndDateChange?: (value: string) => void;
+  onRangeEndTimeChange?: (value: string) => void;
+  rangeStartDateLabel?: string;
+  rangeStartTimeLabel?: string;
+  rangeEndDateLabel?: string;
+  rangeEndTimeLabel?: string;
   hint?: string;
   extraActions?: React.ReactNode;
   trailing?: React.ReactNode;
 }
 
-function normalizeDateTimeLocalValue(value?: string) {
-  const normalized = String(value || '').trim();
-  if (!normalized) {
-    return '';
+function toDateValue(value?: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) {
+    return null;
   }
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(normalized)) {
-    return normalized;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (match) {
+    const [, year, month, day] = match;
+    const localDate = new Date(Number(year), Number(month) - 1, Number(day));
+    if (!Number.isNaN(localDate.getTime())) {
+      return dayjs(localDate);
+    }
   }
-  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
-    return normalized.replace(' ', 'T');
+  const parsed = dayjs(trimmed);
+  return parsed.isValid() ? parsed : null;
+}
+
+function toTimeValue(value?: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) {
+    return null;
   }
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
-    return '';
+  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
+  if (match) {
+    const [, hour, minute, second = '00'] = match;
+    const localTime = new Date(
+      1970,
+      0,
+      1,
+      Number(hour),
+      Number(minute),
+      Number(second),
+    );
+    if (!Number.isNaN(localTime.getTime())) {
+      return dayjs(localTime);
+    }
   }
-  const year = parsed.getFullYear();
-  const month = `${parsed.getMonth() + 1}`.padStart(2, '0');
-  const day = `${parsed.getDate()}`.padStart(2, '0');
-  const hours = `${parsed.getHours()}`.padStart(2, '0');
-  const minutes = `${parsed.getMinutes()}`.padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  const parsed = dayjs(`1970-01-01T${trimmed.length === 5 ? `${trimmed}:00` : trimmed}`);
+  return parsed.isValid() ? parsed : null;
 }
 
 const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
@@ -68,12 +98,18 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
   onCleanupModeChange,
   cleanupModeLabel,
   cleanupModeOptions,
-  rangeStart,
-  rangeEnd,
-  onRangeStartChange,
-  onRangeEndChange,
-  rangeStartLabel,
-  rangeEndLabel,
+  rangeStartDate,
+  rangeStartTime,
+  rangeEndDate,
+  rangeEndTime,
+  onRangeStartDateChange,
+  onRangeStartTimeChange,
+  onRangeEndDateChange,
+  onRangeEndTimeChange,
+  rangeStartDateLabel,
+  rangeStartTimeLabel,
+  rangeEndDateLabel,
+  rangeEndTimeLabel,
   hint,
   extraActions,
   trailing,
@@ -86,6 +122,11 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
       </Button>
     </Popconfirm>
   );
+
+  const rangeValueStartDate = toDateValue(rangeStartDate);
+  const rangeValueStartTime = toTimeValue(rangeStartTime);
+  const rangeValueEndDate = toDateValue(rangeEndDate);
+  const rangeValueEndTime = toTimeValue(rangeEndTime);
 
   return (
     <div className="table-batch-action-bar table-batch-action-bar--governance">
@@ -103,21 +144,102 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
             ) : null}
             {cleanupMode === 'range' ? (
               <div className="table-batch-action-bar__range-controls">
-                <RangePicker
-                  className="table-batch-action-bar__range-picker"
-                  showTime={{ format: 'HH:mm' }}
-                  format={CLEANUP_DATETIME_FORMAT}
-                  value={[
-                    normalizeDateTimeLocalValue(rangeStart),
-                    normalizeDateTimeLocalValue(rangeEnd),
-                  ]}
-                  placeholder={[rangeStartLabel ?? '', rangeEndLabel ?? '']}
-                  onChange={(valueStrings) => {
-                    const [start, end] = valueStrings ?? [];
-                    onRangeStartChange?.(start ?? '');
-                    onRangeEndChange?.(end ?? '');
-                  }}
-                />
+                <div className="table-batch-action-bar__cleanup-range-fields">
+                  <label className="table-batch-action-bar__cleanup-field">
+                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
+                      {rangeStartDateLabel}
+                    </Typography.Text>
+                    <DatePicker
+                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-date-picker"
+                      allowClear
+                      editable={false}
+                      dayStartOfWeek={1}
+                      format={CLEANUP_DATE_FORMAT}
+                      value={rangeValueStartDate || undefined}
+                      placeholder={rangeStartDateLabel}
+                      position="br"
+                      triggerProps={{
+                        className: 'table-batch-action-bar__cleanup-date-popup',
+                        autoAlignPopupWidth: false,
+                        popupStyle: { maxHeight: 480 },
+                        popupAlign: { bottom: 6 },
+                      }}
+                      onChange={(valueString) => {
+                        onRangeStartDateChange?.(valueString || '');
+                      }}
+                    />
+                  </label>
+                  <label className="table-batch-action-bar__cleanup-field">
+                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
+                      {rangeStartTimeLabel}
+                    </Typography.Text>
+                    <TimePicker
+                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-time-picker"
+                      allowClear
+                      editable={false}
+                      format={CLEANUP_TIME_FORMAT}
+                      value={rangeValueStartTime || undefined}
+                      placeholder={rangeStartTimeLabel}
+                      position="br"
+                      triggerProps={{
+                        className: 'table-batch-action-bar__cleanup-time-popup',
+                        autoAlignPopupWidth: false,
+                        popupStyle: { maxHeight: 360 },
+                        popupAlign: { bottom: 6 },
+                      }}
+                      onChange={(valueString) => {
+                        onRangeStartTimeChange?.(valueString || '');
+                      }}
+                    />
+                  </label>
+                  <label className="table-batch-action-bar__cleanup-field">
+                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
+                      {rangeEndDateLabel}
+                    </Typography.Text>
+                    <DatePicker
+                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-date-picker"
+                      allowClear
+                      editable={false}
+                      dayStartOfWeek={1}
+                      format={CLEANUP_DATE_FORMAT}
+                      value={rangeValueEndDate || undefined}
+                      placeholder={rangeEndDateLabel}
+                      position="br"
+                      triggerProps={{
+                        className: 'table-batch-action-bar__cleanup-date-popup',
+                        autoAlignPopupWidth: false,
+                        popupStyle: { maxHeight: 480 },
+                        popupAlign: { bottom: 6 },
+                      }}
+                      onChange={(valueString) => {
+                        onRangeEndDateChange?.(valueString || '');
+                      }}
+                    />
+                  </label>
+                  <label className="table-batch-action-bar__cleanup-field">
+                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
+                      {rangeEndTimeLabel}
+                    </Typography.Text>
+                    <TimePicker
+                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-time-picker"
+                      allowClear
+                      editable={false}
+                      format={CLEANUP_TIME_FORMAT}
+                      value={rangeValueEndTime || undefined}
+                      placeholder={rangeEndTimeLabel}
+                      position="br"
+                      triggerProps={{
+                        className: 'table-batch-action-bar__cleanup-time-popup',
+                        autoAlignPopupWidth: false,
+                        popupStyle: { maxHeight: 360 },
+                        popupAlign: { bottom: 6 },
+                      }}
+                      onChange={(valueString) => {
+                        onRangeEndTimeChange?.(valueString || '');
+                      }}
+                    />
+                  </label>
+                </div>
                 {cleanupAction}
               </div>
             ) : (

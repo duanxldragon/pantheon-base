@@ -65,6 +65,15 @@
   white-space: nowrap;
 }
 
+/* Compact datetime cells use 24h ISO-ish strings that are dense digits but
+   need to stay on one line so a 168px column does not wrap. Used by every
+   system/auth module that renders <Typography.Text className="system-list__datetime-text">. */
+.system-list__datetime-text {
+  display: inline-block;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .governance-summary-bar {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
@@ -366,26 +375,89 @@
   width: 148px;
 }
 
-.table-batch-action-bar__range-picker {
-  width: 380px;
-  min-width: 320px;
+.table-batch-action-bar__range-picker,
+.table-batch-action-bar__range-picker.arco-picker,
+.table-batch-action-bar__range-picker.arco-picker-range {
+  width: min(100%, 440px);
+  min-width: 260px;
+  max-width: 100%;
+  flex: 0 1 440px;
+  display: inline-flex;
+  align-items: center;
 }
 
 /*
- * Force the Arco RangePicker to render its two date fields horizontally. The
- * global .arco-picker rules in index.css (authored before any DatePicker was
- * used in the app) leave the range picker's inner wrapper stacking vertically;
- * pin the inner layout to a single row here.
+ * Keep the Arco RangePicker popup as a compact horizontal overlay on desktop.
+ * The global .arco-picker rules in index.css predate DatePicker usage and can
+ * leave the range picker collapsed into a tall vertical stack; keep the popup
+ * on one row here and fall back to wrapping only on narrow screens.
  */
-.table-batch-action-bar__range-picker.arco-picker-range {
-  display: inline-flex;
+.table-batch-action-bar__range-picker .arco-picker-input {
+  display: flex;
   align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.table-batch-action-bar__range-picker.arco-picker-range .arco-picker-input {
-  display: inline-flex;
-  align-items: center;
-  flex: 1 1 auto;
+.table-batch-action-bar__range-picker .arco-picker-input input {
+  width: auto;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+/*
+ * The popup is portal-rendered, so it is NOT a descendant of
+ * .table-batch-action-bar__range-picker. Arco mounts an extra wrapper div in
+ * body, then the trigger span, then the actual picker container. Target the
+ * container node directly.
+ */
+body .arco-picker-range-container {
+  min-width: 540px;
+  max-height: min(560px, 80vh);
+  overflow: hidden auto;
+  background-color: var(--color-bg-popup) !important;
+  position: relative;
+  z-index: 1;
+}
+
+body .arco-picker-range-container .arco-picker-range-wrapper {
+  display: flex !important;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+}
+
+/* Ensure calendar grid rows always display as horizontal flex (fixes React 19 compat) */
+body .arco-picker-range-container .arco-picker-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Ensure week list header displays horizontally */
+body .arco-picker-range-container .arco-picker-week-list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Ensure calendar grid cells stay equal width */
+body .arco-picker-range-container .arco-picker-cell {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+body
+  .arco-picker-range-container
+  .arco-picker-range-wrapper
+  .arco-panel-date
+  > .arco-panel-date-inner {
+  width: 256px;
 }
 
 .table-batch-action-bar__range-controls,
@@ -398,11 +470,14 @@
 }
 
 .table-batch-action-bar__range-controls {
-  flex: 0 0 auto;
-  flex-wrap: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .table-batch-action-bar__range-inputs {
+  flex: 1 1 0;
+  min-width: 0;
   flex-wrap: nowrap;
 }
 
@@ -426,7 +501,7 @@
   gap: 6px !important;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1024px) {
   .table-batch-action-bar--governance .table-batch-action-bar__meta,
   .table-batch-action-bar--governance .table-batch-action-bar__actions {
     flex-wrap: wrap;
@@ -434,6 +509,23 @@
 
   .table-batch-action-bar__range-controls,
   .table-batch-action-bar__range-inputs {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-batch-action-bar__range-picker {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  body .arco-picker-range-container {
+    min-width: 0;
+  }
+
+  body .arco-picker-range-container .arco-picker-range-wrapper {
+    display: flex !important;
+    align-items: flex-start;
     flex-wrap: wrap;
   }
 }
@@ -1754,6 +1846,89 @@
   justify-content: space-between;
   gap: 12px;
   margin-top: auto;
+}
+
+.table-batch-action-bar__cleanup-range-fields {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.table-batch-action-bar__cleanup-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.table-batch-action-bar__cleanup-field-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.table-batch-action-bar__cleanup-date-picker,
+.table-batch-action-bar__cleanup-date-picker.arco-picker {
+  width: 152px;
+}
+
+.table-batch-action-bar__cleanup-time-picker,
+.table-batch-action-bar__cleanup-time-picker.arco-picker {
+  width: 104px;
+}
+
+body .table-batch-action-bar__cleanup-date-popup.arco-picker-container,
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-container {
+  min-width: 0;
+}
+
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list,
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-row {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  align-items: center;
+  justify-items: center;
+}
+
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list-item,
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-cell {
+  min-width: 0 !important;
+}
+
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-date {
+  justify-content: center;
+}
+
+body .table-batch-action-bar__cleanup-date-popup .arco-picker-date-value {
+  min-width: 24px;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .table-batch-action-bar__cleanup-range-fields {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-batch-action-bar__cleanup-range-fields {
+    width: 100%;
+  }
+
+  .table-batch-action-bar__cleanup-field,
+  .table-batch-action-bar__cleanup-date-picker,
+  .table-batch-action-bar__cleanup-time-picker {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {

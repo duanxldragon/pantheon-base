@@ -387,8 +387,12 @@ const enUSFallback = {
   'common.cleanupModeRange': 'By time range',
   'common.cleanupRangeStart': 'Start time',
   'common.cleanupRangeEnd': 'End time',
+  'common.cleanupRangeStartDate': 'Start date',
+  'common.cleanupRangeStartTime': 'Start time',
+  'common.cleanupRangeEndDate': 'End date',
+  'common.cleanupRangeEndTime': 'End time',
   'common.cleanupRangeRequired':
-    'When using range cleanup, select both the start and end timestamps',
+    'When using range cleanup, select both the start and end dates and times',
   'common.cleanupRangeConfirm': 'Clean up records inside the selected time range?',
   'common.deleteSelected': 'Delete Selected',
   'common.batchDeleteSuccess': 'Deleted {{deleted}} record(s)',
