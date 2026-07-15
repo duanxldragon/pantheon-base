@@ -421,7 +421,7 @@ body .arco-picker-range-container {
   min-width: 540px;
   max-height: min(560px, 80vh);
   overflow: hidden auto;
-  background-color: var(--color-bg-popup) !important;
+  background-color: var(--panel-bg-solid) !important;
   position: relative;
   z-index: 1;
 }
