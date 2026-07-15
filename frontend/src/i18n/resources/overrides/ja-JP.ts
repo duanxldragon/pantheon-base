@@ -131,8 +131,12 @@ const jaJPOverrideFallback = {
   'common.cleanupModeRetention': '保持期間指定',
   'common.cleanupRangeConfirm': '選択した期間内のレコードを整理しますか？',
   'common.cleanupRangeEnd': '終了時刻',
+  'common.cleanupRangeStartDate': '開始日',
+  'common.cleanupRangeStartTime': '開始時刻',
+  'common.cleanupRangeEndDate': '終了日',
+  'common.cleanupRangeEndTime': '終了時刻',
   'common.cleanupRangeRequired':
-    '期間指定で整理する場合は、開始時刻と終了時刻の両方を選択してください',
+    '期間指定で整理する場合は、開始日と終了日、および開始時刻と終了時刻の両方を選択してください',
   'common.cleanupRangeStart': '開始時刻',
   'common.pagination.firstPage': '先頭ページ',
   'common.pagination.lastPage': '最終ページ',

@@ -63,7 +63,7 @@ import {
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import '../components/shared/list-page.css';
-import { toCleanupTimestamp, loadRetentionSetting } from './retentionSetting';
+import { toCleanupTimestampFromParts, loadRetentionSetting } from './retentionSetting';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -466,8 +466,10 @@ const OperationLogList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStart, setCleanupRangeStart] = useState('');
-  const [cleanupRangeEnd, setCleanupRangeEnd] = useState('');
+  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
+  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
+  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
+  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
@@ -592,19 +594,27 @@ const OperationLogList: React.FC = () => {
   };
 
   const handleCleanup = async () => {
-    if (cleanupMode === 'range' && (!cleanupRangeStart || !cleanupRangeEnd)) {
-      message.warning(t('common.cleanupRangeRequired'));
-      return;
-    }
     try {
-      const resp = await cleanupOperationLogs(
-        cleanupMode === 'range'
-          ? {
-              startedAt: toCleanupTimestamp(cleanupRangeStart),
-              endedAt: toCleanupTimestamp(cleanupRangeEnd),
-            }
-          : { retentionDays },
-      );
+      if (cleanupMode === 'range') {
+        const startedAt = toCleanupTimestampFromParts(
+          cleanupRangeStartDate,
+          cleanupRangeStartTime,
+        );
+        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
+        if (!startedAt || !endedAt) {
+          message.warning(t('common.cleanupRangeRequired'));
+          return;
+        }
+        const resp = await cleanupOperationLogs({
+          startedAt,
+          endedAt,
+        });
+        message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
+        void loadData();
+        return;
+      }
+
+      const resp = await cleanupOperationLogs({ retentionDays });
       message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
       void loadData();
     } catch {
@@ -779,7 +789,11 @@ const OperationLogList: React.FC = () => {
         // shared datetime width, otherwise the timestamp wraps to two lines.
         width: 200,
         ...sortableColumn('operTime'),
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value, { withSeconds: true })}
+          </Typography.Text>
+        ),
       },
       'medium',
     ),
@@ -1010,12 +1024,18 @@ const OperationLogList: React.FC = () => {
                 { label: t('common.cleanupModeRetention'), value: 'retention' },
                 { label: t('common.cleanupModeRange'), value: 'range' },
               ]}
-              rangeStart={cleanupRangeStart}
-              rangeEnd={cleanupRangeEnd}
-              onRangeStartChange={setCleanupRangeStart}
-              onRangeEndChange={setCleanupRangeEnd}
-              rangeStartLabel={t('common.cleanupRangeStart')}
-              rangeEndLabel={t('common.cleanupRangeEnd')}
+              rangeStartDate={cleanupRangeStartDate}
+              rangeStartTime={cleanupRangeStartTime}
+              rangeEndDate={cleanupRangeEndDate}
+              rangeEndTime={cleanupRangeEndTime}
+              onRangeStartDateChange={setCleanupRangeStartDate}
+              onRangeStartTimeChange={setCleanupRangeStartTime}
+              onRangeEndDateChange={setCleanupRangeEndDate}
+              onRangeEndTimeChange={setCleanupRangeEndTime}
+              rangeStartDateLabel={t('common.cleanupRangeStartDate')}
+              rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
+              rangeEndDateLabel={t('common.cleanupRangeEndDate')}
+              rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
               confirmTitle={
                 cleanupMode === 'range'
                   ? t('common.cleanupRangeConfirm')
@@ -1207,7 +1227,10 @@ const OperationLogList: React.FC = () => {
                   label: t('system.audit.title'),
                   value: t(currentLog.title, { defaultValue: currentLog.title || '-' }),
                 },
-                { label: t('system.audit.operTime'), value: formatDateTime(currentLog.operTime) },
+                {
+                  label: t('system.audit.operTime'),
+                  value: formatDateTime(currentLog.operTime, { withSeconds: true }),
+                },
                 { label: t('system.audit.operName'), value: currentLog.operName || '-' },
                 { label: t('system.audit.operIp'), value: currentLog.operIp || '-' },
                 { label: t('system.audit.operUrl'), value: currentLog.operUrl || '-' },

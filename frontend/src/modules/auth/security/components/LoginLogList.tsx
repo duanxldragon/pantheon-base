@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Card,
   Button,
+  Card,
+  DatePicker,
   Form,
   Grid,
   Input,
@@ -11,10 +12,11 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import dayjs from 'dayjs';
+import { IconCalendar, IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
+import { useTranslation } from 'react-i18next';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
-import { IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
-import { useTranslation } from 'react-i18next';
 import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
 import {
   getVisibleSelectedRowKeys,
@@ -51,20 +53,92 @@ import {
   useGovernanceRail,
 } from '../../../../components';
 import { usePermission } from '../../../../hooks/usePermission';
-import '../../auth.css';
 import '../../../system/components/shared/list-page.css';
-import { toCleanupTimestamp, loadRetentionSetting } from '../../../system/audit/retentionSetting';
+import '../../auth.css';
+import {
+  loadRetentionSetting,
+  toCleanupTimestampFromParts,
+} from '../../../system/audit/retentionSetting';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
+const RangePicker = DatePicker.RangePicker;
+const defaultRetentionOptions = [1, 7, 30];
 
 const emptyQuery: LoginLogQuery = {
   username: '',
   status: undefined,
+  startedAt: '',
+  endedAt: '',
   page: 1,
   pageSize: 10,
 };
-const defaultRetentionOptions = [1, 7, 30];
+
+const DATETIME_FORMAT = 'YYYY-MM-DD HH:mm';
+
+// Quick time presets - 更新为更细粒度的时间选项
+type TimePreset = {
+  labelKey: string;
+  minutes?: number;
+  hours?: number;
+  preset?: 'today' | 'yesterday';
+};
+
+const TIME_PRESETS: readonly TimePreset[] = [
+  { labelKey: 'auth.security.timePreset.min5', minutes: 5 },
+  { labelKey: 'auth.security.timePreset.min30', minutes: 30 },
+  { labelKey: 'auth.security.timePreset.hour1', hours: 1 },
+  { labelKey: 'auth.security.timePreset.hour3', hours: 3 },
+  { labelKey: 'auth.security.timePreset.hour12', hours: 12 },
+  { labelKey: 'auth.security.timePreset.hour24', hours: 24 },
+  { labelKey: 'auth.security.timePreset.day2', hours: 48 },
+  { labelKey: 'auth.security.timePreset.day7', hours: 24 * 7 },
+  { labelKey: 'auth.security.timePreset.day30', hours: 24 * 30 },
+  { labelKey: 'auth.security.timePreset.today', preset: 'today' },
+  { labelKey: 'auth.security.timePreset.yesterday', preset: 'yesterday' },
+] as const;
+
+const LOGIN_LOG_DURATION_PRESETS = TIME_PRESETS.filter((preset) => !preset.preset);
+const LOGIN_LOG_CALENDAR_PRESETS = TIME_PRESETS.filter((preset) => preset.preset);
+
+function buildTimePresetRange(preset: TimePreset): [dayjs.Dayjs, dayjs.Dayjs] {
+  const now = dayjs();
+
+  if (preset.preset === 'today') {
+    return [now.startOf('day'), now.endOf('day')];
+  }
+
+  if (preset.preset === 'yesterday') {
+    const yesterday = now.subtract(1, 'day');
+    return [yesterday.startOf('day'), yesterday.endOf('day')];
+  }
+
+  if (preset.minutes) {
+    return [now.subtract(preset.minutes, 'minute').startOf('minute'), now.endOf('minute')];
+  }
+
+  return [now.subtract(preset.hours || 0, 'hour').startOf('minute'), now.endOf('minute')];
+}
+
+function getDefaultTimeRange(): [dayjs.Dayjs, dayjs.Dayjs] {
+  return [dayjs().subtract(24, 'hour').startOf('minute'), dayjs().endOf('minute')];
+}
+
+function formatTimeRangeRange([start, end]: [dayjs.Dayjs, dayjs.Dayjs]) {
+  return [start.format(DATETIME_FORMAT), end.format(DATETIME_FORMAT)] as const;
+}
+
+const LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS = {
+  className: 'auth-login-log-page__time-range-popup',
+  autoAlignPopupWidth: false,
+  popupAlign: { bottom: 6 },
+  popupStyle: {
+    width: 'min(600px, calc(100vw - 32px))',
+    maxHeight: 560,
+  },
+} as const;
+
+const DEFAULT_TIME_RANGE_LABEL = 'auth.security.timePreset.hour24';
 
 const LoginLogList: React.FC = () => {
   const { t } = useTranslation();
@@ -82,10 +156,75 @@ const LoginLogList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStart, setCleanupRangeStart] = useState('');
-  const [cleanupRangeEnd, setCleanupRangeEnd] = useState('');
+  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
+  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
+  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
+  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
+  );
+
+  const [timeRangePopupVisible, setTimeRangePopupVisible] = useState(false);
+  const [timeRangeDraft, setTimeRangeDraft] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  const [quickSelectPreset, setQuickSelectPreset] = useState<string>(DEFAULT_TIME_RANGE_LABEL);
+
+  const timeRangeValue = useMemo<[dayjs.Dayjs, dayjs.Dayjs]>(() => {
+    if (query.startedAt && query.endedAt) {
+      const start = dayjs(query.startedAt);
+      const end = dayjs(query.endedAt);
+      if (start.isValid() && end.isValid()) {
+        return [start, end];
+      }
+    }
+    return getDefaultTimeRange();
+  }, [query.endedAt, query.startedAt]);
+
+  const timeRangeDisplayValue = timeRangeDraft ?? timeRangeValue;
+
+  const closeTimeRangePopup = useCallback(() => {
+    setTimeRangePopupVisible(false);
+    setTimeRangeDraft(null);
+  }, []);
+
+  const handleTimeRangeShortcutApply = useCallback(
+    (preset: TimePreset) => {
+      const [startedAt, endedAt] = buildTimePresetRange(preset);
+
+      setSelectedRowKeys([]);
+      setQuickSelectPreset(preset.labelKey);
+      setQuery((prev) => ({
+        ...prev,
+        startedAt: startedAt.format(DATETIME_FORMAT),
+        endedAt: endedAt.format(DATETIME_FORMAT),
+        page: 1,
+      }));
+      closeTimeRangePopup();
+    },
+    [closeTimeRangePopup],
+  );
+
+  const handleTimeRangePopupVisibleChange = useCallback(
+    (visible?: boolean) => {
+      const nextVisible = Boolean(visible);
+      setTimeRangePopupVisible(nextVisible);
+      setTimeRangeDraft(nextVisible ? timeRangeValue : null);
+    },
+    [timeRangeValue],
+  );
+
+  const handleTimeRangeSelect = useCallback(
+    (_dateStrings: string[], dateValues: dayjs.Dayjs[]) => {
+      if (!dateValues || dateValues.length < 2) {
+        return;
+      }
+
+      const nextStart = dateValues[0] ? dateValues[0].startOf('minute') : timeRangeValue[0];
+      const nextEnd = dateValues[1] ? dateValues[1].endOf('minute') : timeRangeValue[1];
+
+      setTimeRangeDraft([nextStart, nextEnd]);
+      setQuickSelectPreset('auth.security.timePreset.custom');
+    },
+    [timeRangeValue],
   );
 
   const loadData = useCallback(
@@ -140,10 +279,37 @@ const LoginLogList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
+    queryForm.setFieldsValue({ username: '', status: undefined });
     setSelectedRowKeys([]);
-    setQuery(emptyQuery);
+    setTimeRangePopupVisible(false);
+    setTimeRangeDraft(null);
+    setQuickSelectPreset(DEFAULT_TIME_RANGE_LABEL);
+    const [defaultStart, defaultEnd] = getDefaultTimeRange();
+    setQuery({
+      ...emptyQuery,
+      startedAt: defaultStart.format(DATETIME_FORMAT),
+      endedAt: defaultEnd.format(DATETIME_FORMAT),
+    });
   };
+
+  const handleTimeRangeChange = useCallback(
+    (_dateStrings: string[], dateValues: dayjs.Dayjs[]) => {
+      if (!dateValues || dateValues.length < 2 || !dateValues[0] || !dateValues[1]) {
+        return;
+      }
+
+      setSelectedRowKeys([]);
+      setQuery((prev) => ({
+        ...prev,
+        startedAt: dateValues[0].startOf('minute').format(DATETIME_FORMAT),
+        endedAt: dateValues[1].endOf('minute').format(DATETIME_FORMAT),
+        page: 1,
+      }));
+      setTimeRangeDraft(null);
+      setQuickSelectPreset('auth.security.timePreset.custom');
+    },
+    [],
+  );
 
   const handleTableChange: TableProps<LoginLogRow>['onChange'] = (pagination) => {
     setQuery({
@@ -151,27 +317,6 @@ const LoginLogList: React.FC = () => {
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
     });
-  };
-
-  const handleCleanup = async () => {
-    if (cleanupMode === 'range' && (!cleanupRangeStart || !cleanupRangeEnd)) {
-      message.warning(t('common.cleanupRangeRequired'));
-      return;
-    }
-    try {
-      const resp = await cleanupAdminLoginLogs(
-        cleanupMode === 'range'
-          ? {
-              startedAt: toCleanupTimestamp(cleanupRangeStart),
-              endedAt: toCleanupTimestamp(cleanupRangeEnd),
-            }
-          : { retentionDays },
-      );
-      message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
-      void loadData();
-    } catch {
-      message.error(t('common.actionFailed'));
-    }
   };
 
   const handleBatchDelete = async () => {
@@ -183,6 +328,35 @@ const LoginLogList: React.FC = () => {
       const resp = await batchDeleteAdminLoginLogs({ ids: selectedRowKeys });
       message.success(t('auth.loginLog.batchDeleteSuccess', { count: resp.deletedCount }));
       setSelectedRowKeys([]);
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
+  };
+
+  const handleCleanup = async () => {
+    try {
+      if (cleanupMode === 'range') {
+        const startedAt = toCleanupTimestampFromParts(
+          cleanupRangeStartDate,
+          cleanupRangeStartTime,
+        );
+        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
+        if (!startedAt || !endedAt) {
+          message.warning(t('common.cleanupRangeRequired'));
+          return;
+        }
+        const resp = await cleanupAdminLoginLogs({
+          startedAt,
+          endedAt,
+        });
+        message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
+        void loadData();
+        return;
+      }
+
+      const resp = await cleanupAdminLoginLogs({ retentionDays });
+      message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
       void loadData();
     } catch {
       message.error(t('common.actionFailed'));
@@ -226,20 +400,8 @@ const LoginLogList: React.FC = () => {
         value: failedCount,
         hint: t('auth.loginLog.hero.failedHint'),
       },
-      {
-        key: 'export',
-        label: t('auth.loginLog.hero.exportReady'),
-        value: canExport ? t('common.yes') : t('common.no'),
-        hint: t('auth.loginLog.hero.exportHint'),
-      },
-      {
-        key: 'cleanup',
-        label: t('auth.loginLog.hero.cleanupReady'),
-        value: canClear ? t('common.yes') : t('common.no'),
-        hint: t('auth.loginLog.hero.cleanupHint'),
-      },
     ],
-    [canClear, canExport, failedCount, successCount, t, total],
+    [failedCount, successCount, t, total],
   );
 
   const columns: ColumnProps<LoginLogRow>[] = [
@@ -286,7 +448,7 @@ const LoginLogList: React.FC = () => {
       title: t('auth.loginLog.loginTime'),
       dataIndex: 'loginTime',
       width: TABLE_COLUMN_WIDTH.datetime,
-      render: (value: string) => formatDateTime(value),
+      render: (value: string) => formatDateTime(value, { withSeconds: true }),
     },
   ];
 
@@ -306,6 +468,91 @@ const LoginLogList: React.FC = () => {
     }
     await exportAdminLoginLogs(query);
   };
+
+  const renderTimeRangePanel = useCallback(
+    (panelNode: React.ReactNode) => {
+      const [displayStart, displayEnd] = formatTimeRangeRange(timeRangeDisplayValue);
+
+      return (
+        <div className="auth-login-log-page__time-range-shell">
+          <div className="auth-login-log-page__time-range-shortcuts">
+            <div className="auth-login-log-page__time-range-shortcut-row">
+              {LOGIN_LOG_DURATION_PRESETS.map((preset) => (
+                <Button
+                  key={preset.labelKey}
+                  size="mini"
+                  type="outline"
+                  className={`auth-login-log-page__time-range-shortcut ${
+                    quickSelectPreset === preset.labelKey
+                      ? 'auth-login-log-page__time-range-shortcut--active'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    handleTimeRangeShortcutApply(preset);
+                  }}
+                >
+                  {t(preset.labelKey)}
+                </Button>
+              ))}
+            </div>
+            <div className="auth-login-log-page__time-range-shortcut-row">
+              {LOGIN_LOG_CALENDAR_PRESETS.map((preset) => (
+                <Button
+                  key={preset.labelKey}
+                  size="mini"
+                  type="outline"
+                  className={`auth-login-log-page__time-range-shortcut ${
+                    quickSelectPreset === preset.labelKey
+                      ? 'auth-login-log-page__time-range-shortcut--active'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    handleTimeRangeShortcutApply(preset);
+                  }}
+                >
+                  {t(preset.labelKey)}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="auth-login-log-page__time-range-summary">
+            <div className="auth-login-log-page__time-range-summary-item">
+              <Typography.Text
+                type="secondary"
+                className="auth-login-log-page__time-range-summary-label"
+              >
+                开始时间
+              </Typography.Text>
+              <Typography.Text className="auth-login-log-page__time-range-summary-value">
+                {displayStart}
+              </Typography.Text>
+            </div>
+            <Typography.Text
+              type="secondary"
+              className="auth-login-log-page__time-range-summary-separator"
+            >
+              至
+            </Typography.Text>
+            <div className="auth-login-log-page__time-range-summary-item auth-login-log-page__time-range-summary-item--end">
+              <Typography.Text
+                type="secondary"
+                className="auth-login-log-page__time-range-summary-label"
+              >
+                结束时间
+              </Typography.Text>
+              <Typography.Text className="auth-login-log-page__time-range-summary-value">
+                {displayEnd}
+              </Typography.Text>
+            </div>
+          </div>
+
+          <div className="auth-login-log-page__time-range-panel-body">{panelNode}</div>
+        </div>
+      );
+    },
+    [handleTimeRangeShortcutApply, quickSelectPreset, timeRangeDisplayValue, t],
+  );
 
   return (
     <PageContainer>
@@ -333,12 +580,53 @@ const LoginLogList: React.FC = () => {
           <FilterPanel>
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16} className="auth-filter-grid auth-login-log-page__filter-grid">
-                <Col xs={24} md={12} lg={6}>
+                <Col xs={24} md={10} lg={5}>
+                  <FormItem label={t('auth.security.timeRange')}>
+                    <RangePicker
+                      allowClear={false}
+                      dayStartOfWeek={1}
+                      format={DATETIME_FORMAT}
+                      extra={
+                        <Button
+                          type="text"
+                          size="mini"
+                          onClick={() => {
+                            closeTimeRangePopup();
+                          }}
+                        >
+                          {t('common.cancel')}
+                        </Button>
+                      }
+                      showTime={{ format: 'HH:mm' }}
+                      value={timeRangeValue}
+                      popupVisible={timeRangePopupVisible}
+                      position="bl"
+                      triggerElement={
+                        <Button
+                          className="auth-login-log-page__time-range-trigger"
+                          htmlType="button"
+                          type="outline"
+                        >
+                          <span className="auth-login-log-page__time-range-trigger-label">
+                            {t(quickSelectPreset)}
+                          </span>
+                          <IconCalendar className="auth-login-log-page__time-range-trigger-icon" />
+                        </Button>
+                      }
+                      triggerProps={LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS}
+                      panelRender={renderTimeRangePanel}
+                      onChange={handleTimeRangeChange}
+                      onSelect={handleTimeRangeSelect}
+                      onVisibleChange={handleTimeRangePopupVisibleChange}
+                    />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={8} lg={4}>
                   <FormItem label={t('system.user.username')} field="username">
                     <Input onPressEnter={() => queryForm.submit()} />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={12} lg={4}>
+                <Col xs={24} md={8} lg={3}>
                   <FormItem label={t('auth.loginLog.status')} field="status">
                     <Select
                       allowClear
@@ -349,13 +637,15 @@ const LoginLogList: React.FC = () => {
                     />
                   </FormItem>
                 </Col>
-                <Col xs={24} md={24} lg={5}>
+                <Col xs={24} lg={4}>
                   <FormItem className="filter-panel__action-item auth-login-log-page__filter-actions">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
+                    <Space direction="vertical">
+                      <Space>
+                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>
+                          {t('common.search')}
+                        </Button>
+                        <Button onClick={reset}>{t('common.reset')}</Button>
+                      </Space>
                     </Space>
                   </FormItem>
                 </Col>
@@ -377,12 +667,18 @@ const LoginLogList: React.FC = () => {
                 { label: t('common.cleanupModeRetention'), value: 'retention' },
                 { label: t('common.cleanupModeRange'), value: 'range' },
               ]}
-              rangeStart={cleanupRangeStart}
-              rangeEnd={cleanupRangeEnd}
-              onRangeStartChange={setCleanupRangeStart}
-              onRangeEndChange={setCleanupRangeEnd}
-              rangeStartLabel={t('common.cleanupRangeStart')}
-              rangeEndLabel={t('common.cleanupRangeEnd')}
+              rangeStartDate={cleanupRangeStartDate}
+              rangeStartTime={cleanupRangeStartTime}
+              rangeEndDate={cleanupRangeEndDate}
+              rangeEndTime={cleanupRangeEndTime}
+              onRangeStartDateChange={setCleanupRangeStartDate}
+              onRangeStartTimeChange={setCleanupRangeStartTime}
+              onRangeEndDateChange={setCleanupRangeEndDate}
+              onRangeEndTimeChange={setCleanupRangeEndTime}
+              rangeStartDateLabel={t('common.cleanupRangeStartDate')}
+              rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
+              rangeEndDateLabel={t('common.cleanupRangeEndDate')}
+              rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
               confirmTitle={
                 cleanupMode === 'range'
                   ? t('common.cleanupRangeConfirm')
@@ -424,7 +720,10 @@ const LoginLogList: React.FC = () => {
                     >
                       {t('common.clearSelection')}
                     </Button>
-                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
+                    <PermissionAction
+                      allowed={canDelete}
+                      tooltip={t('common.noPermissionAction')}
+                    >
                       <Popconfirm
                         disabled={selectedRowKeys.length === 0 || !canDelete}
                         title={t('auth.loginLog.batchDeleteConfirm', {

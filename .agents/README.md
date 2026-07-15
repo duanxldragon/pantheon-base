@@ -2,7 +2,7 @@
 
 Chinese version: [README.zh.md](./README.zh.md)
 
-This directory contains tool-specific adapters for the repository Harness protocol.
+This directory contains agent adapters for the repository Harness protocol.
 
 The source of truth is not any single adapter. Read:
 
@@ -26,6 +26,6 @@ Adapters map that shared protocol to specific tools:
 - `adapters/openhands.md`
 - `adapters/human.md`
 
-Repository-local Codex skills live in:
+Repository-local agent skills live in:
 
 - `skills/README.md`

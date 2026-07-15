@@ -2,7 +2,7 @@
 
 English version: [README.md](./README.md)
 
-这个目录包含面向不同工具的、用于适配仓库 Harness 协议的 adapter。
+这个目录包含面向不同 agent 的、用于适配仓库 Harness 协议的 adapter。
 
 事实源不是某一个单独 adapter。建议先读：
 
@@ -26,6 +26,6 @@ English version: [README.md](./README.md)
 - `adapters/openhands.md`
 - `adapters/human.md`
 
-仓库本地 Codex skills 放在：
+仓库本地 agent skills 放在：
 
 - `skills/README.zh.md`

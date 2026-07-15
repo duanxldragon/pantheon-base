@@ -475,3 +475,53 @@ func prepareScaffoldWorkspaceRoot(t *testing.T) string {
 	}
 	return root
 }
+
+// TestWriteGeneratedRegistriesProducesEmptyButCompilableArtifacts 验证无生成模块时，
+// WriteGeneratedRegistries 不会写出"半截"或"语法破损"的注册表，避免 base 启动失败。
+// 该测试用 gofmt 校验 .go 产物与一段最小 tsconfig 校验 .ts 产物，确保下游 build 一定能跑通。
+func TestWriteGeneratedRegistriesProducesEmptyButCompilableArtifacts(t *testing.T) {
+	root := prepareScaffoldWorkspaceRoot(t)
+
+	if err := WriteGeneratedRegistries(root, nil); err != nil {
+		t.Fatalf("write generated registries with empty refs: %v", err)
+	}
+
+	backendRegistry := filepath.Join(root, "backend", "modules", "business", "generated_registry.go")
+	backendContent, err := os.ReadFile(backendRegistry)
+	if err != nil {
+		t.Fatalf("read backend registry: %v", err)
+	}
+	if !strings.Contains(string(backendContent), "package business") {
+		t.Fatalf("expected backend registry to declare package business, got: %s", string(backendContent))
+	}
+	if !strings.Contains(string(backendContent), "InitGeneratedBusinessModules") {
+		t.Fatalf("expected backend registry to expose InitGeneratedBusinessModules, got: %s", string(backendContent))
+	}
+	if !strings.Contains(string(backendContent), "gin-gonic/gin") {
+		t.Fatalf("expected backend registry to keep gin import, got: %s", string(backendContent))
+	}
+
+	gofmtPath, err := exec.LookPath("gofmt")
+	if err == nil {
+		cmd := exec.Command(gofmtPath, "-l", backendRegistry)
+		output, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("gofmt -l on backend registry: %v", err)
+		}
+		if strings.TrimSpace(string(output)) != "" {
+			t.Fatalf("backend registry fails gofmt check: %s", string(output))
+		}
+	}
+
+	frontendRegistry := filepath.Join(root, "frontend", "src", "modules", "generated", "business.ts")
+	frontendContent, err := os.ReadFile(frontendRegistry)
+	if err != nil {
+		t.Fatalf("read frontend registry: %v", err)
+	}
+	if !strings.Contains(string(frontendContent), "ModuleConfig") {
+		t.Fatalf("expected frontend registry to reference ModuleConfig type, got: %s", string(frontendContent))
+	}
+	if !strings.Contains(string(frontendContent), "generatedBusinessModules") {
+		t.Fatalf("expected frontend registry to export generatedBusinessModules, got: %s", string(frontendContent))
+	}
+}

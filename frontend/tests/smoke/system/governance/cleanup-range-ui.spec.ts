@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
 import { installOperationToken, signInAsAdmin } from '../../helpers/auth';
 
 type CleanupCase = {
@@ -133,24 +133,117 @@ async function mockAuditSetting(page: Page, settingKey: string) {
 }
 
 function cleanupBar(page: Page, cleanupButtonName: string) {
-  return page.locator('.page-panel').filter({
-    has: page.getByRole('button', { name: cleanupButtonName, exact: true }),
-  }).first();
+  return page
+    .locator('.page-panel')
+    .filter({
+      has: page.getByRole('button', { name: cleanupButtonName, exact: true }),
+    })
+    .first();
 }
 
 function popupConfirmButton(page: Page) {
   return page
-    .locator('.arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible')
+    .locator(
+      '.arco-popconfirm:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible',
+    )
     .last()
     .getByRole('button', { name: '确定', exact: true })
     .last();
+}
+
+function cleanupDatePopup(page: Page) {
+  return page
+    .locator(
+      'body .table-batch-action-bar__cleanup-date-popup.arco-picker-container, body .table-batch-action-bar__cleanup-date-popup .arco-picker-container',
+    )
+    .last();
+}
+
+function cleanupTimePopup(page: Page) {
+  return page
+    .locator(
+      '.arco-trigger-popup:visible, .arco-picker-container:visible, .arco-timepicker:visible',
+    )
+    .filter({ has: page.locator('.arco-timepicker-list:visible') })
+    .last();
+}
+
+function rangePopup(page: Page) {
+  return page.locator('body .arco-picker-range-container').last();
+}
+
+function popupDateCell(popup: Locator, day: string) {
+  return popup
+    .locator('.arco-picker-cell-in-view')
+    .filter({ hasText: new RegExp(`^${day}$`) })
+    .first();
+}
+
+async function selectPopupTime(panel: Locator, hour: string, minute: string) {
+  await panel.locator('.arco-timepicker-list').nth(0).getByText(hour, { exact: true }).click();
+  await panel.locator('.arco-timepicker-list').nth(1).getByText(minute, { exact: true }).click();
+}
+
+async function selectCleanupDateField(
+  page: Page,
+  field: Locator,
+  day: string,
+  options?: { screenshotPath?: string },
+) {
+  await field.click();
+  const popup = cleanupDatePopup(page);
+  await expect(popup).toBeVisible();
+  const panel = popup.locator('.arco-panel-date').first();
+  const weekLabels = panel.locator('.arco-picker-week-list-item');
+  await expect(weekLabels).toHaveText(['一', '二', '三', '四', '五', '六', '日']);
+
+  const firstDateRow = panel.locator('.arco-picker-body .arco-picker-row').first();
+  const firstDateCells = firstDateRow.locator('.arco-picker-cell');
+  await expect(firstDateCells).toHaveCount(7);
+
+  for (let index = 0; index < 7; index += 1) {
+    const weekBox = await weekLabels.nth(index).boundingBox();
+    const dayBox = await firstDateCells.nth(index).boundingBox();
+    expect(weekBox).not.toBeNull();
+    expect(dayBox).not.toBeNull();
+
+    const weekCenter = (weekBox?.x || 0) + (weekBox?.width || 0) / 2;
+    const dayCenter = (dayBox?.x || 0) + (dayBox?.width || 0) / 2;
+    expect(Math.abs(weekCenter - dayCenter)).toBeLessThanOrEqual(4);
+  }
+
+  if (options?.screenshotPath) {
+    await panel.screenshot({
+      path: options.screenshotPath,
+    });
+  }
+
+  await popupDateCell(panel, day).click();
+  await expect(field).toHaveValue(new RegExp(`^\\d{4}-\\d{2}-${day}$`));
+}
+
+async function selectCleanupTimeField(page: Page, field: Locator, hour: string, minute: string) {
+  await field.click();
+  const timeLists = page.locator('.arco-timepicker-list:visible');
+  await expect(timeLists).toHaveCount(2);
+  await expect(timeLists.first()).toBeVisible();
+
+  const popup = cleanupTimePopup(page);
+  await expect(popup).toBeVisible();
+  await selectPopupTime(popup, hour, minute);
+  const confirmButton = page.getByRole('button', { name: '确定', exact: true }).last();
+  await expect(confirmButton).toBeEnabled();
+  await confirmButton.click();
+  await expect(field).toHaveValue(new RegExp(`^${hour}:${minute}$`));
 }
 
 test.describe('cleanup range governance smoke', () => {
   test.describe.configure({ timeout: 120000 });
 
   for (const cleanupCase of cleanupCases) {
-    test(`${cleanupCase.name} cleanup range submits selected timestamps and keeps inline layout`, async ({ page }) => {
+    test(`${cleanupCase.name} cleanup range submits split date/time selections and keeps calendar centered`, async ({
+      page,
+    }, testInfo) => {
       const accessToken = await signInAsAdmin(page);
       await page.goto('/dashboard', { waitUntil: 'networkidle' });
       await installOperationToken(page, accessToken);
@@ -181,45 +274,176 @@ test.describe('cleanup range governance smoke', () => {
       await modeSelect.click();
       await page.getByRole('option', { name: '按时间范围', exact: true }).click();
 
-      const dateInputs = bar.locator('input[type="datetime-local"]');
-      await expect(dateInputs).toHaveCount(2);
-
-      const startInput = dateInputs.nth(0);
-      const endInput = dateInputs.nth(1);
-      await startInput.fill('2026-06-13T18:26');
-      await endInput.fill('2026-06-14T09:45');
-
-      await expect(startInput).toHaveValue('2026-06-13T18:26');
-      await expect(endInput).toHaveValue('2026-06-14T09:45');
+      const startDateInput = bar.getByLabel('开始日期').first();
+      const startTimeInput = bar.getByLabel('开始时间').first();
+      const endDateInput = bar.getByLabel('结束日期').first();
+      const endTimeInput = bar.getByLabel('结束时间').first();
 
       const cleanupButton = bar
         .locator('.table-batch-action-bar__meta')
         .getByRole('button', { name: cleanupCase.cleanupButtonName, exact: true })
         .first();
-      const startBox = await startInput.boundingBox();
-      const endBox = await endInput.boundingBox();
-      const buttonBox = await cleanupButton.boundingBox();
 
-      expect(startBox).not.toBeNull();
-      expect(endBox).not.toBeNull();
-      expect(buttonBox).not.toBeNull();
+      await selectCleanupDateField(
+        page,
+        startDateInput,
+        '13',
+        cleanupCase.name === 'login-log'
+          ? { screenshotPath: testInfo.outputPath('login-log-cleanup-date-popup.png') }
+          : undefined,
+      );
+      await selectCleanupTimeField(page, startTimeInput, '18', '26');
+      await selectCleanupDateField(page, endDateInput, '14');
+      await selectCleanupTimeField(page, endTimeInput, '09', '45');
 
-      expect(Math.abs((startBox?.y || 0) - (endBox?.y || 0))).toBeLessThanOrEqual(4);
-      expect(Math.abs((startBox?.y || 0) - (buttonBox?.y || 0))).toBeLessThanOrEqual(6);
+      await expect(startDateInput).toHaveValue(/\d{4}-\d{2}-13/);
+      await expect(startTimeInput).toHaveValue('18:26');
+      await expect(endDateInput).toHaveValue(/\d{4}-\d{2}-14/);
+      await expect(endTimeInput).toHaveValue('09:45');
+
+      if (cleanupCase.name === 'login-log') {
+        await bar.screenshot({
+          path: testInfo.outputPath('login-log-cleanup-filled-bar.png'),
+        });
+      }
 
       await cleanupButton.click();
       await popupConfirmButton(page).click();
 
-      await expect
-        .poll(() => capturedCleanupPayload)
-        .not.toBeNull();
+      await expect.poll(() => capturedCleanupPayload).not.toBeNull();
 
       expect(capturedCleanupPayload?.retentionDays).toBeUndefined();
-      expect(String(capturedCleanupPayload?.startedAt || '')).toContain('2026-06-13T18:26');
-      expect(String(capturedCleanupPayload?.endedAt || '')).toContain('2026-06-14T09:45');
+      expect(String(capturedCleanupPayload?.startedAt || '')).toMatch(/\d{4}-\d{2}-13T18:26/);
+      expect(String(capturedCleanupPayload?.endedAt || '')).toMatch(/\d{4}-\d{2}-14T09:45/);
       await expect(page.locator('.arco-message')).toContainText(/已清理|清理成功/);
     });
   }
+
+  test('login-log filter time range renders Arco shortcuts and horizontal panels', async ({
+    page,
+  }, testInfo) => {
+    const loginLogCase = cleanupCases[0];
+    const accessToken = await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    await installOperationToken(page, accessToken);
+
+    await mockAuditSetting(page, loginLogCase.settingKey);
+    await page.route(loginLogCase.listRoute, async (route) => {
+      await fulfillJson(route, 200, {
+        code: 200,
+        data: loginLogCase.listPayload,
+      });
+    });
+
+    await page.goto(loginLogCase.path, { waitUntil: 'networkidle' });
+
+    const filterGrid = page.locator('.auth-login-log-page__filter-grid');
+    await expect(filterGrid).toBeVisible();
+
+    const rangeTrigger = filterGrid.locator('.auth-login-log-page__time-range-trigger');
+    await expect(rangeTrigger).toBeVisible();
+    await expect(rangeTrigger).toContainText('24小时');
+    await rangeTrigger.click();
+
+    const popup = rangePopup(page);
+    await expect(popup).toBeVisible();
+
+    const popupBox = await popup.boundingBox();
+    expect(popupBox).not.toBeNull();
+    expect(popupBox?.width ?? 0).toBeGreaterThanOrEqual(580);
+    expect(popupBox?.width ?? 0).toBeLessThanOrEqual(640);
+
+    const shell = popup.locator('.auth-login-log-page__time-range-shell');
+    await expect(shell).toBeVisible();
+
+    const shortcutRows = shell.locator('.auth-login-log-page__time-range-shortcut-row');
+    await expect(shortcutRows).toHaveCount(2);
+    await expect(
+      shortcutRows.first().locator('.auth-login-log-page__time-range-shortcut'),
+    ).toHaveCount(9);
+    await expect(
+      shortcutRows.nth(1).locator('.auth-login-log-page__time-range-shortcut'),
+    ).toHaveCount(2);
+    await expect(shell.getByRole('button', { name: '今天', exact: true })).toBeVisible();
+    await expect(shell.getByRole('button', { name: '昨天', exact: true })).toBeVisible();
+
+    const summary = shell.locator('.auth-login-log-page__time-range-summary');
+    await expect(summary).toBeVisible();
+    await expect(summary).toContainText('开始时间');
+    await expect(summary).toContainText('结束时间');
+    await expect(summary).toContainText('至');
+
+    const summaryBox = await summary.boundingBox();
+    expect(summaryBox).not.toBeNull();
+
+    const rangePopupWrapper = popup.locator('.arco-picker-range-wrapper');
+    await expect(rangePopupWrapper).toHaveCSS('flex-wrap', 'nowrap');
+
+    const weekLabels = popup
+      .locator('.arco-panel-date')
+      .first()
+      .locator('.arco-picker-week-list-item');
+    await expect(weekLabels).toHaveText(['一', '二', '三', '四', '五', '六', '日']);
+
+    const weekList = popup.locator('.arco-panel-date').first().locator('.arco-picker-week-list');
+    await expect(weekList).toHaveCSS('display', 'grid');
+
+    const firstDateRow = popup
+      .locator('.arco-panel-date')
+      .first()
+      .locator('.arco-picker-body .arco-picker-row')
+      .first();
+    await expect(firstDateRow).toHaveCSS('display', 'grid');
+
+    const firstDateCells = firstDateRow.locator('.arco-picker-cell');
+    await expect(firstDateCells).toHaveCount(7);
+    for (let index = 0; index < 7; index += 1) {
+      const weekBox = await weekLabels.nth(index).boundingBox();
+      const dayBox = await firstDateCells.nth(index).boundingBox();
+      expect(weekBox).not.toBeNull();
+      expect(dayBox).not.toBeNull();
+
+      const weekCenter = (weekBox?.x || 0) + (weekBox?.width || 0) / 2;
+      const dayCenter = (dayBox?.x || 0) + (dayBox?.width || 0) / 2;
+      expect(Math.abs(weekCenter - dayCenter)).toBeLessThanOrEqual(4);
+      expect(Math.abs((weekBox?.width || 0) - (dayBox?.width || 0))).toBeLessThanOrEqual(4);
+    }
+
+    const rangePanels = popup.locator('.arco-panel-date');
+    await expect(rangePanels).toHaveCount(2);
+    const leftPanelBox = await rangePanels.nth(0).boundingBox();
+    const rightPanelBox = await rangePanels.nth(1).boundingBox();
+    expect(leftPanelBox).not.toBeNull();
+    expect(rightPanelBox).not.toBeNull();
+    expect(Math.abs((leftPanelBox?.y || 0) - (rightPanelBox?.y || 0))).toBeLessThanOrEqual(4);
+    expect((rightPanelBox?.x || 0) - (leftPanelBox?.x || 0)).toBeGreaterThan(20);
+
+    expect(
+      (leftPanelBox?.y || 0) - ((summaryBox?.y || 0) + (summaryBox?.height || 0)),
+    ).toBeGreaterThanOrEqual(0);
+
+    await expect(popup.locator('.arco-picker-btn-confirm')).toBeVisible();
+    await expect(shell.getByRole('button', { name: '取消', exact: true })).toBeVisible();
+    await popup.screenshot({
+      path: testInfo.outputPath('login-log-time-range-picker.png'),
+    });
+
+    await expect(popup.locator('.arco-picker-btn-select-time')).toBeVisible();
+    await popup.locator('.arco-picker-btn-select-time').click();
+
+    const timePanels = popup.locator('.arco-panel-date-timepicker');
+    await expect(timePanels).toHaveCount(2);
+    const leftTimeBox = await timePanels.nth(0).boundingBox();
+    const rightTimeBox = await timePanels.nth(1).boundingBox();
+    expect(leftTimeBox).not.toBeNull();
+    expect(rightTimeBox).not.toBeNull();
+    expect(Math.abs((leftTimeBox?.y || 0) - (rightTimeBox?.y || 0))).toBeLessThanOrEqual(4);
+    expect((rightTimeBox?.x || 0) - (leftTimeBox?.x || 0)).toBeGreaterThan(20);
+
+    await shell.getByRole('button', { name: '今天', exact: true }).click();
+    await expect(rangeTrigger).toContainText('今天');
+    await expect(popup).toBeHidden();
+  });
 
   test('selected login-log rows export as csv without calling backend export endpoint', async ({
     page,

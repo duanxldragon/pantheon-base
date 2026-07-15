@@ -2,7 +2,7 @@
 
 Chinese version: [README.zh.md](./README.zh.md)
 
-This directory contains Pantheon Base repository-local Codex skills.
+This directory contains Pantheon Base repository-local agent workflow skills.
 
 Shared template source:
 

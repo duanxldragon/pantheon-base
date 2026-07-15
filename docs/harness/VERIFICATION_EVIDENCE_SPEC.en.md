@@ -74,8 +74,8 @@ complete | blocked | partial
   "taskId": "YYYY-MM-DD-task-name",
   "repo": "pantheon-platform",
   "agent": {
-    "tool": "codex",
-    "adapter": ".agents/adapters/codex.md"
+    "tool": "agent",
+    "adapter": "repository-defined adapter"
   },
   "commands": [
     {
@@ -105,7 +105,7 @@ complete | blocked | partial
     "estimatedCostUsd": 1.42,
     "retryCount": 1,
     "delegationCount": 0,
-    "notes": "derived from tool-native session log"
+    "notes": "derived from agent session record"
   },
   "browserEvidence": [],
   "runtimeSensitive": true,
@@ -126,14 +126,11 @@ complete | blocked | partial
 
 `agent.tool` may be:
 
-- `codex`
-- `claude-code`
-- `cursor`
-- `github-copilot`
-- `openhands`
-- `aider`
+- `agent`
 - `human`
 - `other`
+
+Specific tool examples include `codex`, `claude-code`, `cursor`, `github-copilot`, `openhands`, `aider`.
 
 When a task includes browser verification for UI, routes, or permission states, `browserEvidence` should include at least:
 
@@ -182,7 +179,7 @@ For long-running, delegated, or cost-sensitive work, `commands.json` should also
     "estimatedCostUsd": 1.42,
     "retryCount": 1,
     "delegationCount": 2,
-    "notes": "derived from tool-native session log"
+    "notes": "derived from agent session record"
   }
 }
 ```

@@ -142,8 +142,12 @@ const frFROverrideFallback = {
   'common.cleanupModeRetention': 'Par fenêtre de rétention',
   'common.cleanupRangeConfirm': 'Nettoyer les enregistrements dans la plage horaire sélectionnée ?',
   'common.cleanupRangeEnd': 'Heure de fin',
+  'common.cleanupRangeStartDate': 'Date de début',
+  'common.cleanupRangeStartTime': 'Heure de début',
+  'common.cleanupRangeEndDate': 'Date de fin',
+  'common.cleanupRangeEndTime': 'Heure de fin',
   'common.cleanupRangeRequired':
-    'Pour un nettoyage par plage, sélectionnez à la fois l’heure de début et l’heure de fin',
+    'Pour un nettoyage par plage, sélectionnez la date et l’heure de début ainsi que la date et l’heure de fin',
   'common.cleanupRangeStart': 'Heure de début',
   'common.pagination.firstPage': 'Première page',
   'common.pagination.lastPage': 'Dernière page',
