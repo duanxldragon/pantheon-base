@@ -15,9 +15,9 @@ English version: [VERIFICATION_EVIDENCE_SPEC.en.md](./VERIFICATION_EVIDENCE_SPEC
 
 ## 0. 版本历史
 
-| 版本 | 日期 | 变更 |
-|---|---|---|
-| v1.0 | 2026-06-15 | 初始版本 |
+| 版本 | 日期       | 变更                                               |
+| ---- | ---------- | -------------------------------------------------- |
+| v1.0 | 2026-06-15 | 初始版本                                           |
 | v1.1 | 2026-06-26 | 增强证据目录结构、质量标准、Negative Evidence 处理 |
 
 ## 1. 证据目录（v1.1+ 增强结构）
@@ -62,9 +62,9 @@ English version: [VERIFICATION_EVIDENCE_SPEC.en.md](./VERIFICATION_EVIDENCE_SPEC
 
 ## Commands
 
-| Command | CWD | Result | Notes |
-|---|---|---|---|
-| `go test ./...` | `pantheon-base` | passed |  |
+| Command         | CWD             | Result | Notes |
+| --------------- | --------------- | ------ | ----- |
+| `go test ./...` | `pantheon-base` | passed |       |
 
 ## Graph Checks
 
@@ -114,9 +114,7 @@ complete | blocked | partial
   ],
   "graphChecks": {
     "usedCodeGraph": true,
-    "affectedSubgraph": [
-      "route -> handler -> service -> repo"
-    ],
+    "affectedSubgraph": ["route -> handler -> service -> repo"],
     "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
     "findings": [],
     "notes": ""
@@ -238,7 +236,7 @@ complete | blocked | partial
 - `taskId` 必须与 `linkage.taskManifest` 路径中的 task id 和 `linkage.evidenceDir` 目录名一致
 - `reviewFile` 如存在应放在对应 evidence 目录下
 - `changeRef` 如无 OpenSpec change，写 `none`
-- `planRefs` 如无 superpowers plan，可为空数组
+- `planRefs` 如无 plan 引用，可为空数组；legacy superpowers plan 引用对历史任务仍然有效
 
 如果仓库同时保留人类可读 task packet，保持它与 `taskManifest` 使用同一个 task id；证据校验闭环以 `taskManifest` 为 machine-readable 主键。
 
@@ -271,8 +269,8 @@ For UI-affecting tasks, evidence must include:
 ```md
 ## Not Run
 
-| Command | Reason | Risk |
-|---|---|---|
+| Command         | Reason                     | Risk                                     |
+| --------------- | -------------------------- | ---------------------------------------- |
 | `npm run build` | dependencies not installed | frontend build regressions not ruled out |
 ```
 
@@ -288,29 +286,29 @@ For UI-affecting tasks, evidence must include:
 
 ### 截图标准
 
-| 属性 | 值 |
-|---|---|
-| 分辨率 - 桌面 | 1920x1080 |
-| 分辨率 - 移动 | 375x812 |
-| 格式 | PNG |
-| 最大文件大小 | 2MB |
-| 命名规范 | `<page>-<viewport>-<timestamp>.png` |
+| 属性          | 值                                  |
+| ------------- | ----------------------------------- |
+| 分辨率 - 桌面 | 1920x1080                           |
+| 分辨率 - 移动 | 375x812                             |
+| 格式          | PNG                                 |
+| 最大文件大小  | 2MB                                 |
+| 命名规范      | `<page>-<viewport>-<timestamp>.png` |
 
 ### 日志标准
 
-| 属性 | 值 |
-|---|---|
-| 格式 | `[LEVEL] [TIMESTAMP] [SOURCE] MESSAGE` |
-| 级别 | DEBUG, INFO, WARN, ERROR |
-| 单文件最大 | 10MB |
-| 轮转 | 5 files |
+| 属性       | 值                                     |
+| ---------- | -------------------------------------- |
+| 格式       | `[LEVEL] [TIMESTAMP] [SOURCE] MESSAGE` |
+| 级别       | DEBUG, INFO, WARN, ERROR               |
+| 单文件最大 | 10MB                                   |
+| 轮转       | 5 files                                |
 
 ### 命令输出标准
 
-| 属性 | 值 |
-|---|---|
-| 格式 | JSON |
-| 必需字段 | taskId, agent, commands, sessionEconomics |
+| 属性     | 值                                             |
+| -------- | ---------------------------------------------- |
+| 格式     | JSON                                           |
+| 必需字段 | taskId, agent, commands, sessionEconomics      |
 | 可选字段 | graphChecks, browserEvidence, runtimeSensitive |
 
 ## 7. Negative Evidence 处理（v1.1+）
@@ -331,6 +329,7 @@ For UI-affecting tasks, evidence must include:
 ```
 
 规则：
+
 - `skipReason` 必须是具体原因，不能是"太忙"或"不需要"
 - 如果有替代验证，必须在 `alternativeVerification` 中记录
 - 必须有 `riskAcceptedBy` 确认风险已被接受
