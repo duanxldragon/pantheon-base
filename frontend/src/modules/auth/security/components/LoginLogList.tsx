@@ -78,24 +78,24 @@ const DATETIME_FORMAT = 'YYYY-MM-DD HH:mm';
 
 // Quick time presets - 更新为更细粒度的时间选项
 type TimePreset = {
-  label: string;
+  labelKey: string;
   minutes?: number;
   hours?: number;
   preset?: 'today' | 'yesterday';
 };
 
 const TIME_PRESETS: readonly TimePreset[] = [
-  { label: '5分钟', minutes: 5 },
-  { label: '30分钟', minutes: 30 },
-  { label: '1小时', hours: 1 },
-  { label: '3小时', hours: 3 },
-  { label: '12小时', hours: 12 },
-  { label: '24小时', hours: 24 },
-  { label: '2天', hours: 48 },
-  { label: '7天', hours: 24 * 7 },
-  { label: '30天', hours: 24 * 30 },
-  { label: '今天', preset: 'today' },
-  { label: '昨天', preset: 'yesterday' },
+  { labelKey: 'auth.security.timePreset.min5', minutes: 5 },
+  { labelKey: 'auth.security.timePreset.min30', minutes: 30 },
+  { labelKey: 'auth.security.timePreset.hour1', hours: 1 },
+  { labelKey: 'auth.security.timePreset.hour3', hours: 3 },
+  { labelKey: 'auth.security.timePreset.hour12', hours: 12 },
+  { labelKey: 'auth.security.timePreset.hour24', hours: 24 },
+  { labelKey: 'auth.security.timePreset.day2', hours: 48 },
+  { labelKey: 'auth.security.timePreset.day7', hours: 24 * 7 },
+  { labelKey: 'auth.security.timePreset.day30', hours: 24 * 30 },
+  { labelKey: 'auth.security.timePreset.today', preset: 'today' },
+  { labelKey: 'auth.security.timePreset.yesterday', preset: 'yesterday' },
 ] as const;
 
 const LOGIN_LOG_DURATION_PRESETS = TIME_PRESETS.filter((preset) => !preset.preset);
@@ -138,7 +138,7 @@ const LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS = {
   },
 } as const;
 
-const DEFAULT_TIME_RANGE_LABEL = '24小时';
+const DEFAULT_TIME_RANGE_LABEL = 'auth.security.timePreset.hour24';
 
 const LoginLogList: React.FC = () => {
   const { t } = useTranslation();
@@ -191,7 +191,7 @@ const LoginLogList: React.FC = () => {
       const [startedAt, endedAt] = buildTimePresetRange(preset);
 
       setSelectedRowKeys([]);
-      setQuickSelectPreset(preset.label);
+      setQuickSelectPreset(preset.labelKey);
       setQuery((prev) => ({
         ...prev,
         startedAt: startedAt.format(DATETIME_FORMAT),
@@ -222,7 +222,7 @@ const LoginLogList: React.FC = () => {
       const nextEnd = dateValues[1] ? dateValues[1].endOf('minute') : timeRangeValue[1];
 
       setTimeRangeDraft([nextStart, nextEnd]);
-      setQuickSelectPreset('自定义');
+      setQuickSelectPreset('auth.security.timePreset.custom');
     },
     [timeRangeValue],
   );
@@ -306,7 +306,7 @@ const LoginLogList: React.FC = () => {
         page: 1,
       }));
       setTimeRangeDraft(null);
-      setQuickSelectPreset('自定义');
+      setQuickSelectPreset('auth.security.timePreset.custom');
     },
     [],
   );
@@ -479,11 +479,11 @@ const LoginLogList: React.FC = () => {
             <div className="auth-login-log-page__time-range-shortcut-row">
               {LOGIN_LOG_DURATION_PRESETS.map((preset) => (
                 <Button
-                  key={preset.label}
+                  key={preset.labelKey}
                   size="mini"
                   type="outline"
                   className={`auth-login-log-page__time-range-shortcut ${
-                    quickSelectPreset === preset.label
+                    quickSelectPreset === preset.labelKey
                       ? 'auth-login-log-page__time-range-shortcut--active'
                       : ''
                   }`}
@@ -491,18 +491,18 @@ const LoginLogList: React.FC = () => {
                     handleTimeRangeShortcutApply(preset);
                   }}
                 >
-                  {preset.label}
+                  {t(preset.labelKey)}
                 </Button>
               ))}
             </div>
             <div className="auth-login-log-page__time-range-shortcut-row">
               {LOGIN_LOG_CALENDAR_PRESETS.map((preset) => (
                 <Button
-                  key={preset.label}
+                  key={preset.labelKey}
                   size="mini"
                   type="outline"
                   className={`auth-login-log-page__time-range-shortcut ${
-                    quickSelectPreset === preset.label
+                    quickSelectPreset === preset.labelKey
                       ? 'auth-login-log-page__time-range-shortcut--active'
                       : ''
                   }`}
@@ -510,7 +510,7 @@ const LoginLogList: React.FC = () => {
                     handleTimeRangeShortcutApply(preset);
                   }}
                 >
-                  {preset.label}
+                  {t(preset.labelKey)}
                 </Button>
               ))}
             </div>
@@ -551,7 +551,7 @@ const LoginLogList: React.FC = () => {
         </div>
       );
     },
-    [handleTimeRangeShortcutApply, quickSelectPreset, timeRangeDisplayValue],
+    [handleTimeRangeShortcutApply, quickSelectPreset, timeRangeDisplayValue, t],
   );
 
   return (
@@ -581,7 +581,7 @@ const LoginLogList: React.FC = () => {
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16} className="auth-filter-grid auth-login-log-page__filter-grid">
                 <Col xs={24} md={10} lg={5}>
-                  <FormItem label="时间范围">
+                  <FormItem label={t('auth.security.timeRange')}>
                     <RangePicker
                       allowClear={false}
                       dayStartOfWeek={1}
@@ -594,7 +594,7 @@ const LoginLogList: React.FC = () => {
                             closeTimeRangePopup();
                           }}
                         >
-                          取消
+                          {t('common.cancel')}
                         </Button>
                       }
                       showTime={{ format: 'HH:mm' }}
@@ -608,7 +608,7 @@ const LoginLogList: React.FC = () => {
                           type="outline"
                         >
                           <span className="auth-login-log-page__time-range-trigger-label">
-                            {quickSelectPreset}
+                            {t(quickSelectPreset)}
                           </span>
                           <IconCalendar className="auth-login-log-page__time-range-trigger-icon" />
                         </Button>
