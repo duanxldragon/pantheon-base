@@ -19,14 +19,21 @@ import {
   verifiedHeaders,
 } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
-import {
-  installSharedPageReadCache,
-  type CachedReadResponse,
-} from '../helpers/shared-read-cache';
+import { installSharedPageReadCache, type CachedReadResponse } from '../helpers/shared-read-cache';
 import { expectPagePathname } from '../helpers/url-pattern';
 import { registerSystemWorkspaceTaskDepthSmokeTests } from './system-workspace-task-depth';
 const pageErrorTitles = ['加载失败', '网络异常', '请求超时'];
-const pageEmptyTexts = ['暂无数据', '当前筛选范围内没有可展示的数据', '当前筛选下暂无岗位', '暂无系统设置', '请选择左侧字典类型后维护字典项', '暂无字典类型', '暂无字典项', '暂无登录日志', '暂无会话数据'];
+const pageEmptyTexts = [
+  '暂无数据',
+  '当前筛选范围内没有可展示的数据',
+  '当前筛选下暂无岗位',
+  '暂无系统设置',
+  '请选择左侧字典类型后维护字典项',
+  '暂无字典类型',
+  '暂无字典项',
+  '暂无登录日志',
+  '暂无会话数据',
+];
 const reactElementRefWarningPattern = /Accessing element\.ref was removed in React 19/i;
 type SettingItem = { settingKey: string; settingValue: string };
 type UserPlatformPreferences = {
@@ -47,7 +54,10 @@ type ManageMenuNode = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const admissionConfig = JSON.parse(
-  syncFs.readFileSync(path.resolve(__dirname, '../../../config/system-page-admission.json'), 'utf8'),
+  syncFs.readFileSync(
+    path.resolve(__dirname, '../../../config/system-page-admission.json'),
+    'utf8',
+  ),
 ) as Array<{
   path: string;
   hero: 'allowed' | 'forbidden';
@@ -82,7 +92,8 @@ const reloadStableReadPaths = new Set([
 
 async function installReloadStableReadCache(page: Page) {
   return installSharedPageReadCache(page, new Map<string, CachedReadResponse>(), {
-    shouldHandleRequest: ({ method, url }) => method === 'GET' && reloadStableReadPaths.has(url.pathname),
+    shouldHandleRequest: ({ method, url }) =>
+      method === 'GET' && reloadStableReadPaths.has(url.pathname),
   });
 }
 
@@ -117,8 +128,18 @@ const workspacePages = [
     title: '安全中心',
     assertReady: async (page: Page) => {
       await expect(page.locator('.page-split-layout--with-rail')).toBeVisible();
-      await expect(page.locator('.page-main-column .arco-card').filter({ hasText: /在线会话|Active Sessions/ }).first()).toBeVisible();
-      await expect(page.locator('.page-main-column .arco-card').filter({ hasText: /最近登录|Recent Logins/ }).first()).toBeVisible();
+      await expect(
+        page
+          .locator('.page-main-column .arco-card')
+          .filter({ hasText: /在线会话|Active Sessions/ })
+          .first(),
+      ).toBeVisible();
+      await expect(
+        page
+          .locator('.page-main-column .arco-card')
+          .filter({ hasText: /最近登录|Recent Logins/ })
+          .first(),
+      ).toBeVisible();
     },
   },
   {
@@ -139,7 +160,12 @@ const workspacePages = [
   },
 ] as const;
 
-async function updateSettingGroup(page: Page, accessToken: string, groupKey: string, items: SettingItem[]) {
+async function updateSettingGroup(
+  page: Page,
+  accessToken: string,
+  groupKey: string,
+  items: SettingItem[],
+) {
   return page.request.put(`${apiBaseUrl}/system/setting/group/${groupKey}`, {
     headers: await verifiedHeaders(page, accessToken),
     data: { items },
@@ -172,8 +198,10 @@ async function closeExtraBrowserContext(context: BrowserContext) {
 }
 
 function isIgnorableConsoleError(text: string) {
-  return text.includes('Failed to load resource: the server responded with a status of 404')
-    || reactElementRefWarningPattern.test(text);
+  return (
+    text.includes('Failed to load resource: the server responded with a status of 404') ||
+    reactElementRefWarningPattern.test(text)
+  );
 }
 
 async function createSharedAdminLogin(page: Page): Promise<BrowserLoginResult> {
@@ -184,7 +212,9 @@ async function createSharedAdminLogin(page: Page): Promise<BrowserLoginResult> {
 
 async function waitForOkApiResponse(
   page: Page,
-  matcher: (response: Parameters<Page['waitForResponse']>[0] extends (arg: infer T) => boolean ? T : never) => boolean,
+  matcher: (
+    response: Parameters<Page['waitForResponse']>[0] extends (arg: infer T) => boolean ? T : never,
+  ) => boolean,
 ) {
   return page.waitForResponse((response) => matcher(response) && response.ok(), { timeout: 15000 });
 }
@@ -218,7 +248,7 @@ async function findVisibleRowByText(container: Locator, text: string, actionName
   const rowCount = await rows.count();
   for (let index = rowCount - 1; index >= 0; index -= 1) {
     const row = rows.nth(index);
-    if (!await row.isVisible()) {
+    if (!(await row.isVisible())) {
       continue;
     }
     const rowText = (await row.textContent()) || '';
@@ -227,10 +257,10 @@ async function findVisibleRowByText(container: Locator, text: string, actionName
     }
     if (actionName) {
       const actionButton = row.getByRole('button', { name: actionName, exact: true }).last();
-      if (!await actionButton.count()) {
+      if (!(await actionButton.count())) {
         continue;
       }
-      if (!await actionButton.isVisible()) {
+      if (!(await actionButton.isVisible())) {
         continue;
       }
     }
@@ -250,11 +280,11 @@ async function clickVisibleRowAction(
   expect(actionCount).toBeGreaterThan(0);
   for (let index = actionCount - 1; index >= 0; index -= 1) {
     const actionButton = actionButtons.nth(index);
-    if (!await actionButton.isVisible()) {
+    if (!(await actionButton.isVisible())) {
       continue;
     }
     await actionButton.click();
-    if (!confirmTitleText || await waitForVisibleConfirmDialog(page, confirmTitleText)) {
+    if (!confirmTitleText || (await waitForVisibleConfirmDialog(page, confirmTitleText))) {
       return;
     }
   }
@@ -267,16 +297,19 @@ async function waitForVisibleRowByText(
   actionName?: string,
   timeout = 15000,
 ) {
-  await expect(
-    container.getByRole('row', { name: new RegExp(text) }).last(),
-  ).toBeVisible({ timeout });
+  await expect(container.getByRole('row', { name: new RegExp(text) }).last()).toBeVisible({
+    timeout,
+  });
   return findVisibleRowByText(container, text, actionName);
 }
 
 async function dismissVisibleSuccessDialog(page: Page) {
-  const successDialog = page.locator('.app-dialog:visible, [role="dialog"]:visible').filter({
-    has: page.getByRole('button', { name: '确定', exact: true }),
-  }).last();
+  const successDialog = page
+    .locator('.app-dialog:visible, [role="dialog"]:visible')
+    .filter({
+      has: page.getByRole('button', { name: '确定', exact: true }),
+    })
+    .last();
   if (await successDialog.count()) {
     await successDialog.getByRole('button', { name: '确定', exact: true }).click();
   }
@@ -294,9 +327,11 @@ async function deleteUserByUsername(page: Page, accessToken: string, username: s
   const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
   for (const item of items) {
     if (item.username === username) {
-      await page.request.delete(`${apiBaseUrl}/system/user/${item.id}`, {
-        headers: await verifiedHeaders(page, accessToken),
-      }).catch(() => undefined);
+      await page.request
+        .delete(`${apiBaseUrl}/system/user/${item.id}`, {
+          headers: await verifiedHeaders(page, accessToken),
+        })
+        .catch(() => undefined);
     }
   }
 }
@@ -332,32 +367,51 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
   const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
   for (const item of items) {
     if (item.roleKey === roleKey && item.roleKey !== 'admin') {
-      await page.request.delete(`${apiBaseUrl}/system/role/${item.id}`, {
-        headers: await verifiedHeaders(page, accessToken),
-      }).catch(() => undefined);
+      await page.request
+        .delete(`${apiBaseUrl}/system/role/${item.id}`, {
+          headers: await verifiedHeaders(page, accessToken),
+        })
+        .catch(() => undefined);
     }
   }
 }
 
-async function deleteUserByIdWithHeaders(page: Page, headers: Record<string, string>, userId: number | null | undefined) {
+async function deleteUserByIdWithHeaders(
+  page: Page,
+  headers: Record<string, string>,
+  userId: number | null | undefined,
+) {
   if (!userId) {
     return;
   }
-  await page.request.delete(`${apiBaseUrl}/system/user/${userId}`, {
-    headers,
-  }).catch(() => undefined);
+  await page.request
+    .delete(`${apiBaseUrl}/system/user/${userId}`, {
+      headers,
+    })
+    .catch(() => undefined);
 }
 
-async function deleteRoleByIdWithHeaders(page: Page, headers: Record<string, string>, roleId: number | null | undefined) {
+async function deleteRoleByIdWithHeaders(
+  page: Page,
+  headers: Record<string, string>,
+  roleId: number | null | undefined,
+) {
   if (!roleId) {
     return;
   }
-  await page.request.delete(`${apiBaseUrl}/system/role/${roleId}`, {
-    headers,
-  }).catch(() => undefined);
+  await page.request
+    .delete(`${apiBaseUrl}/system/role/${roleId}`, {
+      headers,
+    })
+    .catch(() => undefined);
 }
 
-async function cleanupViewerIdentity(page: Page, accessToken: string, username: string, roleKey: string) {
+async function cleanupViewerIdentity(
+  page: Page,
+  accessToken: string,
+  username: string,
+  roleKey: string,
+) {
   await deleteUserByUsername(page, accessToken, username);
   await deleteRoleByKey(page, accessToken, roleKey);
 }
@@ -397,7 +451,11 @@ async function getRoleList(page: Page, accessToken: string, params?: Record<stri
 }
 
 async function getFirstActiveRole(page: Page, accessToken: string) {
-  const items = await getRoleList(page, accessToken, { status: 1, sortField: 'sort', sortOrder: 'asc' });
+  const items = await getRoleList(page, accessToken, {
+    status: 1,
+    sortField: 'sort',
+    sortOrder: 'asc',
+  });
   const role = items.find((item) => item.roleKey !== 'guest');
   expect(role).toBeTruthy();
   return role!;
@@ -419,19 +477,30 @@ async function getDeptTree(page: Page, accessToken: string, params?: Record<stri
 }
 
 async function deleteDeptByName(page: Page, accessToken: string, deptName: string) {
-  const rows = flattenDeptTreeNodes(await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' }));
+  const rows = flattenDeptTreeNodes(
+    await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' }),
+  );
   const targets = rows.filter((item) => item.deptName === deptName && !item.isRoot);
   for (const item of targets.reverse()) {
-    await page.request.delete(`${apiBaseUrl}/system/dept/${item.id}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    }).catch(() => undefined);
+    await page.request
+      .delete(`${apiBaseUrl}/system/dept/${item.id}`, {
+        headers: await verifiedHeaders(page, accessToken),
+      })
+      .catch(() => undefined);
   }
 }
 
 async function createDeptByApi(
   page: Page,
   accessToken: string,
-  data: { parentId: number; deptName: string; sort?: number; phone?: string; email?: string; status?: number },
+  data: {
+    parentId: number;
+    deptName: string;
+    sort?: number;
+    phone?: string;
+    email?: string;
+    status?: number;
+  },
 ) {
   const response = await page.request.post(`${apiBaseUrl}/system/dept`, {
     headers: await verifiedHeaders(page, accessToken),
@@ -469,9 +538,11 @@ async function deletePostByCode(page: Page, accessToken: string, postCode: strin
   const items = await getPostListItems(page, accessToken, { postCode });
   for (const item of items) {
     if (item.postCode === postCode) {
-      await page.request.delete(`${apiBaseUrl}/system/post/${item.id}`, {
-        headers: await verifiedHeaders(page, accessToken),
-      }).catch(() => undefined);
+      await page.request
+        .delete(`${apiBaseUrl}/system/post/${item.id}`, {
+          headers: await verifiedHeaders(page, accessToken),
+        })
+        .catch(() => undefined);
     }
   }
 }
@@ -479,7 +550,14 @@ async function deletePostByCode(page: Page, accessToken: string, postCode: strin
 async function createPostByApi(
   page: Page,
   accessToken: string,
-  data: { deptId: number; postCode: string; postName: string; sort?: number; remark?: string; status?: number },
+  data: {
+    deptId: number;
+    postCode: string;
+    postName: string;
+    sort?: number;
+    remark?: string;
+    status?: number;
+  },
 ) {
   const response = await page.request.post(`${apiBaseUrl}/system/post`, {
     headers: await verifiedHeaders(page, accessToken),
@@ -558,10 +636,17 @@ async function getRoleByKey(page: Page, accessToken: string, roleKey: string) {
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
-  return items.find((item: { roleKey: string }) => item.roleKey === roleKey) as { id: number; roleKey: string } | undefined;
+  return items.find((item: { roleKey: string }) => item.roleKey === roleKey) as
+    { id: number; roleKey: string } | undefined;
 }
 
-async function createApiPermission(page: Page, accessToken: string, roleKey: string, path: string, method: string) {
+async function createApiPermission(
+  page: Page,
+  accessToken: string,
+  roleKey: string,
+  path: string,
+  method: string,
+) {
   const response = await page.request.post(`${apiBaseUrl}/system/permission`, {
     headers: await verifiedHeaders(page, accessToken),
     data: { roleKey, path, method },
@@ -571,7 +656,10 @@ async function createApiPermission(page: Page, accessToken: string, roleKey: str
   expect(payload.code).toBe(200);
 }
 
-async function getCurrentUserPreferences(page: Page, accessToken: string): Promise<UserPlatformPreferences> {
+async function getCurrentUserPreferences(
+  page: Page,
+  accessToken: string,
+): Promise<UserPlatformPreferences> {
   const response = await page.request.get(`${apiBaseUrl}/auth/me`, {
     headers: authHeaders(accessToken),
   });
@@ -581,7 +669,11 @@ async function getCurrentUserPreferences(page: Page, accessToken: string): Promi
   return (payload.data?.preferences || {}) as UserPlatformPreferences;
 }
 
-async function updateCurrentUserPreferences(page: Page, accessToken: string, preferences: UserPlatformPreferences) {
+async function updateCurrentUserPreferences(
+  page: Page,
+  accessToken: string,
+  preferences: UserPlatformPreferences,
+) {
   const response = await page.request.put(`${apiBaseUrl}/auth/me/preferences`, {
     headers: await requestHeaders(page, accessToken),
     data: preferences,
@@ -695,9 +787,15 @@ test('user page keeps list workflow primary without governance drawer entry', as
   await expect(page.locator('.governance-insight-drawer')).toHaveCount(0);
   await expect(page.locator('.system-list__table-card')).toBeVisible();
   await expect(page.locator('.table-batch-action-bar__prefix-actions')).toBeVisible();
-  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('新增')).toBeVisible();
-  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('导入')).toBeVisible();
-  await expect(page.locator('.table-batch-action-bar__prefix-actions').getByText('导出')).toBeVisible();
+  await expect(
+    page.locator('.table-batch-action-bar__prefix-actions').getByText('新增'),
+  ).toBeVisible();
+  await expect(
+    page.locator('.table-batch-action-bar__prefix-actions').getByText('导入'),
+  ).toBeVisible();
+  await expect(
+    page.locator('.table-batch-action-bar__prefix-actions').getByText('导出'),
+  ).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '状态' })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '部门' })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: '岗位' })).toBeVisible();
@@ -723,15 +821,16 @@ test('setting page shows audit table only in audit group and removes governance 
   await expect(page.locator('.setting-overview-page__anchor-strip')).toBeVisible();
   await expect(page.locator('.setting-group-workspace')).toHaveCount(1);
 
-  await page.getByRole('tab', { name: /日志治理/ }).first().click();
+  await page
+    .getByRole('tab', { name: /日志治理/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/system\/setting\?group=audit$/);
   await expect(page.locator('#setting-group-section-audit')).toBeVisible();
   await expect(page.locator('.setting-page__audit-card')).toBeVisible();
 });
 
-test('setting route lands in a single visible group workspace', async ({
-  page,
-}) => {
+test('setting route lands in a single visible group workspace', async ({ page }) => {
   await page.goto('/system/setting', { waitUntil: 'networkidle' });
 
   await expectVisiblePageTitle(page, '系统设置');
@@ -752,7 +851,9 @@ test('setting group route isolates one group context per route', async ({ page }
   await expect(page.locator('.setting-page__group-nav-grid')).toBeVisible();
   await expect(page.getByRole('tab', { name: '安全策略' })).toBeVisible();
   await expect(page.locator('.setting-page__audit-card')).toHaveCount(0);
-  await expect(page.locator('.form-section__title').getByText('安全策略', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.form-section__title').getByText('安全策略', { exact: true }),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: /日志治理/ }).click();
   await expect(page).toHaveURL(/\/system\/setting\/audit$/);
@@ -767,7 +868,9 @@ test('governance and audit pages remove hero-heavy main-area blocks', async ({ p
     await expect(page.locator('.system-list__hero')).toHaveCount(0);
     await expect(
       page
-        .locator('.system-list__table-card, .permission-workbench__tabs, .org-structure, .dict-workbench')
+        .locator(
+          '.system-list__table-card, .permission-workbench__tabs, .org-structure, .dict-workbench',
+        )
         .first(),
     ).toBeVisible();
   }
@@ -778,7 +881,9 @@ test('menu smoke: create dialog uses tree parent selector', async ({ page }) => 
   await page.goto('/system/menu', { waitUntil: 'networkidle' });
 
   await page.getByRole('button', { name: '新增', exact: true }).click();
-  const dialog = page.getByRole('dialog').filter({ has: page.getByText('新增菜单', { exact: true }) });
+  const dialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByText('新增菜单', { exact: true }) });
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.arco-tree-select').first()).toBeVisible();
 });
@@ -795,20 +900,27 @@ test('menu smoke: create child action preselects clicked parent', async ({ page 
   try {
     await page.goto('/system/menu', { waitUntil: 'networkidle' });
 
-    const parentRow = page.locator('.arco-table-tr').filter({ hasText: parentMenu?.path || '' }).first();
+    const parentRow = page
+      .locator('.arco-table-tr')
+      .filter({ hasText: parentMenu?.path || '' })
+      .first();
     await expect(parentRow).toBeVisible();
     await parentRow.getByRole('button', { name: '新增子菜单', exact: true }).click();
 
-    const dialog = page.getByRole('dialog').filter({ has: page.getByText('新增菜单', { exact: true }) });
+    const dialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增菜单', { exact: true }) });
     await expect(dialog).toBeVisible();
     await expect(dialog.locator('.arco-tree-select').first()).toContainText('/system/access');
 
     const uniqueSuffix = Date.now();
-    await dialog.getByPlaceholder('例如：system.menu.example').fill(`system.menu.child.${uniqueSuffix}`);
-    await dialog.getByPlaceholder('例如：/system/example').fill(`/system/menu-child-${uniqueSuffix}`);
     await dialog
-      .getByPlaceholder('例如：business/cmdb/CMDBTypeList')
-      .fill('system/menu/MenuList');
+      .getByPlaceholder('例如：system.menu.example')
+      .fill(`system.menu.child.${uniqueSuffix}`);
+    await dialog
+      .getByPlaceholder('例如：/system/example')
+      .fill(`/system/menu-child-${uniqueSuffix}`);
+    await dialog.getByPlaceholder('例如：business/cmdb/CMDBTypeList').fill('system/menu/MenuList');
     await dialog.getByPlaceholder('例如：system-example').fill(`system-menu-child-${uniqueSuffix}`);
     await dialog
       .getByPlaceholder('例如：system.iam / system.auth / platform / business.order')
@@ -820,8 +932,7 @@ test('menu smoke: create child action preselects clicked parent', async ({ page 
 
     const createResponsePromise = page.waitForResponse(
       (response) =>
-        response.url().includes('/api/v1/system/menu') &&
-        response.request().method() === 'POST',
+        response.url().includes('/api/v1/system/menu') && response.request().method() === 'POST',
     );
     await dialog.locator('.submit-bar').getByRole('button', { name: '新增', exact: true }).click();
     const createResponse = await createResponsePromise;
@@ -836,7 +947,9 @@ test('menu smoke: create child action preselects clicked parent', async ({ page 
   }
 });
 
-test('config high-sensitivity pages keep one summary container and no hero wall', async ({ page }) => {
+test('config high-sensitivity pages keep one summary container and no hero wall', async ({
+  page,
+}) => {
   test.setTimeout(60000);
   await page.goto('/system/modules', { waitUntil: 'networkidle' });
   await expectVisiblePageTitle(page, '模块注册表');
@@ -844,7 +957,9 @@ test('config high-sensitivity pages keep one summary container and no hero wall'
   await expect(page.locator('.system-list__hero')).toHaveCount(0);
   await expect(page.locator('.module-manager-page__intro')).toHaveCount(0);
   await expect(page.locator('.module-manager-page__stats')).toHaveCount(0);
-  await expect(page.locator('.module-manager-page__header-actions .arco-btn-primary')).toBeVisible();
+  await expect(
+    page.locator('.module-manager-page__header-actions .arco-btn-primary'),
+  ).toBeVisible();
   await expect(page.getByText('临时模块', { exact: true }).first()).toBeVisible();
 
   await page.goto('/system/generator', { waitUntil: 'networkidle' });
@@ -928,7 +1043,9 @@ test('dict workspace keeps the governance summary outside one tabbed task surfac
   await expect(governanceBar).toHaveCount(1);
   await expect(governanceBar).toBeVisible();
   await expect(workbench).toBeVisible();
-  await expect(workbench.locator('.governance-summary-bar, .dict-page__governance-bar')).toHaveCount(0);
+  await expect(
+    workbench.locator('.governance-summary-bar, .dict-page__governance-bar'),
+  ).toHaveCount(0);
   await expect(workbench.getByRole('tab')).toHaveCount(2);
   await expect(workbench.locator('[role="tab"][aria-selected="true"]')).toHaveCount(1);
   await expect(workbench.locator('.dict-page__actions').first()).toBeVisible();
@@ -952,7 +1069,9 @@ test('dict workspace keeps the governance summary outside one tabbed task surfac
   const itemTab = workbench.getByRole('tab').nth(1);
   await itemTab.click();
   await expect(itemTab).toHaveAttribute('aria-selected', 'true');
-  await expect(workbench.locator('.governance-summary-bar, .dict-page__governance-bar')).toHaveCount(0);
+  await expect(
+    workbench.locator('.governance-summary-bar, .dict-page__governance-bar'),
+  ).toHaveCount(0);
   await expect(workbench.locator('.dict-page__actions').first()).toBeVisible();
 });
 
@@ -1107,7 +1226,9 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   }
 
   await targetRow.getByRole('button', { name: '详情' }).click();
-  const detailDialog = page.getByRole('dialog').filter({ has: page.getByText('翻译详情', { exact: true }) });
+  const detailDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByText('翻译详情', { exact: true }) });
   await expect(detailDialog).toBeVisible();
   await expect(detailDialog.getByText(seedKey)).toBeVisible();
   const detailText = (await detailDialog.textContent()) || '';
@@ -1117,28 +1238,34 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   if (rawUpdatedAt) {
     expect(detailText).not.toContain(rawUpdatedAt);
   }
-  expect(detailText).toMatch(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/);
+  expect(detailText).toMatch(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(?!:\d{2})/);
   await detailDialog.getByRole('button', { name: '关闭' }).click();
 
   await targetRow.getByRole('button', { name: '编辑' }).click();
-  const editDialog = page.getByRole('dialog').filter({ has: page.getByText('编辑翻译', { exact: true }) });
+  const editDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByText('编辑翻译', { exact: true }) });
   await expect(editDialog).toBeVisible();
   const editTextarea = editDialog.locator('textarea').first();
   await editTextarea.fill('更新值');
   await editDialog.getByRole('button', { name: '确定' }).click();
   await expect(editDialog).toHaveCount(0);
 
-  await expect.poll(async () => {
-    const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
-      headers: authHeaders(accessToken),
-      params: { key: seedKey, page: '1', pageSize: '10' },
-    });
-    const listPayload = await listResp.json();
-    return listPayload.data.items[0]?.value;
-  }).toBe('更新值');
+  await expect
+    .poll(async () => {
+      const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
+        headers: authHeaders(accessToken),
+        params: { key: seedKey, page: '1', pageSize: '10' },
+      });
+      const listPayload = await listResp.json();
+      return listPayload.data.items[0]?.value;
+    })
+    .toBe('更新值');
 
   await page.getByRole('button', { name: '新增' }).click();
-  const createDialog = page.getByRole('dialog').filter({ has: page.getByText('新增翻译', { exact: true }) });
+  const createDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByText('新增翻译', { exact: true }) });
   await expect(createDialog).toBeVisible();
   const createKey = `${seedKey}.created`;
   await createDialog.locator('input').nth(0).fill('system.config');
@@ -1151,8 +1278,7 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
     waitForOkApiResponse(
       page,
       (response) =>
-        response.url().includes('/system/i18n') &&
-        response.request().method() === 'POST',
+        response.url().includes('/system/i18n') && response.request().method() === 'POST',
     ),
     createDialog.getByRole('button', { name: '确定' }).click(),
   ]);
@@ -1185,29 +1311,37 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   const deleteRow = page.getByRole('row', { name: new RegExp(seedKey) }).first();
   await deleteRow.getByRole('button', { name: '删除' }).click();
   const deleteConfirmPopup = page
-    .locator('.arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible')
+    .locator(
+      '.arco-popconfirm:visible, .arco-trigger-popup:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible',
+    )
     .filter({ has: page.getByRole('button', { name: '确定', exact: true }) })
     .last();
   await expect(deleteConfirmPopup).toBeVisible();
   await deleteConfirmPopup.getByRole('button', { name: '确定', exact: true }).click();
 
-  await expect.poll(async () => {
-    const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
-      headers: authHeaders(accessToken),
-      params: { key: seedKey, page: '1', pageSize: '10' },
-    });
-    const listPayload = await listResp.json();
-    return listPayload.data.items.length;
-  }).toBe(1);
+  await expect
+    .poll(async () => {
+      const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
+        headers: authHeaders(accessToken),
+        params: { key: seedKey, page: '1', pageSize: '10' },
+      });
+      const listPayload = await listResp.json();
+      return listPayload.data.items.length;
+    })
+    .toBe(1);
 
   if (createdRowId) {
-    await page.request.delete(`${apiBaseUrl}/system/i18n/${createdRowId}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    }).catch(() => undefined);
+    await page.request
+      .delete(`${apiBaseUrl}/system/i18n/${createdRowId}`, {
+        headers: await verifiedHeaders(page, accessToken),
+      })
+      .catch(() => undefined);
   }
 });
 
-test('i18n smoke: import csv creates updates and downloads error file', async ({ page }, testInfo) => {
+test('i18n smoke: import csv creates updates and downloads error file', async ({
+  page,
+}, testInfo) => {
   const accessToken = await signInAsAdmin(page);
   const seedBase = `i18n.import.${Date.now()}`;
   const updateKey = `${seedBase}.update`;
@@ -1239,34 +1373,40 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
     waitForOkApiResponse(
       page,
       (response) =>
-        response.url().includes('/system/i18n/import') &&
-        response.request().method() === 'POST',
+        response.url().includes('/system/i18n/import') && response.request().method() === 'POST',
     ),
-    page.locator('input[type="file"]').first().setInputFiles({
-      name: 'system-i18n-import.csv',
-      mimeType: 'text/csv',
-      buffer: Buffer.from(`\uFEFF${successCsv}`, 'utf8'),
-    }),
+    page
+      .locator('input[type="file"]')
+      .first()
+      .setInputFiles({
+        name: 'system-i18n-import.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from(`\uFEFF${successCsv}`, 'utf8'),
+      }),
   ]);
   await dismissVisibleSuccessDialog(page);
 
-  await expect.poll(async () => {
-    const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
-      headers: authHeaders(accessToken),
-      params: { key: updateKey, page: '1', pageSize: '10' },
-    });
-    const listPayload = await listResp.json();
-    return listPayload.data.items[0]?.value;
-  }).toBe('导入后新值');
+  await expect
+    .poll(async () => {
+      const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
+        headers: authHeaders(accessToken),
+        params: { key: updateKey, page: '1', pageSize: '10' },
+      });
+      const listPayload = await listResp.json();
+      return listPayload.data.items[0]?.value;
+    })
+    .toBe('导入后新值');
 
-  await expect.poll(async () => {
-    const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
-      headers: authHeaders(accessToken),
-      params: { key: createKey, page: '1', pageSize: '10' },
-    });
-    const listPayload = await listResp.json();
-    return listPayload.data.items[0]?.value;
-  }).toBe('批量新增值');
+  await expect
+    .poll(async () => {
+      const listResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
+        headers: authHeaders(accessToken),
+        params: { key: createKey, page: '1', pageSize: '10' },
+      });
+      const listPayload = await listResp.json();
+      return listPayload.data.items[0]?.value;
+    })
+    .toBe('批量新增值');
 
   const invalidKey = `${seedBase}.invalid`;
   const invalidCsv = [
@@ -1280,14 +1420,16 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
     waitForOkApiResponse(
       page,
       (response) =>
-        response.url().includes('/system/i18n/import') &&
-        response.request().method() === 'POST',
+        response.url().includes('/system/i18n/import') && response.request().method() === 'POST',
     ),
-    page.locator('input[type="file"]').first().setInputFiles({
-      name: 'system-i18n-import-invalid.csv',
-      mimeType: 'text/csv',
-      buffer: Buffer.from(`\uFEFF${invalidCsv}`, 'utf8'),
-    }),
+    page
+      .locator('input[type="file"]')
+      .first()
+      .setInputFiles({
+        name: 'system-i18n-import-invalid.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from(`\uFEFF${invalidCsv}`, 'utf8'),
+      }),
   ]);
 
   const errorDownload = await downloadPromise;
@@ -1308,13 +1450,17 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
   const createdRowId = createdListPayload.data.items[0]?.id as number | undefined;
 
   if (createdRowId) {
-    await page.request.delete(`${apiBaseUrl}/system/i18n/${createdRowId}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    }).catch(() => undefined);
+    await page.request
+      .delete(`${apiBaseUrl}/system/i18n/${createdRowId}`, {
+        headers: await verifiedHeaders(page, accessToken),
+      })
+      .catch(() => undefined);
   }
-  await page.request.delete(`${apiBaseUrl}/system/i18n/${seedPayload.data.id}`, {
-    headers: await verifiedHeaders(page, accessToken),
-  }).catch(() => undefined);
+  await page.request
+    .delete(`${apiBaseUrl}/system/i18n/${seedPayload.data.id}`, {
+      headers: await verifiedHeaders(page, accessToken),
+    })
+    .catch(() => undefined);
 });
 
 test('setting smoke: security policy saves through setting page UI', async ({ page }) => {
@@ -1326,7 +1472,9 @@ test('setting smoke: security policy saves through setting page UI', async ({ pa
   const groupPayload = await groupResponse.json();
   expect(groupPayload.code).toBe(200);
   const originalItems = groupPayload.data.items as SettingItem[];
-  const originalValue = originalItems.find((item) => item.settingKey === 'security.password_min_length')?.settingValue ?? '6';
+  const originalValue =
+    originalItems.find((item) => item.settingKey === 'security.password_min_length')
+      ?.settingValue ?? '6';
   const nextValue = originalValue === '6' ? '7' : '6';
 
   try {
@@ -1334,14 +1482,20 @@ test('setting smoke: security policy saves through setting page UI', async ({ pa
     await installOperationToken(page, accessToken);
     await page.locator('input[role="spinbutton"]').first().fill(nextValue);
     await page.locator('.submit-bar button').last().click();
-    await expect.poll(async () => {
-      const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/security`, {
-        headers: authHeaders(accessToken),
-      });
-      const verifyPayload = await verifyResponse.json();
-      return (verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>)
-        .find((item) => item.settingKey === 'security.password_min_length')?.settingValue;
-    }).toBe(nextValue);
+    await expect
+      .poll(async () => {
+        const verifyResponse = await page.request.get(
+          `${apiBaseUrl}/system/setting/group/security`,
+          {
+            headers: authHeaders(accessToken),
+          },
+        );
+        const verifyPayload = await verifyResponse.json();
+        return (
+          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
+        ).find((item) => item.settingKey === 'security.password_min_length')?.settingValue;
+      })
+      .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'security', originalItems);
   }
@@ -1396,7 +1550,9 @@ test('setting smoke: login policy saves through setting page UI', async ({ page 
   const groupPayload = await groupResponse.json();
   expect(groupPayload.code).toBe(200);
   const originalItems = groupPayload.data.items as SettingItem[];
-  const originalValue = originalItems.find((item) => item.settingKey === 'login.max_failed_attempts')?.settingValue ?? '5';
+  const originalValue =
+    originalItems.find((item) => item.settingKey === 'login.max_failed_attempts')?.settingValue ??
+    '5';
   const nextValue = originalValue === '5' ? '6' : '5';
 
   try {
@@ -1404,20 +1560,25 @@ test('setting smoke: login policy saves through setting page UI', async ({ page 
     await installOperationToken(page, accessToken);
     await page.locator('input[role="spinbutton"]').first().fill(nextValue);
     await page.locator('.submit-bar button').last().click();
-    await expect.poll(async () => {
-      const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/login`, {
-        headers: authHeaders(accessToken),
-      });
-      const verifyPayload = await verifyResponse.json();
-      return (verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>)
-        .find((item) => item.settingKey === 'login.max_failed_attempts')?.settingValue;
-    }).toBe(nextValue);
+    await expect
+      .poll(async () => {
+        const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/login`, {
+          headers: authHeaders(accessToken),
+        });
+        const verifyPayload = await verifyResponse.json();
+        return (
+          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
+        ).find((item) => item.settingKey === 'login.max_failed_attempts')?.settingValue;
+      })
+      .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'login', originalItems);
   }
 });
 
-test('setting smoke: upload storage driver can be selected through setting page UI', async ({ page }) => {
+test('setting smoke: upload storage driver can be selected through setting page UI', async ({
+  page,
+}) => {
   const accessToken = await signInAsAdmin(page);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/upload`, {
     headers: authHeaders(accessToken),
@@ -1426,7 +1587,9 @@ test('setting smoke: upload storage driver can be selected through setting page 
   const groupPayload = await groupResponse.json();
   expect(groupPayload.code).toBe(200);
   const originalItems = groupPayload.data.items as SettingItem[];
-  const currentValue = originalItems.find((item) => item.settingKey === 'upload.storage_driver')?.settingValue ?? 'local';
+  const currentValue =
+    originalItems.find((item) => item.settingKey === 'upload.storage_driver')?.settingValue ??
+    'local';
   const nextValue = currentValue === 'local' ? 's3' : 'local';
   const nextLabel = nextValue === 's3' ? 'S3 兼容对象存储' : '本地存储';
 
@@ -1436,20 +1599,25 @@ test('setting smoke: upload storage driver can be selected through setting page 
     await page.locator('.arco-select-view').first().click();
     await page.locator('.arco-select-option').filter({ hasText: nextLabel }).first().click();
     await page.locator('.submit-bar button').last().click();
-    await expect.poll(async () => {
-      const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/upload`, {
-        headers: authHeaders(accessToken),
-      });
-      const verifyPayload = await verifyResponse.json();
-      return (verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>)
-        .find((item) => item.settingKey === 'upload.storage_driver')?.settingValue;
-    }).toBe(nextValue);
+    await expect
+      .poll(async () => {
+        const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/upload`, {
+          headers: authHeaders(accessToken),
+        });
+        const verifyPayload = await verifyResponse.json();
+        return (
+          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
+        ).find((item) => item.settingKey === 'upload.storage_driver')?.settingValue;
+      })
+      .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'upload', originalItems);
   }
 });
 
-test('setting smoke: default language applies when there is no explicit choice', async ({ page }) => {
+test('setting smoke: default language applies when there is no explicit choice', async ({
+  page,
+}) => {
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
@@ -1489,7 +1657,9 @@ test('setting smoke: default language applies when there is no explicit choice',
   }
 });
 
-test('setting smoke: default language can be selected through setting page UI', async ({ page }) => {
+test('setting smoke: default language can be selected through setting page UI', async ({
+  page,
+}) => {
   const accessToken = await signInAsAdmin(page);
   const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
     headers: authHeaders(accessToken),
@@ -1498,7 +1668,9 @@ test('setting smoke: default language can be selected through setting page UI', 
   const groupPayload = await groupResponse.json();
   expect(groupPayload.code).toBe(200);
   const originalItems = groupPayload.data.items as SettingItem[];
-  const currentValue = originalItems.find((item) => item.settingKey === 'i18n.default_language')?.settingValue ?? 'zh-CN';
+  const currentValue =
+    originalItems.find((item) => item.settingKey === 'i18n.default_language')?.settingValue ??
+    'zh-CN';
   const nextValue = currentValue === 'zh-CN' ? 'en-US' : 'zh-CN';
   const nextLabel = nextValue === 'en-US' ? 'English' : '中文';
 
@@ -1508,14 +1680,17 @@ test('setting smoke: default language can be selected through setting page UI', 
     await page.locator('.arco-select-view').first().click();
     await page.locator('.arco-select-option').filter({ hasText: nextLabel }).first().click();
     await page.locator('.submit-bar button').last().click();
-    await expect.poll(async () => {
-      const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
-        headers: authHeaders(accessToken),
-      });
-      const verifyPayload = await verifyResponse.json();
-      return (verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>)
-        .find((item) => item.settingKey === 'i18n.default_language')?.settingValue;
-    }).toBe(nextValue);
+    await expect
+      .poll(async () => {
+        const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
+          headers: authHeaders(accessToken),
+        });
+        const verifyPayload = await verifyResponse.json();
+        return (
+          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
+        ).find((item) => item.settingKey === 'i18n.default_language')?.settingValue;
+      })
+      .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'i18n', originalItems);
   }
@@ -1583,7 +1758,9 @@ test('setting smoke: login page language choice overrides saved preference and s
   }
 });
 
-test('setting smoke: logout clears explicit language and falls back to default language', async ({ page }) => {
+test('setting smoke: logout clears explicit language and falls back to default language', async ({
+  page,
+}) => {
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
@@ -1629,7 +1806,9 @@ test('setting smoke: logout clears explicit language and falls back to default l
   }
 });
 
-test('auth smoke: logout sends revoke request without stale invalid-session prompt', async ({ page }) => {
+test('auth smoke: logout sends revoke request without stale invalid-session prompt', async ({
+  page,
+}) => {
   const tokens = await loginByApi(page.request, adminCredentials);
   await installClientSession(page, tokens);
 
@@ -1637,7 +1816,11 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
   const authFailures: string[] = [];
 
   page.on('response', async (response) => {
-    if (!captureAuthFailures || !response.url().includes('/api/v1/') || response.url().endsWith('/auth/logout')) {
+    if (
+      !captureAuthFailures ||
+      !response.url().includes('/api/v1/') ||
+      response.url().endsWith('/auth/logout')
+    ) {
       return;
     }
     try {
@@ -1647,11 +1830,14 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
       }
       const code = 'code' in payload ? payload.code : undefined;
       const message = 'message' in payload ? payload.message : undefined;
-      const isAuthFailure = code === 401
-        || message === 'session.invalid'
-        || (typeof message === 'string' && message.startsWith('token.'));
+      const isAuthFailure =
+        code === 401 ||
+        message === 'session.invalid' ||
+        (typeof message === 'string' && message.startsWith('token.'));
       if (isAuthFailure) {
-        authFailures.push(`${response.request().method()} ${response.url()} -> ${String(message || code)}`);
+        authFailures.push(
+          `${response.request().method()} ${response.url()} -> ${String(message || code)}`,
+        );
       }
     } catch {
       // ignore non-json responses
@@ -1660,7 +1846,9 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
 
   await page.goto('/dashboard', { waitUntil: 'networkidle' });
   captureAuthFailures = true;
-  const logoutResponsePromise = page.waitForResponse((response) => response.url().includes('/api/v1/auth/logout'));
+  const logoutResponsePromise = page.waitForResponse((response) =>
+    response.url().includes('/api/v1/auth/logout'),
+  );
   await page.getByRole('button', { name: /admin/ }).click();
   await page.getByRole('menuitem', { name: /退出登录|Sign out|Logout/ }).click();
   const logoutPayload = await (await logoutResponsePromise).json();
@@ -1668,7 +1856,9 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
   await expect(page).toHaveURL(/\/login$/);
   await page.waitForTimeout(1000);
   expect(logoutPayload.code).toBe(200);
-  await expect(page.locator('.arco-message').filter({ hasText: /无效会话|session\.invalid|token\./i })).toHaveCount(0);
+  await expect(
+    page.locator('.arco-message').filter({ hasText: /无效会话|session\.invalid|token\./i }),
+  ).toHaveCount(0);
   expect(authFailures).toEqual([]);
 });
 
@@ -1698,7 +1888,9 @@ test('platform smoke: lock screen keeps current route and opened tabs', async ({
     await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
     await expect(page.getByRole('dialog')).toContainText(/会话已锁定|Session Locked/);
 
-    await page.getByPlaceholder(/请输入当前账号密码以解锁|Enter the current account password to unlock/).fill('123456');
+    await page
+      .getByPlaceholder(/请输入当前账号密码以解锁|Enter the current account password to unlock/)
+      .fill('123456');
     await page.getByRole('button', { name: /解锁|Unlock/ }).click();
 
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -1721,7 +1913,9 @@ test('platform smoke: lock screen refreshes activity timestamp and blocks comman
   await page.goto('/system/profile', { waitUntil: 'networkidle' });
   await expectVisiblePageTitle(page, '个人中心');
 
-  const beforeLockActivity = await page.evaluate(() => sessionStorage.getItem('pantheon_shell_last_activity_at'));
+  const beforeLockActivity = await page.evaluate(() =>
+    sessionStorage.getItem('pantheon_shell_last_activity_at'),
+  );
   expect(beforeLockActivity).toBeTruthy();
 
   await page.getByRole('button', { name: /admin/i }).click();
@@ -1732,12 +1926,16 @@ test('platform smoke: lock screen refreshes activity timestamp and blocks comman
   await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+K`);
   await expect(page.locator('.app-command')).toHaveCount(0);
 
-  await page.getByPlaceholder(/请输入当前账号密码以解锁|Enter the current account password to unlock/).fill('123456');
+  await page
+    .getByPlaceholder(/请输入当前账号密码以解锁|Enter the current account password to unlock/)
+    .fill('123456');
   await page.getByRole('button', { name: /解锁|Unlock/ }).click();
   await expect(lockDialog).toHaveCount(0);
   await expect(page).toHaveURL(/\/system\/profile$/);
 
-  const afterUnlockActivity = await page.evaluate(() => sessionStorage.getItem('pantheon_shell_last_activity_at'));
+  const afterUnlockActivity = await page.evaluate(() =>
+    sessionStorage.getItem('pantheon_shell_last_activity_at'),
+  );
   expect(afterUnlockActivity).toBeTruthy();
   expect(Number(afterUnlockActivity)).toBeGreaterThan(Number(beforeLockActivity));
 });
@@ -1749,10 +1947,14 @@ test('auth smoke: login page shows idle-timeout notice once', async ({ page }) =
   });
 
   await page.reload({ waitUntil: 'networkidle' });
-  await expect(page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true }),
+  ).toBeVisible();
 
   await page.reload({ waitUntil: 'networkidle' });
-  await expect(page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true }),
+  ).toHaveCount(0);
 });
 
 test('platform + system/auth smoke: locked session times out, relogin notice appears, and security center shows session context', async ({
@@ -1769,10 +1971,7 @@ test('platform + system/auth smoke: locked session times out, relogin notice app
   await expect(lockDialog).toContainText(/会话已锁定|Session Locked/);
 
   await page.evaluate(() => {
-    sessionStorage.setItem(
-      'pantheon_shell_last_activity_at',
-      String(Date.now() - 31 * 60 * 1000),
-    );
+    sessionStorage.setItem('pantheon_shell_last_activity_at', String(Date.now() - 31 * 60 * 1000));
   });
 
   await page.reload({ waitUntil: 'networkidle' });
@@ -1796,7 +1995,9 @@ test('platform + system/auth smoke: locked session times out, relogin notice app
   await expect(page.getByText('成功', { exact: true }).first()).toBeVisible();
 });
 
-test('setting smoke: logout clears explicit theme and falls back to default theme', async ({ page }) => {
+test('setting smoke: logout clears explicit theme and falls back to default theme', async ({
+  page,
+}) => {
   test.setTimeout(45000);
   const accessToken = await signInAsAdmin(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
@@ -1829,20 +2030,26 @@ test('setting smoke: logout clears explicit theme and falls back to default them
       document.documentElement.dataset.pantheonTheme = 'slate';
     });
 
-    await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme)).toBe('slate');
+    await expect
+      .poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme))
+      .toBe('slate');
 
     await page.getByRole('button', { name: /admin/ }).click();
     await page.getByRole('menuitem', { name: '退出登录' }).click();
 
     await expect(page).toHaveURL(/\/login$/);
-    await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme)).toBe(nextTheme);
+    await expect
+      .poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme))
+      .toBe(nextTheme);
 
     await page.getByRole('textbox', { name: /用户名|Username/ }).fill('admin');
     await page.getByLabel(/密码|Password/).fill('123456');
     await page.getByRole('button', { name: /登录|Sign in|Sign In/ }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
-    await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme)).toBe(nextTheme);
+    await expect
+      .poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme))
+      .toBe(nextTheme);
   } finally {
     const restoreToken = await page.evaluate(() => localStorage.getItem('pantheon_access_token'));
     const effectiveToken = restoreToken || (await signInAsAdmin(page));
@@ -1876,7 +2083,9 @@ test('setting smoke: tab bar visibility follows ui preference', async ({ page })
   }
 });
 
-test('setting smoke: default theme applies when explicit theme preference is cleared', async ({ page }) => {
+test('setting smoke: default theme applies when explicit theme preference is cleared', async ({
+  page,
+}) => {
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
@@ -1909,7 +2118,9 @@ test('setting smoke: default theme applies when explicit theme preference is cle
     });
     await page.reload({ waitUntil: 'networkidle' });
 
-    await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme)).toBe(nextTheme);
+    await expect
+      .poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme))
+      .toBe(nextTheme);
   } finally {
     await updateCurrentUserPreferences(page, accessToken, originalPreferences);
     await updateSettingGroup(page, accessToken, 'ui', originalItems);
@@ -1943,16 +2154,19 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
   try {
     const updateResponse = await updateSettingGroup(page, accessToken, 'upload', nextItems);
     expect(updateResponse.ok()).toBeTruthy();
-    const uploadPayload = await page.request.post(`${apiBaseUrl}/system/upload?scope=profile/avatar`, {
-      headers: await requestHeaders(page, accessToken),
-      multipart: {
-        file: {
-          name: 'avatar.png',
-          mimeType: 'image/png',
-          buffer: Buffer.from('pantheon-upload-smoke', 'utf8'),
+    const uploadPayload = await page.request.post(
+      `${apiBaseUrl}/system/upload?scope=profile/avatar`,
+      {
+        headers: await requestHeaders(page, accessToken),
+        multipart: {
+          file: {
+            name: 'avatar.png',
+            mimeType: 'image/png',
+            buffer: Buffer.from('pantheon-upload-smoke', 'utf8'),
+          },
         },
       },
-    });
+    );
     expect(uploadPayload.ok()).toBeTruthy();
     const uploadResult = await uploadPayload.json();
     expect(uploadResult.code).toBe(200);
@@ -1962,16 +2176,19 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
     expect(fileResponse.ok()).toBeTruthy();
     expect((await fileResponse.body()).toString('utf8')).toBe('pantheon-upload-smoke');
 
-    const blockedPayload = await page.request.post(`${apiBaseUrl}/system/upload?scope=profile/avatar`, {
-      headers: await requestHeaders(page, accessToken),
-      multipart: {
-        file: {
-          name: 'avatar.txt',
-          mimeType: 'text/plain',
-          buffer: Buffer.from('blocked', 'utf8'),
+    const blockedPayload = await page.request.post(
+      `${apiBaseUrl}/system/upload?scope=profile/avatar`,
+      {
+        headers: await requestHeaders(page, accessToken),
+        multipart: {
+          file: {
+            name: 'avatar.txt',
+            mimeType: 'text/plain',
+            buffer: Buffer.from('blocked', 'utf8'),
+          },
         },
       },
-    });
+    );
     expect(blockedPayload.ok()).toBeTruthy();
     const blockedResult = await blockedPayload.json();
     expect(blockedResult.code).not.toBe(200);
@@ -1983,16 +2200,19 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
 
 test('operation log smoke: failed reason and detail summary are visible', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const failedUploadResponse = await page.request.post(`${apiBaseUrl}/system/upload?scope=profile/avatar`, {
-    headers: await requestHeaders(page, accessToken),
-    multipart: {
-      file: {
-        name: 'audit-failure.txt',
-        mimeType: 'text/plain',
-        buffer: Buffer.from('audit-failure', 'utf8'),
+  const failedUploadResponse = await page.request.post(
+    `${apiBaseUrl}/system/upload?scope=profile/avatar`,
+    {
+      headers: await requestHeaders(page, accessToken),
+      multipart: {
+        file: {
+          name: 'audit-failure.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('audit-failure', 'utf8'),
+        },
       },
     },
-  });
+  );
   expect(failedUploadResponse.ok()).toBeTruthy();
   const failedUploadPayload = await failedUploadResponse.json();
   expect(failedUploadPayload.code).not.toBe(200);
@@ -2026,7 +2246,9 @@ test('operation log smoke: failed reason and detail summary are visible', async 
   await expect(detailDialog.getByText('upload.file.type_not_allowed').first()).toBeVisible();
 });
 
-test('setting permission smoke: list-only role can view page but cannot save or refresh', async ({ page }) => {
+test('setting permission smoke: list-only role can view page but cannot save or refresh', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `setting_view_only_${Date.now()}`;
   const username = `setting_viewer_${Date.now()}`;
@@ -2050,7 +2272,13 @@ test('setting permission smoke: list-only role can view page but cannot save or 
     expect(createRoleResponse.ok()).toBeTruthy();
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
     expect(role).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/setting/list', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/setting/list',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
@@ -2078,8 +2306,12 @@ test('setting permission smoke: list-only role can view page but cannot save or 
 
       const settingPanel = viewerPage.locator('.setting-page__config-card');
       await expect(settingPanel.getByRole('button', { name: '刷新设置缓存' })).toBeDisabled();
-      await expect(settingPanel.locator('.submit-bar').getByRole('button', { name: '保存' })).toBeDisabled();
-      await expect(settingPanel.locator('.submit-bar').getByRole('button', { name: '取消' })).toBeEnabled();
+      await expect(
+        settingPanel.locator('.submit-bar').getByRole('button', { name: '保存' }),
+      ).toBeDisabled();
+      await expect(
+        settingPanel.locator('.submit-bar').getByRole('button', { name: '取消' }),
+      ).toBeEnabled();
     } finally {
       await viewerPage.close();
     }
@@ -2090,7 +2322,9 @@ test('setting permission smoke: list-only role can view page but cannot save or 
   }
 });
 
-test('dict permission smoke: list-only role can view page but cannot mutate config', async ({ page }) => {
+test('dict permission smoke: list-only role can view page but cannot mutate config', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `dict_view_only_${Date.now()}`;
   const username = `dict_viewer_${Date.now()}`;
@@ -2114,8 +2348,20 @@ test('dict permission smoke: list-only role can view page but cannot mutate conf
     expect(createRoleResponse.ok()).toBeTruthy();
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
     expect(role).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/dict/type/list', 'GET');
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/dict/item/list', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/dict/type/list',
+      'GET',
+    );
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/dict/item/list',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
@@ -2162,7 +2408,9 @@ test('dict permission smoke: list-only role can view page but cannot mutate conf
   }
 });
 
-test('i18n permission smoke: list-only role can view page but cannot mutate translations', async ({ page }) => {
+test('i18n permission smoke: list-only role can view page but cannot mutate translations', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `i18n_view_only_${Date.now()}`;
   const username = `i18n_viewer_${Date.now()}`;
@@ -2187,7 +2435,13 @@ test('i18n permission smoke: list-only role can view page but cannot mutate tran
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
     expect(role).toBeTruthy();
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/i18n/list', 'GET');
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/i18n/overview', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/i18n/overview',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
@@ -2227,7 +2481,9 @@ test('i18n permission smoke: list-only role can view page but cannot mutate tran
   }
 });
 
-test('login-log permission smoke: list-only role can view page but cannot clear, export, or batch delete', async ({ page }) => {
+test('login-log permission smoke: list-only role can view page but cannot clear, export, or batch delete', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `login_log_view_only_${Date.now()}`;
   const username = `login_log_viewer_${Date.now()}`;
@@ -2249,8 +2505,20 @@ test('login-log permission smoke: list-only role can view page but cannot clear,
       },
     });
     expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/login-log/list', 'GET');
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/setting/group/audit', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/login-log/list',
+      'GET',
+    );
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/setting/group/audit',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
@@ -2290,7 +2558,9 @@ test('login-log permission smoke: list-only role can view page but cannot clear,
   }
 });
 
-test('session permission smoke: list-only role can view page but cannot revoke or clear sessions', async ({ page }) => {
+test('session permission smoke: list-only role can view page but cannot revoke or clear sessions', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `session_view_only_${Date.now()}`;
   const username = `session_viewer_${Date.now()}`;
@@ -2312,7 +2582,13 @@ test('session permission smoke: list-only role can view page but cannot revoke o
       },
     });
     expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/session/list', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/session/list',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
@@ -2352,7 +2628,9 @@ test('session permission smoke: list-only role can view page but cannot revoke o
   }
 });
 
-test('operation-log permission smoke: list-only role can view page but cannot clear, export, or batch delete', async ({ page }) => {
+test('operation-log permission smoke: list-only role can view page but cannot clear, export, or batch delete', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `operation_log_view_only_${Date.now()}`;
   const username = `operation_log_viewer_${Date.now()}`;
@@ -2374,8 +2652,20 @@ test('operation-log permission smoke: list-only role can view page but cannot cl
       },
     });
     expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/operation-log/list', 'GET');
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/setting/group/audit', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/operation-log/list',
+      'GET',
+    );
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/system/setting/group/audit',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
@@ -2415,7 +2705,9 @@ test('operation-log permission smoke: list-only role can view page but cannot cl
   }
 });
 
-test('module permission smoke: list-only role can view registry but cannot register or unregister modules', async ({ page }) => {
+test('module permission smoke: list-only role can view registry but cannot register or unregister modules', async ({
+  page,
+}) => {
   const adminAccessToken = await signInAsAdmin(page);
   const roleKey = `module_view_only_${Date.now()}`;
   const username = `module_viewer_${Date.now()}`;
@@ -2437,7 +2729,13 @@ test('module permission smoke: list-only role can view registry but cannot regis
       },
     });
     expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/lowcode/dynamic-modules', 'GET');
+    await createApiPermission(
+      page,
+      adminAccessToken,
+      roleKey,
+      '/api/v1/lowcode/dynamic-modules',
+      'GET',
+    );
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
     const role = await getRoleByKey(page, adminAccessToken, roleKey);
@@ -2515,13 +2813,17 @@ test('module manager smoke: auto-recycle module shows explicit lifecycle and pur
   await expect(row).toBeVisible();
 
   await row.getByRole('button', { name: '卸载', exact: true }).click();
-  await expect(page.getByText('确认卸载该临时模块吗？卸载时会自动回收业务表 biz_temp_auto_qa。')).toBeVisible();
+  await expect(
+    page.getByText('确认卸载该临时模块吗？卸载时会自动回收业务表 biz_temp_auto_qa。'),
+  ).toBeVisible();
 
   const popconfirmCancel = page.getByRole('button', { name: '取消' }).last();
   await popconfirmCancel.click();
 
   await row.getByRole('button', { name: '彻底删除', exact: true }).click();
-  const purgeDialog = page.getByRole('dialog').filter({ has: page.getByText('彻底删除模块', { exact: true }) });
+  const purgeDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByText('彻底删除模块', { exact: true }) });
   await expect(purgeDialog).toBeVisible();
   await expect(
     purgeDialog.getByText('该模块已标记为临时模块，彻底删除时会自动回收业务表 biz_temp_auto_qa。'),
@@ -2532,7 +2834,9 @@ test('module manager smoke: auto-recycle module shows explicit lifecycle and pur
   await expect(purgeDialog.getByText('同时删除业务数据表', { exact: false })).toHaveCount(0);
 });
 
-test('login-log governance smoke: selecting rows enables batch delete affordance', async ({ page }) => {
+test('login-log governance smoke: selecting rows enables batch delete affordance', async ({
+  page,
+}) => {
   await signInAsAdmin(page);
   await page.goto('/system/login-log', { waitUntil: 'networkidle' });
   await expectPageIdentityReady(page, '登录日志');
@@ -2752,10 +3056,16 @@ test('security-center smoke: client-side AppTable pagination exposes shared boun
   await expectNoPageError(page);
   await expect(page.locator('.page-split-layout--with-rail')).toBeVisible();
   await expect(
-    page.locator('.page-main-column .arco-card').filter({ hasText: /在线会话|Active Sessions/ }).first(),
+    page
+      .locator('.page-main-column .arco-card')
+      .filter({ hasText: /在线会话|Active Sessions/ })
+      .first(),
   ).toBeVisible();
 
-  const sessionCard = page.locator('.page-panel').filter({ hasText: /在线会话|Active Sessions/ }).first();
+  const sessionCard = page
+    .locator('.page-panel')
+    .filter({ hasText: /在线会话|Active Sessions/ })
+    .first();
   const firstPageButton = sessionCard.getByRole('button', { name: /^(首页|First page)$/ });
   const lastPageButton = sessionCard.getByRole('button', { name: /^(末页|Last page)$/ });
   const prevPageButton = sessionCard.locator('.arco-pagination-item-prev');
@@ -2778,26 +3088,35 @@ test('security-center smoke: client-side AppTable pagination exposes shared boun
   await expect(firstPageButton).toBeEnabled();
 });
 
-test('operation-log governance smoke: selecting rows enables batch delete affordance', async ({ page }) => {
+test('operation-log governance smoke: selecting rows enables batch delete affordance', async ({
+  page,
+}) => {
   await signInAsAdmin(page);
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
   await expectPageIdentityReady(page, '操作日志');
   await expectNoPageError(page);
 
   const batchDeleteButton = page.getByRole('button', { name: '删除所选' });
-  await expect(page.locator('.table-batch-action-bar').getByRole('button', { name: '导出' })).toBeVisible();
+  await expect(
+    page.locator('.table-batch-action-bar').getByRole('button', { name: '导出' }),
+  ).toBeVisible();
   await expect(batchDeleteButton).toBeDisabled();
   await page.locator('.system-list__table .arco-checkbox').nth(1).click({ force: true });
   await expect(batchDeleteButton).toBeEnabled();
 });
 
-test('user governance smoke: cross-page selection keeps the full selected set', async ({ page }) => {
+test('user governance smoke: cross-page selection keeps the full selected set', async ({
+  page,
+}) => {
   const accessToken = await signInAsAdmin(page);
   const now = Date.now();
   const userPrefix = `smoke_cross_page_${now}`;
   const password = 'ChangeMe123';
   const roleId = (await getFirstActiveRole(page, accessToken)).id;
-  const usernames = Array.from({ length: 11 }, (_, index) => `${userPrefix}_${String(index + 1).padStart(2, '0')}`);
+  const usernames = Array.from(
+    { length: 11 },
+    (_, index) => `${userPrefix}_${String(index + 1).padStart(2, '0')}`,
+  );
 
   try {
     for (const username of usernames) {
@@ -2829,13 +3148,18 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
 
     const pager = page.locator('.system-user-list__table');
     const selectedText = page.locator('.table-batch-action-bar__meta');
-    await expect(pager.locator('.arco-pagination-item').filter({ hasText: /^2$/ }).first()).toBeVisible();
+    await expect(
+      pager.locator('.arco-pagination-item').filter({ hasText: /^2$/ }).first(),
+    ).toBeVisible();
 
     const firstPageCheckbox = pager.locator('.arco-checkbox').nth(1);
     await firstPageCheckbox.click({ force: true });
     await expect(selectedText).toContainText('已选 1 条');
 
-    const secondPageButton = pager.locator('.arco-pagination-item').filter({ hasText: /^2$/ }).first();
+    const secondPageButton = pager
+      .locator('.arco-pagination-item')
+      .filter({ hasText: /^2$/ })
+      .first();
     await Promise.all([
       waitForOkApiResponse(
         page,
@@ -2858,7 +3182,10 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
     await secondPageCheckbox.click({ force: true });
     await expect(selectedText).toContainText('已选 2 条');
 
-    const firstPageButton = pager.locator('.arco-pagination-item').filter({ hasText: /^1$/ }).first();
+    const firstPageButton = pager
+      .locator('.arco-pagination-item')
+      .filter({ hasText: /^1$/ })
+      .first();
     await Promise.all([
       waitForOkApiResponse(
         page,
@@ -2885,9 +3212,7 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
   }
 });
 
-test('user smoke: edit and detail work through the UI', async ({
-  page,
-}) => {
+test('user smoke: edit and detail work through the UI', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
   const now = Date.now();
   const deptName = `烟测用户部门-${now}`;
@@ -2898,7 +3223,9 @@ test('user smoke: edit and detail work through the UI', async ({
   const nextEmail = `smoke-user-${now}-updated@example.com`;
   const password = 'ChangeMe123';
   const deptTree = await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' });
-  const rootDept = flattenDeptTreeNodes(deptTree).find((item) => item.isRoot || item.parentId === 0);
+  const rootDept = flattenDeptTreeNodes(deptTree).find(
+    (item) => item.isRoot || item.parentId === 0,
+  );
   expect(rootDept).toBeTruthy();
 
   await deleteUserByUsername(page, accessToken, username);
@@ -2941,13 +3268,16 @@ test('user smoke: edit and detail work through the UI', async ({
       waitForOkApiResponse(
         page,
         (response) =>
-          response.url().includes('/system/user/') &&
-          response.request().method() === 'PUT',
+          response.url().includes('/system/user/') && response.request().method() === 'PUT',
       ),
       editDialog.locator('.submit-bar').getByRole('button', { name: '保存' }).click(),
     ]);
-    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.nickname).toBe(nextNickname);
-    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.email).toBe(nextEmail);
+    await expect
+      .poll(async () => (await findUserByUsername(page, accessToken, username))?.nickname)
+      .toBe(nextNickname);
+    await expect
+      .poll(async () => (await findUserByUsername(page, accessToken, username))?.email)
+      .toBe(nextEmail);
     await expect(userRow).toContainText(nextNickname);
     await expect(userRow).toContainText(nextEmail);
 
@@ -2957,7 +3287,6 @@ test('user smoke: edit and detail work through the UI', async ({
     await expect(detailDialog.getByText(nextNickname).first()).toBeVisible();
     await expect(detailDialog.getByText(nextEmail).first()).toBeVisible();
     await page.keyboard.press('Escape');
-
   } finally {
     await runOptionalSmokeCleanup('system-pages:user-smoke-edit-detail', async () => {
       await deleteUserByUsername(page, accessToken, username);
@@ -2966,7 +3295,9 @@ test('user smoke: edit and detail work through the UI', async ({
   }
 });
 
-test('user and role smoke: role binding can be deferred to role management and removed there', async ({ page }) => {
+test('user and role smoke: role binding can be deferred to role management and removed there', async ({
+  page,
+}) => {
   test.setTimeout(120000);
   const login = await loginByApi(page.request, adminCredentials);
   await installClientSession(page, login);
@@ -3013,17 +3344,22 @@ test('user and role smoke: role binding can be deferred to role management and r
     await createDialog.locator('.submit-bar').getByRole('button', { name: '取消' }).click();
     await expect(createDialog).toHaveCount(0);
 
-    createdUserId = (await createUserByApi(page, accessToken, {
-      username,
-      password,
-      nickname,
-      roleIds: [],
-    })).id;
+    createdUserId = (
+      await createUserByApi(page, accessToken, {
+        username,
+        password,
+        nickname,
+        roleIds: [],
+      })
+    ).id;
     expect(createdUserId).toBeTruthy();
 
-    const userDetailBeforeResponse = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
-      headers: authHeaders(accessToken),
-    });
+    const userDetailBeforeResponse = await page.request.get(
+      `${apiBaseUrl}/system/user/${createdUserId}`,
+      {
+        headers: authHeaders(accessToken),
+      },
+    );
     expect(userDetailBeforeResponse.ok()).toBeTruthy();
     const userDetailBeforePayload = await userDetailBeforeResponse.json();
     expect(userDetailBeforePayload.data.roleIds).toEqual([]);
@@ -3038,15 +3374,20 @@ test('user and role smoke: role binding can be deferred to role management and r
 
     const memberDrawer = page.locator('.role-member-drawer');
     await expect(memberDrawer).toBeVisible();
-    const candidateResponse = await page.request.get(`${apiBaseUrl}/system/role/${role!.id}/user-candidates`, {
-      headers: authHeaders(accessToken),
-      params: { keyword: username, page: '1', pageSize: '20' },
-    });
+    const candidateResponse = await page.request.get(
+      `${apiBaseUrl}/system/role/${role!.id}/user-candidates`,
+      {
+        headers: authHeaders(accessToken),
+        params: { keyword: username, page: '1', pageSize: '20' },
+      },
+    );
     expect(candidateResponse.ok()).toBeTruthy();
     const candidatePayload = await candidateResponse.json();
     expect(
       Array.isArray(candidatePayload.data?.items) &&
-        candidatePayload.data.items.some((item: { username: string }) => item.username === username),
+        candidatePayload.data.items.some(
+          (item: { username: string }) => item.username === username,
+        ),
     ).toBeTruthy();
     await memberDrawer.getByPlaceholder('搜索并选择待加入该角色的用户').fill(username);
     const candidateChip = memberDrawer
@@ -3057,57 +3398,40 @@ test('user and role smoke: role binding can be deferred to role management and r
     await candidateChip.click({ force: true });
     await expect(memberDrawer.getByRole('button', { name: '新增' })).toBeEnabled();
     await memberDrawer.getByRole('button', { name: '新增' }).click();
-    await expect.poll(async () => {
-      const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
-        headers: authHeaders(accessToken),
-      });
-      const payload = await response.json();
-      return payload.data.roleIds;
-    }).toEqual([role!.id]);
-    await expect.poll(async () => {
-      const response = await page.request.get(`${apiBaseUrl}/system/role/${role!.id}/users`, {
-        headers: authHeaders(accessToken),
-        params: { keyword: username, page: 1, pageSize: 10 },
-      });
-      const payload = await response.json();
-      const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
-      return items.some((item: { username: string }) => item.username === username);
-    }).toBeTruthy();
+    await expect
+      .poll(async () => {
+        const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
+          headers: authHeaders(accessToken),
+        });
+        const payload = await response.json();
+        return payload.data.roleIds;
+      })
+      .toEqual([role!.id]);
+    await expect
+      .poll(async () => {
+        const response = await page.request.get(`${apiBaseUrl}/system/role/${role!.id}/users`, {
+          headers: authHeaders(accessToken),
+          params: { keyword: username, page: 1, pageSize: 10 },
+        });
+        const payload = await response.json();
+        const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+        return items.some((item: { username: string }) => item.username === username);
+      })
+      .toBeTruthy();
     await memberDrawer.getByPlaceholder('按用户名或昵称搜索当前成员').fill(username);
-    const memberSearchResponse = waitForOkApiResponse(
-      page,
-      (response) => {
-        const url = new URL(response.url());
-        return url.pathname.endsWith(`/system/role/${role!.id}/users`)
-          && response.request().method() === 'GET'
-          && (url.searchParams.get('keyword') || '') === username;
-      },
-    );
     await memberDrawer.getByRole('button', { name: '搜索' }).click();
-    await memberSearchResponse;
     const memberRow = await waitForVisibleRowByText(memberDrawer, username, '删除');
-    await clickVisibleRowAction(
-      page,
-      memberRow,
-      '删除',
-      '确认移除该成员的当前角色绑定？',
-    );
-    await Promise.all([
-      waitForOkApiResponse(
-        page,
-        (response) =>
-          response.url().includes(`/system/role/${role!.id}/users/remove`) &&
-          response.request().method() === 'POST',
-      ),
-      clickVisibleConfirmButton(page, '确认移除该成员的当前角色绑定？'),
-    ]);
-    await expect.poll(async () => {
-      const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
-        headers: authHeaders(accessToken),
-      });
-      const payload = await response.json();
-      return payload.data.roleIds;
-    }).toEqual([]);
+    await clickVisibleRowAction(page, memberRow, '删除', '确认移除该成员的当前角色绑定？');
+    await clickVisibleConfirmButton(page, '确认移除该成员的当前角色绑定？');
+    await expect
+      .poll(async () => {
+        const response = await page.request.get(`${apiBaseUrl}/system/user/${createdUserId}`, {
+          headers: authHeaders(accessToken),
+        });
+        const payload = await response.json();
+        return payload.data.roleIds;
+      })
+      .toEqual([]);
   } finally {
     await runOptionalSmokeCleanup('system-pages:user-role-membership-governance', async () => {
       await deleteUserByIdWithHeaders(page, verifiedAuthHeaders, createdUserId);
@@ -3157,7 +3481,10 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       await expect(selectedText).toContainText('已选 1 条');
     };
 
-    await Promise.all([waitForFilteredUserList(), page.getByRole('button', { name: '搜索' }).click()]);
+    await Promise.all([
+      waitForFilteredUserList(),
+      page.getByRole('button', { name: '搜索' }).click(),
+    ]);
     await selectBatchUser();
 
     await page.getByRole('button', { name: '批量禁用' }).click();
@@ -3171,7 +3498,9 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       clickVisibleConfirmButton(page),
     ]);
     await waitForFilteredUserList();
-    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(2);
+    await expect
+      .poll(async () => (await findUserByUsername(page, accessToken, username))?.status)
+      .toBe(2);
     await expect(selectedText).toContainText('已选 0 条');
 
     await selectBatchUser();
@@ -3186,7 +3515,9 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       clickVisibleConfirmButton(page),
     ]);
     await waitForFilteredUserList();
-    await expect.poll(async () => (await findUserByUsername(page, accessToken, username))?.status).toBe(1);
+    await expect
+      .poll(async () => (await findUserByUsername(page, accessToken, username))?.status)
+      .toBe(1);
     await expect(selectedText).toContainText('已选 0 条');
 
     await selectBatchUser();
@@ -3201,7 +3532,9 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       clickVisibleConfirmButton(page),
     ]);
     await waitForFilteredUserList();
-    await expect.poll(async () => await findUserByUsername(page, accessToken, username)).toBeUndefined();
+    await expect
+      .poll(async () => await findUserByUsername(page, accessToken, username))
+      .toBeUndefined();
   } finally {
     await runOptionalSmokeCleanup('system-pages:user-smoke-batch', async () => {
       await deleteUserByUsername(page, accessToken, username);
@@ -3240,7 +3573,9 @@ test('dept smoke: blocked delete through API is covered', async ({ page }) => {
   const postCode = `SMOKE_DEPT_POST_${now}`;
   const postName = `烟测部门岗位-${now}`;
   const deptTree = await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' });
-  const rootDept = flattenDeptTreeNodes(deptTree).find((item) => item.isRoot || item.parentId === 0);
+  const rootDept = flattenDeptTreeNodes(deptTree).find(
+    (item) => item.isRoot || item.parentId === 0,
+  );
   expect(rootDept).toBeTruthy();
 
   await deletePostByCode(page, accessToken, postCode);
@@ -3263,9 +3598,12 @@ test('dept smoke: blocked delete through API is covered', async ({ page }) => {
       remark: 'dept smoke',
     });
 
-    const deleteResponse = await page.request.delete(`${apiBaseUrl}/system/dept/${createdDept.id}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    });
+    const deleteResponse = await page.request.delete(
+      `${apiBaseUrl}/system/dept/${createdDept.id}`,
+      {
+        headers: await verifiedHeaders(page, accessToken),
+      },
+    );
     expect(deleteResponse.ok()).toBeTruthy();
     const deletePayload = await deleteResponse.json();
     expect(deletePayload.code).not.toBe(200);
@@ -3288,7 +3626,9 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
   const password = 'ChangeMe123';
   const role = await getFirstActiveRole(page, accessToken);
   const deptTree = await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' });
-  const rootDept = flattenDeptTreeNodes(deptTree).find((item) => item.isRoot || item.parentId === 0);
+  const rootDept = flattenDeptTreeNodes(deptTree).find(
+    (item) => item.isRoot || item.parentId === 0,
+  );
   expect(rootDept).toBeTruthy();
 
   await deleteUserByUsername(page, accessToken, username);
@@ -3341,9 +3681,12 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
       email: `post-user-${now}@example.com`,
     });
 
-    const deleteResponse = await page.request.delete(`${apiBaseUrl}/system/post/${createdPost.id}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    });
+    const deleteResponse = await page.request.delete(
+      `${apiBaseUrl}/system/post/${createdPost.id}`,
+      {
+        headers: await verifiedHeaders(page, accessToken),
+      },
+    );
     expect(deleteResponse.ok()).toBeTruthy();
     const deletePayload = await deleteResponse.json();
     expect(deletePayload.code).not.toBe(200);
@@ -3357,7 +3700,9 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
   }
 });
 
-test('session governance smoke: cleanup bar uses the unified governance affordance', async ({ page }) => {
+test('session governance smoke: cleanup bar uses the unified governance affordance', async ({
+  page,
+}) => {
   await signInAsAdmin(page);
   await page.route(/\/api\/v1\/system\/session\/list(?:\?.*)?$/, async (route) => {
     await route.fulfill({
@@ -3413,9 +3758,14 @@ test('session governance smoke: cleanup bar uses the unified governance affordan
   await expectPageIdentityReady(page, '会话管理');
   await expectNoPageError(page);
 
-  const cleanupBar = page.locator('.page-panel').filter({ has: page.getByRole('button', { name: '清理历史会话' }) }).first();
+  const cleanupBar = page
+    .locator('.page-panel')
+    .filter({ has: page.getByRole('button', { name: '清理历史会话' }) })
+    .first();
   await expect(cleanupBar.getByRole('button', { name: '清理历史会话' })).toBeVisible();
-  await expect(cleanupBar.getByText('用于清理超出保留窗口的已下线历史会话，减小会话表规模；活跃会话保留。')).toBeVisible();
+  await expect(
+    cleanupBar.getByText('用于清理超出保留窗口的已下线历史会话，减小会话表规模；活跃会话保留。'),
+  ).toBeVisible();
   const revokeSelectedButton = cleanupBar.getByRole('button', { name: '下线所选' });
   await expect(revokeSelectedButton).toBeDisabled();
   await page.locator('.app-table tbody .arco-checkbox').nth(1).click({ force: true });
@@ -3485,7 +3835,10 @@ test('security-event governance smoke: pending event can be acknowledged with a 
   });
 });
 
-test('refresh sync smoke: setting page auto-updates across isolated contexts', async ({ browser, page }) => {
+test('refresh sync smoke: setting page auto-updates across isolated contexts', async ({
+  browser,
+  page,
+}) => {
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
@@ -3496,7 +3849,8 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
   const groupPayload = await groupResponse.json();
   expect(groupPayload.code).toBe(200);
   const originalItems = groupPayload.data.items as SettingItem[];
-  const originalSiteName = originalItems.find((item) => item.settingKey === 'site.name')?.settingValue || 'Pantheon Base';
+  const originalSiteName =
+    originalItems.find((item) => item.settingKey === 'site.name')?.settingValue || 'Pantheon Base';
   const nextSiteName = `Pantheon Sync ${Date.now()}`;
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
@@ -3526,7 +3880,10 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
   }
 });
 
-test('refresh sync smoke: dict page auto-updates across isolated contexts', async ({ browser, page }) => {
+test('refresh sync smoke: dict page auto-updates across isolated contexts', async ({
+  browser,
+  page,
+}) => {
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
@@ -3560,17 +3917,24 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
     expect(createPayload.code).toBe(200);
     const createdId = createPayload.data.id as number;
 
-    await expect(syncPage.getByText(dictCode, { exact: false }).first()).toBeVisible({ timeout: 15000 });
+    await expect(syncPage.getByText(dictCode, { exact: false }).first()).toBeVisible({
+      timeout: 15000,
+    });
 
-    await page.request.delete(`${apiBaseUrl}/system/dict/type/${createdId}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    }).catch(() => undefined);
+    await page.request
+      .delete(`${apiBaseUrl}/system/dict/type/${createdId}`, {
+        headers: await verifiedHeaders(page, accessToken),
+      })
+      .catch(() => undefined);
   } finally {
     await closeExtraBrowserContext(syncContext);
   }
 });
 
-test('refresh sync smoke: i18n page auto-updates across isolated contexts', async ({ browser, page }) => {
+test('refresh sync smoke: i18n page auto-updates across isolated contexts', async ({
+  browser,
+  page,
+}) => {
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
@@ -3602,11 +3966,15 @@ test('refresh sync smoke: i18n page auto-updates across isolated contexts', asyn
     expect(createPayload.code).toBe(200);
     const createdId = createPayload.data.id as number;
 
-    await expect(syncPage.getByText(i18nKey, { exact: false }).first()).toBeVisible({ timeout: 15000 });
+    await expect(syncPage.getByText(i18nKey, { exact: false }).first()).toBeVisible({
+      timeout: 15000,
+    });
 
-    await page.request.delete(`${apiBaseUrl}/system/i18n/${createdId}`, {
-      headers: await verifiedHeaders(page, accessToken),
-    }).catch(() => undefined);
+    await page.request
+      .delete(`${apiBaseUrl}/system/i18n/${createdId}`, {
+        headers: await verifiedHeaders(page, accessToken),
+      })
+      .catch(() => undefined);
   } finally {
     await closeExtraBrowserContext(syncContext);
   }

@@ -596,10 +596,7 @@ const OperationLogList: React.FC = () => {
   const handleCleanup = async () => {
     try {
       if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(
-          cleanupRangeStartDate,
-          cleanupRangeStartTime,
-        );
+        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
         const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
         if (!startedAt || !endedAt) {
           message.warning(t('common.cleanupRangeRequired'));

@@ -19,6 +19,15 @@ func validateGovernanceContract(req *RegisterGeneratedModuleRequest) error {
 		return common.NewBadRequest("module.generate.invalid_data_scope")
 	}
 
+	for _, field := range []string{
+		req.Schema.Metadata.RelationFromField,
+		req.Schema.Metadata.RelationToField,
+	} {
+		if field != "" && (field != strings.TrimSpace(field) || !moduleRelationFieldPattern.MatchString(field)) {
+			return common.NewBadRequest("module.generate.invalid_relation")
+		}
+	}
+
 	moduleName := strings.TrimSpace(req.Schema.Name)
 	seenDependencies := make(map[string]struct{}, len(req.Schema.Dependencies))
 	for _, dependency := range req.Schema.Dependencies {

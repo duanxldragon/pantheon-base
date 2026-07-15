@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/textproto"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type stubConfigReader struct {
@@ -180,6 +182,101 @@ func TestServiceStoreUsesS3ClientWhenConfigured(t *testing.T) {
 	}
 	if stored.URL != "https://cdn.example.com/files/"+stored.ObjectKey {
 		t.Fatalf("unexpected s3 url: %s", stored.URL)
+	}
+}
+
+func TestServiceStoreUsesRealS3WhenConfigured(t *testing.T) {
+	endpoint := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_ENDPOINT"))
+	if endpoint == "" {
+		t.Skip("PANTHEON_TEST_S3_ENDPOINT is not configured")
+	}
+	accessKey := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_ACCESS_KEY"))
+	secretKey := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_SECRET_KEY"))
+	if accessKey == "" || secretKey == "" {
+		t.Fatal("PANTHEON_TEST_S3_ACCESS_KEY and PANTHEON_TEST_S3_SECRET_KEY are required")
+	}
+
+	bucket := fmt.Sprintf("pantheon-upload-it-%d", time.Now().UnixNano())
+	region := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_REGION"))
+	if region == "" {
+		region = "us-east-1"
+	}
+	service := NewService(stubConfigReader{
+		values: map[string]string{
+			"upload.storage_driver":       "s3",
+			"upload.max_file_size":        "2",
+			"upload.allowed_types":        `["png"]`,
+			"upload.s3_endpoint":          endpoint,
+			"upload.s3_bucket":            bucket,
+			"upload.s3_region":            region,
+			"upload.s3_access_key_id":     accessKey,
+			"upload.s3_secret_access_key": secretKey,
+		},
+	})
+
+	payload := []byte("pantheon-real-s3-upload")
+	fileHeader := buildFileHeader(t, "integration.png", "image/png", payload)
+	storeCtx, storeCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer storeCancel()
+	stored, err := service.StoreWithContext(
+		storeCtx,
+		fileHeader,
+		"integration/upload",
+		"http://localhost:8080",
+	)
+	if err != nil {
+		t.Fatalf("store file in real S3-compatible service: %v", err)
+	}
+
+	host, secure, err := normalizeS3Endpoint(endpoint)
+	if err != nil {
+		t.Fatalf("normalize integration endpoint: %v", err)
+	}
+	client, err := minio.New(host, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: secure,
+		Region: region,
+	})
+	if err != nil {
+		t.Fatalf("create integration verification client: %v", err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := client.RemoveObject(ctx, bucket, stored.ObjectKey, minio.RemoveObjectOptions{}); err != nil {
+			t.Errorf("remove integration object: %v", err)
+		}
+		if err := client.RemoveBucket(ctx, bucket); err != nil {
+			t.Errorf("remove integration bucket: %v", err)
+		}
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	info, err := client.StatObject(ctx, bucket, stored.ObjectKey, minio.StatObjectOptions{})
+	if err != nil {
+		t.Fatalf("stat uploaded integration object: %v", err)
+	}
+	if info.Size != int64(len(payload)) || info.ContentType != "image/png" {
+		t.Fatalf("unexpected uploaded object metadata: size=%d contentType=%q", info.Size, info.ContentType)
+	}
+	object, err := client.GetObject(ctx, bucket, stored.ObjectKey, minio.GetObjectOptions{})
+	if err != nil {
+		t.Fatalf("open uploaded integration object: %v", err)
+	}
+	defer func() {
+		_ = object.Close()
+	}()
+	storedPayload, err := io.ReadAll(object)
+	if err != nil {
+		t.Fatalf("read uploaded integration object: %v", err)
+	}
+	if !bytes.Equal(storedPayload, payload) {
+		t.Fatalf("unexpected uploaded object content: %q", storedPayload)
+	}
+	wantURL := strings.TrimRight(endpoint, "/") + "/" + bucket + "/" + stored.ObjectKey
+	if stored.URL != wantURL {
+		t.Fatalf("unexpected real S3 object URL: got %q want %q", stored.URL, wantURL)
 	}
 }
 

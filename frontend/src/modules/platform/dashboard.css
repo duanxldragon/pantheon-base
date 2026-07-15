@@ -35,8 +35,8 @@
   margin-bottom: 8px;
 }
 
-.dashboard-hero-card__title {
-  margin: 0 !important;
+.dashboard-hero-card .dashboard-hero-card__title {
+  margin: 0;
 }
 
 .dashboard-stat-card {

@@ -442,15 +442,25 @@ const PostList: React.FC = () => {
     [data],
   );
 
-  const renderGovernanceTags = (labels: string[], tone: 'tag' | 'note' = 'tag') => {
-    if (labels.length === 0) {
+  const renderGovernanceTags = (keys: string[], tone: 'tag' | 'note' = 'tag') => {
+    if (keys.length === 0) {
       return '-';
     }
+    // Backend returns stable i18n keys (`governanceTags`, `governanceBlockedBy`,
+    // `governanceActions`); only the rendered labels used to be displayed. The
+    // label values came from the English dictionary hardcoded on the backend
+    // (`impexp.GovernanceTagLabels` etc.) and therefore leaked through every
+    // non-English locale. Translate by key here and ignore the label strings.
+    const labels = keys.map((key) =>
+      t(`system.post.governance.tag.${key}`, {
+        defaultValue: t(`system.dept.task.tag.${key}`, { defaultValue: key }),
+      }),
+    );
     if (tone === 'note') {
       return (
         <Space size={[6, 6]} wrap>
-          {labels.map((label) => (
-            <Tag key={label} size="small">
+          {labels.map((label, index) => (
+            <Tag key={`${keys[index]}-${label}`} size="small">
               {label}
             </Tag>
           ))}
@@ -459,8 +469,8 @@ const PostList: React.FC = () => {
     }
     return (
       <Space size={[6, 6]} wrap>
-        {labels.map((label) => (
-          <Tag key={label} size="small" color="arcoblue">
+        {labels.map((label, index) => (
+          <Tag key={`${keys[index]}-${label}`} size="small" color="arcoblue">
             {label}
           </Tag>
         ))}
@@ -499,7 +509,7 @@ const PostList: React.FC = () => {
         title: t('system.dept.governance'),
         dataIndex: 'governanceTagLabels',
         width: TABLE_COLUMN_WIDTH.tagGroup,
-        render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTagLabels),
+        render: (_: unknown, row: PostRow) => renderGovernanceTags(row.governanceTags),
       },
       'low',
     ),
@@ -508,8 +518,25 @@ const PostList: React.FC = () => {
         title: t('system.post.hero.blockedBy'),
         dataIndex: 'governanceBlockedDesc',
         width: TABLE_COLUMN_WIDTH.diagnostics,
-        render: (_: unknown, row: PostRow) =>
-          renderGovernanceTags(row.governanceBlockedDesc, 'note'),
+        render: (_: unknown, row: PostRow) => {
+          const labels = row.governanceBlockedBy.map((key) =>
+            t(`system.post.governance.blockedBy.${key}`, {
+              defaultValue: t(`system.dept.task.blockedBy.${key}`, { defaultValue: key }),
+            }),
+          );
+          if (labels.length === 0) {
+            return '-';
+          }
+          return (
+            <Space size={[6, 6]} wrap>
+              {labels.map((label, index) => (
+                <Tag key={`${row.governanceBlockedBy[index]}-${label}`} size="small">
+                  {label}
+                </Tag>
+              ))}
+            </Space>
+          );
+        },
       },
       'medium',
     ),
@@ -518,11 +545,21 @@ const PostList: React.FC = () => {
         title: t('system.post.hero.nextAction'),
         dataIndex: 'governanceActionLabel',
         width: TABLE_COLUMN_WIDTH.tagGroup,
-        render: (_: unknown, row: PostRow) => (
-          <Typography.Text className="post-governance__action-text">
-            {row.governanceActionLabel.join(' / ') || '-'}
-          </Typography.Text>
-        ),
+        render: (_: unknown, row: PostRow) => {
+          const labels = row.governanceActions.map((key) =>
+            t(`system.post.governance.action.${key}`, {
+              defaultValue: t(`system.dept.task.action.${key}`, { defaultValue: key }),
+            }),
+          );
+          if (labels.length === 0) {
+            return '-';
+          }
+          return (
+            <Typography.Text className="post-governance__action-text">
+              {labels.join(' / ')}
+            </Typography.Text>
+          );
+        },
       },
       'low',
     ),
@@ -556,7 +593,11 @@ const PostList: React.FC = () => {
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         ...sortableColumn('createdAt'),
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
       },
       'low',
     ),

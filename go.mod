@@ -1,6 +1,6 @@
 module pantheon-platform
 
-go 1.25.10
+go 1.26.5
 
 require (
 	github.com/casbin/casbin/v2 v2.135.0

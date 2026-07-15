@@ -1,0 +1,75 @@
+{
+  "taskId": "2026-07-13-superpowers-linkage-alignment",
+  "title": "Align legacy plan-reference linkage",
+  "goal": "Prefer current plan-reference metadata while retaining compatibility with historical Superpowers linkage.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [],
+  "scope": {
+    "in": ["three active task packets", "task-packet checker compatibility"],
+    "out": ["runtime behavior", "bulk historical metadata migration"]
+  },
+  "implementationNotes": [
+    "Accept both linkage formats while preferring Plan References."
+  ],
+  "taskDoc": "docs/harness/tasks/2026-07-13-superpowers-linkage-alignment.task.md",
+  "contractAnchors": [
+    "AGENTS.md",
+    "scripts/harness/check-task-packet.mjs",
+    "../pantheon-harness/architecture/methodology/superpowers-migration.md"
+  ],
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "pantheon-base",
+    "qualityProfile": "method-health",
+    "portableFailureClass": "documentation-drift",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": ["maintainability", "method-health"]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-07-13-superpowers-linkage-alignment.task.md",
+      ".harness/tasks/2026-07-13-superpowers-linkage-alignment/manifest.json",
+      ".harness/evidence/2026-07-13-superpowers-linkage-alignment/commands.json",
+      ".harness/evidence/2026-07-13-superpowers-linkage-alignment/review.md"
+    ],
+    "modify": [
+      "docs/harness/tasks/2026-07-10-p1-1-permission-anti-privilege-escalation.task.md",
+      "docs/harness/tasks/2026-07-10-p1-2-multi-instance-consistency.task.md",
+      "docs/harness/tasks/2026-07-10-p1-3-schema-single-source.task.md",
+      "scripts/harness/check-task-packet.mjs"
+    ],
+    "doNotTouch": ["backend/**", "frontend/**"]
+  },
+  "structuralScope": {
+    "affectedSubgraph": ["task linkage metadata -> task-packet checker"],
+    "boundaryCrossings": [
+      "repository projection -> portable method convention"
+    ],
+    "riskNodes": ["historical plan references"],
+    "graphFocus": ["method-health"]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["mechanical"]
+  },
+  "verificationPlan": {
+    "commands": ["node scripts/harness/check-task-packet.mjs --root ."],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-13-superpowers-linkage-alignment/",
+    "reviewFile": ".harness/evidence/2026-07-13-superpowers-linkage-alignment/review.md",
+    "summaryFile": "none",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": ["command result summary", "review summary"],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

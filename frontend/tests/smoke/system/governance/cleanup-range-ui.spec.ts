@@ -342,7 +342,7 @@ test.describe('cleanup range governance smoke', () => {
 
     const rangeTrigger = filterGrid.locator('.auth-login-log-page__time-range-trigger');
     await expect(rangeTrigger).toBeVisible();
-    await expect(rangeTrigger).toContainText('24小时');
+    await expect(rangeTrigger).toContainText('最近 24 小时');
     await rangeTrigger.click();
 
     const popup = rangePopup(page);

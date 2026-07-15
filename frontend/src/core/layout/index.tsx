@@ -360,7 +360,7 @@ function buildNoticeRecentItems(
     id: item.id,
     username: item.username,
     status: item.status,
-    time: formatDateTime(item.loginTime),
+    time: formatDateTime(item.loginTime, { withSeconds: true }),
     message: t(item.msg || '', { defaultValue: item.msg || '-' }),
   }));
 }
@@ -1316,7 +1316,7 @@ const BaseLayout: React.FC = () => {
           <span className="app-shell__notice-summary-label">{t('app.notice.lastSuccess')}</span>
           <span className="app-shell__notice-summary-value">
             {noticeSummary.lastSuccessfulLoginAt
-              ? formatDateTime(noticeSummary.lastSuccessfulLoginAt)
+              ? formatDateTime(noticeSummary.lastSuccessfulLoginAt, { withSeconds: true })
               : t('dashboard.lastSuccessfulLoginEmpty')}
           </span>
         </div>
@@ -1446,7 +1446,6 @@ const BaseLayout: React.FC = () => {
               <Dropdown
                 trigger="click"
                 position="br"
-                triggerProps={{ autoFitPosition: false }}
                 droplist={
                   <div className="app-shell__notice-panel">
                     <div className="app-shell__notice-header">

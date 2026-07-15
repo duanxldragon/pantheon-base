@@ -1081,7 +1081,11 @@ const I18nList: React.FC = () => {
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         sorter: true,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
       },
       'low',
     ),
@@ -1091,7 +1095,11 @@ const I18nList: React.FC = () => {
         dataIndex: 'updatedAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         sorter: true,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
       },
       'low',
     ),

@@ -12,12 +12,7 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
-import {
-  IconCode,
-  IconDownload,
-  IconPlus,
-  IconRefresh,
-} from '@arco-design/web-react/icon';
+import { IconCode, IconDownload, IconPlus, IconRefresh } from '@arco-design/web-react/icon';
 import { message } from '../../../../components/feedback/message';
 import { isRequestError, ensureOperationVerified } from '../../../../api/request';
 import PermissionAction from '../../../../components/patterns/PermissionAction';
@@ -555,7 +550,7 @@ const ModuleWizard: React.FC = () => {
       dataScopeMode: enableDataScope ? dataScopeMode : 'none',
       listLayout: {
         governance:
-          tableRole !== 'relation' &&
+          listLayout.governance !== false &&
           Boolean(metadata.primaryTable || metadata.relationFromField || metadata.relationToField),
         search: hasSearchableFields && listLayout.search !== false,
         headerActions:
@@ -1714,8 +1709,7 @@ const ModuleWizard: React.FC = () => {
                     <Checkbox.Group
                       value={
                         (form.getFieldValue('pageActions' as keyof ModuleSchema) as
-                          | PageActionKey[]
-                          | undefined) ?? previewSchema.pageActions
+                          PageActionKey[] | undefined) ?? previewSchema.pageActions
                       }
                       disabled={previewSchema.metadata?.tableRole === 'relation'}
                       options={[

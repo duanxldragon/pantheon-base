@@ -85,17 +85,17 @@ type TimePreset = {
 };
 
 const TIME_PRESETS: readonly TimePreset[] = [
-  { labelKey: 'auth.security.timePreset.min5', minutes: 5 },
-  { labelKey: 'auth.security.timePreset.min30', minutes: 30 },
-  { labelKey: 'auth.security.timePreset.hour1', hours: 1 },
-  { labelKey: 'auth.security.timePreset.hour3', hours: 3 },
-  { labelKey: 'auth.security.timePreset.hour12', hours: 12 },
-  { labelKey: 'auth.security.timePreset.hour24', hours: 24 },
-  { labelKey: 'auth.security.timePreset.day2', hours: 48 },
-  { labelKey: 'auth.security.timePreset.day7', hours: 24 * 7 },
-  { labelKey: 'auth.security.timePreset.day30', hours: 24 * 30 },
-  { labelKey: 'auth.security.timePreset.today', preset: 'today' },
-  { labelKey: 'auth.security.timePreset.yesterday', preset: 'yesterday' },
+  { labelKey: 'auth.login_log.time_preset.last_5_minutes', minutes: 5 },
+  { labelKey: 'auth.login_log.time_preset.last_30_minutes', minutes: 30 },
+  { labelKey: 'auth.login_log.time_preset.last_1_hour', hours: 1 },
+  { labelKey: 'auth.login_log.time_preset.last_3_hours', hours: 3 },
+  { labelKey: 'auth.login_log.time_preset.last_12_hours', hours: 12 },
+  { labelKey: 'auth.login_log.time_preset.last_24_hours', hours: 24 },
+  { labelKey: 'auth.login_log.time_preset.last_2_days', hours: 48 },
+  { labelKey: 'auth.login_log.time_preset.last_7_days', hours: 24 * 7 },
+  { labelKey: 'auth.login_log.time_preset.last_30_days', hours: 24 * 30 },
+  { labelKey: 'auth.login_log.time_preset.today', preset: 'today' },
+  { labelKey: 'auth.login_log.time_preset.yesterday', preset: 'yesterday' },
 ] as const;
 
 const LOGIN_LOG_DURATION_PRESETS = TIME_PRESETS.filter((preset) => !preset.preset);
@@ -138,7 +138,7 @@ const LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS = {
   },
 } as const;
 
-const DEFAULT_TIME_RANGE_LABEL = 'auth.security.timePreset.hour24';
+const DEFAULT_TIME_RANGE_LABEL_KEY = 'auth.login_log.time_preset.last_24_hours';
 
 const LoginLogList: React.FC = () => {
   const { t } = useTranslation();
@@ -166,7 +166,7 @@ const LoginLogList: React.FC = () => {
 
   const [timeRangePopupVisible, setTimeRangePopupVisible] = useState(false);
   const [timeRangeDraft, setTimeRangeDraft] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
-  const [quickSelectPreset, setQuickSelectPreset] = useState<string>(DEFAULT_TIME_RANGE_LABEL);
+  const [quickSelectPreset, setQuickSelectPreset] = useState<string>(DEFAULT_TIME_RANGE_LABEL_KEY);
 
   const timeRangeValue = useMemo<[dayjs.Dayjs, dayjs.Dayjs]>(() => {
     if (query.startedAt && query.endedAt) {
@@ -222,7 +222,7 @@ const LoginLogList: React.FC = () => {
       const nextEnd = dateValues[1] ? dateValues[1].endOf('minute') : timeRangeValue[1];
 
       setTimeRangeDraft([nextStart, nextEnd]);
-      setQuickSelectPreset('auth.security.timePreset.custom');
+      setQuickSelectPreset('auth.login_log.time_range.custom');
     },
     [timeRangeValue],
   );
@@ -283,7 +283,7 @@ const LoginLogList: React.FC = () => {
     setSelectedRowKeys([]);
     setTimeRangePopupVisible(false);
     setTimeRangeDraft(null);
-    setQuickSelectPreset(DEFAULT_TIME_RANGE_LABEL);
+    setQuickSelectPreset(DEFAULT_TIME_RANGE_LABEL_KEY);
     const [defaultStart, defaultEnd] = getDefaultTimeRange();
     setQuery({
       ...emptyQuery,
@@ -292,24 +292,21 @@ const LoginLogList: React.FC = () => {
     });
   };
 
-  const handleTimeRangeChange = useCallback(
-    (_dateStrings: string[], dateValues: dayjs.Dayjs[]) => {
-      if (!dateValues || dateValues.length < 2 || !dateValues[0] || !dateValues[1]) {
-        return;
-      }
+  const handleTimeRangeChange = useCallback((_dateStrings: string[], dateValues: dayjs.Dayjs[]) => {
+    if (!dateValues || dateValues.length < 2 || !dateValues[0] || !dateValues[1]) {
+      return;
+    }
 
-      setSelectedRowKeys([]);
-      setQuery((prev) => ({
-        ...prev,
-        startedAt: dateValues[0].startOf('minute').format(DATETIME_FORMAT),
-        endedAt: dateValues[1].endOf('minute').format(DATETIME_FORMAT),
-        page: 1,
-      }));
-      setTimeRangeDraft(null);
-      setQuickSelectPreset('auth.security.timePreset.custom');
-    },
-    [],
-  );
+    setSelectedRowKeys([]);
+    setQuery((prev) => ({
+      ...prev,
+      startedAt: dateValues[0].startOf('minute').format(DATETIME_FORMAT),
+      endedAt: dateValues[1].endOf('minute').format(DATETIME_FORMAT),
+      page: 1,
+    }));
+    setTimeRangeDraft(null);
+    setQuickSelectPreset('auth.login_log.time_range.custom');
+  }, []);
 
   const handleTableChange: TableProps<LoginLogRow>['onChange'] = (pagination) => {
     setQuery({
@@ -337,10 +334,7 @@ const LoginLogList: React.FC = () => {
   const handleCleanup = async () => {
     try {
       if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(
-          cleanupRangeStartDate,
-          cleanupRangeStartTime,
-        );
+        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
         const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
         if (!startedAt || !endedAt) {
           message.warning(t('common.cleanupRangeRequired'));
@@ -522,7 +516,7 @@ const LoginLogList: React.FC = () => {
                 type="secondary"
                 className="auth-login-log-page__time-range-summary-label"
               >
-                开始时间
+                {t('auth.login_log.time_range.start')}
               </Typography.Text>
               <Typography.Text className="auth-login-log-page__time-range-summary-value">
                 {displayStart}
@@ -532,14 +526,14 @@ const LoginLogList: React.FC = () => {
               type="secondary"
               className="auth-login-log-page__time-range-summary-separator"
             >
-              至
+              {t('auth.login_log.time_range.to')}
             </Typography.Text>
             <div className="auth-login-log-page__time-range-summary-item auth-login-log-page__time-range-summary-item--end">
               <Typography.Text
                 type="secondary"
                 className="auth-login-log-page__time-range-summary-label"
               >
-                结束时间
+                {t('auth.login_log.time_range.end')}
               </Typography.Text>
               <Typography.Text className="auth-login-log-page__time-range-summary-value">
                 {displayEnd}
@@ -551,7 +545,7 @@ const LoginLogList: React.FC = () => {
         </div>
       );
     },
-    [handleTimeRangeShortcutApply, quickSelectPreset, timeRangeDisplayValue, t],
+    [handleTimeRangeShortcutApply, quickSelectPreset, t, timeRangeDisplayValue],
   );
 
   return (
@@ -581,7 +575,7 @@ const LoginLogList: React.FC = () => {
             <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
               <Row gutter={16} className="auth-filter-grid auth-login-log-page__filter-grid">
                 <Col xs={24} md={10} lg={5}>
-                  <FormItem label={t('auth.security.timeRange')}>
+                  <FormItem label={t('auth.login_log.time_range.label')}>
                     <RangePicker
                       allowClear={false}
                       dayStartOfWeek={1}
@@ -720,10 +714,7 @@ const LoginLogList: React.FC = () => {
                     >
                       {t('common.clearSelection')}
                     </Button>
-                    <PermissionAction
-                      allowed={canDelete}
-                      tooltip={t('common.noPermissionAction')}
-                    >
+                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
                       <Popconfirm
                         disabled={selectedRowKeys.length === 0 || !canDelete}
                         title={t('auth.loginLog.batchDeleteConfirm', {

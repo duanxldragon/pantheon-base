@@ -177,7 +177,7 @@ const ProfileCenter: React.FC = () => {
                   { label: t('system.profile.phone'), value: profile?.phone || '-' },
                   {
                     label: t('system.profile.createdAt'),
-                    value: formatDateTime(profile?.createdAt),
+                    value: formatDateTime(profile?.createdAt, { withSeconds: true }),
                   },
                 ]}
               />

@@ -126,11 +126,29 @@ const requiredGlobalTokens = [
 ];
 
 function getBlock(cssSource, selector) {
+  const normalizedSelector = normalizeSelectorForContract(selector);
   return extractCssRules(cssSource)
-    .filter(({ selectorText }) => splitSelectorList(selectorText).includes(selector))
+    .filter(({ selectorText }) =>
+      splitSelectorList(selectorText).some(
+        (candidate) => normalizeSelectorForContract(candidate) === normalizedSelector,
+      ),
+    )
     .map(({ body }) => body.trim())
     .filter(Boolean)
     .join('\n');
+}
+
+function normalizeSelectorForContract(selector) {
+  let normalized = selector
+    .trim()
+    .replace(/^:root\[data-pantheon-theme\]\s+/, '')
+    .replace(/^\.app-shell\s+(?=\.app-shell__)/, '');
+  let previous;
+  do {
+    previous = normalized;
+    normalized = normalized.replace(/(\.[a-z0-9_-]+)\1/gi, '$1');
+  } while (normalized !== previous);
+  return normalized;
 }
 
 function requireBlock(cssSource, selector, findings) {
@@ -550,9 +568,7 @@ const systemTableCardBlock = requireBlock(
   findings,
 );
 if (systemTableCardBlock) {
-  if (
-    !/padding\s*:\s*var\(--shell-table-card-padding\)\s*!important\s*;/i.test(systemTableCardBlock)
-  ) {
+  if (!hasDeclaration(systemTableCardBlock, 'padding', 'var\\(--shell-table-card-padding\\)')) {
     findings.push(
       '.system-list__table-card must use --shell-table-card-padding so table left/right spacing is consistent.',
     );
@@ -953,13 +969,13 @@ if (appDialogBlock) {
 
 const appDialogAppearBlock = requireBlock(globalSource, '.app-dialog.zoomModal-appear', findings);
 if (appDialogAppearBlock) {
-  if (!/animation-name\s*:\s*app-dialog-no-scale\s*!important\s*;/i.test(appDialogAppearBlock)) {
+  if (!hasDeclaration(appDialogAppearBlock, 'animation-name', 'app-dialog-no-scale')) {
     findings.push('.app-dialog must replace zoom animation with the shared no-scale animation.');
   }
-  if (!/animation-duration\s*:\s*1ms\s*!important\s*;/i.test(appDialogAppearBlock)) {
+  if (!hasDeclaration(appDialogAppearBlock, 'animation-duration', '1ms')) {
     findings.push('.app-dialog animation must be short enough to avoid transient layout scaling.');
   }
-  if (!/transform\s*:\s*none\s*!important\s*;/i.test(appDialogAppearBlock)) {
+  if (!hasDeclaration(appDialogAppearBlock, 'transform', 'none')) {
     findings.push('.app-dialog must not use transform scaling during modal entry.');
   }
 }
@@ -970,13 +986,13 @@ if (!/@keyframes\s+app-dialog-no-scale/i.test(globalSource)) {
 
 const appDialogHeaderBlock = requireBlock(globalSource, '.app-dialog .arco-modal-header', findings);
 if (appDialogHeaderBlock) {
-  if (!/height\s*:\s*64px\s*!important\s*;/i.test(appDialogHeaderBlock)) {
+  if (!hasDeclaration(appDialogHeaderBlock, 'height', '64px')) {
     findings.push('.app-dialog header must keep a stable 64px height.');
   }
-  if (!/min-height\s*:\s*64px\s*!important\s*;/i.test(appDialogHeaderBlock)) {
+  if (!hasDeclaration(appDialogHeaderBlock, 'min-height', '64px')) {
     findings.push('.app-dialog header must keep a stable 64px minimum height.');
   }
-  if (!/padding\s*:\s*16px 24px\s*!important\s*;/i.test(appDialogHeaderBlock)) {
+  if (!hasDeclaration(appDialogHeaderBlock, 'padding', '16px 24px')) {
     findings.push('.app-dialog header must use shared desktop padding.');
   }
 }
@@ -1445,10 +1461,7 @@ const fixedColumnShadowBlock = requireBlock(
   '.app-table .arco-table-col-fixed-left-last::after',
   findings,
 );
-if (
-  fixedColumnShadowBlock &&
-  !/box-shadow\s*:\s*none\s*!important\s*;/i.test(fixedColumnShadowBlock)
-) {
+if (fixedColumnShadowBlock && !hasDeclaration(fixedColumnShadowBlock, 'box-shadow', 'none')) {
   findings.push(
     'AppTable fixed-column shadow must be disabled to avoid gradient-like table borders.',
   );

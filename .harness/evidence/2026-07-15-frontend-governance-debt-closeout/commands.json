@@ -1,0 +1,206 @@
+{
+  "taskId": "2026-07-15-frontend-governance-debt-closeout",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": ".agents/adapters/codex.md"
+  },
+  "commands": [
+    {
+      "command": "npm run format:check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "All frontend TypeScript, TSX, CSS, and JSON source files match Prettier formatting."
+    },
+    {
+      "command": "npm run check:important-budget",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Reported zero !important declarations against the ratcheted zero budget."
+    },
+    {
+      "command": "rg -n \"!important\" src --glob \"*.css\"",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "No matches; rg exit code 1 is the expected no-match result."
+    },
+    {
+      "command": "npm run check:shell-visual-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "The shared shell visual contract passed after selector migration."
+    },
+    {
+      "command": "npm run check:contrast",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Light and dark semantic roles passed configured text contrast thresholds."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Full frontend ESLint check passed."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "TypeScript project build passed."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Production build passed with menu, i18n, datetime, shell, page-admission, and smoke coverage prebuild gates."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors were reported."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/backoffice-ui-visual.spec.ts tests/smoke/platform/shell-top-panels.spec.ts --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "failed",
+      "notes": "Initial attempt reproduced an environment gap: backend port 8080 was offline, causing 502 and ECONNREFUSED failures; the reduced-motion-only scenario passed."
+    },
+    {
+      "command": "go run ./backend/cmd/server with documented local MySQL, Redis, and workspace environment",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Backend started against local MySQL and Redis; /api/v1/health returned HTTP 200 before rerunning smoke."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/backoffice-ui-visual.spec.ts tests/smoke/platform/shell-top-panels.spec.ts --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "46/46 scenarios passed across login, shell, system pages, dialogs, forms, tables, compact layout, desktop, 1280, phone, and tablet viewports."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/system/governance/cleanup-range-ui.spec.ts --grep \"login-log filter time range\" --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "1/1 date-range popup scenario passed, including shortcut copy and horizontal calendar panel geometry."
+    },
+    {
+      "command": "npm run format:check",
+      "cwd": "pantheon-base/frontend",
+      "status": "failed",
+      "notes": "Post-smoke closeout check found that generated-module cleanup had restored seven generated snapshots from unformatted templates."
+    },
+    {
+      "command": "npm run format && npm run format:check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Reformatted the seven generated snapshots; the final repository-wide frontend format check passed."
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Formatting generated snapshots did not reintroduce generated business modules or cleanup drift."
+    },
+    {
+      "command": "claude -p <independent review prompt>",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "The local external reviewer could not connect to its API and the workspace trust dialog had not been accepted; no independent approval is claimed."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/system-pages.spec.ts --workers=1 --grep \"user and role smoke: role binding can be deferred\"",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "The role-member drawer and overlaid confirmation modal completed add/remove binding end to end (1/1)."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/shell-visual-contract.spec.ts --workers=1 --grep \"dialogs use single-layer inputs|narrow mobile layout keeps actions dialogs|core system dialogs share modal spacing|form controls use a single visible focus ring\"",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Desktop, narrow-mobile, shared-dialog, and focus-state rendered contracts passed (4/4)."
+    },
+    {
+      "command": "npm run test:smoke:system",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Pages 81/81, forms 4/4, IAM authorization 4/4, governance 18/18, and API 11/11 passed (118/118 total)."
+    },
+    {
+      "command": "npm run check:important-budget && npm run lint && npm run type-check && npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Zero-priority budget, lint, TypeScript, all prebuild contracts, and production build passed after the modal fix."
+    }
+  ],
+  "browserEvidence": [
+    {
+      "viewport": "1440x900",
+      "url": "/login",
+      "screenshot": "login-desktop.png",
+      "consoleErrors": [],
+      "notes": "Authentication console remains balanced with visible controls and no clipping."
+    },
+    {
+      "viewport": "390x844",
+      "url": "/login",
+      "screenshot": "login-mobile.png",
+      "consoleErrors": [],
+      "notes": "Login form remains contained and readable without horizontal overflow."
+    },
+    {
+      "viewport": "1440x900",
+      "url": "/system/user",
+      "screenshot": "system-user-desktop.png",
+      "consoleErrors": [],
+      "notes": "Shell, filters, actions, table, and pagination retain the expected hierarchy."
+    },
+    {
+      "viewport": "390x844",
+      "url": "/system/user",
+      "screenshot": "system-user-phone.png",
+      "consoleErrors": [],
+      "notes": "Phone layout remains usable with collapsed filters, stacked actions, and contained table scrolling."
+    },
+    {
+      "viewport": "768x1024",
+      "url": "/system/user",
+      "screenshot": "system-user-tablet-portrait.png",
+      "consoleErrors": [],
+      "notes": "Tablet portrait keeps stable action and table geometry."
+    },
+    {
+      "viewport": "1024x768",
+      "url": "/system/user",
+      "screenshot": "system-user-tablet-landscape.png",
+      "consoleErrors": [],
+      "notes": "Tablet landscape keeps stable shell, filter, and table geometry."
+    },
+    {
+      "viewport": "1440x900",
+      "url": "/system/permission",
+      "screenshot": "system-permission-desktop.png",
+      "consoleErrors": [],
+      "notes": "Permission workbench tabs, cards, filters, and table remain aligned."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeLogs": [
+    "Focused Playwright scenarios captured console and page errors and reported no disallowed runtime errors after the backend was restored.",
+    "Responsive assertions covered horizontal overflow and viewport containment on phone and tablet layouts.",
+    "The final format gate was rerun after smoke cleanup and passed after reformatting seven generated snapshots."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-15-frontend-governance-debt-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/",
+    "reviewFile": ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [".codex/tasks/2026-07-15-frontend-governance-debt-closeout.md"]
+  },
+  "knownGaps": [
+    "Independent non-author review remains a required PR / human gate because the configured external reviewer was unavailable.",
+    "GitHub-hosted required checks, merge, and downstream foundation synchronization remain human/release gates."
+  ],
+  "completedAt": "2026-07-15T19:35:00+08:00"
+}

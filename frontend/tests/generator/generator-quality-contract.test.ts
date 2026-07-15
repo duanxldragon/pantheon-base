@@ -107,11 +107,11 @@ function createSchema(overrides: Partial<ModuleSchema> = {}): ModuleSchema {
       owner: 'platform',
       summary: '资产台账',
     },
-  model: {
-    tableName: 'biz_cmdb_asset',
-    modelName: 'CmdbAsset',
-    fields: createRelationFields(),
-  },
+    model: {
+      tableName: 'biz_cmdb_asset',
+      modelName: 'CmdbAsset',
+      fields: createRelationFields(),
+    },
     menus: [],
     permissions: [],
     i18n: {
@@ -156,11 +156,13 @@ function buildI18n(schema: ModuleSchema): ModuleSchema['i18n'] {
     en[buildFieldLabelKey(schema.scope, schema.name, field.name)] = field.labelEn || field.label;
     if (field.placeholder || field.placeholderEn) {
       zh[buildFieldPlaceholderKey(schema.scope, schema.name, field.name)] = field.placeholder || '';
-      en[buildFieldPlaceholderKey(schema.scope, schema.name, field.name)] = field.placeholderEn || field.placeholder || '';
+      en[buildFieldPlaceholderKey(schema.scope, schema.name, field.name)] =
+        field.placeholderEn || field.placeholder || '';
     }
     for (const item of field.enumOptions ?? []) {
       zh[buildEnumOptionKey(schema.scope, schema.name, field.name, item.value)] = item.label;
-      en[buildEnumOptionKey(schema.scope, schema.name, field.name, item.value)] = item.labelEn || item.label;
+      en[buildEnumOptionKey(schema.scope, schema.name, field.name, item.value)] =
+        item.labelEn || item.label;
     }
   }
 
@@ -181,7 +183,9 @@ function generatedFiles(schema: ModuleSchema) {
 }
 
 function assertCompletenessPasses(schema: ModuleSchema) {
-  const blockingIssues = validateGeneratorCompleteness(schema).filter((issue) => issue.level === 'error');
+  const blockingIssues = validateGeneratorCompleteness(schema).filter(
+    (issue) => issue.level === 'error',
+  );
   assert.deepEqual(blockingIssues, []);
 }
 
@@ -190,18 +194,21 @@ test('exports a complete business module contract for a main table schema', () =
   const files = generatedFiles(schema);
 
   assertCompletenessPasses(schema);
-  assert.deepEqual([...files.keys()], [
-    'backend/modules/business/cmdb/asset/asset_model.go',
-    'backend/modules/business/cmdb/asset/asset_dto.go',
-    'backend/modules/business/cmdb/asset/asset_service.go',
-    'backend/modules/business/cmdb/asset/asset_handler.go',
-    'backend/modules/business/cmdb/asset/module.go',
-    'frontend/src/modules/business/cmdb/asset/index.ts',
-    'frontend/src/modules/business/cmdb/asset/api.ts',
-    'frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx',
-    'frontend/src/modules/business/cmdb/asset/CmdbAssetForm.tsx',
-    'frontend/src/modules/business/cmdb/asset/CmdbAssetDetail.tsx',
-  ]);
+  assert.deepEqual(
+    [...files.keys()],
+    [
+      'backend/modules/business/cmdb/asset/asset_model.go',
+      'backend/modules/business/cmdb/asset/asset_dto.go',
+      'backend/modules/business/cmdb/asset/asset_service.go',
+      'backend/modules/business/cmdb/asset/asset_handler.go',
+      'backend/modules/business/cmdb/asset/module.go',
+      'frontend/src/modules/business/cmdb/asset/index.ts',
+      'frontend/src/modules/business/cmdb/asset/api.ts',
+      'frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx',
+      'frontend/src/modules/business/cmdb/asset/CmdbAssetForm.tsx',
+      'frontend/src/modules/business/cmdb/asset/CmdbAssetDetail.tsx',
+    ],
+  );
 
   const backendModule = files.get('backend/modules/business/cmdb/asset/module.go') || '';
   assert.match(backendModule, /ModuleName:\s+"business\.cmdb\.asset"/);
@@ -216,7 +223,10 @@ test('exports a complete business module contract for a main table schema', () =
   assert.doesNotMatch(backendService, /backend\/modules\/system\//);
   assert.match(backendService, /ListCmdbAssetOptions/);
   assert.match(backendService, /CmdbAssetOptionItem/);
-  assert.match(backendService, /db = db\.Where\("asset_code LIKE \?", "%"\+query\.AssetCode\+"%"\)/);
+  assert.match(
+    backendService,
+    /db = db\.Where\("asset_code LIKE \?", "%"\+query\.AssetCode\+"%"\)/,
+  );
   assert.match(backendService, /db = db\.Where\("status LIKE \?", "%"\+query\.Status\+"%"\)/);
   assert.match(backendService, /"assetCode": "asset_code"/);
   assert.doesNotMatch(backendService, /a_et_code/);
@@ -234,7 +244,8 @@ test('exports a complete business module contract for a main table schema', () =
   assert.match(frontendIndex, /activeMenu: '\/operations\/cmdb\/asset'/);
   assert.match(frontendIndex, /pagePermission: 'business:cmdb:asset:view'/);
 
-  const frontendList = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx') || '';
+  const frontendList =
+    files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx') || '';
   assert.match(frontendList, /t\('business\.cmdb\.asset\.field\.assetCode\.label'\)/);
   assert.match(frontendList, /<TableBatchActionBar/);
   assert.doesNotMatch(frontendList, /system-list__table-head/);
@@ -252,9 +263,13 @@ test('exports a complete business module contract for a main table schema', () =
   assert.match(frontendApi, /apiRequest<unknown>/);
   assert.match(frontendApi, /item\['name'\] \?\? item\.label \?\? item\.name/);
 
-  const frontendForm = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetForm.tsx') || '';
+  const frontendForm =
+    files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetForm.tsx') || '';
   assert.match(frontendForm, /export interface CmdbAssetFormValues/);
-  assert.match(frontendForm, /FormItem label=\{t\('business\.cmdb\.asset\.field\.assetCode\.label'\)\}/);
+  assert.match(
+    frontendForm,
+    /FormItem label=\{t\('business\.cmdb\.asset\.field\.assetCode\.label'\)\}/,
+  );
   assert.match(frontendForm, /field="vendorId"/);
   assert.match(frontendForm, /loading=\{Boolean\(relationLoading\['vendorId'\]\)\}/);
   assert.match(frontendForm, /generator\.fieldEditor\.type\.relation/);
@@ -269,7 +284,8 @@ test('exports a complete business module contract for a main table schema', () =
   assert.match(frontendForm, /options=\{relationOptions\['vendorId'\] \|\| \[\]\}/);
   assert.match(frontendForm, /disabled=\{!relationLookupContractMap\['vendorId'\]\?\.lookupApi\}/);
 
-  const frontendDetail = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetDetail.tsx') || '';
+  const frontendDetail =
+    files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetDetail.tsx') || '';
   assert.match(frontendDetail, /getCmdbAssetDetail/);
   assert.match(frontendDetail, /PageContainer/);
   assert.match(frontendDetail, /Descriptions/);
@@ -287,38 +303,48 @@ test('exports a complete business module contract for a main table schema', () =
   assert.doesNotMatch(frontendDetail, /generator\.wizard\.result\.primaryTableContext/);
   assert.match(frontendDetail, /cmdb\/vendor/);
   assert.match(frontendDetail, /assetVendor/);
-  assert.match(frontendDetail, /const governanceTableRole = 'main'/);
+  assert.match(frontendDetail, /const governanceTableRole = "main"/);
 });
 
 test('omits routes, menus, permissions, and widgets for relation tables', () => {
   const relationSchema = createSchema({
-  name: 'cmdb/asset_vendor',
-  displayName: '资产供应商关系',
-  displayNameEn: 'Asset Vendor Relation',
-  pageActions: [],
-  dependencies: [],
-  relations: [],
-  metadata: {
-    businessContext: 'cmdb',
-    businessContextTitle: 'CMDB',
-    businessContextTitleEn: 'CMDB',
-    tableRole: 'relation',
-    primaryTable: 'biz_cmdb_asset',
-    relationFromField: 'asset_id',
-    relationToField: 'vendor_id',
-  },
-  model: {
-    tableName: 'biz_cmdb_asset_vendor',
-    modelName: 'CmdbAssetVendor',
-    fields: createFields(),
-  },
-  includeDashboardWidget: true,
+    name: 'cmdb/asset_vendor',
+    displayName: '资产供应商关系',
+    displayNameEn: 'Asset Vendor Relation',
+    pageActions: [],
+    dependencies: [],
+    relations: [],
+    metadata: {
+      businessContext: 'cmdb',
+      businessContextTitle: 'CMDB',
+      businessContextTitleEn: 'CMDB',
+      tableRole: 'relation',
+      primaryTable: 'biz_cmdb_asset',
+      relationFromField: 'asset_id',
+      relationToField: 'vendor_id',
+    },
+    listLayout: {
+      governance: true,
+    },
+    model: {
+      tableName: 'biz_cmdb_asset_vendor',
+      modelName: 'CmdbAssetVendor',
+      fields: createFields(),
+    },
+    includeDashboardWidget: true,
   });
   const relationFiles = generatedFiles(relationSchema);
-  const relationIndex = relationFiles.get('frontend/src/modules/business/cmdb/asset_vendor/index.ts') || '';
-  const relationModule = relationFiles.get('backend/modules/business/cmdb/asset_vendor/module.go') || '';
-  const relationDetail = relationFiles.get('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorDetail.tsx') || '';
-  const relationList = relationFiles.get('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorList.tsx') || '';
+  const relationIndex =
+    relationFiles.get('frontend/src/modules/business/cmdb/asset_vendor/index.ts') || '';
+  const relationModule =
+    relationFiles.get('backend/modules/business/cmdb/asset_vendor/module.go') || '';
+  const relationDetail =
+    relationFiles.get(
+      'frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorDetail.tsx',
+    ) || '';
+  const relationList =
+    relationFiles.get('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorList.tsx') ||
+    '';
 
   assertCompletenessPasses(relationSchema);
   assert.match(relationIndex, /routes:\s*\[\]/);
@@ -327,62 +353,114 @@ test('omits routes, menus, permissions, and widgets for relation tables', () => 
   assert.doesNotMatch(relationIndex, /dashboardWidgets:/);
   assert.doesNotMatch(relationModule, /PagePerm:/);
   assert.doesNotMatch(relationModule, /Perms:/);
-  assert.ok(relationFiles.has('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorForm.tsx'));
-  assert.ok(relationFiles.has('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorDetail.tsx'));
-  assert.match(relationDetail, /const governanceTableRole = 'relation'/);
+  assert.ok(
+    relationFiles.has('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorForm.tsx'),
+  );
+  assert.ok(
+    relationFiles.has('frontend/src/modules/business/cmdb/asset_vendor/CmdbAssetVendorDetail.tsx'),
+  );
+  assert.match(relationDetail, /const governanceTableRole = "relation"/);
   assert.match(relationDetail, /biz_cmdb_asset/);
   assert.match(relationDetail, /asset_id/);
   assert.match(relationDetail, /vendor_id/);
   assert.match(relationDetail, /generator\.wizard\.result\.relatedData/);
   assert.match(relationDetail, /generator\.wizard\.result\.openRelatedModule/);
   assert.match(relationList, /generator\.wizard\.relationFields/);
+  assert.match(relationList, /generator\.wizard\.relationFromField/);
+  assert.match(relationList, /generator\.wizard\.relationToField/);
   assert.doesNotMatch(relationList, /generator\.wizard\.result\.relatedModules/);
   assert.doesNotMatch(relationList, /generator\.wizard\.result\.relatedModuleAction/);
   assert.match(relationList, /asset_id/);
   assert.match(relationList, /vendor_id/);
 });
 
+test('serializes and rejects unsafe relation governance field metadata', () => {
+  const unsafeField = "asset_id';\nalert(1)//";
+  const schema = createSchema({
+    name: 'cmdb/unsafe_relation',
+    displayName: '不安全关系',
+    displayNameEn: 'Unsafe Relation',
+    pageActions: [],
+    metadata: {
+      tableRole: 'relation',
+      primaryTable: 'biz_cmdb_asset',
+      relationFromField: unsafeField,
+      relationToField: 'vendor_id',
+    },
+    listLayout: {
+      governance: true,
+    },
+    model: {
+      tableName: 'biz_cmdb_unsafe_relation',
+      modelName: 'CmdbUnsafeRelation',
+      fields: createFields(),
+    },
+  });
+
+  const issues = validateGeneratorCompleteness(schema);
+  assert.ok(issues.some((issue) => issue.code === 'relation_from_field_invalid'));
+
+  const files = generatedFiles(schema);
+  const relationList =
+    files.get('frontend/src/modules/business/cmdb/unsafe_relation/CmdbUnsafeRelationList.tsx') ||
+    '';
+  assert.ok(
+    relationList.includes(`const governanceRelationFromField = ${JSON.stringify(unsafeField)};`),
+  );
+  assert.doesNotMatch(relationList, /const governanceRelationFromField = 'asset_id'/);
+
+  for (const invalidField of [' asset_id ', '\t']) {
+    schema.metadata!.relationFromField = invalidField;
+    assert.ok(
+      validateGeneratorCompleteness(schema).some(
+        (issue) => issue.code === 'relation_from_field_invalid',
+      ),
+    );
+  }
+});
+
 test('emits many-to-many and master-detail runtime contracts', () => {
   const manyToManySchema = createSchema({
-  name: 'cmdb/asset_tag',
-  displayName: '资产标签',
-  displayNameEn: 'Asset Tag',
-  pageActions: ['view', 'create', 'update', 'delete'],
-  dependencies: [],
-  relations: [
-    {
-      name: 'assetTags',
-      type: 'manyToMany',
-      targetModule: 'cmdb/tag',
-      localField: 'id',
-      targetField: 'id',
-      targetLabelField: 'name',
-      lookupApi: '/business/cmdb/tag/options',
-      lookupValueField: 'id',
-      junctionTable: 'biz_cmdb_asset_tag_rel',
+    name: 'cmdb/asset_tag',
+    displayName: '资产标签',
+    displayNameEn: 'Asset Tag',
+    pageActions: ['view', 'create', 'update', 'delete'],
+    dependencies: [],
+    relations: [
+      {
+        name: 'assetTags',
+        type: 'manyToMany',
+        targetModule: 'cmdb/tag',
+        localField: 'id',
+        targetField: 'id',
+        targetLabelField: 'name',
+        lookupApi: '/business/cmdb/tag/options',
+        lookupValueField: 'id',
+        junctionTable: 'biz_cmdb_asset_tag_rel',
+      },
+    ],
+    metadata: {
+      businessContext: 'cmdb',
+      businessContextTitle: 'CMDB',
+      businessContextTitleEn: 'CMDB',
+      tableRole: 'main',
+      boundedContext: 'asset-tag',
+      owner: 'platform',
+      summary: '资产标签绑定',
     },
-  ],
-  metadata: {
-    businessContext: 'cmdb',
-    businessContextTitle: 'CMDB',
-    businessContextTitleEn: 'CMDB',
-    tableRole: 'main',
-    boundedContext: 'asset-tag',
-    owner: 'platform',
-    summary: '资产标签绑定',
-  },
-  model: {
-    tableName: 'biz_cmdb_asset',
-    modelName: 'CmdbAssetTag',
-    fields: createFields(),
-  },
-  includeDashboardWidget: true,
+    model: {
+      tableName: 'biz_cmdb_asset',
+      modelName: 'CmdbAssetTag',
+      fields: createFields(),
+    },
+    includeDashboardWidget: true,
   });
   const manyToManyFiles = generatedFiles(manyToManySchema);
   const manyToManyApi =
     manyToManyFiles.get('frontend/src/modules/business/cmdb/asset_tag/api.ts') || '';
   const manyToManyDetail =
-    manyToManyFiles.get('frontend/src/modules/business/cmdb/asset_tag/CmdbAssetTagDetail.tsx') || '';
+    manyToManyFiles.get('frontend/src/modules/business/cmdb/asset_tag/CmdbAssetTagDetail.tsx') ||
+    '';
   const manyToManyService =
     manyToManyFiles.get('backend/modules/business/cmdb/asset_tag/asset_tag_service.go') || '';
   const manyToManyHandler =
@@ -419,33 +497,33 @@ test('emits many-to-many and master-detail runtime contracts', () => {
   assert.match(manyToManyModule, /protected\.DELETE\("\/:id\/relations\/assetTags\/:targetId"/);
 
   const masterDetailSchema = createSchema({
-  name: 'cmdb/order',
-  displayName: '工单主表',
-  displayNameEn: 'Order Master',
-  relations: [
-    {
-      name: 'orderItems',
-      type: 'oneToMany',
-      targetModule: 'cmdb/order_item',
-      localField: 'id',
-      targetField: 'orderId',
-      targetLabelField: 'itemName',
+    name: 'cmdb/order',
+    displayName: '工单主表',
+    displayNameEn: 'Order Master',
+    relations: [
+      {
+        name: 'orderItems',
+        type: 'oneToMany',
+        targetModule: 'cmdb/order_item',
+        localField: 'id',
+        targetField: 'orderId',
+        targetLabelField: 'itemName',
+      },
+    ],
+    metadata: {
+      businessContext: 'cmdb',
+      businessContextTitle: 'CMDB',
+      businessContextTitleEn: 'CMDB',
+      tableRole: 'main',
+      boundedContext: 'order',
+      owner: 'platform',
+      summary: '工单主表',
     },
-  ],
-  metadata: {
-    businessContext: 'cmdb',
-    businessContextTitle: 'CMDB',
-    businessContextTitleEn: 'CMDB',
-    tableRole: 'main',
-    boundedContext: 'order',
-    owner: 'platform',
-    summary: '工单主表',
-  },
-  model: {
-    tableName: 'biz_cmdb_order',
-    modelName: 'CmdbOrder',
-    fields: createFields(),
-  },
+    model: {
+      tableName: 'biz_cmdb_order',
+      modelName: 'CmdbOrder',
+      fields: createFields(),
+    },
   });
   const masterDetailFiles = generatedFiles(masterDetailSchema);
   const masterDetailPage =
@@ -461,7 +539,10 @@ test('emits many-to-many and master-detail runtime contracts', () => {
   assert.match(masterDetailPage, /resolveEditableChildRelation/);
   assert.match(masterDetailPage, /renderChildFieldInput/);
   assert.match(masterDetailPage, /relation\.targetField]: detail\[relation\.localField/);
-  assert.match(masterDetailPage, /url: `\$\{buildModuleCrudBasePath\(scope, relation\.targetModule\)\}\/\$\{recordId\}`/);
+  assert.match(
+    masterDetailPage,
+    /url: `\$\{buildModuleCrudBasePath\(scope, relation\.targetModule\)\}\/\$\{recordId\}`/,
+  );
   assert.match(masterDetailPage, /generator\.wizard\.result\.childTableActions/);
   assert.match(masterDetailPage, /generator\.wizard\.result\.childTableCreate/);
   assert.match(masterDetailPage, /generator\.wizard\.result\.childTableEdit/);

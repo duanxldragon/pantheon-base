@@ -1,4 +1,3 @@
-const generatedenUSFallback = {
-};
+const generatedenUSFallback = {};
 
 export default generatedenUSFallback;

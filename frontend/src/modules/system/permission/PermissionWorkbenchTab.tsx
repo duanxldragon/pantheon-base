@@ -37,6 +37,7 @@ import {
   withTableColumnPriority,
 } from '../../../components';
 import { translateRoleName } from '../role/display';
+import '../components/shared/list-page.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -678,7 +679,11 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   {
                     title: t('system.permission.workbench.remediationTime'),
                     dataIndex: 'createdAt',
-                    render: (value: string) => formatDateTime(value),
+                    render: (value: string) => (
+                      <Typography.Text className="system-list__datetime-text">
+                        {formatDateTime(value)}
+                      </Typography.Text>
+                    ),
                   },
                 ]}
                 pagination={false}

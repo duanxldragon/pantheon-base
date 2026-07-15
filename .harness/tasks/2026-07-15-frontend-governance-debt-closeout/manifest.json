@@ -1,0 +1,97 @@
+{
+  "taskId": "2026-07-15-frontend-governance-debt-closeout",
+  "title": "Frontend governance debt closeout",
+  "goal": "Clear historical formatting debt and migrate the remaining frontend !important declarations without visual or behavioral regression.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "system/iam", "system/config"],
+  "scope": {
+    "in": [
+      "format-check backlog",
+      "CSS priority migration",
+      "important budget ratchet",
+      "desktop and mobile rendered verification"
+    ],
+    "out": [
+      "backend changes",
+      "business module changes",
+      "product redesign",
+      "pantheon-ops synchronization"
+    ]
+  },
+  "implementationNotes": [
+    "Prefer deletion and component-native APIs before selector specificity.",
+    "Validate each UI surface group before lowering the budget.",
+    "Do not raise the important budget."
+  ],
+  "taskDoc": ".codex/tasks/2026-07-15-frontend-governance-debt-closeout.md",
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/acceptances/AGENT_EXECUTION_CHECKLIST.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ui-runtime",
+    "portableFailureClass": "css-priority-debt",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": ["behaviour", "maintainability", "runtime-quality", "method-health"]
+  },
+  "expectedFiles": {
+    "create": [
+      ".codex/tasks/2026-07-15-frontend-governance-debt-closeout.md",
+      ".harness/tasks/2026-07-15-frontend-governance-debt-closeout/manifest.json",
+      ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/commands.json",
+      ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/summary.md",
+      ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/review.md"
+    ],
+    "modify": [
+      "frontend/src/**/*.{ts,tsx,css,json}",
+      "frontend/scripts/check-important-budget.mjs",
+      "frontend/tests/smoke/platform/**",
+      "frontend/tests/smoke/system/**"
+    ],
+    "doNotTouch": ["backend/**", "frontend/src/modules/business/**", "pantheon-ops/**"]
+  },
+  "structuralScope": {
+    "affectedSubgraph": ["global CSS -> platform/auth/system UI -> rendered surfaces"],
+    "boundaryCrossings": ["shared visual cascade across platform and system domains"],
+    "riskNodes": ["Arco internals", "navigation", "dialogs", "drawers", "tables", "calendar", "responsive layout"],
+    "graphFocus": ["runtime-quality"]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["mechanical", "UX-QA", "maintainability"]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run format:check",
+      "npm run check:important-budget",
+      "npm run check:shell-visual-contract",
+      "npm run check:contrast",
+      "npm run lint",
+      "npm run type-check",
+      "npm run build",
+      "focused Playwright visual acceptance"
+    ],
+    "runtimeEvidence": ["desktop and mobile screenshots", "runtime-error collection", "overflow assertions"]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/",
+    "reviewFile": ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-07-15-frontend-governance-debt-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [".codex/tasks/2026-07-15-frontend-governance-debt-closeout.md"]
+  },
+  "evidenceRequired": ["command result summary", "desktop and mobile screenshots", "runtime-error result", "independent review summary"],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

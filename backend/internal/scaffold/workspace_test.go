@@ -174,6 +174,33 @@ func TestValidateRegisterRequestRejectsInvalidGovernanceContract(t *testing.T) {
 			},
 			wantError: "module.generate.invalid_relation",
 		},
+		{
+			name: "relation metadata fields must be identifiers",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Metadata.TableRole = "relation"
+				req.Schema.Metadata.RelationFromField = "asset_id'; alert(1) //"
+				req.Schema.Metadata.RelationToField = "vendor_id"
+			},
+			wantError: "module.generate.invalid_relation",
+		},
+		{
+			name: "relation metadata fields reject boundary whitespace",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Metadata.TableRole = "relation"
+				req.Schema.Metadata.RelationFromField = " asset_id "
+				req.Schema.Metadata.RelationToField = "vendor_id"
+			},
+			wantError: "module.generate.invalid_relation",
+		},
+		{
+			name: "relation metadata fields reject whitespace only values",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.Metadata.TableRole = "relation"
+				req.Schema.Metadata.RelationFromField = "\t"
+				req.Schema.Metadata.RelationToField = "vendor_id"
+			},
+			wantError: "module.generate.invalid_relation",
+		},
 	}
 
 	for _, tt := range tests {

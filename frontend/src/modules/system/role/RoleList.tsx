@@ -814,7 +814,11 @@ const RoleList: React.FC = () => {
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
         ...sortableColumn('createdAt'),
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
       },
       'low',
     ),
@@ -1004,10 +1008,7 @@ const RoleList: React.FC = () => {
                       >
                         {t('common.downloadTemplate')}
                       </Button>
-                      <ImportCsvButton
-                        disabled={!canImport}
-                        onSelect={handleImport}
-                      >
+                      <ImportCsvButton disabled={!canImport} onSelect={handleImport}>
                         {t('common.import')}
                       </ImportCsvButton>
                     </>

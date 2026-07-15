@@ -25,11 +25,11 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 ## Tech Stack
 
-| Layer       | Technology                                                 |
-| ----------- | ---------------------------------------------------------- |
-| Backend     | Go、Gin、GORM、Casbin、Redis Token、MySQL、Redis           |
-| Frontend    | React, TypeScript, Vite, Arco Design, Zustand, i18next     |
-| Engineering | Docker Compose, Playwright, GitHub Actions, gstack QA flow |
+| Layer       | Technology                                             |
+| ----------- | ------------------------------------------------------ |
+| Backend     | Go、Gin、GORM、Casbin、Redis Token、MySQL、Redis       |
+| Frontend    | React, TypeScript, Vite, Arco Design, Zustand, i18next |
+| Engineering | Docker Compose, Playwright, GitHub Actions, QA flow    |
 
 ## Repository Layout
 
@@ -66,6 +66,8 @@ If you need an English entry path, continue with:
 
 ## Quick Start
 
+The toolchain baseline is Go 1.26.5. Local development, CI, and container builds follow the version declared in `go.mod`.
+
 ### 1. Start infrastructure
 
 ```bash
@@ -94,11 +96,11 @@ Backend default: `http://127.0.0.1:8080`
 
 ### Low-code module environment variables
 
-| Variable | Default (per env) | Meaning |
-|----------|-------------------|---------|
+| Variable                          | Default (per env)                  | Meaning                                                                                                          |
+| --------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `PANTHEON_ENABLE_DYNAMIC_MODULES` | production `false` / others `true` | Whether runtime registration/activation of dynamic business modules is allowed. Production must keep it disabled |
-| `PANTHEON_WORKSPACE_ROOT` | inferred from git root | Workspace root used by the low-code generator when writing source/schema; must be an absolute path when set |
-| `PANTHEON_NODE_BIN` | `node` from `PATH` | Forces the Node.js absolute binary path; mainly needed in multi-version Node setups or containerized deployments |
+| `PANTHEON_WORKSPACE_ROOT`         | inferred from git root             | Workspace root used by the low-code generator when writing source/schema; must be an absolute path when set      |
+| `PANTHEON_NODE_BIN`               | `node` from `PATH`                 | Forces the Node.js absolute binary path; mainly needed in multi-version Node setups or containerized deployments |
 
 Full description lives in `.env.example` and [Low-Code Module Code Generation Platform Guide](./docs/designs/LOWCODE_GENERATOR_GUIDE.en.md).
 
@@ -141,7 +143,7 @@ CodeQL is the primary security signal. Code quality is gated by GitHub required 
 - [docs/README.md](./docs/README.md): Chinese-first full documentation index
 - [docs/README.en.md](./docs/README.en.md): English companion index
 - `docs/assessments/`: archived architecture, permission, and UI assessment/review reports (not first-line entry docs)
-- [.agents/skills/README.md](./.agents/skills/README.md): repository-local Codex workflow skills for PR closure, GitHub comment automation, and CI triage
+- [.agents/skills/README.md](./.agents/skills/README.md): repository-local agent workflow skills for PR closure, GitHub comment automation, and CI triage
 - [docs/designs/REPOSITORY_LAYOUT.en.md](./docs/designs/REPOSITORY_LAYOUT.en.md): root layout and file placement rules
 - [docs/designs/QUALITY_AND_SECURITY_STRATEGY.md](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md): code quality and security governance strategy
 - [docs/designs/FOUNDATION_RELEASE_MODEL.md](./docs/designs/FOUNDATION_RELEASE_MODEL.md): foundation release and consumer-upgrade model

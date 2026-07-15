@@ -1,6 +1,9 @@
 import type { UserInfo } from '../../store/authTypes';
 
-export function checkPermission(userInfo: UserInfo | null | undefined, permission: string): boolean {
+export function checkPermission(
+  userInfo: UserInfo | null | undefined,
+  permission: string,
+): boolean {
   if (!permission) {
     return true;
   }

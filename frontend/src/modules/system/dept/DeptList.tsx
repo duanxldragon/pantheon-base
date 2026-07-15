@@ -1467,8 +1467,16 @@ const DeptList: React.FC = () => {
                   <div key={task.taskKey} className="dept-governance-rail__task">
                     <div className="dept-governance-rail__task-head">
                       <Space wrap size={6}>
-                        <Tag color="arcoblue">{task.governanceScopeLabel}</Tag>
-                        <Tag color="orange">{task.governanceTagLabel}</Tag>
+                        <Tag color="arcoblue">
+                          {t(`system.dept.task.scope.${task.governanceScope}`, {
+                            defaultValue: task.governanceScopeLabel,
+                          })}
+                        </Tag>
+                        <Tag color="orange">
+                          {t(`system.dept.task.tag.${task.governanceTag}`, {
+                            defaultValue: task.governanceTagLabel,
+                          })}
+                        </Tag>
                         {task.relatedUserCount > 0 ? (
                           <Tag color="gold">
                             {t('system.dept.task.relatedUserCount')}: {task.relatedUserCount}
@@ -1492,8 +1500,16 @@ const DeptList: React.FC = () => {
                         : task.deptName}
                     </Typography.Text>
                     <Typography.Text type="secondary" className="dept-governance-rail__task-meta">
-                      {task.governanceActionLabel}
-                      {task.governanceBlockedByLabel ? ` · ${task.governanceBlockedByLabel}` : ''}
+                      {task.governanceActionLabel
+                        ? t(`system.dept.task.action.${task.governanceAction}`, {
+                            defaultValue: task.governanceActionLabel,
+                          })
+                        : ''}
+                      {task.governanceBlockedByLabel
+                        ? ` · ${t(`system.dept.task.blockedBy.${task.governanceBlockedBy}`, {
+                            defaultValue: task.governanceBlockedByLabel,
+                          })}`
+                        : ''}
                     </Typography.Text>
                   </div>
                 ))}

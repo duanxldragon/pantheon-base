@@ -1,19 +1,16 @@
 /**
  * `!important` budget guard for P2-5.
  *
- * The remaining `!important` declarations are load-bearing Arco-internal
- * overrides plus legitimate `prefers-reduced-motion` resets; ripping them out
- * blindly regresses the UI, so the roadmap treats reduction as incremental
- * ("停止新增 + 逐步降"). This guard operationalises that: it fails if the total
- * count grows beyond the recorded budget, so new code cannot silently add more,
- * and the budget can be ratcheted down as overrides are migrated to Arco CSS
- * variables. Lower BUDGET whenever you remove some — never raise it.
+ * All historical `!important` declarations have been migrated to deletion,
+ * component-native behavior, or scoped selectors. This zero-tolerance guard
+ * prevents priority debt from returning; prefer supported component APIs, CSS
+ * variables, or narrowly scoped selectors for future overrides.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-const BUDGET = 147;
+const BUDGET = 0;
 
 function walk(dir) {
   const out = [];
