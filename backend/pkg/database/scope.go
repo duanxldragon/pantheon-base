@@ -1,7 +1,7 @@
 package database
 
 import (
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strings"
 
 	"gorm.io/gorm"

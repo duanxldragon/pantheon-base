@@ -1,9 +1,9 @@
 package generator
 
 import (
-	"pantheon-platform/backend/internal/middleware"
-	"pantheon-platform/backend/pkg/contracts"
-	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/internal/middleware"
+	"pantheon-platform/pkg/contracts"
+	"pantheon-platform/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

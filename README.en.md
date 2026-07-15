@@ -142,12 +142,10 @@ CodeQL is the primary security signal. Code quality is gated by GitHub required 
 - [DESIGN.md](./DESIGN.md): top-level architecture and domain boundaries
 - [docs/README.md](./docs/README.md): Chinese-first full documentation index
 - [docs/README.en.md](./docs/README.en.md): English companion index
-- `docs/assessments/`: archived architecture, permission, and UI assessment/review reports (not first-line entry docs)
 - [.agents/skills/README.md](./.agents/skills/README.md): repository-local agent workflow skills for PR closure, GitHub comment automation, and CI triage
 - [docs/designs/REPOSITORY_LAYOUT.en.md](./docs/designs/REPOSITORY_LAYOUT.en.md): root layout and file placement rules
 - [docs/designs/QUALITY_AND_SECURITY_STRATEGY.md](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md): code quality and security governance strategy
 - [docs/designs/FOUNDATION_RELEASE_MODEL.md](./docs/designs/FOUNDATION_RELEASE_MODEL.md): foundation release and consumer-upgrade model
-- [docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md](./docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md): foundation release generation and consumer upgrade runbook
 - [SECURITY.md](./SECURITY.md): GitHub Security policy entry
 
 ## GitHub Presentation

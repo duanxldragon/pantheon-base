@@ -7,14 +7,9 @@ related_designs:
   - docs/designs/SYSTEM_ORG_DESIGN.md
   - docs/designs/FRONTEND_PAGE_TEMPLATES.md
   - docs/designs/BACKEND.md
-related_assessments:
-  - docs/assessments/SYSTEM_MODULE_AUDIT.md
-related_remediations:
-  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
 related_acceptances:
   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
   - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
-  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-04-30
 ---
 
@@ -27,16 +22,9 @@ English version: [SYSTEM_ORG_CONTRACT.en.md](./SYSTEM_ORG_CONTRACT.en.md)
 - `FRONTEND_PAGE_TEMPLATES.md`
 - `BACKEND.md`
 
-关联评估：
-- `SYSTEM_MODULE_AUDIT.md`
-
-关联整改：
-- `BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
-
 关联验收：
 - `ACCEPTANCE_CHECKLIST.md`
 - `PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md`
-- `QA_SMOKE_REPORT_20260420.md`
 
 ---
 
@@ -223,17 +211,8 @@ English version: [SYSTEM_ORG_CONTRACT.en.md](./SYSTEM_ORG_CONTRACT.en.md)
 - [FRONTEND_PAGE_TEMPLATES.md](../designs/FRONTEND_PAGE_TEMPLATES.md)
 - [FRONTEND_UI_SPEC.md](../designs/FRONTEND_UI_SPEC.md)
 
-### 10.2 Assessment
-
-- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
-
-### 10.3 Remediation
-
-- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](../remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 

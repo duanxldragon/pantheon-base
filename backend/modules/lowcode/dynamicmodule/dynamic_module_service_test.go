@@ -14,11 +14,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	systemi18n "pantheon-platform/backend/modules/system/i18n"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/testmysql"
+	systemi18n "pantheon-platform/modules/system/i18n"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/testmysql"
 
-	"pantheon-platform/backend/internal/scaffold"
+	"pantheon-platform/internal/scaffold"
 )
 
 func TestRegisterGeneratedModuleBusinessOnly(t *testing.T) {
@@ -91,7 +91,7 @@ func TestRegisterGeneratedModuleWritesRegistries(t *testing.T) {
 		t.Fatalf("expected restart/build flags to be true: %+v", summary)
 	}
 
-	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), `ticket "pantheon-platform/backend/modules/business/ticket"`)
+	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), `ticket "pantheon-platform/modules/business/ticket"`)
 	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "ticket.InitTicketModule")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "modules", "generated", "business.ts"), "TicketModule")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "'business/ticket/TicketList'")
@@ -1330,7 +1330,7 @@ func prepareDynamicModuleWorkspace(t *testing.T) string {
 	t.Helper()
 
 	root := t.TempDir()
-	mustWriteFile(t, filepath.Join(root, "go.mod"), "module pantheon-platform\n\ngo 1.25.4\n")
+	mustWriteFile(t, filepath.Join(root, "backend", "go.mod"), "module pantheon-platform\n\ngo 1.25.4\n")
 	mustMkdirAll(t, filepath.Join(root, "backend", "modules", "business"))
 	mustMkdirAll(t, filepath.Join(root, "backend", "modules", "system", "iam", "menu"))
 	mustMkdirAll(t, filepath.Join(root, "frontend", "scripts"))

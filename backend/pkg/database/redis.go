@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"pantheon-platform/backend/pkg/metrics"
+	"pantheon-platform/pkg/metrics"
 )
 
 var RDB *redis.Client

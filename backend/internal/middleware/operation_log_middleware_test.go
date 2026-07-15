@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/testmysql"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/testmysql"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

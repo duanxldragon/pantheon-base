@@ -220,5 +220,4 @@ English version: [BACKOFFICE_STYLE_CONSTRAINTS.en.md](./BACKOFFICE_STYLE_CONSTRA
 ## 8. 与现有文档关系
 
 - 顶层视觉/布局规范：`docs/designs/FRONTEND_UI_SPEC.md`
-- 后台整改路线：`docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 - 本文职责：把“风格一致性”落实成可执行、可搜索、可阻断回归的实现约束

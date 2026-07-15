@@ -177,7 +177,6 @@ Pantheon Platform 将权限拆成四层：
 - `DESIGN.md`：顶层架构与领域边界。
 - `docs/README.md`：完整文档索引。
 - `docs/README.en.md`：英文索引入口。
-- `docs/assessments/`：架构、权限、UI 等评估与审查报告归档（非一线入口文档）。
 - `.agents/skills/README.zh.md`：本仓库的 repo-local agent skills 入口，覆盖 PR 收口、GitHub comments 自动处理与 CI 红灯排查。
 - `docs/designs/PERMISSION_MODEL.md`：权限模型设计。
 - `docs/designs/FRONTEND.md`：前端架构与 UI 规范。
@@ -186,7 +185,6 @@ Pantheon Platform 将权限拆成四层：
 - `docs/designs/REPOSITORY_LAYOUT.md`：根目录分层、文件放置规则与本地噪音目录说明。
 - `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`：代码质量与安全治理策略。
 - `docs/designs/FOUNDATION_RELEASE_MODEL.md`：底座 release 与 consumer upgrade 模型。
-- `docs/archive/upgrade/FOUNDATION_RELEASE_RUNBOOK_20260604.md`：foundation release 生成与 consumer upgrade 运行手册。
 - `SECURITY.md`：GitHub Security policy 入口。
 
 ## 推荐阅读顺序

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/testmysql"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/testmysql"
 )
 
 func newI18nTestDB(t *testing.T) *gorm.DB {

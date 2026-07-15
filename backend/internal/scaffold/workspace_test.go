@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 )
 
 func TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules(t *testing.T) {
@@ -491,11 +491,11 @@ func TestResolveNodeBinaryRejectsRelativeEnvOverride(t *testing.T) {
 func prepareScaffoldWorkspaceRoot(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module pantheon-platform\n\ngo 1.25.4\n"), 0o644); err != nil {
-		t.Fatalf("write go.mod: %v", err)
-	}
 	if err := os.MkdirAll(filepath.Join(root, "backend"), 0o755); err != nil {
 		t.Fatalf("mkdir backend: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "backend", "go.mod"), []byte("module pantheon-platform\n\ngo 1.25.4\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "frontend"), 0o755); err != nil {
 		t.Fatalf("mkdir frontend: %v", err)

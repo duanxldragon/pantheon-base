@@ -3,8 +3,8 @@ package middleware
 import (
 	"strings"
 
-	"pantheon-platform/backend/pkg/common"
-	commonhttp "pantheon-platform/backend/pkg/common/http"
+	"pantheon-platform/pkg/common"
+	commonhttp "pantheon-platform/pkg/common/http"
 
 	"github.com/gin-gonic/gin"
 )

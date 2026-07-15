@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/backend/internal/middleware"
-	"pantheon-platform/backend/pkg/testmysql"
+	"pantheon-platform/internal/middleware"
+	"pantheon-platform/pkg/testmysql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

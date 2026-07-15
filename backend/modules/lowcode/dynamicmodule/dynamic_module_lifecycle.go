@@ -3,12 +3,12 @@ package dynamicmodule
 
 import (
 	"errors"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strings"
 	"time"
 
-	"pantheon-platform/backend/internal/scaffold"
-	systemi18n "pantheon-platform/backend/modules/system/i18n"
+	"pantheon-platform/internal/scaffold"
+	systemi18n "pantheon-platform/modules/system/i18n"
 
 	"gorm.io/gorm"
 )

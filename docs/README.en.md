@@ -79,19 +79,8 @@ For Chinese-first onboarding, read:
 - [GITHUB_REPOSITORY_SETUP.md](./GITHUB_REPOSITORY_SETUP.md)
 - [AI_QUALITY_GOVERNANCE.md](./harness/AI_QUALITY_GOVERNANCE.md)
 - [../SECURITY.md](../SECURITY.md): security reporting policy
-- [DEFERRED_CODE_BACKLOG_20260608.md](./harness/DEFERRED_CODE_BACKLOG_20260608.md)
-
-### Historical and retained material
-
-- `archive/examples/`: reusable real delivery examples
-- `archive/baselines/`: older baselines still retained for comparison
-- `archive/upgrade/`: upgrade and migration runbooks
-- `assessments/`: assessment outputs that are not first-line entry docs
-- `remediations/`: remediation plans and visual baselines
 
 ## Notes
 
-- `docs/superpowers/specs/` should retain only adopted or still-referenced AI design anchors
-- `docs/superpowers/plans/` should retain only active plans linked by task packets, evidence, or current execution context
 - documents with no reuse value, no linkage, and no baseline role should be deleted rather than archived
 - the Chinese index remains the more detailed source for local working context

@@ -299,7 +299,6 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 - 工作台是否避免卡片墙，是否优先呈现状态、待关注事项、快捷入口和最近活动
 - 所有展示控件是否有真实行为，未实现能力是否隐藏、禁用或明确说明
 - 系统列表页、树表页、配置页是否统一使用页面骨架和 Arco 组件
-- 是否符合 `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 
 补充平台层混合态验收：
 
@@ -346,7 +345,6 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 固定模板：
 
 - 统一使用 `docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
-- 首个基准样例：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 
 提交流程要求：
 
@@ -476,7 +474,6 @@ English version: [ACCEPTANCE_CHECKLIST.en.md](./ACCEPTANCE_CHECKLIST.en.md)
 
 ### 13.3 验收证据
 
-- 最终汇总：`docs/archive/examples/QA_SMOKE_REPORT_20260420.md`
 - 机器可读结果：`.gstack/qa-reports/summary-20260420-final.json`
 - 原始输出：`.gstack/qa-reports/raw/20260420-final`
 - 页面截图：`.gstack/qa-reports/screenshots/20260420-final`

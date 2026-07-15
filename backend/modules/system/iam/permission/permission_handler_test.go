@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 )
 
 func TestPermissionServiceErrorCode(t *testing.T) {

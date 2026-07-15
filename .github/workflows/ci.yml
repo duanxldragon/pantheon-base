@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GO_VERSION_FILE: go.mod
+  GO_VERSION_FILE: backend/go.mod
   NODE_VERSION: "22"
 
 jobs:
@@ -53,6 +53,7 @@ jobs:
       - name: Check Go formatting
         id: gofmt
         continue-on-error: true
+        working-directory: backend
         run: |
           UNFORMATTED=$(gofmt -l .)
           if [ -n "$UNFORMATTED" ]; then
@@ -79,6 +80,7 @@ jobs:
           fi
 
       - name: Check Go vet
+        working-directory: backend
         run: go vet ./...
 
       - name: Install frontend deps
@@ -115,6 +117,7 @@ jobs:
           cache: true
 
       - name: Run Go tests
+        working-directory: backend
         run: go test -race -short ./...
 
       - name: Setup Node
@@ -154,6 +157,7 @@ jobs:
       - name: Run golangci-lint
         id: lint
         continue-on-error: true
+        working-directory: backend
         run: golangci-lint run ./...
 
       - name: Handle lint results

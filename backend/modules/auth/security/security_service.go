@@ -7,12 +7,12 @@ import (
 	"time"
 	"unicode"
 
-	"pantheon-platform/backend/modules/auth/session"
-	user "pantheon-platform/backend/modules/system/iam/user"
-	"pantheon-platform/backend/pkg/authsession"
-	"pantheon-platform/backend/pkg/authtoken"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/modules/auth/session"
+	user "pantheon-platform/modules/system/iam/user"
+	"pantheon-platform/pkg/authsession"
+	"pantheon-platform/pkg/authtoken"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/database"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

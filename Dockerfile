@@ -27,20 +27,20 @@ WORKDIR /app
 RUN apk add --no-cache git ca-certificates tzdata
 
 # 复制 Go 模块文件
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 
 # 下载依赖
 RUN go mod download
 
 # 复制后端源码
-COPY backend/ ./backend/
+COPY backend/ ./
 
 # 构建后端（静态链接）
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' \
     -a -installsuffix cgo \
     -o /app/server \
-    ./backend/cmd/server/main.go
+    ./cmd/server/main.go
 
 # 阶段 3: 最终镜像
 FROM alpine:3.19

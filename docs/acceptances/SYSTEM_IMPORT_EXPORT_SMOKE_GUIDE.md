@@ -98,12 +98,12 @@ $token = $loginResp.accessToken
 
 可直接使用以下样例文件：
 
-- `tests/fixtures/system-import-export/user-import.csv`
-- `tests/fixtures/system-import-export/dept-import.csv`
-- `tests/fixtures/system-import-export/post-import.csv`
-- `tests/fixtures/system-import-export/permission-import.csv`
-- `tests/fixtures/system-import-export/dict-type-import.csv`
-- `tests/fixtures/system-import-export/dict-item-import.csv`
+- `frontend/tests/fixtures/system-import-export/user-import.csv`
+- `frontend/tests/fixtures/system-import-export/dept-import.csv`
+- `frontend/tests/fixtures/system-import-export/post-import.csv`
+- `frontend/tests/fixtures/system-import-export/permission-import.csv`
+- `frontend/tests/fixtures/system-import-export/dict-type-import.csv`
+- `frontend/tests/fixtures/system-import-export/dict-item-import.csv`
 
 ## 6. 用户导入导出
 
@@ -121,7 +121,7 @@ curl.exe -L `
 ```powershell
 curl.exe -L `
   -H "Authorization: Bearer $token" `
-  -F "file=@tests/fixtures/system-import-export/user-import.csv" `
+  -F "file=@frontend/tests/fixtures/system-import-export/user-import.csv" `
   "$base/system/user/import"
 ```
 
@@ -150,7 +150,7 @@ curl.exe -L `
 
 ```powershell
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/dept/import-template" -o ".tmp/dept-import-template.csv"
-curl.exe -L -H "Authorization: Bearer $token" -F "file=@tests/fixtures/system-import-export/dept-import.csv" "$base/system/dept/import"
+curl.exe -L -H "Authorization: Bearer $token" -F "file=@frontend/tests/fixtures/system-import-export/dept-import.csv" "$base/system/dept/import"
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/dept/tree?deptName=%E7%A0%94%E5%8F%91"
 curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d "{\"deptName\":\"研发\"}" "$base/system/dept/export" -o ".tmp/dept-export.csv"
 ```
@@ -159,7 +159,7 @@ curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json
 
 ```powershell
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/post/import-template" -o ".tmp/post-import-template.csv"
-curl.exe -L -H "Authorization: Bearer $token" -F "file=@tests/fixtures/system-import-export/post-import.csv" "$base/system/post/import"
+curl.exe -L -H "Authorization: Bearer $token" -F "file=@frontend/tests/fixtures/system-import-export/post-import.csv" "$base/system/post/import"
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/post/list?postCode=developer&page=1&pageSize=10"
 curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d "{\"postCode\":\"developer\"}" "$base/system/post/export" -o ".tmp/post-export.csv"
 ```
@@ -172,7 +172,7 @@ curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json
 
 ```powershell
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/permission/import-template" -o ".tmp/permission-import-template.csv"
-curl.exe -L -H "Authorization: Bearer $token" -F "file=@tests/fixtures/system-import-export/permission-import.csv" "$base/system/permission/import"
+curl.exe -L -H "Authorization: Bearer $token" -F "file=@frontend/tests/fixtures/system-import-export/permission-import.csv" "$base/system/permission/import"
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/permission/list?roleKey=admin&page=1&pageSize=10"
 curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d "{\"roleKey\":\"admin\"}" "$base/system/permission/export" -o ".tmp/permission-export.csv"
 ```
@@ -183,7 +183,7 @@ curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json
 
 ```powershell
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/dict/type/import-template" -o ".tmp/dict-type-import-template.csv"
-curl.exe -L -H "Authorization: Bearer $token" -F "file=@tests/fixtures/system-import-export/dict-type-import.csv" "$base/system/dict/type/import"
+curl.exe -L -H "Authorization: Bearer $token" -F "file=@frontend/tests/fixtures/system-import-export/dict-type-import.csv" "$base/system/dict/type/import"
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/dict/type/list?dictCode=biz_status"
 curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d "{\"dictCode\":\"biz_status\"}" "$base/system/dict/type/export" -o ".tmp/dict-type-export.csv"
 ```
@@ -192,7 +192,7 @@ curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json
 
 ```powershell
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/dict/item/import-template" -o ".tmp/dict-item-import-template.csv"
-curl.exe -L -H "Authorization: Bearer $token" -F "file=@tests/fixtures/system-import-export/dict-item-import.csv" "$base/system/dict/item/import"
+curl.exe -L -H "Authorization: Bearer $token" -F "file=@frontend/tests/fixtures/system-import-export/dict-item-import.csv" "$base/system/dict/item/import"
 curl.exe -L -H "Authorization: Bearer $token" "$base/system/dict/item/list?dictCode=biz_status"
 curl.exe -L -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d "{\"dictCode\":\"biz_status\"}" "$base/system/dict/item/export" -o ".tmp/dict-item-export.csv"
 ```

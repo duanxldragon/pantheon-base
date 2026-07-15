@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/backend/internal/middleware"
-	settingmod "pantheon-platform/backend/modules/system/config/setting"
-	user "pantheon-platform/backend/modules/system/iam/user"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/testmysql"
+	"pantheon-platform/internal/middleware"
+	settingmod "pantheon-platform/modules/system/config/setting"
+	user "pantheon-platform/modules/system/iam/user"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/testmysql"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"

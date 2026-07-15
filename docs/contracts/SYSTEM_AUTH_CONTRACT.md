@@ -9,15 +9,8 @@ related_designs:
   - docs/designs/ERROR_CODE_AND_I18N.md
   - docs/designs/SECURITY_POLICY_ROADMAP.md
   - docs/designs/SSO_OIDC_DESIGN.md
-related_assessments:
-  - docs/assessments/SYSTEM_MODULE_AUDIT.md
-  - docs/assessments/ABSTRACTION_AND_DUPLICATION_AUDIT_2026_06_23.md
-related_remediations:
-  - docs/archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md
-  - docs/remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md
 related_acceptances:
   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
-  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-06-23
 ---
 
@@ -32,17 +25,8 @@ English version: [SYSTEM_AUTH_CONTRACT.en.md](./SYSTEM_AUTH_CONTRACT.en.md)
 - `SECURITY_POLICY_ROADMAP.md`
 - `SSO_OIDC_DESIGN.md`
 
-关联评估：
-- `SYSTEM_MODULE_AUDIT.md`
-- `ABSTRACTION_AND_DUPLICATION_AUDIT_2026_06_23.md`
-
-关联整改：
-- `PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md`
-- `MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md`
-
 关联验收：
 - `ACCEPTANCE_CHECKLIST.md`
-- `QA_SMOKE_REPORT_20260420.md`
 
 ---
 
@@ -276,20 +260,9 @@ Pantheon 早期最明显的结构性问题之一，是认证与后台用户管�
 - [SECURITY_CENTER_DESIGN.md](../designs/SECURITY_CENTER_DESIGN.md)
 - [ERROR_CODE_AND_I18N.md](../designs/ERROR_CODE_AND_I18N.md)
 
-### 10.2 Assessment
-
-- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
-- [ABSTRACTION_AND_DUPLICATION_AUDIT_2026_06_23.md](../assessments/ABSTRACTION_AND_DUPLICATION_AUDIT_2026_06_23.md)
-
-### 10.3 Remediation
-
-- [PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md](../archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
-- [MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
-- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 
 ## 变更日志
 | 日期 | 版本 | 变更内容 | 原因 |

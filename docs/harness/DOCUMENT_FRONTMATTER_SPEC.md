@@ -47,10 +47,6 @@ Contract documents should progressively move their human-readable related sectio
 ```yaml
 related_designs:
   - docs/designs/FOO.md
-related_assessments:
-  - docs/assessments/BAR.md
-related_remediations:
-  - docs/remediations/BAZ.md
 related_acceptances:
   - docs/acceptances/QUX.md
 ```

@@ -12,7 +12,7 @@ updated_at: 2026-04-17
 
 English version: [FRONTEND.en.md](./FRONTEND.en.md)
 
-> 本文偏”架构总览”。更细的页面骨架、导航、状态、表单、表格、响应式和权限态规范，见 `docs/designs/FRONTEND_UI_SPEC.md`；后台 UI 专项整改见 `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`。
+> 本文偏”架构总览”。更细的页面骨架、导航、状态、表单、表格、响应式和权限态规范，见 `docs/designs/FRONTEND_UI_SPEC.md`。
 
 数值性真相源约束：
 
@@ -192,7 +192,6 @@ export const OrderModule = {
 后续以前端实现为准时，必须同时参考：
 
 - `docs/designs/FRONTEND_UI_SPEC.md`：UI 详细规范
-- `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`：后台 UI 专项整改方案
 - `docs/designs/AUTH_MODULE_DESIGN.md`：认证与安全中心边界
 - `DESIGN.md`：顶层架构与能力域设计
 

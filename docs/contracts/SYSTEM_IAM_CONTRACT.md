@@ -9,15 +9,9 @@ related_designs:
   - docs/designs/FRONTEND_PAGE_TEMPLATES.md
   - docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md
   - docs/designs/NAVIGATION_IA_STRATEGY.md
-related_assessments:
-  - docs/assessments/SYSTEM_MODULE_AUDIT.md
-  - docs/assessments/DYNAMIC_MENU_MATURITY_20260422.md
-related_remediations:
-  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
 related_acceptances:
   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
   - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
-  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-05-12
 ---
 
@@ -32,17 +26,9 @@ English version: [SYSTEM_IAM_CONTRACT.en.md](./SYSTEM_IAM_CONTRACT.en.md)
 - `PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
 - `NAVIGATION_IA_STRATEGY.md`
 
-关联评估：
-- `SYSTEM_MODULE_AUDIT.md`
-- `DYNAMIC_MENU_MATURITY_20260422.md`
-
-关联整改：
-- `BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
-
 关联验收：
 - `ACCEPTANCE_CHECKLIST.md`
 - `PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md`
-- `QA_SMOKE_REPORT_20260420.md`
 
 ---
 
@@ -289,20 +275,10 @@ Pantheon 的 `iam` 不是简单的“用户管理页集合”，而是系统底�
 - [MODULE_CONTRACT.md](../designs/MODULE_CONTRACT.md)
 - [FRONTEND_PAGE_TEMPLATES.md](../designs/FRONTEND_PAGE_TEMPLATES.md)
 
-### 10.2 Assessment
-
-- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
-- [DYNAMIC_MENU_MATURITY_20260422.md](../assessments/DYNAMIC_MENU_MATURITY_20260422.md)
-
-### 10.3 Remediation
-
-- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](../remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 
 ## 变更日志
 | 日期 | 版本 | 变更内容 | 原因 |

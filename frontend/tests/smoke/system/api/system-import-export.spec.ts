@@ -103,7 +103,7 @@ const smokePermissionPath = '/api/v1/system/user/list';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const fixtureDir = path.resolve(__dirname, '../../../../../tests/fixtures/system-import-export');
+const fixtureDir = path.resolve(__dirname, '../../../fixtures/system-import-export');
 
 test.describe.serial('system import/export api smoke', () => {
   let apiContext: APIRequestContext;

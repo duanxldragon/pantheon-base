@@ -1,8 +1,8 @@
 package generator
 
 import (
-	"pantheon-platform/backend/internal/scaffold"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/internal/scaffold"
+	"pantheon-platform/pkg/common"
 	"strings"
 
 	"github.com/gin-gonic/gin"

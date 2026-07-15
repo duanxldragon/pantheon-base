@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 )
 
 func itoa(n int) string {

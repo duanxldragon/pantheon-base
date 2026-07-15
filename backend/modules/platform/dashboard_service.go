@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"pantheon-platform/backend/pkg/authsession"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/authsession"
+	"pantheon-platform/pkg/common"
 
 	"gorm.io/gorm"
 )

@@ -18,7 +18,6 @@ English version: [PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.en.md](./PLATFORM
 
 - 本模板产出的记录文件，应用于后续壳层 PR、阶段记录和阶段收口说明；
 - 提交说明中必须直接附本文档的实例化记录链接，不接受只贴截图或口头结论；
-- 首个基准记录见 `docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`。
 - PR 描述正文模板见 `docs/acceptances/PLATFORM_SHELL_PR_TEMPLATE.md`。
 
 适用范围：
