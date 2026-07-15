@@ -15,9 +15,9 @@ Task packet 是非 trivial 任务的工具无关输入格式。它让 Codex、Cl
 
 ## 0. 版本历史
 
-| 版本 | 日期 | 变更 |
-|---|---|---|
-| v1.0 | 2026-06-15 | 初始版本 |
+| 版本 | 日期       | 变更                                                                                                 |
+| ---- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| v1.0 | 2026-06-15 | 初始版本                                                                                             |
 | v1.1 | 2026-06-26 | 新增 priority/estimatedComplexity/technicalDebtFlag/rollBackPlan/dependencies 字段，增强边界定义量化 |
 
 ## 1. 存放位置
@@ -28,7 +28,7 @@ Task packet 是非 trivial 任务的工具无关输入格式。它让 Codex、Cl
 docs/harness/tasks/YYYY-MM-DD-<task-name>.task.md
 ```
 
-如果任务来自已有 superpowers plan，可以在 task packet 中引用该 plan，而不是重复全文。
+如果任务来自已有 plan（含 legacy superpowers plan），可以在 task packet 中引用该 plan，而不是重复全文。
 
 `pantheon-base` 还要求 task packet 配对 machine-readable task manifest：
 
@@ -104,6 +104,7 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 ## Structural Scope (v1.1+ Enhanced)
 
 ### Scope Quantification
+
 - Modules affected: N
 - Files: N (create N, modify N, delete N)
 - API endpoints: N
@@ -318,6 +319,6 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - `Evidence Directory`：必须指向 `.harness/evidence/<task-id>/`
 - `Review File`：如保留 review artifact，必须指向 evidence 目录下文件
 - `OpenSpec Change`：如任务来自 OpenSpec，必须显式记录 change 路径；否则写 `none`
-- `Superpowers Plan`：如任务来自 `docs/superpowers/plans/*`，必须显式记录；否则写 `none`。下游 manifest / evidence / review 统一写入 `planRefs`
+- `Superpowers Plan`：legacy 字段。如任务来自 `docs/superpowers/plans/*` 历史工件，必须显式记录；否则写 `none`。下游 manifest / evidence / review 统一写入 `planRefs`
 
-这组 linkage 字段用于把 `task packet / task manifest / OpenSpec change / superpowers plan / evidence / review` 串成可追踪链路。
+这组 linkage 字段用于把 `task packet / task manifest / OpenSpec change / plan reference / evidence / review` 串成可追踪链路。

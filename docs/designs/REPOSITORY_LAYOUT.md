@@ -25,7 +25,7 @@ scripts/                  # 根级自动化、GitHub 协作、harness 检查、r
 tests/                    # 根级 Node 脚本测试、文档测试、性能脚本
 .harness/                 # 方法执行证据、任务 manifest、运行时治理状态
 .agents/                  # repo-local agent 说明、skills、schemas
-.codex/                   # Codex/OMX 本仓库配置和任务入口
+.codex/                   # Codex 本仓库配置和任务入口
 .github/                  # GitHub workflow、模板、CODEOWNERS、Dependabot
 .githooks/                # 本地 git hooks
 config/                   # 方法链路配置，当前保留 config/method.config.json

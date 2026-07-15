@@ -25,7 +25,7 @@ scripts/                  # Root automation, GitHub collaboration, harness check
 tests/                    # Root Node script tests, docs tests, performance scripts
 .harness/                 # Method evidence, task manifests, runtime governance state
 .agents/                  # repo-local agent notes, skills, schemas
-.codex/                   # Codex/OMX repository config and task entries
+.codex/                   # Codex repository config and task entries
 .github/                  # GitHub workflows, templates, CODEOWNERS, Dependabot
 .githooks/                # Local git hooks
 config/                   # Method-chain config, currently config/method.config.json
