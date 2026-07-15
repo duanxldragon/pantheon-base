@@ -306,12 +306,20 @@ const SecurityCenter: React.FC = () => {
     {
       title: t('auth.session.refreshExpiresAt'),
       dataIndex: 'refreshExpiresAt',
-      render: (value: string) => formatDateTime(value),
+      render: (value: string) => (
+        <Typography.Text className="system-list__datetime-text">
+          {formatDateTime(value, { withSeconds: true })}
+        </Typography.Text>
+      ),
     },
     {
       title: t('system.profile.createdAt'),
       dataIndex: 'createdAt',
-      render: (value: string) => formatDateTime(value),
+      render: (value: string) => (
+        <Typography.Text className="system-list__datetime-text">
+          {formatDateTime(value, { withSeconds: true })}
+        </Typography.Text>
+      ),
     },
     {
       title: t('common.action'),
@@ -460,7 +468,7 @@ const SecurityCenter: React.FC = () => {
                     value: t(`auth.securityEvent.severity.${item.severity}`, {
                       defaultValue: item.severity,
                     }),
-                    description: formatDateTime(item.createdAt),
+                    description: formatDateTime(item.createdAt, { withSeconds: true }),
                   }))}
                 />
               ) : null}

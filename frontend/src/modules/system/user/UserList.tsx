@@ -569,11 +569,7 @@ const UserList: React.FC = () => {
                       }}
                       disabled={batchDeleteDisabled}
                     >
-                      <Button
-                        status="danger"
-                        icon={<IconDelete />}
-                        disabled={batchDeleteDisabled}
-                      >
+                      <Button status="danger" icon={<IconDelete />} disabled={batchDeleteDisabled}>
                         {t('common.deleteSelected')}
                       </Button>
                     </Popconfirm>

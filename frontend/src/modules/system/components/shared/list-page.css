@@ -1,7 +1,7 @@
-.system-list__table-card > .arco-card-body {
+.system-list__table-card.system-list__table-card > .arco-card-body {
   display: grid;
   gap: 12px;
-  padding: var(--shell-table-card-padding) !important;
+  padding: var(--shell-table-card-padding);
 }
 
 .system-list__table .arco-table-container {
@@ -22,7 +22,7 @@
 
 .system-list__actions {
   row-gap: 4px;
-  column-gap: 6px !important;
+  column-gap: 6px;
 }
 
 .system-list__actions .arco-btn-text {
@@ -205,16 +205,16 @@
   font-size: 20px;
 }
 
-.post-list-page__row-actions {
-  column-gap: 4px !important;
+.post-list-page__row-actions.post-list-page__row-actions {
+  column-gap: 4px;
 }
 
 .post-list-page__row-actions .arco-btn-text {
   padding-inline: 6px;
 }
 
-.dict-page__row-actions {
-  column-gap: 4px !important;
+.dict-page__row-actions.dict-page__row-actions {
+  column-gap: 4px;
 }
 
 .dict-page__row-actions .arco-btn-text {
@@ -417,39 +417,39 @@
  * body, then the trigger span, then the actual picker container. Target the
  * container node directly.
  */
-body .arco-picker-range-container {
+body .arco-picker-range-container.arco-picker-range-container {
   min-width: 540px;
   max-height: min(560px, 80vh);
   overflow: hidden auto;
-  background-color: var(--panel-bg-solid) !important;
+  background-color: var(--panel-bg-solid);
   position: relative;
   z-index: 1;
 }
 
-body .arco-picker-range-container .arco-picker-range-wrapper {
-  display: flex !important;
+body .arco-picker-range-container.arco-picker-range-container .arco-picker-range-wrapper {
+  display: flex;
   align-items: flex-start;
   flex-wrap: nowrap;
 }
 
 /* Ensure calendar grid rows always display as horizontal flex (fixes React 19 compat) */
-body .arco-picker-range-container .arco-picker-row {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
+body .arco-picker-range-container.arco-picker-range-container .arco-picker-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
 }
 
 /* Ensure week list header displays horizontally */
-body .arco-picker-range-container .arco-picker-week-list {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
+body .arco-picker-range-container.arco-picker-range-container .arco-picker-week-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
 }
 
 /* Ensure calendar grid cells stay equal width */
-body .arco-picker-range-container .arco-picker-cell {
-  flex: 1 !important;
-  min-width: 0 !important;
+body .arco-picker-range-container.arco-picker-range-container .arco-picker-cell {
+  flex: 1;
+  min-width: 0;
 }
 
 body
@@ -497,8 +497,8 @@ body
   flex-wrap: nowrap;
 }
 
-.table-batch-action-bar--governance .arco-space {
-  gap: 6px !important;
+.table-batch-action-bar--governance.table-batch-action-bar--governance .arco-space {
+  gap: 6px;
 }
 
 @media (max-width: 1024px) {
@@ -523,8 +523,8 @@ body
     min-width: 0;
   }
 
-  body .arco-picker-range-container .arco-picker-range-wrapper {
-    display: flex !important;
+  body .arco-picker-range-container.arco-picker-range-container .arco-picker-range-wrapper {
+    display: flex;
     align-items: flex-start;
     flex-wrap: wrap;
   }
@@ -611,9 +611,11 @@ body
   background: color-mix(in srgb, var(--brand-primary) 5%, var(--surface-lift));
 }
 
-:root[data-pantheon-density='compact'] .system-list__table-card > .arco-card-body {
+:root[data-pantheon-density='compact']
+  .system-list__table-card.system-list__table-card
+  > .arco-card-body {
   gap: 8px;
-  padding: var(--shell-table-card-padding) !important;
+  padding: var(--shell-table-card-padding);
 }
 
 :root[data-pantheon-density='compact'] .system-list__hero .arco-card-body {
@@ -731,7 +733,7 @@ body
 }
 
 .setting-page__form-stack {
-  gap: 8px !important;
+  gap: 8px;
 }
 
 .setting-page__field-grid {
@@ -778,8 +780,8 @@ body
   overflow-wrap: anywhere;
 }
 
-.module-manager-page__desc {
-  margin: 0 !important;
+.module-manager-page .module-manager-page__desc {
+  margin: 0;
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.45;
@@ -881,7 +883,7 @@ body
 }
 
 .permission-workbench__context-desc {
-  margin: 0 !important;
+  margin: 0;
   font-size: 12px;
   line-height: 1.45;
 }
@@ -895,12 +897,13 @@ body
   flex-wrap: wrap;
 }
 
-.permission-workbench__utility-actions,
-.permission-workbench__utility-actions .arco-space,
-.permission-workbench__utility-actions .arco-space-horizontal {
+.permission-workbench__utility-actions.permission-workbench__utility-actions,
+.permission-workbench__utility-actions.permission-workbench__utility-actions .arco-space,
+.permission-workbench__utility-actions.permission-workbench__utility-actions
+  .arco-space-horizontal {
   display: flex;
   align-items: center;
-  gap: 8px !important;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -917,7 +920,7 @@ body
 
 .permission-workbench__view-button {
   min-width: 92px;
-  border-radius: 999px !important;
+  border-radius: 999px;
   color: var(--text-secondary);
 }
 
@@ -956,8 +959,8 @@ body
   line-height: 1.15;
 }
 
-.permission-workbench__overview-value {
-  margin: 6px 0 0 !important;
+.permission-workbench__overview-card .permission-workbench__overview-value {
+  margin: 6px 0 0;
 }
 
 .permission-workbench__filter-shell,
@@ -993,7 +996,7 @@ body
 
 .permission-page__api-list-actions .list-header-actions__utility,
 .permission-page__data-scope-actions .list-header-actions__utility {
-  gap: 8px !important;
+  gap: 8px;
 }
 
 .permission-page__api-list-actions .list-header-actions__primary {
@@ -1884,17 +1887,25 @@ body .table-batch-action-bar__cleanup-date-popup .arco-picker-container {
   min-width: 0;
 }
 
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list,
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-row {
-  display: grid !important;
-  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+body
+  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
+  .arco-picker-week-list,
+body
+  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
+  .arco-picker-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   align-items: center;
   justify-items: center;
 }
 
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list-item,
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-cell {
-  min-width: 0 !important;
+body
+  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
+  .arco-picker-week-list-item,
+body
+  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
+  .arco-picker-cell {
+  min-width: 0;
 }
 
 body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list-item {
@@ -2039,7 +2050,7 @@ body .table-batch-action-bar__cleanup-date-popup .arco-picker-date-value {
     align-items: stretch;
   }
 
-  .menu-list-view__item {
-    margin-left: 0 !important;
+  .menu-list-view .menu-list-view__item {
+    margin-left: 0;
   }
 }

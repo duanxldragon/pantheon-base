@@ -1,11 +1,5 @@
 export type RequestErrorKind =
-  | 'business'
-  | 'unauthorized'
-  | 'forbidden'
-  | 'server'
-  | 'network'
-  | 'timeout'
-  | 'unknown';
+  'business' | 'unauthorized' | 'forbidden' | 'server' | 'network' | 'timeout' | 'unknown';
 
 interface TransportErrorLike {
   code?: string;

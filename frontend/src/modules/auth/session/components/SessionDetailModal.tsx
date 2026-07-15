@@ -81,13 +81,17 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({ visible, sessio
                 label: t('auth.session.lastActive'),
                 value: formatDateTime(
                   session.lastActivityAt || session.lastRefreshAt || session.createdAt,
+                  { withSeconds: true },
                 ),
               },
               {
                 label: t('auth.session.refreshExpiresAt'),
-                value: formatDateTime(session.refreshExpiresAt),
+                value: formatDateTime(session.refreshExpiresAt, { withSeconds: true }),
               },
-              { label: t('system.profile.createdAt'), value: formatDateTime(session.createdAt) },
+              {
+                label: t('system.profile.createdAt'),
+                value: formatDateTime(session.createdAt, { withSeconds: true }),
+              },
               {
                 label: t('auth.session.status'),
                 value: session.revokedAt

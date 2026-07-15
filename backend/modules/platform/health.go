@@ -2,13 +2,21 @@ package platform
 
 import (
 	"context"
+	"database/sql"
+	"database/sql/driver"
+	"errors"
+	"fmt"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"pantheon-platform/backend/pkg/common"
 	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/backend/pkg/logging"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +31,60 @@ type healthResp struct {
 	Timestamp    string                      `json:"timestamp"`
 	RequestID    string                      `json:"requestId,omitempty"`
 	Dependencies map[string]healthDependency `json:"dependencies"`
+}
+
+const healthFailureLogInterval = time.Minute
+
+var healthFailureLogState = struct {
+	sync.Mutex
+	lastLogged map[string]time.Time
+}{lastLogged: make(map[string]time.Time)}
+
+func sanitizeHealthError(err error, messageKey string) string {
+	if err == nil {
+		return ""
+	}
+	return messageKey
+}
+
+func classifyHealthDependencyError(err error) string {
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		return "timeout"
+	case errors.Is(err, sql.ErrConnDone):
+		return "connection_closed"
+	case errors.Is(err, driver.ErrBadConn):
+		return "connection_unusable"
+	}
+
+	var networkError net.Error
+	if errors.As(err, &networkError) {
+		if networkError.Timeout() {
+			return "timeout"
+		}
+		return "network"
+	}
+	return "unavailable"
+}
+
+func logHealthDependencyFailure(dependency, requestID string, err error) {
+	now := time.Now()
+	healthFailureLogState.Lock()
+	lastLogged := healthFailureLogState.lastLogged[dependency]
+	if now.Sub(lastLogged) < healthFailureLogInterval {
+		healthFailureLogState.Unlock()
+		return
+	}
+	healthFailureLogState.lastLogged[dependency] = now
+	healthFailureLogState.Unlock()
+
+	logging.Error(
+		"Health dependency check failed",
+		zap.String("dependency", dependency),
+		zap.String("requestId", requestID),
+		zap.String("errorType", fmt.Sprintf("%T", err)),
+		zap.String("reason", classifyHealthDependencyError(err)),
+	)
 }
 
 func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
@@ -43,10 +105,12 @@ func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 			resp.Dependencies["database"] = healthDependency{Status: "down", Message: "database.not_initialized"}
 		} else if sqlDB, err := db.DB(); err != nil {
 			resp.Status = "degraded"
-			resp.Dependencies["database"] = healthDependency{Status: "down", Message: err.Error()}
+			resp.Dependencies["database"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "database.unavailable")}
+			logHealthDependencyFailure("database", resp.RequestID, err)
 		} else if err := sqlDB.PingContext(c.Request.Context()); err != nil {
 			resp.Status = "degraded"
-			resp.Dependencies["database"] = healthDependency{Status: "down", Message: err.Error()}
+			resp.Dependencies["database"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "database.unavailable")}
+			logHealthDependencyFailure("database", resp.RequestID, err)
 		}
 
 		if database.RDB != nil {
@@ -54,7 +118,8 @@ func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 			defer cancel()
 			if err := database.RDB.Ping(ctx).Err(); err != nil {
 				resp.Status = "degraded"
-				resp.Dependencies["redis"] = healthDependency{Status: "down", Message: err.Error()}
+				resp.Dependencies["redis"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "redis.unavailable")}
+				logHealthDependencyFailure("redis", resp.RequestID, err)
 			} else {
 				resp.Dependencies["redis"] = healthDependency{Status: "ok"}
 			}

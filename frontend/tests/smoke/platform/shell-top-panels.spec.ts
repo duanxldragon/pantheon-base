@@ -29,7 +29,16 @@ async function expectNoViewportOverflow(page: import('@playwright/test').Page) {
     .toBeLessThanOrEqual(1);
 }
 
-test('shell top panels keep readable desktop widths', async ({ page }) => {
+function expectBoxInsideViewport(page: import('@playwright/test').Page, box: Box) {
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  expect(box.x).toBeGreaterThanOrEqual(-1);
+  expect(box.y).toBeGreaterThanOrEqual(-1);
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport!.width + 1);
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport!.height + 1);
+}
+
+test('shell top panels keep readable desktop widths', async ({ page }, testInfo) => {
   await signInAsAdmin(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/dashboard', { waitUntil: 'networkidle' });
@@ -41,6 +50,7 @@ test('shell top panels keep readable desktop widths', async ({ page }) => {
   const noticePanel = page.locator('.app-shell__notice-panel');
   await expect(noticePanel).toBeVisible();
   await expect(await readWidth(noticePanel)).toBeGreaterThanOrEqual(380);
+  await page.screenshot({ path: testInfo.outputPath('shell-top-panels-desktop-notice.png') });
 
   await page.mouse.click(24, 24);
   await expect(noticePanel).toHaveCount(0);
@@ -73,15 +83,18 @@ test('shell top panels and profile page stay contained on narrow viewports', asy
   await expect(noticePanel).toBeVisible();
   const noticeBox = await readBox(noticePanel);
   expect(noticeBox.y).toBeGreaterThanOrEqual(searchBox.y + searchBox.height - 1);
+  expectBoxInsideViewport(page, noticeBox);
   await expect(await readWidth(noticePanel)).toBeLessThanOrEqual(358);
   await page.screenshot({ path: testInfo.outputPath('shell-top-panels-narrow-notice.png') });
   await expectNoViewportOverflow(page);
 
-  await page.mouse.click(20, 20);
+  await noticeTrigger.click();
+  await expect(noticePanel).toHaveCount(0);
   const preferenceTrigger = page.getByRole('button', { name: /平台偏好|Platform Preferences/ });
   await preferenceTrigger.click();
   const preferencePanel = page.locator('.app-shell__preference-panel');
   await expect(preferencePanel).toBeVisible();
+  expectBoxInsideViewport(page, await readBox(preferencePanel));
   await expect(await readWidth(preferencePanel)).toBeLessThanOrEqual(358);
   await expectNoViewportOverflow(page);
 

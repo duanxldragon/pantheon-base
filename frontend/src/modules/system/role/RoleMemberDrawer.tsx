@@ -28,6 +28,7 @@ import {
   type RoleRow,
 } from './api';
 import { translateRoleName } from './display';
+import '../components/shared/list-page.css';
 
 interface RoleMemberDrawerProps {
   role: RoleRow | null;
@@ -284,7 +285,11 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
         title: t('system.user.createdAt'),
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
       },
       {
         title: t('common.action'),

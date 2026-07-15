@@ -89,10 +89,10 @@
   width: 100%;
 }
 
-.app-shell__menu {
+.app-shell .app-shell__menu {
   padding: 0 10px 16px;
   background: transparent;
-  border-inline-end: none !important;
+  border-inline-end: none;
 }
 
 .app-shell__menu .arco-menu-inner {
@@ -144,7 +144,7 @@
     transform 0.18s ease;
 }
 
-.app-shell__menu-entry-icon .arco-icon {
+.app-shell .app-shell__menu-entry-icon .arco-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,7 +152,7 @@
   height: 100%;
   font-size: 16px;
   line-height: 1;
-  margin-right: 0 !important;
+  margin-right: 0;
 }
 
 .app-shell__menu-entry--level-0 {
@@ -221,9 +221,9 @@
   flex: 1 1 auto;
 }
 
-.app-shell__menu > .arco-menu-inner > .arco-menu-item,
-.app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header {
-  padding: 0 12px 0 14px !important;
+.app-shell .app-shell__menu > .arco-menu-inner > .arco-menu-item,
+.app-shell .app-shell__menu > .arco-menu-inner > .arco-menu-sub > .arco-menu-inline-header {
+  padding: 0 12px 0 14px;
 }
 
 .app-shell__menu .arco-menu-inline-header::before,
@@ -284,10 +284,10 @@
   background: transparent;
 }
 
-.app-shell__menu .arco-menu-inline-content .arco-menu-item {
+.app-shell .app-shell__menu .arco-menu-inline-content .arco-menu-item {
   min-height: 38px;
   margin-bottom: 2px;
-  padding: 0 12px 0 14px !important;
+  padding: 0 12px 0 14px;
   background: transparent;
 }
 
@@ -313,8 +313,8 @@
   align-items: center;
 }
 
-.app-shell__menu .arco-menu-open > .arco-menu-inline-header {
-  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift)) !important;
+.app-shell .app-shell__menu .arco-menu-open > .arco-menu-inline-header {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--surface-lift));
   color: var(--text-primary);
 }
 
@@ -323,9 +323,14 @@
   font-weight: 600;
 }
 
-.app-shell__menu .arco-menu-open > .arco-menu-inline-header .arco-menu-icon,
-.app-shell__menu .arco-menu-open > .arco-menu-inline-header .arco-menu-icon-suffix .arco-icon {
-  color: var(--brand-primary) !important;
+.app-shell .app-shell__menu .arco-menu-open > .arco-menu-inline-header .arco-menu-icon,
+.app-shell
+  .app-shell__menu
+  .arco-menu-open
+  > .arco-menu-inline-header
+  .arco-menu-icon-suffix
+  .arco-icon {
+  color: var(--brand-primary);
 }
 
 .app-shell__menu .arco-menu-open > .arco-menu-inline-header .app-shell__menu-entry-icon--level-0 {
@@ -333,9 +338,9 @@
   color: var(--brand-primary);
 }
 
-.app-shell__menu .arco-menu-item:hover,
-.app-shell__menu .arco-menu-inline-header:hover {
-  background: color-mix(in srgb, var(--brand-primary) 3%, var(--surface-lift)) !important;
+.app-shell .app-shell__menu .arco-menu-item:hover,
+.app-shell .app-shell__menu .arco-menu-inline-header:hover {
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--surface-lift));
   color: var(--text-primary);
   box-shadow: none;
 }
@@ -354,15 +359,15 @@
   color: var(--brand-primary);
 }
 
-.app-shell__menu .arco-menu-selected,
-.app-shell__menu .arco-menu-inline-header.arco-menu-selected {
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift)) !important;
+.app-shell .app-shell__menu .arco-menu-selected,
+.app-shell .app-shell__menu .arco-menu-inline-header.arco-menu-selected {
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 8%, transparent);
 }
 
-.app-shell__menu .arco-menu-selected,
-.app-shell__menu .arco-menu-selected .arco-menu-icon {
-  color: var(--brand-primary) !important;
+.app-shell .app-shell__menu .arco-menu-selected,
+.app-shell .app-shell__menu .arco-menu-selected .arco-menu-icon {
+  color: var(--brand-primary);
 }
 
 .app-shell__menu .arco-menu-selected::before,
@@ -372,9 +377,9 @@
   background: var(--brand-primary);
 }
 
-.app-shell__menu .arco-menu-selected .arco-menu-icon,
-.app-shell__menu .arco-menu-inline-header.arco-menu-selected .arco-menu-icon {
-  color: var(--brand-primary) !important;
+.app-shell .app-shell__menu .arco-menu-selected .arco-menu-icon,
+.app-shell .app-shell__menu .arco-menu-inline-header.arco-menu-selected .arco-menu-icon {
+  color: var(--brand-primary);
 }
 
 .app-shell__menu .arco-menu-selected .app-shell__menu-entry-icon--level-0,
@@ -426,8 +431,8 @@
   font-size: 14px;
 }
 
-.app-shell__menu .arco-menu-icon {
-  margin-right: 0 !important;
+.app-shell .app-shell__menu .arco-menu-icon {
+  margin-right: 0;
 }
 
 .app-shell__menu .arco-menu-icon-suffix {
@@ -527,7 +532,7 @@
 .app-shell__collapse-btn,
 .app-shell__icon-btn,
 .app-shell__user-trigger {
-  border-radius: var(--radius-sm) !important;
+  border-radius: var(--radius-sm);
 }
 
 .app-shell__header-meta {
@@ -613,10 +618,10 @@
   font-family: inherit;
 }
 
-.app-shell__icon-btn {
+.app-shell .app-shell__icon-btn {
   min-width: 36px;
   height: 36px;
-  padding-inline: 8px !important;
+  padding-inline: 8px;
   border: 1px solid rgba(229, 230, 235, 0.82);
   background: var(--panel-bg-solid);
   color: var(--text-secondary);
@@ -667,13 +672,13 @@
   width: 100%;
 }
 
-.app-shell__top-menu {
+.app-shell .app-shell__top-menu {
   min-height: 52px;
   padding: 6px 8px;
   border: 1px solid color-mix(in srgb, var(--brand-primary) 6%, var(--panel-border));
   border-radius: var(--radius-xl);
-  background: var(--surface-lift) !important;
-  border-bottom: none !important;
+  background: var(--surface-lift);
+  border-bottom: none;
   box-shadow: none;
   white-space: nowrap;
 }
@@ -689,15 +694,15 @@
   margin-left: 0;
 }
 
-.app-shell__top-menu .arco-menu-item,
-.app-shell__top-menu .arco-menu-pop-header,
-.app-shell__top-menu .arco-menu-inline-header {
+.app-shell .app-shell__top-menu .arco-menu-item,
+.app-shell .app-shell__top-menu .arco-menu-pop-header,
+.app-shell .app-shell__top-menu .arco-menu-inline-header {
   position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 42px;
   height: 42px;
-  padding: 0 14px 0 16px !important;
+  padding: 0 14px 0 16px;
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   background: transparent;
@@ -755,12 +760,12 @@
   color: color-mix(in srgb, var(--brand-primary) 44%, var(--text-tertiary));
 }
 
-.app-shell__top-menu .arco-menu-item:hover,
-.app-shell__top-menu .arco-menu-pop-header:hover,
-.app-shell__top-menu .arco-menu-inline-header:hover {
+.app-shell .app-shell__top-menu .arco-menu-item:hover,
+.app-shell .app-shell__top-menu .arco-menu-pop-header:hover,
+.app-shell .app-shell__top-menu .arco-menu-inline-header:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 16%, var(--panel-border));
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--brand-primary) 3%, var(--surface-lift)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--surface-lift));
 }
 
 .app-shell__top-menu .arco-menu-item:hover::before,
@@ -788,13 +793,13 @@
   color: var(--brand-primary);
 }
 
-.app-shell__top-menu .arco-menu-selected,
-.app-shell__top-menu .arco-menu-pop-header.arco-menu-selected,
-.app-shell__top-menu .arco-menu-inline-header.arco-menu-selected {
+.app-shell .app-shell__top-menu .arco-menu-selected,
+.app-shell .app-shell__top-menu .arco-menu-pop-header.arco-menu-selected,
+.app-shell .app-shell__top-menu .arco-menu-inline-header.arco-menu-selected {
   border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--panel-border));
-  color: var(--brand-primary) !important;
+  color: var(--brand-primary);
   font-weight: 600;
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift)) !important;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 6%, transparent);
 }
 
@@ -833,8 +838,8 @@
   color: inherit;
 }
 
-.app-shell__top-menu .arco-menu-pop {
-  margin-left: 0 !important;
+.app-shell .app-shell__top-menu .arco-menu-pop {
+  margin-left: 0;
 }
 
 .app-shell__top-menu-popup {
@@ -1001,10 +1006,10 @@
   color: var(--text-tertiary);
 }
 
-.app-shell__top-menu-popup .arco-trigger-arrow,
-.app-shell__top-menu-popup .arco-trigger-arrow::before {
-  background: var(--panel-bg-solid) !important;
-  border-color: color-mix(in srgb, var(--panel-border) 86%, transparent) !important;
+.app-shell__top-menu-popup.app-shell__top-menu-popup .arco-trigger-arrow,
+.app-shell__top-menu-popup.app-shell__top-menu-popup .arco-trigger-arrow::before {
+  background: var(--panel-bg-solid);
+  border-color: color-mix(in srgb, var(--panel-border) 86%, transparent);
 }
 
 .app-shell__user-trigger {
@@ -1012,7 +1017,7 @@
   align-items: center;
   gap: 8px;
   height: 36px;
-  padding-inline: 8px !important;
+  padding-inline: 8px;
   border: 1px solid rgba(229, 230, 235, 0.82);
   background: var(--surface-lift);
   box-shadow: none;
@@ -1851,6 +1856,7 @@
 
   .app-shell__notice-panel {
     width: min(336px, calc(100vw - 48px));
+    margin-top: 2px;
   }
 
   .app-shell__preference-panel {

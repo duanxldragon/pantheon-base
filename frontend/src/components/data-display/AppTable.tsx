@@ -182,11 +182,11 @@ function AppTable<T>(props: AppTableProps<T>) {
   const { t } = useTranslation();
   const rows = Array.isArray(data) ? data : [];
   const [viewportWidth, setViewportWidth] = useState(() =>
-    globalThis.document === undefined ? 1920 : globalThis.innerWidth,
+    typeof globalThis.window === 'undefined' ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
   );
 
   useEffect(() => {
-    if (globalThis.document === undefined) {
+    if (typeof globalThis.window === 'undefined') {
       return undefined;
     }
 

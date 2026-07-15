@@ -70,14 +70,7 @@ function toTimeValue(value?: string) {
   const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
   if (match) {
     const [, hour, minute, second = '00'] = match;
-    const localTime = new Date(
-      1970,
-      0,
-      1,
-      Number(hour),
-      Number(minute),
-      Number(second),
-    );
+    const localTime = new Date(1970, 0, 1, Number(hour), Number(minute), Number(second));
     if (!Number.isNaN(localTime.getTime())) {
       return dayjs(localTime);
     }

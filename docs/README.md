@@ -89,6 +89,10 @@ Pantheon Harness 方法源文件（来自 workspace sibling `../../pantheon-harn
 7. [execution-guardrails.md](../../pantheon-harness/patterns/execution-guardrails.md) — 执行护栏
 8. [context-engineering-protocol.md](../../pantheon-harness/patterns/context-engineering-protocol.md) — 上下文工程协议
 
+Shared skills live in `../../pantheon-harness/skills/`; recommended shared skills:
+
+- `../../pantheon-harness/skills/grill-me/SKILL.md` — plan/design/PR grilling
+
 ### 2.3 Harness 落地层
 
 当前仓库的 Harness 合同与落地规则：

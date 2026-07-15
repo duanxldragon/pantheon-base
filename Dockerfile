@@ -19,7 +19,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # 阶段 2: 构建后端
-FROM golang:1.25-alpine AS backend-builder
+FROM golang:1.26.5-alpine AS backend-builder
 
 WORKDIR /app
 

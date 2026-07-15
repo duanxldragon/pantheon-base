@@ -14,13 +14,7 @@ export type TemplateLevel = 'basic' | 'enterprise';
 export type FieldType = 'string' | 'text' | 'int' | 'float' | 'bool' | 'date' | 'enum' | 'relation';
 
 export type PageActionKey =
-  | 'view'
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'export'
-  | 'import'
-  | 'detail';
+  'view' | 'create' | 'update' | 'delete' | 'export' | 'import' | 'detail';
 
 export type PageActionTemplate = 'standard' | 'masterData' | 'lookup';
 
@@ -1142,6 +1136,7 @@ export function buildMenuPreview(schema: Pick<ModuleSchema, 'menus'>): Generator
 
 export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCompletenessIssue[] {
   const issues: GeneratorCompletenessIssue[] = [];
+  const relationFieldPattern = /^[A-Za-z][A-Za-z0-9_]*$/;
   const segments = splitModuleSegments(schema.name);
   const zh = schema.i18n.translations.zh;
   const en = schema.i18n.translations.en;
@@ -1166,6 +1161,20 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
       messageKey: 'generator.validation.relationTableHasMenu',
       detail: schema.name,
     });
+  }
+
+  for (const [code, field] of [
+    ['relation_from_field_invalid', schema.metadata?.relationFromField],
+    ['relation_to_field_invalid', schema.metadata?.relationToField],
+  ] as const) {
+    if (field && !relationFieldPattern.test(field)) {
+      issues.push({
+        code,
+        level: 'error',
+        messageKey: 'generator.validation.relationIncomplete',
+        detail: field,
+      });
+    }
   }
 
   for (const dependency of schema.dependencies ?? []) {
@@ -1199,7 +1208,7 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
         detail: relation.name || schema.name,
       });
     }
-    if (relation.targetLabelField && !/^[A-Za-z][A-Za-z0-9_]*$/.test(relation.targetLabelField)) {
+    if (relation.targetLabelField && !relationFieldPattern.test(relation.targetLabelField)) {
       issues.push({
         code: 'relation_target_label_field_invalid',
         level: 'error',
@@ -1207,7 +1216,7 @@ export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCo
         detail: relation.targetLabelField,
       });
     }
-    if (relation.lookupValueField && !/^[A-Za-z][A-Za-z0-9_]*$/.test(relation.lookupValueField)) {
+    if (relation.lookupValueField && !relationFieldPattern.test(relation.lookupValueField)) {
       issues.push({
         code: 'relation_lookup_value_field_invalid',
         level: 'error',

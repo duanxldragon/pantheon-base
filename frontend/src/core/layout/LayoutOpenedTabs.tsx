@@ -48,7 +48,9 @@ const LayoutOpenedTabs: React.FC<LayoutOpenedTabsProps> = ({
         const active = item.path === currentPath;
         const itemIndex = tabs.findIndex((tab) => tab.path === item.path);
         const canCloseCurrent = item.closable && !item.pinned;
-        const canCloseOthers = tabs.some((tab) => tab.path !== item.path && tab.closable && !tab.pinned);
+        const canCloseOthers = tabs.some(
+          (tab) => tab.path !== item.path && tab.closable && !tab.pinned,
+        );
         const canCloseRight = tabs.slice(itemIndex + 1).some((tab) => tab.closable && !tab.pinned);
         const canCloseAll = tabs.some((tab) => tab.closable && !tab.pinned);
 

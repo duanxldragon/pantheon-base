@@ -1,0 +1,114 @@
+{
+  "taskId": "2026-07-14-pantheon-base-code-review-remediation",
+  "title": "Pantheon Base code-review remediation",
+  "goal": "Resolve confirmed platform, system, low-code, security, and frontend governance findings with runtime evidence.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "scope": {
+    "in": [
+      "confirmed P0/P1 review findings",
+      "low-code generator contracts",
+      "platform and system runtime verification"
+    ],
+    "out": ["pantheon-ops synchronization", "production deployment"]
+  },
+  "implementationNotes": [
+    "Keep shared fixes in pantheon-base.",
+    "Preserve authorization, audit, i18n, and generator boundaries."
+  ],
+  "taskDoc": ".codex/tasks/2026-07-14-pantheon-base-code-review-remediation.md",
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "security-runtime",
+    "portableFailureClass": "review-remediation",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      ".codex/tasks/2026-07-14-pantheon-base-code-review-remediation.md",
+      ".harness/tasks/2026-07-14-pantheon-base-code-review-remediation/manifest.json",
+      ".harness/evidence/2026-07-14-pantheon-base-code-review-remediation/commands.json",
+      ".harness/evidence/2026-07-14-pantheon-base-code-review-remediation/review.md"
+    ],
+    "modify": ["backend/**", "frontend/**", "docs/**", "go.mod", "Dockerfile"],
+    "doNotTouch": ["../pantheon-ops/**", "../pantheon-harness/**"]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "platform health",
+      "system IAM and i18n",
+      "low-code generator",
+      "shared frontend UI"
+    ],
+    "boundaryCrossings": [
+      "generated schema -> backend scaffold -> frontend generator",
+      "system APIs -> frontend system pages"
+    ],
+    "riskNodes": [
+      "authorization",
+      "health response",
+      "generated modules",
+      "shared overlays"
+    ],
+    "graphFocus": ["sensitive-flow", "architecture-fitness"]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["security", "architecture", "UX-QA"]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test -race -count=1 ./...",
+      "npm run build",
+      "npm run test:generator:smoke",
+      "npm run test:smoke:system"
+    ],
+    "runtimeEvidence": [
+      "desktop and mobile screenshots",
+      "platform and system smoke",
+      "local dependency health"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-07-14-pantheon-base-code-review-remediation/",
+    "reviewFile": ".harness/evidence/2026-07-14-pantheon-base-code-review-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-14-pantheon-base-code-review-remediation/closeout.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".codex/tasks/2026-07-14-pantheon-base-code-review-remediation.md"
+    ]
+  },
+  "evidenceRequired": [
+    "command results",
+    "runtime evidence",
+    "independent review",
+    "known gaps"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

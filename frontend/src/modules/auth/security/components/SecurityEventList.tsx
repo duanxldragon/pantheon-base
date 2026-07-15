@@ -112,7 +112,11 @@ const SecurityEventList: React.FC = () => {
       title: t('auth.securityEvent.createdAt'),
       dataIndex: 'createdAt',
       width: TABLE_COLUMN_WIDTH.datetime,
-      render: (value) => formatDateTime(value as string),
+      render: (value) => (
+        <Typography.Text className="system-list__datetime-text">
+          {formatDateTime(value as string, { withSeconds: true })}
+        </Typography.Text>
+      ),
     },
     {
       title: t('common.username'),
@@ -163,7 +167,8 @@ const SecurityEventList: React.FC = () => {
           <Space direction="vertical" size={2}>
             <Tag color="green">{t('auth.securityEvent.status.acknowledged')}</Tag>
             <Typography.Text type="secondary">
-              {record.acknowledgedByUser || '-'} · {formatDateTime(record.acknowledgedAt)}
+              {record.acknowledgedByUser || '-'} ·{' '}
+              {formatDateTime(record.acknowledgedAt, { withSeconds: true })}
             </Typography.Text>
           </Space>
         ) : (

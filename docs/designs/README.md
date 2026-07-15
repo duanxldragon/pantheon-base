@@ -88,7 +88,6 @@ English version: [README.en.md](./README.en.md)
 - [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
 - [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
 - [P2 规模化能力路线图](./P2_SCALE_ROADMAP.md)
-- [GStack Windows 使用说明](./GSTACK_WINDOWS_GUIDE.md)
 
 ## 说明
 

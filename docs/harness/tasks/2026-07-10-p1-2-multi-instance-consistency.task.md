@@ -133,7 +133,7 @@ system/auth
 - Task ID: `2026-07-10-p1-2-multi-instance-consistency`
 - Task Manifest: `.harness/tasks/2026-07-10-p1-2-multi-instance-consistency/manifest.json`
 - OpenSpec Change: none
-- Superpowers Plan: none
+- Plan References: none
 - Evidence Directory: `.harness/evidence/2026-07-10-p1-2-multi-instance-consistency/`
 - Review File: `.harness/evidence/2026-07-10-p1-2-multi-instance-consistency/review.md`
 

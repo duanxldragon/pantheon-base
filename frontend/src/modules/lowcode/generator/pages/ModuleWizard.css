@@ -172,8 +172,8 @@
     grid-template-columns: 1fr;
   }
 
-  .generator-wizard__toolbar {
-    align-items: stretch !important;
+  .generator-wizard .generator-wizard__toolbar {
+    align-items: stretch;
     flex-direction: column;
   }
 
@@ -182,8 +182,8 @@
     flex-wrap: wrap;
   }
 
-  .generator-wizard__verification-row {
-    align-items: stretch !important;
+  .generator-wizard .generator-wizard__verification-row {
+    align-items: stretch;
     flex-direction: column;
   }
 }

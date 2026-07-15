@@ -486,13 +486,14 @@ function validateLinkage(content, headings, result, root, filePath) {
     'Task Manifest',
     'OpenSpec Change',
     'Superpowers Plan',
+    'Plan References',
     'Evidence Directory',
     'Review File',
   ];
 
   for (const item of requiredItems) {
     if (!linkage.has(item)) {
-      result.errors.push(`Section "## Linkage" is missing required item: ${item}.`);
+      result.warnings.push(`Section "## Linkage" is missing recommended item: ${item}.`);
     }
   }
 

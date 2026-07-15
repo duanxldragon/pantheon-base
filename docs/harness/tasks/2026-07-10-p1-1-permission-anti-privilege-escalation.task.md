@@ -137,7 +137,7 @@ system/iam
 - Task ID: `2026-07-10-p1-1-permission-anti-privilege-escalation`
 - Task Manifest: `.harness/tasks/2026-07-10-p1-1-permission-anti-privilege-escalation/manifest.json`
 - OpenSpec Change: none
-- Superpowers Plan: none
+- Plan References: none
 - Evidence Directory: `.harness/evidence/2026-07-10-p1-1-permission-anti-privilege-escalation/`
 - Review File: `.harness/evidence/2026-07-10-p1-1-permission-anti-privilege-escalation/review.md`
 

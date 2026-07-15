@@ -1,9 +1,0 @@
-在 pantheon-base/frontend 拆分 src/core/layout/index.tsx（约 2103 行 God component）。这是壳层核心，务必保证 4a 建立的 smoke/typecheck 全绿。前置条件：先确认 npm run typecheck 与 smoke 当前通过。
-
-步骤：
-1. 按关注点抽子组件/hook（不改外部行为、不改路由、不改权限判断口径）：SideMenu 渲染、TabBar 管理、ThemeSwitcher、Breadcrumb、以及数据装载 hook（如 useLayoutMenu）。新文件放 src/core/layout/ 下。
-2. index.tsx 只保留装配。每抽一块就跑一次 typecheck + 相关 smoke，保持绿灯。
-3. 权限判断去重：App.tsx、core/router/RoutePermissionGuard.tsx、hooks/usePermission.ts 中重复的"admin 兜底 + perms.includes"逻辑抽成单一 checkPermission(userInfo, perm) 并三处复用，行为不变。
-4. 本批只交付 layout 拆分 + 权限去重，不拆其它大组件。
-
-完成后运行 npm run lint && npm run typecheck 及相关 smoke，贴结果。输出改动清单与行数变化。

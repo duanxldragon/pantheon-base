@@ -135,54 +135,51 @@ const SystemRowActions: React.FC<SystemRowActionsProps> = ({
     );
   };
 
-  const overflowMenu = overflowActions.length > 0 ? (
-    <Menu
-      className="system-row-actions__overflow-menu"
-      onClickMenuItem={(key) => {
-        const action = overflowActions.find((item) => String(item.key) === String(key));
-        if (!action) {
-          return;
-        }
+  const overflowMenu =
+    overflowActions.length > 0 ? (
+      <Menu
+        className="system-row-actions__overflow-menu"
+        onClickMenuItem={(key) => {
+          const action = overflowActions.find((item) => String(item.key) === String(key));
+          if (!action) {
+            return;
+          }
 
-        runAction(action);
-      }}
-    >
-      {overflowActions.map((action) => {
-        const isDanger = action.status === 'danger' || Boolean(action.confirm);
-        const label = action.text ?? action.ariaLabel ?? String(action.key);
+          runAction(action);
+        }}
+      >
+        {overflowActions.map((action) => {
+          const isDanger = action.status === 'danger' || Boolean(action.confirm);
+          const label = action.text ?? action.ariaLabel ?? String(action.key);
 
-        return (
-          <Menu.Item
-            key={String(action.key)}
-            disabled={action.disabled || action.loading}
-            className={[
-              'system-row-actions__overflow-item',
-              isDanger ? 'system-row-actions__overflow-item--danger' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-          >
-            <span className="system-row-actions__overflow-item-copy">
-              {action.icon ? (
-                <span className="system-row-actions__overflow-item-icon">{action.icon}</span>
-              ) : null}
-              <span className="system-row-actions__overflow-item-label">{label}</span>
-            </span>
-          </Menu.Item>
-        );
-      })}
-    </Menu>
-  ) : null;
+          return (
+            <Menu.Item
+              key={String(action.key)}
+              disabled={action.disabled || action.loading}
+              className={[
+                'system-row-actions__overflow-item',
+                isDanger ? 'system-row-actions__overflow-item--danger' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              <span className="system-row-actions__overflow-item-copy">
+                {action.icon ? (
+                  <span className="system-row-actions__overflow-item-icon">{action.icon}</span>
+                ) : null}
+                <span className="system-row-actions__overflow-item-label">{label}</span>
+              </span>
+            </Menu.Item>
+          );
+        })}
+      </Menu>
+    ) : null;
 
   return (
     <Space size={4} className={['system-list__actions', className].filter(Boolean).join(' ')}>
       {inlineActions.map((action) => renderButtonAction(action))}
       {overflowMenu ? (
-        <Dropdown
-          trigger="click"
-          position="br"
-          droplist={overflowMenu}
-        >
+        <Dropdown trigger="click" position="br" droplist={overflowMenu}>
           <Button
             type="text"
             size="small"

@@ -8,7 +8,14 @@ import { expectOnlyAllowedRuntimeErrors } from '../helpers/runtime-errors';
 import { expectPagePathname } from '../helpers/url-pattern';
 const artifactDir = join(process.cwd(), 'test-results', 'backoffice-ui');
 
-const pageErrorTexts = ['加载失败', '网络异常', '请求超时', 'Load failed', 'Network error', 'Request timed out'];
+const pageErrorTexts = [
+  '加载失败',
+  '网络异常',
+  '请求超时',
+  'Load failed',
+  'Network error',
+  'Request timed out',
+];
 
 interface ShellPreferenceOptions {
   theme?: 'indigo' | 'emerald' | 'violet' | 'slate';
@@ -49,11 +56,7 @@ async function installExplicitZhCNPreference(page: Page) {
 }
 
 async function installShellPreferences(page: Page, options: ShellPreferenceOptions = {}) {
-  const {
-    language = 'zh-CN',
-    layoutMode = 'vertical',
-    densityMode = 'comfortable',
-  } = options;
+  const { language = 'zh-CN', layoutMode = 'vertical', densityMode = 'comfortable' } = options;
   await page.addInitScript(
     ({ nextLanguage, nextLayoutMode, nextDensityMode }) => {
       localStorage.setItem('pantheon_lang', nextLanguage);
@@ -107,7 +110,9 @@ async function getDeptTreeItems(page: Page, accessToken: string) {
 function flattenDeptTree(nodes: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
   return nodes.flatMap((node) => [
     node,
-    ...flattenDeptTree(Array.isArray(node.children) ? (node.children as Array<Record<string, unknown>>) : []),
+    ...flattenDeptTree(
+      Array.isArray(node.children) ? (node.children as Array<Record<string, unknown>>) : [],
+    ),
   ]);
 }
 
@@ -137,9 +142,11 @@ async function createDeptSeed(page: Page, accessToken: string) {
 }
 
 async function deleteDeptSeed(page: Page, accessToken: string, deptId: number) {
-  await page.request.delete(`${apiBaseUrl}/system/dept/${deptId}`, {
-    headers: await requestHeaders(page, accessToken),
-  }).catch(() => undefined);
+  await page.request
+    .delete(`${apiBaseUrl}/system/dept/${deptId}`, {
+      headers: await requestHeaders(page, accessToken),
+    })
+    .catch(() => undefined);
 }
 
 async function createPostSeed(page: Page, accessToken: string) {
@@ -166,9 +173,11 @@ async function createPostSeed(page: Page, accessToken: string) {
 }
 
 async function deletePostSeed(page: Page, accessToken: string, postId: number) {
-  await page.request.delete(`${apiBaseUrl}/system/post/${postId}`, {
-    headers: await requestHeaders(page, accessToken),
-  }).catch(() => undefined);
+  await page.request
+    .delete(`${apiBaseUrl}/system/post/${postId}`, {
+      headers: await requestHeaders(page, accessToken),
+    })
+    .catch(() => undefined);
 }
 
 const authenticatedPages = [
@@ -184,8 +193,16 @@ const authenticatedPages = [
   { path: '/system/i18n', title: '国际化管理', screenshot: 'system-i18n-desktop.png' },
   { path: '/system/login-log', title: '登录日志', screenshot: 'system-login-log-desktop.png' },
   { path: '/system/session', title: '会话管理', screenshot: 'system-session-desktop.png' },
-  { path: '/system/security-event', title: '安全事件', screenshot: 'system-security-event-desktop.png' },
-  { path: '/system/operation-log', title: '操作日志', screenshot: 'system-operation-log-desktop.png' },
+  {
+    path: '/system/security-event',
+    title: '安全事件',
+    screenshot: 'system-security-event-desktop.png',
+  },
+  {
+    path: '/system/operation-log',
+    title: '操作日志',
+    screenshot: 'system-operation-log-desktop.png',
+  },
   {
     path: '/system/modules',
     title: '模块注册表',
@@ -412,7 +429,9 @@ test.beforeAll(async () => {
 });
 
 test.describe('backoffice UI visual acceptance', () => {
-  test('login page keeps a professional authentication console on desktop and mobile', async ({ page }) => {
+  test('login page keeps a professional authentication console on desktop and mobile', async ({
+    page,
+  }) => {
     const runtimeErrors = collectRuntimeErrors(page);
 
     await installExplicitZhCNPreference(page);
@@ -427,8 +446,12 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(page.getByText('记住我', { exact: false })).toHaveCount(0);
     await expect(page.getByText('忘记密码', { exact: false })).toHaveCount(0);
     await expect(page.getByText('AI', { exact: true })).toHaveCount(0);
-    const loginUsernameChrome = await readFieldChrome(page.getByPlaceholder(/请输入用户名|username/i));
-    const loginPasswordChrome = await readFieldChrome(page.getByPlaceholder(/请输入密码|password/i));
+    const loginUsernameChrome = await readFieldChrome(
+      page.getByPlaceholder(/请输入用户名|username/i),
+    );
+    const loginPasswordChrome = await readFieldChrome(
+      page.getByPlaceholder(/请输入密码|password/i),
+    );
     expect(loginUsernameChrome.borderWidth).toBe('1px');
     expect(loginUsernameChrome.borderStyle).toBe('solid');
     expect(loginUsernameChrome.backgroundColor).toBe('rgb(255, 255, 255)');
@@ -444,7 +467,33 @@ test.describe('backoffice UI visual acceptance', () => {
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
-  test('login and user-management forms keep one shared input border contract', async ({ page }) => {
+  test('reduced-motion preference suppresses login transitions and animations', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await installExplicitZhCNPreference(page);
+    await page.goto('/login', { waitUntil: 'networkidle' });
+
+    const motion = await page.getByRole('button', { name: '登录' }).evaluate((node) => {
+      const style = globalThis.getComputedStyle(node);
+      return {
+        animationDuration: style.animationDuration,
+        animationIterationCount: style.animationIterationCount,
+        transitionDuration: style.transitionDuration,
+      };
+    });
+
+    const durationsAreReduced = (value: string) =>
+      value.split(',').every((duration) => Number.parseFloat(duration) <= 0.00001);
+
+    expect(durationsAreReduced(motion.animationDuration)).toBe(true);
+    expect(motion.animationIterationCount).toBe('1');
+    expect(durationsAreReduced(motion.transitionDuration)).toBe(true);
+  });
+
+  test('login and user-management forms keep one shared input border contract', async ({
+    page,
+  }) => {
     const runtimeErrors = collectRuntimeErrors(page);
 
     await installExplicitZhCNPreference(page);
@@ -452,7 +501,9 @@ test.describe('backoffice UI visual acceptance', () => {
     await page.goto('/login', { waitUntil: 'networkidle' });
 
     const baselineChrome = await readFieldChrome(page.getByPlaceholder(/请输入用户名|username/i));
-    const loginPasswordChrome = await readFieldChrome(page.getByPlaceholder(/请输入密码|password/i));
+    const loginPasswordChrome = await readFieldChrome(
+      page.getByPlaceholder(/请输入密码|password/i),
+    );
     expect(baselineChrome.borderWidth).toBe('1px');
     expect(baselineChrome.borderStyle).toBe('solid');
     expect(baselineChrome.backgroundColor).toBe('rgb(255, 255, 255)');
@@ -462,11 +513,17 @@ test.describe('backoffice UI visual acceptance', () => {
     await page.goto('/system/user', { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: '新增', exact: true }).click();
 
-    const createDialog = page.getByRole('dialog').filter({ has: page.getByText('新增用户', { exact: true }) });
+    const createDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增用户', { exact: true }) });
     await expect(createDialog).toBeVisible();
 
     const createUsernameChrome = await readFieldChrome(
-      createDialog.locator('.arco-form-item').filter({ hasText: '用户名' }).locator('input').first(),
+      createDialog
+        .locator('.arco-form-item')
+        .filter({ hasText: '用户名' })
+        .locator('input')
+        .first(),
     );
     const createPasswordChrome = await readFieldChrome(
       createDialog.locator('.arco-form-item').filter({ hasText: '密码' }).locator('input').first(),
@@ -476,15 +533,25 @@ test.describe('backoffice UI visual acceptance', () => {
     await createDialog.getByRole('button', { name: '取消', exact: true }).click();
     await expect(createDialog).toBeHidden();
 
-    await page.locator('.system-user-list__table-card').getByRole('button', { name: '重置密码' }).first().click();
-    const resetDialog = page.getByRole('dialog').filter({ has: page.getByText('重置用户密码', { exact: true }) });
+    await page
+      .locator('.system-user-list__table-card')
+      .getByRole('button', { name: '重置密码' })
+      .first()
+      .click();
+    const resetDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('重置用户密码', { exact: true }) });
     await expect(resetDialog).toBeVisible();
 
     const resetPasswordChrome = await readFieldChrome(
       resetDialog.locator('.arco-form-item').filter({ hasText: '新密码' }).locator('input').first(),
     );
     const resetConfirmPasswordChrome = await readFieldChrome(
-      resetDialog.locator('.arco-form-item').filter({ hasText: '确认新密码' }).locator('input').first(),
+      resetDialog
+        .locator('.arco-form-item')
+        .filter({ hasText: '确认新密码' })
+        .locator('input')
+        .first(),
     );
     expectMatchingFieldChrome(resetPasswordChrome, baselineChrome);
     expectMatchingFieldChrome(resetConfirmPasswordChrome, baselineChrome);
@@ -524,10 +591,18 @@ test.describe('backoffice UI visual acceptance', () => {
         userDialog.locator('.arco-form-item').filter({ hasText: '密码' }).locator('input').first(),
       );
       const userDept = await readSurfaceChrome(
-        userDialog.locator('.arco-form-item').filter({ hasText: '部门' }).locator('.arco-select-view').first(),
+        userDialog
+          .locator('.arco-form-item')
+          .filter({ hasText: '部门' })
+          .locator('.arco-select-view')
+          .first(),
       );
       const userStatus = await readSurfaceChrome(
-        userDialog.locator('.arco-form-item').filter({ hasText: '状态' }).locator('.arco-select-view').first(),
+        userDialog
+          .locator('.arco-form-item')
+          .filter({ hasText: '状态' })
+          .locator('.arco-select-view')
+          .first(),
       );
       expect(userBaseline.backgroundColor).toBe('rgb(255, 255, 255)');
       expectMatchingFieldChrome(userPassword, userBaseline);
@@ -547,7 +622,9 @@ test.describe('backoffice UI visual acceptance', () => {
         .getByRole('dialog')
         .filter({ has: page.getByText('新增菜单', { exact: true }) });
       await expect(menuDialog).toBeVisible();
-      const parentMenu = await readSurfaceChrome(menuDialog.locator('.arco-tree-select-view').first());
+      const parentMenu = await readSurfaceChrome(
+        menuDialog.locator('.arco-tree-select-view').first(),
+      );
       const parentMenuLayout = await readTreeSelectLayoutContract(
         menuDialog.locator('.arco-tree-select').first(),
       );
@@ -577,7 +654,9 @@ test.describe('backoffice UI visual acceptance', () => {
       expect(roleStatusFocused.boxShadow).not.toContain('190, 218, 255');
 
       const authorizationTitleMetrics = await roleDialog.evaluate((root) => {
-        return Array.from(root.querySelectorAll('.dialog-grid-card .arco-card-header-title .arco-typography'))
+        return Array.from(
+          root.querySelectorAll('.dialog-grid-card .arco-card-header-title .arco-typography'),
+        )
           .slice(0, 3)
           .map((node) => {
             const style = globalThis.getComputedStyle(node);
@@ -624,14 +703,18 @@ test.describe('backoffice UI visual acceptance', () => {
         .filter({ has: page.getByText('新增用户', { exact: true }) });
       await expect(createDialog).toBeVisible();
       const baselineChrome = await readFieldChrome(
-        createDialog.locator('.arco-form-item').filter({ hasText: '用户名' }).locator('input').first(),
+        createDialog
+          .locator('.arco-form-item')
+          .filter({ hasText: '用户名' })
+          .locator('input')
+          .first(),
       );
       await createDialog.getByRole('button', { name: '取消', exact: true }).click();
       await expect(createDialog).toBeHidden();
 
       for (const path of sharedControlPages) {
         if (path === '/system/post') {
-      seededPost = await createPostSeed(page, accessToken);
+          seededPost = await createPostSeed(page, accessToken);
         }
 
         await openSystemListPage(page, path);
@@ -780,13 +863,19 @@ test.describe('backoffice UI visual acceptance', () => {
       expect(horizontalShellOrder.menuBottom).not.toBeNull();
       expect(horizontalShellOrder.menuTop!).toBeLessThan(horizontalShellOrder.tabsTop!);
       expect(horizontalShellOrder.menuBottom!).toBeLessThanOrEqual(horizontalShellOrder.tabsTop!);
-      await page.screenshot({ path: join(artifactDir, 'dashboard-horizontal-compact.png'), fullPage: true });
+      await page.screenshot({
+        path: join(artifactDir, 'dashboard-horizontal-compact.png'),
+        fullPage: true,
+      });
 
       await page.goto('/system/user', { waitUntil: 'networkidle' });
       await expect(page.locator('html')).toHaveAttribute('data-pantheon-density', 'compact');
       await expect(page.locator('.app-shell--horizontal')).toBeVisible();
       await expect(page.locator('.app-table')).toBeVisible();
-      await page.screenshot({ path: join(artifactDir, 'system-user-horizontal-compact.png'), fullPage: true });
+      await page.screenshot({
+        path: join(artifactDir, 'system-user-horizontal-compact.png'),
+        fullPage: true,
+      });
     } finally {
       await updateCurrentUserPreferences(page, accessToken, originalPreferences);
     }
@@ -794,7 +883,9 @@ test.describe('backoffice UI visual acceptance', () => {
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
-  test('system user page keeps filter and table patterns readable on phone and tablet', async ({ page }) => {
+  test('system user page keeps filter and table patterns readable on phone and tablet', async ({
+    page,
+  }) => {
     const runtimeErrors = collectRuntimeErrors(page);
     await signInAsAdmin(page);
 
@@ -810,13 +901,19 @@ test.describe('backoffice UI visual acceptance', () => {
     await page.goto('/system/user', { waitUntil: 'networkidle' });
     await expect(page.locator('.filter-panel')).toBeVisible();
     await expect(page.locator('.app-table')).toBeVisible();
-    await page.screenshot({ path: join(artifactDir, 'system-user-tablet-portrait.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'system-user-tablet-portrait.png'),
+      fullPage: true,
+    });
 
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto('/system/user', { waitUntil: 'networkidle' });
     await expect(page.locator('.filter-panel')).toBeVisible();
     await expect(page.locator('.app-table')).toBeVisible();
-    await page.screenshot({ path: join(artifactDir, 'system-user-tablet-landscape.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'system-user-tablet-landscape.png'),
+      fullPage: true,
+    });
 
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
@@ -852,12 +949,17 @@ test.describe('backoffice UI visual acceptance', () => {
       };
     });
 
-    expect(overviewContract.bodyScrollWidth).toBeLessThanOrEqual(overviewContract.viewportWidth + 1);
+    expect(overviewContract.bodyScrollWidth).toBeLessThanOrEqual(
+      overviewContract.viewportWidth + 1,
+    );
     expect(overviewContract.navOverflowX).toBe('auto');
     expect(overviewContract.navAutoFlow).toBe('column');
     expect(overviewContract.firstWidth).toBeGreaterThanOrEqual(160);
     expect(overviewContract.workspaceCount).toBe(1);
-    await page.screenshot({ path: join(artifactDir, 'system-setting-overview-phone.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'system-setting-overview-phone.png'),
+      fullPage: true,
+    });
 
     await page.goto('/system/setting/basic', { waitUntil: 'networkidle' });
     await expect(page.locator('.setting-group-page')).toBeVisible();
@@ -891,7 +993,10 @@ test.describe('backoffice UI visual acceptance', () => {
     expect(groupContract.navAutoFlow).toBe('column');
     expect(groupContract.configRight).toBeLessThanOrEqual(groupContract.viewportWidth + 1);
     expect(groupContract.saveRight).toBeLessThanOrEqual(groupContract.viewportWidth + 1);
-    await page.screenshot({ path: join(artifactDir, 'system-setting-group-phone.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'system-setting-group-phone.png'),
+      fullPage: true,
+    });
 
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
@@ -923,15 +1028,22 @@ test.describe('backoffice UI visual acceptance', () => {
     expect(mobileStepLayout).toHaveLength(4);
     for (let index = 1; index < mobileStepLayout.length; index += 1) {
       expect(mobileStepLayout[index].top).toBeGreaterThan(mobileStepLayout[index - 1].top);
-      expect(Math.abs(mobileStepLayout[index].left - mobileStepLayout[0].left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(mobileStepLayout[index].left - mobileStepLayout[0].left)).toBeLessThanOrEqual(
+        1,
+      );
     }
     await expect
       .poll(async () =>
-        page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+        page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ),
       )
       .toBeLessThanOrEqual(1);
 
-    await page.screenshot({ path: join(artifactDir, 'system-generator-phone.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'system-generator-phone.png'),
+      fullPage: true,
+    });
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 
@@ -943,16 +1055,23 @@ test.describe('backoffice UI visual acceptance', () => {
     await page.goto('/system/setting/basic', { waitUntil: 'networkidle' });
     await page.locator('.submit-bar').getByRole('button', { name: '保存' }).click();
 
-    const verifyDialog = page.getByRole('dialog').filter({ has: page.getByText('敏感操作验证', { exact: true }) });
+    const verifyDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('敏感操作验证', { exact: true }) });
     await expect(verifyDialog).toBeVisible();
-    await expect(verifyDialog.getByText('为了您的账号安全，请重新输入登录密码以继续操作。')).toBeVisible();
+    await expect(
+      verifyDialog.getByText('为了您的账号安全，请重新输入登录密码以继续操作。'),
+    ).toBeVisible();
 
     const passwordInput = verifyDialog.locator('input').first();
     await expect(passwordInput).toHaveAttribute('placeholder', '请输入密码');
     await verifyDialog.getByRole('button', { name: '确定' }).click();
     await expect(verifyDialog.getByText('请输入密码')).toBeVisible();
 
-    await page.screenshot({ path: join(artifactDir, 'secondary-verify-dialog-validation.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'secondary-verify-dialog-validation.png'),
+      fullPage: true,
+    });
     expectOnlyAllowedRuntimeErrors(runtimeErrors, [/403 \(Forbidden\)/]);
   });
 
@@ -964,7 +1083,9 @@ test.describe('backoffice UI visual acceptance', () => {
     await page.goto('/system/i18n', { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: '新增' }).click();
 
-    const createDialog = page.getByRole('dialog').filter({ has: page.getByText('新增翻译', { exact: true }) });
+    const createDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('新增翻译', { exact: true }) });
     await expect(createDialog).toBeVisible();
     await createDialog.getByRole('button', { name: '确定' }).click();
 
@@ -972,7 +1093,10 @@ test.describe('backoffice UI visual acceptance', () => {
     await expect(createDialog.getByText('请输入翻译键')).toBeVisible();
     await expect(createDialog.getByText('请输入内容')).toBeVisible();
 
-    await page.screenshot({ path: join(artifactDir, 'system-i18n-create-validation.png'), fullPage: true });
+    await page.screenshot({
+      path: join(artifactDir, 'system-i18n-create-validation.png'),
+      fullPage: true,
+    });
     expectOnlyAllowedRuntimeErrors(runtimeErrors);
   });
 });

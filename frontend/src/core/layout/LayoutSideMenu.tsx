@@ -62,7 +62,9 @@ const LayoutSideMenu: React.FC<LayoutSideMenuProps> = ({
       breakpoint="xl"
       onCollapse={onCollapse}
     >
-      <div className={collapsed ? 'app-shell__brand app-shell__brand--collapsed' : 'app-shell__brand'}>
+      <div
+        className={collapsed ? 'app-shell__brand app-shell__brand--collapsed' : 'app-shell__brand'}
+      >
         <div className="app-shell__brand-mark">
           {siteLogo ? <img src={siteLogo} alt={appName} /> : brandInitial}
         </div>

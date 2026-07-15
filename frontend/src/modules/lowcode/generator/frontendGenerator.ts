@@ -428,9 +428,13 @@ import '${this.relativeToSystemListPageCss()}';
 
 ${governanceConstants}
 
-${searchEnabled ? `const FormItem = Form.Item;
+${
+  searchEnabled
+    ? `const FormItem = Form.Item;
 const { Row, Col } = Grid;
-` : ''}
+`
+    : ''
+}
 
 const emptyQuery: ${modelName}ListQuery = {
 ${this.generateEmptyQueryFields()}
@@ -468,7 +472,9 @@ const ${modelName}List: React.FC = () => {
     void loadData();
   }, [loadData]);
 
-  ${searchEnabled ? `const search = () => {
+  ${
+    searchEnabled
+      ? `const search = () => {
     const values = queryForm.getFieldsValue();
     ${batchActionsEnabled ? 'setSelectedRowKeys([]);' : ''}
     const nextQuery = {
@@ -485,19 +491,31 @@ const ${modelName}List: React.FC = () => {
     ${batchActionsEnabled ? 'setSelectedRowKeys([]);' : ''}
     setQuery(emptyQuery);
     void loadData(emptyQuery);
-  };` : ''}
+  };`
+      : ''
+  }
 
-  ${exportActionEnabled ? `const handleExport = async () => {
+  ${
+    exportActionEnabled
+      ? `const handleExport = async () => {
     await export${modelName}s(query);
-  };` : ''}
+  };`
+      : ''
+  }
 
-  ${importActionEnabled ? `const handleImport = async (file: File) => {
+  ${
+    importActionEnabled
+      ? `const handleImport = async (file: File) => {
     await import${modelName}s(file);
     message.success(t('common.importSuccess'));
     await loadData(query);
-  };` : ''}
+  };`
+      : ''
+  }
 
-  ${batchActionsEnabled ? `const handleBatchDelete = async () => {
+  ${
+    batchActionsEnabled
+      ? `const handleBatchDelete = async () => {
     if (selectedRowKeys.length === 0) {
       return;
     }
@@ -510,7 +528,9 @@ const ${modelName}List: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  };` : ''}
+  };`
+      : ''
+  }
 
   if (loading && data.length === 0) {
     return <PageLoading />;
@@ -1569,6 +1589,16 @@ ${this.generateRowActionItems()}
               label: t('generator.wizard.primaryTable'),
               value: governancePrimaryTable || '-',
             },
+            {
+              key: 'relationFromField',
+              label: t('generator.wizard.relationFromField'),
+              value: governanceRelationFromField || '-',
+            },
+            {
+              key: 'relationToField',
+              label: t('generator.wizard.relationToField'),
+              value: governanceRelationToField || '-',
+            },
           ]}
         />`;
   }
@@ -1674,9 +1704,13 @@ ${primaryActions.join('\n')}
             clearText={t('common.clearSelection')}
             clearSuccessText={t('common.clearSelectionSuccess')}
             onClear={() => setSelectedRowKeys([])}
-            ${headerActionsEnabled ? `prefixActions={
+            ${
+              headerActionsEnabled
+                ? `prefixActions={
 ${listHeaderActions}
-            }` : ''}
+            }`
+                : ''
+            }
             ${
               batchActionsEnabled
                 ? `actions={
@@ -1705,9 +1739,13 @@ ${listHeaderActions}
   private generateListGovernanceConstants(): string {
     const tableRole = this.schema.metadata?.tableRole || 'main';
     const primaryTable = this.schema.metadata?.primaryTable || '';
+    const relationFromField = this.schema.metadata?.relationFromField || '';
+    const relationToField = this.schema.metadata?.relationToField || '';
 
-    return `const governanceTableRole = '${tableRole}';
-const governancePrimaryTable = '${primaryTable}';
+    return `const governanceTableRole = ${JSON.stringify(tableRole)};
+const governancePrimaryTable = ${JSON.stringify(primaryTable)};
+const governanceRelationFromField = ${JSON.stringify(relationFromField)};
+const governanceRelationToField = ${JSON.stringify(relationToField)};
 `;
   }
 
@@ -1752,10 +1790,10 @@ const governanceRelations = ${relations} as Array<{
   junctionTable?: string;
 }>;
 
-const governanceTableRole = '${tableRole}';
-const governancePrimaryTable = '${primaryTable}';
-const governanceRelationFromField = '${relationFromField}';
-const governanceRelationToField = '${relationToField}';
+const governanceTableRole = ${JSON.stringify(tableRole)};
+const governancePrimaryTable = ${JSON.stringify(primaryTable)};
+const governanceRelationFromField = ${JSON.stringify(relationFromField)};
+const governanceRelationToField = ${JSON.stringify(relationToField)};
 `;
   }
 

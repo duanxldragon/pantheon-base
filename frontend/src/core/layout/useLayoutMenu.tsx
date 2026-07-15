@@ -90,11 +90,7 @@ function preloadRouteByPath(path: string) {
   preloadRouteComponent(path).catch(() => undefined);
 }
 
-function renderMenuItems(
-  nodes: MenuNode[],
-  options: MenuRenderOptions,
-  level = 0,
-): ReactNode[] {
+function renderMenuItems(nodes: MenuNode[], options: MenuRenderOptions, level = 0): ReactNode[] {
   return nodes.map((item) => {
     const entryClassName = [
       'app-shell__menu-entry',
@@ -164,7 +160,9 @@ function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): M
     .filter((item) => orgEnabled || item.module !== 'system.org')
     .map((item) => ({
       ...item,
-      children: item.children?.length ? filterMenuTreeByCapabilities(item.children, orgEnabled) : [],
+      children: item.children?.length
+        ? filterMenuTreeByCapabilities(item.children, orgEnabled)
+        : [],
     }));
 }
 
