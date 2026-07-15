@@ -1,0 +1,91 @@
+{
+  "taskId": "2026-07-15-repo-deep-cleanup",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-code",
+    "adapter": ".agents/adapters/claude-code.md"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Full backend build after moving go.mod into backend/ and rewriting 140 files of pantheon-platform/backend/* imports to pantheon-platform/*."
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Clean vet on rewritten module."
+    },
+    {
+      "command": "go test -short ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "All short-mode tests pass, including scaffold workspace-root detection updated for backend/go.mod and test fixtures reordered to create backend/ before writing go.mod."
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Type check clean after fixture relocation."
+    },
+    {
+      "command": "npx eslint src --max-warnings 0",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Zero-warning lint pass."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "200 docs checked, 178 with frontmatter, after removal of 250+ retired docs."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 findings after cleaning ~50 dead links across contracts, designs, acceptances, and READMEs."
+    },
+    {
+      "command": "npm run check:harness-method && npm run check:harness-adoption && npm run check:harness-template && npm run check:harness-inventory && npm run check:harness-sync",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "All strict harness checks report 0 findings; method health has 2 pre-existing warnings (openspec skeleton, unrelated)."
+    },
+    {
+      "command": "npm run check:failure-registry && npm run check:task-packet-template && npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Failure registry FR-003 guide pointer repointed to QUALITY_AND_SECURITY_STRATEGY.md after runbook retirement."
+    },
+    {
+      "command": "npm run test:docs-frontmatter && npm run test:pr-governance && npm run test:branch-hygiene",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Root script test suites pass (6+4 and branch-hygiene assertions)."
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "10 pass / 2 fail. The 2 failures are tar 'Cannot connect to C: resolve failed' on Windows; reproduced identically on a clean stash of the pre-cleanup tree, therefore pre-existing environment issue, not a regression from this task."
+    }
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-15-repo-deep-cleanup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-15-repo-deep-cleanup/",
+    "reviewFile": ".harness/evidence/2026-07-15-repo-deep-cleanup/review.md",
+    "summaryFile": ".harness/evidence/2026-07-15-repo-deep-cleanup/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "test:foundation-release has 2 pre-existing Windows tar environment failures, reproduced on the pre-cleanup tree.",
+    "check:harness-method reports 2 pre-existing warnings about the missing openspec skeleton directory.",
+    "Two .tmp/ log files were held open by a running process and could not be deleted locally; .tmp/ is gitignored so there is no repository effect."
+  ],
+  "completedAt": "2026-07-15T23:59:00+08:00"
+}

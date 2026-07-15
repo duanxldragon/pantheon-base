@@ -1,0 +1,100 @@
+{
+  "taskId": "2026-07-15-repo-deep-cleanup",
+  "title": "Repository deep cleanup and layout normalization",
+  "goal": "Retire historical audit/process artifacts, normalize the frontend/backend directory boundary (Go module into backend/, test assets into their owning side), and remove orphan tooling bundles without changing any runtime behavior.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "delete historical process artifacts: docs/{assessments,remediations,archive,superpowers,harness/tasks}, DRIFT_AUDIT, deliverable-assessment, SESSION_DECISIONS, DEFERRED_CODE_BACKLOG, .harness/{evidence,tasks} history, releases/, .codex/tasks, .github/pr-body.txt",
+      "remove orphan frontend/.codex OMX bundle, frontend/screenshots, committed backend/uploads binaries",
+      "move go.mod/go.sum/.golangci.yml into backend/ and rewrite module import paths",
+      "move tests/fixtures/system-import-export to frontend/tests/fixtures and tests/performance to backend/tests/performance",
+      "clean dead documentation links caused by the retirement and refresh REPOSITORY_LAYOUT"
+    ],
+    "out": [
+      "harness governance framework retirement (docs/harness specs, .agents, scripts/harness, CI gates all stay)",
+      "any runtime code behavior change beyond import-path rewrites",
+      "grafana/, database/, config/ root directories (kept per layout contract)",
+      "downstream pantheon-ops synchronization"
+    ]
+  },
+  "taskDoc": "none — user-directed cleanup executed interactively; decision record in this manifest and evidence summary",
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-15-repo-deep-cleanup/manifest.json",
+      ".harness/evidence/2026-07-15-repo-deep-cleanup/commands.json",
+      ".harness/evidence/2026-07-15-repo-deep-cleanup/summary.md",
+      ".harness/evidence/2026-07-15-repo-deep-cleanup/review.md",
+      "backend/go.mod",
+      "backend/go.sum",
+      "backend/.golangci.yml",
+      "backend/tests/performance/**",
+      "frontend/tests/fixtures/system-import-export/**"
+    ],
+    "modify": [
+      "backend/**/*.go (import path rewrite only)",
+      "Dockerfile",
+      ".github/workflows/{ci,quality,security,smoke-full}.yml",
+      "docs/** (dead-link cleanup)",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md"
+    ],
+    "doNotTouch": [
+      "backend business logic",
+      "frontend/src runtime behavior",
+      "scripts/harness/** checker logic",
+      "database/system_init.sql"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["mechanical"]
+  },
+  "verificationPlan": {
+    "backend": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -short ./..."
+    ],
+    "frontend": [
+      "cd frontend && npx tsc --noEmit",
+      "cd frontend && npx eslint src --max-warnings 0"
+    ],
+    "browser": []
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-07-15-repo-deep-cleanup",
+    "taskPacket": ".harness/tasks/2026-07-15-repo-deep-cleanup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-15-repo-deep-cleanup/",
+    "reviewFile": ".harness/evidence/2026-07-15-repo-deep-cleanup/review.md",
+    "summaryFile": ".harness/evidence/2026-07-15-repo-deep-cleanup/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "command result summary",
+    "full governance check suite results",
+    "independent review summary"
+  ],
+  "humanGates": [
+    "user selected cleanup scope interactively (audit-artifact retirement only, governance framework retained)",
+    "user confirmed go.mod relocation into backend/ accepting import rewrite",
+    "user confirmed .harness history deletion was intentional, not accidental"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}
