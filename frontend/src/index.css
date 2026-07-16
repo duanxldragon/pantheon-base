@@ -1876,18 +1876,24 @@ a {
   box-shadow: none;
 }
 
-/* 工具栏内所有控件对齐同一控件规格：高度、边框、圆角与页面输入控件一致。 */
+/* 工具栏内所有控件对齐同一控件规格：高度与页面输入控件一致。
+   边框/hover/focus 交由全局 .arco-* 控件规则接管，避免高特异性覆盖交互态。 */
 .search-toolbar .search-toolbar__keyword .arco-input-inner-wrapper,
 .search-toolbar .search-toolbar__inline .arco-select-view,
 .search-toolbar .search-toolbar__inline .arco-tree-select-view,
-.search-toolbar .search-toolbar__inline .arco-picker,
+.search-toolbar .search-toolbar__inline .arco-picker {
+  height: var(--shell-filter-control-min-height);
+  min-height: var(--shell-filter-control-min-height);
+  box-sizing: border-box;
+}
+
 .search-toolbar .search-toolbar__inline .arco-btn,
 .search-toolbar .search-toolbar__advanced-trigger {
   height: var(--shell-filter-control-min-height);
   min-height: var(--shell-filter-control-min-height);
-  border: 1px solid color-mix(in srgb, var(--panel-border-strong) 82%, var(--surface-lift));
+  border: 1px solid var(--panel-border-strong);
   border-radius: var(--radius-control);
-  background: var(--panel-bg-solid);
+  background: var(--control-bg);
   box-sizing: border-box;
 }
 
