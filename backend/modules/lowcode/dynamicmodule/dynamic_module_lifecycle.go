@@ -23,10 +23,15 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	}
 
 	var registration ModuleRegistration
-	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err == nil {
-		if strings.TrimSpace(registration.ModelTableName) == "" {
-			return nil, common.NewForbidden("module.unregister.builtin_forbidden")
+	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err != nil {
+		// 无注册记录的模块一律拒绝卸载：防止对任意磁盘目录（尤其 system/*）执行清理/删除。
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, common.NewNotFound("module.not_found")
 		}
+		return nil, err
+	}
+	if strings.TrimSpace(registration.ModelTableName) == "" {
+		return nil, common.NewForbidden("module.unregister.builtin_forbidden")
 	}
 
 	scope, shortName, err := splitModuleKey(moduleName)
@@ -35,16 +40,14 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	}
 
 	if s.db.Migrator().HasTable("system_menu") {
-		if err := s.db.Table("system_menu").
-			Where("module = ?", moduleName).
-			Delete(nil).Error; err != nil {
+		if err := s.deleteModuleMenusWithRoleBindings(moduleName); err != nil {
 			return nil, err
 		}
 	}
 
 	if s.db.Migrator().HasTable("system_role_permission") {
 		if err := s.db.Table("system_role_permission").
-			Where("permission_key LIKE ?", scope+":"+shortName+":%").
+			Where("permission_key LIKE ?", modulePermissionPrefix(scope, shortName)+":%").
 			Delete(nil).Error; err != nil {
 			return nil, err
 		}
@@ -148,18 +151,42 @@ func (s *DynamicModuleService) deleteModuleNavigationArtifacts(moduleName string
 		return err
 	}
 	if s.db.Migrator().HasTable("system_menu") {
-		if err := s.db.Table("system_menu").Where("module = ?", moduleName).Delete(nil).Error; err != nil {
+		if err := s.deleteModuleMenusWithRoleBindings(moduleName); err != nil {
 			return err
 		}
 	}
 	if s.db.Migrator().HasTable("system_role_permission") {
 		if err := s.db.Table("system_role_permission").
-			Where("permission_key LIKE ?", scope+":"+shortName+":%").
+			Where("permission_key LIKE ?", modulePermissionPrefix(scope, shortName)+":%").
 			Delete(nil).Error; err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// deleteModuleMenusWithRoleBindings 删除模块菜单，并同步清理 system_role_menu 的
+// 角色-菜单关联，避免卸载后留下悬挂的 menu_id 孤儿行。
+func (s *DynamicModuleService) deleteModuleMenusWithRoleBindings(moduleName string) error {
+	var menuIDs []uint64
+	if err := s.db.Table("system_menu").
+		Where("module = ?", moduleName).
+		Pluck("id", &menuIDs).Error; err != nil {
+		return err
+	}
+	if len(menuIDs) == 0 {
+		return nil
+	}
+	if s.db.Migrator().HasTable("system_role_menu") {
+		if err := s.db.Table("system_role_menu").
+			Where("menu_id IN ?", menuIDs).
+			Delete(nil).Error; err != nil {
+			return err
+		}
+	}
+	return s.db.Table("system_menu").
+		Where("module = ?", moduleName).
+		Delete(nil).Error
 }
 
 // ListRegisteredModules 获取已注册模块列表
@@ -234,6 +261,10 @@ func (s *DynamicModuleService) FinalizeUnregister(moduleName string, purgeSource
 			return nil, err
 		}
 		return buildModuleI18nLifecycleSummary(moduleName, false, nil), nil
+	}
+	// 纵深防御：源码删除仅允许 business/*，system/* 源码目录不属于生成物管理范围。
+	if scope != "business" {
+		return nil, common.NewForbidden("module.unregister.builtin_forbidden")
 	}
 	if err := scaffold.RemoveGeneratedModuleSource(s.workspaceRoot, scope, shortName); err != nil {
 		return nil, err

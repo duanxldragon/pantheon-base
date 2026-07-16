@@ -228,9 +228,9 @@ func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, e
 	if err := s.ensureUsersExist(normalizedUserIDs); err != nil {
 		return 0, err
 	}
-	if role.RoleKey == "admin" {
+	if role.RoleKey == common.AdminRoleKey {
 		for _, userID := range normalizedUserIDs {
-			if userID == 1 {
+			if userID == common.BuiltinAdminUserID {
 				return 0, common.NewConflict("user.update.error.protected")
 			}
 		}
@@ -358,7 +358,7 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 	if err := s.db.First(&role, roleID).Error; err != nil {
 		return err
 	}
-	if role.ID == 1 || role.RoleKey == "admin" {
+	if role.ID == common.BuiltinAdminRoleID || role.RoleKey == common.AdminRoleKey {
 		return common.NewConflict("role.delete.error.protected")
 	}
 
@@ -419,7 +419,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 	}
 	if status == common.StatusDisabled {
 		for _, role := range roles {
-			if role.ID == 1 || role.RoleKey == "admin" {
+			if role.ID == common.BuiltinAdminRoleID || role.RoleKey == common.AdminRoleKey {
 				return 0, common.NewConflict("role.update.error.protected")
 			}
 		}

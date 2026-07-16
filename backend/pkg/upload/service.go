@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -165,6 +166,9 @@ func (s *Service) StoreWithContext(ctx context.Context, fileHeader *multipart.Fi
 	}
 	if len(cfg.AllowedTypes) > 0 && !containsString(cfg.AllowedTypes, extension) {
 		return nil, errors.New("upload.file.type_not_allowed")
+	}
+	if err := verifyImageContent(fileHeader, extension); err != nil {
+		return nil, err
 	}
 
 	objectKey := filepath.ToSlash(filepath.Join(
@@ -478,4 +482,41 @@ func containsString(items []string, target string) bool {
 		}
 	}
 	return false
+}
+
+// imageSniffPrefixes 图片扩展名与内容嗅探（http.DetectContentType）结果的对应关系。
+var imageSniffPrefixes = map[string][]string{
+	"jpg":  {"image/jpeg"},
+	"jpeg": {"image/jpeg"},
+	"png":  {"image/png"},
+	"gif":  {"image/gif"},
+	"webp": {"image/webp"},
+}
+
+// verifyImageContent 对图片类扩展做 magic-bytes 内容嗅探，拒绝“伪装成图片”的任意内容。
+// 非图片扩展（pdf/zip 等）不做嗅探——这些类型内容多样，靠 serve 端 nosniff + attachment 兜底。
+func verifyImageContent(fileHeader *multipart.FileHeader, extension string) error {
+	expected, isImage := imageSniffPrefixes[extension]
+	if !isImage {
+		return nil
+	}
+	source, err := fileHeader.Open()
+	if err != nil {
+		return errors.New("upload.file.open.error")
+	}
+	defer func() {
+		_ = source.Close()
+	}()
+	head := make([]byte, 512)
+	n, err := io.ReadFull(source, head)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+		return errors.New("upload.file.open.error")
+	}
+	detected := http.DetectContentType(head[:n])
+	for _, prefix := range expected {
+		if strings.HasPrefix(detected, prefix) {
+			return nil
+		}
+	}
+	return errors.New("upload.file.type_not_allowed")
 }

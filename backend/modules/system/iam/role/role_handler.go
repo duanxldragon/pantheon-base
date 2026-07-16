@@ -52,7 +52,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 }
 
 func (h *RoleHandler) ExportRoles(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出角色", common.BusinessExport)
+	common.SetAuditMetadata(c, "role.export.title", common.BusinessExport)
 
 	var query RoleListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
@@ -78,7 +78,7 @@ func (h *RoleHandler) DownloadImportTemplate(c *gin.Context) {
 }
 
 func (h *RoleHandler) ImportRoles(c *gin.Context) {
-	common.SetAuditMetadata(c, "导入角色", common.BusinessImport)
+	common.SetAuditMetadata(c, "role.import.title", common.BusinessImport)
 
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
@@ -129,7 +129,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 }
 
 func (h *RoleHandler) BatchUpdateRoleStatus(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量更新角色状态", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "role.batch_status.title", common.BusinessUpdate)
 
 	var req RoleBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -146,7 +146,7 @@ func (h *RoleHandler) BatchUpdateRoleStatus(c *gin.Context) {
 }
 
 func (h *RoleHandler) BatchDeleteRoles(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量删除角色", common.BusinessDelete)
+	common.SetAuditMetadata(c, "role.batch_delete.title", common.BusinessDelete)
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -200,7 +200,7 @@ func (h *RoleHandler) GetRoleMemberCandidates(c *gin.Context) {
 }
 
 func (h *RoleHandler) AddRoleMembers(c *gin.Context) {
-	common.SetAuditMetadata(c, "维护角色成员", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "role.members.update.title", common.BusinessUpdate)
 
 	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -223,7 +223,7 @@ func (h *RoleHandler) AddRoleMembers(c *gin.Context) {
 }
 
 func (h *RoleHandler) RemoveRoleMembers(c *gin.Context) {
-	common.SetAuditMetadata(c, "移除角色成员", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "role.members.remove.title", common.BusinessUpdate)
 
 	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

@@ -57,6 +57,14 @@ func buildModuleKey(scope, name string) string {
 	return strings.TrimSpace(scope) + "." + strings.ReplaceAll(strings.Trim(strings.TrimSpace(name), "/"), "/", ".")
 }
 
+// modulePermissionPrefix 构造模块权限键前缀。
+// 生成器写入的权限键按段用 ":" 连接（如 business:a:b:list），
+// 而 splitModuleKey 返回的 shortName 用 "/" 分段（a/b），此处统一转换，
+// 保证嵌套模块卸载时权限清理的 LIKE 模式与实际权限键匹配。
+func modulePermissionPrefix(scope, shortName string) string {
+	return scope + ":" + strings.ReplaceAll(shortName, "/", ":")
+}
+
 func resolveGeneratedParentMenu(scope, name, explicitParent string) (string, string) {
 	normalizedExplicit := normalizeGeneratedMenuPath(explicitParent)
 	if normalizedExplicit != "" {

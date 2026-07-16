@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-07-15-code-review-remediation",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-code",
+    "adapter": ".agents/adapters/claude-code.md"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Clean build after all remediation edits including authtoken sessref index, upload sniffing, lifecycle guards."
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "No vet findings."
+    },
+    {
+      "command": "gofmt -l .",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "No formatting drift across all touched files."
+    },
+    {
+      "command": "go test ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Full suite green. Upload test fixtures updated with real PNG/GIF/WEBP magic bytes for the new content sniffing; generator datasource test extended with default-deny + opt-in cases; two new authtoken tests cover cascade revoke idempotency and rotation index tracking."
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Type check clean after 111 new i18n resource pairs and timeout additions."
+    },
+    {
+      "command": "npx eslint src --max-warnings 0",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Zero warnings."
+    },
+    {
+      "command": "node pantheon-base/scripts/harness/check-audit-coverage.mjs",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "notes": "pantheon-base: 118 write routes scanned, 0 findings (was 2 warnings on generator preview/download before SetAuditMetadata was added)."
+    },
+    {
+      "command": "node pantheon-base/scripts/harness/check-permission-contract.mjs",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "notes": "pantheon-base: 0 findings."
+    },
+    {
+      "command": "node pantheon-base/scripts/harness/check-boundaries.mjs",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "notes": "No boundary violations."
+    }
+  ]
+}

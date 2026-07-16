@@ -66,6 +66,18 @@ func (f *fakeObjectStorageClient) PutObject(ctx context.Context, bucketName, obj
 	return minio.UploadInfo{Bucket: bucketName, Key: objectName}, f.putObjectErr
 }
 
+// pngPayload 构造带真实 PNG magic bytes 的测试内容，配合 verifyImageContent 内容嗅探。
+func pngPayload(extra []byte) []byte {
+	head := []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}
+	return append(head, extra...)
+}
+
+// gifPayload 构造带真实 GIF magic bytes 的测试内容。
+func gifPayload(extra []byte) []byte {
+	head := []byte("GIF89a")
+	return append(head, extra...)
+}
+
 func buildFileHeader(t *testing.T, filename, contentType string, content []byte) *multipart.FileHeader {
 	t.Helper()
 
@@ -113,7 +125,7 @@ func TestServiceStoreRespectsLocalConfigAndReturnsURL(t *testing.T) {
 		return time.Date(2026, 4, 24, 10, 0, 0, 0, time.UTC)
 	}
 
-	fileHeader := buildFileHeader(t, "avatar.png", "image/png", []byte("avatar-demo"))
+	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload([]byte("avatar-demo")))
 	stored, err := service.Store(fileHeader, "profile/avatar", "http://localhost:8080")
 	if err != nil {
 		t.Fatalf("store file: %v", err)
@@ -135,7 +147,7 @@ func TestServiceStoreRespectsLocalConfigAndReturnsURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read stored file: %v", err)
 	}
-	if string(data) != "avatar-demo" {
+	if string(data) != string(pngPayload([]byte("avatar-demo"))) {
 		t.Fatalf("unexpected stored content: %s", string(data))
 	}
 }
@@ -165,7 +177,7 @@ func TestServiceStoreUsesS3ClientWhenConfigured(t *testing.T) {
 		return fakeClient, nil
 	}
 
-	fileHeader := buildFileHeader(t, "avatar.png", "image/png", []byte("avatar-demo"))
+	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload([]byte("avatar-demo")))
 	stored, err := service.Store(fileHeader, "profile/avatar", "http://localhost:8080")
 	if err != nil {
 		t.Fatalf("store s3 file: %v", err)
@@ -214,7 +226,7 @@ func TestServiceStoreUsesRealS3WhenConfigured(t *testing.T) {
 		},
 	})
 
-	payload := []byte("pantheon-real-s3-upload")
+	payload := pngPayload([]byte("pantheon-real-s3-upload"))
 	fileHeader := buildFileHeader(t, "integration.png", "image/png", payload)
 	storeCtx, storeCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer storeCancel()
@@ -299,7 +311,7 @@ func TestServiceStoreWithContextPassesContextToS3Client(t *testing.T) {
 
 	type requestIDKey string
 	ctx := context.WithValue(context.Background(), requestIDKey("request-id"), "req-upload-001")
-	fileHeader := buildFileHeader(t, "avatar.png", "image/png", []byte("avatar-demo"))
+	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload([]byte("avatar-demo")))
 	if _, err := service.StoreWithContext(ctx, fileHeader, "profile/avatar", "http://localhost:8080"); err != nil {
 		t.Fatalf("store s3 file with context: %v", err)
 	}
@@ -318,7 +330,7 @@ func TestServiceStoreRejectsDisallowedExtension(t *testing.T) {
 			"upload.local_path":     t.TempDir(),
 		},
 	})
-	fileHeader := buildFileHeader(t, "avatar.gif", "image/gif", []byte("gif"))
+	fileHeader := buildFileHeader(t, "avatar.gif", "image/gif", gifPayload([]byte("gif")))
 	_, err := service.Store(fileHeader, "profile", "http://localhost:8080")
 	if err == nil || err.Error() != "upload.file.type_not_allowed" {
 		t.Fatalf("expected type_not_allowed, got %v", err)
@@ -373,8 +385,12 @@ func TestServiceStoreAllowsWebpAndGifByDefault(t *testing.T) {
 		return time.Date(2026, 4, 24, 10, 0, 0, 0, time.UTC)
 	}
 
+	imagePayloads := map[string][]byte{
+		"avatar.webp": append([]byte("RIFF\x24\x00\x00\x00WEBPVP8 "), []byte("avatar-demo")...),
+		"avatar.gif":  gifPayload([]byte("avatar-demo")),
+	}
 	for _, filename := range []string{"avatar.webp", "avatar.gif"} {
-		fileHeader := buildFileHeader(t, filename, "image/"+strings.TrimPrefix(filepath.Ext(filename), "."), []byte("avatar-demo"))
+		fileHeader := buildFileHeader(t, filename, "image/"+strings.TrimPrefix(filepath.Ext(filename), "."), imagePayloads[filename])
 		stored, err := service.Store(fileHeader, "profile/avatar", "http://localhost:8080")
 		if err != nil {
 			t.Fatalf("store %s: %v", filename, err)
@@ -394,7 +410,7 @@ func TestServiceStoreRejectsOversizedFile(t *testing.T) {
 			"upload.local_path":     t.TempDir(),
 		},
 	})
-	fileHeader := buildFileHeader(t, "avatar.png", "image/png", bytes.Repeat([]byte("a"), 1024*1024+1))
+	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload(bytes.Repeat([]byte("a"), 1024*1024+1)))
 	_, err := service.Store(fileHeader, "profile", "http://localhost:8080")
 	if err == nil || err.Error() != "upload.file.too_large" {
 		t.Fatalf("expected too_large, got %v", err)
@@ -411,7 +427,7 @@ func TestServiceStoreRequiresS3Credentials(t *testing.T) {
 			"upload.s3_bucket":      "pantheon",
 		},
 	})
-	fileHeader := buildFileHeader(t, "avatar.png", "image/png", []byte("ok"))
+	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload([]byte("ok")))
 	_, err := service.Store(fileHeader, "profile", "http://localhost:8080")
 	if err == nil || err.Error() != "upload.s3.credentials.required" {
 		t.Fatalf("expected s3 credentials required, got %v", err)
@@ -437,7 +453,7 @@ func TestServiceStoreHandlesS3UploadFailure(t *testing.T) {
 	service.s3ClientFactory = func(cfg *Config) (objectStorageClient, error) {
 		return fakeClient, nil
 	}
-	fileHeader := buildFileHeader(t, "avatar.png", "image/png", []byte("ok"))
+	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload([]byte("ok")))
 	_, err := service.Store(fileHeader, "profile", "http://localhost:8080")
 	if err == nil || err.Error() != "upload.s3.upload.error" {
 		t.Fatalf("expected s3 upload error, got %v", err)

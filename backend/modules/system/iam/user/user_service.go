@@ -536,7 +536,7 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 	}
 	if status == common.StatusDisabled {
 		for _, user := range users {
-			if user.ID == 1 {
+			if user.ID == common.BuiltinAdminUserID {
 				return 0, common.NewForbidden("user.update.error.protected")
 			}
 		}
@@ -559,7 +559,7 @@ func (s *UserService) DeleteUser(userID uint64) error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
 	}
-	if userID == 1 {
+	if userID == common.BuiltinAdminUserID {
 		return common.NewForbidden("user.delete.error.protected")
 	}
 

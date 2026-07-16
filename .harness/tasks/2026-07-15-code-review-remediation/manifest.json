@@ -1,0 +1,109 @@
+{
+  "taskId": "2026-07-15-code-review-remediation",
+  "title": "Full code-review remediation per PANTHEON_BASE_CODE_REVIEW_CHECKLIST",
+  "goal": "Scan the codebase against docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md across all thirteen dimensions, auto-fix every mechanically safe finding (security hardening, i18n key compliance, UI token compliance, DB indexes, error swallowing), and implement the three user-approved decision items (i18n unique index migration, session-revocation refresh-token cascade, private-datasource default-deny).",
+  "primaryLayer": "system",
+  "dependencyLayers": ["platform"],
+  "scope": {
+    "in": [
+      "refresh token rotation and session-revocation cascade delete (authtoken sessref reverse index, all four revoke paths)",
+      "SecureActionMiddleware on high-risk routes: user delete/reset-password, role delete, menu delete, admin session revoke",
+      "CSP single-source (remove duplicate header from SecurityHeadersMiddleware), CSRF exempt exact-match",
+      "CSV formula-injection neutralization, import size/row caps, batch-operation cap (MaxBatchIDs=1000)",
+      "upload magic-bytes sniffing for image extensions, serve endpoint nosniff + attachment for non-image",
+      "dynamic module lifecycle: reject unregistered module names, nested-module permission prefix fix, role_menu orphan cleanup, business-only source purge",
+      "generator: env guard on preview/download, datasource private-host default-deny with PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE opt-in",
+      "i18n: 88 hardcoded audit titles to keys, 111 new zh/en resource pairs, system:role:import permission seed",
+      "silent error swallowing replaced with logged warnings/errors in auth settings, throttle, login-log, security-event, audit-cleanup paths",
+      "builtin admin magic values centralized in pkg/common/builtin.go",
+      "migrations 000009 (tree/junction indexes) and 000010 (i18n locale+key unique with dedupe)",
+      "UI token compliance: 4 hardcoded colors to Pantheon tokens; upload/import request timeouts",
+      "husky pre-commit hook committed (.gitignore fix)"
+    ],
+    "out": [
+      "search-toolbar feature work present in the same working tree (kept unstaged, separate branch/PR)",
+      "pantheon-ops synchronization of equivalent findings",
+      "boundary-gate CI blocking, MFA production baseline, coverage ratchet (deferred per fix-report roadmap)",
+      "system_i18n updated_by column"
+    ]
+  },
+  "taskDoc": "fix-report.md — full finding list, verification matrix, and remaining roadmap",
+  "contractAnchors": [
+    "docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md",
+    "DESIGN.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "SECURITY.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/common/builtin.go",
+      "backend/pkg/database/migrations/000009_review_hardening_indexes.up.sql",
+      "backend/pkg/database/migrations/000009_review_hardening_indexes.down.sql",
+      "backend/pkg/database/migrations/000010_i18n_locale_key_unique.up.sql",
+      "backend/pkg/database/migrations/000010_i18n_locale_key_unique.down.sql",
+      ".husky/pre-commit",
+      "fix-report.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/*.go (security headers, csrf, body-limit, rate-limit messages)",
+      "backend/modules/auth/** (rotation, cascade, logging, secure-action routes)",
+      "backend/modules/lowcode/** (lifecycle guards, datasource policy, audit metadata)",
+      "backend/modules/system/** (audit titles, seeds, secure-action routes, upload serve)",
+      "backend/pkg/{authtoken,common,impexp,upload}/**",
+      "frontend/src/api/{upload,importExport}.ts",
+      "frontend/src/i18n/resources/{zh-CN,en-US}.ts",
+      "frontend/src/modules/**/*.css (token compliance)",
+      "docs/DEPLOYMENT_GUIDE.md",
+      ".gitignore"
+    ],
+    "doNotTouch": [
+      "frontend/src/components/patterns/SearchToolbar.tsx and related keyword-search changes (separate task)",
+      "database/system_init.sql",
+      "scripts/harness/** checker logic"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["security", "mechanical"]
+  },
+  "verificationPlan": {
+    "backend": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && gofmt -l .",
+      "cd backend && go test ./..."
+    ],
+    "frontend": [
+      "cd frontend && npx tsc --noEmit",
+      "cd frontend && npx eslint src --max-warnings 0"
+    ],
+    "browser": []
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-07-15-code-review-remediation",
+    "taskPacket": ".harness/tasks/2026-07-15-code-review-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-15-code-review-remediation/",
+    "reviewFile": ".harness/evidence/2026-07-15-code-review-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-15-code-review-remediation/summary.md",
+    "changeRef": "fix/2026-07-15-code-review-remediation",
+    "planRefs": ["fix-report.md"]
+  },
+  "evidenceRequired": [
+    "command result summary",
+    "contract gate results (audit-coverage, permission-contract, boundaries)",
+    "independent review summary"
+  ],
+  "humanGates": [
+    "user directed full-review-and-autofix via /goal with explicit edit authorization",
+    "user approved the three decision items (i18n unique index, refresh cascade, private-host default-deny) and delegated best-practice implementation",
+    "user chose commit scope: review remediation only, search-toolbar work stays uncommitted"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}

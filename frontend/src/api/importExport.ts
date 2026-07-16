@@ -44,6 +44,7 @@ export function uploadImportFile(url: string, file: File) {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 30000,
   });
 }
 

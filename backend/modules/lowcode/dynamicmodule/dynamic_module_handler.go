@@ -20,7 +20,7 @@ func NewDynamicModuleHandler(s *DynamicModuleService) *DynamicModuleHandler {
 
 // RegisterModule 注册模块
 func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
-	common.SetAuditMetadata(c, "注册动态模块", common.BusinessInsert)
+	common.SetAuditMetadata(c, "module.register.title", common.BusinessInsert)
 
 	var req struct {
 		Name string `json:"name" binding:"required"`
@@ -50,7 +50,7 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 }
 
 func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
-	common.SetAuditMetadata(c, "一键生成并注册模块", common.BusinessInsert)
+	common.SetAuditMetadata(c, "module.generate_register.title", common.BusinessInsert)
 
 	rawBody, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -96,7 +96,7 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 
 // UnregisterModule 卸载模块
 func (h *DynamicModuleHandler) UnregisterModule(c *gin.Context) {
-	common.SetAuditMetadata(c, "卸载动态模块", common.BusinessDelete)
+	common.SetAuditMetadata(c, "module.uninstall.title", common.BusinessDelete)
 
 	moduleName := c.Param("name")
 	dropTable := c.Query("dropTable") == "true"
@@ -116,7 +116,7 @@ func (h *DynamicModuleHandler) UnregisterModule(c *gin.Context) {
 }
 
 func (h *DynamicModuleHandler) DeleteModuleRecord(c *gin.Context) {
-	common.SetAuditMetadata(c, "删除动态模块记录", common.BusinessDelete)
+	common.SetAuditMetadata(c, "module.record.delete.title", common.BusinessDelete)
 
 	if err := h.service.DeleteModuleRecord(c.Param("name")); err != nil {
 		common.FailWithError(c, common.CodeError, err, "module.delete_record.error")
@@ -129,7 +129,7 @@ func (h *DynamicModuleHandler) DeleteModuleRecord(c *gin.Context) {
 }
 
 func (h *DynamicModuleHandler) PurgeModule(c *gin.Context) {
-	common.SetAuditMetadata(c, "彻底删除动态模块", common.BusinessDelete)
+	common.SetAuditMetadata(c, "module.purge.title", common.BusinessDelete)
 
 	moduleName := c.Param("name")
 	dropTable := c.Query("dropTable") == "true"
@@ -148,7 +148,7 @@ func (h *DynamicModuleHandler) PurgeModule(c *gin.Context) {
 }
 
 func (h *DynamicModuleHandler) RepairRegistries(c *gin.Context) {
-	common.SetAuditMetadata(c, "执行模块注册表自检修复", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "module.registry.repair.title", common.BusinessUpdate)
 
 	summary, err := h.service.AuditAndRepairGeneratedRegistries()
 	if err != nil {
@@ -163,7 +163,7 @@ func (h *DynamicModuleHandler) RepairRegistries(c *gin.Context) {
 }
 
 func (h *DynamicModuleHandler) AuditPendingActivations(c *gin.Context) {
-	common.SetAuditMetadata(c, "执行模块激活检查", common.BusinessOther)
+	common.SetAuditMetadata(c, "module.activation.check.title", common.BusinessOther)
 
 	summary, err := h.service.AuditPendingGeneratedModuleActivations()
 	if err != nil {

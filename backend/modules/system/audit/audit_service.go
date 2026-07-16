@@ -12,7 +12,9 @@ import (
 
 	"pantheon-platform/internal/middleware"
 	"pantheon-platform/pkg/impexp"
+	"pantheon-platform/pkg/logging"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -284,7 +286,9 @@ func (s *AuditService) ensureAutomaticOperationLogRetention() {
 		retentionDays = defaultOperationLogRetentionDays
 	}
 	cutoff := now.AddDate(0, 0, -retentionDays)
-	_ = s.db.Where("oper_time < ?", cutoff).Delete(&middleware.SystemLogOper{}).Error
+	if err := s.db.Where("oper_time < ?", cutoff).Delete(&middleware.SystemLogOper{}).Error; err != nil {
+		logging.Warn("cleanup expired operation logs failed", zap.Error(err))
+	}
 }
 
 func (s *AuditService) getRetentionDaysFromSetting(settingKey string, fallback int) int {
