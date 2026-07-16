@@ -140,7 +140,6 @@ The current frontend already covers:
 `FRONTEND.md` only defines direction and current capability coverage. Large-scale page delivery must also follow:
 
 - `docs/designs/FRONTEND_UI_SPEC.md`
-- `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 - `docs/designs/AUTH_MODULE_DESIGN.md`
 - `DESIGN.md`
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/mail"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strconv"
 	"strings"
 	"time"

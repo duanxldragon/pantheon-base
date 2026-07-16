@@ -45,8 +45,6 @@ English version: [PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.en.md](./PLATFORM_SHELL_PR
 ## 推荐搭配
 
 - PR 正文模板：`docs/acceptances/PLATFORM_SHELL_PR_TEMPLATE.md`
-- PR 正文样例：`docs/archive/examples/PLATFORM_SHELL_PR_SAMPLE_20260430_LAYOUT_UNIFICATION.md`
 - 双模式验收模板：`docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
-- 双模式验收基准样例：`docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 
 

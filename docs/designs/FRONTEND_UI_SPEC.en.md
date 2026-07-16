@@ -539,7 +539,6 @@ Also forbidden:
 ## 19. Related Documents
 
 - `docs/designs/FRONTEND.md`
-- `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 - `docs/designs/AUTH_MODULE_DESIGN.md`
 - `DESIGN.md`
 - `AGENTS.md`

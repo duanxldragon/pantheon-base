@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"pantheon-platform/backend/pkg/impexp"
+	"pantheon-platform/pkg/impexp"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -1216,7 +1216,7 @@ func resolveProjectRoot() (string, error) {
 		return "", err
 	}
 	for {
-		if fileExists(filepath.Join(current, "go.mod")) && dirExists(filepath.Join(current, "frontend")) {
+		if fileExists(filepath.Join(current, "backend", "go.mod")) && dirExists(filepath.Join(current, "frontend")) {
 			return current, nil
 		}
 		parent := filepath.Dir(current)

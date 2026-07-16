@@ -760,7 +760,7 @@ Pantheon Base 当前优先桌面端，但代码不能写死成“只有桌面端
 
 ## 14. 全局体验统一规范（2026-04-23 补充）
 
-本节承接 `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`，用于约束登录页到系统内部的一致体验。
+本节用于约束登录页到系统内部的一致体验。
 
 ### 14.1 Modal / Drawer
 
@@ -909,7 +909,6 @@ Pantheon Base 当前优先桌面端，但代码不能写死成“只有桌面端
 ## 19. 后续关联文档
 
 - `docs/designs/FRONTEND.md`
-- `docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
 - `docs/designs/AUTH_MODULE_DESIGN.md`
 - `DESIGN.md`
 - `AGENTS.md`

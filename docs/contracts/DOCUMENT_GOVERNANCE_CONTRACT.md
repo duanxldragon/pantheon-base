@@ -299,10 +299,7 @@ docs/
   README.md
   contracts/
   designs/
-  assessments/
-  remediations/
   acceptances/
-  archive/
 ```
 
 但第一轮不建议物理迁移全部文件。

@@ -267,20 +267,10 @@ Changes in `system/config` must at least pass:
 - [DYNAMIC_MODULE_GOVERNANCE_DESIGN.md](../designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
 - [GENERATOR_MODULE_DESIGN.md](../designs/GENERATOR_MODULE_DESIGN.md)
 
-### 10.2 Assessment
-
-- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
-- [PLATFORM_GAP_AUDIT_20260429.md](../assessments/PLATFORM_GAP_AUDIT_20260429.md)
-
-### 10.3 Remediation
-
-- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](../remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 
 ## 11. Reserved Topic Subcontracts
 

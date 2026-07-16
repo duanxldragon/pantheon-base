@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"pantheon-platform/backend/pkg/authtoken"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/testredis"
+	"pantheon-platform/pkg/authtoken"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/testredis"
 
 	"github.com/gin-gonic/gin"
 )

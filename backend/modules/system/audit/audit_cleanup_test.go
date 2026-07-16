@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/backend/internal/middleware"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/internal/middleware"
+	"pantheon-platform/pkg/common"
 )
 
 func TestAuditService_CleanupOperationLogsUsesConfiguredRetentionOptions(t *testing.T) {

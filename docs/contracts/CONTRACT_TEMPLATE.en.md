@@ -16,14 +16,6 @@ Use this template when creating a new contract document.
 
 - `TBD`
 
-## Related Assessment
-
-- `TBD`
-
-## Related Remediation
-
-- `TBD`
-
 ## Related Acceptance
 
 - `TBD`
@@ -110,15 +102,7 @@ List the required:
 
 - `TBD`
 
-### 10.2 Assessment
-
-- `TBD`
-
-### 10.3 Remediation
-
-- `TBD`
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - `TBD`
 

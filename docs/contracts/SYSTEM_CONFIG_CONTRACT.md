@@ -11,16 +11,10 @@ related_designs:
   - docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md
   - docs/designs/GENERATOR_MODULE_DESIGN.md
   - docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md
-related_assessments:
-  - docs/assessments/SYSTEM_MODULE_AUDIT.md
-  - docs/assessments/PLATFORM_GAP_AUDIT_20260429.md
-related_remediations:
-  - docs/remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md
 related_acceptances:
   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
   - docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md
   - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
-  - docs/archive/examples/QA_SMOKE_REPORT_20260420.md
 updated_at: 2026-05-12
 ---
 
@@ -37,18 +31,10 @@ English version: [SYSTEM_CONFIG_CONTRACT.en.md](./SYSTEM_CONFIG_CONTRACT.en.md)
 - `GENERATOR_MODULE_DESIGN.md`
 - `BUSINESS_DICT_INTEGRATION_GUIDE.md`
 
-关联评估：
-- `SYSTEM_MODULE_AUDIT.md`
-- `PLATFORM_GAP_AUDIT_20260429.md`
-
-关联整改：
-- `BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md`
-
 关联验收：
 - `ACCEPTANCE_CHECKLIST.md`
 - `SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
 - `PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md`
-- `QA_SMOKE_REPORT_20260420.md`
 
 ---
 
@@ -309,20 +295,10 @@ Pantheon 当前的 `system/config` 已经不再只是“字典 + 设置页”。
 - [DYNAMIC_MODULE_GOVERNANCE_DESIGN.md](../designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md)
 - [GENERATOR_MODULE_DESIGN.md](../designs/GENERATOR_MODULE_DESIGN.md)
 
-### 10.2 Assessment
-
-- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
-- [PLATFORM_GAP_AUDIT_20260429.md](../assessments/PLATFORM_GAP_AUDIT_20260429.md)
-
-### 10.3 Remediation
-
-- [BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md](../remediations/BACKOFFICE_UI_REMEDIATION_PLAN_20260423.md)
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
 - [PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md](../acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md)
-- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)
 
 ## 11. 后续专题子合同预留
 

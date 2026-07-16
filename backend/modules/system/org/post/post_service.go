@@ -3,11 +3,11 @@ package org
 import (
 	"errors"
 	"fmt"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strings"
 	"time"
 
-	"pantheon-platform/backend/pkg/impexp"
+	"pantheon-platform/pkg/impexp"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

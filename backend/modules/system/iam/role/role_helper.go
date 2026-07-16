@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strings"
 	"time"
 
-	"pantheon-platform/backend/pkg/database"
-	"pantheon-platform/backend/pkg/rbacbind"
+	"pantheon-platform/pkg/database"
+	"pantheon-platform/pkg/rbacbind"
 
 	"gorm.io/gorm"
 )

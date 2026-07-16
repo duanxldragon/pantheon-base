@@ -27,7 +27,6 @@ English version: [README.en.md](./README.en.md)
 7. [权限模型设计](./PERMISSION_MODEL.md)
 8. [业务开发工作流与 AI 协作指南](./WORKFLOW.md)
 9. [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
-10. [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
 
 ## 平台与前端
 
@@ -86,7 +85,6 @@ English version: [README.en.md](./README.en.md)
 - [数据库设计规范与详细说明](./DATABASE.md)
 - [错误码与多语言设计](./ERROR_CODE_AND_I18N.md)
 - [代码质量与安全治理策略](./QUALITY_AND_SECURITY_STRATEGY.md)
-- [可维护性与重复代码整改计划](../remediations/MAINTAINABILITY_REMEDIATION_PLAN_2026_06_23.md)
 - [P2 规模化能力路线图](./P2_SCALE_ROADMAP.md)
 
 ## 说明

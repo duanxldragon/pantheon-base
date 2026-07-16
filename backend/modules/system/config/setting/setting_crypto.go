@@ -6,8 +6,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
-	"pantheon-platform/backend/pkg/common"
-	commonsecurity "pantheon-platform/backend/pkg/common/security"
+	"pantheon-platform/pkg/common"
+	commonsecurity "pantheon-platform/pkg/common/security"
 	"strings"
 )
 

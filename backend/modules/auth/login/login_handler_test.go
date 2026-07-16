@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/backend/pkg/authtoken"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/authtoken"
+	"pantheon-platform/pkg/common"
 
 	"github.com/gin-gonic/gin"
 )

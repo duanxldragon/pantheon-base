@@ -1,8 +1,8 @@
 package security
 
 import (
-	"pantheon-platform/backend/modules/auth/session"
-	"pantheon-platform/backend/pkg/platformprefs"
+	"pantheon-platform/modules/auth/session"
+	"pantheon-platform/pkg/platformprefs"
 )
 
 // UserInfoResp 当前登录主体信息 DTO

@@ -2,7 +2,7 @@ package dynamicmodule
 
 import (
 	"os"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"path/filepath"
 	"strings"
 	"time"

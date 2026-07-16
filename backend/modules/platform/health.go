@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/database"
-	"pantheon-platform/backend/pkg/logging"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/database"
+	"pantheon-platform/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

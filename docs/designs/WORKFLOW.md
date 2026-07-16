@@ -250,7 +250,6 @@ browse chain "goto http://127.0.0.1:5173/login | wait --networkidle 15000 | stor
 
 ### 4.7 文档落点
 
-- 本次真实样例可参考 `docs/archive/examples/QA_SMOKE_REPORT_20260420.md`
 - 平台层验收对照结论可参考 `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
 - Windows 使用细节可参考 `docs/designs/GSTACK_WINDOWS_GUIDE.md`
 
@@ -285,10 +284,6 @@ browse chain "goto http://127.0.0.1:5173/login | wait --networkidle 15000 | stor
 双模式验收记录必须基于：
 
 - `docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md`
-
-首个基准样例为：
-
-- `docs/archive/examples/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_20260430_LAYOUT_UNIFICATION.md`
 - PR 描述模板：`docs/acceptances/PLATFORM_SHELL_PR_TEMPLATE.md`
 - PR checklist 片段：`docs/acceptances/PLATFORM_SHELL_PR_CHECKLIST_SNIPPET.md`
 

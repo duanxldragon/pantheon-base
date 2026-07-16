@@ -15,7 +15,7 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
-  GO_VERSION_FILE: go.mod
+  GO_VERSION_FILE: backend/go.mod
   MYSQL_ROOT_PASSWORD: "root"
   MYSQL_DATABASE: "pantheon_base"
 
@@ -308,6 +308,7 @@ jobs:
           cache: true
 
       - name: Test backend
+        working-directory: backend
         run: go test -race ./...
 
   go-lint:
@@ -336,6 +337,7 @@ jobs:
       - name: Run golangci-lint
         id: golangci-lint
         continue-on-error: true
+        working-directory: backend
         run: golangci-lint run ./...
 
       - name: Enforce go-lint gate
@@ -473,8 +475,9 @@ jobs:
 
       - name: Start backend
         shell: bash
+        working-directory: backend
         run: |
-          nohup go run ./backend/cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
+          nohup go run ./cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
           echo $! >"$RUNNER_TEMP/pantheon-backend.pid"
 
       - name: Wait for backend health

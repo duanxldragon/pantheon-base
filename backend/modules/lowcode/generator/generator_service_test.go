@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"pantheon-platform/backend/internal/scaffold"
+	"pantheon-platform/internal/scaffold"
 )
 
 func TestSuggestModuleNameMatchesScopeConventions(t *testing.T) {
@@ -148,7 +148,7 @@ func TestBuildGeneratedModuleArchiveUsesServerSideFiles(t *testing.T) {
 			t.Fatalf("mkdir %s: %v", dir, err)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module pantheon-platform\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "backend", "go.mod"), []byte("module pantheon-platform\n"), 0o644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}
 

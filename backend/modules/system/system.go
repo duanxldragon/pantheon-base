@@ -1,7 +1,7 @@
 package system
 
 import (
-	"pantheon-platform/backend/pkg/contracts"
+	"pantheon-platform/pkg/contracts"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

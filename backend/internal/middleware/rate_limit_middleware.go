@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"

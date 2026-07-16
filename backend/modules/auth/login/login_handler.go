@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	authsessiondomain "pantheon-platform/backend/modules/auth/session"
-	"pantheon-platform/backend/pkg/authtoken"
-	"pantheon-platform/backend/pkg/common"
-	commonhttp "pantheon-platform/backend/pkg/common/http"
-	"pantheon-platform/backend/pkg/database"
-	"pantheon-platform/backend/pkg/impexp"
-	"pantheon-platform/backend/pkg/platformprefs"
+	authsessiondomain "pantheon-platform/modules/auth/session"
+	"pantheon-platform/pkg/authtoken"
+	"pantheon-platform/pkg/common"
+	commonhttp "pantheon-platform/pkg/common/http"
+	"pantheon-platform/pkg/database"
+	"pantheon-platform/pkg/impexp"
+	"pantheon-platform/pkg/platformprefs"
 
 	"github.com/gin-gonic/gin"
 )

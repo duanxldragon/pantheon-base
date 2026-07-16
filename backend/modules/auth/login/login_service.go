@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"pantheon-platform/backend/modules/auth/security"
-	user "pantheon-platform/backend/modules/system/iam/user"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/impexp"
+	"pantheon-platform/modules/auth/security"
+	user "pantheon-platform/modules/system/iam/user"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/impexp"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

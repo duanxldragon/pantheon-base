@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"gorm.io/gorm"
-	"pantheon-platform/backend/pkg/testmysql"
+	"pantheon-platform/pkg/testmysql"
 )
 
 func TestSeedAuthModuleMenusReparentsLegacyFlatMenus(t *testing.T) {

@@ -3,7 +3,7 @@ package system
 
 import (
 	"fmt"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strings"
 	"sync"
 

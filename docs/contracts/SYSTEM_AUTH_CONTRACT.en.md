@@ -228,15 +228,6 @@ Additional checks:
 - [SECURITY_CENTER_DESIGN.md](../designs/SECURITY_CENTER_DESIGN.md)
 - [ERROR_CODE_AND_I18N.md](../designs/ERROR_CODE_AND_I18N.md)
 
-### 10.2 Assessment
-
-- [SYSTEM_MODULE_AUDIT.md](../assessments/SYSTEM_MODULE_AUDIT.md)
-
-### 10.3 Remediation
-
-- [PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md](../archive/examples/PLATFORM_AUTH_REMEDIATION_CLOSEOUT_20260429.md)
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
-- [QA_SMOKE_REPORT_20260420.md](../archive/examples/QA_SMOKE_REPORT_20260420.md)

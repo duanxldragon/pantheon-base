@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	commonhttp "pantheon-platform/backend/pkg/common/http"
-	"pantheon-platform/backend/pkg/common/security"
+	commonhttp "pantheon-platform/pkg/common/http"
+	"pantheon-platform/pkg/common/security"
 )
 
 // ── Re-exports from http package ─────────────────────────────────────

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/impexp"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/impexp"
 
 	"gorm.io/gorm"
 )

@@ -5,10 +5,6 @@ layer: platform / system/auth / system/iam / system/org / system/config / busine
 status: Draft
 related_designs:
   - docs/designs/TBD.md
-related_assessments:
-  - docs/assessments/TBD.md
-related_remediations:
-  - docs/remediations/TBD.md
 related_acceptances:
   - docs/acceptances/TBD.md
 updated_at: YYYY-MM-DD
@@ -19,12 +15,6 @@ updated_at: YYYY-MM-DD
 English version: [CONTRACT_TEMPLATE.en.md](./CONTRACT_TEMPLATE.en.md)
 
 关联设计：
-- `TBD`
-
-关联评估：
-- `TBD`
-
-关联整改：
 - `TBD`
 
 关联验收：
@@ -114,15 +104,7 @@ English version: [CONTRACT_TEMPLATE.en.md](./CONTRACT_TEMPLATE.en.md)
 
 - `TBD`
 
-### 10.2 Assessment
-
-- `TBD`
-
-### 10.3 Remediation
-
-- `TBD`
-
-### 10.4 Acceptance
+### 10.2 Acceptance
 
 - `TBD`
 

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"pantheon-platform/backend/pkg/metrics"
+	"pantheon-platform/pkg/metrics"
 	"strconv"
 	"time"
 

@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"pantheon-platform/backend/pkg/authtoken"
-	"pantheon-platform/backend/pkg/common"
-	"pantheon-platform/backend/pkg/database"
+	"pantheon-platform/pkg/authtoken"
+	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/database"
 
 	"github.com/gin-gonic/gin"
 )

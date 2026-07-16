@@ -77,7 +77,7 @@ const prBody = `## 变更摘要
 
 ## 验证记录
 
-- [x] 后端测试：\`go test ./backend/...\`
+- [x] 后端测试：\`go test ./... (from backend/)\`
 - [ ] 前端构建：
 - [ ] 轻量 smoke：
 - [ ] 如涉及系统域深链路，已补充专项 smoke：

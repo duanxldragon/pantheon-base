@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -23,7 +23,7 @@ const generatedModuleExporterScript = "frontend/scripts/export-generated-module.
 const GeneratedFeatureLedgerRelativePath = "schema/generated/feature-ledger.json"
 
 func isWorkspaceRoot(candidate string) bool {
-	return fileExists(filepath.Join(candidate, "go.mod")) &&
+	return fileExists(filepath.Join(candidate, "backend", "go.mod")) &&
 		dirExists(filepath.Join(candidate, "backend")) &&
 		dirExists(filepath.Join(candidate, "frontend"))
 }
@@ -361,7 +361,7 @@ func writeGeneratedBackendRegistry(workspaceRoot string, scope string, refs []Ge
 		name := ref.Name
 		entries = append(entries, entry{
 			Alias:      safeIdentifier(name),
-			ImportPath: fmt.Sprintf("pantheon-platform/backend/modules/%s/%s", scope, name),
+			ImportPath: fmt.Sprintf("pantheon-platform/modules/%s/%s", scope, name),
 			InitFunc:   "Init" + toPascal(name) + "Module",
 		})
 	}

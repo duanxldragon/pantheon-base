@@ -160,10 +160,7 @@ docs/
   README.md
   contracts/
   designs/
-  assessments/
-  remediations/
   acceptances/
-  archive/
 ```
 
 But the first round should focus on:

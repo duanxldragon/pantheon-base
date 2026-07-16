@@ -3,10 +3,10 @@ package generator
 import (
 	"archive/zip"
 	"bytes"
-	"pantheon-platform/backend/pkg/common"
+	"pantheon-platform/pkg/common"
 	"strings"
 
-	"pantheon-platform/backend/internal/scaffold"
+	"pantheon-platform/internal/scaffold"
 
 	"gorm.io/gorm"
 )
