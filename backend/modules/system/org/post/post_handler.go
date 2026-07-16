@@ -35,7 +35,7 @@ func (h *PostHandler) GetPostList(c *gin.Context) {
 }
 
 func (h *PostHandler) CreatePost(c *gin.Context) {
-	common.SetAuditMetadata(c, "新增岗位", common.BusinessInsert)
+	common.SetAuditMetadata(c, "post.create.title", common.BusinessInsert)
 	var req PostCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -51,7 +51,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 }
 
 func (h *PostHandler) UpdatePost(c *gin.Context) {
-	common.SetAuditMetadata(c, "编辑岗位", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "post.update.title", common.BusinessUpdate)
 	var req PostUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -73,7 +73,7 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 }
 
 func (h *PostHandler) BatchUpdatePostStatus(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量更新岗位状态", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "post.batch_status.title", common.BusinessUpdate)
 
 	var req PostBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -90,7 +90,7 @@ func (h *PostHandler) BatchUpdatePostStatus(c *gin.Context) {
 }
 
 func (h *PostHandler) DeletePost(c *gin.Context) {
-	common.SetAuditMetadata(c, "删除岗位", common.BusinessDelete)
+	common.SetAuditMetadata(c, "post.delete.title", common.BusinessDelete)
 	postID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -105,7 +105,7 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 }
 
 func (h *PostHandler) BatchDeletePosts(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量删除岗位", common.BusinessDelete)
+	common.SetAuditMetadata(c, "post.batch_delete.title", common.BusinessDelete)
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -117,7 +117,7 @@ func (h *PostHandler) BatchDeletePosts(c *gin.Context) {
 }
 
 func (h *PostHandler) ExportPosts(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出岗位", common.BusinessExport)
+	common.SetAuditMetadata(c, "post.export.title", common.BusinessExport)
 
 	var query PostListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
@@ -143,7 +143,7 @@ func (h *PostHandler) DownloadImportTemplate(c *gin.Context) {
 }
 
 func (h *PostHandler) ImportPosts(c *gin.Context) {
-	common.SetAuditMetadata(c, "导入岗位", common.BusinessImport)
+	common.SetAuditMetadata(c, "post.import.title", common.BusinessImport)
 
 	fileHeader, err := c.FormFile("file")
 	if err != nil {

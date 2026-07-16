@@ -449,6 +449,7 @@ kubectl scale deployment pantheon-base --replicas=5 -n pantheon
 | `PANTHEON_METRICS_BEARER_TOKEN` | - | `/metrics` Bearer token；生产环境推荐配置 |
 | `PANTHEON_METRICS_PUBLIC` | `false` | 生产环境是否允许无 token 暴露 `/metrics`；仅限内网或网关已保护场景 |
 | `PANTHEON_OPERATION_LOG_QUEUE_SIZE` | `1024` | 操作日志异步写入队列大小；队列满时会短超时同步降级写入 |
+| `PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE` | `false` | 低代码生成器数据源是否允许私网地址（RFC1918）。默认拒绝以收窄 SSRF 面；数据库位于内网网段时需显式设为 `true` |
 
 ---
 

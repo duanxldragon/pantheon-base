@@ -27,6 +27,10 @@ const (
 	sessionPrefix   = "pantheon:session:"
 	refreshPrefix   = "pantheon:refresh:"
 	operationPrefix = "pantheon:op:"
+	// sessionRefreshIndexPrefix 存 sessionID → 当前 refresh token 的反向索引，
+	// 使会话吊销（logout/强制下线/改密）能级联删除 Redis 中的 refresh entry，
+	// 不依赖 DB session 状态校验作为唯一防线。
+	sessionRefreshIndexPrefix = "pantheon:sessref:"
 )
 
 // Shared token TTL overrides and sentinel errors.
@@ -166,7 +170,8 @@ func RefreshSessionActivity(ctx context.Context, rdb *redis.Client, tok string, 
 	return rdb.Set(ctx, SessionKey(tok), b, ttl).Err()
 }
 
-// StoreRefresh writes a refresh token mapping to Redis.
+// StoreRefresh writes a refresh token mapping to Redis, plus a sessionID→token
+// reverse index (same TTL) so session revocation can cascade-delete the token.
 func StoreRefresh(ctx context.Context, rdb *redis.Client, tok string, uid uint64, sid string, ttl time.Duration) error {
 	if rdb == nil {
 		return ErrStoreNotInitialized
@@ -175,7 +180,15 @@ func StoreRefresh(ctx context.Context, rdb *redis.Client, tok string, uid uint64
 	if err != nil {
 		return err
 	}
-	return rdb.Set(ctx, RefreshKey(tok), b, ttl).Err()
+	pipe := rdb.Pipeline()
+	pipe.Set(ctx, RefreshKey(tok), b, ttl)
+	if sid != "" {
+		// 同一会话轮换 refresh token 时，旧 token 由调用方显式删除；
+		// 这里只维护"当前有效 token"的索引，Set 覆盖即可。
+		pipe.Set(ctx, sessionRefreshIndexKey(sid), tok, ttl)
+	}
+	_, err = pipe.Exec(ctx)
+	return err
 }
 
 // ValidateRefresh loads a refresh token mapping from Redis.
@@ -203,6 +216,33 @@ func DeleteRefresh(ctx context.Context, rdb *redis.Client, tok string) error {
 		return nil
 	}
 	return rdb.Del(ctx, RefreshKey(tok)).Err()
+}
+
+// sessionRefreshIndexKey builds the Redis key for the session→refresh reverse index.
+func sessionRefreshIndexKey(sessionID string) string {
+	return sessionRefreshIndexPrefix + sessionID
+}
+
+// RevokeSessionRefresh cascade-deletes the refresh token bound to a session,
+// along with the reverse-index entry. Missing keys are treated as success —
+// the session may never have issued a token or it may have already expired.
+func RevokeSessionRefresh(ctx context.Context, rdb *redis.Client, sessionID string) error {
+	if rdb == nil || sessionID == "" {
+		return nil
+	}
+	indexKey := sessionRefreshIndexKey(sessionID)
+	tok, err := rdb.Get(ctx, indexKey).Result()
+	if err == redis.Nil {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	pipe := rdb.Pipeline()
+	pipe.Del(ctx, RefreshKey(tok))
+	pipe.Del(ctx, indexKey)
+	_, err = pipe.Exec(ctx)
+	return err
 }
 
 // DeleteSessionPair removes both access and refresh token keys from Redis.

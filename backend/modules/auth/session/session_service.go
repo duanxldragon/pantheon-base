@@ -10,8 +10,11 @@ import (
 	"pantheon-platform/pkg/authsession"
 	"pantheon-platform/pkg/authtoken"
 	"pantheon-platform/pkg/common"
+	"pantheon-platform/pkg/database"
+	"pantheon-platform/pkg/logging"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -108,9 +111,27 @@ func (s *Service) RevokeSession(sessionID string) error {
 		return nil
 	}
 	now := time.Now()
-	return s.db.Model(&SystemUserSession{}).
+	if err := s.db.Model(&SystemUserSession{}).
 		Where("session_id = ? AND revoked_at IS NULL", sessionID).
-		Updates(map[string]interface{}{"revoked_at": &now}).Error
+		Updates(map[string]interface{}{"revoked_at": &now}).Error; err != nil {
+		return err
+	}
+	CascadeRevokeSessionRefresh(sessionID)
+	return nil
+}
+
+// CascadeRevokeSessionRefresh 级联删除会话绑定的 refresh token（Redis）。
+// 失败仅记日志不回滚：DB 侧 revoked_at 已生效，refresh 路径仍会被 session 状态校验拦截。
+func CascadeRevokeSessionRefresh(sessionIDs ...string) {
+	for _, sid := range sessionIDs {
+		if strings.TrimSpace(sid) == "" {
+			continue
+		}
+		if err := authtoken.RevokeSessionRefresh(context.Background(), database.RDB, sid); err != nil {
+			logging.Warn("cascade revoke session refresh token failed",
+				zap.String("session_id", sid), zap.Error(err))
+		}
+	}
 }
 
 // TouchSessionActivity updates last_activity_at for an active session.
@@ -183,9 +204,13 @@ func (s *Service) RevokeOwnedSession(userID uint64, currentSessionID, targetSess
 		return nil
 	}
 	now := time.Now()
-	return s.db.Model(&SystemUserSession{}).
+	if err := s.db.Model(&SystemUserSession{}).
 		Where(sessionIDAndActiveUserIDWhereClause, targetSessionID, userID).
-		Updates(map[string]interface{}{"revoked_at": &now}).Error
+		Updates(map[string]interface{}{"revoked_at": &now}).Error; err != nil {
+		return err
+	}
+	CascadeRevokeSessionRefresh(targetSessionID)
+	return nil
 }
 
 // CleanupHistoricSessions removes expired session records.
@@ -234,7 +259,11 @@ func (s *Service) BatchRevokeSessions(currentSessionID string, sessionIDs []stri
 	result := s.db.Model(&SystemUserSession{}).
 		Where("session_id IN ? AND revoked_at IS NULL", normalized).
 		Updates(map[string]interface{}{"revoked_at": &now})
-	return result.RowsAffected, result.Error
+	if result.Error != nil {
+		return result.RowsAffected, result.Error
+	}
+	CascadeRevokeSessionRefresh(normalized...)
+	return result.RowsAffected, nil
 }
 
 // ListAllSessions returns paginated session records for admin use.

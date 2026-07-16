@@ -35,7 +35,7 @@ func (h *DictHandler) GetDictTypeList(c *gin.Context) {
 }
 
 func (h *DictHandler) CreateDictType(c *gin.Context) {
-	common.SetAuditMetadata(c, "新增字典类型", common.BusinessInsert)
+	common.SetAuditMetadata(c, "dict.type.create.title", common.BusinessInsert)
 	var req DictTypeCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -50,7 +50,7 @@ func (h *DictHandler) CreateDictType(c *gin.Context) {
 }
 
 func (h *DictHandler) UpdateDictType(c *gin.Context) {
-	common.SetAuditMetadata(c, "编辑字典类型", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "dict.type.update.title", common.BusinessUpdate)
 	var req DictTypeUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -70,7 +70,7 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 }
 
 func (h *DictHandler) DeleteDictType(c *gin.Context) {
-	common.SetAuditMetadata(c, "删除字典类型", common.BusinessDelete)
+	common.SetAuditMetadata(c, "dict.type.delete.title", common.BusinessDelete)
 	typeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -84,7 +84,7 @@ func (h *DictHandler) DeleteDictType(c *gin.Context) {
 }
 
 func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量更新字典类型状态", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "dict.type.batch_status.title", common.BusinessUpdate)
 	var req DictTypeBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -99,7 +99,7 @@ func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
 }
 
 func (h *DictHandler) BatchDeleteDictTypes(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量删除字典类型", common.BusinessDelete)
+	common.SetAuditMetadata(c, "dict.type.batch_delete.title", common.BusinessDelete)
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -138,7 +138,7 @@ func (h *DictHandler) AnalyzeDictUsage(c *gin.Context) {
 }
 
 func (h *DictHandler) CreateDictItem(c *gin.Context) {
-	common.SetAuditMetadata(c, "新增字典项", common.BusinessInsert)
+	common.SetAuditMetadata(c, "dict.item.create.title", common.BusinessInsert)
 	var req DictItemCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -153,7 +153,7 @@ func (h *DictHandler) CreateDictItem(c *gin.Context) {
 }
 
 func (h *DictHandler) UpdateDictItem(c *gin.Context) {
-	common.SetAuditMetadata(c, "编辑字典项", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "dict.item.update.title", common.BusinessUpdate)
 	var req DictItemUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -173,7 +173,7 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 }
 
 func (h *DictHandler) DeleteDictItem(c *gin.Context) {
-	common.SetAuditMetadata(c, "删除字典项", common.BusinessDelete)
+	common.SetAuditMetadata(c, "dict.item.delete.title", common.BusinessDelete)
 	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -187,7 +187,7 @@ func (h *DictHandler) DeleteDictItem(c *gin.Context) {
 }
 
 func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量更新字典项状态", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "dict.item.batch_status.title", common.BusinessUpdate)
 	var req DictItemBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -202,7 +202,7 @@ func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
 }
 
 func (h *DictHandler) BatchDeleteDictItems(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量删除字典项", common.BusinessDelete)
+	common.SetAuditMetadata(c, "dict.item.batch_delete.title", common.BusinessDelete)
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -213,7 +213,7 @@ func (h *DictHandler) BatchDeleteDictItems(c *gin.Context) {
 }
 
 func (h *DictHandler) ReorderDictItem(c *gin.Context) {
-	common.SetAuditMetadata(c, "调整字典项排序", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "dict.item.sort.title", common.BusinessUpdate)
 	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -247,7 +247,7 @@ func (h *DictHandler) GetDictOptions(c *gin.Context) {
 }
 
 func (h *DictHandler) RefreshDictOptionsCache(c *gin.Context) {
-	common.SetAuditMetadata(c, "刷新字典缓存", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "dict.cache.refresh.title", common.BusinessUpdate)
 	var req DictCacheRefreshReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -262,7 +262,7 @@ func (h *DictHandler) RefreshDictOptionsCache(c *gin.Context) {
 }
 
 func (h *DictHandler) ExportDictTypes(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出字典类型", common.BusinessExport)
+	common.SetAuditMetadata(c, "dict.type.export.title", common.BusinessExport)
 
 	var query DictTypeListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
@@ -287,7 +287,7 @@ func (h *DictHandler) DownloadDictTypeImportTemplate(c *gin.Context) {
 }
 
 func (h *DictHandler) ImportDictTypes(c *gin.Context) {
-	common.SetAuditMetadata(c, "导入字典类型", common.BusinessImport)
+	common.SetAuditMetadata(c, "dict.type.import.title", common.BusinessImport)
 
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
@@ -313,7 +313,7 @@ func (h *DictHandler) ImportDictTypes(c *gin.Context) {
 }
 
 func (h *DictHandler) ExportDictItems(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出字典项", common.BusinessExport)
+	common.SetAuditMetadata(c, "dict.item.export.title", common.BusinessExport)
 
 	var query DictItemListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
@@ -338,7 +338,7 @@ func (h *DictHandler) DownloadDictItemImportTemplate(c *gin.Context) {
 }
 
 func (h *DictHandler) ImportDictItems(c *gin.Context) {
-	common.SetAuditMetadata(c, "导入字典项", common.BusinessImport)
+	common.SetAuditMetadata(c, "dict.item.import.title", common.BusinessImport)
 
 	fileHeader, err := c.FormFile("file")
 	if err != nil {

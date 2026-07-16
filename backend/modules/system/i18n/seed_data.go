@@ -86,6 +86,8 @@ func (s *I18nService) SeedI18nModuleI18n(db *gorm.DB) error {
 		{Module: "system.iam", Locale: "en-US", Group: "permission", Key: "system.permission.role.batch_delete", Value: "Role Batch Delete"},
 		{Module: "system.iam", Locale: "zh-CN", Group: "permission", Key: "system.permission.role.export", Value: "角色导出"},
 		{Module: "system.iam", Locale: "en-US", Group: "permission", Key: "system.permission.role.export", Value: "Role Export"},
+		{Module: "system.iam", Locale: "zh-CN", Group: "permission", Key: "system.permission.role.import", Value: "角色导入"},
+		{Module: "system.iam", Locale: "en-US", Group: "permission", Key: "system.permission.role.import", Value: "Role Import"},
 		{Module: "system.iam", Locale: "zh-CN", Group: "permission", Key: "system.permission.menu.create", Value: "菜单新增"},
 		{Module: "system.iam", Locale: "en-US", Group: "permission", Key: "system.permission.menu.create", Value: "Menu Create"},
 		{Module: "system.iam", Locale: "zh-CN", Group: "permission", Key: "system.permission.menu.update", Value: "菜单编辑"},

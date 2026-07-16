@@ -75,7 +75,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.GET("/session/list", authHandler.GetSessionList)
 					systemProtected.POST("/session/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupHistoricSessions)
 					systemProtected.POST("/session/batch-revoke", middleware.SecureActionMiddleware(), authHandler.BatchRevokeSessions)
-					systemProtected.DELETE("/session/:id", authHandler.RevokeAnySession)
+					systemProtected.DELETE("/session/:id", middleware.SecureActionMiddleware(), authHandler.RevokeAnySession)
 				}
 
 				authV2 := r.Group("/auth").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())

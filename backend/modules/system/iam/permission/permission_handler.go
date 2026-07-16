@@ -48,7 +48,7 @@ func (h *PermissionHandler) GetWorkbench(c *gin.Context) {
 }
 
 func (h *PermissionHandler) ExportWorkbench(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出权限工作台", common.BusinessExport)
+	common.SetAuditMetadata(c, "permission.workbench.export.title", common.BusinessExport)
 
 	var query PermissionWorkbenchQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -82,7 +82,7 @@ func (h *PermissionHandler) ListWorkbenchRemediationEvents(c *gin.Context) {
 }
 
 func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
-	common.SetAuditMetadata(c, "补齐推荐接口策略", common.BusinessInsert)
+	common.SetAuditMetadata(c, "permission.policy.sync_recommended.title", common.BusinessInsert)
 
 	var req PermissionWorkbenchRemediateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -114,7 +114,7 @@ func (h *PermissionHandler) ListDataScopePolicies(c *gin.Context) {
 }
 
 func (h *PermissionHandler) UpdateDataScopePolicy(c *gin.Context) {
-	common.SetAuditMetadata(c, "更新数据权限策略", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "permission.data_policy.update.title", common.BusinessUpdate)
 
 	var req PermissionDataScopePolicyUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -146,7 +146,7 @@ func (h *PermissionHandler) GetPolicyList(c *gin.Context) {
 }
 
 func (h *PermissionHandler) CreatePolicy(c *gin.Context) {
-	common.SetAuditMetadata(c, "新增权限策略", common.BusinessInsert)
+	common.SetAuditMetadata(c, "permission.policy.create.title", common.BusinessInsert)
 	var req PermissionPolicyCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -162,7 +162,7 @@ func (h *PermissionHandler) CreatePolicy(c *gin.Context) {
 }
 
 func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
-	common.SetAuditMetadata(c, "编辑权限策略", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "permission.policy.update.title", common.BusinessUpdate)
 	var req PermissionPolicyUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -184,7 +184,7 @@ func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
 }
 
 func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
-	common.SetAuditMetadata(c, "删除权限策略", common.BusinessDelete)
+	common.SetAuditMetadata(c, "permission.policy.delete.title", common.BusinessDelete)
 	policyID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		common.Fail(c, common.CodeParamInvalid, "param.invalid")
@@ -199,7 +199,7 @@ func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
 }
 
 func (h *PermissionHandler) BatchDeletePolicies(c *gin.Context) {
-	common.SetAuditMetadata(c, "批量删除权限策略", common.BusinessDelete)
+	common.SetAuditMetadata(c, "permission.policy.batch_delete.title", common.BusinessDelete)
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -214,7 +214,7 @@ func (h *PermissionHandler) BatchDeletePolicies(c *gin.Context) {
 }
 
 func (h *PermissionHandler) ExportPolicies(c *gin.Context) {
-	common.SetAuditMetadata(c, "导出权限策略", common.BusinessExport)
+	common.SetAuditMetadata(c, "permission.policy.export.title", common.BusinessExport)
 
 	var query PermissionPolicyQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
@@ -239,7 +239,7 @@ func (h *PermissionHandler) DownloadImportTemplate(c *gin.Context) {
 }
 
 func (h *PermissionHandler) ImportPolicies(c *gin.Context) {
-	common.SetAuditMetadata(c, "导入权限策略", common.BusinessImport)
+	common.SetAuditMetadata(c, "permission.policy.import.title", common.BusinessImport)
 
 	fileHeader, err := c.FormFile("file")
 	if err != nil {

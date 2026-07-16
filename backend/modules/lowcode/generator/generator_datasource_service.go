@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/netip"
+	"os"
 	"pantheon-platform/pkg/common"
 	"regexp"
 	"strconv"
@@ -327,6 +328,9 @@ func validateDatasourceHost(host string) error {
 		if addr.IsLoopback() || addr.IsMulticast() || addr.IsLinkLocalMulticast() || addr.IsLinkLocalUnicast() || addr.IsUnspecified() {
 			return common.NewBadRequest("generator.datasource.host_invalid")
 		}
+		if addr.IsPrivate() && !datasourcePrivateHostAllowed() {
+			return common.NewBadRequest("generator.datasource.host_private_disabled")
+		}
 		return nil
 	}
 
@@ -345,6 +349,14 @@ func validateDatasourceHost(host string) error {
 		}
 	}
 	return nil
+}
+
+// datasourcePrivateHostAllowed 判断是否放行 RFC1918 私网数据源地址。
+// 默认拒绝（SSRF 最小面原则）；内网部署需显式设置
+// PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE=true 放行，见 docs/DEPLOYMENT_GUIDE.md。
+func datasourcePrivateHostAllowed() bool {
+	value := strings.ToLower(strings.TrimSpace(os.Getenv("PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE")))
+	return value == "true" || value == "1" || value == "yes" || value == "on"
 }
 
 func parseDatasourceNumericID(id string) (uint64, error) {
