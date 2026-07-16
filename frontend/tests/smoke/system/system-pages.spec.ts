@@ -2162,7 +2162,10 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
           file: {
             name: 'avatar.png',
             mimeType: 'image/png',
-            buffer: Buffer.from('pantheon-upload-smoke', 'utf8'),
+            buffer: Buffer.concat([
+              Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+              Buffer.from('pantheon-upload-smoke', 'utf8'),
+            ]),
           },
         },
       },
@@ -2174,7 +2177,7 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
 
     const fileResponse = await page.request.get(uploadResult.data.url);
     expect(fileResponse.ok()).toBeTruthy();
-    expect((await fileResponse.body()).toString('utf8')).toBe('pantheon-upload-smoke');
+    expect((await fileResponse.body()).toString('utf8')).toContain('pantheon-upload-smoke');
 
     const blockedPayload = await page.request.post(
       `${apiBaseUrl}/system/upload?scope=profile/avatar`,
@@ -2219,7 +2222,7 @@ test('operation log smoke: failed reason and detail summary are visible', async 
   expect(failedUploadPayload.message).toBe('upload.file.type_not_allowed');
 
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
-  await page.getByLabel('操作标题').fill('上传文件');
+  await page.getByLabel('操作标题').fill('upload.file.title');
   await page.locator('.arco-select-view').first().click();
   await page.locator('.arco-select-option').filter({ hasText: '失败' }).first().click();
   await page.locator('.arco-select-view').nth(1).click();
