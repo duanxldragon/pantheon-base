@@ -719,7 +719,7 @@ func TestSyncBuiltInModules_LeavesGeneratedSchemaPendingWithoutActivationSignal(
 	if registration.Status != ModuleStatusPendingActivation {
 		t.Fatalf("unexpected status: %d", registration.Status)
 	}
-	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "backend/modules/business/cmdb/host")
+	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "pantheon-platform/modules/business/cmdb/host")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/cmdb/host/CmdbHostList")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/cmdb/host/CmdbHostDetail")
 }
