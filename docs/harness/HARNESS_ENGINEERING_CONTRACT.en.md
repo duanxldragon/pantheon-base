@@ -79,7 +79,7 @@ Agents are responsible for:
 
 ### 4.4 Evidence First
 
-It is not enough to say “done�? “verified�? or “should be fine�? The executor must provide:
+It is not enough to say “done”, “verified”, or “should be fine”. The executor must provide:
 
 - commands that were run
 - pass or fail results
@@ -94,7 +94,7 @@ For `non-trivial` work, the harness should explicitly separate:
 - implementer posture
 - reviewer posture
 
-The implementer may provide self-check notes, but “I checked it myself�?is not the default completion decision.
+The implementer may provide self-check notes, but “I checked it myself” is not the default completion decision.
 
 The following work should default to an independent reviewer or explicit review gate:
 
@@ -180,7 +180,7 @@ Exceptions must be explained:
 
 ### 5.5 Green
 
-Implementation must stay within the task packet scope. Do not opportunistically refactor unrelated code or “fix�?issues that have not been attributed.
+Implementation must stay within the task packet scope. Do not opportunistically refactor unrelated code or “fix” issues that have not been attributed.
 
 ### 5.6 Verify
 

@@ -115,6 +115,7 @@ export interface LoginLogRow {
 }
 
 export interface LoginLogQuery {
+  keyword?: string;
   username?: string;
   status?: number;
   startedAt?: string;

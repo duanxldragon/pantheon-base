@@ -1846,6 +1846,124 @@ a {
   }
 }
 
+/* SearchToolbar：单行搜索工具栏（关键词 + 行内筛选 + 弹层筛选 + 清空） */
+.search-toolbar .filter-panel__body,
+.search-toolbar .search-toolbar__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: var(--shell-filter-body-padding);
+  padding-bottom: calc(var(--shell-filter-form-item-margin-bottom) + 2px);
+}
+
+.search-toolbar__keyword {
+  flex: 1 1 260px;
+  min-width: 200px;
+  max-width: 560px;
+}
+
+.search-toolbar__inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-toolbar__inline .arco-select,
+.search-toolbar__inline .arco-tree-select,
+.search-toolbar__inline .arco-picker {
+  width: 168px;
+}
+
+.search-toolbar .arco-form-item {
+  margin-bottom: 0;
+}
+
+.search-toolbar__advanced-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--shell-filter-control-min-height);
+  border-color: color-mix(in srgb, var(--panel-border-strong) 92%, var(--surface-lift));
+  border-radius: var(--radius-control);
+  background: var(--panel-bg-solid);
+  white-space: nowrap;
+}
+
+.search-toolbar__badge .arco-badge-number {
+  background: var(--brand-primary);
+  box-shadow: none;
+}
+
+.search-toolbar__clear {
+  min-height: var(--shell-filter-control-min-height);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.search-toolbar__clear:hover {
+  color: var(--text-primary);
+}
+
+.search-toolbar__extra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.search-toolbar__popover {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 264px;
+  max-width: min(320px, calc(100vw - 48px));
+  padding: 4px 2px;
+}
+
+.search-toolbar__popover .arco-form-item {
+  margin-bottom: 0;
+}
+
+.search-toolbar__popover .arco-select,
+.search-toolbar__popover .arco-tree-select,
+.search-toolbar__popover .arco-picker,
+.search-toolbar__popover .arco-input-inner-wrapper,
+.search-toolbar__popover input.arco-input {
+  width: 100%;
+  min-height: var(--shell-filter-control-min-height);
+}
+
+.search-toolbar__popover-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-toolbar__popover-field > label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .search-toolbar .filter-panel__body,
+  .search-toolbar .search-toolbar__body {
+    gap: 8px;
+  }
+
+  .search-toolbar__keyword {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .search-toolbar__extra {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .role-member-drawer__summary,
   .role-member-drawer__toolbar,

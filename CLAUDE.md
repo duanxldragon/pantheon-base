@@ -65,4 +65,3 @@ schema, middleware, generator, dynamic-module, import/export,
 pkg/common, pkg/contracts, or spans 3+ packages.
 
 **→ standard** for everything else — the default for code-writing tasks.
-# refresh

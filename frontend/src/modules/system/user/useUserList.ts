@@ -64,6 +64,7 @@ export interface UserListState {
 }
 
 const emptyQuery: UserListQuery = {
+  keyword: '',
   username: '',
   nickname: '',
   status: undefined,
@@ -86,6 +87,7 @@ const emptyForm: UserCreatePayload = {
 
 function isDefaultUserListQuery(query: UserListQuery) {
   return (
+    !query.keyword &&
     !query.username &&
     !query.nickname &&
     query.status === undefined &&

@@ -18,10 +18,15 @@ const systemTablePages = [
 ] as const;
 
 const filterPanelPages = [
-  '/system/user',
   '/system/permission',
   '/system/dict',
+] as const;
+
+// SearchToolbar 试点页：单行工具栏契约（关键词框 + 即时筛选），无 form-item/action-item 结构。
+const searchToolbarPages = [
+  '/system/user',
   '/system/login-log',
+  '/system/operation-log',
 ] as const;
 
 const governanceBarPages = [
@@ -987,6 +992,43 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
     expect(filterPanelContract.firstActionButton?.height, path).toBeGreaterThanOrEqual(
       Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
     );
+  }
+
+  // SearchToolbar 试点页：验证工具栏本体与控件最小高度（无 form-item 结构）。
+  for (const path of searchToolbarPages) {
+    await navigateInShell(page, path);
+    await expect(
+      page.locator('.search-toolbar .search-toolbar__body').first(),
+      `${path} search toolbar ready`,
+    ).toBeVisible({ timeout: 20000 });
+    const cssVariables = await readRootCssVariables(page, ['--shell-filter-control-min-height']);
+    const minHeight = Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10);
+    const toolbarContract = await page.evaluate(() => {
+      const toolbar = document.querySelector<HTMLElement>('.search-toolbar');
+      const keyword = toolbar?.querySelector<HTMLElement>(
+        '.search-toolbar__keyword .arco-input-inner-wrapper, .search-toolbar__keyword',
+      );
+      const inlineControl = toolbar?.querySelector<HTMLElement>(
+        '.search-toolbar__inline .arco-select-view, .search-toolbar__inline .arco-btn',
+      );
+      const read = (element?: HTMLElement | null) => {
+        if (!element) {
+          return null;
+        }
+        return { height: Math.round(element.getBoundingClientRect().height) };
+      };
+      return { keyword: read(keyword), inlineControl: read(inlineControl) };
+    });
+    expect(toolbarContract.keyword, `${path} keyword input`).not.toBeNull();
+    expect(toolbarContract.keyword?.height, `${path} keyword height`).toBeGreaterThanOrEqual(
+      minHeight,
+    );
+    if (toolbarContract.inlineControl) {
+      expect(
+        toolbarContract.inlineControl.height,
+        `${path} inline control height`,
+      ).toBeGreaterThanOrEqual(minHeight - 2);
+    }
   }
 
   for (const path of governanceBarPages) {

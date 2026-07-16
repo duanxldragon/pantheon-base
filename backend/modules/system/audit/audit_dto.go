@@ -28,6 +28,7 @@ type OperationLogPageResp struct {
 }
 
 type OperationLogQuery struct {
+	Keyword         string `form:"keyword" json:"keyword"`
 	Title           string `form:"title" json:"title"`
 	RequestID       string `form:"requestId" json:"requestId"`
 	OperName        string `form:"operName" json:"operName"`

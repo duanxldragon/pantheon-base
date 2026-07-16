@@ -2,6 +2,7 @@ export { default as AppTable } from './data-display/AppTable';
 export { default as DateTimeMeta } from './data-display/DateTimeMeta';
 export { default as PageContainer } from './patterns/layout/PageContainer';
 export { default as FilterPanel } from './patterns/FilterPanel';
+export { default as SearchToolbar, type SearchToolbarProps } from './patterns/SearchToolbar';
 export { default as PageActions } from './patterns/actions/PageActions';
 export { default as ListHeaderActions } from './patterns/actions/ListHeaderActions';
 export {

@@ -13,10 +13,13 @@ type RefreshTokenReq struct {
 
 // LoginLogQuery 登录日志查询
 type LoginLogQuery struct {
-	Username string `form:"username" json:"username"`
-	Status   *int   `form:"status" json:"status"`
-	Page     int    `form:"page" json:"page"`
-	PageSize int    `form:"pageSize" json:"pageSize"`
+	Keyword   string `form:"keyword" json:"keyword"`
+	Username  string `form:"username" json:"username"`
+	Status    *int   `form:"status" json:"status"`
+	StartedAt string `form:"startedAt" json:"startedAt"`
+	EndedAt   string `form:"endedAt" json:"endedAt"`
+	Page      int    `form:"page" json:"page"`
+	PageSize  int    `form:"pageSize" json:"pageSize"`
 }
 
 type LoginLogCleanupReq struct {

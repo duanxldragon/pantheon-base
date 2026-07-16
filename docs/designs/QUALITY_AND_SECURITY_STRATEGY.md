@@ -54,7 +54,7 @@ English version: [QUALITY_AND_SECURITY_STRATEGY.en.md](./QUALITY_AND_SECURITY_ST
 
 1. 优先治理真实运行时页面、共享组件、布局、表单、表格和生成模板。
 2. 其次治理 smoke、fixture、示例代码中的重复，避免它们被误当成生产代码或反复触发安全扫描。
-3. vendored 方法层脚本如 `scripts/harness/` 不计入产品重复率；它们由 `harness-engineering` 统一治理。
+3. vendored 方法层脚本如 `scripts/harness/` 不计入产品重复率；它们由 `pantheon-harness` 统一治理。
 4. 不为了压低数字盲目抽象业务叶子逻辑；只有当重复影响维护、安全或生成模板时才抽公共层。
 
 ### 2.1.1 重复治理与抽象边界

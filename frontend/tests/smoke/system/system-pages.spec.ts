@@ -2219,16 +2219,22 @@ test('operation log smoke: failed reason and detail summary are visible', async 
   expect(failedUploadPayload.message).toBe('upload.file.type_not_allowed');
 
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
-  await page.getByLabel('操作标题').fill('上传文件');
-  await page.locator('.arco-select-view').first().click();
+  // SearchToolbar：关键词 + 行内下拉即时触发；低频筛选在“筛选”弹层内。
+  const auditToolbar = page.locator('.search-toolbar');
+  await auditToolbar.getByPlaceholder(/搜索/).fill('上传文件');
+  await auditToolbar.getByPlaceholder(/搜索/).press('Enter');
+  await auditToolbar.locator('.arco-select-view').first().click();
   await page.locator('.arco-select-option').filter({ hasText: '失败' }).first().click();
-  await page.locator('.arco-select-view').nth(1).click();
+  await auditToolbar.locator('.arco-select-view').nth(1).click();
   await page.locator('.arco-select-option').filter({ hasText: '系统配置' }).first().click();
-  await page.locator('.arco-select-view').nth(2).click();
+  await auditToolbar.locator('.search-toolbar__advanced-trigger').click();
+  const auditPopover = page.locator('.search-toolbar__popover');
+  await expect(auditPopover).toBeVisible();
+  await auditPopover.locator('.arco-select-view').first().click();
   await page.locator('.arco-select-option').filter({ hasText: '参数/校验失败' }).first().click();
-  await page.locator('.arco-select-view').nth(3).click();
+  await auditPopover.locator('.arco-select-view').nth(1).click();
   await page.locator('.arco-select-option').filter({ hasText: '上传配置' }).first().click();
-  await page.getByRole('button', { name: '搜索' }).click();
+  await page.keyboard.press('Escape');
 
   const firstRow = page.getByRole('row', { name: /上传文件/ }).first();
   await expect(firstRow).toBeVisible();

@@ -50,7 +50,7 @@ Targets:
 - New Code coverage at or above `80%` by default, with PR-level exceptions only.
 - High-risk changes must document residual risk, rollback steps, and added verification instead of depending on extra human approvals.
 
-Frontend duplication is the current main hotspot. Fix runtime pages, shared components, layouts, forms, tables, and generator templates first. Clean smoke, fixture, and example duplication when it pollutes runtime quality signals or repeated security triage. Vendored method-shell scripts such as `scripts/harness/` are excluded from product duplication and governed in `harness-engineering`. Do not create premature abstractions for isolated business leaf logic.
+Frontend duplication is the current main hotspot. Fix runtime pages, shared components, layouts, forms, tables, and generator templates first. Clean smoke, fixture, and example duplication when it pollutes runtime quality signals or repeated security triage. Vendored method-shell scripts such as `scripts/harness/` are excluded from product duplication and governed in `pantheon-harness`. Do not create premature abstractions for isolated business leaf logic.
 
 ### pantheon-ops
 

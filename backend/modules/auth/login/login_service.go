@@ -179,6 +179,10 @@ func (s *LoginService) listLoginLogs(query *LoginLogQuery, filterUsername string
 	} else if query != nil && strings.TrimSpace(query.Username) != "" {
 		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
 	}
+	if filterUsername == "" {
+		db = applyLoginLogKeyword(db, query)
+	}
+	db = applyLoginLogTimeWindow(db, query)
 	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
 		db = db.Where("status = ?", *query.Status)
 	}
@@ -281,10 +285,47 @@ func (s *LoginService) listLoginLogsForExport(query *LoginLogQuery) ([]SystemLog
 	if query != nil && strings.TrimSpace(query.Username) != "" {
 		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
 	}
+	db = applyLoginLogKeyword(db, query)
 	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
 		db = db.Where("status = ?", *query.Status)
 	}
 	return logs, db.Order(loginTimeDescOrderClause).Limit(maxLoginLogExportRows).Find(&logs).Error
+}
+
+// applyLoginLogKeyword 关键词匹配用户名 / IP / 登录地。
+func applyLoginLogKeyword(db *gorm.DB, query *LoginLogQuery) *gorm.DB {
+	if query == nil || strings.TrimSpace(query.Keyword) == "" {
+		return db
+	}
+	keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+	return db.Where("username LIKE ? OR ipaddr LIKE ? OR login_location LIKE ?", keyword, keyword, keyword)
+}
+
+// applyLoginLogTimeWindow 按登录时间窗口过滤；起止时间接受 RFC3339 或 "2006-01-02 15:04"。
+func applyLoginLogTimeWindow(db *gorm.DB, query *LoginLogQuery) *gorm.DB {
+	if query == nil {
+		return db
+	}
+	if start, ok := parseLoginLogTime(query.StartedAt); ok {
+		db = db.Where("login_time >= ?", start)
+	}
+	if end, ok := parseLoginLogTime(query.EndedAt); ok {
+		db = db.Where("login_time <= ?", end)
+	}
+	return db
+}
+
+func parseLoginLogTime(value string) (time.Time, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02 15:04"} {
+		if parsed, err := time.ParseInLocation(layout, value, time.Local); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 // RecordLoginLog writes a login log entry.

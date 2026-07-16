@@ -3,9 +3,6 @@ import {
   Button,
   Card,
   DatePicker,
-  Form,
-  Grid,
-  Input,
   Popconfirm,
   Select,
   Space,
@@ -13,7 +10,7 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import dayjs from 'dayjs';
-import { IconCalendar, IconDelete, IconDownload, IconSearch } from '@arco-design/web-react/icon';
+import { IconCalendar, IconDelete, IconDownload } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
@@ -37,7 +34,6 @@ import { renderClientInfo } from '../../session/clientInfo';
 import {
   AppTable,
   buildStandardPagination,
-  FilterPanel,
   type GovernanceCleanupMode,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
@@ -49,6 +45,7 @@ import {
   PageLoading,
   PageRequestError,
   PermissionAction,
+  SearchToolbar,
   TABLE_COLUMN_WIDTH,
   useGovernanceRail,
 } from '../../../../components';
@@ -59,13 +56,11 @@ import {
   loadRetentionSetting,
   toCleanupTimestampFromParts,
 } from '../../../system/audit/retentionSetting';
-const Row = Grid.Row;
-const Col = Grid.Col;
-const FormItem = Form.Item;
 const RangePicker = DatePicker.RangePicker;
 const defaultRetentionOptions = [1, 7, 30];
 
 const emptyQuery: LoginLogQuery = {
+  keyword: '',
   username: '',
   status: undefined,
   startedAt: '',
@@ -152,7 +147,6 @@ const LoginLogList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<LoginLogQuery>(emptyQuery);
-  const [queryForm] = Form.useForm<LoginLogQuery>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
@@ -268,18 +262,7 @@ const LoginLogList: React.FC = () => {
     return () => globalThis.clearTimeout(timer);
   }, []);
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
-    setSelectedRowKeys([]);
-    setQuery({
-      ...query,
-      ...values,
-      page: 1,
-    });
-  };
-
   const reset = () => {
-    queryForm.setFieldsValue({ username: '', status: undefined });
     setSelectedRowKeys([]);
     setTimeRangePopupVisible(false);
     setTimeRangeDraft(null);
@@ -571,81 +554,70 @@ const LoginLogList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16} className="auth-filter-grid auth-login-log-page__filter-grid">
-                <Col xs={24} md={10} lg={5}>
-                  <FormItem label={t('auth.login_log.time_range.label')}>
-                    <RangePicker
-                      allowClear={false}
-                      dayStartOfWeek={1}
-                      format={DATETIME_FORMAT}
-                      extra={
-                        <Button
-                          type="text"
-                          size="mini"
-                          onClick={() => {
-                            closeTimeRangePopup();
-                          }}
-                        >
-                          {t('common.cancel')}
-                        </Button>
-                      }
-                      showTime={{ format: 'HH:mm' }}
-                      value={timeRangeValue}
-                      popupVisible={timeRangePopupVisible}
-                      position="bl"
-                      triggerElement={
-                        <Button
-                          className="auth-login-log-page__time-range-trigger"
-                          htmlType="button"
-                          type="outline"
-                        >
-                          <span className="auth-login-log-page__time-range-trigger-label">
-                            {t(quickSelectPreset)}
-                          </span>
-                          <IconCalendar className="auth-login-log-page__time-range-trigger-icon" />
-                        </Button>
-                      }
-                      triggerProps={LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS}
-                      panelRender={renderTimeRangePanel}
-                      onChange={handleTimeRangeChange}
-                      onSelect={handleTimeRangeSelect}
-                      onVisibleChange={handleTimeRangePopupVisibleChange}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={8} lg={4}>
-                  <FormItem label={t('system.user.username')} field="username">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={8} lg={3}>
-                  <FormItem label={t('auth.loginLog.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('auth.loginLog.status.success'), value: 1 },
-                        { label: t('auth.loginLog.status.failed'), value: 0 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} lg={4}>
-                  <FormItem className="filter-panel__action-item auth-login-log-page__filter-actions">
-                    <Space direction="vertical">
-                      <Space>
-                        <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                          {t('common.search')}
-                        </Button>
-                        <Button onClick={reset}>{t('common.reset')}</Button>
-                      </Space>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('auth.loginLog.search.placeholder')}
+            onKeywordChange={(keyword) => {
+              setSelectedRowKeys([]);
+              setQuery((prev) => ({ ...prev, keyword, page: 1 }));
+            }}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  placeholder={t('auth.loginLog.status')}
+                  value={query.status}
+                  onChange={(value) => {
+                    setSelectedRowKeys([]);
+                    setQuery((prev) => ({ ...prev, status: value, page: 1 }));
+                  }}
+                  options={[
+                    { label: t('auth.loginLog.status.success'), value: 1 },
+                    { label: t('auth.loginLog.status.failed'), value: 0 },
+                  ]}
+                />
+                <RangePicker
+                  allowClear={false}
+                  dayStartOfWeek={1}
+                  format={DATETIME_FORMAT}
+                  extra={
+                    <Button
+                      type="text"
+                      size="mini"
+                      onClick={() => {
+                        closeTimeRangePopup();
+                      }}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  }
+                  showTime={{ format: 'HH:mm' }}
+                  value={timeRangeValue}
+                  popupVisible={timeRangePopupVisible}
+                  position="bl"
+                  triggerElement={
+                    <Button
+                      className="auth-login-log-page__time-range-trigger"
+                      htmlType="button"
+                      type="outline"
+                    >
+                      <span className="auth-login-log-page__time-range-trigger-label">
+                        {t(quickSelectPreset)}
+                      </span>
+                      <IconCalendar className="auth-login-log-page__time-range-trigger-icon" />
+                    </Button>
+                  }
+                  triggerProps={LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS}
+                  panelRender={renderTimeRangePanel}
+                  onChange={handleTimeRangeChange}
+                  onSelect={handleTimeRangeSelect}
+                  onVisibleChange={handleTimeRangePopupVisibleChange}
+                />
+              </>
+            }
+            hasActiveFilters={Boolean(query.keyword || query.status !== undefined)}
+            onClearAll={reset}
+          />
 
           <Card className="page-panel system-list__table-card auth-login-log-page__table-card">
             <GovernanceCleanupBar

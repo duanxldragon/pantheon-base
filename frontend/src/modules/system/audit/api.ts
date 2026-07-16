@@ -2,6 +2,7 @@ import { apiRequest } from '../../../api/request';
 import { downloadCsvFile, downloadFile } from '../../../api/file';
 
 export interface OperationLogQuery {
+  keyword?: string;
   title?: string;
   operName?: string;
   status?: number;
