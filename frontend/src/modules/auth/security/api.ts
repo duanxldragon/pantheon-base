@@ -83,6 +83,7 @@ export interface SecurityEventRow {
 }
 
 export interface SecurityEventQuery {
+  keyword?: string;
   username?: string;
   eventType?: string;
   severity?: string;

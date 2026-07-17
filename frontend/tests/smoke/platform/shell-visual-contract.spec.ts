@@ -17,14 +17,20 @@ const systemTablePages = [
   { path: '/system/operation-log' },
 ] as const;
 
-const filterPanelPages = [
-  '/system/permission',
-  '/system/dict',
-] as const;
+// 全部列表页已迁移至 SearchToolbar，旧 form-grid FilterPanel 契约无剩余页面。
+const filterPanelPages = [] as const;
 
-// SearchToolbar 试点页：单行工具栏契约（关键词框 + 即时筛选），无 form-item/action-item 结构。
+// SearchToolbar 页面：单行工具栏契约（关键词框 + 即时筛选），无 form-item/action-item 结构。
 const searchToolbarPages = [
   '/system/user',
+  '/system/role',
+  '/system/menu',
+  '/system/dept',
+  '/system/post',
+  '/system/permission',
+  '/system/dict',
+  '/system/i18n',
+  '/system/session',
   '/system/login-log',
   '/system/operation-log',
 ] as const;
@@ -1004,7 +1010,15 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
     const cssVariables = await readRootCssVariables(page, ['--shell-filter-control-min-height']);
     const minHeight = Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10);
     const toolbarContract = await page.evaluate(() => {
-      const toolbar = document.querySelector<HTMLElement>('.search-toolbar');
+      // shell 标签缓存会保留历史页面 DOM，取最后一个可见工具栏（当前页）。
+      const toolbar = Array.from(
+        document.querySelectorAll<HTMLElement>('.search-toolbar'),
+      )
+        .filter((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        })
+        .at(-1);
       const keyword = toolbar?.querySelector<HTMLElement>(
         '.search-toolbar__keyword .arco-input-inner-wrapper, .search-toolbar__keyword',
       );
@@ -1019,10 +1033,16 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
       };
       return { keyword: read(keyword), inlineControl: read(inlineControl) };
     });
-    expect(toolbarContract.keyword, `${path} keyword input`).not.toBeNull();
-    expect(toolbarContract.keyword?.height, `${path} keyword height`).toBeGreaterThanOrEqual(
-      minHeight,
-    );
+    // keyword 输入是可选能力（如权限工作台只有下拉筛选），存在即校验高度契约。
+    expect(
+      toolbarContract.keyword || toolbarContract.inlineControl,
+      `${path} toolbar has at least one control`,
+    ).toBeTruthy();
+    if (toolbarContract.keyword) {
+      expect(toolbarContract.keyword.height, `${path} keyword height`).toBeGreaterThanOrEqual(
+        minHeight,
+      );
+    }
     if (toolbarContract.inlineControl) {
       expect(
         toolbarContract.inlineControl.height,
@@ -1766,20 +1786,17 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
     '--shell-filter-form-item-margin-bottom',
     '--shell-filter-control-min-height',
   ]);
-  const [filterPaddingTop, filterPaddingRight, filterPaddingBottom, filterPaddingLeft] =
+  const [filterPaddingTop, filterPaddingRight, , filterPaddingLeft] =
     expandPaddingValues(cssVariables['--shell-filter-body-padding']);
 
   const typeTabContract = await readDictTabContract();
   expect(typeTabContract.governancePaddingTop).toBe('10px');
   expect(typeTabContract.governancePaddingBottom).toBe('10px');
   expect(typeTabContract.hasSharedSystemTable).toBe(true);
+  // SearchToolbar：单行工具栏，只校验体与控件最小高度（无 form-item 结构）。
   expect(typeTabContract.filterBody?.paddingTop).toBe(filterPaddingTop);
   expect(typeTabContract.filterBody?.paddingRight).toBe(filterPaddingRight);
-  expect(typeTabContract.filterBody?.paddingBottom).toBe(filterPaddingBottom);
   expect(typeTabContract.filterBody?.paddingLeft).toBe(filterPaddingLeft ?? filterPaddingRight);
-  expect(typeTabContract.firstItem?.marginBottom).toBe(
-    cssVariables['--shell-filter-form-item-margin-bottom'],
-  );
   expect(typeTabContract.firstControl?.height).toBeGreaterThanOrEqual(
     Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
   );
@@ -1801,11 +1818,7 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
   }
   expect(itemTabContract.filterBody?.paddingTop).toBe(filterPaddingTop);
   expect(itemTabContract.filterBody?.paddingRight).toBe(filterPaddingRight);
-  expect(itemTabContract.filterBody?.paddingBottom).toBe(filterPaddingBottom);
   expect(itemTabContract.filterBody?.paddingLeft).toBe(filterPaddingLeft ?? filterPaddingRight);
-  expect(itemTabContract.firstItem?.marginBottom).toBe(
-    cssVariables['--shell-filter-form-item-margin-bottom'],
-  );
   expect(itemTabContract.firstControl?.height).toBeGreaterThanOrEqual(
     Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
   );

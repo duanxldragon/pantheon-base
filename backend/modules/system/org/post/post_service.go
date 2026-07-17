@@ -49,6 +49,10 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 	db := s.db.Model(&SystemPost{})
 	page, pageSize := normalizePostPageQuery(query)
 	if query != nil {
+		if strings.TrimSpace(query.Keyword) != "" {
+			keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+			db = db.Where("post_code LIKE ? OR post_name LIKE ?", keyword, keyword)
+		}
 		if strings.TrimSpace(query.PostCode) != "" {
 			db = db.Where("post_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostCode))+"%")
 		}

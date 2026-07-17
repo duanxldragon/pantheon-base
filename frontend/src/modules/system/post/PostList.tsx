@@ -23,7 +23,6 @@ import {
   IconDownload,
   IconEdit,
   IconPlus,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
@@ -55,7 +54,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -83,6 +82,7 @@ const Col = Grid.Col;
 const FormItem = Form.Item;
 
 const emptyQuery: PostListQuery = {
+  keyword: '',
   postCode: '',
   postName: '',
   deptId: undefined,
@@ -119,6 +119,7 @@ function normalizePostRow(row: PostRow): PostRow {
 
 function isDefaultPostListQuery(query: PostListQuery) {
   return (
+    !query.keyword &&
     !query.postCode &&
     !query.postName &&
     query.deptId === undefined &&
@@ -156,7 +157,6 @@ const PostList: React.FC = () => {
   const [deptOptions, setDeptOptions] = useState<Array<{ label: string; value: number }>>([]);
   const [query, setQuery] = useState<PostListQuery>(emptyQuery);
   const [form] = Form.useForm<PostPayload>();
-  const [queryForm] = Form.useForm<PostListQuery>();
   const invalidatePostCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
       { path: '/system/post', resourceKeys: ['list:default'] },
@@ -289,8 +289,7 @@ const PostList: React.FC = () => {
     setQuery({ ...query, page: nextPage });
   };
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<PostListQuery>) => {
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -300,7 +299,6 @@ const PostList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
@@ -678,48 +676,37 @@ const PostList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16}>
-                <Col xs={24} md={12} lg={5}>
-                  <FormItem label={t('system.post.postCode')} field="postCode">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={5}>
-                  <FormItem label={t('system.post.postName')} field="postName">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={5}>
-                  <FormItem label={t('system.post.dept')} field="deptId">
-                    <Select allowClear options={deptOptions} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={5}>
-                  <FormItem label={t('system.post.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={4}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('system.post.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder={t('system.post.dept')}
+                  value={query.deptId}
+                  onChange={(value) => search({ deptId: value })}
+                  options={deptOptions}
+                />
+                <Select
+                  allowClear
+                  placeholder={t('system.post.status')}
+                  value={query.status}
+                  onChange={(value) => search({ status: value })}
+                  options={[
+                    { label: t('system.user.status.enabled'), value: 1 },
+                    { label: t('system.user.status.disabled'), value: 2 },
+                  ]}
+                />
+              </>
+            }
+            hasActiveFilters={Boolean(
+              query.keyword || query.deptId !== undefined || query.status !== undefined,
+            )}
+            onClearAll={reset}
+          />
           <Card className="page-panel system-list__table-card">
             <TableBatchActionBar
               selectedCount={selectedRowKeys.length}

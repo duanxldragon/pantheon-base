@@ -333,6 +333,10 @@ func applySecurityEventFilters(db *gorm.DB, query *SecurityEventQuery) *gorm.DB 
 	if query == nil {
 		return db
 	}
+	if strings.TrimSpace(query.Keyword) != "" {
+		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+		db = db.Where("username LIKE ?", keyword)
+	}
 	if strings.TrimSpace(query.Username) != "" {
 		db = db.Where("username LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Username))+"%")
 	}
@@ -432,6 +436,7 @@ type PasswordChangeReq struct {
 
 // SecurityEventQuery mirrors the auth-layer DTO.
 type SecurityEventQuery struct {
+	Keyword      string `form:"keyword" json:"keyword"`
 	Username     string `form:"username" json:"username"`
 	EventType    string `form:"eventType" json:"eventType"`
 	Severity     string `form:"severity" json:"severity"`

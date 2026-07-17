@@ -61,7 +61,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -113,6 +113,7 @@ const emptyForm: RoleFormValues = {
 };
 
 const emptyQuery: RoleListQuery = {
+  keyword: '',
   roleName: '',
   roleKey: '',
   status: undefined,
@@ -122,6 +123,7 @@ const emptyQuery: RoleListQuery = {
 
 function isDefaultRoleListQuery(query: RoleListQuery) {
   return (
+    !query.keyword &&
     !query.roleName &&
     !query.roleKey &&
     query.status === undefined &&
@@ -277,7 +279,6 @@ const RoleList: React.FC = () => {
   const [menuTree, setMenuTree] = useState<MenuNode[]>([]);
   const [authorizationCounts, setAuthorizationCounts] = useState(emptyAuthorizationCounts);
   const [form] = Form.useForm<RoleFormValues>();
-  const [queryForm] = Form.useForm<RoleListQuery>();
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
   const canCreate = isAdmin || hasPerm('system:role:create');
@@ -716,8 +717,7 @@ const RoleList: React.FC = () => {
     }
   };
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<RoleListQuery>) => {
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -727,7 +727,6 @@ const RoleList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
@@ -943,43 +942,25 @@ const RoleList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16}>
-                <Col span={6}>
-                  <FormItem label={t('system.role.roleName')} field="roleName">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.role.roleKey')} field="roleKey">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.role.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('system.role.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <Select
+                allowClear
+                placeholder={t('system.role.status')}
+                value={query.status}
+                onChange={(value) => search({ status: value })}
+                options={[
+                  { label: t('system.user.status.enabled'), value: 1 },
+                  { label: t('system.user.status.disabled'), value: 2 },
+                ]}
+              />
+            }
+            hasActiveFilters={Boolean(query.keyword || query.status !== undefined)}
+            onClearAll={reset}
+          />
           <Card className="page-panel system-list__table-card">
             <TableBatchActionBar
               selectedCount={selectedRowKeys.length}

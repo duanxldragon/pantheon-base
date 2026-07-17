@@ -18,6 +18,7 @@ export interface DictTypeRow {
 }
 
 export interface DictTypeQuery {
+  keyword?: string;
   dictCode?: string;
   dictName?: string;
   status?: number;

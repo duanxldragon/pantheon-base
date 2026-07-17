@@ -2,9 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Card,
   Button,
-  Form,
-  Grid,
-  Input,
   Popconfirm,
   Select,
   Space,
@@ -13,7 +10,7 @@ import {
 } from '@arco-design/web-react';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
-import { IconDelete, IconSearch } from '@arco-design/web-react/icon';
+import { IconDelete } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
 import {
@@ -35,7 +32,7 @@ import {
 import {
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   type GovernanceCleanupMode,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
@@ -58,11 +55,9 @@ import {
   toCleanupTimestampFromParts,
   loadRetentionSetting,
 } from '../../../system/audit/retentionSetting';
-const Row = Grid.Row;
-const Col = Grid.Col;
-const FormItem = Form.Item;
 
 const emptyQuery: AdminSessionQuery = {
+  keyword: '',
   username: '',
   lastIp: '',
   browser: undefined,
@@ -93,7 +88,6 @@ const SessionList: React.FC = () => {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<AdminSessionQuery>(emptyQuery);
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
-  const [queryForm] = Form.useForm<AdminSessionQuery>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
@@ -153,8 +147,7 @@ const SessionList: React.FC = () => {
     return () => globalThis.clearTimeout(timer);
   }, []);
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<AdminSessionQuery>) => {
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -164,7 +157,6 @@ const SessionList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
@@ -412,73 +404,84 @@ const SessionList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16} className="auth-filter-grid">
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('system.user.username')} field="username">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.ip')} field="lastIp">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.filter.status')} field="status">
-                    <Select allowClear>
-                      <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
-                      <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.browserName')} field="browser">
-                    <Select allowClear>
-                      {browserOptions.map((item) => (
-                        <Select.Option key={item} value={item}>
-                          {item}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.osName')} field="os">
-                    <Select allowClear>
-                      {osOptions.map((item) => (
-                        <Select.Option key={item} value={item}>
-                          {item}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.deviceName')} field="device">
-                    <Select allowClear>
-                      {deviceOptions.map((item) => (
-                        <Select.Option key={item} value={item}>
-                          {item}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('auth.session.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <Select
+                allowClear
+                placeholder={t('auth.session.filter.status')}
+                value={query.status}
+                onChange={(value) => search({ status: value })}
+              >
+                <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
+                <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
+              </Select>
+            }
+            advancedFilters={
+              <>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('auth.session.browserName')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.session.browserName')}
+                    value={query.browser}
+                    onChange={(value) => search({ browser: value })}
+                  >
+                    {browserOptions.map((item) => (
+                      <Select.Option key={item} value={item}>
+                        {item}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('auth.session.osName')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.session.osName')}
+                    value={query.os}
+                    onChange={(value) => search({ os: value })}
+                  >
+                    {osOptions.map((item) => (
+                      <Select.Option key={item} value={item}>
+                        {item}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('auth.session.deviceName')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.session.deviceName')}
+                    value={query.device}
+                    onChange={(value) => search({ device: value })}
+                  >
+                    {deviceOptions.map((item) => (
+                      <Select.Option key={item} value={item}>
+                        {item}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            }
+            advancedActiveCount={
+              [query.browser, query.os, query.device].filter(
+                (value) => value !== undefined && value !== '',
+              ).length
+            }
+            hasActiveFilters={Boolean(
+              query.keyword ||
+                query.status !== undefined ||
+                query.browser ||
+                query.os ||
+                query.device,
+            )}
+            onClearAll={reset}
+          />
 
           <Card className="page-panel system-list__table-card">
             {canClear || canDelete ? (

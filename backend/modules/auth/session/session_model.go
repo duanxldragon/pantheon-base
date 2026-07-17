@@ -46,6 +46,7 @@ type ClientInfoResp struct {
 
 // AdminSessionQuery 管理员会话查询
 type AdminSessionQuery struct {
+	Keyword  string `form:"keyword" json:"keyword"`
 	Username string `form:"username" json:"username"`
 	LastIP   string `form:"lastIp" json:"lastIp"`
 	Browser  string `form:"browser" json:"browser"`

@@ -40,6 +40,7 @@ export interface AdminSessionRow {
 }
 
 export interface AdminSessionQuery {
+  keyword?: string;
   username?: string;
   lastIp?: string;
   browser?: string;

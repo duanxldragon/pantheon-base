@@ -21,7 +21,6 @@ import {
   IconEdit,
   IconEye,
   IconPlus,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import type {
   ColumnProps,
@@ -72,7 +71,7 @@ import {
   AppTable,
   buildStandardPagination,
   getPagedItems,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -253,7 +252,6 @@ const DeptList: React.FC = () => {
   const [form] = Form.useForm<DeptFormValues>();
   const [leaderForm] = Form.useForm<DeptLeaderFormValues>();
   const [postForm] = Form.useForm<OrgPostFormValues>();
-  const [queryForm] = Form.useForm<DeptListQuery>();
   const governanceRail = useGovernanceRail({ enabled: activeTab === 'manage' });
   const loadDataRequestIdRef = useRef(0);
   const invalidateDeptCaches = useCallback(() => {
@@ -652,8 +650,7 @@ const DeptList: React.FC = () => {
     }
   };
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<DeptListQuery>) => {
     setSelectedRowKeys([]);
     setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery({
@@ -663,21 +660,10 @@ const DeptList: React.FC = () => {
   };
 
   const applyGovernanceFilter = (governance?: 'leaderless' | 'no-post' | 'empty') => {
-    const nextQuery: DeptListQuery = {
-      ...query,
-      governance,
-    };
-    queryForm.setFieldsValue({
-      ...queryForm.getFieldsValue(),
-      governance,
-    });
-    setSelectedRowKeys([]);
-    setTablePagination((current) => ({ ...current, current: 1 }));
-    setQuery(nextQuery);
+    search({ governance });
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setTablePagination({ current: 1, pageSize: 10 });
     setQuery(emptyQuery);
@@ -1157,57 +1143,40 @@ const DeptList: React.FC = () => {
         <Tabs activeTab={activeTab} onChange={setActiveTab} className="system-dept-tabs">
           <Tabs.TabPane key="manage" title={t('system.dept.manageTab')}>
             <div className="page-main-column dept-list-page__layout">
-              <FilterPanel>
-                <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-                  <Row gutter={16}>
-                    <Col xs={24} md={12} lg={6}>
-                      <FormItem label={t('system.dept.deptName')} field="deptName">
-                        <Input onPressEnter={() => queryForm.submit()} />
-                      </FormItem>
-                    </Col>
-                    <Col xs={24} md={12} lg={6}>
-                      <FormItem label={t('system.dept.status')} field="status">
-                        <Select
-                          allowClear
-                          options={[
-                            { label: t('system.user.status.enabled'), value: 1 },
-                            { label: t('system.user.status.disabled'), value: 2 },
-                          ]}
-                        />
-                      </FormItem>
-                    </Col>
-                    <Col xs={24} md={12} lg={6}>
-                      <FormItem label={t('system.dept.governance')} field="governance">
-                        <Select
-                          allowClear
-                          options={[
-                            { label: t('system.dept.governance.leaderless'), value: 'leaderless' },
-                            { label: t('system.dept.governance.noPost'), value: 'no-post' },
-                            { label: t('system.dept.governance.empty'), value: 'empty' },
-                          ]}
-                        />
-                      </FormItem>
-                    </Col>
-                    <Col xs={24} md={12} lg={6}>
-                      <FormItem className="filter-panel__action-item">
-                        <Space size={6}>
-                          <Button
-                            size="small"
-                            type="primary"
-                            htmlType="submit"
-                            icon={<IconSearch />}
-                          >
-                            {t('common.search')}
-                          </Button>
-                          <Button size="small" onClick={reset}>
-                            {t('common.reset')}
-                          </Button>
-                        </Space>
-                      </FormItem>
-                    </Col>
-                  </Row>
-                </Form>
-              </FilterPanel>
+              <SearchToolbar
+                keyword={query.deptName ?? ''}
+                keywordPlaceholder={t('system.dept.search.placeholder')}
+                onKeywordChange={(deptName) => search({ deptName })}
+                inlineFilters={
+                  <>
+                    <Select
+                      allowClear
+                      placeholder={t('system.dept.status')}
+                      value={query.status}
+                      onChange={(value) => search({ status: value })}
+                      options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]}
+                    />
+                    <Select
+                      allowClear
+                      placeholder={t('system.dept.governance')}
+                      value={query.governance}
+                      onChange={(value) => search({ governance: value })}
+                      options={[
+                        { label: t('system.dept.governance.leaderless'), value: 'leaderless' },
+                        { label: t('system.dept.governance.noPost'), value: 'no-post' },
+                        { label: t('system.dept.governance.empty'), value: 'empty' },
+                      ]}
+                    />
+                  </>
+                }
+                hasActiveFilters={Boolean(
+                  query.deptName || query.status !== undefined || query.governance !== undefined,
+                )}
+                onClearAll={reset}
+              />
               <Card className="page-panel system-list__table-card dept-list-page__table-card">
                 <TableBatchActionBar
                   selectedCount={selectedRowKeys.length}

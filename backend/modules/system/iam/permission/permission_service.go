@@ -82,6 +82,10 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 	db := s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p")
 	page, pageSize := normalizePermissionPageQuery(query)
 	if query != nil {
+		if strings.TrimSpace(query.Keyword) != "" {
+			keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+			db = db.Where("v0 LIKE ? OR v1 LIKE ?", keyword, keyword)
+		}
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("v0 LIKE ?", "%"+strings.TrimSpace(query.RoleKey)+"%")
 		}

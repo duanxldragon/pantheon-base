@@ -11,6 +11,7 @@ export interface PermissionPolicyRow {
 }
 
 export interface PermissionPolicyQuery {
+  keyword?: string;
   roleKey?: string;
   path?: string;
   method?: string;

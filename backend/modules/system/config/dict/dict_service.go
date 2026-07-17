@@ -168,6 +168,10 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 	var rows []SystemDictType
 	db := s.db.Model(&SystemDictType{})
 	if query != nil {
+		if strings.TrimSpace(query.Keyword) != "" {
+			keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+			db = db.Where("dict_code LIKE ? OR dict_name LIKE ?", keyword, keyword)
+		}
 		if strings.TrimSpace(query.DictCode) != "" {
 			db = db.Where("dict_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.DictCode))+"%")
 		}

@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
-  Form,
-  Grid,
   Input,
   Select,
   Space,
@@ -11,7 +9,7 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
-import { IconCheck, IconSearch } from '@arco-design/web-react/icon';
+import { IconCheck } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { message } from '../../../../components/feedback/message';
 import { formatDateTime } from '../../../../core/format/dateTime';
@@ -19,7 +17,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -42,25 +40,10 @@ import {
 import '../../auth.css';
 import '../../../system/components/shared/list-page.css';
 
-const Row = Grid.Row;
-const Col = Grid.Col;
-const FormItem = Form.Item;
 const TextArea = Input.TextArea;
 
 const emptyQuery: SecurityEventQuery = {
-  username: '',
-  eventType: '',
-  severity: '',
-  acknowledged: undefined,
-  page: 1,
-  pageSize: 10,
-};
-
-type SecurityEventFilterForm = Omit<SecurityEventQuery, 'acknowledged'> & {
-  acknowledged?: 'acknowledged' | 'pending';
-};
-
-const emptyFilterForm: SecurityEventFilterForm = {
+  keyword: '',
   username: '',
   eventType: '',
   severity: '',
@@ -74,7 +57,6 @@ const SecurityEventList: React.FC = () => {
   const { isAdmin, hasPerm } = usePermission();
   const canAcknowledge = isAdmin || hasPerm('system:security-event:acknowledge');
   const governanceRail = useGovernanceRail();
-  const [form] = Form.useForm<SecurityEventFilterForm>();
   const [query, setQuery] = useState<SecurityEventQuery>(emptyQuery);
   const [data, setData] = useState<SecurityEventPageResp>({
     items: [],
@@ -210,23 +192,15 @@ const SecurityEventList: React.FC = () => {
     },
   });
 
-  const handleSearch = () => {
-    const values = form.getFieldsValue();
+  const handleSearch = (values: Partial<SecurityEventQuery>) => {
     void fetchData({
-      ...emptyQuery,
+      ...query,
       ...values,
-      acknowledged:
-        values.acknowledged === 'acknowledged'
-          ? true
-          : values.acknowledged === 'pending'
-            ? false
-            : undefined,
       page: 1,
     });
   };
 
   const handleReset = () => {
-    form.resetFields();
     void fetchData(emptyQuery);
   };
 
@@ -277,81 +251,73 @@ const SecurityEventList: React.FC = () => {
             </GovernanceRailToggleButton>
           }
         />
-        <FilterPanel>
-          <Form form={form} layout="vertical" initialValues={emptyFilterForm}>
-            <Row gutter={16} className="auth-filter-grid auth-security-event-page__filter-grid">
-              <Col xs={24} md={12} lg={5}>
-                <FormItem field="username" label={t('common.user')}>
-                  <Input
-                    allowClear
-                    placeholder={t('auth.securityEvent.filter.usernamePlaceholder')}
-                  />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={5}>
-                <FormItem field="eventType" label={t('auth.securityEvent.eventType')}>
-                  <Select
-                    allowClear
-                    placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
-                  >
-                    <Select.Option value="password_wrong">
-                      {t('auth.securityEvent.type.password_wrong')}
-                    </Select.Option>
-                    <Select.Option value="source_blocked">
-                      {t('auth.securityEvent.type.source_blocked')}
-                    </Select.Option>
-                    <Select.Option value="account_locked">
-                      {t('auth.securityEvent.type.account_locked')}
-                    </Select.Option>
-                  </Select>
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={5}>
-                <FormItem field="severity" label={t('auth.securityEvent.severity')}>
-                  <Select
-                    allowClear
-                    placeholder={t('auth.securityEvent.filter.severityPlaceholder')}
-                  >
-                    <Select.Option value="high">
-                      {t('auth.securityEvent.severity.high')}
-                    </Select.Option>
-                    <Select.Option value="medium">
-                      {t('auth.securityEvent.severity.medium')}
-                    </Select.Option>
-                    <Select.Option value="low">
-                      {t('auth.securityEvent.severity.low')}
-                    </Select.Option>
-                  </Select>
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={5}>
-                <FormItem field="acknowledged" label={t('auth.securityEvent.acknowledgement')}>
-                  <Select
-                    allowClear
-                    placeholder={t('auth.securityEvent.filter.acknowledgedPlaceholder')}
-                  >
-                    <Select.Option value="acknowledged">
-                      {t('auth.securityEvent.status.acknowledged')}
-                    </Select.Option>
-                    <Select.Option value="pending">
-                      {t('auth.securityEvent.status.pending')}
-                    </Select.Option>
-                  </Select>
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={4}>
-                <FormItem className="filter-panel__action-item auth-security-event-page__filter-actions">
-                  <Space>
-                    <Button type="primary" icon={<IconSearch />} onClick={handleSearch}>
-                      {t('common.search')}
-                    </Button>
-                    <Button onClick={handleReset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
+        <SearchToolbar
+          keyword={query.keyword ?? ''}
+          keywordPlaceholder={t('auth.securityEvent.search.placeholder')}
+          onKeywordChange={(keyword) => handleSearch({ keyword })}
+          inlineFilters={
+            <>
+              <Select
+                allowClear
+                placeholder={t('auth.securityEvent.filter.eventTypePlaceholder')}
+                value={query.eventType || undefined}
+                onChange={(value) => handleSearch({ eventType: value ?? '' })}
+              >
+                <Select.Option value="password_wrong">
+                  {t('auth.securityEvent.type.password_wrong')}
+                </Select.Option>
+                <Select.Option value="source_blocked">
+                  {t('auth.securityEvent.type.source_blocked')}
+                </Select.Option>
+                <Select.Option value="account_locked">
+                  {t('auth.securityEvent.type.account_locked')}
+                </Select.Option>
+              </Select>
+              <Select
+                allowClear
+                placeholder={t('auth.securityEvent.filter.severityPlaceholder')}
+                value={query.severity || undefined}
+                onChange={(value) => handleSearch({ severity: value ?? '' })}
+              >
+                <Select.Option value="high">
+                  {t('auth.securityEvent.severity.high')}
+                </Select.Option>
+                <Select.Option value="medium">
+                  {t('auth.securityEvent.severity.medium')}
+                </Select.Option>
+                <Select.Option value="low">{t('auth.securityEvent.severity.low')}</Select.Option>
+              </Select>
+              <Select
+                allowClear
+                placeholder={t('auth.securityEvent.filter.acknowledgedPlaceholder')}
+                value={
+                  query.acknowledged === undefined
+                    ? undefined
+                    : query.acknowledged
+                      ? 'acknowledged'
+                      : 'pending'
+                }
+                onChange={(value) =>
+                  handleSearch({
+                    acknowledged:
+                      value === 'acknowledged' ? true : value === 'pending' ? false : undefined,
+                  })
+                }
+              >
+                <Select.Option value="acknowledged">
+                  {t('auth.securityEvent.status.acknowledged')}
+                </Select.Option>
+                <Select.Option value="pending">
+                  {t('auth.securityEvent.status.pending')}
+                </Select.Option>
+              </Select>
+            </>
+          }
+          hasActiveFilters={Boolean(
+            query.keyword || query.eventType || query.severity || query.acknowledged !== undefined,
+          )}
+          onClearAll={handleReset}
+        />
         <Card className="page-panel system-list__table-card auth-security-event-page__table-card">
           <Typography.Text type="secondary">{t('auth.securityEvent.hint')}</Typography.Text>
           {loading && data.items.length === 0 ? <PageLoading /> : null}

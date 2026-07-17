@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Form,
-  Grid,
   Input,
   InputNumber,
   Select,
@@ -20,7 +19,6 @@ import {
   IconEdit,
   IconList,
   IconPlus,
-  IconSearch,
   IconUnorderedList,
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
@@ -49,7 +47,7 @@ import {
   AppTable,
   buildStandardPagination,
   getPagedItems,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -74,8 +72,6 @@ import {
 } from '../../../core/router/componentRegistry';
 import '../components/shared/list-page.css';
 
-const Row = Grid.Row;
-const Col = Grid.Col;
 const FormItem = Form.Item;
 const registeredComponentKeys = listRegisteredComponentKeys();
 
@@ -109,6 +105,7 @@ const emptyForm: MenuFormValues = {
 };
 
 const emptyQuery: MenuListQuery = {
+  keyword: '',
   titleKey: '',
   path: '',
   isVisible: undefined,
@@ -132,7 +129,6 @@ const MenuList: React.FC = () => {
   const [tablePagination, setTablePagination] = useState({ current: 1, pageSize: 10 });
   const [query, setQuery] = useState<MenuListQuery>(emptyQuery);
   const [form] = Form.useForm<MenuFormValues>();
-  const [queryForm] = Form.useForm<MenuListQuery>();
   const { fetchMenuTree } = useMenuStore();
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
@@ -310,8 +306,7 @@ const MenuList: React.FC = () => {
     ]);
   };
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<MenuListQuery>) => {
     setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery({
       ...query,
@@ -320,7 +315,6 @@ const MenuList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setTablePagination((current) => ({ ...current, current: 1 }));
     setQuery(emptyQuery);
   };
@@ -759,43 +753,25 @@ const MenuList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16}>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('system.menu.titleKey')} field="titleKey">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('system.menu.path')} field="path">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={4}>
-                  <FormItem label={t('system.menu.visible')} field="isVisible">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('common.yes'), value: 1 },
-                        { label: t('common.no'), value: 0 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={4}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('system.menu.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <Select
+                allowClear
+                placeholder={t('system.menu.visible')}
+                value={query.isVisible}
+                onChange={(value) => search({ isVisible: value })}
+                options={[
+                  { label: t('common.yes'), value: 1 },
+                  { label: t('common.no'), value: 0 },
+                ]}
+              />
+            }
+            hasActiveFilters={Boolean(query.keyword || query.isVisible !== undefined)}
+            onClearAll={reset}
+          />
           <Card className="page-panel system-list__table-card">
             <div className="system-list__work-actions">
               <PageActions>

@@ -125,6 +125,10 @@ func applyAdminSessionFilters(db *gorm.DB, query *AdminSessionQuery, now time.Ti
 	if query == nil {
 		return db
 	}
+	if strings.TrimSpace(query.Keyword) != "" {
+		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+		db = db.Where("system_user.username LIKE ? OR system_user_session.last_ip LIKE ?", keyword, keyword)
+	}
 	if strings.TrimSpace(query.Username) != "" {
 		db = db.Where("system_user.username LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Username))+"%")
 	}

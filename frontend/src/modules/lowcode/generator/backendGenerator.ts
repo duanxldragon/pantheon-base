@@ -240,15 +240,25 @@ ${relationDTOs ? `\n${relationDTOs}` : ''}
       return '\t// 无搜索字段';
     }
 
-    return searchableFields
-      .map((field) => {
-        const tsType = this.goTypeFromField(field.type);
-        // 可搜索字段通常可选
-        const isPointer = field.type === 'int' || field.type === 'float';
-        const goType = isPointer ? `*${tsType}` : tsType;
-        return `\t${this.capitalize(field.name)} ${goType} \`form:"${field.name}" json:"${field.name}"\``;
-      })
-      .join('\n');
+    const fields = searchableFields.map((field) => {
+      const tsType = this.goTypeFromField(field.type);
+      // 可搜索字段通常可选
+      const isPointer = field.type === 'int' || field.type === 'float';
+      const goType = isPointer ? `*${tsType}` : tsType;
+      return `\t${this.capitalize(field.name)} ${goType} \`form:"${field.name}" json:"${field.name}"\``;
+    });
+    // 统一关键词：跨所有文本型可搜索字段 OR LIKE
+    if (this.getKeywordSearchColumns().length > 0) {
+      fields.unshift('\tKeyword string `form:"keyword" json:"keyword"`');
+    }
+    return fields.join('\n');
+  }
+
+  /** 文本型可搜索字段的数据库列名，供统一关键词 OR LIKE。 */
+  private getKeywordSearchColumns(): string[] {
+    return this.schema.model.fields
+      .filter((f) => f.searchable && f.type !== 'int' && f.type !== 'float' && f.type !== 'enum')
+      .map((f) => this.toDBColumn(f.name));
   }
 
   /**
@@ -270,8 +280,8 @@ ${relationDTOs ? `\n${relationDTOs}` : ''}
 
 import (
 \t"errors"
-\t${hasDataScope ? `"pantheon-platform/backend/pkg/common"` : ``}
-\t${hasDataScope ? `"pantheon-platform/backend/pkg/database"` : ``}
+\t${hasDataScope ? `"pantheon-platform/pkg/common"` : ``}
+\t${hasDataScope ? `"pantheon-platform/pkg/database"` : ``}
 \t${requiresStrconv ? `"strconv"` : ``}
 \t"strings"
 \t"time"
@@ -461,22 +471,31 @@ ${relationServices ? `\n${relationServices}` : ''}
       return '// 无搜索条件';
     }
 
-    return searchableFields
-      .map((field) => {
-        const fieldName = this.capitalize(field.name);
-        const columnName = this.toDBColumn(field.name);
-        const isPointer = field.type === 'int' || field.type === 'float';
-        if (isPointer) {
-          return `if query.${fieldName} != nil {
+    const filters = searchableFields.map((field) => {
+      const fieldName = this.capitalize(field.name);
+      const columnName = this.toDBColumn(field.name);
+      const isPointer = field.type === 'int' || field.type === 'float';
+      if (isPointer) {
+        return `if query.${fieldName} != nil {
 \t\tdb = db.Where("${columnName} = ?", query.${fieldName})
 \t}`;
-        } else {
-          return `if query.${fieldName} != "" {
+      } else {
+        return `if query.${fieldName} != "" {
 \t\tdb = db.Where("${columnName} LIKE ?", "%"+query.${fieldName}+"%")
 \t}`;
-        }
-      })
-      .join('\n\t');
+      }
+    });
+    // 统一关键词：跨所有文本型可搜索字段 OR LIKE
+    const keywordColumns = this.getKeywordSearchColumns();
+    if (keywordColumns.length > 0) {
+      const clause = keywordColumns.map((column) => `${column} LIKE ?`).join(' OR ');
+      const args = keywordColumns.map(() => 'keyword').join(', ');
+      filters.unshift(`if strings.TrimSpace(query.Keyword) != "" {
+\t\tkeyword := "%" + strings.TrimSpace(query.Keyword) + "%"
+\t\tdb = db.Where("${clause}", ${args})
+\t}`);
+    }
+    return filters.join('\n\t');
   }
 
   private toDBColumn(name: string): string {
@@ -553,7 +572,7 @@ ${relationServices ? `\n${relationServices}` : ''}
     return `package ${this.packageName}
 
 import (
-\t"pantheon-platform/backend/pkg/common"
+\t"pantheon-platform/pkg/common"
 \t"strconv"
 \t"github.com/gin-gonic/gin"
 )
@@ -690,8 +709,8 @@ ${relationHandlers ? `\n${relationHandlers}` : ''}
     return `package ${this.packageName}
 
 import (
-\t"pantheon-platform/backend/internal/middleware"
-\t"pantheon-platform/backend/pkg/contracts"
+\t"pantheon-platform/internal/middleware"
+\t"pantheon-platform/pkg/contracts"
 \t"strings"
 \t"github.com/gin-gonic/gin"
 \t"gorm.io/gorm"
