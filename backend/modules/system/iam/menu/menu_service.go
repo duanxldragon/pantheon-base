@@ -40,17 +40,13 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 
 	var menus []SystemMenu
 	db := s.db.Model(&SystemMenu{})
+	textFiltered := false
 	if query != nil {
-		if strings.TrimSpace(query.Keyword) != "" {
-			keyword := fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Keyword)))
-			db = db.Where("title_key LIKE ? OR path LIKE ?", keyword, keyword)
-		}
-		if strings.TrimSpace(query.TitleKey) != "" {
-			db = db.Where("title_key LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.TitleKey))))
-		}
-		if strings.TrimSpace(query.Path) != "" {
-			db = db.Where("path LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Path))))
-		}
+		// 文本过滤（keyword/titleKey/path）在内存中做：命中子节点时需要补全祖先链，
+		// 直接在 SQL 里过滤会把"父不匹配、子匹配"的整条链丢掉，树装配后结果为空。
+		textFiltered = strings.TrimSpace(query.Keyword) != "" ||
+			strings.TrimSpace(query.TitleKey) != "" ||
+			strings.TrimSpace(query.Path) != ""
 		if query.IsVisible != nil && (*query.IsVisible == 0 || *query.IsVisible == 1) {
 			db = db.Where("is_visible = ?", *query.IsVisible)
 		}
@@ -70,7 +66,66 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 		return nil, err
 	}
 
+	if textFiltered {
+		menus = filterMenusWithAncestors(menus, query)
+	}
+
 	return normalizeManageMenuTree(buildMenuTree(menus, 0), 0), nil
+}
+
+// filterMenusWithAncestors 按文本条件过滤菜单并保留命中节点的祖先链，
+// 保证树装配后命中的子节点仍然可见（保持传入的排序）。
+func filterMenusWithAncestors(menus []SystemMenu, query *MenuListQuery) []SystemMenu {
+	keyword := strings.ToLower(strings.TrimSpace(query.Keyword))
+	titleKey := strings.ToLower(strings.TrimSpace(query.TitleKey))
+	pathFilter := strings.ToLower(strings.TrimSpace(query.Path))
+
+	matches := func(menu SystemMenu) bool {
+		menuTitle := strings.ToLower(menu.TitleKey)
+		menuPath := strings.ToLower(menu.Path)
+		if keyword != "" && !strings.Contains(menuTitle, keyword) && !strings.Contains(menuPath, keyword) {
+			return false
+		}
+		if titleKey != "" && !strings.Contains(menuTitle, titleKey) {
+			return false
+		}
+		if pathFilter != "" && !strings.Contains(menuPath, pathFilter) {
+			return false
+		}
+		return true
+	}
+
+	menuMap := make(map[uint64]SystemMenu, len(menus))
+	for _, menu := range menus {
+		menuMap[menu.ID] = menu
+	}
+
+	selected := make(map[uint64]struct{}, len(menus))
+	for _, menu := range menus {
+		if !matches(menu) {
+			continue
+		}
+		currentID := menu.ID
+		for currentID > 0 {
+			node, ok := menuMap[currentID]
+			if !ok {
+				break
+			}
+			if _, exists := selected[node.ID]; exists {
+				break
+			}
+			selected[node.ID] = struct{}{}
+			currentID = node.ParentID
+		}
+	}
+
+	result := make([]SystemMenu, 0, len(selected))
+	for _, menu := range menus {
+		if _, ok := selected[menu.ID]; ok {
+			result = append(result, menu)
+		}
+	}
+	return result
 }
 
 func (s *MenuService) HasManageAccess(roleKeys []string) (bool, error) {
