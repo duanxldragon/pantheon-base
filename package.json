@@ -15,6 +15,7 @@
     "check:harness-docs": "node scripts/harness/check-doc-links.mjs --root . --strict",
     "check:harness-inventory": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
     "check:harness-sync": "node scripts/harness/check-sync-drift.mjs --root . --strict",
+    "check:harness-encoding": "node scripts/harness/check-encoding.mjs --root . --strict",
     "release:foundation:bundle": "node scripts/foundation-release/build-release-bundle.mjs",
     "release:foundation:cut": "node scripts/foundation-release/cut-foundation-release.mjs",
     "release:foundation:manifest": "node scripts/foundation-release/build-release-manifest.mjs",

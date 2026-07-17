@@ -23,6 +23,7 @@ node scripts/harness/check-doc-frontmatter.mjs --root . --strict
 node scripts/harness/check-doc-links.mjs --root . --strict
 node scripts/harness/check-doc-inventory.mjs --root . --strict
 node scripts/harness/check-sync-drift.mjs --root . --strict
+node scripts/harness/check-encoding.mjs --root . --strict
 ```
 
 ## 共享工具
