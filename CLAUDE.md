@@ -4,6 +4,10 @@ Chinese operational rules: [AGENTS.md](./AGENTS.md)
 
 Follow `AGENTS.md` as the project source of truth.
 
+## Maintainer Contract: three touchpoints only
+
+The maintainer intervenes at exactly three points — (1) requirement clarification at intake (batch ALL questions once, produce In/Out/acceptance criteria, then stop asking), (2) gate-policy decisions (red gates, exemptions, rule changes), (3) final visual/functional acceptance. Between those, run autonomously: no mid-task confirmations for reversible in-scope work; gates and evidence replace verbal confirmation. See `../pantheon-harness/architecture/methodology/workflow-routing.md` → Human Touchpoints.
+
 ## CodeGraph
 
 This repository has a project-local CodeGraph MCP config in `.mcp.json`.
