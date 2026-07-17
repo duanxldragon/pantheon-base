@@ -34,6 +34,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "audit": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
     "preview": "vite preview",
+    "test:visual": "playwright test -c playwright.visual.config.ts",
+    "test:visual:baseline": "playwright test -c playwright.visual.config.ts --update-snapshots",
     "test:smoke:platform": "npm run test:smoke:platform:contracts && npm run test:smoke:platform:surfaces && npm run test:smoke:platform:full",
     "test:smoke:platform:contracts": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/shell-visual-contract.spec.ts tests/smoke/platform/pagination-contract.spec.ts --workers=1",
     "test:smoke:platform:surfaces": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/platform-shell.spec.ts tests/smoke/platform/backoffice-ui-visual.spec.ts tests/smoke/platform/shell-top-panels.spec.ts tests/smoke/platform/system-layout-contract.spec.ts tests/smoke/platform/system-secondary-route-visual.spec.ts tests/smoke/platform/system-secondary-route-interaction.spec.ts tests/smoke/platform/system-secondary-route-failure.spec.ts tests/smoke/platform/system-secondary-route-permission.spec.ts --workers=1",
