@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "predev": "npm run patch:arco-react19",
-    "prebuild": "npm run patch:arco-react19 && npm run check:menu-contract && npm run check:i18n-hardcode && npm run check:i18n-generated-scope && npm run check:system-datetime-presentation && npm run check:shell-visual-contract && npm run check:ui-contract && npm run check:important-budget && npm run check:system-page-admission && npm run check:smoke-web-base && npm run check:smoke-coverage-contract",
+    "prebuild": "npm run patch:arco-react19 && npm run check:menu-contract && npm run check:i18n-hardcode && npm run check:i18n-generated-scope && npm run check:system-datetime-presentation && npm run check:shell-visual-contract && npm run check:ui-contract && npm run check:search-toolbar-contract && npm run check:important-budget && npm run check:system-page-admission && npm run check:smoke-web-base && npm run check:smoke-coverage-contract",
     "build": "tsc -b && vite build",
     "postinstall": "npm run patch:arco-react19",
     "patch:arco-react19": "node ./scripts/patch-arco-react19.mjs",
@@ -16,6 +16,7 @@
     "check:system-datetime-presentation": "node ./scripts/check-system-datetime-presentation.mjs",
     "check:shell-visual-contract": "node ./scripts/check-shell-visual-contract.mjs",
     "check:ui-contract": "node ./scripts/check-ui-contract.mjs",
+    "check:search-toolbar-contract": "node ./scripts/check-search-toolbar-contract.mjs",
     "check:system-page-admission": "node ./scripts/check-system-page-admission.mjs",
     "check:smoke-web-base": "node ./scripts/check-smoke-web-base.mjs",
     "check:smoke-coverage-contract": "node ./scripts/check-smoke-coverage-contract.mjs",
