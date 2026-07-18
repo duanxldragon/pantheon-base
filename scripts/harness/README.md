@@ -53,6 +53,7 @@ The following scripts are repo-specific and not part of the portable method:
 - `check-backend-dto-contract.mjs` - backend DTO contract checks.
 - `check-backend-response-contract.mjs` - backend response contract checks.
 - `check-inheritance-contract.mjs` - base-to-ops inheritance validation.
+- `check-structure-contract.mjs` - file placement + naming against REPOSITORY_LAYOUT.md (complements check-boundaries import rules).
 - `check-permission-contract.mjs` - permission model contract checks.
 - `triage-base-drift.mjs` - base drift triage.
 

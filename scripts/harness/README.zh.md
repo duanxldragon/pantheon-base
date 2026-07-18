@@ -37,5 +37,6 @@ node scripts/harness/check-encoding.mjs --root . --strict
 - `check-backend-dto-contract.mjs`
 - `check-backend-response-contract.mjs`
 - `check-inheritance-contract.mjs`
+- `check-structure-contract.mjs`（目录放置 + 命名门禁，契约源 REPOSITORY_LAYOUT.md；与 check-boundaries 的 import 边界互补）
 - `check-permission-contract.mjs`
 - `triage-base-drift.mjs`
