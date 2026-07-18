@@ -55,3 +55,13 @@ type LoginLogPageResp struct {
 type LoginLogCleanupResp struct {
 	ClearedCount int64 `json:"clearedCount"`
 }
+
+type SecurityEventCleanupReq struct {
+	RetentionDays int    `json:"retentionDays"`
+	StartedAt     string `json:"startedAt"`
+	EndedAt       string `json:"endedAt"`
+}
+
+type SecurityEventCleanupResp struct {
+	ClearedCount int64 `json:"clearedCount"`
+}

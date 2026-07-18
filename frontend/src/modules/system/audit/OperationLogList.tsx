@@ -39,7 +39,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  type GovernanceCleanupMode,
+  type GovernanceCleanupPayload,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -60,7 +60,7 @@ import {
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import '../components/shared/list-page.css';
-import { toCleanupTimestampFromParts, loadRetentionSetting } from './retentionSetting';
+import { loadRetentionSetting } from './retentionSetting';
 const httpMethodSet = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']);
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -459,11 +459,6 @@ const OperationLogList: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
-  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
-  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
-  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
@@ -596,25 +591,15 @@ const OperationLogList: React.FC = () => {
     }
   };
 
-  const handleCleanup = async () => {
+  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
     try {
-      if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
-        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
-        if (!startedAt || !endedAt) {
-          message.warning(t('common.cleanupRangeRequired'));
-          return;
-        }
-        const resp = await cleanupOperationLogs({
-          startedAt,
-          endedAt,
-        });
-        message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
-        void loadData();
-        return;
-      }
-
-      const resp = await cleanupOperationLogs({ retentionDays });
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupOperationLogs({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupOperationLogs({ retentionDays: payload.retentionDays });
       message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
       void loadData();
     } catch {
@@ -1009,34 +994,9 @@ const OperationLogList: React.FC = () => {
               retentionOptions={retentionOptions}
               onRetentionChange={setRetentionDays}
               retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-              cleanupMode={cleanupMode}
-              onCleanupModeChange={setCleanupMode}
-              cleanupModeLabel={t('common.cleanupMode')}
-              cleanupModeOptions={[
-                { label: t('common.cleanupModeRetention'), value: 'retention' },
-                { label: t('common.cleanupModeRange'), value: 'range' },
-              ]}
-              rangeStartDate={cleanupRangeStartDate}
-              rangeStartTime={cleanupRangeStartTime}
-              rangeEndDate={cleanupRangeEndDate}
-              rangeEndTime={cleanupRangeEndTime}
-              onRangeStartDateChange={setCleanupRangeStartDate}
-              onRangeStartTimeChange={setCleanupRangeStartTime}
-              onRangeEndDateChange={setCleanupRangeEndDate}
-              onRangeEndTimeChange={setCleanupRangeEndTime}
-              rangeStartDateLabel={t('common.cleanupRangeStartDate')}
-              rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
-              rangeEndDateLabel={t('common.cleanupRangeEndDate')}
-              rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
-              confirmTitle={
-                cleanupMode === 'range'
-                  ? t('common.cleanupRangeConfirm')
-                  : t('system.audit.cleanupConfirm', { count: retentionDays })
-              }
+              confirmTitle={t('common.cleanupIrreversibleWarning')}
               actionLabel={t('common.cleanupLogs')}
-              onConfirm={() => {
-                void handleCleanup();
-              }}
+              onConfirm={handleCleanup}
               hint={t('system.audit.cleanupHint')}
               trailing={
                 <Button

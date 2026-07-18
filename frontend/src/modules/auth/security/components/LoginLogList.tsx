@@ -34,7 +34,7 @@ import { renderClientInfo } from '../../session/clientInfo';
 import {
   AppTable,
   buildStandardPagination,
-  type GovernanceCleanupMode,
+  type GovernanceCleanupPayload,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -52,10 +52,7 @@ import {
 import { usePermission } from '../../../../hooks/usePermission';
 import '../../../system/components/shared/list-page.css';
 import '../../auth.css';
-import {
-  loadRetentionSetting,
-  toCleanupTimestampFromParts,
-} from '../../../system/audit/retentionSetting';
+import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 const RangePicker = DatePicker.RangePicker;
 const defaultRetentionOptions = [1, 7, 30];
 
@@ -128,8 +125,9 @@ const LOGIN_LOG_RANGE_PICKER_TRIGGER_PROPS = {
   autoAlignPopupWidth: false,
   popupAlign: { bottom: 6 },
   popupStyle: {
-    width: 'min(600px, calc(100vw - 32px))',
-    maxHeight: 560,
+    // 弹层按内容自适应（双月日历 ~540px + 外壳），只约束不超出视口
+    maxWidth: 'calc(100vw - 32px)',
+    maxHeight: 640,
   },
 } as const;
 
@@ -149,11 +147,6 @@ const LoginLogList: React.FC = () => {
   const [query, setQuery] = useState<LoginLogQuery>(emptyQuery);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
-  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
-  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
-  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
@@ -314,25 +307,15 @@ const LoginLogList: React.FC = () => {
     }
   };
 
-  const handleCleanup = async () => {
+  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
     try {
-      if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
-        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
-        if (!startedAt || !endedAt) {
-          message.warning(t('common.cleanupRangeRequired'));
-          return;
-        }
-        const resp = await cleanupAdminLoginLogs({
-          startedAt,
-          endedAt,
-        });
-        message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
-        void loadData();
-        return;
-      }
-
-      const resp = await cleanupAdminLoginLogs({ retentionDays });
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupAdminLoginLogs({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupAdminLoginLogs({ retentionDays: payload.retentionDays });
       message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
       void loadData();
     } catch {
@@ -626,34 +609,9 @@ const LoginLogList: React.FC = () => {
               retentionOptions={retentionOptions}
               onRetentionChange={setRetentionDays}
               retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-              cleanupMode={cleanupMode}
-              onCleanupModeChange={setCleanupMode}
-              cleanupModeLabel={t('common.cleanupMode')}
-              cleanupModeOptions={[
-                { label: t('common.cleanupModeRetention'), value: 'retention' },
-                { label: t('common.cleanupModeRange'), value: 'range' },
-              ]}
-              rangeStartDate={cleanupRangeStartDate}
-              rangeStartTime={cleanupRangeStartTime}
-              rangeEndDate={cleanupRangeEndDate}
-              rangeEndTime={cleanupRangeEndTime}
-              onRangeStartDateChange={setCleanupRangeStartDate}
-              onRangeStartTimeChange={setCleanupRangeStartTime}
-              onRangeEndDateChange={setCleanupRangeEndDate}
-              onRangeEndTimeChange={setCleanupRangeEndTime}
-              rangeStartDateLabel={t('common.cleanupRangeStartDate')}
-              rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
-              rangeEndDateLabel={t('common.cleanupRangeEndDate')}
-              rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
-              confirmTitle={
-                cleanupMode === 'range'
-                  ? t('common.cleanupRangeConfirm')
-                  : t('auth.loginLog.cleanupConfirm', { count: retentionDays })
-              }
+              confirmTitle={t('common.cleanupIrreversibleWarning')}
               actionLabel={t('common.cleanupLogs')}
-              onConfirm={() => {
-                void handleCleanup();
-              }}
+              onConfirm={handleCleanup}
               hint={t('auth.loginLog.hero.cleanupHint')}
               trailing={
                 <Button

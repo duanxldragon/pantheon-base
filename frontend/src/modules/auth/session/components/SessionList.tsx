@@ -33,7 +33,7 @@ import {
   AppTable,
   buildStandardPagination,
   SearchToolbar,
-  type GovernanceCleanupMode,
+  type GovernanceCleanupPayload,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -51,10 +51,7 @@ import { formatClientSummary } from '../clientInfo';
 import SessionDetailModal from './SessionDetailModal';
 import '../../../system/components/shared/list-page.css';
 import '../../auth.css';
-import {
-  toCleanupTimestampFromParts,
-  loadRetentionSetting,
-} from '../../../system/audit/retentionSetting';
+import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 
 const emptyQuery: AdminSessionQuery = {
   keyword: '',
@@ -90,11 +87,6 @@ const SessionList: React.FC = () => {
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
-  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
-  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
-  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
@@ -195,25 +187,15 @@ const SessionList: React.FC = () => {
     }
   };
 
-  const clearHistoricSessions = async () => {
+  const clearHistoricSessions = async (payload: GovernanceCleanupPayload) => {
     try {
-      if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
-        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
-        if (!startedAt || !endedAt) {
-          message.warning(t('common.cleanupRangeRequired'));
-          return;
-        }
-        const resp = await cleanupAdminSessions({
-          startedAt,
-          endedAt,
-        });
-        message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
-        await loadData(query, { silent: true });
-        return;
-      }
-
-      const resp = await cleanupAdminSessions({ retentionDays });
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupAdminSessions({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupAdminSessions({ retentionDays: payload.retentionDays });
       message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
       await loadData(query, { silent: true });
     } catch {
@@ -492,34 +474,9 @@ const SessionList: React.FC = () => {
                   retentionOptions={retentionOptions}
                   onRetentionChange={setRetentionDays}
                   retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                  cleanupMode={cleanupMode}
-                  onCleanupModeChange={setCleanupMode}
-                  cleanupModeLabel={t('common.cleanupMode')}
-                  cleanupModeOptions={[
-                    { label: t('common.cleanupModeRetention'), value: 'retention' },
-                    { label: t('common.cleanupModeRange'), value: 'range' },
-                  ]}
-                  rangeStartDate={cleanupRangeStartDate}
-                  rangeStartTime={cleanupRangeStartTime}
-                  rangeEndDate={cleanupRangeEndDate}
-                  rangeEndTime={cleanupRangeEndTime}
-                  onRangeStartDateChange={setCleanupRangeStartDate}
-                  onRangeStartTimeChange={setCleanupRangeStartTime}
-                  onRangeEndDateChange={setCleanupRangeEndDate}
-                  onRangeEndTimeChange={setCleanupRangeEndTime}
-                  rangeStartDateLabel={t('common.cleanupRangeStartDate')}
-                  rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
-                  rangeEndDateLabel={t('common.cleanupRangeEndDate')}
-                  rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
-                  confirmTitle={
-                    cleanupMode === 'range'
-                      ? t('common.cleanupRangeConfirm')
-                      : t('auth.session.cleanupConfirm', { count: retentionDays })
-                  }
+                  confirmTitle={t('common.cleanupIrreversibleWarning')}
                   actionLabel={t('auth.session.cleanupAction')}
-                  onConfirm={() => {
-                    void clearHistoricSessions();
-                  }}
+                  onConfirm={clearHistoricSessions}
                   hint={t('auth.session.cleanupHint')}
                   extraActions={
                     <>

@@ -127,6 +127,8 @@ const koKROverrideFallback = {
   'common.cleanupModeRange': '기간 지정',
   'common.cleanupModeRetention': '보관 기간 기준',
   'common.cleanupRangeConfirm': '선택한 기간의 레코드를 정리하시겠습니까?',
+  'common.cleanupIrreversibleWarning':
+    '정리된 레코드는 복구할 수 없습니다. 조건을 확인한 후 실행하세요.',
   'common.cleanupRangeEnd': '종료 시각',
   'common.cleanupRangeStartDate': '시작 날짜',
   'common.cleanupRangeStartTime': '시작 시각',
@@ -161,6 +163,13 @@ const koKROverrideFallback = {
   'operations.cmdb.menu': '구성 관리 자산',
   'operations.menu': '운영 관리',
   'system.permission.security_event.acknowledge': '보안 이벤트 확인 처리',
+  'system.permission.security_event.clear': '보안 이벤트 정리',
+  'auth.securityEvent.cleanupAction': '이력 정리',
+  'auth.securityEvent.cleanupHint':
+    '확인된 이력 보안 이벤트만 정리하며, 미확인 이벤트는 유지됩니다.',
+  'auth.securityEvent.cleanupWarning':
+    '확인된 이벤트만 정리되며 복구할 수 없습니다. 미확인 이벤트는 유지됩니다. 조건을 확인한 후 실행하세요.',
+  'auth.securityEvent.cleanupSuccess': '이력 보안 이벤트 {{count}}건을 정리했습니다',
   'system.permission.workbench.currentGapSection': '현재 누락 요약',
   'system.permission.workbench.currentStatusSection': '현재 거버넌스 상태',
   'system.permission.workbench.governanceStatus': '거버넌스 상태',

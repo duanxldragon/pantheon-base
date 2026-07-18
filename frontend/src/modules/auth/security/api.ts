@@ -204,6 +204,20 @@ export function getAdminSecurityEventList(params?: SecurityEventQuery) {
   });
 }
 
+export interface SecurityEventCleanupPayload {
+  retentionDays?: number;
+  startedAt?: string;
+  endedAt?: string;
+}
+
+export function cleanupSecurityEvents(data: SecurityEventCleanupPayload) {
+  return apiRequest<{ clearedCount: number }>({
+    url: '/system/security-event/cleanup',
+    method: 'post',
+    data,
+  });
+}
+
 export function exportAdminLoginLogs(data?: LoginLogQuery) {
   return downloadFile({
     url: '/system/login-log/export',

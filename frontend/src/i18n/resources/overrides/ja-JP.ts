@@ -130,6 +130,8 @@ const jaJPOverrideFallback = {
   'common.cleanupModeRange': '期間指定',
   'common.cleanupModeRetention': '保持期間指定',
   'common.cleanupRangeConfirm': '選択した期間内のレコードを整理しますか？',
+  'common.cleanupIrreversibleWarning':
+    '整理されたレコードは復元できません。条件を確認してから実行してください。',
   'common.cleanupRangeEnd': '終了時刻',
   'common.cleanupRangeStartDate': '開始日',
   'common.cleanupRangeStartTime': '開始時刻',
@@ -165,6 +167,13 @@ const jaJPOverrideFallback = {
   'operations.cmdb.menu': '構成管理台帳',
   'operations.menu': '運用管理',
   'system.permission.security_event.acknowledge': 'セキュリティイベント受付',
+  'system.permission.security_event.clear': 'セキュリティイベント整理',
+  'auth.securityEvent.cleanupAction': '履歴を整理',
+  'auth.securityEvent.cleanupHint':
+    '確認済みの履歴セキュリティイベントのみ整理します。未確認のイベントは保持されます。',
+  'auth.securityEvent.cleanupWarning':
+    '確認済みのイベントのみ整理され、復元できません。未確認のイベントは保持されます。条件を確認してから実行してください。',
+  'auth.securityEvent.cleanupSuccess': '{{count}} 件の履歴セキュリティイベントを整理しました',
   'system.permission.workbench.currentGapSection': '現在の不足概要',
   'system.permission.workbench.currentStatusSection': '現在のガバナンス状態',
   'system.permission.workbench.governanceStatus': 'ガバナンス状態',

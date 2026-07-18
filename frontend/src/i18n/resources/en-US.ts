@@ -309,6 +309,12 @@ const enUSFallback = {
   'auth.securityEvent.empty': 'No security events',
   'auth.securityEvent.hint':
     'Security events only record real authentication risks; unavailable notification channels are not shown.',
+  'auth.securityEvent.cleanupAction': 'Clean up history',
+  'auth.securityEvent.cleanupHint':
+    'Only acknowledged historical security events are cleaned up; pending events are kept.',
+  'auth.securityEvent.cleanupWarning':
+    'Only acknowledged events are cleaned up and cannot be recovered; pending events are kept. Double-check the criteria before proceeding.',
+  'auth.securityEvent.cleanupSuccess': 'Cleaned up {{count}} historical security event(s)',
   'auth.securityEvent.filter.usernamePlaceholder': 'Filter by account',
   'auth.securityEvent.filter.eventTypePlaceholder': 'Select event type',
   'auth.securityEvent.filter.severityPlaceholder': 'Select severity',
@@ -429,6 +435,8 @@ const enUSFallback = {
   'common.cleanupRangeRequired':
     'When using range cleanup, select both the start and end dates and times',
   'common.cleanupRangeConfirm': 'Clean up records inside the selected time range?',
+  'common.cleanupIrreversibleWarning':
+    'Cleaned records cannot be recovered. Double-check the cleanup criteria before proceeding.',
   'common.deleteSelected': 'Delete Selected',
   'common.batchDeleteSuccess': 'Deleted {{deleted}} record(s)',
   'common.batchDeletePartialSuccess': 'Deleted {{deleted}} record(s), {{failed}} failed',
@@ -2281,6 +2289,7 @@ const enUSFallback = {
   'system.permission.session.delete': 'Session Revoke',
   'system.permission.session.clear': 'Clean Historic Sessions',
   'system.permission.security_event.acknowledge': 'Security Event Acknowledge',
+  'system.permission.security_event.clear': 'Security Event Cleanup',
   'system.permission.operation_log.export': 'Operation Log Export',
   'permission.role.invalid': 'Role key does not exist',
   'permission.policy.exists': 'A policy with the same role, API path, and method already exists',

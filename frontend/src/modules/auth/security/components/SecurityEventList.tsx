@@ -18,6 +18,8 @@ import {
   AppTable,
   buildStandardPagination,
   SearchToolbar,
+  type GovernanceCleanupPayload,
+  GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -32,13 +34,18 @@ import {
 import { usePermission } from '../../../../hooks/usePermission';
 import {
   acknowledgeSecurityEvent,
+  cleanupSecurityEvents,
   getAdminSecurityEventList,
   type SecurityEventPageResp,
   type SecurityEventQuery,
   type SecurityEventRow,
 } from '../api';
+import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
+import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 import '../../auth.css';
 import '../../../system/components/shared/list-page.css';
+
+const defaultRetentionOptions = [1, 7, 30];
 
 const TextArea = Input.TextArea;
 
@@ -56,8 +63,13 @@ const SecurityEventList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
   const canAcknowledge = isAdmin || hasPerm('system:security-event:acknowledge');
+  const canClear = isAdmin || hasPerm('system:security-event:clear');
   const governanceRail = useGovernanceRail();
   const [query, setQuery] = useState<SecurityEventQuery>(emptyQuery);
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
+    [...defaultRetentionOptions].sort((left, right) => right - left),
+  );
   const [data, setData] = useState<SecurityEventPageResp>({
     items: [],
     total: 0,
@@ -88,6 +100,38 @@ const SecurityEventList: React.FC = () => {
     const timer = globalThis.setTimeout(() => void fetchData(emptyQuery), 0);
     return () => globalThis.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      getSettingGroup('audit')
+        .then((group: SettingGroup) =>
+          loadRetentionSetting(
+            group,
+            'audit.security_event_retention_options',
+            setRetentionOptions,
+            setRetentionDays,
+          ),
+        )
+        .catch(() => undefined);
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, []);
+
+  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
+    try {
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupSecurityEvents({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupSecurityEvents({ retentionDays: payload.retentionDays });
+      message.success(t('auth.securityEvent.cleanupSuccess', { count: resp.clearedCount }));
+      await fetchData(query);
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
+  };
 
   const columns: ColumnProps<SecurityEventRow>[] = [
     {
@@ -320,6 +364,19 @@ const SecurityEventList: React.FC = () => {
         />
         <Card className="page-panel system-list__table-card auth-security-event-page__table-card">
           <Typography.Text type="secondary">{t('auth.securityEvent.hint')}</Typography.Text>
+          {canClear ? (
+            <GovernanceCleanupBar
+              showCleanup={canClear}
+              retentionDays={retentionDays}
+              retentionOptions={retentionOptions}
+              onRetentionChange={setRetentionDays}
+              retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+              confirmTitle={t('auth.securityEvent.cleanupWarning')}
+              actionLabel={t('auth.securityEvent.cleanupAction')}
+              onConfirm={handleCleanup}
+              hint={t('auth.securityEvent.cleanupHint')}
+            />
+          ) : null}
           {loading && data.items.length === 0 ? <PageLoading /> : null}
           {error ? <PageRequestError error={error} onRetry={() => void fetchData(query)} /> : null}
           {!error && data.items.length === 0 && !loading ? (

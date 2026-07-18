@@ -126,11 +126,7 @@
 }
 
 .governance-summary-bar__desc {
-  margin: 0;
-  max-width: 60ch;
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--text-secondary);
+  display: none;
 }
 
 .governance-summary-bar__metrics {
@@ -1851,95 +1847,39 @@ body
   margin-top: auto;
 }
 
-.table-batch-action-bar__cleanup-range-fields {
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 8px 10px;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.table-batch-action-bar__cleanup-field {
+.governance-cleanup-dialog {
   display: grid;
-  gap: 4px;
-  min-width: 0;
+  gap: 14px;
 }
 
-.table-batch-action-bar__cleanup-field-label {
-  color: var(--text-secondary);
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.table-batch-action-bar__cleanup-date-picker,
-.table-batch-action-bar__cleanup-date-picker.arco-picker {
-  width: 152px;
-}
-
-.table-batch-action-bar__cleanup-time-picker,
-.table-batch-action-bar__cleanup-time-picker.arco-picker {
-  width: 104px;
-}
-
-body .table-batch-action-bar__cleanup-date-popup.arco-picker-container,
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-container {
-  min-width: 0;
-}
-
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-week-list,
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-row {
+.governance-cleanup-dialog__field {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  align-items: center;
-  justify-items: center;
-}
-
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-week-list-item,
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-cell {
+  gap: 6px;
   min-width: 0;
 }
 
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list-item {
-  display: flex;
+.governance-cleanup-dialog__label {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.governance-cleanup-dialog__error {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.governance-cleanup-dialog .arco-picker-range {
+  width: 100%;
+  height: 34px;
+}
+
+.governance-cleanup-dialog .arco-picker-range .arco-picker-input {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
 }
 
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-date {
-  justify-content: center;
-}
-
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-date-value {
-  min-width: 24px;
-  text-align: center;
-}
-
-@media (max-width: 1024px) {
-  .table-batch-action-bar__cleanup-range-fields {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .table-batch-action-bar__cleanup-range-fields {
-    width: 100%;
-  }
-
-  .table-batch-action-bar__cleanup-field,
-  .table-batch-action-bar__cleanup-date-picker,
-  .table-batch-action-bar__cleanup-time-picker {
-    width: 100%;
-  }
+.governance-cleanup-dialog .arco-select {
+  width: 100%;
 }
 
 @media (max-width: 768px) {

@@ -15,6 +15,7 @@ export { useGovernanceRail } from '../hooks/useGovernanceRail';
 export {
   default as GovernanceCleanupBar,
   type GovernanceCleanupMode,
+  type GovernanceCleanupPayload,
 } from './governance/GovernanceCleanupBar';
 export {
   default as GovernanceSummaryBar,

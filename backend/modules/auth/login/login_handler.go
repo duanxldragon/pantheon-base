@@ -319,6 +319,23 @@ func (h *AuthHandler) AcknowledgeSecurityEvent(c *gin.Context) {
 	common.Success(c, gin.H{"acknowledged": true})
 }
 
+func (h *AuthHandler) CleanupSecurityEvents(c *gin.Context) {
+	common.SetAuditMetadata(c, "auth.security_event.cleanup.title", common.BusinessClean)
+
+	var req SecurityEventCleanupReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	clearedCount, err := h.service.CleanupSecurityEvents(req.RetentionDays, req.StartedAt, req.EndedAt)
+	if err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.security_event.cleanup.error")
+		return
+	}
+	common.Success(c, SecurityEventCleanupResp{ClearedCount: clearedCount})
+}
+
 func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 	common.SetAuditMetadata(c, "audit.login_log.export.title", common.BusinessExport)
 

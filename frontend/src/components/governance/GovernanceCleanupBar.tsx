@@ -1,19 +1,28 @@
-import dayjs from 'dayjs';
-import React from 'react';
+import dayjs, { type Dayjs } from 'dayjs';
+import React, { useState } from 'react';
 import {
+  Alert,
   Button,
   DatePicker,
-  Popconfirm,
+  Radio,
   Select,
-  TimePicker,
   Typography,
 } from '@arco-design/web-react';
 import { IconDelete } from '@arco-design/web-react/icon';
+import AppModal from '../patterns/modals/AppModal';
 
-const CLEANUP_DATE_FORMAT = 'YYYY-MM-DD';
-const CLEANUP_TIME_FORMAT = 'HH:mm';
+const { RangePicker } = DatePicker;
+const CLEANUP_RANGE_FORMAT = 'YYYY-MM-DD HH:mm';
 
 export type GovernanceCleanupMode = 'retention' | 'range';
+
+export interface GovernanceCleanupPayload {
+  mode: GovernanceCleanupMode;
+  retentionDays?: number;
+  /** RFC3339 with local offset, e.g. 2026-07-18T09:00:00+08:00 */
+  startedAt?: string;
+  endedAt?: string;
+}
 
 interface GovernanceCleanupBarProps {
   showCleanup?: boolean;
@@ -21,62 +30,22 @@ interface GovernanceCleanupBarProps {
   retentionOptions: number[];
   onRetentionChange: (value: number) => void;
   retentionLabel: (value: number) => string;
+  /** Shown inside the dialog as the irreversible-action warning. */
   confirmTitle: string;
   actionLabel: string;
-  onConfirm: () => void;
-  cleanupMode?: GovernanceCleanupMode;
-  onCleanupModeChange?: (value: GovernanceCleanupMode) => void;
   cleanupModeLabel?: string;
   cleanupModeOptions?: Array<{ label: string; value: GovernanceCleanupMode }>;
-  rangeStartDate?: string;
-  rangeStartTime?: string;
-  rangeEndDate?: string;
-  rangeEndTime?: string;
-  onRangeStartDateChange?: (value: string) => void;
-  onRangeStartTimeChange?: (value: string) => void;
-  onRangeEndDateChange?: (value: string) => void;
-  onRangeEndTimeChange?: (value: string) => void;
-  rangeStartDateLabel?: string;
-  rangeStartTimeLabel?: string;
-  rangeEndDateLabel?: string;
-  rangeEndTimeLabel?: string;
+  rangeStartLabel?: string;
+  rangeEndLabel?: string;
+  rangeRequiredMessage?: string;
+  onConfirm: (payload: GovernanceCleanupPayload) => Promise<void> | void;
   hint?: string;
   extraActions?: React.ReactNode;
   trailing?: React.ReactNode;
 }
 
-function toDateValue(value?: string) {
-  const trimmed = String(value || '').trim();
-  if (!trimmed) {
-    return null;
-  }
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
-  if (match) {
-    const [, year, month, day] = match;
-    const localDate = new Date(Number(year), Number(month) - 1, Number(day));
-    if (!Number.isNaN(localDate.getTime())) {
-      return dayjs(localDate);
-    }
-  }
-  const parsed = dayjs(trimmed);
-  return parsed.isValid() ? parsed : null;
-}
-
-function toTimeValue(value?: string) {
-  const trimmed = String(value || '').trim();
-  if (!trimmed) {
-    return null;
-  }
-  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
-  if (match) {
-    const [, hour, minute, second = '00'] = match;
-    const localTime = new Date(1970, 0, 1, Number(hour), Number(minute), Number(second));
-    if (!Number.isNaN(localTime.getTime())) {
-      return dayjs(localTime);
-    }
-  }
-  const parsed = dayjs(`1970-01-01T${trimmed.length === 5 ? `${trimmed}:00` : trimmed}`);
-  return parsed.isValid() ? parsed : null;
+function toRfc3339(value: Dayjs) {
+  return value.second(0).millisecond(0).format('YYYY-MM-DDTHH:mm:ssZ');
 }
 
 const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
@@ -86,169 +55,66 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
   retentionLabel,
   confirmTitle,
   actionLabel,
-  onConfirm,
-  cleanupMode = 'retention',
-  onCleanupModeChange,
   cleanupModeLabel,
   cleanupModeOptions,
-  rangeStartDate,
-  rangeStartTime,
-  rangeEndDate,
-  rangeEndTime,
-  onRangeStartDateChange,
-  onRangeStartTimeChange,
-  onRangeEndDateChange,
-  onRangeEndTimeChange,
-  rangeStartDateLabel,
-  rangeStartTimeLabel,
-  rangeEndDateLabel,
-  rangeEndTimeLabel,
+  rangeStartLabel,
+  rangeEndLabel,
+  rangeRequiredMessage,
+  onConfirm,
   hint,
   extraActions,
   trailing,
   showCleanup = true,
 }) => {
-  const cleanupAction = (
-    <Popconfirm title={confirmTitle} onOk={onConfirm}>
-      <Button type="primary" status="danger" icon={<IconDelete />}>
-        {actionLabel}
-      </Button>
-    </Popconfirm>
-  );
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [mode, setMode] = useState<GovernanceCleanupMode>('retention');
+  const [rangeValue, setRangeValue] = useState<Dayjs[]>([]);
+  const [rangeError, setRangeError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const rangeEnabled = Boolean(cleanupModeOptions?.some((item) => item.value === 'range'));
 
-  const rangeValueStartDate = toDateValue(rangeStartDate);
-  const rangeValueStartTime = toTimeValue(rangeStartTime);
-  const rangeValueEndDate = toDateValue(rangeEndDate);
-  const rangeValueEndTime = toTimeValue(rangeEndTime);
+  const openDialog = () => {
+    setMode('retention');
+    setRangeValue([]);
+    setRangeError(false);
+    setDialogVisible(true);
+  };
+
+  const closeDialog = () => {
+    if (!submitting) {
+      setDialogVisible(false);
+    }
+  };
+
+  const handleOk = async () => {
+    let payload: GovernanceCleanupPayload;
+    if (mode === 'range') {
+      const [start, end] = rangeValue;
+      if (!start || !end) {
+        setRangeError(true);
+        return;
+      }
+      payload = { mode, startedAt: toRfc3339(start), endedAt: toRfc3339(end) };
+    } else {
+      payload = { mode, retentionDays };
+    }
+    setSubmitting(true);
+    try {
+      await onConfirm(payload);
+      setDialogVisible(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="table-batch-action-bar table-batch-action-bar--governance">
       <div className="table-batch-action-bar__main">
         {showCleanup ? (
           <div className="table-batch-action-bar__meta">
-            {cleanupModeOptions && onCleanupModeChange ? (
-              <Select
-                className="table-batch-action-bar__select"
-                value={cleanupMode}
-                placeholder={cleanupModeLabel}
-                onChange={(value) => onCleanupModeChange(value as GovernanceCleanupMode)}
-                options={cleanupModeOptions}
-              />
-            ) : null}
-            {cleanupMode === 'range' ? (
-              <div className="table-batch-action-bar__range-controls">
-                <div className="table-batch-action-bar__cleanup-range-fields">
-                  <label className="table-batch-action-bar__cleanup-field">
-                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
-                      {rangeStartDateLabel}
-                    </Typography.Text>
-                    <DatePicker
-                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-date-picker"
-                      allowClear
-                      editable={false}
-                      dayStartOfWeek={1}
-                      format={CLEANUP_DATE_FORMAT}
-                      value={rangeValueStartDate || undefined}
-                      placeholder={rangeStartDateLabel}
-                      position="br"
-                      triggerProps={{
-                        className: 'table-batch-action-bar__cleanup-date-popup',
-                        autoAlignPopupWidth: false,
-                        popupStyle: { maxHeight: 480 },
-                        popupAlign: { bottom: 6 },
-                      }}
-                      onChange={(valueString) => {
-                        onRangeStartDateChange?.(valueString || '');
-                      }}
-                    />
-                  </label>
-                  <label className="table-batch-action-bar__cleanup-field">
-                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
-                      {rangeStartTimeLabel}
-                    </Typography.Text>
-                    <TimePicker
-                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-time-picker"
-                      allowClear
-                      editable={false}
-                      format={CLEANUP_TIME_FORMAT}
-                      value={rangeValueStartTime || undefined}
-                      placeholder={rangeStartTimeLabel}
-                      position="br"
-                      triggerProps={{
-                        className: 'table-batch-action-bar__cleanup-time-popup',
-                        autoAlignPopupWidth: false,
-                        popupStyle: { maxHeight: 360 },
-                        popupAlign: { bottom: 6 },
-                      }}
-                      onChange={(valueString) => {
-                        onRangeStartTimeChange?.(valueString || '');
-                      }}
-                    />
-                  </label>
-                  <label className="table-batch-action-bar__cleanup-field">
-                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
-                      {rangeEndDateLabel}
-                    </Typography.Text>
-                    <DatePicker
-                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-date-picker"
-                      allowClear
-                      editable={false}
-                      dayStartOfWeek={1}
-                      format={CLEANUP_DATE_FORMAT}
-                      value={rangeValueEndDate || undefined}
-                      placeholder={rangeEndDateLabel}
-                      position="br"
-                      triggerProps={{
-                        className: 'table-batch-action-bar__cleanup-date-popup',
-                        autoAlignPopupWidth: false,
-                        popupStyle: { maxHeight: 480 },
-                        popupAlign: { bottom: 6 },
-                      }}
-                      onChange={(valueString) => {
-                        onRangeEndDateChange?.(valueString || '');
-                      }}
-                    />
-                  </label>
-                  <label className="table-batch-action-bar__cleanup-field">
-                    <Typography.Text className="table-batch-action-bar__cleanup-field-label">
-                      {rangeEndTimeLabel}
-                    </Typography.Text>
-                    <TimePicker
-                      className="table-batch-action-bar__cleanup-picker table-batch-action-bar__cleanup-time-picker"
-                      allowClear
-                      editable={false}
-                      format={CLEANUP_TIME_FORMAT}
-                      value={rangeValueEndTime || undefined}
-                      placeholder={rangeEndTimeLabel}
-                      position="br"
-                      triggerProps={{
-                        className: 'table-batch-action-bar__cleanup-time-popup',
-                        autoAlignPopupWidth: false,
-                        popupStyle: { maxHeight: 360 },
-                        popupAlign: { bottom: 6 },
-                      }}
-                      onChange={(valueString) => {
-                        onRangeEndTimeChange?.(valueString || '');
-                      }}
-                    />
-                  </label>
-                </div>
-                {cleanupAction}
-              </div>
-            ) : (
-              <>
-                <Select
-                  className="table-batch-action-bar__select"
-                  value={retentionDays}
-                  onChange={(value) => onRetentionChange(Number(value))}
-                  options={retentionOptions.map((option) => ({
-                    label: retentionLabel(option),
-                    value: option,
-                  }))}
-                />
-                {cleanupAction}
-              </>
-            )}
+            <Button type="outline" status="danger" icon={<IconDelete />} onClick={openDialog}>
+              {actionLabel}
+            </Button>
             {trailing}
           </div>
         ) : (
@@ -263,6 +129,74 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
           {hint}
         </Typography.Text>
       ) : null}
+      <AppModal
+        title={actionLabel}
+        visible={dialogVisible}
+        size="sm"
+        onCancel={closeDialog}
+        onOk={() => {
+          void handleOk();
+        }}
+        confirmLoading={submitting}
+        okButtonProps={{ status: 'danger' }}
+      >
+        <div className="governance-cleanup-dialog">
+          {rangeEnabled && cleanupModeOptions ? (
+            <div className="governance-cleanup-dialog__field">
+              {cleanupModeLabel ? (
+                <Typography.Text type="secondary" className="governance-cleanup-dialog__label">
+                  {cleanupModeLabel}
+                </Typography.Text>
+              ) : null}
+              <Radio.Group
+                type="button"
+                value={mode}
+                onChange={(value) => {
+                  setMode(value as GovernanceCleanupMode);
+                  setRangeError(false);
+                }}
+                options={cleanupModeOptions}
+              />
+            </div>
+          ) : null}
+          {mode === 'range' && rangeEnabled ? (
+            <div className="governance-cleanup-dialog__field">
+              <RangePicker
+                className="governance-cleanup-bar__range-picker"
+                style={{ width: '100%' }}
+                allowClear
+                dayStartOfWeek={1}
+                showTime={{ format: 'HH:mm' }}
+                format={CLEANUP_RANGE_FORMAT}
+                placeholder={[rangeStartLabel || '', rangeEndLabel || '']}
+                value={rangeValue}
+                disabledDate={(current) => Boolean(current?.isAfter(dayjs(), 'day'))}
+                onChange={(_, dates) => {
+                  setRangeValue((dates || []).filter(Boolean) as Dayjs[]);
+                  setRangeError(false);
+                }}
+              />
+              {rangeError && rangeRequiredMessage ? (
+                <Typography.Text type="error" className="governance-cleanup-dialog__error">
+                  {rangeRequiredMessage}
+                </Typography.Text>
+              ) : null}
+            </div>
+          ) : (
+            <div className="governance-cleanup-dialog__field">
+              <Select
+                value={retentionDays}
+                onChange={(value) => onRetentionChange(Number(value))}
+                options={retentionOptions.map((option) => ({
+                  label: retentionLabel(option),
+                  value: option,
+                }))}
+              />
+            </div>
+          )}
+          <Alert type="warning" content={confirmTitle} />
+        </div>
+      </AppModal>
     </div>
   );
 };

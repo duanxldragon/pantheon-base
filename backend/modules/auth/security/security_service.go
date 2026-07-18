@@ -2,7 +2,9 @@ package security
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -182,6 +184,102 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 		Page:     page,
 		PageSize: pageSize,
 	}, nil
+}
+
+// CleanupSecurityEvents removes historical security events. Only acknowledged
+// (resolved) events are eligible so that pending alerts are never swept away.
+func (s *Service) CleanupSecurityEvents(retentionDays int, startedAt, endedAt string) (int64, error) {
+	if s.db == nil {
+		return 0, common.ErrDatabaseNotInitialized
+	}
+	window, err := parseSecurityEventCleanupWindow(startedAt, endedAt)
+	if err != nil {
+		return 0, err
+	}
+	db := s.db.Model(&SystemAuthSecurityEvent{}).Where("acknowledged_at IS NOT NULL")
+	if window != nil {
+		db = db.Where("created_at >= ? AND created_at <= ?", window.StartedAt, window.EndedAt)
+	} else {
+		if !s.isAllowedSecurityEventRetentionDays(retentionDays) {
+			return 0, errors.New("auth.security_event.cleanup.days_invalid")
+		}
+		cutoff := time.Now().AddDate(0, 0, -retentionDays)
+		db = db.Where("created_at < ?", cutoff)
+	}
+	result := db.Delete(&SystemAuthSecurityEvent{})
+	return result.RowsAffected, result.Error
+}
+
+type securityEventCleanupWindow struct {
+	StartedAt time.Time
+	EndedAt   time.Time
+}
+
+func parseSecurityEventCleanupWindow(startedAt, endedAt string) (*securityEventCleanupWindow, error) {
+	startedAt = strings.TrimSpace(startedAt)
+	endedAt = strings.TrimSpace(endedAt)
+	if startedAt == "" && endedAt == "" {
+		return nil, nil
+	}
+	if startedAt == "" || endedAt == "" {
+		return nil, errors.New("auth.security_event.cleanup.range_invalid")
+	}
+	start, err := time.Parse(time.RFC3339, startedAt)
+	if err != nil {
+		return nil, errors.New("auth.security_event.cleanup.range_invalid")
+	}
+	end, err := time.Parse(time.RFC3339, endedAt)
+	if err != nil {
+		return nil, errors.New("auth.security_event.cleanup.range_invalid")
+	}
+	if end.Before(start) {
+		return nil, errors.New("auth.security_event.cleanup.range_invalid")
+	}
+	return &securityEventCleanupWindow{StartedAt: start, EndedAt: end}, nil
+}
+
+func (s *Service) isAllowedSecurityEventRetentionDays(retentionDays int) bool {
+	for _, allowed := range s.getSecurityEventRetentionOptions() {
+		if allowed == retentionDays {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) getSecurityEventRetentionOptions() []int {
+	fallback := []int{1, 7, 30}
+	if s.db == nil {
+		return fallback
+	}
+	var row struct {
+		SettingValue string `gorm:"column:setting_value"`
+	}
+	if err := s.db.Table("system_setting").Select("setting_value").
+		Where("setting_key = ?", "audit.security_event_retention_options").Take(&row).Error; err != nil {
+		return fallback
+	}
+	var values []int
+	if err := json.Unmarshal([]byte(strings.TrimSpace(row.SettingValue)), &values); err != nil {
+		return fallback
+	}
+	normalized := make([]int, 0, len(values))
+	seen := make(map[int]struct{}, len(values))
+	for _, value := range values {
+		if value <= 0 {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		normalized = append(normalized, value)
+	}
+	if len(normalized) == 0 {
+		return fallback
+	}
+	sort.Ints(normalized)
+	return normalized
 }
 
 // AcknowledgeSecurityEvent marks a security event as acknowledged.

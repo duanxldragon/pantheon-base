@@ -1446,6 +1446,7 @@ const BaseLayout: React.FC = () => {
               <Dropdown
                 trigger="click"
                 position="br"
+                triggerProps={{ autoFitPosition: false }}
                 droplist={
                   <div className="app-shell__notice-panel">
                     <div className="app-shell__notice-header">
@@ -1502,7 +1503,12 @@ const BaseLayout: React.FC = () => {
                 </Tooltip>
               </Dropdown>
             ) : null}
-            <Dropdown trigger="click" position="br" droplist={preferencePanel}>
+            <Dropdown
+              trigger="click"
+              position="br"
+              triggerProps={{ autoFitPosition: false }}
+              droplist={preferencePanel}
+            >
               <Tooltip
                 content={t('app.preference.tooltip', {
                   theme: t(activeTheme.labelKey),

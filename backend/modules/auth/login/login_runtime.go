@@ -627,6 +627,10 @@ func (s *Runtime) AcknowledgeSecurityEvent(eventID, actorID uint64, actorUsernam
 	return s.securitySvc.AcknowledgeSecurityEvent(eventID, actorID, actorUsername, note)
 }
 
+func (s *Runtime) CleanupSecurityEvents(retentionDays int, startedAt, endedAt string) (int64, error) {
+	return s.securitySvc.CleanupSecurityEvents(retentionDays, startedAt, endedAt)
+}
+
 // ─────────────────────────────────────────────────────────────
 // Settings management
 // ─────────────────────────────────────────────────────────────
