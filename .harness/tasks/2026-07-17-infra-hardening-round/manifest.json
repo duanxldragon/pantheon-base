@@ -1,0 +1,97 @@
+{
+  "taskId": "2026-07-17-infra-hardening-round",
+  "title": "Infrastructure hardening round: encoding, UI-contract, visual, and structure mechanical gates",
+  "goal": "Land four mechanical CI gates (encoding integrity, DESIGN.md §7 UI-contract, Playwright visual regression, REPOSITORY_LAYOUT structure/naming) plus the SearchToolbar rollout and menu-tree filter fix, so that recurring drift classes (mojibake, off-contract UI, layout regressions, misplaced files) are caught by CI instead of by human review.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system"],
+  "scope": {
+    "in": [
+      "vendor check-encoding gate from pantheon-harness into scripts/harness and wire blocking in quality.yml",
+      "add frontend/scripts/check-ui-contract.mjs sweeping DESIGN.md §7.6/7.7/7.9 forbidden patterns with ui-contract-allow escape hatch, wired into prebuild",
+      "add Playwright visual-regression project (playwright.visual.config.ts + tests/visual) with committed win32 baselines",
+      "add scripts/harness/check-structure-contract.mjs enforcing REPOSITORY_LAYOUT.md §2 placement and naming, wired blocking in quality.yml docs-governance",
+      "roll out SearchToolbar to all list pages, generator, and keyword APIs; menu tree text filter keeps ancestor chain",
+      "add three-touchpoint maintainer contract to CLAUDE.md"
+    ],
+    "out": [
+      "pantheon-ops synchronization (tracked separately on the ops branch)",
+      "linux visual baselines (must be generated in a linux runner before CI enforcement)",
+      "any business/* module behavior change",
+      "the uncommitted SearchToolbar UI working-tree WIP owned by a separate session"
+    ]
+  },
+  "taskDoc": "none — maintainer-directed infrastructure hardening executed across the session; decision record in this manifest, evidence summary, and project memory infra_hardening_2026_07_17.md",
+  "contractAnchors": [
+    "DESIGN.md",
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "AGENTS.md",
+    "scripts/harness/README.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-17-infra-hardening-round/manifest.json",
+      ".harness/evidence/2026-07-17-infra-hardening-round/commands.json",
+      ".harness/evidence/2026-07-17-infra-hardening-round/summary.md",
+      ".harness/evidence/2026-07-17-infra-hardening-round/review.md",
+      "scripts/harness/check-structure-contract.mjs",
+      "tests/scripts/harness-check-structure-contract.test.mjs",
+      "frontend/scripts/check-ui-contract.mjs",
+      "frontend/playwright.visual.config.ts",
+      "frontend/tests/visual/**"
+    ],
+    "modify": [
+      "package.json",
+      "frontend/package.json",
+      ".github/workflows/quality.yml",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "DESIGN.md",
+      "CLAUDE.md"
+    ],
+    "doNotTouch": [
+      "backend business logic",
+      "database/system_init.sql",
+      "the separate session's uncommitted SearchToolbar UI working-tree changes"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["mechanical"]
+  },
+  "verificationPlan": {
+    "frontend": [
+      "cd frontend && npm run check:ui-contract",
+      "cd frontend && npm run build"
+    ],
+    "governance": [
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "node --test tests/scripts/harness-check-structure-contract.test.mjs"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-07-17-infra-hardening-round",
+    "taskPacket": ".harness/tasks/2026-07-17-infra-hardening-round/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-17-infra-hardening-round/",
+    "reviewFile": ".harness/evidence/2026-07-17-infra-hardening-round/review.md",
+    "summaryFile": ".harness/evidence/2026-07-17-infra-hardening-round/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "gate self-check results (0 findings at landing)",
+    "structure-contract fixture test results",
+    "independent review summary"
+  ],
+  "humanGates": [
+    "maintainer requested the four mechanical gates to stop UI and layout drift from reaching review",
+    "maintainer established the three-touchpoint contract governing autonomous execution between touchpoints"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}
