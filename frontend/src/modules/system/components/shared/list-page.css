@@ -474,32 +474,7 @@ body
   flex-wrap: nowrap;
 }
 
-.table-batch-action-bar--governance .table-batch-action-bar__meta {
-  flex: 1 1 420px;
-  gap: 6px;
-  flex-wrap: nowrap;
-}
-
-.table-batch-action-bar--governance .table-batch-action-bar__select {
-  width: 128px;
-}
-
-.table-batch-action-bar--governance .table-batch-action-bar__actions {
-  justify-content: flex-end;
-  gap: 4px 6px;
-  flex-wrap: nowrap;
-}
-
-.table-batch-action-bar--governance.table-batch-action-bar--governance .arco-space {
-  gap: 6px;
-}
-
 @media (max-width: 1024px) {
-  .table-batch-action-bar--governance .table-batch-action-bar__meta,
-  .table-batch-action-bar--governance .table-batch-action-bar__actions {
-    flex-wrap: wrap;
-  }
-
   .table-batch-action-bar__range-controls,
   .table-batch-action-bar__range-inputs {
     flex-wrap: wrap;

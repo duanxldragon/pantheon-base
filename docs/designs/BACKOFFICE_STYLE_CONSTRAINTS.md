@@ -113,7 +113,7 @@ English version: [BACKOFFICE_STYLE_CONSTRAINTS.en.md](./BACKOFFICE_STYLE_CONSTRA
 - 系统列表表格面板留白：统一使用 `--shell-table-card-padding`
 - 系统列表筛选面板：统一使用 `FilterPanel` 与 `--shell-filter-*` token
 - 系统列表页头动作：统一使用 `ListHeaderActions` 与 `--shell-list-actions-gap`
-- 系统列表批量/治理动作：统一使用 `TableBatchActionBar` / `GovernanceCleanupBar` 与 `--shell-action-bar-*` token
+- 系统列表批量/治理动作：统一使用 `TableBatchActionBar` / `GovernanceSummaryBar` + `TimeRangeFilter` 与 `--shell-action-bar-*` token
 
 禁止：
 
@@ -145,7 +145,7 @@ English version: [BACKOFFICE_STYLE_CONSTRAINTS.en.md](./BACKOFFICE_STYLE_CONSTRA
 - 筛选项底部节奏来自 `--shell-filter-form-item-margin-bottom` 和 `--shell-filter-label-padding-bottom`
 - 查询/重置按钮通过 `filter-panel__action-item` 与输入控件底线对齐
 - 页头操作条通过 `ListHeaderActions` 分离次级动作和主动作，gap 来自 `--shell-list-actions-gap`
-- 批量操作条通过 `TableBatchActionBar`，治理清理条通过 `GovernanceCleanupBar`
+- 批量操作条通过 `TableBatchActionBar`，治理摘要/筛选条通过 `GovernanceSummaryBar` + `TimeRangeFilter`
 - 治理清理条的保留期选择宽度来自 `--shell-governance-select-width`，额外动作统一靠右
 - 视觉密度只能通过平台层 `data-pantheon-density` token 生效，不得在页面局部重新声明压缩值
 

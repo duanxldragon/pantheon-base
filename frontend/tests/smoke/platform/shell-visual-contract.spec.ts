@@ -36,9 +36,9 @@ const searchToolbarPages = [
 ] as const;
 
 const governanceBarPages = [
-  '/system/session',
-  '/system/login-log',
-  '/system/operation-log',
+  // 全部列表页已迁移至 SearchToolbar + GovernanceSummaryBar + TableBatchActionBar（无 --governance 修饰），
+  // 旧的 `.table-batch-action-bar--governance` 契约不再有页面覆盖；governance 共享结构契约改由
+  // 单独的「shared governance rhythm」用例覆盖。
 ] as const;
 
 const tableRhythmPages = [
@@ -1050,54 +1050,6 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
       ).toBeGreaterThanOrEqual(minHeight - 2);
     }
   }
-
-  for (const path of governanceBarPages) {
-    await navigateInShell(page, path);
-    await expect(page.locator('.table-batch-action-bar--governance')).toBeVisible();
-
-    const governanceContract = await page.evaluate(() => {
-      const bar = document.querySelector<HTMLElement>('.table-batch-action-bar--governance');
-      const main = bar?.querySelector<HTMLElement>('.table-batch-action-bar__main');
-      const meta = bar?.querySelector<HTMLElement>('.table-batch-action-bar__meta');
-      const actions = bar?.querySelector<HTMLElement>('.table-batch-action-bar__actions');
-      const select = bar?.querySelector<HTMLElement>('.table-batch-action-bar__select');
-      const read = (element?: HTMLElement | null) => {
-        if (!element) {
-          return null;
-        }
-        const style = globalThis.getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return {
-          alignItems: style.alignItems,
-          backgroundColor: style.backgroundColor,
-          borderStyle: style.borderStyle,
-          boxShadow: style.boxShadow,
-          gap: style.gap,
-          height: Math.round(rect.height),
-          justifyContent: style.justifyContent,
-          width: Math.round(rect.width),
-        };
-      };
-
-      return {
-        bar: read(bar),
-        main: read(main),
-        meta: read(meta),
-        actions: read(actions),
-        select: read(select),
-      };
-    });
-
-    expect(governanceContract.bar?.backgroundColor, path).toBe('rgba(0, 0, 0, 0)');
-    expect(governanceContract.bar?.borderStyle, path).toBe('none');
-    expect(governanceContract.bar?.boxShadow, path).toBe('none');
-    expect(governanceContract.main?.justifyContent, path).toBe('space-between');
-    expect(governanceContract.main?.height, path).toBeGreaterThanOrEqual(32);
-    if (governanceContract.actions) {
-      expect(governanceContract.actions.justifyContent, path).toBe('flex-end');
-    }
-    expect(governanceContract.select?.width, path).toBeGreaterThanOrEqual(120);
-  }
 });
 
 test('business actions stay in the work area and dialogs use single-layer inputs', async ({
@@ -1573,13 +1525,22 @@ test('user create dialog role multi-select keeps a single focus ring', async ({ 
   }
 });
 
-test('login-log governance action keeps the shared local alignment contract', async ({ page }) => {
+test('login-log page keeps the shared governance + batch bar rhythm', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
   await navigateInShell(page, '/system/login-log');
-  await expect(page.locator('.table-batch-action-bar--governance')).toBeVisible();
 
-  const contract = await page.locator('.table-batch-action-bar--governance').evaluate((bar) => {
+  // 1) 摘要条：迁移到 GovernanceSummaryBar（eyebrow + title 两行，无 description 第三行）
+  const summaryBar = page.locator('.auth-login-log-page__hero').first();
+  await expect(summaryBar).toBeVisible();
+  await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
+
+  // 2) 批量条：使用通用 TableBatchActionBar（无 --governance 修饰），左 meta / 右 actions 视觉对齐
+  const batchBar = page.locator('.auth-login-log-page__table-card .table-batch-action-bar').first();
+  await expect(batchBar).toBeVisible();
+  await expect(batchBar).not.toHaveClass(/table-batch-action-bar--governance/);
+
+  const contract = await batchBar.evaluate((bar) => {
     const main = bar.querySelector<HTMLElement>('.table-batch-action-bar__main');
     const metaLead = bar.querySelector<HTMLElement>(
       '.table-batch-action-bar__meta .arco-select-view, .table-batch-action-bar__meta .arco-input-inner-wrapper, .table-batch-action-bar__meta .arco-btn',
