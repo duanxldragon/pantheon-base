@@ -12,7 +12,6 @@ import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
@@ -22,7 +21,6 @@ import { useAuthStore } from '../../../../store/useAuthStore';
 import { usePermission } from '../../../../hooks/usePermission';
 import {
   batchRevokeAdminSessions,
-  cleanupAdminSessions,
   getAdminSessionList,
   revokeAdminSession,
   type AdminSessionPageResp,
@@ -33,8 +31,6 @@ import {
   AppTable,
   buildStandardPagination,
   SearchToolbar,
-  type GovernanceCleanupPayload,
-  GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -44,6 +40,8 @@ import {
   PageLoading,
   PageRequestError,
   TABLE_ACTION_COLUMN_WIDTH,
+  TableBatchActionBar,
+  TimeRangeFilter,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../../components';
@@ -51,7 +49,6 @@ import { formatClientSummary } from '../clientInfo';
 import SessionDetailModal from './SessionDetailModal';
 import '../../../system/components/shared/list-page.css';
 import '../../auth.css';
-import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 
 const emptyQuery: AdminSessionQuery = {
   keyword: '',
@@ -64,7 +61,6 @@ const emptyQuery: AdminSessionQuery = {
   page: 1,
   pageSize: 10,
 };
-const defaultRetentionOptions = [1, 7, 30];
 
 interface LoadDataOptions {
   silent?: boolean;
@@ -75,7 +71,6 @@ const SessionList: React.FC = () => {
   const { userInfo } = useAuthStore();
   const { isAdmin, hasPerm } = usePermission();
   const canDelete = isAdmin || hasPerm('system:session:delete');
-  const canClear = isAdmin || hasPerm('system:session:clear');
   const governanceRail = useGovernanceRail();
   const [data, setData] = useState<AdminSessionRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -86,10 +81,6 @@ const SessionList: React.FC = () => {
   const [query, setQuery] = useState<AdminSessionQuery>(emptyQuery);
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
-  const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
-    [...defaultRetentionOptions].sort((left, right) => right - left),
-  );
 
   const loadData = useCallback(
     async (nextQuery: AdminSessionQuery = query, options?: LoadDataOptions) => {
@@ -122,22 +113,6 @@ const SessionList: React.FC = () => {
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
-
-  useEffect(() => {
-    const timer = globalThis.setTimeout(() => {
-      getSettingGroup('audit')
-        .then((group: SettingGroup) =>
-          loadRetentionSetting(
-            group,
-            'audit.session_cleanup_retention_options',
-            setRetentionOptions,
-            setRetentionDays,
-          ),
-        )
-        .catch(() => undefined);
-    }, 0);
-    return () => globalThis.clearTimeout(timer);
-  }, []);
 
   const search = (values: Partial<AdminSessionQuery>) => {
     setSelectedRowKeys([]);
@@ -181,22 +156,6 @@ const SessionList: React.FC = () => {
       const resp = await batchRevokeAdminSessions({ sessionIds: selectedRowKeys });
       message.success(t('auth.session.batchRevokeSuccess', { count: resp.revokedCount }));
       setSelectedRowKeys([]);
-      await loadData(query, { silent: true });
-    } catch {
-      message.error(t('common.actionFailed'));
-    }
-  };
-
-  const clearHistoricSessions = async (payload: GovernanceCleanupPayload) => {
-    try {
-      const resp =
-        payload.mode === 'range'
-          ? await cleanupAdminSessions({
-              startedAt: payload.startedAt,
-              endedAt: payload.endedAt,
-            })
-          : await cleanupAdminSessions({ retentionDays: payload.retentionDays });
-      message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
       await loadData(query, { silent: true });
     } catch {
       message.error(t('common.actionFailed'));
@@ -391,15 +350,21 @@ const SessionList: React.FC = () => {
             keywordPlaceholder={t('auth.session.search.placeholder')}
             onKeywordChange={(keyword) => search({ keyword })}
             inlineFilters={
-              <Select
-                allowClear
-                placeholder={t('auth.session.filter.status')}
-                value={query.status}
-                onChange={(value) => search({ status: value })}
-              >
-                <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
-                <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
-              </Select>
+              <>
+                <Select
+                  allowClear
+                  placeholder={t('auth.session.filter.status')}
+                  value={query.status}
+                  onChange={(value) => search({ status: value })}
+                >
+                  <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
+                  <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
+                </Select>
+                <TimeRangeFilter
+                  value={{ startedAt: query.startedAt, endedAt: query.endedAt }}
+                  onChange={(value) => search(value)}
+                />
+              </>
             }
             advancedFilters={
               <>
@@ -460,64 +425,40 @@ const SessionList: React.FC = () => {
                 query.status !== undefined ||
                 query.browser ||
                 query.os ||
-                query.device,
+                query.device ||
+                query.startedAt,
             )}
             onClearAll={reset}
           />
 
           <Card className="page-panel system-list__table-card">
-            {canClear || canDelete ? (
-              <div>
-                <GovernanceCleanupBar
-                  showCleanup={canClear}
-                  retentionDays={retentionDays}
-                  retentionOptions={retentionOptions}
-                  onRetentionChange={setRetentionDays}
-                  retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                  confirmTitle={t('common.cleanupIrreversibleWarning')}
-                  actionLabel={t('auth.session.cleanupAction')}
-                  onConfirm={clearHistoricSessions}
-                  hint={t('auth.session.cleanupHint')}
-                  extraActions={
-                    <>
-                      <span className="table-batch-action-bar__summary">
-                        {t('common.selectedCount', { count: selectedRowKeys.length })}
-                      </span>
-                      <Button
-                        type="text"
-                        size="small"
-                        disabled={selectedRowKeys.length === 0}
-                        onClick={() => {
-                          if (selectedRowKeys.length === 0) {
-                            return;
-                          }
-                          setSelectedRowKeys([]);
-                          message.success(t('common.clearSelectionSuccess'));
-                        }}
-                      >
-                        {t('common.clearSelection')}
-                      </Button>
-                      <Popconfirm
-                        disabled={selectedRowKeys.length === 0 || !canDelete}
-                        title={t('auth.session.batchRevokeConfirm', {
-                          count: selectedRowKeys.length,
-                        })}
-                        onOk={() => {
-                          void handleBatchRevoke();
-                        }}
-                      >
-                        <Button
-                          status="danger"
-                          icon={<IconDelete />}
-                          disabled={selectedRowKeys.length === 0 || !canDelete}
-                        >
-                          {t('auth.session.revokeSelected')}
-                        </Button>
-                      </Popconfirm>
-                    </>
-                  }
-                />
-              </div>
+            {canDelete ? (
+              <TableBatchActionBar
+                selectedCount={selectedRowKeys.length}
+                selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+                clearText={t('common.clearSelection')}
+                clearSuccessText={t('common.clearSelectionSuccess')}
+                onClear={() => setSelectedRowKeys([])}
+                actions={
+                  <Popconfirm
+                    disabled={selectedRowKeys.length === 0 || !canDelete}
+                    title={t('auth.session.batchRevokeConfirm', {
+                      count: selectedRowKeys.length,
+                    })}
+                    onOk={() => {
+                      void handleBatchRevoke();
+                    }}
+                  >
+                    <Button
+                      status="danger"
+                      icon={<IconDelete />}
+                      disabled={selectedRowKeys.length === 0 || !canDelete}
+                    >
+                      {t('auth.session.revokeSelected')}
+                    </Button>
+                  </Popconfirm>
+                }
+              />
             ) : null}
             {loading && data.length === 0 ? <PageLoading /> : null}
             {loadError && !loading ? (

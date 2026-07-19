@@ -444,6 +444,12 @@ func applySecurityEventFilters(db *gorm.DB, query *SecurityEventQuery) *gorm.DB 
 	if strings.TrimSpace(query.Severity) != "" {
 		db = db.Where("severity = ?", strings.TrimSpace(query.Severity))
 	}
+	if start, ok := parseSecurityEventFilterTime(query.StartedAt); ok {
+		db = db.Where("created_at >= ?", start)
+	}
+	if end, ok := parseSecurityEventFilterTime(query.EndedAt); ok {
+		db = db.Where("created_at <= ?", end)
+	}
 	if query.Acknowledged == nil {
 		return db
 	}
@@ -451,6 +457,21 @@ func applySecurityEventFilters(db *gorm.DB, query *SecurityEventQuery) *gorm.DB 
 		return db.Where("acknowledged_at IS NOT NULL")
 	}
 	return db.Where("acknowledged_at IS NULL")
+}
+
+// parseSecurityEventFilterTime accepts the same formats the login-log list
+// filter does, so all audit toolbars share one frontend time-range component.
+func parseSecurityEventFilterTime(value string) (time.Time, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02 15:04"} {
+		if parsed, err := time.ParseInLocation(layout, value, time.Local); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 func passwordMatchesComplexity(password string, policy AuthRuntimePolicy) bool {
@@ -539,6 +560,8 @@ type SecurityEventQuery struct {
 	EventType    string `form:"eventType" json:"eventType"`
 	Severity     string `form:"severity" json:"severity"`
 	Acknowledged *bool  `form:"acknowledged" json:"acknowledged"`
+	StartedAt    string `form:"startedAt" json:"startedAt"`
+	EndedAt      string `form:"endedAt" json:"endedAt"`
 	Page         int    `form:"page" json:"page"`
 	PageSize     int    `form:"pageSize" json:"pageSize"`
 }

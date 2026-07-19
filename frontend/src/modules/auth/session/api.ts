@@ -47,6 +47,8 @@ export interface AdminSessionQuery {
   os?: string;
   device?: string;
   status?: number;
+  startedAt?: string;
+  endedAt?: string;
   page?: number;
   pageSize?: number;
 }

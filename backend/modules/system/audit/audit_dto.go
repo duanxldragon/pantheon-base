@@ -37,6 +37,8 @@ type OperationLogQuery struct {
 	SourceDomain    string `form:"sourceDomain" json:"sourceDomain"`
 	SourcePage      string `form:"sourcePage" json:"sourcePage"`
 	FailureCategory string `form:"failureCategory" json:"failureCategory"`
+	StartedAt       string `form:"startedAt" json:"startedAt"`
+	EndedAt         string `form:"endedAt" json:"endedAt"`
 	Page            int    `form:"page" json:"page"`
 	PageSize        int    `form:"pageSize" json:"pageSize"`
 	SortField       string `form:"sortField" json:"sortField"`

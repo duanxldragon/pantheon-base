@@ -87,7 +87,7 @@
 
 .governance-summary-bar__copy {
   display: grid;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -125,10 +125,6 @@
   min-width: 0;
 }
 
-.governance-summary-bar__desc {
-  display: none;
-}
-
 .governance-summary-bar__metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -139,8 +135,9 @@
 .governance-summary-bar__metric {
   display: grid;
   gap: 4px;
-  min-height: 86px;
-  padding: 10px 12px;
+  /* 治理栏收敛为两行文案后，指标卡随 label+value 自适应，不再预留描述行高度 */
+  min-height: 60px;
+  padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
   border-radius: var(--radius-md);
   background: var(--surface-lift);

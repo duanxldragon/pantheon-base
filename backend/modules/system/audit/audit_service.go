@@ -413,7 +413,28 @@ func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationL
 	if strings.TrimSpace(query.FailureCategory) != "" {
 		db = db.Where("failure_category = ?", strings.TrimSpace(query.FailureCategory))
 	}
+	if start, ok := parseOperationLogTime(query.StartedAt); ok {
+		db = db.Where("oper_time >= ?", start)
+	}
+	if end, ok := parseOperationLogTime(query.EndedAt); ok {
+		db = db.Where("oper_time <= ?", end)
+	}
 	return db
+}
+
+// parseOperationLogTime accepts the same formats the login-log list filter does,
+// so both audit toolbars can share one frontend time-range component.
+func parseOperationLogTime(value string) (time.Time, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02 15:04"} {
+		if parsed, err := time.ParseInLocation(layout, value, time.Local); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 func operationLogToResp(row middleware.SystemLogOper) OperationLogResp {

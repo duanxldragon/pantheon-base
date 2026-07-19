@@ -10,6 +10,8 @@ export interface OperationLogQuery {
   sourceDomain?: string;
   sourcePage?: string;
   failureCategory?: string;
+  startedAt?: string;
+  endedAt?: string;
   page: number;
   pageSize: number;
   sortField?: string;

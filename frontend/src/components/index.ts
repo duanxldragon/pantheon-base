@@ -22,6 +22,11 @@ export {
   type GovernanceSummaryBarProps,
   type GovernanceSummaryMetric,
 } from './governance/GovernanceSummaryBar';
+export {
+  default as TimeRangeFilter,
+  TIME_RANGE_FILTER_FORMAT,
+  type TimeRangeFilterValue,
+} from './patterns/filters/TimeRangeFilter';
 export { default as PermissionAction } from './patterns/PermissionAction';
 export { default as SystemRowActions, type SystemRowAction } from './patterns/SystemRowActions';
 export { default as TableBatchActionBar } from './patterns/table/TableBatchActionBar';

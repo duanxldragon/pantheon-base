@@ -84,6 +84,16 @@
   --primary-8: 7, 44, 166;
   --primary-9: 3, 26, 121;
   --primary-10: 0, 13, 77;
+  --pantheon-primary-1: 232, 243, 255;
+  --pantheon-primary-2: 190, 218, 255;
+  --pantheon-primary-3: 148, 191, 255;
+  --pantheon-primary-4: 106, 161, 255;
+  --pantheon-primary-5: 64, 128, 255;
+  --pantheon-primary-6: 22, 93, 255;
+  --pantheon-primary-7: 14, 66, 210;
+  --pantheon-primary-8: 7, 44, 166;
+  --pantheon-primary-9: 3, 26, 121;
+  --pantheon-primary-10: 0, 13, 77;
   --shell-page-gap: 16px;
   --shell-page-header-gap: 12px;
   --shell-panel-body-padding: 18px;
@@ -167,6 +177,16 @@ body {
   --primary-8: 0, 102, 76;
   --primary-9: 0, 71, 57;
   --primary-10: 0, 41, 37;
+  --pantheon-primary-1: 232, 255, 248;
+  --pantheon-primary-2: 173, 245, 224;
+  --pantheon-primary-3: 113, 232, 200;
+  --pantheon-primary-4: 64, 214, 177;
+  --pantheon-primary-5: 25, 191, 151;
+  --pantheon-primary-6: 0, 168, 112;
+  --pantheon-primary-7: 0, 135, 94;
+  --pantheon-primary-8: 0, 102, 76;
+  --pantheon-primary-9: 0, 71, 57;
+  --pantheon-primary-10: 0, 41, 37;
 }
 
 :root[data-pantheon-theme='violet'] {
@@ -188,6 +208,16 @@ body {
   --primary-8: 59, 16, 122;
   --primary-9: 37, 6, 77;
   --primary-10: 20, 0, 46;
+  --pantheon-primary-1: 247, 237, 255;
+  --pantheon-primary-2: 229, 198, 255;
+  --pantheon-primary-3: 209, 158, 255;
+  --pantheon-primary-4: 186, 119, 255;
+  --pantheon-primary-5: 151, 82, 247;
+  --pantheon-primary-6: 114, 46, 209;
+  --pantheon-primary-7: 85, 29, 166;
+  --pantheon-primary-8: 59, 16, 122;
+  --pantheon-primary-9: 37, 6, 77;
+  --pantheon-primary-10: 20, 0, 46;
 }
 
 :root[data-pantheon-theme='slate'] {
@@ -209,6 +239,16 @@ body {
   --primary-8: 15, 23, 42;
   --primary-9: 8, 15, 29;
   --primary-10: 2, 6, 23;
+  --pantheon-primary-1: 241, 245, 249;
+  --pantheon-primary-2: 226, 232, 240;
+  --pantheon-primary-3: 203, 213, 225;
+  --pantheon-primary-4: 148, 163, 184;
+  --pantheon-primary-5: 100, 116, 139;
+  --pantheon-primary-6: 51, 65, 85;
+  --pantheon-primary-7: 30, 41, 59;
+  --pantheon-primary-8: 15, 23, 42;
+  --pantheon-primary-9: 8, 15, 29;
+  --pantheon-primary-10: 2, 6, 23;
 }
 
 /* ===========================================================================
@@ -311,6 +351,18 @@ body {
   background: var(--app-bg);
   color: var(--text-primary);
   font-feature-settings: 'tnum' 1;
+  /* Arco 组件的 --primary-* 定义在 body 上，:root 的主题梯度会被覆盖；
+     这里用 :root 侧透传的 --pantheon-primary-* 把主题色同步给 Arco。 */
+  --primary-1: var(--pantheon-primary-1);
+  --primary-2: var(--pantheon-primary-2);
+  --primary-3: var(--pantheon-primary-3);
+  --primary-4: var(--pantheon-primary-4);
+  --primary-5: var(--pantheon-primary-5);
+  --primary-6: var(--pantheon-primary-6);
+  --primary-7: var(--pantheon-primary-7);
+  --primary-8: var(--pantheon-primary-8);
+  --primary-9: var(--pantheon-primary-9);
+  --primary-10: var(--pantheon-primary-10);
 }
 
 * {
@@ -867,6 +919,14 @@ a {
   gap: var(--shell-page-side-gap);
   position: sticky;
   top: 0;
+  /* 侧栏高于视口时允许内部滚动，避免 sticky 钉住后底部内容不可达 */
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* 侧栏卡片不参与 flex 收缩，超出部分交给侧栏自身滚动，避免卡片内容被截断 */
+.page-side-column > * {
+  flex-shrink: 0;
 }
 
 .side-rail-panel .arco-card-body {

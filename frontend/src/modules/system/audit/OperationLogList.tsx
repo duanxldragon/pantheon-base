@@ -19,14 +19,12 @@ import type {
 import { IconDelete, IconDownload, IconEye } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { getSettingGroup, type SettingGroup } from '../setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
 } from '../../../components/table/crossPageSelection';
 import {
   batchDeleteOperationLogs,
-  cleanupOperationLogs,
   deleteOperationLog,
   exportOperationLogs,
   exportSelectedOperationLogs,
@@ -39,8 +37,6 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  type GovernanceCleanupPayload,
-  GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -54,13 +50,15 @@ import {
   SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
+  TableBatchActionBar,
+  TimeRangeFilter,
+  type TimeRangeFilterValue,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import '../components/shared/list-page.css';
-import { loadRetentionSetting } from './retentionSetting';
 const httpMethodSet = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']);
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -117,7 +115,6 @@ const emptyQuery: OperationLogQuery = {
   page: 1,
   pageSize: 10,
 };
-const defaultRetentionOptions = [1, 7, 30];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -445,7 +442,6 @@ const OperationLogList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
   const canExport = isAdmin || hasPerm('system:operation-log:export');
-  const canClear = isAdmin || hasPerm('system:operation-log:clear');
   const canDelete = isAdmin || hasPerm('system:operation-log:delete');
   const governanceRail = useGovernanceRail();
   const [data, setData] = useState<OperationLogRow[]>([]);
@@ -458,10 +454,6 @@ const OperationLogList: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
-    [...defaultRetentionOptions].sort((left, right) => right - left),
-  );
   const resultPreview = currentLog ? extractOperationResult(currentLog.jsonResult) : {};
   const settingAuditPayload = currentLog ? extractSettingAuditPayload(currentLog.operParam) : null;
   const i18nLifecycleParam = currentLog
@@ -506,22 +498,6 @@ const OperationLogList: React.FC = () => {
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
-
-  useEffect(() => {
-    const timer = globalThis.setTimeout(() => {
-      getSettingGroup('audit')
-        .then((group: SettingGroup) =>
-          loadRetentionSetting(
-            group,
-            'audit.operation_log_retention_options',
-            setRetentionOptions,
-            setRetentionDays,
-          ),
-        )
-        .catch(() => undefined);
-    }, 0);
-    return () => globalThis.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const detailId = Number(searchParams.get('detailId') || 0);
@@ -578,6 +554,7 @@ const OperationLogList: React.FC = () => {
     query.keyword ||
       query.status !== undefined ||
       (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
+      query.startedAt ||
       advancedActiveCount > 0,
   );
 
@@ -591,20 +568,9 @@ const OperationLogList: React.FC = () => {
     }
   };
 
-  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
-    try {
-      const resp =
-        payload.mode === 'range'
-          ? await cleanupOperationLogs({
-              startedAt: payload.startedAt,
-              endedAt: payload.endedAt,
-            })
-          : await cleanupOperationLogs({ retentionDays: payload.retentionDays });
-      message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
-      void loadData();
-    } catch {
-      message.error(t('common.actionFailed'));
-    }
+  const handleTimeRangeChange = (value: Required<TimeRangeFilterValue>) => {
+    setSelectedRowKeys([]);
+    setQuery((current) => ({ ...current, ...value, page: 1 }));
   };
 
   const handleBatchDelete = async () => {
@@ -856,14 +822,8 @@ const OperationLogList: React.FC = () => {
         value: canExport ? t('common.yes') : t('common.no'),
         hint: t('system.audit.hero.exportHint'),
       },
-      {
-        key: 'cleanup',
-        label: t('system.audit.hero.cleanupReady'),
-        value: canClear ? t('common.yes') : t('common.no'),
-        hint: t('system.audit.hero.cleanupHint'),
-      },
     ],
-    [canClear, canExport, failedCount, successCount, t, total],
+    [canExport, failedCount, successCount, t, total],
   );
 
   const formatI18nLifecycleLabel = (value: string) =>
@@ -935,6 +895,10 @@ const OperationLogList: React.FC = () => {
                     { label: t('system.audit.sourceDomain.other'), value: 'other' },
                   ]}
                 />
+                <TimeRangeFilter
+                  value={{ startedAt: query.startedAt, endedAt: query.endedAt }}
+                  onChange={handleTimeRangeChange}
+                />
               </>
             }
             advancedFilters={
@@ -988,17 +952,14 @@ const OperationLogList: React.FC = () => {
           />
 
           <Card className="page-panel system-list__table-card">
-            <GovernanceCleanupBar
-              showCleanup={canClear}
-              retentionDays={retentionDays}
-              retentionOptions={retentionOptions}
-              onRetentionChange={setRetentionDays}
-              retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-              confirmTitle={t('common.cleanupIrreversibleWarning')}
-              actionLabel={t('common.cleanupLogs')}
-              onConfirm={handleCleanup}
-              hint={t('system.audit.cleanupHint')}
-              trailing={
+            <TableBatchActionBar
+              selectedCount={selectedRowKeys.length}
+              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+              clearText={t('common.clearSelection')}
+              clearSuccessText={t('common.clearSelectionSuccess')}
+              onClear={() => setSelectedRowKeys([])}
+              showSelectionSummary={canDelete}
+              prefixActions={
                 <Button
                   icon={<IconDownload />}
                   onClick={() => {
@@ -1009,46 +970,27 @@ const OperationLogList: React.FC = () => {
                   {t('common.export')}
                 </Button>
               }
-              extraActions={
+              actions={
                 canDelete ? (
-                  <>
-                    <Typography.Text type="secondary">
-                      {t('common.selectedCount', { count: selectedRowKeys.length })}
-                    </Typography.Text>
-                    <Button
-                      type="text"
-                      size="small"
-                      disabled={selectedRowKeys.length === 0}
-                      onClick={() => {
-                        if (selectedRowKeys.length === 0) {
-                          return;
-                        }
-                        setSelectedRowKeys([]);
-                        message.success(t('common.clearSelectionSuccess'));
+                  <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
+                    <Popconfirm
+                      disabled={selectedRowKeys.length === 0 || !canDelete}
+                      title={t('system.audit.batchDeleteConfirm', {
+                        count: selectedRowKeys.length,
+                      })}
+                      onOk={() => {
+                        void handleBatchDelete();
                       }}
                     >
-                      {t('common.clearSelection')}
-                    </Button>
-                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm
+                      <Button
+                        status="danger"
+                        icon={<IconDelete />}
                         disabled={selectedRowKeys.length === 0 || !canDelete}
-                        title={t('system.audit.batchDeleteConfirm', {
-                          count: selectedRowKeys.length,
-                        })}
-                        onOk={() => {
-                          void handleBatchDelete();
-                        }}
                       >
-                        <Button
-                          status="danger"
-                          icon={<IconDelete />}
-                          disabled={selectedRowKeys.length === 0 || !canDelete}
-                        >
-                          {t('common.deleteSelected')}
-                        </Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </>
+                        {t('common.deleteSelected')}
+                      </Button>
+                    </Popconfirm>
+                  </PermissionAction>
                 ) : undefined
               }
             />
@@ -1122,11 +1064,6 @@ const OperationLogList: React.FC = () => {
               label: t('common.failed'),
               value: failedCount,
               description: t('system.audit.hero.failedHint'),
-            },
-            {
-              label: t('system.audit.hero.cleanupReady'),
-              value: canClear ? t('common.yes') : t('common.no'),
-              description: t('system.audit.hero.cleanupHint'),
             },
             {
               label: t('common.selected'),

@@ -88,6 +88,8 @@ export interface SecurityEventQuery {
   eventType?: string;
   severity?: string;
   acknowledged?: boolean;
+  startedAt?: string;
+  endedAt?: string;
   page?: number;
   pageSize?: number;
 }
