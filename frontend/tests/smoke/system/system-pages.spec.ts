@@ -3782,8 +3782,10 @@ test('session governance smoke: revocation uses the shared table batch bar', asy
   await expectPageIdentityReady(page, '会话管理');
   await expectNoPageError(page);
 
-  // 治理摘要：迁移到 GovernanceSummaryBar（eyebrow + title 两行）
-  const summaryBar = page.locator('.system-page-template > .governance-summary-bar').first();
+  // 治理摘要：迁移到 GovernanceSummaryBar（eyebrow + title 两行）。
+  // 与基线 selector 保持一致（shell-visual-contract / governance-insight-drawer），
+  // 避免 Arco <Space> 包裹打断 `.system-page-template >` 的直系选择器。
+  const summaryBar = page.locator('.governance-summary-bar').first();
   await expect(summaryBar).toBeVisible();
   await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
 
