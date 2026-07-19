@@ -14,9 +14,11 @@ import (
 	commonhttp "pantheon-platform/pkg/common/http"
 	"pantheon-platform/pkg/database"
 	"pantheon-platform/pkg/impexp"
+	"pantheon-platform/pkg/logging"
 	"pantheon-platform/pkg/platformprefs"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type AuthHandler struct {
@@ -215,6 +217,12 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
+	// 刷新令牌轮换：新 pair 签发成功后立即失效旧 refresh token，防止旧 token 在剩余 TTL 内被重放。
+	if err := authtoken.DeleteRefresh(c.Request.Context(), database.RDB, refreshToken); err != nil {
+		logging.Warn("revoke rotated refresh token failed",
+			zap.String("session_id", refreshClaims.SessionID), zap.Error(err))
+	}
+
 	if !writeRefreshSuccessResponse(c, tokenPair) {
 		return
 	}
@@ -229,7 +237,7 @@ func (h *AuthHandler) GetCurrentUserInfo(c *gin.Context) {
 }
 
 func (h *AuthHandler) UpdateCurrentUserPreferences(c *gin.Context) {
-	common.SetAuditMetadata(c, "更新平台偏好", common.BusinessUpdate)
+	common.SetAuditMetadata(c, "auth.preferences.update.title", common.BusinessUpdate)
 
 	var req UserPlatformPreferenceUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {

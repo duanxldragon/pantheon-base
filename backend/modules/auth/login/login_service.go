@@ -11,7 +11,9 @@ import (
 	user "pantheon-platform/modules/system/iam/user"
 	"pantheon-platform/pkg/common"
 	"pantheon-platform/pkg/impexp"
+	"pantheon-platform/pkg/logging"
 
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -346,7 +348,10 @@ func (s *LoginService) RecordLoginLog(requestID, username, ip, browser, os strin
 		LoginTime:     time.Now(),
 		LoginLocation: common.GetLocationByIP(ip),
 	}
-	_ = s.db.Create(&loginLog).Error
+	if err := s.db.Create(&loginLog).Error; err != nil {
+		logging.Warn("record login log failed",
+			zap.String("username", username), zap.Error(err))
+	}
 }
 
 func (s *LoginService) ensureAutomaticLoginLogRetention() {
@@ -356,7 +361,9 @@ func (s *LoginService) ensureAutomaticLoginLogRetention() {
 	now := time.Now()
 	policy := s.policy.GetRuntimePolicy()
 	cutoff := now.AddDate(0, 0, -maxInt(policy.LoginLogRetentionDays, 1))
-	_ = s.db.Where("login_time < ?", cutoff).Delete(&SystemLogLogin{}).Error
+	if err := s.db.Where("login_time < ?", cutoff).Delete(&SystemLogLogin{}).Error; err != nil {
+		logging.Warn("cleanup expired login logs failed", zap.Error(err))
+	}
 }
 
 func (s *LoginService) recordFailedLoginAttempt(currentUser *user.SystemUser, policy RuntimePolicy) (bool, error) {
@@ -403,11 +410,14 @@ func (s *LoginService) checkSourceThrottle(sourceKey string, policy RuntimePolic
 		return true, nil
 	}
 	if s.isSourceThrottleWindowExpired(throttle.WindowStartedAt, policy, now) || (throttle.BlockedUntil != nil && !throttle.BlockedUntil.After(now)) {
-		_ = s.db.Model(&throttle).Updates(map[string]any{
+		if err := s.db.Model(&throttle).Updates(map[string]any{
 			"failure_count":     0,
 			"window_started_at": nil,
 			"blocked_until":     nil,
-		}).Error
+		}).Error; err != nil {
+			logging.Error("reset login source throttle failed",
+				zap.String("source_key", normalizedKey), zap.Error(err))
+		}
 	}
 	return false, nil
 }
@@ -469,12 +479,16 @@ func (s *LoginService) updateSourceThrottleFailure(throttle *SystemLoginThrottle
 	if throttle.FailureCount >= policy.SourceMaxFailedAttempts {
 		throttle.BlockedUntil = sourceThrottleBlockedUntil(policy, now, true)
 	}
-	_ = s.db.Model(&throttle).Updates(map[string]any{
+	if err := s.db.Model(&throttle).Updates(map[string]any{
 		"failure_count":     throttle.FailureCount,
 		"window_started_at": throttle.WindowStartedAt,
 		"last_attempt_at":   throttle.LastAttemptAt,
 		"blocked_until":     throttle.BlockedUntil,
-	}).Error
+	}).Error; err != nil {
+		// 限流计数更新失败意味着暴力破解计数可能不增长，必须以 Error 级留痕。
+		logging.Error("update login source throttle failed",
+			zap.String("source_key", throttle.SourceKey), zap.Error(err))
+	}
 	return sourceThrottleBlocked(throttle.BlockedUntil, now), nil
 }
 

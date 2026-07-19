@@ -2167,7 +2167,10 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
           file: {
             name: 'avatar.png',
             mimeType: 'image/png',
-            buffer: Buffer.from('pantheon-upload-smoke', 'utf8'),
+            buffer: Buffer.concat([
+              Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+              Buffer.from('pantheon-upload-smoke', 'utf8'),
+            ]),
           },
         },
       },
@@ -2179,7 +2182,7 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
 
     const fileResponse = await page.request.get(uploadResult.data.url);
     expect(fileResponse.ok()).toBeTruthy();
-    expect((await fileResponse.body()).toString('utf8')).toBe('pantheon-upload-smoke');
+    expect((await fileResponse.body()).toString('utf8')).toContain('pantheon-upload-smoke');
 
     const blockedPayload = await page.request.post(
       `${apiBaseUrl}/system/upload?scope=profile/avatar`,

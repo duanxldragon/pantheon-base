@@ -1511,14 +1511,14 @@ body
 .org-chart__dept-card:hover,
 .org-chart__dept-card:focus {
   border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border));
-  box-shadow: 0 10px 28px rgba(22, 93, 255, 0.08);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--brand-primary) 8%, transparent);
   outline: none;
   transform: translateY(-1px);
 }
 
 .org-chart__dept-card--active {
   border-color: var(--brand-primary);
-  box-shadow: 0 12px 32px rgba(22, 93, 255, 0.1);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--brand-primary) 10%, transparent);
 }
 
 .org-chart__dept-header,

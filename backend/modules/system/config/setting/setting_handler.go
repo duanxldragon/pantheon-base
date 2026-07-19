@@ -150,7 +150,7 @@ func (h *SettingHandler) ExportSettingAudit(c *gin.Context) {
 }
 
 func (h *SettingHandler) UploadFile(c *gin.Context) {
-	common.SetAuditMetadata(c, "上传文件", common.BusinessImport)
+	common.SetAuditMetadata(c, "upload.file.title", common.BusinessImport)
 	if h.uploadService == nil {
 		common.Fail(c, common.CodeError, "upload.config.unavailable")
 		return
@@ -203,8 +203,16 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		return
 	}
 
-	if contentType := mime.TypeByExtension(strings.ToLower(filepath.Ext(objectKey))); contentType != "" {
+	extension := strings.TrimPrefix(strings.ToLower(filepath.Ext(objectKey)), ".")
+	if contentType := mime.TypeByExtension("." + extension); contentType != "" {
 		c.Header("Content-Type", contentType)
+	}
+	// 纵深防御：禁止 MIME 嗅探；非图片类型强制下载，防止伪装内容被浏览器内联渲染。
+	c.Header("X-Content-Type-Options", "nosniff")
+	switch extension {
+	case "jpg", "jpeg", "png", "gif", "webp":
+	default:
+		c.Header("Content-Disposition", "attachment")
 	}
 	if !filepath.IsLocal(objectKey) {
 		common.Fail(c, common.CodeParamInvalid, "upload.file.not_found")

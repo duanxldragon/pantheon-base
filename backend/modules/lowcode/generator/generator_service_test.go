@@ -105,13 +105,15 @@ func TestMapColumnToFieldSplitsChineseAndEnglishFallbacks(t *testing.T) {
 
 func TestNormalizeDatasourceReqRejectsUnsafeHosts(t *testing.T) {
 	tests := []struct {
-		name      string
-		host      string
-		wantError string
+		name         string
+		host         string
+		allowPrivate bool
+		wantError    string
 	}{
 		{name: "reject localhost", host: "localhost", wantError: "generator.datasource.host_invalid"},
 		{name: "reject loopback ip", host: "127.0.0.1", wantError: "generator.datasource.host_invalid"},
-		{name: "allow private ip", host: "10.10.10.10"},
+		{name: "reject private ip by default", host: "10.10.10.10", wantError: "generator.datasource.host_private_disabled"},
+		{name: "allow private ip when opted in", host: "10.10.10.10", allowPrivate: true},
 		{name: "allow internal hostname", host: "db.internal"},
 		{name: "reject invalid host chars", host: "db/internal", wantError: "generator.datasource.host_invalid"},
 		{name: "allow public hostname", host: "db.example.com"},
@@ -119,6 +121,11 @@ func TestNormalizeDatasourceReqRejectsUnsafeHosts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.allowPrivate {
+				t.Setenv("PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE", "true")
+			} else {
+				t.Setenv("PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE", "")
+			}
 			_, err := normalizeDatasourceReq(&UpsertGeneratorDatasourceReq{
 				Name:         "demo",
 				Driver:       "mysql",

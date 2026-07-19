@@ -147,10 +147,10 @@ func (s *UserService) validateUserUpdate(user *SystemUser, req *UserUpdateReq) e
 		return err
 	}
 
-	if user.ID == 1 && req.Status == common.StatusDisabled {
+	if user.ID == common.BuiltinAdminUserID && req.Status == common.StatusDisabled {
 		return common.NewForbidden("user.update.error.protected")
 	}
-	if user.ID == 1 {
+	if user.ID == common.BuiltinAdminUserID {
 		adminRoleID, err := s.getAdminRoleID()
 		if err != nil {
 			return err

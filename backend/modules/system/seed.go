@@ -306,6 +306,7 @@ func permissionMenuSeeds() []menuSeed {
 		{Key: "role-batch-update", ParentKey: "role", TitleKey: "system.permission.role.batch_update", Perms: "system:role:batch-update", Type: "F", Sort: 4},
 		{Key: "role-batch-delete", ParentKey: "role", TitleKey: "system.permission.role.batch_delete", Perms: "system:role:batch-delete", Type: "F", Sort: 5},
 		{Key: "role-export", ParentKey: "role", TitleKey: "system.permission.role.export", Perms: "system:role:export", Type: "F", Sort: 6},
+		{Key: "role-import", ParentKey: "role", TitleKey: "system.permission.role.import", Perms: "system:role:import", Type: "F", Sort: 7},
 		{Key: "menu-create", ParentKey: "menu", TitleKey: "system.permission.menu.create", Perms: "system:menu:create", Type: "F", Sort: 1},
 		{Key: "menu-update", ParentKey: "menu", TitleKey: "system.permission.menu.update", Perms: "system:menu:update", Type: "F", Sort: 2},
 		{Key: "menu-delete", ParentKey: "menu", TitleKey: "system.permission.menu.delete", Perms: "system:menu:delete", Type: "F", Sort: 3},

@@ -136,8 +136,8 @@ func initIAMModules(deps *systemModuleDependencies) []contracts.BackendModule {
 					systemProtected.POST("/user/batch-status", deps.userHandler.BatchUpdateUserStatus)
 					systemProtected.POST("/user/batch-delete", middleware.SecureActionMiddleware(), deps.userHandler.BatchDeleteUsers)
 					systemProtected.PUT("/user/:id", deps.userHandler.UpdateUser)
-					systemProtected.PUT("/user/:id/reset-password", deps.userHandler.ResetPassword)
-					systemProtected.DELETE("/user/:id", deps.userHandler.DeleteUser)
+					systemProtected.PUT("/user/:id/reset-password", middleware.SecureActionMiddleware(), deps.userHandler.ResetPassword)
+					systemProtected.DELETE("/user/:id", middleware.SecureActionMiddleware(), deps.userHandler.DeleteUser)
 				}
 				{
 					systemDataScoped.GET("/user/list", deps.userHandler.GetUserList)
@@ -155,7 +155,7 @@ func initIAMModules(deps *systemModuleDependencies) []contracts.BackendModule {
 					systemProtected.GET("/menu/tree", deps.menuHandler.GetMenuTree)
 					systemProtected.POST("/menu", deps.menuHandler.CreateMenu)
 					systemProtected.PUT("/menu/:id", deps.menuHandler.UpdateMenu)
-					systemProtected.DELETE("/menu/:id", deps.menuHandler.DeleteMenu)
+					systemProtected.DELETE("/menu/:id", middleware.SecureActionMiddleware(), deps.menuHandler.DeleteMenu)
 				}
 			},
 		},
@@ -178,7 +178,7 @@ func initIAMModules(deps *systemModuleDependencies) []contracts.BackendModule {
 					systemProtected.POST("/role/:id/users", deps.roleHandler.AddRoleMembers)
 					systemProtected.POST("/role/:id/users/remove", deps.roleHandler.RemoveRoleMembers)
 					systemProtected.PUT("/role/:id", deps.roleHandler.UpdateRole)
-					systemProtected.DELETE("/role/:id", deps.roleHandler.DeleteRole)
+					systemProtected.DELETE("/role/:id", middleware.SecureActionMiddleware(), deps.roleHandler.DeleteRole)
 				}
 			},
 		},

@@ -15,7 +15,9 @@ import (
 	"pantheon-platform/pkg/authtoken"
 	"pantheon-platform/pkg/common"
 	"pantheon-platform/pkg/database"
+	"pantheon-platform/pkg/logging"
 
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -61,7 +63,10 @@ func (r *SecurityEventRecorder) Record(event SystemAuthSecurityEvent) {
 	}
 	event.SourceKey = strings.TrimSpace(event.SourceKey)
 	event.Username = strings.TrimSpace(event.Username)
-	_ = r.db.Create(&event).Error
+	if err := r.db.Create(&event).Error; err != nil {
+		logging.Warn("record security event failed",
+			zap.String("event_type", event.EventType), zap.Error(err))
+	}
 }
 
 // AuthRuntimePolicy is the runtime security policy snapshot.
@@ -366,10 +371,21 @@ func (s *Service) RevokeOtherSessionsForUser(tx *gorm.DB, userID uint64, current
 	if strings.TrimSpace(currentSessionID) == "" {
 		return nil
 	}
-	now := time.Now()
-	return tx.Model(&session.SystemUserSession{}).
+	// 先收集将被吊销的会话 ID，事务提交后级联删除 Redis refresh entry。
+	var sessionIDs []string
+	if err := tx.Model(&session.SystemUserSession{}).
 		Where("user_id = ? AND session_id <> ? AND revoked_at IS NULL", userID, currentSessionID).
-		Updates(map[string]interface{}{"revoked_at": &now}).Error
+		Pluck("session_id", &sessionIDs).Error; err != nil {
+		return err
+	}
+	now := time.Now()
+	if err := tx.Model(&session.SystemUserSession{}).
+		Where("user_id = ? AND session_id <> ? AND revoked_at IS NULL", userID, currentSessionID).
+		Updates(map[string]interface{}{"revoked_at": &now}).Error; err != nil {
+		return err
+	}
+	session.CascadeRevokeSessionRefresh(sessionIDs...)
+	return nil
 }
 
 func (s *Service) ensurePasswordNotRecentlyUsed(userID uint64, newPassword, currentPasswordHash string, policy AuthRuntimePolicy) error {

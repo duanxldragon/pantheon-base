@@ -20,9 +20,11 @@ import (
 	"pantheon-platform/pkg/common"
 	"pantheon-platform/pkg/database"
 	"pantheon-platform/pkg/impexp"
+	"pantheon-platform/pkg/logging"
 	"pantheon-platform/pkg/platformprefs"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -186,7 +188,10 @@ func (s *Runtime) RecordSecurityEvent(event security.SystemAuthSecurityEvent) {
 	if event.Severity == "" {
 		event.Severity = "medium"
 	}
-	_ = s.db.Create(&event).Error
+	if err := s.db.Create(&event).Error; err != nil {
+		logging.Warn("record security event failed",
+			zap.String("event_type", event.EventType), zap.Error(err))
+	}
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -745,6 +750,8 @@ func (s *Runtime) fetchSettingIntFromDB(settingKey string, fallback int) int {
 		Limit(1).
 		Pluck("setting_value", &rawValue).Error
 	if err != nil {
+		logging.Warn("auth settings reload: read setting failed, using fallback",
+			zap.String("setting_key", settingKey), zap.Error(err))
 		return fallback
 	}
 	val, err := strconv.Atoi(strings.TrimSpace(rawValue))
@@ -765,6 +772,8 @@ func (s *Runtime) fetchSettingBoolFromDB(settingKey string, fallback bool) bool 
 		Limit(1).
 		Pluck("setting_value", &rawValue).Error
 	if err != nil {
+		logging.Warn("auth settings reload: read setting failed, using fallback",
+			zap.String("setting_key", settingKey), zap.Error(err))
 		return fallback
 	}
 	parsed, err := strconv.ParseBool(strings.TrimSpace(rawValue))
@@ -785,6 +794,8 @@ func (s *Runtime) fetchSettingIntSliceFromDB(settingKey string, fallback []int) 
 		Limit(1).
 		Pluck("setting_value", &rawValue).Error
 	if err != nil {
+		logging.Warn("auth settings reload: read setting failed, using fallback",
+			zap.String("setting_key", settingKey), zap.Error(err))
 		return cloneIntSlice(fallback)
 	}
 	return normalizeRetentionDays(rawValue, fallback)

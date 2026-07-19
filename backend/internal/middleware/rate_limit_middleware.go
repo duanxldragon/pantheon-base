@@ -54,7 +54,7 @@ func RateLimiter(config RateLimiterConfig) gin.HandlerFunc {
 		}
 		if !allowed {
 			slog.Warn("rate limit exceeded", "limit", config.MaxRequests)
-			c.JSON(http.StatusTooManyRequests, gin.H{"code": 429, "message": "too many requests"})
+			c.JSON(http.StatusTooManyRequests, gin.H{"code": 429, "message": "request.too_many"})
 			c.Abort()
 			return
 		}
