@@ -35,12 +35,6 @@ const searchToolbarPages = [
   '/system/operation-log',
 ] as const;
 
-const governanceBarPages = [
-  // 全部列表页已迁移至 SearchToolbar + GovernanceSummaryBar + TableBatchActionBar（无 --governance 修饰），
-  // 旧的 `.table-batch-action-bar--governance` 契约不再有页面覆盖；governance 共享结构契约改由
-  // 单独的「shared governance rhythm」用例覆盖。
-] as const;
-
 const tableRhythmPages = [
   '/system/user',
   '/system/permission',

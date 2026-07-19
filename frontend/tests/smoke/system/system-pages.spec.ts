@@ -3724,7 +3724,7 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
   }
 });
 
-test('session governance smoke: cleanup bar uses the unified governance affordance', async ({
+test('session governance smoke: revocation uses the shared table batch bar', async ({
   page,
 }) => {
   await signInAsAdmin(page);
@@ -3782,16 +3782,22 @@ test('session governance smoke: cleanup bar uses the unified governance affordan
   await expectPageIdentityReady(page, '会话管理');
   await expectNoPageError(page);
 
-  const cleanupBar = page
-    .locator('.page-panel')
-    .filter({ has: page.getByRole('button', { name: '清理历史会话' }) })
-    .first();
-  await expect(cleanupBar.getByRole('button', { name: '清理历史会话' })).toBeVisible();
-  await expect(
-    cleanupBar.getByText('用于清理超出保留窗口的已下线历史会话，减小会话表规模；活跃会话保留。'),
-  ).toBeVisible();
-  const revokeSelectedButton = cleanupBar.getByRole('button', { name: '下线所选' });
+  // 治理摘要：迁移到 GovernanceSummaryBar（eyebrow + title 两行）
+  const summaryBar = page.locator('.system-page-template > .governance-summary-bar').first();
+  await expect(summaryBar).toBeVisible();
+  await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
+
+  // 批量下线按钮：迁移到通用 TableBatchActionBar（无 --governance 修饰）
+  const batchBar = page.locator('.page-panel.system-list__table-card .table-batch-action-bar').first();
+  await expect(batchBar).toBeVisible();
+  await expect(batchBar).not.toHaveClass(/table-batch-action-bar--governance/);
+  const revokeSelectedButton = batchBar.getByRole('button', { name: '下线所选' });
   await expect(revokeSelectedButton).toBeDisabled();
+
+  // 历史清理按钮已在前端移除（保留期清理由后端按策略自动执行）
+  await expect(page.getByRole('button', { name: '清理历史会话' })).toHaveCount(0);
+
+  // 选中一行后，批量下线按钮启用
   await page.locator('.app-table tbody .arco-checkbox').nth(1).click({ force: true });
   await expect(revokeSelectedButton).toBeEnabled();
 });
