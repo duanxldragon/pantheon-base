@@ -14,6 +14,10 @@ const jaJPOverrideFallback = {
     'セキュリティイベントを完了する前に受付メモを入力してください',
   'auth.securityEvent.acknowledgePrompt': '受付メモを入力してください',
   'auth.securityEvent.acknowledgeSuccess': 'セキュリティイベントを受付しました',
+  'auth.securityEvent.batchAcknowledge': '選択を一括受付',
+  'auth.securityEvent.batchAcknowledgeDialogHint':
+    '選択した未受付イベントに同じ処置メモを適用します。受付済みイベントはスキップされ、元のメモは保持されます。',
+  'auth.securityEvent.batchAcknowledgeSuccess': '{{count}} 件のセキュリティイベントを受付しました',
   'auth.securityEvent.acknowledgedHint':
     '受付済みイベントには担当者、時刻、処置メモが監査用に保持されます。',
   'auth.securityEvent.acknowledgement': '受付内容',

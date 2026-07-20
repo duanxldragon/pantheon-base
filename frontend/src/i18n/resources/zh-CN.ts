@@ -303,6 +303,10 @@ const zhCNFallback = {
     '记录你的处置结论、影响范围和后续动作，形成可追踪的治理闭环。',
   'auth.securityEvent.acknowledgeNoteRequired': '请先填写安全事件确认说明',
   'auth.securityEvent.acknowledgeSuccess': '安全事件已确认',
+  'auth.securityEvent.batchAcknowledge': '批量确认',
+  'auth.securityEvent.batchAcknowledgeDialogHint':
+    '为所选待确认事件统一填写处置说明；已确认事件会自动跳过，不会覆盖原有说明。',
+  'auth.securityEvent.batchAcknowledgeSuccess': '已确认 {{count}} 条安全事件',
   'auth.securityEvent.pendingHint': '待确认事件应先核实来源、账号状态与是否需要联动会话治理。',
   'auth.securityEvent.acknowledgedHint': '已确认事件会保留确认人、时间与处置说明，便于审计追踪。',
   'auth.securityEvent.highSeverityHint': '高风险事件优先联动登录日志、会话管理和操作审计复盘。',
@@ -2383,6 +2387,8 @@ const zhCNFallback = {
   'system.setting.item.audit.operation_log_retention_days': '操作日志自动保留天数',
   'system.setting.item.audit.session_cleanup_retention_options': '历史会话清理保留期选项',
   'system.setting.item.audit.session_retention_days': '会话历史保留天数',
+  'system.setting.item.audit.security_event_retention_options': '安全事件清理保留期选项',
+  'system.setting.item.audit.security_event_retention_days': '安全事件自动保留天数',
   'system.setting.item.upload.storage_driver': '存储驱动',
   'system.setting.option.upload.storage_driver.local': '本地存储',
   'system.setting.option.upload.storage_driver.s3': 'S3 兼容对象存储',
@@ -2438,6 +2444,10 @@ const zhCNFallback = {
     '登录日志自动保留天数。超过该时间后系统会按节流策略自动清理，默认 90 天。',
   'system.setting.remark.audit.operation_log_retention_days':
     '操作日志自动保留天数。超过该时间后系统会按节流策略自动清理，默认 180 天。',
+  'system.setting.remark.audit.security_event_retention_options':
+    '使用 JSON 数组维护安全事件清理可选保留天数，例如 [1,7,30]。',
+  'system.setting.remark.audit.security_event_retention_days':
+    '已确认安全事件的自动保留天数。仅清理已确认事件，待确认事件始终保留。默认 180 天。',
   'system.setting.audit.retentionDaysOption': '自动保留 {{count}} 天',
   'system.setting.remark.upload.storage_driver':
     '当前支持 local / s3-compatible，可接 MinIO、AWS S3、OSS 兼容网关。',

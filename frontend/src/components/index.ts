@@ -18,6 +18,11 @@ export {
   type GovernanceSummaryMetric,
 } from './governance/GovernanceSummaryBar';
 export {
+  default as GovernanceCleanupBar,
+  type GovernanceCleanupPayload,
+  type GovernanceCleanupMode,
+} from './governance/GovernanceCleanupBar';
+export {
   default as TimeRangeFilter,
   TIME_RANGE_FILTER_FORMAT,
   type TimeRangeFilterValue,

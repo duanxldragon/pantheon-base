@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Popconfirm, Select, Space, Tag } from '@arco-design/web-react';
+import { Button, Card, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
 import { IconDelete, IconDownload } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { message } from '../../../../components/feedback/message';
@@ -11,6 +11,7 @@ import {
 import { formatDateTime } from '../../../../core/format/dateTime';
 import {
   batchDeleteAdminLoginLogs,
+  cleanupAdminLoginLogs,
   exportAdminLoginLogs,
   exportSelectedAdminLoginLogs,
   getAdminLoginLogList,
@@ -22,6 +23,7 @@ import { renderClientInfo } from '../../session/clientInfo';
 import {
   AppTable,
   buildStandardPagination,
+  GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -33,14 +35,18 @@ import {
   PermissionAction,
   SearchToolbar,
   TABLE_COLUMN_WIDTH,
-  TableBatchActionBar,
   TimeRangeFilter,
+  type GovernanceCleanupPayload,
   type TimeRangeFilterValue,
   useGovernanceRail,
 } from '../../../../components';
 import { usePermission } from '../../../../hooks/usePermission';
+import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
+import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 import '../../../system/components/shared/list-page.css';
 import '../../auth.css';
+const defaultRetentionOptions = [1, 7, 30];
+
 const emptyQuery: LoginLogQuery = {
   keyword: '',
   username: '',
@@ -56,13 +62,36 @@ const LoginLogList: React.FC = () => {
   const { isAdmin, hasPerm } = usePermission();
   const canExport = isAdmin || hasPerm('system:login-log:export');
   const canDelete = isAdmin || hasPerm('system:login-log:delete');
+  const canClear = isAdmin || hasPerm('system:login-log:clear');
   const governanceRail = useGovernanceRail();
   const [data, setData] = useState<LoginLogRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [successCount, setSuccessCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<LoginLogQuery>(emptyQuery);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
+    [...defaultRetentionOptions].sort((left, right) => right - left),
+  );
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      getSettingGroup('audit')
+        .then((group: SettingGroup) =>
+          loadRetentionSetting(
+            group,
+            'audit.login_log_retention_options',
+            setRetentionOptions,
+            setRetentionDays,
+          ),
+        )
+        .catch(() => undefined);
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, []);
 
   const loadData = useCallback(
     async (nextQuery: LoginLogQuery = query) => {
@@ -72,6 +101,8 @@ const LoginLogList: React.FC = () => {
         const result: LoginLogPageResp = await getAdminLoginLogList(nextQuery);
         setData(result.items);
         setTotal(result.total);
+        setSuccessCount(result.successCount ?? 0);
+        setFailedCount(result.failedCount ?? 0);
       } catch (requestError) {
         setLoadError(requestError);
         message.error(t('common.loadFailed'));
@@ -122,6 +153,22 @@ const LoginLogList: React.FC = () => {
     }
   };
 
+  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
+    try {
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupAdminLoginLogs({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupAdminLoginLogs({ retentionDays: payload.retentionDays });
+      message.success(t('auth.loginLog.cleanupSuccess', { count: resp.clearedCount }));
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
+  };
+
   const translateLogMessage = (value?: string | null) => {
     if (!value) {
       return '-';
@@ -129,8 +176,6 @@ const LoginLogList: React.FC = () => {
     return t(value, { defaultValue: value });
   };
 
-  const successCount = data.filter((item) => item.status === 1).length;
-  const failedCount = data.filter((item) => item.status !== 1).length;
   const visibleSelectedRowKeys = useMemo(
     () =>
       getVisibleSelectedRowKeys(
@@ -286,14 +331,25 @@ const LoginLogList: React.FC = () => {
           />
 
           <Card className="page-panel system-list__table-card auth-login-log-page__table-card">
-            <TableBatchActionBar
-              selectedCount={selectedRowKeys.length}
-              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-              clearText={t('common.clearSelection')}
-              clearSuccessText={t('common.clearSelectionSuccess')}
-              onClear={() => setSelectedRowKeys([])}
-              showSelectionSummary={canDelete}
-              prefixActions={
+            <GovernanceCleanupBar
+              showCleanup={canClear}
+              retentionDays={retentionDays}
+              retentionOptions={retentionOptions}
+              onRetentionChange={setRetentionDays}
+              retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+              confirmTitle={t('common.cleanupIrreversibleWarning')}
+              actionLabel={t('common.cleanupLogs')}
+              cleanupModeLabel={t('common.cleanupMode')}
+              cleanupModeOptions={[
+                { label: t('common.cleanupModeRetention'), value: 'retention' },
+                { label: t('common.cleanupModeRange'), value: 'range' },
+              ]}
+              rangeStartLabel={t('common.cleanupRangeStart')}
+              rangeEndLabel={t('common.cleanupRangeEnd')}
+              rangeRequiredMessage={t('common.cleanupRangeRequired')}
+              onConfirm={handleCleanup}
+              hint={t('auth.loginLog.hero.cleanupHint')}
+              trailing={
                 <Button
                   icon={<IconDownload />}
                   onClick={() => {
@@ -304,9 +360,26 @@ const LoginLogList: React.FC = () => {
                   {t('common.export')}
                 </Button>
               }
-              actions={
+              extraActions={
                 canDelete ? (
                   <>
+                    <Typography.Text type="secondary">
+                      {t('common.selectedCount', { count: selectedRowKeys.length })}
+                    </Typography.Text>
+                    <Button
+                      type="text"
+                      size="small"
+                      disabled={selectedRowKeys.length === 0}
+                      onClick={() => {
+                        if (selectedRowKeys.length === 0) {
+                          return;
+                        }
+                        setSelectedRowKeys([]);
+                        message.success(t('common.clearSelectionSuccess'));
+                      }}
+                    >
+                      {t('common.clearSelection')}
+                    </Button>
                     <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
                       <Popconfirm
                         disabled={selectedRowKeys.length === 0 || !canDelete}

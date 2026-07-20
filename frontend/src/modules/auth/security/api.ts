@@ -97,6 +97,10 @@ export interface SecurityEventQuery {
 export interface SecurityEventPageResp {
   items: SecurityEventRow[];
   total: number;
+  /** 全量过滤集（跨页）聚合，供治理栏展示全局数字。 */
+  pendingCount: number;
+  acknowledgedCount: number;
+  highSeverityCount: number;
   page: number;
   pageSize: number;
 }
@@ -140,6 +144,9 @@ export interface LoginLogBatchDeletePayload {
 export interface LoginLogPageResp {
   items: LoginLogRow[];
   total: number;
+  /** 全量过滤集（跨页）聚合，供治理栏展示全局数字。 */
+  successCount: number;
+  failedCount: number;
   page: number;
   pageSize: number;
 }
@@ -147,6 +154,19 @@ export interface LoginLogPageResp {
 export function acknowledgeSecurityEvent(id: number, data: SecurityEventAcknowledgePayload) {
   return apiRequest<{ acknowledged: boolean }>({
     url: `/system/security-event/${id}/acknowledge`,
+    method: 'post',
+    data,
+  });
+}
+
+export interface SecurityEventBatchAcknowledgePayload {
+  ids: number[];
+  acknowledgementNote: string;
+}
+
+export function batchAcknowledgeSecurityEvents(data: SecurityEventBatchAcknowledgePayload) {
+  return apiRequest<{ acknowledgedCount: number }>({
+    url: '/system/security-event/batch-acknowledge',
     method: 'post',
     data,
   });

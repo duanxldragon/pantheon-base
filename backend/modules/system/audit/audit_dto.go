@@ -21,10 +21,14 @@ type OperationLogResp struct {
 }
 
 type OperationLogPageResp struct {
-	Items    []OperationLogResp `json:"items"`
-	Total    int64              `json:"total"`
-	Page     int                `json:"page"`
-	PageSize int                `json:"pageSize"`
+	Items []OperationLogResp `json:"items"`
+	Total int64              `json:"total"`
+	// SuccessCount/FailedCount aggregate the whole filtered set (all pages),
+	// so the governance bar shows global numbers instead of page-local ones.
+	SuccessCount int64 `json:"successCount"`
+	FailedCount  int64 `json:"failedCount"`
+	Page         int   `json:"page"`
+	PageSize     int   `json:"pageSize"`
 }
 
 type OperationLogQuery struct {

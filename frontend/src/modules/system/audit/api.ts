@@ -40,6 +40,9 @@ export interface OperationLogRow {
 export interface OperationLogPageResp {
   items: OperationLogRow[];
   total: number;
+  /** 全量过滤集（跨页）聚合，供治理栏展示全局数字。 */
+  successCount: number;
+  failedCount: number;
   page: number;
   pageSize: number;
 }

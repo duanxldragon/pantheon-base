@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
@@ -94,6 +96,11 @@ type AuthRuntimePolicy struct {
 type Service struct {
 	db     *gorm.DB
 	policy PolicyProvider
+
+	// Throttle state for automatic security-event retention cleanup so list
+	// requests do not each issue a full-table DELETE scan.
+	autoCleanupMu     sync.Mutex
+	lastAutoCleanupAt time.Time
 }
 
 // NewService creates a SecurityService.
@@ -172,6 +179,7 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
+	s.ensureAutomaticSecurityEventRetention()
 	page, pageSize := normalizeSecurityEventPageQuery(query)
 	db := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query)
 
@@ -179,15 +187,31 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
+	// Whole-filtered-set aggregates so the governance bar shows global numbers.
+	var acknowledgedCount int64
+	if err := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query).
+		Where("acknowledged_at IS NOT NULL").
+		Count(&acknowledgedCount).Error; err != nil {
+		return nil, err
+	}
+	var highSeverityCount int64
+	if err := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query).
+		Where("severity = ?", "high").
+		Count(&highSeverityCount).Error; err != nil {
+		return nil, err
+	}
 	var events []SystemAuthSecurityEvent
 	if err := db.Order("created_at desc, id desc").Offset((page - 1) * pageSize).Limit(pageSize).Find(&events).Error; err != nil {
 		return nil, err
 	}
 	return &SecurityEventPageResp{
-		Items:    toSecurityEventRespList(events),
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
+		Items:             toSecurityEventRespList(events),
+		Total:             total,
+		PendingCount:      total - acknowledgedCount,
+		AcknowledgedCount: acknowledgedCount,
+		HighSeverityCount: highSeverityCount,
+		Page:              page,
+		PageSize:          pageSize,
 	}, nil
 }
 
@@ -311,6 +335,91 @@ func (s *Service) AcknowledgeSecurityEvent(eventID, actorID uint64, actorUsernam
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+// BatchAcknowledgeSecurityEvents acknowledges multiple pending events in one
+// call. Already-acknowledged events are skipped so earlier acknowledgement
+// notes are never overwritten.
+func (s *Service) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint64, actorUsername, note string) (int64, error) {
+	if s.db == nil {
+		return 0, common.ErrDatabaseNotInitialized
+	}
+	note = strings.TrimSpace(note)
+	if note == "" {
+		return 0, errors.New("auth.security_event.acknowledge.note_required")
+	}
+	normalized := make([]uint64, 0, len(eventIDs))
+	seen := make(map[uint64]struct{}, len(eventIDs))
+	for _, id := range eventIDs {
+		if id == 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		normalized = append(normalized, id)
+	}
+	if len(normalized) == 0 {
+		return 0, errors.New("auth.security_event.acknowledge.ids_required")
+	}
+	result := s.db.Model(&SystemAuthSecurityEvent{}).
+		Where("id IN ? AND acknowledged_at IS NULL", normalized).
+		Updates(map[string]interface{}{
+			"acknowledged_at":      time.Now(),
+			"acknowledged_by":      actorID,
+			"acknowledged_by_user": strings.TrimSpace(actorUsername),
+			"acknowledgement_note": note,
+		})
+	return result.RowsAffected, result.Error
+}
+
+const (
+	defaultSecurityEventRetentionDays  = 180
+	securityEventAutoCleanupMinLatency = 15 * time.Minute
+)
+
+// ensureAutomaticSecurityEventRetention deletes acknowledged events older than
+// audit.security_event_retention_days (default 180). Pending events are never
+// swept automatically — they require an explicit acknowledgement first.
+func (s *Service) ensureAutomaticSecurityEventRetention() {
+	if s.db == nil {
+		return
+	}
+	now := time.Now()
+	s.autoCleanupMu.Lock()
+	if !s.lastAutoCleanupAt.IsZero() && now.Sub(s.lastAutoCleanupAt) < securityEventAutoCleanupMinLatency {
+		s.autoCleanupMu.Unlock()
+		return
+	}
+	s.lastAutoCleanupAt = now
+	s.autoCleanupMu.Unlock()
+
+	retentionDays := s.getSecurityEventRetentionDays()
+	cutoff := now.AddDate(0, 0, -retentionDays)
+	if err := s.db.
+		Where("acknowledged_at IS NOT NULL AND created_at < ?", cutoff).
+		Delete(&SystemAuthSecurityEvent{}).Error; err != nil {
+		logging.Warn("cleanup expired security events failed", zap.Error(err))
+	}
+}
+
+func (s *Service) getSecurityEventRetentionDays() int {
+	if s.db == nil {
+		return defaultSecurityEventRetentionDays
+	}
+	var row struct {
+		SettingValue string `gorm:"column:setting_value"`
+	}
+	if err := s.db.Table("system_setting").Select("setting_value").
+		Where("setting_key = ?", "audit.security_event_retention_days").Take(&row).Error; err != nil {
+		return defaultSecurityEventRetentionDays
+	}
+	value, err := strconv.Atoi(strings.TrimSpace(row.SettingValue))
+	if err != nil || value <= 0 {
+		return defaultSecurityEventRetentionDays
+	}
+	return value
 }
 
 // CountActiveSessions returns how many active sessions a user has.
@@ -603,8 +712,13 @@ type SecurityEventResp struct {
 
 // SecurityEventPageResp mirrors the auth-layer DTO.
 type SecurityEventPageResp struct {
-	Items    []SecurityEventResp `json:"items"`
-	Total    int64               `json:"total"`
-	Page     int                 `json:"page"`
-	PageSize int                 `json:"pageSize"`
+	Items []SecurityEventResp `json:"items"`
+	Total int64               `json:"total"`
+	// Whole-filtered-set aggregates (all pages) so the governance bar shows
+	// global numbers instead of page-local ones.
+	PendingCount      int64 `json:"pendingCount"`
+	AcknowledgedCount int64 `json:"acknowledgedCount"`
+	HighSeverityCount int64 `json:"highSeverityCount"`
+	Page              int   `json:"page"`
+	PageSize          int   `json:"pageSize"`
 }

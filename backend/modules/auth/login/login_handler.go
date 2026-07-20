@@ -327,6 +327,28 @@ func (h *AuthHandler) AcknowledgeSecurityEvent(c *gin.Context) {
 	common.Success(c, gin.H{"acknowledged": true})
 }
 
+func (h *AuthHandler) BatchAcknowledgeSecurityEvents(c *gin.Context) {
+	common.SetAuditMetadata(c, "auth.security_event.batch_acknowledge.title", common.BusinessUpdate)
+
+	var req SecurityEventBatchAcknowledgeReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		return
+	}
+
+	acknowledgedCount, err := h.service.BatchAcknowledgeSecurityEvents(
+		req.IDs,
+		common.GetUserID(c),
+		c.GetString("username"),
+		req.AcknowledgementNote,
+	)
+	if err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.security_event.acknowledge.error")
+		return
+	}
+	common.Success(c, SecurityEventBatchAcknowledgeResp{AcknowledgedCount: acknowledgedCount})
+}
+
 func (h *AuthHandler) CleanupSecurityEvents(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.security_event.cleanup.title", common.BusinessClean)
 

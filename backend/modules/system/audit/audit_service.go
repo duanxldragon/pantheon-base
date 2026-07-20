@@ -70,6 +70,13 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
+	// Whole-filtered-set aggregate so the governance bar shows global numbers.
+	var successCount int64
+	if err := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query).
+		Where("status = ?", common.OperationStatusSuccess).
+		Count(&successCount).Error; err != nil {
+		return nil, err
+	}
 	sortColumn, sortDesc := normalizeOperationLogSort(query)
 	orderedDB := db.Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc})
 	if sortColumn != "id" {
@@ -85,10 +92,12 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	}
 
 	return &OperationLogPageResp{
-		Items:    items,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
+		Items:        items,
+		Total:        total,
+		SuccessCount: successCount,
+		FailedCount:  total - successCount,
+		Page:         page,
+		PageSize:     pageSize,
 	}, nil
 }
 

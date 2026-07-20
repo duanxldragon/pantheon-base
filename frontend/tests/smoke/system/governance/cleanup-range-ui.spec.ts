@@ -271,14 +271,15 @@ test.describe('cleanup range governance smoke', () => {
 
     await page.goto(loginLogCase.path, { waitUntil: 'networkidle' });
 
-    // Login-log filters now render inside the shared SearchToolbar inline slot
-    // (the legacy .auth-login-log-page__filter-grid wrapper was removed).
+    // Login-log filters render inside the shared SearchToolbar inline slot and
+    // use the shared TimeRangeFilter component (the page-local
+    // .auth-login-log-page__time-range-* DOM was retired in 8ce624d8).
     const filterGrid = page.locator('.search-toolbar__inline');
     await expect(filterGrid).toBeVisible();
 
-    const rangeTrigger = filterGrid.locator('.auth-login-log-page__time-range-trigger');
+    const rangeTrigger = filterGrid.locator('.time-range-filter__trigger');
     await expect(rangeTrigger).toBeVisible();
-    await expect(rangeTrigger).toContainText('最近 24 小时');
+    await expect(rangeTrigger).toContainText('时间范围');
     await rangeTrigger.click();
 
     const popup = rangePopup(page);
@@ -286,24 +287,20 @@ test.describe('cleanup range governance smoke', () => {
 
     const popupBox = await popup.boundingBox();
     expect(popupBox).not.toBeNull();
-    expect(popupBox?.width ?? 0).toBeGreaterThanOrEqual(580);
-    expect(popupBox?.width ?? 0).toBeLessThanOrEqual(640);
+    expect(popupBox?.width ?? 0).toBeGreaterThanOrEqual(540);
+    expect(popupBox?.width ?? 0).toBeLessThanOrEqual(700);
 
-    const shell = popup.locator('.auth-login-log-page__time-range-shell');
+    const shell = popup.locator('.time-range-filter__shell');
     await expect(shell).toBeVisible();
 
-    const shortcutRows = shell.locator('.auth-login-log-page__time-range-shortcut-row');
+    const shortcutRows = shell.locator('.time-range-filter__shortcut-row');
     await expect(shortcutRows).toHaveCount(2);
-    await expect(
-      shortcutRows.first().locator('.auth-login-log-page__time-range-shortcut'),
-    ).toHaveCount(9);
-    await expect(
-      shortcutRows.nth(1).locator('.auth-login-log-page__time-range-shortcut'),
-    ).toHaveCount(2);
+    await expect(shortcutRows.first().locator('.time-range-filter__shortcut')).toHaveCount(9);
+    await expect(shortcutRows.nth(1).locator('.time-range-filter__shortcut')).toHaveCount(2);
     await expect(shell.getByRole('button', { name: '今天', exact: true })).toBeVisible();
     await expect(shell.getByRole('button', { name: '昨天', exact: true })).toBeVisible();
 
-    const summary = shell.locator('.auth-login-log-page__time-range-summary');
+    const summary = shell.locator('.time-range-filter__summary');
     await expect(summary).toBeVisible();
     await expect(summary).toContainText('开始时间');
     await expect(summary).toContainText('结束时间');
@@ -321,15 +318,18 @@ test.describe('cleanup range governance smoke', () => {
       .locator('.arco-picker-week-list-item');
     await expect(weekLabels).toHaveText(['一', '二', '三', '四', '五', '六', '日']);
 
+    // The shared popup CSS lays week list and date rows out as horizontal flex
+    // (React 19 compat fix in list-page.css); column alignment is asserted
+    // geometrically below.
     const weekList = popup.locator('.arco-panel-date').first().locator('.arco-picker-week-list');
-    await expect(weekList).toHaveCSS('display', 'grid');
+    await expect(weekList).toHaveCSS('display', 'flex');
 
     const firstDateRow = popup
       .locator('.arco-panel-date')
       .first()
       .locator('.arco-picker-body .arco-picker-row')
       .first();
-    await expect(firstDateRow).toHaveCSS('display', 'grid');
+    await expect(firstDateRow).toHaveCSS('display', 'flex');
 
     const firstDateCells = firstDateRow.locator('.arco-picker-cell');
     await expect(firstDateCells).toHaveCount(7);

@@ -9,3 +9,8 @@ export {
   type GovernanceSummaryBarProps,
   type GovernanceSummaryMetric,
 } from './GovernanceSummaryBar';
+export {
+  default as GovernanceCleanupBar,
+  type GovernanceCleanupMode,
+  type GovernanceCleanupPayload,
+} from './GovernanceCleanupBar';

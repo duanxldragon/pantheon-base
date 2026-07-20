@@ -25,6 +25,7 @@ import {
 } from '../../../components/table/crossPageSelection';
 import {
   batchDeleteOperationLogs,
+  cleanupOperationLogs,
   deleteOperationLog,
   exportOperationLogs,
   exportSelectedOperationLogs,
@@ -33,10 +34,13 @@ import {
   type OperationLogRow,
   type OperationLogQuery,
 } from './api';
+import { getSettingGroup, type SettingGroup } from '../setting/api';
+import { loadRetentionSetting } from './retentionSetting';
 import {
   AppModal,
   AppTable,
   buildStandardPagination,
+  GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -50,8 +54,8 @@ import {
   SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
-  TableBatchActionBar,
   TimeRangeFilter,
+  type GovernanceCleanupPayload,
   type TimeRangeFilterValue,
   useGovernanceRail,
   withTableColumnPriority,
@@ -103,6 +107,8 @@ interface FailureMeta {
   summaryKey: string;
   color: string;
 }
+
+const defaultRetentionOptions = [1, 7, 30];
 
 const emptyQuery: OperationLogQuery = {
   keyword: '',
@@ -443,9 +449,16 @@ const OperationLogList: React.FC = () => {
   const { isAdmin, hasPerm } = usePermission();
   const canExport = isAdmin || hasPerm('system:operation-log:export');
   const canDelete = isAdmin || hasPerm('system:operation-log:delete');
+  const canClear = isAdmin || hasPerm('system:operation-log:clear');
   const governanceRail = useGovernanceRail();
   const [data, setData] = useState<OperationLogRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [successCount, setSuccessCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
+    [...defaultRetentionOptions].sort((left, right) => right - left),
+  );
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<OperationLogQuery>(emptyQuery);
@@ -482,6 +495,8 @@ const OperationLogList: React.FC = () => {
         const result = await getOperationLogList(nextQuery);
         setData(result.items);
         setTotal(result.total);
+        setSuccessCount(result.successCount ?? 0);
+        setFailedCount(result.failedCount ?? 0);
       } catch (requestError) {
         setLoadError(requestError);
         message.error(t('common.loadFailed'));
@@ -498,6 +513,22 @@ const OperationLogList: React.FC = () => {
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      getSettingGroup('audit')
+        .then((group: SettingGroup) =>
+          loadRetentionSetting(
+            group,
+            'audit.operation_log_retention_options',
+            setRetentionOptions,
+            setRetentionDays,
+          ),
+        )
+        .catch(() => undefined);
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const detailId = Number(searchParams.get('detailId') || 0);
@@ -571,6 +602,22 @@ const OperationLogList: React.FC = () => {
   const handleTimeRangeChange = (value: Required<TimeRangeFilterValue>) => {
     setSelectedRowKeys([]);
     setQuery((current) => ({ ...current, ...value, page: 1 }));
+  };
+
+  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
+    try {
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupOperationLogs({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupOperationLogs({ retentionDays: payload.retentionDays });
+      message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
+      void loadData();
+    } catch {
+      message.error(t('common.actionFailed'));
+    }
   };
 
   const handleBatchDelete = async () => {
@@ -794,8 +841,6 @@ const OperationLogList: React.FC = () => {
     }
     await exportOperationLogs(query);
   };
-  const successCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
-  const failedCount = useMemo(() => data.filter((item) => item.status !== 1).length, [data]);
   const heroStats = useMemo(
     () => [
       {
@@ -952,14 +997,25 @@ const OperationLogList: React.FC = () => {
           />
 
           <Card className="page-panel system-list__table-card">
-            <TableBatchActionBar
-              selectedCount={selectedRowKeys.length}
-              selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-              clearText={t('common.clearSelection')}
-              clearSuccessText={t('common.clearSelectionSuccess')}
-              onClear={() => setSelectedRowKeys([])}
-              showSelectionSummary={canDelete}
-              prefixActions={
+            <GovernanceCleanupBar
+              showCleanup={canClear}
+              retentionDays={retentionDays}
+              retentionOptions={retentionOptions}
+              onRetentionChange={setRetentionDays}
+              retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+              confirmTitle={t('common.cleanupIrreversibleWarning')}
+              actionLabel={t('common.cleanupLogs')}
+              cleanupModeLabel={t('common.cleanupMode')}
+              cleanupModeOptions={[
+                { label: t('common.cleanupModeRetention'), value: 'retention' },
+                { label: t('common.cleanupModeRange'), value: 'range' },
+              ]}
+              rangeStartLabel={t('common.cleanupRangeStart')}
+              rangeEndLabel={t('common.cleanupRangeEnd')}
+              rangeRequiredMessage={t('common.cleanupRangeRequired')}
+              onConfirm={handleCleanup}
+              hint={t('system.audit.cleanupHint')}
+              trailing={
                 <Button
                   icon={<IconDownload />}
                   onClick={() => {
@@ -970,27 +1026,46 @@ const OperationLogList: React.FC = () => {
                   {t('common.export')}
                 </Button>
               }
-              actions={
+              extraActions={
                 canDelete ? (
-                  <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
-                    <Popconfirm
-                      disabled={selectedRowKeys.length === 0 || !canDelete}
-                      title={t('system.audit.batchDeleteConfirm', {
-                        count: selectedRowKeys.length,
-                      })}
-                      onOk={() => {
-                        void handleBatchDelete();
+                  <>
+                    <Typography.Text type="secondary">
+                      {t('common.selectedCount', { count: selectedRowKeys.length })}
+                    </Typography.Text>
+                    <Button
+                      type="text"
+                      size="small"
+                      disabled={selectedRowKeys.length === 0}
+                      onClick={() => {
+                        if (selectedRowKeys.length === 0) {
+                          return;
+                        }
+                        setSelectedRowKeys([]);
+                        message.success(t('common.clearSelectionSuccess'));
                       }}
                     >
-                      <Button
-                        status="danger"
-                        icon={<IconDelete />}
+                      {t('common.clearSelection')}
+                    </Button>
+                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
+                      <Popconfirm
                         disabled={selectedRowKeys.length === 0 || !canDelete}
+                        title={t('system.audit.batchDeleteConfirm', {
+                          count: selectedRowKeys.length,
+                        })}
+                        onOk={() => {
+                          void handleBatchDelete();
+                        }}
                       >
-                        {t('common.deleteSelected')}
-                      </Button>
-                    </Popconfirm>
-                  </PermissionAction>
+                        <Button
+                          status="danger"
+                          icon={<IconDelete />}
+                          disabled={selectedRowKeys.length === 0 || !canDelete}
+                        >
+                          {t('common.deleteSelected')}
+                        </Button>
+                      </Popconfirm>
+                    </PermissionAction>
+                  </>
                 ) : undefined
               }
             />

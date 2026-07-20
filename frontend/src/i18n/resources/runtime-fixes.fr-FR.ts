@@ -42,8 +42,12 @@ const frFRRuntimeFixes = {
   'auth.role.list.error': 'Échec du chargement de la liste des rôles',
   'auth.security_event.acknowledge.error':
     'Échec de l’accusé de réception de l’événement de sécurité',
+  'auth.security_event.acknowledge.ids_required':
+    'Sélectionnez d’abord les événements de sécurité à confirmer',
   'auth.security_event.acknowledge.note_required': 'Une note d’accusé de réception est requise',
   'auth.security_event.acknowledge.title': 'Accuser réception de l’événement de sécurité',
+  'auth.security_event.batch_acknowledge.title':
+    'Accusé de réception groupé des événements de sécurité',
   'auth.security_event.list.error': 'Échec du chargement des événements de sécurité',
   'auth.security.overview.error': 'Échec du chargement du résumé de sécurité',
   'auth.session.cleanup.days_invalid': 'La valeur de jours de nettoyage des sessions est invalide',

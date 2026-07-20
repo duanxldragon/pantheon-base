@@ -161,7 +161,8 @@ ListPage
 - 批量选择后的启用、禁用、清空选择等使用 `TableBatchActionBar`
 - 登录日志、会话管理、操作日志等页的时间范围筛选使用 `TimeRangeFilter`（预置 + 双月日历 + HH:mm），接入对应 SearchToolbar
 - 治理摘要区统一使用 `GovernanceSummaryBar`（eyebrow + title 两行；无 description 第三行）
-- 治理动作（导出、批量删除等）放在 `TableBatchActionBar` 的 prefix / actions 区，与列表批量操作共享同一节奏；保留期清理由后端按策略自动执行，不在前端暴露手动按钮
+- 治理动作（导出、批量删除等）放在 `TableBatchActionBar` 的 prefix / actions 区，与列表批量操作共享同一节奏
+- 审计域页面（登录日志、会话管理、操作日志、安全事件）的清理策略是"自动为主、受控手动为辅"：后端按 `audit.*_retention_days` 自动清理，同时通过 `GovernanceCleanupBar` 提供手动清理入口（按保留天数 / 按时间范围两种模式），受 `system:*:clear` 权限点与二次验证保护（2026-07-20 维护者决策，恢复 2026-07-19 移除的手动入口）
 - `ListHeaderActions` 间距必须使用 `--shell-list-actions-gap`
 - `TableBatchActionBar` 主行间距和高度必须使用 `--shell-action-bar-gap`、`--shell-action-bar-min-height`
 - 治理摘要区左对齐（eyebrow + title），额外动作在右侧对齐；不得出现有的页面左对齐、有的页面右对齐

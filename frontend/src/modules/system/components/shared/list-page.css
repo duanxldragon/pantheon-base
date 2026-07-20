@@ -162,6 +162,24 @@
   line-height: 1.45;
 }
 
+/* 可点击指标卡（点击即过滤）：边框/背景过渡提示可交互，键盘焦点可见 */
+.governance-summary-bar__metric--action {
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.governance-summary-bar__metric--action:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--surface-lift));
+}
+
+.governance-summary-bar__metric--action:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
 .governance-summary-bar__action {
   justify-self: end;
 }
@@ -474,7 +492,32 @@ body
   flex-wrap: nowrap;
 }
 
+.table-batch-action-bar--governance .table-batch-action-bar__meta {
+  flex: 1 1 420px;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.table-batch-action-bar--governance .table-batch-action-bar__select {
+  width: var(--shell-governance-select-width);
+}
+
+.table-batch-action-bar--governance .table-batch-action-bar__actions {
+  justify-content: flex-end;
+  gap: 4px 6px;
+  flex-wrap: nowrap;
+}
+
+.table-batch-action-bar--governance.table-batch-action-bar--governance .arco-space {
+  gap: 6px;
+}
+
 @media (max-width: 1024px) {
+  .table-batch-action-bar--governance .table-batch-action-bar__meta,
+  .table-batch-action-bar--governance .table-batch-action-bar__actions {
+    flex-wrap: wrap;
+  }
+
   .table-batch-action-bar__range-controls,
   .table-batch-action-bar__range-inputs {
     flex-wrap: wrap;

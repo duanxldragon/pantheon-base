@@ -46,10 +46,14 @@ type LoginLogResp struct {
 }
 
 type LoginLogPageResp struct {
-	Items    []LoginLogResp `json:"items"`
-	Total    int64          `json:"total"`
-	Page     int            `json:"page"`
-	PageSize int            `json:"pageSize"`
+	Items []LoginLogResp `json:"items"`
+	Total int64          `json:"total"`
+	// SuccessCount/FailedCount aggregate the whole filtered set (all pages),
+	// so the governance bar shows global numbers instead of page-local ones.
+	SuccessCount int64 `json:"successCount"`
+	FailedCount  int64 `json:"failedCount"`
+	Page         int   `json:"page"`
+	PageSize     int   `json:"pageSize"`
 }
 
 type LoginLogCleanupResp struct {
@@ -64,4 +68,13 @@ type SecurityEventCleanupReq struct {
 
 type SecurityEventCleanupResp struct {
 	ClearedCount int64 `json:"clearedCount"`
+}
+
+type SecurityEventBatchAcknowledgeReq struct {
+	IDs                 []uint64 `json:"ids"`
+	AcknowledgementNote string   `json:"acknowledgementNote"`
+}
+
+type SecurityEventBatchAcknowledgeResp struct {
+	AcknowledgedCount int64 `json:"acknowledgedCount"`
 }

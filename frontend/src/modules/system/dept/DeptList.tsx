@@ -1080,56 +1080,36 @@ const DeptList: React.FC = () => {
             eyebrow={t('system.dept.hero.eyebrow')}
             title={t('system.dept.hero.title')}
             description={t('system.dept.hero.desc')}
-            metrics={heroStats.slice(0, 4).map((item) => ({
-              key: item.key,
-              label: item.label,
-              value: item.value,
-              description: item.hint,
-              role:
-                item.key === 'leaderless' ||
-                item.key === 'noPost' ||
-                item.key === 'empty' ||
-                item.key === 'issues'
-                  ? 'button'
-                  : undefined,
-              tabIndex:
-                item.key === 'leaderless' ||
-                item.key === 'noPost' ||
-                item.key === 'empty' ||
-                item.key === 'issues'
-                  ? 0
-                  : undefined,
-              onClick:
-                item.key === 'leaderless'
-                  ? () => applyGovernanceFilter('leaderless')
-                  : item.key === 'noPost'
-                    ? () => applyGovernanceFilter('no-post')
-                    : item.key === 'empty'
-                      ? () => applyGovernanceFilter('empty')
-                      : item.key === 'issues'
-                        ? () => applyGovernanceFilter(undefined)
-                        : undefined,
-              onKeyDown:
-                item.key === 'leaderless' ||
-                item.key === 'noPost' ||
-                item.key === 'empty' ||
-                item.key === 'issues'
+            metrics={heroStats.slice(0, 4).map((item) => {
+              // 指标说明统一收进治理抽屉（governanceSummaryItems），指标卡保持
+              // label + value 两行节奏；可点击指标只承担“点击即过滤”动作。
+              const metricFilters: Record<string, 'leaderless' | 'no-post' | 'empty' | undefined> =
+                {
+                  leaderless: 'leaderless',
+                  noPost: 'no-post',
+                  empty: 'empty',
+                  issues: undefined,
+                };
+              const actionable = Object.prototype.hasOwnProperty.call(metricFilters, item.key);
+              const triggerFilter = () => applyGovernanceFilter(metricFilters[item.key]);
+              return {
+                key: item.key,
+                label: item.label,
+                value: item.value,
+                className: actionable ? 'governance-summary-bar__metric--action' : undefined,
+                role: actionable ? 'button' : undefined,
+                tabIndex: actionable ? 0 : undefined,
+                onClick: actionable ? triggerFilter : undefined,
+                onKeyDown: actionable
                   ? (event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        if (item.key === 'leaderless') {
-                          applyGovernanceFilter('leaderless');
-                        } else if (item.key === 'noPost') {
-                          applyGovernanceFilter('no-post');
-                        } else if (item.key === 'empty') {
-                          applyGovernanceFilter('empty');
-                        } else {
-                          applyGovernanceFilter(undefined);
-                        }
+                        triggerFilter();
                       }
                     }
                   : undefined,
-            }))}
+              };
+            })}
             action={
               <GovernanceRailToggleButton
                 expanded={governanceRail.expanded}

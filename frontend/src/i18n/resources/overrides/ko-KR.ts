@@ -12,6 +12,10 @@ const koKROverrideFallback = {
     '보안 이벤트를 종료하기 전에 확인 메모를 입력하세요',
   'auth.securityEvent.acknowledgePrompt': '확인 메모를 작성하세요',
   'auth.securityEvent.acknowledgeSuccess': '보안 이벤트를 확인 처리했습니다',
+  'auth.securityEvent.batchAcknowledge': '선택 일괄 확인',
+  'auth.securityEvent.batchAcknowledgeDialogHint':
+    '선택한 대기 이벤트에 동일한 처리 메모를 적용합니다. 이미 확인된 이벤트는 건너뛰며 기존 메모를 유지합니다.',
+  'auth.securityEvent.batchAcknowledgeSuccess': '보안 이벤트 {{count}}건을 확인 처리했습니다',
   'auth.securityEvent.acknowledgedHint':
     '확인된 이벤트는 담당자, 시각, 처리 메모를 감사 추적용으로 유지합니다.',
   'auth.securityEvent.acknowledgement': '확인 내용',

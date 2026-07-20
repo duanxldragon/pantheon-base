@@ -1,0 +1,106 @@
+{
+  "taskId": "2026-07-20-security-audit-governance-round",
+  "title": "Security-audit governance round: governance-bar consistency, restore manual cleanup entries, security-event batch acknowledge + auto retention",
+  "goal": "Address the maintainer's security-audit review: (A) make governance-bar metrics consistent (drop DeptList metric description line, switch page-local success/failed counts to whole-filtered-set backend aggregates, admit /system/security-event); (B) restore the manual cleanup entries (GovernanceCleanupBar) on login-log/session/operation-log/security-event that were retired on 2026-07-19, per maintainer decision — auto retention stays primary, manual cleanup is the guarded secondary path — and throttle the login-log auto retention DELETE; (C) add security-event batch acknowledge and automatic retention so the table stops growing unbounded.",
+  "primaryLayer": "system",
+  "dependencyLayers": ["platform", "system/auth", "system/audit", "system/config"],
+  "scope": {
+    "in": [
+      "DeptList governance metrics: remove third description line, keep click-to-filter with visible affordance (CSS metric--action)",
+      "Backend list aggregates: login-log successCount/failedCount, operation-log successCount/failedCount, security-event pendingCount/acknowledgedCount/highSeverityCount over the whole filtered set; frontend hero stats consume them",
+      "system-page-admission.json: add /system/security-event (audit-console, drawer allowed)",
+      "Restore GovernanceCleanupBar component + barrel exports + --governance CSS (reverting the removal parts of 8ce624d8/3ca5b658)",
+      "Wire cleanup dialogs (retention-days + time-range modes) into the four audit pages behind system:*:clear permissions",
+      "Throttle ensureAutomaticLoginLogRetention with a 15-minute min interval; drop dead Runtime.lastCleanupAt",
+      "Security-event: POST /system/security-event/batch-acknowledge (SecureAction) + frontend row selection and batch-acknowledge modal",
+      "Security-event automatic retention: audit.security_event_retention_days (default 180, acknowledged-only) + retention options seed",
+      "i18n: batch-acknowledge and new setting keys across zh/en (+ fr/ja/ko overrides and runtime-fixes)",
+      "FRONTEND_PAGE_TEMPLATES.md: replace the 'no manual cleanup button' rule with the auto-primary/manual-secondary policy (maintainer decision 2026-07-20)"
+    ],
+    "out": [
+      "Security-event type expansion (permission/role-change events) — follow-up",
+      "SearchToolbar advancedFilters popover: evaluated, kept as designed, no change",
+      "pantheon-ops synchronization"
+    ]
+  },
+  "taskDoc": "Maintainer review 2026-07-20 (chat): governance-bar redundancy on DeptList, missing quick cleanup on audit pages, security-event batch ops missing, filter popover consistency question. Assessment and plan recorded in project memory security_audit_assessment_2026_07_20.md.",
+  "contractAnchors": [
+    "docs/designs/FRONTEND_PAGE_TEMPLATES.md",
+    "docs/designs/BACKOFFICE_STYLE_CONSTRAINTS.md",
+    "frontend/config/system-page-admission.json",
+    "frontend/tests/smoke/system/governance/cleanup-range-ui.spec.ts"
+  ],
+  "expectedFiles": {
+    "create": [
+      "frontend/src/components/governance/GovernanceCleanupBar.tsx",
+      ".harness/tasks/2026-07-20-security-audit-governance-round/manifest.json",
+      ".harness/evidence/2026-07-20-security-audit-governance-round/summary.md",
+      ".harness/evidence/2026-07-20-security-audit-governance-round/review.md"
+    ],
+    "modify": [
+      "backend/modules/auth/login/{login_dto,login_service,login_runtime,login_handler}.go",
+      "backend/modules/auth/module.go",
+      "backend/modules/auth/security/security_service.go",
+      "backend/modules/system/audit/{audit_dto,audit_service}.go",
+      "backend/modules/system/config/setting/setting_seed.go",
+      "frontend/config/system-page-admission.json",
+      "frontend/src/components/{index,governance/index}.ts",
+      "frontend/src/modules/auth/security/{api.ts,components/LoginLogList.tsx,components/SecurityEventList.tsx}",
+      "frontend/src/modules/auth/session/components/SessionList.tsx",
+      "frontend/src/modules/system/audit/{api.ts,OperationLogList.tsx}",
+      "frontend/src/modules/system/components/shared/list-page.css",
+      "frontend/src/modules/system/dept/DeptList.tsx",
+      "frontend/src/i18n/resources/*",
+      "docs/designs/FRONTEND_PAGE_TEMPLATES.md"
+    ],
+    "doNotTouch": [
+      "database/system_init.sql",
+      "business/* modules"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "claude-direct (maintainer one-time exemption 2026-07-20 overriding the 'Claude does not implement' rule)",
+    "reviewerPosture": ["mechanical", "self-review"]
+  },
+  "verificationPlan": {
+    "backend": [
+      "cd backend && go build ./...",
+      "cd backend && go test ./modules/auth/... ./modules/system/audit/... ./modules/system/config/..."
+    ],
+    "frontend": [
+      "cd frontend && npx tsc --noEmit",
+      "cd frontend && node scripts/check-system-page-admission.mjs",
+      "cd frontend && npm run check:ui-contract",
+      "cd frontend && node scripts/check-shell-visual-contract.mjs",
+      "cd frontend && npm run build",
+      "cd frontend && npm run test:smoke:system:governance (includes cleanup-range-ui.spec.ts as the behavior contract)"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-07-20-security-audit-governance-round",
+    "taskPacket": ".harness/tasks/2026-07-20-security-audit-governance-round/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-20-security-audit-governance-round/",
+    "reviewFile": ".harness/evidence/2026-07-20-security-audit-governance-round/review.md",
+    "summaryFile": ".harness/evidence/2026-07-20-security-audit-governance-round/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "gate results (tsc, admission, ui-contract, shell-visual-contract, build)",
+    "go build + go test results for auth/audit/setting",
+    "governance smoke including cleanup-range-ui.spec.ts",
+    "visual evidence for the four audit pages with restored cleanup entries"
+  ],
+  "humanGates": [
+    "Maintainer decision 2026-07-20: restore manual cleanup entries (reverses the 2026-07-19 retirement recorded in FRONTEND_PAGE_TEMPLATES.md:164)",
+    "Maintainer one-time exemption 2026-07-20: Claude implements directly this round instead of delegating to Codex"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}
