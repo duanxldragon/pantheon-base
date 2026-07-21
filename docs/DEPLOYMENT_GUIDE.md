@@ -469,6 +469,30 @@ kubectl scale deployment pantheon-base --replicas=5 -n pantheon
 - [ ] 监控告警规则
 - [ ] 定期更新依赖
 
+### 强制安全基线（生产必选）
+
+以下配置项在生产环境**必须**设置为指定值，不可降级。部署完成后，运维必须通过「管理后台 → 安全设置」确认这些开关处于"启用"状态。
+
+| 配置项 | 必须值 | 说明 |
+|---|---|---|
+| `login.mfa_enabled` | `1` | 强制双因子认证（TOTP）。高敏操作不可仅依赖密码。 |
+| `session.secure_cookie` | `true` | 会话 Cookie 仅经 HTTPS 传输，防中间人窃取。 |
+| `csrf.enabled` | `true` | 启用 CSRF 防护（精确路径豁免，不做前缀豁免）。 |
+| `audit.enabled` | `true` | 启用审计日志，高危操作全程留痕。 |
+| `rate_limit.enabled` | `true` | 启用全局限流（依赖 Redis），防暴力破解与滥用。 |
+
+> **注意**：`login.mfa_enabled` 默认为 `false`（便于开发环境联调）。生产部署时**必须**显式开启。未开启 MFA 的生产实例不满足企业级安全基线，安全审计将判定为不合规。
+
+设置方式（管理后台 → 系统设置 → 安全，或调用设置 API）：
+
+```bash
+curl -X POST https://<host>/api/v1/system/settings \
+  -H "Authorization: Bearer <admin-token>" \
+  -H "Content-Type: application/json" \
+  -H "X-Operation-Token: <secure-action-token>" \
+  -d '{"key": "login.mfa_enabled", "value": "1"}'
+```
+
 ---
 
 ## 📊 监控配置

@@ -179,11 +179,70 @@ jobs:
           fi
 
   # ============================================================
+  # Phase 3b: Boundary Gate (business/* 边界静态门禁)
+  # ============================================================
+  boundary-gate:
+    name: Boundary Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check business boundaries
+        run: node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base
+
+  # ============================================================
+  # Phase 3c: Coverage Gate (测试覆盖率门禁，ratchet 起步)
+  # ============================================================
+  coverage-gate:
+    name: Coverage Gate
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run coverage
+        working-directory: backend
+        run: |
+          go test -coverprofile=coverage.out -covermode=atomic ./...
+          go tool cover -func=coverage.out > coverage.txt
+
+      - name: Check coverage threshold
+        run: node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold ${{ vars.COVERAGE_THRESHOLD || '11' }}
+
+  # ============================================================
   # Phase 4: Summary
   # ============================================================
   ci-summary:
     name: CI Summary
-    needs: [fast-checks, unit-tests, go-lint]
+    needs: [fast-checks, unit-tests, go-lint, boundary-gate, coverage-gate]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -195,6 +254,8 @@ jobs:
           FAST_CHECKS: ${{ needs.fast-checks.result }}
           UNIT_TESTS: ${{ needs.unit-tests.result }}
           GO_LINT: ${{ needs.go-lint.result }}
+          BOUNDARY_GATE: ${{ needs.boundary-gate.result }}
+          COVERAGE_GATE: ${{ needs.coverage-gate.result }}
         run: |
           echo "## CI Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -203,9 +264,11 @@ jobs:
           echo "| Fast Checks | $FAST_CHECKS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Unit Tests | $UNIT_TESTS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Go Lint | $GO_LINT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Boundary Gate | $BOUNDARY_GATE |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Coverage Gate | $COVERAGE_GATE |" >> "$GITHUB_STEP_SUMMARY"
           
           # Exit with failure if critical checks failed
-          if [ "$FAST_CHECKS" = "failure" ] || [ "$UNIT_TESTS" = "failure" ]; then
+          if [ "$FAST_CHECKS" = "failure" ] || [ "$UNIT_TESTS" = "failure" ] || [ "$BOUNDARY_GATE" = "failure" ] || [ "$COVERAGE_GATE" = "failure" ]; then
             echo "Critical check failed"
             exit 1
           fi

@@ -62,15 +62,17 @@ const TS_FORBIDDEN_IMPORT_PATTERNS = [
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/harness/check-boundaries.mjs [--json] [--strict] [--root <path>]
+  node scripts/harness/check-boundaries.mjs [--json] [--strict] [--root <path>] [--repo <name>]
 
 Default behavior:
   Report findings and exit 0. Use --strict to exit 1 when findings exist.
+  Use --repo <name> to scan only one repository (default scans all).
 
 Examples:
   node scripts/harness/check-boundaries.mjs
   node scripts/harness/check-boundaries.mjs --json
   node scripts/harness/check-boundaries.mjs --strict
+  node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base
   node scripts/harness/check-boundaries.mjs --root /tmp/fixture`);
 }
 
@@ -80,6 +82,7 @@ function parseArgs(argv) {
     strict: false,
     help: false,
     root: DEFAULT_ROOT,
+    repo: null,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -94,6 +97,12 @@ function parseArgs(argv) {
         throw new Error('--root requires a path');
       }
       options.root = path.resolve(value);
+    } else if (arg === '--repo') {
+      const value = argv[++i];
+      if (!value) {
+        throw new Error('--repo requires a repository name');
+      }
+      options.repo = value;
     } else if (arg === '--help' || arg === '-h') {
       options.help = true;
     } else {
@@ -185,7 +194,13 @@ function scanTsFile(filePath, root) {
 function scanRepository(repoName, root) {
   const warnings = [];
   const findings = [];
-  const repoRoot = path.join(root, repoName);
+  // 约定 root 为 workspace 根（含各仓库目录）。但当 root 本身就是目标仓库
+  // （例如 CI 在仓库内 checkout 后 cwd = 仓库根，其目录名 == repoName），
+  // 直接使用 root 作为仓库根，避免 path.join(root, repoName) 找不到。
+  let repoRoot = path.join(root, repoName);
+  if (!fs.existsSync(repoRoot) && path.basename(root) === repoName) {
+    repoRoot = root;
+  }
   const backendBusinessRoot = path.join(repoRoot, 'backend', 'modules', 'business');
   const frontendBusinessRoot = path.join(repoRoot, 'frontend', 'src', 'modules', 'business');
 
@@ -256,7 +271,16 @@ function main() {
     return 0;
   }
 
-  const results = REPOSITORIES.map((repo) => scanRepository(repo, options.root));
+  const repositories = options.repo
+    ? REPOSITORIES.filter((repo) => repo === options.repo)
+    : REPOSITORIES;
+
+  if (options.repo && repositories.length === 0) {
+    console.error(`Unknown repository: ${options.repo} (known: ${REPOSITORIES.join(', ')})`);
+    return 1;
+  }
+
+  const results = repositories.map((repo) => scanRepository(repo, options.root));
   const findingCount = results.reduce((count, result) => count + result.findings.length, 0);
   const warningCount = results.reduce((count, result) => count + result.warnings.length, 0);
 
