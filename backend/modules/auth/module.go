@@ -72,6 +72,8 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.POST("/login-log/batch-delete", middleware.SecureActionMiddleware(), authHandler.BatchDeleteLoginLogs)
 					systemProtected.GET("/security-event/list", authHandler.GetSecurityEventList)
 					systemProtected.POST("/security-event/:id/acknowledge", middleware.SecureActionMiddleware(), authHandler.AcknowledgeSecurityEvent)
+					systemProtected.POST("/security-event/batch-acknowledge", middleware.SecureActionMiddleware(), authHandler.BatchAcknowledgeSecurityEvents)
+					systemProtected.POST("/security-event/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupSecurityEvents)
 					systemProtected.GET("/session/list", authHandler.GetSessionList)
 					systemProtected.POST("/session/cleanup", middleware.SecureActionMiddleware(), authHandler.CleanupHistoricSessions)
 					systemProtected.POST("/session/batch-revoke", middleware.SecureActionMiddleware(), authHandler.BatchRevokeSessions)

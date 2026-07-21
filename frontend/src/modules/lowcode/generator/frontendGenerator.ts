@@ -311,12 +311,26 @@ ${extraApi ? `\n${extraApi}\n` : ''}
       return '  // 无搜索字段';
     }
 
-    return searchableFields
-      .map((field) => {
-        const tsType = TYPE_MAPPING[field.type].ts;
-        return `  ${field.name}?: ${tsType};`;
-      })
-      .join('\n');
+    const fields = searchableFields.map((field) => {
+      const tsType = TYPE_MAPPING[field.type].ts;
+      return `  ${field.name}?: ${tsType};`;
+    });
+    if (this.getKeywordSearchFields().length > 0) {
+      fields.unshift('  keyword?: string;');
+    }
+    return fields.join('\n');
+  }
+
+  /** 文本型可搜索字段：合并进统一关键词框（与后端 keyword OR LIKE 覆盖列一致）。 */
+  private getKeywordSearchFields() {
+    return this.schema.model.fields.filter(
+      (f) => f.searchable && f.type !== 'int' && f.type !== 'float' && f.type !== 'enum',
+    );
+  }
+
+  /** 行内下拉筛选字段（enum）。 */
+  private getInlineFilterFields() {
+    return this.schema.model.fields.filter((f) => f.searchable && f.type === 'enum');
   }
 
   /**
@@ -335,7 +349,6 @@ ${extraApi ? `\n${extraApi}\n` : ''}
     const rowActionsEnabled = this.isListRowActionsEnabled();
     const searchableFields = this.schema.model.fields.filter((field) => field.searchable);
     const searchUsesSelect = searchableFields.some((field) => field.type === 'enum');
-    const searchUsesInput = searchableFields.some((field) => field.type !== 'enum');
     const detailActionEnabled = pageActions.includes('view') || pageActions.includes('detail');
     const createActionEnabled = pageActions.includes('create');
     const deleteActionEnabled = pageActions.includes('delete');
@@ -350,14 +363,8 @@ ${extraApi ? `\n${extraApi}\n` : ''}
       ? `${this.generateListGovernanceConstants()}\n`
       : '';
     const listImports = ['Card', 'Space'];
-    if (searchEnabled) {
-      listImports.unshift('Form', 'Grid');
-      if (searchUsesInput) {
-        listImports.unshift('Input');
-      }
-      if (searchUsesSelect) {
-        listImports.unshift('Select');
-      }
+    if (searchEnabled && searchUsesSelect) {
+      listImports.unshift('Select');
     }
     if (searchEnabled || headerActionsEnabled || batchActionsEnabled) {
       listImports.unshift('Button');
@@ -378,9 +385,6 @@ ${extraApi ? `\n${extraApi}\n` : ''}
     if (createActionEnabled) {
       iconImports.push('IconPlus');
     }
-    if (searchEnabled) {
-      iconImports.push('IconSearch');
-    }
     const componentImports = [
       'AppTable',
       'PageContainer',
@@ -390,7 +394,7 @@ ${extraApi ? `\n${extraApi}\n` : ''}
       'buildStandardPagination',
     ];
     if (searchEnabled) {
-      componentImports.splice(1, 0, 'FilterPanel');
+      componentImports.splice(1, 0, 'SearchToolbar');
     }
     if (governanceEnabled) {
       componentImports.splice(componentImports.length - 3, 0, 'GovernanceSummaryBar');
@@ -428,13 +432,6 @@ import '${this.relativeToSystemListPageCss()}';
 
 ${governanceConstants}
 
-${
-  searchEnabled
-    ? `const FormItem = Form.Item;
-const { Row, Col } = Grid;
-`
-    : ''
-}
 
 const emptyQuery: ${modelName}ListQuery = {
 ${this.generateEmptyQueryFields()}
@@ -451,7 +448,6 @@ const ${modelName}List: React.FC = () => {
   const [query, setQuery] = useState<${modelName}ListQuery>(emptyQuery);
   ${batchActionsEnabled ? 'const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);' : ''}
   ${batchActionsEnabled ? 'const [submitting, setSubmitting] = useState(false);' : ''}
-  ${searchEnabled ? `const [queryForm] = Form.useForm<${modelName}ListQuery>();` : ''}
   const { t } = useTranslation();
 
   const loadData = useCallback(async (nextQuery: ${modelName}ListQuery = query) => {
@@ -474,8 +470,7 @@ const ${modelName}List: React.FC = () => {
 
   ${
     searchEnabled
-      ? `const search = () => {
-    const values = queryForm.getFieldsValue();
+      ? `const search = (values: Partial<${modelName}ListQuery>) => {
     ${batchActionsEnabled ? 'setSelectedRowKeys([]);' : ''}
     const nextQuery = {
       ...query,
@@ -487,7 +482,6 @@ const ${modelName}List: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     ${batchActionsEnabled ? 'setSelectedRowKeys([]);' : ''}
     setQuery(emptyQuery);
     void loadData(emptyQuery);
@@ -1368,12 +1362,14 @@ export default ${modelName}DetailPage;
   private generateEmptyQueryFields(): string {
     const searchableFields = this.schema.model.fields.filter((f) => f.searchable);
 
-    return searchableFields
-      .map((field) => {
-        const defaultValue = this.getDefaultValue(field.type);
-        return `  ${field.name}: ${defaultValue},`;
-      })
-      .join('\n');
+    const fields = searchableFields.map((field) => {
+      const defaultValue = this.getDefaultValue(field.type);
+      return `  ${field.name}: ${defaultValue},`;
+    });
+    if (this.getKeywordSearchFields().length > 0) {
+      fields.unshift(`  keyword: '',`);
+    }
+    return fields.join('\n');
   }
 
   private generateFormItems(): string {
@@ -1607,45 +1603,51 @@ ${this.generateRowActionItems()}
     if (!this.isListSearchEnabled()) {
       return '';
     }
-    const searchableFields = this.schema.model.fields.filter((field) => field.searchable);
-    return `        <FilterPanel>
-          <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-            <Row gutter={16}>
-${searchableFields
-  .map(
-    (field) => `              <Col xs={24} md={6}>
-                <FormItem label={t('${buildFieldLabelKey(this.schema.scope, this.schema.name, field.name)}')} field="${field.name}">
-                  ${this.renderSearchField(field)}
-                </FormItem>
-              </Col>`,
-  )
-  .join('\n')}
-              <Col xs={24} md={6}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                      {t('common.search')}
-                    </Button>
-                    <Button onClick={reset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>`;
+    const keywordFields = this.getKeywordSearchFields();
+    const inlineFields = this.getInlineFilterFields();
+    const keywordProps =
+      keywordFields.length > 0
+        ? `
+          keyword={query.keyword ?? ''}
+          keywordPlaceholder={t('common.searchKeyword.placeholder')}
+          onKeywordChange={(keyword) => search({ keyword })}`
+        : '';
+    const inlineProps =
+      inlineFields.length > 0
+        ? `
+          inlineFilters={
+            <>
+${inlineFields.map((field) => this.renderInlineFilterSelect(field)).join('\n')}
+            </>
+          }`
+        : '';
+    const activeChecks = [
+      ...(keywordFields.length > 0 ? ['query.keyword'] : []),
+      ...inlineFields.map(
+        (field) => `(query.${field.name} !== undefined && query.${field.name} !== '')`,
+      ),
+    ];
+    return `        <SearchToolbar${keywordProps}${inlineProps}
+          hasActiveFilters={Boolean(${activeChecks.join(' || ')})}
+          onClearAll={reset}
+        />`;
   }
 
-  private renderSearchField(field: ModuleSchema['model']['fields'][number]): string {
-    if (field.type === 'enum') {
-      const options = (field.enumOptions ?? [])
-        .map(
-          (option) =>
-            `{ label: t('${buildEnumOptionKey(this.schema.scope, this.schema.name, field.name, option.value)}'), value: '${option.value}' }`,
-        )
-        .join(', ');
-      return `<Select allowClear options={[${options}]} />`;
-    }
-    return `<Input onPressEnter={() => queryForm.submit()} />`;
+  private renderInlineFilterSelect(field: ModuleSchema['model']['fields'][number]): string {
+    const options = (field.enumOptions ?? [])
+      .map(
+        (option) =>
+          `{ label: t('${buildEnumOptionKey(this.schema.scope, this.schema.name, field.name, option.value)}'), value: '${option.value}' }`,
+      )
+      .join(', ');
+    const labelKey = buildFieldLabelKey(this.schema.scope, this.schema.name, field.name);
+    return `              <Select
+                allowClear
+                placeholder={t('${labelKey}')}
+                value={query.${field.name}}
+                onChange={(value) => search({ ${field.name}: value })}
+                options={[${options}]}
+              />`;
   }
 
   private generateWorkbenchHeaderActions(

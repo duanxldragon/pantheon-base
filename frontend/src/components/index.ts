@@ -2,6 +2,7 @@ export { default as AppTable } from './data-display/AppTable';
 export { default as DateTimeMeta } from './data-display/DateTimeMeta';
 export { default as PageContainer } from './patterns/layout/PageContainer';
 export { default as FilterPanel } from './patterns/FilterPanel';
+export { default as SearchToolbar, type SearchToolbarProps } from './patterns/SearchToolbar';
 export { default as PageActions } from './patterns/actions/PageActions';
 export { default as ListHeaderActions } from './patterns/actions/ListHeaderActions';
 export {
@@ -12,14 +13,20 @@ export {
 } from './governance/GovernanceRail';
 export { useGovernanceRail } from '../hooks/useGovernanceRail';
 export {
-  default as GovernanceCleanupBar,
-  type GovernanceCleanupMode,
-} from './governance/GovernanceCleanupBar';
-export {
   default as GovernanceSummaryBar,
   type GovernanceSummaryBarProps,
   type GovernanceSummaryMetric,
 } from './governance/GovernanceSummaryBar';
+export {
+  default as GovernanceCleanupBar,
+  type GovernanceCleanupPayload,
+  type GovernanceCleanupMode,
+} from './governance/GovernanceCleanupBar';
+export {
+  default as TimeRangeFilter,
+  TIME_RANGE_FILTER_FORMAT,
+  type TimeRangeFilterValue,
+} from './patterns/filters/TimeRangeFilter';
 export { default as PermissionAction } from './patterns/PermissionAction';
 export { default as SystemRowActions, type SystemRowAction } from './patterns/SystemRowActions';
 export { default as TableBatchActionBar } from './patterns/table/TableBatchActionBar';

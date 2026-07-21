@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"pantheon-platform/modules/auth/security"
@@ -33,6 +34,11 @@ type LoginService struct {
 	db       *gorm.DB
 	policy   PolicyProvider
 	recorder SecurityEventRecorder
+
+	// Throttle state for automatic retention cleanup: without it every
+	// RecordLoginLog/List/Export issues a full-table DELETE scan.
+	autoCleanupMu     sync.Mutex
+	lastAutoCleanupAt time.Time
 }
 
 // NewLoginService creates a LoginService with the given DB and policy provider.
@@ -167,26 +173,42 @@ func (s *LoginService) ListLoginLogs(query *LoginLogQuery) (*LoginLogPageResp, e
 	return s.listLoginLogs(query, "")
 }
 
+// scopedLoginLogQuery applies the shared list filters so that the paged query
+// and the whole-set aggregates run over the identical scope.
+func (s *LoginService) scopedLoginLogQuery(query *LoginLogQuery, filterUsername string) *gorm.DB {
+	db := s.db.Model(&SystemLogLogin{})
+	if filterUsername != "" {
+		db = db.Where(usernameLikeWhereClause, "%"+filterUsername+"%")
+	} else if query != nil && strings.TrimSpace(query.Username) != "" {
+		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
+	}
+	if filterUsername == "" {
+		db = applyLoginLogKeyword(db, query)
+	}
+	db = applyLoginLogTimeWindow(db, query)
+	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
+		db = db.Where("status = ?", *query.Status)
+	}
+	return db
+}
+
 func (s *LoginService) listLoginLogs(query *LoginLogQuery, filterUsername string) (*LoginLogPageResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
 	var logs []SystemLogLogin
-	db := s.db.Model(&SystemLogLogin{})
 	page, pageSize := normalizePageQuery(queryPage(query), queryPageSize(query))
-
-	if filterUsername != "" {
-		db = db.Where(usernameLikeWhereClause, "%"+filterUsername+"%")
-	} else if query != nil && strings.TrimSpace(query.Username) != "" {
-		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
-	}
-	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
-		db = db.Where("status = ?", *query.Status)
-	}
+	db := s.scopedLoginLogQuery(query, filterUsername)
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	var successCount int64
+	if err := s.scopedLoginLogQuery(query, filterUsername).
+		Where("status = ?", common.LoginStatusSuccess).
+		Count(&successCount).Error; err != nil {
 		return nil, err
 	}
 	if err := db.Order(loginTimeDescOrderClause).Offset((page - 1) * pageSize).Limit(pageSize).Find(&logs).Error; err != nil {
@@ -207,7 +229,14 @@ func (s *LoginService) listLoginLogs(query *LoginLogQuery, filterUsername string
 			LoginTime:     item.LoginTime.Format(time.RFC3339),
 		})
 	}
-	return &LoginLogPageResp{Items: items, Total: total, Page: page, PageSize: pageSize}, nil
+	return &LoginLogPageResp{
+		Items:        items,
+		Total:        total,
+		SuccessCount: successCount,
+		FailedCount:  total - successCount,
+		Page:         page,
+		PageSize:     pageSize,
+	}, nil
 }
 
 // ExportLoginLogs exports login logs as CSV.
@@ -279,14 +308,46 @@ func (s *LoginService) listLoginLogsForExport(query *LoginLogQuery) ([]SystemLog
 	s.ensureAutomaticLoginLogRetention()
 
 	var logs []SystemLogLogin
-	db := s.db.Model(&SystemLogLogin{})
-	if query != nil && strings.TrimSpace(query.Username) != "" {
-		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
-	}
-	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
-		db = db.Where("status = ?", *query.Status)
-	}
+	// Reuse the exact list-scope filters (username/keyword/status AND the
+	// time window) so the CSV always matches the filtered view being exported.
+	db := s.scopedLoginLogQuery(query, "")
 	return logs, db.Order(loginTimeDescOrderClause).Limit(maxLoginLogExportRows).Find(&logs).Error
+}
+
+// applyLoginLogKeyword 关键词匹配用户名 / IP / 登录地。
+func applyLoginLogKeyword(db *gorm.DB, query *LoginLogQuery) *gorm.DB {
+	if query == nil || strings.TrimSpace(query.Keyword) == "" {
+		return db
+	}
+	keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+	return db.Where("username LIKE ? OR ipaddr LIKE ? OR login_location LIKE ?", keyword, keyword, keyword)
+}
+
+// applyLoginLogTimeWindow 按登录时间窗口过滤；起止时间接受 RFC3339 或 "2006-01-02 15:04"。
+func applyLoginLogTimeWindow(db *gorm.DB, query *LoginLogQuery) *gorm.DB {
+	if query == nil {
+		return db
+	}
+	if start, ok := parseLoginLogTime(query.StartedAt); ok {
+		db = db.Where("login_time >= ?", start)
+	}
+	if end, ok := parseLoginLogTime(query.EndedAt); ok {
+		db = db.Where("login_time <= ?", end)
+	}
+	return db
+}
+
+func parseLoginLogTime(value string) (time.Time, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02 15:04"} {
+		if parsed, err := time.ParseInLocation(layout, value, time.Local); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 // RecordLoginLog writes a login log entry.
@@ -318,6 +379,14 @@ func (s *LoginService) ensureAutomaticLoginLogRetention() {
 		return
 	}
 	now := time.Now()
+	s.autoCleanupMu.Lock()
+	if !s.lastAutoCleanupAt.IsZero() && now.Sub(s.lastAutoCleanupAt) < autoCleanupMinInterval {
+		s.autoCleanupMu.Unlock()
+		return
+	}
+	s.lastAutoCleanupAt = now
+	s.autoCleanupMu.Unlock()
+
 	policy := s.policy.GetRuntimePolicy()
 	cutoff := now.AddDate(0, 0, -maxInt(policy.LoginLogRetentionDays, 1))
 	if err := s.db.Where("login_time < ?", cutoff).Delete(&SystemLogLogin{}).Error; err != nil {

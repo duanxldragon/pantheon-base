@@ -4,6 +4,17 @@ English version: [README.en.md](./README.en.md)
 
 Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀认证、IAM、组织、配置、审计、多语言、动态菜单，以及受控低代码生成与模块治理能力。项目目标不是只提供登录和 CRUD 壳，而是提供一套可持续演进、系统域与业务域解耦、AI 友好的后台平台基础设施。
 
+## 版本
+
+| 项 | 值 |
+| --- | --- |
+| 产品里程碑 | **V1.0**（2026-07-21 发布） |
+| Shell 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
+| 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（Docker Compose / K8s / 环境变量清单） |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
+
+V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
+
 ## 项目定位
 
 - **平台层**：应用壳层、路由装配、中间件、平台工作台、跨域聚合视图。

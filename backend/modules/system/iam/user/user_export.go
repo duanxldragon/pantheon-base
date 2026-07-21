@@ -308,6 +308,10 @@ func applyUserListFilters(db *gorm.DB, query *UserListQuery) *gorm.DB {
 	if query == nil {
 		return db
 	}
+	if strings.TrimSpace(query.Keyword) != "" {
+		keyword := fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Keyword)))
+		db = db.Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?", keyword, keyword, keyword)
+	}
 	if strings.TrimSpace(query.Username) != "" {
 		db = db.Where("username LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Username))))
 	}

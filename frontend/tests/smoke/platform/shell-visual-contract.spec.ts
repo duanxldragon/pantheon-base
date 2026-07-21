@@ -17,14 +17,19 @@ const systemTablePages = [
   { path: '/system/operation-log' },
 ] as const;
 
-const filterPanelPages = [
+// 全部列表页已迁移至 SearchToolbar，旧 form-grid FilterPanel 契约无剩余页面。
+const filterPanelPages = [] as const;
+
+// SearchToolbar 页面：单行工具栏契约（关键词框 + 即时筛选），无 form-item/action-item 结构。
+const searchToolbarPages = [
   '/system/user',
+  '/system/role',
+  '/system/menu',
+  '/system/dept',
+  '/system/post',
   '/system/permission',
   '/system/dict',
-  '/system/login-log',
-] as const;
-
-const governanceBarPages = [
+  '/system/i18n',
   '/system/session',
   '/system/login-log',
   '/system/operation-log',
@@ -989,52 +994,55 @@ test('system filter panels and governance bars keep one formal rhythm', async ({
     );
   }
 
-  for (const path of governanceBarPages) {
+  // SearchToolbar 试点页：验证工具栏本体与控件最小高度（无 form-item 结构）。
+  for (const path of searchToolbarPages) {
     await navigateInShell(page, path);
-    await expect(page.locator('.table-batch-action-bar--governance')).toBeVisible();
-
-    const governanceContract = await page.evaluate(() => {
-      const bar = document.querySelector<HTMLElement>('.table-batch-action-bar--governance');
-      const main = bar?.querySelector<HTMLElement>('.table-batch-action-bar__main');
-      const meta = bar?.querySelector<HTMLElement>('.table-batch-action-bar__meta');
-      const actions = bar?.querySelector<HTMLElement>('.table-batch-action-bar__actions');
-      const select = bar?.querySelector<HTMLElement>('.table-batch-action-bar__select');
+    await expect(
+      page.locator('.search-toolbar .search-toolbar__body').first(),
+      `${path} search toolbar ready`,
+    ).toBeVisible({ timeout: 20000 });
+    const cssVariables = await readRootCssVariables(page, ['--shell-filter-control-min-height']);
+    const minHeight = Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10);
+    const toolbarContract = await page.evaluate(() => {
+      // shell 标签缓存会保留历史页面 DOM，取最后一个可见工具栏（当前页）。
+      const toolbar = Array.from(
+        document.querySelectorAll<HTMLElement>('.search-toolbar'),
+      )
+        .filter((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        })
+        .at(-1);
+      const keyword = toolbar?.querySelector<HTMLElement>(
+        '.search-toolbar__keyword .arco-input-inner-wrapper, .search-toolbar__keyword',
+      );
+      const inlineControl = toolbar?.querySelector<HTMLElement>(
+        '.search-toolbar__inline .arco-select-view, .search-toolbar__inline .arco-btn',
+      );
       const read = (element?: HTMLElement | null) => {
         if (!element) {
           return null;
         }
-        const style = globalThis.getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return {
-          alignItems: style.alignItems,
-          backgroundColor: style.backgroundColor,
-          borderStyle: style.borderStyle,
-          boxShadow: style.boxShadow,
-          gap: style.gap,
-          height: Math.round(rect.height),
-          justifyContent: style.justifyContent,
-          width: Math.round(rect.width),
-        };
+        return { height: Math.round(element.getBoundingClientRect().height) };
       };
-
-      return {
-        bar: read(bar),
-        main: read(main),
-        meta: read(meta),
-        actions: read(actions),
-        select: read(select),
-      };
+      return { keyword: read(keyword), inlineControl: read(inlineControl) };
     });
-
-    expect(governanceContract.bar?.backgroundColor, path).toBe('rgba(0, 0, 0, 0)');
-    expect(governanceContract.bar?.borderStyle, path).toBe('none');
-    expect(governanceContract.bar?.boxShadow, path).toBe('none');
-    expect(governanceContract.main?.justifyContent, path).toBe('space-between');
-    expect(governanceContract.main?.height, path).toBeGreaterThanOrEqual(32);
-    if (governanceContract.actions) {
-      expect(governanceContract.actions.justifyContent, path).toBe('flex-end');
+    // keyword 输入是可选能力（如权限工作台只有下拉筛选），存在即校验高度契约。
+    expect(
+      toolbarContract.keyword || toolbarContract.inlineControl,
+      `${path} toolbar has at least one control`,
+    ).toBeTruthy();
+    if (toolbarContract.keyword) {
+      expect(toolbarContract.keyword.height, `${path} keyword height`).toBeGreaterThanOrEqual(
+        minHeight,
+      );
     }
-    expect(governanceContract.select?.width, path).toBeGreaterThanOrEqual(120);
+    if (toolbarContract.inlineControl) {
+      expect(
+        toolbarContract.inlineControl.height,
+        `${path} inline control height`,
+      ).toBeGreaterThanOrEqual(minHeight - 2);
+    }
   }
 });
 
@@ -1511,13 +1519,24 @@ test('user create dialog role multi-select keeps a single focus ring', async ({ 
   }
 });
 
-test('login-log governance action keeps the shared local alignment contract', async ({ page }) => {
+test('login-log page keeps the shared governance + batch bar rhythm', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signInAsAdmin(page);
   await navigateInShell(page, '/system/login-log');
-  await expect(page.locator('.table-batch-action-bar--governance')).toBeVisible();
 
-  const contract = await page.locator('.table-batch-action-bar--governance').evaluate((bar) => {
+  // 1) 摘要条：迁移到 GovernanceSummaryBar（eyebrow + title 两行，无 description 第三行）
+  const summaryBar = page.locator('.auth-login-log-page__hero').first();
+  await expect(summaryBar).toBeVisible();
+  await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
+
+  // 2) 批量条：GovernanceCleanupBar（--governance 修饰，2026-07-20 恢复手动清理入口），
+  //    左 meta（清理+导出）/ 右 actions（选择+批量删除）视觉对齐
+  const batchBar = page.locator('.auth-login-log-page__table-card .table-batch-action-bar').first();
+  await expect(batchBar).toBeVisible();
+  await expect(batchBar).toHaveClass(/table-batch-action-bar--governance/);
+  await expect(batchBar.getByRole('button', { name: '清理日志', exact: true })).toBeVisible();
+
+  const contract = await batchBar.evaluate((bar) => {
     const main = bar.querySelector<HTMLElement>('.table-batch-action-bar__main');
     const metaLead = bar.querySelector<HTMLElement>(
       '.table-batch-action-bar__meta .arco-select-view, .table-batch-action-bar__meta .arco-input-inner-wrapper, .table-batch-action-bar__meta .arco-btn',
@@ -1724,20 +1743,17 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
     '--shell-filter-form-item-margin-bottom',
     '--shell-filter-control-min-height',
   ]);
-  const [filterPaddingTop, filterPaddingRight, filterPaddingBottom, filterPaddingLeft] =
+  const [filterPaddingTop, filterPaddingRight, , filterPaddingLeft] =
     expandPaddingValues(cssVariables['--shell-filter-body-padding']);
 
   const typeTabContract = await readDictTabContract();
   expect(typeTabContract.governancePaddingTop).toBe('10px');
   expect(typeTabContract.governancePaddingBottom).toBe('10px');
   expect(typeTabContract.hasSharedSystemTable).toBe(true);
+  // SearchToolbar：单行工具栏，只校验体与控件最小高度（无 form-item 结构）。
   expect(typeTabContract.filterBody?.paddingTop).toBe(filterPaddingTop);
   expect(typeTabContract.filterBody?.paddingRight).toBe(filterPaddingRight);
-  expect(typeTabContract.filterBody?.paddingBottom).toBe(filterPaddingBottom);
   expect(typeTabContract.filterBody?.paddingLeft).toBe(filterPaddingLeft ?? filterPaddingRight);
-  expect(typeTabContract.firstItem?.marginBottom).toBe(
-    cssVariables['--shell-filter-form-item-margin-bottom'],
-  );
   expect(typeTabContract.firstControl?.height).toBeGreaterThanOrEqual(
     Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
   );
@@ -1759,11 +1775,7 @@ test('dict management keeps both tabs on the shared list rhythm', async ({ page 
   }
   expect(itemTabContract.filterBody?.paddingTop).toBe(filterPaddingTop);
   expect(itemTabContract.filterBody?.paddingRight).toBe(filterPaddingRight);
-  expect(itemTabContract.filterBody?.paddingBottom).toBe(filterPaddingBottom);
   expect(itemTabContract.filterBody?.paddingLeft).toBe(filterPaddingLeft ?? filterPaddingRight);
-  expect(itemTabContract.firstItem?.marginBottom).toBe(
-    cssVariables['--shell-filter-form-item-margin-bottom'],
-  );
   expect(itemTabContract.firstControl?.height).toBeGreaterThanOrEqual(
     Number.parseInt(cssVariables['--shell-filter-control-min-height'], 10),
   );

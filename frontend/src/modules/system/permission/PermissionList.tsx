@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Form,
-  Grid,
   Input,
   Popconfirm,
   Select,
@@ -23,7 +22,6 @@ import {
   IconEdit,
   IconPlus,
   IconRefresh,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
@@ -62,7 +60,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -84,13 +82,12 @@ import {
 } from '../../../components';
 import '../components/shared/list-page.css';
 
-const Row = Grid.Row;
-const Col = Grid.Col;
 const FormItem = Form.Item;
 
 const methodOptions = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 const emptyQuery: PermissionPolicyQuery = {
+  keyword: '',
   roleKey: '',
   path: '',
   method: '',
@@ -107,6 +104,7 @@ const emptyWorkbenchQuery: PermissionWorkbenchQuery = {
 
 function isDefaultPermissionPolicyQuery(query: PermissionPolicyQuery) {
   return (
+    !query.keyword &&
     !query.roleKey &&
     !query.path &&
     !query.method &&
@@ -164,7 +162,6 @@ const PermissionList: React.FC = () => {
   const [detailRole, setDetailRole] = useState<PermissionWorkbenchRole | null>(null);
   const [remediatingRoleKey, setRemediatingRoleKey] = useState<string>('');
   const [form] = Form.useForm<PermissionPolicyPayload>();
-  const [queryForm] = Form.useForm<PermissionPolicyQuery>();
   const governanceRail = useGovernanceRail();
   const invalidatePermissionCaches = useCallback(() => {
     invalidateRouteWarmDataMany([
@@ -376,8 +373,7 @@ const PermissionList: React.FC = () => {
     ]);
   };
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<PermissionPolicyQuery>) => {
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -387,7 +383,6 @@ const PermissionList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
@@ -649,40 +644,32 @@ const PermissionList: React.FC = () => {
           ) : (
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <div className="permission-page__api-filter-shell">
-                <FilterPanel>
-                  <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-                    <Row gutter={16}>
-                      <Col xs={24} sm={12} lg={8}>
-                        <FormItem label={t('system.permission.roleKey')} field="roleKey">
-                          <Select allowClear options={roleOptions} />
-                        </FormItem>
-                      </Col>
-                      <Col xs={24} sm={12} lg={8}>
-                        <FormItem label={t('system.permission.path')} field="path">
-                          <Input onPressEnter={() => queryForm.submit()} />
-                        </FormItem>
-                      </Col>
-                      <Col xs={24} sm={12} lg={4}>
-                        <FormItem label={t('system.permission.method')} field="method">
-                          <Select
-                            allowClear
-                            options={methodOptions.map((item) => ({ label: item, value: item }))}
-                          />
-                        </FormItem>
-                      </Col>
-                      <Col xs={24} sm={12} lg={4}>
-                        <FormItem className="filter-panel__action-item">
-                          <Space>
-                            <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                              {t('common.search')}
-                            </Button>
-                            <Button onClick={reset}>{t('common.reset')}</Button>
-                          </Space>
-                        </FormItem>
-                      </Col>
-                    </Row>
-                  </Form>
-                </FilterPanel>
+                <SearchToolbar
+                  keyword={query.keyword ?? ''}
+                  keywordPlaceholder={t('system.permission.search.placeholder')}
+                  onKeywordChange={(keyword) => search({ keyword })}
+                  inlineFilters={
+                    <>
+                      <Select
+                        allowClear
+                        showSearch
+                        placeholder={t('system.permission.roleKey')}
+                        value={query.roleKey || undefined}
+                        onChange={(value) => search({ roleKey: value ?? '' })}
+                        options={roleOptions}
+                      />
+                      <Select
+                        allowClear
+                        placeholder={t('system.permission.method')}
+                        value={query.method || undefined}
+                        onChange={(value) => search({ method: value ?? '' })}
+                        options={methodOptions.map((item) => ({ label: item, value: item }))}
+                      />
+                    </>
+                  }
+                  hasActiveFilters={Boolean(query.keyword || query.roleKey || query.method)}
+                  onClearAll={reset}
+                />
               </div>
               <Card className="page-panel system-list__table-card permission-page__api-table-card">
                 <TableBatchActionBar

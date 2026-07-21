@@ -1205,8 +1205,9 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   expect(createPayload.code).toBe(200);
 
   await page.goto('/system/i18n', { waitUntil: 'networkidle' });
-  await formItem(page, '翻译键').locator('input').first().fill(seedKey);
-  await page.getByRole('button', { name: '搜索' }).click();
+  const i18nToolbar = page.locator('.search-toolbar');
+  await i18nToolbar.getByPlaceholder(/搜索/).fill(seedKey);
+  await i18nToolbar.getByPlaceholder(/搜索/).press('Enter');
 
   const seededListResponse = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
     headers: authHeaders(accessToken),
@@ -1284,8 +1285,6 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   ]);
   await expect(createDialog).toHaveCount(0);
 
-  await page.locator('.filter-panel').getByRole('button', { name: '重置' }).click();
-  await formItem(page, '翻译键').locator('input').first().fill(createKey);
   await Promise.all([
     waitForOkApiResponse(
       page,
@@ -1294,7 +1293,11 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
         decodeURIComponent(response.url()).includes(`key=${createKey}`) &&
         response.request().method() === 'GET',
     ),
-    page.getByRole('button', { name: '搜索' }).click(),
+    (async () => {
+      const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+      await toolbarKeyword.fill(createKey);
+      await toolbarKeyword.press('Enter');
+    })(),
   ]);
 
   const createdListResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
@@ -1305,9 +1308,11 @@ test('i18n smoke: detail edit create and delete dialogs work', async ({ page }) 
   const createdRowId = createdListPayload.data.items[0]?.id as number | undefined;
   expect(createdListPayload.data.items[0]?.key).toBe(createKey);
 
-  await page.locator('.filter-panel').getByRole('button', { name: '重置' }).click();
-  await formItem(page, '翻译键').locator('input').first().fill(seedKey);
-  await page.getByRole('button', { name: '搜索' }).click();
+  {
+    const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+    await toolbarKeyword.fill(seedKey);
+    await toolbarKeyword.press('Enter');
+  }
   const deleteRow = page.getByRole('row', { name: new RegExp(seedKey) }).first();
   await deleteRow.getByRole('button', { name: '删除' }).click();
   const deleteConfirmPopup = page
@@ -1440,7 +1445,7 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
   expect(errorCsv).toContain('i18n.value.required');
   expect(errorCsv).toContain('import.duplicate.row.2');
 
-  await expect(page.getByRole('button', { name: '搜索' })).toBeVisible();
+  await expect(page.locator('.search-toolbar')).toBeVisible();
 
   const createdListResp = await page.request.get(`${apiBaseUrl}/system/i18n/list`, {
     headers: authHeaders(accessToken),
@@ -2222,16 +2227,24 @@ test('operation log smoke: failed reason and detail summary are visible', async 
   expect(failedUploadPayload.message).toBe('upload.file.type_not_allowed');
 
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
-  await page.getByLabel('操作标题').fill('upload.file.title');
-  await page.locator('.arco-select-view').first().click();
+  // SearchToolbar：关键词 + 行内下拉即时触发；低频筛选在“筛选”弹层内。
+  // keyword 按存储值匹配（title 列存 i18n key、oper_name、request_id），
+  // 所以这里用操作人 admin 覆盖关键词交互，行定位仍用渲染后的中文标题。
+  const auditToolbar = page.locator('.search-toolbar');
+  await auditToolbar.getByPlaceholder(/搜索/).fill('admin');
+  await auditToolbar.getByPlaceholder(/搜索/).press('Enter');
+  await auditToolbar.locator('.arco-select-view').first().click();
   await page.locator('.arco-select-option').filter({ hasText: '失败' }).first().click();
-  await page.locator('.arco-select-view').nth(1).click();
+  await auditToolbar.locator('.arco-select-view').nth(1).click();
   await page.locator('.arco-select-option').filter({ hasText: '系统配置' }).first().click();
-  await page.locator('.arco-select-view').nth(2).click();
+  await auditToolbar.locator('.search-toolbar__advanced-trigger').click();
+  const auditPopover = page.locator('.search-toolbar__popover');
+  await expect(auditPopover).toBeVisible();
+  await auditPopover.locator('.arco-select-view').first().click();
   await page.locator('.arco-select-option').filter({ hasText: '参数/校验失败' }).first().click();
-  await page.locator('.arco-select-view').nth(3).click();
+  await auditPopover.locator('.arco-select-view').nth(1).click();
   await page.locator('.arco-select-option').filter({ hasText: '上传配置' }).first().click();
-  await page.getByRole('button', { name: '搜索' }).click();
+  await page.keyboard.press('Escape');
 
   const firstRow = page.getByRole('row', { name: /上传文件/ }).first();
   await expect(firstRow).toBeVisible();
@@ -3137,17 +3150,20 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
     await expectPageIdentityReady(page, '用户管理');
     await expectNoPageError(page);
 
-    await formItem(page, '用户名').locator('input').fill(userPrefix);
-    await Promise.all([
-      waitForOkApiResponse(
-        page,
-        (response) =>
-          response.url().includes('/system/user/list') &&
-          decodeURIComponent(response.url()).includes(`username=${userPrefix}`) &&
-          response.request().method() === 'GET',
-      ),
-      page.getByRole('button', { name: '搜索' }).click(),
-    ]);
+    {
+      const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+      await toolbarKeyword.fill(userPrefix);
+      await Promise.all([
+        waitForOkApiResponse(
+          page,
+          (response) =>
+            response.url().includes('/system/user/list') &&
+            decodeURIComponent(response.url()).includes(`keyword=${userPrefix}`) &&
+            response.request().method() === 'GET',
+        ),
+        toolbarKeyword.press('Enter'),
+      ]);
+    }
 
     const pager = page.locator('.system-user-list__table');
     const selectedText = page.locator('.table-batch-action-bar__meta');
@@ -3168,7 +3184,7 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
         page,
         (response) =>
           response.url().includes('/system/user/list') &&
-          decodeURIComponent(response.url()).includes(`username=${userPrefix}`) &&
+          decodeURIComponent(response.url()).includes(`keyword=${userPrefix}`) &&
           decodeURIComponent(response.url()).includes('page=2') &&
           response.request().method() === 'GET',
       ),
@@ -3194,7 +3210,7 @@ test('user governance smoke: cross-page selection keeps the full selected set', 
         page,
         (response) =>
           response.url().includes('/system/user/list') &&
-          decodeURIComponent(response.url()).includes(`username=${userPrefix}`) &&
+          decodeURIComponent(response.url()).includes(`keyword=${userPrefix}`) &&
           decodeURIComponent(response.url()).includes('page=1') &&
           response.request().method() === 'GET',
       ),
@@ -3256,8 +3272,11 @@ test('user smoke: edit and detail work through the UI', async ({ page }) => {
     await expectVisiblePageTitle(page, '用户管理');
     await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
 
-    await formItem(page, '用户名').locator('input').fill(username);
-    await page.getByRole('button', { name: '搜索' }).click();
+    {
+      const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+      await toolbarKeyword.fill(username);
+      await toolbarKeyword.press('Enter');
+    }
     const userRow = page.getByRole('row', { name: new RegExp(username) }).first();
     await expect(userRow).toBeVisible();
     await expect(userRow).toContainText(nickname);
@@ -3369,8 +3388,11 @@ test('user and role smoke: role binding can be deferred to role management and r
 
     await page.goto('/system/role', { waitUntil: 'networkidle' });
     await expectVisiblePageTitle(page, '角色管理');
-    await formItem(page, '角色标识').locator('input').fill(roleKey);
-    await page.getByRole('button', { name: '搜索' }).click();
+    {
+      const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+      await toolbarKeyword.fill(roleKey);
+      await toolbarKeyword.press('Enter');
+    }
     const roleRow = page.getByRole('row', { name: new RegExp(roleName) }).first();
     await expect(roleRow).toBeVisible();
     await roleRow.getByRole('button', { name: '角色成员' }).click();
@@ -3468,13 +3490,14 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
     const selectedText = page.locator('.table-batch-action-bar__meta');
     await expect(tableCard).toBeVisible({ timeout: 30000 });
 
-    await formItem(page, '用户名').locator('input').fill(username);
+    const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+    await toolbarKeyword.fill(username);
     const waitForFilteredUserList = () =>
       waitForOkApiResponse(
         page,
         (response) =>
           response.url().includes('/system/user/list') &&
-          decodeURIComponent(response.url()).includes(`username=${username}`) &&
+          decodeURIComponent(response.url()).includes(`keyword=${username}`) &&
           response.request().method() === 'GET',
       );
     const selectBatchUser = async () => {
@@ -3484,10 +3507,7 @@ test('user smoke: batch disable enable and delete stay stable through the UI', a
       await expect(selectedText).toContainText('已选 1 条');
     };
 
-    await Promise.all([
-      waitForFilteredUserList(),
-      page.getByRole('button', { name: '搜索' }).click(),
-    ]);
+    await Promise.all([waitForFilteredUserList(), toolbarKeyword.press('Enter')]);
     await selectBatchUser();
 
     await page.getByRole('button', { name: '批量禁用' }).click();
@@ -3659,8 +3679,11 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
     await expectVisiblePageTitle(page, '岗位管理');
     await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
 
-    await formItem(page, '岗位编码').locator('input').fill(postCode);
-    await page.getByRole('button', { name: '搜索' }).click();
+    {
+      const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+      await toolbarKeyword.fill(postCode);
+      await toolbarKeyword.press('Enter');
+    }
     const postRow = page.getByRole('row', { name: new RegExp(postCode) }).first();
     await expect(postRow).toBeVisible();
     await expect(postRow).toContainText(postName);
@@ -3703,7 +3726,7 @@ test('post smoke: edit through UI and blocked delete through API are covered', a
   }
 });
 
-test('session governance smoke: cleanup bar uses the unified governance affordance', async ({
+test('session governance smoke: revocation uses the shared table batch bar', async ({
   page,
 }) => {
   await signInAsAdmin(page);
@@ -3761,16 +3784,25 @@ test('session governance smoke: cleanup bar uses the unified governance affordan
   await expectPageIdentityReady(page, '会话管理');
   await expectNoPageError(page);
 
-  const cleanupBar = page
-    .locator('.page-panel')
-    .filter({ has: page.getByRole('button', { name: '清理历史会话' }) })
-    .first();
-  await expect(cleanupBar.getByRole('button', { name: '清理历史会话' })).toBeVisible();
-  await expect(
-    cleanupBar.getByText('用于清理超出保留窗口的已下线历史会话，减小会话表规模；活跃会话保留。'),
-  ).toBeVisible();
-  const revokeSelectedButton = cleanupBar.getByRole('button', { name: '下线所选' });
+  // 治理摘要：迁移到 GovernanceSummaryBar（eyebrow + title 两行）。
+  // 与基线 selector 保持一致（shell-visual-contract / governance-insight-drawer），
+  // 避免 Arco <Space> 包裹打断 `.system-page-template >` 的直系选择器。
+  const summaryBar = page.locator('.governance-summary-bar').first();
+  await expect(summaryBar).toBeVisible();
+  await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
+
+  // 批量下线 + 手动清理共用 GovernanceCleanupBar（--governance 修饰；
+  // 2026-07-20 维护者决策恢复受控手动清理入口，自动保留策略仍为主）
+  const batchBar = page.locator('.page-panel.system-list__table-card .table-batch-action-bar').first();
+  await expect(batchBar).toBeVisible();
+  await expect(batchBar).toHaveClass(/table-batch-action-bar--governance/);
+  const revokeSelectedButton = batchBar.getByRole('button', { name: '下线所选' });
   await expect(revokeSelectedButton).toBeDisabled();
+
+  // 手动清理入口存在且受权限保护（admin 会话可见）
+  await expect(batchBar.getByRole('button', { name: '清理历史会话', exact: true })).toBeVisible();
+
+  // 选中一行后，批量下线按钮启用
   await page.locator('.app-table tbody .arco-checkbox').nth(1).click({ force: true });
   await expect(revokeSelectedButton).toBeEnabled();
 });
@@ -3900,8 +3932,11 @@ test('refresh sync smoke: dict page auto-updates across isolated contexts', asyn
     await installClientSession(syncPage, adminLogin);
     const refreshBootstrap = waitForRefreshBootstrap(syncPage);
     await syncPage.goto('/system/dict', { waitUntil: 'networkidle' });
-    await formItem(syncPage, '字典编码').locator('input').first().fill(dictCode);
-    await syncPage.getByRole('button', { name: '搜索' }).click();
+    {
+      const toolbarKeyword = syncPage.locator('.search-toolbar').getByPlaceholder(/搜索/).first();
+      await toolbarKeyword.fill(dictCode);
+      await toolbarKeyword.press('Enter');
+    }
     await expect(syncPage.getByText(dictCode, { exact: false })).toHaveCount(0);
     await refreshBootstrap;
 
@@ -3949,8 +3984,11 @@ test('refresh sync smoke: i18n page auto-updates across isolated contexts', asyn
   try {
     await installClientSession(syncPage, adminLogin);
     await syncPage.goto('/system/i18n', { waitUntil: 'networkidle' });
-    await formItem(syncPage, '翻译键').locator('input').first().fill(i18nKey);
-    await syncPage.getByRole('button', { name: '搜索' }).click();
+    {
+      const toolbarKeyword = syncPage.locator('.search-toolbar').getByPlaceholder(/搜索/).first();
+      await toolbarKeyword.fill(i18nKey);
+      await toolbarKeyword.press('Enter');
+    }
     await expect(syncPage.getByText(i18nKey, { exact: false })).toHaveCount(0);
 
     const createResponse = await page.request.post(`${apiBaseUrl}/system/i18n`, {

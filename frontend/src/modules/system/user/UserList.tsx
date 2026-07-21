@@ -2,8 +2,6 @@ import React, { useMemo } from 'react';
 import {
   Button,
   Card,
-  Grid,
-  Input,
   Popconfirm,
   Select,
   Space,
@@ -19,7 +17,6 @@ import {
   IconEye,
   IconLock,
   IconPlus,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '../../../core/format/dateTime';
@@ -34,7 +31,6 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
   ImportCsvButton,
   ListHeaderActions,
   PageContainer,
@@ -47,6 +43,7 @@ import {
   PageLoading,
   PageRequestError,
   PermissionAction,
+  SearchToolbar,
   SystemRowActions,
   TableBatchActionBar,
   TABLE_ACTION_COLUMN_WIDTH,
@@ -62,10 +59,6 @@ import { translateRoleName } from '../role/display';
 import '../components/shared/list-page.css';
 import './user.css';
 
-const Row = Grid.Row;
-const Col = Grid.Col;
-const FormItem = Form.Item;
-
 interface ResetPasswordFormValues {
   newPassword: string;
   confirmPassword: string;
@@ -79,7 +72,6 @@ function getTableText(value: string | number | null | undefined) {
 const UserList: React.FC = () => {
   const [form] = Form.useForm<UserCreatePayload>();
   const [resetPasswordForm] = Form.useForm<ResetPasswordFormValues>();
-  const [queryForm] = Form.useForm();
 
   const {
     state,
@@ -347,15 +339,16 @@ const UserList: React.FC = () => {
 
   // ---- Search ----
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
-    doSearch(values);
-  };
+  const hasActiveFilters = Boolean(
+    state.query.keyword ||
+      state.query.status !== undefined ||
+      state.query.deptId !== undefined,
+  );
 
-  const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
-    resetQuery();
-  };
+  const deptFilterOptions = useMemo(
+    () => state.deptOptions.filter((item) => item.value > 0),
+    [state.deptOptions],
+  );
 
   // ---- Governance metrics ----
 
@@ -426,48 +419,37 @@ const UserList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16}>
-                <Col span={6}>
-                  <FormItem label={t('system.user.username')} field="username">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.user.nickname')} field="nickname">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.user.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        icon={<IconSearch />}
-                        onClick={search}
-                      >
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={state.query.keyword ?? ''}
+            keywordPlaceholder={t('system.user.search.placeholder')}
+            onKeywordChange={(keyword) => doSearch({ keyword })}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  placeholder={t('system.user.status')}
+                  value={state.query.status}
+                  onChange={(value) => doSearch({ status: value })}
+                  options={[
+                    { label: t('system.user.status.enabled'), value: 1 },
+                    { label: t('system.user.status.disabled'), value: 2 },
+                  ]}
+                />
+                {orgEnabled ? (
+                  <Select
+                    allowClear
+                    showSearch
+                    placeholder={t('system.user.dept')}
+                    value={state.query.deptId}
+                    onChange={(value) => doSearch({ deptId: value })}
+                    options={deptFilterOptions}
+                  />
+                ) : null}
+              </>
+            }
+            hasActiveFilters={hasActiveFilters}
+            onClearAll={resetQuery}
+          />
           <Card className="page-panel system-list__table-card system-user-list__table-card">
             <TableBatchActionBar
               selectedCount={state.selectedRowKeys.length}

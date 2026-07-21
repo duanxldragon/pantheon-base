@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   Button,
   Form,
-  Grid,
   Input,
   Popconfirm,
   Select,
@@ -15,7 +14,6 @@ import {
   IconDownload,
   IconEdit,
   IconPlus,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +26,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   ImportCsvButton,
   ListHeaderActions,
@@ -58,8 +56,6 @@ import {
 } from './api';
 import '../components/shared/list-page.css';
 
-const Row = Grid.Row;
-const Col = Grid.Col;
 const FormItem = Form.Item;
 const { Text } = Typography;
 
@@ -128,7 +124,6 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   const [editingType, setEditingType] = useState<DictTypeRow | null>(null);
   const [typeSubmitting, setTypeSubmitting] = useState(false);
   const [typeForm] = Form.useForm<DictTypePayload>();
-  const [queryForm] = Form.useForm<DictTypeQuery>();
 
   const invalidateCaches = useCallback((dictCode?: string) => {
     const targets: Array<{ path: string; resourceKeys?: string[] }> = [
@@ -140,17 +135,15 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
     invalidateRouteWarmDataMany(targets);
   }, []);
 
-  const handleSearch = () => {
-    const values = queryForm.getFieldsValue();
+  const handleSearch = (values: Partial<DictTypeQuery>) => {
     setTypeTablePage(1);
     onQueryChange({
-      ...emptyTypeQuery,
+      ...typeQuery,
       ...values,
     });
   };
 
   const handleReset = () => {
-    queryForm.setFieldsValue(emptyTypeQuery);
     setTypeTablePage(1);
     onQueryChange(emptyTypeQuery);
   };
@@ -373,43 +366,25 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
   return (
     <>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <FilterPanel>
-          <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
-            <Row gutter={16}>
-              <Col xs={24} md={12} lg={8}>
-                <FormItem label={t('system.dict.dictCode')} field="dictCode">
-                  <Input onPressEnter={() => queryForm.submit()} />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={8}>
-                <FormItem label={t('system.dict.dictName')} field="dictName">
-                  <Input onPressEnter={() => queryForm.submit()} />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={4}>
-                <FormItem label={t('system.dict.status')} field="status">
-                  <Select
-                    allowClear
-                    options={[
-                      { label: t('system.user.status.enabled'), value: 1 },
-                      { label: t('system.user.status.disabled'), value: 2 },
-                    ]}
-                  />
-                </FormItem>
-              </Col>
-              <Col xs={24} md={12} lg={4}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                      {t('common.search')}
-                    </Button>
-                    <Button onClick={handleReset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
+        <SearchToolbar
+          keyword={typeQuery.keyword ?? ''}
+          keywordPlaceholder={t('system.dict.search.placeholder')}
+          onKeywordChange={(keyword) => handleSearch({ keyword })}
+          inlineFilters={
+            <Select
+              allowClear
+              placeholder={t('system.dict.status')}
+              value={typeQuery.status}
+              onChange={(value) => handleSearch({ status: value })}
+              options={[
+                { label: t('system.user.status.enabled'), value: 1 },
+                { label: t('system.user.status.disabled'), value: 2 },
+              ]}
+            />
+          }
+          hasActiveFilters={Boolean(typeQuery.keyword || typeQuery.status !== undefined)}
+          onClearAll={handleReset}
+        />
         <TableBatchActionBar
           selectedCount={selectedTypeRowKeys.length}
           selectedText={t('common.selectedCount', { count: selectedTypeRowKeys.length })}

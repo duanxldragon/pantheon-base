@@ -461,7 +461,7 @@ const SecurityCenter: React.FC = () => {
               {overview?.recentSecurityEvents?.length ? (
                 <StandardRailSummary
                   title={t('system.menu.securityEvent')}
-                  items={overview.recentSecurityEvents.map((item) => ({
+                  items={overview.recentSecurityEvents.slice(0, 4).map((item) => ({
                     label: t(`auth.securityEvent.type.${item.eventType}`, {
                       defaultValue: item.eventType,
                     }),

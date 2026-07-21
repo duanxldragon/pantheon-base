@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Descriptions,
-  Form,
   Grid,
   Select,
   Space,
@@ -11,7 +10,6 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
-import { IconSearch } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
@@ -28,7 +26,7 @@ import {
   AppTable,
   buildStandardPagination,
   getPagedItems,
-  FilterPanel,
+  SearchToolbar,
   PageEmpty,
   PageLoading,
   PageRequestError,
@@ -41,7 +39,6 @@ import '../components/shared/list-page.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;
-const FormItem = Form.Item;
 
 function dedupePermissions(items: PermissionWorkbenchPermission[]) {
   const seen = new Set<string>();
@@ -95,7 +92,6 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
   const { isAdmin } = usePermission();
   const canCreate = isAdmin;
 
-  const [workbenchForm] = Form.useForm<PermissionWorkbenchQuery>();
   const [viewMode, setViewMode] = useState<'pending' | 'all'>('all');
   const [tablePagination, setTablePagination] = useState({ current: 1, pageSize: 10 });
   const [remediationEvents, setRemediationEvents] = useState<PermissionWorkbenchRemediationEvent[]>(
@@ -132,8 +128,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
     };
   }, [detailRole]);
 
-  const searchWorkbench = () => {
-    const values = workbenchForm.getFieldsValue();
+  const searchWorkbench = (values: Partial<PermissionWorkbenchQuery>) => {
     setTablePagination((current) => ({ ...current, current: 1 }));
     onWorkbenchQueryChange({
       ...workbenchQuery,
@@ -142,7 +137,6 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
   };
 
   const resetWorkbench = () => {
-    workbenchForm.setFieldsValue(emptyWorkbenchQuery);
     setTablePagination({ current: 1, pageSize: 10 });
     onWorkbenchQueryChange(emptyWorkbenchQuery);
   };
@@ -401,76 +395,88 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
         ) : null}
 
         <div className="permission-workbench__filter-shell">
-          <FilterPanel>
-            <Form form={workbenchForm} layout="vertical" onSubmit={() => searchWorkbench()}>
-              <Row gutter={16}>
-                <Col xs={24} sm={12} lg={8} xl={7}>
-                  <FormItem label={t('system.permission.roleKey')} field="roleKey">
-                    <Select allowClear options={roleOptions} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} sm={12} lg={4} xl={4}>
-                  <FormItem label={t('system.role.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.user.status.enabled'), value: 1 },
-                        { label: t('system.user.status.disabled'), value: 2 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} sm={12} lg={4} xl={4}>
-                  <FormItem label={t('system.permission.workbench.integrity')} field="integrity">
-                    <Select
-                      allowClear
-                      options={[
-                        {
-                          label: t('system.permission.workbench.integrity.unknown'),
-                          value: 'unknown',
-                        },
-                        {
-                          label: t('system.permission.workbench.integrity.clean'),
-                          value: 'clean',
-                        },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} sm={12} lg={4} xl={5}>
-                  <FormItem label={t('system.permission.workbench.coverage')} field="coverage">
-                    <Select
-                      allowClear
-                      options={[
-                        {
-                          label: t('system.permission.workbench.coverage.pageGap'),
-                          value: 'page-gap',
-                        },
-                        {
-                          label: t('system.permission.workbench.coverage.apiGap'),
-                          value: 'api-gap',
-                        },
-                        {
-                          label: t('system.permission.workbench.coverage.complete'),
-                          value: 'complete',
-                        },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col xs={24} sm={12} lg={4} xl={4}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={resetWorkbench}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder={t('system.permission.roleKey')}
+                  value={workbenchQuery.roleKey || undefined}
+                  onChange={(value) => searchWorkbench({ roleKey: value ?? '' })}
+                  options={roleOptions}
+                />
+                <Select
+                  allowClear
+                  placeholder={t('system.role.status')}
+                  value={workbenchQuery.status}
+                  onChange={(value) => searchWorkbench({ status: value })}
+                  options={[
+                    { label: t('system.user.status.enabled'), value: 1 },
+                    { label: t('system.user.status.disabled'), value: 2 },
+                  ]}
+                />
+              </>
+            }
+            advancedFilters={
+              <>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('system.permission.workbench.integrity')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('system.permission.workbench.integrity')}
+                    value={workbenchQuery.integrity}
+                    onChange={(value) => searchWorkbench({ integrity: value })}
+                    options={[
+                      {
+                        label: t('system.permission.workbench.integrity.unknown'),
+                        value: 'unknown',
+                      },
+                      {
+                        label: t('system.permission.workbench.integrity.clean'),
+                        value: 'clean',
+                      },
+                    ]}
+                  />
+                </div>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('system.permission.workbench.coverage')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('system.permission.workbench.coverage')}
+                    value={workbenchQuery.coverage}
+                    onChange={(value) => searchWorkbench({ coverage: value })}
+                    options={[
+                      {
+                        label: t('system.permission.workbench.coverage.pageGap'),
+                        value: 'page-gap',
+                      },
+                      {
+                        label: t('system.permission.workbench.coverage.apiGap'),
+                        value: 'api-gap',
+                      },
+                      {
+                        label: t('system.permission.workbench.coverage.complete'),
+                        value: 'complete',
+                      },
+                    ]}
+                  />
+                </div>
+              </>
+            }
+            advancedActiveCount={
+              [workbenchQuery.integrity, workbenchQuery.coverage].filter(
+                (value) => value !== undefined && value !== '',
+              ).length
+            }
+            hasActiveFilters={Boolean(
+              workbenchQuery.roleKey ||
+                workbenchQuery.status !== undefined ||
+                workbenchQuery.integrity ||
+                workbenchQuery.coverage,
+            )}
+            onClearAll={resetWorkbench}
+          />
         </div>
 
         <Card className="page-panel system-list__table-card permission-workbench__table-card">

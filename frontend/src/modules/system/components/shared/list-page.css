@@ -87,7 +87,7 @@
 
 .governance-summary-bar__copy {
   display: grid;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -125,14 +125,6 @@
   min-width: 0;
 }
 
-.governance-summary-bar__desc {
-  margin: 0;
-  max-width: 60ch;
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--text-secondary);
-}
-
 .governance-summary-bar__metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -143,8 +135,9 @@
 .governance-summary-bar__metric {
   display: grid;
   gap: 4px;
-  min-height: 86px;
-  padding: 10px 12px;
+  /* 治理栏收敛为两行文案后，指标卡随 label+value 自适应，不再预留描述行高度 */
+  min-height: 60px;
+  padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
   border-radius: var(--radius-md);
   background: var(--surface-lift);
@@ -167,6 +160,24 @@
   color: var(--text-tertiary);
   font-size: 11px;
   line-height: 1.45;
+}
+
+/* 可点击指标卡（点击即过滤）：边框/背景过渡提示可交互，键盘焦点可见 */
+.governance-summary-bar__metric--action {
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.governance-summary-bar__metric--action:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--surface-lift));
+}
+
+.governance-summary-bar__metric--action:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
 }
 
 .governance-summary-bar__action {
@@ -488,7 +499,7 @@ body
 }
 
 .table-batch-action-bar--governance .table-batch-action-bar__select {
-  width: 128px;
+  width: var(--shell-governance-select-width);
 }
 
 .table-batch-action-bar--governance .table-batch-action-bar__actions {
@@ -1851,95 +1862,39 @@ body
   margin-top: auto;
 }
 
-.table-batch-action-bar__cleanup-range-fields {
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 8px 10px;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.table-batch-action-bar__cleanup-field {
+.governance-cleanup-dialog {
   display: grid;
-  gap: 4px;
-  min-width: 0;
+  gap: 14px;
 }
 
-.table-batch-action-bar__cleanup-field-label {
-  color: var(--text-secondary);
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.table-batch-action-bar__cleanup-date-picker,
-.table-batch-action-bar__cleanup-date-picker.arco-picker {
-  width: 152px;
-}
-
-.table-batch-action-bar__cleanup-time-picker,
-.table-batch-action-bar__cleanup-time-picker.arco-picker {
-  width: 104px;
-}
-
-body .table-batch-action-bar__cleanup-date-popup.arco-picker-container,
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-container {
-  min-width: 0;
-}
-
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-week-list,
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-row {
+.governance-cleanup-dialog__field {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  align-items: center;
-  justify-items: center;
-}
-
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-week-list-item,
-body
-  .table-batch-action-bar__cleanup-date-popup.table-batch-action-bar__cleanup-date-popup
-  .arco-picker-cell {
+  gap: 6px;
   min-width: 0;
 }
 
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-week-list-item {
-  display: flex;
+.governance-cleanup-dialog__label {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.governance-cleanup-dialog__error {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.governance-cleanup-dialog .arco-picker-range {
+  width: 100%;
+  height: 34px;
+}
+
+.governance-cleanup-dialog .arco-picker-range .arco-picker-input {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
 }
 
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-date {
-  justify-content: center;
-}
-
-body .table-batch-action-bar__cleanup-date-popup .arco-picker-date-value {
-  min-width: 24px;
-  text-align: center;
-}
-
-@media (max-width: 1024px) {
-  .table-batch-action-bar__cleanup-range-fields {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .table-batch-action-bar__cleanup-range-fields {
-    width: 100%;
-  }
-
-  .table-batch-action-bar__cleanup-field,
-  .table-batch-action-bar__cleanup-date-picker,
-  .table-batch-action-bar__cleanup-time-picker {
-    width: 100%;
-  }
+.governance-cleanup-dialog .arco-select {
+  width: 100%;
 }
 
 @media (max-width: 768px) {

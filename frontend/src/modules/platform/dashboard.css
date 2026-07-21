@@ -236,7 +236,8 @@
   transform: translateY(-1px);
 }
 
-.dashboard-quick-action:focus-visible {
+.dashboard-quick-action:focus-visible,
+.dashboard-domain-card:focus-visible {
   outline: none;
   border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--panel-border));
   box-shadow:
@@ -447,12 +448,18 @@
   overflow: hidden;
 }
 
-.dashboard-domain-card > .arco-btn-text {
-  height: auto;
-  padding: 0;
+.dashboard-domain-card__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 20px;
   color: var(--text-tertiary);
   align-self: center;
+  transition: color var(--motion-duration-base) ease;
+}
+
+.dashboard-domain-card:hover .dashboard-domain-card__arrow {
+  color: var(--brand-primary);
 }
 
 .dashboard-login-table .arco-table-th,

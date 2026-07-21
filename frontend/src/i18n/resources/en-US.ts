@@ -203,6 +203,7 @@ const enUSFallback = {
   'auth.session.currentDevice': 'Current Device',
   'auth.session.otherDevice': 'Other Device',
   'auth.session.ip': 'IP Address',
+  'auth.session.search.placeholder': 'Search by username or IP…',
   'auth.session.userAgent': 'Device Info',
   'auth.session.lastActive': 'Last Active',
   'auth.session.refreshExpiresAt': 'Refresh Expires At',
@@ -256,6 +257,7 @@ const enUSFallback = {
   'auth.loginLog.browser': 'Browser',
   'auth.loginLog.os': 'Operating System',
   'auth.loginLog.status': 'Status',
+  'auth.loginLog.search.placeholder': 'Search by username, IP or location…',
   'auth.loginLog.failureReason': 'Message',
   'auth.loginLog.status.success': 'Success',
   'auth.loginLog.status.failed': 'Failed',
@@ -300,12 +302,19 @@ const enUSFallback = {
     'The security events page stays within `system/auth`: the main task area handles filtering, acknowledgement, and investigation, while the side summary keeps risk distribution, acknowledgement progress, and governance guidance in one place.',
   'auth.securityEvent.createdAt': 'Occurred At',
   'auth.securityEvent.eventType': 'Event Type',
+  'auth.securityEvent.search.placeholder': 'Search by username…',
   'auth.securityEvent.severity': 'Severity',
   'auth.securityEvent.sourceKey': 'Source',
   'auth.securityEvent.messageKey': 'Event Message',
   'auth.securityEvent.empty': 'No security events',
   'auth.securityEvent.hint':
     'Security events only record real authentication risks; unavailable notification channels are not shown.',
+  'auth.securityEvent.cleanupAction': 'Clean up history',
+  'auth.securityEvent.cleanupHint':
+    'Only acknowledged historical security events are cleaned up; pending events are kept.',
+  'auth.securityEvent.cleanupWarning':
+    'Only acknowledged events are cleaned up and cannot be recovered; pending events are kept. Double-check the criteria before proceeding.',
+  'auth.securityEvent.cleanupSuccess': 'Cleaned up {{count}} historical security event(s)',
   'auth.securityEvent.filter.usernamePlaceholder': 'Filter by account',
   'auth.securityEvent.filter.eventTypePlaceholder': 'Select event type',
   'auth.securityEvent.filter.severityPlaceholder': 'Select severity',
@@ -326,6 +335,10 @@ const enUSFallback = {
   'auth.securityEvent.acknowledgeNoteRequired':
     'Provide an acknowledgement note before closing the security event',
   'auth.securityEvent.acknowledgeSuccess': 'Security event acknowledged',
+  'auth.securityEvent.batchAcknowledge': 'Acknowledge Selected',
+  'auth.securityEvent.batchAcknowledgeDialogHint':
+    'One disposition note is applied to every selected pending event; already-acknowledged events are skipped and keep their original notes.',
+  'auth.securityEvent.batchAcknowledgeSuccess': 'Acknowledged {{count}} security event(s)',
   'auth.securityEvent.pendingHint':
     'Pending events should be triaged against the source, account state, and related session posture first.',
   'auth.securityEvent.acknowledgedHint':
@@ -391,6 +404,9 @@ const enUSFallback = {
   'common.keyword': 'Keyword',
   'common.all': 'All',
   'common.filters': 'Filters',
+  'common.moreFilters': 'Filters',
+  'common.clearFilters': 'Clear filters',
+  'common.searchKeyword.placeholder': 'Search by keyword…',
   'common.expand': 'Expand',
   'common.collapse': 'Collapse',
   'common.expandFilters': 'Expand filters',
@@ -423,6 +439,8 @@ const enUSFallback = {
   'common.cleanupRangeRequired':
     'When using range cleanup, select both the start and end dates and times',
   'common.cleanupRangeConfirm': 'Clean up records inside the selected time range?',
+  'common.cleanupIrreversibleWarning':
+    'Cleaned records cannot be recovered. Double-check the cleanup criteria before proceeding.',
   'common.deleteSelected': 'Delete Selected',
   'common.batchDeleteSuccess': 'Deleted {{deleted}} record(s)',
   'common.batchDeletePartialSuccess': 'Deleted {{deleted}} record(s), {{failed}} failed',
@@ -587,6 +605,7 @@ const enUSFallback = {
   'i18n.group': 'Group',
   'i18n.group.placeholder': 'Select group',
   'i18n.key': 'I18n Key',
+  'i18n.search.placeholder': 'Search by translation key…',
   'i18n.value': 'Content',
   'i18n.remark': 'Remark',
   'i18n.createdAt': 'Created At',
@@ -1564,6 +1583,7 @@ const enUSFallback = {
   'system.audit.subtitle':
     'View full critical operation records and change audits of the platform.',
   'system.audit.title': 'Action Title',
+  'system.audit.search.placeholder': 'Search by title, operator or request ID…',
   'system.audit.operName': 'Operator',
   'system.audit.operIp': 'Operator IP',
   'system.audit.operUrl': 'Request Path',
@@ -1820,6 +1840,7 @@ const enUSFallback = {
   'system.profile.savePassword': 'Update Password',
   'system.profile.passwordSuccess': 'Password updated successfully',
   'system.user.username': 'Username',
+  'system.user.search.placeholder': 'Search by username, nickname or email…',
   'system.user.nickname': 'Nickname',
   'system.user.email': 'Email',
   'system.user.dept': 'Department',
@@ -1882,6 +1903,7 @@ const enUSFallback = {
   'user.batch.not_found': 'Some users no longer exist. Please refresh and try again',
   'role.admin.name': 'Administrator',
   'system.role.roleName': 'Role Name',
+  'system.role.search.placeholder': 'Search by role name or key…',
   'system.role.roleName.required': 'Please input role name',
   'system.role.roleKey': 'Role Key',
   'system.role.roleKey.required': 'Please input role key',
@@ -1985,6 +2007,7 @@ const enUSFallback = {
   'system.dept.root': 'Organization Root',
   'system.dept.none': 'No Department',
   'system.dept.deptName': 'Department Name',
+  'system.dept.search.placeholder': 'Search by department name…',
   'system.dept.deptNameRequired': 'Please input department name',
   'system.dept.parentId': 'Parent Department',
   'system.dept.leader': 'Leader',
@@ -2142,6 +2165,7 @@ const enUSFallback = {
   'system.post.dept': 'Department',
   'system.post.deptRequired': 'Please select department',
   'system.post.postCode': 'Post Code',
+  'system.post.search.placeholder': 'Search by post code or name…',
   'system.post.postCodeRequired': 'Please input post code',
   'system.post.postName': 'Post Name',
   'system.post.postNameRequired': 'Please input post name',
@@ -2218,6 +2242,7 @@ const enUSFallback = {
   'role.delete.error.has_users':
     'The current role is still assigned to users and cannot be deleted',
   'system.permission.roleKey': 'Role Key',
+  'system.permission.search.placeholder': 'Search by role key or API path…',
   'system.permission.path': 'API Path',
   'system.permission.method': 'Method',
   'system.permission.hint':
@@ -2378,6 +2403,7 @@ const enUSFallback = {
   'system.permission.session.delete': 'Session Revoke',
   'system.permission.session.clear': 'Clean Historic Sessions',
   'system.permission.security_event.acknowledge': 'Security Event Acknowledge',
+  'system.permission.security_event.clear': 'Security Event Cleanup',
   'system.permission.operation_log.export': 'Operation Log Export',
   'permission.role.invalid': 'Role key does not exist',
   'permission.policy.exists': 'A policy with the same role, API path, and method already exists',
@@ -2386,6 +2412,7 @@ const enUSFallback = {
   'permission.escalation.forbidden': 'Writing management policies is forbidden.',
   'system.menu.title': 'Title',
   'system.menu.titleKey': 'Title Key',
+  'system.menu.search.placeholder': 'Search by menu title key or path…',
   'system.menu.titleRequired': 'Please input title key',
   'system.menu.titleKey.placeholder': 'Example: system.menu.example',
   'system.menu.path': 'Path',
@@ -2573,6 +2600,9 @@ const enUSFallback = {
   'system.setting.item.audit.session_cleanup_retention_options':
     'Session Cleanup Retention Options',
   'system.setting.item.audit.session_retention_days': 'Session History Retention Days',
+  'system.setting.item.audit.security_event_retention_options':
+    'Security Event Cleanup Retention Options',
+  'system.setting.item.audit.security_event_retention_days': 'Security Event Auto-Retention Days',
   'system.setting.item.upload.storage_driver': 'Storage Driver',
   'system.setting.option.upload.storage_driver.local': 'Local Storage',
   'system.setting.option.upload.storage_driver.s3': 'S3 Compatible Storage',
@@ -2628,6 +2658,10 @@ const enUSFallback = {
     'How many days login logs are kept before the system performs throttled automatic cleanup. Defaults to 90 days.',
   'system.setting.remark.audit.operation_log_retention_days':
     'How many days operation logs are kept before the system performs throttled automatic cleanup. Defaults to 180 days.',
+  'system.setting.remark.audit.security_event_retention_options':
+    'Maintain the selectable retention days for security-event cleanup as a JSON array, for example [1,7,30].',
+  'system.setting.remark.audit.security_event_retention_days':
+    'How many days acknowledged security events are kept before throttled automatic cleanup. Pending events are always retained. Defaults to 180 days.',
   'system.setting.audit.retentionDaysOption': 'Auto retain {{count}} day(s)',
   'system.setting.remark.upload.storage_driver':
     'Currently supports local / s3-compatible, including MinIO, AWS S3, and OSS-compatible gateways.',
@@ -2747,6 +2781,7 @@ const enUSFallback = {
   'system.dict.type': 'Dictionary Types',
   'system.dict.item': 'Dictionary Items',
   'system.dict.dictCode': 'Dictionary Code',
+  'system.dict.search.placeholder': 'Search by dict code or name…',
   'system.dict.dictCodeRequired': 'Please input dictionary code',
   'system.dict.dictName': 'Dictionary Name',
   'system.dict.dictNameRequired': 'Please input dictionary name',
@@ -2754,6 +2789,7 @@ const enUSFallback = {
   'system.dict.status': 'Status',
   'system.dict.remark': 'Remark',
   'system.dict.itemLabelKey': 'Label Key',
+  'system.dict.item.search.placeholder': 'Search by label, value or remark…',
   'system.dict.itemLabelKeyRequired': 'Please input label key',
   'system.dict.itemValue': 'Value',
   'system.dict.itemValueRequired': 'Please input dictionary value',

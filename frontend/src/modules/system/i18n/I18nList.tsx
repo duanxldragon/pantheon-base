@@ -20,7 +20,6 @@ import {
   IconEdit,
   IconEye,
   IconRefresh,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import { IconDownload } from '@arco-design/web-react/icon';
 import type { TFunction } from 'i18next';
@@ -38,7 +37,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
@@ -234,7 +233,6 @@ const I18nList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<(string | number)[]>([]);
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
-  const [queryForm] = Form.useForm<I18nQuery>();
   const [overview, setOverview] = useState<I18nOverviewResp | null>(null);
   const [missingLocaleRows, setMissingLocaleRows] = useState<I18nMissingLocaleItem[]>([]);
   const [missingLocaleVisible, setMissingLocaleVisible] = useState(false);
@@ -498,8 +496,7 @@ const I18nList: React.FC = () => {
     [canRefresh, groupOptions.length, overview, t, total],
   );
 
-  const handleSearch = () => {
-    const values = queryForm.getFieldsValue();
+  const handleSearch = (values: Partial<I18nQuery>) => {
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -509,7 +506,6 @@ const I18nList: React.FC = () => {
   };
 
   const handleReset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
@@ -521,7 +517,6 @@ const I18nList: React.FC = () => {
       ...nextQuery,
       page: 1,
     };
-    queryForm.setFieldsValue(mergedQuery);
     setQuery(mergedQuery);
     setAuditVisible(false);
   };
@@ -1196,66 +1191,55 @@ const I18nList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => handleSearch()}>
-              <Row gutter={16}>
-                <Col span={8}>
-                  <FormItem label={t('i18n.key')} field="key">
-                    <Input
-                      allowClear
-                      prefix={<IconSearch />}
-                      onPressEnter={() => queryForm.submit()}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={4}>
-                  <FormItem label={t('i18n.module')} field="module">
-                    <Select allowClear placeholder={t('i18n.module')}>
-                      {moduleOptions.map((moduleName) => (
-                        <Select.Option key={moduleName} value={moduleName}>
-                          {moduleName}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col span={4}>
-                  <FormItem label={t('i18n.group')} field="group">
-                    <Select allowClear placeholder={t('i18n.group.placeholder')}>
-                      {groupOptions.map((groupName) => (
-                        <Select.Option key={groupName} value={groupName}>
-                          {groupName}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col span={4}>
-                  <FormItem label={t('i18n.locale')} field="locale">
-                    <Select allowClear placeholder={t('i18n.locale')}>
-                      {(overview?.locales || [...SUPPORTED_LOCALES]).map((locale) => (
-                        <Select.Option key={locale} value={locale}>
-                          {locale}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col span={4}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space size={6}>
-                      <Button size="small" type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button size="small" onClick={handleReset}>
-                        {t('common.reset')}
-                      </Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.key ?? ''}
+            keywordPlaceholder={t('i18n.search.placeholder')}
+            onKeywordChange={(key) => handleSearch({ key })}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder={t('i18n.module')}
+                  value={query.module || undefined}
+                  onChange={(value) => handleSearch({ module: value ?? '' })}
+                >
+                  {moduleOptions.map((moduleName) => (
+                    <Select.Option key={moduleName} value={moduleName}>
+                      {moduleName}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder={t('i18n.group.placeholder')}
+                  value={query.group || undefined}
+                  onChange={(value) => handleSearch({ group: value ?? '' })}
+                >
+                  {groupOptions.map((groupName) => (
+                    <Select.Option key={groupName} value={groupName}>
+                      {groupName}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <Select
+                  allowClear
+                  placeholder={t('i18n.locale')}
+                  value={query.locale || undefined}
+                  onChange={(value) => handleSearch({ locale: value ?? '' })}
+                >
+                  {(overview?.locales || [...SUPPORTED_LOCALES]).map((locale) => (
+                    <Select.Option key={locale} value={locale}>
+                      {locale}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </>
+            }
+            hasActiveFilters={Boolean(query.key || query.module || query.group || query.locale)}
+            onClearAll={handleReset}
+          />
 
           <Card className="page-panel system-list__table-card i18n-list-page__table-card">
             <div className="system-list__table-head">

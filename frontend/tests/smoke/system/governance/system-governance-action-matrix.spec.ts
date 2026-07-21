@@ -18,6 +18,10 @@ type GovernanceActionCase = {
   prepare: (page: Page) => Promise<Locator>;
 };
 
+// Log/session cleanup now opens a dialog with a shared irreversible-action
+// warning (common.cleanupIrreversibleWarning) instead of an inline Popconfirm.
+const CLEANUP_WARNING_TEXT = '清理后的记录不可恢复，请确认清理条件无误后再执行。';
+
 function createDeferred<T = void>(): Deferred<T> {
   let resolve!: (value: T | PromiseLike<T>) => void;
   const promise = new Promise<T>((nextResolve) => {
@@ -174,7 +178,7 @@ async function prepareLoginCleanup(page: Page) {
 
   await page.goto('/system/login-log', { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: '清理日志', exact: true }).click();
-  return waitForConfirmPopup(page, '确认清理超出最近 30 天保留窗口的登录日志？');
+  return waitForConfirmPopup(page, CLEANUP_WARNING_TEXT);
 }
 
 async function prepareOperationCleanup(page: Page) {
@@ -212,7 +216,7 @@ async function prepareOperationCleanup(page: Page) {
 
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: '清理日志', exact: true }).click();
-  return waitForConfirmPopup(page, '确认清理超出最近 30 天保留窗口的操作日志？');
+  return waitForConfirmPopup(page, CLEANUP_WARNING_TEXT);
 }
 
 async function prepareModuleUnregister(page: Page) {
@@ -254,7 +258,7 @@ const actionCases: GovernanceActionCase[] = [
     key: 'login-log-cleanup',
     domain: 'system/auth',
     path: '/system/login-log',
-    confirmText: '确认清理超出最近 30 天保留窗口的登录日志？',
+    confirmText: CLEANUP_WARNING_TEXT,
     successToast: '已清理 1 条登录日志',
     errorToast: '请求失败，请稍后重试',
     actionRoutePattern: /\/api\/v1\/system\/login-log\/cleanup$/,
@@ -264,7 +268,7 @@ const actionCases: GovernanceActionCase[] = [
     key: 'operation-log-cleanup',
     domain: 'system/iam',
     path: '/system/operation-log',
-    confirmText: '确认清理超出最近 30 天保留窗口的操作日志？',
+    confirmText: CLEANUP_WARNING_TEXT,
     successToast: '已清理 1 条历史操作日志，并记录 1 条清理审计',
     errorToast: '请求失败，请稍后重试',
     actionRoutePattern: /\/api\/v1\/system\/operation-log\/cleanup$/,

@@ -1311,14 +1311,14 @@ if (loginPasswordInnerInputBlock) {
 
 const governanceActionsBlock = requireBlock(
   listPageSource,
-  '.table-batch-action-bar--governance .table-batch-action-bar__actions',
+  '.table-batch-action-bar__actions',
   findings,
 );
 if (
   governanceActionsBlock &&
   !hasDeclaration(governanceActionsBlock, 'justify-content', 'flex-end')
 ) {
-  findings.push('Governance action bar secondary actions must align to the right.');
+  findings.push('TableBatchActionBar secondary actions must align to the right.');
 }
 
 const governanceSelectBlock = requireBlock(

@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
+import { expect, test, type Page, type Route } from '@playwright/test';
 import { installOperationToken, signInAsAdmin } from '../../helpers/auth';
 
 type CleanupCase = {
@@ -141,109 +141,53 @@ function cleanupBar(page: Page, cleanupButtonName: string) {
     .first();
 }
 
-function popupConfirmButton(page: Page) {
-  return page
-    .locator(
-      '.arco-popconfirm:visible, .arco-popover:visible, [role="tooltip"]:visible, [role="dialog"]:visible',
-    )
-    .last()
-    .getByRole('button', { name: '确定', exact: true })
-    .last();
-}
-
-function cleanupDatePopup(page: Page) {
-  return page
-    .locator(
-      'body .table-batch-action-bar__cleanup-date-popup.arco-picker-container, body .table-batch-action-bar__cleanup-date-popup .arco-picker-container',
-    )
-    .last();
-}
-
-function cleanupTimePopup(page: Page) {
-  return page
-    .locator(
-      '.arco-trigger-popup:visible, .arco-picker-container:visible, .arco-timepicker:visible',
-    )
-    .filter({ has: page.locator('.arco-timepicker-list:visible') })
-    .last();
-}
-
 function rangePopup(page: Page) {
   return page.locator('body .arco-picker-range-container').last();
 }
 
-function popupDateCell(popup: Locator, day: string) {
-  return popup
-    .locator('.arco-picker-cell-in-view')
-    .filter({ hasText: new RegExp(`^${day}$`) })
-    .first();
+function cleanupDialog(page: Page) {
+  return page.locator('.arco-modal:visible').last();
 }
 
-async function selectPopupTime(panel: Locator, hour: string, minute: string) {
-  await panel.locator('.arco-timepicker-list').nth(0).getByText(hour, { exact: true }).click();
-  await panel.locator('.arco-timepicker-list').nth(1).getByText(minute, { exact: true }).click();
+function dialogOkButton(page: Page) {
+  return cleanupDialog(page)
+    .locator('.arco-modal-footer')
+    .getByRole('button', { name: '确定', exact: true })
+    .last();
 }
 
-async function selectCleanupDateField(
-  page: Page,
-  field: Locator,
-  day: string,
-  options?: { screenshotPath?: string },
-) {
-  await field.click();
-  const popup = cleanupDatePopup(page);
+// Select a past start/end day inside the cleanup dialog's Arco RangePicker
+// (single trigger, showTime enabled, mounted to body).
+async function selectCleanupRange(page: Page) {
+  const trigger = cleanupDialog(page).locator('.arco-picker').first();
+  await trigger.click();
+
+  const popup = rangePopup(page);
   await expect(popup).toBeVisible();
-  const panel = popup.locator('.arco-panel-date').first();
-  const weekLabels = panel.locator('.arco-picker-week-list-item');
-  await expect(weekLabels).toHaveText(['一', '二', '三', '四', '五', '六', '日']);
 
-  const firstDateRow = panel.locator('.arco-picker-body .arco-picker-row').first();
-  const firstDateCells = firstDateRow.locator('.arco-picker-cell');
-  await expect(firstDateCells).toHaveCount(7);
+  // Left panel shows an earlier month, so its in-view cells are always in the
+  // past relative to "today" and therefore enabled by disabledDate.
+  const leftPanel = popup.locator('.arco-panel-date').first();
+  const enabledCells = leftPanel.locator('.arco-picker-cell-in-view:not(.arco-picker-cell-disabled)');
+  await expect(enabledCells.first()).toBeVisible();
 
-  for (let index = 0; index < 7; index += 1) {
-    const weekBox = await weekLabels.nth(index).boundingBox();
-    const dayBox = await firstDateCells.nth(index).boundingBox();
-    expect(weekBox).not.toBeNull();
-    expect(dayBox).not.toBeNull();
+  await enabledCells.nth(4).click();
+  await enabledCells.nth(10).click();
 
-    const weekCenter = (weekBox?.x || 0) + (weekBox?.width || 0) / 2;
-    const dayCenter = (dayBox?.x || 0) + (dayBox?.width || 0) / 2;
-    expect(Math.abs(weekCenter - dayCenter)).toBeLessThanOrEqual(4);
+  const confirm = popup.locator('.arco-picker-btn-confirm');
+  if (await confirm.count()) {
+    await confirm.first().click();
   }
-
-  if (options?.screenshotPath) {
-    await panel.screenshot({
-      path: options.screenshotPath,
-    });
-  }
-
-  await popupDateCell(panel, day).click();
-  await expect(field).toHaveValue(new RegExp(`^\\d{4}-\\d{2}-${day}$`));
-}
-
-async function selectCleanupTimeField(page: Page, field: Locator, hour: string, minute: string) {
-  await field.click();
-  const timeLists = page.locator('.arco-timepicker-list:visible');
-  await expect(timeLists).toHaveCount(2);
-  await expect(timeLists.first()).toBeVisible();
-
-  const popup = cleanupTimePopup(page);
-  await expect(popup).toBeVisible();
-  await selectPopupTime(popup, hour, minute);
-  const confirmButton = page.getByRole('button', { name: '确定', exact: true }).last();
-  await expect(confirmButton).toBeEnabled();
-  await confirmButton.click();
-  await expect(field).toHaveValue(new RegExp(`^${hour}:${minute}$`));
+  await expect(popup).toBeHidden();
 }
 
 test.describe('cleanup range governance smoke', () => {
   test.describe.configure({ timeout: 120000 });
 
   for (const cleanupCase of cleanupCases) {
-    test(`${cleanupCase.name} cleanup range submits split date/time selections and keeps calendar centered`, async ({
+    test(`${cleanupCase.name} cleanup dialog submits retention and range payloads`, async ({
       page,
-    }, testInfo) => {
+    }) => {
       const accessToken = await signInAsAdmin(page);
       await page.goto('/dashboard', { waitUntil: 'networkidle' });
       await installOperationToken(page, accessToken);
@@ -270,52 +214,42 @@ test.describe('cleanup range governance smoke', () => {
       const bar = cleanupBar(page, cleanupCase.cleanupButtonName);
       await expect(bar).toBeVisible();
 
-      const modeSelect = bar.locator('.arco-select').first();
-      await modeSelect.click();
-      await page.getByRole('option', { name: '按时间范围', exact: true }).click();
-
-      const startDateInput = bar.getByLabel('开始日期').first();
-      const startTimeInput = bar.getByLabel('开始时间').first();
-      const endDateInput = bar.getByLabel('结束日期').first();
-      const endTimeInput = bar.getByLabel('结束时间').first();
-
-      const cleanupButton = bar
+      const cleanupTrigger = bar
         .locator('.table-batch-action-bar__meta')
         .getByRole('button', { name: cleanupCase.cleanupButtonName, exact: true })
         .first();
 
-      await selectCleanupDateField(
-        page,
-        startDateInput,
-        '13',
-        cleanupCase.name === 'login-log'
-          ? { screenshotPath: testInfo.outputPath('login-log-cleanup-date-popup.png') }
-          : undefined,
-      );
-      await selectCleanupTimeField(page, startTimeInput, '18', '26');
-      await selectCleanupDateField(page, endDateInput, '14');
-      await selectCleanupTimeField(page, endTimeInput, '09', '45');
-
-      await expect(startDateInput).toHaveValue(/\d{4}-\d{2}-13/);
-      await expect(startTimeInput).toHaveValue('18:26');
-      await expect(endDateInput).toHaveValue(/\d{4}-\d{2}-14/);
-      await expect(endTimeInput).toHaveValue('09:45');
-
-      if (cleanupCase.name === 'login-log') {
-        await bar.screenshot({
-          path: testInfo.outputPath('login-log-cleanup-filled-bar.png'),
-        });
-      }
-
-      await cleanupButton.click();
-      await popupConfirmButton(page).click();
+      // 1) Retention mode (default): irreversible warning is shown, submit sends retentionDays.
+      await cleanupTrigger.click();
+      const dialog = cleanupDialog(page);
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator('.arco-alert-warning')).toBeVisible();
+      await dialogOkButton(page).click();
 
       await expect.poll(() => capturedCleanupPayload).not.toBeNull();
-
-      expect(capturedCleanupPayload?.retentionDays).toBeUndefined();
-      expect(String(capturedCleanupPayload?.startedAt || '')).toMatch(/\d{4}-\d{2}-13T18:26/);
-      expect(String(capturedCleanupPayload?.endedAt || '')).toMatch(/\d{4}-\d{2}-14T09:45/);
+      expect(typeof capturedCleanupPayload?.retentionDays).toBe('number');
+      expect(capturedCleanupPayload?.startedAt).toBeUndefined();
       await expect(page.locator('.arco-message')).toContainText(/已清理|清理成功/);
+
+      // 2) Range mode: submit sends startedAt/endedAt instead of retentionDays.
+      capturedCleanupPayload = null;
+      await cleanupTrigger.click();
+      await expect(cleanupDialog(page)).toBeVisible();
+      // Arco Radio.Group type="button" renders the native input visually hidden,
+      // so drive the visible label instead of the radio role.
+      await cleanupDialog(page)
+        .locator('.arco-radio-button')
+        .filter({ hasText: '按时间范围' })
+        .click();
+      await selectCleanupRange(page);
+      await dialogOkButton(page).click();
+
+      await expect.poll(() => capturedCleanupPayload).not.toBeNull();
+      expect(capturedCleanupPayload?.retentionDays).toBeUndefined();
+      expect(String(capturedCleanupPayload?.startedAt || '')).toMatch(
+        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/,
+      );
+      expect(String(capturedCleanupPayload?.endedAt || '')).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
     });
   }
 
@@ -337,12 +271,15 @@ test.describe('cleanup range governance smoke', () => {
 
     await page.goto(loginLogCase.path, { waitUntil: 'networkidle' });
 
-    const filterGrid = page.locator('.auth-login-log-page__filter-grid');
+    // Login-log filters render inside the shared SearchToolbar inline slot and
+    // use the shared TimeRangeFilter component (the page-local
+    // .auth-login-log-page__time-range-* DOM was retired in 8ce624d8).
+    const filterGrid = page.locator('.search-toolbar__inline');
     await expect(filterGrid).toBeVisible();
 
-    const rangeTrigger = filterGrid.locator('.auth-login-log-page__time-range-trigger');
+    const rangeTrigger = filterGrid.locator('.time-range-filter__trigger');
     await expect(rangeTrigger).toBeVisible();
-    await expect(rangeTrigger).toContainText('最近 24 小时');
+    await expect(rangeTrigger).toContainText('时间范围');
     await rangeTrigger.click();
 
     const popup = rangePopup(page);
@@ -350,24 +287,20 @@ test.describe('cleanup range governance smoke', () => {
 
     const popupBox = await popup.boundingBox();
     expect(popupBox).not.toBeNull();
-    expect(popupBox?.width ?? 0).toBeGreaterThanOrEqual(580);
-    expect(popupBox?.width ?? 0).toBeLessThanOrEqual(640);
+    expect(popupBox?.width ?? 0).toBeGreaterThanOrEqual(540);
+    expect(popupBox?.width ?? 0).toBeLessThanOrEqual(700);
 
-    const shell = popup.locator('.auth-login-log-page__time-range-shell');
+    const shell = popup.locator('.time-range-filter__shell');
     await expect(shell).toBeVisible();
 
-    const shortcutRows = shell.locator('.auth-login-log-page__time-range-shortcut-row');
+    const shortcutRows = shell.locator('.time-range-filter__shortcut-row');
     await expect(shortcutRows).toHaveCount(2);
-    await expect(
-      shortcutRows.first().locator('.auth-login-log-page__time-range-shortcut'),
-    ).toHaveCount(9);
-    await expect(
-      shortcutRows.nth(1).locator('.auth-login-log-page__time-range-shortcut'),
-    ).toHaveCount(2);
+    await expect(shortcutRows.first().locator('.time-range-filter__shortcut')).toHaveCount(9);
+    await expect(shortcutRows.nth(1).locator('.time-range-filter__shortcut')).toHaveCount(2);
     await expect(shell.getByRole('button', { name: '今天', exact: true })).toBeVisible();
     await expect(shell.getByRole('button', { name: '昨天', exact: true })).toBeVisible();
 
-    const summary = shell.locator('.auth-login-log-page__time-range-summary');
+    const summary = shell.locator('.time-range-filter__summary');
     await expect(summary).toBeVisible();
     await expect(summary).toContainText('开始时间');
     await expect(summary).toContainText('结束时间');
@@ -385,15 +318,18 @@ test.describe('cleanup range governance smoke', () => {
       .locator('.arco-picker-week-list-item');
     await expect(weekLabels).toHaveText(['一', '二', '三', '四', '五', '六', '日']);
 
+    // The shared popup CSS lays week list and date rows out as horizontal flex
+    // (React 19 compat fix in list-page.css); column alignment is asserted
+    // geometrically below.
     const weekList = popup.locator('.arco-panel-date').first().locator('.arco-picker-week-list');
-    await expect(weekList).toHaveCSS('display', 'grid');
+    await expect(weekList).toHaveCSS('display', 'flex');
 
     const firstDateRow = popup
       .locator('.arco-panel-date')
       .first()
       .locator('.arco-picker-body .arco-picker-row')
       .first();
-    await expect(firstDateRow).toHaveCSS('display', 'grid');
+    await expect(firstDateRow).toHaveCSS('display', 'flex');
 
     const firstDateCells = firstDateRow.locator('.arco-picker-cell');
     await expect(firstDateCells).toHaveCount(7);

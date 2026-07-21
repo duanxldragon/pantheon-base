@@ -16,6 +16,7 @@ type PermissionPolicyPageResp struct {
 }
 
 type PermissionPolicyQuery struct {
+	Keyword   string `form:"keyword" json:"keyword"`
 	RoleKey   string `form:"roleKey" json:"roleKey"`
 	Path      string `form:"path" json:"path"`
 	Method    string `form:"method" json:"method"`

@@ -2,9 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Card,
   Button,
-  Form,
-  Grid,
-  Input,
   Popconfirm,
   Select,
   Space,
@@ -13,9 +10,8 @@ import {
 } from '@arco-design/web-react';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
-import { IconDelete, IconSearch } from '@arco-design/web-react/icon';
+import { IconDelete } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
-import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
@@ -35,8 +31,7 @@ import {
 import {
   AppTable,
   buildStandardPagination,
-  FilterPanel,
-  type GovernanceCleanupMode,
+  SearchToolbar,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -47,22 +42,22 @@ import {
   PageLoading,
   PageRequestError,
   TABLE_ACTION_COLUMN_WIDTH,
+  TimeRangeFilter,
+  type GovernanceCleanupPayload,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../../components';
 import { formatClientSummary } from '../clientInfo';
 import SessionDetailModal from './SessionDetailModal';
+import { getSettingGroup, type SettingGroup } from '../../../system/setting/api';
+import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 import '../../../system/components/shared/list-page.css';
 import '../../auth.css';
-import {
-  toCleanupTimestampFromParts,
-  loadRetentionSetting,
-} from '../../../system/audit/retentionSetting';
-const Row = Grid.Row;
-const Col = Grid.Col;
-const FormItem = Form.Item;
+
+const defaultRetentionOptions = [1, 7, 30];
 
 const emptyQuery: AdminSessionQuery = {
+  keyword: '',
   username: '',
   lastIp: '',
   browser: undefined,
@@ -72,7 +67,6 @@ const emptyQuery: AdminSessionQuery = {
   page: 1,
   pageSize: 10,
 };
-const defaultRetentionOptions = [1, 7, 30];
 
 interface LoadDataOptions {
   silent?: boolean;
@@ -93,17 +87,27 @@ const SessionList: React.FC = () => {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<AdminSessionQuery>(emptyQuery);
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
-  const [queryForm] = Form.useForm<AdminSessionQuery>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
-  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
-  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
-  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      getSettingGroup('audit')
+        .then((group: SettingGroup) =>
+          loadRetentionSetting(
+            group,
+            'audit.session_cleanup_retention_options',
+            setRetentionOptions,
+            setRetentionDays,
+          ),
+        )
+        .catch(() => undefined);
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, []);
 
   const loadData = useCallback(
     async (nextQuery: AdminSessionQuery = query, options?: LoadDataOptions) => {
@@ -137,24 +141,7 @@ const SessionList: React.FC = () => {
     return () => globalThis.clearTimeout(timer);
   }, [loadData, query]);
 
-  useEffect(() => {
-    const timer = globalThis.setTimeout(() => {
-      getSettingGroup('audit')
-        .then((group: SettingGroup) =>
-          loadRetentionSetting(
-            group,
-            'audit.session_cleanup_retention_options',
-            setRetentionOptions,
-            setRetentionDays,
-          ),
-        )
-        .catch(() => undefined);
-    }, 0);
-    return () => globalThis.clearTimeout(timer);
-  }, []);
-
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<AdminSessionQuery>) => {
     setSelectedRowKeys([]);
     setQuery({
       ...query,
@@ -164,7 +151,6 @@ const SessionList: React.FC = () => {
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
@@ -203,25 +189,15 @@ const SessionList: React.FC = () => {
     }
   };
 
-  const clearHistoricSessions = async () => {
+  const clearHistoricSessions = async (payload: GovernanceCleanupPayload) => {
     try {
-      if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
-        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
-        if (!startedAt || !endedAt) {
-          message.warning(t('common.cleanupRangeRequired'));
-          return;
-        }
-        const resp = await cleanupAdminSessions({
-          startedAt,
-          endedAt,
-        });
-        message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
-        await loadData(query, { silent: true });
-        return;
-      }
-
-      const resp = await cleanupAdminSessions({ retentionDays });
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupAdminSessions({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupAdminSessions({ retentionDays: payload.retentionDays });
       message.success(t('auth.session.cleanupSuccess', { count: resp.clearedCount }));
       await loadData(query, { silent: true });
     } catch {
@@ -412,117 +388,118 @@ const SessionList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16} className="auth-filter-grid">
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('system.user.username')} field="username">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.ip')} field="lastIp">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.filter.status')} field="status">
-                    <Select allowClear>
-                      <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
-                      <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.browserName')} field="browser">
-                    <Select allowClear>
-                      {browserOptions.map((item) => (
-                        <Select.Option key={item} value={item}>
-                          {item}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.osName')} field="os">
-                    <Select allowClear>
-                      {osOptions.map((item) => (
-                        <Select.Option key={item} value={item}>
-                          {item}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem label={t('auth.session.deviceName')} field="device">
-                    <Select allowClear>
-                      {deviceOptions.map((item) => (
-                        <Select.Option key={item} value={item}>
-                          {item}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('auth.session.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  placeholder={t('auth.session.filter.status')}
+                  value={query.status}
+                  onChange={(value) => search({ status: value })}
+                >
+                  <Select.Option value={1}>{t('auth.session.status.active')}</Select.Option>
+                  <Select.Option value={2}>{t('auth.session.status.revoked')}</Select.Option>
+                </Select>
+                <TimeRangeFilter
+                  value={{ startedAt: query.startedAt, endedAt: query.endedAt }}
+                  onChange={(value) => search(value)}
+                />
+              </>
+            }
+            advancedFilters={
+              <>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('auth.session.browserName')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.session.browserName')}
+                    value={query.browser}
+                    onChange={(value) => search({ browser: value })}
+                  >
+                    {browserOptions.map((item) => (
+                      <Select.Option key={item} value={item}>
+                        {item}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('auth.session.osName')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.session.osName')}
+                    value={query.os}
+                    onChange={(value) => search({ os: value })}
+                  >
+                    {osOptions.map((item) => (
+                      <Select.Option key={item} value={item}>
+                        {item}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('auth.session.deviceName')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('auth.session.deviceName')}
+                    value={query.device}
+                    onChange={(value) => search({ device: value })}
+                  >
+                    {deviceOptions.map((item) => (
+                      <Select.Option key={item} value={item}>
+                        {item}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            }
+            advancedActiveCount={
+              [query.browser, query.os, query.device].filter(
+                (value) => value !== undefined && value !== '',
+              ).length
+            }
+            hasActiveFilters={Boolean(
+              query.keyword ||
+                query.status !== undefined ||
+                query.browser ||
+                query.os ||
+                query.device ||
+                query.startedAt,
+            )}
+            onClearAll={reset}
+          />
 
           <Card className="page-panel system-list__table-card">
-            {canClear || canDelete ? (
-              <div>
-                <GovernanceCleanupBar
-                  showCleanup={canClear}
-                  retentionDays={retentionDays}
-                  retentionOptions={retentionOptions}
-                  onRetentionChange={setRetentionDays}
-                  retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                  cleanupMode={cleanupMode}
-                  onCleanupModeChange={setCleanupMode}
-                  cleanupModeLabel={t('common.cleanupMode')}
-                  cleanupModeOptions={[
-                    { label: t('common.cleanupModeRetention'), value: 'retention' },
-                    { label: t('common.cleanupModeRange'), value: 'range' },
-                  ]}
-                  rangeStartDate={cleanupRangeStartDate}
-                  rangeStartTime={cleanupRangeStartTime}
-                  rangeEndDate={cleanupRangeEndDate}
-                  rangeEndTime={cleanupRangeEndTime}
-                  onRangeStartDateChange={setCleanupRangeStartDate}
-                  onRangeStartTimeChange={setCleanupRangeStartTime}
-                  onRangeEndDateChange={setCleanupRangeEndDate}
-                  onRangeEndTimeChange={setCleanupRangeEndTime}
-                  rangeStartDateLabel={t('common.cleanupRangeStartDate')}
-                  rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
-                  rangeEndDateLabel={t('common.cleanupRangeEndDate')}
-                  rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
-                  confirmTitle={
-                    cleanupMode === 'range'
-                      ? t('common.cleanupRangeConfirm')
-                      : t('auth.session.cleanupConfirm', { count: retentionDays })
-                  }
-                  actionLabel={t('auth.session.cleanupAction')}
-                  onConfirm={() => {
-                    void clearHistoricSessions();
-                  }}
-                  hint={t('auth.session.cleanupHint')}
-                  extraActions={
+            {canDelete || canClear ? (
+              <GovernanceCleanupBar
+                showCleanup={canClear}
+                retentionDays={retentionDays}
+                retentionOptions={retentionOptions}
+                onRetentionChange={setRetentionDays}
+                retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
+                confirmTitle={t('common.cleanupIrreversibleWarning')}
+                actionLabel={t('auth.session.cleanupAction')}
+                cleanupModeLabel={t('common.cleanupMode')}
+                cleanupModeOptions={[
+                  { label: t('common.cleanupModeRetention'), value: 'retention' },
+                  { label: t('common.cleanupModeRange'), value: 'range' },
+                ]}
+                rangeStartLabel={t('common.cleanupRangeStart')}
+                rangeEndLabel={t('common.cleanupRangeEnd')}
+                rangeRequiredMessage={t('common.cleanupRangeRequired')}
+                onConfirm={clearHistoricSessions}
+                hint={t('auth.session.cleanupHint')}
+                extraActions={
+                  canDelete ? (
                     <>
-                      <span className="table-batch-action-bar__summary">
+                      <Typography.Text type="secondary">
                         {t('common.selectedCount', { count: selectedRowKeys.length })}
-                      </span>
+                      </Typography.Text>
                       <Button
                         type="text"
                         size="small"
@@ -555,9 +532,9 @@ const SessionList: React.FC = () => {
                         </Button>
                       </Popconfirm>
                     </>
-                  }
-                />
-              </div>
+                  ) : undefined
+                }
+              />
             ) : null}
             {loading && data.length === 0 ? <PageLoading /> : null}
             {loadError && !loading ? (

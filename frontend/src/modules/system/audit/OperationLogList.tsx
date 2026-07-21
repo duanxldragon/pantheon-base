@@ -4,9 +4,6 @@ import {
   Button,
   Card,
   Descriptions,
-  Form,
-  Grid,
-  Input,
   Popconfirm,
   Select,
   Space,
@@ -19,10 +16,9 @@ import type {
   SorterInfo,
   TableProps,
 } from '@arco-design/web-react/es/Table/interface';
-import { IconDelete, IconDownload, IconSearch, IconEye } from '@arco-design/web-react/icon';
+import { IconDelete, IconDownload, IconEye } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { getSettingGroup, type SettingGroup } from '../setting/api';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
@@ -38,12 +34,12 @@ import {
   type OperationLogRow,
   type OperationLogQuery,
 } from './api';
+import { getSettingGroup, type SettingGroup } from '../setting/api';
+import { loadRetentionSetting } from './retentionSetting';
 import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
-  type GovernanceCleanupMode,
   GovernanceCleanupBar,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
@@ -54,19 +50,19 @@ import {
   PageLoading,
   PageRequestError,
   PermissionAction,
+  SearchToolbar,
   SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
+  TimeRangeFilter,
+  type GovernanceCleanupPayload,
+  type TimeRangeFilterValue,
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
 import '../components/shared/list-page.css';
-import { toCleanupTimestampFromParts, loadRetentionSetting } from './retentionSetting';
-const Row = Grid.Row;
-const Col = Grid.Col;
-const FormItem = Form.Item;
 const httpMethodSet = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']);
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -112,7 +108,10 @@ interface FailureMeta {
   color: string;
 }
 
+const defaultRetentionOptions = [1, 7, 30];
+
 const emptyQuery: OperationLogQuery = {
+  keyword: '',
   title: '',
   operName: '',
   status: undefined,
@@ -122,7 +121,6 @@ const emptyQuery: OperationLogQuery = {
   page: 1,
   pageSize: 10,
 };
-const defaultRetentionOptions = [1, 7, 30];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -450,29 +448,25 @@ const OperationLogList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
   const canExport = isAdmin || hasPerm('system:operation-log:export');
-  const canClear = isAdmin || hasPerm('system:operation-log:clear');
   const canDelete = isAdmin || hasPerm('system:operation-log:delete');
+  const canClear = isAdmin || hasPerm('system:operation-log:clear');
   const governanceRail = useGovernanceRail();
   const [data, setData] = useState<OperationLogRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [successCount, setSuccessCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
+    [...defaultRetentionOptions].sort((left, right) => right - left),
+  );
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<OperationLogQuery>(emptyQuery);
-  const [queryForm] = Form.useForm<OperationLogQuery>();
   const [detailVisible, setDetailVisible] = useState(false);
   const [currentLog, setCurrentLog] = useState<OperationLogRow | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [retentionDays, setRetentionDays] = useState<number>(30);
-  const [cleanupMode, setCleanupMode] = useState<GovernanceCleanupMode>('retention');
-  const [cleanupRangeStartDate, setCleanupRangeStartDate] = useState('');
-  const [cleanupRangeStartTime, setCleanupRangeStartTime] = useState('');
-  const [cleanupRangeEndDate, setCleanupRangeEndDate] = useState('');
-  const [cleanupRangeEndTime, setCleanupRangeEndTime] = useState('');
-  const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
-    [...defaultRetentionOptions].sort((left, right) => right - left),
-  );
   const resultPreview = currentLog ? extractOperationResult(currentLog.jsonResult) : {};
   const settingAuditPayload = currentLog ? extractSettingAuditPayload(currentLog.operParam) : null;
   const i18nLifecycleParam = currentLog
@@ -501,6 +495,8 @@ const OperationLogList: React.FC = () => {
         const result = await getOperationLogList(nextQuery);
         setData(result.items);
         setTotal(result.total);
+        setSuccessCount(result.successCount ?? 0);
+        setFailedCount(result.failedCount ?? 0);
       } catch (requestError) {
         setLoadError(requestError);
         message.error(t('common.loadFailed'));
@@ -567,21 +563,31 @@ const OperationLogList: React.FC = () => {
     return () => globalThis.clearTimeout(timer);
   }, [data, searchParams, t]);
 
-  const search = () => {
-    const values = queryForm.getFieldsValue();
+  const search = (values: Partial<OperationLogQuery>) => {
     setSelectedRowKeys([]);
-    setQuery({
-      ...query,
+    setQuery((current) => ({
+      ...current,
       ...values,
       page: 1,
-    });
+    }));
   };
 
   const reset = () => {
-    queryForm.setFieldsValue(emptyQuery);
     setSelectedRowKeys([]);
     setQuery(emptyQuery);
   };
+
+  const advancedActiveCount = [query.failureCategory, query.sourcePage].filter(
+    (value) => value !== undefined && value !== '',
+  ).length;
+
+  const hasActiveFilters = Boolean(
+    query.keyword ||
+      query.status !== undefined ||
+      (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
+      query.startedAt ||
+      advancedActiveCount > 0,
+  );
 
   const handleDelete = async (id: number) => {
     try {
@@ -593,25 +599,20 @@ const OperationLogList: React.FC = () => {
     }
   };
 
-  const handleCleanup = async () => {
-    try {
-      if (cleanupMode === 'range') {
-        const startedAt = toCleanupTimestampFromParts(cleanupRangeStartDate, cleanupRangeStartTime);
-        const endedAt = toCleanupTimestampFromParts(cleanupRangeEndDate, cleanupRangeEndTime);
-        if (!startedAt || !endedAt) {
-          message.warning(t('common.cleanupRangeRequired'));
-          return;
-        }
-        const resp = await cleanupOperationLogs({
-          startedAt,
-          endedAt,
-        });
-        message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
-        void loadData();
-        return;
-      }
+  const handleTimeRangeChange = (value: Required<TimeRangeFilterValue>) => {
+    setSelectedRowKeys([]);
+    setQuery((current) => ({ ...current, ...value, page: 1 }));
+  };
 
-      const resp = await cleanupOperationLogs({ retentionDays });
+  const handleCleanup = async (payload: GovernanceCleanupPayload) => {
+    try {
+      const resp =
+        payload.mode === 'range'
+          ? await cleanupOperationLogs({
+              startedAt: payload.startedAt,
+              endedAt: payload.endedAt,
+            })
+          : await cleanupOperationLogs({ retentionDays: payload.retentionDays });
       message.success(t('system.audit.cleanupSuccess', { count: resp.clearedCount }));
       void loadData();
     } catch {
@@ -840,8 +841,6 @@ const OperationLogList: React.FC = () => {
     }
     await exportOperationLogs(query);
   };
-  const successCount = useMemo(() => data.filter((item) => item.status === 1).length, [data]);
-  const failedCount = useMemo(() => data.filter((item) => item.status !== 1).length, [data]);
   const heroStats = useMemo(
     () => [
       {
@@ -868,14 +867,8 @@ const OperationLogList: React.FC = () => {
         value: canExport ? t('common.yes') : t('common.no'),
         hint: t('system.audit.hero.exportHint'),
       },
-      {
-        key: 'cleanup',
-        label: t('system.audit.hero.cleanupReady'),
-        value: canClear ? t('common.yes') : t('common.no'),
-        hint: t('system.audit.hero.cleanupHint'),
-      },
     ],
-    [canClear, canExport, failedCount, successCount, t, total],
+    [canExport, failedCount, successCount, t, total],
   );
 
   const formatI18nLifecycleLabel = (value: string) =>
@@ -916,96 +909,92 @@ const OperationLogList: React.FC = () => {
           }
         />
         <>
-          <FilterPanel>
-            <Form form={queryForm} layout="vertical" onSubmit={() => search()}>
-              <Row gutter={16}>
-                <Col span={6}>
-                  <FormItem label={t('system.audit.title')} field="title">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.audit.operName')} field="operName">
-                    <Input onPressEnter={() => queryForm.submit()} />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.audit.status')} field="status">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('common.success'), value: 1 },
-                        { label: t('common.failed'), value: 2 },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.audit.sourceDomain')} field="sourceDomain">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.audit.sourceDomain.platform'), value: 'platform' },
-                        { label: t('system.audit.sourceDomain.auth'), value: 'auth' },
-                        { label: t('system.audit.sourceDomain.iam'), value: 'iam' },
-                        { label: t('system.audit.sourceDomain.org'), value: 'org' },
-                        { label: t('system.audit.sourceDomain.config'), value: 'config' },
-                        { label: t('system.audit.sourceDomain.audit'), value: 'audit' },
-                        { label: t('system.audit.sourceDomain.other'), value: 'other' },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.audit.failureCategory')} field="failureCategory">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.audit.failureType.validation'), value: 'validation' },
-                        { label: t('system.audit.failureType.auth'), value: 'auth' },
-                        { label: t('system.audit.failureType.permission'), value: 'permission' },
-                        { label: t('system.audit.failureType.server'), value: 'server' },
-                        { label: t('system.audit.failureType.business'), value: 'business' },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem label={t('system.audit.sourcePage')} field="sourcePage">
-                    <Select
-                      allowClear
-                      options={[
-                        { label: t('system.audit.sourcePage.dashboard'), value: 'dashboard' },
-                        { label: t('system.audit.sourcePage.setting'), value: 'setting' },
-                        { label: t('system.audit.sourcePage.upload'), value: 'upload' },
-                        { label: t('system.audit.sourcePage.i18n'), value: 'i18n' },
-                        { label: t('system.audit.sourcePage.operationLog'), value: 'operationLog' },
-                        { label: t('system.audit.sourcePage.loginLog'), value: 'loginLog' },
-                        { label: t('system.audit.sourcePage.session'), value: 'session' },
-                        { label: t('system.audit.sourcePage.user'), value: 'user' },
-                        { label: t('system.audit.sourcePage.role'), value: 'role' },
-                        { label: t('system.audit.sourcePage.menu'), value: 'menu' },
-                        { label: t('system.audit.sourcePage.permission'), value: 'permission' },
-                        { label: t('system.audit.sourcePage.dept'), value: 'dept' },
-                        { label: t('system.audit.sourcePage.post'), value: 'post' },
-                        { label: t('system.audit.sourcePage.other'), value: 'other' },
-                      ]}
-                    />
-                  </FormItem>
-                </Col>
-                <Col span={6}>
-                  <FormItem className="filter-panel__action-item">
-                    <Space>
-                      <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                        {t('common.search')}
-                      </Button>
-                      <Button onClick={reset}>{t('common.reset')}</Button>
-                    </Space>
-                  </FormItem>
-                </Col>
-              </Row>
-            </Form>
-          </FilterPanel>
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('system.audit.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  placeholder={t('system.audit.status')}
+                  value={query.status}
+                  onChange={(value) => search({ status: value })}
+                  options={[
+                    { label: t('common.success'), value: 1 },
+                    { label: t('common.failed'), value: 2 },
+                  ]}
+                />
+                <Select
+                  allowClear
+                  placeholder={t('system.audit.sourceDomain')}
+                  value={query.sourceDomain}
+                  onChange={(value) => search({ sourceDomain: value })}
+                  options={[
+                    { label: t('system.audit.sourceDomain.platform'), value: 'platform' },
+                    { label: t('system.audit.sourceDomain.auth'), value: 'auth' },
+                    { label: t('system.audit.sourceDomain.iam'), value: 'iam' },
+                    { label: t('system.audit.sourceDomain.org'), value: 'org' },
+                    { label: t('system.audit.sourceDomain.config'), value: 'config' },
+                    { label: t('system.audit.sourceDomain.audit'), value: 'audit' },
+                    { label: t('system.audit.sourceDomain.other'), value: 'other' },
+                  ]}
+                />
+                <TimeRangeFilter
+                  value={{ startedAt: query.startedAt, endedAt: query.endedAt }}
+                  onChange={handleTimeRangeChange}
+                />
+              </>
+            }
+            advancedFilters={
+              <>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('system.audit.failureCategory')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('system.audit.failureCategory')}
+                    value={query.failureCategory}
+                    onChange={(value) => search({ failureCategory: value })}
+                    options={[
+                      { label: t('system.audit.failureType.validation'), value: 'validation' },
+                      { label: t('system.audit.failureType.auth'), value: 'auth' },
+                      { label: t('system.audit.failureType.permission'), value: 'permission' },
+                      { label: t('system.audit.failureType.server'), value: 'server' },
+                      { label: t('system.audit.failureType.business'), value: 'business' },
+                    ]}
+                  />
+                </div>
+                <div className="search-toolbar__popover-field">
+                  <label>{t('system.audit.sourcePage')}</label>
+                  <Select
+                    allowClear
+                    placeholder={t('system.audit.sourcePage')}
+                    value={query.sourcePage}
+                    onChange={(value) => search({ sourcePage: value })}
+                    options={[
+                      { label: t('system.audit.sourcePage.dashboard'), value: 'dashboard' },
+                      { label: t('system.audit.sourcePage.setting'), value: 'setting' },
+                      { label: t('system.audit.sourcePage.upload'), value: 'upload' },
+                      { label: t('system.audit.sourcePage.i18n'), value: 'i18n' },
+                      { label: t('system.audit.sourcePage.operationLog'), value: 'operationLog' },
+                      { label: t('system.audit.sourcePage.loginLog'), value: 'loginLog' },
+                      { label: t('system.audit.sourcePage.session'), value: 'session' },
+                      { label: t('system.audit.sourcePage.user'), value: 'user' },
+                      { label: t('system.audit.sourcePage.role'), value: 'role' },
+                      { label: t('system.audit.sourcePage.menu'), value: 'menu' },
+                      { label: t('system.audit.sourcePage.permission'), value: 'permission' },
+                      { label: t('system.audit.sourcePage.dept'), value: 'dept' },
+                      { label: t('system.audit.sourcePage.post'), value: 'post' },
+                      { label: t('system.audit.sourcePage.other'), value: 'other' },
+                    ]}
+                  />
+                </div>
+              </>
+            }
+            advancedActiveCount={advancedActiveCount}
+            hasActiveFilters={hasActiveFilters}
+            onClearAll={reset}
+          />
 
           <Card className="page-panel system-list__table-card">
             <GovernanceCleanupBar
@@ -1014,34 +1003,17 @@ const OperationLogList: React.FC = () => {
               retentionOptions={retentionOptions}
               onRetentionChange={setRetentionDays}
               retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-              cleanupMode={cleanupMode}
-              onCleanupModeChange={setCleanupMode}
+              confirmTitle={t('common.cleanupIrreversibleWarning')}
+              actionLabel={t('common.cleanupLogs')}
               cleanupModeLabel={t('common.cleanupMode')}
               cleanupModeOptions={[
                 { label: t('common.cleanupModeRetention'), value: 'retention' },
                 { label: t('common.cleanupModeRange'), value: 'range' },
               ]}
-              rangeStartDate={cleanupRangeStartDate}
-              rangeStartTime={cleanupRangeStartTime}
-              rangeEndDate={cleanupRangeEndDate}
-              rangeEndTime={cleanupRangeEndTime}
-              onRangeStartDateChange={setCleanupRangeStartDate}
-              onRangeStartTimeChange={setCleanupRangeStartTime}
-              onRangeEndDateChange={setCleanupRangeEndDate}
-              onRangeEndTimeChange={setCleanupRangeEndTime}
-              rangeStartDateLabel={t('common.cleanupRangeStartDate')}
-              rangeStartTimeLabel={t('common.cleanupRangeStartTime')}
-              rangeEndDateLabel={t('common.cleanupRangeEndDate')}
-              rangeEndTimeLabel={t('common.cleanupRangeEndTime')}
-              confirmTitle={
-                cleanupMode === 'range'
-                  ? t('common.cleanupRangeConfirm')
-                  : t('system.audit.cleanupConfirm', { count: retentionDays })
-              }
-              actionLabel={t('common.cleanupLogs')}
-              onConfirm={() => {
-                void handleCleanup();
-              }}
+              rangeStartLabel={t('common.cleanupRangeStart')}
+              rangeEndLabel={t('common.cleanupRangeEnd')}
+              rangeRequiredMessage={t('common.cleanupRangeRequired')}
+              onConfirm={handleCleanup}
               hint={t('system.audit.cleanupHint')}
               trailing={
                 <Button
@@ -1167,11 +1139,6 @@ const OperationLogList: React.FC = () => {
               label: t('common.failed'),
               value: failedCount,
               description: t('system.audit.hero.failedHint'),
-            },
-            {
-              label: t('system.audit.hero.cleanupReady'),
-              value: canClear ? t('common.yes') : t('common.no'),
-              description: t('system.audit.hero.cleanupHint'),
             },
             {
               label: t('common.selected'),

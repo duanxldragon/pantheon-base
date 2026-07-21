@@ -178,6 +178,8 @@ func (s *I18nService) SeedI18nModuleI18n(db *gorm.DB) error {
 		{Module: "system.auth", Locale: "en-US", Group: "permission", Key: "system.permission.login_log.delete", Value: "Login Log Delete"},
 		{Module: "system.auth", Locale: "zh-CN", Group: "permission", Key: "system.permission.security_event.acknowledge", Value: "安全事件确认"},
 		{Module: "system.auth", Locale: "en-US", Group: "permission", Key: "system.permission.security_event.acknowledge", Value: "Security Event Acknowledge"},
+		{Module: "system.auth", Locale: "zh-CN", Group: "permission", Key: "system.permission.security_event.clear", Value: "安全事件清理"},
+		{Module: "system.auth", Locale: "en-US", Group: "permission", Key: "system.permission.security_event.clear", Value: "Security Event Cleanup"},
 		{Module: "system.audit", Locale: "zh-CN", Group: "permission", Key: "system.permission.operation_log.delete", Value: "操作日志删除"},
 		{Module: "system.audit", Locale: "en-US", Group: "permission", Key: "system.permission.operation_log.delete", Value: "Operation Log Delete"},
 		{Module: "system.audit", Locale: "zh-CN", Group: "permission", Key: "system.permission.operation_log.clear", Value: "操作日志清理"},

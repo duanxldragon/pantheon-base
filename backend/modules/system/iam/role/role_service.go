@@ -75,6 +75,10 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 	db := s.db.Model(&SystemRole{})
 	page, pageSize := normalizeRolePageQuery(query)
 	if query != nil {
+		if strings.TrimSpace(query.Keyword) != "" {
+			keyword := fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.Keyword)))
+			db = db.Where("role_name LIKE ? OR role_key LIKE ?", keyword, keyword)
+		}
 		if strings.TrimSpace(query.RoleName) != "" {
 			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleName))))
 		}

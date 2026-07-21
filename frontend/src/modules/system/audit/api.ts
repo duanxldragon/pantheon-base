@@ -2,6 +2,7 @@ import { apiRequest } from '../../../api/request';
 import { downloadCsvFile, downloadFile } from '../../../api/file';
 
 export interface OperationLogQuery {
+  keyword?: string;
   title?: string;
   operName?: string;
   status?: number;
@@ -9,6 +10,8 @@ export interface OperationLogQuery {
   sourceDomain?: string;
   sourcePage?: string;
   failureCategory?: string;
+  startedAt?: string;
+  endedAt?: string;
   page: number;
   pageSize: number;
   sortField?: string;
@@ -37,6 +40,9 @@ export interface OperationLogRow {
 export interface OperationLogPageResp {
   items: OperationLogRow[];
   total: number;
+  /** 全量过滤集（跨页）聚合，供治理栏展示全局数字。 */
+  successCount: number;
+  failedCount: number;
   page: number;
   pageSize: number;
 }

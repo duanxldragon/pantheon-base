@@ -53,6 +53,8 @@ schema/generated/         # 生成能力账本等跨端治理输出
 7. 数据库初始化脚本当前保留在 `database/system_init.sql`，因为 `docker-compose.yml` 直接引用该路径。
 8. Grafana/Prometheus 本地观测配置当前保留在 `grafana/`，避免和应用运行代码混在一起。
 
+本节规则由机械门禁强制执行：`scripts/harness/check-structure-contract.mjs`（`npm run check:structure`，quality.yml 阻塞步骤）。覆盖：backend/frontend 顶层白名单、`modules/` 域白名单（auth/business/lowcode/platform/system + 前端 generated）、Go 文件 snake_case、`frontend/src` 内禁放测试、共享组件 PascalCase、hooks `use*` 命名、禁止提交二进制。跨层 import 边界由 `check-boundaries.mjs` 负责，两者互补。新增合法目录时先改本文档，再同步门禁白名单。
+
 ## 3. 本地噪音目录
 
 这些目录不是仓库结构的一部分，已由 `.gitignore` 排除；需要清爽根目录时可以按需清理，但不要把它们纳入提交：

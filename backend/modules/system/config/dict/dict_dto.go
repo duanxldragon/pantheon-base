@@ -16,6 +16,7 @@ type DictTypeResp struct {
 }
 
 type DictTypeListQuery struct {
+	Keyword  string `form:"keyword" json:"keyword"`
 	DictCode string `form:"dictCode" json:"dictCode"`
 	DictName string `form:"dictName" json:"dictName"`
 	Status   *int   `form:"status" json:"status"`

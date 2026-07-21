@@ -24,7 +24,7 @@ const emptyTypeQuery: DictTypeQuery = {
 };
 
 function isDefaultDictTypeQuery(query: DictTypeQuery) {
-  return !query.dictCode && !query.dictName && query.status === undefined;
+  return !query.keyword && !query.dictCode && !query.dictName && query.status === undefined;
 }
 
 type DictTabKey = 'types' | 'items';

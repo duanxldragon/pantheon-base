@@ -14,6 +14,10 @@ const frFROverrideFallback = {
     'Ajoutez une note d’accusé de réception avant de clôturer cet événement de sécurité',
   'auth.securityEvent.acknowledgePrompt': 'Commencez à rédiger la note d’accusé de réception',
   'auth.securityEvent.acknowledgeSuccess': 'Événement de sécurité accusé',
+  'auth.securityEvent.batchAcknowledge': 'Accuser la sélection',
+  'auth.securityEvent.batchAcknowledgeDialogHint':
+    'Une note de traitement unique est appliquée à tous les événements en attente sélectionnés ; les événements déjà accusés sont ignorés et conservent leur note d’origine.',
+  'auth.securityEvent.batchAcknowledgeSuccess': '{{count}} événement(s) de sécurité accusé(s)',
   'auth.securityEvent.acknowledgedHint':
     'Les événements accusés conservent l’acteur, l’horodatage et la note de traitement pour l’audit.',
   'auth.securityEvent.acknowledgement': 'Accusé de réception',
@@ -141,6 +145,8 @@ const frFROverrideFallback = {
   'common.cleanupModeRange': 'Par plage horaire',
   'common.cleanupModeRetention': 'Par fenêtre de rétention',
   'common.cleanupRangeConfirm': 'Nettoyer les enregistrements dans la plage horaire sélectionnée ?',
+  'common.cleanupIrreversibleWarning':
+    'Les enregistrements nettoyés sont irrécupérables. Vérifiez les critères avant de continuer.',
   'common.cleanupRangeEnd': 'Heure de fin',
   'common.cleanupRangeStartDate': 'Date de début',
   'common.cleanupRangeStartTime': 'Heure de début',
@@ -189,6 +195,13 @@ const frFROverrideFallback = {
   'operations.menu': 'Opérations',
   'system.menu.session': 'Gestion des sessions',
   'system.permission.security_event.acknowledge': 'Accuser réception des événements de sécurité',
+  'system.permission.security_event.clear': 'Nettoyage des événements de sécurité',
+  'auth.securityEvent.cleanupAction': "Nettoyer l'historique",
+  'auth.securityEvent.cleanupHint':
+    'Seuls les événements de sécurité historiques traités sont nettoyés ; les événements en attente sont conservés.',
+  'auth.securityEvent.cleanupWarning':
+    'Seuls les événements traités sont nettoyés et irrécupérables ; les événements en attente sont conservés. Vérifiez les critères avant de continuer.',
+  'auth.securityEvent.cleanupSuccess': '{{count}} événement(s) de sécurité historique(s) nettoyé(s)',
   'system.permission.workbench.currentGapSection': 'Résumé des écarts courants',
   'system.permission.workbench.currentStatusSection': 'État courant de gouvernance',
   'system.permission.workbench.governanceStatus': 'État de gouvernance',

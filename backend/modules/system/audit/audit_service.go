@@ -70,6 +70,13 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
 	}
+	// Whole-filtered-set aggregate so the governance bar shows global numbers.
+	var successCount int64
+	if err := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query).
+		Where("status = ?", common.OperationStatusSuccess).
+		Count(&successCount).Error; err != nil {
+		return nil, err
+	}
 	sortColumn, sortDesc := normalizeOperationLogSort(query)
 	orderedDB := db.Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc})
 	if sortColumn != "id" {
@@ -85,10 +92,12 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	}
 
 	return &OperationLogPageResp{
-		Items:    items,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
+		Items:        items,
+		Total:        total,
+		SuccessCount: successCount,
+		FailedCount:  total - successCount,
+		Page:         page,
+		PageSize:     pageSize,
 	}, nil
 }
 
@@ -389,6 +398,10 @@ func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationL
 	if query == nil {
 		return db
 	}
+	if strings.TrimSpace(query.Keyword) != "" {
+		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+		db = db.Where("title LIKE ? OR oper_name LIKE ? OR request_id LIKE ?", keyword, keyword, keyword)
+	}
 	if strings.TrimSpace(query.Title) != "" {
 		db = db.Where("title LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Title))+"%")
 	}
@@ -413,7 +426,28 @@ func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationL
 	if strings.TrimSpace(query.FailureCategory) != "" {
 		db = db.Where("failure_category = ?", strings.TrimSpace(query.FailureCategory))
 	}
+	if start, ok := parseOperationLogTime(query.StartedAt); ok {
+		db = db.Where("oper_time >= ?", start)
+	}
+	if end, ok := parseOperationLogTime(query.EndedAt); ok {
+		db = db.Where("oper_time <= ?", end)
+	}
 	return db
+}
+
+// parseOperationLogTime accepts the same formats the login-log list filter does,
+// so both audit toolbars can share one frontend time-range component.
+func parseOperationLogTime(value string) (time.Time, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02 15:04"} {
+		if parsed, err := time.ParseInLocation(layout, value, time.Local); err == nil {
+			return parsed, true
+		}
+	}
+	return time.Time{}, false
 }
 
 func operationLogToResp(row middleware.SystemLogOper) OperationLogResp {

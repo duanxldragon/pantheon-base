@@ -82,7 +82,6 @@ type Runtime struct {
 	settingsCache                map[string]int
 	loginLogCleanupRetentionDays []int
 	sessionCleanupRetentionDays  []int
-	lastCleanupAt                map[string]time.Time
 }
 
 // NewRuntime constructs the root auth service and its sub-services.
@@ -90,7 +89,6 @@ func NewRuntime(db *gorm.DB) *Runtime {
 	s := &Runtime{
 		db:            db,
 		settingsCache: make(map[string]int),
-		lastCleanupAt: make(map[string]time.Time),
 	}
 
 	// Build sub-services, wiring them back through interfaces on Runtime.
@@ -630,6 +628,14 @@ func (s *Runtime) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 
 func (s *Runtime) AcknowledgeSecurityEvent(eventID, actorID uint64, actorUsername, note string) error {
 	return s.securitySvc.AcknowledgeSecurityEvent(eventID, actorID, actorUsername, note)
+}
+
+func (s *Runtime) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint64, actorUsername, note string) (int64, error) {
+	return s.securitySvc.BatchAcknowledgeSecurityEvents(eventIDs, actorID, actorUsername, note)
+}
+
+func (s *Runtime) CleanupSecurityEvents(retentionDays int, startedAt, endedAt string) (int64, error) {
+	return s.securitySvc.CleanupSecurityEvents(retentionDays, startedAt, endedAt)
 }
 
 // ─────────────────────────────────────────────────────────────

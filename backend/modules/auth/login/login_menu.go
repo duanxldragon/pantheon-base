@@ -77,6 +77,7 @@ func authMenuSeeds() []menuSeed {
 		{Key: "session-delete", ParentKey: "session", TitleKey: "system.permission.session.delete", Perms: "system:session:delete", Type: "F", Sort: 1},
 		{Key: "session-clear", ParentKey: "session", TitleKey: "system.permission.session.clear", Perms: "system:session:clear", Type: "F", Sort: 2},
 		{Key: "security-event-acknowledge", ParentKey: "security-event", TitleKey: "system.permission.security_event.acknowledge", Perms: "system:security-event:acknowledge", Type: "F", Sort: 1},
+		{Key: "security-event-clear", ParentKey: "security-event", TitleKey: "system.permission.security_event.clear", Perms: "system:security-event:clear", Type: "F", Sort: 2},
 	}
 }
 

@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Form,
-  Grid,
   Input,
   InputNumber,
   Popconfirm,
@@ -20,7 +19,6 @@ import {
   IconEdit,
   IconPlus,
   IconRefresh,
-  IconSearch,
 } from '@arco-design/web-react/icon';
 import type {
   ColumnProps,
@@ -42,7 +40,7 @@ import {
   AppModal,
   AppTable,
   buildStandardPagination,
-  FilterPanel,
+  SearchToolbar,
   FormSection,
   ImportCsvButton,
   ListHeaderActions,
@@ -78,8 +76,6 @@ import {
 } from './api';
 import '../components/shared/list-page.css';
 
-const Row = Grid.Row;
-const Col = Grid.Col;
 const FormItem = Form.Item;
 const { Text } = Typography;
 
@@ -153,7 +149,6 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
   const [usageLoading, setUsageLoading] = useState(false);
   const [usageAnalysis, setUsageAnalysis] = useState<DictUsageAnalysisResp | null>(null);
   const [itemForm] = Form.useForm<DictItemPayload>();
-  const [itemQueryForm] = Form.useForm<Omit<DictItemQuery, 'dictCode'>>();
 
   const invalidateCaches = useCallback((dictCode?: string) => {
     const targets: Array<{ path: string; resourceKeys?: string[] }> = [
@@ -223,18 +218,16 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
     [t, typeRows],
   );
 
-  const handleItemSearch = () => {
-    const values = itemQueryForm.getFieldsValue();
+  const handleItemSearch = (values: Partial<Omit<DictItemQuery, 'dictCode'>>) => {
     setSelectedItemRowKeys([]);
     setItemQuery({
-      ...emptyItemQuery,
+      ...itemQuery,
       ...values,
       page: 1,
     });
   };
 
   const handleItemReset = () => {
-    itemQueryForm.setFieldsValue(emptyItemQuery);
     setSelectedItemRowKeys([]);
     setItemQuery(emptyItemQuery);
   };
@@ -608,57 +601,35 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
           </Card>
         ) : null}
 
-        <FilterPanel>
-          <Form form={itemQueryForm} layout="vertical" onSubmit={() => handleItemSearch()}>
-            <Row gutter={16}>
-              <Col xs={24} lg={8}>
-                <FormItem label={t('system.dict.type')}>
-                  <Select
-                    allowClear={false}
-                    placeholder={t('system.dict.type')}
-                    value={selectedType?.id}
-                    options={selectedTypeOptions}
-                    onChange={handleSelectedTypeChange}
-                  />
-                </FormItem>
-              </Col>
-              <Col xs={24} lg={6}>
-                <FormItem label={t('system.dict.dictCode')}>
-                  <Input value={selectedType?.dictCode || ''} readOnly />
-                </FormItem>
-              </Col>
-              <Col xs={24} lg={6}>
-                <FormItem label={t('system.dict.status')} field="status">
-                  <Select
-                    allowClear
-                    options={[
-                      { label: t('system.user.status.enabled'), value: 1 },
-                      { label: t('system.user.status.disabled'), value: 2 },
-                    ]}
-                  />
-                </FormItem>
-              </Col>
-              <Col xs={24} lg={4}>
-                <FormItem label={t('common.search')} field="keyword">
-                  <Input
-                    placeholder={t('system.dict.itemLabelKey')}
-                    onPressEnter={() => itemQueryForm.submit()}
-                  />
-                </FormItem>
-              </Col>
-              <Col xs={24} lg={6}>
-                <FormItem className="filter-panel__action-item">
-                  <Space>
-                    <Button type="primary" htmlType="submit" icon={<IconSearch />}>
-                      {t('common.search')}
-                    </Button>
-                    <Button onClick={handleItemReset}>{t('common.reset')}</Button>
-                  </Space>
-                </FormItem>
-              </Col>
-            </Row>
-          </Form>
-        </FilterPanel>
+        <SearchToolbar
+          keyword={itemQuery.keyword ?? ''}
+          keywordPlaceholder={t('system.dict.item.search.placeholder')}
+          onKeywordChange={(keyword) => handleItemSearch({ keyword })}
+          inlineFilters={
+            <>
+              <Select
+                allowClear={false}
+                showSearch
+                placeholder={t('system.dict.type')}
+                value={selectedType?.id}
+                options={selectedTypeOptions}
+                onChange={handleSelectedTypeChange}
+              />
+              <Select
+                allowClear
+                placeholder={t('system.dict.status')}
+                value={itemQuery.status}
+                onChange={(value) => handleItemSearch({ status: value })}
+                options={[
+                  { label: t('system.user.status.enabled'), value: 1 },
+                  { label: t('system.user.status.disabled'), value: 2 },
+                ]}
+              />
+            </>
+          }
+          hasActiveFilters={Boolean(itemQuery.keyword || itemQuery.status !== undefined)}
+          onClearAll={handleItemReset}
+        />
 
         <TableBatchActionBar
           selectedCount={selectedItemRowKeys.length}

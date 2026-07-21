@@ -1446,6 +1446,10 @@ const BaseLayout: React.FC = () => {
               <Dropdown
                 trigger="click"
                 position="br"
+                // autoFitPosition keeps the 336px panel inside narrow viewports:
+                // with the widened search trigger the bell sits left of center on
+                // 390px screens and a hard "br" alignment overflows past x=0.
+                triggerProps={{ autoFitPosition: true }}
                 droplist={
                   <div className="app-shell__notice-panel">
                     <div className="app-shell__notice-header">
@@ -1502,7 +1506,12 @@ const BaseLayout: React.FC = () => {
                 </Tooltip>
               </Dropdown>
             ) : null}
-            <Dropdown trigger="click" position="br" droplist={preferencePanel}>
+            <Dropdown
+              trigger="click"
+              position="br"
+              triggerProps={{ autoFitPosition: true }}
+              droplist={preferencePanel}
+            >
               <Tooltip
                 content={t('app.preference.tooltip', {
                   theme: t(activeTheme.labelKey),

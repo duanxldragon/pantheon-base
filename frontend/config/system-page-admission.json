@@ -156,6 +156,16 @@
     "hero": "forbidden"
   },
   {
+    "path": "/system/security-event",
+    "title": "安全事件",
+    "sourceFile": "src/modules/auth/security/components/SecurityEventList.tsx",
+    "narrative": "audit-console",
+    "governanceDrawer": "allowed",
+    "governanceButtonText": "治理摘要",
+    "governanceDrawerTitle": "治理摘要",
+    "hero": "forbidden"
+  },
+  {
     "path": "/system/modules",
     "title": "模块注册表",
     "sourceFile": "src/modules/lowcode/dynamicmodule/ModuleManager.tsx",

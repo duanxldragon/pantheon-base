@@ -23,6 +23,7 @@ node scripts/harness/check-doc-frontmatter.mjs --root . --strict
 node scripts/harness/check-doc-links.mjs --root . --strict
 node scripts/harness/check-doc-inventory.mjs --root . --strict
 node scripts/harness/check-sync-drift.mjs --root . --strict
+node scripts/harness/check-encoding.mjs --root . --strict
 ```
 
 ## 共享工具
@@ -36,5 +37,6 @@ node scripts/harness/check-sync-drift.mjs --root . --strict
 - `check-backend-dto-contract.mjs`
 - `check-backend-response-contract.mjs`
 - `check-inheritance-contract.mjs`
+- `check-structure-contract.mjs`（目录放置 + 命名门禁，契约源 REPOSITORY_LAYOUT.md；与 check-boundaries 的 import 边界互补）
 - `check-permission-contract.mjs`
 - `triage-base-drift.mjs`

@@ -690,6 +690,16 @@ const DashboardPage: React.FC = () => {
                     <div
                       key={item.key}
                       className={`dashboard-domain-card dashboard-domain-card--${item.key}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${item.title} · ${t('dashboard.openModule')}`}
+                      onClick={() => navigate(item.path)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(item.path);
+                        }
+                      }}
                     >
                       <span className="dashboard-domain-card__summary" title={item.summary}>
                         {item.compactSummary}
@@ -698,14 +708,9 @@ const DashboardPage: React.FC = () => {
                         <span className="dashboard-domain-card__title">{item.title}</span>
                         <span className="dashboard-domain-card__desc">{item.description}</span>
                       </div>
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<IconArrowRight />}
-                        aria-label={t('dashboard.openModule')}
-                        title={t('dashboard.openModule')}
-                        onClick={() => navigate(item.path)}
-                      />
+                      <span className="dashboard-domain-card__arrow" aria-hidden="true">
+                        <IconArrowRight />
+                      </span>
                     </div>
                   ))}
                 </div>

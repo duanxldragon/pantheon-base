@@ -38,9 +38,25 @@ function saveBlob(blob: Blob, filename: string) {
   globalThis.URL.revokeObjectURL(url);
 }
 
+// 与后端 impexp.sanitizeCSVCell 对齐：以 = + - @ 或制表符/回车开头的非数值
+// 单元格在 Excel 中会被当作公式执行（日志里的用户名等字段可被攻击者写入），
+// 统一前置单引号中和；合法数值（-5、+3.14）保持原样。
+function neutralizeCsvFormula(value: string) {
+  if (!value) {
+    return value;
+  }
+  if (!/^[=+\-@\t\r]/.test(value)) {
+    return value;
+  }
+  if (!Number.isNaN(Number(value))) {
+    return value;
+  }
+  return `'${value}`;
+}
+
 export function downloadCsvFile(filename: string, headers: string[], rows: string[][]) {
   const escaped = (value: string) => {
-    const normalized = String(value ?? '');
+    const normalized = neutralizeCsvFormula(String(value ?? ''));
     if (/[",\r\n]/.test(normalized)) {
       return `"${normalized.replace(/"/g, '""')}"`;
     }
