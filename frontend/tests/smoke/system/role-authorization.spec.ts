@@ -90,8 +90,10 @@ test('built-in admin role stays localized in role management without mutating st
 
   await page.goto('/system/role', { waitUntil: 'networkidle' });
   await expect(page.getByText('角色管理', { exact: false }).filter({ visible: true }).first()).toBeVisible();
-  await page.getByRole('textbox', { name: '角色标识' }).fill('admin');
-  await page.getByRole('button', { name: '搜索' }).click();
+  // SearchToolbar：单一关键词框即时查询，旧的“角色标识 + 搜索按钮”表单已移除。
+  const roleKeyword = page.locator('.search-toolbar input').first();
+  await roleKeyword.fill('admin');
+  await roleKeyword.press('Enter');
 
   const roleRow = page.getByRole('row').filter({ hasText: '系统管理员' }).last();
   await expect(roleRow).toBeVisible();
@@ -136,15 +138,19 @@ test('built-in admin role stays localized in user management surfaces', async ({
   await page.goto('/system/user', { waitUntil: 'networkidle' });
   await expect(page.getByText('用户管理', { exact: false }).filter({ visible: true }).first()).toBeVisible();
 
-  await page.getByRole('textbox', { name: '用户名' }).fill('admin');
+  // SearchToolbar：关键词即时查询（keyword=），旧的“用户名 + 搜索按钮”表单已移除。
+  const userKeyword = page.locator('.search-toolbar input').first();
   await Promise.all([
     page.waitForResponse(
       (response) =>
         response.url().includes('/system/user/list') &&
-        decodeURIComponent(response.url()).includes('username=admin') &&
+        decodeURIComponent(response.url()).includes('keyword=admin') &&
         response.request().method() === 'GET',
     ),
-    page.getByRole('button', { name: '搜索' }).click(),
+    (async () => {
+      await userKeyword.fill('admin');
+      await userKeyword.press('Enter');
+    })(),
   ]);
 
   const adminRow = page.getByRole('row', { name: /admin/ }).last();
