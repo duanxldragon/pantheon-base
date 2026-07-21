@@ -52,5 +52,14 @@
       "docs/DEPLOYMENT_GUIDE.md",
       "CHANGELOG.md"
     ]
+  },
+  "linkage": {
+    "taskId": "2026-07-21-v090-module-rename",
+    "taskPacket": ".harness/tasks/2026-07-21-v090-module-rename/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-21-v090-module-rename/",
+    "reviewFile": ".harness/evidence/2026-07-21-v090-module-rename/review.md",
+    "summaryFile": ".harness/evidence/2026-07-21-v090-module-rename/summary.md",
+    "changeRef": "none",
+    "planRefs": []
   }
 }
