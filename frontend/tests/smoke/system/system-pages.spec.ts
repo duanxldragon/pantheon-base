@@ -2228,8 +2228,10 @@ test('operation log smoke: failed reason and detail summary are visible', async 
 
   await page.goto('/system/operation-log', { waitUntil: 'networkidle' });
   // SearchToolbar：关键词 + 行内下拉即时触发；低频筛选在“筛选”弹层内。
+  // keyword 按存储值匹配（title 列存 i18n key、oper_name、request_id），
+  // 所以这里用操作人 admin 覆盖关键词交互，行定位仍用渲染后的中文标题。
   const auditToolbar = page.locator('.search-toolbar');
-  await auditToolbar.getByPlaceholder(/搜索/).fill('上传文件');
+  await auditToolbar.getByPlaceholder(/搜索/).fill('admin');
   await auditToolbar.getByPlaceholder(/搜索/).press('Enter');
   await auditToolbar.locator('.arco-select-view').first().click();
   await page.locator('.arco-select-option').filter({ hasText: '失败' }).first().click();
@@ -3789,15 +3791,16 @@ test('session governance smoke: revocation uses the shared table batch bar', asy
   await expect(summaryBar).toBeVisible();
   await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
 
-  // 批量下线按钮：迁移到通用 TableBatchActionBar（无 --governance 修饰）
+  // 批量下线 + 手动清理共用 GovernanceCleanupBar（--governance 修饰；
+  // 2026-07-20 维护者决策恢复受控手动清理入口，自动保留策略仍为主）
   const batchBar = page.locator('.page-panel.system-list__table-card .table-batch-action-bar').first();
   await expect(batchBar).toBeVisible();
-  await expect(batchBar).not.toHaveClass(/table-batch-action-bar--governance/);
+  await expect(batchBar).toHaveClass(/table-batch-action-bar--governance/);
   const revokeSelectedButton = batchBar.getByRole('button', { name: '下线所选' });
   await expect(revokeSelectedButton).toBeDisabled();
 
-  // 历史清理按钮已在前端移除（保留期清理由后端按策略自动执行）
-  await expect(page.getByRole('button', { name: '清理历史会话' })).toHaveCount(0);
+  // 手动清理入口存在且受权限保护（admin 会话可见）
+  await expect(batchBar.getByRole('button', { name: '清理历史会话', exact: true })).toBeVisible();
 
   // 选中一行后，批量下线按钮启用
   await page.locator('.app-table tbody .arco-checkbox').nth(1).click({ force: true });

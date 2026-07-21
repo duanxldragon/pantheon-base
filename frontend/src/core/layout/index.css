@@ -1858,6 +1858,13 @@
     padding: 12px 16px 10px;
   }
 
+  /* 窄屏下搜索触发器让位：280px 的桌面 min-width 会把右侧按钮组挤出
+   * 视口，通知/偏好弹层随触发按钮一起越界（x < 0）。 */
+  .app-shell__search-trigger {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .app-shell__notice-panel {
     width: min(336px, calc(100vw - 48px));
     margin-top: 2px;

@@ -56,28 +56,31 @@ test.describe('enter submit smoke', () => {
   });
 
   test('list filters submit with Enter key on auth pages', async ({ page }) => {
+    // Auth list pages migrated to the shared SearchToolbar: one keyword box,
+    // Enter (or debounce) fires the query with `keyword=`; the per-field
+    // 用户名 FilterPanel inputs no longer exist.
     await signInAsAdmin(page);
 
     await page.goto('/system/login-log', { waitUntil: 'networkidle' });
-    const loginLogUsername = formItem(page, '用户名').locator('input').first();
+    const loginLogKeyword = page.locator('.search-toolbar input').first();
     const loginLogRequest = page.waitForRequest((request) => (
       request.method() === 'GET'
       && request.url().includes('/api/v1/system/login-log/list')
-      && request.url().includes('username=admin')
+      && request.url().includes('keyword=admin')
     ));
-    await loginLogUsername.fill('admin');
-    await loginLogUsername.press('Enter');
+    await loginLogKeyword.fill('admin');
+    await loginLogKeyword.press('Enter');
     await loginLogRequest;
 
     await page.goto('/system/session', { waitUntil: 'networkidle' });
-    const sessionUsername = formItem(page, '用户名').locator('input').first();
+    const sessionKeyword = page.locator('.search-toolbar input').first();
     const sessionRequest = page.waitForRequest((request) => (
       request.method() === 'GET'
       && request.url().includes('/api/v1/system/session/list')
-      && request.url().includes('username=admin')
+      && request.url().includes('keyword=admin')
     ));
-    await sessionUsername.fill('admin');
-    await sessionUsername.press('Enter');
+    await sessionKeyword.fill('admin');
+    await sessionKeyword.press('Enter');
     await sessionRequest;
   });
 
