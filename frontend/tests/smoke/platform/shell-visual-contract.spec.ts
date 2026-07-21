@@ -1529,10 +1529,12 @@ test('login-log page keeps the shared governance + batch bar rhythm', async ({ p
   await expect(summaryBar).toBeVisible();
   await expect(summaryBar.locator('.governance-summary-bar__title-row')).toBeVisible();
 
-  // 2) 批量条：使用通用 TableBatchActionBar（无 --governance 修饰），左 meta / 右 actions 视觉对齐
+  // 2) 批量条：GovernanceCleanupBar（--governance 修饰，2026-07-20 恢复手动清理入口），
+  //    左 meta（清理+导出）/ 右 actions（选择+批量删除）视觉对齐
   const batchBar = page.locator('.auth-login-log-page__table-card .table-batch-action-bar').first();
   await expect(batchBar).toBeVisible();
-  await expect(batchBar).not.toHaveClass(/table-batch-action-bar--governance/);
+  await expect(batchBar).toHaveClass(/table-batch-action-bar--governance/);
+  await expect(batchBar.getByRole('button', { name: '清理日志', exact: true })).toBeVisible();
 
   const contract = await batchBar.evaluate((bar) => {
     const main = bar.querySelector<HTMLElement>('.table-batch-action-bar__main');

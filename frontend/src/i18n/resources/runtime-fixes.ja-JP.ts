@@ -60,7 +60,8 @@ const jaJPRuntimeFixes = {
   'auth.session.touch.error': 'セッションアクティビティの更新に失敗しました',
   'auth.session.touch.title': 'セッションアクティビティを更新',
   'common.comingSoon': '近日公開',
-  'common.exportCurrentPageSelectionOnly': '現在のページで選択したデータのみをエクスポート',
+  'common.exportCurrentPageSelectionOnly':
+    '選択に他ページの行が含まれています。該当ページに戻ってからエクスポートしてください。',
   'common.importSuccess': 'インポートに成功しました',
   'common.module': 'モジュール',
   'common.required': '必須',

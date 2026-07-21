@@ -61,7 +61,8 @@ const enUSRuntimeFixes = {
   'auth.session.touch.error': 'Failed to update session activity',
   'auth.session.touch.title': 'Update Session Activity',
   'common.comingSoon': 'Coming soon',
-  'common.exportCurrentPageSelectionOnly': 'Export selected data on current page only',
+  'common.exportCurrentPageSelectionOnly':
+    'Selection includes rows from other pages; switch to that page before exporting.',
   'common.importSuccess': 'Import successful',
   'common.module': 'Module',
   'common.required': 'Required',

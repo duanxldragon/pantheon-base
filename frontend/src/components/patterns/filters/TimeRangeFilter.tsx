@@ -8,6 +8,10 @@ import './time-range-filter.css';
 const RangePicker = DatePicker.RangePicker;
 
 export const TIME_RANGE_FILTER_FORMAT = 'YYYY-MM-DD HH:mm';
+// Query payload keeps seconds so `endOf('minute')` really includes the whole
+// minute — the display format above would truncate :59 back to :00 and the
+// backend's inclusive <= compare would drop the freshest events.
+const TIME_RANGE_PAYLOAD_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 export interface TimeRangeFilterValue {
   startedAt?: string;
@@ -105,8 +109,8 @@ const TimeRangeFilter: React.FC<TimeRangeFilterProps> = ({ value, onChange }) =>
     (start: dayjs.Dayjs, end: dayjs.Dayjs, labelKey: string | null) => {
       setPresetLabelKey(labelKey);
       onChange({
-        startedAt: start.format(TIME_RANGE_FILTER_FORMAT),
-        endedAt: end.format(TIME_RANGE_FILTER_FORMAT),
+        startedAt: start.format(TIME_RANGE_PAYLOAD_FORMAT),
+        endedAt: end.format(TIME_RANGE_PAYLOAD_FORMAT),
       });
     },
     [onChange],

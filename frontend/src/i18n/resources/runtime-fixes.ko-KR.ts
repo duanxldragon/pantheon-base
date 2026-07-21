@@ -60,7 +60,8 @@ const koKRRuntimeFixes = {
   'auth.session.touch.error': '세션 활동을 업데이트하지 못했습니다',
   'auth.session.touch.title': '세션 활동 업데이트',
   'common.comingSoon': '곧 제공 예정',
-  'common.exportCurrentPageSelectionOnly': '현재 페이지에서 선택한 데이터만 내보내기',
+  'common.exportCurrentPageSelectionOnly':
+    '선택 항목에 다른 페이지의 행이 포함되어 있습니다. 해당 페이지로 이동한 뒤 내보내세요.',
   'common.importSuccess': '가져오기에 성공했습니다',
   'common.module': '모듈',
   'common.required': '필수',

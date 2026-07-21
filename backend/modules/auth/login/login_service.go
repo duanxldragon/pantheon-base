@@ -308,14 +308,9 @@ func (s *LoginService) listLoginLogsForExport(query *LoginLogQuery) ([]SystemLog
 	s.ensureAutomaticLoginLogRetention()
 
 	var logs []SystemLogLogin
-	db := s.db.Model(&SystemLogLogin{})
-	if query != nil && strings.TrimSpace(query.Username) != "" {
-		db = db.Where(usernameLikeWhereClause, "%"+strings.TrimSpace(query.Username)+"%")
-	}
-	db = applyLoginLogKeyword(db, query)
-	if query != nil && query.Status != nil && common.IsLoginStatus(*query.Status) {
-		db = db.Where("status = ?", *query.Status)
-	}
+	// Reuse the exact list-scope filters (username/keyword/status AND the
+	// time window) so the CSV always matches the filtered view being exported.
+	db := s.scopedLoginLogQuery(query, "")
 	return logs, db.Order(loginTimeDescOrderClause).Limit(maxLoginLogExportRows).Find(&logs).Error
 }
 

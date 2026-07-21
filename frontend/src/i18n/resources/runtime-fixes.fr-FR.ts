@@ -67,7 +67,7 @@ const frFRRuntimeFixes = {
   'auth.session.touch.title': 'Mettre à jour l’activité de la session',
   'common.comingSoon': 'Bientôt disponible',
   'common.exportCurrentPageSelectionOnly':
-    'Exporter uniquement les données sélectionnées sur la page courante',
+    'La sélection contient des lignes d’autres pages ; revenez à la page concernée avant d’exporter.',
   'common.importSuccess': 'Import réussi',
   'common.module': 'Module fonctionnel',
   'common.required': 'Requis',

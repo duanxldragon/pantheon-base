@@ -59,7 +59,7 @@ const zhCNRuntimeFixes = {
   'auth.session.touch.error': '更新会话活跃时间失败',
   'auth.session.touch.title': '更新会话活跃时间',
   'common.comingSoon': '敬请期待',
-  'common.exportCurrentPageSelectionOnly': '仅导出当前页所选数据',
+  'common.exportCurrentPageSelectionOnly': '已选记录包含跨页项，请切回对应页面后再导出。',
   'common.importSuccess': '导入成功',
   'common.module': '模块',
   'common.required': '必填',
