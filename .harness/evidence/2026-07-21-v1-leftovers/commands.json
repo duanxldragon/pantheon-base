@@ -1,0 +1,58 @@
+{
+  "taskId": "2026-07-21-v1-leftovers",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-code",
+    "adapter": "claude-direct under maintainer authorization (V1.0 release exemption extended)"
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "After batch caps + verification-fragment change."
+    },
+    {
+      "command": "cd backend && go test ./modules/auth/... ./modules/system/audit/ ./modules/lowcode/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "All ok; includes dynamicmodule package covering the verification change."
+    },
+    {
+      "command": "cd frontend && npx tsc --noEmit",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 errors after SecurityEventList timing fix."
+    },
+    {
+      "command": "cd frontend && npx eslint <changed files>",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 findings."
+    },
+    {
+      "command": "cd frontend && npm run test:smoke:business:generated",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "1/1 — first green since the module-path move; root cause was assertions searching backend/modules/business/<name> while the registry imports pantheon-platform/modules/business/<name>."
+    },
+    {
+      "command": "cd frontend && npm run test:smoke:business:database-import",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "1/1 — same root cause in module-governance-host-real.spec.ts."
+    },
+    {
+      "command": "cd frontend && npx playwright test tests/smoke/system/governance/module-governance.spec.ts -g 'generator workbench entry'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "1/1 — spec synced to the i18n-ized 治理面板 label (was searching the English 'Governance' literal)."
+    },
+    {
+      "command": "node --test tests/scripts/quality-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "not-run-locally",
+      "notes": "Local permission-classifier outage blocked node --test; the single-line if: condition was verified by hand against the test regex (if:\\s*github\\.event_name == 'pull_request' [\\s\\S]* check-pr-governance) and is enforced by this PR's Fast Checks."
+    }
+  ]
+}

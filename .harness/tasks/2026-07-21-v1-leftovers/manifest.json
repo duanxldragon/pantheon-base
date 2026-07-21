@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-07-21-v1-leftovers",
+  "title": "V1.0 leftovers: generator registry assertions, batch caps, dependabot governance exemption",
+  "goal": "Close every leftover registered in the V1.0 release-readiness report: unblock the three lowcode real-flow smoke failures (stale backend/modules path assertions after the module-path move + un-i18n-synced wizard label), fix the SecurityEventList deferred query commit, cap batch id lists on the four audit batch endpoints, and remove the structural deadlock that made dependabot PRs unmergeable under Docs Governance.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "system/audit", "lowcode"],
+  "scope": {
+    "in": [
+      "sync backend_registry verification fragment and four smoke assertions to the Go import path the registry actually writes",
+      "sync generator-wizard smoke to the i18n-ized 治理面板 label",
+      "SecurityEventList commits query state synchronously like the other audit pages",
+      "cap id lists at 500 on login-log/operation-log batch delete, session batch revoke, security-event batch acknowledge",
+      "quality.yml: exempt dependabot PRs from the heavy governance-body validation (structural checks unchanged)",
+      "merge dependabot PR #188 via maintainer-authorized solo-override + rebase"
+    ],
+    "out": [
+      "any generator behavior change (assertion/verification strings only)",
+      "legacy Go Lint (errcheck/goconst) backlog in the non-required CI workflow",
+      "Security Gates scheduled-run backlog on main"
+    ]
+  },
+  "taskDoc": "Maintainer authorization 2026-07-21 (chat): 遗留的问题，我授权你去处理. Leftover list defined in .harness/evidence/2026-07-21-v1-release-readiness/{test-report,review-report}.md.",
+  "contractAnchors": [
+    "docs/harness/HARNESS_ENGINEERING_CONTRACT.md",
+    "tests/scripts/quality-workflow.test.mjs",
+    "frontend/tests/smoke/business/generated/module-governance-real.spec.ts"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-21-v1-leftovers/manifest.json",
+      ".harness/evidence/2026-07-21-v1-leftovers/commands.json",
+      ".harness/evidence/2026-07-21-v1-leftovers/summary.md",
+      ".harness/evidence/2026-07-21-v1-leftovers/review.md"
+    ],
+    "modify": [
+      ".github/workflows/quality.yml",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_summary.go",
+      "backend/modules/auth/{login/login_service,security/security_service,session/session_service}.go",
+      "backend/modules/system/audit/audit_service.go",
+      "frontend/src/modules/auth/security/components/SecurityEventList.tsx",
+      "frontend/tests/smoke/business/generated/*.spec.ts",
+      "frontend/tests/smoke/system/governance/module-governance.spec.ts"
+    ],
+    "doNotTouch": ["database/system_init.sql", "generator templates/behavior"]
+  },
+  "executionRoles": {
+    "implementerPosture": "claude-direct (maintainer authorization extends the V1.0 release exemption)",
+    "reviewerPosture": ["mechanical", "self-review"]
+  },
+  "verificationPlan": {
+    "backend": [
+      "cd backend && go build ./...",
+      "cd backend && go test ./modules/auth/... ./modules/system/audit/ ./modules/lowcode/..."
+    ],
+    "frontend": [
+      "cd frontend && npx tsc --noEmit",
+      "cd frontend && npm run test:smoke:business:generated",
+      "cd frontend && npm run test:smoke:business:database-import",
+      "cd frontend && npx playwright test tests/smoke/system/governance/module-governance.spec.ts -g 'generator workbench entry'"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-07-21-v1-leftovers",
+    "taskPacket": ".harness/tasks/2026-07-21-v1-leftovers/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-21-v1-leftovers/",
+    "reviewFile": ".harness/evidence/2026-07-21-v1-leftovers/review.md",
+    "summaryFile": ".harness/evidence/2026-07-21-v1-leftovers/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "generator real-flow smoke green (module-governance-real, database-import host-real, wizard case)",
+    "backend build/test results",
+    "workflow-test regex compatibility check for the quality.yml condition"
+  ],
+  "humanGates": [
+    "Maintainer authorization 2026-07-21 to process all registered leftovers, including applying solo-override to #188 and adjusting the dependabot governance condition"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ]
+}
