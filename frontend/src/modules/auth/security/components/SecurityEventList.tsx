@@ -103,12 +103,15 @@ const SecurityEventList: React.FC = () => {
   );
 
   const fetchData = async (nextQuery: SecurityEventQuery) => {
+    // Commit the query synchronously (same as the other audit pages): a
+    // deferred commit let a resolving response clobber in-flight keyword
+    // drafts, and a failed request left pagination on the stale filter.
+    setQuery(nextQuery);
     setLoading(true);
     setError(null);
     try {
       const result = await getAdminSecurityEventList(nextQuery);
       setData(result);
-      setQuery(nextQuery);
     } catch (requestError) {
       setError(requestError);
     } finally {

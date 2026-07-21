@@ -487,7 +487,7 @@ test.describe('module governance smoke', () => {
     await chooseOption(page, '关系表');
     await page.getByPlaceholder('来源字段，例如 host_id').fill('asset_id');
     await page.getByPlaceholder('目标字段，例如 group_id').fill('vendor_id');
-    await openFormSelect(page, 'Governance');
+    await openFormSelect(page, '治理面板');
     await chooseOption(page, '禁用');
     await expect(formItem(page, '平台工作台入口').locator('.arco-select').first()).toHaveClass(
       /arco-select-disabled/,
@@ -505,7 +505,7 @@ test.describe('module governance smoke', () => {
     await page.getByRole('button', { name: '上一步', exact: true }).click();
     await page.getByRole('button', { name: '上一步', exact: true }).click();
     await page.getByRole('button', { name: '上一步', exact: true }).click();
-    await openFormSelect(page, 'Governance');
+    await openFormSelect(page, '治理面板');
     await chooseOption(page, '启用');
     await page.getByRole('button', { name: '下一步', exact: true }).click();
     await page.getByRole('button', { name: '下一步', exact: true }).click();

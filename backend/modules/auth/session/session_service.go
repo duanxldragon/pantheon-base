@@ -250,6 +250,11 @@ func (s *Service) BatchRevokeSessions(currentSessionID string, sessionIDs []stri
 	if len(normalized) == 0 {
 		return 0, common.ErrUnauthorized
 	}
+	// Cap batch input so a single request cannot smuggle an arbitrarily
+	// large IN clause past BodySizeLimit.
+	if len(normalized) > 500 {
+		return 0, errors.New("param.invalid")
+	}
 	for _, sid := range normalized {
 		if sid == currentSessionID {
 			return 0, errors.New("auth.session.current_revoke_forbidden")

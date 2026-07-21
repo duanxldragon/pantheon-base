@@ -363,6 +363,11 @@ func (s *Service) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint
 	if len(normalized) == 0 {
 		return 0, errors.New("auth.security_event.acknowledge.ids_required")
 	}
+	// Cap batch input so a single request cannot smuggle an arbitrarily
+	// large IN clause past BodySizeLimit.
+	if len(normalized) > 500 {
+		return 0, errors.New("param.invalid")
+	}
 	result := s.db.Model(&SystemAuthSecurityEvent{}).
 		Where("id IN ? AND acknowledged_at IS NULL", normalized).
 		Updates(map[string]interface{}{

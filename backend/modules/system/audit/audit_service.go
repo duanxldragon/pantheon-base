@@ -328,6 +328,11 @@ func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 	if len(normalized) == 0 {
 		return 0, common.NewBadRequest("audit.operation_log.delete.ids_required")
 	}
+	// Cap batch input so a single request cannot smuggle an arbitrarily
+	// large IN clause past BodySizeLimit.
+	if len(normalized) > 500 {
+		return 0, common.NewBadRequest("param.invalid")
+	}
 
 	result := s.db.Where("id IN ?", normalized).Delete(&middleware.SystemLogOper{})
 	if result.Error != nil {

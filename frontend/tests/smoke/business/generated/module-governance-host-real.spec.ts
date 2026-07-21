@@ -325,7 +325,8 @@ test('cmdb host database-import flow generates a temporary module without droppi
   const frontendRegistry = path.join(generatedRepoRoot!, frontendRegistryRelativePath);
   const componentRegistry = path.join(generatedRepoRoot!, componentRegistryRelativePath);
 
-  await expect.poll(async () => readFileContains(backendRegistry, `backend/modules/business/${moduleName}`)).toBe(true);
+  // Registry imports the module by Go import path, not the directory path.
+  await expect.poll(async () => readFileContains(backendRegistry, `pantheon-platform/modules/business/${moduleName}`)).toBe(true);
   await expect.poll(async () => readFileContains(frontendRegistry, `../business/${moduleName}`)).toBe(true);
   await expect.poll(async () => readFileContains(componentRegistry, `business/${moduleName}/${frontendModelName}List`)).toBe(true);
 
@@ -388,7 +389,7 @@ test('cmdb host database-import flow generates a temporary module without droppi
   await expect.poll(async () => locateGeneratedRepo(generatedArtifactRelativePaths), {
     timeout: 30000,
   }).toBeFalsy();
-  await expect.poll(async () => readFileContains(backendRegistry, `backend/modules/business/${moduleName}`)).toBe(false);
+  await expect.poll(async () => readFileContains(backendRegistry, `pantheon-platform/modules/business/${moduleName}`)).toBe(false);
   await expect.poll(async () => readFileContains(frontendRegistry, `../business/${moduleName}`)).toBe(false);
   await expect.poll(async () => readFileContains(componentRegistry, `business/${moduleName}/${frontendModelName}List`)).toBe(false);
 
