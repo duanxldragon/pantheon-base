@@ -280,8 +280,8 @@ ${relationDTOs ? `\n${relationDTOs}` : ''}
 
 import (
 \t"errors"
-\t${hasDataScope ? `"pantheon-platform/pkg/common"` : ``}
-\t${hasDataScope ? `"pantheon-platform/pkg/database"` : ``}
+\t${hasDataScope ? `"pantheon-base/pkg/common"` : ``}
+\t${hasDataScope ? `"pantheon-base/pkg/database"` : ``}
 \t${requiresStrconv ? `"strconv"` : ``}
 \t"strings"
 \t"time"
@@ -572,7 +572,7 @@ ${relationServices ? `\n${relationServices}` : ''}
     return `package ${this.packageName}
 
 import (
-\t"pantheon-platform/pkg/common"
+\t"pantheon-base/pkg/common"
 \t"strconv"
 \t"github.com/gin-gonic/gin"
 )
@@ -709,8 +709,8 @@ ${relationHandlers ? `\n${relationHandlers}` : ''}
     return `package ${this.packageName}
 
 import (
-\t"pantheon-platform/internal/middleware"
-\t"pantheon-platform/pkg/contracts"
+\t"pantheon-base/internal/middleware"
+\t"pantheon-base/pkg/contracts"
 \t"strings"
 \t"github.com/gin-gonic/gin"
 \t"gorm.io/gorm"
