@@ -6,6 +6,17 @@ Pantheon Platform is an enterprise backoffice foundation built as a modular mono
 
 The project is not intended to be just a login shell plus CRUD scaffolding. Its goal is to provide AI-friendly, sustainably evolving platform infrastructure with clear separation between system domains and business domains.
 
+## Version
+
+| Item | Value |
+| --- | --- |
+| Product milestone | **V1.0** (released 2026-07-21) |
+| Shell baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
+| Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (Docker Compose / K8s / env matrix) |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) |
+
+V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
+
 ## Positioning
 
 - **Platform layer**: application shell, route composition, middleware, platform workbench, cross-domain aggregate views
