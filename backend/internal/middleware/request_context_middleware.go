@@ -6,8 +6,8 @@ import (
 	"time"
 	"unicode"
 
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/logging"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

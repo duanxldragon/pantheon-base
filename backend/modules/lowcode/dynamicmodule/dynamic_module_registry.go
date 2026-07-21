@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 	"path/filepath"
 	"strings"
 
-	"pantheon-platform/internal/scaffold"
+	"pantheon-base/internal/scaffold"
 )
 
 func generatedModuleRelativePath(parts ...string) (string, bool) {

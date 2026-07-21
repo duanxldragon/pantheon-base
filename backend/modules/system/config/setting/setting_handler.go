@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/impexp"
-	uploadpkg "pantheon-platform/pkg/upload"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/impexp"
+	uploadpkg "pantheon-base/pkg/upload"
 )
 
 type SettingHandler struct {

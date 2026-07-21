@@ -1,4 +1,4 @@
-module pantheon-platform
+module pantheon-base
 
 go 1.26.5
 

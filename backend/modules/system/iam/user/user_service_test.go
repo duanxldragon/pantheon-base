@@ -8,9 +8,9 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	authsession "pantheon-platform/modules/auth/session"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/testmysql"
+	authsession "pantheon-base/modules/auth/session"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/testmysql"
 )
 
 func setupUserTestDB(t *testing.T) *gorm.DB {

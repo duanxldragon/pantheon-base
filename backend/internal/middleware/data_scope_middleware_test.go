@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/testmysql"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/testmysql"
 
 	"github.com/gin-gonic/gin"
 )

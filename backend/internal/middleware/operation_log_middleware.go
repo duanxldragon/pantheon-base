@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 
 	"gorm.io/gorm"
 

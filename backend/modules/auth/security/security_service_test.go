@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/pkg/testmysql"
+	"pantheon-base/pkg/testmysql"
 
 	"golang.org/x/crypto/bcrypt"
 )

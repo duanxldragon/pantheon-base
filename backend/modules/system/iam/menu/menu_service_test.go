@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"gorm.io/gorm"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/testmysql"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/testmysql"
 )
 
 func setupMenuTestDB(t *testing.T) *gorm.DB {

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/testmysql"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/testmysql"
 )
 
 func setupPostTestDB(t *testing.T) *gorm.DB {

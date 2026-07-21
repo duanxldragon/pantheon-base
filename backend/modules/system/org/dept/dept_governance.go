@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/impexp"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/impexp"
 )
 
 // dept_governance.go - Governance functions for dept module

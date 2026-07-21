@@ -1,10 +1,10 @@
 package generator
 
 import (
-	"pantheon-platform/internal/middleware"
-	"pantheon-platform/modules/lowcode/dynamicmodule"
-	"pantheon-platform/pkg/contracts"
-	"pantheon-platform/pkg/database"
+	"pantheon-base/internal/middleware"
+	"pantheon-base/modules/lowcode/dynamicmodule"
+	"pantheon-base/pkg/contracts"
+	"pantheon-base/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

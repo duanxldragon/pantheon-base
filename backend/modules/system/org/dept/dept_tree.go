@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

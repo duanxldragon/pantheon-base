@@ -1,8 +1,8 @@
 package contracts
 
 import (
-	"pantheon-platform/internal/middleware"
-	"pantheon-platform/pkg/database"
+	"pantheon-base/internal/middleware"
+	"pantheon-base/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"

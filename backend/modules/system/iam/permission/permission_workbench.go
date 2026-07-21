@@ -1,12 +1,12 @@
 package iam
 
 import (
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 	"sort"
 	"strings"
 	"time"
 
-	"pantheon-platform/pkg/database"
+	"pantheon-base/pkg/database"
 
 	"gorm.io/gorm/clause"
 )

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	uploadpkg "pantheon-platform/pkg/upload"
+	uploadpkg "pantheon-base/pkg/upload"
 )
 
 type stubUploadConfigReader struct {
