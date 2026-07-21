@@ -11,11 +11,6 @@ import {
 } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
 
-
-function formItem(page: Page, label: string) {
-  return page.locator('.arco-form-item').filter({ has: page.getByText(label, { exact: true }) }).first();
-}
-
 async function waitForDialog(page: Page, title: string) {
   const dialog = page.getByRole('dialog').filter({ has: page.getByText(title, { exact: true }) });
   await expect(dialog).toBeVisible();
