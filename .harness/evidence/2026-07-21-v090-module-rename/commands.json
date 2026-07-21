@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-07-21-v090-module-rename",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "workbuddy",
+    "adapter": "software-team (lead Qi / architect Gao / engineer Kou / QA Yan) under maintainer authorization"
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "After go.mod module rename + 142 files / 339 imports → pantheon-base."
+    },
+    {
+      "command": "cd backend && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No findings after rename."
+    },
+    {
+      "command": "cd backend && gofmt -l .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No output; formatting clean."
+    },
+    {
+      "command": "cd backend && go test -short ./pkg/... ./internal/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "All ok. -race unavailable on Windows (cgo off); CI runs -race on Linux."
+    },
+    {
+      "command": "cd frontend && npx tsc --noEmit",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 errors after generator template + smoke assertion sync."
+    },
+    {
+      "command": "grep -rIn '\"pantheon-platform/' backend/ frontend/src/ frontend/scripts/ frontend/tests/ scripts/harness/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 residual imports outside allowlist."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "exit 0 from repo root and workspace root after repoRoot cwd-location fix."
+    },
+    {
+      "command": "cd backend && golangci-lint run ./modules/business/... (with injected bad import)",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "depguard POC: injected `_ \"pantheon-base/modules/system/iam/user\"` correctly blocked; reverted after. files glob **/modules/business/** works, modules/business/**/*.go does not."
+    },
+    {
+      "command": "cd backend && go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out && node ../scripts/harness/check-coverage.mjs coverage.txt --threshold 11",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Measured total 12.2% statements; threshold = 12.2% × 0.9 ≈ 11%; exit 0."
+    }
+  ]
+}
