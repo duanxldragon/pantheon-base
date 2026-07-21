@@ -173,7 +173,9 @@ test('real module governance flow can generate register and purge a temporary bu
 
   await expect.poll(async () => {
     const content = await fs.readFile(backendRegistry, 'utf8');
-    return content.includes(`backend/modules/business/${moduleName}`);
+    // Registry imports the module by Go import path (module path moved off
+    // the old backend/modules/... directory-style string long ago).
+    return content.includes(`pantheon-platform/modules/business/${moduleName}`);
   }).toBe(true);
   await expect.poll(async () => {
     const content = await fs.readFile(frontendRegistry, 'utf8');
@@ -213,7 +215,7 @@ test('real module governance flow can generate register and purge a temporary bu
 
   await expect.poll(async () => {
     const content = await fs.readFile(backendRegistry, 'utf8');
-    return content.includes(`backend/modules/business/${moduleName}`);
+    return content.includes(`pantheon-platform/modules/business/${moduleName}`);
   }).toBe(false);
   await expect.poll(async () => {
     const content = await fs.readFile(frontendRegistry, 'utf8');

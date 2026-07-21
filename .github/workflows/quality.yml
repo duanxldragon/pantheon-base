@@ -132,8 +132,12 @@ jobs:
       - name: Validate PR governance body
         # Heavy ceremony (full template + harness artifact linkage) is enforced for
         # agent PRs but skipped when the maintainer labels the PR `solo-override`.
-        # Cheap structural checks (frontmatter, task-packet, PR template) still run above.
-        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'solo-override')
+        # Dependabot PRs are exempt too: dependabot rewrites its PR body on every
+        # rebase/recreate (wiping any appended template), and pushes from other
+        # actors to branches that touch workflow files do not trigger CI — so the
+        # template requirement is structurally unsatisfiable for them (V1.0
+        # release round, 2026-07-21). Cheap structural checks still run above.
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'solo-override') && github.event.pull_request.user.login != 'dependabot[bot]'
         run: node scripts/check-pr-governance.mjs --event "$GITHUB_EVENT_PATH"
 
       - name: Check failure registry

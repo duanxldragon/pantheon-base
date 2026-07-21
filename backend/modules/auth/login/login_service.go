@@ -288,6 +288,10 @@ func (s *LoginService) CleanupLoginLogs(retentionDays int, startedAt, endedAt st
 	return result.RowsAffected, result.Error
 }
 
+// maxBatchIDs caps id-list inputs on batch endpoints so a single request
+// cannot smuggle an arbitrarily large IN clause past BodySizeLimit.
+const maxBatchIDs = 500
+
 // BatchDeleteLoginLogs deletes login logs by IDs.
 func (s *LoginService) BatchDeleteLoginLogs(ids []uint64) (int64, error) {
 	if s.db == nil {
@@ -296,6 +300,9 @@ func (s *LoginService) BatchDeleteLoginLogs(ids []uint64) (int64, error) {
 	normalized := normalizeUint64IDs(ids)
 	if len(normalized) == 0 {
 		return 0, errors.New(errLoginLogDeleteIdsRequired)
+	}
+	if len(normalized) > maxBatchIDs {
+		return 0, errors.New("param.invalid")
 	}
 	result := s.db.Where("id IN ?", normalized).Delete(&SystemLogLogin{})
 	return result.RowsAffected, result.Error
