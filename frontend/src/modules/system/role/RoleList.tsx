@@ -626,8 +626,16 @@ const RoleList: React.FC = () => {
               {t('system.role.governanceHint')}&nbsp;
               <a
                 style={{ cursor: 'pointer' }}
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   navigate('/system/permission');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate('/system/permission');
+                  }
                 }}
               >
                 {t('system.role.governanceHintAction')}

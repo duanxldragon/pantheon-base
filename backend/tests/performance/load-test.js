@@ -25,8 +25,8 @@ export const options = {
 // 测试数据
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const TEST_USER = {
-  username: 'test_user',
-  password: 'Test123456!',
+  username: __ENV.TEST_USERNAME || 'test_user',
+  password: __ENV.TEST_PASSWORD || '',
 };
 
 // 设置阶段
