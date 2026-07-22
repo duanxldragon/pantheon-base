@@ -161,11 +161,15 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        # --ignore-scripts blocks arbitrary lifecycle scripts (supply-chain);
+        # the one script we do need (arco react19 patch) runs explicitly below.
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
 
       - name: Run Vitest with coverage
         working-directory: frontend
-        run: npx vitest run --coverage
+        run: npm run test:unit:coverage
 
       - name: Upload frontend coverage artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae655e7c1c64a875d1fc6a0a
