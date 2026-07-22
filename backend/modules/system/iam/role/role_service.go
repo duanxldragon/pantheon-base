@@ -2,12 +2,12 @@ package iam
 
 import (
 	"fmt"
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 	"strings"
 	"time"
 
-	"pantheon-platform/pkg/database"
-	"pantheon-platform/pkg/rbacbind"
+	"pantheon-base/pkg/database"
+	"pantheon-base/pkg/rbacbind"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

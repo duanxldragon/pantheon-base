@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"pantheon-platform/pkg/capability"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/rbacbind"
+	"pantheon-base/pkg/capability"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/rbacbind"
 	"strings"
 
 	"gorm.io/gorm"

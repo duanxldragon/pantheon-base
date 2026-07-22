@@ -22,6 +22,7 @@ linters:
     - misspell      # spelling in comments
     - unconvert     # unnecessary type conversions
     - prealloc      # slice preallocation
+    - depguard      # import boundary enforcement
   disable:
     # Disable noisy/redundant linters
     - dupl          # handled by project-level check-duplication.mjs
@@ -29,6 +30,18 @@ linters:
     - cyclop        # covered by gocyclo analysis
     - testpackage   # test files live next to source
   settings:
+    depguard:
+      rules:
+        business-boundary:
+          files:
+            - "**/modules/business/**"
+          deny:
+            - pkg: pantheon-base/modules/system
+              desc: use pantheon-base/pkg/contracts instead
+            - pkg: pantheon-base/modules/auth
+              desc: use pantheon-base/pkg/contracts instead
+            - pkg: pantheon-base/modules/platform
+              desc: use pantheon-base/pkg/contracts instead
     gosec:
       severity: medium
       excludes:

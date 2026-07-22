@@ -14,11 +14,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	systemi18n "pantheon-platform/modules/system/i18n"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/testmysql"
+	systemi18n "pantheon-base/modules/system/i18n"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/testmysql"
 
-	"pantheon-platform/internal/scaffold"
+	"pantheon-base/internal/scaffold"
 )
 
 func TestRegisterGeneratedModuleBusinessOnly(t *testing.T) {
@@ -91,7 +91,7 @@ func TestRegisterGeneratedModuleWritesRegistries(t *testing.T) {
 		t.Fatalf("expected restart/build flags to be true: %+v", summary)
 	}
 
-	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), `ticket "pantheon-platform/modules/business/ticket"`)
+	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), `ticket "pantheon-base/modules/business/ticket"`)
 	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "ticket.InitTicketModule")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "modules", "generated", "business.ts"), "TicketModule")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "'business/ticket/TicketList'")
@@ -719,7 +719,7 @@ func TestSyncBuiltInModules_LeavesGeneratedSchemaPendingWithoutActivationSignal(
 	if registration.Status != ModuleStatusPendingActivation {
 		t.Fatalf("unexpected status: %d", registration.Status)
 	}
-	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "pantheon-platform/modules/business/cmdb/host")
+	assertFileContains(t, filepath.Join(workspaceRoot, "backend", "modules", "business", "generated_registry.go"), "pantheon-base/modules/business/cmdb/host")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/cmdb/host/CmdbHostList")
 	assertFileContains(t, filepath.Join(workspaceRoot, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "business/cmdb/host/CmdbHostDetail")
 }

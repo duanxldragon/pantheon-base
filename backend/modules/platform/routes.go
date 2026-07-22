@@ -1,12 +1,12 @@
 package platform
 
 import (
-	"pantheon-platform/internal/middleware"
-	"pantheon-platform/pkg/database"
+	"pantheon-base/internal/middleware"
+	"pantheon-base/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	dept "pantheon-platform/modules/system/org/dept"
+	dept "pantheon-base/modules/system/org/dept"
 )
 
 type platformDeptGovernanceTaskLoader struct {

@@ -66,7 +66,7 @@ test('checkDirty detects generated module leftovers by prefix and content marker
     writeFileSync(path.join(generatedPaths.schemaBusinessDir, 'mdqa-order.json'), '{}\n', 'utf8');
     writeFileSync(
       registryFiles.backendRegistry,
-      'import (\n\t"pantheon-platform/backend/modules/business/mdqaorder"\n)\n',
+      'import (\n\t"pantheon-base/modules/business/mdqaorder"\n)\n',
       'utf8',
     );
     writeFileSync(
@@ -111,7 +111,7 @@ test('cleanup removes generated leftovers and restores clean registry templates'
     writeFileSync(generatedSchemaPath, '{}\n', 'utf8');
     writeFileSync(
       registryFiles.backendRegistry,
-      'import (\n\t"pantheon-platform/backend/modules/business/mdqaorder"\n)\n',
+      'import (\n\t"pantheon-base/modules/business/mdqaorder"\n)\n',
       'utf8',
     );
     writeFileSync(

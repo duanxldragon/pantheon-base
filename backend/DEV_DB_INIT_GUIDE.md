@@ -85,7 +85,7 @@ go run .\backend\cmd\server\main.go
 export PANTHEON_AUTO_MIGRATE=true
 export PANTHEON_ENV=development
 export PANTHEON_DSN='root:dev_password_change_me@tcp(localhost:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
-cd /path/to/pantheon-platform/pantheon-base
+cd /path/to/pantheon-base/pantheon-base
 go run ./backend/cmd/server/main.go
 ```
 
@@ -101,7 +101,7 @@ start-dev.bat
 **Linux/Mac:**
 
 ```bash
-cd /path/to/pantheon-platform/pantheon-base/backend
+cd /path/to/pantheon-base/pantheon-base/backend
 chmod +x start-dev.sh
 ./start-dev.sh
 ```

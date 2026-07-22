@@ -1,0 +1,65 @@
+{
+  "taskId": "2026-07-21-v090-module-rename",
+  "title": "v0.9.0 freeze: Go module rename pantheon-platform→pantheon-base + three governance gates",
+  "goal": "Freeze pantheon-base v0.9.0 so pantheon-ops can inherit via foundation release. Resolve pre-release leftovers: sync the Go module path rename (pantheon-platform → pantheon-base) across go.mod, 142 .go files, the lowcode generator template, smoke assertions and cleanup/drift scripts; land the three fix-report §4 leftover gates (business/* boundary depguard + CI boundary-gate, coverage-gate, MFA production baseline doc).",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "business/*", "lowcode"],
+  "scope": {
+    "in": [
+      "backend/go.mod module declaration + 142 .go files / 339 import paths → pantheon-base",
+      "backendGenerator.ts 5 template import strings → pantheon-base",
+      "module-governance smoke assertions (4) + cleanup-generated-modules regex + triage-base-drift normalization",
+      "golangci-lint depguard business-boundary rule (files glob **/modules/business/**)",
+      "check-boundaries.mjs --repo flag + CI boundary-gate job",
+      "check-coverage.mjs + CI coverage-gate job (threshold = measured 12.2% × 0.9 = 11%)",
+      "docs/DEPLOYMENT_GUIDE.md MFA production mandatory security baseline section"
+    ],
+    "out": [
+      "any business logic/interface/permission/menu/i18n change (import path only)",
+      "VERSION file (harness shell version line, not product line)",
+      "govulncheck working-directory fix (separate PR #190)",
+      "ops-side foundation-release.lock.json bump (post-release step)"
+    ]
+  },
+  "taskDoc": "Maintainer decision 2026-07-21 (chat): freeze as pantheon-base-v0.9.0; govulncheck fix via PR; Q1=A/Q2=B/Q3=POC/Q4=measured×0.9/Q5=A/Q6=A/Q7=A. Design docs/system_design.md, handoff docs/engineering_handoff.md.",
+  "contractAnchors": [
+    "docs/system_design.md",
+    "docs/engineering_handoff.md",
+    "backend/.golangci.yml",
+    "scripts/harness/check-boundaries.mjs",
+    "scripts/harness/check-coverage.mjs"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-21-v090-module-rename/manifest.json",
+      ".harness/evidence/2026-07-21-v090-module-rename/commands.json",
+      ".harness/evidence/2026-07-21-v090-module-rename/summary.md",
+      ".harness/evidence/2026-07-21-v090-module-rename/review.md",
+      "scripts/maintenance/rename-module.sh",
+      "scripts/maintenance/verify-module-rename.sh",
+      "scripts/harness/check-coverage.mjs"
+    ],
+    "modify": [
+      "backend/go.mod",
+      "backend/**/*.go",
+      "frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "frontend/tests/smoke/business/generated/module-governance-*.spec.ts",
+      "frontend/scripts/cleanup-generated-modules.mjs",
+      "scripts/harness/triage-base-drift.mjs",
+      "backend/.golangci.yml",
+      "scripts/harness/check-boundaries.mjs",
+      ".github/workflows/ci.yml",
+      "docs/DEPLOYMENT_GUIDE.md",
+      "CHANGELOG.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-21-v090-module-rename",
+    "taskPacket": ".harness/tasks/2026-07-21-v090-module-rename/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-21-v090-module-rename/",
+    "reviewFile": ".harness/evidence/2026-07-21-v090-module-rename/review.md",
+    "summaryFile": ".harness/evidence/2026-07-21-v090-module-rename/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

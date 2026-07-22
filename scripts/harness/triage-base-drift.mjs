@@ -159,7 +159,7 @@ function normalizeModuleName(content, options) {
   const baseBackend = `${options.base}/backend`;
   const businessBackend = `${options.business}/backend`;
   return content
-    .replaceAll('pantheon-platform/backend', 'MODNAME/backend')
+    .replaceAll('pantheon-base/backend', 'MODNAME/backend')
     .replaceAll(`${options.base}/backend`, 'MODNAME/backend')
     .replaceAll(baseBackend, 'MODNAME/backend')
     .replaceAll(businessBackend, 'MODNAME/backend');

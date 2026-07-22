@@ -3,7 +3,7 @@ package business
 import (
 	"testing"
 
-	"pantheon-platform/pkg/testmysql"
+	"pantheon-base/pkg/testmysql"
 
 	"gorm.io/gorm"
 )

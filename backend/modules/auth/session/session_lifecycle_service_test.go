@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-platform/pkg/testmysql"
+	"pantheon-base/pkg/testmysql"
 )
 
 func setupLifecycleTestDB(t *testing.T) *LifecycleService {

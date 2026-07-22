@@ -189,7 +189,7 @@ export function checkDirty(paths = GENERATED_PATHS, registryFiles = REGISTRY_FIL
     dirty,
     registryFiles.backendRegistry,
     'backend generated_registry.go: has generated module imports',
-    [/mdqaorder/, /mdqaorderitem/, /"pantheon-platform\/backend\/modules\/business\//],
+    [/mdqaorder/, /mdqaorderitem/, /"pantheon-base\/modules\/business\//],
   );
   appendDirtyIfFileMatches(
     dirty,

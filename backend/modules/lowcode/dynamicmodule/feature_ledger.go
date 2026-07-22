@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"pantheon-platform/internal/scaffold"
-	"pantheon-platform/pkg/common"
+	"pantheon-base/internal/scaffold"
+	"pantheon-base/pkg/common"
 )
 
 const featureLedgerVersion = 1

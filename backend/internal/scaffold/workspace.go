@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -361,7 +361,7 @@ func writeGeneratedBackendRegistry(workspaceRoot string, scope string, refs []Ge
 		name := ref.Name
 		entries = append(entries, entry{
 			Alias:      safeIdentifier(name),
-			ImportPath: fmt.Sprintf("pantheon-platform/modules/%s/%s", scope, name),
+			ImportPath: fmt.Sprintf("pantheon-base/modules/%s/%s", scope, name),
 			InitFunc:   "Init" + toPascal(name) + "Module",
 		})
 	}

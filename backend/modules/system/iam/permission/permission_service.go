@@ -4,14 +4,14 @@ package iam
 import (
 	"fmt"
 	"log/slog"
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
-	"pantheon-platform/pkg/database"
-	"pantheon-platform/pkg/impexp"
+	"pantheon-base/pkg/database"
+	"pantheon-base/pkg/impexp"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

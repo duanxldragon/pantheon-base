@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/impexp"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/impexp"
 )
 
 type I18nHandler struct {

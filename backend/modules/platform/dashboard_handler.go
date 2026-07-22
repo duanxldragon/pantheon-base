@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 
 	"github.com/gin-gonic/gin"
 )

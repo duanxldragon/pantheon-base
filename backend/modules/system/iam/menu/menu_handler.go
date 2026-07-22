@@ -3,7 +3,7 @@ package iam
 import (
 	"strconv"
 
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 
 	"github.com/gin-gonic/gin"
 )

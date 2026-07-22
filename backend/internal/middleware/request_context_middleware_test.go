@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/logging"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"pantheon-platform/pkg/common"
-	"pantheon-platform/pkg/database"
+	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/database"
 	"strings"
 
 	"github.com/gin-gonic/gin"

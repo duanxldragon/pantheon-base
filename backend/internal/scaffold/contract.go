@@ -1,7 +1,7 @@
 package scaffold
 
 import (
-	"pantheon-platform/pkg/common"
+	"pantheon-base/pkg/common"
 	"regexp"
 	"strings"
 )
