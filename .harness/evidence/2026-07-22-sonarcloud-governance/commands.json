@@ -1,0 +1,23 @@
+[
+  {
+    "id": "open-sonarcloud-dashboard",
+    "description": "Open the SonarCloud project dashboard to read current issues",
+    "command": "open https://sonarcloud.io/dashboard?id=duanxldragon_pantheon-base",
+    "expected": "Dashboard loads with current issue list",
+    "status": "blocked-no-access"
+  },
+  {
+    "id": "export-issues-csv",
+    "description": "Export SonarCloud issues to CSV for triage archive",
+    "command": "gh api ... (no SonarCloud CLI/connector available in this environment)",
+    "expected": "CSV of issues for classification",
+    "status": "blocked-no-access"
+  },
+  {
+    "id": "scope-legacy-via-properties",
+    "description": "Add sonar-project.properties to separate legacy from new code",
+    "command": "echo 'sonar.projectKey=duanxldragon_pantheon-base' > sonar-project.properties",
+    "expected": "SonarCloud picks up scoping on next analysis",
+    "status": "deferred"
+  }
+]

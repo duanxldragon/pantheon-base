@@ -1,0 +1,42 @@
+{
+  "taskId": "2026-07-22-sonarcloud-governance",
+  "title": "SonarCloud external gate — separate governance workstream (remediation deferred)",
+  "goal": "Establish SonarCloud as its own governed workstream, decoupled from the errcheck cleanup (2026-07-22-errcheck-cleanup) and the ops lock upgrade (deferred by user). Define the triage procedure (real bug vs legacy/accepted), acceptance criteria, and the remediation plan. Actual issue remediation is DEFERRED until SonarCloud dashboard access is available or a maintenance window is scheduled. SonarCloud Code Analysis currently FAILS on PRs (e.g. #193) but is NOT a blocking ruleset check — the `solo dev merge rules` ruleset only requires the `Quality Gates` check, which is green.",
+  "primaryLayer": "ci-workflow",
+  "dependencyLayers": ["platform"],
+  "scope": {
+    "in": [
+      "harness task packet + triage runbook (this packet) — governance-only",
+      "decision: SonarCloud is a non-blocking informational gate on PRs for now; tracked separately, not bundled into other PRs",
+      "deferred: actual SonarCloud issue remediation (needs dashboard access / maintenance window)"
+    ],
+    "out": [
+      "any code change in this packet (governance-only)",
+      "errcheck historical cleanup (separate packet 2026-07-22-errcheck-cleanup)",
+      "ops lock upgrade to base-v0.9.0 (deferred, user decision)"
+    ]
+  },
+  "taskDoc": "Follow-up from v0.9.0 release leftovers. User decision 2026-07-22: handle three leftovers; SonarCloud governed separately; ops deferred. No SonarCloud connector access in this environment, so the dashboard cannot be read; this packet scopes the work and defers execution.",
+  "contractAnchors": [
+    ".github/workflows/ci.yml",
+    "sonar-project.properties (to be added at remediation time)"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-22-sonarcloud-governance/manifest.json",
+      ".harness/evidence/2026-07-22-sonarcloud-governance/summary.md",
+      ".harness/evidence/2026-07-22-sonarcloud-governance/commands.json",
+      ".harness/evidence/2026-07-22-sonarcloud-governance/review.md"
+    ],
+    "modify": []
+  },
+  "linkage": {
+    "taskId": "2026-07-22-sonarcloud-governance",
+    "taskPacket": ".harness/tasks/2026-07-22-sonarcloud-governance/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-sonarcloud-governance/",
+    "reviewFile": ".harness/evidence/2026-07-22-sonarcloud-governance/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-sonarcloud-governance/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
