@@ -437,8 +437,12 @@ jobs:
 
   smoke-sanity:
     name: Smoke Sanity
+    # Runs only after unit/contract layers pass — a failed unit test must not
+    # burn ~30 min of Playwright runner time.
     needs:
       - change-scope
+      - backend-tests
+      - frontend-contract
     if: ${{ github.event_name == 'merge_group' || needs.change-scope.outputs.governance_only != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
