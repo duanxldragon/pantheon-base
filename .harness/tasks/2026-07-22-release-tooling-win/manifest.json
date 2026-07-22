@@ -1,0 +1,42 @@
+{
+  "taskId": "2026-07-22-release-tooling-win",
+  "title": "Fix foundation-release bundle tar on Windows + gitignore releases/",
+  "goal": "Make `npm run release:foundation:cut` work on Windows. The bundle step spawned `tar` with native `D:\\...` paths, which Git Bash's tar interprets as a remote tape device ('Cannot connect to D:'). Convert OS paths to POSIX for the tar subprocess. Also gitignore `releases/` (a build artifact, like `dist/`) so `publish`'s clean-worktree check passes.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow", "tooling"],
+  "scope": {
+    "in": [
+      "scripts/foundation-release/build-release-bundle.mjs: convert archivePath/distRoot to POSIX for tar spawnSync",
+      ".gitignore: add releases/ (build artifact)"
+    ],
+    "out": [
+      "any product/runtime code change (tooling only)",
+      "release artifact content (unchanged)"
+    ]
+  },
+  "taskDoc": "Discovered 2026-07-22 while cutting base-v0.9.0 on Windows; tar step failed. Minimal POSIX-path fix in createArchive.",
+  "contractAnchors": [
+    "scripts/foundation-release/build-release-bundle.mjs"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-22-release-tooling-win/manifest.json",
+      ".harness/evidence/2026-07-22-release-tooling-win/commands.json",
+      ".harness/evidence/2026-07-22-release-tooling-win/summary.md",
+      ".harness/evidence/2026-07-22-release-tooling-win/review.md"
+    ],
+    "modify": [
+      "scripts/foundation-release/build-release-bundle.mjs",
+      ".gitignore"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-22-release-tooling-win",
+    "taskPacket": ".harness/tasks/2026-07-22-release-tooling-win/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-release-tooling-win/",
+    "reviewFile": ".harness/evidence/2026-07-22-release-tooling-win/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-release-tooling-win/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
