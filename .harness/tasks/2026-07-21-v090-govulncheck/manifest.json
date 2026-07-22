@@ -1,0 +1,41 @@
+{
+  "taskId": "2026-07-21-v090-govulncheck",
+  "title": "Fix govulncheck working-directory in security.yml",
+  "goal": "Restore the govulncheck Security Gate to a working state. security.yml ran govulncheck from the repo root, but go.mod lives under backend/, so every main push exited with 'no go.mod file' and never scanned any code. Set working-directory to backend/ and redirect output accordingly.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow"],
+  "scope": {
+    "in": [
+      ".github/workflows/security.yml govulncheck step working-directory → backend",
+      ".github/workflows/security.yml govulncheck output → ../security-reports/govulncheck.json"
+    ],
+    "out": [
+      "any application/business code change (CI configuration only)",
+      "go module rename work (separate PR #191)"
+    ]
+  },
+  "taskDoc": "Maintainer decision 2026-07-21 (chat): govulncheck fix via separate PR #190 merged before v0.9.0 tag.",
+  "contractAnchors": [
+    ".github/workflows/security.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-21-v090-govulncheck/manifest.json",
+      ".harness/evidence/2026-07-21-v090-govulncheck/commands.json",
+      ".harness/evidence/2026-07-21-v090-govulncheck/summary.md",
+      ".harness/evidence/2026-07-21-v090-govulncheck/review.md"
+    ],
+    "modify": [
+      ".github/workflows/security.yml"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-21-v090-govulncheck",
+    "taskPacket": ".harness/tasks/2026-07-21-v090-govulncheck/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-21-v090-govulncheck/",
+    "reviewFile": ".harness/evidence/2026-07-21-v090-govulncheck/review.md",
+    "summaryFile": ".harness/evidence/2026-07-21-v090-govulncheck/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

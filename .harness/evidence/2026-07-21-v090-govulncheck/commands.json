@@ -1,0 +1,16 @@
+[
+  {
+    "id": "verify-govulncheck-working-dir",
+    "description": "Confirm govulncheck can scan backend Go modules after the security.yml working-directory fix",
+    "command": "cd backend && go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...",
+    "expected": "govulncheck runs against backend Go code (no 'no go.mod file' error)",
+    "status": "verified"
+  },
+  {
+    "id": "diff-security-yml",
+    "description": "Show the security.yml change",
+    "command": "git diff .github/workflows/security.yml",
+    "expected": "working-directory changed to backend; output path to ../security-reports/govulncheck.json",
+    "status": "verified"
+  }
+]
