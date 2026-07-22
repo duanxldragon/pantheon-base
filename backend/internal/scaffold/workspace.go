@@ -220,7 +220,7 @@ func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([
 		return nil, err
 	}
 	schemaPath := schemaFile.Name()
-	defer os.Remove(schemaPath)
+	defer func() { _ = os.Remove(schemaPath) }()
 
 	schemaJSON, err := json.Marshal(schema)
 	if err != nil {
@@ -472,7 +472,7 @@ func writeTemplateFile(target string, templateSource string, data any) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	return tpl.Execute(file, data)
 }
 

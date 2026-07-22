@@ -38,7 +38,7 @@ const (
 )
 
 func (w operationLogWriter) Write(data []byte) (int, error) {
-	w.body.Write(data)
+	_, _ = w.body.Write(data)
 	return w.ResponseWriter.Write(data)
 }
 
@@ -303,7 +303,7 @@ func sanitizeJSON(raw string) string {
 		return raw
 	}
 
-	payload = maskSensitivePayload(payload).(map[string]interface{})
+	payload, _ = maskSensitivePayload(payload).(map[string]interface{})
 
 	data, err := json.Marshal(payload)
 	if err != nil {

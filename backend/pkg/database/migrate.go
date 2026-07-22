@@ -83,7 +83,7 @@ func RunMigrations(dsn string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
-	defer m.Close()
+	defer func() { _, _ = m.Close() }()
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("migration failed: %w", err)
@@ -103,7 +103,7 @@ func bootstrapExistingCurrentSchema(dsn string) error {
 	if err != nil {
 		return fmt.Errorf("open mysql connection: %w", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if err := db.Ping(); err != nil {
 		return fmt.Errorf("ping mysql connection: %w", err)
@@ -172,7 +172,7 @@ func writeMigrationVersion(db *sql.DB, version int, dirty bool) error {
 	if err != nil {
 		return fmt.Errorf("begin migration state transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if _, err := tx.Exec("CREATE TABLE IF NOT EXISTS `" + migrationsTableName + "` (version bigint not null primary key, dirty boolean not null)"); err != nil {
 		return fmt.Errorf("create schema migrations table: %w", err)
