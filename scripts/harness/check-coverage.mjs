@@ -6,9 +6,11 @@
  *
  * 用法:
  *   node scripts/harness/check-coverage.mjs <coverage.txt> --threshold <number>
+ *   node scripts/harness/check-coverage.mjs <coverage-summary.json> --format json --threshold <number>
  *
  * 参数:
  *   coverage.txt   `go tool cover -func=coverage.out` 的输出文件
+ *   --format F     输入格式：go（默认，cover -func 文本）或 json（istanbul/vitest coverage-summary.json）
  *   --threshold N  覆盖率阈值（百分比，0-100）。总覆盖率低于该值则 exit 1。
  *
  * 退出码:
@@ -37,7 +39,7 @@ Example:
 }
 
 function parseArgs(argv) {
-  const options = { file: null, threshold: null, help: false };
+  const options = { file: null, threshold: null, format: 'go', help: false };
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -47,6 +49,12 @@ function parseArgs(argv) {
         throw new Error('--threshold requires a numeric value');
       }
       options.threshold = Number(value);
+    } else if (arg === '--format') {
+      const value = argv[++i];
+      if (value !== 'go' && value !== 'json') {
+        throw new Error("--format must be 'go' or 'json'");
+      }
+      options.format = value;
     } else if (arg === '--help' || arg === '-h') {
       options.help = true;
     } else if (arg.startsWith('--')) {
@@ -84,6 +92,41 @@ function packageOf(fileRef) {
   return dir === '.' ? '(root)' : dir;
 }
 
+/** Check an istanbul/vitest coverage-summary.json ({ total: { lines: { pct }, ... } }). */
+function checkJsonSummary(content, options) {
+  let summary;
+  try {
+    summary = JSON.parse(content);
+  } catch (error) {
+    console.error(`Error: cannot parse '${options.file}' as JSON: ${error.message}`);
+    return 1;
+  }
+
+  const total = summary?.total;
+  const pct = total?.lines?.pct;
+  if (typeof pct !== 'number') {
+    console.error(`Error: no 'total.lines.pct' found in '${options.file}'. Is it a coverage-summary.json?`);
+    return 1;
+  }
+
+  console.log(`Coverage report (threshold: ${options.threshold}%)`);
+  for (const metric of ['lines', 'statements', 'functions', 'branches']) {
+    const value = total?.[metric]?.pct;
+    if (typeof value === 'number') {
+      console.log(`  ${metric}: ${value.toFixed(1)}%`);
+    }
+  }
+  console.log('');
+
+  if (pct < options.threshold) {
+    console.error(`FAIL: total line coverage ${pct.toFixed(1)}% is below threshold ${options.threshold}%`);
+    return 1;
+  }
+
+  console.log(`OK: total line coverage ${pct.toFixed(1)}% meets threshold ${options.threshold}%`);
+  return 0;
+}
+
 function main() {
   let options;
   try {
@@ -113,6 +156,10 @@ function main() {
   } catch (error) {
     console.error(`Error: cannot read coverage file '${options.file}': ${error.message}`);
     return 1;
+  }
+
+  if (options.format === 'json') {
+    return checkJsonSummary(content, options);
   }
 
   const lines = content.split(/\r?\n/).filter((line) => line.trim().length > 0);
