@@ -277,7 +277,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: read
     steps:
+      - name: Check CodeQL open alerts
+        id: codeql-alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          count=$(gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
+            --jq '[.[] | select(.rule.severity == "error" or .rule.severity == "critical")] | length' 2>/dev/null || echo "0")
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "CodeQL error/critical open alerts: $count"
+          if [ "$count" -gt 0 ]; then
+            gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
+              --jq '.[] | select(.rule.severity == "error" or .rule.severity == "critical") | "  \(.rule.id): \(.most_recent_instance.location.path):\(.most_recent_instance.location.start_line)"' || true
+          fi
+
       - name: Generate summary
         shell: bash
         env:
@@ -285,6 +301,7 @@ jobs:
           SECRET_SCAN: ${{ needs.secret-scan.result }}
           WORKFLOW_SEC: ${{ needs.workflow-security.result }}
           CODEQL: ${{ needs.codeql-scan.result }}
+          CODEQL_ALERTS: ${{ steps.codeql-alerts.outputs.count }}
         run: |
           echo "## Security Gates Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -294,3 +311,22 @@ jobs:
           echo "| Secret Scan | $SECRET_SCAN |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Workflow Security | $WORKFLOW_SEC |" >> "$GITHUB_STEP_SUMMARY"
           echo "| CodeQL Scan | $CODEQL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| CodeQL Open Alerts (error/critical) | ${CODEQL_ALERTS:-unknown} |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce CodeQL gate
+        shell: bash
+        env:
+          CODEQL_ALERTS: ${{ steps.codeql-alerts.outputs.count }}
+          SECRET_SCAN: ${{ needs.secret-scan.result }}
+        run: |
+          # Secret scan is always a hard gate (already enforced in its own job,
+          # but double-check here so the summary job is the single source of truth)
+          if [ "$SECRET_SCAN" != "success" ]; then
+            echo "::error::Secret scan failed — leaked secrets detected"
+            exit 1
+          fi
+          # CodeQL error/critical alerts are a hard gate on every event
+          if [ "${CODEQL_ALERTS:-0}" -gt 0 ]; then
+            echo "::error::CodeQL found ${CODEQL_ALERTS} open error/critical alert(s). Fix before merging."
+            exit 1
+          fi
