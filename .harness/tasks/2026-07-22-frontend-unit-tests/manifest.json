@@ -1,0 +1,62 @@
+{
+  "taskId": "2026-07-22-frontend-unit-tests",
+  "title": "Frontend unit tests + coverage gates + release gate workflow (PR #198)",
+  "goal": "Introduce Vitest unit-test infrastructure for frontend pure logic (13 files / 132 cases) with per-file coverage thresholds, wire a frontend-unit-tests CI job with coverage artifact reuse, make golangci-lint new-code-only on PRs, harden the security summary with a CodeQL hard gate, and add a pre-release release-gate workflow. Follow-up round clears all red gates raised by the first push: relocate tests to frontend/tests/unit/ per REPOSITORY_LAYOUT §2.2, fix a pinned-action SHA typo, restore the go-lint diff baseline, and register gitleaks false-positive fingerprints.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow"],
+  "scope": {
+    "in": [
+      "frontend/tests/unit/**: 13 Vitest test files over core/ pure logic and hooks",
+      "frontend/vitest.config.ts + eslint.config.js + package.json test scripts",
+      ".github/workflows/ci.yml: frontend-unit-tests job, Go coverage artifact reuse, coverage-gate frontend check",
+      ".github/workflows/quality.yml: golangci-lint --new-from-rev on PRs (fetch-depth 0)",
+      ".github/workflows/security.yml: CodeQL error/critical open alerts hard gate",
+      ".github/workflows/release-gate.yml: pre-release checkpoint (CodeQL + Dependabot + SonarCloud)",
+      "scripts/harness/check-structure-contract.mjs + docs/designs/REPOSITORY_LAYOUT{,.en}.md: register vitest.config.ts (doc first, then gate whitelist)",
+      ".gitleaksignore: fingerprints for curl-auth-user false positives in commit d489c8db"
+    ],
+    "out": [
+      "any backend runtime code change",
+      "any frontend/src runtime code change (tests only reference src modules)",
+      "smoke spec content changes (no runtime flow changed; smoke gating handled in quality.yml)",
+      "golangci historical debt remediation (accepted debt, tracked separately)"
+    ]
+  },
+  "taskDoc": "PR #198 feat/frontend-unit-tests. First push went red on six gates: Fast Checks/Frontend Contract (unused import), Frontend Unit Tests (upload-artifact SHA typo 655e->656e), Docs Governance (no-tests-in-src + vitest.config.ts outside whitelist + PR body governance), Secret Scan (curl -u ${SONAR_TOKEN} false positive), Go Lint quality.yml (shallow checkout broke --new-from-rev, full-repo goconst debt leaked). Codex executor unavailable (freemodel quota until Jul 24); relocation performed directly — content edits all live outside frontend/src (tests/, root configs, scripts/harness, docs), only git mv removals touch src.",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "scripts/harness/check-structure-contract.mjs",
+    "scripts/check-pr-governance.mjs"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-22-frontend-unit-tests/manifest.json",
+      ".harness/evidence/2026-07-22-frontend-unit-tests/commands.json",
+      ".harness/evidence/2026-07-22-frontend-unit-tests/summary.md",
+      ".harness/evidence/2026-07-22-frontend-unit-tests/review.md",
+      "frontend/tests/unit/**",
+      "frontend/vitest.config.ts",
+      ".github/workflows/release-gate.yml"
+    ],
+    "modify": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/quality.yml",
+      ".github/workflows/security.yml",
+      ".gitleaksignore",
+      "frontend/eslint.config.js",
+      "frontend/package.json",
+      "scripts/harness/check-structure-contract.mjs",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-22-frontend-unit-tests",
+    "taskPacket": ".harness/tasks/2026-07-22-frontend-unit-tests/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-frontend-unit-tests/",
+    "reviewFile": ".harness/evidence/2026-07-22-frontend-unit-tests/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-frontend-unit-tests/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

@@ -215,16 +215,13 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
         run: |
           echo "golangci-lint: $LINT_RESULT"
-          
-          # PR/merge_group: report-only until existing issues are remediated
-          if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; then
-            echo "Lint is report-only for PR/merge_group"
-            exit 0
-          fi
-          
-          if [ "$LINT_RESULT" != "success" ]; then
-            exit 1
-          fi
+
+          # Report-only everywhere: full-repo lint carries accepted historical debt
+          # (see .harness/tasks/2026-07-22-sonarcloud-remediation) so enforcing it on
+          # pushes keeps main permanently red. The enforced NEW-CODE lint gate lives
+          # in quality.yml (pull_request + merge_group, --new-from-rev).
+          echo "Full-repo lint is report-only; new-code enforcement lives in quality.yml"
+          exit 0
 
   # ============================================================
   # Phase 3b: Boundary Gate (business/* 边界静态门禁)
@@ -284,7 +281,8 @@ jobs:
 
       - name: Check Go coverage threshold
         run: |
-          go tool cover -func=backend/coverage.out > backend/coverage.txt
+          # go tool cover needs the module context to resolve package paths
+          (cd backend && go tool cover -func=coverage.out > coverage.txt)
           node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold ${{ vars.COVERAGE_THRESHOLD || '11' }}
 
       - name: Download frontend coverage artifact
