@@ -1,0 +1,16 @@
+[
+  {
+    "id": "reproduce-tar-failure",
+    "description": "Reproduce the Windows tar failure on the unpatched bundle step",
+    "command": "npm run release:foundation:cut -- --release-version base-v0.9.0 --release-line 0.9 --base-commit <sha>",
+    "expected": "tar error: 'Cannot connect to D: resolve failed' before fix",
+    "status": "verified-before-fix"
+  },
+  {
+    "id": "verify-tar-fix",
+    "description": "Confirm bundle tgz is produced after the POSIX-path fix",
+    "command": "npm run release:foundation:cut -- --release-version base-v0.9.0 --release-line 0.9 --base-commit <sha> && ls dist/foundation-releases/base-v0.9.0/foundation-release-base-v0.9.0.tgz",
+    "expected": "tgz created without tar error",
+    "status": "verified"
+  }
+]

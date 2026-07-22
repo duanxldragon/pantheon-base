@@ -114,6 +114,15 @@ function writeReleaseModuleBoundary(distRoot, releaseVersion) {
   );
 }
 
+// Git Bash's `tar` treats a Windows drive path like `D:\...` as a remote
+// tape device ("Cannot connect to D:"). Convert native OS paths to POSIX so
+// the spawned `tar` subprocess receives `/d/workspace/...` on Windows.
+function toPosixPath(p) {
+  return p
+    .replace(/^([A-Za-z]):[\\/]/, (_m, drive) => `/${drive.toLowerCase()}/`)
+    .replace(/\\/g, '/');
+}
+
 function createArchive(distRoot, releaseVersion) {
   const archiveName = `foundation-release-${releaseVersion}.tgz`;
   const archivePath = path.join(distRoot, archiveName);
@@ -122,7 +131,7 @@ function createArchive(distRoot, releaseVersion) {
     'go.mod',
     'bundle',
   ];
-  const result = spawnSync('tar', ['-czf', archivePath, '-C', distRoot, ...entries], {
+  const result = spawnSync('tar', ['-czf', toPosixPath(archivePath), '-C', toPosixPath(distRoot), ...entries], {
     encoding: 'utf8',
   });
   if (result.status !== 0) {

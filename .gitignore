@@ -57,6 +57,7 @@ frontend/build/
 frontend/coverage/
 frontend/.vite/
 dist/
+releases/
 
 # Test artifacts
 playwright-report/
