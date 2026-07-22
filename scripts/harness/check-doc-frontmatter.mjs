@@ -163,7 +163,7 @@ function validateFile(file, root) {
 function scan(root) {
   return DOC_ROOTS
     .flatMap((docRoot) => walkMarkdownFiles(path.join(root, docRoot)))
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .map((file) => validateFile(file, root))
     .filter((result) => result.errors.length > 0 || result.warnings.length > 0);
 }
