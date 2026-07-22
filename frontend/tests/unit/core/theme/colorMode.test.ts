@@ -6,7 +6,7 @@ import {
   applyColorMode,
   initializePantheonColorMode,
   usePantheonColorMode,
-} from './colorMode'
+} from '../../../../src/core/theme/colorMode'
 
 describe('normalizeColorMode', () => {
   it('returns light for undefined', () => expect(normalizeColorMode(undefined)).toBe('light'))

@@ -34,3 +34,5 @@ de04041dd340dbf79b29028a3fcce26485539a0f:frontend/src/modules/system/i18n/I18nLi
 7ab9b8dd8f21558adac0e955802bf10ad0359295:.github/workflows/quality.yml:curl-auth-user:166
 890fd1a09796daeb87512f3bd745e9d0924d384e:backend/modules/system/i18n/builtin_locale_resources.json:private-key:2345
 a16ffc6695962244064ff6c8eb9b78dd9b207fc7:backend/DEV_DB_INIT_GUIDE.md:curl-auth-header:202
+d489c8db33773db68aeb24bc503621cff5a22087:.github/workflows/release-gate.yml:curl-auth-user:100
+d489c8db33773db68aeb24bc503621cff5a22087:.github/workflows/release-gate.yml:curl-auth-user:116

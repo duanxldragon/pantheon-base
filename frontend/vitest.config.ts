@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['tests/unit/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'lcov'],
@@ -24,8 +24,6 @@ export default defineConfig({
       exclude: [
         'src/**/*.d.ts',
         'src/i18n/**',
-        'src/**/*.spec.*',
-        'src/**/*.test.*',
         'src/modules/generated/**',
         // CSS-only side-effect imports — no testable exports
         'src/core/arco/style.ts',

@@ -6,8 +6,7 @@ import {
   shouldWarmHighFrequencyRouteData,
   shouldFetchRemoteI18nPack,
   shouldReportShellActivity,
-  shouldLoadShellNoticeSummary,
-} from './automationPolicy'
+} from '../../../../src/core/runtime/automationPolicy'
 
 describe('isAutomatedDevBrowserRuntime', () => {
   it('returns false when neither dev nor webdriver', () => {

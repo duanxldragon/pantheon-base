@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveArcoLocale } from './arcoLocale'
+import { resolveArcoLocale } from '../../../../src/core/arco/arcoLocale'
 
 describe('resolveArcoLocale', () => {
   it('returns zh-CN locale for zh-CN', () => {

@@ -45,7 +45,7 @@ Root files fall into four groups:
 ## 2. Placement Rules
 
 1. Backend product code belongs under `backend/modules/` or `backend/pkg/`; do not create new business directories at the repository root. Backend performance/load test scripts belong under `backend/tests/performance/`.
-2. Frontend runtime code belongs under `frontend/src/`; frontend scripts belong under `frontend/scripts/`; frontend smoke tests and test fixtures belong under `frontend/tests/`.
+2. Frontend runtime code belongs under `frontend/src/`; frontend scripts belong under `frontend/scripts/`; frontend smoke tests and test fixtures belong under `frontend/tests/`; frontend unit tests belong under `frontend/tests/unit/` (tests must not live in `frontend/src/`); `vitest.config.ts` is a legal frontend root config file (alongside the vite/playwright configs).
 3. Root automation belongs under `scripts/`; matching tests belong under `tests/scripts/`.
 4. Harness method checks belong under `scripts/harness/`; task manifests and evidence belong under `.harness/`.
 5. Active architecture and governance docs belong under `docs/designs/`, `docs/contracts/`, and `docs/acceptances/`; phase audits, assessments, and process records are not committed — they stay with task evidence under `.harness/` and are cleaned up when a task closes.

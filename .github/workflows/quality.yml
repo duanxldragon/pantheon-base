@@ -339,6 +339,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          # --new-from-rev needs the PR base commit in history; shallow
+          # checkout breaks the diff processor and lint falls back to full-repo.
+          fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e

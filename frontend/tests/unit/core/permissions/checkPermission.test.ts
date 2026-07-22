@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { checkPermission } from './checkPermission'
+import { checkPermission } from '../../../../src/core/permissions/checkPermission'
 
 describe('checkPermission', () => {
   it('returns true when permission is empty', () => {

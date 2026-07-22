@@ -97,7 +97,7 @@ jobs:
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
           # Quality gate status (new-code)
-          qg=$(curl -sf -u "${SONAR_TOKEN}:" \
+          qg=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT}" \
             | jq -r '.projectStatus.status')
           echo "SonarCloud quality gate: $qg"
@@ -113,7 +113,7 @@ jobs:
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
           # Count issues that are OPEN (not yet accepted/FP/fixed) of type BUG or VULNERABILITY
-          result=$(curl -sf -u "${SONAR_TOKEN}:" \
+          result=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
             "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY&statuses=OPEN&ps=1")
           total=$(echo "$result" | jq -r '.total // 0')
           echo "Unprocessed SonarCloud BUG+VULNERABILITY (OPEN status): $total"

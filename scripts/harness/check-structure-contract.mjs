@@ -59,6 +59,7 @@ const FRONTEND_TOP_FILE_PATTERNS = [
   /^playwright(\.[a-z0-9-]+)?\.config\.ts$/,
   /^tsconfig(\.[a-z]+)?\.json$/,
   /^vite\.config\.ts$/,
+  /^vitest\.config\.ts$/,
 ];
 const BINARY_EXTENSIONS = new Set(['.exe', '.dll', '.so', '.dylib']);
 const GO_FILE_NAME = /^[a-z0-9_]+\.go$/;

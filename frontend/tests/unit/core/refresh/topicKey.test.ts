@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { canonicalizeRefreshTopics, buildRefreshTopicKey } from './topicKey'
+import { canonicalizeRefreshTopics, buildRefreshTopicKey } from '../../../../src/core/refresh/topicKey'
 
 describe('canonicalizeRefreshTopics', () => {
   it('wraps a single string in an array', () => {

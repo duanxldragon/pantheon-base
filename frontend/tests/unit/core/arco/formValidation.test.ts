@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isArcoFormValidationError, isLikelyEmailAddress } from './formValidation'
+import { isArcoFormValidationError, isLikelyEmailAddress } from '../../../../src/core/arco/formValidation'
 
 describe('isArcoFormValidationError', () => {
   it('returns true for object with errors key', () => {

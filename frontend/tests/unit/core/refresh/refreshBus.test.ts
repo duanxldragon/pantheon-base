@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { publishRefresh, subscribeRefresh, useRefreshSubscription } from './refreshBus'
-import type { PantheonRefreshTopic } from './refreshBus'
+import { publishRefresh, subscribeRefresh, useRefreshSubscription } from '../../../../src/core/refresh/refreshBus'
+import type { PantheonRefreshTopic } from '../../../../src/core/refresh/refreshBus'
 
 describe('publishRefresh / subscribeRefresh', () => {
   it('delivers a single topic to a subscriber', () => {

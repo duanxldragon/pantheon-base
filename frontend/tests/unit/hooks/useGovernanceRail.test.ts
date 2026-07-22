@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useGovernanceRail } from './useGovernanceRail'
+import { useGovernanceRail } from '../../../src/hooks/useGovernanceRail'
 
 describe('useGovernanceRail', () => {
   it('starts collapsed by default', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useRequest } from './useRequest'
+import { useRequest } from '../../../src/hooks/useRequest'
 
 describe('useRequest', () => {
   it('manual=false initializes loading as true', () => {

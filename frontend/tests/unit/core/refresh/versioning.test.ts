@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldPublishRefreshForVersionChange } from './versioning'
+import { shouldPublishRefreshForVersionChange } from '../../../../src/core/refresh/versioning'
 
 describe('shouldPublishRefreshForVersionChange', () => {
   it('returns true when version increases', () => {
