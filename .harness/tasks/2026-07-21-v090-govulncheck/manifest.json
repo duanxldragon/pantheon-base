@@ -1,0 +1,30 @@
+{
+  "id": "2026-07-21-v090-govulncheck",
+  "title": "Fix govulncheck working-directory in security.yml",
+  "createdAt": "2026-07-21",
+  "updatedAt": "2026-07-22",
+  "status": "done",
+  "layer": "platform",
+  "scope": {
+    "touchedPackages": ["github-workflows"],
+    "touchedModules": [".github/workflows/security.yml"],
+    "contractsChanged": false,
+    "dbSchemaChanged": false,
+    "permissionsChanged": false,
+    "i18nChanged": false,
+    "menuChanged": false,
+    "publicEndpointsChanged": false
+  },
+  "taskType": "ci-workflow-fix",
+  "riskLevel": "low",
+  "evidence": {
+    "commands": ".harness/evidence/2026-07-21-v090-govulncheck/commands.json",
+    "summary": ".harness/evidence/2026-07-21-v090-govulncheck/summary.md",
+    "review": ".harness/evidence/2026-07-21-v090-govulncheck/review.md"
+  },
+  "linkage": {
+    "pr": "#190",
+    "baseBranch": "main",
+    "release": "pantheon-base-v0.9.0"
+  }
+}
