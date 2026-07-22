@@ -1012,7 +1012,7 @@ func (s *DictService) AnalyzeDictUsage(dictCode string) (*DictUsageAnalysisResp,
 		if err != nil {
 			return nil
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 
 		scanner := bufio.NewScanner(file)
 		lineNumber := 0

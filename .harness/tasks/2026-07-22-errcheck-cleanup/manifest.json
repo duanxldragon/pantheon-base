@@ -1,0 +1,55 @@
+{
+  "taskId": "2026-07-22-errcheck-cleanup",
+  "title": "Fix 13 historical unchecked errors flagged by errcheck",
+  "goal": "Resolve the 13 errcheck issues present on main (current .golangci.yml config, check-type-assertions enabled). Apply the repo's documented convention for deliberately-ignored errors: explicit `_ = err` / `_, _ = f()` ignore for best-effort/cleanup paths, matching the comment in backend/.golangci.yml ('idiomatic `_ = err` for deliberately ignored errors is allowed; avoids no-op ignoreError() helpers'). No suppression via exclude-functions, no behavioral change.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow", "linting"],
+  "scope": {
+    "in": [
+      "backend/internal/middleware/operation_log_middleware.go: ignore 2-value Write + unchecked type assertion",
+      "backend/internal/scaffold/workspace.go: ignore os.Remove + file.Close in defer",
+      "backend/modules/lowcode/generator/generator_introspection_service.go: ignore reader.close() in defer (x2)",
+      "backend/modules/system/config/dict/dict_service.go: ignore file.Close in defer",
+      "backend/pkg/database/migrate.go: ignore m.Close (2-value), db.Close, tx.Rollback in defer",
+      "backend/pkg/impexp/csv.go: ignore file.Close in defer",
+      "backend/modules/system/audit/audit_benchmark_test.go: ignore rows.Close in defer",
+      "backend/pkg/impexp/csv_test.go: ignore ReadCSV(nil) (2-value)"
+    ],
+    "out": [
+      "any change to lint rules / exclude-functions (convention unchanged)",
+      "any behavioral/logic change (pure error-handling annotation only)",
+      "SonarCloud remediation (separate workstream, see 2026-07-22-sonarcloud-governance)"
+    ]
+  },
+  "taskDoc": "Carried over from v0.9.0 leftover #1 (errcheck historical unchecked errors, previously estimated ~45, measured 13 under current config). User decision 2026-07-21: fix per repo standard `_ =` convention. ops upgrade to base-v0.9.0 deferred by user (not started).",
+  "contractAnchors": [
+    "backend/.golangci.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-22-errcheck-cleanup/manifest.json",
+      ".harness/evidence/2026-07-22-errcheck-cleanup/commands.json",
+      ".harness/evidence/2026-07-22-errcheck-cleanup/summary.md",
+      ".harness/evidence/2026-07-22-errcheck-cleanup/review.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/operation_log_middleware.go",
+      "backend/internal/scaffold/workspace.go",
+      "backend/modules/lowcode/generator/generator_introspection_service.go",
+      "backend/modules/system/config/dict/dict_service.go",
+      "backend/pkg/database/migrate.go",
+      "backend/pkg/impexp/csv.go",
+      "backend/modules/system/audit/audit_benchmark_test.go",
+      "backend/pkg/impexp/csv_test.go"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-22-errcheck-cleanup",
+    "taskPacket": ".harness/tasks/2026-07-22-errcheck-cleanup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-errcheck-cleanup/",
+    "reviewFile": ".harness/evidence/2026-07-22-errcheck-cleanup/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-errcheck-cleanup/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

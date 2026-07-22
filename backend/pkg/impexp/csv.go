@@ -86,7 +86,7 @@ func WriteCSV(c *gin.Context, file CSVFile) error {
 }
 
 func ReadCSV(file multipart.File) ([][]string, error) {
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	content, err := io.ReadAll(io.LimitReader(file, maxImportBytes+1))
 	if err != nil {
