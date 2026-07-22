@@ -1,0 +1,47 @@
+{
+  "taskId": "2026-07-22-sonarcloud-remediation",
+  "title": "Clear all 879 SonarCloud Open Issues (real fixes + accepted debt)",
+  "goal": "Bring SonarCloud overall Open Issues to zero for duanxldragon_pantheon-base. Fix the small number of genuine code issues (a11y, sort comparator, hardcoded test secret) and accept the remaining historical technical debt / false positives via governance (Won't Fix with rationale) so they are not mixed into feature PRs. ops lock upgrade to base-v0.9.0 remains deferred per user.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow", "linting"],
+  "scope": {
+    "in": [
+      "frontend/src/modules/system/role/RoleList.tsx: a11y keyboard handler for clickable <a> (S1082)",
+      "scripts/harness/check-doc-frontmatter.mjs: localeCompare comparator for .sort() (S2871)",
+      "backend/tests/performance/load-test.js: read test password from __ENV (S2068)",
+      "SonarCloud issue governance: 876 issues marked Won't Fix via API"
+    ],
+    "out": [
+      "any change to .golangci.yml rules or exclude-functions",
+      "any behavioral/logic change (pure annotation + env-var hardening only)",
+      "ops lock upgrade to base-v0.9.0 (deferred by user, not started)",
+      "githubactions:S6505 real supply-chain fixes (deferred to dedicated window, accepted for now)"
+    ]
+  },
+  "taskDoc": "Carried over from v0.9.0 leftover #2 (SonarCloud historical red). User decision 2026-07-22: SonarCloud handled last; ops upgrade stays deferred until SonarCloud done. User also directed: handle the remaining issues if possible, zero them out. 3 genuine code issues fixed; 876 historical/false-positive issues accepted via SonarCloud governance (Won't Fix).",
+  "contractAnchors": [
+    "scripts/check-pr-governance.mjs"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-22-sonarcloud-remediation/manifest.json",
+      ".harness/evidence/2026-07-22-sonarcloud-remediation/commands.json",
+      ".harness/evidence/2026-07-22-sonarcloud-remediation/summary.md",
+      ".harness/evidence/2026-07-22-sonarcloud-remediation/review.md"
+    ],
+    "modify": [
+      "frontend/src/modules/system/role/RoleList.tsx",
+      "scripts/harness/check-doc-frontmatter.mjs",
+      "backend/tests/performance/load-test.js"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-22-sonarcloud-remediation",
+    "taskPacket": ".harness/tasks/2026-07-22-sonarcloud-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-sonarcloud-remediation/",
+    "reviewFile": ".harness/evidence/2026-07-22-sonarcloud-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-sonarcloud-remediation/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
