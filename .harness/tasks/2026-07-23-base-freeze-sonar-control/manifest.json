@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-07-23-base-freeze-sonar-control",
+  "title": "Close Pantheon Base for version freeze with zero open SonarCloud findings",
+  "goal": "Verify main and GitHub are synchronized, remediate every open SonarCloud finding in code, and prove the final release candidate is free of unresolved static-analysis debt.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow", "quality-governance", "security"],
+  "scope": {
+    "in": [
+      "scripts/harness/check-boundaries.mjs Sonar reliability finding",
+      "GitHub Actions workflow supply-chain and least-privilege remediation",
+      "Release Gate SonarCloud zero-open-issue policy alignment",
+      "Full SonarCloud debt remediation, evidence, and review"
+    ],
+    "out": [
+      "pantheon-ops dependency upgrade or business-module changes"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md"
+  ],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "repo-quality-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Reuse the existing GitHub Actions and SonarCloud release gate; fix each open issue in code in focused, verified batches and keep the gate closed until the query returns zero.",
+  "successCriteria": [
+    "Local main and origin/main are identical and all local changes are committed and pushed before closeout.",
+    "Current main required workflows are green.",
+    "SonarCloud quality gate is OK and the full OPEN query for BUG, VULNERABILITY, and CODE_SMELL returns zero.",
+    "Release Gate passes on the final main commit.",
+    "Historical SonarCloud debt remains explicitly measured and documented as residual risk."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "scripts/harness/check-boundaries.mjs",
+      ".github/workflows/lint-workflows.yml",
+      ".github/workflows/pr-automation.yml",
+      ".github/workflows/release-gate.yml"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-23-base-freeze-sonar-control/manifest.json",
+      ".harness/evidence/2026-07-23-base-freeze-sonar-control/commands.json",
+      ".harness/evidence/2026-07-23-base-freeze-sonar-control/summary.md",
+      ".harness/evidence/2026-07-23-base-freeze-sonar-control/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-23-base-freeze-sonar-control",
+    "taskPacket": ".harness/tasks/2026-07-23-base-freeze-sonar-control/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-23-base-freeze-sonar-control/",
+    "reviewFile": ".harness/evidence/2026-07-23-base-freeze-sonar-control/review.md",
+    "summaryFile": ".harness/evidence/2026-07-23-base-freeze-sonar-control/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "gate-updated",
+  "githubSignal": "required",
+  "deferredCodeIssues": "None. This task is not complete until all SonarCloud OPEN BUG, VULNERABILITY, and CODE_SMELL issues are fixed. A genuine false positive requires an individual documented rationale and is not eligible for a bulk closure."
+}

@@ -28,13 +28,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: '1.26.5'
+          cache: false
+
       - name: Install actionlint
         shell: bash
-        run: |
-          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.10/scripts/download-actionlint.bash)
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.10
 
       - name: Run actionlint
-        run: ./actionlint -color -shellcheck=""
+        run: actionlint -color -shellcheck=""
 
       - name: Write summary
         if: always()

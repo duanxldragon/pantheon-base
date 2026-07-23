@@ -427,7 +427,7 @@ function main() {
     return 1;
   }
 
-  console.log(JSON.stringify(result, null, 2));
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   return 0;
 }
 
