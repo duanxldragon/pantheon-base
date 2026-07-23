@@ -177,9 +177,12 @@ function requireStandaloneBlock(cssSource, selector, findings) {
 
 function hasDeclaration(block, property, expectedValue) {
   const normalizedValue = String(expectedValue).replace(/\\([()[\\]])/g, '$1');
-  const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const escapedValue = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp(`${escapedProperty}\\s*:\\s*${escapedValue}(?:\\s*!important)?\\s*;`, 'i');
+  const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const escapedValue = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const pattern = new RegExp(
+    String.raw`${escapedProperty}\s*:\s*${escapedValue}(?:\s*!important)?\s*;`,
+    'i',
+  );
   return pattern.test(block);
 }
 

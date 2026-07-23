@@ -16,7 +16,7 @@
 - Trivial change：no
 - Quality Profile：ci-workflow
 - Ratchet Decision：gate-updated
-- GitHub Signal：required
+- GitHub Signal：repo-quality-gate
 
 ## Harness adoption markers
 

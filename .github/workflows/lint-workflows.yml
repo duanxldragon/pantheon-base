@@ -28,18 +28,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
-        with:
-          go-version: '1.26.5'
-          cache: false
-
       - name: Install actionlint
         shell: bash
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.10
+        env:
+          ACTIONLINT_VERSION: 1.7.10
+          ACTIONLINT_SHA256: f4c76b71db5755a713e6055cbb0857ed07e103e028bda117817660ebadb4386f
+        run: |
+          curl -sSfL -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
 
       - name: Run actionlint
-        run: actionlint -color -shellcheck=""
+        run: ./actionlint -color -shellcheck=""
 
       - name: Write summary
         if: always()

@@ -49,6 +49,12 @@
       "notes": "6/6 pass — pr-automation.yml governance-prereq job invokes the same checker with --event."
     },
     {
+      "command": "node scripts/check-shell-visual-contract.mjs && node --test tests/scripts/quality-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Re-run after PR #200 SonarCloud round: S8545 fixed by replacing go install with checksum-verified release tarball in lint-workflows.yml; S7780 x3 fixed by String.raw in hasDeclaration. Contract still passes, workflow tests 3/3."
+    },
+    {
       "command": "actionlint -color -shellcheck=\"\"",
       "cwd": "pantheon-base",
       "status": "not-run",

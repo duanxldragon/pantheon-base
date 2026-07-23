@@ -1,3 +1,4 @@
 package iam
 
-var generatedMenuComponentKeys = map[string]struct{}{}
+var generatedMenuComponentKeys = map[string]struct{}{
+}
