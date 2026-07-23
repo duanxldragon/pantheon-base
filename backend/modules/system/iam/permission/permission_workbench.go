@@ -514,54 +514,51 @@ func diffMissingAPIPolicies(required []permissionRequiredAPIPolicy, actual []Per
 	return missing
 }
 
+var requiredAPIPoliciesByPermission = map[string][]permissionRequiredAPIPolicy{
+	"system:user:list": {
+		{Path: "/api/v1/system/user/list", Method: "GET"},
+	},
+	"system:security-event:list": {
+		{Path: "/api/v1/system/security-event/list", Method: "GET"},
+	},
+	"system:security-event:acknowledge": {
+		{Path: "/api/v1/system/security-event/:id/acknowledge", Method: "POST"},
+		{Path: "/api/v1/system/security-event/batch-acknowledge", Method: "POST"},
+	},
+	"system:security-event:clear": {
+		{Path: "/api/v1/system/security-event/cleanup", Method: "POST"},
+	},
+	"system:module:list": {
+		{Path: "/api/v1/lowcode/dynamic-modules", Method: "GET"},
+	},
+	"system:module:register": {
+		{Path: "/api/v1/lowcode/dynamic-modules", Method: "POST"},
+	},
+	"system:module:unregister": {
+		{Path: "/api/v1/lowcode/dynamic-modules/:name", Method: "DELETE"},
+	},
+	"system:module:delete_record": {
+		{Path: "/api/v1/lowcode/dynamic-modules/:name/record", Method: "DELETE"},
+	},
+	"system:module:purge": {
+		{Path: "/api/v1/lowcode/dynamic-modules/:name/purge", Method: "DELETE"},
+	},
+	"system:module:generate": {
+		{Path: "/api/v1/lowcode/dynamic-modules/generate", Method: "POST"},
+	},
+	"system:generator:datasource:manage": {
+		{Path: "/api/v1/lowcode/generator/datasources", Method: "POST"},
+		{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "PUT"},
+		{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "DELETE"},
+		{Path: "/api/v1/lowcode/generator/datasources/:id/test", Method: "POST"},
+	},
+	"system:user:create": {
+		{Path: "/api/v1/system/user/create", Method: "POST"},
+	},
+}
+
 func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequiredAPIPolicy {
-	switch strings.TrimSpace(permissionKey) {
-	case "system:user:list":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/user/list", Method: "GET"},
-		}
-	case "system:security-event:list":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/security-event/list", Method: "GET"},
-		}
-	case "system:module:list":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules", Method: "GET"},
-		}
-	case "system:module:register":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules", Method: "POST"},
-		}
-	case "system:module:unregister":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/:name", Method: "DELETE"},
-		}
-	case "system:module:delete_record":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/:name/record", Method: "DELETE"},
-		}
-	case "system:module:purge":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/:name/purge", Method: "DELETE"},
-		}
-	case "system:module:generate":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/generate", Method: "POST"},
-		}
-	case "system:generator:datasource:manage":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/generator/datasources", Method: "POST"},
-			{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "PUT"},
-			{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "DELETE"},
-			{Path: "/api/v1/lowcode/generator/datasources/:id/test", Method: "POST"},
-		}
-	case "system:user:create":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/user/create", Method: "POST"},
-		}
-	default:
-		return nil
-	}
+	return requiredAPIPoliciesByPermission[strings.TrimSpace(permissionKey)]
 }
 
 // getRoleMissingAPIPolicies fetches only the data needed to determine missing API policies

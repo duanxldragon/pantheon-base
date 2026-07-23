@@ -1,0 +1,58 @@
+{
+  "taskId": "2026-07-23-security-event-policy-i18n-header",
+  "title": "Complete security-event cleanup permission chain and remove undesigned i18n table-head title",
+  "goal": "Make the security-event cleanup/acknowledge feature work end-to-end for non-admin roles by registering the missing required API policies, and remove the undesigned '翻译详情' table-head block from the i18n management list page.",
+  "primaryLayer": "system/iam",
+  "dependencyLayers": ["system/auth", "ui-runtime"],
+  "scope": {
+    "in": [
+      "requiredAPIPoliciesByPermissionKey mappings for system:security-event:acknowledge and system:security-event:clear",
+      "Unit test coverage for the new mappings",
+      "Removal of the system-list__table-head block (title '翻译详情' + count) from I18nList.tsx"
+    ],
+    "out": [
+      "login-log and session action-permission API policy mappings (same gap class, tracked as residual risk)",
+      "Any backend route/handler/service change (cleanup chain already exists and is tested)",
+      "i18n locale key removal (i18n.viewTitle is still used by the row detail modal)"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "DESIGN.md"
+  ],
+  "qualityProfile": "permission-policy",
+  "portableFailureClass": "permission-chain-gap",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Register the two missing permission-key → API-policy mappings in the existing workbench switch (keyMatch2 already supports the :id pattern), extend the existing unit test, and delete the single undesigned JSX block; verify with go tests plus the frontend contract gates.",
+  "successCriteria": [
+    "Permission workbench reports and remediates the cleanup/acknowledge API policies for roles granted system:security-event:clear/acknowledge, so non-admin cleanup calls pass Casbin.",
+    "go test ./modules/system/iam/permission passes with the extended assertions.",
+    "The i18n list page no longer renders the '翻译详情' table-head; tsc, eslint, system page admission, shell visual contract, i18n and UI contract checks all pass."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "backend/modules/system/iam/permission/permission_workbench.go",
+      "backend/modules/system/iam/permission/permission_service_test.go",
+      "frontend/src/modules/system/i18n/I18nList.tsx"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-23-security-event-policy-i18n-header/manifest.json",
+      ".harness/evidence/2026-07-23-security-event-policy-i18n-header/commands.json",
+      ".harness/evidence/2026-07-23-security-event-policy-i18n-header/summary.md",
+      ".harness/evidence/2026-07-23-security-event-policy-i18n-header/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-23-security-event-policy-i18n-header",
+    "taskPacket": ".harness/tasks/2026-07-23-security-event-policy-i18n-header/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/",
+    "reviewFile": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/review.md",
+    "summaryFile": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "sensor-added",
+  "githubSignal": "repo-quality-gate",
+  "deferredCodeIssues": "login-log/session action permissions (system:login-log:clear/delete/export, system:session:clear/delete) share the same missing-mapping gap in requiredAPIPoliciesByPermissionKey; deferred to keep this fix scoped to the reported security-event issue."
+}
