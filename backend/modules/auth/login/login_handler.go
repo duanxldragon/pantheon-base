@@ -93,7 +93,7 @@ func writeRefreshSuccessResponse(c *gin.Context, tokenPair *authtoken.Pair) bool
 }
 
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
-	common.SetAuditMetadata(c, "auth.login.title", common.BusinessOther)
+	common.SetAuditMetadata(c, "auth.login.audit.title", common.BusinessOther)
 
 	var req LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {

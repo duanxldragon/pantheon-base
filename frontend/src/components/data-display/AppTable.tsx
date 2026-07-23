@@ -86,6 +86,13 @@ function filterResponsiveColumns<T>(
       return result;
     }
 
+    // On phone-width viewports a fixed action column can cover almost the whole
+    // table, hiding the data columns behind it; let it scroll with the rest.
+    if (column.fixed && viewportWidth <= 768) {
+      result.push({ ...column, fixed: undefined });
+      return result;
+    }
+
     result.push(column);
     return result;
   }, []);

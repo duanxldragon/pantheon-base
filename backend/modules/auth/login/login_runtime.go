@@ -298,7 +298,17 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 	if err := s.db.Create(&sess).Error; err != nil {
 		return nil, err
 	}
-	return s.issueTokenPair(ctx, &u, roles, &sess)
+	pair, err := s.issueTokenPair(ctx, &u, roles, &sess)
+	if err != nil {
+		// Token issuance failed after the session row was persisted; remove it so
+		// failed logins don't accumulate orphan sessions in the governance views.
+		if delErr := s.db.Delete(&sess).Error; delErr != nil {
+			logging.Warn("cleanup orphan session after token issuance failure failed",
+				zap.String("sessionId", sess.SessionID), zap.Error(delErr))
+		}
+		return nil, err
+	}
+	return pair, nil
 }
 
 // ─────────────────────────────────────────────────────────────
