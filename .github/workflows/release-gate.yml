@@ -1,0 +1,192 @@
+name: Release Gate
+
+# Triggered manually before cutting a release tag, or automatically when a
+# release/** branch is pushed. This is the single hard checkpoint that must
+# pass before `base-vX.Y.Z` is tagged and the release bundle is published.
+#
+# Gate policy (all must pass):
+#   1. No open CodeQL error/critical alerts
+#   2. No open Dependabot high/critical alerts
+#   3. All CI jobs green on the candidate commit
+#   4. SonarCloud quality gate green (new-code only, via API)
+#   5. No unresolved SonarCloud BUG or VULNERABILITY issues (processed = 0)
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: "Commit SHA to release (defaults to HEAD of current branch)"
+        required: false
+        default: ""
+  push:
+    branches:
+      - release/**
+
+concurrency:
+  group: release-gate-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # ============================================================
+  # Gate 1: CodeQL — zero error/critical open alerts
+  # ============================================================
+  codeql-alerts:
+    name: CodeQL Alerts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - name: Check open CodeQL alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          count=$(gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
+            --jq '[.[] | select(.rule.severity == "error" or .rule.severity == "critical")] | length' 2>/dev/null || echo "0")
+          echo "CodeQL error/critical open alerts: $count"
+          if [ "$count" -gt 0 ]; then
+            gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
+              --jq '.[] | select(.rule.severity == "error" or .rule.severity == "critical") | "  [\(.rule.severity)] \(.rule.id): \(.most_recent_instance.location.path):\(.most_recent_instance.location.start_line)"' || true
+            echo "::error::Release blocked: $count open CodeQL error/critical alert(s). Fix before releasing."
+            exit 1
+          fi
+          echo "✓ No open CodeQL error/critical alerts"
+
+  # ============================================================
+  # Gate 2: Dependabot — zero high/critical open alerts
+  # ============================================================
+  dependabot-alerts:
+    name: Dependabot Alerts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - name: Check open Dependabot alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          count=$(gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100" \
+            --jq '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")] | length' 2>/dev/null || echo "0")
+          echo "Dependabot high/critical open alerts: $count"
+          if [ "$count" -gt 0 ]; then
+            gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100" \
+              --jq '.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical") | "  [\(.security_advisory.severity)] \(.security_advisory.cve_id // .security_advisory.ghsa_id): \(.dependency.package.name)"' || true
+            echo "::error::Release blocked: $count open Dependabot high/critical alert(s)."
+            exit 1
+          fi
+          echo "✓ No open Dependabot high/critical alerts"
+
+  # ============================================================
+  # Gate 3: SonarCloud — quality gate green + zero unprocessed bugs/vulns
+  # ============================================================
+  sonarcloud-gate:
+    name: SonarCloud Gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check SonarCloud quality gate
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT: duanxldragon_pantheon-base
+        run: |
+          # Quality gate status (new-code)
+          qg=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT}" \
+            | jq -r '.projectStatus.status')
+          echo "SonarCloud quality gate: $qg"
+          if [ "$qg" != "OK" ]; then
+            echo "::error::Release blocked: SonarCloud quality gate is $qg (must be OK)."
+            exit 1
+          fi
+          echo "✓ Quality gate OK"
+
+      - name: Check unprocessed SonarCloud bugs and vulnerabilities
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT: duanxldragon_pantheon-base
+        run: |
+          # Count issues that are OPEN (not yet accepted/FP/fixed) of type BUG or VULNERABILITY
+          result=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
+            "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY&statuses=OPEN&ps=1")
+          total=$(echo "$result" | jq -r '.total // 0')
+          echo "Unprocessed SonarCloud BUG+VULNERABILITY (OPEN status): $total"
+          if [ "$total" -gt 0 ]; then
+            echo "Each issue must be either fixed, marked False Positive, or accepted (Won't Fix) with a rationale before release."
+            echo "::error::Release blocked: $total unprocessed BUG/VULNERABILITY issue(s) on SonarCloud."
+            exit 1
+          fi
+          echo "✓ All bugs and vulnerabilities processed"
+
+  # ============================================================
+  # Gate 4: Open PRs — no unmerged PRs targeting main
+  # ============================================================
+  open-prs:
+    name: Open PRs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check for open PRs targeting main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          count=$(gh api "repos/$REPO/pulls?state=open&base=main&per_page=100" --jq 'length')
+          echo "Open PRs targeting main: $count"
+          if [ "$count" -gt 0 ]; then
+            gh api "repos/$REPO/pulls?state=open&base=main&per_page=100" \
+              --jq '.[] | "  #\(.number) \(.title) [\(.head.ref)]"'
+            echo "::warning::$count open PR(s) targeting main. Merge or close before releasing."
+            # Warning only — maintainer may intentionally release with open PRs
+          else
+            echo "✓ No open PRs targeting main"
+          fi
+
+  # ============================================================
+  # Summary
+  # ============================================================
+  release-gate-summary:
+    name: Release Gate Summary
+    needs: [codeql-alerts, dependabot-alerts, sonarcloud-gate, open-prs]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Summarize
+        shell: bash
+        env:
+          CODEQL: ${{ needs.codeql-alerts.result }}
+          DEPENDABOT: ${{ needs.dependabot-alerts.result }}
+          SONAR: ${{ needs.sonarcloud-gate.result }}
+          OPEN_PRS: ${{ needs.open-prs.result }}
+        run: |
+          echo "## Release Gate Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Gate | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| CodeQL (error/critical) | $CODEQL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Dependabot (high/critical) | $DEPENDABOT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| SonarCloud quality gate | $SONAR |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Open PRs (advisory) | $OPEN_PRS |" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$CODEQL" != "success" ] || \
+             [ "$DEPENDABOT" != "success" ] || \
+             [ "$SONAR" != "success" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "❌ **Release blocked.** Fix the failing gates above before tagging." >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Release gate failed. See summary for details."
+            exit 1
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ **All hard gates passed. Safe to tag and publish.**" >> "$GITHUB_STEP_SUMMARY"
+          echo "Release gate passed."

@@ -1,0 +1,29 @@
+{
+  "taskId": "2026-07-22-frontend-unit-tests",
+  "commands": [
+    {
+      "purpose": "Structure contract gate after relocating tests to frontend/tests/unit/",
+      "cmd": "node scripts/harness/check-structure-contract.mjs --strict"
+    },
+    {
+      "purpose": "Frontend lint (same command as Fast Checks / Frontend Contract CI jobs)",
+      "cmd": "cd frontend && npx eslint . --max-warnings 0"
+    },
+    {
+      "purpose": "Frontend unit tests with per-file coverage thresholds",
+      "cmd": "cd frontend && npm run test:unit:coverage"
+    },
+    {
+      "purpose": "Frontend type-check",
+      "cmd": "cd frontend && npx tsc -b"
+    },
+    {
+      "purpose": "Docs governance checks run locally before push",
+      "cmd": "npm run check:docs-frontmatter && npm run check:structure"
+    },
+    {
+      "purpose": "Verify playwright configs do not collect tests/unit (smoke isolation)",
+      "cmd": "grep -n 'testDir' frontend/playwright*.config.ts"
+    }
+  ]
+}

@@ -45,7 +45,7 @@ schema/generated/         # 生成能力账本等跨端治理输出
 ## 2. 新文件放置规则
 
 1. 业务或系统后端代码只能进入 `backend/modules/` 或 `backend/pkg/`，不要在根目录创建新的业务目录；后端性能压测脚本进入 `backend/tests/performance/`。
-2. 前端运行时代码进入 `frontend/src/`；前端脚本进入 `frontend/scripts/`；前端 smoke 与测试 fixtures 进入 `frontend/tests/`。
+2. 前端运行时代码进入 `frontend/src/`；前端脚本进入 `frontend/scripts/`；前端 smoke 与测试 fixtures 进入 `frontend/tests/`；前端单元测试进入 `frontend/tests/unit/`（禁止在 `frontend/src/` 内放测试）；`vitest.config.ts` 是合法的 frontend 根级配置文件（与 vite/playwright 配置同级）。
 3. 根级工程脚本进入 `scripts/`；对应测试进入 `tests/scripts/`。
 4. harness 方法检查进入 `scripts/harness/`；任务 manifest 和证据进入 `.harness/`。
 5. 当前仍有效的架构和治理文档进入 `docs/designs/`、`docs/contracts/`、`docs/acceptances/`；阶段性审计、评估、过程记录不入库，随任务证据留在 `.harness/` 并在任务关闭后清理。

@@ -64,7 +64,9 @@
     "smoke:cleanup:org": "node scripts/cleanup-smoke-fixtures.mjs --scope org",
     "smoke:cleanup:config": "node scripts/cleanup-smoke-fixtures.mjs --scope config",
     "check:contrast": "node ./scripts/check-contrast.mjs",
-    "check:important-budget": "node ./scripts/check-important-budget.mjs"
+    "check:important-budget": "node ./scripts/check-important-budget.mjs",
+    "test:unit": "vitest run",
+    "test:unit:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@arco-design/web-react": "2.66.16",
@@ -80,21 +82,26 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
+    "@testing-library/jest-dom": "^6.10.0",
+    "@testing-library/react": "^16.3.2",
     "@types/jszip": "^3.4.1",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "jsdom": "^25.0.1",
     "jszip": "^3.10.1",
     "nyc": "^18.0.0",
     "prettier": "^3.9.5",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
     "vite": "^8.1.5",
-    "vite-plugin-istanbul": "^9.0.1"
+    "vite-plugin-istanbul": "^9.0.1",
+    "vitest": "^2.1.9"
   }
 }

@@ -339,6 +339,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          # --new-from-rev needs the PR base commit in history; shallow
+          # checkout breaks the diff processor and lint falls back to full-repo.
+          fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
@@ -349,11 +352,20 @@ jobs:
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
 
-      - name: Run golangci-lint
+      - name: Run golangci-lint (new code only on PR)
         id: golangci-lint
         continue-on-error: true
         working-directory: backend
-        run: golangci-lint run ./...
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "${EVENT_NAME}" = "pull_request" ] && [ -n "${BASE_SHA}" ]; then
+            # Only lint lines changed in this PR — historical debt never blocks a PR
+            golangci-lint run --new-from-rev="${BASE_SHA}" ./...
+          else
+            golangci-lint run ./...
+          fi
 
       - name: Enforce go-lint gate
         if: always()
@@ -364,8 +376,11 @@ jobs:
         run: |
           echo "golangci-lint: ${GOLANGCI_LINT_RESULT}"
           echo "event: ${EVENT_NAME}"
-          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${EVENT_NAME}" = "merge_group" ]; then
-            echo "Go lint is report-only for PR and merge_group until existing findings are remediated."
+          # merge_group: new-code only, still enforce
+          if [ "${EVENT_NAME}" = "merge_group" ]; then
+            if [ "${GOLANGCI_LINT_RESULT}" != "success" ]; then
+              exit 1
+            fi
             exit 0
           fi
           if [ "${GOLANGCI_LINT_RESULT}" != "success" ]; then
@@ -425,8 +440,12 @@ jobs:
 
   smoke-sanity:
     name: Smoke Sanity
+    # Runs only after unit/contract layers pass — a failed unit test must not
+    # burn ~30 min of Playwright runner time.
     needs:
       - change-scope
+      - backend-tests
+      - frontend-contract
     if: ${{ github.event_name == 'merge_group' || needs.change-scope.outputs.governance_only != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
