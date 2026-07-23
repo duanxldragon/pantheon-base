@@ -107,7 +107,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install root dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Check docs frontmatter
         run: npm run check:docs-frontmatter
@@ -262,7 +262,9 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
 
       - name: Check menu contract
         working-directory: frontend
@@ -406,7 +408,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install root dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run duplication scan
         id: duplication
@@ -502,11 +504,13 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
 
       - name: Install Playwright browsers
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Start backend
         shell: bash

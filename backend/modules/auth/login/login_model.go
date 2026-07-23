@@ -11,7 +11,9 @@ type SystemLogLogin struct {
 	LoginLocation string    `gorm:"size:255"`
 	Browser       string    `gorm:"size:128"`
 	Os            string    `gorm:"size:128"`
-	Status        int       `gorm:"default:1"`
+	// No gorm default tag: LoginStatusFailure is 0, and GORM replaces zero-value
+	// fields that carry a default tag, which silently records failures as success.
+	Status        int
 	Msg           string    `gorm:"size:255"`
 	LoginTime     time.Time `gorm:"default:null"`
 }

@@ -8,8 +8,8 @@ name: Release Gate
 #   1. No open CodeQL error/critical alerts
 #   2. No open Dependabot high/critical alerts
 #   3. All CI jobs green on the candidate commit
-#   4. SonarCloud quality gate green (new-code only, via API)
-#   5. No unresolved SonarCloud BUG or VULNERABILITY issues (processed = 0)
+#   4. SonarCloud quality gate green
+#   5. No unresolved SonarCloud BUG, VULNERABILITY, or CODE_SMELL issues
 
 on:
   workflow_dispatch:
@@ -83,7 +83,7 @@ jobs:
           echo "✓ No open Dependabot high/critical alerts"
 
   # ============================================================
-  # Gate 3: SonarCloud — quality gate green + zero unprocessed bugs/vulns
+  # Gate 3: SonarCloud — quality gate green + zero open issues
   # ============================================================
   sonarcloud-gate:
     name: SonarCloud Gate
@@ -107,22 +107,22 @@ jobs:
           fi
           echo "✓ Quality gate OK"
 
-      - name: Check unprocessed SonarCloud bugs and vulnerabilities
+      - name: Check unprocessed SonarCloud issues
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
-          # Count issues that are OPEN (not yet accepted/FP/fixed) of type BUG or VULNERABILITY
+          # The freeze is not releasable while any SonarCloud issue remains open.
+          # Every finding must be fixed in code; bulk acceptance is not a release path.
           result=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
-            "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY&statuses=OPEN&ps=1")
+            "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=1")
           total=$(echo "$result" | jq -r '.total // 0')
-          echo "Unprocessed SonarCloud BUG+VULNERABILITY (OPEN status): $total"
+          echo "Unprocessed SonarCloud issues (OPEN status): $total"
           if [ "$total" -gt 0 ]; then
-            echo "Each issue must be either fixed, marked False Positive, or accepted (Won't Fix) with a rationale before release."
-            echo "::error::Release blocked: $total unprocessed BUG/VULNERABILITY issue(s) on SonarCloud."
+            echo "::error::Release blocked: $total unresolved SonarCloud issue(s)."
             exit 1
           fi
-          echo "✓ All bugs and vulnerabilities processed"
+          echo "✓ No unresolved SonarCloud issues"
 
   # ============================================================
   # Gate 4: Open PRs — no unmerged PRs targeting main
@@ -175,7 +175,7 @@ jobs:
           echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
           echo "| CodeQL (error/critical) | $CODEQL |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Dependabot (high/critical) | $DEPENDABOT |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| SonarCloud quality gate | $SONAR |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| SonarCloud quality gate and open issues | $SONAR |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Open PRs (advisory) | $OPEN_PRS |" >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$CODEQL" != "success" ] || \

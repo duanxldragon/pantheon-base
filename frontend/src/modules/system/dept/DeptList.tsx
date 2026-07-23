@@ -1200,7 +1200,6 @@ const DeptList: React.FC = () => {
                       }
                       primary={
                         <Button
-                          size="small"
                           type="primary"
                           icon={<IconPlus />}
                           onClick={openCreate}
@@ -1528,11 +1527,7 @@ const DeptList: React.FC = () => {
                       showSearch
                       loading={leaderCandidateLoading}
                       disabled={!editing || editing.isRoot}
-                      placeholder={
-                        editing
-                          ? t('system.dept.leaderCandidatePlaceholder')
-                          : t('system.dept.leaderCandidateCreateHint')
-                      }
+                      placeholder={t('system.dept.leaderCandidatePlaceholder')}
                       options={leaderCandidates.map((item) => ({
                         label: `${item.displayName} · ${item.postName || '-'}`,
                         value: item.userId,

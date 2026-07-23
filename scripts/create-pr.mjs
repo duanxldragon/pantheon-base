@@ -28,6 +28,18 @@ const message = values.message || process.env.PR_MESSAGE || 'Routine update';
 const isTrivial = values.trivial;
 const qualityProfile = isTrivial ? 'none' : values.profile;
 
+function validateCliInput(value, name, pattern) {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 200 || !pattern.test(value)) {
+    throw new Error(`invalid ${name}`);
+  }
+  return value;
+}
+
+validateCliInput(title, 'PR title', /^[^\r\n]+$/);
+validateCliInput(branch, 'branch', /^[A-Za-z0-9][A-Za-z0-9._/-]*$/);
+validateCliInput(message, 'commit message', /^[^\r\n]+$/);
+validateCliInput(qualityProfile, 'quality profile', /^[A-Za-z0-9._-]+$/);
+
 const GITHUB_REPO = execFileSync('git', ['remote', 'get-url', 'origin'], { encoding: 'utf8' })
   .trim()
   .replace(/.*github\.com[/:]/, '')
@@ -114,7 +126,7 @@ const prBody = `## 变更摘要
 
 function run(cmd) {
   console.log(`$ ${cmd}`);
-  execFileSync(cmd[0], cmd.slice(1), { stdio: 'inherit' });
+  execFileSync(cmd[0], cmd.slice(1), { stdio: 'inherit', shell: false });
 }
 
 // Create branch and commit if not exists

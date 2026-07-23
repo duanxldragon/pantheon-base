@@ -103,6 +103,7 @@ const enUSFallback = {
   'auth.loginSuccess': 'Login Successful',
   'auth.login.entryTag': 'Unified Auth Entry',
   'auth.login.title': 'Welcome back',
+  'auth.login.audit.title': 'User Login',
   'auth.login.subtitle':
     'Sign in to enter the platform workspace and manage identity, permissions, menus, and security.',
   'auth.login.consoleLabel': 'Admin Auth Console',
@@ -380,6 +381,7 @@ const enUSFallback = {
   'common.import': 'Import',
   'common.export': 'Export',
   'common.downloadTemplate': 'Download Template',
+  'common.more': 'More',
   'common.updatedAt': 'Updated At',
   'common.loadFailed': 'Load Failed',
   'common.loadFailedDesc':

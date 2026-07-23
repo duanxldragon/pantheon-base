@@ -1159,45 +1159,57 @@ const RoleList: React.FC = () => {
         >
           <Space direction="vertical" size={20} className="dialog-form-stack">
             <FormSection title={t('common.basicInfo')}>
-              <FormItem
-                label={t('system.role.roleName')}
-                field="roleName"
-                rules={[{ required: true, message: t('system.role.roleName.required') }]}
-              >
-                <Input onPressEnter={() => form.submit()} />
-              </FormItem>
-              <FormItem
-                label={t('system.role.roleKey')}
-                field="roleKey"
-                rules={[{ required: true, message: t('system.role.roleKey.required') }]}
-              >
-                <Input disabled={protectedRole} onPressEnter={() => form.submit()} />
-              </FormItem>
-              <FormItem label={t('system.role.sort')} field="sort">
-                <InputNumber min={0} />
-              </FormItem>
-              <FormItem label={t('system.role.status')} field="status">
-                <Select
-                  disabled={protectedRole}
-                  options={[
-                    { label: t('system.user.status.enabled'), value: 1 },
-                    { label: t('system.user.status.disabled'), value: 2 },
-                  ]}
-                />
-              </FormItem>
-              <FormItem label={t('system.role.dataScope')} field="dataScope">
-                <Select
-                  options={[
-                    { label: t('system.permission.dataScope.mode.all'), value: 'all' },
-                    { label: t('system.permission.dataScope.mode.self'), value: 'self' },
-                    { label: t('system.permission.dataScope.mode.dept'), value: 'dept' },
-                    {
-                      label: t('system.permission.dataScope.mode.deptAndChildren'),
-                      value: 'dept_and_children',
-                    },
-                  ]}
-                />
-              </FormItem>
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <FormItem
+                    label={t('system.role.roleName')}
+                    field="roleName"
+                    rules={[{ required: true, message: t('system.role.roleName.required') }]}
+                  >
+                    <Input onPressEnter={() => form.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12}>
+                  <FormItem
+                    label={t('system.role.roleKey')}
+                    field="roleKey"
+                    rules={[{ required: true, message: t('system.role.roleKey.required') }]}
+                  >
+                    <Input disabled={protectedRole} onPressEnter={() => form.submit()} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12}>
+                  <FormItem label={t('system.role.sort')} field="sort">
+                    <InputNumber min={0} />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12}>
+                  <FormItem label={t('system.role.status')} field="status">
+                    <Select
+                      disabled={protectedRole}
+                      options={[
+                        { label: t('system.user.status.enabled'), value: 1 },
+                        { label: t('system.user.status.disabled'), value: 2 },
+                      ]}
+                    />
+                  </FormItem>
+                </Col>
+                <Col xs={24} md={12}>
+                  <FormItem label={t('system.role.dataScope')} field="dataScope">
+                    <Select
+                      options={[
+                        { label: t('system.permission.dataScope.mode.all'), value: 'all' },
+                        { label: t('system.permission.dataScope.mode.self'), value: 'self' },
+                        { label: t('system.permission.dataScope.mode.dept'), value: 'dept' },
+                        {
+                          label: t('system.permission.dataScope.mode.deptAndChildren'),
+                          value: 'dept_and_children',
+                        },
+                      ]}
+                    />
+                  </FormItem>
+                </Col>
+              </Row>
             </FormSection>
             <FormSection
               title={t('common.accessControl')}

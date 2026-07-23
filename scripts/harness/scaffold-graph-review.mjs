@@ -508,7 +508,7 @@ function main() {
   }
 
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
     console.log(
       `Graph review scaffold (${options.write ? 'write' : 'report-only'}): ${result.taskId}\n` +

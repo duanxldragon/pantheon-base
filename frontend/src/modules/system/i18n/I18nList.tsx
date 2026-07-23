@@ -4,9 +4,11 @@ import {
   Button,
   Checkbox,
   Descriptions,
+  Dropdown,
   Form,
   Grid,
   Input,
+  Menu,
   Popconfirm,
   Select,
   Space,
@@ -19,6 +21,7 @@ import {
   IconDelete,
   IconEdit,
   IconEye,
+  IconMore,
   IconRefresh,
 } from '@arco-design/web-react/icon';
 import { IconDownload } from '@arco-design/web-react/icon';
@@ -1272,25 +1275,6 @@ const I18nList: React.FC = () => {
                         >
                           {t('common.refresh')}
                         </Button>
-                        <Button
-                          size="small"
-                          icon={<IconEye />}
-                          onClick={() => void handleOpenAudit()}
-                        >
-                          {t('i18n.audit.action')}
-                        </Button>
-                        {canHydrateBuiltin ? (
-                          <Button
-                            size="small"
-                            status="warning"
-                            loading={hydratingBuiltinLocales}
-                            onClick={() =>
-                              void handleHydrateBuiltinLocales(query.module || undefined)
-                            }
-                          >
-                            {t('i18n.hydrateBuiltin.action')}
-                          </Button>
-                        ) : null}
                         {canExport ? (
                           <Button
                             size="small"
@@ -1301,28 +1285,51 @@ const I18nList: React.FC = () => {
                           </Button>
                         ) : null}
                         {canImport ? (
-                          <>
-                            <Button size="small" onClick={() => void handleDownloadTemplate()}>
-                              {t('common.downloadTemplate')}
-                            </Button>
-                            <ImportCsvButton
-                              onSelect={(file) => {
-                                void handleImport(file);
+                          <ImportCsvButton
+                            onSelect={(file) => {
+                              void handleImport(file);
+                            }}
+                          >
+                            {t('i18n.import')}
+                          </ImportCsvButton>
+                        ) : null}
+                        <Dropdown
+                          trigger="click"
+                          droplist={
+                            <Menu
+                              onClickMenuItem={(key) => {
+                                if (key === 'audit') {
+                                  void handleOpenAudit();
+                                } else if (key === 'hydrate') {
+                                  void handleHydrateBuiltinLocales(query.module || undefined);
+                                } else if (key === 'template') {
+                                  void handleDownloadTemplate();
+                                } else if (key === 'refreshCache') {
+                                  void handleRefreshCache();
+                                }
                               }}
                             >
-                              {t('i18n.import')}
-                            </ImportCsvButton>
-                          </>
-                        ) : null}
-                        <Button
-                          size="small"
-                          status="warning"
-                          icon={<IconRefresh />}
-                          onClick={() => void handleRefreshCache()}
-                          disabled={!canRefresh}
+                              <Menu.Item key="audit">{t('i18n.audit.action')}</Menu.Item>
+                              {canHydrateBuiltin ? (
+                                <Menu.Item key="hydrate" disabled={hydratingBuiltinLocales}>
+                                  {t('i18n.hydrateBuiltin.action')}
+                                </Menu.Item>
+                              ) : null}
+                              {canImport ? (
+                                <Menu.Item key="template">
+                                  {t('common.downloadTemplate')}
+                                </Menu.Item>
+                              ) : null}
+                              <Menu.Item key="refreshCache" disabled={!canRefresh}>
+                                {t('i18n.refreshCache')}
+                              </Menu.Item>
+                            </Menu>
+                          }
                         >
-                          {t('i18n.refreshCache')}
-                        </Button>
+                          <Button size="small" icon={<IconMore />}>
+                            {t('common.more')}
+                          </Button>
+                        </Dropdown>
                       </>
                     }
                     primary={

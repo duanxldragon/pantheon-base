@@ -1,0 +1,79 @@
+{
+  "taskId": "2026-07-23-base-freeze-sonar-control",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": ".agents/adapters/claude-code.md"
+  },
+  "commands": [
+    {
+      "command": "node --test tests/scripts/quality-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "3/3 pass after paths-filter pin update to 7b450fff21473bca461d4b92ce414b9d0420d706 in quality.yml and matching test expectation."
+    },
+    {
+      "command": "node scripts/check-shell-visual-contract.mjs",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Contract passes after hasDeclaration regex hardening (proper escaping of property and value instead of caller-side double-escaped patterns) — Sonar reliability finding on regex construction resolved without weakening the contract."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 findings after simplifying --repo filtering (S7728-class simplification); pantheon-ops root-not-found warning is expected in the standalone checkout."
+    },
+    {
+      "command": "npm run check:harness-sync",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Strict sync drift 0 findings — modified harness scripts (check-boundaries, check-evidence, scaffold-graph-review, build-graph-review-import) are consistent with the pantheon-harness mirror."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Strict docs inventory 0 findings."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:structure && npm run check:pr-governance && npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "202 docs checked; structure contract 0 findings across 1140 tracked files; PR template and task-packet template gates OK."
+    },
+    {
+      "command": "node --test tests/scripts/check-pr-governance.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "6/6 pass — pr-automation.yml governance-prereq job invokes the same checker with --event."
+    },
+    {
+      "command": "node scripts/check-shell-visual-contract.mjs && node --test tests/scripts/quality-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Re-run after PR #200 SonarCloud round: S8545 fixed by replacing go install with checksum-verified release tarball in lint-workflows.yml; S7780 x3 fixed by String.raw in hasDeclaration. Contract still passes, workflow tests 3/3."
+    },
+    {
+      "command": "actionlint -color -shellcheck=\"\"",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "actionlint binary not installed locally on Windows; the Lint Workflows CI job (now installing via go install with pinned setup-go) is the enforcement point and must be green on the PR."
+    }
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-23-base-freeze-sonar-control/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-23-base-freeze-sonar-control/",
+    "reviewFile": ".harness/evidence/2026-07-23-base-freeze-sonar-control/review.md",
+    "summaryFile": ".harness/evidence/2026-07-23-base-freeze-sonar-control/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "actionlint not executed locally (Windows, no binary); enforced by the Lint Workflows CI job on the PR.",
+    "SonarCloud zero-open-issue verification is post-merge by design: automatic analysis runs on main after squash-merge, then Release Gate's strengthened BUG+VULNERABILITY+CODE_SMELL OPEN=0 query is the final proof.",
+    "Historical evidence files under .harness/evidence/ from earlier tasks fail the current commands.json schema in report-only mode (54 pre-existing errors); out of scope for this freeze task and unchanged by it."
+  ],
+  "completedAt": "2026-07-23T14:59:03+08:00"
+}

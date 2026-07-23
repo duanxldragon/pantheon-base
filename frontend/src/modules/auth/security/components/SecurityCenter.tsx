@@ -605,7 +605,7 @@ const SecurityCenter: React.FC = () => {
                       });
                     },
                   })}
-                  scroll={{ x: 1100 }}
+                  scroll={{ x: 'max-content' }}
                   emptyText={t('auth.session.empty')}
                 />
               )}

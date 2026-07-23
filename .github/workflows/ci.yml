@@ -85,15 +85,17 @@ jobs:
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
 
       - name: TypeScript type check
         working-directory: frontend
-        run: npx tsc --noEmit
+        run: ./node_modules/.bin/tsc --noEmit
 
       - name: ESLint check
         working-directory: frontend
-        run: npx eslint src --max-warnings 0
+        run: ./node_modules/.bin/eslint src --max-warnings 0
 
   # ============================================================
   # Phase 2: Unit Tests
@@ -135,7 +137,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Run npm script tests
-        run: npm ci && npm run test:docs-frontmatter
+        run: npm ci --ignore-scripts && npm run test:docs-frontmatter
 
   # ============================================================
   # Phase 2b: Frontend Unit Tests (Vitest + coverage)
