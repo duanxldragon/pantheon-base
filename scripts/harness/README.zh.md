@@ -36,6 +36,7 @@ node scripts/harness/check-encoding.mjs --root . --strict
 - `check-audit-coverage.mjs`
 - `check-backend-dto-contract.mjs`
 - `check-backend-response-contract.mjs`
+- `check-coverage.mjs`（单测覆盖率门禁，支持 Go cover profile 与 vitest coverage-summary `--format json`）
 - `check-inheritance-contract.mjs`
 - `check-structure-contract.mjs`（目录放置 + 命名门禁，契约源 REPOSITORY_LAYOUT.md；与 check-boundaries 的 import 边界互补）
 - `check-permission-contract.mjs`

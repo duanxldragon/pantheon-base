@@ -376,11 +376,12 @@ jobs:
         run: |
           echo "golangci-lint: ${GOLANGCI_LINT_RESULT}"
           echo "event: ${EVENT_NAME}"
-          # merge_group: new-code only, still enforce
-          if [ "${EVENT_NAME}" = "merge_group" ]; then
-            if [ "${GOLANGCI_LINT_RESULT}" != "success" ]; then
-              exit 1
-            fi
+          # push (main/release): report-only — full-repo lint carries accepted
+          # historical debt (see .harness/tasks/2026-07-22-sonarcloud-remediation),
+          # same policy as ci.yml. New code stays gated below on PR/merge_group
+          # where lint runs --new-from-rev.
+          if [ "${EVENT_NAME}" = "push" ]; then
+            echo "Full-repo lint is report-only on push; new-code enforcement applies to PR/merge_group"
             exit 0
           fi
           if [ "${GOLANGCI_LINT_RESULT}" != "success" ]; then
