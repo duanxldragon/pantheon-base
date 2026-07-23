@@ -1,0 +1,48 @@
+{
+  "taskId": "2026-07-23-main-quality-gates-green",
+  "title": "Restore green Code Quality Gates on main after PR #198 merge",
+  "goal": "Fix the three failures that turned Code Quality Gates red on the main push for PR #198: (1) check-coverage.mjs missing from the scripts/harness README inventory (Harness Inventory strict gate), (2) check-doc-frontmatter.mjs mirror drift against pantheon-harness (Harness Sync strict gate; canonical side is pantheon-base per PR #196 SonarCloud S2871 fix, upstream synced separately), (3) quality.yml go-lint enforcing full-repo lint on push events, contradicting the accepted-historical-debt policy already applied to ci.yml in PR #198.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow", "harness-governance"],
+  "scope": {
+    "in": [
+      "scripts/harness/README.md: register check-coverage.mjs in the Pantheon Base Additions inventory",
+      "scripts/harness/README.zh.md: same registration, bilingual parity",
+      ".github/workflows/quality.yml: go-lint enforce step becomes report-only for push events (PR/merge_group new-code enforcement unchanged)",
+      ".harness/{tasks,evidence}/2026-07-23-main-quality-gates-green/: governance artifacts"
+    ],
+    "out": [
+      "any change to golangci-lint rules or lint debt itself (tracked in 2026-07-22-sonarcloud-remediation)",
+      "pantheon-harness upstream sync (committed directly to pantheon-harness main as 57223d9, one-line localeCompare sync)",
+      "runtime code (backend/, frontend/src) — untouched"
+    ]
+  },
+  "taskDoc": "Post-merge red-gate remediation for main push d58c84e8 (PR #198). Run 29969367373: Docs Governance failed on Harness Inventory + Harness Sync (strict on push), Go Lint failed on full-repo historical debt. CI and Security Gates on the same commit are green (2 CodeQL go/log-injection alerts on logger.go dismissed as false positive — SanitizeLogValue strings.Map barrier not modeled by CodeQL).",
+  "contractAnchors": [
+    "scripts/harness/README.md",
+    ".github/workflows/quality.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-23-main-quality-gates-green/manifest.json",
+      ".harness/evidence/2026-07-23-main-quality-gates-green/commands.json",
+      ".harness/evidence/2026-07-23-main-quality-gates-green/summary.md",
+      ".harness/evidence/2026-07-23-main-quality-gates-green/review.md",
+      ".harness/evidence/2026-07-23-main-quality-gates-green/pr-body.md"
+    ],
+    "modify": [
+      "scripts/harness/README.md",
+      "scripts/harness/README.zh.md",
+      ".github/workflows/quality.yml"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-23-main-quality-gates-green",
+    "taskPacket": ".harness/tasks/2026-07-23-main-quality-gates-green/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-23-main-quality-gates-green/",
+    "reviewFile": ".harness/evidence/2026-07-23-main-quality-gates-green/review.md",
+    "summaryFile": ".harness/evidence/2026-07-23-main-quality-gates-green/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

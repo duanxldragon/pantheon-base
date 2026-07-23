@@ -52,6 +52,7 @@ The following scripts are repo-specific and not part of the portable method:
 - `check-audit-coverage.mjs` - audit coverage validation.
 - `check-backend-dto-contract.mjs` - backend DTO contract checks.
 - `check-backend-response-contract.mjs` - backend response contract checks.
+- `check-coverage.mjs` - unit-test coverage gate (Go cover profile / vitest coverage-summary via `--format json`).
 - `check-inheritance-contract.mjs` - base-to-ops inheritance validation.
 - `check-structure-contract.mjs` - file placement + naming against REPOSITORY_LAYOUT.md (complements check-boundaries import rules).
 - `check-permission-contract.mjs` - permission model contract checks.
