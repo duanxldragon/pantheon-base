@@ -524,6 +524,15 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 		return []permissionRequiredAPIPolicy{
 			{Path: "/api/v1/system/security-event/list", Method: "GET"},
 		}
+	case "system:security-event:acknowledge":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/security-event/:id/acknowledge", Method: "POST"},
+			{Path: "/api/v1/system/security-event/batch-acknowledge", Method: "POST"},
+		}
+	case "system:security-event:clear":
+		return []permissionRequiredAPIPolicy{
+			{Path: "/api/v1/system/security-event/cleanup", Method: "POST"},
+		}
 	case "system:module:list":
 		return []permissionRequiredAPIPolicy{
 			{Path: "/api/v1/lowcode/dynamic-modules", Method: "GET"},
