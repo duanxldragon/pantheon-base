@@ -1,0 +1,29 @@
+{
+  "taskId": "2026-07-25-sonar-small-buckets",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-direct",
+    "adapter": ".agents/adapters/claude-code.md",
+    "note": "Codex relay (api.freemodel.dev) still returns 401/hangs; direct implementation per maintainer precedent 2026-07-23."
+  },
+  "commands": [
+    {
+      "command": "curl api/issues/search componentKeys=duanxldragon_pantheon-base resolved=false statuses=OPEN (per-file drilldown)",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Enumerated the exact 22 findings with file:line:rule:message before editing; every fix below maps 1:1 to a listed finding."
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/tsc --noEmit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Type check clean with the edited test files (getAnimations subtree waits, String.raw regex, randomUUID import)."
+    },
+    {
+      "command": "PR-gate Smoke Sanity (test:smoke:platform:contracts + test:smoke:system:pages)",
+      "cwd": "pantheon-base",
+      "status": "pending",
+      "notes": "The edited shell-visual-contract.spec.ts and system-pages.spec.ts waits are exercised directly by the PR's required Smoke Sanity job; full-page-audit.spec.ts is a manual QA sweep, not a CI gate."
+    }
+  ]
+}

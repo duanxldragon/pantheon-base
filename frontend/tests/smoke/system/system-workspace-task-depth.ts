@@ -279,7 +279,7 @@ export function registerSystemWorkspaceTaskDepthSmokeTests({
       await expect(page.getByText('账号摘要', { exact: true })).toBeVisible();
       await expect(
         page.getByRole('row', {
-          name: new RegExp(`用户名\\s+${detailPayload.data.username}`),
+          name: new RegExp(String.raw`用户名\s+${detailPayload.data.username}`),
         }).first(),
       ).toBeVisible();
       // The UI applies translateRoleName() to roleNames, converting i18n keys

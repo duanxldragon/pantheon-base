@@ -38,7 +38,14 @@ test('auth smoke helper does not emit storage security errors on about:blank pag
   await primeChineseLocale(page);
   await installClientSession(page, fakeLogin);
   await page.goto('about:blank', { waitUntil: 'load' });
-  await page.waitForTimeout(50);
+  // Flush two frames so queued error/pageerror events are delivered before the
+  // negative assertion — replaces a fixed 50ms delay.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
 
   assert.deepEqual(runtimeErrors, []);
 

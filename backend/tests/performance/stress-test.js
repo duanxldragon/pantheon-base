@@ -20,7 +20,7 @@ export const options = {
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
-export default function () {
+export default function stressScenario() {
   // 混合负载测试
   const testCases = [
     // 健康检查
@@ -37,14 +37,15 @@ export default function () {
     () => http.get(`${BASE_URL}/metrics`),
   ];
 
-  // 随机选择一个测试用例
-  const randomTest = testCases[Math.floor(Math.random() * testCases.length)];
-  const res = randomTest();
+  // 按 VU/迭代序号轮转选择测试用例：分布均匀且可复现（无需伪随机数）
+  const selectedTest = testCases[(__VU + __ITER) % testCases.length];
+  const res = selectedTest();
 
   check(res, {
     'status is not 500': (r) => r.status !== 500,
     'response time < 2s': (r) => r.timings.duration < 2000,
   });
 
-  sleep(Math.random() * 3);
+  // 1-3 秒确定性思考时间，按迭代序号错开，避免所有 VU 同步冲击
+  sleep((__ITER % 3) + 1);
 }

@@ -24,7 +24,7 @@ FROM golang:1.26.5-alpine AS backend-builder
 WORKDIR /app
 
 # 安装构建依赖
-RUN apk add --no-cache git ca-certificates tzdata
+RUN apk add --no-cache ca-certificates git tzdata
 
 # 复制 Go 模块文件
 COPY backend/go.mod backend/go.sum ./
@@ -46,17 +46,15 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 FROM alpine:3.19
 
 # 安装运行时依赖
-RUN apk --no-cache add ca-certificates tzdata curl
+RUN apk --no-cache add ca-certificates curl tzdata
 
 # 设置时区
 ENV TZ=Asia/Shanghai
 
 # 创建非 root 用户
 RUN addgroup -g 1000 pantheon && \
-    adduser -D -u 1000 -G pantheon pantheon
-
-# 创建目录
-RUN mkdir -p /app/dist /app/uploads /var/log/pantheon && \
+    adduser -D -u 1000 -G pantheon pantheon && \
+    mkdir -p /app/dist /app/uploads /var/log/pantheon && \
     chown -R pantheon:pantheon /app /var/log/pantheon
 
 WORKDIR /app

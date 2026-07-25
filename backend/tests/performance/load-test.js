@@ -39,7 +39,7 @@ export function setup() {
 }
 
 // 主测试逻辑
-export default function (data) {
+export default function loadScenario(data) {
   // 1. 测试健康检查
   const healthRes = http.get(`${data.baseUrl}/api/v1/health`);
   check(healthRes, {

@@ -193,7 +193,12 @@ async function readDialogContract(
   }
   const dialogLocator = getVisibleDialog(page);
   await expect(dialogLocator).toBeVisible();
-  await page.waitForTimeout(250);
+  // Wait for the modal open transition to finish instead of a fixed delay.
+  await dialogLocator
+    .evaluate((el) =>
+      Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => undefined))),
+    )
+    .catch(() => {});
   return dialogLocator.evaluate((dialog) => {
     const header = dialog.querySelector<HTMLElement>('.arco-modal-header');
     const content = dialog.querySelector<HTMLElement>('.arco-modal-content');
@@ -1334,7 +1339,12 @@ test('emerald theme dialogs keep themed select focus and single-line authorizati
   await expect(roleStatusView).toBeVisible();
   await roleStatusView.click();
   await expect(roleStatusSelect).toHaveClass(/arco-select-open/);
-  await page.waitForTimeout(100);
+  // Wait for the focus/open border transition to finish instead of a fixed delay.
+  await roleStatusView
+    .evaluate((el) =>
+      Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => undefined))),
+    )
+    .catch(() => {});
   const roleStatusContract = await roleStatusView.evaluate((view) => {
     const style = globalThis.getComputedStyle(view);
     return {

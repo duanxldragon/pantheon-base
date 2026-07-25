@@ -194,7 +194,8 @@ test.describe('full page audit', () => {
     const tokens = await loginByApi(page.request, adminCredentials);
     await installClientSession(page, tokens);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1500);
+    await page.locator('.app-shell .arco-layout-sider').waitFor({ state: 'visible' });
+    await page.waitForLoadState('networkidle').catch(() => {});
 
     const geo = await page.evaluate(() => {
       const shell = document.querySelector('.app-shell');
@@ -262,7 +263,6 @@ test.describe('full page audit', () => {
 
       await page.goto(ap.path, { waitUntil: 'domcontentloaded' });
       // let async data settle
-      await page.waitForTimeout(1500);
       await page.waitForLoadState('networkidle').catch(() => notes.push('networkidle timeout'));
 
       const titleVisible = await page
@@ -300,10 +300,18 @@ test.describe('full page audit', () => {
               .filter({ has: page.getByText(ap.dialogTitle, { exact: true }) });
             await expect(dialog).toBeVisible({ timeout: 5000 });
             dialogOpened = true;
-            await page.waitForTimeout(500);
+            // Wait for the modal open transition to finish instead of a fixed delay.
+            await dialog
+              .evaluate((el) =>
+                Promise.all(
+                  el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => undefined)),
+                ),
+              )
+              .catch(() => {});
             await page.screenshot({
               path: path.join(OUT_DIR, `${ap.key}__dialog.png`),
               fullPage: true,
+              animations: 'disabled',
             });
             // dialog overflow / empty checks
             const box = await dialog.boundingBox();
