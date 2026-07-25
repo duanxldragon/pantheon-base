@@ -201,14 +201,16 @@ jobs:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           cache: true
 
-      - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
-
+      # golangci/golangci-lint-action v9.3.0 — checksum-verified prebuilt binary
+      # replaces `go install pkg@version` (SonarCloud githubactions:S8545).
       - name: Run golangci-lint
         id: lint
         continue-on-error: true
-        working-directory: backend
-        run: golangci-lint run ./...
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
+        with:
+          version: v2.6.2
+          working-directory: backend
+          args: ./...
 
       - name: Handle lint results
         shell: bash

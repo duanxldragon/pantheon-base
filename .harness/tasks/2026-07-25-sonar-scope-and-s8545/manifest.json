@@ -1,0 +1,60 @@
+{
+  "taskId": "2026-07-25-sonar-scope-and-s8545",
+  "title": "SonarCloud analysis-scope control and S8545 workflow remediation",
+  "goal": "Reduce the SonarCloud OPEN backlog by scoping automatic analysis to shipped product code (maintainer-approved scope decision), and fix the two githubactions:S8545 findings by replacing go-install of golangci-lint with the SHA-pinned official action.",
+  "primaryLayer": "ci-workflow",
+  "dependencyLayers": ["quality-governance"],
+  "scope": {
+    "in": [
+      ".sonarcloud.properties analysis-scope exclusions (scripts, frontend/scripts, database, *.sql, i18n resources)",
+      "githubactions:S8545 remediation in ci.yml and quality.yml (golangci-lint-action, SHA-pinned)",
+      "Coverage-is-empty root-cause documentation (automatic analysis imports no coverage reports)"
+    ],
+    "out": [
+      "Product-code issue remediation batches (follow-up tasks: small buckets, go:S1192, frontend style rules, S3776 refactors)",
+      "Switching to CI-based SonarCloud analysis (deferred post-freeze: uploading coverage would activate the Sonar way new_coverage>=80 condition against mechanical remediation PRs)",
+      "pantheon-ops work (deferred until base release is cut; ops syncs against the release)"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md"
+  ],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "repo-quality-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Commit a .sonarcloud.properties scope file (autoscan honors it; verify issue count after merge) and swap both go-install lint steps for golangci/golangci-lint-action pinned to the v9.3.0 commit, keeping golangci-lint v2.6.2 and the existing report-only/new-code gate semantics unchanged.",
+  "successCriteria": [
+    "SonarCloud OPEN count drops by the excluded-scope share (~355: tooling 261, sql 47, i18n-resource S2068 FPs 47) after the next main analysis.",
+    "githubactions:S8545 no longer reported on ci.yml or quality.yml.",
+    "Lint gate behavior is unchanged: report-only full-repo on push, --new-from-rev enforcement on PR.",
+    "backend/go.mod and go.sum are untouched (go-tool route explicitly rejected: it downgraded minio-go v7.2.1 to v7.1.0 and drifted golangci-lint to 2.12.2).",
+    "Coverage root cause is documented: automatic analysis runs no tests and imports no coverage reports, so SonarCloud has no coverage metric; CI already produces backend/coverage.out and frontend lcov but nothing uploads them."
+  ],
+  "expectedFiles": {
+    "modify": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/quality.yml"
+    ],
+    "create": [
+      ".sonarcloud.properties",
+      ".harness/tasks/2026-07-25-sonar-scope-and-s8545/manifest.json",
+      ".harness/evidence/2026-07-25-sonar-scope-and-s8545/commands.json",
+      ".harness/evidence/2026-07-25-sonar-scope-and-s8545/summary.md",
+      ".harness/evidence/2026-07-25-sonar-scope-and-s8545/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-25-sonar-scope-and-s8545",
+    "taskPacket": ".harness/tasks/2026-07-25-sonar-scope-and-s8545/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-25-sonar-scope-and-s8545/",
+    "reviewFile": ".harness/evidence/2026-07-25-sonar-scope-and-s8545/review.md",
+    "summaryFile": ".harness/evidence/2026-07-25-sonar-scope-and-s8545/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "gate-updated",
+  "githubSignal": "required",
+  "deferredCodeIssues": "Remaining OPEN issues after scope control (~457) are product/test/container code and are scheduled as code-fix batches: small buckets (Dockerfile, index.html, start-dev.sh, tests), go:S1192 constants, frontend style rules, then S3776 cognitive-complexity refactors. The scope exclusions carry individual documented rationales in .sonarcloud.properties and in this manifest; no Sonar-side bulk closure is used."
+}
