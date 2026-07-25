@@ -81,6 +81,7 @@ const frFRFallback = {
   'auth.loginSuccess': 'Connexion réussie',
   'auth.login.entryTag': "Point d'entrée d'authentification unifié",
   'auth.login.title': 'Bienvenue de retour',
+  'auth.login.audit.title': 'Connexion utilisateur',
   'auth.login.subtitle':
     'Connectez-vous pour accéder à l’espace de travail plateforme et gérer identité, permissions, menus et sécurité.',
   'auth.login.consoleLabel': "Console d'authentification admin",
@@ -136,6 +137,7 @@ const frFRFallback = {
   'common.import': 'Importer',
   'common.export': 'Exporter',
   'common.downloadTemplate': 'Télécharger le modèle',
+  'common.more': 'Plus',
   'common.updatedAt': 'Mis à jour le',
   'common.loadFailed': 'Chargement échoué',
   'common.loadFailedDesc':

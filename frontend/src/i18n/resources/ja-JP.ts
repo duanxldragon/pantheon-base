@@ -78,6 +78,7 @@ const jaJPFallback = {
   'auth.loginSuccess': 'ログインしました',
   'auth.login.entryTag': '統一認証入口',
   'auth.login.title': 'お帰りなさい',
+  'auth.login.audit.title': 'ユーザーログイン',
   'auth.login.subtitle':
     'サインインしてプラットフォームワークスペースに入り、ID、権限、メニュー、セキュリティを管理します。',
   'auth.login.consoleLabel': '管理認証コンソール',
@@ -132,6 +133,7 @@ const jaJPFallback = {
   'common.import': 'インポート',
   'common.export': 'エクスポート',
   'common.downloadTemplate': 'テンプレートをダウンロード',
+  'common.more': 'その他',
   'common.updatedAt': '更新日時',
   'common.loadFailed': '読み込みに失敗しました',
   'common.loadFailedDesc':

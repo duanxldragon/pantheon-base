@@ -553,7 +553,7 @@ const SessionList: React.FC = () => {
                 data={data}
                 columns={columns}
                 loading={loading}
-                scroll={{ x: 1600 }}
+                scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
                 emptyText={t('auth.session.empty')}
                 rowSelection={

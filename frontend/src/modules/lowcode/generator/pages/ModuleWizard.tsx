@@ -50,6 +50,7 @@ import { FieldEditor } from '../../components/FieldEditor';
 import { CodePreview } from '../../components/CodePreview';
 import DatasourceManagerModal from './components/DatasourceManagerModal';
 import MenuPreviewTree from './components/MenuPreviewTree';
+import '../../../system/components/shared/list-page.css';
 import './ModuleWizard.css';
 import {
   buildDashboardQuickActionDescriptionKey,

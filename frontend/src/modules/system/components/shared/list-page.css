@@ -1958,6 +1958,9 @@ body
   .list-header-actions__utility,
   .list-header-actions__primary {
     width: 100%;
+    /* 纵向堆叠后主轴变为垂直，桌面端的 flex-basis: 280px 会变成 280px 高度
+     * 的空档，这里必须归零。 */
+    flex-basis: auto;
   }
 
   .list-header-actions__utility .arco-btn,

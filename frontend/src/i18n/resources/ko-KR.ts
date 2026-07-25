@@ -77,6 +77,7 @@ const koKRFallback = {
   'auth.loginSuccess': '로그인 성공',
   'auth.login.entryTag': '통합 인증 진입점',
   'auth.login.title': '다시 오신 것을 환영합니다',
+  'auth.login.audit.title': '사용자 로그인',
   'auth.login.subtitle':
     '로그인하여 플랫폼 워크스페이스로 진입하고 계정, 권한, 메뉴, 보안을 관리하세요.',
   'auth.login.consoleLabel': '관리 인증 콘솔',
@@ -130,6 +131,7 @@ const koKRFallback = {
   'common.import': '가져오기',
   'common.export': '내보내기',
   'common.downloadTemplate': '템플릿 다운로드',
+  'common.more': '더 보기',
   'common.updatedAt': '업데이트 시간',
   'common.loadFailed': '불러오기에 실패했습니다',
   'common.loadFailedDesc':

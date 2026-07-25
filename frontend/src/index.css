@@ -552,6 +552,11 @@ a {
   gap: 12px;
 }
 
+/* 4 metric cards with descriptions: a fixed 2x2 grid avoids the 3+1 auto-fit hole. */
+.setting-page__governance-bar .governance-summary-bar__metrics {
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
 .setting-page__group-nav-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

@@ -501,8 +501,8 @@ function main() {
   const warningCount = results.reduce((count, result) => count + result.warnings.length, 0);
 
   if (options.json) {
-    console.log(
-      JSON.stringify(
+    process.stdout.write(
+      `${JSON.stringify(
         {
           mode: options.strict ? 'strict' : 'report-only',
           fileCount: results.length,
@@ -512,7 +512,7 @@ function main() {
         },
         null,
         2,
-      ),
+      )}\n`,
     );
   } else {
     printTextReport(results, options);

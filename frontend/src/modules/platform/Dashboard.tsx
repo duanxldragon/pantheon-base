@@ -738,7 +738,7 @@ const DashboardPage: React.FC = () => {
               columns={loginColumns}
               data={recentLoginPreview}
               pagination={false}
-              scroll={{ x: 1040 }}
+              scroll={{ x: 'max-content' }}
               emptyText={t('dashboard.recentLoginsEmpty')}
             />
           </Card>

@@ -58,7 +58,7 @@ jobs:
         id: npm-audit-root
         continue-on-error: true
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npm audit --registry=https://registry.npmjs.org --json --audit-level=high > security-reports/npm-audit-root.json || true
 
       - name: Report npm vulnerabilities (frontend)
@@ -66,7 +66,7 @@ jobs:
         continue-on-error: true
         working-directory: frontend
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npm audit --registry=https://registry.npmjs.org --json --audit-level=high > ../security-reports/npm-audit-frontend.json || true
 
       - name: Upload reports
@@ -270,9 +270,13 @@ jobs:
   # ============================================================
   # Phase 5: Summary
   # ============================================================
-  security-summary:
-    name: Security Summary
-    needs: [dependency-vulnerabilities, secret-scan, workflow-security, codeql-scan]
+  security-gates:
+    name: Security Gates
+    needs:
+      - dependency-vulnerabilities
+      - secret-scan
+      - workflow-security
+      - codeql-scan
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -316,13 +320,25 @@ jobs:
       - name: Enforce CodeQL gate
         shell: bash
         env:
+          DEPENDENCY_VULNERABILITIES_RESULT: ${{ needs.dependency-vulnerabilities.result }}
           CODEQL_ALERTS: ${{ steps.codeql-alerts.outputs.count }}
           SECRET_SCAN: ${{ needs.secret-scan.result }}
+          WORKFLOW_SECURITY: ${{ needs.workflow-security.result }}
+          CODEQL_SCAN: ${{ needs.codeql-scan.result }}
         run: |
+          if [ "${DEPENDENCY_VULNERABILITIES_RESULT}" != "success" ] && \
+             [ "${DEPENDENCY_VULNERABILITIES_RESULT}" != "skipped" ]; then
+            echo "::error::Dependency vulnerability scan failed"
+            exit 1
+          fi
           # Secret scan is always a hard gate (already enforced in its own job,
           # but double-check here so the summary job is the single source of truth)
           if [ "$SECRET_SCAN" != "success" ]; then
             echo "::error::Secret scan failed — leaked secrets detected"
+            exit 1
+          fi
+          if [ "$WORKFLOW_SECURITY" != "success" ] || [ "$CODEQL_SCAN" != "success" ]; then
+            echo "::error::Workflow security or CodeQL scan failed"
             exit 1
           fi
           # CodeQL error/critical alerts are a hard gate on every event

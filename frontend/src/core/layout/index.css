@@ -1859,10 +1859,24 @@
   }
 
   /* 窄屏下搜索触发器让位：280px 的桌面 min-width 会把右侧按钮组挤出
-   * 视口，通知/偏好弹层随触发按钮一起越界（x < 0）。 */
-  .app-shell__search-trigger {
-    flex: 1 1 auto;
+   * 视口，通知/偏好弹层随触发按钮一起越界（x < 0）。
+   * flex 修饰必须打在 .arco-space-item 包装层上（Space 的 flex 子项是
+   * 包装层而非按钮本身），basis 归零让搜索框只吃剩余空间，否则占位
+   * 文本的内在宽度会把头像挤到第二行。 */
+  .app-shell__header-actions > .arco-space-item:first-child {
+    flex: 1 1 0;
     min-width: 0;
+  }
+
+  .app-shell__search-trigger {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .app-shell__search-placeholder {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .app-shell__notice-panel {

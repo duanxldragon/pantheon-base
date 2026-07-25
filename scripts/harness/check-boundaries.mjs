@@ -271,14 +271,12 @@ function main() {
     return 0;
   }
 
-  const repositories = options.repo
-    ? REPOSITORIES.filter((repo) => repo === options.repo)
-    : REPOSITORIES;
-
-  if (options.repo && repositories.length === 0) {
+  if (options.repo && !REPOSITORIES.includes(options.repo)) {
     console.error(`Unknown repository: ${options.repo} (known: ${REPOSITORIES.join(', ')})`);
     return 1;
   }
+
+  const repositories = options.repo ? [options.repo] : REPOSITORIES;
 
   const results = repositories.map((repo) => scanRepository(repo, options.root));
   const findingCount = results.reduce((count, result) => count + result.findings.length, 0);
