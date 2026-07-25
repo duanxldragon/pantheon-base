@@ -644,6 +644,27 @@ func TestPermissionWorkbenchRequiresSecurityEventListPolicy(t *testing.T) {
 	}
 }
 
+func TestPermissionWorkbenchRequiresSecurityEventActionPolicies(t *testing.T) {
+	acknowledge := requiredAPIPoliciesByPermissionKey("system:security-event:acknowledge")
+	if len(acknowledge) != 2 {
+		t.Fatalf("expected two required acknowledge policies, got %+v", acknowledge)
+	}
+	if acknowledge[0].Path != "/api/v1/system/security-event/:id/acknowledge" || acknowledge[0].Method != "POST" {
+		t.Fatalf("unexpected acknowledge policy: %+v", acknowledge[0])
+	}
+	if acknowledge[1].Path != "/api/v1/system/security-event/batch-acknowledge" || acknowledge[1].Method != "POST" {
+		t.Fatalf("unexpected batch acknowledge policy: %+v", acknowledge[1])
+	}
+
+	clear := requiredAPIPoliciesByPermissionKey("system:security-event:clear")
+	if len(clear) != 1 {
+		t.Fatalf("expected one required clear policy, got %+v", clear)
+	}
+	if clear[0].Path != "/api/v1/system/security-event/cleanup" || clear[0].Method != "POST" {
+		t.Fatalf("unexpected clear policy: %+v", clear[0])
+	}
+}
+
 func TestProtectedManagementPolicyGuard(t *testing.T) {
 	cases := []struct {
 		name     string

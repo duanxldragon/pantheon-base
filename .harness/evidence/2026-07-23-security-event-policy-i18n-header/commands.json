@@ -1,0 +1,66 @@
+{
+  "taskId": "2026-07-23-security-event-policy-i18n-header",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-code",
+    "adapter": ".agents/adapters/claude-code.md"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Clean build after adding security-event acknowledge/clear cases to requiredAPIPoliciesByPermissionKey."
+    },
+    {
+      "command": "go test ./modules/system/iam/permission/ -run TestPermissionWorkbench -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Includes new TestPermissionWorkbenchRequiresSecurityEventActionPolicies asserting the :id acknowledge, batch-acknowledge, and cleanup policy mappings."
+    },
+    {
+      "command": "./node_modules/.bin/tsc --noEmit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Type check clean after removing the system-list__table-head block from I18nList.tsx."
+    },
+    {
+      "command": "./node_modules/.bin/eslint src/modules/system/i18n/I18nList.tsx --max-warnings 0",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Zero warnings; Typography and summary remain used elsewhere in the file."
+    },
+    {
+      "command": "node scripts/check-system-page-admission.mjs && node scripts/check-shell-visual-contract.mjs && npm run check:i18n-hardcode && npm run check:ui-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "16 admission entries pass; shell visual contract pass; hardcode scan 194 files pass; UI contract 0 findings across 228 files."
+    },
+    {
+      "command": "npm run check:smoke-web-base && npm run check:smoke-coverage-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "94 files / 28 smoke specs contracts intact."
+    },
+    {
+      "command": "playwright full-page rendered screenshot of /system/i18n",
+      "cwd": "pantheon-base/frontend",
+      "status": "not-run",
+      "notes": "Rendered evidence not produced: the change is a pure removal of one JSX block (undesigned table-head title '翻译详情' + duplicate count already shown by pagination); full smoke needs a provisioned backend+DB and is reserved for manual/pre-release runs per governance. Static gates (tsc, eslint, admission, shell visual contract, UI contract) cover layout regression for this page."
+    }
+  ],
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-23-security-event-policy-i18n-header/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/",
+    "reviewFile": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/review.md",
+    "summaryFile": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "login-log/session action permissions share the same missing API-policy-mapping gap; deferred (documented in manifest.deferredCodeIssues).",
+    "No rendered screenshot for the i18n page removal; reason recorded in the corresponding command entry."
+  ],
+  "completedAt": "2026-07-23T16:20:00+08:00"
+}

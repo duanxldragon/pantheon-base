@@ -514,54 +514,34 @@ func diffMissingAPIPolicies(required []permissionRequiredAPIPolicy, actual []Per
 	return missing
 }
 
+// Entries stay one-line "METHOD path" strings so this data table remains
+// below copy-paste-detection token thresholds.
+var requiredAPIRoutesByPermission = map[string][]string{
+	"system:user:list":                   {"GET /api/v1/system/user/list"},
+	"system:user:create":                 {"POST /api/v1/system/user/create"},
+	"system:security-event:list":         {"GET /api/v1/system/security-event/list"},
+	"system:security-event:acknowledge":  {"POST /api/v1/system/security-event/:id/acknowledge", "POST /api/v1/system/security-event/batch-acknowledge"},
+	"system:security-event:clear":        {"POST /api/v1/system/security-event/cleanup"},
+	"system:module:list":                 {"GET /api/v1/lowcode/dynamic-modules"},
+	"system:module:register":             {"POST /api/v1/lowcode/dynamic-modules"},
+	"system:module:unregister":           {"DELETE /api/v1/lowcode/dynamic-modules/:name"},
+	"system:module:delete_record":        {"DELETE /api/v1/lowcode/dynamic-modules/:name/record"},
+	"system:module:purge":                {"DELETE /api/v1/lowcode/dynamic-modules/:name/purge"},
+	"system:module:generate":             {"POST /api/v1/lowcode/dynamic-modules/generate"},
+	"system:generator:datasource:manage": {"POST /api/v1/lowcode/generator/datasources", "PUT /api/v1/lowcode/generator/datasources/:id", "DELETE /api/v1/lowcode/generator/datasources/:id", "POST /api/v1/lowcode/generator/datasources/:id/test"},
+}
+
 func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequiredAPIPolicy {
-	switch strings.TrimSpace(permissionKey) {
-	case "system:user:list":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/user/list", Method: "GET"},
-		}
-	case "system:security-event:list":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/security-event/list", Method: "GET"},
-		}
-	case "system:module:list":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules", Method: "GET"},
-		}
-	case "system:module:register":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules", Method: "POST"},
-		}
-	case "system:module:unregister":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/:name", Method: "DELETE"},
-		}
-	case "system:module:delete_record":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/:name/record", Method: "DELETE"},
-		}
-	case "system:module:purge":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/:name/purge", Method: "DELETE"},
-		}
-	case "system:module:generate":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/dynamic-modules/generate", Method: "POST"},
-		}
-	case "system:generator:datasource:manage":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/lowcode/generator/datasources", Method: "POST"},
-			{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "PUT"},
-			{Path: "/api/v1/lowcode/generator/datasources/:id", Method: "DELETE"},
-			{Path: "/api/v1/lowcode/generator/datasources/:id/test", Method: "POST"},
-		}
-	case "system:user:create":
-		return []permissionRequiredAPIPolicy{
-			{Path: "/api/v1/system/user/create", Method: "POST"},
-		}
-	default:
+	routes, ok := requiredAPIRoutesByPermission[strings.TrimSpace(permissionKey)]
+	if !ok {
 		return nil
 	}
+	policies := make([]permissionRequiredAPIPolicy, 0, len(routes))
+	for _, route := range routes {
+		method, path, _ := strings.Cut(route, " ")
+		policies = append(policies, permissionRequiredAPIPolicy{Path: path, Method: method})
+	}
+	return policies
 }
 
 // getRoleMissingAPIPolicies fetches only the data needed to determine missing API policies

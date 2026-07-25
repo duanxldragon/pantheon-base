@@ -1242,16 +1242,6 @@ const I18nList: React.FC = () => {
           />
 
           <Card className="page-panel system-list__table-card i18n-list-page__table-card">
-            <div className="system-list__table-head">
-              <div className="system-list__table-head-copy">
-                <Typography.Text className="system-list__table-head-title">
-                  {t('i18n.viewTitle')}
-                </Typography.Text>
-                <Typography.Paragraph type="secondary" className="system-list__table-head-desc">
-                  {t('common.totalWithCount', { count: summary.total })}
-                </Typography.Paragraph>
-              </div>
-            </div>
             {canDelete || canRefresh ? (
               <TableBatchActionBar
                 selectedCount={selectedRowKeys.length}
