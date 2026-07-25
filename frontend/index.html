@@ -10,30 +10,37 @@
       // page background never flashes light-on-dark. Body's arco-theme is set
       // by colorMode.ts before React renders.
       (() => {
+        let mode = null;
         try {
-          let mode = localStorage.getItem('pantheon_color_mode');
-          if (mode !== 'light' && mode !== 'dark') {
-            mode =
-              window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light';
-          }
-          document.documentElement.dataset.colorMode = mode;
+          mode = localStorage.getItem('pantheon_color_mode');
         } catch (error) {
-          /* ignore storage access errors */
+          // Storage can be unavailable (privacy mode); fall through to the
+          // media-query default below.
+          mode = null;
         }
+        if (mode !== 'light' && mode !== 'dark') {
+          mode =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+        }
+        document.documentElement.dataset.colorMode = mode;
       })();
     </script>
     <script>
       (() => {
         const resizeObserverNoise = 'ResizeObserver loop completed with undelivered notifications.';
-        const isKnownNoise = (value) =>
-          value instanceof ErrorEvent
-            ? value.message === resizeObserverNoise
-            : value instanceof PromiseRejectionEvent
-              ? value.reason?.message === resizeObserverNoise ||
-                value.reason === resizeObserverNoise
-              : false;
+        const isKnownNoise = (value) => {
+          if (value instanceof ErrorEvent) {
+            return value.message === resizeObserverNoise;
+          }
+          if (value instanceof PromiseRejectionEvent) {
+            return (
+              value.reason?.message === resizeObserverNoise || value.reason === resizeObserverNoise
+            );
+          }
+          return false;
+        };
 
         window.addEventListener(
           'error',

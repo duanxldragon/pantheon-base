@@ -1,0 +1,69 @@
+{
+  "taskId": "2026-07-25-sonar-small-buckets",
+  "title": "SonarCloud small-bucket code remediation (Dockerfile, index.html, start-dev.sh, tests)",
+  "goal": "Fix in code the 22 SonarCloud OPEN findings outside the main product batches: container file, HTML bootstrap scripts, dev shell script, Playwright/k6 test hygiene.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow"],
+  "scope": {
+    "in": [
+      "Dockerfile: docker:S7018 x2 (sort apk package names), docker:S7031 (merge consecutive RUN)",
+      "frontend/index.html: javascript:S2486 (handled catch), javascript:S3358 (nested ternary)",
+      "backend/start-dev.sh: shelldre:S7688 x2 ([[ ]]), shelldre:S7677 (stderr)",
+      "Playwright tests: typescript:S2925 x7 (fixed waits -> observable conditions), typescript:S2245 (Math.random -> randomUUID), typescript:S7780 (String.raw)",
+      "k6 perf tests: javascript:S7726 x3 (named default exports), javascript:S2245 x2 (deterministic VU/ITER rotation instead of Math.random)"
+    ],
+    "out": [
+      "backend go:S1192 constants batch",
+      "frontend/src style-rule batch",
+      "S3776 cognitive-complexity refactors"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md"
+  ],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "repo-quality-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Surgical per-finding fixes preserving behavior: fixed waits replaced by the observable condition each wait was standing in for (networkidle, element visibility, CSS animation finish, double-rAF flush); randomness replaced by crypto UUID (fixture filename) or deterministic VU/iteration rotation (load shape).",
+  "successCriteria": [
+    "All 22 targeted findings disappear from the SonarCloud OPEN query after the next main analysis.",
+    "Smoke Sanity (system pages + platform contracts) stays green on the PR — the edited waits are exercised by the PR gate itself.",
+    "tsc --noEmit passes with the edited test files.",
+    "No behavior change in Dockerfile image contents (same packages, same layers semantics) or start-dev.sh flow."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "Dockerfile",
+      "frontend/index.html",
+      "backend/start-dev.sh",
+      "backend/tests/performance/load-test.js",
+      "backend/tests/performance/spike-test.js",
+      "backend/tests/performance/stress-test.js",
+      "frontend/tests/api/auth-smoke-helper.test.ts",
+      "frontend/tests/fixtures/coverage.ts",
+      "frontend/tests/smoke/platform/full-page-audit.spec.ts",
+      "frontend/tests/smoke/platform/shell-visual-contract.spec.ts",
+      "frontend/tests/smoke/system/system-pages.spec.ts",
+      "frontend/tests/smoke/system/system-workspace-task-depth.ts"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-25-sonar-small-buckets/manifest.json",
+      ".harness/evidence/2026-07-25-sonar-small-buckets/commands.json",
+      ".harness/evidence/2026-07-25-sonar-small-buckets/summary.md",
+      ".harness/evidence/2026-07-25-sonar-small-buckets/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-25-sonar-small-buckets",
+    "taskPacket": ".harness/tasks/2026-07-25-sonar-small-buckets/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-25-sonar-small-buckets/",
+    "reviewFile": ".harness/evidence/2026-07-25-sonar-small-buckets/review.md",
+    "summaryFile": ".harness/evidence/2026-07-25-sonar-small-buckets/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "no-repeat-observed",
+  "githubSignal": "required",
+  "deferredCodeIssues": "None in this bucket. Remaining OPEN issues are covered by the follow-up batches listed in scope.out."
+}

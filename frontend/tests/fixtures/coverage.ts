@@ -4,6 +4,7 @@
 // data so it can be merged into an lcov report after the smoke run.
 /* eslint-disable react-hooks/rules-of-hooks */
 import { test as base } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -19,7 +20,7 @@ export const test = base.extend({
       const coverage = await page.evaluate(() => (window as any).__coverage__);
       if (coverage) {
         fs.mkdirSync(COVERAGE_DIR, { recursive: true });
-        const key = `coverage-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const key = `coverage-${Date.now()}-${randomUUID().slice(0, 8)}`;
         fs.writeFileSync(path.join(COVERAGE_DIR, `${key}.json`), JSON.stringify(coverage));
       }
     } catch {

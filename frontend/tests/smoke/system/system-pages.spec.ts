@@ -1859,7 +1859,10 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
   const logoutPayload = await (await logoutResponsePromise).json();
 
   await expect(page).toHaveURL(/\/login$/);
-  await page.waitForTimeout(1000);
+  // Wait for the login page to settle (all in-flight requests done) so any
+  // stray auth-failure message would have been rendered before the negative
+  // assertions below — replaces a fixed 1s delay.
+  await page.waitForLoadState('networkidle').catch(() => {});
   expect(logoutPayload.code).toBe(200);
   await expect(
     page.locator('.arco-message').filter({ hasText: /无效会话|session\.invalid|token\./i }),
