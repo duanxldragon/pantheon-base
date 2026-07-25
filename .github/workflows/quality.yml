@@ -374,6 +374,12 @@ jobs:
           version: v2.6.2
           working-directory: backend
           args: ${{ steps.lint-scope.outputs.args }}
+          # Parity with the previous go-install path, which never ran
+          # `golangci-lint config verify`: .golangci.yml carries three legacy
+          # keys the v2 schema rejects (goconst.ignore-tests, issues.exclusions,
+          # output.sort-results). Fixing the config changes effective lint
+          # behavior — deferred as an explicit follow-up.
+          verify: false
 
       - name: Enforce go-lint gate
         if: always()
