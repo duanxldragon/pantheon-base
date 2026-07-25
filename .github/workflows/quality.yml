@@ -364,8 +364,8 @@ jobs:
             echo "args=./..." >> "$GITHUB_OUTPUT"
           fi
 
-      # golangci/golangci-lint-action v9.3.0 — checksum-verified prebuilt binary
-      # replaces `go install pkg@version` (SonarCloud githubactions:S8545).
+      # golangci/golangci-lint-action v9.3.0 replaces the raw `go install
+      # pkg@version` run step (SonarCloud githubactions:S8545).
       - name: Run golangci-lint (new code only on PR)
         id: golangci-lint
         continue-on-error: true
@@ -374,6 +374,10 @@ jobs:
           version: v2.6.2
           working-directory: backend
           args: ${{ steps.lint-scope.outputs.args }}
+          # goinstall: compile v2.6.2 with the repo's Go toolchain, exactly as
+          # the previous install path did — the prebuilt binary is built with
+          # an older Go and panics type-checking go 1.26.5 sources.
+          install-mode: goinstall
           # Parity with the previous go-install path, which never ran
           # `golangci-lint config verify`: .golangci.yml carries three legacy
           # keys the v2 schema rejects (goconst.ignore-tests, issues.exclusions,
