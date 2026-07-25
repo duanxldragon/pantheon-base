@@ -201,14 +201,26 @@ jobs:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           cache: true
 
-      - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
-
+      # golangci/golangci-lint-action v9.3.0 replaces the raw `go install
+      # pkg@version` run step (SonarCloud githubactions:S8545).
       - name: Run golangci-lint
         id: lint
         continue-on-error: true
-        working-directory: backend
-        run: golangci-lint run ./...
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
+        with:
+          version: v2.6.2
+          working-directory: backend
+          args: ./...
+          # goinstall: compile v2.6.2 with the repo's Go toolchain, exactly as
+          # the previous install path did — the prebuilt binary is built with
+          # an older Go and panics type-checking go 1.26.5 sources.
+          install-mode: goinstall
+          # Parity with the previous go-install path, which never ran
+          # `golangci-lint config verify`: .golangci.yml carries three legacy
+          # keys the v2 schema rejects (goconst.ignore-tests, issues.exclusions,
+          # output.sort-results). Fixing the config changes effective lint
+          # behavior — deferred as an explicit follow-up.
+          verify: false
 
       - name: Handle lint results
         shell: bash

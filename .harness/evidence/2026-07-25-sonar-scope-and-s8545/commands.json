@@ -1,0 +1,47 @@
+{
+  "taskId": "2026-07-25-sonar-scope-and-s8545",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-direct",
+    "adapter": ".agents/adapters/claude-code.md",
+    "note": "Codex relay (api.freemodel.dev) still returns 401/hangs; direct implementation per maintainer precedent 2026-07-23."
+  },
+  "commands": [
+    {
+      "command": "curl api/issues/search componentKeys=duanxldragon_pantheon-base resolved=false statuses=OPEN (facets + full 812-issue export)",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Baseline: 812 OPEN = 746 CODE_SMELL + 66 VULNERABILITY + 0 BUG. Buckets: tooling-scripts 261, PRODUCT-backend 237, PRODUCT-frontend 206, i18n-resources 47 (all typescript:S2068 FPs), sql-seed 40 (+7 plsql under backend/pkg/database/migrations), tests 14, Dockerfile 3, index.html 2, workflows 2 (S8545)."
+    },
+    {
+      "command": "curl api/measures/component metricKeys=coverage,line_coverage,ncloc,tests",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Only ncloc returned — SonarCloud holds no coverage metric at all. Root cause of 'coverage is 0': automatic analysis imports no coverage reports."
+    },
+    {
+      "command": "curl api/qualitygates/show name='Sonar way'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Built-in gate includes new_coverage >= 80 — reason the CI-based-analysis switch is deferred post-freeze."
+    },
+    {
+      "command": "go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2 (REVERTED)",
+      "cwd": "pantheon-base/backend",
+      "status": "rejected",
+      "notes": "Tool-directive route downgraded product dep minio-go v7.2.1 -> v7.1.0; restoring minio drifted golangci-lint to 2.12.2. Reverted go.mod/go.sum; chose SHA-pinned golangci-lint-action instead."
+    },
+    {
+      "command": "node --test tests/scripts/quality-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "3/3 pass with the edited quality.yml/ci.yml lint steps."
+    },
+    {
+      "command": "npm run check:pr-governance && npm run check:task-packet-template && npm run check:structure && npm run check:harness-encoding",
+      "cwd": "pantheon-base",
+      "status": "pending",
+      "notes": "Run before commit; recorded in PR body verification section."
+    }
+  ]
+}
