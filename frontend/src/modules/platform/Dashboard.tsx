@@ -144,6 +144,21 @@ function compareByPriority(leftKey: string, rightKey: string, priority: string[]
   return leftIndex - rightIndex;
 }
 
+// scope → issue → i18n key，与 TODO_*_ALIASES 同风格的查表翻译。
+const TODO_ISSUE_LABEL_KEYS: Record<string, Record<string, string>> = {
+  dept: {
+    leaderless: 'system.dept.governance.leaderless',
+    'no-post': 'system.dept.governance.noPost',
+    empty: 'system.dept.governance.empty',
+    clean: 'system.dept.governance.clean',
+  },
+  post: {
+    'in-use': 'dashboard.todo.issue.inUse',
+    disabled: 'dashboard.todo.issue.disabled',
+    clean: 'system.dept.governance.clean',
+  },
+};
+
 function normalizeTodoAlias(value?: string | null) {
   return value?.trim().toLowerCase().replace(/\s+/g, ' ') ?? '';
 }
@@ -332,30 +347,9 @@ const DashboardPage: React.FC = () => {
 
   const translateTodoIssue = useCallback(
     (scope: string, issue: string, fallback?: string) => {
-      if (scope === 'dept') {
-        if (issue === 'leaderless') {
-          return t('system.dept.governance.leaderless');
-        }
-        if (issue === 'no-post') {
-          return t('system.dept.governance.noPost');
-        }
-        if (issue === 'empty') {
-          return t('system.dept.governance.empty');
-        }
-        if (issue === 'clean') {
-          return t('system.dept.governance.clean');
-        }
-      }
-      if (scope === 'post') {
-        if (issue === 'in-use') {
-          return t('dashboard.todo.issue.inUse');
-        }
-        if (issue === 'disabled') {
-          return t('dashboard.todo.issue.disabled');
-        }
-        if (issue === 'clean') {
-          return t('system.dept.governance.clean');
-        }
+      const labelKey = TODO_ISSUE_LABEL_KEYS[scope]?.[issue];
+      if (labelKey) {
+        return t(labelKey);
       }
       return fallback || issue || '-';
     },
