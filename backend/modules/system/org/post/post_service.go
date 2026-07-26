@@ -21,6 +21,8 @@ type PostService struct {
 
 const deletedPostCodePrefix = "__deleted_post_"
 
+const errPostHasUsers = "post.status.error.has_users"
+
 func NewPostService(db *gorm.DB) *PostService {
 	return &PostService{db: db}
 }
@@ -180,7 +182,7 @@ func (s *PostService) DeletePost(postID uint64) error {
 		}
 		// 用户占用检查放在事务内，收窄检查与删除之间的并发窗口。
 		if err := s.ensurePostsNotAssignedToUsers(tx, []uint64{postID}); err != nil {
-			if common.ErrMessage(err) == "post.status.error.has_users" {
+			if common.ErrMessage(err) == errPostHasUsers {
 				return common.NewInternal("post.delete.error.has_users")
 			}
 			return err
@@ -721,7 +723,7 @@ func (s *PostService) ensurePostsNotAssignedToUsers(db *gorm.DB, postIDs []uint6
 		return err
 	}
 	if userCount > 0 {
-		return common.NewInternal("post.status.error.has_users")
+		return common.NewInternal(errPostHasUsers)
 	}
 	return nil
 }
