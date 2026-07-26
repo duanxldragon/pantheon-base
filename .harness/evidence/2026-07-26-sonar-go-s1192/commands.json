@@ -1,0 +1,47 @@
+{
+  "taskId": "2026-07-26-sonar-go-s1192",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-direct",
+    "adapter": ".agents/adapters/claude-code.md",
+    "note": "Implemented by a Claude subagent in an isolated worktree, reviewed by the coordinating Claude session. Codex relay remains unavailable (401); maintainer precedent 2026-07-23."
+  },
+  "commands": [
+    {
+      "command": "gofmt -l .",
+      "cwd": "pantheon-base/backend (worktree .wt-prc)",
+      "status": "passed",
+      "notes": "Empty output."
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "pantheon-base/backend (worktree .wt-prc)",
+      "status": "passed",
+      "notes": "-buildvcs=false required in the sandboxed worktree shell; no source impact."
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend (worktree .wt-prc)",
+      "status": "passed",
+      "notes": ""
+    },
+    {
+      "command": "go test -short ./...",
+      "cwd": "pantheon-base/backend (worktree .wt-prc)",
+      "status": "passed",
+      "notes": "39 packages ok, 0 FAIL."
+    },
+    {
+      "command": "diff audit: changed files vs frozen finding lists",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "53 changed files = exactly the union of prc_s1192.txt (113 findings) and prc_godre_safe.txt (13 findings); every flagged literal now appears at most once per file."
+    },
+    {
+      "command": "coordinator spot-review of behavior-adjacent fixes",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "health.go merged branches produce identical per-error outcomes; GetSecurityRuntimePolicy delegates to byte-identical GetAuthRuntimePolicy (same RLock discipline)."
+    }
+  ]
+}
