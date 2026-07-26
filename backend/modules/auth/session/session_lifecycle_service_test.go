@@ -94,6 +94,60 @@ func TestLifecycleService_DeleteUserSessions(t *testing.T) {
 	}
 }
 
+func TestLifecycleService_PurgeUserAuthArtifacts(t *testing.T) {
+	service := setupLifecycleTestDB(t)
+
+	ddl := []string{
+		"CREATE TABLE IF NOT EXISTS system_user_password_history (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, password_hash VARCHAR(255))",
+		"CREATE TABLE IF NOT EXISTS system_auth_factor (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, factor_type VARCHAR(32), secret VARCHAR(255))",
+		"CREATE TABLE IF NOT EXISTS system_auth_mfa_challenge (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, challenge_id VARCHAR(64))",
+	}
+	for _, stmt := range ddl {
+		if err := service.db.Exec(stmt).Error; err != nil {
+			t.Fatalf("create table: %v", err)
+		}
+	}
+	seeds := []string{
+		"INSERT INTO system_user_password_history (user_id, password_hash) VALUES (42, 'h1'), (99, 'h2')",
+		"INSERT INTO system_auth_factor (user_id, factor_type, secret) VALUES (42, 'totp', 's1'), (99, 'totp', 's2')",
+		"INSERT INTO system_auth_mfa_challenge (user_id, challenge_id) VALUES (42, 'c1'), (99, 'c2')",
+	}
+	for _, stmt := range seeds {
+		if err := service.db.Exec(stmt).Error; err != nil {
+			t.Fatalf("seed rows: %v", err)
+		}
+	}
+
+	if err := service.PurgeUserAuthArtifacts(42); err != nil {
+		t.Fatalf("purge artifacts: %v", err)
+	}
+
+	for _, table := range []string{"system_user_password_history", "system_auth_factor", "system_auth_mfa_challenge"} {
+		var purged int64
+		if err := service.db.Table(table).Where("user_id = ?", 42).Count(&purged).Error; err != nil {
+			t.Fatalf("count %s for purged user: %v", table, err)
+		}
+		if purged != 0 {
+			t.Fatalf("expected %s rows purged for user 42, got %d", table, purged)
+		}
+		var kept int64
+		if err := service.db.Table(table).Where("user_id = ?", 99).Count(&kept).Error; err != nil {
+			t.Fatalf("count %s for other user: %v", table, err)
+		}
+		if kept != 1 {
+			t.Fatalf("expected %s rows kept for user 99, got %d", table, kept)
+		}
+	}
+
+	// 表不存在时应静默跳过（HasTable 守卫）
+	if err := service.db.Exec("DROP TABLE system_auth_mfa_challenge").Error; err != nil {
+		t.Fatalf("drop table: %v", err)
+	}
+	if err := service.PurgeUserAuthArtifacts(99); err != nil {
+		t.Fatalf("expected purge to skip missing table, got %v", err)
+	}
+}
+
 func TestLifecycleService_NilAndZeroInputsAreNoops(t *testing.T) {
 	var nilService *LifecycleService
 	if revoked, err := nilService.RevokeUserSessions(42, time.Now()); err != nil || revoked != 0 {
@@ -101,6 +155,9 @@ func TestLifecycleService_NilAndZeroInputsAreNoops(t *testing.T) {
 	}
 	if err := nilService.DeleteUserSessions(42); err != nil {
 		t.Fatalf("expected nil service delete noop, got %v", err)
+	}
+	if err := nilService.PurgeUserAuthArtifacts(42); err != nil {
+		t.Fatalf("expected nil service purge noop, got %v", err)
 	}
 
 	service := NewLifecycleService(nil)

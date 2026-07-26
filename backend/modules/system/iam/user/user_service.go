@@ -15,6 +15,7 @@ import (
 type SessionLifecycle interface {
 	RevokeUserSessions(userID uint64, now time.Time) (int64, error)
 	DeleteUserSessions(userID uint64) error
+	PurgeUserAuthArtifacts(userID uint64) error
 }
 
 type SessionLifecycleFactory func(db *gorm.DB) SessionLifecycle
@@ -569,11 +570,18 @@ func (s *UserService) DeleteUser(userID uint64) error {
 			return err
 		}
 		if err := s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
-			return lifecycle.DeleteUserSessions(userID)
+			if err := lifecycle.DeleteUserSessions(userID); err != nil {
+				return err
+			}
+			return lifecycle.PurgeUserAuthArtifacts(userID)
 		}); err != nil {
 			return err
 		}
 		if err := tx.Exec("DELETE FROM system_user_role WHERE user_id = ?", userID).Error; err != nil {
+			return err
+		}
+		// 用户档案扩展随用户一并清理，避免孤儿行。
+		if err := tx.Where("user_id = ?", userID).Delete(&SystemUserProfileExt{}).Error; err != nil {
 			return err
 		}
 		deletedUsername, err := s.allocateDeletedUsername(tx, user.ID)
