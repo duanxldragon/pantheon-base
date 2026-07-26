@@ -865,7 +865,7 @@ const DeptList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const deptIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const deptIds = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchUpdateDeptStatus({ deptIds, status });
     message.success(t('system.dept.batchStatusSuccess', { count: result.updatedCount }));
     invalidateDeptCaches();
@@ -883,7 +883,7 @@ const DeptList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const ids = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchDeleteDepts({ ids });
     const messageKey =
       result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
@@ -925,9 +925,9 @@ const DeptList: React.FC = () => {
   };
 
   const openBatchLeader = () => {
-    const selectedDeptIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const selectedDeptIds = new Set(selectedRowKeys.map(Number).filter((item) => item > 0));
     const selectedDepts = flatDeptRows.filter(
-      (item) => selectedDeptIds.includes(item.id) && !item.isRoot,
+      (item) => selectedDeptIds.has(item.id) && !item.isRoot,
     );
     if (selectedDepts.length === 0) {
       message.warning(t('common.batchSelectionRequired'));
@@ -1068,6 +1068,24 @@ const DeptList: React.FC = () => {
     }
   };
 
+  let leaderCandidateExtra = t('system.dept.leaderCandidateCreateHint');
+  if (editing) {
+    leaderCandidateExtra =
+      leaderCandidates.length > 0
+        ? t('system.dept.leaderCandidateHint')
+        : t('system.dept.leaderCandidateEmpty');
+  }
+
+  const formatTaskBlockedBySuffix = (blockedBy?: string, blockedByLabel?: string) => {
+    if (!blockedByLabel) {
+      return '';
+    }
+    const blockedByText = t(`system.dept.task.blockedBy.${blockedBy}`, {
+      defaultValue: blockedByLabel,
+    });
+    return ` · ${blockedByText}`;
+  };
+
   return (
     <PageContainer>
       <Space
@@ -1090,7 +1108,7 @@ const DeptList: React.FC = () => {
                   empty: 'empty',
                   issues: undefined,
                 };
-              const actionable = Object.prototype.hasOwnProperty.call(metricFilters, item.key);
+              const actionable = Object.hasOwn(metricFilters, item.key);
               const triggerFilter = () => applyGovernanceFilter(metricFilters[item.key]);
               return {
                 key: item.key,
@@ -1453,11 +1471,10 @@ const DeptList: React.FC = () => {
                             defaultValue: task.governanceActionLabel,
                           })
                         : ''}
-                      {task.governanceBlockedByLabel
-                        ? ` · ${t(`system.dept.task.blockedBy.${task.governanceBlockedBy}`, {
-                            defaultValue: task.governanceBlockedByLabel,
-                          })}`
-                        : ''}
+                      {formatTaskBlockedBySuffix(
+                        task.governanceBlockedBy,
+                        task.governanceBlockedByLabel,
+                      )}
                     </Typography.Text>
                   </div>
                 ))}
@@ -1514,13 +1531,7 @@ const DeptList: React.FC = () => {
                   <FormItem
                     label={t('system.dept.leaderCandidate')}
                     field="leaderUserId"
-                    extra={
-                      editing
-                        ? leaderCandidates.length > 0
-                          ? t('system.dept.leaderCandidateHint')
-                          : t('system.dept.leaderCandidateEmpty')
-                        : t('system.dept.leaderCandidateCreateHint')
-                    }
+                    extra={leaderCandidateExtra}
                   >
                     <Select
                       allowClear
@@ -1555,8 +1566,8 @@ const DeptList: React.FC = () => {
                     field="email"
                     rules={[
                       {
-                        // NOSONAR - simple email shape check; backend owns authoritative validation.
-                        match: /\S+@\S+\.\S+/,
+                        // Linear-time email shape check; backend owns authoritative validation.
+                        match: /\S@\S[^\s.]*\.\S/,
                         message: t('system.user.email.invalid'),
                       },
                     ]}

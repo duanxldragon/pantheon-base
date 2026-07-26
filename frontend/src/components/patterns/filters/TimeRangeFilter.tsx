@@ -157,34 +157,37 @@ const TimeRangeFilter: React.FC<TimeRangeFilterProps> = ({ value, onChange }) =>
     [applyRange],
   );
 
+  const renderShortcutRow = useCallback(
+    (presets: readonly TimePreset[]) => (
+      <div className="time-range-filter__shortcut-row">
+        {presets.map((preset) => (
+          <Button
+            key={preset.labelKey}
+            size="mini"
+            type="outline"
+            className={`time-range-filter__shortcut ${
+              presetLabelKey === preset.labelKey && hasValue
+                ? 'time-range-filter__shortcut--active'
+                : ''
+            }`}
+            onClick={() => {
+              handleShortcutApply(preset);
+            }}
+          >
+            {t(preset.labelKey)}
+          </Button>
+        ))}
+      </div>
+    ),
+    [handleShortcutApply, hasValue, presetLabelKey, t],
+  );
+
   const renderPanel = useCallback(
     (panelNode: React.ReactNode) => {
       const [displayStart, displayEnd] = [
         displayValue[0].format(TIME_RANGE_FILTER_FORMAT),
         displayValue[1].format(TIME_RANGE_FILTER_FORMAT),
       ];
-
-      const renderShortcutRow = (presets: readonly TimePreset[]) => (
-        <div className="time-range-filter__shortcut-row">
-          {presets.map((preset) => (
-            <Button
-              key={preset.labelKey}
-              size="mini"
-              type="outline"
-              className={`time-range-filter__shortcut ${
-                presetLabelKey === preset.labelKey && hasValue
-                  ? 'time-range-filter__shortcut--active'
-                  : ''
-              }`}
-              onClick={() => {
-                handleShortcutApply(preset);
-              }}
-            >
-              {t(preset.labelKey)}
-            </Button>
-          ))}
-        </div>
-      );
 
       return (
         <div className="time-range-filter__shell">
@@ -219,7 +222,7 @@ const TimeRangeFilter: React.FC<TimeRangeFilterProps> = ({ value, onChange }) =>
         </div>
       );
     },
-    [displayValue, handleShortcutApply, hasValue, presetLabelKey, t],
+    [displayValue, renderShortcutRow, t],
   );
 
   return (

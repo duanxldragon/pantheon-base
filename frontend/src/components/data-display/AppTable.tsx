@@ -174,7 +174,54 @@ function renderNativePagination(paginationNode: React.ReactNode, pagePosition: T
   );
 }
 
-function AppTable<T>(props: AppTableProps<T>) {
+function createDecoratedPaginationNode<T>(
+  paginationNode: React.ReactElement<PaginationNodeProps>,
+  firstPageAriaLabel: string,
+  lastPageAriaLabel: string,
+  onTableChange?: TableChangeHandler<T>,
+) {
+  const originalItemRender = paginationNode.props.itemRender;
+  return React.createElement(paginationNode.type as React.ElementType<PaginationNodeProps>, {
+    ...paginationNode.props,
+    itemRender: (page, type, originElement) => {
+      const renderedOrigin = originalItemRender
+        ? originalItemRender(page, type, originElement)
+        : originElement;
+
+      if (type === 'prev') {
+        return (
+          <span className="app-table__pagination-step-group">
+            {createBoundaryPaginationItem<T>(
+              'first',
+              paginationNode.props,
+              firstPageAriaLabel,
+              onTableChange,
+            )}
+            <span className="app-table__pagination-step-origin">{renderedOrigin}</span>
+          </span>
+        );
+      }
+
+      if (type === 'next') {
+        return (
+          <span className="app-table__pagination-step-group">
+            <span className="app-table__pagination-step-origin">{renderedOrigin}</span>
+            {createBoundaryPaginationItem<T>(
+              'last',
+              paginationNode.props,
+              lastPageAriaLabel,
+              onTableChange,
+            )}
+          </span>
+        );
+      }
+
+      return renderedOrigin;
+    },
+  });
+}
+
+function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   const {
     data,
     loading,
@@ -189,11 +236,11 @@ function AppTable<T>(props: AppTableProps<T>) {
   const { t } = useTranslation();
   const rows = Array.isArray(data) ? data : [];
   const [viewportWidth, setViewportWidth] = useState(() =>
-    typeof globalThis.window === 'undefined' ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
+    globalThis.window === undefined ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
   );
 
   useEffect(() => {
-    if (typeof globalThis.window === 'undefined') {
+    if (globalThis.window === undefined) {
       return undefined;
     }
 
@@ -243,47 +290,11 @@ function AppTable<T>(props: AppTableProps<T>) {
             : renderNativePagination(paginationNode, pagePosition);
         }
 
-        const originalItemRender = paginationNode.props.itemRender;
-        const decoratedPaginationNode = React.createElement(
-          paginationNode.type as React.ElementType<PaginationNodeProps>,
-          {
-            ...paginationNode.props,
-            itemRender: (page, type, originElement) => {
-              const renderedOrigin = originalItemRender
-                ? originalItemRender(page, type, originElement)
-                : originElement;
-
-              if (type === 'prev') {
-                return (
-                  <span className="app-table__pagination-step-group">
-                    {createBoundaryPaginationItem<T>(
-                      'first',
-                      paginationNode.props,
-                      firstPageAriaLabel,
-                      rest.onChange,
-                    )}
-                    <span className="app-table__pagination-step-origin">{renderedOrigin}</span>
-                  </span>
-                );
-              }
-
-              if (type === 'next') {
-                return (
-                  <span className="app-table__pagination-step-group">
-                    <span className="app-table__pagination-step-origin">{renderedOrigin}</span>
-                    {createBoundaryPaginationItem<T>(
-                      'last',
-                      paginationNode.props,
-                      lastPageAriaLabel,
-                      rest.onChange,
-                    )}
-                  </span>
-                );
-              }
-
-              return renderedOrigin;
-            },
-          },
+        const decoratedPaginationNode = createDecoratedPaginationNode<T>(
+          paginationNode,
+          firstPageAriaLabel,
+          lastPageAriaLabel,
+          rest.onChange,
         );
         const callerNode = renderPagination
           ? renderPagination(decoratedPaginationNode)

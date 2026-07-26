@@ -273,6 +273,46 @@ const LoginLogList: React.FC = () => {
     await exportAdminLoginLogs(query);
   };
 
+  const tableContent =
+    data.length === 0 && !loading ? (
+      <PageEmpty description={t('auth.loginLog.empty')} />
+    ) : (
+      <AppTable<LoginLogRow>
+        className="system-list__table"
+        rowKey="id"
+        data={data}
+        columns={columns}
+        loading={loading}
+        scroll={{ x: 'max-content' }}
+        onChange={handleTableChange}
+        emptyText={t('auth.loginLog.empty')}
+        rowSelection={
+          canDelete
+            ? {
+                type: 'checkbox',
+                selectedRowKeys: visibleSelectedRowKeys,
+                checkCrossPage: true,
+                preserveSelectedRowKeys: true,
+                onChange: (keys) =>
+                  setSelectedRowKeys(
+                    (currentKeys) =>
+                      mergeCrossPageSelection(
+                        currentKeys,
+                        keys as number[],
+                        data.map((item) => item.id),
+                      ) as number[],
+                  ),
+              }
+            : undefined
+        }
+        pagination={buildStandardPagination(t, {
+          current: query.page || emptyQuery.page,
+          pageSize: query.pageSize || emptyQuery.pageSize,
+          total,
+        })}
+      />
+    );
+
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template auth-login-log-page">
@@ -411,43 +451,8 @@ const LoginLogList: React.FC = () => {
                   void loadData(query);
                 }}
               />
-            ) : data.length === 0 && !loading ? (
-              <PageEmpty description={t('auth.loginLog.empty')} />
             ) : (
-              <AppTable<LoginLogRow>
-                className="system-list__table"
-                rowKey="id"
-                data={data}
-                columns={columns}
-                loading={loading}
-                scroll={{ x: 'max-content' }}
-                onChange={handleTableChange}
-                emptyText={t('auth.loginLog.empty')}
-                rowSelection={
-                  canDelete
-                    ? {
-                        type: 'checkbox',
-                        selectedRowKeys: visibleSelectedRowKeys,
-                        checkCrossPage: true,
-                        preserveSelectedRowKeys: true,
-                        onChange: (keys) =>
-                          setSelectedRowKeys(
-                            (currentKeys) =>
-                              mergeCrossPageSelection(
-                                currentKeys,
-                                keys as number[],
-                                data.map((item) => item.id),
-                              ) as number[],
-                          ),
-                      }
-                    : undefined
-                }
-                pagination={buildStandardPagination(t, {
-                  current: query.page || emptyQuery.page,
-                  pageSize: query.pageSize || emptyQuery.pageSize,
-                  total,
-                })}
-              />
+              tableContent
             )}
           </Card>
         </>

@@ -215,8 +215,8 @@ const ProfileCenter: React.FC = () => {
                     field="email"
                     rules={[
                       {
-                        // NOSONAR - simple email shape check; backend owns authoritative validation.
-                        match: /\S+@\S+\.\S+/,
+                        // Linear-time email shape check; backend owns authoritative validation.
+                        match: /\S@\S[^\s.]*\.\S/,
                         message: t('system.user.email.invalid'),
                       },
                     ]}

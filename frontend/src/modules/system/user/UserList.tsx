@@ -220,13 +220,14 @@ const UserList: React.FC = () => {
         const roleLabels = row.roleIds
           ?.map((roleId) => roleLabelById.get(roleId))
           .filter((value): value is string => Boolean(value));
-        const roleText = roleNames?.length
-          ? roleNames.join(' / ')
-          : roleLabels?.length
-            ? roleLabels.join(' / ')
-            : row.roleKeys?.length
-              ? row.roleKeys.join(' / ')
-              : undefined;
+        let roleText: string | undefined;
+        if (roleNames?.length) {
+          roleText = roleNames.join(' / ');
+        } else if (roleLabels?.length) {
+          roleText = roleLabels.join(' / ');
+        } else if (row.roleKeys?.length) {
+          roleText = row.roleKeys.join(' / ');
+        }
         return renderCellText(roleText, 'system-user-list__role-text');
       },
     },
@@ -316,17 +317,18 @@ const UserList: React.FC = () => {
 
   const handleTableChange: TableProps<UserListRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    let nextSortOrder: 'asc' | 'desc' | undefined;
+    if (currentSorter?.direction === 'ascend') {
+      nextSortOrder = 'asc';
+    } else if (currentSorter?.direction === 'descend') {
+      nextSortOrder = 'desc';
+    }
     const nextQuery = {
       ...state.query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || state.query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder:
-        currentSorter?.direction === 'ascend'
-          ? 'asc'
-          : currentSorter?.direction === 'descend'
-            ? 'desc'
-            : undefined,
+      sortOrder: nextSortOrder,
     } as import('./api').UserListQuery;
     const sortChanged =
       nextQuery.sortField !== state.query.sortField ||

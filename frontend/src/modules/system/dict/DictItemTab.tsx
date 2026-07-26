@@ -105,6 +105,16 @@ function isDefaultDictItemQuery(query: Omit<DictItemQuery, 'dictCode'>) {
   );
 }
 
+function toArcoSortOrder(order?: 'asc' | 'desc'): 'ascend' | 'descend' | undefined {
+  if (order === 'asc') {
+    return 'ascend';
+  }
+  if (order === 'desc') {
+    return 'descend';
+  }
+  return undefined;
+}
+
 interface DictItemTabProps {
   selectedType: DictTypeRow | null;
   typeRows: DictTypeRow[];
@@ -348,7 +358,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const itemIds = selectedItemRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const itemIds = selectedItemRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchUpdateDictItemStatus({ itemIds, status });
     message.success(t('system.dict.item.batchStatusSuccess', { count: result.updatedCount }));
     invalidateCaches(selectedType?.dictCode);
@@ -363,7 +373,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const ids = selectedItemRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const ids = selectedItemRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchDeleteDictItems({ ids });
     const messageKey =
       result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
@@ -408,12 +418,12 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
   const handleItemTableChange: TableProps<DictItemRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     const nextSortField = currentSorter?.direction ? String(currentSorter.field) : undefined;
-    const nextSortOrder =
-      currentSorter?.direction === 'ascend'
-        ? 'asc'
-        : currentSorter?.direction === 'descend'
-          ? 'desc'
-          : undefined;
+    let nextSortOrder: 'asc' | 'desc' | undefined;
+    if (currentSorter?.direction === 'ascend') {
+      nextSortOrder = 'asc';
+    } else if (currentSorter?.direction === 'descend') {
+      nextSortOrder = 'desc';
+    }
     setItemQuery((prev) => ({
       ...prev,
       page: pagination.current || prev.page || emptyItemQuery.page,
@@ -428,14 +438,7 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
       field: NonNullable<DictItemQuery['sortField']>,
     ): Partial<ColumnProps<DictItemRow>> => ({
       sorter: true,
-      sortOrder:
-        itemQuery.sortField === field
-          ? itemQuery.sortOrder === 'asc'
-            ? 'ascend'
-            : itemQuery.sortOrder === 'desc'
-              ? 'descend'
-              : undefined
-          : undefined,
+      sortOrder: itemQuery.sortField === field ? toArcoSortOrder(itemQuery.sortOrder) : undefined,
     });
     return [
       {

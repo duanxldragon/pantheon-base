@@ -604,7 +604,7 @@ const RoleList: React.FC = () => {
       roleKey: values.roleKey,
       sort: values.sort,
       status: values.status,
-      menuIds: values.menuIds.map((item) => Number(item)),
+      menuIds: values.menuIds.map(Number),
       permissionKeys: mergePermissionKeys(
         values.pagePermissionKeys,
         values.actionPermissionKeys,
@@ -673,7 +673,7 @@ const RoleList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const roleIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const roleIds = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchUpdateRoleStatus({ roleIds, status });
     message.success(t('system.role.batchStatusSuccess', { count: result.updatedCount }));
     invalidateRoleCaches();
@@ -687,7 +687,7 @@ const RoleList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const ids = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchDeleteRoles({ ids });
     const messageKey =
       result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
@@ -758,17 +758,18 @@ const RoleList: React.FC = () => {
 
   const handleTableChange: TableProps<RoleRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    let nextSortOrder: 'asc' | 'desc' | undefined;
+    if (currentSorter?.direction === 'ascend') {
+      nextSortOrder = 'asc';
+    } else if (currentSorter?.direction === 'descend') {
+      nextSortOrder = 'desc';
+    }
     const nextQuery: RoleListQuery = {
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder:
-        currentSorter?.direction === 'ascend'
-          ? 'asc'
-          : currentSorter?.direction === 'descend'
-            ? 'desc'
-            : undefined,
+      sortOrder: nextSortOrder,
     };
     const sortChanged =
       nextQuery.sortField !== query.sortField || nextQuery.sortOrder !== query.sortOrder;

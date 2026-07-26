@@ -221,7 +221,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const typeIds = selectedTypeRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const typeIds = selectedTypeRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchUpdateDictTypeStatus({ typeIds, status });
     message.success(t('system.dict.type.batchStatusSuccess', { count: result.updatedCount }));
     invalidateCaches();
@@ -235,7 +235,7 @@ const DictTypeTab: React.FC<DictTypeTabProps> = ({
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const ids = selectedTypeRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const ids = selectedTypeRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchDeleteDictTypes({ ids });
     const messageKey =
       result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';

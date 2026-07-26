@@ -32,21 +32,13 @@ const OrgDeptNode: React.FC<OrgDeptNodeProps> = ({
   const enabledPosts = posts.filter((post) => post.status === 1).length;
 
   const selectDept = () => onSelect(dept.id);
-  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      selectDept();
-    }
-  };
 
   return (
     <div className="org-chart__branch">
-      <div
+      <button
+        type="button"
         className={`org-chart__dept-card${selectedDeptId === dept.id ? ' org-chart__dept-card--active' : ''}`}
-        role="button"
-        tabIndex={0}
         onClick={selectDept}
-        onKeyDown={handleKeyDown}
       >
         <div className="org-chart__dept-header">
           <div className="org-chart__dept-title">
@@ -124,7 +116,7 @@ const OrgDeptNode: React.FC<OrgDeptNodeProps> = ({
             </div>
           ) : null}
         </div>
-      </div>
+      </button>
       {dept.children?.length ? (
         <div className="org-chart__children">
           {dept.children.map((child) => (

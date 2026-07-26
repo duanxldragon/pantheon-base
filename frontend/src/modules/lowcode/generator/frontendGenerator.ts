@@ -34,8 +34,8 @@ import {
 import { TYPE_MAPPING } from './typeMapping';
 
 export class FrontendGenerator {
-  private schema: ModuleSchema;
-  private modelName: string;
+  private readonly schema: ModuleSchema;
+  private readonly modelName: string;
 
   constructor(schema: ModuleSchema) {
     this.schema = schema;
@@ -92,6 +92,17 @@ export class FrontendGenerator {
   ],`
         : '';
 
+    const detailRouteSnippet = generateDetailRoute
+      ? `{
+      path: '${routePath}/:id',
+      routeName: '${routeName}-detail',
+      titleKey: '${titleKey}',
+      pagePermission: '${permissionPrefix}:view',
+      activeMenu: '${buildPageRoutePath(scope, name)}',
+      componentKey: '${detailComponentKey}',
+    },`
+      : '';
+
     return `import { defineModule } from '${toSrcRoot}/core/router/types';
 
 export const ${modelName}Module = defineModule({
@@ -108,18 +119,7 @@ export const ${modelName}Module = defineModule({
       pagePermission: '${permissionPrefix}:list',
       componentKey: '${listComponentKey}',
     },
-    ${
-      generateDetailRoute
-        ? `{
-      path: '${routePath}/:id',
-      routeName: '${routeName}-detail',
-      titleKey: '${titleKey}',
-      pagePermission: '${permissionPrefix}:view',
-      activeMenu: '${buildPageRoutePath(scope, name)}',
-      componentKey: '${detailComponentKey}',
-    },`
-        : ''
-    }
+    ${detailRouteSnippet}
   ]`
       : '[]'
   },
@@ -397,21 +397,23 @@ ${extraApi ? `\n${extraApi}\n` : ''}
       componentImports.splice(1, 0, 'SearchToolbar');
     }
     if (governanceEnabled) {
-      componentImports.splice(componentImports.length - 3, 0, 'GovernanceSummaryBar');
+      componentImports.splice(-3, 0, 'GovernanceSummaryBar');
     }
     if (importActionEnabled) {
-      componentImports.splice(componentImports.length - 3, 0, 'ImportCsvButton');
+      componentImports.splice(-3, 0, 'ImportCsvButton');
     }
     if (headerActionsEnabled) {
-      componentImports.splice(componentImports.length - 3, 0, 'ListHeaderActions');
+      componentImports.splice(-3, 0, 'ListHeaderActions');
     }
     if (rowActionsEnabled) {
-      componentImports.splice(componentImports.length - 3, 0, 'SystemRowActions');
-      componentImports.splice(componentImports.length - 3, 0, 'TABLE_ACTION_COLUMN_WIDTH');
+      componentImports.splice(-3, 0, 'SystemRowActions');
+      componentImports.splice(-3, 0, 'TABLE_ACTION_COLUMN_WIDTH');
     }
     if (batchActionsEnabled) {
-      componentImports.splice(componentImports.length - 3, 0, 'TableBatchActionBar');
+      componentImports.splice(-3, 0, 'TableBatchActionBar');
     }
+
+    const clearSelectionSnippet = batchActionsEnabled ? 'setSelectedRowKeys([]);' : '';
 
     return `import React, { useCallback, useEffect, useState } from 'react';
 import { ${listImports.join(', ')} } from '@arco-design/web-react';
@@ -471,7 +473,7 @@ const ${modelName}List: React.FC = () => {
   ${
     searchEnabled
       ? `const search = (values: Partial<${modelName}ListQuery>) => {
-    ${batchActionsEnabled ? 'setSelectedRowKeys([]);' : ''}
+    ${clearSelectionSnippet}
     const nextQuery = {
       ...query,
       ...values,
@@ -482,7 +484,7 @@ const ${modelName}List: React.FC = () => {
   };
 
   const reset = () => {
-    ${batchActionsEnabled ? 'setSelectedRowKeys([]);' : ''}
+    ${clearSelectionSnippet}
     setQuery(emptyQuery);
     void loadData(emptyQuery);
   };`

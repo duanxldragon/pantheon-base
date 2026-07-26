@@ -120,6 +120,14 @@ const TODO_ACTION_ALIASES: Record<string, string> = {
   '删除或保留停用岗位': 'delete-or-keep-disabled',
 };
 
+function compactMetricText(value: string) {
+  const numbers = value.match(/\d+/g);
+  if (!numbers?.length) {
+    return value;
+  }
+  return numbers.join(' / ');
+}
+
 function compareByPriority(leftKey: string, rightKey: string, priority: string[]) {
   const leftIndex = priority.indexOf(leftKey);
   const rightIndex = priority.indexOf(rightKey);
@@ -306,14 +314,6 @@ const DashboardPage: React.FC = () => {
     }
     return <DateTimeMeta value={value} />;
   };
-
-  function compactMetricText(value: string) {
-    const numbers = value.match(/\d+/g);
-    if (!numbers?.length) {
-      return value;
-    }
-    return numbers.join(' / ');
-  }
 
   const recentLoginPreview = useMemo(() => summary?.recentLogins.slice(0, 6) ?? [], [summary]);
 
@@ -561,18 +561,11 @@ const DashboardPage: React.FC = () => {
                 {todoItems.length ? (
                   <div className="dashboard-task-grid">
                     {todoItems.map((item) => (
-                      <div
+                      <button
                         key={item.taskKey}
+                        type="button"
                         className="dashboard-task-card"
                         onClick={() => openTodoTask(item)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            openTodoTask(item);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
                       >
                         <span className="dashboard-task-card__icon">
                           <IconExclamationCircle />
@@ -607,7 +600,7 @@ const DashboardPage: React.FC = () => {
                               : ''}
                           </span>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : (
@@ -687,19 +680,12 @@ const DashboardPage: React.FC = () => {
               >
                 <div className="dashboard-domain-grid">
                   {domainCards.map((item) => (
-                    <div
+                    <button
                       key={item.key}
+                      type="button"
                       className={`dashboard-domain-card dashboard-domain-card--${item.key}`}
-                      role="button"
-                      tabIndex={0}
                       aria-label={`${item.title} · ${t('dashboard.openModule')}`}
                       onClick={() => navigate(item.path)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          navigate(item.path);
-                        }
-                      }}
                     >
                       <span className="dashboard-domain-card__summary" title={item.summary}>
                         {item.compactSummary}
@@ -711,7 +697,7 @@ const DashboardPage: React.FC = () => {
                       <span className="dashboard-domain-card__arrow" aria-hidden="true">
                         <IconArrowRight />
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </Card>

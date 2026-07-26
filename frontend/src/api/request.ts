@@ -126,35 +126,33 @@ const shouldRefresh = (config?: RequestConfig, code?: number) => {
 };
 
 const doRefreshToken = async (): Promise<boolean> => {
-  if (!refreshPromise) {
-    refreshPromise = axios
-      .post(
-        '/api/v1/auth/refresh',
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
-          },
+  refreshPromise ??= axios
+    .post(
+      '/api/v1/auth/refresh',
+      {},
+      {
+        withCredentials: true,
+        headers: {
+          'Accept-Language': localStorage.getItem('pantheon_lang') || 'zh-CN',
         },
-      )
-      .then((response) => {
-        syncCsrfTokenFromHeaders(response.headers);
-        const { code, data } = response.data;
-        if (code !== 200) {
-          throw new Error(response.data.message || 'request.failed');
-        }
-        useAuthStore.getState().setTokens(COOKIE_TOKEN_PLACEHOLDER, COOKIE_TOKEN_PLACEHOLDER);
-        return Boolean(data);
-      })
-      .catch(() => {
-        clearClientSession();
-        return false;
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
+      },
+    )
+    .then((response) => {
+      syncCsrfTokenFromHeaders(response.headers);
+      const { code, data } = response.data;
+      if (code !== 200) {
+        throw new Error(response.data.message || 'request.failed');
+      }
+      useAuthStore.getState().setTokens(COOKIE_TOKEN_PLACEHOLDER, COOKIE_TOKEN_PLACEHOLDER);
+      return Boolean(data);
+    })
+    .catch(() => {
+      clearClientSession();
+      return false;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
 
   return refreshPromise;
 };
@@ -289,7 +287,7 @@ const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
     return null;
   }
   try {
-    const base64 = segments[1].replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = segments[1].replaceAll('-', '+').replaceAll('_', '/');
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
     const json = globalThis.atob(padded);
     return JSON.parse(json) as Record<string, unknown>;
@@ -397,11 +395,7 @@ request.interceptors.response.use(
 
     // 处理二次验证请求
     if (code === 403 && shouldRetryOperationVerify(config, message)) {
-      try {
-        return await retryWithOperationVerify(config);
-      } catch (err) {
-        return Promise.reject(err);
-      }
+      return await retryWithOperationVerify(config);
     }
 
     if (shouldRefresh(config, code)) {
@@ -430,7 +424,7 @@ request.interceptors.response.use(
         ),
       );
     }
-    return Promise.reject(requestError);
+    throw requestError;
   },
   async (error) => {
     const config = error.config as RequestConfig | undefined;
@@ -442,7 +436,7 @@ request.interceptors.response.use(
       try {
         return await retryWithOperationVerify(config);
       } catch (verifyError) {
-        return Promise.reject(createTransportError(verifyError));
+        throw createTransportError(verifyError);
       }
     }
 
@@ -472,7 +466,7 @@ request.interceptors.response.use(
         ),
       );
     }
-    return Promise.reject(requestError);
+    throw requestError;
   },
 );
 

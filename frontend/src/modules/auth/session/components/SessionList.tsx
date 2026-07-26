@@ -366,6 +366,49 @@ const SessionList: React.FC = () => {
     },
   ];
 
+  const tableContent =
+    data.length === 0 && !loading ? (
+      <PageEmpty description={t('auth.session.empty')} />
+    ) : (
+      <AppTable<AdminSessionRow>
+        className="system-list__table"
+        rowKey="sessionId"
+        data={data}
+        columns={columns}
+        loading={loading}
+        scroll={{ x: 'max-content' }}
+        onChange={handleTableChange}
+        emptyText={t('auth.session.empty')}
+        rowSelection={
+          canDelete
+            ? {
+                type: 'checkbox',
+                selectedRowKeys: visibleSelectedRowKeys,
+                checkCrossPage: true,
+                preserveSelectedRowKeys: true,
+                onChange: (keys) =>
+                  setSelectedRowKeys(
+                    (currentKeys) =>
+                      mergeCrossPageSelection(
+                        currentKeys,
+                        keys as string[],
+                        data.map((item) => item.sessionId),
+                      ) as string[],
+                  ),
+                checkboxProps: (record: AdminSessionRow) => ({
+                  disabled: record.username === currentUsername || Boolean(record.revokedAt),
+                }),
+              }
+            : undefined
+        }
+        pagination={buildStandardPagination(t, {
+          current: query.page || emptyQuery.page,
+          pageSize: query.pageSize || emptyQuery.pageSize,
+          total,
+        })}
+      />
+    );
+
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template">
@@ -544,47 +587,8 @@ const SessionList: React.FC = () => {
                   void loadData(query);
                 }}
               />
-            ) : data.length === 0 && !loading ? (
-              <PageEmpty description={t('auth.session.empty')} />
             ) : (
-              <AppTable<AdminSessionRow>
-                className="system-list__table"
-                rowKey="sessionId"
-                data={data}
-                columns={columns}
-                loading={loading}
-                scroll={{ x: 'max-content' }}
-                onChange={handleTableChange}
-                emptyText={t('auth.session.empty')}
-                rowSelection={
-                  canDelete
-                    ? {
-                        type: 'checkbox',
-                        selectedRowKeys: visibleSelectedRowKeys,
-                        checkCrossPage: true,
-                        preserveSelectedRowKeys: true,
-                        onChange: (keys) =>
-                          setSelectedRowKeys(
-                            (currentKeys) =>
-                              mergeCrossPageSelection(
-                                currentKeys,
-                                keys as string[],
-                                data.map((item) => item.sessionId),
-                              ) as string[],
-                          ),
-                        checkboxProps: (record: AdminSessionRow) => ({
-                          disabled:
-                            record.username === currentUsername || Boolean(record.revokedAt),
-                        }),
-                      }
-                    : undefined
-                }
-                pagination={buildStandardPagination(t, {
-                  current: query.page || emptyQuery.page,
-                  pageSize: query.pageSize || emptyQuery.pageSize,
-                  total,
-                })}
-              />
+              tableContent
             )}
           </Card>
         </>

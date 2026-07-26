@@ -37,6 +37,19 @@ import {
 import { translateRoleName } from '../role/display';
 import '../components/shared/list-page.css';
 
+function remediationActionLabel(
+  action: string | undefined,
+  t: ReturnType<typeof useTranslation>['t'],
+) {
+  if (action === 'remediated') {
+    return t('system.permission.workbench.timeline.remediated');
+  }
+  if (action === 'noop') {
+    return t('system.permission.workbench.timeline.noop');
+  }
+  return '-';
+}
+
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -338,9 +351,8 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
             {utilityActions ? (
               <div className="permission-workbench__utility-actions">{utilityActions}</div>
             ) : null}
-            <div
+            <fieldset
               className="permission-workbench__view-switch"
-              role="group"
               aria-label={t('system.permission.workbench.tab')}
             >
               <Button
@@ -375,7 +387,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
               >
                 {t('system.permission.workbench.view.all')}
               </Button>
-            </div>
+            </fieldset>
           </div>
         </div>
 
@@ -538,12 +550,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   },
                   {
                     label: t('system.permission.workbench.remediationAction'),
-                    value:
-                      detailRole.lastRemediationAction === 'remediated'
-                        ? t('system.permission.workbench.timeline.remediated')
-                        : detailRole.lastRemediationAction === 'noop'
-                          ? t('system.permission.workbench.timeline.noop')
-                          : '-',
+                    value: remediationActionLabel(detailRole.lastRemediationAction, t),
                   },
                   {
                     label: t('system.permission.workbench.remediationTime'),

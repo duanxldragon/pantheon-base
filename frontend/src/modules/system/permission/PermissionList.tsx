@@ -357,7 +357,7 @@ const PermissionList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const ids = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchDeletePermissionPolicies({ ids });
     const messageKey =
       result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';
@@ -406,17 +406,18 @@ const PermissionList: React.FC = () => {
 
   const handleTableChange: TableProps<PermissionPolicyRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    let nextSortOrder: 'asc' | 'desc' | undefined;
+    if (currentSorter?.direction === 'ascend') {
+      nextSortOrder = 'asc';
+    } else if (currentSorter?.direction === 'descend') {
+      nextSortOrder = 'desc';
+    }
     setQuery({
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder:
-        currentSorter?.direction === 'ascend'
-          ? 'asc'
-          : currentSorter?.direction === 'descend'
-            ? 'desc'
-            : undefined,
+      sortOrder: nextSortOrder,
     });
   };
 
@@ -485,16 +486,17 @@ const PermissionList: React.FC = () => {
     ],
     [t, total, workbench],
   );
-  const governanceSummaryItems = useMemo(
-    () => [
+  const governanceSummaryItems = useMemo(() => {
+    let currentModeLabel = t('system.permission.policy.tab');
+    if (activeTab === 'workbench') {
+      currentModeLabel = t('system.permission.workbench.tab');
+    } else if (activeTab === 'data-scope') {
+      currentModeLabel = t('system.permission.dataScope.tab');
+    }
+    return [
       {
         label: t('system.permission.hero.currentMode'),
-        value:
-          activeTab === 'workbench'
-            ? t('system.permission.workbench.tab')
-            : activeTab === 'data-scope'
-              ? t('system.permission.dataScope.tab')
-              : t('system.permission.policy.tab'),
+        value: currentModeLabel,
         description: t('system.permission.hero.modeHint'),
       },
       {
@@ -507,9 +509,8 @@ const PermissionList: React.FC = () => {
         value: canExport ? t('common.yes') : t('common.no'),
         description: t('system.permission.hero.exportHint'),
       },
-    ],
-    [activeTab, canExport, t, workbench?.overview.unknownPermissionAssignmentCount],
-  );
+    ];
+  }, [activeTab, canExport, t, workbench?.overview.unknownPermissionAssignmentCount]);
 
   const columns: ColumnProps<PermissionPolicyRow>[] = [
     {
@@ -637,11 +638,13 @@ const PermissionList: React.FC = () => {
                 remediatingRoleKey={remediatingRoleKey}
               />
             </Space>
-          ) : activeTab === 'data-scope' ? (
+          ) : null}
+          {activeTab === 'data-scope' ? (
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <PermissionDataScopeTab roleOptions={roleOptions} />
             </Space>
-          ) : (
+          ) : null}
+          {activeTab !== 'workbench' && activeTab !== 'data-scope' ? (
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <div className="permission-page__api-filter-shell">
                 <SearchToolbar
@@ -803,7 +806,7 @@ const PermissionList: React.FC = () => {
                 ) : null}
               </Card>
             </Space>
-          )}
+          ) : null}
         </div>
       </Space>
 

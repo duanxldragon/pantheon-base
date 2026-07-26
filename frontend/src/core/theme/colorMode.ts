@@ -67,12 +67,12 @@ export function initializePantheonColorMode() {
 }
 
 export function usePantheonColorMode() {
-  const [mode, setModeState] = useState<PantheonColorMode>(() => getStoredColorMode());
+  const [mode, setMode] = useState<PantheonColorMode>(() => getStoredColorMode());
 
   useEffect(() => {
     const handleColorModeChange = (event: Event) => {
       const nextMode = (event as CustomEvent<PantheonColorMode>).detail;
-      setModeState(normalizeColorMode(nextMode));
+      setMode(normalizeColorMode(nextMode));
     };
     globalThis.addEventListener(PANTHEON_COLOR_MODE_EVENT, handleColorModeChange);
     return () => {
@@ -82,12 +82,12 @@ export function usePantheonColorMode() {
 
   const setColorMode = useCallback((nextMode: PantheonColorMode) => {
     const normalized = normalizeColorMode(nextMode);
-    setModeState(normalized);
+    setMode(normalized);
     applyColorMode(normalized);
   }, []);
 
   const toggleColorMode = useCallback(() => {
-    setModeState((current) => {
+    setMode((current) => {
       const next: PantheonColorMode = current === 'dark' ? 'light' : 'dark';
       applyColorMode(next);
       return next;

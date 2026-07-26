@@ -78,6 +78,19 @@ function statusColor(status: number) {
   return 'gray';
 }
 
+function scopeColor(scope: string) {
+  if (scope === 'system') return 'blue';
+  if (scope === 'platform') return 'purple';
+  return 'green';
+}
+
+function statusLabelKey(status: number) {
+  if (status === 1) return 'generator.moduleManager.status.active';
+  if (status === 3) return 'generator.moduleManager.status.pending';
+  if (status === 4) return 'generator.moduleManager.status.failed';
+  return 'generator.moduleManager.status.uninstalled';
+}
+
 function hasLifecycleChanges(summary: ModuleI18nLifecycleSummary | null | undefined) {
   if (!summary?.triggered) {
     return false;
@@ -292,9 +305,7 @@ const ModuleManager: React.FC = () => {
       dataIndex: 'scope',
       width: TABLE_COLUMN_WIDTH.scope,
       render: (scope: string) => (
-        <Tag color={scope === 'system' ? 'blue' : scope === 'platform' ? 'purple' : 'green'}>
-          {scope}
-        </Tag>
+        <Tag color={scopeColor(scope)}>{scope}</Tag>
       ),
     },
     {
@@ -369,15 +380,7 @@ const ModuleManager: React.FC = () => {
       dataIndex: 'status',
       width: TABLE_COLUMN_WIDTH.status,
       render: (status: number) => (
-        <Tag color={statusColor(status)}>
-          {status === 1
-            ? t('generator.moduleManager.status.active')
-            : status === 3
-              ? t('generator.moduleManager.status.pending')
-              : status === 4
-                ? t('generator.moduleManager.status.failed')
-                : t('generator.moduleManager.status.uninstalled')}
-        </Tag>
+        <Tag color={statusColor(status)}>{t(statusLabelKey(status))}</Tag>
       ),
     },
     withTableColumnPriority(
@@ -524,6 +527,29 @@ const ModuleManager: React.FC = () => {
     );
   }
 
+  const renderPurgeTableHint = (record: ModuleRegistration) => {
+    if (hasAutoRecycle(record)) {
+      return t('generator.moduleManager.purgeModal.autoRecycleTable', { table: record.tableName });
+    }
+    if (record.tableName) {
+      return t('generator.moduleManager.purgeModal.keepTable', { table: record.tableName });
+    }
+    return t('generator.moduleManager.purgeModal.noTable');
+  };
+
+  let moduleStateAlert = (
+    <Alert type="info" content={t('generator.moduleManager.repairHint')} />
+  );
+  if (featureDisabled) {
+    moduleStateAlert = (
+      <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
+    );
+  } else if (modules.some((item) => item.status === 3)) {
+    moduleStateAlert = (
+      <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
+    );
+  }
+
   return (
     <PageContainer>
       <Space direction="vertical" size={12} className="system-page-template module-manager-page">
@@ -637,13 +663,7 @@ const ModuleManager: React.FC = () => {
                 }
               />
             ) : null}
-            {featureDisabled ? (
-              <Alert type="warning" content={t('generator.moduleManager.disabledHint')} />
-            ) : modules.some((item) => item.status === 3) ? (
-              <Alert type="warning" content={t('generator.moduleManager.pendingHint')} />
-            ) : (
-              <Alert type="info" content={t('generator.moduleManager.repairHint')} />
-            )}
+            {moduleStateAlert}
           </div>
           <AppTable
             className="system-list__table"
@@ -695,15 +715,7 @@ const ModuleManager: React.FC = () => {
                 </Typography.Text>
               ) : null}
               <Typography.Text type="secondary">
-                {hasAutoRecycle(purgeTarget)
-                  ? t('generator.moduleManager.purgeModal.autoRecycleTable', {
-                      table: purgeTarget.tableName,
-                    })
-                  : purgeTarget.tableName
-                    ? t('generator.moduleManager.purgeModal.keepTable', {
-                        table: purgeTarget.tableName,
-                      })
-                    : t('generator.moduleManager.purgeModal.noTable')}
+                {renderPurgeTableHint(purgeTarget)}
               </Typography.Text>
             </Space>
             {purgeTarget.tableName && !hasAutoRecycle(purgeTarget) ? (

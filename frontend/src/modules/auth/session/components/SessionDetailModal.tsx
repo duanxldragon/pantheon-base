@@ -29,6 +29,11 @@ interface SessionDetailModalProps {
   onCancel: () => void;
 }
 
+function formatSessionUserLabel(session: SessionDetailRecord) {
+  const nicknameSuffix = session.nickname ? ` / ${session.nickname}` : '';
+  return `${session.username}${nicknameSuffix}`;
+}
+
 const SessionDetailModal: React.FC<SessionDetailModalProps> = ({ visible, session, onCancel }) => {
   const { t } = useTranslation();
 
@@ -51,7 +56,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({ visible, sessio
               </Typography.Text>
               <Typography.Text className="auth-detail-summary__desc">
                 {session.username
-                  ? `${session.username}${session.nickname ? ` / ${session.nickname}` : ''}`
+                  ? formatSessionUserLabel(session)
                   : t('auth.security.currentSessionSummary')}
               </Typography.Text>
             </div>
