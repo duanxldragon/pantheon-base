@@ -30,7 +30,7 @@ import type {
 import type { TreeSelectDataType } from '@arco-design/web-react/es/TreeSelect/interface';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
-import { isArcoFormValidationError } from '../../../core/arco/formValidation';
+import { isArcoFormValidationError, isLikelyEmailAddress } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
@@ -1567,8 +1567,13 @@ const DeptList: React.FC = () => {
                     rules={[
                       {
                         // Linear-time email shape check; backend owns authoritative validation.
-                        match: /\S@\S[^\s.]*\.\S/,
-                        message: t('system.user.email.invalid'),
+                        validator: (value, callback) => {
+                          if (!value || isLikelyEmailAddress(String(value))) {
+                            callback();
+                            return;
+                          }
+                          callback(t('system.user.email.invalid'));
+                        },
                       },
                     ]}
                   >

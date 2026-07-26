@@ -4,6 +4,7 @@ import { Avatar, Button, Form, Grid, Input, Select, Space, Typography } from '@a
 import { IconUpload } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { AppModal, FormSection, SubmitBar } from '../../../components';
+import { isLikelyEmailAddress } from '../../../core/arco/formValidation';
 import type { FormInstance } from '@arco-design/web-react/es/Form';
 import type { UserCreatePayload, UserListRow } from './api';
 
@@ -110,7 +111,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                     {
                       validator: (value, callback) => {
                         // Linear-time email shape check; backend owns authoritative validation.
-                        if (!value || /\S@\S[^\s.]*\.\S/.test(String(value))) {
+                        if (!value || isLikelyEmailAddress(String(value))) {
                           callback();
                           return;
                         }
