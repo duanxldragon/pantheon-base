@@ -30,7 +30,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { auditPendingActivations, getModuleStatus } from '../../../lowcode/dynamicmodule/api';
 
-import type { GenerateAndRegisterResp, GeneratedFile } from '../api';
 import {
   createGeneratorDatasource,
   deleteGeneratorDatasource,
@@ -42,6 +41,8 @@ import {
   previewGeneratedFiles as requestPreviewGeneratedFiles,
   testGeneratorDatasource,
   updateGeneratorDatasource,
+  type GenerateAndRegisterResp,
+  type GeneratedFile,
   type GeneratorDatasource,
   type GeneratorTableOption,
   type UpsertGeneratorDatasourcePayload,
@@ -143,7 +144,27 @@ function escapeCsvCell(value: string): string {
   if (!/[",\n\r]/.test(normalized)) {
     return normalized;
   }
-  return `"${normalized.replace(/"/g, '""')}"`;
+  return `"${normalized.replaceAll('"', '""')}"`;
+}
+
+function verificationStatusColor(status: string): string {
+  if (status === 'pass') {
+    return 'green';
+  }
+  if (status === 'warn') {
+    return 'orange';
+  }
+  return 'arcoblue';
+}
+
+function moduleActivationStatusKey(status: number): string {
+  if (status === 1) {
+    return 'generator.moduleManager.status.active';
+  }
+  if (status === 2) {
+    return 'generator.moduleManager.status.uninstalled';
+  }
+  return 'generator.moduleManager.status.pending';
 }
 
 function parseCsvRows(content: string): string[][] {
@@ -496,7 +517,7 @@ const ModuleWizard: React.FC = () => {
       const groupDisplayName =
         index === 0 && groupSegments[0] === businessContext
           ? businessContextTitle
-          : inferMenuGroupDisplayName(groupSegments[groupSegments.length - 1]);
+          : inferMenuGroupDisplayName(groupSegments.at(-1) ?? '');
       const groupDisplayNameEn =
         index === 0 && groupSegments[0] === businessContext
           ? businessContextTitleEn
@@ -527,10 +548,10 @@ const ModuleWizard: React.FC = () => {
       `${actionLabel('delete', 'en-US')} ${displayNameEn}`;
 
     Object.entries(translationOverrides).forEach(([key, override]) => {
-      if (Object.prototype.hasOwnProperty.call(zhTranslations, key) && override.zh !== undefined) {
+      if (Object.hasOwn(zhTranslations, key) && override.zh !== undefined) {
         zhTranslations[key] = override.zh;
       }
-      if (Object.prototype.hasOwnProperty.call(enTranslations, key) && override.en !== undefined) {
+      if (Object.hasOwn(enTranslations, key) && override.en !== undefined) {
         enTranslations[key] = override.en;
       }
     });
@@ -644,8 +665,7 @@ const ModuleWizard: React.FC = () => {
 
   const handleBasicInfoSubmit = async () => {
     try {
-      let values = getAllFormValues();
-      let metadata = readMetadataValues();
+      const metadata = readMetadataValues();
       const sourceMode = metadata.sourceMode;
       if (sourceMode === 'database' && !metadata.sourceTable) {
         message.error(t('generator.wizard.sourceTable.required'));
@@ -661,8 +681,7 @@ const ModuleWizard: React.FC = () => {
       }
 
       await form.validate();
-      values = getAllFormValues();
-      metadata = readMetadataValues();
+      const values = getAllFormValues();
       const normalizedName = normalizeModulePath(values.name || '');
       const scope = (values.scope as ModuleScope | undefined) || 'business';
       if (!isValidScopedModulePath(scope, normalizedName)) {
@@ -935,11 +954,7 @@ const ModuleWizard: React.FC = () => {
     translationPreviewPage * translationPreviewPageSize,
   );
   const activationStatusKey = registerResult
-    ? registerResult.module.status === 1
-      ? 'generator.moduleManager.status.active'
-      : registerResult.module.status === 2
-        ? 'generator.moduleManager.status.uninstalled'
-        : 'generator.moduleManager.status.pending'
+    ? moduleActivationStatusKey(registerResult.module.status)
     : '';
 
   useEffect(() => {
@@ -1456,10 +1471,10 @@ const ModuleWizard: React.FC = () => {
                       <Select
                         value={
                           ((form.getFieldValue('scope') as ModuleScope | undefined) ||
-                            'business') === 'business' && selectedTableRole !== 'relation'
-                            ? includeDashboardWidget
-                              ? 'enabled'
-                              : 'disabled'
+                            'business') === 'business' &&
+                          selectedTableRole !== 'relation' &&
+                          includeDashboardWidget
+                            ? 'enabled'
                             : 'disabled'
                         }
                         disabled={
@@ -1814,13 +1829,16 @@ const ModuleWizard: React.FC = () => {
                       {previewCompletenessIssues.length === 0 ? (
                         <Alert type="success" content={t('generator.validation.passed')} />
                       ) : (
-                        previewCompletenessIssues.map((issue) => (
-                          <Alert
-                            key={`${issue.code}-${issue.detail || ''}`}
-                            type={issue.level === 'error' ? 'error' : 'warning'}
-                            content={`${t(issue.messageKey)}${issue.detail ? `: ${issue.detail}` : ''}`}
-                          />
-                        ))
+                        previewCompletenessIssues.map((issue) => {
+                          const detailSuffix = issue.detail ? `: ${issue.detail}` : '';
+                          return (
+                            <Alert
+                              key={`${issue.code}-${issue.detail || ''}`}
+                              type={issue.level === 'error' ? 'error' : 'warning'}
+                              content={`${t(issue.messageKey)}${detailSuffix}`}
+                            />
+                          );
+                        })
                       )}
                     </Space>
                   </Card>
@@ -2153,15 +2171,7 @@ const ModuleWizard: React.FC = () => {
                           className="generator-wizard__verification-row"
                         >
                           <Space>
-                            <Tag
-                              color={
-                                item.status === 'pass'
-                                  ? 'green'
-                                  : item.status === 'warn'
-                                    ? 'orange'
-                                    : 'arcoblue'
-                              }
-                            >
+                            <Tag color={verificationStatusColor(item.status)}>
                               {t(`generator.wizard.result.verificationStatus.${item.status}`)}
                             </Tag>
                             <Typography.Text>{t(item.messageKey)}</Typography.Text>

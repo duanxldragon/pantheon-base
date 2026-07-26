@@ -935,8 +935,7 @@ const BaseLayout: React.FC = () => {
   };
 
   const closeOtherTabs = (targetPath: string) => {
-    const targetTab = openedTabs.find((item) => item.path === targetPath);
-    if (!targetTab) {
+    if (!openedTabs.some((item) => item.path === targetPath)) {
       return;
     }
     const nextTabs = orderOpenedTabs(
@@ -1408,9 +1407,7 @@ const BaseLayout: React.FC = () => {
                 type="text"
                 className="app-shell__collapse-btn"
                 aria-label={t('app.nav.toggle')}
-                icon={
-                  isMobile ? <IconMenuUnfold /> : collapsed ? <IconMenuUnfold /> : <IconMenuFold />
-                }
+                icon={isMobile || collapsed ? <IconMenuUnfold /> : <IconMenuFold />}
                 onClick={() =>
                   isMobile ? setMobileNavOpen((value) => !value) : setCollapsed((value) => !value)
                 }

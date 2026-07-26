@@ -126,7 +126,46 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function safeParseJSON(raw: string): unknown | null {
+function resolveConfigSourcePageKey(path: string) {
+  if (path.includes('/system/upload')) {
+    return 'system.audit.sourcePage.upload';
+  }
+  if (path.includes('/system/i18n')) {
+    return 'system.audit.sourcePage.i18n';
+  }
+  return 'system.audit.sourcePage.setting';
+}
+
+function resolveIamSourcePageKey(path: string) {
+  if (path.includes('/system/user')) {
+    return 'system.audit.sourcePage.user';
+  }
+  if (path.includes('/system/role')) {
+    return 'system.audit.sourcePage.role';
+  }
+  if (path.includes('/system/menu')) {
+    return 'system.audit.sourcePage.menu';
+  }
+  return 'system.audit.sourcePage.permission';
+}
+
+function failureCategoryColor(category: string) {
+  if (category === 'validation') {
+    return 'orange';
+  }
+  if (category === 'auth') {
+    return 'gold';
+  }
+  if (category === 'permission') {
+    return 'red';
+  }
+  if (category === 'server') {
+    return 'magenta';
+  }
+  return 'arcoblue';
+}
+
+function safeParseJSON(raw: string): unknown {
   const trimmed = raw.trim();
   if (!trimmed) {
     return null;
@@ -304,11 +343,7 @@ function getAuditSourceMeta(log: OperationLogRow): AuditSourceMeta {
     return {
       layerKey: 'system.audit.sourceLayer.system',
       domainKey: 'system.audit.sourceDomain.config',
-      pageKey: path.includes('/system/upload')
-        ? 'system.audit.sourcePage.upload'
-        : path.includes('/system/i18n')
-          ? 'system.audit.sourcePage.i18n'
-          : 'system.audit.sourcePage.setting',
+      pageKey: resolveConfigSourcePageKey(path),
     };
   }
   if (path.includes('/system/operation-log')) {
@@ -340,13 +375,7 @@ function getAuditSourceMeta(log: OperationLogRow): AuditSourceMeta {
     return {
       layerKey: 'system.audit.sourceLayer.system',
       domainKey: 'system.audit.sourceDomain.iam',
-      pageKey: path.includes('/system/user')
-        ? 'system.audit.sourcePage.user'
-        : path.includes('/system/role')
-          ? 'system.audit.sourcePage.role'
-          : path.includes('/system/menu')
-            ? 'system.audit.sourcePage.menu'
-            : 'system.audit.sourcePage.permission',
+      pageKey: resolveIamSourcePageKey(path),
     };
   }
   if (path.includes('/system/dept') || path.includes('/system/post')) {
@@ -384,16 +413,7 @@ function getFailureMeta(
     return {
       typeKey: `system.audit.failureType.${storedFailureCategory}`,
       summaryKey: `system.audit.failureSummary.${storedFailureCategory}`,
-      color:
-        storedFailureCategory === 'validation'
-          ? 'orange'
-          : storedFailureCategory === 'auth'
-            ? 'gold'
-            : storedFailureCategory === 'permission'
-              ? 'red'
-              : storedFailureCategory === 'server'
-                ? 'magenta'
-                : 'arcoblue',
+      color: failureCategoryColor(storedFailureCategory),
     };
   }
   const errorKey = `${log.errorMsg} ${resultPreview.message || ''}`.toLowerCase();
@@ -670,12 +690,12 @@ const OperationLogList: React.FC = () => {
   const handleTableChange: TableProps<OperationLogRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
     const nextSortField = currentSorter?.direction ? String(currentSorter.field) : undefined;
-    const nextSortOrder =
-      currentSorter?.direction === 'ascend'
-        ? 'asc'
-        : currentSorter?.direction === 'descend'
-          ? 'desc'
-          : undefined;
+    let nextSortOrder: 'asc' | 'desc' | undefined;
+    if (currentSorter?.direction === 'ascend') {
+      nextSortOrder = 'asc';
+    } else if (currentSorter?.direction === 'descend') {
+      nextSortOrder = 'desc';
+    }
     if (nextSortField !== query.sortField || nextSortOrder !== query.sortOrder) {
       setSelectedRowKeys([]);
     }
@@ -887,6 +907,88 @@ const OperationLogList: React.FC = () => {
     return value || '-';
   };
 
+  const plainResultSummaryCard =
+    typeof resultPreview.code === 'number' ||
+    translatedResultMessage ||
+    resultPreview.data !== undefined ? (
+      <Card className="detail-panel-card" title={t('system.audit.resultSummary')} size="small">
+        <Descriptions
+          column={2}
+          data={[
+            ...(typeof resultPreview.code === 'number'
+              ? [{ label: t('system.audit.responseCode'), value: resultPreview.code }]
+              : []),
+            ...(translatedResultMessage
+              ? [
+                  {
+                    label: t('system.audit.responseMessage'),
+                    value: translatedResultMessage,
+                  },
+                ]
+              : []),
+            ...(resultPreview.message && resultPreview.message !== translatedResultMessage
+              ? [
+                  {
+                    label: t('system.audit.responseMessageKey'),
+                    value: resultPreview.message,
+                  },
+                ]
+              : []),
+            ...(resultPreview.data !== undefined
+              ? [
+                  {
+                    label: t('system.audit.responseData'),
+                    value:
+                      isRecord(resultPreview.data) || Array.isArray(resultPreview.data)
+                        ? t('system.audit.responseDataStructured')
+                        : String(resultPreview.data as Exclude<JsonValue, object>),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </Card>
+    ) : null;
+
+  const tableContent =
+    data.length === 0 && !loading ? (
+      <PageEmpty />
+    ) : (
+      <AppTable<OperationLogRow>
+        className="system-list__table"
+        rowKey="id"
+        data={data}
+        columns={columns}
+        loading={loading}
+        scroll={{ x: 'max-content' }}
+        onChange={handleTableChange}
+        rowSelection={
+          canDelete
+            ? {
+                type: 'checkbox',
+                selectedRowKeys: visibleSelectedRowKeys,
+                checkCrossPage: true,
+                preserveSelectedRowKeys: true,
+                onChange: (keys) =>
+                  setSelectedRowKeys(
+                    (currentKeys) =>
+                      mergeCrossPageSelection(
+                        currentKeys,
+                        keys as number[],
+                        data.map((item) => item.id),
+                      ) as number[],
+                  ),
+              }
+            : undefined
+        }
+        pagination={buildStandardPagination(t, {
+          current: query.page || emptyQuery.page,
+          pageSize: query.pageSize || emptyQuery.pageSize,
+          total,
+        })}
+      />
+    );
+
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template">
@@ -1078,42 +1180,8 @@ const OperationLogList: React.FC = () => {
                   void loadData(query);
                 }}
               />
-            ) : data.length === 0 && !loading ? (
-              <PageEmpty />
             ) : (
-              <AppTable<OperationLogRow>
-                className="system-list__table"
-                rowKey="id"
-                data={data}
-                columns={columns}
-                loading={loading}
-                scroll={{ x: 'max-content' }}
-                onChange={handleTableChange}
-                rowSelection={
-                  canDelete
-                    ? {
-                        type: 'checkbox',
-                        selectedRowKeys: visibleSelectedRowKeys,
-                        checkCrossPage: true,
-                        preserveSelectedRowKeys: true,
-                        onChange: (keys) =>
-                          setSelectedRowKeys(
-                            (currentKeys) =>
-                              mergeCrossPageSelection(
-                                currentKeys,
-                                keys as number[],
-                                data.map((item) => item.id),
-                              ) as number[],
-                          ),
-                      }
-                    : undefined
-                }
-                pagination={buildStandardPagination(t, {
-                  current: query.page || emptyQuery.page,
-                  pageSize: query.pageSize || emptyQuery.pageSize,
-                  total,
-                })}
-              />
+              tableContent
             )}
           </Card>
         </>
@@ -1421,51 +1489,9 @@ const OperationLogList: React.FC = () => {
                   ]}
                 />
               </Card>
-            ) : typeof resultPreview.code === 'number' ||
-              translatedResultMessage ||
-              resultPreview.data !== undefined ? (
-              <Card
-                className="detail-panel-card"
-                title={t('system.audit.resultSummary')}
-                size="small"
-              >
-                <Descriptions
-                  column={2}
-                  data={[
-                    ...(typeof resultPreview.code === 'number'
-                      ? [{ label: t('system.audit.responseCode'), value: resultPreview.code }]
-                      : []),
-                    ...(translatedResultMessage
-                      ? [
-                          {
-                            label: t('system.audit.responseMessage'),
-                            value: translatedResultMessage,
-                          },
-                        ]
-                      : []),
-                    ...(resultPreview.message && resultPreview.message !== translatedResultMessage
-                      ? [
-                          {
-                            label: t('system.audit.responseMessageKey'),
-                            value: resultPreview.message,
-                          },
-                        ]
-                      : []),
-                    ...(resultPreview.data !== undefined
-                      ? [
-                          {
-                            label: t('system.audit.responseData'),
-                            value:
-                              isRecord(resultPreview.data) || Array.isArray(resultPreview.data)
-                                ? t('system.audit.responseDataStructured')
-                                : String(resultPreview.data as JsonValue),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </Card>
-            ) : null}
+            ) : (
+              plainResultSummaryCard
+            )}
 
             <Card className="detail-panel-card" title={t('system.audit.operParam')} size="small">
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap', maxHeight: 220, overflow: 'auto' }}>

@@ -87,7 +87,7 @@ export function isRegisteredComponentKey(key?: string): key is RegisteredCompone
   if (!key) {
     return false;
   }
-  return Object.prototype.hasOwnProperty.call(componentRegistry, key);
+  return Object.hasOwn(componentRegistry, key);
 }
 
 export function listRegisteredComponentKeys(): RegisteredComponentKey[] {

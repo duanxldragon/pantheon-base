@@ -33,8 +33,8 @@ function parseDate(value: DateValue) {
         return date;
       }
     }
-    const localDateTimeMatch = normalized.match(
-      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/,
+    const localDateTimeMatch = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(
+      normalized,
     );
     if (localDateTimeMatch) {
       const [, year, month, day, hour = '00', minute = '00', second = '00'] = localDateTimeMatch;

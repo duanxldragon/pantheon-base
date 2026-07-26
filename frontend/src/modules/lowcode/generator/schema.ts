@@ -533,7 +533,7 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
         'generator.fieldTemplates.phone.placeholder',
         'generator.fieldTemplates.phone.placeholder',
       ),
-      validation: { pattern: '^1[3-9]\\d{9}$' },
+      validation: { pattern: String.raw`^1[3-9]\d{9}$` },
       templateKey: 'phone',
     }),
   },
@@ -572,7 +572,7 @@ export const FIELD_TEMPLATE_DEFINITIONS: FieldTemplateDefinition[] = [
         'generator.fieldTemplates.email.placeholder',
         'generator.fieldTemplates.email.placeholder',
       ),
-      validation: { pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+      validation: { pattern: String.raw`^[^\s@]+@[^\s@]+\.[^\s@]+$` },
       templateKey: 'email',
     }),
   },
@@ -784,7 +784,7 @@ export const PAGE_ACTION_TEMPLATE_DEFINITIONS: PageActionTemplateDefinition[] = 
 
 export function splitModuleSegments(name: string): string[] {
   return name
-    .replace(/\\/g, '/')
+    .replaceAll('\\', '/')
     .split('/')
     .map((segment) => segment.trim())
     .filter(Boolean);
@@ -816,7 +816,7 @@ export function isValidScopedModulePath(scope: ModuleScope, value?: string): boo
 
 export function getLeafModuleName(name: string): string {
   const segments = splitModuleSegments(name);
-  return segments[segments.length - 1] || name;
+  return segments.at(-1) || name;
 }
 
 function toPascalCase(value: string): string {
@@ -850,7 +850,7 @@ export function buildPageRoutePath(scope: ModuleScope, name: string): string {
 export function normalizeMenuPath(value?: string): string {
   const normalized = String(value || '')
     .trim()
-    .replace(/\\/g, '/');
+    .replaceAll('\\', '/');
   if (!normalized) {
     return '';
   }
@@ -1136,7 +1136,7 @@ export function buildMenuPreview(schema: Pick<ModuleSchema, 'menus'>): Generator
 
 export function validateGeneratorCompleteness(schema: ModuleSchema): GeneratorCompletenessIssue[] {
   const issues: GeneratorCompletenessIssue[] = [];
-  const relationFieldPattern = /^[A-Za-z][A-Za-z0-9_]*$/;
+  const relationFieldPattern = /^[A-Za-z]\w*$/;
   const segments = splitModuleSegments(schema.name);
   const zh = schema.i18n.translations.zh;
   const en = schema.i18n.translations.en;

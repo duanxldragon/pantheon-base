@@ -109,8 +109,8 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                   rules={[
                     {
                       validator: (value, callback) => {
-                        if (!value || /\S+@\S+\.\S+/.test(String(value))) {
-                          // NOSONAR — simple email regex
+                        // Linear-time email shape check; backend owns authoritative validation.
+                        if (!value || /\S@\S[^\s.]*\.\S/.test(String(value))) {
                           callback();
                           return;
                         }

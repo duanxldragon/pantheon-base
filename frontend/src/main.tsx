@@ -14,14 +14,15 @@ initializePantheonColorMode();
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
-Promise.allSettled([initializePublicSettings(), initializePantheonTheme()]).finally(() => {
-  initI18n().finally(() => {
-    root.render(
-      <React.StrictMode>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </React.StrictMode>,
-    );
-  });
-});
+await Promise.allSettled([initializePublicSettings(), initializePantheonTheme()]);
+try {
+  await initI18n();
+} finally {
+  root.render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>,
+  );
+}

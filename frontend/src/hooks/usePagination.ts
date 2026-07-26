@@ -21,16 +21,16 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
   const { defaultCurrent = 1, defaultPageSize = 10, total = 0 } = options;
 
   const [current, setCurrent] = useState(defaultCurrent);
-  const [pageSize, setPageSizeState] = useState(defaultPageSize);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
 
-  const setPageSize = useCallback((size: number) => {
-    setPageSizeState(size);
+  const changePageSize = useCallback((size: number) => {
+    setPageSize(size);
     setCurrent(1);
   }, []);
 
   const reset = useCallback(() => {
     setCurrent(defaultCurrent);
-    setPageSizeState(defaultPageSize);
+    setPageSize(defaultPageSize);
   }, [defaultCurrent, defaultPageSize]);
 
   const paginationProps = useMemo<PaginationProps>(
@@ -53,7 +53,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     total,
     paginationProps,
     setCurrent,
-    setPageSize,
+    setPageSize: changePageSize,
     reset,
   };
 }

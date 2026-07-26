@@ -19,12 +19,10 @@ import type { GeneratorDatasource, UpsertGeneratorDatasourcePayload } from '../.
 const FormItem = Form.Item;
 
 export interface DatasourceManagerProps {
-  visible?: boolean;
   editingId: string | null;
   saving: boolean;
   form: ReturnType<typeof Form.useForm<UpsertGeneratorDatasourcePayload>>[0];
   items: GeneratorDatasource[];
-  onClose?: () => void;
   onEditItem: (item: GeneratorDatasource) => void;
   onDeleteItem: (id: string) => void;
   onTestItem: (id: string) => void;

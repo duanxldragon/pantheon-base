@@ -44,9 +44,9 @@ import { TYPE_MAPPING, generateStructTags, getRequiredImports } from './typeMapp
 type StructTagOptions = NonNullable<Parameters<typeof generateStructTags>[2]>;
 
 export class BackendGenerator {
-  private schema: ModuleSchema;
-  private packageName: string;
-  private modelName: string;
+  private readonly schema: ModuleSchema;
+  private readonly packageName: string;
+  private readonly modelName: string;
 
   constructor(schema: ModuleSchema) {
     this.schema = schema;
@@ -941,11 +941,10 @@ func seed${modelName}I18n(db *gorm.DB) error {
     const menuKey = segments.join('-');
     const explicitParentPath = normalizeMenuPath(this.schema.parentMenu || '');
     const shouldGenerateAncestorMenus = !explicitParentPath && segments.length > 1;
-    const inferredParentPath = shouldGenerateAncestorMenus
-      ? ''
-      : segments.length > 1
-        ? buildPageRoutePath(this.schema.scope, segments.slice(0, -1).join('/'))
-        : '';
+    let inferredParentPath = '';
+    if (!shouldGenerateAncestorMenus && segments.length > 1) {
+      inferredParentPath = buildPageRoutePath(this.schema.scope, segments.slice(0, -1).join('/'));
+    }
     const parentPath = normalizeMenuPath(explicitParentPath || inferredParentPath || '');
     const parentKey = shouldGenerateAncestorMenus ? segments.slice(0, -1).join('-') : '';
     const actionSeeds = getPageActions(this.schema)
@@ -1031,7 +1030,7 @@ func seed${modelName}I18n(db *gorm.DB) error {
     for (let index = 0; index < segments.length - 1; index += 1) {
       const groupSegments = segments.slice(0, index + 1);
       const groupTitleKey = buildMenuGroupTitleKey(this.schema.scope, groupSegments);
-      const fallback = inferMenuGroupDisplayName(groupSegments[groupSegments.length - 1]);
+      const fallback = inferMenuGroupDisplayName(groupSegments.at(-1) ?? '');
       pushEntry(zhEntries, seenZh, {
         group: 'menu',
         key: groupTitleKey,
@@ -1547,11 +1546,7 @@ func (h *${this.modelName}Handler) Unbind${relationName}Relation(c *gin.Context)
   }
 
   private generateOptionNameExpression(sourceVar: string): string {
-    const labelField = this.resolveOptionLabelField();
-    if (!labelField) {
-      return `strconv.FormatUint(${sourceVar}.ID, 10)`;
-    }
-    return `${sourceVar}.${labelField}`;
+    return this.generateOptionLabelExpression(sourceVar);
   }
 
   /**
@@ -1569,7 +1564,7 @@ func (h *${this.modelName}Handler) Unbind${relationName}Relation(c *gin.Context)
   }
 
   private escapeGoString(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    return value.replaceAll('\\', String.raw`\\`).replaceAll('"', String.raw`\"`);
   }
 
   private toPascalCase(value: string): string {

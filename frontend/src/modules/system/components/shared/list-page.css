@@ -919,6 +919,8 @@ body
 }
 
 .permission-workbench__view-switch {
+  margin: 0;
+  min-inline-size: auto;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1514,6 +1516,10 @@ body
 }
 
 .org-chart__dept-card {
+  display: block;
+  text-align: left;
+  color: inherit;
+  font: inherit;
   width: 320px;
   cursor: pointer;
   border: 1px solid var(--panel-border);

@@ -14,11 +14,11 @@ function parseFilename(contentDisposition?: string, fallbackName?: string) {
   if (!contentDisposition) {
     return fallbackName || 'download.csv';
   }
-  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition);
   if (utf8Match?.[1]) {
     return decodeURIComponent(utf8Match[1]);
   }
-  const plainMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+  const plainMatch = /filename="?([^"]+)"?/i.exec(contentDisposition);
   if (plainMatch?.[1]) {
     return plainMatch[1];
   }
@@ -34,7 +34,7 @@ function saveBlob(blob: Blob, filename: string) {
   anchor.download = filename;
   document.body.appendChild(anchor);
   anchor.click();
-  document.body.removeChild(anchor);
+  anchor.remove();
   globalThis.URL.revokeObjectURL(url);
 }
 
@@ -58,7 +58,7 @@ export function downloadCsvFile(filename: string, headers: string[], rows: strin
   const escaped = (value: string) => {
     const normalized = neutralizeCsvFormula(String(value ?? ''));
     if (/[",\r\n]/.test(normalized)) {
-      return `"${normalized.replace(/"/g, '""')}"`;
+      return `"${normalized.replaceAll('"', '""')}"`;
     }
     return normalized;
   };
@@ -87,11 +87,12 @@ export async function downloadFile(options: DownloadFileOptions) {
   });
 
   const contentTypeHeader = response.headers['content-type'];
-  const contentType = Array.isArray(contentTypeHeader)
-    ? contentTypeHeader.join(',')
-    : typeof contentTypeHeader === 'string'
-      ? contentTypeHeader
-      : '';
+  let contentType = '';
+  if (Array.isArray(contentTypeHeader)) {
+    contentType = contentTypeHeader.join(',');
+  } else if (typeof contentTypeHeader === 'string') {
+    contentType = contentTypeHeader;
+  }
   if (response.status >= 400 || contentType.includes('application/json')) {
     try {
       const text = await response.data.text();

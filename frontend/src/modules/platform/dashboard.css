@@ -300,6 +300,10 @@
 }
 
 .dashboard-task-card {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) auto;
   gap: 12px;

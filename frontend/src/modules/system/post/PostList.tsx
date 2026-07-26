@@ -322,17 +322,18 @@ const PostList: React.FC = () => {
 
   const handleTableChange: TableProps<PostRow>['onChange'] = (pagination, sorter) => {
     const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
+    let nextSortOrder: 'asc' | 'desc' | undefined;
+    if (currentSorter?.direction === 'ascend') {
+      nextSortOrder = 'asc';
+    } else if (currentSorter?.direction === 'descend') {
+      nextSortOrder = 'desc';
+    }
     const nextQuery: PostListQuery = {
       ...query,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || query.pageSize || emptyQuery.pageSize,
       sortField: currentSorter?.direction ? String(currentSorter.field) : undefined,
-      sortOrder:
-        currentSorter?.direction === 'ascend'
-          ? 'asc'
-          : currentSorter?.direction === 'descend'
-            ? 'desc'
-            : undefined,
+      sortOrder: nextSortOrder,
     };
     const sortChanged =
       nextQuery.sortField !== query.sortField || nextQuery.sortOrder !== query.sortOrder;
@@ -365,7 +366,7 @@ const PostList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const postIds = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const postIds = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchUpdatePostStatus({ postIds, status });
     message.success(t('system.post.batchStatusSuccess', { count: result.updatedCount }));
     invalidatePostCaches();
@@ -379,7 +380,7 @@ const PostList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
-    const ids = selectedRowKeys.map((item) => Number(item)).filter((item) => item > 0);
+    const ids = selectedRowKeys.map(Number).filter((item) => item > 0);
     const result = await batchDeletePosts({ ids });
     const messageKey =
       result.failedCount > 0 ? 'common.batchDeletePartialSuccess' : 'common.batchDeleteSuccess';

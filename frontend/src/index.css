@@ -148,16 +148,6 @@
   --z-notification: 1400;
 }
 
-body {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    'Microsoft YaHei',
-    sans-serif;
-}
-
 :root[data-pantheon-theme='emerald'] {
   --app-bg: #f6faf8;
   --brand-primary: #00a870;
@@ -348,6 +338,13 @@ body,
 }
 
 body {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
   background: var(--app-bg);
   color: var(--text-primary);
   font-feature-settings: 'tnum' 1;
@@ -889,6 +886,7 @@ a {
   grid-template-columns: minmax(0, 2.35fr) minmax(236px, 272px);
   align-items: start;
   gap: var(--shell-page-split-gap);
+  min-width: 0;
   width: 100%;
 }
 
@@ -911,11 +909,6 @@ a {
   gap: var(--shell-page-main-gap);
   min-width: 0;
   overflow: hidden;
-}
-
-.page-split-layout {
-  min-width: 0;
-  width: 100%;
 }
 
 .page-side-column {
@@ -1271,6 +1264,8 @@ a {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .app-dialog .arco-modal-footer {
@@ -1296,11 +1291,6 @@ a {
 .app-dialog .arco-modal-header,
 .app-dialog .arco-modal-footer {
   flex: 0 0 auto;
-}
-
-.app-dialog .arco-modal-content {
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
 .app-dialog .arco-form-item:last-child {
@@ -1676,6 +1666,10 @@ a {
 }
 
 .role-member-drawer__candidate-list {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: auto;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;

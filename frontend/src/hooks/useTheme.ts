@@ -12,12 +12,12 @@ export type { PantheonThemeKey } from '../core/theme/theme';
 export { pantheonThemeOptions };
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<_PantheonThemeKey>(() => getStoredPantheonTheme());
+  const [theme, setTheme] = useState<_PantheonThemeKey>(() => getStoredPantheonTheme());
 
   useEffect(() => {
     const handleThemeChange = (event: Event) => {
       const nextTheme = (event as CustomEvent<_PantheonThemeKey>).detail;
-      setThemeState(_normalizeTheme(nextTheme));
+      setTheme(_normalizeTheme(nextTheme));
     };
 
     globalThis.addEventListener('pantheon-theme-change', handleThemeChange);
@@ -26,11 +26,11 @@ export function useTheme() {
     };
   }, []);
 
-  const setTheme = useCallback((nextTheme: _PantheonThemeKey) => {
+  const updateTheme = useCallback((nextTheme: _PantheonThemeKey) => {
     const normalizedTheme = _normalizeTheme(nextTheme);
-    setThemeState(normalizedTheme);
+    setTheme(normalizedTheme);
     applyPantheonTheme(normalizedTheme);
   }, []);
 
-  return { theme, setTheme, options: pantheonThemeOptions };
+  return { theme, setTheme: updateTheme, options: pantheonThemeOptions };
 }

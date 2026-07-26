@@ -55,6 +55,33 @@ const TextArea = Input.TextArea;
 
 const defaultRetentionOptions = [1, 7, 30];
 
+function getSeverityTagColor(severity: string) {
+  if (severity === 'high') {
+    return 'red';
+  }
+  if (severity === 'low') {
+    return 'green';
+  }
+  return 'orange';
+}
+
+function getAcknowledgedFilterValue(acknowledged?: boolean) {
+  if (acknowledged === undefined) {
+    return undefined;
+  }
+  return acknowledged ? 'acknowledged' : 'pending';
+}
+
+function parseAcknowledgedFilterValue(value?: string) {
+  if (value === 'acknowledged') {
+    return true;
+  }
+  if (value === 'pending') {
+    return false;
+  }
+  return undefined;
+}
+
 const emptyQuery: SecurityEventQuery = {
   keyword: '',
   username: '',
@@ -186,7 +213,7 @@ const SecurityEventList: React.FC = () => {
       width: TABLE_COLUMN_WIDTH.status,
       render: (value) => {
         const severity = String(value || 'medium');
-        const color = severity === 'high' ? 'red' : severity === 'low' ? 'green' : 'orange';
+        const color = getSeverityTagColor(severity);
         return (
           <Tag color={color}>
             {t(`auth.securityEvent.severity.${severity}`, { defaultValue: severity })}
@@ -359,17 +386,10 @@ const SecurityEventList: React.FC = () => {
               <Select
                 allowClear
                 placeholder={t('auth.securityEvent.filter.acknowledgedPlaceholder')}
-                value={
-                  query.acknowledged === undefined
-                    ? undefined
-                    : query.acknowledged
-                      ? 'acknowledged'
-                      : 'pending'
-                }
+                value={getAcknowledgedFilterValue(query.acknowledged)}
                 onChange={(value) =>
                   handleSearch({
-                    acknowledged:
-                      value === 'acknowledged' ? true : value === 'pending' ? false : undefined,
+                    acknowledged: parseAcknowledgedFilterValue(value),
                   })
                 }
               >

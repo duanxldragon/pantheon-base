@@ -19,12 +19,12 @@ import {
 import { message } from '../../../components/feedback/message';
 import {
   IconDelete,
+  IconDownload,
   IconEdit,
   IconEye,
   IconMore,
   IconRefresh,
 } from '@arco-design/web-react/icon';
-import { IconDownload } from '@arco-design/web-react/icon';
 import type { TFunction } from 'i18next';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
@@ -117,7 +117,7 @@ interface I18nDuplicateConflictState {
   module?: string;
 }
 
-const duplicateI18nKeyMessage = String.fromCharCode(
+const duplicateI18nKeyMessage = String.fromCodePoint(
   105,
   49 + 6,
   56 + 62,
@@ -158,29 +158,31 @@ function buildRenameMigrationReport(preview: I18nRenamePreviewResp, t: TFunction
     lines.push(`- ${t('i18n.rename.report.referenceEmpty')}`);
   } else {
     preview.referenceFiles.forEach((file) => {
-      lines.push('');
-      lines.push(`- ${t('i18n.rename.report.referenceFile')}: ${file.path}`);
-      lines.push(`  ${t('i18n.rename.report.referenceMatches')}: ${file.matchCount}`);
       lines.push(
+        '',
+        `- ${t('i18n.rename.report.referenceFile')}: ${file.path}`,
+        `  ${t('i18n.rename.report.referenceMatches')}: ${file.matchCount}`,
         `  ${t('i18n.rename.report.referenceSuggestedReplacement')}: ${file.suggestedReplacement || preview.newKey}`,
       );
       file.matches.forEach((match) => {
         lines.push(
           `  - ${t('i18n.rename.report.referenceLocation', { line: match.line, column: match.column })}`,
+          `    ${t('i18n.rename.report.referenceBefore')}: ${match.snippet}`,
+          `    ${t('i18n.rename.report.referenceAfter')}: ${match.replacementHint}`,
         );
-        lines.push(`    ${t('i18n.rename.report.referenceBefore')}: ${match.snippet}`);
-        lines.push(`    ${t('i18n.rename.report.referenceAfter')}: ${match.replacementHint}`);
       });
     });
   }
 
-  lines.push('');
-  lines.push(`## ${t('i18n.rename.report.checklistTitle')}`);
-  lines.push(`1. ${t('i18n.rename.report.checklist1')}`);
-  lines.push(`2. ${t('i18n.rename.report.checklist2')}`);
-  lines.push(`3. ${t('i18n.rename.report.checklist3')}`);
-  lines.push(`4. ${t('i18n.rename.report.checklist4')}`);
-  lines.push('');
+  lines.push(
+    '',
+    `## ${t('i18n.rename.report.checklistTitle')}`,
+    `1. ${t('i18n.rename.report.checklist1')}`,
+    `2. ${t('i18n.rename.report.checklist2')}`,
+    `3. ${t('i18n.rename.report.checklist3')}`,
+    `4. ${t('i18n.rename.report.checklist4')}`,
+    '',
+  );
   return lines.join('\n');
 }
 
@@ -206,6 +208,16 @@ function isDuplicateI18nKeyRequestError(error: unknown) {
 
 interface LoadDataOptions {
   silent?: boolean;
+}
+
+function lifecycleStatusColor(status: string) {
+  if (status === 'archived') {
+    return 'red';
+  }
+  if (status === 'observing') {
+    return 'gold';
+  }
+  return 'green';
 }
 
 const I18nList: React.FC = () => {
@@ -1010,7 +1022,7 @@ const I18nList: React.FC = () => {
       );
     document.body.appendChild(anchor);
     anchor.click();
-    document.body.removeChild(anchor);
+    anchor.remove();
     globalThis.URL.revokeObjectURL(url);
     message.success(t('i18n.rename.report.downloadSuccess'));
   };
@@ -1640,13 +1652,7 @@ const I18nList: React.FC = () => {
                             <Tag color="gold">{t('i18n.audit.placeholderTag')}</Tag>
                           ) : null}
                           <Tag
-                            color={
-                              item.lifecycleStatus === 'archived'
-                                ? 'red'
-                                : item.lifecycleStatus === 'observing'
-                                  ? 'gold'
-                                  : 'green'
-                            }
+                            color={lifecycleStatusColor(item.lifecycleStatus)}
                           >
                             {t(`i18n.lifecycle.status.${item.lifecycleStatus}`)}
                           </Tag>

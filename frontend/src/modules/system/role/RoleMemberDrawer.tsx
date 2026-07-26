@@ -395,9 +395,8 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
               {t('common.refresh')}
             </Button>
           </div>
-          <div
+          <fieldset
             className="role-member-drawer__candidate-list"
-            role="listbox"
             aria-label={t('system.role.members.candidatePlaceholder')}
           >
             {candidateOptions.length > 0 ? (
@@ -420,7 +419,7 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
                 {candidateLoading ? t('common.loading') : t('system.role.members.candidateEmpty')}
               </Typography.Text>
             )}
-          </div>
+          </fieldset>
         </Card>
 
         <Card className="dialog-grid-card" size="small">
