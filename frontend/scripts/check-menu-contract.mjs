@@ -154,7 +154,7 @@ function extractObjectBlocks(arrayBody) {
   return blocks;
 }
 
-function extractField(block, fieldName) {
+function extractField(block, fieldName, consts) {
   const patterns = [
     new RegExp(`\\b${fieldName}\\b\\s*:\\s*'([^']*)'`),
     new RegExp(`\\b${fieldName}\\b\\s*:\\s*"([^"]*)"`),
@@ -166,7 +166,40 @@ function extractField(block, fieldName) {
       return match[1];
     }
   }
+  // Go seed files may reference package-local string constants instead of
+  // literals (SonarCloud S1192 remediation); resolve identifiers through the
+  // package const table when one is supplied.
+  if (consts) {
+    const identifier = block.match(new RegExp(`\\b${fieldName}\\b\\s*:\\s*([A-Za-z_]\\w*)`));
+    if (identifier && consts.has(identifier[1])) {
+      return consts.get(identifier[1]);
+    }
+  }
   return '';
+}
+
+// Package-scoped Go string-constant tables (dir -> Map<name, value>), so seed
+// parsers can resolve `Key: keyMenuUser`-style references introduced by the
+// duplicated-literal remediation. Only simple `name = "value"` declarations
+// are collected — enough for seed keys, modules, and locales.
+const goConstTableCache = new Map();
+
+function goConstTable(filePath) {
+  const dirPath = path.dirname(filePath);
+  if (!goConstTableCache.has(dirPath)) {
+    const table = new Map();
+    for (const entry of fs.readdirSync(dirPath)) {
+      if (!entry.endsWith('.go') || entry.endsWith('_test.go')) {
+        continue;
+      }
+      const source = readFile(path.join(dirPath, entry));
+      for (const match of source.matchAll(/^\s*(\w+)\s*(?:string\s*)?=\s*"((?:[^"\\]|\\.)*)"\s*$/gm)) {
+        table.set(match[1], match[2]);
+      }
+    }
+    goConstTableCache.set(dirPath, table);
+  }
+  return goConstTableCache.get(dirPath);
 }
 
 function extractStringArray(source, propertyName) {
@@ -247,20 +280,21 @@ function parseBackendSeeds() {
       continue;
     }
     const source = readFile(filePath);
-    const matches = source.matchAll(/\{([^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms);
+    const consts = goConstTable(filePath);
+    const matches = source.matchAll(/\{([^{}]*\bKey:\s*(?:"[^"]+"|[A-Za-z_]\w*)[^{}]*)\}/gms);
     for (const match of matches) {
       const block = match[1];
-      const type = extractField(block, 'Type');
+      const type = extractField(block, 'Type', consts);
       const item = {
         filePath,
-        key: extractField(block, 'Key'),
-        path: extractField(block, 'Path'),
-        titleKey: extractField(block, 'TitleKey'),
-        component: extractField(block, 'Component'),
-        pagePerm: extractField(block, 'PagePerm'),
-        perms: extractField(block, 'Perms'),
-        routeName: extractField(block, 'RouteName'),
-        module: extractField(block, 'Module'),
+        key: extractField(block, 'Key', consts),
+        path: extractField(block, 'Path', consts),
+        titleKey: extractField(block, 'TitleKey', consts),
+        component: extractField(block, 'Component', consts),
+        pagePerm: extractField(block, 'PagePerm', consts),
+        perms: extractField(block, 'Perms', consts),
+        routeName: extractField(block, 'RouteName', consts),
+        module: extractField(block, 'Module', consts),
         type,
       };
       if (item.path || item.pagePerm || item.perms) {
@@ -335,12 +369,13 @@ function parseBackendMenuI18nSeeds() {
   for (const filePath of files) {
     const source = readFile(filePath);
 
+    const consts = goConstTable(filePath);
     for (const match of source.matchAll(
-      /\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"menu"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms,
+      /\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"menu"[^{}]*\bKey:\s*(?:"[^"]+"|[A-Za-z_]\w*)[^{}]*)\}/gms,
     )) {
       const block = match[1];
-      const locale = extractField(block, 'Locale');
-      const key = extractField(block, 'Key');
+      const locale = extractField(block, 'Locale', consts);
+      const key = extractField(block, 'Key', consts);
       if (translations.has(locale) && key) {
         translations.get(locale).add(key);
       }
@@ -372,13 +407,14 @@ function parseBackendScopedI18nSeeds(groupNames) {
   for (const filePath of files) {
     const source = readFile(filePath);
 
+    const consts = goConstTable(filePath);
     for (const match of source.matchAll(
-      /\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"[^"]+"[^{}]*\bKey:\s*"[^"]+"[^{}]*)\}/gms,
+      /\{([^{}]*\bLocale:\s*"[^"]+"[^{}]*\bGroup:\s*"[^"]+"[^{}]*\bKey:\s*(?:"[^"]+"|[A-Za-z_]\w*)[^{}]*)\}/gms,
     )) {
       const block = match[1];
-      const locale = extractField(block, 'Locale');
-      const group = extractField(block, 'Group');
-      const key = extractField(block, 'Key');
+      const locale = extractField(block, 'Locale', consts);
+      const group = extractField(block, 'Group', consts);
+      const key = extractField(block, 'Key', consts);
       if (translations.has(locale) && groups.has(group) && key) {
         translations.get(locale).add(key);
       }
