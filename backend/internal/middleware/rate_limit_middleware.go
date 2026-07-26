@@ -124,6 +124,7 @@ func (s *memoryRateLimitStore) Allow(ctx context.Context, key string, limit int,
 	entry, exists := s.entries[key]
 	if !exists || now.Sub(entry.lastSeen) > window {
 		s.entries[key] = &rateLimiterEntry{count: 1, lastSeen: now}
+		s.evictStaleLocked(now, window)
 		return true, nil
 	}
 
@@ -132,4 +133,18 @@ func (s *memoryRateLimitStore) Allow(ctx context.Context, key string, limit int,
 		return false, nil
 	}
 	return true, nil
+}
+
+// evictStaleLocked 在 map 超阈值时清理过期条目，防止无 Redis 部署下
+// 按 key（路径+IP）无界增长。调用方须持有 s.mu。
+func (s *memoryRateLimitStore) evictStaleLocked(now time.Time, window time.Duration) {
+	const maxEntries = 10000
+	if len(s.entries) <= maxEntries {
+		return
+	}
+	for key, entry := range s.entries {
+		if now.Sub(entry.lastSeen) > window {
+			delete(s.entries, key)
+		}
+	}
 }
