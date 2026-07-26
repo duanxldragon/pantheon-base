@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -39,6 +40,55 @@ func waitOperationLog(t *testing.T, db *gorm.DB) SystemLogOper {
 	}
 	t.Fatalf("operation log not written in time")
 	return SystemLogOper{}
+}
+
+func TestOperationLogStore_DropsWhenQueueFullAndDrainsOnClose(t *testing.T) {
+	db := setupOperationLogTestDB(t)
+
+	store := &operationLogAsyncStore{
+		db:    db,
+		queue: make(chan SystemLogOper, 1),
+		done:  make(chan struct{}),
+	}
+	// 不启动 run()：队列容量 1，第二条必然走 drop 分支且不得阻塞。
+	first := SystemLogOper{Title: "keep", OperTime: time.Now()}
+	second := SystemLogOper{Title: "dropped", OperTime: time.Now()}
+
+	enqueueDone := make(chan struct{})
+	go func() {
+		store.enqueue(first)
+		store.enqueue(second)
+		close(enqueueDone)
+	}()
+	select {
+	case <-enqueueDone:
+	case <-time.After(2 * time.Second):
+		t.Fatal("enqueue blocked on full queue; sync fallback still present")
+	}
+
+	// Close 排空:启动 run 后关闭，队列中的 first 必须落库
+	go store.run()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	store.Close(ctx)
+
+	var count int64
+	if err := db.Model(&SystemLogOper{}).Where("title = ?", "keep").Count(&count).Error; err != nil {
+		t.Fatalf("count drained logs: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected queued log drained on close, got %d rows", count)
+	}
+	var droppedCount int64
+	if err := db.Model(&SystemLogOper{}).Where("title = ?", "dropped").Count(&droppedCount).Error; err != nil {
+		t.Fatalf("count dropped logs: %v", err)
+	}
+	if droppedCount != 0 {
+		t.Fatalf("expected overflow log dropped, got %d rows", droppedCount)
+	}
+
+	// 关闭后 enqueue 是 no-op，不 panic
+	store.enqueue(SystemLogOper{Title: "after-close"})
 }
 
 func TestOperationLogMiddleware_UsesAuditOverrides(t *testing.T) {
