@@ -175,6 +175,15 @@ jobs:
         continue-on-error: true
         run: npm run check:harness-sync
 
+      - name: Check visual evidence
+        id: harness-visual
+        # Observation mode per pantheon-harness visual-evidence-promotion-policy
+        # (HOT-001): stays advisory on every event until 3 consecutive
+        # UI-affecting tasks pass with rendered evidence and no false positives;
+        # deliberately excluded from the strict main/release enforcement below.
+        continue-on-error: true
+        run: npm run check:harness-visual
+
       - name: Check generated modules
         id: generated-modules
         continue-on-error: true
@@ -192,6 +201,7 @@ jobs:
           HARNESS_DOCS_RESULT: ${{ steps.harness-docs.outcome }}
           HARNESS_INVENTORY_RESULT: ${{ steps.harness-inventory.outcome }}
           HARNESS_SYNC_RESULT: ${{ steps.harness-sync.outcome }}
+          HARNESS_VISUAL_RESULT: ${{ steps.harness-visual.outcome }}
           GENERATED_MODULES_RESULT: ${{ steps.generated-modules.outcome }}
         run: |
           # Report harness check results
@@ -206,6 +216,7 @@ jobs:
           printf '| Harness Docs | %s |\n' "$HARNESS_DOCS_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Harness Inventory | %s |\n' "$HARNESS_INVENTORY_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Harness Sync | %s |\n' "$HARNESS_SYNC_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Visual Evidence (observation) | %s |\n' "$HARNESS_VISUAL_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Generated Modules | %s |\n' "$GENERATED_MODULES_RESULT" >> "$GITHUB_STEP_SUMMARY"
 
           echo ""
@@ -217,6 +228,7 @@ jobs:
           echo "  Harness Docs: ${HARNESS_DOCS_RESULT}"
           echo "  Harness Inventory: ${HARNESS_INVENTORY_RESULT}"
           echo "  Harness Sync: ${HARNESS_SYNC_RESULT}"
+          echo "  Visual Evidence (observation): ${HARNESS_VISUAL_RESULT}"
           echo "  Generated Modules: ${GENERATED_MODULES_RESULT}"
 
           # For PR and merge_group: harness checks are report-only (not blocking)
