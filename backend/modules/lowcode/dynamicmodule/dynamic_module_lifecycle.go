@@ -23,15 +23,15 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	}
 
 	var registration ModuleRegistration
-	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err != nil {
+	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
 		// 无注册记录的模块一律拒绝卸载：防止对任意磁盘目录（尤其 system/*）执行清理/删除。
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound("module.not_found")
+			return nil, common.NewNotFound(msgModuleNotFound)
 		}
 		return nil, err
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
-		return nil, common.NewForbidden("module.unregister.builtin_forbidden")
+		return nil, common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 
 	scope, shortName, err := splitModuleKey(moduleName)
@@ -60,7 +60,7 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	}
 
 	if err := s.db.Table("system_module_registration").
-		Where("name = ?", moduleName).
+		Where(condNameEquals, moduleName).
 		Updates(map[string]interface{}{
 			"status":         ModuleStatusUninstalled,
 			"uninstalled_at": time.Now().Format(time.RFC3339),
@@ -77,14 +77,14 @@ func (s *DynamicModuleService) DeleteModuleRecord(moduleName string) error {
 	}
 
 	var registration ModuleRegistration
-	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err != nil {
+	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.NewNotFound("module.not_found")
+			return common.NewNotFound(msgModuleNotFound)
 		}
 		return err
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
-		return common.NewForbidden("module.unregister.builtin_forbidden")
+		return common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 	if registration.Status != ModuleStatusUninstalled {
 		return common.NewBadRequest("module.delete_record.requires_uninstalled")
@@ -107,14 +107,14 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 	}
 
 	var registration ModuleRegistration
-	if err := s.db.Where("name = ?", moduleName).First(&registration).Error; err != nil {
+	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound("module.not_found")
+			return nil, common.NewNotFound(msgModuleNotFound)
 		}
 		return nil, err
 	}
 	if isBuiltInModuleRegistration(registration) {
-		return nil, common.NewForbidden("module.unregister.builtin_forbidden")
+		return nil, common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
 		if err := s.deleteModuleNavigationArtifacts(moduleName); err != nil {
@@ -170,7 +170,7 @@ func (s *DynamicModuleService) deleteModuleNavigationArtifacts(moduleName string
 func (s *DynamicModuleService) deleteModuleMenusWithRoleBindings(moduleName string) error {
 	var menuIDs []uint64
 	if err := s.db.Table("system_menu").
-		Where("module = ?", moduleName).
+		Where(condModuleEquals, moduleName).
 		Pluck("id", &menuIDs).Error; err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (s *DynamicModuleService) deleteModuleMenusWithRoleBindings(moduleName stri
 		}
 	}
 	return s.db.Table("system_menu").
-		Where("module = ?", moduleName).
+		Where(condModuleEquals, moduleName).
 		Delete(nil).Error
 }
 
@@ -232,7 +232,7 @@ func (s *DynamicModuleService) GetModuleStatus(moduleName string) (*ModuleRegist
 	}
 	var module ModuleRegistration
 	if err := s.db.Table("system_module_registration").
-		Where("name = ?", moduleName).
+		Where(condNameEquals, moduleName).
 		First(&module).Error; err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func (s *DynamicModuleService) FinalizeUnregister(moduleName string, purgeSource
 	}
 	// 纵深防御：源码删除仅允许 business/*，system/* 源码目录不属于生成物管理范围。
 	if scope != "business" {
-		return nil, common.NewForbidden("module.unregister.builtin_forbidden")
+		return nil, common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 	if err := scaffold.RemoveGeneratedModuleSource(s.workspaceRoot, scope, shortName); err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func (s *DynamicModuleService) advanceModuleI18nLifecycle(moduleName string) (*M
 	}
 
 	var directCount int64
-	if err := s.db.Table("system_i18n").Where("module = ?", moduleName).Count(&directCount).Error; err != nil {
+	if err := s.db.Table("system_i18n").Where(condModuleEquals, moduleName).Count(&directCount).Error; err != nil {
 		return nil, err
 	}
 	var prefixedConfigCount int64

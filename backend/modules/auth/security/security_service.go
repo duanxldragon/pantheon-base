@@ -24,6 +24,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	condEventAcknowledged = "acknowledged_at IS NOT NULL"
+	condUserIDEquals      = "user_id = ?"
+)
+
 // PolicyProvider abstracts runtime auth policy.
 type PolicyProvider interface {
 	GetAuthRuntimePolicy() AuthRuntimePolicy
@@ -190,7 +195,7 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	// Whole-filtered-set aggregates so the governance bar shows global numbers.
 	var acknowledgedCount int64
 	if err := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query).
-		Where("acknowledged_at IS NOT NULL").
+		Where(condEventAcknowledged).
 		Count(&acknowledgedCount).Error; err != nil {
 		return nil, err
 	}
@@ -225,7 +230,7 @@ func (s *Service) CleanupSecurityEvents(retentionDays int, startedAt, endedAt st
 	if err != nil {
 		return 0, err
 	}
-	db := s.db.Model(&SystemAuthSecurityEvent{}).Where("acknowledged_at IS NOT NULL")
+	db := s.db.Model(&SystemAuthSecurityEvent{}).Where(condEventAcknowledged)
 	if window != nil {
 		db = db.Where("created_at >= ? AND created_at <= ?", window.StartedAt, window.EndedAt)
 	} else {
@@ -435,7 +440,7 @@ func (s *Service) CountActiveSessions(userID uint64, now time.Time) (int64, erro
 	policy := s.policy.GetAuthRuntimePolicy()
 	var count int64
 	err := authsession.ApplyActiveScope(s.db.Model(&session.SystemUserSession{}), "", now, policy.SessionIdleMinutes).
-		Where("user_id = ?", userID).
+		Where(condUserIDEquals, userID).
 		Count(&count).Error
 	return count, err
 }
@@ -473,7 +478,7 @@ func (s *Service) ListRecentSecurityEvents(userID uint64, limit int) []SecurityE
 		return []SecurityEventResp{}
 	}
 	var events []SystemAuthSecurityEvent
-	if err := s.db.Where("user_id = ?", userID).Order("created_at desc, id desc").Limit(limit).Find(&events).Error; err != nil {
+	if err := s.db.Where(condUserIDEquals, userID).Order("created_at desc, id desc").Limit(limit).Find(&events).Error; err != nil {
 		return []SecurityEventResp{}
 	}
 	return toSecurityEventRespList(events)
@@ -510,7 +515,7 @@ func (s *Service) ensurePasswordNotRecentlyUsed(userID uint64, newPassword, curr
 		return errors.New("user.password.error.reused")
 	}
 	var rows []SystemUserPasswordHistory
-	if err := s.db.Where("user_id = ?", userID).
+	if err := s.db.Where(condUserIDEquals, userID).
 		Order("changed_at desc, id desc").
 		Limit(policy.PasswordHistoryLimit).
 		Find(&rows).Error; err != nil {
@@ -526,7 +531,7 @@ func (s *Service) ensurePasswordNotRecentlyUsed(userID uint64, newPassword, curr
 
 func (s *Service) passwordLastChangedAt(userID uint64) time.Time {
 	var row SystemUserPasswordHistory
-	if err := s.db.Where("user_id = ?", userID).Order("changed_at desc, id desc").First(&row).Error; err == nil {
+	if err := s.db.Where(condUserIDEquals, userID).Order("changed_at desc, id desc").First(&row).Error; err == nil {
 		return row.ChangedAt
 	}
 	var currentUser user.SystemUser
@@ -584,7 +589,7 @@ func applySecurityEventFilters(db *gorm.DB, query *SecurityEventQuery) *gorm.DB 
 		return db
 	}
 	if *query.Acknowledged {
-		return db.Where("acknowledged_at IS NOT NULL")
+		return db.Where(condEventAcknowledged)
 	}
 	return db.Where("acknowledged_at IS NULL")
 }

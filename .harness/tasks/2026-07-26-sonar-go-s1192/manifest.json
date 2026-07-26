@@ -1,0 +1,54 @@
+{
+  "taskId": "2026-07-26-sonar-go-s1192",
+  "title": "SonarCloud backend batch: duplicated-literal constants + safe godre/misc fixes",
+  "goal": "Fix in code the 126 backend SonarCloud OPEN findings: 113 go:S1192 duplicated literals extracted to package-level unexported constants, plus 13 mechanical godre/misc findings (blank-import comments, condition inlining, parameter grouping, empty-function comments, identical-branch merge, duplicate-implementation delegation).",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "system/iam", "system/org", "system/config", "system/i18n", "lowcode"],
+  "scope": {
+    "in": [
+      "go:S1192 x113 per prc_s1192.txt (frozen finding list exported from SonarCloud 2026-07-25)",
+      "godre:S8184 x3, godre:S8193 x3, godre:S8209 x3, go:S1186 x2, go:S1871 x1, go:S4144 x1 per prc_godre_safe.txt"
+    ],
+    "out": [
+      "go:S3776 cognitive-complexity refactors (highest-risk batch, scheduled last)",
+      "Risky godre findings requiring API/struct changes: godre:S8242 x2, godre:S8205, godre:S8196, go:S107 x2"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md"
+  ],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "repo-quality-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Per-file unexported constants with role-derived names, byte-identical string values, reusing existing const blocks and naming conventions; the two behavior-adjacent fixes (health.go identical-branch merge, GetSecurityRuntimePolicy delegating to the byte-identical GetAuthRuntimePolicy) verified equivalent by review.",
+  "successCriteria": [
+    "All 126 targeted findings disappear from the SonarCloud OPEN query after the next main analysis.",
+    "gofmt -l empty, go vet, go build, go test -short all pass.",
+    "Changed-file set is exactly the union of the two finding lists (53 files), nothing outside.",
+    "No exported API surface change; all new constants unexported; string values byte-identical."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "backend/** (53 files, exactly the union of prc_s1192.txt and prc_godre_safe.txt)"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-26-sonar-go-s1192/manifest.json",
+      ".harness/evidence/2026-07-26-sonar-go-s1192/commands.json",
+      ".harness/evidence/2026-07-26-sonar-go-s1192/summary.md",
+      ".harness/evidence/2026-07-26-sonar-go-s1192/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-26-sonar-go-s1192",
+    "taskPacket": ".harness/tasks/2026-07-26-sonar-go-s1192/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-sonar-go-s1192/",
+    "reviewFile": ".harness/evidence/2026-07-26-sonar-go-s1192/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-sonar-go-s1192/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "no-repeat-observed",
+  "githubSignal": "required",
+  "deferredCodeIssues": "Remaining backend OPEN issues after this batch: go:S3776 x95 and 6 risky godre/misc findings, scheduled as the final cognitive-complexity batch."
+}

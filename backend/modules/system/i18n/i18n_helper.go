@@ -14,6 +14,16 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	orderByModuleASC    = "module ASC"
+	orderByGroupNameASC = "group_name ASC"
+	orderByKeyASC       = "`key` ASC"
+	orderByLocaleASC    = "locale ASC"
+	condModuleEquals    = "module = ?"
+	condModuleKeyEquals = "module = ? AND `key` = ?"
+	condLocaleKeyEquals = "locale = ? AND `key` = ?"
+)
+
 func isI18nPlaceholderValue(value string) bool {
 	trimmed := strings.TrimSpace(value)
 	return strings.HasPrefix(trimmed, "[") && strings.HasSuffix(trimmed, "]")
@@ -107,10 +117,10 @@ func (s *I18nService) GetAudit() (*I18nAuditResp, error) {
 	var rows []row
 	if err := s.db.Model(&SystemI18n{}).
 		Select("id, module, group_name as `group`, `key`, locale, value, lifecycle_status, lifecycle_marked_at, updated_at").
-		Order("module ASC").
-		Order("group_name ASC").
-		Order("`key` ASC").
-		Order("locale ASC").
+		Order(orderByModuleASC).
+		Order(orderByGroupNameASC).
+		Order(orderByKeyASC).
+		Order(orderByLocaleASC).
 		Find(&rows).Error; err != nil {
 		return nil, err
 	}
@@ -398,7 +408,7 @@ func (s *I18nService) CleanupUnusedKeys(module string) (*I18nCleanupUnusedResp, 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		query := tx.Where("`key` IN ?", keys)
 		if resp.Module != "" {
-			query = query.Where("module = ?", resp.Module)
+			query = query.Where(condModuleEquals, resp.Module)
 		}
 		deleteResult := query.Delete(&SystemI18n{})
 		if deleteResult.Error != nil {
@@ -475,7 +485,7 @@ func (s *I18nService) ArchiveObservedUnusedKeys(module string) (*I18nUnusedLifec
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, item := range targets {
 			updateResult := tx.Model(&SystemI18n{}).
-				Where("module = ? AND `key` = ?", item.module, item.key).
+				Where(condModuleKeyEquals, item.module, item.key).
 				Updates(map[string]interface{}{
 					"lifecycle_status":    I18nLifecycleStatusArchived,
 					"lifecycle_marked_at": now,
@@ -538,7 +548,7 @@ func (s *I18nService) deleteArchivedUnusedKeys(module string, requireEligible bo
 	}
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, item := range targets {
-			deleteResult := tx.Where("module = ? AND `key` = ?", item.module, item.key).Delete(&SystemI18n{})
+			deleteResult := tx.Where(condModuleKeyEquals, item.module, item.key).Delete(&SystemI18n{})
 			if deleteResult.Error != nil {
 				return deleteResult.Error
 			}
@@ -619,7 +629,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 
 	var sourceRows []SystemI18n
-	if err := s.db.Where("module = ? AND `key` = ?", module, oldKey).Order("locale ASC").Find(&sourceRows).Error; err != nil {
+	if err := s.db.Where(condModuleKeyEquals, module, oldKey).Order(orderByLocaleASC).Find(&sourceRows).Error; err != nil {
 		return nil, err
 	}
 	resp.AffectedRows = int64(len(sourceRows))
@@ -631,7 +641,7 @@ func (s *I18nService) PreviewRenameKey(req *I18nRenamePreviewReq) (*I18nRenamePr
 	}
 
 	var targetRows []SystemI18n
-	if err := s.db.Where("module = ? AND `key` = ?", module, newKey).Order("locale ASC").Find(&targetRows).Error; err != nil {
+	if err := s.db.Where(condModuleKeyEquals, module, newKey).Order(orderByLocaleASC).Find(&targetRows).Error; err != nil {
 		return nil, err
 	}
 	resp.ExistingTargetRows = int64(len(targetRows))
@@ -673,7 +683,7 @@ func (s *I18nService) RenameKey(req *I18nRenameExecuteReq) (*I18nRenameExecuteRe
 	}
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		updateResult := tx.Model(&SystemI18n{}).
-			Where("module = ? AND `key` = ?", preview.Module, preview.OldKey).
+			Where(condModuleKeyEquals, preview.Module, preview.OldKey).
 			Updates(map[string]interface{}{
 				"key": preview.NewKey,
 			})
@@ -695,7 +705,7 @@ func (s *I18nService) ListSupportedLocales() ([]string, error) {
 	}
 
 	var rows []string
-	if err := s.db.Model(&SystemI18n{}).Distinct("locale").Order("locale ASC").Pluck("locale", &rows).Error; err != nil {
+	if err := s.db.Model(&SystemI18n{}).Distinct("locale").Order(orderByLocaleASC).Pluck("locale", &rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -830,13 +840,13 @@ func (s *I18nService) ListMissingLocales(module string) (*I18nMissingLocaleResp,
 	query := s.db.Model(&SystemI18n{})
 	module = strings.TrimSpace(module)
 	if module != "" {
-		query = query.Where("module = ?", module)
+		query = query.Where(condModuleEquals, module)
 	}
 	if err := query.
 		Select("module, group_name as `group`, `key`, locale").
-		Order("module ASC").
-		Order("group_name ASC").
-		Order("`key` ASC").
+		Order(orderByModuleASC).
+		Order(orderByGroupNameASC).
+		Order(orderByKeyASC).
 		Find(&rows).Error; err != nil {
 		return nil, err
 	}
@@ -973,9 +983,9 @@ func (s *I18nService) HydrateBuiltinLocales(module string) (*I18nHydrateBuiltinR
 	var rows []row
 	query := s.db.Model(&SystemI18n{}).Select("id, module, group_name as `group`, `key`, locale, value")
 	if module != "" {
-		query = query.Where("module = ?", module)
+		query = query.Where(condModuleEquals, module)
 	}
-	if err := query.Order("module ASC").Order("group_name ASC").Order("`key` ASC").Order("locale ASC").Find(&rows).Error; err != nil {
+	if err := query.Order(orderByModuleASC).Order(orderByGroupNameASC).Order(orderByKeyASC).Order(orderByLocaleASC).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -1354,7 +1364,7 @@ func normalizeI18nLifecycleStatus(status string) string {
 
 func (s *I18nService) resetI18nLifecycle(_ string, module, key string) error {
 	return s.db.Model(&SystemI18n{}).
-		Where("module = ? AND `key` = ?", module, key).
+		Where(condModuleKeyEquals, module, key).
 		Updates(map[string]interface{}{
 			"lifecycle_status":    I18nLifecycleStatusActive,
 			"lifecycle_marked_at": nil,
@@ -1404,7 +1414,7 @@ func (s *I18nService) transitionUnusedLifecycleWithFilter(module string, fromSta
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, item := range targets {
 			updateResult := tx.Model(&SystemI18n{}).
-				Where("module = ? AND `key` = ?", item.module, item.key).
+				Where(condModuleKeyEquals, item.module, item.key).
 				Updates(map[string]interface{}{
 					"lifecycle_status":    toStatus,
 					"lifecycle_marked_at": now,

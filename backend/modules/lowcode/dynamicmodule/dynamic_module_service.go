@@ -20,6 +20,14 @@ const (
 	ModuleStatusFailed            = 4
 )
 
+const (
+	condNameEquals            = "name = ?"
+	condModuleEquals          = "module = ?"
+	msgModuleNotFound         = "module.not_found"
+	msgModuleBuiltinForbidden = "module.unregister.builtin_forbidden"
+	msgWorkspaceNotFound      = "workspace.not_found"
+)
+
 // DynamicModuleService 动态模块管理服务
 type DynamicModuleService struct {
 	db            *gorm.DB
@@ -192,13 +200,13 @@ func (s *DynamicModuleService) RegisterGeneratedModule(req *scaffold.RegisterGen
 		return nil, nil, nil, common.NewBadRequest("module.generate.business_only")
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, nil, nil, common.NewNotFound("workspace.not_found")
+		return nil, nil, nil, common.NewNotFound(msgWorkspaceNotFound)
 	}
 
 	moduleKey := buildModuleKey(req.Schema.Scope, req.Schema.Name)
 
 	var existing ModuleRegistration
-	err := s.db.Where("name = ?", moduleKey).First(&existing).Error
+	err := s.db.Where(condNameEquals, moduleKey).First(&existing).Error
 	if err == nil && strings.TrimSpace(existing.ModelTableName) == "" {
 		return nil, nil, nil, common.NewBadRequest("module.generate.reserved")
 	}
@@ -264,11 +272,11 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 		return nil, err
 	}
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, common.NewNotFound("workspace.not_found")
+		return nil, common.NewNotFound(msgWorkspaceNotFound)
 	}
 
 	var registration ModuleRegistration
-	err = s.db.Where("name = ?", moduleName).First(&registration).Error
+	err = s.db.Where(condNameEquals, moduleName).First(&registration).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -324,7 +332,7 @@ func (s *DynamicModuleService) RegisterManagedModule(moduleName string) (*Module
 
 func (s *DynamicModuleService) GetManagedModuleSchema(moduleName string) (*scaffold.ModuleSchema, error) {
 	if strings.TrimSpace(s.workspaceRoot) == "" {
-		return nil, common.NewNotFound("workspace.not_found")
+		return nil, common.NewNotFound(msgWorkspaceNotFound)
 	}
 	scope, shortName, err := splitModuleKey(moduleName)
 	if err != nil {

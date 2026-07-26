@@ -8,6 +8,8 @@ import (
 
 var moduleRelationFieldPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*$`)
 
+const msgInvalidDependency = "module.generate.invalid_dependency"
+
 func validateGovernanceContract(req *RegisterGeneratedModuleRequest) error {
 	templateVersion := strings.TrimSpace(req.Schema.TemplateVersion)
 	if templateVersion != "" && templateVersion != "v1" {
@@ -33,13 +35,13 @@ func validateGovernanceContract(req *RegisterGeneratedModuleRequest) error {
 	for _, dependency := range req.Schema.Dependencies {
 		dependencyModule := strings.TrimSpace(dependency.Module)
 		if !isValidModulePath(dependencyModule, true) {
-			return common.NewBadRequest("module.generate.invalid_dependency")
+			return common.NewBadRequest(msgInvalidDependency)
 		}
 		if dependencyModule == moduleName {
-			return common.NewBadRequest("module.generate.invalid_dependency")
+			return common.NewBadRequest(msgInvalidDependency)
 		}
 		if _, ok := seenDependencies[dependencyModule]; ok {
-			return common.NewBadRequest("module.generate.invalid_dependency")
+			return common.NewBadRequest(msgInvalidDependency)
 		}
 		seenDependencies[dependencyModule] = struct{}{}
 	}

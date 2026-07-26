@@ -11,6 +11,7 @@ import (
 )
 
 const errRequestFailed = "request.failed"
+const errParamInvalid = "param.invalid"
 
 type DictHandler struct {
 	service *DictService
@@ -23,7 +24,7 @@ func NewDictHandler(service *DictService) *DictHandler {
 func (h *DictHandler) GetDictTypeList(c *gin.Context) {
 	var query DictTypeListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	rows, err := h.service.ListDictTypes(&query)
@@ -38,7 +39,7 @@ func (h *DictHandler) CreateDictType(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.create.title", common.BusinessInsert)
 	var req DictTypeCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	row, err := h.service.CreateDictType(&req)
@@ -53,12 +54,12 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.update.title", common.BusinessUpdate)
 	var req DictTypeUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	typeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	row, err := h.service.UpdateDictType(typeID, &req)
@@ -73,7 +74,7 @@ func (h *DictHandler) DeleteDictType(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.delete.title", common.BusinessDelete)
 	typeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	if err := h.service.DeleteDictType(typeID); err != nil {
@@ -87,7 +88,7 @@ func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.batch_status.title", common.BusinessUpdate)
 	var req DictTypeBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	updatedCount, err := h.service.BatchUpdateDictTypeStatus(req.TypeIDs, req.Status)
@@ -102,7 +103,7 @@ func (h *DictHandler) BatchDeleteDictTypes(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.batch_delete.title", common.BusinessDelete)
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.service.DeleteDictType)
@@ -112,7 +113,7 @@ func (h *DictHandler) BatchDeleteDictTypes(c *gin.Context) {
 func (h *DictHandler) GetDictItemList(c *gin.Context) {
 	var query DictItemListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	rows, err := h.service.ListDictItems(&query)
@@ -126,7 +127,7 @@ func (h *DictHandler) GetDictItemList(c *gin.Context) {
 func (h *DictHandler) AnalyzeDictUsage(c *gin.Context) {
 	dictCode := strings.TrimSpace(c.Query("dictCode"))
 	if dictCode == "" {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	resp, err := h.service.AnalyzeDictUsage(dictCode)
@@ -141,7 +142,7 @@ func (h *DictHandler) CreateDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.create.title", common.BusinessInsert)
 	var req DictItemCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	row, err := h.service.CreateDictItem(&req)
@@ -156,12 +157,12 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.update.title", common.BusinessUpdate)
 	var req DictItemUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	row, err := h.service.UpdateDictItem(itemID, &req)
@@ -176,7 +177,7 @@ func (h *DictHandler) DeleteDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.delete.title", common.BusinessDelete)
 	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	if err := h.service.DeleteDictItem(itemID); err != nil {
@@ -190,7 +191,7 @@ func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.batch_status.title", common.BusinessUpdate)
 	var req DictItemBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	updatedCount, err := h.service.BatchUpdateDictItemStatus(req.ItemIDs, req.Status)
@@ -205,7 +206,7 @@ func (h *DictHandler) BatchDeleteDictItems(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.batch_delete.title", common.BusinessDelete)
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.service.DeleteDictItem)
@@ -216,12 +217,12 @@ func (h *DictHandler) ReorderDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.sort.title", common.BusinessUpdate)
 	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	var req DictItemReorderReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	row, err := h.service.ReorderDictItem(itemID, req.Direction)
@@ -250,7 +251,7 @@ func (h *DictHandler) RefreshDictOptionsCache(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.cache.refresh.title", common.BusinessUpdate)
 	var req DictCacheRefreshReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	resp, err := h.service.RefreshDictOptionsCache(req.Codes)
@@ -266,7 +267,7 @@ func (h *DictHandler) ExportDictTypes(c *gin.Context) {
 
 	var query DictTypeListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	file, err := h.service.ExportDictTypes(&query)
@@ -317,7 +318,7 @@ func (h *DictHandler) ExportDictItems(c *gin.Context) {
 
 	var query DictItemListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	file, err := h.service.ExportDictItems(&query)

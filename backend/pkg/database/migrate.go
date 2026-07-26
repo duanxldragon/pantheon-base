@@ -12,6 +12,7 @@ import (
 
 	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
+	// Blank import registers the golang-migrate MySQL database driver used by RunMigrations.
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"gorm.io/gorm"

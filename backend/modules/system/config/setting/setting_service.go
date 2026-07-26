@@ -14,10 +14,11 @@ import (
 )
 
 const (
-	settingKeyUITheme      = "ui.default_theme"
-	settingKeyUploadDriver = "upload.storage_driver"
-	settingKeyI18nLanguage = "i18n.default_language"
-	settingKeyAppMode      = "platform.app_mode"
+	settingKeyUITheme            = "ui.default_theme"
+	settingKeyUploadDriver       = "upload.storage_driver"
+	settingKeyI18nLanguage       = "i18n.default_language"
+	settingKeyAppMode            = "platform.app_mode"
+	settingKeyUploadAllowedTypes = "upload.allowed_types"
 )
 
 type SettingService struct {
@@ -62,10 +63,10 @@ func (s *SettingService) Bootstrap() error {
 	if err := s.normalizeLegacySettingValue(settingKeyUploadDriver); err != nil {
 		return err
 	}
-	if err := s.migrateLegacySettingValue("upload.allowed_types", settingValueUploadAllowedTypesLegacy, settingValueUploadAllowedTypesDefault); err != nil {
+	if err := s.migrateLegacySettingValue(settingKeyUploadAllowedTypes, settingValueUploadAllowedTypesLegacy, settingValueUploadAllowedTypesDefault); err != nil {
 		return err
 	}
-	if err := s.migrateLegacySettingValue("upload.allowed_types", settingValueUploadAllowedTypesArchives, settingValueUploadAllowedTypesDefault); err != nil {
+	if err := s.migrateLegacySettingValue(settingKeyUploadAllowedTypes, settingValueUploadAllowedTypesArchives, settingValueUploadAllowedTypesDefault); err != nil {
 		return err
 	}
 	if err := s.migrateLegacySettingValue("audit.session_cleanup_retention_options", "[7,30,90]", "[1,7,30]"); err != nil {
@@ -330,7 +331,7 @@ func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
 		"ui.enable_tab_bar",
 		settingKeyUploadDriver,
 		"upload.max_file_size",
-		"upload.allowed_types",
+		settingKeyUploadAllowedTypes,
 	}
 	if resp.StorageDriver == "s3" {
 		requiredKeys = append(requiredKeys,

@@ -1389,7 +1389,7 @@ func mustWriteGeneratedRegistryStubs(t *testing.T, root string) {
 	mustWriteFile(t, filepath.Join(root, "frontend", "src", "core", "router", "generatedComponentRegistry.ts"), "export const generatedComponentRegistry = {}\n")
 }
 
-func newGeneratedModuleRequest(scope string, name string, displayName string, tableName string) *scaffold.RegisterGeneratedModuleRequest {
+func newGeneratedModuleRequest(scope, name, displayName, tableName string) *scaffold.RegisterGeneratedModuleRequest {
 	req := &scaffold.RegisterGeneratedModuleRequest{}
 	req.Schema.Name = name
 	req.Schema.Scope = scope

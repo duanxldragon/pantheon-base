@@ -10,6 +10,7 @@ import (
 )
 
 const errRequestFailed = "request.failed"
+const errParamInvalid = "param.invalid"
 
 type DeptHandler struct {
 	service *DeptService
@@ -22,7 +23,7 @@ func NewDeptHandler(s *DeptService) *DeptHandler {
 func (h *DeptHandler) GetDeptTree(c *gin.Context) {
 	var query DeptListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -46,7 +47,7 @@ func (h *DeptHandler) GetDeptOverview(c *gin.Context) {
 func (h *DeptHandler) GetGovernanceTasks(c *gin.Context) {
 	var query DeptGovernanceTaskQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -61,7 +62,7 @@ func (h *DeptHandler) GetGovernanceTasks(c *gin.Context) {
 func (h *DeptHandler) GetDeptLeaderCandidates(c *gin.Context) {
 	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -77,7 +78,7 @@ func (h *DeptHandler) CreateDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "dept.create.title", common.BusinessInsert)
 	var req DeptCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -93,13 +94,13 @@ func (h *DeptHandler) UpdateDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "dept.update.title", common.BusinessUpdate)
 	var req DeptUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
 	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -116,7 +117,7 @@ func (h *DeptHandler) BatchUpdateDeptStatus(c *gin.Context) {
 
 	var req DeptBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -133,7 +134,7 @@ func (h *DeptHandler) BatchUpdateDeptLeader(c *gin.Context) {
 
 	var req DeptBatchLeaderReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -149,7 +150,7 @@ func (h *DeptHandler) DeleteDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "dept.delete.title", common.BusinessDelete)
 	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -165,7 +166,7 @@ func (h *DeptHandler) BatchDeleteDepts(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.service.DeleteDept)
@@ -177,7 +178,7 @@ func (h *DeptHandler) ExportDepts(c *gin.Context) {
 
 	var query DeptListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	file, err := h.service.ExportDepts(&query)
@@ -195,7 +196,7 @@ func (h *DeptHandler) ExportGovernanceTasks(c *gin.Context) {
 
 	var query DeptGovernanceTaskQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	file, err := h.service.ExportGovernanceTasks(&query)

@@ -8,6 +8,18 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	moduleIAM     = "system.iam"
+	moduleOrg     = "system.org"
+	moduleConfig  = "system.config"
+	moduleLowcode = "system.lowcode"
+
+	menuKeyOperationLog = "operation-log"
+
+	orderByIDASC   = "id ASC"
+	condPathEquals = "path = ?"
+)
+
 type menuSeed struct {
 	Key        string
 	ParentKey  string
@@ -117,7 +129,7 @@ func baseMenuGroupSeeds() []menuSeed {
 			Path:      "/system/access",
 			Type:      "M",
 			Icon:      "idcard",
-			Module:    "system.iam",
+			Module:    moduleIAM,
 			RouteName: "system-access",
 			Sort:      20,
 		},
@@ -127,7 +139,7 @@ func baseMenuGroupSeeds() []menuSeed {
 			Path:      "/system/org",
 			Type:      "M",
 			Icon:      "storage",
-			Module:    "system.org",
+			Module:    moduleOrg,
 			RouteName: "system-org",
 			Sort:      30,
 		},
@@ -137,7 +149,7 @@ func baseMenuGroupSeeds() []menuSeed {
 			Path:      "/system/config",
 			Type:      "M",
 			Icon:      "tool",
-			Module:    "system.config",
+			Module:    moduleConfig,
 			RouteName: "system-config",
 			Sort:      50,
 		},
@@ -147,7 +159,7 @@ func baseMenuGroupSeeds() []menuSeed {
 			Path:      "/system/lowcode",
 			Type:      "M",
 			Icon:      "code",
-			Module:    "system.lowcode",
+			Module:    moduleLowcode,
 			RouteName: "system-lowcode",
 			Sort:      45,
 		},
@@ -189,7 +201,7 @@ func coreMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "user",
 			RouteName: "system-user",
-			Module:    "system.iam",
+			Module:    moduleIAM,
 			Sort:      10,
 		},
 		{
@@ -203,7 +215,7 @@ func coreMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "user-group",
 			RouteName: "system-role",
-			Module:    "system.iam",
+			Module:    moduleIAM,
 			Sort:      20,
 		},
 		{
@@ -217,7 +229,7 @@ func coreMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "menu",
 			RouteName: "system-menu",
-			Module:    "system.iam",
+			Module:    moduleIAM,
 			Sort:      40,
 		},
 	}
@@ -236,7 +248,7 @@ func deptMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "branch",
 			RouteName: "system-dept",
-			Module:    "system.org",
+			Module:    moduleOrg,
 			Sort:      10,
 		},
 		{Key: "dept-create", ParentKey: "dept", TitleKey: "system.permission.dept.create", Perms: "system:dept:create", Type: "F", Sort: 1},
@@ -262,7 +274,7 @@ func postMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "tags",
 			RouteName: "system-post",
-			Module:    "system.org",
+			Module:    moduleOrg,
 			Sort:      20,
 		},
 		{Key: "post-create", ParentKey: "post", TitleKey: "system.permission.post.create", Perms: "system:post:create", Type: "F", Sort: 1},
@@ -288,7 +300,7 @@ func permissionMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "lock",
 			RouteName: "system-permission",
-			Module:    "system.iam",
+			Module:    moduleIAM,
 			Sort:      30,
 		},
 		{Key: "user-view", ParentKey: "user", TitleKey: "system.permission.user.view", Perms: "system:user:view", Type: "F", Sort: 1},
@@ -332,7 +344,7 @@ func settingMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "settings",
 			RouteName: "system-setting",
-			Module:    "system.config",
+			Module:    moduleConfig,
 			IsCache:   1,
 			Sort:      20,
 		},
@@ -354,7 +366,7 @@ func platformToolMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "apps",
 			RouteName: "system-modules",
-			Module:    "system.lowcode",
+			Module:    moduleLowcode,
 			Sort:      35,
 		},
 		{Key: "module-register", ParentKey: "modules", TitleKey: "system.permission.module.register", Perms: "system:module:register", Type: "F", Sort: 1},
@@ -372,7 +384,7 @@ func platformToolMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "code",
 			RouteName: "system-generator",
-			Module:    "system.lowcode",
+			Module:    moduleLowcode,
 			Sort:      40,
 		},
 		{Key: "module-generate", ParentKey: "generator", TitleKey: "system.permission.module.generate", Perms: "system:module:generate", Type: "F", Sort: 1},
@@ -393,7 +405,7 @@ func dictMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "book",
 			RouteName: "system-dict",
-			Module:    "system.config",
+			Module:    moduleConfig,
 			IsCache:   1,
 			Sort:      10,
 		},
@@ -421,7 +433,7 @@ func i18nMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "language",
 			RouteName: "system-i18n",
-			Module:    "system.config",
+			Module:    moduleConfig,
 			IsCache:   1,
 			Sort:      30,
 		},
@@ -438,7 +450,7 @@ func i18nMenuSeeds() []menuSeed {
 func auditMenuSeeds() []menuSeed {
 	return []menuSeed{
 		{
-			Key:       "operation-log",
+			Key:       menuKeyOperationLog,
 			ParentKey: "security",
 			TitleKey:  "system.menu.operationLog",
 			Path:      "/system/operation-log",
@@ -451,20 +463,20 @@ func auditMenuSeeds() []menuSeed {
 			Module:    "system.audit",
 			Sort:      30,
 		},
-		{Key: "operation-log-delete", ParentKey: "operation-log", TitleKey: "system.permission.operation_log.delete", Perms: "system:operation-log:delete", Type: "F", Sort: 1},
-		{Key: "operation-log-clear", ParentKey: "operation-log", TitleKey: "system.permission.operation_log.clear", Perms: "system:operation-log:clear", Type: "F", Sort: 2},
-		{Key: "operation-log-export", ParentKey: "operation-log", TitleKey: "system.permission.operation_log.export", Perms: "system:operation-log:export", Type: "F", Sort: 3},
+		{Key: "operation-log-delete", ParentKey: menuKeyOperationLog, TitleKey: "system.permission.operation_log.delete", Perms: "system:operation-log:delete", Type: "F", Sort: 1},
+		{Key: "operation-log-clear", ParentKey: menuKeyOperationLog, TitleKey: "system.permission.operation_log.clear", Perms: "system:operation-log:clear", Type: "F", Sort: 2},
+		{Key: "operation-log-export", ParentKey: menuKeyOperationLog, TitleKey: "system.permission.operation_log.export", Perms: "system:operation-log:export", Type: "F", Sort: 3},
 	}
 }
 
 func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 	var menuID uint64
 	if seed.Path != "" {
-		if err := db.Table("system_menu").Select("id").Where("path = ?", seed.Path).Order("id ASC").Limit(1).Pluck("id", &menuID).Error; err != nil {
+		if err := db.Table("system_menu").Select("id").Where(condPathEquals, seed.Path).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
 			return err
 		}
 	} else if seed.Perms != "" {
-		if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order("id ASC").Limit(1).Pluck("id", &menuID).Error; err != nil {
+		if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
 			return err
 		}
 	}
@@ -496,11 +508,11 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 			return err
 		}
 		if seed.Path != "" {
-			if err := db.Table("system_menu").Select("id").Where("path = ?", seed.Path).Order("id ASC").Limit(1).Pluck("id", &menuID).Error; err != nil {
+			if err := db.Table("system_menu").Select("id").Where(condPathEquals, seed.Path).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
 				return err
 			}
 		} else if seed.Perms != "" {
-			if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order("id ASC").Limit(1).Pluck("id", &menuID).Error; err != nil {
+			if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
 				return err
 			}
 		}
@@ -809,25 +821,25 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 		return 0, nil
 	}
 	parentPaths := map[string]string{
-		"access":        "/system/access",
-		"org":           "/system/org",
-		"config":        "/system/config",
-		"lowcode":       "/system/lowcode",
-		"security":      "/system/security",
-		"user":          "/system/user",
-		"role":          "/system/role",
-		"menu":          "/system/menu",
-		"dept":          "/system/dept",
-		"post":          "/system/post",
-		"permission":    "/system/permission",
-		"login-log":     "/system/login-log",
-		"session":       "/system/session",
-		"setting":       "/system/setting",
-		"modules":       "/system/modules",
-		"generator":     "/system/generator",
-		"dict":          "/system/dict",
-		"i18n":          "/system/i18n",
-		"operation-log": "/system/operation-log",
+		"access":            "/system/access",
+		"org":               "/system/org",
+		"config":            "/system/config",
+		"lowcode":           "/system/lowcode",
+		"security":          "/system/security",
+		"user":              "/system/user",
+		"role":              "/system/role",
+		"menu":              "/system/menu",
+		"dept":              "/system/dept",
+		"post":              "/system/post",
+		"permission":        "/system/permission",
+		"login-log":         "/system/login-log",
+		"session":           "/system/session",
+		"setting":           "/system/setting",
+		"modules":           "/system/modules",
+		"generator":         "/system/generator",
+		"dict":              "/system/dict",
+		"i18n":              "/system/i18n",
+		menuKeyOperationLog: "/system/operation-log",
 	}
 	parentPath, ok := parentPaths[parentKey]
 	if !ok {
@@ -838,7 +850,7 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 
 func lookupMenuIDByPath(db *gorm.DB, path string) (uint64, error) {
 	var menuID uint64
-	if err := db.Table("system_menu").Select("id").Where("path = ?", path).Order("id ASC").Limit(1).Pluck("id", &menuID).Error; err != nil {
+	if err := db.Table("system_menu").Select("id").Where(condPathEquals, path).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
 		return 0, err
 	}
 	return menuID, nil
@@ -909,7 +921,7 @@ func cleanupDuplicateMenusByColumn(db *gorm.DB, columnName, excludeValue string)
 		if err := db.Table("system_menu").
 			Select("id").
 			Where(columnName+" = ?", value).
-			Order("id ASC").
+			Order(orderByIDASC).
 			Limit(1).
 			Pluck("id", &keepID).Error; err != nil {
 			return err

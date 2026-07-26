@@ -8,6 +8,15 @@ import (
 	"pantheon-base/pkg/impexp"
 )
 
+const (
+	govActionKeepObserving   = "keep-observing"
+	govActionClearChildDepts = "clear-child-depts"
+	govActionClearPosts      = "clear-posts"
+	govActionClearUsers      = "clear-users"
+	govActionReassignUsers   = "reassign-users"
+	govTagNoPost             = "no-post"
+)
+
 // dept_governance.go - Governance functions for dept module
 
 // ListGovernanceTasks lists governance tasks for departments and posts
@@ -51,7 +60,7 @@ func (s *DeptService) ListGovernanceTasks(query *DeptGovernanceTaskQuery) ([]Dep
 		governanceBlockedBy := buildDeptDeleteBlockers(childCountByDept[dept.ID], postCountByDept[dept.ID], userCountByDept[dept.ID])
 		governanceActions := buildDeptGovernanceActions(governanceTags, governanceBlockedBy)
 		for index, action := range governanceActions {
-			if action == "keep-observing" {
+			if action == govActionKeepObserving {
 				continue
 			}
 			task := DeptGovernanceTaskResp{
@@ -99,7 +108,7 @@ func (s *DeptService) ListGovernanceTasks(query *DeptGovernanceTaskQuery) ([]Dep
 			governanceBlockedBy := buildLocalPostGovernanceBlockers(postUserCountByPost[post.ID])
 			governanceActions := buildLocalPostGovernanceActions(post.Status, postUserCountByPost[post.ID])
 			for _, action := range governanceActions {
-				if action == "keep-observing" {
+				if action == govActionKeepObserving {
 					continue
 				}
 				task := DeptGovernanceTaskResp{
@@ -225,7 +234,7 @@ func buildDeptGovernanceTags(dept SystemDept, childDeptCount int, postCount int)
 		tags = append(tags, "leaderless")
 	}
 	if postCount == 0 {
-		tags = append(tags, "no-post")
+		tags = append(tags, govTagNoPost)
 	}
 	if childDeptCount == 0 && postCount == 0 {
 		tags = append(tags, "empty")
@@ -273,7 +282,7 @@ func buildDeptGovernanceActions(tags, deleteBlockedBy []string) []string {
 		switch tag {
 		case "leaderless":
 			appendAction("assign-leader")
-		case "no-post":
+		case govTagNoPost:
 			appendAction("create-post")
 		case "empty":
 			appendAction("review-merge-or-delete")
@@ -282,15 +291,15 @@ func buildDeptGovernanceActions(tags, deleteBlockedBy []string) []string {
 	for _, blocker := range deleteBlockedBy {
 		switch blocker {
 		case "children":
-			appendAction("clear-child-depts")
+			appendAction(govActionClearChildDepts)
 		case "posts":
-			appendAction("clear-posts")
+			appendAction(govActionClearPosts)
 		case "users":
-			appendAction("clear-users")
+			appendAction(govActionClearUsers)
 		}
 	}
 	if len(actions) == 0 {
-		return []string{"keep-observing"}
+		return []string{govActionKeepObserving}
 	}
 	return actions
 }
@@ -322,14 +331,14 @@ func buildLocalPostGovernanceBlockers(assignedUserCount int) []string {
 func buildLocalPostGovernanceActions(status, assignedUserCount int) []string {
 	if assignedUserCount > 0 {
 		if normalizeSystemStatus(status) == common.StatusDisabled {
-			return []string{"reassign-users", "review-status"}
+			return []string{govActionReassignUsers, "review-status"}
 		}
-		return []string{"reassign-users"}
+		return []string{govActionReassignUsers}
 	}
 	if normalizeSystemStatus(status) == common.StatusDisabled {
 		return []string{"delete-or-keep-disabled"}
 	}
-	return []string{"keep-observing"}
+	return []string{govActionKeepObserving}
 }
 
 // pickDeptTaskTag picks governance tag for a department action
@@ -338,10 +347,10 @@ func pickDeptTaskTag(tags []string, action string) string {
 	case "assign-leader":
 		return "leaderless"
 	case "create-post":
-		return "no-post"
+		return govTagNoPost
 	case "review-merge-or-delete":
 		return "empty"
-	case "clear-child-depts", "clear-posts", "clear-users":
+	case govActionClearChildDepts, govActionClearPosts, govActionClearUsers:
 		return "clean"
 	default:
 		if len(tags) > 0 {
@@ -354,11 +363,11 @@ func pickDeptTaskTag(tags []string, action string) string {
 // pickDeptTaskBlockedBy picks governance blockedBy for a department action
 func pickDeptTaskBlockedBy(blockedBy []string, action string) string {
 	switch action {
-	case "clear-child-depts":
+	case govActionClearChildDepts:
 		return "children"
-	case "clear-posts":
+	case govActionClearPosts:
 		return "posts"
-	case "clear-users":
+	case govActionClearUsers:
 		return "users"
 	default:
 		if len(blockedBy) > 0 {
@@ -371,7 +380,7 @@ func pickDeptTaskBlockedBy(blockedBy []string, action string) string {
 // pickPostTaskTag picks governance tag for a post action
 func pickPostTaskTag(tags []string, action string) string {
 	switch action {
-	case "reassign-users":
+	case govActionReassignUsers:
 		return "in-use"
 	case "review-status", "delete-or-keep-disabled":
 		return "disabled"
@@ -386,7 +395,7 @@ func pickPostTaskTag(tags []string, action string) string {
 // pickPostTaskBlockedBy picks governance blockedBy for a post action
 func pickPostTaskBlockedBy(blockedBy []string, action string) string {
 	switch action {
-	case "reassign-users":
+	case govActionReassignUsers:
 		return "users"
 	default:
 		if len(blockedBy) > 0 {

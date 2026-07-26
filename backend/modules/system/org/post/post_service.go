@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const condIDIn = "id IN ?"
+
 type PostService struct {
 	db *gorm.DB
 }
@@ -206,7 +208,7 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 	}
 
 	var posts []SystemPost
-	if err := s.db.Where("id IN ?", normalizedIDs).Find(&posts).Error; err != nil {
+	if err := s.db.Where(condIDIn, normalizedIDs).Find(&posts).Error; err != nil {
 		return 0, err
 	}
 	if len(posts) != len(normalizedIDs) {
@@ -225,7 +227,7 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 	}
 
 	if err := s.db.Model(&SystemPost{}).
-		Where("id IN ?", normalizedIDs).
+		Where(condIDIn, normalizedIDs).
 		Updates(map[string]any{
 			"status":     normalizePostStatus(status),
 			"updated_at": time.Now(),
@@ -538,7 +540,7 @@ func (s *PostService) loadPostDeptNames(posts []SystemPost) (map[uint64]string, 
 		DeptName string `gorm:"column:dept_name"`
 	}
 	var rows []row
-	if err := s.db.Table("system_dept").Select("id, dept_name").Where("id IN ?", deptIDs).Scan(&rows).Error; err != nil {
+	if err := s.db.Table("system_dept").Select("id, dept_name").Where(condIDIn, deptIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
