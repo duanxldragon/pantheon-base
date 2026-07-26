@@ -1,0 +1,41 @@
+{
+  "taskId": "2026-07-26-sonar-frontend-style",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-direct",
+    "adapter": ".agents/adapters/claude-code.md",
+    "note": "Implemented by Claude subagents in an isolated worktree across three resumed runs (usage-limit interruptions), finished and reviewed by the coordinating Claude session. Codex relay remains unavailable (401); maintainer precedent 2026-07-23."
+  },
+  "commands": [
+    {
+      "command": "npx tsc --noEmit",
+      "cwd": "worktree .wt-prd/frontend",
+      "status": "passed",
+      "notes": "Clean."
+    },
+    {
+      "command": "npx eslint src --max-warnings 0",
+      "cwd": "worktree .wt-prd/frontend",
+      "status": "passed",
+      "notes": "Zero warnings."
+    },
+    {
+      "command": "npm run test:unit:coverage",
+      "cwd": "worktree .wt-prd/frontend",
+      "status": "passed",
+      "notes": "13 test files, 132/132 pass; lines 92.6%."
+    },
+    {
+      "command": "npm run build (prebuild contract chain + vite build)",
+      "cwd": "worktree .wt-prd/frontend",
+      "status": "passed",
+      "notes": "First attempt FAILED on shell-visual-contract: the S4666 dedup had deleted the .filter-panel and .app-table .arco-table-container anchor blocks. Anchors restored to main's structure (see review.md); full chain then green: menu-contract, i18n-hardcode(194), i18n-generated-scope, datetime(33), shell-visual, ui-contract(228), search-toolbar(86), important-budget(0/0), page-admission(16), smoke-web-base(94), smoke-coverage(28); vite build OK."
+    },
+    {
+      "command": "coordinator spot-review",
+      "cwd": "worktree .wt-prd",
+      "status": "passed",
+      "notes": "useSettingCatalog.ts four findings verified against source (TypeError only at the flagged type-check branch; value-format branch keeps new Error). CSS cascade audit of remaining merges: body font-family single occurrence, .page-split-layout and .app-dialog .arco-modal-content merges cascade-neutral."
+    }
+  ]
+}

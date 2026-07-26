@@ -1,0 +1,53 @@
+{
+  "taskId": "2026-07-26-sonar-frontend-style",
+  "title": "SonarCloud frontend batch: style-rule remediation across frontend/src",
+  "goal": "Fix in code the 182 frontend SonarCloud OPEN findings (frozen list exported 2026-07-25): nested-ternary extraction, modern-JS rule modernization, cascade-safe duplicate-CSS merges, duplicate-import merges, and assorted per-message fixes.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "system/iam", "system/org", "system/config", "system/i18n", "lowcode"],
+  "scope": {
+    "in": [
+      "typescript:S3358 x46, S7778 x20, S7770 x19, S7781 x9, S7771 x6, S6819 x5, S6653 x5, S6594 x5, S4624 x4, S6754 x4, S3863 x4, S7763 x4, S7746 x4, css:S4666 x6, and remaining S77xx/S29xx/S87xx singles per prd_frontend.txt"
+    ],
+    "out": [
+      "typescript:S3776 cognitive-complexity refactors (final batch)",
+      "frontend/src/i18n/resources/** (excluded from analysis scope)"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md"
+  ],
+  "qualityProfile": "ui-runtime",
+  "portableFailureClass": "repo-quality-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Per-finding surgical fixes following each rule message literally; JSX nested ternaries extracted to consts/helpers in the same file; CSS merges only where cascade-neutral; the two visual-contract anchor duplicates (.filter-panel, .app-table .arco-table-container) deliberately restored and recorded as residual instead of breaking the shell-visual-contract gate.",
+  "successCriteria": [
+    "Frontend OPEN findings drop to the S3776 batch plus the two documented anchor duplicates after the next main analysis.",
+    "tsc --noEmit clean; eslint src --max-warnings 0 clean; vitest 132/132; full prebuild contract chain (menu, i18n-hardcode, i18n-generated-scope, datetime, shell-visual, ui, search-toolbar, important-budget, page-admission, smoke-web-base, smoke-coverage) green; vite build succeeds.",
+    "No visual or behavioral change: no i18n keys, route paths, permission strings, or registry keys moved or altered."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "frontend/src/** (56 files on the frozen finding list)"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-26-sonar-frontend-style/manifest.json",
+      ".harness/evidence/2026-07-26-sonar-frontend-style/commands.json",
+      ".harness/evidence/2026-07-26-sonar-frontend-style/summary.md",
+      ".harness/evidence/2026-07-26-sonar-frontend-style/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-26-sonar-frontend-style",
+    "taskPacket": ".harness/tasks/2026-07-26-sonar-frontend-style/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-sonar-frontend-style/",
+    "reviewFile": ".harness/evidence/2026-07-26-sonar-frontend-style/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-sonar-frontend-style/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "no-repeat-observed",
+  "githubSignal": "required",
+  "deferredCodeIssues": "typescript:S3776 x24 (final cognitive-complexity batch) plus two css:S4666 anchor duplicates retained by design: the first .filter-panel / .app-table .arco-table-container blocks are shell-visual-contract anchors and their later same-selector twins are load-bearing cascade layers; resolving them requires a maintainer decision to re-anchor the contract checker, not a code-only fix."
+}
