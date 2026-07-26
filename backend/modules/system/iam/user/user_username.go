@@ -16,6 +16,8 @@ import (
 
 const deletedUsernamePrefix = "__deleted_user_"
 
+const condIDEquals = "id = ?"
+
 const (
 	defaultConfiguredPasswordMinLength = 6
 	defaultDevInitialAdminPassword     = "123456"
@@ -51,7 +53,7 @@ func (s *UserService) normalizeUserPreferenceJSON() error {
 		}
 		if err := s.db.Unscoped().
 			Model(&SystemUser{}).
-			Where("id = ?", row.ID).
+			Where(condIDEquals, row.ID).
 			Update("preference_json", normalized).Error; err != nil {
 			return err
 		}
@@ -62,7 +64,7 @@ func (s *UserService) normalizeUserPreferenceJSON() error {
 
 func (s *UserService) ensureAdminUserSeed() error {
 	var count int64
-	if err := s.db.Model(&SystemUser{}).Where("id = ?", 1).Count(&count).Error; err != nil {
+	if err := s.db.Model(&SystemUser{}).Where(condIDEquals, 1).Count(&count).Error; err != nil {
 		return err
 	}
 	if count > 0 {
@@ -139,7 +141,7 @@ func (s *UserService) releaseDeletedUsernames() error {
 			}
 			if err := tx.Unscoped().
 				Model(&SystemUser{}).
-				Where("id = ?", user.ID).
+				Where(condIDEquals, user.ID).
 				Update("username", deletedUsername).Error; err != nil {
 				return err
 			}

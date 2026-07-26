@@ -103,14 +103,16 @@ func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 		if db == nil {
 			resp.Status = "degraded"
 			resp.Dependencies["database"] = healthDependency{Status: "down", Message: "database.not_initialized"}
-		} else if sqlDB, err := db.DB(); err != nil {
-			resp.Status = "degraded"
-			resp.Dependencies["database"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "database.unavailable")}
-			logHealthDependencyFailure("database", resp.RequestID, err)
-		} else if err := sqlDB.PingContext(c.Request.Context()); err != nil {
-			resp.Status = "degraded"
-			resp.Dependencies["database"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "database.unavailable")}
-			logHealthDependencyFailure("database", resp.RequestID, err)
+		} else {
+			sqlDB, err := db.DB()
+			if err == nil {
+				err = sqlDB.PingContext(c.Request.Context())
+			}
+			if err != nil {
+				resp.Status = "degraded"
+				resp.Dependencies["database"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "database.unavailable")}
+				logHealthDependencyFailure("database", resp.RequestID, err)
+			}
 		}
 
 		if database.RDB != nil {

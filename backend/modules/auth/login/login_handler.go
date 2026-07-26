@@ -26,6 +26,8 @@ type AuthHandler struct {
 }
 
 const csrfGenerateErrorKey = "csrf.generate.error"
+const msgParamInvalid = "param.invalid"
+const headerUserAgent = "User-Agent"
 
 func NewAuthHandler(s *Runtime) *AuthHandler {
 	return &AuthHandler{service: s}
@@ -97,12 +99,12 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	var req LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
 	ip := c.ClientIP()
-	userAgent := c.GetHeader("User-Agent")
+	userAgent := c.GetHeader(headerUserAgent)
 	clientInfo := authsessiondomain.ParseClientInfo(userAgent)
 
 	sourceKey := buildLoginSourceKey(ip)
@@ -159,12 +161,12 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 
 	var req MFAVerifyReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
 	ip := c.ClientIP()
-	userAgent := c.GetHeader("User-Agent")
+	userAgent := c.GetHeader(headerUserAgent)
 	clientInfo := authsessiondomain.ParseClientInfo(userAgent)
 	resp, err := h.service.VerifyMFAChallengeWithContext(c.Request.Context(), &req, ip, userAgent)
 	if err != nil {
@@ -195,7 +197,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 	if refreshToken == "" {
 		var req RefreshTokenReq
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.Fail(c, common.CodeParamInvalid, "param.invalid")
+			common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 			return
 		}
 		refreshToken = req.RefreshToken
@@ -211,7 +213,7 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.RefreshSessionWithContext(c.Request.Context(), refreshClaims.SessionID, refreshClaims.UserID, c.ClientIP(), c.GetHeader("User-Agent"))
+	tokenPair, err := h.service.RefreshSessionWithContext(c.Request.Context(), refreshClaims.SessionID, refreshClaims.UserID, c.ClientIP(), c.GetHeader(headerUserAgent))
 	if err != nil {
 		common.FailWithError(c, common.CodeUnauthorized, err, "auth.session.refresh.error")
 		return
@@ -241,7 +243,7 @@ func (h *AuthHandler) UpdateCurrentUserPreferences(c *gin.Context) {
 
 	var req UserPlatformPreferenceUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -263,7 +265,7 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 
 	var req PasswordUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	if err := h.service.UpdatePassword(common.GetUserID(c), c.GetString("sessionId"), &req); err != nil {
@@ -275,7 +277,7 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 func (h *AuthHandler) GetLoginLogList(c *gin.Context) {
 	var query LoginLogQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	resp, err := h.service.ListLoginLogs(&query)
@@ -289,7 +291,7 @@ func (h *AuthHandler) GetLoginLogList(c *gin.Context) {
 func (h *AuthHandler) GetSecurityEventList(c *gin.Context) {
 	var query SecurityEventQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	resp, err := h.service.ListSecurityEvents(&query)
@@ -305,13 +307,13 @@ func (h *AuthHandler) AcknowledgeSecurityEvent(c *gin.Context) {
 
 	eventID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
 	var req SecurityEventAcknowledgeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -332,7 +334,7 @@ func (h *AuthHandler) BatchAcknowledgeSecurityEvents(c *gin.Context) {
 
 	var req SecurityEventBatchAcknowledgeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -354,7 +356,7 @@ func (h *AuthHandler) CleanupSecurityEvents(c *gin.Context) {
 
 	var req SecurityEventCleanupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -371,7 +373,7 @@ func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 
 	var query LoginLogQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	file, err := h.service.ExportLoginLogs(&query)
@@ -427,7 +429,7 @@ func (h *AuthHandler) CleanupLoginLogs(c *gin.Context) {
 
 	var req LoginLogCleanupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -444,7 +446,7 @@ func (h *AuthHandler) CleanupHistoricSessions(c *gin.Context) {
 
 	var req SessionCleanupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -461,7 +463,7 @@ func (h *AuthHandler) BatchRevokeSessions(c *gin.Context) {
 
 	var req SessionBatchRevokeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -478,7 +480,7 @@ func (h *AuthHandler) BatchDeleteLoginLogs(c *gin.Context) {
 
 	var req LoginLogBatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -492,7 +494,7 @@ func (h *AuthHandler) BatchDeleteLoginLogs(c *gin.Context) {
 func (h *AuthHandler) GetSessionList(c *gin.Context) {
 	var query AdminSessionQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	resp, err := h.service.ListAllSessions(&query)
@@ -527,7 +529,7 @@ func (h *AuthHandler) VerifyOperationPassword(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	token, err := h.service.VerifyPasswordForOperationWithContext(c.Request.Context(), common.GetUserID(c), c.GetString("sessionId"), req.Password)
@@ -541,7 +543,7 @@ func (h *AuthHandler) VerifyOperationPassword(c *gin.Context) {
 func (h *AuthHandler) TouchActivity(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.session.touch.title", common.BusinessUpdate)
 
-	if err := h.service.TouchSessionActivity(c.GetString("sessionId"), common.GetUserID(c), c.ClientIP(), c.GetHeader("User-Agent")); err != nil {
+	if err := h.service.TouchSessionActivity(c.GetString("sessionId"), common.GetUserID(c), c.ClientIP(), c.GetHeader(headerUserAgent)); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.session.touch.error")
 		return
 	}
@@ -578,7 +580,7 @@ func (h *AuthHandler) RevokeSession(c *gin.Context) {
 func (h *AuthHandler) GetOwnLoginLogs(c *gin.Context) {
 	var query LoginLogQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	resp, err := h.service.ListOwnLoginLogs(c.GetString("username"), &query)

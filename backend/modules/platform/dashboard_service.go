@@ -17,6 +17,7 @@ const (
 	dynamicModuleStatusActive  = 1
 	authSecurityEventTableName = "system_auth_security_event"
 	operationLogTableName      = "system_log_oper"
+	condNotDeleted             = "deleted_at IS NULL"
 )
 
 type OrgGovernanceTask struct {
@@ -169,12 +170,12 @@ type summaryCountJob struct {
 
 func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, todayStart time.Time, idleMinutes int, hasI18nTable, hasDynamicModuleTable, hasSecurityEventTable bool) error {
 	jobs := []summaryCountJob{
-		{count: func() (int64, error) { return s.countTable("system_user", "deleted_at IS NULL") }, apply: func(value int64) { resp.TotalUsers = value }},
+		{count: func() (int64, error) { return s.countTable("system_user", condNotDeleted) }, apply: func(value int64) { resp.TotalUsers = value }},
 		{count: func() (int64, error) { return s.countTable("system_user", "deleted_at IS NULL AND status = ?", 1) }, apply: func(value int64) { resp.EnabledUsers = value }},
-		{count: func() (int64, error) { return s.countTable("system_role", "deleted_at IS NULL") }, apply: func(value int64) { resp.TotalRoles = value }},
+		{count: func() (int64, error) { return s.countTable("system_role", condNotDeleted) }, apply: func(value int64) { resp.TotalRoles = value }},
 		{count: func() (int64, error) { return s.countTable("system_dept", "deleted_at IS NULL AND is_root = ?", 0) }, apply: func(value int64) { resp.TotalDepts = value }},
-		{count: func() (int64, error) { return s.countTable("system_post", "deleted_at IS NULL") }, apply: func(value int64) { resp.TotalPosts = value }},
-		{count: func() (int64, error) { return s.countTable("system_dict_type", "deleted_at IS NULL") }, apply: func(value int64) { resp.TotalDictTypes = value }},
+		{count: func() (int64, error) { return s.countTable("system_post", condNotDeleted) }, apply: func(value int64) { resp.TotalPosts = value }},
+		{count: func() (int64, error) { return s.countTable("system_dict_type", condNotDeleted) }, apply: func(value int64) { resp.TotalDictTypes = value }},
 		{count: func() (int64, error) { return s.countTable("system_setting", "") }, apply: func(value int64) { resp.TotalSettings = value }},
 		{count: func() (int64, error) { return s.countTable("system_menu", "is_visible = ? AND type <> ?", 1, "F") }, apply: func(value int64) { resp.VisibleMenuCount = value }},
 		{count: func() (int64, error) {

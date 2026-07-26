@@ -8,6 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	menuKeyLoginLog      = "login-log"
+	menuKeySecurityEvent = "security-event"
+	menuModuleSystemAuth = "system.auth"
+)
+
 type menuSeed struct {
 	Key        string
 	ParentKey  string
@@ -33,7 +39,7 @@ func SeedAuthModuleMenus(db *gorm.DB) error {
 func authMenuSeeds() []menuSeed {
 	return []menuSeed{
 		{
-			Key:       "login-log",
+			Key:       menuKeyLoginLog,
 			ParentKey: "security",
 			TitleKey:  "system.menu.loginLog",
 			Path:      "/system/login-log",
@@ -42,7 +48,7 @@ func authMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "clock",
 			RouteName: "system-login-log",
-			Module:    "system.auth",
+			Module:    menuModuleSystemAuth,
 			Sort:      10,
 		},
 		{
@@ -55,11 +61,11 @@ func authMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "desktop",
 			RouteName: "system-session",
-			Module:    "system.auth",
+			Module:    menuModuleSystemAuth,
 			Sort:      20,
 		},
 		{
-			Key:       "security-event",
+			Key:       menuKeySecurityEvent,
 			ParentKey: "security",
 			TitleKey:  "system.menu.securityEvent",
 			Path:      "/system/security-event",
@@ -68,16 +74,16 @@ func authMenuSeeds() []menuSeed {
 			Type:      "C",
 			Icon:      "safe",
 			RouteName: "system-security-event",
-			Module:    "system.auth",
+			Module:    menuModuleSystemAuth,
 			Sort:      30,
 		},
-		{Key: "login-log-export", ParentKey: "login-log", TitleKey: "system.permission.login_log.export", Perms: "system:login-log:export", Type: "F", Sort: 1},
-		{Key: "login-log-clear", ParentKey: "login-log", TitleKey: "system.permission.login_log.clear", Perms: "system:login-log:clear", Type: "F", Sort: 2},
-		{Key: "login-log-delete", ParentKey: "login-log", TitleKey: "system.permission.login_log.delete", Perms: "system:login-log:delete", Type: "F", Sort: 3},
+		{Key: "login-log-export", ParentKey: menuKeyLoginLog, TitleKey: "system.permission.login_log.export", Perms: "system:login-log:export", Type: "F", Sort: 1},
+		{Key: "login-log-clear", ParentKey: menuKeyLoginLog, TitleKey: "system.permission.login_log.clear", Perms: "system:login-log:clear", Type: "F", Sort: 2},
+		{Key: "login-log-delete", ParentKey: menuKeyLoginLog, TitleKey: "system.permission.login_log.delete", Perms: "system:login-log:delete", Type: "F", Sort: 3},
 		{Key: "session-delete", ParentKey: "session", TitleKey: "system.permission.session.delete", Perms: "system:session:delete", Type: "F", Sort: 1},
 		{Key: "session-clear", ParentKey: "session", TitleKey: "system.permission.session.clear", Perms: "system:session:clear", Type: "F", Sort: 2},
-		{Key: "security-event-acknowledge", ParentKey: "security-event", TitleKey: "system.permission.security_event.acknowledge", Perms: "system:security-event:acknowledge", Type: "F", Sort: 1},
-		{Key: "security-event-clear", ParentKey: "security-event", TitleKey: "system.permission.security_event.clear", Perms: "system:security-event:clear", Type: "F", Sort: 2},
+		{Key: "security-event-acknowledge", ParentKey: menuKeySecurityEvent, TitleKey: "system.permission.security_event.acknowledge", Perms: "system:security-event:acknowledge", Type: "F", Sort: 1},
+		{Key: "security-event-clear", ParentKey: menuKeySecurityEvent, TitleKey: "system.permission.security_event.clear", Perms: "system:security-event:clear", Type: "F", Sort: 2},
 	}
 }
 
@@ -182,10 +188,10 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 		return 0, nil
 	}
 	parentPaths := map[string]string{
-		"security":       "/system/security",
-		"login-log":      "/system/login-log",
-		"session":        "/system/session",
-		"security-event": "/system/security-event",
+		"security":           "/system/security",
+		menuKeyLoginLog:      "/system/login-log",
+		"session":            "/system/session",
+		menuKeySecurityEvent: "/system/security-event",
 	}
 	parentPath, ok := parentPaths[parentKey]
 	if !ok {

@@ -19,6 +19,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const errCleanupRangeInvalid = "audit.operation_log.cleanup.range_invalid"
+
 type AuditService struct {
 	db              *gorm.DB
 	lastCleanupAtMu sync.Mutex
@@ -209,18 +211,18 @@ func parseOperationCleanupWindow(startedAt, endedAt string) (*operationCleanupWi
 		return nil, nil
 	}
 	if startedAt == "" || endedAt == "" {
-		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest(errCleanupRangeInvalid)
 	}
 	start, err := time.Parse(time.RFC3339, startedAt)
 	if err != nil {
-		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest(errCleanupRangeInvalid)
 	}
 	end, err := time.Parse(time.RFC3339, endedAt)
 	if err != nil {
-		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest(errCleanupRangeInvalid)
 	}
 	if end.Before(start) {
-		return nil, common.NewBadRequest("audit.operation_log.cleanup.range_invalid")
+		return nil, common.NewBadRequest(errCleanupRangeInvalid)
 	}
 	return &operationCleanupWindow{StartedAt: start, EndedAt: end}, nil
 }

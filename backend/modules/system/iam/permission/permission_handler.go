@@ -11,6 +11,7 @@ import (
 )
 
 const errRequestFailed = "request.failed"
+const errParamInvalid = "param.invalid"
 
 func permissionServiceErrorCode(err error) int {
 	if errors.Is(err, common.ErrForbidden) {
@@ -35,7 +36,7 @@ func NewPermissionHandler(s *PermissionService) *PermissionHandler {
 func (h *PermissionHandler) GetWorkbench(c *gin.Context) {
 	var query PermissionWorkbenchQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -52,7 +53,7 @@ func (h *PermissionHandler) ExportWorkbench(c *gin.Context) {
 
 	var query PermissionWorkbenchQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -69,7 +70,7 @@ func (h *PermissionHandler) ExportWorkbench(c *gin.Context) {
 func (h *PermissionHandler) ListWorkbenchRemediationEvents(c *gin.Context) {
 	var query PermissionWorkbenchRemediationQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -86,7 +87,7 @@ func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
 
 	var req PermissionWorkbenchRemediateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -101,7 +102,7 @@ func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
 func (h *PermissionHandler) ListDataScopePolicies(c *gin.Context) {
 	var query PermissionDataScopeQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -118,7 +119,7 @@ func (h *PermissionHandler) UpdateDataScopePolicy(c *gin.Context) {
 
 	var req PermissionDataScopePolicyUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -133,7 +134,7 @@ func (h *PermissionHandler) UpdateDataScopePolicy(c *gin.Context) {
 func (h *PermissionHandler) GetPolicyList(c *gin.Context) {
 	var query PermissionPolicyQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -149,7 +150,7 @@ func (h *PermissionHandler) CreatePolicy(c *gin.Context) {
 	common.SetAuditMetadata(c, "permission.policy.create.title", common.BusinessInsert)
 	var req PermissionPolicyCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -165,13 +166,13 @@ func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
 	common.SetAuditMetadata(c, "permission.policy.update.title", common.BusinessUpdate)
 	var req PermissionPolicyUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
 	policyID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -187,7 +188,7 @@ func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
 	common.SetAuditMetadata(c, "permission.policy.delete.title", common.BusinessDelete)
 	policyID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 
@@ -203,7 +204,7 @@ func (h *PermissionHandler) BatchDeletePolicies(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	operatorRoleKeys := common.GetRoleKeys(c)
@@ -218,7 +219,7 @@ func (h *PermissionHandler) ExportPolicies(c *gin.Context) {
 
 	var query PermissionPolicyQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
 	file, err := h.service.ExportPolicies(&query)

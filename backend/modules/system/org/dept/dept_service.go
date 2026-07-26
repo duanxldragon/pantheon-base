@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const condIDIn = "id IN ?"
+
 type DeptService struct {
 	db *gorm.DB
 }
@@ -172,7 +174,7 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 	}
 
 	var depts []SystemDept
-	if err := s.db.Where("id IN ?", normalizedIDs).Find(&depts).Error; err != nil {
+	if err := s.db.Where(condIDIn, normalizedIDs).Find(&depts).Error; err != nil {
 		return 0, err
 	}
 	if len(depts) != len(normalizedIDs) {
@@ -185,7 +187,7 @@ func (s *DeptService) BatchUpdateDeptStatus(deptIDs []uint64, status int) (int, 
 	}
 
 	if err := s.db.Model(&SystemDept{}).
-		Where("id IN ?", normalizedIDs).
+		Where(condIDIn, normalizedIDs).
 		Updates(map[string]any{
 			"status":     normalizeSystemStatus(status),
 			"updated_at": time.Now(),
@@ -213,7 +215,7 @@ func (s *DeptService) BatchUpdateDeptLeader(items []DeptBatchLeaderItem) (int, e
 		deptToLeader[item.DeptID] = item
 	}
 	var depts []SystemDept
-	if err := s.db.Where("id IN ?", deptIDs).Find(&depts).Error; err != nil {
+	if err := s.db.Where(condIDIn, deptIDs).Find(&depts).Error; err != nil {
 		return 0, err
 	}
 	if len(depts) != len(deptIDs) {

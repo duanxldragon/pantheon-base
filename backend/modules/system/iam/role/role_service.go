@@ -19,6 +19,11 @@ type RoleService struct {
 
 const deletedRoleKeyPrefix = "__deleted_role_"
 
+const (
+	errDatabaseNotInitialized = "database.not_initialized"
+	condIDIn                  = "id IN ?"
+)
+
 // roleDataScopePolicy mirrors PermissionRoleDataScopePolicy to avoid cross-directory import.
 // Table name: system_role_data_scope
 type roleDataScopePolicy struct {
@@ -38,7 +43,7 @@ func NewRoleService(db *gorm.DB) *RoleService {
 
 func (s *RoleService) Migrate() error {
 	if s.db == nil {
-		return common.NewBadRequest("database.not_initialized")
+		return common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	if err := s.db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}, &roleDataScopePolicy{}); err != nil {
 		return err
@@ -48,7 +53,7 @@ func (s *RoleService) Migrate() error {
 
 func (s *RoleService) Bootstrap() error {
 	if s.db == nil {
-		return common.NewBadRequest("database.not_initialized")
+		return common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	if err := s.releaseDeletedRoleKeys(); err != nil {
 		return err
@@ -68,7 +73,7 @@ func (s *RoleService) Bootstrap() error {
 // ListRoles 获取角色分页列表。
 func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error) {
 	if s.db == nil {
-		return nil, common.NewBadRequest("database.not_initialized")
+		return nil, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 
 	var roles []SystemRole
@@ -147,7 +152,7 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 
 func (s *RoleService) ListRoleMembers(roleID uint64, query *RoleMemberQuery) (*RoleMemberPageResp, error) {
 	if s.db == nil {
-		return nil, common.NewBadRequest("database.not_initialized")
+		return nil, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	if _, err := s.getRole(roleID); err != nil {
 		return nil, err
@@ -157,7 +162,7 @@ func (s *RoleService) ListRoleMembers(roleID uint64, query *RoleMemberQuery) (*R
 
 func (s *RoleService) ListAssignableUsers(roleID uint64, query *RoleMemberQuery) (*RoleMemberPageResp, error) {
 	if s.db == nil {
-		return nil, common.NewBadRequest("database.not_initialized")
+		return nil, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	if _, err := s.getRole(roleID); err != nil {
 		return nil, err
@@ -167,7 +172,7 @@ func (s *RoleService) ListAssignableUsers(roleID uint64, query *RoleMemberQuery)
 
 func (s *RoleService) AddRoleMembers(roleID uint64, userIDs []uint64) (int, error) {
 	if s.db == nil {
-		return 0, common.NewBadRequest("database.not_initialized")
+		return 0, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	if _, err := s.getRole(roleID); err != nil {
 		return 0, err
@@ -218,7 +223,7 @@ func (s *RoleService) AddRoleMembers(roleID uint64, userIDs []uint64) (int, erro
 
 func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, error) {
 	if s.db == nil {
-		return 0, common.NewBadRequest("database.not_initialized")
+		return 0, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	role, err := s.getRole(roleID)
 	if err != nil {
@@ -252,7 +257,7 @@ func (s *RoleService) RemoveRoleMembers(roleID uint64, userIDs []uint64) (int, e
 // CreateRole 创建角色。
 func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 	if s.db == nil {
-		return nil, common.NewBadRequest("database.not_initialized")
+		return nil, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	if err := s.validateRoleCreate(req); err != nil {
 		return nil, err
@@ -302,7 +307,7 @@ func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 // UpdateRole 更新角色。
 func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListResp, error) {
 	if s.db == nil {
-		return nil, common.NewBadRequest("database.not_initialized")
+		return nil, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 
 	var role SystemRole
@@ -355,7 +360,7 @@ func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListRe
 // DeleteRole 删除角色。
 func (s *RoleService) DeleteRole(roleID uint64) error {
 	if s.db == nil {
-		return common.NewBadRequest("database.not_initialized")
+		return common.NewBadRequest(errDatabaseNotInitialized)
 	}
 
 	var role SystemRole
@@ -404,18 +409,18 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 
 func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, error) {
 	if s.db == nil {
-		return 0, common.NewBadRequest("database.not_initialized")
+		return 0, common.NewBadRequest(errDatabaseNotInitialized)
 	}
 	normalizedIDs := normalizeUint64IDs(roleIDs)
 	if len(normalizedIDs) == 0 {
 		return 0, common.NewBadRequest("role.batch.empty")
 	}
 	if !common.IsEnabledStatus(status) {
-		return 0, common.NewBadRequest("param.invalid")
+		return 0, common.NewBadRequest(errParamInvalid)
 	}
 
 	var roles []SystemRole
-	if err := s.db.Where("id IN ?", normalizedIDs).Find(&roles).Error; err != nil {
+	if err := s.db.Where(condIDIn, normalizedIDs).Find(&roles).Error; err != nil {
 		return 0, err
 	}
 	if len(roles) != len(normalizedIDs) {
@@ -430,7 +435,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 	}
 
 	if err := s.db.Model(&SystemRole{}).
-		Where("id IN ?", normalizedIDs).
+		Where(condIDIn, normalizedIDs).
 		Updates(map[string]any{
 			"status":     normalizeRoleStatus(status),
 			"updated_at": time.Now(),
@@ -604,7 +609,7 @@ func (s *RoleService) loadRoleDataScopes(roleIDs []uint64) map[uint64]string {
 	}
 	if err := s.db.Table("system_role").
 		Select("id, role_key").
-		Where("id IN ?", roleIDs).
+		Where(condIDIn, roleIDs).
 		Scan(&roleRows).Error; err != nil {
 		return result
 	}

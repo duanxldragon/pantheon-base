@@ -23,6 +23,11 @@ import (
 
 const defaultServePath = "/api/v1/system/upload/files"
 
+const (
+	schemeHTTP  = "http://"
+	schemeHTTPS = "https://"
+)
+
 // ConfigReader reads upload settings by key.
 type ConfigReader interface {
 	GetByKey(settingKey string) (string, error)
@@ -100,7 +105,7 @@ func (s *Service) LoadConfig() (*Config, error) {
 	}
 	if value, err := s.reader.GetByKey("upload.allowed_types"); err == nil && strings.TrimSpace(value) != "" {
 		var items []string
-		if parseErr := json.Unmarshal([]byte(value), &items); parseErr != nil {
+		if json.Unmarshal([]byte(value), &items) != nil {
 			return nil, errors.New("upload.config.invalid_allowed_types")
 		}
 		cfg.AllowedTypes = normalizeAllowedTypes(items)
@@ -314,7 +319,7 @@ func BuildFileURL(publicBaseURL, requestBaseURL, objectKey string) string {
 		return strings.TrimRight(requestBaseURL, "/") + defaultServePath + "/" + normalizedKey
 	}
 	base = strings.TrimRight(base, "/")
-	if strings.HasPrefix(base, "http://") || strings.HasPrefix(base, "https://") {
+	if strings.HasPrefix(base, schemeHTTP) || strings.HasPrefix(base, schemeHTTPS) {
 		return base + "/" + normalizedKey
 	}
 	if requestBaseURL == "" {
@@ -335,8 +340,8 @@ func buildS3FileURL(cfg *Config, objectKey string) string {
 	if rawEndpoint == "" {
 		return "/" + strings.TrimLeft(filepath.ToSlash(filepath.Join(cfg.S3Bucket, objectKey)), "/")
 	}
-	if !strings.HasPrefix(rawEndpoint, "http://") && !strings.HasPrefix(rawEndpoint, "https://") {
-		rawEndpoint = "https://" + rawEndpoint
+	if !strings.HasPrefix(rawEndpoint, schemeHTTP) && !strings.HasPrefix(rawEndpoint, schemeHTTPS) {
+		rawEndpoint = schemeHTTPS + rawEndpoint
 	}
 	return strings.TrimRight(rawEndpoint, "/") + "/" + strings.TrimLeft(filepath.ToSlash(filepath.Join(cfg.S3Bucket, objectKey)), "/")
 }
@@ -361,7 +366,7 @@ func normalizeS3Endpoint(raw string) (string, bool, error) {
 	if raw == "" {
 		return "", false, errors.New("upload.s3.endpoint.required")
 	}
-	if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
+	if !strings.HasPrefix(raw, schemeHTTP) && !strings.HasPrefix(raw, schemeHTTPS) {
 		return raw, true, nil
 	}
 	parsed, err := url.Parse(raw)

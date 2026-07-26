@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const msgParamInvalid = "param.invalid"
+
 type GeneratorHandler struct {
 	service *GeneratorService
 }
@@ -30,7 +32,7 @@ func (h *GeneratorHandler) CreateDatasource(c *gin.Context) {
 
 	var req UpsertGeneratorDatasourceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	item, err := h.service.CreateDatasource(&req)
@@ -46,7 +48,7 @@ func (h *GeneratorHandler) UpdateDatasource(c *gin.Context) {
 
 	var req UpsertGeneratorDatasourceReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	item, err := h.service.UpdateDatasource(c.Param("id"), &req)
@@ -108,7 +110,7 @@ func (h *GeneratorHandler) PreviewGeneratedFiles(c *gin.Context) {
 		Schema scaffold.ModuleSchema `json:"schema"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	files, err := h.service.PreviewGeneratedFiles(&req.Schema)
@@ -126,7 +128,7 @@ func (h *GeneratorHandler) DownloadGeneratedSource(c *gin.Context) {
 		Schema scaffold.ModuleSchema `json:"schema"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 

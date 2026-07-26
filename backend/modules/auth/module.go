@@ -104,7 +104,7 @@ func publicAuthRateLimitKey(c *gin.Context) string {
 	return c.FullPath() + ":" + c.ClientIP()
 }
 
-func publicAuthRateLimitMax(productionDefault int, nonProductionDefault int) int {
+func publicAuthRateLimitMax(productionDefault, nonProductionDefault int) int {
 	if override := strings.TrimSpace(os.Getenv("PANTHEON_PUBLIC_AUTH_RATE_LIMIT_MAX")); override != "" {
 		value, err := strconv.Atoi(override)
 		if err == nil && value > 0 {

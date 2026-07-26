@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const condIDIn = "id IN ?"
+
 func normalizeStatus(status int) int {
 	return common.NormalizeEnabledStatus(status)
 }
@@ -353,7 +355,7 @@ func (s *UserService) loadDeptNames(users []SystemUser) (map[uint64]string, erro
 		DeptName string `gorm:"column:dept_name"`
 	}
 	var rows []deptNameRow
-	if err := s.db.Table("system_dept").Select("id, dept_name").Where("id IN ?", deptIDs).Scan(&rows).Error; err != nil {
+	if err := s.db.Table("system_dept").Select("id, dept_name").Where(condIDIn, deptIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
@@ -385,7 +387,7 @@ func (s *UserService) loadPostNames(users []SystemUser) (map[uint64]string, erro
 		PostName string `gorm:"column:post_name"`
 	}
 	var rows []postNameRow
-	if err := s.db.Table("system_post").Select("id, post_name").Where("id IN ?", postIDs).Scan(&rows).Error; err != nil {
+	if err := s.db.Table("system_post").Select("id, post_name").Where(condIDIn, postIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
@@ -417,7 +419,7 @@ func (s *UserService) loadPostCodes(users []SystemUser) (map[uint64]string, erro
 		PostCode string `gorm:"column:post_code"`
 	}
 	var rows []postCodeRow
-	if err := s.db.Table("system_post").Select("id, post_code").Where("id IN ?", postIDs).Scan(&rows).Error; err != nil {
+	if err := s.db.Table("system_post").Select("id, post_code").Where(condIDIn, postIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {

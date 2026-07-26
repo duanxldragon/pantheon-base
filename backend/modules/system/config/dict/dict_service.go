@@ -24,6 +24,12 @@ const (
 	maxDictItemPageSize     = 100
 )
 
+const (
+	condDictCodeEquals = "dict_code = ?"
+	condIDIn           = "id IN ?"
+	condIDEquals       = "id = ?"
+)
+
 type DictService struct {
 	db            *gorm.DB
 	optionCache   map[string][]DictOptionResp
@@ -114,7 +120,7 @@ func (s *DictService) Bootstrap() error {
 func (s *DictService) bootstrapDefaultDictTypes() error {
 	for _, item := range defaultDictTypeSeeds {
 		var count int64
-		if err := s.db.Model(&SystemDictType{}).Where("dict_code = ?", item.DictCode).Count(&count).Error; err != nil {
+		if err := s.db.Model(&SystemDictType{}).Where(condDictCodeEquals, item.DictCode).Count(&count).Error; err != nil {
 			return err
 		}
 		if count > 0 {
@@ -407,7 +413,7 @@ func (s *DictService) UpdateDictType(typeID uint64, req *DictTypeUpdateReq) (*Di
 			return err
 		}
 		if oldCode != row.DictCode {
-			return tx.Model(&SystemDictItem{}).Where("dict_code = ?", oldCode).Update("dict_code", row.DictCode).Error
+			return tx.Model(&SystemDictItem{}).Where(condDictCodeEquals, oldCode).Update("dict_code", row.DictCode).Error
 		}
 		return nil
 	})
@@ -431,7 +437,7 @@ func (s *DictService) DeleteDictType(typeID uint64) error {
 	}
 
 	var itemCount int64
-	if err := s.db.Model(&SystemDictItem{}).Where("dict_code = ?", row.DictCode).Count(&itemCount).Error; err != nil {
+	if err := s.db.Model(&SystemDictItem{}).Where(condDictCodeEquals, row.DictCode).Count(&itemCount).Error; err != nil {
 		return err
 	}
 	if itemCount > 0 {
@@ -462,11 +468,11 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 		return 0, common.NewBadRequest("dict.type.batch.empty")
 	}
 	if !common.IsEnabledStatus(status) {
-		return 0, common.NewBadRequest("param.invalid")
+		return 0, common.NewBadRequest(errParamInvalid)
 	}
 
 	var rows []SystemDictType
-	if err := s.db.Where("id IN ?", normalizedIDs).Find(&rows).Error; err != nil {
+	if err := s.db.Where(condIDIn, normalizedIDs).Find(&rows).Error; err != nil {
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
@@ -474,7 +480,7 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 	}
 
 	if err := s.db.Model(&SystemDictType{}).
-		Where("id IN ?", normalizedIDs).
+		Where(condIDIn, normalizedIDs).
 		Updates(map[string]any{
 			"status":     normalizeDictStatus(status),
 			"updated_at": time.Now(),
@@ -503,7 +509,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 	}
 
 	var rows []SystemDictItem
-	db := s.db.Model(&SystemDictItem{}).Where("dict_code = ?", strings.TrimSpace(query.DictCode))
+	db := s.db.Model(&SystemDictItem{}).Where(condDictCodeEquals, strings.TrimSpace(query.DictCode))
 	if strings.TrimSpace(query.Keyword) != "" {
 		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
 		db = db.Where("item_label_key LIKE ? OR item_value LIKE ? OR remark LIKE ?", keyword, keyword, keyword)
@@ -804,11 +810,11 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 		return 0, common.NewBadRequest("dict.item.batch.empty")
 	}
 	if !common.IsEnabledStatus(status) {
-		return 0, common.NewBadRequest("param.invalid")
+		return 0, common.NewBadRequest(errParamInvalid)
 	}
 
 	var rows []SystemDictItem
-	if err := s.db.Where("id IN ?", normalizedIDs).Find(&rows).Error; err != nil {
+	if err := s.db.Where(condIDIn, normalizedIDs).Find(&rows).Error; err != nil {
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
@@ -821,7 +827,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 	}
 
 	if err := s.db.Model(&SystemDictItem{}).
-		Where("id IN ?", normalizedIDs).
+		Where(condIDIn, normalizedIDs).
 		Updates(map[string]any{
 			"status":     normalizeDictStatus(status),
 			"updated_at": time.Now(),
@@ -837,7 +843,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	if direction != "up" && direction != "down" {
-		return nil, common.NewBadRequest("param.invalid")
+		return nil, common.NewBadRequest(errParamInvalid)
 	}
 
 	var current SystemDictItem
@@ -866,11 +872,11 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 		currentSort := current.Sort
 		current.Sort = neighbor.Sort
 		neighbor.Sort = currentSort
-		if err := tx.Model(&SystemDictItem{}).Where("id = ?", current.ID).
+		if err := tx.Model(&SystemDictItem{}).Where(condIDEquals, current.ID).
 			Updates(map[string]any{"sort": current.Sort, "updated_at": time.Now()}).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&SystemDictItem{}).Where("id = ?", neighbor.ID).
+		if err := tx.Model(&SystemDictItem{}).Where(condIDEquals, neighbor.ID).
 			Updates(map[string]any{"sort": neighbor.Sort, "updated_at": time.Now()}).Error; err != nil {
 			return err
 		}
@@ -968,7 +974,7 @@ func (s *DictService) RefreshDictOptionsCache(codes []string) (*DictCacheRefresh
 func (s *DictService) AnalyzeDictUsage(dictCode string) (*DictUsageAnalysisResp, error) {
 	trimmedCode := strings.TrimSpace(dictCode)
 	if trimmedCode == "" {
-		return nil, common.NewBadRequest("param.invalid")
+		return nil, common.NewBadRequest(errParamInvalid)
 	}
 	projectRoot, err := resolveProjectRoot()
 	if err != nil {
@@ -1080,11 +1086,11 @@ func (s *DictService) queryEnabledDictOptions(codes []string) (DictOptionMapResp
 func (s *DictService) validateDictType(typeID uint64, dictCode string) error {
 	trimmedCode := strings.TrimSpace(dictCode)
 	if trimmedCode == "" {
-		return common.NewBadRequest("param.invalid")
+		return common.NewBadRequest(errParamInvalid)
 	}
 
 	var count int64
-	db := s.db.Model(&SystemDictType{}).Where("dict_code = ?", trimmedCode)
+	db := s.db.Model(&SystemDictType{}).Where(condDictCodeEquals, trimmedCode)
 	if typeID > 0 {
 		db = db.Where("id <> ?", typeID)
 	}
@@ -1101,11 +1107,11 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 	trimmedCode := strings.TrimSpace(dictCode)
 	trimmedValue := strings.TrimSpace(itemValue)
 	if trimmedCode == "" || trimmedValue == "" {
-		return common.NewBadRequest("param.invalid")
+		return common.NewBadRequest(errParamInvalid)
 	}
 
 	var typeCount int64
-	if err := s.db.Model(&SystemDictType{}).Where("dict_code = ?", trimmedCode).Count(&typeCount).Error; err != nil {
+	if err := s.db.Model(&SystemDictType{}).Where(condDictCodeEquals, trimmedCode).Count(&typeCount).Error; err != nil {
 		return err
 	}
 	if typeCount == 0 {
@@ -1308,7 +1314,7 @@ func (s *DictService) releaseDeletedDictTypeCodes() error {
 			if err != nil {
 				return err
 			}
-			if err := tx.Unscoped().Model(&SystemDictType{}).Where("id = ?", item.ID).Update("dict_code", deletedCode).Error; err != nil {
+			if err := tx.Unscoped().Model(&SystemDictType{}).Where(condIDEquals, item.ID).Update("dict_code", deletedCode).Error; err != nil {
 				return err
 			}
 		}
@@ -1330,7 +1336,7 @@ func (s *DictService) releaseDeletedDictItemValues() error {
 			if err != nil {
 				return err
 			}
-			if err := tx.Unscoped().Model(&SystemDictItem{}).Where("id = ?", item.ID).Update("item_value", deletedValue).Error; err != nil {
+			if err := tx.Unscoped().Model(&SystemDictItem{}).Where(condIDEquals, item.ID).Update("item_value", deletedValue).Error; err != nil {
 				return err
 			}
 		}

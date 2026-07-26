@@ -28,6 +28,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const logMsgAuthSettingsReloadFallback = "auth settings reload: read setting failed, using fallback"
+
 const (
 	defaultPasswordMinLength       = 6
 	defaultMaxFailedAttempts       = 5
@@ -315,27 +317,7 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 // security.PolicyProvider implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) GetSecurityRuntimePolicy() security.AuthRuntimePolicy {
-	s.settingsMu.RLock()
-	defer s.settingsMu.RUnlock()
-	return security.AuthRuntimePolicy{
-		PasswordMinLength:       s.settingsCache[settingPasswordMinLengthKey],
-		PasswordRequireDigit:    s.settingsCache[settingPasswordRequireDigitKey] == 1,
-		PasswordRequireUpper:    s.settingsCache[settingPasswordRequireUpperKey] == 1,
-		PasswordHistoryLimit:    s.settingsCache[settingPasswordHistoryLimitKey],
-		PasswordExpireDays:      s.settingsCache[settingPasswordExpireDaysKey],
-		MaxFailedAttempts:       s.settingsCache[settingMaxFailedAttemptsKey],
-		LockMinutes:             s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts: s.settingsCache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:     s.settingsCache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:       s.settingsCache[settingSourceLockMinutesKey],
-		SessionIdleMinutes:      s.settingsCache[settingSessionIdleMinutesKey],
-		MaxActiveSessions:       s.settingsCache[settingMaxActiveSessionsKey],
-		SessionRetentionDays:    s.settingsCache[settingSessionRetentionDaysKey],
-		SecurityEventEnabled:    s.settingsCache[settingSecurityEventEnabledKey] == 1,
-		CaptchaEnabled:          s.settingsCache[settingCaptchaEnabledKey] == 1,
-		MFAEnabled:              s.settingsCache[settingMFAEnabledKey] == 1,
-		SSOEnabled:              s.settingsCache[settingSSOEnabledKey] == 1,
-	}
+	return s.GetAuthRuntimePolicy()
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -762,7 +744,7 @@ func (s *Runtime) fetchSettingIntFromDB(settingKey string, fallback int) int {
 		Limit(1).
 		Pluck("setting_value", &rawValue).Error
 	if err != nil {
-		logging.Warn("auth settings reload: read setting failed, using fallback",
+		logging.Warn(logMsgAuthSettingsReloadFallback,
 			zap.String("setting_key", settingKey), zap.Error(err))
 		return fallback
 	}
@@ -784,7 +766,7 @@ func (s *Runtime) fetchSettingBoolFromDB(settingKey string, fallback bool) bool 
 		Limit(1).
 		Pluck("setting_value", &rawValue).Error
 	if err != nil {
-		logging.Warn("auth settings reload: read setting failed, using fallback",
+		logging.Warn(logMsgAuthSettingsReloadFallback,
 			zap.String("setting_key", settingKey), zap.Error(err))
 		return fallback
 	}
@@ -806,7 +788,7 @@ func (s *Runtime) fetchSettingIntSliceFromDB(settingKey string, fallback []int) 
 		Limit(1).
 		Pluck("setting_value", &rawValue).Error
 	if err != nil {
-		logging.Warn("auth settings reload: read setting failed, using fallback",
+		logging.Warn(logMsgAuthSettingsReloadFallback,
 			zap.String("setting_key", settingKey), zap.Error(err))
 		return cloneIntSlice(fallback)
 	}

@@ -463,7 +463,7 @@ func (s *PermissionService) countRecentWorkbenchRemediationEvents(roleKeys []str
 func collectRequiredAPIPolicies(pagePermissions, actionPermissions []PermissionWorkbenchPermissionResp) []permissionRequiredAPIPolicy {
 	seen := make(map[string]struct{})
 	result := make([]permissionRequiredAPIPolicy, 0)
-	appendPolicy := func(path string, method string) {
+	appendPolicy := func(path, method string) {
 		path = strings.TrimSpace(path)
 		method = strings.ToUpper(strings.TrimSpace(method))
 		if path == "" || method == "" {

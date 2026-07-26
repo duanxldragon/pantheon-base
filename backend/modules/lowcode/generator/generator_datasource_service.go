@@ -16,6 +16,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	msgDatasourceNotFound    = "generator.datasource.not_found"
+	msgDatasourceHostInvalid = "generator.datasource.host_invalid"
+)
+
 func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
@@ -72,7 +77,7 @@ func (s *GeneratorService) UpdateDatasource(id string, req *UpsertGeneratorDatas
 	var existing GeneratorDatasource
 	if err := s.db.First(&existing, numericID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound("generator.datasource.not_found")
+			return nil, common.NewNotFound(msgDatasourceNotFound)
 		}
 		return nil, err
 	}
@@ -113,7 +118,7 @@ func (s *GeneratorService) DeleteDatasource(id string) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return common.NewNotFound("generator.datasource.not_found")
+		return common.NewNotFound(msgDatasourceNotFound)
 	}
 	return nil
 }
@@ -239,7 +244,7 @@ func (s *GeneratorService) loadDatasource(id string) (*GeneratorDatasource, erro
 	var row GeneratorDatasource
 	if err := s.db.First(&row, numericID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound("generator.datasource.not_found")
+			return nil, common.NewNotFound(msgDatasourceNotFound)
 		}
 		return nil, err
 	}
@@ -321,12 +326,12 @@ func validateDatasourceHost(host string) error {
 		return common.NewBadRequest("generator.datasource.required")
 	}
 	if strings.ContainsAny(normalizedHost, `/\:@`) {
-		return common.NewBadRequest("generator.datasource.host_invalid")
+		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
 
 	if addr, err := netip.ParseAddr(normalizedHost); err == nil {
 		if addr.IsLoopback() || addr.IsMulticast() || addr.IsLinkLocalMulticast() || addr.IsLinkLocalUnicast() || addr.IsUnspecified() {
-			return common.NewBadRequest("generator.datasource.host_invalid")
+			return common.NewBadRequest(msgDatasourceHostInvalid)
 		}
 		if addr.IsPrivate() && !datasourcePrivateHostAllowed() {
 			return common.NewBadRequest("generator.datasource.host_private_disabled")
@@ -335,17 +340,17 @@ func validateDatasourceHost(host string) error {
 	}
 
 	if normalizedHost == "localhost" || strings.HasSuffix(normalizedHost, ".localhost") {
-		return common.NewBadRequest("generator.datasource.host_invalid")
+		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
 	if !regexp.MustCompile(`^[a-z0-9.-]+$`).MatchString(normalizedHost) {
-		return common.NewBadRequest("generator.datasource.host_invalid")
+		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
 	if strings.HasPrefix(normalizedHost, ".") || strings.HasSuffix(normalizedHost, ".") || strings.Contains(normalizedHost, "..") {
-		return common.NewBadRequest("generator.datasource.host_invalid")
+		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
 	for _, label := range strings.Split(normalizedHost, ".") {
 		if label == "" || strings.HasPrefix(label, "-") || strings.HasSuffix(label, "-") {
-			return common.NewBadRequest("generator.datasource.host_invalid")
+			return common.NewBadRequest(msgDatasourceHostInvalid)
 		}
 	}
 	return nil
@@ -362,11 +367,11 @@ func datasourcePrivateHostAllowed() bool {
 func parseDatasourceNumericID(id string) (uint64, error) {
 	trimmed := strings.TrimSpace(id)
 	if trimmed == "" || trimmed == generatorDatasourceCurrentID {
-		return 0, common.NewNotFound("generator.datasource.not_found")
+		return 0, common.NewNotFound(msgDatasourceNotFound)
 	}
 	value, err := strconv.ParseUint(trimmed, 10, 64)
 	if err != nil || value == 0 {
-		return 0, common.NewNotFound("generator.datasource.not_found")
+		return 0, common.NewNotFound(msgDatasourceNotFound)
 	}
 	return value, nil
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const msgParamInvalid = "param.invalid"
+const msgModuleInvalidName = "module.invalid_name"
+
 type DynamicModuleHandler struct {
 	service *DynamicModuleService
 }
@@ -27,7 +30,7 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -35,7 +38,7 @@ func (h *DynamicModuleHandler) RegisterModule(c *gin.Context) {
 	if err != nil {
 		code := common.CodeError
 		switch err.Error() {
-		case "module.invalid_name", "module.register.source_missing", "module.register.schema_invalid":
+		case msgModuleInvalidName, "module.register.source_missing", msgModuleSchemaInvalid:
 			code = common.CodeParamInvalid
 		}
 		common.FailWithError(c, code, err, "module.register.error")
@@ -54,7 +57,7 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 
 	rawBody, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	c.Request.Body = io.NopCloser(bytes.NewReader(rawBody))
@@ -64,7 +67,7 @@ func (h *DynamicModuleHandler) GenerateAndRegisterModule(c *gin.Context) {
 		Overwrite bool                  `json:"overwrite"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 	applyGenerateSchemaRawMetadata(rawBody, &input.Schema)
@@ -180,7 +183,7 @@ func (h *DynamicModuleHandler) AuditPendingActivations(c *gin.Context) {
 func (h *DynamicModuleHandler) GetModuleSchema(c *gin.Context) {
 	moduleName := c.Query("module")
 	if moduleName == "" {
-		common.Fail(c, common.CodeParamInvalid, "param.invalid")
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
 
@@ -188,7 +191,7 @@ func (h *DynamicModuleHandler) GetModuleSchema(c *gin.Context) {
 	if err != nil {
 		code := common.CodeError
 		switch err.Error() {
-		case "module.invalid_name", "module.register.source_missing", "module.register.schema_invalid":
+		case msgModuleInvalidName, "module.register.source_missing", msgModuleSchemaInvalid:
 			code = common.CodeParamInvalid
 		}
 		common.FailWithError(c, code, err, "module.schema.error")
@@ -258,7 +261,7 @@ func isGenerateValidationError(err error) bool {
 		"module.generate.file_exists",
 		"module.generate.already_exists",
 		"module.generate.business_only",
-		"module.invalid_name":
+		msgModuleInvalidName:
 		return true
 	default:
 		return false

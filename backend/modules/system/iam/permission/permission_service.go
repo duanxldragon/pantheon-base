@@ -20,6 +20,11 @@ import (
 const permissionPtypeClause = "ptype = ?"
 
 const (
+	errPermissionPolicyExists = "permission.policy.exists"
+	errPermissionRoleInvalid  = "permission.role.invalid"
+)
+
+const (
 	protectedManagementPolicyPrefixPermission = "/api/v1/system/permission"
 	protectedManagementPolicyPrefixRole       = "/api/v1/system/role"
 )
@@ -149,7 +154,7 @@ func (s *PermissionService) CreatePolicy(operatorRoleKeys []string, req *Permiss
 		V2:    method,
 	}
 	if err := s.db.Create(&policy).Error; err != nil {
-		return nil, common.NewConflict("permission.policy.exists")
+		return nil, common.NewConflict(errPermissionPolicyExists)
 	}
 	if err := reloadPermissionPolicies(); err != nil {
 		return nil, err
@@ -186,7 +191,7 @@ func (s *PermissionService) UpdatePolicy(operatorRoleKeys []string, policyID uin
 	policy.V4 = ""
 	policy.V5 = ""
 	if err := s.db.Save(&policy).Error; err != nil {
-		return nil, common.NewConflict("permission.policy.exists")
+		return nil, common.NewConflict(errPermissionPolicyExists)
 	}
 	if err := reloadPermissionPolicies(); err != nil {
 		return nil, err
@@ -334,7 +339,7 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 		return nil, err
 	}
 	if role == nil {
-		return nil, common.NewBadRequest("permission.role.invalid")
+		return nil, common.NewBadRequest(errPermissionRoleInvalid)
 	}
 	resp := &PermissionWorkbenchRemediateResp{
 		RoleKey:         roleKey,
@@ -342,7 +347,7 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 		CreatedPolicies: []PermissionWorkbenchAPIPolicyResp{},
 	}
 	if len(role.MissingAPIPolicies) == 0 {
-		_ = s.recordWorkbenchRemediation(roleKey, "api-gap", "", "complete", "complete", "noop", 0, resp.SkippedCount)
+		_ = s.recordWorkbenchRemediation(roleKey, workbenchCoverageAPIGap, "", "complete", "complete", "noop", 0, resp.SkippedCount)
 		return resp, nil
 	}
 
@@ -376,9 +381,9 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 	}
 	if err := s.recordWorkbenchRemediation(
 		roleKey,
-		"api-gap",
+		workbenchCoverageAPIGap,
 		joinWorkbenchPolicyKeys(role.MissingAPIPolicies),
-		"api-gap",
+		workbenchCoverageAPIGap,
 		"complete",
 		"remediated",
 		resp.CreatedCount,
@@ -557,7 +562,7 @@ func validateImportRows(records [][]string, headerIndex map[string]int, result *
 		path := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "path"))
 		method := normalizePolicyMethod(impexp.ReadCSVField(record, headerIndex, "method"))
 		if roleKey == "" {
-			impexp.AppendImportError(result, rowNumber, "roleKey", "permission.role.invalid")
+			impexp.AppendImportError(result, rowNumber, "roleKey", errPermissionRoleInvalid)
 		}
 		if path == "" {
 			impexp.AppendImportError(result, rowNumber, "path", "permission.path.required")
@@ -603,7 +608,7 @@ func validateImportRoleKeys(db *gorm.DB, rows []policyImportRow, result *impexp.
 				return err
 			}
 			if count == 0 {
-				impexp.AppendImportError(result, row.RowNumber, "roleKey", "permission.role.invalid")
+				impexp.AppendImportError(result, row.RowNumber, "roleKey", errPermissionRoleInvalid)
 			}
 		}
 		return common.NewBadRequest("import.role.invalid")
@@ -703,7 +708,7 @@ func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {
 		return err
 	}
 	if count == 0 {
-		return common.NewBadRequest("permission.role.invalid")
+		return common.NewBadRequest(errPermissionRoleInvalid)
 	}
 	return nil
 }
@@ -718,7 +723,7 @@ func (s *PermissionService) ensurePolicyUnique(policyID uint64, roleKey string, 
 		return err
 	}
 	if count > 0 {
-		return common.NewConflict("permission.policy.exists")
+		return common.NewConflict(errPermissionPolicyExists)
 	}
 	return nil
 }

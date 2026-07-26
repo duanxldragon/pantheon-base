@@ -170,7 +170,7 @@ func (s *RoleService) ImportRoles(records [][]string) (*impexp.ImportResult, err
 			if parsed, err := strconv.Atoi(sortStr); err == nil {
 				sort = parsed
 			} else {
-				impexp.AppendImportError(result, rowNumber, "sort", "param.invalid")
+				impexp.AppendImportError(result, rowNumber, "sort", errParamInvalid)
 			}
 		}
 
@@ -179,7 +179,7 @@ func (s *RoleService) ImportRoles(records [][]string) (*impexp.ImportResult, err
 			if parsed, err := strconv.Atoi(statusStr); err == nil && common.IsEnabledStatus(parsed) {
 				status = parsed
 			} else {
-				impexp.AppendImportError(result, rowNumber, "status", "param.invalid")
+				impexp.AppendImportError(result, rowNumber, "status", errParamInvalid)
 			}
 		}
 
@@ -192,7 +192,7 @@ func (s *RoleService) ImportRoles(records [][]string) (*impexp.ImportResult, err
 				}
 				id, err := strconv.ParseUint(idStr, 10, 64)
 				if err != nil {
-					impexp.AppendImportError(result, rowNumber, "menuIds", "param.invalid")
+					impexp.AppendImportError(result, rowNumber, "menuIds", errParamInvalid)
 					continue
 				}
 				if _, ok := menuIDSet[id]; !ok {

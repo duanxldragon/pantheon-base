@@ -84,7 +84,7 @@ func (s *DynamicModuleService) syncMenuBackedModuleRegistrations() error {
 		}
 
 		var existing ModuleRegistration
-		err := s.db.Where("name = ?", moduleName).First(&existing).Error
+		err := s.db.Where(condNameEquals, moduleName).First(&existing).Error
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			if err := s.db.Create(&registration).Error; err != nil {
@@ -127,17 +127,17 @@ func (s *DynamicModuleService) normalizeStaticModuleAliases() error {
 	for legacyName, canonicalName := range map[string]string{
 		"platform.lowcode": "system.lowcode",
 	} {
-		if err := s.db.Table("system_menu").Where("module = ?", legacyName).Update("module", canonicalName).Error; err != nil {
+		if err := s.db.Table("system_menu").Where(condModuleEquals, legacyName).Update("module", canonicalName).Error; err != nil {
 			return err
 		}
 		if s.db.Migrator().HasTable("system_i18n") {
-			if err := s.db.Table("system_i18n").Where("module = ?", legacyName).Update("module", canonicalName).Error; err != nil {
+			if err := s.db.Table("system_i18n").Where(condModuleEquals, legacyName).Update("module", canonicalName).Error; err != nil {
 				return err
 			}
 		}
 
 		var canonicalCount int64
-		if err := s.db.Model(&ModuleRegistration{}).Where("name = ?", canonicalName).Count(&canonicalCount).Error; err != nil {
+		if err := s.db.Model(&ModuleRegistration{}).Where(condNameEquals, canonicalName).Count(&canonicalCount).Error; err != nil {
 			return err
 		}
 		if canonicalCount > 0 {
@@ -294,7 +294,7 @@ func (s *DynamicModuleService) syncGeneratedModuleRegistrations() (int, error) {
 		}
 
 		var existing ModuleRegistration
-		err = s.db.Where("name = ?", moduleKey).First(&existing).Error
+		err = s.db.Where(condNameEquals, moduleKey).First(&existing).Error
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			return s.db.Create(&registration).Error
