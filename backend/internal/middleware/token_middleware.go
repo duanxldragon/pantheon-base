@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -154,7 +153,7 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 
 		// Check blacklist
 		if rdb != nil {
-			blacklistKey := fmt.Sprintf("blacklist:%d", sessionData.UserID)
+			blacklistKey := authtoken.BlacklistUserKey(sessionData.UserID)
 			val, err := rdb.Get(ctx, blacklistKey).Result()
 			if err == nil && val != "" {
 				invalidateTokenSessionCache(token)

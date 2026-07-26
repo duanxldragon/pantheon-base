@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"pantheon-base/pkg/common"
+	"pantheon-base/pkg/logging"
 	"strings"
 	"time"
 
@@ -70,7 +71,9 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	if s.shouldDropManagedTable(registration, dropTable) {
 		if err := s.dropManagedModuleTable(scope, registration.ModelTableName); err != nil {
 			slog.Warn("dynamic module table drop failed; retry via purge",
-				"module", moduleName, "table", registration.ModelTableName, "error", err)
+				"module", logging.SanitizeLogValue(moduleName),
+				"table", logging.SanitizeLogValue(registration.ModelTableName),
+				"error", err)
 			return nil, err
 		}
 	}
@@ -143,7 +146,9 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 		// 删表失败必须在删除注册记录之前返回：记录保留则 purge 可重试。
 		if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
 			slog.Warn("dynamic module table drop failed; registration kept for retry",
-				"module", moduleName, "table", registration.ModelTableName, "error", err)
+				"module", logging.SanitizeLogValue(moduleName),
+				"table", logging.SanitizeLogValue(registration.ModelTableName),
+				"error", err)
 			return nil, err
 		}
 	}

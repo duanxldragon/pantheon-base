@@ -1,10 +1,14 @@
 package session
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"pantheon-base/pkg/authtoken"
+	"pantheon-base/pkg/database"
 	"pantheon-base/pkg/testmysql"
+	"pantheon-base/pkg/testredis"
 )
 
 func setupLifecycleTestDB(t *testing.T) *LifecycleService {
@@ -94,6 +98,61 @@ func TestLifecycleService_DeleteUserSessions(t *testing.T) {
 	}
 }
 
+func TestLifecycleService_RevokeUserTokens(t *testing.T) {
+	service := setupLifecycleTestDB(t)
+	rdb := testredis.Open(t)
+	oldRDB := database.RDB
+	database.RDB = rdb
+	t.Cleanup(func() { database.RDB = oldRDB })
+
+	now := time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
+	if err := service.db.Create(&[]SystemUserSession{
+		{SessionID: "revoke-a", UserID: 42, RefreshJTI: "r1", RefreshExpiresAt: now.Add(time.Hour)},
+		{SessionID: "revoke-b", UserID: 42, RefreshJTI: "r2", RefreshExpiresAt: now.Add(time.Hour)},
+		{SessionID: "keep-c", UserID: 99, RefreshJTI: "r3", RefreshExpiresAt: now.Add(time.Hour)},
+	}).Error; err != nil {
+		t.Fatalf("seed sessions: %v", err)
+	}
+
+	ctx := context.Background()
+	for _, seed := range []struct {
+		token, sid string
+		uid        uint64
+	}{
+		{token: "rt-a", sid: "revoke-a", uid: 42},
+		{token: "rt-b", sid: "revoke-b", uid: 42},
+		{token: "rt-c", sid: "keep-c", uid: 99},
+	} {
+		if err := authtoken.StoreRefresh(ctx, rdb, seed.token, seed.uid, seed.sid, time.Hour); err != nil {
+			t.Fatalf("seed refresh token %s: %v", seed.token, err)
+		}
+	}
+
+	if err := service.RevokeUserTokens(42); err != nil {
+		t.Fatalf("revoke user tokens: %v", err)
+	}
+
+	blacklistVal, err := rdb.Get(ctx, authtoken.BlacklistUserKey(42)).Result()
+	if err != nil || blacklistVal == "" {
+		t.Fatalf("expected blacklist key for user 42, got val=%q err=%v", blacklistVal, err)
+	}
+	ttl, err := rdb.TTL(ctx, authtoken.BlacklistUserKey(42)).Result()
+	if err != nil || ttl < authtoken.AccessTokenTTL {
+		t.Fatalf("expected blacklist TTL >= access token TTL, got %v err=%v", ttl, err)
+	}
+	for _, revoked := range []string{"rt-a", "rt-b"} {
+		if _, _, err := authtoken.ValidateRefresh(ctx, rdb, revoked); err == nil {
+			t.Fatalf("expected refresh token %s revoked", revoked)
+		}
+	}
+	if _, _, err := authtoken.ValidateRefresh(ctx, rdb, "rt-c"); err != nil {
+		t.Fatalf("expected other user's refresh token kept, got %v", err)
+	}
+	if val, err := rdb.Get(ctx, authtoken.BlacklistUserKey(99)).Result(); err == nil {
+		t.Fatalf("expected no blacklist for user 99, got %q", val)
+	}
+}
+
 func TestLifecycleService_PurgeUserAuthArtifacts(t *testing.T) {
 	service := setupLifecycleTestDB(t)
 
@@ -158,6 +217,9 @@ func TestLifecycleService_NilAndZeroInputsAreNoops(t *testing.T) {
 	}
 	if err := nilService.PurgeUserAuthArtifacts(42); err != nil {
 		t.Fatalf("expected nil service purge noop, got %v", err)
+	}
+	if err := nilService.RevokeUserTokens(42); err != nil {
+		t.Fatalf("expected nil service token revoke noop, got %v", err)
 	}
 
 	service := NewLifecycleService(nil)

@@ -25,7 +25,7 @@
 | 服务 | 版本 | 必需 | 用途 |
 |------|------|------|------|
 | MySQL | 8.0+ | ✅ 是 | 主数据库 |
-| Redis | 7.0+ | ⚠️ 推荐 | 会话管理、速率限制 |
+| Redis | 7.0+ | ✅ 必需 | 令牌会话存储（无 Redis 时所有认证请求返回 401）、令牌吊销黑名单、速率限制 |
 | Prometheus | 2.x+ | ⚠️ 推荐 | 指标采集 |
 | Grafana | 10.x+ | ⚠️ 推荐 | 监控可视化 |
 | Jaeger/Tempo | latest | ⚠️ 推荐 | 分布式追踪 |
@@ -434,7 +434,7 @@ kubectl scale deployment pantheon-base --replicas=5 -n pantheon
 | 变量名 | 示例值 | 说明 |
 |--------|--------|------|
 | `PANTHEON_ENV` | `production` | 环境标识（影响日志格式和 CSP） |
-| `PANTHEON_REDIS_ADDR` | `redis:6379` | Redis 地址（速率限制、会话） |
+| `PANTHEON_REDIS_ADDR` | `redis:6379` | Redis 地址（**必需**：令牌会话存储与吊销黑名单；另用于速率限制） |
 | `PANTHEON_REDIS_PASSWORD` | `your_password` | Redis 密码 |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `jaeger:4318` | OpenTelemetry 端点 |
 
@@ -463,7 +463,7 @@ kubectl scale deployment pantheon-base --replicas=5 -n pantheon
 - [ ] 设置 `PANTHEON_ENV=production`
 - [ ] 配置 `PANTHEON_ALLOWED_ORIGINS`（严格 CORS）
 - [ ] 为 `/metrics` 配置 `PANTHEON_METRICS_BEARER_TOKEN`，或确认仅内网暴露后显式设置 `PANTHEON_METRICS_PUBLIC=true`
-- [ ] 启用 Redis（速率限制）
+- [ ] 部署 Redis（认证令牌存储——必需；另承担吊销黑名单、速率限制、Casbin watcher）
 - [ ] 定期备份数据库
 - [ ] 配置日志轮转
 - [ ] 监控告警规则
@@ -583,6 +583,9 @@ echo $PANTHEON_DSN
 ```
 
 **3. Redis 连接失败**
+
+症状：登录成功后所有接口返回 401 `token.invalid`（令牌会话存于 Redis，连接失败即全部认证失效）。
+
 ```bash
 # 测试 Redis 连接
 redis-cli -h redis -a your_password ping

@@ -16,6 +16,7 @@ type SessionLifecycle interface {
 	RevokeUserSessions(userID uint64, now time.Time) (int64, error)
 	DeleteUserSessions(userID uint64) error
 	PurgeUserAuthArtifacts(userID uint64) error
+	RevokeUserTokens(userID uint64) error
 }
 
 type SessionLifecycleFactory func(db *gorm.DB) SessionLifecycle
@@ -404,6 +405,12 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 	}); err != nil {
 		return nil, err
 	}
+	// 单用户禁用同样即时吊销令牌与会话。
+	if common.IsEnabledStatus(req.Status) && req.Status == common.StatusDisabled && user.Status != common.StatusDisabled {
+		if err := s.revokeUsersAccess([]uint64{userID}); err != nil {
+			return nil, err
+		}
+	}
 	if err := s.db.First(&user, userID).Error; err != nil {
 		return nil, err
 	}
@@ -506,6 +513,10 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 
 		return s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
 			var err error
+			// 令牌吊销要在 DB 会话标记 revoked 之前拉取 session_id 列表。
+			if err = lifecycle.RevokeUserTokens(userID); err != nil {
+				return err
+			}
 			revokedSessionCount, err = lifecycle.RevokeUserSessions(userID, time.Now())
 			return err
 		})
@@ -552,7 +563,30 @@ func (s *UserService) BatchUpdateUserStatus(userIDs []uint64, status int) (int, 
 		return 0, err
 	}
 
+	// 禁用即吊销：黑名单 + 会话，令牌不再等 TTL 自然过期。
+	if normalizeStatus(status) == common.StatusDisabled {
+		if err := s.revokeUsersAccess(normalizedIDs); err != nil {
+			return 0, err
+		}
+	}
+
 	return len(normalizedIDs), nil
+}
+
+// revokeUsersAccess 吊销一批用户的 Redis 令牌并撤销其 DB 会话。
+func (s *UserService) revokeUsersAccess(userIDs []uint64) error {
+	now := time.Now()
+	return s.withSessionLifecycle(s.db, func(lifecycle SessionLifecycle) error {
+		for _, id := range userIDs {
+			if err := lifecycle.RevokeUserTokens(id); err != nil {
+				return err
+			}
+			if _, err := lifecycle.RevokeUserSessions(id, now); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // DeleteUser 删除用户。
@@ -570,6 +604,10 @@ func (s *UserService) DeleteUser(userID uint64) error {
 			return err
 		}
 		if err := s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
+			// 先吊销 Redis 令牌（需要还能查到 session_id），再删 DB 会话行。
+			if err := lifecycle.RevokeUserTokens(userID); err != nil {
+				return err
+			}
 			if err := lifecycle.DeleteUserSessions(userID); err != nil {
 				return err
 			}

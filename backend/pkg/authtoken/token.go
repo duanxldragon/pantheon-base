@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -221,6 +222,27 @@ func DeleteRefresh(ctx context.Context, rdb *redis.Client, tok string) error {
 // sessionRefreshIndexKey builds the Redis key for the session→refresh reverse index.
 func sessionRefreshIndexKey(sessionID string) string {
 	return sessionRefreshIndexPrefix + sessionID
+}
+
+// blacklistPrefix must stay in sync with the per-request check in
+// internal/middleware/token_middleware.go (TokenAuthMiddleware).
+const blacklistPrefix = "blacklist:"
+
+// BlacklistUserKey builds the Redis key TokenAuthMiddleware checks on every
+// authenticated request.
+func BlacklistUserKey(userID uint64) string {
+	return blacklistPrefix + strconv.FormatUint(userID, 10)
+}
+
+// BlacklistUser force-expires every live access token of a user by writing the
+// per-user blacklist key. TTL covers the longest possible remaining access
+// token life (RefreshSessionActivity preserves, never extends, session TTLs)
+// plus a margin for the middleware's in-memory session cache and clock skew.
+func BlacklistUser(ctx context.Context, rdb *redis.Client, userID uint64) error {
+	if rdb == nil || userID == 0 {
+		return nil
+	}
+	return rdb.Set(ctx, BlacklistUserKey(userID), "1", AccessTokenTTL+time.Minute).Err()
 }
 
 // RevokeSessionRefresh cascade-deletes the refresh token bound to a session,
