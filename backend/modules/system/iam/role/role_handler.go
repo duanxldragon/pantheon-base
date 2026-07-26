@@ -65,7 +65,7 @@ func (h *RoleHandler) ExportRoles(c *gin.Context) {
 		return
 	}
 
-	file, err := h.service.ExportRoles(&query)
+	file, err := h.service.ExportRoles(c.Request.Context(), &query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "role.export.error")
 		return

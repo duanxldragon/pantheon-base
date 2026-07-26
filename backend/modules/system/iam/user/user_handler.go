@@ -84,7 +84,7 @@ func (h *UserHandler) ExportUsers(c *gin.Context) {
 		return
 	}
 	dataScope := common.GetDataScope(c)
-	file, err := h.service.ExportUsers(&query, dataScope)
+	file, err := h.service.ExportUsers(c.Request.Context(), &query, dataScope)
 	if err != nil {
 		common.Fail(c, common.CodeError, "user.export.error")
 		return

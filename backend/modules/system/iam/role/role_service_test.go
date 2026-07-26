@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -254,6 +255,29 @@ func TestRoleService_DeleteRole(t *testing.T) {
 	}
 }
 
+func TestRoleService_ExportRolesHonorsRowCap(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	oldCap := maxRoleExportRows
+	maxRoleExportRows = 2
+	defer func() { maxRoleExportRows = oldCap }()
+
+	for _, key := range []string{"cap_role_a", "cap_role_b", "cap_role_c"} {
+		if err := db.Create(&SystemRole{RoleName: key, RoleKey: key, Status: 1}).Error; err != nil {
+			t.Fatalf("seed role %s: %v", key, err)
+		}
+	}
+
+	exported, err := s.ExportRoles(context.Background(), &RoleListQuery{RoleKey: "cap_role_"})
+	if err != nil {
+		t.Fatalf("export roles: %v", err)
+	}
+	if len(exported.Rows) != 2 {
+		t.Fatalf("expected export capped at 2 rows, got %d", len(exported.Rows))
+	}
+}
+
 func TestRoleService_DeleteRoleRollsBackOnFailure(t *testing.T) {
 	db := setupRoleTestDB(t)
 	s := NewRoleService(db)
@@ -330,7 +354,7 @@ func TestRoleService_ExportAndBatchStatus(t *testing.T) {
 		t.Fatalf("seed editor role: %v", err)
 	}
 
-	exported, err := s.ExportRoles(&RoleListQuery{RoleKey: "editor"})
+	exported, err := s.ExportRoles(context.Background(), &RoleListQuery{RoleKey: "editor"})
 	if err != nil {
 		t.Fatalf("export roles: %v", err)
 	}

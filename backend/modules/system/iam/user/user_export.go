@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -13,12 +14,16 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s *UserService) ExportUsers(query *UserListQuery, dataScope *common.DataScopeReq) (*impexp.CSVFile, error) {
+// maxUserExportRows 对齐日志导出的行数上限，防止大库全表导出占满内存并
+// 长期占用连接（var 便于测试降低阈值）。
+var maxUserExportRows = 10000
+
+func (s *UserService) ExportUsers(ctx context.Context, query *UserListQuery, dataScope *common.DataScopeReq) (*impexp.CSVFile, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
-	users, err := s.listUsersForExport(query, dataScope)
+	users, err := s.listUsersForExport(ctx, query, dataScope)
 	if err != nil {
 		return nil, err
 	}
@@ -281,9 +286,9 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 	return result, nil
 }
 
-func (s *UserService) listUsersForExport(query *UserListQuery, dataScope *common.DataScopeReq) ([]SystemUser, error) {
+func (s *UserService) listUsersForExport(ctx context.Context, query *UserListQuery, dataScope *common.DataScopeReq) ([]SystemUser, error) {
 	var users []SystemUser
-	db := s.db.Model(&SystemUser{}).Scopes(database.WithDataScope(dataScope))
+	db := s.db.WithContext(ctx).Model(&SystemUser{}).Scopes(database.WithDataScope(dataScope))
 	db = applyUserListFilters(db, query)
 
 	sortColumn, sortDesc := normalizeUserSort(query)
@@ -296,6 +301,7 @@ func (s *UserService) listUsersForExport(query *UserListQuery, dataScope *common
 			Column: clause.Column{Name: "id"},
 			Desc:   false,
 		}).
+		Limit(maxUserExportRows).
 		Find(&users).Error; err != nil {
 		return nil, err
 	}
