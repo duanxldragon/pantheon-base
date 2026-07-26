@@ -1,0 +1,57 @@
+{
+  "taskId": "2026-07-26-visual-evidence-observation-gate",
+  "title": "Wire check-visual-evidence into quality CI in observation mode (HOT-001)",
+  "goal": "Start the pantheon-harness HOT-001 visual-evidence promotion window by running check-visual-evidence.mjs in the quality docs-governance job as an advisory (continue-on-error) step, reported in the harness governance summary but excluded from strict main/release enforcement.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "Add check:harness-visual npm script (package.json)",
+      "Add advisory 'Check visual evidence' step to docs-governance job with outcome reporting (quality.yml)",
+      "Create this task manifest and evidence artifacts for PR governance linkage"
+    ],
+    "out": [
+      "No promotion to blocking enforcement (requires 3 consecutive UI-affecting tasks with rendered evidence and zero checker false positives per visual-evidence-promotion-policy)",
+      "No product code, UI, or runtime changes",
+      "No changes to other quality gates or their enforcement"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    ".github/workflows/quality.yml"
+  ],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "method-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Reuse the existing docs-governance advisory-step pattern (continue-on-error + outcome env + summary table row); one npm script plus one workflow step; deliberately not added to the strict push enforcement block.",
+  "successCriteria": [
+    "npm run check:harness-visual exits 0 with no findings on the current tree",
+    "npm run test:quality-workflow passes (workflow structure tests)",
+    "Visual Evidence row appears in the Harness Governance Results summary as an observation signal",
+    "No event becomes blocked by the new step"
+  ],
+  "expectedFiles": {
+    "modify": [
+      "package.json",
+      ".github/workflows/quality.yml"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-26-visual-evidence-observation-gate/manifest.json",
+      ".harness/evidence/2026-07-26-visual-evidence-observation-gate/commands.json",
+      ".harness/evidence/2026-07-26-visual-evidence-observation-gate/summary.md",
+      ".harness/evidence/2026-07-26-visual-evidence-observation-gate/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-26-visual-evidence-observation-gate",
+    "taskPacket": ".harness/tasks/2026-07-26-visual-evidence-observation-gate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/",
+    "reviewFile": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "sensor-added",
+  "githubSignal": "method-gate",
+  "deferredCodeIssues": "Promotion to blocking enforcement deferred until the 3-task observation window completes; tracked in pantheon-harness harness-open-tasks.md HOT-001."
+}

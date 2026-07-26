@@ -16,6 +16,7 @@
     "check:harness-inventory": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
     "check:harness-sync": "node scripts/harness/check-sync-drift.mjs --root . --strict",
     "check:harness-encoding": "node scripts/harness/check-encoding.mjs --root . --strict",
+    "check:harness-visual": "node scripts/harness/check-visual-evidence.mjs --root . --strict",
     "check:structure": "node scripts/harness/check-structure-contract.mjs --root . --strict",
     "test:structure-contract": "node --test tests/scripts/harness-check-structure-contract.test.mjs",
     "release:foundation:bundle": "node scripts/foundation-release/build-release-bundle.mjs",
