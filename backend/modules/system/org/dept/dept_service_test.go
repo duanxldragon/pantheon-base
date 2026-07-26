@@ -1,6 +1,7 @@
 package org
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -506,7 +507,7 @@ func TestDeptService_ImportTemplateAndExport(t *testing.T) {
 		t.Fatalf("unexpected import result: %+v", result)
 	}
 
-	exported, err := service.ExportDepts(&DeptListQuery{DeptName: "研发"})
+	exported, err := service.ExportDepts(context.Background(), &DeptListQuery{DeptName: "研发"})
 	if err != nil {
 		t.Fatalf("export dept: %v", err)
 	}
@@ -548,7 +549,7 @@ func TestDeptService_ExportDeptsSupportsGovernanceFilter(t *testing.T) {
 		t.Fatalf("seed normal dept: %v", err)
 	}
 
-	exported, err := service.ExportDepts(&DeptListQuery{Governance: "leaderless"})
+	exported, err := service.ExportDepts(context.Background(), &DeptListQuery{Governance: "leaderless"})
 	if err != nil {
 		t.Fatalf("export leaderless dept: %v", err)
 	}
@@ -606,7 +607,7 @@ func TestDeptService_ExportDeptsIncludesGovernanceMetrics(t *testing.T) {
 		t.Fatalf("seed user: %v", err)
 	}
 
-	exported, err := service.ExportDepts(&DeptListQuery{})
+	exported, err := service.ExportDepts(context.Background(), &DeptListQuery{})
 	if err != nil {
 		t.Fatalf("export dept: %v", err)
 	}

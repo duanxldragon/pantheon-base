@@ -181,7 +181,7 @@ func (h *DeptHandler) ExportDepts(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	file, err := h.service.ExportDepts(&query)
+	file, err := h.service.ExportDepts(c.Request.Context(), &query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "dept.export.error")
 		return

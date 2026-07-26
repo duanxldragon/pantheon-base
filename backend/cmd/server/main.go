@@ -5,7 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"pantheon-base/internal/middleware"
@@ -115,6 +118,15 @@ func main() {
 
 	// 4. 注册底座模块
 	api := r.Group("/api/v1")
+	// 全局 API 限流（按 IP；组级中间件先于各路由的 TokenAuthMiddleware，
+	// 取不到 userId）。默认 6000 次/分钟 ≈ 100 QPS/IP，只作滥用兜底。
+	if envFlag("PANTHEON_API_RATE_LIMIT_ENABLED") != envFlagFalse {
+		api.Use(middleware.RateLimiter(middleware.RateLimiterConfig{
+			MaxRequests: envIntDefault("PANTHEON_API_RATE_LIMIT_MAX", 6000),
+			Window:      time.Duration(envIntDefault("PANTHEON_API_RATE_LIMIT_WINDOW_SECONDS", 60)) * time.Second,
+			Store:       middleware.NewRedisRateLimitStore(),
+		}))
+	}
 	platform.RegisterPlatformRoutes(api, database.DB)
 	lowcode.InitLowcodeModule(api, database.DB)
 	system.InitSystemModule(api, database.DB)
@@ -135,14 +147,45 @@ func main() {
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		slog.Error("failed to run server", "error", err)
-		os.Exit(1)
+	// 优雅停机：SIGINT/SIGTERM 后先停止接收连接并等在途请求完成，
+	// 再排空操作日志异步队列，避免部署时丢请求、丢审计日志。
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("failed to run server", "error", err)
+			stop()
+		}
+	}()
+
+	<-ctx.Done()
+	slog.Info("shutdown signal received; draining")
+
+	shutdownTimeout := time.Duration(envIntDefault("PANTHEON_SHUTDOWN_TIMEOUT_SECONDS", 15)) * time.Second
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		slog.Error("http server shutdown error", "error", err)
 	}
+	middleware.ShutdownOperationLog(shutdownCtx)
+	slog.Info("server stopped")
+}
+
+func envIntDefault(name string, fallback int) int {
+	raw := strings.TrimSpace(os.Getenv(name))
+	if raw == "" {
+		return fallback
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil || value <= 0 {
+		return fallback
+	}
+	return value
 }
 
 func shouldExposeMetrics(env string) bool {
-	if envFlag("PANTHEON_METRICS_ENABLED") == "false" {
+	if envFlag("PANTHEON_METRICS_ENABLED") == envFlagFalse {
 		return false
 	}
 	if !strings.EqualFold(strings.TrimSpace(env), "production") {
@@ -151,7 +194,7 @@ func shouldExposeMetrics(env string) bool {
 	if strings.TrimSpace(os.Getenv("PANTHEON_METRICS_BEARER_TOKEN")) != "" {
 		return true
 	}
-	return envFlag("PANTHEON_METRICS_PUBLIC") == "true"
+	return envFlag("PANTHEON_METRICS_PUBLIC") == envFlagTrue
 }
 
 func metricsAccessMiddleware() gin.HandlerFunc {
@@ -170,12 +213,17 @@ func metricsAccessMiddleware() gin.HandlerFunc {
 	}
 }
 
+const (
+	envFlagTrue  = "true"
+	envFlagFalse = "false"
+)
+
 func envFlag(name string) string {
 	switch strings.ToLower(strings.TrimSpace(os.Getenv(name))) {
-	case "1", "true", "yes", "on":
-		return "true"
-	case "0", "false", "no", "off":
-		return "false"
+	case "1", envFlagTrue, "yes", "on":
+		return envFlagTrue
+	case "0", envFlagFalse, "no", "off":
+		return envFlagFalse
 	default:
 		return ""
 	}

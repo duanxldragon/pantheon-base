@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"errors"
 	"net/http/httptest"
 	"strconv"
@@ -433,7 +434,7 @@ func TestDeleteUser_DBNil(t *testing.T) {
 
 func TestExportUsers_DBNil(t *testing.T) {
 	s := &UserService{db: nil}
-	_, err := s.ExportUsers(nil, nil)
+	_, err := s.ExportUsers(context.Background(), nil, nil)
 	if err == nil {
 		t.Fatal("expected error when db is nil")
 	}

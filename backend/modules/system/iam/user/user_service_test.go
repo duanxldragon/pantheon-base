@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -450,6 +451,35 @@ func TestUserService_DeleteUser(t *testing.T) {
 	}
 }
 
+func TestUserService_ExportUsersHonorsRowCap(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := NewUserService(db)
+
+	oldCap := maxUserExportRows
+	maxUserExportRows = 2
+	defer func() { maxUserExportRows = oldCap }()
+
+	for _, name := range []string{"cap_user_a", "cap_user_b", "cap_user_c"} {
+		if err := db.Create(&SystemUser{Username: name, Password: "hashed", Status: 1}).Error; err != nil {
+			t.Fatalf("seed user %s: %v", name, err)
+		}
+	}
+
+	exported, err := s.ExportUsers(context.Background(), &UserListQuery{Keyword: "cap_user_"}, nil)
+	if err != nil {
+		t.Fatalf("export users: %v", err)
+	}
+	if len(exported.Rows) != 2 {
+		t.Fatalf("expected export capped at 2 rows, got %d", len(exported.Rows))
+	}
+
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := s.ExportUsers(cancelled, &UserListQuery{}, nil); err == nil {
+		t.Fatalf("expected cancelled context to abort export")
+	}
+}
+
 func TestUserService_DeleteUserPurgesAuthArtifacts(t *testing.T) {
 	db := setupUserTestDB(t)
 	s := newUserServiceWithSessionLifecycle(db)
@@ -769,7 +799,7 @@ func TestUserService_ImportTemplateAndExport(t *testing.T) {
 		t.Fatalf("unexpected import result: %+v", result)
 	}
 
-	exported, err := s.ExportUsers(&UserListQuery{Username: "sample_user"}, nil)
+	exported, err := s.ExportUsers(context.Background(), &UserListQuery{Username: "sample_user"}, nil)
 	if err != nil {
 		t.Fatalf("export user: %v", err)
 	}

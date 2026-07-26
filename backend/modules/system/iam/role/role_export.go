@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,12 +14,16 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s *RoleService) ExportRoles(query *RoleListQuery) (*impexp.CSVFile, error) {
+// maxRoleExportRows 对齐日志导出的行数上限（var 便于测试降低阈值）。
+var maxRoleExportRows = 10000
+
+// ExportRoles 导出角色 CSV（受 maxRoleExportRows 上限与请求上下文取消约束）。
+func (s *RoleService) ExportRoles(ctx context.Context, query *RoleListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
 		return nil, common.NewBadRequest("database.not_initialized")
 	}
 
-	roles, err := s.listRolesForExport(query)
+	roles, err := s.listRolesForExport(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +46,9 @@ func (s *RoleService) ExportRoles(query *RoleListQuery) (*impexp.CSVFile, error)
 	}, nil
 }
 
-func (s *RoleService) listRolesForExport(query *RoleListQuery) ([]SystemRole, error) {
+func (s *RoleService) listRolesForExport(ctx context.Context, query *RoleListQuery) ([]SystemRole, error) {
 	var roles []SystemRole
-	db := s.db.Model(&SystemRole{})
+	db := s.db.WithContext(ctx).Model(&SystemRole{})
 	if query != nil {
 		if strings.TrimSpace(query.RoleName) != "" {
 			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleName))))
@@ -60,6 +65,7 @@ func (s *RoleService) listRolesForExport(query *RoleListQuery) ([]SystemRole, er
 	if err := db.
 		Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc}).
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false}).
+		Limit(maxRoleExportRows).
 		Find(&roles).Error; err != nil {
 		return nil, err
 	}
