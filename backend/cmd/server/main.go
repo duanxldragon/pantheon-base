@@ -120,7 +120,7 @@ func main() {
 	api := r.Group("/api/v1")
 	// 全局 API 限流（按 IP；组级中间件先于各路由的 TokenAuthMiddleware，
 	// 取不到 userId）。默认 6000 次/分钟 ≈ 100 QPS/IP，只作滥用兜底。
-	if envFlag("PANTHEON_API_RATE_LIMIT_ENABLED") != "false" {
+	if envFlag("PANTHEON_API_RATE_LIMIT_ENABLED") != envFlagFalse {
 		api.Use(middleware.RateLimiter(middleware.RateLimiterConfig{
 			MaxRequests: envIntDefault("PANTHEON_API_RATE_LIMIT_MAX", 6000),
 			Window:      time.Duration(envIntDefault("PANTHEON_API_RATE_LIMIT_WINDOW_SECONDS", 60)) * time.Second,
@@ -185,7 +185,7 @@ func envIntDefault(name string, fallback int) int {
 }
 
 func shouldExposeMetrics(env string) bool {
-	if envFlag("PANTHEON_METRICS_ENABLED") == "false" {
+	if envFlag("PANTHEON_METRICS_ENABLED") == envFlagFalse {
 		return false
 	}
 	if !strings.EqualFold(strings.TrimSpace(env), "production") {
@@ -194,7 +194,7 @@ func shouldExposeMetrics(env string) bool {
 	if strings.TrimSpace(os.Getenv("PANTHEON_METRICS_BEARER_TOKEN")) != "" {
 		return true
 	}
-	return envFlag("PANTHEON_METRICS_PUBLIC") == "true"
+	return envFlag("PANTHEON_METRICS_PUBLIC") == envFlagTrue
 }
 
 func metricsAccessMiddleware() gin.HandlerFunc {
@@ -213,12 +213,17 @@ func metricsAccessMiddleware() gin.HandlerFunc {
 	}
 }
 
+const (
+	envFlagTrue  = "true"
+	envFlagFalse = "false"
+)
+
 func envFlag(name string) string {
 	switch strings.ToLower(strings.TrimSpace(os.Getenv(name))) {
-	case "1", "true", "yes", "on":
-		return "true"
-	case "0", "false", "no", "off":
-		return "false"
+	case "1", envFlagTrue, "yes", "on":
+		return envFlagTrue
+	case "0", envFlagFalse, "no", "off":
+		return envFlagFalse
 	default:
 		return ""
 	}

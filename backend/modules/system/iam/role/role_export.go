@@ -17,6 +17,7 @@ import (
 // maxRoleExportRows 对齐日志导出的行数上限（var 便于测试降低阈值）。
 var maxRoleExportRows = 10000
 
+// ExportRoles 导出角色 CSV（受 maxRoleExportRows 上限与请求上下文取消约束）。
 func (s *RoleService) ExportRoles(ctx context.Context, query *RoleListQuery) (*impexp.CSVFile, error) {
 	if s.db == nil {
 		return nil, common.NewBadRequest("database.not_initialized")

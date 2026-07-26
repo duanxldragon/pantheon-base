@@ -79,7 +79,7 @@ var (
 		},
 	)
 
-	// 操作日志异步队列
+	// OperationLogDroppedTotal 操作日志异步队列满时丢弃的日志条数。
 	OperationLogDroppedTotal = promauto.NewCounter(
 		prometheus.CounterOpts{
 			Name: "pantheon_operation_log_dropped_total",
@@ -87,6 +87,7 @@ var (
 		},
 	)
 
+	// OperationLogQueueDepth 操作日志异步队列当前深度。
 	OperationLogQueueDepth = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "pantheon_operation_log_queue_depth",

@@ -18,6 +18,7 @@ import (
 // 长期占用连接（var 便于测试降低阈值）。
 var maxUserExportRows = 10000
 
+// ExportUsers 导出用户 CSV（受 maxUserExportRows 上限与请求上下文取消约束）。
 func (s *UserService) ExportUsers(ctx context.Context, query *UserListQuery, dataScope *common.DataScopeReq) (*impexp.CSVFile, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
