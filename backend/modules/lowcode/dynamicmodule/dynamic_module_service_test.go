@@ -1254,6 +1254,72 @@ func TestRegisterManagedModuleRejectsPathTraversalWorkspaceArtifacts(t *testing.
 	}
 }
 
+func TestUnregisterModule_RollsBackMenuDeletionOnStatusUpdateFailure(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+	mustInsertSystemMenuModule(t, db, "/business/cmdb/host", "business.cmdb")
+
+	if err := db.Create(&ModuleRegistration{
+		Name:           "business.cmdb",
+		Scope:          "business",
+		ModelTableName: "biz_cmdb_host",
+		Status:         1,
+	}).Error; err != nil {
+		t.Fatalf("seed registration: %v", err)
+	}
+
+	// 删除 uninstalled_at 列制造事务尾部（状态更新）失败，
+	// 验证事务内先执行的菜单删除被整体回滚。
+	if err := db.Exec("ALTER TABLE system_module_registration DROP COLUMN uninstalled_at").Error; err != nil {
+		t.Fatalf("drop column for failure injection: %v", err)
+	}
+
+	service := &DynamicModuleService{db: db}
+	if _, err := service.UnregisterModule("business.cmdb", false, false); err == nil {
+		t.Fatalf("expected unregister to fail after dropping uninstalled_at column")
+	}
+
+	var menuCount int64
+	if err := db.Table("system_menu").Where("module = ?", "business.cmdb").Count(&menuCount).Error; err != nil {
+		t.Fatalf("count module menus: %v", err)
+	}
+	if menuCount != 1 {
+		t.Fatalf("expected menu deletion rolled back, got %d menus", menuCount)
+	}
+}
+
+func TestPurgeModule_KeepsRegistrationWhenDropTableFails(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+
+	// system_user 不是受管业务表名，dropManagedModuleTable 的
+	// ValidateManagedTableName 会确定性失败。
+	if err := db.Create(&ModuleRegistration{
+		Name:           "business.badtable",
+		Scope:          "business",
+		ModelTableName: "system_user",
+		AutoRecycle:    true,
+		Status:         ModuleStatusUninstalled,
+	}).Error; err != nil {
+		t.Fatalf("seed registration: %v", err)
+	}
+
+	service := &DynamicModuleService{db: db}
+	if _, err := service.PurgeModule("business.badtable", true, false); err == nil {
+		t.Fatalf("expected purge to fail when table drop is rejected")
+	}
+
+	var count int64
+	if err := db.Model(&ModuleRegistration{}).Where(condNameEquals, "business.badtable").Count(&count).Error; err != nil {
+		t.Fatalf("count registration: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected registration kept for retry after drop failure, got %d", count)
+	}
+}
+
 func openDynamicModuleTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 

@@ -450,6 +450,67 @@ func TestUserService_DeleteUser(t *testing.T) {
 	}
 }
 
+func TestUserService_DeleteUserPurgesAuthArtifacts(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := newUserServiceWithSessionLifecycle(db)
+
+	// auth 域残留表（用户包不 own 这些模型，用 DDL 建表）
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_password_history (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, password_hash VARCHAR(255))")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_auth_factor (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, factor_type VARCHAR(32), secret VARCHAR(255))")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_auth_mfa_challenge (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, challenge_id VARCHAR(64))")
+
+	// 占位用户占用 ID 1（受保护不可删）
+	db.Create(&SystemUser{Username: "admin_placeholder2"})
+
+	userResp, err := s.CreateUser(&UserCreateReq{
+		Username: "purge_test",
+		Password: "password123",
+		RoleIDs:  []uint64{2},
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	seeds := []string{
+		"INSERT INTO system_user_password_history (user_id, password_hash) VALUES (?, 'old-hash')",
+		"INSERT INTO system_auth_factor (user_id, factor_type, secret) VALUES (?, 'totp', 'top-secret')",
+		"INSERT INTO system_auth_mfa_challenge (user_id, challenge_id) VALUES (?, 'chal-1')",
+		"INSERT INTO system_user_profile_ext (user_id, profile_json) VALUES (?, '{}')",
+		"INSERT INTO system_user_session (session_id, user_id) VALUES ('sess-purge', ?)",
+	}
+	for _, stmt := range seeds {
+		if err := db.Exec(stmt, userResp.ID).Error; err != nil {
+			t.Fatalf("failed to seed auth artifact: %v", err)
+		}
+	}
+	// 其他用户的 MFA 因子必须保留
+	if err := db.Exec("INSERT INTO system_auth_factor (user_id, factor_type, secret) VALUES (1, 'totp', 'keep-me')").Error; err != nil {
+		t.Fatalf("failed to seed other user's factor: %v", err)
+	}
+
+	if err := s.DeleteUser(userResp.ID); err != nil {
+		t.Fatalf("expected delete to succeed, got %v", err)
+	}
+
+	assertCount := func(table string, where string, arg any, want int64) {
+		t.Helper()
+		var count int64
+		if err := db.Table(table).Where(where, arg).Count(&count).Error; err != nil {
+			t.Fatalf("failed to count %s: %v", table, err)
+		}
+		if count != want {
+			t.Fatalf("expected %d rows in %s for %v, got %d", want, table, arg, count)
+		}
+	}
+	assertCount("system_user_password_history", "user_id = ?", userResp.ID, 0)
+	assertCount("system_auth_factor", "user_id = ?", userResp.ID, 0)
+	assertCount("system_auth_mfa_challenge", "user_id = ?", userResp.ID, 0)
+	assertCount("system_user_profile_ext", "user_id = ?", userResp.ID, 0)
+	assertCount("system_user_session", "user_id = ?", userResp.ID, 0)
+	assertCount("system_auth_factor", "user_id = ?", uint64(1), 1)
+}
+
 func TestUserService_MigrateReleasesLegacyDeletedUsername(t *testing.T) {
 	db := setupUserTestDB(t)
 

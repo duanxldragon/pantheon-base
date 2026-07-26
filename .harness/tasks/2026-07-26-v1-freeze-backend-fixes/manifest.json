@@ -1,0 +1,93 @@
+{
+  "taskId": "2026-07-26-v1-freeze-backend-fixes",
+  "title": "V1 freeze backend fixes: delete integrity, token revocation, runtime robustness",
+  "goal": "Fix every backend issue found by the V1 freeze deep review (maintainer decision: all known issues fixed before release): orphan data on delete paths, missing token revocation on user delete/disable, and the load-degradation paths (sync oplog fallback, unbounded exports, no graceful shutdown, no general rate limit).",
+  "primaryLayer": "system/iam",
+  "dependencyLayers": ["system/auth", "system/org", "lowcode", "infrastructure"],
+  "scope": {
+    "in": [
+      "Role delete purges system_role_data_scope (+ legacy table) in-tx; pre-checks locked in-tx",
+      "User delete cascades profile_ext, password history, MFA factor/challenge; menu delete removes last-owner role-permission keys",
+      "Dept/post delete pre-checks moved inside transactions with row locks",
+      "Dynamic module unregister/purge transactional with retryable DROP TABLE ordering",
+      "Migration 000011: system_user dept_id/post_id indexes",
+      "Redis token blacklist writer + refresh cascade on delete/disable/batch-disable/password-reset",
+      "Redis documented as hard dependency (DEPLOYMENT_GUIDE + startup warning)",
+      "Operation-log queue: drop-with-metric instead of sync fallback; drain on shutdown",
+      "Graceful shutdown (signal.NotifyContext + server.Shutdown + oplog drain)",
+      "CSV export 10k row caps + request-context propagation (user/role/dept)",
+      "General per-IP API rate limiter on /api/v1 with env overrides; memory-store eviction"
+    ],
+    "out": [
+      "GORM WithContext sweep beyond export paths (carried past V1)",
+      "GetLocationByIP real implementation (documented stub, carried)",
+      "Smoke coverage gap closure (separate task 2026-07-26 smoke batches)",
+      "SonarCloud S3776/S4666 remediation (separate Sonar zero-out batches)"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/DEPLOYMENT_GUIDE.md"
+  ],
+  "qualityProfile": "auth-security",
+  "portableFailureClass": "runtime-evidence-gate",
+  "ownerLayer": "consumer repository",
+  "minimumViableApproach": "Three stacked PRs merged in order: (1) fix/v1-freeze-delete-integrity — delete-path orphan cleanup, transactional pre-checks, migration 000011; (2) fix/v1-freeze-token-revocation — blacklist writer wired to every disable/delete path plus Redis hard-dependency docs; (3) fix/v1-freeze-runtime-robustness — oplog queue policy, graceful shutdown, export caps, general rate limiter.",
+  "successCriteria": [
+    "Deleting a role removes its data-scope policy rows; re-creating the same role_key starts from scope 'all' (regression test).",
+    "Deleting a user leaves no rows in profile_ext / password_history / auth_factor / mfa_challenge and revokes live Redis tokens immediately (blacklist checked per request incl. cache hits).",
+    "Disabling a user (single, batch, or via update) revokes tokens and sessions; admin password reset revokes tokens.",
+    "Menu delete removes role-permission keys only when the menu was the key's last owner.",
+    "Dept/post/role delete guards run inside transactions with row locks; mid-tx failure rolls back fully (regression test).",
+    "Module unregister/purge leave no half-states; failed DROP TABLE is retryable via purge with registration intact.",
+    "Operation-log queue overflow drops with pantheon_operation_log_dropped_total instead of blocking mutating requests; queued entries drain on SIGTERM.",
+    "user/role/dept exports capped at 10000 rows and cancellable via request context.",
+    "Full backend suite green against real MySQL (the two known local-Redis env-conditional failures reproduce identically on clean main and are documented in evidence)."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/user/user_model.go",
+      "backend/modules/system/iam/menu/menu_service.go",
+      "backend/modules/system/org/dept/dept_service.go",
+      "backend/modules/system/org/post/post_service.go",
+      "backend/modules/auth/session/session_lifecycle_service.go",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go",
+      "backend/pkg/authtoken/token.go",
+      "backend/internal/middleware/token_middleware.go",
+      "backend/internal/middleware/operation_log_middleware.go",
+      "backend/internal/middleware/rate_limit_middleware.go",
+      "backend/internal/middleware/rate_limit_presets.go",
+      "backend/pkg/metrics/prometheus.go",
+      "backend/pkg/database/redis.go",
+      "backend/cmd/server/main.go",
+      "backend/modules/system/iam/user/user_export.go",
+      "backend/modules/system/iam/role/role_export.go",
+      "backend/modules/system/org/dept/dept_export.go",
+      "docs/DEPLOYMENT_GUIDE.md"
+    ],
+    "create": [
+      "backend/pkg/database/migrations/000011_user_org_indexes.up.sql",
+      "backend/pkg/database/migrations/000011_user_org_indexes.down.sql",
+      ".harness/tasks/2026-07-26-v1-freeze-backend-fixes/manifest.json",
+      ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/commands.json",
+      ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/summary.md",
+      ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-07-26-v1-freeze-backend-fixes",
+    "taskPacket": ".harness/tasks/2026-07-26-v1-freeze-backend-fixes/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/",
+    "reviewFile": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "ratchetDecision": "sensor-added",
+  "githubSignal": "required",
+  "deferredCodeIssues": "Carried past V1 with documented rationale: full GORM WithContext sweep (only export paths done), GetLocationByIP stub, dept export cap applies pre-tree-filter (noted in code), TOCTOU residual for concurrent child INSERT under REPEATABLE READ (parent row lock does not block it; create paths would need to lock the parent)."
+}

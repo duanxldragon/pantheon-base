@@ -363,24 +363,26 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 		return common.NewBadRequest(errDatabaseNotInitialized)
 	}
 
-	var role SystemRole
-	if err := s.db.First(&role, roleID).Error; err != nil {
-		return err
-	}
-	if role.ID == common.BuiltinAdminRoleID || role.RoleKey == common.AdminRoleKey {
-		return common.NewConflict("role.delete.error.protected")
-	}
-
-	var userCount int64
-	if err := s.db.Table("system_user_role").Where("role_id = ?", roleID).Count(&userCount).Error; err != nil {
-		return err
-	}
-	if userCount > 0 {
-		return common.NewInternal("role.delete.error.has_users")
-	}
-
-	roleKey := role.RoleKey
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 前置检查放在事务内并对角色行加锁，避免检查与删除之间的并发窗口
+		// （成员绑定检查通过后、删除前有新成员绑定进来）。
+		var role SystemRole
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&role, roleID).Error; err != nil {
+			return err
+		}
+		if role.ID == common.BuiltinAdminRoleID || role.RoleKey == common.AdminRoleKey {
+			return common.NewConflict("role.delete.error.protected")
+		}
+
+		var userCount int64
+		if err := tx.Table("system_user_role").Where("role_id = ?", roleID).Count(&userCount).Error; err != nil {
+			return err
+		}
+		if userCount > 0 {
+			return common.NewInternal("role.delete.error.has_users")
+		}
+
+		roleKey := role.RoleKey
 		if err := tx.Exec("DELETE FROM system_role_menu WHERE role_id = ?", roleID).Error; err != nil {
 			return err
 		}
@@ -391,6 +393,18 @@ func (s *RoleService) DeleteRole(roleID uint64) error {
 			Where("ptype = ? AND v0 = ?", "p", roleKey).
 			Delete(&database.CasbinRule{}).Error; err != nil {
 			return err
+		}
+		// system_role_data_scope 按 role_key 字符串关联：不清理会让同名
+		// role_key 重建的新角色静默继承死角色的数据权限策略。
+		if err := tx.Where(condRoleKeyEquals, roleKey).Delete(&roleDataScopePolicy{}).Error; err != nil {
+			return err
+		}
+		// 迁移 000001 的遗留表同样按 role_key 唯一键存策略，防御性同步清理。
+		if tx.Migrator().HasTable("permission_role_data_scope_policy") {
+			if err := tx.Table("permission_role_data_scope_policy").
+				Where(condRoleKeyEquals, roleKey).Delete(nil).Error; err != nil {
+				return err
+			}
 		}
 		deletedRoleKey, err := s.allocateDeletedRoleKey(tx, role.ID)
 		if err != nil {

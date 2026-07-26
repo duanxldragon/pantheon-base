@@ -3,6 +3,7 @@ package dynamicmodule
 
 import (
 	"errors"
+	"log/slog"
 	"pantheon-base/pkg/common"
 	"strings"
 	"time"
@@ -39,33 +40,39 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 		return nil, err
 	}
 
-	if s.db.Migrator().HasTable("system_menu") {
-		if err := s.deleteModuleMenusWithRoleBindings(moduleName); err != nil {
-			return nil, err
+	// 菜单/授权清理与状态更新收进同一事务：中途失败整体回滚，
+	// 不再留下"菜单已删但注册状态未变"的半成品状态。
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if tx.Migrator().HasTable("system_menu") {
+			if err := s.deleteModuleMenusWithRoleBindings(tx, moduleName); err != nil {
+				return err
+			}
 		}
+		if tx.Migrator().HasTable("system_role_permission") {
+			if err := tx.Table("system_role_permission").
+				Where("permission_key LIKE ?", modulePermissionPrefix(scope, shortName)+":%").
+				Delete(nil).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Table("system_module_registration").
+			Where(condNameEquals, moduleName).
+			Updates(map[string]interface{}{
+				"status":         ModuleStatusUninstalled,
+				"uninstalled_at": time.Now().Format(time.RFC3339),
+			}).Error
+	}); err != nil {
+		return nil, err
 	}
 
-	if s.db.Migrator().HasTable("system_role_permission") {
-		if err := s.db.Table("system_role_permission").
-			Where("permission_key LIKE ?", modulePermissionPrefix(scope, shortName)+":%").
-			Delete(nil).Error; err != nil {
-			return nil, err
-		}
-	}
-
+	// MySQL DDL 自带隐式提交，DROP TABLE 无法参与上面的事务，放到提交后执行。
+	// 失败时模块已是 uninstalled 状态且注册记录仍在，PurgeModule 会重试删表。
 	if s.shouldDropManagedTable(registration, dropTable) {
 		if err := s.dropManagedModuleTable(scope, registration.ModelTableName); err != nil {
+			slog.Warn("dynamic module table drop failed; retry via purge",
+				"module", moduleName, "table", registration.ModelTableName, "error", err)
 			return nil, err
 		}
-	}
-
-	if err := s.db.Table("system_module_registration").
-		Where(condNameEquals, moduleName).
-		Updates(map[string]interface{}{
-			"status":         ModuleStatusUninstalled,
-			"uninstalled_at": time.Now().Format(time.RFC3339),
-		}).Error; err != nil {
-		return nil, err
 	}
 
 	return s.FinalizeUnregister(moduleName, purgeSource)
@@ -117,10 +124,12 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 		return nil, common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
-		if err := s.deleteModuleNavigationArtifacts(moduleName); err != nil {
-			return nil, err
-		}
-		if err := s.db.Delete(&registration).Error; err != nil {
+		if err := s.db.Transaction(func(tx *gorm.DB) error {
+			if err := s.deleteModuleNavigationArtifacts(tx, moduleName); err != nil {
+				return err
+			}
+			return tx.Delete(&registration).Error
+		}); err != nil {
 			return nil, err
 		}
 		return s.FinalizeUnregister(moduleName, purgeSource)
@@ -131,7 +140,10 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 			return nil, err
 		}
 	} else if s.shouldDropManagedTable(registration, dropTable) {
+		// 删表失败必须在删除注册记录之前返回：记录保留则 purge 可重试。
 		if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
+			slog.Warn("dynamic module table drop failed; registration kept for retry",
+				"module", moduleName, "table", registration.ModelTableName, "error", err)
 			return nil, err
 		}
 	}
@@ -142,21 +154,21 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 	return s.FinalizeUnregister(moduleName, purgeSource)
 }
 
-func (s *DynamicModuleService) deleteModuleNavigationArtifacts(moduleName string) error {
-	if s.db == nil {
+func (s *DynamicModuleService) deleteModuleNavigationArtifacts(db *gorm.DB, moduleName string) error {
+	if db == nil {
 		return nil
 	}
 	scope, shortName, err := splitModuleKey(moduleName)
 	if err != nil {
 		return err
 	}
-	if s.db.Migrator().HasTable("system_menu") {
-		if err := s.deleteModuleMenusWithRoleBindings(moduleName); err != nil {
+	if db.Migrator().HasTable("system_menu") {
+		if err := s.deleteModuleMenusWithRoleBindings(db, moduleName); err != nil {
 			return err
 		}
 	}
-	if s.db.Migrator().HasTable("system_role_permission") {
-		if err := s.db.Table("system_role_permission").
+	if db.Migrator().HasTable("system_role_permission") {
+		if err := db.Table("system_role_permission").
 			Where("permission_key LIKE ?", modulePermissionPrefix(scope, shortName)+":%").
 			Delete(nil).Error; err != nil {
 			return err
@@ -167,9 +179,9 @@ func (s *DynamicModuleService) deleteModuleNavigationArtifacts(moduleName string
 
 // deleteModuleMenusWithRoleBindings 删除模块菜单，并同步清理 system_role_menu 的
 // 角色-菜单关联，避免卸载后留下悬挂的 menu_id 孤儿行。
-func (s *DynamicModuleService) deleteModuleMenusWithRoleBindings(moduleName string) error {
+func (s *DynamicModuleService) deleteModuleMenusWithRoleBindings(db *gorm.DB, moduleName string) error {
 	var menuIDs []uint64
-	if err := s.db.Table("system_menu").
+	if err := db.Table("system_menu").
 		Where(condModuleEquals, moduleName).
 		Pluck("id", &menuIDs).Error; err != nil {
 		return err
@@ -177,14 +189,14 @@ func (s *DynamicModuleService) deleteModuleMenusWithRoleBindings(moduleName stri
 	if len(menuIDs) == 0 {
 		return nil
 	}
-	if s.db.Migrator().HasTable("system_role_menu") {
-		if err := s.db.Table("system_role_menu").
+	if db.Migrator().HasTable("system_role_menu") {
+		if err := db.Table("system_role_menu").
 			Where("menu_id IN ?", menuIDs).
 			Delete(nil).Error; err != nil {
 			return err
 		}
 	}
-	return s.db.Table("system_menu").
+	return db.Table("system_menu").
 		Where(condModuleEquals, moduleName).
 		Delete(nil).Error
 }

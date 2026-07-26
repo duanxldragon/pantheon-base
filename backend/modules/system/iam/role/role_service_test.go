@@ -194,6 +194,11 @@ func TestRoleService_DeleteRole(t *testing.T) {
 		t.Fatalf("failed to seed casbin policy: %v", err)
 	}
 
+	// 预置 custom 数据权限策略，验证删除会清理而不是被同名新角色继承
+	if err := db.Exec("INSERT INTO system_role_data_scope (role_key, mode) VALUES ('delete_me','custom') ON DUPLICATE KEY UPDATE mode='custom'").Error; err != nil {
+		t.Fatalf("failed to seed data scope policy: %v", err)
+	}
+
 	// 1. 成功删除
 	err = s.DeleteRole(roleResp.ID)
 	if err != nil {
@@ -213,8 +218,21 @@ func TestRoleService_DeleteRole(t *testing.T) {
 	if policyCount != 0 {
 		t.Fatalf("expected casbin policies to be removed, got %d", policyCount)
 	}
+	var scopeCount int64
+	if err := db.Model(&roleDataScopePolicy{}).Where(condRoleKeyEquals, "delete_me").Count(&scopeCount).Error; err != nil {
+		t.Fatalf("failed to count data scope policies: %v", err)
+	}
+	if scopeCount != 0 {
+		t.Fatalf("expected data scope policies to be removed, got %d", scopeCount)
+	}
 	if _, err := s.CreateRole(createReq); err != nil {
 		t.Fatalf("expected role key to be reusable after delete, got %v", err)
+	}
+	var recreatedScope roleDataScopePolicy
+	if err := db.Where(condRoleKeyEquals, "delete_me").First(&recreatedScope).Error; err == nil {
+		if recreatedScope.Mode == "custom" {
+			t.Fatalf("re-created role inherited dead role's custom data scope")
+		}
 	}
 
 	// 2. 删除超级管理员 (admin)
@@ -233,6 +251,37 @@ func TestRoleService_DeleteRole(t *testing.T) {
 	err = s.DeleteRole(roleWithUser.ID)
 	if err == nil || common.ErrMessage(err) != "role.delete.error.has_users" {
 		t.Errorf("expected has_users error, got %v", err)
+	}
+}
+
+func TestRoleService_DeleteRoleRollsBackOnFailure(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	roleResp, err := s.CreateRole(&RoleCreateReq{
+		RoleName: "Rollback Me",
+		RoleKey:  "rollback_me",
+		Status:   1,
+	})
+	if err != nil {
+		t.Fatalf("failed to create role: %v", err)
+	}
+
+	// 删除 system_role_menu 表制造事务中途失败，验证角色未被半删除。
+	if err := db.Exec("DROP TABLE system_role_menu").Error; err != nil {
+		t.Fatalf("failed to drop table for failure injection: %v", err)
+	}
+
+	if err := s.DeleteRole(roleResp.ID); err == nil {
+		t.Fatalf("expected delete to fail after dropping system_role_menu")
+	}
+
+	var role SystemRole
+	if err := db.First(&role, roleResp.ID).Error; err != nil {
+		t.Fatalf("expected role to survive failed delete, got %v", err)
+	}
+	if role.RoleKey != "rollback_me" {
+		t.Fatalf("expected role key unchanged after rollback, got %s", role.RoleKey)
 	}
 }
 

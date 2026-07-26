@@ -312,20 +312,63 @@ func (s *MenuService) DeleteMenu(menuID uint64) error {
 		return common.ErrDatabaseNotInitialized
 	}
 
-	var childCount int64
-	if err := s.db.Model(&SystemMenu{}).Where("parent_id = ?", menuID).Count(&childCount).Error; err != nil {
-		return err
-	}
-	if childCount > 0 {
-		return common.NewInternal("menu.delete.error.has_children")
-	}
-
 	return s.db.Transaction(func(tx *gorm.DB) error {
+		var menu SystemMenu
+		if err := tx.First(&menu, menuID).Error; err != nil {
+			return err
+		}
+
+		// 子菜单检查放在事务内，收窄检查与删除之间的并发窗口。
+		var childCount int64
+		if err := tx.Model(&SystemMenu{}).Where("parent_id = ?", menuID).Count(&childCount).Error; err != nil {
+			return err
+		}
+		if childCount > 0 {
+			return common.NewInternal("menu.delete.error.has_children")
+		}
+
 		if err := tx.Table("system_role_menu").Where("menu_id = ?", menuID).Delete(nil).Error; err != nil {
 			return err
 		}
-		return tx.Delete(&SystemMenu{}, menuID).Error
+		if err := tx.Delete(&SystemMenu{}, menuID).Error; err != nil {
+			return err
+		}
+
+		// 若被删菜单是某 permission_key 的最后一个持有者，同步清理
+		// system_role_permission 中的授权行，避免权限工作台出现 unknown
+		// permission 孤儿；多个菜单共享同一 key 时保留。
+		for _, key := range uniqueNonEmpty(menu.PagePerm, menu.Perms) {
+			var owners int64
+			if err := tx.Model(&SystemMenu{}).
+				Where("page_perm = ? OR perms = ?", key, key).
+				Count(&owners).Error; err != nil {
+				return err
+			}
+			if owners == 0 {
+				if err := tx.Table("system_role_permission").
+					Where("permission_key = ?", key).Delete(nil).Error; err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	})
+}
+
+func uniqueNonEmpty(values ...string) []string {
+	result := make([]string, 0, len(values))
+	seen := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
 }
 
 func buildMenuTree(menus []SystemMenu, parentID uint64) []*MenuTreeResp {
