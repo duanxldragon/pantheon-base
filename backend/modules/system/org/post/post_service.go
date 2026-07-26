@@ -145,7 +145,7 @@ func (s *PostService) UpdatePost(postID uint64, req *PostUpdateReq) (*PostListRe
 		return nil, err
 	}
 	if post.Status != common.StatusDisabled && normalizePostStatus(req.Status) == common.StatusDisabled {
-		if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
+		if err := s.ensurePostsNotAssignedToUsers(s.db, []uint64{postID}); err != nil {
 			return nil, err
 		}
 	}
@@ -173,15 +173,16 @@ func (s *PostService) DeletePost(postID uint64) error {
 		return common.ErrDatabaseNotInitialized
 	}
 
-	if err := s.ensurePostsNotAssignedToUsers([]uint64{postID}); err != nil {
-		if common.ErrMessage(err) == "post.status.error.has_users" {
-			return common.NewInternal("post.delete.error.has_users")
-		}
-		return err
-	}
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var post SystemPost
-		if err := tx.First(&post, postID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&post, postID).Error; err != nil {
+			return err
+		}
+		// 用户占用检查放在事务内，收窄检查与删除之间的并发窗口。
+		if err := s.ensurePostsNotAssignedToUsers(tx, []uint64{postID}); err != nil {
+			if common.ErrMessage(err) == "post.status.error.has_users" {
+				return common.NewInternal("post.delete.error.has_users")
+			}
 			return err
 		}
 		deletedCode, err := s.allocateDeletedPostCode(tx, post.ID)
@@ -221,7 +222,7 @@ func (s *PostService) BatchUpdatePostStatus(postIDs []uint64, status int) (int, 
 				activeIDs = append(activeIDs, post.ID)
 			}
 		}
-		if err := s.ensurePostsNotAssignedToUsers(activeIDs); err != nil {
+		if err := s.ensurePostsNotAssignedToUsers(s.db, activeIDs); err != nil {
 			return 0, err
 		}
 	}
@@ -711,12 +712,12 @@ func buildPostGovernanceActions(status, assignedUserCount int) []string {
 	return []string{"keep-observing"}
 }
 
-func (s *PostService) ensurePostsNotAssignedToUsers(postIDs []uint64) error {
+func (s *PostService) ensurePostsNotAssignedToUsers(db *gorm.DB, postIDs []uint64) error {
 	if len(postIDs) == 0 {
 		return nil
 	}
 	var userCount int64
-	if err := s.db.Table("system_user").Where("post_id IN ? AND deleted_at IS NULL", postIDs).Count(&userCount).Error; err != nil {
+	if err := db.Table("system_user").Where("post_id IN ? AND deleted_at IS NULL", postIDs).Count(&userCount).Error; err != nil {
 		return err
 	}
 	if userCount > 0 {

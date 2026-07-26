@@ -9,6 +9,7 @@ import (
 	"pantheon-base/pkg/common"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const condIDIn = "id IN ?"
@@ -125,39 +126,43 @@ func (s *DeptService) DeleteDept(deptID uint64) error {
 		return common.ErrDatabaseNotInitialized
 	}
 
-	var dept SystemDept
-	if err := s.db.First(&dept, deptID).Error; err != nil {
-		return err
-	}
-	if dept.IsRoot == common.StatusFlagYes {
-		return common.NewForbidden("dept.root.delete_forbidden")
-	}
+	// 检查与删除同事务并对部门行加锁，避免检查通过后、删除前
+	// 出现新增子部门/岗位/用户的并发窗口。
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		var dept SystemDept
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&dept, deptID).Error; err != nil {
+			return err
+		}
+		if dept.IsRoot == common.StatusFlagYes {
+			return common.NewForbidden("dept.root.delete_forbidden")
+		}
 
-	var childCount int64
-	if err := s.db.Model(&SystemDept{}).Where("parent_id = ?", deptID).Count(&childCount).Error; err != nil {
-		return err
-	}
-	if childCount > 0 {
-		return common.NewInternal("dept.delete.error.has_children")
-	}
+		var childCount int64
+		if err := tx.Model(&SystemDept{}).Where("parent_id = ?", deptID).Count(&childCount).Error; err != nil {
+			return err
+		}
+		if childCount > 0 {
+			return common.NewInternal("dept.delete.error.has_children")
+		}
 
-	var postCount int64
-	if err := s.db.Table("system_post").Where("dept_id = ? AND deleted_at IS NULL", deptID).Count(&postCount).Error; err != nil {
-		return err
-	}
-	if postCount > 0 {
-		return common.NewInternal("dept.delete.error.has_posts")
-	}
+		var postCount int64
+		if err := tx.Table("system_post").Where("dept_id = ? AND deleted_at IS NULL", deptID).Count(&postCount).Error; err != nil {
+			return err
+		}
+		if postCount > 0 {
+			return common.NewInternal("dept.delete.error.has_posts")
+		}
 
-	var userCount int64
-	if err := s.db.Table("system_user").Where("dept_id = ? AND deleted_at IS NULL", deptID).Count(&userCount).Error; err != nil {
-		return err
-	}
-	if userCount > 0 {
-		return common.NewInternal("dept.delete.error.has_users")
-	}
+		var userCount int64
+		if err := tx.Table("system_user").Where("dept_id = ? AND deleted_at IS NULL", deptID).Count(&userCount).Error; err != nil {
+			return err
+		}
+		if userCount > 0 {
+			return common.NewInternal("dept.delete.error.has_users")
+		}
 
-	return s.db.Delete(&SystemDept{}, deptID).Error
+		return tx.Delete(&SystemDept{}, deptID).Error
+	})
 }
 
 // BatchUpdateDeptStatus updates multiple departments status
