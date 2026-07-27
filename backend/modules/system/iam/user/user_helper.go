@@ -540,10 +540,7 @@ func (s *UserService) loadUserProfileExt(userID uint64) (map[string]interface{},
 		return nil, nil
 	}
 	var ext SystemUserProfileExt
-	if err := s.db.First(&ext, "user_id = ?", userID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
+	if err := s.db.Where("user_id = ?", userID).Limit(1).Find(&ext).Error; err != nil {
 		return nil, err
 	}
 	return unmarshalUserProfileExt(ext.ProfileJSON)
