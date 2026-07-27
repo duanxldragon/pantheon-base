@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/logging"
 	"strings"
 	"time"
 
@@ -70,10 +69,9 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	// 失败时模块已是 uninstalled 状态且注册记录仍在，PurgeModule 会重试删表。
 	if s.shouldDropManagedTable(registration, dropTable) {
 		if err := s.dropManagedModuleTable(scope, registration.ModelTableName); err != nil {
-			slog.Warn("dynamic module table drop failed; retry via purge",
-				"module", logging.SanitizeLogValue(moduleName),
-				"table", logging.SanitizeLogValue(registration.ModelTableName),
-				"error", err)
+			// 日志不带 module/table（请求输入，CodeQL go/log-injection 污点源；
+			// 与 rate_limit 中间件同一先例），上下文由调用方错误响应与审计日志承载。
+			slog.Warn("dynamic module table drop failed; retry via purge", "registration_id", registration.ID, "error", err)
 			return nil, err
 		}
 	}
@@ -145,10 +143,8 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 	} else if s.shouldDropManagedTable(registration, dropTable) {
 		// 删表失败必须在删除注册记录之前返回：记录保留则 purge 可重试。
 		if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
-			slog.Warn("dynamic module table drop failed; registration kept for retry",
-				"module", logging.SanitizeLogValue(moduleName),
-				"table", logging.SanitizeLogValue(registration.ModelTableName),
-				"error", err)
+			// 同上：不打请求输入字段，避免 go/log-injection。
+			slog.Warn("dynamic module table drop failed; registration kept for retry", "registration_id", registration.ID, "error", err)
 			return nil, err
 		}
 	}
