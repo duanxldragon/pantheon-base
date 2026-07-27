@@ -10,7 +10,7 @@
       "command": "npm run test:api:unit",
       "cwd": "frontend",
       "status": "passed",
-      "notes": "11 discovered tests/api suites; 37 assertions passed."
+      "notes": "12 recursively discovered tests/api suites; 39 assertions passed, including the nested ESM directory-index regression suite."
     },
     {
       "command": "npm run lint",

@@ -12,7 +12,7 @@ import {
   existsSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import ts from 'typescript';
@@ -56,15 +56,20 @@ function collectRelativeClosure(entryAbsPath, collected) {
   }
 }
 
-function addEsmExtensions(source) {
+function addEsmExtensions(source, sourcePath) {
   return source.replace(
     /((?:from|import\()\s*['"])(\.[^'"]+?)(['"])/g,
     (whole, prefix, specifier, suffix) => {
       if (/\.(js|mjs|json)$/.test(specifier)) {
         return whole;
       }
-      const mapped = specifier.replace(/\.tsx?$/, '');
-      return `${prefix}${mapped}.js${suffix}`;
+      const resolved = resolveModuleFile(dirname(sourcePath), specifier);
+      if (!resolved) {
+        throw new Error(`cannot resolve import '${specifier}' from ${sourcePath}`);
+      }
+      const emittedPath = resolved.replace(/\.tsx?$/, '.js');
+      const mapped = relative(dirname(sourcePath), emittedPath).replaceAll('\\', '/');
+      return `${prefix}${mapped.startsWith('.') ? mapped : `./${mapped}`}${suffix}`;
     },
   );
 }
@@ -74,8 +79,9 @@ function prepareEsmWorkspace(tempDirName, files) {
   mkdirSync(tempDir, { recursive: true });
   writeFileSync(join(tempDir, 'package.json'), '{"type":"module"}\n');
   for (const file of files) {
+    const sourcePath = join(frontendDir, file);
     // Vite 语义 define：与 vitest 开发环境一致，DEV 视为 true。
-    const source = readFileSync(join(frontendDir, file), 'utf8').replace(
+    const source = readFileSync(sourcePath, 'utf8').replace(
       /import\.meta\.env\?\.DEV|import\.meta\.env\.DEV/g,
       'true',
     );
@@ -85,14 +91,24 @@ function prepareEsmWorkspace(tempDirName, files) {
     });
     const outputPath = join(tempDir, file.replace(/\.tsx?$/, '.js'));
     mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, addEsmExtensions(output.outputText));
+    writeFileSync(outputPath, addEsmExtensions(output.outputText, sourcePath));
   }
   return tempDir;
 }
 
-const testFiles = readdirSync(apiTestsDir)
-  .filter((name) => name.endsWith('.test.ts'))
-  .sort((a, b) => a.localeCompare(b));
+function discoverApiTestFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const entryPath = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return discoverApiTestFiles(entryPath).map((file) => join(entry.name, file));
+      }
+      return entry.isFile() && entry.name.endsWith('.test.ts') ? [entry.name] : [];
+    })
+    .sort((a, b) => a.localeCompare(b));
+}
+
+const testFiles = discoverApiTestFiles(apiTestsDir);
 
 if (testFiles.length === 0) {
   console.error('no tests/api/*.test.ts files found');
@@ -114,7 +130,7 @@ for (const testFile of testFiles) {
   const needsEsm = transpileFiles.some((file) =>
     readFileSync(join(frontendDir, file), 'utf8').includes('import.meta'),
   );
-  const workspaceName = `api-unit-${testFile.replace(/\.test\.ts$/, '')}`;
+  const workspaceName = `api-unit-${testFile.replace(/\.test\.ts$/, '').replace(/[\\/]/g, '-')}`;
   const tempDir = needsEsm
     ? prepareEsmWorkspace(workspaceName, transpileFiles)
     : prepareTranspiledWorkspace(workspaceName, transpileFiles).tempDir;

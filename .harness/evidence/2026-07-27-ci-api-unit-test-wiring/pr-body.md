@@ -46,7 +46,7 @@
 - [x] 前端构建：`cd frontend && npm run build` 通过
 - [ ] 轻量 smoke：不涉及产品运行时；浏览器存储断言由 API unit suite 覆盖
 - [ ] 如涉及系统域深链路，已补充专项 smoke：不涉及
-- [x] 其他专项验证：`npm run test:api:unit`（11 suites / 37 assertions）、`npm run lint`、`npm run type-check`、Prettier、task/evidence/review 严格检查通过
+- [x] 其他专项验证：`npm run test:api:unit`（12 suites / 39 assertions，含嵌套 ESM 目录导入回归）、`npm run lint`、`npm run type-check`、Prettier、task/evidence/review 严格检查通过
 - [x] CodeQL 结果已检查并解释：当前 PR CodeQL check 为成功；不改变生产信任边界
 - [x] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up：无新增告警
 - [x] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁

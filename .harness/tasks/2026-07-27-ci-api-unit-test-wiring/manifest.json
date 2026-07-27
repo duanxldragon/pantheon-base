@@ -1,14 +1,14 @@
 {
   "taskId": "2026-07-27-ci-api-unit-test-wiring",
   "title": "Wire existing frontend API unit suites into CI for V1 freeze",
-  "goal": "Execute all pure frontend tests/api node:test suites in the existing CI frontend-test job.",
+  "goal": "Execute every frontend tests/api node:test suite recursively in the existing CI frontend-test job, including its browser-storage assertion.",
   "primaryLayer": "platform",
   "dependencyLayers": ["ci-workflow"],
   "qualityProfile": "ci-workflow",
   "portableFailureClass": "repo-quality-gate",
-  "minimumViableApproach": "Reuse the existing TypeScript transpile helper and CI frontend-test job; add no dependencies.",
+  "minimumViableApproach": "Reuse the existing TypeScript transpile helper and CI frontend-test job; resolve emitted ESM paths from their real modules and install the repository-pinned Chromium only where the browser-storage test runs; add no dependencies.",
   "scope": {
-    "in": ["API test runner", "frontend package script", "CI invocation", "automation-policy expectation"],
+    "in": ["recursive API test runner", "ESM directory-import regression suite", "frontend package script", "CI invocation with repository-pinned Chromium", "automation-policy expectation"],
     "out": ["production runtime behavior", "backend code", "pantheon-ops", "unrelated CI changes"]
   },
   "linkage": {

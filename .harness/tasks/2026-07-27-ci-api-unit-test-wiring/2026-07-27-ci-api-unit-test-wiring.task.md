@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make every existing pure `frontend/tests/api/*.test.ts` suite a required CI signal for the V1 freeze without changing product behavior or adding a dependency.
+Make every `frontend/tests/api/**/*.test.ts` suite a required CI signal for the V1 freeze without changing product behavior or adding a dependency.
 
 ## Primary Layer
 
@@ -34,7 +34,7 @@ platform
 
 ### In
 
-- Reusable Node runner for every `tests/api/*.test.ts` suite.
+- Reusable Node runner for every nested `tests/api/**/*.test.ts` suite.
 - `test:api:unit` package script.
 - Invocation in the existing frontend CI test job.
 - The automation-policy test expectation documenting intentional refresh polling.
@@ -58,7 +58,7 @@ Reuse the repository TypeScript transpilation helper and current CI frontend-tes
 
 ## Success Criteria
 
-- All discovered `tests/api/*.test.ts` suites execute through one command and a failure produces a non-zero exit.
+- All recursively discovered `tests/api/**/*.test.ts` suites execute through one command and a failure produces a non-zero exit; ESM directory imports resolve to their emitted `index.js` files.
 - API tests, ESLint, TypeScript, and touched-file formatting pass locally.
 - Task packet, evidence, and review have valid reciprocal linkage.
 
@@ -74,6 +74,8 @@ Reuse the repository TypeScript transpilation helper and current CI frontend-tes
 ### Create
 
 - frontend/scripts/run-api-unit-tests.mjs
+- frontend/tests/api/runner/fixtures/index-import/index.ts
+- frontend/tests/api/runner/runner-discovery.test.ts
 - .harness/tasks/2026-07-27-ci-api-unit-test-wiring/2026-07-27-ci-api-unit-test-wiring.task.md
 - .harness/tasks/2026-07-27-ci-api-unit-test-wiring/manifest.json
 - .harness/evidence/2026-07-27-ci-api-unit-test-wiring/commands.json
@@ -102,7 +104,7 @@ Reuse the repository TypeScript transpilation helper and current CI frontend-tes
 
 ## Implementation Notes
 
-- The runner discovers every `*.test.ts` entry and transpiles its relative-import closure using the repository helper.
+- The runner recursively discovers every `*.test.ts` entry, transpiles its relative-import closure using the repository helper, and maps ESM imports from their resolved emitted module path.
 - It returns a non-zero exit for no tests, unresolved imports, or a failed suite.
 - Refresh polling remains enabled under automated browsers because the refresh-sync smoke needs cross-context propagation; only the stale test expectation changes.
 
