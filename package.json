@@ -56,8 +56,8 @@
   },
   "devDependencies": {
     "husky": "^9.1.7",
-    "lint-staged": "^17.1.0",
-    "playwright": "^1.61.1",
-    "prettier": "^3.9.5"
+    "lint-staged": "^17.2.0",
+    "playwright": "^1.62.0",
+    "prettier": "^3.9.6"
   }
 }
