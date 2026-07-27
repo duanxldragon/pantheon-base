@@ -35,6 +35,30 @@
       "cwd": "frontend",
       "status": "passed",
       "notes": "Complete prebuild contract chain and Vite production build passed; 1375 modules transformed."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs .harness/tasks/2026-07-27-ci-api-unit-test-wiring/2026-07-27-ci-api-unit-test-wiring.task.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "One task packet checked; 0 errors and 0 warnings after the CI remediation update."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-07-27-ci-api-unit-test-wiring/commands.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Focused strict evidence check passed."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-07-27-ci-api-unit-test-wiring/review.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Focused strict review check passed."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors in the CI remediation or L2 artifact updates."
     }
   ],
   "runtimeSensitive": false,
@@ -63,7 +87,8 @@
     "planRefs": []
   },
   "knownGaps": [
-    "actionlint is not installed locally; the existing CI Lint Workflows job remains the required syntax/action validation."
+    "The first hosted PR run failed because CI did not install Chromium for tests/api/auth-smoke-helper.test.ts. The CI workflow now installs repository-pinned Playwright Chromium before the API unit command; hosted Frontend Unit Tests is required to validate that Ubuntu install path.",
+    "actionlint and zizmor are not installed locally; the existing Lint Workflows and Workflow Security jobs remain the required hosted workflow validation."
   ],
   "completedAt": "2026-07-27T14:00:00+08:00"
 }

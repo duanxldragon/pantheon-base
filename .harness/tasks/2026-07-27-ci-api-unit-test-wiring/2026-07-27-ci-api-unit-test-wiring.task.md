@@ -49,7 +49,7 @@ platform
 
 ## Assumptions and Open Questions
 
-- The API suites are pure Node tests and require no service; this has been locally verified.
+- The API suites require no service. One browser-storage suite launches the repository-pinned Playwright Chromium, so the existing frontend CI job installs Chromium explicitly before running the API test command.
 - The PR CI `Lint Workflows` job owns the remaining actionlint validation.
 
 ## Minimum Viable Approach

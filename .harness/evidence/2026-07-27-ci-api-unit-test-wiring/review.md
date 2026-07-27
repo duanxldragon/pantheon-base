@@ -2,13 +2,14 @@
 
 ## Findings
 
-- No blocking finding in the focused diff.
+- The first hosted run caught one blocking CI configuration omission: `auth-smoke-helper.test.ts` launches Chromium but the frontend unit-test job did not install it. The workflow now uses the repository-pinned local Playwright binary to install Chromium and Linux dependencies before the API command. This is the smallest fix; no test is skipped or weakened.
+- The initial PR description did not use the repository governance template. It is replaced with a fully linked L2 body before closure.
 - The workflow runs a repository-local npm script after the existing dependency installation and frontend coverage tests; no permissions, external action, or package dependency changed.
 - The runner exits non-zero for a missing directory, unresolved relative import, or failed test suite, so CI cannot silently omit a broken API unit test.
 
 ## Residual Risk
 
-- `actionlint` is CI-only in this environment. The PR must pass the existing `Lint Workflows` job before this batch can be considered merged.
+- `actionlint` and the actual Ubuntu Playwright install path are CI-only in this environment. The PR must pass `Lint Workflows` and `Frontend Unit Tests` before this batch can be considered merged.
 
 ## Decision
 
