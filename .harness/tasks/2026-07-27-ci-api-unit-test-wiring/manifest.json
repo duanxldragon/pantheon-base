@@ -1,0 +1,25 @@
+{
+  "taskId": "2026-07-27-ci-api-unit-test-wiring",
+  "title": "Wire existing frontend API unit suites into CI for V1 freeze",
+  "goal": "Execute all pure frontend tests/api node:test suites in the existing CI frontend-test job.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow"],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "repo-quality-gate",
+  "minimumViableApproach": "Reuse the existing TypeScript transpile helper and CI frontend-test job; add no dependencies.",
+  "scope": {
+    "in": ["API test runner", "frontend package script", "CI invocation", "automation-policy expectation"],
+    "out": ["production runtime behavior", "backend code", "pantheon-ops", "unrelated CI changes"]
+  },
+  "linkage": {
+    "taskId": "2026-07-27-ci-api-unit-test-wiring",
+    "taskPacket": ".harness/tasks/2026-07-27-ci-api-unit-test-wiring/2026-07-27-ci-api-unit-test-wiring.task.md",
+    "evidenceDir": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/",
+    "reviewFile": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/review.md",
+    "summaryFile": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/summary.md",
+    "changeRef": "none",
+    "planRefs": ["Claude session aff7e630-4d1d-4395-96e3-7aae3530fa93"]
+  },
+  "runtimeSensitive": false,
+  "humanGates": ["PR CI Lint Workflows actionlint result", "V1 release gate after all freeze phases"]
+}

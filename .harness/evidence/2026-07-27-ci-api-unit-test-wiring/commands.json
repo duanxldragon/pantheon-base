@@ -1,0 +1,69 @@
+{
+  "taskId": "2026-07-27-ci-api-unit-test-wiring",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "handoffFrom": "claude-aff7e630-4d1d-4395-96e3-7aae3530fa93"
+  },
+  "commands": [
+    {
+      "command": "npm run test:api:unit",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "11 discovered tests/api suites; 37 assertions passed."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "ESLint completed without findings."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "TypeScript project build completed without diagnostics."
+    },
+    {
+      "command": "./node_modules/.bin/prettier.cmd --check package.json scripts/run-api-unit-tests.mjs tests/api/route-warmup-policy.test.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "All touched frontend files use Prettier style."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Complete prebuild contract chain and Vite production build passed; 1375 modules transformed."
+    }
+  ],
+  "runtimeSensitive": false,
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "tests/api",
+      "frontend/scripts",
+      "CI frontend test job"
+    ],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "The change adds test execution only; it does not alter production imports or request behavior."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-27-ci-api-unit-test-wiring/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/",
+    "reviewFile": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/review.md",
+    "summaryFile": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "actionlint is not installed locally; the existing CI Lint Workflows job remains the required syntax/action validation."
+  ],
+  "completedAt": "2026-07-27T14:00:00+08:00"
+}
