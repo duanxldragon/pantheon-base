@@ -22,7 +22,9 @@ test('shouldWarmHighFrequencyRouteData keeps speculative route data warmup for i
 test('automation runtime policies suppress non-essential background network for automated dev browsers', () => {
   const runtime = { dev: true, webdriver: true };
   assert.equal(shouldFetchRemoteI18nPack(runtime), false);
-  assert.equal(shouldPollServerRefreshState(runtime), false);
+  // 刷新状态轮询在自动化环境下有意保持开启（refresh-sync 冒烟依赖跨上下文
+  // 传播验证，见 automationPolicy.ts 内注释）。
+  assert.equal(shouldPollServerRefreshState(runtime), true);
   assert.equal(shouldReportShellActivity(runtime), false);
   assert.equal(shouldLoadShellNoticeSummary(runtime), false);
 });

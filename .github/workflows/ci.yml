@@ -173,6 +173,16 @@ jobs:
         working-directory: frontend
         run: npm run test:unit:coverage
 
+      # One API suite launches Chromium to validate browser storage behavior.
+      # Keep its browser dependency explicit and scoped to the job that runs it.
+      - name: Install Playwright Chromium for API unit tests
+        working-directory: frontend
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Run tests/api node:test suites
+        working-directory: frontend
+        run: npm run test:api:unit
+
       - name: Upload frontend coverage artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:

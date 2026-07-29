@@ -1,0 +1,94 @@
+{
+  "taskId": "2026-07-27-ci-api-unit-test-wiring",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "handoffFrom": "claude-aff7e630-4d1d-4395-96e3-7aae3530fa93"
+  },
+  "commands": [
+    {
+      "command": "npm run test:api:unit",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "12 recursively discovered tests/api suites; 39 assertions passed, including the nested ESM directory-index regression suite."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "ESLint completed without findings."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "TypeScript project build completed without diagnostics."
+    },
+    {
+      "command": "./node_modules/.bin/prettier.cmd --check package.json scripts/run-api-unit-tests.mjs tests/api/route-warmup-policy.test.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "All touched frontend files use Prettier style."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Complete prebuild contract chain and Vite production build passed; 1375 modules transformed."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs .harness/tasks/2026-07-27-ci-api-unit-test-wiring/2026-07-27-ci-api-unit-test-wiring.task.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "One task packet checked; 0 errors and 0 warnings after the CI remediation update."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-07-27-ci-api-unit-test-wiring/commands.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Focused strict evidence check passed."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-07-27-ci-api-unit-test-wiring/review.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Focused strict review check passed."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors in the CI remediation or L2 artifact updates."
+    }
+  ],
+  "runtimeSensitive": false,
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "tests/api",
+      "frontend/scripts",
+      "CI frontend test job"
+    ],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "The change adds test execution only; it does not alter production imports or request behavior."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-27-ci-api-unit-test-wiring/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/",
+    "reviewFile": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/review.md",
+    "summaryFile": ".harness/evidence/2026-07-27-ci-api-unit-test-wiring/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "The first hosted PR run failed because CI did not install Chromium for tests/api/auth-smoke-helper.test.ts. The CI workflow now installs repository-pinned Playwright Chromium before the API unit command; hosted Frontend Unit Tests is required to validate that Ubuntu install path.",
+    "actionlint and zizmor are not installed locally; the existing Lint Workflows and Workflow Security jobs remain the required hosted workflow validation."
+  ],
+  "completedAt": "2026-07-27T14:00:00+08:00"
+}
