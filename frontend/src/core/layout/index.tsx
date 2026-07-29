@@ -425,6 +425,131 @@ function buildNoticeRiskGroups(options: {
   return groups;
 }
 
+// ── 页签操作纯函数 ──────────────────────────────────────────────
+// 计算与副作用分离：以下 computeTab* 只算下一状态与跳转目标，
+// 组件内统一 applyTabUpdate 落地，压 BaseLayout 认知复杂度。
+
+type TabUpdate = { tabs: OpenedPageTab[]; navigateTo?: string } | null;
+
+function dashboardFallbackTab(dashboardTitle: string): OpenedPageTab {
+  return {
+    path: '/dashboard',
+    titleKey: 'dashboard.title',
+    fallbackTitle: dashboardTitle,
+    closable: false,
+    pinned: true,
+  };
+}
+
+function ensureTabsNotEmpty(tabs: OpenedPageTab[], dashboardTitle: string): OpenedPageTab[] {
+  return tabs.length > 0 ? tabs : [dashboardFallbackTab(dashboardTitle)];
+}
+
+function computeTabClose(
+  tabs: OpenedPageTab[],
+  targetPath: string,
+  currentPath: string,
+  dashboardTitle: string,
+): TabUpdate {
+  const targetTab = tabs.find((item) => item.path === targetPath);
+  if (!targetTab?.closable || targetTab.pinned) {
+    return null;
+  }
+  const safeTabs = ensureTabsNotEmpty(
+    tabs.filter((item) => item.path !== targetPath),
+    dashboardTitle,
+  );
+  const navigateTo = targetPath === currentPath ? safeTabs.at(-1)?.path || '/dashboard' : undefined;
+  return { tabs: safeTabs, navigateTo };
+}
+
+function computeTabCloseOthers(
+  tabs: OpenedPageTab[],
+  targetPath: string,
+  currentPath: string,
+): TabUpdate {
+  if (!tabs.some((item) => item.path === targetPath)) {
+    return null;
+  }
+  const nextTabs = orderOpenedTabs(tabs.filter((item) => item.pinned || item.path === targetPath));
+  return { tabs: nextTabs, navigateTo: currentPath !== targetPath ? targetPath : undefined };
+}
+
+function computeTabCloseToRight(
+  tabs: OpenedPageTab[],
+  targetPath: string,
+  currentPath: string,
+): TabUpdate {
+  const targetIndex = tabs.findIndex((item) => item.path === targetPath);
+  if (targetIndex < 0) {
+    return null;
+  }
+  const nextTabs = orderOpenedTabs(
+    tabs.filter((item, index) => item.pinned || index <= targetIndex),
+  );
+  const stillVisible = nextTabs.some((item) => item.path === currentPath);
+  return { tabs: nextTabs, navigateTo: stillVisible ? undefined : targetPath };
+}
+
+function computeTabCloseAll(
+  tabs: OpenedPageTab[],
+  currentPath: string,
+  dashboardTitle: string,
+): TabUpdate {
+  const safeTabs = ensureTabsNotEmpty(
+    orderOpenedTabs(tabs.filter((item) => item.pinned)),
+    dashboardTitle,
+  );
+  const stillVisible = safeTabs.some((item) => item.path === currentPath);
+  return {
+    tabs: safeTabs,
+    navigateTo: stillVisible ? undefined : safeTabs.at(-1)?.path || '/dashboard',
+  };
+}
+
+function computeTabTogglePin(tabs: OpenedPageTab[], targetPath: string): TabUpdate {
+  const nextTabs = orderOpenedTabs(
+    tabs.map((item) => {
+      if (item.path !== targetPath || item.path === '/dashboard') {
+        return item;
+      }
+      return { ...item, pinned: !item.pinned };
+    }),
+  );
+  return { tabs: nextTabs };
+}
+
+function computeTabMove(tabs: OpenedPageTab[], dragPath: string, targetPath: string): TabUpdate {
+  if (dragPath === targetPath) {
+    return null;
+  }
+  const dragTab = tabs.find((item) => item.path === dragPath);
+  const targetTab = tabs.find((item) => item.path === targetPath);
+  if (!dragTab || !targetTab || dragTab.path === '/dashboard' || targetTab.path === '/dashboard') {
+    return null;
+  }
+  if (Boolean(dragTab.pinned) !== Boolean(targetTab.pinned)) {
+    return null;
+  }
+  const nextTabs = [...tabs];
+  const fromIndex = nextTabs.findIndex((item) => item.path === dragPath);
+  const toIndex = nextTabs.findIndex((item) => item.path === targetPath);
+  if (fromIndex < 0 || toIndex < 0) {
+    return null;
+  }
+  const [movedTab] = nextTabs.splice(fromIndex, 1);
+  nextTabs.splice(toIndex, 0, movedTab);
+  return { tabs: orderOpenedTabs(nextTabs) };
+}
+
+async function fetchNoticeSummarySafely(): Promise<DashboardSummary | null> {
+  try {
+    return await getDashboardSummary();
+  } catch {
+    return null;
+  }
+}
+
 const BaseLayout: React.FC = () => {
   const bootstrappedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -640,29 +765,20 @@ const BaseLayout: React.FC = () => {
 
   useEffect(() => {
     let active = true;
+    const applySummary = (data: DashboardSummary | null) => {
+      if (active) {
+        setNoticeSummary(data);
+        setNoticeLoading(false);
+      }
+    };
     const loadNoticeSummary = async () => {
-      if (!shouldLoadShellNoticeSummary() || !token || !canViewNoticeSummary) {
-        if (active) {
-          setNoticeSummary(null);
-          setNoticeLoading(false);
-        }
+      const allowed = shouldLoadShellNoticeSummary() && Boolean(token) && canViewNoticeSummary;
+      if (!allowed) {
+        applySummary(null);
         return;
       }
       setNoticeLoading(true);
-      try {
-        const data = await getDashboardSummary();
-        if (active) {
-          setNoticeSummary(data);
-        }
-      } catch {
-        if (active) {
-          setNoticeSummary(null);
-        }
-      } finally {
-        if (active) {
-          setNoticeLoading(false);
-        }
-      }
+      applySummary(await fetchNoticeSummarySafely());
     };
     runSilently(loadNoticeSummary());
     return () => {
@@ -804,22 +920,13 @@ const BaseLayout: React.FC = () => {
   }, [navigate]);
 
   const handleUserMenuClick = (key: string) => {
-    const actionKey = key as UserMenuActionKey;
-    if (key === 'profile') {
-      handleGoProfile();
-      return;
-    }
-    if (key === 'security') {
-      handleGoSecurity();
-      return;
-    }
-    if (actionKey === 'lock') {
-      handleLockScreen();
-      return;
-    }
-    if (actionKey === 'logout') {
-      runSilently(handleLogout());
-    }
+    const userMenuActions: Record<UserMenuActionKey, () => void> = {
+      profile: handleGoProfile,
+      security: handleGoSecurity,
+      lock: handleLockScreen,
+      logout: () => runSilently(handleLogout()),
+    };
+    userMenuActions[key as UserMenuActionKey]?.();
   };
 
   const commandItems = useMemo<CommandSearchItem[]>(() => {
@@ -909,143 +1016,46 @@ const BaseLayout: React.FC = () => {
   const hasNoticeAttention = noticeBadgeCount > 0 || noticeRiskGroups.length > 0;
   const showNoticeCenter = canViewNoticeSummary;
 
-  const closeTab = (targetPath: string) => {
-    const targetTab = openedTabs.find((item) => item.path === targetPath);
-    if (!targetTab?.closable || targetTab.pinned) {
+  const applyTabUpdate = (update: TabUpdate) => {
+    if (!update) {
       return;
     }
-    const nextTabs = openedTabs.filter((item) => item.path !== targetPath);
-    const safeTabs =
-      nextTabs.length > 0
-        ? nextTabs
-        : [
-            {
-              path: '/dashboard',
-              titleKey: 'dashboard.title',
-              fallbackTitle: t('dashboard.title'),
-              closable: false,
-              pinned: true,
-            },
-          ];
-    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(safeTabs));
-    setOpenedTabs(safeTabs);
-    if (targetPath === location.pathname) {
-      const fallbackTab = safeTabs.at(-1);
-      navigate(fallbackTab?.path || '/dashboard');
+    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(update.tabs));
+    setOpenedTabs(update.tabs);
+    if (update.navigateTo) {
+      navigate(update.navigateTo);
     }
   };
 
-  const closeOtherTabs = (targetPath: string) => {
-    if (!openedTabs.some((item) => item.path === targetPath)) {
-      return;
-    }
-    const nextTabs = orderOpenedTabs(
-      openedTabs.filter((item) => item.pinned || item.path === targetPath),
+  const closeTab = (targetPath: string) =>
+    applyTabUpdate(
+      computeTabClose(openedTabs, targetPath, location.pathname, t('dashboard.title')),
     );
-    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(nextTabs));
-    setOpenedTabs(nextTabs);
-    if (location.pathname !== targetPath) {
-      navigate(targetPath);
-    }
-  };
 
-  const closeTabsToRight = (targetPath: string) => {
-    const targetIndex = openedTabs.findIndex((item) => item.path === targetPath);
-    if (targetIndex < 0) {
-      return;
-    }
-    const nextTabs = orderOpenedTabs(
-      openedTabs.filter((item, index) => item.pinned || index <= targetIndex),
-    );
-    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(nextTabs));
-    setOpenedTabs(nextTabs);
-    if (!nextTabs.some((item) => item.path === location.pathname)) {
-      navigate(targetPath);
-    }
-  };
+  const closeOtherTabs = (targetPath: string) =>
+    applyTabUpdate(computeTabCloseOthers(openedTabs, targetPath, location.pathname));
 
-  const closeAllTabs = () => {
-    const nextTabs = orderOpenedTabs(openedTabs.filter((item) => item.pinned));
-    const safeTabs =
-      nextTabs.length > 0
-        ? nextTabs
-        : [
-            {
-              path: '/dashboard',
-              titleKey: 'dashboard.title',
-              fallbackTitle: t('dashboard.title'),
-              closable: false,
-              pinned: true,
-            },
-          ];
-    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(safeTabs));
-    setOpenedTabs(safeTabs);
-    if (!safeTabs.some((item) => item.path === location.pathname)) {
-      navigate(safeTabs.at(-1)?.path || '/dashboard');
-    }
-  };
+  const closeTabsToRight = (targetPath: string) =>
+    applyTabUpdate(computeTabCloseToRight(openedTabs, targetPath, location.pathname));
 
-  const togglePinTab = (targetPath: string) => {
-    const nextTabs = orderOpenedTabs(
-      openedTabs.map((item) => {
-        if (item.path !== targetPath || item.path === '/dashboard') {
-          return item;
-        }
-        return { ...item, pinned: !item.pinned };
-      }),
-    );
-    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(nextTabs));
-    setOpenedTabs(nextTabs);
-  };
+  const closeAllTabs = () =>
+    applyTabUpdate(computeTabCloseAll(openedTabs, location.pathname, t('dashboard.title')));
 
-  const moveTab = (dragPath: string, targetPath: string) => {
-    if (dragPath === targetPath) {
-      return;
-    }
-    const dragTab = openedTabs.find((item) => item.path === dragPath);
-    const targetTab = openedTabs.find((item) => item.path === targetPath);
-    if (
-      !dragTab ||
-      !targetTab ||
-      dragTab.path === '/dashboard' ||
-      targetTab.path === '/dashboard'
-    ) {
-      return;
-    }
-    if (Boolean(dragTab.pinned) !== Boolean(targetTab.pinned)) {
-      return;
-    }
-    const nextTabs = [...openedTabs];
-    const fromIndex = nextTabs.findIndex((item) => item.path === dragPath);
-    const toIndex = nextTabs.findIndex((item) => item.path === targetPath);
-    if (fromIndex < 0 || toIndex < 0) {
-      return;
-    }
-    const [movedTab] = nextTabs.splice(fromIndex, 1);
-    nextTabs.splice(toIndex, 0, movedTab);
-    const orderedTabs = orderOpenedTabs(nextTabs);
-    localStorage.setItem(OPENED_TABS_STORAGE_KEY, JSON.stringify(orderedTabs));
-    setOpenedTabs(orderedTabs);
-  };
+  const togglePinTab = (targetPath: string) =>
+    applyTabUpdate(computeTabTogglePin(openedTabs, targetPath));
+
+  const moveTab = (dragPath: string, targetPath: string) =>
+    applyTabUpdate(computeTabMove(openedTabs, dragPath, targetPath));
 
   const handleTabAction = (targetPath: string, action: TabActionKey) => {
-    if (action === 'togglePin') {
-      togglePinTab(targetPath);
-      return;
-    }
-    if (action === 'close') {
-      closeTab(targetPath);
-      return;
-    }
-    if (action === 'closeOthers') {
-      closeOtherTabs(targetPath);
-      return;
-    }
-    if (action === 'closeRight') {
-      closeTabsToRight(targetPath);
-      return;
-    }
-    closeAllTabs();
+    const tabActionHandlers: Record<TabActionKey, (path: string) => void> = {
+      togglePin: togglePinTab,
+      close: closeTab,
+      closeOthers: closeOtherTabs,
+      closeRight: closeTabsToRight,
+      closeAll: closeAllTabs,
+    };
+    tabActionHandlers[action]?.(targetPath);
   };
 
   const openedTabsContent = (

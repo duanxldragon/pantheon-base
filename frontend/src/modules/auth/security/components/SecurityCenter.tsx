@@ -53,6 +53,112 @@ const FormItem = Form.Item;
 const Row = Grid.Row;
 const Col = Grid.Col;
 
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+const renderActivityTime = (value?: string | null) => {
+  if (!value) {
+    return '-';
+  }
+  return <DateTimeMeta value={value} />;
+};
+
+// 纯函数抽离：安全策略展示项构造不依赖组件状态，降低组件体认知复杂度。
+function buildSecurityPolicyItems(
+  t: TranslateFn,
+  policy: SecurityPolicy | undefined,
+): Array<{ label: string; value: string; hint: string }> {
+  if (!policy) {
+    return [];
+  }
+  const yesNo = (enabled: boolean) => (enabled ? t('common.yes') : t('common.no'));
+  return [
+    {
+      label: t('system.setting.item.security.password_min_length'),
+      value: t('auth.security.policy.passwordMinLength', { count: policy.passwordMinLength }),
+      hint: t('system.setting.remark.security.password_min_length'),
+    },
+    {
+      label: t('system.setting.item.security.password_require_digit'),
+      value: yesNo(policy.passwordRequireDigit),
+      hint: t('system.setting.remark.security.password_require_digit'),
+    },
+    {
+      label: t('system.setting.item.security.password_require_uppercase'),
+      value: yesNo(policy.passwordRequireUpper),
+      hint: t('system.setting.remark.security.password_require_uppercase'),
+    },
+    {
+      label: t('system.setting.item.security.password_history_limit'),
+      value: String(policy.passwordHistoryLimit ?? 0),
+      hint: t('system.setting.remark.security.password_history_limit'),
+    },
+    {
+      label: t('system.setting.item.security.password_expire_days'),
+      value: String(policy.passwordExpireDays ?? 0),
+      hint: t('system.setting.remark.security.password_expire_days'),
+    },
+    {
+      label: t('system.setting.item.login.max_failed_attempts'),
+      value: t('auth.security.policy.maxFailedAttempts', { count: policy.maxFailedAttempts }),
+      hint: t('system.setting.remark.login.max_failed_attempts'),
+    },
+    {
+      label: t('system.setting.item.login.lock_minutes'),
+      value: t('auth.security.policy.lockMinutes', { count: policy.lockMinutes }),
+      hint: t('system.setting.remark.login.lock_minutes'),
+    },
+    {
+      label: t('system.setting.item.login.source_max_failed_attempts'),
+      value: t('auth.security.policy.sourceMaxFailedAttempts', {
+        count: policy.sourceMaxFailedAttempts,
+      }),
+      hint: t('system.setting.remark.login.source_max_failed_attempts'),
+    },
+    {
+      label: t('system.setting.item.login.source_window_minutes'),
+      value: t('auth.security.policy.sourceWindowMinutes', { count: policy.sourceWindowMinutes }),
+      hint: t('system.setting.remark.login.source_window_minutes'),
+    },
+    {
+      label: t('system.setting.item.login.source_lock_minutes'),
+      value: t('auth.security.policy.sourceLockMinutes', { count: policy.sourceLockMinutes }),
+      hint: t('system.setting.remark.login.source_lock_minutes'),
+    },
+    {
+      label: t('system.setting.item.login.session_idle_minutes'),
+      value: t('auth.security.policy.sessionIdleMinutes', { count: policy.sessionIdleMinutes }),
+      hint: t('system.setting.remark.login.session_idle_minutes'),
+    },
+    {
+      label: t('system.setting.item.login.max_active_sessions_per_user'),
+      value: t('auth.security.policy.maxActiveSessions', { count: policy.maxActiveSessions }),
+      hint: t('system.setting.remark.login.max_active_sessions_per_user'),
+    },
+    {
+      label: t('system.setting.item.audit.session_retention_days'),
+      value: t('auth.security.policy.sessionRetentionDays', {
+        count: policy.sessionRetentionDays,
+      }),
+      hint: t('system.setting.remark.audit.session_retention_days'),
+    },
+    {
+      label: t('system.setting.item.login.captcha_enabled'),
+      value: yesNo(policy.captchaEnabled),
+      hint: t('system.setting.remark.login.captcha_enabled'),
+    },
+    {
+      label: t('system.setting.item.login.mfa_enabled'),
+      value: yesNo(policy.mfaEnabled),
+      hint: t('system.setting.remark.login.mfa_enabled'),
+    },
+    {
+      label: t('system.setting.item.login.sso_enabled'),
+      value: yesNo(policy.ssoEnabled),
+      hint: t('system.setting.remark.login.sso_enabled'),
+    },
+  ];
+}
+
 const SecurityCenter: React.FC = () => {
   const { t } = useTranslation();
   const { userInfo, setUserInfo } = useAuthStore();
@@ -120,13 +226,6 @@ const SecurityCenter: React.FC = () => {
     [t],
   );
 
-  const renderActivityTime = (value?: string | null) => {
-    if (!value) {
-      return '-';
-    }
-    return <DateTimeMeta value={value} />;
-  };
-
   const handleChangePassword = async () => {
     const values = await passwordForm.validate();
     setSavingPassword(true);
@@ -179,98 +278,10 @@ const SecurityCenter: React.FC = () => {
     },
   ];
 
-  const policyItems = useMemo<Array<{ label: string; value: string; hint: string }>>(() => {
-    const policy: SecurityPolicy | undefined = overview?.policy;
-    if (!policy) {
-      return [];
-    }
-    return [
-      {
-        label: t('system.setting.item.security.password_min_length'),
-        value: t('auth.security.policy.passwordMinLength', { count: policy.passwordMinLength }),
-        hint: t('system.setting.remark.security.password_min_length'),
-      },
-      {
-        label: t('system.setting.item.security.password_require_digit'),
-        value: policy.passwordRequireDigit ? t('common.yes') : t('common.no'),
-        hint: t('system.setting.remark.security.password_require_digit'),
-      },
-      {
-        label: t('system.setting.item.security.password_require_uppercase'),
-        value: policy.passwordRequireUpper ? t('common.yes') : t('common.no'),
-        hint: t('system.setting.remark.security.password_require_uppercase'),
-      },
-      {
-        label: t('system.setting.item.security.password_history_limit'),
-        value: String(policy.passwordHistoryLimit ?? 0),
-        hint: t('system.setting.remark.security.password_history_limit'),
-      },
-      {
-        label: t('system.setting.item.security.password_expire_days'),
-        value: String(policy.passwordExpireDays ?? 0),
-        hint: t('system.setting.remark.security.password_expire_days'),
-      },
-      {
-        label: t('system.setting.item.login.max_failed_attempts'),
-        value: t('auth.security.policy.maxFailedAttempts', { count: policy.maxFailedAttempts }),
-        hint: t('system.setting.remark.login.max_failed_attempts'),
-      },
-      {
-        label: t('system.setting.item.login.lock_minutes'),
-        value: t('auth.security.policy.lockMinutes', { count: policy.lockMinutes }),
-        hint: t('system.setting.remark.login.lock_minutes'),
-      },
-      {
-        label: t('system.setting.item.login.source_max_failed_attempts'),
-        value: t('auth.security.policy.sourceMaxFailedAttempts', {
-          count: policy.sourceMaxFailedAttempts,
-        }),
-        hint: t('system.setting.remark.login.source_max_failed_attempts'),
-      },
-      {
-        label: t('system.setting.item.login.source_window_minutes'),
-        value: t('auth.security.policy.sourceWindowMinutes', { count: policy.sourceWindowMinutes }),
-        hint: t('system.setting.remark.login.source_window_minutes'),
-      },
-      {
-        label: t('system.setting.item.login.source_lock_minutes'),
-        value: t('auth.security.policy.sourceLockMinutes', { count: policy.sourceLockMinutes }),
-        hint: t('system.setting.remark.login.source_lock_minutes'),
-      },
-      {
-        label: t('system.setting.item.login.session_idle_minutes'),
-        value: t('auth.security.policy.sessionIdleMinutes', { count: policy.sessionIdleMinutes }),
-        hint: t('system.setting.remark.login.session_idle_minutes'),
-      },
-      {
-        label: t('system.setting.item.login.max_active_sessions_per_user'),
-        value: t('auth.security.policy.maxActiveSessions', { count: policy.maxActiveSessions }),
-        hint: t('system.setting.remark.login.max_active_sessions_per_user'),
-      },
-      {
-        label: t('system.setting.item.audit.session_retention_days'),
-        value: t('auth.security.policy.sessionRetentionDays', {
-          count: policy.sessionRetentionDays,
-        }),
-        hint: t('system.setting.remark.audit.session_retention_days'),
-      },
-      {
-        label: t('system.setting.item.login.captcha_enabled'),
-        value: policy.captchaEnabled ? t('common.yes') : t('common.no'),
-        hint: t('system.setting.remark.login.captcha_enabled'),
-      },
-      {
-        label: t('system.setting.item.login.mfa_enabled'),
-        value: policy.mfaEnabled ? t('common.yes') : t('common.no'),
-        hint: t('system.setting.remark.login.mfa_enabled'),
-      },
-      {
-        label: t('system.setting.item.login.sso_enabled'),
-        value: policy.ssoEnabled ? t('common.yes') : t('common.no'),
-        hint: t('system.setting.remark.login.sso_enabled'),
-      },
-    ];
-  }, [overview?.policy, t]);
+  const policyItems = useMemo<Array<{ label: string; value: string; hint: string }>>(
+    () => buildSecurityPolicyItems(t, overview?.policy),
+    [overview?.policy, t],
+  );
 
   const sessionColumns = [
     {

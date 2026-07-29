@@ -22,6 +22,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
+  type CrossPageRowKey,
 } from '../../../components/table/crossPageSelection';
 import {
   batchDeleteOperationLogs,
@@ -317,81 +318,91 @@ function getBusinessTypeMeta(
   };
 }
 
-function getAuditSourceMeta(log: OperationLogRow): AuditSourceMeta {
+function getStoredSourceMeta(log: OperationLogRow): AuditSourceMeta | null {
   const storedSourceDomain = log.sourceDomain?.trim();
   const storedSourcePage = log.sourcePage?.trim();
-  if (storedSourceDomain || storedSourcePage) {
-    return {
-      layerKey:
-        storedSourceDomain === 'platform'
-          ? 'system.audit.sourceLayer.platform'
-          : 'system.audit.sourceLayer.system',
-      domainKey: storedSourceDomain
-        ? `system.audit.sourceDomain.${storedSourceDomain}`
-        : 'system.audit.sourceDomain.other',
-      pageKey: storedSourcePage
-        ? `system.audit.sourcePage.${storedSourcePage}`
-        : 'system.audit.sourcePage.other',
-    };
+  if (!storedSourceDomain && !storedSourcePage) {
+    return null;
   }
-  const path = log.operUrl.trim();
-  if (
-    path.includes('/system/setting') ||
-    path.includes('/system/upload') ||
-    path.includes('/system/i18n')
-  ) {
-    return {
-      layerKey: 'system.audit.sourceLayer.system',
-      domainKey: 'system.audit.sourceDomain.config',
-      pageKey: resolveConfigSourcePageKey(path),
-    };
-  }
-  if (path.includes('/system/operation-log')) {
-    return {
-      layerKey: 'system.audit.sourceLayer.system',
-      domainKey: 'system.audit.sourceDomain.audit',
-      pageKey: 'system.audit.sourcePage.operationLog',
-    };
-  }
-  if (
-    path.includes('/system/login-log') ||
-    path.includes('/system/session') ||
-    path.includes('/auth/')
-  ) {
-    return {
-      layerKey: 'system.audit.sourceLayer.system',
-      domainKey: 'system.audit.sourceDomain.auth',
-      pageKey: path.includes('/system/session')
+  return {
+    layerKey:
+      storedSourceDomain === 'platform'
+        ? 'system.audit.sourceLayer.platform'
+        : 'system.audit.sourceLayer.system',
+    domainKey: storedSourceDomain
+      ? `system.audit.sourceDomain.${storedSourceDomain}`
+      : 'system.audit.sourceDomain.other',
+    pageKey: storedSourcePage
+      ? `system.audit.sourcePage.${storedSourcePage}`
+      : 'system.audit.sourcePage.other',
+  };
+}
+
+// 路径推断规则表：命中任一片段即归入对应域，pageKey 可按路径细分。
+const AUDIT_SOURCE_PATH_RULES: Array<{
+  fragments: string[];
+  layerKey: string;
+  domainKey: string;
+  resolvePageKey: (path: string) => string;
+}> = [
+  {
+    fragments: ['/system/setting', '/system/upload', '/system/i18n'],
+    layerKey: 'system.audit.sourceLayer.system',
+    domainKey: 'system.audit.sourceDomain.config',
+    resolvePageKey: resolveConfigSourcePageKey,
+  },
+  {
+    fragments: ['/system/operation-log'],
+    layerKey: 'system.audit.sourceLayer.system',
+    domainKey: 'system.audit.sourceDomain.audit',
+    resolvePageKey: () => 'system.audit.sourcePage.operationLog',
+  },
+  {
+    fragments: ['/system/login-log', '/system/session', '/auth/'],
+    layerKey: 'system.audit.sourceLayer.system',
+    domainKey: 'system.audit.sourceDomain.auth',
+    resolvePageKey: (path) =>
+      path.includes('/system/session')
         ? 'system.audit.sourcePage.session'
         : 'system.audit.sourcePage.loginLog',
-    };
-  }
-  if (
-    path.includes('/system/user') ||
-    path.includes('/system/role') ||
-    path.includes('/system/menu') ||
-    path.includes('/system/permission')
-  ) {
-    return {
-      layerKey: 'system.audit.sourceLayer.system',
-      domainKey: 'system.audit.sourceDomain.iam',
-      pageKey: resolveIamSourcePageKey(path),
-    };
-  }
-  if (path.includes('/system/dept') || path.includes('/system/post')) {
-    return {
-      layerKey: 'system.audit.sourceLayer.system',
-      domainKey: 'system.audit.sourceDomain.org',
-      pageKey: path.includes('/system/dept')
+  },
+  {
+    fragments: ['/system/user', '/system/role', '/system/menu', '/system/permission'],
+    layerKey: 'system.audit.sourceLayer.system',
+    domainKey: 'system.audit.sourceDomain.iam',
+    resolvePageKey: resolveIamSourcePageKey,
+  },
+  {
+    fragments: ['/system/dept', '/system/post'],
+    layerKey: 'system.audit.sourceLayer.system',
+    domainKey: 'system.audit.sourceDomain.org',
+    resolvePageKey: (path) =>
+      path.includes('/system/dept')
         ? 'system.audit.sourcePage.dept'
         : 'system.audit.sourcePage.post',
-    };
+  },
+  {
+    fragments: ['/dashboard'],
+    layerKey: 'system.audit.sourceLayer.platform',
+    domainKey: 'system.audit.sourceDomain.platform',
+    resolvePageKey: () => 'system.audit.sourcePage.dashboard',
+  },
+];
+
+function getAuditSourceMeta(log: OperationLogRow): AuditSourceMeta {
+  const storedMeta = getStoredSourceMeta(log);
+  if (storedMeta) {
+    return storedMeta;
   }
-  if (path.includes('/dashboard')) {
+  const path = log.operUrl.trim();
+  const rule = AUDIT_SOURCE_PATH_RULES.find((candidate) =>
+    candidate.fragments.some((fragment) => path.includes(fragment)),
+  );
+  if (rule) {
     return {
-      layerKey: 'system.audit.sourceLayer.platform',
-      domainKey: 'system.audit.sourceDomain.platform',
-      pageKey: 'system.audit.sourcePage.dashboard',
+      layerKey: rule.layerKey,
+      domainKey: rule.domainKey,
+      pageKey: rule.resolvePageKey(path),
     };
   }
   return {
@@ -464,6 +475,515 @@ function getFailureMeta(
   };
 }
 
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+const i18nLifecycleActionKeys: Record<string, string> = {
+  observe: 'i18n.lifecycle.observe',
+  archive: 'i18n.lifecycle.archive',
+  delete: 'i18n.lifecycle.delete',
+};
+
+function formatI18nLifecycleAction(value: string, t: TranslateFn) {
+  const key = i18nLifecycleActionKeys[value];
+  if (key) {
+    return t(key);
+  }
+  return value || '-';
+}
+
+function formatI18nLifecycleLabel(value: string, t: TranslateFn) {
+  return value ? t(`i18n.lifecycle.status.${value}`, { defaultValue: value }) : '-';
+}
+
+function toArcoSortOrder(sortOrder?: OperationLogQuery['sortOrder']) {
+  if (sortOrder === 'asc') {
+    return 'ascend';
+  }
+  if (sortOrder === 'desc') {
+    return 'descend';
+  }
+  return undefined;
+}
+
+function parseTableSorter(sorter?: SorterInfo | SorterInfo[]): {
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+} {
+  const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+  if (!currentSorter?.direction) {
+    return { sortField: undefined, sortOrder: undefined };
+  }
+  return {
+    sortField: String(currentSorter.field),
+    sortOrder: currentSorter.direction === 'ascend' ? 'asc' : 'desc',
+  };
+}
+
+interface DetailLookupHandlers {
+  onFound: (log: OperationLogRow) => void;
+  onLoadStart: () => void;
+  onLoaded: (log: OperationLogRow) => void;
+  onLoadError: () => void;
+  onLoadEnd: () => void;
+}
+
+// setTimeout(0) wrappers keep setState out of the synchronous effect body
+// (react-hooks/set-state-in-effect) — preserve them when editing.
+function scheduleDetailLookup(
+  detailId: number,
+  rows: OperationLogRow[],
+  handlers: DetailLookupHandlers,
+) {
+  const matchedLog = rows.find((item) => item.id === detailId);
+  if (matchedLog) {
+    const timer = globalThis.setTimeout(() => {
+      handlers.onFound(matchedLog);
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }
+  const timer = globalThis.setTimeout(() => {
+    handlers.onLoadStart();
+    getOperationLog(detailId)
+      .then((detail) => {
+        handlers.onLoaded(detail);
+      })
+      .catch(() => {
+        handlers.onLoadError();
+      })
+      .finally(() => {
+        handlers.onLoadEnd();
+      });
+  }, 0);
+  return () => globalThis.clearTimeout(timer);
+}
+
+function hasActiveOperationLogFilters(query: OperationLogQuery, advancedActiveCount: number) {
+  return Boolean(
+    query.keyword ||
+    query.status !== undefined ||
+    (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
+    query.startedAt ||
+    advancedActiveCount > 0,
+  );
+}
+
+function buildLogRowSelection(options: {
+  enabled: boolean;
+  visibleSelectedRowKeys: CrossPageRowKey[];
+  rows: OperationLogRow[];
+  setSelectedRowKeys: React.Dispatch<React.SetStateAction<CrossPageRowKey[]>>;
+}): TableProps<OperationLogRow>['rowSelection'] {
+  if (!options.enabled) {
+    return undefined;
+  }
+  return {
+    type: 'checkbox',
+    selectedRowKeys: options.visibleSelectedRowKeys,
+    checkCrossPage: true,
+    preserveSelectedRowKeys: true,
+    onChange: (keys) =>
+      options.setSelectedRowKeys((currentKeys) =>
+        mergeCrossPageSelection(
+          currentKeys,
+          keys,
+          options.rows.map((item) => item.id),
+        ),
+      ),
+  };
+}
+
+const DetailSummaryHeader: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  const businessTypeMeta = getBusinessTypeMeta(log.businessType, t);
+  const sourceMeta = getAuditSourceMeta(log);
+  const methodText = normalizeMethod(log.method);
+  return (
+    <div className="audit-detail-summary">
+      <div className="audit-detail-summary__copy">
+        <Typography.Text className="audit-detail-summary__title">
+          {t(log.title, { defaultValue: log.title || '-' })}
+        </Typography.Text>
+        <Typography.Text className="audit-detail-summary__desc" type="secondary">
+          {log.operUrl || '-'}
+        </Typography.Text>
+      </div>
+      <Space wrap>
+        <Tag color={log.status === 1 ? 'green' : 'red'}>
+          {log.status === 1 ? t('common.success') : t('common.failed')}
+        </Tag>
+        <Tag color={businessTypeMeta.color}>{businessTypeMeta.label}</Tag>
+        <Tag color="purple">{t(sourceMeta.domainKey)}</Tag>
+        <Tag color="cyan">{t(sourceMeta.pageKey)}</Tag>
+        {methodText ? <Tag color="arcoblue">{methodText}</Tag> : null}
+        <Tag color="gray">{t('system.audit.costTimeValue', { count: log.costTime })}</Tag>
+      </Space>
+    </div>
+  );
+};
+
+const DetailBasicInfo: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  const sourceMeta = getAuditSourceMeta(log);
+  const businessTypeMeta = getBusinessTypeMeta(log.businessType, t);
+  const methodText = normalizeMethod(log.method);
+  const handlerText = formatHandlerName(log.method);
+  return (
+    <Descriptions
+      column={2}
+      data={[
+        {
+          label: t('system.audit.title'),
+          value: t(log.title, { defaultValue: log.title || '-' }),
+        },
+        {
+          label: t('system.audit.operTime'),
+          value: formatDateTime(log.operTime, { withSeconds: true }),
+        },
+        { label: t('system.audit.operName'), value: log.operName || '-' },
+        { label: t('system.audit.operIp'), value: log.operIp || '-' },
+        { label: t('system.audit.operUrl'), value: log.operUrl || '-' },
+        { label: t('system.audit.sourceLayer'), value: t(sourceMeta.layerKey) },
+        { label: t('system.audit.sourceDomain'), value: t(sourceMeta.domainKey) },
+        { label: t('system.audit.sourcePage'), value: t(sourceMeta.pageKey) },
+        { label: t('system.audit.businessType'), value: businessTypeMeta.label || '-' },
+        { label: t('system.audit.method'), value: methodText || '-' },
+        {
+          label: t('system.audit.costTime'),
+          value: t('system.audit.costTimeValue', { count: log.costTime }),
+        },
+        ...(handlerText ? [{ label: t('system.audit.handler'), value: handlerText }] : []),
+      ]}
+    />
+  );
+};
+
+const DetailFailureCard: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  if (log.status !== 2) {
+    return null;
+  }
+  const resultPreview = extractOperationResult(log.jsonResult);
+  const failureMeta = getFailureMeta(log, resultPreview);
+  const sourceMeta = getAuditSourceMeta(log);
+  const translatedErrorText = log.errorMsg ? t(log.errorMsg, { defaultValue: log.errorMsg }) : '';
+  const translatedResultMessage = resultPreview.message
+    ? t(resultPreview.message, { defaultValue: resultPreview.message })
+    : '';
+  return (
+    <Card
+      className="detail-panel-card detail-panel-card--danger"
+      title={t('system.audit.failureReason')}
+      size="small"
+    >
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space wrap>
+          {failureMeta ? <Tag color={failureMeta.color}>{t(failureMeta.typeKey)}</Tag> : null}
+          <Tag color="purple">{t(sourceMeta.domainKey)}</Tag>
+        </Space>
+        <Alert
+          type="error"
+          content={translatedErrorText || translatedResultMessage || t('common.failed')}
+        />
+        <Descriptions
+          column={1}
+          data={[
+            ...(failureMeta
+              ? [
+                  {
+                    label: t('system.audit.failureCategory'),
+                    value: t(failureMeta.typeKey),
+                  },
+                  {
+                    label: t('system.audit.failureSummary'),
+                    value: t(failureMeta.summaryKey),
+                  },
+                ]
+              : []),
+            ...(translatedErrorText
+              ? [{ label: t('system.audit.failureText'), value: translatedErrorText }]
+              : []),
+            ...(log.errorMsg ? [{ label: t('system.audit.errorKey'), value: log.errorMsg }] : []),
+            ...(typeof resultPreview.code === 'number'
+              ? [{ label: t('system.audit.responseCode'), value: resultPreview.code }]
+              : []),
+            ...(translatedResultMessage
+              ? [
+                  {
+                    label: t('system.audit.responseMessage'),
+                    value: translatedResultMessage,
+                  },
+                ]
+              : []),
+            ...(resultPreview.message && resultPreview.message !== translatedResultMessage
+              ? [
+                  {
+                    label: t('system.audit.responseMessageKey'),
+                    value: resultPreview.message,
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </Space>
+    </Card>
+  );
+};
+
+const SettingAuditCard: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  const payload = extractSettingAuditPayload(log.operParam);
+  if (!payload || payload.changes.length === 0) {
+    return null;
+  }
+  return (
+    <Card className="detail-panel-card" title={t('system.audit.requestSummary')} size="small">
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space wrap>
+          {payload.groupKey ? (
+            <Tag color="arcoblue">
+              {t(`system.setting.group.${payload.groupKey}`, payload.groupKey)}
+            </Tag>
+          ) : null}
+          <Tag color="gold">{t('system.audit.changeCount', { count: payload.changes.length })}</Tag>
+        </Space>
+        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+          {payload.changes.map((change) => (
+            <Space key={change.settingKey} size={8} wrap>
+              <Typography.Text>
+                {t(`system.setting.item.${change.settingKey}`, change.settingKey)}
+              </Typography.Text>
+              {change.isEncrypted === 1 ? (
+                <Tag color="red">{t('system.setting.audit.sensitiveChanged')}</Tag>
+              ) : (
+                <>
+                  <Typography.Text type="secondary">{change.oldValue || '-'}</Typography.Text>
+                  <Typography.Text type="secondary">→</Typography.Text>
+                  <Typography.Text>{change.newValue || '-'}</Typography.Text>
+                </>
+              )}
+            </Space>
+          ))}
+        </Space>
+      </Space>
+    </Card>
+  );
+};
+
+const I18nLifecycleParamCard: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  const payload = extractI18nLifecycleAuditPayload(log.operParam);
+  if (!payload) {
+    return null;
+  }
+  return (
+    <Card className="detail-panel-card" title={t('system.audit.requestSummary')} size="small">
+      <Descriptions
+        column={2}
+        data={[
+          {
+            label: t('i18n.audit.action'),
+            value: formatI18nLifecycleAction(payload.action, t),
+          },
+          { label: t('common.module'), value: payload.module || '-' },
+          {
+            label: t('i18n.lifecycle.fromStatus'),
+            value: formatI18nLifecycleLabel(payload.fromStatus, t),
+          },
+          {
+            label: t('i18n.lifecycle.toStatus'),
+            value: formatI18nLifecycleLabel(payload.toStatus, t),
+          },
+          ...(typeof payload.observationThresholdDays === 'number'
+            ? [
+                {
+                  label: t('i18n.lifecycle.observationThreshold'),
+                  value: t('i18n.lifecycle.observationThresholdValue', {
+                    count: payload.observationThresholdDays,
+                  }),
+                },
+              ]
+            : []),
+          ...(typeof payload.confirmArchived === 'boolean'
+            ? [
+                {
+                  label: t('i18n.lifecycle.confirmArchived'),
+                  value: payload.confirmArchived ? t('common.yes') : t('common.no'),
+                },
+              ]
+            : []),
+          ...(payload.affectedKeys.length > 0
+            ? [
+                {
+                  label: t('i18n.audit.affectedKeys'),
+                  value: payload.affectedKeys.join(', '),
+                },
+              ]
+            : []),
+        ]}
+      />
+    </Card>
+  );
+};
+
+const I18nLifecycleResultCard: React.FC<{ payload: I18nLifecycleAuditPreview }> = ({ payload }) => {
+  const { t } = useTranslation();
+  return (
+    <Card className="detail-panel-card" title={t('system.audit.resultSummary')} size="small">
+      <Descriptions
+        column={2}
+        data={[
+          {
+            label: t('i18n.audit.action'),
+            value: formatI18nLifecycleAction(payload.action, t),
+          },
+          { label: t('common.module'), value: payload.module || '-' },
+          {
+            label: t('i18n.lifecycle.fromStatus'),
+            value: formatI18nLifecycleLabel(payload.fromStatus, t),
+          },
+          {
+            label: t('i18n.lifecycle.toStatus'),
+            value: formatI18nLifecycleLabel(payload.toStatus, t),
+          },
+          {
+            label: t('system.audit.responseData'),
+            value: t('i18n.lifecycle.affectedRowsValue', {
+              count: payload.affectedRows || 0,
+            }),
+          },
+          {
+            label: t('i18n.audit.affectedKeys'),
+            value: payload.affectedKeys.length > 0 ? payload.affectedKeys.join(', ') : '-',
+          },
+        ]}
+      />
+    </Card>
+  );
+};
+
+const PlainResultSummaryCard: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  const resultPreview = extractOperationResult(log.jsonResult);
+  const translatedResultMessage = resultPreview.message
+    ? t(resultPreview.message, { defaultValue: resultPreview.message })
+    : '';
+  const hasContent =
+    typeof resultPreview.code === 'number' ||
+    Boolean(translatedResultMessage) ||
+    resultPreview.data !== undefined;
+  if (!hasContent) {
+    return null;
+  }
+  return (
+    <Card className="detail-panel-card" title={t('system.audit.resultSummary')} size="small">
+      <Descriptions
+        column={2}
+        data={[
+          ...(typeof resultPreview.code === 'number'
+            ? [{ label: t('system.audit.responseCode'), value: resultPreview.code }]
+            : []),
+          ...(translatedResultMessage
+            ? [
+                {
+                  label: t('system.audit.responseMessage'),
+                  value: translatedResultMessage,
+                },
+              ]
+            : []),
+          ...(resultPreview.message && resultPreview.message !== translatedResultMessage
+            ? [
+                {
+                  label: t('system.audit.responseMessageKey'),
+                  value: resultPreview.message,
+                },
+              ]
+            : []),
+          ...(resultPreview.data !== undefined
+            ? [
+                {
+                  label: t('system.audit.responseData'),
+                  value:
+                    isRecord(resultPreview.data) || Array.isArray(resultPreview.data)
+                      ? t('system.audit.responseDataStructured')
+                      : String(resultPreview.data as Exclude<JsonValue, object>),
+                },
+              ]
+            : []),
+        ]}
+      />
+    </Card>
+  );
+};
+
+const DetailResultSection: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const lifecycleResult = extractI18nLifecycleAuditResult(log.jsonResult);
+  if (lifecycleResult) {
+    return <I18nLifecycleResultCard payload={lifecycleResult} />;
+  }
+  return <PlainResultSummaryCard log={log} />;
+};
+
+const rawPreStyle: React.CSSProperties = {
+  margin: 0,
+  whiteSpace: 'pre-wrap',
+  maxHeight: 220,
+  overflow: 'auto',
+};
+
+const OperationLogDetail: React.FC<{ log: OperationLogRow }> = ({ log }) => {
+  const { t } = useTranslation();
+  return (
+    <Space direction="vertical" size={16} className="detail-stack">
+      <DetailSummaryHeader log={log} />
+      <DetailBasicInfo log={log} />
+      <DetailFailureCard log={log} />
+      <SettingAuditCard log={log} />
+      <I18nLifecycleParamCard log={log} />
+      <DetailResultSection log={log} />
+      <Card className="detail-panel-card" title={t('system.audit.operParam')} size="small">
+        <pre style={rawPreStyle}>{formatAuditRaw(log.operParam)}</pre>
+      </Card>
+      <Card className="detail-panel-card" title={t('system.audit.jsonResult')} size="small">
+        <pre style={rawPreStyle}>{formatAuditRaw(log.jsonResult)}</pre>
+      </Card>
+    </Space>
+  );
+};
+
+const BatchActionBar: React.FC<{
+  canDelete: boolean;
+  selectedCount: number;
+  onClearSelection: () => void;
+  onBatchDelete: () => void;
+}> = ({ canDelete, selectedCount, onClearSelection, onBatchDelete }) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Typography.Text type="secondary">
+        {t('common.selectedCount', { count: selectedCount })}
+      </Typography.Text>
+      <Button type="text" size="small" disabled={selectedCount === 0} onClick={onClearSelection}>
+        {t('common.clearSelection')}
+      </Button>
+      <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
+        <Popconfirm
+          disabled={selectedCount === 0 || !canDelete}
+          title={t('system.audit.batchDeleteConfirm', { count: selectedCount })}
+          onOk={onBatchDelete}
+        >
+          <Button
+            status="danger"
+            icon={<IconDelete />}
+            disabled={selectedCount === 0 || !canDelete}
+          >
+            {t('common.deleteSelected')}
+          </Button>
+        </Popconfirm>
+      </PermissionAction>
+    </>
+  );
+};
+
 const OperationLogList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
@@ -486,26 +1006,7 @@ const OperationLogList: React.FC = () => {
   const [currentLog, setCurrentLog] = useState<OperationLogRow | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const resultPreview = currentLog ? extractOperationResult(currentLog.jsonResult) : {};
-  const settingAuditPayload = currentLog ? extractSettingAuditPayload(currentLog.operParam) : null;
-  const i18nLifecycleParam = currentLog
-    ? extractI18nLifecycleAuditPayload(currentLog.operParam)
-    : null;
-  const i18nLifecycleResult = currentLog
-    ? extractI18nLifecycleAuditResult(currentLog.jsonResult)
-    : null;
-  const translatedErrorText = currentLog?.errorMsg
-    ? t(currentLog.errorMsg, { defaultValue: currentLog.errorMsg })
-    : '';
-  const translatedResultMessage = resultPreview.message
-    ? t(resultPreview.message, { defaultValue: resultPreview.message })
-    : '';
-  const methodText = currentLog ? normalizeMethod(currentLog.method) : '';
-  const handlerText = currentLog ? formatHandlerName(currentLog.method) : '';
-  const businessTypeMeta = currentLog ? getBusinessTypeMeta(currentLog.businessType, t) : null;
-  const sourceMeta = currentLog ? getAuditSourceMeta(currentLog) : null;
-  const failureMeta = currentLog ? getFailureMeta(currentLog, resultPreview) : null;
+  const [selectedRowKeys, setSelectedRowKeys] = useState<CrossPageRowKey[]>([]);
 
   const loadData = useCallback(
     async (nextQuery: OperationLogQuery = query) => {
@@ -556,31 +1057,20 @@ const OperationLogList: React.FC = () => {
       return;
     }
 
-    const matchedLog = data.find((item) => item.id === detailId);
-    if (matchedLog) {
-      const timer = globalThis.setTimeout(() => {
-        setCurrentLog(matchedLog);
+    return scheduleDetailLookup(detailId, data, {
+      onFound: (log) => {
+        setCurrentLog(log);
         setDetailVisible(true);
         setDetailLoading(false);
-      }, 0);
-      return () => globalThis.clearTimeout(timer);
-    }
-
-    const timer = globalThis.setTimeout(() => {
-      setDetailLoading(true);
-      getOperationLog(detailId)
-        .then((detail) => {
-          setCurrentLog(detail);
-          setDetailVisible(true);
-        })
-        .catch(() => {
-          message.error(t('common.loadFailed'));
-        })
-        .finally(() => {
-          setDetailLoading(false);
-        });
-    }, 0);
-    return () => globalThis.clearTimeout(timer);
+      },
+      onLoadStart: () => setDetailLoading(true),
+      onLoaded: (detail) => {
+        setCurrentLog(detail);
+        setDetailVisible(true);
+      },
+      onLoadError: () => message.error(t('common.loadFailed')),
+      onLoadEnd: () => setDetailLoading(false),
+    });
   }, [data, searchParams, t]);
 
   const search = (values: Partial<OperationLogQuery>) => {
@@ -601,13 +1091,7 @@ const OperationLogList: React.FC = () => {
     (value) => value !== undefined && value !== '',
   ).length;
 
-  const hasActiveFilters = Boolean(
-    query.keyword ||
-    query.status !== undefined ||
-    (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
-    query.startedAt ||
-    advancedActiveCount > 0,
-  );
+  const hasActiveFilters = hasActiveOperationLogFilters(query, advancedActiveCount);
 
   const handleDelete = async (id: number) => {
     try {
@@ -645,14 +1129,27 @@ const OperationLogList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
+    const ids = selectedRowKeys.map(Number);
+    if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+      message.error(t('common.actionFailed'));
+      return;
+    }
     try {
-      const resp = await batchDeleteOperationLogs({ ids: selectedRowKeys });
+      const resp = await batchDeleteOperationLogs({ ids });
       message.success(t('system.audit.batchDeleteSuccess', { count: resp.deletedCount }));
       setSelectedRowKeys([]);
       void loadData();
     } catch {
       message.error(t('common.actionFailed'));
     }
+  };
+
+  const handleClearSelection = () => {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+    setSelectedRowKeys([]);
+    message.success(t('common.clearSelectionSuccess'));
   };
 
   const showDetail = (log: OperationLogRow) => {
@@ -670,16 +1167,6 @@ const OperationLogList: React.FC = () => {
     }
   };
 
-  const toArcoSortOrder = (sortOrder?: OperationLogQuery['sortOrder']) => {
-    if (sortOrder === 'asc') {
-      return 'ascend';
-    }
-    if (sortOrder === 'desc') {
-      return 'descend';
-    }
-    return undefined;
-  };
-
   const sortableColumn = (
     field: NonNullable<OperationLogQuery['sortField']>,
   ): Partial<ColumnProps<OperationLogRow>> => ({
@@ -688,14 +1175,7 @@ const OperationLogList: React.FC = () => {
   });
 
   const handleTableChange: TableProps<OperationLogRow>['onChange'] = (pagination, sorter) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : (sorter as SorterInfo | undefined);
-    const nextSortField = currentSorter?.direction ? String(currentSorter.field) : undefined;
-    let nextSortOrder: 'asc' | 'desc' | undefined;
-    if (currentSorter?.direction === 'ascend') {
-      nextSortOrder = 'asc';
-    } else if (currentSorter?.direction === 'descend') {
-      nextSortOrder = 'desc';
-    }
+    const { sortField: nextSortField, sortOrder: nextSortOrder } = parseTableSorter(sorter);
     if (nextSortField !== query.sortField || nextSortOrder !== query.sortOrder) {
       setSelectedRowKeys([]);
     }
@@ -891,65 +1371,6 @@ const OperationLogList: React.FC = () => {
     [canExport, failedCount, successCount, t, total],
   );
 
-  const formatI18nLifecycleLabel = (value: string) =>
-    value ? t(`i18n.lifecycle.status.${value}`, { defaultValue: value }) : '-';
-
-  const formatI18nLifecycleAction = (value: string) => {
-    if (value === 'observe') {
-      return t('i18n.lifecycle.observe');
-    }
-    if (value === 'archive') {
-      return t('i18n.lifecycle.archive');
-    }
-    if (value === 'delete') {
-      return t('i18n.lifecycle.delete');
-    }
-    return value || '-';
-  };
-
-  const plainResultSummaryCard =
-    typeof resultPreview.code === 'number' ||
-    translatedResultMessage ||
-    resultPreview.data !== undefined ? (
-      <Card className="detail-panel-card" title={t('system.audit.resultSummary')} size="small">
-        <Descriptions
-          column={2}
-          data={[
-            ...(typeof resultPreview.code === 'number'
-              ? [{ label: t('system.audit.responseCode'), value: resultPreview.code }]
-              : []),
-            ...(translatedResultMessage
-              ? [
-                  {
-                    label: t('system.audit.responseMessage'),
-                    value: translatedResultMessage,
-                  },
-                ]
-              : []),
-            ...(resultPreview.message && resultPreview.message !== translatedResultMessage
-              ? [
-                  {
-                    label: t('system.audit.responseMessageKey'),
-                    value: resultPreview.message,
-                  },
-                ]
-              : []),
-            ...(resultPreview.data !== undefined
-              ? [
-                  {
-                    label: t('system.audit.responseData'),
-                    value:
-                      isRecord(resultPreview.data) || Array.isArray(resultPreview.data)
-                        ? t('system.audit.responseDataStructured')
-                        : String(resultPreview.data as Exclude<JsonValue, object>),
-                  },
-                ]
-              : []),
-          ]}
-        />
-      </Card>
-    ) : null;
-
   const tableContent =
     data.length === 0 && !loading ? (
       <PageEmpty />
@@ -962,25 +1383,12 @@ const OperationLogList: React.FC = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         onChange={handleTableChange}
-        rowSelection={
-          canDelete
-            ? {
-                type: 'checkbox',
-                selectedRowKeys: visibleSelectedRowKeys,
-                checkCrossPage: true,
-                preserveSelectedRowKeys: true,
-                onChange: (keys) =>
-                  setSelectedRowKeys(
-                    (currentKeys) =>
-                      mergeCrossPageSelection(
-                        currentKeys,
-                        keys as number[],
-                        data.map((item) => item.id),
-                      ) as number[],
-                  ),
-              }
-            : undefined
-        }
+        rowSelection={buildLogRowSelection({
+          enabled: canDelete,
+          visibleSelectedRowKeys,
+          rows: data,
+          setSelectedRowKeys,
+        })}
         pagination={buildStandardPagination(t, {
           current: query.page || emptyQuery.page,
           pageSize: query.pageSize || emptyQuery.pageSize,
@@ -1131,44 +1539,14 @@ const OperationLogList: React.FC = () => {
               }
               extraActions={
                 canDelete ? (
-                  <>
-                    <Typography.Text type="secondary">
-                      {t('common.selectedCount', { count: selectedRowKeys.length })}
-                    </Typography.Text>
-                    <Button
-                      type="text"
-                      size="small"
-                      disabled={selectedRowKeys.length === 0}
-                      onClick={() => {
-                        if (selectedRowKeys.length === 0) {
-                          return;
-                        }
-                        setSelectedRowKeys([]);
-                        message.success(t('common.clearSelectionSuccess'));
-                      }}
-                    >
-                      {t('common.clearSelection')}
-                    </Button>
-                    <PermissionAction allowed={canDelete} tooltip={t('common.noPermissionAction')}>
-                      <Popconfirm
-                        disabled={selectedRowKeys.length === 0 || !canDelete}
-                        title={t('system.audit.batchDeleteConfirm', {
-                          count: selectedRowKeys.length,
-                        })}
-                        onOk={() => {
-                          void handleBatchDelete();
-                        }}
-                      >
-                        <Button
-                          status="danger"
-                          icon={<IconDelete />}
-                          disabled={selectedRowKeys.length === 0 || !canDelete}
-                        >
-                          {t('common.deleteSelected')}
-                        </Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  </>
+                  <BatchActionBar
+                    canDelete={canDelete}
+                    selectedCount={selectedRowKeys.length}
+                    onClearSelection={handleClearSelection}
+                    onBatchDelete={() => {
+                      void handleBatchDelete();
+                    }}
+                  />
                 ) : undefined
               }
             />
@@ -1226,286 +1604,7 @@ const OperationLogList: React.FC = () => {
         size="detail"
       >
         {detailLoading && !currentLog ? <PageLoading /> : null}
-        {currentLog && (
-          <Space direction="vertical" size={16} className="detail-stack">
-            <div className="audit-detail-summary">
-              <div className="audit-detail-summary__copy">
-                <Typography.Text className="audit-detail-summary__title">
-                  {t(currentLog.title, { defaultValue: currentLog.title || '-' })}
-                </Typography.Text>
-                <Typography.Text className="audit-detail-summary__desc" type="secondary">
-                  {currentLog.operUrl || '-'}
-                </Typography.Text>
-              </div>
-              <Space wrap>
-                <Tag color={currentLog.status === 1 ? 'green' : 'red'}>
-                  {currentLog.status === 1 ? t('common.success') : t('common.failed')}
-                </Tag>
-                {businessTypeMeta ? (
-                  <Tag color={businessTypeMeta.color}>{businessTypeMeta.label}</Tag>
-                ) : null}
-                {sourceMeta ? <Tag color="purple">{t(sourceMeta.domainKey)}</Tag> : null}
-                {sourceMeta ? <Tag color="cyan">{t(sourceMeta.pageKey)}</Tag> : null}
-                {methodText ? <Tag color="arcoblue">{methodText}</Tag> : null}
-                <Tag color="gray">
-                  {t('system.audit.costTimeValue', { count: currentLog.costTime })}
-                </Tag>
-              </Space>
-            </div>
-
-            <Descriptions
-              column={2}
-              data={[
-                {
-                  label: t('system.audit.title'),
-                  value: t(currentLog.title, { defaultValue: currentLog.title || '-' }),
-                },
-                {
-                  label: t('system.audit.operTime'),
-                  value: formatDateTime(currentLog.operTime, { withSeconds: true }),
-                },
-                { label: t('system.audit.operName'), value: currentLog.operName || '-' },
-                { label: t('system.audit.operIp'), value: currentLog.operIp || '-' },
-                { label: t('system.audit.operUrl'), value: currentLog.operUrl || '-' },
-                ...(sourceMeta
-                  ? [{ label: t('system.audit.sourceLayer'), value: t(sourceMeta.layerKey) }]
-                  : []),
-                ...(sourceMeta
-                  ? [{ label: t('system.audit.sourceDomain'), value: t(sourceMeta.domainKey) }]
-                  : []),
-                ...(sourceMeta
-                  ? [{ label: t('system.audit.sourcePage'), value: t(sourceMeta.pageKey) }]
-                  : []),
-                { label: t('system.audit.businessType'), value: businessTypeMeta?.label || '-' },
-                { label: t('system.audit.method'), value: methodText || '-' },
-                {
-                  label: t('system.audit.costTime'),
-                  value: t('system.audit.costTimeValue', { count: currentLog.costTime }),
-                },
-                ...(handlerText ? [{ label: t('system.audit.handler'), value: handlerText }] : []),
-              ]}
-            />
-
-            {currentLog.status === 2 && (
-              <Card
-                className="detail-panel-card detail-panel-card--danger"
-                title={t('system.audit.failureReason')}
-                size="small"
-              >
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                  <Space wrap>
-                    {failureMeta ? (
-                      <Tag color={failureMeta.color}>{t(failureMeta.typeKey)}</Tag>
-                    ) : null}
-                    {sourceMeta ? <Tag color="purple">{t(sourceMeta.domainKey)}</Tag> : null}
-                  </Space>
-                  <Alert
-                    type="error"
-                    content={translatedErrorText || translatedResultMessage || t('common.failed')}
-                  />
-                  <Descriptions
-                    column={1}
-                    data={[
-                      ...(failureMeta
-                        ? [
-                            {
-                              label: t('system.audit.failureCategory'),
-                              value: t(failureMeta.typeKey),
-                            },
-                          ]
-                        : []),
-                      ...(failureMeta
-                        ? [
-                            {
-                              label: t('system.audit.failureSummary'),
-                              value: t(failureMeta.summaryKey),
-                            },
-                          ]
-                        : []),
-                      ...(translatedErrorText
-                        ? [{ label: t('system.audit.failureText'), value: translatedErrorText }]
-                        : []),
-                      ...(currentLog.errorMsg
-                        ? [{ label: t('system.audit.errorKey'), value: currentLog.errorMsg }]
-                        : []),
-                      ...(typeof resultPreview.code === 'number'
-                        ? [{ label: t('system.audit.responseCode'), value: resultPreview.code }]
-                        : []),
-                      ...(translatedResultMessage
-                        ? [
-                            {
-                              label: t('system.audit.responseMessage'),
-                              value: translatedResultMessage,
-                            },
-                          ]
-                        : []),
-                      ...(resultPreview.message && resultPreview.message !== translatedResultMessage
-                        ? [
-                            {
-                              label: t('system.audit.responseMessageKey'),
-                              value: resultPreview.message,
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                </Space>
-              </Card>
-            )}
-
-            {settingAuditPayload && settingAuditPayload.changes.length > 0 ? (
-              <Card
-                className="detail-panel-card"
-                title={t('system.audit.requestSummary')}
-                size="small"
-              >
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                  <Space wrap>
-                    {settingAuditPayload.groupKey ? (
-                      <Tag color="arcoblue">
-                        {t(
-                          `system.setting.group.${settingAuditPayload.groupKey}`,
-                          settingAuditPayload.groupKey,
-                        )}
-                      </Tag>
-                    ) : null}
-                    <Tag color="gold">
-                      {t('system.audit.changeCount', { count: settingAuditPayload.changes.length })}
-                    </Tag>
-                  </Space>
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    {settingAuditPayload.changes.map((change) => (
-                      <Space key={change.settingKey} size={8} wrap>
-                        <Typography.Text>
-                          {t(`system.setting.item.${change.settingKey}`, change.settingKey)}
-                        </Typography.Text>
-                        {change.isEncrypted === 1 ? (
-                          <Tag color="red">{t('system.setting.audit.sensitiveChanged')}</Tag>
-                        ) : (
-                          <>
-                            <Typography.Text type="secondary">
-                              {change.oldValue || '-'}
-                            </Typography.Text>
-                            <Typography.Text type="secondary">→</Typography.Text>
-                            <Typography.Text>{change.newValue || '-'}</Typography.Text>
-                          </>
-                        )}
-                      </Space>
-                    ))}
-                  </Space>
-                </Space>
-              </Card>
-            ) : null}
-
-            {i18nLifecycleParam ? (
-              <Card
-                className="detail-panel-card"
-                title={t('system.audit.requestSummary')}
-                size="small"
-              >
-                <Descriptions
-                  column={2}
-                  data={[
-                    {
-                      label: t('i18n.audit.action'),
-                      value: formatI18nLifecycleAction(i18nLifecycleParam.action),
-                    },
-                    { label: t('common.module'), value: i18nLifecycleParam.module || '-' },
-                    {
-                      label: t('i18n.lifecycle.fromStatus'),
-                      value: formatI18nLifecycleLabel(i18nLifecycleParam.fromStatus),
-                    },
-                    {
-                      label: t('i18n.lifecycle.toStatus'),
-                      value: formatI18nLifecycleLabel(i18nLifecycleParam.toStatus),
-                    },
-                    ...(typeof i18nLifecycleParam.observationThresholdDays === 'number'
-                      ? [
-                          {
-                            label: t('i18n.lifecycle.observationThreshold'),
-                            value: t('i18n.lifecycle.observationThresholdValue', {
-                              count: i18nLifecycleParam.observationThresholdDays,
-                            }),
-                          },
-                        ]
-                      : []),
-                    ...(typeof i18nLifecycleParam.confirmArchived === 'boolean'
-                      ? [
-                          {
-                            label: t('i18n.lifecycle.confirmArchived'),
-                            value: i18nLifecycleParam.confirmArchived
-                              ? t('common.yes')
-                              : t('common.no'),
-                          },
-                        ]
-                      : []),
-                    ...(i18nLifecycleParam.affectedKeys.length > 0
-                      ? [
-                          {
-                            label: t('i18n.audit.affectedKeys'),
-                            value: i18nLifecycleParam.affectedKeys.join(', '),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </Card>
-            ) : null}
-
-            {i18nLifecycleResult ? (
-              <Card
-                className="detail-panel-card"
-                title={t('system.audit.resultSummary')}
-                size="small"
-              >
-                <Descriptions
-                  column={2}
-                  data={[
-                    {
-                      label: t('i18n.audit.action'),
-                      value: formatI18nLifecycleAction(i18nLifecycleResult.action),
-                    },
-                    { label: t('common.module'), value: i18nLifecycleResult.module || '-' },
-                    {
-                      label: t('i18n.lifecycle.fromStatus'),
-                      value: formatI18nLifecycleLabel(i18nLifecycleResult.fromStatus),
-                    },
-                    {
-                      label: t('i18n.lifecycle.toStatus'),
-                      value: formatI18nLifecycleLabel(i18nLifecycleResult.toStatus),
-                    },
-                    {
-                      label: t('system.audit.responseData'),
-                      value: t('i18n.lifecycle.affectedRowsValue', {
-                        count: i18nLifecycleResult.affectedRows || 0,
-                      }),
-                    },
-                    {
-                      label: t('i18n.audit.affectedKeys'),
-                      value:
-                        i18nLifecycleResult.affectedKeys.length > 0
-                          ? i18nLifecycleResult.affectedKeys.join(', ')
-                          : '-',
-                    },
-                  ]}
-                />
-              </Card>
-            ) : (
-              plainResultSummaryCard
-            )}
-
-            <Card className="detail-panel-card" title={t('system.audit.operParam')} size="small">
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', maxHeight: 220, overflow: 'auto' }}>
-                {formatAuditRaw(currentLog.operParam)}
-              </pre>
-            </Card>
-            <Card className="detail-panel-card" title={t('system.audit.jsonResult')} size="small">
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', maxHeight: 220, overflow: 'auto' }}>
-                {formatAuditRaw(currentLog.jsonResult)}
-              </pre>
-            </Card>
-          </Space>
-        )}
+        {currentLog && <OperationLogDetail log={currentLog} />}
       </AppModal>
     </PageContainer>
   );

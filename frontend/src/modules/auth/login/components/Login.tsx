@@ -78,6 +78,20 @@ function resolveLoginErrorKey(error: unknown, fallbackKey: string) {
   return fallbackKey;
 }
 
+// 开发态排障日志：非业务错误(网络/服务端/超时)打到控制台，生产静默。
+function logDevLoginError(error: unknown) {
+  if (
+    import.meta.env.DEV &&
+    (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))
+  ) {
+    console.error(error);
+  }
+}
+
+function canEnterPlatformDashboard(user: { roles?: string[]; perms?: string[] }) {
+  return Boolean(user.roles?.includes('admin') || user.perms?.includes('platform:dashboard:view'));
+}
+
 export function LoginPageComponent() {
   const [form] = Form.useForm<LoginPayload & { mfaCode?: string }>();
   const [loading, setLoading] = useState(false);
@@ -140,12 +154,7 @@ export function LoginPageComponent() {
     setUserInfo(res.user);
     const menuTree = await fetchMenuTree();
     const fallbackMenuPath = findFirstNavigableMenuPath(menuTree);
-    const nextPath = resolvePostLoginPath(
-      Boolean(
-        res.user.roles?.includes('admin') || res.user.perms?.includes('platform:dashboard:view'),
-      ),
-      fallbackMenuPath,
-    );
+    const nextPath = resolvePostLoginPath(canEnterPlatformDashboard(res.user), fallbackMenuPath);
     message.success(t('auth.loginSuccess'));
     navigate(nextPath, { replace: true });
   };
@@ -171,12 +180,7 @@ export function LoginPageComponent() {
       }
       await completeLogin(res);
     } catch (error) {
-      if (
-        import.meta.env.DEV &&
-        (!isRequestError(error) || isServerRequestError(error) || isTimeoutRequestError(error))
-      ) {
-        console.error(error);
-      }
+      logDevLoginError(error);
       const fallbackKey = mfaChallenge ? 'auth.mfa.verifyFailed' : 'auth.loginFailed';
       message.error(t(resolveLoginErrorKey(error, fallbackKey)));
     } finally {
