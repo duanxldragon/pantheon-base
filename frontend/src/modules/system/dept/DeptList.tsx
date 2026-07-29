@@ -15,13 +15,7 @@ import {
   TreeSelect,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
-import {
-  IconDelete,
-  IconDownload,
-  IconEdit,
-  IconEye,
-  IconPlus,
-} from '@arco-design/web-react/icon';
+import { IconDelete, IconDownload, IconEdit, IconEye, IconPlus } from '@arco-design/web-react/icon';
 import type {
   ColumnProps,
   SorterInfo,

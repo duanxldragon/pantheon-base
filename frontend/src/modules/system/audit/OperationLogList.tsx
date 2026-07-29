@@ -22,6 +22,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   getVisibleSelectedRowKeys,
   mergeCrossPageSelection,
+  type CrossPageRowKey,
 } from '../../../components/table/crossPageSelection';
 import {
   batchDeleteOperationLogs,
@@ -559,18 +560,18 @@ function scheduleDetailLookup(
 function hasActiveOperationLogFilters(query: OperationLogQuery, advancedActiveCount: number) {
   return Boolean(
     query.keyword ||
-      query.status !== undefined ||
-      (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
-      query.startedAt ||
-      advancedActiveCount > 0,
+    query.status !== undefined ||
+    (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
+    query.startedAt ||
+    advancedActiveCount > 0,
   );
 }
 
 function buildLogRowSelection(options: {
   enabled: boolean;
-  visibleSelectedRowKeys: number[];
+  visibleSelectedRowKeys: CrossPageRowKey[];
   rows: OperationLogRow[];
-  setSelectedRowKeys: React.Dispatch<React.SetStateAction<number[]>>;
+  setSelectedRowKeys: React.Dispatch<React.SetStateAction<CrossPageRowKey[]>>;
 }): TableProps<OperationLogRow>['rowSelection'] {
   if (!options.enabled) {
     return undefined;
@@ -581,13 +582,12 @@ function buildLogRowSelection(options: {
     checkCrossPage: true,
     preserveSelectedRowKeys: true,
     onChange: (keys) =>
-      options.setSelectedRowKeys(
-        (currentKeys) =>
-          mergeCrossPageSelection(
-            currentKeys,
-            keys as number[],
-            options.rows.map((item) => item.id),
-          ) as number[],
+      options.setSelectedRowKeys((currentKeys) =>
+        mergeCrossPageSelection(
+          currentKeys,
+          keys,
+          options.rows.map((item) => item.id),
+        ),
       ),
   };
 }
@@ -971,7 +971,11 @@ const BatchActionBar: React.FC<{
           title={t('system.audit.batchDeleteConfirm', { count: selectedCount })}
           onOk={onBatchDelete}
         >
-          <Button status="danger" icon={<IconDelete />} disabled={selectedCount === 0 || !canDelete}>
+          <Button
+            status="danger"
+            icon={<IconDelete />}
+            disabled={selectedCount === 0 || !canDelete}
+          >
             {t('common.deleteSelected')}
           </Button>
         </Popconfirm>
@@ -1002,7 +1006,7 @@ const OperationLogList: React.FC = () => {
   const [currentLog, setCurrentLog] = useState<OperationLogRow | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<CrossPageRowKey[]>([]);
 
   const loadData = useCallback(
     async (nextQuery: OperationLogQuery = query) => {
@@ -1125,8 +1129,13 @@ const OperationLogList: React.FC = () => {
       message.warning(t('common.batchSelectionRequired'));
       return;
     }
+    const ids = selectedRowKeys.map(Number);
+    if (ids.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+      message.error(t('common.actionFailed'));
+      return;
+    }
     try {
-      const resp = await batchDeleteOperationLogs({ ids: selectedRowKeys });
+      const resp = await batchDeleteOperationLogs({ ids });
       message.success(t('system.audit.batchDeleteSuccess', { count: resp.deletedCount }));
       setSelectedRowKeys([]);
       void loadData();

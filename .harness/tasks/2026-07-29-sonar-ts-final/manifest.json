@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-07-29-sonar-ts-final",
+  "title": "Final TypeScript Sonar remediation batch",
+  "goal": "Close the final nine TypeScript Sonar findings with a behavior-preserving, type-safe operation-log batch-delete boundary.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "system/iam", "system/org", "system/config"],
+  "scope": {
+    "in": [
+      "TypeScript S8786 x3 and S3776 x6 remediation in the frozen eight-file batch",
+      "CrossPageRowKey-safe operation-log selection and positive safe-integer validation before batch deletion",
+      "Required L2 task, evidence, and review linkage"
+    ],
+    "out": [
+      "UI layout, routing, permissions, i18n, APIs, database, and smoke-fixture changes",
+      "Go/CSS Sonar remediation, release, push, PR creation, and merge"
+    ]
+  },
+  "contractAnchors": ["AGENTS.md", "DESIGN.md", "docs/designs/FRONTEND_UI_SPEC.md", "docs/acceptances/AGENT_EXECUTION_CHECKLIST.md"],
+  "implementationNotes": ["Reuse CrossPageRowKey and the existing selection helper; validate destructive-operation IDs locally without new dependencies.", "The Arco operational table's density and interaction structure are intentionally unchanged."],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ui-runtime",
+    "portableFailureClass": "repo-quality-gate",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": ["behaviour", "maintainability", "runtime-quality"]
+  },
+  "expectedFiles": {
+    "create": [".harness/tasks/2026-07-29-sonar-ts-final/manifest.json", ".harness/evidence/2026-07-29-sonar-ts-final/commands.json", ".harness/evidence/2026-07-29-sonar-ts-final/summary.md", ".harness/evidence/2026-07-29-sonar-ts-final/review.md", "docs/harness/tasks/2026-07-29-sonar-ts-final.task.md"],
+    "modify": ["frontend/src/core/layout/index.tsx", "frontend/src/modules/auth/login/components/Login.tsx", "frontend/src/modules/auth/security/components/SecurityCenter.tsx", "frontend/src/modules/platform/Dashboard.tsx", "frontend/src/modules/system/audit/OperationLogList.tsx", "frontend/src/modules/system/dept/DeptList.tsx", "frontend/src/modules/system/profile/ProfileCenter.tsx", "frontend/src/modules/system/user/UserFormModal.tsx"],
+    "doNotTouch": ["pantheon-base main worktree", ".wt-sonar-ts", "pantheon-ops", "backend source", "release workflows"]
+  },
+  "structuralScope": {
+    "affectedSubgraph": ["OperationLogList -> crossPageSelection -> batchDeleteOperationLogs"],
+    "boundaryCrossings": ["platform -> system/audit"],
+    "riskNodes": ["cross-page row keys", "destructive batch delete"],
+    "graphFocus": ["sensitive-input-flow"]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": ["frontend prebuild UI contracts", "Arco operational table conventions"],
+    "requiredSensors": ["lint", "type-check", "unit tests", "build", "format check", "diff check", "harness checkers"],
+    "requiredEvidence": ["command summary", "explicit visual/runtime gap", "review request"],
+    "ratchetDecision": "no-repeat-observed",
+    "deferredCodeIssues": ["Independent review and rendered smoke evidence remain required before PR merge because no shared local app services were listening."]
+  },
+  "deliveryGovernance": {
+    "designGate": ["existing frontend UI specification"],
+    "developmentGate": ["expected files and do-not-touch boundary declared"],
+    "qaAcceptanceGate": ["static gates and explicit runtime/visual gap"],
+    "githubGovernanceGate": ["repo-quality-gate"]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["UX-QA", "mechanical", "independent review requested"]
+  },
+  "verificationPlan": {
+    "commands": ["npm run lint", "npm run type-check", "npm run test:unit", "npm run build", "npx prettier --check <eight files>", "git diff --check"],
+    "runtimeEvidence": ["Explicit gap: no listener on 127.0.0.1:5173 or 127.0.0.1:8080; no shared service was started or stopped."]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-07-29-sonar-ts-final",
+    "taskPacket": ".harness/tasks/2026-07-29-sonar-ts-final/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-29-sonar-ts-final/",
+    "reviewFile": ".harness/evidence/2026-07-29-sonar-ts-final/review.md",
+    "summaryFile": ".harness/evidence/2026-07-29-sonar-ts-final/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": ["command result summary", "explicit visual/runtime gap", "review summary"],
+  "humanGates": ["independent review before PR merge", "release gate owned by coordinator"],
+  "completionChecklist": ["Layer and boundary declared", "Verification evidence saved", "Independent review requested"]
+}

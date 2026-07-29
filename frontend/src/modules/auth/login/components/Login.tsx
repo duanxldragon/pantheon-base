@@ -89,9 +89,7 @@ function logDevLoginError(error: unknown) {
 }
 
 function canEnterPlatformDashboard(user: { roles?: string[]; perms?: string[] }) {
-  return Boolean(
-    user.roles?.includes('admin') || user.perms?.includes('platform:dashboard:view'),
-  );
+  return Boolean(user.roles?.includes('admin') || user.perms?.includes('platform:dashboard:view'));
 }
 
 export function LoginPageComponent() {

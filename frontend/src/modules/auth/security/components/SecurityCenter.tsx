@@ -226,7 +226,6 @@ const SecurityCenter: React.FC = () => {
     [t],
   );
 
-
   const handleChangePassword = async () => {
     const values = await passwordForm.validate();
     setSavingPassword(true);

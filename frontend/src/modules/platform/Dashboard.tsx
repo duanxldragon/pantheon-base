@@ -147,15 +147,15 @@ function compareByPriority(leftKey: string, rightKey: string, priority: string[]
 // scope → issue → i18n key，与 TODO_*_ALIASES 同风格的查表翻译。
 const TODO_ISSUE_LABEL_KEYS: Record<string, Record<string, string>> = {
   dept: {
-    leaderless: 'system.dept.governance.leaderless',
+    'leaderless': 'system.dept.governance.leaderless',
     'no-post': 'system.dept.governance.noPost',
-    empty: 'system.dept.governance.empty',
-    clean: 'system.dept.governance.clean',
+    'empty': 'system.dept.governance.empty',
+    'clean': 'system.dept.governance.clean',
   },
   post: {
     'in-use': 'dashboard.todo.issue.inUse',
-    disabled: 'dashboard.todo.issue.disabled',
-    clean: 'system.dept.governance.clean',
+    'disabled': 'dashboard.todo.issue.disabled',
+    'clean': 'system.dept.governance.clean',
   },
 };
 

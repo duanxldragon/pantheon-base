@@ -459,8 +459,7 @@ function computeTabClose(
     tabs.filter((item) => item.path !== targetPath),
     dashboardTitle,
   );
-  const navigateTo =
-    targetPath === currentPath ? safeTabs.at(-1)?.path || '/dashboard' : undefined;
+  const navigateTo = targetPath === currentPath ? safeTabs.at(-1)?.path || '/dashboard' : undefined;
   return { tabs: safeTabs, navigateTo };
 }
 
@@ -472,9 +471,7 @@ function computeTabCloseOthers(
   if (!tabs.some((item) => item.path === targetPath)) {
     return null;
   }
-  const nextTabs = orderOpenedTabs(
-    tabs.filter((item) => item.pinned || item.path === targetPath),
-  );
+  const nextTabs = orderOpenedTabs(tabs.filter((item) => item.pinned || item.path === targetPath));
   return { tabs: nextTabs, navigateTo: currentPath !== targetPath ? targetPath : undefined };
 }
 
