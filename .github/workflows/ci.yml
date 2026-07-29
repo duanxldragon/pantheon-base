@@ -298,7 +298,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Download Go coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: go-coverage
           path: backend
@@ -312,7 +312,7 @@ jobs:
       - name: Download frontend coverage artifact
         id: fe-coverage
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: frontend-coverage
           path: frontend/coverage
