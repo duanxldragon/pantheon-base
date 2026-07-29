@@ -145,6 +145,7 @@ const zhCNFallback = {
   'auth.security.lastLoginAt': '最近成功登录',
   'auth.security.currentDevice': '当前设备',
   'auth.security.currentIp': '当前 IP',
+  'auth.security.recentSuccessfulLoginCount': '最近 10 条中的成功登录',
   'auth.security.subtitle': '统一查看当前账号的设备、登录活动与密码安全状态',
   'auth.security.overview': '账号安全概览',
   'auth.security.currentSessionSummary': '当前会话摘要',
@@ -216,7 +217,7 @@ const zhCNFallback = {
   'auth.session.userAgentRaw': '原始 User-Agent',
   'auth.session.subtitle': '查看全局在线会话、设备信息与下线操作',
   'auth.session.selfProtected': '当前登录账号不允许在此页面自我下线',
-  'auth.session.currentUser': '当前账号',
+  'auth.session.currentUser': '当前会话',
   'auth.session.hero.eyebrow': '系统域 / 安全审计会话',
   'auth.session.hero.title': '在统一治理页中查看在线会话、设备画像与下线边界',
   'auth.session.hero.desc':
@@ -386,6 +387,7 @@ const zhCNFallback = {
   'network.timeout': '请求超时，请稍后重试',
   'common.cancel': '取消',
   'common.clear': '清空',
+  'common.cleanup': '清理',
   'common.clearConfirm': '确认清空当前数据？',
   'common.clearSuccess': '清空成功',
   'common.cleanupLogs': '清理日志',
@@ -2154,7 +2156,7 @@ const zhCNFallback = {
   'system.permission.pathRequired': '请输入接口路径',
   'system.permission.methodRequired': '请选择请求方法',
   'system.permission.hero.eyebrow': '系统域 / IAM 权限工作台',
-  'system.permission.hero.title': '把角色授权盘面与 Casbin 接口策略收口到同一条权限治理主链路',
+  'system.permission.hero.title': '把角色授权盘面与接口访问策略收口到同一条权限治理主链路',
   'system.permission.hero.desc':
     '权限页继续承接 `system/iam` 的治理闭环：工作台视角负责看全量授权覆盖，接口策略页负责补齐后端 API 边界，页面骨架与其他系统页保持同一模板。',
   'system.permission.hero.rolesHint': '当前被纳入权限工作台分析的角色数。',

@@ -173,6 +173,7 @@ const jaJPFallback = {
   'common.actionFailed': '操作に失敗しました。後でもう一度お試しください。',
   'common.cancel': 'キャンセル',
   'common.clear': 'クリア',
+  'common.cleanup': '整理',
   'common.clearConfirm': '現在のデータをクリアしてもよろしいですか？',
   'common.clearSuccess': 'クリアしました',
   'common.cleanupLogs': 'ログを整理',
@@ -351,6 +352,7 @@ const jaJPFallback = {
   'auth.security.lastLoginAt': '直近の成功ログイン',
   'auth.security.currentDevice': '現在の端末',
   'auth.security.currentIp': '現在の IP',
+  'auth.security.recentSuccessfulLoginCount': '直近 10 件の成功ログイン',
   'auth.security.subtitle':
     '現在のアカウントの端末、ログイン活動、パスワードセキュリティを確認します。',
   'auth.security.overview': 'アカウントセキュリティ概要',
@@ -421,7 +423,7 @@ const jaJPFallback = {
   'auth.session.subtitle': '全体のオンラインセッション、端末詳細、無効化操作を確認します。',
   'auth.session.selfProtected':
     '現在サインイン中のアカウントはこのページから自分自身を無効化できません。',
-  'auth.session.currentUser': '現在のアカウント',
+  'auth.session.currentUser': '現在のセッション',
   'auth.session.hero.eyebrow': 'システムドメイン / セッション監査',
   'auth.session.hero.title':
     'オンラインセッション、端末指紋、無効化境界を 1 つのガバナンス画面で確認',
@@ -746,7 +748,7 @@ const jaJPFallback = {
   'system.permission.edit': 'ポリシーを編集',
   'system.permission.hero.eyebrow': 'システムドメイン / IAM 権限ワークベンチ',
   'system.permission.hero.title':
-    'ロール認可と Casbin API ポリシーを 1 つの権限ガバナンスチェーンに統合',
+    'ロール認可と API アクセスポリシーを 1 つの権限ガバナンスチェーンに統合',
   'system.permission.hero.gaps': 'カバレッジギャップ',
   'system.permission.hero.summaryTitle': 'ガバナンス概要',
   'system.permission.hero.currentMode': '現在のモード',

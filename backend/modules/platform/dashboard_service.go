@@ -78,7 +78,15 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 	hasI18nTable := s.db.Migrator().HasTable("system_i18n")
 	hasDynamicModuleTable := s.db.Migrator().HasTable(dynamicModuleTable)
 	hasSecurityEventTable := s.db.Migrator().HasTable(authSecurityEventTableName)
-	if err := s.loadSummaryCounts(resp, now, since, todayStart, idleMinutes, hasI18nTable, hasDynamicModuleTable, hasSecurityEventTable); err != nil {
+	if err := s.loadSummaryCounts(resp, summaryCountsParams{
+		Now:                   now,
+		Since:                 since,
+		TodayStart:            todayStart,
+		IdleMinutes:           idleMinutes,
+		HasI18nTable:          hasI18nTable,
+		HasDynamicModuleTable: hasDynamicModuleTable,
+		HasSecurityEventTable: hasSecurityEventTable,
+	}); err != nil {
 		return nil, err
 	}
 
@@ -168,7 +176,17 @@ type summaryCountJob struct {
 	apply func(int64)
 }
 
-func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, todayStart time.Time, idleMinutes int, hasI18nTable, hasDynamicModuleTable, hasSecurityEventTable bool) error {
+type summaryCountsParams struct {
+	Now                   time.Time
+	Since                 time.Time
+	TodayStart            time.Time
+	IdleMinutes           int
+	HasI18nTable          bool
+	HasDynamicModuleTable bool
+	HasSecurityEventTable bool
+}
+
+func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, params summaryCountsParams) error {
 	jobs := []summaryCountJob{
 		{count: func() (int64, error) { return s.countTable("system_user", condNotDeleted) }, apply: func(value int64) { resp.TotalUsers = value }},
 		{count: func() (int64, error) { return s.countTable("system_user", "deleted_at IS NULL AND status = ?", 1) }, apply: func(value int64) { resp.EnabledUsers = value }},
@@ -179,27 +197,27 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 		{count: func() (int64, error) { return s.countTable("system_setting", "") }, apply: func(value int64) { resp.TotalSettings = value }},
 		{count: func() (int64, error) { return s.countTable("system_menu", "is_visible = ? AND type <> ?", 1, "F") }, apply: func(value int64) { resp.VisibleMenuCount = value }},
 		{count: func() (int64, error) {
-			return countQuery(authsession.ApplyActiveScope(s.db.Table("system_user_session"), "", now, idleMinutes))
+			return countQuery(authsession.ApplyActiveScope(s.db.Table("system_user_session"), "", params.Now, params.IdleMinutes))
 		}, apply: func(value int64) { resp.ActiveSessionCount = value }},
 		{count: func() (int64, error) {
-			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 1, since)
+			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 1, params.Since)
 		}, apply: func(value int64) { resp.LoginSuccessCount = value }},
 		{count: func() (int64, error) {
-			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 0, since)
+			return s.countTable("system_log_login", "status = ? AND login_time >= ?", 0, params.Since)
 		}, apply: func(value int64) { resp.LoginFailureCount = value }},
 		{count: func() (int64, error) {
-			return s.countTable(operationLogTableName, "oper_time >= ?", todayStart)
+			return s.countTable(operationLogTableName, "oper_time >= ?", params.TodayStart)
 		}, apply: func(value int64) { resp.TodayOperationCount = value }},
 	}
 
-	if hasI18nTable {
+	if params.HasI18nTable {
 		jobs = append(jobs, summaryCountJob{
 			count: func() (int64, error) { return s.countTable("system_i18n", "") },
 			apply: func(value int64) { resp.TotalI18nEntries = value },
 		})
 	}
 
-	if hasDynamicModuleTable {
+	if params.HasDynamicModuleTable {
 		jobs = append(jobs, summaryCountJob{
 			count: func() (int64, error) {
 				return s.countTable(dynamicModuleTable, "status = ?", dynamicModuleStatusActive)
@@ -208,7 +226,7 @@ func (s *DashboardService) loadSummaryCounts(resp *SummaryResp, now, since, toda
 		})
 	}
 
-	if hasSecurityEventTable {
+	if params.HasSecurityEventTable {
 		jobs = append(jobs,
 			summaryCountJob{
 				count: func() (int64, error) { return s.countTable(authSecurityEventTableName, "") },

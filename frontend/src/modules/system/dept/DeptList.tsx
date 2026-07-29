@@ -1567,7 +1567,7 @@ const DeptList: React.FC = () => {
                     rules={[
                       {
                         // Linear-time email shape check; backend owns authoritative validation.
-                        match: /\S@\S[^\s.]*\.\S/,
+                        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                         message: t('system.user.email.invalid'),
                       },
                     ]}

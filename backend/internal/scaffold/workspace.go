@@ -35,51 +35,61 @@ func isWorkspaceRoot(candidate string) bool {
 func ResolveWorkspaceRoot(start string) (string, error) {
 	current := strings.TrimSpace(start)
 	if current == "" {
-		if configuredRoot := strings.TrimSpace(os.Getenv(workspaceRootEnvKey)); configuredRoot != "" {
-			resolved, err := filepath.Abs(configuredRoot)
-			if err != nil {
-				return "", err
-			}
-			if !isWorkspaceRoot(resolved) {
-				return "", common.NewNotFound("workspace.not_found")
-			}
-			return resolved, nil
+		if resolved, err, handled := tryResolveWorkspaceRootFromEnv(); handled {
+			return resolved, err
 		}
-
-		var err error
-		current, err = os.Getwd()
+		cwd, err := os.Getwd()
 		if err != nil {
 			return "", err
 		}
+		current = cwd
 	}
 	current, _ = filepath.Abs(current)
 
+	if found, ok := findWorkspaceRootUpward(current); ok {
+		return found, nil
+	}
+	if found, ok := findWorkspaceRootFromCaller(); ok {
+		return found, nil
+	}
+	return "", common.NewNotFound("workspace.not_found")
+}
+
+func tryResolveWorkspaceRootFromEnv() (string, error, bool) {
+	configuredRoot := strings.TrimSpace(os.Getenv(workspaceRootEnvKey))
+	if configuredRoot == "" {
+		return "", nil, false
+	}
+	resolved, err := filepath.Abs(configuredRoot)
+	if err != nil {
+		return "", err, true
+	}
+	if !isWorkspaceRoot(resolved) {
+		return "", common.NewNotFound("workspace.not_found"), true
+	}
+	return resolved, nil, true
+}
+
+func findWorkspaceRootUpward(start string) (string, bool) {
+	current := start
 	for {
 		if isWorkspaceRoot(current) {
-			return current, nil
+			return current, true
 		}
 		parent := filepath.Dir(current)
 		if parent == current {
-			break
+			return "", false
 		}
 		current = parent
 	}
+}
 
-	if _, sourceFile, _, ok := runtime.Caller(0); ok {
-		current = filepath.Dir(sourceFile)
-		for {
-			if isWorkspaceRoot(current) {
-				return current, nil
-			}
-			parent := filepath.Dir(current)
-			if parent == current {
-				break
-			}
-			current = parent
-		}
+func findWorkspaceRootFromCaller() (string, bool) {
+	_, sourceFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", false
 	}
-
-	return "", common.NewNotFound("workspace.not_found")
+	return findWorkspaceRootUpward(filepath.Dir(sourceFile))
 }
 
 func ValidateRegisterRequest(req *RegisterGeneratedModuleRequest) error {
@@ -161,52 +171,68 @@ func WriteGeneratedModuleSource(workspaceRoot string, req *RegisterGeneratedModu
 	seen := make(map[string]struct{}, len(files))
 
 	for _, file := range files {
-		relativePath := filepath.ToSlash(strings.TrimSpace(file.Path))
-		if relativePath == "" || strings.Contains(relativePath, "..") || !filepath.IsLocal(relativePath) {
-			return nil, common.NewBadRequest(msgInvalidPath)
-		}
-		if !strings.HasPrefix(relativePath, backendPrefix) && !strings.HasPrefix(relativePath, frontendPrefix) {
-			return nil, common.NewBadRequest(msgInvalidPath)
-		}
-		if _, ok := seen[relativePath]; ok {
-			return nil, common.NewConflict("module.generate.duplicate_file")
-		}
-		seen[relativePath] = struct{}{}
-
-		absolutePath := filepath.Join(workspaceRoot, filepath.FromSlash(relativePath))
-		if err := os.MkdirAll(filepath.Dir(absolutePath), 0o755); err != nil {
-			return nil, err
-		}
-		if !req.Overwrite && fileExists(absolutePath) {
-			return nil, common.NewConflict("module.generate.file_exists")
-		}
-		if err := os.WriteFile(absolutePath, []byte(file.Content), 0o644); err != nil {
+		relativePath, err := writeSingleGeneratedModuleFile(workspaceRoot, backendPrefix, frontendPrefix, file, req.Overwrite, seen)
+		if err != nil {
 			return nil, err
 		}
 		written = append(written, relativePath)
 	}
 
-	schemaRelativePath := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
-	if !filepath.IsLocal(schemaRelativePath) {
-		return nil, common.NewBadRequest(msgInvalidPath)
-	}
-	schemaPath := filepath.Join(workspaceRoot, filepath.FromSlash(schemaRelativePath))
-	if err := os.MkdirAll(filepath.Dir(schemaPath), 0o755); err != nil {
-		return nil, err
-	}
-	schemaJSON, err := json.MarshalIndent(req.Schema, "", "  ")
+	schemaRelativePath, err := writeGeneratedModuleSchemaFile(workspaceRoot, scope, name, req.Schema)
 	if err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(schemaPath, schemaJSON, 0o644); err != nil {
-		return nil, err
-	}
-	written = append(written, filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json")))
+	written = append(written, schemaRelativePath)
+
 	if err := WriteGeneratedFallbackResources(workspaceRoot); err != nil {
 		return nil, err
 	}
-
 	return written, nil
+}
+
+func writeSingleGeneratedModuleFile(workspaceRoot, backendPrefix, frontendPrefix string, file GeneratedFile, overwrite bool, seen map[string]struct{}) (string, error) {
+	relativePath := filepath.ToSlash(strings.TrimSpace(file.Path))
+	if relativePath == "" || strings.Contains(relativePath, "..") || !filepath.IsLocal(relativePath) {
+		return "", common.NewBadRequest(msgInvalidPath)
+	}
+	if !strings.HasPrefix(relativePath, backendPrefix) && !strings.HasPrefix(relativePath, frontendPrefix) {
+		return "", common.NewBadRequest(msgInvalidPath)
+	}
+	if _, ok := seen[relativePath]; ok {
+		return "", common.NewConflict("module.generate.duplicate_file")
+	}
+	seen[relativePath] = struct{}{}
+
+	absolutePath := filepath.Join(workspaceRoot, filepath.FromSlash(relativePath))
+	if err := os.MkdirAll(filepath.Dir(absolutePath), 0o755); err != nil {
+		return "", err
+	}
+	if !overwrite && fileExists(absolutePath) {
+		return "", common.NewConflict("module.generate.file_exists")
+	}
+	if err := os.WriteFile(absolutePath, []byte(file.Content), 0o644); err != nil {
+		return "", err
+	}
+	return relativePath, nil
+}
+
+func writeGeneratedModuleSchemaFile(workspaceRoot, scope, name string, schema ModuleSchema) (string, error) {
+	schemaRelativePath := filepath.ToSlash(filepath.Join("schema", "generated", scope, name+".json"))
+	if !filepath.IsLocal(schemaRelativePath) {
+		return "", common.NewBadRequest(msgInvalidPath)
+	}
+	schemaPath := filepath.Join(workspaceRoot, filepath.FromSlash(schemaRelativePath))
+	if err := os.MkdirAll(filepath.Dir(schemaPath), 0o755); err != nil {
+		return "", err
+	}
+	schemaJSON, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(schemaPath, schemaJSON, 0o644); err != nil {
+		return "", err
+	}
+	return schemaRelativePath, nil
 }
 
 func GenerateModuleFilesFromSchema(workspaceRoot string, schema ModuleSchema) ([]GeneratedFile, error) {
@@ -501,19 +527,26 @@ func isValidModulePath(name string, allowNested bool) bool {
 		return false
 	}
 	for _, segment := range segments {
-		if segment == "" {
+		if !isValidModulePathSegment(segment) {
 			return false
 		}
-		for index, char := range segment {
-			if index == 0 {
-				if !unicode.IsLower(char) {
-					return false
-				}
-				continue
-			}
-			if !(unicode.IsLower(char) || unicode.IsDigit(char) || char == '_') {
+	}
+	return true
+}
+
+func isValidModulePathSegment(segment string) bool {
+	if segment == "" {
+		return false
+	}
+	for index, char := range segment {
+		if index == 0 {
+			if !unicode.IsLower(char) {
 				return false
 			}
+			continue
+		}
+		if !(unicode.IsLower(char) || unicode.IsDigit(char) || char == '_') {
+			return false
 		}
 	}
 	return true
@@ -560,51 +593,77 @@ func fileExists(path string) bool {
 }
 
 func WriteGeneratedFallbackResources(workspaceRoot string) error {
+	localePayload := newEmptyLocalePayload()
 	schemaRoot := filepath.Join(workspaceRoot, "schema", "generated")
-	localePayload := map[string]map[string]string{
+	if dirExists(schemaRoot) {
+		if err := collectGeneratedModuleLocales(schemaRoot, localePayload); err != nil {
+			return err
+		}
+	}
+	mergeFallbackLocales(localePayload)
+
+	resourceDir := filepath.Join(workspaceRoot, "frontend", "src", "i18n", "resources", "generated")
+	if err := os.MkdirAll(resourceDir, 0o755); err != nil {
+		return err
+	}
+	return writeLocaleResourceFiles(resourceDir, localePayload)
+}
+
+func newEmptyLocalePayload() map[string]map[string]string {
+	return map[string]map[string]string{
 		"zh-CN": {},
 		"en-US": {},
 		"ja-JP": {},
 		"ko-KR": {},
 		"fr-FR": {},
 	}
+}
 
-	if dirExists(schemaRoot) {
-		walkErr := filepath.WalkDir(schemaRoot, func(path string, d os.DirEntry, walkErr error) error {
-			if walkErr != nil {
-				return walkErr
-			}
-			if d.IsDir() || !strings.EqualFold(filepath.Ext(path), ".json") || strings.EqualFold(filepath.Base(path), filepath.Base(GeneratedFeatureLedgerRelativePath)) {
-				return nil
-			}
-
-			content, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			var schema ModuleSchema
-			if err := json.Unmarshal(content, &schema); err != nil {
-				return nil
-			}
-			for key, value := range schema.I18n.Translations.Zh {
-				if strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
-					continue
-				}
-				localePayload["zh-CN"][key] = value
-			}
-			for key, value := range schema.I18n.Translations.En {
-				if strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
-					continue
-				}
-				localePayload["en-US"][key] = value
-			}
-			return nil
-		})
+func collectGeneratedModuleLocales(schemaRoot string, localePayload map[string]map[string]string) error {
+	return filepath.WalkDir(schemaRoot, func(path string, d os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
+		if shouldSkipFallbackSchemaFile(path, d) {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		var schema ModuleSchema
+		if err := json.Unmarshal(content, &schema); err != nil {
+			return nil
+		}
+		copySchemaTranslations(localePayload, "zh-CN", schema.I18n.Translations.Zh)
+		copySchemaTranslations(localePayload, "en-US", schema.I18n.Translations.En)
+		return nil
+	})
+}
+
+func shouldSkipFallbackSchemaFile(path string, d os.DirEntry) bool {
+	if d.IsDir() {
+		return true
 	}
+	if !strings.EqualFold(filepath.Ext(path), ".json") {
+		return true
+	}
+	if strings.EqualFold(filepath.Base(path), filepath.Base(GeneratedFeatureLedgerRelativePath)) {
+		return true
+	}
+	return false
+}
+
+func copySchemaTranslations(localePayload map[string]map[string]string, locale string, translations map[string]string) {
+	for key, value := range translations {
+		if strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
+			continue
+		}
+		localePayload[locale][key] = value
+	}
+}
+
+func mergeFallbackLocales(localePayload map[string]map[string]string) {
 	for _, locale := range []string{"ja-JP", "ko-KR", "fr-FR"} {
 		for key, value := range localePayload["en-US"] {
 			if strings.TrimSpace(localePayload[locale][key]) == "" {
@@ -612,11 +671,9 @@ func WriteGeneratedFallbackResources(workspaceRoot string) error {
 			}
 		}
 	}
+}
 
-	resourceDir := filepath.Join(workspaceRoot, "frontend", "src", "i18n", "resources", "generated")
-	if err := os.MkdirAll(resourceDir, 0o755); err != nil {
-		return err
-	}
+func writeLocaleResourceFiles(resourceDir string, localePayload map[string]map[string]string) error {
 	for locale, payload := range localePayload {
 		serialized, err := json.MarshalIndent(payload, "", "  ")
 		if err != nil {

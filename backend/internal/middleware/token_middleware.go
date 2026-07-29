@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -112,6 +113,84 @@ func extractToken(c *gin.Context) string {
 	return parts[1]
 }
 
+// resolveTokenSession 解析 token 对应的会话：优先命中本地缓存（未过期），
+// 否则回源 Redis 校验并写入缓存。校验失败（无效/过期）时直接以 401 中断请求，
+// 返回 (nil, true)，调用方须立即 return。
+func resolveTokenSession(c *gin.Context, ctx context.Context, rdb *redis.Client, token string) (*authtoken.SessionData, bool) {
+	if cached, cacheHit := lookupTokenSessionCache(token); cacheHit && cached.expiresAt.After(time.Now()) {
+		return cached.data, false
+	}
+
+	sessionData, err := authtoken.ValidateSession(ctx, rdb, token)
+	if err != nil {
+		invalidateTokenSessionCache(token)
+		common.Fail(c, common.CodeUnauthorized, "token.invalid")
+		c.Abort()
+		return nil, true
+	}
+
+	ttl, ttlErr := rdb.TTL(ctx, authtoken.SessionKey(token)).Result()
+	if ttlErr == nil && ttl > 0 {
+		storeTokenSessionCache(token, sessionData, time.Now().Add(ttl))
+	}
+	return sessionData, false
+}
+
+// checkTokenBlacklist 检查用户是否被强制拉黑；命中则直接 401 中断并返回 true。
+func checkTokenBlacklist(c *gin.Context, ctx context.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
+	if rdb == nil {
+		return false
+	}
+	blacklistKey := fmt.Sprintf("blacklist:%d", sessionData.UserID)
+	val, err := rdb.Get(ctx, blacklistKey).Result()
+	if err == nil && val != "" {
+		invalidateTokenSessionCache(token)
+		common.Fail(c, common.CodeUnauthorized, "token.expired.force")
+		c.Abort()
+		return true
+	}
+	return false
+}
+
+// enforceTokenIdleTimeout 检查会话空闲超时；超时则清理 Redis 会话并 401 中断，返回 true。
+func enforceTokenIdleTimeout(c *gin.Context, ctx context.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
+	idleMinutes := loadSessionIdleMinutes()
+	if idleMinutes > 0 && sessionData.LastActivityAt > 0 {
+		lastActivity := time.Unix(sessionData.LastActivityAt, 0)
+		if lastActivity.Add(time.Duration(idleMinutes) * time.Minute).Before(time.Now()) {
+			invalidateTokenSessionCache(token)
+			_ = authtoken.DeleteSession(ctx, rdb, token)
+			common.Fail(c, common.CodeUnauthorized, "session.idle_timeout")
+			c.Abort()
+			return true
+		}
+	}
+	return false
+}
+
+// refreshTokenActivity 尽力刷新 Redis 中的活跃时间戳并同步本地缓存；失败不影响请求。
+func refreshTokenActivity(ctx context.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) {
+	if sessionData.LastActivityAt == 0 || time.Since(time.Unix(sessionData.LastActivityAt, 0)) > time.Minute {
+		sessionData.LastActivityAt = time.Now().Unix()
+		if err := authtoken.RefreshSessionActivity(ctx, rdb, token, sessionData); err == nil {
+			if cached, ok := lookupTokenSessionCache(token); ok {
+				cached.data.LastActivityAt = sessionData.LastActivityAt
+			}
+		}
+	}
+}
+
+// applyTokenContext 将鉴权主体写入 Gin 上下文，键名与顺序与原实现完全一致，供下游读取。
+func applyTokenContext(c *gin.Context, sessionData *authtoken.SessionData) {
+	c.Set("userId", sessionData.UserID)
+	c.Set("username", sessionData.Username)
+	c.Set("roleKeys", sessionData.RoleKeys)
+	c.Set("sessionId", sessionData.SessionID)
+	if len(sessionData.RoleKeys) > 0 {
+		c.Set("roleKey", sessionData.RoleKeys[0])
+	}
+}
+
 // TokenAuthMiddleware is the unified middleware for Redis opaque token authentication.
 // It combines the simplicity of Redis token validation with session management features:
 // - 60-second in-memory cache for performance
@@ -128,76 +207,19 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
-		var sessionData *authtoken.SessionData
-		var err error
-
-		// Try cache first
-		cached, cacheHit := lookupTokenSessionCache(token)
-		if cacheHit && cached.expiresAt.After(time.Now()) {
-			sessionData = cached.data
-		} else {
-			// Cache miss or expired - query Redis
-			sessionData, err = authtoken.ValidateSession(ctx, rdb, token)
-			if err != nil {
-				invalidateTokenSessionCache(token)
-				common.Fail(c, common.CodeUnauthorized, "token.invalid")
-				c.Abort()
-				return
-			}
-
-			// Get TTL from Redis for cache expiry
-			ttl, ttlErr := rdb.TTL(ctx, authtoken.SessionKey(token)).Result()
-			if ttlErr == nil && ttl > 0 {
-				storeTokenSessionCache(token, sessionData, time.Now().Add(ttl))
-			}
+		sessionData, aborted := resolveTokenSession(c, ctx, rdb, token)
+		if aborted {
+			return
+		}
+		if checkTokenBlacklist(c, ctx, rdb, token, sessionData) {
+			return
+		}
+		if enforceTokenIdleTimeout(c, ctx, rdb, token, sessionData) {
+			return
 		}
 
-		// Check blacklist
-		if rdb != nil {
-			blacklistKey := fmt.Sprintf("blacklist:%d", sessionData.UserID)
-			val, err := rdb.Get(ctx, blacklistKey).Result()
-			if err == nil && val != "" {
-				invalidateTokenSessionCache(token)
-				common.Fail(c, common.CodeUnauthorized, "token.expired.force")
-				c.Abort()
-				return
-			}
-		}
-
-		// Check idle timeout
-		idleMinutes := loadSessionIdleMinutes()
-		if idleMinutes > 0 && sessionData.LastActivityAt > 0 {
-			lastActivity := time.Unix(sessionData.LastActivityAt, 0)
-			if lastActivity.Add(time.Duration(idleMinutes) * time.Minute).Before(time.Now()) {
-				invalidateTokenSessionCache(token)
-				// Clean up the expired session from Redis
-				_ = authtoken.DeleteSession(ctx, rdb, token)
-				common.Fail(c, common.CodeUnauthorized, "session.idle_timeout")
-				c.Abort()
-				return
-			}
-		}
-
-		// Update activity timestamp in Redis (best-effort, don't fail the request)
-		if sessionData.LastActivityAt == 0 || time.Since(time.Unix(sessionData.LastActivityAt, 0)) > time.Minute {
-			sessionData.LastActivityAt = time.Now().Unix()
-			if err := authtoken.RefreshSessionActivity(ctx, rdb, token, sessionData); err == nil {
-				// Update cache with new activity time
-				if cached, ok := lookupTokenSessionCache(token); ok {
-					cached.data.LastActivityAt = sessionData.LastActivityAt
-				}
-			}
-		}
-
-		// Set Gin context values
-		c.Set("userId", sessionData.UserID)
-		c.Set("username", sessionData.Username)
-		c.Set("roleKeys", sessionData.RoleKeys)
-		c.Set("sessionId", sessionData.SessionID)
-		if len(sessionData.RoleKeys) > 0 {
-			c.Set("roleKey", sessionData.RoleKeys[0])
-		}
-
+		refreshTokenActivity(ctx, rdb, token, sessionData)
+		applyTokenContext(c, sessionData)
 		c.Next()
 	}
 }

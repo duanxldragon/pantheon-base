@@ -73,28 +73,45 @@ func (s *MenuService) GetMenuTree(query *MenuListQuery, roleKeys []string) ([]*M
 	return normalizeManageMenuTree(buildMenuTree(menus, 0), 0), nil
 }
 
-// filterMenusWithAncestors 按文本条件过滤菜单并保留命中节点的祖先链，
-// 保证树装配后命中的子节点仍然可见（保持传入的排序）。
-func filterMenusWithAncestors(menus []SystemMenu, query *MenuListQuery) []SystemMenu {
-	keyword := strings.ToLower(strings.TrimSpace(query.Keyword))
-	titleKey := strings.ToLower(strings.TrimSpace(query.TitleKey))
-	pathFilter := strings.ToLower(strings.TrimSpace(query.Path))
+// menuTextFilter 保存文本过滤条件（已统一小写）。
+type menuTextFilter struct {
+	keyword  string
+	titleKey string
+	path     string
+}
 
-	matches := func(menu SystemMenu) bool {
-		menuTitle := strings.ToLower(menu.TitleKey)
-		menuPath := strings.ToLower(menu.Path)
-		if keyword != "" && !strings.Contains(menuTitle, keyword) && !strings.Contains(menuPath, keyword) {
-			return false
-		}
-		if titleKey != "" && !strings.Contains(menuTitle, titleKey) {
-			return false
-		}
-		if pathFilter != "" && !strings.Contains(menuPath, pathFilter) {
-			return false
-		}
-		return true
+// buildMenuTextFilter 从查询构造文本过滤条件（统一小写，便于 Contains 比较）。
+func buildMenuTextFilter(query *MenuListQuery) menuTextFilter {
+	return menuTextFilter{
+		keyword:  strings.ToLower(strings.TrimSpace(query.Keyword)),
+		titleKey: strings.ToLower(strings.TrimSpace(query.TitleKey)),
+		path:     strings.ToLower(strings.TrimSpace(query.Path)),
 	}
+}
 
+// menuMatchesTextFilter 判断单个菜单是否满足文本过滤条件（与原内联匹配逻辑等价）。
+func menuMatchesTextFilter(menu SystemMenu, f menuTextFilter) bool {
+	menuTitle := strings.ToLower(menu.TitleKey)
+	menuPath := strings.ToLower(menu.Path)
+	if f.keyword != "" && !strings.Contains(menuTitle, f.keyword) && !strings.Contains(menuPath, f.keyword) {
+		return false
+	}
+	if f.titleKey != "" && !strings.Contains(menuTitle, f.titleKey) {
+		return false
+	}
+	if f.path != "" && !strings.Contains(menuPath, f.path) {
+		return false
+	}
+	return true
+}
+
+// menuFilterPredicate 判断单个菜单是否满足过滤条件。
+type menuFilterPredicate func(menu SystemMenu) bool
+
+// collectMenusWithAncestors 在 menus 中选出满足 predicate 的节点，并补全其祖先链，
+// 返回按 menus 原始顺序排列的结果（保持排序）。与 filterMenusWithAncestors /
+// getScopedNavigationMenuTree 中的内联祖先补全逻辑等价。
+func collectMenusWithAncestors(menus []SystemMenu, predicate menuFilterPredicate) []SystemMenu {
 	menuMap := make(map[uint64]SystemMenu, len(menus))
 	for _, menu := range menus {
 		menuMap[menu.ID] = menu
@@ -102,21 +119,10 @@ func filterMenusWithAncestors(menus []SystemMenu, query *MenuListQuery) []System
 
 	selected := make(map[uint64]struct{}, len(menus))
 	for _, menu := range menus {
-		if !matches(menu) {
+		if !predicate(menu) {
 			continue
 		}
-		currentID := menu.ID
-		for currentID > 0 {
-			node, ok := menuMap[currentID]
-			if !ok {
-				break
-			}
-			if _, exists := selected[node.ID]; exists {
-				break
-			}
-			selected[node.ID] = struct{}{}
-			currentID = node.ParentID
-		}
+		walkAncestors(selected, menuMap, menu.ID)
 	}
 
 	result := make([]SystemMenu, 0, len(selected))
@@ -126,6 +132,31 @@ func filterMenusWithAncestors(menus []SystemMenu, query *MenuListQuery) []System
 		}
 	}
 	return result
+}
+
+// walkAncestors 将 id 及其所有祖先加入 selected 集合（命中已存在节点即停止，
+// 因为该节点的祖先此前已被加入，等价于继续向上遍历）。
+func walkAncestors(selected map[uint64]struct{}, menuMap map[uint64]SystemMenu, id uint64) {
+	for id > 0 {
+		node, ok := menuMap[id]
+		if !ok {
+			return
+		}
+		if _, exists := selected[node.ID]; exists {
+			return
+		}
+		selected[node.ID] = struct{}{}
+		id = node.ParentID
+	}
+}
+
+// filterMenusWithAncestors 按文本条件过滤菜单并保留命中节点的祖先链，
+// 保证树装配后命中的子节点仍然可见（保持传入的排序）。
+func filterMenusWithAncestors(menus []SystemMenu, query *MenuListQuery) []SystemMenu {
+	f := buildMenuTextFilter(query)
+	return collectMenusWithAncestors(menus, func(menu SystemMenu) bool {
+		return menuMatchesTextFilter(menu, f)
+	})
 }
 
 func (s *MenuService) HasManageAccess(roleKeys []string) (bool, error) {
@@ -145,6 +176,15 @@ func (s *MenuService) HasManageAccess(roleKeys []string) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// toIDSet 将 id 切片转为查询集合，便于 O(1) 命中判断。
+func toIDSet(ids []uint64) map[uint64]struct{} {
+	set := make(map[uint64]struct{}, len(ids))
+	for _, id := range ids {
+		set[id] = struct{}{}
+	}
+	return set
 }
 
 func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTreeResp, error) {
@@ -167,33 +207,11 @@ func (s *MenuService) getScopedNavigationMenuTree(roleKeys []string) ([]*MenuTre
 		return []*MenuTreeResp{}, nil
 	}
 
-	menuMap := make(map[uint64]SystemMenu, len(allMenus))
-	selectedMap := make(map[uint64]struct{}, len(allowedIDs))
-	for _, menu := range allMenus {
-		menuMap[menu.ID] = menu
-	}
-	for _, menuID := range allowedIDs {
-		currentID := menuID
-		for currentID > 0 {
-			menu, ok := menuMap[currentID]
-			if !ok {
-				break
-			}
-			if _, exists := selectedMap[menu.ID]; exists {
-				currentID = menu.ParentID
-				continue
-			}
-			selectedMap[menu.ID] = struct{}{}
-			currentID = menu.ParentID
-		}
-	}
-
-	selectedMenus := make([]SystemMenu, 0, len(selectedMap))
-	for _, menu := range allMenus {
-		if _, ok := selectedMap[menu.ID]; ok {
-			selectedMenus = append(selectedMenus, menu)
-		}
-	}
+	allowedSet := toIDSet(allowedIDs)
+	selectedMenus := collectMenusWithAncestors(allMenus, func(menu SystemMenu) bool {
+		_, ok := allowedSet[menu.ID]
+		return ok
+	})
 	return normalizeScopedNavigationMenuTree(buildMenuTree(selectedMenus, 0), 0), nil
 }
 
@@ -601,36 +619,72 @@ func (s *MenuService) validateMenuUpdate(menuID uint64, req *MenuUpdateReq) erro
 	return s.ensurePathUnique(menuID, req.Path)
 }
 
+// isRouteNameRequired 目录/菜单类型且未提供路由名时必填（与原内联守卫等价）。
+func isRouteNameRequired(menuType, routeName string) bool {
+	return menuType == "C" && routeName == ""
+}
+
+// isPagePermRequired 菜单类型、非外链且未配置页面权限时必填（与原内联守卫等价）。
+func isPagePermRequired(menuType string, isExternal int, pagePerm string) bool {
+	return menuType == "C" && isExternal != 1 && pagePerm == ""
+}
+
+// isPermsRequired 按钮类型且未配置权限标识时必填（与原内联守卫等价）。
+func isPermsRequired(menuType, perms string) bool {
+	return menuType == "F" && perms == ""
+}
+
+// ensureRouteNameUniqueIfPresent 仅当路由名非空时校验唯一性（与原嵌套守卫等价）。
+func ensureRouteNameUniqueIfPresent(s *MenuService, menuID uint64, routeName string) error {
+	if routeName == "" {
+		return nil
+	}
+	return s.ensureRouteNameUnique(menuID, routeName)
+}
+
+// validateExternalMenuPath 校验外链菜单的 path 必须是合法 http/https 链接。
+func validateExternalMenuPath(path string) error {
+	if !isValidExternalMenuPath(path) {
+		return common.NewBadRequest("menu.path.invalid_external")
+	}
+	return nil
+}
+
+// isComponentRequired 菜单类型且未提供组件键时必填（与原内联守卫等价）。
+func isComponentRequired(menuType, componentKey string) bool {
+	return menuType == "C" && componentKey == ""
+}
+
+// isComponentInvalid 菜单类型、所属模块要求注册组件且组件键未在注册表中时非法（与原内联守卫等价）。
+func isComponentInvalid(menuType, module, componentKey string) bool {
+	return menuType == "C" && requiresRegisteredMenuComponent(module) && !isRegisteredMenuComponentKey(componentKey)
+}
+
 func (s *MenuService) validateMenuMeta(menuID uint64, req *MenuCreateReq) error {
 	routeName := normalizeMenuRouteName(req.RouteName)
 	menuType := normalizeMenuType(req.Type)
 	isExternal := normalizeMenuFlag(req.IsExternal)
 
-	if menuType == "C" && routeName == "" {
+	if isRouteNameRequired(menuType, routeName) {
 		return common.NewBadRequest("menu.route_name.required")
 	}
-	if menuType == "C" && isExternal != 1 && normalizeMenuPerm(req.PagePerm) == "" {
+	if isPagePermRequired(menuType, isExternal, normalizeMenuPerm(req.PagePerm)) {
 		return common.NewBadRequest("menu.page_perm.required")
 	}
-	if menuType == "F" && normalizeMenuPerm(req.Perms) == "" {
+	if isPermsRequired(menuType, normalizeMenuPerm(req.Perms)) {
 		return common.NewBadRequest("menu.perms.required")
 	}
-	if routeName != "" {
-		if err := s.ensureRouteNameUnique(menuID, routeName); err != nil {
-			return err
-		}
+	if err := ensureRouteNameUniqueIfPresent(s, menuID, routeName); err != nil {
+		return err
 	}
 	if isExternal == 1 {
-		if !isValidExternalMenuPath(req.Path) {
-			return common.NewBadRequest("menu.path.invalid_external")
-		}
-		return nil
+		return validateExternalMenuPath(req.Path)
 	}
 	componentKey := strings.TrimSpace(req.Component)
-	if menuType == "C" && componentKey == "" {
+	if isComponentRequired(menuType, componentKey) {
 		return common.NewBadRequest("menu.component.required")
 	}
-	if menuType == "C" && requiresRegisteredMenuComponent(normalizeMenuModule(req.Module)) && !isRegisteredMenuComponentKey(componentKey) {
+	if isComponentInvalid(menuType, normalizeMenuModule(req.Module), componentKey) {
 		return common.NewBadRequest("menu.component.invalid")
 	}
 	return nil

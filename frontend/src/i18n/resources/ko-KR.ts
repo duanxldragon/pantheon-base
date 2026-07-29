@@ -171,6 +171,7 @@ const koKRFallback = {
   'common.actionFailed': '작업에 실패했습니다. 나중에 다시 시도하세요.',
   'common.cancel': '취소',
   'common.clear': '지우기',
+  'common.cleanup': '정리',
   'common.clearConfirm': '현재 데이터를 지우시겠습니까?',
   'common.clearSuccess': '정상적으로 지워졌습니다',
   'common.cleanupLogs': '로그 정리',
@@ -348,6 +349,7 @@ const koKRFallback = {
   'auth.security.lastLoginAt': '최근 성공 로그인',
   'auth.security.currentDevice': '현재 장치',
   'auth.security.currentIp': '현재 IP',
+  'auth.security.recentSuccessfulLoginCount': '최근 10건 중 성공 로그인',
   'auth.security.subtitle': '현재 계정의 장치, 로그인 활동, 비밀번호 보안을 검토합니다.',
   'auth.security.overview': '계정 보안 개요',
   'auth.security.currentSessionSummary': '현재 세션 요약',
@@ -416,7 +418,7 @@ const koKRFallback = {
   'auth.session.subtitle': '전역 온라인 세션, 장치 상세, 해제 작업을 검토합니다.',
   'auth.session.selfProtected':
     '현재 로그인한 계정은 이 페이지에서 자기 자신을 해제할 수 없습니다.',
-  'auth.session.currentUser': '현재 계정',
+  'auth.session.currentUser': '현재 세션',
   'auth.session.hero.eyebrow': '시스템 도메인 / 세션 감사',
   'auth.session.hero.title': '온라인 세션, 장치 지문, 해제 경계를 하나의 거버넌스 화면에서 검토',
   'auth.session.hero.desc':
@@ -709,7 +711,7 @@ const koKRFallback = {
   'system.permission.edit': '정책 수정',
   'system.permission.hero.eyebrow': '시스템 도메인 / IAM 권한 워크벤치',
   'system.permission.hero.title':
-    '역할 권한과 Casbin API 정책을 하나의 권한 거버넌스 체인으로 통합',
+    '역할 권한과 API 액세스 정책을 하나의 권한 거버넌스 체인으로 통합',
   'system.menu.title': '제목',
   'system.menu.titleKey': '제목 키',
   'system.menu.search.placeholder': '메뉴 제목 키 또는 경로로 검색…',

@@ -93,45 +93,127 @@ func (s *Service) LoadConfig() (*Config, error) {
 		S3Region:      "us-east-1",
 	}
 
-	if value, err := s.reader.GetByKey("upload.storage_driver"); err == nil && strings.TrimSpace(value) != "" {
-		cfg.StorageDriver = strings.ToLower(strings.TrimSpace(value))
-	}
-	if value, err := s.reader.GetByKey("upload.max_file_size"); err == nil && strings.TrimSpace(value) != "" {
-		size, parseErr := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
-		if parseErr != nil || size <= 0 {
-			return nil, errors.New("upload.config.invalid_max_file_size")
+	for _, field := range loadConfigStringFields {
+		raw, ok := readSetting(s.reader, field.key)
+		if ok && (field.emptyAllowed || strings.TrimSpace(raw) != "") {
+			field.apply(cfg, strings.TrimSpace(raw))
 		}
-		cfg.MaxFileSizeMB = size
 	}
-	if value, err := s.reader.GetByKey("upload.allowed_types"); err == nil && strings.TrimSpace(value) != "" {
-		var items []string
-		if json.Unmarshal([]byte(value), &items) != nil {
-			return nil, errors.New("upload.config.invalid_allowed_types")
-		}
-		cfg.AllowedTypes = normalizeAllowedTypes(items)
+
+	if err := applyMaxFileSize(cfg, s.reader); err != nil {
+		return nil, err
 	}
-	if value, err := s.reader.GetByKey("upload.local_path"); err == nil && strings.TrimSpace(value) != "" {
-		cfg.LocalPath = strings.TrimSpace(value)
-	}
-	if value, err := s.reader.GetByKey("upload.public_base_url"); err == nil {
-		cfg.PublicBaseURL = strings.TrimSpace(value)
-	}
-	if value, err := s.reader.GetByKey("upload.s3_endpoint"); err == nil {
-		cfg.S3Endpoint = strings.TrimSpace(value)
-	}
-	if value, err := s.reader.GetByKey("upload.s3_bucket"); err == nil {
-		cfg.S3Bucket = strings.TrimSpace(value)
-	}
-	if value, err := s.reader.GetByKey("upload.s3_region"); err == nil && strings.TrimSpace(value) != "" {
-		cfg.S3Region = strings.TrimSpace(value)
-	}
-	if value, err := s.reader.GetByKey("upload.s3_access_key_id"); err == nil {
-		cfg.S3AccessKeyID = strings.TrimSpace(value)
-	}
-	if value, err := s.reader.GetByKey("upload.s3_secret_access_key"); err == nil {
-		cfg.S3SecretKey = strings.TrimSpace(value)
+	if err := applyAllowedTypes(cfg, s.reader); err != nil {
+		return nil, err
 	}
 	return cfg, nil
+}
+
+// configStringField describes a scalar string setting and how it is applied to Config.
+// emptyAllowed marks settings whose raw (trimmed) value is kept even when empty, mirroring the
+// original per-key assignment semantics (settings read without the `&& trim != ""` guard).
+type configStringField struct {
+	key          string
+	emptyAllowed bool
+	apply        func(cfg *Config, value string)
+}
+
+// loadConfigStringFields enumerates the scalar string settings and maps them onto Config.
+// The order is not significant for behaviour; only max_file_size/allowed_types can surface errors.
+var loadConfigStringFields = []configStringField{
+	{
+		key: "upload.storage_driver",
+		apply: func(cfg *Config, value string) {
+			cfg.StorageDriver = strings.ToLower(value)
+		},
+	},
+	{
+		key: "upload.local_path",
+		apply: func(cfg *Config, value string) {
+			cfg.LocalPath = value
+		},
+	},
+	{
+		key:          "upload.public_base_url",
+		emptyAllowed: true,
+		apply: func(cfg *Config, value string) {
+			cfg.PublicBaseURL = value
+		},
+	},
+	{
+		key:          "upload.s3_endpoint",
+		emptyAllowed: true,
+		apply: func(cfg *Config, value string) {
+			cfg.S3Endpoint = value
+		},
+	},
+	{
+		key:          "upload.s3_bucket",
+		emptyAllowed: true,
+		apply: func(cfg *Config, value string) {
+			cfg.S3Bucket = value
+		},
+	},
+	{
+		key: "upload.s3_region",
+		apply: func(cfg *Config, value string) {
+			cfg.S3Region = value
+		},
+	},
+	{
+		key:          "upload.s3_access_key_id",
+		emptyAllowed: true,
+		apply: func(cfg *Config, value string) {
+			cfg.S3AccessKeyID = value
+		},
+	},
+	{
+		key:          "upload.s3_secret_access_key",
+		emptyAllowed: true,
+		apply: func(cfg *Config, value string) {
+			cfg.S3SecretKey = value
+		},
+	},
+}
+
+// readSetting reads a raw setting value and reports whether the reader succeeded.
+// The error guard (err == nil) is preserved by the ok result; callers apply their own trimming.
+func readSetting(reader ConfigReader, key string) (string, bool) {
+	value, err := reader.GetByKey(key)
+	if err != nil {
+		return "", false
+	}
+	return value, true
+}
+
+// applyMaxFileSize resolves upload.max_file_size, preserving the original error semantics:
+// a parse failure or a non-positive value reports upload.config.invalid_max_file_size.
+func applyMaxFileSize(cfg *Config, reader ConfigReader) error {
+	raw, ok := readSetting(reader, "upload.max_file_size")
+	if !ok || strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	size, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+	if err != nil || size <= 0 {
+		return errors.New("upload.config.invalid_max_file_size")
+	}
+	cfg.MaxFileSizeMB = size
+	return nil
+}
+
+// applyAllowedTypes resolves upload.allowed_types, preserving the original error semantics:
+// a JSON decode failure reports upload.config.invalid_allowed_types.
+func applyAllowedTypes(cfg *Config, reader ConfigReader) error {
+	raw, ok := readSetting(reader, "upload.allowed_types")
+	if !ok || strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	var items []string
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return errors.New("upload.config.invalid_allowed_types")
+	}
+	cfg.AllowedTypes = normalizeAllowedTypes(items)
+	return nil
 }
 
 // MaxBytes returns the configured maximum upload size in bytes.
@@ -444,6 +526,28 @@ func normalizeExtension(value string) string {
 	return strings.TrimPrefix(strings.ToLower(strings.TrimSpace(value)), ".")
 }
 
+// sanitizeScopeSegment 对单个路径段执行白名单过滤：仅保留小写字母、大写字母（转小写）、
+// 数字、连字符与下划线，其余 rune 直接丢弃。返回的字符串可能为空（当整段均被过滤时）。
+// 该逻辑从 normalizeScope 提炼而来，语义须与原始内联实现逐字节等价。
+func sanitizeScopeSegment(part string) string {
+	builder := strings.Builder{}
+	for _, r := range part {
+		switch {
+		case r >= 'a' && r <= 'z':
+			builder.WriteRune(r)
+		case r >= 'A' && r <= 'Z':
+			builder.WriteRune(r + 32)
+		case r >= '0' && r <= '9':
+			builder.WriteRune(r)
+		case r == '-' || r == '_':
+			builder.WriteRune(r)
+		}
+	}
+	return builder.String()
+}
+
+// normalizeScope 将任意 scope 字符串规范化为对象存储路径片段。
+// 语义保持：按 '/' 与 '\' 切分 -> 逐段 trim -> 白名单过滤 -> 空结果回退 "general" -> 以 '/' 连接。
 func normalizeScope(scope string) string {
 	parts := strings.FieldsFunc(strings.TrimSpace(scope), func(r rune) bool {
 		return r == '/' || r == '\\'
@@ -457,21 +561,8 @@ func normalizeScope(scope string) string {
 		if part == "" {
 			continue
 		}
-		builder := strings.Builder{}
-		for _, r := range part {
-			switch {
-			case r >= 'a' && r <= 'z':
-				builder.WriteRune(r)
-			case r >= 'A' && r <= 'Z':
-				builder.WriteRune(r + 32)
-			case r >= '0' && r <= '9':
-				builder.WriteRune(r)
-			case r == '-' || r == '_':
-				builder.WriteRune(r)
-			}
-		}
-		if builder.Len() > 0 {
-			result = append(result, builder.String())
+		if segment := sanitizeScopeSegment(part); segment != "" {
+			result = append(result, segment)
 		}
 	}
 	if len(result) == 0 {
