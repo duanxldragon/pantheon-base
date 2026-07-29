@@ -350,7 +350,7 @@ func (s *DynamicModuleService) shouldSkipGeneratedSchemaFile(path string, d os.D
 // loadGeneratedSchema reads and unmarshals a generated schema JSON file. The
 // boolean result is false when reading or parsing fails.
 func (s *DynamicModuleService) loadGeneratedSchema(path string) (generatedSchema, bool, error) {
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(path) // #nosec G304 -- path comes from filepath.WalkDir under the controlled generated-schema root.
 	if err != nil {
 		return generatedSchema{}, false, err
 	}

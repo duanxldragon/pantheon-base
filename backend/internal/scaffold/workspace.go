@@ -204,13 +204,13 @@ func writeSingleGeneratedModuleFile(workspaceRoot, backendPrefix, frontendPrefix
 	seen[relativePath] = struct{}{}
 
 	absolutePath := filepath.Join(workspaceRoot, filepath.FromSlash(relativePath))
-	if err := os.MkdirAll(filepath.Dir(absolutePath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(absolutePath), 0o750); err != nil {
 		return "", err
 	}
 	if !overwrite && fileExists(absolutePath) {
 		return "", common.NewConflict("module.generate.file_exists")
 	}
-	if err := os.WriteFile(absolutePath, []byte(file.Content), 0o644); err != nil {
+	if err := os.WriteFile(absolutePath, []byte(file.Content), 0o600); err != nil {
 		return "", err
 	}
 	return relativePath, nil
@@ -545,7 +545,7 @@ func isValidModulePathSegment(segment string) bool {
 			}
 			continue
 		}
-		if !(unicode.IsLower(char) || unicode.IsDigit(char) || char == '_') {
+		if !unicode.IsLower(char) && !unicode.IsDigit(char) && char != '_' {
 			return false
 		}
 	}
@@ -603,7 +603,7 @@ func WriteGeneratedFallbackResources(workspaceRoot string) error {
 	mergeFallbackLocales(localePayload)
 
 	resourceDir := filepath.Join(workspaceRoot, "frontend", "src", "i18n", "resources", "generated")
-	if err := os.MkdirAll(resourceDir, 0o755); err != nil {
+	if err := os.MkdirAll(resourceDir, 0o750); err != nil {
 		return err
 	}
 	return writeLocaleResourceFiles(resourceDir, localePayload)
@@ -627,7 +627,7 @@ func collectGeneratedModuleLocales(schemaRoot string, localePayload map[string]m
 		if shouldSkipFallbackSchemaFile(path, d) {
 			return nil
 		}
-		content, err := os.ReadFile(path)
+		content, err := os.ReadFile(path) // #nosec G304 -- path comes from filepath.WalkDir under the controlled schema root.
 		if err != nil {
 			return err
 		}

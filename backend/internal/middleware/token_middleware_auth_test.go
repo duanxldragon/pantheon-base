@@ -39,7 +39,7 @@ func TestTokenAuthMiddleware_MissingTokenIsUnauthorized(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("failed to parse response body: %v", err)
 	}
-	if code, ok := body["code"]; !ok || int(code.(float64)) != common.CodeUnauthorized {
+	if code, ok := body["code"].(float64); !ok || int(code) != common.CodeUnauthorized {
 		t.Fatalf("expected business code %d in body, got %v", common.CodeUnauthorized, body)
 	}
 	if msg, ok := body["message"]; !ok || msg != "token.missing" {
@@ -73,7 +73,7 @@ func TestTokenAuthMiddleware_InvalidTokenWhenRedisUnavailable(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("failed to parse response body: %v", err)
 	}
-	if code, ok := body["code"]; !ok || int(code.(float64)) != common.CodeUnauthorized {
+	if code, ok := body["code"].(float64); !ok || int(code) != common.CodeUnauthorized {
 		t.Fatalf("expected business code %d in body, got %v", common.CodeUnauthorized, body)
 	}
 	if msg, ok := body["message"]; !ok || msg != "token.invalid" {
@@ -106,7 +106,9 @@ func TestApplyTokenContext(t *testing.T) {
 		if v, ok := c.Get("username"); !ok || v != "alice" {
 			t.Fatalf("username mismatch: ok=%v v=%v", ok, v)
 		}
-		if v, ok := c.Get("roleKeys"); !ok || len(v.([]string)) != 2 || v.([]string)[0] != "admin" {
+		if v, ok := c.Get("roleKeys"); !ok {
+			t.Fatalf("roleKeys missing: ok=%v v=%v", ok, v)
+		} else if keys, isSlice := v.([]string); !isSlice || len(keys) != 2 || keys[0] != "admin" {
 			t.Fatalf("roleKeys mismatch: ok=%v v=%v", ok, v)
 		}
 		if v, ok := c.Get("sessionId"); !ok || v != "sess-abc" {

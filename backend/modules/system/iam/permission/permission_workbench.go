@@ -264,17 +264,17 @@ func sortWorkbenchRoleSlices(role *PermissionWorkbenchRoleResp) {
 
 func (s *PermissionService) applyWorkbenchFilters(resp *PermissionWorkbenchResp, query *PermissionWorkbenchQuery) {
 	switch strings.TrimSpace(query.Integrity) {
-	case "unknown":
+	case workbenchIntegrityUnknown:
 		resp.Roles = filterWorkbenchRoles(resp.Roles, func(r PermissionWorkbenchRoleResp) bool { return r.UnknownPermissionCount > 0 })
-	case "clean":
+	case workbenchIntegrityClean:
 		resp.Roles = filterWorkbenchRoles(resp.Roles, func(r PermissionWorkbenchRoleResp) bool { return r.UnknownPermissionCount == 0 })
 	}
 	switch strings.TrimSpace(query.Coverage) {
-	case "page-gap":
+	case workbenchCoveragePageGap:
 		resp.Roles = filterWorkbenchRoles(resp.Roles, func(r PermissionWorkbenchRoleResp) bool { return r.HasPageGap })
-	case "api-gap":
+	case workbenchCoverageAPIGap:
 		resp.Roles = filterWorkbenchRoles(resp.Roles, func(r PermissionWorkbenchRoleResp) bool { return r.HasAPIGap })
-	case "complete":
+	case workbenchCoverageComplete:
 		resp.Roles = filterWorkbenchRoles(resp.Roles, func(r PermissionWorkbenchRoleResp) bool { return !r.HasPageGap && !r.HasAPIGap })
 	}
 }
@@ -325,7 +325,7 @@ func resolveWorkbenchGovernanceStatus(role PermissionWorkbenchRoleResp, latest *
 	if latest != nil {
 		return "remediated"
 	}
-	return "clean"
+	return workbenchIntegrityClean
 }
 
 func extractWorkbenchRoleKeys(roles []PermissionWorkbenchRoleResp) []string {

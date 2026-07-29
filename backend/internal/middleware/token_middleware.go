@@ -116,7 +116,7 @@ func extractToken(c *gin.Context) string {
 // resolveTokenSession 解析 token 对应的会话：优先命中本地缓存（未过期），
 // 否则回源 Redis 校验并写入缓存。校验失败（无效/过期）时直接以 401 中断请求，
 // 返回 (nil, true)，调用方须立即 return。
-func resolveTokenSession(c *gin.Context, ctx context.Context, rdb *redis.Client, token string) (*authtoken.SessionData, bool) {
+func resolveTokenSession(ctx context.Context, c *gin.Context, rdb *redis.Client, token string) (*authtoken.SessionData, bool) {
 	if cached, cacheHit := lookupTokenSessionCache(token); cacheHit && cached.expiresAt.After(time.Now()) {
 		return cached.data, false
 	}
@@ -137,7 +137,7 @@ func resolveTokenSession(c *gin.Context, ctx context.Context, rdb *redis.Client,
 }
 
 // checkTokenBlacklist 检查用户是否被强制拉黑；命中则直接 401 中断并返回 true。
-func checkTokenBlacklist(c *gin.Context, ctx context.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
+func checkTokenBlacklist(ctx context.Context, c *gin.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
 	if rdb == nil {
 		return false
 	}
@@ -153,7 +153,7 @@ func checkTokenBlacklist(c *gin.Context, ctx context.Context, rdb *redis.Client,
 }
 
 // enforceTokenIdleTimeout 检查会话空闲超时；超时则清理 Redis 会话并 401 中断，返回 true。
-func enforceTokenIdleTimeout(c *gin.Context, ctx context.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
+func enforceTokenIdleTimeout(ctx context.Context, c *gin.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
 	idleMinutes := loadSessionIdleMinutes()
 	if idleMinutes > 0 && sessionData.LastActivityAt > 0 {
 		lastActivity := time.Unix(sessionData.LastActivityAt, 0)
@@ -207,14 +207,14 @@ func TokenAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
-		sessionData, aborted := resolveTokenSession(c, ctx, rdb, token)
+		sessionData, aborted := resolveTokenSession(ctx, c, rdb, token)
 		if aborted {
 			return
 		}
-		if checkTokenBlacklist(c, ctx, rdb, token, sessionData) {
+		if checkTokenBlacklist(ctx, c, rdb, token, sessionData) {
 			return
 		}
-		if enforceTokenIdleTimeout(c, ctx, rdb, token, sessionData) {
+		if enforceTokenIdleTimeout(ctx, c, rdb, token, sessionData) {
 			return
 		}
 

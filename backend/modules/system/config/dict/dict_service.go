@@ -1129,7 +1129,7 @@ func visitDictUsageEntry(projectRoot, path string, d fs.DirEntry, walkErr error,
 	if _, ok := allowedExt[strings.ToLower(filepath.Ext(path))]; !ok {
 		return nil
 	}
-	file, err := os.Open(path)
+	file, err := os.Open(path) // #nosec G304 -- path comes from filepath.WalkDir under the repo source roots being scanned.
 	if err != nil {
 		return nil
 	}

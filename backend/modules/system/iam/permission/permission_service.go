@@ -35,6 +35,11 @@ const (
 	workbenchCoverageAPIGap   = "api-gap"
 )
 
+const (
+	workbenchIntegrityUnknown = "unknown"
+	workbenchIntegrityClean   = "clean"
+)
+
 type PermissionService struct {
 	db *gorm.DB
 }

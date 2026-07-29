@@ -424,6 +424,7 @@ func (s *I18nService) sortI18nAuditResults(resp *I18nAuditResp) {
 	})
 }
 
+// GetAudit 汇总 i18n 词条治理审计结果：重复键、未使用键、过期占位符与模块统计。
 func (s *I18nService) GetAudit() (*I18nAuditResp, error) {
 	resp := &I18nAuditResp{
 		DuplicateKeys:                  make([]I18nDuplicateKeyConflict, 0),
@@ -1323,7 +1324,7 @@ func scanI18nKeysInFile(path string, excludeCatalog bool, re *regexp.Regexp, key
 	if excludeCatalog && isIgnoredI18nUsageFile(path) {
 		return
 	}
-	content, readErr := os.ReadFile(path)
+	content, readErr := os.ReadFile(path) // #nosec G304 -- path comes from filepath.Walk under the repo source roots being scanned.
 	if readErr != nil {
 		return
 	}
@@ -1468,7 +1469,7 @@ func scanI18nKeyReferenceInFile(path, normalizedTarget, trimNewKey string, exclu
 	if excludeCatalog && isIgnoredI18nUsageFile(path) {
 		return
 	}
-	content, readErr := os.ReadFile(path)
+	content, readErr := os.ReadFile(path) // #nosec G304 -- path comes from filepath.Walk under the repo source roots being scanned.
 	if readErr != nil {
 		return
 	}
