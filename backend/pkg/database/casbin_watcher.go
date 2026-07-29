@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -65,8 +66,7 @@ type redisCasbinWatcher struct {
 	stateMu sync.Mutex
 	pubsub  *redis.PubSub
 
-	ctx    context.Context
-	cancel func()
+	cancel context.CancelFunc
 
 	closeOnce sync.Once
 }
@@ -81,15 +81,14 @@ func newRedisCasbinWatcher(client *redis.Client) persist.Watcher {
 		client:     client,
 		channel:    casbinPolicyReloadChannel,
 		instanceID: fmt.Sprintf("%d-%d", os.Getpid(), time.Now().UnixNano()),
-		ctx:        ctx,
 		cancel:     cancel,
 	}
-	go watcher.run()
+	go watcher.run(ctx)
 	return watcher
 }
 
-func (w *redisCasbinWatcher) run() {
-	pubsub := w.client.Subscribe(w.ctx, w.channel)
+func (w *redisCasbinWatcher) run(ctx context.Context) {
+	pubsub := w.client.Subscribe(ctx, w.channel)
 	w.stateMu.Lock()
 	w.pubsub = pubsub
 	w.stateMu.Unlock()
@@ -97,8 +96,8 @@ func (w *redisCasbinWatcher) run() {
 		_ = pubsub.Close()
 	}()
 
-	if _, err := pubsub.Receive(w.ctx); err != nil {
-		if !errorsIsContextCanceled(w.ctx, err) {
+	if _, err := pubsub.Receive(ctx); err != nil {
+		if !errorsIsContextCanceled(err) {
 			slog.Warn("casbin watcher subscription failed", "error", err)
 		}
 		return
@@ -106,7 +105,7 @@ func (w *redisCasbinWatcher) run() {
 
 	for {
 		select {
-		case <-w.ctx.Done():
+		case <-ctx.Done():
 			return
 		case msg, ok := <-pubsub.Channel():
 			if !ok {
@@ -137,7 +136,7 @@ func (w *redisCasbinWatcher) SetUpdateCallback(callback func(string)) error {
 }
 
 func (w *redisCasbinWatcher) Update() error {
-	return w.client.Publish(w.ctx, w.channel, w.instanceID).Err()
+	return w.client.Publish(context.Background(), w.channel, w.instanceID).Err()
 }
 
 func (w *redisCasbinWatcher) Close() {
@@ -152,9 +151,6 @@ func (w *redisCasbinWatcher) Close() {
 	})
 }
 
-func errorsIsContextCanceled(ctx context.Context, err error) bool {
-	if err == nil {
-		return false
-	}
-	return ctx.Err() != nil
+func errorsIsContextCanceled(err error) bool {
+	return errors.Is(err, context.Canceled)
 }

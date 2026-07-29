@@ -1,0 +1,162 @@
+{
+  "taskId": "2026-07-29-sonar-go-platform-core",
+  "title": "SonarCloud Go remediation for platform core",
+  "goal": "Fix every OPEN SonarCloud issue from the frozen 2026-07-26 report under backend/cmd, backend/internal, backend/modules/platform, and backend/pkg without changing behavior or touching system/business modules.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform shell",
+    "shared backend packages"
+  ],
+  "scope": {
+    "in": [
+      "17 go:S3776 findings in the assigned paths",
+      "1 go:S107 finding in backend/modules/platform/dashboard_service.go",
+      "godre:S8196 in rate_limit_middleware.go",
+      "godre:S8205 in scaffold/types.go",
+      "godre:S8242 in casbin_watcher.go and upload/service_test.go"
+    ],
+    "out": [
+      "backend/modules/auth",
+      "backend/modules/system",
+      "backend/modules/lowcode",
+      "backend/modules/business",
+      "frontend",
+      "Sonar findings outside the assigned paths",
+      "remote push, PR creation, merge, release, or tag"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": "server bootstrap; token/rate-limit middleware; scaffold validation and generated-resource writers; platform dashboard/health; shared database, import/export, metrics, and upload helpers",
+    "boundaryCrossings": [
+      "cmd -> internal middleware",
+      "platform -> pkg",
+      "internal scaffold -> generated filesystem artifacts"
+    ],
+    "riskNodes": [
+      "authentication middleware",
+      "server lifecycle",
+      "Casbin watcher lifecycle",
+      "generated module filesystem writes",
+      "upload validation and storage"
+    ],
+    "graphFocus": [
+      "behavior-preserving helper extraction",
+      "context lifecycle ownership",
+      "sensitive input validation"
+    ],
+    "codeGraphGap": "The isolated worktree is not initialized in CodeGraph; frozen Sonar locations, direct source inspection, existing tests, and full race validation are used instead."
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/acceptances/AGENT_EXECUTION_CHECKLIST.md"
+  ],
+  "qualityProfile": "ci-workflow",
+  "portableFailureClass": "repo-quality-gate",
+  "ownerLayer": "consumer-repository",
+  "assumptionsAndOpenQuestions": [
+    "The frozen sonar-report-open-full.json in the main pantheon-base worktree is the authoritative issue list for this recovery branch.",
+    "Behavior-preserving helper extraction and internal unexported type changes do not require contract or schema changes.",
+    "No human gate is required because the task excludes release, external production actions, schema changes, and authorization policy changes."
+  ],
+  "minimumViableApproach": "Extract small single-purpose helpers, introduce named internal parameter/config types where Sonar requests them, remove stored context fields by creating watcher context inside the run lifecycle, and split monolithic tests into focused test functions. Reuse existing behavior and dependencies; add no new dependency or abstraction beyond the minimum needed to reduce complexity.",
+  "successCriteria": [
+    "All 22 frozen findings in the assigned paths are structurally removed from the flagged functions or types.",
+    "No files outside backend/cmd, backend/internal, backend/modules/platform, backend/pkg, and linked L2 artifacts are changed.",
+    "gofmt leaves no modified Go file unformatted.",
+    "Focused package tests pass.",
+    "go test -race ./... passes from backend.",
+    "Harness task, evidence, and review-request artifacts pass strict checks.",
+    "Changes are committed locally on fix/sonar-go-platform-core-recovery and are not pushed."
+  ],
+  "expectedFiles": {
+    "modify": [
+      "backend/cmd/server/main.go",
+      "backend/internal/middleware/rate_limit_middleware.go",
+      "backend/internal/middleware/token_middleware.go",
+      "backend/internal/scaffold/contract.go",
+      "backend/internal/scaffold/types.go",
+      "backend/internal/scaffold/workspace.go",
+      "backend/modules/platform/dashboard_service.go",
+      "backend/modules/platform/health.go",
+      "backend/pkg/database/casbin_adapter.go",
+      "backend/pkg/database/casbin_watcher.go",
+      "backend/pkg/database/casbin.go",
+      "backend/pkg/database/scope.go",
+      "backend/pkg/impexp/import_helpers.go",
+      "backend/pkg/metrics/prometheus_test.go",
+      "backend/pkg/upload/service.go",
+      "backend/pkg/upload/service_test.go"
+    ],
+    "create": [
+      ".harness/tasks/2026-07-29-sonar-go-platform-core/manifest.json",
+      ".harness/evidence/2026-07-29-sonar-go-platform-core/commands.json",
+      ".harness/evidence/2026-07-29-sonar-go-platform-core/summary.md",
+      ".harness/evidence/2026-07-29-sonar-go-platform-core/review-request.md"
+    ],
+    "doNotTouch": [
+      "backend/modules/auth/**",
+      "backend/modules/system/**",
+      "backend/modules/lowcode/**",
+      "backend/modules/business/**",
+      "frontend/**",
+      "other worktrees"
+    ]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": "Pantheon Base L2 task/evidence linkage and Go quality gates",
+    "requiredSensors": [
+      "focused go tests",
+      "go test -race ./...",
+      "gofmt",
+      "git diff --check",
+      "harness strict checks",
+      "independent review request"
+    ],
+    "requiredEvidence": [
+      "commands.json",
+      "summary.md",
+      "review-request.md"
+    ],
+    "minimalComplexityRung": "minimum-new-code",
+    "ratchetDecision": "no-repeat-observed",
+    "deferredCodeIssues": "Sonar findings outside the assigned path set remain owned by other freeze batches."
+  },
+  "deliveryGovernance": {
+    "designGate": "behavior-preserving static-analysis remediation only",
+    "developmentGate": "declared path allowlist and do-not-touch boundaries",
+    "qaAcceptanceGate": "focused tests plus full race suite",
+    "githubGovernanceGate": "not-applicable in this local-only subtask",
+    "githubSignal": "required when the coordinating branch opens a PR"
+  },
+  "executionRoles": {
+    "implementerPosture": "executor",
+    "reviewerPosture": "architecture + security + mechanical",
+    "reviewRequirement": "Independent review is requested through the linked review-request artifact; the coordinating agent owns reviewer routing."
+  },
+  "verificationPlan": {
+    "backend": [
+      "go test focused affected packages",
+      "go test -race ./..."
+    ],
+    "frontend": "none",
+    "browserSmoke": "none; no UI change",
+    "runtimeEvidence": "race-enabled full Go suite; no external runtime environment required"
+  },
+  "linkage": {
+    "taskId": "2026-07-29-sonar-go-platform-core",
+    "taskPacket": ".harness/tasks/2026-07-29-sonar-go-platform-core/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-29-sonar-go-platform-core/",
+    "reviewFile": ".harness/evidence/2026-07-29-sonar-go-platform-core/review-request.md",
+    "summaryFile": ".harness/evidence/2026-07-29-sonar-go-platform-core/summary.md",
+    "changeRef": "fix/sonar-go-platform-core-recovery",
+    "planRefs": []
+  },
+  "humanGates": [
+    "release/tag/publish remains outside scope"
+  ],
+  "syncExpectation": "pantheon-base only; no base-to-ops sync is required for behavior-preserving internal refactors."
+}

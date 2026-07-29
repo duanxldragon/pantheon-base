@@ -48,7 +48,7 @@ import { renderMenuIcon } from '../menu/icon';
 import { useTheme } from '../../hooks';
 import { clearPantheonThemePreference } from '../theme/theme';
 import { usePantheonColorMode, type PantheonColorMode } from '../theme/colorMode';
-import { AppModal } from '../../components';
+import { AppModal, shouldShowIdentityLabel, UserAvatarContent } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/platform/api';
 import { clearClientAuthSession } from '../auth/clientSession';
 import {
@@ -490,6 +490,7 @@ const BaseLayout: React.FC = () => {
   const currentTabTitleKey = currentRouteTitleKey || currentMenuTitleKey;
   const userDisplayName = userInfo?.nickname || userInfo?.username || t('common.user');
   const roleLabel = userInfo?.roles?.[0] || '';
+  const showRoleLabel = shouldShowIdentityLabel(userDisplayName, roleLabel);
   const isHorizontalLayout = layoutMode === 'horizontal';
   const isVerticalLayout = !isHorizontalLayout;
   const layoutModeLabel = t(
@@ -1550,15 +1551,16 @@ const BaseLayout: React.FC = () => {
             >
               <Button type="text" className="app-shell__user-trigger">
                 <Avatar size={28}>
-                  {userInfo?.avatar ? (
-                    <img src={userInfo.avatar} alt={userDisplayName} />
-                  ) : (
-                    userDisplayName.slice(0, 1).toUpperCase()
-                  )}
+                  <UserAvatarContent
+                    avatar={userInfo?.avatar}
+                    userDisplayName={userDisplayName}
+                  />
                 </Avatar>
                 <div className="app-shell__user-meta">
                   <span className="app-shell__user-name">{userDisplayName}</span>
-                  {roleLabel ? <span className="app-shell__user-subtitle">{roleLabel}</span> : null}
+                  {showRoleLabel ? (
+                    <span className="app-shell__user-subtitle">{roleLabel}</span>
+                  ) : null}
                 </div>
               </Button>
             </Dropdown>

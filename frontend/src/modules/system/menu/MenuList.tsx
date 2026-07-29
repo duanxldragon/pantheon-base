@@ -644,7 +644,8 @@ const MenuList: React.FC = () => {
       {
         title: t('system.menu.sort'),
         dataIndex: 'sort',
-        width: TABLE_COLUMN_WIDTH.count,
+        width: TABLE_COLUMN_WIDTH.sm,
+        fixed: 'right',
         ...sortableColumn('sort'),
       },
       'medium',
@@ -653,6 +654,7 @@ const MenuList: React.FC = () => {
       title: t('system.menu.visible'),
       dataIndex: 'isVisible',
       width: TABLE_COLUMN_WIDTH.status,
+      fixed: 'right',
       ...sortableColumn('isVisible'),
       render: renderVisibleTag,
     },

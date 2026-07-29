@@ -110,7 +110,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                     {
                       validator: (value, callback) => {
                         // Linear-time email shape check; backend owns authoritative validation.
-                        if (!value || /\S@\S[^\s.]*\.\S/.test(String(value))) {
+                        if (!value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) {
                           callback();
                           return;
                         }

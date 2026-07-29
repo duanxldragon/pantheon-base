@@ -8,6 +8,7 @@ import (
 
 	"pantheon-base/pkg/common"
 	"pantheon-base/pkg/database"
+	"pantheon-base/pkg/impexp"
 	"pantheon-base/pkg/testmysql"
 
 	"gorm.io/gorm"
@@ -469,5 +470,174 @@ func TestRoleService_RemoveAdminMemberProtection(t *testing.T) {
 
 	if _, err := s.RemoveRoleMembers(adminRole.ID, []uint64{1}); err == nil || common.ErrMessage(err) != "user.update.error.protected" {
 		t.Fatalf("expected protected error when removing built-in admin, got %v", err)
+	}
+}
+
+// roleImportHeader 与 role_export.go 中 BuildRoleImportTemplate 的表头保持一致。
+var roleImportHeader = []string{"roleName", "roleKey", "sort", "status", "menuIds", "permissionKeys"}
+
+func hasImportErrorMessage(errors []impexp.ImportError, msg string) bool {
+	for _, e := range errors {
+		if e.Message == msg {
+			return true
+		}
+	}
+	return false
+}
+
+func TestRoleService_ImportRolesEmptyFile(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	result, err := s.ImportRoles([][]string{})
+	if err != nil {
+		t.Fatalf("unexpected error on empty records: %v", err)
+	}
+	if result.Applied {
+		t.Fatalf("expected applied=false for empty file")
+	}
+	if result.Failed != 1 {
+		t.Fatalf("expected failed=1 for empty file, got %d", result.Failed)
+	}
+	if !hasImportErrorMessage(result.Errors, "import.file.empty") {
+		t.Fatalf("expected import.file.empty error, got %+v", result.Errors)
+	}
+}
+
+func TestRoleService_ImportRolesCreateAndUpdate(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	createRecords := [][]string{
+		roleImportHeader,
+		{"Imported A", "imported_a", "10", "1", "1", ""},
+		{"Imported B", "imported_b", "20", "2", "1", ""},
+	}
+	created, err := s.ImportRoles(createRecords)
+	if err != nil {
+		t.Fatalf("import create: %v", err)
+	}
+	if !created.Applied || created.Created != 2 || created.Updated != 0 {
+		t.Fatalf("expected 2 created, got %+v", created)
+	}
+
+	updateRecords := [][]string{
+		roleImportHeader,
+		{"Imported A Edit", "imported_a", "11", "2", "1", ""},
+	}
+	updated, err := s.ImportRoles(updateRecords)
+	if err != nil {
+		t.Fatalf("import update: %v", err)
+	}
+	if !updated.Applied || updated.Updated != 1 || updated.Created != 0 {
+		t.Fatalf("expected 1 updated, got %+v", updated)
+	}
+
+	var role SystemRole
+	if err := db.Where("role_key = ?", "imported_a").First(&role).Error; err != nil {
+		t.Fatalf("load updated role: %v", err)
+	}
+	if role.Status != 2 || role.Sort != 11 || role.RoleName != "Imported A Edit" {
+		t.Fatalf("unexpected updated role: status=%d sort=%d name=%s", role.Status, role.Sort, role.RoleName)
+	}
+
+	var menuCount int64
+	if err := db.Table("system_role_menu").Where("role_id = ?", role.ID).Count(&menuCount).Error; err != nil {
+		t.Fatalf("count menus: %v", err)
+	}
+	if menuCount != 1 {
+		t.Fatalf("expected 1 menu binding after update, got %d", menuCount)
+	}
+}
+
+func TestRoleService_ImportRowsDuplicateDetection(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	records := [][]string{
+		roleImportHeader,
+		{"Dup One", "dup_role", "1", "1", "", ""},
+		{"Dup Two", "dup_role", "2", "1", "", ""},
+	}
+	result, err := s.ImportRoles(records)
+	if err != nil {
+		t.Fatalf("import dup: %v", err)
+	}
+	if result.Applied {
+		t.Fatalf("expected applied=false for duplicate rows")
+	}
+	if result.Failed == 0 {
+		t.Fatalf("expected at least one failure for duplicate rows")
+	}
+	if !hasImportErrorMessage(result.Errors, "import.duplicate.row.2") {
+		t.Fatalf("expected duplicate-row error, got %+v", result.Errors)
+	}
+}
+
+func TestRoleService_ImportRowsMissingRoleKey(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	records := [][]string{roleImportHeader, {"No Key", "", "1", "1", "", ""}}
+	result, err := s.ImportRoles(records)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Applied || result.Failed == 0 {
+		t.Fatalf("expected failure for missing roleKey, got %+v", result)
+	}
+	if !hasImportErrorMessage(result.Errors, "role.roleKey.required") {
+		t.Fatalf("expected role.roleKey.required, got %+v", result.Errors)
+	}
+}
+
+func TestRoleService_ImportRowsMissingRoleName(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	records := [][]string{roleImportHeader, {"", "no_name", "1", "1", "", ""}}
+	result, err := s.ImportRoles(records)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Applied || result.Failed == 0 {
+		t.Fatalf("expected failure for missing roleName, got %+v", result)
+	}
+	if !hasImportErrorMessage(result.Errors, "role.roleName.required") {
+		t.Fatalf("expected role.roleName.required, got %+v", result.Errors)
+	}
+}
+
+func TestRoleService_ImportRowsInvalidMenuID(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	records := [][]string{roleImportHeader, {"Bad Menu", "bad_menu", "1", "1", "99", ""}}
+	result, err := s.ImportRoles(records)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Applied || result.Failed == 0 {
+		t.Fatalf("expected failure for invalid menu id, got %+v", result)
+	}
+	if !hasImportErrorMessage(result.Errors, "role.menu.not_found") {
+		t.Fatalf("expected role.menu.not_found, got %+v", result.Errors)
+	}
+}
+
+func TestRoleService_ImportRowsInvalidPermission(t *testing.T) {
+	db := setupRoleTestDB(t)
+	s := NewRoleService(db)
+
+	records := [][]string{roleImportHeader, {"Bad Perm", "bad_perm", "1", "1", "", "bogus:perm"}}
+	result, err := s.ImportRoles(records)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Applied || result.Failed == 0 {
+		t.Fatalf("expected failure for invalid permission key, got %+v", result)
+	}
+	if !hasImportErrorMessage(result.Errors, "role.permission.not_found") {
+		t.Fatalf("expected role.permission.not_found, got %+v", result.Errors)
 	}
 }

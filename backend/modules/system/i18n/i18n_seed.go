@@ -230,34 +230,9 @@ func (s *I18nService) BatchInsert(items []SystemI18n) error {
 		err := s.db.Where(condLocaleKeyEquals, item.Locale, item.Key).First(&existing).Error
 		switch {
 		case err == nil:
-			updates := map[string]interface{}{}
-			if strings.TrimSpace(existing.Module) == "" && strings.TrimSpace(item.Module) != "" {
-				updates["module"] = item.Module
-			}
-			if strings.TrimSpace(existing.Group) == "" && item.Group != "" {
-				updates["group_name"] = item.Group
-			}
-			if strings.TrimSpace(existing.Remark) == "" && strings.TrimSpace(item.Remark) != "" {
-				updates["remark"] = item.Remark
-			}
-			if strings.TrimSpace(existing.Value) == "" && strings.TrimSpace(item.Value) != "" {
-				updates["value"] = item.Value
-			}
-			if canonical, ok := canonicalEntryFor(existing.Locale, existing.Key); ok {
-				if strings.TrimSpace(existing.Module) != canonical.Module {
-					updates["module"] = canonical.Module
-				}
-				if strings.TrimSpace(existing.Group) != canonical.Group {
-					updates["group_name"] = canonical.Group
-				}
-				if strings.TrimSpace(existing.Value) == "" || strings.TrimSpace(existing.Value) != canonical.Value {
-					updates["value"] = canonical.Value
-				}
-			}
-			if len(updates) > 0 {
-				if err := s.db.Model(&existing).Updates(updates).Error; err != nil {
-					return err
-				}
+			updates := s.buildBatchInsertUpdates(existing, item)
+			if err := s.applyLocaleUpdates(&existing, updates); err != nil {
+				return err
 			}
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			if err := s.db.Create(&item).Error; err != nil {
@@ -268,6 +243,58 @@ func (s *I18nService) BatchInsert(items []SystemI18n) error {
 		}
 	}
 	return s.ReloadCache()
+}
+
+// buildBatchInsertUpdates composes the field updates for an existing i18n row
+// during a batch insert, based on the incoming item and the canonical entry.
+func (s *I18nService) buildBatchInsertUpdates(existing, item SystemI18n) map[string]interface{} {
+	updates := map[string]interface{}{}
+	s.fillBatchInsertFromItem(updates, existing, item)
+	s.fillBatchInsertFromCanonical(updates, existing)
+	return updates
+}
+
+// fillBatchInsertFromItem copies non-empty incoming fields into the update map
+// only when the existing row leaves those fields empty.
+func (s *I18nService) fillBatchInsertFromItem(updates map[string]interface{}, existing, item SystemI18n) {
+	if strings.TrimSpace(existing.Module) == "" && strings.TrimSpace(item.Module) != "" {
+		updates["module"] = item.Module
+	}
+	if strings.TrimSpace(existing.Group) == "" && item.Group != "" {
+		updates["group_name"] = item.Group
+	}
+	if strings.TrimSpace(existing.Remark) == "" && strings.TrimSpace(item.Remark) != "" {
+		updates["remark"] = item.Remark
+	}
+	if strings.TrimSpace(existing.Value) == "" && strings.TrimSpace(item.Value) != "" {
+		updates["value"] = item.Value
+	}
+}
+
+// fillBatchInsertFromCanonical overrides fields of the existing row with the
+// canonical menu entry values when they differ (or the value is empty).
+func (s *I18nService) fillBatchInsertFromCanonical(updates map[string]interface{}, existing SystemI18n) {
+	canonical, ok := canonicalEntryFor(existing.Locale, existing.Key)
+	if !ok {
+		return
+	}
+	if strings.TrimSpace(existing.Module) != canonical.Module {
+		updates["module"] = canonical.Module
+	}
+	if strings.TrimSpace(existing.Group) != canonical.Group {
+		updates["group_name"] = canonical.Group
+	}
+	if strings.TrimSpace(existing.Value) == "" || strings.TrimSpace(existing.Value) != canonical.Value {
+		updates["value"] = canonical.Value
+	}
+}
+
+// applyLocaleUpdates applies the composed update map to the given existing row.
+func (s *I18nService) applyLocaleUpdates(existing *SystemI18n, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	return s.db.Model(existing).Updates(updates).Error
 }
 
 func (s *I18nService) normalizeLocaleKeyDuplicates() error {
@@ -290,39 +317,56 @@ func (s *I18nService) normalizeLocaleKeyDuplicates() error {
 	}
 
 	for _, group := range groups {
-		var rows []SystemI18n
-		if err := s.db.Where(condLocaleKeyEquals, group.Locale, group.Key).
-			Order("updated_at DESC").
-			Order("id DESC").
-			Find(&rows).Error; err != nil {
+		if err := s.resolveDuplicateLocaleKey(group.Locale, group.Key); err != nil {
 			return err
-		}
-		if len(rows) <= 1 {
-			continue
-		}
-
-		winner := pickLocaleKeyWinner(rows)
-		updates := buildWinnerUpdates(winner, rows)
-		if len(updates) > 0 {
-			if err := s.db.Model(&SystemI18n{}).Where("id = ?", winner.ID).Updates(updates).Error; err != nil {
-				return err
-			}
-		}
-
-		deleteIDs := make([]uint64, 0, len(rows)-1)
-		for _, row := range rows {
-			if row.ID != winner.ID {
-				deleteIDs = append(deleteIDs, row.ID)
-			}
-		}
-		if len(deleteIDs) > 0 {
-			if err := s.db.Where("id IN ?", deleteIDs).Delete(&SystemI18n{}).Error; err != nil {
-				return err
-			}
 		}
 	}
 
 	return nil
+}
+
+// resolveDuplicateLocaleKey loads all rows for a duplicated (locale, key) pair,
+// promotes a winner and removes the losing rows.
+func (s *I18nService) resolveDuplicateLocaleKey(locale, key string) error {
+	var rows []SystemI18n
+	if err := s.db.Where(condLocaleKeyEquals, locale, key).
+		Order("updated_at DESC").
+		Order("id DESC").
+		Find(&rows).Error; err != nil {
+		return err
+	}
+	if len(rows) <= 1 {
+		return nil
+	}
+
+	winner := pickLocaleKeyWinner(rows)
+	if err := s.applyWinnerUpdates(winner, rows); err != nil {
+		return err
+	}
+	return s.deleteLoserRows(winner, rows)
+}
+
+// applyWinnerUpdates writes the composed winner updates onto the winning row.
+func (s *I18nService) applyWinnerUpdates(winner SystemI18n, rows []SystemI18n) error {
+	updates := buildWinnerUpdates(winner, rows)
+	if len(updates) == 0 {
+		return nil
+	}
+	return s.db.Model(&SystemI18n{}).Where("id = ?", winner.ID).Updates(updates).Error
+}
+
+// deleteLoserRows removes every duplicated row except the chosen winner.
+func (s *I18nService) deleteLoserRows(winner SystemI18n, rows []SystemI18n) error {
+	deleteIDs := make([]uint64, 0, len(rows)-1)
+	for _, row := range rows {
+		if row.ID != winner.ID {
+			deleteIDs = append(deleteIDs, row.ID)
+		}
+	}
+	if len(deleteIDs) == 0 {
+		return nil
+	}
+	return s.db.Where("id IN ?", deleteIDs).Delete(&SystemI18n{}).Error
 }
 
 func pickLocaleKeyWinner(rows []SystemI18n) SystemI18n {
@@ -346,38 +390,54 @@ func pickLocaleKeyWinner(rows []SystemI18n) SystemI18n {
 
 func buildWinnerUpdates(winner SystemI18n, rows []SystemI18n) map[string]interface{} {
 	updates := map[string]interface{}{}
-
-	if canonical, ok := canonicalEntryFor(winner.Locale, winner.Key); ok {
-		if strings.TrimSpace(winner.Module) != canonical.Module {
-			updates["module"] = canonical.Module
-		}
-		if strings.TrimSpace(winner.Group) != canonical.Group {
-			updates["group_name"] = canonical.Group
-		}
-		if strings.TrimSpace(winner.Value) != canonical.Value {
-			updates["value"] = canonical.Value
-		}
-	}
-
-	if strings.TrimSpace(winner.Remark) == "" {
-		for _, row := range rows {
-			if strings.TrimSpace(row.Remark) != "" {
-				updates["remark"] = strings.TrimSpace(row.Remark)
-				break
-			}
-		}
-	}
-
-	if strings.TrimSpace(winner.Group) == "" {
-		for _, row := range rows {
-			if strings.TrimSpace(row.Group) != "" {
-				updates["group_name"] = strings.TrimSpace(row.Group)
-				break
-			}
-		}
-	}
-
+	addWinnerCanonicalUpdates(updates, winner)
+	addWinnerRemarkUpdate(updates, winner, rows)
+	addWinnerGroupUpdate(updates, winner, rows)
 	return updates
+}
+
+// addWinnerCanonicalUpdates overrides the winner's fields with the canonical
+// menu entry values when they differ.
+func addWinnerCanonicalUpdates(updates map[string]interface{}, winner SystemI18n) {
+	canonical, ok := canonicalEntryFor(winner.Locale, winner.Key)
+	if !ok {
+		return
+	}
+	if strings.TrimSpace(winner.Module) != canonical.Module {
+		updates["module"] = canonical.Module
+	}
+	if strings.TrimSpace(winner.Group) != canonical.Group {
+		updates["group_name"] = canonical.Group
+	}
+	if strings.TrimSpace(winner.Value) != canonical.Value {
+		updates["value"] = canonical.Value
+	}
+}
+
+// addWinnerRemarkUpdate fills the remark from the first row that has one.
+func addWinnerRemarkUpdate(updates map[string]interface{}, winner SystemI18n, rows []SystemI18n) {
+	if strings.TrimSpace(winner.Remark) != "" {
+		return
+	}
+	for _, row := range rows {
+		if strings.TrimSpace(row.Remark) != "" {
+			updates["remark"] = strings.TrimSpace(row.Remark)
+			return
+		}
+	}
+}
+
+// addWinnerGroupUpdate fills the group_name from the first row that has one.
+func addWinnerGroupUpdate(updates map[string]interface{}, winner SystemI18n, rows []SystemI18n) {
+	if strings.TrimSpace(winner.Group) != "" {
+		return
+	}
+	for _, row := range rows {
+		if strings.TrimSpace(row.Group) != "" {
+			updates["group_name"] = strings.TrimSpace(row.Group)
+			return
+		}
+	}
 }
 
 func (s *I18nService) ensureLocaleKeyUniqueIndex() error {
@@ -395,38 +455,59 @@ func (s *I18nService) ensureCanonicalMenuEntries() error {
 		return nil
 	}
 	for localeKey, canonical := range menuLocaleEntries() {
-		var existing SystemI18n
-		err := s.db.Where(condLocaleKeyEquals, localeKey.Locale, localeKey.Key).First(&existing).Error
-		switch {
-		case err == nil:
-			updates := map[string]interface{}{}
-			if strings.TrimSpace(existing.Module) != canonical.Module {
-				updates["module"] = canonical.Module
-			}
-			if strings.TrimSpace(existing.Group) != canonical.Group {
-				updates["group_name"] = canonical.Group
-			}
-			if strings.TrimSpace(existing.Value) != canonical.Value {
-				updates["value"] = canonical.Value
-			}
-			if len(updates) > 0 {
-				if err := s.db.Model(&existing).Updates(updates).Error; err != nil {
-					return err
-				}
-			}
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			if err := s.db.Create(&SystemI18n{
-				Module: canonical.Module,
-				Group:  canonical.Group,
-				Key:    localeKey.Key,
-				Locale: localeKey.Locale,
-				Value:  canonical.Value,
-			}).Error; err != nil {
-				return err
-			}
-		default:
+		if err := s.ensureCanonicalMenuEntry(localeKey, canonical); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// ensureCanonicalMenuEntry reconciles a single canonical menu entry against the
+// database: updating the existing row or creating it when missing.
+func (s *I18nService) ensureCanonicalMenuEntry(localeKey i18nLocaleKey, canonical i18nCanonicalEntry) error {
+	var existing SystemI18n
+	err := s.db.Where(condLocaleKeyEquals, localeKey.Locale, localeKey.Key).First(&existing).Error
+	switch {
+	case err == nil:
+		if err := s.applyCanonicalUpdates(&existing, canonical); err != nil {
+			return err
+		}
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		if err := s.db.Create(&SystemI18n{
+			Module: canonical.Module,
+			Group:  canonical.Group,
+			Key:    localeKey.Key,
+			Locale: localeKey.Locale,
+			Value:  canonical.Value,
+		}).Error; err != nil {
+			return err
+		}
+	default:
+		return err
+	}
+	return nil
+}
+
+// applyCanonicalUpdates writes the canonical field overrides onto the given row.
+func (s *I18nService) applyCanonicalUpdates(existing *SystemI18n, canonical i18nCanonicalEntry) error {
+	updates := s.buildCanonicalUpdates(*existing, canonical)
+	if len(updates) == 0 {
+		return nil
+	}
+	return s.db.Model(existing).Updates(updates).Error
+}
+
+// buildCanonicalUpdates composes the field overrides for a canonical menu entry.
+func (s *I18nService) buildCanonicalUpdates(existing SystemI18n, canonical i18nCanonicalEntry) map[string]interface{} {
+	updates := map[string]interface{}{}
+	if strings.TrimSpace(existing.Module) != canonical.Module {
+		updates["module"] = canonical.Module
+	}
+	if strings.TrimSpace(existing.Group) != canonical.Group {
+		updates["group_name"] = canonical.Group
+	}
+	if strings.TrimSpace(existing.Value) != canonical.Value {
+		updates["value"] = canonical.Value
+	}
+	return updates
 }

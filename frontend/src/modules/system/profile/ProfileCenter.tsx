@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Avatar,
   Button,
   Card,
   Descriptions,
@@ -8,7 +7,6 @@ import {
   Grid,
   Input,
   Space,
-  Tag,
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
@@ -26,6 +24,7 @@ import {
 import { formatDateTime } from '../../../core/format/dateTime';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { FormSection, PageContainer, PageLoading, SubmitBar } from '../../../components';
+import ProfileIdentityHero from './ProfileIdentityHero';
 import './profile.css';
 
 const Row = Grid.Row;
@@ -142,31 +141,13 @@ const ProfileCenter: React.FC = () => {
         <Card className="page-panel page-panel--soft profile-center-page__hero">
           <Row gutter={24} align="center">
             <Col xs={24} md={16}>
-              <Space align="start" size={16}>
-                <Avatar size={56}>
-                  {avatarPreview || profile?.avatar ? (
-                    <img
-                      src={avatarPreview || profile?.avatar}
-                      alt={profile?.nickname || profile?.username || 'U'}
-                    />
-                  ) : (
-                    profile?.nickname?.[0] || profile?.username?.[0] || 'U'
-                  )}
-                </Avatar>
-                <Space direction="vertical" size={4}>
-                  <Typography.Title heading={5} style={{ margin: 0 }}>
-                    {profile?.nickname || profile?.username || t('system.profile.title')}
-                  </Typography.Title>
-                  <Typography.Text type="secondary">{profile?.username}</Typography.Text>
-                  <Space wrap>
-                    {profile?.roles?.map((role) => (
-                      <Tag key={role} color="arcoblue">
-                        {role}
-                      </Tag>
-                    ))}
-                  </Space>
-                </Space>
-              </Space>
+              <ProfileIdentityHero
+                avatar={avatarPreview || profile?.avatar}
+                nickname={profile?.nickname}
+                username={profile?.username}
+                roles={profile?.roles}
+                fallbackName={t('system.profile.title')}
+              />
             </Col>
             <Col xs={24} md={8}>
               <Descriptions
@@ -216,7 +197,7 @@ const ProfileCenter: React.FC = () => {
                     rules={[
                       {
                         // Linear-time email shape check; backend owns authoritative validation.
-                        match: /\S@\S[^\s.]*\.\S/,
+                        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                         message: t('system.user.email.invalid'),
                       },
                     ]}

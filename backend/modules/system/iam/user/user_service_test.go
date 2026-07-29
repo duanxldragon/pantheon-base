@@ -145,6 +145,31 @@ func TestUserService_UpdateUser(t *testing.T) {
 	}
 }
 
+func TestUserService_LoadUserProfileExtMissingRow(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := NewUserService(db)
+
+	profileExt, err := s.loadUserProfileExt(42)
+	if err != nil {
+		t.Fatalf("expected missing optional profile ext to succeed, got %v", err)
+	}
+	if profileExt != nil {
+		t.Fatalf("expected nil profile ext for missing row, got %+v", profileExt)
+	}
+}
+
+func TestUserService_LoadUserProfileExtPropagatesDatabaseError(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := NewUserService(db)
+	if err := db.Migrator().DropColumn(&SystemUserProfileExt{}, "ProfileJSON"); err != nil {
+		t.Fatalf("drop profile_json column: %v", err)
+	}
+
+	if _, err := s.loadUserProfileExt(42); err == nil {
+		t.Fatal("expected database query error to propagate")
+	}
+}
+
 func TestUserService_UserProfileExtLifecycle(t *testing.T) {
 	db := setupUserTestDB(t)
 	s := NewUserService(db)

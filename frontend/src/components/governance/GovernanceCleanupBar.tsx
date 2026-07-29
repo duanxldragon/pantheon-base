@@ -1,13 +1,6 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import React, { useState } from 'react';
-import {
-  Alert,
-  Button,
-  DatePicker,
-  Radio,
-  Select,
-  Typography,
-} from '@arco-design/web-react';
+import { Alert, Button, DatePicker, Radio, Select, Typography } from '@arco-design/web-react';
 import { IconDelete } from '@arco-design/web-react/icon';
 import AppModal from '../patterns/modals/AppModal';
 
@@ -33,6 +26,7 @@ interface GovernanceCleanupBarProps {
   /** Shown inside the dialog as the irreversible-action warning. */
   confirmTitle: string;
   actionLabel: string;
+  confirmActionLabel?: string;
   cleanupModeLabel?: string;
   cleanupModeOptions?: Array<{ label: string; value: GovernanceCleanupMode }>;
   rangeStartLabel?: string;
@@ -55,6 +49,7 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
   retentionLabel,
   confirmTitle,
   actionLabel,
+  confirmActionLabel,
   cleanupModeLabel,
   cleanupModeOptions,
   rangeStartLabel,
@@ -137,6 +132,7 @@ const GovernanceCleanupBar: React.FC<GovernanceCleanupBarProps> = ({
         onOk={() => {
           void handleOk();
         }}
+        okText={confirmActionLabel || actionLabel}
         confirmLoading={submitting}
         okButtonProps={{ status: 'danger' }}
       >

@@ -603,10 +603,10 @@ const OperationLogList: React.FC = () => {
 
   const hasActiveFilters = Boolean(
     query.keyword ||
-      query.status !== undefined ||
-      (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
-      query.startedAt ||
-      advancedActiveCount > 0,
+    query.status !== undefined ||
+    (query.sourceDomain !== undefined && query.sourceDomain !== '') ||
+    query.startedAt ||
+    advancedActiveCount > 0,
   );
 
   const handleDelete = async (id: number) => {
@@ -1107,6 +1107,7 @@ const OperationLogList: React.FC = () => {
               retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
               confirmTitle={t('common.cleanupIrreversibleWarning')}
               actionLabel={t('common.cleanupLogs')}
+              confirmActionLabel={t('common.cleanup')}
               cleanupModeLabel={t('common.cleanupMode')}
               cleanupModeOptions={[
                 { label: t('common.cleanupModeRetention'), value: 'retention' },

@@ -173,7 +173,7 @@ const SecurityCenter: React.FC = () => {
       hint: t('auth.security.currentSessionSummary'),
     },
     {
-      label: t('auth.loginLog.status.success'),
+      label: t('auth.security.recentSuccessfulLoginCount'),
       value: String(successCount),
       hint: t('auth.security.recentWindow'),
     },

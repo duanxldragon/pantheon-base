@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Card,
-  Button,
-  Popconfirm,
-  Select,
-  Space,
-  Tag,
-  Typography,
-} from '@arco-design/web-react';
+import { Card, Button, Popconfirm, Select, Space, Tag, Typography } from '@arco-design/web-react';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete } from '@arco-design/web-react/icon';
@@ -23,6 +15,7 @@ import {
   batchRevokeAdminSessions,
   cleanupAdminSessions,
   getAdminSessionList,
+  getSessions,
   revokeAdminSession,
   type AdminSessionPageResp,
   type AdminSessionQuery,
@@ -87,11 +80,33 @@ const SessionList: React.FC = () => {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [query, setQuery] = useState<AdminSessionQuery>(emptyQuery);
   const [detailSession, setDetailSession] = useState<AdminSessionRow | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [retentionOptions, setRetentionOptions] = useState<number[]>(() =>
     [...defaultRetentionOptions].sort((left, right) => right - left),
   );
+
+  useEffect(() => {
+    let active = true;
+    const timer = globalThis.setTimeout(() => {
+      getSessions()
+        .then((sessions) => {
+          if (active) {
+            setCurrentSessionId(sessions.find((session) => session.isCurrent)?.sessionId ?? null);
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setCurrentSessionId(null);
+          }
+        });
+    }, 0);
+    return () => {
+      active = false;
+      globalThis.clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {
@@ -260,43 +275,46 @@ const SessionList: React.FC = () => {
       title: t('system.user.username'),
       dataIndex: 'username',
       width: 168,
-      render: (value: string) => (
-        <Space direction="vertical" size={4}>
-          <span style={{ whiteSpace: 'nowrap' }}>{value}</span>
-          {value === currentUsername ? (
-            <Tag color="arcoblue">{t('auth.session.currentUser')}</Tag>
-          ) : null}
-        </Space>
-      ),
+      render: (value: string, row: AdminSessionRow) => {
+        const isCurrentSession = currentSessionId
+          ? row.sessionId === currentSessionId
+          : currentSessionId === null && value === currentUsername && !row.revokedAt;
+        return (
+          <Space direction="vertical" size={4}>
+            <span style={{ whiteSpace: 'nowrap' }}>{value}</span>
+            {isCurrentSession ? <Tag color="arcoblue">{t('auth.session.currentUser')}</Tag> : null}
+          </Space>
+        );
+      },
     },
-    {
-      title: t('system.profile.nickname'),
-      dataIndex: 'nickname',
-      width: 160,
-      render: (value: string) => <span style={{ whiteSpace: 'nowrap' }}>{value || '-'}</span>,
-    },
+    withTableColumnPriority(
+      {
+        title: t('system.profile.nickname'),
+        dataIndex: 'nickname',
+        width: 160,
+        render: (value: string) => <span style={{ whiteSpace: 'nowrap' }}>{value || '-'}</span>,
+      },
+      'low',
+    ),
     {
       title: t('auth.session.ip'),
       dataIndex: 'lastIp',
       width: 128,
       render: (value: string) => <span style={{ whiteSpace: 'nowrap' }}>{value || '-'}</span>,
     },
-    withTableColumnPriority(
-      {
-        title: t('auth.session.userAgent'),
-        dataIndex: 'device',
-        width: 260,
-        render: (_: unknown, row: AdminSessionRow) => (
-          <Space direction="vertical" size={2}>
-            <span className="auth-device-summary">{formatClientSummary(row)}</span>
-            {row.userAgent ? (
-              <span className="auth-device-summary__meta">{row.userAgent}</span>
-            ) : null}
-          </Space>
-        ),
-      },
-      'low',
-    ),
+    {
+      title: t('auth.session.userAgent'),
+      dataIndex: 'device',
+      width: 260,
+      render: (_: unknown, row: AdminSessionRow) => (
+        <Space direction="vertical" size={2}>
+          <span className="auth-device-summary">{formatClientSummary(row)}</span>
+          {row.userAgent ? (
+            <span className="auth-device-summary__meta">{row.userAgent}</span>
+          ) : null}
+        </Space>
+      ),
+    },
     withTableColumnPriority(
       {
         title: t('auth.session.lastActive'),
@@ -508,11 +526,11 @@ const SessionList: React.FC = () => {
             }
             hasActiveFilters={Boolean(
               query.keyword ||
-                query.status !== undefined ||
-                query.browser ||
-                query.os ||
-                query.device ||
-                query.startedAt,
+              query.status !== undefined ||
+              query.browser ||
+              query.os ||
+              query.device ||
+              query.startedAt,
             )}
             onClearAll={reset}
           />
@@ -527,6 +545,7 @@ const SessionList: React.FC = () => {
                 retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
                 confirmTitle={t('common.cleanupIrreversibleWarning')}
                 actionLabel={t('auth.session.cleanupAction')}
+                confirmActionLabel={t('common.cleanup')}
                 cleanupModeLabel={t('common.cleanupMode')}
                 cleanupModeOptions={[
                   { label: t('common.cleanupModeRetention'), value: 'retention' },
@@ -604,7 +623,7 @@ const SessionList: React.FC = () => {
         <GovernanceRailSummary
           items={[
             {
-              label: t('auth.session.currentUser'),
+              label: t('auth.session.hero.currentUser'),
               value: currentUsername || '-',
               description: t('auth.session.selfProtected'),
             },

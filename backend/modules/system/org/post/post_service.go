@@ -52,24 +52,7 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 	var posts []SystemPost
 	db := s.db.Model(&SystemPost{})
 	page, pageSize := normalizePostPageQuery(query)
-	if query != nil {
-		if strings.TrimSpace(query.Keyword) != "" {
-			keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
-			db = db.Where("post_code LIKE ? OR post_name LIKE ?", keyword, keyword)
-		}
-		if strings.TrimSpace(query.PostCode) != "" {
-			db = db.Where("post_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostCode))+"%")
-		}
-		if strings.TrimSpace(query.PostName) != "" {
-			db = db.Where("post_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostName))+"%")
-		}
-		if query.DeptID > 0 {
-			db = db.Where("dept_id = ?", query.DeptID)
-		}
-		if query.Status != nil && common.IsEnabledStatus(*query.Status) {
-			db = db.Where("status = ?", *query.Status)
-		}
-	}
+	db = applyPostListFilters(db, query)
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -104,6 +87,31 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 		Page:     page,
 		PageSize: pageSize,
 	}, nil
+}
+
+// applyPostListFilters 将查询条件等价应用到 *gorm.DB，保持筛选口径与原 ListPosts 完全一致：
+// 关键字同时匹配 post_code/post_name（LIKE），其余字段各自独立 LIKE/等值匹配；nil 查询不附加任何条件。
+func applyPostListFilters(db *gorm.DB, query *PostListQuery) *gorm.DB {
+	if query == nil {
+		return db
+	}
+	if strings.TrimSpace(query.Keyword) != "" {
+		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
+		db = db.Where("post_code LIKE ? OR post_name LIKE ?", keyword, keyword)
+	}
+	if strings.TrimSpace(query.PostCode) != "" {
+		db = db.Where("post_code LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostCode))+"%")
+	}
+	if strings.TrimSpace(query.PostName) != "" {
+		db = db.Where("post_name LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.PostName))+"%")
+	}
+	if query.DeptID > 0 {
+		db = db.Where("dept_id = ?", query.DeptID)
+	}
+	if query.Status != nil && common.IsEnabledStatus(*query.Status) {
+		db = db.Where("status = ?", *query.Status)
+	}
+	return db
 }
 
 func (s *PostService) CreatePost(req *PostCreateReq) (*PostListResp, error) {
@@ -303,6 +311,123 @@ func (s *PostService) BuildPostImportTemplate() *impexp.CSVFile {
 	}
 }
 
+// postImportRow 表示一次导入解析后的单行数据。
+type postImportRow struct {
+	DeptID   uint64
+	PostCode string
+	PostName string
+	Sort     int
+	Status   int
+	Remark   string
+}
+
+// validateImportHeaders 校验导入表头是否包含必填列，缺失时追加错误到 result。
+func validateImportHeaders(headerIndex map[string]int, result *impexp.ImportResult) {
+	requiredHeaders := []string{"deptPath", "postCode", "postName", "sort", "status", "remark"}
+	for _, header := range requiredHeaders {
+		if _, ok := headerIndex[header]; !ok {
+			impexp.AppendImportError(result, 0, header, "import.header.missing")
+		}
+	}
+}
+
+// readImportRow 解析并校验单行导入记录，行为与原实现完全一致：
+//   - 空/注释行（IsCSVRecordEmpty）返回 nil，调用方跳过且不计入 rows；
+//   - 校验失败仅追加到 result.Errors，返回的非 nil 行仍应被追加到 rows；
+//   - 部门校验与重复码检测的顺序与原循环一致。
+func (s *PostService) readImportRow(
+	record []string,
+	rowNumber int,
+	headerIndex map[string]int,
+	deptPathToID map[string]uint64,
+	seenCodes map[string]int,
+	result *impexp.ImportResult,
+) *postImportRow {
+	if impexp.IsCSVRecordEmpty(record) {
+		return nil
+	}
+
+	postCode := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "postCode"))
+	postName := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "postName"))
+	deptPath := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "deptPath"))
+	sortValue, sortErr := impexp.ParseCSVInt(impexp.ReadCSVField(record, headerIndex, "sort"))
+	status := impexp.ParseEnabledStatus(impexp.ReadCSVField(record, headerIndex, "status"))
+	remark := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "remark"))
+
+	if postCode == "" {
+		impexp.AppendImportError(result, rowNumber, "postCode", "post.code.required")
+	}
+	if postName == "" {
+		impexp.AppendImportError(result, rowNumber, "postName", "post.name.required")
+	}
+	deptID := deptPathToID[deptPath]
+	if deptPath == "" {
+		impexp.AppendImportError(result, rowNumber, "deptPath", "post.dept.required")
+	} else if deptID == 0 {
+		impexp.AppendImportError(result, rowNumber, "deptPath", "post.dept.invalid")
+	} else if err := s.ensurePostDeptID(deptID); err != nil {
+		impexp.AppendImportError(result, rowNumber, "deptPath", err.Error())
+	}
+	if sortErr != nil {
+		impexp.AppendImportError(result, rowNumber, "sort", "import.field.invalid_integer")
+	}
+	if postCode != "" {
+		if firstRow, ok := seenCodes[postCode]; ok {
+			impexp.AppendImportError(result, rowNumber, "postCode", fmt.Sprintf("import.duplicate.row.%d", firstRow))
+		} else {
+			seenCodes[postCode] = rowNumber
+		}
+	}
+
+	return &postImportRow{
+		DeptID:   deptID,
+		PostCode: postCode,
+		PostName: postName,
+		Sort:     sortValue,
+		Status:   status,
+		Remark:   remark,
+	}
+}
+
+// applyImportRows 在事务内对每行执行新增或更新并累加导入统计，与原事务语义完全一致：
+// 已存在的 post_code 执行更新（Updated++），否则新增（Created++）；任何写入错误立即回滚事务。
+func applyImportRows(
+	tx *gorm.DB,
+	rows []postImportRow,
+	existingByCode map[string]SystemPost,
+	result *impexp.ImportResult,
+) error {
+	for _, row := range rows {
+		existing, ok := existingByCode[row.PostCode]
+		if ok {
+			existing.DeptID = row.DeptID
+			existing.PostName = row.PostName
+			existing.Sort = row.Sort
+			existing.Status = row.Status
+			existing.Remark = row.Remark
+			if err := tx.Save(&existing).Error; err != nil {
+				return err
+			}
+			result.Updated++
+			continue
+		}
+
+		post := SystemPost{
+			DeptID:   row.DeptID,
+			PostCode: row.PostCode,
+			PostName: row.PostName,
+			Sort:     row.Sort,
+			Status:   row.Status,
+			Remark:   row.Remark,
+		}
+		if err := tx.Create(&post).Error; err != nil {
+			return err
+		}
+		result.Created++
+	}
+	return nil
+}
+
 func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{
 		Applied: false,
@@ -320,77 +445,23 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 	for index, header := range records[0] {
 		headerIndex[strings.TrimSpace(header)] = index
 	}
-	requiredHeaders := []string{"deptPath", "postCode", "postName", "sort", "status", "remark"}
-	for _, header := range requiredHeaders {
-		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
-		}
-	}
+	validateImportHeaders(headerIndex, result)
 	if result.Failed > 0 {
 		return result, nil
 	}
 
-	type importRow struct {
-		DeptID   uint64
-		PostCode string
-		PostName string
-		Sort     int
-		Status   int
-		Remark   string
-	}
-
-	rows := make([]importRow, 0, len(records)-1)
+	rows := make([]postImportRow, 0, len(records)-1)
 	seenCodes := make(map[string]int, len(records)-1)
 	_, deptPathToID, err := impexp.BuildDeptPathMaps(s.db)
 	if err != nil {
 		return nil, err
 	}
 	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
-		record := records[rowIndex]
-		if impexp.IsCSVRecordEmpty(record) {
+		row := s.readImportRow(records[rowIndex], rowIndex+1, headerIndex, deptPathToID, seenCodes, result)
+		if row == nil {
 			continue
 		}
-
-		postCode := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "postCode"))
-		postName := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "postName"))
-		deptPath := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "deptPath"))
-		sortValue, sortErr := impexp.ParseCSVInt(impexp.ReadCSVField(record, headerIndex, "sort"))
-		status := impexp.ParseEnabledStatus(impexp.ReadCSVField(record, headerIndex, "status"))
-		remark := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "remark"))
-
-		if postCode == "" {
-			impexp.AppendImportError(result, rowIndex+1, "postCode", "post.code.required")
-		}
-		if postName == "" {
-			impexp.AppendImportError(result, rowIndex+1, "postName", "post.name.required")
-		}
-		deptID := deptPathToID[deptPath]
-		if deptPath == "" {
-			impexp.AppendImportError(result, rowIndex+1, "deptPath", "post.dept.required")
-		} else if deptID == 0 {
-			impexp.AppendImportError(result, rowIndex+1, "deptPath", "post.dept.invalid")
-		} else if err := s.ensurePostDeptID(deptID); err != nil {
-			impexp.AppendImportError(result, rowIndex+1, "deptPath", err.Error())
-		}
-		if sortErr != nil {
-			impexp.AppendImportError(result, rowIndex+1, "sort", "import.field.invalid_integer")
-		}
-		if postCode != "" {
-			if firstRow, ok := seenCodes[postCode]; ok {
-				impexp.AppendImportError(result, rowIndex+1, "postCode", fmt.Sprintf("import.duplicate.row.%d", firstRow))
-			} else {
-				seenCodes[postCode] = rowIndex + 1
-			}
-		}
-
-		rows = append(rows, importRow{
-			DeptID:   deptID,
-			PostCode: postCode,
-			PostName: postName,
-			Sort:     sortValue,
-			Status:   status,
-			Remark:   remark,
-		})
+		rows = append(rows, *row)
 	}
 
 	if result.Failed > 0 {
@@ -412,35 +483,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		for _, row := range rows {
-			existing, ok := existingByCode[row.PostCode]
-			if ok {
-				existing.DeptID = row.DeptID
-				existing.PostName = row.PostName
-				existing.Sort = row.Sort
-				existing.Status = row.Status
-				existing.Remark = row.Remark
-				if err := tx.Save(&existing).Error; err != nil {
-					return err
-				}
-				result.Updated++
-				continue
-			}
-
-			post := SystemPost{
-				DeptID:   row.DeptID,
-				PostCode: row.PostCode,
-				PostName: row.PostName,
-				Sort:     row.Sort,
-				Status:   row.Status,
-				Remark:   row.Remark,
-			}
-			if err := tx.Create(&post).Error; err != nil {
-				return err
-			}
-			result.Created++
-		}
-		return nil
+		return applyImportRows(tx, rows, existingByCode, result)
 	}); err != nil {
 		return nil, err
 	}

@@ -177,6 +177,7 @@ const frFRFallback = {
   'common.actionFailed': "L'action a échoué. Veuillez réessayer plus tard.",
   'common.cancel': 'Annuler',
   'common.clear': 'Effacer',
+  'common.cleanup': 'Nettoyer',
   'common.clearConfirm': 'Voulez-vous vraiment effacer les données courantes ?',
   'common.clearSuccess': 'Effacement réussi',
   'common.cleanupLogs': 'Nettoyer les journaux',
@@ -368,6 +369,7 @@ const frFRFallback = {
   'auth.security.lastLoginAt': 'Dernière connexion réussie',
   'auth.security.currentDevice': 'Appareil actuel',
   'auth.security.currentIp': 'IP actuelle',
+  'auth.security.recentSuccessfulLoginCount': 'Connexions réussies parmi les 10 dernières',
   'auth.security.subtitle':
     'Examiner les appareils, l’activité de connexion et la sécurité du mot de passe du compte courant.',
   'auth.security.overview': 'Vue d’ensemble de la sécurité du compte',
@@ -442,7 +444,7 @@ const frFRFallback = {
     'Examiner les sessions globales en ligne, les détails des appareils et les actions de révocation.',
   'auth.session.selfProtected':
     'Le compte actuellement connecté ne peut pas se révoquer lui-même depuis cette page.',
-  'auth.session.currentUser': 'Compte courant',
+  'auth.session.currentUser': 'Session courante',
   'auth.session.hero.eyebrow': 'Domaine système / Audit des sessions',
   'auth.session.hero.title':
     'Examiner sessions en ligne, empreintes d’appareil et frontières de révocation sur une seule page de gouvernance',
@@ -511,7 +513,7 @@ const frFRFallback = {
   'auth.securityEvent.hero.eyebrow': 'Domaine systeme / Evenements de risque auth',
   'auth.securityEvent.createdAt': 'Date de l evenement',
   'auth.securityEvent.eventType': 'Type d evenement',
-  'auth.securityEvent.search.placeholder': 'Rechercher par nom d\'utilisateur…',
+  'auth.securityEvent.search.placeholder': "Rechercher par nom d'utilisateur…",
   'auth.securityEvent.severity': 'Niveau de risque',
   'auth.securityEvent.sourceKey': 'Source',
   'auth.securityEvent.messageKey': 'Message',
@@ -750,7 +752,7 @@ const frFRFallback = {
   'system.role.hero.sideDesc':
     'La page des rôles possède l’autorisation de navigation, de page et d’action. Les politiques API Casbin restent sur la page des permissions afin que visibilité des pages et accès backend ne soient plus mélangés.',
   'system.permission.roleKey': 'Clé du rôle',
-  'system.permission.search.placeholder': 'Rechercher par clé de rôle ou chemin d\'API…',
+  'system.permission.search.placeholder': "Rechercher par clé de rôle ou chemin d'API…",
   'system.permission.path': 'Chemin API',
   'system.permission.method': 'Méthode',
   'system.permission.policy.tab': 'Politiques API',
@@ -764,7 +766,7 @@ const frFRFallback = {
   'system.permission.edit': 'Modifier une politique',
   'system.permission.hero.eyebrow': 'Domaine système / Atelier IAM des permissions',
   'system.permission.hero.title':
-    'Unifier autorisations de rôle et politiques API Casbin dans une seule chaîne de gouvernance',
+    'Unifier les autorisations de rôle et les politiques d’accès API dans une seule chaîne de gouvernance',
   'system.menu.title': 'Titre',
   'system.menu.titleKey': 'Clé de titre',
   'system.menu.search.placeholder': 'Rechercher par clé de titre ou chemin de menu…',
