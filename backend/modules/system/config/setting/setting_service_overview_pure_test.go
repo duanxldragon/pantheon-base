@@ -81,7 +81,7 @@ func TestAggregateSettingOverviewCounts(t *testing.T) {
 
 func TestCheckRequiredSettingKeys(t *testing.T) {
 	byKey := map[string]SystemSetting{
-		"site.name":        {SettingKey: "site.name", SettingValue: "Pantheon"},
+		"site.name":         {SettingKey: "site.name", SettingValue: "Pantheon"},
 		"login.mfa_enabled": {SettingKey: "login.mfa_enabled", SettingValue: ""},
 	}
 	resp := &SettingOverviewResp{Issues: make([]SettingOverviewIssueResp, 0)}
