@@ -175,12 +175,12 @@ func mkScanRootBase(t *testing.T, withBackend, withFrontend bool) string {
 	t.Helper()
 	base := t.TempDir()
 	if withBackend {
-		if err := os.MkdirAll(filepath.Join(base, "backend"), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Join(base, "backend"), 0o750); err != nil {
 			t.Fatalf("mkdir backend: %v", err)
 		}
 	}
 	if withFrontend {
-		if err := os.MkdirAll(filepath.Join(base, "frontend"), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Join(base, "frontend"), 0o750); err != nil {
 			t.Fatalf("mkdir frontend: %v", err)
 		}
 	}
@@ -227,13 +227,13 @@ func TestAttemptScanRootPair(t *testing.T) {
 func TestWalkUpScanRoots(t *testing.T) {
 	base := t.TempDir()
 	nested := filepath.Join(base, "a", "b", "c")
-	if err := os.MkdirAll(nested, 0o755); err != nil {
+	if err := os.MkdirAll(nested, 0o750); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(base, "backend"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(base, "backend"), 0o750); err != nil {
 		t.Fatalf("mkdir backend: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(base, "frontend"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(base, "frontend"), 0o750); err != nil {
 		t.Fatalf("mkdir frontend: %v", err)
 	}
 
@@ -340,13 +340,15 @@ func TestMatchesLifecycleTransitionTarget(t *testing.T) {
 	}
 }
 
+const testKeepActiveSecondKey = "keep-active-2"
+
 func TestCollectUnusedLifecycleTargets(t *testing.T) {
 	audit := &I18nAuditResp{
 		UnusedKeys: []I18nUnusedKeyItem{
 			{Module: "system", Key: "keep-active", LifecycleStatus: I18nLifecycleStatusActive},
 			{Module: "system", Key: "drop-observing", LifecycleStatus: I18nLifecycleStatusObserving},
 			{Module: "other", Key: "other-active", LifecycleStatus: I18nLifecycleStatusActive},
-			{Module: "system", Key: "keep-active-2", LifecycleStatus: I18nLifecycleStatusActive},
+			{Module: "system", Key: testKeepActiveSecondKey, LifecycleStatus: I18nLifecycleStatusActive},
 		},
 	}
 
@@ -355,7 +357,7 @@ func TestCollectUnusedLifecycleTargets(t *testing.T) {
 		if len(targets) != 2 {
 			t.Fatalf("expected 2 targets, got %d", len(targets))
 		}
-		if len(keys) != 2 || keys[0] != "keep-active" || keys[1] != "keep-active-2" {
+		if len(keys) != 2 || keys[0] != "keep-active" || keys[1] != testKeepActiveSecondKey {
 			t.Fatalf("unexpected affected keys: %v", keys)
 		}
 		if targets[0].module != "system" || targets[1].module != "system" {
@@ -374,12 +376,12 @@ func TestCollectUnusedLifecycleTargets(t *testing.T) {
 	})
 
 	t.Run("with filter", func(t *testing.T) {
-		filter := func(item I18nUnusedKeyItem) bool { return item.Key == "keep-active-2" }
+		filter := func(item I18nUnusedKeyItem) bool { return item.Key == testKeepActiveSecondKey }
 		targets, keys := collectUnusedLifecycleTargets(audit, "system", I18nLifecycleStatusActive, filter)
 		if len(targets) != 1 {
 			t.Fatalf("expected 1 target, got %d", len(targets))
 		}
-		if keys[0] != "keep-active-2" {
+		if keys[0] != testKeepActiveSecondKey {
 			t.Fatalf("unexpected affected key: %v", keys)
 		}
 	})

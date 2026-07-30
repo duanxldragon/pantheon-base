@@ -1,7 +1,10 @@
 package org
 
 import (
+	"errors"
 	"testing"
+
+	"gorm.io/gorm"
 )
 
 // 以下回归测试用于锁定 ImportPosts 的事务边界、逐行校验、重复处理以及
@@ -17,6 +20,9 @@ func importRecords(rows ...[]string) [][]string {
 	return records
 }
 
+// testImportPostCode 是回归测试共用的导入岗位编码。
+const testImportPostCode = "developer"
+
 // TestPostService_ImportPostsUpdatesExistingPost 锁定：
 // 同一 post_code 二次导入应走“更新”路径（Updated++、Created=0），
 // 且持久化值反映最新字段；事务语义不被弱化。
@@ -25,7 +31,7 @@ func TestPostService_ImportPostsUpdatesExistingPost(t *testing.T) {
 	service := NewPostService(db)
 
 	first, err := service.ImportPosts(importRecords([]string{
-		"Pantheon Base/研发中心", "developer", "研发工程师", "10", "1", "负责研发交付",
+		"Pantheon Base/研发中心", testImportPostCode, "研发工程师", "10", "1", "负责研发交付",
 	}))
 	if err != nil {
 		t.Fatalf("first import: %v", err)
@@ -35,7 +41,7 @@ func TestPostService_ImportPostsUpdatesExistingPost(t *testing.T) {
 	}
 
 	second, err := service.ImportPosts(importRecords([]string{
-		"Pantheon Base/研发中心", "developer", "高级研发工程师", "20", "2", "负责核心研发",
+		"Pantheon Base/研发中心", testImportPostCode, "高级研发工程师", "20", "2", "负责核心研发",
 	}))
 	if err != nil {
 		t.Fatalf("second import: %v", err)
@@ -45,7 +51,7 @@ func TestPostService_ImportPostsUpdatesExistingPost(t *testing.T) {
 	}
 
 	var updated SystemPost
-	if err := db.Where("post_code = ?", "developer").First(&updated).Error; err != nil {
+	if err := db.Where("post_code = ?", testImportPostCode).First(&updated).Error; err != nil {
 		t.Fatalf("load updated post: %v", err)
 	}
 	if updated.PostName != "高级研发工程师" || updated.Sort != 20 || updated.Status != 2 || updated.Remark != "负责核心研发" {
@@ -61,8 +67,8 @@ func TestPostService_ImportPostsRejectsDuplicateRowsInFile(t *testing.T) {
 	service := NewPostService(db)
 
 	result, err := service.ImportPosts(importRecords(
-		[]string{"Pantheon Base/研发中心", "developer", "研发工程师", "10", "1", "r1"},
-		[]string{"Pantheon Base/研发中心", "developer", "研发工程师", "10", "1", "r2"},
+		[]string{"Pantheon Base/研发中心", testImportPostCode, "研发工程师", "10", "1", "r1"},
+		[]string{"Pantheon Base/研发中心", testImportPostCode, "研发工程师", "10", "1", "r2"},
 	))
 	if err != nil {
 		t.Fatalf("import: %v", err)
@@ -81,7 +87,7 @@ func TestPostService_ImportPostsRejectsDuplicateRowsInFile(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&SystemPost{}).Where("post_code = ?", "developer").Count(&count).Error; err != nil {
+	if err := db.Model(&SystemPost{}).Where("post_code = ?", testImportPostCode).Count(&count).Error; err != nil {
 		t.Fatalf("count posts: %v", err)
 	}
 	if count != 0 {
@@ -132,7 +138,7 @@ func TestPostService_ImportPostsRejectsInvalidDept(t *testing.T) {
 	service := NewPostService(db)
 
 	result, err := service.ImportPosts(importRecords([]string{
-		"不存在的部门", "developer", "研发工程师", "10", "1", "r",
+		"不存在的部门", testImportPostCode, "研发工程师", "10", "1", "r",
 	}))
 	if err != nil {
 		t.Fatalf("import: %v", err)
@@ -151,7 +157,7 @@ func TestPostService_ImportPostsRejectsRootDept(t *testing.T) {
 	service := NewPostService(db)
 
 	result, err := service.ImportPosts(importRecords([]string{
-		"Pantheon Base", "developer", "研发工程师", "10", "1", "r",
+		"Pantheon Base", testImportPostCode, "研发工程师", "10", "1", "r",
 	}))
 	if err != nil {
 		t.Fatalf("import: %v", err)
@@ -164,13 +170,48 @@ func TestPostService_ImportPostsRejectsRootDept(t *testing.T) {
 	}
 }
 
+// TestPostService_ImportPostsPropagatesUnexpectedDeptQueryError 锁定：
+// 部门校验中的基础设施错误必须作为顶层错误返回，不能泄露到逐行 i18n 错误。
+func TestPostService_ImportPostsPropagatesUnexpectedDeptQueryError(t *testing.T) {
+	db := setupPostTestDB(t)
+	service := NewPostService(db)
+	wantErr := errors.New("forced post department query failure")
+	const callbackName = "test:force_post_department_query_error"
+	departmentQueries := 0
+	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		if tx.Statement.Table != "system_dept" {
+			return
+		}
+		departmentQueries++
+		if departmentQueries == 2 {
+			tx.AddError(wantErr)
+		}
+	}); err != nil {
+		t.Fatalf("register query callback: %v", err)
+	}
+	defer db.Callback().Query().Remove(callbackName)
+
+	result, err := service.ImportPosts(importRecords([]string{
+		"Pantheon Base/研发中心", testImportPostCode, "研发工程师", "10", "1", "r",
+	}))
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("expected database query error %v to propagate, got %v", wantErr, err)
+	}
+	if result != nil {
+		t.Fatalf("expected no import result for infrastructure error, got %+v", result)
+	}
+	if departmentQueries != 2 {
+		t.Fatalf("expected path-map and department-validation queries, got %d", departmentQueries)
+	}
+}
+
 // TestPostService_ListPostsFiltersByPostCode 锁定：applyPostListFilters 的
 // post_code LIKE 筛选口径与原 ListPosts 一致（独立筛选，不影响其它条件）。
 func TestPostService_ListPostsFiltersByPostCode(t *testing.T) {
 	db := setupPostTestDB(t)
 	service := NewPostService(db)
 
-	if _, err := service.CreatePost(&PostCreateReq{DeptID: 10, PostCode: "developer", PostName: "研发工程师", Status: 1}); err != nil {
+	if _, err := service.CreatePost(&PostCreateReq{DeptID: 10, PostCode: testImportPostCode, PostName: "研发工程师", Status: 1}); err != nil {
 		t.Fatalf("create developer: %v", err)
 	}
 	if _, err := service.CreatePost(&PostCreateReq{DeptID: 10, PostCode: "manager", PostName: "经理", Status: 1}); err != nil {
@@ -184,7 +225,7 @@ func TestPostService_ListPostsFiltersByPostCode(t *testing.T) {
 	if resp.Total != 1 {
 		t.Fatalf("expected 1 post matching 'dev', got total=%d items=%d", resp.Total, len(resp.Items))
 	}
-	if len(resp.Items) != 1 || resp.Items[0].PostCode != "developer" {
+	if len(resp.Items) != 1 || resp.Items[0].PostCode != testImportPostCode {
 		t.Fatalf("unexpected list result: %+v", resp.Items)
 	}
 }

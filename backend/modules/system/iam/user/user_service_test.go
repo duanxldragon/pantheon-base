@@ -161,12 +161,17 @@ func TestUserService_LoadUserProfileExtMissingRow(t *testing.T) {
 func TestUserService_LoadUserProfileExtPropagatesDatabaseError(t *testing.T) {
 	db := setupUserTestDB(t)
 	s := NewUserService(db)
-	if err := db.Migrator().DropColumn(&SystemUserProfileExt{}, "ProfileJSON"); err != nil {
-		t.Fatalf("drop profile_json column: %v", err)
+	wantErr := errors.New("forced profile extension query failure")
+	const callbackName = "test:force_profile_ext_query_error"
+	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		tx.AddError(wantErr)
+	}); err != nil {
+		t.Fatalf("register query callback: %v", err)
 	}
+	defer db.Callback().Query().Remove(callbackName)
 
-	if _, err := s.loadUserProfileExt(42); err == nil {
-		t.Fatal("expected database query error to propagate")
+	if _, err := s.loadUserProfileExt(42); !errors.Is(err, wantErr) {
+		t.Fatalf("expected database query error %v to propagate, got %v", wantErr, err)
 	}
 }
 

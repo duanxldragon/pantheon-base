@@ -767,7 +767,7 @@ func collectObsoleteMenuIDs(tx *gorm.DB, rule obsoleteMenuRule) ([]uint64, error
 // calls to avoid reallocation.
 func collectObsoleteMenuIDsByColumn(tx *gorm.DB, rule obsoleteMenuRule, collected map[uint64]struct{}, column string, values []string, directIDs *[]uint64) error {
 	*directIDs = (*directIDs)[:0]
-	if err := tx.Table("system_menu").Select("id").Where(column+" IN ?", values).Pluck("id", *directIDs).Error; err != nil {
+	if err := tx.Table("system_menu").Select("id").Where(column+" IN ?", values).Pluck("id", directIDs).Error; err != nil {
 		return err
 	}
 	return collectObsoleteMenuIDsRecursive(tx, rule, *directIDs, collected)

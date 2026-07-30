@@ -197,6 +197,7 @@ func (s *I18nService) applyI18nImportRows(tx *gorm.DB, rows []i18nValidatedImpor
 	return nil
 }
 
+// Import 批量导入 i18n 词条记录，逐行校验并返回导入结果（含逐行错误）。
 func (s *I18nService) Import(records [][]string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{
 		Applied: false,

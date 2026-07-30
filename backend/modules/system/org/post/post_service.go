@@ -331,10 +331,11 @@ func validateImportHeaders(headerIndex map[string]int, result *impexp.ImportResu
 	}
 }
 
-// readImportRow 解析并校验单行导入记录，行为与原实现完全一致：
+// readImportRow 解析并校验单行导入记录：
 //   - 空/注释行（IsCSVRecordEmpty）返回 nil，调用方跳过且不计入 rows；
 //   - 校验失败仅追加到 result.Errors，返回的非 nil 行仍应被追加到 rows；
 //   - 部门校验与重复码检测的顺序与原循环一致。
+//   - 非领域校验错误立即上抛，避免将基础设施错误暴露给导入结果。
 func (s *PostService) readImportRow(
 	record []string,
 	rowNumber int,
@@ -342,9 +343,9 @@ func (s *PostService) readImportRow(
 	deptPathToID map[string]uint64,
 	seenCodes map[string]int,
 	result *impexp.ImportResult,
-) *postImportRow {
+) (*postImportRow, error) {
 	if impexp.IsCSVRecordEmpty(record) {
-		return nil
+		return nil, nil
 	}
 
 	postCode := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "postCode"))
@@ -366,7 +367,11 @@ func (s *PostService) readImportRow(
 	} else if deptID == 0 {
 		impexp.AppendImportError(result, rowNumber, "deptPath", "post.dept.invalid")
 	} else if err := s.ensurePostDeptID(deptID); err != nil {
-		impexp.AppendImportError(result, rowNumber, "deptPath", err.Error())
+		if errors.Is(err, common.ErrBadRequest) || errors.Is(err, common.ErrForbidden) {
+			impexp.AppendImportError(result, rowNumber, "deptPath", common.ErrMessage(err))
+		} else {
+			return nil, err
+		}
 	}
 	if sortErr != nil {
 		impexp.AppendImportError(result, rowNumber, "sort", "import.field.invalid_integer")
@@ -386,7 +391,7 @@ func (s *PostService) readImportRow(
 		Sort:     sortValue,
 		Status:   status,
 		Remark:   remark,
-	}
+	}, nil
 }
 
 // applyImportRows 在事务内对每行执行新增或更新并累加导入统计，与原事务语义完全一致：
@@ -457,7 +462,10 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 		return nil, err
 	}
 	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
-		row := s.readImportRow(records[rowIndex], rowIndex+1, headerIndex, deptPathToID, seenCodes, result)
+		row, err := s.readImportRow(records[rowIndex], rowIndex+1, headerIndex, deptPathToID, seenCodes, result)
+		if err != nil {
+			return nil, err
+		}
 		if row == nil {
 			continue
 		}

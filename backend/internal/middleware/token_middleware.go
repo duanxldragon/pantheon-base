@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -141,7 +140,7 @@ func checkTokenBlacklist(ctx context.Context, c *gin.Context, rdb *redis.Client,
 	if rdb == nil {
 		return false
 	}
-	blacklistKey := fmt.Sprintf("blacklist:%d", sessionData.UserID)
+	blacklistKey := authtoken.BlacklistUserKey(sessionData.UserID)
 	val, err := rdb.Get(ctx, blacklistKey).Result()
 	if err == nil && val != "" {
 		invalidateTokenSessionCache(token)
