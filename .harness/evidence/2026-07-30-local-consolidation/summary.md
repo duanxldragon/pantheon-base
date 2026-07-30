@@ -19,6 +19,7 @@ reads. Non-conflicting recovery work did not add a net working-tree change.
 - Post import records canonical i18n keys only for known domain errors; unexpected department-query errors are returned as top-level failures instead of being exposed in row errors.
 - User-profile error propagation uses deterministic GORM callback injection instead of DDL mutation.
 - The remaining lint findings are addressed by an exported-method comment, restrictive test directories, and shared test constants.
+- The four role-import validation tests with identical setup and assertions are table-driven without changing their input rows or expected i18n error keys, removing the Sonar new-code duplication that blocked the quality gate.
 
 ## Local verification
 
@@ -37,6 +38,11 @@ The updated PR must pass GitHub Docs Governance, Backend Tests (Linux race plus
 MySQL/Redis), Go Lint, Frontend Contract, Smoke Sanity, security checks, and
 SonarCloud before merge. Only after merge will redundant remote/local branches,
 worktrees, stashes, and temporary diagnostic reports be removed.
+
+On the final Sonar remediation, `gofmt`, focused role tests, the full non-race
+backend suite, and `git diff --check` passed locally. The required race suite
+remains a GitHub Linux gate because the local Windows host lacks a supported
+native cgo compiler.
 
 ## Sync and UI
 

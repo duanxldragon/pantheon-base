@@ -53,6 +53,12 @@
       "cwd": ".",
       "status": "passed",
       "notes": "Docs, encoding, structure, task-template, PR-template, strict harness, generated-module, and duplication checks passed. Method health reported only the existing OpenSpec-skeleton warning."
+    },
+    {
+      "command": "gofmt -w modules/system/iam/role/role_service_test.go && go test ./modules/system/iam/role && go test ./... && git diff --check",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Table-driven role-import validation test refactor preserves the four original rows and i18n error-key assertions while removing Sonar new-code duplication."
     }
   ],
   "runtimeSensitive": true,

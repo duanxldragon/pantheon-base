@@ -574,70 +574,47 @@ func TestRoleService_ImportRowsDuplicateDetection(t *testing.T) {
 	}
 }
 
-func TestRoleService_ImportRowsMissingRoleKey(t *testing.T) {
-	db := setupRoleTestDB(t)
-	s := NewRoleService(db)
+func TestRoleService_ImportRowsRejectInvalidReferences(t *testing.T) {
+	testCases := []struct {
+		name        string
+		record      []string
+		wantMessage string
+	}{
+		{
+			name:        "missing role key",
+			record:      []string{"No Key", "", "1", "1", "", ""},
+			wantMessage: "role.roleKey.required",
+		},
+		{
+			name:        "missing role name",
+			record:      []string{"", "no_name", "1", "1", "", ""},
+			wantMessage: "role.roleName.required",
+		},
+		{
+			name:        "invalid menu id",
+			record:      []string{"Bad Menu", "bad_menu", "1", "1", "99", ""},
+			wantMessage: "role.menu.not_found",
+		},
+		{
+			name:        "invalid permission",
+			record:      []string{"Bad Perm", "bad_perm", "1", "1", "", "bogus:perm"},
+			wantMessage: "role.permission.not_found",
+		},
+	}
 
-	records := [][]string{roleImportHeader, {"No Key", "", "1", "1", "", ""}}
-	result, err := s.ImportRoles(records)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Applied || result.Failed == 0 {
-		t.Fatalf("expected failure for missing roleKey, got %+v", result)
-	}
-	if !hasImportErrorMessage(result.Errors, "role.roleKey.required") {
-		t.Fatalf("expected role.roleKey.required, got %+v", result.Errors)
-	}
-}
-
-func TestRoleService_ImportRowsMissingRoleName(t *testing.T) {
-	db := setupRoleTestDB(t)
-	s := NewRoleService(db)
-
-	records := [][]string{roleImportHeader, {"", "no_name", "1", "1", "", ""}}
-	result, err := s.ImportRoles(records)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Applied || result.Failed == 0 {
-		t.Fatalf("expected failure for missing roleName, got %+v", result)
-	}
-	if !hasImportErrorMessage(result.Errors, "role.roleName.required") {
-		t.Fatalf("expected role.roleName.required, got %+v", result.Errors)
-	}
-}
-
-func TestRoleService_ImportRowsInvalidMenuID(t *testing.T) {
-	db := setupRoleTestDB(t)
-	s := NewRoleService(db)
-
-	records := [][]string{roleImportHeader, {"Bad Menu", "bad_menu", "1", "1", "99", ""}}
-	result, err := s.ImportRoles(records)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Applied || result.Failed == 0 {
-		t.Fatalf("expected failure for invalid menu id, got %+v", result)
-	}
-	if !hasImportErrorMessage(result.Errors, "role.menu.not_found") {
-		t.Fatalf("expected role.menu.not_found, got %+v", result.Errors)
-	}
-}
-
-func TestRoleService_ImportRowsInvalidPermission(t *testing.T) {
-	db := setupRoleTestDB(t)
-	s := NewRoleService(db)
-
-	records := [][]string{roleImportHeader, {"Bad Perm", "bad_perm", "1", "1", "", "bogus:perm"}}
-	result, err := s.ImportRoles(records)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if result.Applied || result.Failed == 0 {
-		t.Fatalf("expected failure for invalid permission key, got %+v", result)
-	}
-	if !hasImportErrorMessage(result.Errors, "role.permission.not_found") {
-		t.Fatalf("expected role.permission.not_found, got %+v", result.Errors)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			db := setupRoleTestDB(t)
+			result, err := NewRoleService(db).ImportRoles([][]string{roleImportHeader, testCase.record})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if result.Applied || result.Failed == 0 {
+				t.Fatalf("expected import validation failure, got %+v", result)
+			}
+			if !hasImportErrorMessage(result.Errors, testCase.wantMessage) {
+				t.Fatalf("expected %s, got %+v", testCase.wantMessage, result.Errors)
+			}
+		})
 	}
 }

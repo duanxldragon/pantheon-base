@@ -21,6 +21,17 @@ The focused invalid-department, root-department, and forced database-error
 tests, `gofmt`, `git diff --check`, and language-server checks passed. No
 remaining code-review findings were reported.
 
+## Sonar Duplication Remediation Review
+
+Independent review approved the table-driven refactor of the four role-import
+validation tests. It retains each original input row, the nil-error and failed
+import expectations, and their expected i18n error keys. Each sequential
+subtest creates and cleans up its own test database; no parallel execution or
+range-variable closure hazard is present. `gopls check`, `go vet
+./modules/system/iam/role`, a focused shuffled test repeated ten times,
+`gofmt -d`, and `git diff --check` passed. The only remaining local gap is the
+previously recorded unsupported native Windows cgo compiler for `-race`.
+
 ## Machine Readable
 
 ```json
@@ -36,7 +47,7 @@ remaining code-review findings were reported.
     ],
     "checks": ["security boundary", "failure propagation", "scope"],
     "findings": [],
-    "notes": "Initial database-error disclosure finding was fixed and independently re-reviewed."
+    "notes": "Initial database-error disclosure finding was fixed and independently re-reviewed. The later Sonar duplication remediation was independently approved with focused repeat-test and static-check evidence."
   },
   "linkage": {
     "taskManifest": ".harness/tasks/2026-07-30-local-consolidation/manifest.json",
