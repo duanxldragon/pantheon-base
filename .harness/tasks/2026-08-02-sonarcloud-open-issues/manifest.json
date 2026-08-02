@@ -29,6 +29,18 @@
       "Visual redesign"
     ]
   },
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-08-02-sonarcloud-open-issues/pr-body.md",
+      "tests/scripts/create-pr.test.mjs"
+    ],
+    "modify": [
+      ".agents/skills/repo-pr-gate/SKILL.md",
+      ".harness/evidence/2026-08-02-sonarcloud-open-issues/review.md",
+      "package.json",
+      "scripts/create-pr.mjs"
+    ]
+  },
   "workBatches": [
     {
       "id": "backend-tests",

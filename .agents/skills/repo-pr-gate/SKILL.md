@@ -15,6 +15,26 @@ Close the change before PR. Do not rely on the PR conversation to discover missi
 4. Attach evidence.
 5. Request independent review.
 
+## PR Body Submission
+
+Do not create a Pantheon Base PR with an ad hoc `gh pr create` body. First
+create the task-scoped `.harness/evidence/<task-id>/pr-body.md`, then use the
+repository wrapper:
+
+```bash
+node scripts/create-pr.mjs --title "type(scope): summary" --body-file .harness/evidence/<task-id>/pr-body.md
+```
+
+The wrapper runs `check-pr-governance` against the exact body before calling
+GitHub. To correct an existing PR body, use:
+
+```bash
+node scripts/create-pr.mjs --pr <number> --body-file .harness/evidence/<task-id>/pr-body.md
+```
+
+The wrapper intentionally does not create branches, stage files, commit, or
+push. Those operations must remain explicit and reviewable.
+
 ## Risk Split
 
 - Standard change:
