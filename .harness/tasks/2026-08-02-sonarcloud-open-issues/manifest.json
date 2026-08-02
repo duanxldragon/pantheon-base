@@ -36,9 +36,11 @@
     ],
     "modify": [
       ".agents/skills/repo-pr-gate/SKILL.md",
+      ".github/workflows/quality.yml",
       ".harness/evidence/2026-08-02-sonarcloud-open-issues/review.md",
       "package.json",
-      "scripts/create-pr.mjs"
+      "scripts/create-pr.mjs",
+      "tests/scripts/quality-workflow.test.mjs"
     ]
   },
   "workBatches": [
