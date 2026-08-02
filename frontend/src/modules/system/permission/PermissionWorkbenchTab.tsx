@@ -69,7 +69,7 @@ function roleStatusLabel(role: PermissionWorkbenchRole, t: TranslateFn) {
 }
 
 function roleCoverageLabel(role: PermissionWorkbenchRole, t: TranslateFn) {
-  const labels = [];
+  const labels: string[] = [];
   if (role.hasPageGap) {
     labels.push(t('system.permission.workbench.coverage.pageGap'));
   }
