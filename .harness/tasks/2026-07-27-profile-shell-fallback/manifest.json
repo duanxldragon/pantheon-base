@@ -1,0 +1,130 @@
+{
+  "taskId": "2026-07-27-profile-shell-fallback",
+  "title": "Silence optional profile lookup and harden shell and profile identity fallback",
+  "goal": "Treat a missing optional user profile extension as a normal result and prevent broken avatars or duplicate identity labels from repeating the shell or ProfileCenter hero identity.",
+  "primaryLayer": "system/iam",
+  "dependencyLayers": ["platform"],
+  "scope": {
+    "in": [
+      "Query optional system_user_profile_ext rows without record-not-found logging while preserving real database errors and JSON parsing semantics",
+      "Fallback from a failed avatar image to the uppercase first character of the display name in the shell and ProfileCenter hero",
+      "Hide a username or role label when it equals the display name after trimming and case folding",
+      "Add focused backend and frontend regression tests"
+    ],
+    "out": [
+      "No API, schema, permission, menu, route, i18n, CSS, dependency, or pantheon-ops changes",
+      "No unrelated cleanup or refactor",
+      "No git commit or external environment action"
+    ]
+  },
+  "assumptionsAndOpenQuestions": [
+    "The existing GORM Find behavior is the repository-compatible way to query an optional single row without emitting ErrRecordNotFound.",
+    "A shared identity helper and avatar content component is the smallest testable frontend change without coupling ProfileCenter to layout internals."
+  ],
+  "minimumViableApproach": "Reuse GORM Find and React state; move identity presentation primitives to shared data-display components and consume them from the shell and ProfileCenter.",
+  "successCriteria": [
+    "loadUserProfileExt returns nil, nil when the extension table exists but the user has no extension row.",
+    "A genuine profile extension query error is returned unchanged.",
+    "A broken avatar image is removed and replaced by the uppercase display-name initial, and the same URL can be retried after changing away and back.",
+    "A username or role label equal to the display name after trim and case-insensitive comparison is not rendered in the shell or ProfileCenter hero.",
+    "ProfileCenter does not render repeated admin labels for nickname, username, and roles all equal to admin; distinct username and roles remain visible."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "docs/designs/FRONTEND_UI_SPEC.md",
+    "docs/acceptances/PLATFORM_SHELL_DUAL_MODE_ACCEPTANCE_TEMPLATE.md",
+    "docs/acceptances/AGENT_EXECUTION_CHECKLIST.md"
+  ],
+  "structuralScope": {
+    "affectedSubgraph": [
+      "UserService.loadUserProfileExt -> GORM optional row query -> JSON decode",
+      "Shell and ProfileCenter userInfo -> shared avatar and identity presentation"
+    ],
+    "boundaryCrossings": [
+      "platform shell consumes current system/iam user identity"
+    ],
+    "riskNodes": [
+      "database error propagation",
+      "shared identity rendering in shell and ProfileCenter"
+    ],
+    "graphFocus": [
+      "No new dependency direction, cycle, hub, or deeper call chain"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-27-profile-shell-fallback/manifest.json",
+      "frontend/src/components/data-display/UserIdentity.tsx",
+      "frontend/src/components/data-display/userIdentityHelpers.ts",
+      "frontend/src/modules/system/profile/ProfileIdentityHero.tsx",
+      "frontend/tests/unit/components/data-display/UserIdentity.test.tsx",
+      "frontend/tests/unit/modules/system/profile/ProfileIdentityHero.test.tsx"
+    ],
+    "modify": [
+      "backend/modules/system/iam/user/user_helper.go",
+      "backend/modules/system/iam/user/user_service_test.go",
+      "frontend/src/components/index.ts",
+      "frontend/src/core/layout/index.tsx",
+      "frontend/src/modules/system/profile/ProfileCenter.tsx"
+    ],
+    "doNotTouch": [
+      "frontend/src/core/layout/index.css",
+      "backend database migrations",
+      "permissions, menus, routes, locale resources",
+      "pantheon-ops/**",
+      "pre-existing working-tree changes"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "generator/executor",
+    "reviewerPosture": ["architecture and scope", "UX-QA", "mechanical"]
+  },
+  "verificationPlan": {
+    "backend": [
+      "gofmt changed Go files",
+      "go test ./backend/modules/system/iam/user",
+      "go test ./backend/..."
+    ],
+    "frontend": [
+      "npm run test:unit -- tests/unit/components/data-display/UserIdentity.test.tsx tests/unit/modules/system/profile/ProfileIdentityHero.test.tsx",
+      "npm run type-check",
+      "npm run check:shell-visual-contract",
+      "npm run lint",
+      "npm run build"
+    ],
+    "browser": [
+      "Explicit visual/runtime gap if no authenticated browser runtime is available"
+    ]
+  },
+  "qualityProfile": ["permission-policy", "ui-runtime"],
+  "portableFailureClass": "test-gap",
+  "ratchetDecision": "sensor-added",
+  "linkage": {
+    "taskId": "2026-07-27-profile-shell-fallback",
+    "taskPacket": ".harness/tasks/2026-07-27-profile-shell-fallback/manifest.json",
+    "evidenceDir": "inline command summary in final response",
+    "reviewFile": "inline findings-first self-review in final response",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "focused backend and frontend test results",
+    "Go formatting result",
+    "frontend type-check, shell contract, lint, and build results",
+    "explicit visual/runtime gap"
+  ],
+  "humanGates": [
+    "Maintainer final visual acceptance",
+    "Any scope expansion into schema, permissions, dependencies, external systems, or pantheon-ops"
+  ],
+  "completionChecklist": [
+    "Layer and Base-only boundary declared",
+    "Contract anchors read",
+    "Focused tests added and run",
+    "Required feasible gates run",
+    "No commit created"
+  ]
+}

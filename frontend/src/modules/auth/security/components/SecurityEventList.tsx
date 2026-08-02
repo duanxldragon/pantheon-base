@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Button,
-  Card,
-  Input,
-  Select,
-  Space,
-  Tag,
-  Typography,
-} from '@arco-design/web-react';
+import { Button, Card, Input, Select, Space, Tag, Typography } from '@arco-design/web-react';
 import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconCheck } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
@@ -375,9 +367,7 @@ const SecurityEventList: React.FC = () => {
                 value={query.severity || undefined}
                 onChange={(value) => handleSearch({ severity: value ?? '' })}
               >
-                <Select.Option value="high">
-                  {t('auth.securityEvent.severity.high')}
-                </Select.Option>
+                <Select.Option value="high">{t('auth.securityEvent.severity.high')}</Select.Option>
                 <Select.Option value="medium">
                   {t('auth.securityEvent.severity.medium')}
                 </Select.Option>
@@ -408,10 +398,10 @@ const SecurityEventList: React.FC = () => {
           }
           hasActiveFilters={Boolean(
             query.keyword ||
-              query.eventType ||
-              query.severity ||
-              query.acknowledged !== undefined ||
-              query.startedAt,
+            query.eventType ||
+            query.severity ||
+            query.acknowledged !== undefined ||
+            query.startedAt,
           )}
           onClearAll={handleReset}
         />
@@ -426,6 +416,7 @@ const SecurityEventList: React.FC = () => {
               retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
               confirmTitle={t('auth.securityEvent.cleanupWarning')}
               actionLabel={t('auth.securityEvent.cleanupAction')}
+              confirmActionLabel={t('common.cleanup')}
               cleanupModeLabel={t('common.cleanupMode')}
               cleanupModeOptions={[
                 { label: t('common.cleanupModeRetention'), value: 'retention' },

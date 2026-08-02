@@ -379,6 +379,7 @@ const LoginLogList: React.FC = () => {
               retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
               confirmTitle={t('common.cleanupIrreversibleWarning')}
               actionLabel={t('common.cleanupLogs')}
+              confirmActionLabel={t('common.cleanup')}
               cleanupModeLabel={t('common.cleanupMode')}
               cleanupModeOptions={[
                 { label: t('common.cleanupModeRetention'), value: 'retention' },

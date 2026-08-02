@@ -13,8 +13,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RateLimitStore abstracts the backing store for rate limit counters.
-type RateLimitStore interface {
+// RateLimitAllower abstracts the backing store for rate limit counters.
+type RateLimitAllower interface {
 	// Allow reports whether the given key is within the limit for the window.
 	// Returns true if allowed, false if rate-limited.
 	Allow(ctx context.Context, key string, limit int, window time.Duration) (bool, error)
@@ -25,7 +25,7 @@ type RateLimiterConfig struct {
 	MaxRequests int
 	Window      time.Duration
 	KeyFunc     func(c *gin.Context) string
-	Store       RateLimitStore // nil defaults to in-memory store
+	Store       RateLimitAllower // nil defaults to in-memory store
 }
 
 // RateLimiter returns a Gin middleware that limits request frequency per key.
@@ -62,9 +62,9 @@ func RateLimiter(config RateLimiterConfig) gin.HandlerFunc {
 	}
 }
 
-// NewRedisRateLimitStore returns a RateLimitStore backed by Redis.
+// NewRedisRateLimitStore returns a RateLimitAllower backed by Redis.
 // Uses a Lua script for atomic INCR + EXPIRE in a single round-trip.
-func NewRedisRateLimitStore() RateLimitStore {
+func NewRedisRateLimitStore() RateLimitAllower {
 	if database.RDB == nil {
 		return newMemoryRateLimitStore()
 	}

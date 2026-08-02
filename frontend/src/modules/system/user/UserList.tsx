@@ -213,6 +213,8 @@ const UserList: React.FC = () => {
       title: t('system.user.roles'),
       dataIndex: 'roleNames',
       width: TABLE_COLUMN_WIDTH.tagGroup,
+      ellipsis: true,
+      fixed: 'right',
       render: (_: string[], row: UserListRow) => {
         const roleNames = row.roleNames
           ?.filter(Boolean)
@@ -228,7 +230,14 @@ const UserList: React.FC = () => {
         } else if (row.roleKeys?.length) {
           roleText = row.roleKeys.join(' / ');
         }
-        return renderCellText(roleText, 'system-user-list__role-text');
+        return (
+          <Typography.Text
+            className="system-user-list__role-text"
+            ellipsis={{ cssEllipsis: true, showTooltip: true }}
+          >
+            {getTableText(roleText)}
+          </Typography.Text>
+        );
       },
     },
     {
@@ -342,9 +351,7 @@ const UserList: React.FC = () => {
   // ---- Search ----
 
   const hasActiveFilters = Boolean(
-    state.query.keyword ||
-      state.query.status !== undefined ||
-      state.query.deptId !== undefined,
+    state.query.keyword || state.query.status !== undefined || state.query.deptId !== undefined,
   );
 
   const deptFilterOptions = useMemo(

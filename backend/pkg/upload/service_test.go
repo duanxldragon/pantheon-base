@@ -38,25 +38,26 @@ type fakeObjectStorageClient struct {
 	putObjectCalled      bool
 	lastBucket           string
 	lastObjectKey        string
-	lastContext          context.Context
+	contextValueKey      interface{}
+	lastContextValue     interface{}
 	lastPutObjectOptions minio.PutObjectOptions
 }
 
 func (f *fakeObjectStorageClient) BucketExists(ctx context.Context, bucketName string) (bool, error) {
-	f.lastContext = ctx
 	f.lastBucket = bucketName
 	return f.bucketExists, f.bucketExistsErr
 }
 
 func (f *fakeObjectStorageClient) MakeBucket(ctx context.Context, bucketName string, _ minio.MakeBucketOptions) error {
-	f.lastContext = ctx
 	f.makeBucketCalled = true
 	f.lastBucket = bucketName
 	return f.makeBucketErr
 }
 
 func (f *fakeObjectStorageClient) PutObject(ctx context.Context, bucketName, objectName string, reader io.Reader, _ int64, opts minio.PutObjectOptions) (minio.UploadInfo, error) {
-	f.lastContext = ctx
+	if f.contextValueKey != nil {
+		f.lastContextValue = ctx.Value(f.contextValueKey)
+	}
 	f.putObjectCalled = true
 	f.lastBucket = bucketName
 	f.lastObjectKey = objectName
@@ -311,13 +312,14 @@ func TestServiceStoreWithContextPassesContextToS3Client(t *testing.T) {
 
 	type requestIDKey string
 	ctx := context.WithValue(context.Background(), requestIDKey("request-id"), "req-upload-001")
+	fakeClient.contextValueKey = requestIDKey("request-id")
 	fileHeader := buildFileHeader(t, "avatar.png", "image/png", pngPayload([]byte("avatar-demo")))
 	if _, err := service.StoreWithContext(ctx, fileHeader, "profile/avatar", "http://localhost:8080"); err != nil {
 		t.Fatalf("store s3 file with context: %v", err)
 	}
 
-	if fakeClient.lastContext == nil || fakeClient.lastContext.Value(requestIDKey("request-id")) != "req-upload-001" {
-		t.Fatalf("expected request context to reach s3 client, got %#v", fakeClient.lastContext)
+	if fakeClient.lastContextValue != "req-upload-001" {
+		t.Fatalf("expected request context to reach s3 client, got %#v", fakeClient.lastContextValue)
 	}
 }
 

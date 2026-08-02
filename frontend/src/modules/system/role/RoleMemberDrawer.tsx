@@ -257,7 +257,15 @@ const RoleMemberDrawer: React.FC<RoleMemberDrawerProps> = ({
         title: t('system.user.nickname'),
         dataIndex: 'nickname',
         width: TABLE_COLUMN_WIDTH.identity,
-        render: (value: string) => value || '-',
+        ellipsis: true,
+        render: (value: string) => (
+          <Typography.Text
+            className="role-member-drawer__nickname-text"
+            ellipsis={{ cssEllipsis: true, showTooltip: true }}
+          >
+            {value || '-'}
+          </Typography.Text>
+        ),
       },
       {
         title: t('system.user.status'),

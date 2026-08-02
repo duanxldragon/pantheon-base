@@ -157,6 +157,7 @@ const enUSFallback = {
   'auth.security.lastLoginAt': 'Last Successful Login',
   'auth.security.currentDevice': 'Current Device',
   'auth.security.currentIp': 'Current IP',
+  'auth.security.recentSuccessfulLoginCount': 'Successful Sign-ins in Latest 10',
   'auth.security.subtitle':
     'Review devices, sign-in activity, and password security of the current account.',
   'auth.security.overview': 'Account Security Overview',
@@ -233,7 +234,7 @@ const enUSFallback = {
   'auth.session.subtitle': 'Review global online sessions, device details, and revoke actions.',
   'auth.session.selfProtected':
     'The current signed-in account cannot revoke itself from this page.',
-  'auth.session.currentUser': 'Current Account',
+  'auth.session.currentUser': 'Current Session',
   'auth.session.hero.eyebrow': 'System Domain / Session Audit',
   'auth.session.hero.title':
     'Review online sessions, device fingerprints, and revoke boundaries in one governance page',
@@ -426,6 +427,7 @@ const enUSFallback = {
   'network.timeout': 'Request timed out. Please try again later.',
   'common.cancel': 'Cancel',
   'common.clear': 'Clear',
+  'common.cleanup': 'Clean Up',
   'common.clearConfirm': 'Are you sure you want to clear the current data?',
   'common.clearSuccess': 'Cleared successfully',
   'common.cleanupLogs': 'Cleanup Logs',
@@ -2335,7 +2337,7 @@ const enUSFallback = {
   'system.permission.methodRequired': 'Please select request method',
   'system.permission.hero.eyebrow': 'System Domain / IAM Permission Workbench',
   'system.permission.hero.title':
-    'Unify role authorization and Casbin API policy into one permission governance chain',
+    'Unify role authorization and API access policy into one permission governance chain',
   'system.permission.hero.desc':
     'The permission page keeps the `system/iam` governance loop intact: the workbench reviews end-to-end authorization coverage, while the API policy tab closes backend route boundaries, all inside the same shared page template.',
   'system.permission.hero.rolesHint': 'Roles currently analyzed by the permission workbench.',

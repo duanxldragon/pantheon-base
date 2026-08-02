@@ -470,80 +470,84 @@ func auditMenuSeeds() []menuSeed {
 }
 
 func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
-	var menuID uint64
-	if seed.Path != "" {
-		if err := db.Table("system_menu").Select("id").Where(condPathEquals, seed.Path).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
-			return err
-		}
-	} else if seed.Perms != "" {
-		if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
-			return err
-		}
+	menuID, err := resolveSeedMenuID(db, seed)
+	if err != nil {
+		return err
 	}
-
 	parentID, err := resolveMenuParentID(db, seed.ParentKey)
 	if err != nil {
 		return err
 	}
 	if menuID == 0 {
-		payload := map[string]interface{}{
-			"parent_id":   parentID,
-			"title_key":   seed.TitleKey,
-			"path":        seed.Path,
-			"component":   seed.Component,
-			"page_perm":   seed.PagePerm,
-			"perms":       seed.Perms,
-			"type":        normalizeSeedMenuType(seed.Type),
-			"icon":        seed.Icon,
-			"route_name":  strings.TrimSpace(seed.RouteName),
-			"module":      normalizeSeedMenuModule(seed.Module),
-			"sort":        seed.Sort,
-			"is_visible":  1,
-			"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
-			"is_external": normalizeSeedMenuFlag(seed.IsExternal),
-			"active_menu": strings.TrimSpace(seed.ActiveMenu),
-			"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
-		}
-		if err := db.Table("system_menu").Create(payload).Error; err != nil {
+		if menuID, err = createSeedMenu(db, seed, parentID); err != nil {
 			return err
 		}
-		if seed.Path != "" {
-			if err := db.Table("system_menu").Select("id").Where(condPathEquals, seed.Path).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
-				return err
-			}
-		} else if seed.Perms != "" {
-			if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order(orderByIDASC).Limit(1).Pluck("id", &menuID).Error; err != nil {
-				return err
-			}
-		}
 	} else {
-		updates := map[string]interface{}{
-			"parent_id":   parentID,
-			"title_key":   seed.TitleKey,
-			"component":   seed.Component,
-			"page_perm":   seed.PagePerm,
-			"icon":        seed.Icon,
-			"route_name":  strings.TrimSpace(seed.RouteName),
-			"module":      normalizeSeedMenuModule(seed.Module),
-			"sort":        seed.Sort,
-			"type":        normalizeSeedMenuType(seed.Type),
-			"is_visible":  1,
-			"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
-			"is_external": normalizeSeedMenuFlag(seed.IsExternal),
-			"active_menu": strings.TrimSpace(seed.ActiveMenu),
-			"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
-		}
-		updates["path"] = seed.Path
-		updates["perms"] = seed.Perms
-		if err := db.Table("system_menu").Where("id = ?", menuID).Updates(updates).Error; err != nil {
+		if err := updateSeedMenu(db, seed, parentID, menuID); err != nil {
 			return err
 		}
 	}
-
 	if menuID == 0 {
 		return nil
 	}
+	return bindSeedMenuAdminRole(db, seed, menuID)
+}
 
+func resolveSeedMenuID(db *gorm.DB, seed menuSeed) (uint64, error) {
+	if seed.Path != "" {
+		var id uint64
+		if err := db.Table("system_menu").Select("id").Where(condPathEquals, seed.Path).Order(orderByIDASC).Limit(1).Pluck("id", &id).Error; err != nil {
+			return 0, err
+		}
+		return id, nil
+	}
+	if seed.Perms != "" {
+		var id uint64
+		if err := db.Table("system_menu").Select("id").Where("perms = ?", seed.Perms).Order(orderByIDASC).Limit(1).Pluck("id", &id).Error; err != nil {
+			return 0, err
+		}
+		return id, nil
+	}
+	return 0, nil
+}
+
+func createSeedMenu(db *gorm.DB, seed menuSeed, parentID uint64) (uint64, error) {
+	payload := seedMenuPayload(seed, parentID)
+	if err := db.Table("system_menu").Create(payload).Error; err != nil {
+		return 0, err
+	}
+	return resolveSeedMenuID(db, seed)
+}
+
+func updateSeedMenu(db *gorm.DB, seed menuSeed, parentID, menuID uint64) error {
+	updates := seedMenuPayload(seed, parentID)
+	updates["path"] = seed.Path
+	updates["perms"] = seed.Perms
+	return db.Table("system_menu").Where("id = ?", menuID).Updates(updates).Error
+}
+
+func seedMenuPayload(seed menuSeed, parentID uint64) map[string]interface{} {
+	return map[string]interface{}{
+		"parent_id":   parentID,
+		"title_key":   seed.TitleKey,
+		"path":        seed.Path,
+		"component":   seed.Component,
+		"page_perm":   seed.PagePerm,
+		"perms":       seed.Perms,
+		"type":        normalizeSeedMenuType(seed.Type),
+		"icon":        seed.Icon,
+		"route_name":  strings.TrimSpace(seed.RouteName),
+		"module":      normalizeSeedMenuModule(seed.Module),
+		"sort":        seed.Sort,
+		"is_visible":  1,
+		"is_cache":    normalizeSeedMenuFlag(seed.IsCache),
+		"is_external": normalizeSeedMenuFlag(seed.IsExternal),
+		"active_menu": strings.TrimSpace(seed.ActiveMenu),
+		"hide_in_nav": normalizeSeedMenuFlag(seed.HideInNav),
+	}
+}
+
+func bindSeedMenuAdminRole(db *gorm.DB, seed menuSeed, menuID uint64) error {
 	var adminRoleID uint64
 	if err := db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
 		return err
@@ -551,7 +555,6 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 	if adminRoleID == 0 {
 		return nil
 	}
-
 	if normalizeSeedMenuType(seed.Type) != "F" {
 		if err := rbacbind.EnsureRoleMenu(db, adminRoleID, menuID); err != nil {
 			return err
@@ -725,86 +728,29 @@ func resolveRetainedMenuParent(parentByID map[uint64]uint64, parentID uint64) ui
 	return 0
 }
 
+// collectObsoleteMenuIDs returns the set of menu IDs matching any matcher of the given obsolete
+// rule, optionally cascading to descendant menus when rule.Cascade is set. The returned IDs are
+// de-duplicated; ordering is unspecified (derived from map iteration).
 func collectObsoleteMenuIDs(tx *gorm.DB, rule obsoleteMenuRule) ([]uint64, error) {
 	collected := make(map[uint64]struct{})
+	directIDs := make([]uint64, 0)
 
-	var collect func(ids []uint64) error
-	collect = func(ids []uint64) error {
-		for _, id := range ids {
-			if id == 0 {
-				continue
-			}
-			if _, ok := collected[id]; ok {
-				continue
-			}
-			collected[id] = struct{}{}
-
-			if !rule.Cascade {
-				continue
-			}
-
-			var children []uint64
-			if err := tx.Table("system_menu").Select("id").Where("parent_id = ?", id).Pluck("id", &children).Error; err != nil {
-				return err
-			}
-			if err := collect(children); err != nil {
-				return err
-			}
-		}
-		return nil
+	columns := []struct {
+		values []string
+		column string
+	}{
+		{rule.TitleKeys, "title_key"},
+		{rule.Paths, "path"},
+		{rule.RouteNames, "route_name"},
+		{rule.Components, "component"},
+		{rule.PagePerms, "page_perm"},
+		{rule.Perms, "perms"},
 	}
-
-	var directIDs []uint64
-	if len(rule.TitleKeys) > 0 {
-		if err := tx.Table("system_menu").Select("id").Where("title_key IN ?", rule.TitleKeys).Pluck("id", &directIDs).Error; err != nil {
-			return nil, err
+	for _, matcher := range columns {
+		if len(matcher.values) == 0 {
+			continue
 		}
-		if err := collect(directIDs); err != nil {
-			return nil, err
-		}
-	}
-	if len(rule.Paths) > 0 {
-		directIDs = directIDs[:0]
-		if err := tx.Table("system_menu").Select("id").Where("path IN ?", rule.Paths).Pluck("id", &directIDs).Error; err != nil {
-			return nil, err
-		}
-		if err := collect(directIDs); err != nil {
-			return nil, err
-		}
-	}
-	if len(rule.RouteNames) > 0 {
-		directIDs = directIDs[:0]
-		if err := tx.Table("system_menu").Select("id").Where("route_name IN ?", rule.RouteNames).Pluck("id", &directIDs).Error; err != nil {
-			return nil, err
-		}
-		if err := collect(directIDs); err != nil {
-			return nil, err
-		}
-	}
-	if len(rule.Components) > 0 {
-		directIDs = directIDs[:0]
-		if err := tx.Table("system_menu").Select("id").Where("component IN ?", rule.Components).Pluck("id", &directIDs).Error; err != nil {
-			return nil, err
-		}
-		if err := collect(directIDs); err != nil {
-			return nil, err
-		}
-	}
-	if len(rule.PagePerms) > 0 {
-		directIDs = directIDs[:0]
-		if err := tx.Table("system_menu").Select("id").Where("page_perm IN ?", rule.PagePerms).Pluck("id", &directIDs).Error; err != nil {
-			return nil, err
-		}
-		if err := collect(directIDs); err != nil {
-			return nil, err
-		}
-	}
-	if len(rule.Perms) > 0 {
-		directIDs = directIDs[:0]
-		if err := tx.Table("system_menu").Select("id").Where("perms IN ?", rule.Perms).Pluck("id", &directIDs).Error; err != nil {
-			return nil, err
-		}
-		if err := collect(directIDs); err != nil {
+		if err := collectObsoleteMenuIDsByColumn(tx, rule, collected, matcher.column, matcher.values, &directIDs); err != nil {
 			return nil, err
 		}
 	}
@@ -814,6 +760,45 @@ func collectObsoleteMenuIDs(tx *gorm.DB, rule obsoleteMenuRule) ([]uint64, error
 		result = append(result, id)
 	}
 	return result, nil
+}
+
+// collectObsoleteMenuIDsByColumn queries system_menu for IDs whose column matches any of the given
+// values and merges them (with cascade) into collected, reusing directIDs' backing array across
+// calls to avoid reallocation.
+func collectObsoleteMenuIDsByColumn(tx *gorm.DB, rule obsoleteMenuRule, collected map[uint64]struct{}, column string, values []string, directIDs *[]uint64) error {
+	*directIDs = (*directIDs)[:0]
+	if err := tx.Table("system_menu").Select("id").Where(column+" IN ?", values).Pluck("id", directIDs).Error; err != nil {
+		return err
+	}
+	return collectObsoleteMenuIDsRecursive(tx, rule, *directIDs, collected)
+}
+
+// collectObsoleteMenuIDsRecursive merges ids (and their descendants when rule.Cascade is set) into
+// collected. It is a no-op for id == 0 and for IDs already present in collected, preventing both
+// duplicate work and infinite recursion on cyclic parent references.
+func collectObsoleteMenuIDsRecursive(tx *gorm.DB, rule obsoleteMenuRule, ids []uint64, collected map[uint64]struct{}) error {
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		if _, ok := collected[id]; ok {
+			continue
+		}
+		collected[id] = struct{}{}
+
+		if !rule.Cascade {
+			continue
+		}
+
+		var children []uint64
+		if err := tx.Table("system_menu").Select("id").Where("parent_id = ?", id).Pluck("id", &children).Error; err != nil {
+			return err
+		}
+		if err := collectObsoleteMenuIDsRecursive(tx, rule, children, collected); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {

@@ -1,0 +1,83 @@
+{
+  "taskId": "2026-07-30-local-consolidation",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "note": "Coordinated consolidation of verified recovery changes and PR #220 closure."
+  },
+  "commands": [
+    {
+      "command": "git checkout --ours backend/internal/scaffold/types.go backend/internal/scaffold/workspace.go && git add ...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Resolved recovery conflicts in favor of main's newer restrictive generated-file permissions and guarded reads."
+    },
+    {
+      "command": "gofmt -w <touched Go files>",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All touched Go files were formatted."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No whitespace errors."
+    },
+    {
+      "command": "go test ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "All backend packages passed after the import error-propagation correction."
+    },
+    {
+      "command": "go test ./modules/system/org/post && go vet ./modules/system/org/post",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "The focused import regression suite and static vet check passed, including deterministic unexpected-error classification coverage."
+    },
+    {
+      "command": "go test -race ./...",
+      "cwd": "backend",
+      "status": "blocked-local-environment",
+      "notes": "The default environment sets CGO_ENABLED=0. Retrying with the only available compiler, Cygwin GCC, fails because Go rejects Cygwin for native Windows cgo. GitHub Linux is the required race-test environment."
+    },
+    {
+      "command": "npm run lint && npm run test:unit && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "ESLint passed; Vitest passed 15 files / 138 tests; TypeScript, all prebuild contracts, and Vite production build passed."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:harness-encoding && npm run check:structure && npm run check:task-packet-template && npm run check:pr-governance && npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Docs, encoding, structure, task-template, PR-template, strict harness, generated-module, and duplication checks passed. Method health reported only the existing OpenSpec-skeleton warning."
+    },
+    {
+      "command": "gofmt -w modules/system/iam/role/role_service_test.go && go test ./modules/system/iam/role && go test ./... && git diff --check",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Table-driven role-import validation test refactor preserves the four original rows and i18n error-key assertions while removing Sonar new-code duplication."
+    },
+    {
+      "command": "GOCACHE=<workspace-temp-cache> go test -count=1 ./modules/system/org/post ./modules/system/iam/user && go vet ./modules/system/org/post ./modules/system/iam/user && go test ./... && golangci-lint run --new-from-rev=<PR-base-sha> ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Reproduced the hosted new-code lint scope after replacing a race-unstable GORM callback test with deterministic error-classification coverage and checking callback cleanup errors."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "No supported local native cgo compiler is installed. The GitHub Linux runner must execute the required race suite and MySQL/Redis-backed smoke sanity after the PR head update.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-30-local-consolidation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-30-local-consolidation/",
+    "reviewFile": ".harness/evidence/2026-07-30-local-consolidation/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-07-30-local-consolidation.task.md"]
+  },
+  "knownGaps": [
+    "Local race testing is unavailable because the only C compiler is Cygwin GCC, which Go rejects for native Windows cgo.",
+    "Hosted GitHub checks are required before merge and before destructive Git-state cleanup."
+  ]
+}

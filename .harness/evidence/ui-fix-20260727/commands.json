@@ -1,0 +1,190 @@
+{
+  "taskId": "ui-fix-20260727",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex"
+  },
+  "commands": [
+    {
+      "command": "npm run check:ui-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "0 findings across 228 files."
+    },
+    {
+      "command": "npm run check:shell-visual-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Shell visual contract passed with the consolidated S4666 anchors."
+    },
+    {
+      "command": "npm run check:search-toolbar-contract",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "0 findings across 86 module files plus index.css."
+    },
+    {
+      "command": "npm run check:i18n-hardcode",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Display hardcode scan passed across 194 files."
+    },
+    {
+      "command": "npm run check:i18n-generated-scope",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Generated i18n scope check passed."
+    },
+    {
+      "command": "npm run audit:i18n-locales",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "All five locales contain 2732 keys with missing=0, extra=0, empty=0."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "TypeScript project build completed without diagnostics."
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "13 test files and 132 tests passed."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Full prebuild contract chain passed; Vite transformed 1375 modules and produced the production bundle."
+    },
+    {
+      "command": "npx playwright test --config .tmp-capture/capture.config.ts .tmp-capture/verify-ui-fix.spec.ts",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "1 authenticated fix-round test passed in 25.0s; seven screenshots written, DOM/computed-style probes passed, consoleErrors=[] and page errors were collected into the same array."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . .harness/tasks/ui-fix-20260727/ui-fix-20260727.task.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "1 task packet passed with 0 errors and 0 warnings."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict --root . .harness/evidence/ui-fix-20260727/commands.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Canonical evidence passed strict validation with 0 errors and 0 warnings."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict --root . .harness/evidence/ui-fix-20260727/review.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Canonical review passed strict validation with 0 errors."
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "19 runtime evidence files scanned with 0 errors and 0 warnings."
+    },
+    {
+      "command": "npm run check:harness-visual",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "1 UI task recognized with 0 visual-evidence warnings."
+    },
+    {
+      "command": "npx prettier --check <changed frontend files>",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "All changed frontend TSX, locale, and CSS files use Prettier style."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors."
+    }
+  ],
+  "browserEvidence": [
+    {
+      "viewport": "390x844",
+      "url": "http://127.0.0.1:15173/system/user",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-header-user-390.png",
+      "consoleErrors": [],
+      "checkedStates": ["breadcrumb plus one action row", "four header actions", "document width equals viewport width"]
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:15173/system/menu",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-menu-sort-1440.png",
+      "consoleErrors": [],
+      "checkedStates": ["sort column width 120px", "sort header center not covered", "sort, visibility, and actions readable"]
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:15173/system/user",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-user-role-ellipsis-1440.png",
+      "consoleErrors": [],
+      "checkedStates": ["role text has hidden overflow, ellipsis, and nowrap", "role header center not covered", "full current role is readable"]
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:15173/system/role",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-role-member-ellipsis-1440.png",
+      "consoleErrors": [],
+      "checkedStates": ["role-member drawer open", "nickname is one line", "word-break normal with tooltip-capable ellipsis"]
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:15173/system/session",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-current-session-1440.png",
+      "consoleErrors": [],
+      "checkedStates": ["exactly one current-session tag", "device info visible", "recent activity visible", "status visible"]
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:15173/auth/security",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-security-kpi-1440.png",
+      "consoleErrors": [],
+      "checkedStates": ["successful sign-ins among latest 10 KPI visible", "KPI label and value do not overlap"]
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:15173/system/login-log",
+      "screenshot": ".harness/evidence/ui-fix-20260727/after-cleanup-action-1440.png",
+      "consoleErrors": [],
+      "checkedStates": ["cleanup dialog open", "destructive primary action reads Clean Up", "cancel and destructive actions are distinct"]
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeTraces": [
+    "Authenticated Playwright flow against the isolated Base instance at 127.0.0.1:15173.",
+    ".harness/evidence/ui-fix-20260727/verification-probes.json"
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "system IAM table presentation",
+      "auth session/security presentation",
+      "frontend locale resources to backend builtin snapshot"
+    ],
+    "checks": [],
+    "findings": [],
+    "notes": "The task supplied exact files and involved presentation/i18n changes; focused diff review confirmed no new module dependency direction. SessionList reuses the existing auth getSessions API."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/ui-fix-20260727/manifest.json",
+    "evidenceDir": ".harness/evidence/ui-fix-20260727/",
+    "reviewFile": ".harness/evidence/ui-fix-20260727/review.md",
+    "summaryFile": ".harness/evidence/ui-fix-20260727/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "This fix round rendered the populated primary states only; loading, error, forbidden, and filtered-empty states were not re-captured because their state components did not change. The parent cross-review already contains an empty-state capture."
+  ],
+  "completedAt": "2026-07-27T13:38:00+08:00"
+}

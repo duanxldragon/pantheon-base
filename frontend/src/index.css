@@ -42,7 +42,6 @@
   --brand-primary: #165dff;
   --brand-primary-soft: rgba(22, 93, 255, 0.12);
   --brand-primary-muted: rgba(22, 93, 255, 0.08);
-  --brand-gradient: #165dff;
   --shell-sider-bg: #162033;
   --shell-sider-elevated: #1d2940;
   --shell-sider-border: rgba(255, 255, 255, 0.1);
@@ -61,7 +60,6 @@
     var(--surface-lift) 14%
   );
   --shell-sider-menu-divider: rgba(255, 255, 255, 0.08);
-  --shell-brand-shadow: 0 12px 28px rgba(22, 93, 255, 0.24);
   --color-success: #00b42a;
   --color-success-bg: rgba(0, 180, 42, 0.12);
   --color-warning: #ff7d00;
@@ -153,10 +151,8 @@
   --brand-primary: #00a870;
   --brand-primary-soft: rgba(0, 168, 112, 0.13);
   --brand-primary-muted: rgba(0, 168, 112, 0.08);
-  --brand-gradient: #00a870;
   --shell-sider-bg: #143126;
   --shell-sider-elevated: #1a3d32;
-  --shell-brand-shadow: 0 12px 28px rgba(0, 168, 112, 0.26);
   --primary-1: 232, 255, 248;
   --primary-2: 173, 245, 224;
   --primary-3: 113, 232, 200;
@@ -184,10 +180,8 @@
   --brand-primary: #722ed1;
   --brand-primary-soft: rgba(114, 46, 209, 0.13);
   --brand-primary-muted: rgba(114, 46, 209, 0.08);
-  --brand-gradient: #722ed1;
   --shell-sider-bg: #22193b;
   --shell-sider-elevated: #2c2350;
-  --shell-brand-shadow: 0 12px 28px rgba(114, 46, 209, 0.26);
   --primary-1: 247, 237, 255;
   --primary-2: 229, 198, 255;
   --primary-3: 209, 158, 255;
@@ -215,10 +209,8 @@
   --brand-primary: #334155;
   --brand-primary-soft: rgba(51, 65, 85, 0.12);
   --brand-primary-muted: rgba(51, 65, 85, 0.08);
-  --brand-gradient: #334155;
   --shell-sider-bg: #182235;
   --shell-sider-elevated: #243148;
-  --shell-brand-shadow: 0 12px 28px rgba(51, 65, 85, 0.24);
   --primary-1: 241, 245, 249;
   --primary-2: 226, 232, 240;
   --primary-3: 203, 213, 225;
@@ -281,28 +273,24 @@
   --brand-primary: #5b88ff;
   --brand-primary-soft: rgba(91, 136, 255, 0.22);
   --brand-primary-muted: rgba(91, 136, 255, 0.14);
-  --brand-gradient: #5b88ff;
 }
 
 :root[data-color-mode='dark'][data-pantheon-theme='emerald'] {
   --brand-primary: #1fc78f;
   --brand-primary-soft: rgba(31, 199, 143, 0.22);
   --brand-primary-muted: rgba(31, 199, 143, 0.14);
-  --brand-gradient: #1fc78f;
 }
 
 :root[data-color-mode='dark'][data-pantheon-theme='violet'] {
   --brand-primary: #9a6cf0;
   --brand-primary-soft: rgba(154, 108, 240, 0.22);
   --brand-primary-muted: rgba(154, 108, 240, 0.14);
-  --brand-gradient: #9a6cf0;
 }
 
 :root[data-color-mode='dark'][data-pantheon-theme='slate'] {
   --brand-primary: #7c8ba3;
   --brand-primary-soft: rgba(124, 139, 163, 0.24);
   --brand-primary-muted: rgba(124, 139, 163, 0.16);
-  --brand-gradient: #7c8ba3;
 }
 
 :root[data-pantheon-density='compact'] {
@@ -1397,8 +1385,9 @@ a {
 
 .app-drawer .arco-drawer-body,
 .app-drawer .arco-drawer-content {
+  /* 抽屉体与弹窗体（.app-dialog .arco-modal-content）共用同一 muted 表面比例。 */
   padding: 20px 24px 24px;
-  background: color-mix(in srgb, var(--panel-muted) 82%, var(--surface-lift));
+  background: color-mix(in srgb, var(--panel-muted) 78%, var(--surface-lift));
 }
 
 .app-drawer .arco-drawer-footer {
@@ -1415,8 +1404,7 @@ a {
   background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-lift));
 }
 
-.app-drawer.arco-drawer,
-.app-drawer .arco-drawer-content {
+.app-drawer.arco-drawer {
   overflow: hidden;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-overlay);
@@ -1426,9 +1414,6 @@ a {
 
 .app-drawer.arco-drawer .arco-drawer-content {
   overflow-y: auto;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
 }
 
 .app-drawer.app-drawer .arco-input-password,
@@ -1698,6 +1683,16 @@ a {
   line-height: 32px;
 }
 
+.role-member-drawer__nickname-text {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+}
+
 .role-member-drawer__filter-row {
   margin-bottom: 12px;
 }
@@ -1735,11 +1730,13 @@ a {
 }
 
 .filter-panel {
-  border-width: 1px;
-  border-style: solid;
-  border-color: color-mix(in srgb, var(--panel-border) 92%, transparent);
-  background: color-mix(in srgb, var(--panel-muted) 82%, var(--surface-lift));
-  box-shadow: none;
+  /* 单一真相块：与 :root[data-pantheon-theme] .arco-card 的实际渲染一致
+     （SearchToolbar/FilterPanel 均为 Card，卡片规则本就以更高特异性生效）。 */
+  min-width: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg-solid);
+  box-shadow: var(--panel-shadow-soft);
 }
 
 .filter-panel__header {
@@ -2691,19 +2688,6 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .page-panel,
-.filter-panel {
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-md);
-  background: var(--panel-bg-solid);
-  box-shadow: var(--panel-shadow-soft);
-  min-width: 0;
-}
-
-.filter-panel {
-  background: color-mix(in srgb, var(--panel-muted) 52%, var(--surface-lift));
-  border-color: color-mix(in srgb, var(--panel-border) 94%, transparent);
-}
-
 .app-table-shell {
   width: 100%;
   min-width: 0;
@@ -2753,9 +2737,11 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 }
 
 .app-table .arco-table-container {
+  /* 单一真相块：表格容器直角（外层 page-panel 的 radius-md 承担轮廓圆角）。 */
   overflow: auto hidden;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   background: var(--panel-bg-solid);
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-table.app-table .arco-table-content-scroll.arco-table-content-scroll::before,
@@ -2811,10 +2797,6 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
 .app-table .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-left,
 .app-table .arco-table-tr:hover .arco-table-td.arco-table-col-fixed-right {
   background: var(--panel-muted);
-}
-
-.app-table .arco-table-container {
-  border-radius: 0;
 }
 
 .app-table .arco-table-header {
@@ -3316,12 +3298,6 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   .filter-panel .filter-panel__action-item .arco-space {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .app-table .arco-table-container {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
   }
 
   .app-table__mobile-hint {

@@ -1,0 +1,174 @@
+{
+  "taskId": "ui-fix-20260727",
+  "title": "Close pantheon-ui-cross-review findings in pantheon-base",
+  "goal": "Close the accepted P1/P2 UI cross-review findings with restrained Base-only changes, synchronized i18n/design contracts, and rendered desktop/mobile evidence.",
+  "primaryLayer": "system",
+  "dependencyLayers": ["platform"],
+  "scope": {
+    "in": [
+      "Verify the mobile shell header at 390x844 with no page-level horizontal overflow",
+      "Make menu sort, user role, and role-member nickname columns readable without fixed-column coverage or word breaking",
+      "Identify the current session precisely and keep device, recent-activity, and status information visible at 1440x900",
+      "Use action-specific cleanup confirmation labels across the four governance cleanup surfaces",
+      "Replace implementation-oriented or ambiguous permission/security copy and synchronize all five locales plus the backend builtin snapshot",
+      "Re-anchor DESIGN.md and DESIGN.en.md section 7.8 to implemented radius/spacing tokens",
+      "Preserve the existing S4666 CSS/checker re-anchor changes from the prior Claude work"
+    ],
+    "out": [
+      "No pantheon-ops edits or base-sync work",
+      "No pantheon-base-v1-freeze work",
+      "No backend API, database, permission, menu seed, or routing contract changes",
+      "No commit or external environment action"
+    ]
+  },
+  "assumptionsAndOpenQuestions": [
+    "The isolated 127.0.0.1:15173 instance is the accepted runtime target for this fix round.",
+    "Final human visual and functional acceptance remains the maintainer gate."
+  ],
+  "minimumViableApproach": "Reuse Arco Typography ellipsis, existing table width/priority helpers, the current auth sessions API, existing cleanup component props, and existing i18n export tooling. Add no dependencies or shared abstractions.",
+  "successCriteria": [
+    "At 390x844, shell actions occupy one row below the breadcrumb and document width equals viewport width.",
+    "At 1440x900, menu sort and user role headers are not covered by fixed action columns.",
+    "Role and nickname text use single-line ellipsis behavior with accessible tooltips and no break-word wrapping.",
+    "Exactly one current-session tag appears and device, recent-activity, and status columns are visible.",
+    "Cleanup primary action reads Clear/Clean Up according to locale intent, and permission/security copy is user-facing.",
+    "All required contracts, locale audit, type check, unit tests, production build, Playwright probe, and harness checks pass."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md sections 7.8 and 7.9",
+    ".harness/evidence/ui-cross-review-20260726/report.md",
+    ".harness/tasks/ui-fix-20260727/brief.md"
+  ],
+  "structuralScope": {
+    "affectedSubgraph": [
+      "frontend shell and shared visual CSS contract",
+      "system IAM menu/user/role table presentation",
+      "auth session/security/audit governance presentation",
+      "frontend locale resources to backend builtin locale snapshot"
+    ],
+    "boundaryCrossings": [
+      "frontend locale source to generated backend builtin locale snapshot",
+      "SessionList to the existing /auth/sessions current-session API"
+    ],
+    "riskNodes": [
+      "fixed right table columns at 1440px",
+      "current-session fallback semantics",
+      "generated locale parity"
+    ],
+    "graphFocus": [
+      "No new module boundary or dependency direction",
+      "Existing auth API read for current-session identity",
+      "Responsive table projection at 390px and 1440px"
+    ]
+  },
+  "expectedFiles": {
+    "modify": [
+      "DESIGN.md",
+      "DESIGN.en.md",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/scripts/check-shell-visual-contract.mjs",
+      "frontend/src/index.css",
+      "frontend/src/components/governance/GovernanceCleanupBar.tsx",
+      "frontend/src/i18n/resources/{zh-CN,en-US,fr-FR,ja-JP,ko-KR}.ts",
+      "frontend/src/modules/auth/security/components/{LoginLogList,SecurityCenter,SecurityEventList}.tsx",
+      "frontend/src/modules/auth/session/components/SessionList.tsx",
+      "frontend/src/modules/system/audit/OperationLogList.tsx",
+      "frontend/src/modules/system/menu/MenuList.tsx",
+      "frontend/src/modules/system/role/RoleMemberDrawer.tsx",
+      "frontend/src/modules/system/user/{UserList.tsx,user.css}"
+    ],
+    "create": [
+      ".harness/tasks/ui-fix-20260727/manifest.json",
+      ".harness/tasks/ui-fix-20260727/changes.md",
+      ".harness/evidence/ui-fix-20260727/commands.json",
+      ".harness/evidence/ui-fix-20260727/summary.md",
+      ".harness/evidence/ui-fix-20260727/review.md",
+      ".harness/evidence/ui-fix-20260727/after-*.png",
+      ".harness/evidence/ui-fix-20260727/verification-probes.json"
+    ],
+    "doNotTouch": [
+      "pantheon-ops/**",
+      "backend API and database contracts",
+      "unrelated release and Sonar working-tree artifacts"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "generator",
+    "reviewerPosture": ["impeccable visual quality", "mechanical", "scope and regression"]
+  },
+  "verificationPlan": {
+    "frontend": [
+      "npm run check:ui-contract",
+      "npm run check:shell-visual-contract",
+      "npm run check:search-toolbar-contract",
+      "npm run check:i18n-hardcode",
+      "npm run check:i18n-generated-scope",
+      "npm run audit:i18n-locales",
+      "npm run type-check",
+      "npm run test:unit",
+      "npm run build"
+    ],
+    "runtimeEvidence": [
+      "Playwright authenticated probe at 390x844 and 1440x900",
+      "Seven screenshots, computed-style/visibility probes, and console/page error collection"
+    ],
+    "visualEvidence": {
+      "viewports": ["390x844", "1440x900"],
+      "states": [
+        "breadcrumb plus one action row",
+        "sort header center not covered",
+        "role text has hidden overflow, ellipsis, and nowrap",
+        "role-member drawer open",
+        "exactly one current-session tag",
+        "successful sign-ins among latest 10 KPI visible",
+        "cleanup dialog open"
+      ],
+      "routes": [
+        "/system/user",
+        "/system/menu",
+        "/system/role",
+        "/system/session",
+        "/auth/security",
+        "/system/login-log"
+      ]
+    },
+    "harness": [
+      "check-task-packet",
+      "check-evidence",
+      "check-review",
+      "check-runtime-evidence",
+      "check-visual-evidence"
+    ]
+  },
+  "qualityProfile": "frontend-ui-l2",
+  "runtimeSensitive": true,
+  "portableFailureClass": "runtime-evidence-gate",
+  "ratchetDecision": "existing shell visual checker re-anchored; fixed-column coverage captured in task-local runtime probes",
+  "linkage": {
+    "taskId": "ui-fix-20260727",
+    "taskPacket": ".harness/tasks/ui-fix-20260727/manifest.json",
+    "evidenceDir": ".harness/evidence/ui-fix-20260727/",
+    "reviewFile": ".harness/evidence/ui-fix-20260727/review.md",
+    "summaryFile": ".harness/evidence/ui-fix-20260727/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "command result summary",
+    "desktop and mobile rendered screenshots",
+    "DOM/computed-style probes",
+    "findings-first review"
+  ],
+  "humanGates": [
+    "Maintainer final visual and functional acceptance",
+    "Any requested scope expansion into pantheon-ops or v1 freeze"
+  ],
+  "completionChecklist": [
+    "Layer and Base-only boundary declared",
+    "Design and review contracts read",
+    "Required validation and runtime evidence collected",
+    "Evidence and review linked",
+    "No commit created"
+  ]
+}

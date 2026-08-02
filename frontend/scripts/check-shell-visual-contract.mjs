@@ -624,28 +624,21 @@ if (
   findings.push('FilterPanel action buttons must align to --shell-filter-control-min-height.');
 }
 
+// Re-anchored 2026-07-27 (ui-cross-review-20260726): the previous anchors
+// (92% border mix / 82% muted background / no shadow) were dead declarations —
+// `:root[data-pantheon-theme] .arco-card` always won the cascade, so what
+// actually rendered (and was visually accepted since 07-16) is the plain card
+// surface. The single .filter-panel block now states that reality; assert it.
 const filterPanelBlock = requireBlock(globalSource, '.filter-panel', findings);
 if (filterPanelBlock) {
-  if (
-    !hasDeclaration(
-      filterPanelBlock,
-      'border-color',
-      'color-mix(in srgb, var(--panel-border) 92%, transparent)',
-    )
-  ) {
-    findings.push('.filter-panel must use the shared softened panel border.');
+  if (!hasDeclaration(filterPanelBlock, 'border', '1px solid var(--panel-border)')) {
+    findings.push('.filter-panel must use the shared panel border.');
   }
-  if (
-    !hasDeclaration(
-      filterPanelBlock,
-      'background',
-      'color-mix(in srgb, var(--panel-muted) 82%, var(--surface-lift))',
-    )
-  ) {
-    findings.push('.filter-panel must use the shared muted filter background.');
+  if (!hasDeclaration(filterPanelBlock, 'background', 'var(--panel-bg-solid)')) {
+    findings.push('.filter-panel must use the solid card surface (matches .arco-card cascade).');
   }
-  if (!hasDeclaration(filterPanelBlock, 'box-shadow', 'none')) {
-    findings.push('.filter-panel must not render an extra shadow layer.');
+  if (!hasDeclaration(filterPanelBlock, 'box-shadow', 'var(--panel-shadow-soft)')) {
+    findings.push('.filter-panel must use the shared soft card shadow.');
   }
 }
 
@@ -911,9 +904,7 @@ const appDialogControlBlock = requireBlock(
   findings,
 );
 if (appDialogControlBlock) {
-  if (
-    !hasDeclaration(appDialogControlBlock, 'border', '1px solid var(--panel-border-strong)')
-  ) {
+  if (!hasDeclaration(appDialogControlBlock, 'border', '1px solid var(--panel-border-strong)')) {
     findings.push('.app-dialog controls must render one shared outer border.');
   }
   if (!hasDeclaration(appDialogControlBlock, 'background', 'var(--control-bg)')) {
@@ -947,9 +938,7 @@ const appDrawerControlBlock = requireBlock(
   findings,
 );
 if (appDrawerControlBlock) {
-  if (
-    !hasDeclaration(appDrawerControlBlock, 'border', '1px solid var(--panel-border-strong)')
-  ) {
+  if (!hasDeclaration(appDrawerControlBlock, 'border', '1px solid var(--panel-border-strong)')) {
     findings.push('.app-drawer controls must render one shared outer border.');
   }
   if (!hasDeclaration(appDrawerControlBlock, 'background', 'var(--control-bg)')) {
@@ -1457,8 +1446,13 @@ const appTableContainerBlock = requireBlock(
   findings,
 );
 if (appTableContainerBlock) {
-  if (!hasDeclaration(appTableContainerBlock, 'border-radius', 'var(--radius-md)')) {
-    findings.push('.app-table .arco-table-container must use radius-md.');
+  // Re-anchored 2026-07-27: a later duplicate block always flattened the radius
+  // to 0 (the outer page-panel carries the rounded outline); the merged single
+  // block now states that long-rendered reality.
+  if (!hasDeclaration(appTableContainerBlock, 'border-radius', '0')) {
+    findings.push(
+      '.app-table .arco-table-container must stay square (page-panel owns the outline radius).',
+    );
   }
 }
 

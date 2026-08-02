@@ -1,0 +1,101 @@
+{
+  "taskId": "2026-07-30-local-consolidation",
+  "title": "Pantheon Base local branch and PR consolidation",
+  "goal": "Consolidate validated local work into main, repair PR #220 quality failures, and remove superseded Git state only after hosted verification.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth", "system/iam", "system/org", "system/i18n"],
+  "scope": {
+    "in": [
+      "PR #220 governance and quality closure",
+      "Eight tracked backend corrections for previously reported CI/Sonar findings",
+      "Post-merge removal of redundant branches, worktrees, stashes, and temporary diagnostics"
+    ],
+    "out": [
+      "Public API, schema, permission-policy, menu-contract, or UI behavior changes",
+      "Pantheon Ops source or foundation release publication",
+      "Deletion before branch ancestry and worktree state are verified"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "token middleware -> blacklist key",
+      "seed cleanup -> GORM Pluck",
+      "post import -> i18n error key",
+      "user profile test -> forced query failure"
+    ],
+    "boundaryCrossings": ["platform/internal -> system/auth", "system/iam", "system/org", "system/i18n"],
+    "riskNodes": ["token blacklist invalidation", "seed deletion selection", "import localization", "GORM callback lifecycle"],
+    "graphFocus": ["sensitive-input-flow", "failure-propagation"]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/acceptances/AGENT_EXECUTION_CHECKLIST.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "repo-quality-gate",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": ["behaviour", "maintainability", "architecture-fitness", "runtime-quality", "method-health"]
+  },
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-07-30-local-consolidation/manifest.json",
+      ".harness/evidence/2026-07-30-local-consolidation/commands.json",
+      ".harness/evidence/2026-07-30-local-consolidation/summary.md",
+      ".harness/evidence/2026-07-30-local-consolidation/review.md",
+      "docs/harness/tasks/2026-07-30-local-consolidation.task.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/token_middleware.go",
+      "backend/modules/system/i18n/i18n_export.go",
+      "backend/modules/system/i18n/i18n_helpers_test.go",
+      "backend/modules/system/iam/user/user_service_test.go",
+      "backend/modules/system/iam/role/role_service_test.go",
+      "backend/modules/system/org/post/post_import_regression_test.go",
+      "backend/modules/system/org/post/post_service.go",
+      "backend/modules/system/seed.go"
+    ],
+    "doNotTouch": ["public API DTOs", "database migrations", "permission policy", "Pantheon Ops source", "foundation release artifacts"]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": ["PR governance", "Go race", "golangci-lint new-code gate", "frontend contract", "GitHub smoke sanity"],
+    "requiredSensors": ["Go tests", "gofmt", "diff check", "governance checks", "hosted race/smoke", "independent review"],
+    "requiredEvidence": ["command summary", "runtime gap", "review summary", "hosted check result"],
+    "minimalComplexityRung": "reuse",
+    "ratchetDecision": "sensor-added",
+    "deferredCodeIssues": ["Local Windows has only Cygwin GCC; Go rejects it for native cgo, so the race suite remains a hosted Linux gate."]
+  },
+  "deliveryGovernance": {
+    "designGate": ["short boundary note", "behavior-preserving CI closure"],
+    "developmentGate": ["expected files", "do-not-touch boundary"],
+    "qaAcceptanceGate": ["full non-race Go suite", "hosted race/lint/frontend/smoke"],
+    "githubGovernanceGate": ["repo-quality-gate"]
+  },
+  "executionRoles": {
+    "implementerPosture": "reviewer-assisted",
+    "reviewerPosture": ["architecture", "security", "mechanical"]
+  },
+  "verificationPlan": {
+    "commands": ["go test ./...", "go test -race ./... (GitHub Actions)", "npm run lint", "npm run test:unit", "npm run build", "npm run check:docs-frontmatter", "npm run check:pr-governance", "npm run check:duplication", "git diff --check"],
+    "runtimeEvidence": ["GitHub Linux race suite and MySQL/Redis-backed smoke suite after updating PR #220."]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-07-30-local-consolidation",
+    "taskPacket": ".harness/tasks/2026-07-30-local-consolidation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-30-local-consolidation/",
+    "reviewFile": ".harness/evidence/2026-07-30-local-consolidation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-30-local-consolidation/summary.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-07-30-local-consolidation.task.md"]
+  },
+  "humanGates": ["required GitHub checks and repository merge protection"],
+  "syncExpectation": "Pantheon Base only; no base-to-ops synchronization is required because public contracts and runtime behavior do not change.",
+  "completionChecklist": ["Layer and boundary declared", "Verification evidence recorded", "Independent review requested", "Hosted required checks pending"]
+}

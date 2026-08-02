@@ -145,6 +145,40 @@ func TestUserService_UpdateUser(t *testing.T) {
 	}
 }
 
+func TestUserService_LoadUserProfileExtMissingRow(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := NewUserService(db)
+
+	profileExt, err := s.loadUserProfileExt(42)
+	if err != nil {
+		t.Fatalf("expected missing optional profile ext to succeed, got %v", err)
+	}
+	if profileExt != nil {
+		t.Fatalf("expected nil profile ext for missing row, got %+v", profileExt)
+	}
+}
+
+func TestUserService_LoadUserProfileExtPropagatesDatabaseError(t *testing.T) {
+	db := setupUserTestDB(t)
+	s := NewUserService(db)
+	wantErr := errors.New("forced profile extension query failure")
+	const callbackName = "test:force_profile_ext_query_error"
+	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		_ = tx.AddError(wantErr)
+	}); err != nil {
+		t.Fatalf("register query callback: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := db.Callback().Query().Remove(callbackName); err != nil {
+			t.Errorf("remove query callback: %v", err)
+		}
+	})
+
+	if _, err := s.loadUserProfileExt(42); !errors.Is(err, wantErr) {
+		t.Fatalf("expected database query error %v to propagate, got %v", wantErr, err)
+	}
+}
+
 func TestUserService_UserProfileExtLifecycle(t *testing.T) {
 	db := setupUserTestDB(t)
 	s := NewUserService(db)
