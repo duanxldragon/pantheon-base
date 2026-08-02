@@ -1,4 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Avatar,
   Button,
@@ -756,19 +764,61 @@ function ShellHeaderLeading({
   );
 }
 
-function ShellUserTrigger({
-  avatar,
-  roleLabel,
-  showRoleLabel,
-  userDisplayName,
-}: {
+type ShellUserTriggerHandle = {
+  getRootDOMNode: () => HTMLElement | null;
+};
+
+type ShellUserTriggerProps = Omit<React.ComponentProps<typeof Button>, 'children'> & {
   avatar?: string;
+  expanded: boolean;
+  label: string;
   roleLabel: string;
   showRoleLabel: boolean;
   userDisplayName: string;
-}) {
+};
+
+const ShellUserTrigger = forwardRef<
+  ShellUserTriggerHandle,
+  ShellUserTriggerProps
+>(function ShellUserTrigger(
+  {
+    avatar,
+    className,
+    expanded,
+    label,
+    roleLabel,
+    showRoleLabel,
+    userDisplayName,
+    ...buttonProps
+  },
+  ref,
+) {
+  const buttonRef = useRef<HTMLElement | { getRootDOMNode?: () => HTMLElement | null } | null>(
+    null,
+  );
+  useImperativeHandle(
+    ref,
+    () => ({
+      getRootDOMNode: () => {
+        if (buttonRef.current instanceof HTMLElement) {
+          return buttonRef.current;
+        }
+        return buttonRef.current?.getRootDOMNode?.() || null;
+      },
+    }),
+    [],
+  );
+
   return (
-    <Button type="text" className="app-shell__user-trigger">
+    <Button
+      {...buttonProps}
+      ref={buttonRef}
+      type="text"
+      className={['app-shell__user-trigger', className].filter(Boolean).join(' ')}
+      aria-expanded={expanded}
+      aria-haspopup="menu"
+      aria-label={label}
+    >
       <Avatar size={28}>
         <UserAvatarContent avatar={avatar} userDisplayName={userDisplayName} />
       </Avatar>
@@ -778,7 +828,7 @@ function ShellUserTrigger({
       </div>
     </Button>
   );
-}
+});
 
 function ShellNoticeCenter({
   entries,
@@ -906,6 +956,7 @@ const BaseLayout: React.FC = () => {
   const [densityMode, setDensityMode] = useState<ShellDensityMode>(() => readShellDensityMode());
   const [openedTabs, setOpenedTabs] = useState<OpenedPageTab[]>(() => readOpenedTabs());
   const [commandVisible, setCommandVisible] = useState(false);
+  const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [commandQuery, setCommandQuery] = useState('');
   const [noticeSummary, setNoticeSummary] = useState<DashboardSummary | null>(null);
   const [noticeLoading, setNoticeLoading] = useState(false);
@@ -1732,7 +1783,10 @@ const BaseLayout: React.FC = () => {
               </Tooltip>
             </Dropdown>
             <Dropdown
+              trigger={['hover', 'click']}
               position="br"
+              popupVisible={userMenuVisible}
+              onVisibleChange={setUserMenuVisible}
               droplist={
                 <Menu onClickMenuItem={handleUserMenuClick}>
                   <Menu.Item key="profile">
@@ -1756,6 +1810,8 @@ const BaseLayout: React.FC = () => {
             >
               <ShellUserTrigger
                 avatar={userInfo?.avatar}
+                expanded={userMenuVisible}
+                label={`${t('common.user')}: ${userDisplayName}`}
                 roleLabel={roleLabel}
                 showRoleLabel={showRoleLabel}
                 userDisplayName={userDisplayName}
