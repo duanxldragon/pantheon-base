@@ -299,7 +299,7 @@ function SecurityRail({
   policyItems,
   t,
   userInfo,
-}: SecurityRailProps) {
+}: Readonly<SecurityRailProps>) {
   return (
     <>
       {loading && !overview ? (

@@ -99,7 +99,12 @@ interface BrandIdentityProps {
   subtitle: string;
 }
 
-function BrandIdentity({ appName, brandInitial, siteLogo, subtitle }: BrandIdentityProps) {
+function BrandIdentity({
+  appName,
+  brandInitial,
+  siteLogo,
+  subtitle,
+}: Readonly<BrandIdentityProps>) {
   return (
     <div className="auth-login-page__brand">
       <div className="auth-login-page__brand-mark">
@@ -119,7 +124,7 @@ interface MFAChallengeFieldsProps {
   onSubmit: () => void;
 }
 
-function MFAChallengeFields({ challenge, t, onSubmit }: MFAChallengeFieldsProps) {
+function MFAChallengeFields({ challenge, t, onSubmit }: Readonly<MFAChallengeFieldsProps>) {
   return (
     <>
       <Alert

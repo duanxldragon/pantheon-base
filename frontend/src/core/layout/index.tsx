@@ -559,7 +559,7 @@ async function fetchNoticeSummarySafely(): Promise<DashboardSummary | null> {
 }
 
 function pickText(...values: Array<string | null | undefined>) {
-  return values.find((value) => Boolean(value)) || '';
+  return values.find(Boolean) || '';
 }
 
 function resolveRouteTitleKey(matchedRoute: ReturnType<typeof findRouteByPath>, pathname: string) {
@@ -636,14 +636,14 @@ function NoticePanelBody({
   statItems,
   summary,
   t,
-}: {
+}: Readonly<{
   loading: boolean;
   recentItems: NoticeRecentItem[];
   riskGroups: NoticeRiskItem[];
   statItems: NoticeStatItem[];
   summary: DashboardSummary | null;
   t: TranslateLabel;
-}) {
+}>) {
   if (loading) {
     return <div className="app-shell__notice-empty">{t('common.loading')}</div>;
   }
@@ -732,7 +732,7 @@ function ShellHeaderLeading({
   onToggleMobileNav,
   siteLogo,
   t,
-}: {
+}: Readonly<{
   appName: string;
   brandInitial: string;
   collapsed: boolean;
@@ -742,7 +742,7 @@ function ShellHeaderLeading({
   onToggleMobileNav: () => void;
   siteLogo?: string;
   t: TranslateLabel;
-}) {
+}>) {
   if (isVerticalLayout) {
     return (
       <Button
@@ -768,67 +768,68 @@ type ShellUserTriggerHandle = {
   getRootDOMNode: () => HTMLElement | null;
 };
 
-type ShellUserTriggerProps = Omit<React.ComponentProps<typeof Button>, 'children'> & {
-  avatar?: string;
-  expanded: boolean;
-  label: string;
-  roleLabel: string;
-  showRoleLabel: boolean;
-  userDisplayName: string;
-};
+type ShellUserTriggerProps = Readonly<
+  Omit<React.ComponentProps<typeof Button>, 'children'> & {
+    avatar?: string;
+    expanded: boolean;
+    label: string;
+    roleLabel: string;
+    showRoleLabel: boolean;
+    userDisplayName: string;
+  }
+>;
 
-const ShellUserTrigger = forwardRef<
-  ShellUserTriggerHandle,
-  ShellUserTriggerProps
->(function ShellUserTrigger(
-  {
-    avatar,
-    className,
-    expanded,
-    label,
-    roleLabel,
-    showRoleLabel,
-    userDisplayName,
-    ...buttonProps
-  },
-  ref,
-) {
-  const buttonRef = useRef<HTMLElement | { getRootDOMNode?: () => HTMLElement | null } | null>(
-    null,
-  );
-  useImperativeHandle(
+const ShellUserTrigger = forwardRef<ShellUserTriggerHandle, ShellUserTriggerProps>(
+  function ShellUserTrigger(
+    {
+      avatar,
+      className,
+      expanded,
+      label,
+      roleLabel,
+      showRoleLabel,
+      userDisplayName,
+      ...buttonProps
+    },
     ref,
-    () => ({
-      getRootDOMNode: () => {
-        if (buttonRef.current instanceof HTMLElement) {
-          return buttonRef.current;
-        }
-        return buttonRef.current?.getRootDOMNode?.() || null;
-      },
-    }),
-    [],
-  );
+  ) {
+    const buttonRef = useRef<HTMLElement | { getRootDOMNode?: () => HTMLElement | null } | null>(
+      null,
+    );
+    useImperativeHandle(
+      ref,
+      () => ({
+        getRootDOMNode: () => {
+          if (buttonRef.current instanceof HTMLElement) {
+            return buttonRef.current;
+          }
+          return buttonRef.current?.getRootDOMNode?.() || null;
+        },
+      }),
+      [],
+    );
 
-  return (
-    <Button
-      {...buttonProps}
-      ref={buttonRef}
-      type="text"
-      className={['app-shell__user-trigger', className].filter(Boolean).join(' ')}
-      aria-expanded={expanded}
-      aria-haspopup="menu"
-      aria-label={label}
-    >
-      <Avatar size={28}>
-        <UserAvatarContent avatar={avatar} userDisplayName={userDisplayName} />
-      </Avatar>
-      <div className="app-shell__user-meta">
-        <span className="app-shell__user-name">{userDisplayName}</span>
-        {showRoleLabel ? <span className="app-shell__user-subtitle">{roleLabel}</span> : null}
-      </div>
-    </Button>
-  );
-});
+    return (
+      <Button
+        {...buttonProps}
+        ref={buttonRef}
+        type="text"
+        className={['app-shell__user-trigger', className].filter(Boolean).join(' ')}
+        aria-expanded={expanded}
+        aria-haspopup="menu"
+        aria-label={label}
+      >
+        <Avatar size={28}>
+          <UserAvatarContent avatar={avatar} userDisplayName={userDisplayName} />
+        </Avatar>
+        <div className="app-shell__user-meta">
+          <span className="app-shell__user-name">{userDisplayName}</span>
+          {showRoleLabel ? <span className="app-shell__user-subtitle">{roleLabel}</span> : null}
+        </div>
+      </Button>
+    );
+  },
+);
 
 function ShellNoticeCenter({
   entries,
@@ -841,7 +842,7 @@ function ShellNoticeCenter({
   statItems,
   summary,
   t,
-}: {
+}: Readonly<{
   entries: NoticeEntry[];
   hasAttention: boolean;
   loading: boolean;
@@ -852,7 +853,7 @@ function ShellNoticeCenter({
   statItems: NoticeStatItem[];
   summary: DashboardSummary | null;
   t: TranslateLabel;
-}) {
+}>) {
   if (!show) {
     return null;
   }
@@ -921,17 +922,17 @@ function CommandResults({
   items,
   onExecute,
   t,
-}: {
+}: Readonly<{
   items: CommandSearchItem[];
   onExecute: (item: CommandSearchItem) => void;
   t: TranslateLabel;
-}) {
+}>) {
   if (items.length === 0) {
     return <Empty description={t('app.command.empty')} />;
   }
   return items.map((item, index) => {
     const previousItem = items[index - 1];
-    const showSection = !previousItem || previousItem.section !== item.section;
+    const showSection = previousItem?.section !== item.section;
     return (
       <React.Fragment key={item.key}>
         {showSection ? <div className="app-command__section">{item.section}</div> : null}

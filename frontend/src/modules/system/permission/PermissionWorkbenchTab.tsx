@@ -37,10 +37,9 @@ import {
 import { translateRoleName } from '../role/display';
 import '../components/shared/list-page.css';
 
-function remediationActionLabel(
-  action: string | undefined,
-  t: ReturnType<typeof useTranslation>['t'],
-) {
+type TranslateFn = ReturnType<typeof useTranslation>['t'];
+
+function remediationActionLabel(action: string | undefined, t: TranslateFn) {
   if (action === 'remediated') {
     return t('system.permission.workbench.timeline.remediated');
   }
@@ -63,6 +62,32 @@ function dedupePermissions(items: PermissionWorkbenchPermission[]) {
     seen.add(identity);
     return true;
   });
+}
+
+function roleStatusLabel(role: PermissionWorkbenchRole, t: TranslateFn) {
+  return role.status === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled');
+}
+
+function roleCoverageLabel(role: PermissionWorkbenchRole, t: TranslateFn) {
+  const labels = [];
+  if (role.hasPageGap) {
+    labels.push(t('system.permission.workbench.coverage.pageGap'));
+  }
+  if (role.hasApiGap) {
+    labels.push(t('system.permission.workbench.coverage.apiGap'));
+  }
+  return labels.join(' / ') || t('system.permission.workbench.coverage.complete');
+}
+
+function renderItemsOrEmpty<T>(
+  items: T[],
+  renderItem: (item: T) => React.ReactNode,
+  t: TranslateFn,
+) {
+  if (items.length === 0) {
+    return <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>;
+  }
+  return items.map(renderItem);
 }
 
 const emptyWorkbenchQuery: PermissionWorkbenchQuery = {
@@ -571,10 +596,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                 },
                 {
                   label: t('system.role.status'),
-                  value:
-                    detailRole.status === 1
-                      ? t('system.user.status.enabled')
-                      : t('system.user.status.disabled'),
+                  value: roleStatusLabel(detailRole, t),
                 },
               ]}
             />
@@ -614,15 +636,7 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                 },
                 {
                   label: t('system.permission.workbench.coverage'),
-                  value:
-                    [
-                      detailRole.hasPageGap
-                        ? t('system.permission.workbench.coverage.pageGap')
-                        : '',
-                      detailRole.hasApiGap ? t('system.permission.workbench.coverage.apiGap') : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' / ') || t('system.permission.workbench.coverage.complete'),
+                  value: roleCoverageLabel(detailRole, t),
                 },
               ]}
             />
@@ -725,14 +739,14 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   {t('system.permission.workbench.navSection')}
                 </Typography.Text>
                 <Space wrap>
-                  {detailRole.menus.length > 0 ? (
-                    detailRole.menus.map((item) => (
+                  {renderItemsOrEmpty(
+                    detailRole.menus,
+                    (item) => (
                       <Tag key={`${item.id}-${item.path}`}>
                         {translateTitleKey(item.titleKey, item.path)}
                       </Tag>
-                    ))
-                  ) : (
-                    <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>
+                    ),
+                    t,
                   )}
                 </Space>
               </Space>
@@ -742,14 +756,14 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   {t('system.permission.workbench.pageSection')}
                 </Typography.Text>
                 <Space wrap>
-                  {detailPagePermissions.length > 0 ? (
-                    detailPagePermissions.map((item) => (
+                  {renderItemsOrEmpty(
+                    detailPagePermissions,
+                    (item) => (
                       <Tag key={`${item.kind}:${item.key}:${item.path || ''}`} color="arcoblue">
                         {translateTitleKey(item.titleKey, item.key)}
                       </Tag>
-                    ))
-                  ) : (
-                    <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>
+                    ),
+                    t,
                   )}
                 </Space>
               </Space>
@@ -759,14 +773,14 @@ export const PermissionWorkbenchTab: React.FC<PermissionWorkbenchTabProps> = ({
                   {t('system.permission.workbench.actionSection')}
                 </Typography.Text>
                 <Space wrap>
-                  {detailActionPermissions.length > 0 ? (
-                    detailActionPermissions.map((item) => (
+                  {renderItemsOrEmpty(
+                    detailActionPermissions,
+                    (item) => (
                       <Tag key={`${item.kind}:${item.key}:${item.path || ''}`} color="green">
                         {translateTitleKey(item.titleKey, item.key)}
                       </Tag>
-                    ))
-                  ) : (
-                    <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>
+                    ),
+                    t,
                   )}
                 </Space>
               </Space>

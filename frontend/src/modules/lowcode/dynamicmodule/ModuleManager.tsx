@@ -160,7 +160,7 @@ function ModuleManagerTable({
   onRegister,
   onUnregister,
   t,
-}: ModuleManagerTableProps) {
+}: Readonly<ModuleManagerTableProps>) {
   const columns = [
     {
       title: t('generator.moduleManager.name'),
@@ -411,10 +411,10 @@ function ModuleManagerTable({
 function ModuleLifecycleNotice({
   summary,
   t,
-}: {
+}: Readonly<{
   summary: ModuleI18nLifecycleSummary | null;
   t: TranslateFn;
-}) {
+}>) {
   if (!summary?.triggered) {
     return null;
   }

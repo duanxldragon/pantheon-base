@@ -306,14 +306,14 @@ function UserTableState({
   onSelectionChange,
   state,
   t,
-}: {
+}: Readonly<{
   columns: ColumnProps<UserListRow>[];
   onChange: TableProps<UserListRow>['onChange'];
   onRetry: () => void;
   onSelectionChange: (rowKeys: Array<string | number>) => void;
   state: UserListState;
   t: ReturnType<typeof useTranslation>['t'];
-}) {
+}>) {
   return (
     <>
       {state.loading && state.data.length === 0 ? <PageLoading /> : null}

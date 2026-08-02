@@ -679,7 +679,7 @@ function choose<T>(condition: boolean, whenTrue: T, whenFalse: T): T {
 }
 
 function valueOr<T>(value: T | null | undefined | false | '', fallback: T): T {
-  return value ? value : fallback;
+  return value || fallback;
 }
 
 function hasAccess(isAdmin: boolean, hasPermission: boolean): boolean {
