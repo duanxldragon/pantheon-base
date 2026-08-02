@@ -17,8 +17,8 @@ The reviewer confirmed that:
 - the task scope does not include unannounced API, schema, permission, or UI
   behavior changes.
 
-The focused invalid-department, root-department, and forced database-error
-tests, `gofmt`, `git diff --check`, and language-server checks passed. No
+The focused invalid-department, root-department, and unexpected-error
+classification tests, `gofmt`, `git diff --check`, and language-server checks passed. No
 remaining code-review findings were reported.
 
 ## Sonar Duplication Remediation Review

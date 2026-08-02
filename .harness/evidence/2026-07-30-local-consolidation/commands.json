@@ -34,7 +34,7 @@
       "command": "go test ./modules/system/org/post && go vet ./modules/system/org/post",
       "cwd": "backend",
       "status": "passed",
-      "notes": "The focused import regression suite and static vet check passed, including the forced department-query failure path."
+      "notes": "The focused import regression suite and static vet check passed, including deterministic unexpected-error classification coverage."
     },
     {
       "command": "go test -race ./...",
@@ -59,6 +59,12 @@
       "cwd": "backend",
       "status": "passed",
       "notes": "Table-driven role-import validation test refactor preserves the four original rows and i18n error-key assertions while removing Sonar new-code duplication."
+    },
+    {
+      "command": "GOCACHE=<workspace-temp-cache> go test -count=1 ./modules/system/org/post ./modules/system/iam/user && go vet ./modules/system/org/post ./modules/system/iam/user && go test ./... && golangci-lint run --new-from-rev=<PR-base-sha> ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Reproduced the hosted new-code lint scope after replacing a race-unstable GORM callback test with deterministic error-classification coverage and checking callback cleanup errors."
     }
   ],
   "runtimeSensitive": true,

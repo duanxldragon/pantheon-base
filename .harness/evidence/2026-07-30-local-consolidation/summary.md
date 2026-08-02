@@ -16,7 +16,7 @@ reads. Non-conflicting recovery work did not add a net working-tree change.
 
 - Token middleware now uses `authtoken.BlacklistUserKey` rather than a duplicate key format.
 - Seed cleanup gives GORM a pointer slice for `Pluck`, preventing its reflection panic.
-- Post import records canonical i18n keys only for known domain errors; unexpected department-query errors are returned as top-level failures instead of being exposed in row errors.
+- Post import records canonical i18n keys only for known domain errors; the explicit error-classification helper returns unexpected department-query errors as top-level failures instead of exposing them in row errors.
 - User-profile error propagation uses deterministic GORM callback injection instead of DDL mutation.
 - The remaining lint findings are addressed by an exported-method comment, restrictive test directories, and shared test constants.
 - The four role-import validation tests with identical setup and assertions are table-driven without changing their input rows or expected i18n error keys, removing the Sonar new-code duplication that blocked the quality gate.
@@ -43,6 +43,14 @@ On the final Sonar remediation, `gofmt`, focused role tests, the full non-race
 backend suite, and `git diff --check` passed locally. The required race suite
 remains a GitHub Linux gate because the local Windows host lacks a supported
 native cgo compiler.
+
+The first hosted run after the Sonar fix passed SonarCloud and all other
+completed checks, but its Linux race suite exposed an unstable GORM callback
+test and the new-code lint gate reported ignored callback return values plus a
+branch-shape warning. The remediation replaces the unstable callback with a
+deterministic error-classification test, handles callback cleanup errors, and
+passes full non-race tests plus the local new-code lint command. Hosted checks
+must be rerun before merge.
 
 ## Sync and UI
 

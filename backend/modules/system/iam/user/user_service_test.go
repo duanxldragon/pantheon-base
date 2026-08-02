@@ -164,11 +164,15 @@ func TestUserService_LoadUserProfileExtPropagatesDatabaseError(t *testing.T) {
 	wantErr := errors.New("forced profile extension query failure")
 	const callbackName = "test:force_profile_ext_query_error"
 	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
-		tx.AddError(wantErr)
+		_ = tx.AddError(wantErr)
 	}); err != nil {
 		t.Fatalf("register query callback: %v", err)
 	}
-	defer db.Callback().Query().Remove(callbackName)
+	t.Cleanup(func() {
+		if err := db.Callback().Query().Remove(callbackName); err != nil {
+			t.Errorf("remove query callback: %v", err)
+		}
+	})
 
 	if _, err := s.loadUserProfileExt(42); !errors.Is(err, wantErr) {
 		t.Fatalf("expected database query error %v to propagate, got %v", wantErr, err)

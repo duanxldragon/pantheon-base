@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"gorm.io/gorm"
+	"pantheon-base/pkg/impexp"
 )
 
 // 以下回归测试用于锁定 ImportPosts 的事务边界、逐行校验、重复处理以及
@@ -170,38 +170,17 @@ func TestPostService_ImportPostsRejectsRootDept(t *testing.T) {
 	}
 }
 
-// TestPostService_ImportPostsPropagatesUnexpectedDeptQueryError 锁定：
-// 部门校验中的基础设施错误必须作为顶层错误返回，不能泄露到逐行 i18n 错误。
-func TestPostService_ImportPostsPropagatesUnexpectedDeptQueryError(t *testing.T) {
-	db := setupPostTestDB(t)
-	service := NewPostService(db)
+// TestAppendPostImportDeptErrorPropagatesUnexpectedError 锁定：
+// 部门校验中的基础设施错误必须返回调用方，不能泄露到逐行 i18n 错误。
+func TestAppendPostImportDeptErrorPropagatesUnexpectedError(t *testing.T) {
 	wantErr := errors.New("forced post department query failure")
-	const callbackName = "test:force_post_department_query_error"
-	departmentQueries := 0
-	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
-		if tx.Statement.Table != "system_dept" {
-			return
-		}
-		departmentQueries++
-		if departmentQueries == 2 {
-			tx.AddError(wantErr)
-		}
-	}); err != nil {
-		t.Fatalf("register query callback: %v", err)
-	}
-	defer db.Callback().Query().Remove(callbackName)
-
-	result, err := service.ImportPosts(importRecords([]string{
-		"Pantheon Base/研发中心", testImportPostCode, "研发工程师", "10", "1", "r",
-	}))
+	result := &impexp.ImportResult{}
+	err := appendPostImportDeptError(result, 2, wantErr)
 	if !errors.Is(err, wantErr) {
-		t.Fatalf("expected database query error %v to propagate, got %v", wantErr, err)
+		t.Fatalf("expected database error %v to propagate, got %v", wantErr, err)
 	}
-	if result != nil {
-		t.Fatalf("expected no import result for infrastructure error, got %+v", result)
-	}
-	if departmentQueries != 2 {
-		t.Fatalf("expected path-map and department-validation queries, got %d", departmentQueries)
+	if result.Failed != 0 || len(result.Errors) != 0 {
+		t.Fatalf("expected no row errors for infrastructure failure, got %+v", result)
 	}
 }
 

@@ -321,6 +321,16 @@ type postImportRow struct {
 	Remark   string
 }
 
+// appendPostImportDeptError records domain validation errors as i18n keys and
+// returns unexpected infrastructure errors to the caller.
+func appendPostImportDeptError(result *impexp.ImportResult, rowNumber int, err error) error {
+	if !errors.Is(err, common.ErrBadRequest) && !errors.Is(err, common.ErrForbidden) {
+		return err
+	}
+	impexp.AppendImportError(result, rowNumber, "deptPath", common.ErrMessage(err))
+	return nil
+}
+
 // validateImportHeaders 校验导入表头是否包含必填列，缺失时追加错误到 result。
 func validateImportHeaders(headerIndex map[string]int, result *impexp.ImportResult) {
 	requiredHeaders := []string{"deptPath", "postCode", "postName", "sort", "status", "remark"}
@@ -367,9 +377,7 @@ func (s *PostService) readImportRow(
 	} else if deptID == 0 {
 		impexp.AppendImportError(result, rowNumber, "deptPath", "post.dept.invalid")
 	} else if err := s.ensurePostDeptID(deptID); err != nil {
-		if errors.Is(err, common.ErrBadRequest) || errors.Is(err, common.ErrForbidden) {
-			impexp.AppendImportError(result, rowNumber, "deptPath", common.ErrMessage(err))
-		} else {
+		if err := appendPostImportDeptError(result, rowNumber, err); err != nil {
 			return nil, err
 		}
 	}
