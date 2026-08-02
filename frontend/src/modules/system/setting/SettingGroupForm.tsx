@@ -264,6 +264,52 @@ const SettingGroupForm: React.FC<SettingGroupFormProps> = ({
     );
   };
 
+  const renderNumberField = (
+    item: SettingItem,
+    label: string,
+    fieldClassName: string,
+    help: React.ReactNode,
+  ) => {
+    if (item.valueType !== 'number') {
+      return null;
+    }
+    if (auditRetentionDaySettingKeys.has(item.settingKey)) {
+      return (
+        <FormItem
+          key={item.settingKey}
+          className={fieldClassName}
+          field={item.settingKey}
+          label={label}
+          extra={help}
+          rules={[{ required: true, message: t('common.requiredField', { field: label }) }]}
+        >
+          <Select
+            options={recommendedAuditRetentionDayOptions.map((option) => ({
+              label: t('system.setting.audit.retentionDaysOption', { count: option }),
+              value: option,
+            }))}
+          />
+        </FormItem>
+      );
+    }
+    return (
+      <FormItem
+        key={item.settingKey}
+        className={fieldClassName}
+        field={item.settingKey}
+        label={label}
+        extra={help}
+        rules={[{ required: true, message: t('common.requiredField', { field: label }) }]}
+      >
+        <InputNumber
+          style={{ width: '100%' }}
+          precision={integerSettingKeys.has(item.settingKey) ? 0 : undefined}
+          min={integerSettingKeys.has(item.settingKey) ? 1 : undefined}
+        />
+      </FormItem>
+    );
+  };
+
   const renderField = (item: SettingItem) => {
     const label = t(`system.setting.item.${item.settingKey}`, item.settingKey);
     const isWideField = isWideSettingField(item);
@@ -324,42 +370,9 @@ const SettingGroupForm: React.FC<SettingGroupFormProps> = ({
         </FormItem>
       );
     }
-    if (item.valueType === 'number') {
-      if (auditRetentionDaySettingKeys.has(item.settingKey)) {
-        return (
-          <FormItem
-            key={item.settingKey}
-            className={fieldClassName}
-            field={item.settingKey}
-            label={label}
-            extra={help}
-            rules={[{ required: true, message: t('common.requiredField', { field: label }) }]}
-          >
-            <Select
-              options={recommendedAuditRetentionDayOptions.map((option) => ({
-                label: t('system.setting.audit.retentionDaysOption', { count: option }),
-                value: option,
-              }))}
-            />
-          </FormItem>
-        );
-      }
-      return (
-        <FormItem
-          key={item.settingKey}
-          className={fieldClassName}
-          field={item.settingKey}
-          label={label}
-          extra={help}
-          rules={[{ required: true, message: t('common.requiredField', { field: label }) }]}
-        >
-          <InputNumber
-            style={{ width: '100%' }}
-            precision={integerSettingKeys.has(item.settingKey) ? 0 : undefined}
-            min={integerSettingKeys.has(item.settingKey) ? 1 : undefined}
-          />
-        </FormItem>
-      );
+    const numberField = renderNumberField(item, label, fieldClassName, help);
+    if (numberField) {
+      return numberField;
     }
     if (item.isEncrypted === 1) {
       return (
