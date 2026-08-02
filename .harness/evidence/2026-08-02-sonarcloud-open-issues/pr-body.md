@@ -50,7 +50,7 @@
 - [x] CodeQL 结果已检查并解释
 - [x] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up
 - [x] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
-- [ ] GitHub required checks 通过：SonarCloud、Frontend Contract、Go Lint、Security Gates、Duplication 已通过；Docs Governance 正在由本正文修复，Backend Tests 仍需处理其 Linux race 失败
+- [ ] GitHub required checks 通过：Docs Governance、SonarCloud、Frontend Contract、Go Lint、Security Gates、Duplication 已通过；Backend Tests 已修正 i18n 生命周期断言，等待 Linux race 重跑
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用
 - [x] 已启用或确认将启用 squash auto-merge
 
@@ -60,7 +60,7 @@
 
 - Copilot review：`automatic-policy`
 - CodeQL 结果：`passed`
-- GitHub checks 结果：`in-progress; Docs Governance body corrected and Backend Tests race failure tracked`
+- GitHub checks 结果：`Docs Governance passed; Backend Tests rerun pending after lifecycle assertion correction`
 - Auto-merge：`not-enabled`
 - Duplication Gate 结果：`passed`
 - 是否高风险改动：`yes; shared system and lowcode code paths changed, with behavior-preservation review completed`

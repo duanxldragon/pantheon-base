@@ -30,6 +30,12 @@
       "notes": "Only pre-existing pkg/database/casbin_watcher.go:run at 16 remains; it was outside the 77 Sonar findings."
     },
     {
+      "command": "cd backend/modules/lowcode/dynamicmodule && go test -count=1 -run '^TestPurgeModuleAllowsBusinessStaticModuleWithoutTable$' .",
+      "cwd": "backend/modules/lowcode/dynamicmodule",
+      "status": "passed",
+      "notes": "Corrected the lifecycle-marked-at assertion for system.config prefixed keys; those rows are intentionally marked when observation begins."
+    },
+    {
       "command": "cd frontend && npm run lint && npm run type-check && npm run test:unit",
       "cwd": "frontend",
       "status": "passed",

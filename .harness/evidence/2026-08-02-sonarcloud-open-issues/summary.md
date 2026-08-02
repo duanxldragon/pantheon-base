@@ -1,6 +1,6 @@
 # Summary - 2026-08-02-sonarcloud-open-issues
 
-Status: ready for PR and hosted SonarCloud verification.
+Status: Docs Governance is green; hosted Backend Tests rerun pending.
 
 Baseline: SonarCloud quality gate `OK`, 77 unresolved code smells.
 
@@ -12,6 +12,8 @@ UI contract and production build checks are green.
 Verification:
 
 - `go test -count=1 ./...` passed.
+- `TestPurgeModuleAllowsBusinessStaticModuleWithoutTable` passed after correcting
+  its lifecycle-marked-at assertion for prefixed `system.config` keys.
 - `go vet ./...` passed.
 - `gofmt` and `git diff --check` passed.
 - `npm run lint` and `npm run type-check` passed.
@@ -34,4 +36,5 @@ Known gaps:
   existing JSX into helpers/components and tightens readonly props.
 - The strict visual checker still reports one pre-existing unreadable
   2026-07-29 task manifest outside this task.
-- Hosted SonarCloud issue count and PR checks remain pending until push.
+- Hosted Linux race tests and final PR checks remain pending after the
+  lifecycle assertion correction.

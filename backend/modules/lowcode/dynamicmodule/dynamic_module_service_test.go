@@ -1104,7 +1104,7 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	assertDynamicModuleTableCount(t, db.Model(&ModuleRegistration{}).Where("name = ?", "business.cmdb"), 0, "registration")
 	assertDynamicModuleTableCount(t, db.Table("system_menu").Where("module = ?", "business.cmdb"), 0, "menu")
 	assertDynamicModuleI18nModuleRows(t, db, "business.cmdb", 2, systemi18n.I18nLifecycleStatusObserving)
-	assertDynamicModuleI18nRows(t, db, "system.config", "business.cmdb.host.title", 2, systemi18n.I18nLifecycleStatusObserving, false)
+	assertDynamicModuleI18nRows(t, db, "system.config", "business.cmdb.host.title", 2, systemi18n.I18nLifecycleStatusObserving, true)
 }
 
 func assertDynamicModuleTableCount(t *testing.T, query *gorm.DB, want int64, label string) {
