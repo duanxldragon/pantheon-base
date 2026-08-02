@@ -774,40 +774,52 @@ func (s *DictService) loadExistingDictItemsByKey() (map[string]SystemDictItem, e
 func (s *DictService) upsertDictItemsInTx(rows []dictItemImportRow, existingByKey map[string]SystemDictItem, result *impexp.ImportResult) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		for _, row := range rows {
-			if err := s.validateDictItem(0, row.DictCode, row.ItemValue); err != nil {
-				if existing, ok := existingByKey[row.DictCode+"|"+row.ItemValue]; ok {
-					existing.ItemLabelKey = row.ItemLabelKey
-					existing.ItemColor = row.ItemColor
-					existing.Sort = row.Sort
-					existing.Status = normalizeDictStatus(row.Status)
-					existing.Remark = row.Remark
-					if err := tx.Save(&existing).Error; err != nil {
-						return err
-					}
-					s.invalidateDictOptionCache(existing.DictCode)
-					result.Updated++
-					continue
-				}
+			if err := s.upsertDictItemImportRow(tx, row, existingByKey, result); err != nil {
 				return err
 			}
-
-			item := SystemDictItem{
-				DictCode:     row.DictCode,
-				ItemLabelKey: row.ItemLabelKey,
-				ItemValue:    row.ItemValue,
-				ItemColor:    row.ItemColor,
-				Sort:         row.Sort,
-				Status:       normalizeDictStatus(row.Status),
-				Remark:       row.Remark,
-			}
-			if err := tx.Create(&item).Error; err != nil {
-				return err
-			}
-			s.invalidateDictOptionCache(item.DictCode)
-			result.Created++
 		}
 		return nil
 	})
+}
+
+func (s *DictService) upsertDictItemImportRow(tx *gorm.DB, row dictItemImportRow, existingByKey map[string]SystemDictItem, result *impexp.ImportResult) error {
+	validationErr := s.validateDictItem(0, row.DictCode, row.ItemValue)
+	if validationErr == nil {
+		return s.createImportedDictItem(tx, row, result)
+	}
+	existing, ok := existingByKey[row.DictCode+"|"+row.ItemValue]
+	if !ok {
+		return validationErr
+	}
+	existing.ItemLabelKey = row.ItemLabelKey
+	existing.ItemColor = row.ItemColor
+	existing.Sort = row.Sort
+	existing.Status = normalizeDictStatus(row.Status)
+	existing.Remark = row.Remark
+	if err := tx.Save(&existing).Error; err != nil {
+		return err
+	}
+	s.invalidateDictOptionCache(existing.DictCode)
+	result.Updated++
+	return nil
+}
+
+func (s *DictService) createImportedDictItem(tx *gorm.DB, row dictItemImportRow, result *impexp.ImportResult) error {
+	item := SystemDictItem{
+		DictCode:     row.DictCode,
+		ItemLabelKey: row.ItemLabelKey,
+		ItemValue:    row.ItemValue,
+		ItemColor:    row.ItemColor,
+		Sort:         row.Sort,
+		Status:       normalizeDictStatus(row.Status),
+		Remark:       row.Remark,
+	}
+	if err := tx.Create(&item).Error; err != nil {
+		return err
+	}
+	s.invalidateDictOptionCache(item.DictCode)
+	result.Created++
+	return nil
 }
 
 func (s *DictService) UpdateDictItem(itemID uint64, req *DictItemUpdateReq) (*DictItemResp, error) {
@@ -1079,12 +1091,16 @@ func (s *DictService) AnalyzeDictUsage(dictCode string) (*DictUsageAnalysisResp,
 }
 
 func scanDictUsageReferences(projectRoot, trimmedCode string) ([]DictUsageReferenceResp, error) {
-	allowedExt := dictUsageAllowedExt()
-	ignoredDir := dictUsageIgnoredDir()
-
 	references := make([]DictUsageReferenceResp, 0)
+	scan := dictUsageScan{
+		projectRoot: projectRoot,
+		dictCode:    trimmedCode,
+		allowedExt:  dictUsageAllowedExt(),
+		ignoredDir:  dictUsageIgnoredDir(),
+		references:  &references,
+	}
 	walkErr := filepath.WalkDir(projectRoot, func(path string, d fs.DirEntry, walkErr error) error {
-		return visitDictUsageEntry(projectRoot, path, d, walkErr, trimmedCode, allowedExt, ignoredDir, &references)
+		return visitDictUsageEntry(scan, path, d, walkErr)
 	})
 	if walkErr != nil {
 		return nil, walkErr
@@ -1116,17 +1132,25 @@ func dictUsageIgnoredDir() map[string]struct{} {
 	}
 }
 
-func visitDictUsageEntry(projectRoot, path string, d fs.DirEntry, walkErr error, trimmedCode string, allowedExt, ignoredDir map[string]struct{}, references *[]DictUsageReferenceResp) error {
+type dictUsageScan struct {
+	projectRoot string
+	dictCode    string
+	allowedExt  map[string]struct{}
+	ignoredDir  map[string]struct{}
+	references  *[]DictUsageReferenceResp
+}
+
+func visitDictUsageEntry(scan dictUsageScan, path string, d fs.DirEntry, walkErr error) error {
 	if walkErr != nil {
 		return nil
 	}
 	if d.IsDir() {
-		if _, skip := ignoredDir[d.Name()]; skip {
+		if _, skip := scan.ignoredDir[d.Name()]; skip {
 			return filepath.SkipDir
 		}
 		return nil
 	}
-	if _, ok := allowedExt[strings.ToLower(filepath.Ext(path))]; !ok {
+	if _, ok := scan.allowedExt[strings.ToLower(filepath.Ext(path))]; !ok {
 		return nil
 	}
 	file, err := os.Open(path) // #nosec G304 -- path comes from filepath.WalkDir under the repo source roots being scanned.
@@ -1142,13 +1166,13 @@ func visitDictUsageEntry(projectRoot, path string, d fs.DirEntry, walkErr error,
 		line := scanner.Text()
 		searchOffset := 0
 		for {
-			index := strings.Index(line[searchOffset:], trimmedCode)
+			index := strings.Index(line[searchOffset:], scan.dictCode)
 			if index < 0 {
 				break
 			}
 			column := searchOffset + index + 1
-			relPath, _ := filepath.Rel(projectRoot, path)
-			*references = append(*references, DictUsageReferenceResp{
+			relPath, _ := filepath.Rel(scan.projectRoot, path)
+			*scan.references = append(*scan.references, DictUsageReferenceResp{
 				FilePath:   filepath.ToSlash(relPath),
 				Line:       lineNumber,
 				Column:     column,
@@ -1156,7 +1180,7 @@ func visitDictUsageEntry(projectRoot, path string, d fs.DirEntry, walkErr error,
 				Domain:     inferDictUsageDomain(relPath),
 				ModuleHint: inferDictUsageModuleHint(relPath),
 			})
-			searchOffset += index + len(trimmedCode)
+			searchOffset += index + len(scan.dictCode)
 		}
 	}
 	return nil

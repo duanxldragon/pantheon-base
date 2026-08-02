@@ -33,6 +33,87 @@ import {
 } from './schema';
 import { TYPE_MAPPING } from './typeMapping';
 
+interface ListPageFeatures {
+  governanceEnabled: boolean;
+  searchEnabled: boolean;
+  headerActionsEnabled: boolean;
+  batchActionsEnabled: boolean;
+  rowActionsEnabled: boolean;
+  searchUsesSelect: boolean;
+  detailActionEnabled: boolean;
+  createActionEnabled: boolean;
+  deleteActionEnabled: boolean;
+  exportActionEnabled: boolean;
+  importActionEnabled: boolean;
+  useNavigateHook: boolean;
+  useMessage: boolean;
+}
+
+function buildListImports(features: ListPageFeatures): string[] {
+  const imports = ['Card', 'Space'];
+  if (features.searchEnabled && features.searchUsesSelect) {
+    imports.unshift('Select');
+  }
+  if (features.searchEnabled || features.headerActionsEnabled || features.batchActionsEnabled) {
+    imports.unshift('Button');
+  }
+  if (features.batchActionsEnabled) {
+    imports.unshift('Popconfirm');
+  }
+  return imports;
+}
+
+function buildListIconImports(features: ListPageFeatures): string[] {
+  const imports: string[] = [];
+  if (
+    features.deleteActionEnabled &&
+    (features.batchActionsEnabled || features.rowActionsEnabled)
+  ) {
+    imports.push('IconDelete');
+  }
+  if (features.exportActionEnabled) {
+    imports.push('IconDownload');
+  }
+  if (features.detailActionEnabled) {
+    imports.push('IconEye');
+  }
+  if (features.createActionEnabled) {
+    imports.push('IconPlus');
+  }
+  return imports;
+}
+
+function buildListComponentImports(features: ListPageFeatures): string[] {
+  const imports = [
+    'AppTable',
+    'PageContainer',
+    'PageEmpty',
+    'PageLoading',
+    'PageRequestError',
+    'buildStandardPagination',
+  ];
+  if (features.searchEnabled) {
+    imports.splice(1, 0, 'SearchToolbar');
+  }
+  if (features.governanceEnabled) {
+    imports.splice(-3, 0, 'GovernanceSummaryBar');
+  }
+  if (features.importActionEnabled) {
+    imports.splice(-3, 0, 'ImportCsvButton');
+  }
+  if (features.headerActionsEnabled) {
+    imports.splice(-3, 0, 'ListHeaderActions');
+  }
+  if (features.rowActionsEnabled) {
+    imports.splice(-3, 0, 'SystemRowActions');
+    imports.splice(-3, 0, 'TABLE_ACTION_COLUMN_WIDTH');
+  }
+  if (features.batchActionsEnabled) {
+    imports.splice(-3, 0, 'TableBatchActionBar');
+  }
+  return imports;
+}
+
 export class FrontendGenerator {
   private readonly schema: ModuleSchema;
   private readonly modelName: string;
@@ -341,86 +422,17 @@ ${extraApi ? `\n${extraApi}\n` : ''}
   generateListPage(): string {
     const modelName = this.modelName;
     const toSrcRoot = this.relativeToSrcRoot();
-    const pageActions = getPageActions(this.schema);
-    const governanceEnabled = this.isListGovernanceEnabled();
-    const searchEnabled = this.isListSearchEnabled();
-    const headerActionsEnabled = this.isListHeaderActionsEnabled();
-    const batchActionsEnabled = this.isListBatchActionsEnabled();
-    const rowActionsEnabled = this.isListRowActionsEnabled();
-    const searchableFields = this.schema.model.fields.filter((field) => field.searchable);
-    const searchUsesSelect = searchableFields.some((field) => field.type === 'enum');
-    const detailActionEnabled = pageActions.includes('view') || pageActions.includes('detail');
-    const createActionEnabled = pageActions.includes('create');
-    const deleteActionEnabled = pageActions.includes('delete');
-    const exportActionEnabled = pageActions.includes('export');
-    const importActionEnabled = pageActions.includes('import');
-    const useNavigateHook = detailActionEnabled;
-    const useMessage =
-      createActionEnabled ||
-      importActionEnabled ||
-      (deleteActionEnabled && (batchActionsEnabled || rowActionsEnabled));
-    const governanceConstants = governanceEnabled
-      ? `${this.generateListGovernanceConstants()}\n`
-      : '';
-    const listImports = ['Card', 'Space'];
-    if (searchEnabled && searchUsesSelect) {
-      listImports.unshift('Select');
-    }
-    if (searchEnabled || headerActionsEnabled || batchActionsEnabled) {
-      listImports.unshift('Button');
-    }
-    if (batchActionsEnabled) {
-      listImports.unshift('Popconfirm');
-    }
-    const iconImports: string[] = [];
-    if (deleteActionEnabled && (batchActionsEnabled || rowActionsEnabled)) {
-      iconImports.push('IconDelete');
-    }
-    if (exportActionEnabled) {
-      iconImports.push('IconDownload');
-    }
-    if (detailActionEnabled) {
-      iconImports.push('IconEye');
-    }
-    if (createActionEnabled) {
-      iconImports.push('IconPlus');
-    }
-    const componentImports = [
-      'AppTable',
-      'PageContainer',
-      'PageEmpty',
-      'PageLoading',
-      'PageRequestError',
-      'buildStandardPagination',
-    ];
-    if (searchEnabled) {
-      componentImports.splice(1, 0, 'SearchToolbar');
-    }
-    if (governanceEnabled) {
-      componentImports.splice(-3, 0, 'GovernanceSummaryBar');
-    }
-    if (importActionEnabled) {
-      componentImports.splice(-3, 0, 'ImportCsvButton');
-    }
-    if (headerActionsEnabled) {
-      componentImports.splice(-3, 0, 'ListHeaderActions');
-    }
-    if (rowActionsEnabled) {
-      componentImports.splice(-3, 0, 'SystemRowActions');
-      componentImports.splice(-3, 0, 'TABLE_ACTION_COLUMN_WIDTH');
-    }
-    if (batchActionsEnabled) {
-      componentImports.splice(-3, 0, 'TableBatchActionBar');
-    }
-
-    const clearSelectionSnippet = batchActionsEnabled ? 'setSelectedRowKeys([]);' : '';
+    const features = this.getListPageFeatures();
+    const listImports = buildListImports(features);
+    const componentImports = buildListComponentImports(features);
+    const snippets = this.buildListPageSnippets(features);
 
     return `import React, { useCallback, useEffect, useState } from 'react';
 import { ${listImports.join(', ')} } from '@arco-design/web-react';
-${iconImports.length > 0 ? `import { ${iconImports.join(', ')} } from '@arco-design/web-react/icon';` : ''}
+${snippets.iconImport}
 import { useTranslation } from 'react-i18next';
-${useNavigateHook ? "import { useNavigate } from 'react-router-dom';" : ''}
-${useMessage ? `import { message } from '${toSrcRoot}/components/feedback/message';` : ''}
+${snippets.navigateImport}
+${snippets.messageImport}
 import {
   ${this.generateListActionImports()}
   get${modelName}List,
@@ -432,7 +444,7 @@ import {
 } from '${toSrcRoot}/components';
 import '${this.relativeToSystemListPageCss()}';
 
-${governanceConstants}
+${snippets.governanceConstants}
 
 
 const emptyQuery: ${modelName}ListQuery = {
@@ -442,14 +454,14 @@ ${this.generateEmptyQueryFields()}
 };
 
 const ${modelName}List: React.FC = () => {
-  ${useNavigateHook ? 'const navigate = useNavigate();' : ''}
+  ${snippets.navigateHook}
   const [data, setData] = useState<${modelName}ListRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [query, setQuery] = useState<${modelName}ListQuery>(emptyQuery);
-  ${batchActionsEnabled ? 'const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);' : ''}
-  ${batchActionsEnabled ? 'const [submitting, setSubmitting] = useState(false);' : ''}
+  ${snippets.selectionState}
+  ${snippets.submittingState}
   const { t } = useTranslation();
 
   const loadData = useCallback(async (nextQuery: ${modelName}ListQuery = query) => {
@@ -470,63 +482,12 @@ const ${modelName}List: React.FC = () => {
     void loadData();
   }, [loadData]);
 
-  ${
-    searchEnabled
-      ? `const search = (values: Partial<${modelName}ListQuery>) => {
-    ${clearSelectionSnippet}
-    const nextQuery = {
-      ...query,
-      ...values,
-      page: 1,
-    };
-    setQuery(nextQuery);
-    void loadData(nextQuery);
-  };
+  ${snippets.searchHandlers}
+  ${snippets.exportHandler}
 
-  const reset = () => {
-    ${clearSelectionSnippet}
-    setQuery(emptyQuery);
-    void loadData(emptyQuery);
-  };`
-      : ''
-  }
+  ${snippets.importHandler}
 
-  ${
-    exportActionEnabled
-      ? `const handleExport = async () => {
-    await export${modelName}s(query);
-  };`
-      : ''
-  }
-
-  ${
-    importActionEnabled
-      ? `const handleImport = async (file: File) => {
-    await import${modelName}s(file);
-    message.success(t('common.importSuccess'));
-    await loadData(query);
-  };`
-      : ''
-  }
-
-  ${
-    batchActionsEnabled
-      ? `const handleBatchDelete = async () => {
-    if (selectedRowKeys.length === 0) {
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await Promise.all(selectedRowKeys.map((rowKey) => delete${modelName}(Number(rowKey))));
-      message.success(t('common.deleteSuccess'));
-      setSelectedRowKeys([]);
-      await loadData(query);
-    } finally {
-      setSubmitting(false);
-    }
-  };`
-      : ''
-  }
+  ${snippets.batchDeleteHandler}
 
   if (loading && data.length === 0) {
     return <PageLoading />;
@@ -541,7 +502,7 @@ const ${modelName}List: React.FC = () => {
       <Space direction="vertical" size={16} className="system-page-template">
 ${this.generateWorkbenchGovernanceBlock()}
 ${this.generateWorkbenchSearchBlock()}
-${this.generateWorkbenchHeaderActions(headerActionsEnabled, batchActionsEnabled)}
+${this.generateWorkbenchHeaderActions(features.headerActionsEnabled, features.batchActionsEnabled)}
         <Card className="page-panel system-list__table-card">
           {loading && data.length === 0 ? <PageLoading /> : null}
           {error && data.length === 0 ? (
@@ -561,18 +522,7 @@ ${this.generateWorkbenchHeaderActions(headerActionsEnabled, batchActionsEnabled)
               data={data}
               rowKey="id"
               scroll={{ x: 'max-content' }}
-              ${
-                batchActionsEnabled
-                  ? `rowSelection={{
-                type: 'checkbox',
-                selectedRowKeys,
-                checkCrossPage: true,
-                preserveSelectedRowKeys: true,
-                fixed: true,
-                onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-              }}`
-                  : ''
-              }
+              ${snippets.rowSelection}
               pagination={buildStandardPagination(t, {
                 current: query.page,
                 pageSize: query.pageSize,
@@ -584,7 +534,7 @@ ${this.generateWorkbenchHeaderActions(headerActionsEnabled, batchActionsEnabled)
                 },
               })}
               columns={[
-${this.generateWorkbenchTableColumns(rowActionsEnabled)}
+${this.generateWorkbenchTableColumns(features.rowActionsEnabled)}
               ]}
             />
           ) : null}
@@ -596,6 +546,120 @@ ${this.generateWorkbenchTableColumns(rowActionsEnabled)}
 
 export default ${modelName}List;
       `;
+  }
+
+  private getListPageFeatures(): ListPageFeatures {
+    const pageActions = getPageActions(this.schema);
+    const governanceEnabled = this.isListGovernanceEnabled();
+    const searchEnabled = this.isListSearchEnabled();
+    const headerActionsEnabled = this.isListHeaderActionsEnabled();
+    const batchActionsEnabled = this.isListBatchActionsEnabled();
+    const rowActionsEnabled = this.isListRowActionsEnabled();
+    const detailActionEnabled = pageActions.includes('view') || pageActions.includes('detail');
+    const createActionEnabled = pageActions.includes('create');
+    const deleteActionEnabled = pageActions.includes('delete');
+    const importActionEnabled = pageActions.includes('import');
+    return {
+      governanceEnabled,
+      searchEnabled,
+      headerActionsEnabled,
+      batchActionsEnabled,
+      rowActionsEnabled,
+      searchUsesSelect: this.schema.model.fields.some(
+        (field) => field.searchable && field.type === 'enum',
+      ),
+      detailActionEnabled,
+      createActionEnabled,
+      deleteActionEnabled,
+      exportActionEnabled: pageActions.includes('export'),
+      importActionEnabled,
+      useNavigateHook: detailActionEnabled,
+      useMessage:
+        createActionEnabled ||
+        importActionEnabled ||
+        (deleteActionEnabled && (batchActionsEnabled || rowActionsEnabled)),
+    };
+  }
+
+  private buildListPageSnippets(features: ListPageFeatures) {
+    const clearSelection = features.batchActionsEnabled ? 'setSelectedRowKeys([]);' : '';
+    return {
+      iconImport: buildListIconImports(features).length
+        ? `import { ${buildListIconImports(features).join(', ')} } from '@arco-design/web-react/icon';`
+        : '',
+      navigateImport: features.useNavigateHook
+        ? "import { useNavigate } from 'react-router-dom';"
+        : '',
+      messageImport: features.useMessage
+        ? `import { message } from '${this.relativeToSrcRoot()}/components/feedback/message';`
+        : '',
+      governanceConstants: features.governanceEnabled
+        ? `${this.generateListGovernanceConstants()}\n`
+        : '',
+      navigateHook: features.useNavigateHook ? 'const navigate = useNavigate();' : '',
+      selectionState: features.batchActionsEnabled
+        ? 'const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);'
+        : '',
+      submittingState: features.batchActionsEnabled
+        ? 'const [submitting, setSubmitting] = useState(false);'
+        : '',
+      searchHandlers: features.searchEnabled
+        ? `const search = (values: Partial<${this.modelName}ListQuery>) => {
+    ${clearSelection}
+    const nextQuery = {
+      ...query,
+      ...values,
+      page: 1,
+    };
+    setQuery(nextQuery);
+    void loadData(nextQuery);
+  };
+
+  const reset = () => {
+    ${clearSelection}
+    setQuery(emptyQuery);
+    void loadData(emptyQuery);
+  };`
+        : '',
+      exportHandler: features.exportActionEnabled
+        ? `const handleExport = async () => {
+    await export${this.modelName}s(query);
+  };`
+        : '',
+      importHandler: features.importActionEnabled
+        ? `const handleImport = async (file: File) => {
+    await import${this.modelName}s(file);
+    message.success(t('common.importSuccess'));
+    await loadData(query);
+  };`
+        : '',
+      batchDeleteHandler: features.batchActionsEnabled
+        ? `const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await Promise.all(selectedRowKeys.map((rowKey) => delete${this.modelName}(Number(rowKey))));
+      message.success(t('common.deleteSuccess'));
+      setSelectedRowKeys([]);
+      await loadData(query);
+    } finally {
+      setSubmitting(false);
+    }
+  };`
+        : '',
+      rowSelection: features.batchActionsEnabled
+        ? `rowSelection={{
+                type: 'checkbox',
+                selectedRowKeys,
+                checkCrossPage: true,
+                preserveSelectedRowKeys: true,
+                fixed: true,
+                onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
+              }}`
+        : '',
+    };
   }
 
   generateFormComponent(): string {

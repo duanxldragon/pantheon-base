@@ -29,16 +29,7 @@ import (
 )
 
 func main() {
-	// 0. 初始化结构化日志
-	env := os.Getenv("PANTHEON_ENV")
-	if env == "" {
-		env = "development"
-	}
-
-	if err := logging.InitLogger(env); err != nil {
-		slog.Error("Failed to initialize logger", "error", err)
-		os.Exit(1)
-	}
+	env := initEnvironment()
 	defer logging.Sync()
 
 	logging.Info("Starting Pantheon Base",
@@ -46,80 +37,105 @@ func main() {
 		zap.String("environment", env),
 	)
 
-	// 0b. 初始化 OpenTelemetry 追踪
-	otlpEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-	if otlpEndpoint != "" {
-		_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		tp, err := telemetry.InitTracer("pantheon-base", otlpEndpoint)
-		if err != nil {
-			logging.Error("Failed to initialize tracer", zap.Error(err))
-		} else {
-			defer func() {
-				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer shutdownCancel()
-				if err := tp.Shutdown(shutdownCtx); err != nil {
-					logging.Error("Error shutting down tracer", zap.Error(err))
-				}
-			}()
-			logging.Info("OpenTelemetry tracer initialized", zap.String("endpoint", otlpEndpoint))
-		}
+	if shutdownTracer := initTelemetry(); shutdownTracer != nil {
+		defer shutdownTracer()
 	}
 
-	// 1. 初始化核心基础能力
+	initInfrastructure()
+	r := buildRouter(env)
+	runServer(r)
+}
+
+func initEnvironment() string {
+	env := os.Getenv("PANTHEON_ENV")
+	if env == "" {
+		env = "development"
+	}
+	if err := logging.InitLogger(env); err != nil {
+		slog.Error("Failed to initialize logger", "error", err)
+		os.Exit(1)
+	}
+	return env
+}
+
+func initTelemetry() func() {
+	otlpEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if otlpEndpoint == "" {
+		return nil
+	}
+	_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	tp, err := telemetry.InitTracer("pantheon-base", otlpEndpoint)
+	if err != nil {
+		logging.Error("Failed to initialize tracer", zap.Error(err))
+		return nil
+	}
+	logging.Info("OpenTelemetry tracer initialized", zap.String("endpoint", otlpEndpoint))
+	return func() {
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdownCancel()
+		if err := tp.Shutdown(shutdownCtx); err != nil {
+			logging.Error("Error shutting down tracer", zap.Error(err))
+		}
+	}
+}
+
+func initInfrastructure() {
 	common.InitLocationService()
 	if err := common.InitSecurityConfig(); err != nil {
 		logging.Error("Security configuration invalid", zap.Error(err))
 		os.Exit(1)
 	}
 
-	// 1. 初始化数据库
 	dsn := os.Getenv("PANTHEON_DSN")
 	if dsn == "" {
 		logging.Fatal("PANTHEON_DSN is required")
 	}
 	database.InitDB(dsn)
+	runDatabaseMigrations(dsn)
 
-	// 1b. 数据库迁移：默认使用版本化迁移(golang-migrate)，开发模式可启用 AutoMigrate
-	if database.ShouldAutoMigrate() {
-		slog.Info("PANTHEON_AUTO_MIGRATE=true: using GORM AutoMigrate (dev mode)")
-		// AutoMigrate 由各模块的 Migrate() 方法在注册时自动执行
-	} else {
-		if err := database.RunMigrations(dsn); err != nil {
-			slog.Error("database migration failed", "error", err)
-			os.Exit(1)
-		}
-	}
-
-	// 2. 初始化 Redis (默认本地地址)
 	if redisAddr := os.Getenv("PANTHEON_REDIS_ADDR"); redisAddr != "" {
 		database.InitRedis(redisAddr, os.Getenv("PANTHEON_REDIS_PASSWORD"), 0)
 	}
-
 	database.InitCasbin(database.DB)
+}
 
-	// 3. 初始化 Gin
+func runDatabaseMigrations(dsn string) {
+	if database.ShouldAutoMigrate() {
+		slog.Info("PANTHEON_AUTO_MIGRATE=true: using GORM AutoMigrate (dev mode)")
+		return
+	}
+	if err := database.RunMigrations(dsn); err != nil {
+		slog.Error("database migration failed", "error", err)
+		os.Exit(1)
+	}
+}
+
+func buildRouter(env string) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.SecurityHeadersMiddleware())
-	r.Use(middleware.CSPMiddleware()) // Content-Security-Policy
+	r.Use(middleware.CSPMiddleware())
 	r.Use(middleware.BodySizeLimit(middleware.DefaultMaxBodyBytes))
 	r.Use(middleware.CORSMiddleware())
-	r.Use(otelgin.Middleware("pantheon-base")) // OpenTelemetry 追踪
-	r.Use(middleware.PrometheusMiddleware())   // Prometheus 指标采集
+	r.Use(otelgin.Middleware("pantheon-base"))
+	r.Use(middleware.PrometheusMiddleware())
 	r.Use(middleware.RequestContextMiddleware(), middleware.OperationLogMiddleware(database.DB))
 	r.Use(middleware.CSRFMiddleware())
+	registerMetricsRoute(r, env)
+	registerAPIRoutes(r)
+	return r
+}
 
-	// 3. 注册 Prometheus metrics 端点。生产环境默认要求显式 token 或公开开关。
-	if shouldExposeMetrics(env) {
-		r.GET("/metrics", metricsAccessMiddleware(), gin.WrapH(promhttp.Handler()))
-	} else {
+func registerMetricsRoute(r *gin.Engine, env string) {
+	if !shouldExposeMetrics(env) {
 		logging.Warn("Prometheus metrics endpoint disabled; set PANTHEON_METRICS_BEARER_TOKEN or PANTHEON_METRICS_PUBLIC=true to expose it")
+		return
 	}
+	r.GET("/metrics", metricsAccessMiddleware(), gin.WrapH(promhttp.Handler()))
+}
 
-	// 4. 注册底座模块
+func registerAPIRoutes(r *gin.Engine) {
 	api := r.Group("/api/v1")
-	// 全局 API 限流（按 IP；组级中间件先于各路由的 TokenAuthMiddleware，
-	// 取不到 userId）。默认 6000 次/分钟 ≈ 100 QPS/IP，只作滥用兜底。
 	if envFlag("PANTHEON_API_RATE_LIMIT_ENABLED") != envFlagFalse {
 		api.Use(middleware.RateLimiter(middleware.RateLimiterConfig{
 			MaxRequests: envIntDefault("PANTHEON_API_RATE_LIMIT_MAX", 6000),
@@ -132,8 +148,9 @@ func main() {
 	system.InitSystemModule(api, database.DB)
 	auth.InitAuthModule(api, database.DB)
 	business.InitBusinessModules(api, database.DB)
+}
 
-	// 5. 启动服务器
+func runServer(r *gin.Engine) {
 	port := os.Getenv("PANTHEON_PORT")
 	if port == "" {
 		port = "8080"

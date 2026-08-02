@@ -565,358 +565,375 @@ const DictItemTab: React.FC<DictItemTabProps> = ({
     [itemRows, selectedItemRowKeys],
   );
 
-  return (
-    <>
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        {selectedType ? (
-          <Card className="dict-workbench__context-card">
-            <div className="dict-workbench__context-head">
-              <div className="dict-workbench__context-copy">
-                <div className="dict-workbench__context-title">{selectedTypeTitle}</div>
-                <div className="dict-workbench__context-subtitle">{selectedType.dictCode}</div>
-              </div>
-              <Space wrap>
-                <Tag color="arcoblue">{selectedType.module || 'system'}</Tag>
-                <Tag color={selectedType.status === 1 ? 'green' : 'red'}>
-                  {selectedType.status === 1
-                    ? t('system.user.status.enabled')
-                    : t('system.user.status.disabled')}
-                </Tag>
-              </Space>
-            </div>
-            <div className="dict-workbench__context-metrics">
-              <span>
-                {t('system.dict.item')}: {selectedType.itemCount || 0}
-              </span>
-              <span>
-                {t('system.user.status.enabled')}: {selectedType.activeItemCount || 0}
-              </span>
-              <span>
-                {t('system.user.status.disabled')}: {selectedType.disabledItemCount || 0}
-              </span>
-              <span>
-                {t('common.search')}: {itemTotal}
-              </span>
-              <span>
-                {t('i18n.updatedAt')}: {formatDateTime(selectedType.lastItemUpdatedAt)}
-              </span>
-            </div>
-          </Card>
-        ) : null}
+  const renderContextCard = () =>
+    selectedType ? (
+      <Card className="dict-workbench__context-card">
+        <div className="dict-workbench__context-head">
+          <div className="dict-workbench__context-copy">
+            <div className="dict-workbench__context-title">{selectedTypeTitle}</div>
+            <div className="dict-workbench__context-subtitle">{selectedType.dictCode}</div>
+          </div>
+          <Space wrap>
+            <Tag color="arcoblue">{selectedType.module || 'system'}</Tag>
+            <Tag color={selectedType.status === 1 ? 'green' : 'red'}>
+              {selectedType.status === 1
+                ? t('system.user.status.enabled')
+                : t('system.user.status.disabled')}
+            </Tag>
+          </Space>
+        </div>
+        <div className="dict-workbench__context-metrics">
+          <span>
+            {t('system.dict.item')}: {selectedType.itemCount || 0}
+          </span>
+          <span>
+            {t('system.user.status.enabled')}: {selectedType.activeItemCount || 0}
+          </span>
+          <span>
+            {t('system.user.status.disabled')}: {selectedType.disabledItemCount || 0}
+          </span>
+          <span>
+            {t('common.search')}: {itemTotal}
+          </span>
+          <span>
+            {t('i18n.updatedAt')}: {formatDateTime(selectedType.lastItemUpdatedAt)}
+          </span>
+        </div>
+      </Card>
+    ) : null;
 
-        <SearchToolbar
-          keyword={itemQuery.keyword ?? ''}
-          keywordPlaceholder={t('system.dict.item.search.placeholder')}
-          onKeywordChange={(keyword) => handleItemSearch({ keyword })}
-          inlineFilters={
-            <>
-              <Select
-                allowClear={false}
-                showSearch
-                placeholder={t('system.dict.type')}
-                value={selectedType?.id}
-                options={selectedTypeOptions}
-                onChange={handleSelectedTypeChange}
+  const renderItemStates = () => {
+    if (!selectedType) {
+      return <PageEmpty description={t('system.dict.item.empty')} />;
+    }
+    return (
+      <>
+        {itemLoading && itemRows.length === 0 ? <PageLoading /> : null}
+        {itemError && itemRows.length === 0 ? (
+          <PageRequestError
+            error={itemError}
+            onRetry={() => {
+              void loadItems(itemQuery, selectedType.dictCode);
+            }}
+          />
+        ) : null}
+        {!itemLoading && !itemError && itemTotal === 0 ? (
+          <PageEmpty description={t('system.dict.itemEmpty')} />
+        ) : null}
+        {!itemLoading && !(itemError && itemRows.length === 0) && itemTotal > 0 ? (
+          <AppTable<DictItemRow>
+            className="system-list__table"
+            rowKey="id"
+            columns={itemColumns}
+            data={itemRows}
+            loading={itemLoading}
+            rowSelection={{
+              selectedRowKeys: visibleSelectedItemRowKeys,
+              checkCrossPage: true,
+              preserveSelectedRowKeys: true,
+              onChange: (keys) =>
+                setSelectedItemRowKeys((currentKeys) =>
+                  mergeCrossPageSelection(
+                    currentKeys,
+                    keys,
+                    itemRows.map((item) => item.id),
+                  ),
+                ),
+            }}
+            emptyText={t('system.dict.itemEmpty')}
+            onChange={handleItemTableChange}
+            pagination={buildStandardPagination(t, {
+              total: itemTotal,
+              current: itemQuery.page,
+              pageSize: itemQuery.pageSize,
+              onChange: (page, pageSize) => setItemQuery((prev) => ({ ...prev, page, pageSize })),
+            })}
+            scroll={{ x: 'max-content' }}
+          />
+        ) : null}
+      </>
+    );
+  };
+
+  const renderPageContent = () => (
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      {renderContextCard()}
+
+      <SearchToolbar
+        keyword={itemQuery.keyword ?? ''}
+        keywordPlaceholder={t('system.dict.item.search.placeholder')}
+        onKeywordChange={(keyword) => handleItemSearch({ keyword })}
+        inlineFilters={
+          <>
+            <Select
+              allowClear={false}
+              showSearch
+              placeholder={t('system.dict.type')}
+              value={selectedType?.id}
+              options={selectedTypeOptions}
+              onChange={handleSelectedTypeChange}
+            />
+            <Select
+              allowClear
+              placeholder={t('system.dict.status')}
+              value={itemQuery.status}
+              onChange={(value) => handleItemSearch({ status: value })}
+              options={[
+                { label: t('system.user.status.enabled'), value: 1 },
+                { label: t('system.user.status.disabled'), value: 2 },
+              ]}
+            />
+          </>
+        }
+        hasActiveFilters={Boolean(itemQuery.keyword || itemQuery.status !== undefined)}
+        onClearAll={handleItemReset}
+      />
+
+      <TableBatchActionBar
+        selectedCount={selectedItemRowKeys.length}
+        selectedText={t('common.selectedCount', { count: selectedItemRowKeys.length })}
+        clearText={t('common.clearSelection')}
+        clearSuccessText={t('common.clearSelectionSuccess')}
+        onClear={() => setSelectedItemRowKeys([])}
+        prefixActions={
+          <ListHeaderActions
+            className="dict-page__actions"
+            utility={
+              <>
+                <Button
+                  icon={<IconRefresh />}
+                  onClick={() => {
+                    void handleRefreshCache();
+                  }}
+                  disabled={!canRefresh || !selectedType}
+                >
+                  {t('system.dict.refreshCache')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    void handleOpenUsageAnalysis();
+                  }}
+                  disabled={!selectedType}
+                >
+                  {t('system.dict.usage.action')}
+                </Button>
+                <Button
+                  icon={<IconDownload />}
+                  onClick={() => {
+                    void handleExportItems();
+                  }}
+                  disabled={!canExport || !selectedType}
+                >
+                  {t('common.export')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    void handleDownloadItemTemplate();
+                  }}
+                  disabled={!canImport}
+                >
+                  {t('common.downloadTemplate')}
+                </Button>
+                <ImportCsvButton
+                  disabled={!canImport}
+                  onSelect={(file) => {
+                    void handleImportItems(file);
+                  }}
+                >
+                  {t('common.import')}
+                </ImportCsvButton>
+              </>
+            }
+            primary={
+              <Button
+                type="primary"
+                icon={<IconPlus />}
+                onClick={openCreateItem}
+                disabled={!canCreate || !selectedType}
+              >
+                {t('system.dict.itemAdd')}
+              </Button>
+            }
+          />
+        }
+        hint={
+          !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
+        }
+        actions={
+          <>
+            <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+              <Popconfirm
+                title={t('system.dict.item.batchEnableConfirm')}
+                onOk={() => {
+                  void handleBatchItemStatus(1);
+                }}
+                disabled={itemBatchActionDisabled}
+              >
+                <Button disabled={itemBatchActionDisabled}>{t('system.dict.batchEnable')}</Button>
+              </Popconfirm>
+            </PermissionAction>
+            <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
+              <Popconfirm
+                title={t('system.dict.item.batchDisableConfirm')}
+                onOk={() => {
+                  void handleBatchItemStatus(2);
+                }}
+                disabled={itemBatchActionDisabled}
+              >
+                <Button
+                  status={itemBatchActionDisabled ? undefined : 'warning'}
+                  disabled={itemBatchActionDisabled}
+                >
+                  {t('system.dict.batchDisable')}
+                </Button>
+              </Popconfirm>
+            </PermissionAction>
+            <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
+              <Popconfirm
+                title={t('system.dict.item.batchDeleteConfirm')}
+                onOk={() => {
+                  void handleBatchItemDelete();
+                }}
+                disabled={itemBatchDeleteDisabled}
+              >
+                <Button status="danger" icon={<IconDelete />} disabled={itemBatchDeleteDisabled}>
+                  {t('common.deleteSelected')}
+                </Button>
+              </Popconfirm>
+            </PermissionAction>
+          </>
+        }
+      />
+
+      {renderItemStates()}
+    </Space>
+  );
+
+  const renderUsageModal = () => (
+    <AppModal
+      title={t('system.dict.usage.title')}
+      visible={usageVisible}
+      size="detail"
+      footer={<Button onClick={() => setUsageVisible(false)}>{t('common.close')}</Button>}
+      onCancel={() => setUsageVisible(false)}
+    >
+      {usageLoading ? <PageLoading /> : null}
+      {!usageLoading && usageAnalysis ? (
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Card className="page-panel">
+            <Space direction="vertical" size={6} style={{ width: '100%' }}>
+              <Text>{`${t('system.dict.dictCode')}: ${usageAnalysis.dictCode}`}</Text>
+              <Text>{`${t('system.dict.usage.referenceCount')}: ${usageAnalysis.referenceCount}`}</Text>
+              <Text type="secondary">{`${t('system.dict.usage.root')}: ${usageAnalysis.scannedProjectRoot}`}</Text>
+            </Space>
+          </Card>
+          {usageAnalysis.references.length === 0 ? (
+            <PageEmpty description={t('system.dict.usage.empty')} />
+          ) : (
+            <Card className="page-panel">
+              <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                {usageAnalysis.references.map((item) => (
+                  <div
+                    key={`${item.filePath}:${item.line}:${item.column}`}
+                    className="dict-usage__item"
+                  >
+                    <div className="dict-usage__head">
+                      <Text copyable>{`${item.filePath}:${item.line}:${item.column}`}</Text>
+                      <Space wrap size={8}>
+                        <Tag>{item.domain}</Tag>
+                        {item.moduleHint ? <Tag color="arcoblue">{item.moduleHint}</Tag> : null}
+                      </Space>
+                    </div>
+                    <Text code>{item.snippet || '-'}</Text>
+                  </div>
+                ))}
+              </Space>
+            </Card>
+          )}
+        </Space>
+      ) : null}
+    </AppModal>
+  );
+
+  const renderItemModal = () => (
+    <AppModal
+      title={editingItem ? t('system.dict.itemEdit') : t('system.dict.itemCreate')}
+      visible={itemVisible}
+      size="md"
+      onCancel={() => setItemVisible(false)}
+      footer={
+        <SubmitBar
+          onCancel={() => setItemVisible(false)}
+          onSubmit={() => {
+            void submitItemForm();
+          }}
+          loading={itemSubmitting}
+          submitText={editingItem ? t('common.save') : t('common.add')}
+        />
+      }
+      unmountOnExit
+    >
+      <Form
+        form={itemForm}
+        layout="vertical"
+        onSubmit={() => {
+          void submitItemForm();
+        }}
+      >
+        <Space direction="vertical" size={20} className="dialog-form-stack">
+          <FormSection title={t('system.dict.item')}>
+            <FormItem
+              label={t('system.dict.dictCode')}
+              field="dictCode"
+              rules={[{ required: true, message: t('system.dict.dictCodeRequired') }]}
+            >
+              <Input disabled />
+            </FormItem>
+            <FormItem
+              label={t('system.dict.itemLabelKey')}
+              field="itemLabelKey"
+              rules={[{ required: true, message: t('system.dict.itemLabelKeyRequired') }]}
+            >
+              <Input onPressEnter={() => itemForm.submit()} />
+            </FormItem>
+            <FormItem
+              label={t('system.dict.itemValue')}
+              field="itemValue"
+              rules={[{ required: true, message: t('system.dict.itemValueRequired') }]}
+            >
+              <Input onPressEnter={() => itemForm.submit()} />
+            </FormItem>
+            <FormItem label={t('system.dict.itemColor')} field="itemColor">
+              <Input
+                placeholder={t('system.dict.itemColorPlaceholder')}
+                onPressEnter={() => itemForm.submit()}
               />
+            </FormItem>
+            <FormItem label={t('system.dict.sort')} field="sort">
+              <InputNumber min={0} />
+            </FormItem>
+            <FormItem label={t('system.dict.status')} field="status">
               <Select
-                allowClear
-                placeholder={t('system.dict.status')}
-                value={itemQuery.status}
-                onChange={(value) => handleItemSearch({ status: value })}
                 options={[
                   { label: t('system.user.status.enabled'), value: 1 },
                   { label: t('system.user.status.disabled'), value: 2 },
                 ]}
               />
-            </>
-          }
-          hasActiveFilters={Boolean(itemQuery.keyword || itemQuery.status !== undefined)}
-          onClearAll={handleItemReset}
-        />
+            </FormItem>
+            <FormItem label={t('system.dict.remark')} field="remark">
+              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} />
+            </FormItem>
+          </FormSection>
+        </Space>
+      </Form>
+    </AppModal>
+  );
 
-        <TableBatchActionBar
-          selectedCount={selectedItemRowKeys.length}
-          selectedText={t('common.selectedCount', { count: selectedItemRowKeys.length })}
-          clearText={t('common.clearSelection')}
-          clearSuccessText={t('common.clearSelectionSuccess')}
-          onClear={() => setSelectedItemRowKeys([])}
-          prefixActions={
-            <ListHeaderActions
-              className="dict-page__actions"
-              utility={
-                <>
-                  <Button
-                    icon={<IconRefresh />}
-                    onClick={() => {
-                      void handleRefreshCache();
-                    }}
-                    disabled={!canRefresh || !selectedType}
-                  >
-                    {t('system.dict.refreshCache')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      void handleOpenUsageAnalysis();
-                    }}
-                    disabled={!selectedType}
-                  >
-                    {t('system.dict.usage.action')}
-                  </Button>
-                  <Button
-                    icon={<IconDownload />}
-                    onClick={() => {
-                      void handleExportItems();
-                    }}
-                    disabled={!canExport || !selectedType}
-                  >
-                    {t('common.export')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      void handleDownloadItemTemplate();
-                    }}
-                    disabled={!canImport}
-                  >
-                    {t('common.downloadTemplate')}
-                  </Button>
-                  <ImportCsvButton
-                    disabled={!canImport}
-                    onSelect={(file) => {
-                      void handleImportItems(file);
-                    }}
-                  >
-                    {t('common.import')}
-                  </ImportCsvButton>
-                </>
-              }
-              primary={
-                <Button
-                  type="primary"
-                  icon={<IconPlus />}
-                  onClick={openCreateItem}
-                  disabled={!canCreate || !selectedType}
-                >
-                  {t('system.dict.itemAdd')}
-                </Button>
-              }
-            />
-          }
-          hint={
-            !canBatchUpdate || !canBatchDelete ? t('common.batchActionPermissionHint') : undefined
-          }
-          actions={
-            <>
-              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                <Popconfirm
-                  title={t('system.dict.item.batchEnableConfirm')}
-                  onOk={() => {
-                    void handleBatchItemStatus(1);
-                  }}
-                  disabled={itemBatchActionDisabled}
-                >
-                  <Button disabled={itemBatchActionDisabled}>{t('system.dict.batchEnable')}</Button>
-                </Popconfirm>
-              </PermissionAction>
-              <PermissionAction allowed={canBatchUpdate} tooltip={t('common.noPermissionAction')}>
-                <Popconfirm
-                  title={t('system.dict.item.batchDisableConfirm')}
-                  onOk={() => {
-                    void handleBatchItemStatus(2);
-                  }}
-                  disabled={itemBatchActionDisabled}
-                >
-                  <Button
-                    status={itemBatchActionDisabled ? undefined : 'warning'}
-                    disabled={itemBatchActionDisabled}
-                  >
-                    {t('system.dict.batchDisable')}
-                  </Button>
-                </Popconfirm>
-              </PermissionAction>
-              <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
-                <Popconfirm
-                  title={t('system.dict.item.batchDeleteConfirm')}
-                  onOk={() => {
-                    void handleBatchItemDelete();
-                  }}
-                  disabled={itemBatchDeleteDisabled}
-                >
-                  <Button status="danger" icon={<IconDelete />} disabled={itemBatchDeleteDisabled}>
-                    {t('common.deleteSelected')}
-                  </Button>
-                </Popconfirm>
-              </PermissionAction>
-            </>
-          }
-        />
-
-        {!selectedType ? (
-          <PageEmpty description={t('system.dict.item.empty')} />
-        ) : (
-          <>
-            {itemLoading && itemRows.length === 0 ? <PageLoading /> : null}
-            {itemError && itemRows.length === 0 ? (
-              <PageRequestError
-                error={itemError}
-                onRetry={() => {
-                  void loadItems(itemQuery, selectedType?.dictCode);
-                }}
-              />
-            ) : null}
-            {!itemLoading && !itemError && itemTotal === 0 ? (
-              <PageEmpty description={t('system.dict.itemEmpty')} />
-            ) : null}
-            {!itemLoading && !(itemError && itemRows.length === 0) && itemTotal > 0 ? (
-              <AppTable<DictItemRow>
-                className="system-list__table"
-                rowKey="id"
-                columns={itemColumns}
-                data={itemRows}
-                loading={itemLoading}
-                rowSelection={{
-                  selectedRowKeys: visibleSelectedItemRowKeys,
-                  checkCrossPage: true,
-                  preserveSelectedRowKeys: true,
-                  onChange: (keys) =>
-                    setSelectedItemRowKeys((currentKeys) =>
-                      mergeCrossPageSelection(
-                        currentKeys,
-                        keys,
-                        itemRows.map((item) => item.id),
-                      ),
-                    ),
-                }}
-                emptyText={t('system.dict.itemEmpty')}
-                onChange={handleItemTableChange}
-                pagination={buildStandardPagination(t, {
-                  total: itemTotal,
-                  current: itemQuery.page,
-                  pageSize: itemQuery.pageSize,
-                  onChange: (page, pageSize) =>
-                    setItemQuery((prev) => ({ ...prev, page, pageSize })),
-                })}
-                scroll={{ x: 'max-content' }}
-              />
-            ) : null}
-          </>
-        )}
-      </Space>
-
-      <AppModal
-        title={t('system.dict.usage.title')}
-        visible={usageVisible}
-        size="detail"
-        footer={<Button onClick={() => setUsageVisible(false)}>{t('common.close')}</Button>}
-        onCancel={() => setUsageVisible(false)}
-      >
-        {usageLoading ? <PageLoading /> : null}
-        {!usageLoading && usageAnalysis ? (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
-            <Card className="page-panel">
-              <Space direction="vertical" size={6} style={{ width: '100%' }}>
-                <Text>{`${t('system.dict.dictCode')}: ${usageAnalysis.dictCode}`}</Text>
-                <Text>{`${t('system.dict.usage.referenceCount')}: ${usageAnalysis.referenceCount}`}</Text>
-                <Text type="secondary">{`${t('system.dict.usage.root')}: ${usageAnalysis.scannedProjectRoot}`}</Text>
-              </Space>
-            </Card>
-            {usageAnalysis.references.length === 0 ? (
-              <PageEmpty description={t('system.dict.usage.empty')} />
-            ) : (
-              <Card className="page-panel">
-                <Space direction="vertical" size={10} style={{ width: '100%' }}>
-                  {usageAnalysis.references.map((item) => (
-                    <div
-                      key={`${item.filePath}:${item.line}:${item.column}`}
-                      className="dict-usage__item"
-                    >
-                      <div className="dict-usage__head">
-                        <Text copyable>{`${item.filePath}:${item.line}:${item.column}`}</Text>
-                        <Space wrap size={8}>
-                          <Tag>{item.domain}</Tag>
-                          {item.moduleHint ? <Tag color="arcoblue">{item.moduleHint}</Tag> : null}
-                        </Space>
-                      </div>
-                      <Text code>{item.snippet || '-'}</Text>
-                    </div>
-                  ))}
-                </Space>
-              </Card>
-            )}
-          </Space>
-        ) : null}
-      </AppModal>
-
-      <AppModal
-        title={editingItem ? t('system.dict.itemEdit') : t('system.dict.itemCreate')}
-        visible={itemVisible}
-        size="md"
-        onCancel={() => setItemVisible(false)}
-        footer={
-          <SubmitBar
-            onCancel={() => setItemVisible(false)}
-            onSubmit={() => {
-              void submitItemForm();
-            }}
-            loading={itemSubmitting}
-            submitText={editingItem ? t('common.save') : t('common.add')}
-          />
-        }
-        unmountOnExit
-      >
-        <Form
-          form={itemForm}
-          layout="vertical"
-          onSubmit={() => {
-            void submitItemForm();
-          }}
-        >
-          <Space direction="vertical" size={20} className="dialog-form-stack">
-            <FormSection title={t('system.dict.item')}>
-              <FormItem
-                label={t('system.dict.dictCode')}
-                field="dictCode"
-                rules={[{ required: true, message: t('system.dict.dictCodeRequired') }]}
-              >
-                <Input disabled />
-              </FormItem>
-              <FormItem
-                label={t('system.dict.itemLabelKey')}
-                field="itemLabelKey"
-                rules={[{ required: true, message: t('system.dict.itemLabelKeyRequired') }]}
-              >
-                <Input onPressEnter={() => itemForm.submit()} />
-              </FormItem>
-              <FormItem
-                label={t('system.dict.itemValue')}
-                field="itemValue"
-                rules={[{ required: true, message: t('system.dict.itemValueRequired') }]}
-              >
-                <Input onPressEnter={() => itemForm.submit()} />
-              </FormItem>
-              <FormItem label={t('system.dict.itemColor')} field="itemColor">
-                <Input
-                  placeholder={t('system.dict.itemColorPlaceholder')}
-                  onPressEnter={() => itemForm.submit()}
-                />
-              </FormItem>
-              <FormItem label={t('system.dict.sort')} field="sort">
-                <InputNumber min={0} />
-              </FormItem>
-              <FormItem label={t('system.dict.status')} field="status">
-                <Select
-                  options={[
-                    { label: t('system.user.status.enabled'), value: 1 },
-                    { label: t('system.user.status.disabled'), value: 2 },
-                  ]}
-                />
-              </FormItem>
-              <FormItem label={t('system.dict.remark')} field="remark">
-                <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} />
-              </FormItem>
-            </FormSection>
-          </Space>
-        </Form>
-      </AppModal>
+  return (
+    <>
+      {renderPageContent()}
+      {renderUsageModal()}
+      {renderItemModal()}
     </>
   );
 };

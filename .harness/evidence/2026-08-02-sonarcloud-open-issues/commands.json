@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-08-02-sonarcloud-open-issues",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "note": "Behavior-preserving SonarCloud remediation; external Claude CLI unavailable."
+  },
+  "baseline": {
+    "qualityGate": "OK",
+    "openIssues": 77,
+    "rules": {
+      "go:S3776": 53,
+      "typescript:S3776": 18,
+      "go:S107": 3,
+      "typescript:S6759": 2,
+      "typescript:S1135": 1
+    }
+  },
+  "commands": [
+    {
+      "command": "cd backend && go test -count=1 ./... && go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "All packages passed."
+    },
+    {
+      "command": "cd backend && gocognit -over 15 .",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Only pre-existing pkg/database/casbin_watcher.go:run at 16 remains; it was outside the 77 Sonar findings."
+    },
+    {
+      "command": "cd frontend && npm run lint && npm run type-check && npm run test:unit",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Lint and type check passed; 15 test files and 138 tests passed."
+    },
+    {
+      "command": "cd frontend && npm run build && npm run test:generator:smoke",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Passed after allowing node_modules/.tmp temporary writes."
+    },
+    {
+      "command": "npm run check:docs-frontmatter; npm run check:harness-method; npm run check:harness-adoption; npm run check:harness-template; npm run check:harness-docs; npm run check:harness-inventory; npm run check:harness-sync; npm run check:generated-modules; npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Passed; check:harness-method has one unrelated OpenSpec-directory warning."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Local Windows has CGO_ENABLED=0, so the Go race suite is delegated to the hosted Linux Backend Tests gate.",
+  "browserEvidence": [
+    {
+      "viewport": "desktop",
+      "url": "static-contract-only",
+      "visualGap": "No layout or CSS change: existing JSX was extracted into helpers/components. UI contracts and production build passed.",
+      "consoleErrors": [],
+      "checkedStates": ["static-contract-only"]
+    }
+  ],
+  "knownGaps": [
+    "Hosted Linux race tests are required because CGO is unavailable locally.",
+    "Hosted SonarCloud analysis and PR checks remain pending."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-02-sonarcloud-open-issues/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-02-sonarcloud-open-issues/",
+    "reviewFile": ".harness/evidence/2026-08-02-sonarcloud-open-issues/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-08-02-sonarcloud-open-issues.task.md"]
+  }
+}

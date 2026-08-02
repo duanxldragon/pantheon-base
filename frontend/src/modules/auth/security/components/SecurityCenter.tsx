@@ -12,6 +12,7 @@ import {
 } from '@arco-design/web-react';
 import { message } from '../../../../components/feedback/message';
 import { IconEye, IconLock } from '@arco-design/web-react/icon';
+import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '../../../../core/format/dateTime';
 import { resolveRouteWarmData } from '../../../../core/router/prefetch';
@@ -159,6 +160,207 @@ function buildSecurityPolicyItems(
   ];
 }
 
+function buildSessionColumns(options: {
+  t: TranslateFn;
+  revokingSessionId: string | null;
+  onDetail: (session: AuthSession) => void;
+  onRevoke: (sessionId: string) => Promise<void>;
+}): ColumnProps<AuthSession>[] {
+  const { t, revokingSessionId, onDetail, onRevoke } = options;
+  return [
+    {
+      title: t('auth.session.current'),
+      dataIndex: 'isCurrent',
+      render: (_: unknown, record) =>
+        record.isCurrent ? (
+          <Tag color="arcoblue">{t('auth.session.currentDevice')}</Tag>
+        ) : (
+          <Tag>{t('auth.session.otherDevice')}</Tag>
+        ),
+    },
+    {
+      title: t('auth.session.ip'),
+      dataIndex: 'lastIp',
+      render: (value) => value || '-',
+    },
+    {
+      title: t('auth.session.userAgent'),
+      dataIndex: 'device',
+      render: (_: unknown, record) => (
+        <Typography.Text ellipsis={{ showTooltip: true }} style={{ maxWidth: 320 }}>
+          {formatClientSummary(record)}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: t('auth.session.lastActive'),
+      dataIndex: 'lastRefreshAt',
+      render: (value: string | undefined, record) => renderActivityTime(value || record.createdAt),
+    },
+    {
+      title: t('auth.session.refreshExpiresAt'),
+      dataIndex: 'refreshExpiresAt',
+      render: (value) => (
+        <Typography.Text className="system-list__datetime-text">
+          {formatDateTime(value, { withSeconds: true })}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: t('system.profile.createdAt'),
+      dataIndex: 'createdAt',
+      render: (value) => (
+        <Typography.Text className="system-list__datetime-text">
+          {formatDateTime(value, { withSeconds: true })}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: t('common.action'),
+      dataIndex: 'action',
+      width: TABLE_ACTION_COLUMN_WIDTH.compact,
+      render: (_: unknown, record) => (
+        <Space size={4} className="system-list__actions">
+          <Button type="text" icon={<IconEye />} onClick={() => onDetail(record)}>
+            {t('common.detail')}
+          </Button>
+          <Popconfirm
+            title={t('auth.session.revokeConfirm')}
+            onOk={() => onRevoke(record.sessionId)}
+            disabled={record.isCurrent}
+          >
+            <Button
+              type="text"
+              status="danger"
+              disabled={record.isCurrent}
+              loading={revokingSessionId === record.sessionId}
+            >
+              {record.isCurrent ? t('auth.session.current') : t('auth.session.revoke')}
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+}
+
+function buildLoginLogColumns(
+  t: TranslateFn,
+  translateLogMessage: (value?: string | null) => string,
+): ColumnProps<LoginLogRow>[] {
+  return [
+    {
+      title: t('auth.loginLog.loginTime'),
+      dataIndex: 'loginTime',
+      render: (value) => renderActivityTime(value),
+    },
+    {
+      title: t('auth.loginLog.ip'),
+      dataIndex: 'ipaddr',
+      render: (value) => value || '-',
+    },
+    {
+      title: t('auth.loginLog.browser'),
+      dataIndex: 'browser',
+      render: (_: unknown, record) => renderClientInfo(record),
+    },
+    {
+      title: t('auth.loginLog.status'),
+      dataIndex: 'status',
+      render: (value) =>
+        value === 1 ? (
+          <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
+        ) : (
+          <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>
+        ),
+    },
+    {
+      title: t('auth.loginLog.failureReason'),
+      dataIndex: 'msg',
+      ellipsis: true,
+      render: (value) => translateLogMessage(value),
+    },
+  ];
+}
+
+interface SecurityRailProps {
+  currentSession: AuthSession | null;
+  loading: boolean;
+  overview: SecurityOverview | null;
+  policyItems: Array<{ label: string; value: string; hint: string }>;
+  t: TranslateFn;
+  userInfo: ReturnType<typeof useAuthStore.getState>['userInfo'];
+}
+
+function SecurityRail({
+  currentSession,
+  loading,
+  overview,
+  policyItems,
+  t,
+  userInfo,
+}: SecurityRailProps) {
+  return (
+    <>
+      {loading && !overview ? (
+        <PageLoading />
+      ) : (
+        <StandardRailSummary
+          title={t('auth.security.overview')}
+          items={[
+            {
+              label: t('system.profile.username'),
+              value: overview?.user?.username || userInfo?.username || '-',
+              description: overview?.user?.nickname || userInfo?.nickname || '-',
+            },
+            {
+              label: t('auth.security.currentDevice'),
+              value: formatClientSummary(currentSession),
+              description: currentSession?.lastIp || '-',
+            },
+            {
+              label: t('auth.session.lastActive'),
+              value: currentSession
+                ? renderActivityTime(currentSession.lastRefreshAt || currentSession.createdAt)
+                : '-',
+            },
+          ]}
+        />
+      )}
+      {policyItems.length === 0 && loading ? <PageLoading /> : null}
+      {policyItems.length > 0 ? (
+        <StandardRailSummary
+          title={t('auth.security.policy')}
+          items={policyItems.map((item) => ({
+            label: item.label,
+            value: item.value,
+            description: item.hint,
+          }))}
+        />
+      ) : null}
+      {overview?.recentSecurityEvents?.length ? (
+        <StandardRailSummary
+          title={t('system.menu.securityEvent')}
+          items={overview.recentSecurityEvents.slice(0, 4).map((item) => ({
+            label: t(`auth.securityEvent.type.${item.eventType}`, {
+              defaultValue: item.eventType,
+            }),
+            value: t(`auth.securityEvent.severity.${item.severity}`, {
+              defaultValue: item.severity,
+            }),
+            description: formatDateTime(item.createdAt, { withSeconds: true }),
+          }))}
+        />
+      ) : null}
+      <StandardRailNotePanel
+        title={t('auth.security.hero.sideTitle')}
+        noteTitle={t('auth.security.currentSessionSummary')}
+        noteDescription={t('auth.security.hero.sideDesc')}
+      />
+    </>
+  );
+}
+
 const SecurityCenter: React.FC = () => {
   const { t } = useTranslation();
   const { userInfo, setUserInfo } = useAuthStore();
@@ -283,116 +485,13 @@ const SecurityCenter: React.FC = () => {
     [overview?.policy, t],
   );
 
-  const sessionColumns = [
-    {
-      title: t('auth.session.current'),
-      dataIndex: 'isCurrent',
-      render: (_: unknown, record: AuthSession) =>
-        record.isCurrent ? (
-          <Tag color="arcoblue">{t('auth.session.currentDevice')}</Tag>
-        ) : (
-          <Tag>{t('auth.session.otherDevice')}</Tag>
-        ),
-    },
-    {
-      title: t('auth.session.ip'),
-      dataIndex: 'lastIp',
-      render: (value: string) => value || '-',
-    },
-    {
-      title: t('auth.session.userAgent'),
-      dataIndex: 'device',
-      render: (_: unknown, record: AuthSession) => (
-        <Typography.Text ellipsis={{ showTooltip: true }} style={{ maxWidth: 320 }}>
-          {formatClientSummary(record)}
-        </Typography.Text>
-      ),
-    },
-    {
-      title: t('auth.session.lastActive'),
-      dataIndex: 'lastRefreshAt',
-      render: (value: string | undefined, record: AuthSession) =>
-        renderActivityTime(value || record.createdAt),
-    },
-    {
-      title: t('auth.session.refreshExpiresAt'),
-      dataIndex: 'refreshExpiresAt',
-      render: (value: string) => (
-        <Typography.Text className="system-list__datetime-text">
-          {formatDateTime(value, { withSeconds: true })}
-        </Typography.Text>
-      ),
-    },
-    {
-      title: t('system.profile.createdAt'),
-      dataIndex: 'createdAt',
-      render: (value: string) => (
-        <Typography.Text className="system-list__datetime-text">
-          {formatDateTime(value, { withSeconds: true })}
-        </Typography.Text>
-      ),
-    },
-    {
-      title: t('common.action'),
-      dataIndex: 'action',
-      width: TABLE_ACTION_COLUMN_WIDTH.compact,
-      render: (_: unknown, record: AuthSession) => (
-        <Space size={4} className="system-list__actions">
-          <Button type="text" icon={<IconEye />} onClick={() => setDetailSession(record)}>
-            {t('common.detail')}
-          </Button>
-          <Popconfirm
-            title={t('auth.session.revokeConfirm')}
-            onOk={() => handleRevokeSession(record.sessionId)}
-            disabled={record.isCurrent}
-          >
-            <Button
-              type="text"
-              status="danger"
-              disabled={record.isCurrent}
-              loading={revokingSessionId === record.sessionId}
-            >
-              {record.isCurrent ? t('auth.session.current') : t('auth.session.revoke')}
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  const loginLogColumns = [
-    {
-      title: t('auth.loginLog.loginTime'),
-      dataIndex: 'loginTime',
-      render: (value: string) => renderActivityTime(value),
-    },
-    {
-      title: t('auth.loginLog.ip'),
-      dataIndex: 'ipaddr',
-      render: (value: string) => value || '-',
-    },
-    {
-      title: t('auth.loginLog.browser'),
-      dataIndex: 'browser',
-      render: (_: unknown, record: LoginLogRow) => renderClientInfo(record),
-    },
-    {
-      title: t('auth.loginLog.status'),
-      dataIndex: 'status',
-      render: (value: number) =>
-        value === 1 ? (
-          <Tag color="green">{t('auth.loginLog.status.success')}</Tag>
-        ) : (
-          <Tag color="red">{t('auth.loginLog.status.failed')}</Tag>
-        ),
-    },
-    {
-      title: t('auth.loginLog.failureReason'),
-      dataIndex: 'msg',
-      ellipsis: true,
-      render: (value: string) => translateLogMessage(value),
-    },
-  ];
+  const sessionColumns = buildSessionColumns({
+    t,
+    revokingSessionId,
+    onDetail: setDetailSession,
+    onRevoke: handleRevokeSession,
+  });
+  const loginLogColumns = buildLoginLogColumns(t, translateLogMessage);
 
   return (
     <PageContainer>
@@ -430,65 +529,14 @@ const SecurityCenter: React.FC = () => {
 
         <PageSplitLayout
           rail={
-            <>
-              {loading && !overview ? (
-                <PageLoading />
-              ) : (
-                <StandardRailSummary
-                  title={t('auth.security.overview')}
-                  items={[
-                    {
-                      label: t('system.profile.username'),
-                      value: overview?.user?.username || userInfo?.username || '-',
-                      description: overview?.user?.nickname || userInfo?.nickname || '-',
-                    },
-                    {
-                      label: t('auth.security.currentDevice'),
-                      value: formatClientSummary(currentSession),
-                      description: currentSession?.lastIp || '-',
-                    },
-                    {
-                      label: t('auth.session.lastActive'),
-                      value: currentSession
-                        ? renderActivityTime(
-                            currentSession.lastRefreshAt || currentSession.createdAt,
-                          )
-                        : '-',
-                    },
-                  ]}
-                />
-              )}
-              {policyItems.length === 0 && loading ? <PageLoading /> : null}
-              {policyItems.length > 0 ? (
-                <StandardRailSummary
-                  title={t('auth.security.policy')}
-                  items={policyItems.map((item) => ({
-                    label: item.label,
-                    value: item.value,
-                    description: item.hint,
-                  }))}
-                />
-              ) : null}
-              {overview?.recentSecurityEvents?.length ? (
-                <StandardRailSummary
-                  title={t('system.menu.securityEvent')}
-                  items={overview.recentSecurityEvents.slice(0, 4).map((item) => ({
-                    label: t(`auth.securityEvent.type.${item.eventType}`, {
-                      defaultValue: item.eventType,
-                    }),
-                    value: t(`auth.securityEvent.severity.${item.severity}`, {
-                      defaultValue: item.severity,
-                    }),
-                    description: formatDateTime(item.createdAt, { withSeconds: true }),
-                  }))}
-                />
-              ) : null}
-              <StandardRailNotePanel
-                title={t('auth.security.hero.sideTitle')}
-                noteTitle={t('auth.security.currentSessionSummary')}
-                noteDescription={t('auth.security.hero.sideDesc')}
-              />
-            </>
+            <SecurityRail
+              currentSession={currentSession}
+              loading={loading}
+              overview={overview}
+              policyItems={policyItems}
+              t={t}
+              userInfo={userInfo}
+            />
           }
         >
           <Card

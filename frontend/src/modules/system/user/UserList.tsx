@@ -64,9 +64,311 @@ interface ResetPasswordFormValues {
   confirmPassword: string;
 }
 
+type UserListState = ReturnType<typeof useUserList>['state'];
+
 function getTableText(value: string | number | null | undefined) {
   const text = typeof value === 'number' ? String(value) : value?.trim();
   return text || '-';
+}
+
+function toArcoSortOrder(sortOrder?: UserListQuery['sortOrder']) {
+  if (sortOrder === 'asc') return 'ascend';
+  if (sortOrder === 'desc') return 'descend';
+  return undefined;
+}
+
+function renderCellText(value: string | number | null | undefined, className?: string) {
+  const text = getTableText(value);
+  const cell = (
+    <span className={['system-user-list__cell-text', className].filter(Boolean).join(' ')}>
+      {text}
+    </span>
+  );
+  return text === '-' ? cell : <Tooltip content={text}>{cell}</Tooltip>;
+}
+
+function resolveRoleText(
+  row: UserListRow,
+  roleLabelById: Map<number, string>,
+  t: ReturnType<typeof useTranslation>['t'],
+) {
+  const roleNames = row.roleNames
+    ?.filter(Boolean)
+    .map((roleName) => translateRoleName(roleName, t));
+  const roleLabels = row.roleIds
+    ?.map((roleId) => roleLabelById.get(roleId))
+    .filter((value): value is string => Boolean(value));
+  if (roleNames?.length) {
+    return roleNames.join(' / ');
+  }
+  if (roleLabels?.length) {
+    return roleLabels.join(' / ');
+  }
+  return row.roleKeys?.length ? row.roleKeys.join(' / ') : undefined;
+}
+
+function buildUserColumns(options: {
+  canBatchUpdate: boolean;
+  canEdit: boolean;
+  canResetPassword: boolean;
+  canView: boolean;
+  onEdit: (row: UserListRow) => Promise<void>;
+  onOpenDetail: (row: UserListRow) => void;
+  onOpenResetPassword: (row: UserListRow) => void;
+  onRowStatus: (row: UserListRow, status: 1 | 2) => Promise<void>;
+  orgEnabled: boolean;
+  query: UserListQuery;
+  roleLabelById: Map<number, string>;
+  t: ReturnType<typeof useTranslation>['t'];
+}): ColumnProps<UserListRow>[] {
+  const {
+    canBatchUpdate,
+    canEdit,
+    canResetPassword,
+    canView,
+    onEdit,
+    onOpenDetail,
+    onOpenResetPassword,
+    onRowStatus,
+    orgEnabled,
+    query,
+    roleLabelById,
+    t,
+  } = options;
+  const sortableColumn = (
+    field: NonNullable<UserListQuery['sortField']>,
+  ): Partial<ColumnProps<UserListRow>> => ({
+    sorter: true,
+    sortOrder: query.sortField === field ? toArcoSortOrder(query.sortOrder) : undefined,
+  });
+
+  return [
+    {
+      title: t('system.user.username'),
+      dataIndex: 'username',
+      width: TABLE_COLUMN_WIDTH.name,
+      ...sortableColumn('username'),
+      render: (value: string) => renderCellText(value, 'system-user-list__cell-text--strong'),
+    },
+    {
+      title: t('system.user.nickname'),
+      dataIndex: 'nickname',
+      width: TABLE_COLUMN_WIDTH.identity,
+      ...sortableColumn('nickname'),
+      render: (value: string) => renderCellText(value),
+    },
+    {
+      title: t('system.user.status'),
+      dataIndex: 'status',
+      width: TABLE_COLUMN_WIDTH.status,
+      ...sortableColumn('status'),
+      render: (value: number) => (
+        <Tag color={value === 1 ? 'green' : 'red'}>
+          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
+        </Tag>
+      ),
+    },
+    ...(orgEnabled
+      ? [
+          {
+            title: t('system.user.dept'),
+            dataIndex: 'deptName',
+            width: TABLE_COLUMN_WIDTH.name,
+            render: (value: string) => renderCellText(value),
+          },
+          {
+            title: t('system.user.post'),
+            dataIndex: 'postName',
+            width: TABLE_COLUMN_WIDTH.name,
+            render: (value: string) => renderCellText(value),
+          },
+        ]
+      : []),
+    {
+      title: t('system.user.roles'),
+      dataIndex: 'roleNames',
+      width: TABLE_COLUMN_WIDTH.tagGroup,
+      ellipsis: true,
+      fixed: 'right',
+      render: (_: string[], row: UserListRow) => (
+        <Typography.Text
+          className="system-user-list__role-text"
+          ellipsis={{ cssEllipsis: true, showTooltip: true }}
+        >
+          {getTableText(resolveRoleText(row, roleLabelById, t))}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: t('system.user.email'),
+      dataIndex: 'email',
+      width: TABLE_COLUMN_WIDTH.name,
+      ...sortableColumn('email'),
+      render: (value: string) => renderCellText(value),
+    },
+    withTableColumnPriority(
+      {
+        title: t('system.user.phone'),
+        dataIndex: 'phone',
+        width: TABLE_COLUMN_WIDTH.identity,
+        ...sortableColumn('phone'),
+        render: (value: string) => renderCellText(value),
+      },
+      'low',
+    ),
+    withTableColumnPriority(
+      {
+        title: t('system.user.createdAt'),
+        dataIndex: 'createdAt',
+        width: TABLE_COLUMN_WIDTH.datetime,
+        ...sortableColumn('createdAt'),
+        render: (value: string) => (
+          <Typography.Text className="system-list__datetime-text">
+            {formatDateTime(value)}
+          </Typography.Text>
+        ),
+      },
+      'low',
+    ),
+    {
+      title: t('common.action'),
+      width: TABLE_ACTION_COLUMN_WIDTH.wide,
+      fixed: 'right',
+      render: (_: unknown, row: UserListRow) => (
+        <SystemRowActions
+          className="system-user-list__row-actions"
+          actions={[
+            {
+              key: 'detail',
+              text: t('common.detail'),
+              icon: <IconEye />,
+              onClick: () => onOpenDetail(row),
+              hidden: !canView,
+            },
+            {
+              key: 'edit',
+              text: t('common.edit'),
+              icon: <IconEdit />,
+              onClick: () => {
+                void onEdit(row);
+              },
+              hidden: !canEdit,
+            },
+            {
+              key: 'reset-password',
+              text: t('system.user.resetPassword'),
+              icon: <IconLock />,
+              onClick: () => onOpenResetPassword(row),
+              hidden: !canResetPassword,
+            },
+            {
+              key: 'status',
+              text: row.status === 1 ? t('system.user.disable') : t('system.user.enable'),
+              disabled: row.id === 1,
+              hidden: !canBatchUpdate,
+              status: row.status === 1 ? 'warning' : undefined,
+              confirm: {
+                title:
+                  row.status === 1
+                    ? t('system.user.disableConfirm')
+                    : t('system.user.enableConfirm'),
+                onOk: () => onRowStatus(row, row.status === 1 ? 2 : 1),
+              },
+            },
+          ]}
+        />
+      ),
+    },
+  ];
+}
+
+function resolveUserPermissions(isAdmin: boolean, hasPerm: (permission: string) => boolean) {
+  return {
+    canView: isAdmin || hasPerm('system:user:view'),
+    canCreate: isAdmin || hasPerm('system:user:create'),
+    canEdit: isAdmin || hasPerm('system:user:update'),
+    canResetPassword: isAdmin || hasPerm('system:user:reset'),
+    canExport: isAdmin || hasPerm('system:user:export'),
+    canImport: isAdmin || hasPerm('system:user:import'),
+    canBatchUpdate: isAdmin || hasPerm('system:user:batch-update'),
+    canBatchDelete: isAdmin || hasPerm('system:user:batch-delete'),
+  };
+}
+
+function hasActiveUserFilters(query: UserListQuery) {
+  return Boolean(query.keyword || query.status !== undefined || query.deptId !== undefined);
+}
+
+function UserTableState({
+  columns,
+  onChange,
+  onRetry,
+  onSelectionChange,
+  state,
+  t,
+}: {
+  columns: ColumnProps<UserListRow>[];
+  onChange: TableProps<UserListRow>['onChange'];
+  onRetry: () => void;
+  onSelectionChange: (rowKeys: Array<string | number>) => void;
+  state: UserListState;
+  t: ReturnType<typeof useTranslation>['t'];
+}) {
+  return (
+    <>
+      {state.loading && state.data.length === 0 ? <PageLoading /> : null}
+      {state.error && state.data.length === 0 ? (
+        <PageRequestError error={state.error} onRetry={onRetry} />
+      ) : null}
+      {!state.loading && !state.error && state.data.length === 0 ? (
+        <PageEmpty description={t('common.noData')} />
+      ) : null}
+      {!state.loading && !(state.error && state.data.length === 0) && state.data.length > 0 ? (
+        <AppTable<UserListRow>
+          className="system-list__table system-user-list__table"
+          data={state.data}
+          columns={columns}
+          rowKey="id"
+          loading={state.loading}
+          scroll={{ x: 'max-content' }}
+          rowSelection={{
+            type: 'checkbox',
+            selectedRowKeys: state.selectedRowKeys,
+            checkCrossPage: true,
+            preserveSelectedRowKeys: true,
+            fixed: true,
+            checkboxProps: (row) => ({ disabled: row.id === 1 }),
+            onChange: onSelectionChange,
+          }}
+          onChange={onChange}
+          emptyText={t('common.noData')}
+          pagination={buildStandardPagination(t, {
+            current: state.query.page || emptyQuery.page,
+            pageSize: state.query.pageSize || emptyQuery.pageSize,
+            total: state.total,
+          })}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function renderUserDetailState(
+  state: UserListState,
+  orgEnabled: boolean,
+  retryDetail: () => void,
+  t: ReturnType<typeof useTranslation>['t'],
+) {
+  if (state.detailLoading) {
+    return <PageLoading />;
+  }
+  if (state.detailError) {
+    return <PageError onRetry={retryDetail} />;
+  }
+  if (!state.detailData) {
+    return <PageEmpty description={t('common.noData')} />;
+  }
+  return <UserDetailContent detail={state.detailData} orgEnabled={orgEnabled} />;
 }
 
 const UserList: React.FC = () => {
@@ -122,43 +424,20 @@ const UserList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
   const governanceRail = useGovernanceRail();
-  const canView = isAdmin || hasPerm('system:user:view');
-  const canCreate = isAdmin || hasPerm('system:user:create');
-  const canEdit = isAdmin || hasPerm('system:user:update');
-  const canResetPassword = isAdmin || hasPerm('system:user:reset');
-  const canExport = isAdmin || hasPerm('system:user:export');
-  const canImport = isAdmin || hasPerm('system:user:import');
-  const canBatchUpdate = isAdmin || hasPerm('system:user:batch-update');
-  const canBatchDelete = isAdmin || hasPerm('system:user:batch-delete');
+  const {
+    canView,
+    canCreate,
+    canEdit,
+    canResetPassword,
+    canExport,
+    canImport,
+    canBatchUpdate,
+    canBatchDelete,
+  } = resolveUserPermissions(isAdmin, hasPerm);
 
   const batchActionDisabled = !canBatchUpdate || state.selectedRowKeys.length === 0;
   const batchDeleteDisabled = !canBatchDelete || state.selectedRowKeys.length === 0;
   const batchActionReady = !batchActionDisabled || !batchDeleteDisabled;
-
-  // ---- Column helpers ----
-
-  const toArcoSortOrder = (sortOrder?: UserListQuery['sortOrder']) => {
-    if (sortOrder === 'asc') return 'ascend';
-    if (sortOrder === 'desc') return 'descend';
-    return undefined;
-  };
-
-  const sortableColumn = (
-    field: NonNullable<UserListQuery['sortField']>,
-  ): Partial<ColumnProps<UserListRow>> => ({
-    sorter: true,
-    sortOrder: state.query.sortField === field ? toArcoSortOrder(state.query.sortOrder) : undefined,
-  });
-
-  const renderCellText = (value: string | number | null | undefined, className?: string) => {
-    const text = getTableText(value);
-    const cell = (
-      <span className={['system-user-list__cell-text', className].filter(Boolean).join(' ')}>
-        {text}
-      </span>
-    );
-    return text === '-' ? cell : <Tooltip content={text}>{cell}</Tooltip>;
-  };
 
   const roleLabelById = useMemo(
     () => new Map(state.roleOptions.map((item) => [item.value, item.label])),
@@ -167,160 +446,20 @@ const UserList: React.FC = () => {
 
   // ---- Columns ----
 
-  const columns: ColumnProps<UserListRow>[] = [
-    {
-      title: t('system.user.username'),
-      dataIndex: 'username',
-      width: TABLE_COLUMN_WIDTH.name,
-      ...sortableColumn('username'),
-      render: (value: string) => renderCellText(value, 'system-user-list__cell-text--strong'),
-    },
-    {
-      title: t('system.user.nickname'),
-      dataIndex: 'nickname',
-      width: TABLE_COLUMN_WIDTH.identity,
-      ...sortableColumn('nickname'),
-      render: (value: string) => renderCellText(value),
-    },
-    {
-      title: t('system.user.status'),
-      dataIndex: 'status',
-      width: TABLE_COLUMN_WIDTH.status,
-      ...sortableColumn('status'),
-      render: (value: number) => (
-        <Tag color={value === 1 ? 'green' : 'red'}>
-          {value === 1 ? t('system.user.status.enabled') : t('system.user.status.disabled')}
-        </Tag>
-      ),
-    },
-    ...(orgEnabled
-      ? [
-          {
-            title: t('system.user.dept'),
-            dataIndex: 'deptName',
-            width: TABLE_COLUMN_WIDTH.name,
-            render: (value: string) => renderCellText(value),
-          },
-          {
-            title: t('system.user.post'),
-            dataIndex: 'postName',
-            width: TABLE_COLUMN_WIDTH.name,
-            render: (value: string) => renderCellText(value),
-          },
-        ]
-      : []),
-    {
-      title: t('system.user.roles'),
-      dataIndex: 'roleNames',
-      width: TABLE_COLUMN_WIDTH.tagGroup,
-      ellipsis: true,
-      fixed: 'right',
-      render: (_: string[], row: UserListRow) => {
-        const roleNames = row.roleNames
-          ?.filter(Boolean)
-          .map((roleName) => translateRoleName(roleName, t));
-        const roleLabels = row.roleIds
-          ?.map((roleId) => roleLabelById.get(roleId))
-          .filter((value): value is string => Boolean(value));
-        let roleText: string | undefined;
-        if (roleNames?.length) {
-          roleText = roleNames.join(' / ');
-        } else if (roleLabels?.length) {
-          roleText = roleLabels.join(' / ');
-        } else if (row.roleKeys?.length) {
-          roleText = row.roleKeys.join(' / ');
-        }
-        return (
-          <Typography.Text
-            className="system-user-list__role-text"
-            ellipsis={{ cssEllipsis: true, showTooltip: true }}
-          >
-            {getTableText(roleText)}
-          </Typography.Text>
-        );
-      },
-    },
-    {
-      title: t('system.user.email'),
-      dataIndex: 'email',
-      width: TABLE_COLUMN_WIDTH.name,
-      ...sortableColumn('email'),
-      render: (value: string) => renderCellText(value),
-    },
-    withTableColumnPriority(
-      {
-        title: t('system.user.phone'),
-        dataIndex: 'phone',
-        width: TABLE_COLUMN_WIDTH.identity,
-        ...sortableColumn('phone'),
-        render: (value: string) => renderCellText(value),
-      },
-      'low',
-    ),
-    withTableColumnPriority(
-      {
-        title: t('system.user.createdAt'),
-        dataIndex: 'createdAt',
-        width: TABLE_COLUMN_WIDTH.datetime,
-        ...sortableColumn('createdAt'),
-        render: (value: string) => (
-          <Typography.Text className="system-list__datetime-text">
-            {formatDateTime(value)}
-          </Typography.Text>
-        ),
-      },
-      'low',
-    ),
-    {
-      title: t('common.action'),
-      width: TABLE_ACTION_COLUMN_WIDTH.wide,
-      fixed: 'right',
-      render: (_: unknown, row: UserListRow) => (
-        <SystemRowActions
-          className="system-user-list__row-actions"
-          actions={[
-            {
-              key: 'detail',
-              text: t('common.detail'),
-              icon: <IconEye />,
-              onClick: () => openDetail(row),
-              hidden: !canView,
-            },
-            {
-              key: 'edit',
-              text: t('common.edit'),
-              icon: <IconEdit />,
-              onClick: () => {
-                void openEdit(row);
-              },
-              hidden: !canEdit,
-            },
-            {
-              key: 'reset-password',
-              text: t('system.user.resetPassword'),
-              icon: <IconLock />,
-              onClick: () => openResetPassword(row),
-              hidden: !canResetPassword,
-            },
-            {
-              key: 'status',
-              text: row.status === 1 ? t('system.user.disable') : t('system.user.enable'),
-              disabled: row.id === 1,
-              hidden: !canBatchUpdate,
-              status: row.status === 1 ? 'warning' : undefined,
-              confirm: {
-                title:
-                  row.status === 1
-                    ? t('system.user.disableConfirm')
-                    : t('system.user.enableConfirm'),
-                onOk: () => handleRowStatus(row, row.status === 1 ? 2 : 1),
-              },
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const columns = buildUserColumns({
+    canBatchUpdate,
+    canEdit,
+    canResetPassword,
+    canView,
+    onEdit: openEdit,
+    onOpenDetail: openDetail,
+    onOpenResetPassword: openResetPassword,
+    onRowStatus: handleRowStatus,
+    orgEnabled,
+    query: state.query,
+    roleLabelById,
+    t,
+  });
 
   // ---- Table change ----
 
@@ -350,9 +489,7 @@ const UserList: React.FC = () => {
 
   // ---- Search ----
 
-  const hasActiveFilters = Boolean(
-    state.query.keyword || state.query.status !== undefined || state.query.deptId !== undefined,
-  );
+  const hasActiveFilters = hasActiveUserFilters(state.query);
 
   const deptFilterOptions = useMemo(
     () => state.deptOptions.filter((item) => item.value > 0),
@@ -568,46 +705,16 @@ const UserList: React.FC = () => {
                 </>
               }
             />
-            {state.loading && state.data.length === 0 ? <PageLoading /> : null}
-            {state.error && state.data.length === 0 ? (
-              <PageRequestError
-                error={state.error}
-                onRetry={() => {
-                  void loadData(state.query);
-                }}
-              />
-            ) : null}
-            {!state.loading && !state.error && state.data.length === 0 ? (
-              <PageEmpty description={t('common.noData')} />
-            ) : null}
-            {!state.loading &&
-            !(state.error && state.data.length === 0) &&
-            state.data.length > 0 ? (
-              <AppTable<UserListRow>
-                className="system-list__table system-user-list__table"
-                data={state.data}
-                columns={columns}
-                rowKey="id"
-                loading={state.loading}
-                scroll={{ x: 'max-content' }}
-                rowSelection={{
-                  type: 'checkbox',
-                  selectedRowKeys: state.selectedRowKeys,
-                  checkCrossPage: true,
-                  preserveSelectedRowKeys: true,
-                  fixed: true,
-                  checkboxProps: (row) => ({ disabled: row.id === 1 }),
-                  onChange: (rowKeys) => setSelectedRowKeys(rowKeys),
-                }}
-                onChange={handleTableChange}
-                emptyText={t('common.noData')}
-                pagination={buildStandardPagination(t, {
-                  current: state.query.page || emptyQuery.page,
-                  pageSize: state.query.pageSize || emptyQuery.pageSize,
-                  total: state.total,
-                })}
-              />
-            ) : null}
+            <UserTableState
+              columns={columns}
+              onChange={handleTableChange}
+              onRetry={() => {
+                void loadData(state.query);
+              }}
+              onSelectionChange={setSelectedRowKeys}
+              state={state}
+              t={t}
+            />
           </Card>
         </>
       </Space>
@@ -654,14 +761,7 @@ const UserList: React.FC = () => {
         onCancel={closeDetail}
         footer={null}
       >
-        {state.detailLoading ? <PageLoading /> : null}
-        {!state.detailLoading && state.detailError ? <PageError onRetry={retryDetail} /> : null}
-        {!state.detailLoading && !state.detailError && !state.detailData ? (
-          <PageEmpty description={t('common.noData')} />
-        ) : null}
-        {!state.detailLoading && !state.detailError && state.detailData ? (
-          <UserDetailContent detail={state.detailData} orgEnabled={orgEnabled} />
-        ) : null}
+        {renderUserDetailState(state, orgEnabled, retryDetail, t)}
       </AppModal>
 
       <ResetPasswordModal

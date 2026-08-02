@@ -21,6 +21,8 @@ const (
 	msgDatasourceHostInvalid = "generator.datasource.host_invalid"
 )
 
+var datasourceHostnamePattern = regexp.MustCompile(`^[a-z0-9.-]+$`)
+
 func (s *GeneratorService) ListDatasources() ([]GeneratorDatasourceResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
@@ -330,30 +332,41 @@ func validateDatasourceHost(host string) error {
 	}
 
 	if addr, err := netip.ParseAddr(normalizedHost); err == nil {
-		if addr.IsLoopback() || addr.IsMulticast() || addr.IsLinkLocalMulticast() || addr.IsLinkLocalUnicast() || addr.IsUnspecified() {
-			return common.NewBadRequest(msgDatasourceHostInvalid)
-		}
-		if addr.IsPrivate() && !datasourcePrivateHostAllowed() {
-			return common.NewBadRequest("generator.datasource.host_private_disabled")
-		}
-		return nil
+		return validateDatasourceIP(addr)
 	}
+	return validateDatasourceHostname(normalizedHost)
+}
 
-	if normalizedHost == "localhost" || strings.HasSuffix(normalizedHost, ".localhost") {
+func validateDatasourceIP(addr netip.Addr) error {
+	if addr.IsLoopback() || addr.IsMulticast() || addr.IsLinkLocalMulticast() || addr.IsLinkLocalUnicast() || addr.IsUnspecified() {
 		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
-	if !regexp.MustCompile(`^[a-z0-9.-]+$`).MatchString(normalizedHost) {
+	if addr.IsPrivate() && !datasourcePrivateHostAllowed() {
+		return common.NewBadRequest("generator.datasource.host_private_disabled")
+	}
+	return nil
+}
+
+func validateDatasourceHostname(host string) error {
+	if host == "localhost" || strings.HasSuffix(host, ".localhost") {
 		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
-	if strings.HasPrefix(normalizedHost, ".") || strings.HasSuffix(normalizedHost, ".") || strings.Contains(normalizedHost, "..") {
+	if !datasourceHostnamePattern.MatchString(host) {
 		return common.NewBadRequest(msgDatasourceHostInvalid)
 	}
-	for _, label := range strings.Split(normalizedHost, ".") {
-		if label == "" || strings.HasPrefix(label, "-") || strings.HasSuffix(label, "-") {
+	if strings.HasPrefix(host, ".") || strings.HasSuffix(host, ".") || strings.Contains(host, "..") {
+		return common.NewBadRequest(msgDatasourceHostInvalid)
+	}
+	for _, label := range strings.Split(host, ".") {
+		if !isValidDatasourceHostnameLabel(label) {
 			return common.NewBadRequest(msgDatasourceHostInvalid)
 		}
 	}
 	return nil
+}
+
+func isValidDatasourceHostnameLabel(label string) bool {
+	return label != "" && !strings.HasPrefix(label, "-") && !strings.HasSuffix(label, "-")
 }
 
 // datasourcePrivateHostAllowed 判断是否放行 RFC1918 私网数据源地址。

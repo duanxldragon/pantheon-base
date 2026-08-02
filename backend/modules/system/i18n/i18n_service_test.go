@@ -635,37 +635,22 @@ func TestI18nService_MigrateNormalizesLocaleKeyDuplicates(t *testing.T) {
 		t.Fatalf("migrate: %v", err)
 	}
 
-	var deptRows []SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.menu.dept", "en-US").Find(&deptRows).Error; err != nil {
-		t.Fatalf("load dept rows: %v", err)
-	}
-	if len(deptRows) != 1 {
-		t.Fatalf("expected 1 dept row after normalization, got %d", len(deptRows))
-	}
-	if deptRows[0].Module != "system.org" || deptRows[0].Value != "Departments" {
-		t.Fatalf("unexpected normalized dept row: %#v", deptRows[0])
-	}
+	assertCanonicalLocaleRow(t, db, "system.menu.dept", "en-US", "system.org", "Departments")
+	assertCanonicalLocaleRow(t, db, "system.menu.dept", "ja-JP", "system.org", "部門")
+	assertCanonicalLocaleRow(t, db, "system.menu.session", "en-US", "system.auth", "Sessions")
+}
 
-	var deptJaRows []SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.menu.dept", "ja-JP").Find(&deptJaRows).Error; err != nil {
-		t.Fatalf("load ja dept rows: %v", err)
+func assertCanonicalLocaleRow(t *testing.T, db *gorm.DB, key, locale, wantModule, wantValue string) {
+	t.Helper()
+	var rows []SystemI18n
+	if err := db.Where("`key` = ? AND locale = ?", key, locale).Find(&rows).Error; err != nil {
+		t.Fatalf("load %s %s rows: %v", key, locale, err)
 	}
-	if len(deptJaRows) != 1 {
-		t.Fatalf("expected 1 ja-JP dept row after canonical ensure, got %d", len(deptJaRows))
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 %s %s row after normalization, got %d", key, locale, len(rows))
 	}
-	if deptJaRows[0].Module != "system.org" || deptJaRows[0].Value != "部門" {
-		t.Fatalf("unexpected ja-JP dept row: %#v", deptJaRows[0])
-	}
-
-	var sessionRows []SystemI18n
-	if err := db.Where("`key` = ? AND locale = ?", "system.menu.session", "en-US").Find(&sessionRows).Error; err != nil {
-		t.Fatalf("load session rows: %v", err)
-	}
-	if len(sessionRows) != 1 {
-		t.Fatalf("expected 1 session row after normalization, got %d", len(sessionRows))
-	}
-	if sessionRows[0].Module != "system.auth" || sessionRows[0].Value != "Sessions" {
-		t.Fatalf("unexpected normalized session row: %#v", sessionRows[0])
+	if rows[0].Module != wantModule || rows[0].Value != wantValue {
+		t.Fatalf("unexpected normalized %s %s row: %#v", key, locale, rows[0])
 	}
 }
 
@@ -839,34 +824,34 @@ func TestI18nService_GetAudit(t *testing.T) {
 		t.Fatalf("expected unused keys")
 	}
 
-	foundDuplicate := false
-	for _, item := range resp.DuplicateKeys {
-		if item.Key == "shared.audit.conflict" {
-			foundDuplicate = true
-			if len(item.Modules) != 2 {
-				t.Fatalf("expected conflict modules, got %#v", item.Modules)
-			}
-			if len(item.Suggestions) != 2 {
-				t.Fatalf("expected conflict suggestions, got %#v", item.Suggestions)
-			}
-		}
-	}
-	if !foundDuplicate {
-		t.Fatalf("expected shared.audit.conflict in duplicate audit")
-	}
+	assertDuplicateAuditEntry(t, resp, "shared.audit.conflict")
+	assertUnusedAuditEntry(t, resp, "zz.audit.unused.key", "system.config")
+}
 
-	foundUnused := false
-	for _, item := range resp.UnusedKeys {
-		if item.Key == "zz.audit.unused.key" {
-			foundUnused = true
-			if !containsString(item.Modules, "system.config") {
-				t.Fatalf("expected unused key module system.config, got %#v", item.Modules)
+func assertDuplicateAuditEntry(t *testing.T, resp *I18nAuditResp, key string) {
+	t.Helper()
+	for _, item := range resp.DuplicateKeys {
+		if item.Key == key {
+			if len(item.Modules) != 2 || len(item.Suggestions) != 2 {
+				t.Fatalf("unexpected duplicate audit entry: %#v", item)
 			}
+			return
 		}
 	}
-	if !foundUnused {
-		t.Fatalf("expected zz.audit.unused.key in unused audit")
+	t.Fatalf("expected %s in duplicate audit", key)
+}
+
+func assertUnusedAuditEntry(t *testing.T, resp *I18nAuditResp, key, module string) {
+	t.Helper()
+	for _, item := range resp.UnusedKeys {
+		if item.Key == key {
+			if !containsString(item.Modules, module) {
+				t.Fatalf("expected unused key module %s, got %#v", module, item.Modules)
+			}
+			return
+		}
 	}
+	t.Fatalf("expected %s in unused audit", key)
 }
 
 func TestScanI18nKeysDetectsSingleQuotedFrontendReferences(t *testing.T) {
@@ -1234,21 +1219,8 @@ func TestI18nService_UnusedLifecycleFlow(t *testing.T) {
 		t.Fatalf("expected observation keys")
 	}
 
-	var rows []SystemI18n
-	if err := db.Where("module = ? AND `key` = ?", "system.config", "zz.lifecycle.key").Find(&rows).Error; err != nil {
-		t.Fatalf("load lifecycle rows: %v", err)
-	}
-	for _, row := range rows {
-		if row.LifecycleStatus != I18nLifecycleStatusObserving {
-			t.Fatalf("expected observing status, got %s", row.LifecycleStatus)
-		}
-	}
-
-	if err := db.Model(&SystemI18n{}).
-		Where("module = ? AND `key` = ?", "system.config", "zz.lifecycle.key").
-		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(I18nUnusedObservationThresholdDays+1))).Error; err != nil {
-		t.Fatalf("age lifecycle rows: %v", err)
-	}
+	assertI18nLifecycleStatus(t, db, "system.config", "zz.lifecycle.key", I18nLifecycleStatusObserving)
+	ageI18nLifecycleRows(t, db, "system.config", "zz.lifecycle.key", I18nUnusedObservationThresholdDays+1)
 
 	archiveResp, err := service.ArchiveObservedUnusedKeys("system.config")
 	if err != nil {
@@ -1258,23 +1230,12 @@ func TestI18nService_UnusedLifecycleFlow(t *testing.T) {
 		t.Fatalf("expected archived keys")
 	}
 
-	if err := db.Where("module = ? AND `key` = ?", "system.config", "zz.lifecycle.key").Find(&rows).Error; err != nil {
-		t.Fatalf("reload archived rows: %v", err)
-	}
-	for _, row := range rows {
-		if row.LifecycleStatus != I18nLifecycleStatusArchived {
-			t.Fatalf("expected archived status, got %s", row.LifecycleStatus)
-		}
-	}
+	assertI18nLifecycleStatus(t, db, "system.config", "zz.lifecycle.key", I18nLifecycleStatusArchived)
 
 	if _, err := service.DeleteArchivedUnusedKeys("system.config", false); err == nil || common.ErrMessage(err) != "i18n.lifecycle.delete.confirm_required" {
 		t.Fatalf("expected confirm required error, got %v", err)
 	}
-	if err := db.Model(&SystemI18n{}).
-		Where("module = ? AND `key` = ?", "system.config", "zz.lifecycle.key").
-		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -(I18nArchivedRetentionThresholdDays+1))).Error; err != nil {
-		t.Fatalf("age archived lifecycle rows: %v", err)
-	}
+	ageI18nLifecycleRows(t, db, "system.config", "zz.lifecycle.key", I18nArchivedRetentionThresholdDays+1)
 
 	deleteResp, err := service.DeleteArchivedUnusedKeys("system.config", true)
 	if err != nil {
@@ -1284,12 +1245,39 @@ func TestI18nService_UnusedLifecycleFlow(t *testing.T) {
 		t.Fatalf("expected deleted archived keys")
 	}
 
-	var count int64
-	if err := db.Model(&SystemI18n{}).Where("module = ? AND `key` = ?", "system.config", "zz.lifecycle.key").Count(&count).Error; err != nil {
-		t.Fatalf("count deleted rows: %v", err)
+	assertI18nRowCount(t, db, "system.config", "zz.lifecycle.key", 0)
+}
+
+func assertI18nLifecycleStatus(t *testing.T, db *gorm.DB, module, key, wantStatus string) {
+	t.Helper()
+	var rows []SystemI18n
+	if err := db.Where("module = ? AND `key` = ?", module, key).Find(&rows).Error; err != nil {
+		t.Fatalf("load lifecycle rows: %v", err)
 	}
-	if count != 0 {
-		t.Fatalf("expected archived lifecycle rows deleted, got %d", count)
+	for _, row := range rows {
+		if row.LifecycleStatus != wantStatus {
+			t.Fatalf("expected %s status, got %s", wantStatus, row.LifecycleStatus)
+		}
+	}
+}
+
+func ageI18nLifecycleRows(t *testing.T, db *gorm.DB, module, key string, days int) {
+	t.Helper()
+	if err := db.Model(&SystemI18n{}).
+		Where("module = ? AND `key` = ?", module, key).
+		Update("lifecycle_marked_at", time.Now().AddDate(0, 0, -days)).Error; err != nil {
+		t.Fatalf("age lifecycle rows: %v", err)
+	}
+}
+
+func assertI18nRowCount(t *testing.T, db *gorm.DB, module, key string, want int64) {
+	t.Helper()
+	var count int64
+	if err := db.Model(&SystemI18n{}).Where("module = ? AND `key` = ?", module, key).Count(&count).Error; err != nil {
+		t.Fatalf("count lifecycle rows: %v", err)
+	}
+	if count != want {
+		t.Fatalf("expected %d lifecycle rows, got %d", want, count)
 	}
 }
 

@@ -10,7 +10,7 @@ interface UserAvatarImageProps extends UserAvatarContentProps {
   avatar: string;
 }
 
-function UserAvatarImage({ avatar, userDisplayName }: UserAvatarImageProps) {
+function UserAvatarImage({ avatar, userDisplayName }: Readonly<UserAvatarImageProps>) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -20,7 +20,10 @@ function UserAvatarImage({ avatar, userDisplayName }: UserAvatarImageProps) {
   return <img src={avatar} alt="" onError={() => setFailed(true)} />;
 }
 
-export default function UserAvatarContent({ avatar, userDisplayName }: UserAvatarContentProps) {
+export default function UserAvatarContent({
+  avatar,
+  userDisplayName,
+}: Readonly<UserAvatarContentProps>) {
   if (!avatar) {
     return getUserInitial(userDisplayName);
   }

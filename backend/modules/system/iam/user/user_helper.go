@@ -148,29 +148,33 @@ func (s *UserService) validateUserUpdate(user *SystemUser, req *UserUpdateReq) e
 	if err := s.ensureUserRoleIDs(req.RoleIDs); err != nil {
 		return err
 	}
+	return s.validateBuiltinAdminUpdate(user, req)
+}
 
+func (s *UserService) validateBuiltinAdminUpdate(user *SystemUser, req *UserUpdateReq) error {
+	if user.ID != common.BuiltinAdminUserID {
+		return nil
+	}
 	if user.ID == common.BuiltinAdminUserID && req.Status == common.StatusDisabled {
 		return common.NewForbidden("user.update.error.protected")
 	}
-	if user.ID == common.BuiltinAdminUserID {
-		adminRoleID, err := s.getAdminRoleID()
-		if err != nil {
-			return err
-		}
-		if adminRoleID > 0 {
-			hasAdmin := false
-			for _, roleID := range normalizeUint64IDs(req.RoleIDs) {
-				if roleID == adminRoleID {
-					hasAdmin = true
-					break
-				}
-			}
-			if !hasAdmin {
-				return common.NewForbidden("user.update.error.protected")
-			}
-		}
+	adminRoleID, err := s.getAdminRoleID()
+	if err != nil {
+		return err
+	}
+	if adminRoleID > 0 && !containsUint64(normalizeUint64IDs(req.RoleIDs), adminRoleID) {
+		return common.NewForbidden("user.update.error.protected")
 	}
 	return nil
+}
+
+func containsUint64(values []uint64, target uint64) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *UserService) ensureUserRoleIDs(roleIDs []uint64) error {

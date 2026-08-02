@@ -144,7 +144,7 @@ function compareByPriority(leftKey: string, rightKey: string, priority: string[]
   return leftIndex - rightIndex;
 }
 
-// scope → issue → i18n key，与 TODO_*_ALIASES 同风格的查表翻译。
+// scope -> issue -> i18n key, aligned with the task alias lookup tables above.
 const TODO_ISSUE_LABEL_KEYS: Record<string, Record<string, string>> = {
   dept: {
     'leaderless': 'system.dept.governance.leaderless',

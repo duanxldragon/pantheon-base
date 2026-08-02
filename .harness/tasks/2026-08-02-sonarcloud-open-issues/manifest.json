@@ -1,0 +1,125 @@
+{
+  "taskId": "2026-08-02-sonarcloud-open-issues",
+  "title": "Remediate all open SonarCloud code smells on main",
+  "goal": "Reduce the 77 unresolved SonarCloud code smells on main to zero without changing public behavior, then merge and restore main-only Git state.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config",
+    "lowcode",
+    "frontend"
+  ],
+  "scope": {
+    "in": [
+      "53 go:S3776 findings",
+      "18 typescript:S3776 findings",
+      "3 go:S107 findings",
+      "2 typescript:S6759 findings",
+      "1 typescript:S1135 finding",
+      "Focused tests and evidence required by each refactor"
+    ],
+    "out": [
+      "Public API or DTO behavior changes",
+      "Database schema or seed changes",
+      "Permission, menu, authentication, or audit contract changes",
+      "New dependencies",
+      "Pantheon Ops synchronization",
+      "Visual redesign"
+    ]
+  },
+  "workBatches": [
+    {
+      "id": "backend-tests",
+      "writeScope": [
+        "backend/**/*_test.go"
+      ]
+    },
+    {
+      "id": "backend-system",
+      "writeScope": [
+        "backend/modules/system/**/*.go"
+      ],
+      "excludes": [
+        "backend/modules/system/**/*_test.go"
+      ]
+    },
+    {
+      "id": "backend-platform",
+      "writeScope": [
+        "backend/cmd/**/*.go",
+        "backend/internal/**/*.go",
+        "backend/modules/auth/**/*.go",
+        "backend/modules/lowcode/**/*.go",
+        "backend/modules/platform/**/*.go",
+        "backend/pkg/**/*.go"
+      ],
+      "excludes": [
+        "backend/**/*_test.go"
+      ]
+    },
+    {
+      "id": "frontend",
+      "writeScope": [
+        "frontend/src/**/*.ts",
+        "frontend/src/**/*.tsx",
+        "frontend/tests/**/*.ts",
+        "frontend/tests/**/*.tsx"
+      ]
+    }
+  ],
+  "methodReadiness": {
+    "qualityProfiles": [
+      "ci-workflow",
+      "ui-runtime",
+      "permission-policy",
+      "generator"
+    ],
+    "minimalComplexityRung": "reuse",
+    "implementerPosture": "parallel proposals with single integration",
+    "reviewerPosture": [
+      "architecture",
+      "security",
+      "mechanical",
+      "visual no-regression"
+    ],
+    "requiredSensors": [
+      "gofmt",
+      "go test ./...",
+      "go vet ./...",
+      "golangci-lint new-code scope",
+      "frontend lint",
+      "frontend unit tests",
+      "frontend build",
+      "UI contract checks",
+      "SonarCloud main analysis"
+    ]
+  },
+  "successCriteria": [
+    "SonarCloud main quality gate remains OK",
+    "SonarCloud unresolved issue count is zero",
+    "All required GitHub checks pass",
+    "No behavior, schema, permission, menu, or UI layout regression is introduced",
+    "The remediation PR is merged and local/remote Git state returns to main-only"
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Local Windows cannot run Go race tests because native cgo is unavailable; the hosted Linux Backend Tests gate is required.",
+  "visualEvidence": "Required only if rendered structure or interaction output changes. Pure helper extraction and readonly type changes use existing UI contract/build/smoke evidence with an explicit no-visual-change note.",
+  "linkage": {
+    "taskId": "2026-08-02-sonarcloud-open-issues",
+    "changeRef": "none",
+    "taskPacket": ".harness/tasks/2026-08-02-sonarcloud-open-issues/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-02-sonarcloud-open-issues/",
+    "reviewFile": ".harness/evidence/2026-08-02-sonarcloud-open-issues/review.md",
+    "summaryFile": ".harness/evidence/2026-08-02-sonarcloud-open-issues/summary.md",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-02-sonarcloud-open-issues.task.md"
+    ]
+  },
+  "humanGates": [
+    "Required GitHub checks and repository merge protection"
+  ],
+  "ratchetDecision": "sensor-added",
+  "syncExpectation": "Pantheon Base only; no base-to-ops sync because behavior and contracts are unchanged."
+}

@@ -393,24 +393,39 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&user).Updates(updates).Error; err != nil {
-			return err
-		}
-		if req.ProfileExt != nil {
-			if err := upsertUserProfileExt(tx, userID, profileExtJSON); err != nil {
-				return err
-			}
-		}
-		return replaceUserRoles(tx, userID, roleIDs)
+		return updateUserInTransaction(tx, &user, userID, updates, req.ProfileExt, profileExtJSON, roleIDs)
 	}); err != nil {
 		return nil, err
 	}
 	// 单用户禁用同样即时吊销令牌与会话。
-	if common.IsEnabledStatus(req.Status) && req.Status == common.StatusDisabled && user.Status != common.StatusDisabled {
+	if shouldRevokeUpdatedUserAccess(user.Status, req.Status) {
 		if err := s.revokeUsersAccess([]uint64{userID}); err != nil {
 			return nil, err
 		}
 	}
+	return s.loadUpdatedUserResponse(userID)
+}
+
+func updateUserInTransaction(tx *gorm.DB, user *SystemUser, userID uint64, updates map[string]interface{}, profileExt map[string]interface{}, profileExtJSON string, roleIDs []uint64) error {
+	if err := tx.Model(user).Updates(updates).Error; err != nil {
+		return err
+	}
+	if profileExt != nil {
+		if err := upsertUserProfileExt(tx, userID, profileExtJSON); err != nil {
+			return err
+		}
+	}
+	return replaceUserRoles(tx, userID, roleIDs)
+}
+
+func shouldRevokeUpdatedUserAccess(previousStatus, requestedStatus int) bool {
+	return common.IsEnabledStatus(requestedStatus) &&
+		requestedStatus == common.StatusDisabled &&
+		previousStatus != common.StatusDisabled
+}
+
+func (s *UserService) loadUpdatedUserResponse(userID uint64) (*UserListResp, error) {
+	var user SystemUser
 	if err := s.db.First(&user, userID).Error; err != nil {
 		return nil, err
 	}
@@ -599,36 +614,48 @@ func (s *UserService) DeleteUser(userID uint64) error {
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		var user SystemUser
-		if err := tx.First(&user, userID).Error; err != nil {
-			return err
-		}
-		if err := s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
-			// 先吊销 Redis 令牌（需要还能查到 session_id），再删 DB 会话行。
-			if err := lifecycle.RevokeUserTokens(userID); err != nil {
-				return err
-			}
-			if err := lifecycle.DeleteUserSessions(userID); err != nil {
-				return err
-			}
-			return lifecycle.PurgeUserAuthArtifacts(userID)
-		}); err != nil {
-			return err
-		}
-		if err := tx.Exec("DELETE FROM system_user_role WHERE user_id = ?", userID).Error; err != nil {
-			return err
-		}
-		// 用户档案扩展随用户一并清理，避免孤儿行。
-		if err := tx.Where("user_id = ?", userID).Delete(&SystemUserProfileExt{}).Error; err != nil {
-			return err
-		}
-		deletedUsername, err := s.allocateDeletedUsername(tx, user.ID)
-		if err != nil {
-			return err
-		}
-		if err := tx.Model(&user).Update("username", deletedUsername).Error; err != nil {
-			return err
-		}
-		return tx.Delete(&user).Error
+		return s.deleteUserInTransaction(tx, userID)
 	})
+}
+
+func (s *UserService) deleteUserInTransaction(tx *gorm.DB, userID uint64) error {
+	var user SystemUser
+	if err := tx.First(&user, userID).Error; err != nil {
+		return err
+	}
+	if err := s.deleteUserAuthArtifacts(tx, userID); err != nil {
+		return err
+	}
+	if err := deleteUserRelations(tx, userID); err != nil {
+		return err
+	}
+	deletedUsername, err := s.allocateDeletedUsername(tx, user.ID)
+	if err != nil {
+		return err
+	}
+	if err := tx.Model(&user).Update("username", deletedUsername).Error; err != nil {
+		return err
+	}
+	return tx.Delete(&user).Error
+}
+
+func (s *UserService) deleteUserAuthArtifacts(tx *gorm.DB, userID uint64) error {
+	return s.withSessionLifecycle(tx, func(lifecycle SessionLifecycle) error {
+		// 先吊销 Redis 令牌（需要还能查到 session_id），再删 DB 会话行。
+		if err := lifecycle.RevokeUserTokens(userID); err != nil {
+			return err
+		}
+		if err := lifecycle.DeleteUserSessions(userID); err != nil {
+			return err
+		}
+		return lifecycle.PurgeUserAuthArtifacts(userID)
+	})
+}
+
+func deleteUserRelations(tx *gorm.DB, userID uint64) error {
+	if err := tx.Exec("DELETE FROM system_user_role WHERE user_id = ?", userID).Error; err != nil {
+		return err
+	}
+	// 用户档案扩展随用户一并清理，避免孤儿行。
+	return tx.Where("user_id = ?", userID).Delete(&SystemUserProfileExt{}).Error
 }

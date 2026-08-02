@@ -177,12 +177,18 @@ func TestRoleService_DeleteRole(t *testing.T) {
 	// 创建占位角色占用 ID 1
 	db.Create(&SystemRole{RoleName: "Placeholder", RoleKey: "placeholder"})
 
-	// 创建初始角色
 	createReq := &RoleCreateReq{
 		RoleName: "Delete Me",
 		RoleKey:  "delete_me",
 		Status:   1,
 	}
+	assertRoleDeletionCleansAssociations(t, db, s, createReq)
+	assertProtectedRoleDeletion(t, db, s)
+	assertRoleWithUsersDeletion(t, db, s)
+}
+
+func assertRoleDeletionCleansAssociations(t *testing.T, db *gorm.DB, s *RoleService, createReq *RoleCreateReq) {
+	t.Helper()
 	roleResp, err := s.CreateRole(createReq)
 	if err != nil {
 		t.Fatalf("failed to create role: %v", err)
@@ -201,9 +207,7 @@ func TestRoleService_DeleteRole(t *testing.T) {
 		t.Fatalf("failed to seed data scope policy: %v", err)
 	}
 
-	// 1. 成功删除
-	err = s.DeleteRole(roleResp.ID)
-	if err != nil {
+	if err := s.DeleteRole(roleResp.ID); err != nil {
 		t.Errorf("expected no error for ID %d, got %v", roleResp.ID, err)
 	}
 	var deletedRole SystemRole
@@ -236,21 +240,25 @@ func TestRoleService_DeleteRole(t *testing.T) {
 			t.Fatalf("re-created role inherited dead role's custom data scope")
 		}
 	}
+}
 
-	// 2. 删除超级管理员 (admin)
+func assertProtectedRoleDeletion(t *testing.T, db *gorm.DB, s *RoleService) {
+	t.Helper()
 	adminRole := SystemRole{RoleName: "Admin", RoleKey: "admin"}
 	db.Create(&adminRole)
-	err = s.DeleteRole(adminRole.ID)
+	err := s.DeleteRole(adminRole.ID)
 	if err == nil || common.ErrMessage(err) != "role.delete.error.protected" {
 		t.Errorf("expected protected error for admin role, got %v", err)
 	}
+}
 
-	// 3. 删除有用户的角色
+func assertRoleWithUsersDeletion(t *testing.T, db *gorm.DB, s *RoleService) {
+	t.Helper()
 	roleWithUser := SystemRole{RoleName: "Has User", RoleKey: "has_user"}
 	db.Create(&roleWithUser)
 	_ = db.Exec("INSERT INTO system_user_role (user_id, role_id) VALUES (1, ?)", roleWithUser.ID)
 
-	err = s.DeleteRole(roleWithUser.ID)
+	err := s.DeleteRole(roleWithUser.ID)
 	if err == nil || common.ErrMessage(err) != "role.delete.error.has_users" {
 		t.Errorf("expected has_users error, got %v", err)
 	}
@@ -409,21 +417,8 @@ func TestRoleService_RoleMembersLifecycle(t *testing.T) {
 		t.Fatalf("expected 2 members added, got %d", addedCount)
 	}
 
-	members, err := s.ListRoleMembers(role.ID, &RoleMemberQuery{Page: 1, PageSize: 10})
-	if err != nil {
-		t.Fatalf("list role members: %v", err)
-	}
-	if members.Total != 2 || len(members.Items) != 2 {
-		t.Fatalf("expected 2 bound members, got %+v", members)
-	}
-
-	candidates, err := s.ListAssignableUsers(role.ID, &RoleMemberQuery{Page: 1, PageSize: 10})
-	if err != nil {
-		t.Fatalf("list role candidates: %v", err)
-	}
-	if candidates.Total != 0 {
-		t.Fatalf("expected no remaining candidates, got %+v", candidates.Items)
-	}
+	assertRoleMemberPage(t, s, role.ID, 2, "")
+	assertRoleCandidatePage(t, s, role.ID, "", 0, "")
 
 	removedCount, err := s.RemoveRoleMembers(role.ID, []uint64{11})
 	if err != nil {
@@ -433,20 +428,35 @@ func TestRoleService_RoleMembersLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 member removed, got %d", removedCount)
 	}
 
-	members, err = s.ListRoleMembers(role.ID, &RoleMemberQuery{Page: 1, PageSize: 10})
-	if err != nil {
-		t.Fatalf("list role members after remove: %v", err)
-	}
-	if members.Total != 1 || len(members.Items) != 1 || members.Items[0].Username != "bob" {
-		t.Fatalf("expected only bob to remain bound, got %+v", members.Items)
-	}
+	assertRoleMemberPage(t, s, role.ID, 1, "bob")
+	assertRoleCandidatePage(t, s, role.ID, "alice", 1, "alice")
+}
 
-	candidates, err = s.ListAssignableUsers(role.ID, &RoleMemberQuery{Keyword: "alice", Page: 1, PageSize: 10})
+func assertRoleMemberPage(t *testing.T, s *RoleService, roleID uint64, wantTotal int64, wantUsername string) {
+	t.Helper()
+	members, err := s.ListRoleMembers(roleID, &RoleMemberQuery{Page: 1, PageSize: 10})
 	if err != nil {
-		t.Fatalf("list candidates after remove: %v", err)
+		t.Fatalf("list role members: %v", err)
 	}
-	if candidates.Total != 1 || len(candidates.Items) != 1 || candidates.Items[0].Username != "alice" {
-		t.Fatalf("expected alice to return to candidates, got %+v", candidates.Items)
+	if members.Total != wantTotal || len(members.Items) != int(wantTotal) {
+		t.Fatalf("unexpected role members: %+v", members)
+	}
+	if wantUsername != "" && members.Items[0].Username != wantUsername {
+		t.Fatalf("expected role member %s, got %+v", wantUsername, members.Items)
+	}
+}
+
+func assertRoleCandidatePage(t *testing.T, s *RoleService, roleID uint64, keyword string, wantTotal int64, wantUsername string) {
+	t.Helper()
+	candidates, err := s.ListAssignableUsers(roleID, &RoleMemberQuery{Keyword: keyword, Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list role candidates: %v", err)
+	}
+	if candidates.Total != wantTotal || len(candidates.Items) != int(wantTotal) {
+		t.Fatalf("unexpected role candidates: %+v", candidates)
+	}
+	if wantUsername != "" && candidates.Items[0].Username != wantUsername {
+		t.Fatalf("expected role candidate %s, got %+v", wantUsername, candidates.Items)
 	}
 }
 

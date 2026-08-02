@@ -7,6 +7,7 @@ import (
 	"pantheon-base/pkg/testmysql"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // TestPasswordMatchesComplexity covers every combination of the require-digit /
@@ -120,15 +121,24 @@ func TestCleanupSecurityEvents_OnlyAcknowledged(t *testing.T) {
 		t.Fatalf("automigrate failed: %v", err)
 	}
 	svc := &Service{db: db}
+	seedSecurityEvents(t, db)
 
+	t.Run("retention days not in options is rejected", func(t *testing.T) {
+		assertUnsupportedSecurityEventRetention(t, svc)
+	})
+
+	t.Run("retention cleanup removes only old acknowledged events", func(t *testing.T) {
+		assertSecurityEventCleanup(t, svc)
+	})
+}
+
+func seedSecurityEvents(t *testing.T, db interface{ Create(value any) *gorm.DB }) {
+	t.Helper()
 	now := time.Now()
 	ackedAt := now.AddDate(0, 0, -40)
 	seed := []SystemAuthSecurityEvent{
-		// Old + acknowledged → eligible for cleanup.
 		{EventType: "password_wrong", Severity: "medium", MessageKey: "m", CreatedAt: now.AddDate(0, 0, -40), AcknowledgedAt: &ackedAt},
-		// Old but still pending → must be preserved.
 		{EventType: "password_wrong", Severity: "medium", MessageKey: "m", CreatedAt: now.AddDate(0, 0, -40)},
-		// Recent + acknowledged → outside retention window, preserved.
 		{EventType: "password_wrong", Severity: "medium", MessageKey: "m", CreatedAt: now.AddDate(0, 0, -1), AcknowledgedAt: &now},
 	}
 	for i := range seed {
@@ -136,34 +146,39 @@ func TestCleanupSecurityEvents_OnlyAcknowledged(t *testing.T) {
 			t.Fatalf("seed event %d failed: %v", i, err)
 		}
 	}
+}
 
-	t.Run("retention days not in options is rejected", func(t *testing.T) {
-		if _, err := svc.CleanupSecurityEvents(3, "", ""); err == nil {
-			t.Fatal("expected days_invalid error for unsupported retention")
-		}
-	})
+func assertUnsupportedSecurityEventRetention(t *testing.T, svc *Service) {
+	t.Helper()
+	if _, err := svc.CleanupSecurityEvents(3, "", ""); err == nil {
+		t.Fatal("expected days_invalid error for unsupported retention")
+	}
+}
 
-	t.Run("retention cleanup removes only old acknowledged events", func(t *testing.T) {
-		cleared, err := svc.CleanupSecurityEvents(30, "", "")
-		if err != nil {
-			t.Fatalf("cleanup failed: %v", err)
-		}
-		if cleared != 1 {
-			t.Fatalf("expected 1 cleared event, got %d", cleared)
-		}
-		var remaining int64
-		if err := db.Model(&SystemAuthSecurityEvent{}).Count(&remaining).Error; err != nil {
-			t.Fatalf("count failed: %v", err)
-		}
-		if remaining != 2 {
-			t.Fatalf("expected 2 remaining events, got %d", remaining)
-		}
-		var pending int64
-		if err := db.Model(&SystemAuthSecurityEvent{}).Where("acknowledged_at IS NULL").Count(&pending).Error; err != nil {
-			t.Fatalf("count pending failed: %v", err)
-		}
-		if pending != 1 {
-			t.Fatalf("expected the pending event to be preserved, got %d pending", pending)
-		}
-	})
+func assertSecurityEventCleanup(t *testing.T, svc *Service) {
+	t.Helper()
+	cleared, err := svc.CleanupSecurityEvents(30, "", "")
+	if err != nil {
+		t.Fatalf("cleanup failed: %v", err)
+	}
+	if cleared != 1 {
+		t.Fatalf("expected 1 cleared event, got %d", cleared)
+	}
+	assertSecurityEventCount(t, svc.db, "", 2)
+	assertSecurityEventCount(t, svc.db, "acknowledged_at IS NULL", 1)
+}
+
+func assertSecurityEventCount(t *testing.T, db *gorm.DB, condition string, want int64) {
+	t.Helper()
+	query := db.Model(&SystemAuthSecurityEvent{})
+	if condition != "" {
+		query = query.Where(condition)
+	}
+	var got int64
+	if err := query.Count(&got).Error; err != nil {
+		t.Fatalf("count security events: %v", err)
+	}
+	if got != want {
+		t.Fatalf("expected %d security events for %q, got %d", want, condition, got)
+	}
 }

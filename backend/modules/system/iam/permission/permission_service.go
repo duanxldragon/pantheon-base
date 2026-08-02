@@ -44,6 +44,17 @@ type PermissionService struct {
 	db *gorm.DB
 }
 
+type workbenchRemediationRecord struct {
+	roleKey      string
+	issueType    string
+	issueKey     string
+	beforeState  string
+	afterState   string
+	action       string
+	createdCount int
+	skippedCount int
+}
+
 func NewPermissionService(db *gorm.DB) *PermissionService {
 	return &PermissionService{db: db}
 }
@@ -352,28 +363,19 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 		CreatedPolicies: []PermissionWorkbenchAPIPolicyResp{},
 	}
 	if len(role.MissingAPIPolicies) == 0 {
-		_ = s.recordWorkbenchRemediation(roleKey, workbenchCoverageAPIGap, "", "complete", "complete", "noop", 0, resp.SkippedCount)
+		_ = s.recordWorkbenchRemediation(workbenchRemediationRecord{
+			roleKey:      roleKey,
+			issueType:    workbenchCoverageAPIGap,
+			beforeState:  "complete",
+			afterState:   "complete",
+			action:       "noop",
+			skippedCount: resp.SkippedCount,
+		})
 		return resp, nil
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		for _, item := range role.MissingAPIPolicies {
-			policy := database.CasbinRule{
-				PType: "p",
-				V0:    roleKey,
-				V1:    strings.TrimSpace(item.Path),
-				V2:    normalizePolicyMethod(item.Method),
-			}
-			if err := tx.Create(&policy).Error; err != nil {
-				return err
-			}
-			resp.CreatedPolicies = append(resp.CreatedPolicies, PermissionWorkbenchAPIPolicyResp{
-				ID:     policy.ID,
-				Path:   policy.V1,
-				Method: policy.V2,
-			})
-		}
-		return nil
+		return createMissingWorkbenchPolicies(tx, roleKey, role.MissingAPIPolicies, resp)
 	}); err != nil {
 		return nil, err
 	}
@@ -384,19 +386,39 @@ func (s *PermissionService) RemediateWorkbenchPolicies(req *PermissionWorkbenchR
 			return nil, err
 		}
 	}
-	if err := s.recordWorkbenchRemediation(
-		roleKey,
-		workbenchCoverageAPIGap,
-		joinWorkbenchPolicyKeys(role.MissingAPIPolicies),
-		workbenchCoverageAPIGap,
-		"complete",
-		"remediated",
-		resp.CreatedCount,
-		resp.SkippedCount,
-	); err != nil {
+	if err := s.recordWorkbenchRemediation(workbenchRemediationRecord{
+		roleKey:      roleKey,
+		issueType:    workbenchCoverageAPIGap,
+		issueKey:     joinWorkbenchPolicyKeys(role.MissingAPIPolicies),
+		beforeState:  workbenchCoverageAPIGap,
+		afterState:   "complete",
+		action:       "remediated",
+		createdCount: resp.CreatedCount,
+		skippedCount: resp.SkippedCount,
+	}); err != nil {
 		return nil, err
 	}
 	return resp, nil
+}
+
+func createMissingWorkbenchPolicies(tx *gorm.DB, roleKey string, missing []PermissionWorkbenchAPIPolicyResp, resp *PermissionWorkbenchRemediateResp) error {
+	for _, item := range missing {
+		policy := database.CasbinRule{
+			PType: "p",
+			V0:    roleKey,
+			V1:    strings.TrimSpace(item.Path),
+			V2:    normalizePolicyMethod(item.Method),
+		}
+		if err := tx.Create(&policy).Error; err != nil {
+			return err
+		}
+		resp.CreatedPolicies = append(resp.CreatedPolicies, PermissionWorkbenchAPIPolicyResp{
+			ID:     policy.ID,
+			Path:   policy.V1,
+			Method: policy.V2,
+		})
+	}
+	return nil
 }
 
 func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWorkbenchRemediationQuery) ([]PermissionWorkbenchRemediationResp, error) {
@@ -439,19 +461,19 @@ func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWork
 	return result, nil
 }
 
-func (s *PermissionService) recordWorkbenchRemediation(roleKey string, issueType string, issueKey string, beforeState string, afterState string, action string, createdCount int, skippedCount int) error {
+func (s *PermissionService) recordWorkbenchRemediation(record workbenchRemediationRecord) error {
 	if s.db == nil || !s.db.Migrator().HasTable(&PermissionWorkbenchRemediationEvent{}) {
 		return nil
 	}
 	return s.db.Create(&PermissionWorkbenchRemediationEvent{
-		RoleKey:      strings.TrimSpace(roleKey),
-		IssueType:    strings.TrimSpace(issueType),
-		IssueKey:     strings.TrimSpace(issueKey),
-		BeforeState:  strings.TrimSpace(beforeState),
-		AfterState:   strings.TrimSpace(afterState),
-		Action:       strings.TrimSpace(action),
-		CreatedCount: createdCount,
-		SkippedCount: skippedCount,
+		RoleKey:      strings.TrimSpace(record.roleKey),
+		IssueType:    strings.TrimSpace(record.issueType),
+		IssueKey:     strings.TrimSpace(record.issueKey),
+		BeforeState:  strings.TrimSpace(record.beforeState),
+		AfterState:   strings.TrimSpace(record.afterState),
+		Action:       strings.TrimSpace(record.action),
+		CreatedCount: record.createdCount,
+		SkippedCount: record.skippedCount,
 	}).Error
 }
 
