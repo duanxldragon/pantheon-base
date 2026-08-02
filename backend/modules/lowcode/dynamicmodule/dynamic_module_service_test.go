@@ -589,7 +589,7 @@ func TestPurgeManagedModuleAdvancesI18nLifecycle(t *testing.T) {
 	}
 
 	assertDynamicModuleI18nRows(t, db, "business.asset", "business.asset.title", 2, systemi18n.I18nLifecycleStatusObserving, true)
-	assertDynamicModuleI18nRows(t, db, "business.asset", "business.asset.orphan", 2, systemi18n.I18nLifecycleStatusArchived, false)
+	assertDynamicModuleI18nRows(t, db, "business.asset", "business.asset.orphan", 2, systemi18n.I18nLifecycleStatusArchived, true)
 	assertDynamicModuleI18nRowCount(t, db, "business.asset", "business.asset.expired", 0)
 }
 

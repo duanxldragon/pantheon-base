@@ -36,6 +36,12 @@
       "notes": "Corrected the lifecycle-marked-at assertion for system.config prefixed keys; those rows are intentionally marked when observation begins."
     },
     {
+      "command": "cd backend/modules/lowcode/dynamicmodule && go test -count=1 -run '^TestPurgeManagedModuleAdvancesI18nLifecycle$' .",
+      "cwd": "backend/modules/lowcode/dynamicmodule",
+      "status": "passed",
+      "notes": "Corrected the archived-row lifecycle-marked-at assertion; archived rows are intentionally marked when the purge advances their lifecycle."
+    },
+    {
       "command": "cd frontend && npm run lint && npm run type-check && npm run test:unit",
       "cwd": "frontend",
       "status": "passed",

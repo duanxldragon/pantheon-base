@@ -1,6 +1,6 @@
 # Summary - 2026-08-02-sonarcloud-open-issues
 
-Status: Docs Governance is green; hosted Backend Tests rerun pending.
+Status: Docs Governance is green; hosted Backend Tests rerun pending after the final lifecycle assertion correction.
 
 Baseline: SonarCloud quality gate `OK`, 77 unresolved code smells.
 
@@ -14,6 +14,8 @@ Verification:
 - `go test -count=1 ./...` passed.
 - `TestPurgeModuleAllowsBusinessStaticModuleWithoutTable` passed after correcting
   its lifecycle-marked-at assertion for prefixed `system.config` keys.
+- `TestPurgeManagedModuleAdvancesI18nLifecycle` passed after correcting its
+  archived-row lifecycle-marked-at assertion.
 - `go vet ./...` passed.
 - `gofmt` and `git diff --check` passed.
 - `npm run lint` and `npm run type-check` passed.
