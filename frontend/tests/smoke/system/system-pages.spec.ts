@@ -210,6 +210,10 @@ async function createSharedAdminLogin(page: Page): Promise<BrowserLoginResult> {
   return login;
 }
 
+async function openUserMenu(page: Page) {
+  await page.getByRole('button').and(page.locator('[aria-haspopup="menu"]')).click();
+}
+
 async function waitForOkApiResponse(
   page: Page,
   matcher: (
@@ -1792,7 +1796,7 @@ test('setting smoke: logout clears explicit language and falls back to default l
     expect(updateResponse.ok()).toBeTruthy();
 
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: /admin/ }).click();
+    await openUserMenu(page);
     await page.getByRole('menuitem', { name: '退出登录' }).click();
 
     await expect(page).toHaveURL(/\/login$/);
@@ -1854,7 +1858,7 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
   const logoutResponsePromise = page.waitForResponse((response) =>
     response.url().includes('/api/v1/auth/logout'),
   );
-  await page.getByRole('button', { name: /admin/ }).click();
+  await openUserMenu(page);
   await page.getByRole('menuitem', { name: /退出登录|Sign out|Logout/ }).click();
   const logoutPayload = await (await logoutResponsePromise).json();
 
@@ -1892,7 +1896,7 @@ test('platform smoke: lock screen keeps current route and opened tabs', async ({
     await expectPageIdentityReady(page, '用户管理');
     await expect(page.locator('.app-shell__tabs [role="tab"]')).toHaveCount(2);
 
-    await page.getByRole('button', { name: /admin/i }).click();
+    await openUserMenu(page);
     await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
     await expect(page.getByRole('dialog')).toContainText(/会话已锁定|Session Locked/);
 
@@ -1926,7 +1930,7 @@ test('platform smoke: lock screen refreshes activity timestamp and blocks comman
   );
   expect(beforeLockActivity).toBeTruthy();
 
-  await page.getByRole('button', { name: /admin/i }).click();
+  await openUserMenu(page);
   await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
   const lockDialog = page.getByRole('dialog');
   await expect(lockDialog).toContainText(/会话已锁定|Session Locked/);
@@ -1973,7 +1977,7 @@ test('platform + system/auth smoke: locked session times out, relogin notice app
   await page.goto('/system/profile', { waitUntil: 'networkidle' });
   await expectVisiblePageTitle(page, '个人中心');
 
-  await page.getByRole('button', { name: /admin/i }).click();
+  await openUserMenu(page);
   await page.getByRole('menuitem', { name: /锁定屏幕|Lock Screen/i }).click();
   const lockDialog = page.getByRole('dialog');
   await expect(lockDialog).toContainText(/会话已锁定|Session Locked/);
@@ -2042,7 +2046,7 @@ test('setting smoke: logout clears explicit theme and falls back to default them
       .poll(async () => page.evaluate(() => document.documentElement.dataset.pantheonTheme))
       .toBe('slate');
 
-    await page.getByRole('button', { name: /admin/ }).click();
+    await openUserMenu(page);
     await page.getByRole('menuitem', { name: '退出登录' }).click();
 
     await expect(page).toHaveURL(/\/login$/);
