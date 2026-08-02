@@ -1,0 +1,98 @@
+{
+  "taskId": "2026-08-02-sonarcloud-open-issues",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "note": "Behavior-preserving SonarCloud remediation; external Claude CLI unavailable."
+  },
+  "baseline": {
+    "qualityGate": "OK",
+    "openIssues": 77,
+    "rules": {
+      "go:S3776": 53,
+      "typescript:S3776": 18,
+      "go:S107": 3,
+      "typescript:S6759": 2,
+      "typescript:S1135": 1
+    }
+  },
+  "commands": [
+    {
+      "command": "go test -count=1 ./... && go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "All packages passed."
+    },
+    {
+      "command": "gocognit -over 15 .",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Only pre-existing pkg/database/casbin_watcher.go:run at 16 remains; it was outside the 77 Sonar findings."
+    },
+    {
+      "command": "go test -count=1 -run '^TestPurgeModuleAllowsBusinessStaticModuleWithoutTable$' .",
+      "cwd": "backend/modules/lowcode/dynamicmodule",
+      "status": "passed",
+      "notes": "Corrected the lifecycle-marked-at assertion for system.config prefixed keys; those rows are intentionally marked when observation begins."
+    },
+    {
+      "command": "go test -count=1 -run '^TestPurgeManagedModuleAdvancesI18nLifecycle$' .",
+      "cwd": "backend/modules/lowcode/dynamicmodule",
+      "status": "passed",
+      "notes": "Corrected the archived-row lifecycle-marked-at assertion; archived rows are intentionally marked when the purge advances their lifecycle."
+    },
+    {
+      "command": "npm run lint && npm run type-check && npm run test:unit",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Lint and type check passed; 15 test files and 138 tests passed."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5174 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/system-pages.spec.ts -g \"system smoke: /system/permission|platform smoke: lock screen keeps current route and opened tabs\" --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Two desktop Chromium smoke cases passed: the permission workbench route rendered after the complexity extraction, and the user-menu lock-screen workflow passed after ShellUserTrigger implemented Arco's getRootDOMNode contract and deterministic click support. The focused smoke exercised the click path; hover remains configured but was not exercised."
+    },
+    {
+      "command": "Invoke-WebRequest https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=222&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=100",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The remote PR head 234f3ac8 still reported 15 open findings: 13 readonly/expression TypeScript smells, one layout expression smell, and one CRITICAL PermissionWorkbenchTab cognitive-complexity finding. Commit a0c01eae applies the local remediation; hosted re-analysis is pending."
+    },
+    {
+      "command": "npm run build && npm run test:generator:smoke",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Passed after allowing node_modules/.tmp temporary writes."
+    },
+    {
+      "command": "npm run check:docs-frontmatter; npm run check:harness-method; npm run check:harness-adoption; npm run check:harness-template; npm run check:harness-docs; npm run check:harness-inventory; npm run check:harness-sync; npm run check:generated-modules; npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Passed; check:harness-method has one unrelated OpenSpec-directory warning."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Hosted Linux Backend Tests passed for the backend correction. Full hosted Smoke Sanity and SonarCloud remain pending for frontend code commit a0c01eae.",
+  "browserEvidence": [
+    {
+      "viewport": "desktop",
+      "url": "http://127.0.0.1:5174/system/user",
+      "visualGap": "No layout or CSS change. Functional runtime interaction was verified in Chromium at 1280x720; no standalone screenshot artifact was retained.",
+      "consoleErrors": [],
+      "checkedStates": ["system user page ready", "user menu opened by click", "lock dialog opened and unlocked", "route and opened tabs preserved"]
+    }
+  ],
+  "knownGaps": [
+    "Full hosted Smoke Sanity remains pending for frontend code commit a0c01eae.",
+    "Hosted SonarCloud and final PR checks remain pending for the evidence-bearing PR head."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-02-sonarcloud-open-issues/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-02-sonarcloud-open-issues/",
+    "reviewFile": ".harness/evidence/2026-08-02-sonarcloud-open-issues/review.md",
+    "changeRef": "none",
+    "codeRef": "a0c01eae",
+    "planRefs": ["docs/harness/tasks/2026-08-02-sonarcloud-open-issues.task.md"]
+  }
+}

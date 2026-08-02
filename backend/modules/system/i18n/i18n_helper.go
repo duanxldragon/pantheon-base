@@ -143,6 +143,18 @@ type i18nUnusedKeyAudit struct {
 	lifecycleMarkedAt *time.Time
 }
 
+type i18nStalePlaceholderParams struct {
+	moduleMeta *i18nModuleAudit
+	resp       *I18nAuditResp
+	item       i18nAuditRow
+	module     string
+	group      string
+	key        string
+	locale     string
+	value      string
+	now        time.Time
+}
+
 func (s *I18nService) loadI18nAuditRows() ([]i18nAuditRow, error) {
 	var rows []i18nAuditRow
 	if err := s.db.Model(&SystemI18n{}).
@@ -255,7 +267,17 @@ func (s *I18nService) processI18nAuditRows(rows []i18nAuditRow, now time.Time, r
 		moduleMeta.keys[key] = struct{}{}
 		if !hasEffectiveLocaleValue(locale, key, value) {
 			moduleMeta.placeholderCount++
-			s.trackI18nStalePlaceholder(moduleMeta, resp, item, module, group, key, locale, value, now)
+			s.trackI18nStalePlaceholder(i18nStalePlaceholderParams{
+				moduleMeta: moduleMeta,
+				resp:       resp,
+				item:       item,
+				module:     module,
+				group:      group,
+				key:        key,
+				locale:     locale,
+				value:      value,
+				now:        now,
+			})
 		}
 
 		s.trackI18nUnusedKey(unusedKeyAudits, module, key, group, locale, value, item)
@@ -263,18 +285,18 @@ func (s *I18nService) processI18nAuditRows(rows []i18nAuditRow, now time.Time, r
 	return keyAudits, moduleAudits, unusedKeyAudits
 }
 
-func (s *I18nService) trackI18nStalePlaceholder(moduleMeta *i18nModuleAudit, resp *I18nAuditResp, item i18nAuditRow, module, group, key, locale, value string, now time.Time) {
-	staleDays := int64(now.Sub(item.UpdatedAt).Hours() / 24)
+func (s *I18nService) trackI18nStalePlaceholder(params i18nStalePlaceholderParams) {
+	staleDays := int64(params.now.Sub(params.item.UpdatedAt).Hours() / 24)
 	if staleDays >= I18nStalePlaceholderThresholdDays {
-		moduleMeta.stalePlaceholders++
-		resp.StalePlaceholders = append(resp.StalePlaceholders, I18nStalePlaceholderItem{
-			ID:        item.ID,
-			Module:    module,
-			Group:     group,
-			Key:       key,
-			Locale:    locale,
-			Value:     value,
-			UpdatedAt: item.UpdatedAt.Format(time.RFC3339),
+		params.moduleMeta.stalePlaceholders++
+		params.resp.StalePlaceholders = append(params.resp.StalePlaceholders, I18nStalePlaceholderItem{
+			ID:        params.item.ID,
+			Module:    params.module,
+			Group:     params.group,
+			Key:       params.key,
+			Locale:    params.locale,
+			Value:     params.value,
+			UpdatedAt: params.item.UpdatedAt.Format(time.RFC3339),
 			StaleDays: staleDays,
 		})
 	}
@@ -544,43 +566,49 @@ func (s *I18nService) ArchiveObservedUnusedKeys(module string) (*I18nUnusedLifec
 	if s.db == nil {
 		return resp, nil
 	}
-	type target struct {
-		module string
-		key    string
-	}
-	targets := make([]target, 0)
-	for _, item := range audit.UnusedKeys {
-		if resp.Module != "" && item.Module != resp.Module {
-			continue
-		}
-		if item.EligibleForArchive {
-			targets = append(targets, target{module: item.Module, key: item.Key})
-			resp.AffectedKeys = append(resp.AffectedKeys, item.Key)
-		}
-	}
+	targets := collectI18nArchiveTargets(audit.UnusedKeys, resp)
 	if len(targets) == 0 {
 		return resp, nil
 	}
 	now := time.Now()
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		for _, item := range targets {
-			updateResult := tx.Model(&SystemI18n{}).
-				Where(condModuleKeyEquals, item.module, item.key).
-				Updates(map[string]interface{}{
-					"lifecycle_status":    I18nLifecycleStatusArchived,
-					"lifecycle_marked_at": now,
-				})
-			if updateResult.Error != nil {
-				return updateResult.Error
-			}
-			resp.AffectedRows += updateResult.RowsAffected
-		}
-		return nil
+		return archiveI18nTargetsInTransaction(tx, targets, now, resp)
 	}); err != nil {
 		return nil, err
 	}
 	sort.Strings(resp.AffectedKeys)
 	return resp, s.ReloadCache()
+}
+
+func collectI18nArchiveTargets(items []I18nUnusedKeyItem, resp *I18nUnusedLifecycleResp) []i18nLifecycleTarget {
+	targets := make([]i18nLifecycleTarget, 0)
+	for _, item := range items {
+		if resp.Module != "" && item.Module != resp.Module {
+			continue
+		}
+		if !item.EligibleForArchive {
+			continue
+		}
+		targets = append(targets, i18nLifecycleTarget{module: item.Module, key: item.Key})
+		resp.AffectedKeys = append(resp.AffectedKeys, item.Key)
+	}
+	return targets
+}
+
+func archiveI18nTargetsInTransaction(tx *gorm.DB, targets []i18nLifecycleTarget, now time.Time, resp *I18nUnusedLifecycleResp) error {
+	for _, item := range targets {
+		updateResult := tx.Model(&SystemI18n{}).
+			Where(condModuleKeyEquals, item.module, item.key).
+			Updates(map[string]interface{}{
+				"lifecycle_status":    I18nLifecycleStatusArchived,
+				"lifecycle_marked_at": now,
+			})
+		if updateResult.Error != nil {
+			return updateResult.Error
+		}
+		resp.AffectedRows += updateResult.RowsAffected
+	}
+	return nil
 }
 
 func (s *I18nService) DeleteArchivedUnusedKeys(module string, confirmArchived bool) (*I18nUnusedLifecycleResp, error) {
@@ -606,7 +634,7 @@ func (s *I18nService) deleteArchivedUnusedKeys(module string, requireEligible bo
 	if s.db == nil {
 		return resp, nil
 	}
-	targets := make([]struct{ module, key string }, 0)
+	targets := make([]i18nLifecycleTarget, 0)
 	for _, item := range audit.UnusedKeys {
 		if resp.Module != "" && item.Module != resp.Module {
 			continue
@@ -615,7 +643,7 @@ func (s *I18nService) deleteArchivedUnusedKeys(module string, requireEligible bo
 			continue
 		}
 		if item.LifecycleStatus == I18nLifecycleStatusArchived {
-			targets = append(targets, struct{ module, key string }{module: item.Module, key: item.Key})
+			targets = append(targets, i18nLifecycleTarget{module: item.Module, key: item.Key})
 			resp.AffectedKeys = append(resp.AffectedKeys, item.Key)
 		}
 	}
@@ -633,7 +661,7 @@ func (s *I18nService) deleteArchivedUnusedKeys(module string, requireEligible bo
 
 // deleteI18nTargetsInTransaction 在事务内按 module+key 逐个删除 i18n 记录并累计影响行数。
 // 该逻辑为原 deleteArchivedUnusedKeys 事务闭包的等价提取，未改变删除事务边界与判定条件。
-func (s *I18nService) deleteI18nTargetsInTransaction(tx *gorm.DB, targets []struct{ module, key string }, resp *I18nUnusedLifecycleResp) error {
+func (s *I18nService) deleteI18nTargetsInTransaction(tx *gorm.DB, targets []i18nLifecycleTarget, resp *I18nUnusedLifecycleResp) error {
 	for _, item := range targets {
 		deleteResult := tx.Where(condModuleKeyEquals, item.module, item.key).Delete(&SystemI18n{})
 		if deleteResult.Error != nil {

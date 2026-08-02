@@ -588,43 +588,37 @@ func TestPurgeManagedModuleAdvancesI18nLifecycle(t *testing.T) {
 		t.Fatalf("expected 2 deleted rows, got %d", summary.DeletedRows)
 	}
 
-	var titleRows []systemi18n.SystemI18n
-	if err := db.Where("module = ? AND `key` = ?", "business.asset", "business.asset.title").Find(&titleRows).Error; err != nil {
-		t.Fatalf("load title rows: %v", err)
-	}
-	if len(titleRows) != 2 {
-		t.Fatalf("expected title rows preserved for governance, got %d", len(titleRows))
-	}
-	for _, row := range titleRows {
-		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
-			t.Fatalf("expected title rows observing after purge, got %s", row.LifecycleStatus)
-		}
-		if row.LifecycleMarkedAt == nil {
-			t.Fatal("expected title rows to record lifecycle mark time")
-		}
-	}
+	assertDynamicModuleI18nRows(t, db, "business.asset", "business.asset.title", 2, systemi18n.I18nLifecycleStatusObserving, true)
+	assertDynamicModuleI18nRows(t, db, "business.asset", "business.asset.orphan", 2, systemi18n.I18nLifecycleStatusArchived, true)
+	assertDynamicModuleI18nRowCount(t, db, "business.asset", "business.asset.expired", 0)
+}
 
-	var orphanRows []systemi18n.SystemI18n
-	if err := db.Where("module = ? AND `key` = ?", "business.asset", "business.asset.orphan").Find(&orphanRows).Error; err != nil {
-		t.Fatalf("load orphan rows: %v", err)
+func assertDynamicModuleI18nRows(t *testing.T, db *gorm.DB, module, key string, wantCount int, wantStatus string, wantMarked bool) {
+	t.Helper()
+	var rows []systemi18n.SystemI18n
+	if err := db.Where("module = ? AND `key` = ?", module, key).Find(&rows).Error; err != nil {
+		t.Fatalf("load %s rows: %v", key, err)
 	}
-	if len(orphanRows) != 2 {
-		t.Fatalf("expected orphan rows preserved for governance, got %d", len(orphanRows))
+	if len(rows) != wantCount {
+		t.Fatalf("expected %d %s rows, got %d", wantCount, key, len(rows))
 	}
-	for _, row := range orphanRows {
-		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusArchived {
-			t.Fatalf("expected orphan rows archived after purge, got %s", row.LifecycleStatus)
+	for _, row := range rows {
+		if row.LifecycleStatus != wantStatus || (row.LifecycleMarkedAt != nil) != wantMarked {
+			t.Fatalf("unexpected %s lifecycle row: %#v", key, row)
 		}
 	}
+}
 
-	var expiredCount int64
+func assertDynamicModuleI18nRowCount(t *testing.T, db *gorm.DB, module, key string, want int64) {
+	t.Helper()
+	var count int64
 	if err := db.Model(&systemi18n.SystemI18n{}).
-		Where("module = ? AND `key` = ?", "business.asset", "business.asset.expired").
-		Count(&expiredCount).Error; err != nil {
-		t.Fatalf("count expired archived rows: %v", err)
+		Where("module = ? AND `key` = ?", module, key).
+		Count(&count).Error; err != nil {
+		t.Fatalf("count %s rows: %v", key, err)
 	}
-	if expiredCount != 0 {
-		t.Fatalf("expected expired archived rows deleted, got %d", expiredCount)
+	if count != want {
+		t.Fatalf("expected %d %s rows, got %d", want, key, count)
 	}
 }
 
@@ -1107,40 +1101,35 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 		t.Fatalf("expected static module purge to observe 4 rows, got %d", summary.ObservedRows)
 	}
 
+	assertDynamicModuleTableCount(t, db.Model(&ModuleRegistration{}).Where("name = ?", "business.cmdb"), 0, "registration")
+	assertDynamicModuleTableCount(t, db.Table("system_menu").Where("module = ?", "business.cmdb"), 0, "menu")
+	assertDynamicModuleI18nModuleRows(t, db, "business.cmdb", 2, systemi18n.I18nLifecycleStatusObserving)
+	assertDynamicModuleI18nRows(t, db, "system.config", "business.cmdb.host.title", 2, systemi18n.I18nLifecycleStatusObserving, true)
+}
+
+func assertDynamicModuleTableCount(t *testing.T, query *gorm.DB, want int64, label string) {
+	t.Helper()
 	var count int64
-	if err := db.Model(&ModuleRegistration{}).Where("name = ?", "business.cmdb").Count(&count).Error; err != nil {
-		t.Fatalf("count registration: %v", err)
+	if err := query.Count(&count).Error; err != nil {
+		t.Fatalf("count %s: %v", label, err)
 	}
-	if count != 0 {
-		t.Fatalf("expected registration to be deleted, got %d", count)
+	if count != want {
+		t.Fatalf("expected %d %s rows, got %d", want, label, count)
 	}
-	if err := db.Table("system_menu").Where("module = ?", "business.cmdb").Count(&count).Error; err != nil {
-		t.Fatalf("count menu: %v", err)
-	}
-	if count != 0 {
-		t.Fatalf("expected menu rows to be deleted, got %d", count)
-	}
+}
+
+func assertDynamicModuleI18nModuleRows(t *testing.T, db *gorm.DB, module string, wantCount int, wantStatus string) {
+	t.Helper()
 	var rows []systemi18n.SystemI18n
-	if err := db.Where("module = ?", "business.cmdb").Find(&rows).Error; err != nil {
-		t.Fatalf("load i18n rows: %v", err)
+	if err := db.Where("module = ?", module).Find(&rows).Error; err != nil {
+		t.Fatalf("load %s i18n rows: %v", module, err)
 	}
-	if len(rows) != 2 {
-		t.Fatalf("expected i18n rows preserved for governance, got %d", len(rows))
-	}
-	for _, row := range rows {
-		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
-			t.Fatalf("expected static module i18n rows observing, got %s", row.LifecycleStatus)
-		}
-	}
-	if err := db.Where("module = ? AND `key` = ?", "system.config", "business.cmdb.host.title").Find(&rows).Error; err != nil {
-		t.Fatalf("load prefixed system config i18n rows: %v", err)
-	}
-	if len(rows) != 2 {
-		t.Fatalf("expected prefixed system config i18n rows preserved for governance, got %d", len(rows))
+	if len(rows) != wantCount {
+		t.Fatalf("expected %d %s i18n rows, got %d", wantCount, module, len(rows))
 	}
 	for _, row := range rows {
-		if row.LifecycleStatus != systemi18n.I18nLifecycleStatusObserving {
-			t.Fatalf("expected prefixed system config i18n rows observing, got %s", row.LifecycleStatus)
+		if row.LifecycleStatus != wantStatus {
+			t.Fatalf("expected %s i18n rows %s, got %s", module, wantStatus, row.LifecycleStatus)
 		}
 	}
 }

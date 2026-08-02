@@ -253,26 +253,21 @@ func TestPermissionService_GetWorkbenchIntegrityFilter(t *testing.T) {
 		t.Fatalf("expected 1 unknown assignment, got %d", allWorkbench.Overview.UnknownPermissionAssignmentCount)
 	}
 
-	unknownWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Integrity: "unknown"})
-	if err != nil {
-		t.Fatalf("get unknown workbench: %v", err)
-	}
-	if len(unknownWorkbench.Roles) != 1 || unknownWorkbench.Roles[0].RoleKey != "dirty_role" {
-		t.Fatalf("expected only dirty_role in unknown filter, got %+v", unknownWorkbench.Roles)
-	}
-	if unknownWorkbench.Overview.RoleCount != 1 || unknownWorkbench.Overview.UnknownPermissionAssignmentCount != 1 {
-		t.Fatalf("unexpected unknown overview: %+v", unknownWorkbench.Overview)
-	}
+	assertWorkbenchIntegrityFilter(t, service, "unknown", "dirty_role", 1)
+	assertWorkbenchIntegrityFilter(t, service, "clean", "clean_role", 0)
+}
 
-	cleanWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Integrity: "clean"})
+func assertWorkbenchIntegrityFilter(t *testing.T, service *PermissionService, integrity, wantRoleKey string, wantUnknown int) {
+	t.Helper()
+	workbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Integrity: integrity})
 	if err != nil {
-		t.Fatalf("get clean workbench: %v", err)
+		t.Fatalf("get %s workbench: %v", integrity, err)
 	}
-	if len(cleanWorkbench.Roles) != 1 || cleanWorkbench.Roles[0].RoleKey != "clean_role" {
-		t.Fatalf("expected only clean_role in clean filter, got %+v", cleanWorkbench.Roles)
+	if len(workbench.Roles) != 1 || workbench.Roles[0].RoleKey != wantRoleKey {
+		t.Fatalf("expected only %s in %s filter, got %+v", wantRoleKey, integrity, workbench.Roles)
 	}
-	if cleanWorkbench.Overview.RoleCount != 1 || cleanWorkbench.Overview.UnknownPermissionAssignmentCount != 0 {
-		t.Fatalf("unexpected clean overview: %+v", cleanWorkbench.Overview)
+	if workbench.Overview.RoleCount != 1 || workbench.Overview.UnknownPermissionAssignmentCount != wantUnknown {
+		t.Fatalf("unexpected %s overview: %+v", integrity, workbench.Overview)
 	}
 }
 
@@ -329,28 +324,26 @@ func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
 		t.Fatalf("expected 1 api gap role, got %d", workbench.Overview.APIGapRoleCount)
 	}
 
-	pageGapWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "page-gap"})
-	if err != nil {
-		t.Fatalf("get page-gap workbench: %v", err)
-	}
-	if len(pageGapWorkbench.Roles) != 1 || pageGapWorkbench.Roles[0].RoleKey != "page_gap" || !pageGapWorkbench.Roles[0].HasPageGap {
-		t.Fatalf("expected only page_gap role, got %+v", pageGapWorkbench.Roles)
-	}
+	assertWorkbenchCoverageFilter(t, service, "page-gap", "page_gap")
+	assertWorkbenchCoverageFilter(t, service, "api-gap", "api_gap")
+	assertWorkbenchCoverageFilter(t, service, "complete", "complete_role")
+}
 
-	apiGapWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "api-gap"})
+func assertWorkbenchCoverageFilter(t *testing.T, service *PermissionService, coverage, wantRoleKey string) {
+	t.Helper()
+	workbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: coverage})
 	if err != nil {
-		t.Fatalf("get api-gap workbench: %v", err)
+		t.Fatalf("get %s workbench: %v", coverage, err)
 	}
-	if len(apiGapWorkbench.Roles) != 1 || apiGapWorkbench.Roles[0].RoleKey != "api_gap" || !apiGapWorkbench.Roles[0].HasAPIGap {
-		t.Fatalf("expected only api_gap role, got %+v", apiGapWorkbench.Roles)
+	if len(workbench.Roles) != 1 || workbench.Roles[0].RoleKey != wantRoleKey {
+		t.Fatalf("expected only %s role, got %+v", wantRoleKey, workbench.Roles)
 	}
-
-	completeWorkbench, err := service.GetWorkbench(&PermissionWorkbenchQuery{Coverage: "complete"})
-	if err != nil {
-		t.Fatalf("get complete workbench: %v", err)
+	role := workbench.Roles[0]
+	if coverage == "page-gap" && !role.HasPageGap {
+		t.Fatalf("expected %s to have page gap", wantRoleKey)
 	}
-	if len(completeWorkbench.Roles) != 1 || completeWorkbench.Roles[0].RoleKey != "complete_role" {
-		t.Fatalf("expected only complete_role, got %+v", completeWorkbench.Roles)
+	if coverage == "api-gap" && !role.HasAPIGap {
+		t.Fatalf("expected %s to have api gap", wantRoleKey)
 	}
 }
 
@@ -427,61 +420,56 @@ func TestPermissionService_GetWorkbenchIncludesRemediationGovernanceSummary(t *t
 		t.Fatalf("get workbench: %v", err)
 	}
 
-	if workbench.Overview.PendingRemediationRoleCount != 1 {
-		t.Fatalf("expected 1 pending remediation role, got %d", workbench.Overview.PendingRemediationRoleCount)
+	assertRemediationGovernanceOverview(t, workbench)
+	roleByKey := permissionWorkbenchRolesByKey(workbench.Roles)
+	cases := []struct {
+		roleKey       string
+		status        string
+		action        string
+		wantTimestamp bool
+	}{
+		{roleKey: "pending_role", status: "pending", action: "remediated", wantTimestamp: true},
+		{roleKey: "remediated_role", status: "remediated", action: "remediated", wantTimestamp: true},
+		{roleKey: "clean_role", status: "clean"},
 	}
-	if workbench.Overview.RemediatedRoleCount != 1 {
-		t.Fatalf("expected 1 remediated role, got %d", workbench.Overview.RemediatedRoleCount)
+	for _, tc := range cases {
+		assertRemediationGovernanceRole(t, roleByKey, tc.roleKey, tc.status, tc.action, tc.wantTimestamp)
 	}
-	if workbench.Overview.RecentRemediationCount != 2 {
-		t.Fatalf("expected 2 recent remediation events, got %d", workbench.Overview.RecentRemediationCount)
-	}
+}
 
-	roleByKey := make(map[string]PermissionWorkbenchRoleResp, len(workbench.Roles))
-	for _, item := range workbench.Roles {
+func assertRemediationGovernanceOverview(t *testing.T, workbench *PermissionWorkbenchResp) {
+	t.Helper()
+	if workbench.Overview.PendingRemediationRoleCount != 1 ||
+		workbench.Overview.RemediatedRoleCount != 1 ||
+		workbench.Overview.RecentRemediationCount != 2 {
+		t.Fatalf("unexpected remediation governance overview: %+v", workbench.Overview)
+	}
+}
+
+func permissionWorkbenchRolesByKey(roles []PermissionWorkbenchRoleResp) map[string]PermissionWorkbenchRoleResp {
+	roleByKey := make(map[string]PermissionWorkbenchRoleResp, len(roles))
+	for _, item := range roles {
 		roleByKey[item.RoleKey] = item
 	}
+	return roleByKey
+}
 
-	pendingRole, ok := roleByKey["pending_role"]
+func assertRemediationGovernanceRole(
+	t *testing.T,
+	roleByKey map[string]PermissionWorkbenchRoleResp,
+	roleKey, wantStatus, wantAction string,
+	wantTimestamp bool,
+) {
+	t.Helper()
+	role, ok := roleByKey[roleKey]
 	if !ok {
-		t.Fatalf("missing pending_role in workbench: %+v", workbench.Roles)
+		t.Fatalf("missing %s in workbench", roleKey)
 	}
-	if pendingRole.GovernanceStatus != "pending" {
-		t.Fatalf("expected pending governance status, got %s", pendingRole.GovernanceStatus)
+	if role.GovernanceStatus != wantStatus || role.LastRemediationAction != wantAction {
+		t.Fatalf("unexpected governance state for %s: %+v", roleKey, role)
 	}
-	if pendingRole.LastRemediationAction != "remediated" {
-		t.Fatalf("expected pending role last remediation action remediated, got %s", pendingRole.LastRemediationAction)
-	}
-	if pendingRole.LastRemediationAt == "" {
-		t.Fatalf("expected pending role last remediation timestamp")
-	}
-
-	remediatedRole, ok := roleByKey["remediated_role"]
-	if !ok {
-		t.Fatalf("missing remediated_role in workbench: %+v", workbench.Roles)
-	}
-	if remediatedRole.GovernanceStatus != "remediated" {
-		t.Fatalf("expected remediated governance status, got %s", remediatedRole.GovernanceStatus)
-	}
-	if remediatedRole.LastRemediationAction != "remediated" {
-		t.Fatalf("expected remediated role last remediation action remediated, got %s", remediatedRole.LastRemediationAction)
-	}
-	if remediatedRole.LastRemediationAt == "" {
-		t.Fatalf("expected remediated role last remediation timestamp")
-	}
-
-	cleanRole, ok := roleByKey["clean_role"]
-	if !ok {
-		t.Fatalf("missing clean_role in workbench: %+v", workbench.Roles)
-	}
-	if cleanRole.GovernanceStatus != "clean" {
-		t.Fatalf("expected clean governance status, got %s", cleanRole.GovernanceStatus)
-	}
-	if cleanRole.LastRemediationAction != "" {
-		t.Fatalf("expected clean role to have no last remediation action, got %s", cleanRole.LastRemediationAction)
-	}
-	if cleanRole.LastRemediationAt != "" {
-		t.Fatalf("expected clean role to have no last remediation timestamp, got %s", cleanRole.LastRemediationAt)
+	if (role.LastRemediationAt != "") != wantTimestamp {
+		t.Fatalf("unexpected remediation timestamp for %s: %q", roleKey, role.LastRemediationAt)
 	}
 }
 
@@ -783,37 +771,14 @@ func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("remediate workbench policies: %v", err)
 	}
-	if resp.RoleKey != "generate_gap" {
-		t.Fatalf("expected roleKey generate_gap, got %+v", resp)
-	}
-	if resp.CreatedCount != 1 || len(resp.CreatedPolicies) != 1 {
-		t.Fatalf("expected 1 created policy, got %+v", resp)
-	}
-	if resp.SkippedCount != 0 {
-		t.Fatalf("expected skipped count 0 before remediation, got %+v", resp)
-	}
-	if resp.CreatedPolicies[0].Path != "/api/v1/lowcode/dynamic-modules/generate" || resp.CreatedPolicies[0].Method != "POST" {
-		t.Fatalf("unexpected created policy: %+v", resp.CreatedPolicies[0])
-	}
-
-	var count int64
-	if err := db.Model(&database.CasbinRule{}).
-		Where("ptype = ? AND v0 = ? AND v1 = ? AND v2 = ?", "p", "generate_gap", "/api/v1/lowcode/dynamic-modules/generate", "POST").
-		Count(&count).Error; err != nil {
-		t.Fatalf("count created policy: %v", err)
-	}
-	if count != 1 {
-		t.Fatalf("expected 1 persisted policy, got %d", count)
-	}
+	assertCreatedRemediationPolicy(t, resp)
+	assertPersistedRemediationPolicy(t, db)
 
 	secondResp, err := service.RemediateWorkbenchPolicies(&PermissionWorkbenchRemediateReq{RoleKey: "generate_gap"})
 	if err != nil {
 		t.Fatalf("second remediate workbench policies: %v", err)
 	}
-	if secondResp.CreatedCount != 0 || len(secondResp.CreatedPolicies) != 0 {
-		t.Fatalf("expected idempotent remediation, got %+v", secondResp)
-	}
-	if secondResp.SkippedCount != 1 {
+	if secondResp.CreatedCount != 0 || len(secondResp.CreatedPolicies) != 0 || secondResp.SkippedCount != 1 {
 		t.Fatalf("expected skipped count 1 after remediation, got %+v", secondResp)
 	}
 
@@ -824,6 +789,34 @@ func TestPermissionService_RemediateWorkbenchPolicies(t *testing.T) {
 	if len(events) != 2 {
 		t.Fatalf("expected 2 remediation events, got %+v", events)
 	}
+	assertRemediationEvents(t, events)
+}
+
+func assertCreatedRemediationPolicy(t *testing.T, resp *PermissionWorkbenchRemediateResp) {
+	t.Helper()
+	if resp.RoleKey != "generate_gap" || resp.CreatedCount != 1 || len(resp.CreatedPolicies) != 1 || resp.SkippedCount != 0 {
+		t.Fatalf("unexpected remediation response: %+v", resp)
+	}
+	if resp.CreatedPolicies[0].Path != "/api/v1/lowcode/dynamic-modules/generate" || resp.CreatedPolicies[0].Method != "POST" {
+		t.Fatalf("unexpected created policy: %+v", resp.CreatedPolicies[0])
+	}
+}
+
+func assertPersistedRemediationPolicy(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	var count int64
+	if err := db.Model(&database.CasbinRule{}).
+		Where("ptype = ? AND v0 = ? AND v1 = ? AND v2 = ?", "p", "generate_gap", "/api/v1/lowcode/dynamic-modules/generate", "POST").
+		Count(&count).Error; err != nil {
+		t.Fatalf("count created policy: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected 1 persisted policy, got %d", count)
+	}
+}
+
+func assertRemediationEvents(t *testing.T, events []PermissionWorkbenchRemediationResp) {
+	t.Helper()
 	if events[0].RoleKey != "generate_gap" || events[0].IssueType != "api-gap" || events[0].Action != "remediated" || events[0].CreatedCount != 1 || events[0].AfterState != "complete" {
 		t.Fatalf("unexpected first remediation event: %+v", events[0])
 	}

@@ -89,55 +89,69 @@ func TestApplyTokenContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	t.Run("full session writes all keys", func(t *testing.T) {
-		rec := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(rec)
-		session := &authtoken.SessionData{
-			UserID:         123,
-			Username:       "alice",
-			RoleKeys:       []string{"admin", "user"},
-			SessionID:      "sess-abc",
-			LastActivityAt: 0,
-		}
-		applyTokenContext(c, session)
-
-		if v, ok := c.Get("userId"); !ok || v != uint64(123) {
-			t.Fatalf("userId mismatch: ok=%v v=%v", ok, v)
-		}
-		if v, ok := c.Get("username"); !ok || v != "alice" {
-			t.Fatalf("username mismatch: ok=%v v=%v", ok, v)
-		}
-		if v, ok := c.Get("roleKeys"); !ok {
-			t.Fatalf("roleKeys missing: ok=%v v=%v", ok, v)
-		} else if keys, isSlice := v.([]string); !isSlice || len(keys) != 2 || keys[0] != "admin" {
-			t.Fatalf("roleKeys mismatch: ok=%v v=%v", ok, v)
-		}
-		if v, ok := c.Get("sessionId"); !ok || v != "sess-abc" {
-			t.Fatalf("sessionId mismatch: ok=%v v=%v", ok, v)
-		}
-		if v, ok := c.Get("roleKey"); !ok || v != "admin" {
-			t.Fatalf("roleKey mismatch: ok=%v v=%v", ok, v)
-		}
+		assertFullTokenContext(t)
 	})
 
 	t.Run("empty roleKeys omits roleKey", func(t *testing.T) {
-		rec := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(rec)
-		session := &authtoken.SessionData{
-			UserID:    456,
-			Username:  "bob",
-			RoleKeys:  []string{},
-			SessionID: "sess-def",
-		}
-		applyTokenContext(c, session)
-
-		if v, ok := c.Get("userId"); !ok || v != uint64(456) {
-			t.Fatalf("userId mismatch: ok=%v v=%v", ok, v)
-		}
-		if v, ok := c.Get("sessionId"); !ok || v != "sess-def" {
-			t.Fatalf("sessionId mismatch: ok=%v v=%v", ok, v)
-		}
-		if _, ok := c.Get("roleKey"); ok {
-			t.Fatal("expected roleKey to be absent when RoleKeys is empty")
-		}
+		assertTokenContextWithoutRoleKey(t)
 	})
+}
+
+func assertFullTokenContext(t *testing.T) {
+	t.Helper()
+	c := newTokenTestContext()
+	applyTokenContext(c, &authtoken.SessionData{
+		UserID:    123,
+		Username:  "alice",
+		RoleKeys:  []string{"admin", "user"},
+		SessionID: "sess-abc",
+	})
+
+	assertTokenContextValue(t, c, "userId", uint64(123))
+	assertTokenContextValue(t, c, "username", "alice")
+	assertTokenContextValue(t, c, "sessionId", "sess-abc")
+	assertTokenContextValue(t, c, "roleKey", "admin")
+	assertTokenRoleKeys(t, c, []string{"admin", "user"})
+}
+
+func assertTokenContextWithoutRoleKey(t *testing.T) {
+	t.Helper()
+	c := newTokenTestContext()
+	applyTokenContext(c, &authtoken.SessionData{
+		UserID:    456,
+		Username:  "bob",
+		RoleKeys:  []string{},
+		SessionID: "sess-def",
+	})
+
+	assertTokenContextValue(t, c, "userId", uint64(456))
+	assertTokenContextValue(t, c, "sessionId", "sess-def")
+	if _, ok := c.Get("roleKey"); ok {
+		t.Fatal("expected roleKey to be absent when RoleKeys is empty")
+	}
+}
+
+func newTokenTestContext() *gin.Context {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	return c
+}
+
+func assertTokenContextValue(t *testing.T, c *gin.Context, key string, want any) {
+	t.Helper()
+	got, ok := c.Get(key)
+	if !ok || got != want {
+		t.Fatalf("%s mismatch: ok=%v v=%v", key, ok, got)
+	}
+}
+
+func assertTokenRoleKeys(t *testing.T, c *gin.Context, want []string) {
+	t.Helper()
+	value, ok := c.Get("roleKeys")
+	if !ok {
+		t.Fatalf("roleKeys missing: ok=%v v=%v", ok, value)
+	}
+	keys, isSlice := value.([]string)
+	if !isSlice || len(keys) != len(want) || keys[0] != want[0] {
+		t.Fatalf("roleKeys mismatch: ok=%v v=%v", ok, value)
+	}
 }

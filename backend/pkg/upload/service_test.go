@@ -199,21 +199,7 @@ func TestServiceStoreUsesS3ClientWhenConfigured(t *testing.T) {
 }
 
 func TestServiceStoreUsesRealS3WhenConfigured(t *testing.T) {
-	endpoint := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_ENDPOINT"))
-	if endpoint == "" {
-		t.Skip("PANTHEON_TEST_S3_ENDPOINT is not configured")
-	}
-	accessKey := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_ACCESS_KEY"))
-	secretKey := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_SECRET_KEY"))
-	if accessKey == "" || secretKey == "" {
-		t.Fatal("PANTHEON_TEST_S3_ACCESS_KEY and PANTHEON_TEST_S3_SECRET_KEY are required")
-	}
-
-	bucket := fmt.Sprintf("pantheon-upload-it-%d", time.Now().UnixNano())
-	region := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_REGION"))
-	if region == "" {
-		region = "us-east-1"
-	}
+	endpoint, accessKey, secretKey, bucket, region := loadRealS3TestConfig(t)
 	service := NewService(stubConfigReader{
 		values: map[string]string{
 			"upload.storage_driver":       "s3",
@@ -241,6 +227,31 @@ func TestServiceStoreUsesRealS3WhenConfigured(t *testing.T) {
 		t.Fatalf("store file in real S3-compatible service: %v", err)
 	}
 
+	client := newRealS3VerificationClient(t, endpoint, accessKey, secretKey, region)
+	registerRealS3Cleanup(t, client, bucket, stored.ObjectKey)
+	verifyRealS3Upload(t, client, endpoint, bucket, stored, payload)
+}
+
+func loadRealS3TestConfig(t *testing.T) (string, string, string, string, string) {
+	t.Helper()
+	endpoint := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_ENDPOINT"))
+	if endpoint == "" {
+		t.Skip("PANTHEON_TEST_S3_ENDPOINT is not configured")
+	}
+	accessKey := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_ACCESS_KEY"))
+	secretKey := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_SECRET_KEY"))
+	if accessKey == "" || secretKey == "" {
+		t.Fatal("PANTHEON_TEST_S3_ACCESS_KEY and PANTHEON_TEST_S3_SECRET_KEY are required")
+	}
+	region := strings.TrimSpace(os.Getenv("PANTHEON_TEST_S3_REGION"))
+	if region == "" {
+		region = "us-east-1"
+	}
+	return endpoint, accessKey, secretKey, fmt.Sprintf("pantheon-upload-it-%d", time.Now().UnixNano()), region
+}
+
+func newRealS3VerificationClient(t *testing.T, endpoint, accessKey, secretKey, region string) *minio.Client {
+	t.Helper()
 	host, secure, err := normalizeS3Endpoint(endpoint)
 	if err != nil {
 		t.Fatalf("normalize integration endpoint: %v", err)
@@ -253,17 +264,25 @@ func TestServiceStoreUsesRealS3WhenConfigured(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create integration verification client: %v", err)
 	}
+	return client
+}
+
+func registerRealS3Cleanup(t *testing.T, client *minio.Client, bucket, objectKey string) {
+	t.Helper()
 	t.Cleanup(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		if err := client.RemoveObject(ctx, bucket, stored.ObjectKey, minio.RemoveObjectOptions{}); err != nil {
+		if err := client.RemoveObject(ctx, bucket, objectKey, minio.RemoveObjectOptions{}); err != nil {
 			t.Errorf("remove integration object: %v", err)
 		}
 		if err := client.RemoveBucket(ctx, bucket); err != nil {
 			t.Errorf("remove integration bucket: %v", err)
 		}
 	})
+}
 
+func verifyRealS3Upload(t *testing.T, client *minio.Client, endpoint, bucket string, stored *StoredFile, payload []byte) {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	info, err := client.StatObject(ctx, bucket, stored.ObjectKey, minio.StatObjectOptions{})

@@ -1,4 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Avatar,
   Button,
@@ -550,6 +558,396 @@ async function fetchNoticeSummarySafely(): Promise<DashboardSummary | null> {
   }
 }
 
+function pickText(...values: Array<string | null | undefined>) {
+  return values.find(Boolean) || '';
+}
+
+function resolveRouteTitleKey(matchedRoute: ReturnType<typeof findRouteByPath>, pathname: string) {
+  return pickText(
+    matchedRoute?.resolveTitleKey?.(pathname),
+    matchedRoute?.titleKey,
+    systemRouteTitleMap[pathname],
+  );
+}
+
+function resolveShellAccess(options: {
+  hasDashboardEntry: boolean;
+  hasPerm: (permission: string) => boolean;
+  isAdmin: boolean;
+}) {
+  const { hasDashboardEntry, hasPerm, isAdmin } = options;
+  return {
+    canAccessDashboard: isAdmin || hasDashboardEntry || hasPerm('platform:dashboard:view'),
+    canViewNoticeSummary:
+      isAdmin ||
+      hasDashboardEntry ||
+      hasPerm('platform:dashboard:view') ||
+      hasPerm('system:login-log:list') ||
+      hasPerm('system:session:list') ||
+      hasPerm('system:security-event:list') ||
+      hasPerm('system:operation-log:list'),
+  };
+}
+
+function resolveCurrentLanguage(language: string): SupportedLocale {
+  return (
+    SUPPORTED_LOCALES.includes(language as SupportedLocale) ? language : 'zh-CN'
+  ) as SupportedLocale;
+}
+
+function resolveSessionIdleMinutes(value: number) {
+  return value > 0 ? value : 30;
+}
+
+function resolveLayoutLabels(
+  t: TranslateLabel,
+  isHorizontalLayout: boolean,
+  densityMode: ShellDensityMode,
+) {
+  return {
+    layoutModeLabel: t(
+      isHorizontalLayout ? 'app.layoutMode.horizontal' : 'app.layoutMode.vertical',
+    ),
+    layoutModeActionLabel: t(
+      isHorizontalLayout ? 'app.layoutMode.switchToVertical' : 'app.layoutMode.switchToHorizontal',
+    ),
+    densityModeLabel: t(
+      densityMode === 'compact' ? 'app.density.compact' : 'app.density.comfortable',
+    ),
+  };
+}
+
+function resolveActiveTheme<T>(items: T[], activeItem: T | undefined) {
+  return activeItem ?? items[0];
+}
+
+function resolveRefreshPollingToken(enabled: boolean, token: string | null) {
+  return enabled ? token : null;
+}
+
+function hasNoticeAttentionState(badgeCount: number, riskGroups: NoticeRiskItem[]) {
+  return badgeCount > 0 || riskGroups.length > 0;
+}
+
+function NoticePanelBody({
+  loading,
+  recentItems,
+  riskGroups,
+  statItems,
+  summary,
+  t,
+}: Readonly<{
+  loading: boolean;
+  recentItems: NoticeRecentItem[];
+  riskGroups: NoticeRiskItem[];
+  statItems: NoticeStatItem[];
+  summary: DashboardSummary | null;
+  t: TranslateLabel;
+}>) {
+  if (loading) {
+    return <div className="app-shell__notice-empty">{t('common.loading')}</div>;
+  }
+  if (!summary) {
+    return <div className="app-shell__notice-empty">{t('app.notice.empty')}</div>;
+  }
+  return (
+    <>
+      <div className="app-shell__notice-stats">
+        {statItems.map((item) => (
+          <div
+            key={item.key}
+            className={[
+              'app-shell__notice-stat',
+              item.tone === 'danger' ? 'app-shell__notice-stat--danger' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            <span className="app-shell__notice-stat-label">{item.label}</span>
+            <span className="app-shell__notice-stat-value">{item.value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="app-shell__notice-summary">
+        <span className="app-shell__notice-summary-label">{t('app.notice.lastSuccess')}</span>
+        <span className="app-shell__notice-summary-value">
+          {summary.lastSuccessfulLoginAt
+            ? formatDateTime(summary.lastSuccessfulLoginAt, { withSeconds: true })
+            : t('dashboard.lastSuccessfulLoginEmpty')}
+        </span>
+      </div>
+      {riskGroups.length > 0 ? (
+        <div className="app-shell__notice-list">
+          <div className="app-shell__notice-section">{t('app.notice.section.risk')}</div>
+          {riskGroups.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={['app-shell__notice-risk', `app-shell__notice-risk--${item.tone}`].join(
+                ' ',
+              )}
+              onClick={item.run}
+            >
+              <span className="app-shell__notice-risk-copy">
+                <span className="app-shell__notice-risk-title">{item.title}</span>
+                <span className="app-shell__notice-risk-desc">{item.description}</span>
+              </span>
+              <span className="app-shell__notice-risk-value">{item.value}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="app-shell__notice-list">
+        <div className="app-shell__notice-section">{t('app.notice.section.recent')}</div>
+        {recentItems.length > 0 ? (
+          recentItems.map((item) => (
+            <div key={item.id} className="app-shell__notice-log">
+              <span
+                className={`app-shell__notice-log-dot ${item.status === 1 ? 'app-shell__notice-log-dot--success' : 'app-shell__notice-log-dot--danger'}`}
+              />
+              <span className="app-shell__notice-log-copy">
+                <span className="app-shell__notice-log-title">{item.username}</span>
+                <span className="app-shell__notice-log-desc">{item.message}</span>
+              </span>
+              <span className="app-shell__notice-log-time">{item.time}</span>
+            </div>
+          ))
+        ) : (
+          <div className="app-shell__notice-empty app-shell__notice-empty--compact">
+            {t('dashboard.recentLoginsEmpty')}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ShellHeaderLeading({
+  appName,
+  brandInitial,
+  collapsed,
+  isMobile,
+  isVerticalLayout,
+  onToggleCollapsed,
+  onToggleMobileNav,
+  siteLogo,
+  t,
+}: Readonly<{
+  appName: string;
+  brandInitial: string;
+  collapsed: boolean;
+  isMobile: boolean;
+  isVerticalLayout: boolean;
+  onToggleCollapsed: () => void;
+  onToggleMobileNav: () => void;
+  siteLogo?: string;
+  t: TranslateLabel;
+}>) {
+  if (isVerticalLayout) {
+    return (
+      <Button
+        type="text"
+        className="app-shell__collapse-btn"
+        aria-label={t('app.nav.toggle')}
+        icon={isMobile || collapsed ? <IconMenuUnfold /> : <IconMenuFold />}
+        onClick={isMobile ? onToggleMobileNav : onToggleCollapsed}
+      />
+    );
+  }
+  return (
+    <div className="app-shell__header-brand" aria-label={appName}>
+      <span className="app-shell__header-brand-mark">
+        {siteLogo ? <img src={siteLogo} alt={appName} /> : brandInitial}
+      </span>
+      <span className="app-shell__header-brand-text">{appName}</span>
+    </div>
+  );
+}
+
+type ShellUserTriggerHandle = {
+  getRootDOMNode: () => HTMLElement | null;
+};
+
+type ShellUserTriggerProps = Readonly<
+  Omit<React.ComponentProps<typeof Button>, 'children'> & {
+    avatar?: string;
+    expanded: boolean;
+    label: string;
+    roleLabel: string;
+    showRoleLabel: boolean;
+    userDisplayName: string;
+  }
+>;
+
+const ShellUserTrigger = forwardRef<ShellUserTriggerHandle, ShellUserTriggerProps>(
+  function ShellUserTrigger(
+    {
+      avatar,
+      className,
+      expanded,
+      label,
+      roleLabel,
+      showRoleLabel,
+      userDisplayName,
+      ...buttonProps
+    },
+    ref,
+  ) {
+    const buttonRef = useRef<HTMLElement | { getRootDOMNode?: () => HTMLElement | null } | null>(
+      null,
+    );
+    useImperativeHandle(
+      ref,
+      () => ({
+        getRootDOMNode: () => {
+          if (buttonRef.current instanceof HTMLElement) {
+            return buttonRef.current;
+          }
+          return buttonRef.current?.getRootDOMNode?.() || null;
+        },
+      }),
+      [],
+    );
+
+    return (
+      <Button
+        {...buttonProps}
+        ref={buttonRef}
+        type="text"
+        className={['app-shell__user-trigger', className].filter(Boolean).join(' ')}
+        aria-expanded={expanded}
+        aria-haspopup="menu"
+        aria-label={label}
+      >
+        <Avatar size={28}>
+          <UserAvatarContent avatar={avatar} userDisplayName={userDisplayName} />
+        </Avatar>
+        <div className="app-shell__user-meta">
+          <span className="app-shell__user-name">{userDisplayName}</span>
+          {showRoleLabel ? <span className="app-shell__user-subtitle">{roleLabel}</span> : null}
+        </div>
+      </Button>
+    );
+  },
+);
+
+function ShellNoticeCenter({
+  entries,
+  hasAttention,
+  loading,
+  noticeBadgeCount,
+  recentItems,
+  riskGroups,
+  show,
+  statItems,
+  summary,
+  t,
+}: Readonly<{
+  entries: NoticeEntry[];
+  hasAttention: boolean;
+  loading: boolean;
+  noticeBadgeCount: number;
+  recentItems: NoticeRecentItem[];
+  riskGroups: NoticeRiskItem[];
+  show: boolean;
+  statItems: NoticeStatItem[];
+  summary: DashboardSummary | null;
+  t: TranslateLabel;
+}>) {
+  if (!show) {
+    return null;
+  }
+  return (
+    <Dropdown
+      trigger="click"
+      position="br"
+      triggerProps={{ autoFitPosition: true }}
+      droplist={
+        <div className="app-shell__notice-panel">
+          <div className="app-shell__notice-header">
+            <span className="app-shell__notice-title">{t('app.notice.title')}</span>
+            <span className="app-shell__notice-subtitle">{t('app.notice.subtitle')}</span>
+          </div>
+          <NoticePanelBody
+            loading={loading}
+            recentItems={recentItems}
+            riskGroups={riskGroups}
+            statItems={statItems}
+            summary={summary}
+            t={t}
+          />
+          {entries.length > 0 ? (
+            <div className="app-shell__notice-list">
+              <div className="app-shell__notice-section">{t('app.notice.section.recommended')}</div>
+              {entries.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className="app-shell__notice-item"
+                  onClick={item.run}
+                >
+                  <span className="app-shell__notice-item-icon">{item.icon}</span>
+                  <span className="app-shell__notice-item-copy">
+                    <span className="app-shell__notice-item-title">{item.title}</span>
+                    <span className="app-shell__notice-item-desc">{item.description}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      }
+    >
+      <Tooltip content={hasAttention ? t('app.notice.attention') : t('app.notice.title')}>
+        <Button
+          type="text"
+          className={['app-shell__icon-btn', hasAttention ? 'app-shell__icon-btn--attention' : '']
+            .join(' ')
+            .trim()}
+          icon={<IconNotification />}
+          aria-label={t('app.notice.title')}
+        >
+          {noticeBadgeCount > 0 ? (
+            <span className="app-shell__notice-badge">
+              {noticeBadgeCount > 99 ? '99+' : noticeBadgeCount}
+            </span>
+          ) : null}
+        </Button>
+      </Tooltip>
+    </Dropdown>
+  );
+}
+
+function CommandResults({
+  items,
+  onExecute,
+  t,
+}: Readonly<{
+  items: CommandSearchItem[];
+  onExecute: (item: CommandSearchItem) => void;
+  t: TranslateLabel;
+}>) {
+  if (items.length === 0) {
+    return <Empty description={t('app.command.empty')} />;
+  }
+  return items.map((item, index) => {
+    const previousItem = items[index - 1];
+    const showSection = previousItem?.section !== item.section;
+    return (
+      <React.Fragment key={item.key}>
+        {showSection ? <div className="app-command__section">{item.section}</div> : null}
+        <button type="button" className="app-command__item" onClick={() => onExecute(item)}>
+          <span className="app-command__item-icon">{item.icon}</span>
+          <span className="app-command__item-copy">
+            <span className="app-command__item-title">{item.title}</span>
+            <span className="app-command__item-subtitle">{item.subtitle}</span>
+          </span>
+        </button>
+      </React.Fragment>
+    );
+  });
+}
+
 const BaseLayout: React.FC = () => {
   const bootstrappedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -559,6 +957,7 @@ const BaseLayout: React.FC = () => {
   const [densityMode, setDensityMode] = useState<ShellDensityMode>(() => readShellDensityMode());
   const [openedTabs, setOpenedTabs] = useState<OpenedPageTab[]>(() => readOpenedTabs());
   const [commandVisible, setCommandVisible] = useState(false);
+  const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [commandQuery, setCommandQuery] = useState('');
   const [noticeSummary, setNoticeSummary] = useState<DashboardSummary | null>(null);
   const [noticeLoading, setNoticeLoading] = useState(false);
@@ -589,11 +988,8 @@ const BaseLayout: React.FC = () => {
     },
     [menuTree, navigate],
   );
-  const currentRouteTitleKey =
-    matchedRoute?.resolveTitleKey?.(location.pathname) ||
-    matchedRoute?.titleKey ||
-    systemRouteTitleMap[location.pathname];
-  const activeMenuPath = matchedRoute?.activeMenu || location.pathname;
+  const currentRouteTitleKey = resolveRouteTitleKey(matchedRoute, location.pathname);
+  const activeMenuPath = pickText(matchedRoute?.activeMenu, location.pathname);
   const {
     visibleMenuTree,
     currentMenuTitleKey,
@@ -611,45 +1007,39 @@ const BaseLayout: React.FC = () => {
     t,
     handleMenuNavigation,
   });
-  const currentPageTitle = breadcrumbItems.at(-1)?.label || t('app.workspace');
-  const currentTabTitleKey = currentRouteTitleKey || currentMenuTitleKey;
-  const userDisplayName = userInfo?.nickname || userInfo?.username || t('common.user');
-  const roleLabel = userInfo?.roles?.[0] || '';
+  const currentPageTitle = pickText(breadcrumbItems.at(-1)?.label, t('app.workspace'));
+  const currentTabTitleKey = pickText(currentRouteTitleKey, currentMenuTitleKey);
+  const userDisplayName = pickText(userInfo?.nickname, userInfo?.username, t('common.user'));
+  const roleLabel = pickText(userInfo?.roles?.[0]);
   const showRoleLabel = shouldShowIdentityLabel(userDisplayName, roleLabel);
   const isHorizontalLayout = layoutMode === 'horizontal';
   const isVerticalLayout = !isHorizontalLayout;
-  const layoutModeLabel = t(
-    isHorizontalLayout ? 'app.layoutMode.horizontal' : 'app.layoutMode.vertical',
+  const { layoutModeLabel, layoutModeActionLabel, densityModeLabel } = resolveLayoutLabels(
+    t,
+    isHorizontalLayout,
+    densityMode,
   );
-  const layoutModeActionLabel = t(
-    isHorizontalLayout ? 'app.layoutMode.switchToVertical' : 'app.layoutMode.switchToHorizontal',
-  );
-  const densityModeLabel = t(
-    densityMode === 'compact' ? 'app.density.compact' : 'app.density.comfortable',
-  );
-  const appName = publicSettings.siteName || t('app.name');
+  const appName = pickText(publicSettings.siteName, t('app.name'));
   const brandInitial = getBrandInitial(appName);
   const showExpandedBrand = !collapsed;
   const { theme, setTheme, options: themeOptions } = useTheme();
   const { colorMode, setColorMode } = usePantheonColorMode();
-  const activeTheme = themeOptions.find((item) => item.key === theme) ?? themeOptions[0];
-  const sessionIdleMinutes =
-    publicSettings.sessionIdleMinutes > 0 ? publicSettings.sessionIdleMinutes : 30;
+  const activeTheme = resolveActiveTheme(
+    themeOptions,
+    themeOptions.find((item) => item.key === theme),
+  );
+  const sessionIdleMinutes = resolveSessionIdleMinutes(publicSettings.sessionIdleMinutes);
   const sessionIdleMs = sessionIdleMinutes * 60 * 1000;
   const backgroundNetworkEnabled = shouldPollServerRefreshState();
   const hasDashboardEntry = useMemo(
     () => Boolean(findMenuNodeByPath(visibleMenuTree, '/dashboard')),
     [visibleMenuTree],
   );
-  const canAccessDashboard = isAdmin || hasDashboardEntry || hasPerm('platform:dashboard:view');
-  const canViewNoticeSummary =
-    isAdmin ||
-    hasDashboardEntry ||
-    hasPerm('platform:dashboard:view') ||
-    hasPerm('system:login-log:list') ||
-    hasPerm('system:session:list') ||
-    hasPerm('system:security-event:list') ||
-    hasPerm('system:operation-log:list');
+  const { canAccessDashboard, canViewNoticeSummary } = resolveShellAccess({
+    hasDashboardEntry,
+    hasPerm,
+    isAdmin,
+  });
 
   const syncShellActivity = useCallback((value: number) => {
     lastActivityAtRef.current = value;
@@ -751,7 +1141,7 @@ const BaseLayout: React.FC = () => {
       runSilently(fetchMenuTree({ force: true }));
     },
   );
-  useRefreshPolling(backgroundNetworkEnabled ? token : null, [
+  useRefreshPolling(resolveRefreshPollingToken(backgroundNetworkEnabled, token), [
     'system:user:changed',
     'system:role:changed',
     'system:menu:changed',
@@ -1013,7 +1403,7 @@ const BaseLayout: React.FC = () => {
       }),
     [hasPerm, isAdmin, navigate, noticeSummary, t],
   );
-  const hasNoticeAttention = noticeBadgeCount > 0 || noticeRiskGroups.length > 0;
+  const hasNoticeAttention = hasNoticeAttentionState(noticeBadgeCount, noticeRiskGroups);
   const showNoticeCenter = canViewNoticeSummary;
 
   const applyTabUpdate = (update: TabUpdate) => {
@@ -1071,9 +1461,7 @@ const BaseLayout: React.FC = () => {
     />
   );
 
-  const currentLanguage = (
-    SUPPORTED_LOCALES.includes(i18n.language as SupportedLocale) ? i18n.language : 'zh-CN'
-  ) as SupportedLocale;
+  const currentLanguage = resolveCurrentLanguage(i18n.language);
 
   const persistPlatformPreferences = useCallback(
     (nextPreferences: Partial<UserPlatformPreferences>) => {
@@ -1298,84 +1686,6 @@ const BaseLayout: React.FC = () => {
     </div>
   );
 
-  let noticePanelBody: React.ReactNode = (
-    <div className="app-shell__notice-empty">{t('app.notice.empty')}</div>
-  );
-  if (noticeLoading) {
-    noticePanelBody = <div className="app-shell__notice-empty">{t('common.loading')}</div>;
-  } else if (noticeSummary) {
-    noticePanelBody = (
-      <>
-        <div className="app-shell__notice-stats">
-          {noticeStatItems.map((item) => (
-            <div
-              key={item.key}
-              className={[
-                'app-shell__notice-stat',
-                item.tone === 'danger' ? 'app-shell__notice-stat--danger' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              <span className="app-shell__notice-stat-label">{item.label}</span>
-              <span className="app-shell__notice-stat-value">{item.value}</span>
-            </div>
-          ))}
-        </div>
-        <div className="app-shell__notice-summary">
-          <span className="app-shell__notice-summary-label">{t('app.notice.lastSuccess')}</span>
-          <span className="app-shell__notice-summary-value">
-            {noticeSummary.lastSuccessfulLoginAt
-              ? formatDateTime(noticeSummary.lastSuccessfulLoginAt, { withSeconds: true })
-              : t('dashboard.lastSuccessfulLoginEmpty')}
-          </span>
-        </div>
-        {noticeRiskGroups.length > 0 ? (
-          <div className="app-shell__notice-list">
-            <div className="app-shell__notice-section">{t('app.notice.section.risk')}</div>
-            {noticeRiskGroups.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={['app-shell__notice-risk', `app-shell__notice-risk--${item.tone}`].join(
-                  ' ',
-                )}
-                onClick={item.run}
-              >
-                <span className="app-shell__notice-risk-copy">
-                  <span className="app-shell__notice-risk-title">{item.title}</span>
-                  <span className="app-shell__notice-risk-desc">{item.description}</span>
-                </span>
-                <span className="app-shell__notice-risk-value">{item.value}</span>
-              </button>
-            ))}
-          </div>
-        ) : null}
-        <div className="app-shell__notice-list">
-          <div className="app-shell__notice-section">{t('app.notice.section.recent')}</div>
-          {noticeRecentItems.length > 0 ? (
-            noticeRecentItems.map((item) => (
-              <div key={item.id} className="app-shell__notice-log">
-                <span
-                  className={`app-shell__notice-log-dot ${item.status === 1 ? 'app-shell__notice-log-dot--success' : 'app-shell__notice-log-dot--danger'}`}
-                />
-                <span className="app-shell__notice-log-copy">
-                  <span className="app-shell__notice-log-title">{item.username}</span>
-                  <span className="app-shell__notice-log-desc">{item.message}</span>
-                </span>
-                <span className="app-shell__notice-log-time">{item.time}</span>
-              </div>
-            ))
-          ) : (
-            <div className="app-shell__notice-empty app-shell__notice-empty--compact">
-              {t('dashboard.recentLoginsEmpty')}
-            </div>
-          )}
-        </div>
-      </>
-    );
-  }
-
   return (
     <Layout
       className={[
@@ -1413,28 +1723,17 @@ const BaseLayout: React.FC = () => {
       <Layout className="app-shell__main">
         <Header className="app-shell__header">
           <div className="app-shell__header-left">
-            {isVerticalLayout ? (
-              <Button
-                type="text"
-                className="app-shell__collapse-btn"
-                aria-label={t('app.nav.toggle')}
-                icon={isMobile || collapsed ? <IconMenuUnfold /> : <IconMenuFold />}
-                onClick={() =>
-                  isMobile ? setMobileNavOpen((value) => !value) : setCollapsed((value) => !value)
-                }
-              />
-            ) : (
-              <div className="app-shell__header-brand" aria-label={appName}>
-                <span className="app-shell__header-brand-mark">
-                  {publicSettings.siteLogo ? (
-                    <img src={publicSettings.siteLogo} alt={appName} />
-                  ) : (
-                    brandInitial
-                  )}
-                </span>
-                <span className="app-shell__header-brand-text">{appName}</span>
-              </div>
-            )}
+            <ShellHeaderLeading
+              appName={appName}
+              brandInitial={brandInitial}
+              collapsed={collapsed}
+              isMobile={isMobile}
+              isVerticalLayout={isVerticalLayout}
+              onToggleCollapsed={() => setCollapsed((value) => !value)}
+              onToggleMobileNav={() => setMobileNavOpen((value) => !value)}
+              siteLogo={publicSettings.siteLogo}
+              t={t}
+            />
             <div className="app-shell__header-meta">
               <LayoutBreadcrumb items={breadcrumbItems} />
             </div>
@@ -1450,70 +1749,18 @@ const BaseLayout: React.FC = () => {
               <span className="app-shell__search-placeholder">{t('app.command.placeholder')}</span>
               <kbd className="app-shell__search-shortcut">Ctrl K</kbd>
             </button>
-            {showNoticeCenter ? (
-              <Dropdown
-                trigger="click"
-                position="br"
-                // autoFitPosition keeps the 336px panel inside narrow viewports:
-                // with the widened search trigger the bell sits left of center on
-                // 390px screens and a hard "br" alignment overflows past x=0.
-                triggerProps={{ autoFitPosition: true }}
-                droplist={
-                  <div className="app-shell__notice-panel">
-                    <div className="app-shell__notice-header">
-                      <span className="app-shell__notice-title">{t('app.notice.title')}</span>
-                      <span className="app-shell__notice-subtitle">{t('app.notice.subtitle')}</span>
-                    </div>
-                    {noticePanelBody}
-                    {noticeEntries.length > 0 ? (
-                      <div className="app-shell__notice-list">
-                        <div className="app-shell__notice-section">
-                          {t('app.notice.section.recommended')}
-                        </div>
-                        {noticeEntries.map((item) => (
-                          <button
-                            key={item.key}
-                            type="button"
-                            className="app-shell__notice-item"
-                            onClick={item.run}
-                          >
-                            <span className="app-shell__notice-item-icon">{item.icon}</span>
-                            <span className="app-shell__notice-item-copy">
-                              <span className="app-shell__notice-item-title">{item.title}</span>
-                              <span className="app-shell__notice-item-desc">
-                                {item.description}
-                              </span>
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                }
-              >
-                <Tooltip
-                  content={hasNoticeAttention ? t('app.notice.attention') : t('app.notice.title')}
-                >
-                  <Button
-                    type="text"
-                    className={[
-                      'app-shell__icon-btn',
-                      hasNoticeAttention ? 'app-shell__icon-btn--attention' : '',
-                    ]
-                      .join(' ')
-                      .trim()}
-                    icon={<IconNotification />}
-                    aria-label={t('app.notice.title')}
-                  >
-                    {noticeBadgeCount > 0 ? (
-                      <span className="app-shell__notice-badge">
-                        {noticeBadgeCount > 99 ? '99+' : noticeBadgeCount}
-                      </span>
-                    ) : null}
-                  </Button>
-                </Tooltip>
-              </Dropdown>
-            ) : null}
+            <ShellNoticeCenter
+              entries={noticeEntries}
+              hasAttention={hasNoticeAttention}
+              loading={noticeLoading}
+              noticeBadgeCount={noticeBadgeCount}
+              recentItems={noticeRecentItems}
+              riskGroups={noticeRiskGroups}
+              show={showNoticeCenter}
+              statItems={noticeStatItems}
+              summary={noticeSummary}
+              t={t}
+            />
             <Dropdown
               trigger="click"
               position="br"
@@ -1537,7 +1784,10 @@ const BaseLayout: React.FC = () => {
               </Tooltip>
             </Dropdown>
             <Dropdown
+              trigger={['hover', 'click']}
               position="br"
+              popupVisible={userMenuVisible}
+              onVisibleChange={setUserMenuVisible}
               droplist={
                 <Menu onClickMenuItem={handleUserMenuClick}>
                   <Menu.Item key="profile">
@@ -1559,20 +1809,14 @@ const BaseLayout: React.FC = () => {
                 </Menu>
               }
             >
-              <Button type="text" className="app-shell__user-trigger">
-                <Avatar size={28}>
-                  <UserAvatarContent
-                    avatar={userInfo?.avatar}
-                    userDisplayName={userDisplayName}
-                  />
-                </Avatar>
-                <div className="app-shell__user-meta">
-                  <span className="app-shell__user-name">{userDisplayName}</span>
-                  {showRoleLabel ? (
-                    <span className="app-shell__user-subtitle">{roleLabel}</span>
-                  ) : null}
-                </div>
-              </Button>
+              <ShellUserTrigger
+                avatar={userInfo?.avatar}
+                expanded={userMenuVisible}
+                label={`${t('common.user')}: ${userDisplayName}`}
+                roleLabel={roleLabel}
+                showRoleLabel={showRoleLabel}
+                userDisplayName={userDisplayName}
+              />
             </Dropdown>
           </Space>
         </Header>
@@ -1669,30 +1913,7 @@ const BaseLayout: React.FC = () => {
           }}
         />
         <div className="app-command__results">
-          {filteredCommandItems.length > 0 ? (
-            filteredCommandItems.map((item, index) => {
-              const previousItem = filteredCommandItems[index - 1];
-              const showSection = !previousItem || previousItem.section !== item.section;
-              return (
-                <React.Fragment key={item.key}>
-                  {showSection ? <div className="app-command__section">{item.section}</div> : null}
-                  <button
-                    type="button"
-                    className="app-command__item"
-                    onClick={() => executeCommand(item)}
-                  >
-                    <span className="app-command__item-icon">{item.icon}</span>
-                    <span className="app-command__item-copy">
-                      <span className="app-command__item-title">{item.title}</span>
-                      <span className="app-command__item-subtitle">{item.subtitle}</span>
-                    </span>
-                  </button>
-                </React.Fragment>
-              );
-            })
-          ) : (
-            <Empty description={t('app.command.empty')} />
-          )}
+          <CommandResults items={filteredCommandItems} onExecute={executeCommand} t={t} />
         </div>
       </AppModal>
     </Layout>

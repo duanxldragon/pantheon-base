@@ -90,6 +90,17 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 		return nil, err
 	}
 
+	if err := s.loadLoginActivity(resp, since); err != nil {
+		return nil, err
+	}
+	if err := s.loadOrgGovernanceTasks(resp); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *DashboardService) loadLoginActivity(resp *SummaryResp, since time.Time) error {
 	var lastSuccessfulLoginAt time.Time
 	if err := s.db.Table("system_log_login").
 		Select("login_time").
@@ -97,7 +108,7 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 		Order("login_time desc").
 		Limit(1).
 		Scan(&lastSuccessfulLoginAt).Error; err != nil {
-		return nil, err
+		return err
 	}
 	if !lastSuccessfulLoginAt.IsZero() {
 		resp.LastSuccessfulLoginAt = lastSuccessfulLoginAt.Format(time.RFC3339)
@@ -120,7 +131,7 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 		Order("login_time desc").
 		Limit(20).
 		Scan(&recentLoginsRaw).Error; err != nil {
-		return nil, err
+		return err
 	}
 	resp.RecentLogins = make([]RecentLoginActivityResp, 0, len(recentLoginsRaw))
 	for _, r := range recentLoginsRaw {
@@ -135,40 +146,49 @@ func (s *DashboardService) GetSummary() (*SummaryResp, error) {
 			LoginTime: r.LoginTime.Format(time.RFC3339),
 		})
 	}
+	return nil
+}
 
-	if s.orgGovernanceTaskLoader != nil {
-		tasks, err := s.orgGovernanceTaskLoader.ListOrgGovernanceTasks()
-		if err != nil {
-			return nil, err
-		}
-		resp.OrgGovernanceTaskCount = len(tasks)
-		resp.OrgGovernanceTasks = make([]DashboardTodoResp, 0, len(tasks))
-		for _, task := range tasks {
-			resourceLabel := task.DeptName
-			if task.GovernanceScope == "post" && task.PostName != "" {
-				if task.DeptName != "" {
-					resourceLabel = task.PostName + " / " + task.DeptName
-				} else {
-					resourceLabel = task.PostName
-				}
-			}
-			resp.OrgGovernanceTasks = append(resp.OrgGovernanceTasks, DashboardTodoResp{
-				TaskKey:          task.TaskKey,
-				Domain:           task.GovernanceScope,
-				Issue:            task.GovernanceTag,
-				Action:           task.GovernanceAction,
-				ScopeLabel:       task.GovernanceScopeLabel,
-				IssueLabel:       task.GovernanceTagLabel,
-				ActionLabel:      task.GovernanceActionLabel,
-				ResourceLabel:    resourceLabel,
-				RelatedUserCount: task.RelatedUserCount,
-				RoutePath:        "/system/dept",
-				RouteStateDeptID: task.DeptID,
-			})
-		}
+func (s *DashboardService) loadOrgGovernanceTasks(resp *SummaryResp) error {
+	if s.orgGovernanceTaskLoader == nil {
+		return nil
 	}
+	tasks, err := s.orgGovernanceTaskLoader.ListOrgGovernanceTasks()
+	if err != nil {
+		return err
+	}
+	resp.OrgGovernanceTaskCount = len(tasks)
+	resp.OrgGovernanceTasks = make([]DashboardTodoResp, 0, len(tasks))
+	for _, task := range tasks {
+		resp.OrgGovernanceTasks = append(resp.OrgGovernanceTasks, buildDashboardTodo(task))
+	}
+	return nil
+}
 
-	return resp, nil
+func buildDashboardTodo(task OrgGovernanceTask) DashboardTodoResp {
+	return DashboardTodoResp{
+		TaskKey:          task.TaskKey,
+		Domain:           task.GovernanceScope,
+		Issue:            task.GovernanceTag,
+		Action:           task.GovernanceAction,
+		ScopeLabel:       task.GovernanceScopeLabel,
+		IssueLabel:       task.GovernanceTagLabel,
+		ActionLabel:      task.GovernanceActionLabel,
+		ResourceLabel:    dashboardTodoResourceLabel(task),
+		RelatedUserCount: task.RelatedUserCount,
+		RoutePath:        "/system/dept",
+		RouteStateDeptID: task.DeptID,
+	}
+}
+
+func dashboardTodoResourceLabel(task OrgGovernanceTask) string {
+	if task.GovernanceScope != "post" || task.PostName == "" {
+		return task.DeptName
+	}
+	if task.DeptName == "" {
+		return task.PostName
+	}
+	return task.PostName + " / " + task.DeptName
 }
 
 type summaryCountJob struct {

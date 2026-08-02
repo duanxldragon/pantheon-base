@@ -100,6 +100,11 @@ test('governance-only changes can skip runtime gates without failing Quality Gat
 test('docs governance validates the PR governance template and pull request body', () => {
   assert.match(
     workflowSource,
+    /pull_request:\s*\n\s*types:\s*\n[\s\S]*-\s*edited/i,
+    'quality workflow should rerun when a pull request body is edited',
+  );
+  assert.match(
+    workflowSource,
     /Check PR governance template[\s\S]*npm run check:pr-governance/i,
     'docs governance should check the PR governance template',
   );

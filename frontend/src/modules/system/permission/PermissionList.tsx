@@ -134,15 +134,19 @@ const emptyForm: PermissionPolicyPayload = {
 
 type PermissionTabKey = 'workbench' | 'data-scope' | 'api';
 
+function canAccess(isAdmin: boolean, hasPerm: (permission: string) => boolean, permission: string) {
+  return isAdmin || hasPerm(permission);
+}
+
 const PermissionList: React.FC = () => {
   const { t } = useTranslation();
   const { isAdmin, hasPerm } = usePermission();
-  const canCreate = isAdmin || hasPerm('system:permission:create');
-  const canEdit = isAdmin || hasPerm('system:permission:update');
-  const canDelete = isAdmin || hasPerm('system:permission:delete');
-  const canBatchDelete = isAdmin || hasPerm('system:permission:batch-delete');
-  const canExport = isAdmin || hasPerm('system:permission:export');
-  const canImport = isAdmin || hasPerm('system:permission:import');
+  const canCreate = canAccess(isAdmin, hasPerm, 'system:permission:create');
+  const canEdit = canAccess(isAdmin, hasPerm, 'system:permission:update');
+  const canDelete = canAccess(isAdmin, hasPerm, 'system:permission:delete');
+  const canBatchDelete = canAccess(isAdmin, hasPerm, 'system:permission:batch-delete');
+  const canExport = canAccess(isAdmin, hasPerm, 'system:permission:export');
+  const canImport = canAccess(isAdmin, hasPerm, 'system:permission:import');
   const [activeTab, setActiveTab] = useState<PermissionTabKey>('workbench');
   const [data, setData] = useState<PermissionPolicyRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -565,50 +569,154 @@ const PermissionList: React.FC = () => {
     },
   ];
 
-  return (
-    <PageContainer>
-      <Space direction="vertical" size={16} className="system-page-template">
-        <GovernanceSummaryBar
-          className="permission-page__governance-bar"
-          eyebrow={t('system.permission.hero.eyebrow')}
-          title={t('system.permission.hero.title')}
-          description={t('system.permission.hero.desc')}
-          metrics={heroStats.slice(0, 3).map((item) => ({
-            key: item.key,
-            label: item.label,
-            value: item.value,
-          }))}
-          action={
-            <GovernanceRailToggleButton
-              expanded={governanceRail.expanded}
-              onToggle={governanceRail.toggle}
-            >
-              {t('system.permission.hero.summaryTitle')}
-            </GovernanceRailToggleButton>
+  const renderWorkbenchTab = () =>
+    activeTab === 'workbench' ? (
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <PermissionWorkbenchTab
+          roleOptions={roleOptions}
+          utilityActions={
+            <>
+              <Button
+                icon={<IconRefresh />}
+                onClick={() => {
+                  loadWorkbench(workbenchQuery);
+                }}
+              >
+                {t('common.refresh')}
+              </Button>
+              <Button
+                icon={<IconDownload />}
+                onClick={() => {
+                  exportPermissionWorkbench(workbenchQuery);
+                }}
+                disabled={!canExport}
+              >
+                {t('system.permission.workbench.export')}
+              </Button>
+            </>
           }
+          workbench={workbench}
+          workbenchLoading={workbenchLoading}
+          workbenchError={workbenchError}
+          workbenchQuery={workbenchQuery}
+          onWorkbenchQueryChange={setWorkbenchQuery}
+          onRetryLoadWorkbench={() => {
+            loadWorkbench(workbenchQuery);
+          }}
+          detailRole={detailRole}
+          onDetailRoleChange={setDetailRole}
+          remediateRolePolicies={remediateRolePolicies}
+          remediatingRoleKey={remediatingRoleKey}
         />
-        <div className="permission-page__content">
-          <Card className="page-panel permission-workbench__tabs permission-page__tabs-panel">
-            <Tabs
-              activeTab={activeTab}
-              onChange={(value) => setActiveTab(value as PermissionTabKey)}
-            >
-              <Tabs.TabPane key="workbench" title={t('system.permission.workbench.tab')} />
-              <Tabs.TabPane key="data-scope" title={t('system.permission.dataScope.tab')} />
-              <Tabs.TabPane key="api" title={t('system.permission.policy.tab')} />
-            </Tabs>
-          </Card>
+      </Space>
+    ) : null;
 
-          {activeTab === 'workbench' ? (
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
-              <PermissionWorkbenchTab
-                roleOptions={roleOptions}
-                utilityActions={
+  const renderDataScopeTab = () =>
+    activeTab === 'data-scope' ? (
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <PermissionDataScopeTab roleOptions={roleOptions} />
+      </Space>
+    ) : null;
+
+  const renderApiTableStates = () => (
+    <>
+      {loading && data.length === 0 ? <PageLoading /> : null}
+      {policyError && data.length === 0 ? (
+        <PageRequestError
+          error={policyError}
+          onRetry={() => {
+            loadData(query);
+          }}
+        />
+      ) : null}
+      {!loading && !policyError && data.length === 0 ? (
+        <PageEmpty description={t('common.noData')} />
+      ) : null}
+      {!loading && !(policyError && data.length === 0) && data.length > 0 ? (
+        <AppTable<PermissionPolicyRow>
+          className="system-list__table"
+          data={data}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          scroll={{ x: 'max-content' }}
+          rowSelection={{
+            type: 'checkbox',
+            selectedRowKeys: visibleSelectedRowKeys,
+            checkCrossPage: true,
+            preserveSelectedRowKeys: true,
+            fixed: true,
+            checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+            onChange: (rowKeys) =>
+              setSelectedRowKeys((keys) =>
+                mergeCrossPageSelection(
+                  keys,
+                  rowKeys,
+                  data.map((item) => item.id),
+                ),
+              ),
+          }}
+          onChange={handleTableChange}
+          emptyText={t('common.noData')}
+          pagination={buildStandardPagination(t, {
+            current: query.page || emptyQuery.page,
+            pageSize: query.pageSize || emptyQuery.pageSize,
+            total,
+          })}
+        />
+      ) : null}
+    </>
+  );
+
+  const renderApiTab = () =>
+    activeTab !== 'workbench' && activeTab !== 'data-scope' ? (
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <div className="permission-page__api-filter-shell">
+          <SearchToolbar
+            keyword={query.keyword ?? ''}
+            keywordPlaceholder={t('system.permission.search.placeholder')}
+            onKeywordChange={(keyword) => search({ keyword })}
+            inlineFilters={
+              <>
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder={t('system.permission.roleKey')}
+                  value={query.roleKey || undefined}
+                  onChange={(value) => search({ roleKey: value ?? '' })}
+                  options={roleOptions}
+                />
+                <Select
+                  allowClear
+                  placeholder={t('system.permission.method')}
+                  value={query.method || undefined}
+                  onChange={(value) => search({ method: value ?? '' })}
+                  options={methodOptions.map((item) => ({ label: item, value: item }))}
+                />
+              </>
+            }
+            hasActiveFilters={Boolean(query.keyword || query.roleKey || query.method)}
+            onClearAll={reset}
+          />
+        </div>
+        <Card className="page-panel system-list__table-card permission-page__api-table-card">
+          <TableBatchActionBar
+            className="permission-page__api-action-bar"
+            selectedCount={selectedRowKeys.length}
+            selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
+            clearText={t('common.clearSelection')}
+            clearSuccessText={t('common.clearSelectionSuccess')}
+            onClear={() => setSelectedRowKeys([])}
+            showSelectionSummary={selectedRowKeys.length > 0}
+            prefixActions={
+              <ListHeaderActions
+                className="permission-page__api-list-actions"
+                utility={
                   <>
                     <Button
                       icon={<IconRefresh />}
                       onClick={() => {
-                        loadWorkbench(workbenchQuery);
+                        loadData(query);
                       }}
                     >
                       {t('common.refresh')}
@@ -616,261 +724,172 @@ const PermissionList: React.FC = () => {
                     <Button
                       icon={<IconDownload />}
                       onClick={() => {
-                        exportPermissionWorkbench(workbenchQuery);
+                        handleExport();
                       }}
                       disabled={!canExport}
                     >
-                      {t('system.permission.workbench.export')}
+                      {t('common.export')}
                     </Button>
+                    <Button
+                      onClick={() => {
+                        handleDownloadTemplate();
+                      }}
+                      disabled={!canImport}
+                    >
+                      {t('common.downloadTemplate')}
+                    </Button>
+                    <ImportCsvButton
+                      disabled={!canImport}
+                      onSelect={(file) => {
+                        handleImport(file);
+                      }}
+                    >
+                      {t('common.import')}
+                    </ImportCsvButton>
                   </>
                 }
-                workbench={workbench}
-                workbenchLoading={workbenchLoading}
-                workbenchError={workbenchError}
-                workbenchQuery={workbenchQuery}
-                onWorkbenchQueryChange={setWorkbenchQuery}
-                onRetryLoadWorkbench={() => {
-                  loadWorkbench(workbenchQuery);
-                }}
-                detailRole={detailRole}
-                onDetailRoleChange={setDetailRole}
-                remediateRolePolicies={remediateRolePolicies}
-                remediatingRoleKey={remediatingRoleKey}
+                primary={
+                  <Button
+                    type="primary"
+                    icon={<IconPlus />}
+                    onClick={openCreate}
+                    disabled={!canCreate}
+                  >
+                    {t('common.add')}
+                  </Button>
+                }
               />
-            </Space>
-          ) : null}
-          {activeTab === 'data-scope' ? (
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
-              <PermissionDataScopeTab roleOptions={roleOptions} />
-            </Space>
-          ) : null}
-          {activeTab !== 'workbench' && activeTab !== 'data-scope' ? (
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
-              <div className="permission-page__api-filter-shell">
-                <SearchToolbar
-                  keyword={query.keyword ?? ''}
-                  keywordPlaceholder={t('system.permission.search.placeholder')}
-                  onKeywordChange={(keyword) => search({ keyword })}
-                  inlineFilters={
-                    <>
-                      <Select
-                        allowClear
-                        showSearch
-                        placeholder={t('system.permission.roleKey')}
-                        value={query.roleKey || undefined}
-                        onChange={(value) => search({ roleKey: value ?? '' })}
-                        options={roleOptions}
-                      />
-                      <Select
-                        allowClear
-                        placeholder={t('system.permission.method')}
-                        value={query.method || undefined}
-                        onChange={(value) => search({ method: value ?? '' })}
-                        options={methodOptions.map((item) => ({ label: item, value: item }))}
-                      />
-                    </>
-                  }
-                  hasActiveFilters={Boolean(query.keyword || query.roleKey || query.method)}
-                  onClearAll={reset}
-                />
-              </div>
-              <Card className="page-panel system-list__table-card permission-page__api-table-card">
-                <TableBatchActionBar
-                  className="permission-page__api-action-bar"
-                  selectedCount={selectedRowKeys.length}
-                  selectedText={t('common.selectedCount', { count: selectedRowKeys.length })}
-                  clearText={t('common.clearSelection')}
-                  clearSuccessText={t('common.clearSelectionSuccess')}
-                  onClear={() => setSelectedRowKeys([])}
-                  showSelectionSummary={selectedRowKeys.length > 0}
-                  prefixActions={
-                    <ListHeaderActions
-                      className="permission-page__api-list-actions"
-                      utility={
-                        <>
-                          <Button
-                            icon={<IconRefresh />}
-                            onClick={() => {
-                              loadData(query);
-                            }}
-                          >
-                            {t('common.refresh')}
-                          </Button>
-                          <Button
-                            icon={<IconDownload />}
-                            onClick={() => {
-                              handleExport();
-                            }}
-                            disabled={!canExport}
-                          >
-                            {t('common.export')}
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              handleDownloadTemplate();
-                            }}
-                            disabled={!canImport}
-                          >
-                            {t('common.downloadTemplate')}
-                          </Button>
-                          <ImportCsvButton
-                            disabled={!canImport}
-                            onSelect={(file) => {
-                              handleImport(file);
-                            }}
-                          >
-                            {t('common.import')}
-                          </ImportCsvButton>
-                        </>
-                      }
-                      primary={
-                        <Button
-                          type="primary"
-                          icon={<IconPlus />}
-                          onClick={openCreate}
-                          disabled={!canCreate}
-                        >
-                          {t('common.add')}
-                        </Button>
-                      }
-                    />
-                  }
-                  hint={!canBatchDelete ? t('common.batchActionPermissionHint') : undefined}
-                  actions={
-                    <PermissionAction
-                      allowed={canBatchDelete}
-                      tooltip={t('common.noPermissionAction')}
-                    >
-                      <Popconfirm
-                        title={t('system.permission.policy.batchDeleteConfirm')}
-                        onOk={() => {
-                          handleBatchDelete();
-                        }}
-                        disabled={batchDeleteDisabled}
-                      >
-                        <Button
-                          status="danger"
-                          icon={<IconDelete />}
-                          disabled={batchDeleteDisabled}
-                        >
-                          {t('common.deleteSelected')}
-                        </Button>
-                      </Popconfirm>
-                    </PermissionAction>
-                  }
-                />
-                {loading && data.length === 0 ? <PageLoading /> : null}
-                {policyError && data.length === 0 ? (
-                  <PageRequestError
-                    error={policyError}
-                    onRetry={() => {
-                      loadData(query);
-                    }}
-                  />
-                ) : null}
-                {!loading && !policyError && data.length === 0 ? (
-                  <PageEmpty description={t('common.noData')} />
-                ) : null}
-                {!loading && !(policyError && data.length === 0) && data.length > 0 ? (
-                  <AppTable<PermissionPolicyRow>
-                    className="system-list__table"
-                    data={data}
-                    columns={columns}
-                    rowKey="id"
-                    loading={loading}
-                    scroll={{ x: 'max-content' }}
-                    rowSelection={{
-                      type: 'checkbox',
-                      selectedRowKeys: visibleSelectedRowKeys,
-                      checkCrossPage: true,
-                      preserveSelectedRowKeys: true,
-                      fixed: true,
-                      checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                      onChange: (rowKeys) =>
-                        setSelectedRowKeys((keys) =>
-                          mergeCrossPageSelection(
-                            keys,
-                            rowKeys,
-                            data.map((item) => item.id),
-                          ),
-                        ),
-                    }}
-                    onChange={handleTableChange}
-                    emptyText={t('common.noData')}
-                    pagination={buildStandardPagination(t, {
-                      current: query.page || emptyQuery.page,
-                      pageSize: query.pageSize || emptyQuery.pageSize,
-                      total,
-                    })}
-                  />
-                ) : null}
-              </Card>
-            </Space>
-          ) : null}
-        </div>
-      </Space>
-
-      <GovernanceInsightDrawer
-        title={t('system.permission.hero.summaryTitle')}
-        visible={governanceRail.expanded}
-        onClose={governanceRail.close}
-        noteTitle={t('system.permission.hero.summaryTitle')}
-        noteDescription={t('system.permission.hero.sideDesc')}
-      >
-        <GovernanceRailSummary items={governanceSummaryItems} />
-      </GovernanceInsightDrawer>
-
-      <AppModal
-        title={editing ? t('system.permission.edit') : t('system.permission.create')}
-        visible={visible}
-        size="md"
-        onCancel={() => setVisible(false)}
-        footer={
-          <SubmitBar
-            onCancel={() => setVisible(false)}
-            onSubmit={() => {
-              submitForm();
-            }}
-            loading={submitting}
-            submitText={editing ? t('common.save') : t('common.add')}
+            }
+            hint={!canBatchDelete ? t('common.batchActionPermissionHint') : undefined}
+            actions={
+              <PermissionAction allowed={canBatchDelete} tooltip={t('common.noPermissionAction')}>
+                <Popconfirm
+                  title={t('system.permission.policy.batchDeleteConfirm')}
+                  onOk={() => {
+                    handleBatchDelete();
+                  }}
+                  disabled={batchDeleteDisabled}
+                >
+                  <Button status="danger" icon={<IconDelete />} disabled={batchDeleteDisabled}>
+                    {t('common.deleteSelected')}
+                  </Button>
+                </Popconfirm>
+              </PermissionAction>
+            }
           />
+          {renderApiTableStates()}
+        </Card>
+      </Space>
+    ) : null;
+
+  const renderPageContent = () => (
+    <Space direction="vertical" size={16} className="system-page-template">
+      <GovernanceSummaryBar
+        className="permission-page__governance-bar"
+        eyebrow={t('system.permission.hero.eyebrow')}
+        title={t('system.permission.hero.title')}
+        description={t('system.permission.hero.desc')}
+        metrics={heroStats.slice(0, 3).map((item) => ({
+          key: item.key,
+          label: item.label,
+          value: item.value,
+        }))}
+        action={
+          <GovernanceRailToggleButton
+            expanded={governanceRail.expanded}
+            onToggle={governanceRail.toggle}
+          >
+            {t('system.permission.hero.summaryTitle')}
+          </GovernanceRailToggleButton>
         }
-        unmountOnExit
-      >
-        <Form
-          form={form}
-          layout="vertical"
+      />
+      <div className="permission-page__content">
+        <Card className="page-panel permission-workbench__tabs permission-page__tabs-panel">
+          <Tabs activeTab={activeTab} onChange={(value) => setActiveTab(value as PermissionTabKey)}>
+            <Tabs.TabPane key="workbench" title={t('system.permission.workbench.tab')} />
+            <Tabs.TabPane key="data-scope" title={t('system.permission.dataScope.tab')} />
+            <Tabs.TabPane key="api" title={t('system.permission.policy.tab')} />
+          </Tabs>
+        </Card>
+
+        {renderWorkbenchTab()}
+        {renderDataScopeTab()}
+        {renderApiTab()}
+      </div>
+    </Space>
+  );
+
+  const renderGovernanceDrawer = () => (
+    <GovernanceInsightDrawer
+      title={t('system.permission.hero.summaryTitle')}
+      visible={governanceRail.expanded}
+      onClose={governanceRail.close}
+      noteTitle={t('system.permission.hero.summaryTitle')}
+      noteDescription={t('system.permission.hero.sideDesc')}
+    >
+      <GovernanceRailSummary items={governanceSummaryItems} />
+    </GovernanceInsightDrawer>
+  );
+
+  const renderFormModal = () => (
+    <AppModal
+      title={editing ? t('system.permission.edit') : t('system.permission.create')}
+      visible={visible}
+      size="md"
+      onCancel={() => setVisible(false)}
+      footer={
+        <SubmitBar
+          onCancel={() => setVisible(false)}
           onSubmit={() => {
             submitForm();
           }}
-        >
-          <Space direction="vertical" size={20} className="dialog-form-stack">
-            <FormSection title={t('common.basicInfo')}>
-              <FormItem
-                label={t('system.permission.roleKey')}
-                field="roleKey"
-                rules={[{ required: true, message: t('system.permission.roleRequired') }]}
-              >
-                <Select options={roleOptions} />
-              </FormItem>
-              <FormItem
-                label={t('system.permission.path')}
-                field="path"
-                rules={[{ required: true, message: t('system.permission.pathRequired') }]}
-              >
-                <Input placeholder="/api/v1/system/user/list" onPressEnter={() => form.submit()} />
-              </FormItem>
-              <FormItem
-                label={t('system.permission.method')}
-                field="method"
-                rules={[{ required: true, message: t('system.permission.methodRequired') }]}
-              >
-                <Select options={methodOptions.map((item) => ({ label: item, value: item }))} />
-              </FormItem>
-            </FormSection>
-          </Space>
-        </Form>
-      </AppModal>
+          loading={submitting}
+          submitText={editing ? t('common.save') : t('common.add')}
+        />
+      }
+      unmountOnExit
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onSubmit={() => {
+          submitForm();
+        }}
+      >
+        <Space direction="vertical" size={20} className="dialog-form-stack">
+          <FormSection title={t('common.basicInfo')}>
+            <FormItem
+              label={t('system.permission.roleKey')}
+              field="roleKey"
+              rules={[{ required: true, message: t('system.permission.roleRequired') }]}
+            >
+              <Select options={roleOptions} />
+            </FormItem>
+            <FormItem
+              label={t('system.permission.path')}
+              field="path"
+              rules={[{ required: true, message: t('system.permission.pathRequired') }]}
+            >
+              <Input placeholder="/api/v1/system/user/list" onPressEnter={() => form.submit()} />
+            </FormItem>
+            <FormItem
+              label={t('system.permission.method')}
+              field="method"
+              rules={[{ required: true, message: t('system.permission.methodRequired') }]}
+            >
+              <Select options={methodOptions.map((item) => ({ label: item, value: item }))} />
+            </FormItem>
+          </FormSection>
+        </Space>
+      </Form>
+    </AppModal>
+  );
+
+  return (
+    <PageContainer>
+      {renderPageContent()}
+      {renderGovernanceDrawer()}
+      {renderFormModal()}
     </PageContainer>
   );
 };

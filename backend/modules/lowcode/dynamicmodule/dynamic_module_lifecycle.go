@@ -23,52 +23,24 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 		return buildModuleI18nLifecycleSummary(moduleName, purgeSource, nil), nil
 	}
 
-	var registration ModuleRegistration
-	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
-		// 无注册记录的模块一律拒绝卸载：防止对任意磁盘目录（尤其 system/*）执行清理/删除。
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound(msgModuleNotFound)
-		}
+	registration, err := s.loadModuleRegistration(moduleName)
+	if err != nil {
 		return nil, err
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
 		return nil, common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 
-	scope, shortName, err := splitModuleKey(moduleName)
-	if err != nil {
-		return nil, err
-	}
-
 	// 菜单/授权清理与状态更新收进同一事务：中途失败整体回滚，
 	// 不再留下"菜单已删但注册状态未变"的半成品状态。
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if tx.Migrator().HasTable("system_menu") {
-			if err := s.deleteModuleMenusWithRoleBindings(tx, moduleName); err != nil {
-				return err
-			}
-		}
-		if tx.Migrator().HasTable("system_role_permission") {
-			if err := tx.Table("system_role_permission").
-				Where("permission_key LIKE ?", modulePermissionPrefix(scope, shortName)+":%").
-				Delete(nil).Error; err != nil {
-				return err
-			}
-		}
-		return tx.Table("system_module_registration").
-			Where(condNameEquals, moduleName).
-			Updates(map[string]interface{}{
-				"status":         ModuleStatusUninstalled,
-				"uninstalled_at": time.Now().Format(time.RFC3339),
-			}).Error
-	}); err != nil {
+	if err := s.markModuleUninstalled(moduleName); err != nil {
 		return nil, err
 	}
 
 	// MySQL DDL 自带隐式提交，DROP TABLE 无法参与上面的事务，放到提交后执行。
 	// 失败时模块已是 uninstalled 状态且注册记录仍在，PurgeModule 会重试删表。
 	if s.shouldDropManagedTable(registration, dropTable) {
-		if err := s.dropManagedModuleTable(scope, registration.ModelTableName); err != nil {
+		if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
 			// 日志不带 module/table（请求输入，CodeQL go/log-injection 污点源；
 			// 与 rate_limit 中间件同一先例），上下文由调用方错误响应与审计日志承载。
 			slog.Warn("dynamic module table drop failed; retry via purge", "registration_id", registration.ID, "error", err)
@@ -77,6 +49,32 @@ func (s *DynamicModuleService) UnregisterModule(moduleName string, dropTable boo
 	}
 
 	return s.FinalizeUnregister(moduleName, purgeSource)
+}
+
+func (s *DynamicModuleService) loadModuleRegistration(moduleName string) (ModuleRegistration, error) {
+	var registration ModuleRegistration
+	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
+		// 无注册记录的模块一律拒绝卸载：防止对任意磁盘目录（尤其 system/*）执行清理/删除。
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ModuleRegistration{}, common.NewNotFound(msgModuleNotFound)
+		}
+		return ModuleRegistration{}, err
+	}
+	return registration, nil
+}
+
+func (s *DynamicModuleService) markModuleUninstalled(moduleName string) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.deleteModuleNavigationArtifacts(tx, moduleName); err != nil {
+			return err
+		}
+		return tx.Table("system_module_registration").
+			Where(condNameEquals, moduleName).
+			Updates(map[string]interface{}{
+				"status":         ModuleStatusUninstalled,
+				"uninstalled_at": time.Now().Format(time.RFC3339),
+			}).Error
+	})
 }
 
 func (s *DynamicModuleService) DeleteModuleRecord(moduleName string) error {
@@ -114,45 +112,54 @@ func (s *DynamicModuleService) PurgeModule(moduleName string, dropTable bool, pu
 		return buildModuleI18nLifecycleSummary(moduleName, purgeSource, nil), nil
 	}
 
-	var registration ModuleRegistration
-	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound(msgModuleNotFound)
-		}
+	registration, err := s.loadModuleRegistration(moduleName)
+	if err != nil {
 		return nil, err
 	}
 	if isBuiltInModuleRegistration(registration) {
 		return nil, common.NewForbidden(msgModuleBuiltinForbidden)
 	}
 	if strings.TrimSpace(registration.ModelTableName) == "" {
-		if err := s.db.Transaction(func(tx *gorm.DB) error {
-			if err := s.deleteModuleNavigationArtifacts(tx, moduleName); err != nil {
-				return err
-			}
-			return tx.Delete(&registration).Error
-		}); err != nil {
+		if err := s.deleteRegistrationWithoutManagedTable(moduleName, &registration); err != nil {
 			return nil, err
 		}
 		return s.FinalizeUnregister(moduleName, purgeSource)
 	}
 
-	if registration.Status != ModuleStatusUninstalled {
-		if _, err := s.UnregisterModule(moduleName, dropTable, false); err != nil {
-			return nil, err
-		}
-	} else if s.shouldDropManagedTable(registration, dropTable) {
-		// 删表失败必须在删除注册记录之前返回：记录保留则 purge 可重试。
-		if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
-			// 同上：不打请求输入字段，避免 go/log-injection。
-			slog.Warn("dynamic module table drop failed; registration kept for retry", "registration_id", registration.ID, "error", err)
-			return nil, err
-		}
+	if err := s.prepareManagedRegistrationForPurge(moduleName, registration, dropTable); err != nil {
+		return nil, err
 	}
 
 	if err := s.db.Delete(&registration).Error; err != nil {
 		return nil, err
 	}
 	return s.FinalizeUnregister(moduleName, purgeSource)
+}
+
+func (s *DynamicModuleService) deleteRegistrationWithoutManagedTable(moduleName string, registration *ModuleRegistration) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.deleteModuleNavigationArtifacts(tx, moduleName); err != nil {
+			return err
+		}
+		return tx.Delete(registration).Error
+	})
+}
+
+func (s *DynamicModuleService) prepareManagedRegistrationForPurge(moduleName string, registration ModuleRegistration, dropTable bool) error {
+	if registration.Status != ModuleStatusUninstalled {
+		_, err := s.UnregisterModule(moduleName, dropTable, false)
+		return err
+	}
+	if !s.shouldDropManagedTable(registration, dropTable) {
+		return nil
+	}
+	// 删表失败必须在删除注册记录之前返回：记录保留则 purge 可重试。
+	if err := s.dropManagedModuleTable(registration.Scope, registration.ModelTableName); err != nil {
+		// 同上：不打请求输入字段，避免 go/log-injection。
+		slog.Warn("dynamic module table drop failed; registration kept for retry", "registration_id", registration.ID, "error", err)
+		return err
+	}
+	return nil
 }
 
 func (s *DynamicModuleService) deleteModuleNavigationArtifacts(db *gorm.DB, moduleName string) error {

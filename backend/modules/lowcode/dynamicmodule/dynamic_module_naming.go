@@ -147,19 +147,21 @@ func isValidDynamicModulePath(name string, allowNested bool) bool {
 		return false
 	}
 	for _, segment := range segments {
-		if segment == "" {
+		if !isValidDynamicModulePathSegment(segment) {
 			return false
 		}
-		for index, char := range segment {
-			if index == 0 {
-				if !unicode.IsLower(char) {
-					return false
-				}
-				continue
-			}
-			if !(unicode.IsLower(char) || unicode.IsDigit(char) || char == '_') {
-				return false
-			}
+	}
+	return true
+}
+
+func isValidDynamicModulePathSegment(segment string) bool {
+	runes := []rune(segment)
+	if len(runes) == 0 || !unicode.IsLower(runes[0]) {
+		return false
+	}
+	for _, char := range runes[1:] {
+		if !unicode.IsLower(char) && !unicode.IsDigit(char) && char != '_' {
+			return false
 		}
 	}
 	return true

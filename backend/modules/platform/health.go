@@ -88,49 +88,69 @@ func logHealthDependencyFailure(dependency, requestID string, err error) {
 }
 
 func RegisterHealthRoutes(r *gin.RouterGroup, db *gorm.DB) {
-	r.GET("/health", func(c *gin.Context) {
-		resp := healthResp{
-			Status:    "ok",
-			Service:   "pantheon-platform",
-			Timestamp: time.Now().UTC().Format(time.RFC3339),
-			RequestID: common.GetRequestID(c),
-			Dependencies: map[string]healthDependency{
-				"database": {Status: "ok"},
-				"redis":    {Status: "disabled"},
-			},
-		}
+	r.GET("/health", healthHandler(db))
+}
 
-		if db == nil {
-			resp.Status = "degraded"
-			resp.Dependencies["database"] = healthDependency{Status: "down", Message: "database.not_initialized"}
-		} else {
-			sqlDB, err := db.DB()
-			if err == nil {
-				err = sqlDB.PingContext(c.Request.Context())
-			}
-			if err != nil {
-				resp.Status = "degraded"
-				resp.Dependencies["database"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "database.unavailable")}
-				logHealthDependencyFailure("database", resp.RequestID, err)
-			}
-		}
+func healthHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resp := newHealthResp(c)
+		checkDatabaseHealth(c, db, &resp)
+		checkRedisHealth(c, &resp)
+		common.SuccessWithStatus(c, healthStatusCode(resp.Status), resp)
+	}
+}
 
-		if database.RDB != nil {
-			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
-			defer cancel()
-			if err := database.RDB.Ping(ctx).Err(); err != nil {
-				resp.Status = "degraded"
-				resp.Dependencies["redis"] = healthDependency{Status: "down", Message: sanitizeHealthError(err, "redis.unavailable")}
-				logHealthDependencyFailure("redis", resp.RequestID, err)
-			} else {
-				resp.Dependencies["redis"] = healthDependency{Status: "ok"}
-			}
-		}
+func newHealthResp(c *gin.Context) healthResp {
+	return healthResp{
+		Status:    "ok",
+		Service:   "pantheon-platform",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		RequestID: common.GetRequestID(c),
+		Dependencies: map[string]healthDependency{
+			"database": {Status: "ok"},
+			"redis":    {Status: "disabled"},
+		},
+	}
+}
 
-		statusCode := http.StatusOK
-		if resp.Status != "ok" {
-			statusCode = http.StatusServiceUnavailable
-		}
-		common.SuccessWithStatus(c, statusCode, resp)
-	})
+func checkDatabaseHealth(c *gin.Context, db *gorm.DB, resp *healthResp) {
+	if db == nil {
+		markHealthDependencyDown(resp, "database", "database.not_initialized", nil)
+		return
+	}
+	sqlDB, err := db.DB()
+	if err == nil {
+		err = sqlDB.PingContext(c.Request.Context())
+	}
+	if err != nil {
+		markHealthDependencyDown(resp, "database", "database.unavailable", err)
+	}
+}
+
+func checkRedisHealth(c *gin.Context, resp *healthResp) {
+	if database.RDB == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+	defer cancel()
+	if err := database.RDB.Ping(ctx).Err(); err != nil {
+		markHealthDependencyDown(resp, "redis", "redis.unavailable", err)
+		return
+	}
+	resp.Dependencies["redis"] = healthDependency{Status: "ok"}
+}
+
+func markHealthDependencyDown(resp *healthResp, dependency, messageKey string, err error) {
+	resp.Status = "degraded"
+	resp.Dependencies[dependency] = healthDependency{Status: "down", Message: sanitizeHealthError(err, messageKey)}
+	if err != nil {
+		logHealthDependencyFailure(dependency, resp.RequestID, err)
+	}
+}
+
+func healthStatusCode(status string) int {
+	if status == "ok" {
+		return http.StatusOK
+	}
+	return http.StatusServiceUnavailable
 }

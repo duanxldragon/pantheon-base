@@ -352,44 +352,64 @@ func TestCollectUnusedLifecycleTargets(t *testing.T) {
 		},
 	}
 
-	t.Run("active scoped to system", func(t *testing.T) {
-		targets, keys := collectUnusedLifecycleTargets(audit, "system", I18nLifecycleStatusActive, nil)
-		if len(targets) != 2 {
-			t.Fatalf("expected 2 targets, got %d", len(targets))
-		}
-		if len(keys) != 2 || keys[0] != "keep-active" || keys[1] != testKeepActiveSecondKey {
-			t.Fatalf("unexpected affected keys: %v", keys)
-		}
-		if targets[0].module != "system" || targets[1].module != "system" {
+	cases := []struct {
+		name        string
+		module      string
+		status      string
+		filter      func(I18nUnusedKeyItem) bool
+		wantKeys    []string
+		wantModules []string
+	}{
+		{
+			name:        "active scoped to system",
+			module:      "system",
+			status:      I18nLifecycleStatusActive,
+			wantKeys:    []string{"keep-active", testKeepActiveSecondKey},
+			wantModules: []string{"system", "system"},
+		},
+		{
+			name:     "observing no module scope",
+			status:   I18nLifecycleStatusObserving,
+			wantKeys: []string{"drop-observing"},
+		},
+		{
+			name:        "with filter",
+			module:      "system",
+			status:      I18nLifecycleStatusActive,
+			filter:      func(item I18nUnusedKeyItem) bool { return item.Key == testKeepActiveSecondKey },
+			wantKeys:    []string{testKeepActiveSecondKey},
+			wantModules: []string{"system"},
+		},
+		{name: "no matches returns empty", module: "missing", status: I18nLifecycleStatusActive},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assertUnusedLifecycleTargets(t, audit, tc.module, tc.status, tc.filter, tc.wantKeys, tc.wantModules)
+		})
+	}
+}
+
+func assertUnusedLifecycleTargets(
+	t *testing.T,
+	audit *I18nAuditResp,
+	module string,
+	status string,
+	filter func(I18nUnusedKeyItem) bool,
+	wantKeys []string,
+	wantModules []string,
+) {
+	t.Helper()
+	targets, keys := collectUnusedLifecycleTargets(audit, module, status, filter)
+	if strings.Join(keys, "|") != strings.Join(wantKeys, "|") {
+		t.Fatalf("unexpected affected keys: got=%v want=%v", keys, wantKeys)
+	}
+	if len(targets) != len(wantKeys) {
+		t.Fatalf("unexpected targets: got=%v want count=%d", targets, len(wantKeys))
+	}
+	for i, wantModule := range wantModules {
+		if targets[i].module != wantModule {
 			t.Fatalf("unexpected target modules: %v", targets)
 		}
-	})
-
-	t.Run("observing no module scope", func(t *testing.T) {
-		targets, keys := collectUnusedLifecycleTargets(audit, "", I18nLifecycleStatusObserving, nil)
-		if len(targets) != 1 {
-			t.Fatalf("expected 1 target, got %d", len(targets))
-		}
-		if keys[0] != "drop-observing" {
-			t.Fatalf("unexpected affected key: %v", keys)
-		}
-	})
-
-	t.Run("with filter", func(t *testing.T) {
-		filter := func(item I18nUnusedKeyItem) bool { return item.Key == testKeepActiveSecondKey }
-		targets, keys := collectUnusedLifecycleTargets(audit, "system", I18nLifecycleStatusActive, filter)
-		if len(targets) != 1 {
-			t.Fatalf("expected 1 target, got %d", len(targets))
-		}
-		if keys[0] != testKeepActiveSecondKey {
-			t.Fatalf("unexpected affected key: %v", keys)
-		}
-	})
-
-	t.Run("no matches returns empty", func(t *testing.T) {
-		targets, keys := collectUnusedLifecycleTargets(audit, "missing", I18nLifecycleStatusActive, nil)
-		if len(targets) != 0 || len(keys) != 0 {
-			t.Fatalf("expected empty results, got targets=%v keys=%v", targets, keys)
-		}
-	})
+	}
 }
