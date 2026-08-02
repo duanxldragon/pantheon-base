@@ -50,7 +50,7 @@
 - [x] CodeQL 结果已检查并解释
 - [x] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up
 - [x] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
-- [ ] GitHub required checks 通过：Docs Governance、SonarCloud、Frontend Contract、Go Lint、Security Gates、Duplication 已通过；Backend Tests 已修正 i18n 生命周期断言，等待 Linux race 重跑
+- [ ] GitHub required checks 通过：旧 head 的 Docs Governance、Backend Tests、SonarCloud、Frontend Contract、Go Lint、Security Gates、Duplication 已通过；`a0c01eae` 已修正 Smoke Sanity 和 PR 分析剩余 15 条 Sonar finding，等待完整 hosted 重跑
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用
 - [x] 已启用或确认将启用 squash auto-merge
 
@@ -60,11 +60,11 @@
 
 - Copilot review：`automatic-policy`
 - CodeQL 结果：`passed`
-- GitHub checks 结果：`Docs Governance passed; Backend Tests rerun pending after lifecycle assertion correction`
+- GitHub checks 结果：`local gates and focused smoke passed for a0c01eae; hosted Smoke Sanity and SonarCloud rerun pending`
 - Auto-merge：`not-enabled`
 - Duplication Gate 结果：`passed`
 - 是否高风险改动：`yes; shared system and lowcode code paths changed, with behavior-preservation review completed`
-- Residual risk / follow-up：`hosted Linux race suite and final SonarCloud re-analysis remain required before merge`
+- Residual risk / follow-up：`hosted SonarCloud must report zero PR issues and full Smoke Sanity plus final Quality Gates must pass before merge`
 
 ## 检查清单
 

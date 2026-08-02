@@ -1,6 +1,6 @@
 # Summary - 2026-08-02-sonarcloud-open-issues
 
-Status: Docs Governance is green; hosted Backend Tests rerun pending after the final lifecycle assertion correction.
+Status: local remediation for the final 15 PR findings is green; hosted SonarCloud and Smoke Sanity reruns are pending for a0c01eae.
 
 Baseline: SonarCloud quality gate `OK`, 77 unresolved code smells.
 
@@ -22,6 +22,13 @@ Verification:
 - `npm run test:unit` passed: 15 files / 138 tests.
 - `npm run build` passed with elevated permission for `node_modules/.tmp`.
 - `npm run test:generator:smoke` passed with elevated permission.
+- Focused Chromium smoke passed for `/system/user` and the user-menu lock-screen
+  workflow after the custom Dropdown trigger implemented Arco's trigger
+  contract and forwarded its injected props.
+- A second focused Chromium run passed for `/system/permission` and the
+  user-menu lock-screen workflow after the final Sonar remediation.
+- SonarCloud API reported 15 open findings on the prior remote PR head
+  `234f3ac8`; commit `a0c01eae` fixes all 15 locally.
 - Frontend menu, i18n, shell/UI, search-toolbar, page-admission, smoke-web,
   and smoke-coverage contracts passed.
 - Harness template/docs/inventory/sync/adoption checks passed.
@@ -34,9 +41,10 @@ Known gaps:
 - `gocognit -over 15 .` reports the pre-existing
   `pkg/database/casbin_watcher.go:run` at 16; it is not in the 77-item Sonar
   inventory and was intentionally left out of scope.
-- Visual evidence is a no-visual-change rationale; the code only moves
-  existing JSX into helpers/components and tightens readonly props.
+- Runtime interaction evidence covers the 1280x720 system user page and
+  user-menu lock-screen workflow. The correction does not change layout or
+  styling; no standalone screenshot artifact was retained.
 - The strict visual checker still reports one pre-existing unreadable
   2026-07-29 task manifest outside this task.
-- Hosted Linux race tests and final PR checks remain pending after the
-  lifecycle assertion correction.
+- Hosted SonarCloud must confirm zero PR issues, and hosted Smoke Sanity plus
+  final Quality Gates remain pending for `a0c01eae`.
