@@ -21,7 +21,10 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      pr_body_ready: ${{ steps.pr-body-ready.outcome == 'success' && 'true' || 'false' }}
+      # Dependabot owns and rewrites its generated PR body, so the repository
+      # template cannot be made durable there. Keep the structural repository
+      # checks in quality.yml, but treat the heavy body ceremony as satisfied.
+      pr_body_ready: ${{ github.event.pull_request.user.login == 'dependabot[bot]' || steps.pr-body-ready.outcome == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -39,6 +42,7 @@ jobs:
 
       - name: Validate PR governance body
         id: pr-body-ready
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: node scripts/check-pr-governance.mjs --event "$GITHUB_EVENT_PATH"
 
   feedback-prereq:
