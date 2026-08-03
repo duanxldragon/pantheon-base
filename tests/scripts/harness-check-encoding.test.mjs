@@ -79,6 +79,17 @@ test('check-encoding tolerates UTF-8 BOM', () => {
   assert.equal(result.findingCount, 0);
 });
 
+test('check-encoding rejects Unicode replacement characters', () => {
+  const root = createFixture();
+  const replacementCharacter = String.fromCodePoint(0xfffd);
+  fs.writeFileSync(path.join(root, 'replacement.md'), `# 标题\n\n损坏内容${replacementCharacter}\n`);
+  execFileSync('git', ['-C', root, 'add', 'replacement.md']);
+  const result = spawnSync(process.execPath, [SCRIPT, '--strict', '--root', root], { encoding: 'utf8' });
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /replacement\.md/);
+  assert.match(result.stdout, /U\+FFFD/);
+});
+
 test('check-encoding skips untracked files', () => {
   const root = createFixture();
   // corrupted but never git-added
