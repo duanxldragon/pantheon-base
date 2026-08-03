@@ -1,0 +1,42 @@
+{
+  "taskId": "2026-08-03-dependabot-pr-governance",
+  "title": "Close Dependabot PR governance workflow drift",
+  "goal": "Make the PR automation governance prerequisite apply the same Dependabot policy as Docs Governance, then prove existing dependency PRs can pass without a maintainer bypass.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "Align pr-automation Dependabot handling with quality.yml",
+      "Preserve the successful governance output required by auto-merge",
+      "Add focused workflow regression coverage",
+      "Re-run and merge the existing Dependabot PRs"
+    ],
+    "out": [
+      "Product runtime behavior",
+      "Weakening governance for human or agent-authored PRs",
+      "Using the solo-override maintainer bypass"
+    ]
+  },
+  "requiredSensors": [
+    "node --test tests/scripts/pr-automation-workflow.test.mjs",
+    "node --test tests/scripts/quality-workflow.test.mjs",
+    "npm run check:pr-governance",
+    "npm run check:harness-encoding",
+    "GitHub required checks on the governance fix PR",
+    "PR Governance Prereq on Dependabot PRs"
+  ],
+  "ratchetDecision": "gate-updated",
+  "githubSignal": "repo-quality-gate",
+  "linkage": {
+    "taskId": "2026-08-03-dependabot-pr-governance",
+    "changeRef": "none",
+    "codeRef": "pending",
+    "taskPacket": ".harness/tasks/2026-08-03-dependabot-pr-governance/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-03-dependabot-pr-governance/",
+    "reviewFile": ".harness/evidence/2026-08-03-dependabot-pr-governance/review.md",
+    "summaryFile": ".harness/evidence/2026-08-03-dependabot-pr-governance/summary.md",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-03-dependabot-pr-governance.task.md"
+    ]
+  }
+}
