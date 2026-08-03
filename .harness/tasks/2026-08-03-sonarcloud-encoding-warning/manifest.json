@@ -1,0 +1,32 @@
+{
+  "taskId": "2026-08-03-sonarcloud-encoding-warning",
+  "title": "Remediate SonarCloud source encoding warning",
+  "goal": "Remove confirmed replacement-character corruption and prevent recurrence, then verify the warning disappears from the merged main analysis.",
+  "status": "in_progress",
+  "ownerLayer": "platform",
+  "qualityProfile": "ci-workflow",
+  "taskDoc": "docs/harness/tasks/2026-08-03-sonarcloud-encoding-warning.task.md",
+  "evidenceDir": ".harness/evidence/2026-08-03-sonarcloud-encoding-warning",
+  "reviewFile": ".harness/evidence/2026-08-03-sonarcloud-encoding-warning/review.md",
+  "scope": [
+    "Restore two corrupted Harness documents",
+    "Detect U+FFFD in the strict encoding gate",
+    "Add focused regression coverage",
+    "Verify hosted SonarCloud after merge"
+  ],
+  "outOfScope": [
+    "Product runtime behavior",
+    "SonarCloud quality profile changes",
+    "Analysis exclusions"
+  ],
+  "requiredSensors": [
+    "npm run check:harness-encoding",
+    "node --test tests/scripts/harness-check-encoding.test.mjs",
+    "npm run check:docs-frontmatter",
+    "npm run check:harness-docs",
+    "GitHub required checks",
+    "SonarCloud main analysis"
+  ],
+  "ratchetDecision": "sensor-added",
+  "githubSignal": "repo-quality-gate"
+}

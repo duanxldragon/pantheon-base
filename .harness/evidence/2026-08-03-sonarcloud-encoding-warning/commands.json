@@ -1,0 +1,32 @@
+{
+  "taskId": "2026-08-03-sonarcloud-encoding-warning",
+  "taskManifest": ".harness/tasks/2026-08-03-sonarcloud-encoding-warning/manifest.json",
+  "status": "local-green-hosted-pending",
+  "commands": [
+    {
+      "command": "npm run check:harness-encoding",
+      "result": "passed: 0 findings across 1135 files"
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-encoding.test.mjs",
+      "result": "passed: 8 tests"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "result": "passed: 205 docs checked"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "result": "passed: 0 findings"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "hostedPending": [
+    "GitHub required checks",
+    "SonarCloud encoding-warning verification on merged main"
+  ],
+  "runtimeGap": "No product runtime behavior changed. Hosted SonarCloud is the authoritative scanner verification."
+}
