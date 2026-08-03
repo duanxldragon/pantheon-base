@@ -1,0 +1,37 @@
+{
+  "taskId": "2026-08-03-dependabot-pr-governance",
+  "taskManifest": ".harness/tasks/2026-08-03-dependabot-pr-governance/manifest.json",
+  "status": "local-green-hosted-pending",
+  "commands": [
+    {
+      "command": "node --test tests/scripts/pr-automation-workflow.test.mjs tests/scripts/quality-workflow.test.mjs",
+      "result": "passed: 5 tests"
+    },
+    {
+      "command": "npm run check:pr-governance",
+      "result": "passed"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "result": "passed: 0 findings across 1141 files"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "result": "passed: 207 docs checked"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "result": "passed: 0 findings"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "hostedPending": [
+    "GitHub required checks",
+    "Dependabot PR Governance Prereq reruns",
+    "Dependabot PR merges and branch cleanup"
+  ],
+  "runtimeGap": "No product runtime behavior changes. Hosted GitHub Actions are the authoritative workflow verification."
+}
