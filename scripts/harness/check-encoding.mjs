@@ -87,6 +87,17 @@ function findInvalidUtf8Positions(buffer, limit) {
   return positions;
 }
 
+function findReplacementCharacterPositions(buffer, limit) {
+  const positions = [];
+  const marker = Buffer.from([0xef, 0xbf, 0xbd]);
+  for (let index = 0; index <= buffer.length - marker.length; index += 1) {
+    if (buffer[index] !== marker[0] || buffer[index + 1] !== marker[1] || buffer[index + 2] !== marker[2]) continue;
+    positions.push(index);
+    if (positions.length >= limit) return positions;
+  }
+  return positions;
+}
+
 function lineNumberOfOffset(buffer, offset) {
   let line = 1;
   for (let index = 0; index < offset && index < buffer.length; index += 1) {
@@ -108,10 +119,18 @@ function scan(root, extensions) {
     // UTF-8 BOM is tolerated; skip it so the validator starts on real content.
     const body = buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf ? buffer.subarray(3) : buffer;
     const positions = findInvalidUtf8Positions(body, 5);
-    if (positions.length > 0) {
+    const replacementPositions = findReplacementCharacterPositions(body, 5);
+    if (positions.length > 0 || replacementPositions.length > 0) {
+      const reasons = [];
+      if (positions.length > 0) {
+        reasons.push(`invalid UTF-8 byte sequence(s) at line(s) ${positions.map((p) => lineNumberOfOffset(body, p)).join(', ')}${positions.length >= 5 ? ' (first 5 shown)' : ''}`);
+      }
+      if (replacementPositions.length > 0) {
+        reasons.push(`Unicode replacement character U+FFFD at line(s) ${replacementPositions.map((p) => lineNumberOfOffset(body, p)).join(', ')}${replacementPositions.length >= 5 ? ' (first 5 shown)' : ''}`);
+      }
       findings.push({
         file: relative,
-        reason: `invalid UTF-8 byte sequence(s) at line(s) ${positions.map((p) => lineNumberOfOffset(body, p)).join(', ')}${positions.length >= 5 ? ' (first 5 shown)' : ''}`,
+        reason: reasons.join('; '),
       });
     }
   }
