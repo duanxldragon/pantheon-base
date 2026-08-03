@@ -19,6 +19,16 @@ test('pr automation validates PR governance before enabling auto-merge', () => {
   );
   assert.match(
     workflowSource,
+    /Validate PR governance body[\s\S]*if:\s*github\.event\.pull_request\.user\.login\s*!=\s*'dependabot\[bot\]'/i,
+    'pr automation should exempt Dependabot from the PR body ceremony it cannot preserve',
+  );
+  assert.match(
+    workflowSource,
+    /pr_body_ready:\s*\$\{\{\s*github\.event\.pull_request\.user\.login\s*==\s*'dependabot\[bot\]'\s*\|\|\s*steps\.pr-body-ready\.outcome\s*==\s*'success'\s*\}\}/i,
+    'Dependabot should satisfy the governance prerequisite output without blocking auto-merge',
+  );
+  assert.match(
+    workflowSource,
     /automate-solo-pr:[\s\S]*needs:[\s\S]*-\s*governance-prereq/i,
     'auto-merge job should depend on the governance prerequisite job',
   );
