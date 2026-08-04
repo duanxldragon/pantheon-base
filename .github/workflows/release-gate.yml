@@ -182,9 +182,9 @@ jobs:
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
           # Quality gate status (new-code)
-          qg=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
+          qg=$(curl -sf -u "${SONAR_TOKEN}:" \
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT}" \
-            | jq -r '.projectStatus.status')
+            | jq -er '.projectStatus.status')
           echo "SonarCloud quality gate: $qg"
           if [ "$qg" != "OK" ]; then
             echo "::error::Release blocked: SonarCloud quality gate is $qg (must be OK)."
@@ -199,7 +199,7 @@ jobs:
         run: |
           # The freeze is not releasable while any SonarCloud issue remains open.
           # Every finding must be fixed in code; bulk acceptance is not a release path.
-          result=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
+          result=$(curl -sf -u "${SONAR_TOKEN}:" \
             "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=1")
           total=$(echo "$result" | jq -er '.total | numbers')
           echo "Unprocessed SonarCloud issues (OPEN status): $total"
