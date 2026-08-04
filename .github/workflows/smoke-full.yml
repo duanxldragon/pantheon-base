@@ -3,6 +3,9 @@ name: Full Smoke Suite
 on:
   schedule:
     - cron: "37 18 * * *"
+  push:
+    branches:
+      - release/**
   workflow_dispatch:
 
 permissions:
