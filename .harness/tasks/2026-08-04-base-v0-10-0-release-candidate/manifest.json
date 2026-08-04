@@ -1,5 +1,5 @@
 {
-  "taskId": "2026-08-04-base-v0.10.0-release-candidate",
+  "taskId": "2026-08-04-base-v0-10-0-release-candidate",
   "title": "Prepare the pantheon-base v0.10.0 release candidate",
   "goal": "Close all identified Base-side release, packaging, gate, smoke, and evidence gaps and produce a candidate that is ready for the final maintainer publication gate.",
   "primaryLayer": "platform",
@@ -48,13 +48,13 @@
   "humanGate": "Stop before creating pantheon-base-v0.10.0 tag or publishing the GitHub Release.",
   "syncExpectation": "Base-only. Ops remains unchanged until a later explicit foundation upgrade task.",
   "linkage": {
-    "taskId": "2026-08-04-base-v0.10.0-release-candidate",
+    "taskId": "2026-08-04-base-v0-10-0-release-candidate",
     "changeRef": "none",
     "codeRef": "pending",
-    "taskPacket": ".harness/tasks/2026-08-04-base-v0.10.0-release-candidate/manifest.json",
-    "evidenceDir": ".harness/evidence/2026-08-04-base-v0.10.0-release-candidate/",
-    "reviewFile": ".harness/evidence/2026-08-04-base-v0.10.0-release-candidate/review.md",
-    "summaryFile": ".harness/evidence/2026-08-04-base-v0.10.0-release-candidate/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-04-base-v0.10.0-release-candidate.task.md"]
+    "taskPacket": ".harness/tasks/2026-08-04-base-v0-10-0-release-candidate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/",
+    "reviewFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/review.md",
+    "summaryFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-04-base-v0-10-0-release-candidate.task.md"]
   }
 }

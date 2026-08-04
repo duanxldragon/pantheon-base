@@ -1,6 +1,6 @@
 {
-  "taskId": "2026-08-04-base-v0.10.0-release-candidate",
-  "taskManifest": ".harness/tasks/2026-08-04-base-v0.10.0-release-candidate/manifest.json",
+  "taskId": "2026-08-04-base-v0-10-0-release-candidate",
+  "taskManifest": ".harness/tasks/2026-08-04-base-v0-10-0-release-candidate/manifest.json",
   "status": "implementation-complete-final-verification-pending",
   "commands": [
     {
