@@ -205,17 +205,13 @@ jobs:
     steps:
       - name: Check SonarCloud quality gate
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
-          # Quality gate status (new-code)
-          # Public SonarCloud projects can be queried without authentication;
-          # the token is used only when it is available.
-          auth_args=()
-          if [ -n "$SONAR_TOKEN" ]; then
-            auth_args=(-H "Authorization: Bearer ${SONAR_TOKEN}")
-          fi
-          qg=$(curl -sf "${auth_args[@]}" \
+          # Quality gate status (new-code).
+          # This SonarCloud project is public, so the API can be queried
+          # without authentication. If the project ever becomes private,
+          # curl will fail and the gate will block (fail-closed).
+          qg=$(curl -sf \
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT}" \
             | jq -er '.projectStatus.status')
           echo "SonarCloud quality gate: $qg"
@@ -227,16 +223,11 @@ jobs:
 
       - name: Check unprocessed SonarCloud issues
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
           # The freeze is not releasable while any SonarCloud issue remains open.
           # Every finding must be fixed in code; bulk acceptance is not a release path.
-          auth_args=()
-          if [ -n "$SONAR_TOKEN" ]; then
-            auth_args=(-H "Authorization: Bearer ${SONAR_TOKEN}")
-          fi
-          result=$(curl -sf "${auth_args[@]}" \
+          result=$(curl -sf \
             "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=1")
           total=$(echo "$result" | jq -er '.total | numbers')
           echo "Unprocessed SonarCloud issues (OPEN status): $total"
