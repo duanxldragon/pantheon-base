@@ -33,9 +33,9 @@ test('build-release-manifest writes release metadata files into releases/<versio
         '--root',
         root,
         '--release-version',
-        'base-v0.8.0',
+        'pantheon-base-v0.10.0',
         '--release-line',
-        'release/0.8',
+        'release/0.10',
         '--base-commit',
         'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
         '--release-notes',
@@ -44,22 +44,24 @@ test('build-release-manifest writes release metadata files into releases/<versio
         'run inheritance checks',
         '--consumer-impact',
         'ops should review backend drift',
+        '--required-check',
+        'Release Gate Summary',
       ],
       repoRoot,
     );
 
     assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
 
-    const releaseRoot = path.join(root, 'releases', 'base-v0.8.0');
+    const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
     const manifest = JSON.parse(fs.readFileSync(path.join(releaseRoot, 'manifest.json'), 'utf8'));
 
-    assert.equal(manifest.releaseVersion, 'base-v0.8.0');
-    assert.equal(manifest.releaseLine, 'release/0.8');
+    assert.equal(manifest.releaseVersion, 'pantheon-base-v0.10.0');
+    assert.equal(manifest.releaseLine, 'release/0.10');
     assert.equal(manifest.baseCommit, 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef');
     assert.equal(manifest.sourceRepo, 'pantheon-base');
     assert.equal(manifest.consumerMode, 'foundation-release-consumer');
     assert.deepEqual(manifest.releaseArtifact, {
-      assetName: 'foundation-release-base-v0.8.0.tgz',
+      assetName: 'foundation-release-pantheon-base-v0.10.0.tgz',
     });
     assert.deepEqual(manifest.sharedPaths.frontend, [
       'frontend/src/components',
@@ -70,6 +72,15 @@ test('build-release-manifest writes release metadata files into releases/<versio
       'frontend/src/modules/platform',
       'frontend/src/modules/system',
       'frontend/src/index.css',
+    ]);
+    assert.deepEqual(manifest.verification.requiredChecks, [
+      'CI Summary',
+      'Quality Gates',
+      'Security Gates',
+      'Actionlint',
+      'Full Smoke',
+      'SonarCloud Code Analysis',
+      'Release Gate Summary',
     ]);
 
     assert.match(fs.readFileSync(path.join(releaseRoot, 'release-notes.md'), 'utf8'), /shared auth cleanup/);
@@ -82,7 +93,11 @@ test('build-release-manifest writes release metadata files into releases/<versio
     const verificationSummary = JSON.parse(
       fs.readFileSync(path.join(releaseRoot, 'verification-summary.json'), 'utf8'),
     );
-    assert.equal(verificationSummary.releaseVersion, 'base-v0.8.0');
+    assert.equal(verificationSummary.releaseVersion, 'pantheon-base-v0.10.0');
+    assert.deepEqual(
+      verificationSummary.requiredChecks,
+      manifest.verification.requiredChecks,
+    );
   });
 });
 
@@ -93,7 +108,7 @@ test('build-release-manifest fails when release version is missing', () => {
         '--root',
         root,
         '--release-line',
-        'release/0.8',
+        'release/0.10',
         '--base-commit',
         'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
       ],
@@ -105,6 +120,36 @@ test('build-release-manifest fails when release version is missing', () => {
   });
 });
 
+test('build-release-manifest rejects legacy tag names and mismatched release lines', () => {
+  withTempDir((root) => {
+    const commonArgs = [
+      '--root',
+      root,
+      '--base-commit',
+      'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+    ];
+    const legacyResult = runScript([
+      ...commonArgs,
+      '--release-version',
+      'base-v0.10.0',
+      '--release-line',
+      'release/0.10',
+    ], repoRoot);
+    assert.notEqual(legacyResult.status, 0);
+    assert.match(legacyResult.stderr, /pantheon-base-vX\.Y\.Z/);
+
+    const mismatchedLineResult = runScript([
+      ...commonArgs,
+      '--release-version',
+      'pantheon-base-v0.10.0',
+      '--release-line',
+      'release/0.9',
+    ], repoRoot);
+    assert.notEqual(mismatchedLineResult.status, 0);
+    assert.match(mismatchedLineResult.stderr, /release\/0\.10/);
+  });
+});
+
 test('build-release-manifest help lists the supported release metadata flags', () => {
   const result = runScript(['--help'], repoRoot);
 
@@ -113,4 +158,5 @@ test('build-release-manifest help lists the supported release metadata flags', (
   assert.match(result.stdout, /--release-line <line>/);
   assert.match(result.stdout, /--base-commit <sha>/);
   assert.match(result.stdout, /--consumer-impact <text>/);
+  assert.match(result.stdout, /--required-check <name>/);
 });

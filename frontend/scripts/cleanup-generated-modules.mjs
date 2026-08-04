@@ -37,6 +37,8 @@ const REGISTRY_TEMPLATES = {
     ')',
     '',
     'func InitGeneratedBusinessModules(r *gin.RouterGroup, db *gorm.DB) {',
+    '\t// Intentionally empty: the low-code module generator rewrites this file and',
+    '\t// fills in registrations once generated business modules exist.',
     '}',
     '',
   ].join('\n'),
@@ -44,16 +46,14 @@ const REGISTRY_TEMPLATES = {
   backendMenuRegistry: [
     'package iam',
     '',
-    'var generatedMenuComponentKeys = map[string]struct{}{',
-    '}',
+    'var generatedMenuComponentKeys = map[string]struct{}{}',
     '',
   ].join('\n'),
 
   frontendBusinessRegistry: [
     "import type { ModuleConfig } from '../../core/router/types';",
     '',
-    'export const generatedBusinessModules: ModuleConfig[] = [',
-    '];',
+    'export const generatedBusinessModules: ModuleConfig[] = [];',
     '',
   ].join('\n'),
 
@@ -63,12 +63,11 @@ const REGISTRY_TEMPLATES = {
     'type ComponentLoader = () => Promise<{ default: ComponentType }>;',
     '',
     'interface RegistryEntry {',
-    '\tcomponent: LazyExoticComponent<ComponentType>;',
-    '\tpreload: ComponentLoader;',
+    '  component: LazyExoticComponent<ComponentType>;',
+    '  preload: ComponentLoader;',
     '}',
     '',
-    'export const generatedComponentRegistry = {',
-    '} satisfies Record<string, RegistryEntry>;',
+    'export const generatedComponentRegistry = {} satisfies Record<string, RegistryEntry>;',
     '',
   ].join('\n'),
 };
@@ -76,7 +75,7 @@ const REGISTRY_TEMPLATES = {
 const I18N_LOCALES = ['zh-CN', 'en-US', 'ko-KR', 'ja-JP', 'fr-FR'];
 
 function i18nTemplate(variableName) {
-  return [`const ${variableName} = {`, '};', '', `export default ${variableName};`, ''].join('\n');
+  return [`const ${variableName} = {};`, '', `export default ${variableName};`, ''].join('\n');
 }
 
 function removeDir(dir) {

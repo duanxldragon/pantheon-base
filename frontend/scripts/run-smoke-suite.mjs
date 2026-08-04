@@ -332,9 +332,9 @@ async function main() {
     if (finalExitCode === 0 && postGeneratedCleanup.exitCode !== 0) {
       finalExitCode = postGeneratedCleanup.exitCode;
     }
-  }
 
-  process.exit(finalExitCode);
+    process.exitCode = finalExitCode;
+  }
 }
 
 await main();

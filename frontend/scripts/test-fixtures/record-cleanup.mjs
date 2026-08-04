@@ -11,4 +11,9 @@ if (markerPath) {
   fs.appendFileSync(markerPath, `${payload}\n`, 'utf8');
 }
 
-process.exit(0);
+const failOn = process.env.PANTHEON_CLEANUP_FAIL_ON;
+const kindIndex = process.argv.indexOf('--kind');
+const phaseIndex = process.argv.indexOf('--phase');
+const cleanupIdentity = `${process.argv[kindIndex + 1]}:${process.argv[phaseIndex + 1]}`;
+
+process.exit(failOn === cleanupIdentity ? 7 : 0);

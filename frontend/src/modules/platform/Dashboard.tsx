@@ -573,17 +573,8 @@ const DashboardPage: React.FC = () => {
                               </Tag>
                             </span>
                             <span className="dashboard-task-card__action">
-                              <Button
-                                type="text"
-                                size="small"
-                                icon={<IconArrowRight />}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  openTodoTask(item);
-                                }}
-                              >
-                                {t('dashboard.openTask')}
-                              </Button>
+                              {t('dashboard.openTask')}
+                              <IconArrowRight aria-hidden="true" />
                             </span>
                           </div>
                           <span className="dashboard-task-card__desc">{item.resourceLabel}</span>

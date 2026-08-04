@@ -263,3 +263,42 @@ test('run-smoke-suite skips fixture cleanup in preserve mode but still cleans ge
     ],
   );
 });
+
+test('run-smoke-suite propagates a pre-cleanup failure and does not invoke playwright', async () => {
+  const port = await getFreePort();
+  const cleanupMarkerPath = path.join(tmpRoot, `cleanup-failure-${port}.jsonl`);
+  const playwrightMarkerPath = path.join(tmpRoot, `playwright-failure-${port}.json`);
+  const configPath = path.join(tmpRoot, `config-cleanup-failure-${port}.txt`);
+  fs.writeFileSync(configPath, 'placeholder');
+
+  const result = await spawnCommand(process.execPath, [
+    runnerScript,
+    '--host',
+    '127.0.0.1',
+    '--port',
+    String(port),
+    '--timeout',
+    '10000',
+    '--server-script',
+    fixtureServerScript,
+    '--playwright-cli',
+    fakePlaywrightCli,
+    '--generated-cleanup-script',
+    cleanupRecorderScript,
+    '--config',
+    configPath,
+    '--',
+    'tests/smoke/fake.spec.ts',
+  ], {
+    env: {
+      ...process.env,
+      PANTHEON_CLEANUP_MARKER: cleanupMarkerPath,
+      PANTHEON_CLEANUP_FAIL_ON: 'generated:pre',
+      PANTHEON_FAKE_PLAYWRIGHT_MARKER: playwrightMarkerPath,
+    },
+  });
+
+  assert.equal(result.code, 7, `${result.stderr}\n${result.stdout}`);
+  assert.equal(fs.existsSync(playwrightMarkerPath), false);
+  assert.match(result.stderr, /generated cleanup exited with code 7/);
+});

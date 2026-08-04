@@ -2,6 +2,16 @@ import path from 'node:path';
 import process from 'node:process';
 
 export const DEFAULT_ROOT = process.cwd();
+export const DEFAULT_REQUIRED_CHECKS = Object.freeze([
+  'CI Summary',
+  'Quality Gates',
+  'Security Gates',
+  'Actionlint',
+  'Full Smoke',
+  'SonarCloud Code Analysis',
+]);
+
+const RELEASE_VERSION_PATTERN = /^pantheon-base-v(\d+)\.(\d+)\.(\d+)(?:-(?:alpha|beta|rc)\.\d+)?$/u;
 
 const RELEASE_OPTION_HANDLERS = {
   '--root': (options, value) => {
@@ -30,6 +40,10 @@ const RELEASE_OPTION_HANDLERS = {
   },
   '--consumer-impact': (options, value) => {
     options.consumerImpact = requireOptionValue('--consumer-impact', value);
+    return 1;
+  },
+  '--required-check': (options, value) => {
+    options.requiredChecks.push(requireOptionValue('--required-check', value));
     return 1;
   },
   '--repo': (options, value) => {
@@ -71,6 +85,7 @@ export function parseReleaseArgs(argv) {
     root: DEFAULT_ROOT,
     remote: 'origin',
     dryRun: false,
+    requiredChecks: [],
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -86,6 +101,24 @@ export function parseReleaseArgs(argv) {
   return options;
 }
 
+export function validateReleaseIdentity(releaseVersion, releaseLine) {
+  const versionMatch = String(releaseVersion ?? '').match(RELEASE_VERSION_PATTERN);
+  if (!versionMatch) {
+    throw new Error('release-version must match pantheon-base-vX.Y.Z');
+  }
+
+  const expectedReleaseLine = `release/${versionMatch[1]}.${versionMatch[2]}`;
+  if (releaseLine !== undefined && releaseLine !== expectedReleaseLine) {
+    throw new Error(`release-line must be ${expectedReleaseLine} for ${releaseVersion}`);
+  }
+
+  return { expectedReleaseLine };
+}
+
+export function resolveRequiredChecks(additionalChecks = []) {
+  return [...new Set([...DEFAULT_REQUIRED_CHECKS, ...additionalChecks])];
+}
+
 export function buildReleaseHelp(scriptName) {
   return `Usage:
   node scripts/foundation-release/${scriptName} --release-version <version> --release-line <line> --base-commit <sha> [options]
@@ -98,6 +131,7 @@ Options:
   --release-notes <text>
   --upgrade-notes <text>
   --consumer-impact <text>
+  --required-check <name> (repeatable; adds to the default release gates)
   --repo <owner/repo>
   --remote <name>
   --target-commit <sha>

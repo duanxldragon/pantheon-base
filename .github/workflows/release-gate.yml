@@ -2,7 +2,7 @@ name: Release Gate
 
 # Triggered manually before cutting a release tag, or automatically when a
 # release/** branch is pushed. This is the single hard checkpoint that must
-# pass before `base-vX.Y.Z` is tagged and the release bundle is published.
+# pass before `pantheon-base-vX.Y.Z` is tagged and the release bundle is published.
 #
 # Gate policy (all must pass):
 #   1. No open CodeQL error/critical alerts
@@ -31,6 +31,76 @@ env:
 
 jobs:
   # ============================================================
+  # Candidate: resolve the immutable commit and verify its checks
+  # ============================================================
+  candidate-checks:
+    name: Candidate Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+    outputs:
+      candidate_sha: ${{ steps.candidate.outputs.candidate_sha }}
+    steps:
+      - name: Resolve candidate commit
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          INPUT_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          EVENT_CANDIDATE_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          requested_sha="${INPUT_CANDIDATE_SHA:-$EVENT_CANDIDATE_SHA}"
+          candidate_sha=$(gh api "repos/$REPO/commits/$requested_sha" --jq '.sha')
+          if [[ ! "$candidate_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Unable to resolve a full candidate commit SHA from $requested_sha."
+            exit 1
+          fi
+          echo "candidate_sha=$candidate_sha" >> "$GITHUB_OUTPUT"
+          echo "Candidate commit: $candidate_sha"
+
+      - name: Require successful checks on candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.candidate_sha }}
+          REQUIRED_CHECKS: |-
+            CI Summary
+            Quality Gates
+            Security Gates
+            Actionlint
+            Full Smoke
+            SonarCloud Code Analysis
+        shell: bash
+        run: |
+          check_runs=$(gh api "repos/$REPO/commits/$CANDIDATE_SHA/check-runs?per_page=100")
+          failed=0
+
+          while IFS= read -r check_name; do
+            check_result=$(jq -c --arg name "$check_name" \
+              '[.check_runs[] | select(.name == $name)] | sort_by(.completed_at) | last // empty' \
+              <<< "$check_runs")
+            if [ -z "$check_result" ]; then
+              echo "::error::Candidate $CANDIDATE_SHA is missing required check: $check_name"
+              failed=1
+              continue
+            fi
+
+            status=$(jq -r '.status' <<< "$check_result")
+            conclusion=$(jq -r '.conclusion // "pending"' <<< "$check_result")
+            echo "$check_name: status=$status conclusion=$conclusion"
+            if [ "$status" != "completed" ] || [ "$conclusion" != "success" ]; then
+              echo "::error::Required check $check_name is not successful on $CANDIDATE_SHA."
+              failed=1
+            fi
+          done <<< "$REQUIRED_CHECKS"
+
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+
+  # ============================================================
   # Gate 1: CodeQL — zero error/critical open alerts
   # ============================================================
   codeql-alerts:
@@ -46,7 +116,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           count=$(gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
-            --jq '[.[] | select(.rule.severity == "error" or .rule.severity == "critical")] | length' 2>/dev/null || echo "0")
+            --jq '[.[] | select(.rule.severity == "error" or .rule.severity == "critical")] | length')
           echo "CodeQL error/critical open alerts: $count"
           if [ "$count" -gt 0 ]; then
             gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
@@ -72,7 +142,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           count=$(gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100" \
-            --jq '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")] | length' 2>/dev/null || echo "0")
+            --jq '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")] | length')
           echo "Dependabot high/critical open alerts: $count"
           if [ "$count" -gt 0 ]; then
             gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100" \
@@ -116,7 +186,7 @@ jobs:
           # Every finding must be fixed in code; bulk acceptance is not a release path.
           result=$(curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
             "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=1")
-          total=$(echo "$result" | jq -r '.total // 0')
+          total=$(echo "$result" | jq -er '.total | numbers')
           echo "Unprocessed SonarCloud issues (OPEN status): $total"
           if [ "$total" -gt 0 ]; then
             echo "::error::Release blocked: $total unresolved SonarCloud issue(s)."
@@ -155,7 +225,7 @@ jobs:
   # ============================================================
   release-gate-summary:
     name: Release Gate Summary
-    needs: [codeql-alerts, dependabot-alerts, sonarcloud-gate, open-prs]
+    needs: [candidate-checks, codeql-alerts, dependabot-alerts, sonarcloud-gate, open-prs]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -164,6 +234,8 @@ jobs:
       - name: Summarize
         shell: bash
         env:
+          CANDIDATE_CHECKS: ${{ needs.candidate-checks.result }}
+          CANDIDATE_SHA: ${{ needs.candidate-checks.outputs.candidate_sha }}
           CODEQL: ${{ needs.codeql-alerts.result }}
           DEPENDABOT: ${{ needs.dependabot-alerts.result }}
           SONAR: ${{ needs.sonarcloud-gate.result }}
@@ -171,14 +243,18 @@ jobs:
         run: |
           echo "## Release Gate Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate commit: \`$CANDIDATE_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Gate | Result |" >> "$GITHUB_STEP_SUMMARY"
           echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Candidate required checks | $CANDIDATE_CHECKS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| CodeQL (error/critical) | $CODEQL |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Dependabot (high/critical) | $DEPENDABOT |" >> "$GITHUB_STEP_SUMMARY"
           echo "| SonarCloud quality gate and open issues | $SONAR |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Open PRs (advisory) | $OPEN_PRS |" >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$CODEQL" != "success" ] || \
+          if [ "$CANDIDATE_CHECKS" != "success" ] || \
+             [ "$CODEQL" != "success" ] || \
              [ "$DEPENDABOT" != "success" ] || \
              [ "$SONAR" != "success" ]; then
             echo "" >> "$GITHUB_STEP_SUMMARY"

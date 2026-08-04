@@ -1,0 +1,38 @@
+{
+  "taskId": "2026-08-04-base-v0.10.0-release-candidate",
+  "taskManifest": ".harness/tasks/2026-08-04-base-v0.10.0-release-candidate/manifest.json",
+  "status": "implementation-complete-final-verification-pending",
+  "commands": [
+    {
+      "command": "npm run test:foundation-release",
+      "result": "passed: 14 tests"
+    },
+    {
+      "command": "npm run test:release-gate-workflow",
+      "result": "passed: 3 tests"
+    },
+    {
+      "command": "node --test scripts/run-smoke-suite.test.mjs scripts/cleanup-generated-modules.test.mjs",
+      "result": "passed: 10 tests"
+    },
+    {
+      "command": "go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.10 -shellcheck=\"\"",
+      "result": "passed: all workflow files"
+    },
+    {
+      "command": "focused cleanup-range Playwright smoke --repeat-each=3",
+      "result": "passed: 9 tests in 71.9 seconds"
+    },
+    {
+      "command": "Dashboard backoffice visual smoke",
+      "result": "passed: runtime-error gate and desktop screenshot"
+    }
+  ],
+  "renderedEvidence": "frontend/test-results/backoffice-ui/dashboard-desktop.png",
+  "hostedPending": [
+    "GitHub required checks on the candidate PR",
+    "Full Smoke on the final candidate SHA",
+    "Release Gate on the final candidate SHA"
+  ],
+  "runtimeGap": "No production environment was changed. Local real-stack Playwright used the repository backend and Vite server."
+}

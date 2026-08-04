@@ -4,7 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { buildReleaseHelp, parseReleaseArgs } from './release-cli.mjs';
+import { buildReleaseHelp, parseReleaseArgs, validateReleaseIdentity } from './release-cli.mjs';
 
 const PLACEHOLDER_RELEASE_TEXTS = new Set([
   'No release notes provided.',
@@ -85,9 +85,16 @@ function ensureReleaseDirectory(root, releaseVersion) {
   if (!fs.existsSync(manifestPath)) {
     throw new Error(`release manifest not found: ${manifestPath}`);
   }
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  if (manifest.releaseVersion !== releaseVersion) {
+    throw new Error(
+      `release manifest version ${manifest.releaseVersion} does not match ${releaseVersion}`,
+    );
+  }
   return {
     releaseRoot,
     manifestPath,
+    manifest,
     distRoot: path.join(root, 'dist', 'foundation-releases', releaseVersion),
   };
 }
@@ -152,6 +159,20 @@ export function validateReleaseBodySections({ releaseNotes, upgradeNotes, consum
     }
   }
   return findings;
+}
+
+export function validatePublishCandidate({ releaseVersion, manifest, targetCommit }) {
+  validateReleaseIdentity(releaseVersion);
+  if (manifest.releaseVersion !== releaseVersion) {
+    throw new Error(
+      `release manifest version ${manifest.releaseVersion} does not match ${releaseVersion}`,
+    );
+  }
+  if (manifest.baseCommit !== targetCommit) {
+    throw new Error(
+      `release manifest baseCommit ${manifest.baseCommit} does not match target commit ${targetCommit}`,
+    );
+  }
 }
 
 function checkTagExists(root, tagName) {
@@ -246,11 +267,23 @@ function uploadGitHubReleaseAssets(root, repoFullName, tagName, assetPaths) {
 
 export function publishFoundationRelease(options) {
   const root = path.resolve(options.root);
+  validateReleaseIdentity(options.releaseVersion);
   const repoFullName = resolveRepoFullName(root, options.repoFullName);
   const releasePaths = ensureReleaseDirectory(root, options.releaseVersion);
   const assetPaths = ensureReleaseAssetFiles(releasePaths, options.releaseVersion);
-  const targetCommit =
+  const requestedTargetCommit =
     options.targetCommit || runCommand('git', ['rev-parse', 'HEAD'], 'git rev-parse HEAD', { cwd: root });
+  const targetCommit = runCommand(
+    'git',
+    ['rev-parse', `${requestedTargetCommit}^{commit}`],
+    `git rev-parse ${requestedTargetCommit}^{commit}`,
+    { cwd: root },
+  );
+  validatePublishCandidate({
+    releaseVersion: options.releaseVersion,
+    manifest: releasePaths.manifest,
+    targetCommit,
+  });
   const tagName = options.releaseVersion;
   const releaseTitle = buildGitHubReleaseTitle(options.releaseVersion);
   const tagMessage = `Foundation release ${tagName}`;

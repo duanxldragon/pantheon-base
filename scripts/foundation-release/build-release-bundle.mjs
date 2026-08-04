@@ -5,6 +5,8 @@ import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { validateReleaseIdentity } from './release-cli.mjs';
+
 const DEFAULT_ROOT = process.cwd();
 const METADATA_FILES = [
   'manifest.json',
@@ -45,6 +47,7 @@ function resolveReleaseRoots(root, releaseVersion) {
   if (!releaseVersion) {
     throw new Error('release-version is required');
   }
+  validateReleaseIdentity(releaseVersion);
 
   const releaseRoot = path.join(root, 'releases', releaseVersion);
   const distRoot = path.join(root, 'dist', 'foundation-releases', releaseVersion);
@@ -114,15 +117,6 @@ function writeReleaseModuleBoundary(distRoot, releaseVersion) {
   );
 }
 
-// Git Bash's `tar` treats a Windows drive path like `D:\...` as a remote
-// tape device ("Cannot connect to D:"). Convert native OS paths to POSIX so
-// the spawned `tar` subprocess receives `/d/workspace/...` on Windows.
-function toPosixPath(p) {
-  return p
-    .replace(/^([A-Za-z]):[\\/]/, (_m, drive) => `/${drive.toLowerCase()}/`)
-    .replace(/\\/g, '/');
-}
-
 function createArchive(distRoot, releaseVersion) {
   const archiveName = `foundation-release-${releaseVersion}.tgz`;
   const archivePath = path.join(distRoot, archiveName);
@@ -131,7 +125,8 @@ function createArchive(distRoot, releaseVersion) {
     'go.mod',
     'bundle',
   ];
-  const result = spawnSync('tar', ['-czf', toPosixPath(archivePath), '-C', toPosixPath(distRoot), ...entries], {
+  const result = spawnSync('tar', ['-czf', archiveName, ...entries], {
+    cwd: distRoot,
     encoding: 'utf8',
   });
   if (result.status !== 0) {
@@ -151,6 +146,11 @@ function createArchive(distRoot, releaseVersion) {
 export function createReleaseBundle(options) {
   const { releaseRoot, distRoot, bundleRoot } = resolveReleaseRoots(options.root, options.releaseVersion);
   const manifest = readManifest(releaseRoot);
+  if (manifest.releaseVersion !== options.releaseVersion) {
+    throw new Error(
+      `manifest releaseVersion ${manifest.releaseVersion} does not match ${options.releaseVersion}`,
+    );
+  }
   const pathReport = {
     releaseVersion: manifest.releaseVersion,
     copiedAt: new Date().toISOString(),
@@ -160,6 +160,7 @@ export function createReleaseBundle(options) {
     docs: [],
   };
 
+  fs.rmSync(distRoot, { recursive: true, force: true });
   fs.mkdirSync(bundleRoot, { recursive: true });
   copyMetadataFiles(releaseRoot, distRoot);
   writeReleaseModuleBoundary(distRoot, manifest.releaseVersion);

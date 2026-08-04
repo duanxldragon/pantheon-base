@@ -3,7 +3,12 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { buildReleaseHelp, parseReleaseArgs } from './release-cli.mjs';
+import {
+  buildReleaseHelp,
+  parseReleaseArgs,
+  resolveRequiredChecks,
+  validateReleaseIdentity,
+} from './release-cli.mjs';
 
 function validateOptions(options) {
   if (options.help) {
@@ -19,6 +24,7 @@ function validateOptions(options) {
   if (!options.baseCommit) {
     throw new Error('base-commit is required');
   }
+  validateReleaseIdentity(options.releaseVersion, options.releaseLine);
   if (!/^[0-9a-f]{40}$/i.test(options.baseCommit)) {
     throw new Error('base-commit must be a 40-character hex commit');
   }
@@ -29,6 +35,7 @@ function writeTextFile(filePath, content) {
 }
 
 function buildManifest(options) {
+  const requiredChecks = resolveRequiredChecks(options.requiredChecks);
   return {
     schemaVersion: 1,
     releaseVersion: options.releaseVersion,
@@ -57,7 +64,7 @@ function buildManifest(options) {
     },
     verification: {
       summaryFile: 'verification-summary.json',
-      requiredChecks: [],
+      requiredChecks,
     },
     consumerCompatibility: {
       'pantheon-ops': {
@@ -74,7 +81,7 @@ function buildVerificationSummary(options) {
     releaseLine: options.releaseLine,
     baseCommit: options.baseCommit,
     generatedAt: new Date().toISOString(),
-    requiredChecks: [],
+    requiredChecks: resolveRequiredChecks(options.requiredChecks),
   };
 }
 

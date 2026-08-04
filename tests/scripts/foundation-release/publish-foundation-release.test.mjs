@@ -11,8 +11,12 @@ const moduleUrl = pathToFileURL(
   path.join(repoRoot, 'scripts', 'foundation-release', 'publish-foundation-release.mjs'),
 ).href;
 
-const { buildGitHubReleaseBody, buildGitHubReleaseTitle, validateReleaseBodySections } =
-  await import(moduleUrl);
+const {
+  buildGitHubReleaseBody,
+  buildGitHubReleaseTitle,
+  validatePublishCandidate,
+  validateReleaseBodySections,
+} = await import(moduleUrl);
 
 function withTempDir(callback) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pantheon-foundation-publish-'));
@@ -77,4 +81,25 @@ test('validateReleaseBodySections accepts non-placeholder content', () => {
     upgradeNotes: '# Upgrade Notes\n\nrerun inheritance checks',
     consumerImpact: '# Consumer Impact\n\nops should review business overlays',
   }), []);
+});
+
+test('validatePublishCandidate binds the release tag to the manifest commit', () => {
+  const targetCommit = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  assert.doesNotThrow(() => validatePublishCandidate({
+    releaseVersion: 'pantheon-base-v0.10.0',
+    manifest: {
+      releaseVersion: 'pantheon-base-v0.10.0',
+      baseCommit: targetCommit,
+    },
+    targetCommit,
+  }));
+
+  assert.throws(() => validatePublishCandidate({
+    releaseVersion: 'pantheon-base-v0.10.0',
+    manifest: {
+      releaseVersion: 'pantheon-base-v0.10.0',
+      baseCommit: targetCommit,
+    },
+    targetCommit: 'feedfacefeedfacefeedfacefeedfacefeedface',
+  }), /baseCommit.*does not match target commit/);
 });
