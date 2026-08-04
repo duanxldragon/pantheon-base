@@ -1,0 +1,60 @@
+{
+  "taskId": "2026-08-04-base-v0-10-0-release-candidate",
+  "title": "Prepare the pantheon-base v0.10.0 release candidate",
+  "goal": "Close all identified Base-side release, packaging, gate, smoke, and evidence gaps and produce a candidate that is ready for the final maintainer publication gate.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["ci-workflow", "release-tooling", "ui-runtime"],
+  "qualityProfiles": ["ci-workflow", "generator", "ui-runtime"],
+  "scope": {
+    "in": [
+      "Enforce pantheon-base-vX.Y.Z and matching release/X.Y identities",
+      "Record required candidate checks in release metadata",
+      "Make foundation bundle creation deterministic on Windows",
+      "Bind Release Gate and publish tooling to an immutable candidate commit",
+      "Make security API failures block release",
+      "Fix smoke cleanup false-green and clean-template drift",
+      "Stabilize cleanup RangePicker smoke at month boundaries",
+      "Remove the Dashboard nested-button runtime error",
+      "Generate v0.10.0 metadata and bundle for the accepted candidate SHA"
+    ],
+    "out": [
+      "Any pantheon-ops change",
+      "New Base product features",
+      "External tag creation or GitHub Release publication before maintainer approval"
+    ]
+  },
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+  ],
+  "requiredSensors": [
+    "npm run test:foundation-release",
+    "npm run test:release-gate-workflow",
+    "go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.10 -shellcheck=\"\"",
+    "go test -count=1 ./...",
+    "go vet ./...",
+    "frontend npm run lint",
+    "frontend npm run test:unit",
+    "frontend npm run build",
+    "focused cleanup RangePicker Playwright smoke",
+    "Dashboard visual smoke and screenshot",
+    "GitHub required checks and Full Smoke on the final candidate"
+  ],
+  "ratchetDecision": "gate-updated",
+  "githubSignal": "repo-quality-gate",
+  "humanGate": "Stop before creating pantheon-base-v0.10.0 tag or publishing the GitHub Release.",
+  "syncExpectation": "Base-only. Ops remains unchanged until a later explicit foundation upgrade task.",
+  "linkage": {
+    "taskId": "2026-08-04-base-v0-10-0-release-candidate",
+    "changeRef": "none",
+    "codeRef": "pending",
+    "taskPacket": ".harness/tasks/2026-08-04-base-v0-10-0-release-candidate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/",
+    "reviewFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/review.md",
+    "summaryFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-04-base-v0-10-0-release-candidate.task.md"]
+  }
+}

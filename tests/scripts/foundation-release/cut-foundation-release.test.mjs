@@ -60,9 +60,9 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
         '--root',
         root,
         '--release-version',
-        'base-v0.8.0',
+        'pantheon-base-v0.10.0',
         '--release-line',
-        'release/0.8',
+        'release/0.10',
         '--base-commit',
         'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
         '--release-notes',
@@ -71,14 +71,16 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
         'upgrade ops carefully',
         '--consumer-impact',
         'ops should rerun inheritance checks',
+        '--required-check',
+        'Release Gate Summary',
       ],
       repoRoot,
     );
 
     assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
-    assert.equal(fs.existsSync(path.join(root, 'releases', 'base-v0.8.0', 'manifest.json')), true);
+    assert.equal(fs.existsSync(path.join(root, 'releases', 'pantheon-base-v0.10.0', 'manifest.json')), true);
     assert.equal(
-      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'bundle', 'manifest.paths.json')),
+      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'bundle', 'manifest.paths.json')),
       true,
     );
     assert.equal(
@@ -87,7 +89,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
           root,
           'dist',
           'foundation-releases',
-          'base-v0.8.0',
+          'pantheon-base-v0.10.0',
           'bundle',
           'shared-frontend',
           'frontend',
@@ -109,4 +111,5 @@ test('cut-foundation-release help lists the supported release metadata flags', (
   assert.match(result.stdout, /--release-line <line>/);
   assert.match(result.stdout, /--base-commit <sha>/);
   assert.match(result.stdout, /--consumer-impact <text>/);
+  assert.match(result.stdout, /--required-check <name>/);
 });

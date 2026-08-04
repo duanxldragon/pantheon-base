@@ -137,7 +137,11 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Run npm script tests
-        run: npm ci --ignore-scripts && npm run test:docs-frontmatter
+        run: |
+          npm ci --ignore-scripts
+          npm run test:docs-frontmatter
+          npm run test:foundation-release
+          npm run test:release-gate-workflow
 
   # ============================================================
   # Phase 2b: Frontend Unit Tests (Vitest + coverage)

@@ -38,6 +38,7 @@
     "test:pr-automation-workflow": "node --test tests/scripts/pr-automation-workflow.test.mjs",
     "test:security-workflow": "node --test tests/scripts/security-workflow.test.mjs",
     "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs",
+    "test:release-gate-workflow": "node --test tests/scripts/release-gate-workflow.test.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

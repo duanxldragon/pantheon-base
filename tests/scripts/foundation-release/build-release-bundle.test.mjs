@@ -33,12 +33,12 @@ function runScript(args, cwd) {
 
 test('build-release-bundle copies shared paths into dist/foundation-releases/<version>/bundle', () => {
   withTempDir((root) => {
-    const releaseRoot = path.join(root, 'releases', 'base-v0.8.0');
+    const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
     fs.mkdirSync(releaseRoot, { recursive: true });
 
     writeJson(path.join(releaseRoot, 'manifest.json'), {
-      releaseVersion: 'base-v0.8.0',
-      releaseLine: 'release/0.8',
+      releaseVersion: 'pantheon-base-v0.10.0',
+      releaseLine: 'release/0.10',
       baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
       sourceRepo: 'pantheon-base',
       consumerMode: 'foundation-release-consumer',
@@ -50,7 +50,7 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       },
     });
     writeJson(path.join(releaseRoot, 'verification-summary.json'), {
-      releaseVersion: 'base-v0.8.0',
+      releaseVersion: 'pantheon-base-v0.10.0',
     });
     fs.writeFileSync(path.join(releaseRoot, 'release-notes.md'), '# Release Notes\n', 'utf8');
     fs.writeFileSync(path.join(releaseRoot, 'upgrade-notes.md'), '# Upgrade Notes\n', 'utf8');
@@ -65,10 +65,22 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md'), '# Model\n', 'utf8');
 
-    const result = runScript(['--root', root, '--release-version', 'base-v0.8.0'], repoRoot);
+    const stalePath = path.join(
+      root,
+      'dist',
+      'foundation-releases',
+      'pantheon-base-v0.10.0',
+      'bundle',
+      'stale.txt',
+    );
+    fs.mkdirSync(path.dirname(stalePath), { recursive: true });
+    fs.writeFileSync(stalePath, 'stale\n', 'utf8');
+
+    const result = runScript(['--root', root, '--release-version', 'pantheon-base-v0.10.0'], repoRoot);
     assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
 
-    const bundleRoot = path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'bundle');
+    const bundleRoot = path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'bundle');
+    assert.equal(fs.existsSync(stalePath), false);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-backend', 'backend', 'cmd', 'server.go')), true);
     assert.equal(
       fs.existsSync(path.join(bundleRoot, 'shared-backend', 'backend', 'cmd', 'server', 'uploads', 'ignored.txt')),
@@ -77,13 +89,13 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'core', 'app.ts')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'docs', 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'manifest.paths.json')), true);
-    assert.equal(fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'go.mod')), true);
+    assert.equal(fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'go.mod')), true);
     assert.equal(
-      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'foundation-release-base-v0.8.0.tgz')),
+      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'foundation-release-pantheon-base-v0.10.0.tgz')),
       true,
     );
     assert.equal(
-      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'base-v0.8.0', 'foundation-release-base-v0.8.0.tgz.sha256')),
+      fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'foundation-release-pantheon-base-v0.10.0.tgz.sha256')),
       true,
     );
   });
@@ -91,12 +103,12 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
 
 test('build-release-bundle fails when a shared path is missing', () => {
   withTempDir((root) => {
-    const releaseRoot = path.join(root, 'releases', 'base-v0.8.0');
+    const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
     fs.mkdirSync(releaseRoot, { recursive: true });
 
     writeJson(path.join(releaseRoot, 'manifest.json'), {
-      releaseVersion: 'base-v0.8.0',
-      releaseLine: 'release/0.8',
+      releaseVersion: 'pantheon-base-v0.10.0',
+      releaseLine: 'release/0.10',
       baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
       sourceRepo: 'pantheon-base',
       consumerMode: 'foundation-release-consumer',
@@ -105,7 +117,7 @@ test('build-release-bundle fails when a shared path is missing', () => {
       },
     });
 
-    const result = runScript(['--root', root, '--release-version', 'base-v0.8.0'], repoRoot);
+    const result = runScript(['--root', root, '--release-version', 'pantheon-base-v0.10.0'], repoRoot);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr || result.error?.message || '', /missing|cannot find/i);
   });

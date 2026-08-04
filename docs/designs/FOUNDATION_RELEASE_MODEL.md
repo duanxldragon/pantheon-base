@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-06-04
+updated_at: 2026-08-04
 ---
 
 # Foundation Release Model
@@ -54,8 +54,8 @@ consumer repo -> consume base foundation release
 
 `pantheon-ops` 和未来其他业务仓默认只消费以下之一：
 
-- 显式 tag，例如 `base-v0.8.0`
-- 显式 release line，例如 `release/0.8`
+- 显式 tag，例如 `pantheon-base-v0.10.0`
+- 显式 release line，例如 `release/0.10`
 - 紧急例外下的显式 commit，但必须带原因
 
 默认不允许写成“跟随 `main`”。
@@ -107,7 +107,7 @@ consumer repo -> consume base foundation release
 一个可被消费仓采用的 foundation release，至少要包含：
 
 1. **版本标识**
-   - 推荐 tag：`base-v<major>.<minor>.<patch>`
+   - 推荐 tag：`pantheon-base-v<major>.<minor>.<patch>`
 2. **release notes**
    - 说明本次影响的共享层面
 3. **consumer impact summary**
@@ -178,7 +178,7 @@ consumer repo -> consume base foundation release
 `pantheon-ops` 后续默认应写成：
 
 - Base branch / release line：`release/<x.y>` 或相应稳定线
-- Base version：`base-v<x.y.z>`
+- Base version：`pantheon-base-v<x.y.z>`
 - Inheritance mode：`foundation-release-consumer`
 
 而不是：

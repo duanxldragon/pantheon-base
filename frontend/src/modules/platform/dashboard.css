@@ -386,6 +386,12 @@
 .dashboard-task-card__action {
   flex-shrink: 0;
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  font-size: 12px;
+  line-height: 24px;
 }
 
 .dashboard-panel-card--actions,

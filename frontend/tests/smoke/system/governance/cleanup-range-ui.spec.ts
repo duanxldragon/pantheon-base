@@ -149,10 +149,10 @@ function cleanupDialog(page: Page) {
   return page.locator('.arco-modal:visible').last();
 }
 
-function dialogOkButton(page: Page) {
+function dialogConfirmButton(page: Page) {
   return cleanupDialog(page)
     .locator('.arco-modal-footer')
-    .getByRole('button', { name: '确定', exact: true })
+    .getByRole('button', { name: '清理', exact: true })
     .last();
 }
 
@@ -165,11 +165,18 @@ async function selectCleanupRange(page: Page) {
   const popup = rangePopup(page);
   await expect(popup).toBeVisible();
 
-  // Left panel shows an earlier month, so its in-view cells are always in the
-  // past relative to "today" and therefore enabled by disabledDate.
   const leftPanel = popup.locator('.arco-panel-date').first();
+  const monthLabel = leftPanel.locator('.arco-picker-header-value');
+  const currentMonthLabel = await monthLabel.textContent();
+  const previousMonthButton = leftPanel
+    .locator('.arco-picker-header-icon:not(.arco-picker-header-icon-hidden)')
+    .last();
+  await previousMonthButton.click();
+  await expect(monthLabel).not.toHaveText(currentMonthLabel || '');
+
+  // The previous month is fully in the past, so every in-view day is enabled.
   const enabledCells = leftPanel.locator('.arco-picker-cell-in-view:not(.arco-picker-cell-disabled)');
-  await expect(enabledCells.first()).toBeVisible();
+  await expect.poll(() => enabledCells.count()).toBeGreaterThanOrEqual(28);
 
   await enabledCells.nth(4).click();
   await enabledCells.nth(10).click();
@@ -224,7 +231,7 @@ test.describe('cleanup range governance smoke', () => {
       const dialog = cleanupDialog(page);
       await expect(dialog).toBeVisible();
       await expect(dialog.locator('.arco-alert-warning')).toBeVisible();
-      await dialogOkButton(page).click();
+      await dialogConfirmButton(page).click();
 
       await expect.poll(() => capturedCleanupPayload).not.toBeNull();
       expect(typeof capturedCleanupPayload?.retentionDays).toBe('number');
@@ -242,7 +249,7 @@ test.describe('cleanup range governance smoke', () => {
         .filter({ hasText: '按时间范围' })
         .click();
       await selectCleanupRange(page);
-      await dialogOkButton(page).click();
+      await dialogConfirmButton(page).click();
 
       await expect.poll(() => capturedCleanupPayload).not.toBeNull();
       expect(capturedCleanupPayload?.retentionDays).toBeUndefined();

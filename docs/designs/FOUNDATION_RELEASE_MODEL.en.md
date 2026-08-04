@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-06-04
+updated_at: 2026-08-04
 ---
 
 # Foundation Release Model
@@ -43,8 +43,8 @@ consumer repo -> consume base foundation release
 
 Downstream repositories should consume one of:
 
-- an explicit tag such as `base-v0.8.0`
-- an explicit release line such as `release/0.8`
+- an explicit tag such as `pantheon-base-v0.10.0`
+- an explicit release line such as `release/0.10`
 - an emergency exception commit with a documented reason
 
 Tracking `main` should not be the default.
@@ -101,7 +101,7 @@ A release fit for downstream consumption should include at least:
 
 Recommended tag format:
 
-- `base-v<major>.<minor>.<patch>`
+- `pantheon-base-v<major>.<minor>.<patch>`
 
 ## 5. Release Gate
 
@@ -157,7 +157,7 @@ Even before a full packaging model exists, the minimum standard should be:
 `pantheon-ops` should move toward:
 
 - Base branch or release line: `release/<x.y>`
-- Base version: `base-v<x.y.z>`
+- Base version: `pantheon-base-v<x.y.z>`
 - Inheritance mode: `foundation-release-consumer`
 
 instead of:

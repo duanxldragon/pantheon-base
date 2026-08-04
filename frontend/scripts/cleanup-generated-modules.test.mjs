@@ -143,6 +143,26 @@ test('cleanup removes generated leftovers and restores clean registry templates'
     assert.equal(existsSync(generatedSchemaPath), false);
     assert.equal(existsSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb')), false);
     assert.deepEqual(checkDirty(generatedPaths, registryFiles, repoRoot), []);
+    assert.match(
+      fs.readFileSync(registryFiles.backendRegistry, 'utf8'),
+      /Intentionally empty: the low-code module generator rewrites this file/,
+    );
+    assert.match(
+      fs.readFileSync(registryFiles.backendMenuRegistry, 'utf8'),
+      /generatedMenuComponentKeys = map\[string\]struct\{\}\{\}/,
+    );
+    assert.match(
+      fs.readFileSync(registryFiles.frontendBusinessRegistry, 'utf8'),
+      /generatedBusinessModules: ModuleConfig\[\] = \[\];/,
+    );
+    assert.match(
+      fs.readFileSync(registryFiles.frontendComponentRegistry, 'utf8'),
+      /generatedComponentRegistry = \{\} satisfies/,
+    );
+    assert.match(
+      fs.readFileSync(path.join(generatedPaths.i18nDir, 'zh-CN.ts'), 'utf8'),
+      /generatedzhCNFallback = \{\};/,
+    );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }

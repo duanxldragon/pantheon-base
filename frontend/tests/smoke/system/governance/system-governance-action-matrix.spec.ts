@@ -12,6 +12,7 @@ type GovernanceActionCase = {
   domain: 'system/auth' | 'system/iam';
   path: string;
   confirmText: string;
+  confirmButtonLabel: string;
   successToast: string;
   errorToast: string;
   actionRoutePattern: RegExp;
@@ -77,8 +78,8 @@ async function waitForConfirmPopup(page: Page, text: string) {
   return popup;
 }
 
-function confirmButton(popup: Locator) {
-  return popup.getByRole('button', { name: '确定', exact: true }).last();
+function confirmButton(popup: Locator, label = '确定') {
+  return popup.getByRole('button', { name: label, exact: true }).last();
 }
 
 async function completeSecondaryVerifyIfVisible(page: Page, password = '123456') {
@@ -249,6 +250,7 @@ const actionCases: GovernanceActionCase[] = [
     domain: 'system/auth',
     path: '/system/session',
     confirmText: '确认下线该会话？',
+    confirmButtonLabel: '确定',
     successToast: '会话已下线',
     errorToast: '请求失败，请稍后重试',
     actionRoutePattern: /\/api\/v1\/system\/session\/session-matrix-1$/,
@@ -259,6 +261,7 @@ const actionCases: GovernanceActionCase[] = [
     domain: 'system/auth',
     path: '/system/login-log',
     confirmText: CLEANUP_WARNING_TEXT,
+    confirmButtonLabel: '清理',
     successToast: '已清理 1 条登录日志',
     errorToast: '请求失败，请稍后重试',
     actionRoutePattern: /\/api\/v1\/system\/login-log\/cleanup$/,
@@ -269,6 +272,7 @@ const actionCases: GovernanceActionCase[] = [
     domain: 'system/iam',
     path: '/system/operation-log',
     confirmText: CLEANUP_WARNING_TEXT,
+    confirmButtonLabel: '清理',
     successToast: '已清理 1 条历史操作日志，并记录 1 条清理审计',
     errorToast: '请求失败，请稍后重试',
     actionRoutePattern: /\/api\/v1\/system\/operation-log\/cleanup$/,
@@ -279,6 +283,7 @@ const actionCases: GovernanceActionCase[] = [
     domain: 'system/iam',
     path: '/system/modules',
     confirmText: '确认卸载该模块吗？',
+    confirmButtonLabel: '确定',
     successToast: '模块已卸载',
     errorToast: '模块卸载失败',
     actionRoutePattern: /\/api\/v1\/lowcode\/dynamic-modules\/biz_matrix\?dropTable=false$/,
@@ -333,7 +338,7 @@ test.describe('system governance action matrix', () => {
         });
 
         const popup = await actionCase.prepare(casePage);
-        const submit = confirmButton(popup);
+        const submit = confirmButton(popup, actionCase.confirmButtonLabel);
         await submit.click({ noWaitAfter: true });
         await completeSecondaryVerifyIfVisible(casePage);
 
@@ -371,7 +376,7 @@ test.describe('system governance action matrix', () => {
         });
 
         const popup = await actionCase.prepare(casePage);
-        await confirmButton(popup).click({ noWaitAfter: true });
+        await confirmButton(popup, actionCase.confirmButtonLabel).click({ noWaitAfter: true });
         await completeSecondaryVerifyIfVisible(casePage);
 
         await expectToast(casePage, actionCase.errorToast);
