@@ -39,6 +39,7 @@ jobs:
     permissions:
       contents: read
       checks: read
+      actions: read
     outputs:
       candidate_sha: ${{ steps.candidate.outputs.candidate_sha }}
     steps:
@@ -74,31 +75,44 @@ jobs:
             SonarCloud Code Analysis
         shell: bash
         run: |
-          check_runs=$(gh api "repos/$REPO/commits/$CANDIDATE_SHA/check-runs?per_page=100")
-          failed=0
+          for attempt in {1..240}; do
+            check_runs=$(gh api "repos/$REPO/commits/$CANDIDATE_SHA/check-runs?per_page=100")
+            pending=0
+            failed=0
 
-          while IFS= read -r check_name; do
-            check_result=$(jq -c --arg name "$check_name" \
-              '[.check_runs[] | select(.name == $name)] | sort_by(.completed_at) | last // empty' \
-              <<< "$check_runs")
-            if [ -z "$check_result" ]; then
-              echo "::error::Candidate $CANDIDATE_SHA is missing required check: $check_name"
-              failed=1
-              continue
+            while IFS= read -r check_name; do
+              check_result=$(jq -c --arg name "$check_name" \
+                '[.check_runs[] | select(.name == $name)] | sort_by(.started_at) | last // empty' \
+                <<< "$check_runs")
+              if [ -z "$check_result" ]; then
+                echo "Required check $check_name is not present yet."
+                pending=1
+                continue
+              fi
+
+              status=$(jq -r '.status' <<< "$check_result")
+              conclusion=$(jq -r '.conclusion // "pending"' <<< "$check_result")
+              echo "$check_name: status=$status conclusion=$conclusion"
+              if [ "$status" != "completed" ]; then
+                pending=1
+              elif [ "$conclusion" != "success" ]; then
+                failed=1
+              fi
+            done <<< "$REQUIRED_CHECKS"
+
+            if [ "$failed" -ne 0 ]; then
+              echo "::error::A required check failed on $CANDIDATE_SHA."
+              exit 1
             fi
-
-            status=$(jq -r '.status' <<< "$check_result")
-            conclusion=$(jq -r '.conclusion // "pending"' <<< "$check_result")
-            echo "$check_name: status=$status conclusion=$conclusion"
-            if [ "$status" != "completed" ] || [ "$conclusion" != "success" ]; then
-              echo "::error::Required check $check_name is not successful on $CANDIDATE_SHA."
-              failed=1
+            if [ "$pending" -eq 0 ]; then
+              echo "All required checks passed on $CANDIDATE_SHA."
+              exit 0
             fi
-          done <<< "$REQUIRED_CHECKS"
-
-          if [ "$failed" -ne 0 ]; then
-            exit 1
-          fi
+            echo "Waiting for candidate checks (attempt $attempt/240)..."
+            sleep 30
+          done
+          echo "::error::Timed out waiting for required checks on $CANDIDATE_SHA."
+          exit 1
 
   # ============================================================
   # Gate 1: CodeQL — zero error/critical open alerts
@@ -135,10 +149,11 @@ jobs:
     permissions:
       contents: read
       security-events: read
+      actions: read
     steps:
       - name: Check open Dependabot alerts
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_GATE_TOKEN || github.token }}
           REPO: ${{ github.repository }}
         run: |
           count=$(gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100" \
