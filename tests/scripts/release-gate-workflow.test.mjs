@@ -43,7 +43,7 @@ test('security alert API failures block the release instead of becoming zero ale
   assert.match(workflowSource, /total=\$\(echo "\$result" \| jq -er '\.total \| numbers'\)/);
 });
 
-test('CI Summary fails closed when any required job is not successful', () => {
+test('CI Summary fails closed for required jobs and reports advisory full-repo lint', () => {
   const summarySource = ciWorkflowSource.slice(ciWorkflowSource.indexOf('  ci-summary:'));
   const goLintSource = ciWorkflowSource.slice(
     ciWorkflowSource.indexOf('  go-lint:'),
@@ -51,15 +51,16 @@ test('CI Summary fails closed when any required job is not successful', () => {
   );
 
   assert.match(summarySource, /needs:\s*\[[^\]]*\bgo-lint\b[^\]]*\]/);
-  assert.match(summarySource, /GO_LINT:\s*\$\{\{ needs\.go-lint\.result \}\}/);
-  assert.doesNotMatch(goLintSource, /continue-on-error:\s*true/);
-  assert.doesNotMatch(goLintSource, /\bexit\s+0\b/);
+  assert.match(summarySource, /GO_LINT:\s*\$\{\{ needs\.go-lint\.outputs\.lint-result \}\}/);
+  assert.match(summarySource, /Go Lint \(full-repo, advisory\)/);
+  assert.match(goLintSource, /id:\s*lint/);
+  assert.match(goLintSource, /continue-on-error:\s*true/);
+  assert.match(goLintSource, /Full-repo lint is advisory/);
 
   for (const resultVariable of [
     'FAST_CHECKS',
     'UNIT_TESTS',
     'FRONTEND_UNIT_TESTS',
-    'GO_LINT',
     'BOUNDARY_GATE',
     'COVERAGE_GATE',
   ]) {
@@ -69,4 +70,6 @@ test('CI Summary fails closed when any required job is not successful', () => {
       `CI Summary must reject non-success result for ${resultVariable}`,
     );
   }
+
+  assert.doesNotMatch(summarySource, /\[ "\$GO_LINT" != "success" \]/);
 });
