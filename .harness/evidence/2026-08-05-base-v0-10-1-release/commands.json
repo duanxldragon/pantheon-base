@@ -30,13 +30,13 @@
       "command": "npm run test:release-gate-workflow; npm run test:foundation-release",
       "cwd": ".",
       "status": "passed",
-      "notes": "Release Gate workflow tests passed 4/4 and foundation release tests passed 14/14."
+      "notes": "Release Gate workflow tests passed 4/4 and foundation release tests passed 15/15 after adding SHA-256 content validation."
     },
     {
       "command": "npm run test:quality-workflow; npm run test:security-workflow; npm run test:pr-automation-workflow",
       "cwd": ".",
       "status": "passed",
-      "notes": "Quality workflow passed 3/3, security workflow 1/1, and PR automation workflow 2/2."
+      "notes": "Quality workflow passed 4/4 after adding merge-group new-code lint coverage; security workflow passed 1/1 and PR automation workflow passed 2/2."
     },
     {
       "command": "go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.10 -shellcheck=\"\"",

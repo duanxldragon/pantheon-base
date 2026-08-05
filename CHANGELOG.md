@@ -12,6 +12,7 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ### Changed
 - CI Summary 对 required job 采用 fail-closed 聚合；保留全仓 Go Lint 的真实 advisory 结果，并由 `quality.yml` 继续阻断 PR/merge queue 中的新代码 lint。
+- Merge queue 使用其不可变 base SHA 限定新代码 lint；发布器在上传前复算并校验 foundation archive 的 SHA-256。
 - 补齐历史 task/evidence/review 收口状态和 OpenSpec 仓库骨架。
 - 发布资产、候选 SHA、PR 门禁和 consumer upgrade 重新绑定到 v0.10.1。
 

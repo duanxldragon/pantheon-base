@@ -3,7 +3,7 @@
 - 改动层级：platform
 - 改动模块：CI aggregation、release governance、Harness evidence
 - 目标问题：CI Summary 未对 required job 的非成功状态失败关闭，且未清晰区分全仓 Go Lint 的 advisory 结果与 `quality.yml` 的新代码阻断门禁；历史发布台账存在未收口链接
-- 预期影响：提高发布门禁可信度；不改变产品运行时行为
+- 预期影响：提高发布门禁可信度；merge queue 仅对新代码 lint，发布资产在上传前校验 SHA-256；不改变产品运行时行为
 
 ## Harness 链路
 
