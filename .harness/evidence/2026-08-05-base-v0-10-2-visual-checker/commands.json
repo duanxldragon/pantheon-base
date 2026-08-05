@@ -88,7 +88,7 @@
   },
   "repo": "pantheon-base",
   "agent": { "tool": "codex" },
-  "knownGaps": ["Independent reviews, hosted checks, publication, and Ops consumption remain pending."],
+  "knownGaps": ["Hosted checks, publication, and immutable Ops consumption remain pending."],
   "graphChecks": {
     "affectedSubgraph": ["visual checker -> CSS matcher -> foundation manifest -> release bundle -> Ops inheritance check"],
     "checks": ["call-depth", "sensitive-flow"],

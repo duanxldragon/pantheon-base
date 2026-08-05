@@ -50,7 +50,7 @@
   "linkage": {
     "taskId": "2026-08-05-base-v0-10-2-visual-checker",
     "changeRef": "none",
-    "codeRef": "pending",
+    "codeRef": "396ca23de8012b20f787d28d058a3fee1a8972e7",
     "taskPacket": ".harness/tasks/2026-08-05-base-v0-10-2-visual-checker/manifest.json",
     "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/",
     "reviewFile": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/review.md",

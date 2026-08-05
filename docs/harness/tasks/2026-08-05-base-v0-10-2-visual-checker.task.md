@@ -129,5 +129,5 @@ platform
 - [x] Contract anchors read
 - [x] Verification run or exception recorded
 - [x] Evidence saved or summarized
-- [ ] Review completed
+- [x] Review completed
 - [ ] Hosted checks, release, and Ops handoff completed

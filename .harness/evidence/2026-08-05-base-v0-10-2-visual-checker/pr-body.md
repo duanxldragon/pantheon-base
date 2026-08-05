@@ -28,7 +28,7 @@
 - [x] Base shell visual contract 通过
 - [x] 运行时 smoke 不适用：无产品运行时变更
 - [ ] GitHub required checks 通过
-- [ ] 两路独立 review 通过
+- [x] 两路独立 review 通过
 
 ## 审核留痕
 
