@@ -6,6 +6,32 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.10.1] — 2026-08-05
+
+发布治理补丁，供 `pantheon-ops` 通过 foundation release 升级消费。
+
+### Changed
+- CI Summary 对所有 required job 采用 fail-closed 聚合，并补入 Go Lint。
+- 补齐历史 task/evidence/review 收口状态和 OpenSpec 仓库骨架。
+- 发布资产、候选 SHA、PR 门禁和 consumer upgrade 重新绑定到 v0.10.1。
+
+---
+
+## [pantheon-base-v0.10.0] — 2026-08-04
+
+首个采用 `pantheon-base-vX.Y.Z` 标准命名的 foundation release。
+
+### Changed
+- 发布工具统一校验 release tag、release line 和不可变候选 SHA。
+- Release Gate、Security、SonarCloud 和 Full Smoke 改为失败关闭。
+- 修复 Windows bundle、smoke cleanup、RangePicker 月边界和 Dashboard 嵌套按钮问题。
+
+### Notes
+- 完整 release notes、consumer impact、upgrade notes 和验证摘要位于
+  [GitHub Release pantheon-base-v0.10.0](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.0)。
+
+---
+
 ## [base-v0.9.0] — 2026-07-21
 
 冻结版本，供 `pantheon-ops` 通过 foundation release 继承。

@@ -1,38 +1,67 @@
 {
   "taskId": "2026-08-04-base-v0-10-0-release-candidate",
   "taskManifest": ".harness/tasks/2026-08-04-base-v0-10-0-release-candidate/manifest.json",
-  "status": "implementation-complete-final-verification-pending",
+  "status": "complete-with-historical-review-gap",
   "commands": [
     {
       "command": "npm run test:foundation-release",
-      "result": "passed: 14 tests"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 14 tests"
     },
     {
       "command": "npm run test:release-gate-workflow",
-      "result": "passed: 3 tests"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 3 tests"
     },
     {
       "command": "node --test scripts/run-smoke-suite.test.mjs scripts/cleanup-generated-modules.test.mjs",
-      "result": "passed: 10 tests"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 10 tests"
     },
     {
       "command": "go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.10 -shellcheck=\"\"",
-      "result": "passed: all workflow files"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: all workflow files"
     },
     {
       "command": "focused cleanup-range Playwright smoke --repeat-each=3",
-      "result": "passed: 9 tests in 71.9 seconds"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 9 tests in 71.9 seconds"
     },
     {
       "command": "Dashboard backoffice visual smoke",
-      "result": "passed: runtime-error gate and desktop screenshot"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: runtime-error gate and desktop screenshot"
     }
   ],
   "renderedEvidence": "frontend/test-results/backoffice-ui/dashboard-desktop.png",
-  "hostedPending": [
-    "GitHub required checks on the candidate PR",
-    "Full Smoke on the final candidate SHA",
-    "Release Gate on the final candidate SHA"
+  "hostedVerification": [
+    "PR #229 head d1d5eda3319334bdcfbd9acefcaf2592ce2a6706 passed CI Summary, Quality Gates, Security Gates, Actionlint, Smoke Sanity, and SonarCloud",
+    "Full Smoke run 30898676929 passed on candidate d1d5eda3319334bdcfbd9acefcaf2592ce2a6706",
+    "Release Gate run 30898676855 passed on candidate d1d5eda3319334bdcfbd9acefcaf2592ce2a6706",
+    "GitHub Release pantheon-base-v0.10.0 targets d1d5eda3319334bdcfbd9acefcaf2592ce2a6706 and publishes the archive plus SHA256 asset"
   ],
-  "runtimeGap": "No production environment was changed. Local real-stack Playwright used the repository backend and Vite server."
+  "runtimeGap": "No production environment was changed. Local real-stack Playwright used the repository backend and Vite server.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-04-base-v0-10-0-release-candidate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/",
+    "reviewFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/review.md",
+    "summaryFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-04-base-v0-10-0-release-candidate.task.md"
+    ]
+  },
+  "knownGaps": []
 }

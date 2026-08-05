@@ -28,3 +28,21 @@
   batch is gated on those before merge.
 - Remaining backend debt (S3776 x95, risky godre x6) is explicitly deferred
   to the final cognitive-complexity batch.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-26-sonar-go-s1192",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Full tests, Smoke Sanity, and the separate complexity batch were documented follow-ups"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-26-sonar-go-s1192/manifest.json",
+    "evidence": ".harness/evidence/2026-07-26-sonar-go-s1192/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-26-sonar-go-s1192/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

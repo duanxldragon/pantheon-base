@@ -2,9 +2,9 @@
   "taskId": "2026-07-25-sonar-scope-and-s8545",
   "repo": "pantheon-base",
   "agent": {
-    "tool": "claude-direct",
+    "tool": "claude-code",
     "adapter": ".agents/adapters/claude-code.md",
-    "note": "Codex relay (api.freemodel.dev) still returns 401/hangs; direct implementation per maintainer precedent 2026-07-23."
+    "note": "Codex relay (api.freemodel.dev) still returns 401/hangs; direct implementation per maintainer precedent 2026-07-23. Legacy tool label: claude-direct"
   },
   "commands": [
     {
@@ -28,8 +28,8 @@
     {
       "command": "go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2 (REVERTED)",
       "cwd": "pantheon-base/backend",
-      "status": "rejected",
-      "notes": "Tool-directive route downgraded product dep minio-go v7.2.1 -> v7.1.0; restoring minio drifted golangci-lint to 2.12.2. Reverted go.mod/go.sum; chose SHA-pinned golangci-lint-action instead."
+      "status": "failed",
+      "notes": "Tool-directive route downgraded product dep minio-go v7.2.1 -> v7.1.0; restoring minio drifted golangci-lint to 2.12.2. Reverted go.mod/go.sum; chose SHA-pinned golangci-lint-action instead. Legacy status: rejected"
     },
     {
       "command": "node --test tests/scripts/quality-workflow.test.mjs",
@@ -40,8 +40,17 @@
     {
       "command": "npm run check:pr-governance && npm run check:task-packet-template && npm run check:structure && npm run check:harness-encoding",
       "cwd": "pantheon-base",
-      "status": "pending",
-      "notes": "Run before commit; recorded in PR body verification section."
+      "status": "passed",
+      "notes": "Completed before PR #206 merge; Docs Governance, Actionlint, CI Summary, Quality Gates, Security Gates, Smoke Sanity, and SonarCloud subsequently passed on the hosted candidate."
     }
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-25-sonar-scope-and-s8545/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-25-sonar-scope-and-s8545/",
+    "reviewFile": ".harness/evidence/2026-07-25-sonar-scope-and-s8545/review.md",
+    "summaryFile": ".harness/evidence/2026-07-25-sonar-scope-and-s8545/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
 }

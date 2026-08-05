@@ -50,3 +50,21 @@ Code-complete; mechanical gates green (see summary.md). Remaining before
 merge: governance smoke run (incl. cleanup-range-ui) and rendered visual
 evidence for the four audit pages — blocked at review time by the local Bash
 permission-classifier outage, must be executed before the PR is opened.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-20-security-audit-governance-round",
+  "verdict": "blocked",
+  "findings": [],
+  "residualRisks": ["The original review was blocked pending smoke and rendered evidence"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-20-security-audit-governance-round/manifest.json",
+    "evidence": ".harness/evidence/2026-07-20-security-audit-governance-round/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-20-security-audit-governance-round/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

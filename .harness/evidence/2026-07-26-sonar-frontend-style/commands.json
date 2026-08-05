@@ -2,9 +2,9 @@
   "taskId": "2026-07-26-sonar-frontend-style",
   "repo": "pantheon-base",
   "agent": {
-    "tool": "claude-direct",
+    "tool": "claude-code",
     "adapter": ".agents/adapters/claude-code.md",
-    "note": "Implemented by Claude subagents in an isolated worktree across three resumed runs (usage-limit interruptions), finished and reviewed by the coordinating Claude session. Codex relay remains unavailable (401); maintainer precedent 2026-07-23."
+    "note": "Implemented by Claude subagents in an isolated worktree across three resumed runs (usage-limit interruptions), finished and reviewed by the coordinating Claude session. Codex relay remains unavailable (401); maintainer precedent 2026-07-23. Legacy tool label: claude-direct"
   },
   "commands": [
     {
@@ -37,5 +37,14 @@
       "status": "passed",
       "notes": "useSettingCatalog.ts four findings verified against source (TypeError only at the flagged type-check branch; value-format branch keeps new Error). CSS cascade audit of remaining merges: body font-family single occurrence, .page-split-layout and .app-dialog .arco-modal-content merges cascade-neutral."
     }
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-26-sonar-frontend-style/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-sonar-frontend-style/",
+    "reviewFile": ".harness/evidence/2026-07-26-sonar-frontend-style/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-sonar-frontend-style/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
 }

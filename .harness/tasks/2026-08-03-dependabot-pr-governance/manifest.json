@@ -30,7 +30,7 @@
   "linkage": {
     "taskId": "2026-08-03-dependabot-pr-governance",
     "changeRef": "none",
-    "codeRef": "pending",
+    "codeRef": "1484a7e9",
     "taskPacket": ".harness/tasks/2026-08-03-dependabot-pr-governance/manifest.json",
     "evidenceDir": ".harness/evidence/2026-08-03-dependabot-pr-governance/",
     "reviewFile": ".harness/evidence/2026-08-03-dependabot-pr-governance/review.md",

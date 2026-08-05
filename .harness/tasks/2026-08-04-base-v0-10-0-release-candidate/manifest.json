@@ -3,8 +3,16 @@
   "title": "Prepare the pantheon-base v0.10.0 release candidate",
   "goal": "Close all identified Base-side release, packaging, gate, smoke, and evidence gaps and produce a candidate that is ready for the final maintainer publication gate.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["ci-workflow", "release-tooling", "ui-runtime"],
-  "qualityProfiles": ["ci-workflow", "generator", "ui-runtime"],
+  "dependencyLayers": [
+    "ci-workflow",
+    "release-tooling",
+    "ui-runtime"
+  ],
+  "qualityProfiles": [
+    "ci-workflow",
+    "generator",
+    "ui-runtime"
+  ],
   "scope": {
     "in": [
       "Enforce pantheon-base-vX.Y.Z and matching release/X.Y identities",
@@ -50,11 +58,13 @@
   "linkage": {
     "taskId": "2026-08-04-base-v0-10-0-release-candidate",
     "changeRef": "none",
-    "codeRef": "pending",
+    "codeRef": "d1d5eda3319334bdcfbd9acefcaf2592ce2a6706",
     "taskPacket": ".harness/tasks/2026-08-04-base-v0-10-0-release-candidate/manifest.json",
     "evidenceDir": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/",
     "reviewFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/review.md",
     "summaryFile": ".harness/evidence/2026-08-04-base-v0-10-0-release-candidate/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-04-base-v0-10-0-release-candidate.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-04-base-v0-10-0-release-candidate.task.md"
+    ]
   }
 }

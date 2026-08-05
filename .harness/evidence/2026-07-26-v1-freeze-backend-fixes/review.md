@@ -40,3 +40,21 @@ will re-cover these commits before the release tag.
 
 Pass for freeze inclusion; Phase 4 dual review + Phase 5 full verification
 (smoke:all + k6) remain gating before the V1 tag.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-26-v1-freeze-backend-fixes",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["The freeze plan retained dual review, full smoke, and k6 as later gates"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-26-v1-freeze-backend-fixes/manifest.json",
+    "evidence": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

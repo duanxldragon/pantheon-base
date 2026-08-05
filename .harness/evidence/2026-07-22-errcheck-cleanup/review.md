@@ -26,3 +26,21 @@ The repo `.golangci.yml` explicitly states: *"check-blank: false — idiomatic `
 
 ### Verdict
 APPROVED. Ready to open governance PR and merge after Quality Gates (SonarCloud red is non-blocking per repo ruleset; it is tracked separately in PR #194).
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-22-errcheck-cleanup",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["The separately tracked SonarCloud state was non-blocking for this scoped cleanup"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-22-errcheck-cleanup/manifest.json",
+    "evidence": ".harness/evidence/2026-07-22-errcheck-cleanup/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-22-errcheck-cleanup/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

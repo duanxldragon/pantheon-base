@@ -7,14 +7,73 @@
     "redis": "127.0.0.1:6379 DB1 via pkg/testredis (lifecycle token tests)"
   },
   "commands": [
-    { "step": "worktree", "command": "git worktree add .wt-fix1 -b fix/v1-freeze-delete-integrity", "result": "created from main b5fe19a3" },
-    { "step": "format", "command": "gofmt -l .", "result": "empty (every PR)" },
-    { "step": "vet", "command": "go vet ./...", "result": "pass (every PR)" },
-    { "step": "build", "command": "go build ./...", "result": "pass (every PR; -buildvcs=false in worktree)" },
-    { "step": "test-full-pr1", "command": "PANTHEON_TEST_DSN=*** go test -count=1 -timeout 900s ./...", "result": "42 packages ok, 0 FAIL" },
-    { "step": "test-full-pr2-pr3", "command": "PANTHEON_TEST_DSN=*** PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 REDIS_PASSWORD=*** go test -count=1 -timeout 900s ./...", "result": "40 ok; 2 pre-existing env-conditional failures (TestSecureActionMiddlewareAllowsMatchingSession, TestRuntime_MFAChallengeSetupAndVerify) reproduced identically on clean main with the same env — documented, not regressions" },
-    { "step": "baseline-check", "command": "go test -run 'TestSecureActionMiddlewareAllowsMatchingSession|TestRuntime_MFAChallengeSetupAndVerify' ./internal/middleware/ ./modules/auth/login/ (on clean main, same Redis env)", "result": "both FAIL identically → pre-existing" },
-    { "step": "menu-contract", "command": "npm run check:menu-contract --prefix frontend", "result": "pass: 16 menus / 20 routes / 89 permissions / 20 component keys" },
-    { "step": "codex-probe", "command": "codex exec (read-only probe)", "result": "401 Unauthorized api.freemodel.dev — direct implementation per maintainer precedent 2026-07-23" }
-  ]
+    {
+      "command": "git worktree add .wt-fix1 -b fix/v1-freeze-delete-integrity",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: created from main b5fe19a3"
+    },
+    {
+      "command": "gofmt -l .",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: empty (every PR)"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: pass (every PR)"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: pass (every PR; -buildvcs=false in worktree)"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=*** go test -count=1 -timeout 900s ./...",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Result: 42 packages ok, 0 FAIL"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=*** PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 REDIS_PASSWORD=*** go test -count=1 -timeout 900s ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: 40 ok; 2 pre-existing env-conditional failures (TestSecureActionMiddlewareAllowsMatchingSession, TestRuntime_MFAChallengeSetupAndVerify) reproduced identically on clean main with the same env — documented, not regressions"
+    },
+    {
+      "command": "go test -run 'TestSecureActionMiddlewareAllowsMatchingSession|TestRuntime_MFAChallengeSetupAndVerify' ./internal/middleware/ ./modules/auth/login/ (on clean main, same Redis env)",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Result: both FAIL identically → pre-existing"
+    },
+    {
+      "command": "npm run check:menu-contract --prefix frontend",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: pass: 16 menus / 20 routes / 89 permissions / 20 component keys"
+    },
+    {
+      "command": "codex exec (read-only probe)",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Result: 401 Unauthorized api.freemodel.dev — direct implementation per maintainer precedent 2026-07-23"
+    }
+  ],
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-26-v1-freeze-backend-fixes/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/",
+    "reviewFile": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-v1-freeze-backend-fixes/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
 }

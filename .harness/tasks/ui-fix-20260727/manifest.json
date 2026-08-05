@@ -3,7 +3,9 @@
   "title": "Close pantheon-ui-cross-review findings in pantheon-base",
   "goal": "Close the accepted P1/P2 UI cross-review findings with restrained Base-only changes, synchronized i18n/design contracts, and rendered desktop/mobile evidence.",
   "primaryLayer": "system",
-  "dependencyLayers": ["platform"],
+  "dependencyLayers": [
+    "platform"
+  ],
   "scope": {
     "in": [
       "Verify the mobile shell header at 390x844 with no page-level horizontal overflow",
@@ -57,9 +59,10 @@
       "generated locale parity"
     ],
     "graphFocus": [
-      "No new module boundary or dependency direction",
-      "Existing auth API read for current-session identity",
-      "Responsive table projection at 390px and 1440px"
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-input-flow"
     ]
   },
   "expectedFiles": {
@@ -95,7 +98,11 @@
   },
   "executionRoles": {
     "implementerPosture": "generator",
-    "reviewerPosture": ["impeccable visual quality", "mechanical", "scope and regression"]
+    "reviewerPosture": [
+      "impeccable visual quality",
+      "mechanical",
+      "scope and regression"
+    ]
   },
   "verificationPlan": {
     "frontend": [
@@ -114,7 +121,10 @@
       "Seven screenshots, computed-style/visibility probes, and console/page error collection"
     ],
     "visualEvidence": {
-      "viewports": ["390x844", "1440x900"],
+      "viewports": [
+        "390x844",
+        "1440x900"
+      ],
       "states": [
         "breadcrumb plus one action row",
         "sort header center not covered",

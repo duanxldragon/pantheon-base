@@ -3,34 +3,78 @@
   "repo": "pantheon-base",
   "agent": {
     "tool": "codex",
-    "note": "Recovery-worktree implementation; independent review has been requested from the coordinator."
+    "note": "Recovery-worktree implementation later merged through PR #220; the absent contemporaneous non-author approval is recorded as a historical governance gap."
   },
   "commands": [
-    {"command": "npx prettier --write <eight frozen TypeScript files>", "cwd": "frontend", "status": "passed", "notes": "Formatted the seven changed files; ProfileCenter was already formatted."},
-    {"command": "npm run lint", "cwd": "frontend", "status": "passed", "notes": "ESLint completed with no findings."},
-    {"command": "npm run type-check", "cwd": "frontend", "status": "passed", "notes": "tsc -b completed successfully."},
-    {"command": "npm run test:api:unit", "cwd": "frontend", "status": "not-run", "notes": "This recovery branch has no test:api:unit script. The script is expected from separate CI-wiring work and was not introduced here."},
-    {"command": "npm run test:unit", "cwd": "frontend", "status": "passed", "notes": "13 test files and 132 tests passed."},
-    {"command": "npm run build", "cwd": "frontend", "status": "passed", "notes": "Vite build and all prebuild UI contracts passed."},
-    {"command": "npx prettier --check <eight frozen TypeScript files>", "cwd": "frontend", "status": "passed", "notes": "All eight files match Prettier."},
-    {"command": "git diff --check", "cwd": ".", "status": "passed", "notes": "No whitespace errors."}
+    {
+      "command": "npx prettier --write <eight frozen TypeScript files>",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Formatted the seven changed files; ProfileCenter was already formatted."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "ESLint completed with no findings."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "tsc -b completed successfully."
+    },
+    {
+      "command": "npm run test:api:unit",
+      "cwd": "frontend",
+      "status": "not-run",
+      "notes": "This recovery branch has no test:api:unit script. The script is expected from separate CI-wiring work and was not introduced here."
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "13 test files and 132 tests passed."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Vite build and all prebuild UI contracts passed."
+    },
+    {
+      "command": "npx prettier --check <eight frozen TypeScript files>",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "All eight files match Prettier."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No whitespace errors."
+    }
   ],
   "runtimeSensitive": true,
-  "runtimeGap": "No listeners were present on 127.0.0.1:5173 or 127.0.0.1:8080. Per scope, no shared frontend or backend service was started or stopped, so focused browser/system smoke could not run.",
+  "runtimeGap": "No local service was running during implementation, so no standalone screenshot was retained. PR #220 hosted Smoke Sanity and frontend contracts later passed on the merged candidate.",
   "browserEvidence": [
     {
       "viewport": "desktop",
       "url": "/system/operation-log",
       "visualGap": "No local application service was running; rendered desktop inspection was not produced. The build's shell/UI/SearchToolbar contracts passed.",
       "consoleErrors": [],
-      "checkedStates": ["static-contract-only"]
+      "checkedStates": [
+        "static-contract-only"
+      ]
     },
     {
       "viewport": "narrow",
       "url": "/system/operation-log",
       "visualGap": "No local application service was running; rendered narrow inspection was not produced. No layout-affecting JSX or CSS changes were made.",
       "consoleErrors": [],
-      "checkedStates": ["static-contract-only"]
+      "checkedStates": [
+        "static-contract-only"
+      ]
     }
   ],
   "linkage": {
@@ -40,9 +84,23 @@
     "changeRef": "none",
     "planRefs": []
   },
+  "hostedVerification": [
+    "PR #220 passed CI Summary, Quality Gates, Security Gates, Smoke Sanity, SonarCloud, CodeQL, and frontend contract checks",
+    "PR #220 merged as a543e5e45e4e28c0a20e615167164e4af75f0bb8"
+  ],
   "knownGaps": [
-    "Rendered desktop/narrow audit-table evidence and system smoke are not available because no shared local services were listening; no service lifecycle was changed.",
-    "Independent reviewer verdict remains required before PR merge.",
-    "The branch lacks npm script test:api:unit; 13-file frontend unit suite passed instead."
-  ]
+    "No standalone rendered desktop/narrow screenshot was retained because the batch did not change markup or CSS.",
+    "PR #220 had no contemporaneous non-author approval; retrospective governance review is linked from the v0.10.1 task.",
+    "The recovery branch lacked npm script test:api:unit; the 13-file frontend unit suite and later hosted checks passed instead."
+  ],
+  "graphChecks": {
+    "affectedSubgraph": [
+      "OperationLogList -> crossPageSelection -> batchDeleteOperationLogs"
+    ],
+    "checks": [
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "The destructive batch-delete path validates cross-page row keys as positive safe integers before calling the existing audit API."
+  }
 }

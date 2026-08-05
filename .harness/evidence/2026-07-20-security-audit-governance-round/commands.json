@@ -1,0 +1,29 @@
+{
+  "taskId": "2026-07-20-security-audit-governance-round",
+  "status": "historical-evidence-gap",
+  "commands": [
+    {
+      "command": "[historical command transcript unavailable]",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "The original commands were not retained; this placeholder records the gap and does not claim a rerun."
+    }
+  ],
+  "runtimeGap": "The original machine-readable command log was not retained. The human-readable review records that smoke and rendered evidence were still blocked at review time.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-20-security-audit-governance-round/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-20-security-audit-governance-round/",
+    "reviewFile": ".harness/evidence/2026-07-20-security-audit-governance-round/review.md",
+    "summaryFile": ".harness/evidence/2026-07-20-security-audit-governance-round/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
+  },
+  "knownGaps": [
+    "The original machine-readable command transcript was not retained."
+  ]
+}

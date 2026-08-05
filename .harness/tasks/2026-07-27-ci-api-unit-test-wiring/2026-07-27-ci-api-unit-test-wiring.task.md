@@ -135,7 +135,7 @@ Reuse the repository TypeScript transpilation helper and current CI frontend-tes
 - [x] Evidence saved or summarized
 - [x] Review completed
 - [x] Existing transpile helper reused; no dependency added.
-- [ ] PR CI actionlint passes.
+- [x] PR CI actionlint passes (PR #218, 2026-07-29).
 
 ## Linkage
 

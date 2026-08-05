@@ -33,3 +33,21 @@
 - The two retained S4666 anchors are documented in the manifest, summary,
   and PR body as a maintainer decision item (re-anchor the checker vs accept
   the duplicates).
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-26-sonar-frontend-style",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Two retained S4666 anchors and hosted Smoke Sanity were documented follow-ups"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-26-sonar-frontend-style/manifest.json",
+    "evidence": ".harness/evidence/2026-07-26-sonar-frontend-style/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-26-sonar-frontend-style/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

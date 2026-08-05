@@ -1,26 +1,43 @@
-[
-  {
-    "step": "Quantify current errcheck issues under repo config",
-    "command": "cd pantheon-base/backend && golangci-lint run --enable-only errcheck ./...",
-    "result": "13 issues across 8 files (incl. 2 test files). Earlier estimate of ~45 was wrong; max-issues-per-linter:50 so all shown.",
-    "evidence": "captured in /tmp/errcheck_raw2.txt (pre-fix baseline)"
+{
+  "taskId": "2026-07-22-errcheck-cleanup",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
   },
-  {
-    "step": "Apply explicit-ignore fixes per repo convention",
-    "command": "Edit 13 call sites: wrap defer Close/Rollback/Remove in `defer func(){ _ = x.Close() }()`; 2-value returns use `_, _ =` (m.Close, w.body.Write, ReadCSV); unchecked type assertion uses `payload, _ =`.",
-    "result": "All 13 sites updated; no lint-rule change, no behavioral change.",
-    "evidence": "8 modified files on branch fix/errcheck-historical-unchecked"
+  "commands": [
+    {
+      "command": "cd pantheon-base/backend && golangci-lint run --enable-only errcheck ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: 13 issues across 8 files (incl. 2 test files). Earlier estimate of ~45 was wrong; max-issues-per-linter:50 so all shown. Evidence: captured in /tmp/errcheck_raw2.txt (pre-fix baseline)"
+    },
+    {
+      "command": "Edit 13 call sites: wrap defer Close/Rollback/Remove in `defer func(){ _ = x.Close() }()`; 2-value returns use `_, _ =` (m.Close, w.body.Write, ReadCSV); unchecked type assertion uses `payload, _ =`.",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: All 13 sites updated; no lint-rule change, no behavioral change. Evidence: 8 modified files on branch fix/errcheck-historical-unchecked"
+    },
+    {
+      "command": "cd pantheon-base/backend && go build ./... && go vet ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: build EXIT 0; vet EXIT 0 (vet compiles test files, confirming test-only fixes in audit_benchmark_test.go and csv_test.go also compile). Evidence: BUILD_EXIT:0, VET_EXIT:0"
+    },
+    {
+      "command": "cd pantheon-base/backend && golangci-lint run --enable-only errcheck ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: 0 issues. Evidence: /tmp/errcheck_final.txt"
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-22-errcheck-cleanup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-errcheck-cleanup/",
+    "reviewFile": ".harness/evidence/2026-07-22-errcheck-cleanup/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-errcheck-cleanup/summary.md",
+    "changeRef": "none",
+    "planRefs": []
   },
-  {
-    "step": "Verify compilation",
-    "command": "cd pantheon-base/backend && go build ./... && go vet ./...",
-    "result": "build EXIT 0; vet EXIT 0 (vet compiles test files, confirming test-only fixes in audit_benchmark_test.go and csv_test.go also compile).",
-    "evidence": "BUILD_EXIT:0, VET_EXIT:0"
-  },
-  {
-    "step": "Confirm errcheck gate is green",
-    "command": "cd pantheon-base/backend && golangci-lint run --enable-only errcheck ./...",
-    "result": "0 issues.",
-    "evidence": "/tmp/errcheck_final.txt"
-  }
-]
+  "knownGaps": []
+}

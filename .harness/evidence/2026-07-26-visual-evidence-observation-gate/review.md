@@ -28,7 +28,7 @@ approved
     "consumerSpecificLeakage": "none"
   },
   "linkage": {
-    "taskPacket": ".harness/tasks/2026-07-26-visual-evidence-observation-gate/manifest.json",
+    "taskManifest": ".harness/tasks/2026-07-26-visual-evidence-observation-gate/manifest.json",
     "evidence": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/commands.json",
     "reviewFile": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/review.md",
     "changeRef": "none",

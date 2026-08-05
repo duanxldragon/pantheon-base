@@ -148,8 +148,10 @@ platform
 ## Linkage
 
 - Task ID: `2026-07-30-local-consolidation`
+- Task Manifest: `.harness/tasks/2026-07-30-local-consolidation/manifest.json`
 - OpenSpec Change: none
 - Superpowers Plan: none
+- Plan References: `docs/harness/tasks/2026-07-30-local-consolidation.task.md`
 - Evidence Directory: `.harness/evidence/2026-07-30-local-consolidation/`
 - Review File: `.harness/evidence/2026-07-30-local-consolidation/review.md`
 

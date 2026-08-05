@@ -34,3 +34,21 @@ what the fixed wait was standing in for":
 No product runtime source (frontend/src, backend Go) touched; the only
 behavioral delta is the improved storage-failure fallback in the pre-paint
 bootstrap script, documented above.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-25-sonar-small-buckets",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["A next-frame transition was covered by hosted Smoke Sanity rather than a deterministic local assertion"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-25-sonar-small-buckets/manifest.json",
+    "evidence": ".harness/evidence/2026-07-25-sonar-small-buckets/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-25-sonar-small-buckets/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

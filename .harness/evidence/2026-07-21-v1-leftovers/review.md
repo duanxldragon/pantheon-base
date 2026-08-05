@@ -34,3 +34,21 @@ maintainer's leftover-processing authorization).
 
 Low-risk sync/hardening round; all target failures reproduced, root-caused,
 fixed, and re-verified green locally. Merge gated by Quality Gates as usual.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-21-v1-leftovers",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Quality Gates remained the hosted merge gate at review time"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-21-v1-leftovers/manifest.json",
+    "evidence": ".harness/evidence/2026-07-21-v1-leftovers/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-21-v1-leftovers/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

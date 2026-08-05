@@ -25,3 +25,21 @@
 
 ### Verdict
 APPROVED. Open governance PR, merge after Quality Gates green, then confirm the follow-up main push run is fully green.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-23-main-quality-gates-green",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Hosted Quality Gates and the follow-up main push were final closure signals"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-23-main-quality-gates-green/manifest.json",
+    "evidence": ".harness/evidence/2026-07-23-main-quality-gates-green/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-23-main-quality-gates-green/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

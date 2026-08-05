@@ -21,3 +21,21 @@
 1. `sessref` index TTL equals refresh TTL; a session revoked after refresh-token expiry is a silent no-op (correct behavior).
 2. Multi-instance: pipeline (not MULTI/EXEC) is used for the two-key write; a crash between SETs could leave an index without a token or vice versa — both degrade to the no-op/backstop path, no security impact.
 3. pantheon-ops carries the same generator audit-metadata warnings; not addressed here (out of scope, recorded in fix-report roadmap).
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-15-code-review-remediation",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Intranet deployment behavior change and cross-repository follow-up are documented above"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-15-code-review-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-07-15-code-review-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-15-code-review-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

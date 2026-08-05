@@ -11,9 +11,10 @@ No findings were identified in the scoped diff:
 - No UI layout or state markup changed. Build-time shell, UI, and
   SearchToolbar contracts passed.
 
-Independent UX-QA/mechanical review is requested from the coordinator before
-PR merge. Rendered smoke evidence remains unavailable because no local shared
-service was listening; that gap is explicit in linked evidence.
+PR #220 later passed Smoke Sanity, frontend contracts, SonarCloud, CodeQL,
+Quality Gates, and Security Gates and merged as `a543e5e4`. GitHub records no
+contemporaneous non-author approval. The v0.10.1 governance task carries the
+retrospective independent review; this file preserves the historical gap.
 
 ## Machine Readable
 
@@ -25,7 +26,7 @@ service was listening; that gap is explicit in linked evidence.
     "affectedSubgraph": ["OperationLogList -> crossPageSelection -> batchDeleteOperationLogs"],
     "checks": ["sensitive-flow"],
     "findings": [],
-    "notes": "Author self-review only. Independent review remains required before merge; the verdict records local implementation readiness with documented runtime/visual follow-up."
+    "notes": "Author self-review only at merge time. PR #220 hosted gates passed; the absent contemporaneous non-author approval is recorded and routed to the v0.10.1 retrospective governance review."
   },
   "linkage": {
     "taskManifest": ".harness/tasks/2026-07-29-sonar-ts-final/manifest.json",

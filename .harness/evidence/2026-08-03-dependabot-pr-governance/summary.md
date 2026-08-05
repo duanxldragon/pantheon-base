@@ -9,3 +9,8 @@ The PR automation prerequisite now uses the same Dependabot policy while
 keeping body validation mandatory for human and agent-authored PRs. Regression
 coverage protects both the skip condition and the successful prerequisite
 output needed by the existing auto-merge path.
+
+Hosted verification closed on PR #228: Actionlint and PR Governance Prereq
+passed, the fix merged as 1484a7e9, and no maintainer bypass was used.
+GitHub records no non-author review on that PR; the historical review gap is
+kept explicit and is covered retrospectively by the v0.10.1 governance review.

@@ -1,0 +1,93 @@
+{
+  "taskId": "2026-08-05-base-v0-10-1-release",
+  "title": "Release pantheon-base v0.10.1 and hand off to Pantheon Ops",
+  "goal": "Close release-governance debt, make CI aggregation fail closed, publish an immutable v0.10.1 foundation release, and provide a verified consumer handoff.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "ci-workflow",
+    "release-tooling",
+    "inheritance-governance"
+  ],
+  "qualityProfiles": [
+    "ci-workflow",
+    "foundation-release"
+  ],
+  "scope": {
+    "in": [
+      "Fail closed CI Summary for every required job including Go Lint",
+      "Normalize the historical Sonar Go task manifest and restore its missing evidence linkage",
+      "Close stale hosted-check and review ledgers with verifiable GitHub evidence",
+      "Track the OpenSpec skeleton and update release changelog",
+      "Create, verify, publish, and merge pantheon-base-v0.10.1",
+      "Publish the release artifact and handoff metadata for a separate Pantheon Ops L2 consumer upgrade"
+    ],
+    "out": [
+      "Base product features or runtime behavior changes",
+      "Database, permission, menu, i18n, API, or UI changes",
+      "Any Pantheon Ops worktree modification; the consumer upgrade has its own L2 task and evidence",
+      "Manual copying of Base main into Pantheon Ops",
+      "Publishing from an unverified or mutable candidate"
+    ]
+  },
+  "assumptionsAndOpenQuestions": [
+    "The next semantic version is v0.10.1 because the payload is a backward-compatible governance and release patch.",
+    "The maintainer explicitly authorized commit, PR merge, branch cleanup, GitHub release publication, and the downstream Ops upgrade."
+  ],
+  "minimumViableApproach": "Reuse the existing release scripts, PR wrapper, Release Gate, and Ops foundation consumer. Add no dependency and change no product code.",
+  "successCriteria": [
+    "All Base local governance, workflow, release-tooling, and formatting checks pass",
+    "Two independent reviewers report no blocking finding",
+    "The exact candidate SHA passes required GitHub checks and Release Gate",
+    "The v0.10.1 tag and GitHub Release assets bind to the manifest commit",
+    "Base local and remote branch sets contain only main after merge",
+    "The published release exposes the manifest, checksum, compatibility metadata, and handoff needed by the separate Pantheon Ops L2 upgrade"
+  ],
+  "structuralScope": {
+    "affectedSubgraph": [
+      "CI required jobs -> CI Summary -> Release Gate candidate checks",
+      "task manifest -> evidence -> review -> PR governance",
+      "candidate commit -> foundation manifest -> bundle -> GitHub Release -> Ops lock"
+    ],
+    "boundaryCrossings": [
+      "GitHub Actions -> release tooling",
+      "pantheon-base release -> pantheon-ops consumer"
+    ],
+    "riskNodes": [
+      "workflow result aggregation",
+      "immutable candidate identity",
+      "tag and asset publication",
+      "consumer lock update"
+    ],
+    "graphFocus": [
+      "call-depth",
+      "sensitive-input-flow"
+    ]
+  },
+  "requiredSensors": [
+    "npm run test:release-gate-workflow",
+    "npm run test:foundation-release",
+    "go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.10 -shellcheck=\"\"",
+    "strict Harness checks",
+    "git diff --check",
+    "two independent reviews",
+    "GitHub required checks and Release Gate on the candidate SHA",
+    "published asset checksum verification"
+  ],
+  "ratchetDecision": "gate-updated",
+  "githubSignal": "repo-quality-gate",
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-08-05-base-v0-10-1-release",
+    "changeRef": "none",
+    "codeRef": "pending",
+    "taskPacket": ".harness/tasks/2026-08-05-base-v0-10-1-release/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-1-release/",
+    "reviewFile": ".harness/evidence/2026-08-05-base-v0-10-1-release/review.md",
+    "summaryFile": ".harness/evidence/2026-08-05-base-v0-10-1-release/summary.md",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-05-base-v0-10-1-release.task.md"
+    ]
+  },
+  "humanGate": "Satisfied by the maintainer request on 2026-08-05 authorizing publication and downstream consumption.",
+  "syncExpectation": "After publication, a separate Pantheon Ops L2 task must dry-run and consume the release with compatibility, rollback, and runtime verification; no manual Base main copy is allowed."
+}

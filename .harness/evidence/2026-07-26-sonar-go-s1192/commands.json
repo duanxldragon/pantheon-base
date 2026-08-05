@@ -2,9 +2,9 @@
   "taskId": "2026-07-26-sonar-go-s1192",
   "repo": "pantheon-base",
   "agent": {
-    "tool": "claude-direct",
+    "tool": "claude-code",
     "adapter": ".agents/adapters/claude-code.md",
-    "note": "Implemented by a Claude subagent in an isolated worktree, reviewed by the coordinating Claude session. Codex relay remains unavailable (401); maintainer precedent 2026-07-23."
+    "note": "Implemented by a Claude subagent in an isolated worktree, reviewed by the coordinating Claude session. Codex relay remains unavailable (401); maintainer precedent 2026-07-23. Legacy tool label: claude-direct"
   },
   "commands": [
     {
@@ -22,8 +22,7 @@
     {
       "command": "go build ./...",
       "cwd": "pantheon-base/backend (worktree .wt-prc)",
-      "status": "passed",
-      "notes": ""
+      "status": "passed"
     },
     {
       "command": "go test -short ./...",
@@ -43,5 +42,14 @@
       "status": "passed",
       "notes": "health.go merged branches produce identical per-error outcomes; GetSecurityRuntimePolicy delegates to byte-identical GetAuthRuntimePolicy (same RLock discipline)."
     }
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-26-sonar-go-s1192/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-26-sonar-go-s1192/",
+    "reviewFile": ".harness/evidence/2026-07-26-sonar-go-s1192/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-sonar-go-s1192/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
 }

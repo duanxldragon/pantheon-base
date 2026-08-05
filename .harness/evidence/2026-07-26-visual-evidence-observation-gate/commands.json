@@ -19,9 +19,10 @@
     }
   ],
   "linkage": {
-    "taskPacket": ".harness/tasks/2026-07-26-visual-evidence-observation-gate/manifest.json",
+    "taskManifest": ".harness/tasks/2026-07-26-visual-evidence-observation-gate/manifest.json",
     "evidenceDir": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/",
     "reviewFile": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/review.md",
+    "summaryFile": ".harness/evidence/2026-07-26-visual-evidence-observation-gate/summary.md",
     "changeRef": "none",
     "planRefs": []
   },

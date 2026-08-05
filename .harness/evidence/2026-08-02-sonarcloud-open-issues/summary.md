@@ -1,6 +1,7 @@
 # Summary - 2026-08-02-sonarcloud-open-issues
 
-Status: local remediation for the final 15 PR findings is green; hosted SonarCloud and Smoke Sanity reruns are pending for a0c01eae.
+Status: complete. PR #222 merged as `22d6fb84`; hosted SonarCloud, Smoke
+Sanity, CI Summary, Quality Gates, and Security Gates passed on the final head.
 
 Baseline: SonarCloud quality gate `OK`, 77 unresolved code smells.
 
@@ -46,5 +47,6 @@ Known gaps:
   styling; no standalone screenshot artifact was retained.
 - The strict visual checker still reports one pre-existing unreadable
   2026-07-29 task manifest outside this task.
-- Hosted SonarCloud must confirm zero PR issues, and hosted Smoke Sanity plus
-  final Quality Gates remain pending for `a0c01eae`.
+- Delayed hover opening and click-to-close after a hover-open transition were
+  not separately exercised by the focused local smoke; the full hosted Smoke
+  Sanity suite passed on the final PR head.

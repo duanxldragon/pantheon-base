@@ -57,7 +57,7 @@
       "command": "Invoke-WebRequest https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=222&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=100",
       "cwd": ".",
       "status": "passed",
-      "notes": "The remote PR head 234f3ac8 still reported 15 open findings: 13 readonly/expression TypeScript smells, one layout expression smell, and one CRITICAL PermissionWorkbenchTab cognitive-complexity finding. Commit a0c01eae applies the local remediation; hosted re-analysis is pending."
+      "notes": "The prior remote PR head 234f3ac8 reported 15 open findings. Commit a0c01eae applied the remediation; the final PR #222 analysis on head cfaed7b4 passed with no remaining PR findings."
     },
     {
       "command": "npm run build && npm run test:generator:smoke",
@@ -73,19 +73,27 @@
     }
   ],
   "runtimeSensitive": true,
-  "runtimeGap": "Hosted Linux Backend Tests passed for the backend correction. Full hosted Smoke Sanity and SonarCloud remain pending for frontend code commit a0c01eae.",
+  "runtimeGap": "Closed by PR #222 hosted Backend Tests, Smoke Sanity, SonarCloud, Quality Gates, and Security Gates. The focused local smoke did not separately exercise delayed hover opening.",
   "browserEvidence": [
     {
       "viewport": "desktop",
       "url": "http://127.0.0.1:5174/system/user",
       "visualGap": "No layout or CSS change. Functional runtime interaction was verified in Chromium at 1280x720; no standalone screenshot artifact was retained.",
       "consoleErrors": [],
-      "checkedStates": ["system user page ready", "user menu opened by click", "lock dialog opened and unlocked", "route and opened tabs preserved"]
+      "checkedStates": [
+        "system user page ready",
+        "user menu opened by click",
+        "lock dialog opened and unlocked",
+        "route and opened tabs preserved"
+      ]
     }
   ],
+  "hostedVerification": [
+    "PR #222 head cfaed7b4 passed Backend Tests, Smoke Sanity, SonarCloud, CI Summary, Quality Gates, Security Gates, CodeQL, and Actionlint",
+    "PR #222 merged as 22d6fb84e434c3ba27ee30ceca551846f646ad64"
+  ],
   "knownGaps": [
-    "Full hosted Smoke Sanity remains pending for frontend code commit a0c01eae.",
-    "Hosted SonarCloud and final PR checks remain pending for the evidence-bearing PR head."
+    "Delayed hover opening and click-to-close after a hover-open transition were not separately exercised by the focused local smoke."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-08-02-sonarcloud-open-issues/manifest.json",
@@ -93,6 +101,8 @@
     "reviewFile": ".harness/evidence/2026-08-02-sonarcloud-open-issues/review.md",
     "changeRef": "none",
     "codeRef": "a0c01eae",
-    "planRefs": ["docs/harness/tasks/2026-08-02-sonarcloud-open-issues.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-02-sonarcloud-open-issues.task.md"
+    ]
   }
 }

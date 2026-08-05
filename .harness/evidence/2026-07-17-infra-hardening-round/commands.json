@@ -55,7 +55,7 @@
     "evidenceDir": ".harness/evidence/2026-07-17-infra-hardening-round/",
     "reviewFile": ".harness/evidence/2026-07-17-infra-hardening-round/review.md",
     "summaryFile": ".harness/evidence/2026-07-17-infra-hardening-round/summary.md",
-    "changeRef": "feat/2026-07-16-search-toolbar",
+    "changeRef": "none",
     "planRefs": []
   },
   "knownGaps": [

@@ -2,28 +2,56 @@
   "taskId": "2026-07-22-frontend-unit-tests",
   "commands": [
     {
-      "purpose": "Structure contract gate after relocating tests to frontend/tests/unit/",
-      "cmd": "node scripts/harness/check-structure-contract.mjs --strict"
+      "command": "node scripts/harness/check-structure-contract.mjs --strict",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Purpose: Structure contract gate after relocating tests to frontend/tests/unit/ Legacy record did not capture an execution result; normalized as not-run."
     },
     {
-      "purpose": "Frontend lint (same command as Fast Checks / Frontend Contract CI jobs)",
-      "cmd": "cd frontend && npx eslint . --max-warnings 0"
+      "command": "cd frontend && npx eslint . --max-warnings 0",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Purpose: Frontend lint (same command as Fast Checks / Frontend Contract CI jobs) Legacy record did not capture an execution result; normalized as not-run."
     },
     {
-      "purpose": "Frontend unit tests with per-file coverage thresholds",
-      "cmd": "cd frontend && npm run test:unit:coverage"
+      "command": "cd frontend && npm run test:unit:coverage",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Purpose: Frontend unit tests with per-file coverage thresholds Legacy record did not capture an execution result; normalized as not-run."
     },
     {
-      "purpose": "Frontend type-check",
-      "cmd": "cd frontend && npx tsc -b"
+      "command": "cd frontend && npx tsc -b",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Purpose: Frontend type-check Legacy record did not capture an execution result; normalized as not-run."
     },
     {
-      "purpose": "Docs governance checks run locally before push",
-      "cmd": "npm run check:docs-frontmatter && npm run check:structure"
+      "command": "npm run check:docs-frontmatter && npm run check:structure",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Purpose: Docs governance checks run locally before push Legacy record did not capture an execution result; normalized as not-run."
     },
     {
-      "purpose": "Verify playwright configs do not collect tests/unit (smoke isolation)",
-      "cmd": "grep -n 'testDir' frontend/playwright*.config.ts"
+      "command": "grep -n 'testDir' frontend/playwright*.config.ts",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Purpose: Verify playwright configs do not collect tests/unit (smoke isolation) Legacy record did not capture an execution result; normalized as not-run."
     }
+  ],
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-22-frontend-unit-tests/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-frontend-unit-tests/",
+    "reviewFile": ".harness/evidence/2026-07-22-frontend-unit-tests/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-frontend-unit-tests/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "Some legacy command entries recorded intent but no execution result; those entries are normalized as not-run."
   ]
 }

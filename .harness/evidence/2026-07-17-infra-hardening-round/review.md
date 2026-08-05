@@ -14,13 +14,7 @@
       "REPOSITORY_LAYOUT.md §2 -> check-structure-contract enforcer pointer",
       "DESIGN.md §7.9 -> check-ui-contract + check-shell-visual-contract enforcer pointers"
     ],
-    "checks": [
-      "all gates self-check at 0 findings (ratchets landed clean)",
-      "structure-contract 11 fixture tests pass",
-      "visual 3 baselines verify green",
-      "frontend build clean with gates in prebuild",
-      "docs-governance blocking steps pass"
-    ],
+    "checks": ["call-depth"],
     "findings": [],
     "notes": "Four mechanical gates land as ratchets (0 findings), preventing recurring drift classes (mojibake, off-contract UI, layout regressions, misplaced files) from reaching human review. Each gate has fixture tests or self-verification, contract source documentation updated with enforcer pointers, and CI wiring appropriate to failure impact (encoding/structure blocking even on PRs, UI-contract in prebuild, visual separate project needing linux baselines before CI enforcement). The regex backtracking lesson (negative lookahead defeated by \\s*) is documented in infra_hardening_2026_07_17.md memory and check-ui-contract comments. The Windows case-insensitive FS fixture trap is documented in test comments."
   },
@@ -28,7 +22,7 @@
     "taskManifest": ".harness/tasks/2026-07-17-infra-hardening-round/manifest.json",
     "evidence": ".harness/evidence/2026-07-17-infra-hardening-round/commands.json",
     "reviewFile": ".harness/evidence/2026-07-17-infra-hardening-round/review.md",
-    "changeRef": "feat/2026-07-16-search-toolbar",
+    "changeRef": "none",
     "planRefs": []
   }
 }

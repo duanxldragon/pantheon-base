@@ -1,37 +1,65 @@
 {
   "taskId": "2026-08-03-dependabot-pr-governance",
   "taskManifest": ".harness/tasks/2026-08-03-dependabot-pr-governance/manifest.json",
-  "status": "local-green-hosted-pending",
+  "status": "complete",
   "commands": [
     {
       "command": "node --test tests/scripts/pr-automation-workflow.test.mjs tests/scripts/quality-workflow.test.mjs",
-      "result": "passed: 5 tests"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 5 tests"
     },
     {
       "command": "npm run check:pr-governance",
-      "result": "passed"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed"
     },
     {
       "command": "npm run check:harness-encoding",
-      "result": "passed: 0 findings across 1141 files"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 0 findings across 1141 files"
     },
     {
       "command": "npm run check:docs-frontmatter",
-      "result": "passed: 207 docs checked"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 207 docs checked"
     },
     {
       "command": "npm run check:harness-docs",
-      "result": "passed: 0 findings"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 0 findings"
     },
     {
       "command": "git diff --check",
-      "result": "passed"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed"
     }
   ],
-  "hostedPending": [
-    "GitHub required checks",
-    "Dependabot PR Governance Prereq reruns",
-    "Dependabot PR merges and branch cleanup"
+  "hostedVerification": [
+    "PR #228 merged at 1484a7e9",
+    "Actionlint succeeded",
+    "PR Governance Prereq succeeded"
   ],
-  "runtimeGap": "No product runtime behavior changes. Hosted GitHub Actions are the authoritative workflow verification."
+  "runtimeGap": "No product runtime behavior changes. Hosted GitHub Actions are the authoritative workflow verification.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-03-dependabot-pr-governance/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-03-dependabot-pr-governance/",
+    "reviewFile": ".harness/evidence/2026-08-03-dependabot-pr-governance/review.md",
+    "summaryFile": ".harness/evidence/2026-08-03-dependabot-pr-governance/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-03-dependabot-pr-governance.task.md"
+    ]
+  },
+  "knownGaps": []
 }

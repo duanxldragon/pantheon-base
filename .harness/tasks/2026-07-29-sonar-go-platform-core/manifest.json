@@ -26,7 +26,9 @@
     ]
   },
   "structuralScope": {
-    "affectedSubgraph": "server bootstrap; token/rate-limit middleware; scaffold validation and generated-resource writers; platform dashboard/health; shared database, import/export, metrics, and upload helpers",
+    "affectedSubgraph": [
+      "server bootstrap; token/rate-limit middleware; scaffold validation and generated-resource writers; platform dashboard/health; shared database, import/export, metrics, and upload helpers"
+    ],
     "boundaryCrossings": [
       "cmd -> internal middleware",
       "platform -> pkg",
@@ -40,9 +42,10 @@
       "upload validation and storage"
     ],
     "graphFocus": [
-      "behavior-preserving helper extraction",
-      "context lifecycle ownership",
-      "sensitive input validation"
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-input-flow"
     ],
     "codeGraphGap": "The isolated worktree is not initialized in CodeGraph; frozen Sonar locations, direct source inspection, existing tests, and full race validation are used instead."
   },
@@ -107,7 +110,9 @@
     ]
   },
   "methodReadiness": {
-    "consumerSpecificControls": "Pantheon Base L2 task/evidence linkage and Go quality gates",
+    "consumerSpecificControls": [
+      "Pantheon Base L2 task/evidence linkage and Go quality gates"
+    ],
     "requiredSensors": [
       "focused go tests",
       "go test -race ./...",
@@ -123,18 +128,30 @@
     ],
     "minimalComplexityRung": "minimum-new-code",
     "ratchetDecision": "no-repeat-observed",
-    "deferredCodeIssues": "Sonar findings outside the assigned path set remain owned by other freeze batches."
+    "deferredCodeIssues": [
+      "Sonar findings outside the assigned path set remain owned by other freeze batches."
+    ]
   },
   "deliveryGovernance": {
-    "designGate": "behavior-preserving static-analysis remediation only",
-    "developmentGate": "declared path allowlist and do-not-touch boundaries",
-    "qaAcceptanceGate": "focused tests plus full race suite",
-    "githubGovernanceGate": "not-applicable in this local-only subtask",
+    "designGate": [
+      "behavior-preserving static-analysis remediation only"
+    ],
+    "developmentGate": [
+      "declared path allowlist and do-not-touch boundaries"
+    ],
+    "qaAcceptanceGate": [
+      "focused tests plus full race suite"
+    ],
+    "githubGovernanceGate": [
+      "not-applicable in this local-only subtask"
+    ],
     "githubSignal": "required when the coordinating branch opens a PR"
   },
   "executionRoles": {
     "implementerPosture": "executor",
-    "reviewerPosture": "architecture + security + mechanical",
+    "reviewerPosture": [
+      "architecture + security + mechanical"
+    ],
     "reviewRequirement": "Independent review is requested through the linked review-request artifact; the coordinating agent owns reviewer routing."
   },
   "verificationPlan": {
@@ -144,15 +161,17 @@
     ],
     "frontend": "none",
     "browserSmoke": "none; no UI change",
-    "runtimeEvidence": "race-enabled full Go suite; no external runtime environment required"
+    "runtimeEvidence": [
+      "race-enabled full Go suite; no external runtime environment required"
+    ]
   },
   "linkage": {
     "taskId": "2026-07-29-sonar-go-platform-core",
     "taskPacket": ".harness/tasks/2026-07-29-sonar-go-platform-core/manifest.json",
     "evidenceDir": ".harness/evidence/2026-07-29-sonar-go-platform-core/",
-    "reviewFile": ".harness/evidence/2026-07-29-sonar-go-platform-core/review-request.md",
+    "reviewFile": ".harness/evidence/2026-07-29-sonar-go-platform-core/review.md",
     "summaryFile": ".harness/evidence/2026-07-29-sonar-go-platform-core/summary.md",
-    "changeRef": "fix/sonar-go-platform-core-recovery",
+    "changeRef": "none",
     "planRefs": []
   },
   "humanGates": [

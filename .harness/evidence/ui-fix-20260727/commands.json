@@ -114,49 +114,77 @@
       "url": "http://127.0.0.1:15173/system/user",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-header-user-390.png",
       "consoleErrors": [],
-      "checkedStates": ["breadcrumb plus one action row", "four header actions", "document width equals viewport width"]
+      "checkedStates": [
+        "breadcrumb plus one action row",
+        "four header actions",
+        "document width equals viewport width"
+      ]
     },
     {
       "viewport": "1440x900",
       "url": "http://127.0.0.1:15173/system/menu",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-menu-sort-1440.png",
       "consoleErrors": [],
-      "checkedStates": ["sort column width 120px", "sort header center not covered", "sort, visibility, and actions readable"]
+      "checkedStates": [
+        "sort column width 120px",
+        "sort header center not covered",
+        "sort, visibility, and actions readable"
+      ]
     },
     {
       "viewport": "1440x900",
       "url": "http://127.0.0.1:15173/system/user",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-user-role-ellipsis-1440.png",
       "consoleErrors": [],
-      "checkedStates": ["role text has hidden overflow, ellipsis, and nowrap", "role header center not covered", "full current role is readable"]
+      "checkedStates": [
+        "role text has hidden overflow, ellipsis, and nowrap",
+        "role header center not covered",
+        "full current role is readable"
+      ]
     },
     {
       "viewport": "1440x900",
       "url": "http://127.0.0.1:15173/system/role",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-role-member-ellipsis-1440.png",
       "consoleErrors": [],
-      "checkedStates": ["role-member drawer open", "nickname is one line", "word-break normal with tooltip-capable ellipsis"]
+      "checkedStates": [
+        "role-member drawer open",
+        "nickname is one line",
+        "word-break normal with tooltip-capable ellipsis"
+      ]
     },
     {
       "viewport": "1440x900",
       "url": "http://127.0.0.1:15173/system/session",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-current-session-1440.png",
       "consoleErrors": [],
-      "checkedStates": ["exactly one current-session tag", "device info visible", "recent activity visible", "status visible"]
+      "checkedStates": [
+        "exactly one current-session tag",
+        "device info visible",
+        "recent activity visible",
+        "status visible"
+      ]
     },
     {
       "viewport": "1440x900",
       "url": "http://127.0.0.1:15173/auth/security",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-security-kpi-1440.png",
       "consoleErrors": [],
-      "checkedStates": ["successful sign-ins among latest 10 KPI visible", "KPI label and value do not overlap"]
+      "checkedStates": [
+        "successful sign-ins among latest 10 KPI visible",
+        "KPI label and value do not overlap"
+      ]
     },
     {
       "viewport": "1440x900",
       "url": "http://127.0.0.1:15173/system/login-log",
       "screenshot": ".harness/evidence/ui-fix-20260727/after-cleanup-action-1440.png",
       "consoleErrors": [],
-      "checkedStates": ["cleanup dialog open", "destructive primary action reads Clean Up", "cancel and destructive actions are distinct"]
+      "checkedStates": [
+        "cleanup dialog open",
+        "destructive primary action reads Clean Up",
+        "cancel and destructive actions are distinct"
+      ]
     }
   ],
   "runtimeSensitive": true,
@@ -167,11 +195,17 @@
   "graphChecks": {
     "usedCodeGraph": false,
     "affectedSubgraph": [
-      "system IAM table presentation",
-      "auth session/security presentation",
-      "frontend locale resources to backend builtin snapshot"
+      "frontend shell and shared visual CSS contract",
+      "system IAM menu/user/role table presentation",
+      "auth session/security/audit governance presentation",
+      "frontend locale resources to backend builtin locale snapshot"
     ],
-    "checks": [],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
     "findings": [],
     "notes": "The task supplied exact files and involved presentation/i18n changes; focused diff review confirmed no new module dependency direction. SessionList reuses the existing auth getSessions API."
   },

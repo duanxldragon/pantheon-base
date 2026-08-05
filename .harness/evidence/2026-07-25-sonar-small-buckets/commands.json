@@ -2,9 +2,9 @@
   "taskId": "2026-07-25-sonar-small-buckets",
   "repo": "pantheon-base",
   "agent": {
-    "tool": "claude-direct",
+    "tool": "claude-code",
     "adapter": ".agents/adapters/claude-code.md",
-    "note": "Codex relay (api.freemodel.dev) still returns 401/hangs; direct implementation per maintainer precedent 2026-07-23."
+    "note": "Codex relay (api.freemodel.dev) still returns 401/hangs; direct implementation per maintainer precedent 2026-07-23. Legacy tool label: claude-direct"
   },
   "commands": [
     {
@@ -22,8 +22,17 @@
     {
       "command": "PR-gate Smoke Sanity (test:smoke:platform:contracts + test:smoke:system:pages)",
       "cwd": "pantheon-base",
-      "status": "pending",
-      "notes": "The edited shell-visual-contract.spec.ts and system-pages.spec.ts waits are exercised directly by the PR's required Smoke Sanity job; full-page-audit.spec.ts is a manual QA sweep, not a CI gate."
+      "status": "passed",
+      "notes": "PR #207 Smoke Sanity passed in hosted run 30164251798; full-page-audit.spec.ts remains a manual QA sweep rather than a CI gate."
     }
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-25-sonar-small-buckets/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-25-sonar-small-buckets/",
+    "reviewFile": ".harness/evidence/2026-07-25-sonar-small-buckets/review.md",
+    "summaryFile": ".harness/evidence/2026-07-25-sonar-small-buckets/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
 }

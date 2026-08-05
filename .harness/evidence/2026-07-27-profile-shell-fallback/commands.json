@@ -1,0 +1,40 @@
+{
+  "taskId": "2026-07-27-profile-shell-fallback",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "The original executing tool was not retained in repository evidence."
+  },
+  "commands": [
+    {
+      "command": "[historical command transcript unavailable]",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "The original final response referenced command results, but the transcript was not committed; this placeholder does not claim a rerun."
+    }
+  ],
+  "runtimeGap": "The original final response referenced browser and command results, but no durable transcript or rendered artifact was committed; this retrospective closeout does not reconstruct them.",
+  "graphChecks": {
+    "affectedSubgraph": [
+      "UserService.loadUserProfileExt -> GORM optional row query -> JSON decode",
+      "Shell and ProfileCenter userInfo -> shared avatar and identity presentation"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [
+      "No contemporaneous CodeGraph report was retained; this artifact closes metadata linkage only."
+    ],
+    "notes": "The task packet constrained the change to the optional profile row and shared identity presentation paths."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-27-profile-shell-fallback/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-27-profile-shell-fallback/",
+    "reviewFile": ".harness/evidence/2026-07-27-profile-shell-fallback/review.md",
+    "summaryFile": ".harness/evidence/2026-07-27-profile-shell-fallback/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "The original command transcript and rendered UI evidence were not committed.",
+    "No contemporaneous independent review artifact was retained."
+  ]
+}

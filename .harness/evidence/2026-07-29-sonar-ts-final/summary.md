@@ -34,5 +34,8 @@ and narrow evidence remain required before release-level acceptance.
 
 ## Review state
 
-Author self-review found no scope expansion. Independent review is requested
-and remains a merge gate; this artifact intentionally does not claim approval.
+Author self-review found no scope expansion. PR #220 subsequently passed its
+hosted gates and merged as `a543e5e4`, but GitHub records no contemporaneous
+non-author approval. That historical governance gap is explicit and is included
+in the v0.10.1 retrospective governance review; this artifact does not rewrite
+the original merge history.

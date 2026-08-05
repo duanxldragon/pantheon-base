@@ -41,7 +41,7 @@
     "requiredSensors": ["lint", "type-check", "unit tests", "build", "format check", "diff check", "harness checkers"],
     "requiredEvidence": ["command summary", "explicit visual/runtime gap", "review request"],
     "ratchetDecision": "no-repeat-observed",
-    "deferredCodeIssues": ["Independent review and rendered smoke evidence remain required before PR merge because no shared local app services were listening."]
+    "deferredCodeIssues": ["No standalone rendered screenshot was retained because the batch did not change markup or CSS; PR #220 hosted Smoke Sanity and frontend contracts passed."]
   },
   "deliveryGovernance": {
     "designGate": ["existing frontend UI specification"],
@@ -51,7 +51,7 @@
   },
   "executionRoles": {
     "implementerPosture": "implementer",
-    "reviewerPosture": ["UX-QA", "mechanical", "independent review requested"]
+    "reviewerPosture": ["UX-QA", "mechanical", "historical review gap recorded and included in the v0.10.1 retrospective governance review"]
   },
   "verificationPlan": {
     "commands": ["npm run lint", "npm run type-check", "npm run test:unit", "npm run build", "npx prettier --check <eight files>", "git diff --check"],
@@ -65,9 +65,10 @@
     "reviewFile": ".harness/evidence/2026-07-29-sonar-ts-final/review.md",
     "summaryFile": ".harness/evidence/2026-07-29-sonar-ts-final/summary.md",
     "changeRef": "none",
+    "codeRef": "a543e5e45e4e28c0a20e615167164e4af75f0bb8",
     "planRefs": []
   },
   "evidenceRequired": ["command result summary", "explicit visual/runtime gap", "review summary"],
-  "humanGates": ["independent review before PR merge", "release gate owned by coordinator"],
-  "completionChecklist": ["Layer and boundary declared", "Verification evidence saved", "Independent review requested"]
+  "humanGates": ["PR #220 required checks and maintainer merge gate completed"],
+  "completionChecklist": ["Layer and boundary declared", "Verification evidence saved", "Hosted PR checks passed", "Historical review gap recorded for retrospective review"]
 }

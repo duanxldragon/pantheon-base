@@ -3,7 +3,9 @@
   "title": "Silence optional profile lookup and harden shell and profile identity fallback",
   "goal": "Treat a missing optional user profile extension as a normal result and prevent broken avatars or duplicate identity labels from repeating the shell or ProfileCenter hero identity.",
   "primaryLayer": "system/iam",
-  "dependencyLayers": ["platform"],
+  "dependencyLayers": [
+    "platform"
+  ],
   "scope": {
     "in": [
       "Query optional system_user_profile_ext rows without record-not-found logging while preserving real database errors and JSON parsing semantics",
@@ -51,7 +53,10 @@
       "shared identity rendering in shell and ProfileCenter"
     ],
     "graphFocus": [
-      "No new dependency direction, cycle, hub, or deeper call chain"
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-input-flow"
     ]
   },
   "expectedFiles": {
@@ -80,7 +85,11 @@
   },
   "executionRoles": {
     "implementerPosture": "generator/executor",
-    "reviewerPosture": ["architecture and scope", "UX-QA", "mechanical"]
+    "reviewerPosture": [
+      "architecture and scope",
+      "UX-QA",
+      "mechanical"
+    ]
   },
   "verificationPlan": {
     "backend": [
@@ -99,16 +108,20 @@
       "Explicit visual/runtime gap if no authenticated browser runtime is available"
     ]
   },
-  "qualityProfile": ["permission-policy", "ui-runtime"],
+  "qualityProfile": [
+    "permission-policy",
+    "ui-runtime"
+  ],
   "portableFailureClass": "test-gap",
   "ratchetDecision": "sensor-added",
   "linkage": {
     "taskId": "2026-07-27-profile-shell-fallback",
     "taskPacket": ".harness/tasks/2026-07-27-profile-shell-fallback/manifest.json",
-    "evidenceDir": "inline command summary in final response",
-    "reviewFile": "inline findings-first self-review in final response",
+    "evidenceDir": ".harness/evidence/2026-07-27-profile-shell-fallback/",
+    "reviewFile": ".harness/evidence/2026-07-27-profile-shell-fallback/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "summaryFile": ".harness/evidence/2026-07-27-profile-shell-fallback/summary.md"
   },
   "evidenceRequired": [
     "focused backend and frontend test results",

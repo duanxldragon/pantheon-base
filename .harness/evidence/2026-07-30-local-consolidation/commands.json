@@ -39,8 +39,8 @@
     {
       "command": "go test -race ./...",
       "cwd": "backend",
-      "status": "blocked-local-environment",
-      "notes": "The default environment sets CGO_ENABLED=0. Retrying with the only available compiler, Cygwin GCC, fails because Go rejects Cygwin for native Windows cgo. GitHub Linux is the required race-test environment."
+      "status": "not-run",
+      "notes": "The default environment sets CGO_ENABLED=0. Retrying with the only available compiler, Cygwin GCC, fails because Go rejects Cygwin for native Windows cgo. GitHub Linux is the required race-test environment. Legacy status: blocked-local-environment"
     },
     {
       "command": "npm run lint && npm run test:unit && npm run build",
@@ -73,11 +73,30 @@
     "taskManifest": ".harness/tasks/2026-07-30-local-consolidation/manifest.json",
     "evidenceDir": ".harness/evidence/2026-07-30-local-consolidation/",
     "reviewFile": ".harness/evidence/2026-07-30-local-consolidation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-30-local-consolidation/summary.md",
     "changeRef": "none",
-    "planRefs": ["docs/harness/tasks/2026-07-30-local-consolidation.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-07-30-local-consolidation.task.md"
+    ]
   },
   "knownGaps": [
     "Local race testing is unavailable because the only C compiler is Cygwin GCC, which Go rejects for native Windows cgo.",
     "Hosted GitHub checks are required before merge and before destructive Git-state cleanup."
-  ]
+  ],
+  "graphChecks": {
+    "affectedSubgraph": [
+      "token middleware -> blacklist key",
+      "seed cleanup -> GORM Pluck",
+      "post import -> i18n error key",
+      "user profile test -> forced query failure"
+    ],
+    "checks": [
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [
+      "The initial post-import error-classification review finding was corrected before approval."
+    ],
+    "notes": "The recorded review covers sensitive data flow and the depth of failure propagation through the affected call paths."
+  }
 }
