@@ -33,6 +33,30 @@
       "notes": "TypeScript project build completed successfully."
     },
     {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Frontend prebuild contracts, TypeScript build, and Vite production build completed successfully."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Frontmatter check passed for 210 documents."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Pantheon Base task packet template is present and linked."
+    },
+    {
+      "command": "npm run test:smoke:platform",
+      "cwd": "frontend",
+      "status": "failed",
+      "notes": "2/21 contract-only tests passed; 19 runtime tests could not authenticate because no local backend was listening on 127.0.0.1:8080. No runtime UI code changed in this task."
+    },
+    {
       "command": "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict && node scripts/harness/check-graph-review.mjs --root . --strict && node scripts/harness/check-runtime-evidence.mjs --root . --strict",
       "cwd": ".",
       "status": "passed",
@@ -53,7 +77,7 @@
   ],
   "hostedVerification": [],
   "releaseVerification": [],
-  "runtimeGap": "No runtime UI styles or product behavior changed; rendered evidence is not applicable to this build-time checker correction.",
+  "runtimeGap": "No runtime UI styles or product behavior changed, so rendered evidence is not applicable. Platform smoke was attempted: contract-only tests passed, while runtime cases were blocked uniformly by the absent local backend at 127.0.0.1:8080; hosted checks remain mandatory.",
   "linkage": {
     "taskManifest": ".harness/tasks/2026-08-05-base-v0-10-2-visual-checker/manifest.json",
     "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/",
