@@ -9,8 +9,8 @@
 
 - Task ID：2026-08-05-base-v0-10-1-release
 - Task Manifest：.harness/tasks/2026-08-05-base-v0-10-1-release/manifest.json
-- Evidence：.harness/evidence/2026-08-05-base-v0-10-1-release/
-- Verification evidence：.harness/evidence/2026-08-05-base-v0-10-1-release/commands.json
+- Evidence：.harness/evidence/2026-08-05-base-v0-10-1-release/commands.json
+- Verification evidence：.harness/evidence/2026-08-05-base-v0-10-1-release/summary.md
 - Review Artifact：.harness/evidence/2026-08-05-base-v0-10-1-release/review.md
 - OpenSpec change：none
 - Trivial change：no
