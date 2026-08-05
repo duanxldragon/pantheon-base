@@ -45,7 +45,7 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       bundleExclusions: ['backend/cmd/server/uploads'],
       sharedPaths: {
         backend: ['backend/cmd'],
-        frontend: ['frontend/src/core'],
+        frontend: ['frontend/src/core', 'frontend/scripts/lib/css-declarations.mjs'],
         docs: ['docs/designs/FOUNDATION_RELEASE_MODEL.md'],
       },
     });
@@ -62,6 +62,12 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
     fs.writeFileSync(path.join(root, 'backend', 'cmd', 'server', 'uploads', 'ignored.txt'), 'ignore me\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'core'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'core', 'app.ts'), 'export const app = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'scripts', 'lib'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'frontend', 'scripts', 'lib', 'css-declarations.mjs'),
+      'export const shared = true;\n',
+      'utf8',
+    );
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md'), '# Model\n', 'utf8');
 
@@ -87,6 +93,12 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       false,
     );
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'core', 'app.ts')), true);
+    assert.equal(
+      fs.existsSync(
+        path.join(bundleRoot, 'shared-frontend', 'frontend', 'scripts', 'lib', 'css-declarations.mjs'),
+      ),
+      true,
+    );
     assert.equal(fs.existsSync(path.join(bundleRoot, 'docs', 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'manifest.paths.json')), true);
     assert.equal(fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'go.mod')), true);

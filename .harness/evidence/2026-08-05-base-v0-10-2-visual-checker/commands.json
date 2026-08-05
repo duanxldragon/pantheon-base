@@ -1,0 +1,110 @@
+{
+  "taskId": "2026-08-05-base-v0-10-2-visual-checker",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "15/15 foundation release tests passed, including manifest, bundle, cut, body, candidate, and checksum coverage."
+    },
+    {
+      "command": "node --test frontend/scripts/lib/css-declarations.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "1/1 exact CSS property regression test passed."
+    },
+    {
+      "command": "npm run check:shell-visual-contract",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Base canonical shell visual contract passed with the exact matcher."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "ESLint completed without findings."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "TypeScript project build completed successfully."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Frontend prebuild contracts, TypeScript build, and Vite production build completed successfully."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Frontmatter check passed for 210 documents."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Pantheon Base task packet template is present and linked."
+    },
+    {
+      "command": "npm run test:smoke:platform",
+      "cwd": "frontend",
+      "status": "failed",
+      "notes": "2/21 contract-only tests passed; 19 runtime tests could not authenticate because no local backend was listening on 127.0.0.1:8080. No runtime UI code changed in this task."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict && node scripts/harness/check-graph-review.mjs --root . --strict && node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Task packet, evidence, review, graph review, and runtime evidence strict checks passed with zero warnings."
+    },
+    {
+      "command": "codegraph status",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Index is up to date: 712 files, 11626 nodes, 25497 edges."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No whitespace errors."
+    }
+  ],
+  "hostedVerification": [
+    {
+      "candidate": "7a6e6c96cd33f7cb2338b4ef51c77e28b678ac1f",
+      "pullRequest": "https://github.com/duanxldragon/pantheon-base/pull/231",
+      "status": "passed",
+      "runs": [
+        "https://github.com/duanxldragon/pantheon-base/actions/runs/31009453472",
+        "https://github.com/duanxldragon/pantheon-base/actions/runs/31009453534",
+        "https://github.com/duanxldragon/pantheon-base/actions/runs/31009453692"
+      ],
+      "notes": "Smoke Sanity, Quality Gates, Security Gates, CodeQL, SonarCloud, backend, frontend, coverage, and governance checks passed."
+    }
+  ],
+  "releaseVerification": [],
+  "runtimeGap": "No runtime UI styles or product behavior changed, so rendered evidence is not applicable. Platform smoke was attempted locally: contract-only tests passed, while runtime cases were blocked uniformly by the absent local backend at 127.0.0.1:8080. PR #231 hosted Smoke Sanity passed on candidate 7a6e6c96.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-05-base-v0-10-2-visual-checker/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/",
+    "reviewFile": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/review.md",
+    "summaryFile": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/summary.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-08-05-base-v0-10-2-visual-checker.task.md"]
+  },
+  "repo": "pantheon-base",
+  "agent": { "tool": "codex" },
+  "knownGaps": ["Publication and immutable Ops consumption remain pending."],
+  "graphChecks": {
+    "affectedSubgraph": ["visual checker -> CSS matcher -> foundation manifest -> release bundle -> Ops inheritance check"],
+    "checks": ["call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "The release bundle test proves the helper is copied into shared-frontend tooling."
+  }
+}
