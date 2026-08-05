@@ -372,18 +372,23 @@ jobs:
         id: lint-scope
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
         run: |
-          if [ "${EVENT_NAME}" = "pull_request" ] && [ -n "${BASE_SHA}" ]; then
+          if [ "${EVENT_NAME}" = "pull_request" ] && [ -n "${PR_BASE_SHA}" ]; then
             # Only lint lines changed in this PR — historical debt never blocks a PR
-            echo "args=--new-from-rev=${BASE_SHA} ./..." >> "$GITHUB_OUTPUT"
+            echo "args=--new-from-rev=${PR_BASE_SHA} ./..." >> "$GITHUB_OUTPUT"
+          elif [ "${EVENT_NAME}" = "merge_group" ] && [ -n "${MERGE_GROUP_BASE_SHA}" ]; then
+            # Merge queue candidates include multiple PRs; compare the candidate
+            # checkout with the merge group's base instead of linting existing debt.
+            echo "args=--new-from-rev=${MERGE_GROUP_BASE_SHA} ./..." >> "$GITHUB_OUTPUT"
           else
             echo "args=./..." >> "$GITHUB_OUTPUT"
           fi
 
       # golangci/golangci-lint-action v9.3.0 replaces the raw `go install
       # pkg@version` run step (SonarCloud githubactions:S8545).
-      - name: Run golangci-lint (new code only on PR)
+      - name: Run golangci-lint (new code only on PR or merge group)
         id: golangci-lint
         continue-on-error: true
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a

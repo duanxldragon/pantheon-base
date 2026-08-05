@@ -40,10 +40,10 @@ Status: independent review complete; metadata findings resolved.
 
 ## Residual Risks
 
-- The full hosted Smoke Sanity suite must confirm the focused user-menu fix
-  across the complete serial smoke run.
+- The full hosted Smoke Sanity suite passed on PR #222.
 - The focused smoke covers click-driven opening, not delayed hover opening or
-  click-to-close after a hover-open transition.
+  click-to-close after a hover-open transition; this remains a documented P2
+  interaction-coverage gap rather than a release blocker.
 
 ## Machine Readable
 

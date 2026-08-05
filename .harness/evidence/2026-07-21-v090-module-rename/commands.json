@@ -2,8 +2,9 @@
   "taskId": "2026-07-21-v090-module-rename",
   "repo": "pantheon-base",
   "agent": {
-    "tool": "workbuddy",
-    "adapter": "software-team (lead Qi / architect Gao / engineer Kou / QA Yan) under maintainer authorization"
+    "tool": "other",
+    "adapter": "software-team (lead Qi / architect Gao / engineer Kou / QA Yan) under maintainer authorization",
+    "note": "Legacy tool label: workbuddy"
   },
   "commands": [
     {
@@ -60,5 +61,14 @@
       "status": "passed",
       "notes": "Measured total 12.2% statements; threshold = 12.2% × 0.9 ≈ 11%; exit 0."
     }
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-21-v090-module-rename/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-21-v090-module-rename/",
+    "reviewFile": ".harness/evidence/2026-07-21-v090-module-rename/review.md",
+    "summaryFile": ".harness/evidence/2026-07-21-v090-module-rename/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
 }

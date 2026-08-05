@@ -27,9 +27,10 @@ approved
   "verdict": "approved",
   "structuralReview": {
     "affectedSubgraph": [
-      "system IAM table presentation",
-      "auth session/security presentation",
-      "frontend locale resources to backend builtin snapshot"
+      "frontend shell and shared visual CSS contract",
+      "system IAM menu/user/role table presentation",
+      "auth session/security/audit governance presentation",
+      "frontend locale resources to backend builtin locale snapshot"
     ],
     "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
     "findings": [],

@@ -39,3 +39,21 @@ Reviewer: Claude Code (planner/reviewer per CLAUDE.md role split); implementatio
   green before merge.
 - SonarCloud OPEN=0 proof is post-merge (automatic analysis on main +
   Release Gate run); tracked as the closeout step of this task.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-23-base-freeze-sonar-control",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Actionlint and post-merge SonarCloud were hosted-only closure signals at review time"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-23-base-freeze-sonar-control/manifest.json",
+    "evidence": ".harness/evidence/2026-07-23-base-freeze-sonar-control/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-23-base-freeze-sonar-control/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

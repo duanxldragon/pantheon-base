@@ -36,3 +36,21 @@ deviates from the default Codex-implements split in CLAUDE.md.
   (deferred, documented).
 - Roles granted clear/acknowledge before this fix need a workbench
   remediation run to backfill policies.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-23-security-event-policy-i18n-header",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Existing roles require the documented workbench remediation backfill"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-23-security-event-policy-i18n-header/manifest.json",
+    "evidence": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-23-security-event-policy-i18n-header/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

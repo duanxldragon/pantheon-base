@@ -1,16 +1,31 @@
-[
-  {
-    "id": "reproduce-tar-failure",
-    "description": "Reproduce the Windows tar failure on the unpatched bundle step",
-    "command": "npm run release:foundation:cut -- --release-version base-v0.9.0 --release-line 0.9 --base-commit <sha>",
-    "expected": "tar error: 'Cannot connect to D: resolve failed' before fix",
-    "status": "verified-before-fix"
+{
+  "taskId": "2026-07-22-release-tooling-win",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
   },
-  {
-    "id": "verify-tar-fix",
-    "description": "Confirm bundle tgz is produced after the POSIX-path fix",
-    "command": "npm run release:foundation:cut -- --release-version base-v0.9.0 --release-line 0.9 --base-commit <sha> && ls dist/foundation-releases/base-v0.9.0/foundation-release-base-v0.9.0.tgz",
-    "expected": "tgz created without tar error",
-    "status": "verified"
-  }
-]
+  "commands": [
+    {
+      "command": "npm run release:foundation:cut -- --release-version base-v0.9.0 --release-line 0.9 --base-commit <sha>",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Reproduce the Windows tar failure on the unpatched bundle step Expected: tar error: 'Cannot connect to D: resolve failed' before fix Legacy status: verified-before-fix"
+    },
+    {
+      "command": "npm run release:foundation:cut -- --release-version base-v0.9.0 --release-line 0.9 --base-commit <sha> && ls dist/foundation-releases/base-v0.9.0/foundation-release-base-v0.9.0.tgz",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Confirm bundle tgz is produced after the POSIX-path fix Expected: tgz created without tar error Legacy status: verified"
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-22-release-tooling-win/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-22-release-tooling-win/",
+    "reviewFile": ".harness/evidence/2026-07-22-release-tooling-win/review.md",
+    "summaryFile": ".harness/evidence/2026-07-22-release-tooling-win/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
+}

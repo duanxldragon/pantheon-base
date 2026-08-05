@@ -29,4 +29,23 @@ governance docs and gate whitelists. No backend or frontend runtime code changed
 - [x] Smoke specs confirmed unaffected (no runtime change; playwright testDir isolated).
 
 ## Decision
-Approved for merge pending green required checks on PR #198.
+Approved and merged as `d58c84e8` after PR #198's required checks passed,
+including CI Summary, Quality Gates, Security Summary, Actionlint, Smoke Sanity,
+CodeQL, and SonarCloud.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-22-frontend-unit-tests",
+  "verdict": "approved",
+  "findings": [],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-22-frontend-unit-tests/manifest.json",
+    "evidence": ".harness/evidence/2026-07-22-frontend-unit-tests/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-22-frontend-unit-tests/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

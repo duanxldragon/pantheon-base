@@ -1,16 +1,31 @@
-[
-  {
-    "id": "verify-govulncheck-working-dir",
-    "description": "Confirm govulncheck can scan backend Go modules after the security.yml working-directory fix",
-    "command": "cd backend && go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...",
-    "expected": "govulncheck runs against backend Go code (no 'no go.mod file' error)",
-    "status": "verified"
+{
+  "taskId": "2026-07-21-v090-govulncheck",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
   },
-  {
-    "id": "diff-security-yml",
-    "description": "Show the security.yml change",
-    "command": "git diff .github/workflows/security.yml",
-    "expected": "working-directory changed to backend; output path to ../security-reports/govulncheck.json",
-    "status": "verified"
-  }
-]
+  "commands": [
+    {
+      "command": "cd backend && go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Confirm govulncheck can scan backend Go modules after the security.yml working-directory fix Expected: govulncheck runs against backend Go code (no 'no go.mod file' error) Legacy status: verified"
+    },
+    {
+      "command": "git diff .github/workflows/security.yml",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Show the security.yml change Expected: working-directory changed to backend; output path to ../security-reports/govulncheck.json Legacy status: verified"
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-21-v090-govulncheck/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-21-v090-govulncheck/",
+    "reviewFile": ".harness/evidence/2026-07-21-v090-govulncheck/review.md",
+    "summaryFile": ".harness/evidence/2026-07-21-v090-govulncheck/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": []
+}

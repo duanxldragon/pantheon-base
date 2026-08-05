@@ -1,0 +1,93 @@
+{
+  "taskId": "2026-08-05-base-v0-10-1-release",
+  "status": "local-verification-passed",
+  "commands": [
+    {
+      "command": "npm run check:harness-method; npm run check:harness-adoption; npm run check:harness-template; npm run check:harness-docs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Method, adoption, template, and documentation link checks completed with no findings."
+    },
+    {
+      "command": "npm run check:harness-inventory; npm run check:harness-sync; npm run check:harness-encoding; npm run check:harness-visual",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Inventory, sync, encoding, and visual evidence checks completed with no findings."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .; node scripts/harness/check-evidence.mjs --root . --strict; node scripts/harness/check-review.mjs --root . --strict; node scripts/harness/check-graph-review.mjs --root . --strict; node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Task, evidence, review, graph-review, and runtime-evidence schemas passed strict validation."
+    },
+    {
+      "command": "npm run check:structure; npm run check:failure-registry; npm run check:pr-governance; npm run check:task-packet-template; npm run check:generated-modules; npm run check:duplication; npm run check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Repository contracts passed; duplication was 1.84% against the 3% threshold."
+    },
+    {
+      "command": "npm run test:release-gate-workflow; npm run test:foundation-release",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Release Gate workflow tests passed 4/4 and foundation release tests passed 15/15 after adding SHA-256 content validation."
+    },
+    {
+      "command": "npm run test:quality-workflow; npm run test:security-workflow; npm run test:pr-automation-workflow",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Quality workflow passed 4/4 after adding merge-group new-code lint coverage; security workflow passed 1/1 and PR automation workflow passed 2/2."
+    },
+    {
+      "command": "go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.10 -shellcheck=\"\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All GitHub Actions workflow files passed Actionlint."
+    },
+    {
+      "command": "codegraph sync; codegraph status",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The pantheon-base subproject index was synchronized and reported up to date."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No whitespace errors were reported."
+    }
+  ],
+  "hostedVerification": [],
+  "releaseVerification": [],
+  "runtimeGap": "No product runtime or UI behavior changed; browser evidence is not applicable.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-05-base-v0-10-1-release/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-1-release/",
+    "reviewFile": ".harness/evidence/2026-08-05-base-v0-10-1-release/review.md",
+    "summaryFile": ".harness/evidence/2026-08-05-base-v0-10-1-release/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-05-base-v0-10-1-release.task.md"
+    ]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex"
+  },
+  "knownGaps": [
+    "Two independent reviews and hosted candidate checks remain required before publication."
+  ],
+  "graphChecks": {
+    "affectedSubgraph": [
+      "CI required jobs -> CI Summary -> Release Gate candidate checks",
+      "task manifest -> evidence -> review -> PR governance",
+      "candidate commit -> foundation manifest -> bundle -> GitHub Release -> Ops lock"
+    ],
+    "checks": [
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "Workflow regression tests cover required-job failure propagation; immutable release identity and downstream consumption remain hosted release gates."
+  }
+}

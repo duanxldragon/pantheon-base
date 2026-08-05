@@ -60,5 +60,17 @@
       "status": "passed",
       "notes": "No boundary violations."
     }
-  ]
+  ],
+  "runtimeGap": "The historical task retained build, unit-test, and contract-gate results but no browser, service, log, metric, or trace artifact.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-15-code-review-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-07-15-code-review-remediation/",
+    "reviewFile": ".harness/evidence/2026-07-15-code-review-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-07-15-code-review-remediation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "fix-report.md"
+    ]
+  },
+  "knownGaps": []
 }

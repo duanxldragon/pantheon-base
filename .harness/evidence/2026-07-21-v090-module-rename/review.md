@@ -24,3 +24,21 @@
 - 仓库根历史 CodeQL/Dependabot 分析临时文件待清理。
 
 Reviewer: software-team (lead Qi). Maintainer sign-off: 待打 tag 前确认。
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-21-v090-module-rename",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Historical lint debt and coverage ratchet are documented above"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-21-v090-module-rename/manifest.json",
+    "evidence": ".harness/evidence/2026-07-21-v090-module-rename/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-21-v090-module-rename/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

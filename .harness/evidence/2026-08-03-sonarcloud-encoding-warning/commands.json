@@ -1,32 +1,59 @@
 {
   "taskId": "2026-08-03-sonarcloud-encoding-warning",
   "taskManifest": ".harness/tasks/2026-08-03-sonarcloud-encoding-warning/manifest.json",
-  "status": "local-green-hosted-pending",
+  "status": "complete",
   "commands": [
     {
       "command": "npm run check:harness-encoding",
-      "result": "passed: 0 findings across 1135 files"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 0 findings across 1135 files"
     },
     {
       "command": "node --test tests/scripts/harness-check-encoding.test.mjs",
-      "result": "passed: 8 tests"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 8 tests"
     },
     {
       "command": "npm run check:docs-frontmatter",
-      "result": "passed: 205 docs checked"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 205 docs checked"
     },
     {
       "command": "npm run check:harness-docs",
-      "result": "passed: 0 findings"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed: 0 findings"
     },
     {
       "command": "git diff --check",
-      "result": "passed"
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: passed"
     }
   ],
-  "hostedPending": [
-    "GitHub required checks",
-    "SonarCloud encoding-warning verification on merged main"
+  "hostedVerification": [
+    "PR #227 merged as eddde673",
+    "GitHub required checks succeeded",
+    "SonarCloud analysis succeeded on the merged release line"
   ],
-  "runtimeGap": "No product runtime behavior changed. Hosted SonarCloud is the authoritative scanner verification."
+  "runtimeGap": "No product runtime behavior changed. Hosted SonarCloud is the authoritative scanner verification.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Legacy evidence did not record the executing tool."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-03-sonarcloud-encoding-warning/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-03-sonarcloud-encoding-warning/",
+    "reviewFile": ".harness/evidence/2026-08-03-sonarcloud-encoding-warning/review.md",
+    "summaryFile": ".harness/evidence/2026-08-03-sonarcloud-encoding-warning/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-03-sonarcloud-encoding-warning.task.md"
+    ]
+  },
+  "knownGaps": []
 }

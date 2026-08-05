@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,6 +15,7 @@ const moduleUrl = pathToFileURL(
 const {
   buildGitHubReleaseBody,
   buildGitHubReleaseTitle,
+  validateReleaseAssetChecksum,
   validatePublishCandidate,
   validateReleaseBodySections,
 } = await import(moduleUrl);
@@ -102,4 +104,33 @@ test('validatePublishCandidate binds the release tag to the manifest commit', ()
     },
     targetCommit: 'feedfacefeedfacefeedfacefeedfacefeedface',
   }), /baseCommit.*does not match target commit/);
+});
+
+test('validateReleaseAssetChecksum rejects stale or malformed release checksums', () => {
+  withTempDir((root) => {
+    const archivePath = path.join(root, 'foundation-release-pantheon-base-v0.10.1.tgz');
+    const checksumPath = `${archivePath}.sha256`;
+    fs.writeFileSync(archivePath, 'foundation release archive', 'utf8');
+    const expectedChecksum = crypto.createHash('sha256').update(fs.readFileSync(archivePath)).digest('hex');
+    fs.writeFileSync(
+      checksumPath,
+      `${expectedChecksum}  foundation-release-pantheon-base-v0.10.1.tgz\n`,
+      'utf8',
+    );
+
+    assert.equal(
+      validateReleaseAssetChecksum({ archivePath, checksumPath }),
+      expectedChecksum,
+    );
+
+    fs.writeFileSync(
+      checksumPath,
+      '0000000000000000000000000000000000000000000000000000000000000000  foundation-release-pantheon-base-v0.10.1.tgz\n',
+      'utf8',
+    );
+    assert.throws(
+      () => validateReleaseAssetChecksum({ archivePath, checksumPath }),
+      /SHA-256 mismatch/,
+    );
+  });
 });

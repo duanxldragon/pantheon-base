@@ -45,7 +45,7 @@ previously recorded unsupported native Windows cgo compiler for `-race`.
       "post import -> i18n error key",
       "user profile test -> forced query failure"
     ],
-    "checks": ["security boundary", "failure propagation", "scope"],
+    "checks": ["call-depth", "sensitive-flow"],
     "findings": [],
     "notes": "Initial database-error disclosure finding was fixed and independently re-reviewed. The later Sonar duplication remediation was independently approved with focused repeat-test and static-check evidence."
   },

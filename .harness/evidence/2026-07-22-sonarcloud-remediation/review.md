@@ -21,3 +21,21 @@ This change is **low-risk, hygiene-grade**:
 
 ## Decision
 Approved for merge. SonarCloud overall OPEN issues will reach **0** after merge.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-07-22-sonarcloud-remediation",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Post-merge SonarCloud analysis was the final historical closure signal"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-07-22-sonarcloud-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-07-22-sonarcloud-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-07-22-sonarcloud-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

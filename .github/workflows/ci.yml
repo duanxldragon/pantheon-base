@@ -201,6 +201,8 @@ jobs:
     name: Go Lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      lint-result: ${{ steps.lint.outcome }}
     permissions:
       contents: read
     steps:
@@ -236,19 +238,18 @@ jobs:
           # behavior — deferred as an explicit follow-up.
           verify: false
 
-      - name: Handle lint results
+      - name: Report full-repo lint result
+        if: always()
         shell: bash
         env:
           LINT_RESULT: ${{ steps.lint.outcome }}
-          EVENT_NAME: ${{ github.event_name }}
         run: |
           echo "golangci-lint: $LINT_RESULT"
-
-          # Report-only everywhere: full-repo lint carries accepted historical debt
-          # (see .harness/tasks/2026-07-22-sonarcloud-remediation) so enforcing it on
-          # pushes keeps main permanently red. The enforced NEW-CODE lint gate lives
-          # in quality.yml (pull_request + merge_group, --new-from-rev).
-          echo "Full-repo lint is report-only; new-code enforcement lives in quality.yml"
+          # Full-repo lint carries accepted historical debt (see
+          # .harness/tasks/2026-07-22-sonarcloud-remediation). The blocking
+          # new-code lint gate is in quality.yml for pull_request and
+          # merge_group events, using --new-from-rev.
+          echo "Full-repo lint is advisory; new-code enforcement lives in quality.yml"
           exit 0
 
   # ============================================================
@@ -342,7 +343,7 @@ jobs:
           FAST_CHECKS: ${{ needs.fast-checks.result }}
           UNIT_TESTS: ${{ needs.unit-tests.result }}
           FRONTEND_UNIT_TESTS: ${{ needs.frontend-unit-tests.result }}
-          GO_LINT: ${{ needs.go-lint.result }}
+          GO_LINT: ${{ needs.go-lint.outputs.lint-result }}
           BOUNDARY_GATE: ${{ needs.boundary-gate.result }}
           COVERAGE_GATE: ${{ needs.coverage-gate.result }}
         run: |
@@ -353,15 +354,15 @@ jobs:
           echo "| Fast Checks | $FAST_CHECKS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Unit Tests (Go) | $UNIT_TESTS |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Unit Tests (Frontend) | $FRONTEND_UNIT_TESTS |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Go Lint | $GO_LINT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Go Lint (full-repo, advisory) | $GO_LINT |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Boundary Gate | $BOUNDARY_GATE |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Coverage Gate | $COVERAGE_GATE |" >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$FAST_CHECKS" = "failure" ] || \
-             [ "$UNIT_TESTS" = "failure" ] || \
-             [ "$FRONTEND_UNIT_TESTS" = "failure" ] || \
-             [ "$BOUNDARY_GATE" = "failure" ] || \
-             [ "$COVERAGE_GATE" = "failure" ]; then
-            echo "Critical check failed"
+          if [ "$FAST_CHECKS" != "success" ] || \
+             [ "$UNIT_TESTS" != "success" ] || \
+             [ "$FRONTEND_UNIT_TESTS" != "success" ] || \
+             [ "$BOUNDARY_GATE" != "success" ] || \
+             [ "$COVERAGE_GATE" != "success" ]; then
+            echo "Critical check did not complete successfully"
             exit 1
           fi
