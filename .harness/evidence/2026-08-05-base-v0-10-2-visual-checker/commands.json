@@ -75,9 +75,21 @@
       "notes": "No whitespace errors."
     }
   ],
-  "hostedVerification": [],
+  "hostedVerification": [
+    {
+      "candidate": "7a6e6c96cd33f7cb2338b4ef51c77e28b678ac1f",
+      "pullRequest": "https://github.com/duanxldragon/pantheon-base/pull/231",
+      "status": "passed",
+      "runs": [
+        "https://github.com/duanxldragon/pantheon-base/actions/runs/31009453472",
+        "https://github.com/duanxldragon/pantheon-base/actions/runs/31009453534",
+        "https://github.com/duanxldragon/pantheon-base/actions/runs/31009453692"
+      ],
+      "notes": "Smoke Sanity, Quality Gates, Security Gates, CodeQL, SonarCloud, backend, frontend, coverage, and governance checks passed."
+    }
+  ],
   "releaseVerification": [],
-  "runtimeGap": "No runtime UI styles or product behavior changed, so rendered evidence is not applicable. Platform smoke was attempted: contract-only tests passed, while runtime cases were blocked uniformly by the absent local backend at 127.0.0.1:8080; hosted checks remain mandatory.",
+  "runtimeGap": "No runtime UI styles or product behavior changed, so rendered evidence is not applicable. Platform smoke was attempted locally: contract-only tests passed, while runtime cases were blocked uniformly by the absent local backend at 127.0.0.1:8080. PR #231 hosted Smoke Sanity passed on candidate 7a6e6c96.",
   "linkage": {
     "taskManifest": ".harness/tasks/2026-08-05-base-v0-10-2-visual-checker/manifest.json",
     "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/",
@@ -88,7 +100,7 @@
   },
   "repo": "pantheon-base",
   "agent": { "tool": "codex" },
-  "knownGaps": ["Hosted checks, publication, and immutable Ops consumption remain pending."],
+  "knownGaps": ["Publication and immutable Ops consumption remain pending."],
   "graphChecks": {
     "affectedSubgraph": ["visual checker -> CSS matcher -> foundation manifest -> release bundle -> Ops inheritance check"],
     "checks": ["call-depth", "sensitive-flow"],

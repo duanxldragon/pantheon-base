@@ -2,7 +2,7 @@
 
 - 改动层级：`platform`
 - 改动模块：`shared visual checker, foundation release tooling`
-- 目标问题：`min-height 会错误满足 height 棩查，且修复必须由 Base 分发而非由 Ops 单独维护`
+- 目标问题：`min-height 会错误满足 height 检查，且修复必须由 Base 分发而非由 Ops 单独维护`
 - 预期影响：`提高视觉门禁准确性，并把 matcher 作为 foundation frontend 资产交付；不改变运行时 UI`
 
 ## Harness 链路
@@ -47,18 +47,18 @@
 - [x] Frontend lint、type-check、build 和 shell visual contract
 - [x] Harness task/evidence/review/graph/runtime strict checks
 - [x] 两路独立 review：quality `APPROVE`，architecture `CLEAR`
-- [ ] GitHub required checks 通过
-- [ ] Copilot review 已请求，或已说明当前仓库/账号不可用
+- [x] GitHub required checks 通过：候选 `7a6e6c96` 的 Smoke Sanity、Quality Gates、Security Gates、CodeQL、SonarCloud、前后端、覆盖率和治理检查全部通过
+- [x] Copilot review 已请求，或已说明当前仓库/账号不可用：仓库自动评审策略已运行；另有两路独立 quality/architecture review 通过
 
 补充说明：本地 platform smoke 的合同用例通过；运行态用例因本地 `127.0.0.1:8080` 未启动而无法认证。本任务不改变运行时 UI，托管检查仍为必过门禁。
 
 ## 审核留痕
 
 - Copilot review：`automatic-policy`
-- CodeQL 结果：`pending`
-- GitHub checks 结果：`pending`
+- CodeQL 结果：`passed on 7a6e6c96`
+- GitHub checks 结果：`all checks passed on 7a6e6c96`
 - Auto-merge：`not-enabled`
-- Duplication Gate 结果：`not-applicable`
+- Duplication Gate 结果：`passed on 7a6e6c96`
 - 是否高风险改动：`yes，涉及 foundation consumer inheritance`
 - Residual risk / follow-up：`合并后必须核验 v0.10.2 tag、manifest、archive SHA-256，并由 Ops 正式消费`
 

@@ -15,7 +15,7 @@ Independent quality review approved the exact matcher, checker integration, pack
     "notes": "Quality review approved. Architecture re-review cleared the producer-consumer boundary after Ops added exact tooling allowlist enforcement and roundtrip coverage."
   },
   "findings": [],
-  "residualRisks": ["Hosted checks, immutable release identity, and actual Ops v0.10.2 consumption remain pending"],
+  "residualRisks": ["Immutable release identity and actual Ops v0.10.2 consumption remain pending"],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-08-05-base-v0-10-2-visual-checker/manifest.json",
     "evidence": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/commands.json",
