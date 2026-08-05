@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -108,7 +109,31 @@ function ensureReleaseAssetFiles(releasePaths, releaseVersion) {
       `release asset files are missing: ${missingFiles.join(', ')}. Run release:foundation:bundle first.`,
     );
   }
+  validateReleaseAssetChecksum({ archivePath, checksumPath });
   return [archivePath, checksumPath];
+}
+
+export function validateReleaseAssetChecksum({ archivePath, checksumPath }) {
+  const checksumContents = fs.readFileSync(checksumPath, 'utf8').trim();
+  const checksumMatch = checksumContents.match(/^([a-fA-F0-9]{64})\s+\*?(.+)$/u);
+  if (!checksumMatch) {
+    throw new Error(`invalid SHA-256 checksum file: ${checksumPath}`);
+  }
+
+  const [, expectedChecksum, recordedFileName] = checksumMatch;
+  const archiveName = path.basename(archivePath);
+  if (recordedFileName !== archiveName) {
+    throw new Error(
+      `checksum file ${checksumPath} names ${recordedFileName}, expected ${archiveName}`,
+    );
+  }
+
+  const actualChecksum = crypto.createHash('sha256').update(fs.readFileSync(archivePath)).digest('hex');
+  if (actualChecksum !== expectedChecksum.toLowerCase()) {
+    throw new Error(`SHA-256 mismatch for release archive: ${archivePath}`);
+  }
+
+  return actualChecksum;
 }
 
 function readReleaseFile(releaseRoot, fileName) {

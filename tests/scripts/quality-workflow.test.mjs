@@ -97,6 +97,26 @@ test('governance-only changes can skip runtime gates without failing Quality Gat
   }
 });
 
+test('go lint scopes pull requests and merge groups to new code', () => {
+  const goLintSource = workflowSource.slice(
+    workflowSource.indexOf('  go-lint:'),
+    workflowSource.indexOf('  duplication:'),
+  );
+
+  assert.match(goLintSource, /PR_BASE_SHA:\s*\$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
+  assert.match(goLintSource, /MERGE_GROUP_BASE_SHA:\s*\$\{\{ github\.event\.merge_group\.base_sha \}\}/);
+  assert.match(
+    goLintSource,
+    /if \[ "\$\{EVENT_NAME\}" = "pull_request" \] && \[ -n "\$\{PR_BASE_SHA\}" \]; then[\s\S]*?args=--new-from-rev=\$\{PR_BASE_SHA\} \.\/\.\.\.[\s\S]*?elif \[ "\$\{EVENT_NAME\}" = "merge_group" \] && \[ -n "\$\{MERGE_GROUP_BASE_SHA\}" \]; then[\s\S]*?args=--new-from-rev=\$\{MERGE_GROUP_BASE_SHA\} \.\/\.\.\./,
+    'pull requests and merge groups must both lint only newly introduced code',
+  );
+  assert.match(
+    goLintSource,
+    /if \[ "\$\{EVENT_NAME\}" = "push" \]; then[\s\S]*?Full-repo lint is report-only on push/,
+    'only push events may retain the advisory full-repository lint path',
+  );
+});
+
 test('docs governance validates the PR governance template and pull request body', () => {
   assert.match(
     workflowSource,
