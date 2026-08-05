@@ -1,0 +1,62 @@
+{
+  "taskId": "2026-08-05-base-v0-10-2-visual-checker",
+  "title": "Release shared visual checker fix in pantheon-base v0.10.2",
+  "goal": "Fix exact CSS declaration matching in the Base-owned visual checker, distribute the helper through a patch foundation release, and let Pantheon Ops consume it without an Ops-only generic rule fork.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["shared-ui-governance", "foundation-release-tooling", "consumer-inheritance"],
+  "qualityProfiles": ["shared-ui", "foundation-release"],
+  "scope": {
+    "in": [
+      "Exact CSS declaration property matching",
+      "Focused regression coverage",
+      "Foundation distribution of the shared matcher",
+      "pantheon-base-v0.10.2 publication and Ops handoff"
+    ],
+    "out": [
+      "Runtime UI styling or product behavior changes",
+      "Database, API, permission, menu, or i18n changes",
+      "Broad visual checker refactoring"
+    ]
+  },
+  "assumptionsAndOpenQuestions": [
+    "v0.10.2 is a backward-compatible patch because only build-time checker behavior and release contents change.",
+    "The maintainer authorized the patch release and downstream consumption."
+  ],
+  "minimumViableApproach": "Extract the existing matcher, add a property-boundary regression test, and add that one helper path to the existing foundation frontend asset list.",
+  "successCriteria": [
+    "Base local and hosted gates pass",
+    "Independent reviews have no blocking finding",
+    "The v0.10.2 release checksum and commit identity are verified",
+    "Ops consumes the helper through the release artifact"
+  ],
+  "structuralScope": {
+    "affectedSubgraph": ["visual checker -> CSS matcher -> foundation manifest -> release bundle -> Ops inheritance check"],
+    "boundaryCrossings": ["Base build tooling -> foundation artifact", "foundation artifact -> Ops tooling adapter"],
+    "riskNodes": ["false-positive visual gates", "shared tooling drift", "immutable release checksum"],
+    "graphFocus": ["call-depth", "sensitive-flow"]
+  },
+  "requiredSensors": [
+    "node --test frontend/scripts/lib/css-declarations.test.mjs",
+    "npm run test:foundation-release",
+    "npm --prefix frontend run check:shell-visual-contract",
+    "npm --prefix frontend run lint",
+    "npm --prefix frontend run type-check",
+    "git diff --check",
+    "hosted required checks and release checksum verification"
+  ],
+  "ratchetDecision": "checker-promoted-to-foundation-asset",
+  "githubSignal": "repo-quality-gate",
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-08-05-base-v0-10-2-visual-checker",
+    "changeRef": "none",
+    "codeRef": "pending",
+    "taskPacket": ".harness/tasks/2026-08-05-base-v0-10-2-visual-checker/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/",
+    "reviewFile": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/review.md",
+    "summaryFile": ".harness/evidence/2026-08-05-base-v0-10-2-visual-checker/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-05-base-v0-10-2-visual-checker.task.md"]
+  },
+  "humanGate": "Satisfied by the maintainer request authorizing the next Base release and downstream Ops consumption.",
+  "syncExpectation": "Pantheon Ops must consume the immutable v0.10.2 artifact and validate the shared matcher through its inheritance gate."
+}

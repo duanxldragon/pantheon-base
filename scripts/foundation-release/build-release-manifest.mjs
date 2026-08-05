@@ -59,6 +59,7 @@ function buildManifest(options) {
         'frontend/src/modules/platform',
         'frontend/src/modules/system',
         'frontend/src/index.css',
+        'frontend/scripts/lib/css-declarations.mjs',
       ],
       docs: ['docs/designs/FOUNDATION_RELEASE_MODEL.md', 'docs/designs/WORKFLOW.md'],
     },
