@@ -239,9 +239,9 @@ test('exports a complete business module contract for a main table schema', () =
   assert.match(frontendIndex, /dashboardWidgets:\s*\[/);
   assert.match(frontendIndex, /componentKey: 'business\/cmdb\/asset\/CmdbAssetList'/);
   assert.match(frontendIndex, /componentKey: 'business\/cmdb\/asset\/CmdbAssetDetail'/);
-  assert.equal(buildPageRoutePath('business', 'cmdb/asset'), '/operations/cmdb/asset');
-  assert.match(frontendIndex, /path: 'operations\/cmdb\/asset\/:id'/);
-  assert.match(frontendIndex, /activeMenu: '\/operations\/cmdb\/asset'/);
+  assert.equal(buildPageRoutePath('business', 'cmdb/asset'), '/business/cmdb/asset');
+  assert.match(frontendIndex, /path: 'business\/cmdb\/asset\/:id'/);
+  assert.match(frontendIndex, /activeMenu: '\/business\/cmdb\/asset'/);
   assert.match(frontendIndex, /pagePermission: 'business:cmdb:asset:view'/);
 
   const frontendList =

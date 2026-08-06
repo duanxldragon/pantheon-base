@@ -1,0 +1,55 @@
+{
+  "taskId": "2026-08-06-generator-business-page-route",
+  "title": "Restore generated business page routes and release tooling",
+  "goal": "Restore generated business pages and inferred menus to /business/*, publish the generator exporter tooling required by consumers, and deliver the fix through the next foundation patch release.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["business route contract", "dynamic module governance", "foundation release tooling"],
+  "qualityProfiles": ["generator", "ui-runtime", "foundation-release"],
+  "scope": {
+    "in": [
+      "Generated business page and menu routes under /business/*",
+      "Dynamic module summary and inferred parent menu alignment",
+      "Generator contract and runtime smoke coverage",
+      "Foundation distribution of exporter and transpile scripts",
+      "Reachable high-severity dependency debt surfaced by release verification",
+      "Patch release and Pantheon Ops consumption"
+    ],
+    "out": [
+      "Migration of manually designed business routes already using /operations/*",
+      "Business API prefix changes",
+      "Generator UI redesign",
+      "Database schema changes"
+    ]
+  },
+  "minimumViableApproach": "Reuse the existing buildRoutePath and buildPageRoutePath helpers, remove the business-only /operations override, update backend summary inference, and extend the existing exact foundation tooling allowlist with the two runtime-required generator scripts.",
+  "successCriteria": [
+    "Generated business source remains under modules/business",
+    "Generated page routes, menus, summaries, and parent inference use /business/*",
+    "Generated business APIs remain /api/v1/business/*",
+    "Foundation release contains the exporter and transpile helper",
+    "brace-expansion is patched and the remaining React Router advisory is reachability-assessed against the client-only router architecture",
+    "Base and Ops local and hosted gates pass"
+  ],
+  "structuralScope": {
+    "affectedSubgraph": [
+      "module schema -> page route helper -> frontend/backend generators -> dynamic module summary -> generated runtime smoke",
+      "foundation manifest -> release bundle -> Ops consumer tooling allowlist -> server-side exporter"
+    ],
+    "boundaryCrossings": ["system/lowcode -> business generated code", "Base release -> Ops consumer"],
+    "riskNodes": ["menu-route mismatch", "activation diagnostics", "consumer runtime exporter drift"],
+    "graphFocus": ["call-depth", "sensitive-flow"]
+  },
+  "ratchetDecision": "contract-tests-and-release-allowlist",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-06-generator-business-page-route",
+    "changeRef": "none",
+    "taskPacket": ".harness/tasks/2026-08-06-generator-business-page-route/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-06-generator-business-page-route/",
+    "reviewFile": ".harness/evidence/2026-08-06-generator-business-page-route/review.md",
+    "summaryFile": ".harness/evidence/2026-08-06-generator-business-page-route/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-06-generator-business-page-route.task.md"]
+  },
+  "humanGate": "Satisfied by the maintainer decision that generated business pages must use /business/* and the prior authorization to publish the next Base release and consume it in Ops.",
+  "syncExpectation": "Publish the next immutable Base foundation patch and consume it in Pantheon Ops before merging the Ops closeout PR."
+}

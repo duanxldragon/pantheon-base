@@ -213,7 +213,7 @@ test.describe('module governance smoke', () => {
           },
           summary: {
             moduleKey: 'business.cmdb.vendor',
-            routePath: '/operations/cmdb/vendor',
+            routePath: '/business/cmdb/vendor',
             routeName: 'business-cmdb-vendor',
             componentKey: 'business/cmdb/vendor/CmdbVendorList',
             permissionPrefix: 'business:cmdb:vendor',
@@ -226,7 +226,7 @@ test.describe('module governance smoke', () => {
               dependencies: [],
               relations: [],
             },
-            parentMenuPath: '/operations/cmdb',
+            parentMenuPath: '/business/cmdb',
             parentMenuSource: 'inferred',
             parentMenuExists: true,
             backendModulePath: 'backend/modules/business/cmdb/vendor',
@@ -301,7 +301,7 @@ test.describe('module governance smoke', () => {
       page.locator('.arco-message').getByText('模块源码已写入，等待激活', { exact: true }).last(),
     ).toBeVisible();
     await expect(page.getByText(/模块标识:\s*business\.cmdb\.vendor/)).toBeVisible();
-    await expect(page.getByText(/路由路径:\s*\/operations\/cmdb\/vendor/)).toBeVisible();
+    await expect(page.getByText(/路由路径:\s*\/business\/cmdb\/vendor/)).toBeVisible();
   });
 
   test('generator validates system scope module name before submit and shows a single error hint', async ({

@@ -1,0 +1,122 @@
+{
+  "taskId": "2026-08-06-generator-business-page-route",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "go test -race ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Passed with CGO_ENABLED=1 and D:\\msys64\\mingw64\\bin on PATH."
+    },
+    {
+      "command": "npm run test:generator:smoke",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Dashboard widget, generator quality, lowcode generation, menu, i18n hardcode, and generated-scope gates passed."
+    },
+    {
+      "command": "npm run test:smoke:business",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Five real browser flows passed: governance, database import, master-detail, many-to-many, and auto-recycle. Generated pages opened under /business/*. The first sandboxed cleanup attempt failed with Node EPERM on an atomic temp file; the identical suite passed outside the restricted child-process sandbox."
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "15/15 producer tests passed, including exact inclusion of exporter and transpile tooling."
+    },
+    {
+      "command": "npm run lint && npm run type-check && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "ESLint, TypeScript, all prebuild contracts, and Vite production build passed."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:task-packet-template && npm run check:generated-modules && npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "211 docs checked, task template present, no generated modules remain, duplication 1.84% below the 3.00% limit."
+    },
+    {
+      "command": "go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "No called Go vulnerabilities found."
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Root npm audit found 0 vulnerabilities."
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": "frontend",
+      "status": "failed",
+      "notes": "brace-expansion was upgraded from 5.0.7 to 5.0.9. The sole remaining advisory family is React Router RSC action CSRF in >=7.12; Pantheon Base is a client-only Vite BrowserRouter application and does not enable React Server Components or server actions. Downgrading to 7.11 was tested and rejected because it reintroduced multiple reachable XSS, open-redirect, and DoS advisories. No patched stable release exists as of 2026-08-06."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/consume-foundation-release.test.mjs",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "notes": "23/23 consumer tests passed, including exact exporter/transpiler dry-run, apply, and rollback behavior."
+    },
+    {
+      "command": "node --test tests/scripts/sync-base-shared.test.mjs",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "notes": "3/3 sync tests passed, including missing, drift, apply, and aligned checks for all three allowlisted tooling assets."
+    },
+    {
+      "command": "codegraph status",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Index is up to date: 712 files, 11626 nodes, 25513 edges."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict && node scripts/harness/check-graph-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All 33 review artifacts passed strict validation; all 8 graph-reviewed tasks passed with no warnings. The independent quality lane returned APPROVE and the architecture lane returned CLEAR."
+    },
+    {
+      "command": "npm run check:harness-method && npm run check:harness-adoption && npm run check:harness-template && npm run check:harness-docs && npm run check:harness-inventory && npm run check:harness-sync && npm run check:harness-encoding && npm run check:harness-visual && npm run check:structure && npm run check:failure-registry",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All strict Harness method, adoption, template, docs, inventory, sync, encoding, visual, structure, and failure-registry gates passed with no findings or warnings."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No whitespace errors."
+    }
+  ],
+  "hostedVerification": [],
+  "releaseVerification": [],
+  "runtimeGap": "Base real browser generation flows passed and rendered generated pages under /business/*. Actual immutable v0.10.3 installation and Ops server-side exporter execution remain pending until the Base PR is merged and the release is published.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-06-generator-business-page-route/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-06-generator-business-page-route/",
+    "reviewFile": ".harness/evidence/2026-08-06-generator-business-page-route/review.md",
+    "summaryFile": ".harness/evidence/2026-08-06-generator-business-page-route/summary.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-08-06-generator-business-page-route.task.md"]
+  },
+  "repo": "pantheon-base",
+  "agent": { "tool": "codex" },
+  "knownGaps": [
+    "Base PR hosted checks, v0.10.3 publication, and immutable Ops consumption are pending.",
+    "React Router has no patched stable release for the RSC-only advisory; upstream release is monitored while RSC/server actions remain disabled."
+  ],
+  "graphChecks": {
+    "affectedSubgraph": [
+      "module schema -> page route helper -> frontend/backend generators -> dynamic module summary -> generated runtime smoke",
+      "foundation manifest -> release bundle -> Ops consumer tooling allowlist -> server-side exporter"
+    ],
+    "checks": ["call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "The producer and consumer both use exact path contracts; Ops consumer tests cover dry-run, apply, rollback, missing, drift, and aligned states."
+  }
+}
