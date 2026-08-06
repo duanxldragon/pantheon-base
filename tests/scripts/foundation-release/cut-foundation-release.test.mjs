@@ -53,8 +53,18 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'index.css'), 'body { margin: 0; }\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'scripts', 'lib'), { recursive: true });
     fs.writeFileSync(
+      path.join(root, 'frontend', 'scripts', 'export-generated-module.mjs'),
+      'export const exporter = true;\n',
+      'utf8',
+    );
+    fs.writeFileSync(
       path.join(root, 'frontend', 'scripts', 'lib', 'css-declarations.mjs'),
       'export const shared = true;\n',
+      'utf8',
+    );
+    fs.writeFileSync(
+      path.join(root, 'frontend', 'scripts', 'transpile-typescript-files.mjs'),
+      'export const transpiler = true;\n',
       'utf8',
     );
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
@@ -102,6 +112,38 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
           'src',
           'store',
           'useAuthStore.ts',
+        ),
+      ),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          'pantheon-base-v0.10.0',
+          'bundle',
+          'shared-frontend',
+          'frontend',
+          'scripts',
+          'export-generated-module.mjs',
+        ),
+      ),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          'pantheon-base-v0.10.0',
+          'bundle',
+          'shared-frontend',
+          'frontend',
+          'scripts',
+          'transpile-typescript-files.mjs',
         ),
       ),
       true,

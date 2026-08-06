@@ -72,7 +72,9 @@ test('build-release-manifest writes release metadata files into releases/<versio
       'frontend/src/modules/platform',
       'frontend/src/modules/system',
       'frontend/src/index.css',
+      'frontend/scripts/export-generated-module.mjs',
       'frontend/scripts/lib/css-declarations.mjs',
+      'frontend/scripts/transpile-typescript-files.mjs',
     ]);
     assert.deepEqual(manifest.verification.requiredChecks, [
       'CI Summary',
