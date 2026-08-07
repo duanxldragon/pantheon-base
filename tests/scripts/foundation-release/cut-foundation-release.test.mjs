@@ -70,6 +70,10 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     const sharedSmokeFiles = [
       'frontend/scripts/lib/auth-cookie-session.mjs',
       'frontend/scripts/run-smoke-suite.mjs',
+      'frontend/scripts/run-smoke-suite.test.mjs',
+      'frontend/scripts/test-fixtures/bind-ready-server.mjs',
+      'frontend/scripts/test-fixtures/fake-playwright-cli.mjs',
+      'frontend/scripts/test-fixtures/record-cleanup.mjs',
       'frontend/tests/fixtures/coverage.ts',
       'frontend/tests/smoke/helpers/auth.ts',
       'frontend/tests/smoke/helpers/fixture-policy.ts',
@@ -133,6 +137,28 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       ),
       true,
     );
+    for (const relativePath of [
+      'frontend/scripts/run-smoke-suite.test.mjs',
+      'frontend/scripts/test-fixtures/bind-ready-server.mjs',
+      'frontend/scripts/test-fixtures/fake-playwright-cli.mjs',
+      'frontend/scripts/test-fixtures/record-cleanup.mjs',
+    ]) {
+      assert.equal(
+        fs.existsSync(
+          path.join(
+            root,
+            'dist',
+            'foundation-releases',
+            'pantheon-base-v0.10.0',
+            'bundle',
+            'shared-frontend',
+            relativePath,
+          ),
+        ),
+        true,
+        `${relativePath} must be included in the shared frontend bundle`,
+      );
+    }
     assert.equal(
       fs.existsSync(
         path.join(
