@@ -8,4 +8,6 @@ The independent quality lane reviewed 26 Base and Ops files, found no issues at 
 
 Hosted PR checks, immutable `pantheon-base-v0.10.3` publication, and actual Ops release consumption remain pending.
 
+Downstream closeout found one additional release-boundary defect after v0.10.3 was consumed: the shared source migrated to `SearchToolbar`, but the release artifact omitted the corresponding system/shell smoke specs and helpers, leaving Ops on stale form-grid assertions and unstable repeated-login fixtures. The producer manifest now distributes only the exact shared smoke closure, and the cut-release regression proves the system spec is present in the archive. Runtime product code and visual styling are unchanged; hosted Ops smoke remains the rendered acceptance gate for the next patch release.
+
 Gate Outcomes: generated business pages use `/business/*` | producer and consumer tooling contracts align | no generated residue | reachable dependency risk reduced
