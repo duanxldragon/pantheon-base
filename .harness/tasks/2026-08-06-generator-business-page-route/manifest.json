@@ -11,6 +11,7 @@
       "Dynamic module summary and inferred parent menu alignment",
       "Generator contract and runtime smoke coverage",
       "Foundation distribution of exporter and transpile scripts",
+      "Foundation distribution of shared system and shell smoke contracts with their runtime helpers",
       "Reachable high-severity dependency debt surfaced by release verification",
       "Patch release and Pantheon Ops consumption"
     ],
@@ -27,19 +28,20 @@
     "Generated page routes, menus, summaries, and parent inference use /business/*",
     "Generated business APIs remain /api/v1/business/*",
     "Foundation release contains the exporter and transpile helper",
+    "Foundation release contains the shared smoke contracts and helpers required to validate inherited system UI",
     "brace-expansion is patched and the remaining React Router advisory is reachability-assessed against the client-only router architecture",
     "Base and Ops local and hosted gates pass"
   ],
   "structuralScope": {
     "affectedSubgraph": [
       "module schema -> page route helper -> frontend/backend generators -> dynamic module summary -> generated runtime smoke",
-      "foundation manifest -> release bundle -> Ops consumer tooling allowlist -> server-side exporter"
+      "foundation manifest -> release bundle -> Ops consumer tooling allowlist -> server-side exporter and shared smoke contracts"
     ],
     "boundaryCrossings": ["system/lowcode -> business generated code", "Base release -> Ops consumer"],
     "riskNodes": ["menu-route mismatch", "activation diagnostics", "consumer runtime exporter drift"],
     "graphFocus": ["call-depth", "sensitive-flow"]
   },
-  "ratchetDecision": "contract-tests-and-release-allowlist",
+  "ratchetDecision": "contract-tests-release-allowlist-and-consumer-smoke-distribution",
   "runtimeSensitive": true,
   "linkage": {
     "taskId": "2026-08-06-generator-business-page-route",
