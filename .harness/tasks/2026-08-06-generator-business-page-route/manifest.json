@@ -11,7 +11,7 @@
       "Dynamic module summary and inferred parent menu alignment",
       "Generator contract and runtime smoke coverage",
       "Foundation distribution of exporter and transpile scripts",
-      "Foundation distribution of shared system and shell smoke contracts with their runtime helpers",
+      "Foundation distribution of shared system and shell smoke contracts, runner tests, and runtime helpers",
       "Reachable high-severity dependency debt surfaced by release verification",
       "Patch release and Pantheon Ops consumption"
     ],
@@ -22,13 +22,13 @@
       "Database schema changes"
     ]
   },
-  "minimumViableApproach": "Reuse the existing buildRoutePath and buildPageRoutePath helpers, remove the business-only /operations override, update backend summary inference, and extend the existing exact foundation tooling allowlist with the two runtime-required generator scripts.",
+  "minimumViableApproach": "Reuse the existing buildRoutePath and buildPageRoutePath helpers, remove the business-only /operations override, update backend summary inference, and extend the existing exact foundation tooling allowlist with the runner test and its three direct smoke fixtures.",
   "successCriteria": [
     "Generated business source remains under modules/business",
     "Generated page routes, menus, summaries, and parent inference use /business/*",
     "Generated business APIs remain /api/v1/business/*",
     "Foundation release contains the exporter and transpile helper",
-    "Foundation release contains the shared smoke contracts and helpers required to validate inherited system UI",
+    "Foundation release contains the shared smoke contracts, runner tests, and helpers required to validate inherited system UI",
     "brace-expansion is patched and the remaining React Router advisory is reachability-assessed against the client-only router architecture",
     "Base and Ops local and hosted gates pass"
   ],

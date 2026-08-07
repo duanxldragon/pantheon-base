@@ -10,4 +10,6 @@ Hosted PR checks, immutable `pantheon-base-v0.10.3` publication, and actual Ops 
 
 Downstream closeout found one additional release-boundary defect after v0.10.3 was consumed: the shared source migrated to `SearchToolbar`, but the release artifact omitted the corresponding system/shell smoke specs and helpers, leaving Ops on stale form-grid assertions and unstable repeated-login fixtures. The producer manifest now distributes only the exact shared smoke closure, and the cut-release regression proves the system spec is present in the archive. Runtime product code and visual styling are unchanged; hosted Ops smoke remains the rendered acceptance gate for the next patch release.
 
+Consuming v0.10.4 then exposed the same failure class at the runner boundary: `run-smoke-suite.mjs` was shared without its matching test and three direct fixture dependencies, so Ops retained a stale local runner test. The v0.10.5 candidate now distributes that exact test closure. Focused producer tests, the full foundation suite, shared smoke script tests, frontend lint/type/build, and MSYS2 CGO Go race all pass; runtime product code and UI remain unchanged.
+
 Gate Outcomes: generated business pages use `/business/*` | producer and consumer tooling contracts align | no generated residue | reachable dependency risk reduced

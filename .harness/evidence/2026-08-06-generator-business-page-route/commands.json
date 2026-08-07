@@ -91,11 +91,35 @@
       "cwd": ".",
       "status": "passed",
       "notes": "No whitespace errors."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/build-release-manifest.test.mjs tests/scripts/foundation-release/cut-foundation-release.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "6/6 focused producer tests passed, including exact runner test and fixture inclusion in the release bundle."
+    },
+    {
+      "command": "npm run test:smoke:scripts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "19/19 shared smoke script tests passed with the v0.10.4 runner contract."
+    },
+    {
+      "command": "npm run test:foundation-release && npm --prefix frontend run lint && npm --prefix frontend run type-check && npm --prefix frontend run build",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "15/15 foundation producer tests, ESLint, TypeScript, prebuild contracts, and Vite production build passed for the runner-test distribution fix."
+    },
+    {
+      "command": "go test -race ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Passed with CGO_ENABLED=1 and D:\\msys64\\mingw64\\bin on PATH after correcting the initial non-module root working directory."
     }
   ],
   "hostedVerification": [],
   "releaseVerification": [],
-  "runtimeGap": "Base real browser generation flows passed and rendered generated pages under /business/*. Actual immutable v0.10.3 installation and Ops server-side exporter execution remain pending until the Base PR is merged and the release is published.",
+  "runtimeGap": "Base real browser generation flows passed and rendered generated pages under /business/*. The v0.10.4 artifact exposed a missing shared runner-test closure in Ops; immutable v0.10.5 publication, Ops consumption, and hosted Ops smoke remain pending.",
   "linkage": {
     "taskManifest": ".harness/tasks/2026-08-06-generator-business-page-route/manifest.json",
     "evidenceDir": ".harness/evidence/2026-08-06-generator-business-page-route/",
@@ -107,7 +131,7 @@
   "repo": "pantheon-base",
   "agent": { "tool": "codex" },
   "knownGaps": [
-    "Base PR hosted checks, v0.10.3 publication, and immutable Ops consumption are pending.",
+    "Base PR hosted checks, v0.10.5 publication, immutable Ops consumption, and hosted Ops smoke are pending.",
     "React Router has no patched stable release for the RSC-only advisory; upstream release is monitored while RSC/server actions remain disabled."
   ],
   "graphChecks": {

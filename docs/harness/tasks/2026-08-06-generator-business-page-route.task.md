@@ -57,7 +57,7 @@ platform
 - Generated source remains under `backend/modules/business/*` and `frontend/src/modules/business/*`.
 - Business APIs remain under `/api/v1/business/*`.
 - Foundation releases include `export-generated-module.mjs` and `transpile-typescript-files.mjs`.
-- Foundation releases include the shared system/shell smoke contracts and their exact runtime helpers so consumer tests cannot drift behind shared UI changes.
+- Foundation releases include the shared system/shell smoke contracts, runner tests, and their exact runtime helpers so consumer tests cannot drift behind shared UI changes.
 - Reachable high-severity dependency debt surfaced by the release gate is remediated; upstream-only findings are reachability-assessed.
 - Base and Ops runtime smoke, release, PR, CI, and branch closeout.
 
