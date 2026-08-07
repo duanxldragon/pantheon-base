@@ -67,6 +67,23 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       'export const transpiler = true;\n',
       'utf8',
     );
+    const sharedSmokeFiles = [
+      'frontend/scripts/lib/auth-cookie-session.mjs',
+      'frontend/scripts/run-smoke-suite.mjs',
+      'frontend/tests/fixtures/coverage.ts',
+      'frontend/tests/smoke/helpers/auth.ts',
+      'frontend/tests/smoke/helpers/fixture-policy.ts',
+      'frontend/tests/smoke/helpers/shared-read-cache.ts',
+      'frontend/tests/smoke/helpers/url-pattern.ts',
+      'frontend/tests/smoke/platform/shell-visual-contract.spec.ts',
+      'frontend/tests/smoke/system/system-pages.spec.ts',
+      'frontend/tests/smoke/system/system-workspace-task-depth.ts',
+    ];
+    for (const relativePath of sharedSmokeFiles) {
+      const filePath = path.join(root, relativePath);
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, `export const fixture = '${relativePath}';\n`, 'utf8');
+    }
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md'), '# Model\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'WORKFLOW.md'), '# Workflow\n', 'utf8');
@@ -112,6 +129,24 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
           'src',
           'store',
           'useAuthStore.ts',
+        ),
+      ),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          'pantheon-base-v0.10.0',
+          'bundle',
+          'shared-frontend',
+          'frontend',
+          'tests',
+          'smoke',
+          'system',
+          'system-pages.spec.ts',
         ),
       ),
       true,

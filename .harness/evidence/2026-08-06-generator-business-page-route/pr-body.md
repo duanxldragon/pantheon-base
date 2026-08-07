@@ -2,8 +2,8 @@
 
 - 改动层级：`platform/lowcode -> generated business/*`
 - 改动模块：`lowcode generator`、`dynamicmodule`、`foundation release`
-- 目标问题：生成业务页面错误漂移到 `/operations/*`，且 foundation release 漏发服务端导出所需脚本
-- 预期影响：生成业务页面、菜单和摘要统一使用 `/business/*`；API 继续使用 `/api/v1/business/*`；Ops 可通过不可变 release 获得 exporter tooling
+- 目标问题：生成业务页面错误漂移到 `/operations/*`，且 foundation release 漏发服务端导出脚本与共享 smoke 契约
+- 预期影响：生成业务页面、菜单和摘要统一使用 `/business/*`；API 继续使用 `/api/v1/business/*`；Ops 可通过不可变 release 获得 exporter tooling 和与共享系统 UI 同版本的 smoke 契约
 
 ## Harness 链路
 
@@ -38,7 +38,7 @@
 - [ ] 本次改动仅涉及单一层级
 - [x] 本次改动涉及跨层，已说明边界与依赖
 
-生成器实现继续位于 `modules/lowcode/generator`，只改变其业务输出合同。生成源码仍在 `modules/business/*`；手工 `/operations/*` 页面和业务 API 均不迁移。Base release producer 精确分发两个运行时工具，Ops consumer 仍采用显式 allowlist，不扩大脚本信任面。
+生成器实现继续位于 `modules/lowcode/generator`，只改变其业务输出合同。生成源码仍在 `modules/business/*`；手工 `/operations/*` 页面和业务 API 均不迁移。Base release producer 精确分发两个运行时工具以及 system/shell smoke 的最小闭包，Ops consumer 仍采用显式 allowlist，不扩大到业务 smoke 或整个测试目录。
 
 ## 验证记录
 
@@ -46,6 +46,7 @@
 - [x] Frontend lint、type-check、build
 - [x] 五套真实 business generation smoke 全部通过
 - [x] Ops consumer 23/23 与 sync 3/3 测试通过
+- [x] Foundation producer 15/15 测试通过，cut 测试确认共享 system smoke 进入 bundle
 - [x] Go vuln、root npm audit、brace-expansion 修复
 - [x] CodeGraph 与 Harness 本地门禁
 - [ ] GitHub required checks：PR 创建后验证
@@ -61,7 +62,7 @@
 - Auto-merge：`not-enabled`
 - Duplication Gate 结果：`1.84% / 3.00% PASS`
 - 是否高风险改动：`yes，generator/dynamic module/foundation inheritance`
-- Residual risk / follow-up：`发布 v0.10.3 后必须在 Ops 执行真实 server-side exporter 并完成全量 smoke`
+- Residual risk / follow-up：`v0.10.3 Ops hosted smoke 证明源代码已同步但 smoke 契约未随 release 分发；本 PR 通过下一 patch release 关闭该缺口`
 
 ## 检查清单
 
@@ -69,5 +70,6 @@
 - [x] 生成 API 仍为 `/api/v1/business/*`
 - [x] 未迁移手工 `/operations/*` 页面
 - [x] exporter tooling 由 Base 发布、Ops 精确消费
+- [x] system/shell smoke 契约与所需 helper 由 Base patch release 精确分发
 - [x] 未新增依赖或数据库变更
 - [x] 未泄露敏感配置、账号密码或 Token

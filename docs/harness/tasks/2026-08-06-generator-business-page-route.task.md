@@ -57,6 +57,7 @@ platform
 - Generated source remains under `backend/modules/business/*` and `frontend/src/modules/business/*`.
 - Business APIs remain under `/api/v1/business/*`.
 - Foundation releases include `export-generated-module.mjs` and `transpile-typescript-files.mjs`.
+- Foundation releases include the shared system/shell smoke contracts and their exact runtime helpers so consumer tests cannot drift behind shared UI changes.
 - Reachable high-severity dependency debt surfaced by the release gate is remediated; upstream-only findings are reachability-assessed.
 - Base and Ops runtime smoke, release, PR, CI, and branch closeout.
 
@@ -86,6 +87,7 @@ platform
 - dynamic module summary and parent-menu inference tests
 - generated business runtime smoke expectations
 - foundation release manifest and tests
+- shared smoke contract distribution and consumer sync coverage
 - frontend dependency lock only when mandatory security gates find reachable debt
 
 ### Do Not Touch
@@ -107,6 +109,7 @@ platform
 - `npm run test:generator:smoke` from `frontend/`
 - `npm run test:smoke:business` from `frontend/`
 - `npm run test:foundation-release`
+- hosted Ops `Smoke Sanity` against the released shared smoke contracts
 - frontend lint, type-check, build, dependency, docs, Harness, and security gates
 - Ops foundation consumer, sync, inheritance, generator, and business smoke gates
 
