@@ -64,6 +64,8 @@ test('build-release-manifest writes release metadata files into releases/<versio
       assetName: 'foundation-release-pantheon-base-v0.10.0.tgz',
     });
     assert.deepEqual(manifest.sharedPaths.frontend, [
+      'frontend/src/api/request.ts',
+      'frontend/src/api/requestErrorUtils.ts',
       'frontend/src/components',
       'frontend/src/core',
       'frontend/src/store',
