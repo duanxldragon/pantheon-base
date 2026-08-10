@@ -51,6 +51,8 @@ function buildManifest(options) {
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],
       frontend: [
+        'frontend/src/api/request.ts',
+        'frontend/src/api/requestErrorUtils.ts',
         'frontend/src/components',
         'frontend/src/core',
         'frontend/src/store',

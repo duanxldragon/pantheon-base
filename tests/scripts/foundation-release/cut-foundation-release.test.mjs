@@ -38,6 +38,9 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     fs.writeFileSync(path.join(root, 'backend', 'pkg', 'pkg.go'), 'package pkg\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'core'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'core', 'app.ts'), 'export const app = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'api'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'api', 'request.ts'), 'export const request = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'api', 'requestErrorUtils.ts'), 'export const errors = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'components'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'components', 'card.tsx'), 'export const Card = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'store'), { recursive: true });
