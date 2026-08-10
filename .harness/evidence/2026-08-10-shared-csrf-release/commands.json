@@ -1,0 +1,13 @@
+{
+  "taskId": "2026-08-10-shared-csrf-release",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "node --test tests/scripts/foundation-release/build-release-manifest.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Foundation manifest contract tests passed locally."
+    }
+  ],
+  "hostedVerification": []
+}

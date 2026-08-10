@@ -12,6 +12,7 @@
   "runtimeSensitive": true,
   "linkage": {
     "taskId": "2026-08-10-shared-csrf-release",
+    "changeRef": "none",
     "taskPacket": "docs/harness/tasks/2026-08-10-shared-csrf-release.task.md",
     "evidenceDir": ".harness/evidence/2026-08-10-shared-csrf-release/",
     "reviewFile": ".harness/evidence/2026-08-10-shared-csrf-release/review.md",
