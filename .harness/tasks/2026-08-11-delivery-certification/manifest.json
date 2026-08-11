@@ -1,0 +1,31 @@
+{
+  "taskId": "2026-08-11-delivery-certification",
+  "title": "Certify Pantheon Base delivery for Ops development",
+  "goal": "Close release certification and documentation drift before the next immutable foundation release.",
+  "primaryLayer": "ci-workflow",
+  "qualityProfiles": ["ci-workflow", "auth-security"],
+  "scope": {
+    "in": [
+      "Release Gate candidate binding",
+      "immutable release publishing",
+      "bundle provenance",
+      "Node and Docker build baseline",
+      "runtime version metadata",
+      "README and deployment documentation",
+      "Windows MSYS race verification"
+    ],
+    "out": ["Product UI", "Business-domain behavior", "Database schema"]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-11-delivery-certification",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pull/242",
+    "taskPacket": "docs/harness/tasks/2026-08-11-delivery-certification.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-11-delivery-certification/",
+    "reviewFile": ".harness/evidence/2026-08-11-delivery-certification/review.md",
+    "summaryFile": ".harness/evidence/2026-08-11-delivery-certification/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-11-delivery-certification.task.md"]
+  },
+  "syncExpectation": "Publish the next certified patch release and update pantheon-ops to its immutable artifact."
+}

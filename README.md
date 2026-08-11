@@ -8,10 +8,13 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
+| 当前已发布的 foundation release | `pantheon-base-v0.10.11`（`release/0.10`） |
 | 产品里程碑 | **V1.0**（2026-07-21 发布） |
-| Shell 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
-| 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（Docker Compose / K8s / 环境变量清单） |
+| Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
+| 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（待刷新；本次未同步更新，部署细节请以迁移 + 运行时 seed 为准） |
 | 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
+
+交付审计说明：`pantheon-base-v0.10.11` 已发布，也是 `pantheon-ops` 目前锁定使用的 foundation baseline，但它还没有完成完整 release-gate 认证，因为 commit `48c7ca5dcb8fd3c7235055dbeec57fb5b165b13e` 没有成功的 Release Gate 运行，也没有 Actionlint 或 Full Smoke 的 check-run。`pantheon-ops` 可以在这个锁定基线上按条件继续业务域开发；下一次经过认证的 foundation 发布必须补齐这些 release 证据缺口。
 
 V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
 
@@ -29,7 +32,7 @@ V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安
 - **配置治理**：系统设置、字典管理、缓存刷新、敏感配置保护。
 - **审计能力**：登录日志、操作日志、关键写操作审计。
 - **动态菜单**：菜单 seed、前端 manifest、组件注册表和构建期契约检查。
-- **低代码工作域**：`system/generator` 负责受控模块生成，`system/dynamicmodule` 负责模块接入治理，统一挂接到 `platform.lowcode`。
+- **低代码工作域**：后端物理路径为 `backend/modules/lowcode/generator` 与 `backend/modules/lowcode/dynamicmodule`，前端物理路径为 `frontend/src/modules/lowcode/generator` 与 `frontend/src/modules/lowcode/dynamicmodule`；逻辑工作域统一挂接到 `platform.lowcode`。
 - **业务接入**：平台保留 `business/*` 扩展点、模块生成器和治理契约；具体业务仓库独立维护。
 
 ## 技术栈
@@ -45,6 +48,7 @@ V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安
 ```text
 backend/
   cmd/server/              # 后端启动入口
+  modules/lowcode/         # system/lowcode：generator / dynamicmodule 后端实现
   modules/auth/            # system/auth：认证、会话、安全中心
   modules/platform/        # platform：工作台聚合数据
   modules/system/          # system/*：IAM、组织、配置、审计等底座能力
@@ -52,6 +56,7 @@ backend/
   pkg/                     # 公共契约、数据库、响应、Token 等
 frontend/
   src/core/                # 应用壳层、路由、主题、菜单装配
+  src/modules/lowcode/     # 低代码生成器与动态模块 UI
   src/modules/auth/        # 认证与安全中心页面
   src/modules/platform/    # 平台工作台
   src/modules/system/      # 系统域管理页面
@@ -63,7 +68,7 @@ tests/                     # 根级脚本测试、文档测试、性能脚本
 .agents/                   # repo-local agent 说明、skills、schemas
 .github/                   # GitHub workflow、模板、CODEOWNERS、Dependabot
 config/method.config.json  # pantheon-harness 方法源配置
-database/system_init.sql   # 初始化 schema、seed、i18n
+database/system_init.sql   # 已弃用的历史参考；权威 schema 以迁移 + runtime seed 为准
 grafana/                   # 本地观测配置
 releases/                  # foundation release 元数据
 schema/generated/          # 跨端治理生成输出
@@ -86,21 +91,25 @@ docker compose up -d
 - MySQL: `127.0.0.1:3306`
 - Redis: `127.0.0.1:6379`
 - 默认数据库：`pantheon_base`
+- schema 以应用迁移和 runtime seed 为准；`database/system_init.sql` 仅保留历史参考，不再作为建库入口
 
 ### 2. 启动后端
 
 PowerShell 示例：
 
 ```powershell
-$env:PANTHEON_DSN='root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
+$repoRoot='D:\workspace\go\pantheon-platform\pantheon-base'
+$env:PANTHEON_DSN='root:dev_password_change_me@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
 $env:PANTHEON_REDIS_ADDR='127.0.0.1:6379'
-$env:PANTHEON_REDIS_PASSWORD='DHCCdhcc2025'
-$env:PANTHEON_WORKSPACE_ROOT=(Get-Location).Path
-go run ./backend/cmd/server
+$env:PANTHEON_REDIS_PASSWORD='dev_redis_password_change_me'
+$env:PANTHEON_WORKSPACE_ROOT=$repoRoot
+Set-Location "$repoRoot\backend"
+go run ./cmd/server
 ```
 
 后端默认监听 `http://127.0.0.1:8080`。
 `pantheon-base` 作为底座仓库，应独占 `pantheon_base` 数据库，不与业务仓库混用。
+本地示例中的密码占位符与 `docker-compose.yml` 默认值一致；生产环境必须通过环境变量或 `.env` 覆盖这些值。
 如果你在 `git worktree` 中运行动态模块生成、卸载或彻底删除，务必显式设置 `PANTHEON_WORKSPACE_ROOT` 指向当前 worktree 根目录，避免 generated 源码和注册表被写入另一套仓目录。
 
 ### 低代码模块相关环境变量
@@ -133,12 +142,14 @@ npm run dev
 ```
 
 生产环境必须在启动前设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位。
+`PANTHEON_INITIAL_ADMIN_PASSWORD` 也必须在生产环境显式覆盖，不能沿用开发默认值。
 
 ## 常用命令
 
 ```bash
 # 后端测试
-go test ./backend/modules/auth ./backend/modules/system/...
+cd backend
+go test ./...
 
 # 前端构建与菜单契约检查
 cd frontend
@@ -154,13 +165,14 @@ npm run test:smoke:platform
 npm run test:smoke:all
 
 # 生成 foundation release metadata
-npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+# 以下仅为 next patch 示例，不是重新发布 0.10.11 的命令
+npm run release:foundation:manifest -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
 
 # 一次性生成 release metadata + dist bundle
-npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
 
 # 正式发布 foundation release：同步本地产物、Git tag 与 GitHub Release
-npm run release:foundation:publish -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
 ```
 
 ## 代码质量与安全门禁
@@ -170,7 +182,8 @@ npm run release:foundation:publish -- --release-version base-v0.8.0 --release-li
 - `Quality Gates`：文档治理、前端契约、后端测试、重复率与轻量 smoke
 - `Security Gates`：secret scan、workflow posture、dependency reports、CodeQL scan 与 CodeQL alert gate
 
-CodeQL 是唯一主安全信号。代码质量由 GitHub required checks、CodeQL、分支保护和可选的 Copilot review 共同兜底；不再依赖 Sonar 或 Codacy 作为合并门禁。当前 `main` 分支保护只要求 `Quality Gates` 与 `Security Gates`，并关闭 strict up-to-date 要求，以适配单人维护下的 squash auto-merge。更完整的策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
+SonarCloud 不是 `main` 合并的 required check，但 foundation release gate 仍要求 `SonarCloud Code Analysis`。
+CodeQL 是唯一主安全信号。代码质量由 GitHub required checks、CodeQL、分支保护和可选的 Copilot review 共同兜底。仓库已有作用于 `main` 的 active ruleset，但当前只要求 `Quality Gates`，尚未把 `Security Gates` 和 conversation resolution 纳入强制条件；认证交付前必须补齐并核验该 ruleset。更完整的策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
 
 ## 权限模型摘要
 
@@ -240,7 +253,7 @@ git config core.hooksPath .githooks
 - **Website**：如暂无线上环境，可暂留空。
 - **Topics**：`go`、`gin`、`gorm`、`react`、`typescript`、`vite`、`arco-design`、`casbin`、`iam`、`audit`、`i18n`、`admin-dashboard`、`modular-monolith`、`low-code`、`enterprise-platform`
 - **Features**：启用 Issues、Pull Requests、Actions；如暂不开放协作，可关闭 Wiki。
-- **Community Files**：仓库已补齐 `README`、`CONTRIBUTING`、`SECURITY`、Issue Templates 和 PR Template。
+- **Community Files**：仓库当前已检查入库的社区文件只有 `README.md`、`README.en.md`、`SECURITY.md`、`.github/CODEOWNERS`、`.github/dependabot.yml` 和 `.github/pull_request_template.md`；尚未提供 `CONTRIBUTING` 或 Issue Templates。
 
 当前对外定位建议：
 

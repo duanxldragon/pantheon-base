@@ -1,643 +1,165 @@
 # Pantheon Base 生产部署指南
 
-**版本**: v0.8.3  
-**最后更新**: 2026-06-22  
-**适用环境**: Kubernetes / Docker Compose
+**适用基线**：当前 `main` 与其认证后的 `pantheon-base-vX.Y.Z` foundation release
+**最后更新**：2026-08-11
 
----
+## 1. 支持范围
 
-## 📋 部署前准备
+`pantheon-base` 提供单体后端与前端静态资源镜像。生产运行依赖：
 
-### 系统要求
+| 组件 | 支持版本 | 用途 |
+| --- | --- | --- |
+| MySQL | 8.0+ | `pantheon_base` 主数据库 |
+| Redis | 7.0+ | 认证会话、令牌吊销、限流与 Casbin watcher |
+| OTLP 后端 | 可选 | OpenTelemetry traces |
 
-**最低配置**:
-- CPU: 2 核
-- 内存: 4GB
-- 磁盘: 20GB
+仓库根目录的 `docker-compose.yml` 只启动 MySQL 与 Redis，供本地开发和验证使用；它不是完整生产编排文件。仓库当前也不提供可直接应用的 Kubernetes manifests。生产平台应基于本指南维护自己的 Secret、Deployment、Service、Ingress、备份和告警配置。
 
-**推荐配置**:
-- CPU: 4 核
-- 内存: 8GB
-- 磁盘: 100GB (SSD)
+## 2. 构建镜像
 
-### 依赖服务
+从已认证的 tag 构建，并把同一版本注入后端日志和 OpenTelemetry resource：
 
-| 服务 | 版本 | 必需 | 用途 |
-|------|------|------|------|
-| MySQL | 8.0+ | ✅ 是 | 主数据库 |
-| Redis | 7.0+ | ✅ 必需 | 令牌会话存储（无 Redis 时所有认证请求返回 401）、令牌吊销黑名单、速率限制 |
-| Prometheus | 2.x+ | ⚠️ 推荐 | 指标采集 |
-| Grafana | 10.x+ | ⚠️ 推荐 | 监控可视化 |
-| Jaeger/Tempo | latest | ⚠️ 推荐 | 分布式追踪 |
-| Loki/ELK | latest | 可选 | 日志聚合 |
+```bash
+git checkout pantheon-base-vX.Y.Z
+docker build \
+  --build-arg PANTHEON_VERSION=pantheon-base-vX.Y.Z \
+  -t registry.example.com/pantheon-base:pantheon-base-vX.Y.Z \
+  .
+docker push registry.example.com/pantheon-base:pantheon-base-vX.Y.Z
+```
 
----
+Dockerfile 使用 Node.js 24 构建前端、Go 1.26.5 构建后端，最终进程以非 root 用户运行。不要从未通过 `Release Gate Summary` 的 commit 构建生产镜像。
 
-## 🐳 Docker Compose 部署
+## 3. 数据库初始化
 
-### 1. 创建 docker-compose.yml
+数据库名固定为 `pantheon_base`。先创建空数据库和具有 DDL/DML 权限的应用账号，应用启动时会按顺序执行：
+
+1. `golang-migrate` migrations；
+2. system runtime seed；
+3. i18n runtime seed。
+
+不要挂载 `database/system_init.sql`。该文件仅保留为 deprecated 历史参考，不是当前 schema 来源。
+
+默认启动路径使用 migrations。仅开发环境可使用 `PANTHEON_AUTO_MIGRATE=true`；生产环境不得启用 GORM AutoMigrate。
+
+## 4. 必需环境变量
+
+生产环境至少配置以下变量：
+
+| 变量 | 要求 |
+| --- | --- |
+| `PANTHEON_ENV` | 固定为 `production` |
+| `PANTHEON_DSN` | 指向独占的 `pantheon_base` 数据库 |
+| `PANTHEON_REDIS_ADDR` | Redis 地址；认证链依赖 Redis |
+| `PANTHEON_REDIS_PASSWORD` | Redis 密码 |
+| `PANTHEON_INITIAL_ADMIN_PASSWORD` | 首次 seed 使用，至少 12 位 |
+| `PANTHEON_ACCESS_TOKEN_SECRET` | 至少 32 字节 |
+| `PANTHEON_REFRESH_TOKEN_SECRET` | 至少 32 字节 |
+| `PANTHEON_OP_TOKEN_SECRET` | 至少 32 字节 |
+| `PANTHEON_SETTING_SECRET` | 至少 32 字节 |
+| `PANTHEON_MFA_SECRET` | 至少 32 字节 |
+| `PANTHEON_ALLOWED_ORIGINS` | 明确列出生产前端 origin |
+| `PANTHEON_ENABLE_DYNAMIC_MODULES` | 固定为 `false` |
+
+可从 `.env.example` 复制变量名，但必须通过集群 Secret、Vault 或等价密钥系统注入真实值。不要提交生产 `.env`、DSN、密码或 token。
+
+示例 DSN：
+
+```text
+pantheon_app:<password>@tcp(mysql:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC
+```
+
+## 5. Kubernetes 工作负载要求
+
+生产 Deployment 至少应满足：
+
+- 镜像使用不可变 digest 或认证后的版本 tag；
+- Secret 提供第 4 节全部敏感变量；
+- `PANTHEON_PORT=8080`；
+- readiness 与 liveness 均请求 `GET /api/v1/health`；
+- `terminationGracePeriodSeconds` 大于 `PANTHEON_SHUTDOWN_TIMEOUT_SECONDS`；
+- 使用滚动发布，并在迁移失败时停止 rollout；
+- 挂载持久存储到 `/app/uploads`（如果启用本地文件上传）；
+- 不把 `/metrics` 直接暴露到公网。
+
+探针示例：
 
 ```yaml
-version: '3.8'
-
-services:
-  # 主应用
-  pantheon-base:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: pantheon-base
-    ports:
-      - "8080:8080"
-    environment:
-      PANTHEON_ENV: production
-      PANTHEON_DSN: "root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/pantheon?charset=utf8mb4&parseTime=True&loc=UTC"
-      PANTHEON_REDIS_ADDR: "redis:6379"
-      PANTHEON_REDIS_PASSWORD: "${REDIS_PASSWORD}"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4318"
-      TZ: Asia/Shanghai
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - pantheon-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # MySQL 数据库
-  mysql:
-    image: mysql:8.0
-    container_name: pantheon-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: pantheon
-      TZ: Asia/Shanghai
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: --default-authentication-plugin=mysql_native_password
-    restart: unless-stopped
-    networks:
-      - pantheon-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis
-  redis:
-    image: redis:7-alpine
-    container_name: pantheon-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    restart: unless-stopped
-    networks:
-      - pantheon-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
-  # Prometheus
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: pantheon-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./grafana/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./grafana/prometheus-rules.yml:/etc/prometheus/rules/alerts.yml
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    restart: unless-stopped
-    networks:
-      - pantheon-network
-
-  # Grafana
-  grafana:
-    image: grafana/grafana:latest
-    container_name: pantheon-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/dashboards
-    restart: unless-stopped
-    networks:
-      - pantheon-network
-    depends_on:
-      - prometheus
-
-  # Jaeger (追踪)
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: pantheon-jaeger
-    ports:
-      - "4318:4318"  # OTLP HTTP
-      - "16686:16686"  # Jaeger UI
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-    restart: unless-stopped
-    networks:
-      - pantheon-network
-
-networks:
-  pantheon-network:
-    driver: bridge
-
-volumes:
-  mysql-data:
-  redis-data:
-  prometheus-data:
-  grafana-data:
+readinessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 8080
+  periodSeconds: 5
+  timeoutSeconds: 3
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 8080
+  periodSeconds: 10
+  timeoutSeconds: 5
 ```
 
-### 2. 创建 .env 文件
+应用在 `SIGTERM` 后停止接收新连接、等待在途请求，并排空操作日志队列。默认关闭超时为 15 秒，可通过 `PANTHEON_SHUTDOWN_TIMEOUT_SECONDS` 调整。
+
+## 6. 健康、指标与追踪
+
+健康检查：
 
 ```bash
-# 数据库配置
-MYSQL_ROOT_PASSWORD=your_strong_mysql_password_here
-
-# Redis 配置
-REDIS_PASSWORD=your_strong_redis_password_here
-
-# Grafana 配置
-GRAFANA_ADMIN_PASSWORD=your_strong_grafana_password_here
+curl --fail http://127.0.0.1:8080/api/v1/health
 ```
 
-### 3. 启动服务
+生产环境的 `/metrics` 默认不会无保护暴露。选择其一：
+
+- 设置 `PANTHEON_METRICS_BEARER_TOKEN`，并让 Prometheus 使用 Bearer token；
+- 在已受网关和网络策略保护的内网显式设置 `PANTHEON_METRICS_PUBLIC=true`；
+- 设置 `PANTHEON_METRICS_ENABLED=false` 完全关闭。
+
+配置 `OTEL_EXPORTER_OTLP_ENDPOINT` 后启用 OTLP HTTP traces；未配置时不创建 exporter。
+
+操作日志使用异步队列。队列满时新记录会被丢弃而不是同步降级写入，并增加：
+
+```text
+pantheon_operation_log_dropped_total
+```
+
+必须为该指标配置告警，并结合 `pantheon_operation_log_queue_depth` 调整 `PANTHEON_OPERATION_LOG_QUEUE_SIZE`。
+
+## 7. 发布验证
+
+发布后至少执行：
 
 ```bash
-# 启动所有服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f pantheon-base
-
-# 检查服务状态
-docker-compose ps
-
-# 测试健康检查
-curl http://localhost:8080/api/v1/health
+curl --fail https://<host>/api/v1/health
 ```
 
----
+并确认：
 
-## ☸️ Kubernetes 部署
+1. 应用日志中的 `version` 等于部署 tag；
+2. migrations 与 runtime seed 无错误；
+3. 管理员可以登录并刷新会话；
+4. Redis 中断会被监控捕获；
+5. `/metrics` 未匿名暴露；
+6. 动态模块注册在 production 被拒绝；
+7. 操作日志 dropped counter 未持续增长。
 
-### 1. 创建 Namespace
+## 8. 备份与恢复
 
-```yaml
-# k8s/namespace.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: pantheon
-  labels:
-    name: pantheon
-```
-
-### 2. 创建 ConfigMap
-
-```yaml
-# k8s/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: pantheon-config
-  namespace: pantheon
-data:
-  PANTHEON_ENV: "production"
-  TZ: "Asia/Shanghai"
-  OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger-collector:4318"
-```
-
-### 3. 创建 Secret
-
-```yaml
-# k8s/secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pantheon-secret
-  namespace: pantheon
-type: Opaque
-stringData:
-  PANTHEON_DSN: "root:YOUR_PASSWORD@tcp(mysql:3306)/pantheon?charset=utf8mb4&parseTime=True&loc=UTC"
-  PANTHEON_REDIS_ADDR: "redis:6379"
-  PANTHEON_REDIS_PASSWORD: "YOUR_REDIS_PASSWORD"
-  MYSQL_ROOT_PASSWORD: "YOUR_MYSQL_PASSWORD"
-```
-
-**⚠️ 重要**: 使用以下命令创建 Secret（不要直接提交明文）:
+备份 `pantheon_base`，不要使用旧数据库名 `pantheon`：
 
 ```bash
-kubectl create secret generic pantheon-secret \
-  --from-literal=PANTHEON_DSN='root:YOUR_PASSWORD@tcp(mysql:3306)/pantheon?charset=utf8mb4&parseTime=True&loc=UTC' \
-  --from-literal=PANTHEON_REDIS_ADDR='redis:6379' \
-  --from-literal=PANTHEON_REDIS_PASSWORD='YOUR_REDIS_PASSWORD' \
-  --from-literal=MYSQL_ROOT_PASSWORD='YOUR_MYSQL_PASSWORD' \
-  -n pantheon
+mysqldump --single-transaction -h <mysql-host> -u <backup-user> -p pantheon_base \
+  | gzip > pantheon_base_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
-### 4. 创建 Deployment
+恢复前先停止写流量，在隔离环境验证备份，再恢复到空的 `pantheon_base` 数据库并启动同版本应用执行 migrations。上传文件使用本地卷时，数据库和 `/app/uploads` 必须采用一致的恢复点。
 
-```yaml
-# k8s/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: pantheon-base
-  namespace: pantheon
-  labels:
-    app: pantheon-base
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: pantheon-base
-  template:
-    metadata:
-      labels:
-        app: pantheon-base
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/metrics"
-        prometheus.io/port: "8080"
-    spec:
-      containers:
-      - name: pantheon-base
-        image: pantheon-base:0.8.3
-        ports:
-        - name: http
-          containerPort: 8080
-          protocol: TCP
-        env:
-        - name: PANTHEON_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: pantheon-config
-              key: PANTHEON_ENV
-        - name: PANTHEON_DSN
-          valueFrom:
-            secretKeyRef:
-              name: pantheon-secret
-              key: PANTHEON_DSN
-        - name: PANTHEON_REDIS_ADDR
-          valueFrom:
-            secretKeyRef:
-              name: pantheon-secret
-              key: PANTHEON_REDIS_ADDR
-        - name: PANTHEON_REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: pantheon-secret
-              key: PANTHEON_REDIS_PASSWORD
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          valueFrom:
-            configMapKeyRef:
-              name: pantheon-config
-              key: OTEL_EXPORTER_OTLP_ENDPOINT
-        resources:
-          requests:
-            cpu: 500m
-            memory: 1Gi
-          limits:
-            cpu: 2000m
-            memory: 4Gi
-        livenessProbe:
-          httpGet:
-            path: /api/v1/health
-            port: http
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /api/v1/health
-            port: http
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 2
-```
+## 9. 回滚
 
-### 5. 创建 Service
+1. 停止新版本 rollout；
+2. 评估本次 migration 是否向后兼容；
+3. 仅在 schema 兼容时回滚到上一认证镜像；
+4. schema 不兼容时按 migration runbook 恢复数据库备份；
+5. 回滚后重新验证健康、登录、权限、审计与指标。
 
-```yaml
-# k8s/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: pantheon-base
-  namespace: pantheon
-  labels:
-    app: pantheon-base
-spec:
-  type: ClusterIP
-  ports:
-  - port: 80
-    targetPort: http
-    protocol: TCP
-    name: http
-  selector:
-    app: pantheon-base
-```
-
-### 6. 创建 Ingress
-
-```yaml
-# k8s/ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: pantheon-base
-  namespace: pantheon
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  tls:
-  - hosts:
-    - pantheon.example.com
-    secretName: pantheon-tls
-  rules:
-  - host: pantheon.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: pantheon-base
-            port:
-              number: 80
-```
-
-### 7. 部署到 K8s
-
-```bash
-# 应用所有配置
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/ingress.yaml
-
-# 查看部署状态
-kubectl get pods -n pantheon
-kubectl get svc -n pantheon
-kubectl get ingress -n pantheon
-
-# 查看日志
-kubectl logs -f -l app=pantheon-base -n pantheon
-
-# 扩容
-kubectl scale deployment pantheon-base --replicas=5 -n pantheon
-```
-
----
-
-## 🔧 环境变量配置
-
-### 必需配置
-
-| 变量名 | 示例值 | 说明 |
-|--------|--------|------|
-| `PANTHEON_DSN` | `root:pass@tcp(mysql:3306)/pantheon?...` | MySQL 连接字符串 |
-
-### 推荐配置
-
-| 变量名 | 示例值 | 说明 |
-|--------|--------|------|
-| `PANTHEON_ENV` | `production` | 环境标识（影响日志格式和 CSP） |
-| `PANTHEON_REDIS_ADDR` | `redis:6379` | Redis 地址（**必需**：令牌会话存储与吊销黑名单；另用于速率限制） |
-| `PANTHEON_REDIS_PASSWORD` | `your_password` | Redis 密码 |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `jaeger:4318` | OpenTelemetry 端点 |
-
-### 可选配置
-
-| 变量名 | 默认值 | 说明 |
-|--------|--------|------|
-| `PANTHEON_PORT` | `8080` | 服务端口 |
-| `CSP_REPORT_URI` | - | CSP 违规报告端点 |
-| `PANTHEON_ALLOWED_ORIGINS` | - | CORS 允许的源（逗号分隔） |
-| `PANTHEON_METRICS_ENABLED` | `true` | 是否注册 `/metrics` 端点；设为 `false` 可完全关闭 |
-| `PANTHEON_METRICS_BEARER_TOKEN` | - | `/metrics` Bearer token；生产环境推荐配置 |
-| `PANTHEON_METRICS_PUBLIC` | `false` | 生产环境是否允许无 token 暴露 `/metrics`；仅限内网或网关已保护场景 |
-| `PANTHEON_OPERATION_LOG_QUEUE_SIZE` | `1024` | 操作日志异步写入队列大小；队列满时会短超时同步降级写入 |
-| `PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE` | `false` | 低代码生成器数据源是否允许私网地址（RFC1918）。默认拒绝以收窄 SSRF 面；数据库位于内网网段时需显式设为 `true` |
-
----
-
-## 🔐 安全配置清单
-
-### 生产环境必做
-
-- [ ] 修改所有默认密码
-- [ ] 启用 HTTPS (TLS/SSL)
-- [ ] 配置防火墙规则
-- [ ] 设置 `PANTHEON_ENV=production`
-- [ ] 配置 `PANTHEON_ALLOWED_ORIGINS`（严格 CORS）
-- [ ] 为 `/metrics` 配置 `PANTHEON_METRICS_BEARER_TOKEN`，或确认仅内网暴露后显式设置 `PANTHEON_METRICS_PUBLIC=true`
-- [ ] 部署 Redis（认证令牌存储——必需；另承担吊销黑名单、速率限制、Casbin watcher）
-- [ ] 定期备份数据库
-- [ ] 配置日志轮转
-- [ ] 监控告警规则
-- [ ] 定期更新依赖
-
-### 强制安全基线（生产必选）
-
-以下配置项在生产环境**必须**设置为指定值，不可降级。部署完成后，运维必须通过「管理后台 → 安全设置」确认这些开关处于"启用"状态。
-
-| 配置项 | 必须值 | 说明 |
-|---|---|---|
-| `login.mfa_enabled` | `1` | 强制双因子认证（TOTP）。高敏操作不可仅依赖密码。 |
-| `session.secure_cookie` | `true` | 会话 Cookie 仅经 HTTPS 传输，防中间人窃取。 |
-| `csrf.enabled` | `true` | 启用 CSRF 防护（精确路径豁免，不做前缀豁免）。 |
-| `audit.enabled` | `true` | 启用审计日志，高危操作全程留痕。 |
-| `rate_limit.enabled` | `true` | 启用全局限流（依赖 Redis），防暴力破解与滥用。 |
-
-> **注意**：`login.mfa_enabled` 默认为 `false`（便于开发环境联调）。生产部署时**必须**显式开启。未开启 MFA 的生产实例不满足企业级安全基线，安全审计将判定为不合规。
-
-设置方式（管理后台 → 系统设置 → 安全，或调用设置 API）：
-
-```bash
-curl -X POST https://<host>/api/v1/system/settings \
-  -H "Authorization: Bearer <admin-token>" \
-  -H "Content-Type: application/json" \
-  -H "X-Operation-Token: <secure-action-token>" \
-  -d '{"key": "login.mfa_enabled", "value": "1"}'
-```
-
----
-
-## 📊 监控配置
-
-### Prometheus 采集
-
-在 `prometheus.yml` 中添加：
-
-```yaml
-scrape_configs:
-  - job_name: 'pantheon-base'
-    static_configs:
-      - targets: ['pantheon-base:8080']
-    metrics_path: '/metrics'
-    authorization:
-      type: Bearer
-      credentials: '${PANTHEON_METRICS_BEARER_TOKEN}'
-```
-
-### Grafana 仪表板导入
-
-```bash
-# 导入所有仪表板
-cd grafana/dashboards
-for file in *.json; do
-  curl -X POST http://admin:${GRAFANA_PASSWORD}@grafana:3000/api/dashboards/db \
-    -H "Content-Type: application/json" \
-    -d @"$file"
-done
-```
-
----
-
-## 🔄 备份与恢复
-
-### 数据库备份
-
-```bash
-# 定时备份脚本
-#!/bin/bash
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/backup/mysql"
-MYSQL_PASSWORD="your_password"
-
-# 创建备份
-mysqldump -u root -p${MYSQL_PASSWORD} pantheon > ${BACKUP_DIR}/pantheon_${DATE}.sql
-
-# 压缩备份
-gzip ${BACKUP_DIR}/pantheon_${DATE}.sql
-
-# 保留最近 7 天的备份
-find ${BACKUP_DIR} -name "pantheon_*.sql.gz" -mtime +7 -delete
-```
-
-### 恢复数据库
-
-```bash
-# 解压备份
-gunzip pantheon_20260622_120000.sql.gz
-
-# 恢复数据库
-mysql -u root -p pantheon < pantheon_20260622_120000.sql
-```
-
----
-
-## 🐛 故障排查
-
-### 常见问题
-
-**1. 服务无法启动**
-```bash
-# 检查日志
-docker-compose logs pantheon-base
-kubectl logs -l app=pantheon-base -n pantheon
-
-# 检查健康状态
-curl http://localhost:8080/api/v1/health
-```
-
-**2. 数据库连接失败**
-```bash
-# 测试数据库连接
-mysql -h mysql -u root -p
-
-# 检查 DSN 配置
-echo $PANTHEON_DSN
-```
-
-**3. Redis 连接失败**
-
-症状：登录成功后所有接口返回 401 `token.invalid`（令牌会话存于 Redis，连接失败即全部认证失效）。
-
-```bash
-# 测试 Redis 连接
-redis-cli -h redis -a your_password ping
-
-# 检查 Redis 配置
-echo $PANTHEON_REDIS_ADDR
-```
-
-**4. 高内存使用**
-```bash
-# 查看内存使用
-docker stats pantheon-base
-kubectl top pods -n pantheon
-
-# 调整资源限制
-# 修改 deployment.yaml 中的 resources
-```
-
----
-
-## 📚 附录
-
-### 端口清单
-
-| 端口 | 服务 | 说明 |
-|------|------|------|
-| 8080 | 主应用 | HTTP API |
-| 3306 | MySQL | 数据库 |
-| 6379 | Redis | 缓存/会话 |
-| 9090 | Prometheus | 指标采集 |
-| 3000 | Grafana | 监控面板 |
-| 16686 | Jaeger | 追踪 UI |
-| 4318 | Jaeger | OTLP HTTP |
-
-### 性能调优
-
-**数据库连接池**:
-```go
-// backend/pkg/database/gorm.go
-sqlDB.SetMaxIdleConns(10)
-sqlDB.SetMaxOpenConns(100)
-sqlDB.SetConnMaxLifetime(time.Hour)
-```
-
-**Gin 模式**:
-```bash
-# 生产环境使用 release 模式
-export GIN_MODE=release
-```
-
----
-
-**文档版本**: 1.0  
-**最后更新**: 2026-06-22  
-**维护者**: DevOps Team
+不要仅回滚镜像而忽略已执行的数据库 migration。

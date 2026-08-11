@@ -109,6 +109,55 @@ function copyMetadataFiles(releaseRoot, distRoot) {
   }
 }
 
+function runGit(root, args, description) {
+  const result = spawnSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    throw new Error(result.stderr?.trim() || `${description} failed`);
+  }
+  return result.stdout.trim();
+}
+
+export function validateBundleSource({ root, baseCommit, sharedPaths, exclusions = [] }) {
+  const targetCommit = runGit(
+    root,
+    ['rev-parse', `${baseCommit}^{commit}`],
+    `git rev-parse ${baseCommit}^{commit}`,
+  );
+  if (sharedPaths.length === 0) {
+    throw new Error('release manifest does not declare any shared paths');
+  }
+
+  const diffResult = spawnSync('git', ['diff', '--quiet', targetCommit, '--', ...sharedPaths], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  if (diffResult.status === 1) {
+    throw new Error('shared release paths contain changes outside manifest baseCommit');
+  }
+  if (diffResult.status !== 0) {
+    throw new Error(diffResult.stderr?.trim() || 'git diff validation failed');
+  }
+
+  for (const [label, args] of [
+    ['untracked', ['ls-files', '--others', '--exclude-standard', '--', ...sharedPaths]],
+    ['ignored', ['ls-files', '--others', '--ignored', '--exclude-standard', '--', ...sharedPaths]],
+  ]) {
+    const output = runGit(root, args, `git ls-files ${label}`);
+    const unexpectedPaths = output
+      .split(/\r?\n/u)
+      .filter(Boolean)
+      .filter((relativePath) => !isExcludedPath(relativePath, exclusions));
+    if (unexpectedPaths.length > 0) {
+      throw new Error(`shared release paths contain ${label} files: ${unexpectedPaths.join(', ')}`);
+    }
+  }
+
+  return targetCommit;
+}
+
 function writeReleaseModuleBoundary(distRoot, releaseVersion) {
   fs.writeFileSync(
     path.join(distRoot, 'go.mod'),
@@ -151,8 +200,20 @@ export function createReleaseBundle(options) {
       `manifest releaseVersion ${manifest.releaseVersion} does not match ${options.releaseVersion}`,
     );
   }
+  const sharedPaths = [
+    ...(manifest.sharedPaths?.backend || []),
+    ...(manifest.sharedPaths?.frontend || []),
+    ...(manifest.sharedPaths?.docs || []),
+  ];
+  const sourceCommit = validateBundleSource({
+    root: options.root,
+    baseCommit: manifest.baseCommit,
+    sharedPaths,
+    exclusions: manifest.bundleExclusions ?? [],
+  });
   const pathReport = {
     releaseVersion: manifest.releaseVersion,
+    sourceCommit,
     copiedAt: new Date().toISOString(),
     exclusions: manifest.bundleExclusions ?? [],
     backend: [],

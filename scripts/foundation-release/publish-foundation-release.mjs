@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { createReleaseBundle } from './build-release-bundle.mjs';
 import { buildReleaseHelp, parseReleaseArgs, validateReleaseIdentity } from './release-cli.mjs';
 
 const PLACEHOLDER_RELEASE_TEXTS = new Set([
@@ -75,6 +76,39 @@ function ensureCleanWorktree(root) {
   if (output) {
     throw new Error('publish-foundation-release requires a clean git worktree');
   }
+}
+
+export function validateReleaseGateCheckRuns({ checkRuns, targetCommit }) {
+  const runTimestamp = (checkRun) =>
+    String(checkRun.started_at || checkRun.created_at || checkRun.completed_at || '');
+  const matchingRuns = (checkRuns || [])
+    .filter((checkRun) => checkRun?.name === 'Release Gate Summary')
+    .sort((left, right) => runTimestamp(left).localeCompare(runTimestamp(right)));
+  const releaseGate = matchingRuns.at(-1);
+  if (!releaseGate) {
+    throw new Error(`release gate check is missing on target commit ${targetCommit}`);
+  }
+  if (releaseGate.status !== 'completed' || releaseGate.conclusion !== 'success') {
+    throw new Error(
+      `release gate check on ${targetCommit} is ${releaseGate.status}/${releaseGate.conclusion || 'pending'}`,
+    );
+  }
+  return releaseGate;
+}
+
+function ensureSuccessfulReleaseGate(root, repoFullName, targetCommit) {
+  const payload = JSON.parse(
+    runCommand(
+      'gh',
+      ['api', `repos/${repoFullName}/commits/${targetCommit}/check-runs?per_page=100`],
+      `read check-runs for ${targetCommit}`,
+      { cwd: root },
+    ),
+  );
+  return validateReleaseGateCheckRuns({
+    checkRuns: payload.check_runs,
+    targetCommit,
+  });
 }
 
 function ensureReleaseDirectory(root, releaseVersion) {
@@ -227,6 +261,14 @@ function pushTag(root, remote, tagName) {
   );
 }
 
+export function isMissingGitHubReleaseError(error) {
+  const details = [error?.message, error?.stderr, error?.stdout]
+    .filter(Boolean)
+    .map(String)
+    .join('\n');
+  return /\bHTTP 404\b|release not found/i.test(details);
+}
+
 function checkGitHubReleaseExists(root, repoFullName, tagName) {
   try {
     runCommand(
@@ -236,8 +278,11 @@ function checkGitHubReleaseExists(root, repoFullName, tagName) {
       { cwd: root },
     );
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (isMissingGitHubReleaseError(error)) {
+      return false;
+    }
+    throw error;
   }
 }
 
@@ -262,29 +307,10 @@ function createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCo
   );
 }
 
-function updateGitHubRelease(root, repoFullName, tagName, releaseTitle, notes) {
-  runCommand(
-    'gh',
-    [
-      'release',
-      'edit',
-      tagName,
-      '--repo',
-      repoFullName,
-      '--title',
-      releaseTitle,
-      '--notes',
-      notes,
-    ],
-    `gh release edit ${tagName}`,
-    { cwd: root },
-  );
-}
-
 function uploadGitHubReleaseAssets(root, repoFullName, tagName, assetPaths) {
   runCommand(
     'gh',
-    ['release', 'upload', tagName, '--repo', repoFullName, '--clobber', ...assetPaths],
+    ['release', 'upload', tagName, '--repo', repoFullName, ...assetPaths],
     `gh release upload ${tagName}`,
     { cwd: root },
   );
@@ -295,7 +321,6 @@ export function publishFoundationRelease(options) {
   validateReleaseIdentity(options.releaseVersion);
   const repoFullName = resolveRepoFullName(root, options.repoFullName);
   const releasePaths = ensureReleaseDirectory(root, options.releaseVersion);
-  const assetPaths = ensureReleaseAssetFiles(releasePaths, options.releaseVersion);
   const requestedTargetCommit =
     options.targetCommit || runCommand('git', ['rev-parse', 'HEAD'], 'git rev-parse HEAD', { cwd: root });
   const targetCommit = runCommand(
@@ -309,6 +334,10 @@ export function publishFoundationRelease(options) {
     manifest: releasePaths.manifest,
     targetCommit,
   });
+  ensureCleanWorktree(root);
+  const releaseGate = ensureSuccessfulReleaseGate(root, repoFullName, targetCommit);
+  createReleaseBundle({ root, releaseVersion: options.releaseVersion });
+  const assetPaths = ensureReleaseAssetFiles(releasePaths, options.releaseVersion);
   const tagName = options.releaseVersion;
   const releaseTitle = buildGitHubReleaseTitle(options.releaseVersion);
   const tagMessage = `Foundation release ${tagName}`;
@@ -337,6 +366,9 @@ export function publishFoundationRelease(options) {
   }
 
   const releaseExists = checkGitHubReleaseExists(root, repoFullName, tagName);
+  if (releaseExists) {
+    throw new Error(`GitHub release ${tagName} already exists and is immutable`);
+  }
   const operations = [];
 
   if (!tagExists) {
@@ -354,41 +386,31 @@ export function publishFoundationRelease(options) {
     });
   }
 
-  operations.push(
-    releaseExists
-      ? {
-          type: 'update-github-release',
-          tagName,
-          releaseTitle,
-          repoFullName,
-          command: ['gh', 'release', 'edit', tagName, '--repo', repoFullName, '--title', releaseTitle],
-        }
-      : {
-          type: 'create-github-release',
-          tagName,
-          releaseTitle,
-          repoFullName,
-          targetCommit,
-          command: [
-            'gh',
-            'release',
-            'create',
-            tagName,
-            '--repo',
-            repoFullName,
-            '--target',
-            targetCommit,
-            '--title',
-            releaseTitle,
-          ],
-        },
-  );
+  operations.push({
+    type: 'create-github-release',
+    tagName,
+    releaseTitle,
+    repoFullName,
+    targetCommit,
+    command: [
+      'gh',
+      'release',
+      'create',
+      tagName,
+      '--repo',
+      repoFullName,
+      '--target',
+      targetCommit,
+      '--title',
+      releaseTitle,
+    ],
+  });
   operations.push({
     type: 'upload-github-release-assets',
     tagName,
     repoFullName,
     assetPaths,
-    command: ['gh', 'release', 'upload', tagName, '--repo', repoFullName, '--clobber', ...assetPaths],
+    command: ['gh', 'release', 'upload', tagName, '--repo', repoFullName, ...assetPaths],
   });
 
   if (options.dryRun) {
@@ -404,24 +426,19 @@ export function publishFoundationRelease(options) {
       tagExists,
       releaseExists,
       releaseBody,
+      releaseGate,
       operations,
       assetPaths,
       dryRun: true,
     };
   }
 
-  ensureCleanWorktree(root);
-
   if (!tagExists) {
     createAnnotatedTag(root, tagName, targetCommit, tagMessage);
     pushTag(root, options.remote, tagName);
   }
 
-  if (releaseExists) {
-    updateGitHubRelease(root, repoFullName, tagName, releaseTitle, releaseBody);
-  } else {
-    createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, releaseBody);
-  }
+  createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, releaseBody);
   uploadGitHubReleaseAssets(root, repoFullName, tagName, assetPaths);
 
   return {
@@ -436,6 +453,7 @@ export function publishFoundationRelease(options) {
     tagExists,
     releaseExists,
     releaseBody,
+    releaseGate,
     operations,
     assetPaths,
     dryRun: false,

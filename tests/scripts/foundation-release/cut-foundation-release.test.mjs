@@ -26,6 +26,21 @@ function runScript(args, cwd) {
   });
 }
 
+function runGit(root, args) {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
+  return result.stdout.trim();
+}
+
+function initializeGitRepo(root) {
+  runGit(root, ['init']);
+  runGit(root, ['config', 'user.name', 'Foundation Test']);
+  runGit(root, ['config', 'user.email', 'foundation-test@example.com']);
+  runGit(root, ['add', '.']);
+  runGit(root, ['commit', '-m', 'test fixture']);
+  return runGit(root, ['rev-parse', 'HEAD']);
+}
+
 test('cut-foundation-release creates both release metadata and dist bundle outputs', () => {
   withTempDir((root) => {
     fs.mkdirSync(path.join(root, 'backend', 'cmd'), { recursive: true });
@@ -95,6 +110,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md'), '# Model\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'WORKFLOW.md'), '# Workflow\n', 'utf8');
 
+    const baseCommit = initializeGitRepo(root);
     const result = runScript(
       [
         '--root',
@@ -104,7 +120,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
         '--release-line',
         'release/0.10',
         '--base-commit',
-        'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+        baseCommit,
         '--release-notes',
         'shared foundation release',
         '--upgrade-notes',

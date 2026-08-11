@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
   GO_VERSION_FILE: backend/go.mod
   MYSQL_ROOT_PASSWORD: "root"
   MYSQL_DATABASE: "pantheon_base"

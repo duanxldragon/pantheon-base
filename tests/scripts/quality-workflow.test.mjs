@@ -9,7 +9,7 @@ const workflowSource = fs.readFileSync(workflowPath, 'utf8');
 test('governance-only changes can skip runtime gates without failing Quality Gates', () => {
   assert.match(
     workflowSource,
-    /uses:\s*dorny\/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706/i,
+    /uses:\s*dorny\/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d/i,
     'quality workflow should pin paths-filter to a revision that supports predicate-quantifier',
   );
   assert.match(

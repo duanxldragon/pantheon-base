@@ -18,6 +18,8 @@ const {
   validateReleaseAssetChecksum,
   validatePublishCandidate,
   validateReleaseBodySections,
+  validateReleaseGateCheckRuns,
+  isMissingGitHubReleaseError,
 } = await import(moduleUrl);
 
 function withTempDir(callback) {
@@ -104,6 +106,71 @@ test('validatePublishCandidate binds the release tag to the manifest commit', ()
     },
     targetCommit: 'feedfacefeedfacefeedfacefeedfacefeedface',
   }), /baseCommit.*does not match target commit/);
+});
+
+test('validateReleaseGateCheckRuns fails closed unless the latest gate succeeded', () => {
+  const targetCommit = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  assert.throws(
+    () => validateReleaseGateCheckRuns({ checkRuns: [], targetCommit }),
+    /release gate check is missing/,
+  );
+  assert.throws(
+    () => validateReleaseGateCheckRuns({
+      targetCommit,
+      checkRuns: [{
+        name: 'Release Gate Summary',
+        status: 'completed',
+        conclusion: 'failure',
+        completed_at: '2026-08-11T00:00:00Z',
+      }],
+    }),
+    /completed\/failure/,
+  );
+
+  const successfulGate = {
+    name: 'Release Gate Summary',
+    status: 'completed',
+    conclusion: 'success',
+    completed_at: '2026-08-11T00:01:00Z',
+  };
+  assert.equal(
+    validateReleaseGateCheckRuns({
+      targetCommit,
+      checkRuns: [
+        successfulGate,
+        {
+          name: 'Release Gate Summary',
+          status: 'completed',
+          conclusion: 'failure',
+          completed_at: '2026-08-11T00:00:00Z',
+        },
+      ],
+    }),
+    successfulGate,
+  );
+
+  assert.throws(
+    () => validateReleaseGateCheckRuns({
+      targetCommit,
+      checkRuns: [
+        { ...successfulGate, started_at: '2026-08-11T00:01:00Z' },
+        {
+          name: 'Release Gate Summary',
+          status: 'in_progress',
+          conclusion: null,
+          started_at: '2026-08-11T00:02:00Z',
+        },
+      ],
+    }),
+    /in_progress\/pending/,
+  );
+});
+
+test('GitHub release lookup only treats an explicit not-found response as absent', () => {
+  assert.equal(isMissingGitHubReleaseError(new Error('release not found')), true);
+  assert.equal(isMissingGitHubReleaseError(new Error('HTTP 404: Not Found')), true);
+  assert.equal(isMissingGitHubReleaseError(new Error('HTTP 403: Resource not accessible')), false);
+  assert.equal(isMissingGitHubReleaseError(new Error('network connection reset')), false);
 });
 
 test('validateReleaseAssetChecksum rejects stale or malformed release checksums', () => {

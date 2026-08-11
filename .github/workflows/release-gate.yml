@@ -1,8 +1,8 @@
 name: Release Gate
 
-# Triggered manually before cutting a release tag, or automatically when a
-# release/** branch is pushed. This is the single hard checkpoint that must
-# pass before `pantheon-base-vX.Y.Z` is tagged and the release bundle is published.
+# Triggered automatically after each main update or manually for a main commit.
+# This is the single hard checkpoint that must pass before `pantheon-base-vX.Y.Z`
+# is tagged and the release bundle is published.
 #
 # Gate policy (all must pass):
 #   1. No open CodeQL error/critical alerts
@@ -20,14 +20,14 @@ on:
         default: ""
   push:
     branches:
-      - release/**
+      - main
 
 concurrency:
-  group: release-gate-${{ github.ref }}
+  group: release-gate-${{ github.sha }}
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
 
 jobs:
   # ============================================================
@@ -158,33 +158,7 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_GATE_TOKEN || github.token }}
           REPO: ${{ github.repository }}
         run: |
-          # Try the Dependabot alerts API directly. If the token lacks
-          # permission (HTTP 403), fall back to checking open Dependabot PRs
-          # as a proxy — no open security PRs means no actionable alerts.
-          set +e
-          alerts_json=$(gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100" 2>&1)
-          api_status=$?
-          set -e
-
-          if [ $api_status -ne 0 ]; then
-            if echo "$alerts_json" | grep -q "403\|Resource not accessible"; then
-              echo "::notice::Dependabot alerts API returned 403. Falling back to open Dependabot PRs check."
-              dep_prs=$(gh api "repos/$REPO/pulls?state=open&per_page=100" \
-                --jq '[.[] | select(.user.login == "dependabot[bot]")] | length')
-              echo "Open Dependabot PRs: $dep_prs"
-              if [ "$dep_prs" -gt 0 ]; then
-                gh api "repos/$REPO/pulls?state=open&per_page=100" \
-                  --jq '.[] | select(.user.login == "dependabot[bot]") | "  #\(.number) \(.title)"'
-                echo "::error::Release blocked: $dep_prs open Dependabot PR(s). Review before releasing."
-                exit 1
-              fi
-              echo "✓ No open Dependabot PRs (API 403 fallback)"
-              exit 0
-            fi
-            echo "::error::Dependabot alerts API failed: $alerts_json"
-            exit 1
-          fi
-
+          alerts_json=$(gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100")
           count=$(echo "$alerts_json" | jq '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")] | length')
           echo "Dependabot high/critical open alerts: $count"
           if [ "$count" -gt 0 ]; then
@@ -199,38 +173,46 @@ jobs:
   # ============================================================
   sonarcloud-gate:
     name: SonarCloud Gate
+    needs: candidate-checks
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Check SonarCloud quality gate
         env:
+          CANDIDATE_SHA: ${{ needs.candidate-checks.outputs.candidate_sha }}
+          SONAR_BRANCH: main
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
-          # Quality gate status (new-code).
-          # This SonarCloud project is public, so the API can be queried
-          # without authentication. If the project ever becomes private,
-          # curl will fail and the gate will block (fail-closed).
+          analyses=$(curl -sf \
+            "https://sonarcloud.io/api/project_analyses/search?project=${SONAR_PROJECT}&branch=${SONAR_BRANCH}&ps=100")
+          analysis_id=$(echo "$analyses" | jq -r --arg revision "$CANDIDATE_SHA" \
+            '[.analyses[] | select(.revision == $revision)] | first | .key // empty')
+          if [ -z "$analysis_id" ]; then
+            echo "::error::No SonarCloud analysis found for candidate $CANDIDATE_SHA on $SONAR_BRANCH."
+            exit 1
+          fi
           qg=$(curl -sf \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT}" \
+            "https://sonarcloud.io/api/qualitygates/project_status?analysisId=${analysis_id}" \
             | jq -er '.projectStatus.status')
-          echo "SonarCloud quality gate: $qg"
+          echo "SonarCloud quality gate for $CANDIDATE_SHA: $qg"
           if [ "$qg" != "OK" ]; then
             echo "::error::Release blocked: SonarCloud quality gate is $qg (must be OK)."
             exit 1
           fi
-          echo "✓ Quality gate OK"
+          echo "✓ Candidate quality gate OK"
 
       - name: Check unprocessed SonarCloud issues
         env:
+          SONAR_BRANCH: main
           SONAR_PROJECT: duanxldragon_pantheon-base
         run: |
-          # The freeze is not releasable while any SonarCloud issue remains open.
-          # Every finding must be fixed in code; bulk acceptance is not a release path.
+          # resolved=false covers all unresolved workflow statuses, including
+          # legacy CONFIRMED/REOPENED values as well as OPEN findings.
           result=$(curl -sf \
-            "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&statuses=OPEN&ps=1")
+            "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT}&branch=${SONAR_BRANCH}&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=1")
           total=$(echo "$result" | jq -er '.total | numbers')
-          echo "Unprocessed SonarCloud issues (OPEN status): $total"
+          echo "Unprocessed SonarCloud issues: $total"
           if [ "$total" -gt 0 ]; then
             echo "::error::Release blocked: $total unresolved SonarCloud issue(s)."
             exit 1

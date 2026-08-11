@@ -31,6 +31,47 @@ function runScript(args, cwd) {
   });
 }
 
+function runGit(root, args) {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
+  return result.stdout.trim();
+}
+
+function initializeGitRepo(root) {
+  runGit(root, ['init']);
+  runGit(root, ['config', 'user.name', 'Foundation Test']);
+  runGit(root, ['config', 'user.email', 'foundation-test@example.com']);
+  runGit(root, ['add', '.']);
+  runGit(root, ['commit', '-m', 'test fixture']);
+  return runGit(root, ['rev-parse', 'HEAD']);
+}
+
+function writeMinimalBundleFixture(root) {
+  const releaseVersion = 'pantheon-base-v0.10.0';
+  const releaseRoot = path.join(root, 'releases', releaseVersion);
+  const manifestPath = path.join(releaseRoot, 'manifest.json');
+  fs.mkdirSync(path.join(root, 'backend', 'pkg'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'backend', 'pkg', 'version.go'), 'package pkg\n', 'utf8');
+  writeJson(manifestPath, {
+    releaseVersion,
+    releaseLine: 'release/0.10',
+    baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+    sourceRepo: 'pantheon-base',
+    consumerMode: 'foundation-release-consumer',
+    sharedPaths: { backend: ['backend/pkg'] },
+  });
+  const baseCommit = initializeGitRepo(root);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  manifest.baseCommit = baseCommit;
+  writeJson(manifestPath, manifest);
+  return {
+    baseCommit,
+    manifestPath,
+    releaseVersion,
+    sharedFile: path.join(root, 'backend', 'pkg', 'version.go'),
+  };
+}
+
 test('build-release-bundle copies shared paths into dist/foundation-releases/<version>/bundle', () => {
   withTempDir((root) => {
     const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
@@ -70,6 +111,12 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
     );
     fs.mkdirSync(path.join(root, 'docs', 'designs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'designs', 'FOUNDATION_RELEASE_MODEL.md'), '# Model\n', 'utf8');
+
+    const baseCommit = initializeGitRepo(root);
+    const manifestPath = path.join(releaseRoot, 'manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.baseCommit = baseCommit;
+    writeJson(manifestPath, manifest);
 
     const stalePath = path.join(
       root,
@@ -113,12 +160,74 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
   });
 });
 
+test('build-release-bundle rejects tracked changes in shared paths', () => {
+  withTempDir((root) => {
+    const fixture = writeMinimalBundleFixture(root);
+    fs.writeFileSync(fixture.sharedFile, 'package pkg\n\nconst Dirty = true\n', 'utf8');
+
+    const result = runScript(['--root', root, '--release-version', fixture.releaseVersion], repoRoot);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr || result.error?.message || '', /changes outside manifest baseCommit/);
+  });
+});
+
+test('build-release-bundle rejects untracked files in shared paths', () => {
+  withTempDir((root) => {
+    const fixture = writeMinimalBundleFixture(root);
+    fs.writeFileSync(path.join(root, 'backend', 'pkg', 'untracked.go'), 'package pkg\n', 'utf8');
+
+    const result = runScript(['--root', root, '--release-version', fixture.releaseVersion], repoRoot);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr || result.error?.message || '', /untracked files/);
+  });
+});
+
+test('build-release-bundle allows HEAD to advance outside shared release paths', () => {
+  withTempDir((root) => {
+    const fixture = writeMinimalBundleFixture(root);
+    fs.writeFileSync(path.join(root, 'README.md'), '# New HEAD\n', 'utf8');
+    runGit(root, ['add', 'README.md']);
+    runGit(root, ['commit', '-m', 'advance head']);
+
+    const result = runScript(['--root', root, '--release-version', fixture.releaseVersion], repoRoot);
+    assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
+    const pathReport = JSON.parse(
+      fs.readFileSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          fixture.releaseVersion,
+          'bundle',
+          'manifest.paths.json',
+        ),
+        'utf8',
+      ),
+    );
+    assert.equal(pathReport.sourceCommit, fixture.baseCommit);
+  });
+});
+
+test('build-release-bundle rejects committed changes in shared paths after baseCommit', () => {
+  withTempDir((root) => {
+    const fixture = writeMinimalBundleFixture(root);
+    fs.writeFileSync(fixture.sharedFile, 'package pkg\n\nconst Advanced = true\n', 'utf8');
+    runGit(root, ['add', 'backend/pkg/version.go']);
+    runGit(root, ['commit', '-m', 'advance shared path']);
+
+    const result = runScript(['--root', root, '--release-version', fixture.releaseVersion], repoRoot);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr || result.error?.message || '', /changes outside manifest baseCommit/);
+  });
+});
+
 test('build-release-bundle fails when a shared path is missing', () => {
   withTempDir((root) => {
     const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
     fs.mkdirSync(releaseRoot, { recursive: true });
 
-    writeJson(path.join(releaseRoot, 'manifest.json'), {
+    const manifestPath = path.join(releaseRoot, 'manifest.json');
+    writeJson(manifestPath, {
       releaseVersion: 'pantheon-base-v0.10.0',
       releaseLine: 'release/0.10',
       baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
@@ -128,6 +237,10 @@ test('build-release-bundle fails when a shared path is missing', () => {
         backend: ['backend/missing'],
       },
     });
+    const baseCommit = initializeGitRepo(root);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.baseCommit = baseCommit;
+    writeJson(manifestPath, manifest);
 
     const result = runScript(['--root', root, '--release-version', 'pantheon-base-v0.10.0'], repoRoot);
     assert.notEqual(result.status, 0);

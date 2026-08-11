@@ -10,10 +10,13 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
+| Current published foundation release | `pantheon-base-v0.10.11` (`release/0.10`) |
 | Product milestone | **V1.0** (released 2026-07-21) |
-| Shell baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
-| Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (Docker Compose / K8s / env matrix) |
+| Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
+| Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (pending refresh; not updated in this focused fix, so treat deployment details as migration + runtime seed first) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
+
+Delivery-audit note: `pantheon-base-v0.10.11` is published and is the foundation baseline currently locked by `pantheon-ops`, but it is not fully release-gate-certified because commit `48c7ca5dcb8fd3c7235055dbeec57fb5b165b13e` has no successful Release Gate run and no Actionlint or Full Smoke check-runs. `pantheon-ops` may conditionally continue business-domain development on this locked baseline, while the next certified foundation publication must close those release evidence gaps.
 
 V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
 
@@ -31,7 +34,7 @@ V1.0 covers: auth & session governance (login-log / session / operation-log / se
 - **Configuration governance**: system settings, dictionary management, cache refresh, sensitive-config protection
 - **Audit**: login logs, operation logs, key write-operation audit
 - **Dynamic menus**: menu seeds, frontend manifests, component registry, build-time contract checks
-- **Low-code work domain**: `system/generator` handles controlled module generation and `system/dynamicmodule` handles module onboarding governance under `platform.lowcode`
+- **Low-code work domain**: the physical backend paths are `backend/modules/lowcode/generator` and `backend/modules/lowcode/dynamicmodule`, and the physical frontend paths are `frontend/src/modules/lowcode/generator` and `frontend/src/modules/lowcode/dynamicmodule`; the logical work domain is grouped under `platform.lowcode`
 - **Business integration**: platform-owned `business/*` extension seams, generator support, governance contracts; concrete business repositories evolve separately
 
 ## Tech Stack
@@ -46,7 +49,9 @@ V1.0 covers: auth & session governance (login-log / session / operation-log / se
 
 ```text
 backend/                  # Go backend entrypoint, modules, shared packages
+backend/modules/lowcode/   # system/lowcode backend implementation for generator / dynamicmodule
 frontend/                 # React shell, page modules, smoke tests, frontend scripts
+frontend/src/modules/lowcode/ # low-code generator and dynamic-module UI
 docs/                     # contracts, designs, acceptance docs, retained history
 scripts/                  # root automation, GitHub collaboration, harness checks, releases
 tests/                    # root script tests, docs tests, performance scripts
@@ -54,7 +59,7 @@ tests/                    # root script tests, docs tests, performance scripts
 .agents/                  # repo-local agent notes, skills, schemas
 .github/                  # GitHub workflows, templates, CODEOWNERS, Dependabot
 config/method.config.json # pantheon-harness method-source config
-database/system_init.sql  # first-run schema, seed, i18n initialization
+database/system_init.sql  # deprecated historical reference; authoritative schema comes from migrations + runtime seed
 grafana/                  # local observability config
 releases/                 # foundation release metadata
 schema/generated/         # generated governance outputs
@@ -90,20 +95,25 @@ Defaults:
 - MySQL: `127.0.0.1:3306`
 - Redis: `127.0.0.1:6379`
 - default database: `pantheon_base`
+- schema is authoritative through application migrations and runtime seed; `database/system_init.sql` is historical only and no longer a build-time bootstrap path
 
 ### 2. Start backend
 
 PowerShell example:
 
 ```powershell
-$env:PANTHEON_DSN='root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
+$repoRoot='D:\workspace\go\pantheon-platform\pantheon-base'
+$env:PANTHEON_DSN='root:dev_password_change_me@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
 $env:PANTHEON_REDIS_ADDR='127.0.0.1:6379'
-$env:PANTHEON_REDIS_PASSWORD='DHCCdhcc2025'
-$env:PANTHEON_WORKSPACE_ROOT=(Get-Location).Path
-go run ./backend/cmd/server
+$env:PANTHEON_REDIS_PASSWORD='dev_redis_password_change_me'
+$env:PANTHEON_WORKSPACE_ROOT=$repoRoot
+Set-Location "$repoRoot\backend"
+go run ./cmd/server
 ```
 
 Backend default: `http://127.0.0.1:8080`
+
+The local placeholders above match `docker-compose.yml` defaults; production must override them through environment variables or `.env`.
 
 ### Low-code module environment variables
 
@@ -128,15 +138,17 @@ Frontend default: `http://127.0.0.1:5173`
 ## Common Commands
 
 ```bash
-go test ./backend/modules/auth ./backend/modules/system/...
+cd backend
+go test ./...
 cd frontend
 npm run build
 npm run test:smoke:platform
 npm run test:smoke:system
 npm run test:smoke:all
-npm run release:foundation:manifest -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
-npm run release:foundation:cut -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
-npm run release:foundation:publish -- --release-version base-v0.8.0 --release-line release/0.8 --base-commit <40-char-commit>
+# Illustrative next-patch example only, not a command to republish 0.10.11
+npm run release:foundation:manifest -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
 ```
 
 ## Quality and Security Gates
@@ -146,7 +158,8 @@ This repository keeps GitHub-native merge gates only:
 - `Quality Gates` for docs governance, frontend contract checks, backend tests, duplication, and lightweight smoke
 - `Security Gates` for secret scan, workflow posture, dependency reports, CodeQL scan, and the CodeQL alert gate
 
-CodeQL is the primary security signal. Code quality is gated by GitHub required checks, CodeQL, branch protection, and optional Copilot review; Sonar and Codacy are no longer part of the merge gate. The current `main` branch protection requires only `Quality Gates` and `Security Gates`, with strict up-to-date enforcement disabled so solo-maintainer squash auto-merge does not stall.
+SonarCloud is not a required `main` merge check, but the foundation release gate still requires `SonarCloud Code Analysis`.
+CodeQL is the primary security signal. Code quality is gated by GitHub required checks, CodeQL, branch protection, and optional Copilot review. An active ruleset already targets `main`, but it currently requires only `Quality Gates`; `Security Gates` and conversation resolution must be added and verified before certified delivery.
 
 ## Document Entry
 
@@ -178,6 +191,8 @@ Preferred external positioning:
 - `Enterprise admin foundation`
 - `Modular monolith backoffice platform`
 - `Controlled low-code generation workflow`
+
+Currently checked-in community files: `README.md`, `README.en.md`, `SECURITY.md`, `.github/CODEOWNERS`, `.github/dependabot.yml`, and `.github/pull_request_template.md`. There is no checked-in `CONTRIBUTING` file or issue templates yet.
 
 Avoid claiming, for now:
 
