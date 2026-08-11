@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { validateReleaseIdentity } from './release-cli.mjs';
+import { assertSharedFrontendOwnership } from './frontend-ownership.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 const METADATA_FILES = [
@@ -200,6 +201,7 @@ export function createReleaseBundle(options) {
       `manifest releaseVersion ${manifest.releaseVersion} does not match ${options.releaseVersion}`,
     );
   }
+  assertSharedFrontendOwnership(options.root, manifest.sharedPaths?.frontend);
   const sharedPaths = [
     ...(manifest.sharedPaths?.backend || []),
     ...(manifest.sharedPaths?.frontend || []),

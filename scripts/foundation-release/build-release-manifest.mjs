@@ -9,6 +9,7 @@ import {
   resolveRequiredChecks,
   validateReleaseIdentity,
 } from './release-cli.mjs';
+import { assertSharedFrontendOwnership } from './frontend-ownership.mjs';
 
 function validateOptions(options) {
   if (options.help) {
@@ -51,8 +52,11 @@ function buildManifest(options) {
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],
       frontend: [
-        'frontend/src/api/request.ts',
-        'frontend/src/api/requestErrorUtils.ts',
+        'frontend/src/App.tsx',
+        'frontend/src/main.tsx',
+        'frontend/src/vite-env.d.ts',
+        'frontend/src/api',
+        'frontend/src/hooks',
         'frontend/src/components',
         'frontend/src/core',
         'frontend/src/store',
@@ -111,6 +115,7 @@ export function createReleaseManifest(options) {
   fs.mkdirSync(releaseRoot, { recursive: true });
 
   const manifest = buildManifest(options);
+  assertSharedFrontendOwnership(options.root, manifest.sharedPaths.frontend);
   const verificationSummary = buildVerificationSummary(options);
 
   fs.writeFileSync(path.join(releaseRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');

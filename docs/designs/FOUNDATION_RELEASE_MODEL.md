@@ -119,6 +119,12 @@ consumer repo -> consume base foundation release
 
 推荐把这些信息整理成统一的 release note / release manifest，而不是散落在聊天记录里。
 
+### 4.1 Frontend shared-path ownership
+
+`manifest.sharedPaths.frontend` 是可执行的所有权契约，不是一次性复制清单。基础壳层的 `App.tsx`、`main.tsx`、`vite-env.d.ts` 必须显式声明；共享传输和权限 helper 必须分别以 `frontend/src/api` 与 `frontend/src/hooks` 目录声明，避免新增叶子文件悄然落到 consumer。
+
+打包会拒绝存在但未被该契约覆盖的通用前端根路径。`business/*`、已声明 overlay 和业务 i18n 接缝不由这个机制接管；它们仍按 consumer-owned overlay 规则升级。
+
 ## 5. Release Gate
 
 一个 foundation release 在发布前，至少应满足：

@@ -103,6 +103,12 @@ Recommended tag format:
 
 - `pantheon-base-v<major>.<minor>.<patch>`
 
+### 4.1 Frontend shared-path ownership
+
+`manifest.sharedPaths.frontend` is an executable ownership contract, not a one-time copy list. The foundation shell's `App.tsx`, `main.tsx`, and `vite-env.d.ts` must be declared explicitly. Shared transport and permission helpers must be declared through the `frontend/src/api` and `frontend/src/hooks` directories so new leaf files cannot silently remain in a consumer repository.
+
+Release bundling rejects an existing generic frontend root that is not covered by this contract. `business/*`, declared overlays, and business-i18n seams remain consumer-owned and continue to follow the overlay upgrade rules.
+
 ## 5. Release Gate
 
 A foundation release should not be cut until:
