@@ -1,6 +1,6 @@
 {
   "taskId": "2026-08-11-foundation-release-v0-10-12",
-  "status": "in-progress",
+  "status": "completed",
   "commands": [
     {
       "command": "npm run release:foundation:cut -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit 16918771e2650f8c045b0e086144eb290e774704 ...",
@@ -19,11 +19,21 @@
       "cwd": ".",
       "status": "passed",
       "notes": "Strict documentation, structure, Harness, encoding, visual-evidence applicability, and whitespace gates passed."
+    },
+    {
+      "command": "npm run release:foundation:publish -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit 16918771e2650f8c045b0e086144eb290e774704 --target-commit 16918771e2650f8c045b0e086144eb290e774704",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Published a new immutable annotated tag and GitHub Release after exact-commit Release Gate success; independently downloaded assets passed the published SHA-256 file."
     }
   ],
   "publication": {
     "releaseVersion": "pantheon-base-v0.10.12",
     "targetCommit": "16918771e2650f8c045b0e086144eb290e774704",
-    "status": "pending-release-gate"
+    "archiveSha256": "42a62f08881abe0a1680f721e1da9aa7ee50f0ffbf7a1ad2ccb65350f960fb21",
+    "releaseGateRun": "https://github.com/duanxldragon/pantheon-base/actions/runs/31462473704",
+    "fullSmokeRun": "https://github.com/duanxldragon/pantheon-base/actions/runs/31462262771",
+    "releaseUrl": "https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.12",
+    "status": "published-and-verified"
   }
 }
