@@ -182,7 +182,7 @@ test('build-release-bundle rejects untracked files in shared paths', () => {
   });
 });
 
-test('build-release-bundle rejects a manifest commit that is not HEAD', () => {
+test('build-release-bundle allows HEAD to advance outside shared release paths', () => {
   withTempDir((root) => {
     const fixture = writeMinimalBundleFixture(root);
     fs.writeFileSync(path.join(root, 'README.md'), '# New HEAD\n', 'utf8');
@@ -190,8 +190,34 @@ test('build-release-bundle rejects a manifest commit that is not HEAD', () => {
     runGit(root, ['commit', '-m', 'advance head']);
 
     const result = runScript(['--root', root, '--release-version', fixture.releaseVersion], repoRoot);
+    assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
+    const pathReport = JSON.parse(
+      fs.readFileSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          fixture.releaseVersion,
+          'bundle',
+          'manifest.paths.json',
+        ),
+        'utf8',
+      ),
+    );
+    assert.equal(pathReport.sourceCommit, fixture.baseCommit);
+  });
+});
+
+test('build-release-bundle rejects committed changes in shared paths after baseCommit', () => {
+  withTempDir((root) => {
+    const fixture = writeMinimalBundleFixture(root);
+    fs.writeFileSync(fixture.sharedFile, 'package pkg\n\nconst Advanced = true\n', 'utf8');
+    runGit(root, ['add', 'backend/pkg/version.go']);
+    runGit(root, ['commit', '-m', 'advance shared path']);
+
+    const result = runScript(['--root', root, '--release-version', fixture.releaseVersion], repoRoot);
     assert.notEqual(result.status, 0);
-    assert.match(result.stderr || result.error?.message || '', /does not match manifest baseCommit/);
+    assert.match(result.stderr || result.error?.message || '', /changes outside manifest baseCommit/);
   });
 });
 

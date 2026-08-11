@@ -18,7 +18,7 @@
       "command": "npm run test:foundation-release",
       "cwd": ".",
       "status": "passed",
-      "notes": "20 release tooling tests passed."
+      "notes": "21 release tooling tests passed, including metadata-only HEAD advancement and committed shared-path drift coverage."
     },
     {
       "command": "npm run test:release-gate-workflow && npm run test:quality-workflow && npm run test:security-workflow && npm run test:pr-automation-workflow",

@@ -126,12 +126,6 @@ export function validateBundleSource({ root, baseCommit, sharedPaths, exclusions
     ['rev-parse', `${baseCommit}^{commit}`],
     `git rev-parse ${baseCommit}^{commit}`,
   );
-  const headCommit = runGit(root, ['rev-parse', 'HEAD'], 'git rev-parse HEAD');
-  if (headCommit !== targetCommit) {
-    throw new Error(
-      `bundle source HEAD ${headCommit} does not match manifest baseCommit ${targetCommit}`,
-    );
-  }
   if (sharedPaths.length === 0) {
     throw new Error('release manifest does not declare any shared paths');
   }
