@@ -186,7 +186,10 @@ test('real module governance flow can generate register and purge a temporary bu
     return content.includes(`business/${moduleName}/OrderqaList`);
   }).toBe(true);
 
-  await page.goto('/system/modules', { waitUntil: 'networkidle' });
+  await expect(async () => {
+    await page.goto('/system/modules', { waitUntil: 'networkidle' });
+    await expect(page).toHaveURL(/\/system\/modules(?:\?|$)/);
+  }).toPass({ timeout: 20_000 });
   const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
   await expect(row).toBeVisible();
   await expect(row.getByText(/待激活|已接入/).first()).toBeVisible();
