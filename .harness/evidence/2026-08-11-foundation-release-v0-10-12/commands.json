@@ -1,0 +1,29 @@
+{
+  "taskId": "2026-08-11-foundation-release-v0-10-12",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "npm run release:foundation:cut -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit 16918771e2650f8c045b0e086144eb290e774704 ...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Generated non-placeholder release metadata and a manifest-bound archive for the exact merged Base commit."
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All 21 release tooling tests passed."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:structure && npm run check:task-packet-template && npm run check:harness-method && npm run check:harness-adoption && npm run check:harness-template && npm run check:harness-docs && npm run check:harness-inventory && npm run check:harness-sync && npm run check:harness-encoding && npm run check:harness-visual && git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Strict documentation, structure, Harness, encoding, visual-evidence applicability, and whitespace gates passed."
+    }
+  ],
+  "publication": {
+    "releaseVersion": "pantheon-base-v0.10.12",
+    "targetCommit": "16918771e2650f8c045b0e086144eb290e774704",
+    "status": "pending-release-gate"
+  }
+}
