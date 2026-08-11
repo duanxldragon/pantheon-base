@@ -54,8 +54,14 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'core'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'core', 'app.ts'), 'export const app = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'api'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'App.tsx'), 'export const App = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'main.tsx'), 'export const main = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'vite-env.d.ts'), '/// <reference types="vite/client" />\n', 'utf8');
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'api', 'request.ts'), 'export const request = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'api', 'file.ts'), 'export const file = 1;\n', 'utf8');
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'api', 'requestErrorUtils.ts'), 'export const errors = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'hooks'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'hooks', 'usePermission.ts'), 'export const usePermission = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'components'), { recursive: true });
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'components', 'card.tsx'), 'export const Card = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'store'), { recursive: true });

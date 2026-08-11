@@ -86,7 +86,15 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       bundleExclusions: ['backend/cmd/server/uploads'],
       sharedPaths: {
         backend: ['backend/cmd'],
-        frontend: ['frontend/src/core', 'frontend/scripts/lib/css-declarations.mjs'],
+        frontend: [
+          'frontend/src/App.tsx',
+          'frontend/src/main.tsx',
+          'frontend/src/vite-env.d.ts',
+          'frontend/src/api',
+          'frontend/src/hooks',
+          'frontend/src/core',
+          'frontend/scripts/lib/css-declarations.mjs',
+        ],
         docs: ['docs/designs/FOUNDATION_RELEASE_MODEL.md'],
       },
     });
@@ -102,6 +110,13 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
     fs.mkdirSync(path.join(root, 'backend', 'cmd', 'server', 'uploads'), { recursive: true });
     fs.writeFileSync(path.join(root, 'backend', 'cmd', 'server', 'uploads', 'ignored.txt'), 'ignore me\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'src', 'core'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'App.tsx'), 'export const App = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'main.tsx'), 'export const main = 1;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'vite-env.d.ts'), '/// <reference types="vite/client" />\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'api'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'api', 'file.ts'), 'export const file = 1;\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'frontend', 'src', 'hooks'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'hooks', 'usePermission.ts'), 'export const usePermission = 1;\n', 'utf8');
     fs.writeFileSync(path.join(root, 'frontend', 'src', 'core', 'app.ts'), 'export const app = 1;\n', 'utf8');
     fs.mkdirSync(path.join(root, 'frontend', 'scripts', 'lib'), { recursive: true });
     fs.writeFileSync(
@@ -139,6 +154,11 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       fs.existsSync(path.join(bundleRoot, 'shared-backend', 'backend', 'cmd', 'server', 'uploads', 'ignored.txt')),
       false,
     );
+    assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'App.tsx')), true);
+    assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'main.tsx')), true);
+    assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'vite-env.d.ts')), true);
+    assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'api', 'file.ts')), true);
+    assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'hooks', 'usePermission.ts')), true);
     assert.equal(fs.existsSync(path.join(bundleRoot, 'shared-frontend', 'frontend', 'src', 'core', 'app.ts')), true);
     assert.equal(
       fs.existsSync(
@@ -245,5 +265,30 @@ test('build-release-bundle fails when a shared path is missing', () => {
     const result = runScript(['--root', root, '--release-version', 'pantheon-base-v0.10.0'], repoRoot);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr || result.error?.message || '', /missing|cannot find/i);
+  });
+});
+
+test('build-release-bundle rejects unowned shared frontend roots', () => {
+  withTempDir((root) => {
+    const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
+    fs.mkdirSync(path.join(root, 'frontend', 'src'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'frontend', 'src', 'App.tsx'), 'export const App = 1;\n', 'utf8');
+    writeJson(path.join(releaseRoot, 'manifest.json'), {
+      releaseVersion: 'pantheon-base-v0.10.0',
+      releaseLine: 'release/0.10',
+      baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+      sourceRepo: 'pantheon-base',
+      consumerMode: 'foundation-release-consumer',
+      sharedPaths: { frontend: [] },
+    });
+    const baseCommit = initializeGitRepo(root);
+    const manifestPath = path.join(releaseRoot, 'manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.baseCommit = baseCommit;
+    writeJson(manifestPath, manifest);
+
+    const result = runScript(['--root', root, '--release-version', 'pantheon-base-v0.10.0'], repoRoot);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr || result.error?.message || '', /leaves shared frontend sources unowned.*App\.tsx/i);
   });
 });
