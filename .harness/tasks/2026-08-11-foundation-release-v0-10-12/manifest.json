@@ -1,0 +1,29 @@
+{
+  "taskId": "2026-08-11-foundation-release-v0-10-12",
+  "title": "Publish Pantheon Base foundation release v0.10.12",
+  "goal": "Publish a new immutable certified foundation release for Ops consumption.",
+  "primaryLayer": "ci-workflow",
+  "qualityProfiles": ["ci-workflow"],
+  "scope": {
+    "in": [
+      "release metadata",
+      "manifest-bound bundle",
+      "exact-commit Release Gate",
+      "annotated tag and immutable GitHub Release",
+      "archive checksum verification"
+    ],
+    "out": ["pantheon-base-v0.10.11 mutation", "Product UI", "Business-domain behavior", "Database schema"]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-11-foundation-release-v0-10-12",
+    "changeRef": "pending-pr",
+    "taskPacket": "docs/harness/tasks/2026-08-11-foundation-release-v0-10-12.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-11-foundation-release-v0-10-12/",
+    "reviewFile": ".harness/evidence/2026-08-11-foundation-release-v0-10-12/review.md",
+    "summaryFile": ".harness/evidence/2026-08-11-foundation-release-v0-10-12/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-11-foundation-release-v0-10-12.task.md"]
+  },
+  "syncExpectation": "Pantheon Ops locks the published v0.10.12 archive checksum and Base commit."
+}
