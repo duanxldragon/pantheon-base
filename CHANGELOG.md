@@ -6,6 +6,35 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.10.11] — 2026-08-11
+
+Security maintenance release for the shared frontend toolchain.
+
+### Changed
+- Upgrade `js-yaml` to `3.15.1` to resolve GHSA-5p4m-2wfm-xmqj (CWE-407).
+- Upgrade `nanoid` to `3.3.17` to remove the high-severity infinite-loop advisory in the Vite/PostCSS dependency tree.
+
+### Verification
+- Frontend `npm audit --audit-level=high` reports zero vulnerabilities.
+- Foundation-release, documentation, sync-drift, and lockfile installation checks pass.
+
+---
+
+## [pantheon-base-v0.10.10] — 2026-08-10
+
+Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke contracts.
+
+### Changed
+- Distributed the shared request client so the CSRF cookie/header contract is present in foundation-release consumers.
+- Corrected the shared smoke registry fixture used by hosted smoke validation.
+- Exported the forbidden-request guard required by the shared auth boundary.
+
+### Verification
+- CI Summary, Quality, Security, CodeQL, and hosted smoke passed for the release candidate.
+- Release manifest and archive checksum are bound to commit `a95e6e52eee8ae9aeb4fd115d18c7c37609290f6`.
+
+---
+
 ## [pantheon-base-v0.10.1] — 2026-08-05
 
 发布治理补丁，供 `pantheon-ops` 通过 foundation release 升级消费。
