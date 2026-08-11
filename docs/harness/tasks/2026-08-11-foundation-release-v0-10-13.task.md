@@ -5,7 +5,6 @@ layer: ci-workflow
 status: Active
 updated_at: 2026-08-11
 linked_contracts:
-  - releases/pantheon-base-v0.10.13/manifest.json
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
 ---
 
