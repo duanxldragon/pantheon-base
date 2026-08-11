@@ -2,25 +2,26 @@
 # 用于构建 Pantheon Base 生产镜像
 
 # 阶段 1: 构建前端
-FROM node:22-alpine AS frontend-builder
+FROM node:24-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
 # 复制前端依赖文件
 COPY frontend/package*.json ./
 
-# 安装依赖
-RUN npm ci --only=production --ignore-scripts && npm run patch:arco-react19
+# 安装构建依赖
+RUN npm ci --ignore-scripts
 
 # 复制前端源码
 COPY frontend/ ./
 
-# 构建前端
-RUN npm run build
+# 应用 React 19 兼容补丁并构建前端
+RUN npm run patch:arco-react19 && npm run build
 
 # 阶段 2: 构建后端
 FROM golang:1.26.5-alpine AS backend-builder
 
+ARG PANTHEON_VERSION=dev
 WORKDIR /app
 
 # 安装构建依赖
@@ -35,12 +36,12 @@ RUN go mod download
 # 复制后端源码
 COPY backend/ ./
 
-# 构建后端（静态链接）
+# 构建后端（静态链接并注入发布版本）
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags='-w -s -extldflags "-static"' \
-    -a -installsuffix cgo \
+    -trimpath \
+    -ldflags="-w -s -X pantheon-base/pkg/version.Version=${PANTHEON_VERSION}" \
     -o /app/server \
-    ./cmd/server/main.go
+    ./cmd/server
 
 # 阶段 3: 最终镜像
 FROM alpine:3.19

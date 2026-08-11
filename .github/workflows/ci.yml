@@ -17,7 +17,7 @@ concurrency:
 
 env:
   GO_VERSION_FILE: backend/go.mod
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
 
 jobs:
   # ============================================================

@@ -7,6 +7,10 @@ const workflowPath = path.resolve('.github/workflows/release-gate.yml');
 const workflowSource = fs.readFileSync(workflowPath, 'utf8');
 const ciWorkflowPath = path.resolve('.github/workflows/ci.yml');
 const ciWorkflowSource = fs.readFileSync(ciWorkflowPath, 'utf8');
+const workflowDirectory = path.resolve('.github/workflows');
+const lintWorkflowSource = fs.readFileSync(path.join(workflowDirectory, 'lint-workflows.yml'), 'utf8');
+const smokeWorkflowSource = fs.readFileSync(path.join(workflowDirectory, 'smoke-full.yml'), 'utf8');
+const dockerfileSource = fs.readFileSync(path.resolve('Dockerfile'), 'utf8');
 
 test('release gate resolves and reports the immutable candidate commit', () => {
   assert.match(workflowSource, /INPUT_CANDIDATE_SHA:\s*\$\{\{ inputs\.candidate_sha \}\}/);
@@ -38,8 +42,42 @@ test('release gate requires every aggregate check on the candidate SHA', () => {
   assert.match(workflowSource, /CANDIDATE_CHECKS.*!= "success"/);
 });
 
-test('security alert API failures block the release instead of becoming zero alerts', () => {
+test('release certification checks run on every main candidate', () => {
+  assert.match(workflowSource, /push:\s*\n\s+branches:\s*\n\s+- main/);
+  assert.match(lintWorkflowSource, /push:\s*\n\s+branches:\s*\n\s+- main/);
+  assert.doesNotMatch(
+    lintWorkflowSource.slice(lintWorkflowSource.indexOf('  push:'), lintWorkflowSource.indexOf('  pull_request:')),
+    /paths:/,
+  );
+  assert.match(smokeWorkflowSource, /push:\s*\n\s+branches:\s*\n\s+- main/);
+  assert.match(smokeWorkflowSource, /NODE_VERSION:\s*"24"/);
+});
+
+test('build and workflow Node baselines stay on Node 24', () => {
+  for (const fileName of fs.readdirSync(workflowDirectory).filter((name) => name.endsWith('.yml'))) {
+    const source = fs.readFileSync(path.join(workflowDirectory, fileName), 'utf8');
+    assert.doesNotMatch(source, /NODE_VERSION:\s*["']?22|node-version:\s*["']?22/, fileName);
+  }
+  assert.match(dockerfileSource, /FROM node:24-alpine AS frontend-builder/);
+  assert.match(dockerfileSource, /RUN npm ci --ignore-scripts/);
+  assert.match(dockerfileSource, /COPY frontend\/ \.\/\s+\n\s*#.*\nRUN npm run patch:arco-react19 && npm run build/);
+  assert.match(dockerfileSource, /-X pantheon-base\/pkg\/version\.Version=\$\{PANTHEON_VERSION\}/);
+  assert.doesNotMatch(dockerfileSource, /npm ci --only=production/);
+});
+
+test('SonarCloud gate binds quality status to the candidate analysis revision', () => {
+  assert.match(workflowSource, /CANDIDATE_SHA:\s*\$\{\{ needs\.candidate-checks\.outputs\.candidate_sha \}\}/);
+  assert.match(workflowSource, /project_analyses\/search\?project=\$\{SONAR_PROJECT\}&branch=\$\{SONAR_BRANCH\}/);
+  assert.match(workflowSource, /select\(\.revision == \$revision\)/);
+  assert.match(workflowSource, /qualitygates\/project_status\?analysisId=\$\{analysis_id\}/);
+  assert.doesNotMatch(workflowSource, /qualitygates\/project_status\?projectKey=/);
+  assert.doesNotMatch(workflowSource, /statuses=OPEN/);
+});
+
+test('security alert API failures block the release instead of using fallback proxies', () => {
   assert.doesNotMatch(workflowSource, /2>\/dev\/null\s*\|\|\s*echo "0"/);
+  assert.doesNotMatch(workflowSource, /Falling back|dependabot\[bot\]/);
+  assert.match(workflowSource, /alerts_json=\$\(gh api "repos\/\$REPO\/dependabot\/alerts/);
   assert.match(workflowSource, /total=\$\(echo "\$result" \| jq -er '\.total \| numbers'\)/);
 });
 
