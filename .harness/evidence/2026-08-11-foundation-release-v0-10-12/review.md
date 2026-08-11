@@ -16,7 +16,5 @@
 
 ## Residual Gates
 
-- Merge the metadata PR.
-- Confirm `Release Gate Summary` succeeds on the target commit.
-- Publish and independently verify the new tag, Release, assets, and checksum.
-- Upgrade and certify Pantheon Ops against the published archive.
+- No Base release gate remains: metadata, exact-commit certification, immutable publication, and independent asset verification are complete.
+- Pantheon Ops PR #102 carries the verified v0.10.12 lock and hosted consumer gates.

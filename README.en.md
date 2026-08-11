@@ -10,13 +10,13 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current published foundation release | `pantheon-base-v0.10.11` (`release/0.10`) |
+| Current published foundation release | [`pantheon-base-v0.10.12`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.12) (`release/0.10`) |
 | Product milestone | **V1.0** (released 2026-07-21) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
-| Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (pending refresh; not updated in this focused fix, so treat deployment details as migration + runtime seed first) |
+| Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 
-Delivery-audit note: `pantheon-base-v0.10.11` is published and is the foundation baseline currently locked by `pantheon-ops`, but it is not fully release-gate-certified because commit `48c7ca5dcb8fd3c7235055dbeec57fb5b165b13e` has no successful Release Gate run and no Actionlint or Full Smoke check-runs. `pantheon-ops` may conditionally continue business-domain development on this locked baseline, while the next certified foundation publication must close those release evidence gaps.
+Delivery-audit note: `pantheon-base-v0.10.12` passed candidate-bound Release Gate, Actionlint, Full Smoke, SonarCloud, Windows/MSYS race, and immutable-asset verification. Its tag and GitHub Release point exactly to Base commit `16918771e2650f8c045b0e086144eb290e774704`. `pantheon-ops` is locked to archive SHA-256 `42a62f08881abe0a1680f721e1da9aa7ee50f0ffbf7a1ad2ccb65350f960fb21` and can begin subsequent business-domain development; the existing `pantheon-base-v0.10.11` release remains unchanged.
 
 V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
 

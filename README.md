@@ -8,13 +8,13 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前已发布的 foundation release | `pantheon-base-v0.10.11`（`release/0.10`） |
+| 当前已发布的 foundation release | [`pantheon-base-v0.10.12`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.12)（`release/0.10`） |
 | 产品里程碑 | **V1.0**（2026-07-21 发布） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
-| 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（待刷新；本次未同步更新，部署细节请以迁移 + 运行时 seed 为准） |
+| 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
 | 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
 
-交付审计说明：`pantheon-base-v0.10.11` 已发布，也是 `pantheon-ops` 目前锁定使用的 foundation baseline，但它还没有完成完整 release-gate 认证，因为 commit `48c7ca5dcb8fd3c7235055dbeec57fb5b165b13e` 没有成功的 Release Gate 运行，也没有 Actionlint 或 Full Smoke 的 check-run。`pantheon-ops` 可以在这个锁定基线上按条件继续业务域开发；下一次经过认证的 foundation 发布必须补齐这些 release 证据缺口。
+交付审计说明：`pantheon-base-v0.10.12` 已完成候选提交绑定的 Release Gate、Actionlint、Full Smoke、SonarCloud、Windows/MSYS race 与不可变资产校验，发布 tag 和 GitHub Release 精确指向 Base commit `16918771e2650f8c045b0e086144eb290e774704`。`pantheon-ops` 已锁定 archive SHA-256 `42a62f08881abe0a1680f721e1da9aa7ee50f0ffbf7a1ad2ccb65350f960fb21`，可开始后续业务域开发；原 `pantheon-base-v0.10.11` 保持不变。
 
 V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
 
