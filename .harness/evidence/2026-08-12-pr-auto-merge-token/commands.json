@@ -1,0 +1,13 @@
+{
+  "taskId": "2026-08-12-pr-auto-merge-token",
+  "commands": [
+    {
+      "command": "npm run test:pr-automation-workflow",
+      "expected": "workflow regression tests pass"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "expected": "task packet frontmatter passes"
+    }
+  ]
+}
