@@ -1,0 +1,48 @@
+{
+  "taskId": "2026-08-12-foundation-consumer-cleanup-overlay",
+  "commands": [
+    {
+      "command": "node --test frontend/scripts/cleanup-generated-modules.test.mjs frontend/scripts/run-smoke-suite.test.mjs",
+      "cwd": "pantheon-base",
+      "result": "pass (15/15)"
+    },
+    {
+      "command": "invoke Base cleanup module against the real Ops worktree and compare git status",
+      "cwd": "pantheon-ops",
+      "result": "pass (0 modules removed; tracked business/registry/i18n state unchanged)"
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:task-packet-template && npm run check:harness-adoption",
+      "cwd": "pantheon-base",
+      "result": "pass"
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "pantheon-base",
+      "result": "pass (22/22)"
+    },
+    {
+      "command": "npm run lint && npm run type-check && npm run build",
+      "cwd": "pantheon-base/frontend",
+      "result": "pass"
+    },
+    {
+      "command": "npm run test:generator:smoke",
+      "cwd": "pantheon-base/frontend",
+      "result": "pass"
+    },
+    {
+      "command": "npm run test:smoke:scripts",
+      "cwd": "pantheon-base/frontend",
+      "result": "pass (24/24)"
+    },
+    {
+      "command": "CGO_ENABLED=1 go test -race ./... with MinGW",
+      "cwd": "pantheon-base/backend",
+      "result": "pass"
+    }
+  ],
+  "knownGaps": [
+    "Exact-commit GitHub gates, immutable pantheon-base-v0.10.18 publication, and final Ops business smoke are pending."
+  ]
+}
