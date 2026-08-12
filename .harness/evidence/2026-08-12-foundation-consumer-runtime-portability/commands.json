@@ -3,49 +3,37 @@
   "status": "in-progress",
   "commands": [
     {
-      "command": "node --test scripts/cleanup-generated-modules.test.mjs scripts/run-smoke-suite.test.mjs",
+      "command": "node --test scripts/go-module.test.mjs",
       "cwd": "frontend",
       "status": "passed",
-      "notes": "15/15 cleanup and smoke-runner tests passed, including tracked feature-ledger restoration."
+      "notes": "2/2 backend import-prefix layout tests passed for Base backend/go.mod and Ops root go.mod."
     },
     {
-      "command": "npm run type-check && npm run lint",
+      "command": "npm run test:smoke:scripts",
       "cwd": "frontend",
       "status": "passed",
-      "notes": "The shared go.mod helper and both generated-module smoke specs type-check and lint."
+      "notes": "26/26 smoke script tests passed, including module layout and tracked feature-ledger restoration coverage."
     },
     {
-      "command": "go test ./modules/lowcode/dynamicmodule ./internal/scaffold",
-      "cwd": "backend",
-      "status": "passed",
-      "notes": "Dynamic-module and scaffold focused tests passed."
-    },
-    {
-      "command": "npx playwright test --list tests/smoke/business/generated/module-governance-real.spec.ts tests/smoke/business/generated/module-governance-host-real.spec.ts --config=playwright.config.ts",
+      "command": "npm run type-check && npm run lint && npm run check:smoke-web-base",
       "cwd": "frontend",
       "status": "passed",
-      "notes": "Both generated-module smoke specs load with the Base backend/go.mod layout after the review fix."
+      "notes": "Shared helper and both generated smoke specs pass compile, lint, and smoke entrypoint contracts."
     },
     {
-      "command": "npm run test:foundation-release && npm run check:docs-frontmatter && npm run check:task-packet-template && npm run check:harness-adoption",
+      "command": "npm run check:harness-adoption && git diff --check",
       "cwd": ".",
       "status": "passed",
-      "notes": "22/22 foundation release tests and strict task/document governance passed."
+      "notes": "Strict adoption completed with 0 findings and 0 warnings; git diff --check also passed."
     },
     {
-      "command": "npm run test:smoke:scripts && npm run test:generator:smoke && npm run build",
-      "cwd": "frontend",
-      "status": "passed",
-      "notes": "24/24 smoke scripts, generator smoke, frontend contract gates, and production build passed."
-    },
-    {
-      "command": "CGO_ENABLED=1 go test -race ./... with MinGW",
-      "cwd": "backend",
-      "status": "passed",
-      "notes": "Full Windows CGO race suite passed."
+      "command": "npm run test:smoke:business",
+      "cwd": "pantheon-ops/frontend after consuming pantheon-base-v0.10.19",
+      "status": "failed",
+      "notes": "CMDB 9/9, Deploy API 4/4, and Deploy UI 10/10 passed. Generated smoke then exposed that root go.mod consumers require a /backend import segment. Cleanup restored all tracked overlays with zero diff."
     }
   ],
   "knownGaps": [
-    "Independent review, full Base gates, exact-commit GitHub gates, immutable patch publication, and final Ops business smoke are pending."
+    "Full Base gates, independent review, exact-commit GitHub gates, immutable patch publication, and final Ops business smoke are pending."
   ]
 }

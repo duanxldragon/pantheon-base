@@ -18,7 +18,7 @@ Make Base-owned generated-module runtime smoke use the consumer repository's Go 
 
 ### In
 
-- Resolve generated registry import assertions from the active repository `go.mod`.
+- Resolve generated registry import assertions from the active repository `go.mod` and backend layout.
 - Restore tracked `schema/generated/feature-ledger.json` from the consumer Git index.
 - Add focused producer regression coverage and real Ops runtime evidence.
 - Publish a new immutable patch release after exact-commit gates pass.
