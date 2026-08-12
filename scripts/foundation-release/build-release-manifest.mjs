@@ -74,6 +74,7 @@ function buildManifest(options) {
         'frontend/playwright.master-detail.config.ts',
         'frontend/scripts/cleanup-generated-modules.mjs',
         'frontend/scripts/cleanup-smoke-fixtures.mjs',
+        'frontend/scripts/check-smoke-web-base.mjs',
         'frontend/scripts/database-import-qa-setup.mjs',
         'frontend/scripts/export-generated-module.mjs',
         'frontend/scripts/lib/auth-cookie-session.mjs',

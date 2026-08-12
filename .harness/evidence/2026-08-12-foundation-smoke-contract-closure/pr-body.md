@@ -2,8 +2,8 @@
 
 - 改动层级：inheritance-sync
 - 改动模块：foundation release manifest
-- 目标问题：smoke spec 已消费但 npm entrypoint 与 coverage matrix 未消费
-- 预期影响：消费者得到完整、可执行的 smoke 合同
+- 目标问题：v0.10.16 消费后暴露 smoke checker 未纳入 release，且 Base auto-recycle 命令与该 checker 冲突
+- 预期影响：消费者从同一不可变 release 得到自洽的 smoke 命令、矩阵和守卫
 
 ## Harness 链路
 
@@ -29,7 +29,7 @@
 - permission contract: unchanged
 - audit coverage: unchanged
 - visual evidence: not-applicable, no product UI change
-- inheritance contract: package scripts and smoke README become release-owned
+- inheritance contract: package scripts, smoke README, and smoke web-base guard become release-owned
 - base drift: producer gate updated
 - Base/ops inheritance: publish then consume through Ops adapter
 
@@ -38,11 +38,13 @@
 - [ ] 本次改动仅涉及 `business/*`
 - [x] 本次改动涉及 foundation 继承，已说明 Base-first 边界和消费方式
 
-Base owns generic smoke commands and coverage documentation. Ops retains business-specific commands through its consumer adapter.
+Base owns generic smoke commands, coverage documentation, and the executable smoke web-base guard. Ops retains CMDB/Deploy commands through its consumer adapter. No menu, permission, i18n, audit, backend DTO, or database contract changes.
 
 ## 验证记录
 
 - [x] `npm run test:foundation-release` (22/22)
+- [x] `cd frontend && npm run check:smoke-web-base && npm run check:smoke-coverage-contract`
+- [x] `cd frontend && npm run lint && npm run type-check && npm run build`
 - [x] Ops consumer tests (25/25)
 - [x] Ops installer tests (5/5)
 - [ ] GitHub required checks 通过
@@ -56,7 +58,7 @@ Base owns generic smoke commands and coverage documentation. Ops retains busines
 - Auto-merge：not-enabled
 - Duplication Gate 结果：pending
 - 是否高风险改动：yes, inheritance contract
-- Residual risk / follow-up：publish new immutable patch and consume in Ops
+- Residual risk / follow-up：publish immutable v0.10.17 after exact-commit gates, then consume and run full Ops business smoke
 
 ## 检查清单
 
