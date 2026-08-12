@@ -1,0 +1,32 @@
+{
+  "taskId": "2026-08-12-foundation-smoke-closure",
+  "title": "Close foundation generated smoke ownership",
+  "goal": "Publish and consume the complete generated-business runtime smoke closure through an immutable foundation release.",
+  "primaryLayer": "inheritance-sync",
+  "qualityProfiles": ["generator", "ci-workflow"],
+  "scope": {
+    "in": [
+      "foundation manifest runtime QA closure",
+      "producer ownership ratchet",
+      "immutable patch release",
+      "Ops consumer verification"
+    ],
+    "out": [
+      "product UI behavior",
+      "business behavior",
+      "existing release mutation"
+    ]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-12-foundation-smoke-closure",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-12-foundation-smoke-closure.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-12-foundation-smoke-closure/",
+    "reviewFile": ".harness/evidence/2026-08-12-foundation-smoke-closure/review.md",
+    "summaryFile": ".harness/evidence/2026-08-12-foundation-smoke-closure/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-smoke-closure.task.md"]
+  },
+  "syncExpectation": "Pantheon Ops consumes the next release and removes stale generic generated-smoke copies."
+}

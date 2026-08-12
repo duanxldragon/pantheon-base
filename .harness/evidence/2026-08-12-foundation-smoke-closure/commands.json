@@ -1,0 +1,33 @@
+{
+  "taskId": "2026-08-12-foundation-smoke-closure",
+  "commands": [
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "pantheon-base",
+      "result": "pass (22/22)"
+    },
+    {
+      "command": "node --test tests/scripts/sync-base-shared.test.mjs",
+      "cwd": "pantheon-ops",
+      "result": "pass (5/5)"
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/consume-foundation-release.test.mjs",
+      "cwd": "pantheon-ops",
+      "result": "pass (24/24)"
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base and pantheon-ops",
+      "result": "pass"
+    }
+  ],
+  "knownGaps": [
+    "Exact-commit remote gates and immutable patch publication are pending."
+  ]
+}
