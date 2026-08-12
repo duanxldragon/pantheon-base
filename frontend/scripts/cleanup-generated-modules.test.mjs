@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs, { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -52,7 +53,7 @@ test('checkDirty returns no issues for clean generated artifacts', () => {
     writeFileSync(registryFiles.frontendComponentRegistry, 'export const generatedComponentRegistry = {};\n', 'utf8');
     writeFileSync(path.join(generatedPaths.i18nDir, 'zh-CN.ts'), 'const generatedzhCNFallback = {};\n', 'utf8');
 
-    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot);
+    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot, new Set());
     assert.deepEqual(dirty, []);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
@@ -75,7 +76,7 @@ test('checkDirty detects generated module leftovers by prefix and content marker
       'utf8',
     );
 
-    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot);
+    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot, new Set());
 
     assert.ok(dirty.some((item) => item.includes('backend generated_registry.go')));
     assert.ok(dirty.some((item) => item.includes('frontend generated/business.ts')));
@@ -91,7 +92,7 @@ test('checkDirty detects any leftover business cmdb smoke directory', () => {
   try {
     mkdirSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb', 'host'), { recursive: true });
 
-    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot);
+    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot, new Set());
 
     assert.ok(dirty.some((item) => item.includes('schema/generated/business/cmdb')));
   } finally {
@@ -136,13 +137,13 @@ test('cleanup removes generated leftovers and restores clean registry templates'
     );
     mkdirSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb', 'host'), { recursive: true });
 
-    cleanup(generatedPaths, registryFiles);
+    cleanup(generatedPaths, registryFiles, repoRoot, new Set());
 
     assert.equal(existsSync(backendGeneratedDir), false);
     assert.equal(existsSync(frontendGeneratedDir), false);
     assert.equal(existsSync(generatedSchemaPath), false);
     assert.equal(existsSync(path.join(generatedPaths.schemaBusinessDir, 'cmdb')), false);
-    assert.deepEqual(checkDirty(generatedPaths, registryFiles, repoRoot), []);
+    assert.deepEqual(checkDirty(generatedPaths, registryFiles, repoRoot, new Set()), []);
     assert.match(
       fs.readFileSync(registryFiles.backendRegistry, 'utf8'),
       /Intentionally empty: the low-code module generator rewrites this file/,
@@ -194,11 +195,127 @@ test('cleanup tolerates schema files disappearing during removal', () => {
       return originalRmSync(targetPath, options);
     });
 
-    cleanup(generatedPaths, registryFiles);
+    cleanup(generatedPaths, registryFiles, repoRoot, new Set());
 
     assert.equal(existsSync(generatedSchemaPath), false);
   } finally {
     fs.rmSync = originalRmSync;
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('cleanup preserves tracked consumer overlays while removing nested generated modules', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  const trackedBackendFile = path.join(
+    generatedPaths.backendBusinessDir,
+    'cmdb',
+    'host',
+    'host_service.go',
+  );
+  const trackedFrontendFile = path.join(
+    generatedPaths.frontendBusinessDir,
+    'cmdb',
+    'host',
+    'CmdbHostList.tsx',
+  );
+  const generatedBackendDir = path.join(generatedPaths.backendBusinessDir, 'cmdb', 'smoke');
+  const generatedFrontendDir = path.join(generatedPaths.frontendBusinessDir, 'orderqa');
+  const trackedSchemaFile = path.join(generatedPaths.schemaBusinessDir, 'cmdb', 'host.json');
+  const generatedSchemaFile = path.join(generatedPaths.schemaBusinessDir, 'cmdb', 'smoke.json');
+  const trackedFiles = new Set([
+    path.relative(repoRoot, trackedBackendFile).replaceAll('\\', '/'),
+    path.relative(repoRoot, trackedFrontendFile).replaceAll('\\', '/'),
+    path.relative(repoRoot, trackedSchemaFile).replaceAll('\\', '/'),
+  ]);
+
+  try {
+    mkdirSync(path.dirname(trackedBackendFile), { recursive: true });
+    mkdirSync(path.dirname(trackedFrontendFile), { recursive: true });
+    writeFileSync(trackedBackendFile, 'package host\n', 'utf8');
+    writeFileSync(trackedFrontendFile, 'export default function CmdbHostList() {}\n', 'utf8');
+    mkdirSync(generatedBackendDir, { recursive: true });
+    mkdirSync(generatedFrontendDir, { recursive: true });
+    writeFileSync(path.join(generatedBackendDir, 'smoke.go'), 'package smoke\n', 'utf8');
+    writeFileSync(path.join(generatedFrontendDir, 'OrderqaList.tsx'), 'export default {}\n', 'utf8');
+    mkdirSync(path.dirname(trackedSchemaFile), { recursive: true });
+    writeFileSync(trackedSchemaFile, '{}\n', 'utf8');
+    writeFileSync(generatedSchemaFile, '{}\n', 'utf8');
+
+    cleanup(generatedPaths, registryFiles, repoRoot, trackedFiles);
+
+    assert.equal(existsSync(trackedBackendFile), true);
+    assert.equal(existsSync(trackedFrontendFile), true);
+    assert.equal(existsSync(generatedBackendDir), false);
+    assert.equal(existsSync(generatedFrontendDir), false);
+    assert.equal(existsSync(trackedSchemaFile), true);
+    assert.equal(existsSync(generatedSchemaFile), false);
+    assert.deepEqual(checkDirty(generatedPaths, registryFiles, repoRoot, trackedFiles), []);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('cleanup fails closed when repository ownership cannot be read', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  try {
+    assert.throws(
+      () => cleanup(generatedPaths, registryFiles, repoRoot),
+      /git -C .* ls-files -z/,
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('cleanup fails closed when a tracked registry baseline cannot be read', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  const relativeRegistry = path.relative(repoRoot, registryFiles.backendRegistry).replaceAll('\\', '/');
+  try {
+    assert.throws(
+      () => cleanup(generatedPaths, registryFiles, repoRoot, new Set([relativeRegistry])),
+      /Unable to read tracked cleanup baseline from Git index/,
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('checkDirty rejects generated markers even when the polluted file is tracked', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  const relativeRegistry = path.relative(repoRoot, registryFiles.backendRegistry).replaceAll('\\', '/');
+  try {
+    writeFileSync(
+      registryFiles.backendRegistry,
+      'import "pantheon-base/modules/business/mdqaorder"\n',
+      'utf8',
+    );
+    const dirty = checkDirty(generatedPaths, registryFiles, repoRoot, new Set([relativeRegistry]));
+    assert.ok(dirty.some((item) => item.includes('backend generated_registry.go')));
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('cleanup restores tracked registry and i18n files from a real Git index', () => {
+  const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
+  const i18nFile = path.join(generatedPaths.i18nDir, 'zh-CN.ts');
+  const registryBaseline = 'package business\n\nfunc preserveConsumerOverlay() {}\n';
+  const i18nBaseline = "const generatedzhCNFallback = { 'business.cmdb.title': 'CMDB' };\nexport default generatedzhCNFallback;\n";
+
+  try {
+    writeFileSync(registryFiles.backendRegistry, registryBaseline, 'utf8');
+    writeFileSync(i18nFile, i18nBaseline, 'utf8');
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+    execFileSync('git', ['add', '.'], { cwd: repoRoot, stdio: 'ignore' });
+
+    writeFileSync(registryFiles.backendRegistry, 'package business\n', 'utf8');
+    writeFileSync(i18nFile, 'const generatedzhCNFallback = {};\n', 'utf8');
+
+    cleanup(generatedPaths, registryFiles, repoRoot);
+
+    assert.equal(fs.readFileSync(registryFiles.backendRegistry, 'utf8'), registryBaseline);
+    assert.equal(fs.readFileSync(i18nFile, 'utf8'), i18nBaseline);
+  } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });

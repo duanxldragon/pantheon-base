@@ -1,0 +1,23 @@
+{
+  "taskId": "2026-08-12-foundation-consumer-cleanup-overlay",
+  "title": "Preserve consumer business overlays during generated cleanup",
+  "goal": "Make Base-owned generated cleanup safe for tracked foundation-consumer business overlays.",
+  "primaryLayer": "inheritance-sync",
+  "qualityProfiles": ["generator", "ui-runtime"],
+  "scope": {
+    "in": ["generated cleanup ownership", "consumer overlay preservation", "producer regression gate"],
+    "out": ["business behavior", "schema changes", "existing release mutation"]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-12-foundation-consumer-cleanup-overlay",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-12-foundation-consumer-cleanup-overlay.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/",
+    "reviewFile": ".harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/review.md",
+    "summaryFile": ".harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-consumer-cleanup-overlay.task.md"]
+  },
+  "syncExpectation": "Publish pantheon-base-v0.10.18 as a new immutable patch and consume it through the Ops foundation-release consumer."
+}
