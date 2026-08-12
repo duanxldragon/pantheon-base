@@ -92,9 +92,24 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       'utf8',
     );
     const sharedSmokeFiles = [
+      'frontend/playwright.api.config.ts',
+      'frontend/playwright.config.ts',
+      'frontend/playwright.full-system.config.ts',
+      'frontend/playwright.auto-recycle.config.ts',
+      'frontend/playwright.many-to-many.config.ts',
+      'frontend/playwright.master-detail.config.ts',
+      'frontend/scripts/cleanup-generated-modules.mjs',
+      'frontend/scripts/cleanup-smoke-fixtures.mjs',
+      'frontend/scripts/database-import-qa-setup.mjs',
       'frontend/scripts/lib/auth-cookie-session.mjs',
+      'frontend/scripts/lib/cleanup-fixture-cache.mjs',
+      'frontend/scripts/lib/cleanup-fixture-query-plan.mjs',
+      'frontend/scripts/lib/cleanup-http.mjs',
+      'frontend/scripts/many-to-many-qa-setup.mjs',
+      'frontend/scripts/master-detail-qa-setup.mjs',
       'frontend/scripts/run-smoke-suite.mjs',
       'frontend/scripts/run-smoke-suite.test.mjs',
+      'frontend/scripts/start-smoke-vite.mjs',
       'frontend/scripts/test-fixtures/bind-ready-server.mjs',
       'frontend/scripts/test-fixtures/fake-playwright-cli.mjs',
       'frontend/scripts/test-fixtures/record-cleanup.mjs',
@@ -103,6 +118,11 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       'frontend/tests/smoke/helpers/fixture-policy.ts',
       'frontend/tests/smoke/helpers/shared-read-cache.ts',
       'frontend/tests/smoke/helpers/url-pattern.ts',
+      'frontend/tests/smoke/business/generated/module-auto-recycle-real.spec.ts',
+      'frontend/tests/smoke/business/generated/module-governance-host-real.spec.ts',
+      'frontend/tests/smoke/business/generated/module-governance-real.spec.ts',
+      'frontend/tests/smoke/business/generated/module-many-to-many-real.spec.ts',
+      'frontend/tests/smoke/business/generated/module-master-detail-real.spec.ts',
       'frontend/tests/smoke/platform/shell-visual-contract.spec.ts',
       'frontend/tests/smoke/system/system-pages.spec.ts',
       'frontend/tests/smoke/system/system-workspace-task-depth.ts',
@@ -164,6 +184,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
     );
     for (const relativePath of [
       'frontend/scripts/run-smoke-suite.test.mjs',
+      'frontend/scripts/master-detail-qa-setup.mjs',
       'frontend/scripts/test-fixtures/bind-ready-server.mjs',
       'frontend/scripts/test-fixtures/fake-playwright-cli.mjs',
       'frontend/scripts/test-fixtures/record-cleanup.mjs',
@@ -184,6 +205,25 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
         `${relativePath} must be included in the shared frontend bundle`,
       );
     }
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          root,
+          'dist',
+          'foundation-releases',
+          'pantheon-base-v0.10.0',
+          'bundle',
+          'shared-frontend',
+          'frontend',
+          'tests',
+          'smoke',
+          'business',
+          'generated',
+          'module-master-detail-real.spec.ts',
+        ),
+      ),
+      true,
+    );
     assert.equal(
       fs.existsSync(
         path.join(
