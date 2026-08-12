@@ -147,15 +147,13 @@ jobs:
 
       - name: Enable squash auto-merge
         env:
+          GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          if gh pr merge "$PR_NUMBER" --repo "$GH_REPO" --auto --squash --delete-branch; then
-            echo "Squash auto-merge enabled for PR #$PR_NUMBER"
-          else
-            echo "Unable to enable auto-merge (may already be enabled or PR not mergeable)"
-          fi
+          gh pr merge "$PR_NUMBER" --repo "$GH_REPO" --auto --squash --delete-branch
+          echo "Squash auto-merge enabled for PR #$PR_NUMBER"
 
   # ============================================================
   # Draft PR: Notify but don't auto-merge

@@ -67,6 +67,16 @@ test('pr automation validates PR governance before enabling auto-merge', () => {
     /gh pr merge "\$PR_NUMBER" --repo "\$GH_REPO" --auto --squash --delete-branch/i,
     'auto-merge should request GitHub to delete the branch as part of the merge operation',
   );
+  assert.match(
+    workflowSource,
+    /Enable squash auto-merge[\s\S]*GH_TOKEN:\s*\$\{\{\s*github\.token\s*\}\}[\s\S]*gh pr merge/i,
+    'auto-merge should authenticate GitHub CLI with the workflow token',
+  );
+  assert.doesNotMatch(
+    workflowSource,
+    /if gh pr merge[\s\S]*Unable to enable auto-merge/i,
+    'auto-merge failures should fail the workflow instead of being reported as success',
+  );
 });
 
 test('pr automation does not rely on a pull_request.closed cleanup follow-up', () => {

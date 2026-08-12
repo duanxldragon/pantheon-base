@@ -1,0 +1,31 @@
+{
+  "taskId": "2026-08-12-pr-auto-merge-token",
+  "title": "Repair PR auto-merge authentication",
+  "goal": "Ensure the PR automation workflow authenticates gh and fails closed when auto-merge cannot be enabled.",
+  "primaryLayer": "ci-workflow",
+  "qualityProfiles": ["ci-workflow"],
+  "scope": {
+    "in": [
+      "PR automation token wiring",
+      "fail-closed auto-merge behavior",
+      "workflow regression test"
+    ],
+    "out": [
+      "branch protection policy",
+      "product code",
+      "foundation release contents"
+    ]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-12-pr-auto-merge-token",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-12-pr-auto-merge-token.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-12-pr-auto-merge-token/",
+    "reviewFile": ".harness/evidence/2026-08-12-pr-auto-merge-token/review.md",
+    "summaryFile": ".harness/evidence/2026-08-12-pr-auto-merge-token/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-12-pr-auto-merge-token.task.md"]
+  },
+  "syncExpectation": "No Ops sync; this repairs Base repository PR automation only."
+}
