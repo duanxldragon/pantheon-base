@@ -9,7 +9,7 @@
 
 - Task ID：2026-08-12-foundation-consumer-cleanup-overlay
 - Task Manifest：`.harness/tasks/2026-08-12-foundation-consumer-cleanup-overlay/manifest.json`
-- Evidence：`.harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/`
+- Evidence：`.harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/commands.json`
 - Verification evidence：`.harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/summary.md`
 - Review Artifact：`.harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/review.md`
 - OpenSpec change：not-applicable
