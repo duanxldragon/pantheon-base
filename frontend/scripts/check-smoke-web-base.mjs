@@ -19,6 +19,7 @@ const targetRoots = [
 ];
 
 const forbiddenUrlPattern = /http:\/\/127\.0\.0\.1:517[3-9]/;
+const forbiddenProxyTargetPattern = /--proxy-target\s+https?:\/\/127\.0\.0\.1:\d+/;
 const requiredToken = 'PANTHEON_WEB_BASE_URL';
 const ignoredFileSuffixes = new Set([
   'scripts/check-smoke-web-base.mjs',
@@ -85,6 +86,11 @@ function assertPackageScripts() {
     if (!command.includes('scripts/run-smoke-suite.mjs')) {
       findings.push(
         `${name} must run browser smoke through scripts/run-smoke-suite.mjs so the started Vite server and Playwright baseURL stay synchronized.`,
+      );
+    }
+    if (forbiddenProxyTargetPattern.test(command)) {
+      findings.push(
+        `${name} must not hard-code --proxy-target http://127.0.0.1:* in package.json. Set PANTHEON_API_PROXY_TARGET in the environment so smoke can follow the active backend instance.`,
       );
     }
   }
