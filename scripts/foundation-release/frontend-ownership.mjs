@@ -7,6 +7,7 @@ const requiredFrontendEntries = [
   'frontend/src/vite-env.d.ts',
   'frontend/src/api',
   'frontend/src/hooks',
+  'frontend/package.json',
   'frontend/playwright.api.config.ts',
   'frontend/playwright.config.ts',
   'frontend/playwright.full-system.config.ts',
@@ -28,6 +29,7 @@ const requiredFrontendEntries = [
   'frontend/tests/smoke/helpers',
   'frontend/tests/smoke/platform',
   'frontend/tests/smoke/system',
+  'frontend/tests/smoke/README.md',
 ];
 
 function normalizeRelativePath(relativePath) {

@@ -1,0 +1,23 @@
+{
+  "taskId": "2026-08-12-foundation-smoke-contract-closure",
+  "title": "Close foundation smoke contract ownership",
+  "goal": "Ship smoke entrypoints and coverage documentation with the Base-owned smoke specifications.",
+  "primaryLayer": "inheritance-sync",
+  "qualityProfiles": ["ci-workflow", "ui-runtime"],
+  "scope": {
+    "in": ["foundation smoke command ownership", "smoke coverage matrix ownership", "producer regression gate"],
+    "out": ["business features", "schema changes", "existing release mutation"]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-12-foundation-smoke-contract-closure",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-12-foundation-smoke-contract-closure.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-12-foundation-smoke-contract-closure/",
+    "reviewFile": ".harness/evidence/2026-08-12-foundation-smoke-contract-closure/review.md",
+    "summaryFile": ".harness/evidence/2026-08-12-foundation-smoke-contract-closure/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-smoke-contract-closure.task.md"]
+  },
+  "syncExpectation": "Publish a new immutable patch and consume it through the Ops structured smoke-contract adapter."
+}
