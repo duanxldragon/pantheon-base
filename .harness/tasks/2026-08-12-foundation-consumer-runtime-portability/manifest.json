@@ -1,11 +1,11 @@
 {
   "taskId": "2026-08-12-foundation-consumer-runtime-portability",
   "title": "Make generated-module smoke portable across foundation consumers",
-  "goal": "Remove producer-specific Go module assumptions and restore tracked feature-ledger state during consumer smoke cleanup.",
+  "goal": "Remove producer-specific Go module and backend-layout assumptions and restore tracked feature-ledger state during consumer smoke cleanup.",
   "primaryLayer": "inheritance-sync",
   "qualityProfiles": ["generator", "ui-runtime"],
   "scope": {
-    "in": ["consumer Go module identity", "feature-ledger cleanup baseline", "runtime smoke portability"],
+    "in": ["consumer Go module identity", "consumer backend import layout", "feature-ledger cleanup baseline", "runtime smoke portability"],
     "out": ["business behavior", "database schema", "consumer-local overrides"]
   },
   "ratchetDecision": "gate-updated",
