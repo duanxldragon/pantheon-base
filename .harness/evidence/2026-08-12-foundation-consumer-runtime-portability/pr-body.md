@@ -54,7 +54,7 @@
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用
 - [ ] 已启用或确认将启用 squash auto-merge
 
-补充说明：layout helper 2/2、完整 smoke scripts 26/26、frontend lint/type-check 和 smoke entrypoint contract 已通过。`v0.10.19` Ops runtime 中 CMDB 9/9、Deploy API 4/4、Deploy UI 10/10 通过，generated 阶段准确复现 root-module `/backend` 布局缺口，且失败后的 cleanup 保持业务 overlay 零 diff。其余 Base 门禁与独立审查将在提交前补齐。
+补充说明：layout helper 2/2、完整 smoke scripts 26/26、frontend lint/type-check 和 smoke entrypoint contract 已通过。`v0.10.19` Ops runtime 中 CMDB 9/9、Deploy API 4/4、Deploy UI 10/10 通过，generated 阶段准确复现 root-module `/backend` 布局缺口，且失败后的 cleanup 保持业务 overlay 零 diff。独立代码审查为 `APPROVE`（0 findings），架构审查为 `WATCH`（仅未来第三种/歧义布局需显式合同），综合结论为 `COMMENT`、无当前阻断。
 
 ## 审核留痕
 
@@ -64,7 +64,7 @@
 - Auto-merge：not-enabled
 - Duplication Gate 结果：等待 PR hosted gate
 - 是否高风险改动：是，涉及 generator runtime 和 foundation consumer
-- Residual risk / follow-up：PR merge-SHA 门禁通过后发布不可变 patch；Ops 仅消费官方 asset 并跑完整 business smoke
+- Residual risk / follow-up：当前 helper 显式支持 Base `backend/go.mod` 与 Ops root `go.mod` 两种合同布局；PR merge-SHA 门禁通过后发布不可变 patch，Ops 仅消费官方 asset 并跑完整 business smoke
 
 ## 检查清单
 
