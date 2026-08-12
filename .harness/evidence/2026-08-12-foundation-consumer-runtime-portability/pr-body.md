@@ -9,8 +9,8 @@
 
 - Task ID：2026-08-12-foundation-consumer-runtime-portability
 - Task Manifest：`.harness/tasks/2026-08-12-foundation-consumer-runtime-portability/manifest.json`
-- Evidence：`.harness/evidence/2026-08-12-foundation-consumer-runtime-portability/`
-- Verification evidence：`.harness/evidence/2026-08-12-foundation-consumer-runtime-portability/commands.json`
+- Evidence：`.harness/evidence/2026-08-12-foundation-consumer-runtime-portability/commands.json`
+- Verification evidence：`.harness/evidence/2026-08-12-foundation-consumer-runtime-portability/summary.md`
 - Review Artifact：`.harness/evidence/2026-08-12-foundation-consumer-runtime-portability/review.md`
 - OpenSpec change：not-applicable
 - Trivial change：no
