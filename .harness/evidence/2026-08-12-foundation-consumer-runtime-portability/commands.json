@@ -1,0 +1,51 @@
+{
+  "taskId": "2026-08-12-foundation-consumer-runtime-portability",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "node --test scripts/cleanup-generated-modules.test.mjs scripts/run-smoke-suite.test.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "15/15 cleanup and smoke-runner tests passed, including tracked feature-ledger restoration."
+    },
+    {
+      "command": "npm run type-check && npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "The shared go.mod helper and both generated-module smoke specs type-check and lint."
+    },
+    {
+      "command": "go test ./modules/lowcode/dynamicmodule ./internal/scaffold",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Dynamic-module and scaffold focused tests passed."
+    },
+    {
+      "command": "npx playwright test --list tests/smoke/business/generated/module-governance-real.spec.ts tests/smoke/business/generated/module-governance-host-real.spec.ts --config=playwright.config.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Both generated-module smoke specs load with the Base backend/go.mod layout after the review fix."
+    },
+    {
+      "command": "npm run test:foundation-release && npm run check:docs-frontmatter && npm run check:task-packet-template && npm run check:harness-adoption",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "22/22 foundation release tests and strict task/document governance passed."
+    },
+    {
+      "command": "npm run test:smoke:scripts && npm run test:generator:smoke && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "24/24 smoke scripts, generator smoke, frontend contract gates, and production build passed."
+    },
+    {
+      "command": "CGO_ENABLED=1 go test -race ./... with MinGW",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Full Windows CGO race suite passed."
+    }
+  ],
+  "knownGaps": [
+    "Independent review, full Base gates, exact-commit GitHub gates, immutable patch publication, and final Ops business smoke are pending."
+  ]
+}

@@ -13,6 +13,7 @@ function createFixtureRepo() {
     backendBusinessDir: path.join(repoRoot, 'backend', 'modules', 'business'),
     frontendBusinessDir: path.join(repoRoot, 'frontend', 'src', 'modules', 'business'),
     schemaBusinessDir: path.join(repoRoot, 'schema', 'generated', 'business'),
+    featureLedger: path.join(repoRoot, 'schema', 'generated', 'feature-ledger.json'),
     i18nDir: path.join(repoRoot, 'frontend', 'src', 'i18n', 'resources', 'generated'),
   };
   const registryFiles = {
@@ -37,7 +38,15 @@ function createFixtureRepo() {
     ),
   };
 
-  for (const dir of [...Object.values(generatedPaths), path.dirname(registryFiles.backendMenuRegistry), path.dirname(registryFiles.frontendBusinessRegistry), path.dirname(registryFiles.frontendComponentRegistry)]) {
+  for (const dir of [
+    generatedPaths.backendBusinessDir,
+    generatedPaths.frontendBusinessDir,
+    generatedPaths.schemaBusinessDir,
+    generatedPaths.i18nDir,
+    path.dirname(registryFiles.backendMenuRegistry),
+    path.dirname(registryFiles.frontendBusinessRegistry),
+    path.dirname(registryFiles.frontendComponentRegistry),
+  ]) {
     mkdirSync(dir, { recursive: true });
   }
 
@@ -299,22 +308,32 @@ test('checkDirty rejects generated markers even when the polluted file is tracke
 test('cleanup restores tracked registry and i18n files from a real Git index', () => {
   const { repoRoot, generatedPaths, registryFiles } = createFixtureRepo();
   const i18nFile = path.join(generatedPaths.i18nDir, 'zh-CN.ts');
+  const featureLedgerBaseline = '{"entries":[]}\n';
   const registryBaseline = 'package business\n\nfunc preserveConsumerOverlay() {}\n';
   const i18nBaseline = "const generatedzhCNFallback = { 'business.cmdb.title': 'CMDB' };\nexport default generatedzhCNFallback;\n";
 
   try {
     writeFileSync(registryFiles.backendRegistry, registryBaseline, 'utf8');
     writeFileSync(i18nFile, i18nBaseline, 'utf8');
+    writeFileSync(generatedPaths.featureLedger, featureLedgerBaseline, 'utf8');
     execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
     execFileSync('git', ['add', '.'], { cwd: repoRoot, stdio: 'ignore' });
 
     writeFileSync(registryFiles.backendRegistry, 'package business\n', 'utf8');
     writeFileSync(i18nFile, 'const generatedzhCNFallback = {};\n', 'utf8');
+    writeFileSync(generatedPaths.featureLedger, '{"entries":[{"moduleKey":"business.orderqa"}]}', 'utf8');
+
+    assert.ok(
+      checkDirty(generatedPaths, registryFiles, repoRoot).some((item) =>
+        item.includes('feature ledger differs from tracked baseline'),
+      ),
+    );
 
     cleanup(generatedPaths, registryFiles, repoRoot);
 
     assert.equal(fs.readFileSync(registryFiles.backendRegistry, 'utf8'), registryBaseline);
     assert.equal(fs.readFileSync(i18nFile, 'utf8'), i18nBaseline);
+    assert.equal(fs.readFileSync(generatedPaths.featureLedger, 'utf8'), featureLedgerBaseline);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
