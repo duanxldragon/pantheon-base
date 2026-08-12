@@ -1,0 +1,9 @@
+{
+  "taskId": "2026-08-12-pr-auto-merge-push-trigger",
+  "commands": [
+    "npm run test:pr-automation-workflow",
+    "npm run check:docs-frontmatter",
+    "npm run check:task-packet-template",
+    "git diff --check"
+  ]
+}
