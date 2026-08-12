@@ -1,0 +1,9 @@
+{
+  "taskId": "2026-08-12-foundation-smoke-contract-closure",
+  "commands": [
+    {"command": "npm run test:foundation-release", "cwd": "pantheon-base", "result": "pass (22/22)"},
+    {"command": "node --test tests/scripts/foundation-release/consume-foundation-release.test.mjs", "cwd": "pantheon-ops", "result": "pass (25/25)"},
+    {"command": "node --test tests/scripts/foundation-release/install-foundation-release.test.mjs", "cwd": "pantheon-ops", "result": "pass (5/5)"}
+  ],
+  "knownGaps": ["Exact-commit remote gates and immutable patch publication are pending."]
+}

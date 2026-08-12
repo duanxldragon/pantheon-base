@@ -77,6 +77,7 @@ test('build-release-manifest writes release metadata files into releases/<versio
       'frontend/src/modules/platform',
       'frontend/src/modules/system',
       'frontend/src/index.css',
+      'frontend/package.json',
       'frontend/playwright.api.config.ts',
       'frontend/playwright.config.ts',
       'frontend/playwright.full-system.config.ts',
@@ -106,6 +107,7 @@ test('build-release-manifest writes release metadata files into releases/<versio
       'frontend/tests/smoke/helpers',
       'frontend/tests/smoke/platform',
       'frontend/tests/smoke/system',
+      'frontend/tests/smoke/README.md',
     ]);
     assert.deepEqual(manifest.verification.requiredChecks, [
       'CI Summary',

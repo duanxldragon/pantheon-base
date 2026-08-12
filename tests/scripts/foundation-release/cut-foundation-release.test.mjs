@@ -92,6 +92,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       'utf8',
     );
     const sharedSmokeFiles = [
+      'frontend/package.json',
       'frontend/playwright.api.config.ts',
       'frontend/playwright.config.ts',
       'frontend/playwright.full-system.config.ts',
@@ -126,6 +127,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       'frontend/tests/smoke/platform/shell-visual-contract.spec.ts',
       'frontend/tests/smoke/system/system-pages.spec.ts',
       'frontend/tests/smoke/system/system-workspace-task-depth.ts',
+      'frontend/tests/smoke/README.md',
     ];
     for (const relativePath of sharedSmokeFiles) {
       const filePath = path.join(root, relativePath);
