@@ -1,0 +1,23 @@
+{
+  "taskId": "2026-08-12-foundation-consumer-runtime-portability",
+  "title": "Make generated-module smoke portable across foundation consumers",
+  "goal": "Remove producer-specific Go module assumptions and restore tracked feature-ledger state during consumer smoke cleanup.",
+  "primaryLayer": "inheritance-sync",
+  "qualityProfiles": ["generator", "ui-runtime"],
+  "scope": {
+    "in": ["consumer Go module identity", "feature-ledger cleanup baseline", "runtime smoke portability"],
+    "out": ["business behavior", "database schema", "consumer-local overrides"]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-12-foundation-consumer-runtime-portability",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-12-foundation-consumer-runtime-portability.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-12-foundation-consumer-runtime-portability/",
+    "reviewFile": ".harness/evidence/2026-08-12-foundation-consumer-runtime-portability/review.md",
+    "summaryFile": ".harness/evidence/2026-08-12-foundation-consumer-runtime-portability/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-consumer-runtime-portability.task.md"]
+  },
+  "syncExpectation": "Publish a new immutable patch after the Base PR merges, then consume it in Ops and rerun the full business smoke closure."
+}
