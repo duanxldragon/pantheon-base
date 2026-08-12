@@ -3,7 +3,7 @@
   "status": "in-progress",
   "commands": [
     {
-      "command": "node --test scripts/go-module.test.ts",
+      "command": "node --test scripts/go-module.test.mjs",
       "cwd": "frontend",
       "status": "passed",
       "notes": "2/2 backend import-prefix layout tests passed for Base backend/go.mod and Ops root go.mod."
@@ -19,6 +19,12 @@
       "cwd": "frontend",
       "status": "passed",
       "notes": "Shared helper and both generated smoke specs pass compile, lint, and smoke entrypoint contracts."
+    },
+    {
+      "command": "npm run check:harness-adoption && git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Strict adoption completed with 0 findings and 0 warnings; git diff --check also passed."
     },
     {
       "command": "npm run test:smoke:business",

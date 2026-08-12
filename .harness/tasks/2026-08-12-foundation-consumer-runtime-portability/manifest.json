@@ -5,7 +5,7 @@
   "primaryLayer": "inheritance-sync",
   "qualityProfiles": ["generator", "ui-runtime"],
   "scope": {
-    "in": ["consumer Go module identity", "consumer backend import layout", "feature-ledger cleanup baseline", "runtime smoke portability"],
+    "in": ["consumer Go module identity", "consumer backend import layout", "feature-ledger cleanup baseline", "runtime smoke portability", "Node-native layout regression test entrypoint"],
     "out": ["business behavior", "database schema", "consumer-local overrides"]
   },
   "ratchetDecision": "gate-updated",

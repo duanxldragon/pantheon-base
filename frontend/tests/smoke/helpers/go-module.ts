@@ -2,6 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 export async function readGoBackendImportPrefix(repoRoot: string) {
+  // Supported foundation layouts: Base owns backend/go.mod, while consumers
+  // may own a root go.mod with the shared backend kept under backend/.
   const candidates = [
     { goModPath: path.join(repoRoot, 'backend', 'go.mod'), relativeBackendPath: '' },
     { goModPath: path.join(repoRoot, 'go.mod'), relativeBackendPath: 'backend' },

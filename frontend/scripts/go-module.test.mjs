@@ -7,9 +7,9 @@ import test from 'node:test';
 import { readGoBackendImportPrefix } from '../tests/smoke/helpers/go-module.ts';
 
 async function withRepoLayout(
-  goModRelativePath: string,
-  modulePath: string,
-  verify: (repoRoot: string) => Promise<void>,
+  goModRelativePath,
+  modulePath,
+  verify,
 ) {
   const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pantheon-go-module-'));
   try {
