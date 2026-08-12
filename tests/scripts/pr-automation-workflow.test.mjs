@@ -69,8 +69,18 @@ test('pr automation validates PR governance before enabling auto-merge', () => {
   );
   assert.match(
     workflowSource,
-    /Enable squash auto-merge[\s\S]*GH_TOKEN:\s*\$\{\{\s*github\.token\s*\}\}[\s\S]*gh pr merge/i,
-    'auto-merge should authenticate GitHub CLI with the workflow token',
+    /Enable squash auto-merge[\s\S]*GH_TOKEN:\s*\$\{\{\s*secrets\.RELEASE_GATE_TOKEN\s*\}\}[\s\S]*gh pr merge/i,
+    'auto-merge should prefer the release gate token so the merge triggers push workflows',
+  );
+  assert.match(
+    workflowSource,
+    /if \[ -z "\$\{GH_TOKEN:-\}" \]; then[\s\S]*RELEASE_GATE_TOKEN is required[\s\S]*exit 1/i,
+    'auto-merge should fail closed when the release gate token is unavailable',
+  );
+  assert.doesNotMatch(
+    workflowSource,
+    /Enable squash auto-merge[\s\S]*GH_TOKEN:\s*\$\{\{[\s\S]*github\.token/i,
+    'auto-merge should not fall back to github.token because it suppresses push workflows',
   );
   assert.doesNotMatch(
     workflowSource,

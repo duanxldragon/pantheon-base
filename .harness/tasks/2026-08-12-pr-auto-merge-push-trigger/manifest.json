@@ -1,0 +1,32 @@
+{
+  "taskId": "2026-08-12-pr-auto-merge-push-trigger",
+  "title": "Preserve post-merge workflow triggers",
+  "goal": "Ensure automated merges trigger the exact-commit push workflows required before foundation publication.",
+  "primaryLayer": "ci-workflow",
+  "qualityProfiles": ["ci-workflow"],
+  "scope": {
+    "in": [
+      "fail-closed PAT-backed PR auto-merge",
+      "manual CI recovery trigger",
+      "workflow regression tests"
+    ],
+    "out": [
+      "branch protection policy",
+      "product code",
+      "repository-token fallback",
+      "release validation bypasses"
+    ]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskId": "2026-08-12-pr-auto-merge-push-trigger",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-12-pr-auto-merge-push-trigger.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-12-pr-auto-merge-push-trigger/",
+    "reviewFile": ".harness/evidence/2026-08-12-pr-auto-merge-push-trigger/review.md",
+    "summaryFile": ".harness/evidence/2026-08-12-pr-auto-merge-push-trigger/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-12-pr-auto-merge-push-trigger.task.md"]
+  },
+  "syncExpectation": "No Ops source sync; this repairs Base release automation before publishing a new foundation artifact."
+}

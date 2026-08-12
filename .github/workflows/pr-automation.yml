@@ -147,11 +147,15 @@ jobs:
 
       - name: Enable squash auto-merge
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_GATE_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::RELEASE_GATE_TOKEN is required so the merge commit triggers push workflows"
+            exit 1
+          fi
           gh pr merge "$PR_NUMBER" --repo "$GH_REPO" --auto --squash --delete-branch
           echo "Squash auto-merge enabled for PR #$PR_NUMBER"
 

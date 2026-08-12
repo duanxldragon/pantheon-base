@@ -35,7 +35,7 @@
     "test:create-pr": "node --test tests/scripts/create-pr.test.mjs",
     "test:foundation-release": "node --test tests/scripts/foundation-release/*.test.mjs",
     "test:pr-governance": "node --test tests/scripts/check-pr-governance.test.mjs",
-    "test:pr-automation-workflow": "node --test tests/scripts/pr-automation-workflow.test.mjs",
+    "test:pr-automation-workflow": "node --test tests/scripts/pr-automation-workflow.test.mjs tests/scripts/ci-workflow-dispatch.test.mjs",
     "test:security-workflow": "node --test tests/scripts/security-workflow.test.mjs",
     "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs",
     "test:release-gate-workflow": "node --test tests/scripts/release-gate-workflow.test.mjs",
