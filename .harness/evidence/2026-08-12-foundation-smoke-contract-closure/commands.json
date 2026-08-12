@@ -5,6 +5,8 @@
     {"command": "npm run check:smoke-web-base", "cwd": "pantheon-base/frontend", "result": "pass (97 files)"},
     {"command": "npm run check:smoke-coverage-contract", "cwd": "pantheon-base/frontend", "result": "pass (28 specs, 14 entries)"},
     {"command": "npm run lint && npm run type-check && npm run build", "cwd": "pantheon-base/frontend", "result": "pass"},
+    {"command": "npx playwright test tests/smoke/system/system-pages.spec.ts --config=<local chrome config> --workers=1 --grep \"i18n smoke: import csv\"", "cwd": "pantheon-base/frontend", "result": "pass (1/1, 5.3s; temporary local config removed)"},
+    {"command": "npx playwright test tests/smoke/system/system-pages.spec.ts --config=<local chrome config> --workers=1 --grep \"i18n smoke: import csv\" --repeat-each=3", "cwd": "pantheon-base/frontend", "result": "pass (3/3, 4.7s/5.0s/5.1s; temporary local config removed)"},
     {"command": "node --test tests/scripts/foundation-release/consume-foundation-release.test.mjs", "cwd": "pantheon-ops", "result": "pass (25/25)"},
     {"command": "node --test tests/scripts/foundation-release/install-foundation-release.test.mjs", "cwd": "pantheon-ops", "result": "pass (5/5)"},
     {"command": "go test -race ./... with CGO_ENABLED=1 and MinGW", "cwd": "pantheon-ops/backend", "result": "pass"}
