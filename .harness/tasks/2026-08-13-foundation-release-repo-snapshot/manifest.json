@@ -1,0 +1,33 @@
+{
+  "taskId": "2026-08-13-foundation-release-repo-snapshot",
+  "title": "Ship a full repository snapshot in the foundation release",
+  "goal": "Publish a git-archive repo.tar full-repository snapshot alongside the foundation release bundle so consumers rebuild deterministically from a locked release without a live base working tree.",
+  "primaryLayer": "inheritance-sync",
+  "qualityProfiles": ["generator", "ci-workflow"],
+  "scope": {
+    "in": [
+      "repo.tar full-repository snapshot generation from git archive at baseCommit",
+      "repo.tar.sha256 sidecar and packing into the release .tgz",
+      "repo.tar(+sha256) as standalone GitHub release assets",
+      "manifest repoSnapshot declaration",
+      "bundle ownership regression coverage"
+    ],
+    "out": [
+      "business behavior",
+      "database schema",
+      "consumer-local overrides"
+    ]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-08-13-foundation-release-repo-snapshot",
+    "changeRef": "https://github.com/duanxldragon/pantheon-base/pulls",
+    "taskPacket": "docs/harness/tasks/2026-08-13-foundation-release-repo-snapshot.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-13-foundation-release-repo-snapshot/",
+    "reviewFile": ".harness/evidence/2026-08-13-foundation-release-repo-snapshot/review.md",
+    "summaryFile": ".harness/evidence/2026-08-13-foundation-release-repo-snapshot/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-08-13-foundation-release-repo-snapshot.task.md"]
+  },
+  "syncExpectation": "Ops consumes repo.tar from the locked GitHub release (v0.10.21+) instead of a live ../pantheon-base working tree."
+}
