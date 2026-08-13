@@ -54,7 +54,7 @@
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用
 - [ ] 已启用或确认将启用 squash auto-merge
 
-补充说明：此前 layout helper 2/2、完整 smoke scripts 26/26、frontend lint/type-check 已通过。官方 `v0.10.20` archive 的 Ops dry-run 在 apply 前准确发现 package contract 引用未分发脚本，因此未修改共享树。当前 release tests 22/22 已覆盖 manifest ownership 与实际 bundle inclusion；新 HEAD 的独立复审待补。
+补充说明：此前 layout helper 2/2、完整 smoke scripts 26/26、frontend lint/type-check 已通过。官方 `v0.10.20` archive 的 Ops dry-run 在 apply 前准确发现 package contract 引用未分发脚本，因此未修改共享树。当前 Base release tests 23/23 已覆盖 manifest ownership、实际 bundle inclusion 与负向遗漏回归；Ops script tests 86/86 已覆盖消费白名单复制及合并后 package script 的文件存在性；独立代码复审 `APPROVE`，架构复审 `CLEAR/APPROVE`。
 
 ## 审核留痕
 

@@ -42,10 +42,16 @@
       "command": "npm run test:foundation-release && npm run check:harness-adoption && git diff --check",
       "cwd": "pantheon-base",
       "status": "passed",
-      "notes": "22/22 release tests passed, including manifest ownership and actual bundle inclusion for scripts/go-module.test.mjs; strict adoption reported 0 findings and 0 warnings."
+      "notes": "23/23 release tests passed, including manifest ownership, actual bundle inclusion, and a negative regression for an omitted package-referenced script; strict adoption reported 0 findings and 0 warnings."
+    },
+    {
+      "command": "npm run test:foundation-release && npm run check:task-packet-template && git diff --check",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "86/86 script tests passed, including consumer allowlist copy coverage and merged package-script existence coverage; the task packet template and diff check passed."
     }
   ],
   "knownGaps": [
-    "Full Base gates, independent review, exact-commit GitHub gates, immutable patch publication, and final Ops business smoke are pending."
+    "Independent review, exact-commit GitHub gates, immutable v0.10.21 publication, and final Ops business smoke are pending."
   ]
 }
