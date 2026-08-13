@@ -6,6 +6,18 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.10.22] — 2026-08-13
+
+Menu-contract gate extension point for consumer overlay registries.
+
+### Changed
+- `frontend/scripts/check-menu-contract.mjs` 改为按命名约定发现组件注册表文件（前端 `*Registry.ts`、后端 `*registry.go`），替代硬编码文件清单。
+
+### Consumer Impact
+- `pantheon-ops` 等 consumer 注入的 overlay 注册表（`businessOverlayComponentRegistry.ts` / `business_overlay_component_registry.go`）现在会被菜单契约门禁自动纳入一致性校验，不再被静默丢弃。
+
+---
+
 ## [pantheon-base-v0.10.11] — 2026-08-11
 
 Security maintenance release for the shared frontend toolchain.

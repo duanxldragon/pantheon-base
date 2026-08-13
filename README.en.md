@@ -33,7 +33,7 @@ V1.0 covers: auth & session governance (login-log / session / operation-log / se
 - **Organization management**: departments, posts, user-organization membership, hierarchy views
 - **Configuration governance**: system settings, dictionary management, cache refresh, sensitive-config protection
 - **Audit**: login logs, operation logs, key write-operation audit
-- **Dynamic menus**: menu seeds, frontend manifests, component registry, build-time contract checks
+- **Dynamic menus**: menu seeds, frontend manifests, component registry, build-time contract checks; registry files are discovered by name convention (frontend `*Registry.ts`, backend `*registry.go`), supporting consumer overlay injection.
 - **Low-code work domain**: the physical backend paths are `backend/modules/lowcode/generator` and `backend/modules/lowcode/dynamicmodule`, and the physical frontend paths are `frontend/src/modules/lowcode/generator` and `frontend/src/modules/lowcode/dynamicmodule`; the logical work domain is grouped under `platform.lowcode`
 - **Business integration**: platform-owned `business/*` extension seams, generator support, governance contracts; concrete business repositories evolve separately
 
