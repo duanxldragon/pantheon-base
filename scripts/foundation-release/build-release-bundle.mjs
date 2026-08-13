@@ -174,6 +174,8 @@ function createArchive(distRoot, releaseVersion) {
     ...METADATA_FILES.filter((fileName) => fs.existsSync(path.join(distRoot, fileName))),
     'go.mod',
     'bundle',
+    'repo.tar',
+    'repo.tar.sha256',
   ];
   const result = spawnSync('tar', ['-czf', archiveName, ...entries], {
     cwd: distRoot,
@@ -190,6 +192,28 @@ function createArchive(distRoot, releaseVersion) {
     archiveName,
     archivePath,
     checksum,
+  };
+}
+
+export function createRepoSnapshot({ root, sourceCommit, distRoot }) {
+  const repoTarPath = path.join(distRoot, 'repo.tar');
+  const result = spawnSync(
+    'git',
+    ['archive', '--format=tar', '--output', repoTarPath, sourceCommit],
+    { cwd: root, encoding: 'utf8' },
+  );
+  if (result.status !== 0) {
+    throw new Error(result.stderr?.trim() || 'failed to create repo.tar snapshot');
+  }
+
+  const checksum = crypto.createHash('sha256').update(fs.readFileSync(repoTarPath)).digest('hex');
+  fs.writeFileSync(path.join(distRoot, 'repo.tar.sha256'), `${checksum}  repo.tar\n`, 'utf8');
+
+  return {
+    assetName: 'repo.tar',
+    sha256: checksum,
+    baseCommit: sourceCommit,
+    generatedFrom: 'git-archive',
   };
 }
 
@@ -227,6 +251,8 @@ export function createReleaseBundle(options) {
   fs.mkdirSync(bundleRoot, { recursive: true });
   copyMetadataFiles(releaseRoot, distRoot);
   writeReleaseModuleBoundary(distRoot, manifest.releaseVersion);
+  const repoSnapshot = createRepoSnapshot({ root: options.root, sourceCommit, distRoot });
+  pathReport.repoSnapshot = repoSnapshot;
 
   for (const relativePath of manifest.sharedPaths?.backend || []) {
     pathReport.backend.push(
@@ -253,6 +279,7 @@ export function createReleaseBundle(options) {
     manifest,
     pathReport,
     archive,
+    repoSnapshot,
   };
 }
 

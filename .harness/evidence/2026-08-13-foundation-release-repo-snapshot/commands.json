@@ -1,0 +1,27 @@
+{
+  "taskId": "2026-08-13-foundation-release-repo-snapshot",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "node --test tests/scripts/foundation-release/*.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "24/24 passed, including the new repo.tar snapshot regression (byte-identical git archive, sha256 match, config/database/schema presence, tgz packing)."
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "0 findings across 1252 scanned files."
+    },
+    {
+      "command": "git archive --format=tar --output=/tmp/_repo_test.tar HEAD && du -sh /tmp/_repo_test.tar",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Manual sanity: full snapshot is 24.8MB and includes config/database/schema (tracked, no .gitattributes export-ignore)."
+    }
+  ],
+  "knownGaps": [
+    "GitHub release publication (v0.10.21) and Ops consumption of repo.tar from the GitHub release remain pending this PR's merge."
+  ]
+}

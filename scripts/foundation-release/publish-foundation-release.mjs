@@ -137,14 +137,19 @@ function ensureReleaseDirectory(root, releaseVersion) {
 function ensureReleaseAssetFiles(releasePaths, releaseVersion) {
   const archivePath = path.join(releasePaths.distRoot, `foundation-release-${releaseVersion}.tgz`);
   const checksumPath = `${archivePath}.sha256`;
-  const missingFiles = [archivePath, checksumPath].filter((filePath) => !fs.existsSync(filePath));
+  const repoTarPath = path.join(releasePaths.distRoot, 'repo.tar');
+  const repoTarChecksumPath = `${repoTarPath}.sha256`;
+  const missingFiles = [archivePath, checksumPath, repoTarPath, repoTarChecksumPath].filter(
+    (filePath) => !fs.existsSync(filePath),
+  );
   if (missingFiles.length > 0) {
     throw new Error(
       `release asset files are missing: ${missingFiles.join(', ')}. Run release:foundation:bundle first.`,
     );
   }
   validateReleaseAssetChecksum({ archivePath, checksumPath });
-  return [archivePath, checksumPath];
+  validateReleaseAssetChecksum({ archivePath: repoTarPath, checksumPath: repoTarChecksumPath });
+  return [archivePath, checksumPath, repoTarPath, repoTarChecksumPath];
 }
 
 export function validateReleaseAssetChecksum({ archivePath, checksumPath }) {
