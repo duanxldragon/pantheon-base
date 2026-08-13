@@ -292,3 +292,35 @@ test('build-release-bundle rejects unowned shared frontend roots', () => {
     assert.match(result.stderr || result.error?.message || '', /leaves shared frontend sources unowned.*App\.tsx/i);
   });
 });
+
+test('build-release-bundle rejects a package-referenced smoke script omitted from frontend ownership', () => {
+  withTempDir((root) => {
+    const releaseRoot = path.join(root, 'releases', 'pantheon-base-v0.10.0');
+    const packagePath = path.join(root, 'frontend', 'package.json');
+    const smokeScriptPath = path.join(root, 'frontend', 'scripts', 'go-module.test.mjs');
+    writeJson(packagePath, {
+      scripts: {
+        'test:smoke:scripts': 'node --test scripts/go-module.test.mjs',
+      },
+    });
+    fs.mkdirSync(path.dirname(smokeScriptPath), { recursive: true });
+    fs.writeFileSync(smokeScriptPath, "import test from 'node:test';\n", 'utf8');
+    writeJson(path.join(releaseRoot, 'manifest.json'), {
+      releaseVersion: 'pantheon-base-v0.10.0',
+      releaseLine: 'release/0.10',
+      baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+      sourceRepo: 'pantheon-base',
+      consumerMode: 'foundation-release-consumer',
+      sharedPaths: { frontend: ['frontend/package.json'] },
+    });
+    const baseCommit = initializeGitRepo(root);
+    const manifestPath = path.join(releaseRoot, 'manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.baseCommit = baseCommit;
+    writeJson(manifestPath, manifest);
+
+    const result = runScript(['--root', root, '--release-version', 'pantheon-base-v0.10.0'], repoRoot);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr || result.error?.message || '', /leaves shared frontend sources unowned.*go-module\.test\.mjs/i);
+  });
+});

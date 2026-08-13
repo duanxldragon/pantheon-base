@@ -18,6 +18,7 @@ const requiredFrontendEntries = [
   'frontend/scripts/cleanup-smoke-fixtures.mjs',
   'frontend/scripts/check-smoke-web-base.mjs',
   'frontend/scripts/database-import-qa-setup.mjs',
+  'frontend/scripts/go-module.test.mjs',
   'frontend/scripts/lib/auth-cookie-session.mjs',
   'frontend/scripts/lib/cleanup-fixture-cache.mjs',
   'frontend/scripts/lib/cleanup-fixture-query-plan.mjs',

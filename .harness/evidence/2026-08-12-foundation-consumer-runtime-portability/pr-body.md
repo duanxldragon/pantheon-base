@@ -2,8 +2,8 @@
 
 - 改动层级：inheritance-sync / generator runtime
 - 改动模块：generated business smoke、generated cleanup、feature ledger baseline
-- 目标问题：`v0.10.18` 暴露 producer Go module path 硬编码和 feature-ledger 清理残留；`v0.10.19` runtime 进一步暴露 root `go.mod` consumer 的 `/backend` import 布局差异
-- 预期影响：Base/Ops 均按自身 Go module identity 与 backend 布局验证生成注册，smoke cleanup 后 tracked feature ledger 恢复且可检测漂移
+- 目标问题：`v0.10.18`/`v0.10.19` 暴露 consumer runtime portability；`v0.10.20` 官方资产预演进一步暴露 package script 已更新但 release bundle 漏发 `go-module.test.mjs`
+- 预期影响：Base/Ops 按自身 backend 布局验证生成注册，且共享 package contract 引用的 Node 测试入口必定随 foundation bundle 分发
 
 ## Harness 链路
 
@@ -54,7 +54,7 @@
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用
 - [ ] 已启用或确认将启用 squash auto-merge
 
-补充说明：layout helper 2/2、完整 smoke scripts 26/26、frontend lint/type-check 和 smoke entrypoint contract 已通过。`v0.10.19` Ops runtime 中 CMDB 9/9、Deploy API 4/4、Deploy UI 10/10 通过，generated 阶段准确复现 root-module `/backend` 布局缺口，且失败后的 cleanup 保持业务 overlay 零 diff。独立代码审查为 `APPROVE`（0 findings），架构审查为 `WATCH`（仅未来第三种/歧义布局需显式合同），综合结论为 `COMMENT`、无当前阻断。
+补充说明：此前 layout helper 2/2、完整 smoke scripts 26/26、frontend lint/type-check 已通过。官方 `v0.10.20` archive 的 Ops dry-run 在 apply 前准确发现 package contract 引用未分发脚本，因此未修改共享树。当前 Base release tests 23/23 已覆盖 manifest ownership、实际 bundle inclusion 与负向遗漏回归；Ops script tests 86/86 已覆盖消费白名单复制及合并后 package script 的文件存在性；独立代码复审 `APPROVE`，架构复审 `CLEAR/APPROVE`。
 
 ## 审核留痕
 
