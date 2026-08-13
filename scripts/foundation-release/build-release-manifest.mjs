@@ -48,6 +48,10 @@ function buildManifest(options) {
     releaseArtifact: {
       assetName: `foundation-release-${options.releaseVersion}.tgz`,
     },
+    repoSnapshot: {
+      assetName: 'repo.tar',
+      generatedFrom: 'git-archive',
+    },
     bundleExclusions: ['backend/cmd/server/uploads', 'backend/uploads', 'uploads'],
     sharedPaths: {
       backend: ['backend/cmd', 'backend/internal', 'backend/modules', 'backend/pkg'],

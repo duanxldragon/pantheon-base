@@ -63,6 +63,10 @@ test('build-release-manifest writes release metadata files into releases/<versio
     assert.deepEqual(manifest.releaseArtifact, {
       assetName: 'foundation-release-pantheon-base-v0.10.0.tgz',
     });
+    assert.deepEqual(manifest.repoSnapshot, {
+      assetName: 'repo.tar',
+      generatedFrom: 'git-archive',
+    });
     assert.deepEqual(manifest.sharedPaths.frontend, [
       'frontend/src/App.tsx',
       'frontend/src/main.tsx',

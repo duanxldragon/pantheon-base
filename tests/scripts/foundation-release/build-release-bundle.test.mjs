@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -177,6 +178,77 @@ test('build-release-bundle copies shared paths into dist/foundation-releases/<ve
       fs.existsSync(path.join(root, 'dist', 'foundation-releases', 'pantheon-base-v0.10.0', 'foundation-release-pantheon-base-v0.10.0.tgz.sha256')),
       true,
     );
+  });
+});
+
+test('build-release-bundle ships a full repo.tar snapshot with matching sha256', () => {
+  withTempDir((root) => {
+    const releaseVersion = 'pantheon-base-v0.10.0';
+    const releaseRoot = path.join(root, 'releases', releaseVersion);
+    fs.mkdirSync(releaseRoot, { recursive: true });
+
+    writeJson(path.join(releaseRoot, 'manifest.json'), {
+      releaseVersion,
+      releaseLine: 'release/0.10',
+      baseCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+      sourceRepo: 'pantheon-base',
+      consumerMode: 'foundation-release-consumer',
+      sharedPaths: { backend: ['backend/pkg'] },
+    });
+
+    // Commit a tree that includes the top-level product dirs the snapshot must carry.
+    fs.mkdirSync(path.join(root, 'backend', 'pkg'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'backend', 'pkg', 'version.go'), 'package pkg\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'config'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'config', 'app.json'), '{"env":"test"}\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'database'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'database', 'system_init.sql'), '-- init\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'schema'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'schema', 'generated.json'), '{}\n', 'utf8');
+
+    const baseCommit = initializeGitRepo(root);
+    const manifestPath = path.join(releaseRoot, 'manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.baseCommit = baseCommit;
+    writeJson(manifestPath, manifest);
+
+    const result = runScript(['--root', root, '--release-version', releaseVersion], repoRoot);
+    assert.equal(result.status, 0, result.stderr || result.stdout || result.error?.message);
+
+    const distRoot = path.join(root, 'dist', 'foundation-releases', releaseVersion);
+    const repoTarPath = path.join(distRoot, 'repo.tar');
+    const repoTarChecksumPath = path.join(distRoot, 'repo.tar.sha256');
+
+    assert.equal(fs.existsSync(repoTarPath), true);
+    assert.equal(fs.existsSync(repoTarChecksumPath), true);
+
+    const actualSha = crypto.createHash('sha256').update(fs.readFileSync(repoTarPath)).digest('hex');
+    assert.equal(fs.readFileSync(repoTarChecksumPath, 'utf8').trim(), `${actualSha}  repo.tar`);
+
+    // The snapshot must be byte-identical to `git archive` of the same commit.
+    const archiveOutput = spawnSync('git', ['archive', '--format=tar', baseCommit], {
+      cwd: root,
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    assert.equal(archiveOutput.status, 0, archiveOutput.stderr?.toString());
+    assert.deepEqual(fs.readFileSync(repoTarPath), archiveOutput.stdout);
+
+    // The archive must carry the repo-level product dirs (not just the shared bundle).
+    const tarListing = spawnSync('tar', ['-tf', 'repo.tar'], { cwd: distRoot, encoding: 'utf8' });
+    assert.equal(tarListing.status, 0, tarListing.stderr);
+    assert.match(tarListing.stdout, /config\/app\.json/);
+    assert.match(tarListing.stdout, /database\/system_init\.sql/);
+    assert.match(tarListing.stdout, /schema\/generated\.json/);
+
+    // The snapshot must also be packed inside the release .tgz.
+    const tgzListing = spawnSync(
+      'tar',
+      ['-tzf', `foundation-release-${releaseVersion}.tgz`],
+      { cwd: distRoot, encoding: 'utf8' },
+    );
+    assert.equal(tgzListing.status, 0, tgzListing.stderr);
+    assert.match(tgzListing.stdout, /^repo\.tar$/m);
+    assert.match(tgzListing.stdout, /^repo\.tar\.sha256$/m);
   });
 });
 
