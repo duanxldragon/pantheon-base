@@ -248,6 +248,15 @@ Each module should own the menus that represent its functional boundary.
 
 Menu sources should be explicit and synchronized with module registration. Do not maintain separate hidden menu truths.
 
+### 6.4 Component Registry Discovery Convention
+
+The menu-contract consistency check (`frontend/scripts/check-menu-contract.mjs`) discovers component registry files by name convention instead of a hardcoded list:
+
+- frontend: `frontend/src/core/router/*Registry.ts`
+- backend: `backend/modules/system/iam/menu/*registry.go`
+
+Downstream consumers (e.g. `pantheon-ops`) that inject overlay registries (`businessOverlayComponentRegistry.ts` / `business_overlay_component_registry.go`) are therefore picked up by the gate instead of being silently dropped. New registry files following this naming convention are discovered without editing the check script.
+
 ## 7. Permission Contract
 
 ### 7.1 Permission Sources

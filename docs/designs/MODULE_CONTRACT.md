@@ -359,6 +359,15 @@ export interface ModuleManifest {
 - 菜单元数据来自后端
 - 前端通过 manifest 和路由映射完成组件加载
 
+### 6.4 组件注册表发现约定
+
+菜单契约一致性检查（`frontend/scripts/check-menu-contract.mjs`）按命名约定发现组件注册表文件，而不是硬编码文件清单：
+
+- 前端：`frontend/src/core/router/*Registry.ts`
+- 后端：`backend/modules/system/iam/menu/*registry.go`
+
+下游 consumer（如 `pantheon-ops`）通过 overlay 注入的注册表（`businessOverlayComponentRegistry.ts` / `business_overlay_component_registry.go`）因此会被门禁自动纳入一致性校验，而不是被静默丢弃。新增注册表文件只要遵循命名约定即可被门禁发现，无需修改检查脚本。
+
 ## 7. 权限契约
 
 ## 7.1 权限来源
@@ -472,7 +481,7 @@ export interface ModuleManifest {
 当前仍需继续收口：
 
 - 后端模块 seed 仍处于“部分按子域拆分”阶段，后续应逐步迁移到各模块自己的 `module.go`
-- 前端 manifest、后端菜单 seed、组件注册表已接入基础一致性检查
+- 前端 manifest、后端菜单 seed、组件注册表已接入基础一致性检查；注册表文件按命名约定发现（`*Registry.ts` / `*registry.go`），支持 consumer overlay 注入（见 §6.4）
 - 后续应把一致性检查从源码正则解析继续演进为标准契约数据源
 - 业务模块已用 `business/cmdb` 做端到端验证，后续还需要第二个 `business/*` 模块重复验证
 

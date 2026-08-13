@@ -31,7 +31,7 @@ V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安
 - **组织管理**：部门、岗位、用户组织归属，以及组织架构视图。
 - **配置治理**：系统设置、字典管理、缓存刷新、敏感配置保护。
 - **审计能力**：登录日志、操作日志、关键写操作审计。
-- **动态菜单**：菜单 seed、前端 manifest、组件注册表和构建期契约检查。
+- **动态菜单**：菜单 seed、前端 manifest、组件注册表和构建期契约检查；注册表文件按命名约定发现（前端 `*Registry.ts`、后端 `*registry.go`），支持 consumer overlay 注入。
 - **低代码工作域**：后端物理路径为 `backend/modules/lowcode/generator` 与 `backend/modules/lowcode/dynamicmodule`，前端物理路径为 `frontend/src/modules/lowcode/generator` 与 `frontend/src/modules/lowcode/dynamicmodule`；逻辑工作域统一挂接到 `platform.lowcode`。
 - **业务接入**：平台保留 `business/*` 扩展点、模块生成器和治理契约；具体业务仓库独立维护。
 

@@ -87,6 +87,8 @@ Explicit seams that downstream repositories may extend:
 - `business.*` i18n entries
 - business menu mount points
 
+The `business component registry` seam is discovered by the menu-contract gate (`frontend/scripts/check-menu-contract.mjs`) by name convention (frontend `*Registry.ts`, backend `*registry.go`). Consumer-injected overlay registries are therefore picked up by the gate without editing the base check script.
+
 These seams must stay explicit, reviewable, and upgradeable.
 
 ## 4. Minimum Foundation Release Definition

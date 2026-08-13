@@ -100,6 +100,8 @@ consumer repo -> consume base foundation release
 - `business.*` i18n entries
 - business menu mount points
 
+`business component registry` 接缝由菜单契约门禁（`frontend/scripts/check-menu-contract.mjs`）按命名约定发现（前端 `*Registry.ts`、后端 `*registry.go`）。consumer 注入的 overlay 注册表因此无需修改 base 检查脚本即可被纳入一致性校验。
+
 接缝必须显式、可审查、可升级；不能把它们演化成对共享底座的隐式 override。
 
 ## 4. Foundation Release 的最小定义
