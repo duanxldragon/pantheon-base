@@ -14,7 +14,7 @@
 - Review Artifact：`.harness/evidence/2026-08-13-foundation-release-repo-snapshot/review.md`
 - OpenSpec change：not-applicable
 - Trivial change：no
-- Quality Profile：generator / ci-workflow
+- Quality Profile：ci-workflow
 - Ratchet Decision：gate-updated
 - GitHub Signal：repo-quality-gate
 
