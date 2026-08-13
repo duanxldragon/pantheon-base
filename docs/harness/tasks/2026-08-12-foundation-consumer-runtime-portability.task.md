@@ -21,6 +21,7 @@ Make Base-owned generated-module runtime smoke use the consumer repository's Go 
 - Resolve generated registry import assertions from the active repository `go.mod` and backend layout.
 - Restore tracked `schema/generated/feature-ledger.json` from the consumer Git index.
 - Add focused producer regression coverage and real Ops runtime evidence.
+- Distribute every Base-owned script referenced by the shared frontend package contract.
 - Publish a new immutable patch release after exact-commit gates pass.
 
 ### Out
@@ -34,6 +35,7 @@ Make Base-owned generated-module runtime smoke use the consumer repository's Go 
 - Stop publication if producer tests, independent review, or exact-commit gates fail.
 - Stop Ops merge until the immutable patch is consumed and full business smoke passes.
 - Stop if cleanup leaves any tracked consumer runtime artifact modified.
+- Stop if the consumer package contract references a script absent from the release bundle.
 
 ## Linkage
 

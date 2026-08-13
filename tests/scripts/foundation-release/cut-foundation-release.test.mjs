@@ -103,6 +103,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       'frontend/scripts/cleanup-smoke-fixtures.mjs',
       'frontend/scripts/check-smoke-web-base.mjs',
       'frontend/scripts/database-import-qa-setup.mjs',
+      'frontend/scripts/go-module.test.mjs',
       'frontend/scripts/lib/auth-cookie-session.mjs',
       'frontend/scripts/lib/cleanup-fixture-cache.mjs',
       'frontend/scripts/lib/cleanup-fixture-query-plan.mjs',
@@ -186,6 +187,7 @@ test('cut-foundation-release creates both release metadata and dist bundle outpu
       true,
     );
     for (const relativePath of [
+      'frontend/scripts/go-module.test.mjs',
       'frontend/scripts/run-smoke-suite.test.mjs',
       'frontend/scripts/master-detail-qa-setup.mjs',
       'frontend/scripts/test-fixtures/bind-ready-server.mjs',
