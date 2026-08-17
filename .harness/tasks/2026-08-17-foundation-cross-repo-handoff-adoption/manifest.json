@@ -1,0 +1,34 @@
+{
+  "taskId": "2026-08-17-foundation-cross-repo-handoff-adoption",
+  "title": "Adopt cross-repository handoff evidence in the foundation source",
+  "goal": "Adopt the Harness workspace-context and stateless handoff contract in Pantheon Base without publishing a release or modifying downstream consumers.",
+  "primaryLayer": "inheritance-sync",
+  "qualityProfiles": ["ci-workflow"],
+  "scope": {
+    "in": [
+      "conditional Workspace Context validation for inheritance-sync packets",
+      "bilingual Base task-template handoff fields",
+      "template marker regression coverage",
+      "stateless manifest, status, evidence, review, and handoff artifacts"
+    ],
+    "out": [
+      "product code and database changes",
+      "Harness or foundation release publication",
+      "Pantheon Ops mutation or consumer lock update"
+    ]
+  },
+  "ratchetDecision": "gate-updated",
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-08-17-foundation-cross-repo-handoff-adoption",
+    "changeRef": "none",
+    "taskPacket": "docs/harness/tasks/2026-08-17-foundation-cross-repo-handoff-adoption.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/",
+    "reviewFile": ".harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/review.md",
+    "summaryFile": ".harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/summary.md",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-17-foundation-cross-repo-handoff-adoption.task.md"
+    ]
+  },
+  "syncExpectation": "Publish a Harness method release, adopt it in a future immutable Base foundation release, then update and validate the Pantheon Ops consumer lock."
+}

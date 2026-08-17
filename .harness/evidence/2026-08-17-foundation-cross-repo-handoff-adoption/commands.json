@@ -1,0 +1,109 @@
+{
+  "taskId": "2026-08-17-foundation-cross-repo-handoff-adoption",
+  "repo": "pantheon-base",
+  "status": "approved",
+  "evidenceState": "outcome-supported",
+  "agent": {
+    "tool": "codex",
+    "adapter": "repository AGENTS.md"
+  },
+  "commands": [
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Required Base workspace and foundation handoff markers are present."
+    },
+    {
+      "command": "node --test tests/scripts/check-task-packet-template.test.mjs tests/scripts/harness-check-task-packet-context.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "3 tests passed, including positive and negative Workspace Context validation."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-08-17-foundation-cross-repo-handoff-adoption.task.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Base task packets passed; the inheritance-sync adoption packet has complete Workspace Context and Task Manifest linkage."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/commands.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "The new evidence artifact passes strict targeted validation."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/review.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "The new review artifact passes strict targeted validation."
+    },
+    {
+      "command": "npm run check:harness-method",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Harness method compatibility passed."
+    },
+    {
+      "command": "npm run check:harness-adoption",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Repository adoption gate passed."
+    },
+    {
+      "command": "npm run check:harness-sync",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Configured method mirrors remain aligned."
+    },
+    {
+      "command": "npm run check:harness-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Required method templates pass strict validation."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Internal documentation links pass strict validation."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "1258 scanned files pass strict encoding validation."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors in the working tree diff."
+    }
+  ],
+  "methodReadiness": {
+    "ownerLayer": "consumer-template",
+    "ratchetDecision": "gate-updated",
+    "deferredCodeIssues": [
+      "historical Base governance artifacts require a separate migration task",
+      "Harness method release, Base foundation release, and Ops lock update remain explicit gates"
+    ]
+  },
+  "browserEvidence": [],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-17-foundation-cross-repo-handoff-adoption/manifest.json",
+    "taskPacket": "docs/harness/tasks/2026-08-17-foundation-cross-repo-handoff-adoption.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/",
+    "reviewFile": ".harness/evidence/2026-08-17-foundation-cross-repo-handoff-adoption/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "Harness method release publication is pending a maintainer gate.",
+    "Base foundation release publication is pending the Harness release.",
+    "Pantheon Ops consumer lock update is pending both immutable releases.",
+    "Historical global scans remain red outside this task: 121 task errors, 76 evidence errors, and 12 review errors."
+  ],
+  "completedAt": "2026-08-17T00:00:00+08:00"
+}
