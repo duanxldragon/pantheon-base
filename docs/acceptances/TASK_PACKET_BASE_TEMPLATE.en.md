@@ -25,7 +25,7 @@ Use it for:
 
 Copy and fill:
 
-Target repo: pantheon-base. Sync expectation: see `## Sync expectation` in the template.
+Target repo: pantheon-base. Cross-repository tasks must fill `## Workspace Context`. Sync expectation: use `Sync Expectation` and `## Sync expectation`.
 
 ```md
 # Task Packet: <task-name>
@@ -36,7 +36,18 @@ Target repo: pantheon-base. Sync expectation: see `## Sync expectation` in the t
 
 ## Primary Layer
 
-platform | system/auth | system/iam | system/org | system/config | business/*
+platform | system/auth | system/iam | system/org | system/config | business/* | inheritance-sync
+
+## Workspace Context (required for inheritance-sync)
+
+- Target Repository: `pantheon-base`
+- Repository Role: `foundation-source`
+- Upstream Dependencies: `pantheon-harness`
+- Downstream Consumers: `pantheon-ops`
+- Sync Expectation: `none | not-required | deferred | required | completed`
+- Release Requirement: `none | method-release | foundation-release | consumer-lock-update`
+
+`Sync Expectation` and `Release Requirement` describe the actual handoff boundary; they do not claim that a release or downstream sync has already happened.
 
 ## Dependency Layers
 
@@ -175,6 +186,14 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - base-only
 - if shared behavior will affect pantheon-ops, record whether sync is deferred or included this turn
 - if `base -> ops` sync is required, state the trigger, sync scope, and verification command
+
+## Foundation Release Handoff
+
+- Shared change owner: `<pantheon-base | pantheon-harness | none>`
+- Foundation release required: `yes | no | deferred`
+- Consumer sync status: `not-started | planned | in-progress | completed | blocked`
+- Downstream validation command: `<exact command or none>`
+- Release/lock stop point: `<immutable release, consumer lock update, migration, human gate, or none>`
 
 ## Completion Checklist
 

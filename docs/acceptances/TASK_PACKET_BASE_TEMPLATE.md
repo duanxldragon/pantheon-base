@@ -25,7 +25,7 @@ English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.e
 
 直接复制后补全即可：
 
-目标仓库：pantheon-base。同步要求：见模板中的 `## Sync expectation`。
+目标仓库：pantheon-base。跨仓任务必须填写 `## Workspace Context`。同步要求：见 `Sync Expectation` 和 `## Sync expectation`。
 
 ```md
 # Task Packet: <task-name>
@@ -36,7 +36,18 @@ English version: [TASK_PACKET_BASE_TEMPLATE.en.md](./TASK_PACKET_BASE_TEMPLATE.e
 
 ## Primary Layer
 
-platform | system/auth | system/iam | system/org | system/config | business/*
+platform | system/auth | system/iam | system/org | system/config | business/* | inheritance-sync
+
+## Workspace Context (inheritance-sync 必填)
+
+- Target Repository: `pantheon-base`
+- Repository Role: `foundation-source`
+- Upstream Dependencies: `pantheon-harness`
+- Downstream Consumers: `pantheon-ops`
+- Sync Expectation: `none | not-required | deferred | required | completed`
+- Release Requirement: `none | method-release | foundation-release | consumer-lock-update`
+
+`Sync Expectation` 和 `Release Requirement` 描述实际交接边界，不代表 release 或下游同步已经完成。
 
 ## Dependency Layers
 
@@ -175,6 +186,14 @@ platform | system/auth | system/iam | system/org | system/config | business/*
 - 仅修改 pantheon-base
 - 如果共享能力会影响 pantheon-ops，只记录“后续需要同步”或“本轮同步”
 - 如果 `base -> ops` sync is required，写明触发条件、同步范围和验证命令
+
+## Foundation Release Handoff
+
+- Shared change owner: `<pantheon-base | pantheon-harness | none>`
+- Foundation release required: `yes | no | deferred`
+- Consumer sync status: `not-started | planned | in-progress | completed | blocked`
+- Downstream validation command: `<exact command or none>`
+- Release/lock stop point: `<immutable release, consumer lock update, migration, human gate, or none>`
 
 ## Completion Checklist
 
