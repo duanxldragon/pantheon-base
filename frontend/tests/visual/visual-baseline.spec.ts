@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { primeChineseLocale, signInAsAdmin } from '../smoke/helpers/auth';
 
 async function waitForVisualStability(page: Page) {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
@@ -10,7 +10,7 @@ async function waitForVisualStability(page: Page) {
 
 test('login page visual baseline', async ({ page }) => {
   await primeChineseLocale(page);
-  await page.goto('/login', { waitUntil: 'networkidle' });
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.auth-login-page')).toBeVisible();
   await waitForVisualStability(page);
 
@@ -19,7 +19,7 @@ test('login page visual baseline', async ({ page }) => {
 
 test('workspace dashboard visual baseline', async ({ page }) => {
   await signInAsAdmin(page);
-  await page.goto('/dashboard', { waitUntil: 'networkidle' });
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.dashboard-hero-card')).toBeVisible();
   await expect(page.locator('.dashboard-stat-card').first()).toBeVisible();
   await waitForVisualStability(page);
@@ -37,7 +37,7 @@ test('workspace dashboard visual baseline', async ({ page }) => {
 
 test('system user list visual baseline', async ({ page }) => {
   await signInAsAdmin(page);
-  await page.goto('/system/user', { waitUntil: 'networkidle' });
+  await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.system-list__table-card')).toBeVisible();
   await expect(page.locator('.app-table')).toBeVisible();
   await waitForVisualStability(page);
