@@ -1959,18 +1959,30 @@ test('platform smoke: lock screen refreshes activity timestamp and blocks comman
 });
 
 test('auth smoke: login page shows idle-timeout notice once', async ({ page }) => {
-  test.setTimeout(15000);
+  test.setTimeout(20000);
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  
+  // Wait for i18n to load
+  await expect(page.getByRole('button', { name: '登录' })).toBeVisible({ timeout: 10000 });
+  
   await page.evaluate(() => {
     sessionStorage.setItem('pantheon_login_notice', 'session.idle_timeout');
   });
 
   await page.reload({ waitUntil: 'domcontentloaded' });
+  
+  // Wait for i18n to load after reload
+  await expect(page.getByRole('button', { name: '登录' })).toBeVisible({ timeout: 10000 });
+  
   await expect(
     page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 10000 });
 
   await page.reload({ waitUntil: 'domcontentloaded' });
+  
+  // Wait for i18n to load after second reload
+  await expect(page.getByRole('button', { name: '登录' })).toBeVisible({ timeout: 10000 });
+  
   await expect(
     page.getByText('当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。', { exact: true }),
   ).toHaveCount(0);
