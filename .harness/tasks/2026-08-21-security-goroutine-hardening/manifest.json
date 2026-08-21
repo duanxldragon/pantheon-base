@@ -1,18 +1,59 @@
 {
   "taskId": "2026-08-21-security-goroutine-hardening",
   "title": "Security Goroutine Hardening",
-  "description": "Add panic recovery to goroutines and reconnect mechanism for Redis PubSub",
-  "changeScope": "backend",
-  "changeLevel": "L1",
-  "targetProblem": "P1 security findings: goroutine panic recovery missing, Redis PubSub no reconnection",
-  "expectedImpact": "Improved service stability, prevent process crashes from goroutine panics",
-  "qualityProfile": "security",
-  "trivialChange": false,
+  "goal": "Add panic recovery to goroutines and reconnect mechanism for Redis PubSub to improve service stability",
+  "primaryLayer": "platform",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "Panic recovery for Redis metrics goroutine",
+      "Panic recovery for DB connection pool metrics goroutine",
+      "Panic recovery for Dashboard concurrent query goroutines",
+      "Panic recovery and auto-reconnect for Redis PubSub listener",
+      "Security scan report documentation"
+    ],
+    "out": [
+      "Public API or DTO behavior changes",
+      "Database schema or seed changes",
+      "Permission, menu, authentication, or audit contract changes",
+      "New dependencies",
+      "Frontend changes"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-08-21-security-goroutine-hardening/summary.md",
+      ".harness/evidence/2026-08-21-security-goroutine-hardening/commands.json",
+      "docs/SECURITY_SCAN_REPORT.md"
+    ],
+    "modify": [
+      "backend/pkg/database/redis.go",
+      "backend/pkg/database/gorm.go",
+      "backend/modules/platform/dashboard_service.go",
+      "backend/modules/auth/login/login_runtime.go"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-08-21-security-goroutine-hardening",
+    "changeRef": "none",
+    "codeRef": "c7d1843b",
+    "taskPacket": ".harness/tasks/2026-08-21-security-goroutine-hardening/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-21-security-goroutine-hardening/",
+    "reviewFile": ".harness/evidence/2026-08-21-security-goroutine-hardening/review.md",
+    "summaryFile": ".harness/evidence/2026-08-21-security-goroutine-hardening/summary.md",
+    "planRefs": []
+  },
+  "humanGates": [
+    "Required GitHub checks and repository merge protection"
+  ],
   "ratchetDecision": "sensor-added",
-  "githubSignal": "repo-quality-gate",
-  "boundaries": {
-    "backend": ["pkg/database", "modules/platform", "modules/auth/login"],
-    "frontend": [],
-    "crossLayer": false
-  }
+  "syncExpectation": "Pantheon Base only; no base-to-ops sync because behavior and contracts are unchanged.",
+  "successCriteria": [
+    "All goroutines have panic recovery",
+    "Redis PubSub has auto-reconnect mechanism",
+    "All tests pass",
+    "No behavior, schema, permission, menu, or UI layout regression"
+  ],
+  "runtimeSensitive": false,
+  "visualEvidence": "No visual changes; pure backend security hardening."
 }
