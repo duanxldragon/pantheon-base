@@ -1,0 +1,18 @@
+{
+  "taskId": "2026-08-21-security-goroutine-hardening",
+  "title": "Security Goroutine Hardening",
+  "description": "Add panic recovery to goroutines and reconnect mechanism for Redis PubSub",
+  "changeScope": "backend",
+  "changeLevel": "L1",
+  "targetProblem": "P1 security findings: goroutine panic recovery missing, Redis PubSub no reconnection",
+  "expectedImpact": "Improved service stability, prevent process crashes from goroutine panics",
+  "qualityProfile": "security",
+  "trivialChange": false,
+  "ratchetDecision": "sensor-added",
+  "githubSignal": "repo-quality-gate",
+  "boundaries": {
+    "backend": ["pkg/database", "modules/platform", "modules/auth/login"],
+    "frontend": [],
+    "crossLayer": false
+  }
+}
