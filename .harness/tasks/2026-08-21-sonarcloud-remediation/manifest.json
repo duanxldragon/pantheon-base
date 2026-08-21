@@ -1,0 +1,80 @@
+{
+  "taskId": "2026-08-21-sonarcloud-remediation",
+  "title": "Resolve all unresolved SonarCloud issues (networkidle)",
+  "goal": "Resolve all 156 typescript:S9332 SonarCloud issues to unblock Release Gate and pantheon-ops foundation release consumption.",
+  "primaryLayer": "frontend/tests",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "All 156 typescript:S9332 issues in Playwright test files",
+      "Replace networkidle wait strategy with domcontentloaded"
+    ],
+    "out": [
+      "Backend code changes",
+      "API contract changes",
+      "Database schema changes",
+      "Permission/menu/auth changes",
+      "UI/visual changes"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-08-21-sonarcloud-remediation/manifest.json",
+      ".harness/tasks/2026-08-21-sonarcloud-remediation/STATUS.md",
+      ".harness/evidence/2026-08-21-sonarcloud-remediation/commands.json",
+      ".harness/evidence/2026-08-21-sonarcloud-remediation/summary.md",
+      ".harness/evidence/2026-08-21-sonarcloud-remediation/review.md",
+      "docs/harness/tasks/2026-08-21-sonarcloud-remediation.task.md"
+    ],
+    "modify": [
+      "frontend/tests/**/*.ts",
+      "frontend/tests/**/*.tsx"
+    ]
+  },
+  "workBatches": [
+    {
+      "id": "playwright-networkidle-replacement",
+      "writeScope": [
+        "frontend/tests/**/*.ts",
+        "frontend/tests/**/*.tsx"
+      ]
+    }
+  ],
+  "methodReadiness": {
+    "qualityProfiles": ["ci-workflow"],
+    "minimalComplexityRung": "reuse",
+    "implementerPosture": "single-file replacement",
+    "reviewerPosture": ["mechanical"],
+    "requiredSensors": [
+      "npm run type-check",
+      "npm run lint",
+      "SonarCloud PR analysis"
+    ]
+  },
+  "successCriteria": [
+    "Zero unresolved SonarCloud typescript:S9332 issues",
+    "SonarCloud quality gate OK",
+    "All required GitHub checks pass",
+    "Release Gate passes"
+  ],
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime testing required - test-only changes",
+  "visualEvidence": "No visual evidence required - test file modifications only",
+  "linkage": {
+    "taskId": "2026-08-21-sonarcloud-remediation",
+    "changeRef": "none",
+    "codeRef": "c8bca675",
+    "taskManifest": ".harness/tasks/2026-08-21-sonarcloud-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-08-21-sonarcloud-remediation/",
+    "reviewFile": ".harness/evidence/2026-08-21-sonarcloud-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-08-21-sonarcloud-remediation/summary.md",
+    "planRefs": [
+      "docs/harness/tasks/2026-08-21-sonarcloud-remediation.task.md"
+    ]
+  },
+  "humanGates": [
+    "Required GitHub checks and repository merge protection"
+  ],
+  "ratchetDecision": "sensor-added",
+  "syncExpectation": "Pantheon Base only; no base-to-ops sync required."
+}
