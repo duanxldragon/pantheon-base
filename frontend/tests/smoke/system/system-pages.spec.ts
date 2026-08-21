@@ -1959,6 +1959,7 @@ test('platform smoke: lock screen refreshes activity timestamp and blocks comman
 });
 
 test('auth smoke: login page shows idle-timeout notice once', async ({ page }) => {
+  test.setTimeout(15000);
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => {
     sessionStorage.setItem('pantheon_login_notice', 'session.idle_timeout');
