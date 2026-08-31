@@ -11,7 +11,7 @@ export interface ConditionBuilderProps {
   labels: {
     and: React.ReactNode;
     or: React.ReactNode;
-    operatorLabels: Record<string, React.ReactNode>;
+    operatorLabels: Record<string, React.ReactNode> & { unknown: React.ReactNode };
     addRule: React.ReactNode;
     invalidField: React.ReactNode;
   } & Record<OperationalDataState, React.ReactNode>;
