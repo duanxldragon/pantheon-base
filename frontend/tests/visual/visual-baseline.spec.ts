@@ -8,13 +8,43 @@ async function waitForVisualStability(page: Page) {
   });
 }
 
+async function primeColorMode(page: Page, mode: 'light' | 'dark') {
+  await page.addInitScript((colorMode) => {
+    globalThis.localStorage?.setItem('pantheon_color_mode', colorMode);
+  }, mode);
+}
+
 test('login page visual baseline', async ({ page }) => {
+  await primeColorMode(page, 'light');
   await primeChineseLocale(page);
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.auth-login-page')).toBeVisible();
   await waitForVisualStability(page);
 
   await expect(page).toHaveScreenshot('login.png');
+});
+
+test('@mobile login page visual baseline', async ({ page }) => {
+  await primeColorMode(page, 'light');
+  await primeChineseLocale(page);
+  await page.goto('/login', { waitUntil: 'networkidle' });
+  await expect(page.locator('.auth-login-page')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-color-mode', 'light');
+  await waitForVisualStability(page);
+
+  await expect(page).toHaveScreenshot('login-mobile.png');
+});
+
+test('@dark login page visual baseline', async ({ page }) => {
+  await primeColorMode(page, 'dark');
+  await primeChineseLocale(page);
+  await page.goto('/login', { waitUntil: 'networkidle' });
+  await expect(page.locator('.auth-login-page')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-color-mode', 'dark');
+  await expect(page.locator('body')).toHaveAttribute('arco-theme', 'dark');
+  await waitForVisualStability(page);
+
+  await expect(page).toHaveScreenshot('login-dark.png');
 });
 
 test('workspace dashboard visual baseline', async ({ page }) => {

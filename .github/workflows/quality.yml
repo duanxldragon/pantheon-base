@@ -75,6 +75,7 @@ jobs:
               - '.github/workflows/**'
               - '.harness/**'
               - 'config/method.config.json'
+              - 'config/ui-quality-gate.json'
               - 'docs/**'
               - 'package.json'
               - 'package-lock.json'
@@ -179,6 +180,9 @@ jobs:
         id: harness-sync
         continue-on-error: true
         run: npm run check:harness-sync
+
+      - name: Enforce UI quality gate
+        run: npm run check:ui-quality-gate
 
       - name: Check visual evidence
         id: harness-visual

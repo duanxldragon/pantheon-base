@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Table } from '@arco-design/web-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Checkbox, Dropdown, Menu, Table, Tooltip } from '@arco-design/web-react';
+import { IconArrowDown, IconArrowUp, IconRefresh, IconSettings } from '@arco-design/web-react/icon';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
 import type {
   ColumnProps,
@@ -14,10 +15,28 @@ import {
   getPaginationTotalPages,
   isPaginationConfig,
 } from '../table/crossPageSelection';
+import {
+  applyAppTablePreferences,
+  createDefaultAppTablePreferences,
+  readAppTablePreferences,
+  resolveAppTableColumnKey,
+  writeAppTablePreferences,
+  type AppTableColumnMeta,
+  type AppTableDensity,
+  type AppTablePreferences,
+} from './tablePreferences';
 
 interface AppTableProps<T> extends TableProps<T> {
   emptyText?: React.ReactNode;
+  viewKey?: string;
+  defaultDensity?: AppTableDensity;
 }
+
+type AppTableColumnProps<T> = ColumnProps<T> & {
+  columnKey?: string;
+  defaultVisible?: boolean;
+  hideable?: boolean;
+};
 
 type PaginationNodeProps = PaginationProps & {
   children?: React.ReactNode;
@@ -38,7 +57,7 @@ type TablePagePosition = 'tl' | 'tr' | 'bl' | 'br' | 'topCenter' | 'bottomCenter
 
 const DEFAULT_SELECTION_COLUMN_WIDTH = 44;
 
-function needsHorizontalScroll<T>(columns?: ColumnProps<T>[]): boolean {
+function needsHorizontalScroll<T>(columns?: AppTableColumnProps<T>[]): boolean {
   if (!Array.isArray(columns) || columns.length === 0) {
     return false;
   }
@@ -53,7 +72,7 @@ function needsHorizontalScroll<T>(columns?: ColumnProps<T>[]): boolean {
   });
 }
 
-function getColumnClassName<T>(column: ColumnProps<T>) {
+function getColumnClassName<T>(column: AppTableColumnProps<T>) {
   if (Array.isArray(column.className)) {
     return column.className.join(' ');
   }
@@ -61,14 +80,14 @@ function getColumnClassName<T>(column: ColumnProps<T>) {
 }
 
 function filterResponsiveColumns<T>(
-  columns: ColumnProps<T>[] | undefined,
+  columns: AppTableColumnProps<T>[] | undefined,
   viewportWidth: number,
-): ColumnProps<T>[] | undefined {
+): AppTableColumnProps<T>[] | undefined {
   if (!Array.isArray(columns) || columns.length === 0) {
     return columns;
   }
 
-  return columns.reduce<ColumnProps<T>[]>((result, column) => {
+  return columns.reduce<AppTableColumnProps<T>[]>((result, column) => {
     const className = getColumnClassName(column);
     const hideOnLarge = className.includes('app-table__col--hide-lg') && viewportWidth <= 1440;
     const hideOnMedium = className.includes('app-table__col--hide-md') && viewportWidth <= 1280;
@@ -96,6 +115,38 @@ function filterResponsiveColumns<T>(
     result.push(column);
     return result;
   }, []);
+}
+
+function getAppTableColumnMeta<T>(
+  columns: AppTableColumnProps<T>[] | undefined,
+): AppTableColumnMeta[] {
+  if (!Array.isArray(columns)) {
+    return [];
+  }
+  return columns.reduce<AppTableColumnMeta[]>((result, column) => {
+    const key = resolveAppTableColumnKey(column);
+    if (!key) {
+      return result;
+    }
+    const meta: AppTableColumnMeta = {
+      key,
+      defaultVisible: column.defaultVisible !== false,
+      hideable: column.hideable !== false,
+    };
+    if (column.width !== undefined) {
+      meta.width = column.width;
+    }
+    result.push(meta);
+    return result;
+  }, []);
+}
+
+function getColumnTitleText(title: React.ReactNode, fallback: string) {
+  return typeof title === 'string' || typeof title === 'number' ? String(title) : fallback;
+}
+
+function getStorage() {
+  return globalThis.window?.localStorage;
 }
 
 function createBoundaryPaginationItem<T>(
@@ -227,6 +278,8 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
     loading,
     emptyText,
     columns,
+    viewKey,
+    defaultDensity = 'standard',
     scroll,
     pagination,
     renderPagination,
@@ -235,6 +288,26 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   } = props;
   const { t } = useTranslation();
   const rows = Array.isArray(data) ? data : [];
+  const tableColumns = columns as AppTableColumnProps<T>[] | undefined;
+  const columnMeta = getAppTableColumnMeta(tableColumns);
+  const canPersistView = Boolean(viewKey && columnMeta.length > 0);
+  const columnMetaKey = JSON.stringify(columnMeta);
+  const persistedPreferences = useMemo(
+    () =>
+      canPersistView && viewKey
+        ? readAppTablePreferences(getStorage(), viewKey, columnMeta) ||
+          createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity)
+        : null,
+    [canPersistView, viewKey, defaultDensity, columnMetaKey, columnMeta],
+  );
+  const [localPreferences, setLocalPreferences] = useState<{
+    viewKey: string;
+    preferences: AppTablePreferences;
+  } | null>(null);
+  const preferences =
+    localPreferences && localPreferences.viewKey === viewKey
+      ? localPreferences.preferences
+      : persistedPreferences;
   const [viewportWidth, setViewportWidth] = useState(() =>
     globalThis.window === undefined ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
   );
@@ -253,7 +326,65 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
     return () => globalThis.removeEventListener('resize', syncViewportWidth);
   }, []);
 
-  const responsiveColumns = filterResponsiveColumns(columns, viewportWidth);
+  const updatePreferences = (nextPreferences: AppTablePreferences) => {
+    if (!viewKey) {
+      return;
+    }
+    setLocalPreferences({ viewKey, preferences: nextPreferences });
+    writeAppTablePreferences(getStorage(), {
+      ...nextPreferences,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const setColumnVisible = (key: string, visible: boolean) => {
+    if (!preferences) {
+      return;
+    }
+    updatePreferences({
+      ...preferences,
+      columns: preferences.columns.map((column) =>
+        column.key === key ? { ...column, visible } : column,
+      ),
+    });
+  };
+
+  const moveColumn = (key: string, direction: -1 | 1) => {
+    if (!preferences) {
+      return;
+    }
+    const ordered = [...preferences.columns].sort((left, right) => left.order - right.order);
+    const currentIndex = ordered.findIndex((column) => column.key === key);
+    const targetIndex = currentIndex + direction;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ordered.length) {
+      return;
+    }
+    const [current] = ordered.splice(currentIndex, 1);
+    ordered.splice(targetIndex, 0, current);
+    updatePreferences({
+      ...preferences,
+      columns: ordered.map((column, index) => ({ ...column, order: index })),
+    });
+  };
+
+  const resetPreferences = () => {
+    if (!viewKey) {
+      return;
+    }
+    updatePreferences(createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity));
+  };
+
+  const setDensity = (density: AppTableDensity) => {
+    if (!preferences) {
+      return;
+    }
+    updatePreferences({ ...preferences, density });
+  };
+
+  const preferredColumns = preferences
+    ? applyAppTablePreferences(tableColumns || [], preferences)
+    : tableColumns;
+  const responsiveColumns = filterResponsiveColumns(preferredColumns, viewportWidth);
   const effectiveScroll =
     scroll?.x !== undefined || !needsHorizontalScroll(responsiveColumns)
       ? scroll
@@ -266,12 +397,74 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
         }
       : rest.rowSelection;
 
-  if (!loading && rows.length === 0) {
-    return <PageEmpty description={emptyText} />;
-  }
-
   const firstPageAriaLabel = t('common.pagination.firstPage', { defaultValue: 'First page' });
   const lastPageAriaLabel = t('common.pagination.lastPage', { defaultValue: 'Last page' });
+  const settingsPanel =
+    canPersistView && preferences ? (
+      <Menu className="app-table__view-menu">
+        <Menu.Item key="density" disabled>
+          {t('common.tableView.density')}
+        </Menu.Item>
+        {(['compact', 'standard', 'comfortable'] as AppTableDensity[]).map((density) => (
+          <Menu.Item key={`density-${density}`} onClick={() => setDensity(density)}>
+            <span className="app-table__view-menu-row">
+              <span>{t(`common.tableView.density.${density}`)}</span>
+              {preferences.density === density ? <span aria-hidden="true">✓</span> : null}
+            </span>
+          </Menu.Item>
+        ))}
+        <Menu.Item key="columns" disabled>
+          {t('common.tableView.columns')}
+        </Menu.Item>
+        {[...preferences.columns]
+          .sort((left, right) => left.order - right.order)
+          .map((preference, index, ordered) => {
+            const sourceColumn = tableColumns?.find(
+              (column) => resolveAppTableColumnKey(column) === preference.key,
+            );
+            const meta = columnMeta.find((column) => column.key === preference.key);
+            const label = getColumnTitleText(sourceColumn?.title, preference.key);
+            return (
+              <Menu.Item key={`column-${preference.key}`} className="app-table__view-column-item">
+                <span className="app-table__view-column">
+                  <Checkbox
+                    checked={preference.visible}
+                    disabled={!meta?.hideable}
+                    onChange={(checked) => setColumnVisible(preference.key, Boolean(checked))}
+                  >
+                    {label}
+                  </Checkbox>
+                  <span className="app-table__view-column-order">
+                    <Button
+                      size="mini"
+                      icon={<IconArrowUp />}
+                      disabled={index === 0}
+                      aria-label={t('common.tableView.moveColumnUp', { column: label })}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        moveColumn(preference.key, -1);
+                      }}
+                    />
+                    <Button
+                      size="mini"
+                      icon={<IconArrowDown />}
+                      disabled={index === ordered.length - 1}
+                      aria-label={t('common.tableView.moveColumnDown', { column: label })}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        moveColumn(preference.key, 1);
+                      }}
+                    />
+                  </span>
+                </span>
+              </Menu.Item>
+            );
+          })}
+        <Menu.Item key="reset" onClick={resetPreferences}>
+          <IconRefresh /> {t('common.tableView.reset')}
+        </Menu.Item>
+      </Menu>
+    ) : null;
 
   const enhancedRenderPagination = isPaginationConfig(pagination)
     ? (paginationNode?: React.ReactNode) => {
@@ -305,7 +498,24 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
     : renderPagination;
 
   return (
-    <div className="app-table-shell">
+    <div
+      className={`app-table-shell${preferences ? ` app-table-shell--density-${preferences.density}` : ''}`}
+    >
+      {settingsPanel ? (
+        <div className="app-table__view-toolbar">
+          <Dropdown trigger="click" position="br" droplist={settingsPanel}>
+            <Tooltip content={t('common.tableView.settings')}>
+              <Button
+                size="small"
+                icon={<IconSettings />}
+                aria-label={t('common.tableView.settings')}
+              >
+                {viewportWidth > 768 ? t('common.tableView.settings') : null}
+              </Button>
+            </Tooltip>
+          </Dropdown>
+        </div>
+      ) : null}
       {viewportWidth <= 768 ? (
         <div className="app-table__mobile-hint">
           <span>{t('common.tableRecordSummary', { count: rows.length })}</span>
@@ -314,19 +524,23 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
           ) : null}
         </div>
       ) : null}
-      <Table
-        {...rest}
-        className={rest.className ? `app-table ${rest.className}` : 'app-table'}
-        columns={responsiveColumns}
-        scroll={effectiveScroll}
-        size={rest.size || 'small'}
-        data={rows}
-        loading={loading}
-        rowSelection={effectiveRowSelection}
-        pagePosition={pagePosition}
-        pagination={pagination}
-        renderPagination={enhancedRenderPagination}
-      />
+      {!loading && rows.length === 0 ? (
+        <PageEmpty description={emptyText} />
+      ) : (
+        <Table
+          {...rest}
+          className={rest.className ? `app-table ${rest.className}` : 'app-table'}
+          columns={responsiveColumns}
+          scroll={effectiveScroll}
+          size={rest.size || 'small'}
+          data={rows}
+          loading={loading}
+          rowSelection={effectiveRowSelection}
+          pagePosition={pagePosition}
+          pagination={pagination}
+          renderPagination={enhancedRenderPagination}
+        />
+      )}
     </div>
   );
 }

@@ -75,6 +75,8 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 3. [../.agents/skills/README.zh.md](../.agents/skills/README.zh.md)
 4. [scripts/harness/README.md](../scripts/harness/README.md)
 
+目录职责说明：`docs/harness/` 保存可审阅、可版本化的 Harness 方法、合同和任务包规范；`.harness/` 只保存机器可读的任务状态、执行证据和运行产物。两者不是重复副本，检查器和交付流程分别依赖它们，因此不合并目录。
+
 ### 2.4 继续深入
 
 - 需要更全的目录时，直接看 `./designs/README.md` 和 `./acceptances/ACCEPTANCE_CHECKLIST.md`。
@@ -142,3 +144,5 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - 设计规范类进入主索引；
 - 模板、样例、基线进入“历史基线与样例”；
 - 一次性评估稿如果被后续文档完全覆盖，应在下一轮文档治理中删除。
+
+旧的安全加固计划已移入 `../archive/2026-08-security/`，不再作为当前安全状态入口；当前状态以对应任务包、`.harness/evidence/` 和质量门禁结果为准。

@@ -80,7 +80,10 @@ For Chinese-first onboarding, read:
 - [AI_QUALITY_GOVERNANCE.md](./harness/AI_QUALITY_GOVERNANCE.md)
 - [../SECURITY.md](../SECURITY.md): security reporting policy
 
+Directory responsibilities: `docs/harness/` contains reviewable, versioned Harness methods, contracts, and task-packet specifications. `.harness/` contains machine-readable task state, execution evidence, and runtime artifacts. They are intentionally separate because the checkers and delivery workflow consume them independently.
+
 ## Notes
 
 - documents with no reuse value, no linkage, and no baseline role should be deleted rather than archived
 - the Chinese index remains the more detailed source for local working context
+- the superseded security hardening plan is retained under `../archive/2026-08-security/`; current security status comes from task evidence and quality gates
