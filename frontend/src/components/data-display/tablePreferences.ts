@@ -113,7 +113,12 @@ export function readAppTablePreferences(
     return null;
   }
 
-  const raw = storage.getItem(buildAppTablePreferenceStorageKey(viewKey));
+  let raw: string | null;
+  try {
+    raw = storage.getItem(buildAppTablePreferenceStorageKey(viewKey));
+  } catch {
+    return null;
+  }
   if (!raw) {
     return null;
   }
@@ -132,10 +137,14 @@ export function writeAppTablePreferences(
   if (!storage) {
     return;
   }
-  storage.setItem(
-    buildAppTablePreferenceStorageKey(preferences.viewKey),
-    JSON.stringify(preferences),
-  );
+  try {
+    storage.setItem(
+      buildAppTablePreferenceStorageKey(preferences.viewKey),
+      JSON.stringify(preferences),
+    );
+  } catch {
+    return;
+  }
 }
 
 export function applyAppTablePreferences<T extends { columnKey?: string; dataIndex?: unknown }>(
