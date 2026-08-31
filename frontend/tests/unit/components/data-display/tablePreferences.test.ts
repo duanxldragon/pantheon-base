@@ -44,6 +44,21 @@ describe('AppTable preferences', () => {
     expect(readAppTablePreferences(storage, 'system.users', columns)).toBeNull();
   });
 
+  it('falls back safely when browser storage is unavailable', () => {
+    const storage = {
+      getItem: () => {
+        throw new Error('denied');
+      },
+      setItem: () => {
+        throw new Error('full');
+      },
+    };
+    const preferences = createDefaultAppTablePreferences('system.users', columns);
+
+    expect(readAppTablePreferences(storage, 'system.users', columns)).toBeNull();
+    expect(() => writeAppTablePreferences(storage, preferences)).not.toThrow();
+  });
+
   it('persists only an explicitly named view and applies its column order', () => {
     const values = new Map<string, string>();
     const storage = {

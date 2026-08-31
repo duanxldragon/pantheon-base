@@ -43,7 +43,7 @@ export default function ChangeDiff({
             return (
               <div className={`change-diff__row change-diff__row--${line.kind}`} key={line.key}>
                 <div className="change-diff__cell">
-                  <Tag>{line.kind}</Tag> {line.label ?? line.key}
+                  <Tag>{labels.kindLabels[line.kind]}</Tag> {line.label ?? line.key}
                 </div>
                 <div className="change-diff__cell" aria-label={labels.before}>
                   {guarded ? labels.sensitive : line.before}

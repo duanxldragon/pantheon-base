@@ -114,19 +114,31 @@ function assertOperationalMetadata(
     );
   }
   if (metadata.freshness.refreshIntervalMs !== undefined) {
-    if (metadata.freshness.refreshIntervalMs < MIN_REFRESH_INTERVAL_MS) {
+    if (
+      !Number.isFinite(metadata.freshness.refreshIntervalMs) ||
+      metadata.freshness.refreshIntervalMs < MIN_REFRESH_INTERVAL_MS
+    ) {
       throw new Error(
         `Operational dashboard widget "${widget.key}" refresh interval is below query budget floor.`,
       );
     }
   }
-  if (metadata.queryBudget.maxRequestsPerMinute > MAX_REQUESTS_PER_MINUTE) {
+  if (
+    !Number.isFinite(metadata.queryBudget.maxRequestsPerMinute) ||
+    metadata.queryBudget.maxRequestsPerMinute <= 0 ||
+    metadata.queryBudget.maxRequestsPerMinute > MAX_REQUESTS_PER_MINUTE
+  ) {
     throw new Error(`Operational dashboard widget "${widget.key}" exceeds request budget.`);
   }
-  if (metadata.queryBudget.maxItems > MAX_WIDGET_ITEMS) {
+  if (
+    !Number.isFinite(metadata.queryBudget.maxItems) ||
+    metadata.queryBudget.maxItems <= 0 ||
+    metadata.queryBudget.maxItems > MAX_WIDGET_ITEMS
+  ) {
     throw new Error(`Operational dashboard widget "${widget.key}" exceeds item budget.`);
   }
-  if ((metadata.queryBudget.maxRenderItems ?? metadata.queryBudget.maxItems) > MAX_RENDER_ITEMS) {
+  const maxRenderItems = metadata.queryBudget.maxRenderItems ?? metadata.queryBudget.maxItems;
+  if (!Number.isFinite(maxRenderItems) || maxRenderItems <= 0 || maxRenderItems > MAX_RENDER_ITEMS) {
     throw new Error(`Operational dashboard widget "${widget.key}" exceeds render budget.`);
   }
 }

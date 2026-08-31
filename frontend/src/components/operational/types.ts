@@ -32,6 +32,7 @@ export interface ChangeDiffLine {
 }
 
 export interface ChangeDiffLabels extends OperationalStateLabels {
+  kindLabels: Record<ChangeDiffLine['kind'], React.ReactNode>;
   before: string;
   after: string;
   sensitive: React.ReactNode;

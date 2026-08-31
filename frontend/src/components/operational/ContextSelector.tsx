@@ -34,7 +34,10 @@ export default function ContextSelector({
   onRemove,
 }: Readonly<ContextSelectorProps>) {
   const [keyword, setKeyword] = useState('');
-  const selectedIds = useMemo(() => new Set(selected.map((item) => item.id)), [selected]);
+  const selectedIds = useMemo(
+    () => new Set(selected.map((item) => `${item.source}:${item.id}`)),
+    [selected],
+  );
   const visibleOptions = options
     .filter((item) => String(item.label).toLowerCase().includes(keyword.toLowerCase()))
     .slice(0, Math.max(1, maxVisibleOptions));
@@ -61,7 +64,7 @@ export default function ContextSelector({
                   {option.stale ? <Tag color="orange">{labels.staleItem}</Tag> : null}
                 </span>
                 <Button
-                  disabled={option.disabled || selectedIds.has(option.id)}
+                  disabled={option.disabled || selectedIds.has(`${option.source}:${option.id}`)}
                   onClick={() => onSelect?.(option)}
                 >
                   {labels.add}
