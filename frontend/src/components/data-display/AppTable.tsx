@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, Dropdown, Menu, Table, Tooltip } from '@arco-design/web-react';
 import { IconArrowDown, IconArrowUp, IconRefresh, IconSettings } from '@arco-design/web-react/icon';
 import type { PaginationProps } from '@arco-design/web-react/es/Pagination/interface';
@@ -291,12 +291,23 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   const tableColumns = columns as AppTableColumnProps<T>[] | undefined;
   const columnMeta = getAppTableColumnMeta(tableColumns);
   const canPersistView = Boolean(viewKey && columnMeta.length > 0);
-  const [preferences, setPreferences] = useState<AppTablePreferences | null>(() =>
-    canPersistView
-      ? readAppTablePreferences(getStorage(), viewKey as string, columnMeta) ||
-        createDefaultAppTablePreferences(viewKey as string, columnMeta, defaultDensity)
-      : null,
+  const columnMetaKey = JSON.stringify(columnMeta);
+  const persistedPreferences = useMemo(
+    () =>
+      canPersistView && viewKey
+        ? readAppTablePreferences(getStorage(), viewKey, columnMeta) ||
+          createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity)
+        : null,
+    [canPersistView, viewKey, defaultDensity, columnMetaKey, columnMeta],
   );
+  const [localPreferences, setLocalPreferences] = useState<{
+    viewKey: string;
+    preferences: AppTablePreferences;
+  } | null>(null);
+  const preferences =
+    localPreferences && localPreferences.viewKey === viewKey
+      ? localPreferences.preferences
+      : persistedPreferences;
   const [viewportWidth, setViewportWidth] = useState(() =>
     globalThis.window === undefined ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
   );
@@ -315,19 +326,11 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
     return () => globalThis.removeEventListener('resize', syncViewportWidth);
   }, []);
 
-  useEffect(() => {
-    if (!canPersistView || !viewKey) {
-      setPreferences(null);
+  const updatePreferences = (nextPreferences: AppTablePreferences) => {
+    if (!viewKey) {
       return;
     }
-    setPreferences(
-      readAppTablePreferences(getStorage(), viewKey, columnMeta) ||
-        createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity),
-    );
-  }, [canPersistView, viewKey, defaultDensity, JSON.stringify(columnMeta)]);
-
-  const updatePreferences = (nextPreferences: AppTablePreferences) => {
-    setPreferences(nextPreferences);
+    setLocalPreferences({ viewKey, preferences: nextPreferences });
     writeAppTablePreferences(getStorage(), {
       ...nextPreferences,
       updatedAt: new Date().toISOString(),
