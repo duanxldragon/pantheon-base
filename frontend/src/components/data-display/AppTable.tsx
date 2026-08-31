@@ -291,14 +291,13 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   const tableColumns = columns as AppTableColumnProps<T>[] | undefined;
   const columnMeta = getAppTableColumnMeta(tableColumns);
   const canPersistView = Boolean(viewKey && columnMeta.length > 0);
-  const columnMetaKey = JSON.stringify(columnMeta);
   const persistedPreferences = useMemo(
     () =>
       canPersistView && viewKey
         ? readAppTablePreferences(getStorage(), viewKey, columnMeta) ||
           createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity)
         : null,
-    [canPersistView, viewKey, defaultDensity, columnMetaKey, columnMeta],
+    [canPersistView, viewKey, defaultDensity, columnMeta],
   );
   const [localPreferences, setLocalPreferences] = useState<{
     viewKey: string;

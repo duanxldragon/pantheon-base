@@ -11,6 +11,7 @@ export interface ConditionBuilderProps {
   labels: {
     and: React.ReactNode;
     or: React.ReactNode;
+    operatorLabels: Record<string, React.ReactNode> & { unknown: React.ReactNode };
     addRule: React.ReactNode;
     invalidField: React.ReactNode;
   } & Record<OperationalDataState, React.ReactNode>;
@@ -46,7 +47,7 @@ function renderNode(
         disabled
         options={fields.map((field) => ({ label: field.label, value: field.key }))}
       />
-      <Tag>{node.operator}</Tag>
+      <Tag>{labels.operatorLabels[node.operator] ?? labels.operatorLabels.unknown}</Tag>
       <span>{String(node.value ?? '')}</span>
       {invalidIds.has(node.id) ? <span>{labels.invalidField}</span> : null}
     </div>

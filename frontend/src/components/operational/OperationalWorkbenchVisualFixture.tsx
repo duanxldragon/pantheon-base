@@ -123,6 +123,13 @@ export default function OperationalWorkbenchVisualFixture() {
           ]}
           labels={{
             ...stateLabels,
+            kindLabels: {
+              added: t('operational.fixture.diff.added'),
+              removed: t('operational.fixture.diff.removed'),
+              modified: t('operational.fixture.diff.modified'),
+              unchanged: t('operational.fixture.diff.unchanged'),
+              conflict: t('operational.fixture.diff.conflict'),
+            },
             before: t('operational.fixture.before'),
             after: t('operational.fixture.after'),
             sensitive: t('operational.fixture.masked'),
@@ -139,6 +146,11 @@ export default function OperationalWorkbenchVisualFixture() {
             ...stateLabels,
             and: t('operational.fixture.and'),
             or: t('operational.fixture.or'),
+            operatorLabels: {
+              eq: t('operational.fixture.operator.eq'),
+              neq: t('operational.fixture.operator.neq'),
+              unknown: t('operational.fixture.operator.unknown'),
+            },
             addRule: t('operational.fixture.addRule'),
             invalidField: t('operational.fixture.invalidField'),
           }}

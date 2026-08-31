@@ -84,6 +84,22 @@ describe('dashboard widget registry', () => {
         },
       ]),
     ).toThrow(/request budget/);
+
+    expect(() =>
+      buildDashboardWidgetRegistry([
+        {
+          name: 'ops',
+          dashboardWidgets: [
+            operationalWidget({
+              metadata: {
+                ...operationalWidget().metadata!,
+                queryBudget: { maxRequestsPerMinute: 0, maxItems: 80 },
+              },
+            }),
+          ],
+        },
+      ]),
+    ).toThrow(/request budget/);
   });
 
   it('filters forbidden widgets before callers request or render them', () => {
