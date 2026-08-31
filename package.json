@@ -16,6 +16,7 @@
     "check:harness-inventory": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
     "check:harness-sync": "node scripts/harness/check-sync-drift.mjs --root . --strict",
     "check:harness-encoding": "node scripts/harness/check-encoding.mjs --root . --strict",
+    "check:ui-quality-gate": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
     "check:harness-visual": "node scripts/harness/check-visual-evidence.mjs --root . --strict",
     "check:structure": "node scripts/harness/check-structure-contract.mjs --root . --strict",
     "test:structure-contract": "node --test tests/scripts/harness-check-structure-contract.test.mjs",
@@ -38,6 +39,7 @@
     "test:pr-automation-workflow": "node --test tests/scripts/pr-automation-workflow.test.mjs tests/scripts/ci-workflow-dispatch.test.mjs",
     "test:security-workflow": "node --test tests/scripts/security-workflow.test.mjs",
     "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs",
+    "test:ui-quality-gate": "node --test tests/scripts/check-ui-quality-gate.test.mjs",
     "test:release-gate-workflow": "node --test tests/scripts/release-gate-workflow.test.mjs",
     "prepare": "husky"
   },

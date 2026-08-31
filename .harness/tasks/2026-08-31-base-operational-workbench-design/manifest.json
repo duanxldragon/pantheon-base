@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-08-31-base-operational-workbench-design",
+  "title": "Define Base operational workbench shared contracts",
+  "status": "implementation-complete-awaiting-human-visual-gate",
+  "priority": "P0-P2",
+  "deliveryTier": "L2",
+  "primaryLayer": "platform",
+  "qualityProfiles": ["ui-runtime", "architecture-fitness"],
+  "ratchetDecision": "guide-updated",
+  "goal": "Turn proven operational UI patterns into Base-owned shared contracts and resumable implementation packets.",
+  "scope": {
+    "in": [
+      "shared operational component contracts",
+      "dashboard semantic slots",
+      "content and visual-regression contracts",
+      "Base-first implementation sequencing"
+    ],
+    "out": [
+      "production code changes",
+      "business-specific compositions",
+      "BK Design runtime dependency",
+      "foundation publication or consumer lock update"
+    ]
+  },
+  "taskDoc": "docs/harness/tasks/2026-08-31-base-operational-workbench-design.task.md",
+  "designDoc": "docs/designs/OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md",
+  "handoffDoc": ".harness/tasks/2026-08-31-base-operational-workbench-design/HANDOFF.md",
+  "executionQueueDoc": ".harness/tasks/2026-08-31-base-operational-workbench-design/EXECUTION_QUEUE.md",
+  "statusDoc": ".harness/tasks/2026-08-31-base-operational-workbench-design/STATUS.md",
+  "children": ["B1", "B2", "B3", "B4", "B5"],
+  "completedChildren": ["B1", "B2", "B3", "B4", "B5"],
+  "executionBatches": [["B1", "B5"], ["B2", "B3"], ["B4"]],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "2026-08-31-base-operational-workbench-design",
+    "changeRef": "none",
+    "taskPacket": "docs/harness/tasks/2026-08-31-base-operational-workbench-design.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-31-base-operational-workbench-design/",
+    "reviewFile": ".harness/evidence/2026-08-31-base-operational-workbench-design/review.md",
+    "summaryFile": ".harness/evidence/2026-08-31-base-operational-workbench-design/summary.md",
+    "planRefs": [
+      ".harness/tasks/2026-08-31-base-operational-workbench-design/EXECUTION_QUEUE.md"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:ui-quality-gate",
+      "npm run test:ui-quality-gate",
+      "npm run test:quality-workflow",
+      "npm run check:harness-docs",
+      "npm run check:harness-inventory",
+      "git diff --check"
+    ],
+    "visualEvidenceExemption": {
+      "scope": "governance-only",
+      "reason": "B5 adds policy, checker, tests and CI wiring without changing rendered components, styles, copy, layout or interaction.",
+      "noRenderedSurfaceChanged": true,
+      "humanApprovalRequired": true
+    }
+  },
+  "maintainerGates": [
+    "new backend preference schema",
+    "incompatible shared component API",
+    "foundation release publication",
+    "final visual and functional acceptance"
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "taskId": "2026-08-31-base-operational-workbench-design",
+  "repo": "pantheon-base",
+  "status": "implementation-complete-awaiting-human-visual-gate",
+  "evidenceState": "b1-b5-mechanical-and-browser-evidence-supported",
+  "agent": {
+    "tool": "codex",
+    "adapter": "repository AGENTS.md"
+  },
+  "commands": [
+    {
+      "command": "npm run check:ui-quality-gate",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Strict canonical UI policy and post-adoption task admission check reported zero findings."
+    },
+    {
+      "command": "npm run test:ui-quality-gate",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Three regression scenarios passed: canonical policy, policy/task rejection, and constrained governance exemption."
+    },
+    {
+      "command": "npm run test:quality-workflow",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Five workflow regression tests passed, including strict UI gate wiring."
+    },
+    {
+      "command": "npm run test:visual -- --project=mobile-light --project=desktop-dark",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Two non-update visual comparisons passed after the new baselines were rendered and inspected."
+    },
+    {
+      "command": "npx playwright test -c playwright.visual.config.ts --project=desktop-light --project=mobile-light --project=desktop-dark tests/visual/operational-workbench.spec.ts",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Three non-update browser tests passed: B1 sticky submit interaction, B2 table density menu interaction, B3/B4 bounded primitive rendering, responsive single-column layout and dark theme."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-08-31-base-operational-workbench-design.task.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Target task packet passed; the initial review-link warning is cleared after creating this evidence package."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Strict internal documentation link check reported zero findings."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Strict documentation inventory check reported zero findings."
+    },
+    {
+      "command": "npm run check:harness-visual",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "One UI task checked with zero warnings; the constrained governance-only exemption was accepted."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No whitespace errors in the working tree diff."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "B1-B4 shared component and dashboard registry contracts compile."
+    },
+    {
+      "command": "npm run test:unit -- B1-B4 focused suite",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "15 focused tests passed for table preferences, sticky submission, operational bounds and dashboard widget registry rules."
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "19 test files and 153 tests passed."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Frontend eslint completed without findings."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "notes": "Production build passed with all frontend menu, i18n, UI and shell contract checks."
+    },
+    {
+      "command": "npm run check:failure-registry",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Failure registry schema check passed."
+    }
+  ],
+  "methodReadiness": {
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "guide-updated",
+    "deferredCodeIssues": [
+      "final human visual/function acceptance",
+      "foundation release publication and Pantheon Ops consumer lock update"
+    ]
+  },
+  "browserEvidence": [
+    {
+      "url": "/login",
+      "viewport": "390x844",
+      "theme": "light",
+      "checkedStates": ["default"],
+      "screenshot": "frontend/tests/visual/visual-baseline.spec.ts-snapshots/login-mobile-win32.png",
+      "consoleErrors": [],
+      "result": "passed",
+      "notes": "Rendered and visually inspected for overflow, overlap, legibility and stable mobile composition."
+    },
+    {
+      "url": "/login",
+      "viewport": "1440x900",
+      "theme": "dark",
+      "checkedStates": ["default"],
+      "screenshot": "frontend/tests/visual/visual-baseline.spec.ts-snapshots/login-dark-win32.png",
+      "consoleErrors": [],
+      "result": "passed",
+      "notes": "Rendered and visually inspected for Pantheon token and Arco dark-mode synchronization, contrast and composition."
+    },
+    {
+      "url": "/__visual/operational-workbench",
+      "viewport": "1440x900",
+      "theme": "light",
+      "checkedStates": ["B1 save", "B2 compact density", "B3 bounded primitives", "B4 widget states"],
+      "screenshot": "frontend/tests/visual/operational-workbench.spec.ts-snapshots/operational-workbench-win32.png",
+      "consoleErrors": ["Arco React 19 findDOMNode deprecation warning"],
+      "result": "passed"
+    },
+    {
+      "url": "/__visual/operational-workbench",
+      "viewport": "390x844",
+      "theme": "light",
+      "checkedStates": ["single-column layout", "sticky action visibility"],
+      "screenshot": "frontend/tests/visual/operational-workbench.spec.ts-snapshots/operational-workbench-mobile-win32.png",
+      "consoleErrors": ["Arco React 19 findDOMNode deprecation warning"],
+      "result": "passed"
+    },
+    {
+      "url": "/__visual/operational-workbench",
+      "viewport": "1440x900",
+      "theme": "dark",
+      "checkedStates": ["dark theme synchronization", "primitive visibility"],
+      "screenshot": "frontend/tests/visual/operational-workbench.spec.ts-snapshots/operational-workbench-dark-win32.png",
+      "consoleErrors": ["Arco React 19 findDOMNode deprecation warning"],
+      "result": "passed"
+    }
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-31-base-operational-workbench-design/manifest.json",
+    "taskPacket": "docs/harness/tasks/2026-08-31-base-operational-workbench-design.task.md",
+    "evidenceDir": ".harness/evidence/2026-08-31-base-operational-workbench-design/",
+    "reviewFile": ".harness/evidence/2026-08-31-base-operational-workbench-design/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-08-31-base-operational-workbench-design/EXECUTION_QUEUE.md"
+    ]
+  },
+  "knownGaps": [
+    "B5 changes governance and visual-test artifacts only; no production component, style, copy, layout or interaction changed. New mobile-light and desktop-dark login baselines were rendered and inspected as gate evidence.",
+    "B1-B4 fixture screenshots are deterministic in the development-only visual route; final human visual/function acceptance remains open.",
+    "The existing desktop-light Dashboard and system user list baselines currently fail with 2% and 5% pixel differences because runtime menu/data content has drifted; baselines were not updated in B5 without maintainer review.",
+    "No foundation release was published and no downstream consumer lock was changed."
+  ],
+  "completedAt": "2026-08-31T16:30:00+08:00"
+}
