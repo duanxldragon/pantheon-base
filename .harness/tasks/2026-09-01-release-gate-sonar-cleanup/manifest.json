@@ -41,6 +41,14 @@
       "Release Gate Summary"
     ]
   },
+  "verificationPlan": {
+    "visualEvidenceExemption": {
+      "scope": "governance-only",
+      "reason": "This is a private behavior-preserving presentation extraction: rendered components, styles, copy, layout, routes, and interaction contracts do not change. Focused Playwright pagination coverage remains recorded in the linked evidence.",
+      "noRenderedSurfaceChanged": true,
+      "humanApprovalRequired": true
+    }
+  },
   "successCriteria": [
     "No unresolved SonarCloud BUG, VULNERABILITY, or CODE_SMELL issues on main",
     "All required GitHub checks pass",
