@@ -210,10 +210,48 @@ describe('operational primitive components', () => {
           operatorLabels: { eq: 'equals', unknown: 'unknown' },
           addRule: 'add',
           invalidField: 'invalid',
+          unserializableValue: 'unavailable',
         }}
       />,
     );
 
     expect(screen.getByText('{"active":true}')).toBeTruthy();
+  });
+
+  it('shows a supplied fallback when a structured condition value cannot be serialized', () => {
+    const circularValue: { self?: unknown } = {};
+    circularValue.self = circularValue;
+
+    render(
+      <ConditionBuilder
+        title="conditions"
+        value={{
+          type: 'group',
+          id: 'root',
+          combinator: 'and',
+          children: [
+            { type: 'rule', id: 'metadata', field: 'status', operator: 'eq', value: circularValue },
+          ],
+        }}
+        fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
+        labels={{
+          loading: 'loading',
+          empty: 'empty',
+          error: 'error',
+          forbidden: 'forbidden',
+          stale: 'stale',
+          partial: 'partial',
+          ready: 'ready',
+          and: 'and',
+          or: 'or',
+          operatorLabels: { eq: 'equals', unknown: 'unknown' },
+          addRule: 'add',
+          invalidField: 'invalid',
+          unserializableValue: 'unavailable',
+        }}
+      />,
+    );
+
+    expect(screen.getByText('unavailable')).toBeTruthy();
   });
 });

@@ -153,6 +153,7 @@ export default function OperationalWorkbenchVisualFixture() {
             },
             addRule: t('operational.fixture.addRule'),
             invalidField: t('operational.fixture.invalidField'),
+            unserializableValue: t('operational.fixture.unserializableValue'),
           }}
         />
         <ContextSelector

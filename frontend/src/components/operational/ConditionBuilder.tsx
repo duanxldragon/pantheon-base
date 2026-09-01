@@ -14,11 +14,12 @@ export interface ConditionBuilderProps {
     operatorLabels: Record<string, React.ReactNode> & { unknown: React.ReactNode };
     addRule: React.ReactNode;
     invalidField: React.ReactNode;
+    unserializableValue: React.ReactNode;
   } & Record<OperationalDataState, React.ReactNode>;
   state?: OperationalDataState;
 }
 
-function formatConditionValue(value: unknown): string {
+function formatConditionValue(value: unknown, unserializableValue: React.ReactNode): React.ReactNode {
   if (value === null || value === undefined) {
     return '';
   }
@@ -28,7 +29,7 @@ function formatConditionValue(value: unknown): string {
   try {
     return JSON.stringify(value);
   } catch {
-    return '';
+    return unserializableValue;
   }
 }
 
@@ -63,7 +64,7 @@ function renderNode(
         options={fields.map((field) => ({ label: field.label, value: field.key }))}
       />
       <Tag>{labels.operatorLabels[node.operator] ?? labels.operatorLabels.unknown}</Tag>
-      <span>{formatConditionValue(node.value)}</span>
+      <span>{formatConditionValue(node.value, labels.unserializableValue)}</span>
       {invalidIds.has(node.id) ? <span>{labels.invalidField}</span> : null}
     </div>
   );
