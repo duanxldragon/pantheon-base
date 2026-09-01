@@ -393,6 +393,7 @@ const zhCNFallback = {
   'common.tableView.reset': '恢复默认视图',
   'operational.fixture.title': '运维工作台组件样例',
   'operational.fixture.description': '共享组件的视觉与交互覆盖页面。',
+  'operational.fixture.unserializableValue': '值不可用',
   'operational.fixture.b1': 'B1 固定表单操作',
   'operational.fixture.b2': 'B2 保存的表格视图',
   'operational.fixture.b4': 'B4 工作台注册状态',

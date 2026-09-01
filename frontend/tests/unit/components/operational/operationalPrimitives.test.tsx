@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   ChangeDiff,
+  ConditionBuilder,
   ContextSelector,
   ExecutionStepRail,
   TaskLogViewer,
@@ -14,6 +15,22 @@ import {
   mergeTaskLogChunks,
   validateConditionAst,
 } from '../../../../src/components/operational';
+
+const conditionBuilderLabels = {
+  loading: 'loading',
+  empty: 'empty',
+  error: 'error',
+  forbidden: 'forbidden',
+  stale: 'stale',
+  partial: 'partial',
+  ready: 'ready',
+  and: 'and',
+  or: 'or',
+  operatorLabels: { eq: 'equals', unknown: 'unknown' },
+  addRule: 'add',
+  invalidField: 'invalid',
+  unserializableValue: 'unavailable',
+};
 
 describe('operational primitive helpers', () => {
   it('deduplicates logs by sequence, sorts them, and caps the rendered window', () => {
@@ -179,5 +196,76 @@ describe('operational primitive components', () => {
     );
 
     expect(document.querySelectorAll('.execution-step-rail__step')).toHaveLength(50);
+    expect(screen.getByRole('list')).toBeTruthy();
+    expect(screen.getAllByRole('listitem')).toHaveLength(50);
+  });
+
+  it('renders structured condition values without object stringification', () => {
+    render(
+      <ConditionBuilder
+        title="conditions"
+        value={{
+          type: 'group',
+          id: 'root',
+          combinator: 'and',
+          children: [
+            { type: 'rule', id: 'metadata', field: 'status', operator: 'eq', value: { active: true } },
+          ],
+        }}
+        fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
+        labels={conditionBuilderLabels}
+      />,
+    );
+
+    expect(screen.getByText('{"active":true}')).toBeTruthy();
+  });
+
+  it('shows a supplied fallback when a structured condition value cannot be serialized', () => {
+    const circularValue: { self?: unknown } = {};
+    circularValue.self = circularValue;
+
+    render(
+      <ConditionBuilder
+        title="conditions"
+        value={{
+          type: 'group',
+          id: 'root',
+          combinator: 'and',
+          children: [
+            { type: 'rule', id: 'metadata', field: 'status', operator: 'eq', value: circularValue },
+          ],
+        }}
+        fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
+        labels={conditionBuilderLabels}
+      />,
+    );
+
+    expect(screen.getByText('unavailable')).toBeTruthy();
+  });
+
+  it('shows the fallback when custom serialization has no result', () => {
+    render(
+      <ConditionBuilder
+        title="conditions"
+        value={{
+          type: 'group',
+          id: 'root',
+          combinator: 'and',
+          children: [
+            {
+              type: 'rule',
+              id: 'metadata',
+              field: 'status',
+              operator: 'eq',
+              value: { toJSON: () => undefined },
+            },
+          ],
+        }}
+        fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
+        labels={conditionBuilderLabels}
+      />,
+    );
+
+    expect(screen.getByText('unavailable')).toBeTruthy();
   });
 });

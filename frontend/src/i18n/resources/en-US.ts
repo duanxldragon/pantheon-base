@@ -433,6 +433,7 @@ const enUSFallback = {
   'common.tableView.reset': 'Restore default view',
   'operational.fixture.title': 'Operational workbench fixtures',
   'operational.fixture.description': 'Shared component visual and interaction coverage.',
+  'operational.fixture.unserializableValue': 'Value unavailable',
   'operational.fixture.b1': 'B1 Sticky form actions',
   'operational.fixture.b2': 'B2 Saved table view',
   'operational.fixture.b4': 'B4 Dashboard registry states',

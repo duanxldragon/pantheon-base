@@ -14,9 +14,34 @@ export interface ConditionBuilderProps {
     operatorLabels: Record<string, React.ReactNode> & { unknown: React.ReactNode };
     addRule: React.ReactNode;
     invalidField: React.ReactNode;
+    unserializableValue: React.ReactNode;
   } & Record<OperationalDataState, React.ReactNode>;
   state?: OperationalDataState;
 }
+
+function formatConditionValue(value: unknown, unserializableValue: React.ReactNode): React.ReactNode {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return value.toString();
+  }
+  if (typeof value === 'symbol') {
+    return value.description ?? unserializableValue;
+  }
+  if (typeof value === 'function') {
+    return value.name || unserializableValue;
+  }
+  try {
+    return JSON.stringify(value) ?? unserializableValue;
+  } catch {
+    return unserializableValue;
+  }
+}
+
 function renderNode(
   node: ConditionAstNode,
   fields: ConditionFieldOption[],
@@ -48,7 +73,7 @@ function renderNode(
         options={fields.map((field) => ({ label: field.label, value: field.key }))}
       />
       <Tag>{labels.operatorLabels[node.operator] ?? labels.operatorLabels.unknown}</Tag>
-      <span>{String(node.value ?? '')}</span>
+      <span>{formatConditionValue(node.value, labels.unserializableValue)}</span>
       {invalidIds.has(node.id) ? <span>{labels.invalidField}</span> : null}
     </div>
   );

@@ -34,10 +34,20 @@ export function createContextSelectorFixture(count = 500): ContextSelectorOption
 }
 
 export function createExecutionStepFixture(count = 60): ExecutionStep[] {
+  const resolveStatus = (index: number): ExecutionStep['status'] => {
+    if (index === 4) {
+      return 'failed';
+    }
+    if (index < 4) {
+      return 'success';
+    }
+    return 'pending';
+  };
+
   return Array.from({ length: count }, (_, index) => ({
     id: `step-${index + 1}`,
     title: `step ${index + 1}`,
-    status: index === 4 ? 'failed' : index < 4 ? 'success' : 'pending',
+    status: resolveStatus(index),
     attempts: 1,
   }));
 }

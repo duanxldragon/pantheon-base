@@ -27,7 +27,7 @@ test('login page visual baseline', async ({ page }) => {
 test('@mobile login page visual baseline', async ({ page }) => {
   await primeColorMode(page, 'light');
   await primeChineseLocale(page);
-  await page.goto('/login', { waitUntil: 'networkidle' });
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.auth-login-page')).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-color-mode', 'light');
   await waitForVisualStability(page);
@@ -38,7 +38,7 @@ test('@mobile login page visual baseline', async ({ page }) => {
 test('@dark login page visual baseline', async ({ page }) => {
   await primeColorMode(page, 'dark');
   await primeChineseLocale(page);
-  await page.goto('/login', { waitUntil: 'networkidle' });
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.auth-login-page')).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-color-mode', 'dark');
   await expect(page.locator('body')).toHaveAttribute('arco-theme', 'dark');

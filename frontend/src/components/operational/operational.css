@@ -163,8 +163,15 @@
 
 .execution-step-rail__list {
   display: grid;
+  margin: 0;
   max-height: 420px;
   overflow: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.execution-step-rail__list > li {
+  min-width: 0;
 }
 
 .execution-step-rail__step {
@@ -174,6 +181,7 @@
   min-height: 42px;
   padding: var(--space-sm);
   border-bottom: 1px solid var(--panel-border);
+  width: 100%;
 }
 
 .execution-step-rail__marker {
