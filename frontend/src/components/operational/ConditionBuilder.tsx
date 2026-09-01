@@ -36,7 +36,7 @@ function formatConditionValue(value: unknown, unserializableValue: React.ReactNo
     return value.name || unserializableValue;
   }
   try {
-    return JSON.stringify(value);
+    return JSON.stringify(value) ?? unserializableValue;
   } catch {
     return unserializableValue;
   }

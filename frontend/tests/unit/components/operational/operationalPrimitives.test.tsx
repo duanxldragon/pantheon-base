@@ -242,4 +242,30 @@ describe('operational primitive components', () => {
 
     expect(screen.getByText('unavailable')).toBeTruthy();
   });
+
+  it('shows the fallback when custom serialization has no result', () => {
+    render(
+      <ConditionBuilder
+        title="conditions"
+        value={{
+          type: 'group',
+          id: 'root',
+          combinator: 'and',
+          children: [
+            {
+              type: 'rule',
+              id: 'metadata',
+              field: 'status',
+              operator: 'eq',
+              value: { toJSON: () => undefined },
+            },
+          ],
+        }}
+        fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
+        labels={conditionBuilderLabels}
+      />,
+    );
+
+    expect(screen.getByText('unavailable')).toBeTruthy();
+  });
 });
