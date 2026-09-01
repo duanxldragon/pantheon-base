@@ -10,13 +10,13 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current published foundation release | [`pantheon-base-v0.10.22`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.22) (`release/0.10`) |
+| Current published foundation release | [`pantheon-base-v0.10.25`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.25) (`release/0.10`) |
 | Product milestone | **V1.0** (released 2026-07-21) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 
-Delivery-audit note: `pantheon-base-v0.10.22` passed candidate-bound Release Gate (Full Smoke, SonarCloud quality gate, CodeQL/Dependabot alert gates, all CI green) and immutable-asset verification. Its tag and GitHub Release point exactly to Base commit `f807baa5bfd5e73c1e12e089b74f3d71552ce2a7`. `pantheon-ops` is locked to archive SHA-256 `db03792b91dd9215d16b38f8374fbce78a2e7b5b38b1fd4b9712978589c3c134`; the existing `pantheon-base-v0.10.21` release remains unchanged.
+Delivery-audit note: the GitHub Release for `pantheon-base-v0.10.25` points exactly to Base commit `3008d21c40139f369d8c62ed5dde807ae08ddc12` and passed Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate. Published assets include the foundation bundle, repository snapshot, manifest, and SHA-256 sidecars. The `pantheon-ops` consumption upgrade is scheduled separately; no consumer lock is claimed as updated here.
 
 V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
 
@@ -145,10 +145,10 @@ npm run build
 npm run test:smoke:platform
 npm run test:smoke:system
 npm run test:smoke:all
-# Illustrative next-patch example only, not a command to republish 0.10.11
-npm run release:foundation:manifest -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
-npm run release:foundation:cut -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
-npm run release:foundation:publish -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
+# Illustrative next-release placeholders only; replace the version and candidate commit before use
+npm run release:foundation:manifest -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
 ```
 
 ## Quality and Security Gates

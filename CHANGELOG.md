@@ -6,6 +6,25 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.10.25] — 2026-09-01
+
+Foundation release for the B1-B5 operational-workbench delivery and its shared quality controls.
+
+### Changed
+- Released the B1-B5 operational workbench contracts, reusable UI primitives, and UI quality gates for foundation consumers.
+- Reduced `AppTable` complexity to satisfy the SonarCloud maintainability gate.
+- Applied dependency hardening included in the release candidate.
+
+### Verification
+- The GitHub Release is bound to commit `3008d21c40139f369d8c62ed5dde807ae08ddc12`.
+- Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate passed before publication.
+
+### Consumer Impact
+- Consumers must upgrade from the immutable `pantheon-base-v0.10.25` GitHub Release rather than tracking `main`.
+- `pantheon-ops` consumption remains deferred and is not included in this release closeout.
+
+---
+
 ## [pantheon-base-v0.10.22] — 2026-08-13
 
 Menu-contract gate extension point for consumer overlay registries.

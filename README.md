@@ -8,13 +8,13 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前已发布的 foundation release | [`pantheon-base-v0.10.22`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.22)（`release/0.10`） |
+| 当前已发布的 foundation release | [`pantheon-base-v0.10.25`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.25)（`release/0.10`） |
 | 产品里程碑 | **V1.0**（2026-07-21 发布） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
 | 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
 
-交付审计说明：`pantheon-base-v0.10.22` 已完成候选提交绑定的 Release Gate（Full Smoke、SonarCloud 质量门禁、CodeQL/Dependabot 告警门禁、全量 CI 绿灯）与不可变资产校验，发布 tag 和 GitHub Release 精确指向 Base commit `f807baa5bfd5e73c1e12e089b74f3d71552ce2a7`。`pantheon-ops` 已锁定 archive SHA-256 `db03792b91dd9215d16b38f8374fbce78a2e7b5b38b1fd4b9712978589c3c134`；原 `pantheon-base-v0.10.21` 保持不变。
+交付审计说明：`pantheon-base-v0.10.25` 的 GitHub Release 精确指向 Base commit `3008d21c40139f369d8c62ed5dde807ae08ddc12`，并已通过 Full Smoke、SonarCloud、CodeQL、Dependabot、CI 与 Release Gate。发布资产包含 foundation bundle、仓库快照、manifest 及对应 SHA-256 sidecar。`pantheon-ops` 的消费升级另行安排，当前不把任何 consumer lock 声明为已更新。
 
 V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
 
@@ -165,14 +165,14 @@ npm run test:smoke:platform
 npm run test:smoke:all
 
 # 生成 foundation release metadata
-# 以下仅为 next patch 示例，不是重新发布 0.10.11 的命令
-npm run release:foundation:manifest -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
+# 以下为下一版本占位示例；替换版本与候选提交后再执行
+npm run release:foundation:manifest -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
 
 # 一次性生成 release metadata + dist bundle
-npm run release:foundation:cut -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
 
 # 正式发布 foundation release：同步本地产物、Git tag 与 GitHub Release
-npm run release:foundation:publish -- --release-version pantheon-base-v0.10.12 --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
 ```
 
 ## 代码质量与安全门禁
