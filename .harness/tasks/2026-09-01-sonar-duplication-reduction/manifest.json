@@ -1,0 +1,19 @@
+{
+  "taskId": "2026-09-01-sonar-duplication-reduction",
+  "title": "Reduce Pantheon Base SonarCloud duplication below three percent",
+  "goal": "Reduce overall SonarCloud duplication from 4.10% to below 3.00% with behavior-preserving reuse.",
+  "primaryLayer": "system",
+  "scope": {
+    "in": ["Sonar-ranked frontend production hotspots", "Sonar-ranked backend service/test hotspots", "Focused validation and evidence"],
+    "out": ["Sonar exclusions/settings", "API/schema/permission/menu changes", "pantheon-ops changes", "visual redesign"]
+  },
+  "baseline": {"duplicatedLines": 5936, "ncloc": 128506, "density": 4.1, "source": "SonarCloud public measures endpoint, 2026-09-01"},
+  "methodReadiness": {"qualityProfiles": ["ci-workflow", "ui-runtime"], "minimalComplexityRung": "reuse", "reviewerPosture": ["mechanical", "architecture"]},
+  "verificationPlan": {"localDuplication": "npm run check:duplication", "backend": "focused go test then go test ./...", "frontend": ["npm run type-check", "npm run lint", "npm run build"], "hosted": "SonarCloud measures after CI"},
+  "runtimeSensitive": false,
+  "runtimeGap": "No API/server runtime path is intentionally changed; hosted SonarCloud remains the final metric authority.",
+  "linkage": {"taskManifest": ".harness/tasks/2026-09-01-sonar-duplication-reduction/manifest.json", "evidenceDir": ".harness/evidence/2026-09-01-sonar-duplication-reduction/", "reviewFile": ".harness/evidence/2026-09-01-sonar-duplication-reduction/review.md", "summaryFile": ".harness/evidence/2026-09-01-sonar-duplication-reduction/summary.md", "planRefs": ["docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md"]},
+  "humanGates": ["Hosted SonarCloud analysis", "Final acceptance if density remains at or above 3%"],
+  "ratchetDecision": "guide-updated-deferred",
+  "syncExpectation": "No pantheon-ops sync unless a shared contract changes; none is expected."
+}

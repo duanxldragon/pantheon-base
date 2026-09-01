@@ -23,7 +23,6 @@ import type {
 import type { TreeDataType } from '@arco-design/web-react/es/Tree/interface';
 import {
   IconDelete,
-  IconDownload,
   IconEdit,
   IconPlus,
   IconSearch,
@@ -35,10 +34,7 @@ import { formatDateTime } from '../../../core/format/dateTime';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
-import {
-  getVisibleSelectedRowKeys,
-  mergeCrossPageSelection,
-} from '../../../components/table/crossPageSelection';
+import { buildCrossPageRowSelection } from '../../../components/table/crossPageSelection';
 import { getMenuTree, type MenuNode } from '../menu/api';
 import {
   batchDeleteRoles,
@@ -67,13 +63,13 @@ import {
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
-  ImportCsvButton,
+  FormModalFooter,
+  ListDataActions,
   ListHeaderActions,
   PageContainer,
   PageEmpty,
   PageLoading,
   PageRequestError,
-  SubmitBar,
   SystemRowActions,
   TableBatchActionBar,
   PermissionAction,
@@ -359,13 +355,6 @@ const RoleList: React.FC = () => {
       }
     },
   );
-
-  const visibleSelectedRowKeys = useMemo(() => {
-    return getVisibleSelectedRowKeys(
-      selectedRowKeys,
-      data.map((item) => item.id),
-    );
-  }, [data, selectedRowKeys]);
 
   const permissionCatalog = useMemo(() => {
     const navigationKeys = new Set<string>();
@@ -980,28 +969,14 @@ const RoleList: React.FC = () => {
               prefixActions={
                 <ListHeaderActions
                   utility={
-                    <>
-                      <Button
-                        icon={<IconDownload />}
-                        onClick={() => {
-                          void handleExport();
-                        }}
-                        disabled={!canExport}
-                      >
-                        {t('common.export')}
-                      </Button>
-                      <Button
-                        icon={<IconDownload />}
-                        onClick={() => {
-                          void handleDownloadTemplate();
-                        }}
-                      >
-                        {t('common.downloadTemplate')}
-                      </Button>
-                      <ImportCsvButton disabled={!canImport} onSelect={handleImport}>
-                        {t('common.import')}
-                      </ImportCsvButton>
-                    </>
+                    <ListDataActions
+                      canExport={canExport}
+                      canImport={canImport}
+                      onExport={() => void handleExport()}
+                      onDownloadTemplate={() => void handleDownloadTemplate()}
+                      onImport={handleImport}
+                      templateIcon
+                    />
                   }
                   primary={
                     <Button
@@ -1094,22 +1069,14 @@ const RoleList: React.FC = () => {
                 rowKey="id"
                 loading={loading}
                 scroll={{ x: 'max-content' }}
-                rowSelection={{
-                  type: 'checkbox',
-                  selectedRowKeys: visibleSelectedRowKeys,
-                  checkCrossPage: true,
-                  preserveSelectedRowKeys: true,
+                rowSelection={buildCrossPageRowSelection({
+                  rows: data,
+                  getRowKey: (row) => row.id,
+                  selectedRowKeys,
+                  setSelectedRowKeys,
                   fixed: true,
                   checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-                  onChange: (rowKeys) =>
-                    setSelectedRowKeys((keys) =>
-                      mergeCrossPageSelection(
-                        keys,
-                        rowKeys,
-                        data.map((item) => item.id),
-                      ),
-                    ),
-                }}
+                })}
                 onChange={handleTableChange}
                 emptyText={t('common.noData')}
                 pagination={buildStandardPagination(t, {
@@ -1139,7 +1106,7 @@ const RoleList: React.FC = () => {
         size="xl"
         onCancel={() => setVisible(false)}
         footer={
-          <SubmitBar
+          <FormModalFooter
             onCancel={() => setVisible(false)}
             onSubmit={() => {
               void submitForm();

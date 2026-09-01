@@ -256,7 +256,10 @@ func (s *AuditService) getRetentionOptionsFromSetting(settingKey string, fallbac
 	if err := json.Unmarshal([]byte(strings.TrimSpace(row.SettingValue)), &values); err != nil {
 		return fallback
 	}
+	return normalizeRetentionOptions(values, fallback)
+}
 
+func normalizeRetentionOptions(values, fallback []int) []int {
 	normalized := make([]int, 0, len(values))
 	seen := make(map[int]struct{}, len(values))
 	for _, value := range values {

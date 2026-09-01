@@ -30,6 +30,17 @@ func setupAuditTestDB(t *testing.T) *gorm.DB {
 	return setupAuditTestDBForName(t, t.Name())
 }
 
+func seedAuditDerivedFilterLogs(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	seed := []middleware.SystemLogOper{
+		{Title: "上传文件", Method: "POST", OperName: "admin", OperURL: "/api/v1/system/upload", OperIP: "127.0.0.1", SourceDomain: operationLogSourceDomainConfig, SourcePage: operationLogSourcePageUpload, Status: 2, FailureCategory: operationLogFailureValidation, ErrorMsg: "upload.file.type_not_allowed", JsonResult: `{"code":400,"message":"upload.file.type_not_allowed"}`, OperTime: time.Now().UTC(), CostTime: 18},
+		{Title: "删除用户", Method: "DELETE", OperName: "admin", OperURL: "/api/v1/system/user/2", OperIP: "127.0.0.1", SourceDomain: operationLogSourceDomainIAM, SourcePage: operationLogSourcePageUser, Status: 2, FailureCategory: operationLogFailurePermission, ErrorMsg: "permission.denied", JsonResult: `{"code":403,"message":"permission.denied"}`, OperTime: time.Now().UTC(), CostTime: 21},
+	}
+	if err := db.Create(&seed).Error; err != nil {
+		t.Fatalf("seed audit logs: %v", err)
+	}
+}
+
 func TestAuditService_ExportOperationLogsIncludesDerivedColumns(t *testing.T) {
 	db := setupAuditTestDB(t)
 	service := NewAuditService(db)
@@ -117,42 +128,7 @@ func TestAuditService_ExportOperationLogsRespectsDerivedFilters(t *testing.T) {
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate audit: %v", err)
 	}
-
-	seed := []middleware.SystemLogOper{
-		{
-			Title:           "上传文件",
-			Method:          "POST",
-			OperName:        "admin",
-			OperURL:         "/api/v1/system/upload",
-			OperIP:          "127.0.0.1",
-			SourceDomain:    operationLogSourceDomainConfig,
-			SourcePage:      operationLogSourcePageUpload,
-			Status:          2,
-			FailureCategory: operationLogFailureValidation,
-			ErrorMsg:        "upload.file.type_not_allowed",
-			JsonResult:      `{"code":400,"message":"upload.file.type_not_allowed"}`,
-			OperTime:        time.Now().UTC(),
-			CostTime:        18,
-		},
-		{
-			Title:           "删除用户",
-			Method:          "DELETE",
-			OperName:        "admin",
-			OperURL:         "/api/v1/system/user/2",
-			OperIP:          "127.0.0.1",
-			SourceDomain:    operationLogSourceDomainIAM,
-			SourcePage:      operationLogSourcePageUser,
-			Status:          2,
-			FailureCategory: operationLogFailurePermission,
-			ErrorMsg:        "permission.denied",
-			JsonResult:      `{"code":403,"message":"permission.denied"}`,
-			OperTime:        time.Now().UTC(),
-			CostTime:        21,
-		},
-	}
-	if err := db.Create(&seed).Error; err != nil {
-		t.Fatalf("seed audit logs: %v", err)
-	}
+	seedAuditDerivedFilterLogs(t, db)
 
 	file, err := service.ExportOperationLogs(&OperationLogQuery{
 		SourceDomain:    operationLogSourceDomainConfig,
@@ -178,41 +154,7 @@ func TestAuditService_ListOperationLogsRespectsDerivedFilters(t *testing.T) {
 		t.Fatalf("migrate audit: %v", err)
 	}
 
-	seed := []middleware.SystemLogOper{
-		{
-			Title:           "上传文件",
-			Method:          "POST",
-			OperName:        "admin",
-			OperURL:         "/api/v1/system/upload",
-			OperIP:          "127.0.0.1",
-			SourceDomain:    operationLogSourceDomainConfig,
-			SourcePage:      operationLogSourcePageUpload,
-			Status:          2,
-			FailureCategory: operationLogFailureValidation,
-			ErrorMsg:        "upload.file.type_not_allowed",
-			JsonResult:      `{"code":400,"message":"upload.file.type_not_allowed"}`,
-			OperTime:        time.Now().UTC(),
-			CostTime:        18,
-		},
-		{
-			Title:           "删除用户",
-			Method:          "DELETE",
-			OperName:        "admin",
-			OperURL:         "/api/v1/system/user/2",
-			OperIP:          "127.0.0.1",
-			SourceDomain:    operationLogSourceDomainIAM,
-			SourcePage:      operationLogSourcePageUser,
-			Status:          2,
-			FailureCategory: operationLogFailurePermission,
-			ErrorMsg:        "permission.denied",
-			JsonResult:      `{"code":403,"message":"permission.denied"}`,
-			OperTime:        time.Now().UTC(),
-			CostTime:        21,
-		},
-	}
-	if err := db.Create(&seed).Error; err != nil {
-		t.Fatalf("seed audit logs: %v", err)
-	}
+	seedAuditDerivedFilterLogs(t, db)
 
 	page, err := service.ListOperationLogs(&OperationLogQuery{
 		SourceDomain:    operationLogSourceDomainConfig,

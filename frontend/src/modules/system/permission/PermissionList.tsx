@@ -29,10 +29,7 @@ import { isArcoFormValidationError } from '../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../core/router/prefetch';
 import { usePermission } from '../../../hooks/usePermission';
-import {
-  getVisibleSelectedRowKeys,
-  mergeCrossPageSelection,
-} from '../../../components/table/crossPageSelection';
+import { buildCrossPageRowSelection } from '../../../components/table/crossPageSelection';
 import { getRoleList } from '../role/api';
 import { translateRoleName } from '../role/display';
 import {
@@ -66,7 +63,7 @@ import {
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
-  ImportCsvButton,
+  ListDataActions,
   ListHeaderActions,
   PageContainer,
   PageEmpty,
@@ -74,7 +71,7 @@ import {
   PageRequestError,
   PermissionAction,
   SystemRowActions,
-  SubmitBar,
+  FormModalFooter,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   TableBatchActionBar,
@@ -425,13 +422,6 @@ const PermissionList: React.FC = () => {
     });
   };
 
-  const visibleSelectedRowKeys = useMemo(() => {
-    return getVisibleSelectedRowKeys(
-      selectedRowKeys,
-      data.map((item) => item.id),
-    );
-  }, [data, selectedRowKeys]);
-
   const batchDeleteDisabled = !canBatchDelete || selectedRowKeys.length === 0;
 
   const remediateRolePolicies = async (role: PermissionWorkbenchRole) => {
@@ -640,22 +630,14 @@ const PermissionList: React.FC = () => {
           rowKey="id"
           loading={loading}
           scroll={{ x: 'max-content' }}
-          rowSelection={{
-            type: 'checkbox',
-            selectedRowKeys: visibleSelectedRowKeys,
-            checkCrossPage: true,
-            preserveSelectedRowKeys: true,
+          rowSelection={buildCrossPageRowSelection({
+            rows: data,
+            getRowKey: (row) => row.id,
+            selectedRowKeys,
+            setSelectedRowKeys,
             fixed: true,
             checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-            onChange: (rowKeys) =>
-              setSelectedRowKeys((keys) =>
-                mergeCrossPageSelection(
-                  keys,
-                  rowKeys,
-                  data.map((item) => item.id),
-                ),
-              ),
-          }}
+          })}
           onChange={handleTableChange}
           emptyText={t('common.noData')}
           pagination={buildStandardPagination(t, {
@@ -712,41 +694,14 @@ const PermissionList: React.FC = () => {
               <ListHeaderActions
                 className="permission-page__api-list-actions"
                 utility={
-                  <>
-                    <Button
-                      icon={<IconRefresh />}
-                      onClick={() => {
-                        loadData(query);
-                      }}
-                    >
-                      {t('common.refresh')}
-                    </Button>
-                    <Button
-                      icon={<IconDownload />}
-                      onClick={() => {
-                        handleExport();
-                      }}
-                      disabled={!canExport}
-                    >
-                      {t('common.export')}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        handleDownloadTemplate();
-                      }}
-                      disabled={!canImport}
-                    >
-                      {t('common.downloadTemplate')}
-                    </Button>
-                    <ImportCsvButton
-                      disabled={!canImport}
-                      onSelect={(file) => {
-                        handleImport(file);
-                      }}
-                    >
-                      {t('common.import')}
-                    </ImportCsvButton>
-                  </>
+                  <ListDataActions
+                    canExport={canExport}
+                    canImport={canImport}
+                    onRefresh={() => void loadData(query)}
+                    onExport={() => void handleExport()}
+                    onDownloadTemplate={() => void handleDownloadTemplate()}
+                    onImport={handleImport}
+                  />
                 }
                 primary={
                   <Button
@@ -838,7 +793,7 @@ const PermissionList: React.FC = () => {
       size="md"
       onCancel={() => setVisible(false)}
       footer={
-        <SubmitBar
+          <FormModalFooter
           onCancel={() => setVisible(false)}
           onSubmit={() => {
             submitForm();

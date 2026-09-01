@@ -59,6 +59,19 @@ func seedSettings(t *testing.T, db *gorm.DB, values map[string]string) {
 	}
 }
 
+func createPasswordUser(t *testing.T, db *gorm.DB, username, password string) user.SystemUser {
+	t.Helper()
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatalf("hash test password: %v", err)
+	}
+	testUser := user.SystemUser{Username: username, Password: string(hash), Status: 1}
+	if err := db.Create(&testUser).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	return testUser
+}
+
 func boolPtr(value bool) *bool {
 	return &value
 }
@@ -79,13 +92,7 @@ func TestRuntime_MFAChallengeSetupAndVerify(t *testing.T) {
 	s := NewRuntime(db)
 	setupTestRedis(t)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "mfa_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "mfa_user", "123456")
 	seedSettings(t, db, map[string]string{"login.mfa_enabled": "true"})
 	_ = s.ReloadSettings()
 
@@ -129,13 +136,7 @@ func TestRuntime_MFARejectsInvalidCode(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "mfa_invalid_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "mfa_invalid_user", "123456")
 	seedSettings(t, db, map[string]string{"login.mfa_enabled": "true"})
 	_ = s.ReloadSettings()
 
@@ -180,15 +181,7 @@ func TestRuntime_Authenticate(t *testing.T) {
 	s := NewRuntime(db)
 
 	password := "123456"
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-
-	// 创建测试用户
-	testUser := user.SystemUser{
-		Username: "testuser",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "testuser", password)
 
 	// 1. 成功登录
 	u, err := s.Authenticate(&LoginReq{
@@ -235,13 +228,7 @@ func TestRuntime_AuthenticateTrimsUsername(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "trim_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	createPasswordUser(t, db, "trim_user", "123456")
 
 	u, err := s.Authenticate(&LoginReq{
 		Username: "  trim_user  ",
@@ -260,13 +247,7 @@ func TestRuntime_VerifyPasswordForOperationBindsSession(t *testing.T) {
 	s := NewRuntime(db)
 	rdb := setupTestRedis(t)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "verify_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "verify_user", "123456")
 
 	token, err := s.VerifyPasswordForOperation(testUser.ID, "session-verify-1", "123456")
 	if err != nil {
@@ -290,14 +271,7 @@ func TestRuntime_UpdatePassword(t *testing.T) {
 
 	oldPassword := "oldpassword"
 	newPassword := "newpassword"
-	hash, _ := bcrypt.GenerateFromPassword([]byte(oldPassword), bcrypt.DefaultCost)
-
-	testUser := user.SystemUser{
-		Username: "testpwd",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "testpwd", oldPassword)
 
 	// 1. 成功修改密码
 	err := s.UpdatePassword(testUser.ID, "session123", &PasswordUpdateReq{
@@ -348,13 +322,7 @@ func TestRuntime_AuthenticateLocksUserByConfiguredPolicy(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "locked_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "locked_user", "123456")
 	seedSettings(t, db, map[string]string{
 		"login.max_failed_attempts": "2",
 		"login.lock_minutes":        "10",
@@ -383,13 +351,7 @@ func TestRuntime_LoginWithSourceBlocksSourceAfterConfiguredFailures(t *testing.T
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "source_locked_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	createPasswordUser(t, db, "source_locked_user", "123456")
 	seedSettings(t, db, map[string]string{
 		"login.source_max_failed_attempts": "2",
 		"login.source_window_minutes":      "15",
@@ -415,13 +377,7 @@ func TestRuntime_LoginWithSourceRecordsSecurityEventWhenSourceBlocked(t *testing
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "risk_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	createPasswordUser(t, db, "risk_user", "123456")
 	seedSettings(t, db, map[string]string{
 		"login.source_max_failed_attempts": "1",
 		"login.source_window_minutes":      "15",
@@ -455,13 +411,7 @@ func TestRuntime_LoginWithSourceRecordsSecurityEventWhenPasswordWrong(t *testing
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "wrong_password_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	createPasswordUser(t, db, "wrong_password_user", "123456")
 	_ = s.ReloadSettings()
 
 	_, err := s.LoginWithSource(&LoginReq{Username: "wrong_password_user", Password: "wrong"}, "ip:10.0.0.8")
@@ -531,13 +481,7 @@ func TestRuntime_UpdatePasswordUsesConfiguredMinLength(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "policy_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "policy_user", "oldpassword")
 	seedSettings(t, db, map[string]string{"security.password_min_length": "8"})
 	_ = s.ReloadSettings()
 
@@ -554,13 +498,7 @@ func TestRuntime_UpdatePasswordUsesConfiguredComplexity(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "complexity_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "complexity_user", "oldpassword")
 	seedSettings(t, db, map[string]string{
 		"security.password_require_digit":     "true",
 		"security.password_require_uppercase": "true",
@@ -588,13 +526,7 @@ func TestRuntime_UpdatePasswordRejectsRecentPasswordReuse(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("oldpassword"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "history_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "history_user", "oldpassword")
 	seedSettings(t, db, map[string]string{"security.password_history_limit": "2"})
 	_ = s.ReloadSettings()
 
@@ -615,15 +547,10 @@ func TestRuntime_UpdateCurrentUserPreferencesReturnsNormalizedPayload(t *testing
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username:       "preference_user",
-		Password:       string(hash),
-		Status:         1,
-		PreferenceJSON: `{"theme":"emerald","layout":"vertical","lang":"zh-CN"}`,
-	}
-	if err := db.Create(&testUser).Error; err != nil {
-		t.Fatalf("seed user: %v", err)
+	testUser := createPasswordUser(t, db, "preference_user", "123456")
+	testUser.PreferenceJSON = `{"theme":"emerald","layout":"vertical","lang":"zh-CN"}`
+	if err := db.Save(&testUser).Error; err != nil {
+		t.Fatalf("update user preferences: %v", err)
 	}
 
 	result, err := s.UpdateCurrentUserPreferences(testUser.ID, &UserPlatformPreferenceUpdateReq{
@@ -964,14 +891,11 @@ func TestRuntime_GetSecurityOverviewIncludesRuntimePolicy(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "security_user",
-		Nickname: "Security User",
-		Password: string(hash),
-		Status:   1,
+	testUser := createPasswordUser(t, db, "security_user", "12345678")
+	testUser.Nickname = "Security User"
+	if err := db.Save(&testUser).Error; err != nil {
+		t.Fatalf("update test user: %v", err)
 	}
-	db.Create(&testUser)
 
 	now := time.Now()
 	if err := db.Create(&SystemUserSession{
@@ -1029,13 +953,7 @@ func TestRuntime_GetSecurityOverviewReportsPasswordExpiration(t *testing.T) {
 	db := setupTestDB(t)
 	s := NewRuntime(db)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "expired_password_user",
-		Password: string(hash),
-		Status:   1,
-	}
-	db.Create(&testUser)
+	testUser := createPasswordUser(t, db, "expired_password_user", "12345678")
 	changedAt := time.Now().AddDate(0, 0, -40)
 	if err := db.Create(&SystemUserPasswordHistory{
 		UserID:       testUser.ID,
@@ -1215,15 +1133,7 @@ func TestRuntime_CreateSessionRevokesOlderActiveSessionsByConfiguredLimit(t *tes
 	setupTestRedis(t)
 	now := time.Now()
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.DefaultCost)
-	testUser := user.SystemUser{
-		Username: "single-session-user",
-		Password: string(hash),
-		Status:   1,
-	}
-	if err := db.Create(&testUser).Error; err != nil {
-		t.Fatalf("seed user: %v", err)
-	}
+	testUser := createPasswordUser(t, db, "single-session-user", "12345678")
 	seedSettings(t, db, map[string]string{
 		"login.max_active_sessions_per_user": "1",
 		"audit.session_retention_days":       "90",

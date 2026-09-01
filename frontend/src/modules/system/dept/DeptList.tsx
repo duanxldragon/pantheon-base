@@ -71,14 +71,14 @@ import {
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
-  ImportCsvButton,
+  ListDataActions,
   ListHeaderActions,
   PageContainer,
   PageEmpty,
   PageError,
   PageLoading,
   PageRequestError,
-  SubmitBar,
+  FormModalFooter,
   SystemRowActions,
   TableBatchActionBar,
   PermissionAction,
@@ -1223,35 +1223,14 @@ const DeptList: React.FC = () => {
                   <ListHeaderActions
                     className="dept-list-page__header-actions"
                     utility={
-                      <>
-                        <Button
-                          size="small"
-                          icon={<IconDownload />}
-                          onClick={() => {
-                            handleExport();
-                          }}
-                          disabled={!canExport}
-                        >
-                          {t('common.export')}
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() => {
-                            handleDownloadTemplate();
-                          }}
-                          disabled={!canImport}
-                        >
-                          {t('common.downloadTemplate')}
-                        </Button>
-                        <ImportCsvButton
-                          disabled={!canImport}
-                          onSelect={(file) => {
-                            handleImport(file);
-                          }}
-                        >
-                          {t('common.import')}
-                        </ImportCsvButton>
-                      </>
+                      <ListDataActions
+                        canExport={canExport}
+                        canImport={canImport}
+                        onExport={() => void handleExport()}
+                        onDownloadTemplate={() => void handleDownloadTemplate()}
+                        onImport={handleImport}
+                        size="small"
+                      />
                     }
                     primary={
                       <Button
@@ -1494,7 +1473,7 @@ const DeptList: React.FC = () => {
       size="lg"
       onCancel={() => setVisible(false)}
       footer={
-        <SubmitBar
+        <FormModalFooter
           onCancel={() => setVisible(false)}
           onSubmit={() => {
             submitForm();
@@ -1616,7 +1595,7 @@ const DeptList: React.FC = () => {
         leaderForm.resetFields();
       }}
       footer={
-        <SubmitBar
+        <FormModalFooter
           onCancel={() => {
             setLeaderVisible(false);
             setBatchLeaderTasks([]);
@@ -1687,7 +1666,7 @@ const DeptList: React.FC = () => {
         setCreatingPostDept(null);
       }}
       footer={
-        <SubmitBar
+        <FormModalFooter
           onCancel={() => {
             setPostVisible(false);
             setCreatingPostDept(null);

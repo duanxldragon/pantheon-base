@@ -24,10 +24,11 @@ import {
   AppTable,
   buildStandardPagination,
   GovernanceCleanupBar,
+  buildGovernanceCleanupLabels,
+  GovernanceListSummary,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
-  GovernanceSummaryBar,
   PageContainer,
   PageEmpty,
   PageLoading,
@@ -64,6 +65,7 @@ const LoginLogList: React.FC = () => {
   const canDelete = isAdmin || hasPerm('system:login-log:delete');
   const canClear = isAdmin || hasPerm('system:login-log:clear');
   const governanceRail = useGovernanceRail();
+  const cleanupLabels = useMemo(() => buildGovernanceCleanupLabels(t), [t]);
   const [data, setData] = useState<LoginLogRow[]>([]);
   const [total, setTotal] = useState(0);
   const [successCount, setSuccessCount] = useState(0);
@@ -316,7 +318,7 @@ const LoginLogList: React.FC = () => {
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template auth-login-log-page">
-        <GovernanceSummaryBar
+        <GovernanceListSummary
           className="auth-login-log-page__hero"
           eyebrow={t('auth.loginLog.hero.eyebrow')}
           title={t('auth.loginLog.hero.title')}
@@ -326,7 +328,9 @@ const LoginLogList: React.FC = () => {
             label: item.label,
             value: item.value,
           }))}
-          action={
+          summaryTitle={t('auth.loginLog.hero.summaryTitle')}
+          rail={governanceRail}
+          railToggle={
             <GovernanceRailToggleButton
               expanded={governanceRail.expanded}
               onToggle={governanceRail.toggle}
@@ -376,18 +380,15 @@ const LoginLogList: React.FC = () => {
               retentionDays={retentionDays}
               retentionOptions={retentionOptions}
               onRetentionChange={setRetentionDays}
-              retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-              confirmTitle={t('common.cleanupIrreversibleWarning')}
+              retentionLabel={cleanupLabels.retentionLabel}
+              confirmTitle={cleanupLabels.confirmTitle}
               actionLabel={t('common.cleanupLogs')}
-              confirmActionLabel={t('common.cleanup')}
-              cleanupModeLabel={t('common.cleanupMode')}
-              cleanupModeOptions={[
-                { label: t('common.cleanupModeRetention'), value: 'retention' },
-                { label: t('common.cleanupModeRange'), value: 'range' },
-              ]}
-              rangeStartLabel={t('common.cleanupRangeStart')}
-              rangeEndLabel={t('common.cleanupRangeEnd')}
-              rangeRequiredMessage={t('common.cleanupRangeRequired')}
+              confirmActionLabel={cleanupLabels.confirmActionLabel}
+              cleanupModeLabel={cleanupLabels.cleanupModeLabel}
+              cleanupModeOptions={cleanupLabels.cleanupModeOptions}
+              rangeStartLabel={cleanupLabels.rangeStartLabel}
+              rangeEndLabel={cleanupLabels.rangeEndLabel}
+              rangeRequiredMessage={cleanupLabels.rangeRequiredMessage}
               onConfirm={handleCleanup}
               hint={t('auth.loginLog.hero.cleanupHint')}
               trailing={

@@ -20,8 +20,7 @@ import { IconDelete, IconDownload, IconEye } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
-  getVisibleSelectedRowKeys,
-  mergeCrossPageSelection,
+  buildCrossPageRowSelection,
   type CrossPageRowKey,
 } from '../../../components/table/crossPageSelection';
 import {
@@ -565,31 +564,6 @@ function hasActiveOperationLogFilters(query: OperationLogQuery, advancedActiveCo
     query.startedAt ||
     advancedActiveCount > 0,
   );
-}
-
-function buildLogRowSelection(options: {
-  enabled: boolean;
-  visibleSelectedRowKeys: CrossPageRowKey[];
-  rows: OperationLogRow[];
-  setSelectedRowKeys: React.Dispatch<React.SetStateAction<CrossPageRowKey[]>>;
-}): TableProps<OperationLogRow>['rowSelection'] {
-  if (!options.enabled) {
-    return undefined;
-  }
-  return {
-    type: 'checkbox',
-    selectedRowKeys: options.visibleSelectedRowKeys,
-    checkCrossPage: true,
-    preserveSelectedRowKeys: true,
-    onChange: (keys) =>
-      options.setSelectedRowKeys((currentKeys) =>
-        mergeCrossPageSelection(
-          currentKeys,
-          keys,
-          options.rows.map((item) => item.id),
-        ),
-      ),
-  };
 }
 
 const DetailSummaryHeader: React.FC<{ log: OperationLogRow }> = ({ log }) => {
@@ -1188,15 +1162,6 @@ const OperationLogList: React.FC = () => {
     });
   };
 
-  const visibleSelectedRowKeys = useMemo(
-    () =>
-      getVisibleSelectedRowKeys(
-        selectedRowKeys,
-        data.map((item) => item.id),
-      ),
-    [data, selectedRowKeys],
-  );
-
   const columns: ColumnProps<OperationLogRow>[] = [
     {
       title: t('system.audit.title'),
@@ -1383,12 +1348,16 @@ const OperationLogList: React.FC = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         onChange={handleTableChange}
-        rowSelection={buildLogRowSelection({
-          enabled: canDelete,
-          visibleSelectedRowKeys,
-          rows: data,
-          setSelectedRowKeys,
-        })}
+        rowSelection={
+          canDelete
+            ? buildCrossPageRowSelection({
+                rows: data,
+                getRowKey: (row) => row.id,
+                selectedRowKeys,
+                setSelectedRowKeys,
+              })
+            : undefined
+        }
         pagination={buildStandardPagination(t, {
           current: query.page || emptyQuery.page,
           pageSize: query.pageSize || emptyQuery.pageSize,
