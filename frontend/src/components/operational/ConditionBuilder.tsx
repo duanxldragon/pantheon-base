@@ -23,8 +23,17 @@ function formatConditionValue(value: unknown, unserializableValue: React.ReactNo
   if (value === null || value === undefined) {
     return '';
   }
-  if (typeof value !== 'object') {
-    return String(value);
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return value.toString();
+  }
+  if (typeof value === 'symbol') {
+    return value.description ?? unserializableValue;
+  }
+  if (typeof value === 'function') {
+    return value.name || unserializableValue;
   }
   try {
     return JSON.stringify(value);

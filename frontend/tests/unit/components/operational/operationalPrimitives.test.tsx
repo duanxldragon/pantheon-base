@@ -16,6 +16,22 @@ import {
   validateConditionAst,
 } from '../../../../src/components/operational';
 
+const conditionBuilderLabels = {
+  loading: 'loading',
+  empty: 'empty',
+  error: 'error',
+  forbidden: 'forbidden',
+  stale: 'stale',
+  partial: 'partial',
+  ready: 'ready',
+  and: 'and',
+  or: 'or',
+  operatorLabels: { eq: 'equals', unknown: 'unknown' },
+  addRule: 'add',
+  invalidField: 'invalid',
+  unserializableValue: 'unavailable',
+};
+
 describe('operational primitive helpers', () => {
   it('deduplicates logs by sequence, sorts them, and caps the rendered window', () => {
     const merged = mergeTaskLogChunks(
@@ -197,21 +213,7 @@ describe('operational primitive components', () => {
           ],
         }}
         fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
-        labels={{
-          loading: 'loading',
-          empty: 'empty',
-          error: 'error',
-          forbidden: 'forbidden',
-          stale: 'stale',
-          partial: 'partial',
-          ready: 'ready',
-          and: 'and',
-          or: 'or',
-          operatorLabels: { eq: 'equals', unknown: 'unknown' },
-          addRule: 'add',
-          invalidField: 'invalid',
-          unserializableValue: 'unavailable',
-        }}
+        labels={conditionBuilderLabels}
       />,
     );
 
@@ -234,21 +236,7 @@ describe('operational primitive components', () => {
           ],
         }}
         fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
-        labels={{
-          loading: 'loading',
-          empty: 'empty',
-          error: 'error',
-          forbidden: 'forbidden',
-          stale: 'stale',
-          partial: 'partial',
-          ready: 'ready',
-          and: 'and',
-          or: 'or',
-          operatorLabels: { eq: 'equals', unknown: 'unknown' },
-          addRule: 'add',
-          invalidField: 'invalid',
-          unserializableValue: 'unavailable',
-        }}
+        labels={conditionBuilderLabels}
       />,
     );
 
