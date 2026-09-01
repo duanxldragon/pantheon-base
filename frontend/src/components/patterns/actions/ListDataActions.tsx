@@ -7,6 +7,7 @@ import ImportCsvButton from './ImportCsvButton';
 export interface ListDataActionsProps {
   canExport?: boolean;
   canImport?: boolean;
+  canDownloadTemplate?: boolean;
   onExport?: () => void;
   onDownloadTemplate?: () => void;
   onImport?: (file: File) => void;
@@ -18,6 +19,7 @@ export interface ListDataActionsProps {
 const ListDataActions: React.FC<ListDataActionsProps> = ({
   canExport = true,
   canImport = true,
+  canDownloadTemplate = true,
   onExport,
   onDownloadTemplate,
   onImport,
@@ -43,7 +45,7 @@ const ListDataActions: React.FC<ListDataActionsProps> = ({
           size={size}
           icon={templateIcon ? <IconDownload /> : undefined}
           onClick={onDownloadTemplate}
-          disabled={!canImport}
+          disabled={!canDownloadTemplate}
         >
           {t('common.downloadTemplate')}
         </Button>
