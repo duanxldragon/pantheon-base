@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-09-01-release-gate-sonar-cleanup",
+  "title": "Resolve the remaining AppTable SonarCloud complexity issue",
+  "goal": "Unblock the Base Release Gate and foundation publication by resolving the sole unresolved SonarCloud issue on main.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["frontend"],
+  "scope": {
+    "in": [
+      "Behavior-preserving AppTable presentation refactor",
+      "Frontend static and Playwright pagination verification",
+      "Hosted SonarCloud and Release Gate verification"
+    ],
+    "out": [
+      "Public component API changes",
+      "Menus, permissions, i18n, audit, backend, schema, or Ops changes",
+      "Visual redesign and dependency updates"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-01-release-gate-sonar-cleanup/manifest.json",
+      ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/commands.json",
+      ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/summary.md",
+      ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/review.md",
+      ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/pr-body.md",
+      "docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md"
+    ],
+    "modify": ["frontend/src/components/data-display/AppTable.tsx"]
+  },
+  "methodReadiness": {
+    "qualityProfiles": ["ui-runtime", "ci-workflow"],
+    "minimalComplexityRung": "reuse",
+    "implementerPosture": "behavior-preserving private presentation extraction",
+    "reviewerPosture": ["mechanical", "ui-runtime"],
+    "requiredSensors": [
+      "frontend type-check",
+      "frontend lint",
+      "frontend build",
+      "Playwright pagination contract",
+      "SonarCloud PR analysis",
+      "Release Gate Summary"
+    ]
+  },
+  "verificationPlan": {
+    "visualEvidenceExemption": {
+      "scope": "governance-only",
+      "reason": "This is a private behavior-preserving presentation extraction: rendered components, styles, copy, layout, routes, and interaction contracts do not change. Focused Playwright pagination coverage remains recorded in the linked evidence.",
+      "noRenderedSurfaceChanged": true,
+      "humanApprovalRequired": true
+    }
+  },
+  "successCriteria": [
+    "No unresolved SonarCloud BUG, VULNERABILITY, or CODE_SMELL issues on main",
+    "All required GitHub checks pass",
+    "Release Gate Summary passes on the merged commit"
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "No API or server runtime changed; the shared browser pagination path is covered locally and broader hosted smoke remains a required check.",
+  "visualEvidence": "Playwright pagination contract passed on desktop and narrow mobile surfaces; no visual styling changed.",
+  "linkage": {
+    "taskId": "2026-09-01-release-gate-sonar-cleanup",
+    "changeRef": "none",
+    "taskManifest": ".harness/tasks/2026-09-01-release-gate-sonar-cleanup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/",
+    "reviewFile": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/review.md",
+    "summaryFile": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md"]
+  },
+  "humanGates": ["GitHub required checks", "SonarCloud analysis", "Release Gate Summary"],
+  "ratchetDecision": "no-repeat-observed",
+  "syncExpectation": "Foundation release follows successful Base gate; Ops consumption is validated in a temporary overlay tree."
+}
