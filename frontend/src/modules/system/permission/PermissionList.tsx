@@ -627,7 +627,7 @@ const PermissionList: React.FC = () => {
           className="system-list__table"
           data={data}
           columns={columns}
-          rowKey="id"
+          rowKey={(row) => row.id}
           loading={!!loading}
           scroll={{ x: 'max-content' }}
           rowSelection={buildCrossPageRowSelection({
