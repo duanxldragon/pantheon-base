@@ -491,6 +491,93 @@ function createEnhancedPaginationRenderer<T>({
   };
 }
 
+interface AppTableContentProps<T> {
+  emptyText: React.ReactNode;
+  enhancedRenderPagination: TableProps<T>['renderPagination'];
+  effectiveRowSelection: TableProps<T>['rowSelection'];
+  effectiveScroll: TableProps<T>['scroll'];
+  loading: TableProps<T>['loading'];
+  pagePosition: TablePagePosition;
+  pagination: TableProps<T>['pagination'];
+  responsiveColumns: AppTableColumnProps<T>[] | undefined;
+  rows: T[];
+  settingsPanel: React.ReactNode;
+  tableProps: Omit<
+    AppTableProps<T>,
+    | 'columns'
+    | 'data'
+    | 'defaultDensity'
+    | 'emptyText'
+    | 'loading'
+    | 'pagePosition'
+    | 'pagination'
+    | 'renderPagination'
+    | 'scroll'
+    | 'viewKey'
+  >;
+  viewportWidth: number;
+}
+
+function AppTableContent<T>({
+  emptyText,
+  enhancedRenderPagination,
+  effectiveRowSelection,
+  effectiveScroll,
+  loading,
+  pagePosition,
+  pagination,
+  responsiveColumns,
+  rows,
+  settingsPanel,
+  tableProps,
+  viewportWidth,
+}: Readonly<AppTableContentProps<T>>) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      {settingsPanel ? (
+        <div className="app-table__view-toolbar">
+          <Dropdown trigger="click" position="br" droplist={settingsPanel}>
+            <Tooltip content={t('common.tableView.settings')}>
+              <Button
+                size="small"
+                icon={<IconSettings />}
+                aria-label={t('common.tableView.settings')}
+              >
+                {viewportWidth > 768 ? t('common.tableView.settings') : null}
+              </Button>
+            </Tooltip>
+          </Dropdown>
+        </div>
+      ) : null}
+      {viewportWidth <= 768 ? (
+        <div className="app-table__mobile-hint">
+          <span>{t('common.tableRecordSummary', { count: rows.length })}</span>
+          {needsHorizontalScroll(responsiveColumns) ? <span>{t('common.tableSwipeHint')}</span> : null}
+        </div>
+      ) : null}
+      {!loading && rows.length === 0 ? (
+        <PageEmpty description={emptyText} />
+      ) : (
+        <Table
+          {...tableProps}
+          className={tableProps.className ? `app-table ${tableProps.className}` : 'app-table'}
+          columns={responsiveColumns}
+          scroll={effectiveScroll}
+          size={tableProps.size || 'small'}
+          data={rows}
+          loading={loading}
+          rowSelection={effectiveRowSelection}
+          pagePosition={pagePosition}
+          pagination={pagination}
+          renderPagination={enhancedRenderPagination}
+        />
+      )}
+    </>
+  );
+}
+
 function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   const {
     data,
@@ -578,49 +665,21 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
     : 'app-table-shell';
 
   return (
-    <div
-      className={shellClassName}
-    >
-      {settingsPanel ? (
-        <div className="app-table__view-toolbar">
-          <Dropdown trigger="click" position="br" droplist={settingsPanel}>
-            <Tooltip content={t('common.tableView.settings')}>
-              <Button
-                size="small"
-                icon={<IconSettings />}
-                aria-label={t('common.tableView.settings')}
-              >
-                {viewportWidth > 768 ? t('common.tableView.settings') : null}
-              </Button>
-            </Tooltip>
-          </Dropdown>
-        </div>
-      ) : null}
-      {viewportWidth <= 768 ? (
-        <div className="app-table__mobile-hint">
-          <span>{t('common.tableRecordSummary', { count: rows.length })}</span>
-          {needsHorizontalScroll(responsiveColumns) ? (
-            <span>{t('common.tableSwipeHint')}</span>
-          ) : null}
-        </div>
-      ) : null}
-      {!loading && rows.length === 0 ? (
-        <PageEmpty description={emptyText} />
-      ) : (
-        <Table
-          {...rest}
-          className={rest.className ? `app-table ${rest.className}` : 'app-table'}
-          columns={responsiveColumns}
-          scroll={effectiveScroll}
-          size={rest.size || 'small'}
-          data={rows}
-          loading={loading}
-          rowSelection={effectiveRowSelection}
-          pagePosition={pagePosition}
-          pagination={pagination}
-          renderPagination={enhancedRenderPagination}
-        />
-      )}
+    <div className={shellClassName}>
+      <AppTableContent
+        emptyText={emptyText}
+        enhancedRenderPagination={enhancedRenderPagination}
+        effectiveRowSelection={effectiveRowSelection}
+        effectiveScroll={effectiveScroll}
+        loading={loading}
+        pagePosition={pagePosition}
+        pagination={pagination}
+        responsiveColumns={responsiveColumns}
+        rows={rows}
+        settingsPanel={settingsPanel}
+        tableProps={rest}
+        viewportWidth={viewportWidth}
+      />
     </div>
   );
 }
