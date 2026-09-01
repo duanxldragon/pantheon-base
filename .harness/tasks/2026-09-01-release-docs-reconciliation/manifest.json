@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-09-01-release-docs-reconciliation",
+  "title": "Reconcile published v0.10.25 release documentation",
+  "status": "complete",
+  "primaryLayer": "platform",
+  "qualityProfiles": ["ci-workflow"],
+  "ratchetDecision": "no-repeat-observed",
+  "goal": "Align Base public documentation with the published v0.10.25 release and its main-only branch policy.",
+  "scope": {
+    "in": ["README and changelog release references", "Foundation release model documentation", "Release identity and consumer-impact statements"],
+    "out": ["Product code", "GitHub release assets", "pantheon-ops changes", "Release publication or tag mutation"]
+  },
+  "runtimeSensitive": false,
+  "verificationPlan": {
+    "commands": ["npm run check:docs-frontmatter", "npm run check:harness-docs", "git diff --check"]
+  },
+  "linkage": {
+    "taskId": "2026-09-01-release-docs-reconciliation",
+    "changeRef": "none",
+    "taskManifest": ".harness/tasks/2026-09-01-release-docs-reconciliation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-01-release-docs-reconciliation/",
+    "reviewFile": ".harness/evidence/2026-09-01-release-docs-reconciliation/review.md",
+    "summaryFile": ".harness/evidence/2026-09-01-release-docs-reconciliation/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-09-01-release-docs-reconciliation.task.md"]
+  },
+  "humanGates": ["GitHub required checks", "PR merge"],
+  "syncExpectation": "Base-only documentation; Ops consumption remains deferred"
+}
