@@ -22,7 +22,7 @@ SonarCloud reported one unresolved `typescript:S3776` issue at `frontend/src/com
 
 ## UI Evidence
 
-Surface reviewed: shared operational data table pagination. The focused Playwright run verified the representative pager shell and narrow mobile wrapping. No visual style, text, dimensions, or interaction contract changed; desktop and narrow mobile runtime paths remained green.
+Surface reviewed with the `impeccable` operational-admin checklist: shared operational data table pagination. The focused Playwright run verified the representative pager shell and narrow mobile wrapping. No visual style, text, dimensions, hierarchy, state treatment, or interaction contract changed; desktop and narrow mobile runtime paths remained green. Because there is no rendered change, no new visual baseline was created.
 
 ## Hosted Gates
 
