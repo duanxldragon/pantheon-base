@@ -33,27 +33,27 @@ export default function ExecutionStepRail({
       {state !== 'ready' ? (
         <div className="operational-primitive__state">{labels[state]}</div>
       ) : (
-        <div className="execution-step-rail__list" role="list">
+        <ol className="execution-step-rail__list">
           {visibleSteps.map((step, index) => (
-            <button
-              type="button"
-              role="listitem"
-              className={`execution-step-rail__step execution-step-rail__step--${step.status}`}
-              aria-current={activeStepId === step.id ? 'step' : undefined}
-              aria-label={`${labels.jumpToStep} ${index + 1}`}
-              key={step.id}
-              onClick={() => onStepClick?.(step)}
-            >
-              <span className="execution-step-rail__marker" aria-hidden="true" />
-              <span>{step.title}</span>
-              <span>
-                <Tag>{step.status}</Tag>
-                {step.attempts ? ` ${labels.attempts}: ${step.attempts}` : ''}
-                {step.durationMs ? ` ${labels.duration}: ${step.durationMs}ms` : ''}
-              </span>
-            </button>
+            <li key={step.id}>
+              <button
+                type="button"
+                className={`execution-step-rail__step execution-step-rail__step--${step.status}`}
+                aria-current={activeStepId === step.id ? 'step' : undefined}
+                aria-label={`${labels.jumpToStep} ${index + 1}`}
+                onClick={() => onStepClick?.(step)}
+              >
+                <span className="execution-step-rail__marker" aria-hidden="true" />
+                <span>{step.title}</span>
+                <span>
+                  <Tag>{step.status}</Tag>
+                  {step.attempts ? ` ${labels.attempts}: ${step.attempts}` : ''}
+                  {step.durationMs ? ` ${labels.duration}: ${step.durationMs}ms` : ''}
+                </span>
+              </button>
+            </li>
           ))}
-        </div>
+        </ol>
       )}
     </section>
   );

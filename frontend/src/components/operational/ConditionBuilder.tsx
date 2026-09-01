@@ -17,6 +17,21 @@ export interface ConditionBuilderProps {
   } & Record<OperationalDataState, React.ReactNode>;
   state?: OperationalDataState;
 }
+
+function formatConditionValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (typeof value !== 'object') {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '';
+  }
+}
+
 function renderNode(
   node: ConditionAstNode,
   fields: ConditionFieldOption[],
@@ -48,7 +63,7 @@ function renderNode(
         options={fields.map((field) => ({ label: field.label, value: field.key }))}
       />
       <Tag>{labels.operatorLabels[node.operator] ?? labels.operatorLabels.unknown}</Tag>
-      <span>{String(node.value ?? '')}</span>
+      <span>{formatConditionValue(node.value)}</span>
       {invalidIds.has(node.id) ? <span>{labels.invalidField}</span> : null}
     </div>
   );

@@ -6,7 +6,7 @@ async function openWorkbench(page: Page, colorMode: 'light' | 'dark') {
     globalThis.localStorage.setItem('pantheon_color_mode', mode);
   }, colorMode);
   await primeChineseLocale(page);
-  await page.goto('/__visual/operational-workbench', { waitUntil: 'networkidle' });
+  await page.goto('/__visual/operational-workbench', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('operational-workbench-fixture')).toBeVisible();
   await page.evaluate(async () => document.fonts.ready);
 }

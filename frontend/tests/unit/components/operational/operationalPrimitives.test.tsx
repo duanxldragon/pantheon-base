@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   ChangeDiff,
+  ConditionBuilder,
   ContextSelector,
   ExecutionStepRail,
   TaskLogViewer,
@@ -179,5 +180,40 @@ describe('operational primitive components', () => {
     );
 
     expect(document.querySelectorAll('.execution-step-rail__step')).toHaveLength(50);
+    expect(screen.getByRole('list')).toBeTruthy();
+    expect(screen.getAllByRole('listitem')).toHaveLength(50);
+  });
+
+  it('renders structured condition values without object stringification', () => {
+    render(
+      <ConditionBuilder
+        title="conditions"
+        value={{
+          type: 'group',
+          id: 'root',
+          combinator: 'and',
+          children: [
+            { type: 'rule', id: 'metadata', field: 'status', operator: 'eq', value: { active: true } },
+          ],
+        }}
+        fields={[{ key: 'status', label: 'status', operators: ['eq'] }]}
+        labels={{
+          loading: 'loading',
+          empty: 'empty',
+          error: 'error',
+          forbidden: 'forbidden',
+          stale: 'stale',
+          partial: 'partial',
+          ready: 'ready',
+          and: 'and',
+          or: 'or',
+          operatorLabels: { eq: 'equals', unknown: 'unknown' },
+          addRule: 'add',
+          invalidField: 'invalid',
+        }}
+      />,
+    );
+
+    expect(screen.getByText('{"active":true}')).toBeTruthy();
   });
 });

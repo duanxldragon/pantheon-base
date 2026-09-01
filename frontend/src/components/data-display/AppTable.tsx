@@ -272,31 +272,22 @@ function createDecoratedPaginationNode<T>(
   });
 }
 
-function AppTable<T>(props: Readonly<AppTableProps<T>>) {
-  const {
-    data,
-    loading,
-    emptyText,
-    columns,
-    viewKey,
-    defaultDensity = 'standard',
-    scroll,
-    pagination,
-    renderPagination,
-    pagePosition,
-    ...rest
-  } = props;
-  const { t } = useTranslation();
-  const rows = Array.isArray(data) ? data : [];
-  const tableColumns = columns as AppTableColumnProps<T>[] | undefined;
-  const columnMeta = getAppTableColumnMeta(tableColumns);
+function useAppTableViewPreferences(
+  viewKey: string | undefined,
+  columnMeta: AppTableColumnMeta[],
+  defaultDensity: AppTableDensity,
+) {
   const canPersistView = Boolean(viewKey && columnMeta.length > 0);
   const persistedPreferences = useMemo(
-    () =>
-      canPersistView && viewKey
-        ? readAppTablePreferences(getStorage(), viewKey, columnMeta) ||
-          createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity)
-        : null,
+    () => {
+      if (!canPersistView || !viewKey) {
+        return null;
+      }
+      return (
+        readAppTablePreferences(getStorage(), viewKey, columnMeta) ||
+        createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity)
+      );
+    },
     [canPersistView, viewKey, defaultDensity, columnMeta],
   );
   const [localPreferences, setLocalPreferences] = useState<{
@@ -307,23 +298,6 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
     localPreferences && localPreferences.viewKey === viewKey
       ? localPreferences.preferences
       : persistedPreferences;
-  const [viewportWidth, setViewportWidth] = useState(() =>
-    globalThis.window === undefined ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
-  );
-
-  useEffect(() => {
-    if (globalThis.window === undefined) {
-      return undefined;
-    }
-
-    const syncViewportWidth = () => {
-      setViewportWidth(globalThis.innerWidth);
-    };
-
-    syncViewportWidth();
-    globalThis.addEventListener('resize', syncViewportWidth);
-    return () => globalThis.removeEventListener('resize', syncViewportWidth);
-  }, []);
 
   const updatePreferences = (nextPreferences: AppTablePreferences) => {
     if (!viewKey) {
@@ -367,18 +341,199 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   };
 
   const resetPreferences = () => {
-    if (!viewKey) {
-      return;
+    if (viewKey) {
+      updatePreferences(createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity));
     }
-    updatePreferences(createDefaultAppTablePreferences(viewKey, columnMeta, defaultDensity));
   };
 
   const setDensity = (density: AppTableDensity) => {
-    if (!preferences) {
-      return;
+    if (preferences) {
+      updatePreferences({ ...preferences, density });
     }
-    updatePreferences({ ...preferences, density });
   };
+
+  return {
+    canPersistView,
+    preferences,
+    setColumnVisible,
+    moveColumn,
+    resetPreferences,
+    setDensity,
+  };
+}
+
+interface AppTableViewSettingsProps<T> {
+  tableColumns: AppTableColumnProps<T>[] | undefined;
+  columnMeta: AppTableColumnMeta[];
+  preferences: AppTablePreferences;
+  setDensity: (density: AppTableDensity) => void;
+  setColumnVisible: (key: string, visible: boolean) => void;
+  moveColumn: (key: string, direction: -1 | 1) => void;
+  resetPreferences: () => void;
+}
+
+function AppTableViewSettings<T>({
+  tableColumns,
+  columnMeta,
+  preferences,
+  setDensity,
+  setColumnVisible,
+  moveColumn,
+  resetPreferences,
+}: Readonly<AppTableViewSettingsProps<T>>) {
+  const { t } = useTranslation();
+  const orderedPreferences = [...preferences.columns].sort((left, right) => left.order - right.order);
+
+  return (
+    <Menu className="app-table__view-menu">
+      <Menu.Item key="density" disabled>
+        {t('common.tableView.density')}
+      </Menu.Item>
+      {(['compact', 'standard', 'comfortable'] as AppTableDensity[]).map((density) => (
+        <Menu.Item key={`density-${density}`} onClick={() => setDensity(density)}>
+          <span className="app-table__view-menu-row">
+            <span>{t(`common.tableView.density.${density}`)}</span>
+            {preferences.density === density ? <span aria-hidden="true">✓</span> : null}
+          </span>
+        </Menu.Item>
+      ))}
+      <Menu.Item key="columns" disabled>
+        {t('common.tableView.columns')}
+      </Menu.Item>
+      {orderedPreferences.map((preference, index) => {
+        const sourceColumn = tableColumns?.find(
+          (column) => resolveAppTableColumnKey(column) === preference.key,
+        );
+        const meta = columnMeta.find((column) => column.key === preference.key);
+        const label = getColumnTitleText(sourceColumn?.title, preference.key);
+        return (
+          <Menu.Item key={`column-${preference.key}`} className="app-table__view-column-item">
+            <span className="app-table__view-column">
+              <Checkbox
+                checked={preference.visible}
+                disabled={!meta?.hideable}
+                onChange={(checked) => setColumnVisible(preference.key, Boolean(checked))}
+              >
+                {label}
+              </Checkbox>
+              <span className="app-table__view-column-order">
+                <Button
+                  size="mini"
+                  icon={<IconArrowUp />}
+                  disabled={index === 0}
+                  aria-label={t('common.tableView.moveColumnUp', { column: label })}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    moveColumn(preference.key, -1);
+                  }}
+                />
+                <Button
+                  size="mini"
+                  icon={<IconArrowDown />}
+                  disabled={index === orderedPreferences.length - 1}
+                  aria-label={t('common.tableView.moveColumnDown', { column: label })}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    moveColumn(preference.key, 1);
+                  }}
+                />
+              </span>
+            </span>
+          </Menu.Item>
+        );
+      })}
+      <Menu.Item key="reset" onClick={resetPreferences}>
+        <IconRefresh /> {t('common.tableView.reset')}
+      </Menu.Item>
+    </Menu>
+  );
+}
+
+function createEnhancedPaginationRenderer<T>({
+  pagination,
+  renderPagination,
+  pagePosition,
+  firstPageAriaLabel,
+  lastPageAriaLabel,
+  onTableChange,
+}: {
+  pagination: TableProps<T>['pagination'];
+  renderPagination: TableProps<T>['renderPagination'];
+  pagePosition: TablePagePosition;
+  firstPageAriaLabel: string;
+  lastPageAriaLabel: string;
+  onTableChange: TableChangeHandler<T> | undefined;
+}) {
+  if (!isPaginationConfig(pagination)) {
+    return renderPagination;
+  }
+
+  return (paginationNode?: React.ReactNode) => {
+    if (!React.isValidElement<PaginationNodeProps>(paginationNode)) {
+      return renderPagination
+        ? renderPagination(paginationNode)
+        : renderNativePagination(paginationNode, pagePosition);
+    }
+    const shouldDecorate =
+      !paginationNode.props.simple && getPaginationTotalPages(paginationNode.props) > 1;
+    const decoratedPaginationNode = shouldDecorate
+      ? createDecoratedPaginationNode<T>(
+          paginationNode,
+          firstPageAriaLabel,
+          lastPageAriaLabel,
+          onTableChange,
+        )
+      : paginationNode;
+    const callerNode = renderPagination
+      ? renderPagination(decoratedPaginationNode)
+      : decoratedPaginationNode;
+    return renderPagination ? callerNode : renderNativePagination(callerNode, pagePosition);
+  };
+}
+
+function AppTable<T>(props: Readonly<AppTableProps<T>>) {
+  const {
+    data,
+    loading,
+    emptyText,
+    columns,
+    viewKey,
+    defaultDensity = 'standard',
+    scroll,
+    pagination,
+    renderPagination,
+    pagePosition,
+    ...rest
+  } = props;
+  const { t } = useTranslation();
+  const rows = Array.isArray(data) ? data : [];
+  const tableColumns = columns as AppTableColumnProps<T>[] | undefined;
+  const columnMeta = getAppTableColumnMeta(tableColumns);
+  const {
+    canPersistView,
+    preferences,
+    setColumnVisible,
+    moveColumn,
+    resetPreferences,
+    setDensity,
+  } = useAppTableViewPreferences(viewKey, columnMeta, defaultDensity);
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    globalThis.window === undefined ? Number.MAX_SAFE_INTEGER : globalThis.innerWidth,
+  );
+
+  useEffect(() => {
+    if (globalThis.window === undefined) {
+      return undefined;
+    }
+
+    const syncViewportWidth = () => {
+      setViewportWidth(globalThis.innerWidth);
+    };
+
+    syncViewportWidth();
+    globalThis.addEventListener('resize', syncViewportWidth);
+    return () => globalThis.removeEventListener('resize', syncViewportWidth);
+  }, []);
 
   const preferredColumns = preferences
     ? applyAppTablePreferences(tableColumns || [], preferences)
@@ -400,105 +555,31 @@ function AppTable<T>(props: Readonly<AppTableProps<T>>) {
   const lastPageAriaLabel = t('common.pagination.lastPage', { defaultValue: 'Last page' });
   const settingsPanel =
     canPersistView && preferences ? (
-      <Menu className="app-table__view-menu">
-        <Menu.Item key="density" disabled>
-          {t('common.tableView.density')}
-        </Menu.Item>
-        {(['compact', 'standard', 'comfortable'] as AppTableDensity[]).map((density) => (
-          <Menu.Item key={`density-${density}`} onClick={() => setDensity(density)}>
-            <span className="app-table__view-menu-row">
-              <span>{t(`common.tableView.density.${density}`)}</span>
-              {preferences.density === density ? <span aria-hidden="true">✓</span> : null}
-            </span>
-          </Menu.Item>
-        ))}
-        <Menu.Item key="columns" disabled>
-          {t('common.tableView.columns')}
-        </Menu.Item>
-        {[...preferences.columns]
-          .sort((left, right) => left.order - right.order)
-          .map((preference, index, ordered) => {
-            const sourceColumn = tableColumns?.find(
-              (column) => resolveAppTableColumnKey(column) === preference.key,
-            );
-            const meta = columnMeta.find((column) => column.key === preference.key);
-            const label = getColumnTitleText(sourceColumn?.title, preference.key);
-            return (
-              <Menu.Item key={`column-${preference.key}`} className="app-table__view-column-item">
-                <span className="app-table__view-column">
-                  <Checkbox
-                    checked={preference.visible}
-                    disabled={!meta?.hideable}
-                    onChange={(checked) => setColumnVisible(preference.key, Boolean(checked))}
-                  >
-                    {label}
-                  </Checkbox>
-                  <span className="app-table__view-column-order">
-                    <Button
-                      size="mini"
-                      icon={<IconArrowUp />}
-                      disabled={index === 0}
-                      aria-label={t('common.tableView.moveColumnUp', { column: label })}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        moveColumn(preference.key, -1);
-                      }}
-                    />
-                    <Button
-                      size="mini"
-                      icon={<IconArrowDown />}
-                      disabled={index === ordered.length - 1}
-                      aria-label={t('common.tableView.moveColumnDown', { column: label })}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        moveColumn(preference.key, 1);
-                      }}
-                    />
-                  </span>
-                </span>
-              </Menu.Item>
-            );
-          })}
-        <Menu.Item key="reset" onClick={resetPreferences}>
-          <IconRefresh /> {t('common.tableView.reset')}
-        </Menu.Item>
-      </Menu>
+      <AppTableViewSettings
+        tableColumns={tableColumns}
+        columnMeta={columnMeta}
+        preferences={preferences}
+        setDensity={setDensity}
+        setColumnVisible={setColumnVisible}
+        moveColumn={moveColumn}
+        resetPreferences={resetPreferences}
+      />
     ) : null;
-
-  const enhancedRenderPagination = isPaginationConfig(pagination)
-    ? (paginationNode?: React.ReactNode) => {
-        if (!React.isValidElement<PaginationNodeProps>(paginationNode)) {
-          return renderPagination
-            ? renderPagination(paginationNode)
-            : renderNativePagination(paginationNode, pagePosition);
-        }
-
-        const shouldDecorate =
-          !paginationNode.props.simple && getPaginationTotalPages(paginationNode.props) > 1;
-
-        if (!shouldDecorate) {
-          return renderPagination
-            ? renderPagination(paginationNode)
-            : renderNativePagination(paginationNode, pagePosition);
-        }
-
-        const decoratedPaginationNode = createDecoratedPaginationNode<T>(
-          paginationNode,
-          firstPageAriaLabel,
-          lastPageAriaLabel,
-          rest.onChange,
-        );
-        const callerNode = renderPagination
-          ? renderPagination(decoratedPaginationNode)
-          : decoratedPaginationNode;
-
-        return renderPagination ? callerNode : renderNativePagination(callerNode, pagePosition);
-      }
-    : renderPagination;
+  const enhancedRenderPagination = createEnhancedPaginationRenderer<T>({
+    pagination,
+    renderPagination,
+    pagePosition,
+    firstPageAriaLabel,
+    lastPageAriaLabel,
+    onTableChange: rest.onChange,
+  });
+  const shellClassName = preferences
+    ? `app-table-shell app-table-shell--density-${preferences.density}`
+    : 'app-table-shell';
 
   return (
     <div
-      className={`app-table-shell${preferences ? ` app-table-shell--density-${preferences.density}` : ''}`}
+      className={shellClassName}
     >
       {settingsPanel ? (
         <div className="app-table__view-toolbar">
