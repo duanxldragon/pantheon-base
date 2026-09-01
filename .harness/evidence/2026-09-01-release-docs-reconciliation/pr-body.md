@@ -14,7 +14,7 @@
 - Review Artifact：`.harness/evidence/2026-09-01-release-docs-reconciliation/review.md`
 - OpenSpec change：`none`
 - Trivial change：`no`
-- Quality Profile：`none`
+- Quality Profile：`ci-workflow`
 - Ratchet Decision：`no-repeat-observed`
 - GitHub Signal：`repo-quality-gate`
 

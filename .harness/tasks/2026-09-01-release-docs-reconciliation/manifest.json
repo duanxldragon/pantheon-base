@@ -4,7 +4,7 @@
   "title": "Reconcile published v0.10.25 release documentation",
   "status": "complete",
   "primaryLayer": "platform",
-  "qualityProfiles": ["none"],
+  "qualityProfiles": ["ci-workflow"],
   "ratchetDecision": "no-repeat-observed",
   "goal": "Align Base public documentation with the published v0.10.25 release and its main-only branch policy.",
   "scope": {
