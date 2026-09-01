@@ -129,10 +129,10 @@ function isDefaultPostListQuery(query: PostListQuery) {
 }
 
 interface GovernanceTagListProps {
-  keys: string[];
-  t: TFunction;
-  kind: 'tag' | 'blockedBy';
-  color?: string;
+  readonly keys: string[];
+  readonly t: TFunction;
+  readonly kind: 'tag' | 'blockedBy';
+  readonly color?: string;
 }
 
 function GovernanceTagList({ keys, t, kind, color }: GovernanceTagListProps): ReactNode {

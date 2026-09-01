@@ -376,7 +376,7 @@ const FIELD_TEMPLATE_CONFIGS: readonly FieldTemplateConfig[] = [
     sortable: false,
     visibleInList: true,
     visibleInForm: true,
-    validation: { pattern: '^1[3-9]\\d{9}$' },
+    validation: { pattern: String.raw`^1[3-9]\d{9}$` },
   },
   {
     key: 'email',
@@ -386,7 +386,7 @@ const FIELD_TEMPLATE_CONFIGS: readonly FieldTemplateConfig[] = [
     sortable: false,
     visibleInList: true,
     visibleInForm: true,
-    validation: { pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+    validation: { pattern: String.raw`^[^\s@]+@[^\s@]+\.[^\s@]+$` },
   },
   {
     key: 'ipAddress',

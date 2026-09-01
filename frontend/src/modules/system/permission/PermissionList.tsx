@@ -628,7 +628,7 @@ const PermissionList: React.FC = () => {
           data={data}
           columns={columns}
           rowKey="id"
-          loading={loading}
+          loading={!!loading}
           scroll={{ x: 'max-content' }}
           rowSelection={buildCrossPageRowSelection({
             rows: data,
@@ -795,9 +795,7 @@ const PermissionList: React.FC = () => {
       footer={
           <FormModalFooter
           onCancel={() => setVisible(false)}
-          onSubmit={() => {
-            submitForm();
-          }}
+          onSubmit={() => void submitForm()}
           loading={submitting}
           submitText={editing ? t('common.save') : t('common.add')}
         />
