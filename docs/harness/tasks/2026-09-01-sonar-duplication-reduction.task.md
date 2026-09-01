@@ -1,6 +1,6 @@
 ---
 title: Reduce Pantheon Base SonarCloud duplication below three percent
-doc_type: TaskPacket
+doc_type: Remediation
 layer: system
 status: Active
 updated_at: 2026-09-01
