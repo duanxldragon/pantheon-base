@@ -1,0 +1,23 @@
+{
+  "taskId": "2026-09-01-release-docs-reconciliation",
+  "repo": "pantheon-base",
+  "agent": {"tool": "codex", "note": "Documentation-only release metadata reconciliation."},
+  "commands": [
+    {"command": "npm run check:docs-frontmatter", "cwd": ".", "status": "passed", "notes": "229 docs checked; 200 frontmatter documents."},
+    {"command": "npm run check:harness-docs", "cwd": ".", "status": "passed", "notes": "Strict docs link check returned 0 findings."},
+    {"command": "git diff --check", "cwd": ".", "status": "passed", "notes": "No whitespace errors."}
+  ],
+  "runtimeSensitive": false,
+  "runtimeGap": "No product runtime changed.",
+  "browserEvidence": [],
+  "hostedVerification": ["GitHub PR required checks pending"],
+  "knownGaps": ["GitHub push requires pull request and Quality Gates due repository rules."],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-01-release-docs-reconciliation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-01-release-docs-reconciliation/",
+    "reviewFile": ".harness/evidence/2026-09-01-release-docs-reconciliation/review.md",
+    "summaryFile": ".harness/evidence/2026-09-01-release-docs-reconciliation/summary.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-09-01-release-docs-reconciliation.task.md"]
+  }
+}
