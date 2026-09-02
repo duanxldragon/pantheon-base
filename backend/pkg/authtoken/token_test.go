@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"pantheon-base/pkg/testredis"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testredis"
 )
 
 func TestValidateSessionRejectsInvalidJSON(t *testing.T) {

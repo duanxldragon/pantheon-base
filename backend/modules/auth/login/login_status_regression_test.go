@@ -3,7 +3,7 @@ package login
 import (
 	"testing"
 
-	"pantheon-base/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 )
 
 // Regression: SystemLogLogin.Status used to carry `gorm:"default:1"`, which made

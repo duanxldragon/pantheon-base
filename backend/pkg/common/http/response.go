@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"pantheon-base/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

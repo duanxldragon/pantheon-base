@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"pantheon-base/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"path/filepath"
 	"strings"
 
-	"pantheon-base/internal/scaffold"
+	"github.com/duanxldragon/pantheon-base/backend/internal/scaffold"
 )
 
 const msgModuleSchemaInvalid = "module.register.schema_invalid"

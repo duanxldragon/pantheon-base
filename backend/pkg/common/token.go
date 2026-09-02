@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"pantheon-base/pkg/authtoken"
-	commonhttp "pantheon-base/pkg/common/http"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
+	commonhttp "github.com/duanxldragon/pantheon-base/backend/pkg/common/http"
 )
 
 const (

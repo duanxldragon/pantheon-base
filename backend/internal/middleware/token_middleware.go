@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"pantheon-base/pkg/authtoken"
-	"pantheon-base/pkg/common"
-	commonhttp "pantheon-base/pkg/common/http"
-	"pantheon-base/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	commonhttp "github.com/duanxldragon/pantheon-base/backend/pkg/common/http"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"

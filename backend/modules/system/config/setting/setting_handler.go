@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/impexp"
-	uploadpkg "pantheon-base/pkg/upload"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
+	uploadpkg "github.com/duanxldragon/pantheon-base/backend/pkg/upload"
 )
 
 const (

@@ -1,4 +1,4 @@
-module pantheon-base
+module github.com/duanxldragon/pantheon-base/backend
 
 go 1.26.5
 

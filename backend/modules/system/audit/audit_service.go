@@ -3,16 +3,16 @@ package system
 import (
 	"encoding/json"
 	"fmt"
-	"pantheon-base/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"pantheon-base/internal/middleware"
-	"pantheon-base/pkg/impexp"
-	"pantheon-base/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
