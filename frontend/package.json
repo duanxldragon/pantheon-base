@@ -102,7 +102,6 @@
   },
   "dependencies": {
     "@arco-design/web-react": "^2.60.0",
-    "@duanxldragon/pantheon-base-ui": "file:duanxldragon-pantheon-base-ui-0.10.25.tgz",
     "axios": "^1.20.0",
     "i18next": "26.4.0",
     "qrcode.react": "^4.2.0",
