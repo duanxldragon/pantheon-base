@@ -9,7 +9,7 @@
   },
   "baseline": {"duplicatedLines": 5936, "ncloc": 128506, "density": 4.1, "source": "SonarCloud public measures endpoint, 2026-09-01"},
   "methodReadiness": {"qualityProfiles": ["ci-workflow", "ui-runtime"], "minimalComplexityRung": "reuse", "reviewerPosture": ["mechanical", "architecture"]},
-  "verificationPlan": {"localDuplication": "npm run check:duplication", "backend": "focused go test then go test ./...", "frontend": ["npm run type-check", "npm run lint", "npm run build"], "hosted": "SonarCloud measures after CI"},
+  "verificationPlan": {"localDuplication": "npm run check:duplication", "backend": "focused go test then go test ./...", "frontend": ["npm run type-check", "npm run lint", "npm run build"], "hosted": "SonarCloud measures after CI", "visualEvidenceExemption": {"scope": "governance-only", "reason": "This remediation only consolidates duplicated code and updates governance metadata; no rendered surface changes.", "noRenderedSurfaceChanged": true, "humanApprovalRequired": true}},
   "runtimeSensitive": false,
   "runtimeGap": "No API/server runtime path is intentionally changed; hosted SonarCloud remains the final metric authority.",
   "linkage": {"taskManifest": ".harness/tasks/2026-09-01-sonar-duplication-reduction/manifest.json", "evidenceDir": ".harness/evidence/2026-09-01-sonar-duplication-reduction/", "reviewFile": ".harness/evidence/2026-09-01-sonar-duplication-reduction/review.md", "summaryFile": ".harness/evidence/2026-09-01-sonar-duplication-reduction/summary.md", "planRefs": ["docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md"], "changeRef": "none"},
