@@ -40,6 +40,7 @@ inheritance-sync
 - Close actionable feedback on PR `#279`, merge it, and delete its remote source branch.
 - Merge the existing `chore/sonar-duplication-reduction` branch after independent review and required checks.
 - Correct `CLAUDE.md` so it defers execution-role boundaries to `AGENTS.md`.
+- Remove unreferenced one-off backend import-rewrite scripts and recognize the existing frontend library export entrypoint in the repository-layout contract.
 - Keep only `main` locally and on GitHub after verified merges.
 - Cut immutable `pantheon-base-v0.10.26` from the checked `main` commit and publish its required assets.
 - Rebuild and validate a clean Pantheon Ops consumer worktree from the release, then update its foundation lock through the existing pipeline.
@@ -69,10 +70,13 @@ inheritance-sync
 ### Modify
 
 - `CLAUDE.md`
+- `docs/designs/REPOSITORY_LAYOUT.md`
+- `docs/designs/REPOSITORY_LAYOUT.en.md`
+- `scripts/harness/check-structure-contract.mjs`
 
 ### Do Not Touch
 
-- `backend/`
+- Runtime backend modules, packages, and contracts; deletion is limited to the unreferenced one-off import-rewrite scripts at `backend/` root.
 - `frontend/src/`
 - Primary `pantheon-ops` worktree
 

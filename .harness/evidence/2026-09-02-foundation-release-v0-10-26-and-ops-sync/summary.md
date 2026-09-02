@@ -12,6 +12,7 @@ Command-level status and explicit gaps are recorded in `commands.json`.
 
 - `npm run check:docs-frontmatter` - passed.
 - `npm run check:task-packet-template` - passed.
+- `npm run check:structure` - passed after removing the unreferenced backend-root import rewrite scripts and documenting the existing frontend library entrypoint.
 - `npm run check:github-feedback -- --repo duanxldragon/pantheon-base --pr 279` - passed after the review thread was resolved.
 - `go test -race ./...` with `CGO_ENABLED=1` and MinGW - passed.
 - `npm run lint` - passed.

@@ -2,7 +2,7 @@
 
 - 改动层级：共享 frontend platform、`system/*`、`pkg/*`、治理文档与 foundation release handoff
 - 改动模块：Sonar duplication cleanup、执行角色治理、release/consumer evidence
-- 目标问题：收敛已提交的重复率治理改动，修复 stale frontend package self-dependency，并为 Base 到 Ops 的可审计 foundation release 建立收口链路
+- 目标问题：收敛已提交的重复率治理改动，修复 stale frontend package self-dependency 和遗留布局违规，并为 Base 到 Ops 的可审计 foundation release 建立收口链路
 - 预期影响：不改变 API、DTO、数据库、权限、菜单、i18n 或审计契约；发布后 Ops 仅通过不可变 artifact 与 overlay pipeline 消费
 
 ## Harness 链路
@@ -25,7 +25,7 @@
 - task id: 2026-09-02-foundation-release-v0-10-26-and-ops-sync
 - task manifest: .harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json
 - evidence: .harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/
-- boundaries: shared Base refactor and release governance only; no public API/schema/permission/menu/i18n/audit contract change
+- boundaries: shared Base refactor, release governance, and repository-layout cleanup only; no public API/schema/permission/menu/i18n/audit contract change
 - backend response contract: unchanged
 - backend DTO contract: unchanged
 - permission contract: unchanged

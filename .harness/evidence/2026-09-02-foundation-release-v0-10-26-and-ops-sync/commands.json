@@ -19,6 +19,12 @@
       "notes": "Task packet remains present and linked."
     },
     {
+      "command": "npm run check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The repository layout contract passed after removing unreferenced backend-root import-rewrite scripts and allowlisting the existing library entrypoint."
+    },
+    {
       "command": "npm run check:github-feedback -- --repo duanxldragon/pantheon-base --pr 279",
       "cwd": ".",
       "status": "passed",

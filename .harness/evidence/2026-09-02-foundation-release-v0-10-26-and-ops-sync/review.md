@@ -9,6 +9,7 @@
 
 - RESOLVED: the frontend package had a stale `0.10.25` identity for a `pantheon-base-v0.10.26` release. `frontend/package.json` and the root package records in `frontend/package-lock.json` now use `0.10.26`.
 - RESOLVED: the stale frontend self-tarball/self-dependency and obsolete manual migration guide were removed in `9eb4c1d4b3d93acce22c22737377006c7106c536`.
+- RESOLVED: three unreferenced one-off backend import-rewrite scripts violated the backend-root layout contract. They were removed, while `frontend/src/index.ts` is explicitly allowlisted because `frontend/vite.config.ts` uses it as the library build entrypoint.
 - WATCH: release and consumer gates remain intentionally pending until this PR merges, the exact final `main` commit has a successful `Release Gate Summary`, and Ops validates the immutable artifact in an isolated worktree.
 
 ## Mechanical Review
