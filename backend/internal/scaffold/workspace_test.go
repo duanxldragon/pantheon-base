@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"pantheon-base/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 )
 
 func TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules(t *testing.T) {

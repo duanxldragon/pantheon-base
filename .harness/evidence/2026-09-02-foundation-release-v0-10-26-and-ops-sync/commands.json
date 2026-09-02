@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-09-02-foundation-release-v0-10-26-and-ops-sync",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "repository-defined L2 release workflow"
+  },
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Passed after the final evidence update."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Task packet remains present and linked."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The repository layout contract passed after removing unreferenced backend-root import-rewrite scripts and allowlisting the existing library entrypoint."
+    },
+    {
+      "command": "npm run check:github-feedback -- --repo duanxldragon/pantheon-base --pr 279",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The predecessor PR feedback gate passed after its review thread was resolved."
+    },
+    {
+      "command": "$env:PATH='D:\\msys64\\mingw64\\bin;' + $env:PATH; $env:CGO_ENABLED='1'; go test -race ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Windows CGO race gate passed with MinGW, including the rerun after the Go formatting-only remediation."
+    },
+    {
+      "command": "gofmt -d backend/internal/middleware/rate_limit_presets.go backend/internal/scaffold/workspace.go backend/modules/auth/login/login_menu_test.go backend/modules/lowcode/dynamicmodule/dynamic_module_activation.go backend/modules/lowcode/dynamicmodule/dynamic_module_handler.go backend/modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go backend/modules/lowcode/generator/generator_datasource_service.go backend/modules/platform/routes.go",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No output after `gofmt -w` corrected the 10 whitespace-only findings from hosted Go lint."
+    },
+    {
+      "command": "npm run lint && npm run type-check && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "The final build passed the menu, i18n, visual, and UI contract checks."
+    },
+    {
+      "command": "npm install --package-lock-only --ignore-scripts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Lockfile reconciliation passed; jsdom reported the known Node 24.14.0 engine warning."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No whitespace errors before the release-candidate commit."
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": ["Base main -> foundation manifest/bundle -> Ops consumer lock -> business overlay validation"],
+    "checks": ["sensitive-flow"],
+    "findings": [],
+    "notes": "Release and inheritance scripts define the boundary; no application symbol graph changed in this release-only closure."
+  },
+  "browserEvidence": [],
+  "runtimeSensitive": true,
+  "runtimeGap": "No runtime service was started because this release-only branch does not change runtime behavior; the published artifact will receive isolated Ops overlay and business-smoke validation before consumer lock publication.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/",
+    "reviewFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/review.md",
+    "summaryFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/summary.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync.task.md"]
+  },
+  "knownGaps": [
+    "The final Base main commit and its commit-specific Release Gate Summary do not exist until this PR merges.",
+    "The immutable pantheon-base-v0.10.26 tag and GitHub release assets do not exist until the exact final main commit passes the release gate.",
+    "Pantheon Ops consumer-lock validation is intentionally deferred to a clean isolated worktree after publication; the dirty primary Ops worktree is preserved."
+  ]
+}

@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-base/internal/middleware"
-	"pantheon-base/pkg/database"
-	"pantheon-base/pkg/logging"
-	"pantheon-base/pkg/testmysql"
+	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"

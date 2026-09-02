@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/database"
-	"pantheon-base/pkg/impexp"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

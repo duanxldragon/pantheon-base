@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"pantheon-base/modules/auth/security"
-	user "pantheon-base/modules/system/iam/user"
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/impexp"
-	"pantheon-base/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/modules/auth/security"
+	user "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

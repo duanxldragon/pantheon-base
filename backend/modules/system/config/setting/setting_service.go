@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/contracts"
-	"pantheon-base/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 
 	"gorm.io/gorm"
 )

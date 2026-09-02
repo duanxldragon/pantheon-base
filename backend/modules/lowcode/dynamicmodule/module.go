@@ -1,11 +1,11 @@
 package dynamicmodule
 
 import (
-	"pantheon-base/internal/middleware"
-	"pantheon-base/pkg/common"
-	commonsecurity "pantheon-base/pkg/common/security"
-	"pantheon-base/pkg/contracts"
-	"pantheon-base/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	commonsecurity "github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"strings"
 
 	"github.com/gin-gonic/gin"

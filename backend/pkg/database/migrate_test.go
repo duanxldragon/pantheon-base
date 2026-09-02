@@ -9,7 +9,7 @@ import (
 	mysqlDriver "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 
-	"pantheon-base/pkg/testmysql"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 )
 
 func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {

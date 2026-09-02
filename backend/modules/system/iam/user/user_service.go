@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

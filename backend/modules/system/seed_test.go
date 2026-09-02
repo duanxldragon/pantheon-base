@@ -3,8 +3,8 @@ package system
 import (
 	"testing"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 	"gorm.io/gorm"
-	"pantheon-base/pkg/testmysql"
 )
 
 func TestEnsureMenuSeedsReparentsLegacyFlatMenus(t *testing.T) {

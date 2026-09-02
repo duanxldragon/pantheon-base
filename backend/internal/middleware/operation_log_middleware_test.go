@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/testmysql"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

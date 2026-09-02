@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/metrics"
 	mysqlDriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"pantheon-base/pkg/metrics"
 )
 
 var DB *gorm.DB

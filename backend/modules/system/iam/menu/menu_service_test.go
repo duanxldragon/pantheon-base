@@ -3,9 +3,9 @@ package iam
 import (
 	"testing"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 	"gorm.io/gorm"
-	"pantheon-base/pkg/common"
-	"pantheon-base/pkg/testmysql"
 )
 
 func setupMenuTestDB(t *testing.T) *gorm.DB {

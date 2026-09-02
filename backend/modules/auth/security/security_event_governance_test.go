@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"pantheon-base/pkg/testmysql"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 )
 
 func newSecurityEventFixture(t *testing.T) *Service {

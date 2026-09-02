@@ -1,0 +1,54 @@
+{
+  "taskId": "2026-09-02-foundation-release-v0-10-26-and-ops-sync",
+  "title": "Publish pantheon-base-v0.10.26 and upgrade Pantheon Ops",
+  "goal": "Close the Base release line into main, publish a verified immutable foundation release, and consume it through the Ops overlay pipeline.",
+  "primaryLayer": "inheritance-sync",
+  "scope": {
+    "in": [
+      "PR and branch closure",
+      "foundation release v0.10.26",
+      "isolated Pantheon Ops consumer upgrade"
+    ],
+    "out": [
+      "Base API/schema/permission changes",
+      "manual Base-to-Ops source copying",
+      "overwriting the dirty primary Pantheon Ops worktree",
+      "mutation of existing releases"
+    ]
+  },
+  "methodReadiness": {
+    "qualityProfiles": ["ci-workflow"],
+    "minimalComplexityRung": "reuse",
+    "reviewerPosture": ["architecture", "mechanical"]
+  },
+  "verificationPlan": {
+    "base": [
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "GitHub required checks",
+      "Release Gate Summary"
+    ],
+    "release": "npm run release:foundation:cut -- --release-version pantheon-base-v0.10.26 --release-line release/0.10 --base-commit <final-main-sha>",
+    "consumer": [
+      "npm run upgrade:foundation:local-plan -- --release-version pantheon-base-v0.10.26",
+      "npm run check:base-sync",
+      "business-overlay, Go race, frontend, and business-smoke gates in an isolated worktree"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "No primary Ops runtime service is started before the isolated overlay build and smoke gates complete.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/",
+    "reviewFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/review.md",
+    "summaryFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/summary.md",
+    "planRefs": ["docs/harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync.task.md"],
+    "changeRef": "none"
+  },
+  "humanGates": [
+    "Immutable release requires a successful Release Gate Summary",
+    "Primary Ops worktree remains untouched until a separately authorized replacement"
+  ],
+  "ratchetDecision": "no-repeat-observed",
+  "syncExpectation": "Base release and Ops consumer lock update are required; no source file copying is permitted."
+}
