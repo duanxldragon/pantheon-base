@@ -16,56 +16,8 @@ This repository has a project-local CodeGraph MCP config in `.mcp.json`.
 - Use `rg` for literal strings, logs, copy, comments, or after CodeGraph has identified the target file.
 - If the graph is stale, run `codegraph sync .` before relying on structural results.
 
-## Hard Stop: Claude does not implement
+## Implementation Approach
 
-Claude Code in this repository is the **planner and reviewer**, not the executor.
+`AGENTS.md` governs execution roles. Planners and dispatchers must not directly modify business code under `backend/` or `frontend/src/`. After plan approval, a Generator adapter performs implementation; the coordinator may directly update only governance documents, project configuration, and entry rules as defined there.
 
-After a plan is approved, Claude MUST NOT use Edit/Write to implement code
-changes. Instead, delegate implementation to Codex via `codex exec`.
-
-Everything under `backend/` and `frontend/src/` belongs to Codex.
-
-Claude is allowed to modify only these categories directly:
-- `docs/harness/` — harness policy, task packets, failure registry, review artifacts
-- `.harness/` — evidence and audit reports
-- `CLAUDE.md`, `AGENTS.md`, `DESIGN.md` — governance documents
-- Root config files: `.gitignore`, `package.json` (scripts only)
-- Workflow files: `.github/workflows/` (CI configuration)
-
-## Codex Model Tiers
-
-Model mappings live in `.codex/model-tiers.json` — edit that file when
-models iterate. CLAUDE.md references tier names only (`quick` / `standard`
-/ `deep`), never hardcoded model IDs.
-
-Claude reads `.codex/model-tiers.json` and auto-selects a tier based on
-the task. The user can override by saying "use quick", "use standard",
-or "use deep" when giving a task.
-
-### How Claude builds the codex command
-
-```text
-1. Read .codex/model-tiers.json
-2. Match task to a tier using the autoSelect rules
-3. Always respect user override if present
-4. Assemble: codex exec "<prompt>" -C pantheon-base -s <sandbox> -m <model> -c 'model_reasoning_effort="<reasoning>"'
-```
-
-### Current tiers (from config)
-
-| Tier | Model | Reasoning | Sandbox |
-|------|-------|-----------|---------|
-| **quick** | gpt-5.4-mini | medium | read-only |
-| **standard** | gpt-5.4 | high | read-write |
-| **deep** | gpt-5.5 | xhigh | read-write |
-
-### Auto-select rules
-
-**→ quick** when the task is read-only (explore, find, locate),
-or is a doc-only / trivial text change.
-
-**→ deep** when the task touches auth, security, permissions,
-schema, middleware, generator, dynamic-module, import/export,
-pkg/common, pkg/contracts, or spans 3+ packages.
-
-**→ standard** for everything else — the default for code-writing tasks.
+External tools or agents may assist with complex work only within those role boundaries, with their handoffs recorded in the task packet and evidence artifacts.
