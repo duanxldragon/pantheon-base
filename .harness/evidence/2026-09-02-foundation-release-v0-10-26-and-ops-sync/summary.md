@@ -15,6 +15,7 @@ Command-level status and explicit gaps are recorded in `commands.json`.
 - `npm run check:structure` - passed after removing the unreferenced backend-root import rewrite scripts and documenting the existing frontend library entrypoint.
 - `npm run check:github-feedback -- --repo duanxldragon/pantheon-base --pr 279` - passed after the review thread was resolved.
 - `go test -race ./...` with `CGO_ENABLED=1` and MinGW - passed.
+- `gofmt -d` for the 10 Go files reported by hosted `golangci-lint` - passed with no output after formatting; the full Windows CGO race gate passed again.
 - `npm run lint` - passed.
 - `npm run type-check` - passed.
 - `npm run build` - passed, including frontend contract checks.

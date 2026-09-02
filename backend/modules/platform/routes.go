@@ -4,9 +4,9 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 
+	dept "github.com/duanxldragon/pantheon-base/backend/modules/system/org/dept"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	dept "github.com/duanxldragon/pantheon-base/backend/modules/system/org/dept"
 )
 
 type platformDeptGovernanceTaskLoader struct {

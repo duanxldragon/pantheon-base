@@ -3,8 +3,8 @@ package dynamicmodule
 import (
 	"encoding/json"
 	"errors"
-	"os"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"os"
 	"path/filepath"
 	"strings"
 

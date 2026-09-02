@@ -3,8 +3,8 @@ package login
 import (
 	"testing"
 
-	"gorm.io/gorm"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
+	"gorm.io/gorm"
 )
 
 func TestSeedAuthModuleMenusReparentsLegacyFlatMenus(t *testing.T) {

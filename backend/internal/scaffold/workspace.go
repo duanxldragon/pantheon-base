@@ -3,9 +3,9 @@ package scaffold
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"os"
 	"os/exec"
-	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"path/filepath"
 	"regexp"
 	"runtime"

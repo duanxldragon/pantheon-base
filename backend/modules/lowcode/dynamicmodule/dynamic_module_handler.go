@@ -3,9 +3,9 @@ package dynamicmodule
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"github.com/duanxldragon/pantheon-base/backend/internal/scaffold"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"io"
 
 	"github.com/gin-gonic/gin"
 )

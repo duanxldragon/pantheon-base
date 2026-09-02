@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	systemi18n "github.com/duanxldragon/pantheon-base/backend/modules/system/i18n"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/duanxldragon/pantheon-base/backend/internal/scaffold"
 )
