@@ -18,7 +18,6 @@ This repository has a project-local CodeGraph MCP config in `.mcp.json`.
 
 ## Implementation Approach
 
-Claude Code can directly implement changes using Edit/Write/Bash tools as needed.
+`AGENTS.md` governs execution roles. Planners and dispatchers must not directly modify business code under `backend/` or `frontend/src/`. After plan approval, a Generator adapter performs implementation; the coordinator may directly update only governance documents, project configuration, and entry rules as defined there.
 
-For complex tasks requiring deep reasoning or specialized expertise, consider delegating to external tools or agents, but this is optional and at maintainer discretion.
-
+External tools or agents may assist with complex work only within those role boundaries, with their handoffs recorded in the task packet and evidence artifacts.
