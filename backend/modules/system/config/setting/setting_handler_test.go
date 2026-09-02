@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	uploadpkg "github.com/duanxldragon/pantheon-base/backend/pkg/upload"
+	"github.com/gin-gonic/gin"
 )
 
 type stubUploadConfigReader struct {

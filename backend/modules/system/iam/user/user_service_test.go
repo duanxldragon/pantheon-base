@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 	authsession "github.com/duanxldragon/pantheon-base/backend/modules/auth/session"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func setupUserTestDB(t *testing.T) *gorm.DB {
