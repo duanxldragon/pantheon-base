@@ -608,6 +608,20 @@ const PermissionList: React.FC = () => {
       </Space>
     ) : null;
 
+  const apiTableRowSelection = buildCrossPageRowSelection({
+    rows: data,
+    getRowKey: (row) => row.id,
+    selectedRowKeys,
+    setSelectedRowKeys,
+    fixed: true,
+    checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
+  });
+  const apiTablePagination = buildStandardPagination(t, {
+    current: query.page || emptyQuery.page,
+    pageSize: query.pageSize || emptyQuery.pageSize,
+    total,
+  });
+
   const renderApiTableStates = () => (
     <>
       {loading && data.length === 0 ? <PageLoading /> : null}
@@ -630,21 +644,10 @@ const PermissionList: React.FC = () => {
           rowKey={(row) => row.id}
           loading={!!loading}
           scroll={{ x: 'max-content' }}
-          rowSelection={buildCrossPageRowSelection({
-            rows: data,
-            getRowKey: (row) => row.id,
-            selectedRowKeys,
-            setSelectedRowKeys,
-            fixed: true,
-            checkboxProps: (row) => ({ disabled: row.roleKey === 'admin' }),
-          })}
+          rowSelection={apiTableRowSelection}
           onChange={handleTableChange}
           emptyText={t('common.noData')}
-          pagination={buildStandardPagination(t, {
-            current: query.page || emptyQuery.page,
-            pageSize: query.pageSize || emptyQuery.pageSize,
-            total,
-          })}
+          pagination={apiTablePagination}
         />
       ) : null}
     </>
@@ -793,7 +796,7 @@ const PermissionList: React.FC = () => {
       size="md"
       onCancel={() => setVisible(false)}
       footer={
-          <FormModalFooter
+        <FormModalFooter
           onCancel={() => setVisible(false)}
           onSubmit={() => void submitForm()}
           loading={submitting}
