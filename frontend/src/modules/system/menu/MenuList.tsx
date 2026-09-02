@@ -59,7 +59,7 @@ import {
   PageLoading,
   PageRequestError,
   SystemRowActions,
-  SubmitBar,
+  FormModalFooter,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
   useGovernanceRail,
@@ -886,7 +886,7 @@ const MenuList: React.FC = () => {
       autoFocus={false}
       onCancel={() => setVisible(false)}
       footer={
-        <SubmitBar
+        <FormModalFooter
           onCancel={() => setVisible(false)}
           onSubmit={() => {
             submitForm();

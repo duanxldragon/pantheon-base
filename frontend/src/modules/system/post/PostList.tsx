@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   Button,
   Card,
@@ -13,17 +14,13 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import { message } from '../../../components/feedback/message';
+import type { TFunction } from 'i18next';
 import type {
   ColumnProps,
   SorterInfo,
   TableProps,
 } from '@arco-design/web-react/es/Table/interface';
-import {
-  IconDelete,
-  IconDownload,
-  IconEdit,
-  IconPlus,
-} from '@arco-design/web-react/icon';
+import { IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { showImportResult } from '../../../api/importExport';
 import { isArcoFormValidationError } from '../../../core/arco/formValidation';
@@ -60,14 +57,14 @@ import {
   GovernanceRailSummary,
   GovernanceRailToggleButton,
   GovernanceSummaryBar,
-  ImportCsvButton,
+  FormModalFooter,
+  ListDataActions,
   ListHeaderActions,
   PageContainer,
   PageEmpty,
   PageLoading,
   PageRequestError,
   PermissionAction,
-  SubmitBar,
   SystemRowActions,
   TABLE_ACTION_COLUMN_WIDTH,
   TABLE_COLUMN_WIDTH,
@@ -128,6 +125,33 @@ function isDefaultPostListQuery(query: PostListQuery) {
     (query.pageSize ?? 10) === 10 &&
     !query.sortField &&
     !query.sortOrder
+  );
+}
+
+interface GovernanceTagListProps {
+  readonly keys: string[];
+  readonly t: TFunction;
+  readonly kind: 'tag' | 'blockedBy';
+  readonly color?: string;
+}
+
+function GovernanceTagList({ keys, t, kind, color }: GovernanceTagListProps): ReactNode {
+  if (keys.length === 0) {
+    return '-';
+  }
+  const labels = keys.map((key) =>
+    t(`system.post.governance.${kind}.${key}`, {
+      defaultValue: t(`system.dept.task.${kind}.${key}`, { defaultValue: key }),
+    }),
+  );
+  return (
+    <Space size={[6, 6]} wrap>
+      {labels.map((label, index) => (
+        <Tag key={`${keys[index]}-${label}`} size="small" color={color}>
+          {label}
+        </Tag>
+      ))}
+    </Space>
   );
 }
 
@@ -441,41 +465,9 @@ const PostList: React.FC = () => {
     [data],
   );
 
-  const renderGovernanceTags = (keys: string[], tone: 'tag' | 'note' = 'tag') => {
-    if (keys.length === 0) {
-      return '-';
-    }
-    // Backend returns stable i18n keys (`governanceTags`, `governanceBlockedBy`,
-    // `governanceActions`); only the rendered labels used to be displayed. The
-    // label values came from the English dictionary hardcoded on the backend
-    // (`impexp.GovernanceTagLabels` etc.) and therefore leaked through every
-    // non-English locale. Translate by key here and ignore the label strings.
-    const labels = keys.map((key) =>
-      t(`system.post.governance.tag.${key}`, {
-        defaultValue: t(`system.dept.task.tag.${key}`, { defaultValue: key }),
-      }),
-    );
-    if (tone === 'note') {
-      return (
-        <Space size={[6, 6]} wrap>
-          {labels.map((label, index) => (
-            <Tag key={`${keys[index]}-${label}`} size="small">
-              {label}
-            </Tag>
-          ))}
-        </Space>
-      );
-    }
-    return (
-      <Space size={[6, 6]} wrap>
-        {labels.map((label, index) => (
-          <Tag key={`${keys[index]}-${label}`} size="small" color="arcoblue">
-            {label}
-          </Tag>
-        ))}
-      </Space>
-    );
-  };
+  const renderGovernanceTags = (keys: string[]) => (
+    <GovernanceTagList keys={keys} t={t} kind="tag" color="arcoblue" />
+  );
 
   const columns: ColumnProps<PostRow>[] = [
     withTableColumnPriority(
@@ -517,25 +509,9 @@ const PostList: React.FC = () => {
         title: t('system.post.hero.blockedBy'),
         dataIndex: 'governanceBlockedDesc',
         width: TABLE_COLUMN_WIDTH.diagnostics,
-        render: (_: unknown, row: PostRow) => {
-          const labels = row.governanceBlockedBy.map((key) =>
-            t(`system.post.governance.blockedBy.${key}`, {
-              defaultValue: t(`system.dept.task.blockedBy.${key}`, { defaultValue: key }),
-            }),
-          );
-          if (labels.length === 0) {
-            return '-';
-          }
-          return (
-            <Space size={[6, 6]} wrap>
-              {labels.map((label, index) => (
-                <Tag key={`${row.governanceBlockedBy[index]}-${label}`} size="small">
-                  {label}
-                </Tag>
-              ))}
-            </Space>
-          );
-        },
+        render: (_: unknown, row: PostRow) => (
+          <GovernanceTagList keys={row.governanceBlockedBy} t={t} kind="blockedBy" />
+        ),
       },
       'medium',
     ),
@@ -718,33 +694,13 @@ const PostList: React.FC = () => {
               prefixActions={
                 <ListHeaderActions
                   utility={
-                    <>
-                      <Button
-                        icon={<IconDownload />}
-                        onClick={() => {
-                          handleExport();
-                        }}
-                        disabled={!canExport}
-                      >
-                        {t('common.export')}
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          handleDownloadTemplate();
-                        }}
-                        disabled={!canImport}
-                      >
-                        {t('common.downloadTemplate')}
-                      </Button>
-                      <ImportCsvButton
-                        disabled={!canImport}
-                        onSelect={(file) => {
-                          handleImport(file);
-                        }}
-                      >
-                        {t('common.import')}
-                      </ImportCsvButton>
-                    </>
+                    <ListDataActions
+                      canExport={canExport}
+                      canImport={canImport}
+                      onExport={handleExport}
+                      onDownloadTemplate={handleDownloadTemplate}
+                      onImport={handleImport}
+                    />
                   }
                   primary={
                     <Button
@@ -881,11 +837,9 @@ const PostList: React.FC = () => {
         size="md"
         onCancel={() => setVisible(false)}
         footer={
-          <SubmitBar
+          <FormModalFooter
             onCancel={() => setVisible(false)}
-            onSubmit={() => {
-              submitForm();
-            }}
+            onSubmit={submitForm}
             loading={submitting}
             submitText={editing ? t('common.save') : t('common.add')}
           />

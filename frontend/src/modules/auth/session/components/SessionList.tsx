@@ -26,10 +26,11 @@ import {
   buildStandardPagination,
   SearchToolbar,
   GovernanceCleanupBar,
+  buildGovernanceCleanupLabels,
+  GovernanceListSummary,
   GovernanceInsightDrawer,
   GovernanceRailSummary,
   GovernanceRailToggleButton,
-  GovernanceSummaryBar,
   PageContainer,
   PageEmpty,
   PageLoading,
@@ -72,6 +73,7 @@ const SessionList: React.FC = () => {
   const canDelete = isAdmin || hasPerm('system:session:delete');
   const canClear = isAdmin || hasPerm('system:session:clear');
   const governanceRail = useGovernanceRail();
+  const cleanupLabels = useMemo(() => buildGovernanceCleanupLabels(t), [t]);
   const [data, setData] = useState<AdminSessionRow[]>([]);
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
@@ -430,7 +432,7 @@ const SessionList: React.FC = () => {
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template">
-        <GovernanceSummaryBar
+        <GovernanceListSummary
           eyebrow={t('auth.session.hero.eyebrow')}
           title={t('auth.session.hero.title')}
           description={t('auth.session.hero.desc')}
@@ -439,7 +441,9 @@ const SessionList: React.FC = () => {
             label: item.label,
             value: item.value,
           }))}
-          action={
+          summaryTitle={t('auth.session.hero.summaryTitle')}
+          rail={governanceRail}
+          railToggle={
             <GovernanceRailToggleButton
               expanded={governanceRail.expanded}
               onToggle={governanceRail.toggle}
@@ -542,18 +546,15 @@ const SessionList: React.FC = () => {
                 retentionDays={retentionDays}
                 retentionOptions={retentionOptions}
                 onRetentionChange={setRetentionDays}
-                retentionLabel={(option) => t('common.keepRecentDays', { count: option })}
-                confirmTitle={t('common.cleanupIrreversibleWarning')}
+                retentionLabel={cleanupLabels.retentionLabel}
+                confirmTitle={cleanupLabels.confirmTitle}
                 actionLabel={t('auth.session.cleanupAction')}
-                confirmActionLabel={t('common.cleanup')}
-                cleanupModeLabel={t('common.cleanupMode')}
-                cleanupModeOptions={[
-                  { label: t('common.cleanupModeRetention'), value: 'retention' },
-                  { label: t('common.cleanupModeRange'), value: 'range' },
-                ]}
-                rangeStartLabel={t('common.cleanupRangeStart')}
-                rangeEndLabel={t('common.cleanupRangeEnd')}
-                rangeRequiredMessage={t('common.cleanupRangeRequired')}
+                confirmActionLabel={cleanupLabels.confirmActionLabel}
+                cleanupModeLabel={cleanupLabels.cleanupModeLabel}
+                cleanupModeOptions={cleanupLabels.cleanupModeOptions}
+                rangeStartLabel={cleanupLabels.rangeStartLabel}
+                rangeEndLabel={cleanupLabels.rangeEndLabel}
+                rangeRequiredMessage={cleanupLabels.rangeRequiredMessage}
                 onConfirm={clearHistoricSessions}
                 hint={t('auth.session.cleanupHint')}
                 extraActions={

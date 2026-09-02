@@ -14,6 +14,7 @@ export { default as FilterPanel } from './patterns/FilterPanel';
 export { default as SearchToolbar, type SearchToolbarProps } from './patterns/SearchToolbar';
 export { default as PageActions } from './patterns/actions/PageActions';
 export { default as ListHeaderActions } from './patterns/actions/ListHeaderActions';
+export { default as ListDataActions } from './patterns/actions/ListDataActions';
 export {
   GovernanceRailPanel,
   GovernanceRailSummary,
@@ -31,6 +32,8 @@ export {
   type GovernanceCleanupPayload,
   type GovernanceCleanupMode,
 } from './governance/GovernanceCleanupBar';
+export { default as GovernanceListSummary } from './governance/GovernanceListPatterns';
+export { buildGovernanceCleanupLabels } from './governance/governanceCleanupLabels';
 export {
   default as TimeRangeFilter,
   TIME_RANGE_FILTER_FORMAT,
@@ -55,6 +58,7 @@ export {
   getVisibleSelectedRowKeys,
   isPaginationConfig,
   mergeCrossPageSelection,
+  buildCrossPageRowSelection,
   type CrossPageRowKey,
   type SharedPaginationConfig,
 } from './table/crossPageSelection';
@@ -65,6 +69,7 @@ export {
 } from './table/standardPagination';
 export { default as FormSection } from './patterns/feedback/FormSection';
 export { default as SubmitBar } from './patterns/actions/SubmitBar';
+export { default as FormModalFooter } from './patterns/actions/FormModalFooter';
 export {
   ChangeDiff,
   ConditionBuilder,

@@ -279,45 +279,48 @@ function buildNoticeEntries(options: {
     });
   }
 
-  if (isAdmin || hasPerm('system:session:list')) {
-    entries.push({
-      key: 'notice-session',
-      title: t('system.menu.session'),
-      description: t('app.notice.sessionDesc'),
+  [
+    [
+      'session',
+      'system.menu.session',
+      'app.notice.sessionDesc',
+      '/system/session',
+      'system:session:list',
+    ],
+    [
+      'login-log',
+      'system.menu.loginLog',
+      'app.notice.loginLogDesc',
+      '/system/login-log',
+      'system:login-log:list',
+    ],
+    [
+      'security-event',
+      'system.menu.securityEvent',
+      'app.notice.securityEventDesc',
+      '/system/security-event',
+      'system:security-event:list',
+    ],
+    [
+      'operation-log',
+      'system.menu.operationLog',
+      'app.notice.operationLogDesc',
+      '/system/operation-log',
+      'system:operation-log:list',
+    ],
+  ].forEach(([name, titleKey, descriptionKey, path, permission]) => {
+    appendNoticeEntry(entries, {
+      isAdmin,
+      hasPerm,
+      permission,
+      key: `notice-${name}`,
+      titleKey,
+      descriptionKey,
       icon: renderMenuIcon('safe'),
-      run: () => navigate('/system/session'),
+      run: () => navigate(path),
+      t,
     });
-  }
-
-  if (isAdmin || hasPerm('system:login-log:list')) {
-    entries.push({
-      key: 'notice-login-log',
-      title: t('system.menu.loginLog'),
-      description: t('app.notice.loginLogDesc'),
-      icon: renderMenuIcon('safe'),
-      run: () => navigate('/system/login-log'),
-    });
-  }
-
-  if (isAdmin || hasPerm('system:security-event:list')) {
-    entries.push({
-      key: 'notice-security-event',
-      title: t('system.menu.securityEvent'),
-      description: t('app.notice.securityEventDesc'),
-      icon: renderMenuIcon('safe'),
-      run: () => navigate('/system/security-event'),
-    });
-  }
-
-  if (isAdmin || hasPerm('system:operation-log:list')) {
-    entries.push({
-      key: 'notice-operation-log',
-      title: t('system.menu.operationLog'),
-      description: t('app.notice.operationLogDesc'),
-      icon: renderMenuIcon('safe'),
-      run: () => navigate('/system/operation-log'),
-    });
-  }
+  });
 
   return entries;
 }
@@ -767,6 +770,32 @@ function ShellHeaderLeading({
 type ShellUserTriggerHandle = {
   getRootDOMNode: () => HTMLElement | null;
 };
+
+function appendNoticeEntry(
+  entries: NoticeEntry[],
+  options: {
+    isAdmin: boolean;
+    hasPerm: (permission: string) => boolean;
+    permission: string;
+    key: string;
+    titleKey: string;
+    descriptionKey: string;
+    icon: React.ReactNode;
+    run: () => void;
+    t: TranslateLabel;
+  },
+) {
+  if (!options.isAdmin && !options.hasPerm(options.permission)) {
+    return;
+  }
+  entries.push({
+    key: options.key,
+    title: options.t(options.titleKey),
+    description: options.t(options.descriptionKey),
+    icon: options.icon,
+    run: options.run,
+  });
+}
 
 type ShellUserTriggerProps = Readonly<
   Omit<React.ComponentProps<typeof Button>, 'children'> & {

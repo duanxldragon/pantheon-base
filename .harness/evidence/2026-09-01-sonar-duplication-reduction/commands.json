@@ -1,0 +1,16 @@
+{
+  "taskId": "2026-09-01-sonar-duplication-reduction",
+  "commands": [
+    {"command": "curl.exe https://sonarcloud.io/api/measures/component?component=duanxldragon_pantheon-base&metricKeys=duplicated_lines_density,duplicated_lines,ncloc,lines", "status": "passed", "notes": "Baseline 4.10%, 5936 duplicated lines, 128506 NCLOC."},
+    {"command": "node scripts/check-duplication.mjs --json", "status": "passed", "notes": "1.61%, 1894/117669 normalized lines, <=3% threshold."},
+    {"command": "go test ./...", "status": "passed", "notes": "All backend packages passed."},
+    {"command": "cd frontend && npm run lint", "status": "passed"},
+    {"command": "cd frontend && npm run type-check", "status": "passed"},
+    {"command": "cd frontend && npm run build", "status": "passed", "notes": "All prebuild UI/menu/i18n/system/smoke contracts passed."},
+    {"command": "cd frontend && npm run test:generator:quality", "status": "passed", "notes": "4/4 generator contract tests passed."},
+    {"command": "git diff --check", "status": "passed"}
+  ],
+  "hostedVerification": ["Push changes and wait for SonarCloud re-analysis", "Confirm duplicated_lines_density < 3.00%"],
+  "runtimeGap": "Browser screenshots and live data-state rendering were not run because local backend route was unavailable; no CSS or interaction contract changed.",
+  "linkage": {"taskManifest": ".harness/tasks/2026-09-01-sonar-duplication-reduction/manifest.json", "evidenceDir": ".harness/evidence/2026-09-01-sonar-duplication-reduction/", "reviewFile": ".harness/evidence/2026-09-01-sonar-duplication-reduction/review.md", "summaryFile": ".harness/evidence/2026-09-01-sonar-duplication-reduction/summary.md", "planRefs": ["docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md"]}
+}
