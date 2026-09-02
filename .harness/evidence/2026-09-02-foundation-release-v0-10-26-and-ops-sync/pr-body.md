@@ -9,7 +9,7 @@
 
 - Task ID：2026-09-02-foundation-release-v0-10-26-and-ops-sync
 - Task Manifest：.harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json
-- Evidence：.harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/
+- Evidence：.harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/commands.json
 - Verification evidence：.harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/summary.md
 - Review Artifact：.harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/review.md
 - OpenSpec change：none

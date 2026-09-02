@@ -1,5 +1,7 @@
 # Evidence Summary: 2026-09-02-foundation-release-v0-10-26-and-ops-sync
 
+Command-level status and explicit gaps are recorded in `commands.json`.
+
 ## Scope
 
 - Merge the remaining Base Sonar cleanup branch without changing public API, schema, permission, menu, i18n, or audit contracts.
