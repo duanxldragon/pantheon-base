@@ -48,7 +48,7 @@
 
 **目标**: 编写详细的组件样式开发规范
 
-**交付物**: `frontend/docs/COMPONENT_STYLING_GUIDE.md` (682 行)
+**交付物**: `docs/frontend/COMPONENT_STYLING_GUIDE.md` (682 行)
 
 **文档结构**:
 1. **样式隔离原则**：BEM 命名、独立 CSS 文件
@@ -76,7 +76,7 @@
 
 **目标**: 提供可复用的 UI 模式和代码模板
 
-**交付物**: `frontend/docs/UI_PATTERN_LIBRARY.md` (845 行)
+**交付物**: `docs/frontend/UI_PATTERN_LIBRARY.md` (845 行)
 
 **包含模式**:
 1. **列表页模式**：SearchToolbar + Table + 分页
@@ -104,7 +104,7 @@
 
 **目标**: 建立设计师与开发者之间的协作流程和工程标准
 
-**交付物**: `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` (890 行)
+**交付物**: `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` (890 行)
 
 **核心章节**:
 1. **设计系统概述**：三层架构（Token → Component → Pattern）
@@ -138,9 +138,9 @@
 
 **变更内容**:
 - 在 §10 文档使用顺序中，在 `FRONTEND_UI_SPEC.md` 之后插入三个新文档：
-  - 14. `frontend/docs/COMPONENT_STYLING_GUIDE.md` (组件样式规范)
-  - 15. `frontend/docs/UI_PATTERN_LIBRARY.md` (UI 模式库)
-  - 16. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` (设计工程指南)
+  - 14. `docs/frontend/COMPONENT_STYLING_GUIDE.md` (组件样式规范)
+  - 15. `docs/frontend/UI_PATTERN_LIBRARY.md` (UI 模式库)
+  - 16. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` (设计工程指南)
 - 更新后续文档序号（14 → 17, 15 → 18, ..., 42 → 45）
 
 **文档顺序逻辑**:
@@ -324,9 +324,9 @@ DESIGN_ENGINEERING_GUIDE.md (工程指南) ← 新增
 
 | 文档 | 路径 | 行数 | 用途 |
 |-----|------|-----|------|
-| 组件样式规范 | `frontend/docs/COMPONENT_STYLING_GUIDE.md` | 682 | 开发者编写组件样式的规范 |
-| UI 模式库 | `frontend/docs/UI_PATTERN_LIBRARY.md` | 845 | 常用 UI 模式的代码模板 |
-| 设计工程指南 | `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` | 890 | 设计协作流程和工程标准 |
+| 组件样式规范 | `docs/frontend/COMPONENT_STYLING_GUIDE.md` | 682 | 开发者编写组件样式的规范 |
+| UI 模式库 | `docs/frontend/UI_PATTERN_LIBRARY.md` | 845 | 常用 UI 模式的代码模板 |
+| 设计工程指南 | `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` | 890 | 设计协作流程和工程标准 |
 
 ### B. Token 清单
 
@@ -374,9 +374,9 @@ DESIGN_ENGINEERING_GUIDE.md (工程指南) ← 新增
 |-----|---------|---------|
 | `frontend/src/index.css` | 新增 Token + Arco 覆盖 | +80 行 |
 | `frontend/src/modules/platform/dashboard.css` | 迁移到新 Token | ~8 行 |
-| `frontend/docs/COMPONENT_STYLING_GUIDE.md` | 新建 | +682 行 |
-| `frontend/docs/UI_PATTERN_LIBRARY.md` | 新建 | +845 行 |
-| `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` | 新建 | +890 行 |
+| `docs/frontend/COMPONENT_STYLING_GUIDE.md` | 新建 | +682 行 |
+| `docs/frontend/UI_PATTERN_LIBRARY.md` | 新建 | +845 行 |
+| `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` | 新建 | +890 行 |
 | `DESIGN.md` | 更新文档顺序 | ~5 行 |
 | **总计** | | **+2510 行** |
 

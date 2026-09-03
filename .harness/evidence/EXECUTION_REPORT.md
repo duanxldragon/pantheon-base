@@ -35,9 +35,9 @@
 
 **交付物**:
 1. `frontend/src/index.css` (+50 行，9 个容器 Token)
-2. `frontend/docs/COMPONENT_STYLING_GUIDE.md` (682 行)
-3. `frontend/docs/UI_PATTERN_LIBRARY.md` (845 行)
-4. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` (890 行)
+2. `docs/frontend/COMPONENT_STYLING_GUIDE.md` (682 行)
+3. `docs/frontend/UI_PATTERN_LIBRARY.md` (845 行)
+4. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` (890 行)
 5. `.harness/evidence/phase2-design-system/completion-report.md`
 
 **核心成果**:
@@ -92,7 +92,7 @@
 
 **交付物**:
 1. `frontend/scripts/check-ui-contract.mjs` (+18 行，白名单优化)
-2. `frontend/docs/TOKEN_MIGRATION_GUIDE.md` (420 行)
+2. `docs/frontend/TOKEN_MIGRATION_GUIDE.md` (420 行)
 3. `.harness/evidence/phase3-component-migration/migration-scan-report.md`
 4. `.harness/evidence/phase3-component-migration/migration-strategy.md`
 5. `.harness/evidence/phase3-component-migration/completion-report.md`
@@ -170,7 +170,7 @@ UI contract check: 0 finding(s) across 249 file(s)
 ### 文档交付物
 
 ```
-frontend/docs/
+docs/frontend/
   ├── COMPONENT_STYLING_GUIDE.md       (682 行)
   ├── UI_PATTERN_LIBRARY.md            (845 行)
   ├── DESIGN_ENGINEERING_GUIDE.md      (890 行)
@@ -415,14 +415,14 @@ DESIGN.md
 - `.harness/evidence/phase3-component-migration/completion-report.md` - 阶段三：组件迁移与门禁优化
 
 ### 工程文档
-- `frontend/docs/COMPONENT_STYLING_GUIDE.md` - 组件样式规范
-- `frontend/docs/UI_PATTERN_LIBRARY.md` - UI 模式库
-- `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南
-- `frontend/docs/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南
+- `docs/frontend/COMPONENT_STYLING_GUIDE.md` - 组件样式规范
+- `docs/frontend/UI_PATTERN_LIBRARY.md` - UI 模式库
+- `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南
+- `docs/frontend/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南
 
 ### 设计规范
 - `DESIGN.md` - 总体设计规范
-- `frontend/docs/FRONTEND_UI_SPEC.md` - 前端 UI 规范
+- `docs/frontend/FRONTEND_UI_SPEC.md` - 前端 UI 规范
 
 ---
 

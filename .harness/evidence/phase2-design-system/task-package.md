@@ -41,7 +41,7 @@
 - **状态**: ✅ 完成
 
 **交付物**:
-- [x] 创建 `frontend/docs/COMPONENT_STYLING_GUIDE.md`
+- [x] 创建 `docs/frontend/COMPONENT_STYLING_GUIDE.md`
 - [x] §1 样式隔离原则（BEM 命名）
 - [x] §2 Token 使用规范（容器类型选择）
 - [x] §3 间距与布局
@@ -69,7 +69,7 @@
 - **状态**: ✅ 完成
 
 **交付物**:
-- [x] 创建 `frontend/docs/UI_PATTERN_LIBRARY.md`
+- [x] 创建 `docs/frontend/UI_PATTERN_LIBRARY.md`
 - [x] §1 列表页模式（SearchToolbar + Table）
 - [x] §2 表单页模式（Form + 验证）
 - [x] §3 对话框模式（Modal + Form）
@@ -98,7 +98,7 @@
 - **状态**: ✅ 完成
 
 **交付物**:
-- [x] 创建 `frontend/docs/DESIGN_ENGINEERING_GUIDE.md`
+- [x] 创建 `docs/frontend/DESIGN_ENGINEERING_GUIDE.md`
 - [x] §1 设计系统概述（与主流对比）
 - [x] §2 Design Tokens 设计（架构 + 命名 + 添加流程）
 - [x] §3 组件开发流程（步骤 + 检查清单）
@@ -146,9 +146,9 @@
    - 统计卡片迁移到新 Token
 
 ### 文档文件
-3. `frontend/docs/COMPONENT_STYLING_GUIDE.md` (682 行)
-4. `frontend/docs/UI_PATTERN_LIBRARY.md` (845 行)
-5. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` (890 行)
+3. `docs/frontend/COMPONENT_STYLING_GUIDE.md` (682 行)
+4. `docs/frontend/UI_PATTERN_LIBRARY.md` (845 行)
+5. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` (890 行)
 6. `DESIGN.md` (更新文档顺序)
 
 ### 证据文件

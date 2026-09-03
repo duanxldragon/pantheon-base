@@ -96,7 +96,7 @@
 
 **文档路径**:
 ```
-frontend/docs/
+docs/frontend/
   ├── COMPONENT_STYLING_GUIDE.md
   ├── UI_PATTERN_LIBRARY.md
   ├── DESIGN_ENGINEERING_GUIDE.md
@@ -192,7 +192,7 @@ UI contract check: 0 finding(s) across 249 file(s)
 
 #### 3. Token 迁移指南
 
-**文档**: `frontend/docs/TOKEN_MIGRATION_GUIDE.md` (420 行)
+**文档**: `docs/frontend/TOKEN_MIGRATION_GUIDE.md` (420 行)
 
 **内容**:
 1. 为什么需要 Token 系统？
@@ -276,7 +276,7 @@ UI contract check: 0 finding(s) across 249 file(s)
 ### 文档交付物
 
 ```
-frontend/docs/
+docs/frontend/
   ├── COMPONENT_STYLING_GUIDE.md       (682 行)
   ├── UI_PATTERN_LIBRARY.md            (845 行)
   ├── DESIGN_ENGINEERING_GUIDE.md      (890 行)
@@ -577,13 +577,13 @@ DESIGN.md
 
 1. **设计规范**
    - `DESIGN.md` - 总体设计规范（422 行）
-   - `frontend/docs/FRONTEND_UI_SPEC.md` - 前端 UI 规范
+   - `docs/frontend/FRONTEND_UI_SPEC.md` - 前端 UI 规范
 
 2. **工程文档**
-   - `frontend/docs/COMPONENT_STYLING_GUIDE.md` - 组件样式规范（682 行）
-   - `frontend/docs/UI_PATTERN_LIBRARY.md` - UI 模式库（845 行）
-   - `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南（890 行）
-   - `frontend/docs/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南（420 行）
+   - `docs/frontend/COMPONENT_STYLING_GUIDE.md` - 组件样式规范（682 行）
+   - `docs/frontend/UI_PATTERN_LIBRARY.md` - UI 模式库（845 行）
+   - `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南（890 行）
+   - `docs/frontend/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南（420 行）
 
 3. **机械门禁**
    - `frontend/scripts/check-ui-contract.mjs` - UI 契约检查

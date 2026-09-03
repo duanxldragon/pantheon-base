@@ -180,7 +180,7 @@ UI contract check: 0 finding(s) across 249 file(s)
    - 精细调整保留
 
 **交付物**:
-- `frontend/docs/TOKEN_MIGRATION_GUIDE.md` (420 行)
+- `docs/frontend/TOKEN_MIGRATION_GUIDE.md` (420 行)
 
 ---
 
@@ -247,7 +247,7 @@ UI contract check: 0 finding(s) across 249 file(s)
   ├── migration-strategy.md           # 策略调整文档（原计划 vs 调整后）
   └── completion-report.md            # 本报告
 
-frontend/docs/
+docs/frontend/
   └── TOKEN_MIGRATION_GUIDE.md        # Token 迁移指南（420 行）
 
 frontend/scripts/
