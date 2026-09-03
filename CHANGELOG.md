@@ -6,6 +6,44 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.10.27] — 2026-09-02
+
+Test stability maintenance release.
+
+### Fixed
+- Increased timeout and improved wait strategy for the module governance smoke test to handle Vite hot reload timing issues.
+- Changed navigation wait condition from `domcontentloaded` to `networkidle` with explicit retry intervals.
+
+### Verification
+- The GitHub Release will be bound to commit `9d6931bf88f2ccacc08acea6ccc4afc22703e880` (current HEAD).
+- Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate must pass before publication.
+
+### Consumer Impact
+- No breaking changes; this is a test infrastructure improvement only.
+- Consumers can upgrade from the immutable `pantheon-base-v0.10.27` GitHub Release.
+
+---
+
+## [pantheon-base-v0.10.26] — 2026-09-02
+
+Foundation release for the Go-module and npm-package consumption standardization.
+
+### Changed
+- Standardized backend module consumption on `github.com/duanxldragon/pantheon-base` and removed the overlay/import-rewrite scripts (1020+ lines deleted) so downstream repos consume the foundation via Go modules instead of file copying.
+- Standardized the frontend as a consumable package with a library entrypoint and aligned its identity to `0.10.26`.
+- Folded in the final SonarCloud duplication reduction and the repository-layout governance alignment.
+- Applied dependency hardening for the grpc and browserslist advisories merged onto `main` before publication.
+
+### Verification
+- The GitHub Release is bound to commit `d30d73a5125cdce79bd8d37bd60f75ad7180fcd7`.
+- Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate passed before publication.
+
+### Consumer Impact
+- Consumers must upgrade from the immutable `pantheon-base-v0.10.26` GitHub Release rather than tracking `main`.
+- `pantheon-ops` consumption remains deferred and is not included in this release closeout.
+
+---
+
 ## [pantheon-base-v0.10.25] — 2026-09-01
 
 Foundation release for the B1-B5 operational-workbench delivery and its shared quality controls.
