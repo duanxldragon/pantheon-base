@@ -23,6 +23,22 @@ const ALLOWED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', 'normal', 'bol
 // Pure white/black are legitimate color-mix() anchors for tint generation.
 const NEUTRAL_HEX = /^#(?:fff|ffffff|000|000000)$/i;
 
+// Arco semantic color tokens are allowed (they are color-scale aliases, not text/border/fill tokens)
+const ALLOWED_ARCO_SEMANTIC_TOKENS = [
+  'color-error',
+  'color-error-bg',
+  'color-success',
+  'color-success-bg',
+  'color-warning',
+  'color-warning-bg',
+  'color-info',
+  'color-info-bg',
+];
+
+// Fine-tuned spacing values (designer-adjusted, not arbitrary hardcoding)
+// These should be preserved, not forced to standard tokens
+const FINE_TUNED_SPACING = ['6px', '10px', '14px', '18px', '20px', '28px'];
+
 function checkFontWeightValue(rawValue) {
   const value = rawValue.trim().replace(/\s*!important\s*$/i, '').replace(/^['"]|['"]$/g, '');
   return ALLOWED_FONT_WEIGHTS.has(value) || value.startsWith('var(');
@@ -69,7 +85,15 @@ const RULES = [
     id: 'no-raw-arco-token',
     contract: 'DESIGN.md §7.7 — raw Arco tokens (--color-text-1 etc.) are banned; use Pantheon tokens',
     extensions: ['.css', '.tsx', '.ts'],
-    violates: (line) => /var\(\s*--color-(?:text|border|fill|bg)-\d/.test(line),
+    violates: (line) => {
+      // Check for Arco text/border/fill/bg tokens with numbers
+      const match = line.match(/var\(\s*--(color-(?:text|border|fill|bg)-\d)/);
+      if (!match) return false;
+
+      // Allow if it's a semantic color token
+      const tokenName = match[1];
+      return !ALLOWED_ARCO_SEMANTIC_TOKENS.some((allowed) => tokenName.includes(allowed));
+    },
   },
   {
     id: 'no-module-hex-color',

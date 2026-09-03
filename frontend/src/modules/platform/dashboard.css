@@ -42,8 +42,8 @@
 .dashboard-stat-card {
   min-height: 128px;
   padding: 16px 18px;
-  background: var(--panel-bg-solid);
-  border: 1px solid var(--panel-border);
+  background: var(--container-display-elevated);
+  border: 1px solid var(--container-display-border);
   border-radius: 8px;
   display: flex;
   flex-direction: column;

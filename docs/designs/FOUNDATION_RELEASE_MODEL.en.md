@@ -57,7 +57,7 @@ This is an upgrade model, not an informal file-sync model.
 
 ### 2.4 Current release and branch policy
 
-- Current published version: [`pantheon-base-v0.10.25`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.25).
+- Current published version: [`pantheon-base-v0.10.26`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.26).
 - Current release line: `release/0.10`, used only for manifest, compatibility, and consumer records.
 - Git branch policy: retain only `main` locally and remotely; immutable tags and published assets, not release branches, provide release stability.
 
@@ -169,7 +169,7 @@ Even before a full packaging model exists, the minimum standard should be:
 
 `pantheon-ops` should record:
 
-- Base version: an immutable tag such as `pantheon-base-v0.10.25`
+- Base version: an immutable tag such as `pantheon-base-v0.10.26`
 - Release line: `release/<x.y>` (compatibility metadata, not a Git branch)
 - Inheritance mode: `foundation-release-consumer`
 
