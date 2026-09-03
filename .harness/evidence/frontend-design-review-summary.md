@@ -281,8 +281,11 @@ docs/frontend/
   ├── UI_PATTERN_LIBRARY.md            (845 行)
   ├── DESIGN_ENGINEERING_GUIDE.md      (890 行)
   └── TOKEN_MIGRATION_GUIDE.md         (420 行)
+
+docs/
+  └── VERSION_MANAGEMENT_GUIDE.md      (488 行)
   
-总计: 2837 行工程文档
+总计: 3325 行工程文档
 
 .harness/evidence/
   ├── phase1-design-audit/
@@ -329,6 +332,60 @@ DESIGN.md
 
 ---
 
+---
+
+## 🏷️ 版本管理规范
+
+### 建议版本号
+
+**本次 PR #285 建议升级到**: `pantheon-base-v0.11.0`
+
+**理由**:
+- 设计系统工程化属于重大增强（Minor 版本）
+- 新增 3325 行工程文档
+- Token 体系扩展 +28%
+- 向后兼容（不破坏现有代码）
+
+### 版本管理文档
+
+新增 `docs/VERSION_MANAGEMENT_GUIDE.md` (488 行)，包含：
+
+#### 语义化版本规则
+```
+pantheon-base-v<major>.<minor>.<patch>
+                 |       |       |
+                 |       |       └─ 安全修复、Bug 修复
+                 |       └───────── 新功能、向后兼容的优化
+                 └───────────────── 破坏性变更、契约变更
+```
+
+#### Release 发布流程
+1. **质量门禁**: GitHub Checks + CodeQL + SonarCloud
+2. **文档准备**: Release Notes + Consumer Impact + Upgrade Guide
+3. **打标签**: `git tag -a pantheon-base-v0.11.0`
+4. **推送**: `git push origin pantheon-base-v0.11.0`
+5. **GitHub Release**: 创建正式发布
+
+#### CHANGELOG 维护
+- 采用 [Keep a Changelog](https://keepachangelog.com/) 格式
+- 每个 PR 更新 `[Unreleased]` 章节
+- Release 时移到版本章节
+
+#### 版本决策流程图
+```
+破坏性变更？ → 是 → Major (v1.0.0)
+            ↓
+            否
+            ↓
+新功能/增强？ → 是 → Minor (v0.11.0)  ← 本次 PR
+            ↓
+            否
+            ↓
+Bug/安全修复 → Patch (v0.10.27)
+```
+
+---
+
 ## 🏆 核心价值
 
 ### 1. 工程价值
@@ -353,6 +410,12 @@ DESIGN.md
 - 完整的代码模板（复制即用）
 - 检查清单（提交前验证）
 
+#### ✅ 版本管理
+- 语义化版本规则明确
+- Release 流程标准化
+- CHANGELOG 维护规范
+- 消费仓升级策略清晰
+
 ### 2. 规范价值
 
 #### ✅ 明确了什么应该用 Token，什么可以硬编码
@@ -366,6 +429,12 @@ DESIGN.md
 #### ✅ 优化了机械门禁
 - 更精确的检查规则
 - 减少误报
+
+#### ✅ 明确了版本发布策略
+- 语义化版本（Major/Minor/Patch）
+- Foundation Release 模型（不跟随 main 分支）
+- 不可变 tag + Release Notes
+- 消费仓按需升级
 
 ### 3. 协作价值
 
