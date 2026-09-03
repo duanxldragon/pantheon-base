@@ -1,6 +1,6 @@
 ---
 title: Version Management Guide
-doc_type: Guide
+doc_type: Design
 layer: platform
 status: Active
 linked_contracts:
