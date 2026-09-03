@@ -1,13 +1,25 @@
 {
   "taskId": "maintenance-test-stability-2026-09-02",
+  "title": "Test Stability Improvements for v0.10.27",
   "goal": "Fix module-governance-real.spec.ts intermittent timeout causing CI failures to enable v0.10.27 release",
   "primaryLayer": "test-infrastructure",
+  "dependencyLayers": [],
   "scope": {
-    "frontend": ["tests/smoke/module-governance-real.spec.ts"],
-    "backend": [],
-    "shared": ["CHANGELOG.md"]
+    "in": [
+      "tests/smoke/module-governance-real.spec.ts timeout analysis",
+      "Vite hot reload timing and navigation wait strategy"
+    ],
+    "out": [
+      "tests/smoke/module-governance-real.spec.ts with increased timeout (30s→45s)",
+      "Changed navigation wait from domcontentloaded to networkidle",
+      "Added explicit 2s retry interval for stability"
+    ]
   },
-  "title": "Test Stability Improvements for v0.10.27",
+  "linkage": {
+    "upstream_tasks": [],
+    "downstream_tasks": [],
+    "related_issues": []
+  },
   "created_at": "2026-09-02T12:00:00Z",
   "priority": "P2",
   "type": "maintenance",
