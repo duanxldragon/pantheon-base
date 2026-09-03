@@ -15,7 +15,7 @@ Test stability maintenance release.
 - Changed navigation wait condition from `domcontentloaded` to `networkidle` with explicit retry intervals.
 
 ### Verification
-- The GitHub Release will be bound to commit `cd1b4bb9f8d0e3c6b7a5e9d2f1c4a8b3e6d7f9a2` (pending push).
+- The GitHub Release will be bound to commit `9d6931bf88f2ccacc08acea6ccc4afc22703e880` (current HEAD).
 - Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate must pass before publication.
 
 ### Consumer Impact
