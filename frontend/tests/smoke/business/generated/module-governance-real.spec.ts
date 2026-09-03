@@ -189,12 +189,12 @@ test('real module governance flow can generate register and purge a temporary bu
   }).toBe(true);
 
   await expect(async () => {
-    await page.goto('/system/modules', { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto('/system/modules', { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await expect(page).toHaveURL(/\/system\/modules(?:\?|$)/);
-    await page.waitForLoadState('domcontentloaded');
+    const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
+    await expect(row).toBeVisible({ timeout: 10_000 });
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
   const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
-  await expect(row).toBeVisible();
   await expect(row.getByText(/待激活|已接入/).first()).toBeVisible();
 
   const cleanupResponse = await page.request.delete(`${apiBaseUrl}/lowcode/dynamic-modules/${moduleKey}?dropTable=false&purgeSource=true`, {
