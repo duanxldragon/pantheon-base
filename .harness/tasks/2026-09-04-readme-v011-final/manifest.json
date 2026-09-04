@@ -31,7 +31,14 @@
   "evidence": {
     "manifest": ".harness/tasks/2026-09-04-readme-v011-final/manifest.json",
     "summary": ".harness/evidence/2026-09-04-readme-v011-final/summary.md",
-    "review": ".harness/evidence/2026-09-04-readme-v011-final/review.md"
+    "review": ".harness/evidence/2026-09-04-readme-v011-final/review.md",
+    "commands": ".harness/evidence/2026-09-04-readme-v011-final/commands.json"
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-04-readme-v011-final",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-final/review.md",
+    "changeRef": "docs/readme-v0.11.0-final",
+    "planRefs": []
   },
   "changes": [
     "README.md - version update to v0.11.0",
