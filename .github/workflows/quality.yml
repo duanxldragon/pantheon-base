@@ -596,6 +596,126 @@ jobs:
             kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
           fi
 
+  # ============================================================
+  # Phase 6: Optional PR Smoke Core (条件触发)
+  # ============================================================
+  pr-smoke-core:
+    name: PR Smoke Core (Optional)
+    needs: [change-scope]
+    # 仅在以下情况触发:
+    # 1. PR 事件
+    # 2. 非纯文档变更
+    # 3. PR 带有 'smoke-required' 标签
+    if: |
+      github.event_name == 'pull_request' &&
+      needs.change-scope.outputs.docs_only != 'true' &&
+      contains(github.event.pull_request.labels.*.name, 'smoke-required')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
+      PANTHEON_PORT: "8080"
+      PANTHEON_API_BASE_URL: http://127.0.0.1:8080/api/v1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Start backend
+        shell: bash
+        working-directory: backend
+        run: |
+          nohup go run ./cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/pantheon-backend.pid"
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
+          exit 1
+
+      - name: Run PR core smoke suite
+        working-directory: frontend
+        run: npm run test:smoke:core
+
+      - name: Upload PR smoke artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pr-smoke-core-artifacts
+          path: |
+            frontend/test-results
+            ${{ runner.temp }}/pantheon-backend.log
+          if-no-files-found: ignore
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/pantheon-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
+          fi
+
   quality-gates:
     name: Quality Gates
     needs:
@@ -606,6 +726,7 @@ jobs:
       - go-lint
       - duplication
       - smoke-sanity
+      - pr-smoke-core
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -622,6 +743,7 @@ jobs:
           GO_LINT_RESULT: ${{ needs.go-lint.result }}
           DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
+          PR_SMOKE_CORE_RESULT: ${{ needs.pr-smoke-core.result }}
           SOLO_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'solo-override') }}
         run: |
           # Maintainer escape hatch: a PR labelled `solo-override` treats every gate
@@ -650,6 +772,7 @@ jobs:
           printf '| Go Lint | %s |\n' "$GO_LINT_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Duplication Gate | %s |\n' "$DUPLICATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Smoke Sanity | %s |\n' "$SMOKE_SANITY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| PR Smoke Core (optional) | %s |\n' "$PR_SMOKE_CORE_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Runtime Gates Required | %s |\n' "$RUNTIME_GATES_REQUIRED" >> "$GITHUB_STEP_SUMMARY"
           echo "Docs Only: ${DOCS_ONLY}"
           echo "Governance Only: ${GOVERNANCE_ONLY}"
@@ -659,6 +782,7 @@ jobs:
           echo "Go Lint: ${GO_LINT_RESULT}"
           echo "Duplication Gate: ${DUPLICATION_RESULT}"
           echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
+          echo "PR Smoke Core: ${PR_SMOKE_CORE_RESULT}"
           echo "Runtime Gates Required: ${RUNTIME_GATES_REQUIRED}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
              [ "${DUPLICATION_RESULT}" != "success" ]; then
@@ -669,5 +793,11 @@ jobs:
                [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
                [ "${GO_LINT_RESULT}" != "success" ] || \
                [ "${SMOKE_SANITY_RESULT}" != "success" ]; }; then
+            exit 1
+          fi
+          # PR Smoke Core is optional (only runs with 'smoke-required' label)
+          # If it ran and failed, treat as blocking
+          if [ "${PR_SMOKE_CORE_RESULT}" = "failure" ]; then
+            echo "PR Smoke Core failed (was explicitly requested via label)"
             exit 1
           fi
