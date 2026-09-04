@@ -116,13 +116,31 @@
   --shell-governance-select-width: 200px;
   /* P2-2 通用阶梯 token —— 供浮层与业务页优先消费；壳层专用变量继续保留 */
   --space-2xs: 2px;
+  --space-3xs: 3px;
   --space-xs: 4px;
+  --space-xs-plus: 6px;
   --space-sm: 8px;
+  --space-sm-alt: 9px;
+  --space-sm-plus: 10px;
+  --space-sm-large: 11px;
   --space-md: 12px;
+  --space-md-alt: 13px;
+  --space-md-plus: 14px;
   --space-lg: 16px;
+  --space-lg-alt: 18px;
+  --space-lg-plus: 20px;
+  --space-lg-large: 22px;
   --space-xl: 24px;
+  --space-xl-alt: 26px;
+  --space-xl-plus: 28px;
   --space-2xl: 32px;
+  --space-2xl-alt: 34px;
+  --space-2xl-plus: 36px;
   --space-3xl: 48px;
+  --space-3xl-alt: 56px;
+  --space-3xl-plus: 64px;
+  --space-4xl: 84px;
+  --space-4xl-plus: 88px;
   --font-size-caption: 12px;
   --font-size-body-sm: 13px;
   --font-size-body: 14px;
@@ -456,7 +474,7 @@ input.arco-input,
 }
 
 .arco-descriptions {
-  background-color: var(--container-display-subtle);
+  background-color: var(--container-display-bg);
 }
 
 .arco-table {

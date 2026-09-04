@@ -35,9 +35,11 @@ const ALLOWED_ARCO_SEMANTIC_TOKENS = [
   'color-info-bg',
 ];
 
-// Fine-tuned spacing values (designer-adjusted, not arbitrary hardcoding)
-// These should be preserved, not forced to standard tokens
-const FINE_TUNED_SPACING = ['6px', '10px', '14px', '18px', '20px', '28px'];
+// DEPRECATED: This whitelist is being retired. All spacing should use tokens.
+// If a specific value is genuinely needed, add it to the token system in index.css.
+// Standard tokens: --space-2xs(2px), --space-xs(4px), --space-sm(8px), --space-md(12px),
+// --space-lg(16px), --space-xl(24px), --space-2xl(32px), --space-3xl(48px)
+const DEPRECATED_FINE_TUNED_SPACING = ['6px', '10px', '14px', '18px', '20px', '28px'];
 
 function checkFontWeightValue(rawValue) {
   const value = rawValue.trim().replace(/\s*!important\s*$/i, '').replace(/^['"]|['"]$/g, '');
@@ -103,6 +105,26 @@ const RULES = [
     violates: (line) => {
       const matches = line.match(/#[0-9a-fA-F]{3,8}\b/g);
       return matches !== null && matches.some((hex) => !NEUTRAL_HEX.test(hex));
+    },
+  },
+  {
+    id: 'use-spacing-token',
+    contract: 'DESIGN.md §7.8 — use spacing tokens (--space-*) for consistency',
+    extensions: ['.css'],
+    scope: modulesRoot,
+    violates: (line) => {
+      // Match padding/margin with pixel values
+      const match = line.match(/(?:padding|margin)(?:-(?:top|right|bottom|left))?:\s*([^;]+);/);
+      if (!match) return false;
+
+      const value = match[1];
+      // Allow token usage
+      if (value.includes('var(--')) return false;
+      // Allow 0 without unit
+      if (value.trim() === '0' || /^0\s/.test(value)) return false;
+
+      // Detect any hard-coded pixel values
+      return /\d+px/.test(value);
     },
   },
 ];

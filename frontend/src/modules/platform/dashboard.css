@@ -1,5 +1,5 @@
 .dashboard-page {
-  padding: 16px 20px 24px;
+  padding: var(--space-lg) var(--space-lg-plus) var(--space-xl);
 }
 
 .dashboard-grid {
@@ -19,20 +19,20 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-lg-alt);
 }
 
 .dashboard-hero-card__eyebrow {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
-  padding: 0 10px;
+  padding: 0 var(--space-sm-plus);
   border-radius: 999px;
   background: var(--brand-primary-soft);
   color: var(--brand-primary);
   font-size: 12px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .dashboard-hero-card .dashboard-hero-card__title {
@@ -41,7 +41,7 @@
 
 .dashboard-stat-card {
   min-height: 128px;
-  padding: 16px 18px;
+  padding: var(--space-lg) var(--space-lg-alt);
   background: var(--container-display-elevated);
   border: 1px solid var(--container-display-border);
   border-radius: 8px;
@@ -98,7 +98,7 @@
 .dashboard-panel-card--todo .arco-card-body,
 .dashboard-panel-card--domains .arco-card-body,
 .dashboard-login-table .arco-card-body {
-  padding-top: 16px;
+  padding-top: var(--space-lg);
 }
 
 .dashboard-focus-stack {
@@ -112,7 +112,7 @@
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 12px;
   min-height: 112px;
-  padding: 14px 16px;
+  padding: var(--space-md-plus) var(--space-lg);
   border-radius: 8px;
   border: 1px solid transparent;
   border-left: 3px solid transparent;
@@ -211,7 +211,7 @@
   align-items: start;
   gap: 10px;
   min-height: 88px;
-  padding: 13px 14px 12px;
+  padding: var(--space-md-alt) var(--space-md-plus) var(--space-md);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel-muted) 34%, var(--surface-lift));
@@ -309,7 +309,7 @@
   gap: 12px;
   align-items: start;
   min-height: 112px;
-  padding: 14px 16px;
+  padding: var(--space-md-plus) var(--space-lg);
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--color-warning) 16%, var(--panel-border));
   border-left: 3px solid var(--color-warning);
@@ -409,7 +409,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding-top: 16px;
+  padding-top: var(--space-lg);
   overflow: auto;
 }
 
@@ -420,7 +420,7 @@
 .dashboard-domain-card__summary {
   width: 36px;
   min-height: 36px;
-  padding: 3px 4px;
+  padding: var(--space-3xs) var(--space-xs);
   border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--panel-border));
   background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
@@ -491,11 +491,11 @@
 
 @media (max-width: 768px) {
   .dashboard-page {
-    padding: 12px 12px 20px;
+    padding: var(--space-md) var(--space-md) var(--space-lg-plus);
   }
 
   .dashboard-hero-card__top {
-    margin-bottom: 14px;
+    margin-bottom: var(--space-md-plus);
   }
 
   .dashboard-stat-card {

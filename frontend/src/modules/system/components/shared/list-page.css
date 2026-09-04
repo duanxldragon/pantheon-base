@@ -16,8 +16,8 @@
 
 .system-list__table .arco-table-th,
 .system-list__table .arco-table-td {
-  padding-top: 9px;
-  padding-bottom: 9px;
+  padding-top: var(--space-sm-alt);
+  padding-bottom: var(--space-sm-alt);
 }
 
 .system-list__actions {
@@ -79,7 +79,7 @@
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 12px 16px;
   align-items: center;
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 94%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--panel-muted) 48%, var(--surface-lift));
@@ -137,7 +137,7 @@
   gap: 4px;
   /* 治理栏收敛为两行文案后，指标卡随 label+value 自适应，不再预留描述行高度 */
   min-height: 60px;
-  padding: 8px 12px;
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 84%, transparent);
   border-radius: var(--radius-md);
   background: var(--surface-lift);
@@ -201,7 +201,7 @@
 }
 
 .post-list-page .system-page-hero .arco-card-body {
-  padding: 14px 16px;
+  padding: var(--space-md-plus) var(--space-lg);
 }
 
 .post-list-page .system-page-kpi-grid {
@@ -209,7 +209,7 @@
 }
 
 .post-list-page .system-page-kpi {
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
 }
 
 .post-list-page .system-page-kpi__value {
@@ -281,7 +281,7 @@
   min-width: 0;
   min-inline-size: 0;
   max-width: 100%;
-  padding: 2px 0 0;
+  padding: var(--space-2xs) 0 0;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -321,7 +321,7 @@
 }
 
 .system-list__table-head-desc {
-  margin: 2px 0 0;
+  margin: var(--space-2xs) 0 0;
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.45;
@@ -419,7 +419,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  padding: 0 8px;
+  padding: 0 var(--space-sm);
 }
 
 /*
@@ -630,12 +630,12 @@ body
 }
 
 :root[data-pantheon-density='compact'] .system-list__hero .arco-card-body {
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding-top: var(--space-md-plus);
+  padding-bottom: var(--space-md-plus);
 }
 
 :root[data-pantheon-density='compact'] .system-list__hero .system-page-kpi {
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
 }
 
 :root[data-pantheon-density='compact'] .list-header-actions,
@@ -651,8 +651,8 @@ body
 }
 
 .system-list__hero .arco-card-body {
-  padding-top: 18px;
-  padding-bottom: 18px;
+  padding-top: var(--space-lg-alt);
+  padding-bottom: var(--space-lg-alt);
 }
 
 .system-list__hero .system-page-kpi-grid {
@@ -660,7 +660,7 @@ body
 }
 
 .system-list__hero .system-page-kpi {
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-md-plus);
 }
 
 .system-list__hero .system-page-kpi__value {
@@ -669,7 +669,7 @@ body
 
 .i18n-list-page .system-page-hero .arco-card-body,
 .dept-list-page .system-page-hero .arco-card-body {
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-md-plus);
 }
 
 .i18n-list-page .system-page-kpi-grid,
@@ -679,7 +679,7 @@ body
 
 .i18n-list-page .system-page-kpi,
 .dept-list-page .system-page-kpi {
-  padding: 8px 10px;
+  padding: var(--space-sm) var(--space-sm-plus);
 }
 
 .i18n-list-page .system-page-kpi__value,
@@ -695,7 +695,7 @@ body
 .i18n-list-page .system-page-hero__top,
 .dept-list-page .system-page-hero__top {
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .i18n-list-page .system-page-hero__eyebrow,
@@ -712,12 +712,12 @@ body
 
 .i18n-list-page .system-page-kpi__label,
 .dept-list-page .system-page-kpi__label {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-xs);
 }
 
 .i18n-list-page .system-page-kpi__hint,
 .dept-list-page .system-page-kpi__hint {
-  margin-top: 4px;
+  margin-top: var(--space-xs);
   line-height: 1.35;
 }
 
@@ -732,7 +732,7 @@ body
 }
 
 .setting-page .page-panel:not(.system-list__table-card) .arco-card-body {
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-md-plus);
 }
 
 .setting-page__layout .page-main-column {
@@ -740,7 +740,7 @@ body
 }
 
 .setting-page .arco-tabs-header {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .setting-page__form-stack {
@@ -757,7 +757,7 @@ body
 
 .setting-page__audit-header {
   gap: 6px 10px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .module-manager-page__card .arco-card-body {
@@ -826,7 +826,7 @@ body
 .module-manager-page__stat-card .arco-card-body {
   display: grid;
   gap: 4px;
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
 }
 
 .module-manager-page__stat-card .arco-typography-secondary {
@@ -853,8 +853,8 @@ body
 }
 
 .permission-workbench__tabs > .arco-card-body {
-  padding-top: 6px;
-  padding-bottom: 2px;
+  padding-top: var(--space-xs-plus);
+  padding-bottom: var(--space-2xs);
 }
 
 .permission-workbench__tabs .arco-tabs-header {
@@ -862,8 +862,8 @@ body
 }
 
 .permission-page__tabs-panel .arco-tabs-tab {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: var(--space-sm-plus);
+  padding-bottom: var(--space-sm-plus);
 }
 
 .permission-page__tabs-panel .arco-tabs-tab-title {
@@ -875,7 +875,7 @@ body
   align-items: center;
   justify-content: space-between;
   gap: 10px 14px;
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background: color-mix(in srgb, var(--panel-muted) 56%, var(--surface-lift));
 }
@@ -924,7 +924,7 @@ body
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px;
+  padding: var(--space-2xs);
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
   border-radius: 999px;
   background: var(--surface-lift);
@@ -956,7 +956,7 @@ body
 }
 
 .permission-workbench__overview-card .arco-card-body {
-  padding: 11px 13px;
+  padding: var(--space-sm-large) var(--space-md-alt);
 }
 
 .permission-workbench__overview-card .arco-typography {
@@ -973,7 +973,7 @@ body
 }
 
 .permission-workbench__overview-card .permission-workbench__overview-value {
-  margin: 6px 0 0;
+  margin: var(--space-xs-plus) 0 0;
 }
 
 .permission-workbench__filter-shell,
@@ -998,7 +998,7 @@ body
 }
 
 .permission-page__api-action-bar .table-batch-action-bar__summary {
-  padding-top: 4px;
+  padding-top: var(--space-xs);
 }
 
 .permission-page__api-list-actions,
@@ -1013,7 +1013,7 @@ body
 }
 
 .permission-page__api-list-actions .list-header-actions__primary {
-  margin-left: 12px;
+  margin-left: var(--space-md);
 }
 
 .permission-page__data-scope-actions .list-header-actions__primary {
@@ -1041,14 +1041,14 @@ body
 }
 
 .dept-governance-task-card__intro {
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-primary) 2%, var(--surface-lift));
 }
 
 .dept-list-page .system-dept-tabs .arco-tabs-header {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .dept-list-page .dept-governance-task-card .arco-card-head {
@@ -1056,7 +1056,7 @@ body
 }
 
 .dept-list-page .dept-governance-task-card__intro {
-  padding: 6px 8px;
+  padding: var(--space-xs-plus) var(--space-sm);
 }
 
 .dept-list-page .dept-governance-task-card .governance-workbench__task-desc {
@@ -1102,7 +1102,7 @@ body
 .dept-governance-rail__task {
   display: grid;
   gap: 8px;
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-md-plus);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--brand-primary) 2%, var(--surface-lift));
@@ -1239,7 +1239,7 @@ body
   }
 
   .dept-list-page .system-dept-tabs .arco-tabs-header {
-    margin-bottom: 6px;
+    margin-bottom: var(--space-xs-plus);
   }
 
   .dept-list-page .dept-governance-task-card .arco-card-head {
@@ -1310,7 +1310,7 @@ body
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-lg);
   background: var(--panel-bg-solid);
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
 }
 
 .role-permission-tree__toolbar {
@@ -1318,7 +1318,7 @@ body
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm-plus);
 }
 
 .role-permission-tree__search {
@@ -1354,7 +1354,7 @@ body
 }
 
 .system-dept-tabs .arco-tabs-header {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg);
 }
 
 .dict-workbench__context-card {
@@ -1371,7 +1371,7 @@ body
 .dict-workbench__context-card .arco-card-body {
   display: grid;
   gap: 8px;
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
 }
 
 .dict-workbench__context-head {
@@ -1411,7 +1411,7 @@ body
 .dict-usage__item {
   display: grid;
   gap: 8px;
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-md-plus);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
   background: var(--panel-bg-solid);
@@ -1443,7 +1443,7 @@ body
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 16px 18px;
+  padding: var(--space-lg) var(--space-lg-alt);
 }
 
 .org-structure__summary-card span {
@@ -1479,7 +1479,7 @@ body
 
 .org-structure__chart-card .arco-card-body,
 .org-structure__detail-card .arco-card-body {
-  padding: 18px;
+  padding: var(--space-lg-alt);
 }
 
 .org-structure__section-head {
@@ -1487,7 +1487,7 @@ body
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg);
 }
 
 .org-structure__section-title {
@@ -1497,7 +1497,7 @@ body
 }
 
 .org-structure__section-desc {
-  margin-top: 4px;
+  margin-top: var(--space-xs);
   color: var(--text-tertiary);
   font-size: 12px;
 }
@@ -1505,7 +1505,7 @@ body
 .org-chart {
   min-width: 720px;
   overflow-x: auto;
-  padding: 4px 4px 8px;
+  padding: var(--space-xs) var(--space-xs) var(--space-sm);
 }
 
 .org-chart__branch {
@@ -1525,7 +1525,7 @@ body
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
-  padding: 14px;
+  padding: var(--space-md-plus);
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -1574,7 +1574,7 @@ body
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
-  margin-top: 10px;
+  margin-top: var(--space-sm-plus);
   color: var(--text-tertiary);
   font-size: 12px;
 }
@@ -1582,20 +1582,20 @@ body
 .org-chart__metric-row span {
   border-radius: 999px;
   background: var(--panel-muted);
-  padding: 3px 8px;
+  padding: var(--space-3xs) var(--space-sm);
 }
 
 .org-chart__posts {
   display: grid;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: var(--space-md);
 }
 
 .org-chart__post {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
   background: var(--surface-lift);
-  padding: 10px;
+  padding: var(--space-sm-plus);
 }
 
 .org-chart__post--unassigned {
@@ -1603,7 +1603,7 @@ body
 }
 
 .org-chart__post-code {
-  margin-top: 3px;
+  margin-top: var(--space-3xs);
   color: var(--text-tertiary);
   font-size: 12px;
 }
@@ -1612,7 +1612,7 @@ body
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: var(--space-sm);
   color: var(--text-tertiary);
   font-size: 12px;
 }
@@ -1622,7 +1622,7 @@ body
   border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   font-size: 12px;
-  padding: 10px;
+  padding: var(--space-sm-plus);
   text-align: center;
 }
 
@@ -1630,8 +1630,8 @@ body
   display: flex;
   align-items: flex-start;
   gap: 18px;
-  margin-left: 36px;
-  padding-left: 24px;
+  margin-left: var(--space-2xl-plus);
+  padding-left: var(--space-xl);
   border-left: 1px dashed var(--panel-border);
 }
 
@@ -1651,7 +1651,7 @@ body
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
   background: var(--panel-muted);
-  padding: 10px;
+  padding: var(--space-sm-plus);
 }
 
 .org-structure__detail-grid span,
@@ -1671,7 +1671,7 @@ body
 }
 
 .org-structure__sub-title {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -1681,7 +1681,7 @@ body
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .org-structure__sub-title-row .org-structure__sub-title {
@@ -1717,7 +1717,7 @@ body
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
   background: var(--panel-muted);
-  padding: 9px 10px;
+  padding: var(--space-sm-alt) var(--space-sm-plus);
 }
 
 .org-structure__member-item > div {
@@ -1745,11 +1745,11 @@ body
 .org-structure__rule {
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-primary) 7%, var(--surface-lift));
-  padding: 10px 12px;
+  padding: var(--space-sm-plus) var(--space-md);
 }
 
 .menu-view-switcher {
-  padding: 2px;
+  padding: var(--space-2xs);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--panel-muted) 72%, var(--surface-lift));
@@ -1770,7 +1770,7 @@ body
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
+  padding: var(--space-md-plus) var(--space-lg);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
@@ -1839,7 +1839,7 @@ body
 }
 
 .menu-card-view__subtitle {
-  margin-top: 3px;
+  margin-top: var(--space-3xs);
   color: var(--text-tertiary);
   font-size: 12px;
 }
@@ -2001,7 +2001,7 @@ body
 
   .org-chart__children {
     flex-direction: column;
-    margin-left: 16px;
+    margin-left: var(--space-lg);
   }
 
   .org-chart__dept-card {
