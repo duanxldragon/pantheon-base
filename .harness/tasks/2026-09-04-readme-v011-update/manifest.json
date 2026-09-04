@@ -1,5 +1,5 @@
 {
-  "taskId": "2026-09-04-readme-v0.11.0-update",
+  "taskId": "2026-09-04-readme-v011-update",
   "goal": "Update README to v0.11.0 and fix frontend documentation examples",
   "primaryLayer": "docs",
   "scope": {
@@ -25,8 +25,8 @@
   "linkage": {
     "upstreamDependencies": [],
     "downstreamImpact": [],
-    "evidenceDir": ".harness/evidence/2026-09-04-readme-v0.11.0-update",
-    "reviewFile": ".harness/evidence/2026-09-04-readme-v0.11.0-update/review.md",
+    "evidenceDir": ".harness/evidence/2026-09-04-readme-v011-update",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-update/review.md",
     "changeRef": "75606594",
     "planRefs": []
   },
