@@ -1,40 +1,31 @@
 {
   "taskId": "2026-09-04-readme-v011-update",
-  "goal": "Update README to v0.11.0 and fix frontend documentation examples",
-  "primaryLayer": "docs",
+  "title": "Update README to v0.11.0 and fix frontend doc examples",
+  "description": "Update README version references to v0.11.0, fix frontend documentation examples inconsistency, clarify release reports",
+  "createdAt": "2026-09-04T12:00:00Z",
+  "status": "completed",
+  "type": "documentation",
   "scope": {
-    "in": [
-      "README.md",
-      "README.en.md",
-      "docs/frontend/UI_PATTERN_LIBRARY.md",
-      "docs/frontend/COMPONENT_STYLING_GUIDE.md",
-      "docs/frontend/TOKEN_MIGRATION_GUIDE.md",
-      ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md"
-    ],
-    "out": [
-      "README.md",
-      "README.en.md",
-      "docs/frontend/UI_PATTERN_LIBRARY.md",
-      "docs/frontend/COMPONENT_STYLING_GUIDE.md",
-      "docs/frontend/TOKEN_MIGRATION_GUIDE.md",
-      ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md"
-    ],
-    "modules": ["docs"],
-    "layers": ["docs"]
+    "layers": ["docs"],
+    "modules": ["docs/README", "docs/frontend", ".harness/evidence"],
+    "impact": "documentation-only"
   },
-  "linkage": {
-    "upstreamDependencies": [],
-    "downstreamImpact": [],
-    "evidenceDir": ".harness/evidence/2026-09-04-readme-v011-update",
-    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-update/review.md",
-    "changeRef": "75606594",
-    "planRefs": []
+  "evidence": {
+    "manifest": ".harness/tasks/2026-09-04-readme-v011-update/manifest.json",
+    "commands": ".harness/evidence/2026-09-04-readme-v011-update/commands.json",
+    "summary": ".harness/evidence/2026-09-04-readme-v011-update/summary.md",
+    "review": ".harness/evidence/2026-09-04-readme-v011-update/review.md"
   },
-  "acceptance": {
-    "criteria": [
-      "README version updated to v0.11.0",
-      "Frontend doc examples match actual code",
-      "Release report clarified"
-    ]
+  "changes": [
+    "README.md - version update to v0.11.0",
+    "README.en.md - version update to v0.11.0",
+    "docs/frontend/UI_PATTERN_LIBRARY.md - fix code examples",
+    ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md - clarify release status"
+  ],
+  "verification": {
+    "backend": "passed (no code changes)",
+    "frontend": "passed",
+    "smoke": "passed",
+    "codeql": "passed"
   }
 }
