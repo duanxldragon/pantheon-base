@@ -1,24 +1,17 @@
-# Task Evidence Summary
+# Task Summary: README v0.11.0 Update
 
-## Task ID
-2026-09-04-readme-v0.11.0-update
+## Goal
+Update README to v0.11.0 and fix frontend documentation examples.
 
-## 变更内容
-1. 更新 README.md 和 README.en.md 到 v0.11.0
-2. 修复前端文档示例与实际代码不一致问题
+## Changes Made
+1. README.md - Updated version to v0.11.0 with design system highlights
+2. README.en.md - Updated English version to v0.11.0
+3. UI_PATTERN_LIBRARY.md - Fixed usePermission API and SearchToolbar props
+4. COMPONENT_STYLING_GUIDE.md - Fixed container token names
+5. TOKEN_MIGRATION_GUIDE.md - Removed broken link
+6. V0.11.0_RELEASE_COMPLETION_REPORT.md - Clarified release mechanism
 
-## 关键文件
-- README.md - 版本号更新
-- README.en.md - 版本号更新
-- docs/frontend/UI_PATTERN_LIBRARY.md - 修正 hook API
-- docs/frontend/COMPONENT_STYLING_GUIDE.md - 修正容器 token
-- docs/frontend/TOKEN_MIGRATION_GUIDE.md - 移除失效链接
-- .harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md - 澄清发布机制
-
-## 验证方式
-- 文档示例与代码实现对比验证
-- 版本号一致性检查
-- 链接有效性验证
-
-## 影响范围
-仅文档变更，无运行时影响
+## Verification
+- All doc examples now match actual codebase
+- No code logic changes
+- CI checks pass

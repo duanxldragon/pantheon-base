@@ -1,10 +1,28 @@
 {
   "taskId": "2026-09-04-readme-v0.11.0-update",
-  "title": "Update README to v0.11.0 and fix frontend docs",
-  "description": "Update README files to v0.11.0 version and fix frontend documentation examples to match actual codebase implementation",
-  "createdAt": "2026-09-04T08:00:00Z",
-  "type": "documentation",
-  "scope": "docs",
-  "qualityProfile": "standard",
-  "ratchetDecision": "maintain"
+  "goal": "Update README to v0.11.0 and fix frontend documentation examples",
+  "primaryLayer": "docs",
+  "scope": {
+    "files": [
+      "README.md",
+      "README.en.md",
+      "docs/frontend/UI_PATTERN_LIBRARY.md",
+      "docs/frontend/COMPONENT_STYLING_GUIDE.md",
+      "docs/frontend/TOKEN_MIGRATION_GUIDE.md",
+      ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md"
+    ],
+    "modules": ["docs"],
+    "layers": ["docs"]
+  },
+  "linkage": {
+    "upstreamDependencies": [],
+    "downstreamImpact": []
+  },
+  "acceptance": {
+    "criteria": [
+      "README version updated to v0.11.0",
+      "Frontend doc examples match actual code",
+      "Release report clarified"
+    ]
+  }
 }
