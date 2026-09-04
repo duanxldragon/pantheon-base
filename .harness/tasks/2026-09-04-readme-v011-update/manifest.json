@@ -1,0 +1,53 @@
+{
+  "taskId": "2026-09-04-readme-v011-update",
+  "title": "Update README to v0.11.0 and fix frontend doc examples",
+  "goal": "Update README version references to v0.11.0, fix frontend documentation examples inconsistency, clarify release reports to maintain documentation accuracy",
+  "createdAt": "2026-09-04T12:00:00Z",
+  "status": "completed",
+  "type": "documentation",
+  "primaryLayer": "docs",
+  "scope": {
+    "in": [
+      "README.md version reference",
+      "README.en.md version reference",
+      "docs/frontend/UI_PATTERN_LIBRARY.md code examples",
+      ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md release status"
+    ],
+    "out": [
+      "Backend code",
+      "Frontend runtime code",
+      "Database schema",
+      "API contracts",
+      "Configuration files"
+    ]
+  },
+  "linkage": {
+    "depends_on": [],
+    "blocks": [],
+    "related": [
+      "pantheon-base-v0.11.0 release"
+    ],
+    "evidenceDir": ".harness/evidence/2026-09-04-readme-v011-update",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-update/review.md",
+    "changeRef": "release/v0.11.0-readme-update",
+    "planRefs": []
+  },
+  "evidence": {
+    "manifest": ".harness/tasks/2026-09-04-readme-v011-update/manifest.json",
+    "commands": ".harness/evidence/2026-09-04-readme-v011-update/commands.json",
+    "summary": ".harness/evidence/2026-09-04-readme-v011-update/summary.md",
+    "review": ".harness/evidence/2026-09-04-readme-v011-update/review.md"
+  },
+  "changes": [
+    "README.md - version update to v0.11.0",
+    "README.en.md - version update to v0.11.0",
+    "docs/frontend/UI_PATTERN_LIBRARY.md - fix code examples",
+    ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md - clarify release status"
+  ],
+  "verification": {
+    "backend": "passed (no code changes)",
+    "frontend": "passed",
+    "smoke": "passed",
+    "codeql": "passed"
+  }
+}
