@@ -1,0 +1,10 @@
+{
+  "taskId": "2026-09-04-readme-v0.11.0-update",
+  "title": "Update README to v0.11.0 and fix frontend docs",
+  "description": "Update README files to v0.11.0 version and fix frontend documentation examples to match actual codebase implementation",
+  "createdAt": "2026-09-04T08:00:00Z",
+  "type": "documentation",
+  "scope": "docs",
+  "qualityProfile": "standard",
+  "ratchetDecision": "maintain"
+}

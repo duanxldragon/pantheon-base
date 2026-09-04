@@ -10,13 +10,13 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current published foundation release | [`pantheon-base-v0.10.26`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.26) (`release/0.10`) |
+| Current published foundation release | [`pantheon-base-v0.11.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.11.0) (`release/0.11`) |
 | Product milestone | **V1.0** (released 2026-07-21) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 
-Delivery-audit note: the GitHub Release for `pantheon-base-v0.10.26` points exactly to Base commit `d30d73a5125cdce79bd8d37bd60f75ad7180fcd7` and passed Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate. Published assets include the foundation bundle, repository snapshot, manifest, and SHA-256 sidecars. The `pantheon-ops` consumption upgrade is scheduled separately; no consumer lock is claimed as updated here.
+Delivery-audit note: the GitHub Release for `pantheon-base-v0.11.0` points exactly to Base commit `c907db507f1c71933d4324560eec499e3f6662cf` and passed Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate. Published assets include the foundation bundle, repository snapshot, manifest, and SHA-256 sidecars. This release introduces an enterprise-grade frontend design system engineering framework (5 documents, 3,325 lines), with token expansion +109% (32 → 67), spacing coverage +225% (8 → 26), 9 semantic container tokens, automated migration tooling, and 100% backward compatibility. The `pantheon-ops` consumption upgrade is scheduled separately; no consumer lock is claimed as updated here.
 
 V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
 

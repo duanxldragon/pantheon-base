@@ -8,13 +8,13 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前已发布的 foundation release | [`pantheon-base-v0.10.26`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.26)（`release/0.10`） |
+| 当前已发布的 foundation release | [`pantheon-base-v0.11.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.11.0)（`release/0.11`） |
 | 产品里程碑 | **V1.0**（2026-07-21 发布） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
 | 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
 
-交付审计说明：`pantheon-base-v0.10.26` 的 GitHub Release 精确指向 Base commit `d30d73a5125cdce79bd8d37bd60f75ad7180fcd7`，并已通过 Full Smoke、SonarCloud、CodeQL、Dependabot、CI 与 Release Gate。发布资产包含 foundation bundle、仓库快照、manifest 及对应 SHA-256 sidecar。`pantheon-ops` 的消费升级另行安排，当前不把任何 consumer lock 声明为已更新。
+交付审计说明：`pantheon-base-v0.11.0` 的 GitHub Release 精确指向 Base commit `c907db507f1c71933d4324560eec499e3f6662cf`，并已通过 Full Smoke、SonarCloud、CodeQL、Dependabot、CI 与 Release Gate。发布资产包含 foundation bundle、仓库快照、manifest 及对应 SHA-256 sidecar。本版本引入企业级前端设计系统工程框架（5 文档、3,325 行），Token 扩展 +109%（32 → 67）、间距覆盖 +225%（8 → 26）、9 个语义化容器 token 及自动化迁移工具，100% 向后兼容。`pantheon-ops` 的消费升级另行安排，当前不把任何 consumer lock 声明为已更新。
 
 V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
 
