@@ -1,0 +1,40 @@
+{
+  "taskId": "2026-09-04-readme-v011-final",
+  "title": "Update README to v0.11.0 with design system framework highlights",
+  "goal": "Update README version references to v0.11.0 and add design system framework audit description",
+  "createdAt": "2026-09-04T18:30:00Z",
+  "status": "completed",
+  "type": "documentation",
+  "primaryLayer": "docs",
+  "scope": {
+    "in": [
+      "README.md version reference",
+      "README.en.md version reference",
+      "Design system framework audit description"
+    ],
+    "out": [
+      "Backend code",
+      "Frontend runtime code",
+      "Database schema",
+      "API contracts",
+      "Configuration files"
+    ]
+  },
+  "linkage": {
+    "depends_on": [],
+    "blocks": [],
+    "related": [
+      "pantheon-base-v0.11.0 release",
+      "PR #285 - design system framework"
+    ]
+  },
+  "evidence": {
+    "manifest": ".harness/tasks/2026-09-04-readme-v011-final/manifest.json",
+    "summary": ".harness/evidence/2026-09-04-readme-v011-final/summary.md",
+    "review": ".harness/evidence/2026-09-04-readme-v011-final/review.md"
+  },
+  "changes": [
+    "README.md - version update to v0.11.0",
+    "README.en.md - version update to v0.11.0"
+  ]
+}
