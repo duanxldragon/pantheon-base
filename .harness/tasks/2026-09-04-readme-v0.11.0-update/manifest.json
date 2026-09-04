@@ -3,7 +3,15 @@
   "goal": "Update README to v0.11.0 and fix frontend documentation examples",
   "primaryLayer": "docs",
   "scope": {
-    "files": [
+    "in": [
+      "README.md",
+      "README.en.md",
+      "docs/frontend/UI_PATTERN_LIBRARY.md",
+      "docs/frontend/COMPONENT_STYLING_GUIDE.md",
+      "docs/frontend/TOKEN_MIGRATION_GUIDE.md",
+      ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md"
+    ],
+    "out": [
       "README.md",
       "README.en.md",
       "docs/frontend/UI_PATTERN_LIBRARY.md",
@@ -16,7 +24,11 @@
   },
   "linkage": {
     "upstreamDependencies": [],
-    "downstreamImpact": []
+    "downstreamImpact": [],
+    "evidenceDir": ".harness/evidence/2026-09-04-readme-v0.11.0-update",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v0.11.0-update/review.md",
+    "changeRef": "75606594",
+    "planRefs": []
   },
   "acceptance": {
     "criteria": [
