@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"sort"
 	"strconv"
@@ -443,13 +444,37 @@ func (s *Runtime) GetUserPerms(userID uint64) ([]string, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
+
+	// Try cache first (5-minute TTL)
+	cacheKey := fmt.Sprintf("user_perms:%d", userID)
+	if database.RDB != nil {
+		cached, err := database.RDB.Get(context.Background(), cacheKey).Result()
+		if err == nil && cached != "" {
+			var perms []string
+			if json.Unmarshal([]byte(cached), &perms) == nil {
+				return perms, nil
+			}
+		}
+	}
+
+	// Cache miss or Redis unavailable: query DB
 	var permissionKeys []string
 	err := s.db.Table("system_role_permission").
 		Select("DISTINCT system_role_permission.permission_key").
 		Joins("JOIN system_user_role ON system_user_role.role_id = system_role_permission.role_id").
 		Where("system_user_role.user_id = ? AND system_role_permission.permission_key <> ''", userID).
 		Pluck("system_role_permission.permission_key", &permissionKeys).Error
-	return mergePermissionKeys(permissionKeys), err
+
+	perms := mergePermissionKeys(permissionKeys)
+
+	// Cache for 5 minutes
+	if database.RDB != nil && len(perms) > 0 && err == nil {
+		if data, marshalErr := json.Marshal(perms); marshalErr == nil {
+			database.RDB.Set(context.Background(), cacheKey, data, 5*time.Minute)
+		}
+	}
+
+	return perms, err
 }
 
 func (s *Runtime) GetCurrentUserInfo(userID uint64) (*UserInfoResp, error) {
@@ -978,4 +1003,14 @@ func normalizeRetentionDays(rawValue string, fallback []int) []int {
 	}
 	sort.Ints(normalized)
 	return normalized
+}
+
+// InvalidateUserPermCache invalidates the cached permissions for a user.
+// This should be called after role assignments, permission changes, or role updates.
+func (s *Runtime) InvalidateUserPermCache(userID uint64) error {
+	if database.RDB == nil {
+		return nil // No cache to invalidate
+	}
+	cacheKey := fmt.Sprintf("user_perms:%d", userID)
+	return database.RDB.Del(context.Background(), cacheKey).Err()
 }

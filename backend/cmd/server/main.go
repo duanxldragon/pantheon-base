@@ -20,6 +20,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/metrics"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/telemetry"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/version"
 
@@ -187,6 +188,7 @@ func runServer(r *gin.Engine) {
 		slog.Error("http server shutdown error", "error", err)
 	}
 	middleware.ShutdownOperationLog(shutdownCtx)
+	metrics.StopDBMetricsCollector() // Stop DB metrics goroutine
 	slog.Info("server stopped")
 }
 
