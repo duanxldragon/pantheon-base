@@ -75,7 +75,7 @@ func (s *UserService) ensureAdminUserSeed() error {
 	if err != nil {
 		return err
 	}
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(initialPassword), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(initialPassword), commonsecurity.GetBcryptCost())
 	if err != nil {
 		return err
 	}

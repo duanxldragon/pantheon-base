@@ -16,6 +16,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authsession"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	commonsecurity "github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 
@@ -172,7 +173,7 @@ func (s *Service) UpdatePassword(userID uint64, currentSessionID string, req *Pa
 		return err
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), commonsecurity.GetBcryptCost())
 	if err != nil {
 		return err
 	}
