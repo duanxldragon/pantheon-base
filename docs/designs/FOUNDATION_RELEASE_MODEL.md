@@ -70,7 +70,7 @@ consumer repo -> consume base foundation release
 
 ### 2.4 当前 release 与分支策略
 
-- 当前发布版本：[`pantheon-base-v0.10.25`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.25)。
+- 当前发布版本：[`pantheon-base-v0.10.26`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.26)。
 - 当前 release line：`release/0.10`，仅用于 manifest、兼容性说明和 consumer 记录。
 - Git 分支策略：本地与远端仅保留 `main`；release 的稳定性由不可变 tag 和发布资产提供，而不是由 release 分支提供。
 
@@ -190,7 +190,7 @@ consumer repo -> consume base foundation release
 
 `pantheon-ops` 后续默认应记录：
 
-- Base version：不可变 tag，例如 `pantheon-base-v0.10.25`
+- Base version：不可变 tag，例如 `pantheon-base-v0.10.26`
 - Release line：`release/<x.y>`（兼容性元数据，不是 Git 分支）
 - Inheritance mode：`foundation-release-consumer`
 

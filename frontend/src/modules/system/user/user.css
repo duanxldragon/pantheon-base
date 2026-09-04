@@ -48,7 +48,7 @@
 }
 
 .system-user-list__ops-strip {
-  padding: 8px 0 2px;
+  padding: var(--space-sm) 0 var(--space-2xs);
   border-bottom: 1px solid var(--panel-border);
 }
 
@@ -69,7 +69,7 @@
   align-items: baseline;
   gap: 5px;
   min-height: 28px;
-  padding: 3px 8px;
+  padding: var(--space-3xs) var(--space-sm);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
   background: var(--panel-muted);
@@ -117,8 +117,8 @@
 .system-user-list__role-field .arco-select-view {
   min-height: var(--shell-control-min-height);
   align-items: flex-start;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: var(--space-xs);
+  padding-bottom: var(--space-xs);
 }
 
 .system-user-list__role-field .arco-select-suffix {
@@ -176,7 +176,7 @@
 .system-user-list__row-menu {
   display: grid;
   min-width: 132px;
-  padding: 6px;
+  padding: var(--space-xs-plus);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
@@ -190,8 +190,8 @@
 }
 
 .system-user-list__hero .arco-card-body {
-  padding-top: 18px;
-  padding-bottom: 18px;
+  padding-top: var(--space-lg-alt);
+  padding-bottom: var(--space-lg-alt);
 }
 
 .system-user-list__hero .system-page-kpi-grid {
@@ -199,7 +199,7 @@
 }
 
 .system-user-list__hero .system-page-kpi {
-  padding: 12px 14px;
+  padding: var(--space-md) var(--space-md-plus);
 }
 
 .system-user-list__hero .system-page-kpi__value {

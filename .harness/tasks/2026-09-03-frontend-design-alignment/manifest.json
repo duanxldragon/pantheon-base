@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-09-03-frontend-design-alignment",
+  "title": "Frontend Design System Engineering Alignment (PR #285)",
+  "goal": "参考蓝鲸等主流企业级设计系统工程实践，补充 Pantheon Base 前端设计规范文档体系，建立三层设计工程架构：设计规范层 (DESIGN.md)、工程实践层 (3 个文档 2417 行)、机械门禁层 (自动化检查)。扩展容器 Token 体系 (+9 个容器语义 token)，提供 12 类 UI 模式完整代码模板，建立设计师-开发者协作流程和 Token 迁移指南，优化 UI contract 门禁支持白名单机制。",
+  "primaryLayer": "frontend",
+  "dependencyLayers": ["docs", "ci-workflow"],
+  "scope": {
+    "in": [
+      "docs/frontend/COMPONENT_STYLING_GUIDE.md: BEM 命名、Token 使用、状态实现、检查清单 (682 行)",
+      "docs/frontend/UI_PATTERN_LIBRARY.md: 12 类 UI 模式 + 完整代码模板 (845 行)",
+      "docs/frontend/DESIGN_ENGINEERING_GUIDE.md: 设计协作流程、Token 映射、调试技巧 (890 行)",
+      "docs/frontend/TOKEN_MIGRATION_GUIDE.md: Token 迁移规则、白名单机制 (420 行)",
+      "frontend/src/index.css: 新增 9 个容器 Token (+28% token 覆盖率)",
+      "frontend/scripts/check-ui-contract.mjs: 白名单机制 + 优化检查规则",
+      "DESIGN.md: 更新文档引用顺序",
+      ".harness/evidence/frontend-design-review-summary.md: 三阶段审查总结报告"
+    ],
+    "out": [
+      "业务模块代码 (backend/**, frontend/src/modules/**): 不在此轮改动范围",
+      "组件运行时逻辑: 仅样式和文档，无 TS/TSX 逻辑变更",
+      "API 契约: 纯前端设计规范工程化"
+    ]
+  },
+  "taskDoc": "PR #285 feat/design-system-engineering. 三个阶段：阶段一审查现有设计规范发现缺少工程实践文档；阶段二补充三大工程文档 + 扩展容器 Token 体系；阶段三批量迁移组件 + 优化机械门禁白名单。对标蓝鲸/Ant Design/Arco Design 工程实践，建立 AI 友好的设计系统（明确约束 + 完整模板 + 自动检查）。",
+  "contractAnchors": [
+    "DESIGN.md",
+    "docs/frontend/COMPONENT_STYLING_GUIDE.md",
+    "frontend/scripts/check-ui-contract.mjs"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-03-frontend-design-alignment/manifest.json",
+      ".harness/evidence/2026-09-03-frontend-design-alignment/commands.json",
+      ".harness/evidence/2026-09-03-frontend-design-alignment/summary.md",
+      ".harness/evidence/2026-09-03-frontend-design-alignment/review.md",
+      "docs/frontend/COMPONENT_STYLING_GUIDE.md",
+      "docs/frontend/UI_PATTERN_LIBRARY.md",
+      "docs/frontend/DESIGN_ENGINEERING_GUIDE.md",
+      "docs/frontend/TOKEN_MIGRATION_GUIDE.md",
+      ".harness/evidence/frontend-design-review-summary.md",
+      ".harness/evidence/phase2-design-system/**",
+      ".harness/evidence/phase3-component-migration/**"
+    ],
+    "modify": [
+      "frontend/src/index.css",
+      "frontend/scripts/check-ui-contract.mjs",
+      "frontend/src/modules/platform/dashboard.css",
+      "frontend/src/components/operational/operational.css",
+      "DESIGN.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-03-frontend-design-alignment",
+    "taskPacket": ".harness/tasks/2026-09-03-frontend-design-alignment/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-03-frontend-design-alignment/",
+    "reviewFile": ".harness/evidence/2026-09-03-frontend-design-alignment/review.md",
+    "summaryFile": ".harness/evidence/2026-09-03-frontend-design-alignment/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

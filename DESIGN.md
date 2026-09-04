@@ -390,32 +390,39 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 11. `docs/designs/BACKEND.md`
 12. `docs/designs/FRONTEND.md`
 13. `docs/designs/FRONTEND_UI_SPEC.md`
-14. `docs/designs/PLATFORM_DASHBOARD_DESIGN.md`
-15. `docs/designs/AUTH_MODULE_DESIGN.md`
-16. `docs/designs/MODULE_CONTRACT.md`
-17. `docs/designs/BUSINESS_MODULE_TEMPLATE.md`
-18. `docs/designs/PERMISSION_MODEL.md`
-19. `docs/designs/ERROR_CODE_AND_I18N.md`
-20. `docs/designs/FRONTEND_PAGE_TEMPLATES.md`
-21. `docs/designs/FRONTEND_COMPONENT_PLAN.md`
-22. `docs/designs/SECURITY_CENTER_DESIGN.md`
-23. `docs/designs/DICT_AND_SETTING_DESIGN.md`
-24. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
-25. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`
-26. `docs/designs/LOWCODE_GENERATOR_GUIDE.md`
-27. `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
-28. `docs/designs/GENERATOR_MODULE_DESIGN.md`
-29. `docs/designs/I18N_MODULE_DESIGN.md`
-30. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
-31. `docs/designs/SYSTEM_ORG_DESIGN.md`
-32. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
-33. `docs/designs/NAVIGATION_IA_STRATEGY.md`
-34. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
-35. `docs/designs/SECURITY_POLICY_ROADMAP.md`
-36. `docs/designs/SSO_OIDC_DESIGN.md`
-37. `docs/designs/P2_SCALE_ROADMAP.md`
-38. `docs/designs/DATABASE.md`
-39. `docs/designs/WORKFLOW.md`
-40. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
-41. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
-42. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+14. `frontend/docs/COMPONENT_STYLING_GUIDE.md` (组件样式规范)
+15. `frontend/docs/UI_PATTERN_LIBRARY.md` (UI 模式库)
+16. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` (设计工程指南)
+17. `docs/designs/PLATFORM_DASHBOARD_DESIGN.md`
+18. `docs/designs/AUTH_MODULE_DESIGN.md`
+19. `docs/designs/MODULE_CONTRACT.md`
+20. `docs/designs/BUSINESS_MODULE_TEMPLATE.md`
+21. `docs/designs/PERMISSION_MODEL.md`
+22. `docs/designs/ERROR_CODE_AND_I18N.md`
+23. `docs/designs/FRONTEND_PAGE_TEMPLATES.md`
+24. `docs/designs/FRONTEND_COMPONENT_PLAN.md`
+25. `docs/designs/SECURITY_CENTER_DESIGN.md`
+26. `docs/designs/DICT_AND_SETTING_DESIGN.md`
+27. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
+28. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`
+29. `docs/designs/LOWCODE_GENERATOR_GUIDE.md`
+30. `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
+31. `docs/designs/GENERATOR_MODULE_DESIGN.md`
+32. `docs/designs/I18N_MODULE_DESIGN.md`
+33. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
+34. `docs/designs/SYSTEM_ORG_DESIGN.md`
+35. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
+36. `docs/designs/NAVIGATION_IA_STRATEGY.md`
+37. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
+38. `docs/designs/SECURITY_POLICY_ROADMAP.md`
+39. `docs/designs/SSO_OIDC_DESIGN.md`
+40. `docs/designs/P2_SCALE_ROADMAP.md`
+41. `docs/designs/DATABASE.md`
+42. `docs/designs/WORKFLOW.md`
+43. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
+44. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
+45. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
+46. `frontend/docs/COMPONENT_STYLING_GUIDE.md` - 组件样式规范（BEM 命名、Token 使用、状态实现）
+47. `frontend/docs/UI_PATTERN_LIBRARY.md` - UI 模式库（12 类常用模式 + 完整代码模板）
+48. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南（设计协作流程、Token 映射、调试技巧）
+49. `frontend/docs/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南（迁移规则、机械门禁、FAQ）

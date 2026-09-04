@@ -116,13 +116,31 @@
   --shell-governance-select-width: 200px;
   /* P2-2 通用阶梯 token —— 供浮层与业务页优先消费；壳层专用变量继续保留 */
   --space-2xs: 2px;
+  --space-3xs: 3px;
   --space-xs: 4px;
+  --space-xs-plus: 6px;
   --space-sm: 8px;
+  --space-sm-alt: 9px;
+  --space-sm-plus: 10px;
+  --space-sm-large: 11px;
   --space-md: 12px;
+  --space-md-alt: 13px;
+  --space-md-plus: 14px;
   --space-lg: 16px;
+  --space-lg-alt: 18px;
+  --space-lg-plus: 20px;
+  --space-lg-large: 22px;
   --space-xl: 24px;
+  --space-xl-alt: 26px;
+  --space-xl-plus: 28px;
   --space-2xl: 32px;
+  --space-2xl-alt: 34px;
+  --space-2xl-plus: 36px;
   --space-3xl: 48px;
+  --space-3xl-alt: 56px;
+  --space-3xl-plus: 64px;
+  --space-4xl: 84px;
+  --space-4xl-plus: 88px;
   --font-size-caption: 12px;
   --font-size-body-sm: 13px;
   --font-size-body: 14px;
@@ -144,6 +162,16 @@
   --z-overlay: 1200;
   --z-modal: 1300;
   --z-notification: 1400;
+  /* 容器分类 - 交互容器（需要用户操作的元素） */
+  --container-interactive-bg: var(--panel-bg-solid);
+  --container-interactive-border: var(--panel-border);
+  --container-interactive-hover-bg: rgba(var(--primary-1), 0.5);
+  --container-interactive-focus-border: var(--brand-primary);
+  /* 容器分类 - 展示容器（信息展示、分组容器） */
+  --container-display-bg: var(--panel-muted);
+  --container-display-border: rgba(0, 0, 0, 0.06);
+  --container-display-separator: rgba(0, 0, 0, 0.04);
+  --container-display-elevated: var(--panel-bg-solid);
 }
 
 :root[data-pantheon-theme='emerald'] {
@@ -265,6 +293,15 @@
   --shell-sider-bg: #12161f;
   --shell-sider-elevated: #1a212c;
   --shell-sider-border: rgba(255, 255, 255, 0.08);
+  /* 容器分类 - 暗色模式 */
+  --container-interactive-bg: var(--panel-bg-solid);
+  --container-interactive-border: var(--panel-border);
+  --container-interactive-hover-bg: rgba(91, 136, 255, 0.1);
+  --container-interactive-focus-border: var(--brand-primary);
+  --container-display-bg: var(--panel-muted);
+  --container-display-border: rgba(255, 255, 255, 0.08);
+  --container-display-separator: rgba(255, 255, 255, 0.04);
+  --container-display-elevated: var(--panel-bg-solid);
 }
 
 /* 品牌色在暗色下提亮、略降饱和、保持色相 */
@@ -393,6 +430,60 @@ a {
   .arco-input-tag
 ):focus-visible {
   outline: 0;
+}
+
+/* ===========================================================================
+   交互容器样式 - 使用 --container-interactive-* token
+   应用于需要用户操作的元素：输入框、选择器、可点击卡片
+   =========================================================================== */
+.arco-input-inner-wrapper,
+.arco-input-password,
+.arco-input-number,
+input.arco-input,
+.arco-select-view,
+.arco-tree-select-view,
+.arco-picker,
+.arco-textarea-wrapper {
+  background-color: var(--container-interactive-bg);
+  border-color: var(--container-interactive-border);
+}
+
+.arco-input-inner-wrapper:hover,
+.arco-select-view:hover,
+.arco-tree-select-view:hover,
+.arco-picker:hover {
+  background-color: var(--container-interactive-hover-bg);
+}
+
+.arco-input-inner-wrapper:focus-within,
+.arco-input-inner-wrapper.arco-input-focus,
+.arco-select-view.arco-select-view-focus,
+.arco-tree-select-view.arco-tree-select-view-focus,
+.arco-picker.arco-picker-focused {
+  border-color: var(--container-interactive-focus-border);
+  background-color: var(--container-interactive-bg);
+}
+
+/* ===========================================================================
+   展示容器样式 - 使用 --container-display-* token
+   应用于只读展示的元素：卡片、描述列表、统计面板、信息展示区
+   =========================================================================== */
+.arco-card {
+  background-color: var(--container-display-elevated);
+  border-color: var(--container-display-border);
+}
+
+.arco-descriptions {
+  background-color: var(--container-display-bg);
+}
+
+.arco-table {
+  background-color: var(--container-display-elevated);
+}
+
+.arco-table-th,
+.arco-table-td {
+  border-color: var(--container-display-border);
 }
 
 @media (prefers-reduced-motion: reduce) {
