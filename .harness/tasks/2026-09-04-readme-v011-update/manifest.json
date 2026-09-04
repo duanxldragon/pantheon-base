@@ -26,7 +26,11 @@
     "blocks": [],
     "related": [
       "pantheon-base-v0.11.0 release"
-    ]
+    ],
+    "evidenceDir": ".harness/evidence/2026-09-04-readme-v011-update",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-update/review.md",
+    "changeRef": "release/v0.11.0-readme-update",
+    "planRefs": []
   },
   "evidence": {
     "manifest": ".harness/tasks/2026-09-04-readme-v011-update/manifest.json",
