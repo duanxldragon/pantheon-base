@@ -1,0 +1,39 @@
+[
+  {
+    "timestamp": "2026-09-04T12:00:00Z",
+    "command": "git checkout -b release/v0.11.0-readme-update",
+    "description": "创建文档更新分支",
+    "status": "success"
+  },
+  {
+    "timestamp": "2026-09-04T12:05:00Z",
+    "command": "git pull origin main",
+    "description": "拉取最新 main 分支",
+    "status": "success"
+  },
+  {
+    "timestamp": "2026-09-04T12:10:00Z",
+    "command": "git merge main",
+    "description": "合并 main 到当前分支，解决冲突",
+    "status": "success",
+    "conflicts_resolved": [
+      "README.md",
+      "README.en.md",
+      "docs/frontend/UI_PATTERN_LIBRARY.md",
+      ".harness/evidence/V0.11.0_RELEASE_COMPLETION_REPORT.md"
+    ]
+  },
+  {
+    "timestamp": "2026-09-04T12:15:00Z",
+    "command": "npm run build",
+    "description": "前端构建验证",
+    "status": "success"
+  },
+  {
+    "timestamp": "2026-09-04T12:20:00Z",
+    "command": "git commit -m 'docs: update README to v0.11.0 and fix frontend doc examples'",
+    "description": "提交文档更新",
+    "status": "success",
+    "commit": "dd3b489c"
+  }
+]
