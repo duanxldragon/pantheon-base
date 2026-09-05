@@ -24,9 +24,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
 
-      // 等待子菜单展开
-      await page.waitForLoadState('networkidle');
-
       // 点击第一个子菜单
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
       if (await subMenus.count() > 0) {
@@ -53,7 +50,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-      await page.waitForLoadState('networkidle');
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
       if (await subMenus.count() > 0) {
@@ -86,12 +82,10 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-      await page.waitForLoadState('networkidle');
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
       if (await subMenus.count() > 0) {
         await subMenus.first().click();
-        await page.waitForLoadState('networkidle');
         await page.waitForSelector('table', { timeout: 10000 });
 
         // 验证基础操作按钮存在

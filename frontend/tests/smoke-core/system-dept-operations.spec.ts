@@ -76,7 +76,6 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证部门出现在树中
-    await page.waitForLoadState('networkidle');
     await expect(page.locator(`text="${testDeptName}"`)).toBeVisible();
   });
 
@@ -156,7 +155,6 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证部门从树中消失
-    await page.waitForLoadState('networkidle');
     await expect(page.locator(`text="${testDeptName}"`)).not.toBeVisible();
   });
 });
