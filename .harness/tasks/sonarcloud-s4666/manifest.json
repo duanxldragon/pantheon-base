@@ -1,0 +1,12 @@
+{
+  "taskId": "sonarcloud-s4666",
+  "title": "Resolve SonarCloud CSS duplicate selector",
+  "description": "Merge duplicate .arco-descriptions CSS rules at lines 476 and 2824",
+  "type": "code-quality",
+  "priority": "low",
+  "scope": "frontend-css",
+  "files": [
+    "frontend/src/index.css"
+  ],
+  "impact": "trivial"
+}
