@@ -1,0 +1,14 @@
+{
+  "detection": {
+    "command": "curl -sf \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&ps=100\"",
+    "output": "css:S4666 detected at frontend/src/index.css lines 476 and 2824"
+  },
+  "fix": {
+    "command": "git diff frontend/src/index.css",
+    "description": "Merged duplicate .arco-descriptions selector"
+  },
+  "verification": {
+    "command": "curl -sf \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=291&resolved=false&ps=1\"",
+    "result": "total: 0 issues"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "taskId": "sonarcloud-s4666",
+  "title": "Resolve SonarCloud CSS duplicate selector (css:S4666)",
+  "goal": "Fix SonarCloud code smell css:S4666 by merging duplicate .arco-descriptions CSS selectors at lines 476 and 2824 in frontend/src/index.css",
+  "primaryLayer": "frontend",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "frontend/src/index.css: merge duplicate .arco-descriptions selectors (line 476 and 2824)",
+      ".harness/ governance files for task tracking and evidence"
+    ],
+    "out": [
+      "backend code",
+      "other frontend components",
+      "runtime behavior changes",
+      "visual changes"
+    ]
+  },
+  "taskDoc": "SonarCloud issue css:S4666 - duplicate CSS selector",
+  "contractAnchors": [],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/sonarcloud-s4666/manifest.json",
+      ".harness/evidence/sonarcloud-s4666/commands.json",
+      ".harness/evidence/sonarcloud-s4666/summary.md",
+      ".harness/evidence/sonarcloud-s4666/review.md"
+    ],
+    "modify": [
+      "frontend/src/index.css"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/components/**",
+      "frontend/src/modules/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["mechanical"]
+  },
+  "verificationPlan": {
+    "backend": [],
+    "frontend": [
+      "cd frontend && npm run build",
+      "cd frontend && npm run type-check"
+    ],
+    "browser": []
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "sonarcloud-s4666",
+    "taskPacket": ".harness/tasks/sonarcloud-s4666/manifest.json",
+    "evidenceDir": ".harness/evidence/sonarcloud-s4666/",
+    "reviewFile": ".harness/evidence/sonarcloud-s4666/review.md",
+    "summaryFile": ".harness/evidence/sonarcloud-s4666/summary.md",
+    "changeRef": "fix/sonarcloud-issues",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "SonarCloud scan results showing 0 issues",
+    "frontend build success",
+    "CI pipeline pass"
+  ],
+  "humanGates": [
+    "User directed SonarCloud issue resolution",
+    "Trivial CSS-only change with no runtime impact"
+  ]
+}

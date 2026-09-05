@@ -475,6 +475,7 @@ input.arco-input,
 
 .arco-descriptions {
   background-color: var(--container-display-bg);
+  border-radius: var(--radius-md);
 }
 
 .arco-table {
@@ -2819,10 +2820,6 @@ html .arco-input-number .arco-input-inner-wrapper .arco-input:focus-visible {
   border-color: var(--panel-border-strong);
   background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-lift));
   box-shadow: none;
-}
-
-.arco-descriptions {
-  border-radius: var(--radius-md);
 }
 
 .arco-descriptions-item-label {
