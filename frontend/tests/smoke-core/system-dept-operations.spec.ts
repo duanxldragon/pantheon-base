@@ -24,7 +24,7 @@ async function deleteTestDept(page: Page, accessToken: string, deptName: string)
     const depts = Array.isArray(payload.data) ? payload.data : [];
 
     // 递归查找并删除
-    const findAndDelete = async (items: any[]) => {
+    const findAndDelete = async (items: Array<{ id: string; deptName: string; children?: unknown[] }>) => {
       for (const dept of items) {
         if (dept.deptName === deptName) {
           await page.request.delete(`${apiBaseUrl}/system/dept/${dept.id}`, {

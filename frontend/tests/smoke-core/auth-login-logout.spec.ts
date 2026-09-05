@@ -10,8 +10,8 @@
  * 预估耗时: ~2分钟
  */
 
-import { test, expect, type Page } from '@playwright/test';
-import { adminCredentials, apiBaseUrl } from '../smoke/helpers/auth';
+import { test, expect } from '@playwright/test';
+import { adminCredentials } from '../smoke/helpers/auth';
 
 test.describe('Auth Critical Path @priority:critical @smoke:core', () => {
   test('user can login with valid credentials and logout', async ({ page }) => {

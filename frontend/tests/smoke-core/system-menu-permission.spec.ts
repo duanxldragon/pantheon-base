@@ -23,7 +23,7 @@ async function deleteTestMenu(page: Page, accessToken: string, menuName: string)
     const payload = await listResponse.json();
     const menus = Array.isArray(payload.data) ? payload.data : [];
 
-    const findAndDelete = async (items: any[]) => {
+    const findAndDelete = async (items: Array<{ id: string; menuName: string; children?: unknown[] }>) => {
       for (const menu of items) {
         if (menu.menuName === menuName) {
           await page.request.delete(`${apiBaseUrl}/system/menu/${menu.id}`, {

@@ -85,8 +85,7 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
       },
     });
     expect(createResponse.ok()).toBeTruthy();
-    const roleData = await createResponse.json();
-    const roleId = roleData.data.id;
+    // roleId would be extracted here for future API-based permission assignment
 
     // 登录并打开角色管理
     await signInAsAdmin(page);
