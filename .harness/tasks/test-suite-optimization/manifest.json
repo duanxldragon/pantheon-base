@@ -63,6 +63,13 @@
     "delete": []
   },
   "linkage": {
+    "evidenceDir": ".harness/evidence/test-suite-optimization",
+    "reviewFile": ".harness/evidence/test-suite-optimization/review.md",
+    "changeRef": "docs/readme-v0.11.0-final",
+    "planRefs": [
+      "docs/testing-strategy-optimization.md",
+      "docs/testing-quick-start.md"
+    ],
     "changesBackendResponseContract": false,
     "changesBackendDTOContract": false,
     "changesPermissionContract": false,
