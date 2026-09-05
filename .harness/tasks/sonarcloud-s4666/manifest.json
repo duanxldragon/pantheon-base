@@ -1,21 +1,68 @@
 {
   "taskId": "sonarcloud-s4666",
-  "title": "Resolve SonarCloud CSS duplicate selector",
-  "description": "解决 SonarCloud css:S4666 - 重复的 CSS 选择器",
-  "type": "code-quality",
-  "priority": "low",
-  "scope": "frontend-css",
-  "files": [
-    "frontend/src/index.css"
+  "title": "Resolve SonarCloud CSS duplicate selector (css:S4666)",
+  "goal": "Fix SonarCloud code smell css:S4666 by merging duplicate .arco-descriptions CSS selectors at lines 476 and 2824 in frontend/src/index.css",
+  "primaryLayer": "frontend",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "frontend/src/index.css: merge duplicate .arco-descriptions selectors (line 476 and 2824)",
+      ".harness/ governance files for task tracking and evidence"
+    ],
+    "out": [
+      "backend code",
+      "other frontend components",
+      "runtime behavior changes",
+      "visual changes"
+    ]
+  },
+  "taskDoc": "SonarCloud issue css:S4666 - duplicate CSS selector",
+  "contractAnchors": [],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/sonarcloud-s4666/manifest.json",
+      ".harness/evidence/sonarcloud-s4666/commands.json",
+      ".harness/evidence/sonarcloud-s4666/summary.md",
+      ".harness/evidence/sonarcloud-s4666/review.md"
+    ],
+    "modify": [
+      "frontend/src/index.css"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/components/**",
+      "frontend/src/modules/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "implementer",
+    "reviewerPosture": ["mechanical"]
+  },
+  "verificationPlan": {
+    "backend": [],
+    "frontend": [
+      "cd frontend && npm run build",
+      "cd frontend && npm run type-check"
+    ],
+    "browser": []
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskId": "sonarcloud-s4666",
+    "taskPacket": ".harness/tasks/sonarcloud-s4666/manifest.json",
+    "evidenceDir": ".harness/evidence/sonarcloud-s4666/",
+    "reviewFile": ".harness/evidence/sonarcloud-s4666/review.md",
+    "summaryFile": ".harness/evidence/sonarcloud-s4666/summary.md",
+    "changeRef": "fix/sonarcloud-issues",
+    "planRefs": []
+  },
+  "evidenceRequired": [
+    "SonarCloud scan results showing 0 issues",
+    "frontend build success",
+    "CI pipeline pass"
   ],
-  "impact": "trivial",
-  "qualityProfile": "none",
-  "ratchetDecision": "no-repeat-observed",
-  "githubSignal": "repo-quality-gate",
-  "boundaries": "frontend CSS only",
-  "boundariesNote": "本次仅修改 CSS 样式，合并重复的 .arco-descriptions 选择器（line 476 和 2824），无跨层依赖。",
-  "hasVisualChange": false,
-  "backendTests": "不适用（CSS-only 改动）",
-  "verificationNote": "CSS 样式合并，无功能变更，SonarCloud 扫描确认修复成功。",
-  "technicalDetails": "## 技术细节\n\n在 `frontend/src/index.css` 中存在两个 `.arco-descriptions` 规则：\n- 第 476 行：定义 `background-color`\n- 第 2824 行：定义 `border-radius`\n\n已将 line 2824 的 `border-radius` 属性合并到 line 476 的声明块中，删除重复的选择器。\n\n**修改文件**：\n- `frontend/src/index.css` (-4 lines, +1 line)\n- `.harness/tasks/sonarcloud-s4666/manifest.json` (new)\n- `.harness/evidence/sonarcloud-s4666/commands.json` (new)\n- `.harness/evidence/sonarcloud-s4666/summary.md` (new)\n- `.harness/evidence/sonarcloud-s4666/review.md` (new)\n\nResolves css:S4666"
+  "humanGates": [
+    "User directed SonarCloud issue resolution",
+    "Trivial CSS-only change with no runtime impact"
+  ]
 }

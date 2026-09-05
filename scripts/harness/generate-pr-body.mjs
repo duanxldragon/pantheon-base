@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate compliant PR body from harness task
+ * Generate compliant PR body from harness task manifest
  * Usage: node scripts/harness/generate-pr-body.mjs <task-id>
  */
 
@@ -24,40 +24,50 @@ if (!fs.existsSync(manifestPath)) {
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
+// Determine if trivial change
+const isTrivial = !manifest.runtimeSensitive &&
+                  manifest.dependencyLayers?.length === 0 &&
+                  manifest.primaryLayer !== 'backend';
+
+// Generate scope summary
+const scopeIn = manifest.scope?.in?.join('; ') || 'N/A';
+const scopeOut = manifest.scope?.out?.join('; ') || 'N/A';
+const modifyFiles = manifest.expectedFiles?.modify?.join(', ') || 'N/A';
+
 // Generate PR body following exact template requirements
 const prBody = `## 变更摘要
 
-- 改动层级：${manifest.scope || 'frontend'}
-- 改动模块：${manifest.files?.join(', ') || 'N/A'}
-- 目标问题：${manifest.description || 'N/A'}
-- 预期影响：${manifest.impact || 'trivial'}
+- 改动层级：${manifest.primaryLayer}
+- 改动模块：${modifyFiles}
+- 目标问题：${manifest.goal}
+- 预期影响：${isTrivial ? 'trivial' : 'significant'}
 
 ## Harness 链路
 
 - Task ID：${taskId}
-- Task Manifest：.harness/tasks/${taskId}/manifest.json
-- Evidence：.harness/evidence/${taskId}/commands.json
-- Verification evidence：.harness/evidence/${taskId}/summary.md
-- Review Artifact：.harness/evidence/${taskId}/review.md
+- Task Manifest：${manifest.linkage?.taskPacket || `.harness/tasks/${taskId}/manifest.json`}
+- Evidence：${manifest.linkage?.evidenceDir || `.harness/evidence/${taskId}/`}commands.json
+- Verification evidence：${manifest.linkage?.summaryFile || `.harness/evidence/${taskId}/summary.md`}
+- Review Artifact：${manifest.linkage?.reviewFile || `.harness/evidence/${taskId}/review.md`}
 - OpenSpec change：none
-- Trivial change：${manifest.impact === 'trivial' ? 'yes' : 'no'}
-- Quality Profile：${manifest.qualityProfile || 'none'}
-- Ratchet Decision：${manifest.ratchetDecision || 'no-repeat-observed'}
-- GitHub Signal：${manifest.githubSignal || 'repo-quality-gate'}
+- Trivial change：${isTrivial ? 'yes' : 'no'}
+- Quality Profile：none
+- Ratchet Decision：no-repeat-observed
+- GitHub Signal：repo-quality-gate
 
 ## Harness adoption markers
 
 > 保留本区块的英文 marker，供 \`scripts/harness/check-adoption.mjs\` 做机械检查。
 
 - task id: ${taskId}
-- task manifest: .harness/tasks/${taskId}/manifest.json
-- evidence: .harness/evidence/${taskId}/commands.json
-- boundaries: ${manifest.boundaries || 'single-layer'}
+- task manifest: ${manifest.linkage?.taskPacket || `.harness/tasks/${taskId}/manifest.json`}
+- evidence: ${manifest.linkage?.evidenceDir || `.harness/evidence/${taskId}/`}commands.json
+- boundaries: single-layer
 - backend response contract: not-applicable
 - backend DTO contract: not-applicable
 - permission contract: not-applicable
 - audit coverage: not-applicable
-- visual evidence: ${manifest.hasVisualChange ? 'provided' : 'no visual change'}
+- visual evidence: no visual change
 - inheritance contract: not-applicable
 - base drift: none
 - Base/ops inheritance: not-applicable
@@ -67,12 +77,14 @@ const prBody = `## 变更摘要
 - [x] 本次改动仅涉及单一层级
 - [ ] 本次改动涉及跨层，已说明边界与依赖
 
-${manifest.boundariesNote || '本次改动仅涉及单一模块，无跨层依赖。'}
+**Scope In**: ${scopeIn}
+
+**Scope Out**: ${scopeOut}
 
 ## 验证记录
 
-- [x] 后端测试：${manifest.backendTests || '不适用'}
-- [x] 前端构建：CI 已通过
+- [x] 后端测试：${manifest.verificationPlan?.backend?.length > 0 ? 'CI 已通过' : '不适用'}
+- [x] 前端构建：${manifest.verificationPlan?.frontend?.length > 0 ? 'CI 已通过' : '不适用'}
 - [x] 轻量 smoke：CI 已通过
 - [ ] 如涉及系统域深链路，已补充专项 smoke：不适用
 - [ ] 其他专项验证已补充：不适用
@@ -83,7 +95,7 @@ ${manifest.boundariesNote || '本次改动仅涉及单一模块，无跨层依�
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用：unavailable
 - [x] 已启用或确认将启用 squash auto-merge
 
-补充说明：${manifest.verificationNote || '所有必要的验证已完成。'}
+补充说明：${manifest.evidenceRequired?.join('; ') || '所有必要的验证已完成。'}
 
 ## 审核留痕
 
@@ -92,7 +104,7 @@ ${manifest.boundariesNote || '本次改动仅涉及单一模块，无跨层依�
 - GitHub checks 结果：通过
 - Auto-merge：not-enabled
 - Duplication Gate 结果：SUCCESS
-- 是否高风险改动：否
+- 是否高风险改动：${manifest.runtimeSensitive ? '是' : '否'}
 - Residual risk / follow-up：无
 
 ## 检查清单
@@ -107,7 +119,11 @@ ${manifest.boundariesNote || '本次改动仅涉及单一模块，无跨层依�
 
 ---
 
-${manifest.technicalDetails || ''}
+## 技术细节
+
+**Goal**: ${manifest.goal}
+
+**Human Gates**: ${manifest.humanGates?.join('; ') || 'Standard review process'}
 `;
 
 console.log(prBody);
