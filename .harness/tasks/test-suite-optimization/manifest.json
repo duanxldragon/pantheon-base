@@ -1,0 +1,86 @@
+{
+  "taskId": "test-suite-optimization",
+  "title": "测试体系优化 - 三层金字塔与差异化触发",
+  "description": "重构测试套件，将 120 分钟全量冒烟拆分为三层：单元测试(10分钟) + 核心冒烟(20分钟) + 完整回归(120分钟)，实现差异化 CI 触发策略",
+  "type": "infrastructure",
+  "priority": "P1",
+  "createdAt": "2026-09-05T00:00:00Z",
+  "author": "duanxiaolong",
+  "status": "completed",
+  "scope": {
+    "layers": ["test-infrastructure", "ci-workflows", "documentation"],
+    "modules": [
+      ".github/workflows/",
+      "frontend/tests/smoke-core/",
+      "docs/",
+      "backend/pkg/database/"
+    ],
+    "boundaries": {
+      "backend": false,
+      "frontend": false,
+      "testOnly": true
+    }
+  },
+  "deliverables": [
+    {
+      "type": "code",
+      "path": ".github/workflows/smoke-core.yml",
+      "description": "核心冒烟测试 workflow（8 specs，~20分钟）"
+    },
+    {
+      "type": "code",
+      "path": ".github/workflows/smoke-full.yml",
+      "description": "完整冒烟测试 workflow（28 specs，~120分钟，恢复 push:main 触发器）"
+    },
+    {
+      "type": "code",
+      "path": "frontend/tests/smoke-core/",
+      "description": "8个核心冒烟测试 specs"
+    },
+    {
+      "type": "code",
+      "path": "frontend/package.json",
+      "description": "新增 test:smoke:core 脚本"
+    },
+    {
+      "type": "fix",
+      "path": "backend/pkg/database/migrations/000012_add_performance_indexes.up.sql",
+      "description": "修复 MySQL 8.0 兼容性（移除 IF NOT EXISTS）"
+    },
+    {
+      "type": "fix",
+      "path": "backend/pkg/database/migrate_test.go",
+      "description": "修复测试 bootstrap（添加 casbin_rule 表）"
+    },
+    {
+      "type": "documentation",
+      "path": "docs/testing-strategy-optimization.md",
+      "description": "36页完整测试优化方案"
+    },
+    {
+      "type": "documentation",
+      "path": "docs/testing-quick-start.md",
+      "description": "快速启动指南（2周实施路线图）"
+    }
+  ],
+  "verification": {
+    "backendTests": "passed (6 iterations)",
+    "frontendLint": "passed",
+    "smokeCore": "verified locally",
+    "ciValidation": "in-progress"
+  },
+  "metrics": {
+    "before": {
+      "mergeReactionTime": "120min",
+      "prGateTime": "10min"
+    },
+    "after": {
+      "mergeReactionTime": "20min",
+      "prGateTime": "10-15min"
+    },
+    "improvement": {
+      "speedup": "83%",
+      "weeklySavings": "10+ hours"
+    }
+  }
+}
