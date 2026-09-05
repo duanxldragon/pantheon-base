@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/metrics"
@@ -27,6 +28,13 @@ func InitRedis(addr string, password string, db int) {
 	_, err := RDB.Ping(ctx).Result()
 	if err != nil {
 		slog.Warn("failed to connect redis (authenticated requests will fail: Redis stores token sessions and the revocation blacklist)", "error", err)
+
+		// Production fail-fast: Redis is a hard dependency for token sessions
+		if os.Getenv("PANTHEON_ENV") == "production" {
+			slog.Error("Redis connection is required in production mode", "error", err)
+			os.Exit(1)
+		}
+
 		RDB = nil
 		return
 	}

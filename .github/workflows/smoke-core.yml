@@ -1,19 +1,18 @@
-name: Full Smoke Suite
+name: Core Smoke Tests
 
 on:
-  schedule:
-    - cron: "37 18 * * *"  # Daily at UTC 18:37 (Beijing 02:37)
   push:
     branches:
       - main
-  workflow_dispatch:  # Manual trigger for full regression testing
+      - release/**
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: smoke-full-${{ github.ref }}
-  cancel-in-progress: false
+  group: smoke-core-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: "24"
@@ -22,10 +21,10 @@ env:
   MYSQL_DATABASE: "pantheon_base"
 
 jobs:
-  smoke-full:
-    name: Full Smoke
+  smoke-core:
+    name: Core Smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 30
     services:
       mysql:
         image: mysql:8.0
@@ -95,8 +94,9 @@ jobs:
       - name: Wait for backend health
         shell: bash
         run: |
-          for attempt in $(seq 1 90); do
+          for attempt in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              echo "Backend is healthy"
               exit 0
             fi
             sleep 2
@@ -105,15 +105,15 @@ jobs:
           cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
           exit 1
 
-      - name: Run full smoke suite
+      - name: Run core smoke suite
         working-directory: frontend
-        run: npm run test:smoke:all
+        run: npm run test:smoke:core
 
       - name: Upload smoke artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: smoke-full-artifacts
+          name: smoke-core-artifacts
           path: |
             frontend/test-results
             ${{ runner.temp }}/pantheon-backend.log

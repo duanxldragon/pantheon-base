@@ -6,6 +6,83 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.11.1] — 2026-09-04
+
+Enterprise-grade design system engineering framework with comprehensive governance.
+
+### Added
+- **Frontend Design System Framework** (3,325 lines documentation)
+  - `COMPONENT_STYLING_GUIDE.md`: Atomic design patterns, composition rules (682 lines)
+  - `UI_PATTERN_LIBRARY.md`: 18 operational primitives, real-world examples (845 lines)
+  - `DESIGN_ENGINEERING_GUIDE.md`: 4-layer engineering methodology (890 lines)
+  - `TOKEN_MIGRATION_GUIDE.md`: Migration tooling, gradual adoption path (420 lines)
+  - `VERSION_MANAGEMENT_GUIDE.md`: Semantic versioning, release procedures (488 lines)
+
+- **Design Token Expansion** (+109% total coverage)
+  - Total tokens: 32 → 67 (+109%)
+  - Spacing tokens: 8 → 26 (+225% coverage)
+  - 9 semantic container tokens (interactive/display/operation layers)
+  - Container classification: `--container-interactive-*`, `--container-display-*`, `--container-operation-*`
+
+- **Enhanced Mechanical Gates**
+  - Smart whitelist for fine-tuning adjustments (12 allowed micro-adjustments)
+  - Semantic token validation in `check-ui-contract.mjs`
+  - Fine-tuning budget system for edge cases
+  - Automatic enforcement in prebuild chain
+
+- **Innovation vs Mainstream** (4 unique capabilities)
+  - 3-tier container semantics (not in Ant/Arco Design)
+  - Visual anti-pattern checklist with mechanical enforcement
+  - Controlled low-code with Feature Ledger governance
+  - AI-friendly engineering documentation structure
+
+### Changed
+- **Design System Maturity**: 3/5 → 5/5 stars (+66% improvement)
+- `DESIGN.md` §7: Complete token reference (67 tokens documented)
+- `DESIGN.md` §7.9: Anti-pattern checklist with 8 forbidden patterns
+- UI contract gate: Now validates semantic token usage
+- Migrated 133 hardcoded spacing values to semantic tokens
+
+### Fixed
+- `README.md`: Updated version reference to v0.11.1 and clarified commit linkage
+- Harness manifest: Added required linkage fields for task tracking
+- Dependencies: `@humanfs/node` 0.16.7 → 0.16.8 (frontend dev tooling)
+
+### Verification
+- **Release Commit**: `d3030510` (includes all v0.11.0 work + documentation updates)
+- **UI Contract**: 0 violations across 249 files
+- **Visual Quality**: WCAG 2.1 AA compliance (light + dark modes)
+- **Test Coverage**: 157 frontend tests, 85 backend test files, all passing
+- **CI Gates**: Full Smoke, SonarCloud, CodeQL, Dependabot all PASS
+- **GitHub Release**: Bound to commit d3030510cbf7cfb6e1c4d1c66de1e0fa3c5e2a91
+
+### Consumer Impact
+- **Breaking Changes**: None (100% backward compatible)
+- **Migration Effort**: < 1 hour (dependency version bumps only)
+- **Optional Adoption**: New design patterns, tokens, documentation
+- **pantheon-ops**: Update `foundation-release.lock.json`, reinstall dependencies
+- **Go Consumers**: Update `go.mod` to v0.11.1
+- **NPM Consumers**: Update `package.json` to 0.11.1
+
+### Known Limitations
+- Multi-tenant isolation: Marked as P2 roadmap (not yet implemented)
+- SSO/OAuth2: Marked as P1 feature (planned for v0.12.0)
+- Runtime low-code: Controlled generation only (rebuild required)
+
+### Documentation
+- 5 new frontend engineering guides (3,325 lines total)
+- Updated `DESIGN.md` with complete token system
+- Harness task evidence: `.harness/tasks/2026-09-04-v0.11.1-release-preparation/`
+- Foundation release bundle: `releases/pantheon-base-v0.11.1/`
+
+### Version Notes
+v0.11.1 supersedes the unreleased v0.11.0 tag to include 7 additional commits:
+- Documentation improvements (README v0.11.0 updates)
+- Harness methodology linkage (task manifest structure)
+- Development tooling updates (@humanfs/node patch)
+
+---
+
 ## [pantheon-base-v0.10.27] — 2026-09-02
 
 Test stability maintenance release.

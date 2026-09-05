@@ -609,6 +609,18 @@ func seedCurrentSchemaBootstrapMarkers(t *testing.T, db *gorm.DB) {
 			PRIMARY KEY (id),
 			UNIQUE INDEX idx_system_module_registration_name (name)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE casbin_rule (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			ptype VARCHAR(100) DEFAULT '',
+			v0 VARCHAR(100) DEFAULT '',
+			v1 VARCHAR(100) DEFAULT '',
+			v2 VARCHAR(100) DEFAULT '',
+			v3 VARCHAR(100) DEFAULT '',
+			v4 VARCHAR(100) DEFAULT '',
+			v5 VARCHAR(100) DEFAULT '',
+			PRIMARY KEY (id),
+			UNIQUE INDEX idx_casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 	}
 
 	for _, statement := range statements {
