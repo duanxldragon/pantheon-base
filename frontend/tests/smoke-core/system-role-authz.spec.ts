@@ -68,7 +68,7 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证角色出现在列表
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
     await expect(page.locator(`text="${testRoleKey}"`)).toBeVisible();
   });
 
@@ -152,7 +152,7 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证角色从列表消失
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
     await expect(page.locator(`tr:has-text("${testRoleKey}")`)).not.toBeVisible();
   });
 });
