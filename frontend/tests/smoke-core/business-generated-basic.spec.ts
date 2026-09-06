@@ -47,8 +47,12 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     // 查找业务菜单
     const businessMenus = page.locator('.arco-menu-item:has-text("业务"), .arco-menu-item:has-text("Business")');
+    const menuCount = await businessMenus.count();
 
-    if (await businessMenus.count() > 0) {
+    // Skip if no business modules exist (checked before test execution)
+    test.skip(menuCount === 0, 'No business modules exist in the current database');
+
+    if (menuCount > 0) {
       await businessMenus.first().click();
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
@@ -71,8 +75,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
           await dialog.locator('button:has-text("取消"), button:has-text("Cancel")').first().click();
         }
       }
-    } else {
-      test.skip(true, 'No business modules exist in the current database');
     }
   });
 
@@ -80,8 +82,12 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
     await signInAsAdmin(page);
 
     const businessMenus = page.locator('.arco-menu-item:has-text("业务"), .arco-menu-item:has-text("Business")');
+    const menuCount = await businessMenus.count();
 
-    if (await businessMenus.count() > 0) {
+    // Skip if no business modules exist (checked before test execution)
+    test.skip(menuCount === 0, 'No business modules exist in the current database');
+
+    if (menuCount > 0) {
       await businessMenus.first().click();
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
@@ -100,8 +106,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
         const table = page.locator('table, .arco-table').first();
         await expect(table).toBeVisible();
       }
-    } else {
-      test.skip(true, 'No business modules exist in the current database');
     }
   });
 });
