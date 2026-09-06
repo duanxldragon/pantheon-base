@@ -79,7 +79,6 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     });
 
     // 验证用户出现在列表中
-    await page.waitForLoadState('networkidle');
     await expect(page.locator(`text="${testUsername}"`)).toBeVisible();
   });
 
@@ -120,7 +119,6 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
 
     // 验证成功
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
-    await page.waitForLoadState('networkidle');
     await expect(page.locator('text="测试用户_已修改"')).toBeVisible();
   });
 
@@ -156,7 +154,6 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证用户从列表消失
-    await page.waitForLoadState('networkidle');
     await expect(page.locator(`tr:has-text("${testUsername}")`)).not.toBeVisible();
   });
 

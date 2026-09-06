@@ -51,7 +51,7 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
 
     // 点击折叠
     await toggleButton.click();
-    await page.waitForLoadState('networkidle');
+    await expect(sidebar).toBeVisible({ timeout: 3000 });
 
     // 验证宽度变化
     const collapsedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
@@ -59,7 +59,7 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
 
     // 再次点击展开
     await toggleButton.click();
-    await page.waitForLoadState('networkidle');
+    await expect(sidebar).toBeVisible({ timeout: 3000 });
 
     // 验证恢复
     const expandedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);

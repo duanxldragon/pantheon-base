@@ -50,9 +50,10 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-      await page.waitForLoadState('networkidle');
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
+      await expect(subMenus.first()).toBeVisible({ timeout: 5000 });
+
       if (await subMenus.count() > 0) {
         await subMenus.first().click();
         await page.waitForSelector('.page-container, table', { timeout: 10000 });
@@ -82,9 +83,10 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-      await page.waitForLoadState('networkidle');
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
+      await expect(subMenus.first()).toBeVisible({ timeout: 5000 });
+
       if (await subMenus.count() > 0) {
         await subMenus.first().click();
         await page.waitForSelector('table', { timeout: 10000 });

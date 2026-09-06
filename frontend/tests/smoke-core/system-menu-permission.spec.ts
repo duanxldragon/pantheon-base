@@ -84,7 +84,6 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证菜单出现
-    await page.waitForLoadState('networkidle');
     await expect(page.locator(`text="${testMenuName}"`)).toBeVisible();
   });
 
@@ -167,7 +166,6 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证菜单消失
-    await page.waitForLoadState('networkidle');
     await expect(page.locator(`tr:has-text("${testMenuName}")`)).not.toBeVisible();
   });
 });
