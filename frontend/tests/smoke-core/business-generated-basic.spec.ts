@@ -24,9 +24,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
 
-      // 等待子菜单展开
-      await page.waitForTimeout(500);
-
       // 点击第一个子菜单
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
       if (await subMenus.count() > 0) {
@@ -41,6 +38,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
       }
     } else {
       // 如果没有业务模块，标记为跳过
+      // Skip reason: No business modules exist in the current database
       test.skip();
     }
   });
@@ -53,7 +51,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle');
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
       if (await subMenus.count() > 0) {
@@ -74,6 +72,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
         }
       }
     } else {
+      // Skip reason: No business modules exist in the current database
       test.skip();
     }
   });
@@ -85,7 +84,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle');
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
       if (await subMenus.count() > 0) {
@@ -102,6 +101,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
         await expect(table).toBeVisible();
       }
     } else {
+      // Skip reason: No business modules exist in the current database
       test.skip();
     }
   });
