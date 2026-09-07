@@ -28,7 +28,7 @@ async function deleteTreeItemByName(
   listPath: '/system/dept/tree' | '/system/menu/tree',
   deletePath: '/system/dept' | '/system/menu',
   keyName: string,
-  getName: (item: { deptName?: string; menuName?: string }) => string | undefined,
+  getName: (item: { deptName?: string; titleKey?: string }) => string | undefined,
 ) {
   const response = await page.request.get(`${apiBaseUrl}${listPath}`, {
     headers: authHeaders(login.accessToken),
@@ -43,7 +43,7 @@ async function deleteTreeItemByName(
 
   const walk = async (nodes: Array<{ id: string; children?: unknown[] }>) => {
     for (const node of nodes) {
-      if (getName(node as { deptName?: string; menuName?: string }) === keyName) {
+      if (getName(node as { deptName?: string; titleKey?: string }) === keyName) {
         await page.request.delete(`${apiBaseUrl}${deletePath}/${node.id}`, {
           headers: apiRequestHeaders(login),
         });
@@ -102,11 +102,11 @@ export async function prepareDeptSmokeFixture(page: Page, deptName: string) {
 
 export async function prepareMenuSmokeFixture(page: Page, menuName: string) {
   const login = await loginByApi(page, adminCredentials);
-  await deleteTreeItemByName(page, login, '/system/menu/tree', '/system/menu', menuName, (item) => item.menuName);
+  await deleteTreeItemByName(page, login, '/system/menu/tree', '/system/menu', menuName, (item) => item.titleKey);
   return {
     cleanup: async () => {
       const cleanupLogin = await loginByApi(page, adminCredentials);
-      await deleteTreeItemByName(page, cleanupLogin, '/system/menu/tree', '/system/menu', menuName, (item) => item.menuName);
+      await deleteTreeItemByName(page, cleanupLogin, '/system/menu/tree', '/system/menu', menuName, (item) => item.titleKey);
     },
   };
 }

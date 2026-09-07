@@ -41,7 +41,7 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
 
     // 填写表单
     await formInputByLabel(dialog, /用户名|Username/i).fill(testUsername);
-    await formInputByLabel(dialog, /姓名|Name/i).fill('测试用户');
+    await formInputByLabel(dialog, /昵称|Nickname/i).fill('测试用户');
     await formInputByLabel(dialog, /密码|Password/i).fill('Test@123456');
 
     // 选择部门（如果有）
@@ -71,9 +71,10 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
       headers: apiRequestHeaders(login),
       data: {
         username: testUsername,
-        realName: '测试用户',
+        nickname: '测试用户',
         password: 'Test@123456',
         status: 1,
+        roleIds: [],
       },
     });
     expect(createResponse.ok()).toBeTruthy();
@@ -93,9 +94,9 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 修改姓名
-    const realNameInput = formInputByLabel(dialog, /姓名|Name/i);
-    await realNameInput.clear();
-    await realNameInput.fill('测试用户_已修改');
+    const nicknameInput = formInputByLabel(dialog, /昵称|Nickname/i);
+    await nicknameInput.clear();
+    await nicknameInput.fill('测试用户_已修改');
 
     // 提交
     await dialog.locator('button:has-text("确定"), button:has-text("OK"), button:has-text("Submit")').click();
@@ -112,9 +113,10 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
       headers: apiRequestHeaders(login),
       data: {
         username: testUsername,
-        realName: '待删除用户',
+        nickname: '待删除用户',
         password: 'Test@123456',
         status: 1,
+        roleIds: [],
       },
     });
     expect(createResponse.ok()).toBeTruthy();
@@ -148,9 +150,10 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
       headers: apiRequestHeaders(login),
       data: {
         username: testUsername,
-        realName: '测试批量操作',
+        nickname: '测试批量操作',
         password: 'Test@123456',
         status: 1,
+        roleIds: [],
       },
     });
     expect(createResponse.ok()).toBeTruthy();

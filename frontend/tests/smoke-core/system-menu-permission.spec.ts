@@ -44,13 +44,14 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     await formInputByLabel(dialog, /路由路径|Path/i).fill('/smoke-test-menu');
     await formInputByLabel(dialog, /排序|Sort/i).fill('999');
 
-    // 选择菜单类型（目录）
-    const menuTypeSelect = dialog.locator('.arco-select:has-text("菜单类型"), .arco-select').first();
-    if (await menuTypeSelect.isVisible({ timeout: 2000 })) {
-      await menuTypeSelect.click();
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-    }
+    // 目录类型不要求页面路由、组件键或页面权限，适合隔离的 smoke fixture。
+    const menuTypeSelect = dialog
+      .locator('.arco-form-item')
+      .filter({ hasText: /类型|Type/i })
+      .locator('.arco-select')
+      .first();
+    await menuTypeSelect.click();
+    await page.locator('.arco-select-option').filter({ hasText: /目录|Group/i }).first().click();
 
     // 提交
     await dialog.locator('button:has-text("确定"), button:has-text("OK")').click();
@@ -68,12 +69,21 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     const createResponse = await page.request.post(`${apiBaseUrl}/system/menu`, {
       headers: apiRequestHeaders(login),
       data: {
-        menuName: testMenuName,
+        parentId: 0,
+        titleKey: testMenuName,
         path: '/smoke-test-menu',
-        menuType: 1,
+        component: '',
+        pagePerm: '',
+        perms: '',
+        type: 'M',
+        icon: 'menu',
+        routeName: '',
+        module: 'system',
         sort: 999,
-        status: 1,
-        visible: true,
+        isVisible: 1,
+        isCache: 0,
+        isExternal: 0,
+        activeMenu: '',
       },
     });
     expect(createResponse.ok()).toBeTruthy();
@@ -112,12 +122,21 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     const createResponse = await page.request.post(`${apiBaseUrl}/system/menu`, {
       headers: apiRequestHeaders(login),
       data: {
-        menuName: testMenuName,
+        parentId: 0,
+        titleKey: testMenuName,
         path: '/smoke-test-menu',
-        menuType: 1,
+        component: '',
+        pagePerm: '',
+        perms: '',
+        type: 'M',
+        icon: 'menu',
+        routeName: '',
+        module: 'system',
         sort: 999,
-        status: 1,
-        visible: true,
+        isVisible: 1,
+        isCache: 0,
+        isExternal: 0,
+        activeMenu: '',
       },
     });
     expect(createResponse.ok()).toBeTruthy();
