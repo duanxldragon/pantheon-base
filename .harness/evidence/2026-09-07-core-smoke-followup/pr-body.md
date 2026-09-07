@@ -7,11 +7,11 @@
 
 ## Harness 链路
 
-- Task ID：`2026-09-04-v0.11.1-release-preparation`
-- Task Manifest：`.harness/tasks/2026-09-04-v0.11.1-release-preparation/manifest.json`
-- Evidence：`.harness/evidence/2026-09-04-v0.11.1-release-preparation/commands.json`
-- Verification evidence：`.harness/evidence/2026-09-04-v0.11.1-release-preparation/summary.md`
-- Review Artifact：`.harness/evidence/2026-09-04-v0.11.1-release-preparation/review.md`
+- Task ID：`2026-09-07-core-smoke-followup`
+- Task Manifest：`.harness/tasks/2026-09-07-core-smoke-followup/manifest.json`
+- Evidence：`.harness/evidence/2026-09-07-core-smoke-followup/commands.json`
+- Verification evidence：`.harness/evidence/2026-09-07-core-smoke-followup/summary.md`
+- Review Artifact：`.harness/evidence/2026-09-07-core-smoke-followup/review.md`
 - OpenSpec change：not-applicable
 - Trivial change：no
 - Quality Profile：permission-policy
@@ -20,9 +20,9 @@
 
 ## Harness adoption markers
 
-- task id: `2026-09-04-v0.11.1-release-preparation`
-- task manifest: `.harness/tasks/2026-09-04-v0.11.1-release-preparation/manifest.json`
-- evidence: `.harness/evidence/2026-09-04-v0.11.1-release-preparation/`
+- task id: `2026-09-07-core-smoke-followup`
+- task manifest: `.harness/tasks/2026-09-07-core-smoke-followup/manifest.json`
+- evidence: `.harness/evidence/2026-09-07-core-smoke-followup/`
 - boundaries: smoke tests and fixtures only; no production runtime source
 - backend response contract: unchanged; tests align to existing DTO fields
 - backend DTO contract: unchanged; request payloads now match existing DTOs

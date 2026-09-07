@@ -1,0 +1,20 @@
+{
+  "taskId": "2026-09-04-v0.11.1-release-preparation",
+  "repo": "pantheon-base",
+  "commands": [
+    {"command": "cd frontend && npm run type-check", "status": "passed"},
+    {"command": "cd frontend && npm run lint", "status": "passed"},
+    {"command": "git diff --check", "status": "passed"},
+    {"command": "GitHub Core Smoke", "status": "pending", "notes": "Hosted runtime evidence required; local MySQL/Redis unavailable."}
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Full smoke requires hosted services and remains a merge blocker.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-04-v0.11.1-release-preparation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-04-v0.11.1-release-preparation/",
+    "reviewFile": ".harness/evidence/2026-09-04-v0.11.1-release-preparation/review.md",
+    "summaryFile": ".harness/evidence/2026-09-04-v0.11.1-release-preparation/summary.md",
+    "changeRef": "fix/core-smoke-followup",
+    "planRefs": [".harness/tasks/2026-09-04-v0.11.1-release-preparation/task-manifest.md"]
+  }
+}
