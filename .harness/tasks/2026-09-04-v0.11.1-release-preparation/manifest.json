@@ -1,0 +1,66 @@
+{
+  "taskId": "2026-09-04-v0.11.1-release-preparation",
+  "title": "Close v0.11.1 core smoke release blocker",
+  "goal": "Make core smoke checks exercise the current IAM API and submit a governed follow-up PR before release.",
+  "primaryLayer": "system-iam",
+  "scope": {
+    "in": [
+      "Core Smoke IAM fixtures",
+      "PR governance evidence",
+      "v0.11.1 release readiness"
+    ],
+    "out": [
+      "Production backend behavior",
+      "Database schema changes",
+      "Bypassing required GitHub checks"
+    ]
+  },
+  "dependencyLayers": ["platform", "system-iam"],
+  "implementationNotes": [
+    "Align smoke payloads and selectors with the existing frontend and backend DTO contracts.",
+    "Use hosted Core Smoke as the runtime evidence because local MySQL and Redis are unavailable."
+  ],
+  "contractAnchors": [
+    "backend/modules/system/iam/menu/menu_dto.go",
+    "backend/modules/system/iam/user/user_dto.go",
+    "frontend/src/modules/system/menu/api.ts",
+    "frontend/src/modules/system/user/api.ts"
+  ],
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "frontend/tests/smoke-core/smoke-core-fixtures.ts",
+      "frontend/tests/smoke-core/system-menu-permission.spec.ts",
+      "frontend/tests/smoke-core/system-user-crud.spec.ts"
+    ],
+    "doNotTouch": ["backend/", "frontend/src/"]
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-04-v0.11.1-release-preparation/",
+    "reviewFile": ".harness/evidence/2026-09-04-v0.11.1-release-preparation/review.md",
+    "summaryFile": ".harness/evidence/2026-09-04-v0.11.1-release-preparation/summary.md",
+    "changeRef": "fix/core-smoke-followup",
+    "planRefs": [".harness/tasks/2026-09-04-v0.11.1-release-preparation/task-manifest.md"]
+  },
+  "structuralScope": {
+    "affectedSubgraph": ["smoke-core specs", "IAM API fixtures", "PR governance"],
+    "boundaryCrossings": ["frontend smoke tests -> backend DTO contracts"],
+    "riskNodes": ["menu create/update/delete", "user create/update/delete"],
+    "graphFocus": ["request payload field names", "tree response identity fields"]
+  },
+  "methodReadiness": {
+    "consumerSpecificControls": ["GitHub Core Smoke", "required checks"],
+    "requiredSensors": ["type-check", "lint", "Core Smoke"],
+    "requiredEvidence": ["commands.json", "summary.md", "review.md"],
+    "deferredCodeIssues": ["none"],
+    "ratchetDecision": "no-repeat-observed"
+  },
+  "verificationPlan": {
+    "commands": ["cd frontend && npm run type-check", "cd frontend && npm run lint", "git diff --check"],
+    "runtimeEvidence": ["GitHub Core Smoke", "GitHub Quality Gates", "GitHub Security Gates"]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": ["Hosted Core Smoke result", "All required checks green"],
+  "humanGates": ["Merge follow-up PR only after required checks pass", "Publish only after Release Gate Summary passes"],
+  "completionChecklist": ["Create PR", "Merge PR", "Verify merge checks", "Generate release manifest and bundle"]
+}

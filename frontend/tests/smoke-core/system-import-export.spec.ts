@@ -17,6 +17,7 @@ test.describe('System Import/Export @priority:high @smoke:core', () => {
   test('can export user data', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 等待列表加载
     await page.waitForSelector('table, .arco-table', { timeout: 10000 });
@@ -25,17 +26,14 @@ test.describe('System Import/Export @priority:high @smoke:core', () => {
     const exportButton = page.locator('button:has-text("导出"), button:has-text("Export")').first();
 
     if (await exportButton.isVisible({ timeout: 2000 })) {
-      // 设置下载监听
-      const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
-
-      // 点击导出
+      const exportResponse = page.waitForResponse(
+        (response) => response.url().includes('/api/v1/system/user/export'),
+        { timeout: 10000 },
+      );
       await exportButton.click();
-
-      // 等待下载开始
-      const download = await downloadPromise;
-
-      // 验证文件名包含预期内容
-      const fileName = download.suggestedFilename();
+      const response = await exportResponse;
+      expect(response.ok()).toBeTruthy();
+      const fileName = response.headers()['content-disposition'] ?? '';
       expect(fileName).toMatch(/user|用户|export/i);
       expect(fileName).toMatch(/\.(csv|xlsx|xls)$/i);
     }
@@ -44,6 +42,7 @@ test.describe('System Import/Export @priority:high @smoke:core', () => {
   test('can download import template', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 查找导入按钮
     const importButton = page.locator('button:has-text("导入"), button:has-text("Import")').first();
@@ -75,6 +74,7 @@ test.describe('System Import/Export @priority:high @smoke:core', () => {
   test('export button is available on role management', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 等待列表加载
     await page.waitForSelector('table, .arco-table', { timeout: 10000 });
