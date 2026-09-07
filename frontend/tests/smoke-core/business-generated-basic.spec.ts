@@ -16,6 +16,7 @@ import { signInAsAdmin } from '../smoke/helpers/auth';
 test.describe('Business Generated Basic @priority:high @smoke:core', () => {
   test('generated module pages are accessible', async ({ page }) => {
     await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     // 尝试访问业务模块（如果存在）
     // 注意：这个测试假设有生成的业务模块，如果没有则跳过
@@ -23,9 +24,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
     if (await businessMenus.count() > 0) {
       await businessMenus.first().click();
-
-      // 等待子菜单展开
-      await page.waitForTimeout(500);
 
       // 点击第一个子菜单
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
@@ -41,24 +39,30 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
       }
     } else {
       // 如果没有业务模块，标记为跳过
-      test.skip();
+      test.skip(true, 'No business modules exist in the current database');
     }
   });
 
   test('can open create dialog in generated module', async ({ page }) => {
     await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     // 查找业务菜单
     const businessMenus = page.locator('.arco-menu-item:has-text("业务"), .arco-menu-item:has-text("Business")');
+    const menuCount = await businessMenus.count();
 
-    if (await businessMenus.count() > 0) {
+    // Skip if no business modules exist (checked before test execution)
+    test.skip(menuCount === 0, 'No business modules exist in the current database');
+
+    if (menuCount > 0) {
       await businessMenus.first().click();
-      await page.waitForTimeout(500);
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
+      await expect(subMenus.first()).toBeVisible({ timeout: 5000 });
+
       if (await subMenus.count() > 0) {
         await subMenus.first().click();
-        await page.waitForSelector('.page-container, table', { timeout: 10000 });
+        await page.waitForSelector('.page-container, .arco-table', { timeout: 10000 });
 
         // 查找新增按钮
         const addButton = page.locator('button:has-text("新增"), button:has-text("Add")').first();
@@ -73,21 +77,25 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
           await dialog.locator('button:has-text("取消"), button:has-text("Cancel")').first().click();
         }
       }
-    } else {
-      test.skip();
     }
   });
 
   test('generated module list has basic operations', async ({ page }) => {
     await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     const businessMenus = page.locator('.arco-menu-item:has-text("业务"), .arco-menu-item:has-text("Business")');
+    const menuCount = await businessMenus.count();
 
-    if (await businessMenus.count() > 0) {
+    // Skip if no business modules exist (checked before test execution)
+    test.skip(menuCount === 0, 'No business modules exist in the current database');
+
+    if (menuCount > 0) {
       await businessMenus.first().click();
-      await page.waitForTimeout(500);
 
       const subMenus = page.locator('.arco-menu-item').filter({ hasNotText: /系统管理|System|Dashboard/ });
+      await expect(subMenus.first()).toBeVisible({ timeout: 5000 });
+
       if (await subMenus.count() > 0) {
         await subMenus.first().click();
         await page.waitForSelector('table', { timeout: 10000 });
@@ -101,8 +109,6 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
         const table = page.locator('table, .arco-table').first();
         await expect(table).toBeVisible();
       }
-    } else {
-      test.skip();
     }
   });
 });

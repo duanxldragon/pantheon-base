@@ -590,7 +590,7 @@ const FINE_TUNED_SPACING = [
 ## 八、参考文档
 
 - [DESIGN.md](../../DESIGN.md) - 总体设计规范
-- [FRONTEND_UI_SPEC.md](./FRONTEND_UI_SPEC.md) - 前端 UI 规范
+- [FRONTEND_UI_SPEC.md](../designs/FRONTEND_UI_SPEC.md) - 前端 UI 规范
 - [COMPONENT_STYLING_GUIDE.md](./COMPONENT_STYLING_GUIDE.md) - 组件样式规范
 - [UI_PATTERN_LIBRARY.md](./UI_PATTERN_LIBRARY.md) - UI 模式库
 - [DESIGN_ENGINEERING_GUIDE.md](./DESIGN_ENGINEERING_GUIDE.md) - 设计工程指南
