@@ -30,7 +30,7 @@ test.describe('Auth Critical Path @priority:critical @smoke:core', () => {
     await expect(page.locator('.app-shell')).toBeVisible();
 
     // 验证用户信息显示
-    const userDropdown = page.locator('.user-dropdown, .header-user');
+    const userDropdown = page.locator('.app-shell__user-trigger');
     await expect(userDropdown).toBeVisible();
 
     // 执行登出

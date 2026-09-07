@@ -12,11 +12,11 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { signInAsAdmin, apiBaseUrl, authHeaders, loginByApi } from '../smoke/helpers/auth';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
 
-async function deleteTestDept(page: Page, accessToken: string, deptName: string) {
+async function deleteTestDept(page: Page, login: BrowserLoginResult, deptName: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/dept/tree`, {
-    headers: authHeaders(accessToken),
+    headers: authHeaders(login.accessToken),
   });
 
   if (listResponse.ok()) {
@@ -28,7 +28,7 @@ async function deleteTestDept(page: Page, accessToken: string, deptName: string)
       for (const dept of items) {
         if (dept.deptName === deptName) {
           await page.request.delete(`${apiBaseUrl}/system/dept/${dept.id}`, {
-            headers: authHeaders(accessToken),
+            headers: apiRequestHeaders(login),
           });
         }
         if (Array.isArray(dept.children)) {
@@ -45,13 +45,13 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
   const testDeptName = '测试部门_Smoke';
 
   test.beforeEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteTestDept(page, accessToken, testDeptName);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestDept(page, login, testDeptName);
   });
 
   test.afterEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteTestDept(page, accessToken, testDeptName);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestDept(page, login, testDeptName);
   });
 
   test('can create a root department', async ({ page }) => {
@@ -76,15 +76,14 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证部门出现在树中
-    await page.waitForTimeout(1000);
     await expect(page.locator(`text="${testDeptName}"`)).toBeVisible();
   });
 
   test('can edit a department', async ({ page }) => {
     // 先创建部门
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/dept`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         deptName: testDeptName,
         sort: 999,
@@ -124,9 +123,9 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
 
   test('can delete a department', async ({ page }) => {
     // 先创建部门
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/dept`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         deptName: testDeptName,
         sort: 999,
@@ -156,7 +155,6 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
 
     // 验证部门从树中消失
-    await page.waitForTimeout(1000);
     await expect(page.locator(`text="${testDeptName}"`)).not.toBeVisible();
   });
 });

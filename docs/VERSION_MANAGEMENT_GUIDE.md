@@ -440,8 +440,8 @@ gh release create pantheon-base-v1.0.0 \
 
 ## 9. 参考文档
 
-- [FOUNDATION_RELEASE_MODEL.md](./FOUNDATION_RELEASE_MODEL.md): Foundation Release 模型详解
-- [PLATFORM_CONTRACT.md](../contracts/PLATFORM_CONTRACT.md): 平台契约
+- [FOUNDATION_RELEASE_MODEL.md](./designs/FOUNDATION_RELEASE_MODEL.md): Foundation Release 模型详解
+- [PLATFORM_CONTRACT.md](./contracts/PLATFORM_CONTRACT.md): 平台契约
 - [Semantic Versioning 2.0.0](https://semver.org/): 语义化版本规范
 - [Keep a Changelog](https://keepachangelog.com/): CHANGELOG 格式规范
 
