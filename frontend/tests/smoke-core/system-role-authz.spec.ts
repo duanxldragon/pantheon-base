@@ -10,26 +10,44 @@
  * 预估耗时: ~3分钟
  */
 
-import { test, expect } from '@playwright/test';
-import { adminCredentials, signInAsAdmin, apiBaseUrl, apiRequestHeaders, loginByApi } from '../smoke/helpers/auth';
-import { formInputByLabel, prepareRoleSmokeFixture } from './smoke-core-fixtures';
+import { test, expect, type Page } from '@playwright/test';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
+
+async function deleteRoleByKey(page: Page, login: BrowserLoginResult, roleKey: string) {
+  const listResponse = await page.request.get(`${apiBaseUrl}/system/role/list`, {
+    headers: authHeaders(login.accessToken),
+    params: { roleKey, page: 1, pageSize: 10 },
+  });
+
+  if (listResponse.ok()) {
+    const payload = await listResponse.json();
+    const roles = Array.isArray(payload.data?.items) ? payload.data.items : [];
+    for (const role of roles) {
+      if (role.roleKey === roleKey && role.roleKey !== 'admin') {
+        await page.request.delete(`${apiBaseUrl}/system/role/${role.id}`, {
+          headers: apiRequestHeaders(login),
+        });
+      }
+    }
+  }
+}
 
 test.describe('System Role Authorization @priority:critical @smoke:core', () => {
   const testRoleKey = 'smoke_test_role';
-  let roleFixture: Awaited<ReturnType<typeof prepareRoleSmokeFixture>>;
 
   test.beforeEach(async ({ page }) => {
-    roleFixture = await prepareRoleSmokeFixture(page, testRoleKey);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteRoleByKey(page, login, testRoleKey);
   });
 
-  test.afterEach(async () => {
-    await roleFixture?.cleanup();
+  test.afterEach(async ({ page }) => {
+    const login = await loginByApi(page, adminCredentials);
+    await deleteRoleByKey(page, login, testRoleKey);
   });
 
   test('can create a new role', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 点击新增角色
     await page.click('button:has-text("新增"), button:has-text("Add")');
@@ -39,9 +57,9 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 填写基本信息
-    await formInputByLabel(dialog, /角色名称|Role Name/i).fill('测试角色');
-    await formInputByLabel(dialog, /角色标识|Role Key/i).fill(testRoleKey);
-    await formInputByLabel(dialog, /排序|Sort/i).fill('999');
+    await dialog.locator('input[name="roleName"], input[placeholder*="角色名称"]').fill('测试角色');
+    await dialog.locator('input[name="roleKey"], input[placeholder*="角色标识"]').fill(testRoleKey);
+    await dialog.locator('input[name="sort"], input[placeholder*="排序"]').fill('999');
 
     // 提交
     await dialog.locator('button:has-text("确定"), button:has-text("OK"), button:has-text("Submit")').click();
@@ -71,7 +89,6 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
     // 登录并打开角色管理
     await signInAsAdmin(page);
     await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试角色的权限配置按钮
     const roleRow = page.locator(`tr:has-text("${testRoleKey}")`);
@@ -119,7 +136,6 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
     // 登录并打开角色管理
     await signInAsAdmin(page);
     await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试角色的删除按钮
     const roleRow = page.locator(`tr:has-text("${testRoleKey}")`);

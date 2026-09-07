@@ -11,26 +11,52 @@
  * 预估耗时: ~2分钟
  */
 
-import { test, expect } from '@playwright/test';
-import { adminCredentials, signInAsAdmin, apiBaseUrl, apiRequestHeaders, loginByApi } from '../smoke/helpers/auth';
-import { formInputByLabel, prepareDeptSmokeFixture } from './smoke-core-fixtures';
+import { test, expect, type Page } from '@playwright/test';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
+
+async function deleteTestDept(page: Page, login: BrowserLoginResult, deptName: string) {
+  const listResponse = await page.request.get(`${apiBaseUrl}/system/dept/tree`, {
+    headers: authHeaders(login.accessToken),
+  });
+
+  if (listResponse.ok()) {
+    const payload = await listResponse.json();
+    const depts = Array.isArray(payload.data) ? payload.data : [];
+
+    // 递归查找并删除
+    const findAndDelete = async (items: Array<{ id: string; deptName: string; children?: unknown[] }>) => {
+      for (const dept of items) {
+        if (dept.deptName === deptName) {
+          await page.request.delete(`${apiBaseUrl}/system/dept/${dept.id}`, {
+            headers: apiRequestHeaders(login),
+          });
+        }
+        if (Array.isArray(dept.children)) {
+          await findAndDelete(dept.children);
+        }
+      }
+    };
+
+    await findAndDelete(depts);
+  }
+}
 
 test.describe('System Department Operations @priority:high @smoke:core', () => {
   const testDeptName = '测试部门_Smoke';
-  let deptFixture: Awaited<ReturnType<typeof prepareDeptSmokeFixture>>;
 
   test.beforeEach(async ({ page }) => {
-    deptFixture = await prepareDeptSmokeFixture(page, testDeptName);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestDept(page, login, testDeptName);
   });
 
-  test.afterEach(async () => {
-    await deptFixture?.cleanup();
+  test.afterEach(async ({ page }) => {
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestDept(page, login, testDeptName);
   });
 
   test('can create a root department', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/dept', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 点击新增按钮
     await page.click('button:has-text("新增"), button:has-text("Add")');
@@ -40,8 +66,8 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 填写部门信息
-    await formInputByLabel(dialog, /部门名称|Department Name/i).fill(testDeptName);
-    await formInputByLabel(dialog, /排序|Sort/i).fill('999');
+    await dialog.locator('input[name="deptName"], input[placeholder*="部门名称"]').fill(testDeptName);
+    await dialog.locator('input[name="sort"], input[placeholder*="排序"]').fill('999');
 
     // 提交
     await dialog.locator('button:has-text("确定"), button:has-text("OK")').click();
@@ -69,7 +95,6 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     // 登录并打开部门管理
     await signInAsAdmin(page);
     await page.goto('/system/dept', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试部门的编辑按钮
     const deptRow = page.locator(`tr:has-text("${testDeptName}"), .arco-tree-node:has-text("${testDeptName}")`).first();
@@ -85,7 +110,7 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 修改部门名称
-    const deptNameInput = formInputByLabel(dialog, /部门名称|Department Name/i);
+    const deptNameInput = dialog.locator('input[name="deptName"], input[placeholder*="部门名称"]');
     await deptNameInput.clear();
     await deptNameInput.fill(`${testDeptName}_已修改`);
 
@@ -112,7 +137,6 @@ test.describe('System Department Operations @priority:high @smoke:core', () => {
     // 登录并打开部门管理
     await signInAsAdmin(page);
     await page.goto('/system/dept', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试部门的删除按钮
     const deptRow = page.locator(`tr:has-text("${testDeptName}"), .arco-tree-node:has-text("${testDeptName}")`).first();
