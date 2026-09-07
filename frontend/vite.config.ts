@@ -19,6 +19,7 @@ export default defineConfig({
     // 仅在构建 library 模式时启用 dts
     ...(process.env.BUILD_MODE === 'library'
       ? [dts({
+          tsconfigPath: './tsconfig.app.json',
           include: ['src/**/*.ts', 'src/**/*.tsx'],
           exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/modules/generated/**'],
         })]

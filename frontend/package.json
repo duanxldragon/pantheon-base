@@ -39,7 +39,7 @@
     "predev": "npm run patch:arco-react19",
     "prebuild": "npm run patch:arco-react19 && npm run check:menu-contract && npm run check:i18n-hardcode && npm run check:i18n-generated-scope && npm run check:system-datetime-presentation && npm run check:shell-visual-contract && npm run check:ui-contract && npm run check:search-toolbar-contract && npm run check:important-budget && npm run check:system-page-admission && npm run check:smoke-web-base && npm run check:smoke-coverage-contract",
     "build": "tsc -b && vite build",
-    "build:lib": "cross-env BUILD_MODE=library tsc -b && vite build",
+    "build:lib": "cross-env BUILD_MODE=library tsc -b && cross-env BUILD_MODE=library vite build",
     "patch:arco-react19": "node ./scripts/patch-arco-react19.mjs",
     "check:menu-contract": "node ./scripts/check-menu-contract.mjs",
     "check:i18n-hardcode": "node ./scripts/check-i18n-hardcode.mjs",
