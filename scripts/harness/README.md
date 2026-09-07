@@ -58,6 +58,7 @@ The following scripts are repo-specific and not part of the portable method:
 - `check-structure-contract.mjs` - file placement + naming against REPOSITORY_LAYOUT.md (complements check-boundaries import rules).
 - `check-ui-quality-gate.mjs` - validates the canonical UI policy, CI integration, and post-adoption UI task evidence declarations.
 - `check-permission-contract.mjs` - permission model contract checks.
+- `generate-pr-body.mjs` - generate a task-linked PR body for governance validation.
 - `triage-base-drift.mjs` - base drift triage.
 
 ## Tests

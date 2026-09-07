@@ -12,11 +12,11 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { signInAsAdmin, apiBaseUrl, authHeaders, loginByApi } from '../smoke/helpers/auth';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
 
-async function deleteTestUser(page: Page, accessToken: string, username: string) {
+async function deleteTestUser(page: Page, login: BrowserLoginResult, username: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/user/list`, {
-    headers: authHeaders(accessToken),
+    headers: authHeaders(login.accessToken),
     params: { username, page: 1, pageSize: 10 },
   });
 
@@ -26,7 +26,7 @@ async function deleteTestUser(page: Page, accessToken: string, username: string)
     for (const user of users) {
       if (user.username === username) {
         await page.request.delete(`${apiBaseUrl}/system/user/${user.id}`, {
-          headers: authHeaders(accessToken),
+          headers: apiRequestHeaders(login),
         });
       }
     }
@@ -37,13 +37,13 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
   const testUsername = 'smoke_test_user';
 
   test.beforeEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteTestUser(page, accessToken, testUsername);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestUser(page, login, testUsername);
   });
 
   test.afterEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteTestUser(page, accessToken, testUsername);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestUser(page, login, testUsername);
   });
 
   test('can create a new user', async ({ page }) => {
@@ -84,9 +84,9 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
 
   test('can edit an existing user', async ({ page }) => {
     // 先创建用户
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         username: testUsername,
         realName: '测试用户',
@@ -124,9 +124,9 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
 
   test('can delete a user', async ({ page }) => {
     // 先创建用户
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         username: testUsername,
         realName: '待删除用户',
@@ -159,9 +159,9 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
 
   test('can batch toggle user status', async ({ page }) => {
     // 先创建测试用户
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         username: testUsername,
         realName: '测试批量操作',

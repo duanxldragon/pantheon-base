@@ -16,6 +16,7 @@ import { signInAsAdmin } from '../smoke/helpers/auth';
 test.describe('Business Generated Basic @priority:high @smoke:core', () => {
   test('generated module pages are accessible', async ({ page }) => {
     await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     // 尝试访问业务模块（如果存在）
     // 注意：这个测试假设有生成的业务模块，如果没有则跳过
@@ -44,6 +45,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
   test('can open create dialog in generated module', async ({ page }) => {
     await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     // 查找业务菜单
     const businessMenus = page.locator('.arco-menu-item:has-text("业务"), .arco-menu-item:has-text("Business")');
@@ -60,7 +62,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
       if (await subMenus.count() > 0) {
         await subMenus.first().click();
-        await page.waitForSelector('.page-container, table', { timeout: 10000 });
+        await page.waitForSelector('.page-container, .arco-table', { timeout: 10000 });
 
         // 查找新增按钮
         const addButton = page.locator('button:has-text("新增"), button:has-text("Add")').first();
@@ -80,6 +82,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
 
   test('generated module list has basic operations', async ({ page }) => {
     await signInAsAdmin(page);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     const businessMenus = page.locator('.arco-menu-item:has-text("业务"), .arco-menu-item:has-text("Business")');
     const menuCount = await businessMenus.count();

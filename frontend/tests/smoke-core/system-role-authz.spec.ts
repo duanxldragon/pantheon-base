@@ -11,11 +11,11 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { signInAsAdmin, apiBaseUrl, authHeaders, loginByApi } from '../smoke/helpers/auth';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
 
-async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string) {
+async function deleteRoleByKey(page: Page, login: BrowserLoginResult, roleKey: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/role/list`, {
-    headers: authHeaders(accessToken),
+    headers: authHeaders(login.accessToken),
     params: { roleKey, page: 1, pageSize: 10 },
   });
 
@@ -25,7 +25,7 @@ async function deleteRoleByKey(page: Page, accessToken: string, roleKey: string)
     for (const role of roles) {
       if (role.roleKey === roleKey && role.roleKey !== 'admin') {
         await page.request.delete(`${apiBaseUrl}/system/role/${role.id}`, {
-          headers: authHeaders(accessToken),
+          headers: apiRequestHeaders(login),
         });
       }
     }
@@ -36,13 +36,13 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
   const testRoleKey = 'smoke_test_role';
 
   test.beforeEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteRoleByKey(page, accessToken, testRoleKey);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteRoleByKey(page, login, testRoleKey);
   });
 
   test.afterEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteRoleByKey(page, accessToken, testRoleKey);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteRoleByKey(page, login, testRoleKey);
   });
 
   test('can create a new role', async ({ page }) => {
@@ -73,9 +73,9 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
 
   test('can assign menu permissions to role', async ({ page }) => {
     // 先创建角色
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         roleName: '测试角色',
         roleKey: testRoleKey,
@@ -121,9 +121,9 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
 
   test('can delete a role', async ({ page }) => {
     // 先创建角色
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         roleName: '待删除角色',
         roleKey: testRoleKey,

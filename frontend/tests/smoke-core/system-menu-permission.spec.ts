@@ -12,11 +12,11 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { signInAsAdmin, apiBaseUrl, authHeaders, loginByApi } from '../smoke/helpers/auth';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
 
-async function deleteTestMenu(page: Page, accessToken: string, menuName: string) {
+async function deleteTestMenu(page: Page, login: BrowserLoginResult, menuName: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/menu/tree`, {
-    headers: authHeaders(accessToken),
+    headers: authHeaders(login.accessToken),
   });
 
   if (listResponse.ok()) {
@@ -27,7 +27,7 @@ async function deleteTestMenu(page: Page, accessToken: string, menuName: string)
       for (const menu of items) {
         if (menu.menuName === menuName) {
           await page.request.delete(`${apiBaseUrl}/system/menu/${menu.id}`, {
-            headers: authHeaders(accessToken),
+            headers: apiRequestHeaders(login),
           });
         }
         if (Array.isArray(menu.children)) {
@@ -44,13 +44,13 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
   const testMenuName = '测试菜单_Smoke';
 
   test.beforeEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteTestMenu(page, accessToken, testMenuName);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestMenu(page, login, testMenuName);
   });
 
   test.afterEach(async ({ page }) => {
-    const { accessToken } = await loginByApi(page);
-    await deleteTestMenu(page, accessToken, testMenuName);
+    const login = await loginByApi(page, adminCredentials);
+    await deleteTestMenu(page, login, testMenuName);
   });
 
   test('can create a menu item', async ({ page }) => {
@@ -89,9 +89,9 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
 
   test('can edit a menu item', async ({ page }) => {
     // 先创建菜单
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/menu`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         menuName: testMenuName,
         path: '/smoke-test-menu',
@@ -132,9 +132,9 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
 
   test('can delete a menu item', async ({ page }) => {
     // 先创建菜单
-    const { accessToken } = await loginByApi(page);
+    const login = await loginByApi(page, adminCredentials);
     const createResponse = await page.request.post(`${apiBaseUrl}/system/menu`, {
-      headers: authHeaders(accessToken),
+      headers: apiRequestHeaders(login),
       data: {
         menuName: testMenuName,
         path: '/smoke-test-menu',
