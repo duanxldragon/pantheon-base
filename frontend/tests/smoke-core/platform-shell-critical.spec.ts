@@ -18,6 +18,7 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
   test('shell renders with correct structure after login', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.app-shell__menu')).toBeVisible({ timeout: 15000 });
 
     // 验证 Shell 核心结构
     await expect(page.locator('.app-shell')).toBeVisible();
@@ -38,6 +39,7 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
   test('sidebar menu expands and collapses', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.app-shell__menu')).toBeVisible({ timeout: 15000 });
 
     // 找到折叠/展开按钮
     const toggleButton = page.locator('.app-shell__collapse-btn').first();
@@ -45,43 +47,39 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
     // 验证按钮存在
     await expect(toggleButton).toBeVisible();
 
-    // 记录初始状态
     const sidebar = page.locator('.app-shell__sider').first();
-    const initialWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
+    await expect(sidebar).not.toHaveClass(/arco-layout-sider-collapsed/);
 
     // 点击折叠
     await toggleButton.click();
     await expect(sidebar).toBeVisible({ timeout: 3000 });
 
-    // 验证宽度变化
-    const collapsedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
-    expect(collapsedWidth).toBeLessThan(initialWidth);
+    await expect(sidebar).toHaveClass(/arco-layout-sider-collapsed/);
 
     // 再次点击展开
     await toggleButton.click();
     await expect(sidebar).toBeVisible({ timeout: 3000 });
 
-    // 验证恢复
-    const expandedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
-    expect(expandedWidth).toBeGreaterThan(collapsedWidth);
+    await expect(sidebar).not.toHaveClass(/arco-layout-sider-collapsed/);
   });
 
   test('navigation between system pages works', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.app-shell__menu')).toBeVisible({ timeout: 15000 });
 
-    // 导航到用户管理
-    await page.getByRole('menuitem', { name: /用户管理|User/i }).click();
+    await page.getByRole('button', { name: /系统管理|System/i }).click();
+    await page.getByRole('button', { name: /用户管理|User/i }).click();
     await expect(page).toHaveURL(/\/system\/user/, { timeout: 5000 });
     await expect(page.locator('.page-container')).toBeVisible();
 
     // 导航到角色管理
-    await page.getByRole('menuitem', { name: /角色管理|Role/i }).click();
+    await page.getByRole('button', { name: /角色管理|Role/i }).click();
     await expect(page).toHaveURL(/\/system\/role/, { timeout: 5000 });
     await expect(page.locator('.page-container')).toBeVisible();
 
     // 导航到菜单管理
-    await page.getByRole('menuitem', { name: /菜单管理|Menu/i }).click();
+    await page.getByRole('button', { name: /菜单管理|Menu/i }).click();
     await expect(page).toHaveURL(/\/system\/menu/, { timeout: 5000 });
     await expect(page.locator('.page-container')).toBeVisible();
   });
@@ -90,8 +88,8 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
     await signInAsAdmin(page);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-    // 导航到用户管理
-    await page.getByRole('menuitem', { name: /用户管理|User/i }).click();
+    await page.getByRole('button', { name: /系统管理|System/i }).click();
+    await page.getByRole('button', { name: /用户管理|User/i }).click();
     await expect(page).toHaveURL(/\/system\/user/, { timeout: 5000 });
 
     // 验证面包屑包含正确的路径

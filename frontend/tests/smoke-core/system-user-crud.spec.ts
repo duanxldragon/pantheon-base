@@ -11,44 +11,26 @@
  * 预估耗时: ~3分钟
  */
 
-import { test, expect, type Page } from '@playwright/test';
-import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
-
-async function deleteTestUser(page: Page, login: BrowserLoginResult, username: string) {
-  const listResponse = await page.request.get(`${apiBaseUrl}/system/user/list`, {
-    headers: authHeaders(login.accessToken),
-    params: { username, page: 1, pageSize: 10 },
-  });
-
-  if (listResponse.ok()) {
-    const payload = await listResponse.json();
-    const users = Array.isArray(payload.data?.items) ? payload.data.items : [];
-    for (const user of users) {
-      if (user.username === username) {
-        await page.request.delete(`${apiBaseUrl}/system/user/${user.id}`, {
-          headers: apiRequestHeaders(login),
-        });
-      }
-    }
-  }
-}
+import { test, expect } from '@playwright/test';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, apiRequestHeaders, loginByApi } from '../smoke/helpers/auth';
+import { formInputByLabel, prepareUserSmokeFixture } from './smoke-core-fixtures';
 
 test.describe('System User CRUD @priority:critical @smoke:core', () => {
   const testUsername = 'smoke_test_user';
+  let userFixture: Awaited<ReturnType<typeof prepareUserSmokeFixture>>;
 
   test.beforeEach(async ({ page }) => {
-    const login = await loginByApi(page, adminCredentials);
-    await deleteTestUser(page, login, testUsername);
+    userFixture = await prepareUserSmokeFixture(page, testUsername);
   });
 
-  test.afterEach(async ({ page }) => {
-    const login = await loginByApi(page, adminCredentials);
-    await deleteTestUser(page, login, testUsername);
+  test.afterEach(async () => {
+    await userFixture?.cleanup();
   });
 
   test('can create a new user', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 点击新增按钮
     await page.click('button:has-text("新增"), button:has-text("Add")');
@@ -58,9 +40,9 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 填写表单
-    await dialog.locator('input[name="username"], input[placeholder*="用户名"]').fill(testUsername);
-    await dialog.locator('input[name="realName"], input[placeholder*="姓名"]').fill('测试用户');
-    await dialog.locator('input[name="password"], input[type="password"]').first().fill('Test@123456');
+    await formInputByLabel(dialog, /用户名|Username/i).fill(testUsername);
+    await formInputByLabel(dialog, /姓名|Name/i).fill('测试用户');
+    await formInputByLabel(dialog, /密码|Password/i).fill('Test@123456');
 
     // 选择部门（如果有）
     const deptSelect = dialog.locator('.arco-select:has-text("部门"), .arco-select:has-text("Department")').first();
@@ -99,6 +81,7 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     // 登录并打开用户管理
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试用户的编辑按钮
     const userRow = page.locator(`tr:has-text("${testUsername}")`);
@@ -110,7 +93,7 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 修改姓名
-    const realNameInput = dialog.locator('input[name="realName"], input[placeholder*="姓名"]');
+    const realNameInput = formInputByLabel(dialog, /姓名|Name/i);
     await realNameInput.clear();
     await realNameInput.fill('测试用户_已修改');
 
@@ -139,6 +122,7 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     // 登录并打开用户管理
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试用户的删除按钮
     const userRow = page.locator(`tr:has-text("${testUsername}")`);
@@ -174,6 +158,7 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     // 登录并打开用户管理
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 勾选测试用户
     const userRow = page.locator(`tr:has-text("${testUsername}")`);

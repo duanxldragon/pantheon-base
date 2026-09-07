@@ -11,51 +11,26 @@
  * 预估耗时: ~2分钟
  */
 
-import { test, expect, type Page } from '@playwright/test';
-import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
-
-async function deleteTestMenu(page: Page, login: BrowserLoginResult, menuName: string) {
-  const listResponse = await page.request.get(`${apiBaseUrl}/system/menu/tree`, {
-    headers: authHeaders(login.accessToken),
-  });
-
-  if (listResponse.ok()) {
-    const payload = await listResponse.json();
-    const menus = Array.isArray(payload.data) ? payload.data : [];
-
-    const findAndDelete = async (items: Array<{ id: string; menuName: string; children?: unknown[] }>) => {
-      for (const menu of items) {
-        if (menu.menuName === menuName) {
-          await page.request.delete(`${apiBaseUrl}/system/menu/${menu.id}`, {
-            headers: apiRequestHeaders(login),
-          });
-        }
-        if (Array.isArray(menu.children)) {
-          await findAndDelete(menu.children);
-        }
-      }
-    };
-
-    await findAndDelete(menus);
-  }
-}
+import { test, expect } from '@playwright/test';
+import { adminCredentials, signInAsAdmin, apiBaseUrl, apiRequestHeaders, loginByApi } from '../smoke/helpers/auth';
+import { formInputByLabel, prepareMenuSmokeFixture } from './smoke-core-fixtures';
 
 test.describe('System Menu Permission @priority:high @smoke:core', () => {
   const testMenuName = '测试菜单_Smoke';
+  let menuFixture: Awaited<ReturnType<typeof prepareMenuSmokeFixture>>;
 
   test.beforeEach(async ({ page }) => {
-    const login = await loginByApi(page, adminCredentials);
-    await deleteTestMenu(page, login, testMenuName);
+    menuFixture = await prepareMenuSmokeFixture(page, testMenuName);
   });
 
-  test.afterEach(async ({ page }) => {
-    const login = await loginByApi(page, adminCredentials);
-    await deleteTestMenu(page, login, testMenuName);
+  test.afterEach(async () => {
+    await menuFixture?.cleanup();
   });
 
   test('can create a menu item', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/menu', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 点击新增按钮
     await page.click('button:has-text("新增"), button:has-text("Add")');
@@ -65,9 +40,9 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 填写菜单信息
-    await dialog.locator('input[name="menuName"], input[placeholder*="菜单名称"]').fill(testMenuName);
-    await dialog.locator('input[name="path"], input[placeholder*="路由路径"]').fill('/smoke-test-menu');
-    await dialog.locator('input[name="sort"], input[placeholder*="排序"]').fill('999');
+    await formInputByLabel(dialog, /标题键|Title Key/i).fill(testMenuName);
+    await formInputByLabel(dialog, /路由路径|Path/i).fill('/smoke-test-menu');
+    await formInputByLabel(dialog, /排序|Sort/i).fill('999');
 
     // 选择菜单类型（目录）
     const menuTypeSelect = dialog.locator('.arco-select:has-text("菜单类型"), .arco-select').first();
@@ -106,6 +81,7 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     // 登录并打开菜单管理
     await signInAsAdmin(page);
     await page.goto('/system/menu', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试菜单的编辑按钮
     const menuRow = page.locator(`tr:has-text("${testMenuName}")`).first();
@@ -119,7 +95,7 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
     // 修改菜单名称
-    const menuNameInput = dialog.locator('input[name="menuName"], input[placeholder*="菜单名称"]');
+    const menuNameInput = formInputByLabel(dialog, /标题键|Title Key/i);
     await menuNameInput.clear();
     await menuNameInput.fill(`${testMenuName}_已修改`);
 
@@ -149,6 +125,7 @@ test.describe('System Menu Permission @priority:high @smoke:core', () => {
     // 登录并打开菜单管理
     await signInAsAdmin(page);
     await page.goto('/system/menu', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.page-container', { timeout: 15000 });
 
     // 找到测试菜单的删除按钮
     const menuRow = page.locator(`tr:has-text("${testMenuName}")`).first();
