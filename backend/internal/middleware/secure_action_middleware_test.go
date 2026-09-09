@@ -7,10 +7,23 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testredis"
 
 	"github.com/gin-gonic/gin"
 )
+
+// setupSecureActionRedis wires the test Redis into the global database.RDB
+// that SecureActionMiddleware reads, restoring the previous value on cleanup.
+func setupSecureActionRedis(t *testing.T) {
+	t.Helper()
+	rdb := testredis.Open(t)
+	previousRDB := database.RDB
+	database.RDB = rdb
+	t.Cleanup(func() {
+		database.RDB = previousRDB
+	})
+}
 
 func assertSecureActionStatus(t *testing.T, token string, userID uint64, sessionID string, wantStatus int) {
 	t.Helper()
@@ -37,9 +50,9 @@ func assertSecureActionStatus(t *testing.T, token string, userID uint64, session
 
 func TestSecureActionMiddlewareRejectsSessionMismatch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	rdb := testredis.Open(t)
+	setupSecureActionRedis(t)
 
-	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, database.RDB)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}
@@ -49,9 +62,9 @@ func TestSecureActionMiddlewareRejectsSessionMismatch(t *testing.T) {
 
 func TestSecureActionMiddlewareAllowsMatchingSession(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	rdb := testredis.Open(t)
+	setupSecureActionRedis(t)
 
-	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, database.RDB)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}
@@ -67,9 +80,9 @@ func TestSecureActionMiddlewareRejectsMissingToken(t *testing.T) {
 
 func TestSecureActionMiddlewareRejectsUserMismatch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	rdb := testredis.Open(t)
+	setupSecureActionRedis(t)
 
-	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "secure_action", authtoken.DefaultAccessTokenTTL, database.RDB)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}
@@ -79,9 +92,9 @@ func TestSecureActionMiddlewareRejectsUserMismatch(t *testing.T) {
 
 func TestSecureActionMiddlewareRejectsWrongScope(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	rdb := testredis.Open(t)
+	setupSecureActionRedis(t)
 
-	token, err := authtoken.GenerateOperationToken(7, "session-a", "other_scope", authtoken.DefaultAccessTokenTTL, rdb)
+	token, err := authtoken.GenerateOperationToken(7, "session-a", "other_scope", authtoken.DefaultAccessTokenTTL, database.RDB)
 	if err != nil {
 		t.Fatalf("generate operation token: %v", err)
 	}

@@ -396,6 +396,16 @@ func (s *Runtime) VerifyMFAChallengeWithContext(ctx context.Context, req *MFAVer
 		AccessExpiresAt:  result.TokenPair.AccessExpiresAt.Format("2006-01-02 15:04:05"),
 		RefreshExpiresAt: result.TokenPair.RefreshExpiresAt.Format("2006-01-02 15:04:05"),
 		SessionID:        result.TokenPair.SessionID,
+		User: &security.UserInfoResp{
+			ID:       result.UserID,
+			Username: result.Username,
+			Nickname: result.Nickname,
+			Avatar:   result.Avatar,
+			Email:    result.Email,
+			Phone:    result.Phone,
+			Roles:    result.Roles,
+			Perms:    result.Perms,
+		},
 	}, nil
 }
 

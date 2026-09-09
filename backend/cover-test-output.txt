@@ -1,0 +1,43 @@
+ok  	github.com/duanxldragon/pantheon-base/backend/cmd/server	0.126s	coverage: 13.2% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/internal/middleware	8.889s	coverage: 62.6% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/internal/scaffold	1.045s	coverage: 69.8% of statements
+	github.com/duanxldragon/pantheon-base/backend/modules/auth		coverage: 0.0% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/login	103.419s	coverage: 52.0% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/mfa	0.234s	coverage: 23.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/security	8.607s	coverage: 41.1% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/session	7.219s	coverage: 35.3% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/business	8.142s	coverage: 62.8% of statements
+	github.com/duanxldragon/pantheon-base/backend/modules/lowcode		coverage: 0.0% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule	48.915s	coverage: 69.5% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/lowcode/generator	0.709s	coverage: 26.6% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/platform	14.313s	coverage: 74.1% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system	28.936s	coverage: 30.4% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/audit	24.804s	coverage: 63.9% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/config/dict	12.290s	coverage: 39.8% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting	35.154s	coverage: 58.9% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/i18n	185.060s	coverage: 68.8% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/menu	23.762s	coverage: 55.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/permission	37.527s	coverage: 64.4% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role	48.057s	coverage: 60.0% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user	51.018s	coverage: 64.9% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/org/dept	19.018s	coverage: 62.9% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/org/post	22.187s	coverage: 61.4% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/authsession	0.038s	coverage: 32.6% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/authtoken	0.065s	coverage: 15.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/capability	0.040s	coverage: 38.1% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/common	0.081s	coverage: 29.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/common/http	0.063s	coverage: 62.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/common/security	0.025s	coverage: 44.8% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/contracts	0.087s	coverage: 64.2% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/database	26.274s	coverage: 40.1% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/impexp	0.049s	coverage: 54.2% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/logging	0.038s	coverage: 82.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/metrics	0.033s	coverage: 0.0% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/platformprefs	0.054s	coverage: 77.4% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/ratelimit	0.045s	coverage: 40.9% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind	1.554s	coverage: 84.6% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/telemetry	0.028s	coverage: 85.7% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/testmysql	0.059s	coverage: 32.9% of statements
+	github.com/duanxldragon/pantheon-base/backend/pkg/testredis		coverage: 0.0% of statements
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/upload	0.067s	coverage: 71.0% of statements
+?   	github.com/duanxldragon/pantheon-base/backend/pkg/version	[no test files]

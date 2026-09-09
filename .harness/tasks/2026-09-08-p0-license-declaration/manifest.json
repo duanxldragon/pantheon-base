@@ -1,0 +1,57 @@
+{
+  "taskId": "2026-09-08-p0-license-declaration",
+  "title": "P0 License Declaration",
+  "priority": "P0",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "repository-governance",
+  "estimatedEffort": "20 minutes",
+  "blocking": [
+    "enterprise-adoption",
+    "legal-compliance"
+  ],
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p0-security-gates-enforcement",
+    "2026-09-08-p0-csp-hsts-implementation"
+  ],
+  "scope": {
+    "create": [
+      "LICENSE",
+      ".harness/tasks/2026-09-08-p0-license-declaration/task.md",
+      ".harness/tasks/2026-09-08-p0-license-declaration/manifest.json",
+      ".harness/evidence/2026-09-08-p0-license-declaration/completion.md"
+    ],
+    "modify": [
+      "README.md",
+      "README.en.md",
+      "frontend/package.json"
+    ],
+    "doNotTouch": [
+      "source code files",
+      "third-party dependencies",
+      "build artifacts"
+    ]
+  },
+  "successCriteria": [
+    "LICENSE file exists at repository root",
+    "License clearly displayed in GitHub repository header",
+    "README.md contains license badge",
+    "package.json has correct license field",
+    "No conflicting license declarations"
+  ],
+  "humanGates": [
+    "Project owner approval of license choice",
+    "Legal review (if required)"
+  ],
+  "verification": {
+    "commands": [],
+    "manualChecks": [
+      "GitHub UI shows license",
+      "License badge renders correctly",
+      "package.json validated"
+    ]
+  }
+}
