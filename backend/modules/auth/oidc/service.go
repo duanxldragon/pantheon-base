@@ -13,17 +13,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// OIDCService handles OIDC authentication flow
-type OIDCService struct {
+// Service handles OIDC authentication flow
+type Service struct {
 	db       *gorm.DB
 	redis    *redis.Client
-	provider *OIDCProvider
-	config   *OIDCConfig
+	provider *Provider
+	config   *Config
 }
 
 // NewOIDCService creates a new OIDC service
-func NewOIDCService(db *gorm.DB, redisClient *redis.Client, provider *OIDCProvider, config *OIDCConfig) *OIDCService {
-	return &OIDCService{
+func NewOIDCService(db *gorm.DB, redisClient *redis.Client, provider *Provider, config *Config) *Service {
+	return &Service{
 		db:       db,
 		redis:    redisClient,
 		provider: provider,
@@ -32,7 +32,7 @@ func NewOIDCService(db *gorm.DB, redisClient *redis.Client, provider *OIDCProvid
 }
 
 // InitiateLogin starts the OIDC login flow
-func (s *OIDCService) InitiateLogin(ctx context.Context, clientIP string) (authURL string, err error) {
+func (s *Service) InitiateLogin(ctx context.Context, clientIP string) (authURL string, err error) {
 	// Generate state and nonce
 	state, err := generateRandomString(32)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *OIDCService) InitiateLogin(ctx context.Context, clientIP string) (authU
 }
 
 // HandleCallback processes the OIDC callback
-func (s *OIDCService) HandleCallback(ctx context.Context, code, state, clientIP string) (*CallbackResult, error) {
+func (s *Service) HandleCallback(ctx context.Context, code, state, clientIP string) (*CallbackResult, error) {
 	// Validate state
 	key := "oidc:state:" + state
 	data, err := s.redis.HGetAll(ctx, key).Result()
@@ -76,9 +76,11 @@ func (s *OIDCService) HandleCallback(ctx context.Context, code, state, clientIP 
 	nonce := data["nonce"]
 	storedIP := data["ip"]
 
-	// Optional: Verify IP hasn't changed
-	if storedIP != "" && storedIP != clientIP {
-		// Log warning but don't fail (user might be behind load balancer)
+	// Optional: Verify IP hasn't changed. Intentionally a no-op for now:
+	// users behind load balancers may rotate IPs mid-flow, so mismatches
+	// must not fail the callback. TODO: log a warning once a structured
+	// logger is wired into this service.
+	if storedIP != "" && storedIP != clientIP { //nolint:staticcheck // empty branch is deliberate scaffolding, see TODO above
 	}
 
 	// Delete state (one-time use)
@@ -133,7 +135,7 @@ func (s *OIDCService) HandleCallback(ctx context.Context, code, state, clientIP 
 }
 
 // provisionUser creates or updates a user from OIDC claims
-func (s *OIDCService) provisionUser(ctx context.Context, claims *OIDCUserInfo) (*User, bool, error) {
+func (s *Service) provisionUser(ctx context.Context, claims *UserInfo) (*User, bool, error) {
 	// Check if user exists by OIDC subject
 	var user User
 	result := s.db.Where("oidc_subject = ?", claims.Subject).First(&user)
@@ -172,9 +174,9 @@ func (s *OIDCService) provisionUser(ctx context.Context, claims *OIDCUserInfo) (
 			return nil, false, fmt.Errorf("failed to create user: %w", err)
 		}
 
-		// Assign default role if configured
-		if s.config.DefaultRole != "" {
-			// TODO: Assign role (implementation depends on role system)
+		// Assign default role if configured. Intentionally deferred:
+		// TODO: assign the role once the role system exposes an assignment API.
+		if s.config.DefaultRole != "" { //nolint:staticcheck // empty branch is deliberate scaffolding, see TODO above
 		}
 
 		return &user, true, nil

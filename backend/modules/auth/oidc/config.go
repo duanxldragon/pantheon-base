@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// OIDCConfig holds OIDC provider configuration
-type OIDCConfig struct {
+// Config holds OIDC provider configuration
+type Config struct {
 	Enabled        bool
 	ProviderURL    string
 	ClientID       string
@@ -20,11 +20,11 @@ type OIDCConfig struct {
 }
 
 // LoadOIDCConfig loads OIDC configuration from environment variables
-func LoadOIDCConfig() (*OIDCConfig, error) {
+func LoadOIDCConfig() (*Config, error) {
 	enabled := strings.ToLower(os.Getenv("PANTHEON_OIDC_ENABLED")) == "true"
 
 	if !enabled {
-		return &OIDCConfig{Enabled: false}, nil
+		return &Config{Enabled: false}, nil
 	}
 
 	// Required fields
@@ -63,7 +63,7 @@ func LoadOIDCConfig() (*OIDCConfig, error) {
 		defaultRole = "user"
 	}
 
-	return &OIDCConfig{
+	return &Config{
 		Enabled:        true,
 		ProviderURL:    providerURL,
 		ClientID:       clientID,

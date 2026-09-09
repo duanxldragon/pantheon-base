@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const errInvalidTestSentinel = "err.invalid"
+
 // ---- loginSourceIP ----
 
 func TestLoginSourceIP_ExtractsIPFromSourceKey(t *testing.T) {
@@ -157,7 +159,7 @@ func TestParseCleanupWindow_WhitespaceOnlyCountsAsEmpty(t *testing.T) {
 }
 
 func TestParseCleanupWindow_OneBoundOnlyIsInvalid(t *testing.T) {
-	if _, err := parseCleanupWindow("2026-01-01T00:00:00Z", "", "err.invalid"); err == nil || err.Error() != "err.invalid" {
+	if _, err := parseCleanupWindow("2026-01-01T00:00:00Z", "", errInvalidTestSentinel); err == nil || err.Error() != errInvalidTestSentinel {
 		t.Fatalf("expected err.invalid for missing end, got %v", err)
 	}
 	if _, err := parseCleanupWindow("", "2026-01-01T00:00:00Z", "err.invalid"); err == nil || err.Error() != "err.invalid" {
@@ -178,7 +180,7 @@ func TestParseCleanupWindow_EndBeforeStartIsInvalid(t *testing.T) {
 	_, err := parseCleanupWindow(
 		"2026-01-02T00:00:00Z",
 		"2026-01-01T00:00:00Z",
-		"err.invalid",
+		errInvalidTestSentinel,
 	)
 	if err == nil || err.Error() != "err.invalid" {
 		t.Fatalf("expected err.invalid when end precedes start, got %v", err)
@@ -189,7 +191,7 @@ func TestParseCleanupWindow_ValidWindowIsReturned(t *testing.T) {
 	window, err := parseCleanupWindow(
 		"2026-01-01T00:00:00Z",
 		"2026-01-02T00:00:00Z",
-		"err.invalid",
+		errInvalidTestSentinel,
 	)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

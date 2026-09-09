@@ -1,3 +1,13 @@
+---
+title: SSO/OIDC Design Document
+doc_type: Design
+layer: system/auth
+status: Draft
+linked_contracts:
+  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
+updated_at: 2026-09-08
+---
+
 # SSO/OIDC Design Document
 
 **Version**: 1.0  

@@ -7,7 +7,7 @@ import (
 )
 
 // InitiateOIDCLogin handles the OIDC login initiation
-func InitiateOIDCLogin(service *OIDCService) gin.HandlerFunc {
+func InitiateOIDCLogin(service *Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authURL, err := service.InitiateLogin(c.Request.Context(), c.ClientIP())
 		if err != nil {
@@ -23,7 +23,7 @@ func InitiateOIDCLogin(service *OIDCService) gin.HandlerFunc {
 }
 
 // HandleOIDCCallback handles the OIDC provider callback
-func HandleOIDCCallback(service *OIDCService) gin.HandlerFunc {
+func HandleOIDCCallback(service *Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		code := c.Query("code")
 		state := c.Query("state")
@@ -70,7 +70,7 @@ func HandleOIDCCallback(service *OIDCService) gin.HandlerFunc {
 }
 
 // GetOIDCConfig returns OIDC configuration info for frontend
-func GetOIDCConfig(config *OIDCConfig) gin.HandlerFunc {
+func GetOIDCConfig(config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !config.Enabled {
 			c.JSON(http.StatusOK, gin.H{

@@ -6,6 +6,8 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 )
 
+const roleSortFieldTestName = "role_name"
+
 // ---- normalizeRoleStatus ----
 
 func TestNormalizeRoleStatus_EnabledAndDisabledPassThrough(t *testing.T) {
@@ -102,8 +104,8 @@ func TestNormalizeRoleSort_WhitelistedFields(t *testing.T) {
 		want      string
 	}{
 		{sortField: "id", want: "id"},
-		{sortField: "roleName", want: "role_name"},
-		{sortField: "role_name", want: "role_name"},
+		{sortField: "roleName", want: roleSortFieldTestName},
+		{sortField: roleSortFieldTestName, want: roleSortFieldTestName},
 		{sortField: "roleKey", want: "role_key"},
 		{sortField: "role_key", want: "role_key"},
 		{sortField: "sort", want: "sort"},
@@ -127,18 +129,18 @@ func TestNormalizeRoleSort_InvalidFieldFallsBackToID(t *testing.T) {
 }
 
 func TestNormalizeRoleSort_OrderOnlyDescWhenExplicit(t *testing.T) {
-	column, desc := normalizeRoleSort(&RoleListQuery{SortField: "role_name", SortOrder: "asc"})
-	if column != "role_name" || desc != false {
+	column, desc := normalizeRoleSort(&RoleListQuery{SortField: roleSortFieldTestName, SortOrder: "asc"})
+	if column != roleSortFieldTestName || desc != false {
 		t.Fatalf("expected (role_name, false), got (%s, %v)", column, desc)
 	}
 
-	column, desc = normalizeRoleSort(&RoleListQuery{SortField: "role_name", SortOrder: "DESC"})
-	if column != "role_name" || desc != true {
+	column, desc = normalizeRoleSort(&RoleListQuery{SortField: roleSortFieldTestName, SortOrder: "DESC"})
+	if column != roleSortFieldTestName || desc != true {
 		t.Fatalf("expected case-insensitive desc, got (%s, %v)", column, desc)
 	}
 
-	column, desc = normalizeRoleSort(&RoleListQuery{SortField: "role_name", SortOrder: "invalid"})
-	if column != "role_name" || desc != false {
+	column, desc = normalizeRoleSort(&RoleListQuery{SortField: roleSortFieldTestName, SortOrder: "invalid"})
+	if column != roleSortFieldTestName || desc != false {
 		t.Fatalf("expected non-desc order to be asc, got (%s, %v)", column, desc)
 	}
 }

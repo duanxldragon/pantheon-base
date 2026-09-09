@@ -1,6 +1,7 @@
 package login
 
 import (
+	"context"
 	"encoding/json"
 	"net/http/httptest"
 	"strconv"
@@ -70,15 +71,6 @@ func decodeHandlerResponse(t *testing.T, recorder *httptest.ResponseRecorder) (i
 		t.Fatalf("decode response %q: %v", recorder.Body.String(), err)
 	}
 	return envelope.Code, envelope.Data
-}
-
-func assertHandlerSuccess(t *testing.T, recorder *httptest.ResponseRecorder) map[string]any {
-	t.Helper()
-	code, data := decodeHandlerResponse(t, recorder)
-	if code != common.CodeSuccess {
-		t.Fatalf("expected success code %d, got code=%d body=%s", common.CodeSuccess, code, recorder.Body.String())
-	}
-	return data
 }
 
 func TestAuthHandler_GetCurrentUserInfo(t *testing.T) {
@@ -695,7 +687,7 @@ func TestAuthHandler_buildLoginSourceKey(t *testing.T) {
 }
 
 func TestAuthHandler_parseRefreshTokenWithContextEmpty(t *testing.T) {
-	if _, err := parseRefreshTokenWithContext(nil, ""); err == nil {
+	if _, err := parseRefreshTokenWithContext(context.TODO(), ""); err == nil {
 		t.Fatal("expected error for empty refresh token")
 	}
 }

@@ -8,15 +8,15 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// OIDCProvider wraps the OIDC provider and OAuth2 config
-type OIDCProvider struct {
+// Provider wraps the OIDC provider and OAuth2 config
+type Provider struct {
 	provider     *oidc.Provider
 	verifier     *oidc.IDTokenVerifier
 	oauth2Config oauth2.Config
 }
 
 // NewOIDCProvider creates a new OIDC provider instance
-func NewOIDCProvider(ctx context.Context, cfg *OIDCConfig) (*OIDCProvider, error) {
+func NewOIDCProvider(ctx context.Context, cfg *Config) (*Provider, error) {
 	if !cfg.Enabled {
 		return nil, fmt.Errorf("OIDC is not enabled")
 	}
@@ -41,7 +41,7 @@ func NewOIDCProvider(ctx context.Context, cfg *OIDCConfig) (*OIDCProvider, error
 		Scopes:       cfg.Scopes,
 	}
 
-	return &OIDCProvider{
+	return &Provider{
 		provider:     provider,
 		verifier:     verifier,
 		oauth2Config: oauth2Config,
@@ -49,29 +49,29 @@ func NewOIDCProvider(ctx context.Context, cfg *OIDCConfig) (*OIDCProvider, error
 }
 
 // AuthCodeURL generates the authorization URL with state and nonce
-func (p *OIDCProvider) AuthCodeURL(state, nonce string) string {
+func (p *Provider) AuthCodeURL(state, nonce string) string {
 	return p.oauth2Config.AuthCodeURL(state,
 		oauth2.SetAuthURLParam("nonce", nonce))
 }
 
 // Exchange exchanges the authorization code for tokens
-func (p *OIDCProvider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+func (p *Provider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
 	return p.oauth2Config.Exchange(ctx, code)
 }
 
 // VerifyIDToken verifies the ID token signature and claims
-func (p *OIDCProvider) VerifyIDToken(ctx context.Context, rawIDToken string) (*oidc.IDToken, error) {
+func (p *Provider) VerifyIDToken(ctx context.Context, rawIDToken string) (*oidc.IDToken, error) {
 	return p.verifier.Verify(ctx, rawIDToken)
 }
 
 // UserInfo fetches user information from the UserInfo endpoint
-func (p *OIDCProvider) UserInfo(ctx context.Context, token *oauth2.Token) (*OIDCUserInfo, error) {
+func (p *Provider) UserInfo(ctx context.Context, token *oauth2.Token) (*UserInfo, error) {
 	userInfo, err := p.provider.UserInfo(ctx, oauth2.StaticTokenSource(token))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	var claims OIDCUserInfo
+	var claims UserInfo
 	if err := userInfo.Claims(&claims); err != nil {
 		return nil, fmt.Errorf("failed to parse user info claims: %w", err)
 	}
@@ -79,8 +79,8 @@ func (p *OIDCProvider) UserInfo(ctx context.Context, token *oauth2.Token) (*OIDC
 	return &claims, nil
 }
 
-// OIDCUserInfo represents user information from OIDC provider
-type OIDCUserInfo struct {
+// UserInfo represents user information from OIDC provider
+type UserInfo struct {
 	Subject       string `json:"sub"`
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`

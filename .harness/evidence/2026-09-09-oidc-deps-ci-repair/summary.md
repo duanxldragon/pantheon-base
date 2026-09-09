@@ -43,6 +43,30 @@ Direct `github.com:443` connections time out on this network (DNS resolves to
 `http://127.0.0.1:7897` via one-shot `-c http.proxy=...`; no git config was
 persistently modified.
 
+## Round 2 — new-code gate failures on 3459678b/44e945a2
+
+CI round 1 exposed two gates that lint/check **PR-scoped new code**
+(`--new-from-rev=<pr-base>`), so failures traced to the v0.12.0 feature
+commits themselves:
+
+1. **Docs Governance / frontmatter**: `docs/designs/SSO_OIDC_DESIGN.md` had no
+   frontmatter but is referenced by `docs/contracts/SYSTEM_AUTH_CONTRACT.md`.
+   Added frontmatter (Design / system/auth / Draft, linked to
+   SYSTEM_AUTH_CONTRACT). Local check: passed (256 docs, 202 with frontmatter).
+2. **Go Lint (new-code scope)**: 10 findings fixed:
+   - revive stutter: renamed `OIDCConfig→Config`, `OIDCProvider→Provider`,
+     `OIDCService→Service`, `OIDCUserInfo→UserInfo` inside
+     `modules/auth/oidc` (no external importers existed; the `User.OIDCProvider`
+     gorm field and function names `LoadOIDCConfig`/`NewOIDCService`/etc. kept).
+   - staticcheck SA1012: nil Context in login test → `context.TODO()`.
+   - staticcheck SA9003 ×2: empty branches in oidc service are deliberate
+     TODO scaffolding → documented + `//nolint:staticcheck` with rationale.
+   - unused: removed dead test helper `assertHandlerSuccess`.
+   - goconst ×2: test literals → constants `errInvalidTestSentinel`,
+     `roleSortFieldTestName`.
+   Local verification: `golangci-lint v2.6.2 --new-from-rev=<pr-base> ./...`
+   → 0 issues; gofmt clean; go build/vet pass; go test auth+iam+middleware green.
+
 ## Known gaps
 
 - Final GitHub Actions conclusions on 3459678b were still in progress when this
