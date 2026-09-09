@@ -678,10 +678,10 @@ func TestAuthHandler_buildLoginSourceKey(t *testing.T) {
 	if got := buildLoginSourceKey(" 10.0.0.1 "); got != "ip:10.0.0.1" {
 		t.Fatalf("expected ip:10.0.0.1, got %q", got)
 	}
-	if got := buildLoginSourceKey(""); got != "ip:unknown" {
+	if got := buildLoginSourceKey(""); got != loginSourceKeyUnknownIP {
 		t.Fatalf("expected ip:unknown, got %q", got)
 	}
-	if got := buildLoginSourceKey("   "); got != "ip:unknown" {
+	if got := buildLoginSourceKey("   "); got != loginSourceKeyUnknownIP {
 		t.Fatalf("expected ip:unknown for whitespace, got %q", got)
 	}
 }
