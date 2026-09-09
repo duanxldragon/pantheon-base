@@ -80,10 +80,10 @@ func GetOIDCConfig(config *OIDCConfig) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"enabled":   true,
-			"loginURL":  "/api/v1/auth/oidc/login",
-			"provider":  config.ProviderURL,
-			"scopes":    config.Scopes,
+			"enabled":  true,
+			"loginURL": "/api/v1/auth/oidc/login",
+			"provider": config.ProviderURL,
+			"scopes":   config.Scopes,
 		})
 	}
 }
