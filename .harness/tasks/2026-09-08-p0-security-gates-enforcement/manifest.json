@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-09-08-p0-security-gates-enforcement",
+  "title": "P0 Security Gates Enforcement",
+  "priority": "P0",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "gaps": [
+    "Test PR validating blocking behavior not executed (would require a deliberately failing PR); check context name verified against workflow definition and latest Security Gates run on main is green"
+  ],
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "ci-workflow",
+  "estimatedEffort": "1.75 hours",
+  "blocking": [
+    "production-deployment",
+    "security-compliance"
+  ],
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p0-license-declaration",
+    "2026-09-08-p0-csp-hsts-implementation"
+  ],
+  "scope": {
+    "create": [
+      ".harness/tasks/2026-09-08-p0-security-gates-enforcement/task.md",
+      ".harness/tasks/2026-09-08-p0-security-gates-enforcement/manifest.json",
+      ".harness/evidence/2026-09-08-p0-security-gates-enforcement/verification.md",
+      ".harness/evidence/2026-09-08-p0-security-gates-enforcement/branch-protection-config.json"
+    ],
+    "modify": [
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+      "GitHub Branch Protection Rules (via UI/API)"
+    ],
+    "doNotTouch": [
+      "existing security workflow logic",
+      "CodeQL configuration files",
+      "backend/frontend source code"
+    ]
+  },
+  "successCriteria": [
+    "CodeQL analysis is required check for PR merge",
+    "Secret Scan is required check for PR merge",
+    "Dependabot alerts block merge if high/critical severity",
+    "PRs with security issues cannot merge",
+    "Documentation updated with new policy",
+    "At least one test PR validates enforcement"
+  ],
+  "humanGates": [
+    "Repository admin approval for branch protection changes",
+    "Security team review of enforcement policy",
+    "Test PR validation by maintainer"
+  ],
+  "verification": {
+    "commands": [
+      "gh api repos/:owner/:repo/actions/workflows",
+      "gh api repos/:owner/:repo/branches/main/protection"
+    ],
+    "manualChecks": [
+      "Test PR blocked by security gate",
+      "Test PR succeeds after fix",
+      "Branch protection UI shows required checks"
+    ]
+  }
+}

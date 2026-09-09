@@ -1,0 +1,77 @@
+{
+  "taskId": "2026-09-08-p1-test-coverage-phase1",
+  "title": "P1 Test Coverage Phase 1 - Core Security Modules",
+  "priority": "P1",
+  "status": "in-progress",
+  "week1CompletedAt": "2026-09-08",
+  "week1Summary": "Baseline measured; session package 11.2% -> 32.5% via new pure-logic tests; CI threshold intentionally not raised yet",
+  "week23Progress": "2026-09-08: pure-logic test pass for auth/login (2.4->8.1), iam/role (0.5->7.3), iam/permission (1.8->5.5), audit (6.5->26.5); DB-backed LoginService throttle tests verified against local MySQL (17/17 pass); DB-backed AuthHandler handler tests added (35/35 pass) pushing auth/login 52.0->67.9 (Phase-1 60% target MET); Redis-backed runtime tests enabled (previously silently skipping) - exposed and fixed a real production bug (MFA login response omitted user info) and a latent test-harness bug (secure_action middleware test never wired global Redis handle); auth/login 67.9->70.8, overall backend 57.4; full suite with MySQL+Redis: 39 packages ok, 0 failures; ALL Phase-1 module targets MET (auth 70.8>=60, iam 55.7-64.9>=50, audit 63.9>=50, overall 57.4>=30); CI threshold still not raised (needs MySQL service in ci.yml first - maintainer decision)",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "backend/testing",
+  "estimatedEffort": "44 hours (1 month)",
+  "blocking": [
+    "safe-refactoring",
+    "test-coverage-phase2"
+  ],
+  "blockedBy": [
+    "2026-09-08-p0-security-gates-enforcement",
+    "2026-09-08-p0-csp-hsts-implementation"
+  ],
+  "relatedTasks": [
+    "2026-09-08-p1-sso-oidc-design",
+    "2026-09-08-p1-k8s-manifests"
+  ],
+  "scope": {
+    "create": [
+      "backend/modules/auth/password_service_test.go",
+      "coverage analysis documents",
+      ".harness/tasks/2026-09-08-p1-test-coverage-phase1/task.md",
+      ".harness/tasks/2026-09-08-p1-test-coverage-phase1/manifest.json",
+      ".harness/evidence/2026-09-08-p1-test-coverage-phase1/coverage-before.html",
+      ".harness/evidence/2026-09-08-p1-test-coverage-phase1/coverage-after.html"
+    ],
+    "modify": [
+      "existing *_test.go files in auth/iam/audit",
+      "scripts/harness/check-coverage.mjs (threshold: 11% → 30%)",
+      "README.md (coverage badge)"
+    ],
+    "doNotTouch": [
+      "production code logic (except bug fixes)",
+      "frontend code",
+      "database migrations"
+    ]
+  },
+  "successCriteria": [
+    "Auth module: 60%+ coverage",
+    "IAM module: 50%+ coverage",
+    "Audit module: 50%+ coverage",
+    "Overall backend: 30%+ coverage",
+    "All tests passing",
+    "CI threshold updated to 30%"
+  ],
+  "humanGates": [
+    "Baseline coverage analysis review",
+    "Mid-point check (week 2)",
+    "Final review: all targets met",
+    "Code review of test quality"
+  ],
+  "verification": {
+    "commands": [
+      "cd backend && go test -cover ./modules/auth/...",
+      "cd backend && go test -cover ./modules/system/iam/...",
+      "cd backend && go test -cover ./modules/system/audit/...",
+      "cd backend && go test ./..."
+    ],
+    "manualChecks": [
+      "Coverage reports generated",
+      "Coverage increase validated per module",
+      "CI gate updated"
+    ]
+  },
+  "timeline": {
+    "week1": "Analysis & Infrastructure",
+    "week2-3": "Core Security Modules Testing",
+    "week4": "Verification & Documentation"
+  }
+}

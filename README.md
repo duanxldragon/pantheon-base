@@ -1,5 +1,7 @@
 # Pantheon Platform
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 English version: [README.en.md](./README.en.md)
 
 Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀认证、IAM、组织、配置、审计、多语言、动态菜单，以及受控低代码生成与模块治理能力。项目目标不是只提供登录和 CRUD 壳，而是提供一套可持续演进、系统域与业务域解耦、AI 友好的后台平台基础设施。

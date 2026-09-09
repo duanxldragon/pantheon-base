@@ -42,6 +42,9 @@ bin/
 *.test
 *.prof
 vendor/
+backend/coverage.out
+backend/coverage.txt
+backend/cover-test-output.txt
 
 # Local databases
 *.db

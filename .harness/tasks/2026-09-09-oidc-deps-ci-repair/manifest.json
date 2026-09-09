@@ -1,0 +1,71 @@
+{
+  "taskId": "2026-09-09-oidc-deps-ci-repair",
+  "title": "Repair PR #298 CI: missing OIDC deps, gofmt, grpc CVE",
+  "goal": "Unblock PR #298 (release v0.12.0): modules/auth/oidc imports github.com/coreos/go-oidc/v3/oidc and golang.org/x/oauth2 but go.mod/go.sum lacked them, failing vet/unit/backend tests; oidc/handler.go had a gofmt violation failing Go Lint; google.golang.org/grpc v1.61.2 carries Dependabot alert #28 (high, xDS DoS) failing the Dependency Vulnerabilities gate. Port dependency fixes onto release/v0.11.2, format the handler, and bump grpc to v1.76.0.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system/auth"],
+  "scope": {
+    "in": [
+      "backend/go.mod + backend/go.sum: add go-oidc v3.9.0 and oauth2, bump grpc v1.61.2 → v1.76.0 (with transitive bumps golang.org/x/oauth2 → v0.30.0, github.com/golang/protobuf → v1.5.4, genproto api)",
+      "backend/modules/auth/oidc/handler.go: gofmt alignment fix only (no behavior change)",
+      ".harness task/evidence artifacts for this repair"
+    ],
+    "out": [
+      "any change to OIDC provider/handler logic beyond formatting",
+      "release tag/merge decisions for PR #298 (human gate)",
+      "frontend or business/* code"
+    ]
+  },
+  "implementationNotes": [
+    "Dependency posture change is high-risk scope per repo-pr-gate: full evidence loop required, non-trivial.",
+    "Fixes originate from local main commits 9b049bdf/9e1057ce that were never pushed; they were re-applied onto the PR head branch release/v0.11.2 so CI sees them."
+  ],
+  "contractAnchors": [
+    "backend/go.mod",
+    "backend/modules/auth/oidc/handler.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-09-oidc-deps-ci-repair/manifest.json",
+      ".harness/evidence/2026-09-09-oidc-deps-ci-repair/commands.json",
+      ".harness/evidence/2026-09-09-oidc-deps-ci-repair/summary.md",
+      ".harness/evidence/2026-09-09-oidc-deps-ci-repair/review.md",
+      ".harness/evidence/2026-09-09-oidc-deps-ci-repair/pr-body.md"
+    ],
+    "modify": [
+      "backend/go.mod",
+      "backend/go.sum",
+      "backend/modules/auth/oidc/handler.go"
+    ],
+    "doNotTouch": [
+      "backend/modules/auth/oidc/provider.go",
+      "frontend/**"
+    ]
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/",
+    "reviewFile": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/summary.md",
+    "changeRef": "PR #298",
+    "planRefs": []
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && gofmt -l .",
+      "cd backend && go test ./modules/... ./internal/middleware/..."
+    ],
+    "runtimeEvidence": [
+      "GitHub Actions CI run on release/v0.11.2 after push"
+    ]
+  },
+  "evidenceRequired": [
+    "local build/vet/test output",
+    "gofmt clean output",
+    "grpc version in go.mod after bump"
+  ],
+  "humanGates": [
+    "final merge decision for PR #298"
+  ]
+}

@@ -591,10 +591,12 @@ func (h *AuthHandler) GetOwnLoginLogs(c *gin.Context) {
 	common.Success(c, resp)
 }
 
+const loginSourceKeyUnknownIP = "ip:unknown"
+
 func buildLoginSourceKey(ip string) string {
 	trimmed := strings.TrimSpace(ip)
 	if trimmed == "" {
-		return "ip:unknown"
+		return loginSourceKeyUnknownIP
 	}
 	return "ip:" + trimmed
 }

@@ -19,8 +19,22 @@ export * from './modules/auth';
 export * from './modules/platform';
 
 // === Components ===
-// 根据实际存在的组件导出
-// export * from './components/index';
+export * from './components';
 
 // === Hooks ===
-// export * from './hooks/index';
+export * from './hooks';
+
+// === API (shared request / import-export / upload) ===
+export * from './api/request';
+export * from './api/importExport';
+export * from './api/upload';
+
+// === Shared core helpers ===
+export * from './core/format/dateTime';
+export * from './core/runtime/automationPolicy';
+
+// === System i18n API (consumer bootstrap needs getLangPack) ===
+export * from './modules/system/i18n/api';
+
+// === App shell ===
+export { default as App } from './App';

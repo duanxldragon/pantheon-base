@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-09-09-oidc-deps-ci-repair",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Executed by Buffy (Codebuff) in a maintenance session on 2026-09-09."
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Verify backend compiles with go-oidc/oauth2 present and after grpc bump. Expected: no output, exit 0. Observed: BUILD_OK"
+    },
+    {
+      "command": "cd backend && go vet ./...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Reproduce the failing Fast Checks vet step locally. Expected: no missing-module errors. Observed: VET_OK"
+    },
+    {
+      "command": "cd backend && gofmt -l .",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Verify no gofmt violations after formatting oidc/handler.go. Expected: empty list. Observed: GOFMT_CLEAN"
+    },
+    {
+      "command": "cd backend && go test ./modules/auth/...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Auth-scope tests including modules adjacent to oidc. Expected: ok. Observed: ok login 0.067s, ok mfa, ok security 0.208s, ok session 0.043s; oidc has no test files"
+    },
+    {
+      "command": "cd backend && go test ./modules/... ./internal/middleware/...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Broader regression run after grpc v1.76.0 bump. Expected: no failures. Observed: no failed packages (only ok / no test files lines, filtered)"
+    },
+    {
+      "command": "grep -n \"google.golang.org/grpc\" backend/go.mod",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Confirm grpc version after security bump. Expected: v1.76.0. Observed: google.golang.org/grpc v1.76.0 // indirect"
+    },
+    {
+      "command": "git push origin release/v0.11.2",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Trigger CI on PR #298 head branch. Expected: push accepted. Observed: 66a4141a..025dc3af and 025dc3af..3459678b; local proxy http://127.0.0.1:7897 required (github.com:443 direct connect fails on this network)"
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-09-oidc-deps-ci-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/",
+    "reviewFile": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/summary.md",
+    "changeRef": "PR #298",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "GitHub Actions results on 3459678b were still in progress when evidence was recorded; final CI conclusions are tracked in PR #298 checks.",
+    "govulncheck was not run locally; alert #28 assessment is based on the Dependabot advisory (fixed in grpc >= 1.72.x line, we bumped to v1.76.0)."
+  ]
+}
