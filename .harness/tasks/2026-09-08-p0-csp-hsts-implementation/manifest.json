@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-09-08-p0-csp-hsts-implementation",
+  "title": "P0 CSP/HSTS Implementation",
+  "priority": "P0",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "gaps": [
+    "Browser DevTools / securityheaders.com validation requires a running HTTPS deployment; headers validated at unit-test level only (explicit runtime gap)"
+  ],
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "backend/middleware",
+  "estimatedEffort": "2.5 hours",
+  "blocking": [
+    "production-deployment",
+    "security-compliance",
+    "xss-protection"
+  ],
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p0-license-declaration",
+    "2026-09-08-p0-security-gates-enforcement",
+    "2026-09-08-p1-csp-nonce-hardening"
+  ],
+  "scope": {
+    "create": [
+      "backend/internal/middleware/security_headers.go",
+      "backend/internal/middleware/security_headers_test.go",
+      ".harness/tasks/2026-09-08-p0-csp-hsts-implementation/task.md",
+      ".harness/tasks/2026-09-08-p0-csp-hsts-implementation/manifest.json",
+      ".harness/evidence/2026-09-08-p0-csp-hsts-implementation/security-headers-test.md",
+      ".harness/evidence/2026-09-08-p0-csp-hsts-implementation/browser-validation.png"
+    ],
+    "modify": [
+      "backend/cmd/server/main.go",
+      "SECURITY.md",
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md"
+    ],
+    "doNotTouch": [
+      "frontend source code (unless CSP fixes needed)",
+      "existing auth middleware",
+      "database layer"
+    ]
+  },
+  "successCriteria": [
+    "CSP header present in all HTTP responses",
+    "HSTS header present in all HTTPS responses",
+    "No CSP violations in browser console for standard user flows",
+    "Login page, dashboard, system management pages work correctly",
+    "Unit tests validate header presence and values",
+    "SECURITY.md updated to reflect implementation",
+    "Browser security audit shows A+ rating"
+  ],
+  "humanGates": [
+    "Backend test: go test ./... passes",
+    "Frontend smoke test: all standard flows work",
+    "Security team review of CSP policy",
+    "SECURITY.md update approved"
+  ],
+  "verification": {
+    "commands": [
+      "cd backend && go test ./internal/middleware/security_headers_test.go -v",
+      "cd backend && go test ./..."
+    ],
+    "manualChecks": [
+      "Browser DevTools: no CSP violations",
+      "Browser Network tab: security headers present",
+      "securityheaders.com audit (if applicable)",
+      "Frontend smoke test passes"
+    ]
+  }
+}

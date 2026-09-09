@@ -3,6 +3,9 @@ import type { RegisteredComponentKey } from './componentRegistry';
 import type { MenuIconKey } from '../menu/icon';
 import type { TFunction } from 'i18next';
 
+/** 消费方业务组件覆盖注册表：字符串 key 映射到懒加载组件。 */
+export type ComponentRegistryMap = Record<string, LazyExoticComponent<ComponentType>>;
+
 export type ModuleScope = 'platform' | 'system' | 'business' | 'lowcode';
 
 export type DashboardWidgetSourceDomain =

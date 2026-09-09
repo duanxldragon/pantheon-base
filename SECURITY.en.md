@@ -35,3 +35,10 @@ Preferred reporting flow:
 - issue ownership and impact boundaries will be confirmed first
 - high-risk auth, authorization, and sensitive configuration issues are prioritized
 - related tests and docs should be updated after the fix to prevent regression
+
+## Runtime Security Baseline
+
+- `system/auth` browser flows are cookie-first: `/api/v1/auth/login`, `/api/v1/auth/mfa/verify`, and `/api/v1/auth/refresh` set HttpOnly session cookies plus CSRF header/cookie and return session metadata; tokens live in Redis and are never exposed to the frontend.
+- Cross-origin policy is application-layer allowlist based. Configure allowed origins via `PANTHEON_ALLOWED_ORIGINS`; unmatched `Origin` values never receive credentialed CORS.
+- The application sets a minimal set of security response headers by default: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy`.
+- `Strict-Transport-Security` is emitted by `SecurityHeadersMiddleware` (`max-age=31536000; includeSubDomains`), and `Content-Security-Policy` is emitted by `CSPMiddleware` as the single source: development allows `unsafe-eval` for Vite HMR, production removes it; `CSP_REPORT_URI` configures a violation reporting endpoint. Both middlewares are registered in `buildRouter` in `backend/cmd/server/main.go` and cover every HTTP response.

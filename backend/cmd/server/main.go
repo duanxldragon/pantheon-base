@@ -116,6 +116,7 @@ func runDatabaseMigrations(dsn string) {
 func buildRouter(env string) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.SecurityHeadersMiddleware())
+	r.Use(middleware.CSPNonceMiddleware()) // Generate nonce before CSP
 	r.Use(middleware.CSPMiddleware())
 	r.Use(middleware.BodySizeLimit(middleware.DefaultMaxBodyBytes))
 	r.Use(middleware.CORSMiddleware())
