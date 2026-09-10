@@ -1,0 +1,45 @@
+{
+  "taskId": "2026-09-10-sonar-resolved-repair",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codebuff",
+    "note": "Buffy agent on z-ai/glm-5.3-flash via Codebuff/Freebuff."
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./modules/system/org/dept/... ./modules/system/i18n/... ./modules/lowcode/... && go vet ./modules/system/org/dept/... ./modules/system/i18n/... ./modules/lowcode/... && go test ./modules/system/org/dept/... ./modules/system/i18n/... ./modules/lowcode/...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: compile/vet/test the three touched module trees Expected: all green; observed BUILD+TEST OK"
+    },
+    {
+      "command": "cd backend && go test ./modules/... ./internal/... && gofmt -l modules/system/org/dept modules/system/i18n modules/lowcode",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: full backend suite + gofmt after the three-site rework Expected: no failures, no gofmt output; observed both clean"
+    },
+    {
+      "command": "node sonarcloud-issues-query: types=VULNERABILITY resolved=false (branch=main) => 4 BLOCKERs (2x dept_service.go:411/433 S3649, i18n_service.go:199 S3649, dynamic_module_registry.go:157 S2083)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: capture pre-fix SonarCloud finding set via sonarcloud.io api/issues/search Expected: 4 open BLOCKER VULNERABILITY findings matching the three reworked sites"
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/runs/<release-gate-run-04:38>/jobs -> SonarCloud Gate: 'Release blocked: 17 unresolved SonarCloud issue(s)' (4 VULNERABILITY + 13 CODE_SMELL)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: identify the exact failing Release Gate job and its blocker message after #302 merged Expected: SonarCloud Gate failure blocks Release Gate Summary"
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-sonar-resolved-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-sonar-resolved-repair/",
+    "reviewFile": ".harness/evidence/2026-09-10-sonar-resolved-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-sonar-resolved-repair/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "SonarCloud re-analysis is post-merge: resolution of the 4 findings is verified pre-merge by the guards now being lexically adjacent to the sinks (standard pattern SonarGo tracks); final confirmation is the next main analysis"
+  ]
+}

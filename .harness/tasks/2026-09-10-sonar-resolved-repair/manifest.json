@@ -1,0 +1,47 @@
+{
+  "taskId": "2026-09-10-sonar-resolved-repair",
+  "title": "Resolve 4 SonarCloud BLOCKER taint-analysis findings blocking Release Gate",
+  "goal": "PR #302 cleared Dependabot alerts and the quality-gate rating, but the SonarCloud Gate job additionally requires ZERO unresolved BUG/VULNERABILITY/CODE_SMELL issues. 4 open BLOCKER VULNERABILITY findings remain: gosecurity:S3649 SQL-injection taint on uint64 primary-key GORM First() in dept_service.go (x2) and i18n_service.go (x1), and gosecurity:S2083 path-traversal taint in dynamic_module_registry.go where the traversal guard lives behind a (string, bool) helper tuple the analyzer cannot track. Rework the three sites so the guards are analyzer-trackable, with identical runtime behavior.",
+  "primaryLayer": "backend",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "backend/modules/system/org/dept/dept_service.go: First(pk) -> Where(\"id = ?\").First() x2",
+      "backend/modules/system/i18n/i18n_service.go: First(pk) -> Where(\"id = ?\").First()",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go: inline resolveGeneratedWorkspacePath guard before os.ReadFile"
+    ],
+    "out": [
+      "SonarCloud quality-gate or scanner configuration changes",
+      "suppressing findings via nosec comments",
+      "behavior or validation-logic changes at the three sites"
+    ]
+  },
+  "taskDoc": "Follow-up to #302: Release Gate SonarCloud Gate job fails with '17 unresolved SonarCloud issue(s)'; the 4 VULNERABILITY BLOCKERs are taint-analysis false positives with real guards; restructure for analyzer visibility.",
+  "contractAnchors": [
+    "backend/modules/system/org/dept/dept_service.go",
+    "backend/modules/system/i18n/i18n_service.go",
+    "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-10-sonar-resolved-repair/manifest.json",
+      ".harness/evidence/2026-09-10-sonar-resolved-repair/commands.json",
+      ".harness/evidence/2026-09-10-sonar-resolved-repair/summary.md",
+      ".harness/evidence/2026-09-10-sonar-resolved-repair/review.md"
+    ],
+    "modify": [
+      "backend/modules/system/org/dept/dept_service.go",
+      "backend/modules/system/i18n/i18n_service.go",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-10-sonar-resolved-repair",
+    "taskPacket": ".harness/tasks/2026-09-10-sonar-resolved-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-sonar-resolved-repair/",
+    "reviewFile": ".harness/evidence/2026-09-10-sonar-resolved-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-sonar-resolved-repair/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
