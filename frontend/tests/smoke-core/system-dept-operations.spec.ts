@@ -3,16 +3,57 @@
  *
  * 覆盖范围:
  * - 添加根部门
- * - 添加子部门
  * - 编辑部门
- * - 删除部门
+ * - 删除部门 (行内 Popconfirm)
  *
  * 优先级: P1 (树形结构操作)
  * 预估耗时: ~2分钟
+ *
+ * 选择器基准 (与 modules/system/dept/DeptList.tsx 对齐):
+ * - 对话框标题: 新增部门 / 编辑部门; 字段: 上级部门(TreeSelect, 默认 Pantheon Base) / 部门名称
+ * - 模态底部 .submit-bar: 创建=新增 / 编辑=保存
+ * - 行内操作: 编辑 / 删除 (Popconfirm "确认删除该部门？...")
+ * - 部门树 API 节点含 deptName; 创建/删除走 verified (CSRF + operation token) 请求
+ * - 服务端会为 parentId<=0 归位真实根节点; 表格默认折叠树, 用搜索框定位新行
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
+import {
+  adminCredentials,
+  apiBaseUrl,
+  authHeaders,
+  loginByApi,
+  verifiedApiHeaders,
+  type BrowserLoginResult,
+} from '../smoke/helpers/auth';
+import {
+  confirmVisiblePopconfirm,
+  expandTreeRow,
+  expectSuccessMessage,
+  openSystemPageWithOperationToken,
+  revealTreeRow,
+  submitButtonInDialog,
+} from './smoke-core-fixtures';
+
+type DeptTreeNode = {
+  id: number;
+  deptName: string;
+  parentId?: number;
+  isRoot?: boolean;
+  children?: DeptTreeNode[];
+};
+
+async function findRootDeptId(page: Page, accessToken: string) {
+  const response = await page.request.get(`${apiBaseUrl}/system/dept/tree`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const depts = (Array.isArray(payload.data) ? payload.data : []) as DeptTreeNode[];
+  const root = depts.find((item) => item.isRoot || item.parentId === 0) ?? depts[0];
+  expect(root).toBeTruthy();
+  return root!.id;
+}
 
 async function deleteTestDept(page: Page, login: BrowserLoginResult, deptName: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/dept/tree`, {
@@ -23,13 +64,15 @@ async function deleteTestDept(page: Page, login: BrowserLoginResult, deptName: s
     const payload = await listResponse.json();
     const depts = Array.isArray(payload.data) ? payload.data : [];
 
-    // 递归查找并删除
-    const findAndDelete = async (items: Array<{ id: string; deptName: string; children?: unknown[] }>) => {
+    const findAndDelete = async (items: DeptTreeNode[]) => {
       for (const dept of items) {
         if (dept.deptName === deptName) {
-          await page.request.delete(`${apiBaseUrl}/system/dept/${dept.id}`, {
-            headers: apiRequestHeaders(login),
-          });
+          // Dept deletion is a verified (CSRF + operation-token) mutation.
+          await page.request
+            .delete(`${apiBaseUrl}/system/dept/${dept.id}`, {
+              headers: await verifiedApiHeaders(page.request, login),
+            })
+            .catch(() => undefined);
         }
         if (Array.isArray(dept.children)) {
           await findAndDelete(dept.children);
@@ -41,120 +84,132 @@ async function deleteTestDept(page: Page, login: BrowserLoginResult, deptName: s
   }
 }
 
+async function createDeptByApi(
+  page: Page,
+  login: BrowserLoginResult,
+  rootDeptId: number,
+  deptName: string,
+) {
+  // Dept creation is a verified (CSRF + operation-token) mutation.
+  const response = await page.request.post(`${apiBaseUrl}/system/dept`, {
+    headers: await verifiedApiHeaders(page.request, login),
+    data: {
+      parentId: rootDeptId,
+      deptName,
+      sort: 999,
+      phone: '',
+      email: '',
+      status: 1,
+    },
+  });
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data as { id: number };
+}
+
+/** 通过搜索 + 展开折叠树定位部门行 (新部门是根节点的子节点) */
+function searchDeptRow(page: Page, deptName: string) {
+  return revealTreeRow(page, 'Pantheon Base', deptName);
+}
+
+/**
+ * 创建流程专用: 提交会同时触发列表刷新与 refresh-topic 失效重拉,
+ * 关键字过滤后的结果可能立刻被未过滤重拉覆盖。直接在未过滤树里
+ * 展开根节点定位新行, 并容忍刷新竞态 (行消失后等待重新出现)。
+ */
+async function revealCreatedDeptRow(page: Page, deptName: string) {
+  const deptRow = page.locator('.arco-table-tr').filter({ hasText: deptName }).first();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await expandTreeRow(page, 'Pantheon Base');
+    if (await deptRow.isVisible().catch(() => false)) {
+      return deptRow;
+    }
+    await page.waitForTimeout(500);
+  }
+  await expect(deptRow).toBeVisible({ timeout: 15000 });
+  return deptRow;
+}
+
 test.describe('System Department Operations @priority:high @smoke:core', () => {
-  const testDeptName = '测试部门_Smoke';
+  const testDeptName = `烟测部门_Core_${Date.now().toString(36).slice(-5)}`;
 
   test.beforeEach(async ({ page }) => {
     const login = await loginByApi(page, adminCredentials);
     await deleteTestDept(page, login, testDeptName);
+    await deleteTestDept(page, login, `${testDeptName}_已修改`);
   });
 
   test.afterEach(async ({ page }) => {
     const login = await loginByApi(page, adminCredentials);
     await deleteTestDept(page, login, testDeptName);
+    await deleteTestDept(page, login, `${testDeptName}_已修改`);
   });
 
   test('can create a root department', async ({ page }) => {
-    await signInAsAdmin(page);
-    await page.goto('/system/dept', { waitUntil: 'domcontentloaded' });
+    await openSystemPageWithOperationToken(page, '/system/dept');
 
-    // 点击新增按钮
-    await page.click('button:has-text("新增"), button:has-text("Add")');
+    // 打开新增部门对话框
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+    const dialog = page.getByRole('dialog').filter({ hasText: '新增部门' });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    // 等待对话框
-    const dialog = page.locator('.arco-modal').filter({ hasText: /新增部门|Add Department/i }).first();
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    // 填写部门名称 (上级部门默认 Pantheon Base)
+    await dialog.getByRole('textbox', { name: '部门名称', exact: true }).fill(testDeptName);
 
-    // 填写部门信息
-    await dialog.locator('input[name="deptName"], input[placeholder*="部门名称"]').fill(testDeptName);
-    await dialog.locator('input[name="sort"], input[placeholder*="排序"]').fill('999');
+    // 提交 (创建流程的提交按钮为 "新增")
+    await submitButtonInDialog(dialog, 'add').click();
 
-    // 提交
-    await dialog.locator('button:has-text("确定"), button:has-text("OK")').click();
+    // 验证成功提示
+    await expectSuccessMessage(page);
 
-    // 验证成功
-    await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
-
-    // 验证部门出现在树中
-    await expect(page.locator(`text="${testDeptName}"`)).toBeVisible();
+    // 表格树默认折叠, 展开根节点定位新部门 (容忍创建后的刷新竞态)
+    await revealCreatedDeptRow(page, testDeptName);
   });
 
   test('can edit a department', async ({ page }) => {
-    // 先创建部门
     const login = await loginByApi(page, adminCredentials);
-    const createResponse = await page.request.post(`${apiBaseUrl}/system/dept`, {
-      headers: apiRequestHeaders(login),
-      data: {
-        deptName: testDeptName,
-        sort: 999,
-        status: 1,
-      },
-    });
-    expect(createResponse.ok()).toBeTruthy();
+    const rootDeptId = await findRootDeptId(page, login.accessToken);
+    await createDeptByApi(page, login, rootDeptId, testDeptName);
 
-    // 登录并打开部门管理
-    await signInAsAdmin(page);
-    await page.goto('/system/dept', { waitUntil: 'domcontentloaded' });
+    await openSystemPageWithOperationToken(page, '/system/dept');
 
-    // 找到测试部门的编辑按钮
-    const deptRow = page.locator(`tr:has-text("${testDeptName}"), .arco-tree-node:has-text("${testDeptName}")`).first();
-    await expect(deptRow).toBeVisible();
+    const deptRow = await searchDeptRow(page, testDeptName);
 
-    // 点击编辑按钮（可能需要hover触发）
-    await deptRow.hover();
-    const editButton = deptRow.locator('button:has-text("编辑"), button:has-text("Edit"), button[aria-label*="edit"]').first();
-    await editButton.click();
+    await deptRow.getByRole('button', { name: '编辑', exact: true }).click();
+    const dialog = page.getByRole('dialog').filter({ hasText: '编辑部门' });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    // 等待对话框
-    const dialog = page.locator('.arco-modal').filter({ hasText: /编辑部门|Edit Department/i }).first();
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    const nextName = `${testDeptName}_已修改`;
+    await dialog.getByRole('textbox', { name: '部门名称', exact: true }).fill(nextName);
 
-    // 修改部门名称
-    const deptNameInput = dialog.locator('input[name="deptName"], input[placeholder*="部门名称"]');
-    await deptNameInput.clear();
-    await deptNameInput.fill(`${testDeptName}_已修改`);
+    // 提交 (编辑流程的提交按钮为 "保存")
+    await submitButtonInDialog(dialog, 'save').click();
 
-    // 提交
-    await dialog.locator('button:has-text("确定"), button:has-text("OK")').click();
-
-    // 验证成功
-    await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
+    await expectSuccessMessage(page);
+    await searchDeptRow(page, nextName);
   });
 
   test('can delete a department', async ({ page }) => {
-    // 先创建部门
     const login = await loginByApi(page, adminCredentials);
-    const createResponse = await page.request.post(`${apiBaseUrl}/system/dept`, {
-      headers: apiRequestHeaders(login),
-      data: {
-        deptName: testDeptName,
-        sort: 999,
-        status: 1,
-      },
+    const rootDeptId = await findRootDeptId(page, login.accessToken);
+    await createDeptByApi(page, login, rootDeptId, testDeptName);
+
+    await openSystemPageWithOperationToken(page, '/system/dept');
+
+    const deptRow = await searchDeptRow(page, testDeptName);
+
+    // 行内删除按钮带 Popconfirm ("确认删除该部门？...")
+    await deptRow.getByRole('button', { name: '删除', exact: true }).click();
+    await confirmVisiblePopconfirm(page, '确认删除该部门');
+
+    await expectSuccessMessage(page);
+
+    // 验证部门从树中消失 (清空搜索后重新查询)
+    const searchInput = page.getByPlaceholder('按部门名称搜索…');
+    await searchInput.fill('');
+    await searchInput.press('Enter');
+    await expect(page.locator('.arco-table-tr').filter({ hasText: testDeptName })).toHaveCount(0, {
+      timeout: 15000,
     });
-    expect(createResponse.ok()).toBeTruthy();
-
-    // 登录并打开部门管理
-    await signInAsAdmin(page);
-    await page.goto('/system/dept', { waitUntil: 'domcontentloaded' });
-
-    // 找到测试部门的删除按钮
-    const deptRow = page.locator(`tr:has-text("${testDeptName}"), .arco-tree-node:has-text("${testDeptName}")`).first();
-    await expect(deptRow).toBeVisible();
-
-    await deptRow.hover();
-    const deleteButton = deptRow.locator('button:has-text("删除"), button:has-text("Delete")').first();
-    await deleteButton.click();
-
-    // 确认删除
-    const confirmDialog = page.locator('.arco-modal, .arco-popconfirm').filter({ hasText: /确认删除|Confirm/i }).first();
-    await expect(confirmDialog).toBeVisible({ timeout: 3000 });
-    await confirmDialog.locator('button:has-text("确定"), button:has-text("OK")').click();
-
-    // 验证成功
-    await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
-
-    // 验证部门从树中消失
-    await expect(page.locator(`text="${testDeptName}"`)).not.toBeVisible();
   });
 });

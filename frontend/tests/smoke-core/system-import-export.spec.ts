@@ -2,88 +2,69 @@
  * System Import/Export - 导入导出关键路径
  *
  * 覆盖范围:
- * - 数据导出（CSV/Excel）
- * - 模板下载
- * - 数据导入基础场景
+ * - 用户数据导出 (CSV blob 下载)
+ * - 导入模板下载
+ * - 角色管理导出入口
  *
  * 优先级: P1 (数据批量操作)
- * 预估耗时: ~3分钟
+ * 预估耗时: ~2分钟
+ *
+ * 行为基准 (与 modules/system/user/UserList.tsx、src/api/file.ts 对齐):
+ * - 导出/下载模板/导入均通过 downloadFile 走浏览器 blob 下载,
+ *   不弹对话框、不产生可见页面导航 → 断言 Playwright download 事件
+ * - 用户导出文件名: system-user-export.csv; 模板: system-user-import-template.csv
+ * - 入口按钮位于列表工具条: 导出 / 下载模板 / 导入
  */
 
 import { test, expect } from '@playwright/test';
 import { signInAsAdmin } from '../smoke/helpers/auth';
 
 test.describe('System Import/Export @priority:high @smoke:core', () => {
-  test('can export user data', async ({ page }) => {
+  test('can export user data as csv download', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
+    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
 
-    // 等待列表加载
-    await page.waitForSelector('table, .arco-table', { timeout: 10000 });
+    const exportButton = page.getByRole('button', { name: '导出', exact: true }).first();
+    await expect(exportButton).toBeVisible();
+    await expect(exportButton).toBeEnabled();
 
-    // 查找导出按钮
-    const exportButton = page.locator('button:has-text("导出"), button:has-text("Export")').first();
+    // 导出走 blob 下载, 通过 download 事件断言 (不等待网络响应)
+    const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
+    await exportButton.click();
+    const download = await downloadPromise;
 
-    if (await exportButton.isVisible({ timeout: 2000 })) {
-      const exportResponse = page.waitForResponse(
-        (response) => response.url().includes('/api/v1/system/user/export'),
-        { timeout: 10000 },
-      );
-      await exportButton.click();
-      const response = await exportResponse;
-      expect(response.ok()).toBeTruthy();
-      const fileName = response.headers()['content-disposition'] ?? '';
-      expect(fileName).toMatch(/user|用户|export/i);
-      expect(fileName).toMatch(/\.(csv|xlsx|xls)$/i);
-    }
+    const fileName = download.suggestedFilename();
+    expect(fileName).toMatch(/user|用户|export/i);
+    expect(fileName).toMatch(/\.(csv|xlsx|xls)$/i);
   });
 
-  test('can download import template', async ({ page }) => {
+  test('can download user import template', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
+    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
 
-    // 查找导入按钮
-    const importButton = page.locator('button:has-text("导入"), button:has-text("Import")').first();
+    const templateButton = page.getByRole('button', { name: '下载模板', exact: true }).first();
+    await expect(templateButton).toBeVisible();
+    await expect(templateButton).toBeEnabled();
 
-    if (await importButton.isVisible({ timeout: 2000 })) {
-      await importButton.click();
+    const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
+    await templateButton.click();
+    const download = await downloadPromise;
 
-      // 等待导入对话框
-      const dialog = page.locator('.arco-modal').filter({ hasText: /导入|Import/i }).first();
-      await expect(dialog).toBeVisible({ timeout: 3000 });
-
-      // 查找模板下载链接
-      const templateLink = dialog.locator('a:has-text("模板"), a:has-text("Template"), button:has-text("模板")').first();
-
-      if (await templateLink.isVisible({ timeout: 2000 })) {
-        const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
-        await templateLink.click();
-
-        const download = await downloadPromise;
-        const fileName = download.suggestedFilename();
-        expect(fileName).toMatch(/template|模板/i);
-      }
-
-      // 关闭对话框
-      await dialog.locator('button:has-text("取消"), button:has-text("Cancel")').click();
-    }
+    const fileName = download.suggestedFilename();
+    expect(fileName).toMatch(/template|模板/i);
+    expect(fileName).toMatch(/\.(csv|xlsx|xls)$/i);
   });
 
   test('export button is available on role management', async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.page-container', { timeout: 15000 });
+    await expect(page.locator('.system-list__table-card')).toBeVisible({ timeout: 30000 });
 
-    // 等待列表加载
-    await page.waitForSelector('table, .arco-table', { timeout: 10000 });
-
-    // 验证导出按钮存在
-    const exportButton = page.locator('button:has-text("导出"), button:has-text("Export")').first();
-
-    if (await exportButton.isVisible({ timeout: 2000 })) {
-      await expect(exportButton).toBeEnabled();
-    }
+    // 验证导出按钮存在且可用
+    const exportButton = page.getByRole('button', { name: '导出', exact: true }).first();
+    await expect(exportButton).toBeVisible();
+    await expect(exportButton).toBeEnabled();
   });
 });

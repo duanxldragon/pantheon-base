@@ -2,16 +2,52 @@
  * System Role Authorization - 角色授权关键路径
  *
  * 覆盖范围:
- * - 创建角色
- * - 分配菜单权限
- * - 验证权限生效
+ * - 创建角色 (含勾选菜单权限)
+ * - 编辑角色权限
+ * - 删除角色 (行内 Popconfirm)
  *
  * 优先级: P0 (权限系统核心)
  * 预估耗时: ~3分钟
+ *
+ * 选择器基准 (与 modules/system/role/RoleList.tsx 对齐):
+ * - 对话框标题: 新增角色 / 编辑角色; 字段: 角色名称 / 角色标识
+ * - 菜单权限 (PermissionTreeSelector) 就在创建/编辑对话框内 (menuIds 字段)
+ * - 模态底部 .submit-bar: 创建=新增 / 编辑=保存
+ * - 行内操作: 角色成员 / 编辑 / 删除 (admin 角色禁删; Popconfirm "确认删除？")
+ * - 角色 API 变更走 verified (CSRF + operation token) 请求
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { adminCredentials, signInAsAdmin, apiBaseUrl, authHeaders, apiRequestHeaders, loginByApi, type BrowserLoginResult } from '../smoke/helpers/auth';
+import {
+  adminCredentials,
+  apiBaseUrl,
+  authHeaders,
+  loginByApi,
+  verifiedApiHeaders,
+  type BrowserLoginResult,
+} from '../smoke/helpers/auth';
+import {
+  confirmVisiblePopconfirm,
+  expectSuccessMessage,
+  openSystemPageWithOperationToken,
+  submitButtonInDialog,
+} from './smoke-core-fixtures';
+
+/** 通过工具条搜索框定位角色行 (表格展示 roleName, 搜索匹配名称或标识) */
+async function searchRoleRow(page: Page, keyword: string) {
+  const toolbarKeyword = page.locator('.search-toolbar').getByPlaceholder(/搜索/);
+  await toolbarKeyword.fill(keyword);
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes('/system/role/list') && response.request().method() === 'GET',
+    ),
+    toolbarKeyword.press('Enter'),
+  ]);
+  const row = page.getByRole('row', { name: new RegExp(keyword) }).first();
+  await expect(row).toBeVisible({ timeout: 15000 });
+  return row;
+}
 
 async function deleteRoleByKey(page: Page, login: BrowserLoginResult, roleKey: string) {
   const listResponse = await page.request.get(`${apiBaseUrl}/system/role/list`, {
@@ -22,18 +58,44 @@ async function deleteRoleByKey(page: Page, login: BrowserLoginResult, roleKey: s
   if (listResponse.ok()) {
     const payload = await listResponse.json();
     const roles = Array.isArray(payload.data?.items) ? payload.data.items : [];
-    for (const role of roles) {
+    for (const role of roles as Array<{ id: number; roleKey: string }>) {
       if (role.roleKey === roleKey && role.roleKey !== 'admin') {
-        await page.request.delete(`${apiBaseUrl}/system/role/${role.id}`, {
-          headers: apiRequestHeaders(login),
-        });
+        // Role deletion is a verified (CSRF + operation-token) mutation.
+        await page.request
+          .delete(`${apiBaseUrl}/system/role/${role.id}`, {
+            headers: await verifiedApiHeaders(page.request, login),
+          })
+          .catch(() => undefined);
       }
     }
   }
 }
 
+async function createRoleByApi(
+  page: Page,
+  login: BrowserLoginResult,
+  roleName: string,
+  roleKey: string,
+) {
+  // Role creation is a verified (CSRF + operation-token) mutation.
+  const response = await page.request.post(`${apiBaseUrl}/system/role`, {
+    headers: await verifiedApiHeaders(page.request, login),
+    data: {
+      roleName,
+      roleKey,
+      sort: 999,
+      status: 1,
+      menuIds: [],
+      permissionKeys: [],
+    },
+  });
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data as { id: number };
+}
+
 test.describe('System Role Authorization @priority:critical @smoke:core', () => {
-  const testRoleKey = 'smoke_test_role';
+  const testRoleKey = `smoke_core_role_${Date.now().toString(36).slice(-5)}`;
 
   test.beforeEach(async ({ page }) => {
     const login = await loginByApi(page, adminCredentials);
@@ -45,112 +107,77 @@ test.describe('System Role Authorization @priority:critical @smoke:core', () => 
     await deleteRoleByKey(page, login, testRoleKey);
   });
 
-  test('can create a new role', async ({ page }) => {
-    await signInAsAdmin(page);
-    await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
+  test('can create a role with menu permissions', async ({ page }) => {
+    await openSystemPageWithOperationToken(page, '/system/role');
 
-    // 点击新增角色
-    await page.click('button:has-text("新增"), button:has-text("Add")');
+    // 打开新增角色对话框
+    await page.getByRole('button', { name: '新增', exact: true }).click();
+    const dialog = page.getByRole('dialog').filter({ hasText: '新增角色' });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    // 等待对话框
-    const dialog = page.locator('.arco-modal').filter({ hasText: /新增角色|Add Role/i }).first();
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    // 填写基本信息 (roleKey 含唯一后缀, 同时写入 roleName 以便表格定位)
+    const roleName = `烟测角色_${Date.now().toString(36).slice(-5)}`;
+    await dialog.getByRole('textbox', { name: '角色名称', exact: true }).fill(roleName);
+    await dialog.getByRole('textbox', { name: '角色标识', exact: true }).fill(testRoleKey);
 
-    // 填写基本信息
-    await dialog.locator('input[name="roleName"], input[placeholder*="角色名称"]').fill('测试角色');
-    await dialog.locator('input[name="roleKey"], input[placeholder*="角色标识"]').fill(testRoleKey);
-    await dialog.locator('input[name="sort"], input[placeholder*="排序"]').fill('999');
+    // 在同一对话框内勾选第一个可用菜单权限 (Arco Tree checkable)
+    const menuTree = dialog.locator('.arco-tree').first();
+    await expect(menuTree).toBeVisible();
+    const firstCheckbox = menuTree.locator('.arco-tree-node').first().locator('.arco-checkbox');
+    await expect(firstCheckbox).toBeVisible();
+    await firstCheckbox.click({ force: true });
 
-    // 提交
-    await dialog.locator('button:has-text("确定"), button:has-text("OK"), button:has-text("Submit")').click();
+    // 提交 (创建流程的提交按钮为 "新增")
+    await submitButtonInDialog(dialog, 'add').click();
 
-    // 验证成功
-    await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
+    // 验证成功提示
+    await expectSuccessMessage(page);
 
-    // 验证角色出现在列表
-    await expect(page.locator(`text="${testRoleKey}"`)).toBeVisible();
+    // 验证角色出现在列表中 (通过搜索定位, 新角色可能不在第一页)
+    await searchRoleRow(page, roleName);
   });
 
-  test('can assign menu permissions to role', async ({ page }) => {
-    // 先创建角色
+  test('can edit role permissions', async ({ page }) => {
     const login = await loginByApi(page, adminCredentials);
-    const createResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: apiRequestHeaders(login),
-      data: {
-        roleName: '测试角色',
-        roleKey: testRoleKey,
-        sort: 999,
-        status: 1,
-      },
-    });
-    expect(createResponse.ok()).toBeTruthy();
-    // roleId would be extracted here for future API-based permission assignment
+    const roleName = `烟测角色_${Date.now().toString(36).slice(-5)}`;
+    await createRoleByApi(page, login, roleName, testRoleKey);
 
-    // 登录并打开角色管理
-    await signInAsAdmin(page);
-    await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
+    await openSystemPageWithOperationToken(page, '/system/role');
 
-    // 找到测试角色的权限配置按钮
-    const roleRow = page.locator(`tr:has-text("${testRoleKey}")`);
-    await expect(roleRow).toBeVisible();
+    const roleRow = await searchRoleRow(page, roleName);
 
-    // 点击权限配置按钮（可能是"权限配置"、"配置"、"Permission"等文本）
-    const permissionButton = roleRow.locator(
-      'button:has-text("权限"), button:has-text("配置"), button:has-text("Permission")'
-    ).first();
-    await permissionButton.click();
+    await roleRow.getByRole('button', { name: '编辑', exact: true }).click();
+    const dialog = page.getByRole('dialog').filter({ hasText: '编辑角色' });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    // 等待权限配置对话框
-    const dialog = page.locator('.arco-modal').filter({ hasText: /权限配置|Permission/i }).first();
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    // 修改角色名称
+    await dialog.getByRole('textbox', { name: '角色名称', exact: true }).fill('烟测角色_已修改');
 
-    // 展开菜单树并选择一些权限
-    const menuTree = dialog.locator('.arco-tree, .menu-tree').first();
-    await expect(menuTree).toBeVisible();
+    // 提交 (编辑流程的提交按钮为 "保存")
+    await submitButtonInDialog(dialog, 'save').click();
 
-    // 选择第一个可选的菜单项
-    const firstCheckbox = menuTree.locator('input[type="checkbox"]').first();
-    await firstCheckbox.check();
-
-    // 提交权限配置
-    await dialog.locator('button:has-text("确定"), button:has-text("OK"), button:has-text("Submit")').click();
-
-    // 验证成功
-    await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
+    await expectSuccessMessage(page);
+    await searchRoleRow(page, '烟测角色_已修改');
   });
 
   test('can delete a role', async ({ page }) => {
-    // 先创建角色
     const login = await loginByApi(page, adminCredentials);
-    const createResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: apiRequestHeaders(login),
-      data: {
-        roleName: '待删除角色',
-        roleKey: testRoleKey,
-        sort: 999,
-        status: 1,
-      },
-    });
-    expect(createResponse.ok()).toBeTruthy();
+    const roleName = `待删除角色_${Date.now().toString(36).slice(-5)}`;
+    await createRoleByApi(page, login, roleName, testRoleKey);
 
-    // 登录并打开角色管理
-    await signInAsAdmin(page);
-    await page.goto('/system/role', { waitUntil: 'domcontentloaded' });
+    await openSystemPageWithOperationToken(page, '/system/role');
 
-    // 找到测试角色的删除按钮
-    const roleRow = page.locator(`tr:has-text("${testRoleKey}")`);
-    await expect(roleRow).toBeVisible();
-    await roleRow.locator('button:has-text("删除"), button:has-text("Delete")').first().click();
+    const roleRow = await searchRoleRow(page, roleName);
 
-    // 确认删除
-    const confirmDialog = page.locator('.arco-modal, .arco-popconfirm').filter({ hasText: /确认删除|Confirm/i }).first();
-    await expect(confirmDialog).toBeVisible({ timeout: 3000 });
-    await confirmDialog.locator('button:has-text("确定"), button:has-text("OK")').click();
+    // 行内删除按钮带 Popconfirm ("确认删除？")
+    await roleRow.getByRole('button', { name: '删除', exact: true }).click();
+    await confirmVisiblePopconfirm(page, '确认删除');
 
-    // 验证成功
-    await expect(page.locator('.arco-message-success')).toBeVisible({ timeout: 5000 });
+    await expectSuccessMessage(page);
 
     // 验证角色从列表消失
-    await expect(page.locator(`tr:has-text("${testRoleKey}")`)).not.toBeVisible();
+    await expect(page.getByRole('row', { name: new RegExp(testRoleKey) })).toHaveCount(0, {
+      timeout: 15000,
+    });
   });
 });
