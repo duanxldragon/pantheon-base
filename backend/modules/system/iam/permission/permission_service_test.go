@@ -644,12 +644,12 @@ func TestPermissionWorkbenchRequiresSecurityEventActionPolicies(t *testing.T) {
 		t.Fatalf("unexpected batch acknowledge policy: %+v", acknowledge[1])
 	}
 
-	clear := requiredAPIPoliciesByPermissionKey("system:security-event:clear")
-	if len(clear) != 1 {
-		t.Fatalf("expected one required clear policy, got %+v", clear)
+	policies := requiredAPIPoliciesByPermissionKey("system:security-event:clear")
+	if len(policies) != 1 {
+		t.Fatalf("expected one required clear policy, got %+v", policies)
 	}
-	if clear[0].Path != "/api/v1/system/security-event/cleanup" || clear[0].Method != "POST" {
-		t.Fatalf("unexpected clear policy: %+v", clear[0])
+	if policies[0].Path != "/api/v1/system/security-event/cleanup" || policies[0].Method != "POST" {
+		t.Fatalf("unexpected clear policy: %+v", policies[0])
 	}
 }
 

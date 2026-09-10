@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -132,11 +131,14 @@ func resolveGeneratedWorkspacePath(workspaceRoot, relativePath string) (string, 
 	return target, true
 }
 
-// workspaceFS returns a read-only fs.FS rooted at workspaceRoot. Using fs.FS
-// makes containment structural instead of path-arithmetic based: an fs.FS
-// cannot escape its root, so SonarCloud gosecurity:S2083 no longer reports a
-// traversal flow even when the root is derived from request-controlled data.
-func workspaceFS(workspaceRoot string) (fs.FS, bool) {
+// openWorkspaceRoot opens the workspace directory through os.Root, the
+// kernel-backed traversal-safe API (Go 1.24+): lookups are anchored at the
+// root and cannot escape it, so request-controlled relative paths passed to
+// Root.ReadFile cannot address files outside the workspace regardless of
+// their content (".." segments, absolute paths, symlinks). This makes the
+// containment guarantee structural instead of relying on path validation
+// only, and keeps gosecurity:S2083 from reporting a traversal flow.
+func openWorkspaceRoot(workspaceRoot string) (*os.Root, bool) {
 	root := filepath.Clean(strings.TrimSpace(workspaceRoot))
 	if root == "" {
 		return nil, false
@@ -145,7 +147,11 @@ func workspaceFS(workspaceRoot string) (fs.FS, bool) {
 	if err != nil || !info.IsDir() {
 		return nil, false
 	}
-	return os.DirFS(root), true
+	workspace, err := os.OpenRoot(root)
+	if err != nil {
+		return nil, false
+	}
+	return workspace, true
 }
 
 func generatedPathExists(workspaceRoot, relativePath string) bool {
@@ -167,15 +173,16 @@ func generatedDirExists(workspaceRoot, relativePath string) bool {
 }
 
 func generatedFileContainsAll(workspaceRoot string, relativePath string, fragments ...string) bool {
-	root, ok := workspaceFS(workspaceRoot)
+	root, ok := openWorkspaceRoot(workspaceRoot)
 	if !ok {
 		return false
 	}
+	defer root.Close()
 	normalizedRelative := filepath.ToSlash(strings.TrimSpace(relativePath))
 	if normalizedRelative == "" || strings.Contains(normalizedRelative, "..") || !filepath.IsLocal(normalizedRelative) {
 		return false
 	}
-	content, err := fs.ReadFile(root, normalizedRelative)
+	content, err := root.ReadFile(normalizedRelative)
 	if err != nil {
 		return false
 	}

@@ -126,7 +126,7 @@ async function createMenuByApi(page: Page, login: BrowserLoginResult, parentMenu
 function searchMenuRow(page: Page, titleKey: string) {
   // 标题列是 Typography.Text ellipsis, DOM 文本会被截断为 "前缀...",
   // 搜索请求本身按完整 titleKey 服务端过滤, 可见性断言用稳定前缀即可。
-  return revealTreeRow(page, '访问控制', titleKey, 'smoke_core');
+  return revealTreeRow(page, titleKey, 'smoke_core');
 }
 
 test.describe('System Menu Permission @priority:high @smoke:core', () => {

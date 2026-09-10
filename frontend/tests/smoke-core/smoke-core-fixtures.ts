@@ -245,16 +245,55 @@ export async function openSystemListPage(page: Page, path: string, title: string
 }
 
 /**
- * Reveals a row inside an Arco tree table: searches for the target (the
- * backend returns ancestor chain of the match), expands the matched ancestor
- * if needed, then returns the target row locator once visible.
+ * Runs one search-and-expand attempt for revealTreeRow: fills the tree-table
+ * search box, then clicks inline expand toggles layer by layer until the
+ * target row becomes visible. Returns the row locator, or null if the
+ * attempt did not surface it.
  */
-export async function revealTreeRow(
+async function attemptTreeRowReveal(
   page: Page,
-  ancestorText: string,
+  searchInput: Locator,
   targetText: string,
-  targetMatchOverride?: string,
-) {
+  targetRow: Locator,
+): Promise<Locator | null> {
+  await searchInput.fill(targetText);
+  await searchInput.press('Enter');
+
+  if (await targetRow.isVisible().catch(() => false)) {
+    return targetRow;
+  }
+
+  // 目标行可能藏在折叠的树节点内。Arco 树表格的展开控件是行内第一个无可见文本的
+    // 按钮 (有名称的按钮是 编辑/删除 等操作), 逐层点击直到目标行出现。
+  for (let depth = 0; depth < 3; depth += 1) {
+    const expandToggles = page
+      .locator('.arco-table-tr')
+      .getByRole('button', { name: /^$/ })
+      .filter({ visible: true });
+    const toggleCount = await expandToggles.count();
+    if (toggleCount === 0) {
+      break;
+    }
+    for (let index = 0; index < toggleCount; index += 1) {
+      await expandToggles
+        .nth(index)
+        .click({ force: true })
+        .catch(() => undefined);
+      if (await targetRow.isVisible().catch(() => false)) {
+        return targetRow;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Reveals a row inside an Arco tree table: searches for the target (the
+ * backend returns the ancestor chain of the match), expands the matched
+ * ancestor if needed, then resolves to the target row once visible.
+ */
+export async function revealTreeRow(page: Page, targetText: string, targetMatchOverride?: string) {
   const searchInput = page.locator('.search-toolbar__keyword input').first();
 
   // Arco Typography.Text ellipsis 会在 DOM 里把长文本截断为 "前缀...",
@@ -270,33 +309,9 @@ export async function revealTreeRow(
       // 无法用 Playwright expect 替代 (SonarCloud typescript:S3516)。
       await page.waitForTimeout(800);
     }
-    await searchInput.fill(targetText);
-    await searchInput.press('Enter');
-
-    if (await targetRow.isVisible().catch(() => false)) {
-      return targetRow;
-    }
-
-    // 目标行可能藏在折叠的树节点内。Arco 树表格的展开控件是行内第一个无可见文本的
-    // 按钮 (有名称的按钮是 编辑/删除 等操作), 逐层点击直到目标行出现。
-    for (let depth = 0; depth < 3; depth += 1) {
-      const expandToggles = page
-        .locator('.arco-table-tr')
-        .getByRole('button', { name: /^$/ })
-        .filter({ visible: true });
-      const toggleCount = await expandToggles.count();
-      if (toggleCount === 0) {
-        break;
-      }
-      for (let index = 0; index < toggleCount; index += 1) {
-        await expandToggles
-          .nth(index)
-          .click({ force: true })
-          .catch(() => undefined);
-        if (await targetRow.isVisible().catch(() => false)) {
-          return targetRow;
-        }
-      }
+    const revealed = await attemptTreeRowReveal(page, searchInput, targetText, targetRow);
+    if (revealed) {
+      return revealed;
     }
   }
 
