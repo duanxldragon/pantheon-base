@@ -167,7 +167,7 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
     // 点击重试直到选中态生效)
     const selectRow = async () => {
       const batchMeta = page.locator('.table-batch-action-bar__meta');
-      for (let attempt = 0; attempt < 5; attempt += 1) {
+      for (let attempt = 0; attempt < 8; attempt += 1) {
         const checkbox = page
           .getByRole('row', { name: new RegExp(testUsername) })
           .first()
@@ -182,7 +182,6 @@ test.describe('System User CRUD @priority:critical @smoke:core', () => {
         if (selected) {
           return;
         }
-        await page.waitForTimeout(400);
       }
       await expect(batchMeta).toContainText('已选 1 条', { timeout: 5000 });
     };

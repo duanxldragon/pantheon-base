@@ -4,9 +4,12 @@
 
 set -e  # Exit on error
 
-echo "================================================"
+# SonarCloud shelldre:S1192: 复用分隔线常量而非重复字面量。
+SEP="================================================"
+
+echo "$SEP"
 echo "Pantheon Base v0.12.0 Release Push Script"
-echo "================================================"
+echo "$SEP"
 echo ""
 
 # Navigate to project directory
@@ -104,9 +107,9 @@ git push origin v0.12.0
 echo "✅ Tag pushed successfully"
 echo ""
 
-echo "================================================"
+echo "$SEP"
 echo "✨ Success! All changes pushed to GitHub"
-echo "================================================"
+echo "$SEP"
 echo ""
 echo "Next steps:"
 echo "1. Monitor CI: https://github.com/duanxldragon/pantheon-base/actions"
