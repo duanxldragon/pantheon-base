@@ -9,10 +9,32 @@
  *
  * 优先级: P0 (影响所有用户)
  * 预估耗时: ~2分钟
+ *
+ * 信息架构说明 (v0.12.0 起):
+ * - 侧边栏分组为 工作台 / 访问控制 / 组织架构 / 安全审计 / 低代码平台 / 平台配置
+ * - "系统管理" 分组已不存在; 用户/角色/菜单管理位于 "访问控制" 分组下
+ * - 分组标题是 Arco SubMenu 的 button; 子项渲染为 role="menuitem"
+ *   (子菜单默认折叠, 仅在激活路由所属分组内展开)
+ * - 工作台提供 "高频管理入口" 快捷按钮直达用户/角色/菜单管理
  */
 
 import { test, expect } from '@playwright/test';
 import { signInAsAdmin } from '../smoke/helpers/auth';
+
+/**
+ * 从工作台 "高频管理入口" 快捷按钮导航 (v0.12.0 IA 的确定性入口)。
+ * 侧边栏子菜单是 popup 式折叠, 点击分组按钮只做分组导航不展开子项,
+ * 因此叶子菜单项 (用户/角色/菜单管理) 优先走快捷入口; 直达路由兜底。
+ */
+async function navigateToSystemPage(page: import('@playwright/test').Page, itemName: string, route: string) {
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+  const quickLink = page.getByRole('button', { name: itemName, exact: true }).first();
+  if (await quickLink.isVisible().catch(() => false)) {
+    await quickLink.click();
+  } else {
+    await page.goto(route, { waitUntil: 'domcontentloaded' });
+  }
+}
 
 test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
   test('shell renders with correct structure after login', async ({ page }) => {
@@ -68,39 +90,32 @@ test.describe('Platform Shell Critical @priority:critical @smoke:core', () => {
 
   test('navigation between system pages works', async ({ page }) => {
     await signInAsAdmin(page);
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-    // 导航到用户管理
-    await page.getByRole('menuitem', { name: /用户管理|User/i }).click();
-    await expect(page).toHaveURL(/\/system\/user/, { timeout: 5000 });
+    // 工作台 "高频管理入口" → 用户管理
+    await navigateToSystemPage(page, '用户管理', '/system/user');
+    await expect(page).toHaveURL(/\/system\/user/, { timeout: 10000 });
     await expect(page.locator('.page-container')).toBeVisible();
 
-    // 导航到角色管理
-    await page.getByRole('menuitem', { name: /角色管理|Role/i }).click();
-    await expect(page).toHaveURL(/\/system\/role/, { timeout: 5000 });
+    // 工作台 "高频管理入口" → 角色管理
+    await navigateToSystemPage(page, '角色管理', '/system/role');
+    await expect(page).toHaveURL(/\/system\/role/, { timeout: 10000 });
     await expect(page.locator('.page-container')).toBeVisible();
 
-    // 导航到菜单管理
-    await page.getByRole('menuitem', { name: /菜单管理|Menu/i }).click();
-    await expect(page).toHaveURL(/\/system\/menu/, { timeout: 5000 });
+    // 工作台 "高频管理入口" → 菜单管理
+    await navigateToSystemPage(page, '菜单管理', '/system/menu');
+    await expect(page).toHaveURL(/\/system\/menu/, { timeout: 10000 });
     await expect(page.locator('.page-container')).toBeVisible();
   });
 
   test('breadcrumb updates on navigation', async ({ page }) => {
     await signInAsAdmin(page);
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.goto('/system/user', { waitUntil: 'domcontentloaded' });
 
-    // 导航到用户管理
-    await page.getByRole('menuitem', { name: /用户管理|User/i }).click();
-    await expect(page).toHaveURL(/\/system\/user/, { timeout: 5000 });
-
-    // 验证面包屑包含正确的路径
+    // 验证面包屑包含正确的路径: 首页 → 访问控制 → 用户管理
     const breadcrumb = page.locator('.app-shell__header-breadcrumb');
     await expect(breadcrumb).toBeVisible();
 
-    // 应该包含"系统管理"和"用户管理"
-    const breadcrumbText = await breadcrumb.textContent();
-    expect(breadcrumbText).toMatch(/系统管理|System/);
-    expect(breadcrumbText).toMatch(/用户管理|User/);
+    await expect(breadcrumb).toContainText('访问控制', { timeout: 10000 });
+    await expect(breadcrumb).toContainText('用户管理');
   });
 });

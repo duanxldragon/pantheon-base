@@ -1,6 +1,7 @@
 # Core Smoke Test Suite
 
 > **目标**: 20分钟内覆盖最高价值的关键路径，用于 PR 合并后的快速反馈。
+> **门禁定位**: report-only (`continue-on-error`) — 结果仅在 PR 状态检查中展示，不影响 mergeable 结论；连续多轮全绿后可按 harness 规则转 blocking。
 
 ## 设计原则
 

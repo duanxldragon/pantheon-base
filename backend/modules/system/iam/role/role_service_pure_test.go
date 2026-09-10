@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
@@ -213,5 +215,41 @@ func TestIsValidRoleDataScopeMode(t *testing.T) {
 		if isValidRoleDataScopeMode(mode) {
 			t.Fatalf("expected %q to be invalid", mode)
 		}
+	}
+}
+
+// ---- buildRoleListItems ----
+
+// 回归: 无菜单/权限关联的角色在列表 DTO 中必须是空切片而非 null,
+// 否则前端 RoleRow.menuIds.map(String) 会在编辑角色时直接抛错。
+func TestBuildRoleListItems_NormalizesNilAssociations(t *testing.T) {
+	roles := []SystemRole{{ID: 7, RoleName: "lonely", RoleKey: "lonely"}}
+	associations := roleListAssociations{
+		menus:       map[uint64][]uint64{},
+		permissions: map[uint64][]string{},
+		dataScopes:  map[uint64]string{7: common.DataScopeModeAll},
+	}
+
+	items := buildRoleListItems(roles, associations)
+	if len(items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(items))
+	}
+	if items[0].MenuIDs == nil {
+		t.Fatal("expected MenuIDs to be normalized to empty slice, got nil")
+	}
+	if items[0].PermissionKeys == nil {
+		t.Fatal("expected PermissionKeys to be normalized to empty slice, got nil")
+	}
+
+	// JSON 序列化结果必须是 [] 而非 null
+	encoded, err := json.Marshal(items[0])
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	if !strings.Contains(string(encoded), `"menuIds":[]`) {
+		t.Fatalf("expected serialized menuIds to be [], got: %s", encoded)
+	}
+	if !strings.Contains(string(encoded), `"permissionKeys":[]`) {
+		t.Fatalf("expected serialized permissionKeys to be [], got: %s", encoded)
 	}
 }
