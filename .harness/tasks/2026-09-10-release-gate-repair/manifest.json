@@ -1,0 +1,48 @@
+{
+  "taskId": "2026-09-10-release-gate-repair",
+  "title": "Clear Release Gate Dependabot alerts and Security Gates secret-scan false positives",
+  "goal": "main's Release Gate is blocked by 5 open high/critical Dependabot alerts (4x google.golang.org/grpc including CVE-2026-33186 critical; 1x go-jose/v3 CVE-2026-34986 high), with Candidate Checks additionally failing on SonarCloud new_security_rating=3 caused by kubernetes:S6865 (automounted service account) in the newly added k8s/backend/deployment.yaml. Security Gates is separately blocked by two gitleaks curl-auth-header false positives on documentation placeholders (Bearer YOUR_TOKEN) introduced by the v0.12.0 squash commit b2e90791 whose fingerprints differ from the already-ignored 178756d ones. Upgrade the vulnerable dependencies, disable service-account token automounting, and append the missing fingerprints so both gates return to green.",
+  "primaryLayer": "backend",
+  "dependencyLayers": ["platform"],
+  "scope": {
+    "in": [
+      "backend/go.mod + go.sum: grpc 1.76.0 -> 1.83.1, go-jose/v3 3.0.1 -> 3.0.5, otlptracehttp 1.24.0 -> 1.43.0 (with transitive bumps)",
+      "k8s/backend/deployment.yaml: automountServiceAccountToken: false",
+      ".gitleaksignore: two fingerprints for commit b2e90791 documentation placeholder findings"
+    ],
+    "out": [
+      "any application code change (dependency upgrade only)",
+      "SonarCloud rule tuning or quality-gate configuration changes",
+      "k8s README content changes (placeholders are intentional documentation)"
+    ]
+  },
+  "taskDoc": "Maintainer request 2026-09-10: fix the two persistent main-branch red gates (Release Gate + Security Gates).",
+  "contractAnchors": [
+    "backend/go.mod",
+    ".github/workflows/release-gate.yml",
+    ".github/workflows/security.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-10-release-gate-repair/manifest.json",
+      ".harness/evidence/2026-09-10-release-gate-repair/commands.json",
+      ".harness/evidence/2026-09-10-release-gate-repair/summary.md",
+      ".harness/evidence/2026-09-10-release-gate-repair/review.md"
+    ],
+    "modify": [
+      "backend/go.mod",
+      "backend/go.sum",
+      "k8s/backend/deployment.yaml",
+      ".gitleaksignore"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-10-release-gate-repair",
+    "taskPacket": ".harness/tasks/2026-09-10-release-gate-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-release-gate-repair/",
+    "reviewFile": ".harness/evidence/2026-09-10-release-gate-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-release-gate-repair/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
