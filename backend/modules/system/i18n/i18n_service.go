@@ -197,9 +197,9 @@ func (s *I18nService) Update(id uint64, req *I18nUpdateReq) error {
 	if err := s.db.Where("id = ?", id).First(&t).Error; err != nil {
 		return err
 	}
-	if err := s.db.Model(&t).Select("value", "remark").Updates(map[string]interface{}{
-		"value":  req.Value,
-		"remark": req.Remark,
+	if err := s.db.Model(&t).Select("value", "remark").Updates(SystemI18n{
+		Value:  req.Value,
+		Remark: req.Remark,
 	}).Error; err != nil {
 		return err
 	}

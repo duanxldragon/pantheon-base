@@ -1,0 +1,41 @@
+{
+  "taskId": "2026-09-10-i18n-s3649-zero",
+  "title": "Clear the last SonarCloud issue: i18n S3649 map-Updates taint",
+  "goal": "After #305, the Release Gate's SonarCloud Gate job (zero TOTAL unresolved issues) still fails on exactly 1 issue: gosecurity:S3649 BLOCKER in i18n_service.go:200 — the #304 fix replaced First(pk) with Where(\"id = ?\") but kept the map-values form of Updates(), which Sonar's Go analyzer flags as SQL constructed from user-controlled data regardless of the Select() scoping. Convert the update payload to the model-struct form (analyzer-recognized safe pattern); identical columns written with identical values.",
+  "primaryLayer": "backend",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "backend/modules/system/i18n/i18n_service.go: Updates(map[string]interface{}) -> Updates(SystemI18n{...}) under the same Select(\"value\", \"remark\")"
+    ],
+    "out": [
+      "SonarCloud quality-gate or scanner configuration changes",
+      "suppressing findings via nosec markers",
+      "i18n API contract, cache invalidation, or validation changes"
+    ]
+  },
+  "taskDoc": "Third and final round of the Release Gate zero drive (#302 deps+secrets, #303 4 BLOCKER taints, #304 16 issues + grpc v1.83.2, #305 4 new-code findings incl. os.Root). Remaining gate: SonarCloud Gate counts 1 unresolved issue on main@2d88ecf7 — the i18n map-Updates S3649; Candidate Checks already passes (new-code gate OK).",
+  "contractAnchors": [
+    "backend/modules/system/i18n/i18n_service.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-10-i18n-s3649-zero/manifest.json",
+      ".harness/evidence/2026-09-10-i18n-s3649-zero/commands.json",
+      ".harness/evidence/2026-09-10-i18n-s3649-zero/summary.md",
+      ".harness/evidence/2026-09-10-i18n-s3649-zero/review.md"
+    ],
+    "modify": [
+      "backend/modules/system/i18n/i18n_service.go"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-10-i18n-s3649-zero",
+    "taskPacket": ".harness/tasks/2026-09-10-i18n-s3649-zero/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-i18n-s3649-zero/",
+    "reviewFile": ".harness/evidence/2026-09-10-i18n-s3649-zero/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-i18n-s3649-zero/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
