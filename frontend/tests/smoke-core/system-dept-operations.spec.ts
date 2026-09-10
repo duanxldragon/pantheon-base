@@ -124,9 +124,12 @@ async function revealCreatedDeptRow(page: Page, deptName: string) {
     if (await deptRow.isVisible().catch(() => false)) {
       return deptRow;
     }
-    await page.waitForTimeout(500);
   }
-  await expect(deptRow).toBeVisible({ timeout: 15000 });
+  // 展开竞态的兜底轮询: refresh-topic 重拉没有可观测信号,
+  // 显式 sleep 会触发 SonarCloud typescript:S3516。
+  await expect
+    .poll(async () => deptRow.isVisible().catch(() => false), { timeout: 15000 })
+    .toBe(true);
   return deptRow;
 }
 

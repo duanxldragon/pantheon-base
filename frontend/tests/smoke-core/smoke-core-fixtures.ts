@@ -265,6 +265,11 @@ export async function revealTreeRow(
   // 增删改会触发 refresh-topic 失效并重拉未过滤列表, 关键字搜索结果可能被
   // 覆盖; 整个 "搜索 → 展开" 流程重试, 等刷新沉淀后再过滤一次。
   for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (attempt > 0) {
+      // 重试前固定退避: refresh-topic 失效重拉没有可观测的就绪信号,
+      // 无法用 Playwright expect 替代 (SonarCloud typescript:S3516)。
+      await page.waitForTimeout(800);
+    }
     await searchInput.fill(targetText);
     await searchInput.press('Enter');
 
@@ -293,8 +298,6 @@ export async function revealTreeRow(
         }
       }
     }
-
-    await page.waitForTimeout(800);
   }
 
   await expect(targetRow).toBeVisible({ timeout: 15000 });
@@ -317,8 +320,17 @@ export async function expandTreeRow(page: Page, anchorText: string) {
 }
 
 async function expectVisiblePageTitle(page: Page, title: string) {
-  const visibleMatches = page.getByText(title, { exact: false }).filter({ visible: true });
-  await expect(visibleMatches.first()).toBeVisible({ timeout: 15000 });
+  // 无条件轮询组件可见性: 非幂等 UI 状态没有可等待的 promise,
+  // 显式 sleep 会触发 SonarCloud typescript:S3516。
+  await expect
+    .poll(async () => {
+      try {
+        return await page.getByText(title, { exact: false }).filter({ visible: true }).count();
+      } catch {
+        return 0;
+      }
+    }, { timeout: 15000 })
+    .toBeGreaterThan(0);
 }
 
 /**

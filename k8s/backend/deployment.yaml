@@ -33,7 +33,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: backend
-        image: ghcr.io/duanxldragon/pantheon-base/backend:latest
+        image: ghcr.io/duanxldragon/pantheon-base/backend:v0.12.0 # SonarCloud kubernetes:S6596: 禁用 latest 标签
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -48,6 +48,8 @@ spec:
           requests:
             cpu: 250m
             memory: 512Mi
+            # SonarCloud kubernetes:S6897: 容器需声明存储请求。
+            ephemeral-storage: 512Mi
           limits:
             cpu: 1000m
             memory: 1Gi

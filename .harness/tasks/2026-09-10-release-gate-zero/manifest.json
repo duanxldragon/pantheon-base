@@ -1,0 +1,65 @@
+{
+  "taskId": "2026-09-10-release-gate-zero",
+  "title": "Drive Release Gate to zero: clear 16 SonarCloud issues and grpc v1.83.2 re-alert",
+  "goal": "After #303 the Release Gate still fails on main@b6b1e01f: the SonarCloud Gate job requires ZERO unresolved issues of any severity (16 remain: 2 BLOCKER taints that survived the earlier restructure, 1 CRITICAL complexity, 14 CODE_SMELL) and Dependabot re-alerted grpc GHSA-2v4p-qf9q-27wj (v1.83.1 vulnerable, fixed in v1.83.2). Fix every finding at the source: analyzer-trackable query/fs guards for the taints, extracted helpers for the complexity hot spot, real constants/waits/probe patterns for the smells, plus the grpc bump.",
+  "primaryLayer": "backend",
+  "dependencyLayers": ["frontend", "infra"],
+  "scope": {
+    "in": [
+      "backend/go.mod,go.sum: google.golang.org/grpc v1.83.1 -> v1.83.2 (GHSA-2v4p-qf9q-27wj)",
+      "backend/modules/system/org/dept/dept_service.go: S1192 duplicated condition string -> const condIDEquals",
+      "backend/modules/system/i18n/i18n_service.go: S3649 map-based Updates() -> Select().Updates(struct)",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go: S2083 taint via workspace root -> fs.FS rooted at sanitized root",
+      "backend/modules/auth/oidc/handler.go,service.go: S1135 TODO x6 -> actionable notes; S3776 cognitive complexity -> extracted helpers",
+      "frontend/tests/smoke-core/smoke-core-fixtures.ts: S3516 duplicated locator -> helper",
+      "frontend/tests/smoke-core/system-user-crud.spec.ts, system-dept-operations.spec.ts: S2925 waitForTimeout -> deterministic waits",
+      "k8s/backend/deployment.yaml: S6897/S6596 liveness/readiness probe auth patterns",
+      "release-push.sh: S1192 duplicated command string -> variable"
+    ],
+    "out": [
+      "SonarCloud quality-gate or scanner configuration changes",
+      "suppressing findings via nosec/sonar-ignore markers",
+      "runtime behavior changes in auth/OIDC, i18n, dept, or lowcode flows",
+      "smoke assertion semantics (waits replaced 1:1, locators unchanged in meaning)"
+    ]
+  },
+  "taskDoc": "Follow-up to #302/#303: Release Gate on main demands zero Sonar issues (any severity) and zero high/critical alerts. 16 open issues enumerated from sonarcloud.io api/issues/search on main; every finding has a source-level fix.",
+  "contractAnchors": [
+    "backend/modules/system/org/dept/dept_service.go",
+    "backend/modules/system/i18n/i18n_service.go",
+    "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go",
+    "backend/modules/auth/oidc/service.go",
+    "frontend/tests/smoke-core/smoke-core-fixtures.ts"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-10-release-gate-zero/manifest.json",
+      ".harness/evidence/2026-09-10-release-gate-zero/commands.json",
+      ".harness/evidence/2026-09-10-release-gate-zero/summary.md",
+      ".harness/evidence/2026-09-10-release-gate-zero/review.md"
+    ],
+    "modify": [
+      "backend/go.mod",
+      "backend/go.sum",
+      "backend/modules/system/org/dept/dept_service.go",
+      "backend/modules/system/i18n/i18n_service.go",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go",
+      "backend/modules/auth/oidc/handler.go",
+      "backend/modules/auth/oidc/service.go",
+      "frontend/tests/smoke-core/smoke-core-fixtures.ts",
+      "frontend/tests/smoke-core/system-user-crud.spec.ts",
+      "frontend/tests/smoke-core/system-dept-operations.spec.ts",
+      "k8s/backend/deployment.yaml",
+      "release-push.sh"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-10-release-gate-zero",
+    "taskPacket": ".harness/tasks/2026-09-10-release-gate-zero/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-release-gate-zero/",
+    "reviewFile": ".harness/evidence/2026-09-10-release-gate-zero/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-release-gate-zero/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

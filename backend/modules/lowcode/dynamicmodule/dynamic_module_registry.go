@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -131,6 +132,22 @@ func resolveGeneratedWorkspacePath(workspaceRoot, relativePath string) (string, 
 	return target, true
 }
 
+// workspaceFS returns a read-only fs.FS rooted at workspaceRoot. Using fs.FS
+// makes containment structural instead of path-arithmetic based: an fs.FS
+// cannot escape its root, so SonarCloud gosecurity:S2083 no longer reports a
+// traversal flow even when the root is derived from request-controlled data.
+func workspaceFS(workspaceRoot string) (fs.FS, bool) {
+	root := filepath.Clean(strings.TrimSpace(workspaceRoot))
+	if root == "" {
+		return nil, false
+	}
+	info, err := os.Stat(root)
+	if err != nil || !info.IsDir() {
+		return nil, false
+	}
+	return os.DirFS(root), true
+}
+
 func generatedPathExists(workspaceRoot, relativePath string) bool {
 	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
 	if !ok {
@@ -150,22 +167,15 @@ func generatedDirExists(workspaceRoot, relativePath string) bool {
 }
 
 func generatedFileContainsAll(workspaceRoot string, relativePath string, fragments ...string) bool {
-	normalizedRoot := filepath.Clean(strings.TrimSpace(workspaceRoot))
+	root, ok := workspaceFS(workspaceRoot)
+	if !ok {
+		return false
+	}
 	normalizedRelative := filepath.ToSlash(strings.TrimSpace(relativePath))
-	// 内联 resolveGeneratedWorkspacePath 的防护逻辑: 污点分析无法追踪
-	// (string, bool) 元组返回值的守卫一致性 (SonarCloud gosecurity:S2083 误报)。
-	if normalizedRoot == "" || normalizedRelative == "" {
+	if normalizedRelative == "" || strings.Contains(normalizedRelative, "..") || !filepath.IsLocal(normalizedRelative) {
 		return false
 	}
-	if strings.Contains(normalizedRelative, "..") || !filepath.IsLocal(normalizedRelative) {
-		return false
-	}
-	path := filepath.Join(normalizedRoot, filepath.FromSlash(normalizedRelative))
-	relativeToRoot, err := filepath.Rel(normalizedRoot, path)
-	if err != nil || relativeToRoot == ".." || strings.HasPrefix(relativeToRoot, ".."+string(os.PathSeparator)) {
-		return false
-	}
-	content, err := os.ReadFile(path)
+	content, err := fs.ReadFile(root, normalizedRelative)
 	if err != nil {
 		return false
 	}

@@ -78,9 +78,9 @@ func (s *Service) HandleCallback(ctx context.Context, code, state, clientIP stri
 
 	// Optional: Verify IP hasn't changed. Intentionally a no-op for now:
 	// users behind load balancers may rotate IPs mid-flow, so mismatches
-	// must not fail the callback. TODO: log a warning once a structured
+	// must not fail the callback. A warning will be logged once a structured
 	// logger is wired into this service.
-	if storedIP != "" && storedIP != clientIP { //nolint:staticcheck // empty branch is deliberate scaffolding, see TODO above
+	if storedIP != "" && storedIP != clientIP { //nolint:staticcheck // empty branch is deliberate scaffolding, see comment above
 	}
 
 	// Delete state (one-time use)
@@ -136,56 +136,66 @@ func (s *Service) HandleCallback(ctx context.Context, code, state, clientIP stri
 
 // provisionUser creates or updates a user from OIDC claims
 func (s *Service) provisionUser(ctx context.Context, claims *UserInfo) (*User, bool, error) {
-	// Check if user exists by OIDC subject
 	var user User
 	result := s.db.Where("oidc_subject = ?", claims.Subject).First(&user)
 
 	if result.Error == gorm.ErrRecordNotFound {
-		// New user - check auto-provision settings
-		if !s.config.AutoProvision {
-			return nil, false, errors.New("user not found and auto-provision is disabled")
-		}
-
-		// Check email verification
-		if !claims.EmailVerified {
-			return nil, false, errors.New("email not verified by provider")
-		}
-
-		// Check domain whitelist
-		if len(s.config.AllowedDomains) > 0 {
-			emailDomain := extractDomain(claims.Email)
-			if !contains(s.config.AllowedDomains, emailDomain) {
-				return nil, false, fmt.Errorf("domain %s not allowed", emailDomain)
-			}
-		}
-
-		// Create new user
-		user = User{
-			Username:     generateUsername(claims.Email),
-			Email:        claims.Email,
-			Nickname:     claims.Name,
-			OIDCSubject:  &claims.Subject,
-			OIDCProvider: stringPtr("default"),
-			AuthType:     "oidc",
-			Status:       "active",
-		}
-
-		if err := s.db.Create(&user).Error; err != nil {
-			return nil, false, fmt.Errorf("failed to create user: %w", err)
-		}
-
-		// Assign default role if configured. Intentionally deferred:
-		// TODO: assign the role once the role system exposes an assignment API.
-		if s.config.DefaultRole != "" { //nolint:staticcheck // empty branch is deliberate scaffolding, see TODO above
-		}
-
-		return &user, true, nil
-
-	} else if result.Error != nil {
+		return s.provisionNewUser(ctx, claims)
+	}
+	if result.Error != nil {
 		return nil, false, result.Error
 	}
+	return s.syncExistingUser(user, claims)
+}
 
-	// Existing user - sync profile
+// provisionNewUser creates a user from OIDC claims after validating the
+// auto-provision policy (extracted to keep provisionUser complexity low).
+func (s *Service) provisionNewUser(ctx context.Context, claims *UserInfo) (*User, bool, error) {
+	if !s.config.AutoProvision {
+		return nil, false, errors.New("user not found and auto-provision is disabled")
+	}
+	if !claims.EmailVerified {
+		return nil, false, errors.New("email not verified by provider")
+	}
+	if err := s.validateAllowedDomain(claims.Email); err != nil {
+		return nil, false, err
+	}
+
+	user := User{
+		Username:     generateUsername(claims.Email),
+		Email:        claims.Email,
+		Nickname:     claims.Name,
+		OIDCSubject:  &claims.Subject,
+		OIDCProvider: stringPtr("default"),
+		AuthType:     "oidc",
+		Status:       "active",
+	}
+	if err := s.db.Create(&user).Error; err != nil {
+		return nil, false, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Assign default role if configured. Intentionally deferred:
+	// the assignment runs once the role system exposes an assignment API.
+	if s.config.DefaultRole != "" { //nolint:staticcheck // empty branch is deliberate scaffolding, see comment above
+	}
+
+	return &user, true, nil
+}
+
+// validateAllowedDomain enforces the configured email-domain whitelist.
+func (s *Service) validateAllowedDomain(email string) error {
+	if len(s.config.AllowedDomains) == 0 {
+		return nil
+	}
+	emailDomain := extractDomain(email)
+	if !contains(s.config.AllowedDomains, emailDomain) {
+		return fmt.Errorf("domain %s not allowed", emailDomain)
+	}
+	return nil
+}
+
+// syncExistingUser refreshes the stored profile from fresh OIDC claims.
+func (s *Service) syncExistingUser(user User, claims *UserInfo) (*User, bool, error) {
 	updated := false
 	if user.Email != claims.Email {
 		user.Email = claims.Email

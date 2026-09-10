@@ -45,8 +45,7 @@ func HandleOIDCCallback(service *Service) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Create session using existing session service
-		// For now, return user info
+		// 会话创建待接入既有 session service; 当前先返回用户信息。
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"user": gin.H{
@@ -64,8 +63,7 @@ func HandleOIDCCallback(service *Service) gin.HandlerFunc {
 			}(),
 		})
 
-		// TODO: Redirect to dashboard after setting session cookie
-		// c.Redirect(http.StatusFound, "/dashboard")
+		// 会话服务接入后补充: 设置会话 Cookie 并跳转 dashboard。
 	}
 }
 
