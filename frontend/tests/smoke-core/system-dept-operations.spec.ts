@@ -109,7 +109,7 @@ async function createDeptByApi(
 
 /** 通过搜索 + 展开折叠树定位部门行 (新部门是根节点的子节点) */
 function searchDeptRow(page: Page, deptName: string) {
-  return revealTreeRow(page, 'Pantheon Base', deptName);
+  return revealTreeRow(page, deptName);
 }
 
 /**

@@ -1,0 +1,50 @@
+{
+  "taskId": "2026-09-10-sonar-new-code-zero",
+  "title": "Clear the 4 remaining SonarCloud new-code findings blocking Release Gate",
+  "goal": "After #304, the Release Gate's Candidate Checks job requires 'SonarCloud Code Analysis' (new-code quality gate) to be success on the release candidate. The post-merge main analysis failed with 'Security Rating on New Code = E' on 4 issues: gosecurity:S2083 BLOCKER (taint flows from HTTP request through Schema.Scope into the relativePath argument of fs.ReadFile - the fs.FS restructure moved the sink but the relative path itself remains request-controlled), typescript:S3516+S3776 (revealTreeRow: all exits return the same targetRow locator and cognitive complexity 17), go:S978 (test identifier shadows predeclared clear). Fix all 4 at source: adopt os.Root (kernel-backed traversal-safe API) so containment is structural, split revealTreeRow into attempt helper + retry wrapper, drop dead parameter, rename the test variable.",
+  "primaryLayer": "backend",
+  "dependencyLayers": ["frontend"],
+  "scope": {
+    "in": [
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go: fs.FS workspaceFS -> os.Root openWorkspaceRoot; fs.ReadFile -> Root.ReadFile",
+      "frontend/tests/smoke-core/smoke-core-fixtures.ts: revealTreeRow split into attemptTreeRowReveal + retry wrapper, dead ancestorText param removed",
+      "frontend/tests/smoke-core/system-dept-operations.spec.ts, system-menu-permission.spec.ts: call sites updated to new signature",
+      "backend/modules/system/iam/permission/permission_service_test.go: clear -> policies (S978)"
+    ],
+    "out": [
+      "SonarCloud quality-gate or scanner configuration changes",
+      "suppressing findings via nosec/sonar-ignore markers",
+      "smoke assertion semantics (wait strategy and locator semantics unchanged)",
+      "runtime behavior of lowcode workspace reads (os.Root enforces the same containment the guards already implemented)"
+    ]
+  },
+  "taskDoc": "Follow-up to #304: Release Gate on main@4b8061cd still red. Dependabot Alerts job now passes (0 open high/critical after grpc v1.83.2 propagated), but Candidate Checks requires SonarCloud Code Analysis (new-code gate) success; the main analysis reports Security Rating on New Code = E over 4 issues enumerated from sonarcloud.io api/issues/search?sinceLeakPeriod=true.",
+  "contractAnchors": [
+    "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go",
+    "frontend/tests/smoke-core/smoke-core-fixtures.ts"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-10-sonar-new-code-zero/manifest.json",
+      ".harness/evidence/2026-09-10-sonar-new-code-zero/commands.json",
+      ".harness/evidence/2026-09-10-sonar-new-code-zero/summary.md",
+      ".harness/evidence/2026-09-10-sonar-new-code-zero/review.md"
+    ],
+    "modify": [
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go",
+      "backend/modules/system/iam/permission/permission_service_test.go",
+      "frontend/tests/smoke-core/smoke-core-fixtures.ts",
+      "frontend/tests/smoke-core/system-dept-operations.spec.ts",
+      "frontend/tests/smoke-core/system-menu-permission.spec.ts"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-10-sonar-new-code-zero",
+    "taskPacket": ".harness/tasks/2026-09-10-sonar-new-code-zero/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-sonar-new-code-zero/",
+    "reviewFile": ".harness/evidence/2026-09-10-sonar-new-code-zero/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-sonar-new-code-zero/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
