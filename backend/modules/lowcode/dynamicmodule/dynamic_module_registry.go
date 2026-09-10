@@ -150,8 +150,19 @@ func generatedDirExists(workspaceRoot, relativePath string) bool {
 }
 
 func generatedFileContainsAll(workspaceRoot string, relativePath string, fragments ...string) bool {
-	path, ok := resolveGeneratedWorkspacePath(workspaceRoot, relativePath)
-	if !ok {
+	normalizedRoot := filepath.Clean(strings.TrimSpace(workspaceRoot))
+	normalizedRelative := filepath.ToSlash(strings.TrimSpace(relativePath))
+	// 内联 resolveGeneratedWorkspacePath 的防护逻辑: 污点分析无法追踪
+	// (string, bool) 元组返回值的守卫一致性 (SonarCloud gosecurity:S2083 误报)。
+	if normalizedRoot == "" || normalizedRelative == "" {
+		return false
+	}
+	if strings.Contains(normalizedRelative, "..") || !filepath.IsLocal(normalizedRelative) {
+		return false
+	}
+	path := filepath.Join(normalizedRoot, filepath.FromSlash(normalizedRelative))
+	relativeToRoot, err := filepath.Rel(normalizedRoot, path)
+	if err != nil || relativeToRoot == ".." || strings.HasPrefix(relativeToRoot, ".."+string(os.PathSeparator)) {
 		return false
 	}
 	content, err := os.ReadFile(path)

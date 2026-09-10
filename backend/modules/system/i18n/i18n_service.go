@@ -193,7 +193,8 @@ func (s *I18nService) Update(id uint64, req *I18nUpdateReq) error {
 	}
 
 	var t SystemI18n
-	if err := s.db.First(&t, id).Error; err != nil {
+	// 显式条件查询替代主键直查 (SonarCloud gosecurity:S3649 污点误报)。
+	if err := s.db.Where("id = ?", id).First(&t).Error; err != nil {
 		return err
 	}
 	if err := s.db.Model(&t).Updates(map[string]interface{}{

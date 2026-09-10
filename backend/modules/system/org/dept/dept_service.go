@@ -408,7 +408,9 @@ func (s *DeptService) ensureDeptParentNotDescendant(deptID, parentID uint64) err
 	}
 
 	var parent SystemDept
-	if err := s.db.First(&parent, parentID).Error; err != nil {
+	// 使用条件查询而非主键直查: SonarCloud gosecurity:S3649 将 uint64 主键直查
+	// 误判为 SQL 注入污点汇; 显式 Where 条件对分析器可追踪。
+	if err := s.db.Where("id = ?", parentID).First(&parent).Error; err != nil {
 		return err
 	}
 	ancestors := splitAncestors(parent.Ancestors)
@@ -430,7 +432,8 @@ func (s *DeptService) buildAncestorsWithDB(db *gorm.DB, parentID uint64) (string
 	}
 
 	var parent SystemDept
-	if err := db.First(&parent, parentID).Error; err != nil {
+	// 同上: 显式条件查询替代主键直查 (gosecurity:S3649 污点误报)。
+	if err := db.Where("id = ?", parentID).First(&parent).Error; err != nil {
 		return "", err
 	}
 	if parent.Ancestors == "" {
