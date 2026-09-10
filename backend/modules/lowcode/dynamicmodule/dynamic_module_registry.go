@@ -177,7 +177,7 @@ func generatedFileContainsAll(workspaceRoot string, relativePath string, fragmen
 	if !ok {
 		return false
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	normalizedRelative := filepath.ToSlash(strings.TrimSpace(relativePath))
 	if normalizedRelative == "" || strings.Contains(normalizedRelative, "..") || !filepath.IsLocal(normalizedRelative) {
 		return false
