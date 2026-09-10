@@ -73,3 +73,43 @@
 ### 残余 gap
 
 - `business-generated-basic.spec.ts` 未重写 (CI 失败集无此文件, 本地 3 skipped 为低代码环境依赖), 后续按需对齐
+
+---
+
+## 完整回归套件本地实跑 (2026-09-10, triage-smoke 分支 + 本地栈)
+
+**命令集**: `package.json` 中 `test:smoke:platform|system|business` 全部 13 个 phase 逐段实跑
+(backend@8080 已含角色 null 归一化修复; smoke vite 由 wrapper 自管)。
+
+| Phase | 结果 |
+|-------|------|
+| platform:contracts (2 specs) | ✅ 24 passed (5.0m) |
+| platform:surfaces (8 specs) | ✅ 55 passed (53 直接 + 2 个 layout-loop 用 90s 超时覆盖, 见下) |
+| platform:full (port 5174) | ✅ 77 passed (2.4m) |
+| system:pages | ✅ 81 passed (5.7m) |
+| system:forms | ✅ 4 passed (3.3m) |
+| system:iam-authz | ✅ 4 passed (28.5s) |
+| system:governance (6 specs) | ✅ 18 passed |
+| system:api (api config) | ✅ 11 passed (4.7s) |
+| business:generated | ✅ 1 passed |
+| business:database-import (+qa setup) | ✅ 1 passed |
+| business:master-detail (port 5174) | ✅ 1 passed |
+| business:many-to-many (port 5174) | ✅ 1 passed |
+| business:auto-recycle (port 5174) | ✅ 1 passed |
+| **合计** | **✅ 279 passed / 0 failed** |
+
+### 环境性偏差 (非产品/断言问题)
+
+1. **首次运行冷 vite deps 缓存**: pagination-contract 1 例 30s 超时 (trace 显示模块图仍在
+   加载, `?v=` hash 中途重优化), 缓存变热后原样重跑 4/4 绿。CI 首跑同样受此影响时
+   playwright webServer 已预热, 无需处理。
+2. **system-layout-contract 两个 12 页导航循环用例**: 固定 30s test timeout 在本机
+   (11-12 个真实 API 页面 ≈ 46s) 不够; CLI `--timeout=90000` 后两例分别 46.3s/22.1s 绿。
+   CI runner 更快从未触发。若后续本地频繁出现, 可考虑把该 spec 的循环拆分或用
+   `test.setTimeout` 标注 — 未改动 (CI 全绿, 不引入 diff)。
+3. 与 CI 对照: main 分支最近一次 "Full Smoke Suite" 运行 success, 本地结果与 CI 一致。
+
+### 结论
+
+- smoke-core 修复未破坏任何既有套件; 全部回归在修复后的后端上全绿。
+- 两个产品 bug 修复 (downloadFile CSRF, 角色 null menuIds) 在更大回归面下无副作用。
