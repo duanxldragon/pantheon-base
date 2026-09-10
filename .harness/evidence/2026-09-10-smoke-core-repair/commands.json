@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-09-10-smoke-core-repair",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codebuff",
+    "note": "Buffy agent on z-ai/glm-5.3-flash via Codebuff/Freebuff."
+  },
+  "commands": [
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke-core/*.spec.ts --workers=1",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: full smoke-core suite against local stack with repaired backend Expected: all CI-failing specs green; observed 23 passed / 3 skipped / 0 failed, stable across two rounds"
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && ./node_modules/.bin/eslint tests/smoke-core/ src/api/file.ts",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: typecheck and lint the touched frontend files Expected: clean; observed exit 0"
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: reproduce npm run build without the broken npm shim Expected: build succeeds; observed tsc=0 vite=0"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./modules/system/iam/role/... && go test ./modules/system/iam/role/...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: compile, vet, and test the role package including the new nil-slice regression test Expected: all pass; observed ok github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/pagination-contract.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: re-run pagination contract after diagnosing cold vite deps cache timeout via trace network log Expected: 4/4 green once cache warm"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke/platform/system-layout-contract.spec.ts --grep \"1440w\" --timeout=90000 --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: 12-page layout loop needs ~46s locally vs 30s cap; verify with 90s override Expected: passed 46.3s; 1280w variant passed 22.1s; CI never triggered (runners faster)"
+    },
+    {
+      "command": "13-phase full regression: test:smoke:platform (contracts/surfaces/full) + test:smoke:system (pages/forms/iam-authz/governance/api) + test:smoke:business (generated/database-import/master-detail/many-to-many/auto-recycle)",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: complete regression suite executed locally phase by phase with canonical package.json invocations Expected: no regressions from smoke-core repair or the two product fixes; observed 279 passed / 0 failed total"
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-smoke-core-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-smoke-core-repair/",
+    "reviewFile": ".harness/evidence/2026-09-10-smoke-core-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-smoke-core-repair/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "business-generated-basic.spec.ts not rewritten (absent from CI failure set; lowcode environment dependent locally)",
+    "system-layout-contract 30s test timeout is tight on slower local machines; documented, no repo change because CI is green"
+  ]
+}

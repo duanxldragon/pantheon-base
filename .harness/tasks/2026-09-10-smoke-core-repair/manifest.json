@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-09-10-smoke-core-repair",
+  "title": "Repair core smoke suite; fix downloadFile CSRF and role null-contract defects",
+  "goal": "Core Smoke Tests never passed in CI (0 successes since introduction). Triage the failures, rewrite stale assertions against current UI truth, and fix the two real product defects uncovered during live verification: (1) downloadFile bypasses the axios interceptor so UI export POSTs hit 403 csrf.missing; (2) role list serialized nil slices as menuIds/permissionKeys null, breaking the frontend RoleRow contract and crashing openEdit. Mark the smoke-core workflow report-only until multiple green rounds justify promoting it to blocking.",
+  "primaryLayer": "platform",
+  "dependencyLayers": ["system-iam", "frontend-api"],
+  "scope": {
+    "in": [
+      "frontend/tests/smoke-core/*.spec.ts rewritten against current IA and Arco contracts",
+      "frontend/tests/smoke-core/smoke-core-fixtures.ts shared helpers",
+      ".github/workflows/smoke-core.yml report-only (continue-on-error)",
+      "frontend/src/api/file.ts CSRF + operation-token headers on downloads",
+      "backend/modules/system/iam/role/role_service.go nil-slice normalization",
+      "backend/modules/system/iam/role/role_service_pure_test.go regression test",
+      "frontend/tests/smoke-core/README.md gate positioning note",
+      ".harness/CORE_SMOKE_TRIAGE.md triage + repair + regression evidence"
+    ],
+    "out": [
+      "business repository (pantheon-ops) changes",
+      "full regression smoke suite assertion changes",
+      "promoting smoke-core to blocking gate (requires multiple green rounds)",
+      "business-generated-basic.spec.ts rewrite (not in CI failure set)"
+    ]
+  },
+  "taskDoc": "Maintainer-approved triage follow-up: repair Core Smoke on main; product defects found during verification fixed in same PR per closeout rules.",
+  "contractAnchors": [
+    "backend/modules/system/iam/role/role_service.go",
+    "frontend/src/api/file.ts",
+    "frontend/tests/smoke-core/smoke-core-fixtures.ts",
+    ".github/workflows/smoke-core.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-10-smoke-core-repair/manifest.json",
+      ".harness/evidence/2026-09-10-smoke-core-repair/commands.json",
+      ".harness/evidence/2026-09-10-smoke-core-repair/summary.md",
+      ".harness/evidence/2026-09-10-smoke-core-repair/review.md"
+    ],
+    "modify": [
+      "frontend/tests/smoke-core/auth-login-logout.spec.ts",
+      "frontend/tests/smoke-core/platform-shell-critical.spec.ts",
+      "frontend/tests/smoke-core/system-user-crud.spec.ts",
+      "frontend/tests/smoke-core/system-role-authz.spec.ts",
+      "frontend/tests/smoke-core/system-dept-operations.spec.ts",
+      "frontend/tests/smoke-core/system-menu-permission.spec.ts",
+      "frontend/tests/smoke-core/system-import-export.spec.ts",
+      "frontend/src/api/file.ts",
+      "backend/modules/system/iam/role/role_service.go",
+      ".github/workflows/smoke-core.yml"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-09-10-smoke-core-repair",
+    "taskPacket": ".harness/tasks/2026-09-10-smoke-core-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-smoke-core-repair/",
+    "reviewFile": ".harness/evidence/2026-09-10-smoke-core-repair/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-smoke-core-repair/summary.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
