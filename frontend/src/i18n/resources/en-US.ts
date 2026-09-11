@@ -1160,7 +1160,6 @@ const enUSFallback = {
   'generator.wizard.dataScopeMode': 'Data Scope Mode',
   'generator.wizard.dataScopeMode.dept': 'Department',
   'generator.wizard.dataScopeMode.owner': 'Owner',
-  'generator.wizard.dataScopeMode.tenant': 'Tenant',
   'generator.wizard.dataScopeMode.custom': 'Custom',
   'generator.wizard.dataScope.enabledTag': 'Data scope enabled',
   'generator.wizard.dataScope.disabledTag': 'Data scope disabled',
@@ -2699,6 +2698,8 @@ const enUSFallback = {
   'system.setting.remark.site.logo': 'Site logo URL. Leave empty when not configured.',
   'system.setting.remark.platform.app_mode':
     'enterprise targets back-office systems; consumer targets C-end accounts; hybrid supports both application styles.',
+  'system.setting.remark.platform.tenant_mode':
+    'compat keeps single-tenant behavior (default); multi enables the tenant canary slice (dict resource isolation). Review the tenant migration runbook before switching.',
   'system.setting.remark.org.enabled':
     'When disabled, navigation and user forms hide departments and posts without deleting existing organization data.',
   'system.setting.remark.org.required_for_user':

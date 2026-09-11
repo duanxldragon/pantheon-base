@@ -1876,7 +1876,6 @@ const frFRFallback = {
   'generator.wizard.dataScopeMode': 'Mode de périmètre de données',
   'generator.wizard.dataScopeMode.dept': 'Département',
   'generator.wizard.dataScopeMode.owner': 'Propriétaire',
-  'generator.wizard.dataScopeMode.tenant': 'Locataire',
   'generator.wizard.dataScopeMode.custom': 'Personnalisé',
   'generator.wizard.dataScope.enabledTag': 'Périmètre de données activé',
   'generator.wizard.dataScope.disabledTag': 'Périmètre de données désactivé',
@@ -2542,6 +2541,8 @@ const frFRFallback = {
     'Utilisé pour la page de connexion, le titre du navigateur et la configuration publique.',
   'system.setting.remark.platform.app_mode':
     'enterprise cible le back-office, consumer les comptes C-end, hybrid prend en charge les deux modes.',
+  'system.setting.remark.platform.tenant_mode':
+    'compat conserve le comportement mono-locataire (par défaut) ; multi active la tranche canari locataire (isolation des ressources de dictionnaire). Consultez le runbook de migration locataire avant de basculer.',
   'system.setting.remark.org.enabled':
     'Désactivé, les départements et postes sont masqués dans la navigation et les formulaires sans supprimer les données.',
   'system.setting.remark.org.required_for_user':

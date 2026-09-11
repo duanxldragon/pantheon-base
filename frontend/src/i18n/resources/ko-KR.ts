@@ -1738,7 +1738,6 @@ const koKRFallback = {
   'generator.wizard.dataScopeMode': '데이터 권한 모드',
   'generator.wizard.dataScopeMode.dept': '부서',
   'generator.wizard.dataScopeMode.owner': '본인',
-  'generator.wizard.dataScopeMode.tenant': '테넌트',
   'generator.wizard.dataScopeMode.custom': '사용자 지정',
   'generator.wizard.dataScope.enabledTag': '데이터 권한 활성화',
   'generator.wizard.dataScope.disabledTag': '데이터 권한 비활성화',
@@ -2370,6 +2369,8 @@ const koKRFallback = {
   'system.setting.remark.site.name': '로그인 페이지, 브라우저 제목, 공개 설정에 사용됩니다.',
   'system.setting.remark.platform.app_mode':
     'enterprise는 기업 관리자용, consumer는 C엔드 계정용, hybrid는 두 유형을 함께 지원합니다.',
+  'system.setting.remark.platform.tenant_mode':
+    'compat는 단일 테넌트 동작을 유지하고(기본값), multi는 테넌트 카나리 슬라이스(사전 리소스 격리)를 활성화합니다. 전환 전 테넌트 마이그레이션 Runbook을 확인하세요.',
   'system.setting.remark.org.enabled':
     '끄면 부서와 직책을 내비게이션 및 사용자 폼에서 숨기지만 기존 조직 데이터는 삭제하지 않습니다.',
   'system.setting.remark.org.required_for_user':

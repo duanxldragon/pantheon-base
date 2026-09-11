@@ -116,6 +116,17 @@ func TestValidateRegisterRequestRejectsInvalidGovernanceContract(t *testing.T) {
 			wantError: "module.generate.invalid_data_scope",
 		},
 		{
+			// Tenant isolation has no runtime implementation; the generator must
+			// reject the pseudo-capability instead of silently generating a module
+			// whose data scope would never filter anything (task 0 guardrail).
+			name: "tenant data scope mode is not implemented and must be rejected",
+			mutate: func(req *RegisterGeneratedModuleRequest) {
+				req.Schema.EnableDataScope = true
+				req.Schema.DataScopeMode = "tenant"
+			},
+			wantError: "module.generate.invalid_data_scope",
+		},
+		{
 			name: "module cannot depend on itself",
 			mutate: func(req *RegisterGeneratedModuleRequest) {
 				req.Schema.Dependencies = []ModuleDependency{{Module: "asset", Required: true}}

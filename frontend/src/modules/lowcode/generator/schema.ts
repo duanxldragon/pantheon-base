@@ -22,7 +22,14 @@ export type BusinessTableRole = 'main' | 'detail' | 'relation' | 'dictionary';
 
 export type GeneratorTemplateVersion = 'v1';
 
-export type DataScopeMode = 'none' | 'owner' | 'dept' | 'tenant' | 'custom';
+/**
+ * 生成器数据权限模式。
+ *
+ * 与后端 scaffold 契约（backend/internal/scaffold/contract.go）保持同源：
+ * `tenant` 已下线 —— 运行时没有租户隔离实现，生成器不得再暴露该伪能力。
+ * 见 .harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md（任务 0）。
+ */
+export type DataScopeMode = 'none' | 'owner' | 'dept' | 'custom';
 
 export type ModuleRelationType = 'oneToMany' | 'manyToMany' | 'lookup';
 

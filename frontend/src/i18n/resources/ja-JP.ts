@@ -1805,7 +1805,6 @@ const jaJPFallback = {
   'generator.wizard.dataScopeMode': 'データ権限モード',
   'generator.wizard.dataScopeMode.dept': '部門',
   'generator.wizard.dataScopeMode.owner': '本人',
-  'generator.wizard.dataScopeMode.tenant': 'テナント',
   'generator.wizard.dataScopeMode.custom': 'カスタム',
   'generator.wizard.dataScope.enabledTag': 'データ権限有効',
   'generator.wizard.dataScope.disabledTag': 'データ権限無効',
@@ -2397,6 +2396,8 @@ const jaJPFallback = {
   'system.setting.remark.site.name': 'ログインページ、ブラウザータイトル、公開設定で使用します。',
   'system.setting.remark.platform.app_mode':
     'enterprise は管理画面向け、consumer は C 向けアカウント、hybrid は両方をサポートします。',
+  'system.setting.remark.platform.tenant_mode':
+    'compat はシングルテナント動作を維持し（デフォルト）、multi はテナントカナリースライス（辞書リソース分離）を有効化します。切替前にテナント移行 Runbook を確認してください。',
   'system.setting.remark.org.enabled':
     '無効にすると部門と役職をナビゲーションとユーザーフォームから隠しますが、組織データは削除しません。',
   'system.setting.remark.org.required_for_user':

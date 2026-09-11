@@ -1073,7 +1073,6 @@ const zhCNFallback = {
   'generator.wizard.dataScopeMode': '数据权限模式',
   'generator.wizard.dataScopeMode.dept': '部门级',
   'generator.wizard.dataScopeMode.owner': '本人级',
-  'generator.wizard.dataScopeMode.tenant': '租户级',
   'generator.wizard.dataScopeMode.custom': '自定义',
   'generator.wizard.dataScope.enabledTag': '数据权限已启用',
   'generator.wizard.dataScope.disabledTag': '数据权限未启用',
@@ -2485,6 +2484,8 @@ const zhCNFallback = {
   'system.setting.remark.site.logo': '站点 Logo 地址，允许为空。',
   'system.setting.remark.platform.app_mode':
     'enterprise 面向企业后台；consumer 面向 C 端账号；hybrid 用于同时兼容两类应用。',
+  'system.setting.remark.platform.tenant_mode':
+    'compat 保持单租户行为（默认）；multi 启用租户 canary 切片（字典资源隔离），切换前请阅读租户迁移 Runbook。',
   'system.setting.remark.org.enabled':
     '关闭后导航和用户表单隐藏部门、岗位能力，但不会删除组织数据。',
   'system.setting.remark.org.required_for_user':

@@ -1734,9 +1734,6 @@ const ModuleWizard: React.FC = () => {
                         <Select.Option value="owner">
                           {t('generator.wizard.dataScopeMode.owner')}
                         </Select.Option>
-                        <Select.Option value="tenant">
-                          {t('generator.wizard.dataScopeMode.tenant')}
-                        </Select.Option>
                         <Select.Option value="custom">
                           {t('generator.wizard.dataScopeMode.custom')}
                         </Select.Option>
