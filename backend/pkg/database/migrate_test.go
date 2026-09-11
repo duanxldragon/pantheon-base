@@ -525,7 +525,8 @@ func seedCurrentSchemaBootstrapMarkers(t *testing.T, db *gorm.DB) {
 			created_at DATETIME(3) DEFAULT NULL,
 			updated_at DATETIME(3) DEFAULT NULL,
 			deleted_at DATETIME(3) DEFAULT NULL,
-			PRIMARY KEY (id)
+			PRIMARY KEY (id),
+			UNIQUE KEY idx_system_dict_type_dict_code (dict_code)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 		`CREATE TABLE system_log_oper (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
