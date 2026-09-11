@@ -15,6 +15,10 @@ updated_at: 2026-09-11
 > 任务 3 `tenant-canary-slice`（dict 资源垂直切片，flag `platform.tenant_mode` 默认 `compat`，10 项双租户 hostile tests 全绿，flag-off 回归通过）。
 > 下一步为队列 4--6（core-auth-iam / core-data-infrastructure / verification-and-gray），开工前提：canary 隔离 evidence 的维护者 review（"canary 放量" gate）。
 >
+> **2026-09-12 队列 4 slice 2 完成**：多 membership 用户登录租户选择（`LoginReq.TenantId` 显式选择走同一 membership 门禁、错租户拒绝、歧义消解）+ `GET /auth/login-tenants` 候选列表端点 + MFA 挑战租户值透传；
+> 租户 scoped Casbin policy 写入面打通（create/update policy 增加 `tenantId`，服务端派生 `role:<key>@tenant:<id>` domain subject，per-tenant 命名空间唯一性校验），middleware domain 6 项隔离测试 + permission 4 项测试 + auth-gate 扩至 18 项全绿；
+> 前端 picker UI 留 UX gate（flag 仍 `compat`，UI 惰性），其余队列 4 后端范围收口。
+>
 > **2026-09-11 队列 4 开工（slice 1 完成）**：维护者已消费 "canary 放量" gate（canary review 结论为 Approved，evidence 已被确认）。
 > `tenant-core-auth-iam` slice 1 已交付并验证：session/token 租户 claim（`SessionData.TenantID` + `system_user_session.tenant_id`，additive 迁移）、
 > 多租户登录 membership 发现与签发门禁（单 membership 确定解析 / 无 membership 落平台层 / 歧义拒绝）、refresh 时 membership 复检（会话不过期于 membership）、

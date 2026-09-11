@@ -29,3 +29,34 @@ Reviewer posture: independent authorization reviewer; adversarially challenged d
 ## Verdict
 
 **Approved — slice 1 (session/token tenant semantics + isolation gates) meets the task packet's vertical-slice bar: migration additive, contract tests green, cross-tenant negatives proven, flag-off regression intact. Proceed to slice 2 (login tenant selection for multi-membership users + tenant-scoped policy authoring) before the data-infra task.**
+
+---
+
+# Review addendum: slice 2 (2026-09-12)
+
+Reviewer posture: independent authorization reviewer; adversarially challenged the new explicit-choice surface (choice validation, MFA carry divergence, policy namespace forging).
+
+## Adversarial attempts & outcomes
+
+| Attempt | Vector | Outcome |
+|---------|--------|---------|
+| Log into a tenant via explicit choice without membership | `tenantId=202` with no 202 membership | `tenant.forbidden` — the choice is validated through the same gate as discovery, no bypass (test 14) ✅ |
+| Use the picker endpoint to enumerate tenants | `GET /auth/login-tenants` as arbitrary user | returns only the caller's own active login-able memberships; token-authenticated; fail-closed on DB error (tests 17–18) ✅ |
+| Diverge tenant between MFA challenge and session | request login for tenant 101, attempt session in 202 through MFA verify | choice travels with the challenge and is re-validated at `CreateSessionForTenantWithContext` — divergence impossible without a membership (test 16) ✅ |
+| Forge a domain subject by writing a policy for a foreign tenant | create policy with `tenantId` of a tenant the admin has no relation to | policy authoring is a platform-admin API surface (pre-existing authorization unchanged); tenant existence + active status validated; subject namespace is derived server-side from `tenantId`, not from client-supplied subject strings ✅ |
+| Cross-tenant policy leak via middleware | tenant-101 `role:x@tenant:101` policy vs 202-context request | dedicated `CrossTenantPolicyDoesNotLeak` test: 202 context denied ✅ |
+| Compat regression from new policy writes | flag off, policy with `tenantId` still writable | writes are inert under compat (subject stored, expansion consults domain subject only with resolved tenant context); compat context ignores tenant policies (test) ✅ |
+| Uniqueness collision across namespaces | same role key in tenant 101 and 202 | uniqueness check namespaced per tenant — both coexist; global namespace unaffected ✅ |
+
+## Findings (slice 2)
+
+1. **Choice never widens access**: explicit `tenantId` only *narrows/redirects* within memberships the gate would already accept; any other value fails closed with the same sentinel as ambiguity.
+2. **Picker is read-only and self-scoped**: no tenant enumeration beyond one's own memberships; response fields limited to tenant id/name/role.
+3. **MFA seam closed**: the challenge store carries the choice; session creation re-validates — no second unvalidated entry point.
+4. **Authoring surface stays platform-admin**: tenant-scoped policy writes do not introduce a new authorization role; validation adds tenant status checks on top of the existing permission-service guards.
+5. **Flag-off safety**: under compat, tenant policies are writable but inert (middleware ignores domain subjects without tenant context); no behavior change for single-tenant deployments.
+6. **Stop-point check**: no default-allow, no cross-tenant leak, no new forgery path; single-tenant regression green (full suites). No stop condition triggered.
+
+## Verdict (slice 2)
+
+**Approved — slice 2 closes the two slice-1 gaps that were backend-reachable (explicit tenant selection + tenant-scoped policy authoring). Remaining for the task: frontend picker UI (UX gate; inert under compat), audit-row tenant columns (queue 5), browser E2E (queue 6). Queue 4 backend scope is complete.**

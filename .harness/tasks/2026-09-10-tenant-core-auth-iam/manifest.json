@@ -4,7 +4,7 @@
   "goal": "Implement tenant-aware membership, session/token/MFA, roles, Casbin domain, data scope and administrator boundaries after canary proof.",
   "primaryLayer": "system/auth",
   "status": "in-progress",
-  "statusNote": "2026-09-11: slice 1 implemented and verified in-session (session/token tenant claim, login membership discovery, issuance/refresh gates, Casbin domain expansion, membership revocation); evidence at .harness/evidence/2026-09-10-tenant-core-auth-iam/. Remaining: slice 2 (login tenant selection for multi-membership users, tenant-scoped policy authoring), audit-row tenant columns (data-infra scope), browser smoke (task 6). Canary 放量 gate consumed by maintainer 2026-09-11.",
+  "statusNote": "2026-09-11: slice 1 implemented and verified in-session (session/token tenant claim, login membership discovery, issuance/refresh gates, Casbin domain expansion, membership revocation); evidence at .harness/evidence/2026-09-10-tenant-core-auth-iam/. 2026-09-12: slice 2 delivered and verified (LoginReq.TenantId explicit choice validated through the membership gate, GET /auth/login-tenants picker endpoint, MFA challenge tenant carry-through, tenant-scoped Casbin policy authoring via tenantId on create/update policy APIs with per-tenant namespace uniqueness). Remaining: frontend picker UI (UX gate, inert under compat), audit-row tenant columns (data-infra scope), browser smoke (task 6). Canary 放量 gate consumed by maintainer 2026-09-11.",
   "priority": "critical",
   "estimatedComplexity": "epic",
   "technicalDebtFlag": "yes",

@@ -1,4 +1,4 @@
-# Evidence: 2026-09-10-tenant-core-auth-iam — slice 1 (session/token tenant semantics)
+# Evidence: 2026-09-10-tenant-core-auth-iam — slice 1 (session/token tenant semantics) + slice 2 (login tenant selection + tenant-scoped policy authoring)
 
 Date: 2026-09-11 · Branch: fix/i18n-s3649-zero · Flag default: `platform.tenant_mode=compat` (unchanged)
 
@@ -52,10 +52,40 @@ Plus 6 pure unit tests in `pkg/tenant/authz_test.go` (subject format, expansion 
 - **Canary 放量 gate (consumed)**: maintainer acknowledged canary isolation evidence in-session (2026-09-11), per master plan stop-condition "canary 放量". Canary review verdict was Approved.
 - Remaining gates per manifest: schema/migration approval for new `system_user_session.tenant_id` column is AutoMigrate-only (additive, default 0, no data rewrite) — production migration execution still gated; Casbin/admin boundary approval for any policy *writes* using domain subjects (this slice only reads/expands); staged rollout approval unchanged.
 
+## Slice 2 (2026-09-12): login tenant selection + tenant-scoped policy authoring
+
+| Deliverable | Key files |
+|-------------|-----------|
+| Explicit tenant choice at login | `LoginReq.TenantId` (uint64, optional); discovery validates the choice through the same membership gate — wrong/inactive membership ⇒ `tenant.forbidden` (never silent fallback to another tenant) | `modules/auth/login/login_dto.go`, `login_runtime.go` (`resolveLoginTenantClaim` signature + `validateChosenTenant`) |
+| Tenant picker data source | `GET /auth/login-tenants` (token-authenticated) returns active login-able memberships via `tenant.ListActiveMembershipsForUser` (tenant master + role only, no leaks) | `modules/auth/module.go:65`, `login_handler.go` (`GetLoginTenantCandidates`), `login_tenant_candidates.go` |
+| MFA carry-through | `MFAVerifyReq.TenantId` carried through the challenge store → `CreateSessionForTenantWithContext(ctx, userID, roles, ip, ua, tenantChoice)`; choice re-validated at session creation, challenge-to-session choice cannot diverge from the login request | `modules/auth/mfa/mfa_service.go`, `login_runtime.go` |
+| Tenant-scoped policy authoring | `CreatePolicyReq.TenantId` / `UpdatePolicyReq.TenantId` (min=1): validates tenant exists + active, writes Casbin subject `role:<key>@tenant:<id>` with domain field = tenant id (contract §4), uniqueness check namespaced per tenant | `modules/system/iam/permission/permission_dto.go`, `permission_service.go` |
+
+### Slice-2 test results (18 auth-gate + 6 middleware + 4 permission, all DB-backed)
+
+New in `modules/auth/login/login_tenant_gate_test.go` (tests 13–18):
+
+13. `ExplicitTenantChoiceHonored` — login with `tenantId=101` where user has memberships in 101+202 ⇒ claim 101, deterministic. ✅
+14. `ExplicitChoiceWrongTenantRejected` — login with `tenantId=202` but no 202 membership ⇒ `tenant.forbidden`. ✅
+15. `ExplicitChoiceResolvesAmbiguity` — two active memberships + explicit id ⇒ no more `tenant.forbidden`. ✅
+16. `MFAChoiceCarriedToSession` — challenge with tenant 101, verify ⇒ session claim 101. ✅
+17. `LoginTenantsEndpointListsActiveOnly` — endpoint returns active memberships only (disabled/suspended excluded). ✅
+18. `CandidatesFailClosedOnDBError` — DB failure ⇒ error, never empty-but-successful list. ✅
+
+`internal/middleware/casbin_tenant_domain_test.go` (6 tests, real enforcer): domain policy grants only in matching tenant context; tenant context without domain policy denied; **cross-tenant policy does not leak** (101 policy never authorizes 202 context); compat context ignores tenant policies; global policy still applies in tenant context; nil tenant context = global-only.
+
+`modules/system/iam/permission/permission_tenant_policy_test.go` (4 tests): domain subject stored verbatim; uniqueness per (role, tenant) namespace; invalid/suspended tenant rejected; update moving the tenant moves the namespace.
+
+### Slice-2 verification
+
+- DB-backed: full battery green (`./pkg/... ./internal/... ./modules/auth/... ./modules/system/...`).
+- DSN-less: 0 FAIL. `go build`/`go vet`/`gofmt` clean.
+- i18n: 5×2807 keys missing=0 extra=0; `tsc -b` exit 0; doc links strict 0 findings.
+
 ## Gaps (explicit)
 
-- **Casbin domain policies are not yet writable anywhere**: no UI/API seeds `role:<key>@tenant:<id>` policies. The expansion is live and correct (global-first, then domain) but tenant-scoped policy authoring belongs to the remaining slice of this task or the data-infra task.
-- **Login tenant selection UI** for users with multiple memberships: currently deny-by-default with `tenant.forbidden`. A `tenantId` field on `LoginReq` + tenant-picker surface is deferred to the next slice (needs UX decision — maintainer gate).
+- ~~**Casbin domain policies are not yet writable anywhere**~~ → **closed in slice 2**: tenant-scoped policy authoring via `tenantId` on create/update policy APIs; middleware expansion + authoring now round-trip (covered by permission + middleware tests).
+- ~~**Login tenant selection UI** for users with multiple memberships~~ → **backend closed in slice 2** (`LoginReq.TenantId` + `GET /auth/login-tenants` + MFA carry-through); **remaining**: the frontend picker UI itself (deferred — needs UX gate and is inert while flag stays `compat`);
 - **Two-tenant runtime smoke of the full login→dict flow through HTTP** (Playwright): unit/integration layer proven DB-backed; end-to-end browser evidence deferred to task 6 verification matrix.
 - **Audit/security-event rows** do not yet carry tenant_id columns (data-infra task scope).
 - `RevokeUserSessionsInTenant` blacklists per-user rather than per-(user,tenant) — safe over-approximation; per-tenant revocation would need a session-index Redis key (noted for the data-infra task if cross-tenant users become common).
