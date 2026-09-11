@@ -270,6 +270,13 @@ func (s *Runtime) CreateSession(userID uint64, roles []string, ip, userAgent str
 }
 
 func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, roles []string, ip, userAgent string) (*authtoken.Pair, error) {
+	return s.CreateSessionForTenantWithContext(ctx, userID, roles, ip, userAgent, 0)
+}
+
+// CreateSessionForTenantWithContext creates a session stamped with the given
+// explicit tenant choice (0 = auto-discovery). The choice is still validated
+// by the issuance gate — callers cannot stamp a claim they lack membership for.
+func (s *Runtime) CreateSessionForTenantWithContext(ctx context.Context, userID uint64, roles []string, ip, userAgent string, tenantChoice uint64) (*authtoken.Pair, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -280,9 +287,10 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 	now := time.Now()
 
 	// Tenant discovery (contract §3.1 source 2): multi mode resolves the
-	// login tenant from active membership; ambiguous/erroneous membership
-	// state denies login. Compat mode returns no claim (zero behavior change).
-	tenantClaim, err := s.resolveLoginTenantClaim(userID)
+	// login tenant from the explicit choice or active membership;
+	// ambiguous/erroneous membership state denies login. Compat mode returns
+	// no claim (zero behavior change).
+	tenantClaim, err := s.resolveLoginTenantClaim(userID, tenantChoice)
 	if err != nil {
 		return nil, err
 	}
@@ -326,14 +334,25 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 }
 
 // resolveLoginTenantClaim discovers the tenant claim to stamp into the new
-// session (contract §3.1). Compat mode: always 0. Multi mode: deterministic
-// single-membership resolution via pkg/tenant; zero memberships => 0 (the
-// subject logs into the platform/compat population); ambiguous or
-// inconsistent membership state denies login (deny-by-default).
-func (s *Runtime) resolveLoginTenantClaim(userID uint64) (uint64, error) {
+// session (contract §3.1). Compat mode: always 0. Multi mode:
+//   - explicit tenantChoice > 0 wins and is validated through the issuance
+//     gate (active membership + active tenant master) — this is the picker
+//     path for multi-membership users (slice 2);
+//   - without a choice, single-membership subjects resolve deterministically;
+//   - zero memberships => 0 (the subject logs into the platform population);
+//   - ambiguous memberships without a choice deny (never silently narrowed).
+func (s *Runtime) resolveLoginTenantClaim(userID, tenantChoice uint64) (uint64, error) {
 	mode := tenant.NormalizeMode(tenant.FeatureFlagSettingKeyReader(s.db))
 	if mode != tenant.ModeMulti {
+		// Compat ignores any requested tenant: no claim is ever stamped.
 		return 0, nil
+	}
+	if tenantChoice != 0 {
+		return tenant.GateSessionIssuance(s.db, tenant.IssuanceCheckInput{
+			Mode:     mode,
+			UserID:   userID,
+			TenantID: tenantChoice,
+		})
 	}
 	discovery, err := tenant.DiscoverDefaultTenant(s.db, userID)
 	if err != nil {

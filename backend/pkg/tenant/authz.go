@@ -208,6 +208,52 @@ func IsTenantGateError(err error) bool {
 		errors.Is(err, ErrTenantContextMissing)
 }
 
+// LoginTenantCandidate is one selectable tenant for the login picker: only
+// active memberships in loginable (active) tenants are listed. Master-data
+// reads stay in pkg/tenant; the caller never touches the tenants table
+// directly (contract §7).
+type LoginTenantCandidate struct {
+	TenantID uint64 `json:"tenantId"`
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+}
+
+// ListActiveMembershipsForUser returns the login-able tenant candidates for a
+// user: active membership ∧ active tenant master. Missing tables or query
+// errors return an error so callers can fail closed.
+func ListActiveMembershipsForUser(db *gorm.DB, userID uint64) ([]LoginTenantCandidate, error) {
+	if db == nil || userID == 0 {
+		return nil, nil
+	}
+	var rows []struct {
+		TenantID uint64
+		Code     string
+		Name     string
+		Role     string
+	}
+	err := db.Table("tenant_memberships").
+		Select("tenant_memberships.tenant_id AS tenant_id, tenants.code AS code, tenants.name AS name, tenant_memberships.role AS role").
+		Joins("JOIN tenants ON tenants.id = tenant_memberships.tenant_id").
+		Where("tenant_memberships.user_id = ? AND tenant_memberships.status = ? AND tenants.status = ?",
+			userID, MembershipActive, TenantStatusActive).
+		Order("tenant_memberships.tenant_id asc").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	candidates := make([]LoginTenantCandidate, 0, len(rows))
+	for _, row := range rows {
+		candidates = append(candidates, LoginTenantCandidate{
+			TenantID: row.TenantID,
+			Code:     row.Code,
+			Name:     row.Name,
+			Role:     row.Role,
+		})
+	}
+	return candidates, nil
+}
+
 // FeatureFlagSettingKeyReader reads the raw `platform.tenant_mode` value
 // directly from system_setting (used by callers that have a raw *gorm.DB but
 // no SettingService handle, e.g. the auth runtime). Fail-safe: missing table

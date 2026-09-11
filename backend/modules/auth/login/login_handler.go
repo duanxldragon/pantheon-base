@@ -135,7 +135,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.CreateSessionWithContext(c.Request.Context(), currentUser.ID, roles, ip, userAgent)
+	tokenPair, err := h.service.CreateSessionForTenantWithContext(c.Request.Context(), currentUser.ID, roles, ip, userAgent, req.TenantId)
 	if err != nil {
 		// Tenant gates surface their own i18n keys (contract §5); all other
 		// failures keep the generic session-creation message.
@@ -176,9 +176,14 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	clientInfo := authsessiondomain.ParseClientInfo(userAgent)
 	resp, err := h.service.VerifyMFAChallengeWithContext(c.Request.Context(), &req, ip, userAgent)
 	if err != nil {
+		// Tenant gates (explicit choice rejected at MFA-final session issuance)
+		// surface their contract §5 keys; everything else keeps MFA messages.
 		messageKey := common.ResolveErrorMessageKey(err, "auth.mfa.verify.error")
+		if tenant.IsTenantGateError(err) {
+			messageKey = common.ErrMessage(err)
+		}
 		h.service.RecordLoginLog(common.GetRequestID(c), "", ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
-		common.Fail(c, common.CodeUnauthorized, messageKey)
+		common.Fail(c, common.CodeForbidden, messageKey)
 		return
 	}
 
@@ -191,6 +196,14 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	if !writeMFASuccessResponse(c, resp) {
 		return
 	}
+}
+
+// GetLoginTenantCandidates lists the tenants the authenticated subject may
+// explicitly log into (multi-membership picker, contract §3.1). Empty under
+// compat or on error — the UI keeps the picker hidden (fail closed).
+func (h *AuthHandler) GetLoginTenantCandidates(c *gin.Context) {
+	candidates := h.service.ListLoginTenantCandidates(c.Request.Context(), common.GetUserID(c))
+	common.Success(c, gin.H{"items": candidates})
 }
 
 func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {

@@ -71,7 +71,7 @@ func TestAuthTenantGate_CompatModeNoClaim(t *testing.T) {
 	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
 	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
 
-	claim, err := f.runtime.resolveLoginTenantClaim(42)
+	claim, err := f.runtime.resolveLoginTenantClaim(42, 0)
 	if err != nil {
 		t.Fatalf("compat resolveLoginTenantClaim: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestAuthTenantGate_SingleMembershipResolves(t *testing.T) {
 	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
 	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
 
-	claim, err := f.runtime.resolveLoginTenantClaim(42)
+	claim, err := f.runtime.resolveLoginTenantClaim(42, 0)
 	if err != nil {
 		t.Fatalf("resolveLoginTenantClaim: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestAuthTenantGate_NoMembershipPlatformPopulation(t *testing.T) {
 	f := newAuthTenantFixture(t)
 	f.seedSetting(t, tenant.ModeMulti)
 
-	claim, err := f.runtime.resolveLoginTenantClaim(77)
+	claim, err := f.runtime.resolveLoginTenantClaim(77, 0)
 	if err != nil {
 		t.Fatalf("no-membership resolve: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestAuthTenantGate_AmbiguousMembershipsDenied(t *testing.T) {
 	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
 	f.seedMembership(t, 202, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
 
-	if _, err := f.runtime.resolveLoginTenantClaim(42); !errors.Is(err, tenant.ErrTenantForbidden) {
+	if _, err := f.runtime.resolveLoginTenantClaim(42, 0); !errors.Is(err, tenant.ErrTenantForbidden) {
 		t.Fatalf("ambiguous memberships err = %v, want ErrTenantForbidden", err)
 	}
 }
@@ -137,7 +137,7 @@ func TestAuthTenantGate_DisabledMembershipFallsBackToPlatform(t *testing.T) {
 	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
 	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipDisabled)
 
-	claim, err := f.runtime.resolveLoginTenantClaim(42)
+	claim, err := f.runtime.resolveLoginTenantClaim(42, 0)
 	if err != nil {
 		t.Fatalf("disabled membership resolve: %v", err)
 	}
@@ -159,10 +159,10 @@ func TestAuthTenantGate_TenantStatusGates(t *testing.T) {
 	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
 	f.seedMembership(t, 202, 43, tenant.MembershipRoleMember, tenant.MembershipActive)
 
-	if _, err := f.runtime.resolveLoginTenantClaim(42); !errors.Is(err, tenant.ErrTenantSuspended) {
+	if _, err := f.runtime.resolveLoginTenantClaim(42, 0); !errors.Is(err, tenant.ErrTenantSuspended) {
 		t.Fatalf("suspended tenant err = %v, want ErrTenantSuspended", err)
 	}
-	if _, err := f.runtime.resolveLoginTenantClaim(43); !errors.Is(err, tenant.ErrTenantArchived) {
+	if _, err := f.runtime.resolveLoginTenantClaim(43, 0); !errors.Is(err, tenant.ErrTenantArchived) {
 		t.Fatalf("archived tenant err = %v, want ErrTenantArchived", err)
 	}
 }
@@ -268,7 +268,106 @@ func TestAuthTenantGate_IssuanceCompatNoStamp(t *testing.T) {
 	}
 }
 
-// 12. Token payload round-trips the claim through the Redis JSON envelope.
+// ─────────────────────────────────────────────────────────────
+// Slice 2: explicit tenant choice (picker) paths
+// ─────────────────────────────────────────────────────────────
+
+// 13. Explicit choice resolves for a multi-membership user (picker path):
+// ambiguous memberships no longer deny when the subject picks a tenant.
+func TestAuthTenantGate_ExplicitChoiceResolvesMultiMembership(t *testing.T) {
+	f := newAuthTenantFixture(t)
+	f.seedSetting(t, tenant.ModeMulti)
+	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
+	f.seedTenant(t, 202, "beta", tenant.TenantStatusActive)
+	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
+	f.seedMembership(t, 202, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
+
+	claim, err := f.runtime.resolveLoginTenantClaim(42, 202)
+	if err != nil {
+		t.Fatalf("explicit choice resolve: %v", err)
+	}
+	if claim != 202 {
+		t.Fatalf("claim = %d, want 202", claim)
+	}
+}
+
+// 14. Explicit choice WITHOUT membership is rejected (claim forgery guard):
+// the gate validates the choice against active membership regardless of source.
+func TestAuthTenantGate_ExplicitChoiceWithoutMembershipDenied(t *testing.T) {
+	f := newAuthTenantFixture(t)
+	f.seedSetting(t, tenant.ModeMulti)
+	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
+	f.seedTenant(t, 202, "beta", tenant.TenantStatusActive)
+	// user 42 only belongs to 101
+	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
+
+	if _, err := f.runtime.resolveLoginTenantClaim(42, 202); !errors.Is(err, tenant.ErrTenantForbidden) {
+		t.Fatalf("forged choice err = %v, want ErrTenantForbidden", err)
+	}
+}
+
+// 15. Explicit choice for a suspended tenant is rejected even with membership.
+func TestAuthTenantGate_ExplicitChoiceSuspendedTenantDenied(t *testing.T) {
+	f := newAuthTenantFixture(t)
+	f.seedSetting(t, tenant.ModeMulti)
+	f.seedTenant(t, 101, "alpha", tenant.TenantStatusSuspended)
+	f.seedMembership(t, 101, 42, tenant.MembershipRoleOwner, tenant.MembershipActive)
+
+	if _, err := f.runtime.resolveLoginTenantClaim(42, 101); !errors.Is(err, tenant.ErrTenantSuspended) {
+		t.Fatalf("suspended choice err = %v, want ErrTenantSuspended", err)
+	}
+}
+
+// 16. Compat mode ignores the explicit choice entirely (no claim stamped,
+// zero behavior change under flag-off).
+func TestAuthTenantGate_CompatIgnoresExplicitChoice(t *testing.T) {
+	f := newAuthTenantFixture(t)
+	f.seedSetting(t, tenant.ModeCompat)
+	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
+	f.seedMembership(t, 101, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
+
+	claim, err := f.runtime.resolveLoginTenantClaim(42, 101)
+	if err != nil {
+		t.Fatalf("compat explicit choice: %v", err)
+	}
+	if claim != 0 {
+		t.Fatalf("compat explicit choice claim = %d, want 0", claim)
+	}
+}
+
+// 17. Candidate listing returns only active memberships in active tenants.
+func TestAuthTenantGate_ListCandidates(t *testing.T) {
+	f := newAuthTenantFixture(t)
+	f.seedSetting(t, tenant.ModeMulti)
+	f.seedTenant(t, 101, "alpha", tenant.TenantStatusActive)
+	f.seedTenant(t, 202, "beta", tenant.TenantStatusActive)
+	f.seedTenant(t, 303, "gamma", tenant.TenantStatusSuspended)
+	f.seedMembership(t, 101, 42, tenant.MembershipRoleOwner, tenant.MembershipActive)
+	f.seedMembership(t, 202, 42, tenant.MembershipRoleMember, tenant.MembershipActive)
+	f.seedMembership(t, 303, 42, tenant.MembershipRoleMember, tenant.MembershipActive)   // suspended tenant
+	f.seedMembership(t, 101, 43, tenant.MembershipRoleMember, tenant.MembershipDisabled) // other user, disabled
+
+	candidates := f.runtime.ListLoginTenantCandidates(context.Background(), 42)
+	if len(candidates) != 2 {
+		t.Fatalf("candidates = %+v, want 2 (101, 202)", candidates)
+	}
+	if candidates[0].TenantID != 101 || candidates[1].TenantID != 202 {
+		t.Fatalf("candidate order/ids = %d,%d, want 101,202", candidates[0].TenantID, candidates[1].TenantID)
+	}
+	if candidates[0].Code != "alpha" || candidates[0].Role != tenant.MembershipRoleOwner {
+		t.Fatalf("candidate metadata = %+v, want alpha/owner", candidates[0])
+	}
+
+	// Compat mode: empty list (picker hidden).
+	if err := f.db.Exec("UPDATE system_setting SET setting_value = ? WHERE setting_key = ?", tenant.ModeCompat, tenant.FeatureFlagSettingKey).Error; err != nil {
+		t.Fatalf("flip flag: %v", err)
+	}
+	if got := f.runtime.ListLoginTenantCandidates(context.Background(), 42); len(got) != 0 {
+		t.Fatalf("compat candidates = %+v, want empty", got)
+	}
+}
+
+// 18. Token payload round-trips the claim through the Redis JSON envelope.
 func TestAuthTenantGate_SessionDataClaimRoundTrip(t *testing.T) {
 	data := &authtoken.SessionData{UserID: 42, Username: "u", TenantID: 101}
 	b, err := json.Marshal(data)

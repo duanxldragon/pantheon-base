@@ -59,6 +59,10 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					apiAuth.POST("/login", loginRateLimiter, authHandler.LoginHandler)
 					apiAuth.POST("/mfa/verify", mfaRateLimiter, authHandler.VerifyMFAHandler)
 					apiAuth.POST("/refresh", refreshRateLimiter, authHandler.RefreshTokenHandler)
+					// Login tenant picker (slice 2, contract §3.1): lists active
+					// memberships for an authenticated subject. Compat mode and
+					// errors return an empty list (fail closed, UI stays hidden).
+					apiAuth.GET("/login-tenants", middleware.TokenAuthMiddleware(database.RDB), authHandler.GetLoginTenantCandidates)
 				}
 
 				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())

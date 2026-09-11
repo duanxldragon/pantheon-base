@@ -27,6 +27,7 @@ type IdentityProvider interface {
 // SessionCreator abstracts session creation after MFA verification.
 type SessionCreator interface {
 	CreateSessionWithContext(ctx context.Context, userID uint64, roles []string, ip, userAgent string) (*authtoken.Pair, error)
+	CreateSessionForTenantWithContext(ctx context.Context, userID uint64, roles []string, ip, userAgent string, tenantChoice uint64) (*authtoken.Pair, error)
 }
 
 // MFAVerifyResult is the result of a successful MFA challenge verification.
@@ -47,6 +48,10 @@ type MFAVerifyResult struct {
 type MFAVerifyReq struct {
 	ChallengeID string `json:"challengeId" binding:"required"`
 	Code        string `json:"code" binding:"required"`
+	// TenantId carries the explicit tenant choice through the MFA challenge
+	// (slice 2: multi-membership login). 0 = auto-discovery. The choice is
+	// validated by the session-issuance gate regardless of source.
+	TenantId uint64 `json:"tenantId" binding:"omitempty,min=1"`
 }
 
 // MFAChallengeResp is the response when MFA is required before session creation.
@@ -176,7 +181,7 @@ func (s *Service) VerifyChallengeWithContext(ctx context.Context, req *MFAVerify
 	if err != nil {
 		return nil, err
 	}
-	tokenPair, err := s.creator.CreateSessionWithContext(ctx, currentUser.ID, roles, ip, userAgent)
+	tokenPair, err := s.creator.CreateSessionForTenantWithContext(ctx, currentUser.ID, roles, ip, userAgent, req.TenantId)
 	if err != nil {
 		return nil, err
 	}
