@@ -1108,6 +1108,10 @@ const koKRFallback = {
   'user.login.error.disabled': '이 계정은 비활성화되었습니다. 관리자에게 문의하세요.',
   'auth.login.error.source_blocked':
     '이 출처에서 로그인 실패가 너무 많습니다. 잠시 후 다시 시도하세요.',
+  'auth.login.error.tenant_forbidden':
+    '이 계정은 선택한 테넌트에 로그인할 수 없습니다. 플랫폼 관리자에게 문의하세요.',
+  'auth.login.error.tenant_suspended':
+    '이 계정의 테넌트가 중지되었습니다. 플랫폼 관리자에게 문의하세요.',
   'user.batch.empty': '먼저 사용자를 선택하세요',
   'user.batch.not_found': '일부 사용자가 더 이상 존재하지 않습니다. 새로고침 후 다시 시도하세요',
   'system.dict.subtitle':

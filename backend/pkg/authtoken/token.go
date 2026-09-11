@@ -76,6 +76,12 @@ type SessionData struct {
 	LastIP         string   `json:"ip"`
 	UserAgent      string   `json:"ua"`
 	LastActivityAt int64    `json:"lat"`
+	// TenantID is the trusted tenant claim stamped at issuance (contract
+	// TENANT_CONTRACT_V1 §3.1 source 2). 0 = platform-global / compat. Older
+	// sessions without the field decode as 0, which keeps them on the compat
+	// resolution path (deny-by-default still applies in multi mode without
+	// membership — see pkg/tenant).
+	TenantID uint64 `json:"tn,omitempty"`
 }
 
 type refreshEntry struct {

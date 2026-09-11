@@ -15,6 +15,11 @@ type SystemUserSession struct {
 	RevokedAt        *time.Time `json:"revokedAt"`
 	CreatedAt        time.Time  `json:"createdAt"`
 	UpdatedAt        time.Time  `json:"updatedAt"`
+	// TenantID is the tenant claim this session was issued under
+	// (contract §3.1 source 2). 0 = platform-global / compat. AutoMigrate
+	// adds the column with the default below; existing rows read as 0,
+	// which keeps them on the compat resolution path.
+	TenantID uint64 `gorm:"not null;default:0" json:"tenantId"`
 }
 
 func (SystemUserSession) TableName() string {

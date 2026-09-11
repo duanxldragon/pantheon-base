@@ -1164,6 +1164,10 @@ const jaJPFallback = {
   'user.login.error.disabled': 'このアカウントは無効です。管理者に連絡してください。',
   'auth.login.error.source_blocked':
     'この送信元からのログイン失敗が多すぎます。しばらくしてから再試行してください。',
+  'auth.login.error.tenant_forbidden':
+    'このアカウントは選択されたテナントにログインできません。プラットフォーム管理者に連絡してください。',
+  'auth.login.error.tenant_suspended':
+    'このアカウントのテナントは停止されています。プラットフォーム管理者に連絡してください。',
   'user.batch.empty': '先にユーザーを選択してください',
   'user.batch.not_found': '一部のユーザーは存在しなくなりました。更新して再試行してください',
   'system.dict.subtitle':

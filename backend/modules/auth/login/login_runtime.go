@@ -24,6 +24,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/platformprefs"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -278,6 +279,14 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 	policy := s.getAuthRuntimePolicy()
 	now := time.Now()
 
+	// Tenant discovery (contract §3.1 source 2): multi mode resolves the
+	// login tenant from active membership; ambiguous/erroneous membership
+	// state denies login. Compat mode returns no claim (zero behavior change).
+	tenantClaim, err := s.resolveLoginTenantClaim(userID)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := s.governSessionInventory(now, policy); err != nil {
 		return nil, err
 	}
@@ -298,11 +307,12 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 		LastActivityAt:   &now,
 		LastIP:           ip,
 		UserAgent:        session.TruncateString(userAgent, 255),
+		TenantID:         tenantClaim,
 	}
 	if err := s.db.Create(&sess).Error; err != nil {
 		return nil, err
 	}
-	pair, err := s.issueTokenPair(ctx, &u, roles, &sess)
+	pair, err := s.issueTenantTokenPair(ctx, u.ID, u.Username, roles, &sess, tenantClaim)
 	if err != nil {
 		// Token issuance failed after the session row was persisted; remove it so
 		// failed logins don't accumulate orphan sessions in the governance views.
@@ -313,6 +323,31 @@ func (s *Runtime) CreateSessionWithContext(ctx context.Context, userID uint64, r
 		return nil, err
 	}
 	return pair, nil
+}
+
+// resolveLoginTenantClaim discovers the tenant claim to stamp into the new
+// session (contract §3.1). Compat mode: always 0. Multi mode: deterministic
+// single-membership resolution via pkg/tenant; zero memberships => 0 (the
+// subject logs into the platform/compat population); ambiguous or
+// inconsistent membership state denies login (deny-by-default).
+func (s *Runtime) resolveLoginTenantClaim(userID uint64) (uint64, error) {
+	mode := tenant.NormalizeMode(tenant.FeatureFlagSettingKeyReader(s.db))
+	if mode != tenant.ModeMulti {
+		return 0, nil
+	}
+	discovery, err := tenant.DiscoverDefaultTenant(s.db, userID)
+	if err != nil {
+		return 0, err
+	}
+	if !discovery.Resolved {
+		return 0, nil
+	}
+	// Gate: membership + tenant master status must both hold (contract §5).
+	return tenant.GateSessionIssuance(s.db, tenant.IssuanceCheckInput{
+		Mode:     mode,
+		UserID:   userID,
+		TenantID: discovery.TenantID,
+	})
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -852,6 +887,12 @@ func (s *Runtime) governSessionInventory(now time.Time, policy authRuntimePolicy
 }
 
 func (s *Runtime) issueTokenPair(ctx context.Context, u *iamuser.SystemUser, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+	return s.issueTenantTokenPair(ctx, u.ID, u.Username, roles, sess, 0)
+}
+
+// issueTenantTokenPair stores the session/refresh pair with the resolved
+// tenant claim. claim=0 keeps the legacy payload shape (compat behavior).
+func (s *Runtime) issueTenantTokenPair(ctx context.Context, userID uint64, username string, roles []string, sess *session.SystemUserSession, tenantClaim uint64) (*authtoken.Pair, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -862,16 +903,17 @@ func (s *Runtime) issueTokenPair(ctx context.Context, u *iamuser.SystemUser, rol
 	refreshTTL := authtoken.RefreshTokenTTL
 
 	accessData := &authtoken.SessionData{
-		UserID:         u.ID,
-		Username:       u.Username,
+		UserID:         userID,
+		Username:       username,
 		RoleKeys:       roles,
 		SessionID:      sess.SessionID,
 		LastActivityAt: now.Unix(),
+		TenantID:       tenantClaim,
 	}
 	if err := authtoken.StoreSession(ctx, database.RDB, accessToken, accessData, accessTTL); err != nil {
 		return nil, err
 	}
-	if err := authtoken.StoreRefresh(ctx, database.RDB, refreshToken, u.ID, sess.SessionID, refreshTTL); err != nil {
+	if err := authtoken.StoreRefresh(ctx, database.RDB, refreshToken, userID, sess.SessionID, refreshTTL); err != nil {
 		return nil, err
 	}
 	sess.RefreshExpiresAt = now.Add(refreshTTL)
@@ -889,6 +931,11 @@ func (s *Runtime) issueTokenPairForSession(ctx context.Context, userID uint64, u
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	// Refresh carries the session's original claim (no re-discovery): the
+	// membership re-check for the claim happened in RefreshSessionWithContext
+	// before reaching here; rotating to a different tenant claim silently
+	// would break session↔tenant auditability.
+	tenantClaim := tenant.SessionTenantClaim(sess.TenantID)
 	accessToken := authtoken.NewAccessToken()
 	refreshToken := authtoken.NewRefreshToken()
 	now := time.Now()
@@ -901,6 +948,7 @@ func (s *Runtime) issueTokenPairForSession(ctx context.Context, userID uint64, u
 		RoleKeys:       roles,
 		SessionID:      sess.SessionID,
 		LastActivityAt: now.Unix(),
+		TenantID:       tenantClaim,
 	}
 	if err := authtoken.StoreSession(ctx, database.RDB, accessToken, accessData, accessTTL); err != nil {
 		return nil, err

@@ -16,6 +16,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/platformprefs"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -136,9 +137,14 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	tokenPair, err := h.service.CreateSessionWithContext(c.Request.Context(), currentUser.ID, roles, ip, userAgent)
 	if err != nil {
+		// Tenant gates surface their own i18n keys (contract §5); all other
+		// failures keep the generic session-creation message.
 		messageKey := common.ResolveErrorMessageKey(err, "auth.session.create.error")
+		if tenant.IsTenantGateError(err) {
+			messageKey = common.ErrMessage(err)
+		}
 		h.service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
-		common.Fail(c, common.CodeError, messageKey)
+		common.Fail(c, common.CodeForbidden, messageKey)
 		return
 	}
 

@@ -1830,6 +1830,8 @@ const zhCNFallback = {
   'user.login.error.password_wrong': '用户名或密码错误',
   'user.login.error.disabled': '账号已被禁用，请联系管理员',
   'auth.login.error.source_blocked': '当前来源登录失败次数过多，请稍后再试',
+  'auth.login.error.tenant_forbidden': '当前账号无法登录所选租户，请联系平台管理员',
+  'auth.login.error.tenant_suspended': '所属租户已被停用，请联系平台管理员',
   'user.batch.empty': '请先选择用户',
   'user.batch.not_found': '存在已不存在的用户，请刷新后重试',
   'role.admin.name': '系统管理员',

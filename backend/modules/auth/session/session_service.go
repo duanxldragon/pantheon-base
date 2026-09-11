@@ -12,6 +12,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -81,6 +82,17 @@ func (s *Service) RefreshSessionWithContext(ctx context.Context, sessionID strin
 	}
 	if sess.RevokedAt != nil || sess.RefreshExpiresAt.Before(time.Now()) {
 		return nil, common.ErrUnauthorized
+	}
+
+	// Tenant refresh gate (contract §2.2/§5, task packet risk node "stale
+	// membership"): a session must not outlive its membership. Compat mode
+	// and claim-less sessions pass unchanged (flag-off regression guarantee).
+	if err := tenant.GateSessionRefresh(db, tenant.RefreshCheckInput{
+		Mode:     tenant.NormalizeMode(tenant.FeatureFlagSettingKeyReader(db)),
+		UserID:   sess.UserID,
+		TenantID: sess.TenantID,
+	}); err != nil {
+		return nil, err
 	}
 
 	u, err := s.loader.GetUserByID(userID)

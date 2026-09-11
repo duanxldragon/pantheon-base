@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
@@ -18,9 +19,10 @@ import (
 //     (admin role key alone does not mean cross-tenant; the contract requires
 //     an explicit platform permission decision — canary: roleKeys contains
 //     the platform ops role AND membership is not required for header use).
-//  2. Subject tenant claim — wired from the auth session when the login flow
-//     starts issuing it (core auth/iam task). Until then sessions carry no
-//     claim, so multi-mode requests without header are deny-by-default.
+//  2. Subject tenant claim — the `tenantId` value stamped into the auth
+//     session at issuance (core auth/iam task) and surfaced by
+//     TokenAuthMiddleware. A numeric claim > 0 is trusted because only the
+//     issuance gate (pkg/tenant.GateSessionIssuance) can stamp it.
 //  3. Compat fallback — flag off resolves to global tenant 0.
 //
 // modeLoader is the cached flag reader; membershipDB resolves memberships
@@ -32,7 +34,7 @@ func TenantContextMiddleware(modeLoader *tenant.ModeLoader, membershipDB *gorm.D
 			mode = modeLoader.Load()
 		}
 
-		subjectTenant := c.GetString("tenantId") // auth session claim (core task wires this)
+		subjectTenant := subjectTenantClaim(c)
 		headerTenant := strings.TrimSpace(c.GetHeader(tenant.HeaderTenantID))
 
 		var ctx *tenant.Context
@@ -72,4 +74,25 @@ func subjectHasPlatformTenantOverride(c *gin.Context, membershipDB *gorm.DB) boo
 		}
 	}
 	return false
+}
+
+// subjectTenantClaim extracts the numeric tenant claim stamped into the auth
+// session at issuance. Gin stores it as uint64 (token middleware); a missing
+// or non-numeric value means "no claim".
+func subjectTenantClaim(c *gin.Context) string {
+	if v, ok := c.Get("tenantId"); ok {
+		switch id := v.(type) {
+		case uint64:
+			if id > 0 {
+				return strconv.FormatUint(id, 10)
+			}
+		case int:
+			if id > 0 {
+				return strconv.Itoa(id)
+			}
+		case string:
+			return strings.TrimSpace(id)
+		}
+	}
+	return ""
 }

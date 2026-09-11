@@ -39,6 +39,10 @@ var (
 	// ErrTenantForbidden: subject lacks membership / platform permission for
 	// the requested tenant (contract §5).
 	ErrTenantForbidden = errors.New("tenant.forbidden")
+	// ErrTenantSuspended: tenant master row is suspended (contract §5).
+	ErrTenantSuspended = errors.New("tenant.suspended")
+	// ErrTenantArchived: tenant master row is archived (contract §5).
+	ErrTenantArchived = errors.New("tenant.archived")
 )
 
 // ContextKey stores the resolved tenant context in the Gin context.

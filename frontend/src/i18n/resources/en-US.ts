@@ -1975,6 +1975,10 @@ const enUSFallback = {
   'user.login.error.disabled': 'This account is disabled. Please contact an administrator.',
   'auth.login.error.source_blocked':
     'Too many failed sign-in attempts from this source. Please try again later.',
+  'auth.login.error.tenant_forbidden':
+    'This account cannot sign in to the selected tenant. Please contact a platform administrator.',
+  'auth.login.error.tenant_suspended':
+    'The tenant for this account has been suspended. Please contact a platform administrator.',
   'user.batch.empty': 'Please select users first',
   'user.batch.not_found': 'Some users no longer exist. Please refresh and try again',
   'role.admin.name': 'Administrator',

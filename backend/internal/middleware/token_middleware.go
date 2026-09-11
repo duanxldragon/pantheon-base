@@ -185,6 +185,11 @@ func applyTokenContext(c *gin.Context, sessionData *authtoken.SessionData) {
 	c.Set("username", sessionData.Username)
 	c.Set("roleKeys", sessionData.RoleKeys)
 	c.Set("sessionId", sessionData.SessionID)
+	// Trusted tenant claim from the auth session (contract §3.1 source 2).
+	// 0 = no claim (compat population / platform-only user); the tenant
+	// middleware resolves it after this middleware. Sessions issued before
+	// the claim existed decode as 0 — deny-by-default covers multi mode.
+	c.Set("tenantId", sessionData.TenantID)
 	if len(sessionData.RoleKeys) > 0 {
 		c.Set("roleKey", sessionData.RoleKeys[0])
 	}

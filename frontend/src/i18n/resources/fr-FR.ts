@@ -1196,6 +1196,10 @@ const frFRFallback = {
   'user.login.error.disabled': 'Ce compte est désactivé. Veuillez contacter un administrateur.',
   'auth.login.error.source_blocked':
     'Trop de tentatives de connexion échouées depuis cette source. Veuillez réessayer plus tard.',
+  'auth.login.error.tenant_forbidden':
+    'Ce compte ne peut pas se connecter au tenant sélectionné. Veuillez contacter un administrateur de la plateforme.',
+  'auth.login.error.tenant_suspended':
+    'Le tenant de ce compte a été suspendu. Veuillez contacter un administrateur de la plateforme.',
   'user.batch.empty': 'Veuillez d’abord sélectionner des utilisateurs',
   'user.batch.not_found': 'Certains utilisateurs n’existent plus. Actualisez puis réessayez',
   'system.dict.subtitle':

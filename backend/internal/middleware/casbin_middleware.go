@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
-	"strings"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,8 +29,22 @@ func CasbinMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// Tenant domain expansion (contract §4): consult the global subject
+		// first, then the tenant-scoped subject role:<key>@tenant:<id> for the
+		// resolved request context. Compat contexts resolve to global subjects
+		// only — zero behavior change when the flag is off.
+		tenantCtx := tenant.FromGin(c)
 		allowed, err := authorizeRoleKeys(roleKeys, c.Request.URL.Path, c.Request.Method, func(roleKey, obj, act string) (bool, error) {
-			return database.Enforcer.Enforce(roleKey, obj, act)
+			for _, subject := range tenant.CasbinDomainPolicySubjects(roleKey, tenantCtx) {
+				ok, err := database.Enforcer.Enforce(subject, obj, act)
+				if err != nil {
+					return false, err
+				}
+				if ok {
+					return true, nil
+				}
+			}
+			return false, nil
 		})
 		if err != nil || !allowed {
 			failPermissionCheck(c, "permission.denied")
