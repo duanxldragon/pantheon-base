@@ -14,6 +14,13 @@ updated_at: 2026-09-11
 > 任务 2 `tenant-migration-runbook`（[Runbook](../../docs/runbooks/TENANT_MIGRATION_RUNBOOK.md) + 副本三类演练通过，生产执行待 G1--G4）；
 > 任务 3 `tenant-canary-slice`（dict 资源垂直切片，flag `platform.tenant_mode` 默认 `compat`，10 项双租户 hostile tests 全绿，flag-off 回归通过）。
 > 下一步为队列 4--6（core-auth-iam / core-data-infrastructure / verification-and-gray），开工前提：canary 隔离 evidence 的维护者 review（"canary 放量" gate）。
+>
+> **2026-09-11 队列 4 开工（slice 1 完成）**：维护者已消费 "canary 放量" gate（canary review 结论为 Approved，evidence 已被确认）。
+> `tenant-core-auth-iam` slice 1 已交付并验证：session/token 租户 claim（`SessionData.TenantID` + `system_user_session.tenant_id`，additive 迁移）、
+> 多租户登录 membership 发现与签发门禁（单 membership 确定解析 / 无 membership 落平台层 / 歧义拒绝）、refresh 时 membership 复检（会话不过期于 membership）、
+> Casbin domain subject 展开（global 优先 → `role:<key>@tenant:<id>`，contract §4）、membership 变更会话吊销 helper；
+> 12 项 DB-backed 双租户 hostile tests 全绿 + flag-off 回归通过，evidence 见 `.harness/evidence/2026-09-10-tenant-core-auth-iam/`。
+> 队列 4 剩余：多 membership 用户的登录租户选择 UI（需 UX gate）、租户 scoped policy 写入面；队列 5/6 未开工。
 
 ## 目标与边界
 
