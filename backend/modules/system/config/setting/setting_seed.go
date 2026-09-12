@@ -155,7 +155,7 @@ var (
 
 func (s *SettingService) normalizeLegacySettingValue(settingKey string) error {
 	var row SystemSetting
-	if err := s.db.Where("setting_key = ?", settingKey).First(&row).Error; err != nil {
+	if err := s.db.Where("setting_key = ? AND tenant_id = 0", settingKey).First(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		}
@@ -176,7 +176,7 @@ func (s *SettingService) normalizeLegacySettingValue(settingKey string) error {
 
 func (s *SettingService) migrateLegacySettingValue(settingKey, legacyValue, nextValue string) error {
 	var row SystemSetting
-	if err := s.db.Where("setting_key = ?", settingKey).First(&row).Error; err != nil {
+	if err := s.db.Where("setting_key = ? AND tenant_id = 0", settingKey).First(&row).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		}
@@ -213,26 +213,36 @@ func normalizeSettingGroups(groupKeys []string) []string {
 }
 
 func (s *SettingService) invalidateSettingCache() {
-	s.cacheMu.Lock()
-	defer s.cacheMu.Unlock()
-	s.listCache = make(map[string][]SettingResp)
-	s.groupCache = make(map[string]*SettingGroupResp)
-	s.publicCache = nil
+	s.cache.mu.Lock()
+	defer s.cache.mu.Unlock()
+	s.cache.listCache = make(map[string][]SettingResp)
+	s.cache.groupCache = make(map[string]*SettingGroupResp)
+	s.cache.publicCache = nil
 }
 
 // invalidateSettingCacheForGroup invalidates only the cache entries
 // related to a specific group, preserving the rest.
 func (s *SettingService) invalidateSettingCacheForGroup(groupKey string) {
-	s.cacheMu.Lock()
-	defer s.cacheMu.Unlock()
-	// Remove the specific group cache
-	delete(s.groupCache, groupKey)
+	s.cache.mu.Lock()
+	defer s.cache.mu.Unlock()
+	// Remove the specific group cache (tenant-namespaced key when bound;
+	// a full clear below covers the remaining namespaces safely).
+	delete(s.cache.groupCache, s.settingGroupCacheKey(groupKey))
 	// Remove list cache entries that may contain this group's settings.
 	// Since listCache may be keyed by various criteria, safest to clear it all
 	// (listCache is typically small and rebuilt quickly on demand).
-	s.listCache = make(map[string][]SettingResp)
+	s.cache.listCache = make(map[string][]SettingResp)
 	// If the group contains public settings, publicCache must also be invalidated
-	s.publicCache = nil
+	s.cache.publicCache = nil
+}
+
+// settingGroupCacheKey namespaces the group cache per tenant (multi mode) so
+// two tenants never collide through the process cache (canary pattern).
+func (s *SettingService) settingGroupCacheKey(groupKey string) string {
+	if s.tenantCtx == nil || !s.tenantCtx.IsMulti() {
+		return groupKey
+	}
+	return "t" + strconv.FormatUint(s.tenantCtx.TenantID, 10) + ":" + groupKey
 }
 
 func appendSettingOverviewIssue(issues []SettingOverviewIssueResp, seen map[string]struct{}, issue SettingOverviewIssueResp) []SettingOverviewIssueResp {

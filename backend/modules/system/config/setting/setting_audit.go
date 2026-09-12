@@ -8,6 +8,7 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +16,13 @@ import (
 type settingAuditPayload struct {
 	GroupKey string                   `json:"groupKey"`
 	Changes  []SettingAuditChangeResp `json:"changes"`
+}
+
+// tenantAuditScope pins the setting-audit read path to the request tenant
+// (queue-5 settings slice; the rows live in system_log_oper which now carries
+// tenant_id). Platform-global subjects keep full visibility; compat unchanged.
+func (s *SettingService) tenantAuditScope(db *gorm.DB) *gorm.DB {
+	return db.Where("title = ?", settingAuditTitle).Scopes(tenant.WithTenantScope(s.tenantCtx))
 }
 
 func (s *SettingService) BuildAuditPayload(groupKey string, req *SettingGroupUpdateReq, includeOld bool) (string, error) {
@@ -63,7 +71,7 @@ func collectAuditRequestValues(items []SettingUpdateItemReq) ([]string, map[stri
 
 func (s *SettingService) findAuditRows(groupKey string, keys []string) ([]SystemSetting, error) {
 	var rows []SystemSetting
-	err := s.db.Where("group_key = ? AND setting_key IN ?", strings.TrimSpace(groupKey), keys).Find(&rows).Error
+	err := s.tenantScope()(s.db).Where("group_key = ? AND setting_key IN ?", strings.TrimSpace(groupKey), keys).Find(&rows).Error
 	return rows, err
 }
 
@@ -161,7 +169,7 @@ func (s *SettingService) ListAudit(query *SettingAuditQuery) (*SettingAuditPageR
 		}
 	}
 
-	db := applyAuditFilters(s.db.Model(&systemSettingAuditLog{}).Where("title = ?", settingAuditTitle), query)
+	db := applyAuditFilters(s.tenantAuditScope(s.db.Model(&systemSettingAuditLog{})), query)
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -202,7 +210,7 @@ func (s *SettingService) ExportAudit(query *SettingAuditQuery) (*impexp.CSVFile,
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
-	db := applyAuditFilters(s.db.Model(&systemSettingAuditLog{}).Where("title = ?", settingAuditTitle), query)
+	db := applyAuditFilters(s.tenantAuditScope(s.db.Model(&systemSettingAuditLog{})), query)
 
 	var rows []systemSettingAuditLog
 	if err := db.Order("id desc").Find(&rows).Error; err != nil {

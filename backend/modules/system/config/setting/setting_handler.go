@@ -31,13 +31,20 @@ func NewSettingHandler(service *SettingService, uploadService *uploadpkg.Service
 	return &SettingHandler{service: service, uploadService: uploadService}
 }
 
+// boundService returns the service view bound to the request tenant context
+// (queue-5 settings slice; same canary pattern as DictHandler). Under compat
+// the shared service is returned unchanged.
+func (h *SettingHandler) boundService(c *gin.Context) *SettingService {
+	return h.service.WithTenantContext(tenant.FromGin(c))
+}
+
 func (h *SettingHandler) GetSettingList(c *gin.Context) {
 	var query SettingListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	items, err := h.service.List(&query)
+	items, err := h.boundService(c).List(&query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "setting.list.error")
 		return
@@ -46,7 +53,7 @@ func (h *SettingHandler) GetSettingList(c *gin.Context) {
 }
 
 func (h *SettingHandler) GetSettingOverview(c *gin.Context) {
-	overview, err := h.service.GetOverview()
+	overview, err := h.boundService(c).GetOverview()
 	if err != nil {
 		common.Fail(c, common.CodeError, "setting.overview.error")
 		return
@@ -55,7 +62,7 @@ func (h *SettingHandler) GetSettingOverview(c *gin.Context) {
 }
 
 func (h *SettingHandler) GetSettingGroup(c *gin.Context) {
-	group, err := h.service.GetGroup(c.Param("groupKey"))
+	group, err := h.boundService(c).GetGroup(c.Param("groupKey"))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, errRequestFailed)
 		return
@@ -80,7 +87,7 @@ func (h *SettingHandler) UpdateSettingGroup(c *gin.Context) {
 		successPayload = payload
 	}
 
-	group, err := h.service.UpdateGroup(groupKey, &req)
+	group, err := h.boundService(c).UpdateGroup(groupKey, &req)
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, errRequestFailed)
 		return
@@ -116,7 +123,7 @@ func (h *SettingHandler) RefreshSettingCache(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	resp, err := h.service.RefreshSettingCache(req.GroupKeys)
+	resp, err := h.boundService(c).RefreshSettingCache(req.GroupKeys)
 	if err != nil {
 		common.Fail(c, common.CodeError, "setting.cache.refresh.error")
 		return
@@ -130,7 +137,7 @@ func (h *SettingHandler) GetSettingAuditList(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	page, err := h.service.ListAudit(&query)
+	page, err := h.boundService(c).ListAudit(&query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "setting.audit.list.error")
 		return
@@ -146,7 +153,7 @@ func (h *SettingHandler) ExportSettingAudit(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	file, err := h.service.ExportAudit(&query)
+	file, err := h.boundService(c).ExportAudit(&query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "setting.audit.export.error")
 		return

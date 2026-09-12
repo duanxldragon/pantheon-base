@@ -338,7 +338,7 @@ func initConfigModules(deps *systemModuleDependencies) []contracts.BackendModule
 					systemAuth.POST("/upload", RefreshSyncMiddleware(deps.refreshSyncSvc), deps.settingHandler.UploadFile)
 				}
 
-				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/setting/overview", deps.settingHandler.GetSettingOverview)
 					systemProtected.GET("/setting/list", deps.settingHandler.GetSettingList)
