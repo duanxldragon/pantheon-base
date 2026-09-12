@@ -4,7 +4,7 @@
   "goal": "Isolate config, dict, audit, export, upload, cache, dashboard, async jobs and dynamic modules after auth/IAM semantics are stable.",
   "primaryLayer": "system/config",
   "status": "in-progress",
-  "statusNote": "2026-09-12: audit slice (system_log_oper.tenant_id column + resolved-context stamping + read/detail/export/batch-delete tenant scope + platform-only tenantIdFilter) and upload slice (t<tenantId>/ object-key namespacing in multi mode) delivered and verified; 13 new isolation tests, full suites green. Remaining: system_setting override/inheritance + uniqueness, security-event/login-log tenant columns, dashboard aggregates/async context persistence, download authorization, generator guardrails.",
+  "statusNote": "2026-09-12: audit slice (system_log_oper.tenant_id column + resolved-context stamping + read/detail/export/batch-delete tenant scope + platform-only tenantIdFilter), upload slice (t<tenantId>/ object-key namespacing in multi mode), and settings slice (system_setting.tenant_id + composite unique (tenant_id, setting_key) via migration 000014, override-wins resolution, tenant write creates override copies without mutating global rows, tenant-namespaced caches, scoped list/overview/setting-audit) delivered and verified; 21 new isolation tests, full suites green. Remaining: security-event/login-log tenant columns, dashboard aggregates/async context persistence, download authorization, generator guardrails.",
   "priority": "high",
   "estimatedComplexity": "epic",
   "technicalDebtFlag": "yes",

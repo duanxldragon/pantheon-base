@@ -29,3 +29,34 @@ Reviewer posture: data-leakage reviewer; adversarially challenged stamping trust
 ## Verdict
 
 **Approved — audit and upload slices meet the packet's per-slice bar (migration additive, isolation tests, compat regression). Proceed to the remaining slices (settings/dict override+uniqueness for system_setting, security-event/login-log columns, async context persistence, download authorization, generator guardrails) before the verification task.**
+
+---
+
+# Review addendum: settings slice (2026-09-12)
+
+Reviewer posture: data-leakage reviewer; adversarially challenged override resolution, global-row mutation, cache collisions and uniqueness edges.
+
+## Adversarial attempts & outcomes
+
+| Attempt | Vector | Outcome |
+|---------|--------|---------|
+| Read another tenant's override | tenant-101 `GetByKey` on a key overridden only by tenant 202 | falls back to the global value — foreign override rows are outside the read scope (dedicated test) ✅ |
+| Mutate the platform-global row from a tenant session | tenant-101 `PUT /setting/group/:key` on a key that only has a global row | creates a tenant-owned copy; global row verified byte-identical after the write (test) ✅ |
+| Duplicate a key within one tenant | second insert `(101, dup.key)` | rejected by composite `uk_system_setting_tenant_key` (test) ✅ |
+| Cache poisoning across tenants | tenant-101 and tenant-202 list the same group through the shared service | cache keys namespaced `t<id>:...`; no collision (canary pattern + shared `settingCacheState`) ✅ |
+| Seed duplication per tenant | re-bootstrap with override rows present | seeds pinned to `tenant_id = 0` lookups — never create per-tenant copies ✅ |
+| Compat regression | unbound service with override rows in the table | `GetByKey`/`List`/`GetOverview` resolve global rows only (explicit `tenant_id = 0` filter); existing suites green ✅ |
+| Write-ownership forgery | tenant write attempting to stamp a foreign tenant_id | ownership derives from the resolved context only; request body carries no tenant field (contract §3.3) ✅ |
+| vet lock-copy regression | `WithTenantContext` shallow-copying the service struct | fixed by extracting `settingCacheState` (shared pointer, single lock); vet clean ✅ |
+
+## Findings (settings slice)
+
+1. **Override precedence is deterministic**: `ORDER BY tenant_id asc` with last-match-wins makes global the floor and the tenant row the ceiling; no ambiguity even with both rows present.
+2. **Global rows are immutable from tenant sessions** — the write path only ever creates/updates tenant-owned rows; platform writes stay the single mutation path for global rows.
+3. **Migration is guarded and reversible**: 000014 swaps the unique keys information_schema-guarded; down restores the legacy layout. Compatible with the runbook's additive pattern.
+4. **Cache state refactor**: the lock-copy finding was resolved by sharing one `settingCacheState` pointer across bound views — invalidation from any view reaches all views.
+5. **Stop-point check**: no cross-tenant read/write, no cache collision, compat green. No stop condition triggered.
+
+## Verdict (settings slice)
+
+**Approved — system_setting tenant override + uniqueness closes the last `system/config` scope item of the packet. Remaining for the task: security-event/login-log tenant columns, dashboard aggregates/async context persistence, download authorization, generator guardrails.**

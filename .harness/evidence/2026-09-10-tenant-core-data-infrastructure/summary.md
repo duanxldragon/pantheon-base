@@ -1,4 +1,4 @@
-# Evidence: 2026-09-10-tenant-core-data-infrastructure — audit + upload slices
+# Evidence: 2026-09-10-tenant-core-data-infrastructure — audit + upload + settings slices
 
 Date: 2026-09-12 · Branch: fix/i18n-s3649-zero · Flag default: `platform.tenant_mode=compat` (unchanged)
 
@@ -49,9 +49,29 @@ Pre-existing audit tests updated mechanically (nil ctx added; export header coun
 
 - Schema change (additive column on `system_log_oper`) and storage layout change (object-key prefix) are in scope of the manifest's "schema/storage/audit/export scope approval" gate — recorded here for maintainer review; both are no-ops while flag is compat.
 
+## Slice 3 (2026-09-12): system_setting tenant override + uniqueness
+
+| Deliverable | Key files |
+|-------------|-----------|
+| Schema | `system_setting.tenant_id` (BIGINT UNSIGNED NOT NULL DEFAULT 0) + composite unique `uk_system_setting_tenant_key (tenant_id, setting_key)` replacing the global-unique `idx_system_setting_setting_key` — exactly the scope matrix's "tenant-overridable: 组合键" registration; guarded migration 000014 (+down) follows the 000013 information_schema pattern | `pkg/database/migrations/000014_tenant_settings.{up,down}.sql`, `setting_model.go` |
+| Override resolution | `GetByKey` scoped: multi mode reads global (0) + own tenant rows, override wins (`ORDER BY tenant_id asc`, last match); compat resolves global rows only | `setting_service.go` |
+| Write semantics | tenant write updates the tenant override row when present, otherwise **creates a tenant-owned copy** (global row never mutated); platform write mutates the global row; ownership from context only (contract §3.3) | `updateSettingGroupItem` |
+| Read scoping | `List` / `GetOverview` / `findAuditRows` scoped: multi = global + own tenant rows (foreign overrides invisible); compat = global only (explicit `tenant_id = 0` filter now that override rows exist) | `tenantScope()` |
+| Cache isolation | list/group caches tenant-namespaced (`t<id>:...`, canary pattern) with shared lock state via extracted `settingCacheState` (fixes vet lock-copy finding); public cache stays platform-only | `setting_service.go`, `setting_seed.go` |
+| Seed/legacy pins | seeds and legacy-value normalization pinned to `tenant_id = 0` (bootstrap-time platform operations) | `setting_service.go`, `setting_seed.go` |
+| Route guard | `TenantContextMiddleware` added to the setting protected routes (audit/list/group/cache); audit read path (`ListAudit`/`ExportAudit`) pinned via `tenant.WithTenantScope` on `system_log_oper` | `system_modules.go`, `setting_audit.go` |
+
+### Slice-3 test results (8, DB-backed)
+
+`setting_tenant_override_test.go`: global default inheritance; override wins (101) while non-override tenant (202) inherits global; **foreign override never readable** (101 falls back to global, 202's value invisible); compat resolves global only (GetByKey + List); tenant write creates an override row without mutating the global row, second write updates in place, other tenants unaffected; composite uniqueness enforced (duplicate within a tenant rejected, per-tenant copies coexist); platform write mutates the global row; List/GetOverview scoped (no 202 leak).
+
+### Slice-3 verification
+
+- DB-backed full suite 0 FAIL; DSN-less 0 FAIL; build/vet/gofmt clean (vet lock-copy + unreachable-code findings fixed).
+
 ## Gaps (explicit)
 
-- **settings/dict tenant override + uniqueness** (scope item 1 of the packet): dict rows carry `tenant_id` and code uniqueness is namespaced per tenant (canary); `system_setting` override/inheritance NOT yet implemented — next slice.
+- ~~**settings/dict tenant override + uniqueness**~~ → **closed in slice 3**: dict rows carry `tenant_id` with namespaced uniqueness (canary); `system_setting` override/inheritance + composite uniqueness delivered with migration 000014 and 8 isolation tests.
 - **security-event / login-log rows** still lack tenant columns (they are separate tables from `system_log_oper`).
 - **dashboard aggregates / async jobs / dynamic-module generator guardrails**: not yet tenant-aware; async context persistence belongs to the next slice.
 - **Download authorization**: `ServeUploadedFile` remains public-route; tenant-privatized download authorization not implemented (object keys are now tenant-prefixed but the serve route does not yet check membership).
