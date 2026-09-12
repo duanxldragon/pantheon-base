@@ -13,6 +13,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -25,6 +26,15 @@ type AuditService struct {
 	db              *gorm.DB
 	lastCleanupAtMu sync.Mutex
 	lastCleanupAt   map[string]time.Time
+}
+
+// applyTenantScope enforces the audit read/delete boundary (queue-5 audit
+// slice, contract §3.3/§7): in multi mode every query is pinned to the request
+// tenant; platform-global subjects keep full visibility. Compat is unchanged.
+// The scope derives ONLY from the resolved tenant context handed in by the
+// handler — request parameters cannot widen it.
+func (s *AuditService) applyTenantScope(db *gorm.DB, ctx *tenant.Context) *gorm.DB {
+	return db.Scopes(tenant.WithTenantScope(ctx))
 }
 
 func NewAuditService(db *gorm.DB) *AuditService {
@@ -58,7 +68,7 @@ func (s *AuditService) Bootstrap() error {
 	return s.backfillOperationLogDerivedFields()
 }
 
-func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLogPageResp, error) {
+func (s *AuditService) ListOperationLogs(query *OperationLogQuery, ctx *tenant.Context) (*OperationLogPageResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -66,7 +76,8 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 
 	page, pageSize := normalizeOperationLogPageQuery(query)
 
-	db := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query)
+	db := s.applyTenantScope(s.db.Model(&middleware.SystemLogOper{}), ctx)
+	db = s.applyOperationLogBaseQuery(db, query)
 	var total int64
 	var rows []middleware.SystemLogOper
 	if err := db.Count(&total).Error; err != nil {
@@ -74,8 +85,9 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	}
 	// Whole-filtered-set aggregate so the governance bar shows global numbers.
 	var successCount int64
-	if err := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query).
+	if err := s.applyTenantScope(s.db.Model(&middleware.SystemLogOper{}), ctx).
 		Where("status = ?", common.OperationStatusSuccess).
+		Scopes(s.operationLogQueryScopes(query)...).
 		Count(&successCount).Error; err != nil {
 		return nil, err
 	}
@@ -103,27 +115,27 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery) (*OperationLo
 	}, nil
 }
 
-func (s *AuditService) GetOperationLog(logID uint64) (*OperationLogResp, error) {
+func (s *AuditService) GetOperationLog(logID uint64, ctx *tenant.Context) (*OperationLogResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	s.ensureAutomaticOperationLogRetention()
 
 	var row middleware.SystemLogOper
-	if err := s.db.First(&row, logID).Error; err != nil {
+	if err := s.applyTenantScope(s.db, ctx).First(&row, logID).Error; err != nil {
 		return nil, err
 	}
 	resp := operationLogToResp(row)
 	return &resp, nil
 }
 
-func (s *AuditService) ExportOperationLogs(query *OperationLogQuery) (*impexp.CSVFile, error) {
+func (s *AuditService) ExportOperationLogs(query *OperationLogQuery, ctx *tenant.Context) (*impexp.CSVFile, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	s.ensureAutomaticOperationLogRetention()
 
-	rows, err := s.listOperationLogsForExport(query)
+	rows, err := s.listOperationLogsForExport(query, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -156,21 +168,22 @@ func (s *AuditService) ExportOperationLogs(query *OperationLogQuery) (*impexp.CS
 			row.ErrorMsg,
 			row.OperTime.Format(time.RFC3339),
 			fmt.Sprintf("%d", row.CostTime),
+			fmt.Sprintf("%d", row.TenantID),
 		})
 	}
 
 	return &impexp.CSVFile{
 		Filename: "system-operation-log-export.csv",
-		Headers:  []string{"requestId", "title", "businessType", "sourceDomain", "sourcePage", "method", "operName", "operUrl", "operIp", "status", "failureCategory", "errorMsg", "operTime", "costTime"},
+		Headers:  []string{"requestId", "title", "businessType", "sourceDomain", "sourcePage", "method", "operName", "operUrl", "operIp", "status", "failureCategory", "errorMsg", "operTime", "costTime", "tenantId"},
 		Rows:     result,
 	}, nil
 }
 
-func (s *AuditService) DeleteOperationLog(logID uint64) error {
+func (s *AuditService) DeleteOperationLog(logID uint64, ctx *tenant.Context) error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
 	}
-	return s.db.Delete(&middleware.SystemLogOper{}, logID).Error
+	return s.applyTenantScope(s.db, ctx).Delete(&middleware.SystemLogOper{}, logID).Error
 }
 
 func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string, endedAt string) (int64, error) {
@@ -324,7 +337,7 @@ func (s *AuditService) getRetentionDaysFromSetting(settingKey string, fallback i
 	return value
 }
 
-func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
+func (s *AuditService) BatchDeleteOperationLogs(ids []uint64, ctx *tenant.Context) (int64, error) {
 	if s.db == nil {
 		return 0, common.ErrDatabaseNotInitialized
 	}
@@ -339,16 +352,17 @@ func (s *AuditService) BatchDeleteOperationLogs(ids []uint64) (int64, error) {
 		return 0, common.NewBadRequest("param.invalid")
 	}
 
-	result := s.db.Where("id IN ?", normalized).Delete(&middleware.SystemLogOper{})
+	result := s.applyTenantScope(s.db, ctx).Where("id IN ?", normalized).Delete(&middleware.SystemLogOper{})
 	if result.Error != nil {
 		return 0, result.Error
 	}
 	return result.RowsAffected, nil
 }
 
-func (s *AuditService) listOperationLogsForExport(query *OperationLogQuery) ([]middleware.SystemLogOper, error) {
+func (s *AuditService) listOperationLogsForExport(query *OperationLogQuery, ctx *tenant.Context) ([]middleware.SystemLogOper, error) {
 	var rows []middleware.SystemLogOper
-	db := s.applyOperationLogBaseQuery(s.db.Model(&middleware.SystemLogOper{}), query)
+	db := s.applyTenantScope(s.db.Model(&middleware.SystemLogOper{}), ctx)
+	db = s.applyOperationLogBaseQuery(db, query)
 	if err := db.Order("id desc").Limit(maxOperationLogExportRows).Find(&rows).Error; err != nil {
 		return nil, err
 	}
@@ -408,6 +422,32 @@ func (s *AuditService) applyOperationLogBaseQuery(db *gorm.DB, query *OperationL
 	if query == nil {
 		return db
 	}
+	for _, scope := range s.operationLogQueryScopes(query) {
+		db = db.Scopes(scope)
+	}
+	return db
+}
+
+// operationLogQueryScopes returns the filter scopes as GORM scopes so the same
+// filters can be composed with the tenant scope in any order.
+func (s *AuditService) operationLogQueryScopes(query *OperationLogQuery) []func(*gorm.DB) *gorm.DB {
+	if query == nil {
+		return nil
+	}
+	var scopes []func(*gorm.DB) *gorm.DB
+	if query.TenantIDFilter > 0 {
+		scopes = append(scopes, func(db *gorm.DB) *gorm.DB {
+			return db.Where("tenant_id = ?", query.TenantIDFilter)
+		})
+	}
+	return append(scopes, func(db *gorm.DB) *gorm.DB {
+		return s.applyOperationLogFilters(db, query)
+	})
+}
+
+// applyOperationLogFilters is the previous inline filter chain of
+// applyOperationLogBaseQuery, extracted verbatim.
+func (s *AuditService) applyOperationLogFilters(db *gorm.DB, query *OperationLogQuery) *gorm.DB {
 	if strings.TrimSpace(query.Keyword) != "" {
 		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
 		db = db.Where("title LIKE ? OR oper_name LIKE ? OR request_id LIKE ?", keyword, keyword, keyword)
@@ -462,6 +502,7 @@ func parseOperationLogTime(value string) (time.Time, bool) {
 
 func operationLogToResp(row middleware.SystemLogOper) OperationLogResp {
 	return OperationLogResp{
+		TenantID:        row.TenantID,
 		ID:              row.ID,
 		RequestID:       strings.TrimSpace(row.RequestID),
 		Title:           row.Title,

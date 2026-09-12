@@ -50,7 +50,7 @@ func TestAuditService_ListOperationLogsKeywordMatchesMultipleFields(t *testing.T
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := service.ListOperationLogs(&OperationLogQuery{Keyword: tc.keyword, Page: 1, PageSize: 20})
+			resp, err := service.ListOperationLogs(&OperationLogQuery{Keyword: tc.keyword, Page: 1, PageSize: 20}, nil)
 			if err != nil {
 				t.Fatalf("list operation logs: %v", err)
 			}

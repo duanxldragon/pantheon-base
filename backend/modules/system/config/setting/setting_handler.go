@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"mime"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	uploadpkg "github.com/duanxldragon/pantheon-base/backend/pkg/upload"
 	"github.com/gin-gonic/gin"
 )
@@ -177,7 +179,7 @@ func (h *SettingHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	stored, err := h.uploadService.StoreWithContext(c.Request.Context(), fileHeader, c.DefaultQuery("scope", "general"), requestBaseURL(c))
+	stored, err := h.uploadService.StoreWithContext(c.Request.Context(), fileHeader, h.uploadScope(c), requestBaseURL(c))
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, errRequestFailed)
 		return
@@ -225,6 +227,21 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		return
 	}
 	http.ServeFileFS(c.Writer, c.Request, os.DirFS(rootPath), objectKey)
+}
+
+// uploadScope builds the object-key prefix for an upload (queue-5 upload
+// slice, contract §3.3/Implementation Notes: "Cache and object keys must
+// include canonical tenant identity"). The tenant segment comes from the
+// resolved tenant context — never from the request — so a tenant subject
+// cannot write into another tenant's namespace and keys cannot collide across
+// tenants. Compat keeps the legacy layout (no tenant segment).
+func (h *SettingHandler) uploadScope(c *gin.Context) string {
+	scope := c.DefaultQuery("scope", "general")
+	ctx := tenant.FromGin(c)
+	if ctx == nil || !ctx.IsMulti() {
+		return scope
+	}
+	return fmt.Sprintf("t%d/%s", ctx.TenantID, scope)
 }
 
 func requestBaseURL(c *gin.Context) string {

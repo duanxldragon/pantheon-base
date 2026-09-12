@@ -78,12 +78,12 @@ func TestAuditService_ExportOperationLogsIncludesDerivedColumns(t *testing.T) {
 		t.Fatalf("seed audit logs: %v", err)
 	}
 
-	file, err := service.ExportOperationLogs(&OperationLogQuery{})
+	file, err := service.ExportOperationLogs(&OperationLogQuery{}, nil)
 	if err != nil {
 		t.Fatalf("export audit logs: %v", err)
 	}
 
-	expectedHeaders := []string{"requestId", "title", "businessType", "sourceDomain", "sourcePage", "method", "operName", "operUrl", "operIp", "status", "failureCategory", "errorMsg", "operTime", "costTime"}
+	expectedHeaders := []string{"requestId", "title", "businessType", "sourceDomain", "sourcePage", "method", "operName", "operUrl", "operIp", "status", "failureCategory", "errorMsg", "operTime", "costTime", "tenantId"}
 	if len(file.Headers) != len(expectedHeaders) {
 		t.Fatalf("expected %d headers, got %d", len(expectedHeaders), len(file.Headers))
 	}
@@ -134,7 +134,7 @@ func TestAuditService_ExportOperationLogsRespectsDerivedFilters(t *testing.T) {
 		SourceDomain:    operationLogSourceDomainConfig,
 		SourcePage:      operationLogSourcePageUpload,
 		FailureCategory: operationLogFailureValidation,
-	})
+	}, nil)
 	if err != nil {
 		t.Fatalf("export filtered audit logs: %v", err)
 	}
@@ -162,7 +162,7 @@ func TestAuditService_ListOperationLogsRespectsDerivedFilters(t *testing.T) {
 		FailureCategory: operationLogFailureValidation,
 		Page:            1,
 		PageSize:        10,
-	})
+	}, nil)
 	if err != nil {
 		t.Fatalf("list filtered audit logs: %v", err)
 	}
@@ -219,7 +219,7 @@ func TestAuditService_ListOperationLogsDoesNotBackfillDuringQuery(t *testing.T) 
 		FailureCategory: operationLogFailureValidation,
 		Page:            1,
 		PageSize:        10,
-	})
+	}, nil)
 	if err != nil {
 		t.Fatalf("list filtered audit logs: %v", err)
 	}
@@ -243,7 +243,7 @@ func TestAuditService_ListOperationLogsCapsPageSize(t *testing.T) {
 		t.Fatalf("migrate audit: %v", err)
 	}
 
-	page, err := service.ListOperationLogs(&OperationLogQuery{Page: 1, PageSize: 1000})
+	page, err := service.ListOperationLogs(&OperationLogQuery{Page: 1, PageSize: 1000}, nil)
 	if err != nil {
 		t.Fatalf("list operation logs: %v", err)
 	}
@@ -275,7 +275,7 @@ func TestAuditService_ExportOperationLogsCapsRows(t *testing.T) {
 		t.Fatalf("seed operation logs: %v", err)
 	}
 
-	file, err := service.ExportOperationLogs(&OperationLogQuery{})
+	file, err := service.ExportOperationLogs(&OperationLogQuery{}, nil)
 	if err != nil {
 		t.Fatalf("export operation logs: %v", err)
 	}

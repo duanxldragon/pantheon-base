@@ -83,7 +83,7 @@ func TestAuditService_ListOperationLogsAppliesAutomaticRetention(t *testing.T) {
 		t.Fatalf("seed operation logs: %v", err)
 	}
 
-	resp, err := service.ListOperationLogs(&OperationLogQuery{Page: 1, PageSize: 10})
+	resp, err := service.ListOperationLogs(&OperationLogQuery{Page: 1, PageSize: 10}, nil)
 	if err != nil {
 		t.Fatalf("list operation logs: %v", err)
 	}

@@ -1367,7 +1367,7 @@ func TestAuditService_ExportOperationLogs(t *testing.T) {
 		t.Fatalf("seed operation log: %v", err)
 	}
 
-	exported, err := s.ExportOperationLogs(&auditmod.OperationLogQuery{Title: "导出用户"})
+	exported, err := s.ExportOperationLogs(&auditmod.OperationLogQuery{Title: "导出用户"}, nil)
 	if err != nil {
 		t.Fatalf("export operation logs: %v", err)
 	}
