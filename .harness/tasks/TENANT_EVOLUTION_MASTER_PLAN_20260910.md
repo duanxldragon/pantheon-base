@@ -15,6 +15,10 @@ updated_at: 2026-09-11
 > 任务 3 `tenant-canary-slice`（dict 资源垂直切片，flag `platform.tenant_mode` 默认 `compat`，10 项双租户 hostile tests 全绿，flag-off 回归通过）。
 > 下一步为队列 4--6（core-auth-iam / core-data-infrastructure / verification-and-gray），开工前提：canary 隔离 evidence 的维护者 review（"canary 放量" gate）。
 >
+> **2026-09-13 队列 4 slice 3 + 队列 5 slices 4-5 验证收口**：前端租户 picker（密码验证后展示候选、显式 `tenantId` 重试、MFA 挑战租户绑定与分歧拒绝、5 locale 文案）+ auth 日志租户列（迁移 000015/000016，additive 带索引）+ dashboard 聚合/上传下载授权/operation-log 异步租户持久化/lowcode 路由租户护栏；
+> Playwright picker E2E 3/3 与本地 MySQL 双租户 HTTP 探针通过（见 queue-6 evidence）。收口复验时发现并修复 3 处 `WithTenantContext` 浅拷贝锁复制（`Runtime`/`LoginService`/`security.Service`，vet lock-copy），修复后 build/vet/`go test -short ./...`/type-check/lint 全绿。
+> 队列 4/5 剩余均为 runtime/生产项：hostile 双租户浏览器矩阵扩展、flag 回滚运行态证据、S3 下载授权（当前仅本地存储）、G1--G4 人工门禁；详见各 manifest statusNote。
+>
 > **2026-09-12 队列 5 开工（audit + upload + settings 切片）**：`system_log_oper.tenant_id`（additive，索引，默认 0）+ 解析上下文戳记（不信请求字段）+
 > list/detail/export/batch-delete 的租户硬过滤 + `tenantIdFilter` 仅平台层可用；上传对象 key 多租户模式加 `t<tenantId>/` 前缀（compat 布局不变）；
 > `system_setting` 租户 override/继承（迁移 000014 换组合唯一键 `(tenant_id, setting_key)`，override 优先、租户写生成 override 副本不改全局行、缓存按租户命名空间隔离）；

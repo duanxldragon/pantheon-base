@@ -60,3 +60,31 @@ Reviewer posture: independent authorization reviewer; adversarially challenged t
 ## Verdict (slice 2)
 
 **Approved — slice 2 closes the two slice-1 gaps that were backend-reachable (explicit tenant selection + tenant-scoped policy authoring). Remaining for the task: frontend picker UI (UX gate; inert under compat), audit-row tenant columns (queue 5), browser E2E (queue 6). Queue 4 backend scope is complete.**
+
+---
+
+# Review addendum: slice 3 (2026-09-13)
+
+## Findings
+
+1. Tenant candidates are computed only after `LoginWithSource` succeeds and are
+   returned before session creation; wrong passwords cannot enumerate tenants.
+2. The frontend submits the same credentials with the selected `tenantId`;
+   candidate payloads are validated as an array with at least two entries.
+3. MFA challenge rows persist `tenant_id`; verification rejects a conflicting
+   request tenant and defaults to the challenge-bound tenant.
+4. The change reuses existing Arco controls, Pantheon tokens, and locale
+   resources. No new dependency or alternate layout system was introduced.
+
+## Verification
+
+- Backend focused auth/MFA tests passed.
+- Full backend short suite passed.
+- Frontend type-check and lint passed.
+- UI rendered browser evidence was not available in this environment; desktop/mobile
+  screenshot and live flag-on browser smoke remain explicit release gaps.
+
+## Verdict (slice 3)
+
+**Approved for local implementation scope. Release remains blocked pending live
+browser/API evidence, rollback/gray gates, and the existing audit/data-infra gaps.**

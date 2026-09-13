@@ -82,10 +82,32 @@ New in `modules/auth/login/login_tenant_gate_test.go` (tests 13–18):
 - DSN-less: 0 FAIL. `go build`/`go vet`/`gofmt` clean.
 - i18n: 5×2807 keys missing=0 extra=0; `tsc -b` exit 0; doc links strict 0 findings.
 
+## Slice 3 (2026-09-13): frontend tenant picker and MFA binding
+
+| Deliverable | Key files |
+|---|---|
+| Password-verified tenant picker | `backend/modules/auth/login/login_handler.go`, `frontend/src/modules/auth/login/components/Login.tsx` |
+| Error data preservation | `frontend/src/api/request.ts` |
+| Tenant-aware MFA challenge binding | `backend/modules/auth/mfa/mfa_model.go`, `mfa_service.go`, `login_runtime.go` |
+| Five-language picker copy and compact responsive styling | `frontend/src/i18n/resources/*.ts`, `Login.css` |
+
+The picker is returned only after successful password authentication and before
+session/token issuance. Password failures remain generic and never expose
+membership candidates. The MFA challenge stores the selected tenant and rejects
+tenant divergence at verification.
+
+### Slice-3 verification
+
+- `go test -short ./modules/auth/login ./modules/auth/mfa` — passed.
+- `go test -short ./...` — passed.
+- `npm run type-check` — passed.
+- `npm run lint -- --quiet` — passed.
+- `git diff --check` — passed.
+
 ## Gaps (explicit)
 
 - ~~**Casbin domain policies are not yet writable anywhere**~~ → **closed in slice 2**: tenant-scoped policy authoring via `tenantId` on create/update policy APIs; middleware expansion + authoring now round-trip (covered by permission + middleware tests).
-- ~~**Login tenant selection UI** for users with multiple memberships~~ → **backend closed in slice 2** (`LoginReq.TenantId` + `GET /auth/login-tenants` + MFA carry-through); **remaining**: the frontend picker UI itself (deferred — needs UX gate and is inert while flag stays `compat`);
+- ~~**Login tenant selection UI** for users with multiple memberships~~ → **closed in slice 3** (password-verified picker, retry with explicit `tenantId`, MFA tenant binding, five locales); runtime browser evidence remains pending;
 - **Two-tenant runtime smoke of the full login→dict flow through HTTP** (Playwright): unit/integration layer proven DB-backed; end-to-end browser evidence deferred to task 6 verification matrix.
 - **Audit/security-event rows** do not yet carry tenant_id columns (data-infra task scope).
 - `RevokeUserSessionsInTenant` blacklists per-user rather than per-(user,tenant) — safe over-approximation; per-tenant revocation would need a session-index Redis key (noted for the data-infra task if cross-tenant users become common).

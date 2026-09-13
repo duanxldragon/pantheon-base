@@ -60,3 +60,21 @@ Reviewer posture: data-leakage reviewer; adversarially challenged override resol
 ## Verdict (settings slice)
 
 **Approved — system_setting tenant override + uniqueness closes the last `system/config` scope item of the packet. Remaining for the task: security-event/login-log tenant columns, dashboard aggregates/async context persistence, download authorization, generator guardrails.**
+
+## Review addendum: auth logs + dashboard (2026-09-13)
+
+- `system_log_login` and `system_auth_security_event` now have additive, indexed `tenant_id` columns (migration 000015, reversible down migration).
+- Auth protected routes and dashboard resolve the shared tenant context. Request-scoped runtime views apply hard scope to list, export, cleanup, batch delete/acknowledge, recent events and dashboard login/security aggregates.
+- Login and MFA tenant choices stamp new rows from the validated choice; no request header/body is trusted for ownership.
+- Isolation tests cover login-log and security-event cross-tenant reads; `go test -short ./...` is green.
+
+Remaining stop items are explicit: async context persistence, upload download authorization, dynamic-module generator guardrails, and hostile browser smoke.
+
+## Review addendum: runtime guards (2026-09-13)
+
+1. **Download boundary closed for local storage**: the file route is no longer anonymous; token and tenant context are resolved before the handler, and the handler rejects any multi-mode key outside the resolved `t<tenantID>/` namespace. Own-tenant and cross-tenant tests are green.
+2. **Async ownership is explicit**: operation-log queue items persist the already-resolved `TenantID` field; the worker never reconstructs ownership from ambient request context. A two-tenant drain test proves both IDs survive the asynchronous boundary.
+3. **Generator route guardrails**: dynamic-module and generator route groups now resolve tenant context before authorization/action middleware. The scaffold validator continues to reject `dataScopeMode=tenant`, preventing generated tenant-unaware access paths until a runtime implementation exists.
+4. **Residual risk**: S3 download serving is not implemented by the current handler, and browser hostile smoke plus gray performance/observability remain in the follow-up verification task.
+
+**Verdict:** local upload download authorization, operation-log async persistence, and lowcode route guardrails are approved for the compat-default canary. The parent task remains open until hostile browser smoke and the verification/gray task provide runtime evidence.

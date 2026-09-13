@@ -1,4 +1,4 @@
-# Evidence: 2026-09-10-tenant-core-data-infrastructure — audit + upload + settings slices
+# Evidence: 2026-09-10-tenant-core-data-infrastructure — audit + upload + settings + auth-log + runtime guard slices
 
 Date: 2026-09-12 · Branch: fix/i18n-s3649-zero · Flag default: `platform.tenant_mode=compat` (unchanged)
 
@@ -69,10 +69,25 @@ Pre-existing audit tests updated mechanically (nil ctx added; export header coun
 
 - DB-backed full suite 0 FAIL; DSN-less 0 FAIL; build/vet/gofmt clean (vet lock-copy + unreachable-code findings fixed).
 
+## Slice 5 (2026-09-13): download authorization + async persistence + generator route guard
+
+| Deliverable | Key files |
+|-------------|-----------|
+| Download authorization | `ServeUploadedFile` now requires token + tenant context at the route; in multi mode the requested object key must begin with the resolved `t<tenantID>/` namespace. Cross-tenant and legacy unprefixed keys are denied; compat keeps legacy access. | `system_modules.go`, `setting_handler.go` |
+| Async tenant persistence | operation-log queue entries carry the explicit `TenantID` field through enqueue/drain; regression test proves two tenant rows persist without context loss. | `operation_log_middleware.go`, `operation_log_middleware_test.go` |
+| Dynamic-module/generator guard | lowcode dynamic-module and generator read/write route groups now resolve tenant context before Casbin/action guards; generator contract continues to reject tenant-unaware `dataScopeMode=tenant`. | `lowcode/dynamicmodule/module.go`, `lowcode/generator/module.go`, `internal/scaffold/contract.go` |
+
+### Slice-5 verification
+
+- `go test -short ./internal/middleware ./modules/system/config/setting ./modules/lowcode/dynamicmodule ./modules/lowcode/generator ./modules/system` — 0 FAIL.
+- `go test -short ./...` — 0 FAIL.
+- New file authorization tests cover own namespace allow and foreign namespace deny; async test covers tenant ID persistence.
+
 ## Gaps (explicit)
 
 - ~~**settings/dict tenant override + uniqueness**~~ → **closed in slice 3**: dict rows carry `tenant_id` with namespaced uniqueness (canary); `system_setting` override/inheritance + composite uniqueness delivered with migration 000014 and 8 isolation tests.
-- **security-event / login-log rows** still lack tenant columns (they are separate tables from `system_log_oper`).
-- **dashboard aggregates / async jobs / dynamic-module generator guardrails**: not yet tenant-aware; async context persistence belongs to the next slice.
-- **Download authorization**: `ServeUploadedFile` remains public-route; tenant-privatized download authorization not implemented (object keys are now tenant-prefixed but the serve route does not yet check membership).
+- ~~**security-event / login-log rows**~~ → **closed in slice 4**: additive `tenant_id` columns/indexes via migration 000015; request-scoped auth runtime stamps selected tenant and list/detail/cleanup/batch/export/security aggregates apply hard tenant scope.
+- **dashboard aggregates**: auth-log/security aggregates consume tenant context; org governance loader and other platform-global aggregates still require explicit classification before gray rollout.
+- **Async jobs beyond operation logs**: operation-log queue persistence is closed; no separate durable job framework exists in this repository to verify.
+- **Object storage S3 download authorization**: the current download handler serves local storage only; S3 presigned/download path still needs a tenant-aware implementation if enabled.
 - Browser smoke of two-tenant audit/export/upload: deferred to task 6 verification matrix.

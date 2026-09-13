@@ -1,0 +1,37 @@
+{
+  "taskId": "2026-09-10-tenant-verification-and-gray",
+  "scope": "TenantContextMiddleware hostile boundary",
+  "command": "go test -short ./internal/middleware -run 'TestTenantContextMiddleware_(HostileTwoTenantMatrix|ConcurrentRequestsKeepTenantBoundary)$' -count=1",
+  "status": "passed",
+  "exitCode": 0,
+  "cases": [
+    {
+      "name": "tenant claim resolves tenant 101",
+      "result": "passed"
+    },
+    {
+      "name": "untrusted header cannot switch tenant",
+      "result": "passed"
+    },
+    {
+      "name": "platform override can switch explicitly",
+      "result": "passed"
+    },
+    {
+      "name": "missing tenant claim is denied in multi mode",
+      "result": "passed"
+    },
+    {
+      "name": "compat ignores forged header",
+      "result": "passed"
+    },
+    {
+      "name": "concurrent requests keep tenant boundary",
+      "result": "passed"
+    }
+  ],
+  "limitations": [
+    "This is an in-process middleware smoke, not a live browser/API end-to-end run.",
+    "Feature flag rollback and production-like dependencies were not exercised."
+  ]
+}
