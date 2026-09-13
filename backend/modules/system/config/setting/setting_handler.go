@@ -217,6 +217,13 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errUploadFileNotFound)
 		return
 	}
+	if ctx := tenant.FromGin(c); ctx != nil && ctx.IsMulti() {
+		prefix := fmt.Sprintf("t%d/", ctx.TenantID)
+		if !strings.HasPrefix(objectKey, prefix) {
+			common.Fail(c, common.CodeError, errUploadFileNotFound)
+			return
+		}
+	}
 
 	extension := strings.TrimPrefix(strings.ToLower(filepath.Ext(objectKey)), ".")
 	if contentType := mime.TypeByExtension("." + extension); contentType != "" {

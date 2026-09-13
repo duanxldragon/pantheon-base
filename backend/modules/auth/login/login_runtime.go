@@ -74,7 +74,8 @@ const (
 
 // Runtime is the root auth service that composes sub-domain services.
 type Runtime struct {
-	db *gorm.DB
+	db        *gorm.DB
+	tenantCtx *tenant.Context
 
 	// Sub-services
 	loginSvc    *LoginService
@@ -82,18 +83,36 @@ type Runtime struct {
 	securitySvc *security.Service
 	sessionSvc  *session.Service
 
-	// 账号安全策略缓存
-	settingsMu                   sync.RWMutex
-	settingsCache                map[string]int
+	// 账号安全策略缓存. Shared by pointer so request-scoped tenant facades
+	// never copy the embedded lock (vet lock-copy rule).
+	settings *runtimeSettingsState
+}
+
+// runtimeSettingsState holds the mutex-guarded account-security policy cache.
+type runtimeSettingsState struct {
+	mu                           sync.RWMutex
+	cache                        map[string]int
 	loginLogCleanupRetentionDays []int
 	sessionCleanupRetentionDays  []int
+}
+
+// WithTenantContext returns a request-scoped facade for tenant-bound reads and writes.
+func (s *Runtime) WithTenantContext(ctx *tenant.Context) *Runtime {
+	clone := *s
+	clone.tenantCtx = ctx
+	clone.loginSvc = s.loginSvc.WithTenantContext(ctx)
+	clone.securitySvc = s.securitySvc.WithTenantContext(ctx)
+	clone.loginSvc.recorder = &clone
+	return &clone
 }
 
 // NewRuntime constructs the root auth service and its sub-services.
 func NewRuntime(db *gorm.DB) *Runtime {
 	s := &Runtime{
-		db:            db,
-		settingsCache: make(map[string]int),
+		db: db,
+		settings: &runtimeSettingsState{
+			cache: make(map[string]int),
+		},
 	}
 
 	// Build sub-services, wiring them back through interfaces on Runtime.
@@ -165,17 +184,17 @@ func (s *Runtime) IssueTokenPairWithContext(ctx context.Context, userID uint64, 
 // login.PolicyProvider implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) GetRuntimePolicy() RuntimePolicy {
-	s.settingsMu.RLock()
-	defer s.settingsMu.RUnlock()
+	s.settings.mu.RLock()
+	defer s.settings.mu.RUnlock()
 	return RuntimePolicy{
-		MaxFailedAttempts:            s.settingsCache[settingMaxFailedAttemptsKey],
-		LockMinutes:                  s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts:      s.settingsCache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:          s.settingsCache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:            s.settingsCache[settingSourceLockMinutesKey],
-		SecurityEventEnabled:         s.settingsCache[settingSecurityEventEnabledKey] == 1,
-		LoginLogRetentionDays:        s.settingsCache[settingLoginLogRetentionDaysKey],
-		LoginLogCleanupRetentionDays: cloneIntSlice(s.loginLogCleanupRetentionDays),
+		MaxFailedAttempts:            s.settings.cache[settingMaxFailedAttemptsKey],
+		LockMinutes:                  s.settings.cache[settingLockMinutesKey],
+		SourceMaxFailedAttempts:      s.settings.cache[settingSourceMaxFailedAttemptsKey],
+		SourceWindowMinutes:          s.settings.cache[settingSourceWindowMinutesKey],
+		SourceLockMinutes:            s.settings.cache[settingSourceLockMinutesKey],
+		SecurityEventEnabled:         s.settings.cache[settingSecurityEventEnabledKey] == 1,
+		LoginLogRetentionDays:        s.settings.cache[settingLoginLogRetentionDaysKey],
+		LoginLogCleanupRetentionDays: cloneIntSlice(s.settings.loginLogCleanupRetentionDays),
 	}
 }
 
@@ -191,6 +210,9 @@ func (s *Runtime) RecordSecurityEvent(event security.SystemAuthSecurityEvent) {
 	if event.Severity == "" {
 		event.Severity = "medium"
 	}
+	if s.tenantCtx != nil && s.tenantCtx.IsMulti() {
+		event.TenantID = s.tenantCtx.TenantID
+	}
 	if err := s.db.Create(&event).Error; err != nil {
 		logging.Warn("record security event failed",
 			zap.String("event_type", event.EventType), zap.Error(err))
@@ -201,26 +223,26 @@ func (s *Runtime) RecordSecurityEvent(event security.SystemAuthSecurityEvent) {
 // security.PolicyProvider implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) GetAuthRuntimePolicy() security.AuthRuntimePolicy {
-	s.settingsMu.RLock()
-	defer s.settingsMu.RUnlock()
+	s.settings.mu.RLock()
+	defer s.settings.mu.RUnlock()
 	return security.AuthRuntimePolicy{
-		PasswordMinLength:       s.settingsCache[settingPasswordMinLengthKey],
-		PasswordRequireDigit:    s.settingsCache[settingPasswordRequireDigitKey] == 1,
-		PasswordRequireUpper:    s.settingsCache[settingPasswordRequireUpperKey] == 1,
-		PasswordHistoryLimit:    s.settingsCache[settingPasswordHistoryLimitKey],
-		PasswordExpireDays:      s.settingsCache[settingPasswordExpireDaysKey],
-		MaxFailedAttempts:       s.settingsCache[settingMaxFailedAttemptsKey],
-		LockMinutes:             s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts: s.settingsCache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:     s.settingsCache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:       s.settingsCache[settingSourceLockMinutesKey],
-		SessionIdleMinutes:      s.settingsCache[settingSessionIdleMinutesKey],
-		MaxActiveSessions:       s.settingsCache[settingMaxActiveSessionsKey],
-		SessionRetentionDays:    s.settingsCache[settingSessionRetentionDaysKey],
-		SecurityEventEnabled:    s.settingsCache[settingSecurityEventEnabledKey] == 1,
-		CaptchaEnabled:          s.settingsCache[settingCaptchaEnabledKey] == 1,
-		MFAEnabled:              s.settingsCache[settingMFAEnabledKey] == 1,
-		SSOEnabled:              s.settingsCache[settingSSOEnabledKey] == 1,
+		PasswordMinLength:       s.settings.cache[settingPasswordMinLengthKey],
+		PasswordRequireDigit:    s.settings.cache[settingPasswordRequireDigitKey] == 1,
+		PasswordRequireUpper:    s.settings.cache[settingPasswordRequireUpperKey] == 1,
+		PasswordHistoryLimit:    s.settings.cache[settingPasswordHistoryLimitKey],
+		PasswordExpireDays:      s.settings.cache[settingPasswordExpireDaysKey],
+		MaxFailedAttempts:       s.settings.cache[settingMaxFailedAttemptsKey],
+		LockMinutes:             s.settings.cache[settingLockMinutesKey],
+		SourceMaxFailedAttempts: s.settings.cache[settingSourceMaxFailedAttemptsKey],
+		SourceWindowMinutes:     s.settings.cache[settingSourceWindowMinutesKey],
+		SourceLockMinutes:       s.settings.cache[settingSourceLockMinutesKey],
+		SessionIdleMinutes:      s.settings.cache[settingSessionIdleMinutesKey],
+		MaxActiveSessions:       s.settings.cache[settingMaxActiveSessionsKey],
+		SessionRetentionDays:    s.settings.cache[settingSessionRetentionDaysKey],
+		SecurityEventEnabled:    s.settings.cache[settingSecurityEventEnabledKey] == 1,
+		CaptchaEnabled:          s.settings.cache[settingCaptchaEnabledKey] == 1,
+		MFAEnabled:              s.settings.cache[settingMFAEnabledKey] == 1,
+		SSOEnabled:              s.settings.cache[settingSSOEnabledKey] == 1,
 	}
 }
 
@@ -228,9 +250,9 @@ func (s *Runtime) GetAuthRuntimePolicy() security.AuthRuntimePolicy {
 // mfa.PolicyProvider implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) IsMFAEnabled() bool {
-	s.settingsMu.RLock()
-	defer s.settingsMu.RUnlock()
-	return s.settingsCache[settingMFAEnabledKey] == 1
+	s.settings.mu.RLock()
+	defer s.settings.mu.RUnlock()
+	return s.settings.cache[settingMFAEnabledKey] == 1
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -421,6 +443,10 @@ func (s *Runtime) RecordLoginLog(requestID, username, ip, browser, os string, st
 }
 
 func (s *Runtime) CreateMFAChallenge(currentUser *iamuser.SystemUser) (*mfa.MFAChallengeResp, error) {
+	return s.CreateMFAChallengeForTenant(currentUser, 0)
+}
+
+func (s *Runtime) CreateMFAChallengeForTenant(currentUser *iamuser.SystemUser, tenantID uint64) (*mfa.MFAChallengeResp, error) {
 	mfaUser := &mfa.UserRecord{
 		ID:       currentUser.ID,
 		Username: currentUser.Username,
@@ -430,7 +456,7 @@ func (s *Runtime) CreateMFAChallenge(currentUser *iamuser.SystemUser) (*mfa.MFAC
 		Phone:    currentUser.Phone,
 		Status:   currentUser.Status,
 	}
-	return s.mfaSvc.CreateChallenge(mfaUser)
+	return s.mfaSvc.CreateChallengeForTenant(mfaUser, tenantID)
 }
 
 func (s *Runtime) VerifyMFAChallenge(req *MFAVerifyReq, ip, userAgent string) (*AuthTokenResp, error) {
@@ -748,28 +774,28 @@ func (s *Runtime) ReloadSettings() error {
 		SSOEnabled:                   s.fetchSettingBoolFromDB(settingSSOEnabledKey, false),
 	}
 
-	s.settingsMu.Lock()
-	s.settingsCache[settingPasswordMinLengthKey] = policy.PasswordMinLength
-	s.settingsCache[settingPasswordRequireDigitKey] = boolToInt(policy.PasswordRequireDigit)
-	s.settingsCache[settingPasswordRequireUpperKey] = boolToInt(policy.PasswordRequireUpper)
-	s.settingsCache[settingPasswordHistoryLimitKey] = policy.PasswordHistoryLimit
-	s.settingsCache[settingPasswordExpireDaysKey] = policy.PasswordExpireDays
-	s.settingsCache[settingMaxFailedAttemptsKey] = policy.MaxFailedAttempts
-	s.settingsCache[settingLockMinutesKey] = policy.LockMinutes
-	s.settingsCache[settingSourceMaxFailedAttemptsKey] = policy.SourceMaxFailedAttempts
-	s.settingsCache[settingSourceWindowMinutesKey] = policy.SourceWindowMinutes
-	s.settingsCache[settingSourceLockMinutesKey] = policy.SourceLockMinutes
-	s.settingsCache[settingSessionIdleMinutesKey] = policy.SessionIdleMinutes
-	s.settingsCache[settingMaxActiveSessionsKey] = policy.MaxActiveSessions
-	s.settingsCache[settingLoginLogRetentionDaysKey] = policy.LoginLogRetentionDays
-	s.settingsCache[settingSessionRetentionDaysKey] = policy.SessionRetentionDays
-	s.loginLogCleanupRetentionDays = cloneIntSlice(policy.LoginLogCleanupRetentionDays)
-	s.sessionCleanupRetentionDays = cloneIntSlice(policy.SessionCleanupRetentionDays)
-	s.settingsCache[settingSecurityEventEnabledKey] = boolToInt(policy.SecurityEventEnabled)
-	s.settingsCache[settingCaptchaEnabledKey] = boolToInt(policy.CaptchaEnabled)
-	s.settingsCache[settingMFAEnabledKey] = boolToInt(policy.MFAEnabled)
-	s.settingsCache[settingSSOEnabledKey] = boolToInt(policy.SSOEnabled)
-	s.settingsMu.Unlock()
+	s.settings.mu.Lock()
+	s.settings.cache[settingPasswordMinLengthKey] = policy.PasswordMinLength
+	s.settings.cache[settingPasswordRequireDigitKey] = boolToInt(policy.PasswordRequireDigit)
+	s.settings.cache[settingPasswordRequireUpperKey] = boolToInt(policy.PasswordRequireUpper)
+	s.settings.cache[settingPasswordHistoryLimitKey] = policy.PasswordHistoryLimit
+	s.settings.cache[settingPasswordExpireDaysKey] = policy.PasswordExpireDays
+	s.settings.cache[settingMaxFailedAttemptsKey] = policy.MaxFailedAttempts
+	s.settings.cache[settingLockMinutesKey] = policy.LockMinutes
+	s.settings.cache[settingSourceMaxFailedAttemptsKey] = policy.SourceMaxFailedAttempts
+	s.settings.cache[settingSourceWindowMinutesKey] = policy.SourceWindowMinutes
+	s.settings.cache[settingSourceLockMinutesKey] = policy.SourceLockMinutes
+	s.settings.cache[settingSessionIdleMinutesKey] = policy.SessionIdleMinutes
+	s.settings.cache[settingMaxActiveSessionsKey] = policy.MaxActiveSessions
+	s.settings.cache[settingLoginLogRetentionDaysKey] = policy.LoginLogRetentionDays
+	s.settings.cache[settingSessionRetentionDaysKey] = policy.SessionRetentionDays
+	s.settings.loginLogCleanupRetentionDays = cloneIntSlice(policy.LoginLogCleanupRetentionDays)
+	s.settings.sessionCleanupRetentionDays = cloneIntSlice(policy.SessionCleanupRetentionDays)
+	s.settings.cache[settingSecurityEventEnabledKey] = boolToInt(policy.SecurityEventEnabled)
+	s.settings.cache[settingCaptchaEnabledKey] = boolToInt(policy.CaptchaEnabled)
+	s.settings.cache[settingMFAEnabledKey] = boolToInt(policy.MFAEnabled)
+	s.settings.cache[settingSSOEnabledKey] = boolToInt(policy.SSOEnabled)
+	s.settings.mu.Unlock()
 
 	return nil
 }
@@ -803,37 +829,37 @@ func (s *Runtime) watchSettingsLoop() {
 }
 
 func (s *Runtime) getAuthRuntimePolicy() authRuntimePolicy {
-	s.settingsMu.RLock()
-	defer s.settingsMu.RUnlock()
+	s.settings.mu.RLock()
+	defer s.settings.mu.RUnlock()
 
 	return authRuntimePolicy{
-		PasswordMinLength:            s.settingsCache[settingPasswordMinLengthKey],
-		PasswordRequireDigit:         s.settingsCache[settingPasswordRequireDigitKey] == 1,
-		PasswordRequireUpper:         s.settingsCache[settingPasswordRequireUpperKey] == 1,
-		PasswordHistoryLimit:         s.settingsCache[settingPasswordHistoryLimitKey],
-		PasswordExpireDays:           s.settingsCache[settingPasswordExpireDaysKey],
-		MaxFailedAttempts:            s.settingsCache[settingMaxFailedAttemptsKey],
-		LockMinutes:                  s.settingsCache[settingLockMinutesKey],
-		SourceMaxFailedAttempts:      s.settingsCache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:          s.settingsCache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:            s.settingsCache[settingSourceLockMinutesKey],
-		SessionIdleMinutes:           s.settingsCache[settingSessionIdleMinutesKey],
-		MaxActiveSessions:            s.settingsCache[settingMaxActiveSessionsKey],
-		LoginLogRetentionDays:        s.settingsCache[settingLoginLogRetentionDaysKey],
-		SessionRetentionDays:         s.settingsCache[settingSessionRetentionDaysKey],
-		LoginLogCleanupRetentionDays: cloneIntSlice(s.loginLogCleanupRetentionDays),
-		SessionCleanupRetentionDays:  cloneIntSlice(s.sessionCleanupRetentionDays),
-		SecurityEventEnabled:         s.settingsCache[settingSecurityEventEnabledKey] == 1,
-		CaptchaEnabled:               s.settingsCache[settingCaptchaEnabledKey] == 1,
-		MFAEnabled:                   s.settingsCache[settingMFAEnabledKey] == 1,
-		SSOEnabled:                   s.settingsCache[settingSSOEnabledKey] == 1,
+		PasswordMinLength:            s.settings.cache[settingPasswordMinLengthKey],
+		PasswordRequireDigit:         s.settings.cache[settingPasswordRequireDigitKey] == 1,
+		PasswordRequireUpper:         s.settings.cache[settingPasswordRequireUpperKey] == 1,
+		PasswordHistoryLimit:         s.settings.cache[settingPasswordHistoryLimitKey],
+		PasswordExpireDays:           s.settings.cache[settingPasswordExpireDaysKey],
+		MaxFailedAttempts:            s.settings.cache[settingMaxFailedAttemptsKey],
+		LockMinutes:                  s.settings.cache[settingLockMinutesKey],
+		SourceMaxFailedAttempts:      s.settings.cache[settingSourceMaxFailedAttemptsKey],
+		SourceWindowMinutes:          s.settings.cache[settingSourceWindowMinutesKey],
+		SourceLockMinutes:            s.settings.cache[settingSourceLockMinutesKey],
+		SessionIdleMinutes:           s.settings.cache[settingSessionIdleMinutesKey],
+		MaxActiveSessions:            s.settings.cache[settingMaxActiveSessionsKey],
+		LoginLogRetentionDays:        s.settings.cache[settingLoginLogRetentionDaysKey],
+		SessionRetentionDays:         s.settings.cache[settingSessionRetentionDaysKey],
+		LoginLogCleanupRetentionDays: cloneIntSlice(s.settings.loginLogCleanupRetentionDays),
+		SessionCleanupRetentionDays:  cloneIntSlice(s.settings.sessionCleanupRetentionDays),
+		SecurityEventEnabled:         s.settings.cache[settingSecurityEventEnabledKey] == 1,
+		CaptchaEnabled:               s.settings.cache[settingCaptchaEnabledKey] == 1,
+		MFAEnabled:                   s.settings.cache[settingMFAEnabledKey] == 1,
+		SSOEnabled:                   s.settings.cache[settingSSOEnabledKey] == 1,
 	}
 }
 
 func (s *Runtime) getSecurityEventEnabled() bool {
-	s.settingsMu.RLock()
-	defer s.settingsMu.RUnlock()
-	return s.settingsCache[settingSecurityEventEnabledKey] == 1
+	s.settings.mu.RLock()
+	defer s.settings.mu.RUnlock()
+	return s.settings.cache[settingSecurityEventEnabledKey] == 1
 }
 
 func (s *Runtime) fetchSettingIntFromDB(settingKey string, fallback int) int {

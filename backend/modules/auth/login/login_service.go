@@ -13,6 +13,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -31,14 +32,32 @@ type SecurityEventRecorder interface {
 
 // LoginService handles credential authentication and login throttling.
 type LoginService struct {
-	db       *gorm.DB
-	policy   PolicyProvider
-	recorder SecurityEventRecorder
+	db        *gorm.DB
+	policy    PolicyProvider
+	recorder  SecurityEventRecorder
+	tenantCtx *tenant.Context
 
 	// Throttle state for automatic retention cleanup: without it every
-	// RecordLoginLog/List/Export issues a full-table DELETE scan.
-	autoCleanupMu     sync.Mutex
+	// RecordLoginLog/List/Export issues a full-table DELETE scan. Shared by
+	// pointer so request-scoped tenant facades never copy the lock.
+	autoCleanupState *autoCleanupState
+}
+
+// autoCleanupState holds the mutex-guarded retention-cleanup throttle so the
+// struct can be shallow-copied for tenant-scoped facades (vet lock-copy rule).
+type autoCleanupState struct {
+	mu                sync.Mutex
 	lastAutoCleanupAt time.Time
+}
+
+func (s *LoginService) WithTenantContext(ctx *tenant.Context) *LoginService {
+	clone := *s
+	clone.tenantCtx = ctx
+	return &clone
+}
+
+func (s *LoginService) scoped(db *gorm.DB) *gorm.DB {
+	return db.Scopes(tenant.WithTenantScope(s.tenantCtx))
 }
 
 // NewLoginService creates a LoginService with the given DB and policy provider.
@@ -176,7 +195,7 @@ func (s *LoginService) ListLoginLogs(query *LoginLogQuery) (*LoginLogPageResp, e
 // scopedLoginLogQuery applies the shared list filters so that the paged query
 // and the whole-set aggregates run over the identical scope.
 func (s *LoginService) scopedLoginLogQuery(query *LoginLogQuery, filterUsername string) *gorm.DB {
-	db := s.db.Model(&SystemLogLogin{})
+	db := s.scoped(s.db.Model(&SystemLogLogin{}))
 	if filterUsername != "" {
 		db = db.Where(usernameLikeWhereClause, "%"+filterUsername+"%")
 	} else if query != nil && strings.TrimSpace(query.Username) != "" {
@@ -274,7 +293,7 @@ func (s *LoginService) CleanupLoginLogs(retentionDays int, startedAt, endedAt st
 	if err != nil {
 		return 0, err
 	}
-	db := s.db.Model(&SystemLogLogin{})
+	db := s.scoped(s.db.Model(&SystemLogLogin{}))
 	if window != nil {
 		db = db.Where("login_time >= ? AND login_time <= ?", window.StartedAt, window.EndedAt)
 	} else {
@@ -304,7 +323,7 @@ func (s *LoginService) BatchDeleteLoginLogs(ids []uint64) (int64, error) {
 	if len(normalized) > maxBatchIDs {
 		return 0, errors.New("param.invalid")
 	}
-	result := s.db.Where("id IN ?", normalized).Delete(&SystemLogLogin{})
+	result := s.scoped(s.db).Where("id IN ?", normalized).Delete(&SystemLogLogin{})
 	return result.RowsAffected, result.Error
 }
 
@@ -317,7 +336,7 @@ func (s *LoginService) listLoginLogsForExport(query *LoginLogQuery) ([]SystemLog
 	var logs []SystemLogLogin
 	// Reuse the exact list-scope filters (username/keyword/status AND the
 	// time window) so the CSV always matches the filtered view being exported.
-	db := s.scopedLoginLogQuery(query, "")
+	db := s.scoped(s.scopedLoginLogQuery(query, ""))
 	return logs, db.Order(loginTimeDescOrderClause).Limit(maxLoginLogExportRows).Find(&logs).Error
 }
 
@@ -365,6 +384,7 @@ func (s *LoginService) RecordLoginLog(requestID, username, ip, browser, os strin
 	s.ensureAutomaticLoginLogRetention()
 
 	loginLog := SystemLogLogin{
+		TenantID:      tenantIDFromContext(s.tenantCtx),
 		RequestID:     strings.TrimSpace(requestID),
 		Username:      username,
 		Ipaddr:        ip,
@@ -381,18 +401,30 @@ func (s *LoginService) RecordLoginLog(requestID, username, ip, browser, os strin
 	}
 }
 
+func tenantIDFromContext(ctx *tenant.Context) uint64 {
+	if ctx != nil && ctx.IsMulti() {
+		return ctx.TenantID
+	}
+	return tenant.PlatformGlobalTenantID
+}
+
 func (s *LoginService) ensureAutomaticLoginLogRetention() {
 	if s.db == nil {
 		return
 	}
 	now := time.Now()
-	s.autoCleanupMu.Lock()
-	if !s.lastAutoCleanupAt.IsZero() && now.Sub(s.lastAutoCleanupAt) < autoCleanupMinInterval {
-		s.autoCleanupMu.Unlock()
+	state := s.autoCleanupState
+	if state == nil {
+		state = &autoCleanupState{}
+		s.autoCleanupState = state
+	}
+	state.mu.Lock()
+	if !state.lastAutoCleanupAt.IsZero() && now.Sub(state.lastAutoCleanupAt) < autoCleanupMinInterval {
+		state.mu.Unlock()
 		return
 	}
-	s.lastAutoCleanupAt = now
-	s.autoCleanupMu.Unlock()
+	state.lastAutoCleanupAt = now
+	state.mu.Unlock()
 
 	policy := s.policy.GetRuntimePolicy()
 	cutoff := now.AddDate(0, 0, -maxInt(policy.LoginLogRetentionDays, 1))

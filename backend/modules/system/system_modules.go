@@ -330,7 +330,10 @@ func initConfigModules(deps *systemModuleDependencies) []contracts.BackendModule
 				systemPublic := r.Group(routeGroupSystem)
 				{
 					systemPublic.GET("/setting/public", deps.settingHandler.GetPublicSettings)
-					systemPublic.GET("/upload/files/*filepath", deps.settingHandler.ServeUploadedFile)
+				}
+				uploadProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db))
+				{
+					uploadProtected.GET("/upload/files/*filepath", deps.settingHandler.ServeUploadedFile)
 				}
 
 				systemAuth := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB))

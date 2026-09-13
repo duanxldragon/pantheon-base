@@ -84,6 +84,10 @@ const koKRFallback = {
   'auth.login.consoleTitle': '신원 확인',
   'auth.login.securityNotice':
     '관리자가 할당한 계정으로 로그인하세요. 로그인 시간, 장치, 출처 IP 는 보안 감사를 위해 기록됩니다.',
+  'auth.login.tenant.title': '작업 테넌트 선택',
+  'auth.login.tenant.hint': '이 계정은 여러 테넌트에 속해 있습니다. 이번 로그인 범위를 선택하세요.',
+  'auth.login.tenant.placeholder': '테넌트 선택',
+  'auth.login.tenant.back': '자격 증명으로 돌아가기',
   'auth.login.idleTimeoutNotice':
     '오랫동안 활동이 없어 자동 로그아웃되었습니다. 계속하려면 다시 로그인하세요.',
   'auth.login.feature.modules': '모듈형 모놀리스',

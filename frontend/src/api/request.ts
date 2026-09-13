@@ -34,6 +34,7 @@ export class RequestError extends Error {
   code?: number;
   status?: number;
   messageKey?: string;
+  data?: unknown;
 
   constructor(options: {
     kind: RequestErrorKind;
@@ -41,6 +42,7 @@ export class RequestError extends Error {
     code?: number;
     status?: number;
     messageKey?: string;
+    data?: unknown;
   }) {
     super(options.messageKey || options.message || 'request.failed');
     this.name = 'RequestError';
@@ -48,6 +50,7 @@ export class RequestError extends Error {
     this.code = options.code;
     this.status = options.status;
     this.messageKey = options.messageKey;
+    this.data = options.data;
   }
 }
 
@@ -157,12 +160,13 @@ const doRefreshToken = async (): Promise<boolean> => {
   return refreshPromise;
 };
 
-const createBusinessError = (code?: number, message?: string) => {
+const createBusinessError = (code?: number, message?: string, data?: unknown) => {
   return new RequestError({
     kind: resolveBusinessErrorKind(code),
     code,
     message,
     messageKey: message,
+    data,
   });
 };
 
@@ -409,7 +413,7 @@ request.interceptors.response.use(
       redirectToLogin();
     }
 
-    const requestError = createBusinessError(code, message || 'request.failed');
+    const requestError = createBusinessError(code, message || 'request.failed', data);
     if (
       !config.skipErrorMessage &&
       !shouldSuppressAuthMessage(

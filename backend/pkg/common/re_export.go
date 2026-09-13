@@ -51,6 +51,10 @@ func Fail(c *gin.Context, code int, message string) {
 	commonhttp.Fail(c, code, message)
 }
 
+func FailWithData(c *gin.Context, code int, message string, data interface{}) {
+	commonhttp.FailWithData(c, code, message, data)
+}
+
 func FailWithError(c *gin.Context, code int, err error, fallback string) {
 	commonhttp.FailWithError(c, code, err, fallback)
 }

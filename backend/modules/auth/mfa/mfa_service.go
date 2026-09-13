@@ -62,6 +62,7 @@ type MFAChallengeResp struct {
 	TOTPSecret       string `json:"totpSecret,omitempty"`
 	TOTPProvisionURI string `json:"totpProvisionUri,omitempty"`
 	ExpiresAt        string `json:"expiresAt"`
+	TenantId         uint64 `json:"tenantId,omitempty"`
 }
 
 // Service handles TOTP MFA challenge lifecycle.
@@ -79,6 +80,10 @@ func NewService(db *gorm.DB, policy PolicyProvider, creator SessionCreator, iden
 
 // CreateChallenge initiates an MFA challenge for a user.
 func (s *Service) CreateChallenge(currentUser *UserRecord) (*MFAChallengeResp, error) {
+	return s.CreateChallengeForTenant(currentUser, 0)
+}
+
+func (s *Service) CreateChallengeForTenant(currentUser *UserRecord, tenantID uint64) (*MFAChallengeResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -113,6 +118,7 @@ func (s *Service) CreateChallenge(currentUser *UserRecord) (*MFAChallengeResp, e
 	challenge := SystemAuthMFAChallenge{
 		ChallengeID:     uuid.NewString(),
 		UserID:          currentUser.ID,
+		TenantID:        tenantID,
 		Purpose:         "login",
 		SecretEncrypted: encryptedSecret,
 		SetupRequired:   boolToInt(setupRequired),
@@ -127,6 +133,7 @@ func (s *Service) CreateChallenge(currentUser *UserRecord) (*MFAChallengeResp, e
 		ChallengeID:   challenge.ChallengeID,
 		SetupRequired: setupRequired,
 		ExpiresAt:     expiresAt.Format(time.RFC3339),
+		TenantId:      tenantID,
 	}
 	if setupRequired {
 		resp.TOTPSecret = secret
@@ -173,6 +180,14 @@ func (s *Service) VerifyChallengeWithContext(ctx context.Context, req *MFAVerify
 		return nil, errors.New("user.login.error.disabled")
 	}
 
+	if challenge.TenantID != 0 && req.TenantId != 0 && req.TenantId != challenge.TenantID {
+		return nil, errors.New("tenant.forbidden")
+	}
+	if challenge.TenantID != 0 {
+		req.TenantId = challenge.TenantID
+	} else if req.TenantId != 0 {
+		return nil, errors.New("tenant.forbidden")
+	}
 	if err := s.finalizeChallenge(ctx, *challenge, secret, now); err != nil {
 		return nil, err
 	}

@@ -10,12 +10,23 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/login"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
+	tenantModeLoader := tenant.NewModeLoader(func() string {
+		if db == nil {
+			return tenant.ModeCompat
+		}
+		var value string
+		if err := db.Table("system_setting").Where("setting_key = ?", "platform.tenant_mode").Pluck("setting_value", &value).Error; err != nil {
+			return tenant.ModeCompat
+		}
+		return value
+	}, int64(5*time.Second))
 	authSvc := login.NewRuntime(db)
 	authHandler := login.NewAuthHandler(authSvc)
 	loginRateLimiter := middleware.RateLimiter(middleware.RateLimiterConfig{
@@ -65,7 +76,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					apiAuth.GET("/login-tenants", middleware.TokenAuthMiddleware(database.RDB), authHandler.GetLoginTenantCandidates)
 				}
 
-				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group("/system").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(tenantModeLoader, db)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.POST("/logout", authHandler.LogoutHandler)
 					systemProtected.GET("/user/info", authHandler.GetCurrentUserInfo)
@@ -84,7 +95,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 					systemProtected.DELETE("/session/:id", middleware.SecureActionMiddleware(), authHandler.RevokeAnySession)
 				}
 
-				authV2 := r.Group("/auth").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				authV2 := r.Group("/auth").Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(tenantModeLoader, db)).Use(middleware.CasbinMiddleware())
 				{
 					authV2.POST("/logout", authHandler.LogoutHandler)
 					authV2.POST("/activity", authHandler.TouchActivity)

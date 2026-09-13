@@ -88,6 +88,10 @@ const frFRFallback = {
   'auth.login.consoleTitle': "Vérification d'identité",
   'auth.login.securityNotice':
     "Connectez-vous avec un compte attribué par un administrateur. L'heure de connexion, l'appareil et l'IP source sont enregistrés pour l'audit de sécurité.",
+  'auth.login.tenant.title': 'Choisir le locataire de travail',
+  'auth.login.tenant.hint': 'Ce compte appartient à plusieurs locataires. Choisissez le périmètre de cette connexion.',
+  'auth.login.tenant.placeholder': 'Sélectionner un locataire',
+  'auth.login.tenant.back': 'Retour aux identifiants',
   'auth.login.idleTimeoutNotice':
     'Ce compte a été déconnecté automatiquement après une trop longue inactivité. Reconnectez-vous pour continuer.',
   'auth.login.feature.modules': 'Monolithe modulaire',

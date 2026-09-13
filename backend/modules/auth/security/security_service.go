@@ -19,6 +19,7 @@ import (
 	commonsecurity "github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -100,14 +101,30 @@ type AuthRuntimePolicy struct {
 
 // Service handles password management and security event tracking.
 type Service struct {
-	db     *gorm.DB
-	policy PolicyProvider
+	db        *gorm.DB
+	policy    PolicyProvider
+	tenantCtx *tenant.Context
 
 	// Throttle state for automatic security-event retention cleanup so list
-	// requests do not each issue a full-table DELETE scan.
-	autoCleanupMu     sync.Mutex
+	// requests do not each issue a full-table DELETE scan. Shared by pointer
+	// so request-scoped tenant facades never copy the lock.
+	autoCleanupState *autoCleanupState
+}
+
+// autoCleanupState holds the mutex-guarded retention-cleanup throttle so the
+// struct can be shallow-copied for tenant-scoped facades (vet lock-copy rule).
+type autoCleanupState struct {
+	mu                sync.Mutex
 	lastAutoCleanupAt time.Time
 }
+
+func (s *Service) WithTenantContext(ctx *tenant.Context) *Service {
+	clone := *s
+	clone.tenantCtx = ctx
+	return &clone
+}
+
+func (s *Service) scoped(db *gorm.DB) *gorm.DB { return db.Scopes(tenant.WithTenantScope(s.tenantCtx)) }
 
 // NewService creates a SecurityService.
 func NewService(db *gorm.DB, policy PolicyProvider) *Service {
@@ -187,7 +204,7 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	}
 	s.ensureAutomaticSecurityEventRetention()
 	page, pageSize := normalizeSecurityEventPageQuery(query)
-	db := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query)
+	db := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query)
 
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -195,13 +212,13 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	}
 	// Whole-filtered-set aggregates so the governance bar shows global numbers.
 	var acknowledgedCount int64
-	if err := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query).
+	if err := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query).
 		Where(condEventAcknowledged).
 		Count(&acknowledgedCount).Error; err != nil {
 		return nil, err
 	}
 	var highSeverityCount int64
-	if err := applySecurityEventFilters(s.db.Model(&SystemAuthSecurityEvent{}), query).
+	if err := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query).
 		Where("severity = ?", "high").
 		Count(&highSeverityCount).Error; err != nil {
 		return nil, err
@@ -231,7 +248,7 @@ func (s *Service) CleanupSecurityEvents(retentionDays int, startedAt, endedAt st
 	if err != nil {
 		return 0, err
 	}
-	db := s.db.Model(&SystemAuthSecurityEvent{}).Where(condEventAcknowledged)
+	db := s.scoped(s.db.Model(&SystemAuthSecurityEvent{})).Where(condEventAcknowledged)
 	if window != nil {
 		db = db.Where("created_at >= ? AND created_at <= ?", window.StartedAt, window.EndedAt)
 	} else {
@@ -326,7 +343,7 @@ func (s *Service) AcknowledgeSecurityEvent(eventID, actorID uint64, actorUsernam
 	if note == "" {
 		return errors.New("auth.security_event.acknowledge.note_required")
 	}
-	result := s.db.Model(&SystemAuthSecurityEvent{}).
+	result := s.scoped(s.db.Model(&SystemAuthSecurityEvent{})).
 		Where("id = ?", eventID).
 		Updates(map[string]interface{}{
 			"acknowledged_at":      time.Now(),
@@ -374,7 +391,7 @@ func (s *Service) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint
 	if len(normalized) > 500 {
 		return 0, errors.New("param.invalid")
 	}
-	result := s.db.Model(&SystemAuthSecurityEvent{}).
+	result := s.scoped(s.db.Model(&SystemAuthSecurityEvent{})).
 		Where("id IN ? AND acknowledged_at IS NULL", normalized).
 		Updates(map[string]interface{}{
 			"acknowledged_at":      time.Now(),
@@ -398,13 +415,18 @@ func (s *Service) ensureAutomaticSecurityEventRetention() {
 		return
 	}
 	now := time.Now()
-	s.autoCleanupMu.Lock()
-	if !s.lastAutoCleanupAt.IsZero() && now.Sub(s.lastAutoCleanupAt) < securityEventAutoCleanupMinLatency {
-		s.autoCleanupMu.Unlock()
+	state := s.autoCleanupState
+	if state == nil {
+		state = &autoCleanupState{}
+		s.autoCleanupState = state
+	}
+	state.mu.Lock()
+	if !state.lastAutoCleanupAt.IsZero() && now.Sub(state.lastAutoCleanupAt) < securityEventAutoCleanupMinLatency {
+		state.mu.Unlock()
 		return
 	}
-	s.lastAutoCleanupAt = now
-	s.autoCleanupMu.Unlock()
+	state.lastAutoCleanupAt = now
+	state.mu.Unlock()
 
 	retentionDays := s.getSecurityEventRetentionDays()
 	cutoff := now.AddDate(0, 0, -retentionDays)
@@ -479,7 +501,7 @@ func (s *Service) ListRecentSecurityEvents(userID uint64, limit int) []SecurityE
 		return []SecurityEventResp{}
 	}
 	var events []SystemAuthSecurityEvent
-	if err := s.db.Where(condUserIDEquals, userID).Order("created_at desc, id desc").Limit(limit).Find(&events).Error; err != nil {
+	if err := s.scoped(s.db).Where(condUserIDEquals, userID).Order("created_at desc, id desc").Limit(limit).Find(&events).Error; err != nil {
 		return []SecurityEventResp{}
 	}
 	return toSecurityEventRespList(events)

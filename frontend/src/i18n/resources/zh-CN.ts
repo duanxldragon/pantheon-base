@@ -102,6 +102,10 @@ const zhCNFallback = {
   'auth.login.consoleTitle': '身份验证',
   'auth.login.securityNotice':
     '请使用管理员分配的账号登录。系统会记录登录时间、设备与来源 IP 用于安全审计。',
+  'auth.login.tenant.title': '选择工作租户',
+  'auth.login.tenant.hint': '该账号属于多个租户，请选择本次登录的工作范围。',
+  'auth.login.tenant.placeholder': '请选择租户',
+  'auth.login.tenant.back': '返回重新输入',
   'auth.login.idleTimeoutNotice': '当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。',
   'auth.login.feature.modules': '模块化单体',
   'auth.login.feature.security': '安全会话',
