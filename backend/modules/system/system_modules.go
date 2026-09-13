@@ -336,7 +336,13 @@ func initConfigModules(deps *systemModuleDependencies) []contracts.BackendModule
 					uploadProtected.GET("/upload/files/*filepath", deps.settingHandler.ServeUploadedFile)
 				}
 
-				systemAuth := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB))
+				// TenantContextMiddleware is REQUIRED on the upload write path too:
+				// uploadScope() derives the `t{id}/` object-key prefix from the
+				// resolved tenant context — without it a multi-mode upload would
+				// silently fall back to the legacy (tenantless) keyspace and let
+				// tenants collide into the global namespace (queue-6 matrix
+				// finding #2, 2026-09-13).
+				systemAuth := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db))
 				{
 					systemAuth.POST("/upload", RefreshSyncMiddleware(deps.refreshSyncSvc), deps.settingHandler.UploadFile)
 				}
@@ -408,7 +414,11 @@ func initAuditModules(deps *systemModuleDependencies) []contracts.BackendModule 
 			BootstrapFunc: func(_ *gorm.DB) error { return deps.auditSvc.Bootstrap() },
 			SeedMenusFunc: seedAuditModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				// TenantContextMiddleware is REQUIRED here: without it the audit
+				// handler sees a nil tenant context and WithTenantScope no-ops,
+				// letting every tenant read the full operation-log population
+				// (found by the queue-6 live two-tenant matrix 2026-09-13).
+				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/operation-log/list", deps.auditHandler.GetOperationLogList)
 					systemProtected.GET("/operation-log/:id", deps.auditHandler.GetOperationLog)
