@@ -221,10 +221,10 @@ func buildSnapshot(db *gorm.DB) *snapshotReport {
 	}
 
 	var rawStats []struct {
-		Name     string  `gorm:"column:table_name"`
-		Rows     uint64  `gorm:"column:table_rows"`
-		DataMB   float64 `gorm:"column:data_mb"`
-		IndexMB  float64 `gorm:"column:index_mb"`
+		Name    string  `gorm:"column:table_name"`
+		Rows    uint64  `gorm:"column:table_rows"`
+		DataMB  float64 `gorm:"column:data_mb"`
+		IndexMB float64 `gorm:"column:index_mb"`
 	}
 	err := db.Raw(`
 		SELECT table_name, COALESCE(table_rows,0) AS table_rows,
