@@ -1,0 +1,75 @@
+{
+  "taskId": "2026-09-08-p1-csp-nonce-hardening",
+  "title": "P1-6 CSP Nonce Hardening",
+  "goal": "Remove 'unsafe-inline' from production script-src by generating a per-request CSP nonce and injecting it into the CSP policy.",
+  "primaryLayer": "platform",
+  "priority": "P1",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "backend/security",
+  "estimatedEffort": "2 hours (actual 1.5 hours)",
+  "blockedBy": ["2026-09-08-p0-csp-hsts-implementation"],
+  "relatedTasks": [
+    "2026-09-08-p0-csp-hsts-implementation",
+    "2026-09-08-p0-security-gates-enforcement"
+  ],
+  "scope": {
+    "in": [
+      "nonce generation middleware (crypto/rand, 16-byte base64)",
+      "nonce injection into Gin context and CSP policy",
+      "production CSP: script-src 'self' 'nonce-...' (no unsafe-inline)",
+      "development CSP: nonce + unsafe-inline/unsafe-eval retained for Vite HMR",
+      "unit tests for nonce generation, uniqueness and fallback"
+    ],
+    "out": [
+      "hash-based CSP",
+      "CSP reporting endpoint",
+      "subresource integrity (SRI)",
+      "service worker CSP"
+    ],
+    "create": [
+      "backend/internal/middleware/csp_nonce_middleware.go",
+      "backend/internal/middleware/csp_nonce_middleware_test.go",
+      ".harness/tasks/2026-09-08-p1-csp-nonce-hardening/task.md",
+      ".harness/tasks/2026-09-08-p1-csp-nonce-hardening/manifest.json",
+      ".harness/evidence/2026-09-08-p1-csp-nonce-hardening/completion.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/csp_middleware.go",
+      "backend/internal/middleware/csp_middleware_test.go",
+      "backend/cmd/server/main.go"
+    ],
+    "doNotTouch": [
+      "frontend source",
+      "database migrations"
+    ]
+  },
+  "successCriteria": [
+    "Production CSP uses nonce instead of unsafe-inline for script-src",
+    "Development CSP retains HMR compatibility",
+    "All CSP middleware tests pass",
+    "Fallback to unsafe-inline when nonce missing"
+  ],
+  "humanGates": [],
+  "verification": {
+    "commands": [
+      "cd backend && go test ./internal/middleware/..."
+    ],
+    "manualChecks": [
+      "Browser DevTools: production CSP header contains nonce, no unsafe-inline in script-src",
+      "No CSP violations in console"
+    ]
+  },
+  "reconciliation": "2026-09-15: manifest backfilled from evidence; verified csp_nonce_middleware.go, its tests and main.go wiring exist in repo; status aligned to completed.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p1-csp-nonce-hardening/",
+    "reviewFile": ".harness/evidence/2026-09-08-p1-csp-nonce-hardening/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-08-p1-csp-nonce-hardening/task.md",
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

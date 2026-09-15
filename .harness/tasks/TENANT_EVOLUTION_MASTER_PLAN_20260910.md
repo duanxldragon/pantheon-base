@@ -3,11 +3,15 @@ title: Pantheon Base 租户演进任务分解与开发计划
 doc_type: Plan
 layer: platform
 status: Active
-updated_at: 2026-09-11
+updated_at: 2026-09-15
 ---
 
 # Pantheon Base 租户演进任务分解与开发计划
 
+> **2026-09-15 执行对账**：队列 5 的 S3 下载授权剩余项已收口（`ServeUploadedFile` 现以授权路由服务 s3 驱动：`upload.Service.OpenS3Object` + `EnforceTenantObjectScope`，租户判定仅来自已解析上下文，跨租户在触达对象存储前拒绝，compat 保持旧键位；6 项隔离测试，DB-backed `go test -short` 37 包全绿，evidence 见 `s3-download-authorization.md`）。
+> durable job 框架确认不存在于代码库（仅 operation-log 进程内异步队列，已带显式 `TenantID` 持久化测试）；合同 §3.2 已约束未来 worker 必须携带 `tenant_id`，记录为 future work 而非隔离缺口。
+> 队列 4/5 剩余仅 runtime/生产项（hostile 双租户浏览器矩阵扩展、G1--G4 人工门禁），随队列 6 收口。
+>
 > **2026-09-11 执行对账**：队列 0--3 已完成（manifest 均为 `done`，evidence 齐全）——
 > 任务 0 `tenant-ready-guardrails`（伪能力下线 + 就绪检查 + CI DB-backed 覆盖率对账，阈值 11→50，维护者已批准口径）；
 > 任务 1 `tenant-contract-design`（[合同 V1 冻结](../../docs/contracts/TENANT_CONTRACT_V1.md)）；
