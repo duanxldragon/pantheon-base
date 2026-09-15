@@ -292,7 +292,7 @@ CREATE TABLE tenant_memberships ( ... ); -- 合同 §2.2, UK(tenant_id,user_id)
 | Gate | 决定 | 依据 |
 |------|------|------|
 | G1 | **GRANTED**（2026-09-15，维护者授权 agent 评审后放行） | Runbook 完整；副本三类演练 `rehearse-20260911_065959` 通过（成功/冲突探针 ER_DUP_ENTRY/注入失败回滚），回滚闭环四项验证全过（行数守恒、唯一键恢复、compat 登录 smoke、审计留痕） |
-| G2 | **OPEN**（无法诚实放行） | 仓库内不存在生产备份 RPO/RTO 确认或生产备份恢复演练证据；`tenant_rehearsal` 是一次性本地副本，不构成 G2 要求的"生产备份可恢复"证明。需 DBA 提供生产备份恢复记录后再评审 |
+| G2 | **OPEN**（无法诚实放行） | 仓库内不存在生产备份 RPO/RTO 确认或生产备份恢复演练证据；`tenant_rehearsal` 是一次性本地副本，不构成 G2 要求的"生产备份可恢复"证明。**放行路径**：按 [G2 恢复演练规程](PRODUCTION_BACKUP_RESTORE_DRILL_G2.md) 执行并记录，实测 RPO/RTO 达标后由 DBA+维护者签署 |
 | G3 | **OPEN**（无法诚实放行） | §4.2 公式存在但演练表仅 1 行，无生产表量级数据；窗口估算不可计算，且 >1000 万行的表需预发用生产量级单独演练。需生产表行数清单后再评审 |
 | G4 | **GRANTED**（2026-09-15） | 合同 V1 `status: Approved` 且冻结；无 TBD/未闭合项；无 contract-change 记录；database-per-tenant 为 Phase 3 未来选项，不构成未闭合变更 |
 
