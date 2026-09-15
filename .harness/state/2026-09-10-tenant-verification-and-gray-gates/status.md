@@ -37,13 +37,33 @@ which is independently constrained by open runtime-evidence gaps:
 
 ## Path to Re-review
 
-1. G2: DBA produces a production-backup restore drill record (RPO/RTO measured).
-2. G3: production table row counts recorded; §4.2 math applied; >10M-row tables rehearsed at production scale in staging.
-3. Re-run of this evaluation updates this state file and the runbook §8.1 table.
+### Checklist (execute top to bottom; both tool paths are committed)
+
+**G2 — backup restore drill** (procedure: `docs/runbooks/PRODUCTION_BACKUP_RESTORE_DRILL_G2.md`)
+
+- [ ] DBA executes the drill per the procedure: backup inventory → RPO facts (binlog positions) → timed full restore + binlog replay into isolated staging → consistency checks vs production (read-only) → app-level verification (RTO endpoint)
+- [ ] Record filled using the §5 template → `.harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/g2-restore-<runid>.md`
+- [ ] Meets §4 sign-off criteria: RPO ≤ 15 min, RTO × 2 ≤ maintenance window, consistency explainable, DBA + maintainer signatures
+- [ ] Maintainer flips G2 in runbook §8.1 citing the drill Run ID
+
+**G3 — window estimate** (tool: `backend/cmd/tenantsizing`, runbook §4.2)
+
+- [ ] Capture production sizes: `tenantsizing snapshot -dsn <prod_readonly_dsn> -out g3-snapshot-<date>.json` (read-only; the G2 restored copy may serve as the first sizing source)
+- [ ] Generate worksheet: `tenantsizing plan -report g3-snapshot-<date>.json` → paste into this directory as `g3-window-worksheet-<date>.md`
+- [ ] If verdict is `ESTIMATE-PROVISIONAL` (any table > 10M rows): rehearse those tables in staging at production scale, then re-run snapshot/plan until `ESTIMATE-READY`
+- [ ] Maintainer approves the window (reserve = estimate × 2) and flips G3 in runbook §8.1 citing the worksheet
+
+**Close-out**
+
+- [ ] Update this state file: G2/G3 rows → decision + evidence link
+- [ ] Update runbook §8.1 table to match
+- [ ] Re-evaluate the overall `blocked` verdict of `2026-09-10-tenant-verification-and-gray` against the remaining runtime-evidence gaps (production-like rollback timing, perf/observability baseline, remaining browser surfaces, S3-backed probe, CGO race testing)
 
 ## References
 
 - Runbook §8 + §8.1 decision table: `docs/runbooks/TENANT_MIGRATION_RUNBOOK.md`
+- G2 drill procedure: `docs/runbooks/PRODUCTION_BACKUP_RESTORE_DRILL_G2.md`
+- G3 sizing tool: `backend/cmd/tenantsizing` (snapshot → plan; §4.2 formula + 10M-row rule enforced)
 - Rehearsal log: `.harness/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md`
 - Independent review (verdict: blocked): `.harness/evidence/2026-09-10-tenant-verification-and-gray/review.md`
 - Browser matrix evidence: `.harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-hostile-browser-matrix-20260915.json`
