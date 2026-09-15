@@ -11,6 +11,11 @@
 //	        * set platform.tenant_mode = compat (explicit starting point).
 //	down  — restore: delete fixture rows, force the flag back to compat,
 //	        then roll migrations 16..13 back (reverse of up).
+//	revoke — runbook §6.2 kill-switch session revocation for the smoke user:
+//	        per-user Redis blacklist + refresh cascade + session rows marked
+//	        revoked, via the production pkg/tenant.RevokeUserSessionsInTenant.
+//	unblacklist — clear the per-user kill key (rehearsal-only recovery so
+//	        later phases can log in again; mirrors §6.2 cache invalidation).
 //
 // Safety rails:
 //   - requires PANTHEON_MATRIX_DSN explicitly (never guesses credentials);
@@ -21,12 +26,19 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 const (
@@ -41,7 +53,7 @@ const (
 
 func main() {
 	if len(os.Args) < 2 {
-		fatal("usage: tenantmatrixdb up|down|status")
+		fatal("usage: tenantmatrixdb up|down|status|revoke|unblacklist")
 	}
 	dsn := strings.TrimSpace(os.Getenv("PANTHEON_MATRIX_DSN"))
 	if dsn == "" {
@@ -69,9 +81,80 @@ func main() {
 		if err := cmdStatus(db); err != nil {
 			fatal("status failed: %v", err)
 		}
+	case "revoke":
+		if err := cmdRevoke(db); err != nil {
+			fatal("revoke failed: %v", err)
+		}
+	case "unblacklist":
+		if err := cmdUnblacklist(); err != nil {
+			fatal("unblacklist failed: %v", err)
+		}
 	default:
 		fatal("unknown subcommand %q", os.Args[1])
 	}
+}
+
+// cmdRevoke executes the runbook §6.2 kill-switch session-revocation step
+// through the production code path (pkg/tenant.RevokeUserSessionsInTenant —
+// the same function org membership changes must call): per-user Redis
+// blacklist kills live access tokens, refresh tokens cascade-delete, session
+// rows are marked revoked. The smoke user owns the matrix sessions, so
+// revoking their sessions is exactly the "revoke affected sessions" step for
+// the two-tenant rehearsal.
+func cmdRevoke(db *sql.DB) error {
+	rdb := connectRedis()
+	if rdb == nil {
+		return fmt.Errorf("redis unavailable (PANTHEON_REDIS_ADDR) — blacklist step cannot run")
+	}
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db}), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("wrap gorm: %w", err)
+	}
+	revoked, err := tenant.RevokeUserSessionsInTenant(context.Background(), rdb, gdb, smokeUserID)
+	if err != nil {
+		return fmt.Errorf("revoke user %d sessions: %w", smokeUserID, err)
+	}
+	fmt.Printf("tenant-matrix revoke: user %d sessions revoked=%d (blacklist key ttl=%s)\n",
+		smokeUserID, revoked, authtoken.AccessTokenTTL+time.Minute)
+	return nil
+}
+
+// cmdUnblacklist clears the per-user kill key after the kill-switch evidence
+// pass so later phases (and the dev workflow) can log in again. This mirrors
+// runbook §6.2 step 4 (cache invalidation) in reverse: it is a rehearsal
+// utility only, never a production recovery step.
+func cmdUnblacklist() error {
+	rdb := connectRedis()
+	if rdb == nil {
+		return fmt.Errorf("redis unavailable (PANTHEON_REDIS_ADDR)")
+	}
+	n, err := rdb.Del(context.Background(), authtoken.BlacklistUserKey(smokeUserID)).Result()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("tenant-matrix unblacklist: user %d kill key removed (%d)\n", smokeUserID, n)
+	return nil
+}
+
+// connectRedis builds a client from the same env vars cmd/server uses
+// (PANTHEON_REDIS_ADDR / PANTHEON_REDIS_PASSWORD), without importing the
+// server's global database.RDB singleton.
+func connectRedis() *redis.Client {
+	addr := strings.TrimSpace(os.Getenv("PANTHEON_REDIS_ADDR"))
+	if addr == "" {
+		return nil
+	}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: os.Getenv("PANTHEON_REDIS_PASSWORD"),
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		_ = rdb.Close()
+		return nil
+	}
+	return rdb
 }
 
 func cmdUp(db *sql.DB) error {

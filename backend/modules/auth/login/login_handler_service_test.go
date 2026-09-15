@@ -12,6 +12,7 @@ import (
 	settingmod "github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting"
 	rolemod "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role"
 	user "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 
@@ -596,7 +597,11 @@ func TestAuthHandler_GetSessions(t *testing.T) {
 
 func TestAuthHandler_LogoutHandler(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	var invalidatedToken string
+	h := NewAuthHandler(NewRuntime(db), func(token string) {
+		invalidatedToken = token
+	})
+	rdb := setupTestRedis(t)
 
 	u := seedHandlerUser(t, db, "logout_user", "pass123")
 	if err := db.Create(&SystemUserSession{
@@ -611,11 +616,25 @@ func TestAuthHandler_LogoutHandler(t *testing.T) {
 
 	c, recorder := newHandlerTestContext(t)
 	c.Set("sessionId", "logout-session")
+	accessToken := "logout-access-token"
+	if err := authtoken.StoreSession(c, rdb, accessToken, &authtoken.SessionData{
+		UserID:    u.ID,
+		SessionID: "logout-session",
+	}, time.Hour); err != nil {
+		t.Fatalf("seed access token: %v", err)
+	}
+	c.Request.Header.Set("Authorization", "Bearer "+accessToken)
 	h.LogoutHandler(c)
 
 	code, data := decodeHandlerResponse(t, recorder)
 	if code != common.CodeSuccess || data["loggedOut"] != true {
 		t.Fatalf("expected loggedOut=true, got code=%d body=%s", code, recorder.Body.String())
+	}
+	if _, err := authtoken.ValidateSession(c, rdb, accessToken); err == nil {
+		t.Fatal("expected logout to delete the current access token")
+	}
+	if invalidatedToken != accessToken {
+		t.Fatalf("expected logout to invalidate token cache for %q, got %q", accessToken, invalidatedToken)
 	}
 }
 

@@ -186,7 +186,7 @@ func (s *AuditService) DeleteOperationLog(logID uint64, ctx *tenant.Context) err
 	return s.applyTenantScope(s.db, ctx).Delete(&middleware.SystemLogOper{}, logID).Error
 }
 
-func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string, endedAt string) (int64, error) {
+func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string, endedAt string, ctx *tenant.Context) (int64, error) {
 	if s.db == nil {
 		return 0, common.ErrDatabaseNotInitialized
 	}
@@ -195,7 +195,7 @@ func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string,
 		return 0, err
 	}
 
-	db := s.db.Model(&middleware.SystemLogOper{})
+	db := s.applyTenantScope(s.db.Model(&middleware.SystemLogOper{}), ctx)
 	if window != nil {
 		db = db.Where("oper_time >= ? AND oper_time <= ?", window.StartedAt, window.EndedAt)
 	} else {

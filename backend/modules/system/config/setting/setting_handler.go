@@ -3,10 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
@@ -201,12 +203,6 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 	}
 
 	cfg, err := h.uploadService.LoadConfig()
-	if err != nil || cfg.StorageDriver != "local" {
-		common.Fail(c, common.CodeError, errUploadFileNotFound)
-		return
-	}
-
-	rootPath, err := filepath.Abs(strings.TrimSpace(cfg.LocalPath))
 	if err != nil {
 		common.Fail(c, common.CodeError, errUploadFileNotFound)
 		return
@@ -217,12 +213,29 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errUploadFileNotFound)
 		return
 	}
-	if ctx := tenant.FromGin(c); ctx != nil && ctx.IsMulti() {
-		prefix := fmt.Sprintf("t%d/", ctx.TenantID)
-		if !strings.HasPrefix(objectKey, prefix) {
-			common.Fail(c, common.CodeError, errUploadFileNotFound)
-			return
-		}
+	// Tenancy is enforced from the resolved context only — never request fields.
+	if err := uploadpkg.EnforceTenantObjectScope(tenant.FromGin(c), objectKey); err != nil {
+		common.Fail(c, common.CodeError, errUploadFileNotFound)
+		return
+	}
+
+	// S3 driver: serve through the authorized backend path (download
+	// authorization slice). Previously this endpoint failed closed for S3,
+	// leaving object-store URLs as the only access path — unauthenticated
+	// object reads bypassed the tenant isolation the local path enforces.
+	if cfg.StorageDriver == "s3" {
+		h.serveS3Object(c, objectKey)
+		return
+	}
+	if cfg.StorageDriver != "local" {
+		common.Fail(c, common.CodeError, errUploadFileNotFound)
+		return
+	}
+
+	rootPath, err := filepath.Abs(strings.TrimSpace(cfg.LocalPath))
+	if err != nil {
+		common.Fail(c, common.CodeError, errUploadFileNotFound)
+		return
 	}
 
 	extension := strings.TrimPrefix(strings.ToLower(filepath.Ext(objectKey)), ".")
@@ -241,6 +254,34 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		return
 	}
 	http.ServeFileFS(c.Writer, c.Request, os.DirFS(rootPath), objectKey)
+}
+
+// serveS3Object streams an object from the S3-compatible store through the
+// authorized serve endpoint. Headers mirror the local-driver path (nosniff,
+// attachment for non-images) so browsers treat both drivers identically.
+func (h *SettingHandler) serveS3Object(c *gin.Context, objectKey string) {
+	object, size, contentType, err := h.uploadService.OpenS3Object(c.Request.Context(), objectKey)
+	if err != nil {
+		common.Fail(c, common.CodeError, errUploadFileNotFound)
+		return
+	}
+	defer func() {
+		_ = object.Close()
+	}()
+
+	extension := strings.TrimPrefix(strings.ToLower(filepath.Ext(objectKey)), ".")
+	if contentType != "" {
+		c.Header("Content-Type", contentType)
+	}
+	// 纵深防御：禁止 MIME 嗅探；非图片类型强制下载（与本地驱动一致）。
+	c.Header("X-Content-Type-Options", "nosniff")
+	switch extension {
+	case "jpg", "jpeg", "png", "gif", "webp":
+	default:
+		c.Header("Content-Disposition", "attachment")
+	}
+	c.Header("Content-Length", strconv.FormatInt(size, 10))
+	_, _ = io.Copy(c.Writer, object)
 }
 
 // uploadScope builds the object-key prefix for an upload (queue-5 upload

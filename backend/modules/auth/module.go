@@ -28,7 +28,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 		return value
 	}, int64(5*time.Second))
 	authSvc := login.NewRuntime(db)
-	authHandler := login.NewAuthHandler(authSvc)
+	authHandler := login.NewAuthHandler(authSvc, middleware.InvalidateTokenAuthCache)
 	loginRateLimiter := middleware.RateLimiter(middleware.RateLimiterConfig{
 		MaxRequests: publicAuthRateLimitMax(5, 120),
 		Window:      time.Minute,

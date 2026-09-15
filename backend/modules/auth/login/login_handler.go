@@ -23,15 +23,20 @@ import (
 )
 
 type AuthHandler struct {
-	service *Runtime
+	service                  *Runtime
+	invalidateTokenAuthCache func(string)
 }
 
 const csrfGenerateErrorKey = "csrf.generate.error"
 const msgParamInvalid = "param.invalid"
 const headerUserAgent = "User-Agent"
 
-func NewAuthHandler(s *Runtime) *AuthHandler {
-	return &AuthHandler{service: s}
+func NewAuthHandler(s *Runtime, invalidators ...func(string)) *AuthHandler {
+	h := &AuthHandler{service: s}
+	if len(invalidators) > 0 {
+		h.invalidateTokenAuthCache = invalidators[0]
+	}
+	return h
 }
 
 func failOnCSRFCookieError(c *gin.Context, err error) bool {
@@ -600,6 +605,19 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 	if err := h.service.RevokeSession(c.GetString("sessionId")); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.logout.error")
 		return
+	}
+	// Revoke the current opaque access token as well as the DB session. Without
+	// this step a token cached by TokenAuthMiddleware could remain usable after
+	// logout until its normal TTL elapsed.
+	if accessToken := commonhttp.ExtractAccessToken(c.Request); accessToken != "" {
+		if h.invalidateTokenAuthCache != nil {
+			h.invalidateTokenAuthCache(accessToken)
+		}
+		if err := authtoken.DeleteSession(c.Request.Context(), database.RDB, accessToken); err != nil {
+			logging.Warn("delete access token after logout failed",
+				zap.String("session_id", c.GetString("sessionId")),
+				zap.Error(err))
+		}
 	}
 	commonhttp.ClearTokenCookies(c.Writer)
 	common.Success(c, gin.H{"loggedOut": true})
