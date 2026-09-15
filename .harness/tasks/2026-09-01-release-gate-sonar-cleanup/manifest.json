@@ -1,9 +1,14 @@
 {
   "taskId": "2026-09-01-release-gate-sonar-cleanup",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-01-release-gate-sonar-cleanup/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Resolve the remaining AppTable SonarCloud complexity issue",
   "goal": "Unblock the Base Release Gate and foundation publication by resolving the sole unresolved SonarCloud issue on main.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["frontend"],
+  "dependencyLayers": [
+    "frontend"
+  ],
   "scope": {
     "in": [
       "Behavior-preserving AppTable presentation refactor",
@@ -25,13 +30,21 @@
       ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/pr-body.md",
       "docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md"
     ],
-    "modify": ["frontend/src/components/data-display/AppTable.tsx"]
+    "modify": [
+      "frontend/src/components/data-display/AppTable.tsx"
+    ]
   },
   "methodReadiness": {
-    "qualityProfiles": ["ui-runtime", "ci-workflow"],
+    "qualityProfiles": [
+      "ui-runtime",
+      "ci-workflow"
+    ],
     "minimalComplexityRung": "reuse",
     "implementerPosture": "behavior-preserving private presentation extraction",
-    "reviewerPosture": ["mechanical", "ui-runtime"],
+    "reviewerPosture": [
+      "mechanical",
+      "ui-runtime"
+    ],
     "requiredSensors": [
       "frontend type-check",
       "frontend lint",
@@ -64,9 +77,15 @@
     "evidenceDir": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/",
     "reviewFile": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/review.md",
     "summaryFile": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md"
+    ]
   },
-  "humanGates": ["GitHub required checks", "SonarCloud analysis", "Release Gate Summary"],
+  "humanGates": [
+    "GitHub required checks",
+    "SonarCloud analysis",
+    "Release Gate Summary"
+  ],
   "ratchetDecision": "no-repeat-observed",
   "syncExpectation": "Foundation release follows successful Base gate; Ops consumption is validated in a temporary overlay tree."
 }

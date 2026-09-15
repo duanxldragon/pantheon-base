@@ -1,9 +1,15 @@
 {
   "taskId": "2026-07-23-security-event-policy-i18n-header",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-23-security-event-policy-i18n-header/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Complete security-event cleanup permission chain and remove undesigned i18n table-head title",
   "goal": "Make the security-event cleanup/acknowledge feature work end-to-end for non-admin roles by registering the missing required API policies, and remove the undesigned '翻译详情' table-head block from the i18n management list page.",
   "primaryLayer": "system/iam",
-  "dependencyLayers": ["system/auth", "ui-runtime"],
+  "dependencyLayers": [
+    "system/auth",
+    "ui-runtime"
+  ],
   "scope": {
     "in": [
       "requiredAPIPoliciesByPermissionKey mappings for system:security-event:acknowledge and system:security-event:clear",

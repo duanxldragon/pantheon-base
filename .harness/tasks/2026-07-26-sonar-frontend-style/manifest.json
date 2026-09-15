@@ -1,9 +1,19 @@
 {
   "taskId": "2026-07-26-sonar-frontend-style",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-26-sonar-frontend-style/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "SonarCloud frontend batch: style-rule remediation across frontend/src",
   "goal": "Fix in code the 182 frontend SonarCloud OPEN findings (frozen list exported 2026-07-25): nested-ternary extraction, modern-JS rule modernization, cascade-safe duplicate-CSS merges, duplicate-import merges, and assorted per-message fixes.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system/auth", "system/iam", "system/org", "system/config", "system/i18n", "lowcode"],
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config",
+    "system/i18n",
+    "lowcode"
+  ],
   "scope": {
     "in": [
       "typescript:S3358 x46, S7778 x20, S7770 x19, S7781 x9, S7771 x6, S6819 x5, S6653 x5, S6594 x5, S4624 x4, S6754 x4, S3863 x4, S7763 x4, S7746 x4, css:S4666 x6, and remaining S77xx/S29xx/S87xx singles per prd_frontend.txt"

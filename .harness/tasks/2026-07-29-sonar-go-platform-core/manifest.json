@@ -1,5 +1,8 @@
 {
   "taskId": "2026-07-29-sonar-go-platform-core",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-29-sonar-go-platform-core/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "SonarCloud Go remediation for platform core",
   "goal": "Fix every OPEN SonarCloud issue from the frozen 2026-07-26 report under backend/cmd, backend/internal, backend/modules/platform, and backend/pkg without changing behavior or touching system/business modules.",
   "primaryLayer": "platform",

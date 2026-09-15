@@ -1,5 +1,8 @@
 {
   "taskId": "2026-09-10-i18n-s3649-zero",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-10-i18n-s3649-zero/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Clear the last SonarCloud issue: i18n S3649 map-Updates taint",
   "goal": "After #305, the Release Gate's SonarCloud Gate job (zero TOTAL unresolved issues) still fails on exactly 1 issue: gosecurity:S3649 BLOCKER in i18n_service.go:200 — the #304 fix replaced First(pk) with Where(\"id = ?\") but kept the map-values form of Updates(), which Sonar's Go analyzer flags as SQL constructed from user-controlled data regardless of the Select() scoping. Convert the update payload to the model-struct form (analyzer-recognized safe pattern); identical columns written with identical values.",
   "primaryLayer": "backend",

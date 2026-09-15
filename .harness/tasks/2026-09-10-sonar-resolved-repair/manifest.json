@@ -1,5 +1,8 @@
 {
   "taskId": "2026-09-10-sonar-resolved-repair",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-10-sonar-resolved-repair/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Resolve 4 SonarCloud BLOCKER taint-analysis findings blocking Release Gate",
   "goal": "PR #302 cleared Dependabot alerts and the quality-gate rating, but the SonarCloud Gate job additionally requires ZERO unresolved BUG/VULNERABILITY/CODE_SMELL issues. 4 open BLOCKER VULNERABILITY findings remain: gosecurity:S3649 SQL-injection taint on uint64 primary-key GORM First() in dept_service.go (x2) and i18n_service.go (x1), and gosecurity:S2083 path-traversal taint in dynamic_module_registry.go where the traversal guard lives behind a (string, bool) helper tuple the analyzer cannot track. Rework the three sites so the guards are analyzer-trackable, with identical runtime behavior.",
   "primaryLayer": "backend",

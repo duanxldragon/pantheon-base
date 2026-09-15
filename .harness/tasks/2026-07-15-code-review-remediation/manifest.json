@@ -1,9 +1,14 @@
 {
   "taskId": "2026-07-15-code-review-remediation",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-15-code-review-remediation/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Full code-review remediation per PANTHEON_BASE_CODE_REVIEW_CHECKLIST",
   "goal": "Scan the codebase against docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md across all thirteen dimensions, auto-fix every mechanically safe finding (security hardening, i18n key compliance, UI token compliance, DB indexes, error swallowing), and implement the three user-approved decision items (i18n unique index migration, session-revocation refresh-token cascade, private-datasource default-deny).",
   "primaryLayer": "system",
-  "dependencyLayers": ["platform"],
+  "dependencyLayers": [
+    "platform"
+  ],
   "scope": {
     "in": [
       "refresh token rotation and session-revocation cascade delete (authtoken sessref reverse index, all four revoke paths)",
@@ -64,7 +69,10 @@
   },
   "executionRoles": {
     "implementerPosture": "implementer",
-    "reviewerPosture": ["security", "mechanical"]
+    "reviewerPosture": [
+      "security",
+      "mechanical"
+    ]
   },
   "verificationPlan": {
     "backend": [
@@ -87,7 +95,9 @@
     "reviewFile": ".harness/evidence/2026-07-15-code-review-remediation/review.md",
     "summaryFile": ".harness/evidence/2026-07-15-code-review-remediation/summary.md",
     "changeRef": "fix/2026-07-15-code-review-remediation",
-    "planRefs": ["fix-report.md"]
+    "planRefs": [
+      "fix-report.md"
+    ]
   },
   "evidenceRequired": [
     "command result summary",

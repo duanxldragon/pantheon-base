@@ -1,9 +1,15 @@
 {
   "taskId": "2026-08-13-foundation-release-repo-snapshot",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-13-foundation-release-repo-snapshot/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Ship a full repository snapshot in the foundation release",
   "goal": "Publish a git-archive repo.tar full-repository snapshot alongside the foundation release bundle so consumers rebuild deterministically from a locked release without a live base working tree.",
   "primaryLayer": "inheritance-sync",
-  "qualityProfiles": ["generator", "ci-workflow"],
+  "qualityProfiles": [
+    "generator",
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "repo.tar full-repository snapshot generation from git archive at baseCommit",
@@ -27,7 +33,9 @@
     "evidenceDir": ".harness/evidence/2026-08-13-foundation-release-repo-snapshot/",
     "reviewFile": ".harness/evidence/2026-08-13-foundation-release-repo-snapshot/review.md",
     "summaryFile": ".harness/evidence/2026-08-13-foundation-release-repo-snapshot/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-13-foundation-release-repo-snapshot.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-13-foundation-release-repo-snapshot.task.md"
+    ]
   },
   "syncExpectation": "Ops consumes repo.tar from the locked GitHub release (v0.10.21+) instead of a live ../pantheon-base working tree."
 }

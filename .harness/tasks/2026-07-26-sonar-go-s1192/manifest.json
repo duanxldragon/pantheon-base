@@ -1,9 +1,19 @@
 {
   "taskId": "2026-07-26-sonar-go-s1192",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-26-sonar-go-s1192/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "SonarCloud backend batch: duplicated-literal constants + safe godre/misc fixes",
   "goal": "Fix in code the 126 backend SonarCloud OPEN findings: 113 go:S1192 duplicated literals extracted to package-level unexported constants, plus 13 mechanical godre/misc findings (blank-import comments, condition inlining, parameter grouping, empty-function comments, identical-branch merge, duplicate-implementation delegation).",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system/auth", "system/iam", "system/org", "system/config", "system/i18n", "lowcode"],
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config",
+    "system/i18n",
+    "lowcode"
+  ],
   "scope": {
     "in": [
       "go:S1192 x113 per prc_s1192.txt (frozen finding list exported from SonarCloud 2026-07-25)",

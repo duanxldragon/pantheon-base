@@ -1,5 +1,8 @@
 {
   "taskId": "sonarcloud-s4666",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/sonarcloud-s4666/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Resolve SonarCloud CSS duplicate selector (css:S4666)",
   "goal": "Fix SonarCloud code smell css:S4666 by merging duplicate .arco-descriptions CSS selectors at lines 476 and 2824 in frontend/src/index.css",
   "primaryLayer": "frontend",
@@ -36,7 +39,9 @@
   },
   "executionRoles": {
     "implementerPosture": "implementer",
-    "reviewerPosture": ["mechanical"]
+    "reviewerPosture": [
+      "mechanical"
+    ]
   },
   "verificationPlan": {
     "backend": [],

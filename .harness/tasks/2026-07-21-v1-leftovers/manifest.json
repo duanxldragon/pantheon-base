@@ -1,9 +1,16 @@
 {
   "taskId": "2026-07-21-v1-leftovers",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-21-v1-leftovers/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "V1.0 leftovers: generator registry assertions, batch caps, dependabot governance exemption",
   "goal": "Close every leftover registered in the V1.0 release-readiness report: unblock the three lowcode real-flow smoke failures (stale backend/modules path assertions after the module-path move + un-i18n-synced wizard label), fix the SecurityEventList deferred query commit, cap batch id lists on the four audit batch endpoints, and remove the structural deadlock that made dependabot PRs unmergeable under Docs Governance.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system/auth", "system/audit", "lowcode"],
+  "dependencyLayers": [
+    "system/auth",
+    "system/audit",
+    "lowcode"
+  ],
   "scope": {
     "in": [
       "sync backend_registry verification fragment and four smoke assertions to the Go import path the registry actually writes",
@@ -41,11 +48,17 @@
       "frontend/tests/smoke/business/generated/*.spec.ts",
       "frontend/tests/smoke/system/governance/module-governance.spec.ts"
     ],
-    "doNotTouch": ["database/system_init.sql", "generator templates/behavior"]
+    "doNotTouch": [
+      "database/system_init.sql",
+      "generator templates/behavior"
+    ]
   },
   "executionRoles": {
     "implementerPosture": "claude-direct (maintainer authorization extends the V1.0 release exemption)",
-    "reviewerPosture": ["mechanical", "self-review"]
+    "reviewerPosture": [
+      "mechanical",
+      "self-review"
+    ]
   },
   "verificationPlan": {
     "backend": [

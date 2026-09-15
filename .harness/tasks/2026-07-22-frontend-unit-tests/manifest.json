@@ -1,9 +1,14 @@
 {
   "taskId": "2026-07-22-frontend-unit-tests",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-22-frontend-unit-tests/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Frontend unit tests + coverage gates + release gate workflow (PR #198)",
   "goal": "Introduce Vitest unit-test infrastructure for frontend pure logic (13 files / 132 cases) with per-file coverage thresholds, wire a frontend-unit-tests CI job with coverage artifact reuse, make golangci-lint new-code-only on PRs, harden the security summary with a CodeQL hard gate, and add a pre-release release-gate workflow. Follow-up round clears all red gates raised by the first push: relocate tests to frontend/tests/unit/ per REPOSITORY_LAYOUT §2.2, fix a pinned-action SHA typo, restore the go-lint diff baseline, and register gitleaks false-positive fingerprints.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["ci-workflow"],
+  "dependencyLayers": [
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "frontend/tests/unit/**: 13 Vitest test files over core/ pure logic and hooks",

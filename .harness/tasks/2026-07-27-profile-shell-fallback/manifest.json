@@ -1,5 +1,8 @@
 {
   "taskId": "2026-07-27-profile-shell-fallback",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-27-profile-shell-fallback/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Silence optional profile lookup and harden shell and profile identity fallback",
   "goal": "Treat a missing optional user profile extension as a normal result and prevent broken avatars or duplicate identity labels from repeating the shell or ProfileCenter hero identity.",
   "primaryLayer": "system/iam",

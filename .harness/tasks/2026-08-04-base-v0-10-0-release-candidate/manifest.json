@@ -1,5 +1,8 @@
 {
   "taskId": "2026-08-04-base-v0-10-0-release-candidate",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-04-base-v0-10-0-release-candidate/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Prepare the pantheon-base v0.10.0 release candidate",
   "goal": "Close all identified Base-side release, packaging, gate, smoke, and evidence gaps and produce a candidate that is ready for the final maintainer publication gate.",
   "primaryLayer": "platform",

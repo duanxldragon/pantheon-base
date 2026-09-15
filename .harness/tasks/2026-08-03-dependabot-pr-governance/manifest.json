@@ -1,5 +1,8 @@
 {
   "taskId": "2026-08-03-dependabot-pr-governance",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-03-dependabot-pr-governance/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Close Dependabot PR governance workflow drift",
   "goal": "Make the PR automation governance prerequisite apply the same Dependabot policy as Docs Governance, then prove existing dependency PRs can pass without a maintainer bypass.",
   "primaryLayer": "platform",

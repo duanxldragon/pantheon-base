@@ -1,12 +1,26 @@
 {
   "taskId": "2026-08-12-foundation-consumer-cleanup-overlay",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Preserve consumer business overlays during generated cleanup",
   "goal": "Make Base-owned generated cleanup safe for tracked foundation-consumer business overlays.",
   "primaryLayer": "inheritance-sync",
-  "qualityProfiles": ["generator", "ui-runtime"],
+  "qualityProfiles": [
+    "generator",
+    "ui-runtime"
+  ],
   "scope": {
-    "in": ["generated cleanup ownership", "consumer overlay preservation", "producer regression gate"],
-    "out": ["business behavior", "schema changes", "existing release mutation"]
+    "in": [
+      "generated cleanup ownership",
+      "consumer overlay preservation",
+      "producer regression gate"
+    ],
+    "out": [
+      "business behavior",
+      "schema changes",
+      "existing release mutation"
+    ]
   },
   "ratchetDecision": "gate-updated",
   "runtimeSensitive": true,
@@ -17,7 +31,9 @@
     "evidenceDir": ".harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/",
     "reviewFile": ".harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/review.md",
     "summaryFile": ".harness/evidence/2026-08-12-foundation-consumer-cleanup-overlay/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-consumer-cleanup-overlay.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-12-foundation-consumer-cleanup-overlay.task.md"
+    ]
   },
   "syncExpectation": "Publish pantheon-base-v0.10.18 as a new immutable patch and consume it through the Ops foundation-release consumer."
 }

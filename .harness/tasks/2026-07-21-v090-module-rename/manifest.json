@@ -1,9 +1,16 @@
 {
   "taskId": "2026-07-21-v090-module-rename",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-21-v090-module-rename/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "v0.9.0 freeze: Go module rename pantheon-platform→pantheon-base + three governance gates",
   "goal": "Freeze pantheon-base v0.9.0 so pantheon-ops can inherit via foundation release. Resolve pre-release leftovers: sync the Go module path rename (pantheon-platform → pantheon-base) across go.mod, 142 .go files, the lowcode generator template, smoke assertions and cleanup/drift scripts; land the three fix-report §4 leftover gates (business/* boundary depguard + CI boundary-gate, coverage-gate, MFA production baseline doc).",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system/auth", "business/*", "lowcode"],
+  "dependencyLayers": [
+    "system/auth",
+    "business/*",
+    "lowcode"
+  ],
   "scope": {
     "in": [
       "backend/go.mod module declaration + 142 .go files / 339 import paths → pantheon-base",

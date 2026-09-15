@@ -1,9 +1,14 @@
 {
   "taskId": "2026-09-10-sonar-new-code-zero",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-10-sonar-new-code-zero/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Clear the 4 remaining SonarCloud new-code findings blocking Release Gate",
   "goal": "After #304, the Release Gate's Candidate Checks job requires 'SonarCloud Code Analysis' (new-code quality gate) to be success on the release candidate. The post-merge main analysis failed with 'Security Rating on New Code = E' on 4 issues: gosecurity:S2083 BLOCKER (taint flows from HTTP request through Schema.Scope into the relativePath argument of fs.ReadFile - the fs.FS restructure moved the sink but the relative path itself remains request-controlled), typescript:S3516+S3776 (revealTreeRow: all exits return the same targetRow locator and cognitive complexity 17), go:S978 (test identifier shadows predeclared clear). Fix all 4 at source: adopt os.Root (kernel-backed traversal-safe API) so containment is structural, split revealTreeRow into attempt helper + retry wrapper, drop dead parameter, rename the test variable.",
   "primaryLayer": "backend",
-  "dependencyLayers": ["frontend"],
+  "dependencyLayers": [
+    "frontend"
+  ],
   "scope": {
     "in": [
       "backend/modules/lowcode/dynamicmodule/dynamic_module_registry.go: fs.FS workspaceFS -> os.Root openWorkspaceRoot; fs.ReadFile -> Root.ReadFile",

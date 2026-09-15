@@ -1,5 +1,8 @@
 {
   "taskId": "2026-08-21-sonarcloud-remediation",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-21-sonarcloud-remediation/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Resolve all unresolved SonarCloud issues (networkidle)",
   "goal": "Resolve all 156 typescript:S9332 SonarCloud issues to unblock Release Gate and pantheon-ops foundation release consumption.",
   "primaryLayer": "frontend/tests",
@@ -41,10 +44,14 @@
     }
   ],
   "methodReadiness": {
-    "qualityProfiles": ["ci-workflow"],
+    "qualityProfiles": [
+      "ci-workflow"
+    ],
     "minimalComplexityRung": "reuse",
     "implementerPosture": "single-file replacement",
-    "reviewerPosture": ["mechanical"],
+    "reviewerPosture": [
+      "mechanical"
+    ],
     "requiredSensors": [
       "npm run type-check",
       "npm run lint",

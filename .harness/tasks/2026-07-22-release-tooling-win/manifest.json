@@ -1,9 +1,15 @@
 {
   "taskId": "2026-07-22-release-tooling-win",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-22-release-tooling-win/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Fix foundation-release bundle tar on Windows + gitignore releases/",
   "goal": "Make `npm run release:foundation:cut` work on Windows. The bundle step spawned `tar` with native `D:\\...` paths, which Git Bash's tar interprets as a remote tape device ('Cannot connect to D:'). Convert OS paths to POSIX for the tar subprocess. Also gitignore `releases/` (a build artifact, like `dist/`) so `publish`'s clean-worktree check passes.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["ci-workflow", "tooling"],
+  "dependencyLayers": [
+    "ci-workflow",
+    "tooling"
+  ],
   "scope": {
     "in": [
       "scripts/foundation-release/build-release-bundle.mjs: convert archivePath/distRoot to POSIX for tar spawnSync",

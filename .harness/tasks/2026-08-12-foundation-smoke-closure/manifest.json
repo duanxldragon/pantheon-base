@@ -1,9 +1,15 @@
 {
   "taskId": "2026-08-12-foundation-smoke-closure",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-12-foundation-smoke-closure/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Close foundation generated smoke ownership",
   "goal": "Publish and consume the complete generated-business runtime smoke closure through an immutable foundation release.",
   "primaryLayer": "inheritance-sync",
-  "qualityProfiles": ["generator", "ci-workflow"],
+  "qualityProfiles": [
+    "generator",
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "foundation manifest runtime QA closure",
@@ -26,7 +32,9 @@
     "evidenceDir": ".harness/evidence/2026-08-12-foundation-smoke-closure/",
     "reviewFile": ".harness/evidence/2026-08-12-foundation-smoke-closure/review.md",
     "summaryFile": ".harness/evidence/2026-08-12-foundation-smoke-closure/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-smoke-closure.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-12-foundation-smoke-closure.task.md"
+    ]
   },
   "syncExpectation": "Pantheon Ops consumes the next release and removes stale generic generated-smoke copies."
 }

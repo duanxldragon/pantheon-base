@@ -1,9 +1,14 @@
 {
   "taskId": "2026-08-12-pr-auto-merge-token",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-12-pr-auto-merge-token/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Repair PR auto-merge authentication",
   "goal": "Ensure the PR automation workflow authenticates gh and fails closed when auto-merge cannot be enabled.",
   "primaryLayer": "ci-workflow",
-  "qualityProfiles": ["ci-workflow"],
+  "qualityProfiles": [
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "PR automation token wiring",
@@ -25,7 +30,9 @@
     "evidenceDir": ".harness/evidence/2026-08-12-pr-auto-merge-token/",
     "reviewFile": ".harness/evidence/2026-08-12-pr-auto-merge-token/review.md",
     "summaryFile": ".harness/evidence/2026-08-12-pr-auto-merge-token/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-12-pr-auto-merge-token.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-12-pr-auto-merge-token.task.md"
+    ]
   },
   "syncExpectation": "No Ops sync; this repairs Base repository PR automation only."
 }

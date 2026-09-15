@@ -1,9 +1,15 @@
 {
   "taskId": "2026-07-22-errcheck-cleanup",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-22-errcheck-cleanup/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Fix 13 historical unchecked errors flagged by errcheck",
   "goal": "Resolve the 13 errcheck issues present on main (current .golangci.yml config, check-type-assertions enabled). Apply the repo's documented convention for deliberately-ignored errors: explicit `_ = err` / `_, _ = f()` ignore for best-effort/cleanup paths, matching the comment in backend/.golangci.yml ('idiomatic `_ = err` for deliberately ignored errors is allowed; avoids no-op ignoreError() helpers'). No suppression via exclude-functions, no behavioral change.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["ci-workflow", "linting"],
+  "dependencyLayers": [
+    "ci-workflow",
+    "linting"
+  ],
   "scope": {
     "in": [
       "backend/internal/middleware/operation_log_middleware.go: ignore 2-value Write + unchecked type assertion",

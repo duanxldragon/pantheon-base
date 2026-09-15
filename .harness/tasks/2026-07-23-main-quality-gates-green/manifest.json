@@ -1,9 +1,15 @@
 {
   "taskId": "2026-07-23-main-quality-gates-green",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-23-main-quality-gates-green/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Restore green Code Quality Gates on main after PR #198 merge",
   "goal": "Fix the three failures that turned Code Quality Gates red on the main push for PR #198: (1) check-coverage.mjs missing from the scripts/harness README inventory (Harness Inventory strict gate), (2) check-doc-frontmatter.mjs mirror drift against pantheon-harness (Harness Sync strict gate; canonical side is pantheon-base per PR #196 SonarCloud S2871 fix, upstream synced separately), (3) quality.yml go-lint enforcing full-repo lint on push events, contradicting the accepted-historical-debt policy already applied to ci.yml in PR #198.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["ci-workflow", "harness-governance"],
+  "dependencyLayers": [
+    "ci-workflow",
+    "harness-governance"
+  ],
   "scope": {
     "in": [
       "scripts/harness/README.md: register check-coverage.mjs in the Pantheon Base Additions inventory",

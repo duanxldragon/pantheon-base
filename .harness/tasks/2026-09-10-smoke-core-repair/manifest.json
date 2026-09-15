@@ -1,9 +1,15 @@
 {
   "taskId": "2026-09-10-smoke-core-repair",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-10-smoke-core-repair/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Repair core smoke suite; fix downloadFile CSRF and role null-contract defects",
   "goal": "Core Smoke Tests never passed in CI (0 successes since introduction). Triage the failures, rewrite stale assertions against current UI truth, and fix the two real product defects uncovered during live verification: (1) downloadFile bypasses the axios interceptor so UI export POSTs hit 403 csrf.missing; (2) role list serialized nil slices as menuIds/permissionKeys null, breaking the frontend RoleRow contract and crashing openEdit. Mark the smoke-core workflow report-only until multiple green rounds justify promoting it to blocking.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system-iam", "frontend-api"],
+  "dependencyLayers": [
+    "system-iam",
+    "frontend-api"
+  ],
   "scope": {
     "in": [
       "frontend/tests/smoke-core/*.spec.ts rewritten against current IA and Arco contracts",
