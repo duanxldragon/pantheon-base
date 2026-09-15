@@ -2,7 +2,7 @@
 
 - Priority: `P1`
 - Layer: `platform`
-- Status: `planned`
+- Status: `implemented`
 - Depends On: none
 - Blocks: Ops O1-O5
 

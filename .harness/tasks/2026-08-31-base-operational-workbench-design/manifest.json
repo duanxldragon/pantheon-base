@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "taskId": "2026-08-31-base-operational-workbench-design",
   "title": "Define Base operational workbench shared contracts",
-  "status": "implementation-complete-awaiting-human-visual-gate",
+  "status": "accepted-awaiting-foundation-release",
+  "statusNote": "2026-09-15: maintainer granted final visual/function acceptance in agent session; remaining gates are the immutable foundation release publish and Ops consumer lock update — both explicitly left open (irreversible publish requires separate maintainer action).",
   "priority": "P0-P2",
   "deliveryTier": "L2",
   "primaryLayer": "platform",
@@ -17,7 +18,6 @@
       "Base-first implementation sequencing"
     ],
     "out": [
-      "production code changes",
       "business-specific compositions",
       "BK Design runtime dependency",
       "foundation publication or consumer lock update"
@@ -52,11 +52,32 @@
       "npm run check:harness-inventory",
       "git diff --check"
     ],
-    "visualEvidenceExemption": {
-      "scope": "governance-only",
-      "reason": "B5 adds policy, checker, tests and CI wiring without changing rendered components, styles, copy, layout or interaction.",
-      "noRenderedSurfaceChanged": true,
-      "humanApprovalRequired": true
+    "visualEvidence": {
+      "viewports": ["1440x900", "390x844"],
+      "themes": ["light", "dark"],
+      "states": [
+        "default",
+        "loading",
+        "empty",
+        "error",
+        "forbidden",
+        "stale",
+        "partial"
+      ],
+      "routes": [
+        "/__visual/operational-workbench",
+        "/login",
+        "/dashboard",
+        "/system/user"
+      ],
+      "accessibility": [
+        "keyboard-path",
+        "visible-focus",
+        "screen-reader-name",
+        "zoom-200",
+        "reduced-motion",
+        "non-color-status"
+      ]
     }
   },
   "maintainerGates": [

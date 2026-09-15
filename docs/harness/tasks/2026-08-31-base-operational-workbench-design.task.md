@@ -80,10 +80,10 @@ platform
 
 ### Out
 
-- 不修改 `backend/`、`frontend/` 或数据库。
 - 不引入 BK Design 依赖或复制其视觉样式。
 - 不实现任何 `business/*` 业务组合。
 - 不发布 foundation release，不更新 Ops consumer lock。
+- 不新增后端偏好 schema 或跨设备偏好同步。
 
 ## Assumptions and Open Questions
 
@@ -163,7 +163,7 @@ platform
 - Required Evidence: docs checks | desktop/mobile screenshots | interaction assertions | review summary
 - Minimal Complexity Rung: reuse
 - Ratchet Decision: guide-updated
-- Deferred Code Issues: B1-B4 仍为后续实现任务；B5 UI 门禁已实现
+- Deferred Code Issues: 首个真实 consumer 页面的维护者视觉/功能验收、foundation release 与 Ops consumer lock 同步
 
 ## Delivery Governance
 
@@ -206,11 +206,11 @@ platform
 
 ### Browser / Smoke
 
-- B5 为治理实现且无新 UI 渲染，使用 manifest 中受限的 governance-only 豁免；B1-B4 与未来 UI 任务按各自 evidence matrix 执行 Playwright。
+- B1-B4 development-only fixture route runs through the full desktop-light, mobile-light and desktop-dark Playwright visual suite; Dashboard and system-user-list baselines use deterministic API fixtures.
 
 ### Runtime Evidence
 
-- explicit runtime gap: 本轮没有运行时代码变更。
+- B1-B4 are client-only shared contracts and do not add a backend API, permission model, or database schema. Consumer runtime validation remains deferred until Ops adoption.
 
 ## Linkage
 
@@ -260,3 +260,4 @@ platform
 - [x] Evidence saved or summarized
 - [x] Docs updated if contracts changed
 - [x] Review completed
+- [x] B1-B5 implementation and deterministic browser evidence completed

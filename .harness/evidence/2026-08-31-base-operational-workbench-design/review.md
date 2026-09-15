@@ -5,7 +5,7 @@
 ```json
 {
   "taskId": "2026-08-31-base-operational-workbench-design",
-  "verdict": "approved-with-human-visual-gate",
+  "verdict": "approved-with-maintainer-acceptance-gate",
   "structuralReview": {
     "affectedSubgraph": [
       "Base shared frontend components and dashboard registry -> foundation release -> Ops business composition"
@@ -31,7 +31,7 @@
   "deliveryGovernanceReview": {
     "designGate": "satisfied",
     "developmentGate": "B1-B5-mechanical-and-component-evidence-satisfied",
-    "qaAcceptanceGate": "B5-rendered-evidence-passed; B1-B4-await-human-visual-gate",
+    "qaAcceptanceGate": "B5-rendered-evidence-passed; B1-B4-await-maintainer-visual/function-acceptance",
     "githubGovernanceGate": "repo-quality-gate"
   },
   "linkage": {
@@ -66,14 +66,14 @@ No P0/P1 implementation finding remains. B1-B4 pass type, lint, focused/unit, pr
 - Stable dimensions, long text, dark theme, reduced motion and non-color status semantics are required.
 - Loading, empty, error, forbidden, stale, partial and conflict states are assigned to relevant packets.
 - Keyboard, visible focus, screen-reader names and 200% zoom are required evidence.
-- B1-B4 component DOM tests exercise bounded data, sensitive data masking and native keyboard-capable controls. The development-only fixture adds desktop light, mobile light and desktop dark browser screenshot approval; B1-B4 retain the final human visual gate for their first consumer pages.
+- B1-B4 component DOM tests exercise bounded data, sensitive data masking and native keyboard-capable controls. The development-only fixture adds desktop light, mobile light and desktop dark browser screenshot approval; the complete Playwright suite passes 8/8, while B1-B4 retain the final maintainer visual/function gate for their first consumer pages.
 
 ## Residual Gates
 
-- Maintainer must decide whether current desktop-light Dashboard/user-list runtime drift is intentional before those existing baselines are updated.
+- Maintainer must perform final visual/function acceptance of the first consuming pages.
 - Publish an immutable Base foundation release.
 - Update the Ops consumer lock and run business validation.
 
 ## Verdict
 
-approved with an explicit maintainer visual/function gate; foundation release and Ops sync remain deferred
+approved with an explicit maintainer visual/function acceptance gate; foundation release and Ops sync remain deferred

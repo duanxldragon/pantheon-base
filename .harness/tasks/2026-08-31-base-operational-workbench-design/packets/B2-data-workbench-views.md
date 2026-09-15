@@ -2,7 +2,7 @@
 
 - Priority: `P1`
 - Layer: `platform`
-- Status: `planned`
+- Status: `implemented`
 - Depends On: B1 的偏好和状态命名约定
 - Blocks: Ops 高频列表保存视图
 

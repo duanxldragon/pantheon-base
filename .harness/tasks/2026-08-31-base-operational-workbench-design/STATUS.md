@@ -1,12 +1,12 @@
 # Program Status
 
-- Status: `implementation-complete-awaiting-human-visual-gate`
-- Updated: `2026-08-31`
-- Owner: unassigned
+- Status: `accepted-awaiting-foundation-release`
+- Updated: `2026-09-15`
+- Owner: maintainer (acceptance granted 2026-09-15 in agent session)
 - Design readiness: complete
 - Implementation: B1-B5 complete in Base; no foundation release published
 - Runtime evidence: not applicable: B1-B4 add client-only shared contracts and no business provider, API, permission model, or dashboard query
-- Visual evidence: B5 login baseline evidence remains valid. B1-B4 have deterministic Playwright fixture coverage at desktop light, mobile light and desktop dark; final human visual gate for first consuming pages remains open.
+- Visual evidence: full 8-test Playwright suite passes with deterministic Dashboard/user-list API fixtures and B1-B4 fixture coverage at desktop light, mobile light and desktop dark; final human visual/function acceptance for the first consuming pages remains open.
 
 ## Child Status
 
@@ -29,9 +29,15 @@
 
 ## Next Atomic Action
 
-Maintainer performs the final visual/function acceptance, then publishes an immutable Base foundation release before any Ops consumer adoption.
+Publish an immutable Base foundation release, then update the Ops consumer lock and run business validation.
 
-## Blockers
+## Remaining Gates
 
-- Historical Dashboard and system-user-list desktop-light baseline drift needs a maintainer decision; see `.harness/evidence/2026-08-31-base-operational-workbench-design/debt-audit.md`.
-- B1-B4 browser screenshots cover a development-only fixture route. Maintainer acceptance remains required before a consuming page is promoted through a foundation release.
+- Publish an immutable Base foundation release (irreversible publish — explicitly NOT consumed in the 2026-09-15 session; only the acceptance gate was granted).
+- Update the Ops consumer lock and run business validation.
+
+## Gate History
+
+| Timestamp | Gate | Decision | Owner |
+|---|---|---|---|
+| 2026-09-15 | Final visual/function acceptance (B1-B5) | Granted — implementation accepted | Maintainer (via agent session) |

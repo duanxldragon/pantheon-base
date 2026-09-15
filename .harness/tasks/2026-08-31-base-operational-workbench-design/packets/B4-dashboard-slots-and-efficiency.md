@@ -2,7 +2,7 @@
 
 - Priority: `P1-P2`
 - Layer: `platform`
-- Status: `planned`
+- Status: `implemented`
 - Depends On: B3 registry/types stability
 - Blocks: Ops O6
 

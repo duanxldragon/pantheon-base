@@ -12,7 +12,7 @@
 
 | Priority | State | Debt | Evidence | Recommended Owner / Next Action |
 | --- | --- | --- | --- | --- |
-| P1 | confirmed | Existing desktop-light visual baselines for Dashboard and system user list drift from current runtime. | `frontend/tests/visual/visual-baseline.spec.ts`; current comparison evidence in `commands.json`. | Maintainer visual acceptance, then either fix the runtime drift or intentionally refresh the approved baseline. |
+| P1 | resolved | Dashboard and system-user-list desktop-light baselines were made deterministic with fixed API fixtures and now pass the full visual suite. | `frontend/tests/visual/visual-baseline.spec.ts`; 8/8 Playwright run on 2026-09-14. | Closed in this task; future baseline changes still require review. |
 | P1 | accepted | Full-repository Go lint remains report-only on protected-branch push because historical lint debt would otherwise keep main red. | `.github/workflows/quality.yml`; `2026-07-22-sonarcloud-remediation`; `2026-07-23-main-quality-gates-green`. | Dedicated lint-debt workstream; preserve PR/merge-group new-code enforcement until the baseline is cleared. |
 | P2 | confirmed | The generator datasource listing loads every persisted datasource without a result bound. | `backend/modules/lowcode/generator/generator_datasource_service.go:46`. | Low-code owner: add an explicit operational maximum or pagination only after API/consumer contract review. |
 | P2 | accepted | The lint configuration contains legacy keys and is run with configuration verification disabled. | `.github/workflows/quality.yml` Go lint comments near the action configuration. | Tooling owner: migrate `.golangci.yml` under a dedicated configuration-change task, then enable verification. |
@@ -21,12 +21,12 @@
 
 ## Findings
 
-### HD-001: Visual Regression Baseline Drift
+### HD-001: Visual Regression Baseline Drift (Resolved)
 
-- Classification: `confirmed`, P1, UI quality.
-- Evidence: the current desktop-light comparisons differ by approximately `2%` for Dashboard and `5%` for the system user list. Earlier inspection attributes the differences to runtime menu/data content, not an approved B1-B4 visual change.
-- Impact: a full visual-suite success cannot prove those historical screens are stable. Blind snapshot refresh would hide either a regression or an unreviewed product change.
-- Disposition: leave the affected baseline images untouched in this task. This B1-B4 delivery supplies its own focused visual evidence; a maintainer must decide the intended Dashboard and user-list appearance before any baseline update.
+- Classification: `resolved`, P1, UI quality.
+- Evidence: `visual-baseline.spec.ts` now installs deterministic menu, user, role, department, post and dashboard fixtures; the complete visual suite passed 8/8 on 2026-09-14.
+- Impact: removed the data-dependent false red while preserving non-update screenshot comparison.
+- Disposition: closed. Any intentional visual change must still include before/after evidence and maintainer review.
 
 ### HD-002: Historical Go Lint Debt
 
@@ -78,7 +78,7 @@
 
 ## Exit Criteria For Follow-up Work
 
-1. Dashboard and user-list baselines are either fixed or refreshed after a recorded maintainer visual decision.
+1. Dashboard and user-list baselines remain deterministic and pass without update mode.
 2. Full Go lint runs strictly with a verified configuration and an agreed zero/bounded baseline.
 3. Generator datasource-list behaviour has an explicit cardinality contract and focused tests.
 4. A network-enabled dependency audit produces a retained result and each high finding has a disposition.

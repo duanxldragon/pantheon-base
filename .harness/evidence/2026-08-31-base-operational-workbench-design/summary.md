@@ -25,7 +25,7 @@
 | `npm run check:ui-quality-gate` | passed | zero strict findings |
 | `npm run test:ui-quality-gate` | passed | 3/3 regression scenarios |
 | `npm run test:quality-workflow` | passed | 5/5 workflow regression tests |
-| mobile-light + desktop-dark visual comparison | passed | 2/2 Playwright baselines |
+| complete Playwright visual suite | passed | 8/8 non-update tests across desktop/mobile and light/dark themes |
 | `npm run check:harness-docs` | passed | zero strict findings |
 | `npm run check:harness-inventory` | passed | zero strict findings |
 | `npm run check:harness-visual` | passed | one UI task, zero warnings |
@@ -36,20 +36,20 @@
 | `npm run lint` | passed | frontend eslint clean |
 | `npm run build` | passed | production build plus all frontend UI/i18n contracts |
 | `npm run check:failure-registry` | passed | repository debt registry remains structurally valid |
-| B1-B4 Playwright desktop/mobile/light/dark comparison | passed | 3/3 browser tests and screenshot comparisons passed at `/__visual/operational-workbench` |
+| B1-B4 Playwright desktop/mobile/light/dark comparison | passed | 3/3 browser tests and screenshot comparisons passed at `/__visual/operational-workbench`; complete visual suite is 8/8 |
 
 ## Visual Quality Gate
 
-The design was reviewed against the impeccable checklist for operational admin UI: restrained density, no decorative card nesting, responsive desktop/mobile composition, stable dimensions, light/dark themes, long text, loading/empty/error/forbidden/stale states, keyboard/focus, 200% zoom and reduced motion are all explicit acceptance requirements.
+The design was reviewed against the impeccable checklist for operational admin UI: restrained density, no decorative card nesting, responsive desktop/mobile composition, stable dimensions, light/dark themes, long text, loading/empty/error/forbidden/stale/partial states, keyboard/focus, 200% zoom and reduced motion are all explicit acceptance requirements. The complete Playwright suite passed 8/8 without baseline updates.
 
 B5 changes policy, checker, tests and CI wiring only. B1-B4 additionally have deterministic, development-only browser coverage: Playwright checks the desktop interaction path, mobile single-column layout and desktop dark theme, then compares three committed screenshots in non-update mode.
 
 ## Known Gaps
 
 - B1-B4 fixture screenshots cover the shared contracts only; final human visual/function acceptance of their first consuming pages remains open.
-- The pre-existing desktop-light Dashboard and user-list snapshots are red against the current runtime by 2% and 5%; inspection shows menu/data-content drift. B5 does not blind-update those baselines.
+- Existing Dashboard and user-list visual baselines now match the deterministic fixture-backed runtime and passed in the complete 8/8 suite.
 - Foundation publication and Ops consumer validation are gated follow-ups.
 
 ## Completion Status
 
-implementation complete for B1-B5; parent program awaits final human visual/function acceptance and a foundation release before Ops adoption
+implementation complete for B1-B5; parent program awaits final maintainer visual/function acceptance and a foundation release before Ops adoption
