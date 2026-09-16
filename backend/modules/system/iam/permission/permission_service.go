@@ -756,7 +756,7 @@ func (s *PermissionService) resolvePolicySubject(roleKey string, tenantID uint64
 	if row.Status != tenant.TenantStatusActive {
 		return "", common.NewBadRequest(errPermissionTenantInvalid)
 	}
-	return tenant.TenantRoleSubject(roleKey, tenantID), nil
+	return tenant.RoleSubject(roleKey, tenantID), nil
 }
 
 func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {

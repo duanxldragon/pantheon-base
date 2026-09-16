@@ -9,11 +9,11 @@ import (
 // Casbin domain subject expansion (contract §4)
 // ─────────────────────────────────────────────────────────────
 
-func TestTenantRoleSubjectFormat(t *testing.T) {
-	got := TenantRoleSubject("editor", 101)
+func TestRoleSubjectFormat(t *testing.T) {
+	got := RoleSubject("editor", 101)
 	want := "role:editor@tenant:101"
 	if got != want {
-		t.Fatalf("TenantRoleSubject = %q, want %q", got, want)
+		t.Fatalf("RoleSubject = %q, want %q", got, want)
 	}
 }
 

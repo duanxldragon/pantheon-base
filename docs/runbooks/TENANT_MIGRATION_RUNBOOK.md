@@ -1,20 +1,3 @@
----
-title: 租户迁移 Runbook（共享 schema MVP）
-doc_type: Guide
-layer: platform
-status: Approved
-related_designs:
-  - docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md
-  - docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md
-linked_contracts:
-  - docs/contracts/TENANT_CONTRACT_V1.md
-  - docs/contracts/PLATFORM_CONTRACT.md
-  - docs/contracts/SYSTEM_AUTH_CONTRACT.md
-  - docs/contracts/SYSTEM_IAM_CONTRACT.md
-  - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-09-11
----
-
 # 租户迁移 Runbook（共享 schema MVP）
 
 本 runbook 是 `2026-09-10-tenant-migration-runbook` 任务的冻结交付物，为 [租户合同 V1](../contracts/TENANT_CONTRACT_V1.md) 定义的共享 schema MVP 提供可演练、可回滚的迁移程序。

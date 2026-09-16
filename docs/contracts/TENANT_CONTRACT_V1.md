@@ -24,6 +24,11 @@ English version: [TENANT_CONTRACT_V1.en.md](./TENANT_CONTRACT_V1.en.md)
 
 冻结 = 冻结 V1 的 **模型、所有权边界、不变量**；具体表结构演进由 runbook（`2026-09-10-tenant-migration-runbook`）约束。
 
+关联设计：
+- `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
+- `docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md`
+- `docs/designs/P2_SCALE_ROADMAP.md`
+
 ---
 
 ## 1. 范围（In / Out）

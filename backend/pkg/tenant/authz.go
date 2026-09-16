@@ -33,15 +33,7 @@ const (
 const RoleDomainPrefix = "role:"
 
 // RoleSubject builds `role:<key>@tenant:<id>` for tenant-scoped policies.
-//
-// Deprecated: renamed from TenantRoleSubject to avoid the tenant stutter;
-// TenantRoleSubject remains as a deprecated alias.
 func RoleSubject(roleKey string, tenantID uint64) string {
-	return TenantRoleSubject(roleKey, tenantID)
-}
-
-// TenantRoleSubject builds `role:<key>@tenant:<id>` for tenant-scoped policies.
-func TenantRoleSubject(roleKey string, tenantID uint64) string {
 	return RoleDomainPrefix + strings.TrimSpace(roleKey) + "@tenant:" + strconv.FormatUint(tenantID, 10)
 }
 
@@ -302,6 +294,6 @@ func CasbinDomainPolicySubjects(roleKey string, ctx *Context) []string {
 	}
 	return []string{
 		GlobalRoleSubject(key),
-		TenantRoleSubject(key, ctx.TenantID),
+		RoleSubject(key, ctx.TenantID),
 	}
 }

@@ -1,15 +1,3 @@
----
-title: 生产备份恢复演练（G2 Gate）执行规程
-doc_type: Runbook
-layer: platform
-status: Draft
-updated_at: 2026-09-15
-linked_contracts:
-  - docs/contracts/TENANT_CONTRACT_V1.md
-linked_runbooks:
-  - docs/runbooks/TENANT_MIGRATION_RUNBOOK.md
----
-
 # 生产备份恢复演练（G2 Gate）执行规程
 
 English note: this procedure produces the **only** evidence that can flip gate G2
