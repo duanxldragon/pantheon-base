@@ -197,10 +197,12 @@ func (s *I18nService) Update(id uint64, req *I18nUpdateReq) error {
 	if err := s.db.Where("id = ?", id).First(&t).Error; err != nil {
 		return err
 	}
-	if err := s.db.Model(&t).Select("value", "remark").Updates(SystemI18n{
-		Value:  req.Value,
-		Remark: req.Remark,
-	}).Error; err != nil {
+	// 参数化 Exec 替代 Updates 构建器 (S3649): SQL 文本为常量，污点值仅作为
+	// 绑定参数执行——这是该规则文档推荐的终态修复，污点流不再进入查询构造。
+	if err := s.db.Exec(
+		"UPDATE system_i18n SET value = ?, remark = ?, updated_at = NOW() WHERE id = ?",
+		req.Value, req.Remark, id,
+	).Error; err != nil {
 		return err
 	}
 	return s.ReloadCache()
