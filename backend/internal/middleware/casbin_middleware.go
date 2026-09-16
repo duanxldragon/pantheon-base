@@ -34,18 +34,7 @@ func CasbinMiddleware() gin.HandlerFunc {
 		// resolved request context. Compat contexts resolve to global subjects
 		// only — zero behavior change when the flag is off.
 		tenantCtx := tenant.FromGin(c)
-		allowed, err := authorizeRoleKeys(roleKeys, c.Request.URL.Path, c.Request.Method, func(roleKey, obj, act string) (bool, error) {
-			for _, subject := range tenant.CasbinDomainPolicySubjects(roleKey, tenantCtx) {
-				ok, err := database.Enforcer.Enforce(subject, obj, act)
-				if err != nil {
-					return false, err
-				}
-				if ok {
-					return true, nil
-				}
-			}
-			return false, nil
-		})
+		allowed, err := authorizeRoleKeys(roleKeys, c.Request.URL.Path, c.Request.Method, casbinTenantEnforce(tenantCtx))
 		if err != nil || !allowed {
 			failPermissionCheck(c, "permission.denied")
 			return
@@ -71,6 +60,28 @@ func authorizeRoleKeys(
 			return false, err
 		}
 		if allowed {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// casbinTenantEnforce returns an enforce function that consults every policy
+// subject variant (global + tenant-scoped) for the resolved request context.
+func casbinTenantEnforce(tenantCtx *tenant.Context) func(roleKey, obj, act string) (bool, error) {
+	return func(roleKey, obj, act string) (bool, error) {
+		return enforceAnySubject(tenant.CasbinDomainPolicySubjects(roleKey, tenantCtx), obj, act)
+	}
+}
+
+// enforceAnySubject reports whether any subject variant is allowed for obj/act.
+func enforceAnySubject(subjects []string, obj, act string) (bool, error) {
+	for _, subject := range subjects {
+		ok, err := database.Enforcer.Enforce(subject, obj, act)
+		if err != nil {
+			return false, err
+		}
+		if ok {
 			return true, nil
 		}
 	}

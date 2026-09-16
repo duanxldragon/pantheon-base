@@ -68,31 +68,13 @@ func TestInitAuditModules_TenantContextWiring(t *testing.T) {
 			if recorder.Code != http.StatusOK {
 				t.Fatalf("expected HTTP 200 envelope, got %d: %s", recorder.Code, recorder.Body.String())
 			}
-			var response common.Response
-			if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
-				t.Fatalf("decode response body: %v", err)
-			}
+			response := decodeAuditWiringResponse(t, recorder)
 			if response.Code != tc.wantCode {
 				t.Fatalf("expected code %d, got %d (message=%s)", tc.wantCode, response.Code, response.Message)
 			}
-
-			dataJSON, err := json.Marshal(response.Data)
-			if err != nil {
-				t.Fatalf("re-encode response data: %v", err)
-			}
-			visible := decodeAuditWiringTitles(t, dataJSON)
-			own := "wiring-tenant-" + uint64ToString(tc.tenantClaim)
-			other := "wiring-tenant-" + uint64ToString(otherTenantID(tc.tenantClaim))
-
-			if !containsString(visible, own) {
-				t.Fatalf("expected subject's own row %q in %v", own, visible)
-			}
-			if containsString(visible, other) {
-				t.Fatalf("TENANT LEAK: tenant %d saw row %q from tenant %d — TenantContextMiddleware is missing from the audit route group (rows: %v)",
-					tc.tenantClaim, other, otherTenantID(tc.tenantClaim), visible)
-			}
-			if other := countAuditRows(t, db); other != 2 {
-				t.Fatalf("fixture corruption: expected 2 rows in table, got %d", other)
+			assertAuditWiringIsolation(t, response, tc.tenantClaim)
+			if got := countAuditRows(t, db); got != 2 {
+				t.Fatalf("fixture corruption: expected 2 rows in table, got %d", got)
 			}
 		})
 	}
@@ -214,6 +196,39 @@ func seedAuditWiringRow(t *testing.T, db *gorm.DB, tenantID uint64, title string
 
 // decodeAuditWiringTitles extracts the operation-log titles from the page
 // response data (OperationLogPageResp.List[].Title).
+// decodeAuditWiringResponse asserts the HTTP envelope and decodes the body.
+func decodeAuditWiringResponse(t *testing.T, recorder *httptest.ResponseRecorder) common.Response {
+	t.Helper()
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected HTTP 200 envelope, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	var response common.Response
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatalf("decode response body: %v", err)
+	}
+	return response
+}
+
+// assertAuditWiringIsolation verifies the subject sees its own row and no row
+// from the other tenant (the wiring-regression tenancy-leak assertion).
+func assertAuditWiringIsolation(t *testing.T, response common.Response, tenantClaim uint64) {
+	t.Helper()
+	dataJSON, err := json.Marshal(response.Data)
+	if err != nil {
+		t.Fatalf("re-encode response data: %v", err)
+	}
+	visible := decodeAuditWiringTitles(t, dataJSON)
+	own := "wiring-tenant-" + uint64ToString(tenantClaim)
+	other := "wiring-tenant-" + uint64ToString(otherTenantID(tenantClaim))
+	if !containsString(visible, own) {
+		t.Fatalf("expected subject's own row %q in %v", own, visible)
+	}
+	if containsString(visible, other) {
+		t.Fatalf("TENANT LEAK: tenant %d saw row %q from tenant %d — TenantContextMiddleware is missing from the audit route group (rows: %v)",
+			tenantClaim, other, otherTenantID(tenantClaim), visible)
+	}
+}
+
 func decodeAuditWiringTitles(t *testing.T, data json.RawMessage) []string {
 	t.Helper()
 	var page struct {

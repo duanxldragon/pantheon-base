@@ -35,6 +35,7 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
+	// Blank import registers the MySQL driver for database/sql (driver-side init only).
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"

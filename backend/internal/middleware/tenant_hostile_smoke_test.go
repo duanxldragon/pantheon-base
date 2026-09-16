@@ -66,54 +66,68 @@ func TestTenantContextMiddleware_HostileTwoTenantMatrix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loader := tenant.NewModeLoader(func() string { return tt.mode }, 0)
-			engine := gin.New()
-			engine.Use(func(c *gin.Context) {
-				if tt.subjectTenant != "" {
-					c.Set("tenantId", tt.subjectTenant)
-				}
-				if len(tt.roles) > 0 {
-					c.Set("roleKeys", tt.roles)
-				}
-			})
-			engine.Use(TenantContextMiddleware(loader, nil))
-			engine.GET("/protected", func(c *gin.Context) {
-				ctx := tenant.FromGin(c)
-				if ctx == nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"code": common.CodeError})
-					return
-				}
-				c.JSON(http.StatusOK, gin.H{"code": common.CodeSuccess, "data": tenantSmokeResponse{
-					TenantID: ctx.TenantID, Mode: ctx.Mode,
-				}})
-			})
-
-			req := httptest.NewRequest(http.MethodGet, "/protected", nil)
-			if tt.headerTenant != "" {
-				req.Header.Set(tenant.HeaderTenantID, tt.headerTenant)
-			}
-			recorder := httptest.NewRecorder()
-			engine.ServeHTTP(recorder, req)
-
-			if recorder.Code != tt.wantHTTPStatus {
-				t.Fatalf("http status: got %d, want %d; body=%s", recorder.Code, tt.wantHTTPStatus, recorder.Body.String())
-			}
-			var payload struct {
-				Code int                  `json:"code"`
-				Data *tenantSmokeResponse `json:"data"`
-			}
-			if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
-				t.Fatalf("decode response: %v", err)
-			}
-			if payload.Code != tt.wantCode {
-				t.Fatalf("response code: got %d, want %d; body=%s", payload.Code, tt.wantCode, recorder.Body.String())
-			}
-			if tt.wantCode == common.CodeSuccess {
-				if payload.Data == nil || payload.Data.TenantID != tt.wantTenantID || payload.Data.Mode != tt.wantMode {
-					t.Fatalf("resolved context: got %+v, want tenant=%d mode=%s", payload.Data, tt.wantTenantID, tt.wantMode)
-				}
-			}
+			recorder := runTenantSmokeRequest(t, tt.mode, tt.subjectTenant, tt.headerTenant, tt.roles)
+			assertTenantSmokeResponse(t, recorder, tt.wantHTTPStatus, tt.wantCode, tt.wantTenantID, tt.wantMode)
 		})
+	}
+}
+
+// runTenantSmokeRequest builds the engine with the same stub/context keys as
+// the hostile matrix and issues the protected request.
+func runTenantSmokeRequest(t *testing.T, mode, subjectTenant, headerTenant string, roles []string) *httptest.ResponseRecorder {
+	t.Helper()
+	loader := tenant.NewModeLoader(func() string { return mode }, 0)
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		if subjectTenant != "" {
+			c.Set("tenantId", subjectTenant)
+		}
+		if len(roles) > 0 {
+			c.Set("roleKeys", roles)
+		}
+	})
+	engine.Use(TenantContextMiddleware(loader, nil))
+	engine.GET("/protected", func(c *gin.Context) {
+		ctx := tenant.FromGin(c)
+		if ctx == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"code": common.CodeError})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"code": common.CodeSuccess, "data": tenantSmokeResponse{
+			TenantID: ctx.TenantID, Mode: ctx.Mode,
+		}})
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	if headerTenant != "" {
+		req.Header.Set(tenant.HeaderTenantID, headerTenant)
+	}
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, req)
+	return recorder
+}
+
+// assertTenantSmokeResponse verifies the envelope and, on success, the exact
+// resolved tenant context.
+func assertTenantSmokeResponse(t *testing.T, recorder *httptest.ResponseRecorder, wantHTTPStatus, wantCode int, wantTenantID uint64, wantMode string) {
+	t.Helper()
+	if recorder.Code != wantHTTPStatus {
+		t.Fatalf("http status: got %d, want %d; body=%s", recorder.Code, wantHTTPStatus, recorder.Body.String())
+	}
+	var payload struct {
+		Code int                  `json:"code"`
+		Data *tenantSmokeResponse `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if payload.Code != wantCode {
+		t.Fatalf("response code: got %d, want %d; body=%s", payload.Code, wantCode, recorder.Body.String())
+	}
+	if wantCode == common.CodeSuccess {
+		if payload.Data == nil || payload.Data.TenantID != wantTenantID || payload.Data.Mode != wantMode {
+			t.Fatalf("resolved context: got %+v, want tenant=%d mode=%s", payload.Data, wantTenantID, wantMode)
+		}
 	}
 }
 

@@ -277,6 +277,39 @@ func buildSnapshot(db *gorm.DB) *snapshotReport {
 	}
 }
 
+// estimateTable converts one in-scope table's rehearsal timing into a
+// production-window estimate (§4.2 per-stage decomposition).
+func estimateTable(t tableStat, rehearsalRows uint64) tableEstimate {
+	e := tableEstimate{Name: t.Name, Rows: t.Rows}
+	rows := float64(t.Rows)
+	conv := rows / float64(rehearsalRows) * safetyFactor
+
+	// B1 ADD COLUMN: INSTANT in MySQL 8.0 → metadata-only; rehearsal floor.
+	e.AddColumnSec = rehearsalPerTableSeconds * conv
+	if e.AddColumnSec < rehearsalPerTableSeconds {
+		e.AddColumnSec = rehearsalPerTableSeconds
+	}
+	// B2 backfill: batched UPDATE at the assumed rate + per-batch commit cost.
+	batches := rows / batchSize
+	e.BackfillSec = rows/rehearsalPerRowBackfillRate + batches*perBatchCommit
+	// B4 MODIFY NOT NULL DEFAULT 0: in-place after NULL elimination; rehearsal floor.
+	e.TightenSec = rehearsalPerTableSeconds * conv
+	if e.TightenSec < rehearsalPerTableSeconds {
+		e.TightenSec = rehearsalPerTableSeconds
+	}
+	// Stage C unique-index swap (INPLACE build) — heaviest per-row op; double it.
+	if t.UniqueSwap {
+		e.UniqueSwapSec = rehearsalPerTableSeconds * conv * 2
+	}
+	e.TableTotalSec = e.AddColumnSec + e.BackfillSec + e.TightenSec + e.UniqueSwapSec
+	e.WindowReserveSec = e.TableTotalSec * windowReserve
+	e.Over10M = t.Rows > over10mRows
+	if e.Over10M {
+		e.Over10MAction = over10mAction
+	}
+	return e
+}
+
 func buildEstimate(snap *snapshotReport, rehearsalRows uint64) *estimateReport {
 	if rehearsalRows == 0 {
 		rehearsalRows = 1
@@ -291,32 +324,8 @@ func buildEstimate(snap *snapshotReport, rehearsalRows uint64) *estimateReport {
 		if !t.InScope {
 			continue
 		}
-		e := tableEstimate{Name: t.Name, Rows: t.Rows}
-		rows := float64(t.Rows)
-		conv := rows / float64(rehearsalRows) * safetyFactor
-
-		// B1 ADD COLUMN: INSTANT in MySQL 8.0 → metadata-only; rehearsal floor.
-		e.AddColumnSec = rehearsalPerTableSeconds * conv
-		if e.AddColumnSec < rehearsalPerTableSeconds {
-			e.AddColumnSec = rehearsalPerTableSeconds
-		}
-		// B2 backfill: batched UPDATE at the assumed rate + per-batch commit cost.
-		batches := rows / batchSize
-		e.BackfillSec = rows/rehearsalPerRowBackfillRate + batches*perBatchCommit
-		// B4 MODIFY NOT NULL DEFAULT 0: in-place after NULL elimination; rehearsal floor.
-		e.TightenSec = rehearsalPerTableSeconds * conv
-		if e.TightenSec < rehearsalPerTableSeconds {
-			e.TightenSec = rehearsalPerTableSeconds
-		}
-		// Stage C unique-index swap (INPLACE build) — heaviest per-row op; double it.
-		if t.UniqueSwap {
-			e.UniqueSwapSec = rehearsalPerTableSeconds * conv * 2
-		}
-		e.TableTotalSec = e.AddColumnSec + e.BackfillSec + e.TightenSec + e.UniqueSwapSec
-		e.WindowReserveSec = e.TableTotalSec * windowReserve
-		e.Over10M = t.Rows > over10mRows
+		e := estimateTable(t, rehearsalRows)
 		if e.Over10M {
-			e.Over10MAction = over10mAction
 			est.Over10MTables = append(est.Over10MTables, t.Name)
 		}
 		est.PerTable = append(est.PerTable, e)
