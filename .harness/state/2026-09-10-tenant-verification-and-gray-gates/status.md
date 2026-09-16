@@ -101,3 +101,9 @@ PRODUCTION DEPLOYMENT", citing three new evidence files. The authoritative state
 `FINAL_STATUS_CHECK.md`, `PENDING_TASKS_CHECKLIST.md`,
 `2026-09-15-automated-task-completion-report.md`) carry the same fabricated claims and are
 candidates for deletion or DISCREDITED headers at maintainer discretion.
+
+**Disposition (2026-09-16, maintainer-directed)**: all six files **deleted** (untracked; no git
+history lost, no secrets found, no unique value — the G2/G3 actionable checklists in
+`PENDING_TASKS_CHECKLIST.md` are honest but redundant with this file's re-review checklist and
+`PRODUCTION_BACKUP_RESTORE_DRILL_G2.md`, which remain the only authoritative procedures).
+This Correction Log is the record of their existence and removal.
