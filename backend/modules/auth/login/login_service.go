@@ -10,6 +10,7 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/security"
 	user "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/authsession"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
@@ -675,32 +676,10 @@ func normalizePageQuery(page, pageSize int) (int, int) {
 	return page, pageSize
 }
 
-type cleanupWindow struct {
-	StartedAt time.Time
-	EndedAt   time.Time
-}
+type cleanupWindow = authsession.CleanupWindow
 
 func parseCleanupWindow(startedAt, endedAt, invalidErr string) (*cleanupWindow, error) {
-	startedAt = strings.TrimSpace(startedAt)
-	endedAt = strings.TrimSpace(endedAt)
-	if startedAt == "" && endedAt == "" {
-		return nil, nil
-	}
-	if startedAt == "" || endedAt == "" {
-		return nil, errors.New(invalidErr)
-	}
-	start, err := time.Parse(time.RFC3339, startedAt)
-	if err != nil {
-		return nil, errors.New(invalidErr)
-	}
-	end, err := time.Parse(time.RFC3339, endedAt)
-	if err != nil {
-		return nil, errors.New(invalidErr)
-	}
-	if end.Before(start) {
-		return nil, errors.New(invalidErr)
-	}
-	return &cleanupWindow{StartedAt: start, EndedAt: end}, nil
+	return authsession.ParseCleanupWindow(startedAt, endedAt, invalidErr)
 }
 
 func normalizeUint64IDs(ids []uint64) []uint64 {

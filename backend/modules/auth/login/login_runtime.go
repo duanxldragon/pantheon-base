@@ -223,26 +223,27 @@ func (s *Runtime) RecordSecurityEvent(event security.SystemAuthSecurityEvent) {
 // security.PolicyProvider implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) GetAuthRuntimePolicy() security.AuthRuntimePolicy {
-	s.settings.mu.RLock()
-	defer s.settings.mu.RUnlock()
+	internal := s.getAuthRuntimePolicy()
 	return security.AuthRuntimePolicy{
-		PasswordMinLength:       s.settings.cache[settingPasswordMinLengthKey],
-		PasswordRequireDigit:    s.settings.cache[settingPasswordRequireDigitKey] == 1,
-		PasswordRequireUpper:    s.settings.cache[settingPasswordRequireUpperKey] == 1,
-		PasswordHistoryLimit:    s.settings.cache[settingPasswordHistoryLimitKey],
-		PasswordExpireDays:      s.settings.cache[settingPasswordExpireDaysKey],
-		MaxFailedAttempts:       s.settings.cache[settingMaxFailedAttemptsKey],
-		LockMinutes:             s.settings.cache[settingLockMinutesKey],
-		SourceMaxFailedAttempts: s.settings.cache[settingSourceMaxFailedAttemptsKey],
-		SourceWindowMinutes:     s.settings.cache[settingSourceWindowMinutesKey],
-		SourceLockMinutes:       s.settings.cache[settingSourceLockMinutesKey],
-		SessionIdleMinutes:      s.settings.cache[settingSessionIdleMinutesKey],
-		MaxActiveSessions:       s.settings.cache[settingMaxActiveSessionsKey],
-		SessionRetentionDays:    s.settings.cache[settingSessionRetentionDaysKey],
-		SecurityEventEnabled:    s.settings.cache[settingSecurityEventEnabledKey] == 1,
-		CaptchaEnabled:          s.settings.cache[settingCaptchaEnabledKey] == 1,
-		MFAEnabled:              s.settings.cache[settingMFAEnabledKey] == 1,
-		SSOEnabled:              s.settings.cache[settingSSOEnabledKey] == 1,
+		PasswordMinLength:    internal.PasswordMinLength,
+		PasswordRequireDigit: internal.PasswordRequireDigit,
+		PasswordRequireUpper: internal.PasswordRequireUpper,
+		PasswordHistoryLimit: internal.PasswordHistoryLimit,
+		PasswordExpireDays:   internal.PasswordExpireDays,
+		MaxFailedAttempts:    internal.MaxFailedAttempts,
+		LockMinutes:          internal.LockMinutes,
+
+		SourceMaxFailedAttempts: internal.SourceMaxFailedAttempts,
+		SourceWindowMinutes:     internal.SourceWindowMinutes,
+		SourceLockMinutes:       internal.SourceLockMinutes,
+		SessionIdleMinutes:      internal.SessionIdleMinutes,
+		MaxActiveSessions:       internal.MaxActiveSessions,
+		SessionRetentionDays:    internal.SessionRetentionDays,
+
+		SecurityEventEnabled: internal.SecurityEventEnabled,
+		CaptchaEnabled:       internal.CaptchaEnabled,
+		MFAEnabled:           internal.MFAEnabled,
+		SSOEnabled:           internal.SSOEnabled,
 	}
 }
 
@@ -941,35 +942,7 @@ func (s *Runtime) issueTenantTokenPair(ctx context.Context, userID uint64, usern
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	accessToken := authtoken.NewAccessToken()
-	refreshToken := authtoken.NewRefreshToken()
-	now := time.Now()
-	accessTTL := authtoken.AccessTokenTTL
-	refreshTTL := authtoken.RefreshTokenTTL
-
-	accessData := &authtoken.SessionData{
-		UserID:         userID,
-		Username:       username,
-		RoleKeys:       roles,
-		SessionID:      sess.SessionID,
-		LastActivityAt: now.Unix(),
-		TenantID:       tenantClaim,
-	}
-	if err := authtoken.StoreSession(ctx, database.RDB, accessToken, accessData, accessTTL); err != nil {
-		return nil, err
-	}
-	if err := authtoken.StoreRefresh(ctx, database.RDB, refreshToken, userID, sess.SessionID, refreshTTL); err != nil {
-		return nil, err
-	}
-	sess.RefreshExpiresAt = now.Add(refreshTTL)
-	return &authtoken.Pair{
-		AccessToken:      accessToken,
-		RefreshToken:     refreshToken,
-		TokenType:        authtoken.TypeAccess,
-		AccessExpiresAt:  now.Add(accessTTL),
-		RefreshExpiresAt: now.Add(refreshTTL),
-		SessionID:        sess.SessionID,
-	}, nil
+	return storeSessionTokenPair(ctx, userID, username, roles, sess, tenantClaim)
 }
 
 func (s *Runtime) issueTokenPairForSession(ctx context.Context, userID uint64, username string, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
@@ -980,7 +953,12 @@ func (s *Runtime) issueTokenPairForSession(ctx context.Context, userID uint64, u
 	// membership re-check for the claim happened in RefreshSessionWithContext
 	// before reaching here; rotating to a different tenant claim silently
 	// would break session↔tenant auditability.
-	tenantClaim := tenant.SessionTenantClaim(sess.TenantID)
+	return storeSessionTokenPair(ctx, userID, username, roles, sess, tenant.SessionTenantClaim(sess.TenantID))
+}
+
+// storeSessionTokenPair generates and stores the access/refresh pair for a
+// session with the given tenant claim, rotating the session's refresh expiry.
+func storeSessionTokenPair(ctx context.Context, userID uint64, username string, roles []string, sess *session.SystemUserSession, tenantClaim uint64) (*authtoken.Pair, error) {
 	accessToken := authtoken.NewAccessToken()
 	refreshToken := authtoken.NewRefreshToken()
 	now := time.Now()

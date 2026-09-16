@@ -268,26 +268,14 @@ type securityEventCleanupWindow struct {
 }
 
 func parseSecurityEventCleanupWindow(startedAt, endedAt string) (*securityEventCleanupWindow, error) {
-	startedAt = strings.TrimSpace(startedAt)
-	endedAt = strings.TrimSpace(endedAt)
-	if startedAt == "" && endedAt == "" {
+	window, err := authsession.ParseCleanupWindow(startedAt, endedAt, "auth.security_event.cleanup.range_invalid")
+	if err != nil {
+		return nil, err
+	}
+	if window == nil {
 		return nil, nil
 	}
-	if startedAt == "" || endedAt == "" {
-		return nil, errors.New("auth.security_event.cleanup.range_invalid")
-	}
-	start, err := time.Parse(time.RFC3339, startedAt)
-	if err != nil {
-		return nil, errors.New("auth.security_event.cleanup.range_invalid")
-	}
-	end, err := time.Parse(time.RFC3339, endedAt)
-	if err != nil {
-		return nil, errors.New("auth.security_event.cleanup.range_invalid")
-	}
-	if end.Before(start) {
-		return nil, errors.New("auth.security_event.cleanup.range_invalid")
-	}
-	return &securityEventCleanupWindow{StartedAt: start, EndedAt: end}, nil
+	return &securityEventCleanupWindow{StartedAt: window.StartedAt, EndedAt: window.EndedAt}, nil
 }
 
 func (s *Service) isAllowedSecurityEventRetentionDays(retentionDays int) bool {
