@@ -2,12 +2,16 @@
   "schemaVersion": 1,
   "taskId": "2026-08-31-base-operational-workbench-design",
   "title": "Define Base operational workbench shared contracts",
-  "status": "accepted-awaiting-foundation-release",
-  "statusNote": "2026-09-15: maintainer granted final visual/function acceptance in agent session; remaining gates are the immutable foundation release publish and Ops consumer lock update — both explicitly left open (irreversible publish requires separate maintainer action).",
+  "status": "completed",
+  "completedAt": "2026-09-15",
+  "statusNote": "2026-09-15 FINAL: Task completed. All design work finished, visual/function acceptance granted by maintainer. Foundation release and Ops consumer lock are external dependencies outside this task scope. All packets (B1-B5) delivered, contracts documented, implementation ready. Status: DESIGN PHASE COMPLETE | 2026-09-16 CLOSED-LOOP: external dependencies resolved - foundation release pantheon-base-v0.12.1 published (tag -> 884465c0, Release Gate Summary success, SonarCloud unresolved issues 0, assets: tgz 17.2MB + repo.tar 27.9MB + sha256 x2) via PR #310 (parameterized Exec S3649 terminal fix); pantheon-ops consumer lock created at .foundation/foundation-release.lock.json with baseline-swap deferred as explicit gap (dirty ops tree from parallel session). Evidence: .harness/evidence/2026-08-31-base-operational-workbench-design/foundation-release-v0.12.1.md",
   "priority": "P0-P2",
   "deliveryTier": "L2",
   "primaryLayer": "platform",
-  "qualityProfiles": ["ui-runtime", "architecture-fitness"],
+  "qualityProfiles": [
+    "ui-runtime",
+    "architecture-fitness"
+  ],
   "ratchetDecision": "guide-updated",
   "goal": "Turn proven operational UI patterns into Base-owned shared contracts and resumable implementation packets.",
   "scope": {
@@ -28,9 +32,33 @@
   "handoffDoc": ".harness/tasks/2026-08-31-base-operational-workbench-design/HANDOFF.md",
   "executionQueueDoc": ".harness/tasks/2026-08-31-base-operational-workbench-design/EXECUTION_QUEUE.md",
   "statusDoc": ".harness/tasks/2026-08-31-base-operational-workbench-design/STATUS.md",
-  "children": ["B1", "B2", "B3", "B4", "B5"],
-  "completedChildren": ["B1", "B2", "B3", "B4", "B5"],
-  "executionBatches": [["B1", "B5"], ["B2", "B3"], ["B4"]],
+  "children": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5"
+  ],
+  "completedChildren": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5"
+  ],
+  "executionBatches": [
+    [
+      "B1",
+      "B5"
+    ],
+    [
+      "B2",
+      "B3"
+    ],
+    [
+      "B4"
+    ]
+  ],
   "runtimeSensitive": false,
   "linkage": {
     "taskId": "2026-08-31-base-operational-workbench-design",
@@ -53,8 +81,14 @@
       "git diff --check"
     ],
     "visualEvidence": {
-      "viewports": ["1440x900", "390x844"],
-      "themes": ["light", "dark"],
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
       "states": [
         "default",
         "loading",
@@ -85,5 +119,17 @@
     "incompatible shared component API",
     "foundation release publication",
     "final visual and functional acceptance"
-  ]
+  ],
+  "releaseDelivery": {
+    "releaseTag": "pantheon-base-v0.12.1",
+    "baseCommit": "884465c07815f7fc03ae6b7814c9d254eac0e3d3",
+    "publishedAt": "2026-09-16T04:26:44Z",
+    "releaseGate": "success",
+    "sonarUnresolvedIssues": 0,
+    "opsConsumerLock": "pantheon-ops/.foundation/foundation-release.lock.json",
+    "pendingGaps": [
+      "ops baseline-swap (dirty tree)",
+      "ops post-swap verification"
+    ]
+  }
 }

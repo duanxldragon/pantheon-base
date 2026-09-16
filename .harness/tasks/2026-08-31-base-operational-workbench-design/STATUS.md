@@ -29,15 +29,18 @@
 
 ## Next Atomic Action
 
-Publish an immutable Base foundation release, then update the Ops consumer lock and run business validation.
+Ops-side baseline swap: apply `pantheon-base-v0.12.1` bundle shared paths to the ops source tree and run business validation (deferred with explicit gap — ops tree carries unrelated in-flight work; see consumer lock `pendingWork`).
 
 ## Remaining Gates
 
-- Publish an immutable Base foundation release (irreversible publish — explicitly NOT consumed in the 2026-09-15 session; only the acceptance gate was granted).
-- Update the Ops consumer lock and run business validation.
+- ~~Publish an immutable Base foundation release~~ — **DONE 2026-09-16**: `pantheon-base-v0.12.1` published (tag → 884465c0, Release Gate Summary success after PR #310 cleared the last SonarCloud issue).
+- ~~Update the Ops consumer lock~~ — **DONE 2026-09-16**: `pantheon-ops/.foundation/foundation-release.lock.json` created (supersedes v0.11.0); baseline swap deferred with explicit gap (dirty ops tree from parallel session).
+- Ops baseline swap + business validation — remaining (agent-executable once the ops tree is clean).
 
 ## Gate History
 
 | Timestamp | Gate | Decision | Owner |
 |---|---|---|---|
 | 2026-09-15 | Final visual/function acceptance (B1-B5) | Granted — implementation accepted | Maintainer (via agent session) |
+| 2026-09-16 | Immutable foundation release publish | Executed — `pantheon-base-v0.12.1` (Path A approved by maintainer) | Agent session |
+| 2026-09-16 | Ops consumer lock | Established — baseline swap recorded as explicit gap | Agent session |
