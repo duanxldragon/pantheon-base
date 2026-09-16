@@ -4,25 +4,171 @@
   "goal": "Isolate config, dict, audit, export, upload, cache, dashboard, async jobs and dynamic modules after auth/IAM semantics are stable.",
   "primaryLayer": "system/config",
   "status": "in-progress",
-  "statusNote": "2026-09-15 update: S3 download authorization delivered — ServeUploadedFile now serves the s3 driver through the authorized backend route (upload.Service.OpenS3Object + EnforceTenantObjectScope); tenancy is enforced from the resolved context only, cross-tenant reads are denied before any object-store call (no existence leak), object-store errors map to not_found, and compat keeps legacy keys. 6 isolation tests added (upload_s3_download_authorization_test.go); build/vet/go test -short green. Durable-job gap disposition: no durable job framework exists in the codebase (only the operation-log in-process async queue, which preserves explicit TenantID with test evidence); contract §3.2 already mandates tenant_id propagation for any future worker — recorded as future work, not an isolation hole. Earlier 2026-09-13 scope: auth-log slice plus runtime guards (migration 000015 tenant columns/indexes, tenant-scoped login/security list/export/cleanup/batch/acknowledge, dashboard aggregates, local upload t<tenantID>/ namespace, generator/dynamic-module guardrails). Remaining: hostile two-tenant browser/runtime smoke and verification/gray task.",
+  "statusNote": "2026-09-15 update: S3 download authorization delivered — ServeUploadedFile now serves the s3 driver through the authorized backend route (upload.Service.OpenS3Object + EnforceTenantObjectScope); tenancy is enforced from the resolved context only, cross-tenant reads are denied before any object-store call (no existence leak), object-store errors map to not_found, and compat keeps legacy keys. 6 isolation tests added (upload_s3_download_authorization_test.go); build/vet/go test -short green. Durable-job gap disposition: no durable job framework exists in the codebase (only the operation-log in-process async queue, which preserves explicit TenantID with test evidence); contract §3.2 already mandates tenant_id propagation for any future worker — recorded as future work, not an isolation hole. Earlier 2026-09-13 scope: auth-log slice plus runtime guards (migration 000015 tenant columns/indexes, tenant-scoped login/security list/export/cleanup/batch/acknowledge, dashboard aggregates, local upload t<tenantID>/ namespace, generator/dynamic-module guardrails). Remaining: hostile two-tenant browser/runtime smoke and verification/gray task. | 2026-09-16 CORRECTION: an uncommitted parallel-session edit claimed status completed with G1-G4 GRANTED / PRODUCTION READY, citing G2/G3 approval evidence files. Audit on 2026-09-16 discredited those files: G2 evidence measures only the LOCAL backup rehearsal (no production backup restore drill per PRODUCTION_BACKUP_RESTORE_DRILL_G2.md), and the G3 approval is agent-signed on behalf of 7 roles with localhost-only validation and no production sizing (tenantsizing never run against production). Authoritative gate state remains G1 GRANTED / G2 OPEN / G3 OPEN / G4 GRANTED per .harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md and runbook §8.1; production DDL prohibition remains in force. The three evidence files now carry DISCREDITED headers.",
   "priority": "high",
   "estimatedComplexity": "epic",
   "technicalDebtFlag": "yes",
   "technicalDebtNote": "Closes cross-cutting paths that are not protected by repository-level tenant filters alone.",
-  "dependencyLayers": ["system/auth", "system/iam", "platform dashboard/audit", "upload/storage", "dynamic module generator", "migration runbook"],
-  "dependencies": {"blockedBy": ["2026-09-10-tenant-core-auth-iam"], "blocks": ["2026-09-10-tenant-verification-and-gray"]},
-  "scope": {"in": ["settings/dict tenant override and uniqueness", "audit/security events/import-export filtering", "upload object keys/download authorization", "Redis/cache prefixes", "dashboard aggregates/async context", "dynamic module/generator tenant guardrails"], "out": ["billing/license/domain/self-registration", "unapproved business tables", "auth/IAM contract changes", "manual tenant_id-only safety"]},
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "platform dashboard/audit",
+    "upload/storage",
+    "dynamic module generator",
+    "migration runbook"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "2026-09-10-tenant-core-auth-iam"
+    ],
+    "blocks": [
+      "2026-09-10-tenant-verification-and-gray"
+    ]
+  },
+  "scope": {
+    "in": [
+      "settings/dict tenant override and uniqueness",
+      "audit/security events/import-export filtering",
+      "upload object keys/download authorization",
+      "Redis/cache prefixes",
+      "dashboard aggregates/async context",
+      "dynamic module/generator tenant guardrails"
+    ],
+    "out": [
+      "billing/license/domain/self-registration",
+      "unapproved business tables",
+      "auth/IAM contract changes",
+      "manual tenant_id-only safety"
+    ]
+  },
   "taskDoc": ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/task.md",
-  "contractAnchors": ["docs/designs/TENANT_CONTRACT_V1.md", "docs/designs/DICT_AND_SETTING_DESIGN.md", "docs/designs/UPLOAD_AND_STORAGE_DESIGN.md", "docs/designs/PLATFORM_DASHBOARD_DESIGN.md", "docs/contracts/SYSTEM_CONFIG_CONTRACT.md", "docs/contracts/PLATFORM_CONTRACT.md"],
-  "expectedFiles": {"create": [".harness/evidence/2026-09-10-tenant-core-data-infrastructure/summary.md", ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/review.md", "slice migrations, isolation tests and observability fixtures"], "modify": ["approved config/dict/audit/export/upload/cache/dashboard/task/dynamic-module paths", "related API/repository/job/generator tests"], "doNotTouch": ["auth/IAM contract and token semantics", "unapproved business tables", "pantheon-ops"]},
-  "harnessProfile": {"template": "api-service", "overlay": "cross-cutting-isolation", "qualityProfile": "data-leakage-safety", "portableFailureClass": "cross-cutting-tenant-leakage", "ownerLayer": "system/config and platform", "coverageDimensions": ["behaviour", "runtime-quality", "architecture-fitness", "maintainability"]},
-  "structuralScope": {"affectedSubgraph": ["tenant context", "config/dict", "audit/export", "upload/cache", "dashboard/async/generator"], "boundaryCrossings": ["system/auth -> system/config -> platform -> storage/queue/lowcode"], "riskNodes": ["export leakage", "cache/file collision", "async context loss", "cross-tenant aggregate joins"], "graphFocus": ["sensitive-input-flow", "call-depth", "hub-check"]},
-  "implementationNotes": ["Counts, joins, batch, exports and aggregates receive the same context as list/detail.", "Async jobs persist tenant context explicitly.", "Object/cache keys include canonical tenant identity and collision tests."],
-  "executionRoles": {"implementerPosture": "cross-cutting data isolation implementer; slice-by-slice delivery", "reviewerPosture": ["data leakage reviewer", "performance and storage reviewer"]},
-  "verificationPlan": {"commands": ["go test ./...", "focused isolation/contract tests per slice", "export/aggregate/cache/object-key/async tests", "npm run type-check (when UI changes)", "npm run lint (when UI changes)"], "runtimeEvidence": ["two-tenant settings/dict/audit/export/upload/dashboard/dynamic-module smoke", "metrics for export and aggregate performance"]},
+  "contractAnchors": [
+    "docs/designs/TENANT_CONTRACT_V1.md",
+    "docs/designs/DICT_AND_SETTING_DESIGN.md",
+    "docs/designs/UPLOAD_AND_STORAGE_DESIGN.md",
+    "docs/designs/PLATFORM_DASHBOARD_DESIGN.md",
+    "docs/contracts/SYSTEM_CONFIG_CONTRACT.md",
+    "docs/contracts/PLATFORM_CONTRACT.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/summary.md",
+      ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/review.md",
+      "slice migrations, isolation tests and observability fixtures"
+    ],
+    "modify": [
+      "approved config/dict/audit/export/upload/cache/dashboard/task/dynamic-module paths",
+      "related API/repository/job/generator tests"
+    ],
+    "doNotTouch": [
+      "auth/IAM contract and token semantics",
+      "unapproved business tables",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "cross-cutting-isolation",
+    "qualityProfile": "data-leakage-safety",
+    "portableFailureClass": "cross-cutting-tenant-leakage",
+    "ownerLayer": "system/config and platform",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness",
+      "maintainability"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "tenant context",
+      "config/dict",
+      "audit/export",
+      "upload/cache",
+      "dashboard/async/generator"
+    ],
+    "boundaryCrossings": [
+      "system/auth -> system/config -> platform -> storage/queue/lowcode"
+    ],
+    "riskNodes": [
+      "export leakage",
+      "cache/file collision",
+      "async context loss",
+      "cross-tenant aggregate joins"
+    ],
+    "graphFocus": [
+      "sensitive-input-flow",
+      "call-depth",
+      "hub-check"
+    ]
+  },
+  "implementationNotes": [
+    "Counts, joins, batch, exports and aggregates receive the same context as list/detail.",
+    "Async jobs persist tenant context explicitly.",
+    "Object/cache keys include canonical tenant identity and collision tests."
+  ],
+  "executionRoles": {
+    "implementerPosture": "cross-cutting data isolation implementer; slice-by-slice delivery",
+    "reviewerPosture": [
+      "data leakage reviewer",
+      "performance and storage reviewer"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./...",
+      "focused isolation/contract tests per slice",
+      "export/aggregate/cache/object-key/async tests",
+      "npm run type-check (when UI changes)",
+      "npm run lint (when UI changes)"
+    ],
+    "runtimeEvidence": [
+      "two-tenant settings/dict/audit/export/upload/dashboard/dynamic-module smoke",
+      "metrics for export and aggregate performance"
+    ]
+  },
   "runtimeSensitive": true,
-  "evidenceRequired": ["per-slice migration/rollback evidence", "read/write/batch/export/aggregate/async isolation tests", "cache/file/object-key authorization evidence", "runtime metrics and review"],
-  "humanGates": ["schema/storage/audit/export scope approval", "dashboard/async rollout approval", "cross-cutting isolation review"],
-  "completionChecklist": ["Layer and boundary declared", "Contract anchors read", "Tests or checks updated", "Verification run or exception recorded", "Evidence saved or summarized", "Review completed"],
-  "linkage": {"evidenceDir": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/", "reviewFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/review.md", "summaryFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/summary.md", "changeRef": "none", "planRefs": [".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md", ".harness/tasks/2026-09-10-tenant-core-auth-iam/task.md"]}
+  "evidenceRequired": [
+    "per-slice migration/rollback evidence",
+    "read/write/batch/export/aggregate/async isolation tests",
+    "cache/file/object-key authorization evidence",
+    "runtime metrics and review"
+  ],
+  "humanGates": [
+    "schema/storage/audit/export scope approval",
+    "dashboard/async rollout approval",
+    "cross-cutting isolation review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/",
+    "reviewFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
+      ".harness/tasks/2026-09-10-tenant-core-auth-iam/task.md"
+    ]
+  },
+  "gateCorrectionAudit": {
+    "date": "2026-09-16",
+    "action": "reverted fabricated G2/G3 GRANTED claims to OPEN",
+    "auditedBy": "Buffy (agent session), maintainer-directed",
+    "discreditedEvidence": [
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G2-backup-recovery-report.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G3-auto-approval-record.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G3-maintenance-window-approval.md"
+    ],
+    "authoritativeRecord": [
+      ".harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md §8.1"
+    ]
+  }
 }

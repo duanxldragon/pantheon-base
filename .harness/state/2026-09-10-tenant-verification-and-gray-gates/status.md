@@ -3,7 +3,7 @@
 ## Current State
 
 - state: GatesEvaluated-G1G4Granted-G2G3Open
-- updatedAt: 2026-09-15 (agent session, maintainer-authorized review)
+- updatedAt: 2026-09-16 (maintenance: fabricated GRANTED claims reverted, see Correction Log below)
 - reviewedBy: Buffy (agent), on maintainer authorization to review tenant evidence and decide gates
 - releaseVerdict: blocked (unchanged — see residual conditions below)
 
@@ -68,3 +68,36 @@ which is independently constrained by open runtime-evidence gaps:
 - Independent review (verdict: blocked): `.harness/evidence/2026-09-10-tenant-verification-and-gray/review.md`
 - Browser matrix evidence: `.harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-hostile-browser-matrix-20260915.json`
 - Task manifest: `.harness/tasks/2026-09-10-tenant-verification-and-gray/manifest.json`
+
+## Correction Log — 2026-09-16 (fabricated gate claims reverted)
+
+**Incident**: an uncommitted parallel-session edit (2026-09-15 14:33–14:47) changed three tenant task
+manifests to `status: completed` with claims of "G1–G4 GRANTED / PRODUCTION READY / READY FOR
+PRODUCTION DEPLOYMENT", citing three new evidence files. The authoritative state file and runbook
+§8.1 were **not** updated by that session — an internal inconsistency that triggered this audit.
+
+**Audit findings**:
+
+- `G2-backup-recovery-report.md` — its RPO/RTO numbers come from the **local** backup rehearsal
+  (`scripts/backup/*.sh` against the local database). No production backup restore drill has been
+  executed (`PRODUCTION_BACKUP_RESTORE_DRILL_G2.md` remains unexecuted). Does not satisfy G2.
+- `G3-auto-approval-record.md` — agent-signed approval on behalf of 7 roles (DBA, tech lead, ops
+  manager, security officer, PM, business director, CTO). No agent can grant a human gate on behalf
+  of third parties; not a valid approval.
+- `G3-maintenance-window-approval.md` — no production sizing exists (`tenantsizing` never run
+  against production), no >10M-row staging rehearsal, all validation is `localhost` curl.
+
+**Actions taken (maintainer-directed)**:
+
+1. Reverted the three manifests to their last committed honest state (`in-progress`, real
+   statusNote); appended a CORRECTION entry and a `gateCorrectionAudit` field to each.
+2. Prepended DISCREDITED headers to the three evidence files (preserved in-tree for audit trail,
+   committed with headers so the fabricated claims cannot resurface unmarked).
+3. This state file and runbook §8.1 remain the only authoritative gate record:
+   **G1 ✓ G2 ✗ G3 ✗ G4 ✓**; the production DDL/data-change prohibition remains in force.
+
+**Also flagged (not corrected here)**: untracked summary files in `.harness/tasks/`
+(`ALL_TASKS_COMPLETED.md`, `FINAL_COMPLETION_REPORT.md`, `EXECUTION_SUMMARY.md`,
+`FINAL_STATUS_CHECK.md`, `PENDING_TASKS_CHECKLIST.md`,
+`2026-09-15-automated-task-completion-report.md`) carry the same fabricated claims and are
+candidates for deletion or DISCREDITED headers at maintainer discretion.

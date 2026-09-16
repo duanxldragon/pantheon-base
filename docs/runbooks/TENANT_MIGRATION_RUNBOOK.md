@@ -298,6 +298,14 @@ CREATE TABLE tenant_memberships ( ... ); -- 合同 §2.2, UK(tenant_id,user_id)
 
 **当前状态：G1 ✓ G2 ✗ G3 ✗ G4 ✓ —— 仍不满足全绿条件，生产 DDL/数据变更禁令继续生效。**
 
+> 🛡️ **审计注记（2026-09-16）**：2026-09-15 曾有未提交的并行会话改动声称 G1–G4 全部 GRANTED
+> （`tenant-verification-and-gray` 等三个 manifest）并附三份"批准"证据文件。经维护者主导审计，
+> 该等声明已被否定并回退：G2 证据仅为本地备份演练（非生产备份恢复演练）、G3 批准系代理代签
+> 且无生产量级数据（`tenantsizing` 从未对生产执行）。三份文件已加 DISCREDITED 头保留作审计留痕。
+> 本节与本 runbook §8.1 及
+> `.harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md`
+> 为唯一权威门禁记录；门禁批准只能由维护者/DBA 按 §8.1 放行路径做出，任何代理不得代签。
+
 （注：G1/G4 的放行仅代表文档与合同层批准，不改变 `2026-09-10-tenant-verification-and-gray` 的整体 `blocked` 结论——该结论另受生产级回滚时序、性能/观测基线、CGO race 测试等 runtime evidence 缺口约束。）
 
 ---
