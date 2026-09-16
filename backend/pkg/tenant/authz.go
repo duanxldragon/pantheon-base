@@ -32,6 +32,14 @@ const (
 // domain; the two namespaces stay separate (contract §7).
 const RoleDomainPrefix = "role:"
 
+// RoleSubject builds `role:<key>@tenant:<id>` for tenant-scoped policies.
+//
+// Deprecated: renamed from TenantRoleSubject to avoid the tenant stutter;
+// TenantRoleSubject remains as a deprecated alias.
+func RoleSubject(roleKey string, tenantID uint64) string {
+	return TenantRoleSubject(roleKey, tenantID)
+}
+
 // TenantRoleSubject builds `role:<key>@tenant:<id>` for tenant-scoped policies.
 func TenantRoleSubject(roleKey string, tenantID uint64) string {
 	return RoleDomainPrefix + strings.TrimSpace(roleKey) + "@tenant:" + strconv.FormatUint(tenantID, 10)
@@ -52,6 +60,7 @@ type Tenant struct {
 	Status string `gorm:"size:16;not null;default:active"`
 }
 
+// TableName pins the read-side projection to the `tenants` master table.
 func (Tenant) TableName() string { return "tenants" }
 
 // LoginDiscovery is the result of resolving a user's login tenancy in multi

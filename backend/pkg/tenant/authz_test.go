@@ -18,22 +18,22 @@ func TestTenantRoleSubjectFormat(t *testing.T) {
 }
 
 func TestGlobalRoleSubjectTrims(t *testing.T) {
-	if got := GlobalRoleSubject("  admin  "); got != "admin" {
+	if got := GlobalRoleSubject("  " + MembershipRoleAdmin + "  "); got != MembershipRoleAdmin {
 		t.Fatalf("GlobalRoleSubject = %q, want admin", got)
 	}
 }
 
 func TestCasbinDomainPolicySubjectsCompat(t *testing.T) {
 	ctx := &Context{TenantID: PlatformGlobalTenantID, Mode: ModeCompat}
-	got := CasbinDomainPolicySubjects("admin", ctx)
-	if len(got) != 1 || got[0] != "admin" {
+	got := CasbinDomainPolicySubjects(MembershipRoleAdmin, ctx)
+	if len(got) != 1 || got[0] != MembershipRoleAdmin {
 		t.Fatalf("compat subjects = %v, want [admin]", got)
 	}
 }
 
 func TestCasbinDomainPolicySubjectsNilContext(t *testing.T) {
-	got := CasbinDomainPolicySubjects("admin", nil)
-	if len(got) != 1 || got[0] != "admin" {
+	got := CasbinDomainPolicySubjects(MembershipRoleAdmin, nil)
+	if len(got) != 1 || got[0] != MembershipRoleAdmin {
 		t.Fatalf("nil-context subjects = %v, want [admin]", got)
 	}
 }

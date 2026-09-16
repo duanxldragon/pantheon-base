@@ -129,7 +129,7 @@ func TestAuditTenantIsolation_ExportPinnedToTenant(t *testing.T) {
 	}
 	for _, row := range file.Rows {
 		// operUrl column is index 7; the title (index 1) identifies the row.
-		if string(row[1]) == "tenant-202-export" {
+		if row[1] == "tenant-202-export" {
 			t.Fatalf("tenant 101 export must not contain tenant 202 rows")
 		}
 	}

@@ -118,6 +118,8 @@ type autoCleanupState struct {
 	lastAutoCleanupAt time.Time
 }
 
+// WithTenantContext returns a copy of the service bound to the per-request
+// tenant context.
 func (s *Service) WithTenantContext(ctx *tenant.Context) *Service {
 	clone := *s
 	clone.tenantCtx = ctx

@@ -30,6 +30,8 @@ type settingCacheState struct {
 	publicCache *PublicSettingResp
 }
 
+// SettingService serves platform/system settings with per-request tenant
+// scoping.
 type SettingService struct {
 	db *gorm.DB
 	// tenantCtx is the per-request tenant context (queue-5 settings slice).

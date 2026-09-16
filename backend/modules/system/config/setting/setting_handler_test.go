@@ -29,10 +29,10 @@ func TestServeUploadedFileServesLocalFile(t *testing.T) {
 
 	root := t.TempDir()
 	target := filepath.Join(root, "profile", "avatar.txt")
-	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(target), 0o750); err != nil {
 		t.Fatalf("mkdir target dir: %v", err)
 	}
-	if err := os.WriteFile(target, []byte("avatar-demo"), 0o644); err != nil {
+	if err := os.WriteFile(target, []byte("avatar-demo"), 0o600); err != nil {
 		t.Fatalf("write target file: %v", err)
 	}
 
@@ -90,10 +90,10 @@ func TestServeUploadedFileRejectsAnotherTenantNamespace(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	root := t.TempDir()
 	target := filepath.Join(root, "t202", "general", "20260913", "secret.txt")
-	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(target), 0o750); err != nil {
 		t.Fatalf("mkdir target dir: %v", err)
 	}
-	if err := os.WriteFile(target, []byte("tenant-202-secret"), 0o644); err != nil {
+	if err := os.WriteFile(target, []byte("tenant-202-secret"), 0o600); err != nil {
 		t.Fatalf("write target file: %v", err)
 	}
 	handler := NewSettingHandler(nil, uploadpkg.NewService(stubUploadConfigReader{values: map[string]string{
@@ -116,10 +116,10 @@ func TestServeUploadedFileAllowsOwnTenantNamespace(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	root := t.TempDir()
 	target := filepath.Join(root, "t101", "general", "20260913", "own.txt")
-	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(target), 0o750); err != nil {
 		t.Fatalf("mkdir target dir: %v", err)
 	}
-	if err := os.WriteFile(target, []byte("tenant-101-file"), 0o644); err != nil {
+	if err := os.WriteFile(target, []byte("tenant-101-file"), 0o600); err != nil {
 		t.Fatalf("write target file: %v", err)
 	}
 	handler := NewSettingHandler(nil, uploadpkg.NewService(stubUploadConfigReader{values: map[string]string{

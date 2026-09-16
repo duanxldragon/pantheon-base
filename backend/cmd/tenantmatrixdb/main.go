@@ -64,7 +64,7 @@ func main() {
 	if err != nil {
 		fatal("open mysql: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	if err := db.Ping(); err != nil {
 		fatal("ping mysql: %v", err)
 	}

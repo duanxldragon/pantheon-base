@@ -18,6 +18,7 @@ type Membership struct {
 	Status   string `gorm:"size:16;not null;default:active"`
 }
 
+// TableName pins the projection to the `tenant_memberships` table.
 func (Membership) TableName() string { return "tenant_memberships" }
 
 // Membership status values (contract §2.2).

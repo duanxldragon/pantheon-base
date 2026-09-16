@@ -152,11 +152,11 @@ func TestTenantContextMiddleware_ConcurrentRequestsKeepTenantBoundary(t *testing
 	results := make(chan result, 2)
 	var wg sync.WaitGroup
 	for _, id := range []string{"101", "202"} {
-		id := id
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+			id := id
+			req := httptest.NewRequest(http.MethodGet, "http://example.com/protected", nil)
 			req.Header.Set("X-Test-Tenant", id)
 			recorder := httptest.NewRecorder()
 			engine.ServeHTTP(recorder, req)

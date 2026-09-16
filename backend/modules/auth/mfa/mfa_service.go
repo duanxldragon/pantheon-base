@@ -83,6 +83,8 @@ func (s *Service) CreateChallenge(currentUser *UserRecord) (*MFAChallengeResp, e
 	return s.CreateChallengeForTenant(currentUser, 0)
 }
 
+// CreateChallengeForTenant issues an MFA challenge bound to the given tenant
+// (tenantID 0 = compat/global).
 func (s *Service) CreateChallengeForTenant(currentUser *UserRecord, tenantID uint64) (*MFAChallengeResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized

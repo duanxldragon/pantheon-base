@@ -6,7 +6,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 )
 
-// LoginTenantCandidates lists the tenants a user may explicitly log into
+// ListLoginTenantCandidates lists the tenants a user may explicitly log into
 // (multi-membership tenant selection, contract §3.1 source 2: the login
 // request may specify the tenant; the session claim must match an active
 // membership). Compat mode returns an empty list — selection UI stays hidden

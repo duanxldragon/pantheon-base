@@ -29,6 +29,9 @@ type SettingHandler struct {
 	uploadService *uploadpkg.Service
 }
 
+// storageDriverLocal is the config value selecting the local disk driver.
+const storageDriverLocal = "local"
+
 func NewSettingHandler(service *SettingService, uploadService *uploadpkg.Service) *SettingHandler {
 	return &SettingHandler{service: service, uploadService: uploadService}
 }
@@ -227,7 +230,7 @@ func (h *SettingHandler) ServeUploadedFile(c *gin.Context) {
 		h.serveS3Object(c, objectKey)
 		return
 	}
-	if cfg.StorageDriver != "local" {
+	if cfg.StorageDriver != storageDriverLocal {
 		common.Fail(c, common.CodeError, errUploadFileNotFound)
 		return
 	}

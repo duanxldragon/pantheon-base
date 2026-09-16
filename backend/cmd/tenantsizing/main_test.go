@@ -178,7 +178,7 @@ func TestEstimate_FromFixtureFile(t *testing.T) {
 		{Name: "system_user", Rows: 1000, InScope: true, UniqueSwap: true},
 		{Name: "system_menu", Rows: 500},
 	})
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) //nolint:gosec // G304: t.TempDir fixture path
 	if err != nil {
 		t.Fatalf("read fixture: %v", err)
 	}

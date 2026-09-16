@@ -68,6 +68,7 @@ func (s *AuditService) Bootstrap() error {
 	return s.backfillOperationLogDerivedFields()
 }
 
+// ListOperationLogs returns a tenant-scoped page of operation logs.
 func (s *AuditService) ListOperationLogs(query *OperationLogQuery, ctx *tenant.Context) (*OperationLogPageResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
@@ -115,6 +116,7 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery, ctx *tenant.C
 	}, nil
 }
 
+// GetOperationLog returns one operation log if the tenant context allows it.
 func (s *AuditService) GetOperationLog(logID uint64, ctx *tenant.Context) (*OperationLogResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
@@ -129,6 +131,7 @@ func (s *AuditService) GetOperationLog(logID uint64, ctx *tenant.Context) (*Oper
 	return &resp, nil
 }
 
+// ExportOperationLogs streams the tenant-scoped logs as a CSV export.
 func (s *AuditService) ExportOperationLogs(query *OperationLogQuery, ctx *tenant.Context) (*impexp.CSVFile, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
@@ -179,6 +182,7 @@ func (s *AuditService) ExportOperationLogs(query *OperationLogQuery, ctx *tenant
 	}, nil
 }
 
+// DeleteOperationLog removes one log entry under tenant scoping rules.
 func (s *AuditService) DeleteOperationLog(logID uint64, ctx *tenant.Context) error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
@@ -186,6 +190,8 @@ func (s *AuditService) DeleteOperationLog(logID uint64, ctx *tenant.Context) err
 	return s.applyTenantScope(s.db, ctx).Delete(&middleware.SystemLogOper{}, logID).Error
 }
 
+// CleanupOperationLogs deletes entries older than the retention window and
+// returns the affected row count.
 func (s *AuditService) CleanupOperationLogs(retentionDays int, startedAt string, endedAt string, ctx *tenant.Context) (int64, error) {
 	if s.db == nil {
 		return 0, common.ErrDatabaseNotInitialized
@@ -337,6 +343,8 @@ func (s *AuditService) getRetentionDaysFromSetting(settingKey string, fallback i
 	return value
 }
 
+// BatchDeleteOperationLogs removes several log entries at once and returns
+// the affected row count.
 func (s *AuditService) BatchDeleteOperationLogs(ids []uint64, ctx *tenant.Context) (int64, error) {
 	if s.db == nil {
 		return 0, common.ErrDatabaseNotInitialized

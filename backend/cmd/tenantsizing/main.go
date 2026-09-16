@@ -366,7 +366,7 @@ func printPlan(snap *snapshotReport, est *estimateReport) {
 	fmt.Printf("Formula: %s\n\n", est.Formula)
 
 	w := tabwriter.NewWriter(os.Stdout, 2, 4, 2, ' ', 0)
-	fmt.Fprintln(w, "TABLE\tROWS\tB1+B4 DDL(s)\tBACKFILL(s)\tUNIQUE C(s)\tTABLE TOTAL(s)\tWINDOW ×2\tFLAGS")
+	_, _ = fmt.Fprintln(w, "TABLE\tROWS\tB1+B4 DDL(s)\tBACKFILL(s)\tUNIQUE C(s)\tTABLE TOTAL(s)\tWINDOW ×2\tFLAGS")
 	for _, e := range est.PerTable {
 		flags := []string{}
 		if e.UniqueSwapSec > 0 {
@@ -375,10 +375,10 @@ func printPlan(snap *snapshotReport, est *estimateReport) {
 		if e.Over10M {
 			flags = append(flags, "OVER-10M")
 		}
-		fmt.Fprintf(w, "%s\t%d\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%s\n",
+		_, _ = fmt.Fprintf(w, "%s\t%d\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%s\n",
 			e.Name, e.Rows, e.AddColumnSec+e.TightenSec, e.BackfillSec, e.UniqueSwapSec, e.TableTotalSec, e.WindowReserveSec, strings.Join(flags, ","))
 	}
-	w.Flush()
+	_ = w.Flush()
 
 	fmt.Printf("\nTotal estimate: %.1f s   Window reserve (×2): %.1f s (%s)\n",
 		est.TotalEstimateSec, est.WindowReserveSec, est.WindowReserveHuman)
@@ -406,11 +406,11 @@ func humanDuration(seconds float64) string {
 }
 
 func writeJSON(path string, v any) {
-	f, err := os.Create(path)
+	f, err := os.Create(path) //nolint:gosec // G304: path comes from the CLI flag, by design
 	if err != nil {
 		fatal("create %s: %v", path, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	writeJSONWriter(f, v)
 }
 

@@ -51,6 +51,8 @@ func Fail(c *gin.Context, code int, message string) {
 	commonhttp.Fail(c, code, message)
 }
 
+// FailWithData writes a business-failure response carrying an optional data
+// payload (re-export of pkg/common/http).
 func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 	commonhttp.FailWithData(c, code, message, data)
 }

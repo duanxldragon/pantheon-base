@@ -8,17 +8,6 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 )
 
-type permissionTenantPolicyTest struct {
-	suite string
-}
-
-// seedPolicyTenant inserts a tenants row for policy-authoring tests.
-func seedPolicyTenant(t *testing.T, db interface {
-	Exec(string, ...interface{}) error
-}, id uint64, code, status string) {
-	t.Helper()
-}
-
 // 1. Tenant-scoped create stores the contract §4 subject form.
 func TestPermissionTenantPolicy_CreateStoresDomainSubject(t *testing.T) {
 	db := setupPermissionTestDB(t)
