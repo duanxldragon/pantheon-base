@@ -31,7 +31,7 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 			"is_root", "leader", "phone", "email",
 		},
 		"system_user_session": {
-			"refresh_expires_at", "last_refresh_at", "last_activity_at", "last_ip", "revoked_at",
+			"refresh_expires_at", "last_refresh_at", "last_activity_at", "last_ip", "revoked_at", "tenant_id",
 		},
 		"system_log_login": {
 			"ipaddr", "login_location", "login_time",
@@ -61,7 +61,7 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 			"item_color",
 		},
 		"system_log_oper": {
-			"business_type", "oper_name", "oper_url", "oper_ip", "source_domain", "source_page", "json_result", "error_msg", "oper_time", "cost_time", "failure_category",
+			"business_type", "oper_name", "oper_url", "oper_ip", "source_domain", "source_page", "json_result", "error_msg", "oper_time", "cost_time", "failure_category", "tenant_id",
 		},
 		"system_refresh_version": {
 			"created_at",
@@ -89,6 +89,8 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 	assertMigrationIndexExists(t, db, "system_log_oper", "idx_system_log_oper_source_domain_page")
 	assertMigrationIndexExists(t, db, "system_log_oper", "idx_system_log_oper_source_page")
 	assertMigrationIndexExists(t, db, "system_log_oper", "idx_system_log_oper_failure_category")
+	assertMigrationIndexExists(t, db, "system_user_session", "idx_system_user_session_tenant_id")
+	assertMigrationIndexExists(t, db, "system_log_oper", "idx_system_log_oper_tenant")
 	assertMigrationIndexDoesNotExist(t, db, "system_dept", "idx_system_dept_dept_code")
 	assertLegacyColumnDoesNotBlockRuntimeWrites(t, db, "system_user_session", "expires_at")
 	assertLegacyColumnDoesNotBlockRuntimeWrites(t, db, "system_i18n", "locale_key")
