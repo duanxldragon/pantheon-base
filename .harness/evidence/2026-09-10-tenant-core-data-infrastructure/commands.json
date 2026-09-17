@@ -1,0 +1,45 @@
+{
+  "taskId": "2026-09-10-tenant-core-data-infrastructure",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codebuff",
+    "note": "Buffy agent on z-ai/glm-5.3-flash via Codebuff/Freebuff; smoke assertion follow-up for the audit export tenantId column."
+  },
+  "commands": [
+    {
+      "command": "gh run list --branch main --workflow smoke-full.yml -> Full Smoke failure on 3d28d618",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: identify the post-#311 main failure. Expected: locate failing suite; observed Full Smoke failing job 'Full Smoke'."
+    },
+    {
+      "command": "gh api artifacts/<smoke-full-artifacts> -> system-import-export.spec.ts:383 'login log and operation log export are usable'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: extract the failure signal. Expected: header mismatch; observed Expected header without tenantId, Received header with trailing tenantId."
+    },
+    {
+      "command": "grep -n tenantId backend/modules/system/audit/audit_service.go backend/modules/system/audit/audit_export_test.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Description: confirm the backend export contract. Expected: tenantId is the last CSV column; observed audit_service.go:180 headers end with tenantId and audit_export_test.go:86 asserts the same."
+    },
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b && node node_modules/eslint/bin/eslint.js tests/smoke/system/api/system-import-export.spec.ts tests/smoke/system/governance/cleanup-range-ui.spec.ts",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Description: verify the two updated smoke specs. Expected: clean; observed both commands exit 0."
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/",
+    "reviewFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/summary.md",
+    "changeRef": "PR #312 (fix/smoke-oper-log-export-tenant-column)",
+    "planRefs": []
+  },
+  "knownGaps": [
+    "Full-suite re-run evidence lands with the PR #312 required checks and the next main Full Smoke."
+  ]
+}
