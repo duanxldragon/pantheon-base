@@ -1,5 +1,8 @@
 {
   "taskId": "maintenance-test-stability-2026-09-02",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/maintenance-test-stability-2026-09-02/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Test Stability Improvements for v0.10.27",
   "goal": "Fix module-governance-real.spec.ts intermittent timeout causing CI failures to enable v0.10.27 release",
   "primaryLayer": "test-infrastructure",

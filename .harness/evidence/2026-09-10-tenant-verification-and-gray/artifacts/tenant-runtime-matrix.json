@@ -1,0 +1,566 @@
+{
+  "taskId": "2026-09-10-tenant-verification-and-gray",
+  "harness": "tenant-runtime-matrix.ps1",
+  "startedAt": "2026-09-14T03:08:16.3602781Z",
+  "finishedAt": "2026-09-14T03:08:40.2884635Z",
+  "baseUrl": "http://127.0.0.1:8080",
+  "tenants": [
+    101,
+    202
+  ],
+  "fixtureCodes": [
+    "__matrix_a_20260914030816",
+    "__matrix_b_20260914030816"
+  ],
+  "passed": true,
+  "resultCount": 23,
+  "failedCount": 0,
+  "results": [
+    {
+      "id": "fixture-setup",
+      "expected": "two tagged dict types and items inserted",
+      "actual": {
+        "dictA": "__matrix_a_20260914030816",
+        "dictB": "__matrix_b_20260914030816"
+      },
+      "passed": true,
+      "evidence": "local MySQL only"
+    },
+    {
+      "id": "compat-login",
+      "expected": "HTTP 200 with access token and no tenant claim",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success",
+        "accessCookiePresent": true,
+        "refreshCookiePresent": true,
+        "sessionIdSuffix": "c4f0fd60",
+        "userId": 1,
+        "username": "admin"
+      },
+      "passed": true,
+      "evidence": "compat baseline"
+    },
+    {
+      "id": "compat-me",
+      "expected": "HTTP 200",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success"
+      },
+      "passed": true,
+      "evidence": "pre-switch token"
+    },
+    {
+      "id": "multi-login-picker",
+      "expected": "selection required with tenant IDs 101 and 202",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success",
+        "tenantSelectionRequired": true,
+        "candidates": [
+          {
+            "tenantId": 101,
+            "code": "smoke-acme",
+            "name": "Smoke Acme North",
+            "role": "owner"
+          },
+          {
+            "tenantId": 202,
+            "code": "smoke-globex",
+            "name": "Smoke Globex South",
+            "role": "owner"
+          }
+        ]
+      },
+      "passed": true,
+      "evidence": "password verified candidate disclosure"
+    },
+    {
+      "id": "tenant-a-login",
+      "expected": "HTTP 200 session stamped tenant_id=101",
+      "actual": {
+        "response": {
+          "status": 200,
+          "code": 200,
+          "message": "success",
+          "accessCookiePresent": true,
+          "refreshCookiePresent": true,
+          "sessionIdSuffix": "bd689f85",
+          "userId": 1,
+          "username": "admin"
+        },
+        "session": {
+          "sessionIdSuffix": "bd689f85",
+          "tenantId": 101,
+          "revoked": false
+        }
+      },
+      "passed": true,
+      "evidence": "explicit tenant choice"
+    },
+    {
+      "id": "tenant-b-login",
+      "expected": "HTTP 200 session stamped tenant_id=202",
+      "actual": {
+        "response": {
+          "status": 200,
+          "code": 200,
+          "message": "success",
+          "accessCookiePresent": true,
+          "refreshCookiePresent": true,
+          "sessionIdSuffix": "dd9d6e09",
+          "userId": 1,
+          "username": "admin"
+        },
+        "session": {
+          "sessionIdSuffix": "dd9d6e09",
+          "tenantId": 202,
+          "revoked": false
+        }
+      },
+      "passed": true,
+      "evidence": "explicit tenant choice"
+    },
+    {
+      "id": "stale-compat-token",
+      "expected": "deny missing tenant context",
+      "actual": {
+        "status": 200,
+        "code": 500,
+        "message": "tenant.context.missing"
+      },
+      "passed": true,
+      "evidence": "flag-on stale session"
+    },
+    {
+      "id": "tenant-a-me",
+      "expected": "HTTP 200",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success"
+      },
+      "passed": true,
+      "evidence": "subject claim path"
+    },
+    {
+      "id": "header-forgery",
+      "expected": "deny platform tenant override for admin role",
+      "actual": {
+        "status": 200,
+        "code": 403,
+        "message": "tenant.forbidden"
+      },
+      "passed": true,
+      "evidence": "X-Tenant-Id tamper"
+    },
+    {
+      "id": "dict-list-tenant-a",
+      "expected": "only tenant A row visible",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success",
+        "items": [
+          {
+            "id": 65,
+            "tenantId": null,
+            "dictCode": "__matrix_a_20260914030816",
+            "dictName": "Matrix Tenant A",
+            "itemValue": null
+          }
+        ]
+      },
+      "passed": true,
+      "evidence": "list scope"
+    },
+    {
+      "id": "dict-list-tenant-b",
+      "expected": "only tenant B row visible",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success",
+        "items": [
+          {
+            "id": 66,
+            "tenantId": null,
+            "dictCode": "__matrix_b_20260914030816",
+            "dictName": "Matrix Tenant B",
+            "itemValue": null
+          }
+        ]
+      },
+      "passed": true,
+      "evidence": "list scope"
+    },
+    {
+      "id": "dict-export-tenant-a",
+      "expected": "own CSV contains A and excludes B",
+      "actual": {
+        "own": {
+          "status": 200,
+          "contentType": "text/csv; charset=utf-8",
+          "text": "﻿dictCode,dictName,module,status,remark\n__matrix_a_20260914030816,Matrix Tenant A,system,1,__matrix__\n"
+        },
+        "foreign": {
+          "status": 200,
+          "contentType": "text/csv; charset=utf-8",
+          "text": "﻿dictCode,dictName,module,status,remark\n"
+        },
+        "ownContainsA": true,
+        "ownContainsB": false
+      },
+      "passed": true,
+      "evidence": "export scope"
+    },
+    {
+      "id": "batch-id-tamper",
+      "expected": "foreign ID rejected or updates zero rows",
+      "actual": {
+        "status": 200,
+        "code": 500,
+        "message": "param.invalid"
+      },
+      "passed": true,
+      "evidence": "tenant B attempts A ID"
+    },
+    {
+      "id": "update-id-tamper",
+      "expected": "foreign ID rejected",
+      "actual": {
+        "status": 200,
+        "code": 500,
+        "message": "request.failed"
+      },
+      "passed": true,
+      "evidence": "tenant B attempts A ID"
+    },
+    {
+      "id": "refresh-rotation",
+      "expected": "new pair issued and old refresh replay rejected",
+      "actual": {
+        "first": {
+          "status": 200,
+          "code": 200,
+          "message": "success",
+          "accessCookiePresent": true,
+          "refreshCookiePresent": true,
+          "sessionIdSuffix": "dd9d6e09"
+        },
+        "replay": {
+          "status": 200,
+          "code": 401,
+          "message": "token.invalid"
+        },
+        "newTokenPresent": true
+      },
+      "passed": true,
+      "evidence": "refresh token rotation"
+    },
+    {
+      "id": "audit-tenant-a",
+      "expected": "operation log rows stay in tenant A",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success",
+        "total": 16,
+        "items": [
+          {
+            "id": 18081,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18080,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18052,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18047,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18046,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18041,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18036,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18035,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18030,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18025,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18024,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18016,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18011,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 18010,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 17931,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          },
+          {
+            "id": 17929,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 101
+          }
+        ],
+        "successCount": 16,
+        "failedCount": 0
+      },
+      "passed": true,
+      "evidence": "audit list and aggregate"
+    },
+    {
+      "id": "audit-tenant-b",
+      "expected": "operation log rows stay in tenant B",
+      "actual": {
+        "status": 200,
+        "code": 200,
+        "message": "success",
+        "total": 12,
+        "items": [
+          {
+            "id": 18083,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18082,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18049,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18048,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18038,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18037,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18027,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18026,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18013,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 18012,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 17932,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          },
+          {
+            "id": 17930,
+            "dictCode": null,
+            "dictName": null,
+            "itemValue": null,
+            "tenantId": 202
+          }
+        ],
+        "successCount": 2,
+        "failedCount": 10
+      },
+      "passed": true,
+      "evidence": "audit list and aggregate"
+    },
+    {
+      "id": "file-namespace-tamper",
+      "expected": "cross-tenant object namespace is rejected",
+      "actual": {
+        "status": 200,
+        "code": 500,
+        "message": "upload.file.not_found"
+      },
+      "passed": true,
+      "evidence": "t202 path probe"
+    },
+    {
+      "id": "logout-revocation",
+      "expected": "logout succeeds and old access token is rejected",
+      "actual": {
+        "logout": {
+          "status": 200,
+          "code": 200,
+          "message": "success",
+          "accessCookiePresent": true,
+          "refreshCookiePresent": true,
+          "sessionIdSuffix": "",
+          "loggedOut": true
+        },
+        "after": {
+          "status": 200,
+          "code": 401,
+          "message": "token.invalid"
+        }
+      },
+      "passed": true,
+      "evidence": "session revocation"
+    },
+    {
+      "id": "kill-switch",
+      "expected": "revoke command succeeds and live access token is force-expired",
+      "actual": {
+        "exitCode": 0,
+        "output": "tenant-matrix revoke: user 1 sessions revoked=1 (blacklist key ttl=16m0s)",
+        "after": {
+          "status": 200,
+          "code": 401,
+          "message": "token.expired.force"
+        }
+      },
+      "passed": true,
+      "evidence": "user blacklist plus DB session revocation"
+    },
+    {
+      "id": "flag-rollback",
+      "expected": "platform.tenant_mode restored to compat",
+      "actual": "compat",
+      "passed": true,
+      "evidence": "finally"
+    },
+    {
+      "id": "fixture-cleanup",
+      "expected": "temporary dict rows removed",
+      "actual": {
+        "dictA": "__matrix_a_20260914030816",
+        "dictB": "__matrix_b_20260914030816"
+      },
+      "passed": true,
+      "evidence": "finally"
+    },
+    {
+      "id": "kill-switch-cleanup",
+      "expected": "local blacklist rehearsal key removed",
+      "actual": "tenant-matrix unblacklist: user 1 kill key removed (1)",
+      "passed": true,
+      "evidence": "finally"
+    }
+  ]
+}

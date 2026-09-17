@@ -1,0 +1,85 @@
+{
+  "taskId": "2026-09-08-p1-k8s-manifests",
+  "title": "P1-3 K8s Production Manifests",
+  "goal": "Create production-ready Kubernetes manifests (Deployment, Service, Ingress, HPA) to enable cloud deployment of Pantheon Base.",
+  "primaryLayer": "platform",
+  "priority": "P1",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "infrastructure",
+  "estimatedEffort": "8 hours (actual 3 hours)",
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p1-performance-baseline",
+    "2026-09-08-p1-sso-oidc-design"
+  ],
+  "scope": {
+    "in": [
+      "k8s/ directory structure",
+      "namespace, configmap, secret template",
+      "backend deployment (3 replicas, rolling update, probes, resource limits)",
+      "ClusterIP service with session affinity",
+      "HTTPS ingress with TLS and rate limiting",
+      "horizontal pod autoscaler (CPU/memory, 3-10 replicas)",
+      "k8s/README.md deployment guide"
+    ],
+    "out": [
+      "helm charts",
+      "in-cluster databases (external MySQL/Redis assumed)",
+      "persistent volumes",
+      "service mesh",
+      "gitops",
+      "multi-cluster deployment"
+    ],
+    "create": [
+      "k8s/namespace.yaml",
+      "k8s/configmap.yaml",
+      "k8s/secret.yaml.example",
+      "k8s/ingress.yaml",
+      "k8s/backend/deployment.yaml",
+      "k8s/backend/service.yaml",
+      "k8s/backend/hpa.yaml",
+      "k8s/README.md",
+      "k8s/.gitignore",
+      ".harness/tasks/2026-09-08-p1-k8s-manifests/task.md",
+      ".harness/tasks/2026-09-08-p1-k8s-manifests/manifest.json",
+      ".harness/evidence/2026-09-08-p1-k8s-manifests/completion.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend application code",
+      "frontend source",
+      "database migrations"
+    ]
+  },
+  "successCriteria": [
+    "kubectl apply -f k8s/ deploys a working backend",
+    "Deployment has liveness/readiness probes and resource limits",
+    "HPA scales between 3 and 10 replicas",
+    "Ingress terminates TLS and routes /api to backend",
+    "Actual secrets are gitignored (only secret.yaml.example committed)"
+  ],
+  "humanGates": [
+    "Cluster-specific values (host, registry, sizing) review before production apply"
+  ],
+  "verification": {
+    "commands": [],
+    "manualChecks": [
+      "Manifests validated (kubectl apply --dry-run or equivalent)",
+      "Secrets not committed to git",
+      "README documents cluster sizing and rollout steps"
+    ]
+  },
+  "reconciliation": "2026-09-15: manifest backfilled from evidence; verified k8s/ directory contents (namespace/configmap/secret.yaml.example/ingress + backend deployment/service/hpa + README) exist in repo; status aligned to completed.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p1-k8s-manifests/",
+    "reviewFile": ".harness/evidence/2026-09-08-p1-k8s-manifests/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-08-p1-k8s-manifests/task.md",
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

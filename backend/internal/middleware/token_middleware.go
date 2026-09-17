@@ -98,18 +98,7 @@ var (
 
 // extractToken extracts the access token from Authorization header or cookie.
 func extractToken(c *gin.Context) string {
-	if token, err := c.Cookie(commonhttp.CookieAccessToken); err == nil && token != "" {
-		return token
-	}
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		return ""
-	}
-	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return ""
-	}
-	return parts[1]
+	return commonhttp.ExtractAccessToken(c.Request)
 }
 
 // resolveTokenSession 解析 token 对应的会话：优先命中本地缓存（未过期），
@@ -185,6 +174,11 @@ func applyTokenContext(c *gin.Context, sessionData *authtoken.SessionData) {
 	c.Set("username", sessionData.Username)
 	c.Set("roleKeys", sessionData.RoleKeys)
 	c.Set("sessionId", sessionData.SessionID)
+	// Trusted tenant claim from the auth session (contract §3.1 source 2).
+	// 0 = no claim (compat population / platform-only user); the tenant
+	// middleware resolves it after this middleware. Sessions issued before
+	// the claim existed decode as 0 — deny-by-default covers multi mode.
+	c.Set("tenantId", sessionData.TenantID)
 	if len(sessionData.RoleKeys) > 0 {
 		c.Set("roleKey", sessionData.RoleKeys[0])
 	}

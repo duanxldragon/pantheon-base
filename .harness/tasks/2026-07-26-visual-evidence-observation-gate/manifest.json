@@ -1,5 +1,8 @@
 {
   "taskId": "2026-07-26-visual-evidence-observation-gate",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-26-visual-evidence-observation-gate/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Wire check-visual-evidence into quality CI in observation mode (HOT-001)",
   "goal": "Start the pantheon-harness HOT-001 visual-evidence promotion window by running check-visual-evidence.mjs in the quality docs-governance job as an advisory (continue-on-error) step, reported in the harness governance summary but excluded from strict main/release enforcement.",
   "primaryLayer": "platform",

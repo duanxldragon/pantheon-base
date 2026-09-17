@@ -1,12 +1,26 @@
 {
   "taskId": "2026-08-10-shared-csrf-release",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-10-shared-csrf-release/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Distribute shared CSRF request client in foundation release",
   "goal": "Ensure the HttpOnly CSRF cookie/header contract is shipped to foundation-release consumers.",
   "primaryLayer": "system/auth",
-  "qualityProfiles": ["auth-security", "foundation-release"],
+  "qualityProfiles": [
+    "auth-security",
+    "foundation-release"
+  ],
   "scope": {
-    "in": ["Foundation release shared frontend manifest", "Manifest contract tests", "Ops consumer sync"],
-    "out": ["Business-domain changes", "Cookie policy changes", "Unrelated frontend files"]
+    "in": [
+      "Foundation release shared frontend manifest",
+      "Manifest contract tests",
+      "Ops consumer sync"
+    ],
+    "out": [
+      "Business-domain changes",
+      "Cookie policy changes",
+      "Unrelated frontend files"
+    ]
   },
   "ratchetDecision": "gate-updated",
   "runtimeSensitive": true,
@@ -17,7 +31,9 @@
     "evidenceDir": ".harness/evidence/2026-08-10-shared-csrf-release/",
     "reviewFile": ".harness/evidence/2026-08-10-shared-csrf-release/review.md",
     "summaryFile": ".harness/evidence/2026-08-10-shared-csrf-release/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-10-shared-csrf-release.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-10-shared-csrf-release.task.md"
+    ]
   },
   "syncExpectation": "Publish the next immutable Base foundation patch and consume it in Pantheon Ops."
 }

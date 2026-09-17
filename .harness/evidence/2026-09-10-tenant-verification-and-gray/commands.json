@@ -1,0 +1,269 @@
+{
+  "taskId": "2026-09-10-tenant-verification-and-gray",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "codex"
+  },
+  "commands": [
+    {
+      "command": "go test -short ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "All backend packages passed; exit code 0."
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "durationMs": 3100,
+      "notes": "Backend vet completed without findings after the auth logout cache-invalidator wiring."
+    },
+    {
+      "command": "go test -short ./internal/middleware -run 'TestTenantContextMiddleware_(HostileTwoTenantMatrix|ConcurrentRequestsKeepTenantBoundary)$' -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "Hostile two-tenant and concurrent tenant-boundary tests passed; exit code 0."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "TypeScript build check passed; exit code 0."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "ESLint passed; exit code 0."
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 0,
+      "notes": "No whitespace errors; exit code 0."
+    },
+    {
+      "command": "go test -short ./pkg/common/http ./pkg/authtoken ./internal/middleware ./modules/auth/login",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "durationMs": 3900,
+      "notes": "Logout access-token deletion, shared token extraction, middleware, and auth handler regressions passed after dependency-boundary injection."
+    },
+    {
+      "command": "go build -o server-matrix.exe ./cmd/server",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "durationMs": 4100,
+      "notes": "Rebuilt the local HTTP verification backend with the logout cache-invalidator wiring."
+    },
+    {
+      "command": "tenant-runtime-matrix.ps1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 24200,
+      "notes": "Real local MySQL/Redis HTTP matrix passed 23/23 after rebuilding the backend: compat -> multi -> compat, tenant picker, claims/forgery, dictionary list/export, ID tamper, refresh rotation/replay, audit/file isolation, logout revocation, and kill-switch force expiry. Temporary dictionary fixtures, flag, and blacklist were cleaned up; reusable smoke tenants 101/202 were retained.",
+      "artifacts": [
+        ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/tenant-runtime-matrix.json",
+        ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/tenant-runtime-matrix.ps1"
+      ]
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke-core/auth-login-logout.spec.ts tests/smoke-core/auth-tenant-picker.spec.ts --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 27800,
+      "notes": "Browser auth and tenant-picker smoke passed 7/7 after the logout dependency-boundary refactor."
+    },
+    {
+      "command": "npx playwright test tests/smoke-core/tenant-protected-resources.spec.ts --config playwright.config.ts --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 14000,
+      "notes": "Real two-tenant browser smoke passed 1/1 with independent contexts for tenants 101/202: dashboard and dictionary page access, dictionary list/export isolation, and cross-tenant ID update/batch-status rejection. Cleanup restored platform.tenant_mode=compat."
+    },
+    {
+      "command": "npx playwright test -c playwright.visual.config.ts tests/visual/visual-baseline.spec.ts",
+      "cwd": "pantheon-base/frontend",
+      "status": "failed",
+      "durationMs": 21200,
+      "notes": "Login visual baselines passed 3/3; dashboard and system-user-list snapshots failed with approximately 2% pixel differences. Snapshots were not updated.",
+      "verificationSkipped": true,
+      "skippedVerification": {
+        "skipReason": "data-driven dashboard and user-list rendered surfaces do not match existing snapshots",
+        "alternativeVerification": "Rendered actual and diff images were inspected; login desktop/mobile/dark baselines remain green.",
+        "riskNote": "Visual drift remains an open UI baseline issue, independent of the tenant runtime matrix."
+      }
+    },
+    {
+      "command": "npx playwright test tests/smoke-core/auth-login-logout.spec.ts --config playwright.config.ts --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 19300,
+      "notes": "Core auth browser smoke passed 4/4 on the initial September 13 run; the same four tests passed again in the combined 7/7 run on September 14."
+    },
+    {
+      "command": "npx playwright test tests/smoke-core/auth-tenant-picker.spec.ts --config playwright.config.ts --workers=1",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 12100,
+      "notes": "Tenant picker browser E2E passed 3/3 on the initial September 13 run and again in the combined 7/7 run on September 14."
+    },
+    {
+      "command": "npm run test:visual -- --grep 'login page visual baseline|@mobile login page visual baseline|@dark login page visual baseline'",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "durationMs": 10900,
+      "notes": "Rendered login visual baselines passed 3/3: desktop light, mobile light, and desktop dark."
+    },
+    {
+      "command": "Invoke-WebRequest http://127.0.0.1:8080/api/v1/health",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 35,
+      "notes": "Local backend returned HTTP 200 health response."
+    },
+    {
+      "command": "POST /api/v1/auth/login with temporary tenants 101 and 202, then restore compat and drop fixtures",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "durationMs": 15000,
+      "notes": "Real HTTP probe with local MySQL: multi mode returned Acme North and Globex South candidates; explicit tenantId=101 issued a session; platform.tenant_mode was restored to compat and temporary tenant rows/tables were removed."
+    },
+    {
+      "command": "go test -short -race ./internal/middleware",
+      "cwd": "pantheon-base/backend",
+      "status": "not-run",
+      "durationMs": 0,
+      "notes": "Windows toolchain cannot run race tests with cgo disabled.",
+      "verificationSkipped": true,
+      "skippedVerification": {
+        "skipReason": "environment limitation: Windows Go toolchain reports '-race requires cgo; enable cgo by setting CGO_ENABLED=1'",
+        "alternativeVerification": "Targeted concurrent tenant-boundary test passed without -race; full short backend suite also passed.",
+        "riskAcceptedBy": "Human Gate",
+        "riskNote": "Race behavior remains unverified until a CGO-enabled environment runs the suite."
+      }
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": true,
+    "affectedSubgraph": [
+      "ingress -> auth/IAM -> tenant context -> protected resources/side effects -> audit/metrics -> release flag"
+    ],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "CodeGraph index was up to date on 2026-09-13."
+  },
+  "sessionEconomics": {
+    "responseMode": "standard",
+    "costSensitivity": "medium",
+    "inputTokens": "none",
+    "outputTokens": "none",
+    "cacheReadTokens": "none",
+    "cacheWriteTokens": "none",
+    "estimatedCostUsd": "none",
+    "retryCount": 0,
+    "delegationCount": 0,
+    "notes": "Token and cost telemetry was not exposed by the local command runner."
+  },
+  "browserEvidence": [
+    {
+      "spec": "frontend/tests/smoke-core/auth-login-logout.spec.ts",
+      "result": "passed 4/4",
+      "viewport": "desktop and mobile smoke viewports",
+      "url": "http://127.0.0.1:5173/login -> /dashboard",
+      "visualGap": "Dedicated screenshot artifact was not retained; login rendering is covered by the visual baseline command below.",
+      "consoleErrors": [],
+      "coverage": [
+        "login/logout",
+        "invalid credentials",
+        "expired session redirect",
+        "session persistence"
+      ]
+    },
+    {
+      "spec": "frontend/tests/smoke-core/auth-tenant-picker.spec.ts",
+      "result": "passed 3/3",
+      "viewport": "1280x720 desktop and 390x844 mobile",
+      "url": "http://127.0.0.1:5173/login",
+      "screenshot": ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-picker-desktop.png",
+      "consoleErrors": [],
+      "coverage": [
+        "password-verified tenant picker",
+        "invalid password candidate non-disclosure",
+        "explicit tenantId submission",
+        "mobile horizontal overflow"
+      ],
+      "artifacts": [
+        ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-picker-desktop.png",
+        ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-picker-mobile.png"
+      ]
+    },
+    {
+      "spec": "frontend/tests/visual/visual-baseline.spec.ts",
+      "result": "passed 3/3",
+      "viewport": "1280x720 desktop light/dark and 390x844 mobile light",
+      "url": "http://127.0.0.1:5173/login",
+      "visualGap": "Dashboard and system-user-list snapshots remain approximately 2% out of sync; login baselines passed.",
+      "consoleErrors": [],
+      "coverage": [
+        "desktop light login",
+        "mobile light login",
+        "desktop dark login"
+      ]
+    },
+    {
+      "spec": "frontend/tests/smoke-core/tenant-protected-resources.spec.ts",
+      "result": "passed 1/1",
+      "viewport": "1280x720 desktop",
+      "url": "http://127.0.0.1:5173/dashboard and /system/dict",
+      "visualGap": "No dedicated screenshot artifact was retained; protected page render assertions and zero page errors passed.",
+      "consoleErrors": [],
+      "coverage": [
+        "independent tenant-101 and tenant-202 browser contexts",
+        "dashboard and dictionary protected pages",
+        "dictionary list and export isolation",
+        "cross-tenant ID update rejection",
+        "cross-tenant batch-status rejection"
+      ]
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeLogs": [],
+  "runtimeMetrics": [],
+  "runtimeTraces": [],
+  "runtimePerformance": [],
+  "runtimeGap": "The local hostile HTTP tenant matrix and auth/tenant-picker browser smoke are green, including compat -> multi -> compat, logout access-token revocation, and kill-switch force expiry. Browser coverage for every protected resource is still incomplete; production-like rollback timing, S3 integration, durable-job runner, performance/observability stack, and production recovery remain unverified. Production migration and backup/restore were not authorized. The in-app browser backend was unavailable; repository Playwright Chromium was used instead.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-tenant-verification-and-gray/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-10-tenant-verification-and-gray/",
+    "reviewFile": ".harness/evidence/2026-09-10-tenant-verification-and-gray/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
+      ".harness/tasks/2026-09-10-tenant-core-auth-iam/task.md",
+      ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/task.md"
+    ]
+  },
+  "knownGaps": [
+    "Full hostile two-tenant browser/API end-to-end coverage across every protected resource and side effect is still incomplete; the local HTTP matrix covers the currently executable tenant-sensitive paths.",
+    "In-app browser backend was unavailable; standalone repository Playwright Chromium provided rendered evidence.",
+    "Production-like flag-on/flag-off/kill-switch rollback timing and distributed cache/session recovery evidence remain unavailable; local flag rollback and kill-switch force expiry passed.",
+    "S3 download authorization not implemented or verified.",
+    "No durable async job framework beyond operation-log queue.",
+    "No production-like performance or observability baseline.",
+    "No production backup/restore/rollback execution; migration rehearsal is replica-only.",
+    "Race tests blocked by missing cgo on Windows."
+  ],
+  "completedAt": "2026-09-14T03:08:40Z"
+}

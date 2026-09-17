@@ -1,5 +1,8 @@
 {
   "taskId": "test-suite-optimization",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/test-suite-optimization/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "测试体系优化 - 三层金字塔与差异化触发",
   "goal": "重构测试套件，将 120 分钟全量冒烟拆分为三层：单元测试(10分钟) + 核心冒烟(20分钟) + 完整回归(120分钟)，实现差异化 CI 触发策略，反馈时间减少 83%，CI 成本节省 63%",
   "primaryLayer": "platform",

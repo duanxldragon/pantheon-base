@@ -1,9 +1,14 @@
 {
   "taskId": "2026-07-25-sonar-scope-and-s8545",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-25-sonar-scope-and-s8545/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "SonarCloud analysis-scope control and S8545 workflow remediation",
   "goal": "Reduce the SonarCloud OPEN backlog by scoping automatic analysis to shipped product code (maintainer-approved scope decision), and fix the two githubactions:S8545 findings by replacing go-install of golangci-lint with the SHA-pinned official action.",
   "primaryLayer": "ci-workflow",
-  "dependencyLayers": ["quality-governance"],
+  "dependencyLayers": [
+    "quality-governance"
+  ],
   "scope": {
     "in": [
       ".sonarcloud.properties analysis-scope exclusions (scripts, frontend/scripts, database, *.sql, i18n resources)",

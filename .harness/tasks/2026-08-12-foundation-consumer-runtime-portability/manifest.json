@@ -1,12 +1,29 @@
 {
   "taskId": "2026-08-12-foundation-consumer-runtime-portability",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-12-foundation-consumer-runtime-portability/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Make generated-module smoke portable across foundation consumers",
   "goal": "Remove producer-specific Go module and backend-layout assumptions and restore tracked feature-ledger state during consumer smoke cleanup.",
   "primaryLayer": "inheritance-sync",
-  "qualityProfiles": ["generator", "ui-runtime"],
+  "qualityProfiles": [
+    "generator",
+    "ui-runtime"
+  ],
   "scope": {
-    "in": ["consumer Go module identity", "consumer backend import layout", "feature-ledger cleanup baseline", "runtime smoke portability", "Node-native layout regression test entrypoint", "foundation bundle ownership for referenced scripts"],
-    "out": ["business behavior", "database schema", "consumer-local overrides"]
+    "in": [
+      "consumer Go module identity",
+      "consumer backend import layout",
+      "feature-ledger cleanup baseline",
+      "runtime smoke portability",
+      "Node-native layout regression test entrypoint",
+      "foundation bundle ownership for referenced scripts"
+    ],
+    "out": [
+      "business behavior",
+      "database schema",
+      "consumer-local overrides"
+    ]
   },
   "ratchetDecision": "gate-updated",
   "runtimeSensitive": true,
@@ -17,7 +34,9 @@
     "evidenceDir": ".harness/evidence/2026-08-12-foundation-consumer-runtime-portability/",
     "reviewFile": ".harness/evidence/2026-08-12-foundation-consumer-runtime-portability/review.md",
     "summaryFile": ".harness/evidence/2026-08-12-foundation-consumer-runtime-portability/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-consumer-runtime-portability.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-12-foundation-consumer-runtime-portability.task.md"
+    ]
   },
   "syncExpectation": "Publish a new immutable patch after the Base PR merges, then consume it in Ops and rerun the full business smoke closure."
 }

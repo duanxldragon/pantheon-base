@@ -1,5 +1,8 @@
 {
   "taskId": "2026-08-05-base-v0-10-1-release",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-05-base-v0-10-1-release/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Release pantheon-base v0.10.1 and hand off to Pantheon Ops",
   "goal": "Close release-governance debt, make CI aggregation fail closed, publish an immutable v0.10.1 foundation release, and provide a verified consumer handoff.",
   "primaryLayer": "platform",

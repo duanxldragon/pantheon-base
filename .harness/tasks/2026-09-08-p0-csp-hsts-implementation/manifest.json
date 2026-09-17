@@ -1,6 +1,8 @@
 {
   "taskId": "2026-09-08-p0-csp-hsts-implementation",
   "title": "P0 CSP/HSTS Implementation",
+  "goal": "Implement CSP and HSTS response headers and verify their behavior through automated and documented checks.",
+  "primaryLayer": "platform",
   "priority": "P0",
   "status": "completed",
   "completedAt": "2026-09-08",
@@ -23,6 +25,15 @@
     "2026-09-08-p1-csp-nonce-hardening"
   ],
   "scope": {
+    "in": [
+      "CSP and HSTS response headers",
+      "security header tests and deployment documentation"
+    ],
+    "out": [
+      "frontend source changes unless required by CSP fixes",
+      "existing auth middleware",
+      "database layer"
+    ],
     "create": [
       "backend/internal/middleware/security_headers.go",
       "backend/internal/middleware/security_headers_test.go",
@@ -67,6 +78,14 @@
       "Browser Network tab: security headers present",
       "securityheaders.com audit (if applicable)",
       "Frontend smoke test passes"
+    ]
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p0-csp-hsts-implementation/",
+    "reviewFile": ".harness/evidence/2026-09-08-p0-csp-hsts-implementation/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-08-p0-csp-hsts-implementation/task.md"
     ]
   }
 }

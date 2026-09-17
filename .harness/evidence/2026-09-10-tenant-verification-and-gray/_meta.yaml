@@ -1,0 +1,9 @@
+generatedAt: "2026-09-13T01:23:52Z"
+agent: "codex"
+taskId: "2026-09-10-tenant-verification-and-gray"
+verificationVersion: "v1.1"
+repository: "pantheon-base"
+runtimeSensitive: true
+status: "blocked"
+releaseRecommendation: "blocked"
+notes: "Automated checks passed; runtime evidence and human release gates remain incomplete."

@@ -1,9 +1,15 @@
 {
   "taskId": "2026-09-10-release-gate-zero",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-10-release-gate-zero/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Drive Release Gate to zero: clear 16 SonarCloud issues and grpc v1.83.2 re-alert",
   "goal": "After #303 the Release Gate still fails on main@b6b1e01f: the SonarCloud Gate job requires ZERO unresolved issues of any severity (16 remain: 2 BLOCKER taints that survived the earlier restructure, 1 CRITICAL complexity, 14 CODE_SMELL) and Dependabot re-alerted grpc GHSA-2v4p-qf9q-27wj (v1.83.1 vulnerable, fixed in v1.83.2). Fix every finding at the source: analyzer-trackable query/fs guards for the taints, extracted helpers for the complexity hot spot, real constants/waits/probe patterns for the smells, plus the grpc bump.",
   "primaryLayer": "backend",
-  "dependencyLayers": ["frontend", "infra"],
+  "dependencyLayers": [
+    "frontend",
+    "infra"
+  ],
   "scope": {
     "in": [
       "backend/go.mod,go.sum: google.golang.org/grpc v1.83.1 -> v1.83.2 (GHSA-2v4p-qf9q-27wj)",

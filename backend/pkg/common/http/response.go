@@ -45,9 +45,15 @@ func SuccessWithStatus(c *gin.Context, httpStatus int, data interface{}) {
 }
 
 func Fail(c *gin.Context, code int, message string) {
+	FailWithData(c, code, message, nil)
+}
+
+// FailWithData writes a business-failure response carrying an optional data
+// payload.
+func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 	c.JSON(http.StatusOK, Response{
 		Code:    code,
-		Data:    nil,
+		Data:    data,
 		Message: message,
 	})
 }

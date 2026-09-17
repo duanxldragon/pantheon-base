@@ -27,7 +27,7 @@ func TestAuditService_CleanupOperationLogsUsesConfiguredRetentionOptions(t *test
 		t.Fatalf("seed operation logs: %v", err)
 	}
 
-	clearedCount, err := service.CleanupOperationLogs(15, "", "")
+	clearedCount, err := service.CleanupOperationLogs(15, "", "", nil)
 	if err != nil {
 		t.Fatalf("cleanup operation logs with configured option: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestAuditService_CleanupOperationLogsUsesConfiguredRetentionOptions(t *test
 		t.Fatalf("expected to clean 1 operation log, got %d", clearedCount)
 	}
 
-	_, err = service.CleanupOperationLogs(7, "", "")
+	_, err = service.CleanupOperationLogs(7, "", "", nil)
 	if err == nil || common.ErrMessage(err) != "audit.operation_log.cleanup.days_invalid" {
 		t.Fatalf("expected invalid retention days error, got %v", err)
 	}
@@ -55,7 +55,7 @@ func TestAuditService_CleanupOperationLogsSupportsExplicitTimeRange(t *testing.T
 		t.Fatalf("seed operation logs: %v", err)
 	}
 
-	clearedCount, err := service.CleanupOperationLogs(0, now.Add(-12*time.Hour).Format(time.RFC3339), now.Format(time.RFC3339))
+	clearedCount, err := service.CleanupOperationLogs(0, now.Add(-12*time.Hour).Format(time.RFC3339), now.Format(time.RFC3339), nil)
 	if err != nil {
 		t.Fatalf("cleanup operation logs by explicit range: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestAuditService_ListOperationLogsAppliesAutomaticRetention(t *testing.T) {
 		t.Fatalf("seed operation logs: %v", err)
 	}
 
-	resp, err := service.ListOperationLogs(&OperationLogQuery{Page: 1, PageSize: 10})
+	resp, err := service.ListOperationLogs(&OperationLogQuery{Page: 1, PageSize: 10}, nil)
 	if err != nil {
 		t.Fatalf("list operation logs: %v", err)
 	}

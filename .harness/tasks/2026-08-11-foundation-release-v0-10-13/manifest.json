@@ -1,9 +1,14 @@
 {
   "taskId": "2026-08-11-foundation-release-v0-10-13",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-11-foundation-release-v0-10-13/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Publish Pantheon Base foundation release v0.10.13",
   "goal": "Publish a certified immutable foundation release that closes generic frontend ownership gaps for consumer upgrades.",
   "primaryLayer": "ci-workflow",
-  "qualityProfiles": ["ci-workflow"],
+  "qualityProfiles": [
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "release metadata",
@@ -30,7 +35,9 @@
     "evidenceDir": ".harness/evidence/2026-08-11-foundation-release-v0-10-13/",
     "reviewFile": ".harness/evidence/2026-08-11-foundation-release-v0-10-13/review.md",
     "summaryFile": ".harness/evidence/2026-08-11-foundation-release-v0-10-13/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-11-foundation-release-v0-10-13.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-11-foundation-release-v0-10-13.task.md"
+    ]
   },
   "syncExpectation": "Pantheon Ops consumes the verified v0.10.13 archive and locks its manifest path set, checksum, and Base commit."
 }

@@ -1,8 +1,8 @@
 # Multi-Tenant Architecture Design for Pantheon Base
 
-**Version**: 1.0  
-**Date**: 2026-09-08  
-**Status**: Design Phase  
+**Version**: 1.1  
+**Date**: 2026-09-11  
+**Status**: Superseded by contract V1 — see [TENANT_CONTRACT_V1](../contracts/TENANT_CONTRACT_V1.md) (frozen) and [TENANT_MIGRATION_RUNBOOK](../runbooks/TENANT_MIGRATION_RUNBOOK.md). This document remains as background material for Phase 2/3 deployment models; where it conflicts with the contract, the contract wins.  
 **Target**: Enterprise Multi-Organization Support
 
 ---

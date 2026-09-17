@@ -44,6 +44,8 @@ bin/
 vendor/
 backend/coverage.out
 backend/coverage.txt
+backend/coverage_db.out
+backend/coverage_db.txt
 backend/cover-test-output.txt
 
 # Local databases

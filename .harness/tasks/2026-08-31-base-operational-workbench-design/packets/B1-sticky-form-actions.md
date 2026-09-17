@@ -2,7 +2,7 @@
 
 - Priority: `P0`
 - Layer: `platform`
-- Status: `planned`
+- Status: `implemented`
 - Depends On: none
 - Blocks: Ops long-form create/edit and pre-execution flows
 

@@ -104,9 +104,42 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # timeout raised 10 -> 20: DB-backed tests (MySQL/Redis services) run real
+    # migrations per test database (coverage reconciliation, 2026-09-10).
+    timeout-minutes: 20
     permissions:
       contents: read
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          # Per-run random password: no literal credential in code (secrets:S6697).
+          # Container env expansion resolves it in health-cmd; the job env below
+          # recomputes the identical value for the test DSN.
+          MYSQL_ROOT_PASSWORD: pw-${{ github.run_id }}-${{ github.run_attempt }}
+          MYSQL_DATABASE: pantheon_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      PANTHEON_TEST_DSN: root:pw-${{ github.run_id }}-${{ github.run_attempt }}@tcp(127.0.0.1:3306)/pantheon_test?charset=utf8mb4&parseTime=true&loc=Local
+      PANTHEON_TEST_REDIS_ADDR: 127.0.0.1:6379
+
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -119,6 +152,10 @@ jobs:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           cache: true
 
+      # Coverage reconciliation (task 0, 2026-09-10): the unit-tests job now runs
+      # with MySQL + Redis services so the gate measures the same DB-backed path
+      # as local evidence. Keep -short: testmysql.Open creates an isolated
+      # database per test and skips cleanly when the DSN is absent.
       - name: Run Go tests with coverage
         working-directory: backend
         run: go test -race -short -coverprofile=coverage.out -covermode=atomic ./...
@@ -313,7 +350,10 @@ jobs:
         run: |
           # go tool cover needs the module context to resolve package paths
           (cd backend && go tool cover -func=coverage.out > coverage.txt)
-          node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold ${{ vars.COVERAGE_THRESHOLD || '11' }}
+          # Threshold aligned to the DB-backed measurement (2026-09-10 coverage
+          # reconciliation): measured 55.6% with MySQL/Redis services; gate set
+          # at 50 with headroom. See .harness/evidence/2026-09-10-tenant-ready-guardrails/
+          node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold ${{ vars.COVERAGE_THRESHOLD || '50' }}
 
       - name: Download frontend coverage artifact
         id: fe-coverage

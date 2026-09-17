@@ -1,6 +1,8 @@
 package system
 
 import (
+	"time"
+
 	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
 	authsession "github.com/duanxldragon/pantheon-base/backend/modules/auth/session"
 	audit "github.com/duanxldragon/pantheon-base/backend/modules/system/audit"
@@ -15,6 +17,7 @@ import (
 	post "github.com/duanxldragon/pantheon-base/backend/modules/system/org/post"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	uploadpkg "github.com/duanxldragon/pantheon-base/backend/pkg/upload"
 
 	"github.com/gin-gonic/gin"
@@ -26,6 +29,9 @@ const (
 	routeUserByID    = "/user/:id"
 	routeI18nByID    = "/i18n/:id"
 )
+
+// tenantModeLoaderTTL bounds staleness of the cached tenant mode flag.
+const tenantModeLoaderTTL = 5 * time.Second
 
 type systemModuleDependencies struct {
 	db *gorm.DB
@@ -54,6 +60,9 @@ type systemModuleDependencies struct {
 	dictSvc     *dict.DictService
 	dictHandler *dict.DictHandler
 
+	// tenantModeLoader drives the dict canary flag (nil-safe middleware).
+	tenantModeLoader *tenant.ModeLoader
+
 	settingSvc     *setting.SettingService
 	settingHandler *setting.SettingHandler
 
@@ -77,6 +86,8 @@ func newSystemModuleDependencies(db *gorm.DB) *systemModuleDependencies {
 	postSvc := post.NewPostService(db)
 	dictSvc := dict.NewDictService(db)
 	settingSvc := setting.NewSettingService(db)
+	// Canary flag loader (contract §6): cached read of platform.tenant_mode.
+	tenantModeLoader := tenant.NewSettingModeLoader(settingSvc, int64(tenantModeLoaderTTL))
 	uploadSvc := uploadpkg.NewService(settingSvc)
 	i18nSvc := i18n.NewI18nService(db)
 	auditSvc := audit.NewAuditService(db)
@@ -85,6 +96,7 @@ func newSystemModuleDependencies(db *gorm.DB) *systemModuleDependencies {
 		db:                 db,
 		refreshSyncSvc:     refreshSyncSvc,
 		refreshSyncHandler: NewRefreshSyncHandler(refreshSyncSvc),
+		tenantModeLoader:   tenantModeLoader,
 		userSvc:            userSvc,
 		userHandler:        user.NewUserHandler(userSvc),
 		menuSvc:            menuSvc,
@@ -277,14 +289,13 @@ func initConfigModules(deps *systemModuleDependencies) []contracts.BackendModule
 			ModuleName:    "dict",
 			MigrateFunc:   func(_ *gorm.DB) error { return deps.dictSvc.Migrate() },
 			BootstrapFunc: func(_ *gorm.DB) error { return deps.dictSvc.Bootstrap() },
-			SeedMenusFunc: seedDictModuleMenus,
-			Register: func(r *gin.RouterGroup) {
+			SeedMenusFunc: seedDictModuleMenus, Register: func(r *gin.RouterGroup) {
 				systemPublic := r.Group(routeGroupSystem)
 				{
 					systemPublic.GET("/dict/options", deps.dictHandler.GetDictOptions)
 				}
 
-				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/dict/type/list", deps.dictHandler.GetDictTypeList)
 					systemProtected.GET("/dict/type/import-template", deps.dictHandler.DownloadDictTypeImportTemplate)
@@ -319,15 +330,24 @@ func initConfigModules(deps *systemModuleDependencies) []contracts.BackendModule
 				systemPublic := r.Group(routeGroupSystem)
 				{
 					systemPublic.GET("/setting/public", deps.settingHandler.GetPublicSettings)
-					systemPublic.GET("/upload/files/*filepath", deps.settingHandler.ServeUploadedFile)
+				}
+				uploadProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db))
+				{
+					uploadProtected.GET("/upload/files/*filepath", deps.settingHandler.ServeUploadedFile)
 				}
 
-				systemAuth := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB))
+				// TenantContextMiddleware is REQUIRED on the upload write path too:
+				// uploadScope() derives the `t{id}/` object-key prefix from the
+				// resolved tenant context — without it a multi-mode upload would
+				// silently fall back to the legacy (tenantless) keyspace and let
+				// tenants collide into the global namespace (queue-6 matrix
+				// finding #2, 2026-09-13).
+				systemAuth := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db))
 				{
 					systemAuth.POST("/upload", RefreshSyncMiddleware(deps.refreshSyncSvc), deps.settingHandler.UploadFile)
 				}
 
-				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/setting/overview", deps.settingHandler.GetSettingOverview)
 					systemProtected.GET("/setting/list", deps.settingHandler.GetSettingList)
@@ -394,7 +414,11 @@ func initAuditModules(deps *systemModuleDependencies) []contracts.BackendModule 
 			BootstrapFunc: func(_ *gorm.DB) error { return deps.auditSvc.Bootstrap() },
 			SeedMenusFunc: seedAuditModuleMenus,
 			Register: func(r *gin.RouterGroup) {
-				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.CasbinMiddleware())
+				// TenantContextMiddleware is REQUIRED here: without it the audit
+				// handler sees a nil tenant context and WithTenantScope no-ops,
+				// letting every tenant read the full operation-log population
+				// (found by the queue-6 live two-tenant matrix 2026-09-13).
+				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.TenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware())
 				{
 					systemProtected.GET("/operation-log/list", deps.auditHandler.GetOperationLogList)
 					systemProtected.GET("/operation-log/:id", deps.auditHandler.GetOperationLog)

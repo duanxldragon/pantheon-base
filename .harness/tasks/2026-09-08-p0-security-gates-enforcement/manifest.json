@@ -1,6 +1,8 @@
 {
   "taskId": "2026-09-08-p0-security-gates-enforcement",
   "title": "P0 Security Gates Enforcement",
+  "goal": "Enforce repository security checks as required merge gates and document the branch-protection verification evidence.",
+  "primaryLayer": "platform",
   "priority": "P0",
   "status": "completed",
   "completedAt": "2026-09-08",
@@ -21,6 +23,15 @@
     "2026-09-08-p0-csp-hsts-implementation"
   ],
   "scope": {
+    "in": [
+      "security workflow merge requirements",
+      "branch protection configuration and verification"
+    ],
+    "out": [
+      "existing security workflow logic",
+      "CodeQL configuration files",
+      "backend and frontend source code"
+    ],
     "create": [
       ".harness/tasks/2026-09-08-p0-security-gates-enforcement/task.md",
       ".harness/tasks/2026-09-08-p0-security-gates-enforcement/manifest.json",
@@ -59,6 +70,14 @@
       "Test PR blocked by security gate",
       "Test PR succeeds after fix",
       "Branch protection UI shows required checks"
+    ]
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p0-security-gates-enforcement/",
+    "reviewFile": ".harness/evidence/2026-09-08-p0-security-gates-enforcement/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-08-p0-security-gates-enforcement/task.md"
     ]
   }
 }

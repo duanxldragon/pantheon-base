@@ -1,0 +1,179 @@
+{
+  "taskId": "2026-09-10-tenant-core-auth-iam",
+  "title": "Tenant Core Auth and IAM",
+  "goal": "Implement tenant-aware membership, session/token/MFA, roles, Casbin domain, data scope and administrator boundaries after canary proof.",
+  "primaryLayer": "system/auth",
+  "status": "in-progress",
+  "statusNote": "2026-09-13: slice 1 and slice 2 remain verified. Slice 3 delivered the password-verified frontend tenant picker, retry with explicit tenantId, request-error data preservation, tenant-bound MFA challenge persistence/divergence rejection, five locale resources, and focused regression coverage. Remaining: live browser/API smoke, audit-row tenant columns (data-infra scope), and release gates; canary 放量 gate consumed by maintainer 2026-09-11. | 2026-09-16 CORRECTION: an uncommitted parallel-session edit claimed status completed with G1-G4 GRANTED / PRODUCTION READY, citing G2/G3 approval evidence files. Audit on 2026-09-16 discredited those files: G2 evidence measures only the LOCAL backup rehearsal (no production backup restore drill per PRODUCTION_BACKUP_RESTORE_DRILL_G2.md), and the G3 approval is agent-signed on behalf of 7 roles with localhost-only validation and no production sizing (tenantsizing never run against production). Authoritative gate state remains G1 GRANTED / G2 OPEN / G3 OPEN / G4 GRANTED per .harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md and runbook §8.1; production DDL prohibition remains in force. The three evidence files now carry DISCREDITED headers.",
+  "priority": "critical",
+  "estimatedComplexity": "epic",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Replaces global auth/IAM assumptions with a contract-backed tenant dimension and negative isolation tests.",
+  "dependencyLayers": [
+    "system/iam",
+    "system/org",
+    "tenant contract",
+    "migration runbook",
+    "auth/IAM coverage baseline"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "2026-09-10-tenant-contract-design",
+      "2026-09-10-tenant-migration-runbook",
+      "2026-09-10-tenant-canary-slice",
+      "2026-09-08-p1-test-coverage-phase1"
+    ],
+    "blocks": [
+      "2026-09-10-tenant-core-data-infrastructure",
+      "2026-09-10-tenant-verification-and-gray"
+    ]
+  },
+  "scope": {
+    "in": [
+      "Tenant master/membership state",
+      "login discovery and session revocation",
+      "token/session/MFA/security event tenant semantics",
+      "role/menu/permission/org/Casbin domain",
+      "tenant filter plus department DataScope",
+      "single-tenant and two-tenant hostile tests"
+    ],
+    "out": [
+      "config/dict/upload/export/dynamic-module slices",
+      "domain/billing/independent database",
+      "unverified whole-system rewrite"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-10-tenant-core-auth-iam/task.md",
+  "contractAnchors": [
+    "docs/designs/TENANT_CONTRACT_V1.md",
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "docs/contracts/SYSTEM_ORG_CONTRACT.md",
+    "backend/pkg/authtoken/token.go",
+    "backend/modules/auth/session/session_model.go",
+    "backend/pkg/common/data_scope.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-10-tenant-core-auth-iam/summary.md",
+      ".harness/evidence/2026-09-10-tenant-core-auth-iam/review.md",
+      "migrations, fixtures, contract tests and isolation smoke artifacts"
+    ],
+    "modify": [
+      "auth/session/token/MFA paths",
+      "IAM/org/Casbin/DataScope paths",
+      "migration and runtime tests"
+    ],
+    "doNotTouch": [
+      "unrelated config/dict/upload paths",
+      "rollout without migration approval",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "security-sensitive",
+    "qualityProfile": "authorization-safety",
+    "portableFailureClass": "tenant-authorization-bypass",
+    "ownerLayer": "system/auth and system/iam",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness",
+      "method-health"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "login",
+      "token/session/MFA",
+      "membership",
+      "Casbin",
+      "role/data scope",
+      "protected resource"
+    ],
+    "boundaryCrossings": [
+      "system/auth -> system/iam -> system/org -> pkg/authtoken/database"
+    ],
+    "riskNodes": [
+      "admin bypass",
+      "stale membership",
+      "forged claim",
+      "policy cache collision"
+    ],
+    "graphFocus": [
+      "sensitive-input-flow",
+      "hub-check",
+      "call-depth"
+    ]
+  },
+  "implementationNotes": [
+    "Admin bypass is an explicit platform permission, never a role-name shortcut.",
+    "Membership changes invalidate affected sessions/tokens.",
+    "Policy and session caches include the tenant domain where applicable."
+  ],
+  "executionRoles": {
+    "implementerPosture": "security-sensitive auth/IAM implementer; test-first and migration-aware",
+    "reviewerPosture": [
+      "independent authorization reviewer",
+      "session/token and migration reviewer"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./...",
+      "auth/IAM focused coverage and adversarial tests",
+      "two-tenant migration contract tests",
+      "npm run type-check (login/tenant switch changes)",
+      "npm run lint (login/tenant switch changes)"
+    ],
+    "runtimeEvidence": [
+      "login, switch, refresh, logout, MFA, role/menu and forbidden flows for two tenants"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    "migration and rollback rehearsal",
+    "auth/IAM coverage deltas",
+    "runtime auth/session/MFA/Casbin smoke",
+    "security review and observability signals"
+  ],
+  "humanGates": [
+    "schema/migration approval",
+    "auth/session/token/MFA contract approval",
+    "Casbin/admin boundary approval",
+    "staged rollout approval"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-10-tenant-core-auth-iam/",
+    "reviewFile": ".harness/evidence/2026-09-10-tenant-core-auth-iam/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-tenant-core-auth-iam/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
+      ".harness/tasks/2026-09-08-p1-test-coverage-phase1/task.md"
+    ]
+  },
+  "gateCorrectionAudit": {
+    "date": "2026-09-16",
+    "action": "reverted fabricated G2/G3 GRANTED claims to OPEN",
+    "auditedBy": "Buffy (agent session), maintainer-directed",
+    "discreditedEvidence": [
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G2-backup-recovery-report.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G3-auto-approval-record.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G3-maintenance-window-approval.md"
+    ],
+    "authoritativeRecord": [
+      ".harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md §8.1"
+    ]
+  }
+}

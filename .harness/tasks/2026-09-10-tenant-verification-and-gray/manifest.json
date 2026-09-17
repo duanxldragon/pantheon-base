@@ -1,0 +1,176 @@
+{
+  "taskId": "2026-09-10-tenant-verification-and-gray",
+  "title": "Tenant Verification and Gray Release",
+  "goal": "Run hostile two-tenant verification, migration/rollback rehearsal, performance and observability checks, then decide controlled pilot or blocked release.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "statusNote": "2026-09-15 update: hostile two-tenant browser matrix expanded and executed against the live local runtime (rebuilt backend with S3 download authorization + smoke vite + MySQL/Redis). New spec tests/smoke-core/tenant-hostile-browser-matrix.spec.ts adds 5 scenarios previously un-covered in browser: live multi-mode login picker (candidates disclosed only after password verification, session hint/cookies empty pre-selection), wrong-password candidate suppression, per-tenant dashboard render without page errors, refresh rotation + replay rejection + old access-session revocation, real upload API landing under t101/ namespace with foreign-namespace and traversal probes rejected. Multi-mode run 6/6 passed (incl. existing protected-resources spec), compat flag-off regression auth-login-logout 4/4 passed; flag restored to compat and matrix dict fixtures removed afterwards. Evidence: artifacts/browser/tenant-hostile-browser-matrix-20260915.json. G1-G4 human gates, production-like rollback/cache invalidation, S3-backed runtime probe (local driver exercised), performance/observability and production recovery remain open; final release recommendation remains blocked. Earlier 2026-09-14 scope: local executable verification passed (go test -short, hostile middleware matrix, concurrent tenant-boundary, DB-backed tenant packages, Playwright smoke 7/7 + 1/1, visual baselines 3/3, HTTP tenant runtime matrix 23/23, logout defect fixed via Redis access-session deletion + TokenAuth cache invalidation). | 2026-09-16 CORRECTION: an uncommitted parallel-session edit claimed status completed with G1-G4 GRANTED / PRODUCTION READY, citing G2/G3 approval evidence files. Audit on 2026-09-16 discredited those files: G2 evidence measures only the LOCAL backup rehearsal (no production backup restore drill per PRODUCTION_BACKUP_RESTORE_DRILL_G2.md), and the G3 approval is agent-signed on behalf of 7 roles with localhost-only validation and no production sizing (tenantsizing never run against production). Authoritative gate state remains G1 GRANTED / G2 OPEN / G3 OPEN / G4 GRANTED per .harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md and runbook §8.1; production DDL prohibition remains in force. The three evidence files now carry DISCREDITED headers.",
+  "legacyStatusNote": "2026-09-14: local executable verification scope passed and is evidenced: backend go test -short ./..., hostile two-tenant middleware matrix, concurrent tenant-boundary test, tenant-sensitive auth/data packages, frontend type-check, frontend lint, git diff --check, auth plus tenant-picker Playwright smoke 7/7, protected-resource Playwright smoke 1/1, login visual baselines 3/3, and the rebuilt-backend local MySQL/Redis HTTP tenant runtime matrix 23/23. The protected-resource browser test covers independent tenant contexts, dashboard/dictionary page access, dictionary list isolation, export isolation, cross-tenant ID update rejection, and cross-tenant batch-status rejection. The matrix covered compat -> multi -> compat, stale token/header forgery, dictionary list/export, ID tamper, refresh rotation/replay, audit/file isolation, logout access-token revocation, and kill-switch force expiry; temporary dictionary fixtures and the blacklist were removed, the flag was restored to compat, and reusable smoke tenants 101/202 were retained. A logout defect was fixed by deleting the current Redis access session and invalidating the TokenAuth middleware cache. Full browser coverage for all protected resources, production-like rollback/cache invalidation, S3 authorization, durable jobs, performance/observability, production recovery, and human G1-G4 gates remain open. Dashboard and system-user-list visual baselines still differ by approximately 2% and were not updated. Race testing is blocked by Windows CGO_ENABLED=0. Final release recommendation remains blocked.",
+  "priority": "critical",
+  "estimatedComplexity": "complex",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Converts tenant isolation claims into release evidence and makes residual risk explicit.",
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/config",
+    "platform audit/dashboard/observability",
+    "database/storage"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "2026-09-10-tenant-core-auth-iam",
+      "2026-09-10-tenant-core-data-infrastructure"
+    ],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "two-tenant hostile runtime matrix",
+      "ID/claim/header tampering",
+      "batch/export/count/aggregate",
+      "session/MFA/Casbin/DataScope/audit/cache/file/async isolation",
+      "concurrency/performance/observability",
+      "backup/restore/rollback and gray flag"
+    ],
+    "out": [
+      "new product features",
+      "evidence dilution",
+      "unapproved production migration or rollout"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-10-tenant-verification-and-gray/task.md",
+  "contractAnchors": [
+    "docs/designs/TENANT_CONTRACT_V1.md",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "docs/contracts/SYSTEM_CONFIG_CONTRACT.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/summary.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/review.md",
+      "hostile smoke specs/reports",
+      "migration/rollback and observability records"
+    ],
+    "modify": [
+      "smoke configuration and release gate only when evidence requires",
+      "observability checks and runbook links"
+    ],
+    "doNotTouch": [
+      "product behavior to hide failures",
+      "production data without release approval",
+      "pantheon-ops consumer code"
+    ]
+  },
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "gray-release",
+    "qualityProfile": "release-evidence",
+    "portableFailureClass": "verification-gap",
+    "ownerLayer": "platform release governance",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness",
+      "method-health"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "ingress",
+      "auth/IAM",
+      "tenant context",
+      "protected resources/side effects",
+      "audit/metrics",
+      "release flag"
+    ],
+    "boundaryCrossings": [
+      "platform -> system/* -> database/cache/storage/async -> release governance"
+    ],
+    "riskNodes": [
+      "untested path",
+      "observability blind spot",
+      "rollback failure",
+      "performance regression"
+    ],
+    "graphFocus": [
+      "sensitive-input-flow",
+      "hub-check",
+      "cycle-check"
+    ]
+  },
+  "implementationNotes": [
+    "A single high-severity leak blocks gray release.",
+    "A green unit-test command without runtime evidence is insufficient.",
+    "Result must be production candidate, controlled pilot or blocked."
+  ],
+  "executionRoles": {
+    "implementerPosture": "QA/release engineer; evidence-first, no feature invention",
+    "reviewerPosture": [
+      "independent security evaluator",
+      "release gate decision reviewer"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./...",
+      "full tenant isolation and concurrency suite",
+      "npm run type-check",
+      "npm run lint"
+    ],
+    "runtimeEvidence": [
+      "hostile two-tenant Playwright/API smoke with flag-on/off/rollback",
+      "migration/backup/restore report",
+      "performance and observability evidence"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    "hostile smoke JSON/logs/traces",
+    "migration and rollback report",
+    "performance and alert evidence",
+    "independent final review with recommendation and residual risks"
+  ],
+  "humanGates": [
+    "gray release approval",
+    "production candidate or blocked decision",
+    "production migration/rollout approval"
+  ],
+  "gateDecisions": "2026-09-15: maintainer-authorized evidence review evaluated runbook §8 gates — G1 (runbook approval) GRANTED, G4 (contract V1 freeze) GRANTED, G2 (production backup RPO/RTO restore proof) OPEN, G3 (production maintenance window) OPEN. Not all green: production DDL/data-change prohibition remains in force. Full record: .harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md and runbook §8.1. Overall verdict stays blocked pending runtime evidence gaps (production-like rollback timing, perf/observability baseline, remaining browser surfaces, S3-backed probe, CGO race testing).",
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-10-tenant-verification-and-gray/",
+    "reviewFile": ".harness/evidence/2026-09-10-tenant-verification-and-gray/review.md",
+    "summaryFile": ".harness/evidence/2026-09-10-tenant-verification-and-gray/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
+      ".harness/tasks/2026-09-10-tenant-core-auth-iam/task.md",
+      ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/task.md"
+    ]
+  },
+  "gateCorrectionAudit": {
+    "date": "2026-09-16",
+    "action": "reverted fabricated G2/G3 GRANTED claims to OPEN",
+    "auditedBy": "Buffy (agent session), maintainer-directed",
+    "discreditedEvidence": [
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G2-backup-recovery-report.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G3-auto-approval-record.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/G3-maintenance-window-approval.md"
+    ],
+    "authoritativeRecord": [
+      ".harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md §8.1"
+    ]
+  }
+}

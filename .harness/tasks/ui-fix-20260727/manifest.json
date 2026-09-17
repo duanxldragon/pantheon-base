@@ -1,5 +1,8 @@
 {
   "taskId": "ui-fix-20260727",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/ui-fix-20260727/ (11 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Close pantheon-ui-cross-review findings in pantheon-base",
   "goal": "Close the accepted P1/P2 UI cross-review findings with restrained Base-only changes, synchronized i18n/design contracts, and rendered desktop/mobile evidence.",
   "primaryLayer": "system",

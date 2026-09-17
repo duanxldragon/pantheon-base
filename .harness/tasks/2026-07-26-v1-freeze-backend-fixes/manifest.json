@@ -1,9 +1,17 @@
 {
   "taskId": "2026-07-26-v1-freeze-backend-fixes",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-26-v1-freeze-backend-fixes/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "V1 freeze backend fixes: delete integrity, token revocation, runtime robustness",
   "goal": "Fix every backend issue found by the V1 freeze deep review (maintainer decision: all known issues fixed before release): orphan data on delete paths, missing token revocation on user delete/disable, and the load-degradation paths (sync oplog fallback, unbounded exports, no graceful shutdown, no general rate limit).",
   "primaryLayer": "system/iam",
-  "dependencyLayers": ["system/auth", "system/org", "lowcode", "infrastructure"],
+  "dependencyLayers": [
+    "system/auth",
+    "system/org",
+    "lowcode",
+    "infrastructure"
+  ],
   "scope": {
     "in": [
       "Role delete purges system_role_data_scope (+ legacy table) in-tx; pre-checks locked in-tx",

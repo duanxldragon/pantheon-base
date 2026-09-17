@@ -1,9 +1,14 @@
 {
   "taskId": "2026-09-09-oidc-deps-ci-repair",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-09-oidc-deps-ci-repair/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Repair PR #298 CI: missing OIDC deps, gofmt, grpc CVE",
   "goal": "Unblock PR #298 (release v0.12.0): modules/auth/oidc imports github.com/coreos/go-oidc/v3/oidc and golang.org/x/oauth2 but go.mod/go.sum lacked them, failing vet/unit/backend tests; oidc/handler.go had a gofmt violation failing Go Lint; google.golang.org/grpc v1.61.2 carries Dependabot alert #28 (high, xDS DoS) failing the Dependency Vulnerabilities gate. Port dependency fixes onto release/v0.11.2, format the handler, and bump grpc to v1.76.0.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system/auth"],
+  "dependencyLayers": [
+    "system/auth"
+  ],
   "scope": {
     "in": [
       "backend/go.mod + backend/go.sum: add go-oidc v3.9.0 and oauth2, bump grpc v1.61.2 → v1.76.0 (with transitive bumps golang.org/x/oauth2 → v0.30.0, github.com/golang/protobuf → v1.5.4, genproto api)",

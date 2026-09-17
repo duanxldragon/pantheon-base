@@ -3,6 +3,8 @@ package platform
 import (
 	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
+	"time"
 
 	dept "github.com/duanxldragon/pantheon-base/backend/modules/system/org/dept"
 	"github.com/gin-gonic/gin"
@@ -40,11 +42,18 @@ func (l platformDeptGovernanceTaskLoader) ListOrgGovernanceTasks() ([]OrgGoverna
 
 func RegisterPlatformRoutes(r *gin.RouterGroup, db *gorm.DB) {
 	tokenMiddleware := middleware.TokenAuthMiddleware(database.RDB)
+	tenantModeLoader := tenant.NewModeLoader(func() string {
+		var value string
+		if db == nil || db.Table("system_setting").Where("setting_key = ?", "platform.tenant_mode").Pluck("setting_value", &value).Error != nil {
+			return tenant.ModeCompat
+		}
+		return value
+	}, int64(5*time.Second))
 
 	dashboardSvc := NewDashboardService(db, WithOrgGovernanceTaskLoader(platformDeptGovernanceTaskLoader{db: db}))
 	dashboardHandler := NewDashboardHandler(dashboardSvc)
 
-	dashboardGroup := r.Group("/dashboard").Use(tokenMiddleware)
+	dashboardGroup := r.Group("/dashboard").Use(tokenMiddleware).Use(middleware.TenantContextMiddleware(tenantModeLoader, db))
 	{
 		dashboardGroup.GET("/summary", dashboardHandler.GetSummary)
 	}

@@ -1,9 +1,15 @@
 {
   "taskId": "2026-09-03-frontend-design-alignment",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-03-frontend-design-alignment/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Frontend Design System Engineering Alignment (PR #285)",
   "goal": "参考蓝鲸等主流企业级设计系统工程实践，补充 Pantheon Base 前端设计规范文档体系，建立三层设计工程架构：设计规范层 (DESIGN.md)、工程实践层 (3 个文档 2417 行)、机械门禁层 (自动化检查)。扩展容器 Token 体系 (+9 个容器语义 token)，提供 12 类 UI 模式完整代码模板，建立设计师-开发者协作流程和 Token 迁移指南，优化 UI contract 门禁支持白名单机制。",
   "primaryLayer": "frontend",
-  "dependencyLayers": ["docs", "ci-workflow"],
+  "dependencyLayers": [
+    "docs",
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "docs/frontend/COMPONENT_STYLING_GUIDE.md: BEM 命名、Token 使用、状态实现、检查清单 (682 行)",

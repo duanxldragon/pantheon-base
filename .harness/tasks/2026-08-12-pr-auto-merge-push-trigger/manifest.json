@@ -1,9 +1,14 @@
 {
   "taskId": "2026-08-12-pr-auto-merge-push-trigger",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-12-pr-auto-merge-push-trigger/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Preserve post-merge workflow triggers",
   "goal": "Ensure automated merges trigger the exact-commit push workflows required before foundation publication.",
   "primaryLayer": "ci-workflow",
-  "qualityProfiles": ["ci-workflow"],
+  "qualityProfiles": [
+    "ci-workflow"
+  ],
   "scope": {
     "in": [
       "fail-closed PAT-backed PR auto-merge",
@@ -26,7 +31,9 @@
     "evidenceDir": ".harness/evidence/2026-08-12-pr-auto-merge-push-trigger/",
     "reviewFile": ".harness/evidence/2026-08-12-pr-auto-merge-push-trigger/review.md",
     "summaryFile": ".harness/evidence/2026-08-12-pr-auto-merge-push-trigger/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-12-pr-auto-merge-push-trigger.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-12-pr-auto-merge-push-trigger.task.md"
+    ]
   },
   "syncExpectation": "No Ops source sync; this repairs Base release automation before publishing a new foundation artifact."
 }

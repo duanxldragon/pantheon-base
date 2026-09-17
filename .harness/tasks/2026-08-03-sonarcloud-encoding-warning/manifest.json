@@ -1,5 +1,8 @@
 {
   "taskId": "2026-08-03-sonarcloud-encoding-warning",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-03-sonarcloud-encoding-warning/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Remediate SonarCloud source encoding warning",
   "goal": "Remove confirmed replacement-character corruption and prevent recurrence, then verify the warning disappears from the merged main analysis.",
   "primaryLayer": "platform",

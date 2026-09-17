@@ -1,12 +1,27 @@
 {
   "taskId": "2026-08-12-foundation-smoke-contract-closure",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-08-12-foundation-smoke-contract-closure/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Close foundation smoke contract ownership",
   "goal": "Ship self-consistent smoke entrypoints, coverage documentation, and executable smoke guards with the Base-owned smoke specifications.",
   "primaryLayer": "inheritance-sync",
-  "qualityProfiles": ["ci-workflow", "ui-runtime"],
+  "qualityProfiles": [
+    "ci-workflow",
+    "ui-runtime"
+  ],
   "scope": {
-    "in": ["foundation smoke command ownership", "smoke coverage matrix ownership", "smoke web-base guard ownership", "producer regression gate"],
-    "out": ["business features", "schema changes", "existing release mutation"]
+    "in": [
+      "foundation smoke command ownership",
+      "smoke coverage matrix ownership",
+      "smoke web-base guard ownership",
+      "producer regression gate"
+    ],
+    "out": [
+      "business features",
+      "schema changes",
+      "existing release mutation"
+    ]
   },
   "ratchetDecision": "gate-updated",
   "runtimeSensitive": true,
@@ -17,7 +32,9 @@
     "evidenceDir": ".harness/evidence/2026-08-12-foundation-smoke-contract-closure/",
     "reviewFile": ".harness/evidence/2026-08-12-foundation-smoke-contract-closure/review.md",
     "summaryFile": ".harness/evidence/2026-08-12-foundation-smoke-contract-closure/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-08-12-foundation-smoke-contract-closure.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-08-12-foundation-smoke-contract-closure.task.md"
+    ]
   },
   "syncExpectation": "Publish pantheon-base-v0.10.17 as a new immutable patch and consume it through the Ops structured smoke-contract adapter."
 }

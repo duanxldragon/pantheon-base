@@ -1,5 +1,8 @@
 {
   "taskId": "2026-07-15-repo-deep-cleanup",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-15-repo-deep-cleanup/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Repository deep cleanup and layout normalization",
   "goal": "Retire historical audit/process artifacts, normalize the frontend/backend directory boundary (Go module into backend/, test assets into their owning side), and remove orphan tooling bundles without changing any runtime behavior.",
   "primaryLayer": "platform",
@@ -56,7 +59,9 @@
   },
   "executionRoles": {
     "implementerPosture": "implementer",
-    "reviewerPosture": ["mechanical"]
+    "reviewerPosture": [
+      "mechanical"
+    ]
   },
   "verificationPlan": {
     "backend": [

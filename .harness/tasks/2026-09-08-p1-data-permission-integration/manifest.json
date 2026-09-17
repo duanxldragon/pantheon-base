@@ -1,0 +1,62 @@
+{
+  "taskId": "2026-09-08-p1-data-permission-integration",
+  "title": "P1-4 Data Permission Integration",
+  "goal": "Verify and document data-scope (department-level data permission) integration: existing DataScopeMiddleware covering 5 scope modes with caching and role data-scope policy table.",
+  "primaryLayer": "system/iam",
+  "priority": "P1",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "backend/security",
+  "estimatedEffort": "6 hours (actual 1 hour: feature already implemented; verification and documentation only)",
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p0-license-declaration",
+    "2026-09-10-tenant-core-auth-iam"
+  ],
+  "scope": {
+    "in": [
+      "verification of DataScopeMiddleware (all/custom/dept_children/dept/self modes)",
+      "verification of system_role_data_scope schema and cache layer",
+      "usage documentation for department data-range filtering"
+    ],
+    "out": [
+      "new data permission features",
+      "tenant dimension (handled by tenant program tasks)",
+      "frontend permission UI changes"
+    ],
+    "create": [
+      ".harness/tasks/2026-09-08-p1-data-permission-integration/manifest.json",
+      ".harness/evidence/2026-09-08-p1-data-permission-integration/completion.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/internal/middleware/data_scope_middleware.go (verification only)",
+      "database migrations",
+      "frontend source"
+    ]
+  },
+  "successCriteria": [
+    "DataScopeMiddleware confirmed present and wired with 5 scope modes",
+    "system_role_data_scope table and role_key unique index confirmed",
+    "Three-layer cache (user dept, role policy, table existence) documented"
+  ],
+  "humanGates": [],
+  "verification": {
+    "commands": [],
+    "manualChecks": [
+      "Evidence records existing implementation at backend/internal/middleware/data_scope_middleware.go (359 lines)",
+      "Scope modes and schema documented in completion evidence"
+    ]
+  },
+  "reconciliation": "2026-09-15: manifest backfilled from evidence; verified backend/internal/middleware/data_scope_middleware.go exists in repo. Evidence records the task was closed as 'already implemented' with verification/documentation only; task dir had no task.md. Status aligned to completed with that reduced scope made explicit.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p1-data-permission-integration/",
+    "reviewFile": ".harness/evidence/2026-09-08-p1-data-permission-integration/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

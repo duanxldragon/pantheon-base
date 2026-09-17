@@ -1,0 +1,69 @@
+{
+  "taskId": "2026-09-08-p1-performance-baseline",
+  "title": "P1-5 Performance Baseline Testing",
+  "goal": "Establish performance baseline metrics (throughput, latency, error rate) for capacity planning and regression detection.",
+  "primaryLayer": "platform",
+  "priority": "P1",
+  "status": "completed",
+  "completedAt": "2026-09-08",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "backend/testing",
+  "estimatedEffort": "8 hours (actual 2 hours: infrastructure already existed; documented and enhanced)",
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p1-k8s-manifests",
+    "test-suite-optimization"
+  ],
+  "scope": {
+    "in": [
+      "inventory of existing k6 load/stress/spike tests and Go benchmarks",
+      "baseline thresholds documentation (p95 latency, error rate)",
+      "CI integration recommendations"
+    ],
+    "out": [
+      "frontend performance testing",
+      "database optimization",
+      "caching strategy implementation",
+      "production monitoring setup"
+    ],
+    "create": [
+      ".harness/tasks/2026-09-08-p1-performance-baseline/task.md",
+      ".harness/tasks/2026-09-08-p1-performance-baseline/manifest.json",
+      ".harness/evidence/2026-09-08-p1-performance-baseline/completion.md"
+    ],
+    "modify": [
+      "backend/tests/performance/ (documentation and threshold tuning)"
+    ],
+    "doNotTouch": [
+      "backend application code",
+      "frontend source",
+      "database migrations"
+    ]
+  },
+  "successCriteria": [
+    "Existing k6 scenarios and thresholds documented as the baseline",
+    "Baseline metrics identified: API throughput, p50/p95/p99 latency, DB query performance, memory/CPU under load, error rate",
+    "Capacity planning guidance recorded (K8s resource sizing alignment)"
+  ],
+  "humanGates": [],
+  "verification": {
+    "commands": [
+      "k6 run backend/tests/performance/load-test.js (requires running backend)"
+    ],
+    "manualChecks": [
+      "k6 thresholds documented: p(95)<500ms, error rate <5%",
+      "Audit Go benchmark (20k rows) referenced in evidence"
+    ]
+  },
+  "reconciliation": "2026-09-15: manifest backfilled from evidence; verified backend/tests/performance/ (load/stress/spike tests + README) and audit benchmark exist in repo. Evidence records the task was closed as 'infrastructure already exists, documented and enhanced' rather than building new infra; no separate baseline report artifact was produced. Status aligned to completed with that reduced scope made explicit.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p1-performance-baseline/",
+    "reviewFile": ".harness/evidence/2026-09-08-p1-performance-baseline/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-08-p1-performance-baseline/task.md",
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

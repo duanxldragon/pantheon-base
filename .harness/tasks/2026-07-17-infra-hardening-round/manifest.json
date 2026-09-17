@@ -1,9 +1,14 @@
 {
   "taskId": "2026-07-17-infra-hardening-round",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-17-infra-hardening-round/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Infrastructure hardening round: encoding, UI-contract, visual, and structure mechanical gates",
   "goal": "Land four mechanical CI gates (encoding integrity, DESIGN.md §7 UI-contract, Playwright visual regression, REPOSITORY_LAYOUT structure/naming) plus the SearchToolbar rollout and menu-tree filter fix, so that recurring drift classes (mojibake, off-contract UI, layout regressions, misplaced files) are caught by CI instead of by human review.",
   "primaryLayer": "platform",
-  "dependencyLayers": ["system"],
+  "dependencyLayers": [
+    "system"
+  ],
   "scope": {
     "in": [
       "vendor check-encoding gate from pantheon-harness into scripts/harness and wire blocking in quality.yml",
@@ -55,7 +60,9 @@
   },
   "executionRoles": {
     "implementerPosture": "implementer",
-    "reviewerPosture": ["mechanical"]
+    "reviewerPosture": [
+      "mechanical"
+    ]
   },
   "verificationPlan": {
     "frontend": [

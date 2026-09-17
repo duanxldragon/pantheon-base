@@ -1,5 +1,8 @@
 {
   "taskId": "2026-09-02-foundation-release-v0-10-26-and-ops-sync",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/ (4 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Publish pantheon-base-v0.10.26 and upgrade Pantheon Ops",
   "goal": "Close the Base release line into main, publish a verified immutable foundation release, and consume it through the Ops overlay pipeline.",
   "primaryLayer": "inheritance-sync",
@@ -17,9 +20,14 @@
     ]
   },
   "methodReadiness": {
-    "qualityProfiles": ["ci-workflow"],
+    "qualityProfiles": [
+      "ci-workflow"
+    ],
     "minimalComplexityRung": "reuse",
-    "reviewerPosture": ["architecture", "mechanical"]
+    "reviewerPosture": [
+      "architecture",
+      "mechanical"
+    ]
   },
   "verificationPlan": {
     "base": [
@@ -42,7 +50,9 @@
     "evidenceDir": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/",
     "reviewFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/review.md",
     "summaryFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/summary.md",
-    "planRefs": ["docs/harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync.task.md"],
+    "planRefs": [
+      "docs/harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync.task.md"
+    ],
     "changeRef": "none"
   },
   "humanGates": [

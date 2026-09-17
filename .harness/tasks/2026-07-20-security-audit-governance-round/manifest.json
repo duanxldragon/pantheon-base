@@ -1,9 +1,17 @@
 {
   "taskId": "2026-07-20-security-audit-governance-round",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-07-20-security-audit-governance-round/ (11 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Security-audit governance round: governance-bar consistency, restore manual cleanup entries, security-event batch acknowledge + auto retention",
   "goal": "Address the maintainer's security-audit review: (A) make governance-bar metrics consistent (drop DeptList metric description line, switch page-local success/failed counts to whole-filtered-set backend aggregates, admit /system/security-event); (B) restore the manual cleanup entries (GovernanceCleanupBar) on login-log/session/operation-log/security-event that were retired on 2026-07-19, per maintainer decision — auto retention stays primary, manual cleanup is the guarded secondary path — and throttle the login-log auto retention DELETE; (C) add security-event batch acknowledge and automatic retention so the table stops growing unbounded.",
   "primaryLayer": "system",
-  "dependencyLayers": ["platform", "system/auth", "system/audit", "system/config"],
+  "dependencyLayers": [
+    "platform",
+    "system/auth",
+    "system/audit",
+    "system/config"
+  ],
   "scope": {
     "in": [
       "DeptList governance metrics: remove third description line, keep click-to-filter with visible affordance (CSS metric--action)",
@@ -60,7 +68,10 @@
   },
   "executionRoles": {
     "implementerPosture": "claude-direct (maintainer one-time exemption 2026-07-20 overriding the 'Claude does not implement' rule)",
-    "reviewerPosture": ["mechanical", "self-review"]
+    "reviewerPosture": [
+      "mechanical",
+      "self-review"
+    ]
   },
   "verificationPlan": {
     "backend": [

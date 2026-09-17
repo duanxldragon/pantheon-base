@@ -2,16 +2,15 @@
 
 ## Outcome
 
-本包把运维工作台能力收敛为 Base-owned 共享合同，并拆为 B1-B5。当前只完成设计，不代表任何组件已经实现或通过视觉验收。
+本包把运维工作台能力收敛为 Base-owned 共享合同，并完成 B1-B5 实现、单测/类型/构建门禁和确定性 Playwright 浏览器证据。当前只剩维护者最终视觉/功能验收、foundation release 和 Ops consumer 同步。
 
 ## Start Protocol
 
 1. 阅读 `AGENTS.md`、`DESIGN.md` 和父 task packet。
 2. 阅读 `docs/designs/OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md`。
 3. 检查 `git status --short`，保留所有既有改动。
-4. 从 `EXECUTION_QUEUE.md` 选择依赖已完成的一个 packet。
-5. 用 CodeGraph 确认受影响共享组件及 consumer，再读当前源码。
-6. 把选中 packet 状态、owner、基线和首个动作写入 `STATUS.md` 后再实现。
+4. 复核 `STATUS.md`、manifest 和 evidence，再处理剩余 gate。
+5. 任何新的共享 API、后端 schema、foundation release 或最终视觉/功能验收都必须停在维护者 gate。
 
 ## Global Rules
 
@@ -34,4 +33,4 @@
 
 ## Completion Boundary
 
-B1-B5 全部完成仍不等于 Ops 已同步。必须先发布 immutable foundation release，再由 Ops 更新 consumer lock 和运行业务验证。
+B1-B5 的 Base 实现与机械/浏览器证据已完成，但任务在维护者完成最终视觉/功能验收并发布 immutable foundation release 前保持未关闭；随后由 Ops 更新 consumer lock 和运行业务验证。

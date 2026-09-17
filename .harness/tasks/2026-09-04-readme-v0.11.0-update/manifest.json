@@ -1,10 +1,32 @@
 {
   "taskId": "2026-09-04-readme-v0.11.0-update",
+  "status": "completed",
+  "statusBackfilledAt": "2026-09-15",
+  "reconciliation": "2026-09-15: status backfilled to completed based on existing evidence directory .harness/evidence/2026-09-04-readme-v0.11.0-update/ (3 artifact(s) incl. review.md, summary.md, …); original manifest predated the status-field convention. No code changes made by this backfill.",
   "title": "Update README to v0.11.0 and fix frontend docs",
+  "goal": "Update README files to v0.11.0 and align frontend documentation examples with the implemented codebase.",
+  "primaryLayer": "platform",
   "description": "Update README files to v0.11.0 version and fix frontend documentation examples to match actual codebase implementation",
   "createdAt": "2026-09-04T08:00:00Z",
   "type": "documentation",
-  "scope": "docs",
+  "scope": {
+    "in": [
+      "README version and repository documentation",
+      "frontend documentation examples"
+    ],
+    "out": [
+      "frontend or backend source behavior"
+    ],
+    "label": "docs"
+  },
   "qualityProfile": "standard",
-  "ratchetDecision": "maintain"
+  "ratchetDecision": "maintain",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-04-readme-v0.11.0-update/",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v0.11.0-update/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/evidence/2026-09-04-readme-v0.11.0-update/summary.md"
+    ]
+  }
 }

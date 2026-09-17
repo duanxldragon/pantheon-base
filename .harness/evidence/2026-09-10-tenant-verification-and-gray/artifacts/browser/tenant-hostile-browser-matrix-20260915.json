@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-09-10-tenant-verification-and-gray",
+  "harness": "tenant-hostile-browser-matrix.spec.ts (Playwright, chromium)",
+  "ranAt": "2026-09-15",
+  "environment": {
+    "backend": "local pantheon-server.exe @127.0.0.1:8080 (rebuilt with S3 download authorization)",
+    "database": "MySQL 8.0.36 @127.0.0.1:3306 pantheon_base",
+    "redis": "Redis @127.0.0.1:6379 (password auth)",
+    "frontend": "smoke vite @127.0.0.1:5173",
+    "tenantMode": "multi (flag switched live, restored to compat after)"
+  },
+  "smokeTenants": [
+    101,
+    202
+  ],
+  "fixtures": [
+    "matrix_browser_a (tenant 101)",
+    "matrix_browser_b (tenant 202)",
+    "uploaded object under t101/ via live upload API"
+  ],
+  "multiModeResults": [
+    {
+      "test": "live login picker: tenantSelectionRequired, candidates 101+202 disclosed only after password check, session hint unset, cookies empty",
+      "result": "PASS"
+    },
+    {
+      "test": "wrong password never exposes tenant candidates",
+      "result": "PASS"
+    },
+    {
+      "test": "dashboard renders per tenant without page errors (both tenants)",
+      "result": "PASS"
+    },
+    {
+      "test": "refresh rotation issues new pair; refresh replay rejected",
+      "result": "PASS"
+    },
+    {
+      "test": "upload through real API stores under t101/ namespace (canonical tenant prefix enforced server-side)",
+      "result": "PASS"
+    },
+    {
+      "test": "tenant B reading tenant A object key rejected; tenant A own-object read OK; traversal probes (t101/../../, t202/../t101/) rejected",
+      "result": "PASS"
+    },
+    {
+      "test": "pre-provisioned dict fixtures isolated: A sees only matrix_browser_a; UI dict table shows no foreign row",
+      "result": "PASS"
+    },
+    {
+      "test": "existing tenant-protected-resources spec (pages/dict/export/ID tamper/batch tamper) still green under multi mode",
+      "result": "PASS"
+    }
+  ],
+  "flagOffRegression": {
+    "mode": "compat",
+    "suite": "auth-login-logout.spec.ts",
+    "results": "4/4 PASS (login+logout, invalid credentials, expired token redirect, session persistence)"
+  },
+  "totals": {
+    "multiModePassed": 6,
+    "compatPassed": 4,
+    "failed": 0
+  },
+  "finalVerification": {
+    "note": "Final run on delivered file state (unused Page import removed, eslint clean)",
+    "multiMode": "tenant-hostile-browser-matrix 5/5 PASS",
+    "protectedResources": "tenant-protected-resources 1/1 PASS",
+    "compatRegression": "auth-login-logout 4/4 PASS",
+    "teardown": "flag restored to compat, matrix fixtures deleted, backend+vite processes stopped"
+  }
+}
