@@ -41,12 +41,19 @@ which is independently constrained by open runtime-evidence gaps:
 
 **G2 — backup restore drill** (procedure: `docs/runbooks/PRODUCTION_BACKUP_RESTORE_DRILL_G2.md`)
 
+Prep 2026-09-18: the §5 record template is pre-staged at
+`artifacts/g2-restore-TEMPLATE.md` — copy it to `g2-restore-<runid>.md` when executing.
+
 - [ ] DBA executes the drill per the procedure: backup inventory → RPO facts (binlog positions) → timed full restore + binlog replay into isolated staging → consistency checks vs production (read-only) → app-level verification (RTO endpoint)
 - [ ] Record filled using the §5 template → `.harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/g2-restore-<runid>.md`
 - [ ] Meets §4 sign-off criteria: RPO ≤ 15 min, RTO × 2 ≤ maintenance window, consistency explainable, DBA + maintainer signatures
 - [ ] Maintainer flips G2 in runbook §8.1 citing the drill Run ID
 
 **G3 — window estimate** (tool: `backend/cmd/tenantsizing`, runbook §4.2)
+
+Prep 2026-09-18: tool-chain verified end-to-end (8/8 unit tests, SELECT-only proof,
+local snapshot→plan run) — see `artifacts/g3-toolchain-readiness-LOCAL-SAMPLE-20260918.md`
+for the exact DBA/maintainer commands and the LOCAL-SAMPLE disclaimer.
 
 - [ ] Capture production sizes: `tenantsizing snapshot -dsn <prod_readonly_dsn> -out g3-snapshot-<date>.json` (read-only; the G2 restored copy may serve as the first sizing source)
 - [ ] Generate worksheet: `tenantsizing plan -report g3-snapshot-<date>.json` → paste into this directory as `g3-window-worksheet-<date>.md`
@@ -58,6 +65,24 @@ which is independently constrained by open runtime-evidence gaps:
 - [ ] Update this state file: G2/G3 rows → decision + evidence link
 - [ ] Update runbook §8.1 table to match
 - [ ] Re-evaluate the overall `blocked` verdict of `2026-09-10-tenant-verification-and-gray` against the remaining runtime-evidence gaps (production-like rollback timing, perf/observability baseline, remaining browser surfaces, S3-backed probe, CGO race testing)
+
+## Progress Log — 2026-09-18 (G2/G3 readiness prep; gates unchanged)
+
+Agent-side prep executed on maintainer authorization; **G1 ✓ G2 ✗ G3 ✗ G4 ✓ is unchanged**
+and no production facts were (or could be) produced:
+
+- `tenantsizing` tool-chain verified: `go test ./cmd/tenantsizing/` 8/8 PASS; snapshot
+  confirmed SELECT-only against `information_schema` (no write statements); end-to-end
+  `snapshot → plan` exercised on the local compat-mode DB (34 tables, 6,825 in-scope rows,
+  window reserve 2h19m — recorded as LOCAL-SAMPLE, explicitly not gate evidence).
+- G2 record template pre-staged: `artifacts/g2-restore-TEMPLATE.md` (extracted from drill
+  procedure §5, with sign-off criteria and post-fill flow).
+- Artifacts README updated to index the prep artifacts and the expected future production
+  capture outputs (`g2-restore-<runid>.md`, `g3-snapshot-<date>.json`,
+  `g3-window-worksheet-<date>.md`).
+- Not advanced (human-only, unchanged): executing the production restore drill (DBA),
+  production DSN snapshot capture, >10M-row staging rehearsal if the verdict is
+  ESTIMATE-PROVISIONAL, maintainer sign-off flipping G2/G3 in runbook §8.1.
 
 ## References
 
