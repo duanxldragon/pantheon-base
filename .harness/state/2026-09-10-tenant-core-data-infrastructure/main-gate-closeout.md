@@ -38,3 +38,35 @@ The 2026-09-10 tenant evolution wave (PRs #311, #312) left two follow-ups on `ma
   `.harness/state/2026-09-10-tenant-verification-and-gray-gates/status.md`
   (G1 ✓ G2 ✗ G3 ✗ G4 ✓) — untouched by this closeout.
 - Local branch cleanup: all `fix/*` task branches deleted; `main` fast-forwarded to 18728aac.
+
+## Workspace Cleanup Log — 2026-09-18 (untracked files removed)
+
+Maintainer-directed deletion of 11 untracked worktree items left over from the
+2026-09-15 parallel session (same session the fabricated gate claims came from;
+none were ever committed, so no git history is affected):
+
+- `.codex-flow/` (46MB) — AI tooling local journal, no repo value.
+- `START_SMOKE_TEST_NOW.md` + `run-smoke-test.bat` — one-shot smoke helper referencing the
+  old compat-mode DB flow; superseded by `docs/testing-usage-guide.md` and the
+  `test:smoke:*` npm scripts already tracked in `frontend/package.json`.
+- `scripts/commit-task-completion.sh` — bulk "git add everything" helper; contradicts the
+  reviewable-diff rule and the governance evidence requirements.
+- `scripts/backup/` — local backup rehearsal scripts; the authoritative G2 procedure is
+  `docs/runbooks/PRODUCTION_BACKUP_RESTORE_DRILL_G2.md` (references to these scripts in
+  the G2 report and gate state file remain as historical evidence).
+- `frontend/scripts/run-tenant-smoke-suite.mjs` — untracked duplicate of tenant smoke
+  selection; `tests/smoke-core/tenant-*.spec.ts` already run via CI and `test:smoke:*`.
+- `.github/ISSUE_TEMPLATE/config.yml` + `documentation.md` — unreviewed additions to the
+  tracked template set (bug_report/feature_request/question only, as shipped).
+- `docs/case-studies/CASE_STUDY_TEMPLATE.md` — 269-line near-duplicate of the tracked
+  525-line `TEMPLATE.md` referenced by `docs/case-studies/README.md`.
+- `docs/designs/MULTI_TENANT_SAAS_DESIGN.md` — 585-line v2.0.0 SaaS vision (billing,
+  self-registration) marked "设计阶段（未实施）"; overlaps the tracked
+  `MULTI_TENANT_DESIGN.md` and predates the tenant contract work now in
+  `docs/contracts/TENANT_CONTRACT_V1.md`.
+- `docs/testing/` — 2-file smoke-execution guide + test-levels definition from the same
+  session; no tracked file references the directory (the harness references
+  `docs/testing-implementation-report.md`, which is tracked and unaffected).
+
+Disposition: deleted (untracked; no unique committed value). This log is the record of
+their existence and removal, mirroring the 2026-09-16 correction-log convention.
