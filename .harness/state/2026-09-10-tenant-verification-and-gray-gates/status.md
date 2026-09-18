@@ -32,8 +32,8 @@ which is independently constrained by open runtime-evidence gaps:
 - production-like rollback timing and distributed cache/session invalidation proof
 - performance/observability baseline (latency, concurrency, cache hit, error rate, alerts)
 - hostile browser coverage of remaining protected-resource/cache/async/dynamic-module surfaces
-- S3-backed runtime probe (authorization logic is test-covered; live S3 exercise is env-gated)
-- race testing on a CGO-enabled toolchain (Windows blocks it)
+- S3-backed runtime probe (authorization logic is test-covered; live S3 exercise is env-gated) — 2026-09-18: CI wiring added (MinIO service + `PANTHEON_TEST_S3_*` in the unit-tests job), pending a green main run to confirm the round-trip test executes
+- race testing on a CGO-enabled toolchain (Windows blocks it) — 2026-09-18: `go test -race` confirmed running and green in CI (ci.yml unit-tests, quality.yml every-PR); the Windows limitation is local-DX only
 
 ## Path to Re-review
 
@@ -65,6 +65,23 @@ for the exact DBA/maintainer commands and the LOCAL-SAMPLE disclaimer.
 - [ ] Update this state file: G2/G3 rows → decision + evidence link
 - [ ] Update runbook §8.1 table to match
 - [ ] Re-evaluate the overall `blocked` verdict of `2026-09-10-tenant-verification-and-gray` against the remaining runtime-evidence gaps (production-like rollback timing, perf/observability baseline, remaining browser surfaces, S3-backed probe, CGO race testing)
+
+## Progress Log — 2026-09-18b (runtime-gap CI feasibility)
+
+Assessment of the three remaining runtime-evidence gaps
+(`artifacts/runtime-gap-ci-feasibility-20260918.md`):
+
+- **Race (#7)**: CI-closed — `go test -race` verified green on main run 35313881254
+  (ci.yml unit-tests) and runs on every PR via quality.yml; Windows local failure
+  reproduced and reclassified as DX-only.
+- **S3 probe (#5)**: CI-executable now — MinIO service + runner-side health wait +
+  `PANTHEON_TEST_S3_*` env added to the ci.yml unit-tests job so the env-gated
+  round-trip test `TestServiceStoreUsesRealS3WhenConfigured` runs for real; CI-safe
+  (per-run unique bucket, self-cleanup). Pending confirmation on the next main run.
+- **Perf/observability baseline (#4)**: staging-only for the baseline itself (GitHub
+  runners are not production-representative); optional CI `go test -bench` smoke as a
+  relative regression signal is follow-up work. Prometheus middleware + `/metrics`
+  endpoint already exist in-repo.
 
 ## Progress Log — 2026-09-18 (G2/G3 readiness prep; gates unchanged)
 
