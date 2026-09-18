@@ -141,7 +141,7 @@ jobs:
       # and probe mechanics vary, so readiness is awaited runner-side below
       # via the unauthenticated /minio/health/live endpoint.
       minio:
-        image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+        image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
         env:
           MINIO_ROOT_USER: pantheon-minio-ci
           MINIO_ROOT_PASSWORD: minio-ci-${{ github.run_id }}-${{ github.run_attempt }}
