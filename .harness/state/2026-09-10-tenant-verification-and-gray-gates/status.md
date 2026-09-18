@@ -74,6 +74,10 @@ services cannot pass `command`), so `Wait for MinIO` timed out and the Unit Test
 job failed before any step — `Unit Tests` is not a required check, so the merge
 automation let #322 in while red.
 
+**Ratchet (2026-09-18)**: the `solo dev merge rules` ruleset now requires
+`Unit Tests` and `CI Summary` in addition to `Quality Gates`/`Security Gates`,
+closing the red-merge blind spot that let #322 in.
+
 Maintainer decision: suspend the S3 probe wiring ("我后面自己准备好环境之后，再处理")
 and restore the green CI baseline. Reverted the minio service, the S3 env block, and
 the Wait step from ci.yml (restore-ready YAML preserved in
