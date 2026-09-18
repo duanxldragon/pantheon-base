@@ -32,7 +32,7 @@ which is independently constrained by open runtime-evidence gaps:
 - production-like rollback timing and distributed cache/session invalidation proof
 - performance/observability baseline (latency, concurrency, cache hit, error rate, alerts)
 - hostile browser coverage of remaining protected-resource/cache/async/dynamic-module surfaces
-- S3-backed runtime probe (authorization logic is test-covered; live S3 exercise is env-gated) — 2026-09-18: CI wiring added (MinIO service + `PANTHEON_TEST_S3_*` in the unit-tests job), pending a green main run to confirm the round-trip test executes
+- S3-backed runtime probe (authorization logic is test-covered; live S3 exercise is env-gated) — 2026-09-18: CI wiring attempted (#321/#322) then **SUSPENDED by maintainer decision** after two CI failures (Docker Hub repo retired; official image CMD lacks `server` and GH services cannot pass a command); restore-ready snippet with the maintainer-specified `bitnamicharts/minio:17.0.21` image: `artifacts/s3-probe-minio-service-SUSPENDED.md`
 - race testing on a CGO-enabled toolchain (Windows blocks it) — 2026-09-18: `go test -race` confirmed running and green in CI (ci.yml unit-tests, quality.yml every-PR); the Windows limitation is local-DX only
 
 ## Path to Re-review
@@ -65,6 +65,21 @@ for the exact DBA/maintainer commands and the LOCAL-SAMPLE disclaimer.
 - [ ] Update this state file: G2/G3 rows → decision + evidence link
 - [ ] Update runbook §8.1 table to match
 - [ ] Re-evaluate the overall `blocked` verdict of `2026-09-10-tenant-verification-and-gray` against the remaining runtime-evidence gaps (production-like rollback timing, perf/observability baseline, remaining browser surfaces, S3-backed probe, CGO race testing)
+
+## Progress Log — 2026-09-18c (S3 probe wiring suspended; CI baseline restored)
+
+The #321/#322 MinIO wiring left `main` red: docker hub `minio/minio` repo is retired
+(pull denied), and the quay.io image starts without a server command (GH Actions
+services cannot pass `command`), so `Wait for MinIO` timed out and the Unit Tests
+job failed before any step — `Unit Tests` is not a required check, so the merge
+automation let #322 in while red.
+
+Maintainer decision: suspend the S3 probe wiring ("我后面自己准备好环境之后，再处理")
+and restore the green CI baseline. Reverted the minio service, the S3 env block, and
+the Wait step from ci.yml (restore-ready YAML preserved in
+`artifacts/s3-probe-minio-service-SUSPENDED.md`,方案 A 用维护者指定的
+`bitnamicharts/minio:17.0.21`). Race remains CI-closed (#7); perf baseline remains
+staging-only (#4); gate decisions unchanged.
 
 ## Progress Log — 2026-09-18b (runtime-gap CI feasibility)
 

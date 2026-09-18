@@ -135,26 +135,12 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
-      # S3 runtime probe (tenant verification gap #5): the env-gated
-      # TestServiceStoreUsesRealS3WhenConfigured round-trip runs for real when
-      # this service is up. No --health-cmd: recent minio images ship no curl
-      # and probe mechanics vary, so readiness is awaited runner-side below
-      # via the unauthenticated /minio/health/live endpoint.
-      minio:
-        image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
-        env:
-          MINIO_ROOT_USER: pantheon-minio-ci
-          MINIO_ROOT_PASSWORD: minio-ci-${{ github.run_id }}-${{ github.run_attempt }}
-        ports:
-          - 9000:9000
-
     env:
       PANTHEON_TEST_DSN: root:pw-${{ github.run_id }}-${{ github.run_attempt }}@tcp(127.0.0.1:3306)/pantheon_test?charset=utf8mb4&parseTime=true&loc=Local
       PANTHEON_TEST_REDIS_ADDR: 127.0.0.1:6379
-      PANTHEON_TEST_S3_ENDPOINT: http://127.0.0.1:9000
-      PANTHEON_TEST_S3_ACCESS_KEY: pantheon-minio-ci
-      PANTHEON_TEST_S3_SECRET_KEY: minio-ci-${{ github.run_id }}-${{ github.run_attempt }}
-      PANTHEON_TEST_S3_REGION: us-east-1
+      # S3 probe wiring (PANTHEON_TEST_S3_*) is SUSPENDED per maintainer
+      # decision 2026-09-18; restore instructions:
+      # .harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/s3-probe-minio-service-SUSPENDED.md
 
     steps:
       - name: Checkout
@@ -167,20 +153,6 @@ jobs:
         with:
           go-version-file: ${{ env.GO_VERSION_FILE }}
           cache: true
-
-      # MinIO has no reliable in-image health check; wait runner-side before
-      # any test touches it (S3 round-trip probe).
-      - name: Wait for MinIO
-        run: |
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:9000/minio/health/live; then
-              echo "MinIO is live"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "MinIO failed to become healthy"
-          exit 1
 
       # Coverage reconciliation (task 0, 2026-09-10): the unit-tests job now runs
       # with MySQL + Redis services so the gate measures the same DB-backed path
