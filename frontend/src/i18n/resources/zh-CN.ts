@@ -2534,13 +2534,13 @@ const zhCNFallback = {
     '已确认安全事件的自动保留天数。仅清理已确认事件，待确认事件始终保留。默认 180 天。',
   'system.setting.audit.retentionDaysOption': '自动保留 {{count}} 天',
   'system.setting.remark.upload.storage_driver':
-    '当前支持 local / s3-compatible，可接 MinIO、AWS S3、OSS 兼容网关。',
+    '当前支持 local / s3-compatible，可接 RustFS、MinIO、AWS S3、OSS 兼容网关。',
   'system.setting.remark.upload.max_file_size': '单文件最大上传体积，单位 MB。',
   'system.setting.remark.upload.allowed_types': '使用 JSON 数组维护允许上传的扩展名白名单。',
   'system.setting.remark.upload.local_path': '本地存储模式下的上传根目录。',
   'system.setting.remark.upload.public_base_url': '文件对外访问域名或基础路径，可留空。',
   'system.setting.remark.upload.s3_endpoint':
-    '对象存储服务地址，例如 AWS S3 / MinIO / OSS 兼容网关。',
+    '对象存储服务地址，例如 RustFS / AWS S3 / MinIO / OSS 兼容网关。',
   'system.setting.remark.upload.s3_bucket': '对象存储 Bucket 名称。',
   'system.setting.remark.upload.s3_region': '对象存储 Region，默认 us-east-1。',
   'system.setting.remark.upload.s3_access_key_id': '对象存储访问 Key ID，按敏感配置加密保存。',

@@ -11,6 +11,7 @@
 | --- | --- | --- |
 | MySQL | 8.0+ | `pantheon_base` 主数据库 |
 | Redis | 7.0+ | 认证会话、令牌吊销、限流与 Casbin watcher |
+| 对象存储 | 可选，S3 兼容 | `upload.storage_driver=s3` 时的文件存储（AWS S3 / MinIO / RustFS / OSS 兼容网关） |
 | OTLP 后端 | 可选 | OpenTelemetry traces |
 
 仓库根目录的 `docker-compose.yml` 只启动 MySQL 与 Redis，供本地开发和验证使用；它不是完整生产编排文件。仓库当前也不提供可直接应用的 Kubernetes manifests。生产平台应基于本指南维护自己的 Secret、Deployment、Service、Ingress、备份和告警配置。

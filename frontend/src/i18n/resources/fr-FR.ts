@@ -2584,7 +2584,7 @@ const frFRFallback = {
     'Nombre de jours de conservation automatique des journaux d’opération avant qu’un nettoyage automatique cadencé ne soit exécuté. Valeur par défaut : 180 jours.',
   'system.setting.audit.retentionDaysOption': 'Auto-conserver {{count}} jours',
   'system.setting.remark.upload.storage_driver':
-    'Prend actuellement en charge local / s3-compatible, utilisable avec MinIO, AWS S3 et passerelles compatibles OSS.',
+    'Prend actuellement en charge local / s3-compatible, utilisable avec RustFS, MinIO, AWS S3 et passerelles compatibles OSS.',
   'system.setting.remark.upload.max_file_size': 'Taille maximale d’un fichier téléversé, en Mo.',
   'system.setting.remark.upload.allowed_types':
     'La liste blanche des extensions autorisées est maintenue via un tableau JSON.',
@@ -2593,7 +2593,7 @@ const frFRFallback = {
   'system.setting.remark.upload.public_base_url':
     'Domaine ou chemin de base d’accès public aux fichiers, pouvant être vide.',
   'system.setting.remark.upload.s3_endpoint':
-    'Adresse du service objet, par exemple AWS S3, MinIO ou passerelle compatible OSS.',
+    'Adresse du service objet, par exemple RustFS, AWS S3, MinIO ou passerelle compatible OSS.',
   'system.setting.remark.upload.s3_bucket': 'Nom du bucket de stockage objet.',
   'system.setting.remark.upload.s3_region': 'Région du stockage objet, par défaut `us-east-1`.',
   'system.setting.remark.upload.s3_access_key_id':

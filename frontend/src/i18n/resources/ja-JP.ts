@@ -2439,7 +2439,7 @@ const jaJPFallback = {
     '操作ログを自動保持する日数です。超過後は節流付き自動クリーンアップが実行されます。既定値は 180 日です。',
   'system.setting.audit.retentionDaysOption': '{{count}} 日を自動保持',
   'system.setting.remark.upload.storage_driver':
-    '現在は local / s3-compatible をサポートし、MinIO、AWS S3、OSS 互換ゲートウェイに接続できます。',
+    '現在は local / s3-compatible をサポートし、RustFS、MinIO、AWS S3、OSS 互換ゲートウェイに接続できます。',
   'system.setting.remark.upload.max_file_size': '単一ファイルの最大アップロードサイズ（MB）です。',
   'system.setting.remark.upload.allowed_types':
     '許可する拡張子ホワイトリストを JSON 配列で管理します。',
@@ -2448,7 +2448,7 @@ const jaJPFallback = {
   'system.setting.remark.upload.public_base_url':
     'ファイル公開アクセス用ドメインまたはベースパスです。空欄可。',
   'system.setting.remark.upload.s3_endpoint':
-    'AWS S3 / MinIO / OSS 互換ゲートウェイなどのオブジェクトストレージエンドポイントです。',
+    'RustFS / AWS S3 / MinIO / OSS 互換ゲートウェイなどのオブジェクトストレージエンドポイントです。',
   'system.setting.remark.upload.s3_bucket': 'オブジェクトストレージの Bucket 名です。',
   'system.setting.remark.upload.s3_region':
     'オブジェクトストレージの Region です。既定は us-east-1 です。',
