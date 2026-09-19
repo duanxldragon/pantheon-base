@@ -2412,7 +2412,7 @@ const koKRFallback = {
     '작업 로그를 자동 보관하는 일수입니다. 기간이 지나면 시스템이 스로틀링된 자동 정리를 수행합니다. 기본값은 180일입니다.',
   'system.setting.audit.retentionDaysOption': '{{count}}일 자동 보관',
   'system.setting.remark.upload.storage_driver':
-    '현재 local / s3-compatible 을 지원하며 MinIO, AWS S3, OSS 호환 게이트웨이에 연결할 수 있습니다.',
+    '현재 local / s3-compatible 을 지원하며 RustFS, MinIO, AWS S3, OSS 호환 게이트웨이에 연결할 수 있습니다.',
   'system.setting.remark.upload.max_file_size': '단일 파일 최대 업로드 크기(MB)입니다.',
   'system.setting.remark.upload.allowed_types':
     '허용 확장자 화이트리스트를 JSON 배열로 관리합니다.',
@@ -2420,7 +2420,7 @@ const koKRFallback = {
   'system.setting.remark.upload.public_base_url':
     '파일 공개 접근 도메인 또는 기본 경로이며 비워둘 수 있습니다.',
   'system.setting.remark.upload.s3_endpoint':
-    'AWS S3 / MinIO / OSS 호환 게이트웨이 등의 객체 저장소 엔드포인트입니다.',
+    'RustFS / AWS S3 / MinIO / OSS 호환 게이트웨이 등의 객체 저장소 엔드포인트입니다.',
   'system.setting.remark.upload.s3_bucket': '객체 저장소 Bucket 이름입니다.',
   'system.setting.remark.upload.s3_region': '객체 저장소 Region 이며 기본값은 us-east-1 입니다.',
   'system.setting.remark.upload.s3_access_key_id':

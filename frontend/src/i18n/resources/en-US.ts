@@ -2750,7 +2750,7 @@ const enUSFallback = {
     'How many days acknowledged security events are kept before throttled automatic cleanup. Pending events are always retained. Defaults to 180 days.',
   'system.setting.audit.retentionDaysOption': 'Auto retain {{count}} day(s)',
   'system.setting.remark.upload.storage_driver':
-    'Currently supports local / s3-compatible, including MinIO, AWS S3, and OSS-compatible gateways.',
+    'Currently supports local / s3-compatible, including RustFS, MinIO, AWS S3, and OSS-compatible gateways.',
   'system.setting.remark.upload.max_file_size': 'Maximum upload size per file in MB.',
   'system.setting.remark.upload.allowed_types':
     'Use a JSON array to maintain the allowed file extension whitelist.',
@@ -2758,7 +2758,7 @@ const enUSFallback = {
   'system.setting.remark.upload.public_base_url':
     'Public base URL used to access uploaded files. Can be empty.',
   'system.setting.remark.upload.s3_endpoint':
-    'Object storage service endpoint, such as AWS S3 / MinIO / OSS compatible gateway.',
+    'Object storage service endpoint, such as RustFS / AWS S3 / MinIO / OSS compatible gateway.',
   'system.setting.remark.upload.s3_bucket': 'Object storage bucket name.',
   'system.setting.remark.upload.s3_region': 'Object storage region. Defaults to us-east-1.',
   'system.setting.remark.upload.s3_access_key_id':
