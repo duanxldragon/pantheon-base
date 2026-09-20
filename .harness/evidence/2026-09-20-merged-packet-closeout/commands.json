@@ -1,0 +1,117 @@
+{
+  "taskId": "2026-09-20-merged-packet-closeout",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "codebuff"
+  },
+  "commands": [
+    {
+      "command": "gh pr view {327,329,330} --json number,title,state,mergedAt,mergeCommit,headRefName,url",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Merge facts written back into the three packets: #327 MERGED 2026-09-20T01:37:39Z at 0b17c5d9d6e0c9aa0bc84b1fdeba3e570ceef3f6 (chore/ci-bench-perf-smoke); #329 MERGED 2026-09-20T05:54:31Z at 3f35a0666ac0fc2dc67af482f8a309dfcbfd4bc4 (feat/tenant-hostile-matrix-phase2); #330 MERGED 2026-09-20T05:56:27Z at b3350be37bd61078530588180331592632f8069a (fix/bench-perf-smoke-summary-path)."
+    },
+    {
+      "command": "git ls-remote --heads origin | grep -E \"tenant-hostile|bench-perf|ci-bench|permission-workbench\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No match - all three closed-out branches were already deleted on origin, which is the 'branch closure' line of each closeout record."
+    },
+    {
+      "command": "gh pr view {327,329,330} --json statusCheckRollup",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "PR-side signal classification: #327 = 27 success / 2 skipped / 1 failure (advisory Bench Perf Smoke); #329 = 32 success / 2 skipped / 2 failures (both advisory Bench Perf Smoke runs); #330 = 32 success / 6 skipped / 0 failures. No required check was red on any of them."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/commits/{0b17c5d9,3f35a066,b3350be3}/check-runs --jq '.check_runs[] | \"\\(.conclusion) | \\(.name)\"'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Merge-commit signals: on main tip b3350be3 the required jobs (CI incl. Quality Gates / Frontend Contract, Security Gates, Code Quality Gates, Lint Workflows) are success and Bench Perf Smoke (advisory) is success (run 35492933695 job 106030897699); Core Smoke (advisory) is failure. On 0b17c5d9 the advisory bench job was failure; 3f35a066's push run was superseded by the next push two minutes later (CI/Security cancelled)."
+    },
+    {
+      "command": "gh run list --workflow=smoke-core.yml --branch main --limit 40 --json databaseId,createdAt,headSha + gh api repos/.../actions/runs/<id>/jobs --jq '[.jobs[].conclusion]'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Establishes that the advisory Core Smoke job is a pre-existing red baseline rather than damage from these merges: 29 failure / 3 success / 5 cancelled across the last 37 main runs, the only three green runs being 34431776614, 34437941109 and 34442715170 on 2026-09-10. Red already on 2026-09-05 (33967232853), long before #327."
+    },
+    {
+      "command": "gh run view --job 106030885786 --log-failed",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Tip-of-main Core Smoke detail: 28 passed / 8 failed / 3 skipped in 2.9m; the failure list includes the smoke-core tenant specs (security-event and operation-log 'leaked across tenants' assertions, the phase1 and phase2 hostile matrix specs, tenant-protected-resources) plus platform-shell-critical and system-dept-operations. smoke-core.yml runs it with `continue-on-error: true` and only on push to main/release, so the workflow conclusion stays green and no PR-path gate ever runs these specs."
+    },
+    {
+      "command": "python -c \"json.load(open('.harness/tasks/<id>/manifest.json'))\"  # all four touched manifests",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Caught in-flight: the first three statusNote edits dropped the trailing comma (\"Extra data: line 8 column 3\"), which would have left all three manifests unparsable; fixed and re-verified - FR-011 row's own manifest parses too."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "docs/harness/failure-registry.md PASS (1 file, 0 errors, 0 warnings) with the new FR-011 row (runtime-quality / ci-signal-noise / repo-quality-gate / registry-only / open) and the refreshed Review Notes bullet."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-09-20-merged-packet-closeout/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "PASS (1 file, 0 errors) including the linkage validation against the new task manifest."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-09-20-merged-packet-closeout/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "PASS (1 file, 0 errors): verdict approved, machine-readable block, linkage paths exist. Note: repo-wide --strict still reports pre-existing failures in older evidence dirs; check-review is not wired into CI."
+    },
+    {
+      "command": "for c in check-structure-contract check-encoding check-method-health check-doc-links; do node scripts/harness/$c.mjs; done",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "structure: 0 findings across 1903 tracked files; encoding: 0 findings across 1703 scanned files; method-health: no findings (method kit 1.4.0 / repo shell 1.4.0); doc-links: 0 findings."
+    },
+    {
+      "command": "node scripts/check-duplication.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Result: PASS (the only reported pairs are pre-existing smoke-core/smoke-full workflow duplication)."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --changed-file <changed files>",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "0 findings, 0 warnings: harness adoption entrypoints intact, changed files not missing task manifest/evidence pairing."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Report-only run: no error for the touched packets; the warnings it prints are pre-existing recommended-item notices under docs/harness/tasks/*.task.md, and the closeout packets live in .harness/tasks/<id>/ as the recent convention does."
+    }
+  ],
+  "knownGaps": [
+    "The writeback is manual: nothing in the repo links a merge back to its task packet, so packets drift to in-review until a human writes them back. A sensor was deliberately not added, because in-review is a legitimate pre-merge state and the machine-readable signal for 'this PR is merged' is not currently in the packet.",
+    "Advisory Core Smoke is still red right now. This pass records the signal (FR-011) but does not fix or re-scope the job; the root cause of the smoke-core tenant failures in CI (missing multi-mode backend plus fixtures vs. a real isolation regression) was not diagnosed and needs its own task.",
+    "No PR-path gate runs tests/smoke-core/, so tenant matrix green evidence stays local-only; the required PR gates that passed (#327/#329/#330 rolls) do not cover those specs.",
+    "Same-day merged packets outside this workstream (#325 module-governance-flaky-timeout, #326 docs/rustfs-upload-target, #328 permission-workbench-route-binding) were deliberately not written back; #328's packet still reads in-progress although its PR merged.",
+    "check-review.mjs --strict is not wired into CI and several historical evidence dirs (including .harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/review.md) lack the Machine Readable block. Observed here, not fixed, to keep historical artifacts as written."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-merged-packet-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-20-merged-packet-closeout/",
+    "reviewFile": ".harness/evidence/2026-09-20-merged-packet-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+      ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/task.md",
+      ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/task.md"
+    ]
+  },
+  "environment": {
+    "shellCaveat": "Local npm/npx are intercepted by a WSL shim (`execvpe(/bin/bash) failed`), so npm wrapper scripts (npm run check:*) could not be executed; every gate was run as the equivalent direct `node scripts/...` invocation. CI (ubuntu-latest) uses the npm path.",
+    "network": "GitHub API/gh and git remote access require the local proxy (https_proxy=http://127.0.0.1:7897) in this environment; run list, check-run and job-log reads above all went through it.",
+    "scope": "Docs/evidence only: no workflow, backend, frontend or test file was touched by this pass."
+  }
+}

@@ -58,3 +58,29 @@ buy a feedback control, not just a patch:
   advisory job, so a future silent red is only caught by a human reading main's
   run list. `FR-010` records this as an accepted residual risk; promoting the job
   to blocking remains a maintainer decision (explicitly Out of scope in #327).
+
+## Closeout (post-merge, 2026-09-20)
+
+| Item | Fact |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/330 |
+| Merge commit | `b3350be37bd61078530588180331592632f8069a` |
+| Merged at | 2026-09-20T05:56:27Z |
+| Branch closure | `fix/bench-perf-smoke-summary-path` deleted from origin |
+| PR signal | 32 success / 6 skipped / **0 failure** — advisory `Bench Perf Smoke` included |
+| Main-tip signal (`b3350be3`) | `Bench Perf Smoke (advisory)` = **success** (run 35492933695, job 106030897699) |
+| Ratchet decision | sensor-added (drift guard + `FR-010`) |
+
+Gap closed by the merge: the missing local end-to-end replay of the
+`bench.txt` → `$GITHUB_STEP_SUMMARY` chain (local npm shim + no MySQL) is now
+answered by a real CI run — the job is green and its summary carries the
+benchmark numbers, which was the entire point of the fix.
+
+Gap still open by design: nothing watches advisory jobs. Walking main's run list
+during this writeback surfaced the second instance of exactly that class —
+advisory `Core Smoke` has been red since at least 2026-09-05 while its workflow
+conclusion stays green (`continue-on-error: true`). Recorded as `FR-011`
+(registry-only); fixing or re-scoping that job is deliberately not part of this
+task (Out of scope here and in #327).
+
+Consolidated writeback record: `.harness/evidence/2026-09-20-merged-packet-closeout/`.

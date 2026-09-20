@@ -2,7 +2,7 @@
 task_id: 2026-09-20-tenant-hostile-matrix-phase2
 title: Hostile browser matrix phase 2 — auth-log/audit/settings/dynamic-module two-tenant coverage
 created: 2026-09-20
-status: in-review
+status: completed
 priority: P2
 layer: system
 risk: test-only-plus-fixture-script
@@ -52,3 +52,26 @@ risk: test-only-plus-fixture-script
 ## Evidence
 
 - `.harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/`
+
+## Closeout（合入后回写，2026-09-20）
+
+| 最小交付件 | 事实 |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/329 |
+| Merge commit | `3f35a0666ac0fc2dc67af482f8a309dfcbfd4bc4` |
+| Merged at | 2026-09-20T05:54:31Z |
+| 分支收口 | `feat/tenant-hostile-matrix-phase2` 已从 origin 删除 |
+| GitHub signal（PR 侧） | 32 success / 2 skipped；红的两条都是 advisory `Bench Perf Smoke`（缺陷在 #330 修掉），required 全绿后 auto-merge |
+| GitHub signal（main tip `b3350be3`） | required：`CI`（含 Quality Gates / Frontend Contract）、`Security Gates`、`Code Quality Gates`、`Lint Workflows` 全绿；advisory `Core Smoke` 红，且先于本 PR 存在（见 FR-011） |
+| Review | `review.md`：standard（test-only + fixture 脚本，无契约面） |
+| Evidence | `commands.json` / `summary.md`（含 post-review lint 修复记录） |
+| Ratchet | no-repeat-observed（本任务不新增规则；期间观察到的问题归入 FR-010 / FR-011） |
+
+### Known gap（显式）
+
+- 「phase1+phase2 9/9」是**本地 live multi-mode 后端**的证据。CI 中唯一运行
+  `tests/smoke-core/` 租户 spec 的 job 是 advisory 的 `Core Smoke`
+  （push-only + `continue-on-error`），它在 main 上自 ≥2026-09-05 起持续红，
+  因此这些租户 spec 目前没有可信的 CI 绿信号；PR 路径上的 required 门禁
+  不会执行它们。已记为 `FR-011`（registry-only，待维护者决定处置方式：
+  给 CI 接上 multi-mode + fixture，或把租户 spec 移出 core smoke 范围）。
