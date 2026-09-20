@@ -85,6 +85,12 @@
       "notes": "0 findings, 0 warnings: harness adoption entrypoints intact, changed files not missing task manifest/evidence pairing."
     },
     {
+      "command": "gh pr view 331 --json state,mergedAt,mergeCommit,statusCheckRollup",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Own merge recorded after the fact: PR #331 MERGED 2026-09-20T07:49:01Z as ba824608e2ad430c28bec4361b90a3d77aff3eeb with 23 success / 6 skipped / 0 failure, which is what let this packet move from in-review to completed in a follow-up commit."
+    },
+    {
       "command": "node scripts/harness/check-task-packet.mjs",
       "cwd": ".",
       "status": "passed",

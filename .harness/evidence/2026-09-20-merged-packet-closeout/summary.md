@@ -93,7 +93,20 @@ dropped the trailing comma, leaving all three manifests unparsable
 - **Observed, not fixed:** `check-review.mjs --strict` is not wired into CI and
   several historical evidence dirs lack the Machine Readable block.
 
-## 6. Ratchet decision
+## 6. Closeout of this pass (post-merge, 2026-09-20)
+
+| Item | Fact |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/331 |
+| Merge commit | `ba824608e2ad430c28bec4361b90a3d77aff3eeb` |
+| Merged at | 2026-09-20T07:49:01Z |
+| PR signal | 23 success / 6 skipped / 0 failure — required checks green, auto-merge squash |
+
+The pass's own packet was the last packet still reading `in-review` after its
+merge, so it was written back in a follow-up commit rather than being left as the
+next instance of the drift this pass exists to fix.
+
+## 7. Ratchet decision
 
 `registry-only`. The reusable control here is the registry row plus the recorded
 closeout checklist; no sensor or gate was added, because "packet still says
