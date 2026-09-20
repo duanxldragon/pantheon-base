@@ -237,7 +237,7 @@ func TestPermissionService_GetWorkbenchIntegrityFilter(t *testing.T) {
 
 	if err := db.Create(&[]database.CasbinRule{
 		{PType: "p", V0: "clean_role", V1: "/api/v1/system/user/list", V2: "GET"},
-		{PType: "p", V0: "dirty_role", V1: "/api/v1/system/user/create", V2: "POST"},
+		{PType: "p", V0: "dirty_role", V1: "/api/v1/system/user", V2: "POST"},
 	}).Error; err != nil {
 		t.Fatalf("seed policies: %v", err)
 	}
@@ -308,7 +308,7 @@ func TestPermissionService_GetWorkbenchCoverageFilter(t *testing.T) {
 	}
 	if err := db.Create(&[]database.CasbinRule{
 		{PType: "p", V0: "complete_role", V1: "/api/v1/system/user/list", V2: "GET"},
-		{PType: "p", V0: "complete_role", V1: "/api/v1/system/user/create", V2: "POST"},
+		{PType: "p", V0: "complete_role", V1: "/api/v1/system/user", V2: "POST"},
 	}).Error; err != nil {
 		t.Fatalf("seed casbin rules: %v", err)
 	}
