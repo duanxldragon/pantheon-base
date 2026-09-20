@@ -1,0 +1,46 @@
+{
+  "taskId": "2026-09-20-module-governance-flaky-timeout",
+  "repo": "pantheon-base",
+  "commands": [
+    {
+      "command": "git show 3d76b402 --stat",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: confirm the committed fix scope Expected: only frontend/tests/smoke/business/generated/module-governance-real.spec.ts changed (+8: budget comment + test.setTimeout(120_000)); observed exactly that"
+    },
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/business/generated/module-governance-real.spec.ts (against the maintainer-started backend on 8080)",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Description: first local reproduction of the spec the timeout fix targets Expected: pass or timeout-inverted failure; observed a NEW earlier failure — the wizard's 生成代码 click never reached step 4, spec died at '共生成 10 个文件' assertion, unrelated to the 30s budget"
+    },
+    {
+      "command": "curl POST /api/v1/lowcode/generator/preview-files against 8080 with full admin cookie+header session",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Description: isolate whether the new failure is frontend or backend Expected: 200 with generated files; observed 500 {\"code\":500,\"message\":\"module.generate.server_export_failed\"} — the backend's exec.LookPath(\"node\") failed because the maintainer-started pantheon-server process environment has no node in PATH (PANTHEON_WORKSPACE_ROOT/Node deps are fine; the same exporter runs green standalone)"
+    },
+    {
+      "command": "cd backend && PANTHEON_NODE_BIN=D:/nodejs/node.exe PANTHEON_PORT=8081 go run ./cmd/server (with .env.test DSN/Redis/JWT) then curl preview-files on 8081",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: prove the 500 is environment-shaped, not a product regression Expected: 200; observed 200 with the full file list, confirming the running 8080 process merely lacks node in its PATH (fix on maintainer side: restart backend with node on PATH or set PANTHEON_NODE_BIN)"
+    },
+    {
+      "command": "cd frontend && PANTHEON_API_BASE_URL=http://127.0.0.1:8081/api/v1 node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --proxy-target http://127.0.0.1:8081 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/business/generated/module-governance-real.spec.ts",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: real-flow verification of the committed timeout fix against a node-capable backend Expected: 1 passed; observed '1 passed (10.9s)' — the real generate→register→purge cycle now completes in ~11s locally with the 120s budget in place"
+    },
+    {
+      "command": "git status --porcelain (after restore of frontend/src/modules/generated/system.ts)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: the smoke cleanup script reformats the generated registry file; restored with git checkout -- Expected: clean tree; observed clean"
+    }
+  ],
+  "knownGaps": [
+    "CI-level confirmation of the timeout fix lands when the PR's Full Smoke Suite runs; local run used a second backend instance on 8081 because the maintainer-started 8080 process lacks node in its PATH (environment note, not a code defect).",
+    "Node path issue on the running 8080 backend is an environment finding reported to the maintainer; no repo change made for it."
+  ]
+}
