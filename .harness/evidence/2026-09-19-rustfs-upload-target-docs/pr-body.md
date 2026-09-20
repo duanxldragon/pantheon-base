@@ -9,8 +9,8 @@
 
 - Task ID：2026-09-19-rustfs-upload-target-docs
 - Task Manifest：none
-- Evidence：.harness/evidence/2026-09-19-rustfs-upload-target-docs/pr-body.md
-- Verification evidence：.harness/evidence/2026-09-19-rustfs-upload-target-docs/verification.md
+- Evidence：.harness/evidence/2026-09-19-rustfs-upload-target-docs/commands.json
+- Verification evidence：.harness/evidence/2026-09-19-rustfs-upload-target-docs/summary.md
 - Review Artifact：none
 - OpenSpec change：none
 - Trivial change：yes
