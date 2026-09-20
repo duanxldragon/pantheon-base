@@ -1,0 +1,84 @@
+{
+  "taskId": "2026-09-20-tenant-hostile-matrix-phase2",
+  "title": "Hostile 浏览器矩阵 phase 2：auth-log/audit/settings/dynamic-module 双租户覆盖",
+  "goal": "Expand the hostile two-tenant browser matrix (finding #1 follow-up of tenant-verification-and-gray) to the remaining protected surfaces — auth-log pages, operation-log list/detail/export, tenant-bound settings with cache refresh, and the dynamic-module registry — and script the previously hand-provisioned dict fixtures so the matrix remains runnable after tenantmatrixdb down.",
+  "primaryLayer": "system",
+  "status": "in-review",
+  "statusNote": "2026-09-20: phase2 spec + fixture setup script delivered on feat/tenant-hostile-matrix-phase2; phase1+phase2 9/9 green against live multi-mode backend; environment quiet state restored (flag=compat).",
+  "priority": "P2",
+  "estimatedComplexity": "light",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "tenantmatrixdb down migration rollback fails on the shared dev DB (v16 PREPARE syntax, pre-existing); flag kill-switch still takes effect. Tracked as a follow-up note for tenant tooling.",
+  "dependencyLayers": [
+    "system/auth login-log & security-event surfaces",
+    "system/audit operation-log surfaces",
+    "system/config settings tenant-bound groups",
+    "lowcode dynamic-module registry"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "new smoke-core spec tenant-hostile-browser-matrix-phase2.spec.ts (4 scenarios, tenants 101/202)",
+      "tenant-matrix-fixture-setup.mjs: idempotent admin-API re-provisioning of matrix_browser_a/_b dict fixtures",
+      "evidence of environment quiet-state restoration (flag=compat, tenants re-provisioned, cleanup script verified)"
+    ],
+    "out": [
+      "product code, routes, Casbin/policy, menu, i18n changes",
+      "tenantmatrixdb tool changes (down rollback syntax fix)",
+      "performance/load scenarios",
+      "phase 1 spec modifications"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/task.md",
+  "expectedFiles": {
+    "create": [
+      "frontend/tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts",
+      "frontend/scripts/tenant-matrix-fixture-setup.mjs"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts",
+      "backend/cmd/tenantmatrixdb/main.go"
+    ]
+  },
+  "harnessProfile": {
+    "qualityProfile": "auth-security"
+  },
+  "verificationPlan": {
+    "commands": [
+      "phase1+phase2 suite 9/9 against live multi-mode backend (--proxy-target to matrix backend, NO_PROXY for local system proxy)",
+      "tenantmatrixdb status: flag=compat + smoke-tagged-tenants=2 after the run",
+      "cleanup-smoke-fixtures login sanity check post-restore",
+      "check-pr-governance / task-packet-template / frontmatter gates"
+    ],
+    "runtimeEvidence": [
+      ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/commands.json",
+      ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/summary.md"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "commands.json with the full matrix run + quiet-state restore commands",
+    "summary.md with per-surface assertions and environment pitfalls"
+  ],
+  "humanGates": [],
+  "completionChecklist": [
+    "spec exercises real login + real pages + real APIs per tenant",
+    "row-level tenantId pinning asserted per surface",
+    "fixture script idempotent (list-before-create, exactly-1 assertion)",
+    "no product code touched"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/",
+    "reviewFile": ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/review.md",
+    "summaryFile": ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/summary.md",
+    "changeRef": "feat/tenant-hostile-matrix-phase2",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/runtime-gap-ci-feasibility-20260918.md"
+    ]
+  }
+}
