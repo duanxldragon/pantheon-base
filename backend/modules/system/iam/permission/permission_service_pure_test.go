@@ -127,10 +127,10 @@ func TestBoolToCSVValue(t *testing.T) {
 
 func TestJoinWorkbenchPolicyKeys_JoinsMethodAndPathSorted(t *testing.T) {
 	keys := joinWorkbenchPolicyKeys([]PermissionWorkbenchAPIPolicyResp{
-		{Path: "/api/v1/system/user/create", Method: "post"},
+		{Path: "/api/v1/system/user", Method: "post"},
 		{Path: "/api/v1/system/user/list", Method: "GET"},
 	})
-	if keys != "GET /api/v1/system/user/list|POST /api/v1/system/user/create" {
+	if keys != "GET /api/v1/system/user/list|POST /api/v1/system/user" {
 		t.Fatalf("unexpected joined keys: %q", keys)
 	}
 }
@@ -139,9 +139,9 @@ func TestJoinWorkbenchPolicyKeys_SkipsEmptyMethodOrPath(t *testing.T) {
 	keys := joinWorkbenchPolicyKeys([]PermissionWorkbenchAPIPolicyResp{
 		{Path: "/api/v1/system/user/list", Method: ""},
 		{Path: "", Method: "GET"},
-		{Path: "/api/v1/system/user/create", Method: "POST"},
+		{Path: "/api/v1/system/user", Method: "POST"},
 	})
-	if keys != "POST /api/v1/system/user/create" {
+	if keys != "POST /api/v1/system/user" {
 		t.Fatalf("expected only complete policy key, got %q", keys)
 	}
 }
