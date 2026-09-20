@@ -182,6 +182,7 @@ jobs:
           npm run test:docs-frontmatter
           npm run test:foundation-release
           npm run test:release-gate-workflow
+          npm run test:ci-bench-perf-smoke-workflow
 
   # ============================================================
   # Phase 2b: Frontend Unit Tests (Vitest + coverage)
@@ -343,7 +344,12 @@ jobs:
           go test ./modules/system/audit/ -run '^$' -bench 'BenchmarkAuditServiceListOperationLogs' -benchtime 1x | tee bench.txt
 
       - name: Append benchmark results to job summary
+        # The benchmark step writes bench.txt into backend/ (its own
+        # working-directory). Without the same working-directory here the
+        # `cat bench.txt` below failed on every run, which turned the advisory
+        # job red on main while the benchmarks themselves passed.
         if: always()
+        working-directory: backend
         shell: bash
         run: |
           {
