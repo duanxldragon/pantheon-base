@@ -56,3 +56,33 @@ above is unaffected — the imports were never referenced.
   pre-existing tooling behavior on the shared dev DB; not addressed here
   (flag kill-switch semantics unaffected). Tracked as a follow-up note for
   the tenant tooling owner.
+
+## Closeout (post-merge, 2026-09-20)
+
+Recorded after the merge so this evidence reflects the merged facts rather than
+only the branch-time claims.
+
+| Item | Fact |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/329 |
+| Merge commit | `3f35a0666ac0fc2dc67af482f8a309dfcbfd4bc4` |
+| Merged at | 2026-09-20T05:54:31Z |
+| Branch closure | `feat/tenant-hostile-matrix-phase2` deleted from origin |
+| PR signal (required) | 32 success / 2 skipped; the only reds were advisory `Bench Perf Smoke` runs, fixed in #330 |
+| Main-tip signal (`b3350be3`) | required `CI` (incl. Quality Gates / Frontend Contract), `Security Gates`, `Code Quality Gates`, `Lint Workflows` all green |
+| Post-merge fix carried | the two unused type imports removed after the first CI run (see "Post-review fix (CI)") are what turned Frontend Contract green before auto-merge |
+| Ratchet decision | no-repeat-observed for this task; the two signal defects observed around it landed as FR-010 and FR-011 |
+
+### Gap that the merge does not close
+
+The "9/9" figure above is **local live multi-mode evidence**. In CI the only job
+that executes `tests/smoke-core/` (including both tenant matrix specs) is
+advisory `Core Smoke`, which is push-to-`main` only and `continue-on-error: true`;
+it has been red on `main` since at least 2026-09-05. So the tenant specs still
+have no trustworthy CI green signal, and no PR-path gate runs them. Recorded as
+`FR-011` (registry-only) with the disposition left to the maintainer: either give
+that job the multi-mode backend plus fixtures it needs, or move the tenant specs
+out of its scope.
+
+See also the consolidated writeback record in
+`.harness/evidence/2026-09-20-merged-packet-closeout/`.

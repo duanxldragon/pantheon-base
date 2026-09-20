@@ -2,7 +2,7 @@
 task_id: 2026-09-20-ci-bench-perf-smoke
 title: CI benchmark perf smoke — relative regression signal
 created: 2026-09-20
-status: in-progress
+status: completed
 priority: P2
 layer: platform
 risk: high-workflow
@@ -73,3 +73,24 @@ benchmark 传 `*testing.B` 直接 `tb.Fatalf("audit mysql test helper requires *
 - [x] job 失败是否会挡合并？（不会——未进 ci-summary needs）
 - [x] zizmor 门禁是否零新增？（是）
 - [x] OpenTB 是否改变既有测试行为？（否——Open 委托 OpenTB，同一实现）
+
+## Closeout（合入后回写，2026-09-20）
+
+| 最小交付件 | 事实 |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/327 |
+| Merge commit | `0b17c5d9d6e0c9aa0bc84b1fdeba3e570ceef3f6` |
+| Merged at | 2026-09-20T01:37:39Z |
+| 分支收口 | `chore/ci-bench-perf-smoke` 已从 origin 删除 |
+| GitHub signal（PR 侧） | 27 success / 2 skipped / 1 failure——唯一红的是本任务新增的 advisory `Bench Perf Smoke`（汇总步骤 cwd 缺陷） |
+| Review | `review.md`：advisory-only + zizmor 基线对比 |
+| Ratchet | 本任务未落地；由 #330 承接（`FR-010` + 漂移守卫，sensor-added） |
+
+### 合入后事实
+
+- 该 job 自落地起**每次运行都是红的**（main push `0b17c5d9`、`8c8ff37f` 与 #329 的 PR run），
+  直到 #330 修复汇总步骤的 working-directory。测量步骤一直是 success，失败的是汇报。
+- 本任务 review 里写下的 residual risk（「advisory job 可能会静默变红而无人发现」）
+  按预测发生，且因为 job 不进 `ci-summary` needs，PR 侧没有任何门禁拦下它。
+- 回写 closeout 时顺带发现同类第二次实例：advisory `Core Smoke` 自 ≥2026-09-05 持续红
+  而 workflow 级结论为绿（`continue-on-error`）——记为 `FR-011`，属独立 follow-up。

@@ -2,7 +2,7 @@
 task_id: 2026-09-20-bench-perf-smoke-summary-path
 title: Bench perf smoke summary step reads bench.txt from the wrong working directory
 created: 2026-09-20
-status: in-review
+status: completed
 priority: P2
 layer: platform
 risk: high-workflow
@@ -86,3 +86,24 @@ cat: bench.txt: No such file or directory
 
 - 无新增 human gate。workflow 变更仍由 GitHub required checks / Security Gates 把关；
   advisory → blocking 的升级属未来维护者决策。
+
+## Closeout（合入后回写，2026-09-20）
+
+| 最小交付件 | 事实 |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/330 |
+| Merge commit | `b3350be37bd61078530588180331592632f8069a` |
+| Merged at | 2026-09-20T05:56:27Z |
+| 分支收口 | `fix/bench-perf-smoke-summary-path` 已从 origin 删除 |
+| GitHub signal（PR 侧） | 32 success / 6 skipped / 0 failure——含 advisory `Bench Perf Smoke` 转 SUCCESS |
+| GitHub signal（main tip `b3350be3`） | `Bench Perf Smoke (advisory)` = success（run 35492933695 / job 106030897699）；required 全绿 |
+| Review | `review.md`：sensor-added，含祖先缺陷的负向对照 |
+| Ratchet | sensor-added——`tests/scripts/ci-bench-perf-smoke-workflow.test.mjs` + `npm run test:ci-bench-perf-smoke-workflow`，登记 `FR-010` |
+
+### 关闭的 gap 与残留 gap
+
+- **已关闭**：summary.md 里「无本地端到端重放」的 gap 由合入后的 CI run 补上——
+  bench 数字现在真的进入 job summary（这就是本任务的存在理由）。
+- **未关闭（设计使然）**：advisory job 没有门禁看守。本任务只让这一个信号变可信，
+  没有改变它的权重；同类第二次实例（`Core Smoke`，2026-09-20 回写时发现）
+  记为 `FR-011`。

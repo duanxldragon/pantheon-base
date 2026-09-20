@@ -1,0 +1,124 @@
+{
+  "taskId": "2026-09-20-merged-packet-closeout",
+  "title": "Write merged-task facts back into task packets and evidence (closeout pass)",
+  "goal": "Three task packets stayed at in-review/in-progress after their PRs merged (#327, #329, #330), so the packets and their evidence described branch-time intentions rather than merged facts. Write the merge facts back (PR, merge commit, merged-at, branch closure, signal classification on the merge commit) and add a closeout record per task, plus one consolidated record for this pass. Registering the advisory Core Smoke signal discovered while walking main's runs (red since at least 2026-09-05 behind a green workflow conclusion) belongs to the same pass because it is the second instance of the FR-010 class.",
+  "primaryLayer": "platform",
+  "status": "in-review",
+  "statusNote": "2026-09-20: writeback delivered on chore/merged-packet-closeout - the three merged task packets flipped to completed with closeout sections, per-task closeout records appended to their evidence summaries, FR-011 registered for the long-standing red advisory Core Smoke job, and this pass's own packet/evidence added. Status flips to completed once this PR merges.",
+  "priority": "P2",
+  "estimatedComplexity": "light",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "The repo has no automated link between a merge and its task packet, so every packet drifts to in-review until someone writes it back by hand; this pass is manual by construction. The deeper gap it surfaced (advisory Core Smoke red for two weeks with no gate) is recorded as FR-011 but deliberately not fixed here.",
+  "dependencyLayers": [
+    "platform harness governance (task packets, evidence, failure registry)"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/{manifest.json,task.md}: status to completed + closeout facts",
+      ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/{manifest.json,task.md}: status to completed + closeout facts",
+      ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/{manifest.json,task.md}: status to completed + closeout facts",
+      ".harness/evidence/<those three>/summary.md: append a per-task closeout record",
+      "docs/harness/failure-registry.md: FR-011 (advisory Core Smoke red without a gate) with review-date refresh",
+      ".harness/tasks/2026-09-20-merged-packet-closeout/ + matching evidence dir: this pass's own record",
+      "opening the FR-011 diagnosis as its own task packet and evidence dir (.harness/tasks|evidence/2026-09-20-smoke-core-tenant-ci-gap/) so the finding does not die as a registry row"
+    ],
+    "out": [
+      "fixing or re-scoping the advisory Core Smoke job (why the smoke-core tenant specs fail in CI needs its own task)",
+      "any gate policy change (advisory-to-blocking promotion stays a maintainer decision)",
+      "product code, workflows, tests, permissions, i18n, menus",
+      "writing back the packets of merges this workstream did not own (#325, #326, #328)"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-20-merged-packet-closeout/task.md",
+  "contractAnchors": [
+    "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md (section 7 最小交付件)",
+    "docs/harness/FAILURE_RATCHET_POLICY.md",
+    "docs/harness/failure-registry.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-20-merged-packet-closeout/manifest.json",
+      ".harness/tasks/2026-09-20-merged-packet-closeout/task.md",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/commands.json",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/review.md",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/pr-body.md",
+      ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/manifest.json",
+      ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/task.md",
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/commands.json",
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/summary.md"
+    ],
+    "modify": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/manifest.json",
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+      ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/manifest.json",
+      ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/task.md",
+      ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/manifest.json",
+      ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/task.md",
+      ".harness/evidence/2026-09-20-ci-bench-perf-smoke/summary.md",
+      ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/summary.md",
+      ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/summary.md",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      ".github/workflows/**",
+      "backend/**",
+      "frontend/**",
+      "tests/**",
+      "the review.md and commands.json of the three closed-out tasks (historical records stay as written)"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "harness-governance",
+    "qualityProfile": "none",
+    "portableFailureClass": "method-health-gap",
+    "ownerLayer": "platform release governance",
+    "coverageDimensions": [
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "gh pr view {327,329,330} --json state,mergedAt,mergeCommit,statusCheckRollup (merge facts + PR signal classification)",
+      "gh api repos/.../commits/<sha>/check-runs (required vs advisory signal on the merge commits and on main tip)",
+      "gh run list --workflow=smoke-core.yml --branch main + per-run job conclusions (29 red of 32 completed runs)",
+      "node scripts/harness/check-task-packet.mjs / check-evidence.mjs / check-review.mjs / check-failure-registry.mjs --strict",
+      "node scripts/check-duplication.mjs / check-doc-frontmatter / check-encoding / check-structure-contract / check-method-health"
+    ],
+    "runtimeEvidence": [
+      ".harness/evidence/2026-09-20-merged-packet-closeout/commands.json",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "commands.json with the GitHub lookups that establish each merge fact and the gates re-run after the writeback",
+    "summary.md with the consolidated closeout record and the FR-011 finding",
+    "review disposition"
+  ],
+  "humanGates": [],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-20-merged-packet-closeout/",
+    "reviewFile": ".harness/evidence/2026-09-20-merged-packet-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+      ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/task.md",
+      ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/task.md"
+    ]
+  }
+}
