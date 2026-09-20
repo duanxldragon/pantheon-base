@@ -1,0 +1,48 @@
+{
+  "taskId": "2026-09-20-tenant-hostile-matrix-phase2",
+  "repo": "pantheon-base",
+  "commands": [
+    {
+      "command": "PANTHEON_API_BASE_URL=http://127.0.0.1:8081/api/v1 NO_PROXY=127.0.0.1,localhost node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --proxy-target http://127.0.0.1:8081 --config playwright.config.ts -- tests/smoke-core/tenant-hostile-browser-matrix.spec.ts tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "9/9 passed (30.9s) against live multi-mode backend (flag=multi during run): phase1 login picker, wrong-password, dashboard+refresh, upload namespace, dict fixtures; phase2 auth-log, audit surfaces, settings, dynamic-module."
+    },
+    {
+      "command": "PANTHEON_MATRIX_DSN='root:***@tcp(127.0.0.1:3306)/pantheon_base...' go run ./cmd/tenantmatrixdb status",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Pre-run: migration-version 17, flag=multi (switched live for the matrix run). Post-run: flag restored to compat, tenants 101/202 re-provisioned via up, smoke-tagged-tenants: 2."
+    },
+    {
+      "command": "PANTHEON_API_BASE_URL=http://127.0.0.1:8081/api/v1 node scripts/tenant-matrix-fixture-setup.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Re-provisioned matrix_browser_a (t101) and matrix_browser_b (t202) dict types through the admin API after tenantmatrixdb down wiped them; idempotent re-run reports 'already present'."
+    },
+    {
+      "command": "node scripts/cleanup-smoke-fixtures.mjs --scope config",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Post-restore sanity check: cleanup script login works again once flag is back to compat (no-tenant login returns session cookies in compat mode)."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs < evidence/pr-body.md",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "PR body governance check passed (evidence paths point at commands.json / summary.md)."
+    },
+    {
+      "command": "node ./node_modules/eslint/bin/eslint.js tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts && node ./node_modules/eslint/bin/eslint.js . && node ./node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Post-review CI fix: removed two unused type-only imports (APIRequestContext, BrowserLoginResult) that made the Frontend Contract job red on PR #329 (no-unused-vars x2). Re-verified locally after the fix: spec lint clean, full frontend lint clean, tsc -b clean."
+    }
+  ],
+  "environment": {
+    "backend": "pantheon-server (go run build) @127.0.0.1:8081, PANTHEON_NODE_BIN injected, DSN from .env.test",
+    "database": "MySQL @127.0.0.1:3306 pantheon_base (shared local instance, tenant matrix fixtures)",
+    "tenantMode": "multi during the run, restored to compat afterwards",
+    "proxyCaveat": "Local Clash system proxy (127.0.0.1:7897) intercepts playwright APIRequestContext POSTs and strips cookies -> csrf.missing; run with NO_PROXY=127.0.0.1,localhost. CI has no system proxy."
+  }
+}
