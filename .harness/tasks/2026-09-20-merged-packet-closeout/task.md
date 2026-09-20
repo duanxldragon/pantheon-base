@@ -2,7 +2,7 @@
 task_id: 2026-09-20-merged-packet-closeout
 title: Write merged-task facts back into task packets and evidence (closeout pass)
 created: 2026-09-20
-status: in-review
+status: completed
 priority: P2
 layer: platform
 risk: docs-and-evidence-only
@@ -90,4 +90,18 @@ PR 号、merge commit、分支是否删除、required/advisory 信号的实际�
 ## Human gate
 
 - 无新增 human gate。`FR-011` 的处置（给 Core Smoke 接 multi-mode + fixture，或把租户
-  spec 移出该 job 范围）属维护者决策，本任务只登记不处置。
+  spec 移出该 job 范围）属维护者决策，本任务只登记不处置，并把根因诊断另开为
+  `.harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/`。
+
+## Closeout（合入后回写，2026-09-20）
+
+| 最小交付件 | 事实 |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/331 |
+| Merge commit | `ba824608e2ad430c28bec4361b90a3d77aff3eeb` |
+| Merged at | 2026-09-20T07:49:01Z |
+| GitHub signal（PR 侧） | 23 success / 6 skipped / 0 failure（无 required 红项） |
+| 分支收口 | `chore/merged-packet-closeout` 在合入后删除 |
+| 交付内容 | 三个已合入 packet 回写为 `completed` + closeout 章节；三份 evidence 追加 closeout 记录；`docs/harness/failure-registry.md` 新增 FR-011；本次回写自身的 packet + evidence；FR-011 诊断另开为 `2026-09-20-smoke-core-tenant-ci-gap` |
+| Ratchet | registry-only |
+| 未做（显式） | 不修 advisory `Core Smoke`；不改变任何门禁权重；不回写本工作流之外的合入 packet（#325、#326、#328）；未把 #331 的 statusNote 回写与验证合并在同一个 PR 里——本 packet 的状态由紧随其后的一个小提交回写，避免留下它自己要修的漂移 |
