@@ -121,6 +121,14 @@ async function expectPathMissing(target: string) {
 }
 
 test('real module governance flow can generate register and purge a temporary business module', async ({ page }) => {
+  // Budget: the in-test retry block below allows toPass 60s and goto 90s
+  // (stabilization #246/#284), so the config-level 30s test timeout could
+  // never contain this real generate→register→purge cycle on CI runners —
+  // it died at the /system/modules row assertion once Vite's first compile
+  // of the generated module exceeded the remaining budget. Raise the test
+  // budget instead of shaving the retry block (same pattern as
+  // tenant-hostile-browser-matrix.spec.ts).
+  test.setTimeout(120_000);
   const login = await loginByApi(page.request, adminCredentials);
   const operationToken = await getApiOperationToken(page.request, login);
   await cleanupModule(page.request, login, operationToken);

@@ -1,0 +1,42 @@
+{
+  "taskId": "2026-09-20-module-governance-flaky-timeout",
+  "title": "Raise module-governance-real spec budget above its own retry budget",
+  "goal": "Eliminate the timeout-inverted flake where the 30s config-level test timeout cannot contain the spec's internal retry budget (toPass 60s / goto 90s from #246/#284) during the real generate→register→purge cycle on 2-vCPU CI runners.",
+  "primaryLayer": "test-infrastructure",
+  "status": "in-progress",
+  "statusNote": "2026-09-20: fix committed on fix/module-governance-flaky-timeout (3d76b402); local real-flow verification passed (1 passed, 10.9s) against a node-capable local backend. PR creation pending evidence chain completion.",
+  "priority": "P2",
+  "type": "maintenance",
+  "dependencyLayers": [],
+  "scope": {
+    "in": [
+      "frontend/tests/smoke/business/generated/module-governance-real.spec.ts test.setTimeout(120_000)",
+      "Budget comment explaining the timeout inversion"
+    ],
+    "out": [
+      "Shaving or removing the spec's retry block",
+      "Product code changes",
+      "playwright.config.ts global timeout changes"
+    ]
+  },
+  "linkage": {
+    "upstream_tasks": ["maintenance-test-stability-2026-09-02", "2026-07-27-profile-shell-fallback"],
+    "downstream_tasks": [],
+    "related_issues": [],
+    "evidenceDir": ".harness/evidence/2026-09-20-module-governance-flaky-timeout",
+    "reviewFile": ".harness/evidence/2026-09-20-module-governance-flaky-timeout/review.md",
+    "changeRef": "fix/module-governance-flaky-timeout",
+    "planRefs": []
+  },
+  "created_at": "2026-09-20T01:00:00Z",
+  "description": "Fix module-governance-real.spec.ts CI flake caused by inverted timeout budget; pattern follows tenant-hostile-browser-matrix.spec.ts",
+  "acceptance_criteria": [
+    "test budget (120s) exceeds the spec's own retry budget (60s toPass + 90s goto)",
+    "Real-flow smoke passes locally against a live backend",
+    "Full Smoke Suite green on the PR"
+  ],
+  "verification_commands": [
+    "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/business/generated/module-governance-real.spec.ts"
+  ],
+  "runtimeNotes": "Verification surfaced an environment finding: the maintainer-started 8080 backend lacks node in PATH, so /lowcode/generator/preview-files returns 500 module.generate.server_export_failed there (exec.LookPath fails in backend/internal/scaffold/workspace.go). Same exporter + a second backend with PANTHEON_NODE_BIN set both succeed. Not a code defect; maintainer-side restart with node on PATH (or PANTHEON_NODE_BIN) resolves it."
+}
