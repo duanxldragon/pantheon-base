@@ -61,7 +61,10 @@ is local-only.
 Recorded as **FR-011** (runtime-quality / ci-signal-noise / `registry-only` /
 status `open`). The disposition is a maintainer decision and deliberately out of
 scope here: either give the job what the tenant specs need, or move them out of
-its scope. Root-causing the failures needs its own task.
+its scope. Root-causing the failures was opened as a separate follow-up task,
+`.harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/`, which carries the ranked
+hypotheses (environment/precondition mismatch vs. a real isolation regression),
+the static evidence and the verification plan.
 
 ## 4. Verification
 
@@ -78,7 +81,8 @@ dropped the trailing comma, leaving all three manifests unparsable
 
 ## 5. What this pass deliberately did not do
 
-- **Not fixed:** the advisory `Core Smoke` failures (FR-011 stays `open`).
+- **Not fixed:** the advisory `Core Smoke` failures (FR-011 stays `open`);
+  diagnosis handed to `.harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/`.
 - **Not changed:** any gate weight, workflow, test, product code, or the
   historical `review.md` / `commands.json` of the closed-out tasks.
 - **Not written back:** the packets of same-day merges from other workstreams —

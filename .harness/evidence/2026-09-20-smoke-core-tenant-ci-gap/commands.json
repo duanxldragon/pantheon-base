@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-09-20-smoke-core-tenant-ci-gap",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "codebuff"
+  },
+  "commands": [
+    {
+      "command": "gh run list --workflow=smoke-core.yml --branch main --limit 40 --json databaseId,createdAt,headSha + gh api repos/.../actions/runs/<id>/jobs",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Planned: reconfirm the red baseline before and after any change. Already measured once during the 2026-09-20 closeout pass (29 failure / 3 success / 5 cancelled across the last 37 main runs, greens only on 2026-09-10) and recorded in .harness/evidence/2026-09-20-merged-packet-closeout/commands.json; re-run here to prove the state at execution time."
+    },
+    {
+      "command": "gh run view --job <failed Core Smoke job> --log-failed",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Planned: build the per-spec failure inventory and split the tenant cluster (security-event / operation-log 'leaked across tenants', phase1+phase2 matrix, tenant-protected-resources) from the non-tenant cluster (platform-shell-critical sidebar width, system-dept-operations root-department row). Tip-of-main 2026-09-20 data: 28 passed / 8 failed / 3 skipped, job 106030885786."
+    },
+    {
+      "command": "start backend in multi tenant mode (+ tenantmatrixdb up + fixture setup), then run the three tenant specs",
+      "cwd": "frontend",
+      "status": "not-run",
+      "notes": "Planned: expected green - reproduces the local 9/9 evidence already recorded in .harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/. Blocked locally: no MySQL listening on 127.0.0.1:3306 on this machine."
+    },
+    {
+      "command": "run the same three tenant specs against a compat-mode backend",
+      "cwd": "frontend",
+      "status": "not-run",
+      "notes": "Planned: expected to reproduce the CI failure signature ('leaked across tenants'). A match supports H1 (missing preconditions) and rules out H2 (real isolation regression); a mismatch means the CI environment needs its own investigation."
+    },
+    {
+      "command": "rg for skip/precondition guards in tests/smoke-core/tenant-*.spec.ts and for tenant-mode env in .github/workflows/smoke-core.yml",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Planned mechanical confirmation of the static evidence already gathered: the specs carry no skip guard (only a header comment stating the flag must be multi and tenants 101/202 must exist), and smoke-core.yml sets no tenant mode, tenants or matrix fixtures."
+    }
+  ],
+  "knownGaps": [
+    "No diagnostic command has been executed yet - this evidence dir holds the plan of record, not results. Every command above is marked not-run on purpose; promoting them to passed/failed is the next action of this task.",
+    "Local reproduction is blocked by the environment: no MySQL on 127.0.0.1:3306 and local npm/npx intercepted by a WSL shim, so the multi/compat comparison currently needs a CI loop (or a local MySQL) to iterate.",
+    "H1/H2 are unresolved: if the compat-mode run reproduces the CI assertions the tenant failures are an environment/precondition mismatch, but if it does not, a real tenant isolation regression must be treated as P1 rather than as signal noise.",
+    "The non-tenant failures at the same tip (platform-shell-critical, system-dept-operations) are a separate cluster and are not triaged here.",
+    "No file was changed to produce this packet: smoke-core.yml and the tenant specs are untouched until the disposition is decided (maintainer gate)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/",
+    "reviewFile": ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md"
+    ]
+  },
+  "environment": {
+    "localStack": "No MySQL on 127.0.0.1:3306 and local npm/npx intercepted by a WSL shim; the multi-mode reproduction this task needs cannot be run here as-is.",
+    "ci": "Core Smoke Tests: ubuntu-latest, MySQL 8.0 + Redis 7 services, `go run ./cmd/server` (default compat), `npm run test:smoke:core` = playwright over tests/smoke-core/*.spec.ts, continue-on-error: true, push to main/release only."
+  }
+}

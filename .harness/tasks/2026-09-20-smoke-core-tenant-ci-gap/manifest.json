@@ -1,0 +1,110 @@
+{
+  "taskId": "2026-09-20-smoke-core-tenant-ci-gap",
+  "title": "Diagnose why tests/smoke-core tenant specs fail in the advisory Core Smoke job",
+  "goal": "Explain and dispose of the failures the 2026-09-20 merged-packet closeout surfaced: the advisory, push-only Core Smoke job has been red on 29 of the last 32 completed main runs since at least 2026-09-05, hidden by continue-on-error, and at the 2026-09-20 tip its failure list includes the tests/smoke-core tenant specs. Establish whether those specs fail because the job never provides their preconditions (multi tenant mode plus tenants 101/202 plus matrix fixtures) or because of a real tenant isolation regression, then decide the disposition.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "statusNote": "2026-09-20: opened as the FR-011 follow-up from the merged-packet closeout pass. No diagnostic work started yet - this packet records the observed evidence, the ranked hypotheses and the verification plan. Blocked on a runnable local multi-mode stack (this machine has no MySQL on 3306) or on CI-loop iteration.",
+  "priority": "P2",
+  "estimatedComplexity": "moderate",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "The tenant specs were placed in tests/smoke-core/, whose glob is executed only by the push-to-main advisory job that provisions no tenant mode and no fixtures; the suite README still lists 8 files and does not mention them. The signal has therefore been red and unrunnable-in-practice since the specs landed, and no PR-path gate covers them.",
+  "dependencyLayers": [
+    ".github/workflows/smoke-core.yml (advisory, push-only, continue-on-error)",
+    "frontend/tests/smoke-core/** (tenant specs + run-smoke-suite launcher)",
+    "tenant tooling (tenantmatrixdb flag + matrix fixtures)",
+    "docs/harness/failure-registry.md (FR-011)"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "local multi-mode stack (MySQL on 3306) or CI-loop iteration for reproduction"
+    ],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "reproduce the tenant-spec failure mode locally against a compat-mode backend and compare it with the CI log assertions",
+      "confirm whether the specs carry any precondition skip guard, and what the job actually provides (flag, tenants, fixtures)",
+      "triage the two non-tenant failures at the same tip (platform-shell-critical sidebar width assertion, system-dept-operations root-department row) and separate them from the tenant cluster",
+      "record the disposition decision and, once decided, the follow-up implementation task"
+    ],
+    "out": [
+      "changing smoke-core.yml or the specs before the disposition is decided (maintainer gate)",
+      "promoting Core Smoke to a blocking gate",
+      "product/tenant-isolation code changes unless the diagnosis proves a real leak",
+      "the bench-perf-smoke signal (FR-010, closed by #330)"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/task.md",
+  "contractAnchors": [
+    ".github/workflows/smoke-core.yml",
+    "frontend/tests/smoke-core/README.md",
+    "docs/harness/failure-registry.md",
+    ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/commands.json",
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/summary.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      ".github/workflows/smoke-core.yml",
+      "frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts",
+      "frontend/tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts",
+      "frontend/tests/smoke-core/tenant-protected-resources.spec.ts",
+      "docs/harness/failure-registry.md (FR-011 stays open until the disposition is decided)"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "ci-workflow",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "ci-signal-noise",
+    "ownerLayer": "platform release governance",
+    "coverageDimensions": [
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "gh run list --workflow=smoke-core.yml --branch main --limit 40 + per-run job conclusions (red baseline reconfirmation before/after any change)",
+      "gh run view --job <failed core smoke job> --log-failed (per-spec failure inventory at the tip)",
+      "locally: start backend in multi mode and run the two tenant matrix specs + tenant-protected-resources (expect green - reproduces the local evidence in 2026-09-20-tenant-hostile-matrix-phase2)",
+      "locally: run the same specs against a compat-mode backend (expect the CI failure mode: 'leaked across tenants' assertions)",
+      "rg for skip/precondition guards in tests/smoke-core tenant specs and for tenant mode env in .github/workflows/smoke-core.yml"
+    ],
+    "runtimeEvidence": [
+      "matched failure signatures between the local compat-mode run and the CI job log, or a demonstrated tenant isolation regression",
+      "per-spec triage of the two non-tenant failures, with run-id references"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    "commands.json with the log reads and the local reproduction runs (commands stay not-run until the diagnosis executes)",
+    "summary.md stating the confirmed root cause, the disposition options and their trade-offs",
+    "review disposition before any workflow or spec change"
+  ],
+  "humanGates": [
+    "disposition of the tenant specs in the Core Smoke job: provision multi-mode flag + tenants + fixtures inside the job, mark the specs so the job skips them, or move them to a suite that provisions (maintainer decision)"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/",
+    "reviewFile": ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/review.md",
+    "summaryFile": ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md"
+    ]
+  }
+}

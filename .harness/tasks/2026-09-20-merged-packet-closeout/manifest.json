@@ -23,7 +23,8 @@
       ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/{manifest.json,task.md}: status to completed + closeout facts",
       ".harness/evidence/<those three>/summary.md: append a per-task closeout record",
       "docs/harness/failure-registry.md: FR-011 (advisory Core Smoke red without a gate) with review-date refresh",
-      ".harness/tasks/2026-09-20-merged-packet-closeout/ + matching evidence dir: this pass's own record"
+      ".harness/tasks/2026-09-20-merged-packet-closeout/ + matching evidence dir: this pass's own record",
+      "opening the FR-011 diagnosis as its own task packet and evidence dir (.harness/tasks|evidence/2026-09-20-smoke-core-tenant-ci-gap/) so the finding does not die as a registry row"
     ],
     "out": [
       "fixing or re-scoping the advisory Core Smoke job (why the smoke-core tenant specs fail in CI needs its own task)",
@@ -45,7 +46,11 @@
       ".harness/evidence/2026-09-20-merged-packet-closeout/commands.json",
       ".harness/evidence/2026-09-20-merged-packet-closeout/summary.md",
       ".harness/evidence/2026-09-20-merged-packet-closeout/review.md",
-      ".harness/evidence/2026-09-20-merged-packet-closeout/pr-body.md"
+      ".harness/evidence/2026-09-20-merged-packet-closeout/pr-body.md",
+      ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/manifest.json",
+      ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/task.md",
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/commands.json",
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/summary.md"
     ],
     "modify": [
       ".harness/tasks/2026-09-20-ci-bench-perf-smoke/manifest.json",

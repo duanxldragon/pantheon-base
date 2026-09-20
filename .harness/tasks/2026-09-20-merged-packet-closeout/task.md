@@ -38,6 +38,9 @@ PR 号、merge commit、分支是否删除、required/advisory 信号的实际�
   `Core Smoke` 自 ≥2026-09-05 起持续红，而 workflow 级结论因 `continue-on-error`
   仍为绿；这是 `FR-010` 同类的第二个实例。
 - 本次回写自身的 task packet + evidence（含合并后的事实清单）。
+- 把 FR-011 从「一条 registry 记录」推进成**有 owner 的任务**：开
+  `.harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/`（+ 对应 evidence，诊断命令以
+  `not-run` 记录），带上已确认的静态机制、排序后的假设与处置选项。
 
 ### Out
 
@@ -58,7 +61,12 @@ PR 号、merge commit、分支是否删除、required/advisory 信号的实际�
   closeout，另加一份 consolidated 记录说明本次回写本身。
 - **为什么 FR-011 只登记不修**：它与 `FR-010` 同类但根因不同（不是 cwd，而是
   「advisory job 长期红 + 无门禁」）。诊断租户 spec 在 CI 里的失败原因会显著扩大本
-  任务范围，按最小复杂度阶梯先留 registry 记录 + 显式 out of scope。
+  任务范围，按最小复杂度阶梯先留 registry 记录 + 显式 out of scope，并把处置
+  （给 job 接前置条件 / 加 skip 守卫 / 移出 core 范围）明确为维护者 gate。
+- **为什么同时开一个 follow-up task packet**：只留 registry 行的话，FR-011 会停在
+  「已登记」而没有人拥有它；follow-up packet 记录已确认的静态机制（job 不提供
+  multi 模式与租户，spec 无 skip 守卫，README 与通配范围脱节）与排序假设，
+  让下一位执行者不需要重走一遍定位过程。
 
 ## 验证集合（已执行）
 

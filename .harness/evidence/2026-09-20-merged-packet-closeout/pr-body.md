@@ -1,7 +1,7 @@
 ## 变更摘要
 
 - 改动层级：platform（harness 治理 / task packet 与 evidence 回写）
-- 改动模块：`.harness/tasks/2026-09-20-{ci-bench-perf-smoke,tenant-hostile-matrix-phase2,bench-perf-smoke-summary-path}/`（status 回写 + closeout 章节）、对应三个 `.harness/evidence/*/summary.md`（追加 closeout 记录）、`docs/harness/failure-registry.md`（新增 FR-011）、本次回写自身的 packet + evidence（`.harness/tasks|evidence/2026-09-20-merged-packet-closeout/`）
+- 改动模块：`.harness/tasks/2026-09-20-{ci-bench-perf-smoke,tenant-hostile-matrix-phase2,bench-perf-smoke-summary-path}/`（status 回写 + closeout 章节）、对应三个 `.harness/evidence/*/summary.md`（追加 closeout 记录）、`docs/harness/failure-registry.md`（新增 FR-011）、本次回写自身的 packet + evidence（`.harness/tasks|evidence/2026-09-20-merged-packet-closeout/`）、以及 FR-011 的 follow-up packet（`.harness/tasks|evidence/2026-09-20-smoke-core-tenant-ci-gap/`，诊断命令以 `not-run` 记录）
 - 目标问题：当天合入的三个 PR（#327 / #329 / #330）对应的 task packet 仍停在合入前状态（`in-progress` / `in-review`），packet 与 evidence 描述的是分支期意图——PR 号、merge commit、分支是否删除、required/advisory 信号的实际结论、哪些 gap 被合入关闭，全部没有落进仓库；`PANTHEON_BASE_DELIVERY_WORKFLOW.md` 第 7 节「最小交付件」明确要求这些字段，缺项就不能称为完整闭环
 - 预期影响：三个 packet 的 `status` 变为 `completed`，`statusNote` 与 `task.md` 的 closeout 表带上可核对的合入事实（PR / merge commit / merged-at / 分支删除 / 信号分类）；三份 evidence 各补一节合入后记录，明确「合入关闭了什么、还开着什么」。**纯文档与证据回写**：无 workflow、无产品代码、无测试改动，未改变任何门禁权重。过程中发现的新问题（advisory `Core Smoke` 长期红且被 `continue-on-error` 掩盖）只登记为 FR-011，不在本 PR 处置
 
@@ -56,7 +56,7 @@
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用：创建 PR 后按仓库策略请求
 - [x] 已启用或确认将启用 squash auto-merge
 
-补充说明：main tip `b3350be3` 上 required 信号（CI 含 Quality Gates / Frontend Contract、Security Gates、Code Quality Gates、Lint Workflows）全绿，advisory `Bench Perf Smoke` 已转 success；advisory `Core Smoke` 仍红，且**先于本次合入存在**（近 37 次 main run 中 29 红，唯一三个绿 run 都在 2026-09-10，最早的红 run 在 2026-09-05）。该 job 是 push-only + `continue-on-error: true`，workflow 级结论始终为绿，PR 路径永远不会跑到它，因此 `.harness/evidence/.../tenant-hostile-matrix-phase2` 里的 9/9 依旧是本地证据。已登记为 FR-011（registry-only，open），处置（给该 job 配 multi-mode + fixture，或把 smoke-core 租户 spec 移出范围）属维护者决策，本 PR 不做。
+补充说明：main tip `b3350be3` 上 required 信号（CI 含 Quality Gates / Frontend Contract、Security Gates、Code Quality Gates、Lint Workflows）全绿，advisory `Bench Perf Smoke` 已转 success；advisory `Core Smoke` 仍红，且**先于本次合入存在**（近 37 次 main run 中 29 红，唯一三个绿 run 都在 2026-09-10，最早的红 run 在 2026-09-05）。该 job 是 push-only + `continue-on-error: true`，workflow 级结论始终为绿，PR 路径永远不会跑到它，因此 `.harness/evidence/.../tenant-hostile-matrix-phase2` 里的 9/9 依旧是本地证据。已登记为 FR-011（registry-only，open），**处置**（给该 job 配 multi-mode + fixture，或把 smoke-core 租户 spec 移出范围）属维护者决策，本 PR 不做；**根因诊断**已另开任务 `.harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/`，其中记录了已确认的静态机制（job 不提供租户模式/租户/fixtures，spec 无 skip 守卫，`tests/smoke-core/README.md` 的 8 文件清单与 `*.spec.ts` 通配已脱节）与排序假设（环境前置缺失 vs. 真实隔离回归）。
 
 ## 审核留痕
 
@@ -66,7 +66,7 @@
 - Auto-merge：enabled
 - Duplication Gate 结果：PASS（`node scripts/check-duplication.mjs`，仅剩既有的 smoke-core / smoke-full workflow 重复对）
 - 是否高风险改动：no（无 `.github/workflows/*`、无 schema/权限/认证/审计/删除动作）
-- Residual risk / follow-up：① advisory `Core Smoke` 长期红（FR-011，open，未修）；② 「合入 → 回写 packet」仍无机械联系，本次为手工回写（升级 sensor 需要更明确的信号来源，已写明理由）；③ 同一工作流之外的合入 packet 未回写（#325、#326、#328，其中 #328 仍显示 in-progress），已在 evidence 中显式列出；④ `check-review --strict` 未接线到 CI，部分历史 evidence 缺 Machine Readable 块（观察到但未改）
+- Residual risk / follow-up：① advisory `Core Smoke` 长期红（FR-011，open，未修；根因诊断另开 `.harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/`，含假设与验证方案）；② 「合入 → 回写 packet」仍无机械联系，本次为手工回写（升级 sensor 需要更明确的信号来源，已写明理由）；③ 同一工作流之外的合入 packet 未回写（#325、#326、#328，其中 #328 仍显示 in-progress），已在 evidence 中显式列出；④ `check-review --strict` 未接线到 CI，部分历史 evidence 缺 Machine Readable 块（观察到但未改）
 
 ## 检查清单
 
