@@ -14,11 +14,7 @@ import (
 func setupAuditTestDBForName(tb testing.TB, _ string) *gorm.DB {
 	tb.Helper()
 
-	t, ok := tb.(*testing.T)
-	if !ok {
-		tb.Fatalf("audit mysql test helper requires *testing.T")
-	}
-	db := testmysql.Open(t)
+	db := testmysql.OpenTB(tb)
 	sessionDB := db.Session(&gorm.Session{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})

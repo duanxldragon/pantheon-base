@@ -293,6 +293,68 @@ jobs:
           exit 0
 
   # ============================================================
+  # Phase 2c: Benchmark Perf Smoke (relative regression signal)
+  # ============================================================
+  # Finding #4 follow-up (runtime-gap-ci-feasibility-20260918): GitHub runners
+  # are not production-representative, so these numbers are NOT capacity
+  # baselines. -benchtime 1x keeps the job cheap; it proves the DB-backed
+  # benchmarks stay runnable and samples ns/op for trend watching over time.
+  # Advisory: report-only, does not gate the CI summary.
+  bench-perf-smoke:
+    name: Bench Perf Smoke (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: pw-${{ github.run_id }}-${{ github.run_attempt }}
+          MYSQL_DATABASE: pantheon_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      PANTHEON_TEST_DSN: root:pw-${{ github.run_id }}-${{ github.run_attempt }}@tcp(127.0.0.1:3306)/pantheon_test?charset=utf8mb4&parseTime=true&loc=Local
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          # No build cache: advisory one-iteration bench job; avoids adding a
+          # cache-poisoning surface (zizmor) for a job with no artifact output.
+          cache: false
+
+      - name: Run DB-backed benchmarks (single iteration)
+        working-directory: backend
+        run: |
+          go test ./modules/system/audit/ -run '^$' -bench 'BenchmarkAuditServiceListOperationLogs' -benchtime 1x | tee bench.txt
+
+      - name: Append benchmark results to job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Benchmark Perf Smoke (advisory, not a capacity baseline)"
+            echo ''
+            echo '```'
+            cat bench.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ============================================================
   # Phase 3b: Boundary Gate (business/* 边界静态门禁)
   # ============================================================
   boundary-gate:

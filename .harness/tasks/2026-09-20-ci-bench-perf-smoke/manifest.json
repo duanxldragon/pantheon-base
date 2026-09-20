@@ -1,0 +1,106 @@
+{
+  "taskId": "2026-09-20-ci-bench-perf-smoke",
+  "title": "CI benchmark perf smoke — relative regression signal",
+  "goal": "Wire the existing audit list benchmarks into CI as an advisory relative-regression signal (finding #4 follow-up), after fixing that they could never run at all (*testing.T assertion broke testing.B).",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "statusNote": "2026-09-20: code delivered on chore/ci-bench-perf-smoke; local verification green (benchmarks run, no-DSN skip path clean, zizmor at baseline 13). PR creation pending.",
+  "priority": "P2",
+  "estimatedComplexity": "moderate",
+  "technicalDebtFlag": "no",
+  "dependencyLayers": [
+    "platform observability",
+    "test infrastructure"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "backend/pkg/testmysql OpenTB(testing.TB)",
+      "audit test helper *testing.T assertion relaxation",
+      "ci.yml bench-perf-smoke advisory job (MySQL service, -benchtime 1x, summary-only)"
+    ],
+    "out": [
+      "production capacity baselines (staging-only per finding #4 disposition)",
+      "promoting the job to blocking (future ratchet decision, maintainer gate)",
+      "new benchmarks for other domains",
+      "alert-rule definitions"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+  "contractAnchors": [
+    ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/runtime-gap-ci-feasibility-20260918.md",
+    ".github/workflows/ci.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-20-ci-bench-perf-smoke/commands.json",
+      ".harness/evidence/2026-09-20-ci-bench-perf-smoke/summary.md",
+      ".harness/evidence/2026-09-20-ci-bench-perf-smoke/review.md",
+      ".harness/evidence/2026-09-20-ci-bench-perf-smoke/pr-body.md"
+    ],
+    "modify": [
+      ".github/workflows/ci.yml",
+      "backend/pkg/testmysql/mysql.go",
+      "backend/modules/system/audit/audit_export_test.go"
+    ],
+    "doNotTouch": [
+      "quality.yml / security.yml",
+      "audit production code",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "ci-workflow",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "nonrepresentative-benchmark-misuse",
+    "ownerLayer": "platform release governance",
+    "coverageDimensions": [
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "PANTHEON_TEST_DSN=... go test ./modules/system/audit/ -run '^$' -bench 'BenchmarkAuditServiceListOperationLogs' -benchtime 2x",
+      "env -u PANTHEON_TEST_DSN -u PANTHEON_DSN go test ./modules/system/audit/ -run '^$' -bench ... -benchtime 1x (skip path)",
+      "go test ./pkg/testmysql/ ./modules/system/audit/",
+      "go vet + gofmt on touched packages",
+      "zizmor 1.25.2 JSON baseline diff (stash before/after)",
+      "yaml.safe_load on ci.yml"
+    ],
+    "runtimeEvidence": [
+      "three benchmarks execute against a real MySQL with ns/op samples",
+      "zizmor finding profile unchanged at baseline 13"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "benchmark execution proof",
+    "zizmor baseline comparison",
+    "review disposition"
+  ],
+  "humanGates": [
+    "advisory-to-blocking promotion (future, maintainer decision)"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-20-ci-bench-perf-smoke/",
+    "reviewFile": ".harness/evidence/2026-09-20-ci-bench-perf-smoke/review.md",
+    "summaryFile": ".harness/evidence/2026-09-20-ci-bench-perf-smoke/summary.md",
+    "changeRef": "chore/ci-bench-perf-smoke",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md"
+    ]
+  }
+}
