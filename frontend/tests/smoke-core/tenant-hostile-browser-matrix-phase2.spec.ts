@@ -1,10 +1,9 @@
-import { expect, test, type APIRequestContext, type Browser } from '@playwright/test';
+import { expect, test, type Browser } from '@playwright/test';
 import {
   apiBaseUrl,
   apiRequestHeaders,
   installClientSession,
   loginByApi,
-  type BrowserLoginResult,
 } from '../smoke/helpers/auth';
 
 // Hostile two-tenant browser matrix — phase 2 (tenant-verification-and-gray,

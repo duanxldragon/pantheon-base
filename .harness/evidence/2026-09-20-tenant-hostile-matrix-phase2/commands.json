@@ -31,6 +31,12 @@
       "cwd": ".",
       "status": "passed",
       "notes": "PR body governance check passed (evidence paths point at commands.json / summary.md)."
+    },
+    {
+      "command": "node ./node_modules/eslint/bin/eslint.js tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts && node ./node_modules/eslint/bin/eslint.js . && node ./node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Post-review CI fix: removed two unused type-only imports (APIRequestContext, BrowserLoginResult) that made the Frontend Contract job red on PR #329 (no-unused-vars x2). Re-verified locally after the fix: spec lint clean, full frontend lint clean, tsc -b clean."
     }
   ],
   "environment": {

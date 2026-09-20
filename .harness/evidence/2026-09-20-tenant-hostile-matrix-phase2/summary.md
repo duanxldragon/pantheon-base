@@ -42,6 +42,14 @@ hand-provisioned only; wiped by `tenantmatrixdb down` with no way to restore).
    flag reset does take effect first, so recovery is `up` (idempotent) +
    `tenant-matrix-fixture-setup.mjs`.
 
+## Post-review fix (CI)
+
+First CI run on PR #329 made `Frontend Contract` red: the new spec carried two
+unused type-only imports (`APIRequestContext`, `BrowserLoginResult`), which the
+`eslint .` step flagged as `@typescript-eslint/no-unused-vars`. Removed both and
+re-verified locally (spec lint, full frontend lint, `tsc -b`); the smoke run
+above is unaffected — the imports were never referenced.
+
 ## Gaps
 
 - The rollback failure inside `down` (v16 `PREPARE` syntax on MySQL 8) is
