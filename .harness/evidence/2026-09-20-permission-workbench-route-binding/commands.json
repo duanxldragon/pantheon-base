@@ -1,0 +1,47 @@
+{
+  "taskId": "2026-09-20-permission-workbench-route-binding",
+  "repo": "pantheon-base",
+  "commands": [
+    {
+      "command": "route-table audit: cross-check requiredAPIRoutesByPermission entries against live registrations (system_modules.go initIAMModules user group, auth/module.go security-event group, dynamicmodule/module.go, generator/module.go)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: verify each binding against the real route registration Expected: all 12 entries match live routes; observed 1 stale entry — 'system:user:create' bound to 'POST /api/v1/system/user/create' while the live registration is systemProtected.POST(\"/user\") = 'POST /api/v1/system/user' (11/12 match)"
+    },
+    {
+      "command": "go vet ./modules/system/iam/permission/ && go test ./modules/system/iam/permission/ -run 'TestRequiredAPIRoute|TestJoinWorkbenchPolicyKeys' -count=1",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: drift guard + pure tests after the fix Expected: pass; observed ok 0.038s"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN='root:***@tcp(127.0.0.1:3306)/pantheon_perm?...' go test ./modules/system/iam/permission/ -count=1",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: full permission package regression with fixtures aligned to the corrected route Expected: ok; observed ok 7.916s"
+    },
+    {
+      "command": "env -u PANTHEON_TEST_DSN -u PANTHEON_DSN go test ./modules/system/iam/permission/ -count=1",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: no-DSN skip path stays clean Expected: ok; observed ok 0.034s"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN='...' go test -short -count=1 ./modules/system/iam/... ./modules/system/audit/... ./pkg/contracts/... ./internal/middleware/...",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: adjacent-domain regression (iam menu/role/user, audit, contracts, middleware) Expected: all ok; observed menu 4.2s / permission 10.7s / role 13.8s / user 18.2s / audit 7.5s / contracts 0.04s / middleware 2.1s all ok"
+    },
+    {
+      "command": "gofmt -l modules/system/iam/permission/",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: formatting Expected: empty; observed empty"
+    }
+  ],
+  "knownGaps": [
+    "Full route-table derivation (engine->service export) remains future work; the drift guard is the interim enforcement.",
+    "Any already-issued dead policies (V1 pointing at removed routes) are not cleaned by path existence; Bootstrap cleans orphans by role existence only — path-existence cleanup is a ratchet candidate.",
+    "The probe engine mirrors the live registration shape but is still a copy; complete drift-proofing needs runtime derivation (recorded in task.md)."
+  ]
+}

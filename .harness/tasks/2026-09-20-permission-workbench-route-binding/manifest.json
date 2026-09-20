@@ -1,0 +1,111 @@
+{
+  "taskId": "2026-09-20-permission-workbench-route-binding",
+  "title": "权限工作台 API 权限映射收口（审计项 D）",
+  "goal": "Fix the stale user:create route binding in the workbench remediation table and put the permission-to-route binding table under a mechanical drift guard, per audit finding D (1.0-freeze blocking).",
+  "primaryLayer": "system/iam",
+  "status": "in-progress",
+  "statusNote": "2026-09-20: fix + drift guard delivered on feat/permission-workbench-route-binding; local verification green (with/without DSN, adjacent suites). PR creation pending.",
+  "priority": "P1",
+  "estimatedComplexity": "moderate",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Full route-table derivation (engine->service export) remains future work; the drift guard is the interim enforcement and the future acceptance check.",
+  "dependencyLayers": [
+    "system/iam permission workbench governance",
+    "route registration modules"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "stale system:user:create binding fix (POST /api/v1/system/user/create -> POST /api/v1/system/user)",
+      "RequiredAPIRoutesByPermission read-only accessor + governance contract comment",
+      "TestRequiredAPIRoutesExistOnEngine drift guard + probe sentinel test",
+      "test fixture alignment for the corrected route path"
+    ],
+    "out": [
+      "runtime route-table derivation across all module registrations",
+      "casbin middleware or policy CRUD behavior changes",
+      "cleanup of already-issued dead policies by path existence (ratchet candidate)",
+      "frontend changes"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-20-permission-workbench-route-binding/task.md",
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_DESIGN_SUPPLEMENT_AUDIT_20260910.md",
+    "docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "backend/modules/system/iam/permission/permission_workbench.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/modules/system/iam/permission/permission_workbench_routes_test.go",
+      ".harness/evidence/2026-09-20-permission-workbench-route-binding/commands.json",
+      ".harness/evidence/2026-09-20-permission-workbench-route-binding/summary.md",
+      ".harness/evidence/2026-09-20-permission-workbench-route-binding/review.md",
+      ".harness/evidence/2026-09-20-permission-workbench-route-binding/pr-body.md"
+    ],
+    "modify": [
+      "backend/modules/system/iam/permission/permission_workbench.go",
+      "backend/modules/system/iam/permission/permission_service_test.go",
+      "backend/modules/system/iam/permission/permission_service_pure_test.go"
+    ],
+    "doNotTouch": [
+      "internal/middleware/casbin_middleware.go",
+      "policy CRUD / remediate action",
+      "frontend",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "permission-policy",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "remediation-creates-dead-policy",
+    "ownerLayer": "system/iam",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go vet ./modules/system/iam/permission/",
+      "go test ./modules/system/iam/permission/ -run 'TestRequiredAPIRoute|TestJoinWorkbenchPolicyKeys'",
+      "PANTHEON_TEST_DSN=... go test ./modules/system/iam/permission/",
+      "env -u PANTHEON_TEST_DSN -u PANTHEON_DSN go test ./modules/system/iam/permission/",
+      "PANTHEON_TEST_DSN=... go test -short ./modules/system/iam/... ./modules/system/audit/... ./pkg/contracts/... ./internal/middleware/..."
+    ],
+    "runtimeEvidence": [
+      "drift guard green against the corrected table; adjacent iam/audit suites green DB-backed"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    "drift guard execution",
+    "DB-backed regression",
+    "review disposition"
+  ],
+  "humanGates": [
+    "none required (no new permission surface; remediation semantics unchanged) — PR gates + non-author review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-20-permission-workbench-route-binding/",
+    "reviewFile": ".harness/evidence/2026-09-20-permission-workbench-route-binding/review.md",
+    "summaryFile": ".harness/evidence/2026-09-20-permission-workbench-route-binding/summary.md",
+    "changeRef": "feat/permission-workbench-route-binding",
+    "planRefs": [
+      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md"
+    ]
+  }
+}
