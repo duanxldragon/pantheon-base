@@ -1,0 +1,46 @@
+{
+  "taskId": "2026-09-20-ci-bench-perf-smoke",
+  "repo": "pantheon-base",
+  "commands": [
+    {
+      "command": "PANTHEON_TEST_DSN='root:***@tcp(127.0.0.1:3306)/pantheon_bench?...' go test ./modules/system/audit/ -run '^$' -bench 'BenchmarkAuditServiceListOperationLogs' -benchtime 2x",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: prove the three benchmarks actually run after the helper fix Expected: benchmark output lines; observed 3 benchmarks ~23.8-26.3ms/op @ 20k rows, 56-59KB/op, ~1.2k allocs/op (before the fix: 'audit mysql test helper requires *testing.T' fatal)"
+    },
+    {
+      "command": "go vet ./pkg/testmysql/ ./modules/system/audit/ && gofmt -l pkg/testmysql/ modules/system/audit/",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: static checks on touched packages Expected: clean; observed clean"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=... go test ./pkg/testmysql/ ./modules/system/audit/",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: regression check with DSN present Expected: ok both packages; observed ok (audit 6.7s incl. query-plan test)"
+    },
+    {
+      "command": "env -u PANTHEON_TEST_DSN -u PANTHEON_DSN go test ./modules/system/audit/ -run '^$' -bench 'BenchmarkAuditServiceListOperationLogs' -benchtime 1x",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: verify the no-DSN skip path stays clean (CI DSN-less safety, local dev without MySQL) Expected: PASS with skip; observed PASS"
+    },
+    {
+      "command": "zizmor 1.25.2 --format json .github/workflows/ci.yml — baseline (stash) vs changed",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: workflow posture gate must gain zero findings Expected: same count and profile; observed baseline 13 = changed 13 after switching the new job's setup-go to cache:false (cache:true had produced 14: +1 cache-poisoning Low/High); profile unchanged: 9 cache-poisoning Low/High, 2 template-injection Low/Info, 2 unpinned-uses High/High"
+    },
+    {
+      "command": "python -c \"yaml.safe_load(open('.github/workflows/ci.yml'))\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: YAML syntax check Expected: OK; observed OK"
+    }
+  ],
+  "knownGaps": [
+    "Runner benchmark numbers are NOT production-representative (2-4 vCPU shared); the production-like baseline remains staging-only per the 2026-09-18 feasibility disposition.",
+    "The job is advisory (not in ci-summary needs); CI-level green confirmation arrives with the PR run."
+  ]
+}
