@@ -41,6 +41,7 @@
     "test:quality-workflow": "node --test tests/scripts/quality-workflow.test.mjs",
     "test:ui-quality-gate": "node --test tests/scripts/check-ui-quality-gate.test.mjs",
     "test:release-gate-workflow": "node --test tests/scripts/release-gate-workflow.test.mjs",
+    "test:ci-bench-perf-smoke-workflow": "node --test tests/scripts/ci-bench-perf-smoke-workflow.test.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

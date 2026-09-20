@@ -1,0 +1,60 @@
+{
+  "taskId": "2026-09-20-bench-perf-smoke-summary-path",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "codebuff"
+  },
+  "commands": [
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/jobs/106017144064 --jq '.steps[] | \"\\(.number) \\(.name) | \\(.conclusion)\"'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Root cause captured from PR #329's run: step 5 'Run DB-backed benchmarks (single iteration)' = success, step 6 'Append benchmark results to job summary' = failure (cat: bench.txt: No such file or directory). Same shape on both main runs after #327 (0b17c5d9, 8c8ff37f), where every other CI job was green."
+    },
+    {
+      "command": "python -c \"yaml.safe_load(open('.github/workflows/ci.yml',encoding='utf-8'))\" && <print job/step working-directory>",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "After the fix the bench-perf-smoke steps report working-directory ['-','-','backend','backend'] (benchmark writer and summary reporter agree), the job list is unchanged, and the unit-tests npm list ends with 'npm run test:ci-bench-perf-smoke-workflow'."
+    },
+    {
+      "command": "node --test tests/scripts/ci-bench-perf-smoke-workflow.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "2/2 pass with the fix: artifact steps agree on working-directory, and the job stays advisory (label, -benchtime 1x, not listed in ci-summary)."
+    },
+    {
+      "command": "node --test tests/scripts/ci-bench-perf-smoke-workflow.test.mjs  # negative control: summary-step working-directory removed",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Negative control: with the summary step's working-directory deleted the guard fails as designed (AssertionError: every step touching bench.txt must pin working-directory; got [\"backend\",\"\"]), proving it would have caught the original defect. Workflow restored afterwards."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "docs/harness/failure-registry.md PASS (1 file, 0 errors, 0 warnings) after adding FR-010 and refreshing the review date."
+    }
+  ],
+  "knownGaps": [
+    "No local end-to-end replay of the benchmark -> bench.txt -> $GITHUB_STEP_SUMMARY chain: local npm is intercepted by a WSL shim and no MySQL listens on 127.0.0.1:3306. The authoritative run is this PR's Bench Perf Smoke (advisory) job.",
+    "The underlying visibility gap is not closed: by design no gate watches a report-only job, so a future silent red is still only caught by a human reading main's run list (recorded as FR-010).",
+    "Promoting bench-perf-smoke to a blocking gate remains a maintainer decision and is explicitly out of scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/",
+    "reviewFile": ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/runtime-gap-ci-feasibility-20260918.md"
+    ]
+  },
+  "environment": {
+    "shellCaveat": "Local npm/npx are intercepted by a WSL shim (`wsl: ... execvpe(/bin/bash) failed: No such file or directory`), so npm scripts could not be executed locally; the identical command was run directly via `node --test <file>`. CI (ubuntu-latest) uses the normal npm path.",
+    "database": "No MySQL listening on 127.0.0.1:3306 locally, so the real benchmark -> bench.txt -> $GITHUB_STEP_SUMMARY chain was not replayed locally; its end-to-end evidence comes from the PR run of Bench Perf Smoke (advisory).",
+    "workflowRunner": "GitHub-hosted ubuntu-24.04, MySQL 8.0 service container"
+  }
+}

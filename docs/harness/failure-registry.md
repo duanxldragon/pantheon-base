@@ -7,7 +7,7 @@ This registry turns repeated agent or process failures into concrete harness cha
 - Repository: `pantheon-base`
 - Owner: repository maintainer
 - Review cadence: weekly during quality remediation, then after each release or repeated agent failure
-- Last reviewed: 2026-06-17
+- Last reviewed: 2026-09-20
 
 ## Registry
 
@@ -22,10 +22,11 @@ This registry turns repeated agent or process failures into concrete harness cha
 | `FR-007` | maintainability | static-sensor-gap | consumer-repository | 1 | `.harness/cache` was tracked with thousands of cache files. | Generated or transient state polluted repository history and increased review noise. | repo-quality-gate | `.gitignore` | `git ls-files .harness/cache` | repository review | governance review | previous hygiene checks | gate | gate-updated | none | implemented |
 | `FR-008` | method-health | method-health-gap | consumer-repository | 1 | `scripts/harness/*.mjs` depended on `../../../harness-engineering/...` sibling paths. | Another project or standalone checkout would need the same sibling workspace to run method checks. | method-gate | `agentic-method-kit/INSTALL.md` | `scripts/harness/check-method-health.mjs` | `Docs Governance` | team-mode governance review | previous repo-shell sync checks | adapter | adapter-updated | none | implemented |
 | `FR-009` | runtime-quality | static-sensor-gap | consumer-repository | 2 | Current-schema bootstrap markers covered `system_menu.hide_in_nav`, then later missed the new `permission_workbench_remediation_event` compat columns, so persisted local databases were misclassified as already current. | Versioned startup can report migration success while runtime permission-workbench reads or writes still fail against legacy persisted schemas. | runtime-evidence-gate | `backend/pkg/database/migrate.go`, `docs/contracts/SYSTEM_IAM_CONTRACT.md` | `backend/pkg/database/migrate_test.go`, `backend/modules/system/iam/permission/permission_service_test.go`, focused governance smoke | backend tests, focused system smoke | local startup logs plus real-stack governance smoke | previous bootstrap regression coverage | sensor | sensor-added | none | implemented |
+| `FR-010` | runtime-quality | ci-signal-noise | consumer-repository | 3 | The advisory `bench-perf-smoke` job landed red and stayed red on main: the benchmark step wrote `bench.txt` inside `backend/`, while the summary step ran `cat bench.txt` from the repository root, so the report step failed every run. | A report-only job painted main red and read like a benchmark or environment failure, hiding that the benchmarks themselves passed — the advisory signal could not be trusted or triaged. | repo-quality-gate | `.github/workflows/ci.yml` (bench-perf-smoke) | `tests/scripts/ci-bench-perf-smoke-workflow.test.mjs`, `npm run test:ci-bench-perf-smoke-workflow` | `Unit Tests`, `Fast Checks` | workflow review | bench-perf-smoke evidence (recorded the risk, not the cwd bug) | sensor | sensor-added | none | implemented |
 
 ## Review Notes
 
-- Repeated failures: CI signal noise, historical static-analysis maintainability debt, security boundary drift, smoke scope drift, unrecorded ratchet events, cache hygiene, and sibling-path method wrappers are now tracked.
+- Repeated failures: CI signal noise (including advisory jobs that fail silently — FR-010), historical static-analysis maintainability debt, security boundary drift, smoke scope drift, unrecorded ratchet events, cache hygiene, and sibling-path method wrappers are now tracked.
 - Sensors with false positives: broad smoke can over-block unrelated PRs when used as a main quality gate.
 - Sensors with known false negatives: local checks still depend on agents recording task packet, evidence, and review artifacts for non-trivial work.
 - Rules to remove or downgrade: Codacy remains informational only; `Full Smoke Suite` stays scheduled, manual, or release-precheck.

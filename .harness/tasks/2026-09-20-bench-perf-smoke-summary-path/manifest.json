@@ -1,0 +1,111 @@
+{
+  "taskId": "2026-09-20-bench-perf-smoke-summary-path",
+  "title": "Bench perf smoke summary step reads bench.txt from the wrong working directory",
+  "goal": "Restore the green baseline for the advisory bench-perf-smoke job: its summary step ran `cat bench.txt` from the repository root while the benchmark step wrote bench.txt inside backend/, so the job was red on every run since it landed even though the benchmarks themselves passed. Fix the working directory and add a deterministic drift guard so the writer and the reporter cannot diverge again.",
+  "primaryLayer": "platform",
+  "status": "in-review",
+  "statusNote": "2026-09-20: fix + drift guard delivered on fix/bench-perf-smoke-summary-path; local verification green (guard passes with the fix, fails when reverted, YAML parses, failure registry strict check passes).",
+  "priority": "P2",
+  "estimatedComplexity": "light",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "The advisory bench job reported red for three runs (two main pushes, one PR run) without anyone noticing — the residual risk was already written into the 2026-09-20-ci-bench-perf-smoke review but the cwd defect itself was not. No gate watches advisory jobs by design; the drift guard covers the defect class, not the visibility gap.",
+  "dependencyLayers": [
+    "platform CI workflow (ci.yml)",
+    "platform test infrastructure (tests/scripts workflow guards)",
+    "harness failure registry"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "ci.yml bench-perf-smoke summary step: pin working-directory to the directory the benchmark step writes bench.txt into",
+      "tests/scripts/ci-bench-perf-smoke-workflow.test.mjs drift guard (artifact writer and reporter agree on working-directory; job stays advisory)",
+      "wire the guard into `npm run test:ci-bench-perf-smoke-workflow` and the ci.yml unit-tests npm test list",
+      "failure registry FR-010 (advisory job red without a gate) with review-date refresh"
+    ],
+    "out": [
+      "promoting bench-perf-smoke to a blocking gate (maintainer gate, per 2026-09-20-ci-bench-perf-smoke Out)",
+      "benchmark bodies, backend test helpers and bench sampling parameters",
+      "staging capacity baselines",
+      "quality.yml / security.yml / release-gate.yml"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-20-bench-perf-smoke-summary-path/task.md",
+  "contractAnchors": [
+    ".github/workflows/ci.yml",
+    ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+    "docs/harness/FAILURE_RATCHET_POLICY.md",
+    "docs/harness/failure-registry.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "tests/scripts/ci-bench-perf-smoke-workflow.test.mjs",
+      ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/commands.json",
+      ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/summary.md",
+      ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/review.md",
+      ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/pr-body.md"
+    ],
+    "modify": [
+      ".github/workflows/ci.yml",
+      "package.json",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      "backend/** (benchmark code and test helpers)",
+      "quality.yml / security.yml / release-gate.yml",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "ci-workflow",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "ci-signal-noise",
+    "ownerLayer": "platform release governance",
+    "coverageDimensions": [
+      "runtime-quality",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test tests/scripts/ci-bench-perf-smoke-workflow.test.mjs (guard green with the fix)",
+      "node --test tests/scripts/ci-bench-perf-smoke-workflow.test.mjs with the summary-step working-directory reverted (guard must fail)",
+      "python -c \"yaml.safe_load(open('.github/workflows/ci.yml'))\" + job/step inspection",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs / check-evidence.mjs",
+      "CI rerun of Bench Perf Smoke (advisory) and Unit Tests on the PR"
+    ],
+    "runtimeEvidence": [
+      "guard fails on the pre-fix workflow and passes on the fixed workflow (negative control captured in commands.json)",
+      "ci.yml parses and both bench-perf-smoke artifact steps report working-directory=backend"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "commands.json with the guard's negative control and YAML/registry checks",
+    "summary.md with the root cause, fix and remaining visibility gap",
+    "review disposition"
+  ],
+  "humanGates": [],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Tests or checks updated",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/",
+    "reviewFile": ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/review.md",
+    "summaryFile": ".harness/evidence/2026-09-20-bench-perf-smoke-summary-path/summary.md",
+    "changeRef": "fix/bench-perf-smoke-summary-path",
+    "planRefs": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/task.md",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/runtime-gap-ci-feasibility-20260918.md"
+    ]
+  }
+}
