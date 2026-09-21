@@ -1,67 +1,148 @@
 # Summary — 2026-09-20-smoke-core-tenant-ci-gap
 
-Planning record opened as the `FR-011` follow-up to
-`.harness/evidence/2026-09-20-merged-packet-closeout/summary.md`. Nothing has been
-executed yet; this file states what is already established, what is still
-hypothesis, and what the diagnosis must settle.
+Diagnosis executed on 2026-09-20 against the `main` tip lineage (`add2d003`).
+The verdict is **H1 confirmed, H2 refuted**: the tenant specs in the advisory
+`Core Smoke` job fail because the job provisions **none** of their
+preconditions, not because of a tenant isolation leak.
 
-## What is established
+## Verdict
 
-1. **The advisory Core Smoke job is a long-standing red baseline.** 29 failure /
-   3 success / 5 cancelled across the last 37 `main` runs, the only greens on
-   2026-09-10; red already on 2026-09-05, i.e. before #327–#330. It is invisible
-   at the workflow level because `smoke-core.yml` sets `continue-on-error: true`,
-   and it is push-to-`main`/`release/**` only, so no PR ever runs it.
-2. **At the tip (`b3350be3`, job 106030885786) it is 28 passed / 8 failed /
-   3 skipped**, and the failing set contains the `tests/smoke-core/` tenant specs
-   with assertions like `security-event row 1 leaked across tenants (expected 101)`
-   and `operation-log list leaked a foreign row to tenant 101`.
-3. **The job provides none of the tenant preconditions.** `smoke-core.yml` starts
-   `go run ./cmd/server` (default compat mode) and runs
-   `npm run test:smoke:core`; there is no tenant-mode flag, no `tenantmatrixdb up`,
-   no matrix fixture provisioning.
-4. **The specs require those preconditions and have no skip guard.** The phase 2
-   spec header states *"The flag must be multi and tenants 101/202 must exist
-   (tenantmatrixdb up)"*; grepping the tenant specs finds no skip/precondition
-   logic, so an unmet precondition produces a failure rather than a skip.
-5. **The suite definition has drifted from its README.**
-   `frontend/tests/smoke-core/README.md` still lists 8 files and mentions no tenant
-   spec, while `test:smoke:core` runs the `tests/smoke-core/*.spec.ts` glob over a
-   directory that now holds 14 specs.
-6. **A second, non-tenant cluster exists at the same tip**:
-   `platform-shell-critical.spec.ts` (sidebar `expandedWidth > collapsedWidth`)
-   and `system-dept-operations.spec.ts` (root-department row, 15s poll timeout).
-   Both are in the README's core list and both predate the tenant specs.
+| Hypothesis | Result | Basis |
+|---|---|---|
+| **H1** — scope mismatch: the specs run in a job that never provides multi mode, tenants 101/202 or the matrix fixtures | **Confirmed** | Every failing assertion's `Received` value is a compat-mode shape (`undefined`, `0`), never another tenant's id; the job's tenant-related provisioning is empty; the specs carry no skip guard |
+| **H2** — a genuine tenant isolation regression, hidden behind `continue-on-error` for two weeks | **Refuted** | No row belonging to tenant 202 was ever observed by a request acting as tenant 101. The product paths that produce the observed values (compat fallback, compat claim suppression) are intentional, documented (contract §6) and pinned by passing PR-path backend tests |
+| **H3** — the non-tenant failures are an independent cluster | **Confirmed as separate** | `platform-shell-critical:60` and `system-dept-operations:151` are deterministic and tenant-blind; `auth-tenant-picker:145` is flaky in a fully mocked spec |
 
-## What is still hypothesis
+## The decisive evidence: what the assertions actually received
 
-- **H1 (ranked first): scope mismatch.** The tenant specs landed inside a glob
-  whose job never provisions multi mode, tenants 101/202 or the matrix fixtures,
-  so "leaked across tenants" describes a missing-precondition environment rather
-  than a product defect. Predicts: green locally in multi mode (already the case),
-  same failure signature locally in compat mode.
-- **H2: a genuine tenant isolation regression** that CI has been pointing at for
-  two weeks behind `continue-on-error`. Predicts: compat mode does **not**
-  reproduce the assertions, or reproduces them against a correctly provisioned
-  stack. If true this becomes P1 and leaves this task immediately.
-- **H3: the two non-tenant failures are an independent defect or flake** and
-  should not be mixed into a tenant-focused fix.
+The specs word their assertions as leaks, which is why the job read like a
+security finding. The assertion detail blocks say something different:
 
-## What the diagnosis must decide (maintainer gate)
+| Assertion at the tip (job `106044975128`) | Expected | **Received** | What `Received` really is |
+|---|---|---|---|
+| `security-event row 1 leaked across tenants` | `101` | **`undefined`** | the response row carries no `tenantId` field at all |
+| `operation-log list leaked a foreign row to tenant 101` | `101` | **`0`** | `tenant.PlatformGlobalTenantID` — the compat platform-global namespace |
+
+Neither value is `202` (tenant B). A real cross-tenant leak would have to surface
+tenant 202's id; what surfaces instead is the single compat namespace. The
+remaining tenant failures are the same shape mismatch: `tenantSelectionRequired`
+is falsy (picker never renders), the upload `objectKey` fails `/^t101\//`, and
+the "pre-provisioned" dict fixtures are absent.
+
+Two further pieces of boundary evidence:
+
+- **The product code says compat is supposed to do this.**
+  `backend/pkg/tenant/tenant.go` — `ResolveForCanary` returns
+  `{TenantID: PlatformGlobalTenantID, Mode: compat, ResolvedBy: "compat-fallback"}`
+  for any non-multi mode, with no membership checks (contract §6).
+  `backend/modules/auth/login/login_runtime.go:367` — `resolveLoginTenantClaim`:
+  *"Compat ignores any requested tenant: no claim is ever stamped"* and returns 0
+  before `tenantChoice` is examined. So `loginByApi(…, tenantId: 101)` succeeds
+  in compat mode while stamping tenant 0, which is exactly the mismatch the specs
+  then report as a leak.
+- **Four tenant tests in these same specs pass in compat mode** —
+  `phase2:179` (settings surface), `phase2:219` (dynamic-module surface),
+  `matrix:117`, `matrix:129` (dashboard/refresh isolation). A real isolation
+  regression would not break only the row-scoped assertions and spare these.
+- **The compat behaviour is already pinned by passing tests** —
+  `login_tenant_gate_test.go` asserts "compat explicit choice → claim 0" and
+  `GateSessionIssuance` compat "never stamps"; `system_modules_tenant_wiring_test.go`
+  covers the multi-mode middleware wiring.
+
+## The precondition inventory (the answer to the task's question)
+
+What the three tenant specs require, where it comes from, and what the job has:
+
+| # | Precondition | Authoritative producer | Core Smoke state |
+|---|---|---|---|
+| P1 | `platform.tenant_mode = multi` | `system_setting` flag row; the seed writes `compat` (`modules/system/config/setting/setting_seed.go:42`, `seed_data.yaml:26`). Flipped to `multi` only during the matrix runbook | **absent** — seeded `compat`, never flipped |
+| P2 | tenant master rows `101`/`202`, status active | `tenants` table; upserted by `tenantmatrixdb up` (tagged `plan='__smoke_matrix__'`) | **absent** — job runs no `tenantmatrixdb` step |
+| P3 | active `tenant_memberships` for user 1 (`admin`) in both tenants | `tenant_memberships`; upserted by `tenantmatrixdb up` | **absent** |
+| P4 | dict fixtures `matrix_browser_a` / `matrix_browser_b` under tenants 101/202 | `frontend/scripts/tenant-matrix-fixture-setup.mjs` (idempotent, admin-API based) | **absent** — the script exists but no workflow invokes it; its own header records the fixtures were hand-provisioned during the 2026-09-15 matrix run and wiped by `tenantmatrixdb down` |
+| P5 | tenant object namespace `t{tenantID}/` on uploaded object keys | derived at runtime from the resolved context (`pkg/upload/service.go:488`, `modules/system/config/setting/setting_handler.go:302`) | **absent by consequence** — resolves to `t0/` while P1 is unset |
+
+Precondition P5 needs no provisioning of its own; it is listed because it fails
+*silently* (a `t0/` key looks like a valid key, so only the namespace assertion
+notices).
+
+**The trap for whoever implements the disposition:** `tenantmatrixdb up` is not a
+complete CI step on its own. `cmdUp` finishes by writing
+`platform.tenant_mode = compat` — *"explicit starting point"* for the matrix
+runbook — so a job that only adds `tenantmatrixdb up` would still be in compat
+mode and would still fail. The flip to `multi` is a separate, later step in the
+runbook that any CI wiring must reproduce explicitly. (`tenantmatrixdb` also
+requires `PANTHEON_MATRIX_DSN` and deliberately refuses to guess credentials.)
+On a fresh CI database the migration-version precondition is already satisfied by
+server startup: `RunMigrations` records the latest version (17), so `up`'s
+`ensureMigration(13..16)` calls short-circuit while the tenant tables that
+migration 13 creates already exist.
+
+## Red baseline, restated at execution time
+
+- **Workflow level looks healthy, job level does not.** `gh run list` reports
+  every recent `main` run as success because `8db84bd8` (#301, 2026-09-10) added
+  `continue-on-error: true`; the red only exists in the job list. Before #301 the
+  workflow itself was red (2026-09-05 → 2026-09-09 runs).
+- **31 failure / 3 success / 5 cancelled** across the 39 most recent `main` runs,
+  i.e. 31 of the 34 completed runs red. The only green `Core Smoke` jobs are
+  `34431776614` (2026-09-10T03:02Z), `34437941109` (04:38Z) and `34442715170`
+  (05:50Z) — the window immediately after #301 repaired the suite. From
+  `34456538724` (08:41Z) the job is red again, continuously, through the tip.
+- **The red baseline is older than the tenant specs.** The specs landed on
+  2026-09-20 (#329); the job had already been red for ten days. The tenant specs
+  are *additional* failures in an already-red job, not its cause.
+
+## The second cluster (H3), and two signal-quality findings
+
+- `platform-shell-critical.spec.ts:60` — `expect(expandedWidth).toBeGreaterThan(collapsedWidth)`
+  fails on both attempts: deterministic, tenant-blind, not caused by P1–P5.
+- `system-dept-operations.spec.ts:151` — "can create a root department" times out
+  on both attempts (15s poll). Deterministic, tenant-blind.
+- `auth-tenant-picker.spec.ts:145` — mobile-viewport overflow assertion that
+  **failed then passed on retry**. It is a flake, and the spec is fully mocked
+  (`page.route` stubs `/auth/login` and `/settings/public`), so it needs no live
+  tenant preconditions whatsoever — it is only in the failing list by coincidence
+  of name.
+- `business-generated-basic.spec.ts` — a README-listed core member whose all 3
+  tests self-skip via conditional `test.skip()`. It is the job's entire "3 skipped"
+  and it means the core list claims coverage that never executes.
+- `tests/smoke-core/README.md` still advertises **8 files / ~20 minutes** while
+  `test:smoke:core` globs `tests/smoke-core/*.spec.ts` over **12 specs**; neither
+  the three tenant specs nor `auth-tenant-picker.spec.ts` appear in the README.
+  That drift is the mechanism by which specs needing a different environment
+  ended up in this job.
+
+## Disposition options (unchanged, now backed by the diagnosis — maintainer gate)
 
 | Option | Cost / risk |
 |---|---|
-| Provision tenant mode + tenants + fixtures inside the job | Makes the signal trustworthy; job gets slower and the fixture idempotency/cleanup ownership must be decided |
-| Add precondition skip guards to the specs | Keeps them runnable, but a permanent skip reads as false green unless skips are counted |
-| Move the tenant specs out of the `tests/smoke-core/` glob | Restores a truthful core signal, but tenant coverage then has no CI path unless a new job carries it |
-| Keep the status quo | Leaves a two-week-long red signal hidden behind `continue-on-error` |
+| Provision P1–P4 inside the job (`tenantmatrixdb up` + explicit flip to `multi` + `tenant-matrix-fixture-setup.mjs`) | Makes the signal trustworthy and gives the tenant specs a real CI path. Job gets slower and step-heavy; fixture idempotency and cleanup ownership must be decided; `tenantmatrixdb up` also re-writes `schema_migrations` and is written for a dev DB, so its CI use needs review |
+| Add precondition skip guards to the specs | Keeps them runnable, but a permanent skip reads as false green unless skips are counted — and the job already has an uncounted-skip problem (`business-generated-basic`) |
+| Move the tenant specs out of the `tests/smoke-core/` glob | Restores a truthful core signal, and is the smallest change, but tenant coverage then has no CI path until a new job carries it |
+| Keep the status quo | Leaves a two-week-long red signal hidden behind `continue-on-error`; the tenant specs keep having local-only green evidence |
 
-## Immediate next steps
+Whichever is chosen, the same change should fix the README/glob drift, or the
+next spec that needs a different environment will silently inherit the same fate.
 
-1. Reconfirm the red baseline and build the per-spec failure inventory.
-2. Reproduce the tenant failure locally in compat mode (needs MySQL on 3306 or a
-   CI loop) and compare signatures against the job log.
-3. Triage the two non-tenant failures separately.
-4. Bring the disposition decision to the maintainer before touching
-   `smoke-core.yml` or any spec; only then flip `FR-011` from `open` to the chosen
-   control.
+## What this task did and did not change
+
+- **Changed:** this evidence directory, the task packet, and the `FR-011` row in
+  `docs/harness/failure-registry.md` (root cause recorded).
+- **Not changed:** `.github/workflows/smoke-core.yml`, the three tenant specs, and
+  either of the non-tenant specs. The disposition above is the maintainer's call,
+  and the packet's `doNotTouch` list was honoured.
+
+## Known gaps
+
+- No local end-to-end replay: this machine has no MySQL on 127.0.0.1:3306, so the
+  verdict rests on the CI job's own `Received` values plus the product code paths
+  that produce them (all cited with file:line above). If a maintainer wants
+  belt-and-braces assurance before promoting Core Smoke to blocking, the
+  multi-mode replay is the remaining step.
+- The non-tenant failures are separated from the tenant cluster but not
+  root-caused here; they need their own triage.
+- `auth-tenant-picker:145` is classified flaky from a single fail-then-pass pair;
+  a retry-rate sample would be needed to call it stable.
+- The disposition itself is open. `FR-011` stays `open` until the maintainer picks
+  an option; this evidence converts it from "unexplained red" to
+  "explained red with four costed dispositions".

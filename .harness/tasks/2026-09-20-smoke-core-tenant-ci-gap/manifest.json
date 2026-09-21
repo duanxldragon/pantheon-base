@@ -3,8 +3,8 @@
   "title": "Diagnose why tests/smoke-core tenant specs fail in the advisory Core Smoke job",
   "goal": "Explain and dispose of the failures the 2026-09-20 merged-packet closeout surfaced: the advisory, push-only Core Smoke job has been red on 29 of the last 32 completed main runs since at least 2026-09-05, hidden by continue-on-error, and at the 2026-09-20 tip its failure list includes the tests/smoke-core tenant specs. Establish whether those specs fail because the job never provides their preconditions (multi tenant mode plus tenants 101/202 plus matrix fixtures) or because of a real tenant isolation regression, then decide the disposition.",
   "primaryLayer": "platform",
-  "status": "in-progress",
-  "statusNote": "2026-09-20: opened as the FR-011 follow-up from the merged-packet closeout pass. No diagnostic work started yet - this packet records the observed evidence, the ranked hypotheses and the verification plan. Blocked on a runnable local multi-mode stack (this machine has no MySQL on 3306) or on CI-loop iteration.",
+  "status": "in-review",
+  "statusNote": "2026-09-20: diagnosis executed and complete. Verdict: H1 confirmed, H2 refuted. The tenant specs fail because the advisory Core Smoke job provisions none of their preconditions - not because of an isolation leak. Decisive evidence is the assertion Received values at the tip: security-event reports Received: undefined and operation-log reports Received: 0 (= tenant.PlatformGlobalTenantID), never tenant 202's id, and the product paths that produce those values (pkg/tenant/tenant.go compat fallback; login_runtime.go:367 'Compat ignores any requested tenant'; pkg/upload/service.go:488 t%d/ namespace) are intentional, contract-6 documented and pinned by passing PR-path backend tests. Precondition inventory (authoritative producers): P1 platform.tenant_mode=multi (seeded compat, setting_seed.go:42); P2 tenants 101/202 rows (tenantmatrixdb up); P3 active memberships for user 1 in both (tenantmatrixdb up); P4 dict fixtures matrix_browser_a/_b (frontend/scripts/tenant-matrix-fixture-setup.mjs, invoked by no workflow); P5 upload namespace t{tenantId}/ (derived at runtime, silently t0/ under compat). Baseline re-measured at job level: 31 failure / 3 success / 5 cancelled over the 39 most recent main runs; the red predates the tenant specs by ten days. Non-tenant cluster kept separate: platform-shell-critical:60 and system-dept-operations:151 deterministic and tenant-blind, auth-tenant-picker:145 flaky in a fully mocked spec. Remaining human gate is unchanged: the disposition choice. No local multi-mode replay was possible (no MySQL on 3306) and it is recorded as an explicit gap, not as a pass.",
   "priority": "P2",
   "estimatedComplexity": "moderate",
   "technicalDebtFlag": "yes",
@@ -17,9 +17,12 @@
   ],
   "dependencies": {
     "blockedBy": [
-      "local multi-mode stack (MySQL on 3306) or CI-loop iteration for reproduction"
+      "maintainer disposition decision on the tenant specs in the Core Smoke job (human gate)"
     ],
-    "blocks": []
+    "blocks": [
+      "any change to .github/workflows/smoke-core.yml or the tenant specs",
+      "fixing the tests/smoke-core/README.md 8-file list versus the 12-spec glob drift"
+    ]
   },
   "scope": {
     "in": [
@@ -78,6 +81,13 @@
     "runtimeEvidence": [
       "matched failure signatures between the local compat-mode run and the CI job log, or a demonstrated tenant isolation regression",
       "per-spec triage of the two non-tenant failures, with run-id references"
+    ],
+    "results": [
+      "red baseline reconfirmed at job level: 31 failure / 3 success / 5 cancelled over 39 main runs; only greens are 34431776614, 34437941109, 34442715170 (all 2026-09-10)",
+      "per-spec failure inventory at job 106044975128: 8 failed / 3 skipped / 27 passed / 1 flaky, with the tenant cluster separated from the non-tenant cluster",
+      "H1 confirmed by the Received values (undefined for security-event, 0 for operation-log) and by the compat code paths that produce them",
+      "H2 refuted by the absence of any tenant-202 id in the responses, by four tenant tests in the same specs passing in the same compat run, and by the compat behaviour being pinned by green backend tests",
+      "local multi-mode replay left not-run (no MySQL on 3306) and recorded as an explicit gap"
     ]
   },
   "runtimeSensitive": true,
