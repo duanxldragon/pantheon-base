@@ -1,5 +1,8 @@
 {
   "taskId": "2026-09-10-i18n-s3649-zero",
+  "status": "completed",
+  "statusNote": "2026-09-22: struct-form Updates fix landed in c8d3efd5 (PR #306); backend build, vet, 19/19 module tests and gofmt passed. pantheon-base-v0.12.1 subsequently reported SonarCloud unresolved issues = 0. Remaining Sonar confirmation is post-release evidence only.",
+  "completedAt": "2026-09-22",
   "title": "Clear the last SonarCloud issue: i18n S3649 map-Updates taint",
   "goal": "After #305, the Release Gate's SonarCloud Gate job (zero TOTAL unresolved issues) still fails on exactly 1 issue: gosecurity:S3649 BLOCKER in i18n_service.go:200 — the #304 fix replaced First(pk) with Where(\"id = ?\") but kept the map-values form of Updates(), which Sonar's Go analyzer flags as SQL constructed from user-controlled data regardless of the Select() scoping. Convert the update payload to the model-struct form (analyzer-recognized safe pattern); identical columns written with identical values.",
   "primaryLayer": "backend",
@@ -35,7 +38,7 @@
     "evidenceDir": ".harness/evidence/2026-09-10-i18n-s3649-zero/",
     "reviewFile": ".harness/evidence/2026-09-10-i18n-s3649-zero/review.md",
     "summaryFile": ".harness/evidence/2026-09-10-i18n-s3649-zero/summary.md",
-    "changeRef": "none",
+    "changeRef": "c8d3efd5 / pantheon-base-v0.12.1",
     "planRefs": []
   }
 }

@@ -1,6 +1,6 @@
 # Core Smoke Test Suite
 
-> **目标**: 20分钟内覆盖最高价值的关键路径，用于 PR 合并后的快速反馈。
+> **目标**: 20分钟内覆盖最高价值的关键路径，用于主干合并后的快速反馈。
 > **门禁定位**: report-only (`continue-on-error`) — 结果仅在 PR 状态检查中展示，不影响 mergeable 结论；连续多轮全绿后可按 harness 规则转 blocking。
 
 ## 设计原则
@@ -16,15 +16,27 @@
 | 测试文件 | 覆盖范围 | 预估耗时 | 优先级 |
 |---------|---------|---------|--------|
 | `auth-login-logout.spec.ts` | 登录、登出、token刷新 | 2min | P0 |
+| `auth-tenant-picker.spec.ts` | 登录租户选择器（mocked contract） | 2min | P0 |
 | `platform-shell-critical.spec.ts` | Shell结构、菜单导航 | 2min | P0 |
 | `system-user-crud.spec.ts` | 用户CRUD、批量操作 | 3min | P0 |
 | `system-role-authz.spec.ts` | 角色授权基础场景 | 3min | P0 |
 | `system-dept-operations.spec.ts` | 部门树操作 | 2min | P1 |
 | `system-menu-permission.spec.ts` | 菜单权限联动 | 2min | P1 |
 | `system-import-export.spec.ts` | 导入导出核心场景 | 3min | P1 |
-| `business-generated-basic.spec.ts` | 生成模块基础CRUD | 3min | P1 |
+| `business-generated-basic.spec.ts` | 生成模块基础CRUD（条件 fixture 存在时执行） | 3min | P1 |
 
-**总计**: 8个文件，~20分钟
+**总计**: 9个文件，~20分钟
+
+租户隔离场景不属于这个 compat-mode 套件。它们由 `smoke-tenant` workflow
+job 在显式 multi 模式、租户 101/202、membership 和字典 fixture 均就绪时运行：
+
+```bash
+cd frontend
+npm run test:smoke:tenant
+```
+
+该 job 仍是 push-only 的 advisory 信号；它与 Core Smoke 分离，避免把缺少租户
+前置条件误报成隔离回归。
 
 ## 运行方式
 
@@ -43,9 +55,13 @@ npx playwright test tests/smoke-core/auth-login-logout.spec.ts --debug
 ## 与完整冒烟测试的关系
 
 ```
-smoke-core/              → 20分钟，PR合并后运行
-  ├── 8个核心场景
+smoke-core/              → 20分钟，主干合并后运行
+  ├── 9个核心场景（compat 模式）
   └── 覆盖70%关键路径
+
+tenant smoke            → 35分钟，主干合并后运行
+  ├── 3个双租户 hostile 场景
+  └── 独立 multi 模式与 fixture 前置条件
 
 smoke/ (完整套件)        → 120分钟，每日定时运行
   ├── 28个完整场景

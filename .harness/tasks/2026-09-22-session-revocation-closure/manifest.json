@@ -1,0 +1,19 @@
+{
+  "taskId": "2026-09-22-session-revocation-closure",
+  "title": "Close session revocation invalidation semantics",
+  "goal": "Unify DB, refresh-token, and access-token invalidation for administrator session revocation.",
+  "primaryLayer": "system/auth",
+  "status": "planned",
+  "priority": "P0",
+  "type": "security-hardening",
+  "dependencyLayers": [],
+  "blockedBy": [],
+  "blocks": ["2026-09-22-tenant-public-settings-scope", "2026-09-22-production-redis-and-security-gates"],
+  "taskDoc": ".harness/tasks/2026-09-22-session-revocation-closure/task.md",
+  "evidenceDir": ".harness/evidence/2026-09-22-session-revocation-closure",
+  "scope": {"in": ["backend/modules/auth/session", "backend/modules/auth/login", "backend/internal/middleware", "backend/pkg/authtoken"], "out": ["token format", "login protocol", "MFA policy", "frontend session UI"]},
+  "acceptanceCriteria": ["Admin revoke invalidates refresh and access sessions consistently", "Redis failure semantics are explicit", "Current-session protection remains", "DB/refresh/access regression tests exist"],
+  "verificationCommands": ["go test ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken", "go vet ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken", "go test -race ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken"],
+  "humanGate": "Non-author reviewer required for security invalidation semantics",
+  "createdAt": "2026-09-22T00:00:00Z"
+}

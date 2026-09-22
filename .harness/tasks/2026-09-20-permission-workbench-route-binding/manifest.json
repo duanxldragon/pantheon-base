@@ -3,8 +3,9 @@
   "title": "权限工作台 API 权限映射收口（审计项 D）",
   "goal": "Fix the stale user:create route binding in the workbench remediation table and put the permission-to-route binding table under a mechanical drift guard, per audit finding D (1.0-freeze blocking).",
   "primaryLayer": "system/iam",
-  "status": "in-progress",
-  "statusNote": "2026-09-20: fix + drift guard delivered on feat/permission-workbench-route-binding; local verification green (with/without DSN, adjacent suites). PR creation pending.",
+  "status": "completed",
+  "statusNote": "2026-09-22: fix merged on main as PR #328 (merge commit 8c8ff37f). Drift guard, DB-backed permission regression, no-DSN path, adjacent IAM/audit/contracts/middleware suites, go vet and gofmt all passed. Full route-table derivation and historical dead-policy cleanup remain explicit future ratchets.",
+  "completedAt": "2026-09-22",
   "priority": "P1",
   "estimatedComplexity": "moderate",
   "technicalDebtFlag": "yes",
@@ -103,7 +104,7 @@
     "evidenceDir": ".harness/evidence/2026-09-20-permission-workbench-route-binding/",
     "reviewFile": ".harness/evidence/2026-09-20-permission-workbench-route-binding/review.md",
     "summaryFile": ".harness/evidence/2026-09-20-permission-workbench-route-binding/summary.md",
-    "changeRef": "feat/permission-workbench-route-binding",
+    "changeRef": "8c8ff37f (PR #328)",
     "planRefs": [
       ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md"
     ]

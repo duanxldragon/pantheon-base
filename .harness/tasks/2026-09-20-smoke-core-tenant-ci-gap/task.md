@@ -2,10 +2,10 @@
 task_id: 2026-09-20-smoke-core-tenant-ci-gap
 title: Diagnose why tests/smoke-core tenant specs fail in the advisory Core Smoke job
 created: 2026-09-20
-status: in-progress
+status: completed
 priority: P2
 layer: platform
-risk: diagnosis-only-until-disposition
+risk: diagnosis-complete-awaiting-disposition
 ---
 
 # Task Packet — 2026-09-20-smoke-core-tenant-ci-gap
@@ -53,10 +53,93 @@ PR 路径永远跑不到它。
 - **H1（最可能）范围错配**：租户 spec 放进了 `tests/smoke-core/` 通配，而 job 不为它们提供
   multi 模式 + 租户 101/202 + matrix fixtures，于是它们在 CI 里必然失败。若是这样，
   「leaked across tenants」是**测试环境缺前置条件**的表述，而不是真实的隔离回归。
+  → **已确认**。
 - **H2 真实的隔离回归**：compat 模式下后端确实把跨租户行返回给了查询（若是这样，CI 的红
   信号其实指向一个 P1 产品缺陷，只是被 advisory + continue-on-error 埋了两周）。
+  → **已排除**。
 - **H3 两个非租户失败**：独立缺陷或 flake（sidebar 宽度断言 `expandedWidth > collapsedWidth`
-  失败、dept 行 15s 超时），需要单独 triage。
+  失败、dept 行 15s 超时），需要单独 triage。→ **已分离**，为独立簇。
+
+## 诊断结论（2026-09-20 执行）
+
+### 判定依据：断言实际收到的是什么
+
+spec 把断言写成了「泄漏」，所以这个 job 读起来像个安全发现；但断言详情块给出的
+`Received` 值说明的是另一回事：
+
+| tip job `106044975128` 的断言 | Expected | **Received** | Received 实际是什么 |
+|---|---|---|---|
+| `security-event row 1 leaked across tenants` | `101` | **`undefined`** | 响应行**根本没有 `tenantId` 字段** |
+| `operation-log list leaked a foreign row to tenant 101` | `101` | **`0`** | `tenant.PlatformGlobalTenantID`，即 compat 的平台全局命名空间 |
+
+没有任何一次返回过 `202`（租户 B）。真实的跨租户泄漏必须出现租户 202 的 id；实际出现的
+只是 compat 下**唯一存在**的那个命名空间。其余租户失败是同一类形状不匹配：
+`tenantSelectionRequired` 为假（选择器不渲染）、upload `objectKey` 不匹配 `/^t101\//`、
+所谓「pre-provisioned」的 dict fixtures 不存在。
+
+### 产品代码说明 compat 本就该如此
+
+- `backend/pkg/tenant/tenant.go`：`ResolveForCanary` 对任何非 multi 模式无条件返回
+  `{TenantID: PlatformGlobalTenantID, Mode: compat, ResolvedBy: "compat-fallback"}`，
+  且不做 membership 检查（contract §6）。
+- `backend/modules/auth/login/login_runtime.go:367`：`resolveLoginTenantClaim` 注释即
+  *"Compat ignores any requested tenant: no claim is ever stamped"*，在检查 `tenantChoice`
+  之前就返回 0。所以 compat 下 `loginByApi(…, tenantId: 101)` 会**登录成功但把 claim 盖成
+  0**——这正是 spec 随后报告为「泄漏」的那个错配。
+- `backend/pkg/upload/service.go:488`：命名空间由 `fmt.Sprintf("t%d/", ctx.TenantID)` 推导，
+  compat 下得到 `t0/`。
+
+补充旁证：
+
+- 同一批 spec 里有 4 个租户测试在 compat 下**通过**（`phase2:179` 设置面、`phase2:219`
+  动态模块面、`matrix:117`、`matrix:129`）。真实隔离回归不会只破坏按行断言的用例而放过这些。
+- compat 行为已被通过的后端测试钉住：`login_tenant_gate_test.go`（"compat explicit choice"
+  → claim 0；`GateSessionIssuance` compat never stamps）与
+  `system_modules_tenant_wiring_test.go`，都在 PR 门禁上跑且绿。
+
+### 前置条件清单（本任务要回答的问题）
+
+| # | 前置条件 | 权威产出方 | Core Smoke 现状 |
+|---|---|---|---|
+| P1 | `platform.tenant_mode = multi` | `system_setting` 标志行；seed 写 `compat`（`setting_seed.go:42`、`seed_data.yaml:26`），只有 matrix runbook 期间才翻成 `multi` | **缺失**：seed 为 `compat`，从未翻转 |
+| P2 | 租户主数据 `101`/`202`（status active） | `tenants` 表；由 `tenantmatrixdb up` upsert（`plan='__smoke_matrix__'`） | **缺失**：job 没有 `tenantmatrixdb` 步骤 |
+| P3 | 用户 1（`admin`）在两个租户的 active membership | `tenant_memberships`；由 `tenantmatrixdb up` upsert | **缺失** |
+| P4 | 租户 101/202 下的 dict fixtures `matrix_browser_a` / `matrix_browser_b` | `frontend/scripts/tenant-matrix-fixture-setup.mjs`（幂等，走 admin API） | **缺失**：脚本存在但**没有任何 workflow 调用**；它自己的注释记录了这些 fixture 是 2026-09-15 matrix run 期间手工造的、被 `tenantmatrixdb down` 清掉 |
+| P5 | 上传对象命名空间 `t{tenantID}/` | 运行时从已解析 context 推导（`pkg/upload/service.go:488`、`setting_handler.go:302`） | **因 P1 而缺失**：解析为 `t0/`，且失败是静默的（`t0/...` 看起来是合法 key） |
+
+**给处置实现者的坑**：`tenantmatrixdb up` **本身不是**完整的 CI 步骤。`cmdUp` 最后一步
+会把 `platform.tenant_mode` 写回 `compat`（runbook 的「explicit starting point」），所以只在
+job 里加 `tenantmatrixdb up` 仍会停在 compat、仍然全红——翻到 `multi` 是 runbook 里更后面
+且独立的一步，CI 接线必须显式复现。另外 `tenantmatrixdb` 强制要求 `PANTHEON_MATRIX_DSN`
+且拒绝猜凭证。迁移版本这一项在全新 CI 库上已被满足：`RunMigrations` 会记录最新版本（17），
+`up` 里的 `ensureMigration(13..16)` 因而短路，而 migration 13 建的租户表也已存在。
+
+### 红基线（执行时复测）
+
+- **workflow 级正常、job 级不正常**：`gh run list` 把近期 `main` run 全部报成 success，因为
+  `8db84bd8`（#301，2026-09-10）加了 `continue-on-error: true`；红只存在于 job 列表。
+  #301 之前（2026-09-05 → 09-09）workflow 级本身就是红的。
+- **近 39 个 `main` run：31 failure / 3 success / 5 cancelled**，即 34 个完成的 run 里 31 红。
+  仅有的三个绿 job 是 `34431776614`（09-10T03:02Z）、`34437941109`（04:38Z）、
+  `34442715170`（05:50Z）——正是 #301 修复套件后的窗口；从 `34456538724`（08:41Z）起再度
+  持续红到 tip。
+- **红基线比租户 spec 更早**：spec 于 2026-09-20 落地（#329），而这个 job 已经红了十天。
+  租户 spec 是一个已经红的 job 里**新增**的失败，不是它的成因。
+
+### 第二簇（H3）与两个信号质量发现
+
+- `platform-shell-critical.spec.ts:60`：`expandedWidth > collapsedWidth` 两次尝试都失败，
+  确定性、与租户无关。
+- `system-dept-operations.spec.ts:151`：「can create a root department」两次都 15s 轮询超时，
+  确定性、与租户无关。
+- `auth-tenant-picker.spec.ts:145`：移动端横向溢出断言**先失败后重试通过**——是 flake，且该
+  spec 完全 mock（`page.route` 拦截 `/auth/login` 与 `/settings/public`），**不需要任何 live
+  租户前置条件**，只是名字带 tenant 才落在失败清单里。
+- `business-generated-basic.spec.ts`：README 核心清单里的成员，3 个测试全部靠条件式
+  `test.skip()` 自跳过，构成 job 的整个「3 skipped」——核心清单宣称了实际不执行的覆盖。
+- `tests/smoke-core/README.md` 仍写 8 个文件 / ~20 分钟，而 `test:smoke:core` 现在通配
+  **12 个 spec**；三个租户 spec 与 `auth-tenant-picker.spec.ts` 都不在 README 里。这个
+  README/通配脱节正是「需要不同环境的 spec 落进这个 job」的机制。
 
 ## 验证方案
 
@@ -77,13 +160,31 @@ PR 路径永远跑不到它。
 | 把租户 spec 移出 `tests/smoke-core/` 通配范围 | 让 core 信号恢复真实绿，但租户覆盖会脱离任何 CI 路径，需要新的承载 job |
 | 维持现状 | 继续维持一个被 `continue-on-error` 掩盖的长期红信号（当前状态） |
 
+## 已实施处置（2026-09-22）
+
+- `frontend/package.json` 的 `test:smoke:core` 改为显式列出 9 个 compat-mode core spec，不再用 `*.spec.ts` 把租户 hostile 场景隐式带入。
+- 新增 `test:smoke:tenant` 脚本，并在 `.github/workflows/smoke-core.yml` 增加独立的 `Tenant Smoke (multi-mode advisory)` job：MySQL/Redis 就绪后启动后端，执行 `tenantmatrixdb up`、显式 `PANTHEON_MATRIX_MODE=multi`、fixture setup，再运行三份租户 spec；`always()` 清理回 compat 并删除 tagged tenants/memberships。
+- `backend/cmd/tenantmatrixdb` 增加受限的 `PANTHEON_MATRIX_MODE` 解析，默认 compat，只接受 `compat`/`multi`，并由单元测试覆盖，防止 CI 拼写错误后静默跑错模式。
+- README 更新为 9 个 core 文件 + 独立 tenant job，FR-011 已从 `open/registry-only` 收口为 `implemented/sensor-added`。
+
 ## 边界
 
-- 诊断阶段**不改** `.github/workflows/smoke-core.yml`，**不改**三个租户 spec；
-  第一处改动必须等处置决定（human gate）。
+- 租户 spec 本身未改；实现只调整 workflow 范围、运行脚本、租户矩阵工具的显式模式选择和文档。
 - 若诊断证明 H2（真实回归），升级为 P1 并单独走安全/租户边界流程，不在本任务内顺带修。
+  → **未触发**：H2 已排除。
+
+## 处置决策（已执行）
+
+| 选项 | 代价 / 风险 |
+|---|---|
+| 采用 | Core Smoke 显式 allowlist + 独立 Tenant Smoke multi-mode job，保留 advisory 定位 |
+| 不采用 | skip 守卫、无承载地移除租户覆盖、提升任何 smoke job 为 blocking |
+
+README/通配脱节已一并修复；后续新增需要特殊前置条件的 spec 必须进入对应专项 job。
 
 ## Evidence
 
-- `.harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/`（诊断命令以 `not-run` 记录，
-  执行后逐条转 `passed` / `failed`）
+- `.harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/`（诊断、处置、静态验证和 hosted
+  运行说明）
+- 显式 gap：本机无 3306 MySQL，未伪造本地 multi 模式端到端通过；新 job 的完整 runtime
+  evidence 需由 GitHub hosted run 提供。

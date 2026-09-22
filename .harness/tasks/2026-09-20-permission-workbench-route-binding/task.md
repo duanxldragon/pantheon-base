@@ -2,7 +2,7 @@
 task_id: 2026-09-20-permission-workbench-route-binding
 title: 权限工作台 API 权限映射收口（审计项 D）
 created: 2026-09-20
-status: in-progress
+status: completed
 priority: P1
 layer: system/iam
 risk: high
@@ -75,3 +75,14 @@ map 中 `system:user:create` 绑定的是 `POST /api/v1/system/user/create`，
   防脱节需运行时派生（记录为后续方向，不在本任务）。
 - [x] 已下发的死策略如何处理？——运行时修复属运维动作（删除 V1 不存在的 casbin 规则），
   Bootstrap 已有孤儿策略清理（按 role 存在性）；按路径存在性清理属后续 ratchet 候选。
+
+## Closeout（合入后回写，2026-09-22）
+
+| 最小交付件 | 事实 |
+|---|---|
+| PR | https://github.com/duanxldragon/pantheon-base/pull/328 |
+| Merge commit | `8c8ff37f3efdcfce92187a4718a64efc5c3cd7ef` |
+| 分支收口 | `feat/permission-workbench-route-binding` 已合入 `main` |
+| Verification | 漂移守卫、DB-backed/no-DSN permission、相邻 IAM/audit/contracts/middleware、go vet、gofmt 全部通过 |
+| Evidence | `commands.json` / `summary.md` / `review.md` / `pr-body.md` |
+| Residual ratchet | 完整 engine→service 路由派生与历史死策略按路径清理仍是后续技术债，不阻塞本任务 |

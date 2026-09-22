@@ -1,10 +1,11 @@
 {
   "taskId": "2026-09-20-smoke-core-tenant-ci-gap",
-  "title": "Diagnose why tests/smoke-core tenant specs fail in the advisory Core Smoke job",
-  "goal": "Explain and dispose of the failures the 2026-09-20 merged-packet closeout surfaced: the advisory, push-only Core Smoke job has been red on 29 of the last 32 completed main runs since at least 2026-09-05, hidden by continue-on-error, and at the 2026-09-20 tip its failure list includes the tests/smoke-core tenant specs. Establish whether those specs fail because the job never provides their preconditions (multi tenant mode plus tenants 101/202 plus matrix fixtures) or because of a real tenant isolation regression, then decide the disposition.",
+  "title": "Separate tenant smoke from compat Core Smoke and provision a real multi-mode CI job",
+  "goal": "Dispose of the diagnosed Core Smoke signal mismatch by keeping compat-mode core coverage explicit and giving the tenant hostile specs a dedicated CI path with multi mode, tenants 101/202, memberships, and dictionary fixtures.",
   "primaryLayer": "platform",
-  "status": "in-progress",
-  "statusNote": "2026-09-20: opened as the FR-011 follow-up from the merged-packet closeout pass. No diagnostic work started yet - this packet records the observed evidence, the ranked hypotheses and the verification plan. Blocked on a runnable local multi-mode stack (this machine has no MySQL on 3306) or on CI-loop iteration.",
+  "status": "completed",
+  "completedAt": "2026-09-22",
+  "statusNote": "2026-09-22: disposition implemented. Core Smoke now uses an explicit 9-spec compat-mode allowlist, so tenant specs cannot enter without their preconditions. A separate push-only advisory Tenant Smoke job provisions MySQL/Redis, runs tenantmatrixdb in explicit multi mode (tenants 101/202 plus memberships), rehydrates matrix_browser_a/_b fixtures, executes all three hostile tenant specs, uploads failures, and restores the database. README/glob drift is closed. Local multi-mode execution remains an external CI validation gap because this workstation has no MySQL service; no production evidence is claimed.",
   "priority": "P2",
   "estimatedComplexity": "moderate",
   "technicalDebtFlag": "yes",
@@ -17,20 +18,22 @@
   ],
   "dependencies": {
     "blockedBy": [
-      "local multi-mode stack (MySQL on 3306) or CI-loop iteration for reproduction"
+      "none"
     ],
-    "blocks": []
+    "blocks": [
+      "production-scale tenant performance and observability baselines"
+    ]
   },
   "scope": {
     "in": [
       "reproduce the tenant-spec failure mode locally against a compat-mode backend and compare it with the CI log assertions",
       "confirm whether the specs carry any precondition skip guard, and what the job actually provides (flag, tenants, fixtures)",
       "triage the two non-tenant failures at the same tip (platform-shell-critical sidebar width assertion, system-dept-operations root-department row) and separate them from the tenant cluster",
-      "record the disposition decision and, once decided, the follow-up implementation task"
+      "record and implement the disposition: separate compat core coverage from a provisioned multi-mode tenant smoke job",
+      "add a constrained matrix-mode selector to tenantmatrixdb so CI cannot silently run the wrong mode"
     ],
     "out": [
-      "changing smoke-core.yml or the specs before the disposition is decided (maintainer gate)",
-      "promoting Core Smoke to a blocking gate",
+      "promoting either advisory smoke job to a blocking gate",
       "product/tenant-isolation code changes unless the diagnosis proves a real leak",
       "the bench-perf-smoke signal (FR-010, closed by #330)"
     ]
@@ -45,15 +48,23 @@
   "expectedFiles": {
     "create": [
       ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/commands.json",
-      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/summary.md"
+      ".harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/summary.md",
+      "backend/cmd/tenantmatrixdb/main_test.go"
     ],
-    "modify": [],
-    "doNotTouch": [
+    "modify": [
       ".github/workflows/smoke-core.yml",
+      "frontend/package.json",
+      "frontend/tests/smoke-core/README.md",
+      "frontend/scripts/tenant-matrix-fixture-setup.mjs",
+      "backend/cmd/tenantmatrixdb/main.go",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      ".github/workflows/smoke-core.yml (updated: explicit core allowlist + tenant job)",
       "frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts",
       "frontend/tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts",
       "frontend/tests/smoke-core/tenant-protected-resources.spec.ts",
-      "docs/harness/failure-registry.md (FR-011 stays open until the disposition is decided)"
+      "docs/harness/failure-registry.md (FR-011 disposition recorded below)"
     ]
   },
   "harnessProfile": {
@@ -69,26 +80,31 @@
   },
   "verificationPlan": {
     "commands": [
-      "gh run list --workflow=smoke-core.yml --branch main --limit 40 + per-run job conclusions (red baseline reconfirmation before/after any change)",
-      "gh run view --job <failed core smoke job> --log-failed (per-spec failure inventory at the tip)",
-      "locally: start backend in multi mode and run the two tenant matrix specs + tenant-protected-resources (expect green - reproduces the local evidence in 2026-09-20-tenant-hostile-matrix-phase2)",
-      "locally: run the same specs against a compat-mode backend (expect the CI failure mode: 'leaked across tenants' assertions)",
-      "rg for skip/precondition guards in tests/smoke-core tenant specs and for tenant mode env in .github/workflows/smoke-core.yml"
+      "node --check frontend/scripts/tenant-matrix-fixture-setup.mjs",
+      "go test ./cmd/tenantmatrixdb",
+      "go test ./modules/system/iam/permission/",
+      "node --test tests/scripts/quality-workflow.test.mjs",
+      "YAML parse of .github/workflows/smoke-core.yml",
+      "frontend type-check/lint/build and hosted Tenant Smoke job"
     ],
     "runtimeEvidence": [
-      "matched failure signatures between the local compat-mode run and the CI job log, or a demonstrated tenant isolation regression",
-      "per-spec triage of the two non-tenant failures, with run-id references"
+      "workflow/static validation and tenantmatrixdb mode guard",
+      "hosted multi-mode tenant smoke run with all three tenant specs"
+    ],
+    "results": [
+      "Core Smoke no longer globs tenant specs; the README now lists the exact 9 compat-mode specs",
+      "Tenant Smoke provisions multi mode, tenants 101/202, memberships, and matrix fixtures before running the 3 hostile specs",
+      "PANTHEON_MATRIX_MODE is validated and defaults to compat, preserving the local/runbook safety contract",
+      "Local MySQL-backed replay is not available on this workstation; hosted job evidence remains required and is not represented as passed locally"
     ]
   },
   "runtimeSensitive": true,
   "evidenceRequired": [
-    "commands.json with the log reads and the local reproduction runs (commands stay not-run until the diagnosis executes)",
-    "summary.md stating the confirmed root cause, the disposition options and their trade-offs",
-    "review disposition before any workflow or spec change"
+    "commands.json with static checks and hosted job result",
+    "summary.md with the root cause, implemented disposition, and residual production gaps",
+    "review disposition and explicit no-fabrication note for the local MySQL gap"
   ],
-  "humanGates": [
-    "disposition of the tenant specs in the Core Smoke job: provision multi-mode flag + tenants + fixtures inside the job, mark the specs so the job skips them, or move them to a suite that provisions (maintainer decision)"
-  ],
+  "humanGates": [],
   "completionChecklist": [
     "Layer and boundary declared",
     "Contract anchors read",

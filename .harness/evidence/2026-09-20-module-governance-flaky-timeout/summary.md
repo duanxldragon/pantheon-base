@@ -17,3 +17,10 @@ Config-level 30s timeout < the spec's internal retry budget; on 2-vCPU CI runner
 ## Known gaps
 - CI-level confirmation arrives with the PR's Full Smoke Suite run.
 - 8080 node/PATH finding is maintainer-side environment work.
+
+## Closeout (post-merge, 2026-09-22)
+
+- PR #325 merged to `main` as `99f630868d1df89fce82c9a08d8229e889c17909`.
+- The timeout-only change is present on `main`; no product code or global timeout was changed.
+- Hosted full-smoke timing remains the runner-specific confirmation. The local 8080 backend's
+  missing Node executable is an environment prerequisite and is not represented as a test failure.
