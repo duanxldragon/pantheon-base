@@ -112,37 +112,33 @@ migration 13 creates already exist.
   That drift is the mechanism by which specs needing a different environment
   ended up in this job.
 
-## Disposition options (unchanged, now backed by the diagnosis — maintainer gate)
+## Disposition implemented (2026-09-22)
 
 | Option | Cost / risk |
 |---|---|
-| Provision P1–P4 inside the job (`tenantmatrixdb up` + explicit flip to `multi` + `tenant-matrix-fixture-setup.mjs`) | Makes the signal trustworthy and gives the tenant specs a real CI path. Job gets slower and step-heavy; fixture idempotency and cleanup ownership must be decided; `tenantmatrixdb up` also re-writes `schema_migrations` and is written for a dev DB, so its CI use needs review |
-| Add precondition skip guards to the specs | Keeps them runnable, but a permanent skip reads as false green unless skips are counted — and the job already has an uncounted-skip problem (`business-generated-basic`) |
-| Move the tenant specs out of the `tests/smoke-core/` glob | Restores a truthful core signal, and is the smallest change, but tenant coverage then has no CI path until a new job carries it |
-| Keep the status quo | Leaves a two-week-long red signal hidden behind `continue-on-error`; the tenant specs keep having local-only green evidence |
+| Core Smoke | Uses an explicit nine-spec compat-mode allowlist; tenant specs no longer enter through a broad glob |
+| Tenant Smoke | New push-only advisory job provisions MySQL/Redis, runs `tenantmatrixdb up` with `PANTHEON_MATRIX_MODE=multi`, runs the fixture setup script, executes all three hostile tenant specs, and restores tagged fixtures in an `always()` cleanup step |
+| Matrix tool safety | `PANTHEON_MATRIX_MODE` defaults to compat and rejects values other than `compat`/`multi`; unit tests cover default, accepted values and rejection |
 
-Whichever is chosen, the same change should fix the README/glob drift, or the
-next spec that needs a different environment will silently inherit the same fate.
+The README now lists the nine compat-mode files and documents the separate tenant
+job, so future special-precondition specs must be assigned to an explicit job.
 
 ## What this task did and did not change
 
-- **Changed:** this evidence directory, the task packet, and the `FR-011` row in
-  `docs/harness/failure-registry.md` (root cause recorded).
-- **Not changed:** `.github/workflows/smoke-core.yml`, the three tenant specs, and
-  either of the non-tenant specs. The disposition above is the maintainer's call,
-  and the packet's `doNotTouch` list was honoured.
+- **Changed:** `.github/workflows/smoke-core.yml`, `frontend/package.json`,
+  `frontend/tests/smoke-core/README.md`, `backend/cmd/tenantmatrixdb`, this
+  evidence directory, the task packet, and the `FR-011` row.
+- **Not changed:** the three tenant specs, product tenant isolation code, or the
+  two independent non-tenant failure specs.
 
 ## Known gaps
 
-- No local end-to-end replay: this machine has no MySQL on 127.0.0.1:3306, so the
-  verdict rests on the CI job's own `Received` values plus the product code paths
-  that produce them (all cited with file:line above). If a maintainer wants
-  belt-and-braces assurance before promoting Core Smoke to blocking, the
-  multi-mode replay is the remaining step.
+- No local end-to-end replay: this machine has no MySQL on 127.0.0.1:3306. The
+  new hosted Tenant Smoke job is the required runtime evidence; no local pass is
+  claimed.
 - The non-tenant failures are separated from the tenant cluster but not
   root-caused here; they need their own triage.
 - `auth-tenant-picker:145` is classified flaky from a single fail-then-pass pair;
   a retry-rate sample would be needed to call it stable.
-- The disposition itself is open. `FR-011` stays `open` until the maintainer picks
-  an option; this evidence converts it from "unexplained red" to
-  "explained red with four costed dispositions".
+- The two non-tenant failures remain separate follow-up work and are not silently
+  attributed to tenant isolation.

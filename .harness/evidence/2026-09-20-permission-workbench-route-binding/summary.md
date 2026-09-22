@@ -37,3 +37,10 @@ for a route that does not exist and user creation would remain forbidden.
   acceptance check for that derivation.
 - Dead policies already issued against removed routes are not cleaned by path
   existence (Bootstrap cleans by role existence only) — ratchet candidate.
+
+## Closeout (post-merge, 2026-09-22)
+
+PR #328 merged the fix and drift guard to `main` as `8c8ff37f`. The task is
+closed with the route table protected by the mechanical guard. Full route-table
+derivation and cleanup of historical dead policies remain explicitly deferred
+ratchets, not completion blockers.

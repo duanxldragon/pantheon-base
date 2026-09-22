@@ -1,0 +1,19 @@
+{
+  "taskId": "2026-09-22-upload-authorization-and-import-resources",
+  "title": "Close upload authorization and import resource lifecycle",
+  "goal": "Define upload authorization and close file-handle leaks in CSV import handlers.",
+  "primaryLayer": "system/config",
+  "status": "planned",
+  "priority": "P0",
+  "type": "security-hardening",
+  "dependencyLayers": ["system/iam", "system/org", "system/i18n"],
+  "blockedBy": ["2026-09-22-tenant-public-settings-scope"],
+  "blocks": [],
+  "taskDoc": ".harness/tasks/2026-09-22-upload-authorization-and-import-resources/task.md",
+  "evidenceDir": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources",
+  "scope": {"in": ["upload route", "Casbin/menu seed", "system import handlers"], "out": ["object storage redesign", "file type policy redesign"]},
+  "acceptanceCriteria": ["Upload authorization matches permission seed", "Tenant download scope remains enforced", "Every opened import file is closed", "Limits and negative tests exist"],
+  "verificationCommands": ["go test ./modules/system/config/setting ./modules/system/iam/... ./modules/system/org/... ./modules/system/i18n", "go vet ./modules/system/config/setting ./modules/system/iam/... ./modules/system/org/... ./modules/system/i18n"],
+  "humanGate": "Maintainer confirmation of upload permission semantics",
+  "createdAt": "2026-09-22T00:00:00Z"
+}

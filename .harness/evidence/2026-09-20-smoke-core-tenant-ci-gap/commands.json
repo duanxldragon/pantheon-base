@@ -77,6 +77,30 @@
       "cwd": "frontend",
       "status": "not-run",
       "notes": "Still blocked locally (no MySQL on 3306). Recorded as a gap, not as a pass. It does not block the H1/H2 verdict: the discriminator was resolved from the CI log's own Received values (undefined / 0) plus the product code paths, which is stronger than a local replay because it is the exact environment that is in dispute. The multi-mode green evidence for these specs already exists in .harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/ (9/9) and was produced against a live multi-mode stack."
+    },
+    {
+      "command": "go test ./cmd/tenantmatrixdb",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Added coverage for the matrix mode selector: empty defaults to compat, compat/multi values are accepted case-insensitively, and unknown values are rejected."
+    },
+    {
+      "command": "node --check frontend/scripts/tenant-matrix-fixture-setup.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Fixture provisioner syntax is valid; hosted Tenant Smoke invokes it after the backend and multi-mode database fixtures are ready."
+    },
+    {
+      "command": "static workflow/package review of .github/workflows/smoke-core.yml and frontend/package.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Core Smoke now uses an explicit nine-spec allowlist; Tenant Smoke owns the three tenant specs and provisions P1-P4 before execution. Both jobs remain advisory."
+    },
+    {
+      "command": "hosted Tenant Smoke multi-mode run",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Required external runtime evidence after this workflow change. No local MySQL service is available, so no local pass is claimed."
     }
   ],
   "knownGaps": [
@@ -84,8 +108,8 @@
     "H1 is confirmed and H2 is refuted for the four row-scoped tenant assertions. The confirmation is a signature match (the expected-vs-received pair is a compat-mode shape, not a foreign tenant id) rather than a fresh multi-mode replay; if a maintainer wants belt-and-braces assurance before promoting Core Smoke to blocking, the multi-mode replay in the verification plan is the remaining step.",
     "The tenant object-namespace precondition (objectKey prefix t{tenantId}/) is derived at runtime from the resolved context and therefore needs no separate provisioning - but it is listed as a precondition because it silently becomes t0/ under compat, which is what the upload assertion observes.",
     "The non-tenant failures are triaged only to the point of separating them from the tenant cluster: platform-shell-critical:60 (deterministic sidebar width assertion) and system-dept-operations:151 (deterministic 15s root-department poll timeout) are not root-caused here, and auth-tenant-picker:145 is classified flaky (failed then passed on retry) in a fully mocked spec that needs no live tenant preconditions.",
-    "Signal-quality findings surfaced by the same job are recorded but not fixed: business-generated-basic.spec.ts is a README-listed core member whose 3 tests self-skip, and tests/smoke-core/README.md still advertises 8 files / ~20 minutes while test:smoke:core now globs 12 specs.",
-    "No file was changed to produce this diagnosis: smoke-core.yml, the tenant specs and the FR-011 row's status are untouched, because the disposition is the maintainer's decision."
+    "Signal-quality finding about README/glob drift is fixed: the README and explicit nine-spec Core Smoke script now agree; business-generated-basic.spec.ts remains a conditional fixture-dependent core member.",
+    "The tenant specs and tenant product isolation code were not changed; workflow scope, package scripts, tenantmatrixdb mode validation, documentation and evidence were updated."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-09-20-smoke-core-tenant-ci-gap/manifest.json",
@@ -99,7 +123,7 @@
   },
   "environment": {
     "localStack": "No MySQL on 127.0.0.1:3306 on this machine; the diagnosis was therefore executed read-only against GitHub Actions logs and repository source. This is sufficient because the question is what the CI job provides, and the CI job's own output is the primary evidence.",
-    "ci": "Core Smoke Tests: ubuntu-latest, MySQL 8.0 + Redis 7 services, `go run ./cmd/server` (which seeds platform.tenant_mode = compat), `npm run test:smoke:core` = playwright over tests/smoke-core/*.spec.ts, continue-on-error: true, push to main/release only. Provisioned: nothing tenant-related.",
+    "ci": "Core Smoke: ubuntu-latest, MySQL 8.0 + Redis 7, compat backend, explicit nine-spec allowlist; Tenant Smoke: same services, PANTHEON_MATRIX_MODE=multi, tenantmatrixdb up, tenant-matrix-fixture-setup.mjs, three tenant specs, always cleanup; both push-only and advisory.",
     "githubCli": "gh 2.x against github.com as duanxldragon, no proxy needed for api.github.com at execution time."
   }
 }

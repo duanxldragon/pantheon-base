@@ -28,3 +28,21 @@ Low: single-statement equivalent rewrite.
   it is the rule's documented compliant pattern), follow-up would be to
   route the write through a dedicated repository method with a fully
   parameterized `UpdateColumns` call. Not a suppression.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-10-i18n-s3649-zero",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["SonarCloud zero-total confirmation is post-release evidence"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-i18n-s3649-zero/manifest.json",
+    "evidence": ".harness/evidence/2026-09-10-i18n-s3649-zero/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-10-i18n-s3649-zero/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

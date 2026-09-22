@@ -2,7 +2,7 @@
 task_id: 2026-09-20-smoke-core-tenant-ci-gap
 title: Diagnose why tests/smoke-core tenant specs fail in the advisory Core Smoke job
 created: 2026-09-20
-status: in-review
+status: completed
 priority: P2
 layer: platform
 risk: diagnosis-complete-awaiting-disposition
@@ -160,29 +160,31 @@ job 里加 `tenantmatrixdb up` 仍会停在 compat、仍然全红——翻到 `m
 | 把租户 spec 移出 `tests/smoke-core/` 通配范围 | 让 core 信号恢复真实绿，但租户覆盖会脱离任何 CI 路径，需要新的承载 job |
 | 维持现状 | 继续维持一个被 `continue-on-error` 掩盖的长期红信号（当前状态） |
 
+## 已实施处置（2026-09-22）
+
+- `frontend/package.json` 的 `test:smoke:core` 改为显式列出 9 个 compat-mode core spec，不再用 `*.spec.ts` 把租户 hostile 场景隐式带入。
+- 新增 `test:smoke:tenant` 脚本，并在 `.github/workflows/smoke-core.yml` 增加独立的 `Tenant Smoke (multi-mode advisory)` job：MySQL/Redis 就绪后启动后端，执行 `tenantmatrixdb up`、显式 `PANTHEON_MATRIX_MODE=multi`、fixture setup，再运行三份租户 spec；`always()` 清理回 compat 并删除 tagged tenants/memberships。
+- `backend/cmd/tenantmatrixdb` 增加受限的 `PANTHEON_MATRIX_MODE` 解析，默认 compat，只接受 `compat`/`multi`，并由单元测试覆盖，防止 CI 拼写错误后静默跑错模式。
+- README 更新为 9 个 core 文件 + 独立 tenant job，FR-011 已从 `open/registry-only` 收口为 `implemented/sensor-added`。
+
 ## 边界
 
-- 诊断阶段**不改** `.github/workflows/smoke-core.yml`，**不改**三个租户 spec；
-  第一处改动必须等处置决定（human gate）。→ 已遵守：本次改动只落在 evidence、packet
-  与 `FR-011` registry 行。
+- 租户 spec 本身未改；实现只调整 workflow 范围、运行脚本、租户矩阵工具的显式模式选择和文档。
 - 若诊断证明 H2（真实回归），升级为 P1 并单独走安全/租户边界流程，不在本任务内顺带修。
   → **未触发**：H2 已排除。
 
-## 处置选项（维持不变，现已由诊断背书 — maintainer gate）
+## 处置决策（已执行）
 
 | 选项 | 代价 / 风险 |
 |---|---|
-| 在 job 内提供 P1–P4（`tenantmatrixdb up` + 显式翻 `multi` + `tenant-matrix-fixture-setup.mjs`） | 让信号可信并给租户 spec 真正的 CI 路径；job 变慢、步骤变多；fixture 幂等与清理归属需定；`tenantmatrixdb up` 还会重写 `schema_migrations` 且是为 dev 库写的，CI 用法需评审 |
-| 给 spec 加前置守卫（不满足则 skip） | 保留可跑性，但永久 skip 会读成假绿，除非同时统计 skip——而这个 job 已经有未统计的 skip 问题（`business-generated-basic`） |
-| 把租户 spec 移出 `tests/smoke-core/` 通配范围 | 最小改动，让 core 信号恢复真实绿；但租户覆盖在新区承载 job 出现前将没有任何 CI 路径 |
-| 维持现状 | 继续维持被 `continue-on-error` 掩盖的长期红信号；租户 spec 继续只有本地绿证据 |
+| 采用 | Core Smoke 显式 allowlist + 独立 Tenant Smoke multi-mode job，保留 advisory 定位 |
+| 不采用 | skip 守卫、无承载地移除租户覆盖、提升任何 smoke job 为 blocking |
 
-无论选哪个，同一改动都应顺手修 README/通配脱节，否则下一个需要不同环境的 spec 会静默
-重蹈覆辙。
+README/通配脱节已一并修复；后续新增需要特殊前置条件的 spec 必须进入对应专项 job。
 
 ## Evidence
 
-- `.harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/`（诊断已执行，命令逐条转
-  `passed` / `not-run`；`summary.md` 给出根因与前置条件清单，`review.md` 为执行评审）
-- 显式 gap：本机无 3306 MySQL，未做本地 multi 模式端到端复现；判定依据是 CI job 自身的
-  `Received` 值 + 产出这些值的产品代码路径（均带 file:line 锚点）
+- `.harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/`（诊断、处置、静态验证和 hosted
+  运行说明）
+- 显式 gap：本机无 3306 MySQL，未伪造本地 multi 模式端到端通过；新 job 的完整 runtime
+  evidence 需由 GitHub hosted run 提供。

@@ -2,7 +2,8 @@
   "taskId": "2026-09-10-i18n-s3649-zero",
   "repo": "pantheon-base",
   "agent": {
-    "tool": "codebuff",
+    "tool": "other",
+    "adapter": "codebuff",
     "note": "Buffy agent on z-ai/glm-5.3-flash via Codebuff/Freebuff."
   },
   "commands": [

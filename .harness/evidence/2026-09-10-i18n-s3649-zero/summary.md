@@ -50,4 +50,11 @@ pins the column set anyway.
 ## Residual gaps
 
 - SonarCloud zero-total confirmation lands with the next main analysis
+
+## Closeout (post-release, 2026-09-22)
+
+- The struct-form update fix is on `main` via `c8d3efd5` (PR #306).
+- `pantheon-base-v0.12.1` subsequently recorded SonarCloud unresolved issues = 0.
+- The task is completed; any later Sonar rerun is confirmation evidence, not an
+  implementation blocker.
   after merge.

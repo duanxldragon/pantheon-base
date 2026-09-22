@@ -21,3 +21,27 @@ contract, no permission/menu/i18n surface touched.
 
 - CI Full Smoke Suite is the final arbiter for the 2-vCPU runner timing profile; local run used a warmed environment.
 - The 8080 node/PATH finding could mislead future local smoke runs until the maintainer restarts that backend with node available; recorded in commands.json knownGaps.
+
+## Closeout
+
+PR #325 merged the reviewed test-only fix to `main` as `99f63086`. The review
+remains approved; the only residual evidence gap is hosted runner timing, not a
+known product defect.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-20-module-governance-flaky-timeout",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Hosted runner timing remains the final confirmation"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-module-governance-flaky-timeout/manifest.json",
+    "evidence": ".harness/evidence/2026-09-20-module-governance-flaky-timeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-20-module-governance-flaky-timeout/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```

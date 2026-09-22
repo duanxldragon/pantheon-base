@@ -1,0 +1,19 @@
+{
+  "taskId": "2026-09-22-tenant-public-settings-scope",
+  "title": "Tenant-scope public settings and cache",
+  "goal": "Prevent cross-tenant reuse of public settings and process-local cache entries in multi mode.",
+  "primaryLayer": "system/config",
+  "status": "planned",
+  "priority": "P0",
+  "type": "tenant-isolation",
+  "dependencyLayers": ["platform/tenant"],
+  "blockedBy": [],
+  "blocks": ["2026-09-22-export-and-session-pagination"],
+  "taskDoc": ".harness/tasks/2026-09-22-tenant-public-settings-scope/task.md",
+  "evidenceDir": ".harness/evidence/2026-09-22-tenant-public-settings-scope",
+  "scope": {"in": ["backend/modules/system/config/setting", "backend/internal/middleware", "backend/pkg/tenant"], "out": ["full SaaS tenant management", "single-tenant compat behavior"]},
+  "acceptanceCriteria": ["Multi mode queries use tenant scope", "Cache key includes tenant namespace", "Tenant A/B isolation regression exists", "Refresh invalidation is tested"],
+  "verificationCommands": ["go test ./modules/system/config/setting ./internal/middleware ./pkg/tenant", "go vet ./modules/system/config/setting ./internal/middleware ./pkg/tenant"],
+  "humanGate": "Maintainer confirmation of tenant isolation contract",
+  "createdAt": "2026-09-22T00:00:00Z"
+}

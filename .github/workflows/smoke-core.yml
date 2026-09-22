@@ -130,3 +130,131 @@ jobs:
           if [ -f "$RUNNER_TEMP/pantheon-backend.pid" ]; then
             kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
           fi
+
+  # Tenant smoke has an explicit multi-mode environment. Keeping it out of the
+  # compat-mode Core Smoke glob makes a red result actionable instead of a
+  # precondition mismatch. The job remains push-only and report-only for now.
+  smoke-tenant:
+    name: Tenant Smoke (multi-mode advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    continue-on-error: true
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_MATRIX_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_MATRIX_MODE: multi
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
+      PANTHEON_PORT: "8080"
+      PANTHEON_API_BASE_URL: http://127.0.0.1:8080/api/v1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe502e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Start backend
+        shell: bash
+        working-directory: backend
+        run: |
+          nohup go run ./cmd/server >"$RUNNER_TEMP/pantheon-tenant-backend.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/pantheon-tenant-backend.pid"
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat "$RUNNER_TEMP/pantheon-tenant-backend.log" >&2 || true
+          exit 1
+
+      - name: Provision tenant matrix in multi mode
+        working-directory: backend
+        run: go run ./cmd/tenantmatrixdb up
+
+      - name: Run tenant smoke suite
+        working-directory: frontend
+        run: npm run test:smoke:tenant
+
+      - name: Upload tenant smoke artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: smoke-tenant-artifacts
+          path: |
+            frontend/test-results
+            ${{ runner.temp }}/pantheon-tenant-backend.log
+          if-no-files-found: ignore
+
+      - name: Remove tenant dictionary fixtures
+        if: always()
+        continue-on-error: true
+        working-directory: frontend
+        run: node scripts/tenant-matrix-fixture-setup.mjs down
+
+      - name: Restore tenant matrix database
+        if: always()
+        continue-on-error: true
+        working-directory: backend
+        run: go run ./cmd/tenantmatrixdb down
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/pantheon-tenant-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pantheon-tenant-backend.pid")" || true
+          fi

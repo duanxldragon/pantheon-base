@@ -1,0 +1,19 @@
+{
+  "taskId": "2026-09-22-production-redis-and-security-gates",
+  "title": "Fail fast on production Redis and strengthen security gates",
+  "goal": "Make production dependencies and vulnerability scanning enforceable and observable.",
+  "primaryLayer": "platform/release",
+  "status": "planned",
+  "priority": "P1",
+  "type": "release-hardening",
+  "dependencyLayers": ["system/auth", "platform/infra"],
+  "blockedBy": ["2026-09-22-session-revocation-closure"],
+  "blocks": [],
+  "taskDoc": ".harness/tasks/2026-09-22-production-redis-and-security-gates/task.md",
+  "evidenceDir": ".harness/evidence/2026-09-22-production-redis-and-security-gates",
+  "scope": {"in": ["server startup", "health/readiness", "security workflow", "deployment docs"], "out": ["Redis client replacement", "unrelated dependency upgrades"]},
+  "acceptanceCriteria": ["Production Redis absence/failure is fail-fast", "Readiness reflects DB/Redis/migration", "Security scan failures are not silently swallowed", "Commands are reproducible in CI/runbook"],
+  "verificationCommands": ["go test ./cmd/server ./internal/middleware ./pkg/database", "go vet ./cmd/server ./internal/middleware ./pkg/database", "go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...", "npm audit --audit-level=high"],
+  "humanGate": "Maintainer approval for CI blocking policy and Redis requirement",
+  "createdAt": "2026-09-22T00:00:00Z"
+}

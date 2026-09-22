@@ -8,7 +8,8 @@
 //	          created via GORM AutoMigrate and never ran the versioned ones,
 //	        * create temporary tenants (101/202) + active memberships for the
 //	          smoke user (admin),
-//	        * set platform.tenant_mode = compat (explicit starting point).
+//	        * set platform.tenant_mode to PANTHEON_MATRIX_MODE (compat by
+//	          default; CI can request multi explicitly).
 //	down  — restore: delete fixture rows, force the flag back to compat,
 //	        then roll migrations 16..13 back (reverse of up).
 //	revoke — runbook §6.2 kill-switch session revocation for the smoke user:
@@ -201,12 +202,31 @@ func cmdUp(db *sql.DB) error {
 		}
 	}
 
-	// 4. Explicit starting flag value: compat.
-	if err := setFlagValue(db, flagCompat); err != nil {
+	// 4. Explicit starting flag value: compat by default, or multi when the
+	// caller opts into a real tenant-mode matrix run.
+	mode, err := matrixMode()
+	if err != nil {
 		return err
 	}
-	fmt.Println("tenant-matrix up: migrations ensured, tenants 101/202 ready, flag=compat")
+	if err := setFlagValue(db, mode); err != nil {
+		return err
+	}
+	fmt.Printf("tenant-matrix up: migrations ensured, tenants 101/202 ready, flag=%s\n", mode)
 	return nil
+}
+
+// matrixMode keeps the matrix tool safe by defaulting to compat while allowing
+// an explicit multi-mode CI run. No other values are accepted because a typo
+// here would silently run the tenant suite against the wrong contract.
+func matrixMode() (string, error) {
+	mode := strings.ToLower(strings.TrimSpace(os.Getenv("PANTHEON_MATRIX_MODE")))
+	if mode == "" {
+		return flagCompat, nil
+	}
+	if mode != flagCompat && mode != flagMulti {
+		return "", fmt.Errorf("PANTHEON_MATRIX_MODE must be %q or %q, got %q", flagCompat, flagMulti, mode)
+	}
+	return mode, nil
 }
 
 func cmdDown(db *sql.DB) error {

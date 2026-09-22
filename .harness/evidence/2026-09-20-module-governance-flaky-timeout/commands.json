@@ -1,6 +1,10 @@
 {
   "taskId": "2026-09-20-module-governance-flaky-timeout",
   "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "recorded historical verification"
+  },
   "commands": [
     {
       "command": "git show 3d76b402 --stat",
@@ -42,5 +46,12 @@
   "knownGaps": [
     "CI-level confirmation of the timeout fix lands when the PR's Full Smoke Suite runs; local run used a second backend instance on 8081 because the maintainer-started 8080 process lacks node in its PATH (environment note, not a code defect).",
     "Node path issue on the running 8080 backend is an environment finding reported to the maintainer; no repo change made for it."
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-module-governance-flaky-timeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-20-module-governance-flaky-timeout/",
+    "reviewFile": ".harness/evidence/2026-09-20-module-governance-flaky-timeout/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
 }

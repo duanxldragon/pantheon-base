@@ -1,0 +1,19 @@
+{
+  "taskId": "2026-09-22-request-path-maintenance",
+  "title": "Move retention and session governance out of read paths",
+  "goal": "Remove synchronous cleanup and purge work from ordinary list requests.",
+  "primaryLayer": "platform/reliability",
+  "status": "planned",
+  "priority": "P1",
+  "type": "reliability-hardening",
+  "dependencyLayers": ["system/auth", "system/audit"],
+  "blockedBy": ["2026-09-22-export-and-session-pagination"],
+  "blocks": [],
+  "taskDoc": ".harness/tasks/2026-09-22-request-path-maintenance/task.md",
+  "evidenceDir": ".harness/evidence/2026-09-22-request-path-maintenance",
+  "scope": {"in": ["session inventory governance", "login/operation log retention", "maintenance trigger and metrics"], "out": ["retention policy reduction"]},
+  "acceptanceCriteria": ["List requests do not purge", "Maintenance is throttled and observable", "Retention remains executable explicitly", "Failure is visible"],
+  "verificationCommands": ["go test ./modules/auth/session ./modules/auth/login ./modules/system/audit", "go vet ./modules/auth/session ./modules/auth/login ./modules/system/audit"],
+  "humanGate": "Maintainer confirmation of retention operations",
+  "createdAt": "2026-09-22T00:00:00Z"
+}

@@ -27,3 +27,27 @@ remediate action are untouched.
 - Historical dead policies (if any were created from the stale entry in real
   environments) are not auto-cleaned; path-existence cleanup is a ratchet candidate
   for the next remediation round.
+
+## Closeout
+
+PR #328 merged the reviewed change to `main` as `8c8ff37f`. No blocking finding
+remains for this task; the two residual technical-debt items stay recorded as
+future work.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-20-permission-workbench-route-binding",
+  "verdict": "approved with documented P2 follow-up",
+  "findings": [],
+  "residualRisks": ["Full route-table derivation and historical dead-policy cleanup remain ratchets"],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-permission-workbench-route-binding/manifest.json",
+    "evidence": ".harness/evidence/2026-09-20-permission-workbench-route-binding/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-20-permission-workbench-route-binding/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
+```
