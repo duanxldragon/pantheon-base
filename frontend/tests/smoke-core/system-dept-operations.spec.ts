@@ -119,17 +119,17 @@ function searchDeptRow(page: Page, deptName: string) {
  */
 async function revealCreatedDeptRow(page: Page, deptName: string) {
   const deptRow = page.locator('.arco-table-tr').filter({ hasText: deptName }).first();
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await expandTreeRow(page, 'Pantheon Base');
+  // 展开竞态兜底: refresh-topic 重拉没有可观测信号, 显式 sleep 会触发
+  // SonarCloud typescript:S3516。展开钮是翻转式点击——已展开时再点会折叠回去,
+  // 所以每次尝试都先查行可见性再决定是否展开, 点击后要求行在短窗口内出现;
+  // 整个 "确保展开 → 找行" 流程交给 toPass 重试, 等刷新沉淀后自然收敛。
+  await expect(async () => {
     if (await deptRow.isVisible().catch(() => false)) {
-      return deptRow;
+      return;
     }
-  }
-  // 展开竞态的兜底轮询: refresh-topic 重拉没有可观测信号,
-  // 显式 sleep 会触发 SonarCloud typescript:S3516。
-  await expect
-    .poll(async () => deptRow.isVisible().catch(() => false), { timeout: 15000 })
-    .toBe(true);
+    await expandTreeRow(page, 'Pantheon Base');
+    await expect(deptRow).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   return deptRow;
 }
 
