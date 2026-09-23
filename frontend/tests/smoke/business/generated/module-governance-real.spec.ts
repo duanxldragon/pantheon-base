@@ -121,14 +121,16 @@ async function expectPathMissing(target: string) {
 }
 
 test('real module governance flow can generate register and purge a temporary business module', async ({ page }) => {
-  // Budget: the in-test retry block below allows toPass 60s and goto 90s
-  // (stabilization #246/#284), so the config-level 30s test timeout could
-  // never contain this real generate→register→purge cycle on CI runners —
-  // it died at the /system/modules row assertion once Vite's first compile
-  // of the generated module exceeded the remaining budget. Raise the test
-  // budget instead of shaving the retry block (same pattern as
-  // tenant-hostile-browser-matrix.spec.ts).
-  test.setTimeout(120_000);
+  // Budget: this is a real generate→register→purge cycle, so the config-level
+  // 30s test timeout can never contain it (stabilization #246/#284); same
+  // pattern as tenant-hostile-browser-matrix.spec.ts.
+  //
+  // The /system/modules navigation below needs its own 120s slice on top of the
+  // rest: the generator has just rewritten the generated registries, so the app
+  // entry imports the fresh module tree and Vite must transform all of it on
+  // demand. On a cold runner that single navigation was measured consuming an
+  // entire 60s window (run 35787715713), which is why the budget is 240s here.
+  test.setTimeout(240_000);
   const login = await loginByApi(page.request, adminCredentials);
   const operationToken = await getApiOperationToken(page.request, login);
   await cleanupModule(page.request, login, operationToken);
@@ -196,13 +198,22 @@ test('real module governance flow can generate register and purge a temporary bu
     return content.includes(`business/${moduleName}/OrderqaList`);
   }).toBe(true);
 
-  await expect(async () => {
-    await page.goto('/system/modules', { waitUntil: 'domcontentloaded', timeout: 90_000 });
-    await expect(page).toHaveURL(/\/system\/modules(?:\?|$)/);
-    const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
-    await expect(row).toBeVisible({ timeout: 10_000 });
-  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+  // Navigate once, under its own budget, and retry only the row assertion.
+  //
+  // Previously the navigation lived inside the retry loop, so the cold Vite
+  // transform and the row assertion shared one 60s predicate window: the first
+  // `goto` alone consumed the whole window and the attempt was guaranteed to
+  // fail, with Playwright's retry passing a moment later on a warm module cache
+  // (run 35704013167: attempt 1 died at the 60s timeout, retry #1 passed in
+  // 6.5s). Nothing was wrong with the data — the module is already listed by
+  // the API above — so the UI wait must not be sized against the compile.
+  await page.goto('/system/modules', { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await expect(page).toHaveURL(/\/system\/modules(?:\?|$)/);
+
   const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
+  await expect(async () => {
+    await expect(row).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
   await expect(row.getByText(/待激活|已接入/).first()).toBeVisible();
 
   const cleanupResponse = await page.request.delete(`${apiBaseUrl}/lowcode/dynamic-modules/${moduleKey}?dropTable=false&purgeSource=true`, {

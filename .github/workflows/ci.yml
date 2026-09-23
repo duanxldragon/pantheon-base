@@ -275,12 +275,10 @@ jobs:
           # the previous install path did — the prebuilt binary is built with
           # an older Go and panics type-checking go 1.26.5 sources.
           install-mode: goinstall
-          # Parity with the previous go-install path, which never ran
-          # `golangci-lint config verify`: .golangci.yml carries three legacy
-          # keys the v2 schema rejects (goconst.ignore-tests, issues.exclusions,
-          # output.sort-results). Fixing the config changes effective lint
-          # behavior — deferred as an explicit follow-up.
-          verify: false
+          # Verify the config against the v2 JSON schema, so a v1-only key
+          # cannot be silently ignored again (goconst.ignore-tests,
+          # issues.exclusions, and output.sort-results were exactly that).
+          verify: true
 
       - name: Report full-repo lint result
         if: always()

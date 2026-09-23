@@ -15,23 +15,34 @@ inheritance-sync
 - Upstream Dependencies: `pantheon-harness`
 - Downstream Consumers: `pantheon-ops`
 - Sync Expectation: `required`
-- Release Requirement: `foundation-release` and `consumer-lock-update`
+- Release Requirement: `foundation-release`
+
+## Dependency Layers
+
+- repository branch and PR closure
+- foundation release tooling
+- Pantheon Ops consumer pipeline
 
 ## Harness Profile
 
-- Quality Profile: `ci-workflow`
-- Portable Failure Class: `method-health-gap`
-- Owner Layer: `consumer-repository`
-- Minimal Complexity Rung: `reuse`
-- Ratchet Decision: `no-repeat-observed`
+- Template: api-service
+- Overlay: pantheon-base
+- Quality Profile: ci-workflow
+- Portable Failure Class: method-health-gap
+- Owner Layer: consumer-repository
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - runtime-quality
+  - method-health
 
 ## Contract Anchors
 
 - `AGENTS.md`
 - `DESIGN.md`
 - `docs/designs/FOUNDATION_RELEASE_MODEL.md`
-- `docs/WORKSPACE_INHERITANCE.md`
-- `pantheon-ops/docs/PROJECT_INHERITANCE.md`
+- `docs/contracts/PLATFORM_CONTRACT.md`
 
 ## Scope
 
@@ -52,13 +63,6 @@ inheritance-sync
 - Overwriting the dirty primary `pantheon-ops` worktree or its unpushed commits.
 - Mutating any existing tag or GitHub Release.
 
-## Structural Scope
-
-- Affected Subgraph: `Base main -> foundation manifest/bundle -> Ops consumer lock -> business overlay validation`
-- Boundary Crossings: `base -> ops`
-- Risk Nodes: `GitHub branch protection`, `immutable release tag`, `foundation-release.lock.json`, `business-overlay.json`
-- Graph Focus: `none`; release and inheritance scripts provide the contract boundary
-
 ## Expected Files
 
 ### Create
@@ -76,32 +80,19 @@ inheritance-sync
 
 ### Do Not Touch
 
-- Runtime backend modules, packages, and contracts; deletion is limited to the unreferenced one-off import-rewrite scripts at `backend/` root.
+- runtime backend modules, packages, and contracts; deletion is limited to the unreferenced one-off import-rewrite scripts at `backend/` root.
 - `frontend/src/`
 - Primary `pantheon-ops` worktree
 
-## Delivery Governance
+## Implementation Notes
 
-- Design Gate: `docs/designs/FOUNDATION_RELEASE_MODEL.md`
-- Development Gate: expected files and boundaries declared above
-- QA Acceptance Gate: GitHub required checks, release gate, consumer rebuild and overlay validation
-- GitHub Governance Gate: `repo-quality-gate`
-
-## Execution Roles
-
-- Implementer Posture: `reviewer-assisted`
-- Reviewer Posture: `architecture` and `mechanical`
-
-## Stop Points
-
-- Stop before an immutable tag/release if the matching `Release Gate Summary` is absent or failed.
-- Stop before modifying the dirty primary Ops worktree; use an isolated consumer worktree instead.
+- Deliver the fix by merging into `main` and publishing an immutable release; never copy Base files into Ops by hand.
+- Use an isolated consumer worktree for the Ops rebuild so the dirty primary worktree stays untouched.
 
 ## Verification Plan
 
 - `npm run check:docs-frontmatter`
 - `npm run check:task-packet-template`
-- `npm run check:github-feedback -- --repo duanxldragon/pantheon-base --pr <number>`
 - GitHub required checks and `Release Gate Summary` on the final Base commit
 - `npm run release:foundation:cut -- --release-version pantheon-base-v0.10.26 --release-line release/0.10 --base-commit <final-main-sha>`
 - `npm run upgrade:foundation:local-plan -- --release-version pantheon-base-v0.10.26`
@@ -110,23 +101,30 @@ inheritance-sync
 ## Linkage
 
 - Task ID: `2026-09-02-foundation-release-v0-10-26-and-ops-sync`
+- Task Manifest: `.harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json`
 - OpenSpec Change: `none`
+- Superpowers Plan: `none`
+- Plan References: `docs/harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync.task.md`
 - Evidence Directory: `.harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/`
 - Review File: `.harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/review.md`
 
-## Foundation Release Handoff
+## Evidence Required
 
-- Shared change owner: `pantheon-base`
-- Foundation release required: `yes`
-- Consumer sync status: `in-progress`
-- Downstream validation command: `npm run check:base-sync`
-- Release/lock stop point: `immutable release and consumer lock update`
+- PR closure and branch-deletion record
+- exact-commit Release Gate and required check results
+- published immutable release with verified assets
+- Ops consumer rebuild and lock update result
+- review summary
+
+## Human Gates
+
+- Stop before an immutable tag/release if the matching `Release Gate Summary` is absent or failed.
+- Stop before modifying the dirty primary Ops worktree; use an isolated consumer worktree instead.
 
 ## Completion Checklist
 
-- [ ] PR feedback closed and merged
-- [ ] All non-main branches deleted locally and remotely
-- [ ] Required Base checks and release gate pass
-- [ ] Immutable release published with verified assets
-- [ ] Ops consumer lock updated through the upgrade pipeline
-- [ ] Evidence and independent review recorded
+- [x] Layer and boundary declared
+- [x] Contract anchors read
+- [x] Verification run or exception recorded
+- [x] Evidence saved or summarized
+- [x] Review completed

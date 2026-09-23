@@ -1,0 +1,150 @@
+{
+  "taskId": "2026-09-23-legacy-packet-migration-and-config-integrity",
+  "title": "Migrate the legacy task packets and make the golangci-lint and smoke guards honest",
+  "goal": "Close the three items the 2026-09-23 governance residual closeout recorded as out of scope: migrate the 17 pre-template task packets to the section-based template and empty the legacy allowlist, remove the three v1-only keys that made golangci-lint silently ignore `linters.exclusions` (and re-enable config verification so they cannot come back), and fix the generated-smoke governance test whose first attempt was guaranteed to fail at the /system/modules row assertion and only ever passed via Playwright's retry.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-23: all 17 pre-template packets were rewritten to the current template and config/task-packet-legacy-docs.json is now intentionally empty, so the checker covers every packet with no exemption. backend/.golangci.yml was migrated off goconst.ignore-tests, issues.exclusions and output.sort-results; `golangci-lint config verify` passes and both CI workflows verify again. The generated-smoke spec now gives the cold Vite transform its own navigation budget instead of sharing one with the row assertion; verified by a manually dispatched Full Smoke Suite on the branch because the suite cannot run on this host.",
+  "completedAt": "2026-09-23",
+  "priority": "P2",
+  "type": "governance-ratchet",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Two related gaps stay open by decision: check-boundaries.mjs still runs report-only with 5 unbaselined findings, and no static sensor forbids a page navigation inside a Playwright retry callback, which is the shape that caused the smoke defect (recorded as a deferred follow-up rather than a brittle regex gate).",
+  "dependencyLayers": [
+    "docs harness task packets and the task-packet checker",
+    "backend golangci-lint configuration and the CI Go Lint step",
+    "frontend generated-business smoke suite"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "rewrite the 17 pre-template task packets into the section-based template with their manifest facts, keeping frontmatter as-is",
+      "empty config/task-packet-legacy-docs.json so a plain checker run covers every packet",
+      "remove goconst.ignore-tests, move issues.exclusions to linters.exclusions and drop output.sort-results in backend/.golangci.yml",
+      "replace the schema-invalid linters: [all] generated-code rule with generated: strict coverage",
+      "turn golangci-lint config verification back on in ci.yml and quality.yml",
+      "give the /system/modules navigation in module-governance-real.spec.ts its own budget and retry only the row assertion",
+      "document the measured evidence for the smoke change in the spec comment"
+    ],
+    "out": [
+      "any change to runtime behaviour, API, permissions, menus, i18n, database or seed",
+      "raising check-boundaries.mjs from report-only to blocking, or baselining its 5 findings",
+      "migrating the two generated registries off the standard marker-based exclusion",
+      "adding a static sensor for navigation-inside-retry in smoke specs",
+      "pantheon-ops synchronization (standing deferral, untouched)"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-23-legacy-packet-migration-and-config-integrity/task.md",
+  "contractAnchors": [
+    "docs/acceptances/TASK_PACKET_BASE_TEMPLATE.md",
+    "config/task-packet-legacy-docs.json",
+    "scripts/harness/check-task-packet.mjs",
+    "backend/.golangci.yml",
+    "frontend/tests/smoke/business/generated/module-governance-real.spec.ts",
+    ".github/workflows/quality.yml",
+    ".github/workflows/ci.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-23-legacy-packet-migration-and-config-integrity/manifest.json",
+      ".harness/tasks/2026-09-23-legacy-packet-migration-and-config-integrity/task.md",
+      ".harness/evidence/2026-09-23-legacy-packet-migration-and-config-integrity/commands.json",
+      ".harness/evidence/2026-09-23-legacy-packet-migration-and-config-integrity/summary.md",
+      ".harness/evidence/2026-09-23-legacy-packet-migration-and-config-integrity/review.md"
+    ],
+    "modify": [
+      "docs/harness/tasks/2026-08-10-shared-csrf-release.task.md",
+      "docs/harness/tasks/2026-08-11-base-security-dependencies.task.md",
+      "docs/harness/tasks/2026-08-11-delivery-certification.task.md",
+      "docs/harness/tasks/2026-08-11-foundation-release-v0-10-12.task.md",
+      "docs/harness/tasks/2026-08-11-foundation-release-v0-10-13.task.md",
+      "docs/harness/tasks/2026-08-12-foundation-consumer-cleanup-overlay.task.md",
+      "docs/harness/tasks/2026-08-12-foundation-consumer-runtime-portability.task.md",
+      "docs/harness/tasks/2026-08-12-foundation-smoke-closure.task.md",
+      "docs/harness/tasks/2026-08-12-foundation-smoke-contract-closure.task.md",
+      "docs/harness/tasks/2026-08-12-pr-auto-merge-push-trigger.task.md",
+      "docs/harness/tasks/2026-08-12-pr-auto-merge-token.task.md",
+      "docs/harness/tasks/2026-08-13-foundation-release-repo-snapshot.task.md",
+      "docs/harness/tasks/2026-08-21-sonarcloud-remediation.task.md",
+      "docs/harness/tasks/2026-09-01-release-docs-reconciliation.task.md",
+      "docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md",
+      "docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md",
+      "docs/harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync.task.md",
+      "config/task-packet-legacy-docs.json",
+      "scripts/harness/README.md",
+      "backend/.golangci.yml",
+      ".github/workflows/ci.yml",
+      ".github/workflows/quality.yml",
+      "frontend/tests/smoke/business/generated/module-governance-real.spec.ts"
+    ],
+    "doNotTouch": [
+      "backend/modules/** and backend/pkg/** (no Go source change in this round)",
+      "frontend/src/** (no product source change)",
+      "admin SQL, seeds, permission matrix and i18n resources",
+      "the 17 linked .harness/tasks/**/manifest.json files and their evidence directories"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "governance-ratchet",
+    "qualityProfile": "ci-workflow",
+    "ratchetDecision": "gate-updated",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-task-packet.mjs --root . --legacy .tmp/legacy-probe.json",
+      "cd backend && ../.tmp/bin/golangci-lint config verify",
+      "cd backend && ../.tmp/bin/golangci-lint run --new-from-rev=$(git merge-base HEAD origin/main) ./...",
+      "cd frontend && ./node_modules/.bin/tsc --noEmit -p tsconfig.json && ./node_modules/.bin/eslint tests/smoke/business/generated/module-governance-real.spec.ts && node ./scripts/check-smoke-coverage-contract.mjs",
+      "node scripts/harness/check-doc-frontmatter.mjs --root . --strict && node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict",
+      "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "gh workflow run smoke-full.yml --ref <branch>"
+    ],
+    "runtimeEvidence": [
+      "goconst/revive findings inside setting_*_test.go: 3 with the HEAD config, 0 after the migration, proving linters.exclusions now applies",
+      "golangci-lint config verify: three 'additional properties ... not allowed' errors before, clean exit after",
+      "Full Smoke Suite dispatched on the branch and watched to completion for the smoke change"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    "task-packet checker output over all 28 packets with an empty legacy allowlist, plus a stale-entry negative probe",
+    "golangci-lint before/after for config verify and for test-file exclusions, plus the new-code lint result",
+    "the measured smoke evidence (attempt 1 timing versus retry timing) and the dispatched Full Smoke Suite result",
+    "frontend type-check, eslint and smoke-coverage contract output",
+    "doc and evidence gate output",
+    "review disposition incl. the two deferred follow-ups"
+  ],
+  "humanGates": [
+    "none required (no permission, API, retention, menu or data surface changed) — PR gates, non-author review, and a manually dispatched Full Smoke Suite"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-23-legacy-packet-migration-and-config-integrity/",
+    "reviewFile": ".harness/evidence/2026-09-23-legacy-packet-migration-and-config-integrity/review.md",
+    "summaryFile": ".harness/evidence/2026-09-23-legacy-packet-migration-and-config-integrity/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-23-governance-residual-closeout/manifest.json"
+    ]
+  }
+}

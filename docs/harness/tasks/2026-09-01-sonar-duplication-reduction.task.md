@@ -9,7 +9,7 @@ linked_contracts:
 updated_at: 2026-09-01
 ---
 
-# Task Packet: 2026-09-01 Sonar duplication reduction
+# Task Packet: 2026-09-01-sonar-duplication-reduction
 
 ## Goal
 
@@ -17,7 +17,7 @@ Reduce the `pantheon-base` SonarCloud overall duplication from the observed `4.1
 
 ## Primary Layer
 
-`system/*` and shared frontend platform components; no contract or runtime behavior change.
+platform
 
 ## Workspace Context
 
@@ -28,26 +28,30 @@ Reduce the `pantheon-base` SonarCloud overall duplication from the observed `4.1
 - Sync Expectation: `not-required`
 - Release Requirement: `none`
 
+## Dependency Layers
+
+- shared frontend platform components
+- backend service and test helpers
+
+## Harness Profile
+
+- Template: admin-platform
+- Overlay: pantheon-base
+- Quality Profile: ci-workflow
+- Portable Failure Class: method-health-gap
+- Owner Layer: consumer-repository
+- Coverage Dimensions:
+  - behaviour
+  - maintainability
+  - architecture-fitness
+  - method-health
+
 ## Contract Anchors
 
 - `AGENTS.md`
 - `DESIGN.md`
 - `docs/designs/QUALITY_AND_SECURITY_STRATEGY.md`
 - `scripts/check-duplication.mjs`
-- SonarCloud project `duanxldragon_pantheon-base`
-
-## Assumptions and Open Questions
-
-- Confirmed: public SonarCloud measures report `5,936` duplicated lines, `128,506` NCLOC, and `4.10%` overall density.
-- Confirmed: `SONAR_TOKEN` is unavailable locally; the public measures endpoint is readable, but hosted post-change analysis remains authoritative.
-- Assumption: repeated test setup and repeated list/schema presentation are safe to consolidate without changing exported APIs or observable behavior.
-- Open: exact post-change SonarCloud density until CI analysis runs.
-
-## Minimum Viable Approach
-
-- Reuse existing local helpers/components and extract only repeated blocks shown by the Sonar file ranking.
-- Do not add dependencies, change exclusions, or rewrite generated/fixture content to game the metric.
-- Preserve i18n, authorization, audit, menu, and runtime behavior.
 
 ## Scope
 
@@ -61,13 +65,6 @@ Reduce the `pantheon-base` SonarCloud overall duplication from the observed `4.1
 - SonarCloud project settings or exclusions.
 - API, schema, seed semantics, permissions, menus, Ops repository, and visual redesign.
 
-## Structural Scope
-
-- Affected Subgraph: list/schema view composition and backend test/service helper paths -> existing shared helpers/components -> rendered/API behavior.
-- Boundary Crossings: none; changes remain inside `pantheon-base` modules.
-- Risk Nodes: shared frontend list patterns; backend service/test setup helpers.
-- Graph Focus: hub-check and behavior-preserving call-depth review.
-
 ## Expected Files
 
 ### Create
@@ -79,21 +76,19 @@ Reduce the `pantheon-base` SonarCloud overall duplication from the observed `4.1
 
 ### Modify
 
-- Only files confirmed by the Sonar hotspot ranking and assigned implementation scope.
+- only files confirmed by the Sonar hotspot ranking and assigned implementation scope
 
 ### Do Not Touch
 
 - `.sonarcloud.properties`
 - `pantheon-ops/**`
-- `database/**`, schema contracts, permissions, menus, i18n resource policy, and release configuration.
+- `database/**`, schema contracts, permissions, menus, i18n resource policy, and release configuration
 
-## Method Readiness
+## Implementation Notes
 
-- Quality Profile: `ci-workflow` plus `ui-runtime` where frontend production code is touched.
-- Minimal Complexity Rung: `reuse`.
-- Required Sensors: local duplication gate, Go tests, frontend type-check/lint/build, review.
-- Ratchet Decision: `guide-updated` is deferred unless the same hotspot pattern recurs after this closeout.
-- Deferred Code Issues: hosted SonarCloud post-change measure until CI runs.
+- Reuse existing local helpers/components and extract only repeated blocks shown by the Sonar file ranking.
+- Do not add dependencies, change exclusions, or rewrite generated/fixture content to game the metric.
+- Preserve i18n, authorization, audit, menu, and runtime behavior.
 
 ## Verification Plan
 
@@ -105,25 +100,29 @@ Reduce the `pantheon-base` SonarCloud overall duplication from the observed `4.1
 ## Linkage
 
 - Task ID: `2026-09-01-sonar-duplication-reduction`
+- Task Manifest: `.harness/tasks/2026-09-01-sonar-duplication-reduction/manifest.json`
 - OpenSpec Change: `none`
+- Superpowers Plan: `none`
+- Plan References: `docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md`
 - Evidence Directory: `.harness/evidence/2026-09-01-sonar-duplication-reduction/`
 - Review File: `.harness/evidence/2026-09-01-sonar-duplication-reduction/review.md`
+
+## Evidence Required
+
+- local duplication gate result
+- focused backend and frontend verification results
+- hosted SonarCloud duplication measure after CI
+- explicit runtime gap note
+- review summary
 
 ## Human Gates
 
 - Hosted SonarCloud analysis and final acceptance of any residual density above the target.
 
-## Foundation Release Handoff
+## Completion Checklist
 
-- Shared change owner: `pantheon-base`
-- Foundation release required: `deferred`
-- Consumer sync status: `not-started`
-- Downstream validation command: `none`
-- Release/lock stop point: `none`
-
-## Success Criteria
-
-- Hosted SonarCloud overall duplication density is `< 3.00%`.
-- Local duplication gate remains passing at `<= 3.00%`.
-- Focused backend/frontend validation passes with no contract or behavior regressions.
-- Evidence and review artifacts link back to this task packet.
+- [x] Layer and boundary declared
+- [x] Contract anchors read
+- [x] Verification run or exception recorded
+- [x] Evidence saved or summarized
+- [x] Review completed
