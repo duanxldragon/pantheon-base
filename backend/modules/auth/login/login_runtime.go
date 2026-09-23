@@ -937,10 +937,6 @@ func (s *Runtime) RegisterMaintenanceTasks(reg *maintenance.Registry) {
 	s.securitySvc.RegisterMaintenanceTasks(reg)
 }
 
-func (s *Runtime) issueTokenPair(ctx context.Context, u *authuser.User, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
-	return s.issueTenantTokenPair(ctx, u.ID, u.Username, roles, sess, 0)
-}
-
 // issueTenantTokenPair stores the session/refresh pair with the resolved
 // tenant claim. claim=0 keeps the legacy payload shape (compat behavior).
 func (s *Runtime) issueTenantTokenPair(ctx context.Context, userID uint64, username string, roles []string, sess *session.SystemUserSession, tenantClaim uint64) (*authtoken.Pair, error) {

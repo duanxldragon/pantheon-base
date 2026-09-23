@@ -29,12 +29,6 @@ func newRevocationClosureHarness(t *testing.T) (*Service, *redis.Client) {
 	return NewService(db, nil, nil, nil), rdb
 }
 
-func seedActiveSessionWithTokens(t *testing.T, db interface {
-	Create(value interface{}) interface{ Error() error }
-}, rdb *redis.Client, sessionID string, userID uint64) {
-	t.Helper()
-}
-
 // seedRevocationCase inserts one active session row and issues the matching
 // Redis access/refresh token pair so a revoke path can be verified end-to-end.
 func seedRevocationCase(t *testing.T, svc *Service, rdb *redis.Client, sessionID string, userID uint64) {

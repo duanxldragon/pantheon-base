@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
-	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 
 	"gorm.io/gorm"
 )
@@ -199,7 +198,13 @@ func TestCredentialRepositoryRotatePasswordRollsBackOnCallbackFailure(t *testing
 	}
 }
 
-// The port is what auth depends on; the adapter must satisfy it.
+// The port is what auth depends on; the compile-time implementation assertion
+// lives next to the adapter (auth_repository.go). This pins the factory side of
+// the same contract: the composition root must receive the concrete adapter.
 func TestCredentialRepositoryImplementsAuthUserPort(t *testing.T) {
-	var _ authuser.Repository = NewCredentialRepository(nil)
+	t.Helper()
+	repo := NewCredentialRepository(nil)
+	if _, ok := repo.(*credentialRepository); !ok {
+		t.Fatalf("factory must return the concrete credentialRepository port, got %T", repo)
+	}
 }

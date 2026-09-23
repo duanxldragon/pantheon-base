@@ -62,7 +62,7 @@ var currentRuntimeSchemaMarkers = append(
 	preModuleRegistrationRuntimeSchemaMarkers...,
 )
 
-// migrationsApplied reports whether the startup migration step completed
+// MigrationsHealthy reports whether the startup migration step completed
 // successfully, so the health/readiness endpoint can reflect migration state
 // instead of only process liveness. Checked lazily from the schema_migrations
 // table so restarts and multi-instance deployments stay accurate.

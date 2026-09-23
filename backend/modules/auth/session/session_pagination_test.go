@@ -166,18 +166,23 @@ func BenchmarkListAllSessions_PageQuery(b *testing.B) {
 		b.Fatalf("create system_user fixture: %v", err)
 	}
 	now := time.Now()
+	// Row i is (10000-i) seconds old: walk a timestamp forward instead of
+	// converting the loop counter, which keeps the fixture free of uint64->int
+	// conversions (gosec G115) without changing the seeded ordering.
+	createdAt := now.Add(-10000 * time.Second)
 	rows := make([]SystemUserSession, 0, 10000)
-	for i := 0; i < 10000; i++ {
+	for i := uint64(0); i < 10000; i++ {
 		rows = append(rows, SystemUserSession{
 			SessionID:        fmt.Sprintf("bench-%06d", i),
-			UserID:           uint64(i%500 + 1),
+			UserID:           i%500 + 1,
 			RefreshJTI:       fmt.Sprintf("jti-%06d", i),
 			RefreshExpiresAt: now.Add(time.Hour),
 			LastActivityAt:   &now,
 			LastIP:           fmt.Sprintf("10.1.%d.%d", i/250%250, i%250),
 			UserAgent:        "Mozilla/5.0 (Windows NT 10.0) Chrome/126.0 Safari/537.36",
-			CreatedAt:        now.Add(-time.Duration(10000-i) * time.Second),
+			CreatedAt:        createdAt,
 		})
+		createdAt = createdAt.Add(time.Second)
 	}
 	if err := db.CreateInBatches(&rows, 500).Error; err != nil {
 		b.Fatalf("seed sessions: %v", err)

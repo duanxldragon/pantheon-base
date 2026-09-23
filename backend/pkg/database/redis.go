@@ -13,7 +13,7 @@ import (
 
 var RDB *redis.Client
 
-// requireRedis reports whether Redis is a mandatory startup dependency:
+// RequireRedis reports whether Redis is a mandatory startup dependency:
 // always in production, or explicitly via PANTHEON_REDIS_REQUIRED=true (the
 // dev/test opt-out that keeps non-production startup compatible when Redis
 // is genuinely absent).

@@ -98,7 +98,7 @@ func TestImportLimitsAreEnforced(t *testing.T) {
 	if impexp.MaxImportBytes() <= 0 || impexp.MaxImportRows() <= 0 {
 		t.Fatalf("import caps must be positive, got bytes=%d rows=%d", impexp.MaxImportBytes(), impexp.MaxImportRows())
 	}
-	oversized := strings.Repeat("a", int(impexp.MaxImportBytes())+1)
+	oversized := strings.Repeat("a", impexp.MaxImportBytes()+1)
 	file := openTestCSVPart(t, oversized)
 	if _, err := impexp.ReadCSV(file); !errors.Is(err, impexp.ErrTooManyRows) {
 		t.Fatalf("oversized import must fail with ErrTooManyRows, got %v", err)
