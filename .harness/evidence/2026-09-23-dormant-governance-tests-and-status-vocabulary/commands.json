@@ -87,6 +87,12 @@
       "notes": "`has test:scripts step: true`. The catch-all runs last in the existing 'Run npm script tests' job, so no new job, runner or cache is introduced."
     },
     {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/jobs/107160262863/logs | grep -A2 'test:scripts'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "End-to-end proof the wiring works on the real runner, PR #343 'Unit Tests' job: the log shows `> test:scripts` / `> node --test tests/scripts/*.test.mjs` and then `ℹ tests 124` / `ℹ pass 124`, followed by `✔ ci runs the tests/scripts catch-all so no governance test is left unrun`. The catch-all runs in CI, not just locally, and the guard that keeps it wired is itself executed."
+    },
+    {
       "command": "node scripts/harness/check-evidence.mjs --root . --strict",
       "cwd": "pantheon-base",
       "status": "failed",
