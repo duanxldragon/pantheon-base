@@ -103,8 +103,19 @@ platform
 ## Linkage
 
 - Task ID: `2026-08-21-sonarcloud-remediation`
-- Evidence Directory: `.harness/evidence/2026-08-21-sonarcloud-remediation/`
+- Task Manifest: `.harness/tasks/2026-08-21-sonarcloud-remediation/manifest.json`
+- OpenSpec Change: `none`
+- Superpowers Plan: `none`
 - Plan References: `.github/workflows/release-gate.yml`
+- Evidence Directory: `.harness/evidence/2026-08-21-sonarcloud-remediation/`
+- Review File: `.harness/evidence/2026-08-21-sonarcloud-remediation/review.md`
+
+## Evidence Required
+
+- SonarCloud issue list before and after
+- local type-check, lint, and unit test results
+- hosted quality gate and Release Gate result
+- review summary
 
 ## Human Gates
 
@@ -113,9 +124,9 @@ platform
 
 ## Completion Checklist
 
-- [ ] Layer and boundary declared
-- [ ] Quality profile declared
-- [ ] Contract anchors read
-- [ ] Verification run or exception recorded
-- [ ] Evidence saved or summarized
-- [ ] Review completed
+- [x] Layer and boundary declared
+- [x] Quality profile declared
+- [x] Contract anchors read
+- [x] Verification run or exception recorded
+- [x] Evidence saved or summarized
+- [x] Review completed
