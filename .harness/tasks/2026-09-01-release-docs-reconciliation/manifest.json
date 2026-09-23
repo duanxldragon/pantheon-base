@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "taskId": "2026-09-01-release-docs-reconciliation",
   "title": "Reconcile published v0.10.25 release documentation",
-  "status": "complete",
+  "status": "completed",
   "primaryLayer": "platform",
   "qualityProfiles": ["ci-workflow"],
   "ratchetDecision": "no-repeat-observed",

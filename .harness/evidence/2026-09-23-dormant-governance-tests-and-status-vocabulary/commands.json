@@ -1,0 +1,131 @@
+{
+  "taskId": "2026-09-23-dormant-governance-tests-and-status-vocabulary",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "node --test tests/scripts/*.test.mjs   # FIRST time the whole directory is executed",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Before any fix: `tests 122, pass 120, fail 2`. Two real failures, both invisible until this run because neither file is invoked by any workflow. This is the measurement that motivated the round."
+    },
+    {
+      "command": "node -e \"count test:* scripts and test files not referenced by any .github/workflows/*.yml\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Dormancy census: 12 of the 17 `test:` npm scripts are invoked by no workflow (only test:docs-frontmatter, test:foundation-release, test:release-gate-workflow, test:ci-bench-perf-smoke-workflow and test:generated-marker are wired), and 13 of the 28 files under tests/scripts/ have no npm script at all (branch-hygiene-workflow, check-duplication, check-feature-ledger, check-i18n-generated-scope, check-task-packet-template, harness-check-boundaries, harness-check-encoding, harness-check-generated, harness-check-task-packet-context, harness-graph-review, harness-sort-utils, pr-body-generator plus the new task-manifest-status). A grep for `node --test` or `npm test` in every workflow returns only a path-filter line, so nothing ran them indirectly either."
+    },
+    {
+      "command": "node --test tests/scripts/branch-hygiene-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Failure 1, before the fix: `AssertionError: branch hygiene should run after pushes to main` against a workflow whose `on:` block is only `schedule` + `workflow_dispatch`. `git log -p --follow -- .github/workflows/branch-hygiene.yml` shows commit 547427c3 (\"chore: simplify workflows for solo developer\", PR #142) deleting the `push: branches: - main` trigger, while the test was last touched in bec01d18. The workflow change was deliberate; the test was simply never notified, because it never ran."
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-boundaries.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Failure 2, before the fix: `a stale baseline entry is reported as a warning` asserted `result.status === 0`, but the 2026-09-23 round tightened check-boundaries.mjs so that `--strict` exits 1 on stale baseline entries (help text: 'Under --strict, a baseline entry that no longer matches any finding (stale) fails'). The test still encoded the old lenient contract. This is a self-inflicted regression from the previous round that no gate could see."
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-boundaries.test.mjs tests/scripts/branch-hygiene-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "After the fixes: 8/8 pass. The boundaries file now asserts both halves of the documented contract — strict exits 1 on a stale entry, and a non-strict run exits 0 with the stale warning — via a new `runLoose` helper. The branch-hygiene file now asserts the push trigger is absent (with the #142 reference in the comment) and keeps every still-true invariant: no pull_request.closed dependency, pinned actions, contents:write + pull-requests:read, and delegation to scripts/cleanup-github-branches.mjs."
+    },
+    {
+      "command": "node --test tests/scripts/*.test.mjs   # after the fixes",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`tests 124, pass 124, fail 0`. Up from 122 tests with 2 failures; the net +2 is the new task-manifest-status file (4 tests) and the new ci-workflow-dispatch wiring guard (1), minus the boundaries stale test that was split into two."
+    },
+    {
+      "command": "node -e \"census .harness/tasks/*/manifest.json status values\"   # before",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`{ completed: 101, complete: 2, done: 7 }` across 110 manifests, with no manifest missing the field. Three vocabularies for one state, validated by nothing: `status` does not appear anywhere in validateTaskManifest, and no script reads it. A future `status === 'completed'` query would silently miss 9 packets."
+    },
+    {
+      "command": "node -e \"census .harness/tasks/*/manifest.json status values\"   # after normalisation",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`{ completed: 110 }`. The 9 drifting manifests were edited in place (2 `complete` -> `completed`, 7 `done` -> `completed`); no other field was touched and no file was reformatted."
+    },
+    {
+      "command": "node -e \"validateTaskManifest on 110 manifests + positive/negative probes\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`manifests validated: 110, invalid: 0`, and the probes show the rule is load-bearing rather than decorative: `completed`, `planned`, `in-progress`, `abandoned` accepted; `done` and `complete` rejected with `taskManifest.status must be one of: planned, in-progress, completed, abandoned (got \"done\")`; `status` absent accepted, so a manifest without the optional field stays legal."
+    },
+    {
+      "command": "node scripts/harness/check-visual-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Exit 0. This is the reachability proof for the new rule: check:harness-visual is wired into quality.yml and iterates `listTaskManifestPaths` -> `readTaskManifest` -> `validateTaskManifest`, so every manifest in the repository is validated by a gate that actually runs, not only the ones a task doc links to."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`Task packet check: 28 file(s), 0 error(s), 0 warning(s)`. check:task-packet is wired at quality.yml and reads manifests through readTaskManifest, so it carries the new rule too."
+    },
+    {
+      "command": "node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-method-health.mjs --root . --strict && node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "All exit 0 after the change set."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`Boundary check (strict): 0 finding(s), 5 baselined, 0 stale baselined, 0 warning(s)` — the exact invocation CI uses (ci.yml:385), unchanged by this round."
+    },
+    {
+      "command": "node -e \"read .github/workflows/ci.yml and assert the test:scripts step exists\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`has test:scripts step: true`. The catch-all runs last in the existing 'Run npm script tests' job, so no new job, runner or cache is introduced."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Exit 1 — recorded as a DEFERRED finding, not fixed here: `Evidence check (strict): 93 file(s), 196 error(s)` over legacy artifacts (missing root.repo / root.agent / root.knownGaps / root.linkage in the old commands.json shape). The gate is invoked by no workflow or hook, which is why it has stayed red without blocking anything."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Exit 1 — deferred for the same reason: `Review check (strict): 98 file(s), 51 error(s)`, overwhelmingly `missing ## Machine Readable JSON block` in pre-2026-09 review files. Unwired, so red since it was written."
+    },
+    {
+      "command": "node scripts/harness/check-graph-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Exit 1 — deferred: pre-existing subgraph/structural mismatches reported as warnings for the tenant packets (e.g. 2026-09-10-tenant-verification-and-gray: 'manifest vs evidence affected subgraph does not match'). Also unwired (no npm script, no workflow reference). Unrelated to this round's change."
+    }
+  ],
+  "runtimeGap": "None. Every claim in this round is a static or local measurement (test counts, manifest census, schema probes, gate exit codes) that was executed on this host; there is no runtime, database, browser or deployment surface involved.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-23-dormant-governance-tests-and-status-vocabulary/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/",
+    "reviewFile": ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/review.md",
+    "summaryFile": ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-23-legacy-packet-migration-and-config-integrity/manifest.json"
+    ]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Agent: Codebuff (not in the enumerated tool list, so recorded as other). Executed on Windows under Git Bash (Cygwin); `npm` on this host resolves to a broken WSL shim, so every script was invoked as `node <script>` or `node --test <glob>` directly, which is equivalent to the npm script bodies."
+  },
+  "knownGaps": [
+    "check-evidence.mjs and check-review.mjs are listed as expected harness scripts by check-method-health.mjs but are executed by nothing, and are 196-error / 51-error red over the legacy artifacts (93 and 98 files). Wiring them as-is would block every PR, so it needs a legacy allowlist designed the way config/task-packet-legacy-docs.json was — a decision left open rather than taken here.",
+    "check-graph-review.mjs is unwired and already reports pre-existing tenant-packet subgraph mismatches; it was not touched in this round.",
+    "The new status rule is enforced when a manifest is read, which happens through check:harness-visual and check:task-packet. A manifest that no gate loads is still not validated, so the rule is only as wide as those two paths.",
+    "pantheon-ops carries 15 manifests with no `status` and 10 with non-canonical values (`complete` x9, `complete-with-explicit-gates` x1). The inherited schema accepts the missing ones but will reject the drifted ones when ops syncs; normalising them is part of the standing ops deferral and was not done here.",
+    "The catch-all runs tests/scripts/*.test.mjs only, so a test placed in a subdirectory (currently only tests/scripts/foundation-release/, which has its own wired script) would still need explicit wiring."
+  ]
+}

@@ -56,5 +56,5 @@
   ],
   "runtimeSensitive": false,
   "visualEvidence": "No visual changes; pure backend security hardening.",
-  "status": "complete"
+  "status": "completed"
 }

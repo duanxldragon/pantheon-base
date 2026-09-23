@@ -1,0 +1,143 @@
+{
+  "taskId": "2026-09-23-dormant-governance-tests-and-status-vocabulary",
+  "title": "Wake the dormant governance test suite and pin the task-manifest status vocabulary",
+  "goal": "Stop a whole class of silent drift: 13 of the 28 test files under tests/scripts/ had no npm script and 12 of the 17 test: scripts were referenced by no workflow, so the repository's own governance regression tests ran nowhere. Running them for the first time exposed two real failures (one of them caused by an earlier un-gated strict-mode change in check-boundaries.mjs), so fix those, wire the suite into CI behind a catch-all script, and close the adjacent gap where manifest.json `status` was free text with three vocabularies in use (completed 101 / done 7 / complete 2) that no gate validated.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-23: tests/scripts/ now runs 124/124 green, up from 123 tests with 2 failures once the suite was actually executed. The two failures were a stale branch-hygiene assertion (the push-to-main trigger was deliberately removed in #142 and the test was never updated because nothing ran it) and a check-boundaries test still asserting the pre-2026-09-23 lenient behaviour for stale baseline entries, which the same round had tightened. Wiring is via a new `test:scripts` catch-all (`node --test tests/scripts/*.test.mjs`) invoked from the ci.yml 'Run npm script tests' step, guarded by an assertion in ci-workflow-dispatch.test.mjs so the wiring itself cannot silently disappear. The manifest status rule is validated in scripts/task-manifest.mjs and reaches every manifest because check-visual-evidence.mjs (wired as check:harness-visual) iterates listTaskManifestPaths; all 110 manifests were normalised to `completed`.",
+  "completedAt": "2026-09-23",
+  "priority": "P2",
+  "type": "governance-ratchet",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Three related gaps stay open by decision rather than being fixed here: check-evidence.mjs and check-review.mjs are listed by check-method-health.mjs as expected harness scripts but are executed by nothing and are fully red against the legacy artifacts (196 and 51 errors over 93/98 files); check-graph-review.mjs is likewise unwired and reports pre-existing subgraph mismatches for the tenant packets; and pantheon-ops carries 15 manifests with no `status` plus 10 non-canonical values which the inherited schema will reject at sync time.",
+  "dependencyLayers": [
+    "tests/scripts governance regression suite and the CI npm script step",
+    "scripts/task-manifest.mjs schema and the gates that read every manifest"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "add a test:scripts catch-all that runs tests/scripts/*.test.mjs and wire it into the ci.yml 'Run npm script tests' step",
+      "guard that wiring with an assertion in tests/scripts/ci-workflow-dispatch.test.mjs",
+      "fix the stale branch-hygiene-workflow test to match the deliberate removal of the push-to-main trigger in #142",
+      "update the check-boundaries stale-baseline test to the strict-mode contract documented in the script (strict exits 1, non-strict warns)",
+      "validate manifest.json `status` when present against planned | in-progress | completed | abandoned in scripts/task-manifest.mjs",
+      "normalise the 9 base manifests that used done/complete to completed",
+      "document the optional status field and its vocabulary in docs/HARNESS_GOVERNANCE_GUIDE.md",
+      "add tests/scripts/task-manifest-status.test.mjs covering the vocabulary and the repo's own manifests"
+    ],
+    "out": [
+      "any change to runtime behaviour, API, permissions, menus, i18n, database or seed",
+      "wiring or repairing check-evidence.mjs, check-review.mjs or check-graph-review.mjs (recorded as deferred with measurements)",
+      "migrating pantheon-ops manifests or any pantheon-ops change (standing deferral)",
+      "adding npm scripts for each of the 13 orphaned test files (the catch-all makes per-file scripts optional)"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-23-dormant-governance-tests-and-status-vocabulary/task.md",
+  "contractAnchors": [
+    "scripts/task-manifest.mjs",
+    "tests/scripts/ci-workflow-dispatch.test.mjs",
+    "tests/scripts/harness-check-boundaries.test.mjs",
+    "tests/scripts/branch-hygiene-workflow.test.mjs",
+    ".github/workflows/ci.yml",
+    "docs/HARNESS_GOVERNANCE_GUIDE.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "tests/scripts/task-manifest-status.test.mjs",
+      ".harness/tasks/2026-09-23-dormant-governance-tests-and-status-vocabulary/manifest.json",
+      ".harness/tasks/2026-09-23-dormant-governance-tests-and-status-vocabulary/task.md",
+      ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/commands.json",
+      ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/summary.md",
+      ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/review.md"
+    ],
+    "modify": [
+      "package.json",
+      ".github/workflows/ci.yml",
+      "scripts/task-manifest.mjs",
+      "docs/HARNESS_GOVERNANCE_GUIDE.md",
+      "tests/scripts/ci-workflow-dispatch.test.mjs",
+      "tests/scripts/harness-check-boundaries.test.mjs",
+      "tests/scripts/branch-hygiene-workflow.test.mjs",
+      ".harness/tasks/2026-08-21-security-goroutine-hardening/manifest.json",
+      ".harness/tasks/2026-09-01-release-docs-reconciliation/manifest.json",
+      ".harness/tasks/2026-09-08-p1-test-coverage-phase1/manifest.json",
+      ".harness/tasks/2026-09-08-p2-login-risk-control/manifest.json",
+      ".harness/tasks/2026-09-08-p2-production-case-study/manifest.json",
+      ".harness/tasks/2026-09-10-tenant-canary-slice/manifest.json",
+      ".harness/tasks/2026-09-10-tenant-contract-design/manifest.json",
+      ".harness/tasks/2026-09-10-tenant-migration-runbook/manifest.json",
+      ".harness/tasks/2026-09-10-tenant-ready-guardrails/manifest.json"
+    ],
+    "doNotTouch": [
+      "backend/modules/** and backend/pkg/** (no Go source change in this round)",
+      "frontend/src/** and frontend/tests/** (no product or smoke change)",
+      "admin SQL, seeds, permission matrix and i18n resources",
+      "scripts/harness/check-evidence.mjs, check-review.mjs and check-graph-review.mjs (deferred)",
+      "the pantheon-ops repository"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "governance-ratchet",
+    "qualityProfile": "ci-workflow",
+    "ratchetDecision": "sensor-added",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test tests/scripts/*.test.mjs",
+      "node --test tests/scripts/task-manifest-status.test.mjs",
+      "node --test tests/scripts/harness-check-boundaries.test.mjs tests/scripts/branch-hygiene-workflow.test.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-visual-evidence.mjs --root . --strict",
+      "node scripts/harness/check-method-health.mjs --root . --strict",
+      "node scripts/harness/check-adoption.mjs --root . --strict",
+      "node scripts/harness/check-generated.mjs --root . --strict",
+      "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json"
+    ],
+    "runtimeEvidence": [
+      "tests/scripts suite: 122 tests / 120 pass / 2 fail before the fixes, 124 tests / 124 pass after, measured by running the directory for the first time",
+      "check-boundaries strict-vs-non-strict staleness behaviour proven by a new pair of tests rather than by reading the script",
+      "all 110 manifests validate against the new status rule, and the rule is proven load-bearing by a negative probe rejecting done/complete"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "test counts before and after for the dormant tests/scripts suite",
+    "the two failure outputs and which side (test or workflow) had drifted, with the commit that drifted it",
+    "task-manifest status: vocabulary census before/after, positive and negative probes",
+    "wiring proof: the ci.yml step, the new test:scripts script, and the guard assertion",
+    "governance gate battery output",
+    "review disposition incl. the three deferred unwired gates"
+  ],
+  "humanGates": [
+    "none required (no permission, API, retention, menu or data surface changed) — PR gates and non-author review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/",
+    "reviewFile": ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/review.md",
+    "summaryFile": ".harness/evidence/2026-09-23-dormant-governance-tests-and-status-vocabulary/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-23-legacy-packet-migration-and-config-integrity/manifest.json"
+    ]
+  }
+}

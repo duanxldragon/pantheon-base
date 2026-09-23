@@ -3,7 +3,7 @@
   "title": "Tenant Migration Runbook",
   "goal": "Produce a rehearsable shared-schema migration and rollback runbook covering tables, indexes, uniqueness, caches, files, audit and exports without executing production DDL.",
   "primaryLayer": "platform",
-  "status": "done",
+  "status": "completed",
   "priority": "critical",
   "estimatedComplexity": "complex",
   "technicalDebtFlag": "yes",
