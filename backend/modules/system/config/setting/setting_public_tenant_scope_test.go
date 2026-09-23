@@ -97,7 +97,7 @@ func TestPublicSettings_TenantCacheIsolation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cached 101: %v", err)
 	}
-	if got := resp101.Settings[publicSettingKeySiteName]; got == publicSettingTenant202 {
+	if resp101.Settings[publicSettingKeySiteName] == publicSettingTenant202 {
 		t.Fatal("tenant 101 cache leaked tenant 202's override through the shared publicCache")
 	}
 	if got := resp101.Settings[publicSettingKeySiteName]; got != publicSettingGlobalValue {

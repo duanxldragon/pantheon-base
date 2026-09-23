@@ -1,0 +1,141 @@
+{
+  "taskId": "2026-09-23-ci-triage-338-fallout",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "gh pr checks 338",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: first CI signal for the 170-file merge. Expected: gates either pass or name real defects. Observed: Frontend Contract fail (29s) and Go Lint fail (2m25s); 24 other checks pass. Recorded as the diagnosis baseline."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/jobs/107032517850/logs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Frontend Contract failure detail. Expected: identify the failing step. Observed: `vite build` -> `[UNRESOLVED_IMPORT] Could not resolve './Dashboard.css' in src/modules/platform/Dashboard.tsx`; the tracked file was still `dashboard.css` (git tracks it lowercase, the import was renamed)."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/jobs/107032517971/logs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Go Lint failure detail. Expected: identify each finding. Observed: 9 findings on newly added lines - goconst (tenant-202-name, global-name), gosec G115 (int->uint64), revive (RequireRedis/MigrationsHealthy comment form), staticcheck QF1011, unconvert, unused (issueTokenPair, seedActiveSessionWithTokens)."
+    },
+    {
+      "command": "git config core.ignorecase && git ls-files frontend/src/modules/platform/",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: prove the case drift is a git-level fact, not a build config issue. Expected: ignorecase=true with a lowercase tracked name. Observed: `true` and `dashboard.css` while the worktree file (and the import) read `Dashboard.css`."
+    },
+    {
+      "command": "git update-index --force-remove frontend/src/modules/platform/dashboard.css && git add frontend/src/modules/platform/Dashboard.css",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: force git to record the case-only rename. Expected: staged R entry. Observed: `R100 frontend/src/modules/platform/dashboard.css -> frontend/src/modules/platform/Dashboard.css`."
+    },
+    {
+      "command": "node frontend/scripts/check-import-path-case.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: new prebuild guard against case-only import drift. Expected: pass on the repaired tree. Observed: `import path case guard passed for 247 source files`."
+    },
+    {
+      "command": "cp Dashboard.tsx /tmp/keep.tsx && sed -i \"s|'./Dashboard.css'|'./dashboard.css'|\" Dashboard.tsx && node frontend/scripts/check-import-path-case.mjs ; cp /tmp/keep.tsx Dashboard.tsx",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: NEGATIVE test - the guard must fail on exactly the drift that broke CI. Expected: exit 1 naming the case mismatch. Observed: `src/modules/platform/Dashboard.tsx: './dashboard.css' resolves to 'src/modules/platform/dashboard.css', but the file on disk is 'src/modules/platform/Dashboard.css'`; file restored afterwards and the guard passes again."
+    },
+    {
+      "command": "./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: reproduce the failing Frontend Contract build locally. Expected: resolve now that the tracked name matches. Observed: tsc exit 0; `built in 974ms` with the full asset list. (`npm run build` itself spawns WSL bash in this Cygwin shell, so the tools were invoked directly.)"
+    },
+    {
+      "command": "node ./scripts/check-shell-visual-contract.mjs && node ./scripts/check-menu-contract.mjs && node ./scripts/check-ui-contract.mjs && node ./scripts/check-important-budget.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: the prebuild checkers that consume the renamed path. Expected: green. Observed: shell visual contract passed; menu contract passed (16 menus / 20 routes / 89 permissions); UI contract 0 findings across 249 files; !important 0/0."
+    },
+    {
+      "command": "../.tmp/bin/golangci-lint.exe run --new-from-rev=$BASE ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: run the exact PR gate scope (--new-from-rev, see quality.yml lint-scope) with the CI-pinned linter. Expected: 0 issues. Observed: `0 issues.` after the repairs (started from the same 9 findings CI reported; a full-repo run reports 145 pre-existing issues that the gate deliberately does not block on)."
+    },
+    {
+      "command": "go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: compile/vet/format after the lint repairs. Expected: clean. Observed: build and vet exit 0, gofmt lists no files."
+    },
+    {
+      "command": "go test -count=1 ./modules/auth/session/... ./modules/auth/login/... ./modules/system/config/setting/... ./modules/system/iam/user/...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: affected packages after the lint repairs (incl. deleting issueTokenPair and the dead seed helper). Expected: ok. Observed: session ok 8.2s, login ok 109.2s, setting ok 18.6s, iam/user ok 35.5s."
+    },
+    {
+      "command": "gh pr checks 338",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: second CI signal for #338 after the repair push (474d1f65). Expected: Frontend Contract and Go Lint green. Observed: 27 pass / 2 skipping / 0 fail, including Frontend Contract, Go Lint (both jobs), Backend Tests, Unit Tests, Coverage Gate, CodeQL, Secret Scan."
+    },
+    {
+      "command": "gh run list --branch main --workflow \"Release Gate\" --json headSha,conclusion",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: post-merge main gates. Expected: identify which gate the merge turned red. Observed: main push 6387115e -> CI/Code Quality Gates/Security Gates/Core Smoke/Full Smoke success, Release Gate failure. Pre-merge main (2b1cba31 08:17) had Release Gate success, so the merge introduced it."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/jobs/107043286439/logs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: Release Gate failure detail. Expected: name the blocker. Observed: quality gate OK and CodeQL/Dependabot/Open-PR checks pass, then `Unprocessed SonarCloud issues: 5` -> `Release blocked: 5 unresolved SonarCloud issue(s)`."
+    },
+    {
+      "command": "curl -s \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: enumerate the five issues and attribute them. Observed: all five are in files this merge touched - session_helpers.go (user_agent LIKE literal x4, ' LIKE ?' x4, '%mobile%' x4), iam/user/auth_repository.go ('id = ?' x3), setting_public_tenant_scope_test.go (single-use variable)."
+    },
+    {
+      "command": "go test -count=1 -run TestAdminSessionDeviceFilterRendersDetectDevicePredicates -v ./modules/auth/session/",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: prove the clause-constant refactor did not change the filter SQL. Expected: the rendered predicates equal the pre-refactor literals for every device value. Observed: 5/5 subtests pass (mobile, desktop, android phone, android tablet, ipad) asserting exact predicate text and bound args."
+    },
+    {
+      "command": "go build ./... && go vet ./... && gofmt -l . && ../.tmp/bin/golangci-lint.exe run --new-from-rev=origin/main ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: #339 gate replay after the SonarCloud repairs. Expected: clean. Observed: build/vet exit 0, gofmt empty, `0 issues.`"
+    },
+    {
+      "command": "go test -count=1 ./modules/auth/session/... ./modules/system/iam/user/... ./modules/system/config/setting/...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: #339 affected packages. Expected: ok. Observed: session ok 4.2s, iam/user ok 20.9s, config/setting ok 8.5s."
+    }
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-23-ci-triage-338-fallout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-23-ci-triage-338-fallout/",
+    "reviewFile": ".harness/evidence/2026-09-23-ci-triage-338-fallout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  },
+  "knownGaps": [
+    "Full Smoke Suite is flaky on main: business/generated/module-governance-real.spec.ts hit a 60s predicate timeout on commit 2b1cba31 at 21:37 after the same commit passed at 08:17. It passed again on 6387115e; the flakiness itself was not investigated or fixed.",
+    ".golangci.yml still carries three keys golangci-lint v2 rejects (goconst.ignore-tests, issues.exclusions, output.sort-results), so the _test.go exclusions silently do not apply. Deliberately untouched: repairing it changes effective lint scope, which belongs in its own reviewed change.",
+    "SonarCloud only re-scores on the hosted run, so the 'zero unresolved issues' claim for the SonarCloud repairs can only be confirmed by the #339 analysis and the post-merge main Release Gate.",
+    "pantheon-ops still carries the pre-remediation session/audit retention and filter code; the sync stays deferred to the next foundation release."
+  ],
+  "completedAt": "2026-09-23"
+}
