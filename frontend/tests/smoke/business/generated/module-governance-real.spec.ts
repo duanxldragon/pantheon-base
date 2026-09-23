@@ -125,11 +125,9 @@ test('real module governance flow can generate register and purge a temporary bu
   // 30s test timeout can never contain it (stabilization #246/#284); same
   // pattern as tenant-hostile-browser-matrix.spec.ts.
   //
-  // The /system/modules navigation below needs its own 120s slice on top of the
-  // rest: the generator has just rewritten the generated registries, so the app
-  // entry imports the fresh module tree and Vite must transform all of it on
-  // demand. On a cold runner that single navigation was measured consuming an
-  // entire 60s window (run 35787715713), which is why the budget is 240s here.
+  // The /system/modules navigation below gets a 120s retry window and the row
+  // assertion a separate 60s one, so the test budget has to hold both plus the
+  // generate/cleanup cycle around them.
   test.setTimeout(240_000);
   const login = await loginByApi(page.request, adminCredentials);
   const operationToken = await getApiOperationToken(page.request, login);
@@ -198,17 +196,30 @@ test('real module governance flow can generate register and purge a temporary bu
     return content.includes(`business/${moduleName}/OrderqaList`);
   }).toBe(true);
 
-  // Navigate once, under its own budget, and retry only the row assertion.
+  // Retry only the navigation, then assert the row on its own budget.
   //
-  // Previously the navigation lived inside the retry loop, so the cold Vite
-  // transform and the row assertion shared one 60s predicate window: the first
-  // `goto` alone consumed the whole window and the attempt was guaranteed to
-  // fail, with Playwright's retry passing a moment later on a warm module cache
-  // (run 35704013167: attempt 1 died at the 60s timeout, retry #1 passed in
-  // 6.5s). Nothing was wrong with the data — the module is already listed by
-  // the API above — so the UI wait must not be sized against the compile.
-  await page.goto('/system/modules', { waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await expect(page).toHaveURL(/\/system\/modules(?:\?|$)/);
+  // Two separate conditions used to share one 60s predicate window here, which
+  // is why the first attempt was never able to pass:
+  //
+  // 1. The generator rewrites the generated registries and i18n resources, and
+  //    Vite answers a write to the i18n bundle with a full page reload. When that
+  //    reload lands during our navigation, the browser reloads the generator
+  //    document and aborts ours outright:
+  //      page.goto: Navigation to ".../system/modules" is interrupted by
+  //      another navigation to ".../system/generator"
+  //    This is why the attempt burned its budget on a single `goto` and why the
+  //    failure snapshot still showed the generator wizard.
+  // 2. The first successful navigation must also transform the freshly generated
+  //    module tree on demand, which on a cold runner is slower than a single
+  //    navigation timeout.
+  //
+  // So: retry the navigation (covering 1, and warming 2 for the retry), then wait
+  // for the row separately. The module is already listed by the API above, so the
+  // row wait does not need to absorb a compile.
+  await expect(async () => {
+    await page.goto('/system/modules', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page).toHaveURL(/\/system\/modules(?:\?|$)/);
+  }).toPass({ timeout: 120_000, intervals: [500, 1_000, 2_000, 5_000] });
 
   const row = page.getByRole('row', { name: new RegExp(moduleKey) }).first();
   await expect(async () => {
