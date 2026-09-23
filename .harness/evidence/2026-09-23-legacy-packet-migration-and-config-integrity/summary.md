@@ -92,10 +92,36 @@ window, so attempt 1 could not succeed by construction and only the warmed retry
 ever passed. The data was never the problem — the API poll above the assertion had
 already proven the module ready.
 
-Fix: navigate once under its own 120s budget and retry only the row assertion;
-raise the test budget to 240s to hold that slice. The comment in the spec now
-records the measured evidence so the next reader does not re-raise the shared
-window.
+Fixing that moved the failure from a 60s hang to a fast, explicit one, which is
+what named the actual mechanism. Run `35835353920` (first version of the fix) still
+failed attempt 1 — in **5.7s** rather than 66s — with:
+
+```
+page.goto: Navigation to "http://127.0.0.1:5173/system/modules" is interrupted by
+another navigation to "http://127.0.0.1:5173/system/generator"
+```
+
+Vite answers the generator's write to the generated i18n bundle with a **full page
+reload**. When that reload lands during our navigation, the browser reloads the
+generator document it is currently showing and cancels ours. That also explains
+the original failure snapshot: the page was still the generator wizard, so the
+interrupt had won. The old shape hid this behind a 60s hang, where it looked like
+slowness instead of a cancelled navigation.
+
+Final fix: retry only the navigation (its own 120s window, cheap fast failures on
+interrupt, which also warms the cold transform for the retry) and wait for the row
+separately on 60s. Test budget raised to 240s to hold both slices plus the
+generate/purge cycle around them.
+
+This is a browser-level race, not a test ordering mistake: the write that triggers
+the reload belongs to the generator, and a page cannot complete a navigation while
+the document it is leaving is reloading itself. Tolerating the interrupt and
+retrying the navigation is the correct layer to fix it.
+
+Verified by run `35838488292`: suite `success`, and the spec is
+`✓ 1 ... (6.4s)` on its **first** attempt — no retry, no `flaky` in the run. Before
+this round the same spec failed attempt 1 at 1.1m on every observed run, green or
+red. It is now deterministic rather than retry-saved.
 
 ## Verification
 
@@ -109,7 +135,7 @@ window.
 | frontend `tsc --noEmit` / eslint / smoke coverage contract | pass |
 | doc frontmatter / links / inventory / encoding / structure | pass |
 | `check-boundaries.mjs` | unchanged report-only state (5 findings) |
-| Full Smoke Suite | dispatched on the branch (see commands.json) |
+| Full Smoke Suite (runs `35835353920`, `35838488292`) | success; target spec green on its first attempt in the final run |
 
 ## Open items
 
