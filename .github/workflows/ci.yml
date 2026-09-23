@@ -138,6 +138,9 @@ jobs:
     env:
       PANTHEON_TEST_DSN: root:pw-${{ github.run_id }}-${{ github.run_attempt }}@tcp(127.0.0.1:3306)/pantheon_test?charset=utf8mb4&parseTime=true&loc=Local
       PANTHEON_TEST_REDIS_ADDR: 127.0.0.1:6379
+      # Fail instead of skipping the Redis-backed tests when the address above is
+      # renamed or dropped — a silent skip here would read as green.
+      PANTHEON_TEST_REDIS_REQUIRED: "true"
       # S3 probe wiring (PANTHEON_TEST_S3_*) is SUSPENDED per maintainer
       # decision 2026-09-18; restore instructions:
       # .harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/s3-probe-minio-service-SUSPENDED.md

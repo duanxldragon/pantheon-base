@@ -127,7 +127,7 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 
 1. 执行 `docker compose up -d`，或手动执行 `database/system_init.sql` 初始化 MySQL；底座默认库名为 `pantheon_base`。
 2. 设置 `PANTHEON_DSN`，例如 `user:pass@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local`。
-3. 可选设置 `PANTHEON_REDIS_ADDR=127.0.0.1:6379` 与 `PANTHEON_REDIS_PASSWORD=DHCCdhcc2025`。
+3. 可选设置 `PANTHEON_REDIS_ADDR=127.0.0.1:6379` 与 `PANTHEON_REDIS_PASSWORD=<你的本地 Redis 密码>`；请勿把真实密码写进文档或提交到仓库（可用值参考 `.env.example`，且不要复用生产密码）。
 4. 生产环境设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位；开发环境未设置时会创建 `admin / 123456`。
 5. 后端执行 `go run ./backend/cmd/server`。
 6. 前端进入 `frontend/` 执行 `npm install` 和 `npm run dev`。

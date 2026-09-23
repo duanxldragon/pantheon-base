@@ -66,11 +66,41 @@ const AUTH_RULES = {
   ],
 };
 
+// system/* subdomains may only be wired together at the composition root
+// (backend/modules/system/system_modules.go). A subdomain reaching into another
+// subdomain's packages creates a hidden coupling that the contract docs
+// (docs/contracts/SYSTEM_*_CONTRACT.md) do not sanction.
+const SYSTEM_DOMAINS = ['audit', 'config', 'i18n', 'iam', 'org'];
+
+function systemDomainRules(domain) {
+  const others = SYSTEM_DOMAINS.filter((candidate) => candidate !== domain);
+  return {
+    go: [
+      {
+        pattern: new RegExp(`/backend/modules/system/(?:${others.join('|')})/`),
+        reason: `system/${domain} must not import another system subdomain's packages (wire them at backend/modules/system/system_modules.go instead)`,
+      },
+    ],
+    ts: [],
+  };
+}
+
+// Each subdomain is scanned as its own layer so "another subdomain" can be
+// expressed without a self-exemption escape hatch.
+const SYSTEM_SCANS = SYSTEM_DOMAINS.map((domain) => ({
+  layer: `system/${domain}`,
+  backendDir: `backend/modules/system/${domain}`,
+  frontendDir: `frontend/src/modules/system/${domain}`,
+  rules: systemDomainRules(domain),
+  requireBusinessDirs: false,
+}));
+
 const LAYER_SCANS = {
   'pantheon-base': [
     { layer: 'business', backendDir: 'backend/modules/business', frontendDir: 'frontend/src/modules/business', rules: BUSINESS_RULES, requireBusinessDirs: false },
     { layer: 'platform', backendDir: 'backend/modules/platform', frontendDir: 'frontend/src/modules/platform', rules: PLATFORM_RULES, requireBusinessDirs: false },
     { layer: 'auth', backendDir: 'backend/modules/auth', frontendDir: 'frontend/src/modules/auth', rules: AUTH_RULES, requireBusinessDirs: false },
+    ...SYSTEM_SCANS,
   ],
   'pantheon-ops': [
     { layer: 'business', backendDir: 'backend/modules/business', frontendDir: 'frontend/src/modules/business', rules: BUSINESS_RULES, requireBusinessDirs: true },
@@ -82,9 +112,12 @@ function printHelp() {
   node scripts/harness/check-boundaries.mjs [--json] [--strict] [--root <path>] [--repo <name>] [--baseline <path>]
 
 Default behavior:
-  Report findings and exit 0. Use --strict to exit 1 when unbaselined findings exist.
+  Report findings and exit 0.  Use --strict to exit 1 when unbaselined findings exist.
+  Scanned layers: business, platform, auth and each system/* subdomain.
   Use --repo <name> to scan only one repository (default scans all).
   Use --baseline <path> to treat recorded, review-dated findings as known debt.
+  Under --strict, a baseline entry that no longer matches any finding (stale)
+  fails: remove it so it cannot whitelist a reintroduced import.
 
 Examples:
   node scripts/harness/check-boundaries.mjs
@@ -284,23 +317,31 @@ function scanRepository(repoName, root, baseline) {
     }
   }
 
+  // A stale entry is not harmless bookkeeping: it still whitelists its
+  // file+import pair, so if that import ever comes back it passes silently.
+  // Stale entries are therefore reported separately and fail --strict.
+  const staleBaseline = [];
   for (const entry of baseline.entries) {
     const key = baselineKey(entry.file, entry.importPath);
     if (!usedBaselineKeys.has(key)) {
-      warnings.push(`baseline entry no longer matches any finding (stale): ${entry.file} -> ${entry.importPath}`);
+      staleBaseline.push(entry);
+      warnings.push(
+        `baseline entry no longer matches any finding (stale, remove it): ${entry.file} -> ${entry.importPath}`,
+      );
     }
   }
 
-  return { repo: repoName, findings: remaining, baselined, warnings };
+  return { repo: repoName, findings: remaining, baselined, staleBaseline, warnings };
 }
 
 function printTextReport(results, strict, baseline) {
   const findingCount = results.reduce((count, result) => count + result.findings.length, 0);
   const baselinedCount = results.reduce((count, result) => count + (result.baselined?.length ?? 0), 0);
+  const staleCount = results.reduce((count, result) => count + (result.staleBaseline?.length ?? 0), 0);
   const warningCount = results.reduce((count, result) => count + result.warnings.length, 0);
   const mode = strict ? 'strict' : 'report-only';
 
-  console.log(`Boundary check (${mode}): ${findingCount} finding(s), ${baselinedCount} baselined, ${warningCount} warning(s)`);
+  console.log(`Boundary check (${mode}): ${findingCount} finding(s), ${baselinedCount} baselined, ${staleCount} stale baselined, ${warningCount} warning(s)`);
   if (baseline.reviewBy) {
     console.log(`Baseline review-by: ${baseline.reviewBy}`);
   }
@@ -362,6 +403,7 @@ function main() {
   const results = repositories.map((repo) => scanRepository(repo, options.root, baseline));
   const findingCount = results.reduce((count, result) => count + result.findings.length, 0);
   const baselinedCount = results.reduce((count, result) => count + (result.baselined?.length ?? 0), 0);
+  const staleCount = results.reduce((count, result) => count + (result.staleBaseline?.length ?? 0), 0);
   const warningCount = results.reduce((count, result) => count + result.warnings.length, 0);
 
   if (options.json) {
@@ -372,6 +414,7 @@ function main() {
           baselineReviewBy: baseline.reviewBy,
           findingCount,
           baselinedCount,
+          staleCount,
           warningCount,
           results,
         },
@@ -383,7 +426,9 @@ function main() {
     printTextReport(results, options.strict, baseline);
   }
 
-  return options.strict && findingCount > 0 ? 1 : 0;
+  // --strict fails on new violations AND on stale baseline entries. A stale entry
+  // must be removed (not kept) so it cannot mask a reintroduced import later.
+  return options.strict && (findingCount > 0 || staleCount > 0) ? 1 : 0;
 }
 
 process.exitCode = main();

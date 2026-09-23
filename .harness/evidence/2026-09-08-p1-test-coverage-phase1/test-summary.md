@@ -82,7 +82,7 @@ Notes: success envelope code is 200 (`common.CodeSuccess`), not 0; `CleanupSecur
 
 Uses a stub `PolicyProvider` and a recording `SecurityEventRecorder` so tests are independent of the settings store.
 
-**Verification gap CLOSED (session 4):** with maintainer-provided local MySQL (`root:DHCCroot@2025`) and Redis password, all 17 throttle tests executed against real MySQL 8.0.36 and **passed** (`go test -race` not possible locally — Git Bash's Cygwin gcc cannot build cgo on Windows; CI on ubuntu-latest is unaffected). Full backend suite with DB: **39 packages ok, 0 failures**.
+**Verification gap CLOSED (session 4):** with maintainer-provided local MySQL (`root:<redacted-mysql-password>`) and Redis password, all 17 throttle tests executed against real MySQL 8.0.36 and **passed** (`go test -race` not possible locally — Git Bash's Cygwin gcc cannot build cgo on Windows; CI on ubuntu-latest is unaffected). Full backend suite with DB: **39 packages ok, 0 failures**.
 
 ## Tests added session 2 (Week 2-3 kickoff)
 

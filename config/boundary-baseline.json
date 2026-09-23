@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "docs/designs/REPOSITORY_LAYOUT.md §8.3",
   "reviewBy": "2026-12-31",
-  "description": "Frozen cross-layer boundary findings from the 2026-09-22 layer-boundary-gate task. Each entry is known, reviewed debt with a stated ratchet; the gate (scripts/harness/check-boundaries.mjs --strict --baseline config/boundary-baseline.json) blocks any NEW violation but lets these stay tracked until they are refactored or re-approved. Do not add an entry to silence a new finding — fix it or get explicit maintainer approval.",
+  "description": "Frozen cross-layer boundary findings from the 2026-09-22 layer-boundary-gate task. Each entry is known, reviewed debt with a stated ratchet; the gate (scripts/harness/check-boundaries.mjs --strict --baseline config/boundary-baseline.json) blocks any NEW violation but lets these stay tracked until they are refactored or re-approved. Do not add an entry to silence a new finding — fix it or get explicit maintainer approval. Entries must keep matching a real finding: the gate fails --strict on stale entries (2026-09-23) so they cannot whitelist a reintroduced import. The three backend/modules/auth/* -> modules/system/iam/user entries were removed on 2026-09-23 once the pkg/contracts/authuser port landed and production code stopped importing the iam model.",
   "entries": [
     {
       "file": "frontend/src/modules/platform/widgets.tsx",
@@ -10,27 +10,6 @@
       "layer": "platform",
       "reviewBy": "2026-12-31",
       "reason": "Type-only import of the menu contract type MenuNode. Ratchet: promote MenuNode to a shared contract type (frontend/src/api) so the platform module stops importing the system/menu module path."
-    },
-    {
-      "file": "backend/modules/auth/login/login_service.go",
-      "importPath": "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user",
-      "layer": "auth",
-      "reviewBy": "2026-12-31",
-      "reason": "auth/login reads the user GORM model and queries user state directly for credential/session flows. Ratchet: introduce a UserReader/UserCredential contract in pkg/contracts and inject the system/iam adapter at the composition root."
-    },
-    {
-      "file": "backend/modules/auth/login/login_runtime.go",
-      "importPath": "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user",
-      "layer": "auth",
-      "reviewBy": "2026-12-31",
-      "reason": "auth login runtime loads and updates the SystemUser model during MFA/token issuance. Same ratchet as login_service.go."
-    },
-    {
-      "file": "backend/modules/auth/security/security_service.go",
-      "importPath": "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user",
-      "layer": "auth",
-      "reviewBy": "2026-12-31",
-      "reason": "auth/security password + user state service depends on the SystemUser model. Same ratchet as login_service.go."
     },
     {
       "file": "frontend/src/modules/auth/security/components/LoginLogList.tsx",
